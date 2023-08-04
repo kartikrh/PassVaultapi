@@ -35,9 +35,9 @@ Update the version number in the `package.json` file to reflect the latest chang
 
 ## Commit Message
 Follow the following process while writing the message on your commit
-<type>: <subject>
+type: subject
 
-<type>: 
+* type= 
 - feat: A new feature introduced.
 - fix: A bug fix.
 - chore: Routine tasks, maintenance, or housekeeping.
@@ -46,4 +46,4 @@ Follow the following process while writing the message on your commit
 - refactor: Code changes that neither fix a bug nor add a feature.
 - test: Adding or modifying tests.
 
-<subject>: A concise description of the change. Keep it short (50 characters or less).
+* subject= A concise description of the change. Keep it short (50 characters or less).
