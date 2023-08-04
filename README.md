@@ -5,8 +5,9 @@ Project: scoreapi
 ## Table of Contents
 
 - [Getting Started](#getting-started)
-- [Features](#features)
-- [Bug Fixes](#bug-fixes)
+- [Major Version](#Major-Version)
+- [Minor Version](#Minor-Version)
+- [Patch Version](#Patch-Version)
 - [Side Note](#Side-Note)
 - [Commit Message](#Commit-Message)
 
@@ -19,19 +20,22 @@ To set up and run the project locally, follow these steps:
 3. Start the development server: `npm run dev`
 4. Access the API documentation at [http://localhost:3000/documentation](http://localhost:3000/documentation)
 
-## Features
+## Major Version 
  *version: 1.0.0*
 - Project backbone established.
 - Sequelize ORM integrated for database interactions.
 - Swagger documentation set up for API endpoints.
 
-## Bug Fixes
+## Minor Version
 
-- No bug fixes in this version.
-- follow the above structure
+## Patch Version
+ *version: 1.0.1*
+- .env file added
+
 
 ## Side Note
-Update the version number in the `package.json` file to reflect the latest changes.
+- Update the version number in the `package.json` file to reflect the latest changes.
+- The env.txt contains env data I've used, use it for ref. when making your own changes
 
 ## Commit Message
 Follow the following process while writing the message on your commit
