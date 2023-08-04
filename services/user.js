@@ -1,9 +1,4 @@
-const { findAllCommentQuery, findAllUsersQuery } = require("../repository/TableUser");
-
-async function findAllComment() {
-  const results = await findAllCommentQuery();
-  return results
-}
+const { findAllUsersQuery } = require("../repository/TableUser");
 
 async function findAllUsers() {
   const results = await findAllUsersQuery();
@@ -11,6 +6,5 @@ async function findAllUsers() {
 }
 
 module.exports = {
-  findAllUsers,
-  findAllComment,
+  findAllUsers
 };

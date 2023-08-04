@@ -3,18 +3,7 @@
 //* client specific controller
 
 const { ERROR_CODES, error, success} = require('../../utilities/index');
-const {findAllComment,findAllUsers} = require('../../services/user')
-
-
-async function findAllCommentController(request, reply) {
-  try {
-    const result = await findAllComment(); 
-    reply.status(200).send(success(result, 200));
-  } 
-  catch (err) {
-    reply.status(500).send(error("Internal server error", ERROR_CODES.SERVER_ERROR, 500));
-  }
-}
+const {findAllUsers} = require('../../services/user')
 
 async function findAllUsersController(request, reply) {
   try {
@@ -28,5 +17,4 @@ async function findAllUsersController(request, reply) {
 
 module.exports = {
     findAllUsersController,
-    findAllCommentController,
   };

@@ -27,6 +27,8 @@ To set up and run the project locally, follow these steps:
 - Swagger documentation set up for API endpoints.
 
 ## Minor Version
+*version: 1.1.1*
+- tbUsers and tbUserLoginInfos models created
 
 ## Patch Version
  *version: 1.0.1*

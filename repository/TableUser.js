@@ -3,20 +3,13 @@ const { Sequelize } = require("sequelize");
 const dbConnect = require("../sequelize/config/config")();
 const sequelize = new Sequelize(dbConnect);
 //!import models
-const User = require("../sequelize/tables/user")(sequelize);
-const Comment = require("../sequelize/tables/comment")(sequelize);
+const {UserLoginInfoModel} = require("../sequelize/tables/userLoginInfoModel")(sequelize);
 
-//!Database queries-
-//! for test purposes
+//!Database queries- for test purposes
 async function findAllUsersQuery() {
-  return await User.findAll();
-}
-
-async function findAllCommentQuery() {
-  return await Comment.findAll();
+  return await UserLoginInfoModel.findAll();
 }
 
 module.exports = {
   findAllUsersQuery,
-  findAllCommentQuery,
 };

@@ -1,0 +1,106 @@
+// for test purposes
+const { DataTypes } = require("sequelize");
+
+module.exports = (sequelize) => {
+  const UserModel = sequelize.define('tblUser', {
+    WrUserId: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      allowNull: false,
+      autoIncrement: true,
+    },
+    WrUserName: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+    },
+    WrPassword: {
+      type: DataTypes.STRING(200),
+      allowNull: true,
+    },
+    WrRoleId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    WrName: {
+      type: DataTypes.STRING(200),
+      allowNull: true,
+    },
+    WrUserType: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    WrMobile: {
+      type: DataTypes.STRING(20),
+      allowNull: true,
+    },
+    WrIsActive: {
+      type: DataTypes.BOOLEAN,
+      allowNull: true,
+    },
+    WrIsSuperAdmin: {
+      type: DataTypes.BOOLEAN,
+      allowNull: true,
+    },
+    WrCreatedBy: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    WrCreatedDate: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: DataTypes.NOW,
+    },
+    WrCreatedType: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    WrModifyBy: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    WrModifyDate: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: DataTypes.NOW,
+    },
+    WrModifyType: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    WrParentId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    WrIsDelete: {
+      type: DataTypes.BOOLEAN,
+      allowNull: true,
+    },
+    WrDeleteBy: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    WrDeleteDate: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    WrAllowMultipleLogin: {
+      type: DataTypes.BOOLEAN,
+      allowNull: true,
+    },
+    WrSubAdminId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+  },  {
+    timestamps: false,
+  });
+  sequelize
+  .sync({ alter: true,logging: false  })
+  .then(() => {
+    console.log("Models synchronized with the database.");
+  })
+  .catch((error) => {
+    console.error("Error:", error);
+  });
+  return UserModel;
+};
