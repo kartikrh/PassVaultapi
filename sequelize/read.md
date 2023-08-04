@@ -1,0 +1,1 @@
+# sequelize related files go here
