@@ -9,6 +9,9 @@ const sequelize = require("./sequelize/config/sequelizeConfig");
 
 const swagger = require("@fastify/swagger");
 const swaggerUi = require("@fastify/swagger-ui");
+const fastifyAuth = require('@fastify/auth');
+const fastifyJWT = require('@fastify/jwt');
+
 
 // Pass --options via CLI arguments in command to enable these options.
 module.exports.options = {};
@@ -56,6 +59,11 @@ module.exports = async function (fastify, opts) {
     title: "API Documentation",
     swagger: "/documentation/json", // Route to your Swagger JSON
   });
+
+  fastify.register(fastifyAuth);
+fastify.register(fastifyJWT, {
+  secret: process.env.SECRET_KEY_TOKEN, // Replace with your actual secret key
+});
 
   // Do not touch the following lines
 

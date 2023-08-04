@@ -1,13 +1,19 @@
-//common controllers that will be used for admin as well as clients
-//! Controller (dealing with status codes)
-//* client specific controller
 
 const { ERROR_CODES, error, success} = require('../../utilities/index');
-const {findAllUsers} = require('../../services/user')
+const {signUpUserService,signInUserServices} = require('../../services/user')
 
-async function findAllUsersController(request, reply) {
+async function signUpUser(request, reply,fastify) {
   try {
-    const result = await findAllUsers();
+    const result = await signUpUserService(request,fastify);
+    reply.status(200).send(success(result, 200));
+  } 
+  catch (err) {
+    reply.status(500).send(error("Internal server error", ERROR_CODES.SERVER_ERROR, 500));
+  }
+}
+async function signInUser(request, reply,fastify) {
+  try {
+    const result = await signInUserServices(request,fastify);
     reply.status(200).send(success(result, 200));
   } 
   catch (err) {
@@ -16,5 +22,6 @@ async function findAllUsersController(request, reply) {
 }
 
 module.exports = {
-    findAllUsersController,
+  signUpUser,
+  signInUser
   };

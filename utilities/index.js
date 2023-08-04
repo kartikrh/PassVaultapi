@@ -21,7 +21,7 @@ const success=(result, status)=> {
     return {
         success: true,
         status: status,
-        result: result
+        result: result,
     };
 }
 

@@ -8,8 +8,10 @@ Project: scoreapi
 - [Major Version](#Major-Version)
 - [Minor Version](#Minor-Version)
 - [Patch Version](#Patch-Version)
+- [Current Version](#Current-Version)
 - [Side Note](#Side-Note)
 - [Commit Message](#Commit-Message)
+
 
 ## Getting Started
 
@@ -30,9 +32,18 @@ To set up and run the project locally, follow these steps:
 *version: 1.1.1*
 - tbUsers and tbUserLoginInfos models created
 
+*version: 1.2.1*
+- userSignup api created to generate JWT token so we can start working with login
+- userSignup api is not completed, just the bare minimum to generate JWT token.
+- JWT incorporated in fastify to return token to login
+- bcrypt incorporated in fastify to hash password
+
 ## Patch Version
  *version: 1.0.1*
 - .env file added
+
+## Current Version
+ *version: 1.2.1*
 
 
 ## Side Note

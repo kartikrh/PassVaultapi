@@ -1,8 +1,22 @@
 //! for every new route add a schema name you wish to group the api's on swagger
-const admin = {
-  schema: {
-    tags: ["Admin"],
+const Auth = {
+  signin: {
+    schema: {
+      tags: ["Auth"],
+      body: {
+        type: 'object',
+        properties: {
+          username: { type: 'string' },
+          password: { type: 'string' },
+          roleId: { type: 'integer' },
+          name: { type: 'string' },
+          mobile: { type: 'string' },
+        },
+        required: ['username', 'password', 'roleId', 'name', 'mobile'],
+      },
+    },
   },
+  
 };
 
 
@@ -13,6 +27,6 @@ const user = {
 };
 
 module.exports = {
-  admin,
+  Auth,
   user,
 };
