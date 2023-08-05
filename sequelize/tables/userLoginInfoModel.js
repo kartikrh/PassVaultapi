@@ -16,7 +16,14 @@ const UserLoginInfoModel = sequelize.define('tblUserLoginInfo', {
   },
   WrUserType: {
     type: DataTypes.INTEGER,
-    allowNull: true,
+    allowNull: false,
+    defaultValue: 0,
+    validate: {
+      isIn: {
+        args: [[0, 1, 2, 3]], // Define valid numbers
+        msg: 'Invalid status value',
+      },
+    },
   },
   wrInfo: {
     type: DataTypes.STRING(2000),
@@ -32,22 +39,20 @@ const UserLoginInfoModel = sequelize.define('tblUserLoginInfo', {
     defaultValue: DataTypes.NOW,
   },
   wrToken: {
-    type: DataTypes.STRING(100),
+    type: DataTypes.STRING(500),
     allowNull: true,
   },
 },{
   timestamps: false,
 });
-
-  // Syncs all models with the database
-  sequelize
-    .sync({ alter: true,logging: false  })
-    .then(() => {
-      console.log("Models synchronized with the database.");
-    })
-    .catch((error) => {
-      console.error("Error:", error);
-    });
+sequelize
+.sync({ alter: true,logging: false  })
+.then(() => {
+  console.log("Models synchronized with the database.");
+})
+.catch((error) => {
+  console.error("Error:", error);
+});
 
   return UserLoginInfoModel;
 };

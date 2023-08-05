@@ -3,31 +3,31 @@ const { Sequelize } = require("sequelize");
 const dbConnect = require("../sequelize/config/config")();
 const sequelize = new Sequelize(dbConnect);
 //!import models
-const {UserLoginInfoModel} = require("../sequelize/tables/userLoginInfoModel")(sequelize);
+const UserLoginInfoModel = require("../sequelize/tables/userLoginInfoModel")(sequelize);
 const UserModel = require("../sequelize/tables/userModel")(sequelize);
 
 async function signUpUser(request) {
-
-  const newUser = await UserModel.create({
-    WrUserName:request.username,
-    WrPassword:request.password,
-    WrRoleId:request.roleId,
-    WrName:request.name,
-    WrMobile:request.mobile,
-  });
-  return { userId: newUser.WrUserId };
+  let newUser  = await UserModel.create(request);
+  return { WrUserId: newUser.WrUserId };
 }
 
-async function signInUser({username}) {
+async function signInUser({WrUserName}) {
   const user = await UserModel.findOne({
-    where: { WrUserName: username },
-    attributes: ['WrUserId', 'WrPassword'],
+    where: { WrUserName:WrUserName },
+    attributes: ['WrUserId', 'WrPassword','WrUserType'],
   });
 
   return user;
 }
 
+async function createUserLoginInfo(userLoginInfo) {
+  const result = UserLoginInfoModel.create(userLoginInfo)
+
+  return result;
+}
+
 module.exports = {
   signInUser,
-  signUpUser
+  signUpUser,
+  createUserLoginInfo
 };

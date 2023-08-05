@@ -27,7 +27,14 @@ module.exports = (sequelize) => {
     },
     WrUserType: {
       type: DataTypes.INTEGER,
-      allowNull: true,
+      allowNull: false,
+      defaultValue: 0,
+      validate: {
+        isIn: {
+          args: [[0, 1, 2, 3]], // Define valid numbers
+          msg: 'Invalid status value',
+        },
+      },
     },
     WrMobile: {
       type: DataTypes.STRING(20),

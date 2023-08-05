@@ -43,12 +43,19 @@ To set up and run the project locally, follow these steps:
 - swagger for the above mentioned api has been completed.
 - test complete
 
+*version: 1.4.1*
+- on login all tblUserLoginInfo has been set in the table
+- initially ***WrUserType*** has been set to 0 by default: during sigin/signup
+- ua-parser-js package has been used to breakdown device information
+- enum alternative has been used for **WrUserType**
+
+
 ## Patch Version
  *version: 1.0.1*
 - .env file added
 
 ## Current Version
- *version: 1.3.1*
+ *version: 1.4.1*
 
 
 ## Side Note

@@ -6,26 +6,42 @@ const Auth = {
       body: {
         type: 'object',
         properties: {
-          username: { type: 'string' },
-          password: { type: 'string' },
-          roleId: { type: 'integer' },
-          name: { type: 'string' },
-          mobile: { type: 'string' },
+          WrUserName: { type: 'string' },
+          WrPassword: { type: 'string' },
+          WrRoleId: { type: 'integer' },
+          WrName: { type: 'string' },
+          WrUserType: { type: 'integer', enum: [1, 2, 3] },
+          WrMobile: { type: 'string' },
+          WrIsActive: { type: 'boolean' },
+          WrIsSuperAdmin: { type: 'boolean' },
+          WrCreatedBy: { type: 'integer' },
+          WrCreatedType: { type: 'integer' },
+          WrModifyBy: { type: 'integer' },
+          WrModifyType: { type: 'integer' },
+          WrParentId: { type: 'integer' },
+          WrIsDelete: { type: 'boolean' },
+          WrDeleteBy: { type: 'integer' },
+          WrDeleteDate: { type: 'string', format: 'date-time' },
+          WrAllowMultipleLogin: { type: 'boolean' },
+          WrSubAdminId: { type: 'integer' },
         },
-        required: ['username', 'password', 'roleId', 'name', 'mobile'],
+        required: [
+          'WrUserName',
+          'WrPassword',
+        ],
       },
     },
-  },
+  },  
   signIn:{
     schema:{
       tags: ['Auth'],
   body: {
     type: 'object',
     properties: {
-      username: { type: 'string' },
-      password: { type: 'string' },
+      WrUserName: { type: 'string' },
+      WrPassword: { type: 'string' },
     },
-    required: ['username', 'password'],
+    required: ['WrUserName', 'WrPassword'],
   },
     }
   }
