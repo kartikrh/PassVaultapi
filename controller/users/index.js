@@ -17,7 +17,7 @@ async function signInUser(request, reply,fastify) {
     reply.status(200).send(success(result, 200));
   } 
   catch (err) {
-    reply.status(500).send(error("Internal server error", ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(401).send(error("Invalid credentials", ERROR_CODES.AUTH_ERROR, 401));
   }
 }
 

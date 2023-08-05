@@ -1,6 +1,6 @@
 //! for every new route add a schema name you wish to group the api's on swagger
 const Auth = {
-  signin: {
+  signUp: {
     schema: {
       tags: ["Auth"],
       body: {
@@ -16,6 +16,19 @@ const Auth = {
       },
     },
   },
+  signIn:{
+    schema:{
+      tags: ['Auth'],
+  body: {
+    type: 'object',
+    properties: {
+      username: { type: 'string' },
+      password: { type: 'string' },
+    },
+    required: ['username', 'password'],
+  },
+    }
+  }
   
 };
 

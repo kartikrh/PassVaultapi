@@ -34,16 +34,21 @@ To set up and run the project locally, follow these steps:
 
 *version: 1.2.1*
 - userSignup api created to generate JWT token so we can start working with login
-- userSignup api is not completed, just the bare minimum to generate JWT token.
+- *userSignup api is **not** completed*, just the **bare minimum** to generate JWT token.
 - JWT incorporated in fastify to return token to login
 - bcrypt incorporated in fastify to hash password
+
+*version: 1.3.1*
+- signInUser api created, on successfull login we generate JWT token.
+- swagger for the above mentioned api has been completed.
+- test complete
 
 ## Patch Version
  *version: 1.0.1*
 - .env file added
 
 ## Current Version
- *version: 1.2.1*
+ *version: 1.3.1*
 
 
 ## Side Note

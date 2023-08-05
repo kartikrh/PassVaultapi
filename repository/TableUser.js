@@ -18,8 +18,13 @@ async function signUpUser(request) {
   return { userId: newUser.WrUserId };
 }
 
-async function signInUser(request) {
+async function signInUser({username}) {
+  const user = await UserModel.findOne({
+    where: { WrUserName: username },
+    attributes: ['WrUserId', 'WrPassword'],
+  });
 
+  return user;
 }
 
 module.exports = {
