@@ -1,5 +1,6 @@
 // for test purposes
 const { DataTypes } = require("sequelize");
+const sequelize = require('../../sequelize/config/singleInstance')
 
 module.exports = (sequelize) => {
   const UserModel = sequelize.define('tblUser', {
@@ -12,6 +13,7 @@ module.exports = (sequelize) => {
     WrUserName: {
       type: DataTypes.STRING(100),
       allowNull: true,
+      unique: true,
     },
     WrPassword: {
       type: DataTypes.STRING(200),
@@ -101,6 +103,8 @@ module.exports = (sequelize) => {
   },  {
     timestamps: false,
   });
+
+
   sequelize
   .sync({ alter: true,logging: false  })
   .then(() => {

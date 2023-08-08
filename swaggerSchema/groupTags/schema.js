@@ -49,13 +49,14 @@ const Auth = {
 };
 
 
-const user = {
+const User = {
   schema: {
     tags: ["User"],
+    security: [{ bearerAuth: [] }],
   },
 };
 
 module.exports = {
   Auth,
-  user,
+  User,
 };

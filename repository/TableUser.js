@@ -1,33 +1,68 @@
 //!import dependencies
-const { Sequelize } = require("sequelize");
-const dbConnect = require("../sequelize/config/config")();
-const sequelize = new Sequelize(dbConnect);
+const sequelize = require("../sequelize/config/singleInstance");
 //!import models
-const UserLoginInfoModel = require("../sequelize/tables/userLoginInfoModel")(sequelize);
+const UserLoginInfoModel = require("../sequelize/tables/userLoginInfoModel")(
+  sequelize
+);
 const UserModel = require("../sequelize/tables/userModel")(sequelize);
 
+//TODO: this is a test api
 async function signUpUser(request) {
-  let newUser  = await UserModel.create(request);
+  let newUser = await UserModel.create(request);
   return { WrUserId: newUser.WrUserId };
 }
 
-async function signInUser({WrUserName}) {
-  const user = await UserModel.findOne({
-    where: { WrUserName:WrUserName },
-    attributes: ['WrUserId', 'WrPassword','WrUserType'],
+async function signInUser({ WrUserName }) {
+  return await UserModel.findOne({
+    where: { WrUserName },
+    attributes: [
+      "WrUserId",
+      "WrPassword",
+      "WrUserType",
+      "WrRoleId",
+      "WrUserName",
+      "WrIsSuperAdmin",
+      "WrParentId",
+      "WrAllowMultipleLogin",
+      "WrSubAdminId",
+    ],
   });
-
-  return user;
 }
 
 async function createUserLoginInfo(userLoginInfo) {
-  const result = UserLoginInfoModel.create(userLoginInfo)
+  return await UserLoginInfoModel.create(userLoginInfo);
+}
 
-  return result;
+async function updateSingleLoginInfoToLogout(userLoginInfo) {
+  return await UserLoginInfoModel.update(
+    { wrIsLogin: false },
+    {
+      where: {
+        WrUserId: userLoginInfo,
+      },
+    }
+  );
+}
+
+async function userAuthorization(
+  UserLoginInfoSearchParameters,
+  userModelSearchParameters
+) {
+  return await UserLoginInfoModel.findAll({
+    where: UserLoginInfoSearchParameters,
+    include: [
+      {
+        model: UserModel,
+        where: userModelSearchParameters,
+      },
+    ],
+  });
 }
 
 module.exports = {
   signInUser,
   signUpUser,
-  createUserLoginInfo
+  createUserLoginInfo,
+  updateSingleLoginInfoToLogout,
+  userAuthorization,
 };

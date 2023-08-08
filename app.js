@@ -1,5 +1,5 @@
 "use strict";
-require('dotenv').config();
+require("dotenv").config();
 
 const path = require("path");
 const AutoLoad = require("@fastify/autoload");
@@ -9,9 +9,6 @@ const sequelize = require("./sequelize/config/sequelizeConfig");
 
 const swagger = require("@fastify/swagger");
 const swaggerUi = require("@fastify/swagger-ui");
-const fastifyAuth = require('@fastify/auth');
-const fastifyJWT = require('@fastify/jwt');
-
 
 // Pass --options via CLI arguments in command to enable these options.
 module.exports.options = {};
@@ -47,9 +44,16 @@ module.exports = async function (fastify, opts) {
     routePrefix: "/documentation",
     swagger: {
       info: {
-        title: "My API",
+        title: "Score API",
         description: "API documentation for my Fastify application",
         version: "1.0.0",
+      },
+      securityDefinitions: {
+        bearerAuth: {
+          type: "apiKey",
+          name: "Authorization",
+          in: "header",
+        },
       },
     },
     exposeRoute: true, // This creates a route for serving the Swagger JSON
@@ -59,11 +63,6 @@ module.exports = async function (fastify, opts) {
     title: "API Documentation",
     swagger: "/documentation/json", // Route to your Swagger JSON
   });
-
-  fastify.register(fastifyAuth);
-fastify.register(fastifyJWT, {
-  secret: process.env.SECRET_KEY_TOKEN, // Replace with your actual secret key
-});
 
   // Do not touch the following lines
 

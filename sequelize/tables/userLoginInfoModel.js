@@ -1,7 +1,9 @@
 // for test purposes
 const { DataTypes } = require("sequelize");
+const UserModel = require('./userModel')
 
 module.exports = (sequelize) => {
+const UserModel = require('./userModel')(sequelize);
  
 const UserLoginInfoModel = sequelize.define('tblUserLoginInfo', {
   WrID: {
@@ -13,6 +15,10 @@ const UserLoginInfoModel = sequelize.define('tblUserLoginInfo', {
   WrUserId: {
     type: DataTypes.INTEGER,
     allowNull: true,
+    references: {
+      model: UserModel,
+      key: 'WrUserId',
+    },
   },
   WrUserType: {
     type: DataTypes.INTEGER,
@@ -20,7 +26,7 @@ const UserLoginInfoModel = sequelize.define('tblUserLoginInfo', {
     defaultValue: 0,
     validate: {
       isIn: {
-        args: [[0, 1, 2, 3]], // Define valid numbers
+        args: [[-1, 0, 1, 2, 3]], // Define valid numbers
         msg: 'Invalid status value',
       },
     },
@@ -45,6 +51,12 @@ const UserLoginInfoModel = sequelize.define('tblUserLoginInfo', {
 },{
   timestamps: false,
 });
+
+UserLoginInfoModel.belongsTo(UserModel, {
+  foreignKey: 'WrUserId', // Foreign key in UserLoginInfoModel
+  targetKey: 'WrUserId', // Target key in UserModel
+});
+
 sequelize
 .sync({ alter: true,logging: false  })
 .then(() => {
