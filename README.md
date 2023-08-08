@@ -28,6 +28,13 @@ To set up and run the project locally, follow these steps:
 - Sequelize ORM integrated for database interactions.
 - Swagger documentation set up for API endpoints.
 
+ *version: 2.0.0*
+- @fastify/auth and @fastify/jwt uninstalled switched to jsonwebtoken
+- changes done to tblUserLoginInfo to have a belongsTo relationship to UserTable
+- swagger changed to incorporate JWT tokens
+- middleware added to run on '/' test route that reads the token, and checks its validity, saves device info of incorrect tokens to **later on** prevent DOS attack.
+- folder structure changed
+
 ## Minor Version
 *version: 1.1.1*
 - tbUsers and tbUserLoginInfos models created
@@ -55,7 +62,7 @@ To set up and run the project locally, follow these steps:
 - .env file added
 
 ## Current Version
- *version: 1.4.1*
+ *version: 2.0.0*
 
 
 ## Side Note

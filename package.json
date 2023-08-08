@@ -1,6 +1,6 @@
 {
   "name": "scoreapi",
-  "version": "1.4.1",
+  "version": "2.0.0",
   "description": "score-api project using the fastify framework ",
   "main": "app.js",
   "directories": {
@@ -16,9 +16,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@fastify/auth": "^4.3.0",
     "@fastify/autoload": "^5.0.0",
-    "@fastify/jwt": "^7.2.0",
     "@fastify/sensible": "^5.0.0",
     "@fastify/swagger": "^8.8.0",
     "@fastify/swagger-ui": "^1.9.3",
@@ -28,6 +26,7 @@
     "fastify-cli": "^5.8.0",
     "fastify-plugin": "^4.0.0",
     "fastify-sequelize": "^1.0.4",
+    "jsonwebtoken": "^9.0.1",
     "pg": "^8.11.2",
     "sequelize": "^6.32.1",
     "ua-parser-js": "^1.0.35"
