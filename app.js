@@ -6,7 +6,7 @@ const AutoLoad = require("@fastify/autoload");
 const fsequelize = require("fastify-sequelize");
 const dbPg = require("./sequelize/config/config")();
 const sequelize = require("./sequelize/config/sequelizeConfig");
-
+const cors = require('@fastify/cors');
 const swagger = require("@fastify/swagger");
 const swaggerUi = require("@fastify/swagger-ui");
 
@@ -64,6 +64,13 @@ module.exports = async function (fastify, opts) {
     swagger: "/documentation/json", // Route to your Swagger JSON
   });
 
+  const corsOptions = {
+    origin: 'http://localhost:3001', // Allow requests from localhost
+    methods: ['GET', 'POST'],    // HTTP methods allowed
+  };
+// Register the CORS plugin
+fastify.register(cors, corsOptions);
+  
   // Do not touch the following lines
 
   // This loads all plugins defined in plugins

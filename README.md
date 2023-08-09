@@ -45,6 +45,9 @@ To set up and run the project locally, follow these steps:
 - JWT incorporated in fastify to return token to login
 - bcrypt incorporated in fastify to hash password
 
+*version: 2.1.0*
+- @fastify/cors installed to incorporate localhost
+
 *version: 1.3.1*
 - signInUser api created, on successfull login we generate JWT token.
 - swagger for the above mentioned api has been completed.
@@ -62,7 +65,7 @@ To set up and run the project locally, follow these steps:
 - .env file added
 
 ## Current Version
- *version: 2.0.0*
+ *version: 2.1.0*
 
 
 ## Side Note
