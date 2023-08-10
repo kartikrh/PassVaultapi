@@ -13,7 +13,7 @@ module.exports = async function (fastify, opts) {
     schema: Auth.signIn.schema,
     handler: (request, reply) => signInUser(request, reply, fastify),
   });
-  fastify.post("/", {
+  fastify.get("/dashboard", {
     schema: User.schema,
     preHandler: (request, reply, fastify) => authorize(request, reply, fastify),
     handler: (request, reply) =>

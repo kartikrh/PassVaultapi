@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 
 async function authorize(request, reply, fastify) {
   try {
-    const result = await authorization(request, fastify);
+    await authorization(request, fastify);
   } catch (err) {
     reply
       .status(401)

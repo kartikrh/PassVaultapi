@@ -11,49 +11,50 @@ const {
 async function authorization(request, fastify) {
   const token = request.headers.authorization;
   const secretKey = process.env.SECRET_KEY_TOKEN;
-  const wrInfo= deviceInfo(request)
+  const wrInfo = deviceInfo(request);
   try {
-    jwt.verify(token, secretKey); //check if expired
+    if (token && secretKey) {
+      const valid = jwt.verify(token, secretKey); //check if expired
+      const decode = jwt.decode(token, secretKey);
+      const {
+        WrUserId,
+        WrUserType,
+        WrRoleId,
+        WrUserName,
+        WrIsSuperAdmin,
+        WrParentId,
+        WrAllowMultipleLogin,
+      } = decode;
+      const userLoginInfoSearchParameters = {
+        WrUserId,
+        wrInfo,
+        wrIsLogin: true,
+      };
 
-    const decode = jwt.decode(token, secretKey);
-    const {
-      WrUserId,
-      WrUserType,
-      WrRoleId,
-      WrUserName,
-      WrIsSuperAdmin,
-      WrParentId,
-      WrAllowMultipleLogin,
-    } = decode;
+      const userModelSearchParameters = {
+        WrUserId,
+        WrUserType,
+        WrRoleId,
+        WrUserName,
+        WrIsSuperAdmin,
+        WrParentId,
+        WrAllowMultipleLogin,
+        WrIsDelete: false,
+      };
+      //check: same network and not deleted account and //*currently loggedIn
+      const user = await userAuthorization(
+        userLoginInfoSearchParameters,
+        userModelSearchParameters
+      );
 
-    const userLoginInfoSearchParameters = {
-      WrUserId,
-      wrInfo,
-      wrIsLogin: true,
-    };
-    
-    const userModelSearchParameters = {
-      WrUserId,
-      WrUserType,
-      WrRoleId,
-      WrUserName,
-      WrIsSuperAdmin,
-      WrParentId,
-      WrAllowMultipleLogin,
-      WrIsDelete: false,
-    };
-    //check: same network and not deleted account and //*currently loggedIn
-    const user = await userAuthorization(
-      userLoginInfoSearchParameters,
-      userModelSearchParameters
-    );
+      if (user.length === 0) {
+        throw new Error("Invalid Token");
+      }
 
-    if (user.length === 0) {
-      throw new Error("Invalid Token");
+      request.userTokenInfo = decode;
+    } else {
+      throw new Error("");
     }
-
-    request.userTokenInfo = decode;
-
   } catch (e) {
     userLoginInfo = {
       WrUserId: null,
@@ -65,7 +66,11 @@ async function authorization(request, fastify) {
 
     try {
       await createUserLoginInfo(userLoginInfo);
-    } catch (e) {}
+    } catch (e) {
+      throw new Error("");
+    } finally {
+      throw new Error("");
+    }
   }
 }
 
