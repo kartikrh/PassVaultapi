@@ -63,9 +63,11 @@ To set up and run the project locally, follow these steps:
 ## Patch Version
  *version: 1.0.1*
 - .env file added
+*version: 2.1.1*
+- authentication error solved
 
 ## Current Version
- *version: 2.1.0*
+ *version: 2.1.1*
 
 
 ## Side Note

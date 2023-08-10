@@ -32,7 +32,7 @@ async function signInUserServices(request, fastify) {
   const isPasswordValid = await bcrypt.compare(body.WrPassword, user.WrPassword);
 
   //* if no user exists or password incorrect
-  if (!user&&isPasswordValid) {
+  if (!(user&&isPasswordValid)) {
     try{
       userLoginInfo = {
         WrUserId: null,
