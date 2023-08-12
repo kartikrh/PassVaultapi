@@ -1,19 +1,11 @@
-//!import dependencies
-const sequelize = require("../sequelize/config/singleInstance");
-//!import models
-const UserLoginInfoModel = require("../sequelize/tables/userLoginInfoModel")(
-  sequelize
-);
-const UserModel = require("../sequelize/tables/userModel")(sequelize);
-
 //TODO: this is a test api
-async function signUpUser(request) {
-  let newUser = await UserModel.create(request);
+async function signUpUser(request, fastify) {
+  let newUser = await fastify.db.models.tblUser.create(request);
   return { WrUserId: newUser.WrUserId };
 }
 
-async function signInUser({ WrUserName }) {
-  return await UserModel.findOne({
+async function signInUser({ WrUserName }, fastify) {
+  return await fastify.db.models.tblUser.findOne({
     where: { WrUserName },
     attributes: [
       "WrUserId",
@@ -29,12 +21,12 @@ async function signInUser({ WrUserName }) {
   });
 }
 
-async function createUserLoginInfo(userLoginInfo) {
-  return await UserLoginInfoModel.create(userLoginInfo);
+async function createUserLoginInfo(userLoginInfo, fastify) {
+  return await fastify.db.models.tblUserLoginInfo.create(userLoginInfo);
 }
 
-async function updateSingleLoginInfoToLogout(userLoginInfo) {
-  return await UserLoginInfoModel.update(
+async function updateSingleLoginInfoToLogout(userLoginInfo, fastify) {
+  return await fastify.db.models.tblUserLoginInfo.update(
     { wrIsLogin: false },
     {
       where: {
@@ -46,9 +38,10 @@ async function updateSingleLoginInfoToLogout(userLoginInfo) {
 
 async function userAuthorization(
   UserLoginInfoSearchParameters,
-  userModelSearchParameters
+  userModelSearchParameters,
+  fastify
 ) {
-  return await UserLoginInfoModel.findAll({
+  return await fastify.db.models.tblUserLoginInfo.findAll({
     where: UserLoginInfoSearchParameters,
     include: [
       {

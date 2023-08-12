@@ -44,7 +44,8 @@ async function authorization(request, fastify) {
       //check: same network and not deleted account and //*currently loggedIn
       const user = await userAuthorization(
         userLoginInfoSearchParameters,
-        userModelSearchParameters
+        userModelSearchParameters,
+        fastify
       );
 
       if (user.length === 0) {
@@ -65,7 +66,7 @@ async function authorization(request, fastify) {
     };
 
     try {
-      await createUserLoginInfo(userLoginInfo);
+      await createUserLoginInfo(userLoginInfo,fastify);
     } catch (e) {
       throw new Error("");
     } finally {

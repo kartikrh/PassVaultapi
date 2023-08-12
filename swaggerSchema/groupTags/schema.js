@@ -56,7 +56,16 @@ const User = {
   },
 };
 
+Admin= {
+  schema: {
+    tags: ["Admin"],
+    //security: [{ bearerAuth: [] }],
+  },
+};
+
+
 module.exports = {
   Auth,
   User,
+  Admin
 };

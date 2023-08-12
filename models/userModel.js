@@ -1,8 +1,8 @@
 // for test purposes
 const { DataTypes } = require("sequelize");
 
-module.exports = (sequelize) => {
-  const UserModel = sequelize.define('tblUser', {
+module.exports = () => {
+  const UserModel = fastify.sequelize.define('tblUser', {
     WrUserId: {
       type: DataTypes.INTEGER,
       primaryKey: true,

@@ -35,6 +35,10 @@ To set up and run the project locally, follow these steps:
 - middleware added to run on '/' test route that reads the token, and checks its validity, saves device info of incorrect tokens to **later on** prevent DOS attack.
 - folder structure changed
 
+ *version: 3.0.0*
+- sequelize multicall and multisync problem solved
+- method of quering database changed
+
 ## Minor Version
 *version: 1.1.1*
 - tbUsers and tbUserLoginInfos models created

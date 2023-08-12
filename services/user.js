@@ -14,7 +14,7 @@ async function signUpUserService({ body }, fastify) {
 
   body.WrPassword=hashedPassword;
 
-  const results = await signUpUser(body);
+  const results = await signUpUser(body,fastify);
 
   const payload= { userId: results.WrUserId }
   const token = jwt.sign(payload, process.env.SECRET_KEY_TOKEN);
@@ -25,8 +25,7 @@ async function signUpUserService({ body }, fastify) {
 async function signInUserServices(request, fastify) {
   const body = request.body
   let userLoginInfo;
-
-  const user = await signInUser( body );
+  const user = await signInUser( body,fastify );
 
   //* compare password 
   const isPasswordValid = await bcrypt.compare(body.WrPassword, user.WrPassword);
@@ -42,7 +41,7 @@ async function signInUserServices(request, fastify) {
         wrToken: '-1', //false //recall
       };
 
-      await createUserLoginInfo(userLoginInfo);
+      await createUserLoginInfo(userLoginInfo,fastify);
 
     }
     catch(e){
@@ -85,10 +84,10 @@ async function signInUserServices(request, fastify) {
     if(!user.WrAllowMultipleLogin){
     //if yes
       //set isloggedin to false, for that given userId 
-      await updateSingleLoginInfoToLogout(user.WrUserId)     
+      await updateSingleLoginInfoToLogout(user.WrUserId,fastify)     
     }
     //create UserLoginInfo entry
-    await createUserLoginInfo(userLoginInfo);
+    await createUserLoginInfo(userLoginInfo,fastify);
 
   return { token };
 }
