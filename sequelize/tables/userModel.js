@@ -31,6 +31,7 @@ module.exports = (sequelize) => {
       type: DataTypes.INTEGER,
       allowNull: false,
       defaultValue: 0,
+      //0: default, 1:Admin, 2:agent, 3:client
       validate: {
         isIn: {
           args: [[0, 1, 2, 3]], // Define valid numbers
@@ -104,14 +105,5 @@ module.exports = (sequelize) => {
     timestamps: false,
   });
 
-
-  sequelize
-  .sync({ alter: true,logging: false  })
-  .then(() => {
-    console.log("Models synchronized with the database.");
-  })
-  .catch((error) => {
-    console.error("Error:", error);
-  });
   return UserModel;
 };
