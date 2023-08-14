@@ -1,10 +1,89 @@
-const TabModel = require('../sequelize/tables/tabsModel')
+const TabModel = require("../sequelize/tables/tabsModel");
 
-async function getTabsQuery(request,fastify) {
-    return await fastify.db.models.tblTab.findAll()
-
+async function countTabsWithSameParent(wrParentId, fastify) {
+  return await fastify.db.models.tblTab.count({
+    where: {
+      wrParentId,
+    },
+  });
 }
 
+async function createTabsQuery(body, fastify) {
+    return await fastify.db.models.tblTab.create(body);
+}
+
+async function encryptTabsQuery(body, fastify) {
+  return await fastify.db.models.tblEncryptedTab.create(body);
+}
+
+async function getTabsQuery( fastify) {
+  return await fastify.db.models.tblEncryptedTab.findAll({
+    attributes:{
+      exclude: ['wrTabId'], 
+    },
+    include: {
+      model: fastify.db.models.tblTab,
+      attributes:{
+        exclude: ['wrTabId'],
+      },
+      where: {
+        wrIsActive: true,
+      },
+    },
+  });
+}
+
+async function deleteTabsQuery(Id, fastify) {
+  return await fastify.db.models.tblEncryptedTab.findAll({
+    where: {
+      wrEncryptedTabId: Id,
+    },
+    include: {
+      model: fastify.db.models.tblTab,
+      as: 'tblTab',
+    },
+  });
+}
+
+async function getSpecificTabsQuery(Id, fastify) {
+  return await fastify.db.models.tblEncryptedTab.findOne({
+    where: {
+      wrEncryptedTabId: Id,
+    },
+    attributes:{
+      exclude: ['wrTabId','id','createdAt','updatedAt'],
+    },
+    include: {
+      model: fastify.db.models.tblTab,
+      attributes:{
+        exclude: ['wrTabId'],
+      },
+      where: {
+        wrIsActive: true,
+      },
+    },
+  });
+}
+
+async function updateSpecificTabQuery(Id, fastify) {
+  return await fastify.db.models.tblEncryptedTab.findAll({
+    where: {
+      wrEncryptedTabId: Id,
+    },
+    include: {
+      model: fastify.db.models.tblTab,
+      as: 'tblTab',
+    },
+  });
+}
+
+
 module.exports = {
-    getTabsQuery
+  countTabsWithSameParent,
+  getTabsQuery,
+  createTabsQuery,
+  encryptTabsQuery,
+  deleteTabsQuery,
+  getSpecificTabsQuery,
+  updateSpecificTabQuery
 };

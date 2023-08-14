@@ -1,11 +1,10 @@
 const { ERROR_CODES, error, success} = require('../../../utilities/index');
-const {getTabsService} = require('../../../services/admin.js')
+const {getTabsService,createTabsService,deleteTabsService,getSpecificTabsService,updateSpecificTabService} = require('../../../services/admin.js')
 
 
-//TODO
 async function createTab(request, reply,fastify) {
   try {
-    const result = await getTabsService(request,fastify);
+    const result = await createTabsService(request,fastify);
     reply.status(200).send(success(result, 200));
   } 
   catch (err) {
@@ -13,7 +12,6 @@ async function createTab(request, reply,fastify) {
   }
 }
 
-//TODO
 async function getTabs(request, reply,fastify) {
   try {
     const result = await getTabsService(request,fastify);
@@ -24,10 +22,9 @@ async function getTabs(request, reply,fastify) {
   }
 }
 
-//TODO
 async function deleteTab(request, reply,fastify) {
   try {
-    const result = await getTabsService(request,fastify);
+    const result = await deleteTabsService(request,fastify);
     reply.status(200).send(success(result, 200));
   } 
   catch (err) {
@@ -38,7 +35,7 @@ async function deleteTab(request, reply,fastify) {
 //TODO
 async function getSpecificTab(request, reply,fastify) {
   try {
-    const result = await getTabsService(request,fastify);
+    const result = await getSpecificTabsService(request,fastify);
     reply.status(200).send(success(result, 200));
   } 
   catch (err) {
@@ -49,7 +46,7 @@ async function getSpecificTab(request, reply,fastify) {
 //TODO
 async function updateSpecificTab(request, reply,fastify) {
   try {
-    const result = await getTabsService(request,fastify);
+    const result = await updateSpecificTabService(request,fastify);
     reply.status(200).send(success(result, 200));
   } 
   catch (err) {
@@ -63,5 +60,6 @@ getTabs,
 createTab,
 deleteTab,
 getSpecificTab,
-updateSpecificTab
+updateSpecificTab,
+deleteTab
 };

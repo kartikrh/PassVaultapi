@@ -38,6 +38,7 @@ To set up and run the project locally, follow these steps:
  *version: 3.0.0*
 - sequelize multicall and multisync problem solved
 - method of quering database changed
+- tabs CRUD api's completed
 
 ## Minor Version
 *version: 1.1.1*
@@ -71,7 +72,7 @@ To set up and run the project locally, follow these steps:
 - authentication error solved
 
 ## Current Version
- *version: 2.1.1*
+ *version: 3.0.0*
 
 
 ## Side Note

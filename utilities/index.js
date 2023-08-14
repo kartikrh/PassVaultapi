@@ -1,4 +1,5 @@
 const uaParser = require('ua-parser-js');
+const crypto = require("crypto");
 
 const ERROR_CODES = {
     INVALID_INPUT: "INVALID_INPUT",
@@ -51,9 +52,25 @@ const deviceInfo = (request) =>{
 
 }
 
+const hashFunction = (value) =>{
+  console.log(value,'..beofre hash..')
+  const hash = crypto.createHash("sha256");
+  hash.update((value.toString()+process.env.SECRET_HASH_KEY_TABID.toString())); // Convert to string before hashing
+  return hash.digest("hex");
+}
+
+const encryptedObject = (value,enVal) =>{
+  return {
+    'wrTabId': value,
+    'wrEncryptedTabId': enVal,
+  }
+}
+
 module.exports={
     ERROR_CODES,
     error,
     success,
-    deviceInfo
+    deviceInfo,
+    hashFunction,
+    encryptedObject
 }

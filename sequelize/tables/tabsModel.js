@@ -26,7 +26,7 @@ module.exports = (sequelize) => {
       allowNull: true,
       validate: {
         isIn: {
-          args: [[1, 2]], //admin: 1; agent: 2;
+          args: [[0, 1, 2]], //invalid:0,admin: 1; agent: 2;
           msg: 'Invalid status value',
         },
       },
