@@ -59,10 +59,7 @@ async function getSpecificTabsQuery(Id, fastify) {
       model: fastify.db.models.tblTab,
       attributes:{
         exclude: ['wrTabId'],
-      },
-      where: {
-        wrIsActive: true,
-      },
+      }
     },
   });
 }

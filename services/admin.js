@@ -67,8 +67,8 @@ async function deleteTabsService(request, fastify) {
 
 async function getSpecificTabsService(request,fastify) {
   const encryptedTabId = request.params.id;
-  const encryptedTabValue = await getSpecificTabsQuery(encryptedTabId, fastify);
-  return {"id":encryptedTabValue.wrEncryptedTabId,...encryptedTabValue.tblTab.toJSON()}
+  const encryptedTabValue = await getSpecificTabsQuery(encryptedTabId, fastify);    
+  return encryptedTabValue?{"id":encryptedTabValue.wrEncryptedTabId,...encryptedTabValue.tblTab.toJSON()}:null
 }
 
 async function updateSpecificTabService(request,fastify) {
