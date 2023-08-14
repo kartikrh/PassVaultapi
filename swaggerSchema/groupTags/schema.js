@@ -52,6 +52,7 @@ Admin = {
       tags: ["Admin"],
       description: "get tabs",
       //security: [{ bearerAuth: [] }],
+
     },
   },
 
@@ -67,7 +68,7 @@ Admin = {
           WrDisplayName: { type: "string" },
           wrDisplayType: { type: "integer", enum: [1, 2] },
           wrWebPage: { type: "string" },
-          wrParentId: { type: "integer" },
+          wrParentId: { type: "string" },
           wrIsActive: { type: "boolean" },
           wrIsAdd: { type: "boolean" },
           wrIsEdit: { type: "boolean" },
@@ -75,8 +76,7 @@ Admin = {
           wrIsView: { type: "boolean" },
           wrAddWebpage: { type: "string" },
           wrIsMenu: { type: "boolean" },
-          wrIconName: { type: "string" },
-          wrDisplayOrder: { type: "integer" },
+          wrIconName: { type: "string" }
         },
       },
     },
@@ -117,8 +117,33 @@ Admin = {
   postById: {
     schema: {
       tags: ["Admin"],
-      description: "post by Id tabs",
+      description: "Update tab by ID",
       //security: [{ bearerAuth: [] }],
+      params: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' }, // Update the data type as per your requirement
+        },
+      },
+      body: {
+        type: "object",
+        properties: {
+          // Define properties for updated fields
+          wrTabName: { type: "string" },
+          WrDisplayName: { type: "string" },
+          wrDisplayType: { type: "integer", enum: [1, 2] },
+          wrWebPage: { type: "string" },
+          wrParentId: { type: "string" },
+          wrIsActive: { type: "boolean" },
+          wrIsAdd: { type: "boolean" },
+          wrIsEdit: { type: "boolean" },
+          wrIsDelete: { type: "boolean" },
+          wrIsView: { type: "boolean" },
+          wrAddWebpage: { type: "string" },
+          wrIsMenu: { type: "boolean" },
+          wrIconName: { type: "string" },
+        },
+      },
     },
   },
 };

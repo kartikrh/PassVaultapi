@@ -38,7 +38,7 @@ module.exports = (sequelize) => {
     },
     //* If it is a parent: 0; if it is below a parent: parentId(wrTabId)
     wrParentId: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.STRING,
       allowNull: true,
     },
     //* If it is still used or no longer used

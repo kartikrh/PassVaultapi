@@ -1,4 +1,3 @@
-const TabModel = require("../sequelize/tables/tabsModel");
 
 async function countTabsWithSameParent(wrParentId, fastify) {
   return await fastify.db.models.tblTab.count({
@@ -16,10 +15,10 @@ async function encryptTabsQuery(body, fastify) {
   return await fastify.db.models.tblEncryptedTab.create(body);
 }
 
-async function getTabsQuery( fastify) {
+async function getTabsQuery(fastify) {
   return await fastify.db.models.tblEncryptedTab.findAll({
     attributes:{
-      exclude: ['wrTabId'], 
+      exclude: ['wrTabId','id','createdAt','updatedAt'], 
     },
     include: {
       model: fastify.db.models.tblTab,
@@ -27,7 +26,7 @@ async function getTabsQuery( fastify) {
         exclude: ['wrTabId'],
       },
       where: {
-        wrIsActive: true,
+        wrIsActive: true
       },
     },
   });
@@ -65,6 +64,7 @@ async function getSpecificTabsQuery(Id, fastify) {
   });
 }
 
+
 async function updateSpecificTabQuery(Id, fastify) {
   return await fastify.db.models.tblEncryptedTab.findAll({
     where: {
@@ -77,6 +77,28 @@ async function updateSpecificTabQuery(Id, fastify) {
   });
 }
 
+async function getTabInfoQuery(Id, fastify) {
+  return await fastify.db.models.tblEncryptedTab.findOne({
+    where: {
+      wrEncryptedTabId: Id,
+    },
+    attributes:{
+      exclude: ['wrTabId','id','createdAt','updatedAt'],
+    },
+    include: {
+      model: fastify.db.models.tblTab,
+    },
+  });
+}
+
+
+async function updateTabQuery(tabId,req, fastify) {
+  return await fastify.db.models.tblTab.update(req.body, {
+    where: { wrTabId: tabId},
+  });
+}
+
+
 
 module.exports = {
   countTabsWithSameParent,
@@ -85,5 +107,7 @@ module.exports = {
   encryptTabsQuery,
   deleteTabsQuery,
   getSpecificTabsQuery,
-  updateSpecificTabQuery
+  updateSpecificTabQuery,
+  getTabInfoQuery,
+  updateTabQuery
 };

@@ -32,7 +32,6 @@ async function deleteTab(request, reply,fastify) {
   }
 }
 
-//TODO
 async function getSpecificTab(request, reply,fastify) {
   try {
     const result = await getSpecificTabsService(request,fastify);
@@ -43,7 +42,6 @@ async function getSpecificTab(request, reply,fastify) {
   }
 }
 
-//TODO
 async function updateSpecificTab(request, reply,fastify) {
   try {
     const result = await updateSpecificTabService(request,fastify);

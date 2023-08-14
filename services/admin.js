@@ -5,8 +5,10 @@ const {
   encryptTabsQuery,
   deleteTabsQuery,
   getSpecificTabsQuery,
-  updateSpecificTabQuery
+  getTabInfoQuery,
+  updateTabQuery
 } = require("../repository/TableTabs.js");
+
 const { tabsValidator } = require("../utilities/validator.js");
 const { hashFunction, encryptedObject } = require("../utilities/index.js");
 
@@ -61,11 +63,15 @@ async function getSpecificTabsService(request,fastify) {
   return {"id":encryptedTabValue.wrEncryptedTabId,...encryptedTabValue.tblTab.toJSON()}
 }
 
-//TODO
 async function updateSpecificTabService(request,fastify) {
-
-
-return 1
+  const  wrEncryptedTabId  = request.params.id;
+  const encryptedTab = await getTabInfoQuery(wrEncryptedTabId, fastify);
+  if(!encryptedTab){
+    throw new Error("missing ID")
+  }
+  const associatedTab = encryptedTab.tblTab;
+  const updateTab = await updateTabQuery(associatedTab.wrTabId,request,fastify);
+  return updateTab;
 } 
 
 
@@ -74,5 +80,6 @@ module.exports = {
   getTabsService,
   deleteTabsService,
   getSpecificTabsService,
-  updateSpecificTabService
+  updateSpecificTabService,
+  updateTabQuery
 };
