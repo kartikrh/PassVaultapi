@@ -1,6 +1,5 @@
 // for test purposes
 const { DataTypes } = require("sequelize");
-const sequelize = require('../../sequelize/config/singleInstance')
 
 module.exports = (sequelize) => {
   const UserModel = sequelize.define('tblUser', {

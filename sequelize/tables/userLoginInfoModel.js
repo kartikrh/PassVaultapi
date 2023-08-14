@@ -1,10 +1,9 @@
 // for test purposes
 const { DataTypes } = require("sequelize");
-const UserModel = require('./userModel')
 
 module.exports = (sequelize) => {
-const UserModel = require('./userModel')(sequelize);
- 
+const UserModel = require('./userModel')(sequelize)
+
 const UserLoginInfoModel = sequelize.define('tblUserLoginInfo', {
   WrID: {
     type: DataTypes.INTEGER,
@@ -55,15 +54,6 @@ const UserLoginInfoModel = sequelize.define('tblUserLoginInfo', {
 UserLoginInfoModel.belongsTo(UserModel, {
   foreignKey: 'WrUserId', // Foreign key in UserLoginInfoModel
   targetKey: 'WrUserId', // Target key in UserModel
-});
-
-sequelize
-.sync({ alter: true,logging: false  })
-.then(() => {
-  console.log("Models synchronized with the database.");
-})
-.catch((error) => {
-  console.error("Error:", error);
 });
 
   return UserLoginInfoModel;

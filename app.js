@@ -5,8 +5,7 @@ const path = require("path");
 const AutoLoad = require("@fastify/autoload");
 const fsequelize = require("fastify-sequelize");
 const dbPg = require("./sequelize/config/config")();
-const sequelize = require("./sequelize/config/sequelizeConfig");
-const cors = require('@fastify/cors');
+const cors = require("@fastify/cors");
 const swagger = require("@fastify/swagger");
 const swaggerUi = require("@fastify/swagger-ui");
 
@@ -14,30 +13,22 @@ const swaggerUi = require("@fastify/swagger-ui");
 module.exports.options = {};
 
 module.exports = async function (fastify, opts) {
-  // Place here your custom code!
   fastify
     .register(fsequelize, {
       ...dbPg,
-      models: ["./sequelize/models/*.js"],
-      instance: "db",
+      instance: "db", // tells the plugin to create a Sequelize instance with the name "db"
+      models: path.join(__dirname, "sequelize", "tables", "userModel.js"),
     })
-    .ready(() => {
-      fastify.db
-        .authenticate()
-        .then(() => {
-          sequelize
-            .sync({ alter: true, logging: false })
-            .then(() => {
-              console.log("Database schema has been altered");
-            })
-            .catch((err) => {
-              console.error("Error while altering database schema:", err);
-            });
-          console.log("Connection has been established successfully.");
-        })
-        .catch((err) => {
-          console.error("Unable to connect to the database:", err);
-        });
+    .after(async () => {
+      require("./sequelize/tables/userModel")(fastify.db);
+      require("./sequelize/tables/userLoginInfoModel")(fastify.db);
+      require("./sequelize/tables/tabsModel")(fastify.db);
+      require("./sequelize/tables/encryptedTabs")(fastify.db);
+      try {
+        await fastify.db.sync();
+      } catch (error) {
+        console.log("error sync with db", error);
+      }
     });
 
   fastify.register(swagger, {
@@ -65,12 +56,12 @@ module.exports = async function (fastify, opts) {
   });
 
   const corsOptions = {
-    origin: 'http://localhost:3001', // Allow requests from localhost
-    methods: ['GET', 'POST'],    // HTTP methods allowed
+    origin: "http://localhost:3001", // Allow requests from localhost
+    methods: ["GET", "POST"], // HTTP methods allowed
   };
-// Register the CORS plugin
-fastify.register(cors, corsOptions);
-  
+  // Register the CORS plugin
+  fastify.register(cors, corsOptions);
+
   // Do not touch the following lines
 
   // This loads all plugins defined in plugins

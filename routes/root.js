@@ -13,10 +13,4 @@ module.exports = async function (fastify, opts) {
     schema: Auth.signIn.schema,
     handler: (request, reply) => signInUser(request, reply, fastify),
   });
-  fastify.get("/dashboard", {
-    schema: User.schema,
-    preHandler: (request, reply, fastify) => authorize(request, reply, fastify),
-    handler: (request, reply) =>
-      reply.status(200).send({ hello: request.userTokenInfo }),
-  });
 };
