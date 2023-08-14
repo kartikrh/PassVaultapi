@@ -6,7 +6,8 @@ const {
   deleteTabsQuery,
   getSpecificTabsQuery,
   getTabInfoQuery,
-  updateTabQuery
+  updateTabQuery,
+  inactiveTabsQuery
 } = require("../repository/TableTabs.js");
 
 const { tabsValidator } = require("../utilities/validator.js");
@@ -14,6 +15,7 @@ const { hashFunction, encryptedObject } = require("../utilities/index.js");
 
 async function createTabsService(request, fastify) {
   const body = tabsValidator(request.body);
+
 
   const tabsWithSameParent = await countTabsWithSameParent(
     body.wrParentId,
@@ -36,11 +38,17 @@ async function createTabsService(request, fastify) {
 }
 
 async function getTabsService(request, fastify) {
-  const tabList = await getTabsQuery(fastify);
-  return { tabList };
+    const inactiveTabs = await inactiveTabsQuery(fastify);
+
+    const wrEncryptedTabIds = inactiveTabs.map(tab => tab.wrEncryptedTabId);
+
+    const tabList = await getTabsQuery(wrEncryptedTabIds,fastify);
+  
+    return { tabList };
 }
 
 async function deleteTabsService(request, fastify) {
+
   const encryptedTabIds = request.body.encryptedTabIds;
 
   for (const encryptedTabId of encryptedTabIds) {
