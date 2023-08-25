@@ -24,6 +24,8 @@ module.exports = async function (fastify, opts) {
       require("./sequelize/tables/userLoginInfoModel")(fastify.db);
       require("./sequelize/tables/tabsModel")(fastify.db);
       require("./sequelize/tables/encryptedTabs")(fastify.db);
+      require("./sequelize/tables/roleModel")(fastify.db);
+      require("./sequelize/tables/encryptionData")(fastify.db);
       try {
         await fastify.db.sync();
       } catch (error) {

@@ -1,24 +1,23 @@
+const tabsValidator = (body) => {
+  return {
+    wrTabName: body?.tabName || null,
+    WrDisplayName: body?.displayName || null,
+    wrDisplayType:
+      body?.displayType > 0 && body?.displayType < 3 ? body.displayType : 0,
+    wrWebPage: body?.webPage || null,
+    wrParentId: body?.parentId || 0,
+    wrIsActive: body?.isActive || true,
+    wrIsAdd: body?.isAdd || null,
+    wrIsEdit: body?.isEdit || null,
+    wrIsDelete: body?.isDelete || null,
+    wrIsView: body?.isView || true,
+    wrAddWebpage: body?.addWebpage || null,
+    wrIsMenu: body?.isMenu || null,
+    wrIconName: body?.iconName || null,
+    wrDisplayOrder: body?.displayOrder || null,
+  };
+};
 
-const tabsValidator = (body) =>{
-    return {
-        'wrTabName': body?.wrTabName || null,
-        'WrDisplayName': body?.WrDisplayName || null,
-        'wrDisplayType': (body?.wrDisplayType>0&&body?.wrDisplayType<3)?body.wrDisplayType: 0,
-        'wrWebPage': body?.wrWebPage || null,
-        'wrParentId': body?.wrParentId || 0,
-        'wrIsActive': body?.wrIsActive || true,
-        'wrIsAdd': body?.wrIsAdd || null,
-        'wrIsEdit': body?.wrIsEdit || null,
-        'wrIsDelete': body?.wrIsDelete || null,
-        'wrIsView': body?.wrIsView || true,
-        'wrAddWebpage': body?.wrAddWebpage || null,
-        'wrIsMenu': body?.wrIsMenu || null,
-        'wrIconName': body?.wrIconName || null,
-        'wrDisplayOrder': body?.wrDisplayOrder || null
-    };
-    
-}
-
-module.exports={
-    tabsValidator
-}
+module.exports = {
+  tabsValidator,
+};

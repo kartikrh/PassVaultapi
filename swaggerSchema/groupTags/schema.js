@@ -44,15 +44,28 @@ const Auth = {
       },
     },
   },
+  encryption: {
+    schema: {
+      tags: ["Auth"],
+      description: "Generate Encryption Data",
+      body: {
+        type: "object",
+        properties: {
+          length: { type: "string" },
+        },
+        required: ["length"],
+      },
+    },
+  },
 };
 
-Admin = {
+const Admin = {
+  //all tabs related schema
   getTabs: {
     schema: {
       tags: ["Admin"],
       description: "get tabs",
       //security: [{ bearerAuth: [] }],
-
     },
   },
 
@@ -64,19 +77,19 @@ Admin = {
       body: {
         type: "object",
         properties: {
-          wrTabName: { type: "string" },
-          WrDisplayName: { type: "string" },
-          wrDisplayType: { type: "integer", enum: [1, 2] },
-          wrWebPage: { type: "string" },
-          wrParentId: { type: "string" },
-          wrIsActive: { type: "boolean" },
-          wrIsAdd: { type: "boolean" },
-          wrIsEdit: { type: "boolean" },
-          wrIsDelete: { type: "boolean" },
-          wrIsView: { type: "boolean" },
-          wrAddWebpage: { type: "string" },
-          wrIsMenu: { type: "boolean" },
-          wrIconName: { type: "string" }
+          tabName: { type: "string" },
+          displayName: { type: "string" },
+          displayType: { type: "integer", enum: [1, 2] },
+          webPage: { type: "string" },
+          parentId: { type: "string" },
+          isActive: { type: "boolean" },
+          isAdd: { type: "boolean" },
+          isEdit: { type: "boolean" },
+          isDelete: { type: "boolean" },
+          isView: { type: "boolean" },
+          addWebpage: { type: "string" },
+          isMenu: { type: "boolean" },
+          iconName: { type: "string" },
         },
       },
     },
@@ -96,21 +109,22 @@ Admin = {
           },
         },
         required: ["encryptedTabIds"],
+      },
     },
   },
-},
 
   getById: {
     schema: {
       tags: ["Admin"],
       description: "get by Id tabs",
       //security: [{ bearerAuth: [] }],
-      params: {
-        type: 'object',
+      body: {
+        type: "object",
         properties: {
-          id: { type: 'string' },
+          id: { type: "string" },
         },
       },
+      required: ["id"],
     },
   },
 
@@ -119,30 +133,91 @@ Admin = {
       tags: ["Admin"],
       description: "Update tab by ID",
       //security: [{ bearerAuth: [] }],
-      params: {
-        type: 'object',
-        properties: {
-          id: { type: 'string' }, // Update the data type as per your requirement
-        },
-      },
       body: {
         type: "object",
         properties: {
           // Define properties for updated fields
-          wrTabName: { type: "string" },
-          WrDisplayName: { type: "string" },
-          wrDisplayType: { type: "integer", enum: [1, 2] },
-          wrWebPage: { type: "string" },
-          wrParentId: { type: "string" },
-          wrIsActive: { type: "boolean" },
-          wrIsAdd: { type: "boolean" },
-          wrIsEdit: { type: "boolean" },
-          wrIsDelete: { type: "boolean" },
-          wrIsView: { type: "boolean" },
-          wrAddWebpage: { type: "string" },
-          wrIsMenu: { type: "boolean" },
-          wrIconName: { type: "string" },
+          id: { type: "string" },
+          tabName: { type: "string" },
+          displayName: { type: "string" },
+          displayType: { type: "integer", enum: [1, 2] },
+          webPage: { type: "string" },
+          parentId: { type: "string" },
+          isActive: { type: "boolean" },
+          isAdd: { type: "boolean" },
+          isEdit: { type: "boolean" },
+          isDelete: { type: "boolean" },
+          isView: { type: "boolean" },
+          addWebpage: { type: "string" },
+          isMenu: { type: "boolean" },
+          iconName: { type: "string" },
         },
+      },
+    },
+  },
+
+  getByDisplayType: {
+    schema: {
+      tags: ["Admin"],
+      description: "get by Display type",
+      //security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          displayType: {
+            type: "integer",
+            enum: [1, 2], // Allowable values
+          },
+        },
+        required: ["displayType"], // Required property
+      },
+    },
+  },
+};
+
+const Role = {
+  //all roles related schema
+  getRoles: {
+    schema: {
+      tags: ["Role"],
+      description: "get roles",
+      //security: [{ bearerAuth: [] }],
+    },
+  },
+
+  getByDisplayType: {
+    schema: {
+      tags: ["Role"],
+      description: "get roles by display type",
+      //security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          displayType: {
+            type: "integer",
+            enum: [1, 2], // Allowable values
+          },
+        },
+        required: ["displayType"], // Required property
+      },
+    },
+  },
+
+  deleteTabs: {
+    schema: {
+      tags: ["Role"],
+      description: "Deactivate tabs by encrypted Role IDs",
+      //security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          roleIds: {
+            type: "array",
+            items: { type: "string" },
+            minItems: 1,
+          },
+        },
+        required: ["roleIds"],
       },
     },
   },
@@ -151,4 +226,5 @@ Admin = {
 module.exports = {
   Auth,
   Admin,
+  Role,
 };

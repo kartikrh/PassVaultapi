@@ -1,87 +1,97 @@
 const {
   getTabsQuery,
   createTabsQuery,
-  countTabsWithSameParent,
   encryptTabsQuery,
   deleteTabsQuery,
   getSpecificTabsQuery,
   getTabInfoQuery,
   updateTabQuery,
-  inactiveTabsQuery
+  getDisplayTabsQuery,
+  hasAssociatedChildern,
 } = require("../repository/TableTabs.js");
 
 const { tabsValidator } = require("../utilities/validator.js");
-const { hashFunction, encryptedObject } = require("../utilities/index.js");
+const { encrypt } = require("../utilities/index.js");
 
 async function createTabsService(request, fastify) {
   const body = tabsValidator(request.body);
 
-
-  const tabsWithSameParent = await countTabsWithSameParent(
-    body.wrParentId,
-    fastify
-  );
-
-  body.wrDisplayOrder = tabsWithSameParent + 1;
-
   const createdTab = await createTabsQuery(body, fastify);
 
-  const encryptedId = hashFunction(createdTab.wrTabId);
+  const encryptedId = encrypt(createdTab.tabId.toString());
 
-  const encryptedObj = encryptedObject(createdTab.wrTabId, encryptedId);
+  let dataToInsert = {
+    wrTabId: createdTab.tabId,
+    wrEncryptedTabId: encryptedId,
+  };
 
-  const encrtptedData = await encryptTabsQuery(encryptedObj, fastify);
+  await encryptTabsQuery(dataToInsert, fastify);
 
-  createdTab.dataValues.wrTabId = encrtptedData.wrEncryptedTabId;
+  createdTab.tabId = encryptedId;
 
-  return { createdTab };
+  return createdTab;
 }
 
 async function getTabsService(request, fastify) {
-    const inactiveTabs = await inactiveTabsQuery(fastify);
+  const tabList = await getTabsQuery(fastify);
 
-    const wrEncryptedTabIds = inactiveTabs.map(tab => tab.wrEncryptedTabId);
-
-    const tabList = await getTabsQuery(wrEncryptedTabIds,fastify);
-  
-    return { tabList };
+  return tabList;
 }
 
 async function deleteTabsService(request, fastify) {
-
   const encryptedTabIds = request.body.encryptedTabIds;
 
+  let idWithChildern = [];
+
   for (const encryptedTabId of encryptedTabIds) {
+    console.log("🚀 ~ encryptedTabId:", encryptedTabId);
+    const hasChildern = await hasAssociatedChildern(encryptedTabId, fastify);
+    console.log("🚀 ~ hasChildern:", hasChildern);
 
-    const encryptedTabValue = await deleteTabsQuery(encryptedTabId, fastify);
-
-    if (encryptedTabValue[0].tblTab?.wrIsActive) {
-
-      encryptedTabValue[0].tblTab.wrIsActive = false;
-
-      await encryptedTabValue[0].tblTab.save();
+    if (hasChildern.length) {
+      idWithChildern.push(hasChildern[0].wrTabName);
+    } else {
+      await deleteTabsQuery(encryptedTabId, fastify);
     }
   }
-  return 1;
-}
 
-async function getSpecificTabsService(request,fastify) {
-  const encryptedTabId = request.params.id;
-  const encryptedTabValue = await getSpecificTabsQuery(encryptedTabId, fastify);    
-  return encryptedTabValue?{"id":encryptedTabValue.wrEncryptedTabId,...encryptedTabValue.tblTab.toJSON()}:null
-}
-
-async function updateSpecificTabService(request,fastify) {
-  const  wrEncryptedTabId  = request.params.id;
-  const encryptedTab = await getTabInfoQuery(wrEncryptedTabId, fastify);
-  if(!encryptedTab){
-    throw new Error("missing ID")
+  if (idWithChildern.length) {
+    return `Tab(s) with name(s) ${idWithChildern.join(
+      ","
+    )} has associated childern , skiped from deletion`;
+  } else {
+    return `Tab(s) deleted successfully`;
   }
-  const associatedTab = encryptedTab.tblTab;
-  const updateTab = await updateTabQuery(associatedTab.wrTabId,request,fastify);
-  return updateTab;
-} 
+}
 
+async function getSpecificTabsService(request, fastify) {
+  const { id } = request.body;
+  const data = await getSpecificTabsQuery(id, fastify);
+  return data || null;
+}
+
+async function updateSpecificTabService(request, fastify) {
+  const { id } = request.body;
+
+  const checkDataById = await getTabInfoQuery(id, fastify);
+
+  if (!checkDataById) {
+    throw new Error("No Tabs Found for this Id");
+  }
+
+  const updateTab = await updateTabQuery(
+    checkDataById.wrTabId,
+    request,
+    fastify
+  );
+  return { ...updateTab, tabId: id };
+}
+
+async function getDisplayTabsService(request, fastify) {
+  const { displayType } = request.body;
+  const tabList = await getDisplayTabsQuery(displayType, fastify);
+  return tabList;
+}
 
 module.exports = {
   createTabsService,
@@ -89,5 +99,6 @@ module.exports = {
   deleteTabsService,
   getSpecificTabsService,
   updateSpecificTabService,
-  updateTabQuery
+  updateTabQuery,
+  getDisplayTabsService,
 };
