@@ -31,7 +31,8 @@
     "jsonwebtoken": "^9.0.1",
     "pg": "^8.11.3",
     "sequelize": "^6.32.1",
-    "ua-parser-js": "^1.0.35"
+    "ua-parser-js": "^1.0.35",
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
     "tap": "^16.1.0"

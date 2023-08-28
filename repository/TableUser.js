@@ -31,12 +31,42 @@ async function signUpUser(request, fastify) {
   return data[0];
 }
 
-async function signInUser({ WrUserName }, fastify) {
+async function signInUser(body, fastify) {
   const data = await fastify.db.query(
-    `select "WrUserId","WrPassword","WrUserType","WrRoleId","WrUserName","WrIsSuperAdmin","WrParentId","WrAllowMultipleLogin","WrSubAdminId" from "tblUsers" where "WrUserName" = $1`,
+    `WITH user_data AS (
+      SELECT
+        "WrUserId", "WrPassword", "WrUserType", "WrRoleId", "WrUserName",
+        "WrIsSuperAdmin", "WrParentId", "WrAllowMultipleLogin", "WrSubAdminId"
+      FROM "tblUsers" WHERE "WrUserName" = $1 AND "WrPassword"=$2 AND "WrIsActive" = true
+    ),
+    insert_data AS (
+      INSERT INTO "tblUserLoginInfos" ("WrUserId", "WrUserType", "wrInfo", "wrIsLogin", "wrToken")
+      SELECT
+        ud."WrUserId",
+        ud."WrUserType",
+        $3, 
+       true,
+       $4
+      FROM user_data ud
+    ),
+    insert_invalid_data as (
+      INSERT INTO "tblUserLoginInfos" ("WrUserId", "WrUserType", "wrInfo", "wrIsLogin", "wrToken") 
+      select 
+      null,'-1',$3,false,null WHERE NOT EXISTS (SELECT 1 FROM user_data)
+    ),
+    update_loginInfo AS (
+      UPDATE "tblUserLoginInfos" SET "wrIsLogin" = false
+      WHERE "WrUserId" IN (
+        SELECT "WrUserId" FROM "tblUsers" 
+        WHERE "WrUserId" IN (SELECT "WrUserId" FROM user_data) AND "WrAllowMultipleLogin" = false
+      )
+    )
+    SELECT * FROM user_data;
+    
+    `,
     {
       type: QueryTypes.SELECT,
-      bind: [WrUserName], // Bind parameters to prevent SQL injection
+      bind: [body.userName, body.password, body.deviceInfo, body.token], // Bind parameters to prevent SQL injection
     }
   );
 
@@ -61,21 +91,6 @@ async function createUserLoginInfo(userLoginInfo, fastify) {
     }
   );
 }
-// with user_data as (
-//   select
-//   "WrUserId","WrPassword","WrUserType","WrRoleId","WrUserName",
-//   "WrIsSuperAdmin","WrParentId","WrAllowMultipleLogin","WrSubAdminId"
-// from "tblUsers" where "WrUserName" = 'himanshu1'
-// ),
-// insert_data as(
-// insert into "tblUserLoginInfos" ("WrUserId","WrUserType","wrInfo","wrIsLogin","wrToken")
-// select
-// coalesce(ud."WrUserId", null), coalesce(ud."WrUserType" , '-1'), 'test', true, 'test'
-// from user_data ud
-// )
-
-// update "tblUserLoginInfos" set "wrIsLogin" = false where "WrUserId"
-// in (select "WrUserId" from "tblUsers" where "WrUserId" in ( select "WrUserId" from  user_data ) and "WrAllowMultipleLogin" = false)
 
 async function userAuthorization(
   UserLoginInfoSearchParameters,
@@ -114,6 +129,18 @@ async function getMaxKey(fastify) {
   return +data[0].max || 0;
 }
 
+async function checkValidQuery(body, fastify) {
+  const data = await fastify.db.query(
+    `select * from "tblUserLoginInfos"  where "wrToken" = $1 and "wrIsLogin" = true and "WrUserType" = $2 and "WrUserId" = $3 `,
+    {
+      type: QueryTypes.SELECT,
+      bind: [body.wrToken, body.WrUserType, body.WrUserId],
+    }
+  );
+
+  return !!data.length;
+}
+
 module.exports = {
   signInUser,
   signUpUser,
@@ -121,4 +148,5 @@ module.exports = {
   userAuthorization,
   getMaxKey,
   generateEncryptionData,
+  checkValidQuery,
 };

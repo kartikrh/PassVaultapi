@@ -57,6 +57,19 @@ const Auth = {
       },
     },
   },
+  validateUser: {
+    schema: {
+      tags: ["Auth"],
+      description: "Validate User",
+      headers: {
+        type: "object",
+        properties: {
+          Authorization: { type: "string" },
+        },
+        required: ["Authorization"],
+      },
+    },
+  },
 };
 
 const Admin = {
