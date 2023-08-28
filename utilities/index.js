@@ -1,76 +1,99 @@
-const uaParser = require('ua-parser-js');
+const uaParser = require("ua-parser-js");
 const crypto = require("crypto");
 
 const ERROR_CODES = {
-    INVALID_INPUT: "INVALID_INPUT",
-    SERVER_ERROR: "SERVER_ERROR",
-    AUTH_ERROR: "AUTH_ERROR",
-    INVALID_TOKEN:"INVALID_TOKEN"
+  INVALID_INPUT: "INVALID_INPUT",
+  SERVER_ERROR: "SERVER_ERROR",
+  AUTH_ERROR: "AUTH_ERROR",
+  INVALID_TOKEN: "INVALID_TOKEN",
 };
 
 // Function to generate an error response object
-const error=(message, errorCode, status) =>{
-    return {
-        success: false,
-        status: status,
-        error: {
-            code: errorCode,
-            message: message
-        }
-    };
-}
+const error = (message, errorCode, status) => {
+  return {
+    success: false,
+    status: status,
+    error: {
+      code: errorCode,
+      message: message || "Internal Server Error",
+    },
+  };
+};
 
 // Function to generate a success response object
-const success=(result, status)=> {
-    return {
-        success: true,
-        status: status,
-        result: result,
-    };
-}
-
-const deviceInfo = (request) =>{
-  const parsedUA =uaParser(request.headers['user-agent']);
-    return JSON.stringify({
-        'browserInfo':{
-          ip: request.ip,
-          browser: {
-            name: parsedUA.browser.name,
-            version: parsedUA.browser.version,
-          },
-          os: {
-            name: parsedUA.os.name,
-            version: parsedUA.os.version,
-          },
-          device: {
-            model: parsedUA.device.model,
-            type: parsedUA.device.type,
-            vendor: parsedUA.device.vendor,
-          },
-        }
-    })
-
-}
-
-const hashFunction = (value) =>{
-  console.log(value,'..beofre hash..')
-  const hash = crypto.createHash("sha256");
-  hash.update((value.toString()+process.env.SECRET_HASH_KEY_TABID.toString())); // Convert to string before hashing
-  return hash.digest("hex");
-}
-
-const encryptedObject = (value,enVal) =>{
+const success = (result, status) => {
   return {
-    'wrTabId': value,
-    'wrEncryptedTabId': enVal,
-  }
+    success: true,
+    status: status,
+    result: result,
+  };
+};
+
+const deviceInfo = (request) => {
+  const parsedUA = uaParser(request.headers["user-agent"]);
+  return JSON.stringify({
+    browserInfo: {
+      ip: request.ip,
+      browser: {
+        name: parsedUA.browser.name,
+        version: parsedUA.browser.version,
+      },
+      os: {
+        name: parsedUA.os.name,
+        version: parsedUA.os.version,
+      },
+      device: {
+        model: parsedUA.device.model,
+        type: parsedUA.device.type,
+        vendor: parsedUA.device.vendor,
+      },
+    },
+  });
+};
+
+const hashFunction = (value) => {
+  const hash = crypto.createHash("sha256");
+  hash.update(value.toString() + process.env.SECRET_HASH_KEY_TABID.toString()); // Convert to string before hashing
+  return hash.digest("hex");
+};
+
+const encryptedObject = (value, enVal) => {
+  return {
+    wrTabId: value,
+    wrEncryptedTabId: enVal,
+  };
+};
+
+const convertStringToBuffer = (str) => {
+  const buf = Buffer.alloc(32); // 256-bit buffer
+  buf.write(str, "utf-8"); // Fill buffer with string
+  return buf;
+};
+
+const key = convertStringToBuffer(process.env.ENCRYPTION_KEY); // 256-bit key for AES-256
+const algorithm = "aes-256-ecb"; // ECB mode (not recommended for most cases)
+
+function encrypt(input) {
+  const cipher = crypto.createCipheriv(algorithm, key, Buffer.alloc(0)); // Using ECB mode, so IV is empty
+  let encrypted = cipher.update(input, "utf-8", "hex");
+  encrypted += cipher.final("hex");
+  return encrypted;
 }
 
-module.exports={
-    ERROR_CODES,
-    error,
-    success,
-    deviceInfo,
-    hashFunction,
-    encryptedObject
+function decrypt(encrypted) {
+  const decipher = crypto.createDecipheriv(algorithm, key, Buffer.alloc(0)); // Using ECB mode, so IV is empty
+  let decrypted = decipher.update(encrypted, "hex", "utf-8");
+  decrypted += decipher.final("utf-8");
+  return decrypted;
 }
+
+module.exports = {
+  ERROR_CODES,
+  error,
+  success,
+  deviceInfo,
+  hashFunction,
+  encryptedObject,
+  encrypt,
+  decrypt,
+};

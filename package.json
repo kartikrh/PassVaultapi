@@ -10,7 +10,7 @@
     "test": "tap \"test/**/*.test.js\"",
     "start": "fastify start -l info app.js",
     "info": "fastify print-routes ./routes/root.js",
-    "dev": "fastify start -w -l info -P app.js"
+    "dev": "fastify start -w  app.js"
   },
   "keywords": [],
   "author": "",
@@ -29,9 +29,10 @@
     "fastify-plugin": "^4.0.0",
     "fastify-sequelize": "^1.0.4",
     "jsonwebtoken": "^9.0.1",
-    "pg": "^8.11.2",
+    "pg": "^8.11.3",
     "sequelize": "^6.32.1",
-    "ua-parser-js": "^1.0.35"
+    "ua-parser-js": "^1.0.35",
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
     "tap": "^16.1.0"
