@@ -3,6 +3,8 @@ const {
   valideRoleId,
   deleteRoleQuery,
   roleByDisplayTypeQuery,
+  createRoleQuery,
+  updateOrCreatePermissionQuery,
 } = require("../repository/TableRoles");
 
 const allRolesService = async (fastify) => {
@@ -14,6 +16,26 @@ const roleByDisplayTypeService = async (request, fastify) => {
   const { displayType } = request.body;
   const result = await roleByDisplayTypeQuery(displayType, fastify);
   return result;
+};
+
+const roleCreateService = async (request, fastify) => {
+  let role_id = request.body.roleId;
+
+  if (request.body.roleId === "0") {
+    const createRole = await createRoleQuery(request.body, fastify);
+    role_id = createRole.roleId;
+  }
+
+  request.body.permissions = request.body.permissions.map((item) => {
+    return {
+      roleId: role_id,
+      ...item,
+    };
+  });
+
+  await updateOrCreatePermissionQuery(request.body, fastify);
+
+  return "Role successfully updated";
 };
 
 const deleteRoleService = async (request, fastify) => {
@@ -44,4 +66,5 @@ module.exports = {
   allRolesService,
   deleteRoleService,
   roleByDisplayTypeService,
+  roleCreateService,
 };

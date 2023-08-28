@@ -1,4 +1,4 @@
-const { ERROR_CODES, error, success } = require("../../../utilities/index");
+const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const {
   getTabsService,
   createTabsService,
@@ -6,7 +6,7 @@ const {
   getSpecificTabsService,
   updateSpecificTabService,
   getDisplayTabsService,
-} = require("../../../services/admin.js");
+} = require("../../../../services/admin.js");
 
 async function createTab(request, reply, fastify) {
   try {
@@ -15,7 +15,13 @@ async function createTab(request, reply, fastify) {
   } catch (err) {
     reply
       .status(500)
-      .send(error("Internal server error", ERROR_CODES.SERVER_ERROR, 500));
+      .send(
+        error(
+          err.message || "Internal server error",
+          ERROR_CODES.SERVER_ERROR,
+          500
+        )
+      );
   }
 }
 
@@ -48,7 +54,13 @@ async function deleteTab(request, reply, fastify) {
   } catch (err) {
     reply
       .status(500)
-      .send(error("Internal server error", ERROR_CODES.SERVER_ERROR, 500));
+      .send(
+        error(
+          err.message || "Internal server error",
+          ERROR_CODES.SERVER_ERROR,
+          500
+        )
+      );
   }
 }
 

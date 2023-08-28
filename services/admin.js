@@ -1,7 +1,6 @@
 const {
   getTabsQuery,
   createTabsQuery,
-  encryptTabsQuery,
   deleteTabsQuery,
   getSpecificTabsQuery,
   getTabInfoQuery,
@@ -11,23 +10,11 @@ const {
 } = require("../repository/TableTabs.js");
 
 const { tabsValidator } = require("../utilities/validator.js");
-const { encrypt } = require("../utilities/index.js");
 
 async function createTabsService(request, fastify) {
   const body = tabsValidator(request.body);
 
   const createdTab = await createTabsQuery(body, fastify);
-
-  const encryptedId = encrypt(createdTab.tabId.toString());
-
-  let dataToInsert = {
-    wrTabId: createdTab.tabId,
-    wrEncryptedTabId: encryptedId,
-  };
-
-  await encryptTabsQuery(dataToInsert, fastify);
-
-  createdTab.tabId = encryptedId;
 
   return createdTab;
 }
@@ -44,9 +31,7 @@ async function deleteTabsService(request, fastify) {
   let idWithChildern = [];
 
   for (const encryptedTabId of encryptedTabIds) {
-    console.log("🚀 ~ encryptedTabId:", encryptedTabId);
     const hasChildern = await hasAssociatedChildern(encryptedTabId, fastify);
-    console.log("🚀 ~ hasChildern:", hasChildern);
 
     if (hasChildern.length) {
       idWithChildern.push(hasChildern[0].wrTabName);

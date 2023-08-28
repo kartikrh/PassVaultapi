@@ -3,10 +3,14 @@ async function createTabsQuery(body, fastify) {
     `
       with count_parent as (
         select count(*) as count from "tblTabs" where "wrParentId" = $5
+      ),
+      add_data as (
+        INSERT INTO "tblTabs" ("wrTabName", "WrDisplayName", "wrDisplayType", "wrWebPage", "wrParentId", "wrIsActive", "wrIsAdd", "wrIsEdit", "wrIsDelete", "wrIsView", "wrAddWebpage", "wrIsMenu", "wrIconName", "wrDisplayOrder")
+        select $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13, (select count from count_parent)+1 returning * 
       )
-      INSERT INTO "tblTabs" ("wrTabName", "WrDisplayName", "wrDisplayType", "wrWebPage", "wrParentId", "wrIsActive", "wrIsAdd", "wrIsEdit", "wrIsDelete", "wrIsView", "wrAddWebpage", "wrIsMenu", "wrIconName", "wrDisplayOrder")
-      select $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13, (select count from count_parent)+1 returning 
-      "wrTabId" as "tabId",
+
+      select
+      et."wrValue" as "tabId",
       "wrTabName" as "tabName",
       "WrDisplayName" as  "displayName",
       "wrDisplayType" as "displayType",
@@ -20,7 +24,9 @@ async function createTabsQuery(body, fastify) {
       "wrAddWebpage" as "addWebpage",
       "wrIsMenu" as "isMenu",
       "wrIconName" as "iconName",
-      "wrDisplayOrder" as "displayOrder"`,
+      "wrDisplayOrder" as "displayOrder"
+      from add_data a inner join "tblEncryptedData" et on a."wrTabId"=et."wrKey"
+     `,
     {
       type: fastify.db.Sequelize.QueryTypes.SELECT,
       bind: [
@@ -44,21 +50,11 @@ async function createTabsQuery(body, fastify) {
   return data[0];
 }
 
-async function encryptTabsQuery(body, fastify) {
-  await fastify.db.query(
-    `INSERT INTO "tblEncryptedTabs" ("wrTabId", "wrEncryptedTabId","createdAt","updatedAt") VALUES ($1, $2,$3,$3)`,
-    {
-      type: fastify.db.Sequelize.QueryTypes.INSERT,
-      bind: [body.wrTabId, body.wrEncryptedTabId, new Date()],
-    }
-  );
-}
-
 async function getTabsQuery(fastify) {
   return await fastify.db.query(
     `with disable_tab as (
-      select et."wrEncryptedTabId" from "tblEncryptedTabs" et
-       left join "tblTabs" t on  t."wrTabId" = et."wrTabId" where "wrIsActive" = false
+      select et."wrValue" from "tblEncryptedData" et
+       left join "tblTabs" t on  t."wrTabId" = et."wrKey" where "wrIsActive" = false
      )
      SELECT 
            t."wrTabName" as "tabName",
@@ -75,8 +71,8 @@ async function getTabsQuery(fastify) {
            t."wrIsMenu" as "isMenu",
            t."wrIconName" as "iconName",
            t."wrDisplayOrder" as "displayOrder",
-           et."wrEncryptedTabId" as "encryptedTabId"
-           from "tblTabs" t left join "tblEncryptedTabs" et on t."wrTabId"=et."wrTabId"  where t."wrIsActive" = true 
+           et."wrValue" as "encryptedTabId"
+           from "tblTabs" t inner join "tblEncryptedData" et on t."wrTabId"=et."wrKey"  where t."wrIsActive" = true 
          and t."wrParentId" not in ( select * from disable_tab)`,
     {
       type: fastify.db.Sequelize.QueryTypes.SELECT,
@@ -86,25 +82,30 @@ async function getTabsQuery(fastify) {
 
 async function getDisplayTabsQuery(type, fastify) {
   return await fastify.db.query(
-    `SELECT 
-      t."wrTabName" as "tabName",
-      t."WrDisplayName" as  "displayName",
-      t."wrDisplayType" as "displayType",
-      t."wrWebPage" as "webPage",
-      t."wrParentId" as "parentId",
-      t."wrIsActive" as "isActive",
-      t."wrIsAdd" as "isAdd",
-      t."wrIsEdit" as "isEdit",
-      t."wrIsDelete" as "isDelete",
-      t."wrIsView" as "isView",
-      t."wrAddWebpage" as "addWebpage",
-      t."wrIsMenu" as "isMenu",
-      t."wrIconName" as "iconName",
-      t."wrDisplayOrder" as "displayOrder",
-      et."wrEncryptedTabId" as "encryptedTabId"
-      from "tblTabs" t left join "tblEncryptedTabs" et on t."wrTabId"=et."wrTabId"  where t."wrIsActive" = true
-      and t."wrDisplayType" = $1
-       and t."wrParentId" not in (SELECT "wrEncryptedTabId" from "tblEncryptedTabs" where t."wrIsActive" = false )`,
+    `with disable_tab as (
+      select et."wrValue" from "tblEncryptedData" et
+       left join "tblTabs" t on  t."wrTabId" = et."wrKey" where "wrIsActive" = false
+     )
+     SELECT 
+           t."wrTabName" as "tabName",
+           t."WrDisplayName" as  "displayName",
+           t."wrDisplayType" as "displayType",
+           t."wrWebPage" as "webPage",
+           t."wrParentId" as "parentId",
+           t."wrIsActive" as "isActive",
+           t."wrIsAdd" as "isAdd",
+           t."wrIsEdit" as "isEdit",
+           t."wrIsDelete" as "isDelete",
+           t."wrIsView" as "isView",
+           t."wrAddWebpage" as "addWebpage",
+           t."wrIsMenu" as "isMenu",
+           t."wrIconName" as "iconName",
+           t."wrDisplayOrder" as "displayOrder",
+           et."wrValue" as "encryptedTabId"
+           from "tblTabs" t inner join "tblEncryptedData" et on t."wrTabId"=et."wrKey"  where t."wrIsActive" = true 
+         and t."wrParentId" not in ( select * from disable_tab)
+         and t."wrDisplayType" = $1
+         `,
     {
       type: fastify.db.Sequelize.QueryTypes.SELECT,
       bind: [type],
@@ -116,12 +117,12 @@ async function hasAssociatedChildern(Id, fastify) {
   const data = await fastify.db.query(
     `with table_data as (
       SELECT * from "tblTabs"
-       t left join "tblEncryptedTabs" et 
-       on t."wrTabId"=et."wrTabId" where "wrParentId" = $1 and "wrIsActive" = true
+       t inner join "tblEncryptedData" et 
+       on t."wrTabId"=et."wrKey" where "wrParentId" = $1 and "wrIsActive" = true
      )
-     select "tblTabs"."wrTabName" from "tblEncryptedTabs"
-     left join "tblTabs" on "tblTabs"."wrTabId"="tblEncryptedTabs"."wrTabId" where 
-     "wrEncryptedTabId" in (select "wrParentId" from table_data )`,
+     select "tblTabs"."wrTabName" from "tblEncryptedData"
+     inner join "tblTabs" on "tblTabs"."wrTabId"="tblEncryptedData"."wrKey" where 
+     "wrValue" in (select "wrParentId" from table_data )`,
     {
       type: fastify.db.Sequelize.QueryTypes.SELECT,
       bind: [Id],
@@ -135,10 +136,10 @@ async function deleteTabsQuery(Id, fastify) {
   await fastify.db.query(
     `
     with tab_id as (
-      select "wrTabId" from "tblEncryptedTabs" where "wrEncryptedTabId" = $1
+      select "wrKey" from "tblEncryptedData" where "wrValue" = $1
     )
 
-    update "tblTabs" set "wrIsActive" = false where "wrTabId" in (select "wrTabId" from tab_id)
+    update "tblTabs" set "wrIsActive" = false where "wrTabId" in (select "wrKey" from tab_id)
     `,
     {
       type: fastify.db.Sequelize.QueryTypes.UPDATE,
@@ -164,8 +165,8 @@ async function getSpecificTabsQuery(Id, fastify) {
     t."wrIsMenu" as "isMenu",
     t."wrIconName" as "iconName",
     t."wrDisplayOrder" as "displayOrder",
-    et."wrEncryptedTabId" as "encryptedTabId"
-    from "tblTabs" t left join "tblEncryptedTabs" et on t."wrTabId"=et."wrTabId"  where t."wrIsActive" = true and et."wrEncryptedTabId" = $1`,
+    et."wrValue" as "encryptedTabId"
+    from "tblTabs" t inner join "tblEncryptedData" et on t."wrTabId"=et."wrKey"  where t."wrIsActive" = true and et."wrValue" = $1`,
     {
       type: fastify.db.Sequelize.QueryTypes.SELECT,
       bind: [Id],
@@ -177,7 +178,7 @@ async function getSpecificTabsQuery(Id, fastify) {
 
 async function getTabInfoQuery(Id, fastify) {
   const data = await fastify.db.query(
-    `SELECT t.* from "tblTabs" t left join "tblEncryptedTabs" et on t."wrTabId"=et."wrTabId"  where t."wrIsActive" = true and et."wrEncryptedTabId" = $1`,
+    `SELECT t.* from "tblTabs" t inner join "tblEncryptedData" et on t."wrTabId"=et."wrKey"  where t."wrIsActive" = true and et."wrValue" = $1`,
     {
       type: fastify.db.Sequelize.QueryTypes.SELECT,
       bind: [Id],
@@ -233,7 +234,6 @@ async function updateTabQuery(tabId, req, fastify) {
 module.exports = {
   getTabsQuery,
   createTabsQuery,
-  encryptTabsQuery,
   deleteTabsQuery,
   getSpecificTabsQuery,
   getTabInfoQuery,

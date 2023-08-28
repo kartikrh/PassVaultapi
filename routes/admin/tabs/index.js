@@ -6,7 +6,7 @@ const {
   getSpecificTab,
   updateSpecificTab,
   getDisplayTabs,
-} = require("../../../controller/users/admin/index");
+} = require("../../../controller/users/admin/tabs");
 const { Admin } = require("../../../swaggerSchema/groupTags/schema");
 const { authorize } = require("../../../controller/middleware/index");
 

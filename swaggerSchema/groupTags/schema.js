@@ -203,7 +203,7 @@ const Role = {
     },
   },
 
-  deleteTabs: {
+  deleteRoles: {
     schema: {
       tags: ["Role"],
       description: "Deactivate tabs by encrypted Role IDs",
@@ -218,6 +218,38 @@ const Role = {
           },
         },
         required: ["roleIds"],
+      },
+    },
+  },
+
+  createRole: {
+    schema: {
+      tags: ["Role"],
+      description: "post roles",
+      //security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          roleId: { type: "string" },
+          roleName: { type: "string" },
+          description: { type: "string" },
+          displayType: { type: "integer", enum: [1, 2] },
+          permissions: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                tabId: { type: "string" },
+                isAdd: { type: "boolean" },
+                isEdit: { type: "boolean" },
+                isDelete: { type: "boolean" },
+                isView: { type: "boolean" },
+              },
+            },
+            minItems: 1,
+          },
+        },
+        required: ["roleId", "permissions"],
       },
     },
   },

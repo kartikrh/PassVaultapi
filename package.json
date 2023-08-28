@@ -10,7 +10,7 @@
     "test": "tap \"test/**/*.test.js\"",
     "start": "fastify start -l info app.js",
     "info": "fastify print-routes ./routes/root.js",
-    "dev": "fastify start -w -l info -P app.js"
+    "dev": "fastify start -w  app.js"
   },
   "keywords": [],
   "author": "",
