@@ -60,6 +60,7 @@ async function updateSpecificTabService(request, fastify) {
 
   const checkDataById = await getTabInfoQuery(id, fastify);
 
+
   if (!checkDataById) {
     throw new Error("No Tabs Found for this Id");
   }

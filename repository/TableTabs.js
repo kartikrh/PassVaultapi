@@ -178,7 +178,7 @@ async function getSpecificTabsQuery(Id, fastify) {
 
 async function getTabInfoQuery(Id, fastify) {
   const data = await fastify.db.query(
-    `SELECT t.* from "tblTabs" t inner join "tblEncryptedData" et on t."wrTabId"=et."wrKey"  where t."wrIsActive" = true and et."wrValue" = $1`,
+    `SELECT t.* from "tblTabs" t inner join "tblEncryptedData" et on t."wrTabId"=et."wrKey"  where et."wrValue" = $1`,
     {
       type: fastify.db.Sequelize.QueryTypes.SELECT,
       bind: [Id],
