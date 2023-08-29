@@ -58,8 +58,8 @@ module.exports = async function (fastify, opts) {
   });
 
   const corsOptions = {
-    origin: "http://localhost:3001", // Allow requests from localhost
-    methods: ["GET", "POST"], // HTTP methods allowed
+    origin: "*", // Allow requests from all origin
+    methods: ["GET", "POST", "OPTIONS"], // HTTP methods allowed
   };
   // Register the CORS plugin
   fastify.register(cors, corsOptions);
