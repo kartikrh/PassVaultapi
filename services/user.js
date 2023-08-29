@@ -12,9 +12,9 @@ const {
 const { deviceInfo, encrypt } = require("../utilities/index");
 
 async function signUpUserService({ body }, fastify) {
-  const hashedPassword = encrypt(body.WrPassword);
+  const hashedPassword = encrypt(body.password);
 
-  body.WrPassword = hashedPassword;
+  body.password = hashedPassword;
 
   const results = await signUpUser(body, fastify);
 
@@ -25,10 +25,10 @@ async function signUpUserService({ body }, fastify) {
 }
 
 async function signInUserServices(request, fastify) {
-  const decryptedPassword = encrypt(request.body.WrPassword);
+  const decryptedPassword = encrypt(request.body.password);
 
   const body = {
-    userName: request.body.WrUserName,
+    userName: request.body.userName,
     password: decryptedPassword,
     deviceInfo: deviceInfo(request),
     token: uuidv4(),

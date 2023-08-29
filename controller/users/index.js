@@ -13,7 +13,13 @@ async function signUpUser(request, reply, fastify) {
   } catch (err) {
     reply
       .status(500)
-      .send(error("Internal server error", ERROR_CODES.SERVER_ERROR, 500));
+      .send(
+        error(
+          err.message || "Internal server error",
+          ERROR_CODES.SERVER_ERROR,
+          500
+        )
+      );
   }
 }
 async function signInUser(request, reply, fastify) {

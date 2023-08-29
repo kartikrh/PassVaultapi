@@ -3,27 +3,18 @@ const { QueryTypes } = require("sequelize");
 //TODO: this is a test api
 async function signUpUser(request, fastify) {
   const data = await fastify.db.query(
-    `INSERT INTO "tblUsers" ("WrUserName","WrPassword","WrRoleId","WrName","WrUserType","WrMobile","WrIsActive","WrIsSuperAdmin","WrCreatedBy","WrCreatedType","WrModifyBy","WrModifyType","WrParentId","WrIsDelete","WrDeleteBy","WrDeleteDate","WrAllowMultipleLogin","WrSubAdminId") VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,NOW(),$16,$17) RETURNING "WrUserId"`,
+    `INSERT INTO "tblUsers" ("WrUserName","WrPassword","WrRoleId","WrName","WrUserType","WrIsActive","WrIsSuperAdmin","WrParentId","WrAllowMultipleLogin","WrSubAdminId") VALUES ($1,$2,$3,$4,$5,$6,$7,$3,$8,$3) RETURNING "WrUserId"`,
     {
       type: QueryTypes.SELECT,
       bind: [
-        request.WrUserName,
-        request.WrPassword,
-        request.WrRoleId,
-        request.WrName,
-        request.WrUserType,
-        request.WrMobile,
-        request.WrIsActive,
-        request.WrIsSuperAdmin,
-        request.WrCreatedBy,
-        request.WrCreatedType,
-        request.WrModifyBy,
-        request.WrModifyType,
-        request.WrParentId,
-        request.WrIsDelete,
-        request.WrDeleteBy,
-        request.WrAllowMultipleLogin,
-        request.WrSubAdminId,
+        request.userName,
+        request.password,
+        "0",
+        request.name,
+        request.userType,
+        request.isActive,
+        true,
+        false,
       ],
     }
   );
@@ -40,19 +31,20 @@ async function signInUser(body, fastify) {
       FROM "tblUsers" WHERE "WrUserName" = $1 AND "WrPassword"=$2 AND "WrIsActive" = true
     ),
     insert_data AS (
-      INSERT INTO "tblUserLoginInfos" ("WrUserId", "WrUserType", "wrInfo", "wrIsLogin", "wrToken")
+      INSERT INTO "tblUserLoginInfos" ("WrUserId", "WrUserType", "wrInfo", "wrIsLogin", "wrToken","WrCreatedDate")
       SELECT
         ud."WrUserId",
         ud."WrUserType",
         $3, 
        true,
-       $4
+       $4,
+        now()
       FROM user_data ud
     ),
     insert_invalid_data as (
-      INSERT INTO "tblUserLoginInfos" ("WrUserId", "WrUserType", "wrInfo", "wrIsLogin", "wrToken") 
+      INSERT INTO "tblUserLoginInfos" ("WrUserId", "WrUserType", "wrInfo", "wrIsLogin", "wrToken","WrCreatedDate") 
       select 
-      null,'-1',$3,false,null WHERE NOT EXISTS (SELECT 1 FROM user_data)
+      null,'-1',$3,false,null,now() WHERE NOT EXISTS (SELECT 1 FROM user_data)
     ),
     update_loginInfo AS (
       UPDATE "tblUserLoginInfos" SET "wrIsLogin" = false
