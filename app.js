@@ -57,6 +57,7 @@ module.exports = async function (fastify, opts) {
     swagger: "/documentation/json", // Route to your Swagger JSON
   });
 
+
   fastify.register(require('@fastify/cors'), (instance) => {
     return (req, callback) => {
       const corsOptions = {
@@ -72,6 +73,7 @@ module.exports = async function (fastify, opts) {
       callback(null, corsOptions)
     }
   })
+
 
   // Do not touch the following lines
 
