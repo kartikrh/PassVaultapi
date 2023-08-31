@@ -6,6 +6,7 @@ const {
   getSpecificTab,
   updateSpecificTab,
   getDisplayTabs,
+  changeDisplayOrder,
 } = require("../../../controller/users/admin/tabs");
 const { Admin } = require("../../../swaggerSchema/groupTags/schema");
 const { authorize } = require("../../../controller/middleware/index");
@@ -51,5 +52,12 @@ module.exports = async function (fastify, opts) {
     schema: Admin.postById.schema,
     // preHandler: [(request, reply, fastify) => authorize(request, reply, fastify)],
     handler: (request, reply) => updateSpecificTab(request, reply, fastify),
+  });
+
+  //chnage display order
+  fastify.post("/changeDisplayOrder", {
+    schema: Admin.changeDispalyOrder.schema,
+    // preHandler: [(request, reply, fastify) => authorize(request, reply, fastify)],
+    handler: (request, reply) => changeDisplayOrder(request, reply, fastify),
   });
 };

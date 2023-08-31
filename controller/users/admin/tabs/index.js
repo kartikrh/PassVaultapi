@@ -6,6 +6,7 @@ const {
   getSpecificTabsService,
   updateSpecificTabService,
   getDisplayTabsService,
+  changeDisplayOrderService,
 } = require("../../../../services/admin.js");
 
 async function createTab(request, reply, fastify) {
@@ -92,6 +93,23 @@ async function updateSpecificTab(request, reply, fastify) {
   }
 }
 
+async function changeDisplayOrder(request, reply, fastify) {
+  try {
+    const result = await changeDisplayOrderService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    reply
+      .status(500)
+      .send(
+        error(
+          err?.message || "Internal server error",
+          ERROR_CODES.SERVER_ERROR,
+          500
+        )
+      );
+  }
+}
+
 module.exports = {
   getTabs,
   createTab,
@@ -100,4 +118,5 @@ module.exports = {
   updateSpecificTab,
   deleteTab,
   getDisplayTabs,
+  changeDisplayOrder,
 };
