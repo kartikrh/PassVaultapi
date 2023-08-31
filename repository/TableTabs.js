@@ -222,7 +222,22 @@ async function updateTabQuery(tabId, req, fastify) {
   const data = await fastify.db.query(
     `UPDATE "tblTabs" SET ${updateColumns.join(", ")} WHERE "wrTabId" = $${
       updateValues.length
-    } RETURNING *`,
+    } RETURNING 
+    "wrTabId" as "tabId",
+    "wrTabName" as "tabName",
+    "WrDisplayName" as  "displayName",
+    "wrDisplayType" as "displayType",
+    "wrWebPage" as "webPage",
+    "wrParentId" as "parentId",
+    "wrIsActive" as "isActive",
+    "wrIsAdd" as "isAdd",
+    "wrIsEdit" as "isEdit",
+    "wrIsDelete" as "isDelete",
+    "wrIsView" as "isView",
+    "wrAddWebpage" as "addWebpage",
+    "wrIsMenu" as "isMenu",
+    "wrIconName" as "iconName",
+    "wrDisplayOrder" as "displayOrder"`,
     {
       type: fastify.db.Sequelize.QueryTypes.SELECT,
       bind: updateValues,
