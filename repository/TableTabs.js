@@ -210,7 +210,9 @@ async function updateTabQuery(tabId, req, fastify) {
 
   for (const key in req.body) {
     if (columnMapping[key] !== undefined) {
-      updateColumns.push(`"${columnMapping[key]}" = $${updateColumns.length + 1}`);
+      updateColumns.push(
+        `"${columnMapping[key]}" = $${updateColumns.length + 1}`
+      );
       updateValues.push(req.body[key]);
     }
   }
@@ -218,7 +220,24 @@ async function updateTabQuery(tabId, req, fastify) {
   updateValues.push(tabId);
 
   const data = await fastify.db.query(
-    `UPDATE "tblTabs" SET ${updateColumns.join(", ")} WHERE "wrTabId" = $${updateValues.length} RETURNING *`,
+    `UPDATE "tblTabs" SET ${updateColumns.join(", ")} WHERE "wrTabId" = $${
+      updateValues.length
+    } RETURNING 
+    "wrTabId" as "tabId",
+    "wrTabName" as "tabName",
+    "WrDisplayName" as  "displayName",
+    "wrDisplayType" as "displayType",
+    "wrWebPage" as "webPage",
+    "wrParentId" as "parentId",
+    "wrIsActive" as "isActive",
+    "wrIsAdd" as "isAdd",
+    "wrIsEdit" as "isEdit",
+    "wrIsDelete" as "isDelete",
+    "wrIsView" as "isView",
+    "wrAddWebpage" as "addWebpage",
+    "wrIsMenu" as "isMenu",
+    "wrIconName" as "iconName",
+    "wrDisplayOrder" as "displayOrder"`,
     {
       type: fastify.db.Sequelize.QueryTypes.SELECT,
       bind: updateValues,
@@ -228,6 +247,38 @@ async function updateTabQuery(tabId, req, fastify) {
   return data[0];
 }
 
+async function changeDisplayOrderOfMovingTabQuery(body, fastify) {
+  return await fastify.db.query(
+    `update "tblTabs" set "wrDisplayOrder" = $1 where "wrTabId" = $2 `,
+    {
+      bind: [body.order, body.tabId],
+    }
+  );
+}
+async function findTabsByParentId(parentId, fastify) {
+  return await fastify.db.query(
+    ` SELECT * from "tblTabs" where "wrIsActive" = true and "wrParentId" = $1 order by "wrDisplayOrder" asc`,
+    {
+      type: fastify.db.Sequelize.QueryTypes.SELECT,
+      bind: [parentId],
+    }
+  );
+}
+
+async function validateTabByNameQuery(body, fastify, option) {
+  let query = `select * from "tblTabs" where "wrParentId" = $1 and "wrTabName" ilike $2`;
+  let params = [body.wrParentId, body.wrTabName];
+
+  if (option === "update") {
+    query += ` and not "wrTabId" = $3`;
+    params.push(body.wrTabId);
+  }
+
+  return await fastify.db.query(query, {
+    type: fastify.db.Sequelize.QueryTypes.SELECT,
+    bind: params,
+  });
+}
 
 module.exports = {
   getTabsQuery,
@@ -238,4 +289,7 @@ module.exports = {
   updateTabQuery,
   getDisplayTabsQuery,
   hasAssociatedChildern,
+  changeDisplayOrderOfMovingTabQuery,
+  findTabsByParentId,
+  validateTabByNameQuery,
 };

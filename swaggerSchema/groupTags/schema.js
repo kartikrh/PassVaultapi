@@ -173,6 +173,22 @@ const Admin = {
       },
     },
   },
+
+  changeDispalyOrder: {
+    schema: {
+      tags: ["Admin"],
+      description: "change display order",
+      //security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          tabId: { type: "string" },
+          belowWho: { type: "string" },
+        },
+        required: ["tabId", "belowWho"],
+      },
+    },
+  },
 };
 
 const Role = {
