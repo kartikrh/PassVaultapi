@@ -57,12 +57,23 @@ module.exports = async function (fastify, opts) {
     swagger: "/documentation/json", // Route to your Swagger JSON
   });
 
-  const corsOptions = {
-    origin: "*", // Allow requests from all origin
-    methods: ["GET", "POST", "OPTIONS"], // HTTP methods allowed
-  };
-  // Register the CORS plugin
-  fastify.register(cors, corsOptions);
+
+  fastify.register(require('@fastify/cors'), (instance) => {
+    return (req, callback) => {
+      const corsOptions = {
+        // This is NOT recommended for production as it enables reflection exploits
+        origin: true
+      };
+      //TODO: for production set to false
+      if (/^localhost$/m.test(req.headers.origin)) {
+        corsOptions.origin = true
+      }
+  
+      // callback expects two parameters: error and options
+      callback(null, corsOptions)
+    }
+  })
+
 
   // Do not touch the following lines
 

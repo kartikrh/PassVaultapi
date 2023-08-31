@@ -178,7 +178,7 @@ async function getSpecificTabsQuery(Id, fastify) {
 
 async function getTabInfoQuery(Id, fastify) {
   const data = await fastify.db.query(
-    `SELECT t.* from "tblTabs" t inner join "tblEncryptedData" et on t."wrTabId"=et."wrKey"  where t."wrIsActive" = true and et."wrValue" = $1`,
+    `SELECT t.* from "tblTabs" t inner join "tblEncryptedData" et on t."wrTabId"=et."wrKey"  where et."wrValue" = $1`,
     {
       type: fastify.db.Sequelize.QueryTypes.SELECT,
       bind: [Id],
@@ -189,42 +189,43 @@ async function getTabInfoQuery(Id, fastify) {
 }
 
 async function updateTabQuery(tabId, req, fastify) {
+  const columnMapping = {
+    tabName: "wrTabName",
+    displayName: "WrDisplayName",
+    displayType: "wrDisplayType",
+    webPage: "wrWebPage",
+    parentId: "wrParentId",
+    isActive: "wrIsActive",
+    isAdd: "wrIsAdd",
+    isEdit: "wrIsEdit",
+    isDelete: "wrIsDelete",
+    isView: "wrIsView",
+    addWebpage: "wrAddWebpage",
+    isMenu: "wrIsMenu",
+    iconName: "wrIconName",
+  };
+
+  const updateColumns = [];
+  const updateValues = [];
+
+  for (const key in req.body) {
+    if (columnMapping[key] !== undefined) {
+      updateColumns.push(
+        `"${columnMapping[key]}" = $${updateColumns.length + 1}`
+      );
+      updateValues.push(req.body[key]);
+    }
+  }
+
+  updateValues.push(tabId);
+
   const data = await fastify.db.query(
-    `UPDATE "tblTabs" SET "wrTabName" = $1, "WrDisplayName" = $2, "wrDisplayType" = $3, "wrWebPage" = $4, "wrParentId" = $5, "wrIsActive" = $6, "wrIsAdd" = $7, "wrIsEdit" = $8, "wrIsDelete" = $9, "wrIsView" = $10, "wrAddWebpage" = $11, "wrIsMenu" = $12, "wrIconName" = $13  WHERE "wrTabId" = $14 RETURNING 
-    "wrTabId" as "tabId",
-    "wrTabName" as "tabName",
-    "WrDisplayName" as  "displayName",
-    "wrDisplayType" as "displayType",
-    "wrWebPage" as "webPage",
-    "wrParentId" as "parentId",
-    "wrIsActive" as "isActive",
-    "wrIsAdd" as "isAdd",
-    "wrIsEdit" as "isEdit",
-    "wrIsDelete" as "isDelete",
-    "wrIsView" as "isView",
-    "wrAddWebpage" as "addWebpage",
-    "wrIsMenu" as "isMenu",
-    "wrIconName" as "iconName",
-    "wrDisplayOrder" as "displayOrder"
-    `,
+    `UPDATE "tblTabs" SET ${updateColumns.join(", ")} WHERE "wrTabId" = $${
+      updateValues.length
+    } RETURNING *`,
     {
       type: fastify.db.Sequelize.QueryTypes.SELECT,
-      bind: [
-        req.body.tabName,
-        req.body.displayName,
-        req.body.displayType,
-        req.body.webPage,
-        req.body.parentId,
-        req.body.isActive,
-        req.body.isAdd,
-        req.body.isEdit,
-        req.body.isDelete,
-        req.body.isView,
-        req.body.addWebpage,
-        req.body.isMenu,
-        req.body.iconName,
-        tabId,
-      ],
+      bind: updateValues,
     }
   );
 
