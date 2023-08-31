@@ -203,6 +203,7 @@ async function updateTabQuery(tabId, req, fastify) {
     addWebpage: "wrAddWebpage",
     isMenu: "wrIsMenu",
     iconName: "wrIconName",
+    displayOrder: "wrDisplayOrder",
   };
 
   const updateColumns = [];
@@ -280,6 +281,18 @@ async function validateTabByNameQuery(body, fastify, option) {
   });
 }
 
+async function getMaxDispalyOrderByParent(parentId, fastify) {
+  const data = await fastify.db.query(
+    `SELECT MAX("wrDisplayOrder") from "tblTabs" where "wrParentId" = $1`,
+    {
+      type: fastify.db.Sequelize.QueryTypes.SELECT,
+      bind: [parentId],
+    }
+  );
+
+  return data?.[0]?.max || 0;
+}
+
 module.exports = {
   getTabsQuery,
   createTabsQuery,
@@ -292,4 +305,5 @@ module.exports = {
   changeDisplayOrderOfMovingTabQuery,
   findTabsByParentId,
   validateTabByNameQuery,
+  getMaxDispalyOrderByParent,
 };

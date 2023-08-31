@@ -10,6 +10,7 @@ const {
   changeDisplayOrderOfMovingTabQuery,
   findTabsByParentId,
   validateTabByNameQuery,
+  getMaxDispalyOrderByParent,
 } = require("../repository/TableTabs.js");
 
 const { tabsValidator } = require("../utilities/validator.js");
@@ -69,7 +70,6 @@ async function updateSpecificTabService(request, fastify) {
 
   const checkDataById = await getTabInfoQuery(id, fastify);
 
-
   if (!checkDataById) {
     throw new Error("No Tabs Found for this Id");
   }
@@ -86,6 +86,15 @@ async function updateSpecificTabService(request, fastify) {
 
   if (validateTabByNameAndParent.length) {
     throw new Error("Same tab name in same parent nor allowed");
+  }
+
+  if (checkDataById.wrParentId !== request.body.parentId) {
+    const maxDisplay = await getMaxDispalyOrderByParent(
+      request.body.parentId,
+      fastify
+    );
+
+    request.body.displayOrder = Number(maxDisplay) + 1;
   }
 
   const updateTab = await updateTabQuery(
