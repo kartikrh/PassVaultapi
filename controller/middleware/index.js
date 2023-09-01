@@ -8,7 +8,9 @@ async function authorize(request, reply, fastify) {
   } catch (err) {
     reply
       .status(401)
-      .send(error("invalid token", ERROR_CODES.INVALID_TOKEN, 401));
+      .send(
+        error(err.message || "invalid token", ERROR_CODES.INVALID_TOKEN, 401)
+      );
   }
 }
 

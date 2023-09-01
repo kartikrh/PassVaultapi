@@ -80,6 +80,31 @@ async function getTabsQuery(fastify) {
   );
 }
 
+async function getAllActiveInactiveTabsQuery(fastify) {
+  return await fastify.db.query(
+    `SELECT 
+           t."wrTabName" as "tabName",
+           t."WrDisplayName" as  "displayName",
+           t."wrDisplayType" as "displayType",
+           t."wrWebPage" as "webPage",
+           t."wrParentId" as "parentId",
+           t."wrIsActive" as "isActive",
+           t."wrIsAdd" as "isAdd",
+           t."wrIsEdit" as "isEdit",
+           t."wrIsDelete" as "isDelete",
+           t."wrIsView" as "isView",
+           t."wrAddWebpage" as "addWebpage",
+           t."wrIsMenu" as "isMenu",
+           t."wrIconName" as "iconName",
+           t."wrDisplayOrder" as "displayOrder",
+           et."wrValue" as "encryptedTabId"
+           from "tblTabs" t inner join "tblEncryptedData" et on t."wrTabId"=et."wrKey"`,
+    {
+      type: fastify.db.Sequelize.QueryTypes.SELECT,
+    }
+  );
+}
+
 async function getDisplayTabsQuery(type, fastify) {
   return await fastify.db.query(
     `with disable_tab as (
@@ -306,4 +331,5 @@ module.exports = {
   findTabsByParentId,
   validateTabByNameQuery,
   getMaxDispalyOrderByParent,
+  getAllActiveInactiveTabsQuery,
 };

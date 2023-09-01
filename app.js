@@ -26,6 +26,8 @@ module.exports = async function (fastify, opts) {
       require("./sequelize/tables/roleModel")(fastify.db);
       require("./sequelize/tables/encryptionData")(fastify.db);
       require("./sequelize/tables/permissionModel")(fastify.db);
+      require("./sequelize/tables/blockModel")(fastify.db);
+      require("./sequelize/tables/menuTypeModel")(fastify.db);
       try {
         await fastify.db.sync();
       } catch (error) {
@@ -57,23 +59,21 @@ module.exports = async function (fastify, opts) {
     swagger: "/documentation/json", // Route to your Swagger JSON
   });
 
-
-  fastify.register(require('@fastify/cors'), (instance) => {
+  fastify.register(require("@fastify/cors"), (instance) => {
     return (req, callback) => {
       const corsOptions = {
         // This is NOT recommended for production as it enables reflection exploits
-        origin: true
+        origin: true,
       };
       //TODO: for production set to false
       if (/^localhost$/m.test(req.headers.origin)) {
-        corsOptions.origin = true
+        corsOptions.origin = true;
       }
-  
-      // callback expects two parameters: error and options
-      callback(null, corsOptions)
-    }
-  })
 
+      // callback expects two parameters: error and options
+      callback(null, corsOptions);
+    };
+  });
 
   // Do not touch the following lines
 
