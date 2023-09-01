@@ -1,4 +1,5 @@
 const { QueryTypes } = require("sequelize");
+const userModel = require("../sequelize/tables/userModel");
 
 //TODO: this is a test api
 async function signUpUser(request, fastify) {
@@ -84,22 +85,6 @@ async function createUserLoginInfo(userLoginInfo, fastify) {
   );
 }
 
-async function userAuthorization(
-  UserLoginInfoSearchParameters,
-  userModelSearchParameters,
-  fastify
-) {
-  return await fastify.db.models.tblUserLoginInfo.findAll({
-    where: UserLoginInfoSearchParameters,
-    include: [
-      {
-        model: UserModel,
-        where: userModelSearchParameters,
-      },
-    ],
-  });
-}
-
 async function generateEncryptionData(data, fastify) {
   return await fastify.db.query(
     `INSERT INTO "tblEncryptedData" ("wrKey","wrValue") VALUES ($1,$2) `,
@@ -137,7 +122,6 @@ module.exports = {
   signInUser,
   signUpUser,
   createUserLoginInfo,
-  userAuthorization,
   getMaxKey,
   generateEncryptionData,
   checkValidQuery,

@@ -271,8 +271,82 @@ const Role = {
   },
 };
 
+const Block = {
+  getBlocks: {
+    schema: {
+      tags: ["Block"],
+      description: "get blocks",
+      //security: [{ bearerAuth: [] }],
+    },
+  },
+  getById: {
+    schema: {
+      tags: ["Block"],
+      description: "get blocks",
+      //security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          blockId: { type: "string" },
+        },
+        required: ["blockId"],
+      },
+    },
+  },
+  createBlock: {
+    schema: {
+      tags: ["Block"],
+      description: "block create",
+      //security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          blockName: { type: "string" },
+          isShowContent: { type: "boolean" },
+          content: { type: "string" },
+          controlId: { type: "string" },
+        },
+        required: ["blockName", "isShowContent"],
+      },
+    },
+  },
+  updateBlock: {
+    schema: {
+      tags: ["Block"],
+      description: "block update",
+      //security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          blockId: { type: "string" },
+          blockName: { type: "string" },
+          isShowContent: { type: "boolean" },
+          content: { type: "string" },
+          controlId: { type: "string" },
+        },
+        required: ["blockName", "blockId"],
+      },
+    },
+  },
+  deleteBlock: {
+    schema: {
+      tags: ["Block"],
+      description: "block delete",
+      //security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          blockId: { type: "array", items: { type: "string" }, minItems: 1 },
+        },
+        required: ["blockId"],
+      },
+    },
+  },
+};
+
 module.exports = {
   Auth,
   Admin,
   Role,
+  Block,
 };

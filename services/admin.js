@@ -11,6 +11,7 @@ const {
   findTabsByParentId,
   validateTabByNameQuery,
   getMaxDispalyOrderByParent,
+  getAllActiveInactiveTabsQuery,
 } = require("../repository/TableTabs.js");
 
 const { tabsValidator } = require("../utilities/validator.js");
@@ -35,6 +36,12 @@ async function createTabsService(request, fastify) {
 
 async function getTabsService(request, fastify) {
   const tabList = await getTabsQuery(fastify);
+
+  return tabList;
+}
+
+async function getAllTabsService(request, fastify) {
+  const tabList = await getAllActiveInactiveTabsQuery(fastify);
 
   return tabList;
 }
@@ -167,4 +174,5 @@ module.exports = {
   updateTabQuery,
   getDisplayTabsService,
   changeDisplayOrderService,
+  getAllTabsService,
 };
