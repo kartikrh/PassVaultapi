@@ -180,12 +180,15 @@ const Admin = {
       description: "change display order",
       //security: [{ bearerAuth: [] }],
       body: {
-        type: "object",
-        properties: {
-          tabId: { type: "string" },
-          belowWho: { type: "string" },
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            tabId: { type: "string" },
+            displayOrder: { type: "integer" },
+          },
         },
-        required: ["tabId", "belowWho"],
+        minItems: 1,
       },
     },
   },
@@ -344,9 +347,157 @@ const Block = {
   },
 };
 
+const MenuType = {
+  getAll: {
+    schema: {
+      tags: ["Menu Types"],
+      description: "get MenuType",
+      //security: [{ bearerAuth: [] }],
+    },
+  },
+  getById: {
+    schema: {
+      tags: ["Menu Types"],
+      description: "get Menu Type by Id",
+      //security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          menuTypeId: { type: "string" },
+        },
+        required: ["menuTypeId"],
+      },
+    },
+  },
+  create: {
+    schema: {
+      tags: ["Menu Types"],
+      description: "Menu Type create",
+      //security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          blockId: { type: "string" },
+          isActive: { type: "boolean" },
+          menuTypeName: { type: "string" },
+          noOfLevel: { type: "integer" },
+        },
+        required: ["blockId", "isActive", "menuTypeName", "noOfLevel"],
+      },
+    },
+  },
+  update: {
+    schema: {
+      tags: ["Menu Types"],
+      description: "Menu Type update",
+      //security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          menuTypeId: { type: "string" },
+          blockId: { type: "string" },
+          isActive: { type: "boolean" },
+          menuTypeName: { type: "string" },
+          noOfLevel: { type: "integer" },
+        },
+        required: ["menuTypeId"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["Menu Types"],
+      description: "Menu Types delete",
+      //security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          menuTypeId: { type: "array", items: { type: "string" }, minItems: 1 },
+        },
+        required: ["menuTypeId"],
+      },
+    },
+  },
+};
+
+const MenuItemType = {
+  getAll: {
+    schema: {
+      tags: ["Menu Item Types"],
+      description: "get MenuItemType",
+      //security: [{ bearerAuth: [] }],
+    },
+  },
+  getById: {
+    schema: {
+      tags: ["Menu Item Types"],
+      description: "get Menu Item Type by Id",
+      //security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          menuItemTypeId: { type: "string" },
+        },
+        required: ["menuItemTypeId"],
+      },
+    },
+  },
+  create: {
+    schema: {
+      tags: ["Menu Item Types"],
+      description: "Menu Item Type create",
+      //security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+          menuItemType: { type: "string" },
+        },
+        required: ["menuItemType", "isActive"],
+      },
+    },
+  },
+  update: {
+    schema: {
+      tags: ["Menu Item Types"],
+      description: "Menu Item Type update",
+      //security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          menuItemTypeId: { type: "string" },
+          isActive: { type: "boolean" },
+          menuItemType: { type: "string" },
+        },
+        required: ["menuItemTypeId"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["Menu Item Types"],
+      description: "Menu Item Types delete",
+      //security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          menuItemTypeId: {
+            type: "array",
+            items: { type: "string" },
+            minItems: 1,
+          },
+        },
+        required: ["menuItemTypeId"],
+      },
+    },
+  },
+};
+
 module.exports = {
   Auth,
   Admin,
   Role,
   Block,
+  MenuType,
+  MenuItemType,
 };

@@ -111,13 +111,13 @@ const validateBlockQuery = async (blockId, fastify) => {
   return data[0];
 };
 
-const deleteBlockQuery = async (blockId, fastify) => {
+const deleteBlockQuery = async (blockIds, fastify) => {
   return await fastify.db.query(
-    ` delete from "tblBlocks" where "wrBlockId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)
-    `,
+    `delete from "tblBlocks" where "wrBlockId" in 
+    (select "wrKey" from "tblEncryptedData" where "wrValue" = ANY($1::text[]))`,
     {
       type: fastify.db.Sequelize.QueryTypes.DELETE,
-      bind: [blockId],
+      bind: [blockIds],
     }
   );
 };

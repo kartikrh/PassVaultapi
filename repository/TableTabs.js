@@ -245,6 +245,8 @@ async function updateTabQuery(tabId, req, fastify) {
 
   updateValues.push(tabId);
 
+  console.log("updateColumns", updateValues);
+
   const data = await fastify.db.query(
     `UPDATE "tblTabs" SET ${updateColumns.join(", ")} WHERE "wrTabId" = $${
       updateValues.length
@@ -281,15 +283,6 @@ async function changeDisplayOrderOfMovingTabQuery(body, fastify) {
     }
   );
 }
-async function findTabsByParentId(parentId, fastify) {
-  return await fastify.db.query(
-    ` SELECT * from "tblTabs" where "wrIsActive" = true and "wrParentId" = $1 order by "wrDisplayOrder" asc`,
-    {
-      type: fastify.db.Sequelize.QueryTypes.SELECT,
-      bind: [parentId],
-    }
-  );
-}
 
 async function validateTabByNameQuery(body, fastify, option) {
   let query = `select * from "tblTabs" where "wrParentId" = $1 and "wrTabName" ilike $2`;
@@ -318,6 +311,25 @@ async function getMaxDispalyOrderByParent(parentId, fastify) {
   return data?.[0]?.max || 0;
 }
 
+async function validateAllTabIdsQuery(body, fastify) {
+  return await fastify.db.query(
+    `SELECT t.* from "tblTabs" t inner join "tblEncryptedData" et on t."wrTabId"=et."wrKey"  where et."wrValue" = ANY($1::varchar[])`,
+    {
+      type: fastify.db.Sequelize.QueryTypes.SELECT,
+      bind: [body],
+    }
+  );
+}
+
+async function updateDisplayOrder(body, fastify) {
+  return await fastify.db.query(
+    `update "tblTabs" set "wrDisplayOrder" = $1 where "wrTabId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = $2) `,
+    {
+      bind: [body.displayOrder, body.tabId],
+    }
+  );
+}
+
 module.exports = {
   getTabsQuery,
   createTabsQuery,
@@ -328,8 +340,9 @@ module.exports = {
   getDisplayTabsQuery,
   hasAssociatedChildern,
   changeDisplayOrderOfMovingTabQuery,
-  findTabsByParentId,
   validateTabByNameQuery,
   getMaxDispalyOrderByParent,
   getAllActiveInactiveTabsQuery,
+  validateAllTabIdsQuery,
+  updateDisplayOrder,
 };

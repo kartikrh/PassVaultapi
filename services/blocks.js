@@ -79,9 +79,7 @@ const deleteBlockService = async (request, fastify) => {
     }
   }
 
-  for (const encryptedId of encryptedIds) {
-    await deleteBlockQuery(encryptedId, fastify);
-  }
+  await deleteBlockQuery(encryptedIds, fastify);
 
   return "Block(s) deleted successfully";
 };

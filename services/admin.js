@@ -7,11 +7,11 @@ const {
   updateTabQuery,
   getDisplayTabsQuery,
   hasAssociatedChildern,
-  changeDisplayOrderOfMovingTabQuery,
-  findTabsByParentId,
+  validateAllTabIdsQuery,
   validateTabByNameQuery,
   getMaxDispalyOrderByParent,
   getAllActiveInactiveTabsQuery,
+  updateDisplayOrder,
 } = require("../repository/TableTabs.js");
 
 const { tabsValidator } = require("../utilities/validator.js");
@@ -119,48 +119,25 @@ async function getDisplayTabsService(request, fastify) {
 }
 
 async function changeDisplayOrderService(request, fastify) {
-  const { tabId, belowWho } = request.body;
+  const tabIds = request.body.map((item) => item.tabId);
 
-  const validateMovingTab = await getTabInfoQuery(tabId, fastify);
-  const validateBelowWhoTab = await getTabInfoQuery(belowWho, fastify);
+  const validateAllTabIds = await validateAllTabIdsQuery(tabIds, fastify);
 
-  if (validateMovingTab?.wrParentId !== validateBelowWhoTab?.wrParentId) {
-    throw new Error("You can only switch order in same parent tabs");
+  if (validateAllTabIds.length !== tabIds.length) {
+    throw new Error("Invalid Tab Ids");
   }
 
-  const tabsIds = await findTabsByParentId(
-    validateMovingTab.wrParentId,
-    fastify
+  const checkAllTabsParent = validateAllTabIds.every(
+    (item) => item.wrParentId === validateAllTabIds[0].wrParentId
   );
 
-  const updateTabIds = tabsIds.filter((data) => {
-    return (
-      data.wrDisplayOrder < validateMovingTab.wrDisplayOrder &&
-      data.wrDisplayOrder > validateBelowWhoTab.wrDisplayOrder
-    );
-  });
-
-  if (!updateTabIds.length) {
-    throw new Error("");
+  if (!checkAllTabsParent) {
+    throw new Error("All tabs should have same parent");
   }
 
-  for (let tabs of updateTabIds) {
-    await changeDisplayOrderOfMovingTabQuery(
-      {
-        tabId: tabs.wrTabId,
-        order: tabs.wrDisplayOrder + 1,
-      },
-      fastify
-    );
+  for (const item of request.body) {
+    await updateDisplayOrder(item, fastify);
   }
-
-  await changeDisplayOrderOfMovingTabQuery(
-    {
-      tabId: validateMovingTab.wrTabId,
-      order: validateBelowWhoTab.wrDisplayOrder + 1,
-    },
-    fastify
-  );
 
   return "Order chaged successfully";
 }
