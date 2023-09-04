@@ -28,6 +28,11 @@ module.exports = async function (fastify, opts) {
       require("./sequelize/tables/permissionModel")(fastify.db);
       require("./sequelize/tables/blockModel")(fastify.db);
       require("./sequelize/tables/menuTypeModel")(fastify.db);
+      require("./sequelize/tables/menuItemModel")(fastify.db);
+      require("./sequelize/tables/menuItemTypeModel")(fastify.db);
+      require("./sequelize/tables/pageModel")(fastify.db);
+      require("./sequelize/tables/pageAliasModel")(fastify.db);
+      require("./sequelize/tables/pageFormateModel")(fastify.db);
       try {
         await fastify.db.sync();
       } catch (error) {
