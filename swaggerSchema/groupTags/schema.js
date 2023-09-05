@@ -571,6 +571,100 @@ const PageFormate = {
     },
   },
 };
+const Page = {
+  getAll: {
+    schema: {
+      tags: ["Page"],
+      description: "get all Page",
+      //security: [{ bearerAuth: [] }],
+    },
+  },
+  getById: {
+    schema: {
+      tags: ["Page"],
+      description: "get Page by Id",
+      //security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          pageId: { type: "string" },
+        },
+        required: ["pageId"],
+      },
+    },
+  },
+  create: {
+    schema: {
+      tags: ["Page"],
+      description: "Create Page",
+      //security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          pageTitle: { type: "string" },
+          pageHeading: { type: "string" },
+          pageName: { type: "string" },
+          alias: { type: "string" },
+          isLink: { type: "boolean" },
+          linkURL: { type: "string" },
+          pageFormatId: { type: "string" },
+          isOpenInNewTab: { type: "boolean" },
+          pageContent: { type: "string" },
+          seoWord: { type: "string" },
+          seoDescription: { type: "string" },
+          isDefault: { type: "boolean" },
+          dynamicParameters: { type: "string" },
+        },
+        required: ["pageTitle", "pageHeading", "pageName"],
+      },
+    },
+  },
+  update: {
+    schema: {
+      tags: ["Page"],
+      description: "Update Page",
+      //security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          pageId: { type: "string" },
+          pageTitle: { type: "string" },
+          pageHeading: { type: "string" },
+          pageName: { type: "string" },
+          alias: { type: "string" },
+          isLink: { type: "boolean" },
+          linkURL: { type: "string" },
+          pageFormatId: { type: "string" },
+          isOpenInNewTab: { type: "boolean" },
+          pageContent: { type: "string" },
+          seoWord: { type: "string" },
+          seoDescription: { type: "string" },
+          isDefault: { type: "boolean" },
+          dynamicParameters: { type: "string" },
+        },
+        required: ["pageId"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["Page"],
+      description: "delete page",
+      //security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          pageId: {
+            type: "array",
+            items: { type: "string" },
+            minItems: 1,
+          },
+        },
+        required: ["pageId"],
+      },
+    },
+  },
+};
 
 module.exports = {
   Auth,
@@ -580,4 +674,5 @@ module.exports = {
   MenuType,
   MenuItemType,
   PageFormate,
+  Page,
 };
