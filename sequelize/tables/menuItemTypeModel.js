@@ -4,7 +4,7 @@ module.exports = (sequelize) => {
   const MenuItemTypeModel = sequelize.define(
     "tblMenuItemType",
     {
-      wrMenuItemTypeID: {
+      wrMenuItemTypeId: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         allowNull: false,
@@ -18,11 +18,11 @@ module.exports = (sequelize) => {
         type: DataTypes.BOOLEAN,
         allowNull: true,
       },
-      wrCreateDate: {
+      wrCreatedDate: {
         type: DataTypes.DATE,
         allowNull: true,
       },
-      wrCreateBy: {
+      wrCreatedBy: {
         type: DataTypes.INTEGER,
         allowNull: true,
       },

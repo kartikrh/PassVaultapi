@@ -107,11 +107,7 @@ async function getAllActiveInactiveTabsQuery(fastify) {
 
 async function getDisplayTabsQuery(type, fastify) {
   return await fastify.db.query(
-    `with disable_tab as (
-      select et."wrValue" from "tblEncryptedData" et
-       left join "tblTabs" t on  t."wrTabId" = et."wrKey" where "wrIsActive" = false
-     )
-     SELECT 
+    `SELECT 
            t."wrTabName" as "tabName",
            t."WrDisplayName" as  "displayName",
            t."wrDisplayType" as "displayType",
@@ -127,9 +123,7 @@ async function getDisplayTabsQuery(type, fastify) {
            t."wrIconName" as "iconName",
            t."wrDisplayOrder" as "displayOrder",
            et."wrValue" as "encryptedTabId"
-           from "tblTabs" t inner join "tblEncryptedData" et on t."wrTabId"=et."wrKey"  where t."wrIsActive" = true 
-         and t."wrParentId" not in ( select * from disable_tab)
-         and t."wrDisplayType" = $1
+           from "tblTabs" t inner join "tblEncryptedData" et on t."wrTabId"=et."wrKey"  where t."wrDisplayType" = $1
          `,
     {
       type: fastify.db.Sequelize.QueryTypes.SELECT,
@@ -191,7 +185,7 @@ async function getSpecificTabsQuery(Id, fastify) {
     t."wrIconName" as "iconName",
     t."wrDisplayOrder" as "displayOrder",
     et."wrValue" as "encryptedTabId"
-    from "tblTabs" t inner join "tblEncryptedData" et on t."wrTabId"=et."wrKey"  where t."wrIsActive" = true and et."wrValue" = $1`,
+    from "tblTabs" t inner join "tblEncryptedData" et on t."wrTabId"=et."wrKey"  where et."wrValue" = $1`,
     {
       type: fastify.db.Sequelize.QueryTypes.SELECT,
       bind: [Id],

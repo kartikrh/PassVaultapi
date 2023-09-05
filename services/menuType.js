@@ -105,7 +105,7 @@ const deleteMenuTypeService = async (request, fastify) => {
 
   await deleteMenuTypeQuery(encryptedIds, fastify);
 
-  return "Menu type(s) deleted successfully";
+  return "Menu Item type(s) deleted successfully";
 };
 
 module.exports = {

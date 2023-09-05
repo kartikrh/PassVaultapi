@@ -34,6 +34,10 @@ module.exports = (sequelize) => {
         type: DataTypes.BOOLEAN,
         allowNull: false,
       },
+      wrMenuItemTypeId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
       wrCreatedDate: {
         type: DataTypes.DATE,
         allowNull: false,

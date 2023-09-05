@@ -493,6 +493,85 @@ const MenuItemType = {
   },
 };
 
+const PageFormate = {
+  getAll: {
+    schema: {
+      tags: ["Page Formate"],
+      description: "get all Page Formate",
+      //security: [{ bearerAuth: [] }],
+    },
+  },
+  getById: {
+    schema: {
+      tags: ["Page Formate"],
+      description: "get Page Formate by Id",
+      //security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          pageFormatId: { type: "string" },
+        },
+        required: ["pageFormatId"],
+      },
+    },
+  },
+  create: {
+    schema: {
+      tags: ["Page Formate"],
+      description: "Create Page Formate",
+      //security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          pageFormatName: { type: "string" },
+          pageName: { type: "string" },
+          image: { type: "string" },
+          description: { type: "string" },
+          isActive: { type: "boolean" },
+        },
+        required: ["pageFormatName"],
+      },
+    },
+  },
+  update: {
+    schema: {
+      tags: ["Page Formate"],
+      description: "Update Page Formate",
+      //security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          pageFormatId: { type: "string" },
+          pageFormatName: { type: "string" },
+          pageName: { type: "string" },
+          image: { type: "string" },
+          description: { type: "string" },
+          isActive: { type: "boolean" },
+        },
+        required: ["pageFormatId"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["Page Formate"],
+      description: "delete page formate",
+      //security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          pageFormatId: {
+            type: "array",
+            items: { type: "string" },
+            minItems: 1,
+          },
+        },
+        required: ["pageFormatId"],
+      },
+    },
+  },
+};
+
 module.exports = {
   Auth,
   Admin,
@@ -500,4 +579,5 @@ module.exports = {
   Block,
   MenuType,
   MenuItemType,
+  PageFormate,
 };

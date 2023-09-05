@@ -107,7 +107,7 @@ const updatetMenuTypeQuery = async (body, fastify) => {
 
 const validatMenuTypeQuery = async (menuTypeId, fastify) => {
   const data = await fastify.db.query(
-    `select "wrMenuTypeName" from "tblMenuItems" mi left join "tblMenutypes" mt on mt."wrMenuTypeId" = mi."wrMenuTypeId"  where mi."wrMenuTypeId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = $1) and "wrIsActive" = true
+    `select "wrMenuTypeName" from "tblMenuItems" mi left join "tblMenuTypes" mt on mt."wrMenuTypeId" = mi."wrMenuTypeId"  where mi."wrMenuTypeId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = $1) and mi."wrIsActive" = true
       `,
     {
       type: fastify.db.QueryTypes.SELECT,
