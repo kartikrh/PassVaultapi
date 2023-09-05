@@ -38,11 +38,11 @@ module.exports = (sequelize) => {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
-      WrModifyBy: {
+      wrModifyBy: {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
-      WrModifyDate: {
+      wrModifyDate: {
         type: DataTypes.DATE,
         allowNull: true,
       },
