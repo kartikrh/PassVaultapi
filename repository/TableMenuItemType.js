@@ -105,7 +105,7 @@ const validateMenuItemTypeQuery = async (id, fastify) => {
 
 const deleteMenuItemTypeQuery = async (ids, fastify) => {
   return await fastify.db.query(
-    `update "tblMenuItemTypes" set "wrIsActive"=false where "wrMenuItemTypeId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = ANY($1))`,
+    `delete from "tblMenuItemTypes" where "wrMenuItemTypeId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = ANY($1))`,
     {
       type: fastify.db.QueryTypes.DELETE,
       bind: [ids],
