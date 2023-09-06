@@ -26,7 +26,7 @@ async function createTabsService(request, fastify) {
   );
 
   if (validateTabByNameAndParent.length) {
-    throw new Error("Same tab name in same parent nor allowed");
+    throw new Error("Same tab name in same parent not allowed");
   }
 
   const createdTab = await createTabsQuery(body, fastify);
@@ -92,7 +92,7 @@ async function updateSpecificTabService(request, fastify) {
   );
 
   if (validateTabByNameAndParent.length) {
-    throw new Error("Same tab name in same parent nor allowed");
+    throw new Error("Same tab name in same parent not allowed");
   }
 
   if (checkDataById.wrParentId !== request.body.parentId) {

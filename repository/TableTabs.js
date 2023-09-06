@@ -158,7 +158,7 @@ async function deleteTabsQuery(Id, fastify) {
       select "wrKey" from "tblEncryptedData" where "wrValue" = $1
     )
 
-    update "tblTabs" set "wrIsActive" = false where "wrTabId" in (select "wrKey" from tab_id)
+    delete from  "tblTabs" where "wrTabId" in (select "wrKey" from tab_id)
     `,
     {
       type: fastify.db.Sequelize.QueryTypes.UPDATE,
@@ -238,8 +238,6 @@ async function updateTabQuery(tabId, req, fastify) {
   }
 
   updateValues.push(tabId);
-
-  console.log("updateColumns", updateValues);
 
   const data = await fastify.db.query(
     `UPDATE "tblTabs" SET ${updateColumns.join(", ")} WHERE "wrTabId" = $${

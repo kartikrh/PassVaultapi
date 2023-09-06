@@ -68,7 +68,6 @@ const Admin = {
       //security: [{ bearerAuth: [] }],
     },
   },
-
   createTab: {
     schema: {
       tags: ["Admin"],
@@ -94,7 +93,6 @@ const Admin = {
       },
     },
   },
-
   deleteTabs: {
     schema: {
       tags: ["Admin"],
@@ -112,7 +110,6 @@ const Admin = {
       },
     },
   },
-
   getById: {
     schema: {
       tags: ["Admin"],
@@ -127,7 +124,6 @@ const Admin = {
       required: ["id"],
     },
   },
-
   postById: {
     schema: {
       tags: ["Admin"],
@@ -155,7 +151,6 @@ const Admin = {
       },
     },
   },
-
   getByDisplayType: {
     schema: {
       tags: ["Admin"],
@@ -173,7 +168,6 @@ const Admin = {
       },
     },
   },
-
   changeDispalyOrder: {
     schema: {
       tags: ["Admin"],
@@ -493,6 +487,94 @@ const MenuItemType = {
   },
 };
 
+const MenuItem = {
+  getAll: {
+    schema: {
+      tags: ["Menu Item"],
+      description: "get MenuItem",
+      //security: [{ bearerAuth: [] }],
+    },
+  },
+  getById: {
+    schema: {
+      tags: ["Menu Item"],
+      description: "get Menu Item by Id",
+      //security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          menuItemId: { type: "string" },
+        },
+        required: ["menuItemId"],
+      },
+    },
+  },
+  create: {
+    schema: {
+      tags: ["Menu Item"],
+      description: "Menu Item create",
+      //security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          menuTypeId: { type: "string" },
+          menuItem: { type: "string" },
+          parentId: { type: "string" },
+          pageId: { type: "string" },
+          isActive: { type: "boolean" },
+          menuItemTypeId: { type: "string" },
+        },
+        required: [
+          "menuTypeId",
+          "menuItem",
+          "parentId",
+          "pageId",
+          "isActive",
+          "menuItemTypeId",
+        ],
+      },
+    },
+  },
+  update: {
+    schema: {
+      tags: ["Menu Item"],
+      description: "Menu Item update",
+      //security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          menuItemId: { type: "string" },
+          menuTypeId: { type: "string" },
+          menuItem: { type: "string" },
+          parentId: { type: "string" },
+          pageId: { type: "string" },
+          isActive: { type: "boolean" },
+          menuItemTypeId: { type: "string" },
+        },
+        required: ["menuItemId"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["Menu Item"],
+      description: "Menu Item delete",
+      //security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          menuItemId: {
+            type: "array",
+            items: { type: "string" },
+            minItems: 1,
+          },
+        },
+        required: ["menuItemId"],
+      },
+    },
+  },
+};
+
 const PageFormate = {
   getAll: {
     schema: {
@@ -666,13 +748,94 @@ const Page = {
   },
 };
 
+const PageAlias = {
+  getAll: {
+    schema: {
+      tags: ["Page Alias"],
+      description: "get all Page Alias",
+      //security: [{ bearerAuth: [] }],
+    },
+  },
+  getById: {
+    schema: {
+      tags: ["Page Alias"],
+      description: "get Page Alias by Id",
+      //security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          pageAliasId: { type: "string" },
+        },
+        required: ["pageAliasId"],
+      },
+    },
+  },
+  create: {
+    schema: {
+      tags: ["Page Alias"],
+      description: "Create Page Alias",
+      //security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          pageId: { type: "string" },
+          menuItemId: { type: "string" },
+          pageName: { type: "string" },
+          pageTitle: { type: "string" },
+          alias: { type: "string" },
+        },
+        required: [],
+      },
+    },
+  },
+  update: {
+    schema: {
+      tags: ["Page Alias"],
+      description: "Update Page Alias",
+      //security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          pageAliasId: { type: "string" },
+          pageId: { type: "string" },
+          menuItemId: { type: "string" },
+          pageName: { type: "string" },
+          pageTitle: { type: "string" },
+          alias: { type: "string" },
+        },
+        required: ["pageAliasId"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["Page Alias"],
+      description: "delete page alias",
+      //security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          pageAliasId: {
+            type: "array",
+            items: { type: "string" },
+            minItems: 1,
+          },
+        },
+        required: ["pageAliasId"],
+      },
+    },
+  },
+};
+
 module.exports = {
   Auth,
   Admin,
   Role,
   Block,
   MenuType,
+  MenuItem,
   MenuItemType,
   PageFormate,
   Page,
+  PageAlias,
 };

@@ -120,7 +120,7 @@ const validatMenuTypeQuery = async (menuTypeId, fastify) => {
 
 const deleteMenuTypeQuery = async (menuTypeIds, fastify) => {
   return await fastify.db.query(
-    ` update "tblMenuTypes" set "wrIsActive" = false where "wrMenuTypeId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = ANY($1::text[]))
+    `delete from "tblMenuTypes" where "wrMenuTypeId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = ANY($1::text[]))
       `,
     {
       type: fastify.db.Sequelize.QueryTypes.DELETE,
