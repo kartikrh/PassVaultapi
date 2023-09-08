@@ -68,7 +68,7 @@ const insertMenuItemTypeQuery = async (body, fastify) => {
 const updateMenuItemTypeQuery = async (body, fastify) => {
   const data = await fastify.db.query(
     `with update_data as (
-            Update "tblMenuItemTypes" set "wrMenuItemType" = $1,"wrIsActive" = $2,"wrModifyDate" = $3,"wrModifyBy" = $4 where "wrMenuItemTypeId" = $5 returning *
+            Update "tblMenuItemTypes" set "wrMenuItemType" = $1,"wrIsActive" = $2,"wrModifyDate" = $3,"wrModifyBy" = $4 where "wrMenuItemTypeId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $5) returning *
         )
         select 
         "wrValue" as "menuItemTypeId",

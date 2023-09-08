@@ -9,31 +9,37 @@ const {
 } = require("../repository/TablePageFormate");
 
 const allPageFormatService = async (fastify) => {
-  return await allPageFormateQuery(fastify);
+  return global.tblPageFormats;
 };
 
 const pageFormatServiceById = async (request, fastify) => {
   const { pageFormatId } = request.body;
-  const result = await pageFormateQueryById(pageFormatId, fastify);
-  if (result) delete result.id;
+  const result = global.tblPageFormats.find(
+    (item) => item.pageFormatId === pageFormatId
+  );
   return result || null;
 };
 
 const addPageFormatService = async (request, fastify) => {
-  const validateByName = await checkPageFormateByName(request.body, fastify);
+  const validateByName = global.tblPageFormats.find(
+    (item) =>
+      item.pageFormatName.toLowerCase() ===
+      request.body.pageFormatName.toLowerCase()
+  );
   if (validateByName) {
     throw new Error("Page Format with this name is already exists");
   }
-  return await insertPageFormateQuery(
+  const data = await insertPageFormateQuery(
     { ...request.body, userId: request.userTokenInfo.WrUserId },
     fastify
   );
+  global.tblPageFormats.push(data);
+  return data;
 };
 
 const updatePageFormatService = async (request, fastify) => {
-  const checkId = await pageFormateQueryById(
-    request.body.pageFormatId,
-    fastify
+  const checkId = global.tblPageFormats.find(
+    (item) => item.pageFormatId === request.body.pageFormatId
   );
 
   if (!checkId) {
@@ -45,7 +51,7 @@ const updatePageFormatService = async (request, fastify) => {
     pageName: request.body.pageName || checkId.pageName,
     image: request.body.image || checkId.image,
     description: request.body.description || checkId.description,
-    pageFormatId: checkId.id,
+    pageFormatId: request.body.pageFormatId,
     userId: request.userTokenInfo.WrUserId,
   };
 
@@ -55,12 +61,24 @@ const updatePageFormatService = async (request, fastify) => {
     body.isActive = checkId.isActive;
   }
 
-  const validateByName = await checkPageFormateByName(body, fastify, "update");
+  const validateByName = await global.tblPageFormats.find(
+    (item) =>
+      item.pageFormatName.toLowerCase() === body.pageFormatName.toLowerCase() &&
+      item.pageFormatId !== body.pageFormatId
+  );
   if (validateByName) {
     throw new Error("Page Format with this name is already exists");
   }
 
-  return await updatePageFormateQuery(body, fastify);
+  const data = await updatePageFormateQuery(body, fastify);
+
+  const index = global.tblPageFormats.findIndex(
+    (item) => item.pageFormatId === body.pageFormatId
+  );
+
+  global.tblPageFormats[index] = data;
+
+  return data;
 };
 
 const deletePageFormatService = async (request, fastify) => {
@@ -78,13 +96,26 @@ const deletePageFormatService = async (request, fastify) => {
 
   await deletePageFormatQuery(encryptedIds, fastify);
 
+  global.tblPageFormats = global.tblPageFormats.filter(
+    (item) => !encryptedIds.includes(item.pageFormatId)
+  );
+
   return "Page formate(s) deleted successfully";
+};
+
+const savePageFormatService = async (request, fastify) => {
+  const { pageAliasId } = request.body;
+
+  if (pageAliasId === "0") {
+    return await addPageFormatService(request, fastify);
+  } else {
+    return await updatePageFormatService(request, fastify);
+  }
 };
 
 module.exports = {
   allPageFormatService,
   pageFormatServiceById,
-  addPageFormatService,
-  updatePageFormatService,
+  savePageFormatService,
   deletePageFormatService,
 };

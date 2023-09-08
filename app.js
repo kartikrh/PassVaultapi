@@ -8,9 +8,11 @@ const dbPg = require("./sequelize/config/config")();
 const cors = require("@fastify/cors");
 const swagger = require("@fastify/swagger");
 const swaggerUi = require("@fastify/swagger-ui");
+const featchData = require("./utilities/fetchAllData");
 
 // Pass --options via CLI arguments in command to enable these options.
 module.exports.options = {};
+global.tblData = {};
 
 module.exports = async function (fastify, opts) {
   fastify
@@ -33,8 +35,11 @@ module.exports = async function (fastify, opts) {
       require("./sequelize/tables/pageModel")(fastify.db);
       require("./sequelize/tables/pageAliasModel")(fastify.db);
       require("./sequelize/tables/pageFormateModel")(fastify.db);
+      require("./sequelize/tables/eventTypeModel")(fastify.db);
+      require("./sequelize/tables/teamModel")(fastify.db);
       try {
         await fastify.db.sync();
+        await featchData(fastify);
       } catch (error) {
         console.log("error sync with db", error);
       }

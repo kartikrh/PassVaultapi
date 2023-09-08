@@ -1,10 +1,9 @@
 const { authorize } = require("../../../controller/middleware");
 const {
-  createPageFormat,
   getAllPageFormats,
   getPageFormatById,
-  updatePageFormat,
   deletePageFormat,
+  savePageFormat,
 } = require("../../../controller/users/admin/Page/pageFormate");
 
 const { PageFormate } = require("../../../swaggerSchema/groupTags/schema");
@@ -22,15 +21,10 @@ module.exports = async (fastify, opts) => {
     handler: (request, reply) => getPageFormatById(request, reply, fastify),
   });
 
-  fastify.post("/create", {
-    schema: PageFormate.create.schema,
-    preHandler: (request, reply) => authorize(request, reply, fastify),
-    handler: (request, reply) => createPageFormat(request, reply, fastify),
-  });
-  fastify.post("/update", {
+  fastify.post("/save", {
     schema: PageFormate.update.schema,
     preHandler: (request, reply) => authorize(request, reply, fastify),
-    handler: (request, reply) => updatePageFormat(request, reply, fastify),
+    handler: (request, reply) => savePageFormat(request, reply, fastify),
   });
 
   fastify.post("/delete", {

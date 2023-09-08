@@ -9,31 +9,36 @@ const {
 } = require("../repository/TableMenuItemType");
 
 const allMenuItemTypeService = async (fastify) => {
-  return await getAllMenuItemTypesQuery(fastify);
+  return global.tblMenuItemTypes;
 };
 
 const menuItemTypeByIdService = async (request, fastify) => {
   const { menuItemTypeId } = request.body;
-  const result = await menuItemTypeQueryById(menuItemTypeId, fastify);
-  if (result) delete result.id;
+  const result = global.tblMenuItemTypes.find(
+    (item) => item.menuItemTypeId === menuItemTypeId
+  );
   return result || null;
 };
 
 const createMenuItemTypeService = async (request, fastify) => {
-  const validateByName = await checkMenuItemTypeByName(request.body, fastify);
+  const validateByName = global.tblMenuItemTypes.find(
+    (item) => item.menuItemType === request.body.menuItemType
+  );
   if (validateByName) {
     throw new Error("MenuItemType with this name is already exists");
   }
-  return await insertMenuItemTypeQuery(
+  const data = await insertMenuItemTypeQuery(
     { ...request.body, userId: request.userTokenInfo.WrUserId },
     fastify
   );
+
+  global.tblMenuItemTypes.push(data);
+  return data;
 };
 
 const updateMenuItemTypeService = async (request, fastify) => {
-  const checkId = await menuItemTypeQueryById(
-    request.body.menuItemTypeId,
-    fastify
+  const checkId = global.tblMenuItemTypes.find(
+    (item) => item.menuItemTypeId === request.body.menuItemTypeId
   );
 
   if (!checkId) {
@@ -42,7 +47,7 @@ const updateMenuItemTypeService = async (request, fastify) => {
 
   const body = {
     menuItemType: request.body.menuItemType || checkId.menuItemType,
-    menuItemTypeId: checkId.id,
+    menuItemTypeId: request.body.menuItemTypeId,
     userId: request.userTokenInfo.WrUserId,
   };
 
@@ -52,12 +57,25 @@ const updateMenuItemTypeService = async (request, fastify) => {
     body.isActive = checkId.isActive;
   }
 
-  const validateByName = await checkMenuItemTypeByName(body, fastify, "update");
+  const validateByName = global.tblMenuItemTypes.find(
+    (item) =>
+      item.menuItemType.toLowerCase() === body.menuItemType.toLowerCase() &&
+      item.menuItemTypeId !== body.menuItemTypeId
+  );
+
   if (validateByName) {
     throw new Error("MenuItemType with this name is already exists");
   }
 
-  return await updateMenuItemTypeQuery(body, fastify);
+  const data = await updateMenuItemTypeQuery(body, fastify);
+
+  const index = global.tblMenuItemTypes.findIndex(
+    (item) => item.menuItemTypeId === request.body.menuItemTypeId
+  );
+
+  global.tblMenuItemTypes[index] = data;
+
+  return data;
 };
 
 const deleteMenuItemTypeService = async (request, fastify) => {
@@ -75,13 +93,26 @@ const deleteMenuItemTypeService = async (request, fastify) => {
 
   await deleteMenuItemTypeQuery(encryptedIds, fastify);
 
+  global.tblMenuItemTypes = global.tblMenuItemTypes.filter(
+    (item) => !encryptedIds.includes(item.menuItemTypeId)
+  );
+
   return "Menu type(s) deleted successfully";
+};
+
+const saveMenuItemTypeService = async (request, fastify) => {
+  const { menuItemTypeId } = request.body;
+
+  if (menuItemTypeId === "0") {
+    return await createMenuItemTypeService(request, fastify);
+  } else {
+    return await updateMenuItemTypeService(request, fastify);
+  }
 };
 
 module.exports = {
   allMenuItemTypeService,
-  createMenuItemTypeService,
   menuItemTypeByIdService,
-  updateMenuItemTypeService,
+  saveMenuItemTypeService,
   deleteMenuItemTypeService,
 };

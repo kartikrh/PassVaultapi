@@ -1,21 +1,21 @@
 const {
-  getAllRolesQuery,
   valideRoleId,
   deleteRoleQuery,
-  roleByDisplayTypeQuery,
   createRoleQuery,
   updateOrCreatePermissionQuery,
+  deletePermissionQuery,
 } = require("../repository/TableRoles");
 
 const allRolesService = async (fastify) => {
-  const result = await getAllRolesQuery(fastify);
-  return result;
+  return global.tblRoles;
 };
 
 const roleByDisplayTypeService = async (request, fastify) => {
   const { displayType } = request.body;
-  const result = await roleByDisplayTypeQuery(displayType, fastify);
-  return result;
+  const result = global.tblRoles.filter(
+    (item) => item.displayType === displayType
+  );
+  return result || [];
 };
 
 const roleCreateService = async (request, fastify) => {
@@ -24,6 +24,7 @@ const roleCreateService = async (request, fastify) => {
   if (request.body.roleId === "0") {
     const createRole = await createRoleQuery(request.body, fastify);
     role_id = createRole.roleId;
+    global.tblRoles.push(createRole);
   }
 
   request.body.permissions = request.body.permissions.map((item) => {
@@ -41,25 +42,23 @@ const roleCreateService = async (request, fastify) => {
 const deleteRoleService = async (request, fastify) => {
   const { roleIds } = request.body;
 
-  let invalidRoleIds = [];
-
   for (let i = 0; i < roleIds.length; i++) {
     const checkValidRoleId = await valideRoleId(roleIds[i], fastify);
 
     if (checkValidRoleId) {
-      invalidRoleIds.push(roleIds[i]);
-    } else {
-      await deleteRoleQuery(roleIds[i], fastify);
+      throw new Error(
+        `Role Id ${roleIds[i]} is assigned to user(s), skiping delete`
+      );
     }
   }
+  await deleteRoleQuery(roleIds, fastify);
+  await deletePermissionQuery(roleIds, fastify);
 
-  if (invalidRoleIds.length > 0) {
-    return `Role Id(s) ${invalidRoleIds.join(
-      ","
-    )} stil assigned to user(s), skiping delete`;
-  } else {
-    return `Role Id(s) deleted successfully`;
-  }
+  global.tblRoles = global.tblRoles.filter(
+    (item) => !roleIds.includes(item.roleId)
+  );
+
+  return "Role successfully deleted";
 };
 
 module.exports = {

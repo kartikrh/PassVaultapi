@@ -85,7 +85,7 @@ const insertPageFormateQuery = async (body, fastify) => {
 const updatePageFormateQuery = async (body, fastify) => {
   const data = await fastify.db.query(
     `with update_data as (
-                Update "tblPageFormats" set "wrPageFormatName" = $1,"wrPageName" = $2,"wrImage" = $3,"wrDescription" = $4,"wrIsActive" = $5,"wrModifyDate" = $6,"wrModifyBy" = $7 where "wrPageFormatId" = $8 returning *
+                Update "tblPageFormats" set "wrPageFormatName" = $1,"wrPageName" = $2,"wrImage" = $3,"wrDescription" = $4,"wrIsActive" = $5,"wrModifyDate" = $6,"wrModifyBy" = $7 where "wrPageFormatId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $8) returning *
             )
             select 
             "wrValue" as "pageFormatId",

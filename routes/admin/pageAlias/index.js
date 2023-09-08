@@ -1,9 +1,8 @@
 const { authorize } = require("../../../controller/middleware");
 const {
-  createPageAlias,
   getAllPageAlias,
   getPageAliasById,
-  updatePageAlias,
+  savePageAlias,
   deletePageAlias,
 } = require("../../../controller/users/admin/Page/pageAlias");
 
@@ -22,15 +21,10 @@ module.exports = async (fastify, opts) => {
     handler: (request, reply) => getPageAliasById(request, reply, fastify),
   });
 
-  fastify.post("/create", {
-    schema: PageAlias.create.schema,
-    preHandler: (request, reply) => authorize(request, reply, fastify),
-    handler: (request, reply) => createPageAlias(request, reply, fastify),
-  });
-  fastify.post("/update", {
+  fastify.post("/save", {
     schema: PageAlias.update.schema,
     preHandler: (request, reply) => authorize(request, reply, fastify),
-    handler: (request, reply) => updatePageAlias(request, reply, fastify),
+    handler: (request, reply) => savePageAlias(request, reply, fastify),
   });
 
   fastify.post("/delete", {
