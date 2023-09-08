@@ -10,7 +10,7 @@ async function createTabsQuery(body, fastify) {
       )
 
       select
-      et."wrValue" as "tabId",
+      et."wrValue" as "encryptedTabId",
       "wrTabName" as "tabName",
       "WrDisplayName" as  "displayName",
       "wrDisplayType" as "displayType",
@@ -153,12 +153,7 @@ async function hasAssociatedChildern(Id, fastify) {
 
 async function deleteTabsQuery(Id, fastify) {
   await fastify.db.query(
-    `
-    with tab_id as (
-      select "wrKey" from "tblEncryptedData" where "wrValue" = $1
-    )
-
-    delete from  "tblTabs" where "wrTabId" in (select "wrKey" from tab_id)
+    `delete from  "tblTabs" where "wrTabId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = ANY($1))
     `,
     {
       type: fastify.db.Sequelize.QueryTypes.UPDATE,
@@ -243,7 +238,7 @@ async function updateTabQuery(tabId, req, fastify) {
     `UPDATE "tblTabs" SET ${updateColumns.join(", ")} WHERE "wrTabId" = $${
       updateValues.length
     } RETURNING 
-    "wrTabId" as "tabId",
+    "wrTabId" as "encryptedTabId",
     "wrTabName" as "tabName",
     "WrDisplayName" as  "displayName",
     "wrDisplayType" as "displayType",

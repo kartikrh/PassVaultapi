@@ -59,38 +59,13 @@ const Auth = {
   },
 };
 
-const Admin = {
+const Tabs = {
   //all tabs related schema
   getTabs: {
     schema: {
       tags: ["Admin"],
       description: "get tabs",
       //security: [{ bearerAuth: [] }],
-    },
-  },
-  createTab: {
-    schema: {
-      tags: ["Admin"],
-      description: "post tabs",
-      //security: [{ bearerAuth: [] }],
-      body: {
-        type: "object",
-        properties: {
-          tabName: { type: "string" },
-          displayName: { type: "string" },
-          displayType: { type: "integer", enum: [1, 2] },
-          webPage: { type: "string" },
-          parentId: { type: "string" },
-          isActive: { type: "boolean" },
-          isAdd: { type: "boolean" },
-          isEdit: { type: "boolean" },
-          isDelete: { type: "boolean" },
-          isView: { type: "boolean" },
-          addWebpage: { type: "string" },
-          isMenu: { type: "boolean" },
-          iconName: { type: "string" },
-        },
-      },
     },
   },
   deleteTabs: {
@@ -124,7 +99,7 @@ const Admin = {
       required: ["id"],
     },
   },
-  postById: {
+  saveTab: {
     schema: {
       tags: ["Admin"],
       description: "Update tab by ID",
@@ -149,6 +124,7 @@ const Admin = {
           iconName: { type: "string" },
         },
       },
+      required: ["id"],
     },
   },
   getByDisplayType: {
@@ -290,24 +266,8 @@ const Block = {
       },
     },
   },
-  createBlock: {
-    schema: {
-      tags: ["Block"],
-      description: "block create",
-      //security: [{ bearerAuth: [] }],
-      body: {
-        type: "object",
-        properties: {
-          blockName: { type: "string" },
-          isShowContent: { type: "boolean" },
-          content: { type: "string" },
-          controlId: { type: "string" },
-        },
-        required: ["blockName", "isShowContent"],
-      },
-    },
-  },
-  updateBlock: {
+
+  saveBlock: {
     schema: {
       tags: ["Block"],
       description: "block update",
@@ -436,22 +396,8 @@ const MenuItemType = {
       },
     },
   },
-  create: {
-    schema: {
-      tags: ["Menu Item Types"],
-      description: "Menu Item Type create",
-      //security: [{ bearerAuth: [] }],
-      body: {
-        type: "object",
-        properties: {
-          isActive: { type: "boolean" },
-          menuItemType: { type: "string" },
-        },
-        required: ["menuItemType", "isActive"],
-      },
-    },
-  },
-  update: {
+
+  save: {
     schema: {
       tags: ["Menu Item Types"],
       description: "Menu Item Type update",
@@ -829,7 +775,7 @@ const PageAlias = {
 
 module.exports = {
   Auth,
-  Admin,
+  Tabs,
   Role,
   Block,
   MenuType,

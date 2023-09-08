@@ -2,13 +2,10 @@ const {
   getTabsQuery,
   createTabsQuery,
   deleteTabsQuery,
-  getSpecificTabsQuery,
   getTabInfoQuery,
   updateTabQuery,
-  getDisplayTabsQuery,
   hasAssociatedChildern,
   validateAllTabIdsQuery,
-  validateTabByNameQuery,
   getMaxDispalyOrderByParent,
   getAllActiveInactiveTabsQuery,
   updateDisplayOrder,
@@ -19,17 +16,19 @@ const { tabsValidator } = require("../utilities/validator.js");
 async function createTabsService(request, fastify) {
   const body = tabsValidator(request.body);
 
-  const validateTabByNameAndParent = await validateTabByNameQuery(
-    body,
-    fastify,
-    "create"
+  const validateTabByNameAndParent = global.tblTabs.find(
+    (item) =>
+      item.parentId == body.wrParentId &&
+      item.tabName.toLowerCase() === body.wrTabName.toLowerCase()
   );
 
-  if (validateTabByNameAndParent.length) {
+  if (validateTabByNameAndParent) {
     throw new Error("Same tab name in same parent not allowed");
   }
 
   const createdTab = await createTabsQuery(body, fastify);
+
+  global.tblTabs.push(createdTab);
 
   return createdTab;
 }
@@ -41,9 +40,7 @@ async function getTabsService(request, fastify) {
 }
 
 async function getAllTabsService(request, fastify) {
-  const tabList = await getAllActiveInactiveTabsQuery(fastify);
-
-  return tabList;
+  return global.tblTabs;
 }
 
 async function deleteTabsService(request, fastify) {
@@ -59,16 +56,18 @@ async function deleteTabsService(request, fastify) {
     }
   }
 
-  for (const encryptedTabId of encryptedTabIds) {
-    await deleteTabsQuery(encryptedTabId, fastify);
-  }
+  await deleteTabsQuery(encryptedTabIds, fastify);
+
+  global.tblTabs = global.tblTabs.filter(
+    (item) => !encryptedTabIds.includes(item.encryptedTabId)
+  );
 
   return "Tab(s) deleted successfully";
 }
 
 async function getSpecificTabsService(request, fastify) {
   const { id } = request.body;
-  const data = await getSpecificTabsQuery(id, fastify);
+  const data = global.tblTabs.find((item) => item.encryptedTabId === id);
   return data || null;
 }
 
@@ -81,17 +80,14 @@ async function updateSpecificTabService(request, fastify) {
     throw new Error("No Tabs Found for this Id");
   }
 
-  const validateTabByNameAndParent = await validateTabByNameQuery(
-    {
-      wrTabName: request.body.tabName,
-      wrParentId: request.body.parentId,
-      wrTabId: checkDataById.wrTabId,
-    },
-    fastify,
-    "update"
+  const checkByName = global.tblTabs.find(
+    (item) =>
+      item.tabName.toLowerCase() === request.body.tabName.toLowerCase() &&
+      item.encryptedTabId !== id &&
+      item.parentId === request.body.parentId
   );
 
-  if (validateTabByNameAndParent.length) {
+  if (checkByName) {
     throw new Error("Same tab name in same parent not allowed");
   }
 
@@ -109,13 +105,20 @@ async function updateSpecificTabService(request, fastify) {
     request,
     fastify
   );
-  return { ...updateTab, tabId: id };
+
+  global.tblTabs = global.tblTabs.map((item) => {
+    if (item.encryptedTabId === id) {
+      item = { ...updateTab, encryptedTabId: id };
+    }
+    return item;
+  });
+
+  return { ...updateTab, encryptedTabId: id };
 }
 
 async function getDisplayTabsService(request, fastify) {
   const { displayType } = request.body;
-  const tabList = await getDisplayTabsQuery(displayType, fastify);
-  return tabList;
+  return global.tblTabs.filter((item) => item.displayType === displayType);
 }
 
 async function changeDisplayOrderService(request, fastify) {
@@ -139,16 +142,28 @@ async function changeDisplayOrderService(request, fastify) {
     await updateDisplayOrder(item, fastify);
   }
 
+  const getAllTabs = await getAllActiveInactiveTabsQuery(fastify);
+
+  global.tblTabs = getAllTabs;
+
   return "Order chaged successfully";
 }
 
+async function saveTabService(request, fastify) {
+  const { id } = request.body;
+
+  if (id === "0") {
+    return await createTabsService(request, fastify);
+  } else {
+    return await updateSpecificTabService(request, fastify);
+  }
+}
+
 module.exports = {
-  createTabsService,
+  saveTabService,
   getTabsService,
   deleteTabsService,
   getSpecificTabsService,
-  updateSpecificTabService,
-  updateTabQuery,
   getDisplayTabsService,
   changeDisplayOrderService,
   getAllTabsService,

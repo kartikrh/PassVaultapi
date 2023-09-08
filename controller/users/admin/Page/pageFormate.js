@@ -1,8 +1,7 @@
 const {
-  addPageFormatService,
   allPageFormatService,
   pageFormatServiceById,
-  updatePageFormatService,
+  savePageFormatService,
   deletePageFormatService,
 } = require("../../../../services/pageFormate");
 
@@ -26,18 +25,9 @@ const getPageFormatById = async (request, reply, fastify) => {
   }
 };
 
-const createPageFormat = async (request, reply, fastify) => {
+const savePageFormat = async (request, reply, fastify) => {
   try {
-    const result = await addPageFormatService(request, fastify);
-    reply.status(200).send(success(result, 200));
-  } catch (err) {
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
-  }
-};
-
-const updatePageFormat = async (request, reply, fastify) => {
-  try {
-    const result = await updatePageFormatService(request, fastify);
+    const result = await savePageFormatService(request, fastify);
     reply.status(200).send(success(result, 200));
   } catch (err) {
     reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
@@ -55,7 +45,6 @@ const deletePageFormat = async (request, reply, fastify) => {
 module.exports = {
   getAllPageFormats,
   getPageFormatById,
-  createPageFormat,
-  updatePageFormat,
+  savePageFormat,
   deletePageFormat,
 };

@@ -1,10 +1,9 @@
 const { authorize } = require("../../../controller/middleware");
 const {
-  createMenuType,
   deleteMenuType,
   getAllMenuTypes,
   getMenuTypeById,
-  updateMenuType,
+  saveMenuType,
 } = require("../../../controller/users/admin/menuType");
 const { MenuType } = require("../../../swaggerSchema/groupTags/schema");
 
@@ -21,15 +20,10 @@ module.exports = async (fastify, opts) => {
     handler: (request, reply) => getMenuTypeById(request, reply, fastify),
   });
 
-  fastify.post("/create", {
-    schema: MenuType.create.schema,
-    preHandler: (request, reply) => authorize(request, reply, fastify),
-    handler: (request, reply) => createMenuType(request, reply, fastify),
-  });
-  fastify.post("/update", {
+  fastify.post("/save", {
     schema: MenuType.update.schema,
     preHandler: (request, reply) => authorize(request, reply, fastify),
-    handler: (request, reply) => updateMenuType(request, reply, fastify),
+    handler: (request, reply) => saveMenuType(request, reply, fastify),
   });
 
   fastify.post("/delete", {

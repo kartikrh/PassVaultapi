@@ -106,7 +106,8 @@ const insertPageQuery = async (body, fastify) => {
 
 const updatePageQuery = async (body, fastify) => {
   const data = await fastify.db.query(
-    `UPDATE "tblPages" set "wrPageTitle"=$1 , "wrPageHeading" = $2 , "wrPageName"=$3 , "wrAlias" = $4 , "wrIsLink" = $5 , "wrLinkURL" = $6 , "wrPageFormatId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $7) , "wrIsOpenInNewTab" = $8 , "wrPageContent" = $9 , "wrSEOWord" = $10 , "wrSEODescription" = $11 , "wrIsDefault" = $12 , "wrDynamicParameters" = $13, "wrModifyBy" = $14 , "wrModifyDate" = $15 where "wrPageId" = $16 returning  "wrPageTitle" as "pageTitle",
+    `UPDATE "tblPages" set "wrPageTitle"=$1 , "wrPageHeading" = $2 , "wrPageName"=$3 , "wrAlias" = $4 , "wrIsLink" = $5 , "wrLinkURL" = $6 , "wrPageFormatId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $7) , "wrIsOpenInNewTab" = $8 , "wrPageContent" = $9 , "wrSEOWord" = $10 , "wrSEODescription" = $11 , "wrIsDefault" = $12 , "wrDynamicParameters" = $13, "wrModifyBy" = $14 , "wrModifyDate" = $15 where "wrPageId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $16)
+     returning  "wrPageTitle" as "pageTitle",
         "wrPageHeading" as "pageHeading",
         "wrPageName" as "pageName",
         "wrAlias" as "alias",

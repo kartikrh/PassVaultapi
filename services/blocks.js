@@ -1,52 +1,52 @@
 const {
-  getAllBlocksQuery,
-  checkBlockByName,
   insertBlockQuery,
-  getBlockByIdQuery,
   updateBlockQuery,
   validateBlockQuery,
   deleteBlockQuery,
 } = require("../repository/TableBlock");
 
 const allBlocksService = async (fastify) => {
-  const result = await getAllBlocksQuery(fastify);
-  return result;
+  return global.tblBlocks;
 };
 
 const blockByIdService = async (request, fastify) => {
   const { blockId } = request.body;
-  const result = await getBlockByIdQuery(blockId, fastify);
-  if (result) delete result.id;
+  const result = global.tblBlocks.find((block) => block.blockId === blockId);
   return result || null;
 };
 
 const createBlockService = async (request, fastify) => {
-  const validateByName = await checkBlockByName(request.body, fastify);
+  const validateByName = global.tblBlocks.find(
+    (block) =>
+      block.blockName.toLowerCase() === request.body.blockName.toLowerCase()
+  );
 
   if (validateByName) {
     throw new Error("Block with this name already exists");
   }
 
-  return await insertBlockQuery(
+  const data = await insertBlockQuery(
     { ...request.body, userId: request.userTokenInfo.WrUserId },
     fastify
   );
+
+  global.tblBlocks.push(data);
+  return data;
 };
 
 const updateBlockService = async (request, fastify) => {
-  const checkId = await getBlockByIdQuery(request.body.blockId, fastify);
+  const checkId = global.tblBlocks.find(
+    (block) => block.blockId === request.body.blockId
+  );
 
   if (!checkId) {
     throw new Error("Block with this id not Found");
   }
 
-  const validateByName = await checkBlockByName(
-    {
-      wrBlockId: checkId.id,
-      blockName: request.body.blockName,
-    },
-    fastify,
-    "update"
+  const validateByName = global.tblBlocks.find(
+    (block) =>
+      block.blockName.toLowerCase() === request.body.blockName.toLowerCase() &&
+      block.blockId !== request.body.blockId
   );
 
   if (validateByName) {
@@ -58,10 +58,16 @@ const updateBlockService = async (request, fastify) => {
     isShowContent: request.body.isShowContent,
     content: request.body.content || checkId.content,
     controlId: request.body.controlId || checkId.controlId,
-    blockId: checkId.id,
+    blockId: request.body.blockId,
   };
 
   const result = await updateBlockQuery(updateBody, fastify);
+
+  const index = global.tblBlocks.findIndex(
+    (block) => block.blockId === request.body.blockId
+  );
+
+  global.tblBlocks[index] = { ...result, blockId: request.body.blockId };
 
   return { ...result, blockId: request.body.blockId };
 };
@@ -81,13 +87,26 @@ const deleteBlockService = async (request, fastify) => {
 
   await deleteBlockQuery(encryptedIds, fastify);
 
+  global.tblBlocks = global.tblBlocks.filter(
+    (block) => !encryptedIds.includes(block.blockId)
+  );
+
   return "Block(s) deleted successfully";
+};
+
+const saveBlockService = async (request, fastify) => {
+  const { blockId } = request.body;
+
+  if (blockId === "0") {
+    return await createBlockService(request, fastify);
+  } else {
+    return await updateBlockService(request, fastify);
+  }
 };
 
 module.exports = {
   allBlocksService,
-  createBlockService,
+  saveBlockService,
   blockByIdService,
-  updateBlockService,
   deleteBlockService,
 };

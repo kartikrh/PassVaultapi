@@ -1,10 +1,9 @@
 const { authorize } = require("../../../controller/middleware");
 const {
-  createPage,
   getAllPage,
   getPageById,
-  updatePage,
   deletePage,
+  savePage,
 } = require("../../../controller/users/admin/Page/page");
 
 const { Page } = require("../../../swaggerSchema/groupTags/schema");
@@ -22,15 +21,10 @@ module.exports = async (fastify, opts) => {
     handler: (request, reply) => getPageById(request, reply, fastify),
   });
 
-  fastify.post("/create", {
-    schema: Page.create.schema,
-    preHandler: (request, reply) => authorize(request, reply, fastify),
-    handler: (request, reply) => createPage(request, reply, fastify),
-  });
-  fastify.post("/update", {
+  fastify.post("/save", {
     schema: Page.update.schema,
     preHandler: (request, reply) => authorize(request, reply, fastify),
-    handler: (request, reply) => updatePage(request, reply, fastify),
+    handler: (request, reply) => savePage(request, reply, fastify),
   });
 
   fastify.post("/delete", {

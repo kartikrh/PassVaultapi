@@ -1,8 +1,7 @@
 const {
-  addPageAliasService,
   allPageAliasService,
   pageAliasByIdService,
-  updatePageAliasService,
+  savePageAliasService,
   deletePageAliasService,
 } = require("../../../../services/pageAlias");
 
@@ -26,17 +25,9 @@ const getPageAliasById = async (request, reply, fastify) => {
   }
 };
 
-const createPageAlias = async (request, reply, fastify) => {
+const savePageAlias = async (request, reply, fastify) => {
   try {
-    const result = await addPageAliasService(request, fastify);
-    reply.status(200).send(success(result, 200));
-  } catch (err) {
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
-  }
-};
-const updatePageAlias = async (request, reply, fastify) => {
-  try {
-    const result = await updatePageAliasService(request, fastify);
+    const result = await savePageAliasService(request, fastify);
     reply.status(200).send(success(result, 200));
   } catch (err) {
     reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
@@ -55,7 +46,6 @@ const deletePageAlias = async (request, reply, fastify) => {
 module.exports = {
   getAllPageAlias,
   getPageAliasById,
-  createPageAlias,
-  updatePageAlias,
+  savePageAlias,
   deletePageAlias,
 };

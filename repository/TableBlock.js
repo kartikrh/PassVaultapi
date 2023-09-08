@@ -79,7 +79,7 @@ const insertBlockQuery = async (body, fastify) => {
 
 const updateBlockQuery = async (body, fastify) => {
   const data = await fastify.db.query(
-    `UPDATE "tblBlocks" set "wrBlockName"=$1 , "wrIsShowContent" = $2 , "wrContent"=$3 , "wrControlId" = $4 where "wrBlockId" = $5 returning  "wrBlockName" as "blockName",
+    `UPDATE "tblBlocks" set "wrBlockName"=$1 , "wrIsShowContent" = $2 , "wrContent"=$3 , "wrControlId" = $4 where "wrBlockId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $5) returning  "wrBlockName" as "blockName",
     "wrIsShowContent" as "isShowContent",
     "wrContent" as "content",
     "wrControlId" as "controlId"`,

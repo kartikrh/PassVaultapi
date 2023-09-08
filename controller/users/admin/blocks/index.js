@@ -1,8 +1,7 @@
 const {
   allBlocksService,
-  createBlockService,
   blockByIdService,
-  updateBlockService,
+  saveBlockService,
   deleteBlockService,
 } = require("../../../../services/blocks");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
@@ -24,18 +23,9 @@ const getBlockById = async (request, reply, fastify) => {
   }
 };
 
-const createBlock = async (request, reply, fastify) => {
+const saveBlock = async (request, reply, fastify) => {
   try {
-    const result = await createBlockService(request, fastify);
-    reply.status(200).send(success(result, 200));
-  } catch (err) {
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
-  }
-};
-
-const updateBlock = async (request, reply, fastify) => {
-  try {
-    const result = await updateBlockService(request, fastify);
+    const result = await saveBlockService(request, fastify);
     reply.status(200).send(success(result, 200));
   } catch (err) {
     reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
@@ -53,8 +43,7 @@ const deleteBlock = async (request, reply, fastify) => {
 
 module.exports = {
   getAllBlocks,
-  createBlock,
   getBlockById,
-  updateBlock,
+  saveBlock,
   deleteBlock,
 };

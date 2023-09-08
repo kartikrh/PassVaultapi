@@ -10,21 +10,19 @@ const {
 const { pageFormateQueryById } = require("../repository/TablePageFormate");
 
 const allPageService = async (fastify) => {
-  return await allPageQuery(fastify);
+  return global.tblPages;
 };
 
 const pageByIdService = async (request, fastify) => {
   const { pageId } = request.body;
-  const result = await pageByIdQuery(pageId, fastify);
-  if (result) delete result.id;
+  const result = global.tblPages.find((item) => item.pageId === pageId);
   return result || null;
 };
 
 const addPageService = async (request, fastify) => {
   if (request.body.pageFormatId) {
-    const validatePageFormateId = await pageFormateQueryById(
-      request.body.pageFormatId,
-      fastify
+    const validatePageFormateId = global.tblPageFormats.find(
+      (item) => item.pageFormatId === request.body.pageFormatId
     );
 
     if (!validatePageFormateId) {
@@ -32,23 +30,27 @@ const addPageService = async (request, fastify) => {
     }
   }
 
-  return await insertPageQuery(
+  const data = await insertPageQuery(
     { ...request.body, userId: request.userTokenInfo.WrUserId },
     fastify
   );
+
+  global.tblPages.push(data);
+
+  return data;
 };
 
 const updatePageService = async (request, fastify) => {
-  const validatePageId = await pageByIdQuery(request.body.pageId, fastify);
-
+  const validatePageId = global.tblPages.find(
+    (item) => item.pageId === request.body.pageId
+  );
   if (!validatePageId) {
     throw new Error("Invalid page id");
   }
 
   if (request.body.pageFormatId) {
-    const validatePageFormateId = await pageFormateQueryById(
-      request.body.pageFormatId,
-      fastify
+    const validatePageFormateId = global.tblPageFormats.find(
+      (item) => item.pageFormatId === request.body.pageFormatId
     );
 
     if (!validatePageFormateId) {
@@ -72,7 +74,7 @@ const updatePageService = async (request, fastify) => {
     isDefault: validatePageId.isDefault,
     dynamicParameters:
       request.body.dynamicParameters || validatePageId.dynamicParameters,
-    pageId: validatePageId.id,
+    pageId: request.body.pageId,
     userId: request.userTokenInfo.WrUserId,
   };
 
@@ -90,10 +92,20 @@ const updatePageService = async (request, fastify) => {
 
   const result = await updatePageQuery(body, fastify);
 
+  const index = global.tblPages.findIndex(
+    (item) => item.pageId === request.body.pageId
+  );
+
+  global.tblPages[index] = {
+    ...result,
+    pageId: request.body.pageId,
+    pageFormatId: body.pageFormatId,
+  };
+
   return {
     ...result,
     pageId: request.body.pageId,
-    pageFormatId: request.body.pageFormatId,
+    pageFormatId: body.pageFormatId,
   };
 };
 
@@ -123,13 +135,26 @@ const deletePageService = async (request, fastify) => {
 
   await deletePageQuery(encryptedIds, fastify);
 
+  global.tblPages = global.tblPages.filter(
+    (item) => !encryptedIds.includes(item.pageId)
+  );
+
   return "Page(s) deleted successfully";
+};
+
+const savePageService = async (request, fastify) => {
+  const { pageId } = request.body;
+
+  if (pageId === "0") {
+    return await addPageService(request, fastify);
+  } else {
+    return await updatePageService(request, fastify);
+  }
 };
 
 module.exports = {
   allPageService,
   pageByIdService,
-  addPageService,
-  updatePageService,
+  savePageService,
   deletePageService,
 };

@@ -4,7 +4,6 @@ const allPageAliases = async (fastify) => {
     et."wrValue" as "pageAliasId",
     et2."wrValue" as "menuItemId",
     et3."wrValue" as "pageId",
-    et."wrKey" as "id",
     "wrPageName" as "pageName",
     "wrPageTitle" as "pageTitle",
     "wrAlias" as "alias"
@@ -44,7 +43,10 @@ const pageAliasById = async (pageAliasId, fastify) => {
 const insertPageAliasQuery = async (body, fastify) => {
   const data = await fastify.db.query(
     `with insert_data as (
-            INSERT INTO "tblPageAliases" ("wrMenuItemId","wrPageId" , "wrPageTitle" ,"wrPageName" , "wrCreatedDate","wrCreatedBy","wrAlias") values ($1,$2,$3,$4,$5,$6,$7) returning *
+            INSERT INTO "tblPageAliases" ("wrMenuItemId","wrPageId" , "wrPageTitle" ,"wrPageName" , "wrCreatedDate","wrCreatedBy","wrAlias") values (
+                (select "wrKey" from "tblEncryptedData" where "wrValue" = $1),
+                (select "wrKey" from "tblEncryptedData" where "wrValue" = $2),
+               $3,$4,$5,$6,$7) returning *
         )
         select 
         et."wrValue" as "pageAliasId",
@@ -83,7 +85,8 @@ const updatePageAliasQuery = async (body, fastify) => {
     "wrPageName"=$4,
     "wrAlias"=$5,
     "wrModifyDate"=$6,
-    "wrModifyBy"=$7 where "wrPageAliasId" = $8 returning *`,
+    "wrModifyBy"=$7 where "wrPageAliasId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $8)
+     returning *`,
     {
       type: fastify.db.QueryTypes.SELECT,
       bind: [

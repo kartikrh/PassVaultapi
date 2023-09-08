@@ -1,8 +1,5 @@
 const {
-  checkMenuTypeByName,
   deleteMenuTypeQuery,
-  getAllMenuItemsQuery,
-  getMenuTypeByIdQuery,
   insertMenuTypeQuery,
   updatetMenuTypeQuery,
   validatMenuTypeQuery,
@@ -11,40 +8,50 @@ const {
 const { getBlockByIdQuery } = require("../repository/TableBlock");
 
 const allMenuTypeService = async (fastify) => {
-  return await getAllMenuItemsQuery(fastify);
+  return global.tblMenuTypes;
 };
 
 const menuTypeByIdService = async (request, fastify) => {
   const { menuTypeId } = request.body;
-  const result = await getMenuTypeByIdQuery(menuTypeId, fastify);
-  if (result) delete result.id;
+  const result = global.tblMenuTypes.find(
+    (menuType) => menuType.menuTypeId === menuTypeId
+  );
   return result || null;
 };
 
 const createMenuTypeService = async (request, fastify) => {
-  const validateBlockId = await getBlockByIdQuery(
-    request.body.blockId,
-    fastify
+  const validateBlockId = global.tblBlocks.find(
+    (block) => block.blockId === request.body.blockId
   );
 
   if (!validateBlockId) {
     throw new Error("Block not found for give id");
   }
 
-  const validateByName = await checkMenuTypeByName(request.body, fastify);
+  const validateByName = global.tblMenuTypes.find(
+    (menuType) =>
+      menuType.menuTypeName === request.body.menuTypeName &&
+      menuType.blockId === request.body.blockId
+  );
 
   if (validateByName) {
     throw new Error("MenuType with this name is already exists in this Block");
   }
 
-  return await insertMenuTypeQuery(
+  const data = await insertMenuTypeQuery(
     { ...request.body, userId: request.userTokenInfo.WrUserId },
     fastify
   );
+
+  global.tblMenuTypes.push(data);
+
+  return data;
 };
 
 const updateMenuTypeService = async (request, fastify) => {
-  const checkId = await getMenuTypeByIdQuery(request.body.menuTypeId, fastify);
+  const checkId = global.tblMenuTypes.find(
+    (menuType) => menuType.menuTypeId === request.body.menuTypeId
+  );
 
   if (!checkId) {
     throw new Error("Menu Type with this id not Found");
@@ -54,7 +61,7 @@ const updateMenuTypeService = async (request, fastify) => {
     menuTypeName: request.body.menuTypeName || checkId.menuTypeName,
     blockId: request.body.blockId || checkId.blockId,
     noOfLevel: request.body.noOfLevel || checkId.noOfLevel,
-    menuTypeId: checkId.id,
+    menuTypeId: request.body.menuTypeId,
     userId: request.userTokenInfo.WrUserId,
   };
 
@@ -65,23 +72,36 @@ const updateMenuTypeService = async (request, fastify) => {
   }
 
   if (request.body.blockId) {
-    const validateBlockId = await getBlockByIdQuery(
-      request.body.blockId,
-      fastify
+    const validateBlockId = global.tblBlocks.find(
+      (block) => block.blockId === request.body.blockId
     );
-
     if (!validateBlockId) {
       throw new Error("Block not found for give id");
     }
   }
 
-  const validateByName = await checkMenuTypeByName(body, fastify, "update");
+  const validateByName = global.tblMenuTypes.find(
+    (menuType) =>
+      menuType.menuTypeName === body.menuTypeName &&
+      menuType.blockId === body.blockId &&
+      menuType.menuTypeId !== request.body.menuTypeId
+  );
 
   if (validateByName) {
     throw new Error("MenuType with this name is already exists in this Block");
   }
 
   const result = await updatetMenuTypeQuery(body, fastify);
+
+  const index = global.tblMenuTypes.findIndex(
+    (menuType) => menuType.menuTypeId === request.body.menuTypeId
+  );
+
+  global.tblMenuTypes[index] = {
+    ...result,
+    blockId: body.blockId,
+    menuTypeId: request.body.menuTypeId,
+  };
 
   return {
     ...result,
@@ -105,13 +125,26 @@ const deleteMenuTypeService = async (request, fastify) => {
 
   await deleteMenuTypeQuery(encryptedIds, fastify);
 
+  global.tblMenuTypes = global.tblMenuTypes.filter(
+    (menuType) => !encryptedIds.includes(menuType.menuTypeId)
+  );
+
   return "Menu Item type(s) deleted successfully";
+};
+
+const saveMenuTypeService = async (request, fastify) => {
+  const { menuTypeId } = request.body;
+
+  if (menuTypeId === "0") {
+    return await createMenuTypeService(request, fastify);
+  } else {
+    return await updateMenuTypeService(request, fastify);
+  }
 };
 
 module.exports = {
   allMenuTypeService,
   menuTypeByIdService,
-  createMenuTypeService,
-  updateMenuTypeService,
+  saveMenuTypeService,
   deleteMenuTypeService,
 };

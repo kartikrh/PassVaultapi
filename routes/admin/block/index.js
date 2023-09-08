@@ -1,9 +1,8 @@
 const { authorize } = require("../../../controller/middleware");
 const {
   getAllBlocks,
-  createBlock,
   getBlockById,
-  updateBlock,
+  saveBlock,
   deleteBlock,
 } = require("../../../controller/users/admin/blocks");
 const { Block } = require("../../../swaggerSchema/groupTags/schema");
@@ -21,15 +20,10 @@ module.exports = async (fastify, opts) => {
     handler: (request, reply) => getBlockById(request, reply, fastify),
   });
 
-  fastify.post("/create", {
-    schema: Block.createBlock.schema,
+  fastify.post("/save", {
+    schema: Block.saveBlock.schema,
     preHandler: (request, reply) => authorize(request, reply, fastify),
-    handler: (request, reply) => createBlock(request, reply, fastify),
-  });
-  fastify.post("/update", {
-    schema: Block.updateBlock.schema,
-    preHandler: (request, reply) => authorize(request, reply, fastify),
-    handler: (request, reply) => updateBlock(request, reply, fastify),
+    handler: (request, reply) => saveBlock(request, reply, fastify),
   });
 
   fastify.post("/delete", {

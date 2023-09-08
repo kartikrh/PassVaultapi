@@ -42,10 +42,16 @@ const valideRoleId = async (roleId, fastify) => {
 
 const deleteRoleQuery = async (roleId, fastify) => {
   return await fastify.db.query(
-    `delete from "tblRoles" where "wrRoleId" in (
-        select "wrRoleId" from 
-        "tblRoles" r
-        inner join "tblEncryptedData" e  on r."wrRoleId" = e."wrKey" and e."wrValue" = $1)`,
+    `delete from "tblRoles" where "wrRoleId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = ANY($1))`,
+    {
+      type: fastify.db.QueryTypes.DELETE,
+      bind: [roleId],
+    }
+  );
+};
+const deletePermissionQuery = async (roleId, fastify) => {
+  return await fastify.db.query(
+    `delete from "tblPermissions" where "wrRoleId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = ANY($1))`,
     {
       type: fastify.db.QueryTypes.DELETE,
       bind: [roleId],
@@ -146,4 +152,5 @@ module.exports = {
   roleByDisplayTypeQuery,
   createRoleQuery,
   updateOrCreatePermissionQuery,
+  deletePermissionQuery,
 };

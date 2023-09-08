@@ -1,4 +1,4 @@
-const getAllMenuItemsQuery = async (fastify) => {
+const getAllMenuTypesQuery = async (fastify) => {
   return await fastify.db.query(
     `SELECT
     te."wrValue" as "menuTypeId",
@@ -84,7 +84,7 @@ const insertMenuTypeQuery = async (body, fastify) => {
 
 const updatetMenuTypeQuery = async (body, fastify) => {
   const data = await fastify.db.query(
-    `UPDATE "tblMenuTypes" set "wrMenuTypeName"=$1 , "wrIsActive" = $2 , "wrNoOfLevel"=$3 , "wrBlockId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $4) , "wrModifyBy"=$5 , "wrModifyDate" = $6 where "wrMenuTypeId" = $7 returning  
+    `UPDATE "tblMenuTypes" set "wrMenuTypeName"=$1 , "wrIsActive" = $2 , "wrNoOfLevel"=$3 , "wrBlockId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $4) , "wrModifyBy"=$5 , "wrModifyDate" = $6 where "wrMenuTypeId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $7) returning  
     "wrMenuTypeName" as "menuTypeName",
       "wrIsActive" as "isActive",
       "wrNoOfLevel" as "noOfLevel"`,
@@ -130,12 +130,11 @@ const deleteMenuTypeQuery = async (menuTypeIds, fastify) => {
 };
 
 module.exports = {
-  getAllMenuItemsQuery,
+  getAllMenuTypesQuery,
   getMenuTypeByIdQuery,
   checkMenuTypeByName,
   insertMenuTypeQuery,
   updatetMenuTypeQuery,
-
   validatMenuTypeQuery,
   deleteMenuTypeQuery,
 };
