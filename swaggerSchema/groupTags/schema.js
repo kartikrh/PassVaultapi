@@ -323,23 +323,6 @@ const MenuType = {
       },
     },
   },
-  create: {
-    schema: {
-      tags: ["Menu Types"],
-      description: "Menu Type create",
-      //security: [{ bearerAuth: [] }],
-      body: {
-        type: "object",
-        properties: {
-          blockId: { type: "string" },
-          isActive: { type: "boolean" },
-          menuTypeName: { type: "string" },
-          noOfLevel: { type: "integer" },
-        },
-        required: ["blockId", "isActive", "menuTypeName", "noOfLevel"],
-      },
-    },
-  },
   update: {
     schema: {
       tags: ["Menu Types"],
@@ -452,32 +435,6 @@ const MenuItem = {
           menuItemId: { type: "string" },
         },
         required: ["menuItemId"],
-      },
-    },
-  },
-  create: {
-    schema: {
-      tags: ["Menu Item"],
-      description: "Menu Item create",
-      //security: [{ bearerAuth: [] }],
-      body: {
-        type: "object",
-        properties: {
-          menuTypeId: { type: "string" },
-          menuItem: { type: "string" },
-          parentId: { type: "string" },
-          pageId: { type: "string" },
-          isActive: { type: "boolean" },
-          menuItemTypeId: { type: "string" },
-        },
-        required: [
-          "menuTypeId",
-          "menuItem",
-          "parentId",
-          "pageId",
-          "isActive",
-          "menuItemTypeId",
-        ],
       },
     },
   },

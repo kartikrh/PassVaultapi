@@ -54,14 +54,20 @@ const createMenuItemQuery = async (body, fastify) => {
   const data = await fastify.db.query(
     `
   with count_parent as (
-    select count(*) as count from "tblMenuItems" where "wrParentId" = $3
+    select count(*) as count from "tblMenuItems" where "wrParentId" = (SELECT COALESCE((SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $3), 0))
   ),
   add_data as (
-    INSERT INTO "tblMenuItems" ("wrMenuTypeId" , "wrMenuItem","wrParentId","wrPageId","wrMenuItemTypeId","wrDisplayOrder","wrIsActive","wrCreatedBy","wrCreatedDate") select $1,$2,$3,$4,$5,(select count from count_parent)+1,$6,$7,$8 RETURNING *
+    INSERT INTO "tblMenuItems" ("wrMenuTypeId" , "wrMenuItem","wrParentId","wrPageId","wrMenuItemTypeId","wrDisplayOrder","wrIsActive","wrCreatedBy","wrCreatedDate") values(
+      (select "wrKey" from "tblEncryptedData" where "wrValue" = $1),
+      $2,
+      (SELECT COALESCE((SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $3), 0)),
+      (select "wrKey" from "tblEncryptedData" where "wrValue" = $4),
+      (select "wrKey" from "tblEncryptedData" where "wrValue" = $5),
+      (select count from count_parent)+1,$6,$7,$8 
+    ) RETURNING *
   )
 
   select 
-    et."wrKey" as "id",
     et."wrValue" as "menuItemId",
     et2."wrValue" as "menuTypeId",
     et3."wrValue" as "pageId",
@@ -102,8 +108,8 @@ const updateMenuItemQuery = async (body, fastify) => {
                           "wrMenuTypeId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $2) ,
                            "wrPageId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $3) , 
                            "wrMenuItemTypeId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $4) , 
-                           "wrParentId" =  $5, 
-                           "wrIsActive" = $6, "wrModifyBy" = $7 , "wrModifyDate" = $8 where "wrMenuItemId" = $9`,
+                           "wrParentId" =  (SELECT COALESCE((SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $5), 0)) ,
+                           "wrIsActive" = $6, "wrModifyBy" = $7 , "wrModifyDate" = $8 where "wrMenuItemId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $9) RETURNING *`,
     {
       type: fastify.db.QueryTypes.UPDATE,
       bind: [
