@@ -2,8 +2,7 @@ const { authorize } = require("../../../controller/middleware");
 const {
   getAllMenuItems,
   getMenuItemById,
-  createMenuItem,
-  updateMenuItem,
+  saveMenuItem,
   deleteMenuItem,
 } = require("../../../controller/users/admin/menuItem");
 
@@ -22,16 +21,10 @@ module.exports = async (fastify) => {
     handler: (request, reply) => getMenuItemById(request, reply, fastify),
   });
 
-  fastify.post("/create", {
-    schema: MenuItem.create.schema,
-    preHandler: (request, reply) => authorize(request, reply, fastify),
-    handler: (request, reply) => createMenuItem(request, reply, fastify),
-  });
-
-  fastify.post("/update", {
+  fastify.post("/save", {
     schema: MenuItem.update.schema,
     preHandler: (request, reply) => authorize(request, reply, fastify),
-    handler: (request, reply) => updateMenuItem(request, reply, fastify),
+    handler: (request, reply) => saveMenuItem(request, reply, fastify),
   });
 
   fastify.post("/delete", {

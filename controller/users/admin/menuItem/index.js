@@ -1,8 +1,7 @@
 const {
   allMenuItemService,
   menuItemByIdService,
-  createMenuItemService,
-  updateMenuItemService,
+  saveMenuItemService,
   deleteMenuItemService,
 } = require("../../../../services/menuItem");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
@@ -25,18 +24,9 @@ const getMenuItemById = async (request, reply, fastify) => {
   }
 };
 
-const createMenuItem = async (request, reply, fastify) => {
+const saveMenuItem = async (request, reply, fastify) => {
   try {
-    const result = await createMenuItemService(request, fastify);
-    reply.status(200).send(success(result, 200));
-  } catch (err) {
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
-  }
-};
-
-const updateMenuItem = async (request, reply, fastify) => {
-  try {
-    const result = await updateMenuItemService(request, fastify);
+    const result = await saveMenuItemService(request, fastify);
     reply.status(200).send(success(result, 200));
   } catch (err) {
     reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
@@ -55,7 +45,6 @@ const deleteMenuItem = async (request, reply, fastify) => {
 module.exports = {
   getAllMenuItems,
   getMenuItemById,
-  createMenuItem,
-  updateMenuItem,
+  saveMenuItem,
   deleteMenuItem,
 };

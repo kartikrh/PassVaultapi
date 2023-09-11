@@ -1,7 +1,4 @@
 const {
-  allPageFormateQuery,
-  pageFormateQueryById,
-  checkPageFormateByName,
   insertPageFormateQuery,
   updatePageFormateQuery,
   validatePageFormatQuery,

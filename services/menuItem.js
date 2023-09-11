@@ -12,71 +12,68 @@ const { getMenuTypeByIdQuery } = require("../repository/TableMenuTypes");
 const { pageByIdQuery } = require("../repository/TablePage");
 
 const allMenuItemService = async (fastify) => {
-  return await allMenuItemsQuery(fastify);
+  return global.tblMenuItems;
 };
 
 const menuItemByIdService = async (request, fastify) => {
   const { menuItemId } = request.body;
-  const result = await menuItemByIdQuery(menuItemId, fastify);
-  if (result) {
-    delete result.id;
-    delete result.pId;
-  }
+  const result = global.tblMenuItems.find(
+    (item) => item.menuItemId === menuItemId
+  );
   return result || null;
 };
 
 const createMenuItemService = async (request, fastify) => {
-  const validateMenuTypeId = await getMenuTypeByIdQuery(
-    request.body.menuTypeId,
-    fastify
+  const validateMenuTypeId = global.tblMenuTypes.find(
+    (item) => item.menuTypeId === request.body.menuTypeId
   );
   if (!validateMenuTypeId) {
     throw new Error("Menu Type not found for give id");
   }
 
-  const validatePageId = await pageByIdQuery(request.body.pageId, fastify);
+  const validatePageId = global.tblPages.find(
+    (item) => item.pageId === request.body.pageId
+  );
   if (!validatePageId) {
     throw new Error("Page not found for give id");
   }
 
-  const validateMenuItemTypeId = await menuItemTypeQueryById(
-    request.body.menuItemTypeId,
-    fastify
+  const validateMenuItemTypeId = global.tblMenuItemTypes.find(
+    (item) => item.menuItemTypeId === request.body.menuItemTypeId
   );
 
   if (!validateMenuItemTypeId) {
     throw new Error("Menu Item Type not found for give id");
   }
 
-  return await createMenuItemQuery(
+  const data = await createMenuItemQuery(
     {
       ...request.body,
       userId: request.userTokenInfo.WrUserId,
-      menuTypeId: validateMenuTypeId.id,
-      pageId: validatePageId.id,
-      menuItemTypeId: validateMenuItemTypeId.id,
     },
     fastify
   );
+
+  global.tblMenuItems.push(data);
+  return data;
 };
 
 const updateMenuItemService = async (request, fastify) => {
-  const validateMenuItemId = await menuItemByIdQuery(
-    request.body.menuItemId,
-    fastify
+  const validateMenuItemId = global.tblMenuItems.find(
+    (item) => item.menuItemId === request.body.menuItemId
   );
   if (!validateMenuItemId) {
     throw new Error("Menu Item not found for give id");
   }
 
   const body = {
-    menuItemId: validateMenuItemId.id,
+    menuItemId: validateMenuItemId.menuItemId,
     menuItem: request.body.menuItem || validateMenuItemId.menuItem,
     userId: request.userTokenInfo.WrUserId,
     menuTypeId: validateMenuItemId.menuTypeId,
     pageId: validateMenuItemId.pageId,
     menuItemTypeId: validateMenuItemId.menuItemTypeId,
-    parentId: validateMenuItemId.pId || "0",
+    parentId: validateMenuItemId.parentId || "0",
     isActive: validateMenuItemId.isActive,
   };
 
@@ -85,9 +82,8 @@ const updateMenuItemService = async (request, fastify) => {
   }
 
   if (request.body.menuTypeId) {
-    const validateMenuTypeId = await getMenuTypeByIdQuery(
-      request.body.menuTypeId,
-      fastify
+    const validateMenuTypeId = global.tblMenuTypes.find(
+      (item) => item.menuTypeId === request.body.menuTypeId
     );
     if (!validateMenuTypeId) {
       throw new Error("Menu Type not found for give id");
@@ -97,7 +93,9 @@ const updateMenuItemService = async (request, fastify) => {
   }
 
   if (request.body.pageId) {
-    const validatePageId = await pageByIdQuery(request.body.pageId, fastify);
+    const validatePageId = global.tblPages.find(
+      (item) => item.pageId === request.body.pageId
+    );
     if (!validatePageId) {
       throw new Error("Page not found for give id");
     } else {
@@ -106,9 +104,8 @@ const updateMenuItemService = async (request, fastify) => {
   }
 
   if (request.body.menuItemTypeId) {
-    const validateMenuItemTypeId = await menuItemTypeQueryById(
-      request.body.menuItemTypeId,
-      fastify
+    const validateMenuItemTypeId = global.tblMenuItemTypes.find(
+      (item) => item.menuItemTypeId === request.body.menuItemTypeId
     );
 
     if (!validateMenuItemTypeId) {
@@ -126,7 +123,7 @@ const updateMenuItemService = async (request, fastify) => {
     if (!validateParentId) {
       throw new Error("Parent Menu Item not found for give id");
     } else {
-      body.parentId = validateParentId.id;
+      body.parentId = validateParentId.menuItemId;
     }
   }
 
@@ -135,6 +132,12 @@ const updateMenuItemService = async (request, fastify) => {
   }
 
   await updateMenuItemQuery(body, fastify);
+
+  const index = global.tblMenuItems.findIndex(
+    (item) => item.menuItemId === request.body.menuItemId
+  );
+
+  global.tblMenuItems[index] = { ...body, userId: undefined };
 
   return `Menu Item updated successfully`;
 };
@@ -162,13 +165,26 @@ const deleteMenuItemService = async (request, fastify) => {
 
   await deleteMenuItemQuery(encryptedIds, fastify);
 
+  global.tblMenuItems = global.tblMenuItems.filter(
+    (item) => !encryptedIds.includes(item.menuItemId)
+  );
+
   return "Menu item(s) deleted successfully";
+};
+
+const saveMenuItemService = async (request, fastify) => {
+  const { menuItemId } = request.body;
+
+  if (menuItemId === "0") {
+    return await createMenuItemService(request, fastify);
+  } else {
+    return await updateMenuItemService(request, fastify);
+  }
 };
 
 module.exports = {
   allMenuItemService,
   menuItemByIdService,
-  createMenuItemService,
-  updateMenuItemService,
+  saveMenuItemService,
   deleteMenuItemService,
 };

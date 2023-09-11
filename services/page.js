@@ -1,13 +1,10 @@
 const {
-  allPageQuery,
   insertPageQuery,
-  pageByIdQuery,
   updatePageQuery,
   validatePageIdInMenuItem,
   validatePageIdInPageAlias,
   deletePageQuery,
 } = require("../repository/TablePage");
-const { pageFormateQueryById } = require("../repository/TablePageFormate");
 
 const allPageService = async (fastify) => {
   return global.tblPages;
