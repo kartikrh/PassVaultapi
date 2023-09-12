@@ -1,0 +1,158 @@
+const {
+  insertPlayerQuery,
+  updatePlayerQuery,
+  deletePlayerQuery,
+} = require("../repository/TablePlayer");
+
+const allPlayerService = async () => {
+  return global.tblPlayers;
+};
+
+const playerByIdService = async (request) => {
+  const { playerId } = request.body;
+  const result = global.tblPlayers.find((item) => item.playerId === playerId);
+  return result || null;
+};
+
+const insertPlayerService = async (request, fastify) => {
+  if (request.body.eventTypeId) {
+    const checkEventTypeId = global.tblEventTypes.find(
+      (item) => item.eventTypeId === request.body.eventTypeId
+    );
+    if (!checkEventTypeId) {
+      throw new Error("Event Type with this id not Found");
+    }
+  }
+
+  if (request.body.teamId) {
+    const checkTeamId = global.tblTeams.find(
+      (item) => item.teamId === request.body.teamId
+    );
+    if (!checkTeamId) {
+      throw new Error("Team with this id not Found");
+    }
+  }
+
+  const result = await insertPlayerQuery(
+    { ...request.body, userId: request.userTokenInfo.WrUserId },
+    fastify
+  );
+
+  global.tblPlayers.push(result);
+
+  return result;
+};
+
+const updatePlayerService = async (request, fastify) => {
+  const checkPlayerId = global.tblPlayers.find(
+    (item) => item.playerId === request.body.playerId
+  );
+  if (!checkPlayerId) {
+    throw new Error("Player with this id not Found");
+  }
+
+  const body = {
+    country: request.body.country || checkPlayerId.country,
+    playerName: request.body.playerName || checkPlayerId.playerName,
+    eventTypeId: checkPlayerId.eventTypeId,
+    teamId: checkPlayerId.teamId,
+    userId: request.userTokenInfo.WrUserId,
+    image: request.body.image || checkPlayerId.image,
+    bowlingStyle: request.body.bowlingStyle || checkPlayerId.bowlingStyle,
+    isActive: checkPlayerId.isActive,
+    isKipper: checkPlayerId.isKipper,
+    isLeftHandedBatting: checkPlayerId.isLeftHandedBatting,
+    isLeftArmFielding: checkPlayerId.isLeftArmFielding,
+    playerType: request.body.playerType || checkPlayerId.playerType,
+    imageUrl: request.body.imageUrl || checkPlayerId.imageUrl,
+    displayName: request.body.displayName || checkPlayerId.displayName,
+    batsmanAverage: request.body.batsmanAverage || checkPlayerId.batsmanAverage,
+    batsmanStrikeRate:
+      request.body.batsmanStrikeRate || checkPlayerId.batsmanStrikeRate,
+    bowlerAverage: request.body.bowlerAverage || checkPlayerId.bowlerAverage,
+    bowlerEconomy: request.body.bowlerEconomy || checkPlayerId.bowlerEconomy,
+    playerId: request.body.playerId,
+  };
+
+  if ("isActive" in request.body) {
+    body.isActive = request.body.isActive;
+  }
+
+  if ("isKipper" in request.body) {
+    body.isKipper = request.body.isKipper;
+  }
+
+  if ("isLeftHandedBatting" in request.body) {
+    body.isLeftHandedBatting = request.body.isLeftHandedBatting;
+  }
+
+  if ("isLeftArmFielding" in request.body) {
+    body.isLeftArmFielding = request.body.isLeftArmFielding;
+  }
+
+  if (request.body.eventTypeId) {
+    const checkEventTypeId = global.tblEventTypes.find(
+      (item) => item.eventTypeId === request.body.eventTypeId
+    );
+    if (!checkEventTypeId) {
+      throw new Error("Event Type with this id not Found");
+    } else {
+      body.eventTypeId = request.body.eventTypeId;
+    }
+  }
+
+  if (request.body.teamId) {
+    const checkTeamId = global.tblTeams.find(
+      (item) => item.teamId === request.body.teamId
+    );
+    if (!checkTeamId) {
+      throw new Error("Team with this id not Found");
+    } else {
+      body.teamId = request.body.teamId;
+    }
+  }
+
+  await updatePlayerQuery(body, fastify);
+
+  delete body.userId;
+
+  const index = global.tblPlayers.findIndex(
+    (item) => item.playerId === request.body.playerId
+  );
+
+  global.tblPlayers[index] = body;
+
+  return body;
+};
+
+const savePlayerService = async (request, fastify) => {
+  const { playerId } = request.body;
+
+  if (playerId === "0") {
+    return await insertPlayerService(request, fastify);
+  } else {
+    return await updatePlayerService(request, fastify);
+  }
+};
+const deletePlayerService = async (request, fastify) => {
+  const { playerId } = request.body;
+
+  for (let id of playerId) {
+    //validate id if required
+  }
+
+  await deletePlayerQuery(playerId, fastify);
+
+  global.tblPlayers = global.tblPlayers.filter(
+    (item) => !playerId.includes(item.playerId)
+  );
+
+  return `Player(s)  deleted successfully`;
+};
+
+module.exports = {
+  allPlayerService,
+  playerByIdService,
+  savePlayerService,
+  deletePlayerService,
+};

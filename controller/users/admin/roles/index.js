@@ -3,6 +3,7 @@ const {
   deleteRoleService,
   roleByDisplayTypeService,
   roleCreateService,
+  roleByIdService,
 } = require("../../../../services/roles");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 
@@ -42,9 +43,19 @@ const deleteRoles = async (request, reply, fastify) => {
   }
 };
 
+const getRoleById = async (request, reply, fastify) => {
+  try {
+    const result = await roleByIdService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+  }
+};
+
 module.exports = {
   getAllRoles,
   deleteRoles,
   getRolesByDisplayType,
   createRole,
+  getRoleById,
 };

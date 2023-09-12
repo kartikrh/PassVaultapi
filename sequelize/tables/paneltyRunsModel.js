@@ -26,7 +26,7 @@ module.exports = (sequelize) => {
         type: DataTypes.DATE,
         allowNull: true,
       },
-      wrCreadtedBy: {
+      wrCreatedBy: {
         type: DataTypes.INTEGER,
         allowNull: true,
       },

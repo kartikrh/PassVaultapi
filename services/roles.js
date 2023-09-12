@@ -4,6 +4,7 @@ const {
   createRoleQuery,
   updateOrCreatePermissionQuery,
   deletePermissionQuery,
+  roleByIdQuery,
 } = require("../repository/TableRoles");
 
 const allRolesService = async (fastify) => {
@@ -61,9 +62,22 @@ const deleteRoleService = async (request, fastify) => {
   return "Role successfully deleted";
 };
 
+const roleByIdService = async (request, fastify) => {
+  const permissionData = await roleByIdQuery(request.body, fastify);
+  const roleData = global.tblRoles.find(
+    (item) => item.roleId === request.body.roleId
+  );
+
+  return {
+    ...roleData,
+    permissions: permissionData,
+  };
+};
+
 module.exports = {
   allRolesService,
   deleteRoleService,
   roleByDisplayTypeService,
   roleCreateService,
+  roleByIdService,
 };

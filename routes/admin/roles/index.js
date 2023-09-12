@@ -4,6 +4,7 @@ const {
   deleteRoles,
   getRolesByDisplayType,
   createRole,
+  getRoleById,
 } = require("../../../controller/users/admin/roles");
 const { Role } = require("../../../swaggerSchema/groupTags/schema");
 
@@ -11,6 +12,11 @@ module.exports = async (fastify, opts) => {
   fastify.post("/all", {
     schema: Role.getRoles.schema,
     handler: (request, reply) => getAllRoles(request, reply, fastify),
+  });
+
+  fastify.post("/byId", {
+    schema: Role.getById.schema,
+    handler: (request, reply) => getRoleById(request, reply, fastify),
   });
 
   fastify.post("/byDisplayType", {

@@ -173,7 +173,6 @@ const Role = {
       //security: [{ bearerAuth: [] }],
     },
   },
-
   getByDisplayType: {
     schema: {
       tags: ["Role"],
@@ -191,7 +190,6 @@ const Role = {
       },
     },
   },
-
   deleteRoles: {
     schema: {
       tags: ["Role"],
@@ -210,7 +208,6 @@ const Role = {
       },
     },
   },
-
   createRole: {
     schema: {
       tags: ["Role"],
@@ -239,6 +236,21 @@ const Role = {
           },
         },
         required: ["roleId", "permissions"],
+      },
+    },
+  },
+  getById: {
+    schema: {
+      tags: ["Role"],
+      description: "get role details with permissions by Id",
+      //security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          roleId: { type: "string" },
+          displayType: { type: "integer", enum: [0, 1, 2] },
+        },
+        required: ["roleId", "displayType"],
       },
     },
   },
@@ -851,6 +863,130 @@ const Teams = {
   },
 };
 
+const PaneltyRuns = {
+  getAll: {
+    schema: {
+      tags: ["Panelty Runs"],
+      description: "get all Panelty Runs",
+    },
+  },
+  getById: {
+    schema: {
+      tags: ["Panelty Runs"],
+      description: "get Panelty Runs by id",
+      body: {
+        type: "object",
+        properties: {
+          paneltyId: { type: "string" },
+        },
+        required: ["paneltyId"],
+      },
+    },
+  },
+  save: {
+    schema: {
+      tags: ["Panelty Runs"],
+      description: "save Panelty Runs",
+      body: {
+        type: "object",
+        properties: {
+          paneltyId: { type: "string" },
+          run: { type: "integer" },
+          desc: { type: "string" },
+          isActive: { type: "boolean" },
+        },
+        required: ["paneltyId"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["Panelty Runs"],
+      description: "delete Panelty Runs",
+      body: {
+        type: "object",
+        properties: {
+          paneltyId: {
+            type: "array",
+            items: { type: "string" },
+            minItems: 1,
+          },
+        },
+        required: ["paneltyId"],
+      },
+    },
+  },
+};
+
+const Player = {
+  getAll: {
+    schema: {
+      tags: ["Player"],
+      description: "get all Player",
+    },
+  },
+  getById: {
+    schema: {
+      tags: ["Player"],
+      description: "get Player by id",
+      body: {
+        type: "object",
+        properties: {
+          playerId: { type: "string" },
+        },
+        required: ["playerId"],
+      },
+    },
+  },
+  save: {
+    schema: {
+      tags: ["Player"],
+      description: "save Player",
+      body: {
+        type: "object",
+        properties: {
+          playerId: { type: "string" },
+          eventTypeId: { type: "string" },
+          country: { type: "string" },
+          teamId: { type: "string" },
+          playerName: { type: "string" },
+          image: { type: "string" },
+          bowlingStyle: { type: "integer" },
+          isActive: { type: "boolean" },
+          isKipper: { type: "boolean" },
+          isLeftHandedBatting: { type: "boolean" },
+          isLeftArmFielding: { type: "boolean" },
+          playerType: { type: "integer" },
+          imageUrl: { type: "string" },
+          batsmanAverage: { type: "number" },
+          batsmanStrikeRate: { type: "number" },
+          bowlerAverage: { type: "number" },
+          bowlerEconomy: { type: "number" },
+          displayName: { type: "string" },
+        },
+        required: ["playerId"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["Player"],
+      description: "delete Player",
+      body: {
+        type: "object",
+        properties: {
+          playerId: {
+            type: "array",
+            items: { type: "string" },
+            minItems: 1,
+          },
+        },
+        required: ["playerId"],
+      },
+    },
+  },
+};
+
 module.exports = {
   Auth,
   Tabs,
@@ -864,4 +1000,6 @@ module.exports = {
   PageAlias,
   EventType,
   Teams,
+  PaneltyRuns,
+  Player,
 };
