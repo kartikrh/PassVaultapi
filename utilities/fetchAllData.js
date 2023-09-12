@@ -7,6 +7,8 @@ const { allPageFormateQuery } = require("../repository/TablePageFormate");
 const { allPageAliases } = require("../repository/TablePageAlias");
 const { allMenuItemsQuery } = require("../repository/TableMenuItem");
 const { getAllRolesQuery } = require("../repository/TableRoles");
+const { allEventTypesQuery } = require("../repository/TableEventType");
+const { allTeamQuery } = require("../repository/TableTeams");
 
 const fetchAllDataFromDb = async (fastify) => {
   try {
@@ -20,6 +22,8 @@ const fetchAllDataFromDb = async (fastify) => {
     const getAllPages = await allPageQuery(fastify);
     const getAllPageAliases = await allPageAliases(fastify);
     const getAllMenuItems = await allMenuItemsQuery(fastify);
+    const getAllEventTypes = await allEventTypesQuery(fastify);
+    const getAllTeams = await allTeamQuery(fastify);
 
     global.tblTabs = getAllTabs;
     global.tblRoles = getAllRoles;
@@ -30,6 +34,8 @@ const fetchAllDataFromDb = async (fastify) => {
     global.tblPages = getAllPages;
     global.tblPageAliases = getAllPageAliases;
     global.tblMenuItems = getAllMenuItems;
+    global.tblEventTypes = getAllEventTypes;
+    global.tblTeams = getAllTeams;
 
     console.log("Okkkk");
   } catch (error) {
