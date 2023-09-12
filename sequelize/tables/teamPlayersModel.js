@@ -11,7 +11,7 @@ module.exports = (sequelize) => {
         allowNull: false,
         autoIncrement: true,
       },
-      wrTeamID: {
+      wrTeamId: {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
@@ -23,7 +23,7 @@ module.exports = (sequelize) => {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
-      wrCreateBy: {
+      wrCreatedBy: {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
@@ -46,7 +46,7 @@ module.exports = (sequelize) => {
   );
 
   TeamPlayersModel.belongsTo(TeamModel, {
-    foreignKey: "wrTeamID",
+    foreignKey: "wrTeamId",
     targetKey: "wrTeamId",
   });
 

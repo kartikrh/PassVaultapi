@@ -145,6 +145,33 @@ $$;
   );
 };
 
+const roleByIdQuery = async (data, fastify) => {
+  return await fastify.db.query(
+    `select 
+    te."wrValue" as "tabId", 
+    tt."WrDisplayName" as "displayName", 
+    "wrParentId" as "parentId",
+    COALESCE(tt."wrIsAdd",false) as "isAdd",
+    COALESCE(tt."wrIsEdit",false) as "isEdit",
+    COALESCE(tt."wrIsDelete",false) as "isDelete",
+     COALESCE(tp."wrIsAdd",false) as "isAddPermission",
+    COALESCE(tp."wrIsEdit",false) as "isEditPermission",
+    COALESCE(tp."wrIsDelete",false) as "isDeletePermission",
+    COALESCE(tp."wrIsView",false) as "isViewPermission"
+    from "tblTabs" tt 
+    left join (
+      select * from "tblPermissions" where "wrRoleId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)
+    ) as tp on tt."wrTabId" = tp."wrTabId"
+    left join "tblEncryptedData" te on te."wrKey" = tt."wrTabId"
+    where tt."wrDisplayType" = $2
+    `,
+    {
+      type: fastify.db.QueryTypes.SELECT,
+      bind: [data.roleId, data.displayType],
+    }
+  );
+};
+
 module.exports = {
   getAllRolesQuery,
   valideRoleId,
@@ -153,4 +180,5 @@ module.exports = {
   createRoleQuery,
   updateOrCreatePermissionQuery,
   deletePermissionQuery,
+  roleByIdQuery,
 };

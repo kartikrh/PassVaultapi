@@ -53,7 +53,7 @@ module.exports = (sequelize) => {
         type: DataTypes.BOOLEAN,
         allowNull: true,
       },
-      wrCreateBy: {
+      wrCreatedBy: {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
