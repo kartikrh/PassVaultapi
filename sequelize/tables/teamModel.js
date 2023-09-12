@@ -27,7 +27,7 @@ module.exports = (sequelize) => {
         type: DataTypes.STRING(200),
         allowNull: true,
       },
-      wrCreateBy: {
+      wrCreatedBy: {
         type: DataTypes.INTEGER,
         allowNull: true,
       },

@@ -730,6 +730,127 @@ const PageAlias = {
   },
 };
 
+const EventType = {
+  getAll: {
+    schema: {
+      tags: ["Event Type"],
+      description: "get all event type",
+    },
+  },
+  getById: {
+    schema: {
+      tags: ["Event Type"],
+      description: "get event type by id",
+      body: {
+        type: "object",
+        properties: {
+          eventTypeId: { type: "string" },
+        },
+        required: ["eventTypeId"],
+      },
+    },
+  },
+  save: {
+    schema: {
+      tags: ["Event Type"],
+      description: "save event type",
+      body: {
+        type: "object",
+        properties: {
+          eventTypeId: { type: "string" },
+          eventType: { type: "string" },
+          refId: { type: "string" },
+          image: { type: "string" },
+          icon: { type: "string" },
+          isActive: { type: "boolean" },
+          displayOrder: { type: "integer" },
+          remark: { type: "string" },
+          eEventTypeId: { type: "string" },
+          eRefId: { type: "string" },
+          displayType: { type: "integer", enum: [1, 2] },
+          isHighlight: { type: "boolean" },
+        },
+        required: ["eventTypeId"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["Event Type"],
+      description: "delete event type",
+      body: {
+        type: "object",
+        properties: {
+          eventTypeId: {
+            type: "array",
+            items: { type: "string" },
+            minItems: 1,
+          },
+        },
+        required: ["eventTypeId"],
+      },
+    },
+  },
+};
+
+const Teams = {
+  getAll: {
+    schema: {
+      tags: ["Teams"],
+      description: "get all teams",
+    },
+  },
+  getById: {
+    schema: {
+      tags: ["Teams"],
+      description: "get teams by id",
+      body: {
+        type: "object",
+        properties: {
+          teamId: { type: "string" },
+        },
+        required: ["teamId"],
+      },
+    },
+  },
+  save: {
+    schema: {
+      tags: ["Teams"],
+      description: "save teams",
+      body: {
+        type: "object",
+        properties: {
+          teamId: { type: "string" },
+          teamName: { type: "string" },
+          teamShortName: { type: "string" },
+          country: { type: "string" },
+          eventTypeId: { type: "string" },
+          image: { type: "string" },
+          imageUrl: { type: "string" },
+        },
+        required: ["teamId"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["Teams"],
+      description: "delete teams",
+      body: {
+        type: "object",
+        properties: {
+          teamId: {
+            type: "array",
+            items: { type: "string" },
+            minItems: 1,
+          },
+        },
+        required: ["teamId"],
+      },
+    },
+  },
+};
+
 module.exports = {
   Auth,
   Tabs,
@@ -741,4 +862,6 @@ module.exports = {
   PageFormate,
   Page,
   PageAlias,
+  EventType,
+  Teams,
 };
