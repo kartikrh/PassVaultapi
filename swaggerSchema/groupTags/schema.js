@@ -987,6 +987,74 @@ const Player = {
   },
 };
 
+const TeamPlayer = {
+  getAll: {
+    schema: {
+      tags: ["Team Player"],
+      description: "get all Team Player",
+    },
+  },
+  getById: {
+    schema: {
+      tags: ["Team Player"],
+      description: "get Team Player by id",
+      body: {
+        type: "object",
+        properties: {
+          teamPlayerId: { type: "string" },
+        },
+        required: ["teamPlayerId"],
+      },
+    },
+  },
+  byTeamId: {
+    schema: {
+      tags: ["Team Player"],
+      description: "get Team Player by id",
+      body: {
+        type: "object",
+        properties: {
+          teamId: { type: "string" },
+        },
+        required: ["teamId"],
+      },
+    },
+  },
+  save: {
+    schema: {
+      tags: ["Team Player"],
+      description: "save Team Player",
+      body: {
+        type: "object",
+        properties: {
+          teamPlayerId: { type: "string" },
+          teamId: { type: "string" },
+          refPlayerId: { type: "string" },
+          playerOrder: { type: "integer" },
+        },
+        required: ["teamPlayerId"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["Team Player"],
+      description: "delete Team Player",
+      body: {
+        type: "object",
+        properties: {
+          teamPlayerId: {
+            type: "array",
+            items: { type: "string" },
+            minItems: 1,
+          },
+        },
+        required: ["teamPlayerId"],
+      },
+    },
+  },
+};
+
 module.exports = {
   Auth,
   Tabs,
@@ -1002,4 +1070,5 @@ module.exports = {
   Teams,
   PaneltyRuns,
   Player,
+  TeamPlayer,
 };
