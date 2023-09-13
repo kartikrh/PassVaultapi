@@ -2,6 +2,7 @@ const { DataTypes } = require("sequelize");
 
 module.exports = (sequelize) => {
   const TeamModel = require("./teamModel")(sequelize);
+  const PlayerModel = require("./playerModel")(sequelize);
   const TeamPlayersModel = sequelize.define(
     "tblTeamPlayers",
     {
@@ -48,6 +49,11 @@ module.exports = (sequelize) => {
   TeamPlayersModel.belongsTo(TeamModel, {
     foreignKey: "wrTeamId",
     targetKey: "wrTeamId",
+  });
+
+  TeamPlayersModel.belongsTo(PlayerModel, {
+    foreignKey: "wrRefPlayerId",
+    targetKey: "wrPlayerId",
   });
 
   return TeamPlayersModel;

@@ -4,7 +4,7 @@ const {
   getTeamById,
   saveTeam,
   deleteTeam,
-} = require("../../../controller/users/admin/teams");
+} = require("../../../controller/users/admin/teamsAndPlayer/teams");
 const { Teams } = require("../../../swaggerSchema/groupTags/schema");
 
 module.exports = async (fastify, opts) => {

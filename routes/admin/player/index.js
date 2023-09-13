@@ -4,7 +4,7 @@ const {
   getPlayerById,
   savePlayer,
   deletePlayer,
-} = require("../../../controller/users/admin/players");
+} = require("../../../controller/users/admin/teamsAndPlayer/players");
 
 const { Player } = require("../../../swaggerSchema/groupTags/schema");
 
