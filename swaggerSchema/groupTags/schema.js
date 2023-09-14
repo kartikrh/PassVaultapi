@@ -1055,6 +1055,91 @@ const TeamPlayer = {
   },
 };
 
+const MatchType = {
+  getAll: {
+    schema: {
+      tags: ["Match Type"],
+      description: "get all Match Type",
+    },
+  },
+  getById: {
+    schema: {
+      tags: ["Match Type"],
+      description: "get Match Type by id",
+      body: {
+        type: "object",
+        properties: {
+          matchTypeId: { type: "string" },
+        },
+        required: ["matchTypeId"],
+      },
+    },
+  },
+  save: {
+    schema: {
+      tags: ["Match Type"],
+      description: "save Match Type",
+      body: {
+        type: "object",
+        properties: {
+          matchTypeId: { type: "string" },
+          matchType: { type: "string" },
+          matchRefType: { type: "integer" },
+          noOfIningsPerSide: { type: "integer" },
+          noOfDays: { type: "integer" },
+          noOfPlayer: { type: "integer" },
+          substitutesPlayer: { type: "integer" },
+          isLastManStand: { type: "boolean" },
+          isLimitedOvers: { type: "boolean" },
+          takeNewBallAfterOvers: { type: "integer" },
+          oversInLastHour: { type: "integer" },
+          totalOversInMatch: { type: "integer" },
+          oversPerDay: { type: "integer" },
+          maxOversInFirstInings: { type: "integer" },
+          maxOversInSecondInings: { type: "integer" },
+          isBowlersLimitedOvers: { type: "boolean" },
+          oversPerBowler: { type: "integer" },
+          isPowerPlay: { type: "boolean" },
+          totalPowerPlay: { type: "integer" },
+          isExtraInings: { type: "boolean" },
+          oversPerInings: { type: "integer" },
+          batsmenPerInings: { type: "integer" },
+          ballsPerOver: { type: "integer" },
+          valueOfNoBall: { type: "integer" },
+          isExtraBallWhenNoBall: { type: "boolean" },
+          valueOfNoBallInLastOver: { type: "integer" },
+          isExtraBallWhenNoBallInLastOver: { type: "boolean" },
+          valueOfWideBall: { type: "integer" },
+          isExtraBallWhenWideBall: { type: "boolean" },
+          valueOfWideBallInLastOver: { type: "integer" },
+          isExtraBallWhenWideBallInLastOver: { type: "boolean" },
+          isWideBallCountInPartnership: { type: "boolean" },
+          isPenaltyRunsInPartnership: { type: "boolean" },
+          valueOfFrontFootNoBall: { type: "integer" },
+        },
+        required: ["matchTypeId"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["Match Type"],
+      description: "delete Match Type",
+      body: {
+        type: "object",
+        properties: {
+          matchTypeId: {
+            type: "array",
+            items: { type: "string" },
+            minItems: 1,
+          },
+        },
+        required: ["matchTypeId"],
+      },
+    },
+  },
+};
+
 module.exports = {
   Auth,
   Tabs,
@@ -1071,4 +1156,5 @@ module.exports = {
   PaneltyRuns,
   Player,
   TeamPlayer,
+  MatchType,
 };

@@ -40,6 +40,7 @@ module.exports = async function (fastify, opts) {
       require("./sequelize/tables/teamPlayersModel")(fastify.db);
       require("./sequelize/tables/paneltyRunsModel")(fastify.db);
       require("./sequelize/tables/playerModel")(fastify.db);
+      require("./sequelize/tables/matchTypeModel")(fastify.db);
       try {
         await fastify.db.sync();
         await featchData(fastify);
