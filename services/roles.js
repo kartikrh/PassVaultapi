@@ -5,6 +5,7 @@ const {
   updateOrCreatePermissionQuery,
   deletePermissionQuery,
   roleByIdQuery,
+  permissionByRoleIdQuery,
 } = require("../repository/TableRoles");
 
 const allRolesService = async (fastify) => {
@@ -74,10 +75,33 @@ const roleByIdService = async (request, fastify) => {
   };
 };
 
+const roleByTabService = async (request, fastify) => {
+  const permissionData = await permissionByRoleIdQuery(
+    {
+      roleId: request.userTokenInfo.WrRoleId || null,
+      displayType: request.userTokenInfo.WrUserType || null,
+      tabName: request.body.tabName,
+    },
+    fastify
+  );
+
+  if (!permissionData.length) {
+    return {
+      isAddPermission: false,
+      isEditPermission: false,
+      isDeletePermission: false,
+      isViewPermission: false,
+    };
+  } else {
+    return permissionData[0];
+  }
+};
+
 module.exports = {
   allRolesService,
   deleteRoleService,
   roleByDisplayTypeService,
   roleCreateService,
   roleByIdService,
+  roleByTabService,
 };
