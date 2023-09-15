@@ -1,10 +1,12 @@
 "use strict";
+const { authorize } = require("../../../controller/middleware");
 const {
   getAllRoles,
   deleteRoles,
   getRolesByDisplayType,
   createRole,
   getRoleById,
+  getPermissionByTab,
 } = require("../../../controller/users/admin/roles");
 const { Role } = require("../../../swaggerSchema/groupTags/schema");
 
@@ -12,6 +14,12 @@ module.exports = async (fastify, opts) => {
   fastify.post("/all", {
     schema: Role.getRoles.schema,
     handler: (request, reply) => getAllRoles(request, reply, fastify),
+  });
+
+  fastify.post("/byTab", {
+    schema: Role.getByTab.schema,
+    preHandler: (request, reply) => authorize(request, reply, fastify),
+    handler: (request, reply) => getPermissionByTab(request, reply, fastify),
   });
 
   fastify.post("/byId", {
