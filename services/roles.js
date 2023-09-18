@@ -76,6 +76,15 @@ const roleByIdService = async (request, fastify) => {
 };
 
 const roleByTabService = async (request, fastify) => {
+  if (request.userTokenInfo.WrIsSuperAdmin) {
+    return {
+      isAddPermission: true,
+      isEditPermission: true,
+      isDeletePermission: true,
+      isViewPermission: true,
+    };
+  }
+
   const permissionData = await permissionByRoleIdQuery(
     {
       roleId: request.userTokenInfo.WrRoleId || null,

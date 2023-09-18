@@ -34,9 +34,15 @@ async function createTabsService(request, fastify) {
 }
 
 async function getTabsService(request, fastify) {
-  const tabList = await getTabsQuery(fastify);
+  const { WrIsSuperAdmin, WrUserType, WrRoleId } = request.userTokenInfo;
 
-  return tabList;
+  const body = {
+    displayType: WrIsSuperAdmin ? [1, 2, 0] : [WrUserType],
+    roleId: WrRoleId,
+    isSuperAdmin: WrIsSuperAdmin,
+  };
+
+  return await getTabsQuery(fastify, body);
 }
 
 async function getAllTabsService(request, fastify) {

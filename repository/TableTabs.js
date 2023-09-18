@@ -50,7 +50,7 @@ async function createTabsQuery(body, fastify) {
   return data[0];
 }
 
-async function getTabsQuery(fastify) {
+async function getTabsQuery(fastify, body) {
   return await fastify.db.query(
     `with disable_tab as (
       select et."wrValue" from "tblEncryptedData" et
@@ -72,10 +72,16 @@ async function getTabsQuery(fastify) {
            t."wrIconName" as "iconName",
            t."wrDisplayOrder" as "displayOrder",
            et."wrValue" as "encryptedTabId"
-           from "tblTabs" t inner join "tblEncryptedData" et on t."wrTabId"=et."wrKey"  where t."wrIsActive" = true 
-         and t."wrParentId" not in ( select * from disable_tab)`,
+           from "tblTabs" t inner join "tblEncryptedData" et on t."wrTabId"=et."wrKey" 
+           left join (select * from "tblPermissions" where "wrRoleId" = $2) p on p."wrTabId" = t."wrTabId"
+         where t."wrIsActive" = true 
+         and t."wrParentId" not in ( select * from disable_tab) 
+         and t."wrDisplayType" = ANY($1)
+         and p."wrIsView" = true
+         `,
     {
       type: fastify.db.Sequelize.QueryTypes.SELECT,
+      bind: [body.displayType, body.roleId],
     }
   );
 }

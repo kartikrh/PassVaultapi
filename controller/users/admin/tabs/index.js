@@ -14,11 +14,10 @@ async function getTabs(request, reply, fastify) {
     const result = await getTabsService(request, fastify);
     reply.status(200).send(success(result, 200));
   } catch (err) {
-    reply
-      .status(500)
-      .send(error("Internal server error", ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
   }
 }
+
 async function getAllTabsData(request, reply, fastify) {
   try {
     const result = await getAllTabsService(request, fastify);
