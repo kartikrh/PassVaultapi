@@ -254,6 +254,20 @@ const Role = {
       },
     },
   },
+  getByTab: {
+    schema: {
+      tags: ["Role"],
+      description: "get role details with permissions by tab",
+      //security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          tabName: { type: "string" },
+        },
+        required: ["tabName"],
+      },
+    },
+  },
 };
 
 const Block = {

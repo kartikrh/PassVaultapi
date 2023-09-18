@@ -15,7 +15,7 @@ module.exports = async function (fastify, opts) {
   //* read all tabs which is active
   fastify.post("/all", {
     schema: Tabs.getTabs.schema,
-    // preHandler: [(request, reply, fastify) => authorize(request, reply, fastify)],
+    preHandler: (request, reply) => authorize(request, reply, fastify),
     handler: (request, reply) => getTabs(request, reply, fastify),
   });
 

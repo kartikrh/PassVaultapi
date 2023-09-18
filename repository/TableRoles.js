@@ -171,6 +171,26 @@ const roleByIdQuery = async (data, fastify) => {
     }
   );
 };
+const permissionByRoleIdQuery = async (data, fastify) => {
+  return await fastify.db.query(
+    `select   
+     COALESCE(tp."wrIsAdd",false) as "isAddPermission",
+    COALESCE(tp."wrIsEdit",false) as "isEditPermission",
+    COALESCE(tp."wrIsDelete",false) as "isDeletePermission",
+    COALESCE(tp."wrIsView",false) as "isViewPermission"
+    from "tblTabs" tt 
+    left join (
+      select * from "tblPermissions" where "wrRoleId" = $1
+    ) as tp on tt."wrTabId" = tp."wrTabId"
+    left join "tblEncryptedData" te on te."wrKey" = tt."wrTabId"
+    where tt."wrDisplayType" = $2 and tt."wrTabName" = $3
+    `,
+    {
+      type: fastify.db.QueryTypes.SELECT,
+      bind: [data.roleId, data.displayType, data.tabName],
+    }
+  );
+};
 
 module.exports = {
   getAllRolesQuery,
@@ -181,4 +201,5 @@ module.exports = {
   updateOrCreatePermissionQuery,
   deletePermissionQuery,
   roleByIdQuery,
+  permissionByRoleIdQuery,
 };
