@@ -27,7 +27,8 @@ const createBlockService = async (request, fastify) => {
 
   const data = await insertBlockQuery(
     { ...request.body, userId: request.userTokenInfo.WrUserId },
-    fastify
+    fastify,
+    request
   );
 
   global.tblBlocks.push(data);
@@ -61,7 +62,7 @@ const updateBlockService = async (request, fastify) => {
     blockId: request.body.blockId,
   };
 
-  const result = await updateBlockQuery(updateBody, fastify);
+  const result = await updateBlockQuery(updateBody, fastify, request);
 
   const index = global.tblBlocks.findIndex(
     (block) => block.blockId === request.body.blockId
@@ -76,7 +77,11 @@ const deleteBlockService = async (request, fastify) => {
   const encryptedIds = request.body.blockId;
 
   for (const encryptedId of encryptedIds) {
-    const checkInValide = await validateBlockQuery(encryptedId, fastify);
+    const checkInValide = await validateBlockQuery(
+      encryptedId,
+      fastify,
+      request
+    );
 
     if (checkInValide) {
       throw new Error(
@@ -85,7 +90,7 @@ const deleteBlockService = async (request, fastify) => {
     }
   }
 
-  await deleteBlockQuery(encryptedIds, fastify);
+  await deleteBlockQuery(encryptedIds, fastify, request);
 
   global.tblBlocks = global.tblBlocks.filter(
     (block) => !encryptedIds.includes(block.blockId)
@@ -96,7 +101,6 @@ const deleteBlockService = async (request, fastify) => {
 
 const saveBlockService = async (request, fastify) => {
   const { blockId } = request.body;
-
   if (blockId === "0") {
     return await createBlockService(request, fastify);
   } else {
