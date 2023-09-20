@@ -5,8 +5,6 @@ const {
   validatMenuTypeQuery,
 } = require("../repository/TableMenuTypes");
 
-const { getBlockByIdQuery } = require("../repository/TableBlock");
-
 const allMenuTypeService = async (fastify) => {
   return global.tblMenuTypes;
 };

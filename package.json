@@ -18,6 +18,7 @@
   "dependencies": {
     "@fastify/autoload": "^5.0.0",
     "@fastify/cors": "^8.3.0",
+    "@fastify/rate-limit": "^8.0.3",
     "@fastify/sensible": "^5.0.0",
     "@fastify/swagger": "^8.8.0",
     "@fastify/swagger-ui": "^1.9.3",
@@ -29,6 +30,7 @@
     "fastify-plugin": "^4.0.0",
     "fastify-sequelize": "^1.0.4",
     "jsonwebtoken": "^9.0.1",
+    "mongoose": "^7.5.2",
     "pg": "^8.11.3",
     "request-ip": "^3.3.0",
     "sequelize": "^6.32.1",

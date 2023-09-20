@@ -19,7 +19,8 @@ const eventTypeByIdService = async (request) => {
 const createEventTypeService = async (request, fastify) => {
   const data = await insertEventTypeQuery(
     { ...request.body, userId: request.userTokenInfo.WrUserId },
-    fastify
+    fastify,
+    request
   );
 
   global.tblEventTypes.push(data);
@@ -58,7 +59,7 @@ const updateEventTypeService = async (request, fastify) => {
     data.isHighlight = request.body.isHighlight;
   }
 
-  await updateEventTypeQuery(data, fastify);
+  await updateEventTypeQuery(data, fastify, request);
 
   const index = global.tblEventTypes.findIndex(
     (item) => item.eventTypeId === request.body.eventTypeId
@@ -87,7 +88,7 @@ const deleteEventTypeService = async (request, fastify) => {
     //validate eventTypeId in tblPlayer and tblTeaam
   }
 
-  await deleteEventTypeQuery(eventTypeId, fastify);
+  await deleteEventTypeQuery(eventTypeId, fastify, request);
 
   global.tblEventTypes = global.tblEventTypes.filter(
     (item) => !eventTypeId.includes(item.eventTypeId)

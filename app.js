@@ -5,13 +5,12 @@ const path = require("path");
 const AutoLoad = require("@fastify/autoload");
 const fsequelize = require("fastify-sequelize");
 const dbPg = require("./sequelize/config/config")();
-const cors = require("@fastify/cors");
 const swagger = require("@fastify/swagger");
 const swaggerUi = require("@fastify/swagger-ui");
 const featchData = require("./utilities/fetchAllData");
-const requestIp = require("request-ip");
 const { Server } = require("socket.io"); // Import Socket.IO
 const { connection, socketMiddleware } = require("./socketIo");
+const { fastifyRateLimit } = require("@fastify/rate-limit");
 
 // Pass --options via CLI arguments in command to enable these options.
 module.exports.options = {};
@@ -44,6 +43,7 @@ module.exports = async function (fastify, opts) {
       require("./sequelize/tables/paneltyRunsModel")(fastify.db);
       require("./sequelize/tables/playerModel")(fastify.db);
       require("./sequelize/tables/matchTypeModel")(fastify.db);
+      require("./sequelize/tables/errorLogModel")(fastify.db);
       try {
         await fastify.db.sync();
         await featchData(fastify);
@@ -51,6 +51,18 @@ module.exports = async function (fastify, opts) {
         console.log("error sync with db", error);
       }
     });
+
+  fastify.register(fastifyRateLimit, {
+    max: 1000,
+    timeWindow: "1 hour",
+    errorResponseBuilder: function (request, context) {
+      return {
+        code: 429,
+        error: "Too Many Requests",
+        message: `I only allow ${context.max} requests per ${context.after} to this Website. Try again soon.`,
+      };
+    },
+  });
 
   fastify.register(swagger, {
     routePrefix: "/documentation",

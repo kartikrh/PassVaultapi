@@ -1,3 +1,5 @@
+const { errorLogger } = require("../utilities/logger");
+
 const getAllBlocksQuery = async (fastify) => {
   return await fastify.db.query(
     `SELECT
@@ -13,45 +15,10 @@ const getAllBlocksQuery = async (fastify) => {
   );
 };
 
-const getBlockByIdQuery = async (blockId, fastify) => {
-  const data = await fastify.db.query(
-    `SELECT
-    "wrKey" as "id",
-    "wrValue" as "blockId",
-    "wrBlockName" as "blockName",
-    "wrIsShowContent" as "isShowContent",
-    "wrContent" as "content",
-    "wrControlId" as "controlId"
-    FROM "tblBlocks" tb inner join "tblEncryptedData" te on tb."wrBlockId" = te."wrKey" where "wrValue" = $1`,
-    {
-      type: fastify.db.QueryTypes.SELECT,
-      bind: [blockId],
-    }
-  );
-
-  return data[0];
-};
-
-const checkBlockByName = async (body, fastify, option) => {
-  let query = `SELECT * FROM "tblBlocks" WHERE "wrBlockName" ilike $1`;
-  let params = [body.blockName];
-
-  if (option === "update") {
-    query += ` and not "wrBlockId" = $2`;
-    params.push(body.wrBlockId);
-  }
-
-  const data = await fastify.db.query(query, {
-    type: fastify.db.QueryTypes.SELECT,
-    bind: params,
-  });
-
-  return !!data.length;
-};
-
-const insertBlockQuery = async (body, fastify) => {
-  const data = await fastify.db.query(
-    `with insert_data as (
+const insertBlockQuery = async (body, fastify, request) => {
+  try {
+    const data = await fastify.db.query(
+      `with insert_data as (
       Insert into "tblBlocks"("wrBlockName","wrIsShowContent","wrContent","wrControlId" , "wrCreatedDate","wrCreatedBy") values ($1,$2,$3,$4,$5,$6) returning *
     )
     select 
@@ -61,72 +28,111 @@ const insertBlockQuery = async (body, fastify) => {
     "wrContent" as "content",
     "wrControlId" as "controlId" from insert_data tb inner join "tblEncryptedData" te on tb."wrBlockId" = te."wrKey"
     `,
-    {
-      type: fastify.db.QueryTypes.SELECT,
-      bind: [
-        body.blockName,
-        body.isShowContent,
-        body.content || null,
-        body.controlId || null,
-        new Date(),
-        body.userId,
-      ],
-    }
-  );
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [
+          body.blockName,
+          body.isShowContent,
+          body.content || null,
+          body.controlId || null,
+          new Date(),
+          body.userId,
+        ],
+      }
+    );
 
-  return data[0];
+    return data[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableBlock.js/insertBlockQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
 };
 
 const updateBlockQuery = async (body, fastify) => {
-  const data = await fastify.db.query(
-    `UPDATE "tblBlocks" set "wrBlockName"=$1 , "wrIsShowContent" = $2 , "wrContent"=$3 , "wrControlId" = $4 where "wrBlockId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $5) returning  "wrBlockName" as "blockName",
+  try {
+    const data = await fastify.db.query(
+      `UPDATE "tblBlocks" set "wrBlockName"=$1 , "wrIsShowContent" = $2 , "wrContent"=$3 , "wrControlId" = $4 where "wrBlockId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $5) returning  "wrBlockName" as "blockName",
     "wrIsShowContent" as "isShowContent",
     "wrContent" as "content",
     "wrControlId" as "controlId"`,
-    {
-      type: fastify.db.QueryTypes.SELECT,
-      bind: [
-        body.blockName,
-        body.isShowContent,
-        body.content,
-        body.controlId,
-        body.blockId,
-      ],
-    }
-  );
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [
+          body.blockName,
+          body.isShowContent,
+          body.content,
+          body.controlId,
+          body.blockId,
+        ],
+      }
+    );
 
-  return data[0];
+    return data[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableBlock.js/updateBlockQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
 };
 
 const validateBlockQuery = async (blockId, fastify) => {
-  const data = await fastify.db.query(
-    `select "wrBlockName" from "tblMenuTypes" left join "tblBlocks" on "tblBlocks"."wrBlockId" = "tblMenuTypes"."wrBlockId"  where "tblMenuTypes"."wrBlockId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = $1) and "wrIsActive" = true
+  try {
+    const data = await fastify.db.query(
+      `select "wrBlockName" from "tblMenuTypes" left join "tblBlocks" on "tblBlocks"."wrBlockId" = "tblMenuTypes"."wrBlockId"  where "tblMenuTypes"."wrBlockId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = $1) and "wrIsActive" = true
     `,
-    {
-      type: fastify.db.QueryTypes.SELECT,
-      bind: [blockId],
-    }
-  );
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [blockId],
+      }
+    );
 
-  return data[0];
+    return data[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableBlock.js/validateBlockQuery",
+      request
+    );
+
+    throw new Error(err.message);
+  }
 };
 
 const deleteBlockQuery = async (blockIds, fastify) => {
-  return await fastify.db.query(
-    `delete from "tblBlocks" where "wrBlockId" in 
+  try {
+    return await fastify.db.query(
+      `delete from "tblBlocks" where "wrBlockId" in 
     (select "wrKey" from "tblEncryptedData" where "wrValue" = ANY($1::text[]))`,
-    {
-      type: fastify.db.Sequelize.QueryTypes.DELETE,
-      bind: [blockIds],
-    }
-  );
+      {
+        type: fastify.db.Sequelize.QueryTypes.DELETE,
+        bind: [blockIds],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableBlock.js/deleteBlockQuery",
+      request
+    );
+
+    throw new Error(err.message);
+  }
 };
 
 module.exports = {
   getAllBlocksQuery,
-  checkBlockByName,
   insertBlockQuery,
-  getBlockByIdQuery,
   updateBlockQuery,
   validateBlockQuery,
   deleteBlockQuery,

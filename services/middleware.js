@@ -27,7 +27,7 @@ async function authorization(request, fastify) {
       throw new Error("Invalid Token");
     }
 
-    request.userTokenInfo = decode;
+    request.userTokenInfo = { ...decode, ipAdress: request.ip };
   } catch (e) {
     userLoginInfo = {
       WrUserId: null,
