@@ -9,6 +9,9 @@ const cors = require("@fastify/cors");
 const swagger = require("@fastify/swagger");
 const swaggerUi = require("@fastify/swagger-ui");
 const featchData = require("./utilities/fetchAllData");
+const requestIp = require("request-ip");
+const { Server } = require("socket.io"); // Import Socket.IO
+const { connection, socketMiddleware } = require("./socketIo");
 
 // Pass --options via CLI arguments in command to enable these options.
 module.exports.options = {};
@@ -88,6 +91,25 @@ module.exports = async function (fastify, opts) {
       callback(null, corsOptions);
     };
   });
+
+  //socket.io
+  const io = new Server(fastify.server, {
+    cors: {
+      origin: "*",
+    },
+  });
+
+  //Assign socketIo to global variable
+  global.socketIo = io;
+
+  io.on("connection", connection);
+  io.use(socketMiddleware);
+
+  // fastify.addHook("onRequest", (request, reply, done) => {
+  //   const ip = requestIp.getClientIp(request);
+  //   request.clintIp = ip;
+  //   done();
+  // });
 
   // Do not touch the following lines
 

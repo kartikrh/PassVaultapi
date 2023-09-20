@@ -28,7 +28,7 @@ async function signInUser(body, fastify) {
     `WITH user_data AS (
       SELECT
         "WrUserId", "WrPassword", "WrUserType", "WrRoleId", "WrUserName",
-        "WrIsSuperAdmin", "WrParentId", "WrAllowMultipleLogin", "WrSubAdminId"
+        "WrIsSuperAdmin", "WrParentId", "WrAllowMultipleLogin", "WrSubAdminId" ,"WrUserIp"
       FROM "tblUsers" WHERE "WrUserName" = $1 AND "WrPassword"=$2 AND "WrIsActive" = true
     ),
     insert_data AS (
