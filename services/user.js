@@ -1,6 +1,7 @@
 const uaParser = require("ua-parser-js");
 const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
+const requestIp = require("request-ip");
 
 const {
   signUpUser,
@@ -39,6 +40,12 @@ async function signInUserServices(request, fastify) {
   //* if no user exists or password incorrect
   if (!user) {
     throw new Error("incorrect undername and password");
+  }
+
+  const ipAdress = requestIp.getClientIp(request);
+
+  if (user.WrUserIp !== "0" && user.WrUserIp !== ipAdress) {
+    throw new Error("Invalid IP Address");
   }
 
   const tokenPayload = {

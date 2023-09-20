@@ -38,7 +38,20 @@ const roleCreateService = async (request, fastify) => {
 
   await updateOrCreatePermissionQuery(request.body, fastify);
 
-  return "Role successfully updated";
+  const getRoleById = global.tblRoles.find((item) => item.roleId === role_id);
+
+  const updateRoleData = {
+    roleId: role_id,
+    roleName: request.body.roleName || getRoleById.roleName,
+    description: request.body.description || getRoleById.description,
+    displayType: request.body.displayType || getRoleById.displayType,
+  };
+
+  const index = global.tblRoles.findIndex((item) => item.roleId === role_id);
+
+  global.tblRoles[index] = updateRoleData;
+
+  return { roleId: role_id };
 };
 
 const deleteRoleService = async (request, fastify) => {
