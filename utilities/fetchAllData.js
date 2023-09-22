@@ -13,6 +13,7 @@ const { allPaneltyRunsQuery } = require("../repository/TablePaneltyRun");
 const { getAllPlayersQuery } = require("../repository/TablePlayer");
 const { getAllTeamPlayersQuery } = require("../repository/TableTeamPlayer");
 const { getAllMatchTypeQuery } = require("../repository/TableMatchType");
+const { getAllUsersQuery } = require("../repository/TableUser");
 
 const fetchAllDataFromDb = async (fastify) => {
   try {
@@ -31,6 +32,7 @@ const fetchAllDataFromDb = async (fastify) => {
     const getAllPlayers = await getAllPlayersQuery(fastify);
     const getAllTeamPlayer = await getAllTeamPlayersQuery(fastify);
     const getAllMatchType = await getAllMatchTypeQuery(fastify);
+    const getAllUsers = await getAllUsersQuery(fastify);
 
     global.tblTabs = getAllTabs;
     global.tblRoles = getAllRoles;
@@ -47,6 +49,7 @@ const fetchAllDataFromDb = async (fastify) => {
     global.tblPlayers = getAllPlayers;
     global.tblTeamPlayers = getAllTeamPlayer;
     global.tblMatchTypes = getAllMatchType;
+    global.tblUsers = getAllUsers;
 
     console.log("Okkkk");
   } catch (error) {

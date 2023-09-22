@@ -1154,6 +1154,50 @@ const MatchType = {
   },
 };
 
+const User = {
+  getAll: {
+    schema: {
+      tags: ["User"],
+      description: "get all User",
+    },
+  },
+  getById: {
+    schema: {
+      tags: ["User"],
+      description: "get User by id",
+      body: {
+        type: "object",
+        properties: {
+          userId: { type: "string" },
+        },
+        required: ["userId"],
+      },
+    },
+  },
+  save: {
+    schema: {
+      tags: ["User"],
+      description: "save User",
+      body: {
+        type: "object",
+        properties: {
+          userId: { type: "string" },
+          parentId: { type: "string" },
+          roleId: { type: "string" },
+          userName: { type: "string" },
+          password: { type: "string" },
+          name: { type: "string" },
+          mobile: { type: "string" },
+          isActive: { type: "boolean" },
+          userType: { type: "integer" },
+          allowMultipleLogin: { type: "boolean" },
+        },
+        required: ["userId"],
+      },
+    },
+  },
+};
+
 module.exports = {
   Auth,
   Tabs,
@@ -1171,4 +1215,5 @@ module.exports = {
   Player,
   TeamPlayer,
   MatchType,
+  User,
 };

@@ -9,6 +9,8 @@ const {
   generateEncryptionData,
   getMaxKey,
   checkValidQuery,
+  addUserQuery,
+  updateUserQuery,
 } = require("../repository/TableUser");
 const { deviceInfo, encrypt } = require("../utilities/index");
 
@@ -104,9 +106,123 @@ async function validateUserServices(request, fastify) {
   }
 }
 
+const getAllUsersService = async () => {
+  return global.tblUsers;
+};
+
+const getUserByIdService = async (request) => {
+  const { userId } = request.body;
+
+  const user = global.tblUsers.find((user) => user.userId === userId);
+  return user || null;
+};
+
+const addUserService = async (request, fastify) => {
+  if (request.body.parentId && request.body.parentId !== "0") {
+    const validateParent = global.tblUsers.find(
+      (user) => user.userId === request.body.parentId
+    );
+
+    if (!validateParent) {
+      throw new Error("Invalid Parent");
+    }
+  }
+
+  if (request.body.roleId) {
+    const validateRole = global.tblRoles.find(
+      (role) => role.roleId === request.body.roleId
+    );
+
+    if (!validateRole) {
+      throw new Error("Invalid Role");
+    }
+  }
+
+  request.body.password = encrypt(request.body.password);
+
+  const userData = await addUserQuery(request, fastify);
+
+  global.tblUsers.push(userData);
+
+  return userData;
+};
+
+const updateUserService = async (request, fastify) => {
+  const { userId } = request.body;
+
+  const findUser = global.tblUsers.find((user) => user.userId === userId);
+
+  if (!findUser) {
+    throw new Error("Invalid User");
+  }
+
+  const body = {
+    userId,
+    userName: request.body.userName || findUser.userName,
+    name: request.body.name || findUser.name,
+    mobile: request.body.mobile || findUser.mobile,
+    isActive: findUser.isActive,
+    allowMultipleLogin: findUser.allowMultipleLogin,
+    userType: request.body.userType || findUser.userType,
+    roleId: findUser.roleId,
+    password: findUser.password,
+  };
+
+  if (request.body.roleId) {
+    const validateRole = global.tblRoles.find(
+      (role) => role.roleId === request.body.roleId
+    );
+
+    if (!validateRole) {
+      throw new Error("Invalid Role");
+    } else {
+      body.roleId = request.body.roleId;
+    }
+  }
+
+  if (request.body.password) {
+    body.password = encrypt(request.body.password);
+  }
+
+  if ("isActive" in request.body) {
+    body.isActive = request.body.isActive;
+  }
+
+  if ("allowMultipleLogin" in request.body) {
+    body.allowMultipleLogin = request.body.allowMultipleLogin;
+  }
+
+  await updateUserQuery(body, fastify, request);
+
+  if (!body.isActive) {
+    global.socketIo
+      .to(userId)
+      .emit("logout", "You have been removed from the room.");
+  }
+
+  const index = global.tblUsers.findIndex((user) => user.userId === userId);
+
+  global.tblUsers[index] = body;
+
+  return body;
+};
+
+const saveUserService = async (request, fastify) => {
+  const { userId } = request.body;
+
+  if (userId === "0") {
+    return await addUserService(request, fastify);
+  } else {
+    return await updateUserService(request, fastify);
+  }
+};
+
 module.exports = {
   signUpUserService,
   signInUserServices,
   generateEncryptionService,
   validateUserServices,
+  getAllUsersService,
+  getUserByIdService,
+  saveUserService,
 };

@@ -5,9 +5,8 @@ const {
   generateEncryption,
   validateUser,
 } = require("../controller/users/index");
-const { User, Auth } = require("../swaggerSchema/groupTags/schema");
+const { Auth } = require("../swaggerSchema/groupTags/schema");
 const { authorize } = require("../controller/middleware/index");
-const { set } = require("mongoose");
 
 module.exports = async function (fastify, opts) {
   //! API DEFINITION
