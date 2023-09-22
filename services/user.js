@@ -12,7 +12,7 @@ const {
   addUserQuery,
   updateUserQuery,
 } = require("../repository/TableUser");
-const { deviceInfo, encrypt } = require("../utilities/index");
+const { deviceInfo, encrypt, decrypt } = require("../utilities/index");
 
 async function signUpUserService({ body }, fastify) {
   const hashedPassword = encrypt(body.password);
@@ -107,14 +107,27 @@ async function validateUserServices(request, fastify) {
 }
 
 const getAllUsersService = async () => {
-  return global.tblUsers;
+  return global.tblUsers.map((user) => {
+    return {
+      ...user,
+      password: decrypt(user.password),
+    };
+  });
 };
 
 const getUserByIdService = async (request) => {
   const { userId } = request.body;
 
   const user = global.tblUsers.find((user) => user.userId === userId);
-  return user || null;
+
+  if (user) {
+    return {
+      ...user,
+      password: decrypt(user.password),
+    };
+  } else {
+    return null;
+  }
 };
 
 const addUserService = async (request, fastify) => {
