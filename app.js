@@ -98,7 +98,7 @@ module.exports = async function (fastify, opts) {
         bearerAuth: {
           type: "apiKey",
           name: "Authorization",
-          in: "header",
+          in: "headers",
         },
       },
     },

@@ -4,6 +4,7 @@ const {
   signInUser,
   generateEncryption,
   validateUser,
+  loadDataInMemory,
 } = require("../controller/users/index");
 const { Auth } = require("../swaggerSchema/groupTags/schema");
 const { authorize } = require("../controller/middleware/index");
@@ -25,5 +26,9 @@ module.exports = async function (fastify, opts) {
   fastify.post("/generateEncryption", {
     schema: Auth.encryption.schema,
     handler: (request, reply) => generateEncryption(request, reply, fastify),
+  });
+  fastify.post("/loadData", {
+    preHandler: [(request, reply) => authorize(request, reply, fastify)],
+    handler: (request, reply) => loadDataInMemory(request, reply, fastify),
   });
 };
