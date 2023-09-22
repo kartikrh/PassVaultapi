@@ -13,7 +13,7 @@ let commonPath = "controller/users/admin/roles/index";
 
 const getAllRoles = async (request, reply, fastify) => {
   try {
-    const result = await allRolesService(fastify);
+    const result = await allRolesService(request);
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/getAllRoles", request);

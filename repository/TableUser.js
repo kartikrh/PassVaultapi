@@ -124,6 +124,7 @@ const getAllUsersQuery = async (fastify) => {
     te."wrValue" as "userId",
     COALESCE(te1."wrValue" , '0') as "parentId",
     COALESCE(te2."wrValue",'0') as "roleId",
+    COALESCE(tu1."WrUserName",'') as "parentName",
     tu."WrUserName" as "userName",
     tu."WrName" as "name",
     tu."WrPassword" as "password",
@@ -134,6 +135,7 @@ const getAllUsersQuery = async (fastify) => {
      from "tblUsers" tu left join "tblEncryptedData" te on tu."WrUserId" = te."wrKey"
      left join "tblEncryptedData" te1 on tu."WrParentId" = te1."wrKey" 
      left join "tblEncryptedData" te2 on tu."WrRoleId" = te2."wrKey"
+     left join "tblUsers" tu1 on tu."WrParentId" = tu1."WrUserId"
     `,
     {
       type: QueryTypes.SELECT,

@@ -8,8 +8,14 @@ const {
   permissionByRoleIdQuery,
 } = require("../repository/TableRoles");
 
-const allRolesService = async (fastify) => {
-  return global.tblRoles;
+const allRolesService = async (request) => {
+  if (request.userTokenInfo.WrIsSuperAdmin) {
+    return global.tblRoles;
+  } else {
+    return global.tblRoles.filter(
+      (item) => item.createdBy == request.userTokenInfo.WrUserId
+    );
+  }
 };
 
 const roleByDisplayTypeService = async (request, fastify) => {
@@ -24,7 +30,10 @@ const roleCreateService = async (request, fastify) => {
   let role_id = request.body.roleId;
 
   if (request.body.roleId === "0") {
-    const createRole = await createRoleQuery(request.body, fastify);
+    const createRole = await createRoleQuery(
+      { ...request.body, userId: request.userTokenInfo.WrUserId },
+      fastify
+    );
     role_id = createRole.roleId;
     global.tblRoles.push(createRole);
   }
@@ -45,6 +54,7 @@ const roleCreateService = async (request, fastify) => {
     roleName: request.body.roleName || getRoleById.roleName,
     description: request.body.description || getRoleById.description,
     displayType: request.body.displayType || getRoleById.displayType,
+    createdBy: getRoleById.createdBy,
   };
 
   const index = global.tblRoles.findIndex((item) => item.roleId === role_id);

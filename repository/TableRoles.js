@@ -4,7 +4,8 @@ const getAllRolesQuery = async (fastify) => {
         e."wrValue" as "roleId",
         r."wrRoleName" as "roleName",
         r."wrDescription" as "description",
-        r."wrDisplayType" as "displayType"
+        r."wrDisplayType" as "displayType",
+        r."wrCreatedBy" as  "createdBy"
      FROM "tblRoles" r inner join "tblEncryptedData" e on r."wrRoleId" = e."wrKey"`,
     {
       type: fastify.db.QueryTypes.SELECT,
@@ -66,7 +67,7 @@ const createRoleQuery = async (body, fastify) => {
     INSERT INTO "tblRoles" ("wrRoleName", "wrDescription", "wrDisplayType" , "wrCreatedBy" , "wrCreatedDate") VALUES ($1, $2, $3,$4,$5) RETURNING *
     )
     
-    select "wrValue" as "roleId" , "wrRoleName" as "roleName" , "wrDescription" as "description" , "wrDisplayType" as "displayType" from role_add r inner join "tblEncryptedData" e on r."wrRoleId" = e."wrKey"
+    select "wrValue" as "roleId" , "wrRoleName" as "roleName" , "wrDescription" as "description" , "wrDisplayType" as "displayType" , "wrCreatedBy" as  "createdBy" from role_add r inner join "tblEncryptedData" e on r."wrRoleId" = e."wrKey"
     `,
     {
       type: fastify.db.QueryTypes.SELECT,
@@ -74,7 +75,7 @@ const createRoleQuery = async (body, fastify) => {
         body.roleName,
         body.description,
         body.displayType,
-        body.userId || 0,
+        body.userId,
         new Date(),
       ],
     }
@@ -184,7 +185,7 @@ const permissionByRoleIdQuery = async (data, fastify) => {
       select * from "tblPermissions" where "wrRoleId" = $1
     ) as tp on tt."wrTabId" = tp."wrTabId"
     left join "tblEncryptedData" te on te."wrKey" = tt."wrTabId"
-    where tt."wrDisplayType" = $2 and tt."wrTabName" = $3
+    where tt."wrDisplayType" = $2 and tt."wrTabName" ilike $3
     `,
     {
       type: fastify.db.QueryTypes.SELECT,
