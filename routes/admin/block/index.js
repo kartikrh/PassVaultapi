@@ -16,7 +16,7 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        checkPermission(request, reply, done, fastify, {
+        checkPermission(request, reply, fastify, {
           tabName: "Block",
           mode: "view",
         }),
@@ -29,7 +29,7 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        checkPermission(request, reply, done, fastify, {
+        checkPermission(request, reply, fastify, {
           tabName: "Block",
           mode: "view",
         }),
@@ -42,7 +42,7 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        checkPermission(request, reply, done, fastify, {
+        checkPermission(request, reply, fastify, {
           tabName: "Block",
           mode: request.body.blockId === "0" ? "add" : "edit",
         }),
@@ -55,7 +55,7 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        checkPermission(request, reply, done, fastify, {
+        checkPermission(request, reply, fastify, {
           tabName: "Block",
           mode: "delete",
         }),
