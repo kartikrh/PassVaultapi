@@ -1,5 +1,4 @@
 const {
-  allMenuItemsQuery,
   menuItemByIdQuery,
   createMenuItemQuery,
   updateMenuItemQuery,
@@ -7,9 +6,6 @@ const {
   deleteMenuItemQuery,
   findMenuItemByParentId,
 } = require("../repository/TableMenuItem");
-const { menuItemTypeQueryById } = require("../repository/TableMenuItemType");
-const { getMenuTypeByIdQuery } = require("../repository/TableMenuTypes");
-const { pageByIdQuery } = require("../repository/TablePage");
 
 const allMenuItemService = async (fastify) => {
   return global.tblMenuItems;
@@ -51,7 +47,8 @@ const createMenuItemService = async (request, fastify) => {
       ...request.body,
       userId: request.userTokenInfo.WrUserId,
     },
-    fastify
+    fastify,
+    request
   );
 
   global.tblMenuItems.push(data);
@@ -118,7 +115,8 @@ const updateMenuItemService = async (request, fastify) => {
   if (request.body.parentId && request.body.parentId !== "0") {
     const validateParentId = await menuItemByIdQuery(
       request.body.parentId,
-      fastify
+      fastify,
+      request
     );
     if (!validateParentId) {
       throw new Error("Parent Menu Item not found for give id");
@@ -146,7 +144,11 @@ const deleteMenuItemService = async (request, fastify) => {
   const encryptedIds = request.body.menuItemId;
 
   for (const encryptedId of encryptedIds) {
-    const checkInValide = await validateMenuItemQuery(encryptedId, fastify);
+    const checkInValide = await validateMenuItemQuery(
+      encryptedId,
+      fastify,
+      request
+    );
 
     if (checkInValide) {
       throw new Error(
@@ -154,7 +156,11 @@ const deleteMenuItemService = async (request, fastify) => {
       );
     }
 
-    const checkChild = await findMenuItemByParentId(encryptedId, fastify);
+    const checkChild = await findMenuItemByParentId(
+      encryptedId,
+      fastify,
+      request
+    );
 
     if (checkChild) {
       throw new Error(
@@ -163,7 +169,7 @@ const deleteMenuItemService = async (request, fastify) => {
     }
   }
 
-  await deleteMenuItemQuery(encryptedIds, fastify);
+  await deleteMenuItemQuery(encryptedIds, fastify, request);
 
   global.tblMenuItems = global.tblMenuItems.filter(
     (item) => !encryptedIds.includes(item.menuItemId)

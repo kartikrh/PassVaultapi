@@ -1,5 +1,4 @@
 const { QueryTypes } = require("sequelize");
-const userModel = require("../sequelize/tables/userModel");
 
 //TODO: this is a test api
 async function signUpUser(request, fastify) {

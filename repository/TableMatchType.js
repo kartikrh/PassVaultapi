@@ -1,3 +1,5 @@
+const { errorLogger } = require("../utilities/logger");
+
 const getAllMatchTypeQuery = async (fastify) => {
   return await fastify.db.query(
     `select
@@ -42,9 +44,10 @@ const getAllMatchTypeQuery = async (fastify) => {
   );
 };
 
-const insertMatchTypeQuery = async (data, fastify) => {
-  const result = await fastify.db.query(
-    `
+const insertMatchTypeQuery = async (data, fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `
     with insert_data as (
       insert into "tblMatchTypes" (
         "wrMatchType",
@@ -126,121 +129,141 @@ const insertMatchTypeQuery = async (data, fastify) => {
         "wrValueOfFrontFootNoBall" as "valueOfFrontFootNoBall"
         from "insert_data" mt left join "tblEncryptedData" ed on mt."wrMatchTypeId" = ed."wrKey"
     `,
-    {
-      bind: [
-        data.matchType || null,
-        data.matchRefType || null,
-        data.noOfIningsPerSide || 0,
-        data.noOfDays || 0,
-        data.noOfPlayer || 0,
-        data.substitutesPlayer || 0,
-        data.isLastManStand || false,
-        data.isLimitedOvers || false,
-        data.takeNewBallAfterOvers || 0,
-        data.oversInLastHour || 0,
-        data.totalOversInMatch || 0,
-        data.oversPerDay || 0,
-        data.maxOversInFirstInings || 0,
-        data.maxOversInSecondInings || 0,
-        data.isBowlersLimitedOvers || false,
-        data.oversPerBowler || 0,
-        data.isPowerPlay || false,
-        data.totalPowerPlay || 0,
-        data.isExtraInings || false,
-        data.oversPerInings || 0,
-        data.batsmenPerInings || 0,
-        data.ballsPerOver || 0,
-        data.valueOfNoBall || 0,
-        data.isExtraBallWhenNoBall || false,
-        data.valueOfNoBallInLastOver || 0,
-        data.isExtraBallWhenNoBallInLastOver || false,
-        data.valueOfWideBall || 0,
-        data.isExtraBallWhenWideBall || false,
-        data.valueOfWideBallInLastOver || 0,
-        data.isExtraBallWhenWideBallInLastOver || false,
-        data.isWideBallCountInPartnership || false,
-        data.isPenaltyRunsInPartnership || false,
-        data.valueOfFrontFootNoBall || 0,
-        data.userId,
-        new Date(),
-      ],
-      type: fastify.db.QueryTypes.SELECT,
-    }
-  );
+      {
+        bind: [
+          data.matchType || null,
+          data.matchRefType || null,
+          data.noOfIningsPerSide || 0,
+          data.noOfDays || 0,
+          data.noOfPlayer || 0,
+          data.substitutesPlayer || 0,
+          data.isLastManStand || false,
+          data.isLimitedOvers || false,
+          data.takeNewBallAfterOvers || 0,
+          data.oversInLastHour || 0,
+          data.totalOversInMatch || 0,
+          data.oversPerDay || 0,
+          data.maxOversInFirstInings || 0,
+          data.maxOversInSecondInings || 0,
+          data.isBowlersLimitedOvers || false,
+          data.oversPerBowler || 0,
+          data.isPowerPlay || false,
+          data.totalPowerPlay || 0,
+          data.isExtraInings || false,
+          data.oversPerInings || 0,
+          data.batsmenPerInings || 0,
+          data.ballsPerOver || 0,
+          data.valueOfNoBall || 0,
+          data.isExtraBallWhenNoBall || false,
+          data.valueOfNoBallInLastOver || 0,
+          data.isExtraBallWhenNoBallInLastOver || false,
+          data.valueOfWideBall || 0,
+          data.isExtraBallWhenWideBall || false,
+          data.valueOfWideBallInLastOver || 0,
+          data.isExtraBallWhenWideBallInLastOver || false,
+          data.isWideBallCountInPartnership || false,
+          data.isPenaltyRunsInPartnership || false,
+          data.valueOfFrontFootNoBall || 0,
+          data.userId,
+          new Date(),
+        ],
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
 
-  return result[0];
-};
-
-const deleteMatchTypeQuery = async (matchTypeId, fastify) => {
-  return await fastify.db.query(
-    `delete from "tblMatchTypes" where "wrMatchTypeId" in 
-    ( select "wrKey" from "tblEncryptedData" where "wrValue" = ANY($1))`,
-    {
-      bind: [matchTypeId],
-      type: fastify.db.QueryTypes.DELETE,
-    }
-  );
-};
-
-const updateMatchTypeQuery = async (data, fastify) => {
-  const columnMapping = {
-    matchType: "wrMatchType",
-    matchRefType: "wrMatchRefType",
-    noOfIningsPerSide: "wrNoOfIningsPerSide",
-    noOfDays: "wrNoOfDays",
-    noOfPlayer: "wrNoOfPlayer",
-    substitutesPlayer: "wrSubstitutesPlayer",
-    isLastManStand: "wrIsLastManStand",
-    isLimitedOvers: "wrIsLimitedOvers",
-    takeNewBallAfterOvers: "wrTakeNewBallAfterOvers",
-    oversInLastHour: "wrOversInLastHour",
-    totalOversInMatch: "wrTotalOversInMatch",
-    oversPerDay: "wrOversPerDay",
-    maxOversInFirstInings: "wrMaxOversInFirstInings",
-    maxOversInSecondInings: "wrMaxOversInSecondInings",
-    isBowlersLimitedOvers: "wrIsBowlersLimitedOvers",
-    oversPerBowler: "wrOversPerBowler",
-    isPowerPlay: "wrIsPowerPlay",
-    totalPowerPlay: "wrTotalPowerPlay",
-    isExtraInings: "wrIsExtraInings",
-    oversPerInings: "wrOversPerInings",
-    batsmenPerInings: "wrBatsmenPerInings",
-    ballsPerOver: "wrBallsPerOver",
-    valueOfNoBall: "wrValueOfNoBall",
-    isExtraBallWhenNoBall: "wrIsExtraBallWhenNoBall",
-    valueOfNoBallInLastOver: "wrValueOfNoBallInLastOver",
-    isExtraBallWhenNoBallInLastOver: "wrIsExtraBallWhenNoBallInLastOver",
-    valueOfWideBall: "wrValueOfWideBall",
-    isExtraBallWhenWideBall: "wrIsExtraBallWhenWideBall",
-    valueOfWideBallInLastOver: "wrValueOfWideBallInLastOver",
-    isExtraBallWhenWideBallInLastOver: "wrIsExtraBallWhenWideBallInLastOver",
-    isWideBallCountInPartnership: "wrIsWideBallCountInPartnership",
-    isPenaltyRunsInPartnership: "wrIsPenaltyRunsInPartnership",
-    valueOfFrontFootNoBall: "wrValueOfFrontFootNoBall",
-    modifyBy: "wrModifyBy",
-    modifyDate: "wrModifyDate",
-  };
-
-  const updateColumns = [];
-  const updateValues = [];
-
-  for (const key in data) {
-    if (columnMapping[key] !== undefined) {
-      updateColumns.push(
-        `"${columnMapping[key]}" = $${updateColumns.length + 1}`
-      );
-      updateValues.push(data[key]);
-    }
+    return result[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableMatchType/insertMatchTypeQuery",
+      request
+    );
+    throw new Error(err.message);
   }
+};
 
-  updateValues.push(data.matchTypeId);
+const deleteMatchTypeQuery = async (matchTypeId, fastify, request) => {
+  try {
+    return await fastify.db.query(
+      `delete from "tblMatchTypes" where "wrMatchTypeId" in 
+    ( select "wrKey" from "tblEncryptedData" where "wrValue" = ANY($1))`,
+      {
+        bind: [matchTypeId],
+        type: fastify.db.QueryTypes.DELETE,
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableMatchType/deleteMatchTypeQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
 
-  const result = await fastify.db.query(
-    `UPDATE "tblMatchTypes" SET ${updateColumns.join(
-      ", "
-    )} WHERE "wrMatchTypeId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $${
-      updateValues.length
-    }) returning 
+const updateMatchTypeQuery = async (data, fastify, request) => {
+  try {
+    const columnMapping = {
+      matchType: "wrMatchType",
+      matchRefType: "wrMatchRefType",
+      noOfIningsPerSide: "wrNoOfIningsPerSide",
+      noOfDays: "wrNoOfDays",
+      noOfPlayer: "wrNoOfPlayer",
+      substitutesPlayer: "wrSubstitutesPlayer",
+      isLastManStand: "wrIsLastManStand",
+      isLimitedOvers: "wrIsLimitedOvers",
+      takeNewBallAfterOvers: "wrTakeNewBallAfterOvers",
+      oversInLastHour: "wrOversInLastHour",
+      totalOversInMatch: "wrTotalOversInMatch",
+      oversPerDay: "wrOversPerDay",
+      maxOversInFirstInings: "wrMaxOversInFirstInings",
+      maxOversInSecondInings: "wrMaxOversInSecondInings",
+      isBowlersLimitedOvers: "wrIsBowlersLimitedOvers",
+      oversPerBowler: "wrOversPerBowler",
+      isPowerPlay: "wrIsPowerPlay",
+      totalPowerPlay: "wrTotalPowerPlay",
+      isExtraInings: "wrIsExtraInings",
+      oversPerInings: "wrOversPerInings",
+      batsmenPerInings: "wrBatsmenPerInings",
+      ballsPerOver: "wrBallsPerOver",
+      valueOfNoBall: "wrValueOfNoBall",
+      isExtraBallWhenNoBall: "wrIsExtraBallWhenNoBall",
+      valueOfNoBallInLastOver: "wrValueOfNoBallInLastOver",
+      isExtraBallWhenNoBallInLastOver: "wrIsExtraBallWhenNoBallInLastOver",
+      valueOfWideBall: "wrValueOfWideBall",
+      isExtraBallWhenWideBall: "wrIsExtraBallWhenWideBall",
+      valueOfWideBallInLastOver: "wrValueOfWideBallInLastOver",
+      isExtraBallWhenWideBallInLastOver: "wrIsExtraBallWhenWideBallInLastOver",
+      isWideBallCountInPartnership: "wrIsWideBallCountInPartnership",
+      isPenaltyRunsInPartnership: "wrIsPenaltyRunsInPartnership",
+      valueOfFrontFootNoBall: "wrValueOfFrontFootNoBall",
+      modifyBy: "wrModifyBy",
+      modifyDate: "wrModifyDate",
+    };
+
+    const updateColumns = [];
+    const updateValues = [];
+
+    for (const key in data) {
+      if (columnMapping[key] !== undefined) {
+        updateColumns.push(
+          `"${columnMapping[key]}" = $${updateColumns.length + 1}`
+        );
+        updateValues.push(data[key]);
+      }
+    }
+
+    updateValues.push(data.matchTypeId);
+
+    const result = await fastify.db.query(
+      `UPDATE "tblMatchTypes" SET ${updateColumns.join(
+        ", "
+      )} WHERE "wrMatchTypeId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $${
+        updateValues.length
+      }) returning 
     "wrMatchType" as "matchType",
     "wrMatchRefType" as "matchRefType",
     "wrNoOfIningsPerSide" as "noOfIningsPerSide",
@@ -275,13 +298,22 @@ const updateMatchTypeQuery = async (data, fastify) => {
     "wrIsPenaltyRunsInPartnership" as "isPenaltyRunsInPartnership",
     "wrValueOfFrontFootNoBall" as "valueOfFrontFootNoBall"
     `,
-    {
-      bind: updateValues,
-      type: fastify.db.QueryTypes.SELECT,
-    }
-  );
+      {
+        bind: updateValues,
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
 
-  return result[0];
+    return result[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableMatchType/updateMatchTypeQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
 };
 
 module.exports = {

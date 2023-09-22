@@ -39,7 +39,8 @@ const addPageAliasService = async (request, fastify) => {
 
   const data = await insertPageAliasQuery(
     { ...request.body, userId: request.userTokenInfo.WrUserId },
-    fastify
+    fastify,
+    request
   );
 
   global.tblPageAliases.push(data);
@@ -83,7 +84,7 @@ const updatePageAliasService = async (request, fastify) => {
     }
   }
 
-  await updatePageAliasQuery(body, fastify);
+  await updatePageAliasQuery(body, fastify, request);
 
   const index = global.tblPageAliases.findIndex(
     (item) => item.pageAliasId === request.body.pageAliasId
@@ -103,7 +104,7 @@ const updatePageAliasService = async (request, fastify) => {
 };
 
 const deletePageAliasService = async (request, fastify) => {
-  await deletePageAliasQuery(request.body.pageAliasId, fastify);
+  await deletePageAliasQuery(request.body.pageAliasId, fastify, request);
 
   global.tblPageAliases = global.tblPageAliases.filter(
     (item) => !request.body.pageAliasId.includes(item.pageAliasId)

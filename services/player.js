@@ -35,7 +35,8 @@ const insertPlayerService = async (request, fastify) => {
 
   const result = await insertPlayerQuery(
     { ...request.body, userId: request.userTokenInfo.WrUserId },
-    fastify
+    fastify,
+    request
   );
 
   global.tblPlayers.push(result);
@@ -112,7 +113,7 @@ const updatePlayerService = async (request, fastify) => {
     }
   }
 
-  await updatePlayerQuery(body, fastify);
+  await updatePlayerQuery(body, fastify, request);
 
   delete body.userId;
 
@@ -134,6 +135,7 @@ const savePlayerService = async (request, fastify) => {
     return await updatePlayerService(request, fastify);
   }
 };
+
 const deletePlayerService = async (request, fastify) => {
   const { playerId } = request.body;
 
@@ -141,7 +143,7 @@ const deletePlayerService = async (request, fastify) => {
     //validate id if required
   }
 
-  await deletePlayerQuery(playerId, fastify);
+  await deletePlayerQuery(playerId, fastify, request);
 
   global.tblPlayers = global.tblPlayers.filter(
     (item) => !playerId.includes(item.playerId)

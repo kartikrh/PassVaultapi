@@ -5,6 +5,7 @@ const {
   createUserLoginInfo,
   checkValidQuery,
 } = require("../repository/TableUser");
+const { roleByTabService } = require("./roles");
 
 async function authorization(request, fastify) {
   const wrInfo = deviceInfo(request);
@@ -43,6 +44,23 @@ async function authorization(request, fastify) {
   }
 }
 
+const permissionCheckService = async (request, fastify, data) => {
+  const permission = await roleByTabService(request, fastify, data.tabName);
+
+  if (data.mode === "view" && !permission.isViewPermission) {
+    throw new Error("You don't have permission to view");
+  } else if (data.mode === "add" && !permission.isAddPermission) {
+    throw new Error("You don't have permission to add");
+  } else if (data.mode === "edit" && !permission.isEditPermission) {
+    throw new Error("You don't have permission to edit");
+  } else if (data.mode === "delete" && !permission.isDeletePermission) {
+    throw new Error("You don't have permission to delete");
+  }
+
+  return true;
+};
+
 module.exports = {
   authorization,
+  permissionCheckService,
 };
