@@ -16,7 +16,6 @@ async function authorize(request, reply, fastify) {
 const checkPermission = async (request, reply, done, fastify, data) => {
   try {
     await permissionCheckService(request, fastify, data);
-    done();
   } catch (err) {
     reply.status(403).send(error(err.message, ERROR_CODES.INVALID_TOKEN, 401));
   }
