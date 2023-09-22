@@ -49,7 +49,8 @@ const addTeamPlayerService = async (request, fastify) => {
 
   const data = await insertTeamPlayerQuery(
     { ...request.body, userId: request.userTokenInfo.WrUserId },
-    fastify
+    fastify,
+    request
   );
 
   global.tblTeamPlayers.push(data);
@@ -104,7 +105,7 @@ const updateTeamPlayerService = async (request, fastify) => {
     throw new Error("Player already exist in this team");
   }
 
-  await updateTeamPlayerQuery(body, fastify);
+  await updateTeamPlayerQuery(body, fastify, request);
 
   const index = global.tblTeamPlayers.findIndex(
     (item) => item.teamPlayerId === body.teamPlayerId
@@ -130,7 +131,7 @@ const saveTeamPlayerService = async (request, fastify) => {
 const deleteTeamPlayerService = async (request, fastify) => {
   const { teamPlayerId } = request.body;
 
-  await deleteTeamPlayerQuery(teamPlayerId, fastify);
+  await deleteTeamPlayerQuery(teamPlayerId, fastify, request);
 
   global.tblTeamPlayers = global.tblTeamPlayers.filter(
     (item) => !teamPlayerId.includes(item.teamPlayerId)

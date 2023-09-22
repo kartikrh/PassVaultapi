@@ -88,7 +88,7 @@ const roleByIdService = async (request, fastify) => {
   };
 };
 
-const roleByTabService = async (request, fastify) => {
+const roleByTabService = async (request, fastify, tabName = undefined) => {
   if (request.userTokenInfo.WrIsSuperAdmin) {
     return {
       isAddPermission: true,
@@ -102,7 +102,7 @@ const roleByTabService = async (request, fastify) => {
     {
       roleId: request.userTokenInfo.WrRoleId || null,
       displayType: request.userTokenInfo.WrUserType || null,
-      tabName: request.body.tabName,
+      tabName: tabName || request.body.tabName,
     },
     fastify
   );

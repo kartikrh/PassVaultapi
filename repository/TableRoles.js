@@ -171,6 +171,7 @@ const roleByIdQuery = async (data, fastify) => {
     }
   );
 };
+
 const permissionByRoleIdQuery = async (data, fastify) => {
   return await fastify.db.query(
     `select   

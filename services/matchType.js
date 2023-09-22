@@ -19,7 +19,8 @@ const matchTypeByIdService = async (request) => {
 const createMatchTypeService = async (request, fastify) => {
   const data = await insertMatchTypeQuery(
     { ...request.body, userId: request.userTokenInfo.WrUserId },
-    fastify
+    fastify,
+    request
   );
 
   global.tblMatchTypes.push(data);
@@ -41,7 +42,8 @@ const updateMatchTypeService = async (request, fastify) => {
       modifyBy: request.userTokenInfo.WrUserId,
       modifyDate: new Date(),
     },
-    fastify
+    fastify,
+    request
   );
 
   const index = global.tblMatchTypes.findIndex(
@@ -69,7 +71,7 @@ const saveMatchTypeService = async (request, fastify) => {
 const deleteMatchTypeService = async (request, fastify) => {
   const { matchTypeId } = request.body;
 
-  await deleteMatchTypeQuery(matchTypeId, fastify);
+  await deleteMatchTypeQuery(matchTypeId, fastify, request);
 
   global.tblMatchTypes = global.tblMatchTypes.filter(
     (item) => !matchTypeId.includes(item.matchTypeId)

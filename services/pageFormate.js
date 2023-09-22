@@ -28,7 +28,8 @@ const addPageFormatService = async (request, fastify) => {
   }
   const data = await insertPageFormateQuery(
     { ...request.body, userId: request.userTokenInfo.WrUserId },
-    fastify
+    fastify,
+    request
   );
   global.tblPageFormats.push(data);
   return data;
@@ -67,7 +68,7 @@ const updatePageFormatService = async (request, fastify) => {
     throw new Error("Page Format with this name is already exists");
   }
 
-  const data = await updatePageFormateQuery(body, fastify);
+  const data = await updatePageFormateQuery(body, fastify, request);
 
   const index = global.tblPageFormats.findIndex(
     (item) => item.pageFormatId === body.pageFormatId
@@ -82,7 +83,11 @@ const deletePageFormatService = async (request, fastify) => {
   const encryptedIds = request.body.pageFormatId;
 
   for (const encryptedId of encryptedIds) {
-    const checkInValide = await validatePageFormatQuery(encryptedId, fastify);
+    const checkInValide = await validatePageFormatQuery(
+      encryptedId,
+      fastify,
+      request
+    );
 
     if (checkInValide) {
       throw new Error(
@@ -91,7 +96,7 @@ const deletePageFormatService = async (request, fastify) => {
     }
   }
 
-  await deletePageFormatQuery(encryptedIds, fastify);
+  await deletePageFormatQuery(encryptedIds, fastify, request);
 
   global.tblPageFormats = global.tblPageFormats.filter(
     (item) => !encryptedIds.includes(item.pageFormatId)

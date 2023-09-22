@@ -29,7 +29,8 @@ const addPageService = async (request, fastify) => {
 
   const data = await insertPageQuery(
     { ...request.body, userId: request.userTokenInfo.WrUserId },
-    fastify
+    fastify,
+    request
   );
 
   global.tblPages.push(data);
@@ -87,7 +88,7 @@ const updatePageService = async (request, fastify) => {
     body.isDefault = request.body.isDefault;
   }
 
-  const result = await updatePageQuery(body, fastify);
+  const result = await updatePageQuery(body, fastify, request);
 
   const index = global.tblPages.findIndex(
     (item) => item.pageId === request.body.pageId
@@ -110,7 +111,11 @@ const deletePageService = async (request, fastify) => {
   const encryptedIds = request.body.pageId;
 
   for (const encryptedId of encryptedIds) {
-    const checkInValide = await validatePageIdInMenuItem(encryptedId, fastify);
+    const checkInValide = await validatePageIdInMenuItem(
+      encryptedId,
+      fastify,
+      request
+    );
 
     if (checkInValide) {
       throw new Error(
@@ -120,7 +125,8 @@ const deletePageService = async (request, fastify) => {
 
     const checkInValidePageAlias = await validatePageIdInPageAlias(
       encryptedId,
-      fastify
+      fastify,
+      request
     );
 
     if (checkInValidePageAlias) {
@@ -130,7 +136,7 @@ const deletePageService = async (request, fastify) => {
     }
   }
 
-  await deletePageQuery(encryptedIds, fastify);
+  await deletePageQuery(encryptedIds, fastify, request);
 
   global.tblPages = global.tblPages.filter(
     (item) => !encryptedIds.includes(item.pageId)

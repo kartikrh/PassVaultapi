@@ -26,7 +26,8 @@ const createTeamService = async (request, fastify) => {
 
   const data = await insertTeamQuery(
     { ...request.body, userId: request.userTokenInfo.WrUserId },
-    fastify
+    fastify,
+    request
   );
 
   global.tblTeams.push(data);
@@ -62,7 +63,7 @@ const updateTeamService = async (request, fastify) => {
     }
   }
 
-  await updateTeamQuery(body, fastify);
+  await updateTeamQuery(body, fastify, request);
 
   delete body.userId;
 
@@ -92,7 +93,7 @@ const deleteTeamService = async (request, fastify) => {
     //validate team
   }
 
-  await deleteTeamQuery(teamId, fastify);
+  await deleteTeamQuery(teamId, fastify, request);
 
   global.tblTeams = global.tblTeams.filter(
     (item) => !teamId.includes(item.teamId)

@@ -1,3 +1,5 @@
+const { errorLogger } = require("../utilities/logger");
+
 const getAllTeamPlayersQuery = async (fastify) => {
   return await fastify.db.query(
     `select 
@@ -14,9 +16,10 @@ const getAllTeamPlayersQuery = async (fastify) => {
   );
 };
 
-const insertTeamPlayerQuery = async (data, fastify) => {
-  const result = await fastify.db.query(
-    `with display_order as (
+const insertTeamPlayerQuery = async (data, fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `with display_order as (
       select COALESCE(max("wrPlayerOrder"),0) as "playerOrder" from "tblTeamPlayers" where "wrTeamId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)
     ),
     insert_team_player as (
@@ -35,45 +38,74 @@ const insertTeamPlayerQuery = async (data, fastify) => {
          left join "tblEncryptedData" te3 on tp."wrRefPlayerId" = te3."wrKey"
 
     `,
-    {
-      bind: [data.teamId, data.refPlayerId, new Date(), data.userId],
-      type: fastify.db.QueryTypes.SELECT,
-    }
-  );
+      {
+        bind: [data.teamId, data.refPlayerId, new Date(), data.userId],
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
 
-  return result[0];
+    return result[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableTeamPlayer/insertTeamPlayerQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
 };
 
-const updateTeamPlayerQuery = async (data, fastify) => {
-  return await fastify.db.query(
-    `
+const updateTeamPlayerQuery = async (data, fastify, request) => {
+  try {
+    return await fastify.db.query(
+      `
       update "tblTeamPlayers" set "wrTeamId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1), "wrRefPlayerId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $2), "wrPlayerOrder" = $3, "wrModifyDate" = $4, "wrModifyBy" = $5
       where "wrTeamPlayerId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $6)
       
     `,
-    {
-      bind: [
-        data.teamId,
-        data.refPlayerId,
-        data.playerOrder,
-        new Date(),
-        data.userId,
-        data.teamPlayerId,
-      ],
-      type: fastify.db.QueryTypes.UPDATE,
-    }
-  );
+      {
+        bind: [
+          data.teamId,
+          data.refPlayerId,
+          data.playerOrder,
+          new Date(),
+          data.userId,
+          data.teamPlayerId,
+        ],
+        type: fastify.db.QueryTypes.UPDATE,
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableTeamPlayer/updateTeamPlayerQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
 };
 
-const deleteTeamPlayerQuery = async (teamPlayerId, fastify) => {
-  return await fastify.db.query(
-    `delete from "tblTeamPlayers" where "wrTeamPlayerId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = ANY($1))
+const deleteTeamPlayerQuery = async (teamPlayerId, fastify, request) => {
+  try {
+    return await fastify.db.query(
+      `delete from "tblTeamPlayers" where "wrTeamPlayerId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = ANY($1))
     `,
-    {
-      bind: [teamPlayerId],
-      type: fastify.db.QueryTypes.DELETE,
-    }
-  );
+      {
+        bind: [teamPlayerId],
+        type: fastify.db.QueryTypes.DELETE,
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableTeamPlayer/deleteTeamPlayerQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
 };
 
 module.exports = {

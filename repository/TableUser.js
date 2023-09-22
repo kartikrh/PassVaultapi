@@ -1,5 +1,5 @@
 const { QueryTypes } = require("sequelize");
-const userModel = require("../sequelize/tables/userModel");
+const { errorLogger } = require("../utilities/logger");
 
 //TODO: this is a test api
 async function signUpUser(request, fastify) {
@@ -118,6 +118,131 @@ async function checkValidQuery(body, fastify) {
   return !!data.length;
 }
 
+const getAllUsersQuery = async (fastify) => {
+  return await fastify.db.query(
+    `select 
+    te."wrValue" as "userId",
+    COALESCE(te1."wrValue" , '0') as "parentId",
+    COALESCE(te2."wrValue",'0') as "roleId",
+    tu."WrUserName" as "userName",
+    tu."WrName" as "name",
+    tu."WrPassword" as "password",
+    tu."WrIsActive" as "isActive",
+    tu."WrAllowMultipleLogin" as "allowMultipleLogin",
+    tu."WrMobile" as "mobile",
+    tu."WrUserType" as "userType"
+     from "tblUsers" tu left join "tblEncryptedData" te on tu."WrUserId" = te."wrKey"
+     left join "tblEncryptedData" te1 on tu."WrParentId" = te1."wrKey" 
+     left join "tblEncryptedData" te2 on tu."WrRoleId" = te2."wrKey"
+    `,
+    {
+      type: QueryTypes.SELECT,
+    }
+  );
+};
+
+const addUserQuery = async (request, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `
+      with insert_data as (
+        INSERT INTO "tblUsers" ("WrParentId" , "WrRoleId" , "WrUserName" , "WrPassword" , "WrName" , "WrMobile" , "WrIsActive" , "WrAllowMultipleLogin" , "WrIsSuperAdmin", "WrCreatedBy","WrCreatedDate" , "WrUserIp" , "WrUserType") VALUES (
+          (select "wrKey" from "tblEncryptedData" where "wrValue" = $1),
+          (select "wrKey" from "tblEncryptedData" where "wrValue" = $2),
+          $3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING *
+      )
+
+      select 
+    te."wrValue" as "userId",
+    COALESCE(te1."wrValue" , '0') as "parentId",
+    COALESCE(te2."wrValue",'0') as "roleId",
+    tu."WrUserName" as "userName",
+    tu."WrName" as "name",
+    tu."WrPassword" as "password",
+    tu."WrIsActive" as "isActive",
+    tu."WrAllowMultipleLogin" as "allowMultipleLogin",
+    tu."WrMobile" as "mobile",
+    tu."WrUserType" as "userType"
+     from "insert_data" tu left join "tblEncryptedData" te on tu."WrUserId" = te."wrKey"
+     left join "tblEncryptedData" te1 on tu."WrParentId" = te1."wrKey" 
+     left join "tblEncryptedData" te2 on tu."WrRoleId" = te2."wrKey"
+
+      `,
+      {
+        type: QueryTypes.SELECT,
+        bind: [
+          request.body.parentId || 0,
+          request.body.roleId || 0,
+          request.body.userName || "",
+          request.body.password || "",
+          request.body.name || "",
+          request.body.mobile || "",
+          request.body.isActive || false,
+          request.body.allowMultipleLogin || false,
+          false,
+          request.userTokenInfo.WrUserId,
+          new Date(),
+          "0",
+          request.body.userType || null,
+        ],
+      }
+    );
+
+    return result[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableUser/addUserQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const updateUserQuery = async (body, fastify, request) => {
+  try {
+    return await fastify.db.query(
+      `UPDATE "tblUsers" SET
+       "WrUserName" = $1,
+        "WrName" = $2, 
+        "WrMobile" = $3, 
+        "WrIsActive" = $4,
+         "WrAllowMultipleLogin" = $5, 
+         "WrUserType" = $6, 
+         "WrRoleId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $7), 
+         "WrPassword" = $8,
+         "WrModifyBy" = $10,
+          "WrModifyDate" = $11
+          WHERE "WrUserId" =( select "wrKey" from "tblEncryptedData" where "wrValue" = $9)`,
+      {
+        type: QueryTypes.UPDATE,
+        bind: [
+          body.userName,
+          body.name,
+          body.mobile,
+          body.isActive,
+          body.allowMultipleLogin,
+          body.userType,
+          body.roleId,
+          body.password,
+          body.userId,
+          request.userTokenInfo.WrUserId,
+          new Date(),
+        ],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableUser/updateUserQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   signInUser,
   signUpUser,
@@ -125,4 +250,7 @@ module.exports = {
   getMaxKey,
   generateEncryptionData,
   checkValidQuery,
+  getAllUsersQuery,
+  addUserQuery,
+  updateUserQuery,
 };

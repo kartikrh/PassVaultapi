@@ -19,7 +19,8 @@ const paneltyRunByIdService = async (request) => {
 const insertPaneltyRunService = async (request, fastify) => {
   const result = await insertPaneltyRunQuery(
     { ...request.body, userId: request.userTokenInfo.WrUserId },
-    fastify
+    fastify,
+    request
   );
 
   global.tblPaneltyRuns.push(result);
@@ -47,7 +48,7 @@ const updatePaneltyRunService = async (request, fastify) => {
     body.isActive = request.body.isActive;
   }
 
-  await updatePaneltyRunQuery(body, fastify);
+  await updatePaneltyRunQuery(body, fastify, request);
 
   const index = global.tblPaneltyRuns.findIndex(
     (item) => item.paneltyId === body.paneltyId
@@ -75,7 +76,7 @@ const deletePaneltyRunService = async (request, fastify) => {
     //validate id if required
   }
 
-  await deletePaneltyRunQuery(paneltyId, fastify);
+  await deletePaneltyRunQuery(paneltyId, fastify, request);
 
   global.tblPaneltyRuns = global.tblPaneltyRuns.filter(
     (item) => !paneltyId.includes(item.paneltyId)

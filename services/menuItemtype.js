@@ -1,8 +1,5 @@
 const {
-  checkMenuItemTypeByName,
-  getAllMenuItemTypesQuery,
   insertMenuItemTypeQuery,
-  menuItemTypeQueryById,
   updateMenuItemTypeQuery,
   validateMenuItemTypeQuery,
   deleteMenuItemTypeQuery,
@@ -29,7 +26,8 @@ const createMenuItemTypeService = async (request, fastify) => {
   }
   const data = await insertMenuItemTypeQuery(
     { ...request.body, userId: request.userTokenInfo.WrUserId },
-    fastify
+    fastify,
+    request
   );
 
   global.tblMenuItemTypes.push(data);
@@ -67,7 +65,7 @@ const updateMenuItemTypeService = async (request, fastify) => {
     throw new Error("MenuItemType with this name is already exists");
   }
 
-  const data = await updateMenuItemTypeQuery(body, fastify);
+  const data = await updateMenuItemTypeQuery(body, fastify, request);
 
   const index = global.tblMenuItemTypes.findIndex(
     (item) => item.menuItemTypeId === request.body.menuItemTypeId
@@ -82,7 +80,11 @@ const deleteMenuItemTypeService = async (request, fastify) => {
   const encryptedIds = request.body.menuItemTypeId;
 
   for (const encryptedId of encryptedIds) {
-    const checkInValide = await validateMenuItemTypeQuery(encryptedId, fastify);
+    const checkInValide = await validateMenuItemTypeQuery(
+      encryptedId,
+      fastify,
+      request
+    );
 
     if (checkInValide) {
       throw new Error(
@@ -91,7 +93,7 @@ const deleteMenuItemTypeService = async (request, fastify) => {
     }
   }
 
-  await deleteMenuItemTypeQuery(encryptedIds, fastify);
+  await deleteMenuItemTypeQuery(encryptedIds, fastify, request);
 
   global.tblMenuItemTypes = global.tblMenuItemTypes.filter(
     (item) => !encryptedIds.includes(item.menuItemTypeId)

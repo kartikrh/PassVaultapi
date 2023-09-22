@@ -38,7 +38,8 @@ const createMenuTypeService = async (request, fastify) => {
 
   const data = await insertMenuTypeQuery(
     { ...request.body, userId: request.userTokenInfo.WrUserId },
-    fastify
+    fastify,
+    request
   );
 
   global.tblMenuTypes.push(data);
@@ -89,7 +90,7 @@ const updateMenuTypeService = async (request, fastify) => {
     throw new Error("MenuType with this name is already exists in this Block");
   }
 
-  const result = await updatetMenuTypeQuery(body, fastify);
+  const result = await updatetMenuTypeQuery(body, fastify, request);
 
   const index = global.tblMenuTypes.findIndex(
     (menuType) => menuType.menuTypeId === request.body.menuTypeId
@@ -112,7 +113,11 @@ const deleteMenuTypeService = async (request, fastify) => {
   const encryptedIds = request.body.menuTypeId;
 
   for (const encryptedId of encryptedIds) {
-    const checkInValide = await validatMenuTypeQuery(encryptedId, fastify);
+    const checkInValide = await validatMenuTypeQuery(
+      encryptedId,
+      fastify,
+      request
+    );
 
     if (checkInValide) {
       throw new Error(
@@ -121,7 +126,7 @@ const deleteMenuTypeService = async (request, fastify) => {
     }
   }
 
-  await deleteMenuTypeQuery(encryptedIds, fastify);
+  await deleteMenuTypeQuery(encryptedIds, fastify, request);
 
   global.tblMenuTypes = global.tblMenuTypes.filter(
     (menuType) => !encryptedIds.includes(menuType.menuTypeId)

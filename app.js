@@ -64,6 +64,28 @@ module.exports = async function (fastify, opts) {
     },
   });
 
+  fastify.addHook("onRequest", (request, reply, done) => {
+    // Record the request start time in nanoseconds
+    request.startTime = process.hrtime.bigint();
+    done();
+  });
+
+  fastify.addHook("onResponse", (request, reply, done) => {
+    const logger = true;
+    if (request.startTime && logger) {
+      const responseTimeInNanoseconds =
+        process.hrtime.bigint() - request.startTime;
+      const responseTimeInMilliseconds =
+        Number(responseTimeInNanoseconds) / 1e6;
+
+      // Log the response time along with the request URL
+      // console.log(
+      //   `API Path: ${request.url}, Response time: ${responseTimeInMilliseconds} ms`
+      // );
+    }
+    done();
+  });
+
   fastify.register(swagger, {
     routePrefix: "/documentation",
     swagger: {
