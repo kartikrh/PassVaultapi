@@ -15,7 +15,7 @@ const { getAllTeamPlayersQuery } = require("../repository/TableTeamPlayer");
 const { getAllMatchTypeQuery } = require("../repository/TableMatchType");
 const { getAllUsersQuery } = require("../repository/TableUser");
 
-const fetchAllDataFromDb = async (fastify) => {
+const fetchAllDataFromDb = async (fastify, reply) => {
   try {
     const getAllTabs = await getAllActiveInactiveTabsQuery(fastify);
     const getAllRoles = await getAllRolesQuery(fastify);
@@ -52,8 +52,21 @@ const fetchAllDataFromDb = async (fastify) => {
     global.tblUsers = getAllUsers;
 
     console.log("Okkkk");
+
+    if (reply) {
+      reply.status(200).send({
+        status: 200,
+        message: "Data fetched successfully",
+      });
+    }
   } catch (error) {
     console.log("error in fetchAllDataFromDb", error.message);
+    if (reply) {
+      reply.status(500).send({
+        status: 500,
+        error: error.message,
+      });
+    }
   }
 };
 

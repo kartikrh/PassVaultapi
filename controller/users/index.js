@@ -9,6 +9,7 @@ const {
   saveUserService,
 } = require("../../services/user");
 const { errorLogger } = require("../../utilities/logger");
+const fetchAllDataFromDb = require("../../utilities/fetchAllData");
 
 let commonPath = "controller/users";
 
@@ -56,6 +57,17 @@ async function validateUser(request, reply, fastify) {
   }
 }
 
+const loadDataInMemory = async (request, reply, fastify) => {
+  try {
+    if (!request.userTokenInfo.WrIsSuperAdmin) {
+      throw new Error("You are not authorized to perform this action");
+    }
+    await fetchAllDataFromDb(fastify, reply);
+  } catch (err) {
+    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+  }
+};
+
 const getAllUsers = async (request, reply, fastify) => {
   try {
     const result = await getAllUsersService(request, fastify);
@@ -91,6 +103,7 @@ module.exports = {
   signInUser,
   generateEncryption,
   validateUser,
+  loadDataInMemory,
   getAllUsers,
   getUserById,
   saveUser,

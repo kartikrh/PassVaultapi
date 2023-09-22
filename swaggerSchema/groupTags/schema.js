@@ -65,14 +65,14 @@ const Tabs = {
     schema: {
       tags: ["Admin"],
       description: "get tabs",
-      //security: [{ bearerAuth: [] }],
+      security: [{ bearerAuth: [] }],
     },
   },
   deleteTabs: {
     schema: {
       tags: ["Admin"],
       description: "Deactivate tabs by encrypted tab IDs",
-      //security: [{ bearerAuth: [] }],
+      security: [{ bearerAuth: [] }],
       body: {
         type: "object",
         properties: {
@@ -89,7 +89,7 @@ const Tabs = {
     schema: {
       tags: ["Admin"],
       description: "get by Id tabs",
-      //security: [{ bearerAuth: [] }],
+      security: [{ bearerAuth: [] }],
       body: {
         type: "object",
         properties: {
@@ -103,7 +103,7 @@ const Tabs = {
     schema: {
       tags: ["Admin"],
       description: "Update tab by ID",
-      //security: [{ bearerAuth: [] }],
+      security: [{ bearerAuth: [] }],
       body: {
         type: "object",
         properties: {
@@ -131,7 +131,7 @@ const Tabs = {
     schema: {
       tags: ["Admin"],
       description: "get by Display type",
-      //security: [{ bearerAuth: [] }],
+      security: [{ bearerAuth: [] }],
       body: {
         type: "object",
         properties: {
@@ -148,7 +148,7 @@ const Tabs = {
     schema: {
       tags: ["Admin"],
       description: "change display order",
-      //security: [{ bearerAuth: [] }],
+      security: [{ bearerAuth: [] }],
       body: {
         type: "array",
         items: {
@@ -170,14 +170,14 @@ const Role = {
     schema: {
       tags: ["Role"],
       description: "get roles",
-      //security: [{ bearerAuth: [] }],
+      security: [{ bearerAuth: [] }],
     },
   },
   getByDisplayType: {
     schema: {
       tags: ["Role"],
       description: "get roles by display type",
-      //security: [{ bearerAuth: [] }],
+      security: [{ bearerAuth: [] }],
       body: {
         type: "object",
         properties: {
@@ -194,7 +194,7 @@ const Role = {
     schema: {
       tags: ["Role"],
       description: "Deactivate tabs by encrypted Role IDs",
-      //security: [{ bearerAuth: [] }],
+      security: [{ bearerAuth: [] }],
       body: {
         type: "object",
         properties: {
@@ -212,7 +212,7 @@ const Role = {
     schema: {
       tags: ["Role"],
       description: "post roles",
-      //security: [{ bearerAuth: [] }],
+      security: [{ bearerAuth: [] }],
       body: {
         type: "object",
         properties: {
@@ -243,7 +243,7 @@ const Role = {
     schema: {
       tags: ["Role"],
       description: "get role details with permissions by Id",
-      //security: [{ bearerAuth: [] }],
+      security: [{ bearerAuth: [] }],
       body: {
         type: "object",
         properties: {
@@ -258,7 +258,7 @@ const Role = {
     schema: {
       tags: ["Role"],
       description: "get role details with permissions by tab",
-      //security: [{ bearerAuth: [] }],
+      security: [{ bearerAuth: [] }],
       body: {
         type: "object",
         properties: {
@@ -275,14 +275,14 @@ const Block = {
     schema: {
       tags: ["Block"],
       description: "get blocks",
-      //security: [{ bearerAuth: [] }],
+      security: [{ bearerAuth: [] }],
     },
   },
   getById: {
     schema: {
       tags: ["Block"],
       description: "get blocks",
-      //security: [{ bearerAuth: [] }],
+      security: [{ bearerAuth: [] }],
       body: {
         type: "object",
         properties: {
@@ -297,7 +297,7 @@ const Block = {
     schema: {
       tags: ["Block"],
       description: "block update",
-      //security: [{ bearerAuth: [] }],
+      security: [{ bearerAuth: [] }],
       body: {
         type: "object",
         properties: {
@@ -315,7 +315,7 @@ const Block = {
     schema: {
       tags: ["Block"],
       description: "block delete",
-      //security: [{ bearerAuth: [] }],
+      security: [{ bearerAuth: [] }],
       body: {
         type: "object",
         properties: {
@@ -332,14 +332,14 @@ const MenuType = {
     schema: {
       tags: ["Menu Types"],
       description: "get MenuType",
-      //security: [{ bearerAuth: [] }],
+      security: [{ bearerAuth: [] }],
     },
   },
   getById: {
     schema: {
       tags: ["Menu Types"],
       description: "get Menu Type by Id",
-      //security: [{ bearerAuth: [] }],
+      security: [{ bearerAuth: [] }],
       body: {
         type: "object",
         properties: {
@@ -353,7 +353,7 @@ const MenuType = {
     schema: {
       tags: ["Menu Types"],
       description: "Menu Type update",
-      //security: [{ bearerAuth: [] }],
+      security: [{ bearerAuth: [] }],
       body: {
         type: "object",
         properties: {
@@ -371,7 +371,7 @@ const MenuType = {
     schema: {
       tags: ["Menu Types"],
       description: "Menu Types delete",
-      //security: [{ bearerAuth: [] }],
+      security: [{ bearerAuth: [] }],
       body: {
         type: "object",
         properties: {
@@ -388,14 +388,14 @@ const MenuItemType = {
     schema: {
       tags: ["Menu Item Types"],
       description: "get MenuItemType",
-      //security: [{ bearerAuth: [] }],
+      security: [{ bearerAuth: [] }],
     },
   },
   getById: {
     schema: {
       tags: ["Menu Item Types"],
       description: "get Menu Item Type by Id",
-      //security: [{ bearerAuth: [] }],
+      security: [{ bearerAuth: [] }],
       body: {
         type: "object",
         properties: {
@@ -410,7 +410,7 @@ const MenuItemType = {
     schema: {
       tags: ["Menu Item Types"],
       description: "Menu Item Type update",
-      //security: [{ bearerAuth: [] }],
+      security: [{ bearerAuth: [] }],
       body: {
         type: "object",
         properties: {
@@ -426,7 +426,7 @@ const MenuItemType = {
     schema: {
       tags: ["Menu Item Types"],
       description: "Menu Item Types delete",
-      //security: [{ bearerAuth: [] }],
+      security: [{ bearerAuth: [] }],
       body: {
         type: "object",
         properties: {
@@ -447,14 +447,14 @@ const MenuItem = {
     schema: {
       tags: ["Menu Item"],
       description: "get MenuItem",
-      //security: [{ bearerAuth: [] }],
+      security: [{ bearerAuth: [] }],
     },
   },
   getById: {
     schema: {
       tags: ["Menu Item"],
       description: "get Menu Item by Id",
-      //security: [{ bearerAuth: [] }],
+      security: [{ bearerAuth: [] }],
       body: {
         type: "object",
         properties: {
@@ -468,7 +468,7 @@ const MenuItem = {
     schema: {
       tags: ["Menu Item"],
       description: "Menu Item update",
-      //security: [{ bearerAuth: [] }],
+      security: [{ bearerAuth: [] }],
       body: {
         type: "object",
         properties: {
@@ -488,7 +488,7 @@ const MenuItem = {
     schema: {
       tags: ["Menu Item"],
       description: "Menu Item delete",
-      //security: [{ bearerAuth: [] }],
+      security: [{ bearerAuth: [] }],
       body: {
         type: "object",
         properties: {
@@ -509,14 +509,14 @@ const PageFormate = {
     schema: {
       tags: ["Page Formate"],
       description: "get all Page Formate",
-      //security: [{ bearerAuth: [] }],
+      security: [{ bearerAuth: [] }],
     },
   },
   getById: {
     schema: {
       tags: ["Page Formate"],
       description: "get Page Formate by Id",
-      //security: [{ bearerAuth: [] }],
+      security: [{ bearerAuth: [] }],
       body: {
         type: "object",
         properties: {
@@ -530,7 +530,7 @@ const PageFormate = {
     schema: {
       tags: ["Page Formate"],
       description: "Create Page Formate",
-      //security: [{ bearerAuth: [] }],
+      security: [{ bearerAuth: [] }],
       body: {
         type: "object",
         properties: {
@@ -548,7 +548,7 @@ const PageFormate = {
     schema: {
       tags: ["Page Formate"],
       description: "Update Page Formate",
-      //security: [{ bearerAuth: [] }],
+      security: [{ bearerAuth: [] }],
       body: {
         type: "object",
         properties: {
@@ -567,7 +567,7 @@ const PageFormate = {
     schema: {
       tags: ["Page Formate"],
       description: "delete page formate",
-      //security: [{ bearerAuth: [] }],
+      security: [{ bearerAuth: [] }],
       body: {
         type: "object",
         properties: {
@@ -587,14 +587,14 @@ const Page = {
     schema: {
       tags: ["Page"],
       description: "get all Page",
-      //security: [{ bearerAuth: [] }],
+      security: [{ bearerAuth: [] }],
     },
   },
   getById: {
     schema: {
       tags: ["Page"],
       description: "get Page by Id",
-      //security: [{ bearerAuth: [] }],
+      security: [{ bearerAuth: [] }],
       body: {
         type: "object",
         properties: {
@@ -608,7 +608,7 @@ const Page = {
     schema: {
       tags: ["Page"],
       description: "Create Page",
-      //security: [{ bearerAuth: [] }],
+      security: [{ bearerAuth: [] }],
       body: {
         type: "object",
         properties: {
@@ -634,7 +634,7 @@ const Page = {
     schema: {
       tags: ["Page"],
       description: "Update Page",
-      //security: [{ bearerAuth: [] }],
+      security: [{ bearerAuth: [] }],
       body: {
         type: "object",
         properties: {
@@ -661,7 +661,7 @@ const Page = {
     schema: {
       tags: ["Page"],
       description: "delete page",
-      //security: [{ bearerAuth: [] }],
+      security: [{ bearerAuth: [] }],
       body: {
         type: "object",
         properties: {
@@ -682,14 +682,14 @@ const PageAlias = {
     schema: {
       tags: ["Page Alias"],
       description: "get all Page Alias",
-      //security: [{ bearerAuth: [] }],
+      security: [{ bearerAuth: [] }],
     },
   },
   getById: {
     schema: {
       tags: ["Page Alias"],
       description: "get Page Alias by Id",
-      //security: [{ bearerAuth: [] }],
+      security: [{ bearerAuth: [] }],
       body: {
         type: "object",
         properties: {
@@ -703,7 +703,7 @@ const PageAlias = {
     schema: {
       tags: ["Page Alias"],
       description: "Create Page Alias",
-      //security: [{ bearerAuth: [] }],
+      security: [{ bearerAuth: [] }],
       body: {
         type: "object",
         properties: {
@@ -721,7 +721,7 @@ const PageAlias = {
     schema: {
       tags: ["Page Alias"],
       description: "Update Page Alias",
-      //security: [{ bearerAuth: [] }],
+      security: [{ bearerAuth: [] }],
       body: {
         type: "object",
         properties: {
@@ -740,7 +740,7 @@ const PageAlias = {
     schema: {
       tags: ["Page Alias"],
       description: "delete page alias",
-      //security: [{ bearerAuth: [] }],
+      security: [{ bearerAuth: [] }],
       body: {
         type: "object",
         properties: {
@@ -1159,12 +1159,14 @@ const User = {
     schema: {
       tags: ["User"],
       description: "get all User",
+      security: [{ bearerAuth: [] }],
     },
   },
   getById: {
     schema: {
       tags: ["User"],
       description: "get User by id",
+      security: [{ bearerAuth: [] }],
       body: {
         type: "object",
         properties: {
@@ -1178,6 +1180,8 @@ const User = {
     schema: {
       tags: ["User"],
       description: "save User",
+      security: [{ bearerAuth: [] }],
+
       body: {
         type: "object",
         properties: {
