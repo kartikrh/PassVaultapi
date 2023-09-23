@@ -7,6 +7,7 @@ const {
   getAllUsersService,
   getUserByIdService,
   saveUserService,
+  deleteUserService,
 } = require("../../services/user");
 const { errorLogger } = require("../../utilities/logger");
 const fetchAllDataFromDb = require("../../utilities/fetchAllData");
@@ -93,7 +94,16 @@ const saveUser = async (request, reply, fastify) => {
     const result = await saveUserService(request, fastify);
     reply.status(200).send(success(result, 200));
   } catch (err) {
-    errorLogger(fastify, err.message, commonPath + "/getUserById", request);
+    errorLogger(fastify, err.message, commonPath + "/saveUser", request);
+    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+  }
+};
+const deleteUser = async (request, reply, fastify) => {
+  try {
+    const result = await deleteUserService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/deleteUser", request);
     reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
   }
 };
@@ -107,4 +117,5 @@ module.exports = {
   getAllUsers,
   getUserById,
   saveUser,
+  deleteUser,
 };

@@ -13,7 +13,7 @@ async function authorize(request, reply, fastify) {
   }
 }
 
-const checkPermission = async (request, reply, done, fastify, data) => {
+const checkPermission = async (request, reply, fastify, data) => {
   try {
     await permissionCheckService(request, fastify, data);
   } catch (err) {

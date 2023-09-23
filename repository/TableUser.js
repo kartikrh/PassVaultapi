@@ -138,6 +138,7 @@ const getAllUsersQuery = async (fastify) => {
      left join "tblEncryptedData" te2 on tu."WrRoleId" = te2."wrKey"
      left join "tblUsers" tu1 on tu."WrParentId" = tu1."WrUserId"
       left join "tblRoles" tr on tu."WrRoleId" = tr."wrRoleId"
+      where tu."WrIsDelete" is not true
     `,
     {
       type: QueryTypes.SELECT,
@@ -153,7 +154,7 @@ const addUserQuery = async (request, fastify) => {
         INSERT INTO "tblUsers" ("WrParentId" , "WrRoleId" , "WrUserName" , "WrPassword" , "WrName" , "WrMobile" , "WrIsActive" , "WrAllowMultipleLogin" , "WrIsSuperAdmin", "WrCreatedBy","WrCreatedDate" , "WrUserIp" , "WrUserType") VALUES (
           (select "wrKey" from "tblEncryptedData" where "wrValue" = $1),
           (select "wrKey" from "tblEncryptedData" where "wrValue" = $2),
-          $3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING *
+          $3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING *
       )
 
       select 
@@ -247,6 +248,28 @@ const updateUserQuery = async (body, fastify, request) => {
   }
 };
 
+const deleteUserQuery = async (request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `UPDATE "tblUsers" set "WrIsDelete" = true , "WrDeleteBy" = $2 , "WrDeleteDate"=$3 where "WrUserId" in (
+      select "wrKey" from "tblEncryptedData" where "wrValue" = ANY($1)
+    )`,
+      {
+        type: QueryTypes.UPDATE,
+        bind: [request.body.userId, request.userTokenInfo.WrUserId, new Date()],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableUser/deleteUserQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   signInUser,
   signUpUser,
@@ -257,4 +280,5 @@ module.exports = {
   getAllUsersQuery,
   addUserQuery,
   updateUserQuery,
+  deleteUserQuery,
 };

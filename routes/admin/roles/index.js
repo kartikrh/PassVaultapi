@@ -19,7 +19,7 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        checkPermission(request, reply, done, fastify, {
+        checkPermission(request, reply, fastify, {
           tabName: "Roles",
           mode: "view",
         }),
@@ -38,7 +38,7 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        checkPermission(request, reply, done, fastify, {
+        checkPermission(request, reply, fastify, {
           tabName: "Roles",
           mode: "view",
         }),
@@ -51,7 +51,7 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        checkPermission(request, reply, done, fastify, {
+        checkPermission(request, reply, fastify, {
           tabName: "Roles",
           mode: "view",
         }),
@@ -64,7 +64,7 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        checkPermission(request, reply, done, fastify, {
+        checkPermission(request, reply, fastify, {
           tabName: "Roles",
           mode: request.body.roleId !== "0" ? "edit" : "add",
         }),
@@ -77,7 +77,7 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        checkPermission(request, reply, done, fastify, {
+        checkPermission(request, reply, fastify, {
           tabName: "Roles",
           mode: "delete",
         }),

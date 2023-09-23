@@ -21,7 +21,7 @@ module.exports = async function (fastify, opts) {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        checkPermission(request, reply, done, fastify, {
+        checkPermission(request, reply, fastify, {
           tabName: "Tabs",
           mode: "view",
         }),
@@ -35,7 +35,7 @@ module.exports = async function (fastify, opts) {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        checkPermission(request, reply, done, fastify, {
+        checkPermission(request, reply, fastify, {
           tabName: "Tabs",
           mode: "view",
         }),
@@ -43,7 +43,7 @@ module.exports = async function (fastify, opts) {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        checkPermission(request, reply, done, fastify, {
+        checkPermission(request, reply, fastify, {
           tabName: "Tabs",
           mode: "view",
         }),
@@ -57,7 +57,7 @@ module.exports = async function (fastify, opts) {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        checkPermission(request, reply, done, fastify, {
+        checkPermission(request, reply, fastify, {
           tabName: "Tabs",
           mode: "view",
         }),
@@ -71,7 +71,7 @@ module.exports = async function (fastify, opts) {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        checkPermission(request, reply, done, fastify, {
+        checkPermission(request, reply, fastify, {
           tabName: "Tabs",
           mode: "delete",
         }),
@@ -85,7 +85,7 @@ module.exports = async function (fastify, opts) {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        checkPermission(request, reply, done, fastify, {
+        checkPermission(request, reply, fastify, {
           tabName: "Tabs",
           mode: "view",
         }),
@@ -99,7 +99,7 @@ module.exports = async function (fastify, opts) {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        checkPermission(request, reply, done, fastify, {
+        checkPermission(request, reply, fastify, {
           tabName: "Tabs",
           mode: request.body.id !== "0" ? "edit" : "add",
         }),

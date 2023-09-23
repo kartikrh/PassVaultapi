@@ -3,6 +3,7 @@ const {
   getAllUsers,
   getUserById,
   saveUser,
+  deleteUser,
 } = require("../../../controller/users/index");
 const { User } = require("../../../swaggerSchema/groupTags/schema");
 
@@ -23,5 +24,11 @@ module.exports = async (fastify, opts) => {
     schema: User.save.schema,
     preHandler: [(request, reply) => authorize(request, reply, fastify)],
     handler: (request, reply) => saveUser(request, reply, fastify),
+  });
+
+  fastify.post("/delete", {
+    schema: User.delete.schema,
+    preHandler: [(request, reply) => authorize(request, reply, fastify)],
+    handler: (request, reply) => deleteUser(request, reply, fastify),
   });
 };

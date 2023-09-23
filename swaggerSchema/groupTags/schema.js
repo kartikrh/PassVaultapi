@@ -1200,6 +1200,24 @@ const User = {
       },
     },
   },
+  delete: {
+    schema: {
+      tags: ["User"],
+      description: "delete User",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          userId: {
+            type: "array",
+            items: { type: "string" },
+            minItems: 1,
+          },
+        },
+        required: ["userId"],
+      },
+    },
+  },
 };
 
 module.exports = {
