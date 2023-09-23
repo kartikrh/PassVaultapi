@@ -232,7 +232,7 @@ const updateUserService = async (request, fastify) => {
 
   const index = global.tblUsers.findIndex((user) => user.userId === userId);
 
-  global.tblUsers[index] = body;
+  global.tblUsers[index] = { ...body, parentId: findUser.parentId };
 
   return body;
 };
