@@ -11,6 +11,7 @@ const {
   checkValidQuery,
   addUserQuery,
   updateUserQuery,
+  deleteUserQuery,
 } = require("../repository/TableUser");
 const { deviceInfo, encrypt, decrypt } = require("../utilities/index");
 
@@ -153,6 +154,14 @@ const addUserService = async (request, fastify) => {
 
   request.body.password = encrypt(request.body.password);
 
+  const checkAlreadyExists = global.tblUsers.find(
+    (user) => user.userName === request.body.userName
+  );
+
+  if (checkAlreadyExists) {
+    throw new Error("User already exists with this username");
+  }
+
   const userData = await addUserQuery(request, fastify);
 
   global.tblUsers.push(userData);
@@ -205,6 +214,14 @@ const updateUserService = async (request, fastify) => {
     body.allowMultipleLogin = request.body.allowMultipleLogin;
   }
 
+  const checkAlreadyExists = global.tblUsers.find(
+    (user) => user.userName === body.userName && user.userId !== userId
+  );
+
+  if (checkAlreadyExists) {
+    throw new Error("User already exists with this username");
+  }
+
   await updateUserQuery(body, fastify, request);
 
   if (!body.isActive) {
@@ -230,6 +247,18 @@ const saveUserService = async (request, fastify) => {
   }
 };
 
+const deleteUserService = async (request, fastify) => {
+  const { userId } = request.body;
+
+  await deleteUserQuery(request, fastify);
+
+  global.tblUsers = global.tblUsers.filter(
+    (user) => !userId.includes(user.userId)
+  );
+
+  return "User(s) deleted successfully";
+};
+
 module.exports = {
   signUpUserService,
   signInUserServices,
@@ -238,4 +267,5 @@ module.exports = {
   getAllUsersService,
   getUserByIdService,
   saveUserService,
+  deleteUserService,
 };
