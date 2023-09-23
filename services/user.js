@@ -180,6 +180,9 @@ const updateUserService = async (request, fastify) => {
 
   const body = {
     userId,
+    parentId: findUser.parentId,
+    parentName: findUser.parentName,
+    roleName: findUser.roleName,
     userName: request.body.userName || findUser.userName,
     name: request.body.name || findUser.name,
     mobile: request.body.mobile || findUser.mobile,
@@ -199,6 +202,7 @@ const updateUserService = async (request, fastify) => {
       throw new Error("Invalid Role");
     } else {
       body.roleId = request.body.roleId;
+      body.roleName = validateRole.roleName;
     }
   }
 
@@ -232,7 +236,7 @@ const updateUserService = async (request, fastify) => {
 
   const index = global.tblUsers.findIndex((user) => user.userId === userId);
 
-  global.tblUsers[index] = { ...body, parentId: findUser.parentId };
+  global.tblUsers[index] = body;
 
   return body;
 };
