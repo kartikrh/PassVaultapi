@@ -3,6 +3,7 @@ const {
   eventTypeByIdService,
   saveEventTypeService,
   deleteEventTypeService,
+  updateDisplayOrderService,
 } = require("../../../../services/eventTypes");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -50,10 +51,25 @@ const deleteEventType = async (request, reply, fastify) => {
     reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
   }
 };
+const updateDisplayOrder = async (request, reply, fastify) => {
+  try {
+    const result = await updateDisplayOrderService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      commonPath + "/updateDisplayOrder",
+      request
+    );
+    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+  }
+};
 
 module.exports = {
   getAllEventTypes,
   getEventTypeId,
   saveEventType,
   deleteEventType,
+  updateDisplayOrder,
 };

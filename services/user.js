@@ -12,6 +12,7 @@ const {
   addUserQuery,
   updateUserQuery,
   deleteUserQuery,
+  getOriginalIdFromEncryptedId,
 } = require("../repository/TableUser");
 const { deviceInfo, encrypt, decrypt } = require("../utilities/index");
 
@@ -229,8 +230,13 @@ const updateUserService = async (request, fastify) => {
   await updateUserQuery(body, fastify, request);
 
   if (!body.isActive) {
+    const getOriginalUserId = await getOriginalIdFromEncryptedId(
+      userId,
+      fastify
+    );
+
     global.socketIo
-      .to(userId)
+      .to(getOriginalUserId)
       .emit("logout", "You have been removed from the room.");
   }
 

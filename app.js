@@ -11,6 +11,10 @@ const featchData = require("./utilities/fetchAllData");
 const { Server } = require("socket.io"); // Import Socket.IO
 const { connection, socketMiddleware } = require("./socketIo");
 const { fastifyRateLimit } = require("@fastify/rate-limit");
+const { responseLogger } = require("./utilities/logger");
+const fastifyMultipart = require("@fastify/multipart");
+const fastifyStatic = require("@fastify/static");
+// require("./database/connnection");
 
 // Pass --options via CLI arguments in command to enable these options.
 module.exports.options = {};
@@ -52,6 +56,15 @@ module.exports = async function (fastify, opts) {
       }
     });
 
+  // Configure fastify to use `multipart/form-data` requests
+  fastify.register(fastifyMultipart, { addToBody: true });
+
+  //for images static path
+  fastify.register(fastifyStatic, {
+    root: path.join(__dirname, "images"),
+    prefix: "/images/",
+  });
+
   fastify.register(fastifyRateLimit, {
     max: 1000,
     timeWindow: "1 hour",
@@ -71,17 +84,16 @@ module.exports = async function (fastify, opts) {
   });
 
   fastify.addHook("onResponse", (request, reply, done) => {
-    const logger = true;
+    const logger = false;
     if (request.startTime && logger) {
       const responseTimeInNanoseconds =
         process.hrtime.bigint() - request.startTime;
       const responseTimeInMilliseconds =
         Number(responseTimeInNanoseconds) / 1e6;
 
-      // Log the response time along with the request URL
-      // console.log(
-      //   `API Path: ${request.url}, Response time: ${responseTimeInMilliseconds} ms`
-      // );
+      request.responseTime = responseTimeInMilliseconds;
+
+      responseLogger(request);
     }
     done();
   });

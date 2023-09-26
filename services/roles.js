@@ -30,12 +30,28 @@ const roleCreateService = async (request, fastify) => {
   let role_id = request.body.roleId;
 
   if (request.body.roleId === "0") {
+    const checkRoleName = global.tblRoles.find(
+      (item) => item.roleName === request.body.roleName
+    );
+
+    if (checkRoleName) {
+      throw new Error("Role name already exists");
+    }
+
     const createRole = await createRoleQuery(
       { ...request.body, userId: request.userTokenInfo.WrUserId },
       fastify
     );
     role_id = createRole.roleId;
     global.tblRoles.push(createRole);
+  }
+
+  const checkRoleName = global.tblRoles.find(
+    (item) => item.roleName === request.body.roleName && item.roleId !== role_id
+  );
+
+  if (checkRoleName) {
+    throw new Error("Role name already exists");
   }
 
   request.body.permissions = request.body.permissions.map((item) => {

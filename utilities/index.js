@@ -87,6 +87,12 @@ function decrypt(encrypted) {
   return decrypted;
 }
 
+const generateFileName = () => {
+  let timestamp = new Date().toISOString().replace(/[-:.]/g, "");
+  let random = ("" + Math.random()).substring(2, 8);
+  return timestamp + random;
+};
+
 module.exports = {
   ERROR_CODES,
   error,
@@ -96,4 +102,5 @@ module.exports = {
   encryptedObject,
   encrypt,
   decrypt,
+  generateFileName,
 };

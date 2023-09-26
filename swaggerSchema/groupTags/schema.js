@@ -760,12 +760,14 @@ const EventType = {
   getAll: {
     schema: {
       tags: ["Event Type"],
+      security: [{ bearerAuth: [] }],
       description: "get all event type",
     },
   },
   getById: {
     schema: {
       tags: ["Event Type"],
+      security: [{ bearerAuth: [] }],
       description: "get event type by id",
       body: {
         type: "object",
@@ -779,6 +781,7 @@ const EventType = {
   save: {
     schema: {
       tags: ["Event Type"],
+      security: [{ bearerAuth: [] }],
       description: "save event type",
       body: {
         type: "object",
@@ -786,14 +789,8 @@ const EventType = {
           eventTypeId: { type: "string" },
           eventType: { type: "string" },
           refId: { type: "string" },
-          image: { type: "string" },
-          icon: { type: "string" },
           isActive: { type: "boolean" },
-          displayOrder: { type: "integer" },
           remark: { type: "string" },
-          eEventTypeId: { type: "string" },
-          eRefId: { type: "string" },
-          displayType: { type: "integer", enum: [1, 2] },
           isHighlight: { type: "boolean" },
         },
         required: ["eventTypeId"],
@@ -803,6 +800,7 @@ const EventType = {
   delete: {
     schema: {
       tags: ["Event Type"],
+      security: [{ bearerAuth: [] }],
       description: "delete event type",
       body: {
         type: "object",
@@ -814,6 +812,24 @@ const EventType = {
           },
         },
         required: ["eventTypeId"],
+      },
+    },
+  },
+  changeDispalyOrder: {
+    schema: {
+      tags: ["Event Type"],
+      description: "change display order",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            eventTypeId: { type: "string" },
+            displayOrder: { type: "integer" },
+          },
+        },
+        minItems: 1,
       },
     },
   },
