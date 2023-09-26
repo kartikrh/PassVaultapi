@@ -16,10 +16,11 @@ module.exports = async (fastify, opts) => {
     schema: EventType.getAll.schema,
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
-      checkPermission(request, reply, fastify, {
-        tabName: "Event Types",
-        mode: "view",
-      }),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Event Types",
+          mode: "view",
+        }),
     ],
     handler: (request, reply) => getAllEventTypes(request, reply, fastify),
   });
@@ -28,10 +29,11 @@ module.exports = async (fastify, opts) => {
     schema: EventType.getById.schema,
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
-      checkPermission(request, reply, fastify, {
-        tabName: "Event Types",
-        mode: "view",
-      }),
+      (request, reply, done) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Event Types",
+          mode: "view",
+        }),
     ],
     handler: (request, reply) => getEventTypeId(request, reply, fastify),
   });
@@ -39,10 +41,11 @@ module.exports = async (fastify, opts) => {
     schema: EventType.save.schema,
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
-      checkPermission(request, reply, fastify, {
-        tabName: "Event Types",
-        mode: request.body.eventTypeId === "0" ? "add" : "edit",
-      }),
+      (request, reply, done) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Event Types",
+          mode: request.body.eventTypeId === "0" ? "add" : "edit",
+        }),
     ],
     handler: (request, reply) => saveEventType(request, reply, fastify),
   });
@@ -50,10 +53,11 @@ module.exports = async (fastify, opts) => {
     schema: EventType.delete.schema,
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
-      checkPermission(request, reply, fastify, {
-        tabName: "Event Types",
-        mode: "delete",
-      }),
+      (request, reply, done) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Event Types",
+          mode: "delete",
+        }),
     ],
     handler: (request, reply) => deleteEventType(request, reply, fastify),
   });
@@ -61,10 +65,11 @@ module.exports = async (fastify, opts) => {
     schema: EventType.changeDispalyOrder.schema,
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
-      checkPermission(request, reply, fastify, {
-        tabName: "Event Types",
-        mode: "edit",
-      }),
+      (request, reply, done) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Event Types",
+          mode: "edit",
+        }),
     ],
     handler: (request, reply) => updateDisplayOrder(request, reply, fastify),
   });
