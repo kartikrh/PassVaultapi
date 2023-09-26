@@ -7,6 +7,7 @@ const {
   getEventTypeId,
   saveEventType,
   deleteEventType,
+  updateDisplayOrder,
 } = require("../../../controller/users/admin/eventTypes");
 const { EventType } = require("../../../swaggerSchema/groupTags/schema");
 
@@ -55,5 +56,16 @@ module.exports = async (fastify, opts) => {
       }),
     ],
     handler: (request, reply) => deleteEventType(request, reply, fastify),
+  });
+  fastify.post("/changeDisplayOrder", {
+    schema: EventType.changeDispalyOrder.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      checkPermission(request, reply, fastify, {
+        tabName: "Event Types",
+        mode: "edit",
+      }),
+    ],
+    handler: (request, reply) => updateDisplayOrder(request, reply, fastify),
   });
 };

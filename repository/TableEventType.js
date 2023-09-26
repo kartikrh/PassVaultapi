@@ -11,7 +11,8 @@ const allEventTypesQuery = async (fastify) => {
     "wrDisplayOrder" as "displayOrder",
     "wrRemark" as "remark",
       "wrIsHighlight" as "isHighlight"
-     from "tblEventTypes" te left join "tblEncryptedData" ed on te."wrEventTypeId" = ed."wrKey"`,
+     from "tblEventTypes" te left join "tblEncryptedData" ed on te."wrEventTypeId" = ed."wrKey"
+     order by "wrDisplayOrder" asc`,
     {
       type: fastify.db.QueryTypes.SELECT,
     }
@@ -111,9 +112,29 @@ const deleteEventTypeQuery = async (eventTypeIds, fastify, request) => {
   }
 };
 
+const updateDisplayOrder = async (body, fastify) => {
+  try {
+    return await fastify.db.query(
+      `update "tblEventTypes" set "wrDisplayOrder" = $1 where "wrEventTypeId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = $2) `,
+      {
+        bind: [body.displayOrder, body.eventTypeId],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableEventType.js/updateDisplayOrder",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   allEventTypesQuery,
   insertEventTypeQuery,
   updateEventTypeQuery,
   deleteEventTypeQuery,
+  updateDisplayOrder,
 };

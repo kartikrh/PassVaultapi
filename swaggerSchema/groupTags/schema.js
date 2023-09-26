@@ -815,6 +815,24 @@ const EventType = {
       },
     },
   },
+  changeDispalyOrder: {
+    schema: {
+      tags: ["Event Type"],
+      description: "change display order",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            eventTypeId: { type: "string" },
+            displayOrder: { type: "integer" },
+          },
+        },
+        minItems: 1,
+      },
+    },
+  },
 };
 
 const Teams = {

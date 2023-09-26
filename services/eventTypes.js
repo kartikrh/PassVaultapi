@@ -1,7 +1,9 @@
 const {
+  allEventTypesQuery,
   insertEventTypeQuery,
   updateEventTypeQuery,
   deleteEventTypeQuery,
+  updateDisplayOrder,
 } = require("../repository/TableEventType");
 const { storeImage, removeImage } = require("../utilities/Images");
 
@@ -106,9 +108,20 @@ const deleteEventTypeService = async (request, fastify) => {
   return `EventType(s) deleted successfully`;
 };
 
+const updateDisplayOrderService = async (request, fastify) => {
+  for (const item of request.body) {
+    await updateDisplayOrder(item, fastify);
+  }
+
+  global.tblEventTypes = await allEventTypesQuery(fastify);
+
+  return `Display order updated successfully`;
+};
+
 module.exports = {
   allEventTypesService,
   eventTypeByIdService,
   saveEventTypeService,
   deleteEventTypeService,
+  updateDisplayOrderService,
 };
