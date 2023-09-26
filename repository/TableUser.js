@@ -118,6 +118,17 @@ async function checkValidQuery(body, fastify) {
   return !!data.length;
 }
 
+const getOriginalIdFromEncryptedId = async (encryptedId, fastify) => {
+  const data = await fastify.db.query(
+    `select "wrKey" from "tblEncryptedData" where "wrValue" = $1`,
+    {
+      type: QueryTypes.SELECT,
+      bind: [encryptedId],
+    }
+  );
+
+  return data[0].wrKey;
+};
 const getAllUsersQuery = async (fastify) => {
   return await fastify.db.query(
     `select 
@@ -284,4 +295,5 @@ module.exports = {
   addUserQuery,
   updateUserQuery,
   deleteUserQuery,
+  getOriginalIdFromEncryptedId,
 };

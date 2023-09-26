@@ -1,4 +1,7 @@
-const { authorize } = require("../../../controller/middleware");
+const {
+  authorize,
+  checkPermission,
+} = require("../../../controller/middleware");
 const {
   getAllUsers,
   getUserById,
@@ -10,25 +13,53 @@ const { User } = require("../../../swaggerSchema/groupTags/schema");
 module.exports = async (fastify, opts) => {
   fastify.post("/all", {
     schema: User.getAll.schema,
-    preHandler: [(request, reply) => authorize(request, reply, fastify)],
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Users",
+          mode: "view",
+        }),
+    ],
     handler: (request, reply) => getAllUsers(request, reply, fastify),
   });
 
   fastify.post("/byId", {
     schema: User.getById.schema,
-    preHandler: [(request, reply) => authorize(request, reply, fastify)],
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Users",
+          mode: "view",
+        }),
+    ],
     handler: (request, reply) => getUserById(request, reply, fastify),
   });
 
   fastify.post("/save", {
     schema: User.save.schema,
-    preHandler: [(request, reply) => authorize(request, reply, fastify)],
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Users",
+          mode: request.body.userId === "0" ? "add" : "edit",
+        }),
+    ],
     handler: (request, reply) => saveUser(request, reply, fastify),
   });
 
   fastify.post("/delete", {
     schema: User.delete.schema,
-    preHandler: [(request, reply) => authorize(request, reply, fastify)],
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Users",
+          mode: "delete",
+        }),
+    ],
     handler: (request, reply) => deleteUser(request, reply, fastify),
   });
 };

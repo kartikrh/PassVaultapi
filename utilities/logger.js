@@ -1,3 +1,5 @@
+const ResponseLog = require("../database/schema/responseLogger");
+
 const errorLogger = async (fastify, errMessage, errStack, request) => {
   try {
     return await fastify.db.query(
@@ -20,4 +22,18 @@ const errorLogger = async (fastify, errMessage, errStack, request) => {
   }
 };
 
-module.exports = { errorLogger };
+const responseLogger = async (request) => {
+  try {
+    await ResponseLog.create({
+      domain: request.hostname,
+      path: request.originalUrl,
+      responseTime: request.responseTime,
+      userId: request?.userTokenInfo?.WrUserId,
+      userIp: request.ip,
+    });
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+module.exports = { errorLogger, responseLogger };

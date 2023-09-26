@@ -3,6 +3,7 @@ const {
   updateEventTypeQuery,
   deleteEventTypeQuery,
 } = require("../repository/TableEventType");
+const { storeImage, removeImage } = require("../utilities/Images");
 
 const allEventTypesService = async () => {
   return global.tblEventTypes;
@@ -17,6 +18,13 @@ const eventTypeByIdService = async (request) => {
 };
 
 const createEventTypeService = async (request, fastify) => {
+  const { image } = request.body;
+
+  if (image && image.length > 0) {
+    const data = await storeImage(image[0]);
+    request.body.image = data;
+  }
+
   const data = await insertEventTypeQuery(
     { ...request.body, userId: request.userTokenInfo.WrUserId },
     fastify,
@@ -40,14 +48,9 @@ const updateEventTypeService = async (request, fastify) => {
     eventTypeId: request.body.eventTypeId,
     eventType: request.body.eventType || checkId.eventType,
     refId: request.body.refId || checkId.refId,
-    image: request.body.image || checkId.image,
+    image: checkId.image,
     isActive: checkId.isActive,
-    icon: request.body.icon || checkId.icon,
-    displayOrder: request.body.displayOrder || checkId.displayOrder,
     remark: request.body.remark || checkId.remark,
-    eEventTypeId: request.body.eEventTypeId || checkId.eEventTypeId,
-    eRefId: request.body.eRefId || checkId.eRefId,
-    displayType: request.body.displayType || checkId.displayType,
     isHighlight: checkId.isHighlight,
     userId: request.userTokenInfo.WrUserId,
   };
@@ -57,6 +60,12 @@ const updateEventTypeService = async (request, fastify) => {
 
   if ("isHighlight" in request.body) {
     data.isHighlight = request.body.isHighlight;
+  }
+
+  if (request.body.image && request.body.image.length > 0) {
+    await removeImage(checkId.image);
+    const result = await storeImage(request.body.image[0]);
+    data.image = result;
   }
 
   await updateEventTypeQuery(data, fastify, request);

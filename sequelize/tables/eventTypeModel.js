@@ -22,10 +22,6 @@ module.exports = (sequelize) => {
         type: DataTypes.STRING(200),
         allowNull: true,
       },
-      wrIcon: {
-        type: DataTypes.STRING(200),
-        allowNull: true,
-      },
       wrIsActive: {
         type: DataTypes.BOOLEAN,
         allowNull: true,
@@ -36,18 +32,6 @@ module.exports = (sequelize) => {
       },
       wrRemark: {
         type: DataTypes.STRING,
-        allowNull: true,
-      },
-      wrEEventTypeId: {
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
-      wrERefId: {
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
-      wrDisplayType: {
-        type: DataTypes.INTEGER,
         allowNull: true,
       },
       wrIsHighlight: {
