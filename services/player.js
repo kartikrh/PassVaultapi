@@ -3,6 +3,7 @@ const {
   updatePlayerQuery,
   deletePlayerQuery,
 } = require("../repository/TablePlayer");
+const { storeImage, removeImage } = require("../utilities/Images");
 
 const allPlayerService = async () => {
   return global.tblPlayers;
@@ -24,13 +25,18 @@ const insertPlayerService = async (request, fastify) => {
     }
   }
 
-  if (request.body.teamId) {
-    const checkTeamId = global.tblTeams.find(
-      (item) => item.teamId === request.body.teamId
+  if (request.body.playerTypeId) {
+    const checkTeamId = global.tblPlayerTypes.find(
+      (item) => item.playerTypeId === request.body.playerTypeId
     );
     if (!checkTeamId) {
-      throw new Error("Team with this id not Found");
+      throw new Error("PlayerType with this id not Found");
     }
+  }
+
+  if (request.body.image && request.body.image > 0) {
+    const data = await storeImage(request.body.image[0]);
+    request.body.image = data;
   }
 
   const result = await insertPlayerQuery(
@@ -56,16 +62,14 @@ const updatePlayerService = async (request, fastify) => {
     country: request.body.country || checkPlayerId.country,
     playerName: request.body.playerName || checkPlayerId.playerName,
     eventTypeId: checkPlayerId.eventTypeId,
-    teamId: checkPlayerId.teamId,
+    playerTypeId: checkPlayerId.playerTypeId,
     userId: request.userTokenInfo.WrUserId,
-    image: request.body.image || checkPlayerId.image,
+    image: checkPlayerId.image,
     bowlingStyle: request.body.bowlingStyle || checkPlayerId.bowlingStyle,
     isActive: checkPlayerId.isActive,
     isKipper: checkPlayerId.isKipper,
     isLeftHandedBatting: checkPlayerId.isLeftHandedBatting,
     isLeftArmFielding: checkPlayerId.isLeftArmFielding,
-    playerType: request.body.playerType || checkPlayerId.playerType,
-    imageUrl: request.body.imageUrl || checkPlayerId.imageUrl,
     displayName: request.body.displayName || checkPlayerId.displayName,
     batsmanAverage: request.body.batsmanAverage || checkPlayerId.batsmanAverage,
     batsmanStrikeRate:
@@ -73,6 +77,8 @@ const updatePlayerService = async (request, fastify) => {
     bowlerAverage: request.body.bowlerAverage || checkPlayerId.bowlerAverage,
     bowlerEconomy: request.body.bowlerEconomy || checkPlayerId.bowlerEconomy,
     playerId: request.body.playerId,
+    playerType: checkPlayerId.playerType,
+    eventType: checkPlayerId.eventType,
   };
 
   if ("isActive" in request.body) {
@@ -99,18 +105,26 @@ const updatePlayerService = async (request, fastify) => {
       throw new Error("Event Type with this id not Found");
     } else {
       body.eventTypeId = request.body.eventTypeId;
+      body.eventType = checkEventTypeId.eventType;
     }
   }
 
-  if (request.body.teamId) {
-    const checkTeamId = global.tblTeams.find(
-      (item) => item.teamId === request.body.teamId
+  if (request.body.playerTypeId) {
+    const checkPlayerTypeId = global.tblPlayerTypes.find(
+      (item) => item.playerTypeId === request.body.playerTypeId
     );
-    if (!checkTeamId) {
-      throw new Error("Team with this id not Found");
+    if (!checkPlayerTypeId) {
+      throw new Error("PlayerType with this id not Found");
     } else {
-      body.teamId = request.body.teamId;
+      body.playerTypeId = request.body.playerTypeId;
+      body.playerType = checkPlayerTypeId.playerType;
     }
+  }
+
+  if (request.body.image && request.body.image.length > 0) {
+    await removeImage(body.image);
+    const result = await storeImage(request.body.image[0]);
+    body.image = result;
   }
 
   await updatePlayerQuery(body, fastify, request);

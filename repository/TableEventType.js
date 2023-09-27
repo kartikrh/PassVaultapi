@@ -24,7 +24,7 @@ const insertEventTypeQuery = async (data, fastify, request) => {
     const result = await fastify.db.query(
       `with insert_data as(
             insert into "tblEventTypes" ("wrEventType","wrRefId","wrImage","wrIsActive","wrDisplayOrder","wrRemark","wrIsHighlight","wrCreatedDate","wrCreatedBy") values (
-              $1,$2,$3,$4,(select max("wrDisplayOrder") from "tblEventTypes" as result) + 1,$5,$6,$7,$8) returning *
+              $1,$2,$3,$4,(select COALESCE(max("wrDisplayOrder") , 0) as result from "tblEventTypes") + 1,$5,$6,$7,$8) returning *
         )        
         select 
         "wrValue" as "eventTypeId",

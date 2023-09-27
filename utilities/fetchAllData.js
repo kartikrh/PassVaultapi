@@ -10,7 +10,10 @@ const { getAllRolesQuery } = require("../repository/TableRoles");
 const { allEventTypesQuery } = require("../repository/TableEventType");
 const { allTeamQuery } = require("../repository/TableTeams");
 const { allPaneltyRunsQuery } = require("../repository/TablePaneltyRun");
-const { getAllPlayersQuery } = require("../repository/TablePlayer");
+const {
+  getAllPlayersQuery,
+  getAllPlayerType,
+} = require("../repository/TablePlayer");
 const { getAllTeamPlayersQuery } = require("../repository/TableTeamPlayer");
 const { getAllMatchTypeQuery } = require("../repository/TableMatchType");
 const { getAllUsersQuery } = require("../repository/TableUser");
@@ -33,6 +36,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const getAllTeamPlayer = await getAllTeamPlayersQuery(fastify);
     const getAllMatchType = await getAllMatchTypeQuery(fastify);
     const getAllUsers = await getAllUsersQuery(fastify);
+    const getAllPlayerTypes = await getAllPlayerType(fastify);
 
     global.tblTabs = getAllTabs;
     global.tblRoles = getAllRoles;
@@ -50,6 +54,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblTeamPlayers = getAllTeamPlayer;
     global.tblMatchTypes = getAllMatchType;
     global.tblUsers = getAllUsers;
+    global.tblPlayerTypes = getAllPlayerTypes;
 
     console.log("Okkkk");
 
