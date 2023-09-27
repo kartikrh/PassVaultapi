@@ -1,8 +1,8 @@
 const { DataTypes } = require("sequelize");
 
 module.exports = (sequelize) => {
-  const TeamModel = require("./teamModel")(sequelize);
   const EventTypeModel = require("./eventTypeModel")(sequelize);
+  const PlayerTypeModel = require("./playerTypeModel")(sequelize);
 
   const PlayerModel = sequelize.define(
     "tblPlayer",
@@ -17,12 +17,12 @@ module.exports = (sequelize) => {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
-      wrCountry: {
-        type: DataTypes.STRING(200),
+      wrPlayerTypeId: {
+        type: DataTypes.INTEGER,
         allowNull: true,
       },
-      wrTeamId: {
-        type: DataTypes.INTEGER,
+      wrCountry: {
+        type: DataTypes.STRING(200),
         allowNull: true,
       },
       wrPlayerName: {
@@ -69,14 +69,6 @@ module.exports = (sequelize) => {
         type: DataTypes.DATE,
         allowNull: true,
       },
-      wrPlayerType: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-      },
-      wrImageUrl: {
-        type: DataTypes.STRING(400),
-        allowNull: true,
-      },
       wrBatsmanAverage: {
         type: DataTypes.DECIMAL(10, 2),
         allowNull: true,
@@ -103,14 +95,14 @@ module.exports = (sequelize) => {
     }
   );
 
-  PlayerModel.belongsTo(TeamModel, {
-    foreignKey: "wrTeamId",
-    targetKey: "wrTeamId",
-  });
-
   PlayerModel.belongsTo(EventTypeModel, {
     foreignKey: "wrEventTypeId",
     targetKey: "wrEventTypeId",
+  });
+
+  PlayerModel.belongsTo(PlayerTypeModel, {
+    foreignKey: "wrPlayerTypeId",
+    targetKey: "wrPlayerTypeId",
   });
 
   return PlayerModel;
