@@ -53,6 +53,7 @@ const updateEventTypeService = async (request, fastify) => {
     image: checkId.image,
     isActive: checkId.isActive,
     remark: request.body.remark || checkId.remark,
+    displayOrder: checkId.displayOrder,
     isHighlight: checkId.isHighlight,
     userId: request.userTokenInfo.WrUserId,
   };
