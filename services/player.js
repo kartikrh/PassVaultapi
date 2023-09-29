@@ -8,6 +8,13 @@ const { storeImage, removeImage } = require("../utilities/Images");
 const allPlayerService = async () => {
   return global.tblPlayers;
 };
+const allPlayerTypeService = async () => {
+  return global.tblPlayerTypes;
+};
+
+const allBowlingTypeService = async () => {
+  return global.tblBowlingTypes;
+};
 
 const playerByIdService = async (request) => {
   const { playerId } = request.body;
@@ -31,6 +38,15 @@ const insertPlayerService = async (request, fastify) => {
     );
     if (!checkTeamId) {
       throw new Error("PlayerType with this id not Found");
+    }
+  }
+
+  if (request.body.bowlingStyle) {
+    const checkTeamId = global.tblBowlingTypes.find(
+      (item) => item.bowlingTypeId === request.body.bowlingStyle
+    );
+    if (!checkTeamId) {
+      throw new Error("Bowling Type with this id not Found");
     }
   }
 
@@ -79,6 +95,8 @@ const updatePlayerService = async (request, fastify) => {
     playerId: request.body.playerId,
     playerType: checkPlayerId.playerType,
     eventType: checkPlayerId.eventType,
+    bowlingTypeId: checkPlayerId.bowlingTypeId,
+    bowlingStyle: checkPlayerId.bowlingStyle,
   };
 
   if ("isActive" in request.body) {
@@ -118,6 +136,18 @@ const updatePlayerService = async (request, fastify) => {
     } else {
       body.playerTypeId = request.body.playerTypeId;
       body.playerType = checkPlayerTypeId.playerType;
+    }
+  }
+
+  if (request.body.bowlingStyle) {
+    const checkBowlingTypeId = global.tblBowlingTypes.find(
+      (item) => item.bowlingTypeId === request.body.bowlingStyle
+    );
+    if (!checkBowlingTypeId) {
+      throw new Error("Bowling Type with this id not Found");
+    } else {
+      body.bowlingTypeId = checkBowlingTypeId.bowlingTypeId;
+      body.bowlingStyle = checkBowlingTypeId.bowlingType;
     }
   }
 
@@ -171,4 +201,6 @@ module.exports = {
   playerByIdService,
   savePlayerService,
   deletePlayerService,
+  allBowlingTypeService,
+  allPlayerTypeService,
 };
