@@ -3,6 +3,8 @@ const {
   playerByIdService,
   savePlayerService,
   deletePlayerService,
+  allBowlingTypeService,
+  allPlayerTypeService,
 } = require("../../../../services/player");
 const { errorLogger } = require("../../../../utilities/logger");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
@@ -25,6 +27,34 @@ const getPlayerById = async (request, reply, fastify) => {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/getPlayerById", request);
+    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+  }
+};
+const getAllPlayerType = async (request, reply, fastify) => {
+  try {
+    const result = await allPlayerTypeService();
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      commonPath + "/allPlayerTypeService",
+      request
+    );
+    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+  }
+};
+const getAllBowlingType = async (request, reply, fastify) => {
+  try {
+    const result = await allBowlingTypeService();
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      commonPath + "/getAllBowlingType",
+      request
+    );
     reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
   }
 };
@@ -52,4 +82,6 @@ module.exports = {
   getPlayerById,
   savePlayer,
   deletePlayer,
+  getAllBowlingType,
+  getAllPlayerType,
 };

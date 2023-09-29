@@ -839,12 +839,14 @@ const Teams = {
   getAll: {
     schema: {
       tags: ["Teams"],
+      security: [{ bearerAuth: [] }],
       description: "get all teams",
     },
   },
   getById: {
     schema: {
       tags: ["Teams"],
+      security: [{ bearerAuth: [] }],
       description: "get teams by id",
       body: {
         type: "object",
@@ -858,6 +860,7 @@ const Teams = {
   save: {
     schema: {
       tags: ["Teams"],
+      security: [{ bearerAuth: [] }],
       description: "save teams",
       body: {
         type: "object",
@@ -868,7 +871,6 @@ const Teams = {
           country: { type: "string" },
           eventTypeId: { type: "string" },
           image: { type: "string" },
-          imageUrl: { type: "string" },
         },
         required: ["teamId"],
       },
@@ -877,6 +879,7 @@ const Teams = {
   delete: {
     schema: {
       tags: ["Teams"],
+      security: [{ bearerAuth: [] }],
       description: "delete teams",
       body: {
         type: "object",
@@ -983,7 +986,7 @@ const Player = {
           country: { type: "string" },
           playerTypeId: { type: "string" },
           playerName: { type: "string" },
-          bowlingStyle: { type: "integer" },
+          bowlingStyle: { type: "string" },
           isActive: { type: "boolean" },
           isKipper: { type: "boolean" },
           isLeftHandedBatting: { type: "boolean" },

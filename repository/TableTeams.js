@@ -7,7 +7,6 @@ const allTeamQuery = async (fastify) => {
     te2."wrValue" as "eventTypeId",
     "wrTeamName" as "teamName",
     "wrTeamShortName" as "teamShortName",
-    "wrImageUrl" as "imageUrl",
     "wrImage" as "image",
     "wrCountry" as "country"
      FROM "tblTeams" tt left join "tblEncryptedData" te on tt."wrTeamId" = te."wrKey"
@@ -22,8 +21,8 @@ const insertTeamQuery = async (data, fastify, request) => {
   try {
     const result = await fastify.db.query(
       `with insert_data as(
-      INSERT INTO "tblTeams" ("wrTeamName","wrTeamShortName", "wrImageUrl", "wrImage", "wrCountry", "wrEventTypeId", "wrCreatedBy", "wrCreatedDate")
-      VALUES ($1,$2,$3,$4,$5,(select "wrKey" from "tblEncryptedData" where "wrValue" = $6),$7,$8)
+      INSERT INTO "tblTeams" ("wrTeamName","wrTeamShortName", "wrImage", "wrCountry", "wrEventTypeId", "wrCreatedBy", "wrCreatedDate")
+      VALUES ($1,$2,$3,$4,(select "wrKey" from "tblEncryptedData" where "wrValue" = $5),$6,$7)
       RETURNING *    
     )
     SELECT 
@@ -31,7 +30,6 @@ const insertTeamQuery = async (data, fastify, request) => {
     te2."wrValue" as "eventTypeId",
     "wrTeamName" as "teamName",
     "wrTeamShortName" as "teamShortName",
-    "wrImageUrl" as "imageUrl",
     "wrImage" as "image",
     "wrCountry" as "country"
      FROM "insert_data" tt left join "tblEncryptedData" te on tt."wrTeamId" = te."wrKey"
@@ -41,7 +39,6 @@ const insertTeamQuery = async (data, fastify, request) => {
         bind: [
           data.teamName || null,
           data.teamShortName || null,
-          data.imageUrl || null,
           data.image || null,
           data.country || null,
           data.eventTypeId || null,
@@ -67,12 +64,11 @@ const insertTeamQuery = async (data, fastify, request) => {
 const updateTeamQuery = async (data, fastify, request) => {
   try {
     return await fastify.db.query(
-      `UPDATE "tblTeams" SET "wrTeamName" = $1, "wrTeamShortName" = $2, "wrImageUrl" = $3, "wrImage" = $4, "wrCountry" = $5, "wrEventTypeId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $6), "wrModifyBy" = $7, "wrModifyDate" = $8 WHERE "wrTeamId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $9)`,
+      `UPDATE "tblTeams" SET "wrTeamName" = $1, "wrTeamShortName" = $2,"wrImage" = $3, "wrCountry" = $4, "wrEventTypeId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $5), "wrModifyBy" = $6, "wrModifyDate" = $7 WHERE "wrTeamId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $8)`,
       {
         bind: [
           data.teamName,
           data.teamShortName,
-          data.imageUrl,
           data.image,
           data.country,
           data.eventTypeId,

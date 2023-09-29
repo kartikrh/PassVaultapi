@@ -3,6 +3,7 @@ const {
   updateTeamQuery,
   deleteTeamQuery,
 } = require("../repository/TableTeams");
+const { storeImage, removeImage } = require("../utilities/Images");
 
 const allTeamsService = async () => {
   return global.tblTeams;
@@ -22,6 +23,10 @@ const createTeamService = async (request, fastify) => {
     if (!validateEventId) {
       throw new Error("EventId is not valid");
     }
+  }
+
+  if (request.body.image && request.body.image.length) {
+    request.body.image = await storeImage(request.body.image[0]);
   }
 
   const data = await insertTeamQuery(
@@ -46,8 +51,7 @@ const updateTeamService = async (request, fastify) => {
   const body = {
     teamName: request.body.teamName || checkTeamId.teamName,
     teamShortName: request.body.teamShortName || checkTeamId.teamShortName,
-    imageUrl: request.body.imageUrl || checkTeamId.imageUrl,
-    image: request.body.image || checkTeamId.image,
+    image: checkTeamId.image,
     country: request.body.country || checkTeamId.country,
     eventTypeId: request.body.eventTypeId || checkTeamId.eventTypeId,
     userId: request.userTokenInfo.WrUserId,
@@ -61,6 +65,11 @@ const updateTeamService = async (request, fastify) => {
     if (!validateEventId) {
       throw new Error("EventId is not valid");
     }
+  }
+
+  if (request.body.image && request.body.image.length) {
+    await removeImage(body.image);
+    request.body.image = await storeImage(request.body.image[0]);
   }
 
   await updateTeamQuery(body, fastify, request);

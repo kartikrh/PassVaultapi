@@ -47,10 +47,6 @@ module.exports = (sequelize) => {
         type: DataTypes.STRING(200),
         allowNull: true,
       },
-      wrImageUrl: {
-        type: DataTypes.STRING(400),
-        allowNull: true,
-      },
     },
     {
       timestamps: false,
