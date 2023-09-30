@@ -108,9 +108,53 @@ const deleteTeamPlayerQuery = async (teamPlayerId, fastify, request) => {
   }
 };
 
+const deleteTeamPlayerByTeamIdQuery = async (teamId, fastify, request) => {
+  try {
+    return await fastify.db.query(
+      `delete from "tblTeamPlayers" where "wrTeamId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)
+    `,
+      {
+        bind: [teamId],
+        type: fastify.db.QueryTypes.DELETE,
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableTeamPlayer/deleteTeamPlayerByTeamIdQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const deleteTeamPlayerByPlayerIdQuery = async (playerId, fastify, request) => {
+  try {
+    return await fastify.db.query(
+      `delete from "tblTeamPlayers" where "wrRefPlayerId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)
+    `,
+      {
+        bind: [playerId],
+        type: fastify.db.QueryTypes.DELETE,
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableTeamPlayer/deleteTeamPlayerByPlayerIdQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllTeamPlayersQuery,
   insertTeamPlayerQuery,
   updateTeamPlayerQuery,
   deleteTeamPlayerQuery,
+  deleteTeamPlayerByTeamIdQuery,
+  deleteTeamPlayerByPlayerIdQuery,
 };

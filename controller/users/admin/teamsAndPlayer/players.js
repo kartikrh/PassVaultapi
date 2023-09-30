@@ -23,7 +23,7 @@ const getAllPlayers = async (request, reply, fastify) => {
 
 const getPlayerById = async (request, reply, fastify) => {
   try {
-    const result = await playerByIdService(request);
+    const result = await playerByIdService(request, fastify);
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/getPlayerById", request);

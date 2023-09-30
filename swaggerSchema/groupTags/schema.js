@@ -871,6 +871,10 @@ const Teams = {
           country: { type: "string" },
           eventTypeId: { type: "string" },
           image: { type: "string" },
+          playerId: {
+            type: "array",
+            items: { type: "string" },
+          },
         },
         required: ["teamId"],
       },
@@ -996,6 +1000,10 @@ const Player = {
           bowlerAverage: { type: "number" },
           bowlerEconomy: { type: "number" },
           displayName: { type: "string" },
+          teamId: {
+            type: "array",
+            items: { type: "string" },
+          },
         },
         required: ["playerId"],
       },

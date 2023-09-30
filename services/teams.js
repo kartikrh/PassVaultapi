@@ -1,7 +1,12 @@
 const {
+  insertTeamPlayerQuery,
+  deleteTeamPlayerByTeamIdQuery,
+} = require("../repository/TableTeamPlayer");
+const {
   insertTeamQuery,
   updateTeamQuery,
   deleteTeamQuery,
+  getAllPlayersByTeamIdQuery,
 } = require("../repository/TableTeams");
 const { storeImage, removeImage } = require("../utilities/Images");
 
@@ -9,10 +14,23 @@ const allTeamsService = async () => {
   return global.tblTeams;
 };
 
-const teamByIdService = async (request) => {
+const teamByIdService = async (request, fastify) => {
   const { teamId } = request.body;
   const result = global.tblTeams.find((item) => item.teamId === teamId);
-  return result || null;
+
+  if (!result) {
+    return null;
+  } else {
+    const playersInTeams = await getAllPlayersByTeamIdQuery(
+      teamId,
+      fastify,
+      request
+    );
+
+    result.players = playersInTeams;
+
+    return result;
+  }
 };
 
 const createTeamService = async (request, fastify) => {
@@ -34,6 +52,20 @@ const createTeamService = async (request, fastify) => {
     fastify,
     request
   );
+
+  if (request.body.playerId && request.body.playerId.length) {
+    for (let player of request.body.playerId) {
+      await insertTeamPlayerQuery(
+        {
+          teamId: data.teamId,
+          refPlayerId: player,
+          userId: request.userTokenInfo.WrUserId,
+        },
+        fastify,
+        request
+      );
+    }
+  }
 
   global.tblTeams.push(data);
   return data;
@@ -68,7 +100,9 @@ const updateTeamService = async (request, fastify) => {
   }
 
   if (request.body.image && request.body.image.length) {
-    await removeImage(body.image);
+    if (body.image) {
+      await removeImage(body.image);
+    }
     request.body.image = await storeImage(request.body.image[0]);
   }
 
@@ -81,6 +115,22 @@ const updateTeamService = async (request, fastify) => {
   );
 
   global.tblTeams[index] = body;
+
+  if (request.body.playerId) {
+    await deleteTeamPlayerByTeamIdQuery(request.body.teamId, fastify, request);
+
+    for (let player of request.body.playerId) {
+      await insertTeamPlayerQuery(
+        {
+          teamId: data.teamId,
+          refPlayerId: player,
+          userId: request.userTokenInfo.WrUserId,
+        },
+        fastify,
+        request
+      );
+    }
+  }
 
   return body;
 };

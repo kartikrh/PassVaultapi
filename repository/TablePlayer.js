@@ -65,7 +65,7 @@ const insertPlayerQuery = async (data, fastify, request) => {
         "wrBowlerAverage" as "bowlerAverage",
         "wrBowlerEconomy"  as "bowlerEconomy",
         "wrDisplayName"   as "displayName"
-     from "tblPlayers" tp left join "tblEncryptedData" te on tp."wrPlayerId" = te."wrKey"
+     from "insert_data" tp left join "tblEncryptedData" te on tp."wrPlayerId" = te."wrKey"
      left join "tblEncryptedData" te2 on tp."wrEventTypeId" = te2."wrKey"
      left join "tblEncryptedData" te3 on tp."wrPlayerTypeId" = te3."wrKey"
      left join "tblEncryptedData" te4 on tp."wrBowlingStyle" = te4."wrKey"
@@ -215,6 +215,31 @@ const getAllBowlingTypeQuery = async (fastify) => {
   }
 };
 
+const getAllTeamsByPlayerIdQuery = async (playerId, fastify, request) => {
+  try {
+    return await fastify.db.query(
+      `select 
+      "wrValue" as "teamId",
+      "wrTeamName" as "teamName"
+       from "tblTeamPlayers" tp left join "tblEncryptedData" te on tp."wrTeamId" = te."wrKey"
+       left join "tblTeams" tt on tp."wrTeamId" = tt."wrTeamId"
+       where "wrRefPlayerId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)`,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [playerId],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TablePlayer/getAllTeamsByPlayerIdQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllPlayersQuery,
   insertPlayerQuery,
@@ -222,4 +247,5 @@ module.exports = {
   deletePlayerQuery,
   getAllPlayerTypeQuery,
   getAllBowlingTypeQuery,
+  getAllTeamsByPlayerIdQuery,
 };
