@@ -870,7 +870,6 @@ const Teams = {
           teamShortName: { type: "string" },
           country: { type: "string" },
           eventTypeId: { type: "string" },
-          image: { type: "string" },
           playerId: {
             type: "array",
             items: { type: "string" },
