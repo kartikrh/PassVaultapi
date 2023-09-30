@@ -50,7 +50,7 @@ const insertPlayerService = async (request, fastify) => {
     }
   }
 
-  if (request.body.image && request.body.image > 0) {
+  if (request.body.image && request.body.image.length > 0) {
     const data = await storeImage(request.body.image[0]);
     request.body.image = data;
   }

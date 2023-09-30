@@ -65,7 +65,7 @@ const insertPlayerQuery = async (data, fastify, request) => {
         "wrBowlerAverage" as "bowlerAverage",
         "wrBowlerEconomy"  as "bowlerEconomy",
         "wrDisplayName"   as "displayName"
-     from "tblPlayers" tp left join "tblEncryptedData" te on tp."wrPlayerId" = te."wrKey"
+     from "insert_data" tp left join "tblEncryptedData" te on tp."wrPlayerId" = te."wrKey"
      left join "tblEncryptedData" te2 on tp."wrEventTypeId" = te2."wrKey"
      left join "tblEncryptedData" te3 on tp."wrPlayerTypeId" = te3."wrKey"
      left join "tblEncryptedData" te4 on tp."wrBowlingStyle" = te4."wrKey"
