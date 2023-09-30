@@ -103,7 +103,7 @@ const updateTeamService = async (request, fastify) => {
     if (body.image) {
       await removeImage(body.image);
     }
-    request.body.image = await storeImage(request.body.image[0]);
+    body.image = await storeImage(request.body.image[0]);
   }
 
   await updateTeamQuery(body, fastify, request);
