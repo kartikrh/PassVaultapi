@@ -20,7 +20,7 @@ const getAllTeams = async (request, reply, fastify) => {
 };
 const getTeamById = async (request, reply, fastify) => {
   try {
-    const result = await teamByIdService(request);
+    const result = await teamByIdService(request, fastify);
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/getTeamById", request);

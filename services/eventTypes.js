@@ -66,7 +66,9 @@ const updateEventTypeService = async (request, fastify) => {
   }
 
   if (request.body.image && request.body.image.length > 0) {
-    await removeImage(checkId.image);
+    if (checkId.image) {
+      await removeImage(checkId.image);
+    }
     const result = await storeImage(request.body.image[0]);
     data.image = result;
   }

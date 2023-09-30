@@ -2,12 +2,18 @@ const {
   insertPlayerQuery,
   updatePlayerQuery,
   deletePlayerQuery,
+  getAllTeamsByPlayerIdQuery,
 } = require("../repository/TablePlayer");
+const {
+  insertTeamPlayerQuery,
+  deleteTeamPlayerByPlayerIdQuery,
+} = require("../repository/TableTeamPlayer");
 const { storeImage, removeImage } = require("../utilities/Images");
 
 const allPlayerService = async () => {
   return global.tblPlayers;
 };
+
 const allPlayerTypeService = async () => {
   return global.tblPlayerTypes;
 };
@@ -16,10 +22,23 @@ const allBowlingTypeService = async () => {
   return global.tblBowlingTypes;
 };
 
-const playerByIdService = async (request) => {
+const playerByIdService = async (request, fastify) => {
   const { playerId } = request.body;
   const result = global.tblPlayers.find((item) => item.playerId === playerId);
-  return result || null;
+
+  if (!result) {
+    return null;
+  } else {
+    const playersInTeams = await getAllTeamsByPlayerIdQuery(
+      playerId,
+      fastify,
+      request
+    );
+
+    result.teams = playersInTeams;
+
+    return result;
+  }
 };
 
 const insertPlayerService = async (request, fastify) => {
@@ -50,7 +69,7 @@ const insertPlayerService = async (request, fastify) => {
     }
   }
 
-  if (request.body.image && request.body.image.length > 0) {
+  if (request.body.image && request.body.image.length) {
     const data = await storeImage(request.body.image[0]);
     request.body.image = data;
   }
@@ -60,6 +79,27 @@ const insertPlayerService = async (request, fastify) => {
     fastify,
     request
   );
+
+  if (request.body.teamId && request.body.teamId.length) {
+    // for (let team of request.body.teamId) {
+    //   const checkTeamId = global.tblTeams.find((item) => item.teamId === team);
+    //   if (!checkTeamId) {
+    //     throw new Error("Team with this id not Found");
+    //   }
+    // }
+
+    for (let team of request.body.teamId) {
+      await insertTeamPlayerQuery(
+        {
+          teamId: team,
+          refPlayerId: result.playerId,
+          userId: request.userTokenInfo.WrUserId,
+        },
+        fastify,
+        request
+      );
+    }
+  }
 
   global.tblPlayers.push(result);
 
@@ -152,7 +192,9 @@ const updatePlayerService = async (request, fastify) => {
   }
 
   if (request.body.image && request.body.image.length > 0) {
-    await removeImage(body.image);
+    if (body.image) {
+      await removeImage(body.image);
+    }
     const result = await storeImage(request.body.image[0]);
     body.image = result;
   }
@@ -166,6 +208,26 @@ const updatePlayerService = async (request, fastify) => {
   );
 
   global.tblPlayers[index] = body;
+
+  if (request.body.teamId) {
+    await deleteTeamPlayerByPlayerIdQuery(
+      request.body.playerId,
+      fastify,
+      request
+    );
+
+    for (let team of request.body.teamId) {
+      await insertTeamPlayerQuery(
+        {
+          teamId: team,
+          refPlayerId: request.body.playerId,
+          userId: request.userTokenInfo.WrUserId,
+        },
+        fastify,
+        request
+      );
+    }
+  }
 
   return body;
 };
