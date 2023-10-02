@@ -54,16 +54,18 @@ const createTeamService = async (request, fastify) => {
   );
 
   if (request.body.playerId && request.body.playerId.length) {
-    for (let player of request.body.playerId) {
-      await insertTeamPlayerQuery(
-        {
-          teamId: data.teamId,
-          refPlayerId: player,
-          userId: request.userTokenInfo.WrUserId,
-        },
-        fastify,
-        request
-      );
+    for (const player of request.body.playerId) {
+      if (player) {
+        await insertTeamPlayerQuery(
+          {
+            teamId: data.teamId,
+            refPlayerId: player,
+            userId: request.userTokenInfo.WrUserId,
+          },
+          fastify,
+          request
+        );
+      }
     }
   }
 
@@ -119,16 +121,18 @@ const updateTeamService = async (request, fastify) => {
   if (request.body.playerId) {
     await deleteTeamPlayerByTeamIdQuery(body.teamId, fastify, request);
 
-    for (let player of request.body.playerId) {
-      await insertTeamPlayerQuery(
-        {
-          teamId: body.teamId,
-          refPlayerId: player,
-          userId: request.userTokenInfo.WrUserId,
-        },
-        fastify,
-        request
-      );
+    for (const player of request.body.playerId) {
+      if (player) {
+        await insertTeamPlayerQuery(
+          {
+            teamId: body.teamId,
+            refPlayerId: player,
+            userId: request.userTokenInfo.WrUserId,
+          },
+          fastify,
+          request
+        );
+      }
     }
   }
 
