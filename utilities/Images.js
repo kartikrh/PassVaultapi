@@ -11,6 +11,10 @@ const storeImage = async (imageBuffer) => {
 
     const { filename, data } = await imageBuffer;
 
+    if (!data) {
+      throw new Error("Try Image With Smaller Size");
+    }
+
     const { ext } = path.parse(filename);
     const filenameNew = generateFileName() + ext;
     const imagePath = path.join(folderPath, filenameNew);
