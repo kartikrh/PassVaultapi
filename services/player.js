@@ -35,9 +35,12 @@ const playerByIdService = async (request, fastify) => {
       request
     );
 
-    result.teams = playersInTeams;
+    const data = {
+      ...result,
+      teams: playersInTeams,
+    };
 
-    return result;
+    return data;
   }
 };
 

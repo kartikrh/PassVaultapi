@@ -117,12 +117,12 @@ const updateTeamService = async (request, fastify) => {
   global.tblTeams[index] = body;
 
   if (request.body.playerId) {
-    await deleteTeamPlayerByTeamIdQuery(request.body.teamId, fastify, request);
+    await deleteTeamPlayerByTeamIdQuery(body.teamId, fastify, request);
 
     for (let player of request.body.playerId) {
       await insertTeamPlayerQuery(
         {
-          teamId: data.teamId,
+          teamId: body.teamId,
           refPlayerId: player,
           userId: request.userTokenInfo.WrUserId,
         },
