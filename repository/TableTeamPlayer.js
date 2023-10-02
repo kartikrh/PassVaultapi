@@ -56,58 +56,6 @@ const insertTeamPlayerQuery = async (data, fastify, request) => {
   }
 };
 
-const updateTeamPlayerQuery = async (data, fastify, request) => {
-  try {
-    return await fastify.db.query(
-      `
-      update "tblTeamPlayers" set "wrTeamId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1), "wrRefPlayerId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $2), "wrPlayerOrder" = $3, "wrModifyDate" = $4, "wrModifyBy" = $5
-      where "wrTeamPlayerId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $6)
-      
-    `,
-      {
-        bind: [
-          data.teamId,
-          data.refPlayerId,
-          data.playerOrder,
-          new Date(),
-          data.userId,
-          data.teamPlayerId,
-        ],
-        type: fastify.db.QueryTypes.UPDATE,
-      }
-    );
-  } catch (err) {
-    errorLogger(
-      fastify,
-      err.message,
-      "DB ERROR --> repository/TableTeamPlayer/updateTeamPlayerQuery",
-      request
-    );
-    throw new Error(err.message);
-  }
-};
-
-const deleteTeamPlayerQuery = async (teamPlayerId, fastify, request) => {
-  try {
-    return await fastify.db.query(
-      `delete from "tblTeamPlayers" where "wrTeamPlayerId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = ANY($1))
-    `,
-      {
-        bind: [teamPlayerId],
-        type: fastify.db.QueryTypes.DELETE,
-      }
-    );
-  } catch (err) {
-    errorLogger(
-      fastify,
-      err.message,
-      "DB ERROR --> repository/TableTeamPlayer/deleteTeamPlayerQuery",
-      request
-    );
-    throw new Error(err.message);
-  }
-};
-
 const deleteTeamPlayerByTeamIdQuery = async (teamId, fastify, request) => {
   try {
     return await fastify.db.query(
@@ -151,10 +99,7 @@ const deleteTeamPlayerByPlayerIdQuery = async (playerId, fastify, request) => {
 };
 
 module.exports = {
-  getAllTeamPlayersQuery,
   insertTeamPlayerQuery,
-  updateTeamPlayerQuery,
-  deleteTeamPlayerQuery,
   deleteTeamPlayerByTeamIdQuery,
   deleteTeamPlayerByPlayerIdQuery,
 };
