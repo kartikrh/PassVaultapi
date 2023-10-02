@@ -91,16 +91,18 @@ const insertPlayerService = async (request, fastify) => {
     //   }
     // }
 
-    for (let team of request.body.teamId) {
-      await insertTeamPlayerQuery(
-        {
-          teamId: team,
-          refPlayerId: result.playerId,
-          userId: request.userTokenInfo.WrUserId,
-        },
-        fastify,
-        request
-      );
+    for (const team of request.body.teamId) {
+      if (team) {
+        await insertTeamPlayerQuery(
+          {
+            teamId: team,
+            refPlayerId: result.playerId,
+            userId: request.userTokenInfo.WrUserId,
+          },
+          fastify,
+          request
+        );
+      }
     }
   }
 
@@ -219,16 +221,18 @@ const updatePlayerService = async (request, fastify) => {
       request
     );
 
-    for (let team of request.body.teamId) {
-      await insertTeamPlayerQuery(
-        {
-          teamId: team,
-          refPlayerId: request.body.playerId,
-          userId: request.userTokenInfo.WrUserId,
-        },
-        fastify,
-        request
-      );
+    for (const team of request.body.teamId) {
+      if (team) {
+        await insertTeamPlayerQuery(
+          {
+            teamId: team,
+            refPlayerId: request.body.playerId,
+            userId: request.userTokenInfo.WrUserId,
+          },
+          fastify,
+          request
+        );
+      }
     }
   }
 
