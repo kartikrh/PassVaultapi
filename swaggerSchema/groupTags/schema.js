@@ -1032,12 +1032,14 @@ const MatchType = {
   getAll: {
     schema: {
       tags: ["Match Type"],
+      security: [{ bearerAuth: [] }],
       description: "get all Match Type",
     },
   },
   getById: {
     schema: {
       tags: ["Match Type"],
+      security: [{ bearerAuth: [] }],
       description: "get Match Type by id",
       body: {
         type: "object",
@@ -1051,6 +1053,7 @@ const MatchType = {
   save: {
     schema: {
       tags: ["Match Type"],
+      security: [{ bearerAuth: [] }],
       description: "save Match Type",
       body: {
         type: "object",
@@ -1096,6 +1099,7 @@ const MatchType = {
   },
   delete: {
     schema: {
+      security: [{ bearerAuth: [] }],
       tags: ["Match Type"],
       description: "delete Match Type",
       body: {
