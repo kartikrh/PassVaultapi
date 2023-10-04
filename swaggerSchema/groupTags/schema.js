@@ -1064,7 +1064,7 @@ const MatchType = {
         properties: {
           matchTypeId: { type: "string" },
           matchType: { type: "string" },
-          matchRefType: { type: "integer" },
+          matchRefType: { type: "string" },
           noOfIningsPerSide: { type: "integer" },
           noOfDays: { type: "integer" },
           noOfPlayer: { type: "integer" },

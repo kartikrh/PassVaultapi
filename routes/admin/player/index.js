@@ -9,9 +9,10 @@ const {
   deletePlayer,
   getAllBowlingType,
   getAllPlayerType,
+  getAllPlayerByTeam,
 } = require("../../../controller/users/admin/teamsAndPlayer/players");
 
-const { Player } = require("../../../swaggerSchema/groupTags/schema");
+const { Player, Teams } = require("../../../swaggerSchema/groupTags/schema");
 
 module.exports = async (fastify, opts) => {
   fastify.post("/all", {
@@ -37,6 +38,11 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request, reply) => getPlayerById(request, reply, fastify),
+  });
+  fastify.post("/byTeamId", {
+    schema: Teams.getById.schema,
+    preHandler: [(request, reply) => authorize(request, reply, fastify)],
+    handler: (request, reply) => getAllPlayerByTeam(request, reply, fastify),
   });
   fastify.post("/allPlayerTypes", {
     schema: Player.getAll.schema,
