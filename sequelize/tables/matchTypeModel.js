@@ -15,7 +15,7 @@ module.exports = (sequelize) => {
         allowNull: false,
       },
       wrMatchRefType: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.STRING(200),
         allowNull: true,
       },
       wrNoOfIningsPerSide: {
