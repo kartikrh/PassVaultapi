@@ -18,7 +18,6 @@ const connection = (socket) => {
         .to(firstClientSocketId)
         .emit("logout", "You have been removed from the room.");
 
-      // Remove the first client from the room
       global.socketIo.sockets.sockets.get(firstClientSocketId).leave(userId);
     }
   }

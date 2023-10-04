@@ -8,6 +8,7 @@ const {
   insertTeamPlayerQuery,
   deleteTeamPlayerByPlayerIdQuery,
 } = require("../repository/TableTeamPlayer");
+const { getAllPlayersByTeamIdQuery } = require("../repository/TableTeams");
 const { storeImage, removeImage } = require("../utilities/Images");
 
 const allPlayerService = async () => {
@@ -20,6 +21,19 @@ const allPlayerTypeService = async () => {
 
 const allBowlingTypeService = async () => {
   return global.tblBowlingTypes;
+};
+
+const allPlayerByTeamService = async (request, fastify) => {
+  const { teamId } = request.body;
+
+  const validateTeamId = global.tblTeams.find((item) => item.teamId === teamId);
+  if (!validateTeamId) {
+    throw new Error("TeamId is not valid");
+  }
+
+  const result = await getAllPlayersByTeamIdQuery(teamId, fastify, request);
+
+  return result;
 };
 
 const playerByIdService = async (request, fastify) => {
@@ -272,4 +286,5 @@ module.exports = {
   deletePlayerService,
   allBowlingTypeService,
   allPlayerTypeService,
+  allPlayerByTeamService,
 };

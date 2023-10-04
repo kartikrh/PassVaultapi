@@ -1,4 +1,7 @@
-const { authorize } = require("../../../controller/middleware");
+const {
+  authorize,
+  checkPermission,
+} = require("../../../controller/middleware");
 const {
   getAllPaneltyRun,
   getPaneltyRunById,
@@ -11,23 +14,51 @@ const { PaneltyRuns } = require("../../../swaggerSchema/groupTags/schema");
 module.exports = async (fastify, opts) => {
   fastify.post("/all", {
     schema: PaneltyRuns.getAll.schema,
-    preHandler: (request, reply) => authorize(request, reply, fastify),
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Panelty Runs",
+          mode: "view",
+        }),
+    ],
     handler: (request, reply) => getAllPaneltyRun(request, reply, fastify),
   });
 
   fastify.post("/byId", {
     schema: PaneltyRuns.getById.schema,
-    preHandler: (request, reply) => authorize(request, reply, fastify),
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Panelty Runs",
+          mode: "view",
+        }),
+    ],
     handler: (request, reply) => getPaneltyRunById(request, reply, fastify),
   });
   fastify.post("/save", {
     schema: PaneltyRuns.save.schema,
-    preHandler: (request, reply) => authorize(request, reply, fastify),
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Panelty Runs",
+          mode: request.body.paneltyRunId === "0" ? "add" : "edit",
+        }),
+    ],
     handler: (request, reply) => savePaneltyRun(request, reply, fastify),
   });
   fastify.post("/delete", {
     schema: PaneltyRuns.delete.schema,
-    preHandler: (request, reply) => authorize(request, reply, fastify),
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Panelty Runs",
+          mode: "delete",
+        }),
+    ],
     handler: (request, reply) => deletePaneltyRun(request, reply, fastify),
   });
 };

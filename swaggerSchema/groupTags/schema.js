@@ -903,12 +903,14 @@ const PaneltyRuns = {
   getAll: {
     schema: {
       tags: ["Panelty Runs"],
+      security: [{ bearerAuth: [] }],
       description: "get all Panelty Runs",
     },
   },
   getById: {
     schema: {
       tags: ["Panelty Runs"],
+      security: [{ bearerAuth: [] }],
       description: "get Panelty Runs by id",
       body: {
         type: "object",
@@ -922,6 +924,7 @@ const PaneltyRuns = {
   save: {
     schema: {
       tags: ["Panelty Runs"],
+      security: [{ bearerAuth: [] }],
       description: "save Panelty Runs",
       body: {
         type: "object",
@@ -938,6 +941,7 @@ const PaneltyRuns = {
   delete: {
     schema: {
       tags: ["Panelty Runs"],
+      security: [{ bearerAuth: [] }],
       description: "delete Panelty Runs",
       body: {
         type: "object",
@@ -1060,7 +1064,7 @@ const MatchType = {
         properties: {
           matchTypeId: { type: "string" },
           matchType: { type: "string" },
-          matchRefType: { type: "integer" },
+          matchRefType: { type: "string" },
           noOfIningsPerSide: { type: "integer" },
           noOfDays: { type: "integer" },
           noOfPlayer: { type: "integer" },
