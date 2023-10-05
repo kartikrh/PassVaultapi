@@ -1187,6 +1187,67 @@ const User = {
   },
 };
 
+const Config = {
+  getAll: {
+    schema: {
+      tags: ["Config"],
+      description: "get all Config",
+      security: [{ bearerAuth: [] }],
+    },
+  },
+  getById: {
+    schema: {
+      tags: ["Config"],
+      description: "get Config by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+        },
+        required: ["id"],
+      },
+    },
+  },
+  save: {
+    schema: {
+      tags: ["Config"],
+      description: "save Config",
+      security: [{ bearerAuth: [] }],
+
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          key: { type: "string" },
+          value: { type: "string" },
+          desc: { type: "string" },
+          isActive: { type: "boolean" },
+        },
+        required: ["id"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["Config"],
+      description: "delete Config",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id: {
+            type: "array",
+            items: { type: "string" },
+            minItems: 1,
+          },
+        },
+        required: ["id"],
+      },
+    },
+  },
+};
+
 module.exports = {
   Auth,
   Tabs,
@@ -1204,4 +1265,5 @@ module.exports = {
   Player,
   MatchType,
   User,
+  Config,
 };

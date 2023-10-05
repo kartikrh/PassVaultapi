@@ -17,6 +17,7 @@ const {
 } = require("../repository/TablePlayer");
 const { getAllMatchTypeQuery } = require("../repository/TableMatchType");
 const { getAllUsersQuery } = require("../repository/TableUser");
+const { getAllCongigQuery } = require("../repository/TableConfig");
 
 const fetchAllDataFromDb = async (fastify, reply) => {
   try {
@@ -37,6 +38,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const getAllUsers = await getAllUsersQuery(fastify);
     const getAllPlayerTypes = await getAllPlayerTypeQuery(fastify);
     const getAllBowlingTypes = await getAllBowlingTypeQuery(fastify);
+    const getAllConfigs = await getAllCongigQuery(fastify);
 
     global.tblTabs = getAllTabs;
     global.tblRoles = getAllRoles;
@@ -55,6 +57,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblUsers = getAllUsers;
     global.tblPlayerTypes = getAllPlayerTypes;
     global.tblBowlingTypes = getAllBowlingTypes;
+    global.tblConfigs = getAllConfigs;
 
     console.log("Okkkk");
 
