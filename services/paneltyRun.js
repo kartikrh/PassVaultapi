@@ -37,7 +37,7 @@ const updatePaneltyRunService = async (request, fastify) => {
   }
 
   const body = {
-    run: request.body.run || checkId.run,
+    run: checkId.run,
     desc: request.body.desc || checkId.desc,
     paneltyId: request.body.paneltyId,
     userId: request.userTokenInfo.WrUserId,
@@ -46,6 +46,9 @@ const updatePaneltyRunService = async (request, fastify) => {
 
   if ("isActive" in request.body) {
     body.isActive = request.body.isActive;
+  }
+  if ("run" in request.body) {
+    body.run = request.body.run;
   }
 
   await updatePaneltyRunQuery(body, fastify, request);
