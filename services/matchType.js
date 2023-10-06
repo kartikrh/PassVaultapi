@@ -17,8 +17,49 @@ const matchTypeByIdService = async (request) => {
 };
 
 const createMatchTypeService = async (request, fastify) => {
+  const validateMatchType = global.tblMatchTypes.find(
+    (item) =>
+      item.matchType.toLowerCase() === request.body.matchType.toLowerCase()
+  );
+
+  if (validateMatchType) {
+    throw new Error("MatchType already exist");
+  }
+
   const data = await insertMatchTypeQuery(
     { ...request.body, userId: request.userTokenInfo.WrUserId },
+    fastify,
+    request
+  );
+
+  global.tblMatchTypes.push(data);
+  return data;
+};
+
+const cloneMatchTypeService = async (request, fastify) => {
+  const checkId = global.tblMatchTypes.find(
+    (item) => item.matchTypeId === request.body.matchTypeId
+  );
+
+  if (!checkId) {
+    throw new Error("MatchType with this id not Found");
+  }
+
+  const validateMatchType = global.tblMatchTypes.find(
+    (item) =>
+      item.matchType.toLowerCase() === request.body.matchType.toLowerCase()
+  );
+
+  if (validateMatchType) {
+    throw new Error("MatchType already exist");
+  }
+
+  const data = await insertMatchTypeQuery(
+    {
+      ...checkId,
+      matchType: request.body.matchType,
+      userId: request.userTokenInfo.WrUserId,
+    },
     fastify,
     request
   );
@@ -34,6 +75,18 @@ const updateMatchTypeService = async (request, fastify) => {
 
   if (!checkId) {
     throw new Error("MatchType with this id not Found");
+  }
+
+  if (request.body.matchTypeName) {
+    const validateMatchType = global.tblMatchTypes.find(
+      (item) =>
+        item.matchType.toLowerCase() === request.body.matchType.toLowerCase() &&
+        item.matchTypeId !== request.body.matchTypeId
+    );
+
+    if (validateMatchType) {
+      throw new Error("MatchType already exist");
+    }
   }
 
   const data = await updateMatchTypeQuery(
@@ -85,4 +138,5 @@ module.exports = {
   matchTypeByIdService,
   saveMatchTypeService,
   deleteMatchTypeService,
+  cloneMatchTypeService,
 };

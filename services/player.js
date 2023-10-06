@@ -86,6 +86,15 @@ const insertPlayerService = async (request, fastify) => {
     }
   }
 
+  const validatePlayerName = global.tblPlayers.find(
+    (item) =>
+      item.playerName.toLowerCase() === request.body.playerName.toLowerCase()
+  );
+
+  if (validatePlayerName) {
+    throw new Error("Player Name already exist");
+  }
+
   if (request.body.image && request.body.image.length) {
     const data = await storeImage(request.body.image[0]);
     request.body.image = data;
@@ -131,6 +140,16 @@ const updatePlayerService = async (request, fastify) => {
   );
   if (!checkPlayerId) {
     throw new Error("Player with this id not Found");
+  }
+
+  const validatePlayerName = global.tblPlayers.find(
+    (item) =>
+      item.playerName.toLowerCase() === request.body.playerName.toLowerCase() &&
+      item.playerId !== request.body.playerId
+  );
+
+  if (validatePlayerName) {
+    throw new Error("Player Name already exist");
   }
 
   const body = {

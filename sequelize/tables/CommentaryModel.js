@@ -1,0 +1,143 @@
+const { DataTypes } = require("sequelize");
+
+module.exports = (sequelize) => {
+  const CommentaryModel = sequelize.define(
+    "tblCommentary",
+    {
+      wrCommentaryId: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        allowNull: false,
+        autoIncrement: true,
+      },
+      wrMatchTypeId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      wrEventTypeId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      wrCompetitionId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      wrEventId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      wrEventDate: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+      wrEventName: {
+        type: DataTypes.STRING(400),
+        allowNull: true,
+      },
+      wrEventRefId: {
+        type: DataTypes.STRING(50),
+        allowNull: true,
+      },
+      wrTeam1Id: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      wrTeam2Id: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      wrLocation: {
+        type: DataTypes.STRING(200),
+        allowNull: true,
+      },
+      wrWeather: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      wrPitch: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      wrHomeSideTeam: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      wrTossWonBy: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      wrChoseTo: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      wrWinnerId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      wrWinnerName: {
+        type: DataTypes.STRING(400),
+        allowNull: true,
+      },
+      wrIsViewTable: {
+        type: DataTypes.BOOLEAN,
+        allowNull: true,
+      },
+      wrDisplayStatus: {
+        type: DataTypes.STRING(400),
+        allowNull: true,
+      },
+      wrCommentaryStatus: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      wrRmk: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
+      wrCommentaryUserId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      wrUpdateTime: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+      wrCreatedDate: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+      wrModifyDate: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+      wrIsMatchDraw: {
+        type: DataTypes.BOOLEAN,
+        allowNull: true,
+      },
+      wrTarget: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      wrMarketID: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      wrTpId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      isSignalROn: {
+        type: DataTypes.BOOLEAN,
+        allowNull: true,
+      },
+      isMatchTypeUpdated: {
+        type: DataTypes.BOOLEAN,
+        allowNull: true,
+      },
+    },
+    {
+      timestamps: false,
+    }
+  );
+  return CommentaryModel;
+};

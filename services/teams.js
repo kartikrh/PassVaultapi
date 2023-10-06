@@ -43,6 +43,15 @@ const createTeamService = async (request, fastify) => {
     }
   }
 
+  const validateTeamName = global.tblTeams.find(
+    (item) =>
+      item.teamName.toLowerCase() === request.body.teamName.toLowerCase()
+  );
+
+  if (validateTeamName) {
+    throw new Error("TeamName already exist");
+  }
+
   if (request.body.image && request.body.image.length) {
     request.body.image = await storeImage(request.body.image[0]);
   }
@@ -91,6 +100,16 @@ const updateTeamService = async (request, fastify) => {
     userId: request.userTokenInfo.WrUserId,
     teamId: request.body.teamId,
   };
+
+  const validateTeamName = global.tblTeams.find(
+    (item) =>
+      item.teamName.toLowerCase() === body.teamName.toLowerCase() &&
+      item.teamId !== request.body.teamId
+  );
+
+  if (validateTeamName) {
+    throw new Error("TeamName already exist");
+  }
 
   if (request.body.eventTypeId) {
     const validateEventId = global.tblEventTypes.find(

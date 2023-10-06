@@ -7,6 +7,7 @@ const {
   getMatchTypeId,
   saveMatchType,
   deleteMatchType,
+  cloneMatchType,
 } = require("../../../controller/users/admin/matchType");
 const { MatchType } = require("../../../swaggerSchema/groupTags/schema");
 
@@ -42,11 +43,24 @@ module.exports = async (fastify, opts) => {
       (request, reply) => authorize(request, reply, fastify),
       (request, reply) =>
         checkPermission(request, reply, fastify, {
-          tabName: "Match Types",          
+          tabName: "Match Types",
           mode: request.body.matchTypeId === "0" ? "add" : "edit",
         }),
     ],
     handler: (request, reply) => saveMatchType(request, reply, fastify),
+  });
+
+  fastify.post("/clone", {
+    schema: MatchType.clone.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Match Types",
+          mode: "add",
+        }),
+    ],
+    handler: (request, reply) => cloneMatchType(request, reply, fastify),
   });
   fastify.post("/delete", {
     schema: MatchType.delete.schema,

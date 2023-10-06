@@ -3,6 +3,7 @@ const {
   matchTypeByIdService,
   saveMatchTypeService,
   deleteMatchTypeService,
+  cloneMatchTypeService,
 } = require("../../../../services/matchType");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -42,6 +43,16 @@ const saveMatchType = async (request, reply, fastify) => {
     reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
   }
 };
+
+const cloneMatchType = async (request, reply, fastify) => {
+  try {
+    const result = await cloneMatchTypeService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/cloneMatchType", request);
+    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+  }
+};
 const deleteMatchType = async (request, reply, fastify) => {
   try {
     const result = await deleteMatchTypeService(request, fastify);
@@ -57,4 +68,5 @@ module.exports = {
   getMatchTypeId,
   saveMatchType,
   deleteMatchType,
+  cloneMatchType,
 };
