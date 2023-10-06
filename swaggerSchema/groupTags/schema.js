@@ -1054,6 +1054,21 @@ const MatchType = {
       },
     },
   },
+  clone: {
+    schema: {
+      tags: ["Match Type"],
+      security: [{ bearerAuth: [] }],
+      description: "get Match Type by id",
+      body: {
+        type: "object",
+        properties: {
+          matchTypeId: { type: "string" },
+          matchType: { type: "string" },
+        },
+        required: ["matchTypeId", "matchType"],
+      },
+    },
+  },
   save: {
     schema: {
       tags: ["Match Type"],
@@ -1248,6 +1263,91 @@ const Config = {
   },
 };
 
+const Commentary = {
+  getAll: {
+    schema: {
+      tags: ["Commentary"],
+      description: "get all Commentary",
+      security: [{ bearerAuth: [] }],
+    },
+  },
+  getById: {
+    schema: {
+      tags: ["Commentary"],
+      description: "get Commentary by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "string" },
+        },
+        required: ["commentaryId"],
+      },
+    },
+  },
+  save: {
+    schema: {
+      tags: ["Commentary"],
+      description: "save Commentary",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "string" },
+          eventTypeId: { type: "string" },
+          matchTypeId: { type: "string" },
+          competitionId: { type: "integer" },
+          eventId: { type: "integer" },
+          eventDate: { type: "string" },
+          eventName: { type: "string" },
+          eventRefId: { type: "string" },
+          team1Id: { type: "string" },
+          team2Id: { type: "string" },
+          location: { type: "string" },
+          weather: { type: "integer" },
+          pitch: { type: "integer" },
+          homeSideTeam: { type: "string" },
+          tossWonBy: { type: "string" },
+          choseTo: { type: "integer" },
+          winnerId: { type: "string" },
+          winnerName: { type: "string" },
+          isViewTable: { type: "boolean" },
+          displayStatus: { type: "string" },
+          commentaryStatus: { type: "integer" },
+          rmk: { type: "string" },
+          commentaryUserId: { type: "integer" },
+          updateTime: { type: "string" },
+          isMatchDraw: { type: "boolean" },
+          target: { type: "integer" },
+          marketId: { type: "integer" },
+          tpId: { type: "integer" },
+          isSignalROn: { type: "boolean" },
+          isMatchTypeUpdated: { type: "boolean" },
+        },
+        required: ["commentaryId"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["Commentary"],
+      description: "delete Commentary",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: {
+            type: "array",
+            items: { type: "string" },
+            minItems: 1,
+          },
+        },
+        required: ["commentaryId"],
+      },
+    },
+  },
+};
+
 module.exports = {
   Auth,
   Tabs,
@@ -1266,4 +1366,5 @@ module.exports = {
   MatchType,
   User,
   Config,
+  Commentary,
 };
