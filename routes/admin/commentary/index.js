@@ -6,6 +6,7 @@ const {
   getAllCommentaries,
   getCommentaryById,
   addCommentary,
+  deleteCommentary,
 } = require("../../../controller/users/admin/commentary/commentary");
 const { Commentary } = require("../../../swaggerSchema/groupTags/schema");
 
@@ -47,16 +48,16 @@ module.exports = async (fastify, opts) => {
     ],
     handler: (request, reply) => addCommentary(request, reply, fastify),
   });
-  //   fastify.post("/delete", {
-  //     schema: Commentary.delete.schema,
-  //     preHandler: [
-  //       (request, reply) => authorize(request, reply, fastify),
-  //       //   (request, reply, done) =>
-  //       //     checkPermission(request, reply, fastify, {
-  //       //       tabName: "Config",
-  //       //       mode: "delete",
-  //       //     }),
-  //     ],
-  //     handler: (request, reply) => deleteConfig(request, reply, fastify),
-  //   });
+  fastify.post("/delete", {
+    schema: Commentary.delete.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      //   (request, reply, done) =>
+      //     checkPermission(request, reply, fastify, {
+      //       tabName: "Config",
+      //       mode: "delete",
+      //     }),
+    ],
+    handler: (request, reply) => deleteCommentary(request, reply, fastify),
+  });
 };
