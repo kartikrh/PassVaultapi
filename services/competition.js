@@ -66,6 +66,8 @@ const updateCompititionService = async (request, fastify) => {
     refId: request.body.refId || validateId.refId,
     image: validateId.image,
     isActive: validateId.isActive,
+    eventType: validateId.eventType,
+    displayOrder: validateId.displayOrder,
   };
 
   if ("isActive" in request.body) {
@@ -81,6 +83,7 @@ const updateCompititionService = async (request, fastify) => {
       throw new Error("EventType with this id not Found");
     } else {
       data.eventTypeId = request.body.eventTypeId;
+      data.eventType = validateEventTypeId.eventType;
     }
   }
 
@@ -90,7 +93,7 @@ const updateCompititionService = async (request, fastify) => {
     }
 
     const image = await storeImage(request.body.image[0]);
-    request.body.image = image;
+    data.image = image;
   }
 
   await updateCompititionQuery(data, fastify, request);
