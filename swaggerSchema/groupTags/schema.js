@@ -1420,6 +1420,71 @@ const Compitition = {
   },
 };
 
+const Event = {
+  getAll: {
+    schema: {
+      tags: ["Event"],
+      description: "get all Event",
+      security: [{ bearerAuth: [] }],
+    },
+  },
+  getById: {
+    schema: {
+      tags: ["Event"],
+      description: "get Event by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          eventId: { type: "string" },
+        },
+        required: ["eventId"],
+      },
+    },
+  },
+  save: {
+    schema: {
+      tags: ["Event"],
+      description: "save Event",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          eventId: { type: "string" },
+          eventTypeId: { type: "string" },
+          competitionId: { type: "string" },
+          eventDate: { type: "string" },
+          eventName: { type: "string" },
+          refId: { type: "string" },
+          isActive: { type: "boolean" },
+          countryCode: { type: "string" },
+          timeZone: { type: "string" },
+          venue: { type: "string" },
+        },
+        required: ["eventId"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["Event"],
+      description: "delete Event",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          eventId: {
+            type: "array",
+            items: { type: "string" },
+            minItems: 1,
+          },
+        },
+        required: ["eventId"],
+      },
+    },
+  },
+};
+
 module.exports = {
   Auth,
   Tabs,
@@ -1440,4 +1505,5 @@ module.exports = {
   Config,
   Commentary,
   Compitition,
+  Event,
 };

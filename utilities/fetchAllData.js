@@ -20,6 +20,7 @@ const { getAllUsersQuery } = require("../repository/TableUser");
 const { getAllCongigQuery } = require("../repository/TableConfig");
 const { getAllCommentaryQuery } = require("../repository/TableCommentary");
 const { getAllCompititionQuery } = require("../repository/TableCompitition");
+const { getAllEventsQuery } = require("../repository/TableEvent");
 
 const fetchAllDataFromDb = async (fastify, reply) => {
   try {
@@ -43,6 +44,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const getAllConfigs = await getAllCongigQuery(fastify);
     const getAllCommentary = await getAllCommentaryQuery(fastify);
     const getAllCompetition = await getAllCompititionQuery(fastify);
+    const getAllEvents = await getAllEventsQuery(fastify);
 
     global.tblTabs = getAllTabs;
     global.tblRoles = getAllRoles;
@@ -64,6 +66,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblConfigs = getAllConfigs;
     global.tblCommentaries = getAllCommentary;
     global.tblCompetitions = getAllCompetition;
+    global.tblEvents = getAllEvents;
 
     console.log("Okkkk");
 

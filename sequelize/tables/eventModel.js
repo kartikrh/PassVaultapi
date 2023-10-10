@@ -54,7 +54,7 @@ module.exports = (sequelize) => {
         type: DataTypes.STRING(10),
         allowNull: true,
       },
-      wrTimeZome: {
+      wrTimeZone: {
         type: DataTypes.STRING(10),
         allowNull: true,
       },

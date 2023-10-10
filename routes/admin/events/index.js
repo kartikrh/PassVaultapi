@@ -1,0 +1,63 @@
+const {
+  authorize,
+  checkPermission,
+} = require("../../../controller/middleware");
+const {
+  deleteEvent,
+  getAllEvents,
+  saveEvent,
+  getEventId,
+} = require("../../../controller/users/admin/event");
+const { Event } = require("../../../swaggerSchema/groupTags/schema");
+
+module.exports = async (fastify, opts) => {
+  fastify.post("/all", {
+    schema: Event.getAll.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Events",
+          mode: "view",
+        }),
+    ],
+    handler: (request, reply) => getAllEvents(request, reply, fastify),
+  });
+
+  fastify.post("/byId", {
+    schema: Event.getById.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Events",
+          mode: "view",
+        }),
+    ],
+    handler: (request, reply) => getEventId(request, reply, fastify),
+  });
+  fastify.post("/save", {
+    schema: Event.save.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Events",
+          mode: request.body.eventId === "0" ? "add" : "edit",
+        }),
+    ],
+    handler: (request, reply) => saveEvent(request, reply, fastify),
+  });
+  fastify.post("/delete", {
+    schema: Event.delete.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Events",
+          mode: "delete",
+        }),
+    ],
+    handler: (request, reply) => deleteEvent(request, reply, fastify),
+  });
+};
