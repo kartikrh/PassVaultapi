@@ -54,6 +54,8 @@ module.exports = async function (fastify, opts) {
       require("./sequelize/tables/CommentaryModel")(fastify.db);
       require("./sequelize/tables/commentaryTeamModel")(fastify.db);
       require("./sequelize/tables/commentaryPlayerModel")(fastify.db);
+      require("./sequelize/tables/compititionModel")(fastify.db);
+      require("./sequelize/tables/eventModel")(fastify.db);
       try {
         await fastify.db.sync();
         await featchData(fastify);

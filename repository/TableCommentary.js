@@ -26,13 +26,13 @@ const insertCommentaryQuery = async (request, fastify) => {
     const result = await fastify.db.query(
       `
       with insert_data as(
-        insert into "tblCommentaries" ("wrEventTypeId","wrMatchTypeId","wrCompetitionId","wrEventId","wrEventDate","wrEventName","wrEventRefId","wrTeam1Id","wrTeam2Id","wrLocation","wrWeather","wrPitch","wrDisplayStatus","wrTarget","wrMarketID","wrTpId","isSignalROn","isMatchTypeUpdated" , "wrCreatedDate") values (
+        insert into "tblCommentaries" ("wrEventTypeId","wrMatchTypeId","wrCompetitionId","wrEventId","wrEventDate","wrEventName","wrEventRefId","wrTeam1Id","wrTeam2Id","wrLocation","wrWeather","wrPitch","wrDisplayStatus","wrTarget","wrMarketID","wrTpId","isSignalROn","isMatchTypeUpdated" , "wrCreatedBy" , "wrCreatedDate") values (
           (select "wrKey" from "tblEncryptedData" where "wrValue" = $1),
           (select "wrKey" from "tblEncryptedData" where "wrValue" = $2),
           $3,$4,$5,$6,$7,
           (select "wrKey" from "tblEncryptedData" where "wrValue" = $8),
           (select "wrKey" from "tblEncryptedData" where "wrValue" = $9),
-          $10,$11,$12,$13,$14,$15,$16,$17,$18,now()
+          $10,$11,$12,$13,$14,$15,$16,$17,$18,$19,now()
         ) returning *         
       )
 
@@ -68,6 +68,7 @@ const insertCommentaryQuery = async (request, fastify) => {
           data.tpId || null,
           data.isSignalROn || false,
           data.isMatchTypeUpdated || false,
+          request.userTokenInfo.WrUserId,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
