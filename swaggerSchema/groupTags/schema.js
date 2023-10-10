@@ -1360,6 +1360,66 @@ const Commentary = {
   },
 };
 
+const Compitition = {
+  getAll: {
+    schema: {
+      tags: ["Compitition"],
+      description: "get all Compitition",
+      security: [{ bearerAuth: [] }],
+    },
+  },
+  getById: {
+    schema: {
+      tags: ["Compitition"],
+      description: "get Compitition by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionId: { type: "string" },
+        },
+        required: ["competitionId"],
+      },
+    },
+  },
+  save: {
+    schema: {
+      tags: ["Compitition"],
+      description: "save Compitition",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionId: { type: "string" },
+          competition: { type: "string" },
+          eventTypeId: { type: "string" },
+          refId: { type: "string" },
+          isActive: { type: "boolean" },
+        },
+        required: ["competitionId"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["Compitition"],
+      description: "delete Compitition",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionId: {
+            type: "array",
+            items: { type: "string" },
+            minItems: 1,
+          },
+        },
+        required: ["competitionId"],
+      },
+    },
+  },
+};
+
 module.exports = {
   Auth,
   Tabs,
@@ -1379,4 +1439,5 @@ module.exports = {
   User,
   Config,
   Commentary,
+  Compitition,
 };
