@@ -61,4 +61,16 @@ module.exports = async (fastify, opts) => {
     ],
     handler: (request, reply) => deleteCompetition(request, reply, fastify),
   });
+  fastify.post("/changeDisplayOrder", {
+    schema: Compitition.changeDispalyOrder.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "competition",
+          mode: "edit",
+        }),
+    ],
+    handler: (request, reply) => updateDisplayOrder(request, reply, fastify),
+  });
 };

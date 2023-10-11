@@ -2,6 +2,8 @@ const {
   insertCompetitionQuery,
   deleteCompetitionQuery,
   updateCompititionQuery,
+  getAllCompititionQuery,
+  updateDisplayOrderQuery,
 } = require("../repository/TableCompitition");
 const { storeImage, removeImage } = require("../utilities/Images");
 
@@ -133,9 +135,38 @@ const deleteCompetitionService = async (request, fastify) => {
   return `Competition(s) deleted successfully`;
 };
 
+const updateDisplayOrderService = async (request, fastify) => {
+  const competitionIds = [...request.body.map((item) => item.competitionId)];
+
+  const allCompetitionsData = global.tblCompetitions.filter((item) =>
+    competitionIds.includes(item.competitionId)
+  );
+
+  if (allCompetitionsData.length !== competitionIds.length) {
+    throw new Error("Invalid competition id");
+  }
+
+  const checkALlEventTypeId = allCompetitionsData.every(
+    (item) => item.eventTypeId === allCompetitionsData[0].eventTypeId
+  );
+
+  if (!checkALlEventTypeId) {
+    throw new Error("All competitions should have same eventTypeId");
+  }
+
+  for (const item of request.body) {
+    await updateDisplayOrderQuery(item, fastify, request);
+  }
+
+  global.tblCompetitions = await getAllCompititionQuery(fastify);
+
+  return "Display order updated successfully";
+};
+
 module.exports = {
   allCompetitionService,
   competitionByIdService,
   saveCompetitionService,
   deleteCompetitionService,
+  updateDisplayOrderService,
 };

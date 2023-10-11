@@ -1418,6 +1418,24 @@ const Compitition = {
       },
     },
   },
+  changeDispalyOrder: {
+    schema: {
+      tags: ["Compitition"],
+      description: "change display order",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            competitionId: { type: "string" },
+            displayOrder: { type: "integer" },
+          },
+        },
+        minItems: 1,
+      },
+    },
+  },
 };
 
 const Event = {
