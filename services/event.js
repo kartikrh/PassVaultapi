@@ -58,6 +58,8 @@ const updateEventService = async (request, fastify) => {
     countryCode: request.body.countryCode || checkId.countryCode,
     timeZone: request.body.timeZone || checkId.timeZone,
     venue: request.body.venue || checkId.venue,
+    eventType: checkId.eventType,
+    competition: checkId.competition,
   };
 
   if ("isActive" in request.body) {
@@ -73,6 +75,7 @@ const updateEventService = async (request, fastify) => {
       throw new Error("Event Type Id not found");
     } else {
       data.eventTypeId = request.body.eventTypeId;
+      data.eventType = validateEventTypeId.eventType;
     }
   }
 
@@ -85,6 +88,7 @@ const updateEventService = async (request, fastify) => {
       throw new Error("Competition Id not found");
     } else {
       data.competitionId = request.body.competitionId;
+      data.competition = validateCompetitionId.competition;
     }
   }
 
