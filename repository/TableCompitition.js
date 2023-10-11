@@ -142,9 +142,32 @@ const updateCompititionQuery = async (data, fastify, request) => {
   }
 };
 
+const updateDisplayOrderQuery = async (data, fastify, request) => {
+  try {
+    return await fastify.db.query(
+      `
+        update "tblCompetitions" set "wrDisplayOrder" = $2 where "wrCompetitionId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)
+        `,
+      {
+        bind: [data.competitionId, data.displayOrder],
+        type: fastify.db.QueryTypes.UPDATE,
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCompitition/updateDisplayOrderQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllCompititionQuery,
   insertCompetitionQuery,
   deleteCompetitionQuery,
   updateCompititionQuery,
+  updateDisplayOrderQuery,
 };

@@ -3,6 +3,7 @@ const {
   competitionByIdService,
   saveCompetitionService,
   deleteCompetitionService,
+  updateDisplayOrderService,
 } = require("../../../../services/competition");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
