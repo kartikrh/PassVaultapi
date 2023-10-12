@@ -13,6 +13,7 @@ const {
   updateUserQuery,
   deleteUserQuery,
   getOriginalIdFromEncryptedId,
+  updateUserPasswordQuery,
 } = require("../repository/TableUser");
 const { deviceInfo, encrypt, decrypt } = require("../utilities/index");
 
@@ -69,7 +70,7 @@ async function signInUserServices(request, fastify) {
   };
   const token = jwt.sign(tokenPayload, process.env.SECRET_KEY_TOKEN, options);
 
-  return { token };
+  return { token, userName: user.WrUserName };
 }
 
 async function generateEncryptionService(request, fastify) {
@@ -269,6 +270,39 @@ const deleteUserService = async (request, fastify) => {
   return "User(s) deleted successfully";
 };
 
+const changeUserPasswordService = async (request, fastify) => {
+  const { oldPassword, newPassword } = request.body;
+
+  const findUser = global.tblUsers.find(
+    (user) => user.userId === request.userTokenInfo.WrUserId
+  );
+
+  if (!findUser) {
+    throw new Error("Invalid User");
+  }
+
+  const decryptedPassword = decrypt(findUser.password);
+
+  if (decryptedPassword !== oldPassword) {
+    throw new Error("Old Password is incorrect");
+  }
+
+  const body = {
+    userId: request.userTokenInfo.WrUserId,
+    password: encrypt(newPassword),
+  };
+
+  await updateUserPasswordQuery(body, fastify, request);
+
+  const index = global.tblUsers.findIndex(
+    (user) => user.userId === request.userTokenInfo.WrUserId
+  );
+
+  global.tblUsers[index].password = body.password;
+
+  return "Password changed successfully";
+};
+
 module.exports = {
   signUpUserService,
   signInUserServices,
@@ -278,4 +312,5 @@ module.exports = {
   getUserByIdService,
   saveUserService,
   deleteUserService,
+  changeUserPasswordService,
 };
