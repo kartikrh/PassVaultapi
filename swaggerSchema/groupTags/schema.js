@@ -57,6 +57,21 @@ const Auth = {
       },
     },
   },
+  updatePassword: {
+    schema: {
+      tags: ["Auth"],
+      description: "Update Password",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          oldPassword: { type: "string" },
+          newPassword: { type: "string" },
+        },
+        required: ["oldPassword", "newPassword"],
+      },
+    },
+  },
 };
 
 const Tabs = {

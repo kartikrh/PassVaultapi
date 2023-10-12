@@ -8,6 +8,7 @@ const {
   getUserByIdService,
   saveUserService,
   deleteUserService,
+  changeUserPasswordService,
 } = require("../../services/user");
 const { errorLogger } = require("../../utilities/logger");
 const fetchAllDataFromDb = require("../../utilities/fetchAllData");
@@ -108,6 +109,21 @@ const deleteUser = async (request, reply, fastify) => {
   }
 };
 
+const updateUserPassword = async (request, reply, fastify) => {
+  try {
+    const result = await changeUserPasswordService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      commonPath + "/updateUserPassword",
+      request
+    );
+    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+  }
+};
+
 module.exports = {
   signUpUser,
   signInUser,
@@ -118,4 +134,5 @@ module.exports = {
   getUserById,
   saveUser,
   deleteUser,
+  updateUserPassword,
 };

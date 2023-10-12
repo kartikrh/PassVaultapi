@@ -284,6 +284,26 @@ const deleteUserQuery = async (request, fastify) => {
   }
 };
 
+const updateUserPasswordQuery = async (body, fastify, request) => {
+  try {
+    return await fastify.db.query(
+      `UPDATE "tblUsers" set "WrPassword" = $1 where "WrUserId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $2)`,
+      {
+        type: QueryTypes.UPDATE,
+        bind: [body.password, body.userId],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableUser/updateUserPasswordQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   signInUser,
   signUpUser,
@@ -296,4 +316,5 @@ module.exports = {
   updateUserQuery,
   deleteUserQuery,
   getOriginalIdFromEncryptedId,
+  updateUserPasswordQuery,
 };
