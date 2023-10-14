@@ -171,11 +171,10 @@ const saveTeamService = async (request, fastify) => {
 const deleteTeamService = async (request, fastify) => {
   const { teamId } = request.body;
 
-  for (const team of teamId) {
-    //validate team
-  }
-
   await deleteTeamQuery(teamId, fastify, request);
+  for (const team of teamId) {
+    await deleteTeamPlayerByTeamIdQuery(team, fastify, request);
+  }
 
   global.tblTeams = global.tblTeams.filter(
     (item) => !teamId.includes(item.teamId)

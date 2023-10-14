@@ -285,11 +285,11 @@ const savePlayerService = async (request, fastify) => {
 const deletePlayerService = async (request, fastify) => {
   const { playerId } = request.body;
 
-  for (let id of playerId) {
-    //validate id if required
-  }
-
   await deletePlayerQuery(playerId, fastify, request);
+
+  for (const id of playerId) {
+    await deleteTeamPlayerByPlayerIdQuery(id, fastify, request);
+  }
 
   global.tblPlayers = global.tblPlayers.filter(
     (item) => !playerId.includes(item.playerId)

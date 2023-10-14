@@ -22,6 +22,15 @@ const eventTypeByIdService = async (request) => {
 const createEventTypeService = async (request, fastify) => {
   const { image } = request.body;
 
+  const validateEventTypeName = global.tblEventTypes.find(
+    (item) =>
+      item?.eventType?.toLowerCase() === request?.body?.eventType?.toLowerCase()
+  );
+
+  if (validateEventTypeName) {
+    throw new Error("EventType already exists");
+  }
+
   if (image && image.length > 0) {
     const data = await storeImage(image[0]);
     request.body.image = data;
@@ -63,6 +72,16 @@ const updateEventTypeService = async (request, fastify) => {
 
   if ("isHighlight" in request.body) {
     data.isHighlight = request.body.isHighlight;
+  }
+
+  const validateEventTypeName = global.tblEventTypes.find(
+    (item) =>
+      item?.eventType?.toLowerCase() === data?.eventType?.toLowerCase() &&
+      item.eventTypeId !== data.eventTypeId
+  );
+
+  if (validateEventTypeName) {
+    throw new Error("EventType already exists");
   }
 
   if (request.body.image && request.body.image.length > 0) {
