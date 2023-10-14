@@ -91,7 +91,7 @@ const insertEventQuery = async (request, fastify) => {
           data.eventName,
           data.eventDate ? new Date(data.eventDate) : null,
           data.refId,
-          data.isActive,
+          data.isActive || false,
           request.userTokenInfo.WrUserId,
           data.countryCode,
           data.timeZone,
