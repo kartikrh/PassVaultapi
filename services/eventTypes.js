@@ -128,12 +128,12 @@ const deleteEventTypeService = async (request, fastify) => {
     );
 
     if (validateIdInPlayer || validateIdInTeam) {
-      const eventType = global.tblEventTypes.find(
+      const eventTypeData = global.tblEventTypes.find(
         (item) => item.eventTypeId === eventType
       );
 
       throw new Error(
-        `EventType ${eventType.eventType} is used in Player or Team`
+        `EventType ${eventTypeData.eventType} is used in Player or Team`
       );
     }
   }
