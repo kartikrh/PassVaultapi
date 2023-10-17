@@ -63,7 +63,7 @@ const insertCommentaryQuery = async (request, fastify) => {
           data.weather || null,
           data.pitch || null,
           data.displayStatus || null,
-          data.target || null,
+          data.target || 0,
           data.marketId || null,
           data.tpId || null,
           data.isSignalROn || false,
@@ -113,11 +113,11 @@ const insertCommentaryTeams = async (request, fastify) => {
         bind: [
           data.commentaryId,
           data.team1Id,
-          data.team1Captain,
-          data.team1Kipper,
+          data.team1Captain || null,
+          data.team1Kipper || null,
           data.team2Id,
-          data.team2Captain,
-          data.team2Kipper,
+          data.team2Captain || null,
+          data.team2Kipper || null,
         ],
       }
     );

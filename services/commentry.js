@@ -77,7 +77,11 @@ const createCommentaryService = async (request, fastify) => {
     }
   }
 
-  if (request.body.team1Id === request.body.team2Id) {
+  if (
+    request.body.team1Id &&
+    request.body.team2Id &&
+    request.body.team1Id === request.body.team2Id
+  ) {
     throw new Error("Team1 and Team2 can't be same");
   }
 
