@@ -371,9 +371,11 @@ const getCommentaryPlayersQuery = async (data, fastify, request) => {
       `
       select 
       te."wrValue" as "playerId",
-      "wrDisplayOrder" as "displayOrder"
+      "wrDisplayOrder" as "displayOrder",
+      "wrPlayerName" as "playerName"
       from "tblCommentaryPlayers" tcp
       left join "tblEncryptedData" te on tcp."wrPlayerId" = te."wrKey"
+      left join "tblPlayers" tp on tcp."wrPlayerId" = tp."wrPlayerId"
       where "wrCommentaryId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1) and "wrTeamId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $2)
       order by "wrDisplayOrder"
       `,
