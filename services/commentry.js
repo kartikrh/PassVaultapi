@@ -176,6 +176,8 @@ const createCommentaryService = async (request, fastify) => {
     await insertCommentaryPlayers(info, fastify, request);
   }
 
+  global.tblCommentaries.push(addCommentry);
+
   return addCommentry;
 };
 
