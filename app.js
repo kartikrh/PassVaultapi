@@ -69,6 +69,10 @@ module.exports = async function (fastify, opts) {
     addToBody: true,
   });
 
+  fastify.register(require("@fastify/compress"), {
+    global: false,
+  });
+
   //for images static path
   fastify.register(fastifyStatic, {
     root: path.join(__dirname, "images"),
