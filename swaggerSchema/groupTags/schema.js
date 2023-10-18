@@ -1398,7 +1398,7 @@ const Commentary = {
         type: "object",
         properties: {
           commentaryId: { type: "string" },
-          displayStatus: { type: "integer" },
+          displayStatus: { type: "string" },
         },
         required: ["commentaryId", "displayStatus"],
       },

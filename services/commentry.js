@@ -264,7 +264,7 @@ const updateCommentaryService = async (request, fastify) => {
         commentaryId: request.body.commentaryId,
         teamId: request.body.team1Id,
         playerId: item,
-        displayOrder: i + 3,
+        displayOrder: i + 1,
       };
     }),
     ...request.body.team2Players.map((item, i) => {
@@ -272,7 +272,7 @@ const updateCommentaryService = async (request, fastify) => {
         commentaryId: request.body.commentaryId,
         teamId: request.body.team2Id,
         playerId: item,
-        displayOrder: i + 3,
+        displayOrder: i + 1,
       };
     }),
   ];
@@ -336,6 +336,7 @@ const updateTossDetailsService = async (request, fastify) => {
 
   global.tblCommentaries[index].tossWonBy = request.body.tossWonBy;
   global.tblCommentaries[index].choseTo = request.body.choseTo;
+  global.tblCommentaries[index].commentaryStatus = 2;
 
   return true;
 };

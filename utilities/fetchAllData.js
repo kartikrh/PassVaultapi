@@ -24,6 +24,8 @@ const {
   getAllCommentaryQuery,
   getAllCommentaryPlayerQuery,
   getAllCommentaryTeamsQuery,
+  getAllCommentaryBallByBallQuery,
+  getAllOversQuery,
 } = require("../repository/TableCommentary");
 
 const fetchAllDataFromDb = async (fastify, reply) => {
@@ -51,6 +53,10 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const getAllEvents = await getAllEventsQuery(fastify);
     const getAllCommentaryPlayer = await getAllCommentaryPlayerQuery(fastify);
     const getAllCommentaryTeams = await getAllCommentaryTeamsQuery(fastify);
+    const getAllCommentaryBallByBall = await getAllCommentaryBallByBallQuery(
+      fastify
+    );
+    const getAllOvers = await getAllOversQuery(fastify);
 
     global.tblTabs = getAllTabs;
     global.tblRoles = getAllRoles;
@@ -75,8 +81,10 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblEvents = getAllEvents;
     global.tblCommentaryPlayers = getAllCommentaryPlayer;
     global.tblCommentaryTeams = getAllCommentaryTeams;
+    global.tblCommentaryBallByBall = getAllCommentaryBallByBall;
+    global.tblOvers = getAllOvers;
 
-    console.log("Okkkk");
+    console.log("Okkkk", tblOvers);
 
     if (reply) {
       reply.status(200).send({
