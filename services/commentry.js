@@ -11,6 +11,8 @@ const {
   updateCommentaryTossQuery,
   updateCommentaryStatusQuery,
   getCommentaryByIdQuery,
+  getAllCommentaryPlayerQuery,
+  getAllCommentaryTeamsQuery,
 } = require("../repository/TableCommentary");
 
 const allCommentaryService = async () => {
@@ -160,6 +162,8 @@ const createCommentaryService = async (request, fastify) => {
   }
 
   global.tblCommentaries.push(addCommentry);
+  global.tblCommentaryPlayers = getAllCommentaryPlayerQuery(fastify);
+  global.tblCommentaryTeams = getAllCommentaryTeamsQuery(fastify);
 
   return addCommentry;
 };
@@ -280,6 +284,8 @@ const updateCommentaryService = async (request, fastify) => {
   const updatedData = await getCommentaryByIdQuery(request, fastify);
 
   global.tblCommentaries[index] = updatedData;
+  global.tblCommentaryPlayers = getAllCommentaryPlayerQuery(fastify);
+  global.tblCommentaryTeams = getAllCommentaryTeamsQuery(fastify);
 
   return updatedData;
 };

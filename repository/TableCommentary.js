@@ -3,6 +3,7 @@ const { errorLogger } = require("../utilities/logger");
 const getAllCommentaryQuery = async (fastify) => {
   return await fastify.db.query(
     `select 
+    te7."wrValue" as "commentaryId",
     te."wrValue" as "matchTypeId",
     te1."wrValue" as "eventTypeId",
     te2."wrValue" as "team1Id",
@@ -42,6 +43,7 @@ const getAllCommentaryQuery = async (fastify) => {
     left join "tblEncryptedData" te4 on tc."wrHomeSideTeam" = te4."wrKey"
     left join "tblEncryptedData" te5 on tc."wrTossWonBy" = te5."wrKey"
     left join "tblEncryptedData" te6 on tc."wrWinnerId" = te6."wrKey"
+    left join "tblEncryptedData" te7 on tc."wrCommentaryId" = te7."wrKey"
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"    
         `,
@@ -68,6 +70,7 @@ const insertCommentaryQuery = async (request, fastify) => {
       )
 
       select 
+    te7."wrValue" as "commentaryId",
     te."wrValue" as "matchTypeId",
     te1."wrValue" as "eventTypeId",
     te2."wrValue" as "team1Id",
@@ -107,6 +110,7 @@ const insertCommentaryQuery = async (request, fastify) => {
     left join "tblEncryptedData" te4 on tc."wrHomeSideTeam" = te4."wrKey"
     left join "tblEncryptedData" te5 on tc."wrTossWonBy" = te5."wrKey"
     left join "tblEncryptedData" te6 on tc."wrWinnerId" = te6."wrKey"
+    left join "tblEncryptedData" te7 on tc."wrCommentaryId" = te7."wrKey"
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"  
       `,
@@ -348,6 +352,7 @@ const getCommentaryByIdQuery = async (request, fastify) => {
     const result = await fastify.db.query(
       `
       select 
+      te7."wrValue" as "commentaryId",
       te."wrValue" as "matchTypeId",
       te1."wrValue" as "eventTypeId",
       te2."wrValue" as "team1Id",
@@ -387,6 +392,7 @@ const getCommentaryByIdQuery = async (request, fastify) => {
       left join "tblEncryptedData" te4 on tc."wrHomeSideTeam" = te4."wrKey"
       left join "tblEncryptedData" te5 on tc."wrTossWonBy" = te5."wrKey"
       left join "tblEncryptedData" te6 on tc."wrWinnerId" = te6."wrKey"
+      left join "tblEncryptedData" te7 on tc."wrCommentaryId" = te7."wrKey"
       left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
       left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
       where "wrCommentaryId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)
