@@ -3,16 +3,47 @@ const { errorLogger } = require("../utilities/logger");
 const getAllCommentaryQuery = async (fastify) => {
   return await fastify.db.query(
     `select 
-        te."wrValue" as "commentaryId",
-        "wrEventDate" as "eventDate",
-        "wrEventName" as "eventName",
-        "wrDisplayStatus" as "displayStatus",
-        tt1."wrTeamName" as "team1Name",
-        tt2."wrTeamName" as "team2Name"
-        from "tblCommentaries" tc 
-        left join "tblEncryptedData" te on tc."wrCommentaryId" = te."wrKey"
-        left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
-        left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"     
+    te."wrValue" as "matchTypeId",
+    te1."wrValue" as "eventTypeId",
+    te2."wrValue" as "team1Id",
+    te3."wrValue" as "team2Id",
+    tt1."wrTeamName" as "team1Name",
+    tt2."wrTeamName" as "team2Name",
+    "wrCompetitionId" as "competitionId",
+    "wrEventId" as "eventId",
+    "wrEventDate" as "eventDate",
+    "wrEventName" as "eventName",
+    "wrEventRefId" as "eventRefId",
+    "wrLocation" as "location",
+    "wrWeather" as "weather",
+    "wrPitch" as "pitch",
+    te4."wrValue" as "homeSideTeam",
+    te5."wrValue" as "tossWonBy",
+    "wrChoseTo" as "choseTo",
+    te6."wrValue" as "winnerId",
+    "wrWinnerName" as "winnerName",
+    "wrIsViewTable" as "isViewTable",
+    "wrDisplayStatus" as "displayStatus",
+    "wrRmk" as "rmk",
+    "wrCommentaryUserId" as "commentaryUserId",
+    "wrCommentaryStatus" as "commentaryStatus",
+    "wrUpdateTime" as "updateTime",
+    "wrIsMatchDraw" as "isMatchDraw",
+    "wrTarget" as "target",
+    "wrMarketID" as "marketId",
+    "wrTpId" as "tpId",
+    "isSignalROn" as "isSignalROn",
+    "isMatchTypeUpdated" as "isMatchTypeUpdated"
+    from "tblCommentaries" tc
+    left join "tblEncryptedData" te on tc."wrMatchTypeId" = te."wrKey"
+    left join "tblEncryptedData" te1 on tc."wrEventTypeId" = te1."wrKey"
+    left join "tblEncryptedData" te2 on tc."wrTeam1Id" = te2."wrKey"
+    left join "tblEncryptedData" te3 on tc."wrTeam2Id" = te3."wrKey"
+    left join "tblEncryptedData" te4 on tc."wrHomeSideTeam" = te4."wrKey"
+    left join "tblEncryptedData" te5 on tc."wrTossWonBy" = te5."wrKey"
+    left join "tblEncryptedData" te6 on tc."wrWinnerId" = te6."wrKey"
+    left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
+    left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"    
         `,
     {
       type: fastify.db.QueryTypes.SELECT,
@@ -37,16 +68,47 @@ const insertCommentaryQuery = async (request, fastify) => {
       )
 
       select 
-        te."wrValue" as "commentaryId",
-        "wrEventDate" as "eventDate",
-        "wrEventName" as "eventName",
-        "wrDisplayStatus" as "displayStatus",
-        tt1."wrTeamName" as "team1Name",
-        tt2."wrTeamName" as "team2Name"
-        from "insert_data" tc 
-        left join "tblEncryptedData" te on tc."wrCommentaryId" = te."wrKey"
-        left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
-        left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
+    te."wrValue" as "matchTypeId",
+    te1."wrValue" as "eventTypeId",
+    te2."wrValue" as "team1Id",
+    te3."wrValue" as "team2Id",
+    tt1."wrTeamName" as "team1Name",
+    tt2."wrTeamName" as "team2Name",
+    "wrCompetitionId" as "competitionId",
+    "wrEventId" as "eventId",
+    "wrEventDate" as "eventDate",
+    "wrEventName" as "eventName",
+    "wrEventRefId" as "eventRefId",
+    "wrLocation" as "location",
+    "wrWeather" as "weather",
+    "wrPitch" as "pitch",
+    te4."wrValue" as "homeSideTeam",
+    te5."wrValue" as "tossWonBy",
+    "wrChoseTo" as "choseTo",
+    te6."wrValue" as "winnerId",
+    "wrWinnerName" as "winnerName",
+    "wrIsViewTable" as "isViewTable",
+    "wrDisplayStatus" as "displayStatus",
+    "wrRmk" as "rmk",
+    "wrCommentaryUserId" as "commentaryUserId",
+    "wrCommentaryStatus" as "commentaryStatus",
+    "wrUpdateTime" as "updateTime",
+    "wrIsMatchDraw" as "isMatchDraw",
+    "wrTarget" as "target",
+    "wrMarketID" as "marketId",
+    "wrTpId" as "tpId",
+    "isSignalROn" as "isSignalROn",
+    "isMatchTypeUpdated" as "isMatchTypeUpdated"
+    from "insert_data" tc
+    left join "tblEncryptedData" te on tc."wrMatchTypeId" = te."wrKey"
+    left join "tblEncryptedData" te1 on tc."wrEventTypeId" = te1."wrKey"
+    left join "tblEncryptedData" te2 on tc."wrTeam1Id" = te2."wrKey"
+    left join "tblEncryptedData" te3 on tc."wrTeam2Id" = te3."wrKey"
+    left join "tblEncryptedData" te4 on tc."wrHomeSideTeam" = te4."wrKey"
+    left join "tblEncryptedData" te5 on tc."wrTossWonBy" = te5."wrKey"
+    left join "tblEncryptedData" te6 on tc."wrWinnerId" = te6."wrKey"
+    left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
+    left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"  
       `,
       {
         bind: [
@@ -290,6 +352,8 @@ const getCommentaryByIdQuery = async (request, fastify) => {
       te1."wrValue" as "eventTypeId",
       te2."wrValue" as "team1Id",
       te3."wrValue" as "team2Id",
+      tt1."wrTeamName" as "team1Name",
+      tt2."wrTeamName" as "team2Name",
       "wrCompetitionId" as "competitionId",
       "wrEventId" as "eventId",
       "wrEventDate" as "eventDate",
@@ -298,7 +362,18 @@ const getCommentaryByIdQuery = async (request, fastify) => {
       "wrLocation" as "location",
       "wrWeather" as "weather",
       "wrPitch" as "pitch",
+      te4."wrValue" as "homeSideTeam",
+      te5."wrValue" as "tossWonBy",
+      "wrChoseTo" as "choseTo",
+      te6."wrValue" as "winnerId",
+      "wrWinnerName" as "winnerName",
+      "wrIsViewTable" as "isViewTable",
       "wrDisplayStatus" as "displayStatus",
+      "wrRmk" as "rmk",
+      "wrCommentaryUserId" as "commentaryUserId",
+    "wrCommentaryStatus" as "commentaryStatus",
+      "wrUpdateTime" as "updateTime",
+      "wrIsMatchDraw" as "isMatchDraw",
       "wrTarget" as "target",
       "wrMarketID" as "marketId",
       "wrTpId" as "tpId",
@@ -309,6 +384,11 @@ const getCommentaryByIdQuery = async (request, fastify) => {
       left join "tblEncryptedData" te1 on tc."wrEventTypeId" = te1."wrKey"
       left join "tblEncryptedData" te2 on tc."wrTeam1Id" = te2."wrKey"
       left join "tblEncryptedData" te3 on tc."wrTeam2Id" = te3."wrKey"
+      left join "tblEncryptedData" te4 on tc."wrHomeSideTeam" = te4."wrKey"
+      left join "tblEncryptedData" te5 on tc."wrTossWonBy" = te5."wrKey"
+      left join "tblEncryptedData" te6 on tc."wrWinnerId" = te6."wrKey"
+      left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
+      left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
       where "wrCommentaryId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)
       `,
       {
@@ -424,6 +504,154 @@ const deleteCommentryQuery = async (commentaryId, request, fastify) => {
   }
 };
 
+//update commentary details apis
+const updateCommentaryTossQuery = async (request, fastify) => {
+  try {
+    const { commentaryId, tossWonBy, choseTo } = request.body;
+
+    return await fastify.db.query(
+      `
+      update "tblCommentaries" set
+      "wrTossWonBy" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1),
+      "wrChoseTo" = $2 , "wrCommentaryStatus" = $3
+      where "wrCommentaryId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $3)
+      `,
+      {
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [tossWonBy, choseTo, commentaryId, 1],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/updateCommentaryTossQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const updateCommentaryStatusQuery = async (request, fastify) => {
+  try {
+    const { commentaryId, displayStatus } = request.body;
+
+    return await fastify.db.query(
+      `
+      update "tblCommentaries" set
+      "wrDisplayStatus" = $1
+      where "wrCommentaryId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $2)
+      `,
+      {
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [displayStatus, commentaryId],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/updateCommentaryStatusQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const getAllCommentaryTeamsQuery = async (fastify) => {
+  return await fastify.db.query(
+    `select 
+  te."wrValue" as "commentaryTeamId",
+  te1."wrValue" as "commentaryId",
+  te2."wrValue" as "teamId",
+  "wrShortName" as "shortName",
+  "wrTeamName" as "teamName",
+  te3."wrValue" as "teamCaptain",
+  te4."wrValue" as "teamKipper",
+  "wrTeamScore" as "teamScore",
+  "wrTeamOver" as "teamOver",
+  "wrTeamWicket" as "teamWicket",
+  "wrCrr" as "crr",
+  "wrRrr" as "rrr",
+  "wrTeamStatus" as "teamStatus",
+  "wrIsWin" as "isWin"
+  from "tblCommentaryTeams" tct 
+  left join "tblEncryptedData" te on tct."wrCommentaryTeamId" = te."wrKey"
+  left join "tblEncryptedData" te1 on tct."wrCommentaryId" = te1."wrKey"
+  left join "tblEncryptedData" te2 on tct."wrTeamId" = te2."wrKey"
+  left join "tblEncryptedData" te3 on tct."wrTeamCaptain" = te3."wrKey"
+  left join "tblEncryptedData" te4 on tct."wrTeamKipper" = te4."wrKey"
+
+  `,
+    {
+      type: fastify.db.QueryTypes.SELECT,
+    }
+  );
+};
+
+const getAllCommentaryPlayerQuery = async (fastify) => {
+  return await fastify.db.query(
+    `select
+    te."wrValue" as "commentaryPlayerId",
+    te1."wrValue" as "commentaryId",
+    te2."wrValue" as "teamId",
+    te3."wrValue" as "playerId",
+    "wrPlayerName" as "playerName",
+    "wrDisplayOrder" as "displayOrder",
+    "wrBat_Status" as "batStatus",
+    "wrBat_Run" as "batRun",
+    "wrBat_Ball" as "batBall",
+    "wrBat_DotBall" as "batDotBall",
+    "wrBat_FOUR" as "batFour",
+    "wrBat_SIX" as "batSix",
+    "wrBat_SRR" as "batSrr",
+    "wrBat_BattingOrder" as "battingOrder",
+    "wrBat_IsPlay" as "isPlay",
+    "wrBat_OnStrike" as "onStrike",
+    "wrBat_WicketType" as "wicketType",
+    "wrBat_BowlerID" as "bowlerId",
+    "wrBat_FielderID1" as "fielderId1",
+    "wrBat_FielderID2" as "fielderId2",
+    "wrBowler_Status" as "bowlerStatus",
+    "wrBowler_Over" as "bowlerOver",
+    "wrBowler_CurrentBall" as "bowlerCurrentBall",
+    "wrBowler_TotalBall" as "bowlerTotalBall",
+    "wrBowler_Run" as "bowlerRun",
+    "wrBowler_DotBall" as "bowlerDotBall",
+    "wrBowler_MaidenOver" as "bowlerMaidenOver",
+    "wrBowler_FOUR" as "bowlerFour",
+    "wrBowler_SIX" as "bowlerSix",
+    "wrBowler_WideBall" as "bowlerWideBall",
+    "wrBowler_NOBall" as "bowlerNoBall",
+    "wrBowler_ByeBall" as "bowlerByeBall",
+    "wrBowler_LegByeBall" as "bowlerLegByeBall",
+    "wrBowler_WideBallRun" as "bowlerWideBallRun",
+    "wrBowler_NOBallRun" as "bowlerNoBallRun",
+    "wrBowler_ByeBallRun" as "bowlerByeBallRun",
+    "wrBowler_LegByeBallRun" as "bowlerLegByeBallRun",
+    "wrBowler_TotalWicket" as "bowlerTotalWicket",
+    "wrBowler_Economy" as "bowlerEconomy",
+    "wrBowler_OnStrike" as "bowlerOnStrike",
+    "wrBowler_PeneltyRun" as "bowlerPeneltyRun",
+    "wrIsBatter_Out" as "isBatterOut",
+    "wrIsBatter_Retir" as "isBatterRetir",
+    "wrSwapName" as "swapName",
+    "wrBatsmanAverage" as "batsmanAverage",
+    "wrBatsmanStrikeRate" as "batsmanStrikeRate",
+    "wrBowlerEconomy" as "bowlerEconomy",
+    "wrBowlerAverage" as "bowlerAverage"
+    from "tblCommentaryPlayers" tcp
+    left join "tblEncryptedData" te on tcp."wrCommentaryPlayerId" = te."wrKey"
+    left join "tblEncryptedData" te1 on tcp."wrCommentaryId" = te1."wrKey"
+    left join "tblEncryptedData" te2 on tcp."wrTeamId" = te2."wrKey"
+    left join "tblEncryptedData" te3 on tcp."wrPlayerId" = te3."wrKey"
+    `,
+    {
+      type: fastify.db.QueryTypes.SELECT,
+    }
+  );
+};
+
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -436,4 +664,8 @@ module.exports = {
   getCommentaryTeamsQuery,
   getCommentaryPlayersQuery,
   deleteCommentryQuery,
+  updateCommentaryTossQuery,
+  updateCommentaryStatusQuery,
+  getAllCommentaryTeamsQuery,
+  getAllCommentaryPlayerQuery,
 };

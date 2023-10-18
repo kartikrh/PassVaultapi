@@ -1373,6 +1373,37 @@ const Commentary = {
       },
     },
   },
+  updateToss: {
+    schema: {
+      tags: ["Commentary"],
+      description: "update toss",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "string" },
+          tossWonBy: { type: "string" },
+          choseTo: { type: "integer" },
+        },
+        required: ["commentaryId", "tossWonBy", "choseTo"],
+      },
+    },
+  },
+  updateCommentaryStatus: {
+    schema: {
+      tags: ["Commentary"],
+      description: "update commentary status",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "string" },
+          displayStatus: { type: "integer" },
+        },
+        required: ["commentaryId", "displayStatus"],
+      },
+    },
+  },
 };
 
 const Compitition = {

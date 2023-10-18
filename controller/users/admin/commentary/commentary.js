@@ -3,6 +3,8 @@ const {
   allCommentaryService,
   saveCommentaryService,
   deleteCommentaryService,
+  updateCommentaryStatusService,
+  updateTossDetailsService,
 } = require("../../../../services/commentry");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -48,9 +50,32 @@ const deleteCommentary = async (request, reply, fastify) => {
   }
 };
 
+//apis to update commentary
+const updateTossDetails = async (request, reply, fastify) => {
+  try {
+    const result = await updateTossDetailsService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/updateTossDetails", request);
+    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+  }
+};
+
+const updateCommentaryStatus = async (request, reply, fastify) => {
+  try {
+    const result = await updateCommentaryStatusService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/updateTossDetails", request);
+    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+  }
+};
+
 module.exports = {
   getAllCommentaries,
   getCommentaryById,
   addCommentary,
   deleteCommentary,
+  updateTossDetails,
+  updateCommentaryStatus,
 };

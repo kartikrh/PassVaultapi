@@ -18,9 +18,13 @@ const {
 const { getAllMatchTypeQuery } = require("../repository/TableMatchType");
 const { getAllUsersQuery } = require("../repository/TableUser");
 const { getAllCongigQuery } = require("../repository/TableConfig");
-const { getAllCommentaryQuery } = require("../repository/TableCommentary");
 const { getAllCompititionQuery } = require("../repository/TableCompitition");
 const { getAllEventsQuery } = require("../repository/TableEvent");
+const {
+  getAllCommentaryQuery,
+  getAllCommentaryPlayerQuery,
+  getAllCommentaryTeamsQuery,
+} = require("../repository/TableCommentary");
 
 const fetchAllDataFromDb = async (fastify, reply) => {
   try {
@@ -45,6 +49,8 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const getAllCommentary = await getAllCommentaryQuery(fastify);
     const getAllCompetition = await getAllCompititionQuery(fastify);
     const getAllEvents = await getAllEventsQuery(fastify);
+    const getAllCommentaryPlayer = await getAllCommentaryPlayerQuery(fastify);
+    const getAllCommentaryTeams = await getAllCommentaryTeamsQuery(fastify);
 
     global.tblTabs = getAllTabs;
     global.tblRoles = getAllRoles;
@@ -67,6 +73,8 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblCommentaries = getAllCommentary;
     global.tblCompetitions = getAllCompetition;
     global.tblEvents = getAllEvents;
+    global.tblCommentaryPlayers = getAllCommentaryPlayer;
+    global.tblCommentaryTeams = getAllCommentaryTeams;
 
     console.log("Okkkk");
 
