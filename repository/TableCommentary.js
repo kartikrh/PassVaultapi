@@ -789,6 +789,65 @@ const updateCommentaryTeamsTossQuery = async (data, fastify, request) => {
   }
 };
 
+const updateStrikerQuery = async (data, fastify, request) => {
+  try {
+    return await fastify.db.query(
+      `
+      update "tblCommentaryPlayers" set
+      "wrBat_IsPlay" = $1,
+      "wrBat_OnStrike" = $2
+      where "wrCommentaryId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $3) 
+      and "wrTeamId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $4)
+      and "wrPlayerId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $5)
+      `,
+      {
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [
+          data.isPlay,
+          data.onStrike,
+          data.commentaryId,
+          data.teamId,
+          data.playerId,
+        ],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/updateCommentaryTeamsTossQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const updateStatusOfCommentaryQuery = async (data, fastify, request) => {
+  try {
+    const { commentaryId, status } = data;
+
+    return await fastify.db.query(
+      `
+      update "tblCommentaries" set
+      "wrCommentaryStatus" = ${status}
+      where "wrCommentaryId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)
+      `,
+      {
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [commentaryId],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/updateStatusOfCommentaryQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -809,4 +868,6 @@ module.exports = {
   getAllOversQuery,
   getAllDisplayStatusQuery,
   updateCommentaryTeamsTossQuery,
+  updateStrikerQuery,
+  updateStatusOfCommentaryQuery,
 };

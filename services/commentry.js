@@ -14,6 +14,8 @@ const {
   getAllCommentaryPlayerQuery,
   getAllCommentaryTeamsQuery,
   updateCommentaryTeamsTossQuery,
+  updateStrikerQuery,
+  updateStatusOfCommentaryQuery,
 } = require("../repository/TableCommentary");
 
 const allCommentaryService = async () => {
@@ -420,6 +422,67 @@ const updateCommentaryStatusService = async (request, fastify) => {
   return true;
 };
 
+const updateStrikerService = async (request, fastify) => {
+  const { commentaryId, teamId, strikerId, nonStrikerId } = request.body;
+
+  const indexStriker = global.tblCommentaryPlayers.findIndex(
+    (item) =>
+      item.commentaryId === commentaryId &&
+      item.teamId === teamId &&
+      item.playerId === strikerId
+  );
+
+  const indexNonStriker = global.tblCommentaryPlayers.findIndex(
+    (item) =>
+      item.commentaryId === commentaryId &&
+      item.teamId === teamId &&
+      item.playerId === nonStrikerId
+  );
+
+  const index = global.tblCommentaries.findIndex(
+    (item) => item.commentaryId === commentaryId
+  );
+
+  if (indexStriker === -1 || indexNonStriker === -1) {
+    throw new Error("Player with this id not Found");
+  }
+
+  const data1 = {
+    commentaryId,
+    teamId,
+    playerId: strikerId,
+    onStrike: true,
+    isPlay: true,
+  };
+
+  const data2 = {
+    commentaryId,
+    teamId,
+    playerId: nonStrikerId,
+    onStrike: false,
+    isPlay: true,
+  };
+
+  await updateStrikerQuery(data1, fastify, request);
+  await updateStrikerQuery(data2, fastify, request);
+  await updateStatusOfCommentaryQuery(
+    {
+      commentaryId,
+      status: 3,
+    },
+    fastify,
+    request
+  );
+
+  global.tblCommentaryPlayers[indexStriker].onStrike = true;
+  global.tblCommentaryPlayers[indexNonStriker].onStrike = false;
+  global.tblCommentaryPlayers[indexStriker].isPlay = true;
+  global.tblCommentaryPlayers[indexNonStriker].isPlay = true;
+  global.tblCommentaries[index].commentaryStatus = 3;
+
+  return true;
+};
+
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -429,4 +492,5 @@ module.exports = {
   updateCommentaryStatusService,
   allDisplayStatusService,
   commentaryDetailsByIdService,
+  updateStrikerService,
 };

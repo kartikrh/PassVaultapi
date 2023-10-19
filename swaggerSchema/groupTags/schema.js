@@ -1404,6 +1404,23 @@ const Commentary = {
       },
     },
   },
+  updateStriker: {
+    schema: {
+      tags: ["Commentary"],
+      description: "update commentary striker and non-striker",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "string" },
+          teamId: { type: "string" },
+          strikerId: { type: "string" },
+          nonStrikerId: { type: "string" },
+        },
+        required: ["commentaryId", "teamId", "strikerId", "nonStrikerId"],
+      },
+    },
+  },
 };
 
 const Compitition = {

@@ -11,6 +11,7 @@ const {
   updateTossDetails,
   getAllDisplayStatus,
   getCommentaryDetailsById,
+  updateStriker,
 } = require("../../../controller/users/admin/commentary/commentary");
 const { Commentary } = require("../../../swaggerSchema/groupTags/schema");
 
@@ -112,5 +113,17 @@ module.exports = async (fastify, opts) => {
     ],
     handler: (request, reply) =>
       updateCommentaryStatus(request, reply, fastify),
+  });
+  fastify.post("/updateStriker", {
+    schema: Commentary.updateStriker.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "edit",
+        }),
+    ],
+    handler: (request, reply) => updateStriker(request, reply, fastify),
   });
 };
