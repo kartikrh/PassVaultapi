@@ -749,6 +749,21 @@ const getAllOversQuery = async (fastify) => {
   );
 };
 
+const getAllDisplayStatusQuery = async (fastify) => {
+  return await fastify.db.query(
+    `
+    select 
+    te."wrValue" as "displayStatusId",
+    "wrDisplayStatus" as "displayStatus"
+    from "tblDisplayStatuses" tds
+    left join "tblEncryptedData" te on tds."wrDisplayStatusId" = te."wrKey"
+    `,
+    {
+      type: fastify.db.QueryTypes.SELECT,
+    }
+  );
+};
+
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -767,4 +782,5 @@ module.exports = {
   getAllCommentaryPlayerQuery,
   getAllCommentaryBallByBallQuery,
   getAllOversQuery,
+  getAllDisplayStatusQuery,
 };

@@ -61,6 +61,7 @@ const commentaryByIdService = async (request, fastify) => {
   commentary.team2Kipper = team2.teamKipper;
   commentary.team2Players = team2Players;
   commentary.commentaryId = request.body.commentaryId;
+  commentary.allDisplayStatus = global.tblDisplayStatus;
 
   return commentary;
 };
