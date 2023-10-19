@@ -6,6 +6,7 @@ const {
   updateCommentaryStatusService,
   updateTossDetailsService,
   allDisplayStatusService,
+  commentaryDetailsByIdService,
 } = require("../../../../services/commentry");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -31,9 +32,19 @@ const getAllDisplayStatus = async (request, reply, fastify) => {
     reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
   }
 };
+
 const getCommentaryById = async (request, reply, fastify) => {
   try {
     const result = await commentaryByIdService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/getCommentaryById", request);
+    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+  }
+};
+const getCommentaryDetailsById = async (request, reply, fastify) => {
+  try {
+    const result = await commentaryDetailsByIdService(request, fastify);
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, path + "/getCommentaryById", request);
@@ -90,4 +101,5 @@ module.exports = {
   updateTossDetails,
   updateCommentaryStatus,
   getAllDisplayStatus,
+  getCommentaryDetailsById,
 };

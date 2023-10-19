@@ -87,7 +87,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblOvers = getAllOvers;
     global.tblDisplayStatus = getAllDisplayStatus;
 
-    console.log("Okkkk", tblDisplayStatus);
+    console.log("Okkkk");
 
     if (reply) {
       reply.status(200).send({

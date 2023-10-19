@@ -764,6 +764,31 @@ const getAllDisplayStatusQuery = async (fastify) => {
   );
 };
 
+const updateCommentaryTeamsTossQuery = async (data, fastify, request) => {
+  try {
+    return await fastify.db.query(
+      `
+      update "tblCommentaryTeams" set
+      "wrTeamStatus" = $1
+      where "wrCommentaryId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $2) 
+      and "wrTeamId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $3)
+      `,
+      {
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [data.teamStatus, data.commentaryId, data.teamId],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/updateCommentaryTeamsTossQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -783,4 +808,5 @@ module.exports = {
   getAllCommentaryBallByBallQuery,
   getAllOversQuery,
   getAllDisplayStatusQuery,
+  updateCommentaryTeamsTossQuery,
 };

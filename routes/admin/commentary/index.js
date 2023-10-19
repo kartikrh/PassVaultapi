@@ -10,6 +10,7 @@ const {
   updateCommentaryStatus,
   updateTossDetails,
   getAllDisplayStatus,
+  getCommentaryDetailsById,
 } = require("../../../controller/users/admin/commentary/commentary");
 const { Commentary } = require("../../../swaggerSchema/groupTags/schema");
 
@@ -49,6 +50,19 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request, reply) => getCommentaryById(request, reply, fastify),
+  });
+  fastify.post("/detailsById", {
+    schema: Commentary.getById.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "view",
+        }),
+    ],
+    handler: (request, reply) =>
+      getCommentaryDetailsById(request, reply, fastify),
   });
   fastify.post("/save", {
     schema: Commentary.save.schema,

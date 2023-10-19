@@ -13,6 +13,7 @@ const {
   getCommentaryByIdQuery,
   getAllCommentaryPlayerQuery,
   getAllCommentaryTeamsQuery,
+  updateCommentaryTeamsTossQuery,
 } = require("../repository/TableCommentary");
 
 const allCommentaryService = async () => {
@@ -67,6 +68,32 @@ const commentaryByIdService = async (request, fastify) => {
   commentary.commentaryId = request.body.commentaryId;
 
   return commentary;
+};
+
+const commentaryDetailsByIdService = async (request, fastify) => {
+  const result = await global.tblCommentaries.find(
+    (item) => item.commentaryId === request.body.commentaryId
+  );
+
+  if (!result) {
+    throw new Error("Commentary with this id not Found");
+  }
+
+  const commentaryTeams = await global.tblCommentaryTeams.filter(
+    (item) => item.commentaryId === request.body.commentaryId
+  );
+
+  const commentaryPlayers = await global.tblCommentaryPlayers.filter(
+    (item) => item.commentaryId === request.body.commentaryId
+  );
+
+  const allDetails = {
+    commentaryDetails: { ...result },
+    commentaryTeams,
+    commentaryPlayers,
+  };
+
+  return allDetails;
 };
 
 const createCommentaryService = async (request, fastify) => {
@@ -338,9 +365,42 @@ const updateTossDetailsService = async (request, fastify) => {
 
   await updateCommentaryTossQuery(request, fastify);
 
+  const { team1Id, team2Id } = global.tblCommentaries[index];
+
+  const data1 = {
+    commentaryId: request.body.commentaryId,
+    teamId: request.body.tossWonBy,
+    teamStatus: request.body.choseTo,
+  };
+
+  const data2 = {
+    commentaryId: request.body.commentaryId,
+    teamId: request.body.tossWonBy === team1Id ? team2Id : team1Id,
+    teamStatus: request.body.choseTo === 1 ? 2 : 1,
+  };
+
+  await updateCommentaryTeamsTossQuery(data1, fastify, request);
+  await updateCommentaryTeamsTossQuery(data2, fastify, request);
+
   global.tblCommentaries[index].tossWonBy = request.body.tossWonBy;
   global.tblCommentaries[index].choseTo = request.body.choseTo;
   global.tblCommentaries[index].commentaryStatus = 2;
+
+  const indexTeam1 = global.tblCommentaryTeams.findIndex(
+    (item) =>
+      item.commentaryId === request.body.commentaryId &&
+      item.teamId === data1.teamId
+  );
+
+  const indexTeam2 = global.tblCommentaryTeams.findIndex(
+    (item) =>
+      item.commentaryId === request.body.commentaryId &&
+      item.teamId === data2.teamId
+  );
+
+  global.tblCommentaryTeams[indexTeam1].teamStatus = request.body.choseTo;
+  global.tblCommentaryTeams[indexTeam2].teamStatus =
+    request.body.choseTo === 1 ? 2 : 1;
 
   return true;
 };
@@ -368,4 +428,5 @@ module.exports = {
   updateTossDetailsService,
   updateCommentaryStatusService,
   allDisplayStatusService,
+  commentaryDetailsByIdService,
 };
