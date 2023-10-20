@@ -821,6 +821,31 @@ const updateStrikerQuery = async (data, fastify, request) => {
     throw new Error(err.message);
   }
 };
+const updateBowlerQuery = async (data, fastify, request) => {
+  try {
+    return await fastify.db.query(
+      `
+      update "tblCommentaryPlayers" set
+      "wrBowler_OnStrike" = $1
+      where "wrCommentaryId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $2) 
+      and "wrTeamId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $3)
+      and "wrPlayerId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $4)
+      `,
+      {
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [true, data.commentaryId, data.teamId, data.bowlerId],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/updateBowlerQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
 
 const updateStatusOfCommentaryQuery = async (data, fastify, request) => {
   try {
@@ -870,4 +895,5 @@ module.exports = {
   updateCommentaryTeamsTossQuery,
   updateStrikerQuery,
   updateStatusOfCommentaryQuery,
+  updateBowlerQuery,
 };

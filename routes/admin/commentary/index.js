@@ -12,6 +12,7 @@ const {
   getAllDisplayStatus,
   getCommentaryDetailsById,
   updateStriker,
+  updateBowler,
 } = require("../../../controller/users/admin/commentary/commentary");
 const { Commentary } = require("../../../swaggerSchema/groupTags/schema");
 
@@ -125,5 +126,17 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request, reply) => updateStriker(request, reply, fastify),
+  });
+  fastify.post("/updateBowler", {
+    schema: Commentary.updateBowler.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "edit",
+        }),
+    ],
+    handler: (request, reply) => updateBowler(request, reply, fastify),
   });
 };

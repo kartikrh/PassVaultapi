@@ -1421,6 +1421,22 @@ const Commentary = {
       },
     },
   },
+  updateBowler: {
+    schema: {
+      tags: ["Commentary"],
+      description: "update commentary striker and non-striker",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "string" },
+          teamId: { type: "string" },
+          bowlerId: { type: "string" },
+        },
+        required: ["commentaryId", "teamId", "bowlerId"],
+      },
+    },
+  },
 };
 
 const Compitition = {

@@ -16,6 +16,7 @@ const {
   updateCommentaryTeamsTossQuery,
   updateStrikerQuery,
   updateStatusOfCommentaryQuery,
+  updateBowlerQuery,
 } = require("../repository/TableCommentary");
 
 const allCommentaryService = async () => {
@@ -439,10 +440,6 @@ const updateStrikerService = async (request, fastify) => {
       item.playerId === nonStrikerId
   );
 
-  const index = global.tblCommentaries.findIndex(
-    (item) => item.commentaryId === commentaryId
-  );
-
   if (indexStriker === -1 || indexNonStriker === -1) {
     throw new Error("Player with this id not Found");
   }
@@ -465,6 +462,40 @@ const updateStrikerService = async (request, fastify) => {
 
   await updateStrikerQuery(data1, fastify, request);
   await updateStrikerQuery(data2, fastify, request);
+
+  global.tblCommentaryPlayers[indexStriker].onStrike = true;
+  global.tblCommentaryPlayers[indexNonStriker].onStrike = false;
+  global.tblCommentaryPlayers[indexStriker].isPlay = true;
+  global.tblCommentaryPlayers[indexNonStriker].isPlay = true;
+
+  return true;
+};
+
+const updateBowlerService = async (request, fastify) => {
+  const { commentaryId, teamId, bowlerId } = request.body;
+
+  const indexBowler = global.tblCommentaryPlayers.findIndex(
+    (item) =>
+      item.commentaryId === commentaryId &&
+      item.teamId === teamId &&
+      item.playerId === bowlerId
+  );
+
+  const index = global.tblCommentaries.findIndex(
+    (item) => item.commentaryId === commentaryId
+  );
+
+  if (indexBowler === -1) {
+    throw new Error("Player with this id not Found");
+  }
+
+  const data = {
+    commentaryId,
+    teamId,
+    bowlerId,
+  };
+
+  await updateBowlerQuery(data, fastify, request);
   await updateStatusOfCommentaryQuery(
     {
       commentaryId,
@@ -474,10 +505,7 @@ const updateStrikerService = async (request, fastify) => {
     request
   );
 
-  global.tblCommentaryPlayers[indexStriker].onStrike = true;
-  global.tblCommentaryPlayers[indexNonStriker].onStrike = false;
-  global.tblCommentaryPlayers[indexStriker].isPlay = true;
-  global.tblCommentaryPlayers[indexNonStriker].isPlay = true;
+  global.tblCommentaryPlayers[indexBowler].bowlerOnStrike = true;
   global.tblCommentaries[index].commentaryStatus = 3;
 
   return true;
@@ -493,4 +521,5 @@ module.exports = {
   allDisplayStatusService,
   commentaryDetailsByIdService,
   updateStrikerService,
+  updateBowlerService,
 };

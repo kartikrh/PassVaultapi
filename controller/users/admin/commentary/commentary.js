@@ -8,6 +8,7 @@ const {
   allDisplayStatusService,
   commentaryDetailsByIdService,
   updateStrikerService,
+  updateBowlerService,
 } = require("../../../../services/commentry");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -98,7 +99,16 @@ const updateStriker = async (request, reply, fastify) => {
     const result = await updateStrikerService(request, fastify);
     reply.status(200).send(success(result, 200));
   } catch (err) {
-    errorLogger(fastify, err.message, path + "/updateTossDetails", request);
+    errorLogger(fastify, err.message, path + "/updateStriker", request);
+    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+  }
+};
+const updateBowler = async (request, reply, fastify) => {
+  try {
+    const result = await updateBowlerService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/updateBowler", request);
     reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
   }
 };
@@ -113,4 +123,5 @@ module.exports = {
   getAllDisplayStatus,
   getCommentaryDetailsById,
   updateStriker,
+  updateBowler,
 };
