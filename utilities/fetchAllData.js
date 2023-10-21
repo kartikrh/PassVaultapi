@@ -27,6 +27,7 @@ const {
   getAllCommentaryBallByBallQuery,
   getAllOversQuery,
   getAllDisplayStatusQuery,
+  getAllCommentaryWicketQuery,
 } = require("../repository/TableCommentary");
 
 const fetchAllDataFromDb = async (fastify, reply) => {
@@ -59,6 +60,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     );
     const getAllOvers = await getAllOversQuery(fastify);
     const getAllDisplayStatus = await getAllDisplayStatusQuery(fastify);
+    const getAllCommentaryWicket = await getAllCommentaryWicketQuery(fastify);
 
     global.tblTabs = getAllTabs;
     global.tblRoles = getAllRoles;
@@ -78,14 +80,15 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblPlayerTypes = getAllPlayerTypes;
     global.tblBowlingTypes = getAllBowlingTypes;
     global.tblConfigs = getAllConfigs;
-    global.tblCommentaries = getAllCommentary;
     global.tblCompetitions = getAllCompetition;
     global.tblEvents = getAllEvents;
-    global.tblCommentaryPlayers = getAllCommentaryPlayer;
+    global.tblDisplayStatus = getAllDisplayStatus;
+    global.tblCommentaries = getAllCommentary;
     global.tblCommentaryTeams = getAllCommentaryTeams;
+    global.tblCommentaryPlayers = getAllCommentaryPlayer;
     global.tblCommentaryBallByBall = getAllCommentaryBallByBall;
     global.tblOvers = getAllOvers;
-    global.tblDisplayStatus = getAllDisplayStatus;
+    global.tblCommentaryWicket = getAllCommentaryWicket;
 
     console.log("Okkkk");
 

@@ -90,10 +90,15 @@ const commentaryDetailsByIdService = async (request, fastify) => {
     (item) => item.commentaryId === request.body.commentaryId
   );
 
+  const commentaryOvers = await global.tblOvers.filter(
+    (item) => item.commentaryId === request.body.commentaryId
+  );
+
   const allDetails = {
     commentaryDetails: { ...result },
     commentaryTeams,
     commentaryPlayers,
+    commentaryOvers,
   };
 
   return allDetails;
@@ -196,8 +201,8 @@ const createCommentaryService = async (request, fastify) => {
   }
 
   global.tblCommentaries.push(addCommentry);
-  global.tblCommentaryPlayers = getAllCommentaryPlayerQuery(fastify);
-  global.tblCommentaryTeams = getAllCommentaryTeamsQuery(fastify);
+  global.tblCommentaryPlayers = await getAllCommentaryPlayerQuery(fastify);
+  global.tblCommentaryTeams = await getAllCommentaryTeamsQuery(fastify);
 
   return addCommentry;
 };
@@ -440,6 +445,10 @@ const updateStrikerService = async (request, fastify) => {
       item.playerId === nonStrikerId
   );
 
+  const index = global.tblCommentaries.findIndex(
+    (item) => item.commentaryId === commentaryId
+  );
+
   if (indexStriker === -1 || indexNonStriker === -1) {
     throw new Error("Player with this id not Found");
   }
@@ -462,11 +471,20 @@ const updateStrikerService = async (request, fastify) => {
 
   await updateStrikerQuery(data1, fastify, request);
   await updateStrikerQuery(data2, fastify, request);
+  await updateStatusOfCommentaryQuery(
+    {
+      commentaryId,
+      status: 4,
+    },
+    fastify,
+    request
+  );
 
   global.tblCommentaryPlayers[indexStriker].onStrike = true;
   global.tblCommentaryPlayers[indexNonStriker].onStrike = false;
   global.tblCommentaryPlayers[indexStriker].isPlay = true;
   global.tblCommentaryPlayers[indexNonStriker].isPlay = true;
+  global.tblCommentaries[index].commentaryStatus = 3;
 
   return true;
 };
@@ -499,14 +517,14 @@ const updateBowlerService = async (request, fastify) => {
   await updateStatusOfCommentaryQuery(
     {
       commentaryId,
-      status: 3,
+      status: 4,
     },
     fastify,
     request
   );
 
   global.tblCommentaryPlayers[indexBowler].bowlerOnStrike = true;
-  global.tblCommentaries[index].commentaryStatus = 3;
+  global.tblCommentaries[index].commentaryStatus = 4;
 
   return true;
 };

@@ -59,13 +59,13 @@ const insertCommentaryQuery = async (request, fastify) => {
     const result = await fastify.db.query(
       `
       with insert_data as(
-        insert into "tblCommentaries" ("wrEventTypeId","wrMatchTypeId","wrCompetitionId","wrEventId","wrEventDate","wrEventName","wrEventRefId","wrTeam1Id","wrTeam2Id","wrLocation","wrWeather","wrPitch","wrDisplayStatus","wrTarget","wrMarketID","wrTpId","isSignalROn","isMatchTypeUpdated" , "wrCreatedBy" , "wrCreatedDate") values (
+        insert into "tblCommentaries" ("wrEventTypeId","wrMatchTypeId","wrCompetitionId","wrEventId","wrEventDate","wrEventName","wrEventRefId","wrTeam1Id","wrTeam2Id","wrLocation","wrWeather","wrPitch","wrDisplayStatus","wrTarget","wrMarketID","wrTpId","isSignalROn","isMatchTypeUpdated" , "wrCreatedBy" , "wrCreatedDate","wrCommentaryStatus") values (
           (select "wrKey" from "tblEncryptedData" where "wrValue" = $1),
           (select "wrKey" from "tblEncryptedData" where "wrValue" = $2),
           $3,$4,$5,$6,$7,
           (select "wrKey" from "tblEncryptedData" where "wrValue" = $8),
           (select "wrKey" from "tblEncryptedData" where "wrValue" = $9),
-          $10,$11,$12,$13,$14,$15,$16,$17,$18,$19,now()
+          $10,$11,$12,$13,$14,$15,$16,$17,$18,$19,now(),1
         ) returning *         
       )
 
@@ -852,8 +852,7 @@ const updateStatusOfCommentaryQuery = async (data, fastify, request) => {
     const { commentaryId, status } = data;
 
     return await fastify.db.query(
-      `
-      update "tblCommentaries" set
+      `update "tblCommentaries" set
       "wrCommentaryStatus" = ${status}
       where "wrCommentaryId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)
       `,
@@ -871,6 +870,106 @@ const updateStatusOfCommentaryQuery = async (data, fastify, request) => {
     );
     throw new Error(err.message);
   }
+};
+
+const createOverQuery = async (data, fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `
+      with insert_over as (
+      insert into "tblOvers" ("wrCommentaryId", "wrTeamId", "wrOver", "wrBowlerId") values (
+        (select "wrKey" from "tblEncryptedData" where "wrValue" = $1),
+        (select "wrKey" from "tblEncryptedData" where "wrValue" = $2),
+        $3,
+        (select "wrKey" from "tblEncryptedData" where "wrValue" = $4)
+        )
+        returning * 
+      )
+
+      select
+      te."wrValue" as "overId",
+      te1."wrValue" as "commentaryId",
+      te2."wrValue" as "teamId",
+      "wrOver" as "over",
+      "wrBallCount" as "ballCount",
+      te3."wrValue" as "bowlerId",
+      "wrTotalRun" as "totalRun",
+      "wrTotalFour" as "totalFour",
+      "wrTotalSix" as "totalSix",
+      "wrTotalWideBall" as "totalWideBall",
+      "wrTotalWideRun" as "totalWideRun",
+      "wrTotalNoball" as "totalNoball",
+      "wrTotalNoBallRun" as "totalNoBallRun",
+      "wrTotalByesRun" as "totalByesRun",
+      "wrTotalLegByesRun" as "totalLegByesRun",
+      "wrTotalPanelty" as "totalPanelty",
+      "wrTotalWicket" as "totalWicket",
+      "wrDotBall" as "dotBall",
+      "wrIsComplete" as "isComplete",
+      "wrPowerplay" as "powerplay",
+      "wrIsOverInPowerplay" as "isOverInPowerplay",
+      "wrPowerplayType" as "powerplayType",
+      "wrIsMaiden" as "isMaiden",
+      "wrDate" as "date",
+      "wrIsDelete" as "isDelete"
+      from "insert_over" tco
+      left join "tblEncryptedData" te on tco."wrOverId" = te."wrKey"
+      left join "tblEncryptedData" te1 on tco."wrCommentaryId" = te1."wrKey"
+      left join "tblEncryptedData" te2 on tco."wrTeamId" = te2."wrKey"
+      left join "tblEncryptedData" te3 on tco."wrBowlerId" = te3."wrKey"
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [data.commentaryId, data.teamId, data.over, data.bowlerId],
+      }
+    );
+
+    return result[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/createOverQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const getAllCommentaryWicketQuery = async (fastify) => {
+  return await fastify.db.query(
+    `
+    select 
+    te."wrValue" as "commentaryWicketId",
+    te1."wrValue" as "commentaryId",
+    te2."wrValue" as "bowlerId",
+    "wrBowlerName" as "bowlerName",
+    "wrWicketType" as "wicketType",
+    te3."wrValue" as "batterId",
+    "wrBatterName" as "batterName",
+    te4."wrValue" as "fieldPlayerId",
+    "wrFieldPlayerName" as "fieldPlayerName",
+    te5."wrValue" as "overId",
+    "wrOverCount" as "overCount",
+    te6."wrValue" as "commentaryBallByBallId",
+    te7."wrValue" as "teamId",
+    "wrTeamScore" as "teamScore",
+    "wrPlayerRun" as "playerRun",
+    "wrPlayerBalls" as "playerBalls"
+    from "tblCommentaryWickets" tcw
+    left join "tblEncryptedData" te on tcw."wrCommentaryWicketId" = te."wrKey"
+    left join "tblEncryptedData" te1 on tcw."wrCommentaryId" = te1."wrKey"
+    left join "tblEncryptedData" te2 on tcw."wrBowlerId" = te2."wrKey"
+    left join "tblEncryptedData" te3 on tcw."wrBatterId" = te3."wrKey"
+    left join "tblEncryptedData" te4 on tcw."wrFieldPlayerId" = te4."wrKey"
+    left join "tblEncryptedData" te5 on tcw."wrOverId" = te5."wrKey"
+    left join "tblEncryptedData" te6 on tcw."wrCommentaryBallByBallId" = te6."wrKey"
+    left join "tblEncryptedData" te7 on tcw."wrTeamId" = te7."wrKey"
+    `,
+    {
+      type: fastify.db.QueryTypes.SELECT,
+    }
+  );
 };
 
 module.exports = {
@@ -896,4 +995,6 @@ module.exports = {
   updateStrikerQuery,
   updateStatusOfCommentaryQuery,
   updateBowlerQuery,
+  createOverQuery,
+  getAllCommentaryWicketQuery,
 };
