@@ -1437,6 +1437,42 @@ const Commentary = {
       },
     },
   },
+  saveOver: {
+    schema: {
+      tags: ["Commentary"],
+      description: "update commentary striker and non-striker",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          overId: { type: "string" },
+          commentaryId: { type: "string" },
+          teamId: { type: "string" },
+          bowlerId: { type: "string" },
+          over: { type: "number" },
+          ballCount: { type: "number" },
+          totalRun: { type: "number" },
+          totalFour: { type: "number" },
+          totalSix: { type: "number" },
+          totalWideBall: { type: "number" },
+          totalWideRun: { type: "number" },
+          totalNoball: { type: "number" },
+          totalNoBallRun: { type: "number" },
+          totalByesRun: { type: "number" },
+          totalLegByesRun: { type: "number" },
+          totalPanelty: { type: "number" },
+          totalWicket: { type: "number" },
+          dotBall: { type: "number" },
+          isComplete: { type: "boolean" },
+          powerplay: { type: "boolean" },
+          isOverInPowerplay: { type: "boolean" },
+          powerplayType: { type: "number" },
+          isMaiden: { type: "boolean" },
+        },
+        required: ["commentaryId", "teamId", "bowlerId", "overId"],
+      },
+    },
+  },
 };
 
 const Compitition = {

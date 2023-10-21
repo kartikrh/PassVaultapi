@@ -13,6 +13,7 @@ const {
   getCommentaryDetailsById,
   updateStriker,
   updateBowler,
+  saveOver,
 } = require("../../../controller/users/admin/commentary/commentary");
 const { Commentary } = require("../../../swaggerSchema/groupTags/schema");
 
@@ -138,5 +139,10 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request, reply) => updateBowler(request, reply, fastify),
+  });
+  fastify.post("/saveOver", {
+    schema: Commentary.saveOver.schema,
+    preHandler: [(request, reply) => authorize(request, reply, fastify)],
+    handler: (request, reply) => saveOver(request, reply, fastify),
   });
 };

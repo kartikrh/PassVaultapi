@@ -17,6 +17,8 @@ const {
   updateStrikerQuery,
   updateStatusOfCommentaryQuery,
   updateBowlerQuery,
+  updateOverQuery,
+  createOverQuery,
 } = require("../repository/TableCommentary");
 
 const allCommentaryService = async () => {
@@ -529,6 +531,74 @@ const updateBowlerService = async (request, fastify) => {
   return true;
 };
 
+const saveOverService = async (request, fastify) => {
+  const { overId } = request.body;
+
+  if (overId === "0") {
+    return await createOverService(request, fastify);
+  } else {
+    return await updateOverService(request, fastify);
+  }
+};
+
+const createOverService = async (request, fastify) => {
+  const index = global.tblCommentaries.findIndex(
+    (item) => item.commentaryId === request.body.commentaryId
+  );
+
+  if (index === -1) {
+    throw new Error("Commentary with this id not Found");
+  }
+
+  const indexTeam = global.tblCommentaryTeams.findIndex(
+    (item) =>
+      item.commentaryId === request.body.commentaryId &&
+      item.teamId === request.body.teamId
+  );
+
+  if (indexTeam === -1) {
+    throw new Error("Team with this id not Found");
+  }
+
+  const indexBowler = global.tblCommentaryPlayers.findIndex(
+    (item) =>
+      item.commentaryId === request.body.commentaryId &&
+      item.teamId === request.body.teamId &&
+      item.commentaryPlayerId === request.body.bowlerId
+  );
+
+  if (indexBowler === -1) {
+    throw new Error("Bowler with this id not Found");
+  }
+
+  const addOver = await createOverQuery(request, fastify);
+
+  global.tblOvers.push(addOver);
+
+  return addOver;
+};
+
+const updateOverService = async (request, fastify) => {
+  const indexOver = global.tblOvers.findIndex(
+    (item) => item.overId === request.body.overId
+  );
+
+  if (indexOver === -1) {
+    throw new Error("Over with this id not Found");
+  }
+
+  const data = {
+    ...global.tblOvers[indexOver],
+    ...request.body,
+  };
+
+  await updateOverQuery(data, fastify, request);
+
+  global.tblOvers[indexOver] = data;
+
+  return data;
+};
+
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -540,4 +610,5 @@ module.exports = {
   commentaryDetailsByIdService,
   updateStrikerService,
   updateBowlerService,
+  saveOverService,
 };

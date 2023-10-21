@@ -871,17 +871,57 @@ const updateStatusOfCommentaryQuery = async (data, fastify, request) => {
     throw new Error(err.message);
   }
 };
-
-const createOverQuery = async (data, fastify, request) => {
+const getAllCommentaryWicketQuery = async (fastify) => {
+  return await fastify.db.query(
+    `
+    select 
+    te."wrValue" as "commentaryWicketId",
+    te1."wrValue" as "commentaryId",
+    te2."wrValue" as "bowlerId",
+    "wrBowlerName" as "bowlerName",
+    "wrWicketType" as "wicketType",
+    te3."wrValue" as "batterId",
+    "wrBatterName" as "batterName",
+    te4."wrValue" as "fieldPlayerId",
+    "wrFieldPlayerName" as "fieldPlayerName",
+    te5."wrValue" as "overId",
+    "wrOverCount" as "overCount",
+    te6."wrValue" as "commentaryBallByBallId",
+    te7."wrValue" as "teamId",
+    "wrTeamScore" as "teamScore",
+    "wrPlayerRun" as "playerRun",
+    "wrPlayerBalls" as "playerBalls"
+    from "tblCommentaryWickets" tcw
+    left join "tblEncryptedData" te on tcw."wrCommentaryWicketId" = te."wrKey"
+    left join "tblEncryptedData" te1 on tcw."wrCommentaryId" = te1."wrKey"
+    left join "tblEncryptedData" te2 on tcw."wrBowlerId" = te2."wrKey"
+    left join "tblEncryptedData" te3 on tcw."wrBatterId" = te3."wrKey"
+    left join "tblEncryptedData" te4 on tcw."wrFieldPlayerId" = te4."wrKey"
+    left join "tblEncryptedData" te5 on tcw."wrOverId" = te5."wrKey"
+    left join "tblEncryptedData" te6 on tcw."wrCommentaryBallByBallId" = te6."wrKey"
+    left join "tblEncryptedData" te7 on tcw."wrTeamId" = te7."wrKey"
+    `,
+    {
+      type: fastify.db.QueryTypes.SELECT,
+    }
+  );
+};
+const createOverQuery = async (request, fastify) => {
   try {
+    const data = request.body;
     const result = await fastify.db.query(
       `
       with insert_over as (
-      insert into "tblOvers" ("wrCommentaryId", "wrTeamId", "wrOver", "wrBowlerId") values (
+      insert into "tblOvers" ("wrCommentaryId", "wrTeamId", "wrOver", "wrBowlerId" , "wrBallCount" , "wrTotalRun" , 
+      "wrTotalFour" , "wrTotalSix" , "wrTotalWideBall" , "wrTotalWideRun" , "wrTotalNoball" , "wrTotalNoBallRun" ,
+      "wrTotalByesRun" , "wrTotalLegByesRun" , "wrTotalPanelty" , "wrTotalWicket" , "wrDotBall" , "wrIsComplete" ,
+       "wrIsOverInPowerplay" , "wrPowerplayType" , "wrIsMaiden" , "wrDate"
+      ) values (
         (select "wrKey" from "tblEncryptedData" where "wrValue" = $1),
         (select "wrKey" from "tblEncryptedData" where "wrValue" = $2),
         $3,
-        (select "wrKey" from "tblEncryptedData" where "wrValue" = $4)
+        (select "wrKey" from "tblEncryptedData" where "wrValue" = $4) , 
+        $5 , $6 , $7 , $8 , $9 , $10 , $11 , $12 , $13 , $14 , $15 , $16 , $17 , $18 , $19 , $20 , $21 , $22 
         )
         returning * 
       )
@@ -920,7 +960,30 @@ const createOverQuery = async (data, fastify, request) => {
       `,
       {
         type: fastify.db.QueryTypes.SELECT,
-        bind: [data.commentaryId, data.teamId, data.over, data.bowlerId],
+        bind: [
+          data.commentaryId,
+          data.teamId,
+          data.over,
+          data.bowlerId,
+          data.ballCount || 0,
+          data.totalRun || 0,
+          data.totalFour || 0,
+          data.totalSix || 0,
+          data.totalWideBall || 0,
+          data.totalWideRun || 0,
+          data.totalNoball || 0,
+          data.totalNoBallRun || 0,
+          data.totalByesRun || 0,
+          data.totalLegByesRun || 0,
+          data.totalPanelty || 0,
+          data.totalWicket || 0,
+          data.dotBall || 0,
+          data.isComplete || false,
+          data.isOverInPowerplay || false,
+          data.powerplayType || 0,
+          data.isMaiden || false,
+          new Date(),
+        ],
       }
     );
 
@@ -936,40 +999,69 @@ const createOverQuery = async (data, fastify, request) => {
   }
 };
 
-const getAllCommentaryWicketQuery = async (fastify) => {
-  return await fastify.db.query(
-    `
-    select 
-    te."wrValue" as "commentaryWicketId",
-    te1."wrValue" as "commentaryId",
-    te2."wrValue" as "bowlerId",
-    "wrBowlerName" as "bowlerName",
-    "wrWicketType" as "wicketType",
-    te3."wrValue" as "batterId",
-    "wrBatterName" as "batterName",
-    te4."wrValue" as "fieldPlayerId",
-    "wrFieldPlayerName" as "fieldPlayerName",
-    te5."wrValue" as "overId",
-    "wrOverCount" as "overCount",
-    te6."wrValue" as "commentaryBallByBallId",
-    te7."wrValue" as "teamId",
-    "wrTeamScore" as "teamScore",
-    "wrPlayerRun" as "playerRun",
-    "wrPlayerBalls" as "playerBalls"
-    from "tblCommentaryWickets" tcw
-    left join "tblEncryptedData" te on tcw."wrCommentaryWicketId" = te."wrKey"
-    left join "tblEncryptedData" te1 on tcw."wrCommentaryId" = te1."wrKey"
-    left join "tblEncryptedData" te2 on tcw."wrBowlerId" = te2."wrKey"
-    left join "tblEncryptedData" te3 on tcw."wrBatterId" = te3."wrKey"
-    left join "tblEncryptedData" te4 on tcw."wrFieldPlayerId" = te4."wrKey"
-    left join "tblEncryptedData" te5 on tcw."wrOverId" = te5."wrKey"
-    left join "tblEncryptedData" te6 on tcw."wrCommentaryBallByBallId" = te6."wrKey"
-    left join "tblEncryptedData" te7 on tcw."wrTeamId" = te7."wrKey"
-    `,
-    {
-      type: fastify.db.QueryTypes.SELECT,
-    }
-  );
+const updateOverQuery = async (data, fastify, request) => {
+  try {
+    return await fastify.db.query(
+      `
+      update "tblOvers" set
+      "wrBallCount" = $1,
+      "wrTotalRun" = $2,
+      "wrTotalFour" = $3,
+      "wrTotalSix" = $4,
+      "wrTotalWideBall" = $5,
+      "wrTotalWideRun" = $6,  
+      "wrTotalNoball" = $7,
+      "wrTotalNoBallRun" = $8,
+      "wrTotalByesRun" = $9,
+      "wrTotalLegByesRun" = $10,
+      "wrTotalPanelty" = $11,
+      "wrTotalWicket" = $12,
+      "wrDotBall" = $13,
+      "wrIsComplete" = $14,
+      "wrIsOverInPowerplay" = $15,
+      "wrPowerplayType" = $16,
+      "wrIsMaiden" = $17,
+      "wrDate" = $18,
+      "wrBowlerId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $19),
+      "wrOver" = $20
+      where "wrOverId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $21)
+      `,
+      {
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [
+          data.ballCount || 0,
+          data.totalRun || 0,
+          data.totalFour || 0,
+          data.totalSix || 0,
+          data.totalWideBall || 0,
+          data.totalWideRun || 0,
+          data.totalNoball || 0,
+          data.totalNoBallRun || 0,
+          data.totalByesRun || 0,
+          data.totalLegByesRun || 0,
+          data.totalPanelty || 0,
+          data.totalWicket || 0,
+          data.dotBall || 0,
+          data.isComplete || false,
+          data.isOverInPowerplay || false,
+          data.powerplayType || 0,
+          data.isMaiden || false,
+          new Date(),
+          data.bowlerId,
+          data.over,
+          data.overId,
+        ],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/updateOverQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
 };
 
 module.exports = {
@@ -996,5 +1088,6 @@ module.exports = {
   updateStatusOfCommentaryQuery,
   updateBowlerQuery,
   createOverQuery,
+  updateOverQuery,
   getAllCommentaryWicketQuery,
 };
