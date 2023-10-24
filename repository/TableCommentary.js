@@ -833,7 +833,7 @@ const updateBowlerQuery = async (data, fastify, request) => {
       `,
       {
         type: fastify.db.QueryTypes.UPDATE,
-        bind: [true, data.commentaryId, data.teamId, data.bowlerId],
+        bind: [data.status, data.commentaryId, data.teamId, data.bowlerId],
       }
     );
   } catch (err) {

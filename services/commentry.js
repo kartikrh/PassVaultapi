@@ -513,6 +513,7 @@ const updateBowlerService = async (request, fastify) => {
     commentaryId,
     teamId,
     bowlerId,
+    status: true,
   };
 
   await updateBowlerQuery(data, fastify, request);
