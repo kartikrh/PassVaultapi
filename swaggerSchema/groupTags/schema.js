@@ -1373,103 +1373,20 @@ const Commentary = {
       },
     },
   },
-  updateToss: {
+  saveDetails: {
     schema: {
       tags: ["Commentary"],
-      description: "update toss",
+      description: "save Commentary details",
       security: [{ bearerAuth: [] }],
       body: {
         type: "object",
         properties: {
-          commentaryId: { type: "string" },
-          tossWonBy: { type: "string" },
-          choseTo: { type: "integer" },
+          commentaryDetails: { type: "object" },
+          commentaryTeams: { type: "array", items: { type: "object" } },
+          commentaryPlayers: { type: "array", items: { type: "object" } },
+          commentaryOvers: { type: "array", items: { type: "object" } },
         },
-        required: ["commentaryId", "tossWonBy", "choseTo"],
-      },
-    },
-  },
-  updateCommentaryStatus: {
-    schema: {
-      tags: ["Commentary"],
-      description: "update commentary status",
-      security: [{ bearerAuth: [] }],
-      body: {
-        type: "object",
-        properties: {
-          commentaryId: { type: "string" },
-          displayStatus: { type: "string" },
-        },
-        required: ["commentaryId", "displayStatus"],
-      },
-    },
-  },
-  updateStriker: {
-    schema: {
-      tags: ["Commentary"],
-      description: "update commentary striker and non-striker",
-      security: [{ bearerAuth: [] }],
-      body: {
-        type: "object",
-        properties: {
-          commentaryId: { type: "string" },
-          teamId: { type: "string" },
-          strikerId: { type: "string" },
-          nonStrikerId: { type: "string" },
-        },
-        required: ["commentaryId", "teamId", "strikerId", "nonStrikerId"],
-      },
-    },
-  },
-  updateBowler: {
-    schema: {
-      tags: ["Commentary"],
-      description: "update commentary striker and non-striker",
-      security: [{ bearerAuth: [] }],
-      body: {
-        type: "object",
-        properties: {
-          commentaryId: { type: "string" },
-          teamId: { type: "string" },
-          bowlerId: { type: "string" },
-        },
-        required: ["commentaryId", "teamId", "bowlerId"],
-      },
-    },
-  },
-  saveOver: {
-    schema: {
-      tags: ["Commentary"],
-      description: "update commentary striker and non-striker",
-      security: [{ bearerAuth: [] }],
-      body: {
-        type: "object",
-        properties: {
-          overId: { type: "string" },
-          commentaryId: { type: "string" },
-          teamId: { type: "string" },
-          bowlerId: { type: "string" },
-          over: { type: "number" },
-          ballCount: { type: "number" },
-          totalRun: { type: "number" },
-          totalFour: { type: "number" },
-          totalSix: { type: "number" },
-          totalWideBall: { type: "number" },
-          totalWideRun: { type: "number" },
-          totalNoball: { type: "number" },
-          totalNoBallRun: { type: "number" },
-          totalByesRun: { type: "number" },
-          totalLegByesRun: { type: "number" },
-          totalPanelty: { type: "number" },
-          totalWicket: { type: "number" },
-          dotBall: { type: "number" },
-          isComplete: { type: "boolean" },
-          powerplay: { type: "boolean" },
-          isOverInPowerplay: { type: "boolean" },
-          powerplayType: { type: "number" },
-          isMaiden: { type: "boolean" },
-        },
-        required: ["commentaryId", "teamId", "bowlerId", "overId"],
+        required: [],
       },
     },
   },

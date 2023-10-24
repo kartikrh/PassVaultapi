@@ -509,60 +509,6 @@ const deleteCommentryQuery = async (commentaryId, request, fastify) => {
   }
 };
 
-//update commentary details apis
-const updateCommentaryTossQuery = async (request, fastify) => {
-  try {
-    const { commentaryId, tossWonBy, choseTo } = request.body;
-
-    return await fastify.db.query(
-      `
-      update "tblCommentaries" set
-      "wrTossWonBy" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1),
-      "wrChoseTo" = $2 , "wrCommentaryStatus" = 2
-      where "wrCommentaryId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $3)
-      `,
-      {
-        type: fastify.db.QueryTypes.UPDATE,
-        bind: [tossWonBy, choseTo, commentaryId],
-      }
-    );
-  } catch (err) {
-    errorLogger(
-      fastify,
-      err.message,
-      "DB ERROR --> repository/TableCommentary/updateCommentaryTossQuery",
-      request
-    );
-    throw new Error(err.message);
-  }
-};
-
-const updateCommentaryStatusQuery = async (request, fastify) => {
-  try {
-    const { commentaryId, displayStatus } = request.body;
-
-    return await fastify.db.query(
-      `
-      update "tblCommentaries" set
-      "wrDisplayStatus" = $1
-      where "wrCommentaryId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $2)
-      `,
-      {
-        type: fastify.db.QueryTypes.UPDATE,
-        bind: [displayStatus, commentaryId],
-      }
-    );
-  } catch (err) {
-    errorLogger(
-      fastify,
-      err.message,
-      "DB ERROR --> repository/TableCommentary/updateCommentaryStatusQuery",
-      request
-    );
-    throw new Error(err.message);
-  }
-};
-
 const getAllCommentaryTeamsQuery = async (fastify) => {
   return await fastify.db.query(
     `select 
@@ -764,113 +710,6 @@ const getAllDisplayStatusQuery = async (fastify) => {
   );
 };
 
-const updateCommentaryTeamsTossQuery = async (data, fastify, request) => {
-  try {
-    return await fastify.db.query(
-      `
-      update "tblCommentaryTeams" set
-      "wrTeamStatus" = $1
-      where "wrCommentaryId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $2) 
-      and "wrTeamId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $3)
-      `,
-      {
-        type: fastify.db.QueryTypes.UPDATE,
-        bind: [data.teamStatus, data.commentaryId, data.teamId],
-      }
-    );
-  } catch (err) {
-    errorLogger(
-      fastify,
-      err.message,
-      "DB ERROR --> repository/TableCommentary/updateCommentaryTeamsTossQuery",
-      request
-    );
-    throw new Error(err.message);
-  }
-};
-
-const updateStrikerQuery = async (data, fastify, request) => {
-  try {
-    return await fastify.db.query(
-      `
-      update "tblCommentaryPlayers" set
-      "wrBat_IsPlay" = $1,
-      "wrBat_OnStrike" = $2
-      where "wrCommentaryId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $3) 
-      and "wrTeamId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $4)
-      and "wrPlayerId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $5)
-      `,
-      {
-        type: fastify.db.QueryTypes.UPDATE,
-        bind: [
-          data.isPlay,
-          data.onStrike,
-          data.commentaryId,
-          data.teamId,
-          data.playerId,
-        ],
-      }
-    );
-  } catch (err) {
-    errorLogger(
-      fastify,
-      err.message,
-      "DB ERROR --> repository/TableCommentary/updateCommentaryTeamsTossQuery",
-      request
-    );
-    throw new Error(err.message);
-  }
-};
-const updateBowlerQuery = async (data, fastify, request) => {
-  try {
-    return await fastify.db.query(
-      `
-      update "tblCommentaryPlayers" set
-      "wrBowler_OnStrike" = $1
-      where "wrCommentaryId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $2) 
-      and "wrTeamId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $3)
-      and "wrPlayerId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $4)
-      `,
-      {
-        type: fastify.db.QueryTypes.UPDATE,
-        bind: [data.status, data.commentaryId, data.teamId, data.bowlerId],
-      }
-    );
-  } catch (err) {
-    errorLogger(
-      fastify,
-      err.message,
-      "DB ERROR --> repository/TableCommentary/updateBowlerQuery",
-      request
-    );
-    throw new Error(err.message);
-  }
-};
-
-const updateStatusOfCommentaryQuery = async (data, fastify, request) => {
-  try {
-    const { commentaryId, status } = data;
-
-    return await fastify.db.query(
-      `update "tblCommentaries" set
-      "wrCommentaryStatus" = ${status}
-      where "wrCommentaryId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)
-      `,
-      {
-        type: fastify.db.QueryTypes.UPDATE,
-        bind: [commentaryId],
-      }
-    );
-  } catch (err) {
-    errorLogger(
-      fastify,
-      err.message,
-      "DB ERROR --> repository/TableCommentary/updateStatusOfCommentaryQuery",
-      request
-    );
-    throw new Error(err.message);
-  }
-};
 const getAllCommentaryWicketQuery = async (fastify) => {
   return await fastify.db.query(
     `
@@ -906,9 +745,8 @@ const getAllCommentaryWicketQuery = async (fastify) => {
     }
   );
 };
-const createOverQuery = async (request, fastify) => {
+const createOverQuery = async (data, fastify, request) => {
   try {
-    const data = request.body;
     const result = await fastify.db.query(
       `
       with insert_over as (
@@ -1029,23 +867,23 @@ const updateOverQuery = async (data, fastify, request) => {
       {
         type: fastify.db.QueryTypes.UPDATE,
         bind: [
-          data.ballCount || 0,
-          data.totalRun || 0,
-          data.totalFour || 0,
-          data.totalSix || 0,
-          data.totalWideBall || 0,
-          data.totalWideRun || 0,
-          data.totalNoball || 0,
-          data.totalNoBallRun || 0,
-          data.totalByesRun || 0,
-          data.totalLegByesRun || 0,
-          data.totalPanelty || 0,
-          data.totalWicket || 0,
-          data.dotBall || 0,
-          data.isComplete || false,
-          data.isOverInPowerplay || false,
-          data.powerplayType || 0,
-          data.isMaiden || false,
+          data.ballCount,
+          data.totalRun,
+          data.totalFour,
+          data.totalSix,
+          data.totalWideBall,
+          data.totalWideRun,
+          data.totalNoball,
+          data.totalNoBallRun,
+          data.totalByesRun,
+          data.totalLegByesRun,
+          data.totalPanelty,
+          data.totalWicket,
+          data.dotBall,
+          data.isComplete,
+          data.isOverInPowerplay,
+          data.powerplayType,
+          data.isMaiden,
           new Date(),
           data.bowlerId,
           data.over,
@@ -1064,6 +902,251 @@ const updateOverQuery = async (data, fastify, request) => {
   }
 };
 
+//api for new flow
+
+const updateCommentaryDetailsQuery = async (data, fastify, request) => {
+  try {
+    return await fastify.db.query(
+      `update "tblCommentaries" set 
+      "wrEventTypeId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1),
+      "wrMatchTypeId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $2),
+      "wrCompetitionId" = $3,
+      "wrEventId" = $4,
+      "wrEventDate" = $5,
+      "wrEventName" = $6,
+      "wrEventRefId" = $7,
+      "wrTeam1Id" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $8),
+      "wrTeam2Id" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $9),
+      "wrLocation" = $10,
+      "wrWeather" = $11,
+      "wrPitch" = $12,
+      "wrHomeSideTeam" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $13),
+      "wrTossWonBy" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $14),
+      "wrChoseTo" = $15,
+      "wrWinnerId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $16),
+      "wrWinnerName" = $17,
+      "wrIsViewTable" = $18,
+      "wrDisplayStatus" = $19,
+      "wrCommentaryStatus" = $20,
+      "wrRmk" = $21,
+      "wrCommentaryUserId" = $22,
+      "wrUpdateTime" = $23,
+      "wrModifyDate" = now(),
+      "wrIsMatchDraw" = $24,
+      "wrTarget" = $25,
+      "wrMarketID" = $26,
+      "wrTpId" = $27,
+      "isSignalROn" = $28,
+      "isMatchTypeUpdated" = $29
+      where "wrCommentaryId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $30)
+      `,
+      {
+        bind: [
+          data.eventTypeId,
+          data.matchTypeId,
+          data.competitionId,
+          data.eventId,
+          data.eventDate,
+          data.eventName,
+          data.eventRefId,
+          data.team1Id,
+          data.team2Id,
+          data.location,
+          data.weather,
+          data.pitch,
+          data.homeSideTeam,
+          data.tossWonBy,
+          data.choseTo,
+          data.winnerId,
+          data.winnerName,
+          data.isViewTable,
+          data.displayStatus,
+          data.commentaryStatus,
+          data.rmk,
+          data.commentaryUserId,
+          data.updateTime ? new Date(data.updateTime) : null,
+          data.isMatchDraw,
+          data.target,
+          data.marketId,
+          data.tpId,
+          data.isSignalROn,
+          data.isMatchTypeUpdated,
+          data.commentaryId,
+        ],
+
+        type: fastify.db.QueryTypes.UPDATE,
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableConfig/updateCommentaryDetailsQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const updateCommentaryTeamsQuery = async (data, fastify, request) => {
+  try {
+    return await fastify.db.query(
+      `update "tblCommentaryTeams" set
+       "wrShortName" = $1,
+       "wrTeamName" = $2,
+       "wrTeamCaptain" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $3),
+       "wrTeamKipper" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $4),
+       "wrTeamScore" = $5,
+        "wrTeamOver" = $6,
+        "wrTeamWicket" = $7,
+        "wrCrr" = $8,
+        "wrRrr" = $9,
+        "wrTeamStatus" = $10,
+        "wrIsWin" = $11
+        where "wrCommentaryTeamId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $12)
+      `,
+      {
+        bind: [
+          data.shortName,
+          data.teamName,
+          data.teamCaptain,
+          data.teamKipper,
+          data.teamScore,
+          data.teamOver,
+          data.teamWicket,
+          data.crr,
+          data.rrr,
+          data.teamStatus,
+          data.isWin,
+          data.commentaryTeamId,
+        ],
+        type: fastify.db.QueryTypes.UPDATE,
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableConfig/updateCommentaryTeamsQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const updateCommentaryPlayersQuery = async (data, fastify, request) => {
+  try {
+    return await fastify.db.query(
+      `
+      update "tblCommentaryPlayers" set
+      "wrPlayerName" = $1,
+      "wrDisplayOrder" = $2,
+      "wrBat_Status" = $3,
+      "wrBat_Run" = $4,
+      "wrBat_Ball" = $5,
+      "wrBat_DotBall" = $6,
+      "wrBat_FOUR" = $7,
+      "wrBat_SIX" = $8,
+      "wrBat_SRR" = $9,
+      "wrBat_BattingOrder" = $10,
+      "wrBat_IsPlay" = $11,
+      "wrBat_OnStrike" = $12,
+      "wrBat_WicketType" = $13,
+      "wrBat_BowlerID" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $14),
+      "wrBat_FielderID1" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $15),
+      "wrBat_FielderID2" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $16),
+      "wrBowler_Status" = $17,
+      "wrBowler_Over" = $18,
+      "wrBowler_CurrentBall" = $19,
+      "wrBowler_TotalBall" = $20,
+      "wrBowler_Run" = $21,
+      "wrBowler_DotBall" = $22,
+      "wrBowler_MaidenOver" = $23,
+      "wrBowler_FOUR" = $24,
+      "wrBowler_SIX" = $25,
+      "wrBowler_WideBall" = $26,
+      "wrBowler_NOBall" = $27,
+      "wrBowler_ByeBall" = $28,
+      "wrBowler_LegByeBall" = $29,
+      "wrBowler_WideBallRun" = $30,
+      "wrBowler_NOBallRun" = $31,
+      "wrBowler_ByeBallRun" = $32,
+      "wrBowler_LegByeBallRun" = $33,
+      "wrBowler_TotalWicket" = $34,
+      "wrBowler_Economy" = $35,
+      "wrBowler_OnStrike" = $36,
+      "wrBowler_PeneltyRun" = $37,
+      "wrIsBatter_Out" = $38,
+      "wrIsBatter_Retir" = $39,
+      "wrSwapName" = $40,
+      "wrBatsmanAverage" = $41,
+      "wrBatsmanStrikeRate" = $42,
+      "wrBowlerEconomy" = $43,
+      "wrBowlerAverage" = $44 
+      where "wrCommentaryPlayerId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $45)
+      `,
+      {
+        bind: [
+          data.playerName,
+          data.displayOrder,
+          data.batStatus,
+          data.batRun,
+          data.batBall,
+          data.batDotBall,
+          data.batFour,
+          data.batSix,
+          data.batSrr,
+          data.battingOrder,
+          data.isPlay,
+          data.onStrike,
+          data.wicketType,
+          data.bowlerId,
+          data.fielderId1,
+          data.fielderId2,
+          data.bowlerStatus,
+          data.bowlerOver,
+          data.bowlerCurrentBall,
+          data.bowlerTotalBall,
+          data.bowlerRun,
+          data.bowlerDotBall,
+          data.bowlerMaidenOver,
+          data.bowlerFour,
+          data.bowlerSix,
+          data.bowlerWideBall,
+          data.bowlerNoBall,
+          data.bowlerByeBall,
+          data.bowlerLegByeBall,
+          data.bowlerWideBallRun,
+          data.bowlerNoBallRun,
+          data.bowlerByeBallRun,
+          data.bowlerLegByeBallRun,
+          data.bowlerTotalWicket,
+          data.bowlerEconomy,
+          data.bowlerOnStrike,
+          data.bowlerPeneltyRun,
+          data.isBatterOut,
+          data.isBatterRetir,
+          data.swapName,
+          data.batsmanAverage,
+          data.batsmanStrikeRate,
+          data.bowlerEconomy,
+          data.bowlerAverage,
+          data.commentaryPlayerId,
+        ],
+        type: fastify.db.QueryTypes.UPDATE,
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableConfig/updateCommentaryPlayersQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -1076,18 +1159,15 @@ module.exports = {
   getCommentaryTeamsQuery,
   getCommentaryPlayersQuery,
   deleteCommentryQuery,
-  updateCommentaryTossQuery,
-  updateCommentaryStatusQuery,
   getAllCommentaryTeamsQuery,
   getAllCommentaryPlayerQuery,
   getAllCommentaryBallByBallQuery,
   getAllOversQuery,
   getAllDisplayStatusQuery,
-  updateCommentaryTeamsTossQuery,
-  updateStrikerQuery,
-  updateStatusOfCommentaryQuery,
-  updateBowlerQuery,
   createOverQuery,
   updateOverQuery,
   getAllCommentaryWicketQuery,
+  updateCommentaryDetailsQuery,
+  updateCommentaryTeamsQuery,
+  updateCommentaryPlayersQuery,
 };
