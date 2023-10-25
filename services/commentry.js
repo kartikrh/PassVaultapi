@@ -378,7 +378,7 @@ const saveCommentaryDetailsService = async (request, fastify) => {
     commentaryBallByBall,
   } = request.body;
 
-  let response = null;
+  let response = {};
 
   if (commentaryDetails) {
     await updateCommentaryDetailsServices(commentaryDetails, fastify, request);
@@ -412,7 +412,7 @@ const saveCommentaryDetailsService = async (request, fastify) => {
     );
   }
 
-  if (response) {
+  if (Object.keys(response).length) {
     return response;
   } else {
     return true;
