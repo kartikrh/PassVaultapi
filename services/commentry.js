@@ -17,6 +17,7 @@ const {
   updateCommentaryTeamsQuery,
   updateCommentaryPlayersQuery,
   createBallByBallCommentoriesQuery,
+  updateBallByBallCommentoriesQuery,
 } = require("../repository/TableCommentary");
 
 const allCommentaryService = async () => {
@@ -98,12 +99,22 @@ const commentaryDetailsByIdService = async (request, fastify) => {
     (item) => item.commentaryId === request.body.commentaryId
   );
 
+  const commentaryWicket = await global.tblCommentaryWicket.filter(
+    (item) => item.commentaryId === request.body.commentaryId
+  );
+
+  const commentaryPartnership = await global.tblCommentaryPartnership.filter(
+    (item) => item.commentaryId === request.body.commentaryId
+  );
+
   const allDetails = {
     commentaryDetails: { ...result },
     commentaryTeams,
     commentaryPlayers,
     commentaryOvers,
     commentaryBallByBall,
+    commentaryWicket,
+    commentaryPartnership,
   };
 
   return allDetails;
@@ -545,7 +556,7 @@ const ballByBallCommentoriesService = async (data, fastify, request) => {
   if (commentaryBallByBallId === "0") {
     return await createBallByBallCommentoriesService(data, fastify, request);
   } else {
-    return await false;
+    return await updateBallByBallCommentoriesService(data, fastify, request);
   }
 };
 
@@ -567,6 +578,22 @@ const createBallByBallCommentoriesService = async (data, fastify, request) => {
   global.tblCommentaryBallByBall.push(addBallByBallCommentories);
 
   return addBallByBallCommentories;
+};
+
+const updateBallByBallCommentoriesService = async (data, fastify, request) => {
+  const indexBallByBall = global.tblCommentaryBallByBall.findIndex(
+    (item) => item.commentaryBallByBallId === data.commentaryBallByBallId
+  );
+
+  if (indexBallByBall === -1) {
+    throw new Error("BallByBall with this id not Found");
+  }
+
+  await updateBallByBallCommentoriesQuery(data, fastify, request);
+
+  global.tblCommentaryBallByBall[indexBallByBall] = data;
+
+  return data;
 };
 
 module.exports = {

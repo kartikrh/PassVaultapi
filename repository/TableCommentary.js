@@ -509,6 +509,8 @@ const deleteCommentryQuery = async (commentaryId, request, fastify) => {
   }
 };
 
+//get all query ---------------------------------------------
+
 const getAllCommentaryTeamsQuery = async (fastify) => {
   return await fastify.db.query(
     `select 
@@ -745,6 +747,38 @@ const getAllCommentaryWicketQuery = async (fastify) => {
     }
   );
 };
+
+const getAllCommentaryPartnershipQuery = async (fastify) => {
+  return await fastify.db.query(
+    `
+    select 
+    te."wrValue" as "commentaryPartnershipId",
+    te1."wrValue" as "commentaryId",
+    te2."wrValue" as "teamId",
+    te3."wrValue" as "batter1Id",
+    "wrBatter1Name" as "batter1Name",
+    te4."wrValue" as "batter2Id",
+    "wrBatter2Name" as "batter2Name",
+    "wrTotalRuns" as "totalRuns",
+    "wrTotalBalls" as "totalBalls",
+    "wrExtras" as "extras"
+    from "tblCommentaryPartnerships" tcw
+    left join "tblEncryptedData" te on tcw."wrCommentaryPartnershipId" = te."wrKey"
+    left join "tblEncryptedData" te1 on tcw."wrCommentaryId" = te1."wrKey"
+    left join "tblEncryptedData" te2 on tcw."wrTeamId" = te2."wrKey"
+    left join "tblEncryptedData" te3 on tcw."wrBatter1Id" = te3."wrKey"
+    left join "tblEncryptedData" te4 on tcw."wrBatter2Id" = te4."wrKey"
+    left join "tblEncryptedData" te5 on tcw."wrCommentaryBallByBallId" = te5."wrKey"  
+
+    `,
+    {
+      type: fastify.db.QueryTypes.SELECT,
+    }
+  );
+};
+
+// ---------------------------------------------
+
 const createOverQuery = async (data, fastify, request) => {
   try {
     const result = await fastify.db.query(
@@ -1301,6 +1335,81 @@ const createBallByBallCommentoriesQuery = async (data, fastify, request) => {
   }
 };
 
+const updateBallByBallCommentoriesQuery = async (data, fastify, request) => {
+  try {
+    return await fastify.db.query(
+      `
+      update "tblCommentaryBallByBalls" set
+      "wrTeamId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1),
+      "wrOverId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $2),
+      "wrOverCount" = $3,
+      "wrCurrentOverBalls" = $4,
+      "wrBowler_ID" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $5),
+      "wrBat_StrikeID" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $6),
+      "wrBat_NONStrikeID" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $7),
+      "wrBall_IsCount" = $8,
+      "wrBall_Type" = $9,
+      "wrBall_IsDot" = $10,
+      "wrBall_Run" = $11,
+      "wrBall_ExtraRun" = $12,
+      "wrBall_isBoundry" = $13,
+      "wrBall_FOUR" = $14,
+      "wrBall_SIX" = $15,
+      "wrBall_IsWicket" = $16,
+      "wrBall_WicketType" = $17,
+      "wrBall_PlayerID" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $18),
+      "wrBall_BowlerID" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $19),
+      "wrBall_FielderID1" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $20),
+      "wrBall_FielderID2" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $21),
+      "wrOver_isMaiden" = $22,
+      "wrNextBat_StrikeID" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $23),
+      "wrNextBat_NONStrikeID" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $24),
+      "wrIsDelete" = $25
+      where "wrCommentaryBallByBallId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $26)
+      `,
+      {
+        bind: [
+          data.teamId,
+          data.overId,
+          data.overCount,
+          data.currentOverBalls,
+          data.bowlerId,
+          data.batStrikeId,
+          data.batNonStrikeId,
+          data.ballIsCount,
+          data.ballType,
+          data.ballIsDot,
+          data.ballRun,
+          data.ballExtraRun,
+          data.ballIsBoundry,
+          data.ballFour,
+          data.ballSix,
+          data.ballIsWicket,
+          data.ballWicketType,
+          data.ballPlayerId,
+          data.ballBowlerId,
+          data.ballFielderId1,
+          data.ballFielderId2,
+          data.overIsMaiden,
+          data.nextBatStrikeId,
+          data.nextBatNonStrikeId,
+          data.isDelete || false,
+          data.commentaryBallByBallId,
+        ],
+        type: fastify.db.QueryTypes.UPDATE,
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableConfig/updateBallByBallCommentoriesQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -1325,4 +1434,6 @@ module.exports = {
   updateCommentaryTeamsQuery,
   updateCommentaryPlayersQuery,
   createBallByBallCommentoriesQuery,
+  updateBallByBallCommentoriesQuery,
+  getAllCommentaryPartnershipQuery,
 };
