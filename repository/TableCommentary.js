@@ -1147,6 +1147,160 @@ const updateCommentaryPlayersQuery = async (data, fastify, request) => {
   }
 };
 
+const createBallByBallCommentoriesQuery = async (data, fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `
+    with insert_data as (
+
+      insert into "tblCommentaryBallByBalls" (
+        "wrCommentaryId",
+        "wrTeamId",
+        "wrOverId",
+        "wrOverCount",
+        "wrCurrentOverBalls",
+        "wrBowler_ID",
+        "wrBat_StrikeID",
+        "wrBat_NONStrikeID",
+        "wrBall_IsCount",
+        "wrBall_Type",
+        "wrBall_IsDot",
+        "wrBall_Run",
+        "wrBall_ExtraRun",
+        "wrBall_isBoundry",
+        "wrBall_FOUR",
+        "wrBall_SIX",
+        "wrBall_IsWicket",
+        "wrBall_WicketType",
+        "wrBall_PlayerID",
+        "wrBall_BowlerID",
+        "wrBall_FielderID1",
+        "wrBall_FielderID2",
+        "wrOver_isMaiden",
+        "wrNextBat_StrikeID",
+        "wrNextBat_NONStrikeID",
+        "wrIsDelete"
+      ) values (
+
+        (select "wrKey" from "tblEncryptedData" where "wrValue" = $1),
+        (select "wrKey" from "tblEncryptedData" where "wrValue" = $2),
+        (select "wrKey" from "tblEncryptedData" where "wrValue" = $3),
+        $4,
+        $5,
+        (select "wrKey" from "tblEncryptedData" where "wrValue" = $6),
+        (select "wrKey" from "tblEncryptedData" where "wrValue" = $7),
+        (select "wrKey" from "tblEncryptedData" where "wrValue" = $8),
+        $9,
+        $10,
+        $11,
+        $12,
+        $13,
+        $14,
+        $15,
+        $16,
+        $17,
+        $18,
+        (select "wrKey" from "tblEncryptedData" where "wrValue" = $19),
+        (select "wrKey" from "tblEncryptedData" where "wrValue" = $20),
+        (select "wrKey" from "tblEncryptedData" where "wrValue" = $21),
+        (select "wrKey" from "tblEncryptedData" where "wrValue" = $22),
+        $23,
+        (select "wrKey" from "tblEncryptedData" where "wrValue" = $24),
+        (select "wrKey" from "tblEncryptedData" where "wrValue" = $25),
+        $26
+        )
+
+      returning *       
+    )
+
+    select
+    te."wrValue" as "commentaryBallByBallId",
+    te1."wrValue" as "commentaryId",
+    te2."wrValue" as "teamId",
+    te3."wrValue" as "overId",
+    "wrOverCount" as "overCount",
+    "wrCurrentOverBalls" as "currentOverBalls",
+    te4."wrValue" as "bowlerId",
+    te5."wrValue" as "batStrikeId",
+    te6."wrValue" as "batNonStrikeId",
+    "wrBall_IsCount" as "ballIsCount",
+    "wrBall_Type" as "ballType",
+    "wrBall_IsDot" as "ballIsDot",
+    "wrBall_Run" as "ballRun",
+    "wrBall_ExtraRun" as "ballExtraRun",
+    "wrBall_isBoundry" as "ballIsBoundry",
+    "wrBall_FOUR" as "ballFour",
+    "wrBall_SIX" as "ballSix",
+    "wrBall_IsWicket" as "ballIsWicket",
+    "wrBall_WicketType" as "ballWicketType",
+    te7."wrValue" as "ballPlayerId",
+    te8."wrValue" as "ballBowlerId",
+    te9."wrValue" as "ballFielderId1",
+    te10."wrValue" as "ballFielderId2",
+    "wrOver_isMaiden" as "overIsMaiden",
+    te11."wrValue" as "nextBatStrikeId",
+    te12."wrValue" as "nextBatNonStrikeId",
+    "wrIsDelete" as "isDelete"
+    from "insert_data" tcb
+    left join "tblEncryptedData" te on tcb."wrCommentaryBallByBallId" = te."wrKey"
+    left join "tblEncryptedData" te1 on tcb."wrCommentaryId" = te1."wrKey"
+    left join "tblEncryptedData" te2 on tcb."wrTeamId" = te2."wrKey"
+    left join "tblEncryptedData" te3 on tcb."wrOverId" = te3."wrKey"
+    left join "tblEncryptedData" te4 on tcb."wrBowler_ID" = te4."wrKey"
+    left join "tblEncryptedData" te5 on tcb."wrBat_StrikeID" = te5."wrKey"
+    left join "tblEncryptedData" te6 on tcb."wrBat_NONStrikeID" = te6."wrKey"
+    left join "tblEncryptedData" te7 on tcb."wrBall_PlayerID" = te7."wrKey"
+    left join "tblEncryptedData" te8 on tcb."wrBall_BowlerID" = te8."wrKey"
+    left join "tblEncryptedData" te9 on tcb."wrBall_FielderID1" = te9."wrKey"
+    left join "tblEncryptedData" te10 on tcb."wrBall_FielderID2" = te10."wrKey"
+    left join "tblEncryptedData" te11 on tcb."wrNextBat_StrikeID" = te11."wrKey"
+    left join "tblEncryptedData" te12 on tcb."wrNextBat_NONStrikeID" = te12."wrKey"
+    `,
+      {
+        bind: [
+          data.commentaryId,
+          data.teamId,
+          data.overId,
+          data.overCount,
+          data.currentOverBalls,
+          data.bowlerId,
+          data.batStrikeId,
+          data.batNonStrikeId,
+          data.ballIsCount,
+          data.ballType,
+          data.ballIsDot,
+          data.ballRun,
+          data.ballExtraRun,
+          data.ballIsBoundry,
+          data.ballFour,
+          data.ballSix,
+          data.ballIsWicket,
+          data.ballWicketType,
+          data.ballPlayerId,
+          data.ballBowlerId,
+          data.ballFielderId1,
+          data.ballFielderId2,
+          data.overIsMaiden,
+          data.nextBatStrikeId,
+          data.nextBatNonStrikeId,
+          data.isDelete || false,
+        ],
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+
+    return result[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableConfig/createBallByBallCommentoriesQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -1170,4 +1324,5 @@ module.exports = {
   updateCommentaryDetailsQuery,
   updateCommentaryTeamsQuery,
   updateCommentaryPlayersQuery,
+  createBallByBallCommentoriesQuery,
 };

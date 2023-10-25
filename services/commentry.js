@@ -16,6 +16,7 @@ const {
   updateCommentaryDetailsQuery,
   updateCommentaryTeamsQuery,
   updateCommentaryPlayersQuery,
+  createBallByBallCommentoriesQuery,
 } = require("../repository/TableCommentary");
 
 const allCommentaryService = async () => {
@@ -93,11 +94,16 @@ const commentaryDetailsByIdService = async (request, fastify) => {
     (item) => item.commentaryId === request.body.commentaryId
   );
 
+  const commentaryBallByBall = await global.tblCommentaryBallByBall.filter(
+    (item) => item.commentaryId === request.body.commentaryId
+  );
+
   const allDetails = {
     commentaryDetails: { ...result },
     commentaryTeams,
     commentaryPlayers,
     commentaryOvers,
+    commentaryBallByBall,
   };
 
   return allDetails;
@@ -363,14 +369,16 @@ const deleteCommentaryService = async (request, fastify) => {
 };
 
 //update commentary details according to new flow
-
 const saveCommentaryDetailsService = async (request, fastify) => {
   const {
     commentaryDetails,
     commentaryTeams,
     commentaryPlayers,
     commentaryOvers,
+    commentaryBallByBall,
   } = request.body;
+
+  let response = null;
 
   if (commentaryDetails) {
     await updateCommentaryDetailsServices(commentaryDetails, fastify, request);
@@ -389,10 +397,26 @@ const saveCommentaryDetailsService = async (request, fastify) => {
   }
 
   if (commentaryOvers) {
-    await saveOverService(commentaryOvers, fastify, request);
+    response.overdetails = await saveOverService(
+      commentaryOvers,
+      fastify,
+      request
+    );
   }
 
-  return true;
+  if (commentaryBallByBall) {
+    response.commentaryBallByBallDetails = await ballByBallCommentoriesService(
+      commentaryBallByBall,
+      fastify,
+      request
+    );
+  }
+
+  if (response) {
+    return response;
+  } else {
+    return true;
+  }
 };
 
 const updateCommentaryDetailsServices = async (
@@ -513,6 +537,36 @@ const updateOverService = async (data, fastify, request) => {
   global.tblOvers[indexOver] = data;
 
   return data;
+};
+
+const ballByBallCommentoriesService = async (data, fastify, request) => {
+  const { commentaryBallByBallId } = data;
+
+  if (commentaryBallByBallId === "0") {
+    return await createBallByBallCommentoriesService(data, fastify, request);
+  } else {
+    return await false;
+  }
+};
+
+const createBallByBallCommentoriesService = async (data, fastify, request) => {
+  const index = global.tblCommentaries.findIndex(
+    (item) => item.commentaryId === data.commentaryId
+  );
+
+  if (index === -1) {
+    throw new Error("Commentary with this id not Found");
+  }
+
+  const addBallByBallCommentories = await createBallByBallCommentoriesQuery(
+    data,
+    fastify,
+    request
+  );
+
+  global.tblCommentaryBallByBall.push(addBallByBallCommentories);
+
+  return addBallByBallCommentories;
 };
 
 module.exports = {
