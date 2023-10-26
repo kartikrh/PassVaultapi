@@ -761,7 +761,8 @@ const getAllCommentaryPartnershipQuery = async (fastify) => {
     "wrBatter2Name" as "batter2Name",
     "wrTotalRuns" as "totalRuns",
     "wrTotalBalls" as "totalBalls",
-    "wrExtras" as "extras"
+    "wrExtras" as "extras",
+    te5."wrValue" as "commentaryBallByBallId"
     from "tblCommentaryPartnerships" tcw
     left join "tblEncryptedData" te on tcw."wrCommentaryPartnershipId" = te."wrKey"
     left join "tblEncryptedData" te1 on tcw."wrCommentaryId" = te1."wrKey"
@@ -778,6 +779,116 @@ const getAllCommentaryPartnershipQuery = async (fastify) => {
 };
 
 // ---------------------------------------------
+
+const createCommentaryPartnershipQuery = async (data, fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `
+      with insert_partnership as (
+        insert into "tblCommentaryPartnerships" ("wrCommentaryId", "wrTeamId", "wrBatter1Id", "wrBatter2Id", "wrBatter1Name", "wrBatter2Name", "wrTotalRuns", "wrTotalBalls", "wrExtras" , "wrCommentaryBallByBallId") values (
+          (select "wrKey" from "tblEncryptedData" where "wrValue" = $1),
+          (select "wrKey" from "tblEncryptedData" where "wrValue" = $2),
+          (select "wrKey" from "tblEncryptedData" where "wrValue" = $3),
+          (select "wrKey" from "tblEncryptedData" where "wrValue" = $4),
+          $5,$6,$7,$8,$9,
+          (select "wrKey" from "tblEncryptedData" where "wrValue" = $10)
+        ) 
+        returning *
+      )
+
+      select 
+    te."wrValue" as "commentaryPartnershipId",
+    te1."wrValue" as "commentaryId",
+    te2."wrValue" as "teamId",
+    te3."wrValue" as "batter1Id",
+    "wrBatter1Name" as "batter1Name",
+    te4."wrValue" as "batter2Id",
+    "wrBatter2Name" as "batter2Name",
+    "wrTotalRuns" as "totalRuns",
+    "wrTotalBalls" as "totalBalls",
+    "wrExtras" as "extras",
+    te5."wrValue" as "commentaryBallByBallId"
+    from "insert_partnership" tcw
+    left join "tblEncryptedData" te on tcw."wrCommentaryPartnershipId" = te."wrKey"
+    left join "tblEncryptedData" te1 on tcw."wrCommentaryId" = te1."wrKey"
+    left join "tblEncryptedData" te2 on tcw."wrTeamId" = te2."wrKey"
+    left join "tblEncryptedData" te3 on tcw."wrBatter1Id" = te3."wrKey"
+    left join "tblEncryptedData" te4 on tcw."wrBatter2Id" = te4."wrKey"
+    left join "tblEncryptedData" te5 on tcw."wrCommentaryBallByBallId" = te5."wrKey"  
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [
+          data.commentaryId,
+          data.teamId,
+          data.batter1Id,
+          data.batter2Id,
+          data.batter1Name,
+          data.batter2Name,
+          data.totalRuns,
+          data.totalBalls,
+          data.extras,
+          data.commentaryBallByBallId,
+        ],
+      }
+    );
+
+    return result[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/createCommentaryPartnershipQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const updateCommentaryPartnershipQuery = async (data, fastify, request) => {
+  try {
+    return await fastify.db.query(
+      `
+      update "tblCommentaryPartnerships" set
+      "wrCommentaryId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1),
+      "wrTeamId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $2),
+      "wrBatter1Id" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $3),
+      "wrBatter2Id" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $4),
+      "wrBatter1Name" = $5,
+      "wrBatter2Name" = $6,
+      "wrTotalRuns" = $7,
+      "wrTotalBalls" = $8,
+      "wrExtras" = $9,
+      "wrCommentaryBallByBallId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $10)
+      where "wrCommentaryPartnershipId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $11)
+      `,
+      {
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [
+          data.commentaryId,
+          data.teamId,
+          data.batter1Id,
+          data.batter2Id,
+          data.batter1Name,
+          data.batter2Name,
+          data.totalRuns,
+          data.totalBalls,
+          data.extras,
+          data.commentaryBallByBallId,
+          data.commentaryPartnershipId,
+        ],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/updateCommentaryPartnershipQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
 
 const createOverQuery = async (data, fastify, request) => {
   try {
@@ -935,8 +1046,6 @@ const updateOverQuery = async (data, fastify, request) => {
     throw new Error(err.message);
   }
 };
-
-//api for new flow
 
 const updateCommentaryDetailsQuery = async (data, fastify, request) => {
   try {
@@ -1600,4 +1709,6 @@ module.exports = {
   getAllCommentaryPartnershipQuery,
   createCommentaryWicketQuery,
   updateCommentaryWicketQuery,
+  createCommentaryPartnershipQuery,
+  updateCommentaryPartnershipQuery,
 };

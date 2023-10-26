@@ -20,6 +20,8 @@ const {
   updateBallByBallCommentoriesQuery,
   updateCommentaryWicketQuery,
   createCommentaryWicketQuery,
+  updateCommentaryPartnershipQuery,
+  createCommentaryPartnershipQuery,
 } = require("../repository/TableCommentary");
 
 const allCommentaryService = async () => {
@@ -390,6 +392,7 @@ const saveCommentaryDetailsService = async (request, fastify) => {
     commentaryOvers,
     commentaryBallByBall,
     commentaryWicket,
+    commentaryPartnership,
   } = request.body;
 
   let response = {};
@@ -432,6 +435,15 @@ const saveCommentaryDetailsService = async (request, fastify) => {
       fastify,
       request
     );
+  }
+
+  if (commentaryPartnership) {
+    response.commentaryPartnershipDetails =
+      await saveCommentaryPartnershipService(
+        commentaryPartnership,
+        fastify,
+        request
+      );
   }
 
   if (Object.keys(response).length) {
@@ -649,6 +661,52 @@ const updateCommentaryWicketService = async (data, fastify, request) => {
   await updateCommentaryWicketQuery(data, fastify, request);
 
   global.tblCommentaryWicket[indexWicket] = data;
+
+  return data;
+};
+
+const saveCommentaryPartnershipService = async (data, fastify, request) => {
+  const { commentaryPartnershipId } = data;
+
+  if (commentaryPartnershipId === "0") {
+    return await createCommentaryPartnershipService(data, fastify, request);
+  } else {
+    return await updateCommentaryPartnershipService(data, fastify, request);
+  }
+};
+
+const createCommentaryPartnershipService = async (data, fastify, request) => {
+  const index = global.tblCommentaries.findIndex(
+    (item) => item.commentaryId === data.commentaryId
+  );
+
+  if (index === -1) {
+    throw new Error("Commentary with this id not Found");
+  }
+
+  const addCommentaryPartnership = await createCommentaryPartnershipQuery(
+    data,
+    fastify,
+    request
+  );
+
+  global.tblCommentaryPartnership.push(addCommentaryPartnership);
+
+  return addCommentaryPartnership;
+};
+
+const updateCommentaryPartnershipService = async (data, fastify, request) => {
+  const indexPartnership = global.tblCommentaryPartnership.findIndex(
+    (item) => item.commentaryPartnershipId === data.commentaryPartnershipId
+  );
+
+  if (indexPartnership === -1) {
+    throw new Error("Partnership with this id not Found");
+  }
+
+  await updateCommentaryPartnershipQuery(data, fastify, request);
+
+  global.tblCommentaryPartnership[indexPartnership] = data;
 
   return data;
 };

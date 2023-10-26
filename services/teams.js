@@ -56,6 +56,10 @@ const createTeamService = async (request, fastify) => {
     request.body.image = await storeImage(request.body.image[0]);
   }
 
+  if (request.body.jersey && request.body.jersey.length) {
+    request.body.jersey = await storeImage(request.body.jersey[0]);
+  }
+
   const data = await insertTeamQuery(
     { ...request.body, userId: request.userTokenInfo.WrUserId },
     fastify,
@@ -95,6 +99,7 @@ const updateTeamService = async (request, fastify) => {
     teamName: request.body.teamName || checkTeamId.teamName,
     teamShortName: request.body.teamShortName || checkTeamId.teamShortName,
     image: checkTeamId.image,
+    jersey: checkTeamId.jersey,
     country: request.body.country || checkTeamId.country,
     eventTypeId: request.body.eventTypeId || checkTeamId.eventTypeId,
     userId: request.userTokenInfo.WrUserId,
@@ -125,6 +130,13 @@ const updateTeamService = async (request, fastify) => {
       await removeImage(body.image);
     }
     body.image = await storeImage(request.body.image[0]);
+  }
+
+  if (request.body.jersey && request.body.jersey.length) {
+    if (body.jersey) {
+      await removeImage(body.jersey);
+    }
+    body.jersey = await storeImage(request.body.jersey[0]);
   }
 
   await updateTeamQuery(body, fastify, request);
