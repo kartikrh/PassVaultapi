@@ -18,6 +18,8 @@ const {
   updateCommentaryPlayersQuery,
   createBallByBallCommentoriesQuery,
   updateBallByBallCommentoriesQuery,
+  updateCommentaryWicketQuery,
+  createCommentaryWicketQuery,
 } = require("../repository/TableCommentary");
 
 const allCommentaryService = async () => {
@@ -387,6 +389,7 @@ const saveCommentaryDetailsService = async (request, fastify) => {
     commentaryPlayers,
     commentaryOvers,
     commentaryBallByBall,
+    commentaryWicket,
   } = request.body;
 
   let response = {};
@@ -418,6 +421,14 @@ const saveCommentaryDetailsService = async (request, fastify) => {
   if (commentaryBallByBall) {
     response.commentaryBallByBallDetails = await ballByBallCommentoriesService(
       commentaryBallByBall,
+      fastify,
+      request
+    );
+  }
+
+  if (commentaryWicket) {
+    response.commentaryWicketDetails = await saveCommentaryWicketService(
+      commentaryWicket,
       fastify,
       request
     );
@@ -592,6 +603,52 @@ const updateBallByBallCommentoriesService = async (data, fastify, request) => {
   await updateBallByBallCommentoriesQuery(data, fastify, request);
 
   global.tblCommentaryBallByBall[indexBallByBall] = data;
+
+  return data;
+};
+
+const saveCommentaryWicketService = async (data, fastify, request) => {
+  const { commentaryWicketId } = data;
+
+  if (commentaryWicketId === "0") {
+    return await createCommentaryWicketService(data, fastify, request);
+  } else {
+    return await updateCommentaryWicketService(data, fastify, request);
+  }
+};
+
+const createCommentaryWicketService = async (data, fastify, request) => {
+  const index = global.tblCommentaries.findIndex(
+    (item) => item.commentaryId === data.commentaryId
+  );
+
+  if (index === -1) {
+    throw new Error("Commentary with this id not Found");
+  }
+
+  const addCommentaryWicket = await createCommentaryWicketQuery(
+    data,
+    fastify,
+    request
+  );
+
+  global.tblCommentaryWicket.push(addCommentaryWicket);
+
+  return addCommentaryWicket;
+};
+
+const updateCommentaryWicketService = async (data, fastify, request) => {
+  const indexWicket = global.tblCommentaryWicket.findIndex(
+    (item) => item.commentaryWicketId === data.commentaryWicketId
+  );
+
+  if (indexWicket === -1) {
+    throw new Error("Wicket with this id not Found");
+  }
+
+  await updateCommentaryWicketQuery(data, fastify, request);
+
+  global.tblCommentaryWicket[indexWicket] = data;
 
   return data;
 };
