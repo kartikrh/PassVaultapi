@@ -96,6 +96,13 @@ module.exports = async function (fastify, opts) {
     },
   });
 
+  fastify.addHook("preHandler", (request, reply, done) => {
+    if (request.method === "OPTIONS") {
+      reply.code(200).send();
+    }
+    done();
+  });
+
   fastify.addHook("onRequest", (request, reply, done) => {
     // Record the request start time in nanoseconds
     request.startTime = process.hrtime.bigint();

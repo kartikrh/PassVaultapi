@@ -12,108 +12,108 @@ module.exports = (sequelize) => {
       },
       wrCommentaryId: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: true,
       },
       wrTeamId: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: true,
       },
       wrOverId: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: true,
       },
       wrOverCount: {
         type: DataTypes.DECIMAL(5, 3),
-        allowNull: false,
+        allowNull: true,
       },
       wrCurrentOverBalls: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: true,
       },
       wrBowler_ID: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: true,
       },
       wrBat_StrikeID: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: true,
       },
       wrBat_NONStrikeID: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: true,
       },
       wrBall_IsCount: {
         type: DataTypes.BOOLEAN,
-        allowNull: false,
+        allowNull: true,
       },
 
       wrBall_Type: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: true,
       },
       wrBall_IsDot: {
         type: DataTypes.BOOLEAN,
-        allowNull: false,
+        allowNull: true,
       },
       wrBall_Run: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: true,
       },
       wrBall_ExtraRun: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: true,
       },
       wrBall_isBoundry: {
         type: DataTypes.BOOLEAN,
-        allowNull: false,
+        allowNull: true,
       },
       wrBall_FOUR: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: true,
       },
       wrBall_SIX: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: true,
       },
       wrBall_IsWicket: {
         type: DataTypes.BOOLEAN,
-        allowNull: false,
+        allowNull: true,
       },
       wrBall_WicketType: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: true,
       },
       wrBall_PlayerID: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: true,
       },
       wrBall_BowlerID: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: true,
       },
       wrBall_FielderID1: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: true,
       },
       wrBall_FielderID2: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: true,
       },
       wrOver_isMaiden: {
         type: DataTypes.BOOLEAN,
-        allowNull: false,
+        allowNull: true,
       },
       wrNextBat_StrikeID: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: true,
       },
       wrNextBat_NONStrikeID: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: true,
       },
       wrIsDelete: {
         type: DataTypes.BOOLEAN,
-        allowNull: false,
+        allowNull: true,
       },
     },
     {

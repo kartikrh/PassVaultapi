@@ -23,6 +23,10 @@ module.exports = (sequelize) => {
         type: DataTypes.STRING(200),
         allowNull: true,
       },
+      WrTeamJersey: {
+        type: DataTypes.STRING(200),
+        allowNull: true,
+      },
       wrCountry: {
         type: DataTypes.STRING(200),
         allowNull: true,

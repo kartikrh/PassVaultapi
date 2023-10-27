@@ -7,12 +7,10 @@ const {
   getCommentaryById,
   addCommentary,
   deleteCommentary,
-  updateCommentaryStatus,
-  updateTossDetails,
   getAllDisplayStatus,
   getCommentaryDetailsById,
-  updateStriker,
-  updateBowler,
+  saveCommentaryDetails,
+  deleteBallByBallCommentary,
 } = require("../../../controller/users/admin/commentary/commentary");
 const { Commentary } = require("../../../swaggerSchema/groupTags/schema");
 
@@ -90,53 +88,22 @@ module.exports = async (fastify, opts) => {
     ],
     handler: (request, reply) => deleteCommentary(request, reply, fastify),
   });
-  fastify.post("/updateToss", {
-    schema: Commentary.updateToss.schema,
+  fastify.post("/saveDetails", {
+    schema: Commentary.saveDetails.schema,
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
         checkPermission(request, reply, fastify, {
           tabName: "Commentary",
-          mode: "edit",
+          mode: "delete",
         }),
     ],
-    handler: (request, reply) => updateTossDetails(request, reply, fastify),
+    handler: (request, reply) => saveCommentaryDetails(request, reply, fastify),
   });
-  fastify.post("/updateStatus", {
-    schema: Commentary.updateCommentaryStatus.schema,
-    preHandler: [
-      (request, reply) => authorize(request, reply, fastify),
-      (request, reply, done) =>
-        checkPermission(request, reply, fastify, {
-          tabName: "Commentary",
-          mode: "edit",
-        }),
-    ],
+  fastify.post("/deleteBallByBall", {
+    schema: Commentary.deleteBallByBall.schema,
+    preHandler: [(request, reply) => authorize(request, reply, fastify)],
     handler: (request, reply) =>
-      updateCommentaryStatus(request, reply, fastify),
-  });
-  fastify.post("/updateStriker", {
-    schema: Commentary.updateStriker.schema,
-    preHandler: [
-      (request, reply) => authorize(request, reply, fastify),
-      (request, reply, done) =>
-        checkPermission(request, reply, fastify, {
-          tabName: "Commentary",
-          mode: "edit",
-        }),
-    ],
-    handler: (request, reply) => updateStriker(request, reply, fastify),
-  });
-  fastify.post("/updateBowler", {
-    schema: Commentary.updateBowler.schema,
-    preHandler: [
-      (request, reply) => authorize(request, reply, fastify),
-      (request, reply, done) =>
-        checkPermission(request, reply, fastify, {
-          tabName: "Commentary",
-          mode: "edit",
-        }),
-    ],
-    handler: (request, reply) => updateBowler(request, reply, fastify),
+      deleteBallByBallCommentary(request, reply, fastify),
   });
 };

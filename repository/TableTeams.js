@@ -7,6 +7,7 @@ const allTeamQuery = async (fastify) => {
     te2."wrValue" as "eventTypeId",
     "wrTeamName" as "teamName",
     "wrTeamShortName" as "teamShortName",
+    "WrTeamJersey" as "jersey",
     "wrImage" as "image",
     "wrCountry" as "country"
      FROM "tblTeams" tt left join "tblEncryptedData" te on tt."wrTeamId" = te."wrKey"
@@ -21,8 +22,8 @@ const insertTeamQuery = async (data, fastify, request) => {
   try {
     const result = await fastify.db.query(
       `with insert_data as(
-      INSERT INTO "tblTeams" ("wrTeamName","wrTeamShortName", "wrImage", "wrCountry", "wrEventTypeId", "wrCreatedBy", "wrCreatedDate")
-      VALUES ($1,$2,$3,$4,(select "wrKey" from "tblEncryptedData" where "wrValue" = $5),$6,$7)
+      INSERT INTO "tblTeams" ("wrTeamName","wrTeamShortName", "wrImage", "wrCountry", "wrEventTypeId", "wrCreatedBy", "wrCreatedDate" , "WrTeamJersey")
+      VALUES ($1,$2,$3,$4,(select "wrKey" from "tblEncryptedData" where "wrValue" = $5),$6,$7 , $8)
       RETURNING *    
     )
     SELECT 
@@ -30,6 +31,7 @@ const insertTeamQuery = async (data, fastify, request) => {
     te2."wrValue" as "eventTypeId",
     "wrTeamName" as "teamName",
     "wrTeamShortName" as "teamShortName",
+    "WrTeamJersey" as "jersey",
     "wrImage" as "image",
     "wrCountry" as "country"
      FROM "insert_data" tt left join "tblEncryptedData" te on tt."wrTeamId" = te."wrKey"
@@ -44,6 +46,7 @@ const insertTeamQuery = async (data, fastify, request) => {
           data.eventTypeId || null,
           data.userId,
           new Date(),
+          data.jersey || null,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -64,7 +67,7 @@ const insertTeamQuery = async (data, fastify, request) => {
 const updateTeamQuery = async (data, fastify, request) => {
   try {
     return await fastify.db.query(
-      `UPDATE "tblTeams" SET "wrTeamName" = $1, "wrTeamShortName" = $2,"wrImage" = $3, "wrCountry" = $4, "wrEventTypeId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $5), "wrModifyBy" = $6, "wrModifyDate" = $7 WHERE "wrTeamId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $8)`,
+      `UPDATE "tblTeams" SET "wrTeamName" = $1, "wrTeamShortName" = $2,"wrImage" = $3, "wrCountry" = $4, "wrEventTypeId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $5), "wrModifyBy" = $6, "wrModifyDate" = $7,"WrTeamJersey"=$8  WHERE "wrTeamId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $9)`,
       {
         bind: [
           data.teamName,
@@ -74,6 +77,7 @@ const updateTeamQuery = async (data, fastify, request) => {
           data.eventTypeId,
           data.userId,
           new Date(),
+          data.jersey,
           data.teamId,
         ],
         type: fastify.db.QueryTypes.UPDATE,

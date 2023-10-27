@@ -1373,67 +1373,35 @@ const Commentary = {
       },
     },
   },
-  updateToss: {
+  deleteBallByBall: {
     schema: {
       tags: ["Commentary"],
-      description: "update toss",
+      description: "delete Commentary ball by ball",
       security: [{ bearerAuth: [] }],
       body: {
         type: "object",
         properties: {
-          commentaryId: { type: "string" },
-          tossWonBy: { type: "string" },
-          choseTo: { type: "integer" },
+          commentaryBallByBallId: { type: "string" },
         },
-        required: ["commentaryId", "tossWonBy", "choseTo"],
+        required: ["commentaryBallByBallId"],
       },
     },
   },
-  updateCommentaryStatus: {
+  saveDetails: {
     schema: {
       tags: ["Commentary"],
-      description: "update commentary status",
+      description: "save Commentary details",
       security: [{ bearerAuth: [] }],
       body: {
         type: "object",
         properties: {
-          commentaryId: { type: "string" },
-          displayStatus: { type: "string" },
+          commentaryDetails: { type: "object" },
+          commentaryTeams: { type: "array", items: { type: "object" } },
+          commentaryPlayers: { type: "array", items: { type: "object" } },
+          // commentaryOvers: { type: "array", items: { type: "object" } },
+          commentaryOvers: { type: "object" },
         },
-        required: ["commentaryId", "displayStatus"],
-      },
-    },
-  },
-  updateStriker: {
-    schema: {
-      tags: ["Commentary"],
-      description: "update commentary striker and non-striker",
-      security: [{ bearerAuth: [] }],
-      body: {
-        type: "object",
-        properties: {
-          commentaryId: { type: "string" },
-          teamId: { type: "string" },
-          strikerId: { type: "string" },
-          nonStrikerId: { type: "string" },
-        },
-        required: ["commentaryId", "teamId", "strikerId", "nonStrikerId"],
-      },
-    },
-  },
-  updateBowler: {
-    schema: {
-      tags: ["Commentary"],
-      description: "update commentary striker and non-striker",
-      security: [{ bearerAuth: [] }],
-      body: {
-        type: "object",
-        properties: {
-          commentaryId: { type: "string" },
-          teamId: { type: "string" },
-          bowlerId: { type: "string" },
-        },
-        required: ["commentaryId", "teamId", "bowlerId"],
+        required: [],
       },
     },
   },

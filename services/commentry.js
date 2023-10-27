@@ -8,15 +8,21 @@ const {
   getCommentaryTeamsQuery,
   getCommentaryPlayersQuery,
   deleteCommentryQuery,
-  updateCommentaryTossQuery,
-  updateCommentaryStatusQuery,
   getCommentaryByIdQuery,
   getAllCommentaryPlayerQuery,
   getAllCommentaryTeamsQuery,
-  updateCommentaryTeamsTossQuery,
-  updateStrikerQuery,
-  updateStatusOfCommentaryQuery,
-  updateBowlerQuery,
+  updateOverQuery,
+  createOverQuery,
+  updateCommentaryDetailsQuery,
+  updateCommentaryTeamsQuery,
+  updateCommentaryPlayersQuery,
+  createBallByBallCommentoriesQuery,
+  updateBallByBallCommentoriesQuery,
+  updateCommentaryWicketQuery,
+  createCommentaryWicketQuery,
+  updateCommentaryPartnershipQuery,
+  createCommentaryPartnershipQuery,
+  deleteBallByBallCommentoriesQuery,
 } = require("../repository/TableCommentary");
 
 const allCommentaryService = async () => {
@@ -94,11 +100,26 @@ const commentaryDetailsByIdService = async (request, fastify) => {
     (item) => item.commentaryId === request.body.commentaryId
   );
 
+  const commentaryBallByBall = await global.tblCommentaryBallByBall.filter(
+    (item) => item.commentaryId === request.body.commentaryId
+  );
+
+  const commentaryWicket = await global.tblCommentaryWicket.filter(
+    (item) => item.commentaryId === request.body.commentaryId
+  );
+
+  const commentaryPartnership = await global.tblCommentaryPartnership.filter(
+    (item) => item.commentaryId === request.body.commentaryId
+  );
+
   const allDetails = {
     commentaryDetails: { ...result },
     commentaryTeams,
     commentaryPlayers,
     commentaryOvers,
+    commentaryBallByBall,
+    commentaryWicket,
+    commentaryPartnership,
   };
 
   return allDetails;
@@ -342,16 +363,6 @@ const saveCommentaryService = async (request, fastify) => {
 const deleteCommentaryService = async (request, fastify) => {
   const { commentaryId } = request.body;
 
-  // for (const commentary of commentaryId) {
-  //   const validateCommentaryId = global.tblCommentaries.find(
-  //     (item) => item.commentaryId === commentary
-  //   );
-
-  //   if (!validateCommentaryId) {
-  //     throw new Error("Commentary with this id not Found");
-  //   }
-  // }
-
   for (const commentary of commentaryId) {
     await deleteCommentryQuery(commentary, request, fastify);
   }
@@ -363,170 +374,353 @@ const deleteCommentaryService = async (request, fastify) => {
   return `Commentaries deleted successfully`;
 };
 
-const updateTossDetailsService = async (request, fastify) => {
+//update commentary details according to new flow
+const saveCommentaryDetailsService = async (request, fastify) => {
+  const {
+    commentaryDetails,
+    commentaryTeams,
+    commentaryPlayers,
+    commentaryOvers,
+    commentaryBallByBall,
+    commentaryWicket,
+    commentaryPartnership,
+  } = request.body;
+
+  let response = {};
+
+  if (commentaryDetails) {
+    await updateCommentaryDetailsServices(commentaryDetails, fastify, request);
+  }
+
+  if (commentaryTeams && commentaryTeams.length) {
+    for (const team of commentaryTeams) {
+      await updateCommentaryTeamsServices(team, fastify, request);
+    }
+  }
+
+  if (commentaryPlayers && commentaryPlayers.length) {
+    for (const player of commentaryPlayers) {
+      await updateCommentaryPlayerDetailsServices(player, fastify, request);
+    }
+  }
+
+  if (commentaryOvers) {
+    response.overdetails = await saveOverService(
+      commentaryOvers,
+      fastify,
+      request
+    );
+  }
+
+  if (commentaryBallByBall) {
+    response.commentaryBallByBallDetails = await ballByBallCommentoriesService(
+      commentaryBallByBall,
+      fastify,
+      request
+    );
+  }
+
+  if (commentaryWicket) {
+    response.commentaryWicketDetails = await saveCommentaryWicketService(
+      commentaryWicket,
+      fastify,
+      request
+    );
+  }
+
+  if (commentaryPartnership) {
+    response.commentaryPartnershipDetails =
+      await saveCommentaryPartnershipService(
+        commentaryPartnership,
+        fastify,
+        request
+      );
+  }
+
+  if (Object.keys(response).length) {
+    return response;
+  } else {
+    return true;
+  }
+};
+
+const updateCommentaryDetailsServices = async (
+  commentaryDetails,
+  fastify,
+  request
+) => {
   const index = global.tblCommentaries.findIndex(
-    (item) => item.commentaryId === request.body.commentaryId
+    (item) => item.commentaryId === commentaryDetails.commentaryId
   );
+
   if (index === -1) {
     throw new Error("Commentary with this id not Found");
   }
 
-  await updateCommentaryTossQuery(request, fastify);
+  await updateCommentaryDetailsQuery(commentaryDetails, fastify, request);
 
-  const { team1Id, team2Id } = global.tblCommentaries[index];
+  global.tblCommentaries[index] = commentaryDetails;
 
-  const data1 = {
-    commentaryId: request.body.commentaryId,
-    teamId: request.body.tossWonBy,
-    teamStatus: request.body.choseTo,
-  };
-
-  const data2 = {
-    commentaryId: request.body.commentaryId,
-    teamId: request.body.tossWonBy === team1Id ? team2Id : team1Id,
-    teamStatus: request.body.choseTo === 1 ? 2 : 1,
-  };
-
-  await updateCommentaryTeamsTossQuery(data1, fastify, request);
-  await updateCommentaryTeamsTossQuery(data2, fastify, request);
-
-  global.tblCommentaries[index].tossWonBy = request.body.tossWonBy;
-  global.tblCommentaries[index].choseTo = request.body.choseTo;
-  global.tblCommentaries[index].commentaryStatus = 2;
-
-  const indexTeam1 = global.tblCommentaryTeams.findIndex(
-    (item) =>
-      item.commentaryId === request.body.commentaryId &&
-      item.teamId === data1.teamId
-  );
-
-  const indexTeam2 = global.tblCommentaryTeams.findIndex(
-    (item) =>
-      item.commentaryId === request.body.commentaryId &&
-      item.teamId === data2.teamId
-  );
-
-  global.tblCommentaryTeams[indexTeam1].teamStatus = request.body.choseTo;
-  global.tblCommentaryTeams[indexTeam2].teamStatus =
-    request.body.choseTo === 1 ? 2 : 1;
-
-  return true;
+  return commentaryDetails;
 };
 
-const updateCommentaryStatusService = async (request, fastify) => {
-  const index = global.tblCommentaries.findIndex(
-    (item) => item.commentaryId === request.body.commentaryId
+const updateCommentaryTeamsServices = async (teamDetails, fastify, request) => {
+  const index = global.tblCommentaryTeams.findIndex(
+    (item) =>
+      item.commentaryId === teamDetails.commentaryId &&
+      item.teamId === teamDetails.teamId
   );
+
   if (index === -1) {
     throw new Error("Commentary with this id not Found");
   }
 
-  await updateCommentaryStatusQuery(request, fastify);
+  await updateCommentaryTeamsQuery(teamDetails, fastify, request);
 
-  global.tblCommentaries[index].displayStatus = request.body.displayStatus;
+  global.tblCommentaryTeams[index] = teamDetails;
 
-  return true;
+  return teamDetails;
 };
 
-const updateStrikerService = async (request, fastify) => {
-  const { commentaryId, teamId, strikerId, nonStrikerId } = request.body;
-
-  const indexStriker = global.tblCommentaryPlayers.findIndex(
-    (item) =>
-      item.commentaryId === commentaryId &&
-      item.teamId === teamId &&
-      item.playerId === strikerId
+const updateCommentaryPlayerDetailsServices = async (
+  playerDetails,
+  fastify,
+  request
+) => {
+  const index = global.tblCommentaryPlayers.findIndex(
+    (item) => item.commentaryPlayerId === playerDetails.commentaryPlayerId
   );
 
-  const indexNonStriker = global.tblCommentaryPlayers.findIndex(
-    (item) =>
-      item.commentaryId === commentaryId &&
-      item.teamId === teamId &&
-      item.playerId === nonStrikerId
-  );
-
-  const index = global.tblCommentaries.findIndex(
-    (item) => item.commentaryId === commentaryId
-  );
-
-  if (indexStriker === -1 || indexNonStriker === -1) {
-    throw new Error("Player with this id not Found");
+  if (index === -1) {
+    throw new Error("Commentary with this id not Found");
   }
 
-  const data1 = {
-    commentaryId,
-    teamId,
-    playerId: strikerId,
-    onStrike: true,
-    isPlay: true,
-  };
+  await updateCommentaryPlayersQuery(playerDetails, fastify, request);
 
-  const data2 = {
-    commentaryId,
-    teamId,
-    playerId: nonStrikerId,
-    onStrike: false,
-    isPlay: true,
-  };
+  global.tblCommentaryPlayers[index] = playerDetails;
 
-  await updateStrikerQuery(data1, fastify, request);
-  await updateStrikerQuery(data2, fastify, request);
-  await updateStatusOfCommentaryQuery(
-    {
-      commentaryId,
-      status: 4,
-    },
-    fastify,
-    request
-  );
-
-  global.tblCommentaryPlayers[indexStriker].onStrike = true;
-  global.tblCommentaryPlayers[indexNonStriker].onStrike = false;
-  global.tblCommentaryPlayers[indexStriker].isPlay = true;
-  global.tblCommentaryPlayers[indexNonStriker].isPlay = true;
-  global.tblCommentaries[index].commentaryStatus = 3;
-
-  return true;
+  return playerDetails;
 };
 
-const updateBowlerService = async (request, fastify) => {
-  const { commentaryId, teamId, bowlerId } = request.body;
+const saveOverService = async (overDetais, fastify, request) => {
+  const { overId } = overDetais;
+
+  if (overId === "0") {
+    return await createOverService(overDetais, fastify, request);
+  } else {
+    return await updateOverService(overDetais, fastify, request);
+  }
+};
+
+const createOverService = async (data, fastify, request) => {
+  const index = global.tblCommentaries.findIndex(
+    (item) => item.commentaryId === data.commentaryId
+  );
+
+  if (index === -1) {
+    throw new Error("Commentary with this id not Found");
+  }
+
+  const indexTeam = global.tblCommentaryTeams.findIndex(
+    (item) =>
+      item.commentaryId === data.commentaryId && item.teamId === data.teamId
+  );
+
+  if (indexTeam === -1) {
+    throw new Error("Team with this id not Found");
+  }
 
   const indexBowler = global.tblCommentaryPlayers.findIndex(
     (item) =>
-      item.commentaryId === commentaryId &&
-      item.teamId === teamId &&
-      item.playerId === bowlerId
-  );
-
-  const index = global.tblCommentaries.findIndex(
-    (item) => item.commentaryId === commentaryId
+      item.commentaryId === data.commentaryId &&
+      item.teamId === data.teamId &&
+      item.commentaryPlayerId === data.bowlerId
   );
 
   if (indexBowler === -1) {
-    throw new Error("Player with this id not Found");
+    throw new Error("Bowler with this id not Found");
   }
 
-  const data = {
-    commentaryId,
-    teamId,
-    bowlerId,
-  };
+  const addOver = await createOverQuery(data, fastify, request);
 
-  await updateBowlerQuery(data, fastify, request);
-  await updateStatusOfCommentaryQuery(
-    {
-      commentaryId,
-      status: 4,
-    },
+  global.tblOvers.push(addOver);
+
+  return addOver;
+};
+
+const updateOverService = async (data, fastify, request) => {
+  const indexOver = global.tblOvers.findIndex(
+    (item) => item.overId === data.overId
+  );
+
+  if (indexOver === -1) {
+    throw new Error("Over with this id not Found");
+  }
+
+  await updateOverQuery(data, fastify, request);
+
+  global.tblOvers[indexOver] = data;
+
+  return data;
+};
+
+const ballByBallCommentoriesService = async (data, fastify, request) => {
+  const { commentaryBallByBallId } = data;
+
+  if (commentaryBallByBallId === "0") {
+    return await createBallByBallCommentoriesService(data, fastify, request);
+  } else {
+    return await updateBallByBallCommentoriesService(data, fastify, request);
+  }
+};
+
+const createBallByBallCommentoriesService = async (data, fastify, request) => {
+  const index = global.tblCommentaries.findIndex(
+    (item) => item.commentaryId === data.commentaryId
+  );
+
+  if (index === -1) {
+    throw new Error("Commentary with this id not Found");
+  }
+
+  const addBallByBallCommentories = await createBallByBallCommentoriesQuery(
+    data,
     fastify,
     request
   );
 
-  global.tblCommentaryPlayers[indexBowler].bowlerOnStrike = true;
-  global.tblCommentaries[index].commentaryStatus = 4;
+  global.tblCommentaryBallByBall.push(addBallByBallCommentories);
+
+  return addBallByBallCommentories;
+};
+
+const updateBallByBallCommentoriesService = async (data, fastify, request) => {
+  const indexBallByBall = global.tblCommentaryBallByBall.findIndex(
+    (item) => item.commentaryBallByBallId === data.commentaryBallByBallId
+  );
+
+  if (indexBallByBall === -1) {
+    throw new Error("BallByBall with this id not Found");
+  }
+
+  await updateBallByBallCommentoriesQuery(data, fastify, request);
+
+  global.tblCommentaryBallByBall[indexBallByBall] = data;
+
+  return data;
+};
+
+const saveCommentaryWicketService = async (data, fastify, request) => {
+  const { commentaryWicketId } = data;
+
+  if (commentaryWicketId === "0") {
+    return await createCommentaryWicketService(data, fastify, request);
+  } else {
+    return await updateCommentaryWicketService(data, fastify, request);
+  }
+};
+
+const createCommentaryWicketService = async (data, fastify, request) => {
+  const index = global.tblCommentaries.findIndex(
+    (item) => item.commentaryId === data.commentaryId
+  );
+
+  if (index === -1) {
+    throw new Error("Commentary with this id not Found");
+  }
+
+  const addCommentaryWicket = await createCommentaryWicketQuery(
+    data,
+    fastify,
+    request
+  );
+
+  global.tblCommentaryWicket.push(addCommentaryWicket);
+
+  return addCommentaryWicket;
+};
+
+const updateCommentaryWicketService = async (data, fastify, request) => {
+  const indexWicket = global.tblCommentaryWicket.findIndex(
+    (item) => item.commentaryWicketId === data.commentaryWicketId
+  );
+
+  if (indexWicket === -1) {
+    throw new Error("Wicket with this id not Found");
+  }
+
+  await updateCommentaryWicketQuery(data, fastify, request);
+
+  global.tblCommentaryWicket[indexWicket] = data;
+
+  return data;
+};
+
+const saveCommentaryPartnershipService = async (data, fastify, request) => {
+  const { commentaryPartnershipId } = data;
+
+  if (commentaryPartnershipId === "0") {
+    return await createCommentaryPartnershipService(data, fastify, request);
+  } else {
+    return await updateCommentaryPartnershipService(data, fastify, request);
+  }
+};
+
+const createCommentaryPartnershipService = async (data, fastify, request) => {
+  const index = global.tblCommentaries.findIndex(
+    (item) => item.commentaryId === data.commentaryId
+  );
+
+  if (index === -1) {
+    throw new Error("Commentary with this id not Found");
+  }
+
+  const addCommentaryPartnership = await createCommentaryPartnershipQuery(
+    data,
+    fastify,
+    request
+  );
+
+  global.tblCommentaryPartnership.push(addCommentaryPartnership);
+
+  return addCommentaryPartnership;
+};
+
+const updateCommentaryPartnershipService = async (data, fastify, request) => {
+  const indexPartnership = global.tblCommentaryPartnership.findIndex(
+    (item) => item.commentaryPartnershipId === data.commentaryPartnershipId
+  );
+
+  if (indexPartnership === -1) {
+    throw new Error("Partnership with this id not Found");
+  }
+
+  await updateCommentaryPartnershipQuery(data, fastify, request);
+
+  global.tblCommentaryPartnership[indexPartnership] = data;
+
+  return data;
+};
+
+const deleteBallByBallCommentoriesService = async (request, fastify) => {
+  const { commentaryBallByBallId } = request.body;
+
+  const index = global.tblCommentaryBallByBall.findIndex(
+    (item) => item.commentaryBallByBallId === commentaryBallByBallId
+  );
+
+  if (index === -1) {
+    throw new Error("BallByBall with this id not Found");
+  }
+
+  await deleteBallByBallCommentoriesQuery(ballByBall, request, fastify);
+
+  global.tblCommentaryBallByBall = global.tblCommentaryBallByBall.filter(
+    (item) => item.commentaryBallByBallId !== commentaryBallByBallId
+  );
 
   return true;
+  s;
 };
 
 module.exports = {
@@ -534,10 +728,8 @@ module.exports = {
   commentaryByIdService,
   saveCommentaryService,
   deleteCommentaryService,
-  updateTossDetailsService,
-  updateCommentaryStatusService,
   allDisplayStatusService,
   commentaryDetailsByIdService,
-  updateStrikerService,
-  updateBowlerService,
+  saveCommentaryDetailsService,
+  deleteBallByBallCommentoriesService,
 };
