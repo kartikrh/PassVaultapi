@@ -22,6 +22,7 @@ const {
   createCommentaryWicketQuery,
   updateCommentaryPartnershipQuery,
   createCommentaryPartnershipQuery,
+  deleteBallByBallCommentoriesQuery,
 } = require("../repository/TableCommentary");
 
 const allCommentaryService = async () => {
@@ -362,16 +363,6 @@ const saveCommentaryService = async (request, fastify) => {
 const deleteCommentaryService = async (request, fastify) => {
   const { commentaryId } = request.body;
 
-  // for (const commentary of commentaryId) {
-  //   const validateCommentaryId = global.tblCommentaries.find(
-  //     (item) => item.commentaryId === commentary
-  //   );
-
-  //   if (!validateCommentaryId) {
-  //     throw new Error("Commentary with this id not Found");
-  //   }
-  // }
-
   for (const commentary of commentaryId) {
     await deleteCommentryQuery(commentary, request, fastify);
   }
@@ -711,6 +702,27 @@ const updateCommentaryPartnershipService = async (data, fastify, request) => {
   return data;
 };
 
+const deleteBallByBallCommentoriesService = async (request, fastify) => {
+  const { commentaryBallByBallId } = request.body;
+
+  const index = global.tblCommentaryBallByBall.findIndex(
+    (item) => item.commentaryBallByBallId === commentaryBallByBallId
+  );
+
+  if (index === -1) {
+    throw new Error("BallByBall with this id not Found");
+  }
+
+  await deleteBallByBallCommentoriesQuery(ballByBall, request, fastify);
+
+  global.tblCommentaryBallByBall = global.tblCommentaryBallByBall.filter(
+    (item) => item.commentaryBallByBallId !== commentaryBallByBallId
+  );
+
+  return true;
+  s;
+};
+
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -719,4 +731,5 @@ module.exports = {
   allDisplayStatusService,
   commentaryDetailsByIdService,
   saveCommentaryDetailsService,
+  deleteBallByBallCommentoriesService,
 };

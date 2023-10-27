@@ -490,6 +490,18 @@ const deleteCommentryQuery = async (commentaryId, request, fastify) => {
       ),
        delete_teams as (
         delete from "tblCommentaryTeams" where "wrCommentaryId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)
+      ),
+      delete_overs as (
+        delete from "tblOvers" where "wrCommentaryId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)
+      ),
+      delete_ball_by_ball as (
+        delete from "tblCommentaryBallByBalls" where "wrCommentaryId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)
+      ),
+      delete_partnership as (
+        delete from "tblCommentaryPartnerships" where "wrCommentaryId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)
+      ),
+      delete_wicket as (
+        delete from "tblCommentaryWickets" where "wrCommentaryId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)
       )
       delete from "tblCommentaries" where "wrCommentaryId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)
       `,
@@ -503,6 +515,33 @@ const deleteCommentryQuery = async (commentaryId, request, fastify) => {
       fastify,
       err.message,
       "DB ERROR --> repository/TableConfig/getConfigByIdQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const deleteBallByBallCommentoriesQuery = async (id, request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `with delete_partnership as (
+        delete from "tblCommentaryPartnerships" where "wrCommentaryBallByBallId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)
+      ),
+      delete_wicket as (
+        delete from "tblCommentaryWickets" where "wrCommentaryBallByBallId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)
+      )
+      delete from "tblCommentaryBallByBalls" where "wrCommentaryBallByBallId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)
+      `,
+      {
+        type: fastify.db.QueryTypes.DELETE,
+        bind: [id],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableConfig/deleteBallByBallCommentoriesQuery",
       request
     );
     throw new Error(err.message);
@@ -1711,4 +1750,5 @@ module.exports = {
   updateCommentaryWicketQuery,
   createCommentaryPartnershipQuery,
   updateCommentaryPartnershipQuery,
+  deleteBallByBallCommentoriesQuery,
 };

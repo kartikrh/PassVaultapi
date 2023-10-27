@@ -1373,6 +1373,20 @@ const Commentary = {
       },
     },
   },
+  deleteBallByBall: {
+    schema: {
+      tags: ["Commentary"],
+      description: "delete Commentary ball by ball",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryBallByBallId: { type: "string" },
+        },
+        required: ["commentaryBallByBallId"],
+      },
+    },
+  },
   saveDetails: {
     schema: {
       tags: ["Commentary"],
