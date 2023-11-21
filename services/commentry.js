@@ -713,7 +713,7 @@ const deleteBallByBallCommentoriesService = async (request, fastify) => {
     throw new Error("BallByBall with this id not Found");
   }
 
-  await deleteBallByBallCommentoriesQuery(ballByBall, request, fastify);
+  await deleteBallByBallCommentoriesQuery(commentaryBallByBallId, request, fastify);
 
   global.tblCommentaryBallByBall = global.tblCommentaryBallByBall.filter(
     (item) => item.commentaryBallByBallId !== commentaryBallByBallId
