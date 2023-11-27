@@ -7,6 +7,7 @@ const {
   commentaryDetailsByIdService,
   saveCommentaryDetailsService,
   deleteBallByBallCommentoriesService,
+  deleteOverCommentoriesService
 } = require("../../../../services/commentry");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -22,7 +23,6 @@ const getAllCommentaries = async (request, reply, fastify) => {
     reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
   }
 };
-
 const getAllDisplayStatus = async (request, reply, fastify) => {
   try {
     const result = await allDisplayStatusService();
@@ -32,7 +32,6 @@ const getAllDisplayStatus = async (request, reply, fastify) => {
     reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
   }
 };
-
 const getCommentaryById = async (request, reply, fastify) => {
   try {
     const result = await commentaryByIdService(request, fastify);
@@ -51,7 +50,6 @@ const getCommentaryDetailsById = async (request, reply, fastify) => {
     reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
   }
 };
-
 const addCommentary = async (request, reply, fastify) => {
   try {
     const result = await saveCommentaryService(request, fastify);
@@ -61,7 +59,6 @@ const addCommentary = async (request, reply, fastify) => {
     reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
   }
 };
-
 const deleteCommentary = async (request, reply, fastify) => {
   try {
     const result = await deleteCommentaryService(request, fastify);
@@ -71,7 +68,6 @@ const deleteCommentary = async (request, reply, fastify) => {
     reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
   }
 };
-
 const saveCommentaryDetails = async (request, reply, fastify) => {
   try {
     const result = await saveCommentaryDetailsService(request, fastify);
@@ -81,7 +77,6 @@ const saveCommentaryDetails = async (request, reply, fastify) => {
     reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
   }
 };
-
 const deleteBallByBallCommentary = async (request, reply, fastify) => {
   try {
     const result = await deleteBallByBallCommentoriesService(request, fastify);
@@ -91,6 +86,20 @@ const deleteBallByBallCommentary = async (request, reply, fastify) => {
       fastify,
       err.message,
       path + "/deleteBallByBallCommentary",
+      request
+    );
+    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+  }
+};
+const deleteOverCommentary = async (request, reply, fastify) => {
+  try {
+    const result = await deleteOverCommentoriesService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      path + "/deleteOverCommentary",
       request
     );
     reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
@@ -106,4 +115,5 @@ module.exports = {
   getCommentaryDetailsById,
   saveCommentaryDetails,
   deleteBallByBallCommentary,
+  deleteOverCommentary,
 };
