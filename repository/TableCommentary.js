@@ -547,7 +547,27 @@ const deleteBallByBallCommentoriesQuery = async (id, request, fastify) => {
     throw new Error(err.message);
   }
 };
-
+const deleteOverCommentoriesQuery = async (id, request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `with cte as (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)
+       delete from "tblOvers" where "wrOverId" = (select "wrKey" from cte)
+      `,
+      {
+        type: fastify.db.QueryTypes.DELETE,
+        bind: [id],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableConfig/deleteOverCommentoriesQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
 //get all query ---------------------------------------------
 
 const getAllCommentaryTeamsQuery = async (fastify) => {
@@ -1751,4 +1771,5 @@ module.exports = {
   createCommentaryPartnershipQuery,
   updateCommentaryPartnershipQuery,
   deleteBallByBallCommentoriesQuery,
+  deleteOverCommentoriesQuery
 };
