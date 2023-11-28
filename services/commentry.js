@@ -719,6 +719,12 @@ const deleteBallByBallCommentoriesService = async (request, fastify) => {
   global.tblCommentaryBallByBall = global.tblCommentaryBallByBall.filter(
     (item) => item.commentaryBallByBallId !== commentaryBallByBallId
   );
+  global.tblCommentaryWicket=global.tblCommentaryWicket.filter(
+    (item) => item.commentaryBallByBallId !== commentaryBallByBallId
+  );
+  global.tblCommentaryPartnership=global.tblCommentaryPartnership.filter(
+    (item) => item.commentaryBallByBallId !== commentaryBallByBallId
+  );
 
   return true;
   s;

@@ -524,18 +524,14 @@ const deleteCommentryQuery = async (commentaryId, request, fastify) => {
 const deleteBallByBallCommentoriesQuery = async (id, request, fastify) => {
   try {
     return await fastify.db.query(
-      `with delete_partnership as (
-        delete from "tblCommentaryPartnerships" where "wrCommentaryBallByBallId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)
-      ),
-      delete_wicket as (
-        delete from "tblCommentaryWickets" where "wrCommentaryBallByBallId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)
-      )
-      delete from "tblCommentaryBallByBalls" where "wrCommentaryBallByBallId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)
-      `,
-      {
-        type: fastify.db.QueryTypes.DELETE,
-        bind: [id],
-      }
+      `WITH delete_partnership AS (
+          DELETE FROM "tblCommentaryPartnerships" WHERE "wrCommentaryBallByBallId" = (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $1)
+        ),
+        delete_wicket AS (
+          DELETE FROM "tblCommentaryWickets" WHERE "wrCommentaryBallByBallId" = (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $1)
+        )
+      DELETE FROM "tblCommentaryBallByBalls" WHERE "wrCommentaryBallByBallId" = (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $1)`,
+      { bind: [id], type: fastify.db.QueryTypes.DELETE }
     );
   } catch (err) {
     errorLogger(
@@ -547,6 +543,7 @@ const deleteBallByBallCommentoriesQuery = async (id, request, fastify) => {
     throw new Error(err.message);
   }
 };
+
 const deleteOverCommentoriesQuery = async (id, request, fastify) => {
   try {
     return await fastify.db.query(
