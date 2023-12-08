@@ -78,24 +78,14 @@ module.exports = (sequelize) => {
         type: DataTypes.BOOLEAN,
         allowNull: true,
       },
-<<<<<<< HEAD
       wrWicketCount: {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
-=======
->>>>>>> 04e86581fd38276b280abacc8b69f2f27f7b2e70
       wrBallCount: {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
-<<<<<<< HEAD
-=======
-      wrWicketCount: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-      },
->>>>>>> 04e86581fd38276b280abacc8b69f2f27f7b2e70
     },
     {
       timestamps: false,
