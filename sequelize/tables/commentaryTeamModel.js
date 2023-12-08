@@ -62,6 +62,14 @@ module.exports = (sequelize) => {
         type: DataTypes.BOOLEAN,
         allowNull: true,
       },
+      wrCurrentInnings: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      wrIsBattingComplete: {
+        type: DataTypes.BOOLEAN,
+        allowNull: true,
+      },
     },
     {
       timestamps: false,
