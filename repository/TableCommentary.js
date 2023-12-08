@@ -277,8 +277,8 @@ const updateCommentaryQuery = async (request, fastify) => {
           data.target || null,
           data.isSignalROn,
           data.isMatchTypeUpdated || false,
-          data.commentaryId,
           data.currentInnings,
+          data.commentaryId,
         ],
 
         type: fastify.db.QueryTypes.UPDATE,
@@ -1210,8 +1210,9 @@ const updateCommentaryTeamsQuery = async (data, fastify, request) => {
         "wrRrr" = $9,
         "wrTeamStatus" = $10,
         "wrIsWin" = $11,
-        "wrCurrentInnings", "wrIsBattingComplete"
-        where "wrCommentaryTeamId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $12)
+        "wrCurrentInnings" = $12,
+        "wrIsBattingComplete" = $13
+        where "wrCommentaryTeamId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $14)
       `,
       {
         bind: [
@@ -1226,6 +1227,8 @@ const updateCommentaryTeamsQuery = async (data, fastify, request) => {
           data.rrr,
           data.teamStatus,
           data.isWin,
+          data.currentInnings,
+          data.isBattingComplete,
           data.commentaryTeamId,
         ],
         type: fastify.db.QueryTypes.UPDATE,
@@ -1678,6 +1681,8 @@ const createCommentaryWicketQuery = async (data, fastify, request) => {
           data.playerRun,
           data.playerBalls,
           data.isDelete || false,
+          data.wicketCount,
+          data.ballCount,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -1785,5 +1790,5 @@ module.exports = {
   createCommentaryPartnershipQuery,
   updateCommentaryPartnershipQuery,
   deleteBallByBallCommentoriesQuery,
-  deleteOverCommentoriesQuery
+  deleteOverCommentoriesQuery,
 };
