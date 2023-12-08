@@ -1373,6 +1373,20 @@ const Commentary = {
       },
     },
   },
+  deleteOvers: {
+    schema: {
+      tags: ["Commentary"],
+      description: "delete specific over based on overId ",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryOverId: { type: "string" },
+        },
+        required: ["commentaryOverId"],
+      },
+    },
+  },
   deleteBallByBall: {
     schema: {
       tags: ["Commentary"],

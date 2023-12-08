@@ -23,6 +23,7 @@ const {
   updateCommentaryPartnershipQuery,
   createCommentaryPartnershipQuery,
   deleteBallByBallCommentoriesQuery,
+  deleteOverCommentoriesQuery
 } = require("../repository/TableCommentary");
 
 const allCommentaryService = async () => {
@@ -718,10 +719,36 @@ const deleteBallByBallCommentoriesService = async (request, fastify) => {
   global.tblCommentaryBallByBall = global.tblCommentaryBallByBall.filter(
     (item) => item.commentaryBallByBallId !== commentaryBallByBallId
   );
+  global.tblCommentaryWicket=global.tblCommentaryWicket.filter(
+    (item) => item.commentaryBallByBallId !== commentaryBallByBallId
+  );
+  global.tblCommentaryPartnership=global.tblCommentaryPartnership.filter(
+    (item) => item.commentaryBallByBallId !== commentaryBallByBallId
+  );
 
   return true;
   s;
 };
+const deleteOverCommentoriesService = async (request, fastify) => {
+  const { commentaryOverId } = request.body;
+  const index = global.tblOvers.findIndex(
+    (item) => item.overId === commentaryOverId
+  );
+
+  if (index === -1) {
+    throw new Error("OverId with this id not Found");
+  }
+
+  await deleteOverCommentoriesQuery(commentaryOverId, request, fastify);
+
+  global.tblOvers = global.tblOvers.filter(
+    (item) => item.overId !== commentaryOverId
+  );
+
+  return true;
+};
+
+
 
 module.exports = {
   allCommentaryService,
@@ -732,4 +759,5 @@ module.exports = {
   commentaryDetailsByIdService,
   saveCommentaryDetailsService,
   deleteBallByBallCommentoriesService,
+  deleteOverCommentoriesService
 };

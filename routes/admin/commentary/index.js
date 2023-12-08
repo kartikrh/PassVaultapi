@@ -11,6 +11,7 @@ const {
   getCommentaryDetailsById,
   saveCommentaryDetails,
   deleteBallByBallCommentary,
+  deleteOverCommentary
 } = require("../../../controller/users/admin/commentary/commentary");
 const { Commentary } = require("../../../swaggerSchema/groupTags/schema");
 
@@ -106,4 +107,12 @@ module.exports = async (fastify, opts) => {
     handler: (request, reply) =>
       deleteBallByBallCommentary(request, reply, fastify),
   });
+  fastify.post("/deleteOverCommentary", {
+    schema: Commentary.deleteOvers.schema,
+    preHandler: [(request, reply) => authorize(request, reply, fastify)],
+    handler: (request, reply) =>
+    deleteOverCommentary(request, reply, fastify),
+  });
+
+  
 };
