@@ -78,6 +78,14 @@ module.exports = (sequelize) => {
         type: DataTypes.BOOLEAN,
         allowNull: true,
       },
+      wrBallCount: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      wrWicketCount: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
     },
     {
       timestamps: false,
