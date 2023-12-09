@@ -7,7 +7,8 @@ const {
   commentaryDetailsByIdService,
   saveCommentaryDetailsService,
   deleteBallByBallCommentoriesService,
-  deleteOverCommentoriesService
+  deleteOverCommentoriesService,
+  commentaryDetailsByEventIdService,
 } = require("../../../../services/commentry");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -97,10 +98,20 @@ const deleteOverCommentary = async (request, reply, fastify) => {
     const result = await deleteOverCommentoriesService(request, fastify);
     reply.status(200).send(success(result, 200));
   } catch (err) {
+    errorLogger(fastify, err.message, path + "/deleteOverCommentary", request);
+    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+  }
+};
+
+const getCommentaryDetailsByEventId = async (request, reply, fastify) => {
+  try {
+    const result = await commentaryDetailsByEventIdService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
     errorLogger(
       fastify,
       err.message,
-      path + "/deleteOverCommentary",
+      path + "/getCommentaryDetailsByEventId",
       request
     );
     reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
@@ -117,4 +128,5 @@ module.exports = {
   saveCommentaryDetails,
   deleteBallByBallCommentary,
   deleteOverCommentary,
+  getCommentaryDetailsByEventId,
 };

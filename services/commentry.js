@@ -23,7 +23,7 @@ const {
   updateCommentaryPartnershipQuery,
   createCommentaryPartnershipQuery,
   deleteBallByBallCommentoriesQuery,
-  deleteOverCommentoriesQuery
+  deleteOverCommentoriesQuery,
 } = require("../repository/TableCommentary");
 
 const allCommentaryService = async () => {
@@ -715,15 +715,19 @@ const deleteBallByBallCommentoriesService = async (request, fastify) => {
     throw new Error("BallByBall with this id not Found");
   }
 
-  await deleteBallByBallCommentoriesQuery(commentaryBallByBallId, request, fastify);
+  await deleteBallByBallCommentoriesQuery(
+    commentaryBallByBallId,
+    request,
+    fastify
+  );
 
   global.tblCommentaryBallByBall = global.tblCommentaryBallByBall.filter(
     (item) => item.commentaryBallByBallId !== commentaryBallByBallId
   );
-  global.tblCommentaryWicket=global.tblCommentaryWicket.filter(
+  global.tblCommentaryWicket = global.tblCommentaryWicket.filter(
     (item) => item.commentaryBallByBallId !== commentaryBallByBallId
   );
-  global.tblCommentaryPartnership=global.tblCommentaryPartnership.filter(
+  global.tblCommentaryPartnership = global.tblCommentaryPartnership.filter(
     (item) => item.commentaryBallByBallId !== commentaryBallByBallId
   );
 
@@ -749,7 +753,427 @@ const deleteOverCommentoriesService = async (request, fastify) => {
   return true;
 };
 
+const commentaryDetailsByEventIdService = async (request, fastify) => {
+  const result = await global.tblCommentaries.find(
+    (item) => item.eventId === request.body.eventId
+  );
 
+  if (!result) {
+    throw new Error("Commentary with this id not Found");
+  }
+  const resultArr = {
+    eid: "",
+    til: "",
+    toss: "",
+    scot: "",
+    scor: "",
+    scov: "",
+    t1n: "",
+    t1sn: "",
+    t1s: "",
+    t1im: "",
+    t2n: "",
+    t2sn: "",
+    t2s: "",
+    t2im: "",
+    par: "",
+    lawkt: "",
+    rer: "",
+    reb: "",
+    crr: "",
+    rrr: "",
+    cin: "",
+    tmd: "",
+    dis: "",
+    isc: "",
+    sts: "",
+    rmk: "",
+    win: "",
+  };
+  let eid;
+  let til;
+  let toss;
+  let scot;
+  let scor;
+  let scov;
+  let t1n;
+  let t1nid = 0;
+  let t1sn;
+  let t1s;
+  let t1im;
+  let t2n;
+  let t2nid = 0;
+  let t2sn;
+  let t2s;
+  let t2im;
+  let par;
+  let lawkt;
+  let rer;
+  let reb;
+  let crr;
+  let rrr;
+  let cin;
+  let tmd;
+  let dis;
+  let isc;
+  let sts;
+  let rmk;
+  let win;
+  let getstatus = 0;
+  let tossteam;
+  let tossType;
+  let cid = 0;
+  let batid = 0;
+  let ballid = 0;
+  let mtype = 0;
+  let bovr = 0;
+  // Basic elements are set
+  cid = result.commentaryId;
+  eid = result.eventId.toString();
+  til = result.eventName;
+  getstatus = result.commentaryStatus;
+  dis = result.eventDate;
+  t1nid = result.team1Id;
+  t2nid = result.team2Id;
+  mtype = result.matchTypeId;
+  //teams set
+  const commentaryTeamsOne = await global.tblCommentaryTeams.filter(
+    (item) => item.commentaryId === cid && item.teamId === t1nid
+  );
+
+  const commentaryTeamsTwo = await global.tblCommentaryTeams.filter(
+    (item) => item.commentaryId === cid && item.teamId === t2nid
+  );
+
+  if (commentaryTeamsOne.length > 0) {
+    t1sn = commentaryTeamsOne[0].shortName;
+    t1n = commentaryTeamsOne[0].teamName;
+    const wicket1 =
+      commentaryTeamsOne[0].teamWicket === null
+        ? 0
+        : commentaryTeamsOne[0].teamWicket;
+    const overs1 =
+      commentaryTeamsOne[0].teamOver === null
+        ? 0.0
+        : commentaryTeamsOne[0].teamOver;
+    const teamScore1 = commentaryTeamsOne[0]?.teamScore ?? 0;
+    t1s = teamScore1 + "/" + wicket1 + "(" + overs1 + ")";
+  }
+
+  if (commentaryTeamsTwo.length > 0) {
+    t2sn = commentaryTeamsTwo[0].shortName;
+    t2n = commentaryTeamsTwo[0].teamName;
+    const wicket1 =
+      commentaryTeamsTwo[0].teamWicket === null
+        ? 0
+        : commentaryTeamsTwo[0].teamWicket;
+    const overs1 =
+      commentaryTeamsTwo[0].teamOver === null
+        ? 0.0
+        : commentaryTeamsTwo[0].teamOver;
+    const teamScore2 = commentaryTeamsTwo[0]?.teamScore ?? 0;
+    t2s = teamScore2 + "/" + wicket1 + "(" + overs1 + ")";
+  }
+  //teams Images are Ser
+  const _teamsC1 = await global.tblTeams.filter(
+    (item) => item.teamId === t1nid
+  );
+  t1im = _teamsC1[0].image;
+  const _teamsC2 = await global.tblTeams.filter(
+    (item) => item.teamId === t2nid
+  );
+  t2im = _teamsC2[0].image;
+
+  if (getstatus == 1) {
+    // Assign values to the resultArr object
+    resultArr.eid = result.eventId.toString();
+    resultArr.til = result.eventName;
+    resultArr.toss = "Toss Not Done Yet";
+    resultArr.scot = "";
+    resultArr.scor = "";
+    resultArr.scov = "";
+    resultArr.t1n = t1sn;
+    resultArr.t1sn = t1sn;
+    resultArr.t1s = t1s;
+    resultArr.t1im = t1im;
+    resultArr.t2n = t2n;
+    resultArr.t2sn = t2sn;
+    resultArr.t2s = t2s;
+    resultArr.t2im = t2im;
+    resultArr.par = "";
+    resultArr.lawkt = "";
+    resultArr.rer = "";
+    resultArr.reb = "";
+    resultArr.crr = "";
+    resultArr.rrr = "";
+    resultArr.cin = "";
+    resultArr.tmd = "";
+    resultArr.dis = "";
+    resultArr.isc = "";
+    resultArr.sts = result.commentaryStatus.toString();
+    resultArr.rmk = "Toss Not Done Yet";
+    resultArr.win = "";
+  }
+  if (getstatus == 2) {
+    const _tosswonby = result.tossWonBy;
+    if (commentaryTeamsOne[0].teamId == _tosswonby) {
+      tossteam = commentaryTeamsOne[0].shortName;
+      tossType =
+        result.choseTo === 1
+          ? " won the toss and opt to bat"
+          : " won the toss and opt to bowl";
+    } else {
+      tossteam = commentaryTeamsOTwo[0].shortName;
+      tossType =
+        result.choseTo === 1
+          ? " won the toss and opt to bat"
+          : " won the toss and opt to bowl";
+    }
+
+    toss = tossteam + tossType;
+    // Assign values to the resultArr object
+    resultArr.eid = result.eventId.toString();
+    resultArr.til = result.eventName;
+    resultArr.toss = toss;
+    resultArr.scot = "";
+    resultArr.scor = "";
+    resultArr.scov = "";
+    resultArr.t1n = t1sn;
+    resultArr.t1sn = t1sn;
+    resultArr.t1s = t1s;
+    resultArr.t1im = t1im;
+    resultArr.t2n = t2n;
+    resultArr.t2sn = t2sn;
+    resultArr.t2s = t2s;
+    resultArr.t2im = t2im;
+    resultArr.par = "";
+    resultArr.lawkt = "";
+    resultArr.rer = "";
+    resultArr.reb = "";
+    resultArr.crr = "";
+    resultArr.rrr = "";
+    resultArr.cin = "";
+    resultArr.tmd = "";
+    resultArr.dis = "";
+    resultArr.isc = "";
+    resultArr.sts = result.commentaryStatus.toString();
+    resultArr.rmk = toss;
+    resultArr.win = "";
+  }
+  if (getstatus == 3) {
+    const _tosswonby = result.tossWonBy;
+    if (commentaryTeamsOne[0].teamId == _tosswonby) {
+      tossteam = commentaryTeamsOne[0].shortName;
+      tossType =
+        result.choseTo === 1
+          ? " won the toss and opt to bat"
+          : " won the toss and opt to bowl";
+    } else {
+      tossteam = commentaryTeamsOTwo[0].shortName;
+      tossType =
+        result.choseTo === 1
+          ? " won the toss and opt to bat"
+          : " won the toss and opt to bowl";
+    }
+
+    toss = tossteam + tossType;
+    // Assign values to the resultArr object
+    resultArr.eid = result.eventId.toString();
+    resultArr.til = result.eventName;
+    resultArr.toss = toss;
+    resultArr.scot = "";
+    resultArr.scor = "";
+    resultArr.scov = "";
+    resultArr.t1n = t1sn;
+    resultArr.t1sn = t1sn;
+    resultArr.t1s = t1s;
+    resultArr.t1im = t1im;
+    resultArr.t2n = t2n;
+    resultArr.t2sn = t2sn;
+    resultArr.t2s = t2s;
+    resultArr.t2im = t2im;
+    resultArr.par = "";
+    resultArr.lawkt = "";
+    resultArr.rer = "";
+    resultArr.reb = "";
+    resultArr.crr = "";
+    resultArr.rrr = "";
+    resultArr.cin = "";
+    resultArr.tmd = "";
+    resultArr.dis = "";
+    resultArr.isc = "";
+    resultArr.sts = result.commentaryStatus.toString();
+    resultArr.rmk = toss;
+    resultArr.win = "";
+  }
+  if (getstatus > 3) {
+    const _tosswonby = result.tossWonBy;
+    if (commentaryTeamsOne[0].teamId == _tosswonby) {
+      tossteam = commentaryTeamsOne[0].shortName;
+      tossType =
+        result.choseTo === 1
+          ? " won the toss and opt to bat"
+          : " won the toss and opt to bowl";
+    } else {
+      tossteam = commentaryTeamsOTwo[0].shortName;
+      tossType =
+        result.choseTo === 1
+          ? " won the toss and opt to bat"
+          : " won the toss and opt to bowl";
+    }
+    toss = tossteam + tossType;
+    //get Current Batting Team and
+    if (commentaryTeamsOne[0].teamStatus == 1) {
+      batid = commentaryTeamsOne[0].teamId;
+      ballid = commentaryTeamsTwo[0].teamId;
+      scot = commentaryTeamsOne[0]?.shortName ?? 0;
+      scor =
+        commentaryTeamsOne[0]?.teamScore ??
+        0 + "/" + commentaryTeamsOne[0]?.teamWicket ??
+        0;
+      scov = commentaryTeamsOne[0]?.teamOver ?? 0;
+      crr = commentaryTeamsOne[0]?.crr ?? 0;
+      rrr = commentaryTeamsOne[0]?.rrr ?? 0;
+    } else {
+      batid = commentaryTeamsTwo[0].teamId;
+      ballid = commentaryTeamsOne[0].teamId;
+      scot = commentaryTeamsTwo[0]?.shortName ?? 0;
+      scor =
+        commentaryTeamsTwo[0]?.teamScore ??
+        0 + "/" + commentaryTeamsTwo[0]?.teamWicket ??
+        0;
+      scov = commentaryTeamsTwo[0]?.teamOver ?? 0;
+      crr = commentaryTeamsTwo[0]?.crr ?? 0;
+      rrr = commentaryTeamsTwo[0]?.rrr ?? 0;
+    }
+
+    const commentaryWicket = await global.tblCommentaryWicket
+      .filter((item) => item.commentaryId === cid && item.teamId === batid)
+      .slice(-1)[0]; // Get the last 1 overs;
+
+    const commentaryPartnership = await global.tblCommentaryPartnership
+      .filter((item) => item.commentaryId === cid && item.teamId === batid)
+      .slice(-1)[0]; // Get the last 1 overs
+
+    let _partRuns = commentaryPartnership?.totalRuns ?? 0;
+    let _partBall = commentaryPartnership?.totalBalls ?? 0;
+    par = _partRuns + "(" + _partBall + ")";
+
+    // Assign values to the resultArr object
+    resultArr.eid = result.eventId.toString();
+    resultArr.til = result.eventName;
+    resultArr.toss = toss;
+    resultArr.scot = scot;
+    resultArr.scor = scor;
+    resultArr.scov = scov;
+    resultArr.t1n = t1sn;
+    resultArr.t1sn = t1sn;
+    resultArr.t1s = t1s;
+    resultArr.t1im = t1im;
+    resultArr.t2n = t2n;
+    resultArr.t2sn = t2sn;
+    resultArr.t2s = t2s;
+    resultArr.t2im = t2im;
+    resultArr.par = par;
+    resultArr.lawkt = "";
+    resultArr.rer = "";
+    resultArr.reb = "";
+    resultArr.crr = crr;
+    resultArr.rrr = rrr;
+    resultArr.cin = result.commentaryStatus.toString();
+    resultArr.tmd = "";
+    resultArr.dis = dis;
+    resultArr.isc = "";
+    resultArr.sts = result.commentaryStatus.toString();
+    resultArr.rmk = toss;
+    resultArr.win = "";
+  }
+  const commentaryPlayers_batter = await global.tblCommentaryPlayers.filter(
+    (item) =>
+      item.commentaryId === cid &&
+      item.teamId === batid &&
+      item.onStrike !== null
+  );
+
+  const commentaryPlayersBowler = await global.tblCommentaryPlayers.filter(
+    (item) =>
+      item.commentaryId === cid &&
+      item.teamId === ballid &&
+      item.bowlerOnStrike !== null
+  );
+
+  const cbt = commentaryPlayers_batter.map((player) => ({
+    pid: player.playerId,
+    batn: player.playerName,
+    trun: player.batRun || 0,
+    tball: player.batBall || 0,
+    t4: player.batFour || 0,
+    t6: player.batSix || 0,
+    sr: player.batSrr || 0,
+    os: player.onStrike,
+  }));
+
+  const cbl = commentaryPlayersBowler.map((bowler) => ({
+    pid: bowler.playerId,
+    pn: bowler.playerName,
+    tov: bowler.bowlerOver || 0,
+    cob: bowler.bowlerCurrentBall || 0,
+    trun: bowler.bowlerRun || 0,
+    t4: bowler.bowlerFour || 0,
+    t6: bowler.bowlerSix || 0,
+    twr: bowler.bowlerWideBallRun || 0,
+    twb: bowler.bowlerWideBall || 0,
+    tnr: bowler.bowlerNoBallRun || 0,
+    tnb: bowler.bowlerNoBall || 0,
+    mov: bowler.bowlerMaidenOver || 0,
+    twik: bowler.bowlerTotalWicket || 0.0,
+    eco: parseFloat(bowler.bowlerEconomy) || 0.0,
+    dob: bowler.bowlerDotBall || 0,
+    exr:
+      bowler.bowlerWideBallRun ||
+      0 + bowler.bowlerNoBallRun ||
+      0 + bowler.bowlerByeBallRun ||
+      0 + bowler.bowlerLegByeBallRun ||
+      0,
+  }));
+
+  const commentaryOvers = global.tblOvers
+    .filter((item) => item.commentaryId === cid)
+    .slice(-2); // Get the last 2 overs
+
+  const last2OversIds = commentaryOvers.map((over) => over.overId);
+
+  const commentaryBallByBall = global.tblCommentaryBallByBall.filter((item) =>
+    last2OversIds.includes(item.overId)
+  );
+  const cbb = commentaryBallByBall.map((ball) => ({
+    bbi: ball.commentaryBallByBallId,
+    bai: ball.batStrikeId,
+    nsbi: ball.batNonStrikeId,
+    boi: 0,
+    oid: ball.overId,
+    ocn: parseFloat(ball.overCount),
+    run: ball.ballRun || 0,
+    nbr: ball.ballExtraRun || 0,
+    wbr: ball.ballWideBallRun || 0,
+    byr: ball.ballByeBallRun || 0,
+    lbr: ball.ballLegByeBallRun || 0,
+    pr: ball.ballPlayerId || null,
+    isw: ball.ballIsWicket,
+    bty: ball.ballType || 0,
+    isb: ball.ballIsBoundry,
+    isdel: ball.isDelete,
+  }));
+
+  const allDetails = {
+    cm: { ...resultArr },
+    cbb,
+    cbt,
+    cbl,
+  };
+
+  return allDetails;
+};
 
 module.exports = {
   allCommentaryService,
@@ -760,5 +1184,6 @@ module.exports = {
   commentaryDetailsByIdService,
   saveCommentaryDetailsService,
   deleteBallByBallCommentoriesService,
-  deleteOverCommentoriesService
+  deleteOverCommentoriesService,
+  commentaryDetailsByEventIdService,
 };
