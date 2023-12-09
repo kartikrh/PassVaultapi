@@ -81,10 +81,11 @@ const commentaryByIdService = async (request, fastify) => {
 };
 
 const commentaryDetailsByIdService = async (request, fastify) => {
+  console.log("hit")
   const result = await global.tblCommentaries.find(
     (item) => item.commentaryId === request.body.commentaryId
   );
-
+console.log(result)
   if (!result) {
     throw new Error("Commentary with this id not Found");
   }
