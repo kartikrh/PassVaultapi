@@ -589,8 +589,8 @@ const getAllCommentaryTeamsQuery = async (fastify) => {
   "wrRrr" as "rrr",
   "wrTeamStatus" as "teamStatus",
   "wrIsWin" as "isWin",
-  "wrCurrentInnings" as "currentInnings", 
-  "wrIsBattingComplete" as "isBattingComplete"
+  tct."wrCurrentInnings" as "currentInnings", 
+  tct."wrIsBattingComplete" as "isBattingComplete"
   from "tblCommentaryTeams" tct 
   left join "tblEncryptedData" te on tct."wrCommentaryTeamId" = te."wrKey"
   left join "tblEncryptedData" te1 on tct."wrCommentaryId" = te1."wrKey"
@@ -795,8 +795,8 @@ const getAllCommentaryWicketQuery = async (fastify) => {
     "wrTeamScore" as "teamScore",
     "wrPlayerRun" as "playerRun",
     "wrPlayerBalls" as "playerBalls",
-    "wrWicketCount" as "wicketCount",
-    "wrBallCount" as "ballCount"
+    tcw."wrWicketCount" as "wicketCount",
+    tcw."wrBallCount" as "ballCount"
     from "tblCommentaryWickets" tcw
     left join "tblEncryptedData" te on tcw."wrCommentaryWicketId" = te."wrKey"
     left join "tblEncryptedData" te1 on tcw."wrCommentaryId" = te1."wrKey"
@@ -1654,8 +1654,8 @@ const createCommentaryWicketQuery = async (data, fastify, request) => {
     "wrTeamScore" as "teamScore",
     "wrPlayerRun" as "playerRun",
     "wrPlayerBalls" as "playerBalls",
-    "wrWicketCount" as "wicketCount",
-    "wrBallCount" as "ballCount"
+    tcw."wrWicketCount" as "wicketCount",
+    tcw."wrBallCount" as "ballCount"
     from "insert_data" tcw
     left join "tblEncryptedData" te on tcw."wrCommentaryWicketId" = te."wrKey"
     left join "tblEncryptedData" te1 on tcw."wrCommentaryId" = te1."wrKey"
