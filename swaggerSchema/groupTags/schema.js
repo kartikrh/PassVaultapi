@@ -1300,6 +1300,20 @@ const Commentary = {
       },
     },
   },
+  getByeventId: {
+    schema: {
+      tags: ["Commentary"],
+      description: "get Commentary by evrentid",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          eventId: { type: "integer" },
+        },
+        required: ["eventId"],
+      },
+    },
+  },
   save: {
     schema: {
       tags: ["Commentary"],

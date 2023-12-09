@@ -11,21 +11,22 @@ const {
   getCommentaryDetailsById,
   saveCommentaryDetails,
   deleteBallByBallCommentary,
-  deleteOverCommentary
+  deleteOverCommentary,
+  getCommentaryDetailsByEventId,
 } = require("../../../controller/users/admin/commentary/commentary");
 const { Commentary } = require("../../../swaggerSchema/groupTags/schema");
 
 module.exports = async (fastify, opts) => {
   fastify.post("/all", {
     schema: Commentary.getAll.schema,
-    preHandler: [
-      (request, reply) => authorize(request, reply, fastify),
-      (request, reply) =>
-        checkPermission(request, reply, fastify, {
-          tabName: "Commentary",
-          mode: "view",
-        }),
-    ],
+    // preHandler: [
+    //   (request, reply) => authorize(request, reply, fastify),
+    //   (request, reply) =>
+    //     checkPermission(request, reply, fastify, {
+    //       tabName: "Commentary",
+    //       mode: "view",
+    //     }),
+    // ],
     handler: (request, reply) => getAllCommentaries(request, reply, fastify),
   });
   fastify.post("/displayStatus", {
@@ -54,14 +55,14 @@ module.exports = async (fastify, opts) => {
   });
   fastify.post("/detailsById", {
     schema: Commentary.getById.schema,
-    preHandler: [
-      (request, reply) => authorize(request, reply, fastify),
-      (request, reply, done) =>
-        checkPermission(request, reply, fastify, {
-          tabName: "Commentary",
-          mode: "view",
-        }),
-    ],
+    // preHandler: [
+    //   (request, reply) => authorize(request, reply, fastify),
+    //   (request, reply, done) =>
+    //     checkPermission(request, reply, fastify, {
+    //       tabName: "Commentary",
+    //       mode: "view",
+    //     }),
+    // ],
     handler: (request, reply) =>
       getCommentaryDetailsById(request, reply, fastify),
   });
@@ -110,9 +111,20 @@ module.exports = async (fastify, opts) => {
   fastify.post("/deleteOverCommentary", {
     schema: Commentary.deleteOvers.schema,
     preHandler: [(request, reply) => authorize(request, reply, fastify)],
-    handler: (request, reply) =>
-    deleteOverCommentary(request, reply, fastify),
+    handler: (request, reply) => deleteOverCommentary(request, reply, fastify),
   });
 
-  
+  fastify.post("/getscore", {
+    schema: Commentary.getByeventId.schema,
+    // preHandler: [
+    //   (request, reply) => authorize(request, reply, fastify),
+    //   (request, reply, done) =>
+    //     checkPermission(request, reply, fastify, {
+    //       tabName: "Commentary",
+    //       mode: "view",
+    //     }),
+    // ],
+    handler: (request, reply) =>
+      getCommentaryDetailsByEventId(request, reply, fastify),
+  });
 };
