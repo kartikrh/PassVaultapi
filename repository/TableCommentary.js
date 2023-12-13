@@ -1762,6 +1762,57 @@ const updateCommentaryWicketQuery = async (data, fastify, request) => {
   }
 };
 
+const UpdateCommentaryTimeQuery = async (data, fastify, request) => {
+  try {
+    return await fastify.db.query(
+      `update "tblCommentaries" set 
+      "wrUpdateTime" = now()
+      where "wrCommentaryId" = (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $1)`,
+      {
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [data.commentaryId],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/UpdateCommentaryTimeQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const getCommentaryID_Socket = async (data, fastify, request) => {
+  try {
+    return await fastify.db.query(
+      `SELECT
+      "tblEncryptedData"."wrValue" AS "CommentaryId",
+      "wrEventId" AS "EventID",
+      "wrMarketID" AS "MarketID"
+    FROM
+      "tblCommentaries"
+      LEFT JOIN "tblEncryptedData"
+      ON "tblCommentaries"."wrCommentaryId" = "tblEncryptedData"."wrKey"
+      WHERE
+      "wrUpdateTime" > (CURRENT_TIMESTAMP - INTERVAL '1 second' * $1);`,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [process.env.COMMANTRY_UPDATE_TIME],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/getCommentaryID_Socket",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -1794,4 +1845,7 @@ module.exports = {
   updateCommentaryPartnershipQuery,
   deleteBallByBallCommentoriesQuery,
   deleteOverCommentoriesQuery,
+  //nitesh Updated
+  UpdateCommentaryTimeQuery,
+  getCommentaryID_Socket,
 };

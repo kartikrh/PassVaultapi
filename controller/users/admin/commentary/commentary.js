@@ -8,7 +8,10 @@ const {
   saveCommentaryDetailsService,
   deleteBallByBallCommentoriesService,
   deleteOverCommentoriesService,
+  //nitesh Updated
   commentaryDetailsByEventIdService,
+  commentaryDetailsByCommentaryIdService,
+  getCurrentUpdatedCommentaryIDService,
 } = require("../../../../services/commentry");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -117,6 +120,38 @@ const getCommentaryDetailsByEventId = async (request, reply, fastify) => {
   }
 };
 
+const getCommentaryDetailsBycommentaryId = async (request, reply, fastify) => {
+  try {
+    const result = await commentaryDetailsByCommentaryIdService(
+      request,
+      fastify
+    );
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      path + "/getCommentaryDetailsBycommentaryId",
+      request
+    );
+    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+  }
+};
+
+const getCurrentUpdatedCommentaryID = async (request, reply, fastify) => {
+  try {
+    const result = await getCurrentUpdatedCommentaryIDService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      path + "/getCurrentUpdatedCommentaryID",
+      request
+    );
+    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+  }
+};
 module.exports = {
   getAllCommentaries,
   getCommentaryById,
@@ -128,4 +163,6 @@ module.exports = {
   deleteBallByBallCommentary,
   deleteOverCommentary,
   getCommentaryDetailsByEventId,
+  getCommentaryDetailsBycommentaryId,
+  getCurrentUpdatedCommentaryID,
 };
