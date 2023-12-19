@@ -9,6 +9,8 @@ const {
   saveUserService,
   deleteUserService,
   changeUserPasswordService,
+  signOutUserServices,
+  verifyTokenUserServices,
 } = require("../../services/user");
 const { errorLogger } = require("../../utilities/logger");
 const fetchAllDataFromDb = require("../../utilities/fetchAllData");
@@ -30,6 +32,26 @@ async function signInUser(request, reply, fastify) {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/signInUser", request);
+    reply.status(401).send(error(err.message, ERROR_CODES.AUTH_ERROR, 401));
+  }
+}
+
+async function signOutUser(request, reply, fastify) {
+  try {
+    const result = await signOutUserServices(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/signOutUser", request);
+    reply.status(401).send(error(err.message, ERROR_CODES.AUTH_ERROR, 401));
+  }
+}
+
+async function verifyTokenUser(request, reply, fastify) {
+  try {
+    const result = await verifyTokenUserServices(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/verifyTokenUser", request);
     reply.status(401).send(error(err.message, ERROR_CODES.AUTH_ERROR, 401));
   }
 }
@@ -127,6 +149,8 @@ const updateUserPassword = async (request, reply, fastify) => {
 module.exports = {
   signUpUser,
   signInUser,
+  signOutUser,
+  verifyTokenUser,
   generateEncryption,
   validateUser,
   loadDataInMemory,

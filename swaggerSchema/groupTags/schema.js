@@ -31,6 +31,32 @@ const Auth = {
       },
     },
   },
+  signOut: {
+    schema: {
+      tags: ["Auth"],
+      description: "signOut",
+      headers: {
+        type: "object",
+        properties: {
+          Authorization: { type: "string" },
+        },
+        required: ["Authorization"],
+      },
+    },
+  },
+  verifyToken: {
+    schema: {
+      tags: ["Auth"],
+      description: "verifyToken",
+      headers: {
+        type: "object",
+        properties: {
+          Authorization: { type: "string" },
+        },
+        required: ["Authorization"],
+      },
+    },
+  },
   encryption: {
     schema: {
       tags: ["Auth"],

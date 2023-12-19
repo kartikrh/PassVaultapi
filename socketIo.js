@@ -1,24 +1,17 @@
 const jwt = require("jsonwebtoken");
 
 const connection = (socket) => {
-  const { userId, allowMultipleLogin } = socket;
-
+  const { userId, allowMultipleLogin, wrToken } = socket;
   if (userId) {
-    socket.join(userId); // Join the specified room
+    const user = global.tblUsers.find((user) => user.userId === userId);
 
-    const clientsInRoom = global.socketIo.sockets.adapter.rooms.get(userId);
-
-    // Check if there's more than one client in the room
-    if (clientsInRoom.size > 1 && !allowMultipleLogin) {
-      // Get the first client's socket ID
-      const firstClientSocketId = Array.from(clientsInRoom)[0];
-
-      // Emit a "remove" event to the first client
+    // Check if token is not of latest login and multiple login is false
+    if (wrToken !== user?.loginToken && !allowMultipleLogin) {
       global.socketIo
-        .to(firstClientSocketId)
-        .emit("logout", "You have been removed from the room.");
-
-      global.socketIo.sockets.sockets.get(firstClientSocketId).leave(userId);
+      .to(socket.id)
+      .emit("logout", "You have been removed from the room.");
+    } else {
+      socket.join(userId); // Join the specified room
     }
   }
 
@@ -49,8 +42,9 @@ const socketMiddleware = async (socket, next) => {
       return next(new Error("Invalid Token"));
     }
 
-    socket.userId = verifyToken?.WrUserId;
+    socket.userId = verifyToken?.WrEId;
     socket.allowMultipleLogin = verifyToken?.WrAllowMultipleLogin;
+    socket.wrToken = verifyToken?.wrToken
 
     return next();
   } catch (error) {
