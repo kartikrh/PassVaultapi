@@ -12,10 +12,12 @@ const {
   addUserQuery,
   updateUserQuery,
   deleteUserQuery,
+  signOutUser,
   getOriginalIdFromEncryptedId,
   updateUserPasswordQuery,
 } = require("../repository/TableUser");
 const { deviceInfo, encrypt, decrypt } = require("../utilities/index");
+const { generateToken } = require("../utilities/tokenization");
 
 async function signUpUserService({ body }, fastify) {
   const hashedPassword = encrypt(body.password);
@@ -25,7 +27,7 @@ async function signUpUserService({ body }, fastify) {
   const results = await signUpUser(body, fastify);
 
   const payload = { userId: results.WrUserId };
-  const token = jwt.sign(payload, process.env.SECRET_KEY_TOKEN);
+  const token = generateToken(payload);
 
   return { token };
 }
@@ -41,7 +43,7 @@ async function signInUserServices(request, fastify) {
   };
 
   const user = await signInUser(body, fastify);
-
+  const WrEId = user.WrEId
   //* if no user exists or password incorrect
   if (!user) {
     throw new Error("incorrect undername and password");
@@ -53,8 +55,30 @@ async function signInUserServices(request, fastify) {
     throw new Error("Invalid IP Address");
   }
 
+  if (WrEId) {
+    const index = global.tblUsers.findIndex(
+      (user) => user.userId === WrEId
+    );
+    global.tblUsers[index].loginToken = body.token;
+  }
+
+  try {
+    const clientsInRoom = global.socketIo.sockets.adapter.rooms.get(WrEId); // get sockets in user's room
+  
+    // logout all sockets and remove all sockets from the room if multiple login is false and there are multiple sockets available
+    if (clientsInRoom?.size && !user.WrAllowMultipleLogin) {
+      global.socketIo
+      .to(WrEId)
+      .emit("logout", "You have been removed from the room.");
+      Array.from(clientsInRoom).forEach(id=>global.socketIo.sockets.sockets.get(id).leave(WrEId));
+    }
+  } catch (error) {
+    console.log("Error in socket in signin", error);    
+  }
+  
   const tokenPayload = {
     WrUserId: user.WrUserId,
+    WrEId: user.WrEId,
     WrUserType: user.WrUserType,
     WrRoleId: user.WrRoleId,
     WrUserName: user.WrUserName,
@@ -65,12 +89,72 @@ async function signInUserServices(request, fastify) {
   };
 
   //* token created
-  const options = {
-    expiresIn: process.env.TOKEN_EXPIRY_TIME,
-  };
-  const token = jwt.sign(tokenPayload, process.env.SECRET_KEY_TOKEN, options);
+  const token = generateToken(tokenPayload);
 
   return { token, userName: user.WrUserName };
+}
+
+async function signOutUserServices(request, fastify) {
+
+  // get roomId(userId) from jwt token
+  const {
+    WrUserId,
+    WrEId,
+    WrAllowMultipleLogin,
+    wrToken
+  } = request.userTokenInfo
+
+  if (!WrAllowMultipleLogin) {
+    try {
+      const clientsInRoom = global.socketIo.sockets.adapter.rooms.get(WrEId); // get sockets in user's room
+      // global.socketIo
+      // .to(WrEId)
+      // .emit("logout", "You have been removed from the room.");
+  
+      // Remove socket ids from the user room
+      Array.from(clientsInRoom).forEach(id=>global.socketIo.sockets.sockets.get(id).leave(WrEId));
+    } catch (error) {
+      console.log(`Error While Logging out user id ${WrUserId} from current device`, error);      
+    }
+  }
+
+  // set wrIsLogin to false in userLoginInfo get wrToken from jwt token
+  const userLoginInfo = {
+    WrUserId,
+    wrToken
+  }
+  await signOutUser(userLoginInfo, fastify)
+  
+  // find user in global storage
+  const index = global.tblUsers.findIndex(
+    (user) => user.userId === WrEId
+  );
+
+  if (!WrAllowMultipleLogin || wrToken === global.tblUsers[index].loginToken) {
+    // set loginToken in global to null if user is not multiple login or loginToken and wrToken is same
+    global.tblUsers[index].loginToken = null;
+  }
+
+  return "success";
+}
+
+async function verifyTokenUserServices(request, fastify) {
+
+  // get roomId(userId) from jwt token
+  const {
+    WrEId : userId,
+    WrAllowMultipleLogin,
+    wrToken
+  } = request.userTokenInfo;
+
+  if(userId){
+    const user = global.tblUsers.find((user) => user.userId === userId);
+    // Check if token is not of latest login and multiple login is false
+    if (user?.loginToken && (wrToken === user?.loginToken || WrAllowMultipleLogin)) {
+      return "success";
+    }
+  }
+  throw new Error("Invalid Token");
 }
 
 async function generateEncryptionService(request, fastify) {
@@ -231,14 +315,15 @@ const updateUserService = async (request, fastify) => {
   await updateUserQuery(body, fastify, request);
 
   if (!body.isActive) {
-    const getOriginalUserId = await getOriginalIdFromEncryptedId(
-      userId,
-      fastify
-    );
-
-    global.socketIo
-      .to(getOriginalUserId)
-      .emit("logout", "You have been removed from the room.");
+    try {
+      global.socketIo
+        .to(userId)
+        .emit("logout", "You have been removed from the room.");
+    } catch (error) {
+      const originalId = await getOriginalIdFromEncryptedId(userId, fastify)
+      console.log(`Error While Logging out user id ${originalId} from all device`, error);
+    }
+    body.loginToken = null;
   }
 
   const index = global.tblUsers.findIndex((user) => user.userId === userId);
@@ -306,6 +391,8 @@ const changeUserPasswordService = async (request, fastify) => {
 module.exports = {
   signUpUserService,
   signInUserServices,
+  signOutUserServices,
+  verifyTokenUserServices,
   generateEncryptionService,
   validateUserServices,
   getAllUsersService,

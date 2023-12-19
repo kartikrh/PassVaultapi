@@ -27,9 +27,9 @@ async function signInUser(body, fastify) {
   const data = await fastify.db.query(
     `WITH user_data AS (
       SELECT
-        "WrUserId", "WrPassword", "WrUserType", "WrRoleId", "WrUserName",
+        "WrUserId", te."wrValue" as "WrEId", "WrPassword", "WrUserType", "WrRoleId", "WrUserName",
         "WrIsSuperAdmin", "WrParentId", "WrAllowMultipleLogin", "WrSubAdminId" ,"WrUserIp"
-      FROM "tblUsers" WHERE "WrUserName" = $1 AND "WrPassword"=$2 AND "WrIsActive" = true
+      FROM "tblUsers" left join "tblEncryptedData" te on "WrUserId" = te."wrKey" WHERE "WrUserName" = $1 AND "WrPassword"=$2 AND "WrIsActive" = true
     ),
     insert_data AS (
       INSERT INTO "tblUserLoginInfos" ("WrUserId", "WrUserType", "wrInfo", "wrIsLogin", "wrToken","WrCreatedDate")
@@ -64,6 +64,19 @@ async function signInUser(body, fastify) {
   );
 
   return data[0];
+}
+
+async function signOutUser(userLoginInfo, fastify) {
+  await fastify.db.query(
+    `UPDATE "tblUserLoginInfos" set "wrIsLogin" = false where "WrUserId" = $1 and "wrToken" = $2`,
+    {
+      type: QueryTypes.RAW,
+      bind: [
+        userLoginInfo.WrUserId,
+        userLoginInfo.wrToken,
+      ],
+    }
+  );
 }
 
 async function createUserLoginInfo(userLoginInfo, fastify) {
@@ -307,6 +320,7 @@ const updateUserPasswordQuery = async (body, fastify, request) => {
 module.exports = {
   signInUser,
   signUpUser,
+  signOutUser,
   createUserLoginInfo,
   getMaxKey,
   generateEncryptionData,
