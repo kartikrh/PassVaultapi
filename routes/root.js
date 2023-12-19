@@ -6,6 +6,8 @@ const {
   validateUser,
   loadDataInMemory,
   updateUserPassword,
+  signOutUser,
+  verifyTokenUser,
 } = require("../controller/users/index");
 const { Auth } = require("../swaggerSchema/groupTags/schema");
 const { authorize } = require("../controller/middleware/index");
@@ -19,6 +21,16 @@ module.exports = async function (fastify, opts) {
   fastify.post("/signin", {
     schema: Auth.signIn.schema,
     handler: (request, reply) => signInUser(request, reply, fastify),
+  });
+  fastify.post("/signout", {
+    schema: Auth.signOut.schema,
+    preHandler: [(request, reply) => authorize(request, reply, fastify)],
+    handler: (request, reply) => signOutUser(request, reply, fastify),
+  });
+  fastify.post("/verifyToken", {
+    schema: Auth.verifyToken.schema,
+    preHandler: [(request, reply) => authorize(request, reply, fastify)],
+    handler: (request, reply) => verifyTokenUser(request, reply, fastify),
   });
   fastify.post("/changePassword", {
     schema: Auth.updatePassword.schema,

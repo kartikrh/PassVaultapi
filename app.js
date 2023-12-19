@@ -14,6 +14,7 @@ const { fastifyRateLimit } = require("@fastify/rate-limit");
 const { responseLogger } = require("./utilities/logger");
 const fastifyMultipart = require("@fastify/multipart");
 const fastifyStatic = require("@fastify/static");
+const { generateToken } = require("./utilities/tokenization");
 // require("./database/connnection");
 
 // Pass --options via CLI arguments in command to enable these options.
@@ -109,6 +110,27 @@ module.exports = async function (fastify, opts) {
     done();
   });
 
+  fastify.addHook("onSend", (request, reply, payload, done) => {
+    let newPayload = payload;
+    const urlExceptions = ["/signout", "/verifyToken"];
+    const urlTokenGeneration = ["/signin"];
+    const allowedStatusCodes = [200, 500, 403];
+
+    if (newPayload && allowedStatusCodes.includes(reply.statusCode)) {
+      newPayload = JSON.parse(newPayload);
+      if (urlTokenGeneration.includes(request.originalUrl)) {
+        newPayload.token = newPayload.result.token;
+      }else if (newPayload.token && !urlExceptions.includes(request.originalUrl)) {
+        const userLoginInfo = request.userTokenInfo;
+        delete userLoginInfo.ipAdress;
+        newPayload.token = generateToken(userLoginInfo);
+      }
+      newPayload = JSON.stringify(newPayload)
+    }
+    
+    done(null, newPayload)
+  });
+
   fastify.addHook("onResponse", (request, reply, done) => {
     const logger = false;
     if (request.startTime && logger) {
@@ -174,8 +196,8 @@ module.exports = async function (fastify, opts) {
   //Assign socketIo to global variable
   global.socketIo = io;
 
-  io.on("connection", connection);
   io.use(socketMiddleware);
+  io.on("connection", connection);
 
   // fastify.addHook("onRequest", (request, reply, done) => {
   //   const ip = requestIp.getClientIp(request);
