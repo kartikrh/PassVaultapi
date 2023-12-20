@@ -15,6 +15,7 @@ const { responseLogger } = require("./utilities/logger");
 const fastifyMultipart = require("@fastify/multipart");
 const fastifyStatic = require("@fastify/static");
 const { generateToken } = require("./utilities/tokenization");
+const { isJson } = require("./utilities");
 // require("./database/connnection");
 
 // Pass --options via CLI arguments in command to enable these options.
@@ -112,21 +113,27 @@ module.exports = async function (fastify, opts) {
 
   fastify.addHook("onSend", (request, reply, payload, done) => {
     let newPayload = payload;
-    const urlExceptions = ["/signout", "/verifyToken"];
-    const urlTokenGeneration = ["/signin"];
-    const allowedStatusCodes = [200, 500, 403];
-
-    if (newPayload && allowedStatusCodes.includes(reply.statusCode)) {
+    const originalUrl = request.originalUrl; // get original url
+    const urlDestructor = originalUrl.split('/'); // split original url
+    const urlLastParameter = [...urlDestructor].pop().split('.');
+    const urlExceptions = ['/documentation/json', "/documentation"];
+    
+    if (urlLastParameter.length === 1 && !urlExceptions.includes(originalUrl) && isJson(newPayload)) {
       newPayload = JSON.parse(newPayload);
-      if (urlTokenGeneration.includes(request.originalUrl)) {
-        newPayload.token = newPayload.result.token;
-      } else if (
-        newPayload.token &&
-        !urlExceptions.includes(request.originalUrl)
-      ) {
-        const userLoginInfo = request.userTokenInfo;
-        delete userLoginInfo.ipAdress;
-        newPayload.token = generateToken(userLoginInfo);
+      newPayload.title = urlDestructor[2] || urlDestructor[1];
+      const urlTokenExceptions = ["/signout", "/verifyToken"];
+      const urlTokenGeneration = ["/signin", "/signup"];
+      const allowedStatusCodes = [200, 500, 403];
+      if (allowedStatusCodes.includes(reply.statusCode)) {
+        if (urlTokenGeneration.includes(originalUrl) && newPayload?.result?.token) {
+          newPayload.token = newPayload.result.token;
+        } else if (
+          request.userTokenInfo &&
+          !urlTokenExceptions.includes(originalUrl)
+        ) {
+          const { ipAdress, iat, exp, ...userLoginInfo} = request.userTokenInfo;
+          newPayload.token = generateToken(userLoginInfo);
+        }
       }
       newPayload = JSON.stringify(newPayload);
     }
