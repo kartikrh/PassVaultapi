@@ -1340,6 +1340,29 @@ const Commentary = {
       },
     },
   },
+
+  getBycommentaryId: {
+    schema: {
+      tags: ["Commentary"],
+      description: "get Commentary by evrentid",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "string" },
+        },
+        required: ["commentaryId"],
+      },
+    },
+  },
+
+  getAllUpdatedIds: {
+    schema: {
+      tags: ["Commentary"],
+      description: "get all CommentaryIDS",
+      // security: [{ bearerAuth: [] }],
+    },
+  },
   save: {
     schema: {
       tags: ["Commentary"],
@@ -1390,6 +1413,7 @@ const Commentary = {
             type: "array",
             items: { type: "string" },
           },
+          currentInnings: { type: "integer" },
         },
         required: ["commentaryId"],
       },

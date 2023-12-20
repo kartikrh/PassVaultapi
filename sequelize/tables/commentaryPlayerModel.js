@@ -199,6 +199,10 @@ module.exports = (sequelize) => {
         type: DataTypes.DECIMAL(9, 2),
         allowNull: true,
       },
+      wrCurrentInnings: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
     },
     {
       timestamps: false,
