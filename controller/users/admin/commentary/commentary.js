@@ -46,7 +46,6 @@ const getCommentaryById = async (request, reply, fastify) => {
   }
 };
 const getCommentaryDetailsById = async (request, reply, fastify) => {
-  console.log("checkpoint")
   try {
     const result = await commentaryDetailsByIdService(request, fastify);
     reply.status(200).send(success(result, 200));

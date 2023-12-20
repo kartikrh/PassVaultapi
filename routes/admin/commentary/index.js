@@ -119,41 +119,41 @@ module.exports = async (fastify, opts) => {
 
   fastify.post("/getscore", {
     schema: Commentary.getByeventId.schema,
-    // preHandler: [
-    //   (request, reply) => authorize(request, reply, fastify),
-    //   (request, reply, done) =>
-    //     checkPermission(request, reply, fastify, {
-    //       tabName: "Commentary",
-    //       mode: "view",
-    //     }),
-    // ],
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "view",
+        }),
+    ],
     handler: (request, reply) =>
       getCommentaryDetailsByEventId(request, reply, fastify),
   });
   fastify.post("/getscoreByCId", {
     schema: Commentary.getBycommentaryId.schema,
-    // preHandler: [
-    //   (request, reply) => authorize(request, reply, fastify),
-    //   (request, reply, done) =>
-    //     checkPermission(request, reply, fastify, {
-    //       tabName: "Commentary",
-    //       mode: "view",
-    //     }),
-    // ],
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "view",
+        }),
+    ],
     handler: (request, reply) =>
       getCommentaryDetailsBycommentaryId(request, reply, fastify),
   });
 
   fastify.get("/getCIds", {
     schema: Commentary.getAllUpdatedIds.schema,
-    // preHandler: [
-    //   (request, reply) => authorize(request, reply, fastify),
-    //   (request, reply, done) =>
-    //     checkPermission(request, reply, fastify, {
-    //       tabName: "Commentary",
-    //       mode: "view",
-    //     }),
-    // ],
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "view",
+        }),
+    ],
     handler: (request, reply) =>
       getCurrentUpdatedCommentaryID(request, reply, fastify),
   });

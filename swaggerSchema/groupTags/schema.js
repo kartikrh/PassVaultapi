@@ -1413,6 +1413,7 @@ const Commentary = {
             type: "array",
             items: { type: "string" },
           },
+          currentInnings: { type: "integer" },
         },
         required: ["commentaryId"],
       },

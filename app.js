@@ -86,7 +86,7 @@ module.exports = async function (fastify, opts) {
   });
 
   fastify.register(fastifyRateLimit, {
-    max: 1000,
+    max: 100000000,
     timeWindow: "1 hour",
     errorResponseBuilder: function (request, context) {
       return {
@@ -120,15 +120,18 @@ module.exports = async function (fastify, opts) {
       newPayload = JSON.parse(newPayload);
       if (urlTokenGeneration.includes(request.originalUrl)) {
         newPayload.token = newPayload.result.token;
-      }else if (newPayload.token && !urlExceptions.includes(request.originalUrl)) {
+      } else if (
+        newPayload.token &&
+        !urlExceptions.includes(request.originalUrl)
+      ) {
         const userLoginInfo = request.userTokenInfo;
         delete userLoginInfo.ipAdress;
         newPayload.token = generateToken(userLoginInfo);
       }
-      newPayload = JSON.stringify(newPayload)
+      newPayload = JSON.stringify(newPayload);
     }
-    
-    done(null, newPayload)
+
+    done(null, newPayload);
   });
 
   fastify.addHook("onResponse", (request, reply, done) => {
@@ -186,14 +189,14 @@ module.exports = async function (fastify, opts) {
     };
   });
 
-  //socket.io
+  //  socket.io
   const io = new Server(fastify.server, {
     cors: {
       origin: "*",
     },
   });
 
-  //Assign socketIo to global variable
+  // //Assign socketIo to global variable
   global.socketIo = io;
 
   io.use(socketMiddleware);
