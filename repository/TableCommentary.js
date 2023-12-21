@@ -712,7 +712,8 @@ const getAllCommentaryBallByBallQuery = async (fastify) => {
     "wrOver_isMaiden" as "overIsMaiden",
     te11."wrValue" as "nextBatStrikeId",
     te12."wrValue" as "nextBatNonStrikeId",
-    "wrIsDelete" as "isDelete"
+    "wrIsDelete" as "isDelete",
+    "wrCurrentInnings" as "currentInnings"
     from "tblCommentaryBallByBalls" tcb
     left join "tblEncryptedData" te on tcb."wrCommentaryBallByBallId" = te."wrKey"
     left join "tblEncryptedData" te1 on tcb."wrCommentaryId" = te1."wrKey"
@@ -762,7 +763,8 @@ const getAllOversQuery = async (fastify) => {
     "wrPowerplayType" as "powerplayType",
     "wrIsMaiden" as "isMaiden",
     "wrDate" as "date",
-    "wrIsDelete" as "isDelete"
+    "wrIsDelete" as "isDelete",
+    "wrCurrentInnings" as "currentInnings"
     from "tblOvers" tco
     left join "tblEncryptedData" te on tco."wrOverId" = te."wrKey"
     left join "tblEncryptedData" te1 on tco."wrCommentaryId" = te1."wrKey"
@@ -811,7 +813,8 @@ const getAllCommentaryWicketQuery = async (fastify) => {
     "wrPlayerRun" as "playerRun",
     "wrPlayerBalls" as "playerBalls",
     tcw."wrWicketCount" as "wicketCount",
-    tcw."wrBallCount" as "ballCount"
+    tcw."wrBallCount" as "ballCount",
+    tcw."wrCurrentInnings" as "currentInnings"
     from "tblCommentaryWickets" tcw
     left join "tblEncryptedData" te on tcw."wrCommentaryWicketId" = te."wrKey"
     left join "tblEncryptedData" te1 on tcw."wrCommentaryId" = te1."wrKey"
@@ -842,6 +845,7 @@ const getAllCommentaryPartnershipQuery = async (fastify) => {
     "wrTotalRuns" as "totalRuns",
     "wrTotalBalls" as "totalBalls",
     "wrExtras" as "extras",
+    "wrCurrentInnings" as "currentInnings",
     te5."wrValue" as "commentaryBallByBallId"
     from "tblCommentaryPartnerships" tcw
     left join "tblEncryptedData" te on tcw."wrCommentaryPartnershipId" = te."wrKey"
@@ -865,7 +869,7 @@ const createCommentaryPartnershipQuery = async (data, fastify, request) => {
     const result = await fastify.db.query(
       `
       with insert_partnership as (
-        insert into "tblCommentaryPartnerships" ("wrCommentaryId", "wrTeamId", "wrBatter1Id", "wrBatter2Id", "wrBatter1Name", "wrBatter2Name", "wrTotalRuns", "wrTotalBalls", "wrExtras" , "wrCommentaryBallByBallId") values (
+        insert into "tblCommentaryPartnerships" ("wrCommentaryId", "wrTeamId", "wrBatter1Id", "wrBatter2Id", "wrBatter1Name", "wrBatter2Name", "wrTotalRuns", "wrTotalBalls", "wrExtras" , "wrCommentaryBallByBallId","wrCurrentInnings") values (
           (select "wrKey" from "tblEncryptedData" where "wrValue" = $1),
           (select "wrKey" from "tblEncryptedData" where "wrValue" = $2),
           (select "wrKey" from "tblEncryptedData" where "wrValue" = $3),
