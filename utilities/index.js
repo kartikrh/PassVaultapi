@@ -93,6 +93,15 @@ const generateFileName = () => {
   return timestamp + random;
 };
 
+const isJson = (json) => {
+  try {
+      JSON.parse(json);
+  } catch (e) {
+      return false;
+  }
+  return true;
+}
+
 module.exports = {
   ERROR_CODES,
   error,
@@ -103,4 +112,5 @@ module.exports = {
   encrypt,
   decrypt,
   generateFileName,
+  isJson,
 };
