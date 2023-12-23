@@ -7,6 +7,7 @@ const {
   getAllEvents,
   saveEvent,
   getEventId,
+  getEventcompetitionId,
 } = require("../../../controller/users/admin/event");
 const { Event } = require("../../../swaggerSchema/groupTags/schema");
 
@@ -35,6 +36,19 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request, reply) => getEventId(request, reply, fastify),
+  });
+
+  fastify.post("/bycompetitionId", {
+    schema: Event.getBycompetitionId.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Events",
+          mode: "view",
+        }),
+    ],
+    handler: (request, reply) => getEventcompetitionId(request, reply, fastify),
   });
   fastify.post("/save", {
     schema: Event.save.schema,

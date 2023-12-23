@@ -14,6 +14,14 @@ const eventByIdService = async (request) => {
   return result || null;
 };
 
+const eventBycompetitionIdService = async (request) => {
+  const { competitionId } = request.body;
+  const result = global.tblEvents.find(
+    (item) => item.competitionId === competitionId
+  );
+  return result || null;
+};
+
 const createEventService = async (request, fastify) => {
   const validateEventTypeId = global.tblEventTypes.find(
     (item) => item.eventTypeId === request.body.eventTypeId
@@ -134,4 +142,5 @@ module.exports = {
   eventByIdService,
   saveEventService,
   deleteEventService,
+  eventBycompetitionIdService,
 };

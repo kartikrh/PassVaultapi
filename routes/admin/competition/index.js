@@ -5,6 +5,7 @@ const {
 const {
   deleteCompetition,
   getAllCompetition,
+  getCompetitionByeventTypeId,
   getCompetitionById,
   saveCompetition,
   updateDisplayOrder,
@@ -36,6 +37,20 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request, reply) => getCompetitionById(request, reply, fastify),
+  });
+
+  fastify.post("/byeventTypeId", {
+    schema: Compitition.getByeventTypeId.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "competition",
+          mode: "view",
+        }),
+    ],
+    handler: (request, reply) =>
+      getCompetitionByeventTypeId(request, reply, fastify),
   });
   fastify.post("/save", {
     schema: Compitition.save.schema,
