@@ -1507,6 +1507,20 @@ const Compitition = {
       },
     },
   },
+  getByeventTypeId: {
+    schema: {
+      tags: ["Compitition"],
+      description: "get Compitition by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          eventTypeId: { type: "string" },
+        },
+        required: ["eventTypeId"],
+      },
+    },
+  },
   save: {
     schema: {
       tags: ["Compitition"],
@@ -1582,6 +1596,20 @@ const Event = {
           eventId: { type: "string" },
         },
         required: ["eventId"],
+      },
+    },
+  },
+  getBycompetitionId: {
+    schema: {
+      tags: ["Event"],
+      description: "get Event by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionId: { type: "string" },
+        },
+        required: ["competitionId"],
       },
     },
   },

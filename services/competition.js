@@ -19,6 +19,14 @@ const competitionByIdService = async (request) => {
   return result || null;
 };
 
+const competitionByeventTypeIdService = async (request) => {
+  const { eventTypeId } = request.body;
+  const result = global.tblCompetitions.find(
+    (item) => item.eventTypeId === eventTypeId
+  );
+  return result || null;
+};
+
 const createCompititionService = async (request, fastify) => {
   const findExists = global.tblCompetitions.find(
     (item) =>
@@ -169,4 +177,5 @@ module.exports = {
   saveCompetitionService,
   deleteCompetitionService,
   updateDisplayOrderService,
+  competitionByeventTypeIdService,
 };
