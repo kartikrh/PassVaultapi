@@ -19,7 +19,12 @@ const eventBycompetitionIdService = async (request) => {
   const result = global.tblEvents.find(
     (item) => item.competitionId === competitionId
   );
-  return result || null;
+  if (Array.isArray(result)) {
+    return result;
+  } else {
+    return [result];
+  }
+  //return result || null;
 };
 
 const createEventService = async (request, fastify) => {
