@@ -204,10 +204,10 @@ const createCommentaryService = async (request, fastify) => {
 
   if (validateMatchTypeId) {
     if (
-      validateMatchTypeId?.batsmenPerInings &&
-      validateMatchTypeId?.batsmenPerInings > 0
+      validateMatchTypeId?.noOfIningsPerSide &&
+      validateMatchTypeId?.noOfIningsPerSide > 1
     ) {
-      const TotalInnning = validateMatchTypeId?.batsmenPerInings;
+      const TotalInnning = validateMatchTypeId?.noOfIningsPerSide;
       for (let i = 0; i < TotalInnning; i++) {
         request.body.currentInnings = i + 1;
         await insertCommentaryTeams(request, fastify);
