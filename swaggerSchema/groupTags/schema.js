@@ -803,6 +803,12 @@ const EventType = {
       tags: ["Event Type"],
       security: [{ bearerAuth: [] }],
       description: "get all event type",
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
     },
   },
   getById: {
@@ -946,6 +952,12 @@ const PaneltyRuns = {
       tags: ["Panelty Runs"],
       security: [{ bearerAuth: [] }],
       description: "get all Panelty Runs",
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
     },
   },
   getById: {
@@ -1005,6 +1017,12 @@ const Player = {
       tags: ["Player"],
       security: [{ bearerAuth: [] }],
       description: "get all Player",
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
     },
   },
   getById: {
@@ -1188,7 +1206,6 @@ const User = {
         properties: {
           isActive: { type: "boolean" },
         },
-        required: ["isActive"],
       },
     },
   },
@@ -1498,6 +1515,12 @@ const Compitition = {
       tags: ["Compitition"],
       description: "get all Compitition",
       security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
     },
   },
   getById: {
@@ -1590,6 +1613,12 @@ const Event = {
       tags: ["Event"],
       description: "get all Event",
       security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
     },
   },
   getById: {

@@ -7,8 +7,19 @@ const {
 } = require("../repository/TableCompitition");
 const { storeImage, removeImage } = require("../utilities/Images");
 
-const allCompetitionService = async () => {
-  return global.tblCompetitions;
+const allCompetitionService = async (request) => {
+  const { isActive } = request.body;
+  if (isActive !== undefined) {
+    const result = global.tblCompetitions.find(
+      (item) => item.isActive === isActive
+    );
+    return result;
+  } else {
+    const result = global.tblCompetitions.find(
+      (item) => item.isActive === true
+    );
+    return result;
+  }
 };
 
 const competitionByIdService = async (request) => {

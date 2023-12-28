@@ -12,7 +12,7 @@ let commonPath = "controller/users/admin/eventTypes/index.js";
 
 const getAllEventTypes = async (request, reply, fastify) => {
   try {
-    const result = await allEventTypesService();
+    const result = await allEventTypesService(request);
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(

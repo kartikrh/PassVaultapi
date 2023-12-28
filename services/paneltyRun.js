@@ -4,8 +4,17 @@ const {
   deletePaneltyRunQuery,
 } = require("../repository/TablePaneltyRun");
 
-const allPaneltyRunsService = async () => {
-  return global.tblPaneltyRuns;
+const allPaneltyRunsService = async (request) => {
+  const { isActive } = request.body;
+  if (isActive !== undefined) {
+    const result = global.tblPaneltyRuns.find(
+      (item) => item.isActive === isActive
+    );
+    return result;
+  } else {
+    const result = global.tblPaneltyRuns.find((item) => item.isActive === true);
+    return result;
+  }
 };
 
 const paneltyRunByIdService = async (request) => {

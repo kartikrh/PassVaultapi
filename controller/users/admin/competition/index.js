@@ -13,7 +13,7 @@ let path = "controller/users/admin/competition/index";
 
 const getAllCompetition = async (request, reply, fastify) => {
   try {
-    const result = await allCompetitionService();
+    const result = await allCompetitionService(request);
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, path + "/getAllCompetition", request);

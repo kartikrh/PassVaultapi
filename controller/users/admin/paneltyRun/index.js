@@ -12,7 +12,7 @@ let commonPath = "controller/users/admin/paneltyRun/index";
 
 const getAllPaneltyRun = async (request, reply, fastify) => {
   try {
-    const result = await allPaneltyRunsService();
+    const result = await allPaneltyRunsService(request, fastify);
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(
