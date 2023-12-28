@@ -1183,6 +1183,13 @@ const User = {
       tags: ["User"],
       description: "get all User",
       security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+        required: ["isActive"],
+      },
     },
   },
   getById: {
