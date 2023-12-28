@@ -10,12 +10,14 @@ const { storeImage, removeImage } = require("../utilities/Images");
 const allEventTypesService = async (request) => {
   const { isActive } = request.body;
   if (isActive !== undefined) {
-    const result = global.tblEventTypes.find(
+    const result = global.tblEventTypes.filter(
       (item) => item.isActive === isActive
     );
     return result;
   } else {
-    const result = global.tblEventTypes.find((item) => item.isActive === true);
+    const result = global.tblEventTypes.filter(
+      (item) => item.isActive === true
+    );
     return result;
   }
 };

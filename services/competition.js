@@ -10,12 +10,12 @@ const { storeImage, removeImage } = require("../utilities/Images");
 const allCompetitionService = async (request) => {
   const { isActive } = request.body;
   if (isActive !== undefined) {
-    const result = global.tblCompetitions.find(
+    const result = global.tblCompetitions.filter(
       (item) => item.isActive === isActive
     );
     return result;
   } else {
-    const result = global.tblCompetitions.find(
+    const result = global.tblCompetitions.filter(
       (item) => item.isActive === true
     );
     return result;
