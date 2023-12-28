@@ -201,14 +201,14 @@ const getAllUsersService = async (request) => {
       return userWithoutPassword;
     });
 
-    const users = _users.find((_u) => _u.isActive === isActive);
+    const users = _users.filter((_u) => _u.isActive === isActive);
     return users;
   } else {
     const _users = global.tblUsers.map((user) => {
       const { password, ...userWithoutPassword } = user;
       return userWithoutPassword;
     });
-    const users = _users.find((_u) => _u.isActive === true);
+    const users = _users.filter((_u) => _u.isActive === true);
     return users;
   }
 };

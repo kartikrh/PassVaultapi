@@ -7,10 +7,10 @@ const {
 const allEventService = async (request) => {
   const { isActive } = request.body;
   if (isActive !== undefined) {
-    const _event = global.tblEvents.find((i) => i.isActive === isActive);
+    const _event = global.tblEvents.filter((i) => i.isActive === isActive);
     return _event;
   } else {
-    const _event = global.tblEvents.find((i) => i.isActive === true);
+    const _event = global.tblEvents.filter((i) => i.isActive === true);
     return _event;
   }
 };
