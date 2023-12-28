@@ -4,8 +4,15 @@ const {
   updateEventQuery,
 } = require("../repository/TableEvent");
 
-const allEventService = async () => {
-  return global.tblEvents;
+const allEventService = async (request) => {
+  const { isActive } = request.body;
+  if (isActive !== undefined) {
+    const _event = global.tblEvents.find((i) => i.isActive === isActive);
+    return _event;
+  } else {
+    const _event = global.tblEvents.find((i) => i.isActive === true);
+    return _event;
+  }
 };
 
 const eventByIdService = async (request) => {

@@ -11,8 +11,15 @@ const {
 const { getAllPlayersByTeamIdQuery } = require("../repository/TableTeams");
 const { storeImage, removeImage } = require("../utilities/Images");
 
-const allPlayerService = async () => {
-  return global.tblPlayers;
+const allPlayerService = async (request) => {
+  const { isActive } = request.body;
+  if (isActive !== undefined) {
+    const _player = global.tblPlayers.find((_p) => _p.isActive === isActive);
+    return _player;
+  } else {
+    const _player = global.tblPlayers.find((_p) => _p.isActive === true);
+    return _player;
+  }
 };
 
 const allPlayerTypeService = async () => {

@@ -195,13 +195,22 @@ async function validateUserServices(request, fastify) {
 
 const getAllUsersService = async (request) => {
   const { isActive } = request.body;
-  const _users = global.tblUsers.map((user) => {
-    const { password, ...userWithoutPassword } = user;
-    return userWithoutPassword;
-  });
+  if (isActive !== undefined) {
+    const _users = global.tblUsers.map((user) => {
+      const { password, ...userWithoutPassword } = user;
+      return userWithoutPassword;
+    });
 
-  const users = _users.filter((_u) => _u.isActive === isActive);
-  return users;
+    const users = _users.find((_u) => _u.isActive === isActive);
+    return users;
+  } else {
+    const _users = global.tblUsers.map((user) => {
+      const { password, ...userWithoutPassword } = user;
+      return userWithoutPassword;
+    });
+    const users = _users.find((_u) => _u.isActive === true);
+    return users;
+  }
 };
 
 const getUserByIdService = async (request) => {

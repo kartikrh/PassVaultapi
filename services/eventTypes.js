@@ -7,8 +7,17 @@ const {
 } = require("../repository/TableEventType");
 const { storeImage, removeImage } = require("../utilities/Images");
 
-const allEventTypesService = async () => {
-  return global.tblEventTypes;
+const allEventTypesService = async (request) => {
+  const { isActive } = request.body;
+  if (isActive !== undefined) {
+    const result = global.tblEventTypes.find(
+      (item) => item.isActive === isActive
+    );
+    return result;
+  } else {
+    const result = global.tblEventTypes.find((item) => item.isActive === true);
+    return result;
+  }
 };
 
 const eventTypeByIdService = async (request) => {
