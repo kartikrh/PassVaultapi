@@ -15,7 +15,7 @@ const { responseLogger } = require("./utilities/logger");
 const fastifyMultipart = require("@fastify/multipart");
 const fastifyStatic = require("@fastify/static");
 const { generateToken } = require("./utilities/tokenization");
-const { isJson } = require("./utilities");
+const { isJson, getMessage, toFirstLetterUpperCase } = require("./utilities");
 // require("./database/connnection");
 
 // Pass --options via CLI arguments in command to enable these options.
@@ -120,7 +120,8 @@ module.exports = async function (fastify, opts) {
     
     if (urlLastParameter.length === 1 && !urlExceptions.includes(originalUrl) && isJson(newPayload)) {
       newPayload = JSON.parse(newPayload);
-      newPayload.title = urlDestructor[2] || urlDestructor[1];
+      newPayload.title = toFirstLetterUpperCase(urlDestructor[2] || urlDestructor[1]);
+      newPayload.message = getMessage(newPayload, reply.statusCode, urlLastParameter[0]);
       const urlTokenExceptions = ["/signout", "/verifyToken"];
       const urlTokenGeneration = ["/signin", "/signup"];
       const allowedStatusCodes = [200, 500, 403];

@@ -95,11 +95,45 @@ const generateFileName = () => {
 
 const isJson = (json) => {
   try {
-      JSON.parse(json);
+    JSON.parse(json);
   } catch (e) {
-      return false;
+    return false;
   }
   return true;
+}
+
+const toFirstLetterUpperCase = (str) => {
+  return str.replace(
+    /\w\S*/g,
+    function (txt) {
+      return txt.charAt(0).toUpperCase() + txt.substr(1);
+    }
+  );
+}
+
+const getMessage = (payload, code, type) => {
+  switch (code) {
+    case 500:
+      return payload?.error?.message || `Internal Server Error`
+    case 200:
+      let message = typeof payload?.result === "string" ? payload.result : payload?.result?.message;
+      if (!message) {
+        if (type === "signin" || type === "signup") {
+          message = `${type} successfully`;
+        } else if (type === "save" || type === "create") {
+          message = `${payload.title} saved successfully`;
+        } else if (type.includes('delete')) {
+          message = `${payload.title}(s) delete successfully`;
+        } else {
+          message = `${payload.title} Data fetched successfully`;
+        }
+      }
+      return message
+    case 403:
+      return payload?.error?.message || `Unauthorized Access`
+    default:
+      return `Something Went Wrong with status ${code}`
+  }
 }
 
 module.exports = {
@@ -113,4 +147,6 @@ module.exports = {
   decrypt,
   generateFileName,
   isJson,
+  toFirstLetterUpperCase,
+  getMessage
 };
