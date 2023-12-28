@@ -10,8 +10,8 @@ const getAllCommentaryQuery = async (fastify) => {
     te3."wrValue" as "team2Id",
     tt1."wrTeamName" as "team1Name",
     tt2."wrTeamName" as "team2Name",
-    "wrCompetitionId" as "competitionId",
-    "wrEventId" as "eventId",
+    te8."wrValue" as "competitionId",
+    te9."wrValue" as "eventId",
     "wrEventDate" as "eventDate",
     "wrEventName" as "eventName",
     "wrEventRefId" as "eventRefId",
@@ -45,6 +45,8 @@ const getAllCommentaryQuery = async (fastify) => {
     left join "tblEncryptedData" te5 on tc."wrTossWonBy" = te5."wrKey"
     left join "tblEncryptedData" te6 on tc."wrWinnerId" = te6."wrKey"
     left join "tblEncryptedData" te7 on tc."wrCommentaryId" = te7."wrKey"
+    left join "tblEncryptedData" te8 on tc."wrCompetitionId" = te8."wrKey"
+    left join "tblEncryptedData" te9 on tc."wrEventId" = te9."wrKey"
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"    
         `,
