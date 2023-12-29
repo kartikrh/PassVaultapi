@@ -199,7 +199,6 @@ async function validateUserServices(request, fastify) {
 }
 
 const getAllUsersService = async (request) => {
-  const isActive = request.body?.isActive || true;
   const requestUserID = request.userTokenInfo.WrEId;
   const _filteredUserIDs = getUserChildIds(requestUserID, global.tblUsers);
   const _users = global.tblUsers.map((user) => {
@@ -207,10 +206,13 @@ const getAllUsersService = async (request) => {
     return userWithoutPassword;
   });
 
-  const users = _users.filter(
-    (_u) => _u.isActive === isActive && _filteredUserIDs.includes(_u.userId)
-  );
-  return users;
+  const isActive = request.body?.isActive === undefined ? true : request.body?.isActive;
+  if (request.body?.isActive === undefined) {
+    return _users.filter((_u) => _filteredUserIDs.includes(_u.userId));
+  } else {
+    return _users.filter((_u) => _u.isActive === isActive && _filteredUserIDs.includes(_u.userId));
+  }
+
 };
 
 const getUserDecryptedPassword = async (request) => {
