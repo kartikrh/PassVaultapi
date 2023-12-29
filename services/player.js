@@ -112,29 +112,36 @@ const insertPlayerService = async (request, fastify) => {
     fastify,
     request
   );
-  console.log(request.body.teamId, typeof request.body.teamId);
-  if (request.body.teamId) {
-    const _TeamList = request.body.teamId.split(",");
-    console.log(_TeamList);
 
-    // for (let team of request.body.teamId) {
-    //   const checkTeamId = global.tblTeams.find((item) => item.teamId === team);
-    //   if (!checkTeamId) {
-    //     throw new Error("Team with this id not Found");
-    //   }
-    // }
-    if (_TeamList.length) {
-      for (const team of _TeamList) {
-        if (team) {
-          await insertTeamPlayerQuery(
-            {
-              teamId: team,
-              refPlayerId: result.playerId,
-              userId: request.userTokenInfo.WrUserId,
-            },
-            fastify,
-            request
-          );
+  if (request.body.teamId) {
+    const hashString = request.body.teamId;
+    console.log(hashString);
+    if (typeof hashString === "object") {
+      // Split the string into an array using commas as the delimiter
+      const jsonString = JSON.stringify(hashString);
+      console.log(jsonString);
+      // Convert the string back to an array of values
+      const hashArray = Object.values(JSON.parse(jsonString));
+
+      // for (let team of request.body.teamId) {
+      //   const checkTeamId = global.tblTeams.find((item) => item.teamId === team);
+      //   if (!checkTeamId) {
+      //     throw new Error("Team with this id not Found");
+      //   }
+      // }
+      if (hashArray.length) {
+        for (let i = 0; i < hashArray.length; i++) {
+          if (team) {
+            await insertTeamPlayerQuery(
+              {
+                teamId: team,
+                refPlayerId: result.playerId,
+                userId: request.userTokenInfo.WrUserId,
+              },
+              fastify,
+              request
+            );
+          }
         }
       }
     }
