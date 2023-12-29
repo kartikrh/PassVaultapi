@@ -194,7 +194,7 @@ async function validateUserServices(request, fastify) {
 }
 
 const getAllUsersService = async (request) => {
-  const isActive = request.body?.isActive || true;
+  const isActive = request.body?.isActive === undefined ? true : request.body?.isActive;
   const requestUserID = request.userTokenInfo.WrEId;
   const _filteredUserIDs = getUserChildIds(requestUserID, global.tblUsers)
   const _users = global.tblUsers.map((user) => {
