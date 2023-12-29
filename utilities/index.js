@@ -112,9 +112,14 @@ const toFirstLetterUpperCase = (str) => {
 }
 
 const getMessage = (payload, code, type) => {
+  const sendErrorMessage = (defaultMessage) => {
+    const message = typeof payload?.error === "string" ? payload.error : payload?.error?.message;
+    if(!message) message = defaultMessage;
+    return message;
+  }
   switch (code) {
     case 500:
-      return payload?.error?.message || `Internal Server Error`
+      return sendErrorMessage(`Internal Server Error`)
     case 200:
       let message = typeof payload?.result === "string" ? payload.result : payload?.result?.message;
       if (!message) {
@@ -129,11 +134,31 @@ const getMessage = (payload, code, type) => {
         }
       }
       return message
+    case 400:
+      return sendErrorMessage(`Invalid Request`)
     case 403:
-      return payload?.error?.message || `Unauthorized Access`
+      return sendErrorMessage(`Unauthorized Access`)
     default:
-      return `Something Went Wrong with status ${code}`
+      return sendErrorMessage(`Something Went Wrong with status ${code}`)
   }
+}
+
+function getUserChildIds(parentId, data) {
+  const result = [];
+
+  function findChildren(currentId) {
+    const children = data
+      .filter(item => item.parentId === currentId)
+      .map(item => item.userId);
+
+    children.forEach(child => {
+      result.push(child);
+      findChildren(child);
+    });
+  }
+
+  findChildren(parentId);
+  return result;
 }
 
 module.exports = {
@@ -148,5 +173,6 @@ module.exports = {
   generateFileName,
   isJson,
   toFirstLetterUpperCase,
-  getMessage
+  getMessage,
+  getUserChildIds
 };

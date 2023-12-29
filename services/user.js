@@ -16,7 +16,7 @@ const {
   getOriginalIdFromEncryptedId,
   updateUserPasswordQuery,
 } = require("../repository/TableUser");
-const { deviceInfo, encrypt, decrypt } = require("../utilities/index");
+const { deviceInfo, encrypt, decrypt, getUserChildIds } = require("../utilities/index");
 const { generateToken } = require("../utilities/tokenization");
 
 async function signUpUserService({ body }, fastify) {
@@ -194,22 +194,29 @@ async function validateUserServices(request, fastify) {
 }
 
 const getAllUsersService = async (request) => {
-  const { isActive } = request.body;
-  if (isActive !== undefined) {
-    const _users = global.tblUsers.map((user) => {
-      const { password, ...userWithoutPassword } = user;
-      return userWithoutPassword;
-    });
+  const isActive = request.body?.isActive || true;
+  const requestUserID = request.userTokenInfo.WrEId;
+  const _filteredUserIDs = getUserChildIds(requestUserID, global.tblUsers)
+  const _users = global.tblUsers.map((user) => {
+    const { password, ...userWithoutPassword } = user;
+    return userWithoutPassword;
+  });
 
-    const users = _users.filter((_u) => _u.isActive === isActive);
-    return users;
+  const users = _users.filter((_u) => _u.isActive === isActive && _filteredUserIDs.includes(_u.userId));
+  return users;
+};
+
+const getUserDecryptedPassword = async (request) => {
+  const requestUserID = request.userTokenInfo.WrEId;
+  const { userId } = request.body;
+  const _filteredUserIDs = getUserChildIds(requestUserID, global.tblUsers);
+  if (_filteredUserIDs.includes(userId)) {
+    const user = global.tblUsers.find((user) => user.userId === userId);
+    return {
+      password: decrypt(user.password),
+    };
   } else {
-    const _users = global.tblUsers.map((user) => {
-      const { password, ...userWithoutPassword } = user;
-      return userWithoutPassword;
-    });
-    const users = _users.filter((_u) => _u.isActive === true);
-    return users;
+    throw Error(403)
   }
 };
 
@@ -410,6 +417,7 @@ module.exports = {
   generateEncryptionService,
   validateUserServices,
   getAllUsersService,
+  getUserDecryptedPassword,
   getUserByIdService,
   saveUserService,
   deleteUserService,

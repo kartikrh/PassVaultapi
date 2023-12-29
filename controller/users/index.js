@@ -11,6 +11,7 @@ const {
   changeUserPasswordService,
   signOutUserServices,
   verifyTokenUserServices,
+  getUserDecryptedPassword,
 } = require("../../services/user");
 const { errorLogger } = require("../../utilities/logger");
 const fetchAllDataFromDb = require("../../utilities/fetchAllData");
@@ -102,6 +103,19 @@ const getAllUsers = async (request, reply, fastify) => {
   }
 };
 
+const decryptPasswordUser = async (request, reply, fastify) => {
+  try {
+    const result = await getUserDecryptedPassword(request);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    if (err.message == 403) {
+      reply.status(403).send(error("You don't have permission to decrypt this user's password", ERROR_CODES.INVALID_TOKEN, 403));
+    }
+    errorLogger(fastify, err.message, commonPath + "/decryptPasswordUser", request);
+    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+  }
+};
+
 const getUserById = async (request, reply, fastify) => {
   try {
     const result = await getUserByIdService(request);
@@ -155,6 +169,7 @@ module.exports = {
   validateUser,
   loadDataInMemory,
   getAllUsers,
+  decryptPasswordUser,
   getUserById,
   saveUser,
   deleteUser,
