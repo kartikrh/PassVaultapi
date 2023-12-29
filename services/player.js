@@ -129,12 +129,13 @@ const insertPlayerService = async (request, fastify) => {
       //     throw new Error("Team with this id not Found");
       //   }
       // }
+
       if (hashArray.length) {
         for (let i = 0; i < hashArray.length; i++) {
-          if (team) {
+          if (hashArray[i]) {
             await insertTeamPlayerQuery(
               {
-                teamId: team,
+                teamId: hashArray[i],
                 refPlayerId: result.playerId,
                 userId: request.userTokenInfo.WrUserId,
               },
