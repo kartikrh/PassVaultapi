@@ -121,8 +121,8 @@ const insertPlayerService = async (request, fastify) => {
       const jsonString = JSON.stringify(hashString);
       console.log(jsonString);
       // Convert the string back to an array of values
-      const hashArray = Object.values(JSON.parse(jsonString));
-
+      const hashArray = jsonString?.[0].split(",");
+      console.log(hashArray);
       // for (let team of request.body.teamId) {
       //   const checkTeamId = global.tblTeams.find((item) => item.teamId === team);
       //   if (!checkTeamId) {
