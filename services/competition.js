@@ -48,7 +48,7 @@ const competitionByIdService = async (request) => {
 
 const competitionByeventTypeIdService = async (request) => {
   const { eventTypeId } = request.body;
-  const result = global.tblCompetitions.find(
+  const result = global.tblCompetitions.filter(
     (item) => item.eventTypeId === eventTypeId
   );
   return result || null;
