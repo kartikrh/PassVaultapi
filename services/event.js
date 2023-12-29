@@ -5,14 +5,48 @@ const {
 } = require("../repository/TableEvent");
 
 const allEventService = async (request) => {
-  const { isActive } = request.body;
-  if (isActive !== undefined) {
-    const _event = global.tblEvents.filter((i) => i.isActive === isActive);
-    return _event;
-  } else {
+  const { isActive, eventTypeId, competitionId } = request.body;
+
+  const filterObject = {
+    isActive: isActive,
+    eventTypeId: eventTypeId === "string" ? null : eventTypeId,
+    competitionId: competitionId === "string" ? null : competitionId,
+  };
+
+  // Additional checks for "0" and undefined
+  filterObject.eventTypeId =
+    eventTypeId === "0" || eventTypeId === undefined
+      ? null
+      : filterObject.eventTypeId;
+  filterObject.competitionId =
+    competitionId === "0" || competitionId === undefined
+      ? null
+      : filterObject.competitionId;
+
+  if (filterObject.isActive === undefined) {
     const _event = global.tblEvents.filter((i) => i.isActive === true);
     return _event;
+  } else {
+    const _event = global.tblEvents.filter((item) => {
+      return (
+        (filterObject.isActive === null ||
+          item.isActive === filterObject.isActive) &&
+        (filterObject.competitionId === null ||
+          item.competitionId === filterObject.competitionId) &&
+        (filterObject.eventTypeId === null ||
+          item.eventTypeId === filterObject.eventTypeId)
+      );
+    });
+    return _event;
   }
+  //old Code
+  // if (isActive !== undefined) {
+  //   const _event = global.tblEvents.filter((i) => i.isActive === isActive);
+  //   return _event;
+  // } else {
+  //   const _event = global.tblEvents.filter((i) => i.isActive === true);
+  //   return _event;
+  // }
 };
 
 const eventByIdService = async (request) => {

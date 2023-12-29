@@ -1052,7 +1052,7 @@ const Player = {
           country: { type: "string" },
           playerTypeId: { type: "string" },
           playerName: { type: "string" },
-          bowlingStyle: { type: "string" },
+          bowlingTypeId: { type: "string" },
           isActive: { type: "boolean" },
           isKipper: { type: "boolean" },
           isLeftHandedBatting: { type: "boolean" },
@@ -1519,6 +1519,7 @@ const Compitition = {
         type: "object",
         properties: {
           isActive: { type: "boolean" },
+          eventTypeId: { type: "string" },
         },
       },
     },
@@ -1617,6 +1618,8 @@ const Event = {
         type: "object",
         properties: {
           isActive: { type: "boolean" },
+          eventTypeId: { type: "string" },
+          competitionId: { type: "string" },
         },
       },
     },
