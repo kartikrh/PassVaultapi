@@ -8,16 +8,32 @@ const {
 const { storeImage, removeImage } = require("../utilities/Images");
 
 const allCompetitionService = async (request) => {
-  const { isActive } = request.body;
-  if (isActive !== undefined) {
-    const result = global.tblCompetitions.filter(
-      (item) => item.isActive === isActive
-    );
-    return result;
-  } else {
+  const { isActive, eventTypeId } = request.body;
+
+  const filterObject = {
+    isActive: isActive,
+    eventTypeId: eventTypeId === "string" ? null : eventTypeId,
+  };
+  // Additional checks for "0" and undefined
+  filterObject.eventTypeId =
+    eventTypeId === "0" || eventTypeId === undefined
+      ? null
+      : filterObject.eventTypeId;
+
+  if (isActive === undefined) {
     const result = global.tblCompetitions.filter(
       (item) => item.isActive === true
     );
+    return result;
+  } else {
+    const result = global.tblCompetitions.filter((item) => {
+      return (
+        (filterObject.isActive === null ||
+          item.isActive === filterObject.isActive) &&
+        (filterObject.eventTypeId === null ||
+          item.eventTypeId === filterObject.eventTypeId)
+      );
+    });
     return result;
   }
 };

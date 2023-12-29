@@ -80,7 +80,7 @@ const insertPlayerQuery = async (data, fastify, request) => {
           data.playerName || null,
           data.country || null,
           data.image || null,
-          data.bowlingStyle || 0,
+          data.bowlingTypeId || 0,
           data.isActive || false,
           data.isKipper || false,
           data.isLeftHandedBatting || false,

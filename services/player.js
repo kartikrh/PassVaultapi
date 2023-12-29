@@ -84,9 +84,9 @@ const insertPlayerService = async (request, fastify) => {
     }
   }
 
-  if (request.body.bowlingStyle) {
+  if (request.body.bowlingTypeId) {
     const checkTeamId = global.tblBowlingTypes.find(
-      (item) => item.bowlingTypeId === request.body.bowlingStyle
+      (item) => item.bowlingTypeId === request.body.bowlingTypeId
     );
     if (!checkTeamId) {
       throw new Error("Bowling Type with this id not Found");
@@ -136,9 +136,22 @@ const insertPlayerService = async (request, fastify) => {
     }
   }
 
-  global.tblPlayers.push(result);
+  if (!result) {
+    return null;
+  } else {
+    global.tblPlayers.push(result);
+    const playersInTeams = await getAllTeamsByPlayerIdQuery(
+      result.playerId,
+      fastify,
+      request
+    );
 
-  return result;
+    const data = {
+      ...result,
+      teams: playersInTeams,
+    };
+    return data;
+  }
 };
 
 const updatePlayerService = async (request, fastify) => {
