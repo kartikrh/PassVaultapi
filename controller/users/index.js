@@ -12,6 +12,7 @@ const {
   signOutUserServices,
   verifyTokenUserServices,
   getUserDecryptedPassword,
+  changeUserPasswordByUSerIDService,
 } = require("../../services/user");
 const { errorLogger } = require("../../utilities/logger");
 const fetchAllDataFromDb = require("../../utilities/fetchAllData");
@@ -109,9 +110,22 @@ const decryptPasswordUser = async (request, reply, fastify) => {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     if (err.message == 403) {
-      reply.status(403).send(error("You don't have permission to decrypt this user's password", ERROR_CODES.INVALID_TOKEN, 403));
+      reply
+        .status(403)
+        .send(
+          error(
+            "You don't have permission to decrypt this user's password",
+            ERROR_CODES.INVALID_TOKEN,
+            403
+          )
+        );
     }
-    errorLogger(fastify, err.message, commonPath + "/decryptPasswordUser", request);
+    errorLogger(
+      fastify,
+      err.message,
+      commonPath + "/decryptPasswordUser",
+      request
+    );
     reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
   }
 };
@@ -160,6 +174,21 @@ const updateUserPassword = async (request, reply, fastify) => {
   }
 };
 
+const changeUserPassword = async (request, reply, fastify) => {
+  try {
+    const result = await changeUserPasswordByUSerIDService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      commonPath + "/changeUserPassword",
+      request
+    );
+    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+  }
+};
+
 module.exports = {
   signUpUser,
   signInUser,
@@ -174,4 +203,5 @@ module.exports = {
   saveUser,
   deleteUser,
   updateUserPassword,
+  changeUserPassword,
 };

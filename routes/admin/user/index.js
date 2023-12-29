@@ -8,6 +8,7 @@ const {
   saveUser,
   deleteUser,
   decryptPasswordUser,
+  changeUserPassword,
 } = require("../../../controller/users/index");
 const { User } = require("../../../swaggerSchema/groupTags/schema");
 
@@ -75,5 +76,18 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request, reply) => deleteUser(request, reply, fastify),
+  });
+
+  fastify.post("/changePassword", {
+    schema: User.changePassword.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Users",
+          mode: "delete",
+        }),
+    ],
+    handler: (request, reply) => changeUserPassword(request, reply, fastify),
   });
 };
