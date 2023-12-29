@@ -112,26 +112,30 @@ const insertPlayerService = async (request, fastify) => {
     fastify,
     request
   );
+  console.log(request.body.teamId, typeof request.body.teamId);
+  if (request.body.teamId) {
+    const _TeamList = request.body.teamId.split(",");
+    console.log(_TeamList);
 
-  if (request.body.teamId && request.body.teamId.length) {
     // for (let team of request.body.teamId) {
     //   const checkTeamId = global.tblTeams.find((item) => item.teamId === team);
     //   if (!checkTeamId) {
     //     throw new Error("Team with this id not Found");
     //   }
     // }
-
-    for (const team of request.body.teamId) {
-      if (team) {
-        await insertTeamPlayerQuery(
-          {
-            teamId: team,
-            refPlayerId: result.playerId,
-            userId: request.userTokenInfo.WrUserId,
-          },
-          fastify,
-          request
-        );
+    if (_TeamList.length) {
+      for (const team of _TeamList) {
+        if (team) {
+          await insertTeamPlayerQuery(
+            {
+              teamId: team,
+              refPlayerId: result.playerId,
+              userId: request.userTokenInfo.WrUserId,
+            },
+            fastify,
+            request
+          );
+        }
       }
     }
   }
