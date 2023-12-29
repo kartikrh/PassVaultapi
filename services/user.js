@@ -16,7 +16,12 @@ const {
   getOriginalIdFromEncryptedId,
   updateUserPasswordQuery,
 } = require("../repository/TableUser");
-const { deviceInfo, encrypt, decrypt, getUserChildIds } = require("../utilities/index");
+const {
+  deviceInfo,
+  encrypt,
+  decrypt,
+  getUserChildIds,
+} = require("../utilities/index");
 const { generateToken } = require("../utilities/tokenization");
 
 async function signUpUserService({ body }, fastify) {
@@ -196,13 +201,15 @@ async function validateUserServices(request, fastify) {
 const getAllUsersService = async (request) => {
   const isActive = request.body?.isActive || true;
   const requestUserID = request.userTokenInfo.WrEId;
-  const _filteredUserIDs = getUserChildIds(requestUserID, global.tblUsers)
+  const _filteredUserIDs = getUserChildIds(requestUserID, global.tblUsers);
   const _users = global.tblUsers.map((user) => {
     const { password, ...userWithoutPassword } = user;
     return userWithoutPassword;
   });
 
-  const users = _users.filter((_u) => _u.isActive === isActive && _filteredUserIDs.includes(_u.userId));
+  const users = _users.filter(
+    (_u) => _u.isActive === isActive && _filteredUserIDs.includes(_u.userId)
+  );
   return users;
 };
 
@@ -216,7 +223,7 @@ const getUserDecryptedPassword = async (request) => {
       password: decrypt(user.password),
     };
   } else {
-    throw Error(403)
+    throw Error(403);
   }
 };
 
@@ -409,6 +416,45 @@ const changeUserPasswordService = async (request, fastify) => {
   return "Password changed successfully";
 };
 
+const changeUserPasswordByUSerIDService = async (request, fastify) => {
+  const { newPassword, userId } = request.body;
+
+  const findLoginUser = global.tblUsers.find(
+    (user) => user.userId === request.userTokenInfo.WrUserId
+  );
+  if (findLoginUser) {
+    const validateRole = global.tblRoles.find(
+      (role) => role.roleId === findLoginUser.roleId
+    );
+    if (validateRole) {
+      const containsAdmin = validateRole.roleName.includes("Admin");
+      if (!containsAdmin) {
+        throw new Error("Only Admin Role Have Permission");
+      }
+    }
+  } else {
+    throw new Error("Login User Not Found!");
+  }
+
+  const findUser = global.tblUsers.find((user) => user.userId === userId);
+
+  if (!findUser) {
+    throw new Error("Invalid User");
+  }
+
+  const body = {
+    userId: userId,
+    password: encrypt(newPassword),
+  };
+
+  await updateUserPasswordQuery(body, fastify, request);
+
+  const index = global.tblUsers.findIndex((user) => user.userId === userId);
+
+  global.tblUsers[index].password = body.password;
+
+  return "Password changed successfully";
+};
 module.exports = {
   signUpUserService,
   signInUserServices,
@@ -422,4 +468,5 @@ module.exports = {
   saveUserService,
   deleteUserService,
   changeUserPasswordService,
+  changeUserPasswordByUSerIDService,
 };

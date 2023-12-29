@@ -1279,6 +1279,21 @@ const User = {
       },
     },
   },
+  changePassword: {
+    schema: {
+      tags: ["User"],
+      description: "get User by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          userId: { type: "string" },
+          newPassword: { type: "string" },
+        },
+        required: ["userId", "newPassword"],
+      },
+    },
+  },
 };
 
 const Config = {

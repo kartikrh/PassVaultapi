@@ -179,7 +179,7 @@ const updatePlayerService = async (request, fastify) => {
     playerTypeId: checkPlayerId.playerTypeId,
     userId: request.userTokenInfo.WrUserId,
     image: checkPlayerId.image,
-    bowlingStyle: request.body.bowlingStyle || checkPlayerId.bowlingStyle,
+    bowlingStyle: request.body.bowlingTypeId || checkPlayerId.bowlingTypeId,
     isActive: checkPlayerId.isActive,
     isKipper: checkPlayerId.isKipper,
     isLeftHandedBatting: checkPlayerId.isLeftHandedBatting,
@@ -194,7 +194,7 @@ const updatePlayerService = async (request, fastify) => {
     playerType: checkPlayerId.playerType,
     eventType: checkPlayerId.eventType,
     bowlingTypeId: checkPlayerId.bowlingTypeId,
-    bowlingStyle: checkPlayerId.bowlingStyle,
+    bowlingStyle: checkPlayerId.bowlingTypeId,
   };
 
   if ("isActive" in request.body) {
@@ -237,9 +237,9 @@ const updatePlayerService = async (request, fastify) => {
     }
   }
 
-  if (request.body.bowlingStyle) {
+  if (request.body.bowlingTypeId) {
     const checkBowlingTypeId = global.tblBowlingTypes.find(
-      (item) => item.bowlingTypeId === request.body.bowlingStyle
+      (item) => item.bowlingTypeId === request.body.bowlingTypeId
     );
     if (!checkBowlingTypeId) {
       throw new Error("Bowling Type with this id not Found");
@@ -289,7 +289,18 @@ const updatePlayerService = async (request, fastify) => {
     }
   }
 
-  return body;
+  const playersInTeams = await getAllTeamsByPlayerIdQuery(
+    request.body.playerId,
+    fastify,
+    request
+  );
+
+  const data = {
+    ...body,
+    teams: playersInTeams,
+  };
+  return data;
+  //return body;
 };
 
 const savePlayerService = async (request, fastify) => {
