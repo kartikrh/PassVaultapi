@@ -1223,6 +1223,20 @@ const User = {
       },
     },
   },
+  decryptPassword: {
+    schema: {
+      tags: ["User"],
+      description: "decryptPassword child user's password",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          userId: { type: "string" },
+        },
+        required: ["userId"],
+      },
+    },
+  },
   save: {
     schema: {
       tags: ["User"],

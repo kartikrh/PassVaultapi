@@ -124,7 +124,7 @@ module.exports = async function (fastify, opts) {
       newPayload.message = getMessage(newPayload, reply.statusCode, urlLastParameter[0]);
       const urlTokenExceptions = ["/signout", "/verifyToken"];
       const urlTokenGeneration = ["/signin", "/signup"];
-      const allowedStatusCodes = [200, 500, 403];
+      const allowedStatusCodes = [200, 500, 403, 400];
       if (allowedStatusCodes.includes(reply.statusCode)) {
         if (urlTokenGeneration.includes(originalUrl) && newPayload?.result?.token) {
           newPayload.token = newPayload.result.token;
