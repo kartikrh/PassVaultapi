@@ -66,18 +66,28 @@ const createTeamService = async (request, fastify) => {
     request
   );
 
-  if (request.body.playerId && request.body.playerId.length) {
-    for (const player of request.body.playerId) {
-      if (player) {
-        await insertTeamPlayerQuery(
-          {
-            teamId: data.teamId,
-            refPlayerId: player,
-            userId: request.userTokenInfo.WrUserId,
-          },
-          fastify,
-          request
-        );
+  if (request.body.playerId) {
+    const hashString = request.body.playerId;
+    if (typeof hashString === "object") {
+      // Split the string into an array using commas as the delimiter
+      const jsonString = JSON.stringify(hashString);
+      // Convert the string back to an array of values
+      const hashArray = jsonString.split(",");
+      if (hashArray.length) {
+        for (let i = 0; i < hashArray.length; i++) {
+          if (hashArray[i]) {
+            const playerID = hashArray[i].replace(/[\[\]"]/g, "");
+            await insertTeamPlayerQuery(
+              {
+                teamId: data.teamId,
+                refPlayerId: playerID,
+                userId: request.userTokenInfo.WrUserId,
+              },
+              fastify,
+              request
+            );
+          }
+        }
       }
     }
   }
@@ -152,17 +162,25 @@ const updateTeamService = async (request, fastify) => {
   if (request.body.playerId) {
     await deleteTeamPlayerByTeamIdQuery(body.teamId, fastify, request);
 
-    for (const player of request.body.playerId) {
-      if (player) {
-        await insertTeamPlayerQuery(
-          {
-            teamId: body.teamId,
-            refPlayerId: player,
-            userId: request.userTokenInfo.WrUserId,
-          },
-          fastify,
-          request
-        );
+    const hashString = request.body.playerId;
+    // Split the string into an array using commas as the delimiter
+    const jsonString = JSON.stringify(hashString);
+    // Convert the string back to an array of values
+    const hashArray = jsonString.split(",");
+    if (hashArray.length) {
+      for (let i = 0; i < hashArray.length; i++) {
+        if (hashArray[i]) {
+          const playerID = hashArray[i].replace(/[\[\]"]/g, "");
+          await insertTeamPlayerQuery(
+            {
+              teamId: body.teamId,
+              refPlayerId: playerID,
+              userId: request.userTokenInfo.WrUserId,
+            },
+            fastify,
+            request
+          );
+        }
       }
     }
   }
