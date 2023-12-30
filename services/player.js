@@ -115,14 +115,11 @@ const insertPlayerService = async (request, fastify) => {
 
   if (request.body.teamId) {
     const hashString = request.body.teamId;
-    console.log(hashString);
     if (typeof hashString === "object") {
       // Split the string into an array using commas as the delimiter
       const jsonString = JSON.stringify(hashString);
-      console.log(jsonString);
       // Convert the string back to an array of values
       const hashArray = jsonString.split(",");
-      console.log(hashArray);
       // for (let team of request.body.teamId) {
       //   const checkTeamId = global.tblTeams.find((item) => item.teamId === team);
       //   if (!checkTeamId) {
@@ -133,9 +130,10 @@ const insertPlayerService = async (request, fastify) => {
       if (hashArray.length) {
         for (let i = 0; i < hashArray.length; i++) {
           if (hashArray[i]) {
+            const teamID = hashArray[i].replace(/[\[\]"]/g, "");
             await insertTeamPlayerQuery(
               {
-                teamId: hashArray[i],
+                teamId: teamID,
                 refPlayerId: result.playerId,
                 userId: request.userTokenInfo.WrUserId,
               },
@@ -286,17 +284,27 @@ const updatePlayerService = async (request, fastify) => {
       request
     );
 
-    for (const team of request.body.teamId) {
-      if (team) {
-        await insertTeamPlayerQuery(
-          {
-            teamId: team,
-            refPlayerId: request.body.playerId,
-            userId: request.userTokenInfo.WrUserId,
-          },
-          fastify,
-          request
-        );
+    const hashString = request.body.teamId;
+    if (typeof hashString === "object") {
+      // Split the string into an array using commas as the delimiter
+      const jsonString = JSON.stringify(hashString);
+      // Convert the string back to an array of values
+      const hashArray = jsonString.split(",");
+      if (hashArray.length) {
+        for (let i = 0; i < hashArray.length; i++) {
+          if (hashArray[i]) {
+            const teamID = hashArray[i].replace(/[\[\]"]/g, "");
+            await insertTeamPlayerQuery(
+              {
+                teamId: teamID,
+                refPlayerId: request.body.playerId,
+                userId: request.userTokenInfo.WrUserId,
+              },
+              fastify,
+              request
+            );
+          }
+        }
       }
     }
   }
