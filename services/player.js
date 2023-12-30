@@ -283,7 +283,6 @@ const updatePlayerService = async (request, fastify) => {
       fastify,
       request
     );
-
     const hashString = request.body.teamId;
     if (typeof hashString === "object") {
       // Split the string into an array using commas as the delimiter
