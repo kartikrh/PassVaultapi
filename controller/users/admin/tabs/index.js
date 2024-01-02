@@ -7,6 +7,7 @@ const {
   changeDisplayOrderService,
   getAllTabsService,
   saveTabService,
+  getTabsByRoleIDService,
 } = require("../../../../services/admin.js");
 const { errorLogger } = require("../../../../utilities/logger");
 
@@ -15,6 +16,16 @@ let commonPath = "controller/users/admin/tabs/index";
 async function getTabs(request, reply, fastify) {
   try {
     const result = await getTabsService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/getTabs", request);
+    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+  }
+}
+
+async function getTabsByRoleId(request, reply, fastify) {
+  try {
+    const result = await getTabsByRoleIDService(request, fastify);
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/getTabs", request);
@@ -96,4 +107,5 @@ module.exports = {
   getDisplayTabs,
   changeDisplayOrder,
   getAllTabsData,
+  getTabsByRoleId,
 };
