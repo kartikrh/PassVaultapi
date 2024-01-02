@@ -1222,6 +1222,13 @@ const User = {
       },
     },
   },
+  getAllWithCurrent: {
+    schema: {
+      tags: ["User"],
+      description: "get all User including current user",
+      security: [{ bearerAuth: [] }],
+    },
+  },
   getById: {
     schema: {
       tags: ["User"],

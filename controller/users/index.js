@@ -13,6 +13,7 @@ const {
   verifyTokenUserServices,
   getUserDecryptedPassword,
   changeUserPasswordByUSerIDService,
+  getAllUsersWithCurrentService,
 } = require("../../services/user");
 const { errorLogger } = require("../../utilities/logger");
 const fetchAllDataFromDb = require("../../utilities/fetchAllData");
@@ -100,6 +101,16 @@ const getAllUsers = async (request, reply, fastify) => {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/getAllUsers", request);
+    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+  }
+};
+
+const getAllUsersWithCurrent = async (request, reply, fastify) => {
+  try {
+    const result = await getAllUsersWithCurrentService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/getAllUsersWithCurrent", request);
     reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
   }
 };
@@ -198,6 +209,7 @@ module.exports = {
   validateUser,
   loadDataInMemory,
   getAllUsers,
+  getAllUsersWithCurrent,
   decryptPasswordUser,
   getUserById,
   saveUser,
