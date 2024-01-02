@@ -87,8 +87,11 @@ const deleteRoleService = async (request, fastify) => {
     const checkValidRoleId = await valideRoleId(roleIds[i], fastify);
 
     if (checkValidRoleId) {
+      const role = global.tblRoles.find(
+        (item) => item.roleId === roleIds[i]
+      );
       throw new Error(
-        `Role Id ${roleIds[i]} is assigned to user(s), skiping delete`
+        `Role Id ${role.roleName} is assigned to user(s), skiping delete`
       );
     }
   }
