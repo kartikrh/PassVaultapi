@@ -71,10 +71,7 @@ async function signOutUser(userLoginInfo, fastify) {
     `UPDATE "tblUserLoginInfos" set "wrIsLogin" = false where "WrUserId" = $1 and "wrToken" = $2`,
     {
       type: QueryTypes.RAW,
-      bind: [
-        userLoginInfo.WrUserId,
-        userLoginInfo.wrToken,
-      ],
+      bind: [userLoginInfo.WrUserId, userLoginInfo.wrToken],
     }
   );
 }
@@ -277,10 +274,70 @@ const updateUserQuery = async (body, fastify, request) => {
 
 const deleteUserQuery = async (request, fastify) => {
   try {
+    // return await fastify.db.query(
+    //   `UPDATE "tblUsers" set "WrIsDelete" = true , "WrDeleteBy" = $2 , "WrDeleteDate"=$3 where "WrUserId" in (
+    //   select "wrKey" from "tblEncryptedData" where "wrValue" = ANY($1)
+    // )`
     return await fastify.db.query(
-      `UPDATE "tblUsers" set "WrIsDelete" = true , "WrDeleteBy" = $2 , "WrDeleteDate"=$3 where "WrUserId" in (
-      select "wrKey" from "tblEncryptedData" where "wrValue" = ANY($1)
-    )`,
+      `WITH deleted_user AS (
+          DELETE FROM "tblUsers"
+          WHERE "WrUserId" = in (
+            select "wrKey" from "tblEncryptedData" where "wrValue" = ANY($1))
+          RETURNING *
+      )
+      INSERT INTO "tblUserdeleteLogs" (
+          "wrDeletebyId",
+          "wrDeletedDate",
+          "WrUserId",
+          "WrUserName",
+          "WrPassword",
+          "WrRoleId",
+          "WrName",
+          "WrUserType",
+          "WrMobile",
+          "WrIsActive",
+          "WrIsSuperAdmin",
+          "WrCreatedBy",
+          "WrCreatedDate",
+          "WrCreatedType",
+          "WrModifyBy",
+          "WrModifyDate",
+          "WrModifyType",
+          "WrParentId",
+          "WrIsDelete",
+          "WrDeleteBy",
+          "WrDeleteDate",
+          "WrAllowMultipleLogin",
+          "WrSubAdminId",
+          "WrUserIp"
+      )
+      SELECT
+          $2,
+          $3,
+          "WrUserId",
+          "WrUserName",
+          "WrPassword",
+          "WrRoleId",
+          "WrName",
+          "WrUserType",
+          "WrMobile",
+          "WrIsActive",
+          "WrIsSuperAdmin",
+          "WrCreatedBy",
+          "WrCreatedDate",
+          "WrCreatedType",
+          "WrModifyBy",
+          "WrModifyDate",
+          "WrModifyType",
+          "WrParentId",
+          true,
+          $2,
+          $3,
+          "WrAllowMultipleLogin",
+          "WrSubAdminId",
+          "WrUserIp"
+      FROM deleted_user;
+      `,
       {
         type: QueryTypes.UPDATE,
         bind: [request.body.userId, request.userTokenInfo.WrUserId, new Date()],

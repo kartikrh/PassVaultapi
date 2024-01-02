@@ -572,8 +572,13 @@ const deleteBallByBallCommentoriesQuery = async (id, request, fastify) => {
 const deleteOverCommentoriesQuery = async (id, request, fastify) => {
   try {
     return await fastify.db.query(
-      `with cte as (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)
-       delete from "tblOvers" where "wrOverId" = (select "wrKey" from cte)
+      `WITH deleted_keys AS (
+        DELETE FROM "tblOvers"
+        WHERE "wrOverId" = (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $1)
+    
+    )
+    DELETE FROM "tblCommentaryBallByBalls"
+    WHERE "wrOverId" IN (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $1);
       `,
       {
         type: fastify.db.QueryTypes.DELETE,
