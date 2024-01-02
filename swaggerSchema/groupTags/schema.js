@@ -109,6 +109,19 @@ const Tabs = {
       security: [{ bearerAuth: [] }],
     },
   },
+  byRoleId: {
+    schema: {
+      tags: ["Admin"],
+      description: "get by Id tabs",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          roleId: { type: "string" },
+        },
+      },
+    },
+  },
   deleteTabs: {
     schema: {
       tags: ["Admin"],

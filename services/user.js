@@ -206,13 +206,15 @@ const getAllUsersService = async (request) => {
     return userWithoutPassword;
   });
 
-  const isActive = request.body?.isActive === undefined ? true : request.body?.isActive;
+  const isActive =
+    request.body?.isActive === undefined ? true : request.body?.isActive;
   if (request.body?.isActive === undefined) {
     return _users.filter((_u) => _filteredUserIDs.includes(_u.userId));
   } else {
-    return _users.filter((_u) => _u.isActive === isActive && _filteredUserIDs.includes(_u.userId));
+    return _users.filter(
+      (_u) => _u.isActive === isActive && _filteredUserIDs.includes(_u.userId)
+    );
   }
-
 };
 
 const getUserDecryptedPassword = async (request) => {
