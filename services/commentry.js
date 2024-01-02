@@ -844,7 +844,6 @@ const deleteBallByBallCommentoriesService = async (request, fastify) => {
   );
 
   return true;
-  s;
 };
 const deleteOverCommentoriesService = async (request, fastify) => {
   const { commentaryOverId } = request.body;
@@ -861,7 +860,9 @@ const deleteOverCommentoriesService = async (request, fastify) => {
   global.tblOvers = global.tblOvers.filter(
     (item) => item.overId !== commentaryOverId
   );
-
+  global.tblCommentaryBallByBall = global.tblCommentaryBallByBall.filter(
+    (item) => item.overId !== commentaryOverId
+  );
   return true;
 };
 
