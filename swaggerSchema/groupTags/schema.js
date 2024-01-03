@@ -70,6 +70,13 @@ const Auth = {
       },
     },
   },
+  loaddata: {
+    schema: {
+      tags: ["Auth"],
+      description: "LoadAllData",
+      security: [{ bearerAuth: [] }],
+    },
+  },
   validateUser: {
     schema: {
       tags: ["Auth"],
