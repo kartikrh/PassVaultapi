@@ -281,7 +281,7 @@ const deleteUserQuery = async (request, fastify) => {
     return await fastify.db.query(
       `WITH deleted_user AS (
           DELETE FROM "tblUsers"
-          WHERE "WrUserId" = in (
+          WHERE "WrUserId" in (
             select "wrKey" from "tblEncryptedData" where "wrValue" = ANY($1))
           RETURNING *
       )
