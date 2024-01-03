@@ -35,7 +35,7 @@ async function signInUser(request, reply, fastify) {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/signInUser", request);
-    reply.status(401).send(error(err.message, ERROR_CODES.AUTH_ERROR, 401));
+    reply.status(200).send(error(err.message, ERROR_CODES.AUTH_ERROR, 200));
   }
 }
 
@@ -45,7 +45,7 @@ async function signOutUser(request, reply, fastify) {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/signOutUser", request);
-    reply.status(401).send(error(err.message, ERROR_CODES.AUTH_ERROR, 401));
+    reply.status(200).send(error(err.message, ERROR_CODES.AUTH_ERROR, 200));
   }
 }
 
@@ -55,7 +55,7 @@ async function verifyTokenUser(request, reply, fastify) {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/verifyTokenUser", request);
-    reply.status(401).send(error(err.message, ERROR_CODES.AUTH_ERROR, 401));
+    reply.status(200).send(error(err.message, ERROR_CODES.AUTH_ERROR, 401));
   }
 }
 
@@ -70,7 +70,7 @@ async function generateEncryption(request, reply, fastify) {
       commonPath + "/generateEncryption",
       request
     );
-    reply.status(401).send(error(err.message, ERROR_CODES.AUTH_ERROR, 401));
+    reply.status(200).send(error(err.message, ERROR_CODES.AUTH_ERROR, 200));
   }
 }
 
@@ -125,9 +125,15 @@ const decryptPasswordUser = async (request, reply, fastify) => {
     const result = await getUserDecryptedPassword(request);
     reply.status(200).send(success(result, 200));
   } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      commonPath + "/decryptPasswordUser",
+      request
+    );
     if (err.message == 403) {
-      reply
-        .status(403)
+      return reply
+        .status(200)
         .send(
           error(
             "You don't have permission to decrypt this user's password",
@@ -136,12 +142,6 @@ const decryptPasswordUser = async (request, reply, fastify) => {
           )
         );
     }
-    errorLogger(
-      fastify,
-      err.message,
-      commonPath + "/decryptPasswordUser",
-      request
-    );
     reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
   }
 };
