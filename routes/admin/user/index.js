@@ -8,7 +8,7 @@ const {
   saveUser,
   deleteUser,
   decryptPasswordUser,
-  changeUserPassword,
+  updateUserPassword,
   getAllUsersWithCurrent,
 } = require("../../../controller/users/index");
 const { User } = require("../../../swaggerSchema/groupTags/schema");
@@ -26,7 +26,7 @@ module.exports = async (fastify, opts) => {
     ],
     handler: (request, reply) => getAllUsers(request, reply, fastify),
   });
-  
+
   fastify.post("/allWithCurrent", {
     schema: User.getAllWithCurrent.schema,
     preHandler: [
@@ -37,7 +37,8 @@ module.exports = async (fastify, opts) => {
           mode: "view",
         }),
     ],
-    handler: (request, reply) => getAllUsersWithCurrent(request, reply, fastify),
+    handler: (request, reply) =>
+      getAllUsersWithCurrent(request, reply, fastify),
   });
 
   fastify.post("/decryptPassword", {
@@ -102,6 +103,6 @@ module.exports = async (fastify, opts) => {
           mode: "delete",
         }),
     ],
-    handler: (request, reply) => changeUserPassword(request, reply, fastify),
+    handler: (request, reply) => updateUserPassword(request, reply, fastify),
   });
 };

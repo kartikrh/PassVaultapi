@@ -219,18 +219,21 @@ const getAllUsersService = async (request) => {
 
 const getAllUsersWithCurrentService = async (request) => {
   const requestUserID = request.userTokenInfo.WrEId;
-  const _filteredUserIDs = [requestUserID, ...getUserChildIds(requestUserID, global.tblUsers)];
+  const _filteredUserIDs = [
+    requestUserID,
+    ...getUserChildIds(requestUserID, global.tblUsers),
+  ];
   const _users = global.tblUsers.map((user) => {
     const { password, ...userWithoutPassword } = user;
     return userWithoutPassword;
   });
   const _userList = _users.filter((_u) => _filteredUserIDs.includes(_u.userId));
-  return _userList.map(value => {
+  return _userList.map((value) => {
     if (value.userId === requestUserID) {
       return { ...value, current: true };
     }
     return value;
-  })
+  });
 };
 
 const getUserDecryptedPassword = async (request) => {

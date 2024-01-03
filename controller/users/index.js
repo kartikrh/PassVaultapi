@@ -110,7 +110,12 @@ const getAllUsersWithCurrent = async (request, reply, fastify) => {
     const result = await getAllUsersWithCurrentService(request, fastify);
     reply.status(200).send(success(result, 200));
   } catch (err) {
-    errorLogger(fastify, err.message, commonPath + "/getAllUsersWithCurrent", request);
+    errorLogger(
+      fastify,
+      err.message,
+      commonPath + "/getAllUsersWithCurrent",
+      request
+    );
     reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
   }
 };
