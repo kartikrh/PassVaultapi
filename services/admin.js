@@ -10,6 +10,7 @@ const {
   getAllActiveInactiveTabsQuery,
   updateDisplayOrder,
   getTabsByRoleIDQuery,
+  getTabsByPerentIdQuery,
 } = require("../repository/TableTabs.js");
 
 const { tabsValidator } = require("../utilities/validator.js");
@@ -57,6 +58,27 @@ async function getTabsByRoleIDService(request, fastify) {
   };
 
   return await getTabsByRoleIDQuery(fastify, body);
+}
+
+async function getTabsByParentIdService(request, fastify) {
+  const { WrIsSuperAdmin, WrUserType, WrRoleId } = request.userTokenInfo;
+  const { parentId, isActive, displayType } = request.body;
+
+  let dType = 0;
+  if (displayType) {
+    dType = WrUserType;
+  } else {
+    dType = displayType;
+  }
+
+  const body = {
+    displayType: WrIsSuperAdmin ? [1, 2, 0] : [dType],
+    parentId: parentId === undefined ? 0 : parentId,
+    roleId: WrRoleId === undefined ? 0 : WrRoleId,
+    isActive: isActive === undefined ? true : isActive,
+  };
+
+  return await getTabsByPerentIdQuery(fastify, body);
 }
 
 async function getAllTabsService(request, fastify) {
@@ -188,4 +210,5 @@ module.exports = {
   changeDisplayOrderService,
   getAllTabsService,
   getTabsByRoleIDService,
+  getTabsByParentIdService,
 };

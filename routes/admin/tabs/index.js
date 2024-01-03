@@ -7,7 +7,7 @@ const {
   getDisplayTabs,
   changeDisplayOrder,
   getAllTabsData,
-  getTabsByRoleId,
+  getTabsList,
 } = require("../../../controller/users/admin/tabs");
 const { Tabs } = require("../../../swaggerSchema/groupTags/schema");
 const {
@@ -30,8 +30,8 @@ module.exports = async function (fastify, opts) {
     handler: (request, reply) => getTabs(request, reply, fastify),
   });
 
-  fastify.post("/byRoleId", {
-    schema: Tabs.byRoleId.schema,
+  fastify.post("/tablist", {
+    schema: Tabs.byparentId.schema,
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
@@ -40,7 +40,7 @@ module.exports = async function (fastify, opts) {
           mode: "view",
         }),
     ],
-    handler: (request, reply) => getTabsByRoleId(request, reply, fastify),
+    handler: (request, reply) => getTabsList(request, reply, fastify),
   });
 
   //read all tabs which is active as well as inactive

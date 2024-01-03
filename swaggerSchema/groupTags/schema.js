@@ -109,7 +109,7 @@ const Tabs = {
       security: [{ bearerAuth: [] }],
     },
   },
-  byRoleId: {
+  byparentId: {
     schema: {
       tags: ["Admin"],
       description: "get by Id tabs",
@@ -117,7 +117,8 @@ const Tabs = {
       body: {
         type: "object",
         properties: {
-          roleId: { type: "string" },
+          parentId: { type: "string" },
+          displayType: { type: "integer", enum: [1, 2] },
           isActive: { type: "boolean" },
         },
       },

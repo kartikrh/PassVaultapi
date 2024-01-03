@@ -8,6 +8,7 @@ const {
   getAllTabsService,
   saveTabService,
   getTabsByRoleIDService,
+  getTabsByParentIdService,
 } = require("../../../../services/admin.js");
 const { errorLogger } = require("../../../../utilities/logger");
 
@@ -28,7 +29,17 @@ async function getTabsByRoleId(request, reply, fastify) {
     const result = await getTabsByRoleIDService(request, fastify);
     reply.status(200).send(success(result, 200));
   } catch (err) {
-    errorLogger(fastify, err.message, commonPath + "/getTabs", request);
+    errorLogger(fastify, err.message, commonPath + "/getTabsByRoleId", request);
+    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+  }
+}
+
+async function getTabsList(request, reply, fastify) {
+  try {
+    const result = await getTabsByParentIdService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/getTabsList", request);
     reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
   }
 }
@@ -108,4 +119,5 @@ module.exports = {
   changeDisplayOrder,
   getAllTabsData,
   getTabsByRoleId,
+  getTabsList,
 };

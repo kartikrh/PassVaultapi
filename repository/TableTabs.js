@@ -119,7 +119,34 @@ async function getTabsByRoleIDQuery(fastify, body) {
     }
   );
 }
-
+async function getTabsByPerentIdQuery(fastify, body) {
+  return await fastify.db.query(
+    `SELECT 
+     t."wrTabName" as "tabName",
+     t."WrDisplayName" as  "displayName",
+     t."wrDisplayType" as "displayType",
+     t."wrWebPage" as "webPage",
+     t."wrParentId" as "parentId",
+     t."wrIsActive" as "isActive",
+     t."wrIsAdd" as "isAdd",
+     t."wrIsEdit" as "isEdit",
+     t."wrIsDelete" as "isDelete",
+     t."wrIsView" as "isView",
+     t."wrAddWebpage" as "addWebpage",
+     t."wrIsMenu" as "isMenu",
+     t."wrIconName" as "iconName",
+     t."wrDisplayOrder" as "displayOrder",
+     et."wrValue" as "encryptedTabId"
+     from "tblTabs" t inner join "tblEncryptedData" et on t."wrTabId"=et."wrKey" 
+     left join (select * from "tblPermissions" where "wrRoleId" = $4) p on p."wrTabId" = t."wrTabId"
+     where t."wrIsActive" = $3 AND t."wrParentId" = $2
+     and t."wrDisplayType" = ANY($1)`,
+    {
+      type: fastify.db.Sequelize.QueryTypes.SELECT,
+      bind: [body.displayType, body.parentId, body.isActive, body.roleId],
+    }
+  );
+}
 async function getAllActiveInactiveTabsQuery(fastify) {
   return await fastify.db.query(
     `SELECT 
@@ -373,4 +400,5 @@ module.exports = {
   validateAllTabIdsQuery,
   updateDisplayOrder,
   getTabsByRoleIDQuery,
+  getTabsByPerentIdQuery,
 };
