@@ -39,7 +39,6 @@ async function signUpUserService({ body }, fastify) {
 
 async function signInUserServices(request, fastify) {
   const decryptedPassword = encrypt(request.body.password);
-
   const body = {
     userName: request.body.userName,
     password: decryptedPassword,
