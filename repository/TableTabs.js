@@ -110,12 +110,12 @@ async function getTabsByRoleIDQuery(fastify, body) {
            et."wrValue" as "encryptedTabId"
            from "tblTabs" t inner join "tblEncryptedData" et on t."wrTabId"=et."wrKey" 
            left join (select * from "tblPermissions" where "wrRoleId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $2)) p on p."wrTabId" = t."wrTabId"
-         where  t."wrParentId" not in ( select * from disable_tab) 
+         where t."wrIsActive" = $3 AND t."wrParentId" not in ( select * from disable_tab) 
          and t."wrDisplayType" = ANY($1)
          `,
     {
       type: fastify.db.Sequelize.QueryTypes.SELECT,
-      bind: [body.displayType, body.roleId],
+      bind: [body.displayType, body.roleId, body.isActive],
     }
   );
 }

@@ -118,6 +118,7 @@ const Tabs = {
         type: "object",
         properties: {
           roleId: { type: "string" },
+          isActive: { type: "boolean" },
         },
       },
     },
@@ -1307,10 +1308,10 @@ const User = {
       body: {
         type: "object",
         properties: {
-          userId: { type: "string" },
+          oldPassword: { type: "string" },
           newPassword: { type: "string" },
         },
-        required: ["userId", "newPassword"],
+        required: ["oldPassword", "newPassword"],
       },
     },
   },

@@ -48,11 +48,12 @@ async function getTabsService(request, fastify) {
 
 async function getTabsByRoleIDService(request, fastify) {
   const { WrIsSuperAdmin, WrUserType } = request.userTokenInfo;
-  const { roleId } = request.body;
+  const { roleId, isActive } = request.body;
   const body = {
     displayType: WrIsSuperAdmin ? [1, 2, 0] : [WrUserType],
     roleId: roleId === undefined ? 0 : roleId,
     isSuperAdmin: WrIsSuperAdmin,
+    isActive: isActive === undefined ? true : isActive,
   };
 
   return await getTabsByRoleIDQuery(fastify, body);
