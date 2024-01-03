@@ -48,12 +48,11 @@ async function signInUserServices(request, fastify) {
   };
 
   const user = await signInUser(body, fastify);
-  const WrEId = user.WrEId;
   //* if no user exists or password incorrect
   if (!user) {
     throw new Error("incorrect undername and password");
   }
-
+  const WrEId = user.WrEId;
   const ipAdress = requestIp.getClientIp(request);
 
   if (user.WrUserIp !== "0" && user.WrUserIp !== ipAdress) {
@@ -424,14 +423,14 @@ const changeUserPasswordService = async (request, fastify) => {
   }
 
   const body = {
-    userId: request.userTokenInfo.WrUserId,
+    userId: request.userTokenInfo.WrEId,
     password: encrypt(newPassword),
   };
 
   await updateUserPasswordQuery(body, fastify, request);
 
   const index = global.tblUsers.findIndex(
-    (user) => user.userId === request.userTokenInfo.WrUserId
+    (user) => user.userId === request.userTokenInfo.WrEId
   );
 
   global.tblUsers[index].password = body.password;
