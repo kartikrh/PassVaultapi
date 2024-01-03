@@ -410,7 +410,7 @@ const changeUserPasswordService = async (request, fastify) => {
   const { oldPassword, newPassword } = request.body;
 
   const findUser = global.tblUsers.find(
-    (user) => user.userId === request.userTokenInfo.WrUserId
+    (user) => user.userId === request.userTokenInfo.WrEId
   );
 
   if (!findUser) {
