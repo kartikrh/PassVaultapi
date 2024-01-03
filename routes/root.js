@@ -46,6 +46,7 @@ module.exports = async function (fastify, opts) {
     handler: (request, reply) => generateEncryption(request, reply, fastify),
   });
   fastify.post("/loadData", {
+    schema: Auth.loaddata.schema,
     preHandler: [(request, reply) => authorize(request, reply, fastify)],
     handler: (request, reply) => loadDataInMemory(request, reply, fastify),
   });
