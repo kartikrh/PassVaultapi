@@ -11,6 +11,7 @@ const {
   updateDisplayOrder,
   getTabsByRoleIDQuery,
   getTabsByPerentIdQuery,
+  getUserWisePermisionQuery,
 } = require("../repository/TableTabs.js");
 
 const { tabsValidator } = require("../utilities/validator.js");
@@ -45,6 +46,16 @@ async function getTabsService(request, fastify) {
   };
 
   return await getTabsQuery(fastify, body);
+}
+
+async function getUserWisePermissionService(request, fastify) {
+  const { WrRoleId } = request.userTokenInfo;
+
+  const body = {
+    roleId: WrRoleId,
+  };
+
+  return await getUserWisePermisionQuery(fastify, body);
 }
 
 async function getTabsByRoleIDService(request, fastify) {
@@ -211,4 +222,5 @@ module.exports = {
   getAllTabsService,
   getTabsByRoleIDService,
   getTabsByParentIdService,
+  getUserWisePermissionService,
 };

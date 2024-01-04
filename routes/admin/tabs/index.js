@@ -8,6 +8,7 @@ const {
   changeDisplayOrder,
   getAllTabsData,
   getTabsList,
+  getUserWisePermission,
 } = require("../../../controller/users/admin/tabs");
 const { Tabs } = require("../../../swaggerSchema/groupTags/schema");
 const {
@@ -28,6 +29,19 @@ module.exports = async function (fastify, opts) {
         }),
     ],
     handler: (request, reply) => getTabs(request, reply, fastify),
+  });
+
+  fastify.post("/getUserWisePermission", {
+    schema: Tabs.getTabs.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Tabs",
+          mode: "view",
+        }),
+    ],
+    handler: (request, reply) => getUserWisePermission(request, reply, fastify),
   });
 
   fastify.post("/tablist", {
