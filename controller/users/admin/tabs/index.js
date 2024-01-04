@@ -9,6 +9,7 @@ const {
   saveTabService,
   getTabsByRoleIDService,
   getTabsByParentIdService,
+  getUserWisePermissionService,
 } = require("../../../../services/admin.js");
 const { errorLogger } = require("../../../../utilities/logger");
 
@@ -20,6 +21,21 @@ async function getTabs(request, reply, fastify) {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/getTabs", request);
+    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+  }
+}
+
+async function getUserWisePermission(request, reply, fastify) {
+  try {
+    const result = await getUserWisePermissionService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      commonPath + "/getUserWisePermission",
+      request
+    );
     reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
   }
 }
@@ -120,4 +136,5 @@ module.exports = {
   getAllTabsData,
   getTabsByRoleId,
   getTabsList,
+  getUserWisePermission,
 };

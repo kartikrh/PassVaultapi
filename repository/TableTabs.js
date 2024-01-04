@@ -384,6 +384,36 @@ async function updateDisplayOrder(body, fastify) {
   );
 }
 
+async function getUserWisePermisionQuery(fastify, body) {
+  return await fastify.db.query(
+    `SELECT
+    et."wrValue" as "encryptedPermissionId",
+    T."wrTabName" AS "tabName",
+    T."WrDisplayName" AS   "displayName",
+    T."wrDisplayType" as "displayType",
+    T."wrWebPage" as "webPage",
+    T."wrParentId" as "parentId",
+    P."wrIsAdd" AS "isAdd",
+    P."wrIsEdit" AS "isEdit",
+    P."wrIsDelete" AS "isDelete",
+    P."wrIsView" AS "isView",
+    T."wrAddWebpage" as "addWebpage",
+    T."wrIsMenu" as "isMenu",
+    T."wrIconName" as "iconName",
+    T."wrDisplayOrder" as "displayOrder"
+      FROM "tblPermissions" P
+      INNER JOIN "tblEncryptedData" et on P."wrPermissionId" = et."wrKey" 
+      INNER JOIN "tblTabs" T ON P."wrTabId" = T."wrTabId"
+      WHERE
+          P."wrRoleId" = $1
+          AND T."wrIsActive" = TRUE;`,
+    {
+      type: fastify.db.Sequelize.QueryTypes.SELECT,
+      bind: [body.roleId],
+    }
+  );
+}
+
 module.exports = {
   getTabsQuery,
   createTabsQuery,
@@ -401,4 +431,5 @@ module.exports = {
   updateDisplayOrder,
   getTabsByRoleIDQuery,
   getTabsByPerentIdQuery,
+  getUserWisePermisionQuery,
 };
