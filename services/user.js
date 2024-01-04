@@ -49,7 +49,7 @@ async function signInUserServices(request, fastify) {
   const user = await signInUser(body, fastify);
   //* if no user exists or password incorrect
   if (!user) {
-    throw new Error("incorrect undername and password");
+    throw new Error("Incorrect user name or password");
   }
   const WrEId = user.WrEId;
   const ipAdress = requestIp.getClientIp(request);

@@ -102,6 +102,13 @@ const isJson = (json) => {
   return true;
 }
 
+const getTitle = (str) => {
+  if (str==="signin") return "SignIn"
+  else if (str==="signout") return "SignOut"
+  else if (str==="signup") return "SignUp"
+  return toFirstLetterUpperCase(str)
+}
+
 const toFirstLetterUpperCase = (str) => {
   return str.replace(
     /\w\S*/g,
@@ -172,6 +179,7 @@ module.exports = {
   decrypt,
   generateFileName,
   isJson,
+  getTitle,
   toFirstLetterUpperCase,
   getMessage,
   getUserChildIds
