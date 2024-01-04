@@ -103,19 +103,15 @@ const isJson = (json) => {
 }
 
 const getTitle = (str) => {
-  if (str==="signin") return "SignIn"
-  else if (str==="signout") return "SignOut"
-  else if (str==="signup") return "SignUp"
-  return toFirstLetterUpperCase(str)
-}
-
-const toFirstLetterUpperCase = (str) => {
-  return str.replace(
-    /\w\S*/g,
-    function (txt) {
-      return txt.charAt(0).toUpperCase() + txt.substr(1);
-    }
-  );
+  try{
+    if (str==="signin") return "Sign In"
+    else if (str==="signout") return "Sign Out"
+    else if (str==="signup") return "Sign Up"
+    return str.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/^./, str => str.toUpperCase())
+  } catch (err){
+    console.log(`Error while generating title for ${str}`);
+    return "";
+  }
 }
 
 const getMessage = (payload, code, type) => {
@@ -131,7 +127,7 @@ const getMessage = (payload, code, type) => {
       let message = typeof payload?.result === "string" ? payload.result : payload?.result?.message;
       if (!message) {
         if (type === "signin" || type === "signup") {
-          message = `${type} successfully`;
+          message = `${payload.title} successfully`;
         } else if (type === "save" || type === "create") {
           message = `${payload.title} saved successfully`;
         } else if (type.includes('delete')) {
@@ -180,7 +176,6 @@ module.exports = {
   generateFileName,
   isJson,
   getTitle,
-  toFirstLetterUpperCase,
   getMessage,
   getUserChildIds
 };
