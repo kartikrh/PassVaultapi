@@ -87,9 +87,7 @@ const deleteRoleService = async (request, fastify) => {
     const checkValidRoleId = await valideRoleId(roleIds[i], fastify);
 
     if (checkValidRoleId) {
-      const role = global.tblRoles.find(
-        (item) => item.roleId === roleIds[i]
-      );
+      const role = global.tblRoles.find((item) => item.roleId === roleIds[i]);
       throw new Error(
         `Role Id ${role.roleName} is assigned to user(s), skiping delete`
       );
@@ -106,7 +104,12 @@ const deleteRoleService = async (request, fastify) => {
 };
 
 const roleByIdService = async (request, fastify) => {
-  const permissionData = await roleByIdQuery(request.body, fastify);
+  const permissionData = await roleByIdQuery(
+    request.body,
+    request.userTokenInfo.WrRoleId,
+    request.userTokenInfo.WrIsSuperAdmin,
+    fastify
+  );
   const roleData = global.tblRoles.find(
     (item) => item.roleId === request.body.roleId
   );
