@@ -146,9 +146,10 @@ $$;
   );
 };
 
-const roleByIdQuery = async (data, fastify) => {
-  return await fastify.db.query(
-    `select 
+const roleByIdQuery = async (data, parentRoleId, isSuperAdmin, fastify) => {
+  if (isSuperAdmin) {
+    return await fastify.db.query(
+      `select 
     te."wrValue" as "tabId", 
     tt."WrDisplayName" as "displayName", 
     "wrParentId" as "parentId",
@@ -164,13 +165,42 @@ const roleByIdQuery = async (data, fastify) => {
       select * from "tblPermissions" where "wrRoleId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)
     ) as tp on tt."wrTabId" = tp."wrTabId"
     left join "tblEncryptedData" te on te."wrKey" = tt."wrTabId"
-    where tt."wrDisplayType" = $2
+    where tt."wrIsActive" = true and tt."wrDisplayType" = $2
     `,
-    {
-      type: fastify.db.QueryTypes.SELECT,
-      bind: [data.roleId, data.displayType],
-    }
-  );
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [data.roleId, data.displayType],
+      }
+    );
+  } else {
+    return await fastify.db.query(
+      `select 
+    te."wrValue" as "tabId", 
+    tt."WrDisplayName" as "displayName", 
+    "wrParentId" as "parentId",
+    COALESCE(tpp."wrIsAdd",false) as "isAdd",
+    COALESCE(tpp."wrIsEdit",false) as "isEdit",
+    COALESCE(tpp."wrIsDelete",false) as "isDelete",
+     COALESCE(tp."wrIsAdd",false) as "isAddPermission",
+    COALESCE(tp."wrIsEdit",false) as "isEditPermission",
+    COALESCE(tp."wrIsDelete",false) as "isDeletePermission",
+    COALESCE(tp."wrIsView",false) as "isViewPermission"
+    from "tblTabs" tt 
+    INNER join (
+      select * from "tblPermissions" where "wrRoleId" = $3
+    ) as tpp on tt."wrTabId" = tpp."wrTabId"
+    left join (
+      select * from "tblPermissions" where "wrRoleId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)
+    ) as tp on tt."wrTabId" = tp."wrTabId"
+    left join "tblEncryptedData" te on te."wrKey" = tt."wrTabId"
+    where tt."wrIsActive" = true and tt."wrDisplayType" = $2 AND tpp."wrIsView" = true
+    `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [data.roleId, data.displayType, parentRoleId],
+      }
+    );
+  }
 };
 
 const permissionByRoleIdQuery = async (data, fastify) => {
