@@ -21,7 +21,7 @@ const getAllPaneltyRun = async (request, reply, fastify) => {
       commonPath + "/getAllPaneltyRun",
       request
     );
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 
@@ -36,7 +36,7 @@ const getPaneltyRunById = async (request, reply, fastify) => {
       commonPath + "/getPaneltyRunById",
       request
     );
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 const savePaneltyRun = async (request, reply, fastify) => {
@@ -45,7 +45,7 @@ const savePaneltyRun = async (request, reply, fastify) => {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/savePaneltyRun", request);
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 const deletePaneltyRun = async (request, reply, fastify) => {
@@ -59,7 +59,7 @@ const deletePaneltyRun = async (request, reply, fastify) => {
       commonPath + "/deletePaneltyRun",
       request
     );
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 

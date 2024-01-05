@@ -16,7 +16,7 @@ const getAllPage = async (request, reply, fastify) => {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/getAllPage", request);
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 
@@ -26,7 +26,7 @@ const getPageById = async (request, reply, fastify) => {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/getPageById", request);
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 
@@ -36,7 +36,7 @@ const savePage = async (request, reply, fastify) => {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/savePage", request);
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 
@@ -46,7 +46,7 @@ const deletePage = async (request, reply, fastify) => {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/deletePage", request);
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 

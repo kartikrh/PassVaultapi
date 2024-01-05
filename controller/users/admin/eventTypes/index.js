@@ -21,7 +21,7 @@ const getAllEventTypes = async (request, reply, fastify) => {
       commonPath + "/getAllEventTypes",
       request
     );
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 const getEventTypeId = async (request, reply, fastify) => {
@@ -30,7 +30,7 @@ const getEventTypeId = async (request, reply, fastify) => {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/getEventTypeId", request);
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 const saveEventType = async (request, reply, fastify) => {
@@ -39,7 +39,7 @@ const saveEventType = async (request, reply, fastify) => {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/saveEventType", request);
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 const deleteEventType = async (request, reply, fastify) => {
@@ -48,7 +48,7 @@ const deleteEventType = async (request, reply, fastify) => {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/deleteEventType", request);
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 const updateDisplayOrder = async (request, reply, fastify) => {
@@ -62,7 +62,7 @@ const updateDisplayOrder = async (request, reply, fastify) => {
       commonPath + "/updateDisplayOrder",
       request
     );
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 

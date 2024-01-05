@@ -15,7 +15,7 @@ const getAllMenuItems = async (request, reply, fastify) => {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/getAllMenuItems", request);
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 
@@ -25,7 +25,7 @@ const getMenuItemById = async (request, reply, fastify) => {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/getMenuItemById", request);
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 
@@ -35,7 +35,7 @@ const saveMenuItem = async (request, reply, fastify) => {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/saveMenuItem", request);
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 
@@ -45,7 +45,7 @@ const deleteMenuItem = async (request, reply, fastify) => {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/deleteMenuItem", request);
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 

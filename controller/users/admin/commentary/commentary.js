@@ -24,7 +24,7 @@ const getAllCommentaries = async (request, reply, fastify) => {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, path + "/getAllCommentaries", request);
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 const getAllDisplayStatus = async (request, reply, fastify) => {
@@ -33,7 +33,7 @@ const getAllDisplayStatus = async (request, reply, fastify) => {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, path + "/getAllDisplayStatus", request);
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 const getCommentaryById = async (request, reply, fastify) => {
@@ -42,7 +42,7 @@ const getCommentaryById = async (request, reply, fastify) => {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, path + "/getCommentaryById", request);
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 const getCommentaryDetailsById = async (request, reply, fastify) => {
@@ -51,7 +51,7 @@ const getCommentaryDetailsById = async (request, reply, fastify) => {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, path + "/getCommentaryById", request);
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 const addCommentary = async (request, reply, fastify) => {
@@ -60,7 +60,7 @@ const addCommentary = async (request, reply, fastify) => {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, path + "/addCommentary", request);
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 const deleteCommentary = async (request, reply, fastify) => {
@@ -69,7 +69,7 @@ const deleteCommentary = async (request, reply, fastify) => {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, path + "/addCommentary", request);
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 const saveCommentaryDetails = async (request, reply, fastify) => {
@@ -78,7 +78,7 @@ const saveCommentaryDetails = async (request, reply, fastify) => {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, path + "/addCommentary", request);
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 const deleteBallByBallCommentary = async (request, reply, fastify) => {
@@ -92,7 +92,7 @@ const deleteBallByBallCommentary = async (request, reply, fastify) => {
       path + "/deleteBallByBallCommentary",
       request
     );
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 const deleteOverCommentary = async (request, reply, fastify) => {
@@ -101,7 +101,7 @@ const deleteOverCommentary = async (request, reply, fastify) => {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, path + "/deleteOverCommentary", request);
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 
@@ -116,7 +116,7 @@ const getCommentaryDetailsByEventId = async (request, reply, fastify) => {
       path + "/getCommentaryDetailsByEventId",
       request
     );
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 
@@ -134,7 +134,7 @@ const getCommentaryDetailsBycommentaryId = async (request, reply, fastify) => {
       path + "/getCommentaryDetailsBycommentaryId",
       request
     );
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 
@@ -149,7 +149,7 @@ const getCurrentUpdatedCommentaryID = async (request, reply, fastify) => {
       path + "/getCurrentUpdatedCommentaryID",
       request
     );
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 module.exports = {

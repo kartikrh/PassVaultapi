@@ -18,7 +18,7 @@ const getAllPlayers = async (request, reply, fastify) => {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/getAllPlayers", request);
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 const getAllPlayerByTeam = async (request, reply, fastify) => {
@@ -32,7 +32,7 @@ const getAllPlayerByTeam = async (request, reply, fastify) => {
       commonPath + "/getAllPlayerByTeam",
       request
     );
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 
@@ -42,7 +42,7 @@ const getPlayerById = async (request, reply, fastify) => {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/getPlayerById", request);
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 const getAllPlayerType = async (request, reply, fastify) => {
@@ -56,7 +56,7 @@ const getAllPlayerType = async (request, reply, fastify) => {
       commonPath + "/allPlayerTypeService",
       request
     );
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 const getAllBowlingType = async (request, reply, fastify) => {
@@ -70,7 +70,7 @@ const getAllBowlingType = async (request, reply, fastify) => {
       commonPath + "/getAllBowlingType",
       request
     );
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 const savePlayer = async (request, reply, fastify) => {
@@ -79,7 +79,7 @@ const savePlayer = async (request, reply, fastify) => {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/savePlayer", request);
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 const deletePlayer = async (request, reply, fastify) => {
@@ -88,7 +88,7 @@ const deletePlayer = async (request, reply, fastify) => {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/deletePlayer", request);
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 

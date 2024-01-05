@@ -21,7 +21,7 @@ const getAllPageFormats = async (request, reply, fastify) => {
       commonPath + "/getAllPageFormats",
       request
     );
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 
@@ -37,7 +37,7 @@ const getPageFormatById = async (request, reply, fastify) => {
       request
     );
 
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 
@@ -48,7 +48,7 @@ const savePageFormat = async (request, reply, fastify) => {
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/savePageFormat", request);
 
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 const deletePageFormat = async (request, reply, fastify) => {
@@ -62,7 +62,7 @@ const deletePageFormat = async (request, reply, fastify) => {
       commonPath + "/deletePageFormat",
       request
     );
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 
