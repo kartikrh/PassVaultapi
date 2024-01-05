@@ -22,11 +22,6 @@ module.exports = async function (fastify, opts) {
     schema: Tabs.getTabs.schema,
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
-      (request, reply, done) =>
-        checkPermission(request, reply, fastify, {
-          tabName: "Tabs",
-          mode: "view",
-        }),
     ],
     handler: (request, reply) => getTabs(request, reply, fastify),
   });
@@ -35,11 +30,6 @@ module.exports = async function (fastify, opts) {
     schema: Tabs.getTabs.schema,
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
-      (request, reply, done) =>
-        checkPermission(request, reply, fastify, {
-          tabName: "Tabs",
-          mode: "view",
-        }),
     ],
     handler: (request, reply) => getUserWisePermission(request, reply, fastify),
   });
