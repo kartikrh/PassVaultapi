@@ -1,5 +1,6 @@
 const {
   allTeamsService,
+  allteamByEventTypeIdService,
   teamByIdService,
   saveTeamService,
   deleteTeamService,
@@ -11,7 +12,7 @@ let commonPath = "controller/users/admin/teamsAndPlayer/teams";
 
 const getAllTeams = async (request, reply, fastify) => {
   try {
-    const result = await allTeamsService();
+    const result = await allteamByEventTypeIdService(request);
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/getAllTeams", request);
