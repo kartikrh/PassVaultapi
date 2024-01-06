@@ -910,6 +910,12 @@ const Teams = {
       tags: ["Teams"],
       security: [{ bearerAuth: [] }],
       description: "get all teams",
+      body: {
+        type: "object",
+        properties: {
+          eventTypeId: { type: "string" },
+        },
+      },
     },
   },
   getById: {
@@ -1043,6 +1049,7 @@ const Player = {
         type: "object",
         properties: {
           isActive: { type: "boolean" },
+          eventTypeId: { type: "string" },
         },
       },
     },
