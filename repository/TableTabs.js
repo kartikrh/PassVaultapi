@@ -406,7 +406,7 @@ async function getUserWisePermisionQuery(fastify, body) {
       INNER JOIN "tblTabs" T ON P."wrTabId" = T."wrTabId"
       WHERE
           P."wrRoleId" = $1
-          AND T."wrIsActive" = TRUE;`,
+          AND P."wrIsView" = TRUE;`,
     {
       type: fastify.db.Sequelize.QueryTypes.SELECT,
       bind: [body.roleId],
