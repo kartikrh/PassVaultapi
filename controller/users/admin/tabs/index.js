@@ -21,7 +21,7 @@ async function getTabs(request, reply, fastify) {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/getTabs", request);
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 }
 
@@ -36,7 +36,7 @@ async function getUserWisePermission(request, reply, fastify) {
       commonPath + "/getUserWisePermission",
       request
     );
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 }
 
@@ -46,7 +46,7 @@ async function getTabsByRoleId(request, reply, fastify) {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/getTabsByRoleId", request);
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 }
 
@@ -56,7 +56,7 @@ async function getTabsList(request, reply, fastify) {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/getTabsList", request);
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 }
 
@@ -66,7 +66,7 @@ async function getAllTabsData(request, reply, fastify) {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/getAllTabsData", request);
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 }
 
@@ -76,7 +76,7 @@ async function getDisplayTabs(request, reply, fastify) {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/getDisplayTabs", request);
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 }
 
@@ -86,7 +86,7 @@ async function deleteTab(request, reply, fastify) {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/deleteTab", request);
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 }
 
@@ -96,7 +96,7 @@ async function getSpecificTab(request, reply, fastify) {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/getSpecificTab", request);
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 }
 
@@ -106,7 +106,7 @@ async function saveTabData(request, reply, fastify) {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err?.message, commonPath + "/saveTabData", request);
-    reply.status(500).send(error(err?.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err?.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 }
 
@@ -121,7 +121,7 @@ async function changeDisplayOrder(request, reply, fastify) {
       commonPath + "/changeDisplayOrder",
       request
     );
-    reply.status(500).send(error(err?.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err?.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 }
 

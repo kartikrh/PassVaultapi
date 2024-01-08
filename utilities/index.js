@@ -103,12 +103,12 @@ const isJson = (json) => {
 }
 
 const getTitle = (str) => {
-  try{
-    if (str==="signin") return "Sign In"
-    else if (str==="signout") return "Sign Out"
-    else if (str==="signup") return "Sign Up"
+  try {
+    if (str === "signin") return "Sign In"
+    else if (str === "signout") return "Sign Out"
+    else if (str === "signup") return "Sign Up"
     return str.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/^./, str => str.toUpperCase())
-  } catch (err){
+  } catch (err) {
     console.log(`Error while generating title for ${str}`);
     return "";
   }
@@ -117,23 +117,30 @@ const getTitle = (str) => {
 const getMessage = (payload, code, type) => {
   const sendErrorMessage = (defaultMessage) => {
     const message = typeof payload?.error === "string" ? payload.error : payload?.error?.message;
-    if(!message) message = defaultMessage;
+    if (!message) message = defaultMessage;
     return message;
+  }
+  const generateMessage = (title, action = "") => {
+    const isError = payload?.error;
+    return isError ? sendErrorMessage(`${title}${" " + action} failed`) : `${title}${" " + action} successfully`
   }
   switch (code) {
     case 500:
       return sendErrorMessage(`Internal Server Error`)
     case 200:
       let message = typeof payload?.result === "string" ? payload.result : payload?.result?.message;
+      if (payload?.error) {
+        message = sendErrorMessage("Something Went Wrong");
+      }
       if (!message) {
         if (type === "signin" || type === "signup") {
-          message = `${payload.title} successfully`;
+          message = generateMessage(payload.title);
         } else if (type === "save" || type === "create") {
-          message = `${payload.title} saved successfully`;
+          message = generateMessage(payload.title, "saved");
         } else if (type.includes('delete')) {
-          message = `${payload.title}(s) delete successfully`;
+          message = generateMessage(`${payload.title}(s)`, "delete");
         } else {
-          message = `${payload.title} Data fetched successfully`;
+          message = generateMessage(payload.title, "fetched");
         }
       }
       return message

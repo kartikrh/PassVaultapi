@@ -26,7 +26,7 @@ async function signUpUser(request, reply, fastify) {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/signUpUser", request);
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 }
 async function signInUser(request, reply, fastify) {
@@ -35,7 +35,7 @@ async function signInUser(request, reply, fastify) {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/signInUser", request);
-    reply.status(401).send(error(err.message, ERROR_CODES.AUTH_ERROR, 401));
+    reply.status(200).send(error(err.message, ERROR_CODES.AUTH_ERROR, 200));
   }
 }
 
@@ -45,7 +45,7 @@ async function signOutUser(request, reply, fastify) {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/signOutUser", request);
-    reply.status(401).send(error(err.message, ERROR_CODES.AUTH_ERROR, 401));
+    reply.status(200).send(error(err.message, ERROR_CODES.AUTH_ERROR, 200));
   }
 }
 
@@ -55,7 +55,7 @@ async function verifyTokenUser(request, reply, fastify) {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/verifyTokenUser", request);
-    reply.status(401).send(error(err.message, ERROR_CODES.AUTH_ERROR, 401));
+    reply.status(200).send(error(err.message, ERROR_CODES.AUTH_ERROR, 401));
   }
 }
 
@@ -70,7 +70,7 @@ async function generateEncryption(request, reply, fastify) {
       commonPath + "/generateEncryption",
       request
     );
-    reply.status(401).send(error(err.message, ERROR_CODES.AUTH_ERROR, 401));
+    reply.status(200).send(error(err.message, ERROR_CODES.AUTH_ERROR, 401));
   }
 }
 
@@ -91,7 +91,7 @@ const loadDataInMemory = async (request, reply, fastify) => {
     }
     await fetchAllDataFromDb(fastify, reply);
   } catch (err) {
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 
@@ -101,7 +101,7 @@ const getAllUsers = async (request, reply, fastify) => {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/getAllUsers", request);
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 
@@ -116,7 +116,7 @@ const getAllUsersWithCurrent = async (request, reply, fastify) => {
       commonPath + "/getAllUsersWithCurrent",
       request
     );
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 
@@ -142,7 +142,7 @@ const decryptPasswordUser = async (request, reply, fastify) => {
           )
         );
     }
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 
@@ -152,7 +152,7 @@ const getUserById = async (request, reply, fastify) => {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/getUserById", request);
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 
@@ -162,7 +162,7 @@ const saveUser = async (request, reply, fastify) => {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/saveUser", request);
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 const deleteUser = async (request, reply, fastify) => {
@@ -171,7 +171,7 @@ const deleteUser = async (request, reply, fastify) => {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/deleteUser", request);
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 
@@ -186,7 +186,7 @@ const updateUserPassword = async (request, reply, fastify) => {
       commonPath + "/updateUserPassword",
       request
     );
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 
@@ -201,7 +201,7 @@ const changeUserPassword = async (request, reply, fastify) => {
       commonPath + "/changeUserPassword",
       request
     );
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 

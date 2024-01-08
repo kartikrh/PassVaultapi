@@ -19,7 +19,7 @@ const getAllMenuItemTypes = async (request, reply, fastify) => {
       commonPath + "/getAllMenuItemTypes",
       request
     );
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 
@@ -34,7 +34,7 @@ const getMenuItemTypeById = async (request, reply, fastify) => {
       commonPath + "/getMenuItemTypeById",
       request
     );
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 
@@ -49,7 +49,7 @@ const saveMenuItemType = async (request, reply, fastify) => {
       commonPath + "/saveMenuItemType",
       request
     );
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 
@@ -64,7 +64,7 @@ const deleteMenuItemType = async (request, reply, fastify) => {
       commonPath + "/deleteMenuItemType",
       request
     );
-    reply.status(500).send(error(err.message, ERROR_CODES.SERVER_ERROR, 500));
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 
