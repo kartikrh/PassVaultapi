@@ -125,7 +125,7 @@ const Tabs = {
         type: "object",
         properties: {
           parentId: { type: "string" },
-          displayType: { type: "integer", enum: [1, 2] },
+          displayType: { type: "integer", enum: [0, 1, 2] },
           isActive: { type: "boolean" },
         },
       },

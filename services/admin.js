@@ -76,7 +76,12 @@ async function getTabsByParentIdService(request, fastify) {
   const { parentId, isActive, displayType } = request.body;
 
   const body = {
-    displayType: displayType === undefined ? [1, 2] : [displayType],
+    displayType:
+      displayType === undefined
+        ? [1, 2]
+        : displayType === 0
+        ? [1, 2]
+        : [displayType],
     parentId: parentId === undefined ? 0 : parentId,
     roleId: WrRoleId === undefined ? 0 : WrRoleId,
     isActive: isActive === undefined ? true : isActive,
