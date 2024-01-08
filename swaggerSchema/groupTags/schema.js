@@ -910,6 +910,12 @@ const Teams = {
       tags: ["Teams"],
       security: [{ bearerAuth: [] }],
       description: "get all teams",
+      body: {
+        type: "object",
+        properties: {
+          eventTypeId: { type: "string" },
+        },
+      },
     },
   },
   getById: {
@@ -971,9 +977,9 @@ const Teams = {
 const PaneltyRuns = {
   getAll: {
     schema: {
-      tags: ["Panelty Runs"],
+      tags: ["Penalty Runs"],
       security: [{ bearerAuth: [] }],
-      description: "get all Panelty Runs",
+      description: "get all Penalty Runs",
       body: {
         type: "object",
         properties: {
@@ -984,9 +990,9 @@ const PaneltyRuns = {
   },
   getById: {
     schema: {
-      tags: ["Panelty Runs"],
+      tags: ["Penalty Runs"],
       security: [{ bearerAuth: [] }],
-      description: "get Panelty Runs by id",
+      description: "get Penalty Runs by id",
       body: {
         type: "object",
         properties: {
@@ -998,9 +1004,9 @@ const PaneltyRuns = {
   },
   save: {
     schema: {
-      tags: ["Panelty Runs"],
+      tags: ["Penalty Runs"],
       security: [{ bearerAuth: [] }],
-      description: "save Panelty Runs",
+      description: "save Penalty Runs",
       body: {
         type: "object",
         properties: {
@@ -1015,9 +1021,9 @@ const PaneltyRuns = {
   },
   delete: {
     schema: {
-      tags: ["Panelty Runs"],
+      tags: ["Penalty Runs"],
       security: [{ bearerAuth: [] }],
-      description: "delete Panelty Runs",
+      description: "delete Penalty Runs",
       body: {
         type: "object",
         properties: {
@@ -1043,6 +1049,7 @@ const Player = {
         type: "object",
         properties: {
           isActive: { type: "boolean" },
+          eventTypeId: { type: "string" },
         },
       },
     },

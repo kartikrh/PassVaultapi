@@ -18,7 +18,7 @@ module.exports = async (fastify, opts) => {
       (request, reply) => authorize(request, reply, fastify),
       (request, reply) =>
         checkPermission(request, reply, fastify, {
-          tabName: "Panelty Runs",
+          tabName: "Penalty Runs",
           mode: "view",
         }),
     ],
@@ -31,7 +31,7 @@ module.exports = async (fastify, opts) => {
       (request, reply) => authorize(request, reply, fastify),
       (request, reply) =>
         checkPermission(request, reply, fastify, {
-          tabName: "Panelty Runs",
+          tabName: "Penalty Runs",
           mode: "view",
         }),
     ],
@@ -43,7 +43,7 @@ module.exports = async (fastify, opts) => {
       (request, reply) => authorize(request, reply, fastify),
       (request, reply) =>
         checkPermission(request, reply, fastify, {
-          tabName: "Panelty Runs",
+          tabName: "Penalty Runs",
           mode: request.body.paneltyRunId === "0" ? "add" : "edit",
         }),
     ],
@@ -55,7 +55,7 @@ module.exports = async (fastify, opts) => {
       (request, reply) => authorize(request, reply, fastify),
       (request, reply) =>
         checkPermission(request, reply, fastify, {
-          tabName: "Panelty Runs",
+          tabName: "Penalty Runs",
           mode: "delete",
         }),
     ],

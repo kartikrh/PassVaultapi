@@ -14,6 +14,18 @@ const allTeamsService = async () => {
   return global.tblTeams;
 };
 
+const allteamByEventTypeIdService = async (request, fastify) => {
+  const { eventTypeId } = request.body;
+  if (eventTypeId) {
+    const result = global.tblTeams.filter(
+      (item) => item.eventTypeId === eventTypeId
+    );
+    return result;
+  } else {
+    return global.tblTeams;
+  }
+};
+
 const teamByIdService = async (request, fastify) => {
   const { teamId } = request.body;
   const result = global.tblTeams.find((item) => item.teamId === teamId);
@@ -218,4 +230,5 @@ module.exports = {
   teamByIdService,
   saveTeamService,
   deleteTeamService,
+  allteamByEventTypeIdService,
 };

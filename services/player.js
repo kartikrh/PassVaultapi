@@ -12,12 +12,21 @@ const { getAllPlayersByTeamIdQuery } = require("../repository/TableTeams");
 const { storeImage, removeImage } = require("../utilities/Images");
 
 const allPlayerService = async (request) => {
-  const { isActive } = request.body;
-  if (isActive !== undefined) {
-    const _player = global.tblPlayers.filter((_p) => _p.isActive === isActive);
+  const { isActive, eventTypeId } = request.body;
+  const body = {
+    isActive: isActive === undefined ? true : isActive,
+    eventTypeId: eventTypeId === undefined ? "0" : eventTypeId,
+  };
+  if (body.eventTypeId !== "0") {
+    const _player = global.tblPlayers.filter(
+      (_p) =>
+        _p.isActive === body.isActive && _p.eventTypeId === body.eventTypeId
+    );
     return _player;
   } else {
-    const _player = global.tblPlayers.filter((_p) => _p.isActive === true);
+    const _player = global.tblPlayers.filter(
+      (_p) => _p.isActive === body.isActive
+    );
     return _player;
   }
 };
