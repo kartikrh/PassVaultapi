@@ -16,13 +16,15 @@ const allTeamsService = async () => {
 
 const allteamByEventTypeIdService = async (request, fastify) => {
   const { eventTypeId } = request.body;
-  if (eventTypeId) {
+  if (eventTypeId === undefined) {
+    return global.tblTeams;
+  } else if (eventTypeId == "0") {
+    return global.tblTeams;
+  } else if (eventTypeId) {
     const result = global.tblTeams.filter(
       (item) => item.eventTypeId === eventTypeId
     );
     return result;
-  } else {
-    return global.tblTeams;
   }
 };
 

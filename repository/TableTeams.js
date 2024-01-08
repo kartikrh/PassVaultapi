@@ -8,10 +8,12 @@ const allTeamQuery = async (fastify) => {
     "wrTeamName" as "teamName",
     "wrTeamShortName" as "teamShortName",
     "WrTeamJersey" as "jersey",
-    "wrImage" as "image",
-    "wrCountry" as "country"
+    tt."wrImage" as "image",
+    "wrCountry" as "country",
+    et."wrEventType" AS "eventType"
      FROM "tblTeams" tt left join "tblEncryptedData" te on tt."wrTeamId" = te."wrKey"
-      left join "tblEncryptedData" te2 on tt."wrEventTypeId" = te2."wrKey"`,
+      left join "tblEncryptedData" te2 on tt."wrEventTypeId" = te2."wrKey"
+      LEFT JOIN "tblEventTypes" et ON tt."wrEventTypeId" = et."wrEventTypeId"`,
     {
       type: fastify.db.QueryTypes.SELECT,
     }
