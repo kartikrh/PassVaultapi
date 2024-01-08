@@ -9,6 +9,7 @@ const {
   saveTabService,
   getTabsByRoleIDService,
   getTabsByParentIdService,
+  getUserWisePermissionService,
 } = require("../../../../services/admin.js");
 const { errorLogger } = require("../../../../utilities/logger");
 
@@ -135,4 +136,5 @@ module.exports = {
   getAllTabsData,
   getTabsByRoleId,
   getTabsList,
+  getUserWisePermission,
 };
