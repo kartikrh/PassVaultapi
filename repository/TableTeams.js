@@ -34,10 +34,12 @@ const insertTeamQuery = async (data, fastify, request) => {
     "wrTeamName" as "teamName",
     "wrTeamShortName" as "teamShortName",
     "WrTeamJersey" as "jersey",
-    "wrImage" as "image",
-    "wrCountry" as "country"
+    tt."wrImage" as "image",
+    "wrCountry" as "country",
+    "wrEventType" AS "eventType"
      FROM "insert_data" tt left join "tblEncryptedData" te on tt."wrTeamId" = te."wrKey"
-      left join "tblEncryptedData" te2 on tt."wrEventTypeId" = te2."wrKey"    
+      left join "tblEncryptedData" te2 on tt."wrEventTypeId" = te2."wrKey"   
+      INNER JOIN "tblEventTypes" evt ON tt."wrEventTypeId" = evt."wrEventTypeId" 
     `,
       {
         bind: [
