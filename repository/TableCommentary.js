@@ -1155,7 +1155,7 @@ const updateCommentaryDetailsQuery = async (data, fastify, request) => {
       `update "tblCommentaries" set 
       "wrEventTypeId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1),
       "wrMatchTypeId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $2),
-      "wrCompetitionId" = $3,
+      "wrCompetitionId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $3),
       "wrEventId" = $4,
       "wrEventDate" = $5,
       "wrEventName" = $6,
