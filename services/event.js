@@ -109,9 +109,9 @@ const updateEventService = async (request, fastify) => {
     eventDate: request.body.eventDate || checkId.eventDate,
     refId: request.body.refId || checkId.refId,
     isActive: checkId.isActive,
-    countryCode: request.body.countryCode || checkId.countryCode,
-    timeZone: request.body.timeZone || checkId.timeZone,
-    venue: request.body.venue || checkId.venue,
+    countryCode: request.body.countryCode === undefined ? checkId.countryCode : request.body.countryCode,
+    timeZone: request.body.timeZone === undefined ? checkId.timeZone : request.body.timeZone,
+    venue: request.body.venue === undefined ? checkId.venue : request.body.venue,
     eventType: checkId.eventType,
     competition: checkId.competition,
   };
