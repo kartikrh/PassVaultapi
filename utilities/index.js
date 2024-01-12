@@ -135,7 +135,7 @@ const getMessage = (payload, code, type) => {
       if (!message) {
         if (type === "signin" || type === "signup") {
           message = generateMessage(payload.title);
-        } else if (type === "save" || type === "create") {
+        } else if (type === "save" || type === "create" || type === "saveDetails") {
           message = generateMessage(payload.title, "saved");
         } else if (type.includes('delete')) {
           message = generateMessage(`${payload.title}(s)`, "delete");
