@@ -316,8 +316,7 @@ const updateCommentaryQuery = async (request, fastify) => {
 const updateCommentaryTeams = async (request, fastify, data) => {
   try {
     return await fastify.db.query(
-      `
-      update "tblCommentaryTeams" set
+      `update "tblCommentaryTeams" set
       "wrTeamCaptain" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1),
       "wrTeamKipper" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $2),
       "wrShortName" = (select "wrTeamShortName" from "tblTeams" where "wrTeamId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $3)),
@@ -384,8 +383,8 @@ const getCommentaryByIdQuery = async (request, fastify) => {
       te3."wrValue" as "team2Id",
       tt1."wrTeamName" as "team1Name",
       tt2."wrTeamName" as "team2Name",
-      "wrCompetitionId" as "competitionId",
-      "wrEventId" as "eventId",
+      te8."wrValue" as "competitionId",
+      te9."wrValue" as "eventId",
       "wrEventDate" as "eventDate",
       "wrEventName" as "eventName",
       "wrEventRefId" as "eventRefId",
@@ -418,6 +417,8 @@ const getCommentaryByIdQuery = async (request, fastify) => {
       left join "tblEncryptedData" te5 on tc."wrTossWonBy" = te5."wrKey"
       left join "tblEncryptedData" te6 on tc."wrWinnerId" = te6."wrKey"
       left join "tblEncryptedData" te7 on tc."wrCommentaryId" = te7."wrKey"
+      left join "tblEncryptedData" te8 on tc."wrCompetitionId" = te8."wrKey"
+      left join "tblEncryptedData" te9 on tc."wrEventId" = te9."wrKey"
       left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
       left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
       where "wrCommentaryId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)
