@@ -353,8 +353,11 @@ const updateCommentaryService = async (request, fastify) => {
     (item) => item.matchTypeId === request.body.matchTypeId
   );
   if (validateMatchTypeId) {
-    if (validateMatchTypeId?.isExtraInings) {
-      const TotalInnning = validateMatchTypeId?.batsmenPerInings;
+    if (
+      validateMatchTypeId?.noOfIningsPerSide &&
+      validateMatchTypeId?.noOfIningsPerSide > 1
+    ) {
+      const TotalInnning = validateMatchTypeId?.noOfIningsPerSide;
       for (let i = 0; i < TotalInnning; i++) {
         request.body.currentInnings = i + 1;
         await updateCommentaryTeams(request, fastify, {
@@ -448,8 +451,8 @@ const updateCommentaryService = async (request, fastify) => {
   const updatedData = await getCommentaryByIdQuery(request, fastify);
 
   global.tblCommentaries[index] = updatedData;
-  global.tblCommentaryPlayers = getAllCommentaryPlayerQuery(fastify);
-  global.tblCommentaryTeams = getAllCommentaryTeamsQuery(fastify);
+  global.tblCommentaryPlayers = await getAllCommentaryPlayerQuery(fastify);
+  global.tblCommentaryTeams = await getAllCommentaryTeamsQuery(fastify);
 
   return updatedData;
 };
