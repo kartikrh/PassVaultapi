@@ -7,7 +7,7 @@ const getAllBlocksQuery = async (fastify) => {
     "wrBlockName" as "blockName",
     "wrIsShowContent" as "isShowContent",
     "wrContent" as "content",
-    "wrControlId" as "controlId"
+    "wrContainerId" as "containerId"
     FROM "tblBlocks" tb inner join "tblEncryptedData" te on tb."wrBlockId" = te."wrKey"`,
     {
       type: fastify.db.QueryTypes.SELECT,
@@ -19,14 +19,14 @@ const insertBlockQuery = async (body, fastify, request) => {
   try {
     const data = await fastify.db.query(
       `with insert_data as (
-      Insert into "tblBlocks"("wrBlockName","wrIsShowContent","wrContent","wrControlId" , "wrCreatedDate","wrCreatedBy") values ($1,$2,$3,$4,$5,$6) returning *
+      Insert into "tblBlocks"("wrBlockName","wrIsShowContent","wrContent","wrContainerId" , "wrCreatedDate","wrCreatedBy") values ($1,$2,$3,$4,$5,$6) returning *
     )
     select 
     "wrValue" as "blockId",
     "wrBlockName" as "blockName",
     "wrIsShowContent" as "isShowContent",
     "wrContent" as "content",
-    "wrControlId" as "controlId" from insert_data tb inner join "tblEncryptedData" te on tb."wrBlockId" = te."wrKey"
+    "wrContainerId" as "containerId" from insert_data tb inner join "tblEncryptedData" te on tb."wrBlockId" = te."wrKey"
     `,
       {
         type: fastify.db.QueryTypes.SELECT,
@@ -34,7 +34,7 @@ const insertBlockQuery = async (body, fastify, request) => {
           body.blockName,
           body.isShowContent,
           body.content || null,
-          body.controlId || null,
+          body.containerId || null,
           new Date(),
           body.userId,
         ],
@@ -56,17 +56,17 @@ const insertBlockQuery = async (body, fastify, request) => {
 const updateBlockQuery = async (body, fastify) => {
   try {
     const data = await fastify.db.query(
-      `UPDATE "tblBlocks" set "wrBlockName"=$1 , "wrIsShowContent" = $2 , "wrContent"=$3 , "wrControlId" = $4 where "wrBlockId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $5) returning  "wrBlockName" as "blockName",
+      `UPDATE "tblBlocks" set "wrBlockName"=$1 , "wrIsShowContent" = $2 , "wrContent"=$3 , "wrContainerId" = $4 where "wrBlockId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $5) returning  "wrBlockName" as "blockName",
     "wrIsShowContent" as "isShowContent",
     "wrContent" as "content",
-    "wrControlId" as "controlId"`,
+    "wrContainerId" as "containerId"`,
       {
         type: fastify.db.QueryTypes.SELECT,
         bind: [
           body.blockName,
           body.isShowContent,
           body.content,
-          body.controlId,
+          body.containerId,
           body.blockId,
         ],
       }
