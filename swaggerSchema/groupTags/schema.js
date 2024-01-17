@@ -1760,6 +1760,46 @@ const Event = {
   },
 };
 
+const ImportMarket = {
+  setMarket: {
+    schema: {
+      tags: ["ImportMarket"],
+      security: [{ bearerAuth: [] }],
+      description: "Set Market",
+      body: {
+        type: "object",
+        properties: {
+          eventTypeID: { type: "string" },
+          eventTypeName: { type: "string" },
+          compititionID: { type: "string" },
+          comtitionName: { type: "string" },
+          eventID: { type: "string" },
+          eventName: { type: "string" },
+          countryCode: { type: "string" },
+          timeZome: { type: "string" },
+          venue: { type: "string" },
+          openDate: { type: "string" },
+        },
+      },
+    },
+  },
+  getMarket: {
+    schema: {
+      tags: ["ImportMarket"],
+      description: "Get Markets",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          refID: { type: "string" },
+          isAustralian: { type: "string" },
+          isEvent: { type: "boolean" },
+          isCompitition: { type: "boolean" },
+        },
+      },
+    },
+  },
+};
 module.exports = {
   Auth,
   Tabs,
@@ -1781,4 +1821,5 @@ module.exports = {
   Commentary,
   Compitition,
   Event,
+  ImportMarket,
 };
