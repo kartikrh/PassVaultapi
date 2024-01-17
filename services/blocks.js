@@ -5,8 +5,15 @@ const {
   deleteBlockQuery,
 } = require("../repository/TableBlock");
 
-const allBlocksService = async (fastify) => {
-  return global.tblBlocks;
+const allBlocksService = async (request, fastify) => {
+  // return global.tblBlocks;
+  const { isShowContent } = request.body;
+  if (isShowContent === undefined) {
+    return global.tblBlocks;
+  } else {
+    const result = global.tblBlocks.filter((block) => block.isShowContent === isShowContent);
+    return result;
+  }
 };
 
 const blockByIdService = async (request, fastify) => {
@@ -64,7 +71,7 @@ const updateBlockService = async (request, fastify) => {
 
   const validatecontainerId = global.tblBlocks.find(
     (block) =>
-      block.containerId === request.body.containerId &&
+      block.containerId.toLowerCase() === request.body.containerId.toLowerCase() &&
       block.blockId !== request.body.blockId
   );
   if (validatecontainerId) {
@@ -73,7 +80,9 @@ const updateBlockService = async (request, fastify) => {
 
   const updateBody = {
     blockName: request.body.blockName,
-    isShowContent: request.body.isShowContent,
+    isShowContent: request.body.hasOwnProperty("isShowContent")
+      ? request.body.isShowContent
+      : checkId.isShowContent,
     content: request.body.content || checkId.content,
     containerId: request.body.containerId || checkId.containerId,
     blockId: request.body.blockId,

@@ -339,7 +339,13 @@ const Block = {
       tags: ["Block"],
       description: "get blocks",
       security: [{ bearerAuth: [] }],
-    },
+      body: {
+        type: "object",
+        properties: {
+          isShowContent: { type: "boolean" }
+        }
+      },
+    }
   },
   getById: {
     schema: {
