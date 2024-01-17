@@ -25,6 +25,14 @@ const createBlockService = async (request, fastify) => {
     throw new Error("Block with this name already exists");
   }
 
+  const validatecontainerId = global.tblBlocks.find(
+    (block) => block.containerId === request.body.containerId
+  );
+  
+  if (validatecontainerId) {
+    throw new Error("Block with this containerId already exists");
+  }
+
   const data = await insertBlockQuery(
     { ...request.body, userId: request.userTokenInfo.WrUserId },
     fastify,
@@ -54,11 +62,20 @@ const updateBlockService = async (request, fastify) => {
     throw new Error("Block with this name already exists");
   }
 
+  const validatecontainerId = global.tblBlocks.find(
+    (block) =>
+      block.containerId === request.body.containerId &&
+      block.blockId !== request.body.blockId
+  );
+  if (validatecontainerId) {
+    throw new Error("Block with this containerId already exists");
+  }
+
   const updateBody = {
     blockName: request.body.blockName,
     isShowContent: request.body.isShowContent,
     content: request.body.content || checkId.content,
-    controlId: request.body.controlId || checkId.controlId,
+    containerId: request.body.containerId || checkId.containerId,
     blockId: request.body.blockId,
   };
 

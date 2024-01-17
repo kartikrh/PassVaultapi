@@ -22,7 +22,7 @@ module.exports = (sequelize) => {
         type: DataTypes.TEXT,
         allowNull: true,
       },
-      wrControlId: {
+      wrContainerId: {
         type: DataTypes.STRING(100),
         allowNull: true,
       },
