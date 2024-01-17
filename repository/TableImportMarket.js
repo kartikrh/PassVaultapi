@@ -23,7 +23,7 @@ const insertEventTypeQuery = async (data, fastify, request) => {
         bind: [
           data.eventTypeName || null,
           data.eventTypeID || null,
-          "fa-soccer-ball-o" || null,
+          data.image || null,
           data.isActive || false,
           data.remark || null,
           data.isHighlight || false,
@@ -51,9 +51,9 @@ const updateEventTypeQuery = async (data, fastify, request) => {
       {
         type: fastify.db.QueryTypes.UPDATE,
         bind: [
-          data.eventTypeName,
-          data.eventTypeID,
-          "fa-soccer-ball-o",
+          data.eventType,
+          data.refId,
+          data.image,
           data.isActive,
           data.remark,
           data.isHighlight,
@@ -88,7 +88,7 @@ const insertCompetitionQuery = async (request, fastify) => {
         inser_data as (
             
             insert into "tblCompetitions" ("wrCompetition" , "wrEventTypeId" , "wrRefID" , "wrImage" ,"wrIsActive" , "wrCreatedBy" , "wrCreatedDate","wrDisplayOrder" ) values ($1 ,
-                $2,
+              (select "wrKey" from "tblEncryptedData" where "wrValue" = $2),
                  $3,$4,$5,$6,now(),(select COALESCE("display_order" , 0) from "display") + 1
                  ) returning *
         )
@@ -190,8 +190,8 @@ const insertEventQuery = async (request, fastify) => {
             "wrTimeZone",
             "wrVenue"
         ) values (
-           $1,
-           $2,
+           (select "wrKey" from "tblEncryptedData" where "wrValue" = $1),
+              (select "wrKey" from "tblEncryptedData" where "wrValue" = $2),
             $3,
             $4,
             $5,
@@ -231,12 +231,12 @@ const insertEventQuery = async (request, fastify) => {
           data.eventTypeId,
           data.competitionId,
           data.eventName,
-          data.eventDate ? new Date(data.eventDate) : null,
+          data.openDate ? new Date(data.openDate) : null,
           data.eventID,
           data.isActive || false,
           request.userTokenInfo.WrUserId,
           data.countryCode,
-          data.timeZone,
+          data.timeZome,
           data.venue,
         ],
       }
@@ -253,6 +253,54 @@ const insertEventQuery = async (request, fastify) => {
     throw new Error(err.message);
   }
 };
+
+const updateEventQuery = async (data, fastify, request) => {
+  try {
+    return await fastify.db.query(
+      `
+        update "tblEvents" set
+        "wrEventTypeId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1),
+        "wrCompetitionId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $2),
+        "wrEventName" = $3,
+        "wrEventDate" = $4,
+        "wrRefID" = $5,
+        "wrIsActive" = $6,
+        "wrModifyBy" = $7,
+        "wrModifyDate" = now(),
+        "wrCountryCode" = $8,
+        "wrTimeZone" = $9,
+        "wrVenue" = $10
+        where "wrEventId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $11)
+        returning *
+        `,
+      {
+        bind: [
+          data.eventTypeId,
+          data.competitionId,
+          data.eventName,
+          data.eventDate ? new Date(data.eventDate) : null,
+          data.refId,
+          data.isActive,
+          request.userTokenInfo.WrUserId,
+          data.countryCode,
+          data.timeZone,
+          data.venue,
+          data.eventId,
+        ],
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableEvent/updateEventQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 async function AddUpdateMarket(request, fastify) {
   try {
     const data = await fastify.db.query(
@@ -356,4 +404,5 @@ module.exports = {
   insertCompetitionQuery,
   updateCompititionQuery,
   insertEventQuery,
+  updateEventQuery,
 };
