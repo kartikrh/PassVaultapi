@@ -37,7 +37,6 @@ module.exports = async function (fastify, opts) {
           if (response.ok) {
             const responseData = await response.json();
             // Process the responseData as needed
-            console.log(responseData);
             reply.send({ responseData });
           } else {
             console.error(`Error: ${response.status} - ${response.statusText}`);
