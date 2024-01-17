@@ -19,7 +19,7 @@ const insertBlockQuery = async (body, fastify, request) => {
   try {
     const data = await fastify.db.query(
       `with insert_data as (
-      Insert into "tblBlocks"("wrBlockName","wrIsShowContent","wrContent","wrContainerId" , "wrCreatedDate","wrCreatedBy") values ($1,$2,$3,$4,$5,$6) returning *
+      Insert into "tblBlocks"("wrBlockName","wrIsShowContent","wrContent","wrContainerId" , "wrCreatedDate","wrCreatedBy") values ($1,$2,$3,$4,now(),$5) returning *
     )
     select 
     "wrValue" as "blockId",
@@ -35,7 +35,6 @@ const insertBlockQuery = async (body, fastify, request) => {
           body.isShowContent,
           body.content || null,
           body.containerId || null,
-          new Date(),
           body.userId,
         ],
       }
