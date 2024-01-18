@@ -61,35 +61,36 @@ const updatePageService = async (request, fastify) => {
     pageHeading: request.body.pageHeading || validatePageId.pageHeading,
     pageName: request.body.pageName || validatePageId.pageName,
     alias: request.body.alias || validatePageId.alias,
-    isLink: validatePageId.isLink,
+    isLink: request.body.hasOwnProperty("isLink") ? request.body.isLink : validatePageId.isLink,
     linkURL: request.body.linkURL || validatePageId.linkURL,
     pageFormatId: request.body.pageFormatId || validatePageId.pageFormatId,
-    isOpenInNewTab: validatePageId.isOpenInNewTab,
+    isOpenInNewTab: request.body.hasOwnProperty("isOpenInNewTab") ? request.body.isOpenInNewTab : validatePageId.isOpenInNewTab,
     pageContent: request.body.pageContent || validatePageId.pageContent,
     seoWord: request.body.seoWord || validatePageId.seoWord,
     seoDescription:
       request.body.seoDescription || validatePageId.seoDescription,
-    isDefault: validatePageId.isDefault,
+    isDefault: request.body.hasOwnProperty("isDefault") ? request.body.isDefault : validatePageId.isDefault,
     dynamicParameters:
       request.body.dynamicParameters || validatePageId.dynamicParameters,
     pageId: request.body.pageId,
     userId: request.userTokenInfo.WrUserId,
+    isStatic: request.body.hasOwnProperty("isStatic") ? request.body.isStatic : validatePageId.isStatic,
+    whiteLabelId: request.body.whiteLabelId || validatePageId.whiteLabelId,
   };
 
-  if ("islink" in request.body) {
-    body.isLink = request.body.isLink;
-  }
+  // if ("islink" in request.body) {
+  //   body.isLink = request.body.isLink;
+  // }
 
-  if ("isOpenInNewTab" in request.body) {
-    body.isOpenInNewTab = request.body.isOpenInNewTab;
-  }
+  // if ("isOpenInNewTab" in request.body) {
+  //   body.isOpenInNewTab = request.body.isOpenInNewTab;
+  // }
 
-  if ("isDefault" in request.body) {
-    body.isDefault = request.body.isDefault;
-  }
+  // if ("isDefault" in request.body) {
+  //   body.isDefault = request.body.isDefault;
+  // }
 
   const result = await updatePageQuery(body, fastify, request);
-
   const index = global.tblPages.findIndex(
     (item) => item.pageId === request.body.pageId
   );
@@ -98,12 +99,14 @@ const updatePageService = async (request, fastify) => {
     ...result,
     pageId: request.body.pageId,
     pageFormatId: body.pageFormatId,
+    whiteLabelId : body.whiteLabelId,
   };
 
   return {
     ...result,
     pageId: request.body.pageId,
     pageFormatId: body.pageFormatId,
+    whiteLabelId : body.whiteLabelId,
   };
 };
 

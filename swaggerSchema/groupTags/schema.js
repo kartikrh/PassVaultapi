@@ -579,6 +579,12 @@ const PageFormate = {
       tags: ["Page Formate"],
       description: "get all Page Formate",
       security: [{ bearerAuth: [] }],
+      body :{
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      }
     },
   },
   getById: {
@@ -628,7 +634,7 @@ const PageFormate = {
           description: { type: "string" },
           isActive: { type: "boolean" },
         },
-        required: ["pageFormatId"],
+        required: ["pageFormatId", "pageFormatName"],
       },
     },
   },
@@ -721,6 +727,8 @@ const Page = {
           seoDescription: { type: "string" },
           isDefault: { type: "boolean" },
           dynamicParameters: { type: "string" },
+          isStatic : {type : "boolean"},
+          whiteLabelId : {type : "string"}
         },
         required: ["pageId"],
       },
@@ -1344,6 +1352,12 @@ const Config = {
       tags: ["Config"],
       description: "get all Config",
       security: [{ bearerAuth: [] }],
+      body :{
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      }
     },
   },
   getById: {
@@ -1374,6 +1388,7 @@ const Config = {
           value: { type: "string" },
           desc: { type: "string" },
           isActive: { type: "boolean" },
+          isForAdmin: { type: "boolean" },      
         },
         required: ["id"],
       },

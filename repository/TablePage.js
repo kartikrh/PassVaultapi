@@ -16,9 +16,14 @@ const allPageQuery = async (fastify) => {
     "wrSEOWord" as "seoWord",
     "wrSEODescription" as "seoDescription",
     "wrIsDefault" as "isDefault",
-    "wrDynamicParameters" as "dynamicParameters"
-     from "tblPages" tp left join "tblEncryptedData" ed on tp."wrPageId" = ed."wrKey"
-     left join "tblEncryptedData" tpf on tp."wrPageFormatId" = tpf."wrKey"`,
+    "wrDynamicParameters" as "dynamicParameters",
+    "wrIsStatic" as "isStatic",
+    tpwl."wrValue" as "whiteLabelId"
+     from "tblPages" tp 
+     left join "tblEncryptedData" ed on tp."wrPageId" = ed."wrKey"
+     left join "tblEncryptedData" tpf on tp."wrPageFormatId" = tpf."wrKey"
+     left join "tblEncryptedData" tpwl on tp."wrWhiteLabelId" = tpwl."wrKey"
+    `,
     {
       type: fastify.db.QueryTypes.SELECT,
     }
@@ -31,8 +36,11 @@ const insertPageQuery = async (body, fastify, request) => {
       `
     with insert_data as (
         INSERT INTO "tblPages"(
-            "wrPageTitle", "wrPageHeading", "wrPageName", "wrAlias", "wrIsLink", "wrLinkURL", "wrPageFormatId", "wrIsOpenInNewTab", "wrPageContent", "wrSEOWord", "wrSEODescription", "wrIsDefault", "wrDynamicParameters" ,"wrCreatedDate", "wrCreatedBy")
-            VALUES ($1, $2, $3, $4, $5, $6, (select "wrKey" from "tblEncryptedData" where "wrValue" = $7), $8, $9, $10, $11, $12, $13,$14,$15) returning *
+            "wrPageTitle", "wrPageHeading", "wrPageName", "wrAlias", "wrIsLink", "wrLinkURL", "wrPageFormatId",
+             "wrIsOpenInNewTab", "wrPageContent", "wrSEOWord", "wrSEODescription", 
+            "wrIsDefault", "wrDynamicParameters", "wrIsStatic", "wrWhiteLabelId","wrCreatedBy","wrCreatedDate")
+            VALUES ($1, $2, $3, $4, $5, $6, (select "wrKey" from "tblEncryptedData" where "wrValue" = $7), $8, $9, $10, $11, $12, $13,$14,(select "wrKey" from "tblEncryptedData" where "wrValue" = $15), $16,now()) 
+            returning *
     )
 
     select
@@ -49,9 +57,12 @@ const insertPageQuery = async (body, fastify, request) => {
     "wrSEOWord" as "seoWord",
     "wrSEODescription" as "seoDescription",
     "wrIsDefault" as "isDefault",
-    "wrDynamicParameters" as "dynamicParameters"
+    "wrDynamicParameters" as "dynamicParameters",
+    "wrIsStatic" as "isStatic",
+    tpwl."wrValue" as "whiteLabelId"
      from insert_data tb left join "tblEncryptedData" ed on tb."wrPageId" = ed."wrKey"
      left join "tblEncryptedData" tpf on tb."wrPageFormatId" = tpf."wrKey"
+     left join "tblEncryptedData" tpwl on tb."wrWhiteLabelId" = tpwl."wrKey"
     `,
       {
         type: fastify.db.QueryTypes.SELECT,
@@ -69,7 +80,8 @@ const insertPageQuery = async (body, fastify, request) => {
           body.seoDescription || null,
           body.isDefault || false,
           body.dynamicParameters || null,
-          new Date(),
+          body.isStatic || false,
+          body.whiteLabelId || null,
           body.userId,
         ],
       }
@@ -90,7 +102,9 @@ const insertPageQuery = async (body, fastify, request) => {
 const updatePageQuery = async (body, fastify, request) => {
   try {
     const data = await fastify.db.query(
-      `UPDATE "tblPages" set "wrPageTitle"=$1 , "wrPageHeading" = $2 , "wrPageName"=$3 , "wrAlias" = $4 , "wrIsLink" = $5 , "wrLinkURL" = $6 , "wrPageFormatId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $7) , "wrIsOpenInNewTab" = $8 , "wrPageContent" = $9 , "wrSEOWord" = $10 , "wrSEODescription" = $11 , "wrIsDefault" = $12 , "wrDynamicParameters" = $13, "wrModifyBy" = $14 , "wrModifyDate" = $15 where "wrPageId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $16)
+      `UPDATE "tblPages" set "wrPageTitle"=$1 , "wrPageHeading" = $2 , "wrPageName"=$3 , "wrAlias" = $4 , "wrIsLink" = $5 , "wrLinkURL" = $6 , "wrPageFormatId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $7) , "wrIsOpenInNewTab" = $8 , "wrPageContent" = $9 , "wrSEOWord" = $10 , "wrSEODescription" = $11 , "wrIsDefault" = $12 , "wrDynamicParameters" = $13, "wrModifyBy" = $14 , "wrModifyDate" = now(),
+       "wrIsStatic" = $15, "wrWhiteLabelId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $16)
+       where "wrPageId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $17)
      returning  "wrPageTitle" as "pageTitle",
         "wrPageHeading" as "pageHeading",
         "wrPageName" as "pageName",
@@ -102,7 +116,9 @@ const updatePageQuery = async (body, fastify, request) => {
         "wrSEOWord" as "seoWord",
         "wrSEODescription" as "seoDescription",
         "wrIsDefault" as "isDefault",
-        "wrDynamicParameters" as "dynamicParameters"`,
+        "wrDynamicParameters" as "dynamicParameters",
+        "wrIsStatic" as "isStatic"
+        `,
       {
         type: fastify.db.QueryTypes.SELECT,
         bind: [
@@ -120,8 +136,9 @@ const updatePageQuery = async (body, fastify, request) => {
           body.isDefault,
           body.dynamicParameters,
           body.userId,
-          new Date(),
-          body.pageId,
+          body.isStatic,
+          body.whiteLabelId,
+          body.pageId
         ],
       }
     );

@@ -7,7 +7,8 @@ const getAllCongigQuery = async (fastify) => {
     tc."wrKey" as "key",
     tc."wrValue" as "value",
     tc."wrIsActive" as "isActive",
-    tc."wrDesc" as "desc"
+    tc."wrDesc" as "desc",
+    tc."wrIsForAdmin" as "isForAdmin"
     FROM "tblConfigs" tc inner join "tblEncryptedData" te on tc."wrId" = te."wrKey"`,
     {
       type: fastify.db.QueryTypes.SELECT,
@@ -19,14 +20,16 @@ const insertConfigQuery = async (data, fastify, request) => {
   try {
     const result = await fastify.db.query(
       `with insert_data as(
-              insert into "tblConfigs" ("wrKey","wrValue","wrDesc","wrIsActive") values ($1,$2,$3,$4) returning *
+              insert into "tblConfigs" ("wrKey","wrValue","wrDesc","wrIsActive",
+              "wrIsForAdmin","wrCreatedDate","wrCreatedBy" ) values ($1,$2,$3,$4,$5, now(),$6) returning *
           )        
           SELECT
     te."wrValue" as "id",
     tc."wrKey" as "key",
     tc."wrValue" as "value",
     tc."wrIsActive" as "isActive",
-    tc."wrDesc" as "desc"
+    tc."wrDesc" as "desc",
+    tc."wrIsForAdmin" as "isForAdmin"
     FROM "insert_data" tc inner join "tblEncryptedData" te on tc."wrId" = te."wrKey"`,
       {
         type: fastify.db.QueryTypes.SELECT,
@@ -35,12 +38,14 @@ const insertConfigQuery = async (data, fastify, request) => {
           data.value || null,
           data.desc || null,
           data.isActive || false,
+          data.isForAdmin || false,
+          data.userId
         ],
       }
     );
 
     return result[0];
-  } catch (error) {
+  } catch (err) {
     errorLogger(
       fastify,
       err.message,
@@ -54,14 +59,24 @@ const insertConfigQuery = async (data, fastify, request) => {
 const updateConfigQuery = async (data, fastify, request) => {
   try {
     return await fastify.db.query(
-      `update "tblConfigs" set "wrKey" = $1,"wrValue" = $2,"wrDesc" = $3,"wrIsActive" = $4 where "wrId" = (
-            select "wrKey" from "tblEncryptedData" where "wrValue" = $5)`,
+      `update "tblConfigs" set "wrKey" = $1,"wrValue" = $2,"wrDesc" = $3,"wrIsActive" = $4,
+            "wrIsForAdmin" = $5,"wrModifiedDate" = now(),"wrModifiedBy" = $6
+      where "wrId" = (
+            select "wrKey" from "tblEncryptedData" where "wrValue" = $7)`,
       {
         type: fastify.db.QueryTypes.UPDATE,
-        bind: [data.key, data.value, data.desc, data.isActive, data.id],
+        bind: [
+          data.key,
+          data.value,
+          data.desc,
+          data.isActive,
+          data.isForAdmin,
+          data.userId,
+          data.id
+        ],
       }
     );
-  } catch (error) {
+  } catch (err) {
     errorLogger(
       fastify,
       err.message,

@@ -26,6 +26,26 @@ module.exports = (sequelize) => {
         type: DataTypes.BOOLEAN,
         allowNull: false,
       },
+      wrIsForAdmin: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+      },
+      wrCreatedDate: {
+        type: DataTypes.DATE,
+        allowNull: false,
+      },
+      wrCreatedBy: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
+      wrModifiedDate: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+      wrModifiedBy: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
     },
     {
       timestamps: false,

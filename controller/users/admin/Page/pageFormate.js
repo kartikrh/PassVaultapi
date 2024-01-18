@@ -12,7 +12,7 @@ let commonPath = "controller/users/admin/Page/pageFormate.js";
 
 const getAllPageFormats = async (request, reply, fastify) => {
   try {
-    const result = await allPageFormatService(fastify);
+    const result = await allPageFormatService(request,fastify);
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(
