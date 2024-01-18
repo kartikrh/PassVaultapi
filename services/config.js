@@ -4,8 +4,16 @@ const {
   deleteConfigQuery,
 } = require("../repository/TableConfig");
 
-const allCongifService = async () => {
-  return global.tblConfigs;
+const allCongifService = async (request,fastify) => {
+  // return global.tblConfigs;
+  const {isActive} = request.body;
+  if(isActive === undefined){
+    return global.tblConfigs;
+  }
+  else{
+    const result = global.tblConfigs.filter((config) => config.isActive === isActive);
+    return result;
+  }
 };
 
 const configByIdService = async (request) => {
@@ -15,7 +23,11 @@ const configByIdService = async (request) => {
 };
 
 const createConfigService = async (request, fastify) => {
-  const data = await insertConfigQuery(request.body, fastify, request);
+  const data = await insertConfigQuery(
+    {
+      ...request.body,
+      userId :request.userTokenInfo.WrUserId,
+    }, fastify, request);
 
   global.tblConfigs.push(data);
   return data;
@@ -34,13 +46,18 @@ const updateConfigService = async (request, fastify) => {
     key: request.body.key || checkId.key,
     value: request.body.value || checkId.value,
     desc: request.body.desc || checkId.desc,
+    isActive : request.body.hasOwnProperty('isActive') ? request.body.isActive : checkId.isActive,
+    isForAdmin: request.body.hasOwnProperty('isForAdmin') ? request.body.isForAdmin : checkId.isForAdmin,
   };
 
-  if ("isActive" in request.body) {
-    data.isActive = request.body.isActive;
-  }
+  // if ("isActive" in request.body) {
+  //   data.isActive = request.body.isActive;
+  // }
 
-  await updateConfigQuery(data, fastify, request);
+  await updateConfigQuery({
+    ...data,
+    userId : request.userTokenInfo.WrUserId,
+  }, fastify, request);
 
   const index = global.tblConfigs.findIndex((item) => item.id === id);
 

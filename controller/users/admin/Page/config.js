@@ -12,7 +12,7 @@ let commonPath = "controller/users/admin/page/congig";
 
 const getAllCongig = async (request, reply, fastify) => {
   try {
-    const result = await allCongifService();
+    const result = await allCongifService(request, fastify);
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/getAllCongig", request);

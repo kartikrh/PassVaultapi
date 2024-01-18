@@ -21,7 +21,7 @@ const insertPageFormateQuery = async (body, fastify, request) => {
     const data = await fastify.db.query(
       `with insert_data as (
                 Insert into "tblPageFormats"("wrPageFormatName","wrPageName","wrImage","wrDescription","wrIsActive","wrCreatedDate","wrCreatedBy") 
-                select $1,$2,$3,$4,$5,$6,$7 returning *
+                select $1,$2,$3,$4,$5,now(),$6 returning *
             )
             select 
             "wrValue" as "pageFormatId",
@@ -39,7 +39,6 @@ const insertPageFormateQuery = async (body, fastify, request) => {
           body.image || null,
           body.description || null,
           body.isActive || false,
-          new Date(),
           body.userId,
         ],
       }
@@ -61,7 +60,7 @@ const updatePageFormateQuery = async (body, fastify, request) => {
   try {
     const data = await fastify.db.query(
       `with update_data as (
-                Update "tblPageFormats" set "wrPageFormatName" = $1,"wrPageName" = $2,"wrImage" = $3,"wrDescription" = $4,"wrIsActive" = $5,"wrModifyDate" = $6,"wrModifyBy" = $7 where "wrPageFormatId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $8) returning *
+                Update "tblPageFormats" set "wrPageFormatName" = $1,"wrPageName" = $2,"wrImage" = $3,"wrDescription" = $4,"wrIsActive" = $5,"wrModifyDate" = now(),"wrModifyBy" = $6 where "wrPageFormatId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $7) returning *
             )
             select 
             "wrValue" as "pageFormatId",
@@ -79,7 +78,6 @@ const updatePageFormateQuery = async (body, fastify, request) => {
           body.image,
           body.description,
           body.isActive,
-          new Date(),
           body.userId,
           body.pageFormatId,
         ],
@@ -109,8 +107,8 @@ const validatePageFormatQuery = async (pageFormatId, fastify, request) => {
         bind: [pageFormatId],
       }
     );
-
-    return !!data.length;
+    // return !!data.length;
+    return data.length ? data[0] : null;
   } catch (err) {
     errorLogger(
       fastify,

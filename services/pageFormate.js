@@ -5,8 +5,16 @@ const {
   deletePageFormatQuery,
 } = require("../repository/TablePageFormate");
 
-const allPageFormatService = async (fastify) => {
-  return global.tblPageFormats;
+const allPageFormatService = async (request,fastify) => {
+  // return global.tblPageFormats;
+  const {isActive} = request.body;
+  if(isActive === undefined){
+    return global.tblPageFormats;
+  }
+  else{
+    const result = global.tblPageFormats.filter((pageFormat) => pageFormat.isActive === isActive);
+    return result;
+  }
 };
 
 const pageFormatServiceById = async (request, fastify) => {
@@ -51,13 +59,16 @@ const updatePageFormatService = async (request, fastify) => {
     description: request.body.description || checkId.description,
     pageFormatId: request.body.pageFormatId,
     userId: request.userTokenInfo.WrUserId,
+    isActive : request.body.hasOwnProperty("isActive") 
+    ? request.body.isActive 
+    : checkId.isActive
   };
 
-  if ("isActive" in request.body) {
-    body.isActive = request.body.isActive;
-  } else {
-    body.isActive = checkId.isActive;
-  }
+  // if ("isActive" in request.body) {
+  //   body.isActive = request.body.isActive;
+  // } else {
+  //   body.isActive = checkId.isActive;
+  // }
 
   const validateByName = await global.tblPageFormats.find(
     (item) =>
@@ -106,9 +117,9 @@ const deletePageFormatService = async (request, fastify) => {
 };
 
 const savePageFormatService = async (request, fastify) => {
-  const { pageAliasId } = request.body;
+  const { pageFormatId } = request.body;
 
-  if (pageAliasId === "0") {
+  if (pageFormatId === "0") {
     return await addPageFormatService(request, fastify);
   } else {
     return await updatePageFormatService(request, fastify);

@@ -71,6 +71,14 @@ module.exports = (sequelize) => {
         type: DataTypes.STRING,
         allowNull: true,
       },
+      wrIsStatic: {
+        type: DataTypes.BOOLEAN,
+        allowNull: true,
+      },
+      wrWhiteLabelId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
       wrModifyBy: {
         type: DataTypes.INTEGER,
         allowNull: true,
