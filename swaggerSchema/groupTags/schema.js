@@ -1390,7 +1390,7 @@ const Config = {
           isActive: { type: "boolean" },
           isForAdmin: { type: "boolean" },      
         },
-        required: ["id"],
+        required: ["id", "key", "value"	],
       },
     },
   },
