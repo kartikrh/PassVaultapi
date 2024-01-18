@@ -109,7 +109,7 @@ const insertCompetitionQuery = async (request, fastify) => {
     `,
       {
         bind: [
-          data.comtitionName,
+          data.competitionName,
           data.eventTypeId,
           data.compititionID,
           data.image || null,
