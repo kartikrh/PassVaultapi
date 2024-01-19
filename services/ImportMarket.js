@@ -10,8 +10,8 @@ const {
 const ImportMarketService = async (request, fastify) => {
   if (request.userTokenInfo.WrUserId) {
     //EventType Add/Update
-    const eventtypeobj = global.tblEventTypes.find(
-      (item) => item.refId === request.body.eventTypeID
+    let eventtypeobj = global.tblEventTypes.find(
+      (item) => item.refId === request.body.eventTypeId
     );
     let setEventtype;
     if (!eventtypeobj) {
@@ -24,12 +24,13 @@ const ImportMarketService = async (request, fastify) => {
         fastify,
         request
       );
+      eventtypeobj = setEventtype;
       global.tblEventTypes.push(setEventtype);
     } else {
       setEventtype = {
         eventTypeId: eventtypeobj.eventTypeId,
         eventType: request.body.eventTypeName,
-        refId: request.body.eventTypeID,
+        refId: request.body.eventTypeId,
         image: eventtypeobj.image,
         isActive: eventtypeobj.isActive,
         remark: eventtypeobj.remark,
@@ -43,17 +44,17 @@ const ImportMarketService = async (request, fastify) => {
       const index = global.tblEventTypes.findIndex(
         (item) =>
           item.eventTypeId === eventtypeobj.eventTypeId &&
-          item.refId === request.body.eventTypeID
+          item.refId === request.body.eventTypeId
       );
       global.tblEventTypes[index] = setEventtype;
     }
 
     //Compitition Add/Update
     let setCompetitions;
-    const CompetitionsObj = global.tblCompetitions.find(
+    let CompetitionsObj = global.tblCompetitions.find(
       (item) =>
         item.eventTypeId === setEventtype.eventTypeId &&
-        item.refId === request.body.competitionID
+        item.refId === request.body.competitionId
     );
     if (!CompetitionsObj) {
       request.body.eventTypeId = setEventtype.eventTypeId;
@@ -61,12 +62,13 @@ const ImportMarketService = async (request, fastify) => {
       request.body.isActive = true;
       setCompetitions = await insertCompetitionQuery(request, fastify);
       global.tblCompetitions.push(setCompetitions);
+      CompetitionsObj = setCompetitions;  
     } else {
       setCompetitions = {
         competitionId: CompetitionsObj.competitionId,
         competition: request.body.competitionName,
         eventTypeId: CompetitionsObj.eventTypeId,
-        refId: request.body.competitionID,
+        refId: request.body.competitionId,
         image: CompetitionsObj.image,
         isActive: true,
       };
@@ -75,7 +77,7 @@ const ImportMarketService = async (request, fastify) => {
       const index = global.tblCompetitions.findIndex(
         (item) =>
           item.eventTypeId === setEventtype.eventTypeId &&
-          item.refId === request.body.competitionID
+          item.refId === request.body.competitionId
       );
 
       global.tblCompetitions[index] = setCompetitions;
@@ -86,7 +88,7 @@ const ImportMarketService = async (request, fastify) => {
     const Eventsobj = global.tblEvents.find(
       (item) =>
         item.competitionId === CompetitionsObj.competitionId &&
-        item.refId === request.body.eventID
+        item.refId === request.body.eventId
     );
     if (!Eventsobj) {
       request.body.competitionId = CompetitionsObj.competitionId;
@@ -102,7 +104,7 @@ const ImportMarketService = async (request, fastify) => {
         competitionId: CompetitionsObj.competitionId,
         eventName: request.body.eventName,
         eventDate: request.body.openDate,
-        refId: request.body.eventID,
+        refId: request.body.eventId,
         isActive: true,
         countryCode:
           request.body.countryCode === undefined
@@ -117,7 +119,7 @@ const ImportMarketService = async (request, fastify) => {
       const index = global.tblEvents.findIndex(
         (item) =>
           item.eventTypeId === CompetitionsObj.competitionId &&
-          item.refId === request.body.eventID
+          item.refId === request.body.eventId
       );
 
       global.tblEvents[index] = setEvents;

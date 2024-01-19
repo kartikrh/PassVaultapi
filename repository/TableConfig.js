@@ -34,7 +34,7 @@ const insertConfigQuery = async (data, fastify, request) => {
       {
         type: fastify.db.QueryTypes.SELECT,
         bind: [
-          data.key || null,
+          data.key.trim() || null,
           data.value || null,
           data.desc || null,
           data.isActive || false,
@@ -66,7 +66,7 @@ const updateConfigQuery = async (data, fastify, request) => {
       {
         type: fastify.db.QueryTypes.UPDATE,
         bind: [
-          data.key,
+          data.key.trim(),
           data.value,
           data.desc,
           data.isActive,

@@ -3,11 +3,11 @@ const {
   importMarketController,
   ListEventTypesAPIcontroller,
 } = require("../../../controller/users/admin/ImportMarket/index");
-
 const { ImportMarket } = require("../../../swaggerSchema/groupTags/schema");
+const configConstants = require("../../../utilities/configConstants");
 
 module.exports = async function (fastify, opts) {
-  fastify.post("/importMarketToDB", {
+  fastify.post("/importEvent", {
     schema: ImportMarket.setMarket.schema,
     preHandler: [(request, reply) => authorize(request, reply, fastify)],
     handler: (request, reply) =>
@@ -18,7 +18,10 @@ module.exports = async function (fastify, opts) {
     schema: ImportMarket.getMarket.schema,
     preHandler: [(request, reply) => authorize(request, reply, fastify)],
     handler: async (request, reply) => {
-      const apiUrl = process.env.IMPORTMARKET_API;
+      let keyTofind = configConstants.IMPORTMARKET_API;
+      const apiUrl = global.tblConfigs.find(
+        (item) => item.key.toLowerCase() === keyTofind.toLowerCase()
+      ).value;
       try {
         if (request.body.refID === "0") {
           const postData = {

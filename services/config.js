@@ -23,14 +23,11 @@ const configByIdService = async (request) => {
 };
 
 const createConfigService = async (request, fastify) => {
-  global.tblConfigs.find((item)=>{
-      if(item.key.toLowerCase() === request.body.key.toLowerCase()){
-        throw new Error("Config with this Key already exists");
-      }
-      else if(item.value.toLowerCase() === request.body.value.toLowerCase()){
-        throw new Error("Config with this Value already exists");
-      }
-  });
+  // check if key already exists
+  const checkKey = global.tblConfigs.find((item) => item.key.toLowerCase() === request.body.key.trim().toLowerCase());
+  if (checkKey) {
+    throw new Error("Config with this Key already exists");
+  }
   const data = await insertConfigQuery(
     {
       ...request.body,
@@ -48,14 +45,10 @@ const updateConfigService = async (request, fastify) => {
   if (!checkId) {
     throw new Error("Config with this id not Found");
   }
-  global.tblConfigs.find((item)=>{
-      if(item.key.toLowerCase() === request.body.key.toLowerCase() && item.id !== id){
-        throw new Error("Config with this Key already exists");
-      }
-      else if(item.value.toLowerCase() === request.body.value.toLowerCase() && item.id !== id){
-        throw new Error("Config with this Value already exists");
-      }
-  });
+  const checkKey = global.tblConfigs.find((item) => item.key.toLowerCase() === request.body.key.trim().toLowerCase() && item.id !== id);
+  if (checkKey) {
+    throw new Error("Config with this Key already exists");
+  }
 
   const data = {
     id: request.body.id,
