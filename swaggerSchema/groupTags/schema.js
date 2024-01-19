@@ -1790,11 +1790,11 @@ const ImportMarket = {
       body: {
         type: "object",
         properties: {
-          eventTypeID: { type: "string" },
+          eventTypeId: { type: "string" },
           eventTypeName: { type: "string" },
-          competitionID: { type: "string" },
+          competitionId: { type: "string" },
           competitionName: { type: "string" },
-          eventID: { type: "string" },
+          eventId: { type: "string" },
           eventName: { type: "string" },
           countryCode: { type: "string" },
           timeZone: { type: "string" },

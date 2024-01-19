@@ -22,7 +22,7 @@ const insertEventTypeQuery = async (data, fastify, request) => {
         type: fastify.db.QueryTypes.SELECT,
         bind: [
           data.eventTypeName || null,
-          data.eventTypeID || null,
+          data.eventTypeId || null,
           data.image || null,
           data.isActive || false,
           data.remark || null,
@@ -111,7 +111,7 @@ const insertCompetitionQuery = async (request, fastify) => {
         bind: [
           data.competitionName,
           data.eventTypeId,
-          data.competitionID,
+          data.competitionId,
           data.image || null,
           data.isActive || false,
           request.userTokenInfo.WrUserId,
@@ -232,7 +232,7 @@ const insertEventQuery = async (request, fastify) => {
           data.competitionId,
           data.eventName,
           data.openDate ? new Date(data.openDate) : null,
-          data.eventID,
+          data.eventId,
           data.isActive || false,
           request.userTokenInfo.WrUserId,
           data.countryCode,
@@ -244,6 +244,7 @@ const insertEventQuery = async (request, fastify) => {
 
     return result[0];
   } catch (err) {
+    console.log("err", err);
     errorLogger(
       fastify,
       err.message,
@@ -370,11 +371,11 @@ async function AddUpdateMarket(request, fastify) {
       {
         type: QueryTypes.SELECT,
         bind: [
-          request.body.eventTypeID,
+          request.body.eventTypeId,
           request.body.eventTypeName,
-          request.body.compititionID,
+          request.body.compititionId,
           request.body.comtitionName,
-          request.body.eventID,
+          request.body.eventId,
           request.body.eventName,
           request.body.countryCode,
           request.body.timeZome,
