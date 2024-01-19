@@ -342,10 +342,10 @@ const Block = {
       body: {
         type: "object",
         properties: {
-          isShowContent: { type: "boolean" }
-        }
+          isShowContent: { type: "boolean" },
+        },
       },
-    }
+    },
   },
   getById: {
     schema: {
@@ -579,12 +579,12 @@ const PageFormate = {
       tags: ["Page Formate"],
       description: "get all Page Formate",
       security: [{ bearerAuth: [] }],
-      body :{
+      body: {
         type: "object",
         properties: {
           isActive: { type: "boolean" },
         },
-      }
+      },
     },
   },
   getById: {
@@ -727,8 +727,8 @@ const Page = {
           seoDescription: { type: "string" },
           isDefault: { type: "boolean" },
           dynamicParameters: { type: "string" },
-          isStatic : {type : "boolean"},
-          whiteLabelId : {type : "string"}
+          isStatic: { type: "boolean" },
+          whiteLabelId: { type: "string" },
         },
         required: ["pageId"],
       },
@@ -1352,12 +1352,12 @@ const Config = {
       tags: ["Config"],
       description: "get all Config",
       security: [{ bearerAuth: [] }],
-      body :{
+      body: {
         type: "object",
         properties: {
           isActive: { type: "boolean" },
         },
-      }
+      },
     },
   },
   getById: {
@@ -1388,7 +1388,7 @@ const Config = {
           value: { type: "string" },
           desc: { type: "string" },
           isActive: { type: "boolean" },
-          isForAdmin: { type: "boolean" },      
+          isForAdmin: { type: "boolean" },
         },
         required: ["id", "key", "value"	],
       },
@@ -1792,12 +1792,12 @@ const ImportMarket = {
         properties: {
           eventTypeID: { type: "string" },
           eventTypeName: { type: "string" },
-          compititionID: { type: "string" },
-          comtitionName: { type: "string" },
+          competitionID: { type: "string" },
+          competitionName: { type: "string" },
           eventID: { type: "string" },
           eventName: { type: "string" },
           countryCode: { type: "string" },
-          timeZome: { type: "string" },
+          timeZone: { type: "string" },
           venue: { type: "string" },
           openDate: { type: "string" },
         },

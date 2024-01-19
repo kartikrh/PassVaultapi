@@ -53,7 +53,7 @@ const ImportMarketService = async (request, fastify) => {
     const CompetitionsObj = global.tblCompetitions.find(
       (item) =>
         item.eventTypeId === setEventtype.eventTypeId &&
-        item.refId === request.body.compititionID
+        item.refId === request.body.competitionID
     );
     if (!CompetitionsObj) {
       request.body.eventTypeId = setEventtype.eventTypeId;
@@ -64,9 +64,9 @@ const ImportMarketService = async (request, fastify) => {
     } else {
       setCompetitions = {
         competitionId: CompetitionsObj.competitionId,
-        competition: request.body.comtitionName,
+        competition: request.body.competitionName,
         eventTypeId: CompetitionsObj.eventTypeId,
-        refId: request.body.compititionID,
+        refId: request.body.competitionID,
         image: CompetitionsObj.image,
         isActive: true,
       };
@@ -75,7 +75,7 @@ const ImportMarketService = async (request, fastify) => {
       const index = global.tblCompetitions.findIndex(
         (item) =>
           item.eventTypeId === setEventtype.eventTypeId &&
-          item.refId === request.body.compititionID
+          item.refId === request.body.competitionID
       );
 
       global.tblCompetitions[index] = setCompetitions;
@@ -109,7 +109,7 @@ const ImportMarketService = async (request, fastify) => {
             ? "GMT"
             : request.body.countryCode,
         timeZone:
-          request.body.timeZome === undefined ? "" : request.body.timeZome,
+          request.body.timeZone === undefined ? "" : request.body.timeZone,
         venue: request.body.venue === undefined ? "" : request.body.venue,
       };
       await updateEventQuery(setEvents, fastify, request);

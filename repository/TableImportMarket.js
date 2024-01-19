@@ -109,9 +109,9 @@ const insertCompetitionQuery = async (request, fastify) => {
     `,
       {
         bind: [
-          data.comtitionName,
+          data.competitionName,
           data.eventTypeId,
-          data.compititionID,
+          data.competitionID,
           data.image || null,
           data.isActive || false,
           request.userTokenInfo.WrUserId,
@@ -236,7 +236,7 @@ const insertEventQuery = async (request, fastify) => {
           data.isActive || false,
           request.userTokenInfo.WrUserId,
           data.countryCode,
-          data.timeZome,
+          data.timeZone,
           data.venue,
         ],
       }
