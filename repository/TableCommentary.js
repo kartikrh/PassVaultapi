@@ -1620,7 +1620,7 @@ const updateBallByBallCommentoriesQuery = async (data, fastify, request) => {
           data.nextBatNonStrikeId,
           data.isDelete || false,
           data.commentaryBallByBallId,
-          dat.currentInnings,
+          data.currentInnings,
         ],
         type: fastify.db.QueryTypes.UPDATE,
       }
