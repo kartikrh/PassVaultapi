@@ -57,7 +57,7 @@ const eventByIdService = async (request) => {
 
 const eventBycompetitionIdService = async (request) => {
   const { competitionId } = request.body;
-  const result = global.tblEvents.find(
+  const result = global.tblEvents.filter(
     (item) => item.competitionId === competitionId
   );
   if (Array.isArray(result)) {
@@ -109,9 +109,16 @@ const updateEventService = async (request, fastify) => {
     eventDate: request.body.eventDate || checkId.eventDate,
     refId: request.body.refId || checkId.refId,
     isActive: checkId.isActive,
-    countryCode: request.body.countryCode === undefined ? checkId.countryCode : request.body.countryCode,
-    timeZone: request.body.timeZone === undefined ? checkId.timeZone : request.body.timeZone,
-    venue: request.body.venue === undefined ? checkId.venue : request.body.venue,
+    countryCode:
+      request.body.countryCode === undefined
+        ? checkId.countryCode
+        : request.body.countryCode,
+    timeZone:
+      request.body.timeZone === undefined
+        ? checkId.timeZone
+        : request.body.timeZone,
+    venue:
+      request.body.venue === undefined ? checkId.venue : request.body.venue,
     eventType: checkId.eventType,
     competition: checkId.competition,
   };
