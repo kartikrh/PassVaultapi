@@ -9,7 +9,9 @@ const {
   deleteTeamPlayerByPlayerIdQuery,
 } = require("../repository/TableTeamPlayer");
 const { getAllPlayersByTeamIdQuery } = require("../repository/TableTeams");
-const { storeImage, removeImage } = require("../utilities/Images");
+const {  storeImageOnServer , generateImageName , removeImageFromServer} = require("../utilities/Images");
+const { PROJECT_NAME } = require("../utilities/configConstants");
+const {ImgModuleConfig} = require("../utilities/imageConstant");
 
 const allPlayerService = async (request) => {
   const { isActive, eventTypeId } = request.body;
@@ -112,8 +114,16 @@ const insertPlayerService = async (request, fastify) => {
   }
 
   if (request.body.image && request.body.image.length) {
-    const data = await storeImage(request.body.image[0]);
-    request.body.image = data;
+    // generate image name  
+    const imgName = generateImageName({name : request.body.playerName});
+    const projectName = global.tblConfigs.find((item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()).value;
+    const path = await storeImageOnServer({
+      image : request.body.image[0],
+      project : projectName,
+      name : imgName,
+      ...ImgModuleConfig.Players
+    });
+    request.body.image = path;
   }
 
   const result = await insertPlayerQuery(
@@ -269,10 +279,15 @@ const updatePlayerService = async (request, fastify) => {
   }
 
   if (request.body.image && request.body.image.length > 0) {
-    if (body.image) {
-      await removeImage(body.image);
-    }
-    const result = await storeImage(request.body.image[0]);
+    // generate image name
+    const imgName = generateImageName({name : request.body.playerName});
+    const projectName = global.tblConfigs.find((item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()).value;
+    const result = await storeImageOnServer({
+      image : request.body.image[0],
+      project : projectName,
+      name : imgName,
+      ...ImgModuleConfig.Players
+    });
     body.image = result;
   }
 
@@ -344,6 +359,15 @@ const savePlayerService = async (request, fastify) => {
 const deletePlayerService = async (request, fastify) => {
   const { playerId } = request.body;
 
+  // delete images
+  for (const id of playerId) {
+    const player = global.tblPlayers.find((item) => item.playerId === id);
+    if (player && player?.image) {
+      await removeImageFromServer({
+        path : player.image
+      });
+    }
+  }
   await deletePlayerQuery(playerId, fastify, request);
 
   for (const id of playerId) {

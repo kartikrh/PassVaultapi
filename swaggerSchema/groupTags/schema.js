@@ -611,7 +611,6 @@ const PageFormate = {
         properties: {
           pageFormatName: { type: "string" },
           pageName: { type: "string" },
-          image: { type: "string" },
           description: { type: "string" },
           isActive: { type: "boolean" },
         },
@@ -630,7 +629,6 @@ const PageFormate = {
           pageFormatId: { type: "string" },
           pageFormatName: { type: "string" },
           pageName: { type: "string" },
-          image: { type: "string" },
           description: { type: "string" },
           isActive: { type: "boolean" },
         },

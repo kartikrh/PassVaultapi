@@ -5,7 +5,9 @@ const {
   deleteEventTypeQuery,
   updateDisplayOrder,
 } = require("../repository/TableEventType");
-const { storeImage, removeImage } = require("../utilities/Images");
+const { storeImageOnServer, removeImageFromServer , generateImageName} = require("../utilities/Images");
+const { PROJECT_NAME } = require("../utilities/configConstants");
+const {ImgModuleConfig} = require("../utilities/imageConstant");
 
 const allEventTypesService = async (request) => {
   const { isActive } = request.body;
@@ -43,11 +45,24 @@ const createEventTypeService = async (request, fastify) => {
   }
 
   if (image && image.length > 0) {
-    const data = await storeImage(image[0]);
-    request.body.image = data;
-  }
+    // generate image name
+    const imgName = generateImageName({
+      name: request.body.eventType,
+    });
+    const projectName = global.tblConfigs.find(
+      (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
+    ).value;
 
-  const data = await insertEventTypeQuery(
+    const path = await storeImageOnServer({
+      image: image[0],
+      project: projectName,
+      name: imgName,
+      ...ImgModuleConfig.EventTypes,
+    });
+
+    request.body.image = path;
+  }
+    const data = await insertEventTypeQuery(
     { ...request.body, userId: request.userTokenInfo.WrUserId },
     fastify,
     request
@@ -96,11 +111,21 @@ const updateEventTypeService = async (request, fastify) => {
   }
 
   if (request.body.image && request.body.image.length > 0) {
-    if (checkId.image) {
-      await removeImage(checkId.image);
-    }
-    const result = await storeImage(request.body.image[0]);
-    data.image = result;
+    // generate image name
+    const imgName = generateImageName({
+      name: request.body.eventType,
+    });
+    const projectName = global.tblConfigs.find(
+      (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
+    ).value;
+    const path = await storeImageOnServer({
+      image: request.body.image[0],
+      project: projectName,
+      name: imgName,
+      ...ImgModuleConfig.EventTypes,
+    });
+    
+    data.image = path;
   }
 
   await updateEventTypeQuery(data, fastify, request);
@@ -147,6 +172,17 @@ const deleteEventTypeService = async (request, fastify) => {
         `EventType ${eventTypeData.eventType} is used in Player or Team`
       );
     }
+
+    // delete image from server
+    const eventTypeData = global.tblEventTypes.find(
+      (item) => item.eventTypeId === eventType
+    );
+    if (eventTypeData.image) {
+      await removeImageFromServer({
+        path: eventTypeData.image,
+      });
+    }
+
   }
 
   await deleteEventTypeQuery(eventTypeId, fastify, request);

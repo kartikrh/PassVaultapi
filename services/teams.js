@@ -8,8 +8,9 @@ const {
   deleteTeamQuery,
   getAllPlayersByTeamIdQuery,
 } = require("../repository/TableTeams");
-const { storeImage, removeImage } = require("../utilities/Images");
-
+const { removeImageFromServer, storeImageOnServer, generateImageName } = require("../utilities/Images");
+const { PROJECT_NAME } = require("../utilities/configConstants");
+const {ImgModuleConfig} = require("../utilities/imageConstant");
 const allTeamsService = async () => {
   return global.tblTeams;
 };
@@ -66,12 +67,32 @@ const createTeamService = async (request, fastify) => {
     throw new Error("TeamName already exist");
   }
 
+  let imgName , projectName;
   if (request.body.image && request.body.image.length) {
-    request.body.image = await storeImage(request.body.image[0]);
+    // generate image name
+     imgName = generateImageName({
+      name: request.body.teamName,
+    });
+     projectName = global.tblConfigs.find(
+      (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
+    ).value;
+    const path = await storeImageOnServer({
+      image: request.body.image[0],
+      project: projectName,
+      name: imgName,
+      ...ImgModuleConfig.Teams,
+    });
+    request.body.image = path;
   }
 
   if (request.body.jersey && request.body.jersey.length) {
-    request.body.jersey = await storeImage(request.body.jersey[0]);
+    const path = await storeImageOnServer({
+      image: request.body.jersey[0],
+      project: projectName,
+      name: `${imgName}-jersey`,
+      ...ImgModuleConfig.Teams,
+    });
+    request.body.jersey = path;
   }
 
   const data = await insertTeamQuery(
@@ -149,18 +170,31 @@ const updateTeamService = async (request, fastify) => {
     }
   }
 
+  let imgName , projectName;
   if (request.body.image && request.body.image.length) {
-    if (body.image) {
-      await removeImage(body.image);
-    }
-    body.image = await storeImage(request.body.image[0]);
+    // generate image name
+     imgName = generateImageName({
+      name: request.body.teamName,
+    });
+     projectName = global.tblConfigs.find(
+      (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
+    ).value;
+    const path = await storeImageOnServer({
+      image: request.body.image[0],
+      project: projectName,
+      name: imgName,
+      ...ImgModuleConfig.Teams,
+    });
+    body.image = path;
   }
 
   if (request.body.jersey && request.body.jersey.length) {
-    if (body.jersey) {
-      await removeImage(body.jersey);
-    }
-    body.jersey = await storeImage(request.body.jersey[0]);
+    body.jersey = await storeImageOnServer({
+      image: request.body.jersey[0],
+      project: projectName,
+      name: `${imgName}-jersey`,
+      ...ImgModuleConfig.Teams,
+    });
   }
 
   await updateTeamQuery(body, fastify, request);
@@ -215,6 +249,15 @@ const saveTeamService = async (request, fastify) => {
 const deleteTeamService = async (request, fastify) => {
   const { teamId } = request.body;
 
+
+  // delete images
+  for (id of teamId) {
+    const team = global.tblTeams.find((item) => item.teamId === id);
+    if (team && (team.image || team.jersey)) {
+      await removeImageFromServer({path : team.image});
+      await removeImageFromServer({path : team.jersey});
+    }
+  }
   await deleteTeamQuery(teamId, fastify, request);
   for (const team of teamId) {
     await deleteTeamPlayerByTeamIdQuery(team, fastify, request);
