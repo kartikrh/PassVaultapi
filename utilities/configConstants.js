@@ -1,4 +1,6 @@
 const configConstants = {
-    IMPORTMARKET_API : "IMPORTMARKET_API"
+    IMPORTMARKET_API : "IMPORTAPIURI",
+    FILE_UPLOAD_URL : "FILEUPLOADURI",
+    PROJECT_NAME : "PROJECTCODE",	
 }
 module.exports = configConstants;

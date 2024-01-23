@@ -73,7 +73,12 @@ module.exports = async function (fastify, opts) {
 
   // Configure fastify to use `multipart/form-data` requests
   fastify.register(fastifyMultipart, {
-    addToBody: true,
+    throwFileSizeLimit: true,
+        addToBody: true,
+        limits: {
+            fileSize: 10 * 1024 * 1024,
+        }
+    
   });
 
   fastify.register(require("@fastify/compress"), {

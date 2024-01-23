@@ -5,7 +5,9 @@ const {
   getAllCompititionQuery,
   updateDisplayOrderQuery,
 } = require("../repository/TableCompitition");
-const { storeImage, removeImage } = require("../utilities/Images");
+const {storeImageOnServer, removeImageFromServer, generateImageName } = require("../utilities/Images");
+const { PROJECT_NAME } = require("../utilities/configConstants");
+const {ImgModuleConfig} = require("../utilities/imageConstant");
 
 const allCompetitionService = async (request) => {
   const { isActive, eventTypeId } = request.body;
@@ -76,8 +78,19 @@ const createCompititionService = async (request, fastify) => {
   }
 
   if (request.body.image && request.body.image.length) {
-    const data = await storeImage(request.body.image[0]);
-    request.body.image = data;
+    let imgName = generateImageName({
+      name: `${request.body.competition}-${validateEventTypeId.eventType}`,
+    });
+    const projectName = global.tblConfigs.find(
+      (item) => item.key?.toLowerCase() === PROJECT_NAME.toLowerCase() 
+    ).value;
+    const path = await storeImageOnServer({
+      image: request.body.image[0],
+      name : imgName,
+      project : projectName,
+      ...ImgModuleConfig.Competitions,
+    });
+    request.body.image = path;
   }
 
   const result = await insertCompetitionQuery(request, fastify);
@@ -125,12 +138,20 @@ const updateCompititionService = async (request, fastify) => {
   }
 
   if (request.body.image && request.body.image.length) {
-    if (data.image) {
-      await removeImage(data.image);
-    }
-
-    const image = await storeImage(request.body.image[0]);
-    data.image = image;
+    let imgName = generateImageName({
+      name: `${request.body.competition}-${validateEventTypeId.eventType}`,
+    });
+    const projectName = global.tblConfigs.find(
+      (item) => item.key?.toLowerCase() === PROJECT_NAME.toLowerCase() 
+    ).value;
+    const path = await storeImageOnServer({
+      image: request.body.image[0],
+      name : imgName,
+      project : projectName,
+      ...ImgModuleConfig.Competitions,
+    });
+    
+    data.image = path;
   }
 
   await updateCompititionQuery(data, fastify, request);
@@ -159,6 +180,18 @@ const deleteCompetitionService = async (request, fastify) => {
 
   for (const id of competitionId) {
     //validate id here
+    const validateId = global.tblCompetitions.find(
+      (item) => item.competitionId === id
+    );
+    if(!validateId){
+      throw new Error(`Competition with id ${id} not found`);
+    }
+
+    if (validateId?.image) {
+      await removeImageFromServer({
+        path: validateId.image,
+      });
+    }
   }
 
   await deleteCompetitionQuery(request, fastify);

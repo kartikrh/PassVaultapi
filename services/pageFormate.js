@@ -4,7 +4,9 @@ const {
   validatePageFormatQuery,
   deletePageFormatQuery,
 } = require("../repository/TablePageFormate");
-
+const { removeImageFromServer, storeImageOnServer, generateImageName } = require("../utilities/Images");
+const { PROJECT_NAME } = require("../utilities/configConstants");
+const {ImgModuleConfig} = require("../utilities/imageConstant");
 const allPageFormatService = async (request,fastify) => {
   // return global.tblPageFormats;
   const {isActive} = request.body;
@@ -34,6 +36,29 @@ const addPageFormatService = async (request, fastify) => {
   if (validateByName) {
     throw new Error("Page Format with this name is already exists");
   }
+
+  const { image } = request.body;
+  if(image && image.length > 0){
+
+    // generate image name
+    const imgName = generateImageName({
+      name : request.body.pageFormatName,
+    });
+
+    const projectName = global.tblConfigs.find((item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()).value;
+    const path = await storeImageOnServer({
+      image : image[0],
+      project : projectName,
+      name : imgName,
+      ...ImgModuleConfig.PageFormates
+    });
+
+    if(!path){
+      throw new Error("Error while storing image on server");
+    }
+
+    request.body.image = path;
+  }
   const data = await insertPageFormateQuery(
     { ...request.body, userId: request.userTokenInfo.WrUserId },
     fastify,
@@ -50,6 +75,20 @@ const updatePageFormatService = async (request, fastify) => {
 
   if (!checkId) {
     throw new Error("Page Format with this id not Found");
+  }
+
+  if (request.body.image && request.body.image.length > 0) {
+    let imgName = generateImageName({name : request.body.pageFormatName});
+    const projectName = global.tblConfigs.find((item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()).value;
+    const path = await storeImageOnServer({
+      image : request.body.image[0],
+      project : projectName,
+      name : imgName,
+      ...ImgModuleConfig.PageFormates
+    });
+
+    console.log(path);
+    request.body.image = path;
   }
 
   const body = {
@@ -104,6 +143,15 @@ const deletePageFormatService = async (request, fastify) => {
       throw new Error(
         `Page Formate with name ${checkInValide.wrPageFormatName} associate in Pages, skiped from deletion`
       );
+    }
+    else{
+      // delete image
+      const pageFormat = global.tblPageFormats.find((item) => item.pageFormatId === encryptedId);
+      if(pageFormat?.image){
+        await removeImageFromServer({
+          path : pageFormat.image,
+        });
+      }
     }
   }
 
