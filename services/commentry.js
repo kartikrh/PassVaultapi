@@ -652,7 +652,7 @@ const createOverService = async (data, fastify, request) => {
     return (
       item.commentaryId === data.commentaryId &&
       item.teamId === data.teamId &&
-      item.com === data.bowlerId
+      item.commentaryPlayerId === data.bowlerId
     );
   });
 
