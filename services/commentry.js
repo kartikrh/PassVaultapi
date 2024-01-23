@@ -647,12 +647,14 @@ const createOverService = async (data, fastify, request) => {
     throw new Error("Team with this id not Found");
   }
 
-  const indexBowler = global.tblCommentaryPlayers.findIndex(
-    (item) =>
+  const indexBowler = global.tblCommentaryPlayers.findIndex((item) => {
+    console.log(item.playerId, data.bowlerId);
+    return (
       item.commentaryId === data.commentaryId &&
       item.teamId === data.teamId &&
       item.commentaryPlayerId === data.bowlerId
-  );
+    );
+  });
 
   if (indexBowler === -1) {
     throw new Error("Bowler with this id not Found");
