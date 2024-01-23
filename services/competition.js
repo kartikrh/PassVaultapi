@@ -139,7 +139,7 @@ const updateCompititionService = async (request, fastify) => {
 
   if (request.body.image && request.body.image.length) {
     let imgName = generateImageName({
-      name: `${request.body.competition}-${validateEventTypeId.eventType}`,
+      name: `${request.body.competition}-${data.eventType}`,
     });
     const projectName = global.tblConfigs.find(
       (item) => item.key?.toLowerCase() === PROJECT_NAME.toLowerCase() 
