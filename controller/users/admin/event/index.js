@@ -37,6 +37,21 @@ const getEventcompetitionId = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const getEventListcompetitionId = async (request, reply, fastify) => {
+  try {
+    let result = await eventBycompetitionIdService(request);
+    result = result.map((item) => {
+      return {
+        eventId: item.eventId,
+        eventName: item.eventName,
+      };
+    });
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/getEventListcompetitionId", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 const saveEvent = async (request, reply, fastify) => {
   try {
     const result = await saveEventService(request, fastify);
@@ -62,4 +77,5 @@ module.exports = {
   saveEvent,
   deleteEvent,
   getEventcompetitionId,
+  getEventListcompetitionId
 };

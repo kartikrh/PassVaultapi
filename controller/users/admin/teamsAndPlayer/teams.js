@@ -19,6 +19,22 @@ const getAllTeams = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+
+const getTeamList = async (request, reply, fastify) => {
+  try {
+    let result = await allteamByEventTypeIdService(request);
+    result = result.map((item) => {
+      return {
+        teamId: item.teamId,
+        teamName: item.teamName,
+      };
+    });
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/getTeamList", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 const getTeamById = async (request, reply, fastify) => {
   try {
     const result = await teamByIdService(request, fastify);
@@ -54,4 +70,5 @@ module.exports = {
   getTeamById,
   saveTeam,
   deleteTeam,
+  getTeamList
 };

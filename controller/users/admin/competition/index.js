@@ -20,6 +20,21 @@ const getAllCompetition = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const getCompetitionList = async (request, reply, fastify) => {
+  try {
+    let result = await allCompetitionService(request);
+    result = result.map((item) => {
+      return {
+        competitionId: item.competitionId,
+        competition: item.competition,
+      };
+    });
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/getCompetitionList", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 const getCompetitionById = async (request, reply, fastify) => {
   try {
     const result = await competitionByIdService(request);
@@ -33,6 +48,26 @@ const getCompetitionById = async (request, reply, fastify) => {
 const getCompetitionByeventTypeId = async (request, reply, fastify) => {
   try {
     const result = await competitionByeventTypeIdService(request);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      path + "/getCompetitionByeventTypeId",
+      request
+    );
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const getCompetitionListByeventTypeId = async (request, reply, fastify) => {
+  try {
+    let result = await competitionByeventTypeIdService(request);
+    result = result.map((item) => {
+      return {
+        competitionId: item.competitionId,
+        competition: item.competition,
+      };
+    })
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(
@@ -79,4 +114,6 @@ module.exports = {
   deleteCompetition,
   updateDisplayOrder,
   getCompetitionByeventTypeId,
+  getCompetitionListByeventTypeId,
+  getCompetitionList,
 };

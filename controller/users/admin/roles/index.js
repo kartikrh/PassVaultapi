@@ -20,6 +20,21 @@ const getAllRoles = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const getRoleList = async (request, reply, fastify) => {
+  try {
+    let result = await allRolesService(request);
+    result = result.map((item) => {
+      return {
+        roleId: item.roleId,
+        roleName: item.roleName,
+      };
+    });
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/getRoleList", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 
 const getRolesByDisplayType = async (request, reply, fastify) => {
   try {
@@ -88,4 +103,5 @@ module.exports = {
   createRole,
   getRoleById,
   getPermissionByTab,
+  getRoleList
 };

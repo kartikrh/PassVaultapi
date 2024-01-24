@@ -2,7 +2,7 @@ const {
   authorize,
   checkPermission,
 } = require("../../../controller/middleware");
-const { getAllRoles } = require("../../../controller/users/admin/roles");
+const {  getRoleList } = require("../../../controller/users/admin/roles");
 const {
   getAllUsers,
   getUserById,
@@ -28,7 +28,7 @@ module.exports = async (fastify, opts) => {
     handler: (request, reply) => getAllUsers(request, reply, fastify),
   });
   fastify.post("/roleList", {
-    schema: Role.getRoles.schema,
+    schema: User.roleList.schema,
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
@@ -37,7 +37,7 @@ module.exports = async (fastify, opts) => {
           mode: "view",
         }),
     ],
-    handler: (request, reply) => getAllRoles(request, reply, fastify),
+    handler: (request, reply) => getRoleList(request, reply, fastify),
   });
 
   fastify.post("/allWithCurrent", {
