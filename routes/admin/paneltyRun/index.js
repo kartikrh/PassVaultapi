@@ -44,7 +44,7 @@ module.exports = async (fastify, opts) => {
       (request, reply) =>
         checkPermission(request, reply, fastify, {
           tabName: "Penalty Runs",
-          mode: request.body.paneltyRunId === "0" ? "add" : "edit",
+          mode: request.body.paneltyId === "0" ? "add" : "edit",
         }),
     ],
     handler: (request, reply) => savePaneltyRun(request, reply, fastify),
