@@ -2,6 +2,7 @@ const {
   authorize,
   checkPermission,
 } = require("../../../controller/middleware");
+const { getAllRoles } = require("../../../controller/users/admin/roles");
 const {
   getAllUsers,
   getUserById,
@@ -11,7 +12,7 @@ const {
   updateUserPassword,
   getAllUsersWithCurrent,
 } = require("../../../controller/users/index");
-const { User } = require("../../../swaggerSchema/groupTags/schema");
+const { User, Role } = require("../../../swaggerSchema/groupTags/schema");
 
 module.exports = async (fastify, opts) => {
   fastify.post("/all", {
@@ -25,6 +26,18 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request, reply) => getAllUsers(request, reply, fastify),
+  });
+  fastify.post("/roleList", {
+    schema: Role.getRoles.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Users",
+          mode: "view",
+        }),
+    ],
+    handler: (request, reply) => getAllRoles(request, reply, fastify),
   });
 
   fastify.post("/allWithCurrent", {

@@ -1366,9 +1366,9 @@ const Config = {
       body: {
         type: "object",
         properties: {
-          id: { type: "string" },
+          configId: { type: "string" },
         },
-        required: ["id"],
+        required: ["configId"],
       },
     },
   },
@@ -1381,14 +1381,14 @@ const Config = {
       body: {
         type: "object",
         properties: {
-          id: { type: "string" },
+          configId: { type: "string" },
           key: { type: "string" },
           value: { type: "string" },
           desc: { type: "string" },
           isActive: { type: "boolean" },
           isForAdmin: { type: "boolean" },
         },
-        required: ["id", "key", "value"	],
+        required: ["configId", "key", "value"	],
       },
     },
   },
@@ -1400,13 +1400,13 @@ const Config = {
       body: {
         type: "object",
         properties: {
-          id: {
+          configId: {
             type: "array",
             items: { type: "string" },
             minItems: 1,
           },
         },
-        required: ["id"],
+        required: ["configId"],
       },
     },
   },

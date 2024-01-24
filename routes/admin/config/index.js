@@ -15,11 +15,11 @@ module.exports = async (fastify, opts) => {
     schema: Config.getAll.schema,
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
-      //   (request, reply) =>
-      //     checkPermission(request, reply, fastify, {
-      //       tabName: "Event Types",
-      //       mode: "view",
-      //     }),
+        (request, reply) =>
+          checkPermission(request, reply, fastify, {
+            tabName: "config",
+            mode: "view",
+          }),
     ],
     handler: (request, reply) => getAllCongig(request, reply, fastify),
   });
@@ -28,11 +28,11 @@ module.exports = async (fastify, opts) => {
     schema: Config.getById.schema,
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
-      //   (request, reply, done) =>
-      //     checkPermission(request, reply, fastify, {
-      //       tabName: "Event Types",
-      //       mode: "view",
-      //     }),
+        (request, reply, done) =>
+          checkPermission(request, reply, fastify, {
+            tabName: "config",
+            mode: "view",
+          }),
     ],
     handler: (request, reply) => getConfigById(request, reply, fastify),
   });
@@ -40,11 +40,11 @@ module.exports = async (fastify, opts) => {
     schema: Config.save.schema,
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
-      //   (request, reply, done) =>
-      //     checkPermission(request, reply, fastify, {
-      //       tabName: "Event Types",
-      //       mode: request.body.eventTypeId === "0" ? "add" : "edit",
-      //     }),
+        (request, reply, done) =>
+          checkPermission(request, reply, fastify, {
+            tabName: "config",
+            mode: request.body.configId === "0" ? "add" : "edit",
+          }),
     ],
     handler: (request, reply) => saveConfig(request, reply, fastify),
   });
@@ -52,11 +52,11 @@ module.exports = async (fastify, opts) => {
     schema: Config.delete.schema,
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
-      //   (request, reply, done) =>
-      //     checkPermission(request, reply, fastify, {
-      //       tabName: "Config",
-      //       mode: "delete",
-      //     }),
+        (request, reply, done) =>
+          checkPermission(request, reply, fastify, {
+            tabName: "config",
+            mode: "delete",
+          }),
     ],
     handler: (request, reply) => deleteConfig(request, reply, fastify),
   });

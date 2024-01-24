@@ -17,8 +17,8 @@ const allCongifService = async (request,fastify) => {
 };
 
 const configByIdService = async (request) => {
-  const { id } = request.body;
-  const result = global.tblConfigs.find((item) => item.id === id);
+  const { configId } = request.body;
+  const result = global.tblConfigs.find((item) => item.configId === configId);
   return result || null;
 };
 
@@ -39,19 +39,19 @@ const createConfigService = async (request, fastify) => {
 };
 
 const updateConfigService = async (request, fastify) => {
-  const { id } = request.body;
-  const checkId = global.tblConfigs.find((item) => item.id === id);
+  const { configId } = request.body;
+  const checkId = global.tblConfigs.find((item) => item.configId === configId);
 
   if (!checkId) {
     throw new Error("Config with this id not Found");
   }
-  const checkKey = global.tblConfigs.find((item) => item.key.toLowerCase() === request.body.key.trim().toLowerCase() && item.id !== id);
+  const checkKey = global.tblConfigs.find((item) => item.key.toLowerCase() === request.body.key.trim().toLowerCase() && item.configId !== configId);
   if (checkKey) {
     throw new Error("Config with this Key already exists");
   }
 
   const data = {
-    id: request.body.id,
+    configId: request.body.configId,
     key: request.body.key || checkId.key,
     value: request.body.value || checkId.value,
     desc: request.body.desc || checkId.desc,
@@ -68,7 +68,7 @@ const updateConfigService = async (request, fastify) => {
     userId : request.userTokenInfo.WrUserId,
   }, fastify, request);
 
-  const index = global.tblConfigs.findIndex((item) => item.id === id);
+  const index = global.tblConfigs.findIndex((item) => item.configId === configId);
 
   global.tblConfigs[index] = data;
 
@@ -76,9 +76,9 @@ const updateConfigService = async (request, fastify) => {
 };
 
 const saveConfigService = async (request, fastify) => {
-  const { id } = request.body;
+  const { configId } = request.body;
 
-  if (id === "0") {
+  if (configId === "0") {
     return await createConfigService(request, fastify);
   } else {
     return await updateConfigService(request, fastify);
@@ -86,11 +86,11 @@ const saveConfigService = async (request, fastify) => {
 };
 
 const deleteConfigService = async (request, fastify) => {
-  const { id } = request.body;
+  const { configId } = request.body;
 
-  await deleteConfigQuery(id, fastify, request);
+  await deleteConfigQuery(configId, fastify, request);
 
-  global.tblConfigs = global.tblConfigs.filter((item) => !id.includes(item.id));
+  global.tblConfigs = global.tblConfigs.filter((item) => !configId.includes(item.configId));
 
   return `Config(s) deleted successfully`;
 };

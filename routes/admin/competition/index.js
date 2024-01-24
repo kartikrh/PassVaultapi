@@ -10,7 +10,8 @@ const {
   saveCompetition,
   updateDisplayOrder,
 } = require("../../../controller/users/admin/competition");
-const { Compitition } = require("../../../swaggerSchema/groupTags/schema");
+const { getAllEventTypes } = require("../../../controller/users/admin/eventTypes");
+const { Compitition, EventType } = require("../../../swaggerSchema/groupTags/schema");
 
 module.exports = async (fastify, opts) => {
   fastify.post("/all", {
@@ -25,7 +26,18 @@ module.exports = async (fastify, opts) => {
     ],
     handler: (request, reply) => getAllCompetition(request, reply, fastify),
   });
-
+  fastify.post("/eventTypeList", {
+    schema: EventType.getAll.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "competition",
+          mode: "view",
+        }),
+    ],
+    handler: (request, reply) => getAllEventTypes(request, reply, fastify),
+  });
   fastify.post("/byId", {
     schema: Compitition.getById.schema,
     preHandler: [

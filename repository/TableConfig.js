@@ -3,7 +3,7 @@ const { errorLogger } = require("../utilities/logger");
 const getAllCongigQuery = async (fastify) => {
   return await fastify.db.query(
     `SELECT
-    te."wrValue" as "id",
+    te."wrValue" as "configId",
     tc."wrKey" as "key",
     tc."wrValue" as "value",
     tc."wrIsActive" as "isActive",
@@ -24,7 +24,7 @@ const insertConfigQuery = async (data, fastify, request) => {
               "wrIsForAdmin","wrCreatedDate","wrCreatedBy" ) values ($1,$2,$3,$4,$5, now(),$6) returning *
           )        
           SELECT
-    te."wrValue" as "id",
+    te."wrValue" as "configId",
     tc."wrKey" as "key",
     tc."wrValue" as "value",
     tc."wrIsActive" as "isActive",
@@ -72,7 +72,7 @@ const updateConfigQuery = async (data, fastify, request) => {
           data.isActive,
           data.isForAdmin,
           data.userId,
-          data.id
+          data.configId
         ],
       }
     );
