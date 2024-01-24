@@ -930,6 +930,33 @@ const Teams = {
       },
     },
   },
+  eventTypeList: {
+    schema: {
+      tags: ["Teams"],
+      security: [{ bearerAuth: [] }],
+      description: "get all event type",
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+  playerList: {
+    schema: {
+      tags: ["Teams"],
+      security: [{ bearerAuth: [] }],
+      description: "get all Player",
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+          eventTypeId: { type: "string" },
+        },
+      },
+    },
+  },
   getById: {
     schema: {
       tags: ["Teams"],
@@ -1061,6 +1088,32 @@ const Player = {
         type: "object",
         properties: {
           isActive: { type: "boolean" },
+          eventTypeId: { type: "string" },
+        },
+      },
+    },
+  },
+  eventTypeList: {
+    schema: {
+      tags: ["Player"],
+      security: [{ bearerAuth: [] }],
+      description: "get all event type",
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+  teamList: {
+    schema: {
+      tags: ["Player"],
+      security: [{ bearerAuth: [] }],
+      description: "get all teams",
+      body: {
+        type: "object",
+        properties: {
           eventTypeId: { type: "string" },
         },
       },
@@ -1250,6 +1303,13 @@ const User = {
       },
     },
   },
+  roleList: {
+    schema: {
+      tags: ["User"],
+      description: "get roles",
+      security: [{ bearerAuth: [] }],
+    },
+  },
   getAllWithCurrent: {
     schema: {
       tags: ["User"],
@@ -1418,6 +1478,95 @@ const Commentary = {
       tags: ["Commentary"],
       description: "get all Commentary",
       security: [{ bearerAuth: [] }],
+    },
+  },
+  matchTypeList: {
+    schema: {
+      tags: ["Commentary"],
+      security: [{ bearerAuth: [] }],
+      description: "get all Match Type",
+    },
+  },
+  teamList: {
+    schema: {
+      tags: ["Commentary"],
+      security: [{ bearerAuth: [] }],
+      description: "get all teams",
+      body: {
+        type: "object",
+        properties: {
+          eventTypeId: { type: "string" },
+        },
+      },
+    },
+  },
+  eventTypeList: {
+    schema: {
+      tags: ["Commentary"],
+      security: [{ bearerAuth: [] }],
+      description: "get all event type",
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+  competitionListByEventTypeId: {
+    schema: {
+      tags: ["Commentary"],
+      description: "get Compitition by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          eventTypeId: { type: "string" },
+        },
+        required: ["eventTypeId"],
+      },
+    },
+  },
+  eventListByCompetitionId: {
+    schema: {
+      tags: ["Commentary"],
+      description: "get Event by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionId: { type: "string" },
+        },
+        required: ["competitionId"],
+      },
+    },
+  },
+  eventDataById: {
+    schema: {
+      tags: ["Commentary"],
+      description: "get Event by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          eventId: { type: "string" },
+        },
+        required: ["eventId"],
+      },
+    },
+  },
+  playerListByTeamId: {
+    schema: {
+      tags: ["Commentary"],
+      security: [{ bearerAuth: [] }],
+      description: "get teams by id",
+      body: {
+        type: "object",
+        properties: {
+          teamId: { type: "string" },
+        },
+        required: ["teamId"],
+      },
     },
   },
   getById: {
@@ -1608,6 +1757,19 @@ const Compitition = {
       },
     },
   },
+  eventTypeList: {
+    schema: {
+      tags: ["Compitition"],
+      security: [{ bearerAuth: [] }],
+      description: "get all event type",
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
   getById: {
     schema: {
       tags: ["Compitition"],
@@ -1704,6 +1866,33 @@ const Event = {
           isActive: { type: "boolean" },
           eventTypeId: { type: "string" },
           competitionId: { type: "string" },
+        },
+      },
+    },
+  },
+  eventTypeList: {
+    schema: {
+      tags: ["Event"],
+      security: [{ bearerAuth: [] }],
+      description: "get all event type",
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+  competitionList: {
+    schema: {
+      tags: ["Event"],
+      description: "get all Compitition",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+          eventTypeId: { type: "string" },
         },
       },
     },

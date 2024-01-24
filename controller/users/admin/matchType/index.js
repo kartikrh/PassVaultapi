@@ -24,6 +24,24 @@ const getAllMatchTypes = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const getMatchTypeList = async (request, reply, fastify) => {
+  try{
+    let result = await allMatchTypesService();
+    result = result.map((item) => ({
+      matchTypeId: item.matchTypeId,
+      matchType: item.matchType,
+    }));
+    reply.status(200).send(success(result, 200));
+  }catch{
+    errorLogger(
+      fastify,
+      err.message,
+      commonPath + "/getMatchTypeList",
+      request
+    );
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+}
 const getMatchTypeId = async (request, reply, fastify) => {
   try {
     const result = await matchTypeByIdService(request);
@@ -69,4 +87,5 @@ module.exports = {
   saveMatchType,
   deleteMatchType,
   cloneMatchType,
+  getMatchTypeList
 };

@@ -21,6 +21,21 @@ const getAllPlayers = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const getAllPlayerList = async (request, reply, fastify) => {
+  try {
+    let result = await allPlayerService(request);
+    result = result.map((item) => {
+      return {
+        playerId: item.playerId,
+        playerName: item.playerName,
+      }
+    })
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/getAllPlayerList", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 const getAllPlayerByTeam = async (request, reply, fastify) => {
   try {
     const result = await allPlayerByTeamService(request, fastify);
@@ -100,4 +115,5 @@ module.exports = {
   getAllBowlingType,
   getAllPlayerType,
   getAllPlayerByTeam,
+  getAllPlayerList
 };

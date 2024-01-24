@@ -2,7 +2,7 @@ const {
   authorize,
   checkPermission,
 } = require("../../../controller/middleware");
-const { getAllCompetition } = require("../../../controller/users/admin/competition");
+const { getCompetitionList } = require("../../../controller/users/admin/competition");
 const {
   deleteEvent,
   getAllEvents,
@@ -10,8 +10,8 @@ const {
   getEventId,
   getEventcompetitionId,
 } = require("../../../controller/users/admin/event");
-const { getAllEventTypes } = require("../../../controller/users/admin/eventTypes");
-const { Event, EventType, Compitition } = require("../../../swaggerSchema/groupTags/schema");
+const { getEventTypeList } = require("../../../controller/users/admin/eventTypes");
+const { Event } = require("../../../swaggerSchema/groupTags/schema");
 
 module.exports = async (fastify, opts) => {
   fastify.post("/all", {
@@ -27,7 +27,7 @@ module.exports = async (fastify, opts) => {
     handler: (request, reply) => getAllEvents(request, reply, fastify),
   });
   fastify.post("/eventTypeList", {
-    schema: EventType.getAll.schema,
+    schema: Event.eventTypeList.schema,
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply) =>
@@ -36,11 +36,11 @@ module.exports = async (fastify, opts) => {
           mode: "view",
         }),
     ],
-    handler: (request, reply) => getAllEventTypes(request, reply, fastify),
+    handler: (request, reply) => getEventTypeList(request, reply, fastify),
   });
 
   fastify.post("/competitionList", {
-    schema: Compitition.getAll.schema,
+    schema: Event.competitionList.schema,
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply) =>
@@ -49,7 +49,7 @@ module.exports = async (fastify, opts) => {
           mode: "view",
         }),
     ],
-    handler: (request, reply) => getAllCompetition(request, reply, fastify),
+    handler: (request, reply) => getCompetitionList(request, reply, fastify),
   });
 
   fastify.post("/byId", {

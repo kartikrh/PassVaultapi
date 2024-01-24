@@ -24,6 +24,25 @@ const getAllEventTypes = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+
+const getEventTypeList = async (request, reply, fastify) => {
+  try {
+    let result = await allEventTypesService(request);
+    result = result.map((item) => ({
+      eventTypeId: item.eventTypeId,
+      eventType: item.eventType,
+    }));
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      commonPath + "/getEventTypeList",
+      request
+    );
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 const getEventTypeId = async (request, reply, fastify) => {
   try {
     const result = await eventTypeByIdService(request);
@@ -72,4 +91,5 @@ module.exports = {
   saveEventType,
   deleteEventType,
   updateDisplayOrder,
+  getEventTypeList
 };
