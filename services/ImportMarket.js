@@ -138,7 +138,7 @@ const MarketListService = async (request, fastify) => {
 
   if (request.body.refID === "0") {
     endpoint = "/listEventTypes";
-  } else if (request.body.refID !== "0" && request.body.isCompitition) {
+  } else if (request.body.refID !== "0") {
     if (request.body.isCompitition) {
       endpoint = "/EventTypes_listCompititions";
     }
