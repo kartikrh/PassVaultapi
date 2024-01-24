@@ -119,7 +119,7 @@ module.exports = async function (fastify, opts) {
       (request, reply, done) =>
         checkPermission(request, reply, fastify, {
           tabName: "Tabs",
-          mode: request.body.id !== "0" ? "edit" : "add",
+          mode: request.body.id === "0" ? "add" : "edit",
         }),
     ],
     handler: (request, reply) => saveTabData(request, reply, fastify),

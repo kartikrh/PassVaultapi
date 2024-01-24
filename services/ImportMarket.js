@@ -62,7 +62,7 @@ const ImportMarketService = async (request, fastify) => {
       request.body.isActive = true;
       setCompetitions = await insertCompetitionQuery(request, fastify);
       global.tblCompetitions.push(setCompetitions);
-      CompetitionsObj = setCompetitions;  
+      CompetitionsObj = setCompetitions;
     } else {
       setCompetitions = {
         competitionId: CompetitionsObj.competitionId,
@@ -129,6 +129,43 @@ const ImportMarketService = async (request, fastify) => {
   }
 };
 
+const MarketListService = async (request, fastify) => {
+  const apiUrl = process.env.IMPORTMARKET_API;
+  let endpoint;
+  let postData = {
+    isaustralian: request.body.isAustralian,
+  }
+
+  if (request.body.refID === "0") {
+    endpoint = "/listEventTypes";
+  } else if (request.body.refID !== "0" && request.body.isCompitition) {
+    if (request.body.isCompitition) {
+      endpoint = "/EventTypes_listCompititions";
+    }
+    if (request.body.isEvent) {
+      endpoint = "/Compititions_listEvents";
+    }
+    postData.refId = request.body.refID;
+  }
+
+  const response = await fetch(apiUrl + endpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(postData),
+  });
+
+  if (response.ok) {
+    const responseData = await response.json();
+    return responseData
+  } else {
+    console.error(`Error: ${response.status} - ${response.statusText}`);
+    throw new Error("Error while fetching data from import market");
+  }
+}
+
 module.exports = {
   ImportMarketService,
+  MarketListService,
 };

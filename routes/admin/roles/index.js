@@ -66,7 +66,7 @@ module.exports = async (fastify, opts) => {
       (request, reply, done) =>
         checkPermission(request, reply, fastify, {
           tabName: "Roles",
-          mode: request.body.roleId !== "0" ? "edit" : "add",
+          mode: request.body.roleId === "0" ? "add" : "edit",
         }),
     ],
     handler: (request, reply) => createRole(request, reply, fastify),
