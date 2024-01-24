@@ -17,7 +17,7 @@ module.exports = async (fastify, opts) => {
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
         checkPermission(request, reply, fastify, {
-          tabName: "Block",
+          tabName: "Blocks",
           mode: "view",
         }),
     ],
@@ -30,7 +30,7 @@ module.exports = async (fastify, opts) => {
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
         checkPermission(request, reply, fastify, {
-          tabName: "Block",
+          tabName: "Blocks",
           mode: "view",
         }),
     ],
@@ -43,7 +43,7 @@ module.exports = async (fastify, opts) => {
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
         checkPermission(request, reply, fastify, {
-          tabName: "Block",
+          tabName: "Blocks",
           mode: request.body.blockId === "0" ? "add" : "edit",
         }),
     ],
@@ -56,7 +56,7 @@ module.exports = async (fastify, opts) => {
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
         checkPermission(request, reply, fastify, {
-          tabName: "Block",
+          tabName: "Blocks",
           mode: "delete",
         }),
     ],

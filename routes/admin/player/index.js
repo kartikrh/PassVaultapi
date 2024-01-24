@@ -2,6 +2,7 @@ const {
   authorize,
   checkPermission,
 } = require("../../../controller/middleware");
+const { getAllEventTypes } = require("../../../controller/users/admin/eventTypes");
 const {
   getAllPlayers,
   getPlayerById,
@@ -11,8 +12,9 @@ const {
   getAllPlayerType,
   getAllPlayerByTeam,
 } = require("../../../controller/users/admin/teamsAndPlayer/players");
+const { getAllTeams } = require("../../../controller/users/admin/teamsAndPlayer/teams");
 
-const { Player, Teams } = require("../../../swaggerSchema/groupTags/schema");
+const { Player, Teams, EventType } = require("../../../swaggerSchema/groupTags/schema");
 
 module.exports = async (fastify, opts) => {
   fastify.post("/all", {
@@ -26,7 +28,33 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request, reply) => getAllPlayers(request, reply, fastify),
+  }); 
+  fastify.post("/eventTypeList", {
+    schema: EventType.getAll.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Players",
+          mode: "view",
+        }),
+    ],
+    handler: (request, reply) => getAllEventTypes(request, reply, fastify),
   });
+  fastify.post("/teamList", {
+    schema: Teams.getAll.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Players",
+          mode: "view",
+        }),
+    ],
+    handler: (request, reply) => getAllTeams(request, reply, fastify),
+  });
+
+
   fastify.post("/byId", {
     schema: Player.getById.schema,
     preHandler: [
