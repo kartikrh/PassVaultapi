@@ -8,9 +8,13 @@ const {
   deleteTeamQuery,
   getAllPlayersByTeamIdQuery,
 } = require("../repository/TableTeams");
-const { removeImageFromServer, storeImageOnServer, generateImageName } = require("../utilities/Images");
+const {
+  removeImageFromServer,
+  storeImageOnServer,
+  generateImageName,
+} = require("../utilities/Images");
 const { PROJECT_NAME } = require("../utilities/configConstants");
-const {ImgModuleConfig} = require("../utilities/imageConstant");
+const { ImgModuleConfig } = require("../utilities/imageConstant");
 const allTeamsService = async () => {
   return global.tblTeams;
 };
@@ -67,13 +71,13 @@ const createTeamService = async (request, fastify) => {
     throw new Error("TeamName already exist");
   }
 
-  let imgName , projectName;
+  let imgName, projectName;
   if (request.body.image && request.body.image.length) {
     // generate image name
-     imgName = generateImageName({
+    imgName = generateImageName({
       name: request.body.teamName,
     });
-     projectName = global.tblConfigs.find(
+    projectName = global.tblConfigs.find(
       (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
     ).value;
     const path = await storeImageOnServer({
@@ -140,6 +144,10 @@ const updateTeamService = async (request, fastify) => {
     throw new Error("TeamId is not valid");
   }
 
+  const _getEventType = global.tblEventTypes.find(
+    (item) => item.eventTypeId === request.body.eventTypeId
+  );
+
   const body = {
     teamName: request.body.teamName || checkTeamId.teamName,
     teamShortName: request.body.teamShortName || checkTeamId.teamShortName,
@@ -149,6 +157,7 @@ const updateTeamService = async (request, fastify) => {
     eventTypeId: request.body.eventTypeId || checkTeamId.eventTypeId,
     userId: request.userTokenInfo.WrUserId,
     teamId: request.body.teamId,
+    eventType: _getEventType.eventType,
   };
 
   const validateTeamName = global.tblTeams.find(
@@ -170,13 +179,13 @@ const updateTeamService = async (request, fastify) => {
     }
   }
 
-  let imgName , projectName;
+  let imgName, projectName;
   if (request.body.image && request.body.image.length) {
     // generate image name
-     imgName = generateImageName({
+    imgName = generateImageName({
       name: request.body.teamName,
     });
-     projectName = global.tblConfigs.find(
+    projectName = global.tblConfigs.find(
       (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
     ).value;
     const path = await storeImageOnServer({
@@ -249,13 +258,12 @@ const saveTeamService = async (request, fastify) => {
 const deleteTeamService = async (request, fastify) => {
   const { teamId } = request.body;
 
-
   // delete images
   for (id of teamId) {
     const team = global.tblTeams.find((item) => item.teamId === id);
     if (team && (team.image || team.jersey)) {
-      await removeImageFromServer({path : team.image});
-      await removeImageFromServer({path : team.jersey});
+      await removeImageFromServer({ path: team.image });
+      await removeImageFromServer({ path: team.jersey });
     }
   }
   await deleteTeamQuery(teamId, fastify, request);
