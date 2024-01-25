@@ -414,6 +414,23 @@ async function getUserWisePermisionQuery(fastify, body) {
   );
 }
 
+async function getChildCountQuery(body ,fastify) {
+  return await fastify.db.query(
+    `SELECT 
+    "wrParentId",
+    CAST(COUNT("wrTabId") as integer) AS childCount
+    FROM
+        "tblTabs"
+    WHERE
+        "wrIsActive" = true
+            AND "wrParentId" = ANY ($1)
+    GROUP BY "wrParentId";`,
+        {
+          type: fastify.db.Sequelize.QueryTypes.SELECT,
+          bind: [body.ids],
+        }
+  );
+}
 module.exports = {
   getTabsQuery,
   createTabsQuery,
@@ -432,4 +449,5 @@ module.exports = {
   getTabsByRoleIDQuery,
   getTabsByPerentIdQuery,
   getUserWisePermisionQuery,
+  getChildCountQuery
 };
