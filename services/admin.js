@@ -12,6 +12,7 @@ const {
   getTabsByRoleIDQuery,
   getTabsByPerentIdQuery,
   getUserWisePermisionQuery,
+  getChildCountQuery,
 } = require("../repository/TableTabs.js");
 
 const { tabsValidator } = require("../utilities/validator.js");
@@ -87,7 +88,18 @@ async function getTabsByParentIdService(request, fastify) {
     isActive: isActive === undefined ? true : isActive,
   };
 
-  return await getTabsByPerentIdQuery(fastify, body);
+  let tabData = await getTabsByPerentIdQuery(fastify, body);
+  if (tabData.length) {
+    const ids = tabData.map((item) => item.encryptedTabId);
+    const getChildCount = await getChildCountQuery({ ids }, fastify);
+
+    tabData.forEach((item) => {
+        const childCount = getChildCount.find((child) => child.wrParentId === item.encryptedTabId) || { childcount: 0 };
+        item.childCount = childCount.childcount;
+    });
+  }
+
+  return tabData;
 }
 
 async function getAllTabsService(request, fastify) {
