@@ -1490,7 +1490,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
           ? " won the toss and opt to bat"
           : " won the toss and opt to bowl";
     } else {
-      tossteam = commentaryTeamsOTwo[0].shortName;
+      tossteam = commentaryTeamsTwo[0].shortName;
       tossType =
         result.choseTo === 1
           ? " won the toss and opt to bat"
