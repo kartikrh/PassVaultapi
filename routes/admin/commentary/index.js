@@ -17,12 +17,25 @@ const {
   getCommentaryDetailsBycommentaryId,
   getCurrentUpdatedCommentaryID,
 } = require("../../../controller/users/admin/commentary/commentary");
-const {  getCompetitionListByeventTypeId } = require("../../../controller/users/admin/competition");
-const {  getEventId, getEventListcompetitionId } = require("../../../controller/users/admin/event");
-const { getEventTypeList } = require("../../../controller/users/admin/eventTypes");
-const {  getMatchTypeList } = require("../../../controller/users/admin/matchType");
-const { getAllPlayerByTeam } = require("../../../controller/users/admin/teamsAndPlayer/players");
-const {  getTeamList } = require("../../../controller/users/admin/teamsAndPlayer/teams");
+const {
+  getCompetitionListByeventTypeId,
+} = require("../../../controller/users/admin/competition");
+const {
+  getEventId,
+  getEventListcompetitionId,
+} = require("../../../controller/users/admin/event");
+const {
+  getEventTypeList,
+} = require("../../../controller/users/admin/eventTypes");
+const {
+  getMatchTypeList,
+} = require("../../../controller/users/admin/matchType");
+const {
+  getAllPlayerByTeam,
+} = require("../../../controller/users/admin/teamsAndPlayer/players");
+const {
+  getTeamList,
+} = require("../../../controller/users/admin/teamsAndPlayer/teams");
 const { Commentary } = require("../../../swaggerSchema/groupTags/schema");
 
 module.exports = async (fastify, opts) => {
@@ -75,7 +88,7 @@ module.exports = async (fastify, opts) => {
     handler: (request, reply) => getEventTypeList(request, reply, fastify),
   });
   fastify.post("/competitionListByEventTypeId", {
-    schema:Commentary.competitionListByEventTypeId.schema,
+    schema: Commentary.competitionListByEventTypeId.schema,
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply) =>
@@ -84,7 +97,8 @@ module.exports = async (fastify, opts) => {
           mode: "view",
         }),
     ],
-    handler: (request, reply) => getCompetitionListByeventTypeId(request, reply, fastify),
+    handler: (request, reply) =>
+      getCompetitionListByeventTypeId(request, reply, fastify),
   });
   fastify.post("/eventListByCompetitionId", {
     schema: Commentary.eventListByCompetitionId.schema,
@@ -96,7 +110,8 @@ module.exports = async (fastify, opts) => {
           mode: "view",
         }),
     ],
-    handler: (request, reply) => getEventListcompetitionId(request, reply, fastify),
+    handler: (request, reply) =>
+      getEventListcompetitionId(request, reply, fastify),
   });
   fastify.post("/eventDataById", {
     schema: Commentary.eventDataById.schema,
@@ -112,7 +127,7 @@ module.exports = async (fastify, opts) => {
   });
 
   fastify.post("/playerListByTeamId", {
-    schema:  Commentary.playerListByTeamId.schema,
+    schema: Commentary.playerListByTeamId.schema,
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply) =>
@@ -122,7 +137,7 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request, reply) => getAllPlayerByTeam(request, reply, fastify),
-  })
+  });
   fastify.post("/displayStatus", {
     schema: Commentary.getAll.schema,
     preHandler: [
@@ -223,28 +238,28 @@ module.exports = async (fastify, opts) => {
   });
   fastify.post("/getscoreByCId", {
     schema: Commentary.getBycommentaryId.schema,
-    preHandler: [
-      (request, reply) => authorize(request, reply, fastify),
-      (request, reply, done) =>
-        checkPermission(request, reply, fastify, {
-          tabName: "Commentary",
-          mode: "view",
-        }),
-    ],
+    // preHandler: [
+    //   (request, reply) => authorize(request, reply, fastify),
+    //   (request, reply, done) =>
+    //     checkPermission(request, reply, fastify, {
+    //       tabName: "Commentary",
+    //       mode: "view",
+    //     }),
+    // ],
     handler: (request, reply) =>
       getCommentaryDetailsBycommentaryId(request, reply, fastify),
   });
 
   fastify.get("/getCIds", {
     schema: Commentary.getAllUpdatedIds.schema,
-    preHandler: [
-      (request, reply) => authorize(request, reply, fastify),
-      (request, reply, done) =>
-        checkPermission(request, reply, fastify, {
-          tabName: "Commentary",
-          mode: "view",
-        }),
-    ],
+    // preHandler: [
+    //   (request, reply) => authorize(request, reply, fastify),
+    //   (request, reply, done) =>
+    //     checkPermission(request, reply, fastify, {
+    //       tabName: "Commentary",
+    //       mode: "view",
+    //     }),
+    // ],
     handler: (request, reply) =>
       getCurrentUpdatedCommentaryID(request, reply, fastify),
   });
