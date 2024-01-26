@@ -407,7 +407,8 @@ const getCommentaryByIdQuery = async (request, fastify) => {
       "wrMarketID" as "marketId",
       "wrTpId" as "tpId",
       "isSignalROn" as "isSignalROn",
-      "isMatchTypeUpdated" as "isMatchTypeUpdated"
+      "isMatchTypeUpdated" as "isMatchTypeUpdated",
+      "wrCurrentInnings" as "currentInnings"	
       from "tblCommentaries" tc
       left join "tblEncryptedData" te on tc."wrMatchTypeId" = te."wrKey"
       left join "tblEncryptedData" te1 on tc."wrEventTypeId" = te1."wrKey"
