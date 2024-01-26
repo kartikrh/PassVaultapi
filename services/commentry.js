@@ -467,6 +467,133 @@ const saveCommentaryService = async (request, fastify) => {
   }
 };
 
+const cloneCommentaryService = async (request, fastify) => {
+  const { commentaryId } = request.body;
+  const originalCommentary = global.tblCommentaries.find(
+    (item) => item.commentaryId === commentaryId
+  );
+
+  if (!originalCommentary) {
+    throw new Error("Commentary with this id not Found");
+  }
+
+  const validateMatchTypeId = global.tblMatchTypes.find(
+    (item) => item.matchTypeId === originalCommentary.matchTypeId
+  );
+
+  const team1 = await getCommentaryTeamsQuery(
+    { teamId: originalCommentary.team1Id, commentaryId },
+    fastify,
+    request
+  );
+
+  const team2 = await getCommentaryTeamsQuery(
+    { teamId: originalCommentary.team2Id, commentaryId },
+    fastify,
+    request
+  );
+
+  const team1Players = await getCommentaryPlayersQuery(
+    { teamId: originalCommentary.team1Id, commentaryId },
+    fastify,
+    request
+  );
+
+  const team2Players = await getCommentaryPlayersQuery(
+    { teamId: originalCommentary.team2Id, commentaryId },
+    fastify,
+    request
+  );
+
+  const newCommentary = await insertCommentaryQuery(
+    request,
+    fastify,
+  );
+
+  request.body = {
+    ...originalCommentary,
+    ...request.body,
+    ...newCommentary,
+    team1Captain: team1.teamCaptain,
+    team1Kipper: team1.teamKipper,
+    team1Players: team1Players.map(player => player.playerId),
+    team2Captain: team2.teamCaptain,
+    team2Kipper: team2.teamKipper,
+    team2Players: team2Players.map(player => player.playerId),
+  }
+  
+  if (validateMatchTypeId) {
+    if (
+      validateMatchTypeId?.noOfIningsPerSide &&
+      validateMatchTypeId?.noOfIningsPerSide > 1
+    ) {
+      const TotalInnning = validateMatchTypeId?.noOfIningsPerSide;
+      for (let i = 0; i < TotalInnning; i++) {
+        const currentInning = i + 1;
+        request.body.currentInnings = currentInning;
+        await insertCommentaryTeams(request, fastify);
+        const data = [
+          ...request.body.team1Players.map((item, i) => {
+            return {
+              commentaryId: newCommentary.commentaryId,
+              teamId: request.body.team1Id,
+              playerId: item,
+              displayOrder: i + 1,
+            };
+          }),
+          ...request.body.team2Players.map((item, i) => {
+            return {
+              commentaryId: newCommentary.commentaryId,
+              teamId: request.body.team2Id,
+              playerId: item,
+              displayOrder: i + 1,
+            };
+          }),
+        ];
+        for (let info of data) {
+          await insertCommentaryPlayers(
+            info,
+            currentInning,
+            fastify,
+            request
+          );
+        }
+      }
+    } else {
+      const currentInning = 1;
+      request.body.currentInnings = currentInning;
+      await insertCommentaryTeams(request, fastify);
+
+      const data = [
+        ...request.body.team1Players.map((item, i) => {
+          return {
+            commentaryId: newCommentary.commentaryId,
+            teamId: request.body.team1Id,
+            playerId: item,
+            displayOrder: i + 1,
+          };
+        }),
+        ...request.body.team2Players.map((item, i) => {
+          return {
+            commentaryId: newCommentary.commentaryId,
+            teamId: request.body.team2Id,
+            playerId: item,
+            displayOrder: i + 1,
+          };
+        }),
+      ];
+      for (let info of data) {
+        await insertCommentaryPlayers(info, currentInning, fastify, request);
+      }
+    }
+  }
+  global.tblCommentaries.push(newCommentary);
+  global.tblCommentaryPlayers = await getAllCommentaryPlayerQuery(fastify);
+  global.tblCommentaryTeams = await getAllCommentaryTeamsQuery(fastify);
+
+  return newCommentary;
+};
+
 const deleteCommentaryService = async (request, fastify) => {
   const { commentaryId } = request.body;
 
@@ -1776,6 +1903,7 @@ module.exports = {
   allCommentaryService,
   commentaryByIdService,
   saveCommentaryService,
+  cloneCommentaryService,
   deleteCommentaryService,
   allDisplayStatusService,
   commentaryDetailsByIdService,

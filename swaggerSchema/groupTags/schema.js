@@ -1676,6 +1676,22 @@ const Commentary = {
       },
     },
   },
+  clone: {
+    schema: {
+      tags: ["Commentary"],
+      security: [{ bearerAuth: [] }],
+      description: "Clone Commentary by id",
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "string" },
+          eventName: { type: "string" },
+          eventRefId: { type: "string" },
+        },
+        required: ["commentaryId", "eventName", "eventRefId"],
+      },
+    },
+  },
   delete: {
     schema: {
       tags: ["Commentary"],
