@@ -16,6 +16,7 @@ const {
   getCommentaryDetailsByEventId,
   getCommentaryDetailsBycommentaryId,
   getCurrentUpdatedCommentaryID,
+  cloneCommentary,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -187,6 +188,20 @@ module.exports = async (fastify, opts) => {
     ],
     handler: (request, reply) => addCommentary(request, reply, fastify),
   });
+
+  fastify.post("/clone", {
+    schema: Commentary.clone.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "add",
+        }),
+    ],
+    handler: (request, reply) => cloneCommentary(request, reply, fastify),
+  });
+
   fastify.post("/delete", {
     schema: Commentary.delete.schema,
     preHandler: [

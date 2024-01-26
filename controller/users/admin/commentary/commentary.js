@@ -2,6 +2,7 @@ const {
   commentaryByIdService,
   allCommentaryService,
   saveCommentaryService,
+  cloneCommentaryService,
   deleteCommentaryService,
   allDisplayStatusService,
   commentaryDetailsByIdService,
@@ -63,6 +64,17 @@ const addCommentary = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+
+const cloneCommentary = async (request, reply, fastify) => {
+  try {
+    const result = await cloneCommentaryService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/cloneCommentary", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
 const deleteCommentary = async (request, reply, fastify) => {
   try {
     const result = await deleteCommentaryService(request, fastify);
@@ -160,6 +172,7 @@ module.exports = {
   getAllDisplayStatus,
   getCommentaryDetailsById,
   saveCommentaryDetails,
+  cloneCommentary,
   deleteBallByBallCommentary,
   deleteOverCommentary,
   getCommentaryDetailsByEventId,
