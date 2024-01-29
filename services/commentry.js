@@ -577,16 +577,18 @@ const cloneCommentaryService = async (request, fastify) => {
 
   const newCommentary = await insertCommentaryQuery(request, fastify);
 
+  const filterOutUniquePlayerId = (teamPlayers) => teamPlayers.map(player => player.playerId).filter((value, index, self) => self.indexOf(value) === index)
+
   request.body = {
     ...request.body,
     ...newCommentary,
     team1Captain: team1.teamCaptain,
     team1Kipper: team1.teamKipper,
-    team1Players: team1Players.map((player) => player.playerId),
+    team1Players: filterOutUniquePlayerId(team1Players),
     team2Captain: team2.teamCaptain,
     team2Kipper: team2.teamKipper,
-    team2Players: team2Players.map((player) => player.playerId),
-  };
+    team2Players: filterOutUniquePlayerId(team2Players),
+  }
 
   if (validateMatchTypeId) {
     if (
