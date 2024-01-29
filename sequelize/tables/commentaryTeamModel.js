@@ -70,6 +70,15 @@ module.exports = (sequelize) => {
         type: DataTypes.BOOLEAN,
         allowNull: true,
       },
+      wrCommentaryPlayerTeamCaptain : {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      wrCommentaryPlayerTeamKipper : {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+   
     },
     {
       timestamps: false,

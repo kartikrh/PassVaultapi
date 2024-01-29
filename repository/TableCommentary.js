@@ -222,15 +222,29 @@ const insertCommentaryPlayers = async (
   try {
     return await fastify.db.query(
       `
-      insert into "tblCommentaryPlayers" ("wrCommentaryId" , "wrTeamId" , "wrPlayerId","wrPlayerName", "wrDisplayOrder","wrCurrentInnings")
-       values (
-        (select "wrKey" from "tblEncryptedData" where "wrValue" = $1),
-        (select "wrKey" from "tblEncryptedData" where "wrValue" = $2),
-        (select "wrKey" from "tblEncryptedData" where "wrValue" = $3),
-        (select "wrPlayerName" from "tblPlayers" where "wrPlayerId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $3)),
-        $4,
-        $5
-      )
+      WITH insert_data AS (
+        insert into "tblCommentaryPlayers" ("wrCommentaryId" , "wrTeamId" , "wrPlayerId","wrPlayerName", "wrDisplayOrder","wrCurrentInnings")
+        values (
+          (select "wrKey" from "tblEncryptedData" where "wrValue" = $1),
+          (select "wrKey" from "tblEncryptedData" where "wrValue" = $2),
+          (select "wrKey" from "tblEncryptedData" where "wrValue" = $3),
+          (select "wrPlayerName" from "tblPlayers" where "wrPlayerId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $3)),
+          $4,
+          $5
+        )
+        RETURNING *   
+      ) 
+      SELECT 
+      tp."wrValue" as "playerId", 
+      tp1."wrValue" as "teamId",
+      tp2."wrValue" as "commentaryId",
+      tp3."wrValue" as "commentaryPlayerId"
+      FROM "insert_data" id
+      left join "tblEncryptedData" tp on id."wrPlayerId" = tp."wrKey"
+      left join "tblEncryptedData" tp1 on id."wrTeamId" = tp1."wrKey"
+      left join "tblEncryptedData" tp2 on id."wrCommentaryId" = tp2."wrKey"
+      left join "tblEncryptedData" tp3 on id."wrCommentaryPlayerId" = tp3."wrKey"
+
     `,
       {
         type: fastify.db.QueryTypes.SELECT,
@@ -252,6 +266,58 @@ const insertCommentaryPlayers = async (
     );
     throw new Error(err.message);
   }
+};
+
+const upsertCommentaryPlayers = async (
+  data,
+  currentinning,
+  fastify,
+  request
+) => {
+ try {
+  return await fastify.db.query(
+    `WITH upsert AS (
+      UPDATE "tblCommentaryPlayers"
+      SET
+        "wrDisplayOrder" = $4
+      WHERE
+        "wrCommentaryId" = (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $1)
+        AND "wrTeamId" = (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $2)
+        AND "wrPlayerId" = (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $3)
+        AND "wrCurrentInnings" = $5 -- Added wrCurrentInnings to the WHERE clause
+      RETURNING *
+    )
+    INSERT INTO "tblCommentaryPlayers" ("wrCommentaryId", "wrTeamId", "wrPlayerId", "wrPlayerName", "wrDisplayOrder", "wrCurrentInnings")
+    SELECT
+      (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $1),
+      (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $2),
+      (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $3),
+      (SELECT "wrPlayerName" FROM "tblPlayers" WHERE "wrPlayerId" = (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $3)),
+      $4,
+      $5
+    WHERE NOT EXISTS (SELECT 1 FROM upsert);
+    
+    
+    `,
+    {
+      type: fastify.db.QueryTypes.SELECT,
+      bind: [
+        data.commentaryId,
+        data.teamId,
+        data.playerId,
+        data.displayOrder,
+        currentinning,
+      ],
+    });
+ } catch (error) {
+  errorLogger(
+    fastify,
+    error.message,
+    "DB ERROR --> repository/TableCommentary/upsertCommentaryPlayers",
+    request
+  );
+  throw new Error(error.message);
+ }
 };
 
 const updateCommentaryQuery = async (request, fastify) => {
@@ -617,13 +683,17 @@ const getAllCommentaryTeamsQuery = async (fastify) => {
   "wrTeamStatus" as "teamStatus",
   "wrIsWin" as "isWin",
   tct."wrCurrentInnings" as "currentInnings", 
-  tct."wrIsBattingComplete" as "isBattingComplete"
+  tct."wrIsBattingComplete" as "isBattingComplete",
+  te5."wrValue" as "commentaryPlayerTeamCaptain",
+  te6."wrValue" as "commentaryPlayerTeamKipper"
   from "tblCommentaryTeams" tct 
   left join "tblEncryptedData" te on tct."wrCommentaryTeamId" = te."wrKey"
   left join "tblEncryptedData" te1 on tct."wrCommentaryId" = te1."wrKey"
   left join "tblEncryptedData" te2 on tct."wrTeamId" = te2."wrKey"
   left join "tblEncryptedData" te3 on tct."wrTeamCaptain" = te3."wrKey"
   left join "tblEncryptedData" te4 on tct."wrTeamKipper" = te4."wrKey"
+  left join "tblEncryptedData" te5 on tct."wrCommentaryPlayerTeamCaptain" = te5."wrKey"
+  left join "tblEncryptedData" te6 on tct."wrCommentaryPlayerTeamKipper" = te6."wrKey"
 
   `,
     {
@@ -1868,6 +1938,63 @@ const getCommentaryID_Socket = async (data, fastify, request) => {
   }
 };
 
+const updateCommentaryPlayerIdInCommentaryTeams = async (data, fastify, request) => {
+  try {
+    // update for team1
+    const query1 = `
+    update "tblCommentaryTeams" set
+        "wrCommentaryPlayerTeamCaptain" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1),
+        "wrCommentaryPlayerTeamKipper" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $2)
+      where "wrTeamId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $3)
+      AND "wrCommentaryId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $4)
+      AND "wrCurrentInnings" = $5
+    
+    `;
+
+    // update for team2
+    const query2 = `
+    update "tblCommentaryTeams" set
+      "wrCommentaryPlayerTeamCaptain" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1),
+      "wrCommentaryPlayerTeamKipper" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $2)
+      where "wrTeamId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $3)
+      AND "wrCommentaryId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $4)
+      AND "wrCurrentInnings" = $5
+    `;
+
+    await fastify.db.query(query1, {
+      type: fastify.db.QueryTypes.UPDATE,
+      bind: [
+        data.team1Captain,
+        data.team1Kipper,
+        data.team1Id,
+        data.commentaryId,
+        data.currentInnings,
+      ],
+    });
+
+    await fastify.db.query(query2, {
+      type: fastify.db.QueryTypes.UPDATE,
+      bind: [
+        data.team2Captain,
+        data.team2Kipper,
+        data.team2Id,
+        data.commentaryId,
+        data.currentInnings,
+      ],
+    });
+
+    return true;
+
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/updateCommentaryPlayerIdInCommentaryTeams",
+      request
+    );
+    throw new Error(err.message);
+  }
+}
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -1903,4 +2030,6 @@ module.exports = {
   //nitesh Updated
   UpdateCommentaryTimeQuery,
   getCommentaryID_Socket,
+  upsertCommentaryPlayers,
+  updateCommentaryPlayerIdInCommentaryTeams
 };
