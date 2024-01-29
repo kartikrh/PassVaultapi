@@ -568,13 +568,17 @@ const cloneCommentaryService = async (request, fastify) => {
     request
   );
 
+  request.body = {
+    ...originalCommentary,
+    ...request.body,
+  }
+
   const newCommentary = await insertCommentaryQuery(
     request,
     fastify,
   );
 
   request.body = {
-    ...originalCommentary,
     ...request.body,
     ...newCommentary,
     team1Captain: team1.teamCaptain,
