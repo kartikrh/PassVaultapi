@@ -105,6 +105,20 @@ const Auth = {
       },
     },
   },
+  ckUpload: {
+    schema: {
+      tags: ["ckUpload"],
+      description: "CKEditor Image Upload",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          upload: { type: "array" },
+        },
+        required: ["upload"],
+      },
+    },
+  }
 };
 
 const Tabs = {
