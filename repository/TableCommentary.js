@@ -5,6 +5,7 @@ const getAllCommentaryQuery = async (fastify) => {
     `select 
     te7."wrValue" as "commentaryId",
     te."wrValue" as "matchTypeId",
+    mt."wrMatchType" AS "matchType",
     te1."wrValue" as "eventTypeId",
     te2."wrValue" as "team1Id",
     te3."wrValue" as "team2Id",
@@ -48,8 +49,8 @@ const getAllCommentaryQuery = async (fastify) => {
     left join "tblEncryptedData" te8 on tc."wrCompetitionId" = te8."wrKey"
     left join "tblEncryptedData" te9 on tc."wrEventId" = te9."wrKey"
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
-    left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"    
-        `,
+    left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
+    LEFT JOIN "tblMatchTypes" mt ON tc."wrMatchTypeId" = mt."wrMatchTypeId"`,
     {
       type: fastify.db.QueryTypes.SELECT,
     }
@@ -78,6 +79,7 @@ const insertCommentaryQuery = async (request, fastify) => {
       select 
     te7."wrValue" as "commentaryId",
     te."wrValue" as "matchTypeId",
+    mt."wrMatchType" AS "matchType",
     te1."wrValue" as "eventTypeId",
     te2."wrValue" as "team1Id",
     te3."wrValue" as "team2Id",
@@ -122,6 +124,7 @@ const insertCommentaryQuery = async (request, fastify) => {
     left join "tblEncryptedData" te9 on tc."wrEventId" = te9."wrKey"
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"  
+    LEFT JOIN "tblMatchTypes" mt ON tc."wrMatchTypeId" = mt."wrMatchTypeId"
       `,
       {
         bind: [
@@ -274,9 +277,9 @@ const upsertCommentaryPlayers = async (
   fastify,
   request
 ) => {
- try {
-  return await fastify.db.query(
-    `WITH upsert AS (
+  try {
+    return await fastify.db.query(
+      `WITH upsert AS (
       UPDATE "tblCommentaryPlayers"
       SET
         "wrDisplayOrder" = $4
@@ -299,25 +302,26 @@ const upsertCommentaryPlayers = async (
     
     
     `,
-    {
-      type: fastify.db.QueryTypes.SELECT,
-      bind: [
-        data.commentaryId,
-        data.teamId,
-        data.playerId,
-        data.displayOrder,
-        currentinning,
-      ],
-    });
- } catch (error) {
-  errorLogger(
-    fastify,
-    error.message,
-    "DB ERROR --> repository/TableCommentary/upsertCommentaryPlayers",
-    request
-  );
-  throw new Error(error.message);
- }
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [
+          data.commentaryId,
+          data.teamId,
+          data.playerId,
+          data.displayOrder,
+          currentinning,
+        ],
+      }
+    );
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCommentary/upsertCommentaryPlayers",
+      request
+    );
+    throw new Error(error.message);
+  }
 };
 
 const updateCommentaryQuery = async (request, fastify) => {
@@ -444,6 +448,7 @@ const getCommentaryByIdQuery = async (request, fastify) => {
       select 
       te7."wrValue" as "commentaryId",
       te."wrValue" as "matchTypeId",
+      mt."wrMatchType" AS "matchType",
       te1."wrValue" as "eventTypeId",
       te2."wrValue" as "team1Id",
       te3."wrValue" as "team2Id",
@@ -488,6 +493,7 @@ const getCommentaryByIdQuery = async (request, fastify) => {
       left join "tblEncryptedData" te9 on tc."wrEventId" = te9."wrKey"
       left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
       left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
+      LEFT JOIN "tblMatchTypes" mt ON tc."wrMatchTypeId" = mt."wrMatchTypeId"
       where "wrCommentaryId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)
       `,
       {
@@ -1938,7 +1944,11 @@ const getCommentaryID_Socket = async (data, fastify, request) => {
   }
 };
 
-const updateCommentaryPlayerIdInCommentaryTeams = async (data, fastify, request) => {
+const updateCommentaryPlayerIdInCommentaryTeams = async (
+  data,
+  fastify,
+  request
+) => {
   try {
     // update for team1
     const query1 = `
@@ -1984,7 +1994,6 @@ const updateCommentaryPlayerIdInCommentaryTeams = async (data, fastify, request)
     });
 
     return true;
-
   } catch (err) {
     errorLogger(
       fastify,
@@ -1994,7 +2003,7 @@ const updateCommentaryPlayerIdInCommentaryTeams = async (data, fastify, request)
     );
     throw new Error(err.message);
   }
-}
+};
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -2031,5 +2040,5 @@ module.exports = {
   UpdateCommentaryTimeQuery,
   getCommentaryID_Socket,
   upsertCommentaryPlayers,
-  updateCommentaryPlayerIdInCommentaryTeams
+  updateCommentaryPlayerIdInCommentaryTeams,
 };
