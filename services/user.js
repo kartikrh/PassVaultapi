@@ -2,6 +2,8 @@ const uaParser = require("ua-parser-js");
 const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
 const requestIp = require("request-ip");
+const path = require("path");
+const {ImgModuleConfig} = require("../utilities/imageConstant");
 
 const {
   signUpUser,

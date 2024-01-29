@@ -34,6 +34,20 @@ const ImgModuleConfig = {
         height : 0,
         width : 0,
     },
+    Blocks : {
+        type : 'blocks',
+        formate : '.jpg,.png,.jpeg',
+        size : 0,
+        height : 0,
+        width : 0,
+    },
+    CK_Images: {
+        type : 'ck_images',
+        formate : '.jpg,.png,.jpeg',
+        size : 0,
+        height : 0,
+        width : 0,
+    }
 }
 
 module.exports = {
