@@ -244,23 +244,18 @@ const createCommentaryService = async (request, fastify) => {
             fastify,
             request
           );
-          switch (info.playerId) {
-            case request.body.team1Captain:
-              commentaryPlayerId.team1Captain =
-                playerData[0].commentaryPlayerId;
-              break;
-            case request.body.team1Kipper:
-              commentaryPlayerId.team1Kipper = playerData[0].commentaryPlayerId;
-              break;
-            case request.body.team2Captain:
-              commentaryPlayerId.team2Captain =
-                playerData[0].commentaryPlayerId;
-              break;
-            case request.body.team2Kipper:
-              commentaryPlayerId.team2Kipper = playerData[0].commentaryPlayerId;
-              break;
-            default:
-              break;
+
+          if(info.playerId === request.body.team1Captain){
+            commentaryPlayerId.team1Captain = playerData[0].commentaryPlayerId;
+          }
+           if(info.playerId === request.body.team1Kipper){
+            commentaryPlayerId.team1Kipper = playerData[0].commentaryPlayerId;
+          }
+           if(info.playerId === request.body.team2Captain){
+            commentaryPlayerId.team2Captain = playerData[0].commentaryPlayerId;
+          }
+           if(info.playerId === request.body.team2Kipper){
+            commentaryPlayerId.team2Kipper = playerData[0].commentaryPlayerId;
           }
         }
         await updateCommentaryPlayerIdInCommentaryTeams(
@@ -302,21 +297,17 @@ const createCommentaryService = async (request, fastify) => {
           fastify,
           request
         );
-        switch (info.playerId) {
-          case request.body.team1Captain:
-            commentaryPlayerId.team1Captain = playerData[0].commentaryPlayerId;
-            break;
-          case request.body.team1Kipper:
-            commentaryPlayerId.team1Kipper = playerData[0].commentaryPlayerId;
-            break;
-          case request.body.team2Captain:
-            commentaryPlayerId.team2Captain = playerData[0].commentaryPlayerId;
-            break;
-          case request.body.team2Kipper:
-            commentaryPlayerId.team2Kipper = playerData[0].commentaryPlayerId;
-            break;
-          default:
-            break;
+        if(info.playerId === request.body.team1Captain){
+          commentaryPlayerId.team1Captain = playerData[0].commentaryPlayerId;
+        }
+         if(info.playerId === request.body.team1Kipper){
+          commentaryPlayerId.team1Kipper = playerData[0].commentaryPlayerId;
+        }
+         if(info.playerId === request.body.team2Captain){
+          commentaryPlayerId.team2Captain = playerData[0].commentaryPlayerId;
+        }
+         if(info.playerId === request.body.team2Kipper){
+          commentaryPlayerId.team2Kipper = playerData[0].commentaryPlayerId;
         }
       }
       await updateCommentaryPlayerIdInCommentaryTeams(
