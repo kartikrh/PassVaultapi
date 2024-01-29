@@ -28,6 +28,7 @@ const {
   getCommentaryID_Socket,
   upsertCommentaryPlayers,
   updateCommentaryPlayerIdInCommentaryTeams,
+  updateMatchTypeInCommentaryQuery,
 } = require("../repository/TableCommentary");
 
 const allCommentaryService = async () => {
@@ -1971,7 +1972,59 @@ const UpdateCommentaryTime = async (data, fastify, request) => {
 const getCurrentUpdatedCommentaryIDService = async (data, fastify, request) => {
   return await getCommentaryID_Socket(data, fastify, request);
 };
+const updateMatchTypeInCommentaryService = async (
+  request,
+  fastify,
+) => {
+  const {commentaryId,matchTypeId} = request.body;
+  const index = global.tblCommentaries.findIndex(
+    (item) => item.commentaryId === commentaryId
+  );
 
+  if (index == -1) {
+    throw new Error("Commentary with this id not Found");
+  }
+
+  const validateMatchType = await global.tblMatchTypes.find(
+    (item) => item.matchTypeId === matchTypeId
+  );
+  if(!validateMatchType){
+    throw new Error("Match Type with this id not Found");
+  }    
+
+  await updateMatchTypeInCommentaryQuery(request.body, fastify, request);
+  
+  const updatedData = await getCommentaryByIdQuery(request, fastify);
+
+  global.tblCommentaries[index] = updatedData;
+  return updatedData;
+}
+const getMatchTypeListByCommentaryService = async (
+  request,
+  fastify,
+) => {
+  const {commentaryId} = request.body;
+  const validateCommentary = global.tblCommentaries.find(
+    (item) => item.commentaryId === commentaryId
+  );
+
+  if (!validateCommentary) {
+    throw new Error("Commentary with this id not Found");
+  }
+  let noOfInning = global.tblMatchTypes.find(
+    (item) => item.matchTypeId === validateCommentary.matchTypeId
+  ).noOfIningsPerSide;
+  const matchTypeList = [];
+
+  for (const item of global.tblMatchTypes) {
+    if (item.noOfIningsPerSide === noOfInning) {
+      matchTypeList.push({ matchTypeId: item.matchTypeId, matchType: item.matchType });
+    }
+  }
+
+  return matchTypeList;
+;
+}
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -1988,4 +2041,6 @@ module.exports = {
   commentaryDetailsByCommentaryIdService,
   UpdateCommentaryTime,
   getCurrentUpdatedCommentaryIDService,
+  updateMatchTypeInCommentaryService,
+  getMatchTypeListByCommentaryService
 };

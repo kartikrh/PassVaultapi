@@ -1494,11 +1494,40 @@ const Commentary = {
       security: [{ bearerAuth: [] }],
     },
   },
+  changeMatchType: {
+    schema: {
+      tags: ["Commentary"],
+      description: "change match type",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "string" },
+          matchTypeId: { type: "string" },
+        },
+        required: ["commentaryId", "matchTypeId"],
+      },
+    },
+  },
   matchTypeList: {
     schema: {
       tags: ["Commentary"],
       security: [{ bearerAuth: [] }],
       description: "get all Match Type",
+    },
+  },
+  getMatchTypeListByCommentary: {
+    schema: {
+      tags: ["Commentary"],
+      security: [{ bearerAuth: [] }],
+      description: "get all Match Type",
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "string" },
+        },
+        required: ["commentaryId"],
+      },
     },
   },
   teamList: {

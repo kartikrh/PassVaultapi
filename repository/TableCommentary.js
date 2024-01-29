@@ -2003,7 +2003,26 @@ const updateCommentaryPlayerIdInCommentaryTeams = async (
     );
     throw new Error(err.message);
   }
-};
+}
+const updateMatchTypeInCommentaryQuery = async (data, fastify, request) => {
+  try {
+    return await fastify.db.query(
+      `UPDATE "tblCommentaries" SET "wrMatchTypeId" = (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $1) WHERE "wrCommentaryId" = (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $2)`,
+      {
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [data.matchTypeId, data.commentaryId],
+      }
+    )
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/updateMatchTypeInCommentaryQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+}
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -2041,4 +2060,5 @@ module.exports = {
   getCommentaryID_Socket,
   upsertCommentaryPlayers,
   updateCommentaryPlayerIdInCommentaryTeams,
+  updateMatchTypeInCommentaryQuery
 };

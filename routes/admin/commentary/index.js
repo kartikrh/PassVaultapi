@@ -17,6 +17,8 @@ const {
   getCommentaryDetailsBycommentaryId,
   getCurrentUpdatedCommentaryID,
   cloneCommentary,
+  updateMatchTypeInCommentary,
+  getMatchTypeListByCommentary,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -278,4 +280,32 @@ module.exports = async (fastify, opts) => {
     handler: (request, reply) =>
       getCurrentUpdatedCommentaryID(request, reply, fastify),
   });
+
+  fastify.post("/changeMatchType", {
+    schema: Commentary.changeMatchType.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "view",
+        }),
+    ],
+    handler: (request, reply) =>
+      updateMatchTypeInCommentary(request, reply, fastify),
+
+  });
+  fastify.post("/getMatchTypeListByCommentary", {
+    schema : Commentary.getMatchTypeListByCommentary.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "view",
+        }),
+    ],
+    handler : (request, reply) => getMatchTypeListByCommentary(request, reply, fastify)
+
+  })
 };
