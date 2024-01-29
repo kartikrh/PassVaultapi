@@ -26,6 +26,8 @@ const {
   deleteOverCommentoriesQuery,
   UpdateCommentaryTimeQuery,
   getCommentaryID_Socket,
+  upsertCommentaryPlayers,
+  updateCommentaryPlayerIdInCommentaryTeams,
 } = require("../repository/TableCommentary");
 
 const allCommentaryService = async () => {
@@ -201,7 +203,11 @@ const createCommentaryService = async (request, fastify) => {
   const validateMatchTypeId = global.tblMatchTypes.find(
     (item) => item.matchTypeId === request.body.matchTypeId
   );
-
+  let commentaryPlayerId = {
+    commentaryId : request.body.commentaryId,
+    team1Id : request.body.team1Id,
+    team2Id : request.body.team2Id,
+  };
   if (validateMatchTypeId) {
     if (
       validateMatchTypeId?.noOfIningsPerSide &&
@@ -229,14 +235,36 @@ const createCommentaryService = async (request, fastify) => {
             };
           }),
         ];
+       
         for (let info of data) {
-          await insertCommentaryPlayers(
+          let playerData = await insertCommentaryPlayers(
             info,
             request.body.currentInnings,
             fastify,
             request
           );
+          switch (info.playerId) {
+            case request.body.team1Captain:
+              commentaryPlayerId.team1Captain = playerData[0].commentaryPlayerId;
+              break;
+            case request.body.team1Kipper:
+              commentaryPlayerId.team1Kipper = playerData[0].commentaryPlayerId;
+              break;
+            case request.body.team2Captain:
+              commentaryPlayerId.team2Captain = playerData[0].commentaryPlayerId;
+              break;
+            case request.body.team2Kipper:
+              commentaryPlayerId.team2Kipper = playerData[0].commentaryPlayerId;
+              break;
+            default:
+              break;
+          }
         }
+        await updateCommentaryPlayerIdInCommentaryTeams(
+          {...commentaryPlayerId, currentInnings: request.body.currentInnings},
+          fastify,
+          request
+        );
       }
     } else {
       const currentinning = 1;
@@ -262,8 +290,29 @@ const createCommentaryService = async (request, fastify) => {
         }),
       ];
       for (let info of data) {
-        await insertCommentaryPlayers(info, currentinning, fastify, request);
+         let playerData = await insertCommentaryPlayers(info, currentinning, fastify, request);
+         switch (info.playerId) {
+          case request.body.team1Captain:
+            commentaryPlayerId.team1Captain = playerData[0].commentaryPlayerId;
+            break;
+          case request.body.team1Kipper:
+            commentaryPlayerId.team1Kipper = playerData[0].commentaryPlayerId;
+            break;
+          case request.body.team2Captain:
+            commentaryPlayerId.team2Captain = playerData[0].commentaryPlayerId;
+            break;
+          case request.body.team2Kipper:
+            commentaryPlayerId.team2Kipper = playerData[0].commentaryPlayerId;
+            break;
+          default:
+            break;
+        }
       }
+      await updateCommentaryPlayerIdInCommentaryTeams(
+        {...commentaryPlayerId, currentInnings: request.body.currentInnings},
+        fastify,
+        request
+      );
     }
   }
 
@@ -347,8 +396,10 @@ const updateCommentaryService = async (request, fastify) => {
     }
   }
 
+  if(request.body.matchTypeId !== global.tblCommentaries[index].matchTypeId){
+    request.body.matchTypeId = global.tblCommentaries[index].matchTypeId;
+  }
   await updateCommentaryQuery(request, fastify);
-
   const validateMatchTypeId = global.tblMatchTypes.find(
     (item) => item.matchTypeId === request.body.matchTypeId
   );
@@ -375,7 +426,7 @@ const updateCommentaryService = async (request, fastify) => {
           currentInnings: request.body.currentInnings,
         });
 
-        await deleteCommentaryPlayers(request, fastify);
+        // await deleteCommentaryPlayers(request, fastify);
 
         const data = [
           ...request.body.team1Players.map((item, i) => {
@@ -396,7 +447,13 @@ const updateCommentaryService = async (request, fastify) => {
           }),
         ];
         for (let info of data) {
-          await insertCommentaryPlayers(
+          // await insertCommentaryPlayers(
+          //   info,
+          //   request.body.currentInnings,
+          //   fastify,
+          //   request
+          // );
+          await upsertCommentaryPlayers(
             info,
             request.body.currentInnings,
             fastify,
@@ -422,7 +479,7 @@ const updateCommentaryService = async (request, fastify) => {
         currentInnings: request.body.currentInnings,
       });
 
-      await deleteCommentaryPlayers(request, fastify);
+      // await deleteCommentaryPlayers(request, fastify);
 
       const data = [
         ...request.body.team1Players.map((item, i) => {
@@ -443,7 +500,13 @@ const updateCommentaryService = async (request, fastify) => {
         }),
       ];
       for (let info of data) {
-        await insertCommentaryPlayers(info, currentinning, fastify, request);
+        // await insertCommentaryPlayers(info, currentinning, fastify, request);
+        await upsertCommentaryPlayers(
+          info,
+          request.body.currentInnings,
+          fastify,
+          request
+        );
       }
     }
   }
