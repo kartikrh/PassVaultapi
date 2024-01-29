@@ -14,10 +14,10 @@ const {
   getUserDecryptedPassword,
   changeUserPasswordByUSerIDService,
   getAllUsersWithCurrentService,
-  ckImageUploadService,
 } = require("../../services/user");
 const { errorLogger } = require("../../utilities/logger");
 const fetchAllDataFromDb = require("../../utilities/fetchAllData");
+const { ckImageUploadService } = require("../../services/ckImage");
 
 let commonPath = "controller/users";
 

@@ -25,8 +25,6 @@ const {
   getUserChildIds,
 } = require("../utilities/index");
 const { generateToken } = require("../utilities/tokenization");
-const { generateImageName, storeImageOnServer } = require("../utilities/Images");
-const { PROJECT_NAME } = require("../utilities/configConstants");
 
 async function signUpUserService({ body }, fastify) {
   const hashedPassword = encrypt(body.password);
@@ -197,22 +195,6 @@ async function validateUserServices(request, fastify) {
     return validate;
   } catch (e) {
     return false;
-  }
-}
-
-const ckImageUploadService = async (request) => {
-  if (request.body.image && request.body.image.length) {
-    let filename = path.parse(request.body.image[0].filename).name;
-    const imgName = generateImageName({name : filename});
-    const projectName = 'content_' + global.tblConfigs.find((item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()).value;
-    const imagePath = await storeImageOnServer({
-      image : request.body.image[0],
-      project : projectName,
-      name : imgName,
-      ...ImgModuleConfig.Players
-    });
-    request.body.image = imagePath;
-    return imagePath;
   }
 }
 
@@ -503,7 +485,6 @@ module.exports = {
   verifyTokenUserServices,
   generateEncryptionService,
   validateUserServices,
-  ckImageUploadService,
   getAllUsersService,
   getAllUsersWithCurrentService,
   getUserDecryptedPassword,

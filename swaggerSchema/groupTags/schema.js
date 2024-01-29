@@ -113,9 +113,9 @@ const Auth = {
       body: {
         type: "object",
         properties: {
-          image: { type: "array" },
+          upload: { type: "array" },
         },
-        required: ["image"],
+        required: ["upload"],
       },
     },
   }
