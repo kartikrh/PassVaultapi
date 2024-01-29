@@ -25,7 +25,7 @@
     "@fastify/static": "^6.11.2",
     "@fastify/swagger": "^8.8.0",
     "@fastify/swagger-ui": "^1.9.3",
-    "axios": "^1.6.5",
+    "axios": "^1.6.7",
     "bcrypt": "^5.1.0",
     "crypto": "^1.0.1",
     "dotenv": "^16.3.1",

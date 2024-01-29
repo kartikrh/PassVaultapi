@@ -14,6 +14,7 @@ const {
   getUserDecryptedPassword,
   changeUserPasswordByUSerIDService,
   getAllUsersWithCurrentService,
+  ckImageUploadService,
 } = require("../../services/user");
 const { errorLogger } = require("../../utilities/logger");
 const fetchAllDataFromDb = require("../../utilities/fetchAllData");
@@ -94,6 +95,16 @@ const loadDataInMemory = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+
+const ckImageUpload = async (request, reply, fastify) => {
+  try {
+    const result = await ckImageUploadService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/getAllUsers", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+}
 
 const getAllUsers = async (request, reply, fastify) => {
   try {
@@ -213,6 +224,7 @@ module.exports = {
   generateEncryption,
   validateUser,
   loadDataInMemory,
+  ckImageUpload,
   getAllUsers,
   getAllUsersWithCurrent,
   decryptPasswordUser,
