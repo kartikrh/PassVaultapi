@@ -198,6 +198,14 @@ const createCommentaryService = async (request, fastify) => {
     }
   }
 
+  // check if captain and kipper is in player list
+  let allPlayers = [...request.body.team1Players, ...request.body.team2Players];
+  let captainsAndKippers = [request.body.team1Captain, request.body.team1Kipper, request.body.team2Captain, request.body.team2Kipper];
+
+  let check = captainsAndKippers.filter((item) => !allPlayers.includes(item));
+  if (check.length > 0) {
+    throw new Error(`Captain and Kipper must be in the player list.`);
+  }
   const addCommentry = await insertCommentaryQuery(request, fastify);
   request.body.commentaryId = addCommentry.commentaryId;
 
