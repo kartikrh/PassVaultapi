@@ -599,6 +599,11 @@ const cloneCommentaryService = async (request, fastify) => {
   }
 
   if (validateMatchTypeId) {
+    let commentaryPlayer = {
+      commentaryId: newCommentary.commentaryId,
+      team1Id: request.body.team1Id,
+      team2Id: request.body.team2Id,
+    };
     if (
       validateMatchTypeId?.noOfIningsPerSide &&
       validateMatchTypeId?.noOfIningsPerSide > 1
@@ -627,8 +632,26 @@ const cloneCommentaryService = async (request, fastify) => {
           }),
         ];
         for (let info of data) {
-          await insertCommentaryPlayers(info, currentInning, fastify, request);
+          let playerData = await insertCommentaryPlayers(info, currentInning, fastify, request);
+          if(playerData[0].playerId === request.body.team1Captain){
+            commentaryPlayer.team1Captain = playerData[0].commentaryPlayerId;
+          }
+          if(playerData[0].playerId === request.body.team1Kipper){
+            commentaryPlayer.team1Kipper = playerData[0].commentaryPlayerId;
+          }
+          if(playerData[0].playerId === request.body.team2Captain){
+            commentaryPlayer.team2Captain = playerData[0].commentaryPlayerId;
+          }
+          if(playerData[0].playerId === request.body.team2Kipper){
+            commentaryPlayer.team2Kipper = playerData[0].commentaryPlayerId;
+          }
+          
         }
+        await updateCommentaryPlayerIdInCommentaryTeams(
+          { ...commentaryPlayer, currentInnings: request.body.currentInnings },
+          fastify,
+          request
+        );
       }
     } else {
       const currentInning = 1;
@@ -654,8 +677,26 @@ const cloneCommentaryService = async (request, fastify) => {
         }),
       ];
       for (let info of data) {
-        await insertCommentaryPlayers(info, currentInning, fastify, request);
+        let palyerData = await insertCommentaryPlayers(info, currentInning, fastify, request);
+        if(palyerData[0].playerId === request.body.team1Captain){
+          commentaryPlayer.team1Captain = palyerData[0].commentaryPlayerId;
+        }
+        if(palyerData[0].playerId === request.body.team1Kipper){
+          commentaryPlayer.team1Kipper = palyerData[0].commentaryPlayerId;
+        }
+        if(palyerData[0].playerId === request.body.team2Captain){
+          commentaryPlayer.team2Captain = palyerData[0].commentaryPlayerId;
+        }
+        if(palyerData[0].playerId === request.body.team2Kipper){
+          commentaryPlayer.team2Kipper = palyerData[0].commentaryPlayerId;
+        }
+
       }
+      await updateCommentaryPlayerIdInCommentaryTeams(
+        { ...commentaryPlayer, currentInnings: request.body.currentInnings },
+        fastify,
+        request
+      );
     }
   }
   global.tblCommentaries.push(newCommentary);
