@@ -104,6 +104,7 @@ const isJson = (json) => {
 
 const getTitle = (str) => {
   try {
+    str = str.split("?")[0]
     if (str === "signin") return "Sign In"
     else if (str === "signout") return "Sign Out"
     else if (str === "signup") return "Sign Up"
