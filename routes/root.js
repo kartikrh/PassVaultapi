@@ -53,7 +53,7 @@ module.exports = async function (fastify, opts) {
   });
   fastify.post("/ckUpload", {
     schema: Auth.ckUpload.schema,
-    // preHandler: [(request, reply) => authorize(request, reply, fastify)],
+    preHandler: [(request, reply) => authorize(request, reply, fastify)],
     handler: (request, reply) => ckImageUpload(request, reply, fastify),
   });
 };
