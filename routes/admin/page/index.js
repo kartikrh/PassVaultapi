@@ -4,6 +4,7 @@ const {
   getPageById,
   deletePage,
   savePage,
+  getAllPageFormateList,
 } = require("../../../controller/users/admin/Page/page");
 
 const { Page } = require("../../../swaggerSchema/groupTags/schema");
@@ -21,6 +22,18 @@ module.exports = async (fastify, opts) => {
     ],
     handler: (request, reply) => getAllPage(request, reply, fastify),
   });
+  fastify.post("/pageFormateList" , {
+    schema: Page.pageFormateList.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Pages",
+          mode: "view",
+        }),
+    ],
+    handler: (request, reply) => getAllPageFormateList(request, reply, fastify),
+  })
 
   fastify.post("/byId", {
     schema: Page.getById.schema,
