@@ -2,7 +2,9 @@ const {
   authorize,
   checkPermission,
 } = require("../../../controller/middleware");
-const { getEventTypeList } = require("../../../controller/users/admin/eventTypes");
+const {
+  getEventTypeList,
+} = require("../../../controller/users/admin/eventTypes");
 const {
   getAllPlayers,
   getPlayerById,
@@ -11,8 +13,11 @@ const {
   getAllBowlingType,
   getAllPlayerType,
   getAllPlayerByTeam,
+  UpdatePlayerStats,
 } = require("../../../controller/users/admin/teamsAndPlayer/players");
-const {  getTeamList } = require("../../../controller/users/admin/teamsAndPlayer/teams");
+const {
+  getTeamList,
+} = require("../../../controller/users/admin/teamsAndPlayer/teams");
 
 const { Player, Teams } = require("../../../swaggerSchema/groupTags/schema");
 
@@ -28,7 +33,7 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request, reply) => getAllPlayers(request, reply, fastify),
-  }); 
+  });
   fastify.post("/eventTypeList", {
     schema: Player.eventTypeList.schema,
     preHandler: [
@@ -53,8 +58,6 @@ module.exports = async (fastify, opts) => {
     ],
     handler: (request, reply) => getTeamList(request, reply, fastify),
   });
-
-
   fastify.post("/byId", {
     schema: Player.getById.schema,
     preHandler: [
@@ -105,5 +108,17 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request, reply) => deletePlayer(request, reply, fastify),
+  });
+  fastify.post("/updatePlayerStats", {
+    schema: Player.updatePlayerStats.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Players",
+          mode: request.body.playerId === "0" ? "add" : "edit",
+        }),
+    ],
+    handler: (request, reply) => UpdatePlayerStats(request, reply, fastify),
   });
 };

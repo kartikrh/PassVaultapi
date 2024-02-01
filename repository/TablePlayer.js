@@ -149,6 +149,66 @@ const updatePlayerQuery = async (data, fastify, request) => {
   }
 };
 
+const updatePlayerStatsQuery = async (data, fastify, request) => {
+  try {
+    return await fastify.db.query(
+      ` UPDATE "tblPlayers"
+      SET "wrBatsmanAverage" = $1,
+          "wrBatsmanStrikeRate" = $2,
+          "wrBowlerAverage" = $3,
+         "wrBowlerEconomy" = $4,
+          "wrModifyDate" = $5,
+          "wrModifyBy" = $6
+      WHERE "wrPlayerId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $7)`,
+      {
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [
+          data.batsmanAverage,
+          data.batsmanStrikeRate,
+          data.bowlerAverage,
+          data.bowlerEconomy,
+          new Date(),
+          data.userId,
+          data.playerId,
+        ],
+      }
+    );
+    // const updateQuery = `
+    //   UPDATE "tblPlayers"
+    //   SET "wrBatsmanAverage" = $1,
+    //       "wrBatsmanStrikeRate" = $2,
+    //       "wrBowlerAverage" = $3,
+    //      "wrBowlerEconomy" = $4,
+    //       "wrModifyDate" = $5,
+    //       "wrModifyBy" = 6$
+    //   WHERE "wrPlayerId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $7)
+    // `;
+
+    // const bindValues = [
+    //   data.batsmanAverage,
+    //   data.batsmanStrikeRate,
+    //   data.bowlerAverage,
+    //   data.bowlerEconomy,
+    //   new Date(),
+    //   data.userId,
+    //   data.playerId,
+    // ];
+
+    // return await fastify.db.query(updateQuery, {
+    //   type: fastify.db.QueryTypes.UPDATE,
+    //   bind: bindValues,
+    // });
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TablePlayer/updatePlayerStatsQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 const deletePlayerQuery = async (playerId, fastify, request) => {
   try {
     return await fastify.db.query(
@@ -248,4 +308,5 @@ module.exports = {
   getAllPlayerTypeQuery,
   getAllBowlingTypeQuery,
   getAllTeamsByPlayerIdQuery,
+  updatePlayerStatsQuery,
 };
