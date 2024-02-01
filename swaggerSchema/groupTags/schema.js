@@ -677,6 +677,19 @@ const Page = {
       security: [{ bearerAuth: [] }],
     },
   },
+  pageFormateList: {
+    schema: {
+      tags: ["Page"],
+      security: [{ bearerAuth: [] }],
+      description: "get all Page Formate",
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
   getById: {
     schema: {
       tags: ["Page"],

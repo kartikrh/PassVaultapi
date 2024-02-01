@@ -4,6 +4,7 @@ const {
   deletePageService,
   savePageService,
 } = require("../../../../services/page");
+const { allPageFormatService } = require("../../../../services/pageFormate");
 
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -19,6 +20,19 @@ const getAllPage = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const getAllPageFormateList = async (request, reply, fastify) => {
+  try {
+    let result = await allPageFormatService(request, fastify);
+    result = result.map((item) => ({
+      pageFormatId: item.pageFormatId,
+      pageFormatName: item.pageFormatName,
+    }));
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/getPageById", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+}
 
 const getPageById = async (request, reply, fastify) => {
   try {
@@ -55,4 +69,5 @@ module.exports = {
   getPageById,
   savePage,
   deletePage,
+  getAllPageFormateList
 };
