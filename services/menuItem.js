@@ -23,20 +23,17 @@ const allMenuItemService = async (request,fastify) => {
 
 const menuItemByIdService = async (request, fastify) => {
   const { menuItemId } = request.body;
-  const result = global.tblMenuItems.find(
-    (item) => item.menuItemId === menuItemId
-  );
-  // get page details
-  let pageId = result?.pageId
-  let pageDetails;
-  if(pageId && pageId !== "0"){
-    pageDetails = global.tblPages.find(
-      (item) => item.pageId === pageId
-    );
-    result.pageDetails = pageDetails || null
+  const result = global.tblMenuItems.find((item) => item.menuItemId === menuItemId);
+
+  let dataToreturn = {...result};
+
+  if(dataToreturn?.pageId && dataToreturn.pageId !== "0"){
+    let pageDetails = global.tblPages.find((item) => item.pageId === dataToreturn.pageId);
+    dataToreturn.pageDetails = pageDetails;
   }
 
-  return result || null;
+  return dataToreturn || null;
+  
 };
 
 
