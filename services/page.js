@@ -77,19 +77,6 @@ const updatePageService = async (request, fastify) => {
     isStatic: request.body.hasOwnProperty("isStatic") ? request.body.isStatic : validatePageId.isStatic,
     whiteLabelId: request.body.whiteLabelId || validatePageId.whiteLabelId,
   };
-
-  // if ("islink" in request.body) {
-  //   body.isLink = request.body.isLink;
-  // }
-
-  // if ("isOpenInNewTab" in request.body) {
-  //   body.isOpenInNewTab = request.body.isOpenInNewTab;
-  // }
-
-  // if ("isDefault" in request.body) {
-  //   body.isDefault = request.body.isDefault;
-  // }
-
   const result = await updatePageQuery(body, fastify, request);
   const index = global.tblPages.findIndex(
     (item) => item.pageId === request.body.pageId
@@ -163,4 +150,6 @@ module.exports = {
   pageByIdService,
   savePageService,
   deletePageService,
+  updatePageService,
+  addPageService
 };

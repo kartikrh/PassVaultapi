@@ -3,10 +3,17 @@ const {
   insertMenuTypeQuery,
   updatetMenuTypeQuery,
   validatMenuTypeQuery,
+  getAllMenuTypesQuery,
 } = require("../repository/TableMenuTypes");
 
-const allMenuTypeService = async (fastify) => {
-  return global.tblMenuTypes;
+const allMenuTypeService = async (request , fastify) => {
+  // return global.tblMenuTypes;
+  global.tblMenuTypes = await getAllMenuTypesQuery(fastify);
+  const {isActive} = request.body;
+  if(isActive === undefined){
+    return global.tblMenuTypes;
+  }
+  return global.tblMenuTypes.filter(menuType => menuType.isActive === isActive);
 };
 
 const menuTypeByIdService = async (request, fastify) => {
@@ -28,7 +35,7 @@ const createMenuTypeService = async (request, fastify) => {
 
   const validateByName = global.tblMenuTypes.find(
     (menuType) =>
-      menuType.menuTypeName === request.body.menuTypeName &&
+      menuType.menuTypeName.toLowerCase() === request.body.menuTypeName.toLowerCase().trim() &&
       menuType.blockId === request.body.blockId
   );
 
@@ -81,7 +88,7 @@ const updateMenuTypeService = async (request, fastify) => {
 
   const validateByName = global.tblMenuTypes.find(
     (menuType) =>
-      menuType.menuTypeName === body.menuTypeName &&
+      menuType.menuTypeName.toLowerCase() === body.menuTypeName.toLowerCase().trim() &&
       menuType.blockId === body.blockId &&
       menuType.menuTypeId !== request.body.menuTypeId
   );
@@ -121,7 +128,7 @@ const deleteMenuTypeService = async (request, fastify) => {
 
     if (checkInValide) {
       throw new Error(
-        `Menu Type with name ${checkInValide.wrBlockName} associate in Menu Items, skiped from deletion`
+        `Menu Type with name ${checkInValide.wrMenuTypeName} associate in Menu Items, skiped from deletion`
       );
     }
   }
@@ -149,5 +156,5 @@ module.exports = {
   allMenuTypeService,
   menuTypeByIdService,
   saveMenuTypeService,
-  deleteMenuTypeService,
+  deleteMenuTypeService
 };

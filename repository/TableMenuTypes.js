@@ -6,11 +6,20 @@ const getAllMenuTypesQuery = async (fastify) => {
     te."wrValue" as "menuTypeId",
     t."wrValue" as "blockId",	
     "wrMenuTypeName" as "menuTypeName",
-    "wrIsActive" as "isActive",
-    "wrNoOfLevel" as "noOfLevel"
-    FROM "tblMenuTypes" mt 
-    inner join "tblEncryptedData" te on mt."wrMenuTypeId" = te."wrKey"
-    inner join "tblEncryptedData" t on mt."wrBlockId" = t."wrKey"`,
+    mt."wrIsActive" as "isActive",
+    "wrNoOfLevel" as "noOfLevel",
+    CAST(COALESCE(COUNT(mi."wrMenuItemId"), 0) as integer) as "childCount" 
+  FROM
+      "tblMenuTypes" mt
+  INNER JOIN
+      "tblEncryptedData" te ON mt."wrMenuTypeId" = te."wrKey"
+  INNER JOIN
+      "tblEncryptedData" t ON mt."wrBlockId" = t."wrKey"
+  LEFT JOIN
+      "tblMenuItems" mi ON mt."wrMenuTypeId" = mi."wrMenuTypeId" AND mi."wrParentId" = 0
+  GROUP BY
+      te."wrValue", t."wrValue", "wrMenuTypeName", mt."wrIsActive", "wrNoOfLevel";
+  `,
     {
       type: fastify.db.QueryTypes.SELECT,
     }
@@ -25,16 +34,19 @@ const insertMenuTypeQuery = async (body, fastify, request) => {
         select $1,$2,$3,(select "wrKey" from "tblEncryptedData" where "wrValue" = $4),$5,$6 returning *
       )
       select 
-      "wrValue" as "menuTypeId",
+      te."wrValue" as "menuTypeId",
       "wrMenuTypeName" as "menuTypeName",
       "wrIsActive" as "isActive",
-      "wrNoOfLevel" as "noOfLevel"
-       from insert_data tb inner join "tblEncryptedData" te on tb."wrMenuTypeId" = te."wrKey"
+      "wrNoOfLevel" as "noOfLevel",
+      te1."wrValue" as "blockId"
+       from insert_data tb 
+        inner join "tblEncryptedData" te on tb."wrMenuTypeId" = te."wrKey"
+        inner join "tblEncryptedData" te1 on te1."wrKey" = tb."wrBlockId"	
       `,
       {
         type: fastify.db.QueryTypes.SELECT,
         bind: [
-          body.menuTypeName,
+          body.menuTypeName.trim(),
           body.isActive,
           body.noOfLevel,
           body.blockId,
@@ -66,7 +78,7 @@ const updatetMenuTypeQuery = async (body, fastify, request) => {
       {
         type: fastify.db.QueryTypes.SELECT,
         bind: [
-          body.menuTypeName,
+          body.menuTypeName.trim(),
           body.isActive,
           body.noOfLevel,
           body.blockId,

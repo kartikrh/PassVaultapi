@@ -6,17 +6,16 @@ const allMenuItemsQuery = async (fastify) => {
     et."wrValue" as "menuItemId",
     et2."wrValue" as "menuTypeId",
     et3."wrValue" as "pageId",
-    et4."wrValue" as "parentId",
+    COALESCE(et4."wrValue", '0') as "parentId",
     "wrMenuItem" as "menuItem",
     "wrDisplayOrder" as "displayOrder",
-    "wrIsActive" as "isActive",
-    et5."wrValue" as "menuItemTypeId"
+    "wrIsActive" as "isActive"
      from "tblMenuItems" mi 
     left join "tblEncryptedData" et on mi."wrMenuItemId"=et."wrKey" 
     left join "tblEncryptedData" et2 on mi."wrMenuTypeId"=et2."wrKey"
     left join "tblEncryptedData" et3 on mi."wrPageId"=et3."wrKey"
     left join "tblEncryptedData" et4 on mi."wrParentId"=et4."wrKey"
-    left join "tblEncryptedData" et5 on mi."wrMenuItemTypeId"=et5."wrKey"
+
     `,
     {
       type: fastify.db.QueryTypes.SELECT,
@@ -70,13 +69,12 @@ const createMenuItemQuery = async (body, fastify, request) => {
     select count(*) as count from "tblMenuItems" where "wrParentId" = (SELECT COALESCE((SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $3), 0))
   ),
   add_data as (
-    INSERT INTO "tblMenuItems" ("wrMenuTypeId" , "wrMenuItem","wrParentId","wrPageId","wrMenuItemTypeId","wrDisplayOrder","wrIsActive","wrCreatedBy","wrCreatedDate") values(
+    INSERT INTO "tblMenuItems" ("wrMenuTypeId" , "wrMenuItem","wrParentId","wrPageId","wrDisplayOrder","wrIsActive","wrCreatedBy","wrCreatedDate") values(
       (select "wrKey" from "tblEncryptedData" where "wrValue" = $1),
       $2,
       (SELECT COALESCE((SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $3), 0)),
       (select "wrKey" from "tblEncryptedData" where "wrValue" = $4),
-      (select "wrKey" from "tblEncryptedData" where "wrValue" = $5),
-      (select count from count_parent)+1,$6,$7,$8 
+      (select count from count_parent)+1,$5,$6,$7
     ) RETURNING *
   )
 
@@ -84,17 +82,16 @@ const createMenuItemQuery = async (body, fastify, request) => {
     et."wrValue" as "menuItemId",
     et2."wrValue" as "menuTypeId",
     et3."wrValue" as "pageId",
-    et4."wrValue" as "parentId",
+    COALESCE(et4."wrValue", '0') as "parentId",
     "wrMenuItem" as "menuItem",
     "wrDisplayOrder" as "displayOrder",
-    "wrIsActive" as "isActive",
-    et5."wrValue" as "menuItemTypeId"
+    "wrIsActive" as "isActive"
      from add_data mi 
     left join "tblEncryptedData" et on mi."wrMenuItemId"=et."wrKey" 
     left join "tblEncryptedData" et2 on mi."wrMenuTypeId"=et2."wrKey"
     left join "tblEncryptedData" et3 on mi."wrPageId"=et3."wrKey"
     left join "tblEncryptedData" et4 on mi."wrParentId"=et4."wrKey"
-    left join "tblEncryptedData" et5 on mi."wrMenuItemTypeId"=et5."wrKey"
+
   `,
       {
         type: fastify.db.QueryTypes.SELECT,
@@ -102,9 +99,9 @@ const createMenuItemQuery = async (body, fastify, request) => {
           body.menuTypeId,
           body.menuItem,
           body.parentId,
-          body.pageId,
-          body.menuItemTypeId,
-          body.isActive,
+          body.pageId || null,
+          // body.menuItemTypeId,
+          body.isActive || false,
           body.userId,
           new Date(),
         ],
@@ -115,7 +112,7 @@ const createMenuItemQuery = async (body, fastify, request) => {
   } catch (error) {
     errorLogger(
       fastify,
-      err.message,
+      error.message,
       "DB ERROR --> repository/TableMenuItem/createMenuItemQuery",
       request
     );
@@ -130,21 +127,18 @@ const updateMenuItemQuery = async (body, fastify, request) => {
     Update "tblMenuItems" set "wrMenuItem" = $1 , 
                           "wrMenuTypeId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $2) ,
                            "wrPageId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $3) , 
-                           "wrMenuItemTypeId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $4) , 
-                           "wrParentId" =  (SELECT COALESCE((SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $5), 0)) ,
-                           "wrIsActive" = $6, "wrModifyBy" = $7 , "wrModifyDate" = $8 where "wrMenuItemId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $9) RETURNING *`,
+                           "wrParentId" =  (SELECT COALESCE((SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $4), 0)) ,
+                           "wrIsActive" = $5, "wrModifyBy" = $6 , "wrModifyDate" = now() where "wrMenuItemId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $7) RETURNING *`,
       {
         type: fastify.db.QueryTypes.UPDATE,
         bind: [
           body.menuItem,
           body.menuTypeId,
           body.pageId,
-          body.menuItemTypeId,
           body.parentId,
           body.isActive,
           body.userId,
-          new Date(),
-          body.menuItemId,
+          body.menuItemId
         ],
       }
     );
@@ -190,8 +184,7 @@ const findMenuItemByParentId = async (parentId, fastify, request) => {
         bind: [parentId],
       }
     );
-
-    return !!data.lenght;
+    return data.length > 0 ? true : false;
   } catch (error) {
     errorLogger(
       fastify,
@@ -223,7 +216,30 @@ const deleteMenuItemQuery = async (menuItemId, fastify, request) => {
     throw new Error(error.message);
   }
 };
-
+const updateMenuItemStatusQuery = async (data,request,fastify) => {
+  try {
+    return await fastify.db.query(
+      `UPDATE "tblMenuItems" set "wrIsActive" = $1 , "wrModifyBy"=$2 , "wrModifyDate" = now()
+       where "wrMenuItemId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $3)`,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [
+          data.isActive,
+          data.userId,
+          data.menuItemId,
+        ],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableMenuType/updateMenuItemStatusQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
 module.exports = {
   allMenuItemsQuery,
   menuItemByIdQuery,
@@ -232,4 +248,5 @@ module.exports = {
   validateMenuItemQuery,
   deleteMenuItemQuery,
   findMenuItemByParentId,
+  updateMenuItemStatusQuery
 };
