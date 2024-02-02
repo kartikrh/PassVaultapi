@@ -426,7 +426,7 @@ const MenuType = {
   },
   blockList: {
     schema: {
-      tags: ["Event"],
+      tags: ["Menu Types"],
       security: [{ bearerAuth: [] }],
       description: "get all event type",
       body: {
@@ -560,7 +560,7 @@ const MenuItem = {
   },
   menuTypeList: {
     schema: {
-      tags: ["Event"],
+      tags: ["Menu Item"],
       security: [{ bearerAuth: [] }],
       description: "get all menu type",
       body: {
@@ -573,7 +573,7 @@ const MenuItem = {
   },
   pageList: {
     schema: {
-      tags: ["Event"],
+      tags: ["Menu Item"],
       security: [{ bearerAuth: [] }],
       description: "get all page",
       body: {
@@ -601,7 +601,7 @@ const MenuItem = {
   },
   menuItemList: {
     schema: {
-      tags: ["Menu Types"],
+      tags: ["Menu Item"],
       description: "get Menu Type by parent Id",
       security: [{ bearerAuth: [] }],
       body: {
