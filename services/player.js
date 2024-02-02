@@ -427,7 +427,7 @@ const updatePlayerStatsService = async (request, fastify) => {
         await updatePlayerStatsQuery(body, fastify, request);
 
         const index = global.tblPlayers.findIndex(
-          (item) => item.playerId === request.body.playerId
+          (item) => item.playerId === request.body[i].playerId
         );
         const _p = {
           country: checkPlayerId.country,
