@@ -253,16 +253,16 @@ const createCommentaryService = async (request, fastify) => {
             request
           );
 
-          if(info.playerId === request.body.team1Captain){
+          if (info.playerId === request.body.team1Captain) {
             commentaryPlayerId.team1Captain = playerData[0].commentaryPlayerId;
           }
-           if(info.playerId === request.body.team1Kipper){
+          if (info.playerId === request.body.team1Kipper) {
             commentaryPlayerId.team1Kipper = playerData[0].commentaryPlayerId;
           }
-           if(info.playerId === request.body.team2Captain){
+          if (info.playerId === request.body.team2Captain) {
             commentaryPlayerId.team2Captain = playerData[0].commentaryPlayerId;
           }
-           if(info.playerId === request.body.team2Kipper){
+          if (info.playerId === request.body.team2Kipper) {
             commentaryPlayerId.team2Kipper = playerData[0].commentaryPlayerId;
           }
         }
@@ -305,16 +305,16 @@ const createCommentaryService = async (request, fastify) => {
           fastify,
           request
         );
-        if(info.playerId === request.body.team1Captain){
+        if (info.playerId === request.body.team1Captain) {
           commentaryPlayerId.team1Captain = playerData[0].commentaryPlayerId;
         }
-         if(info.playerId === request.body.team1Kipper){
+        if (info.playerId === request.body.team1Kipper) {
           commentaryPlayerId.team1Kipper = playerData[0].commentaryPlayerId;
         }
-         if(info.playerId === request.body.team2Captain){
+        if (info.playerId === request.body.team2Captain) {
           commentaryPlayerId.team2Captain = playerData[0].commentaryPlayerId;
         }
-         if(info.playerId === request.body.team2Kipper){
+        if (info.playerId === request.body.team2Kipper) {
           commentaryPlayerId.team2Kipper = playerData[0].commentaryPlayerId;
         }
       }
@@ -633,19 +633,19 @@ const cloneCommentaryService = async (request, fastify) => {
         ];
         for (let info of data) {
           let playerData = await insertCommentaryPlayers(info, currentInning, fastify, request);
-          if(playerData[0].playerId === request.body.team1Captain){
+          if (playerData[0].playerId === request.body.team1Captain) {
             commentaryPlayer.team1Captain = playerData[0].commentaryPlayerId;
           }
-          if(playerData[0].playerId === request.body.team1Kipper){
+          if (playerData[0].playerId === request.body.team1Kipper) {
             commentaryPlayer.team1Kipper = playerData[0].commentaryPlayerId;
           }
-          if(playerData[0].playerId === request.body.team2Captain){
+          if (playerData[0].playerId === request.body.team2Captain) {
             commentaryPlayer.team2Captain = playerData[0].commentaryPlayerId;
           }
-          if(playerData[0].playerId === request.body.team2Kipper){
+          if (playerData[0].playerId === request.body.team2Kipper) {
             commentaryPlayer.team2Kipper = playerData[0].commentaryPlayerId;
           }
-          
+
         }
         await updateCommentaryPlayerIdInCommentaryTeams(
           { ...commentaryPlayer, currentInnings: request.body.currentInnings },
@@ -678,16 +678,16 @@ const cloneCommentaryService = async (request, fastify) => {
       ];
       for (let info of data) {
         let palyerData = await insertCommentaryPlayers(info, currentInning, fastify, request);
-        if(palyerData[0].playerId === request.body.team1Captain){
+        if (palyerData[0].playerId === request.body.team1Captain) {
           commentaryPlayer.team1Captain = palyerData[0].commentaryPlayerId;
         }
-        if(palyerData[0].playerId === request.body.team1Kipper){
+        if (palyerData[0].playerId === request.body.team1Kipper) {
           commentaryPlayer.team1Kipper = palyerData[0].commentaryPlayerId;
         }
-        if(palyerData[0].playerId === request.body.team2Captain){
+        if (palyerData[0].playerId === request.body.team2Captain) {
           commentaryPlayer.team2Captain = palyerData[0].commentaryPlayerId;
         }
-        if(palyerData[0].playerId === request.body.team2Kipper){
+        if (palyerData[0].playerId === request.body.team2Kipper) {
           commentaryPlayer.team2Kipper = palyerData[0].commentaryPlayerId;
         }
 
@@ -1864,6 +1864,11 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     let _playerWicket;
     let _playerWiktRun;
     let _playerWiktRBall;
+
+    const commentaryPartnership = await global.tblCommentaryPartnership
+      .filter((item) => item.commentaryId === cid && item.teamId === batid)
+      .slice(-1)[0]; // Get the last 1 overs
+
     if (commentaryWicket) {
       _playerWicket = commentaryWicket?.batterName ?? "";
       _playerWiktRun = commentaryPartnership?.playerRun ?? 0;
@@ -1871,10 +1876,6 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     }
     lawkt = _playerWicket + " " + _playerWiktRun + "(" + _playerWiktRBall + ")";
     lawkt = lawkt ?? "";
-    const commentaryPartnership = await global.tblCommentaryPartnership
-      .filter((item) => item.commentaryId === cid && item.teamId === batid)
-      .slice(-1)[0]; // Get the last 1 overs
-
     let _partRuns = commentaryPartnership?.totalRuns ?? 0;
     let _partBall = commentaryPartnership?.totalBalls ?? 0;
     par = _partRuns + "(" + _partBall + ")";
@@ -2018,7 +2019,7 @@ const updateMatchTypeInCommentaryService = async (
   request,
   fastify,
 ) => {
-  const {commentaryId,matchTypeId} = request.body;
+  const { commentaryId, matchTypeId } = request.body;
   const index = global.tblCommentaries.findIndex(
     (item) => item.commentaryId === commentaryId
   );
@@ -2030,12 +2031,12 @@ const updateMatchTypeInCommentaryService = async (
   const validateMatchType = await global.tblMatchTypes.find(
     (item) => item.matchTypeId === matchTypeId
   );
-  if(!validateMatchType){
+  if (!validateMatchType) {
     throw new Error("Match Type with this id not Found");
-  }    
+  }
 
   await updateMatchTypeInCommentaryQuery(request.body, fastify, request);
-  
+
   const updatedData = await getCommentaryByIdQuery(request, fastify);
 
   global.tblCommentaries[index] = updatedData;
@@ -2045,7 +2046,7 @@ const getMatchTypeListByCommentaryService = async (
   request,
   fastify,
 ) => {
-  const {commentaryId} = request.body;
+  const { commentaryId } = request.body;
   const validateCommentary = global.tblCommentaries.find(
     (item) => item.commentaryId === commentaryId
   );
@@ -2065,7 +2066,6 @@ const getMatchTypeListByCommentaryService = async (
   }
 
   return matchTypeList;
-;
 }
 module.exports = {
   allCommentaryService,
