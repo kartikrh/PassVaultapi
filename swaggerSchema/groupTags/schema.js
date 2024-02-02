@@ -118,7 +118,7 @@ const Auth = {
         required: ["upload"],
       },
     },
-  }
+  },
 };
 
 const Tabs = {
@@ -1312,6 +1312,29 @@ const Player = {
       },
     },
   },
+  updatePlayerStats: {
+    schema: {
+      tags: ["Player"],
+      description: "Update Player Stats",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            playerId: { type: "string" },
+            playerName: { type: "string" },
+            batsmanAverage: { type: "number" },
+            batsmanStrikeRate: { type: "number" },
+            bowlerEconomy: { type: "number" },
+            bowlerAverage: { type: "number" },
+            isUpdate: { type: "number" },
+          },
+        },
+        minItems: 1,
+      },
+    },
+  },
 };
 
 const MatchType = {
@@ -1577,7 +1600,7 @@ const Config = {
           isActive: { type: "boolean" },
           isForAdmin: { type: "boolean" },
         },
-        required: ["configId", "key", "value"	],
+        required: ["configId", "key", "value"],
       },
     },
   },

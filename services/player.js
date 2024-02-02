@@ -3,15 +3,20 @@ const {
   updatePlayerQuery,
   deletePlayerQuery,
   getAllTeamsByPlayerIdQuery,
+  updatePlayerStatsQuery,
 } = require("../repository/TablePlayer");
 const {
   insertTeamPlayerQuery,
   deleteTeamPlayerByPlayerIdQuery,
 } = require("../repository/TableTeamPlayer");
 const { getAllPlayersByTeamIdQuery } = require("../repository/TableTeams");
-const {  storeImageOnServer , generateImageName , removeImageFromServer} = require("../utilities/Images");
+const {
+  storeImageOnServer,
+  generateImageName,
+  removeImageFromServer,
+} = require("../utilities/Images");
 const { PROJECT_NAME } = require("../utilities/configConstants");
-const {ImgModuleConfig} = require("../utilities/imageConstant");
+const { ImgModuleConfig } = require("../utilities/imageConstant");
 
 const allPlayerService = async (request) => {
   const { isActive, eventTypeId } = request.body;
@@ -114,14 +119,16 @@ const insertPlayerService = async (request, fastify) => {
   }
 
   if (request.body.image && request.body.image.length) {
-    // generate image name  
-    const imgName = generateImageName({name : request.body.playerName});
-    const projectName = global.tblConfigs.find((item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()).value;
+    // generate image name
+    const imgName = generateImageName({ name: request.body.playerName });
+    const projectName = global.tblConfigs.find(
+      (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
+    ).value;
     const path = await storeImageOnServer({
-      image : request.body.image[0],
-      project : projectName,
-      name : imgName,
-      ...ImgModuleConfig.Players
+      image: request.body.image[0],
+      project: projectName,
+      name: imgName,
+      ...ImgModuleConfig.Players,
     });
     request.body.image = path;
   }
@@ -280,13 +287,15 @@ const updatePlayerService = async (request, fastify) => {
 
   if (request.body.image && request.body.image.length > 0) {
     // generate image name
-    const imgName = generateImageName({name : request.body.playerName});
-    const projectName = global.tblConfigs.find((item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()).value;
+    const imgName = generateImageName({ name: request.body.playerName });
+    const projectName = global.tblConfigs.find(
+      (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
+    ).value;
     const result = await storeImageOnServer({
-      image : request.body.image[0],
-      project : projectName,
-      name : imgName,
-      ...ImgModuleConfig.Players
+      image: request.body.image[0],
+      project: projectName,
+      name: imgName,
+      ...ImgModuleConfig.Players,
     });
     body.image = result;
   }
@@ -364,7 +373,7 @@ const deletePlayerService = async (request, fastify) => {
     const player = global.tblPlayers.find((item) => item.playerId === id);
     if (player && player?.image) {
       await removeImageFromServer({
-        path : player.image
+        path: player.image,
       });
     }
   }
@@ -381,6 +390,84 @@ const deletePlayerService = async (request, fastify) => {
   return `Player(s)  deleted successfully`;
 };
 
+const updatePlayerStatsService = async (request, fastify) => {
+  let UnsavePlayers = [];
+  for (let i = 0; i < request.body.length; i++) {
+    try {
+      let UnsavePlayer = {};
+      const checkPlayerId = global.tblPlayers.find(
+        (item) => item.playerId === request.body[i].playerId
+      );
+      let isSaved = false;
+      if (!checkPlayerId) {
+        UnsavePlayer.message = "Player with this id not Found";
+        UnsavePlayer.playerId = request.body[i].playerId;
+        UnsavePlayers.push(UnsavePlayer);
+      } else {
+        isSaved = true;
+      }
+      if (isSaved) {
+        const body = {
+          batsmanAverage:
+            parseFloat(request.body[i].batsmanAverage) ||
+            checkPlayerId.batsmanAverage,
+          batsmanStrikeRate:
+            parseFloat(request.body[i].batsmanStrikeRate) ||
+            checkPlayerId.batsmanStrikeRate,
+          bowlerAverage:
+            parseFloat(request.body[i].bowlerAverage) ||
+            checkPlayerId.bowlerAverage,
+          bowlerEconomy:
+            parseFloat(request.body[i].bowlerEconomy) ||
+            checkPlayerId.bowlerEconomy,
+          playerId: request.body[i].playerId,
+          userId: request.userTokenInfo.WrUserId,
+        };
+
+        await updatePlayerStatsQuery(body, fastify, request);
+
+        const index = global.tblPlayers.findIndex(
+          (item) => item.playerId === request.body[i].playerId
+        );
+        const _p = {
+          country: checkPlayerId.country,
+          playerName: checkPlayerId.playerName,
+          eventTypeId: checkPlayerId.eventTypeId,
+          playerTypeId: checkPlayerId.playerTypeId,
+          image: checkPlayerId.image,
+          bowlingStyle: checkPlayerId.bowlingTypeId,
+          isActive: checkPlayerId.isActive,
+          isKipper: checkPlayerId.isKipper,
+          isLeftHandedBatting: checkPlayerId.isLeftHandedBatting,
+          isLeftArmFielding: checkPlayerId.isLeftArmFielding,
+          displayName: checkPlayerId.displayName,
+          batsmanAverage:
+            request.body[i].batsmanAverage || checkPlayerId.batsmanAverage,
+          batsmanStrikeRate:
+            request.body[i].batsmanStrikeRate ||
+            checkPlayerId.batsmanStrikeRate,
+          bowlerAverage:
+            request.body[i].bowlerAverage || checkPlayerId.bowlerAverage,
+          bowlerEconomy:
+            request.body[i].bowlerEconomy || checkPlayerId.bowlerEconomy,
+          playerId: request.body[i].playerId,
+          playerType: checkPlayerId.playerType,
+          eventType: checkPlayerId.eventType,
+          bowlingTypeId: checkPlayerId.bowlingTypeId,
+          bowlingStyle: checkPlayerId.bowlingTypeId,
+        };
+        global.tblPlayers[index] = _p;
+      }
+    } catch (e) {
+      let UnsavePlayer = {};
+      UnsavePlayer.message = e.message;
+      UnsavePlayer.playerId = request.body[i].playerId;
+      UnsavePlayers.push(UnsavePlayer);
+    }
+  }
+  return UnsavePlayers;
+};
+
 module.exports = {
   allPlayerService,
   playerByIdService,
@@ -389,4 +476,5 @@ module.exports = {
   allBowlingTypeService,
   allPlayerTypeService,
   allPlayerByTeamService,
+  updatePlayerStatsService,
 };
