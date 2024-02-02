@@ -416,6 +416,25 @@ const MenuType = {
       tags: ["Menu Types"],
       description: "get MenuType",
       security: [{ bearerAuth: [] }],
+      body : {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+  blockList: {
+    schema: {
+      tags: ["Event"],
+      security: [{ bearerAuth: [] }],
+      description: "get all event type",
+      body: {
+        type: "object",
+        properties: {
+          isShowContent: { type: "boolean" },
+        },
+      },
     },
   },
   getById: {
@@ -531,6 +550,69 @@ const MenuItem = {
       tags: ["Menu Item"],
       description: "get MenuItem",
       security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+  menuTypeList: {
+    schema: {
+      tags: ["Event"],
+      security: [{ bearerAuth: [] }],
+      description: "get all menu type",
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+  pageList: {
+    schema: {
+      tags: ["Event"],
+      security: [{ bearerAuth: [] }],
+      description: "get all page",
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+  activeInactiveMenuItem : {
+    schema: {
+      tags: ["Menu Item"],
+      description: "active inactive menu item",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          menuItemId: { type: "string" },
+          isActive: { type: "boolean" },
+        },
+        required: ["menuItemId","isActive"],
+      },
+    },
+  },
+  menuItemList: {
+    schema: {
+      tags: ["Menu Types"],
+      description: "get Menu Type by parent Id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          menuTypeId: { type: "string" },
+          isActive: { type: "boolean" },
+          parentId : { type: "string" },
+        },
+        required: ["isActive", "parentId"],
+      },
     },
   },
   getById: {
@@ -559,11 +641,31 @@ const MenuItem = {
           menuTypeId: { type: "string" },
           menuItem: { type: "string" },
           parentId: { type: "string" },
-          pageId: { type: "string" },
           isActive: { type: "boolean" },
-          menuItemTypeId: { type: "string" },
+          pageId: { type: "string" },
+          pageDetails: {
+            type: "object",
+            properties: {
+              pageTitle: { type: "string" },
+              pageHeading: { type: "string" },
+              pageName: { type: "string" },
+              alias: { type: "string" },
+              isLink: { type: "boolean" },
+              linkURL: { type: "string" },
+              pageFormatId: { type: "string" },
+              isOpenInNewTab: { type: "boolean" },
+              pageContent: { type: "string" },
+              seoWord: { type: "string" },
+              seoDescription: { type: "string" },
+              isDefault: { type: "boolean" },
+              dynamicParameters: { type: "string" },
+            },
+            required: ["pageTitle", "pageHeading", "pageName" , "alias"],
+
+          }
+          // menuItemTypeId: { type: "string" },
         },
-        required: ["menuItemId"],
+        required: ["menuItemId", "menuTypeId", "menuItem", "parentId" , "pageId"]
       },
     },
   },
@@ -755,7 +857,7 @@ const Page = {
           isStatic: { type: "boolean" },
           whiteLabelId: { type: "string" },
         },
-        required: ["pageId"],
+        required: ["pageId", "pageName", "pageTitle", "alias"],
       },
     },
   },

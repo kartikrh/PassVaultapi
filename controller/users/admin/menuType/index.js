@@ -1,3 +1,4 @@
+const { allBlocksService } = require("../../../../services/blocks");
 const {
   allMenuTypeService,
   deleteMenuTypeService,
@@ -11,7 +12,7 @@ let commonPath = "controller/users/admin/menuType/index";
 
 const getAllMenuTypes = async (request, reply, fastify) => {
   try {
-    const result = await allMenuTypeService(fastify);
+    const result = await allMenuTypeService(request,fastify);
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/getAllMenuTypes", request);
@@ -48,10 +49,23 @@ const deleteMenuType = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
-
+const getBlockList = async (request, reply, fastify) => {
+  try {
+    let result = await allBlocksService(request, fastify);
+    result = result.map((item) => ({
+      blockId: item.blockId,
+      blockName: item.blockName,
+    }));
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/getBlockList", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 module.exports = {
   getAllMenuTypes,
   getMenuTypeById,
   saveMenuType,
   deleteMenuType,
+  getBlockList
 };
