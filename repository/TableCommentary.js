@@ -226,14 +226,19 @@ const insertCommentaryPlayers = async (
     return await fastify.db.query(
       `
       WITH insert_data AS (
-        insert into "tblCommentaryPlayers" ("wrCommentaryId" , "wrTeamId" , "wrPlayerId","wrPlayerName", "wrDisplayOrder","wrCurrentInnings")
+        insert into "tblCommentaryPlayers" ("wrCommentaryId" , "wrTeamId" , "wrPlayerId","wrPlayerName", "wrDisplayOrder","wrCurrentInnings",
+        "wrBatsmanAverage", "wrBatsmanStrikeRate", "wrBowlerEconomy", "wrBowlerAverage")
         values (
           (select "wrKey" from "tblEncryptedData" where "wrValue" = $1),
           (select "wrKey" from "tblEncryptedData" where "wrValue" = $2),
           (select "wrKey" from "tblEncryptedData" where "wrValue" = $3),
           (select "wrPlayerName" from "tblPlayers" where "wrPlayerId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $3)),
           $4,
-          $5
+          $5,
+          (select "wrBatsmanAverage" from "tblPlayers" where "wrPlayerId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $3)),
+          (select "wrBatsmanStrikeRate" from "tblPlayers" where "wrPlayerId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $3)),
+          (select "wrBowlerEconomy" from "tblPlayers" where "wrPlayerId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $3)),
+          (select "wrBowlerAverage" from "tblPlayers" where "wrPlayerId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $3))
         )
         RETURNING *   
       ) 
@@ -287,17 +292,22 @@ const upsertCommentaryPlayers = async (
         "wrCommentaryId" = (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $1)
         AND "wrTeamId" = (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $2)
         AND "wrPlayerId" = (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $3)
-        AND "wrCurrentInnings" = $5 -- Added wrCurrentInnings to the WHERE clause
+        AND "wrCurrentInnings" = $5
       RETURNING *
     )
-    INSERT INTO "tblCommentaryPlayers" ("wrCommentaryId", "wrTeamId", "wrPlayerId", "wrPlayerName", "wrDisplayOrder", "wrCurrentInnings")
+    INSERT INTO "tblCommentaryPlayers" ("wrCommentaryId", "wrTeamId", "wrPlayerId", "wrPlayerName", "wrDisplayOrder", "wrCurrentInnings",
+    "wrBatsmanAverage", "wrBatsmanStrikeRate", "wrBowlerEconomy", "wrBowlerAverage")
     SELECT
       (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $1),
       (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $2),
       (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $3),
       (SELECT "wrPlayerName" FROM "tblPlayers" WHERE "wrPlayerId" = (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $3)),
       $4,
-      $5
+      $5,
+      (SELECT "wrBatsmanAverage" FROM "tblPlayers" WHERE "wrPlayerId" = (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $3)),
+      (SELECT "wrBatsmanStrikeRate" FROM "tblPlayers" WHERE "wrPlayerId" = (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $3)),
+      (SELECT "wrBowlerEconomy" FROM "tblPlayers" WHERE "wrPlayerId" = (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $3)),
+      (SELECT "wrBowlerAverage" FROM "tblPlayers" WHERE "wrPlayerId" = (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $3))
     WHERE NOT EXISTS (SELECT 1 FROM upsert);
     
     
