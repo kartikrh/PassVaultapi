@@ -408,18 +408,10 @@ const updatePlayerStatsService = async (request, fastify) => {
       }
       if (isSaved) {
         const body = {
-          batsmanAverage:
-            parseFloat(request.body[i].batsmanAverage) ||
-            checkPlayerId.batsmanAverage,
-          batsmanStrikeRate:
-            parseFloat(request.body[i].batsmanStrikeRate) ||
-            checkPlayerId.batsmanStrikeRate,
-          bowlerAverage:
-            parseFloat(request.body[i].bowlerAverage) ||
-            checkPlayerId.bowlerAverage,
-          bowlerEconomy:
-            parseFloat(request.body[i].bowlerEconomy) ||
-            checkPlayerId.bowlerEconomy,
+          batsmanAverage: parseFloat(request.body[i].batsmanAverage),
+          batsmanStrikeRate: parseFloat(request.body[i].batsmanStrikeRate),
+          bowlerAverage: parseFloat(request.body[i].bowlerAverage),
+          bowlerEconomy: parseFloat(request.body[i].bowlerEconomy),
           playerId: request.body[i].playerId,
           userId: request.userTokenInfo.WrUserId,
         };
@@ -441,15 +433,10 @@ const updatePlayerStatsService = async (request, fastify) => {
           isLeftHandedBatting: checkPlayerId.isLeftHandedBatting,
           isLeftArmFielding: checkPlayerId.isLeftArmFielding,
           displayName: checkPlayerId.displayName,
-          batsmanAverage:
-            request.body[i].batsmanAverage || checkPlayerId.batsmanAverage,
-          batsmanStrikeRate:
-            request.body[i].batsmanStrikeRate ||
-            checkPlayerId.batsmanStrikeRate,
-          bowlerAverage:
-            request.body[i].bowlerAverage || checkPlayerId.bowlerAverage,
-          bowlerEconomy:
-            request.body[i].bowlerEconomy || checkPlayerId.bowlerEconomy,
+          batsmanAverage: parseFloat(request.body[i].batsmanAverage),
+          batsmanStrikeRate: parseFloat(request.body[i].batsmanStrikeRate),
+          bowlerAverage: parseFloat(request.body[i].bowlerAverage),
+          bowlerEconomy: parseFloat(request.body[i].bowlerEconomy),
           playerId: request.body[i].playerId,
           playerType: checkPlayerId.playerType,
           eventType: checkPlayerId.eventType,
