@@ -1202,7 +1202,7 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
   let bovr = 0;
   // Basic elements are set
   cid = result.commentaryId;
-  eid = result.eventId.toString();
+  eid = result.eventRefId.toString();
   til = result.eventName;
   getstatus = result.commentaryStatus;
   dis = result.eventDate;
@@ -1267,7 +1267,7 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
 
   if (getstatus == 1) {
     // Assign values to the resultArr object
-    resultArr.eid = result.eventId.toString();
+    resultArr.eid = result.eventRefId.toString();
     resultArr.til = result.eventName;
     resultArr.toss = "Toss Not Done Yet";
     resultArr.scot = "";
@@ -1313,7 +1313,7 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
 
     toss = tossteam + tossType;
     // Assign values to the resultArr object
-    resultArr.eid = result.eventId.toString();
+    resultArr.eid = result.eventRefId.toString();
     resultArr.til = result.eventName;
     resultArr.toss = toss;
     resultArr.scot = "";
@@ -1452,8 +1452,7 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
     par = _partRuns + "(" + _partBall + ")";
 
     // Assign values to the resultArr object
-    resultArr.eid = result.eventId.toString();
-    resultArr.erefId = result.eventRefId;
+    resultArr.eid = result.eventRefId.toString();
     resultArr.til = result.eventName;
     resultArr.toss = toss;
     resultArr.scot = scot;
@@ -1579,7 +1578,6 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
   }
   const resultArr = {
     eid: "",
-    erefId: "",
     til: "",
     toss: "",
     scot: "",
@@ -1608,7 +1606,6 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     win: "",
   };
   let eid;
-  let erefId;
   let til;
   let toss;
   let scot;
@@ -1647,8 +1644,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
   let bovr = 0;
   // Basic elements are set
   cid = result.commentaryId;
-  eid = result.eventId.toString();
-  erefId = result.eventRefId;
+  eid = result.eventRefId.toString();
   til = result.eventName;
   getstatus = result.commentaryStatus;
   dis = result.eventDate;
@@ -1717,8 +1713,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
 
   if (getstatus == 1) {
     // Assign values to the resultArr object
-    resultArr.eid = result.eventId.toString();
-    resultArr.erefId = result.eventRefId;
+    resultArr.eid = result.eventRefId.toString();
     resultArr.til = result.eventName;
     resultArr.toss = "Toss Not Done Yet";
     resultArr.scot = "";
@@ -1764,8 +1759,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
 
     toss = tossteam + tossType;
     // Assign values to the resultArr object
-    resultArr.eid = result.eventId.toString();
-    resultArr.erefId = result.eventRefId;
+    resultArr.eid = result.eventRefId.toString();
     resultArr.til = result.eventName;
     resultArr.toss = toss;
     resultArr.scot = "";
@@ -1904,8 +1898,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     par = _partRuns + "(" + _partBall + ")";
 
     // Assign values to the resultArr object
-    resultArr.eid = result.eventId.toString();
-    resultArr.erefId = result.eventRefId;
+    resultArr.eid = result.eventRefId.toString();
     resultArr.til = result.eventName;
     resultArr.toss = toss;
     resultArr.scot = scot;
