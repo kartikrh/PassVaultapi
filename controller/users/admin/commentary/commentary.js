@@ -152,6 +152,25 @@ const getCommentaryDetailsBycommentaryId = async (request, reply, fastify) => {
   }
 };
 
+const getCommentaryDetailsBycommentaryEventId = async (
+  request,
+  reply,
+  fastify
+) => {
+  try {
+    const result = await commentaryDetailsByEventIdService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      path + "/getCommentaryDetailsBycommentaryEventId",
+      request
+    );
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
 const getCurrentUpdatedCommentaryID = async (request, reply, fastify) => {
   try {
     const result = await getCurrentUpdatedCommentaryIDService(request, fastify);
@@ -171,7 +190,6 @@ const updateMatchTypeInCommentary = async (request, reply, fastify) => {
   try {
     const result = await updateMatchTypeInCommentaryService(request, fastify);
     reply.status(200).send(success(result, 200));
-    
   } catch (err) {
     errorLogger(
       fastify,
@@ -211,5 +229,6 @@ module.exports = {
   getCommentaryDetailsBycommentaryId,
   getCurrentUpdatedCommentaryID,
   updateMatchTypeInCommentary,
-  getMatchTypeListByCommentary
+  getMatchTypeListByCommentary,
+  getCommentaryDetailsBycommentaryEventId,
 };

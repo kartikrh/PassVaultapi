@@ -416,7 +416,7 @@ const MenuType = {
       tags: ["Menu Types"],
       description: "get MenuType",
       security: [{ bearerAuth: [] }],
-      body : {
+      body: {
         type: "object",
         properties: {
           isActive: { type: "boolean" },
@@ -584,7 +584,7 @@ const MenuItem = {
       },
     },
   },
-  activeInactiveMenuItem : {
+  activeInactiveMenuItem: {
     schema: {
       tags: ["Menu Item"],
       description: "active inactive menu item",
@@ -595,7 +595,7 @@ const MenuItem = {
           menuItemId: { type: "string" },
           isActive: { type: "boolean" },
         },
-        required: ["menuItemId","isActive"],
+        required: ["menuItemId", "isActive"],
       },
     },
   },
@@ -609,7 +609,7 @@ const MenuItem = {
         properties: {
           menuTypeId: { type: "string" },
           isActive: { type: "boolean" },
-          parentId : { type: "string" },
+          parentId: { type: "string" },
         },
         required: ["isActive", "parentId"],
       },
@@ -660,12 +660,17 @@ const MenuItem = {
               isDefault: { type: "boolean" },
               dynamicParameters: { type: "string" },
             },
-            required: ["pageTitle", "pageHeading", "pageName" , "alias"],
-
-          }
+            required: ["pageTitle", "pageHeading", "pageName", "alias"],
+          },
           // menuItemTypeId: { type: "string" },
         },
-        required: ["menuItemId", "menuTypeId", "menuItem", "parentId" , "pageId"]
+        required: [
+          "menuItemId",
+          "menuTypeId",
+          "menuItem",
+          "parentId",
+          "pageId",
+        ],
       },
     },
   },
@@ -1794,6 +1799,20 @@ const Commentary = {
     },
   },
 
+  getBycommentaryEId: {
+    schema: {
+      tags: ["Commentary"],
+      description: "get Commentary by evrentid",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          eventId: { type: "string" },
+        },
+        required: ["eventId"],
+      },
+    },
+  },
   getAllUpdatedIds: {
     schema: {
       tags: ["Commentary"],
