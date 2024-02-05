@@ -1589,6 +1589,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     win: "",
   };
   let eid;
+  let erefId;
   let til;
   let toss;
   let scot;
@@ -1628,6 +1629,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
   // Basic elements are set
   cid = result.commentaryId;
   eid = result.eventId.toString();
+  erefId = result.eventRefId;
   til = result.eventName;
   getstatus = result.commentaryStatus;
   dis = result.eventDate;
@@ -1882,6 +1884,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
 
     // Assign values to the resultArr object
     resultArr.eid = result.eventId.toString();
+    resultArr.erefId = result.eventRefId;
     resultArr.til = result.eventName;
     resultArr.toss = toss;
     resultArr.scot = scot;
