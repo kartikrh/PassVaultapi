@@ -1930,7 +1930,7 @@ const getCommentaryID_Socket = async (data, fastify, request) => {
     return await fastify.db.query(
       `SELECT
       "tblEncryptedData"."wrValue" AS "CommentaryId",
-      "wrEventId" AS "EventID",
+      "wrEventRefId" AS "EventID",
       "wrMarketID" AS "MarketID"
     FROM
       "tblCommentaries"
