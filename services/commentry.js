@@ -887,7 +887,7 @@ const createOverService = async (data, fastify, request) => {
   }
 
   const indexBowler = global.tblCommentaryPlayers.findIndex((item) => {
-    console.log(item.playerId, data.bowlerId);
+    // console.log(item.playerId, data.bowlerId);
     return (
       item.commentaryId === data.commentaryId &&
       item.teamId === data.teamId &&
@@ -1561,6 +1561,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
   }
   const resultArr = {
     eid: "",
+    erefId: "",
     til: "",
     toss: "",
     scot: "",
@@ -1699,6 +1700,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
   if (getstatus == 1) {
     // Assign values to the resultArr object
     resultArr.eid = result.eventId.toString();
+    resultArr.erefId = result.eventRefId;
     resultArr.til = result.eventName;
     resultArr.toss = "Toss Not Done Yet";
     resultArr.scot = "";
@@ -1745,6 +1747,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     toss = tossteam + tossType;
     // Assign values to the resultArr object
     resultArr.eid = result.eventId.toString();
+    resultArr.erefId = result.eventRefId;
     resultArr.til = result.eventName;
     resultArr.toss = toss;
     resultArr.scot = "";
