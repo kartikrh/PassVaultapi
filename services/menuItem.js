@@ -6,6 +6,7 @@ const {
   deleteMenuItemQuery,
   findMenuItemByParentId,
   updateMenuItemStatusQuery,
+  allMenuItemsQuery,
 } = require("../repository/TableMenuItem");
 const {
   updatePageService, addPageService
@@ -230,6 +231,7 @@ const saveMenuItemService = async (request, fastify) => {
 };
 const getMenuItemListByParentService = async (request, fastify) => {
   const {menuTypeId , isActive, parentId} = request.body;
+  global.tblMenuItems = await allMenuItemsQuery(fastify)
   let result;
   if(menuTypeId){
     result = global.tblMenuItems.filter(

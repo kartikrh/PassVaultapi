@@ -23,6 +23,19 @@ const getAllMenuItems = async (request, reply, fastify) => {
   }
 };
 
+const getAllMenuItemsData = async (request, reply, fastify) => {
+  try {
+    let result = await allMenuItemService(request,fastify);
+    result = result.map((item) => ({
+      menuItemId : item.menuItemId,
+      menuItem : item.menuItem,
+    }));
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/getAllMenuItemsData", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 const getMenuItemById = async (request, reply, fastify) => {
   try {
     const result = await menuItemByIdService(request, fastify);
@@ -111,5 +124,6 @@ module.exports = {
   getMenuItemListByParent,
   getMenuTypeList,
   updateMenuItemStatus,
-  getAllPageList
+  getAllPageList,
+  getAllMenuItemsData
 };

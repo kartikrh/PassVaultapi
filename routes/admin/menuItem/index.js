@@ -8,6 +8,7 @@ const {
   getMenuTypeList,
   updateMenuItemStatus,
   getAllPageList,
+  getAllMenuItemsData,
 } = require("../../../controller/users/admin/menuItem");
 const { allPageService } = require("../../../services/page");
 
@@ -39,7 +40,19 @@ module.exports = async (fastify) => {
     ],
     handler: (request, reply) => getMenuItemById(request, reply, fastify),
   });
-  
+
+  fastify.post("/getAllMenuItems", {
+    schema: MenuItem.getAllMenuItems.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Menu Items",
+          mode: "view",
+        }),
+    ],
+    handler: (request, reply) => getAllMenuItemsData(request, reply, fastify),
+  })
   fastify.post("/menuItemList", {
     schema: MenuItem.menuItemList.schema,
     preHandler: [
