@@ -2,20 +2,35 @@ const { errorLogger } = require("../utilities/logger");
 
 const allMenuItemsQuery = async (fastify) => {
   return await fastify.db.query(
-    `Select
-    et."wrValue" as "menuItemId",
-    et2."wrValue" as "menuTypeId",
-    et3."wrValue" as "pageId",
-    COALESCE(et4."wrValue", '0') as "parentId",
-    "wrMenuItem" as "menuItem",
-    "wrDisplayOrder" as "displayOrder",
-    "wrIsActive" as "isActive"
-     from "tblMenuItems" mi 
-    left join "tblEncryptedData" et on mi."wrMenuItemId"=et."wrKey" 
-    left join "tblEncryptedData" et2 on mi."wrMenuTypeId"=et2."wrKey"
-    left join "tblEncryptedData" et3 on mi."wrPageId"=et3."wrKey"
-    left join "tblEncryptedData" et4 on mi."wrParentId"=et4."wrKey"
-
+    `WITH ChildCount AS (
+      SELECT 
+        "wrParentId" as "parentId",
+        CAST(COUNT(*) AS INTEGER) as "childCount"
+      FROM 
+        "tblMenuItems"
+      GROUP BY "wrParentId"
+    )
+    SELECT 
+      et."wrValue" as "menuItemId",
+      et2."wrValue" as "menuTypeId",
+      et3."wrValue" as "pageId",
+      COALESCE(et4."wrValue" , '0') AS "parentId",
+      "wrMenuItem" as "menuItem",
+      "wrDisplayOrder" as "displayOrder",
+      "wrIsActive" as "isActive",
+      COALESCE(cc."childCount", 0) as "childCount"
+    FROM
+      "tblMenuItems" mi
+    LEFT JOIN 
+      "tblEncryptedData" et ON mi."wrMenuItemId" = et."wrKey"
+    LEFT JOIN
+      "tblEncryptedData" et2 ON mi."wrMenuTypeId" = et2."wrKey"
+    LEFT JOIN
+      "tblEncryptedData" et3 ON mi."wrPageId" = et3."wrKey"
+    LEFT JOIN
+      "tblEncryptedData" et4 ON mi."wrParentId" = et4."wrKey"
+    LEFT JOIN
+      ChildCount cc ON mi."wrMenuItemId" = cc."parentId"    
     `,
     {
       type: fastify.db.QueryTypes.SELECT,

@@ -558,6 +558,19 @@ const MenuItem = {
       },
     },
   },
+  getAllMenuItems: {
+    schema: {
+      tags: ["Menu Item"],
+      description: "get MenuItem",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
   menuTypeList: {
     schema: {
       tags: ["Menu Item"],
