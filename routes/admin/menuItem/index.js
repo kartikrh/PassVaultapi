@@ -41,8 +41,8 @@ module.exports = async (fastify) => {
     handler: (request, reply) => getMenuItemById(request, reply, fastify),
   });
 
-  fastify.post("/getAllMenuItems", {
-    schema: MenuItem.getAllMenuItems.schema,
+  fastify.post("/getMenuItemByMenuType", {
+    schema: MenuItem.getMenuItemByMenuType.schema,
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply) =>

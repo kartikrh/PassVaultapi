@@ -558,7 +558,7 @@ const MenuItem = {
       },
     },
   },
-  getAllMenuItems: {
+  getMenuItemByMenuType: {
     schema: {
       tags: ["Menu Item"],
       description: "get MenuItem",
@@ -567,8 +567,11 @@ const MenuItem = {
         type: "object",
         properties: {
           isActive: { type: "boolean" },
+          menuTypeId : { type: "string"} 
         },
+        required : ["menuTypeId"]
       },
+
     },
   },
   menuTypeList: {
