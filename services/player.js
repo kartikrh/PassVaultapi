@@ -231,6 +231,7 @@ const updatePlayerService = async (request, fastify) => {
     eventType: checkPlayerId.eventType,
     bowlingTypeId: checkPlayerId.bowlingTypeId,
     bowlingStyle: checkPlayerId.bowlingTypeId,
+    isSystemPlayer: request.body.hasOwnProperty("isSystemPlayer") ? request.body.isSystemPlayer : checkPlayerId.isSystemPlayer,
   };
 
   if ("isActive" in request.body) {

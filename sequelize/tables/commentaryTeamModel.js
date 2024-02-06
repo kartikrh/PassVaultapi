@@ -78,7 +78,16 @@ module.exports = (sequelize) => {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
-   
+      wrTeamTrialRuns : {
+        type : DataTypes.INTEGER,
+        allowNull : true,
+        defaultValue : 0
+      },
+      wrTeamLeadRuns : {
+        type : DataTypes.INTEGER,
+        allowNull : true,
+        defaultValue : 0
+      },
     },
     {
       timestamps: false,

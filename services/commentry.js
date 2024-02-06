@@ -222,6 +222,24 @@ const createCommentaryService = async (request, fastify) => {
     team1Id: request.body.team1Id,
     team2Id: request.body.team2Id,
   };
+
+  // if addSystemPlayer is true then add system player in commentary
+  if (request.body.addSystemPlayer) {
+    let systemPlayerArr = global.tblPlayers
+      .filter((item) => item.isSystemPlayer === true)
+      .map((item) => item.playerId);
+    if (systemPlayerArr.length > 0) {
+      // add first 4 system players in team1 and others in team2
+      let [team1Players, team2Players] = [
+        systemPlayerArr.slice(0, 4),
+        systemPlayerArr.slice(4),
+      ];
+  
+      request.body.team1Players.push(...team1Players);
+      request.body.team2Players.push(...team2Players);
+    }
+  }
+
   if (validateMatchTypeId) {
     if (
       validateMatchTypeId?.noOfIningsPerSide &&
@@ -249,7 +267,6 @@ const createCommentaryService = async (request, fastify) => {
             };
           }),
         ];
-
         for (let info of data) {
           let playerData = await insertCommentaryPlayers(
             info,
