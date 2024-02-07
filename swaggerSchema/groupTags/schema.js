@@ -676,7 +676,6 @@ const MenuItem = {
               isDefault: { type: "boolean" },
               dynamicParameters: { type: "string" },
             },
-            required: ["pageTitle", "pageHeading", "pageName", "alias"],
           },
           // menuItemTypeId: { type: "string" },
         },
@@ -2248,6 +2247,50 @@ const ImportMarket = {
     },
   },
 };
+const Score = {
+  getAllUpdatedIds: {
+    schema: {
+      tags: ["Commentary"],
+      description: "get all CommentaryIDS",
+      // security: [{ bearerAuth: [] }],
+    },
+  },
+  getscoreByCId: {
+    schema: {
+      tags: ["Score"],
+      description: "get Commentary by eventId",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "string" },
+        },
+        required: ["commentaryId"],
+      },
+    },
+  },
+  getscoreByEId: {
+    schema: {
+      tags: ["Score"],
+      description: "get Commentary by evrentid",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          eventId: { type: "string" },
+        },
+        required: ["eventId"],
+      },
+    },
+  },
+  getCIds: {
+    schema: {
+      tags: ["Score"],
+      description: "get all CommentaryIDS"
+      // security: [{ bearerAuth: [] }],
+    },
+  },
+};
 module.exports = {
   Auth,
   Tabs,
@@ -2270,4 +2313,5 @@ module.exports = {
   Compitition,
   Event,
   ImportMarket,
+  Score
 };
