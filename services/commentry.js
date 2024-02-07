@@ -1151,6 +1151,7 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
   if (!result) {
     throw new Error("Commentary with this id not Found");
   }
+  const currentInning = result.currentInnings;
   const resultArr = {
     eid: "",
     til: "",
@@ -1228,7 +1229,7 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
   mtype = result.matchTypeId;
   //teams set
   const commentaryTeamsOne = await global.tblCommentaryTeams.filter(
-    (item) => item.commentaryId === cid && item.teamId === t1nid
+    (item) => item.commentaryId === cid && item.teamId === t1nid && item.currentInnings === currentInning
   );
 
   const matchType = await global.tblMatchTypes.filter(
@@ -1242,6 +1243,7 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
 
   const commentaryTeamsTwo = await global.tblCommentaryTeams.filter(
     (item) => item.commentaryId === cid && item.teamId === t2nid
+    && item.currentInnings === currentInning
   );
   if (commentaryTeamsOne.length > 0) {
     t1sn = commentaryTeamsOne[0].shortName;
@@ -1446,7 +1448,7 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
     }
 
     const commentaryWicket = await global.tblCommentaryWicket
-      .filter((item) => item.commentaryId === cid && item.teamId === batid)
+      .filter((item) => item.commentaryId === cid && item.teamId === batid && item.currentInnings === currentInning)
       .slice(-1)[0]; // Get the last 1 overs;
 
     let _playerWicket;
@@ -1454,7 +1456,7 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
     let _playerWiktRBall;
 
     const commentaryPartnership = await global.tblCommentaryPartnership
-      .filter((item) => item.commentaryId === cid && item.teamId === batid)
+      .filter((item) => item.commentaryId === cid && item.teamId === batid && item.currentInnings === currentInning)
       .slice(-1)[0]; // Get the last 1 overs
 
     if (commentaryWicket) {
@@ -1497,18 +1499,25 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
     resultArr.rmk = result.rmk;
     resultArr.win = "";
   }
+  // remove out batsman
   const commentaryPlayers_batter = await global.tblCommentaryPlayers.filter(
     (item) =>
       item.commentaryId === cid &&
       item.teamId === batid &&
-      item.onStrike !== null
+      item.onStrike !== null &&
+      item.currentInnings === currentInning &&
+      (item.isBatterOut === false || item.isBatterOut === null)
+
   );
 
+  // if isplay is true then return that bowler
   const commentaryPlayersBowler = await global.tblCommentaryPlayers.filter(
     (item) =>
       item.commentaryId === cid &&
       item.teamId === ballid &&
-      item.bowlerOnStrike !== null
+      // item.bowlerOnStrike !== null
+      item.currentInnings === currentInning &&
+      item.isPlay === true
   );
 
   const cbt = commentaryPlayers_batter.map((player) => ({
@@ -1547,7 +1556,7 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
   }));
 
   const commentaryOvers = global.tblOvers
-    .filter((item) => item.commentaryId === cid)
+    .filter((item) => item.commentaryId === cid && item.currentInnings === currentInning)
     .slice(-2); // Get the last 2 overs
 
   const last2OversIds = commentaryOvers.map((over) => over.overId);
@@ -1589,10 +1598,11 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
   const result = await global.tblCommentaries.find(
     (item) => item.commentaryId === request.body.commentaryId
   );
-  const _currentInnings = result.currentInnings;
   if (!result) {
     throw new Error("Commentary with this id not Found");
   }
+  const currentInnings = result.currentInnings;
+
   const resultArr = {
     eid: "",
     til: "",
@@ -1671,11 +1681,12 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
   //teams set
   const commentaryTeamsOne = await global.tblCommentaryTeams.filter(
     (item) => item.commentaryId === cid && item.teamId === t1nid
+    && item.currentInnings === currentInnings
   );
 
   const _batTeams = await global.tblCommentaryTeams.filter(
     (item) =>
-      item.commentaryId === cid && item.currentInnings && item.teamStatus === 1
+      item.commentaryId === cid && item.currentInnings == currentInnings && item.teamStatus === 1
   );
   const matchType = await global.tblMatchTypes.filter(
     (item) => item.matchTypeId === mtype
@@ -1688,6 +1699,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
 
   const commentaryTeamsTwo = await global.tblCommentaryTeams.filter(
     (item) => item.commentaryId === cid && item.teamId === t2nid
+    && item.currentInnings === currentInnings
   );
   if (commentaryTeamsOne.length > 0) {
     t1sn = commentaryTeamsOne[0].shortName;
@@ -1892,7 +1904,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     }
 
     const commentaryWicket = await global.tblCommentaryWicket
-      .filter((item) => item.commentaryId === cid && item.teamId === batid)
+      .filter((item) => item.commentaryId === cid && item.teamId === batid && item.currentInnings === currentInnings)
       .slice(-1)[0]; // Get the last 1 overs;
 
     let _playerWicket;
@@ -1900,7 +1912,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     let _playerWiktRBall;
 
     const commentaryPartnership = await global.tblCommentaryPartnership
-      .filter((item) => item.commentaryId === cid && item.teamId === batid)
+      .filter((item) => item.commentaryId === cid && item.teamId === batid && item.currentInnings === currentInnings)
       .slice(-1)[0]; // Get the last 1 overs
 
     if (commentaryWicket) {
@@ -1947,14 +1959,17 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     (item) =>
       item.commentaryId === cid &&
       item.teamId === batid &&
-      item.onStrike !== null
+      item.onStrike !== null &&
+      item.currentInnings === currentInnings &&
+      (item.isBatterOut === false || item.isBatterOut === null)
   );
-
   const commentaryPlayersBowler = await global.tblCommentaryPlayers.filter(
     (item) =>
       item.commentaryId === cid &&
       item.teamId === ballid &&
-      item.bowlerOnStrike !== null
+      // item.bowlerOnStrike !== null &&
+      item.currentInnings === currentInnings &&
+      item.isPlay === true
   );
 
   const cbt = commentaryPlayers_batter.map((player) => ({
@@ -1993,7 +2008,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
   }));
 
   const commentaryOvers = global.tblOvers
-    .filter((item) => item.commentaryId === cid)
+    .filter((item) => item.commentaryId === cid && item.currentInnings === currentInnings)
     .slice(-2); // Get the last 2 overs
 
   const last2OversIds = commentaryOvers.map((over) => over.overId);
