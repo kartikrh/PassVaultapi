@@ -31,8 +31,14 @@ const {
   updateMatchTypeInCommentaryQuery,
 } = require("../repository/TableCommentary");
 
-const allCommentaryService = async () => {
-  return global.tblCommentaries;
+const allCommentaryService = async (request,fastify) => {
+  // return global.tblCommentaries;
+  const {commentaryStatus} = request.body;
+  if(commentaryStatus === undefined){
+    return global.tblCommentaries.filter((item) => item.commentaryStatus !== 0);
+  }
+  return global.tblCommentaries.filter((item) => item.commentaryStatus === commentaryStatus);
+
 };
 
 const allDisplayStatusService = async () => {
@@ -231,8 +237,8 @@ const createCommentaryService = async (request, fastify) => {
     if (systemPlayerArr.length > 0) {
       // add first 4 system players in team1 and others in team2
       let [team1Players, team2Players] = [
-        systemPlayerArr.slice(0, 4),
-        systemPlayerArr.slice(4),
+        systemPlayerArr.slice(0,process.env.SYSTEM_PLAYER_COUNT),
+        systemPlayerArr.slice(process.env.SYSTEM_PLAYER_COUNT),
       ];
   
       request.body.team1Players.push(...team1Players);

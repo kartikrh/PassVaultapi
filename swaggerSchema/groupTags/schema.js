@@ -1652,6 +1652,12 @@ const Commentary = {
       tags: ["Commentary"],
       description: "get all Commentary",
       security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryStatus: { type: "integer" },
+        },
+      },
     },
   },
   changeMatchType: {
