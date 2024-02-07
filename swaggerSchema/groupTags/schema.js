@@ -2250,7 +2250,7 @@ const ImportMarket = {
 const Score = {
   getAllUpdatedIds: {
     schema: {
-      tags: ["Commentary"],
+      tags: ["Score"],
       description: "get all CommentaryIDS",
       // security: [{ bearerAuth: [] }],
     },
