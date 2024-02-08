@@ -235,7 +235,6 @@ const createCommentaryService = async (request, fastify) => {
       .filter((item) => item.isSystemPlayer === true)
       .map((item) => item.playerId);
     if (systemPlayerArr.length > 0) {
-      console.log("process.env.SYSTEM_PLAYER_COUNT", process.env.SYSTEM_PLAYER_COUNT);
       // add first 4 system players in team1 and others in team2
       let [team1Players, team2Players] = [
         systemPlayerArr.slice(0,process.env.SYSTEM_PLAYER_COUNT),
