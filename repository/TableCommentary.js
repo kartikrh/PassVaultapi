@@ -141,7 +141,7 @@ const insertCommentaryQuery = async (request, fastify) => {
           data.weather || null,
           data.pitch || null,
           null,
-          data.target || 0,
+          null,
           data.marketId || null,
           data.tpId || null,
           data.isSignalROn || false,
