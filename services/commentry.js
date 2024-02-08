@@ -238,7 +238,7 @@ const createCommentaryService = async (request, fastify) => {
       // add first 4 system players in team1 and others in team2
       let [team1Players, team2Players] = [
         systemPlayerArr.slice(0,process.env.SYSTEM_PLAYER_COUNT),
-        systemPlayerArr.slice(process.env.SYSTEM_PLAYER_COUNT),
+        systemPlayerArr.slice(process.env.SYSTEM_PLAYER_COUNT,process.env.SYSTEM_PLAYER_COUNT * 2),
       ];
   
       request.body.team1Players.push(...team1Players);
