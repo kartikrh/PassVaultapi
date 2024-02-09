@@ -177,7 +177,7 @@ const deleteEventTypeService = async (request, fastify) => {
     const eventTypeData = global.tblEventTypes.find(
       (item) => item.eventTypeId === eventType
     );
-    if (eventTypeData.image) {
+    if (eventTypeData?.image) {
       await removeImageFromServer({
         path: eventTypeData.image,
       });

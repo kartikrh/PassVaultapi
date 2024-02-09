@@ -29,6 +29,7 @@ const {
   upsertCommentaryPlayers,
   updateCommentaryPlayerIdInCommentaryTeams,
   updateMatchTypeInCommentaryQuery,
+  changeBowlerInCommentary,
 } = require("../repository/TableCommentary");
 
 const allCommentaryService = async (request,fastify) => {
@@ -230,15 +231,14 @@ const createCommentaryService = async (request, fastify) => {
   };
 
   // if addSystemPlayer is true then add system player in commentary
-  if (request.body.addSystemPlayer) {
+  if (request.body.addSystemPlayer && request.body.systemPlayerCount > 0) {
     let systemPlayerArr = global.tblPlayers
       .filter((item) => item.isSystemPlayer === true)
       .map((item) => item.playerId);
     if (systemPlayerArr.length > 0) {
-      // add first 4 system players in team1 and others in team2
       let [team1Players, team2Players] = [
-        systemPlayerArr.slice(0,process.env.SYSTEM_PLAYER_COUNT),
-        systemPlayerArr.slice(process.env.SYSTEM_PLAYER_COUNT,process.env.SYSTEM_PLAYER_COUNT * 2),
+        systemPlayerArr.slice(0,request.body.systemPlayerCount),
+        systemPlayerArr.slice(request.body.systemPlayerCount,request.body.systemPlayerCount * 2),
       ];
   
       request.body.team1Players.push(...team1Players);
@@ -2119,11 +2119,45 @@ const getMatchTypeListByCommentaryService = async (request, fastify) => {
 
   return matchTypeList;
 };
+const changeBowlerOfCommentaryService = async (request, fastify) => {
+  const {bowlerId , overId , commentaryId ,currentInnings} = request.body;
+  const commentary = global.tblCommentaries.find(
+    (item) => item.commentaryId === commentaryId
+  );
+  if(!commentary){
+    throw new Error("Commentary with this id not Found");
+  }
+
+  const over = global.tblOvers.find(
+    (item) => item.overId === overId
+  );
+  if(!over){
+    throw new Error("Over with this id not Found");
+  }
+
+  const bowler = global.tblCommentaryPlayers.find(
+    (item) => item.commentaryPlayerId === bowlerId 
+    && item.currentInnings === currentInnings
+  );
+  if(!bowler){
+    throw new Error("Bowler with this id not Found")
+  }
+
+  // update bowler in commentary
+  const updatedData = await changeBowlerInCommentary({
+    commentaryId,
+    overId,
+    bowlerId,
+    currentInnings
+  }, request, fastify);
+  
+  return updatedData;
+}
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
   saveCommentaryService,
-  cloneCommentaryService,
+  cloneCommentaryService, 
   deleteCommentaryService,
   allDisplayStatusService,
   commentaryDetailsByIdService,
@@ -2137,4 +2171,5 @@ module.exports = {
   getCurrentUpdatedCommentaryIDService,
   updateMatchTypeInCommentaryService,
   getMatchTypeListByCommentaryService,
+  changeBowlerOfCommentaryService
 };

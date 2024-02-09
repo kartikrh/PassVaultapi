@@ -20,6 +20,7 @@ const {
   updateMatchTypeInCommentary,
   getMatchTypeListByCommentary,
   getCommentaryDetailsBycommentaryEventId,
+  changeBowlerOfCommentary,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -322,4 +323,17 @@ module.exports = async (fastify, opts) => {
     handler: (request, reply) =>
       getMatchTypeListByCommentary(request, reply, fastify),
   });
+  fastify.post("/changeBowler", {
+    schema : Commentary.changeBowler.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "view",
+        }),
+    ],
+    handler: (request, reply) =>
+      changeBowlerOfCommentary(request, reply, fastify),
+  })
 };

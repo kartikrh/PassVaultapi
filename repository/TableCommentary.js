@@ -63,7 +63,7 @@ const insertCommentaryQuery = async (request, fastify) => {
     const result = await fastify.db.query(
       `
       with insert_data as(
-        insert into "tblCommentaries" ("wrEventTypeId","wrMatchTypeId","wrCompetitionId","wrEventId","wrEventDate","wrEventName","wrEventRefId","wrTeam1Id","wrTeam2Id","wrLocation","wrWeather","wrPitch","wrDisplayStatus","wrTarget","wrMarketID","wrTpId","isSignalROn","isMatchTypeUpdated" , "wrCreatedBy" , "wrCreatedDate","wrCommentaryStatus","wrCurrentInnings") values (
+        insert into "tblCommentaries" ("wrEventTypeId","wrMatchTypeId","wrCompetitionId","wrEventId","wrEventDate","wrEventName","wrEventRefId","wrTeam1Id","wrTeam2Id","wrLocation","wrWeather","wrPitch","wrDisplayStatus","wrTarget","wrMarketID","wrTpId","isSignalROn","isMatchTypeUpdated" , "wrCreatedBy" , "wrCreatedDate","wrCommentaryStatus","wrCurrentInnings", "wrSystemPlayerCount") values (
           (select "wrKey" from "tblEncryptedData" where "wrValue" = $1),
           (select "wrKey" from "tblEncryptedData" where "wrValue" = $2),
           (select "wrKey" from "tblEncryptedData" where "wrValue" = $3),
@@ -72,7 +72,8 @@ const insertCommentaryQuery = async (request, fastify) => {
           (select "wrKey" from "tblEncryptedData" where "wrValue" = $8),
           (select "wrKey" from "tblEncryptedData" where "wrValue" = $9),
           $10,$11,$12,$13,$14,$15,$16,$17,$18,$19,now(),1,
-          1
+          1,
+          $20
         ) returning *         
       )
 
@@ -147,6 +148,7 @@ const insertCommentaryQuery = async (request, fastify) => {
           data.isSignalROn || false,
           data.isMatchTypeUpdated || false,
           request.userTokenInfo.WrUserId,
+          data.systemPlayerCount || null,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -2033,6 +2035,94 @@ const updateMatchTypeInCommentaryQuery = async (data, fastify, request) => {
     throw new Error(err.message);
   }
 }
+const changeBowlerInCommentary = async (data, request,fastify) => {
+  try {
+    // update bowler in tblOver
+    const query1 = `
+    update "tblOvers" set
+      "wrBowlerId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)
+    WHERE 
+      "wrCommentaryId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $2)
+      AND "wrOverId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $3)
+      AND "wrCurrentInnings" = $4
+    `;
+    const query2 = `
+    update "tblCommentaryBallByBalls" set
+      "wrBowler_ID" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)
+    WHERE 
+      "wrCommentaryId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $2)
+      AND "wrOverId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $3)
+      AND "wrCurrentInnings" = $4
+    `;
+
+    const query3 = `
+    update "tblCommentaryWickets" set
+      "wrBowlerId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)
+    WHERE 
+      "wrCommentaryId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $2)
+      AND "wrOverId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $3)
+      AND "wrCurrentInnings" = $4
+    `;
+
+    const params = [
+      data.bowlerId,
+      data.commentaryId,
+      data.overId,
+      data.currentInnings,
+    ];
+
+    await fastify.db.query(query1, {
+      type: fastify.db.QueryTypes.UPDATE,
+      bind: params,
+    });
+
+    await fastify.db.query(query2, {
+      type: fastify.db.QueryTypes.UPDATE,
+      bind: params,
+    });
+
+    await fastify.db.query(query3, {
+      type: fastify.db.QueryTypes.UPDATE,
+      bind: params,
+    });
+    global.tblOvers = await getAllOversQuery(fastify);
+    global.tblCommentaryBallByBall = await getAllCommentaryBallByBallQuery(fastify);
+    global.tblCommentaryWickets = await getAllCommentaryWicketQuery(fastify);
+
+    let overDetails = global.tblOvers.find(
+      (over) =>
+        over.commentaryId === data.commentaryId &&
+        over.overId === data.overId
+    );
+
+    let commentaryBallByBall = global.tblCommentaryBallByBall.filter(
+      (ball) =>
+        ball.commentaryId === data.commentaryId &&
+        ball.overId === data.overId
+    );
+
+    let commentaryWickets = global.tblCommentaryWickets.filter(
+      (wicket) =>
+        wicket.commentaryId === data.commentaryId
+    );
+
+    return {
+      overDetails,
+      commentaryBallByBall,
+      commentaryWickets,
+    };
+
+
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCommentary/changeBowlerInCommentary",
+      request
+    );
+    throw new Error(error.message);
+  }
+}
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -2070,5 +2160,6 @@ module.exports = {
   getCommentaryID_Socket,
   upsertCommentaryPlayers,
   updateCommentaryPlayerIdInCommentaryTeams,
-  updateMatchTypeInCommentaryQuery
+  updateMatchTypeInCommentaryQuery,
+  changeBowlerInCommentary
 };
