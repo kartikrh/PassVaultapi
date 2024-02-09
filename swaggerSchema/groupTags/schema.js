@@ -1894,6 +1894,7 @@ const Commentary = {
           },
           currentInnings: { type: "integer" },
           addSystemPlayer : { type: "boolean" },
+          systemPlayerCount : { type: "integer" },
         },
         required: ["commentaryId"],
       },
@@ -1976,6 +1977,23 @@ const Commentary = {
           commentaryOvers: { type: "object" },
         },
         required: [],
+      },
+    },
+  },
+  changeBowler: {
+    schema: {
+      tags: ["Commentary"],
+      description: "change bowler",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "string" },
+          bowlerId: { type: "string" },
+          currentInnings: { type: "integer" },
+          overId : { type: "string" },
+        },
+        required: ["commentaryId", "bowlerId", "currentInnings", "overId"],
       },
     },
   },
