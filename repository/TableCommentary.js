@@ -36,7 +36,8 @@ const getAllCommentaryQuery = async (fastify) => {
     "wrTpId" as "tpId",
     "isSignalROn" as "isSignalROn",
     "isMatchTypeUpdated" as "isMatchTypeUpdated",
-    "wrCurrentInnings" as "currentInnings"
+    "wrCurrentInnings" as "currentInnings",
+    "wrSystemPlayerCount" as "systemPlayerCount"
     from "tblCommentaries" tc
     left join "tblEncryptedData" te on tc."wrMatchTypeId" = te."wrKey"
     left join "tblEncryptedData" te1 on tc."wrEventTypeId" = te1."wrKey"
