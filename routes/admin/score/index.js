@@ -7,6 +7,9 @@ const {
   getCommentaryDetailsBycommentaryId,
   getCurrentUpdatedCommentaryID,
   getCommentaryDetailsBycommentaryEventId,
+  getScheduleMatchList,
+  getLiveMatchList,
+  getCompleteMatchList,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   Score} = require("../../../swaggerSchema/groupTags/schema");
@@ -65,5 +68,41 @@ module.exports = async (fastify, opts) => {
     // ],
     handler: (request, reply) =>
       getCurrentUpdatedCommentaryID(request, reply, fastify),
+  });
+  fastify.get("/scheduleMatchesList", {
+    schema: Score.getCIds.schema,
+    // preHandler: [
+    //   (request, reply) => authorize(request, reply, fastify),
+    //   (request, reply, done) =>
+    //     checkPermission(request, reply, fastify, {
+    //       tabName: "Commentary",
+    //       mode: "view",
+    //     }),
+    // ],
+    handler: (request, reply) =>  getScheduleMatchList(request, reply, fastify)
+  });
+  fastify.get("/liveMatchesList", {
+    schema: Score.getCIds.schema,
+    // preHandler: [
+    //   (request, reply) => authorize(request, reply, fastify),
+    //   (request, reply, done) =>
+    //     checkPermission(request, reply, fastify, {
+    //       tabName: "Commentary",
+    //       mode: "view",
+    //     }),
+    // ],
+    handler: (request, reply) => getLiveMatchList(request, reply, fastify)
+  });
+  fastify.get("/completeMatchesList", {
+    schema: Score.getCIds.schema,
+    // preHandler: [
+    //   (request, reply) => authorize(request, reply, fastify),
+    //   (request, reply, done) =>
+    //     checkPermission(request, reply, fastify, {
+    //       tabName: "Commentary",
+    //       mode: "view",
+    //     }),
+    // ]
+    handler: (request, reply) => getCompleteMatchList(request, reply, fastify)
   });
 };

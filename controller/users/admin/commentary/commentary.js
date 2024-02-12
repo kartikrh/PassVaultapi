@@ -16,6 +16,7 @@ const {
   updateMatchTypeInCommentaryService,
   getMatchTypeListByCommentaryService,
   changeBowlerOfCommentaryService,
+  getMatchListByStatus,
 } = require("../../../../services/commentry");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -229,6 +230,64 @@ const changeBowlerOfCommentary = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const getScheduleMatchList = async (request, reply, fastify) => {
+  try {
+    let commentaryData = global.tblCommentaries.filter((item)=>item.commentaryStatus === 1)
+    const body = {
+      commentaryData,
+      type : "schedule"
+    }
+
+    const result = await getMatchListByStatus(body ,request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      path + "/getScheduleMatchList",
+      request
+    );
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const getCompleteMatchList = async (request, reply, fastify) => {
+  try {
+    let commentaryData = global.tblCommentaries.filter((item)=>item.commentaryStatus === 4)
+    const body ={
+      commentaryData,
+      type : "completed"
+    }
+    const result = await getMatchListByStatus(body,request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      path + "/getCompleteMatchList",
+      request
+    );
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const getLiveMatchList = async (request, reply, fastify) => {
+  try {
+    let commentaryData = global.tblCommentaries.filter(item => item.commentaryStatus !== 1 && item.commentaryStatus !== 4);
+    const body = {
+      commentaryData,
+      type : "live"
+    }
+    const result = await getMatchListByStatus(body,request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      path + "/getLiveMatchList",
+      request
+    );
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 module.exports = {
   getAllCommentaries,
   getCommentaryById,
@@ -246,5 +305,8 @@ module.exports = {
   updateMatchTypeInCommentary,
   getMatchTypeListByCommentary,
   getCommentaryDetailsBycommentaryEventId,
-  changeBowlerOfCommentary
+  changeBowlerOfCommentary,
+  getScheduleMatchList,
+  getCompleteMatchList,
+  getLiveMatchList
 };

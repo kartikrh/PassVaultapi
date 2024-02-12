@@ -2124,6 +2124,65 @@ const changeBowlerInCommentary = async (data, request,fastify) => {
     throw new Error(error.message);
   }
 }
+const getCommentaryBallByBallQuery = async (request,fastify) => {
+  return await fastify.db.query(
+    `
+    WITH filtered_commentary AS (
+        SELECT *
+        FROM "tblCommentaryBallByBalls"
+        WHERE "wrCommentaryId" = (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $1)
+    )
+    SELECT
+        te13."wrValue" AS "commentaryBallByBallId",
+        te1."wrValue" AS "commentaryId",
+        te2."wrValue" AS "teamId",
+        te3."wrValue" AS "overId",
+        "wrOverCount" AS "overCount",
+        "wrCurrentOverBalls" AS "currentOverBalls",
+        te4."wrValue" AS "bowlerId",
+        te5."wrValue" AS "batStrikeId",
+        te6."wrValue" AS "batNonStrikeId",
+        "wrBall_IsCount" AS "ballIsCount",
+        "wrBall_Type" AS "ballType",
+        "wrBall_IsDot" AS "ballIsDot",
+        "wrBall_Run" AS "ballRun",
+        "wrBall_ExtraRun" AS "ballExtraRun",
+        "wrBall_isBoundry" AS "ballIsBoundry",
+        "wrBall_FOUR" AS "ballFour",
+        "wrBall_SIX" AS "ballSix",
+        "wrBall_IsWicket" AS "ballIsWicket",
+        "wrBall_WicketType" AS "ballWicketType",
+        te7."wrValue" AS "ballPlayerId",
+        te8."wrValue" AS "ballBowlerId",
+        te9."wrValue" AS "ballFielderId1",
+        te10."wrValue" AS "ballFielderId2",
+        "wrOver_isMaiden" AS "overIsMaiden",
+        te11."wrValue" AS "nextBatStrikeId",
+        te12."wrValue" AS "nextBatNonStrikeId",
+        "wrIsDelete" AS "isDelete",
+        "wrCurrentInnings" AS "currentInnings"
+    FROM filtered_commentary fc
+    LEFT JOIN "tblEncryptedData" te1 ON fc."wrCommentaryId" = te1."wrKey"
+    LEFT JOIN "tblEncryptedData" te2 ON fc."wrTeamId" = te2."wrKey"
+    LEFT JOIN "tblEncryptedData" te3 ON fc."wrOverId" = te3."wrKey"
+    LEFT JOIN "tblEncryptedData" te4 ON fc."wrBowler_ID" = te4."wrKey"
+    LEFT JOIN "tblEncryptedData" te5 ON fc."wrBat_StrikeID" = te5."wrKey"
+    LEFT JOIN "tblEncryptedData" te6 ON fc."wrBat_NONStrikeID" = te6."wrKey"
+    LEFT JOIN "tblEncryptedData" te7 ON fc."wrBall_PlayerID" = te7."wrKey"
+    LEFT JOIN "tblEncryptedData" te8 ON fc."wrBall_BowlerID" = te8."wrKey"
+    LEFT JOIN "tblEncryptedData" te9 ON fc."wrBall_FielderID1" = te9."wrKey"
+    LEFT JOIN "tblEncryptedData" te10 ON fc."wrBall_FielderID2" = te10."wrKey"
+    LEFT JOIN "tblEncryptedData" te11 ON fc."wrNextBat_StrikeID" = te11."wrKey"
+    LEFT JOIN "tblEncryptedData" te12 ON fc."wrNextBat_NONStrikeID" = te12."wrKey"
+    LEFT JOIN "tblEncryptedData" te13 ON fc."wrCommentaryBallByBallId" = te13."wrKey"
+    ORDER BY fc."wrCommentaryBallByBallId" ASC
+    `,
+    {
+      type: fastify.db.QueryTypes.SELECT,
+      bind: [request.body.commentaryId],
+    }
+  );
+}
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -2162,5 +2221,6 @@ module.exports = {
   upsertCommentaryPlayers,
   updateCommentaryPlayerIdInCommentaryTeams,
   updateMatchTypeInCommentaryQuery,
-  changeBowlerInCommentary
+  changeBowlerInCommentary,
+  getCommentaryBallByBallQuery
 };
