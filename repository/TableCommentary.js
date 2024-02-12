@@ -2090,11 +2090,6 @@ const changeBowlerInCommentary = async (data, request,fastify) => {
     global.tblCommentaryBallByBall = await getAllCommentaryBallByBallQuery(fastify);
     global.tblCommentaryWickets = await getAllCommentaryWicketQuery(fastify);
 
-    let overDetails = global.tblOvers.find(
-      (over) =>
-        over.commentaryId === data.commentaryId &&
-        over.overId === data.overId
-    );
 
     let commentaryBallByBall = global.tblCommentaryBallByBall.filter(
       (ball) =>
@@ -2108,7 +2103,6 @@ const changeBowlerInCommentary = async (data, request,fastify) => {
     );
 
     return {
-      overDetails,
       commentaryBallByBall,
       commentaryWickets,
     };
