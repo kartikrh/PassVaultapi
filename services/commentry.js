@@ -30,13 +30,15 @@ const {
   updateCommentaryPlayerIdInCommentaryTeams,
   updateMatchTypeInCommentaryQuery,
   changeBowlerInCommentary,
+  getCommentaryBallByBallQuery,
 } = require("../repository/TableCommentary");
+const moment = require("moment");
 
 const allCommentaryService = async (request,fastify) => {
   // return global.tblCommentaries;
   const {commentaryStatus} = request.body;
-  if(commentaryStatus === undefined){
-    return global.tblCommentaries.filter((item) => item.commentaryStatus !== 0);
+  if(commentaryStatus === undefined || commentaryStatus === 0){
+    return global.tblCommentaries.filter((item) => item.commentaryStatus !== 4);
   }
   return global.tblCommentaries.filter((item) => item.commentaryStatus === commentaryStatus);
 
@@ -112,9 +114,10 @@ const commentaryDetailsByIdService = async (request, fastify) => {
     (item) => item.commentaryId === request.body.commentaryId
   );
 
-  const commentaryBallByBall = await global.tblCommentaryBallByBall.filter(
-    (item) => item.commentaryId === request.body.commentaryId
-  );
+  // const commentaryBallByBall = await global.tblCommentaryBallByBall.filter(
+  //   (item) => item.commentaryId === request.body.commentaryId
+  // );
+  const commentaryBallByBall = await getCommentaryBallByBallQuery(request, fastify)
 
   const commentaryWicket = await global.tblCommentaryWicket.filter(
     (item) => item.commentaryId === request.body.commentaryId
@@ -2152,6 +2155,102 @@ const changeBowlerOfCommentaryService = async (request, fastify) => {
   }, request, fastify);
   
   return updatedData;
+};
+const getMatchListByStatus = async (body, request, fastify) => {
+  // set rno as index of commentaryData
+  let resultArr = [];
+  const isRun = body.type == "scheduled" || "completed" ? false : true;
+  let rno = 0;
+  for (item of body.commentaryData) {
+    rno++;
+    let eventType = await global.tblEventTypes.find(
+      (eventType) => eventType.eventTypeId === item.eventTypeId
+    );
+
+    let competition = await global.tblCompetitions.find(
+      (competition) => competition.competitionId === item.competitionId
+    );
+    //teams set
+    const commentaryTeamsOne = await global.tblCommentaryTeams.find(
+      (team) => team.commentaryId === item.commentaryId && team.teamId === item.team1Id
+      && team.currentInnings === item.currentInnings
+    );
+
+    const commentaryTeamsTwo = await global.tblCommentaryTeams.find(
+      (team) => team.commentaryId === item.commentaryId && team.teamId === item.team2Id
+      && team.currentInnings === item.currentInnings
+    );
+    let teamScore1 , teamScore2;
+    if (commentaryTeamsOne) {
+      const wicket1 =
+        commentaryTeamsOne.teamWicket === null
+          ? 0
+          : commentaryTeamsOne.teamWicket;
+      const overs1 =
+        commentaryTeamsOne.teamOver === null
+          ? 0.0
+          : commentaryTeamsOne.teamOver;
+      teamScore1 = commentaryTeamsOne?.teamScore ?? 0;
+      teamScore1 = teamScore1 + "/" + wicket1 + "(" + overs1 + ")";
+    }
+
+    if (commentaryTeamsTwo) {
+      t2sn = commentaryTeamsTwo.shortName;
+      t2n = commentaryTeamsTwo.teamName;
+      const wicket1 =
+        commentaryTeamsTwo.teamWicket === null
+          ? 0
+          : commentaryTeamsTwo.teamWicket;
+      const overs1 =
+        commentaryTeamsTwo.teamOver === null
+          ? 0.0
+          : commentaryTeamsTwo.teamOver;
+       teamScore2 = commentaryTeamsTwo?.teamScore ?? 0;
+      teamScore2 = teamScore2 + "/" + wicket1 + "(" + overs1 + ")";
+    }
+    // get image of team
+    const team1 = await global.tblTeams.find(
+      (team) => team.teamId === item.team1Id
+    );
+    const team2 = await global.tblTeams.find(
+      (team) => team.teamId === item.team2Id
+    );
+
+    let details = {
+      rno : rno,
+      eid : item.eventRefId || "",
+      ety : eventType?.eventType || "",
+      mtyp : item.matchType || "",
+      com : competition?.competitionName || "",
+      en : item.eventName || "",
+      ed : convertDate(item.eventDate, "DD/MM/YYYY") || "",
+      et : convertDate(item.eventDate, "hh:mm:ss") || "",
+      te1n : commentaryTeamsOne.teamName || "",
+      te2n : commentaryTeamsTwo.teamName || "",
+      s1n : commentaryTeamsOne.shortName || "",
+      s2n : commentaryTeamsTwo.shortName || "",
+      te1i : team1.image || "",
+      te2i : team2.image || "",
+      loc : item.location || "",
+      isrun : isRun,  
+      t1s : teamScore1 || "",
+      t2s : teamScore2 || "",
+      dis : item.displayStatus || "",
+    }
+ 
+
+    resultArr.push(details);
+  }
+
+  return resultArr;
+
+}
+const convertDate = (date, format) =>{
+  if (date) {
+    if (format) return moment(date).local().format(format);
+    return  moment(date).local().format("DD/MM/YYYY hh:mm:ss");
+  }
+  return "";
 }
 module.exports = {
   allCommentaryService,
@@ -2171,5 +2270,6 @@ module.exports = {
   getCurrentUpdatedCommentaryIDService,
   updateMatchTypeInCommentaryService,
   getMatchTypeListByCommentaryService,
-  changeBowlerOfCommentaryService
+  changeBowlerOfCommentaryService,
+  getMatchListByStatus
 };
