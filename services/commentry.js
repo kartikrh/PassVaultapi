@@ -1538,6 +1538,7 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
     t6: player.batSix || 0,
     sr: player.batSrr || 0,
     os: player.onStrike,
+    str : parseFloat(player.batsmanStrikeRate) || 0.0
   }));
 
   const cbl = commentaryPlayersBowler.map((bowler) => ({
@@ -1990,6 +1991,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     t6: player.batSix || 0,
     sr: player.batSrr || 0,
     os: player.onStrike,
+    str : parseFloat(player.batsmanStrikeRate) || 0.0
   }));
 
   const cbl = commentaryPlayersBowler.map((bowler) => ({
