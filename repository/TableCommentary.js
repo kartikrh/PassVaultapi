@@ -231,7 +231,7 @@ const insertCommentaryPlayers = async (
       `
       WITH insert_data AS (
         insert into "tblCommentaryPlayers" ("wrCommentaryId" , "wrTeamId" , "wrPlayerId","wrPlayerName", "wrDisplayOrder","wrCurrentInnings",
-        "wrBatsmanAverage", "wrBatsmanStrikeRate", "wrBowlerEconomy", "wrBowlerAverage")
+        "wrBatsmanAverage", "wrBatsmanStr", "wrBowlerEcon", "wrBowlerAverage")
         values (
           (select "wrKey" from "tblEncryptedData" where "wrValue" = $1),
           (select "wrKey" from "tblEncryptedData" where "wrValue" = $2),
@@ -300,7 +300,7 @@ const upsertCommentaryPlayers = async (
       RETURNING *
     )
     INSERT INTO "tblCommentaryPlayers" ("wrCommentaryId", "wrTeamId", "wrPlayerId", "wrPlayerName", "wrDisplayOrder", "wrCurrentInnings",
-    "wrBatsmanAverage", "wrBatsmanStrikeRate", "wrBowlerEconomy", "wrBowlerAverage")
+    "wrBatsmanAverage", "wrBatsmanStr", "wrBowlerEcon", "wrBowlerAverage")
     SELECT
       (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $1),
       (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $2),
@@ -774,7 +774,9 @@ const getAllCommentaryPlayerQuery = async (fastify) => {
     "wrBatsmanStrikeRate" as "batsmanStrikeRate",
     "wrBowlerEconomy" as "bowlerEconomy",
     "wrBowlerAverage" as "bowlerAverage",
-    "wrCurrentInnings" as "currentInnings"
+    "wrCurrentInnings" as "currentInnings",
+    "wrBatsmanStr" as "batsmanStr",
+    "wrBowlerEcon" as "bowlerEcon"
     from "tblCommentaryPlayers" tcp
     left join "tblEncryptedData" te on tcp."wrCommentaryPlayerId" = te."wrKey"
     left join "tblEncryptedData" te1 on tcp."wrCommentaryId" = te1."wrKey"
