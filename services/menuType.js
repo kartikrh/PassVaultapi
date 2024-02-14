@@ -16,6 +16,63 @@ const allMenuTypeService = async (request , fastify) => {
   return global.tblMenuTypes.filter(menuType => menuType.isActive === isActive);
 };
 
+const getAllMenuItemListService = async (request, fastify) => {
+  let menuTypeList = global.tblMenuTypes.filter(menuType => menuType.isActive === true);
+  const result = menuTypeList.map(menuType => {
+    let menuItem = global.tblMenuItems.filter(item => item.menuTypeId === menuType.menuTypeId && item.parentId === "0" && item.isActive === true)
+                  .map((item)=>{
+                      const pageDetails = global.tblPages.find(page => page.pageId === item.pageId);
+                      return {
+                        menuItemId : item.menuItemId,
+                        menuItem : item.menuItem,
+                        parentId : item.parentId,
+                        pageId : item.pageId,
+                        displayOrder : item.displayOrder,
+                        pageDetails : {
+                          alias : pageDetails.alias,
+                          linkURL : pageDetails.linkURL,
+                        }
+                      }
+                  })
+                  .sort((a, b) => a.displayOrder - b.displayOrder);
+    if(menuItem.length > 0){
+      menuItem = appendChild(menuItem);
+    }
+    return {
+      menuTypeId : menuType.menuTypeId,
+      menuTypeName : menuType.menuTypeName,
+      menuItem : menuItem
+    };
+  });
+
+  return result;
+}
+const appendChild = (menuItems) => {
+  return menuItems.map(menuItem => {
+    const child = global.tblMenuItems.filter(item => item.parentId === menuItem.menuItemId && item.isActive == true).map(
+      (item) => {
+        const pageDetails = global.tblPages.find(page => page.pageId === item.pageId);
+        return {
+          menuItemId : item.menuItemId,
+          menuItem : item.menuItem,
+          displayOrder : item.displayOrder,
+          parentId : item.parentId,
+          pageId : item.pageId,
+          pageDetails : {
+            alias : pageDetails.alias,
+            linkURL : pageDetails.linkURL,
+          }
+        }
+      }
+    
+    );
+    if(child.length > 0){
+      menuItem.menuItems = appendChild(child);
+    }
+    return menuItem ;
+  }).sort((a, b) => a.displayOrder - b.displayOrder);
+}
+
 const menuTypeByIdService = async (request, fastify) => {
   const { menuTypeId } = request.body;
   const result = global.tblMenuTypes.find(
@@ -156,5 +213,6 @@ module.exports = {
   allMenuTypeService,
   menuTypeByIdService,
   saveMenuTypeService,
-  deleteMenuTypeService
+  deleteMenuTypeService,
+  getAllMenuItemListService
 };

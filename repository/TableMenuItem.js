@@ -37,7 +37,25 @@ const allMenuItemsQuery = async (fastify) => {
     }
   );
 };
-
+const updateDisplayOrderQuery = async (data, fastify) => {
+  try {
+    return await fastify.db.query(
+      `UPDATE "tblMenuItems" SET "wrDisplayOrder" = $1 WHERE "wrMenuItemId" = (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $2)`,
+      {
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [data.displayOrder, data.menuItemId],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableMenuItem/updateDisplayOrderQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+}
 const menuItemByIdQuery = async (menuItemId, fastify, request) => {
   try {
     const data = await fastify.db.query(
@@ -81,7 +99,10 @@ const createMenuItemQuery = async (body, fastify, request) => {
     const data = await fastify.db.query(
       `
   with count_parent as (
-    select count(*) as count from "tblMenuItems" where "wrParentId" = (SELECT COALESCE((SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $3), 0))
+    select count(*) as count from "tblMenuItems" where 
+    "wrParentId" = (SELECT COALESCE((SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $3), 0))
+    AND
+    "wrMenuTypeId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1) 
   ),
   add_data as (
     INSERT INTO "tblMenuItems" ("wrMenuTypeId" , "wrMenuItem","wrParentId","wrPageId","wrDisplayOrder","wrIsActive","wrCreatedBy","wrCreatedDate") values(
@@ -263,5 +284,6 @@ module.exports = {
   validateMenuItemQuery,
   deleteMenuItemQuery,
   findMenuItemByParentId,
-  updateMenuItemStatusQuery
+  updateMenuItemStatusQuery,
+  updateDisplayOrderQuery
 };

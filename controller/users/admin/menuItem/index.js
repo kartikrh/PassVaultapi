@@ -4,7 +4,8 @@ const {
   saveMenuItemService,
   deleteMenuItemService,
   getMenuItemListByParentService,
-  updateMenuItemStatusService
+  updateMenuItemStatusService,
+  updateMenuItemDisplayOrderService
 } = require("../../../../services/menuItem");
 const { allMenuTypeService } = require("../../../../services/menuType");
 const { allPageService } = require("../../../../services/page");
@@ -116,7 +117,20 @@ const updateMenuItemStatus = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 }
-
+const changeDisplayOrder = async (request, reply, fastify) => {
+  try {
+    const result = await updateMenuItemDisplayOrderService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      commonPath + "/changeDisplayOrder",
+      request
+    );
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+}
 module.exports = {
   getAllMenuItems,
   getMenuItemById,
@@ -126,5 +140,6 @@ module.exports = {
   getMenuTypeList,
   updateMenuItemStatus,
   getAllPageList,
-  getAllMenuItemsData
+  getAllMenuItemsData,
+  changeDisplayOrder
 };
