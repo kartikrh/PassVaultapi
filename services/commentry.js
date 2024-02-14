@@ -2238,6 +2238,13 @@ const getMatchListByStatus = async (body, request, fastify) => {
       t1s : teamScore1 || "",
       t2s : teamScore2 || "",
       dis : item.displayStatus || "",
+      rmk : item.rmk || "",
+      te1crr : commentaryTeamsOne.crr || 0,
+      te2crr : commentaryTeamsTwo.crr || 0,
+      te1rrr : commentaryTeamsOne.rrr || 0,
+      te2rrr : commentaryTeamsTwo.rrr || 0,
+
+
     }
  
 
