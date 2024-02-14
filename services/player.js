@@ -18,22 +18,32 @@ const {
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
 
-const allPlayerService = async (request) => {
-  const { isActive, eventTypeId } = request.body;
+const allPlayerService = async (request,fastify) => {
+  const { isActive, eventTypeId , teamId} = request.body;
   const body = {
     isActive: isActive === undefined ? true : isActive,
     eventTypeId: eventTypeId === undefined ? "0" : eventTypeId,
+    teamId : teamId === undefined  ? null : teamId
   };
+  let _player = [];
   if (body.eventTypeId !== "0") {
-    const _player = global.tblPlayers.filter(
+     _player = global.tblPlayers.filter(
       (_p) =>
         _p.isActive === body.isActive && _p.eventTypeId === body.eventTypeId
     );
-    return _player;
   } else {
-    const _player = global.tblPlayers.filter(
+     _player = global.tblPlayers.filter(
       (_p) => _p.isActive === body.isActive
     );
+  }
+
+  if(teamId) {
+    let players = await getAllPlayersByTeamIdQuery(teamId, fastify, request);
+    players = players.map((item) => item.playerId);
+    _player = _player.filter((item) => players.includes(item.playerId));
+    return _player;
+  }
+  else {
     return _player;
   }
 };
