@@ -11,6 +11,7 @@ const {
   getLiveMatchList,
   getCompleteMatchList,
 } = require("../../../controller/users/admin/commentary/commentary");
+const { getMenuItemList } = require("../../../controller/users/admin/menuType");
 const {
   Score} = require("../../../swaggerSchema/groupTags/schema");
 
@@ -105,4 +106,16 @@ module.exports = async (fastify, opts) => {
     // ]
     handler: (request, reply) => getCompleteMatchList(request, reply, fastify)
   });
+  fastify.post("/getmenuItemList",{
+    schema : Score.getmenuitemlist.schema,
+    // preHandler: [
+    //   (request, reply) => authorize(request, reply, fastify),
+    //   (request, reply) =>
+    //     checkPermission(request, reply, fastify, {
+    //       tabName: "Match Types",
+    //       mode: "view",
+    //     }),
+    // ],
+    handler: (request, reply) => getMenuItemList(request, reply, fastify)
+  })
 };

@@ -7,6 +7,7 @@ const {
   findMenuItemByParentId,
   updateMenuItemStatusQuery,
   allMenuItemsQuery,
+  updateDisplayOrderQuery,
 } = require("../repository/TableMenuItem");
 const {
   updatePageService, addPageService
@@ -273,11 +274,44 @@ const updateMenuItemStatusService = async (request, fastify) => {
   return `Menu Item status updated successfully`;
   
 };
+const updateMenuItemDisplayOrderService = async (request, fastify) => {
+  const menuItemIds = request.body.map((item) => item.menuItemId);
+  const validateAllMenuItem = global.tblMenuItems.filter(
+    (item) => menuItemIds.includes(item.menuItemId)
+  );
+  if (validateAllMenuItem.length !== menuItemIds.length) {
+    throw new Error("Invalid Menu Item Ids");
+  }
+  // check if all menu item's parent id is same
+  const checkAllMenuItemParent = validateAllMenuItem.every(
+    (item) => item.parentId === validateAllMenuItem[0].parentId
+  );
+
+  if (!checkAllMenuItemParent) {
+    throw new Error("All menu items should have same parent");
+  }
+  for (const item of request.body) {
+    await updateDisplayOrderQuery(
+      {
+        menuItemId: item.menuItemId,
+        displayOrder: item.displayOrder
+      },
+      fastify
+    );
+  }    
+
+  const getAllMenuItems = await allMenuItemsQuery(fastify);
+  global.tblMenuItems = getAllMenuItems;
+
+  return "Order chaged successfully";
+
+};
 module.exports = {
   allMenuItemService,
   menuItemByIdService,
   saveMenuItemService,
   deleteMenuItemService,
   getMenuItemListByParentService,
-  updateMenuItemStatusService
+  updateMenuItemStatusService,
+  updateMenuItemDisplayOrderService
 };

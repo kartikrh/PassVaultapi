@@ -558,6 +558,24 @@ const MenuItem = {
       },
     },
   },
+  changeDispalyOrder: {
+    schema: {
+      tags: ["Menu Item"],
+      description: "change display order",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            menuItemId: { type: "string" },
+            displayOrder: { type: "integer" },
+          },
+        },
+        minItems: 1,
+      },
+    },
+  },
   getMenuItemByMenuType: {
     schema: {
       tags: ["Menu Item"],
@@ -2306,6 +2324,13 @@ const Score = {
       tags: ["Score"],
       description: "get all CommentaryIDS"
       // security: [{ bearerAuth: [] }],
+    },
+  },
+  getmenuitemlist: {
+    schema: {
+      tags: ["Menu Types"],
+      description: "get MenuType",
+      security: [{ bearerAuth: [] }]
     },
   },
 };

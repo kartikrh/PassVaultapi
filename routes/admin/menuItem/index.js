@@ -9,6 +9,7 @@ const {
   updateMenuItemStatus,
   getAllPageList,
   getAllMenuItemsData,
+  changeDisplayOrder,
 } = require("../../../controller/users/admin/menuItem");
 const { allPageService } = require("../../../services/page");
 
@@ -129,6 +130,18 @@ module.exports = async (fastify) => {
         }),
     ],
     handler: (request, reply) => updateMenuItemStatus(request, reply, fastify),
+  })
+
+  fastify.post("/changeDisplayOrder", {
+    schema : MenuItem.changeDispalyOrder.schema,
+    preHandler : [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) => checkPermission(request, reply, fastify, {
+        tabName : "Menu Items",
+        mode : "edit"
+      })
+    ],
+    handler : (request, reply) => changeDisplayOrder(request, reply, fastify)
   })
 
 };
