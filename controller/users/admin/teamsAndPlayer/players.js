@@ -15,7 +15,7 @@ let commonPath = "controller/users/admin/teamsAndPlayer/players";
 
 const getAllPlayers = async (request, reply, fastify) => {
   try {
-    const result = await allPlayerService(request);
+    const result = await allPlayerService(request,fastify);
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/getAllPlayers", request);

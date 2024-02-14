@@ -2,6 +2,7 @@ const {
   authorize,
   checkPermission,
 } = require("../../../controller/middleware");
+const { getAllPage } = require("../../../controller/users/admin/Page/page");
 const {
   getCommentaryDetailsByEventId,
   getCommentaryDetailsBycommentaryId,
@@ -117,5 +118,17 @@ module.exports = async (fastify, opts) => {
     //     }),
     // ],
     handler: (request, reply) => getMenuItemList(request, reply, fastify)
+  }),
+  fastify.post("/getPagesList",{
+    schema : Score.getmenuitemlist.schema,
+    // preHandler: [
+    //   (request, reply) => authorize(request, reply, fastify),
+    //   (request, reply) =>
+    //     checkPermission(request, reply, fastify, {
+    //       tabName: "Match Types",
+    //       mode: "view",
+    //     }),
+    // ],
+    handler: (request, reply) => getAllPage(request, reply, fastify)
   })
 };

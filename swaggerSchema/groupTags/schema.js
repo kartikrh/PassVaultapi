@@ -1256,6 +1256,7 @@ const Player = {
         properties: {
           isActive: { type: "boolean" },
           eventTypeId: { type: "string" },
+          teamId : { type: "string"}
         },
       },
     },
