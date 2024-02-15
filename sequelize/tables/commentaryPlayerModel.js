@@ -203,13 +203,13 @@ module.exports = (sequelize) => {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
-      wrBatsmanStr : {
-        type : DataTypes.DECIMAL(9, 2),
-        allowNull: true
+      wrBatsmanPreviousStrikeRate: {
+        type: DataTypes.DECIMAL(9, 2),
+        allowNull: true,
       },
-      wrBowlerEcon : {
-        type : DataTypes.DECIMAL(9, 2),
-        allowNull: true
+      wrBowlerPreviousEconomy: {
+        type: DataTypes.DECIMAL(9, 2),
+        allowNull: true,
       },
     },
     {
