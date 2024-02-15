@@ -3,6 +3,8 @@ const {
   insertEventQuery,
   updateEventQuery,
 } = require("../repository/TableEvent");
+const { convertDate } = require("../utilities");
+const configConstants = require("../utilities/configConstants");
 
 const allEventService = async (request) => {
   const { isActive, eventTypeId, competitionId } = request.body;
@@ -60,12 +62,19 @@ const eventBycompetitionIdService = async (request) => {
   const result = global.tblEvents.filter(
     (item) => item.competitionId === competitionId
   );
-  if (Array.isArray(result)) {
-    return result;
-  } else {
-    return [result];
-  }
-  //return result || null;
+
+  const currentDate = new Date();
+  const daysTominus = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.COMMENTARY_EVENT_DAY_INTERVAL.toLocaleLowerCase()).value;
+  const getEventDate = new Date(currentDate.setDate(currentDate.getDate() - parseInt(daysTominus)));
+  const _event = result.filter((item) => new Date(item.eventDate) >= getEventDate).map((item) => {
+    console.log(item.eventDate);
+    return {
+      eventId: item.eventId,
+      eventName:  `${item.eventName} - ${convertDate(item.eventDate)}`
+    };
+  })
+
+  return _event || null;
 };
 
 const createEventService = async (request, fastify) => {
