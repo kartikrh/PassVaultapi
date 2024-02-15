@@ -1188,6 +1188,8 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
     t2sn: "",
     t2s: "",
     t2im: "",
+    t1jr: "",
+    t2jr: "",
     par: "",
     lawkt: "",
     rer: "",
@@ -1213,6 +1215,8 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
   let t1sn;
   let t1s;
   let t1im;
+  let t1jr;
+  let t2jr;
   let t2n;
   let t2nid = 0;
   let t2sn;
@@ -1250,7 +1254,10 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
   mtype = result.matchTypeId;
   //teams set
   const commentaryTeamsOne = await global.tblCommentaryTeams.filter(
-    (item) => item.commentaryId === cid && item.teamId === t1nid && item.currentInnings === currentInning
+    (item) =>
+      item.commentaryId === cid &&
+      item.teamId === t1nid &&
+      item.currentInnings === currentInning
   );
 
   const matchType = await global.tblMatchTypes.filter(
@@ -1263,8 +1270,10 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
   }));
 
   const commentaryTeamsTwo = await global.tblCommentaryTeams.filter(
-    (item) => item.commentaryId === cid && item.teamId === t2nid
-    && item.currentInnings === currentInning
+    (item) =>
+      item.commentaryId === cid &&
+      item.teamId === t2nid &&
+      item.currentInnings === currentInning
   );
   if (commentaryTeamsOne.length > 0) {
     t1sn = commentaryTeamsOne[0].shortName;
@@ -1300,10 +1309,12 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
     (item) => item.teamId === t1nid
   );
   t1im = _teamsC1[0].image;
+  t1jr = _teamsC1[0].jersey;
   const _teamsC2 = await global.tblTeams.filter(
     (item) => item.teamId === t2nid
   );
   t2im = _teamsC2[0].image;
+  t2jr = _teamsC2[0].jersey;
 
   if (getstatus == 1) {
     // Assign values to the resultArr object
@@ -1317,6 +1328,8 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
     resultArr.t1sn = t1sn;
     resultArr.t1s = t1s;
     resultArr.t1im = t1im;
+    resultArr.t1jr = t1jr;
+    resultArr.t2jr = t2jr;
     resultArr.t2n = t2n;
     resultArr.t2sn = t2sn;
     resultArr.t2s = t2s;
@@ -1363,6 +1376,8 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
     resultArr.t1sn = t1sn;
     resultArr.t1s = t1s;
     resultArr.t1im = t1im;
+    resultArr.t1jr = t1jr;
+    resultArr.t2jr = t2jr;
     resultArr.t2n = t2n;
     resultArr.t2sn = t2sn;
     resultArr.t2s = t2s;
@@ -1469,7 +1484,12 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
     }
 
     const commentaryWicket = await global.tblCommentaryWicket
-      .filter((item) => item.commentaryId === cid && item.teamId === batid && item.currentInnings === currentInning)
+      .filter(
+        (item) =>
+          item.commentaryId === cid &&
+          item.teamId === batid &&
+          item.currentInnings === currentInning
+      )
       .slice(-1)[0]; // Get the last 1 overs;
 
     let _playerWicket;
@@ -1477,7 +1497,12 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
     let _playerWiktRBall;
 
     const commentaryPartnership = await global.tblCommentaryPartnership
-      .filter((item) => item.commentaryId === cid && item.teamId === batid && item.currentInnings === currentInning)
+      .filter(
+        (item) =>
+          item.commentaryId === cid &&
+          item.teamId === batid &&
+          item.currentInnings === currentInning
+      )
       .slice(-1)[0]; // Get the last 1 overs
 
     if (commentaryWicket) {
@@ -1502,6 +1527,8 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
     resultArr.t1sn = t1sn;
     resultArr.t1s = t1s;
     resultArr.t1im = t1im;
+    resultArr.t1jr = t1jr;
+    resultArr.t2jr = t2jr;
     resultArr.t2n = t2n;
     resultArr.t2sn = t2sn;
     resultArr.t2s = t2s;
@@ -1541,41 +1568,53 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
       item.isPlay === true
   );
 
-  const cbt = commentaryPlayers_batter.map((player) => ({
-    pid: player.playerId,
-    batn: player.playerName,
-    trun: player.batRun || 0,
-    tball: player.batBall || 0,
-    t4: player.batFour || 0,
-    t6: player.batSix || 0,
-    sr: player.batSrr || 0,
-    os: player.onStrike,
-    str : parseFloat(player.batsmanStrikeRate) || 0.0
-  }));
+  const cbt = commentaryPlayers_batter.map((player) => {
+    let bati = global.tblPlayers.find(
+      (item) => item.playerId === player.playerId
+    ).image;
+    return {
+      pid: player.playerId,
+      batn: player.playerName,
+      bati: bati,
+      trun: player.batRun || 0,
+      tball: player.batBall || 0,
+      t4: player.batFour || 0,
+      t6: player.batSix || 0,
+      sr: player.batSrr || 0,
+      os: player.onStrike,
+      str: parseFloat(player.batsmanStrikeRate) || 0.0,
+    };
+  });
 
-  const cbl = commentaryPlayersBowler.map((bowler) => ({
-    pid: bowler.playerId,
-    pn: bowler.playerName,
-    tov: bowler.bowlerOver || 0,
-    cob: bowler.bowlerCurrentBall || 0,
-    trun: bowler.bowlerRun || 0,
-    t4: bowler.bowlerFour || 0,
-    t6: bowler.bowlerSix || 0,
-    twr: bowler.bowlerWideBallRun || 0,
-    twb: bowler.bowlerWideBall || 0,
-    tnr: bowler.bowlerNoBallRun || 0,
-    tnb: bowler.bowlerNoBall || 0,
-    mov: bowler.bowlerMaidenOver || 0,
-    twik: bowler.bowlerTotalWicket || 0.0,
-    eco: parseFloat(bowler.bowlerEconomy) || 0.0,
-    dob: bowler.bowlerDotBall || 0,
-    exr:
-      bowler.bowlerWideBallRun ||
-      0 + bowler.bowlerNoBallRun ||
-      0 + bowler.bowlerByeBallRun ||
-      0 + bowler.bowlerLegByeBallRun ||
-      0,
-  }));
+  const cbl = commentaryPlayersBowler.map((bowler) => {
+    let bli = global.tblPlayers.find(
+      (item) => item.playerId === bowler.playerId
+    ).image;
+    return {
+      pid: bowler.playerId,
+      pn: bowler.playerName,
+      bli : bli,
+      tov: bowler.bowlerOver || 0,
+      cob: bowler.bowlerCurrentBall || 0,
+      trun: bowler.bowlerRun || 0,
+      t4: bowler.bowlerFour || 0,
+      t6: bowler.bowlerSix || 0,
+      twr: bowler.bowlerWideBallRun || 0,
+      twb: bowler.bowlerWideBall || 0,
+      tnr: bowler.bowlerNoBallRun || 0,
+      tnb: bowler.bowlerNoBall || 0,
+      mov: bowler.bowlerMaidenOver || 0,
+      twik: bowler.bowlerTotalWicket || 0.0,
+      eco: parseFloat(bowler.bowlerEconomy) || 0.0,
+      dob: bowler.bowlerDotBall || 0,
+      exr:
+        bowler.bowlerWideBallRun ||
+        0 + bowler.bowlerNoBallRun ||
+        0 + bowler.bowlerByeBallRun ||
+        0 + bowler.bowlerLegByeBallRun ||
+        0,
+    }
+  });
 
   const commentaryOvers = global.tblOvers
     .filter((item) => item.commentaryId === cid && item.currentInnings === currentInning)
@@ -1636,6 +1675,8 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     t1sn: "",
     t1s: "",
     t1im: "",
+    t1jr: "",
+    t2jr: "",
     t2n: "",
     t2sn: "",
     t2s: "",
@@ -1665,6 +1706,8 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
   let t1sn;
   let t1s;
   let t1im;
+  let t1jr;
+  let t2jr;
   let t2n;
   let t2nid = 0;
   let t2sn;
@@ -1702,13 +1745,17 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
   mtype = result.matchTypeId;
   //teams set
   const commentaryTeamsOne = await global.tblCommentaryTeams.filter(
-    (item) => item.commentaryId === cid && item.teamId === t1nid
-    && item.currentInnings === currentInnings
+    (item) =>
+      item.commentaryId === cid &&
+      item.teamId === t1nid &&
+      item.currentInnings === currentInnings
   );
 
   const _batTeams = await global.tblCommentaryTeams.filter(
     (item) =>
-      item.commentaryId === cid && item.currentInnings == currentInnings && item.teamStatus === 1
+      item.commentaryId === cid &&
+      item.currentInnings == currentInnings &&
+      item.teamStatus === 1
   );
   const matchType = await global.tblMatchTypes.filter(
     (item) => item.matchTypeId === mtype
@@ -1720,8 +1767,10 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
   }));
 
   const commentaryTeamsTwo = await global.tblCommentaryTeams.filter(
-    (item) => item.commentaryId === cid && item.teamId === t2nid
-    && item.currentInnings === currentInnings
+    (item) =>
+      item.commentaryId === cid &&
+      item.teamId === t2nid &&
+      item.currentInnings === currentInnings
   );
   if (commentaryTeamsOne.length > 0) {
     t1sn = commentaryTeamsOne[0].shortName;
@@ -1757,10 +1806,12 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     (item) => item.teamId === t1nid
   );
   t1im = _teamsC1[0].image;
+  t1jr = _teamsC1[0].jersey;
   const _teamsC2 = await global.tblTeams.filter(
     (item) => item.teamId === t2nid
   );
   t2im = _teamsC2[0].image;
+  t2jr = _teamsC2[0].jersey;
 
   if (getstatus == 1) {
     // Assign values to the resultArr object
@@ -1774,6 +1825,8 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     resultArr.t1sn = t1sn;
     resultArr.t1s = t1s;
     resultArr.t1im = t1im;
+    resultArr.t1jr = t1jr;
+    resultArr.t2jr = t2jr;
     resultArr.t2n = t2n;
     resultArr.t2sn = t2sn;
     resultArr.t2s = t2s;
@@ -1820,6 +1873,8 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     resultArr.t1sn = t1sn;
     resultArr.t1s = t1s;
     resultArr.t1im = t1im;
+    resultArr.t1jr = t1jr;
+    resultArr.t2jr = t2jr;
     resultArr.t2n = t2n;
     resultArr.t2sn = t2sn;
     resultArr.t2s = t2s;
@@ -1926,7 +1981,12 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     }
 
     const commentaryWicket = await global.tblCommentaryWicket
-      .filter((item) => item.commentaryId === cid && item.teamId === batid && item.currentInnings === currentInnings)
+      .filter(
+        (item) =>
+          item.commentaryId === cid &&
+          item.teamId === batid &&
+          item.currentInnings === currentInnings
+      )
       .slice(-1)[0]; // Get the last 1 overs;
 
     let _playerWicket;
@@ -1934,7 +1994,12 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     let _playerWiktRBall;
 
     const commentaryPartnership = await global.tblCommentaryPartnership
-      .filter((item) => item.commentaryId === cid && item.teamId === batid && item.currentInnings === currentInnings)
+      .filter(
+        (item) =>
+          item.commentaryId === cid &&
+          item.teamId === batid &&
+          item.currentInnings === currentInnings
+      )
       .slice(-1)[0]; // Get the last 1 overs
 
     if (commentaryWicket) {
@@ -1959,6 +2024,8 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     resultArr.t1sn = t1sn;
     resultArr.t1s = t1s;
     resultArr.t1im = t1im;
+    resultArr.t1jr = t1jr;
+    resultArr.t2jr = t2jr;
     resultArr.t2n = t2n;
     resultArr.t2sn = t2sn;
     resultArr.t2s = t2s;
@@ -1994,44 +2061,59 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
       item.isPlay === true
   );
 
-  const cbt = commentaryPlayers_batter.map((player) => ({
-    pid: player.playerId,
-    batn: player.playerName,
-    trun: player.batRun || 0,
-    tball: player.batBall || 0,
-    t4: player.batFour || 0,
-    t6: player.batSix || 0,
-    sr: player.batSrr || 0,
-    os: player.onStrike,
-    str : parseFloat(player.batsmanStrikeRate) || 0.0
-  }));
+  const cbt = commentaryPlayers_batter.map((player) => {
+    let bati = global.tblPlayers.find(
+      (item) => item.playerId === player.playerId
+    ).image;
+    return {
+      pid: player.playerId,
+      batn: player.playerName,
+      bati: bati,
+      trun: player.batRun || 0,
+      tball: player.batBall || 0,
+      t4: player.batFour || 0,
+      t6: player.batSix || 0,
+      sr: player.batSrr || 0,
+      os: player.onStrike,
+      str: parseFloat(player.batsmanStrikeRate) || 0.0,
+    };
+  });
 
-  const cbl = commentaryPlayersBowler.map((bowler) => ({
-    pid: bowler.playerId,
-    pn: bowler.playerName,
-    tov: bowler.bowlerOver || 0,
-    cob: bowler.bowlerCurrentBall || 0,
-    trun: bowler.bowlerRun || 0,
-    t4: bowler.bowlerFour || 0,
-    t6: bowler.bowlerSix || 0,
-    twr: bowler.bowlerWideBallRun || 0,
-    twb: bowler.bowlerWideBall || 0,
-    tnr: bowler.bowlerNoBallRun || 0,
-    tnb: bowler.bowlerNoBall || 0,
-    mov: bowler.bowlerMaidenOver || 0,
-    twik: bowler.bowlerTotalWicket || 0.0,
-    eco: parseFloat(bowler.bowlerEconomy) || 0.0,
-    dob: bowler.bowlerDotBall || 0,
-    exr:
-      bowler.bowlerWideBallRun ||
-      0 + bowler.bowlerNoBallRun ||
-      0 + bowler.bowlerByeBallRun ||
-      0 + bowler.bowlerLegByeBallRun ||
-      0,
-  }));
+  const cbl = commentaryPlayersBowler.map((bowler) => {
+    let bli = global.tblPlayers.find(
+      (item) => item.playerId === bowler.playerId
+    ).image;
+    return {
+      pid: bowler.playerId,
+      pn: bowler.playerName,
+      bli : bli,
+      tov: bowler.bowlerOver || 0,
+      cob: bowler.bowlerCurrentBall || 0,
+      trun: bowler.bowlerRun || 0,
+      t4: bowler.bowlerFour || 0,
+      t6: bowler.bowlerSix || 0,
+      twr: bowler.bowlerWideBallRun || 0,
+      twb: bowler.bowlerWideBall || 0,
+      tnr: bowler.bowlerNoBallRun || 0,
+      tnb: bowler.bowlerNoBall || 0,
+      mov: bowler.bowlerMaidenOver || 0,
+      twik: bowler.bowlerTotalWicket || 0.0,
+      eco: parseFloat(bowler.bowlerEconomy) || 0.0,
+      dob: bowler.bowlerDotBall || 0,
+      exr:
+        bowler.bowlerWideBallRun ||
+        0 + bowler.bowlerNoBallRun ||
+        0 + bowler.bowlerByeBallRun ||
+        0 + bowler.bowlerLegByeBallRun ||
+        0,
+    }
+  });
 
   const commentaryOvers = global.tblOvers
-    .filter((item) => item.commentaryId === cid && item.currentInnings === currentInnings)
+    .filter(
+      (item) =>
+        item.commentaryId === cid && item.currentInnings === currentInnings
+    )
     .slice(-2); // Get the last 2 overs
 
   const last2OversIds = commentaryOvers.map((over) => over.overId);
@@ -2137,37 +2219,40 @@ const getMatchTypeListByCommentaryService = async (request, fastify) => {
   return matchTypeList;
 };
 const changeBowlerOfCommentaryService = async (request, fastify) => {
-  const {bowlerId , overId , commentaryId ,currentInnings} = request.body;
+  const { bowlerId, overId, commentaryId, currentInnings } = request.body;
   const commentary = global.tblCommentaries.find(
     (item) => item.commentaryId === commentaryId
   );
-  if(!commentary){
+  if (!commentary) {
     throw new Error("Commentary with this id not Found");
   }
 
-  const over = global.tblOvers.find(
-    (item) => item.overId === overId
-  );
-  if(!over){
+  const over = global.tblOvers.find((item) => item.overId === overId);
+  if (!over) {
     throw new Error("Over with this id not Found");
   }
 
   const bowler = global.tblCommentaryPlayers.find(
-    (item) => item.commentaryPlayerId === bowlerId 
-    && item.currentInnings === currentInnings
+    (item) =>
+      item.commentaryPlayerId === bowlerId &&
+      item.currentInnings === currentInnings
   );
-  if(!bowler){
-    throw new Error("Bowler with this id not Found")
+  if (!bowler) {
+    throw new Error("Bowler with this id not Found");
   }
 
   // update bowler in commentary
-  const updatedData = await changeBowlerInCommentary({
-    commentaryId,
-    overId,
-    bowlerId,
-    currentInnings
-  }, request, fastify);
-  
+  const updatedData = await changeBowlerInCommentary(
+    {
+      commentaryId,
+      overId,
+      bowlerId,
+      currentInnings,
+    },
+    request,
+    fastify
+  );
+
   return updatedData;
 };
 const getMatchListByStatus = async (body, request, fastify) => {
@@ -2175,7 +2260,7 @@ const getMatchListByStatus = async (body, request, fastify) => {
   let resultArr = [];
   const isRun = body.type == "scheduled" || "completed" ? false : true;
   let rno = 0;
-  let crr,rrr;
+  let crr, rrr;
   for (item of body.commentaryData) {
     rno++;
     let eventType = await global.tblEventTypes.find(
@@ -2186,15 +2271,19 @@ const getMatchListByStatus = async (body, request, fastify) => {
     );
     //teams set
     const commentaryTeamsOne = await global.tblCommentaryTeams.find(
-      (team) => team.commentaryId === item.commentaryId && team.teamId === item.team1Id
-      && team.currentInnings === item.currentInnings
+      (team) =>
+        team.commentaryId === item.commentaryId &&
+        team.teamId === item.team1Id &&
+        team.currentInnings === item.currentInnings
     );
 
     const commentaryTeamsTwo = await global.tblCommentaryTeams.find(
-      (team) => team.commentaryId === item.commentaryId && team.teamId === item.team2Id
-      && team.currentInnings === item.currentInnings
+      (team) =>
+        team.commentaryId === item.commentaryId &&
+        team.teamId === item.team2Id &&
+        team.currentInnings === item.currentInnings
     );
-    let teamScore1 , teamScore2;
+    let teamScore1, teamScore2;
     if (commentaryTeamsOne) {
       const wicket1 =
         commentaryTeamsOne.teamWicket === null
@@ -2219,7 +2308,7 @@ const getMatchListByStatus = async (body, request, fastify) => {
         commentaryTeamsTwo.teamOver === null
           ? 0.0
           : commentaryTeamsTwo.teamOver;
-       teamScore2 = commentaryTeamsTwo?.teamScore ?? 0;
+      teamScore2 = commentaryTeamsTwo?.teamScore ?? 0;
       teamScore2 = teamScore2 + "/" + wicket1 + "(" + overs1 + ")";
     }
     // get image of team
@@ -2230,59 +2319,56 @@ const getMatchListByStatus = async (body, request, fastify) => {
       (team) => team.teamId === item.team2Id
     );
 
-    if(commentaryTeamsOne.teamStatus == 1){
+    if (commentaryTeamsOne.teamStatus == 1) {
       crr = commentaryTeamsOne.crr;
       rrr = commentaryTeamsOne.rrr;
-    }
-    else{
+    } else {
       crr = commentaryTeamsTwo.crr;
       rrr = commentaryTeamsTwo.rrr;
     }
 
     let details = {
-      rno : rno,
-      eid : item.eventRefId || "",
-      ety : eventType?.eventType || "",
-      mtyp : item.matchType || "",
-      com : competition?.competition || "",
-      en : item.eventName || "",
-      ed : convertDate(item.eventDate, "DD/MM/YYYY") || "",
-      et : convertDate(item.eventDate, "hh:mm:ss") || "",
-      te1n : commentaryTeamsOne.teamName || "",
-      te2n : commentaryTeamsTwo.teamName || "",
-      s1n : commentaryTeamsOne.shortName || "",
-      s2n : commentaryTeamsTwo.shortName || "",
-      te1i : team1.image || "",
-      te2i : team2.image || "",
-      loc : item.location || "",
-      isrun : isRun,  
-      t1s : teamScore1 || "",
-      t2s : teamScore2 || "",
-      dis : item.displayStatus || "",
-      rmk : item.rmk || "",
-      te1crr : commentaryTeamsOne.crr || 0,
-      te2crr : commentaryTeamsTwo.crr || 0,
-      te1rrr : commentaryTeamsOne.rrr || 0,
-      te2rrr : commentaryTeamsTwo.rrr || 0,
-      crr : crr || 0,
-      rrr : rrr || 0
-
-
-    }
- 
+      rno: rno,
+      eid: item.eventRefId || "",
+      ety: eventType?.eventType || "",
+      mtyp: item.matchType || "",
+      com: competition?.competition || "",
+      en: item.eventName || "",
+      ed: convertDate(item.eventDate, "DD/MM/YYYY") || "",
+      et: convertDate(item.eventDate, "hh:mm:ss") || "",
+      te1n: commentaryTeamsOne.teamName || "",
+      te2n: commentaryTeamsTwo.teamName || "",
+      s1n: commentaryTeamsOne.shortName || "",
+      s2n: commentaryTeamsTwo.shortName || "",
+      te1i: team1.image || "",
+      te2i: team2.image || "",
+      te1Jersey: commentaryTeamsOne.jersey || "",
+      te2Jersey: commentaryTeamsTwo.jersey || "",
+      loc: item.location || "",
+      isrun: isRun,
+      t1s: teamScore1 || "",
+      t2s: teamScore2 || "",
+      dis: item.displayStatus || "",
+      rmk: item.rmk || "",
+      te1crr: commentaryTeamsOne.crr || 0,
+      te2crr: commentaryTeamsTwo.crr || 0,
+      te1rrr: commentaryTeamsOne.rrr || 0,
+      te2rrr: commentaryTeamsTwo.rrr || 0,
+      crr: crr || 0,
+      rrr: rrr || 0,
+    };
 
     resultArr.push(details);
   }
 
   return resultArr;
-
-}
+};
 
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
   saveCommentaryService,
-  cloneCommentaryService, 
+  cloneCommentaryService,
   deleteCommentaryService,
   allDisplayStatusService,
   commentaryDetailsByIdService,
@@ -2297,5 +2383,5 @@ module.exports = {
   updateMatchTypeInCommentaryService,
   getMatchTypeListByCommentaryService,
   changeBowlerOfCommentaryService,
-  getMatchListByStatus
+  getMatchListByStatus,
 };
