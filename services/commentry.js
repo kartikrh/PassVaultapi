@@ -2254,6 +2254,8 @@ const getMatchListByStatus = async (body, request, fastify) => {
       s2n : commentaryTeamsTwo.shortName || "",
       te1i : team1.image || "",
       te2i : team2.image || "",
+      te1Jersey : commentaryTeamsOne.jersey || "",
+      te2Jersey : commentaryTeamsTwo.jersey || "",
       loc : item.location || "",
       isrun : isRun,  
       t1s : teamScore1 || "",
