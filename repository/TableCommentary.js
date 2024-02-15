@@ -231,7 +231,7 @@ const insertCommentaryPlayers = async (
       `
       WITH insert_data AS (
         insert into "tblCommentaryPlayers" ("wrCommentaryId" , "wrTeamId" , "wrPlayerId","wrPlayerName", "wrDisplayOrder","wrCurrentInnings",
-        "wrBatsmanAverage", "wrBatsmanStr", "wrBowlerEcon", "wrBowlerAverage")
+        "wrBatsmanAverage", "wrBatsmanPreviousStrikeRate", "wrBowlerPreviousEconomy", "wrBowlerAverage")
         values (
           (select "wrKey" from "tblEncryptedData" where "wrValue" = $1),
           (select "wrKey" from "tblEncryptedData" where "wrValue" = $2),
@@ -300,7 +300,7 @@ const upsertCommentaryPlayers = async (
       RETURNING *
     )
     INSERT INTO "tblCommentaryPlayers" ("wrCommentaryId", "wrTeamId", "wrPlayerId", "wrPlayerName", "wrDisplayOrder", "wrCurrentInnings",
-    "wrBatsmanAverage", "wrBatsmanStr", "wrBowlerEcon", "wrBowlerAverage")
+    "wrBatsmanAverage", "wrBatsmanPreviousStrikeRate", "wrBowlerPreviousEconomy", "wrBowlerAverage")
     SELECT
       (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $1),
       (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $2),
@@ -775,8 +775,8 @@ const getAllCommentaryPlayerQuery = async (fastify) => {
     "wrBowlerEconomy" as "bowlerEconomy",
     "wrBowlerAverage" as "bowlerAverage",
     "wrCurrentInnings" as "currentInnings",
-    "wrBatsmanStr" as "batsmanStr",
-    "wrBowlerEcon" as "bowlerEcon"
+    "wrBatsmanPreviousStrikeRate" as "batsmanPreviousStrikeRate",
+    "wrBowlerPreviousEconomy" as "bowlerPreviousEconomy"
     from "tblCommentaryPlayers" tcp
     left join "tblEncryptedData" te on tcp."wrCommentaryPlayerId" = te."wrKey"
     left join "tblEncryptedData" te1 on tcp."wrCommentaryId" = te1."wrKey"
@@ -2020,7 +2020,7 @@ const updateCommentaryPlayerIdInCommentaryTeams = async (
     );
     throw new Error(err.message);
   }
-}
+};
 const updateMatchTypeInCommentaryQuery = async (data, fastify, request) => {
   try {
     return await fastify.db.query(
@@ -2029,7 +2029,7 @@ const updateMatchTypeInCommentaryQuery = async (data, fastify, request) => {
         type: fastify.db.QueryTypes.UPDATE,
         bind: [data.matchTypeId, data.commentaryId],
       }
-    )
+    );
   } catch (err) {
     errorLogger(
       fastify,
@@ -2039,8 +2039,8 @@ const updateMatchTypeInCommentaryQuery = async (data, fastify, request) => {
     );
     throw new Error(err.message);
   }
-}
-const changeBowlerInCommentary = async (data, request,fastify) => {
+};
+const changeBowlerInCommentary = async (data, request, fastify) => {
   try {
     // update bowler in tblOver
     const query1 = `
@@ -2091,27 +2091,24 @@ const changeBowlerInCommentary = async (data, request,fastify) => {
       bind: params,
     });
     global.tblOvers = await getAllOversQuery(fastify);
-    global.tblCommentaryBallByBall = await getAllCommentaryBallByBallQuery(fastify);
+    global.tblCommentaryBallByBall = await getAllCommentaryBallByBallQuery(
+      fastify
+    );
     global.tblCommentaryWickets = await getAllCommentaryWicketQuery(fastify);
-
 
     let commentaryBallByBall = global.tblCommentaryBallByBall.filter(
       (ball) =>
-        ball.commentaryId === data.commentaryId &&
-        ball.overId === data.overId
+        ball.commentaryId === data.commentaryId && ball.overId === data.overId
     );
 
     let commentaryWickets = global.tblCommentaryWickets.filter(
-      (wicket) =>
-        wicket.commentaryId === data.commentaryId
+      (wicket) => wicket.commentaryId === data.commentaryId
     );
 
     return {
       commentaryBallByBall,
       commentaryWickets,
     };
-
-
   } catch (error) {
     errorLogger(
       fastify,
@@ -2121,8 +2118,8 @@ const changeBowlerInCommentary = async (data, request,fastify) => {
     );
     throw new Error(error.message);
   }
-}
-const getCommentaryBallByBallQuery = async (request,fastify) => {
+};
+const getCommentaryBallByBallQuery = async (request, fastify) => {
   return await fastify.db.query(
     `
     WITH filtered_commentary AS (
@@ -2180,7 +2177,7 @@ const getCommentaryBallByBallQuery = async (request,fastify) => {
       bind: [request.body.commentaryId],
     }
   );
-}
+};
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -2220,5 +2217,5 @@ module.exports = {
   updateCommentaryPlayerIdInCommentaryTeams,
   updateMatchTypeInCommentaryQuery,
   changeBowlerInCommentary,
-  getCommentaryBallByBallQuery
+  getCommentaryBallByBallQuery,
 };
