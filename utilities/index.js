@@ -1,6 +1,6 @@
 const uaParser = require("ua-parser-js");
 const crypto = require("crypto");
-
+const moment = require("moment");
 const ERROR_CODES = {
   INVALID_INPUT: "INVALID_INPUT",
   SERVER_ERROR: "SERVER_ERROR",
@@ -171,7 +171,13 @@ function getUserChildIds(parentId, data) {
   findChildren(parentId);
   return result;
 }
-
+const convertDate = (date, format) =>{
+  if (date) {
+    if (format) return moment(date).local().format(format);
+    return  moment(date).local().format("DD/MM/YYYY hh:mm:ss a");
+  }
+  return "";
+}
 module.exports = {
   ERROR_CODES,
   error,
@@ -185,5 +191,6 @@ module.exports = {
   isJson,
   getTitle,
   getMessage,
-  getUserChildIds
+  getUserChildIds,
+  convertDate
 };

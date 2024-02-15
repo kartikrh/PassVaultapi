@@ -33,15 +33,27 @@ const {
   getCommentaryBallByBallQuery,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
+const { convertDate } = require("../utilities");
 
 const allCommentaryService = async (request,fastify) => {
   // return global.tblCommentaries;
-  const {commentaryStatus} = request.body;
+  const {commentaryStatus, eventTypeId , competitionId} = request.body;
+  let result;
   if(commentaryStatus === undefined || commentaryStatus === 0){
-    return global.tblCommentaries.filter((item) => item.commentaryStatus !== 4);
+    result = global.tblCommentaries.filter((item) => item.commentaryStatus !== 4);
   }
-  return global.tblCommentaries.filter((item) => item.commentaryStatus === commentaryStatus);
+  else {
+    result = global.tblCommentaries.filter((item) => item.commentaryStatus === commentaryStatus);
+  }
+  // if eventTypeId is provided then filter commentary by eventTypeId
+  if(eventTypeId){
+    result = result.filter((item) => item.eventTypeId === eventTypeId);
+  }
 
+  if(competitionId){
+    result = result.filter((item) => item.competitionId === competitionId);
+  }
+  return result;
 };
 
 const allDisplayStatusService = async () => {
@@ -2163,12 +2175,12 @@ const getMatchListByStatus = async (body, request, fastify) => {
   let resultArr = [];
   const isRun = body.type == "scheduled" || "completed" ? false : true;
   let rno = 0;
+  let crr,rrr;
   for (item of body.commentaryData) {
     rno++;
     let eventType = await global.tblEventTypes.find(
       (eventType) => eventType.eventTypeId === item.eventTypeId
     );
-
     let competition = await global.tblCompetitions.find(
       (competition) => competition.competitionId === item.competitionId
     );
@@ -2218,12 +2230,21 @@ const getMatchListByStatus = async (body, request, fastify) => {
       (team) => team.teamId === item.team2Id
     );
 
+    if(commentaryTeamsOne.teamStatus == 1){
+      crr = commentaryTeamsOne.crr;
+      rrr = commentaryTeamsOne.rrr;
+    }
+    else{
+      crr = commentaryTeamsTwo.crr;
+      rrr = commentaryTeamsTwo.rrr;
+    }
+
     let details = {
       rno : rno,
       eid : item.eventRefId || "",
       ety : eventType?.eventType || "",
       mtyp : item.matchType || "",
-      com : competition?.competitionName || "",
+      com : competition?.competition || "",
       en : item.eventName || "",
       ed : convertDate(item.eventDate, "DD/MM/YYYY") || "",
       et : convertDate(item.eventDate, "hh:mm:ss") || "",
@@ -2243,6 +2264,8 @@ const getMatchListByStatus = async (body, request, fastify) => {
       te2crr : commentaryTeamsTwo.crr || 0,
       te1rrr : commentaryTeamsOne.rrr || 0,
       te2rrr : commentaryTeamsTwo.rrr || 0,
+      crr : crr || 0,
+      rrr : rrr || 0
 
 
     }
@@ -2254,13 +2277,7 @@ const getMatchListByStatus = async (body, request, fastify) => {
   return resultArr;
 
 }
-const convertDate = (date, format) =>{
-  if (date) {
-    if (format) return moment(date).local().format(format);
-    return  moment(date).local().format("DD/MM/YYYY hh:mm:ss");
-  }
-  return "";
-}
+
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
