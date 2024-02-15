@@ -67,10 +67,11 @@ const eventBycompetitionIdService = async (request) => {
   const daysTominus = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.COMMENTARY_EVENT_DAY_INTERVAL.toLocaleLowerCase()).value;
   const getEventDate = new Date(currentDate.setDate(currentDate.getDate() - parseInt(daysTominus)));
   const _event = result.filter((item) => new Date(item.eventDate) >= getEventDate).map((item) => {
-    console.log(item.eventDate);
+    // console.log(item.eventDate);
     return {
       eventId: item.eventId,
-      eventName:  `${item.eventName} - ${convertDate(item.eventDate)}`
+      eventName: item.eventName,
+      eventDate : item.eventDate,
     };
   })
 
