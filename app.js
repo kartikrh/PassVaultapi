@@ -11,7 +11,7 @@ const featchData = require("./utilities/fetchAllData");
 const { Server } = require("socket.io"); // Import Socket.IO
 const { connection, socketMiddleware } = require("./socketIo");
 const { fastifyRateLimit } = require("@fastify/rate-limit");
-const { responseLogger } = require("./utilities/logger");
+const { responseLogger, responseLogInDB } = require("./utilities/logger");
 const fastifyMultipart = require("@fastify/multipart");
 const fastifyStatic = require("@fastify/static");
 const { generateToken } = require("./utilities/tokenization");
@@ -113,6 +113,7 @@ module.exports = async function (fastify, opts) {
   fastify.addHook("onRequest", (request, reply, done) => {
     // Record the request start time in nanoseconds
     request.startTime = process.hrtime.bigint();
+    request.startTimeTimeStemp = new Date();
     done();
   });
 
@@ -149,14 +150,22 @@ module.exports = async function (fastify, opts) {
 
   fastify.addHook("onResponse", (request, reply, done) => {
     const logger = false;
+    const responseTimeInNanoseconds = process.hrtime.bigint() - request.startTime;
+    const responseTimeInMilliseconds = Number(responseTimeInNanoseconds) / 1e6;
+    request.responseTime = responseTimeInMilliseconds;
+    
+    // if path include /commentary then do log in db
+    if (request.originalUrl.includes("/commentary")) {
+      request.endTimeTimeStemp = new Date();
+      responseLogInDB(request, fastify);
+    }
+  
     if (request.startTime && logger) {
+      request.responseTime = responseTimeInMilliseconds;
       const responseTimeInNanoseconds =
-        process.hrtime.bigint() - request.startTime;
+      process.hrtime.bigint() - request.startTime;
       const responseTimeInMilliseconds =
         Number(responseTimeInNanoseconds) / 1e6;
-
-      request.responseTime = responseTimeInMilliseconds;
-
       responseLogger(request);
     }
     done();
