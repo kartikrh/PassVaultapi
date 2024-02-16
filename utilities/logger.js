@@ -36,4 +36,28 @@ const responseLogger = async (request) => {
   }
 };
 
-module.exports = { errorLogger, responseLogger };
+const responseLogInDB = async (request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `INSERT INTO "tblResponseLogs" ("wrDomain", "wrPath", "wrResponseTime", "wrUserId", "wrUserIp", "wrRequestBody",
+      "wrRequestStartTime", "wrRequestEndTime") VALUES ($1, $2, $3, $4, $5 ,$6,$7,$8)`,
+      {
+        type: fastify.db.QueryTypes.INSERT,
+        bind: [
+          request.hostname,
+          request.originalUrl,
+          parseInt(request.responseTime),
+          request?.userTokenInfo?.WrUserId || null,
+          request.ip,
+          request.body || null,
+          request.startTimeTimeStemp,
+          request.endTimeTimeStemp,
+        ],
+      }
+    );
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+module.exports = { errorLogger, responseLogger ,responseLogInDB};
