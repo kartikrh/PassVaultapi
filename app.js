@@ -161,11 +161,6 @@ module.exports = async function (fastify, opts) {
     }
   
     if (request.startTime && logger) {
-      request.responseTime = responseTimeInMilliseconds;
-      const responseTimeInNanoseconds =
-      process.hrtime.bigint() - request.startTime;
-      const responseTimeInMilliseconds =
-        Number(responseTimeInNanoseconds) / 1e6;
       responseLogger(request);
     }
     done();
