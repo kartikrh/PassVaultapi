@@ -33,7 +33,7 @@ const {
   getCommentaryBallByBallQuery,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
-const { convertDate } = require("../utilities");
+const { convertDate, wicketType } = require("../utilities");
 
 const allCommentaryService = async (request,fastify) => {
   // return global.tblCommentaries;
@@ -787,7 +787,7 @@ const saveCommentaryDetailsService = async (request, fastify) => {
   } = request.body;
 
   let response = {};
-  let _CommentaryId = "";
+  let _CommentaryId = "";  
   //Get Commentry ID
   if (commentaryDetails) {
     _CommentaryId = commentaryDetails.commentaryId;
@@ -2364,6 +2364,246 @@ const getMatchListByStatus = async (body, request, fastify) => {
   return resultArr;
 };
 
+
+const getAllDetailsByEventIdService = async (request, fastify) => {
+  const { eventId } = request.body;
+  const commentary = global.tblCommentaries.find(
+    (item) => item.eventRefId === eventId
+  );
+  if(!commentary){
+    throw new Error("Commentary with this id not Found");
+  }
+  const currentInnings = commentary.currentInnings;
+  const commentaryTeamsOne = await global.tblCommentaryTeams.find(
+    (item) =>
+      item.commentaryId === commentary.commentaryId &&
+      item.teamId === commentary.team1Id &&
+      item.currentInnings === currentInnings
+  );
+
+  const commentaryTeamsTwo = await global.tblCommentaryTeams.find(
+    (item) =>
+      item.commentaryId === commentary.commentaryId &&
+      item.teamId === commentary.team2Id &&
+      item.currentInnings === currentInnings
+  );
+
+
+  //get team data from team table
+  const team1 = await global.tblTeams.find(
+    (team) => team.teamId === commentary.team1Id
+  );
+  const team2 = await global.tblTeams.find(
+    (team) => team.teamId === commentary.team2Id
+  );
+
+  let dataToreturn = {
+    es : {},
+  };
+  let es = {
+    ena : commentary.eventName,
+    sts : commentary.commentaryStatus,
+    tn1 : commentaryTeamsOne.teamName,
+    tn2 : commentaryTeamsTwo.teamName,
+    tsn1 : commentaryTeamsOne.shortName,
+    tsn2 : commentaryTeamsTwo.shortName,
+    tim1 : team1.image,
+    tim2 : team2.image,
+    cci : commentary.currentInnings,
+  }
+  dataToreturn.es = es;
+
+
+  if(commentary.commentaryStatus === 1){
+    return dataToreturn;
+  }
+  // get the all innings data
+  for(let i = 1; i <= commentary.currentInnings; i++){
+    let inningData = await getInningDataByInningNumber(commentary.commentaryId, i);
+    dataToreturn["cci" + i] = inningData;
+  }
+
+  return dataToreturn;
+
+};
+
+const getInningDataByInningNumber = async (commentaryId, inningNumber) => {
+  // get currentBattingTeam
+  const currentBattingTeam = await global.tblCommentaryTeams.find(
+    (item) =>
+      item.commentaryId === commentaryId &&
+      item.currentInnings === inningNumber &&
+      item.teamStatus === 1
+  );
+
+  const currentBowlingTeam = await global.tblCommentaryTeams.find(
+    (item) =>
+      item.commentaryId === commentaryId &&
+      item.currentInnings === inningNumber &&
+      item.teamStatus === 2
+  );
+
+  const commentaryPlayers_batter = await global.tblCommentaryPlayers.filter(
+    (item) =>
+      item.commentaryId === commentaryId &&
+      item.teamId === currentBattingTeam.teamId &&
+      item.currentInnings === inningNumber &&
+     (item.onStrike !== null || item.isBatterOut === true)    
+  );
+
+  const bat1 = commentaryPlayers_batter.map((player) => {
+    return {
+      pid : player.playerId,
+      btn : player.playerName,
+      ot : player.isBatterOut ? "OUT" : "NOT OUT",
+      rt :player.isBatterRetir ? "RET" : "",
+      wkp : player.wicketType ? wicketType[player.wicketType] : "[Batting]",
+      rbl : player.batRun ? `${player.batRun}(${player.batBall})` : "0(0)",
+      four : player.batFour || 0,	
+      six : player.batSix || 0,
+      dot : player.batDotBall || 0,
+      sr : player.batsmanStrikeRate || 0,
+    }
+  })
+
+  const commentaryPlayers_bowler = await global.tblCommentaryPlayers.filter(
+    (item) =>
+      item.commentaryId === commentaryId &&
+      item.teamId === currentBowlingTeam.teamId &&
+      item.currentInnings === inningNumber &&
+      (item.bowlerTotalBall !== null || item.isPlay == true)
+  );
+
+  const bow2 = commentaryPlayers_bowler.map((player) => {
+    return {
+      pid : player.playerId,
+      pln : player.playerName,
+      ovr : player.bowlerOver || 0,
+      mov : player.bowlerMaidenOver || 0,
+      trun : player.bowlerRun || 0,
+      four : player.bowlerFour || 0,
+      six : player.bowlerSix || 0,
+      wkt : player.bowlerTotalWicket || 0,
+      wid : player.bowlerWideBallRun ? `${player.bowlerWideBall}/${player.bowlerWideBallRun}` : "0/0",
+      nob : player.bowlerNoBallRun ? `${player.bowlerNoBall}/${player.bowlerNoBallRun}` : "0/0",
+      dot : player.bowlerDotBall || 0,
+      xtr : player.bowlerWideBallRun ||
+            0 + player.bowlerNoBallRun ||
+            0 + player.bowlerByeBallRun ||
+            0 + player.bowlerLegByeBallRun ||
+            0,
+    }
+  });
+  
+  const currentBatterTeamWicket = await global.tblCommentaryWicket.filter(
+    (item) =>
+      item.commentaryId === commentaryId &&
+      item.teamId === currentBattingTeam.teamId &&
+      item.currentInnings === inningNumber
+  );
+
+  const fow1 = currentBatterTeamWicket.map((player) => {
+      return {
+        pn1 : player.batterName,
+        sco1: player.teamScore,
+        ovr1 : player.overCount,
+        wkt1 : player.wicketCount
+      }
+  });
+  
+  // check if one team is batting complete then get the data of other team
+  const getBattingCompletedTeam = await global.tblCommentaryTeams.find(
+    (item) =>
+      item.commentaryId === commentaryId &&
+      item.currentInnings === inningNumber &&
+      item.isBattingComplete === true
+  );
+  if(!getBattingCompletedTeam){
+    return {
+      bat1,
+      bow2,
+      fow1,
+      bat2 : [],
+      bow1 : [],
+      fow2 : []
+    }
+  }
+  const commentaryPlayers_batter2 = await global.tblCommentaryPlayers.filter(
+    (item) =>
+      item.commentaryId === commentaryId &&
+      item.teamId === currentBowlingTeam.teamId &&
+      item.currentInnings === inningNumber &&
+      (item.onStrike !== null || item.isBatterOut === true)
+  );
+
+  const bat2 = commentaryPlayers_batter2.map((player) => {
+    return {
+      pid : player.playerId,
+      btn : player.playerName,
+      ot : player.isBatterOut ? "OUT" : "NOT OUT",
+      rt :player.isBatterRetir ? "RET" : "",
+      wkp : player.wicketType ? wicketType[player.wicketType] : "[Batting]",
+      rbl : player.batRun ? `${player.batRun}(${player.batBall})` : "0(0)",
+      four : player.batFour || 0,
+      six : player.batSix || 0,
+      dot : player.batDotBall || 0,
+      sr : player.batsmanStrikeRate || 0,
+    }
+  })
+
+  const commentaryPlayers_bowler2 = await global.tblCommentaryPlayers.filter(
+    (item) =>
+      item.commentaryId === commentaryId &&
+      item.teamId === currentBattingTeam.teamId &&
+      item.currentInnings === inningNumber
+  );
+
+  const bow1 = commentaryPlayers_bowler2.map((player) => {
+    return {
+      pid : player.playerId,
+      pln : player.playerName,
+      ovr : player.bowlerOver || 0,
+      mov : player.bowlerMaidenOver || 0,
+      trun : player.bowlerRun || 0,
+      four : player.bowlerFour || 0,
+      six : player.bowlerSix || 0,
+      wkt : player.bowlerTotalWicket || 0,
+      wid : `${player.bowlerWideBall}/${player.bowlerWideBallRun}` || "0/0",
+      nob : `${player.bowlerNoBall}/${player.bowlerNoBallRun}` || "0/0",
+      dot : player.bowlerDotBall || 0,
+      xtr : player.bowlerWideBallRun ||
+            0 + player.bowlerNoBallRun ||
+            0 + player.bowlerByeBallRun ||
+            0 + player.bowlerLegByeBallRun ||
+            0,
+    }
+  });
+
+  const currentBowlerTeamWicket = await global.tblCommentaryWicket.filter(
+    (item) =>
+      item.commentaryId === commentaryId &&
+      item.teamId === currentBowlingTeam.teamId &&
+      item.currentInnings === inningNumber
+  );
+
+  const fow2 = currentBowlerTeamWicket.map((player) => {
+      return {
+        pn1 : player.batterName,
+        sco1: player.teamScore,
+        ovr1 : player.overCount,
+        wkt1 : player.wicketCount
+      }
+  });
+
+  return {
+    bat1,
+    bow2,
+    fow1,
+    bat2,
+    bow1,
+    fow2
+  }
+}
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -2384,4 +2624,5 @@ module.exports = {
   getMatchTypeListByCommentaryService,
   changeBowlerOfCommentaryService,
   getMatchListByStatus,
+  getAllDetailsByEventIdService
 };

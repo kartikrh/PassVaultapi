@@ -178,6 +178,18 @@ const convertDate = (date, format) =>{
   }
   return "";
 }
+const wicketType = {
+  1: "Bold",
+  2: "Catch",
+  3: "Stump",
+  4: "Hit Wicket",
+  5: "LBW",
+  6: "Run Out",
+  7: "Retired Out",
+  8: "Timed Out",
+  9: "Hit Ball Twice",
+  10: "Obstruct the Fielding"
+}
 module.exports = {
   ERROR_CODES,
   error,
@@ -192,5 +204,6 @@ module.exports = {
   getTitle,
   getMessage,
   getUserChildIds,
-  convertDate
+  convertDate,
+  wicketType
 };

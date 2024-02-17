@@ -17,6 +17,7 @@ const {
   getMatchTypeListByCommentaryService,
   changeBowlerOfCommentaryService,
   getMatchListByStatus,
+  getAllDetailsByEventIdService,
 } = require("../../../../services/commentry");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -288,6 +289,20 @@ const getLiveMatchList = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const getAllDetailsByEventId = async (request, reply, fastify) => {
+  try {
+    const result = await getAllDetailsByEventIdService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      path + "/getAllDetailsByEventId",
+      request
+    );
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 module.exports = {
   getAllCommentaries,
   getCommentaryById,
@@ -308,5 +323,6 @@ module.exports = {
   changeBowlerOfCommentary,
   getScheduleMatchList,
   getCompleteMatchList,
-  getLiveMatchList
+  getLiveMatchList,
+  getAllDetailsByEventId
 };
