@@ -53,6 +53,8 @@ const allCommentaryService = async (request,fastify) => {
   if(competitionId){
     result = result.filter((item) => item.competitionId === competitionId);
   }
+  // desc by eventDate
+  result.sort((a, b) => new Date(b.eventDate) - new Date(a.eventDate));
   return result;
 };
 
