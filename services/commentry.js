@@ -2358,6 +2358,7 @@ const getMatchListByStatus = async (body, request, fastify) => {
       te2rrr: commentaryTeamsTwo.rrr || 0,
       crr: crr || 0,
       rrr: rrr || 0,
+      cst : item.commentaryStatus,
     };
 
     resultArr.push(details);
