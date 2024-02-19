@@ -37,7 +37,7 @@ const { convertDate, wicketType } = require("../utilities");
 
 const allCommentaryService = async (request,fastify) => {
   // return global.tblCommentaries;
-  const {commentaryStatus, eventTypeId , competitionId} = request.body;
+  const {commentaryStatus, eventTypeId , competitionId, startDate ,endDate} = request.body;
   let result;
   if(commentaryStatus === undefined || commentaryStatus === 0){
     result = global.tblCommentaries.filter((item) => item.commentaryStatus !== 4);
@@ -52,6 +52,12 @@ const allCommentaryService = async (request,fastify) => {
 
   if(competitionId){
     result = result.filter((item) => item.competitionId === competitionId);
+  }
+  // add dateFilter if provided
+  if(startDate && endDate){
+    result = result?.filter((item) => {
+      return new Date(item.eventDate) >= new Date(startDate) && new Date(item.eventDate) <= new Date(endDate);
+    });
   }
   // desc by eventDate
   result.sort((a, b) => new Date(b.eventDate) - new Date(a.eventDate));
