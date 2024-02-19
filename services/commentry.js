@@ -875,7 +875,9 @@ const updateCommentaryDetailsServices = async (
     throw new Error("Commentary with this id not Found");
   }
 
+  console.time("updateCommentaryDetailsQuery");
   await updateCommentaryDetailsQuery(commentaryDetails, fastify, request);
+  console.timeEnd("updateCommentaryDetailsQuery");
 
   global.tblCommentaries[index] = commentaryDetails;
 
@@ -893,7 +895,9 @@ const updateCommentaryTeamsServices = async (teamDetails, fastify, request) => {
     throw new Error("Commentary with this id not Found");
   }
 
+  console.time("updateCommentaryTeamsQuery")
   await updateCommentaryTeamsQuery(teamDetails, fastify, request);
+  console.timeEnd("updateCommentaryTeamsQuery")
 
   global.tblCommentaryTeams[index] = teamDetails;
 
@@ -912,8 +916,9 @@ const updateCommentaryPlayerDetailsServices = async (
   if (index === -1) {
     throw new Error("Commentary with this id not Found");
   }
-
+  console.time("updateCommentaryPlayersQuery")
   await updateCommentaryPlayersQuery(playerDetails, fastify, request);
+  console.timeEnd("updateCommentaryPlayersQuery")
 
   global.tblCommentaryPlayers[index] = playerDetails;
 
@@ -961,7 +966,9 @@ const createOverService = async (data, fastify, request) => {
     throw new Error("Bowler with this id not Found");
   }
 
+  console.time("createOverQuery")
   const addOver = await createOverQuery(data, fastify, request);
+  console.timeEnd("createOverQuery")
 
   global.tblOvers.push(addOver);
 
@@ -977,7 +984,9 @@ const updateOverService = async (data, fastify, request) => {
     throw new Error("Over with this id not Found");
   }
 
+  console.time("updateOverQuery")
   await updateOverQuery(data, fastify, request);
+  console.timeEnd("updateOverQuery")
 
   global.tblOvers[indexOver] = data;
 
@@ -1003,11 +1012,13 @@ const createBallByBallCommentoriesService = async (data, fastify, request) => {
     throw new Error("Commentary with this id not Found");
   }
 
+  console.time("createBallByBallCommentoriesQuery")
   const addBallByBallCommentories = await createBallByBallCommentoriesQuery(
     data,
     fastify,
     request
   );
+  console.timeEnd("createBallByBallCommentoriesQuery")
 
   global.tblCommentaryBallByBall.push(addBallByBallCommentories);
 
@@ -1023,7 +1034,9 @@ const updateBallByBallCommentoriesService = async (data, fastify, request) => {
     throw new Error("BallByBall with this id not Found");
   }
 
+  console.time("updateBallByBallCommentoriesQuery")
   await updateBallByBallCommentoriesQuery(data, fastify, request);
+  console.timeEnd("updateBallByBallCommentoriesQuery")
 
   global.tblCommentaryBallByBall[indexBallByBall] = data;
 
@@ -1049,11 +1062,13 @@ const createCommentaryWicketService = async (data, fastify, request) => {
     throw new Error("Commentary with this id not Found");
   }
 
+  console.time("createCommentaryWicketQuery")
   const addCommentaryWicket = await createCommentaryWicketQuery(
     data,
     fastify,
     request
   );
+  console.timeEnd("createCommentaryWicketQuery")
 
   global.tblCommentaryWicket.push(addCommentaryWicket);
 
@@ -1069,7 +1084,9 @@ const updateCommentaryWicketService = async (data, fastify, request) => {
     throw new Error("Wicket with this id not Found");
   }
 
+  console.time("updateCommentaryWicketQuery")
   await updateCommentaryWicketQuery(data, fastify, request);
+  console.timeEnd("updateCommentaryWicketQuery")
 
   global.tblCommentaryWicket[indexWicket] = data;
 
@@ -1094,12 +1111,13 @@ const createCommentaryPartnershipService = async (data, fastify, request) => {
   if (index === -1) {
     throw new Error("Commentary with this id not Found");
   }
-
+  console.time("createCommentaryPartnershipQuery")
   const addCommentaryPartnership = await createCommentaryPartnershipQuery(
     data,
     fastify,
     request
   );
+  console.timeEnd("createCommentaryPartnershipQuery")
 
   global.tblCommentaryPartnership.push(addCommentaryPartnership);
 
@@ -1115,7 +1133,9 @@ const updateCommentaryPartnershipService = async (data, fastify, request) => {
     throw new Error("Partnership with this id not Found");
   }
 
+  console.time("updateCommentaryPartnershipQuery")
   await updateCommentaryPartnershipQuery(data, fastify, request);
+  console.timeEnd("updateCommentaryPartnershipQuery")
 
   global.tblCommentaryPartnership[indexPartnership] = data;
 
