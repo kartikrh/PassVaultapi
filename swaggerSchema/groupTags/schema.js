@@ -1676,6 +1676,8 @@ const Commentary = {
           commentaryStatus: { type: "integer" },
           eventTypeId: { type: "string" },
           competitionId: { type: "string" },
+          startDate: { type: "string" },
+          endDate: {type : "string"}
         },
       },
     },
