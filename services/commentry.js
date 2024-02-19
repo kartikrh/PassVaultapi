@@ -1211,6 +1211,7 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
     sts: "",
     rmk: "",
     win: "",
+    cst: "",
   };
   let eid;
   let til;
@@ -1251,6 +1252,7 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
   let ballid = 0;
   let mtype = 0;
   let bovr = 0;
+  let cst;
   // Basic elements are set
   cid = result.commentaryId;
   eid = result.eventRefId.toString();
@@ -1260,6 +1262,7 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
   t1nid = result.team1Id;
   t2nid = result.team2Id;
   mtype = result.matchTypeId;
+  cst = result.commentaryStatus;
   //teams set
   const commentaryTeamsOne = await global.tblCommentaryTeams.filter(
     (item) =>
@@ -1355,6 +1358,7 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
     resultArr.sts = result.commentaryStatus.toString();
     resultArr.rmk = "Toss Not Done Yet";
     resultArr.win = "";
+    resultArr.cst = result.commentaryStatus;
   }
   if (getstatus == 2) {
     const _tosswonby = result.tossWonBy;
@@ -1403,6 +1407,7 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
     resultArr.sts = result.commentaryStatus.toString();
     resultArr.rmk = toss;
     resultArr.win = "";
+    resultArr.cst = result.commentaryStatus;
   }
   // if (getstatus == 3) {
   //   const _tosswonby = result.tossWonBy;
@@ -1554,6 +1559,7 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
     resultArr.sts = result.commentaryStatus.toString();
     resultArr.rmk = result.rmk;
     resultArr.win = "";
+    resultArr.cst = result.commentaryStatus;
   }
   // remove out batsman
   const commentaryPlayers_batter = await global.tblCommentaryPlayers.filter(
@@ -1702,6 +1708,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     sts: "",
     rmk: "",
     win: "",
+    cst : "",
   };
   let eid;
   let til;
@@ -1751,6 +1758,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
   t1nid = result.team1Id;
   t2nid = result.team2Id;
   mtype = result.matchTypeId;
+  cst = result.commentaryStatus;
   //teams set
   const commentaryTeamsOne = await global.tblCommentaryTeams.filter(
     (item) =>
@@ -1852,6 +1860,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     resultArr.sts = result.commentaryStatus.toString();
     resultArr.rmk = "Toss Not Done Yet";
     resultArr.win = "";
+    resultArr.cst = result.commentaryStatus;
   }
   if (getstatus == 2) {
     const _tosswonby = result.tossWonBy;
@@ -1900,6 +1909,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     resultArr.sts = result.commentaryStatus.toString();
     resultArr.rmk = toss;
     resultArr.win = "";
+    resultArr.cst = result.commentaryStatus;
   }
   // if (getstatus == 3) {
   //   const _tosswonby = result.tossWonBy;
@@ -2051,6 +2061,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     resultArr.sts = result.commentaryStatus.toString();
     resultArr.rmk = result.rmk;
     resultArr.win = "";
+    resultArr.cst = result.commentaryStatus;
   }
   const commentaryPlayers_batter = await global.tblCommentaryPlayers.filter(
     (item) =>
