@@ -13,6 +13,8 @@ const allEventService = async (request) => {
     isActive: isActive,
     eventTypeId: eventTypeId === "string" ? null : eventTypeId,
     competitionId: competitionId === "string" ? null : competitionId,
+    startDate: request.body.startDate,
+    endDate: request.body.endDate,
   };
 
   // Additional checks for "0" and undefined
@@ -24,12 +26,12 @@ const allEventService = async (request) => {
     competitionId === "0" || competitionId === undefined
       ? null
       : filterObject.competitionId;
-
+  let _event;
   if (filterObject.isActive === undefined) {
-    const _event = global.tblEvents.filter((i) => i.isActive === true);
-    return _event;
-  } else {
-    const _event = global.tblEvents.filter((item) => {
+    _event = global.tblEvents.filter((i) => i.isActive === true);
+  } 
+  else {
+     _event = global.tblEvents.filter((item) => {
       return (
         (filterObject.isActive === null ||
           item.isActive === filterObject.isActive) &&
@@ -39,9 +41,20 @@ const allEventService = async (request) => {
           item.eventTypeId === filterObject.eventTypeId)
       );
     });
-    return _event;
   }
-  //old Code
+  if (filterObject.startDate && filterObject.endDate) {
+    const startDate = new Date(filterObject.startDate);
+    const endDate = new Date(filterObject.endDate);
+    _event = _event?.filter((item) => {
+      return (
+        new Date(item.eventDate) >= startDate &&
+        new Date(item.eventDate) <= endDate
+      );
+    });
+  }
+  _event = _event.sort((a, b) => new Date(b.eventDate) - new Date(a.eventDate));
+  return _event;
+  // old Code
   // if (isActive !== undefined) {
   //   const _event = global.tblEvents.filter((i) => i.isActive === isActive);
   //   return _event;
@@ -49,6 +62,7 @@ const allEventService = async (request) => {
   //   const _event = global.tblEvents.filter((i) => i.isActive === true);
   //   return _event;
   // }
+  // return _event;
 };
 
 const eventByIdService = async (request) => {

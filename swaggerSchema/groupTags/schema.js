@@ -2144,6 +2144,8 @@ const Event = {
           isActive: { type: "boolean" },
           eventTypeId: { type: "string" },
           competitionId: { type: "string" },
+          startDate: { type: "string" },
+          endDate: { type: "string" },
         },
       },
     },
