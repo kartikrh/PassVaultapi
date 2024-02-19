@@ -1020,9 +1020,14 @@ const createBallByBallCommentoriesService = async (data, fastify, request) => {
   );
   console.timeEnd("createBallByBallCommentoriesQuery")
 
-  global.tblCommentaryBallByBall.push(addBallByBallCommentories);
+  let dataToreturn = {
+    ...data,
+    ...addBallByBallCommentories,
+  }
 
-  return addBallByBallCommentories;
+  global.tblCommentaryBallByBall.push(dataToreturn);
+
+  return dataToreturn;
 };
 
 const updateBallByBallCommentoriesService = async (data, fastify, request) => {

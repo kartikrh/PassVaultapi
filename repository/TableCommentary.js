@@ -1565,47 +1565,9 @@ const createBallByBallCommentoriesQuery = async (data, fastify, request) => {
 
     select
     te."wrValue" as "commentaryBallByBallId",
-    te1."wrValue" as "commentaryId",
-    te2."wrValue" as "teamId",
-    te3."wrValue" as "overId",
-    "wrOverCount" as "overCount",
-    "wrCurrentOverBalls" as "currentOverBalls",
-    te4."wrValue" as "bowlerId",
-    te5."wrValue" as "batStrikeId",
-    te6."wrValue" as "batNonStrikeId",
-    "wrBall_IsCount" as "ballIsCount",
-    "wrBall_Type" as "ballType",
-    "wrBall_IsDot" as "ballIsDot",
-    "wrBall_Run" as "ballRun",
-    "wrBall_ExtraRun" as "ballExtraRun",
-    "wrBall_isBoundry" as "ballIsBoundry",
-    "wrBall_FOUR" as "ballFour",
-    "wrBall_SIX" as "ballSix",
-    "wrBall_IsWicket" as "ballIsWicket",
-    "wrBall_WicketType" as "ballWicketType",
-    te7."wrValue" as "ballPlayerId",
-    te8."wrValue" as "ballBowlerId",
-    te9."wrValue" as "ballFielderId1",
-    te10."wrValue" as "ballFielderId2",
-    "wrOver_isMaiden" as "overIsMaiden",
-    te11."wrValue" as "nextBatStrikeId",
-    te12."wrValue" as "nextBatNonStrikeId",
-    "wrIsDelete" as "isDelete",
-    "wrCurrentInnings" as "currentInnings"
-    from "insert_data" tcb
-    left join "tblEncryptedData" te on tcb."wrCommentaryBallByBallId" = te."wrKey"
-    left join "tblEncryptedData" te1 on tcb."wrCommentaryId" = te1."wrKey"
-    left join "tblEncryptedData" te2 on tcb."wrTeamId" = te2."wrKey"
-    left join "tblEncryptedData" te3 on tcb."wrOverId" = te3."wrKey"
-    left join "tblEncryptedData" te4 on tcb."wrBowler_ID" = te4."wrKey"
-    left join "tblEncryptedData" te5 on tcb."wrBat_StrikeID" = te5."wrKey"
-    left join "tblEncryptedData" te6 on tcb."wrBat_NONStrikeID" = te6."wrKey"
-    left join "tblEncryptedData" te7 on tcb."wrBall_PlayerID" = te7."wrKey"
-    left join "tblEncryptedData" te8 on tcb."wrBall_BowlerID" = te8."wrKey"
-    left join "tblEncryptedData" te9 on tcb."wrBall_FielderID1" = te9."wrKey"
-    left join "tblEncryptedData" te10 on tcb."wrBall_FielderID2" = te10."wrKey"
-    left join "tblEncryptedData" te11 on tcb."wrNextBat_StrikeID" = te11."wrKey"
-    left join "tblEncryptedData" te12 on tcb."wrNextBat_NONStrikeID" = te12."wrKey"
+    tcw."wrIsDelete" as "isDelete"
+    from "insert_data" tcw
+    left join "tblEncryptedData" te on tcw."wrCommentaryBallByBallId" = te."wrKey"
     `,
       {
         bind: [
