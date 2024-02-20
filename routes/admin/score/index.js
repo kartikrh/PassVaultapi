@@ -59,7 +59,7 @@ module.exports = async (fastify, opts) => {
       getCommentaryDetailsBycommentaryEventId(request, reply, fastify),
   });
 
-  fastify.get("/getCIds", {
+  fastify.post("/getCIds", {
     schema: Score.getCIds.schema,
     // preHandler: [
     //   (request, reply) => authorize(request, reply, fastify),
@@ -72,7 +72,7 @@ module.exports = async (fastify, opts) => {
     handler: (request, reply) =>
       getCurrentUpdatedCommentaryID(request, reply, fastify),
   });
-  fastify.get("/scheduleMatchesList", {
+  fastify.post("/scheduleMatchesList", {
     schema: Score.getCIds.schema,
     // preHandler: [
     //   (request, reply) => authorize(request, reply, fastify),
@@ -84,7 +84,7 @@ module.exports = async (fastify, opts) => {
     // ],
     handler: (request, reply) =>  getScheduleMatchList(request, reply, fastify)
   });
-  fastify.get("/liveMatchesList", {
+  fastify.post("/liveMatchesList", {
     schema: Score.getCIds.schema,
     // preHandler: [
     //   (request, reply) => authorize(request, reply, fastify),
@@ -96,7 +96,7 @@ module.exports = async (fastify, opts) => {
     // ],
     handler: (request, reply) => getLiveMatchList(request, reply, fastify)
   });
-  fastify.get("/completeMatchesList", {
+  fastify.post("/completeMatchesList", {
     schema: Score.getCIds.schema,
     // preHandler: [
     //   (request, reply) => authorize(request, reply, fastify),
