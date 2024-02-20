@@ -283,7 +283,7 @@ module.exports = async (fastify, opts) => {
       getCommentaryDetailsBycommentaryEventId(request, reply, fastify),
   });
 
-  fastify.get("/getCIds", {
+  fastify.post("/getCIds", {
     schema: Commentary.getAllUpdatedIds.schema,
     // preHandler: [
     //   (request, reply) => authorize(request, reply, fastify),
