@@ -3,11 +3,11 @@ const { errorLogger } = require("../utilities/logger");
 const allPaneltyRunsQuery = async (fastify) => {
   return await fastify.db.query(
     `select 
-      "wrValue" as "paneltyId",
+      "wrPaneltyId" as "paneltyId",
       "wrRun" as "run",
       "wrDesc" as "desc",
       "wrIsActive" as "isActive"
-      from "tblPaneltyRuns" tb inner join "tblEncryptedData" te on tb."wrPaneltyId" = te."wrKey"`,
+      from "tblPaneltyRuns"`,
     {
       type: fastify.db.QueryTypes.SELECT,
     }

@@ -14,11 +14,11 @@ const allCompetitionService = async (request) => {
 
   const filterObject = {
     isActive: isActive,
-    eventTypeId: eventTypeId === "string" ? null : eventTypeId,
+    eventTypeId: eventTypeId === 0 ? null : eventTypeId,
   };
   // Additional checks for "0" and undefined
   filterObject.eventTypeId =
-    eventTypeId === "0" || eventTypeId === undefined
+    eventTypeId === 0 || eventTypeId === undefined
       ? null
       : filterObject.eventTypeId;
 
@@ -168,7 +168,7 @@ const updateCompititionService = async (request, fastify) => {
 const saveCompetitionService = async (request, fastify) => {
   const { competitionId } = request.body;
 
-  if (competitionId === "0") {
+  if (competitionId === 0) {
     return await createCompititionService(request, fastify);
   } else {
     return await updateCompititionService(request, fastify);

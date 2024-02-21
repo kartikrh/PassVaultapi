@@ -114,7 +114,7 @@ const updateMatchTypeService = async (request, fastify) => {
 const saveMatchTypeService = async (request, fastify) => {
   const { matchTypeId } = request.body;
 
-  if (matchTypeId === "0") {
+  if (matchTypeId === 0) {
     return await createMatchTypeService(request, fastify);
   } else {
     return await updateMatchTypeService(request, fastify);

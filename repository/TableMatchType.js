@@ -3,7 +3,7 @@ const { errorLogger } = require("../utilities/logger");
 const getAllMatchTypeQuery = async (fastify) => {
   return await fastify.db.query(
     `select
-        "wrValue" as "matchTypeId",
+        "wrMatchTypeId" as "matchTypeId",
         "wrMatchType" as "matchType",
         "wrMatchRefType" as "matchRefType",
         "wrNoOfIningsPerSide" as "noOfIningsPerSide",
@@ -37,7 +37,7 @@ const getAllMatchTypeQuery = async (fastify) => {
         "wrIsWideBallCountInPartnership" as "isWideBallCountInPartnership",
         "wrIsPenaltyRunsInPartnership" as "isPenaltyRunsInPartnership",
         "wrValueOfFrontFootNoBall" as "valueOfFrontFootNoBall"
-        from "tblMatchTypes" mt left join "tblEncryptedData" ed on mt."wrMatchTypeId" = ed."wrKey"`,
+        from "tblMatchTypes"`,
     {
       type: fastify.db.QueryTypes.SELECT,
     }
@@ -93,7 +93,7 @@ const insertMatchTypeQuery = async (data, fastify, request) => {
     )
 
     select
-        "wrValue" as "matchTypeId",
+        "wrMatchTypeId" as "matchTypeId",
         "wrMatchType" as "matchType",
         "wrMatchRefType" as "matchRefType",
         "wrNoOfIningsPerSide" as "noOfIningsPerSide",
@@ -127,7 +127,7 @@ const insertMatchTypeQuery = async (data, fastify, request) => {
         "wrIsWideBallCountInPartnership" as "isWideBallCountInPartnership",
         "wrIsPenaltyRunsInPartnership" as "isPenaltyRunsInPartnership",
         "wrValueOfFrontFootNoBall" as "valueOfFrontFootNoBall"
-        from "insert_data" mt left join "tblEncryptedData" ed on mt."wrMatchTypeId" = ed."wrKey"
+        from "insert_data"
     `,
       {
         bind: [
@@ -186,8 +186,7 @@ const insertMatchTypeQuery = async (data, fastify, request) => {
 const deleteMatchTypeQuery = async (matchTypeId, fastify, request) => {
   try {
     return await fastify.db.query(
-      `delete from "tblMatchTypes" where "wrMatchTypeId" in 
-    ( select "wrKey" from "tblEncryptedData" where "wrValue" = ANY($1))`,
+      `delete from "tblMatchTypes" where "wrMatchTypeId" = ANY($1)`,
       {
         bind: [matchTypeId],
         type: fastify.db.QueryTypes.DELETE,

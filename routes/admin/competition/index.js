@@ -71,7 +71,7 @@ module.exports = async (fastify, opts) => {
       (request, reply) =>
         checkPermission(request, reply, fastify, {
           tabName: "competition",
-          mode: request.body.competitionId === "0" ? "add" : "edit",
+          mode: request.body.competitionId === 0 ? "add" : "edit",
         }),
     ],
     handler: (request, reply) => saveCompetition(request, reply, fastify),

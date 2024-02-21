@@ -21,6 +21,7 @@ const {
   getMatchTypeListByCommentary,
   getCommentaryDetailsBycommentaryEventId,
   changeBowlerOfCommentary,
+  getCommentaryTeamList,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -78,7 +79,7 @@ module.exports = async (fastify, opts) => {
           mode: "view",
         }),
     ],
-    handler: (request, reply) => getTeamList(request, reply, fastify),
+    handler: (request, reply) => getCommentaryTeamList(request, reply, fastify),
   });
   fastify.post("/eventTypeList", {
     schema: Commentary.eventTypeList.schema,

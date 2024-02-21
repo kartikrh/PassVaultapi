@@ -92,7 +92,7 @@ module.exports = async (fastify, opts) => {
       (request, reply) =>
         checkPermission(request, reply, fastify, {
           tabName: "Players",
-          mode: request.body.playerId === "0" ? "add" : "edit",
+          mode: request.body.playerId === 0 ? "add" : "edit",
         }),
     ],
     handler: (request, reply) => savePlayer(request, reply, fastify),
@@ -116,7 +116,7 @@ module.exports = async (fastify, opts) => {
       (request, reply) =>
         checkPermission(request, reply, fastify, {
           tabName: "Players",
-          mode: request.body.playerId === "0" ? "add" : "edit",
+          mode: request.body.playerId === 0 ? "add" : "edit",
         }),
     ],
     handler: (request, reply) => UpdatePlayerStats(request, reply, fastify),

@@ -1020,7 +1020,7 @@ const EventType = {
       body: {
         type: "object",
         properties: {
-          eventTypeId: { type: "string" },
+          eventTypeId: { type: "integer" },
         },
         required: ["eventTypeId"],
       },
@@ -1034,7 +1034,7 @@ const EventType = {
       body: {
         type: "object",
         properties: {
-          eventTypeId: { type: "string" },
+          eventTypeId: { type: "integer" },
           eventType: { type: "string" },
           refId: { type: "string" },
           isActive: { type: "boolean" },
@@ -1055,7 +1055,7 @@ const EventType = {
         properties: {
           eventTypeId: {
             type: "array",
-            items: { type: "string" },
+            items: { type: "integer" },
             minItems: 1,
           },
         },
@@ -1073,7 +1073,7 @@ const EventType = {
         items: {
           type: "object",
           properties: {
-            eventTypeId: { type: "string" },
+            eventTypeId: { type: "integer" },
             displayOrder: { type: "integer" },
           },
         },
@@ -1255,8 +1255,8 @@ const Player = {
         type: "object",
         properties: {
           isActive: { type: "boolean" },
-          eventTypeId: { type: "string" },
-          teamId : { type: "string"}
+          eventTypeId: { type: "integer" },
+          teamId : { type: "integer"}
         },
       },
     },
@@ -1282,7 +1282,7 @@ const Player = {
       body: {
         type: "object",
         properties: {
-          eventTypeId: { type: "string" },
+          eventTypeId: { type: "integer" },
         },
       },
     },
@@ -1295,7 +1295,7 @@ const Player = {
       body: {
         type: "object",
         properties: {
-          playerId: { type: "string" },
+          playerId: { type: "integer" },
         },
         required: ["playerId"],
       },
@@ -1309,12 +1309,12 @@ const Player = {
       body: {
         type: "object",
         properties: {
-          playerId: { type: "string" },
-          eventTypeId: { type: "string" },
+          playerId: { type: "integer" },
+          eventTypeId: { type: "integer" },
           country: { type: "string" },
-          playerTypeId: { type: "string" },
+          playerTypeId: { type: "integer" },
           playerName: { type: "string" },
-          bowlingTypeId: { type: "string" },
+          bowlingTypeId: { type: "integer" },
           isActive: { type: "boolean" },
           isKipper: { type: "boolean" },
           isLeftHandedBatting: { type: "boolean" },
@@ -1326,7 +1326,7 @@ const Player = {
           displayName: { type: "string" },
           teamId: {
             type: "array",
-            items: { type: "string" },
+            items: { type: "integer" },
           },
           isSystemPlayer: { type: "boolean" },
         },
@@ -1344,7 +1344,7 @@ const Player = {
         properties: {
           playerId: {
             type: "array",
-            items: { type: "string" },
+            items: { type: "integer" },
             minItems: 1,
           },
         },
@@ -1362,7 +1362,7 @@ const Player = {
         items: {
           type: "object",
           properties: {
-            playerId: { type: "string" },
+            playerId: { type: "integer" },
             playerName: { type: "string" },
             batsmanAverage: { type: "number" },
             batsmanStrikeRate: { type: "number" },
@@ -1393,7 +1393,7 @@ const MatchType = {
       body: {
         type: "object",
         properties: {
-          matchTypeId: { type: "string" },
+          matchTypeId: { type: "integer" },
         },
         required: ["matchTypeId"],
       },
@@ -1407,7 +1407,7 @@ const MatchType = {
       body: {
         type: "object",
         properties: {
-          matchTypeId: { type: "string" },
+          matchTypeId: { type: "integer" },
           matchType: { type: "string" },
         },
         required: ["matchTypeId", "matchType"],
@@ -1422,7 +1422,7 @@ const MatchType = {
       body: {
         type: "object",
         properties: {
-          matchTypeId: { type: "string" },
+          matchTypeId: { type: "integer" },
           matchType: { type: "string" },
           matchRefType: { type: "string" },
           noOfIningsPerSide: { type: "integer" },
@@ -1471,7 +1471,7 @@ const MatchType = {
         properties: {
           matchTypeId: {
             type: "array",
-            items: { type: "string" },
+            items: { type: "integer" },
             minItems: 1,
           },
         },
@@ -2032,7 +2032,7 @@ const Compitition = {
         type: "object",
         properties: {
           isActive: { type: "boolean" },
-          eventTypeId: { type: "string" },
+          eventTypeId: { type: "integer" },
         },
       },
     },
@@ -2046,6 +2046,7 @@ const Compitition = {
         type: "object",
         properties: {
           isActive: { type: "boolean" },
+
         },
       },
     },
@@ -2058,7 +2059,7 @@ const Compitition = {
       body: {
         type: "object",
         properties: {
-          competitionId: { type: "string" },
+          competitionId: { type: "integer" },
         },
         required: ["competitionId"],
       },
@@ -2072,7 +2073,7 @@ const Compitition = {
       body: {
         type: "object",
         properties: {
-          eventTypeId: { type: "string" },
+          eventTypeId: { type: "integer" },
         },
         required: ["eventTypeId"],
       },
@@ -2086,9 +2087,9 @@ const Compitition = {
       body: {
         type: "object",
         properties: {
-          competitionId: { type: "string" },
+          competitionId: { type: "integer" },
           competition: { type: "string" },
-          eventTypeId: { type: "string" },
+          eventTypeId: { type: "integer" },
           refId: { type: "string" },
           isActive: { type: "boolean" },
         },
@@ -2106,7 +2107,7 @@ const Compitition = {
         properties: {
           competitionId: {
             type: "array",
-            items: { type: "string" },
+            items: { type: "integer" },
             minItems: 1,
           },
         },
@@ -2124,7 +2125,7 @@ const Compitition = {
         items: {
           type: "object",
           properties: {
-            competitionId: { type: "string" },
+            competitionId: { type: "integer" },
             displayOrder: { type: "integer" },
           },
         },
@@ -2144,8 +2145,8 @@ const Event = {
         type: "object",
         properties: {
           isActive: { type: "boolean" },
-          eventTypeId: { type: "string" },
-          competitionId: { type: "string" },
+          eventTypeId: { type: "integer" },
+          competitionId: { type: "integer" },
           startDate: { type: "string" },
           endDate: { type: "string" },
         },
@@ -2174,7 +2175,7 @@ const Event = {
         type: "object",
         properties: {
           isActive: { type: "boolean" },
-          eventTypeId: { type: "string" },
+          eventTypeId: { type: "integer" },
         },
       },
     },
@@ -2187,7 +2188,7 @@ const Event = {
       body: {
         type: "object",
         properties: {
-          eventId: { type: "string" },
+          eventId: { type: "integer" },
         },
         required: ["eventId"],
       },
@@ -2201,7 +2202,7 @@ const Event = {
       body: {
         type: "object",
         properties: {
-          competitionId: { type: "string" },
+          competitionId: { type: "integer" },
         },
         required: ["competitionId"],
       },
@@ -2215,9 +2216,9 @@ const Event = {
       body: {
         type: "object",
         properties: {
-          eventId: { type: "string" },
-          eventTypeId: { type: "string" },
-          competitionId: { type: "string" },
+          eventId: { type: "integer" },
+          eventTypeId: { type: "integer" },
+          competitionId: { type: "integer" },
           eventDate: { type: "string" },
           eventName: { type: "string" },
           refId: { type: "string" },
@@ -2240,7 +2241,7 @@ const Event = {
         properties: {
           eventId: {
             type: "array",
-            items: { type: "string" },
+            items: { type: "integer" },
             minItems: 1,
           },
         },

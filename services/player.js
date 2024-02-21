@@ -22,11 +22,11 @@ const allPlayerService = async (request,fastify) => {
   const { isActive, eventTypeId , teamId} = request.body;
   const body = {
     isActive: isActive === undefined ? true : isActive,
-    eventTypeId: eventTypeId === undefined ? "0" : eventTypeId,
+    eventTypeId: eventTypeId === undefined ? 0 : eventTypeId,
     teamId : teamId === undefined  ? null : teamId
   };
   let _player = [];
-  if (body.eventTypeId !== "0") {
+  if (body.eventTypeId !== 0) {
      _player = global.tblPlayers.filter(
       (_p) =>
         _p.isActive === body.isActive && _p.eventTypeId === body.eventTypeId
@@ -369,7 +369,7 @@ const updatePlayerService = async (request, fastify) => {
 const savePlayerService = async (request, fastify) => {
   const { playerId } = request.body;
 
-  if (playerId === "0") {
+  if (playerId === 0) {
     return await insertPlayerService(request, fastify);
   } else {
     return await updatePlayerService(request, fastify);

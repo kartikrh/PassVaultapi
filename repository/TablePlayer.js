@@ -1,40 +1,74 @@
 const { errorLogger } = require("../utilities/logger");
 
 const getAllPlayersQuery = async (fastify) => {
-  return await fastify.db.query(
-    `Select 
-        te."wrValue" as "playerId",
-        te2."wrValue" as "eventTypeId",
-        te3."wrValue" as "playerTypeId",
-        te4."wrValue" as "bowlingTypeId",
-        tet."wrEventType" as "eventType",
-        tbt."wrBowlingType" as "bowlingStyle",
-        tpt."wrPlayerType" as "playerType",
-        "wrCountry" as "country",
-        "wrPlayerName" as "playerName",
-        tp."wrImage" as "image",
-        tp."wrIsActive" as "isActive",
-        "wrIsKipper" as "isKipper",
-        "wrIsLeftHandedBatting" as "isLeftHandedBatting",
-        "wrIsLeftArmFielding" as "isLeftArmFielding",
-        "wrBatsmanAverage"  as "batsmanAverage",
-        "wrBatsmanStrikeRate"  as "batsmanStrikeRate",
-        "wrBowlerAverage" as "bowlerAverage",
-        "wrBowlerEconomy"  as "bowlerEconomy",
-        "wrDisplayName"   as "displayName",
-        "wrIsSystemPlayer" as "isSystemPlayer"
-     from "tblPlayers" tp left join "tblEncryptedData" te on tp."wrPlayerId" = te."wrKey"
-     left join "tblEncryptedData" te2 on tp."wrEventTypeId" = te2."wrKey"
-     left join "tblEncryptedData" te3 on tp."wrPlayerTypeId" = te3."wrKey"
-     left join "tblEncryptedData" te4 on tp."wrBowlingStyle" = te4."wrKey"
-     left join "tblEventTypes" tet on tp."wrEventTypeId" = tet."wrEventTypeId"
-     left join "tblPlayerTypes" tpt on tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
-      left join "tblBowlingTypes" tbt on tp."wrBowlingStyle" = tbt."wrBowlingTypeId"
+   return await fastify.db.query(
+    `SELECT 
+    "wrPlayerId" AS "playerId",
+    tp."wrEventTypeId" AS "eventTypeId",
+    tp."wrPlayerTypeId" AS "playerTypeId",
+    tp."wrBowlingStyle" AS "bowlingTypeId",
+    tet."wrEventType" AS "eventType",
+    tbt."wrBowlingType" AS "bowlingStyle",
+    tpt."wrPlayerType" AS "playerType",
+    tp."wrCountry" AS "country",
+    tp."wrPlayerName" AS "playerName",
+    tp."wrImage" AS "image",
+    tp."wrIsActive" AS "isActive",
+    tp."wrIsKipper" AS "isKipper",
+    tp."wrIsLeftHandedBatting" AS "isLeftHandedBatting",
+    tp."wrIsLeftArmFielding" AS "isLeftArmFielding",
+    tp."wrBatsmanAverage" AS "batsmanAverage",
+    tp."wrBatsmanStrikeRate" AS "batsmanStrikeRate",
+    tp."wrBowlerAverage" AS "bowlerAverage",
+    tp."wrBowlerEconomy" AS "bowlerEconomy",
+    tp."wrDisplayName" AS "displayName",
+    tp."wrIsSystemPlayer" AS "isSystemPlayer"
+FROM 
+    "tblPlayers" tp
+    LEFT JOIN "tblEventTypes" tet ON tp."wrEventTypeId" = tet."wrEventTypeId"
+    LEFT JOIN "tblPlayerTypes" tpt ON tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
+    LEFT JOIN "tblBowlingTypes" tbt ON tp."wrBowlingStyle" = tbt."wrBowlingTypeId";
+
      `,
     {
       type: fastify.db.QueryTypes.SELECT,
     }
   );
+  // return await fastify.db.query(
+  //   `Select 
+  //       "wrPlayerId" as "pId",
+  //       te."wrValue" as "playerId",
+  //       te2."wrValue" as "eventTypeId",
+  //       te3."wrValue" as "playerTypeId",
+  //       te4."wrValue" as "bowlingTypeId",
+  //       tet."wrEventType" as "eventType",
+  //       tbt."wrBowlingType" as "bowlingStyle",
+  //       tpt."wrPlayerType" as "playerType",
+  //       "wrCountry" as "country",
+  //       "wrPlayerName" as "playerName",
+  //       tp."wrImage" as "image",
+  //       tp."wrIsActive" as "isActive",
+  //       "wrIsKipper" as "isKipper",
+  //       "wrIsLeftHandedBatting" as "isLeftHandedBatting",
+  //       "wrIsLeftArmFielding" as "isLeftArmFielding",
+  //       "wrBatsmanAverage"  as "batsmanAverage",
+  //       "wrBatsmanStrikeRate"  as "batsmanStrikeRate",
+  //       "wrBowlerAverage" as "bowlerAverage",
+  //       "wrBowlerEconomy"  as "bowlerEconomy",
+  //       "wrDisplayName"   as "displayName",
+  //       "wrIsSystemPlayer" as "isSystemPlayer"
+  //    from "tblPlayers" tp left join "tblEncryptedData" te on tp."wrPlayerId" = te."wrKey"
+  //    left join "tblEncryptedData" te2 on tp."wrEventTypeId" = te2."wrKey"
+  //    left join "tblEncryptedData" te3 on tp."wrPlayerTypeId" = te3."wrKey"
+  //    left join "tblEncryptedData" te4 on tp."wrBowlingStyle" = te4."wrKey"
+  //    left join "tblEventTypes" tet on tp."wrEventTypeId" = tet."wrEventTypeId"
+  //    left join "tblPlayerTypes" tpt on tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
+  //     left join "tblBowlingTypes" tbt on tp."wrBowlingStyle" = tbt."wrBowlingTypeId"
+  //    `,
+  //   {
+  //     type: fastify.db.QueryTypes.SELECT,
+  //   }
+  // );
 };
 
 const insertPlayerQuery = async (data, fastify, request) => {
@@ -42,15 +76,15 @@ const insertPlayerQuery = async (data, fastify, request) => {
     const result = await fastify.db.query(
       `with insert_data as (
       insert into "tblPlayers" ("wrPlayerName","wrCountry","wrImage","wrBowlingStyle","wrIsActive","wrIsKipper","wrIsLeftHandedBatting","wrIsLeftArmFielding","wrBatsmanAverage","wrBatsmanStrikeRate","wrBowlerAverage","wrBowlerEconomy","wrDisplayName" ,"wrEventTypeId","wrPlayerTypeId" ,"wrCreatedDate","wrCreatedBy","wrIsSystemPlayer")
-      values($1,$2,$3,(select "wrKey" from "tblEncryptedData" where "wrValue" = $4),$5,$6,$7,$8,$9,$10,$11,$12,$13,(select "wrKey" from "tblEncryptedData" where "wrValue" = $14),(select "wrKey" from "tblEncryptedData" where "wrValue" = $15),$16,$17, $18)
+      values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17, $18)
       returning *
     )
 
     Select 
-        te."wrValue" as "playerId",
-        te2."wrValue" as "eventTypeId",
-        te3."wrValue" as "playerTypeId",
-        te4."wrValue" as "bowlingTypeId",
+        "wrPlayerId" as "playerId",
+        tp."wrEventTypeId" as "eventTypeId",
+        tp."wrPlayerTypeId" as "playerTypeId",
+        tp."wrBowlingStyle" as "bowlingTypeId",
         tet."wrEventType" as "eventType",
         tbt."wrBowlingType" as "bowlingStyle",
         tpt."wrPlayerType" as "playerType",
@@ -67,10 +101,7 @@ const insertPlayerQuery = async (data, fastify, request) => {
         "wrBowlerEconomy"  as "bowlerEconomy",
         "wrDisplayName"   as "displayName",
         "wrIsSystemPlayer" as "isSystemPlayer"	
-     from "insert_data" tp left join "tblEncryptedData" te on tp."wrPlayerId" = te."wrKey"
-     left join "tblEncryptedData" te2 on tp."wrEventTypeId" = te2."wrKey"
-     left join "tblEncryptedData" te3 on tp."wrPlayerTypeId" = te3."wrKey"
-     left join "tblEncryptedData" te4 on tp."wrBowlingStyle" = te4."wrKey"
+     from "insert_data" tp 
      left join "tblEventTypes" tet on tp."wrEventTypeId" = tet."wrEventTypeId"
      left join "tblPlayerTypes" tpt on tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
       left join "tblBowlingTypes" tbt on tp."wrBowlingStyle" = tbt."wrBowlingTypeId"
@@ -116,7 +147,8 @@ const insertPlayerQuery = async (data, fastify, request) => {
 const updatePlayerQuery = async (data, fastify, request) => {
   try {
     return await fastify.db.query(
-      `update "tblPlayers" set "wrPlayerName" = $1,"wrCountry" = $2,"wrImage" = $3,"wrBowlingStyle" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $4),"wrIsActive" = $5,"wrIsKipper" = $6,"wrIsLeftHandedBatting" = $7,"wrIsLeftArmFielding" = $8,"wrBatsmanAverage" = $9,"wrBatsmanStrikeRate" = $10,"wrBowlerAverage" = $11,"wrBowlerEconomy" = $12,"wrDisplayName" = $13,"wrEventTypeId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $14),"wrPlayerTypeId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $15),"wrModifyDate" = $16,"wrModifyBy" = $17,"wrIsSystemPlayer" = $18 where "wrPlayerId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $19) `,
+      `update "tblPlayers" set "wrPlayerName" = $1,"wrCountry" = $2,"wrImage" = $3,"wrBowlingStyle" = 
+      $4,"wrIsActive" = $5,"wrIsKipper" = $6,"wrIsLeftHandedBatting" = $7,"wrIsLeftArmFielding" = $8,"wrBatsmanAverage" = $9,"wrBatsmanStrikeRate" = $10,"wrBowlerAverage" = $11,"wrBowlerEconomy" = $12,"wrDisplayName" = $13,"wrEventTypeId" = $14,"wrPlayerTypeId" =$15,"wrModifyDate" = $16,"wrModifyBy" = $17,"wrIsSystemPlayer" = $18 where "wrPlayerId" = $19 `,
       {
         type: fastify.db.QueryTypes.UPDATE,
         bind: [
@@ -163,7 +195,7 @@ const updatePlayerStatsQuery = async (data, fastify, request) => {
          "wrBowlerEconomy" = $4,
           "wrModifyDate" = $5,
           "wrModifyBy" = $6
-      WHERE "wrPlayerId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $7)`,
+      WHERE "wrPlayerId" = $7`,
       {
         type: fastify.db.QueryTypes.UPDATE,
         bind: [
@@ -215,15 +247,16 @@ const updatePlayerStatsQuery = async (data, fastify, request) => {
 
 const deletePlayerQuery = async (playerId, fastify, request) => {
   try {
+    console.log("playerId", playerId)
     return await fastify.db.query(
-      `delete from "tblPlayers" where "wrPlayerId" in 
-    (select "wrKey" from "tblEncryptedData" where "wrValue" = ANY($1))`,
+      `delete from "tblPlayers" where "wrPlayerId" =  ANY($1)`,
       {
         type: fastify.db.QueryTypes.DELETE,
         bind: [playerId],
       }
     );
   } catch (err) {
+    console.log(err)
     errorLogger(
       fastify,
       err.message,
@@ -238,9 +271,9 @@ const getAllPlayerTypeQuery = async (fastify) => {
   try {
     return await fastify.db.query(
       `select 
-      "wrValue" as "playerTypeId",
+      "wrPlayerTypeId" as "playerTypeId",
       "wrPlayerType" as "playerType"
-       from "tblPlayerTypes" tp left join "tblEncryptedData" te on tp."wrPlayerTypeId" = te."wrKey"`,
+       from "tblPlayerTypes"`,
       {
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -260,9 +293,9 @@ const getAllBowlingTypeQuery = async (fastify) => {
   try {
     return await fastify.db.query(
       `select 
-      "wrValue" as "bowlingTypeId",
+      "wrBowlingTypeId" as "bowlingTypeId",
       "wrBowlingType" as "bowlingType"
-       from "tblBowlingTypes" tp left join "tblEncryptedData" te on tp."wrBowlingTypeId" = te."wrKey"
+       from "tblBowlingTypes"
        where "wrIsActive" = true`,
       {
         type: fastify.db.QueryTypes.SELECT,
@@ -283,11 +316,11 @@ const getAllTeamsByPlayerIdQuery = async (playerId, fastify, request) => {
   try {
     return await fastify.db.query(
       `select 
-      "wrValue" as "teamId",
+      tp."wrTeamId" as "teamId",
       "wrTeamName" as "teamName"
-       from "tblTeamPlayers" tp left join "tblEncryptedData" te on tp."wrTeamId" = te."wrKey"
+       from "tblTeamPlayers" tp
        left join "tblTeams" tt on tp."wrTeamId" = tt."wrTeamId"
-       where "wrRefPlayerId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)`,
+       where "wrRefPlayerId" = $1`,
       {
         type: fastify.db.QueryTypes.SELECT,
         bind: [playerId],

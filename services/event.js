@@ -11,19 +11,19 @@ const allEventService = async (request) => {
 
   const filterObject = {
     isActive: isActive,
-    eventTypeId: eventTypeId === "string" ? null : eventTypeId,
-    competitionId: competitionId === "string" ? null : competitionId,
+    eventTypeId: eventTypeId ===  0 ? null : eventTypeId,
+    competitionId: competitionId === 0 ? null : competitionId,
     startDate: request.body.startDate,
     endDate: request.body.endDate,
   };
 
   // Additional checks for "0" and undefined
   filterObject.eventTypeId =
-    eventTypeId === "0" || eventTypeId === undefined
+    eventTypeId === 0 || eventTypeId === undefined
       ? null
       : filterObject.eventTypeId;
   filterObject.competitionId =
-    competitionId === "0" || competitionId === undefined
+    competitionId === 0 || competitionId === undefined
       ? null
       : filterObject.competitionId;
   let _event;
@@ -191,7 +191,7 @@ const updateEventService = async (request, fastify) => {
 const saveEventService = async (request, fastify) => {
   const { eventId } = request.body;
 
-  if (eventId === "0") {
+  if (eventId === 0) {
     return await createEventService(request, fastify);
   } else {
     return await updateEventService(request, fastify);

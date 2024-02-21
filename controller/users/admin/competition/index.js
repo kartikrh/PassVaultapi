@@ -81,6 +81,7 @@ const getCompetitionListByeventTypeId = async (request, reply, fastify) => {
 };
 const saveCompetition = async (request, reply, fastify) => {
   try {
+    // console.log("saveCompetition -> request", request.body);
     const result = await saveCompetitionService(request, fastify);
     reply.status(200).send(success(result, 200));
   } catch (err) {
