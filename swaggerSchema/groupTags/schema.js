@@ -2328,7 +2328,22 @@ const Score = {
   getsquadList: {
     schema: {
       tags: ["Score"],
-      description: "get Commentary by evrentid",
+      description: "get Players List by evrentid",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          eventId: { type: "string" },
+        },
+        required: ["eventId"],
+      },
+    },
+  },
+
+  getPartnershipList: {
+    schema: {
+      tags: ["Score"],
+      description: "getPartnershipList",
       security: [{ bearerAuth: [] }],
       body: {
         type: "object",

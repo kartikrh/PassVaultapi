@@ -13,6 +13,7 @@ const {
   getCompleteMatchList,
   getAllDetailsByEventId,
   getCommenrtySquadList,
+  getPartnershipList,
 } = require("../../../controller/users/admin/commentary/commentary");
 const { getMenuItemList } = require("../../../controller/users/admin/menuType");
 const { Score } = require("../../../swaggerSchema/groupTags/schema");
@@ -156,5 +157,18 @@ module.exports = async (fastify, opts) => {
     //     }),
     // ],
     handler: (request, reply) => getCommenrtySquadList(request, reply, fastify),
+  });
+
+  fastify.post("/partnershipList", {
+    schema: Score.getPartnershipList.schema,
+    // preHandler: [
+    //   (request, reply) => authorize(request, reply, fastify),
+    //   (request, reply, done) =>
+    //     checkPermission(request, reply, fastify, {
+    //       tabName: "Commentary",
+    //       mode: "view",
+    //     }),
+    // ],
+    handler: (request, reply) => getPartnershipList(request, reply, fastify),
   });
 };
