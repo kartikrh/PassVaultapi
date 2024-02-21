@@ -18,6 +18,7 @@ const {
   changeBowlerOfCommentaryService,
   getMatchListByStatus,
   getAllDetailsByEventIdService,
+  getCommenrtySquadDetailsService,
 } = require("../../../../services/commentry");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -235,59 +236,50 @@ const changeBowlerOfCommentary = async (request, reply, fastify) => {
 };
 const getScheduleMatchList = async (request, reply, fastify) => {
   try {
-    let commentaryData = global.tblCommentaries.filter((item)=>item.commentaryStatus === 1)
+    let commentaryData = global.tblCommentaries.filter(
+      (item) => item.commentaryStatus === 1
+    );
     const body = {
       commentaryData,
-      type : "schedule"
-    }
+      type: "schedule",
+    };
 
-    const result = await getMatchListByStatus(body ,request, fastify);
+    const result = await getMatchListByStatus(body, request, fastify);
     reply.status(200).send(success(result, 200));
   } catch (err) {
-    errorLogger(
-      fastify,
-      err.message,
-      path + "/getScheduleMatchList",
-      request
-    );
+    errorLogger(fastify, err.message, path + "/getScheduleMatchList", request);
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 const getCompleteMatchList = async (request, reply, fastify) => {
   try {
-    let commentaryData = global.tblCommentaries.filter((item)=>item.commentaryStatus === 4)
-    const body ={
+    let commentaryData = global.tblCommentaries.filter(
+      (item) => item.commentaryStatus === 4
+    );
+    const body = {
       commentaryData,
-      type : "completed"
-    }
-    const result = await getMatchListByStatus(body,request, fastify);
+      type: "completed",
+    };
+    const result = await getMatchListByStatus(body, request, fastify);
     reply.status(200).send(success(result, 200));
   } catch (err) {
-    errorLogger(
-      fastify,
-      err.message,
-      path + "/getCompleteMatchList",
-      request
-    );
+    errorLogger(fastify, err.message, path + "/getCompleteMatchList", request);
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
 const getLiveMatchList = async (request, reply, fastify) => {
   try {
-    let commentaryData = global.tblCommentaries.filter(item => item.commentaryStatus !== 1 && item.commentaryStatus !== 4);
+    let commentaryData = global.tblCommentaries.filter(
+      (item) => item.commentaryStatus !== 1 && item.commentaryStatus !== 4
+    );
     const body = {
       commentaryData,
-      type : "live"
-    }
-    const result = await getMatchListByStatus(body,request, fastify);
+      type: "live",
+    };
+    const result = await getMatchListByStatus(body, request, fastify);
     reply.status(200).send(success(result, 200));
   } catch (err) {
-    errorLogger(
-      fastify,
-      err.message,
-      path + "/getLiveMatchList",
-      request
-    );
+    errorLogger(fastify, err.message, path + "/getLiveMatchList", request);
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
@@ -302,6 +294,16 @@ const getAllDetailsByEventId = async (request, reply, fastify) => {
       path + "/getAllDetailsByEventId",
       request
     );
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
+const getCommenrtySquadList = async (request, reply, fastify) => {
+  try {
+    const result = await getCommenrtySquadDetailsService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/getCommenrtySquadList", request);
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
@@ -326,5 +328,6 @@ module.exports = {
   getScheduleMatchList,
   getCompleteMatchList,
   getLiveMatchList,
-  getAllDetailsByEventId
+  getAllDetailsByEventId,
+  getCommenrtySquadList,
 };

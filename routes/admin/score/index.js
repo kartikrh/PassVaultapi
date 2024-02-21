@@ -12,10 +12,10 @@ const {
   getLiveMatchList,
   getCompleteMatchList,
   getAllDetailsByEventId,
+  getCommenrtySquadList,
 } = require("../../../controller/users/admin/commentary/commentary");
 const { getMenuItemList } = require("../../../controller/users/admin/menuType");
-const {
-  Score} = require("../../../swaggerSchema/groupTags/schema");
+const { Score } = require("../../../swaggerSchema/groupTags/schema");
 
 module.exports = async (fastify, opts) => {
   fastify.post("/getscore", {
@@ -82,7 +82,7 @@ module.exports = async (fastify, opts) => {
     //       mode: "view",
     //     }),
     // ],
-    handler: (request, reply) =>  getScheduleMatchList(request, reply, fastify)
+    handler: (request, reply) => getScheduleMatchList(request, reply, fastify),
   });
   fastify.post("/liveMatchesList", {
     schema: Score.getCIds.schema,
@@ -94,7 +94,7 @@ module.exports = async (fastify, opts) => {
     //       mode: "view",
     //     }),
     // ],
-    handler: (request, reply) => getLiveMatchList(request, reply, fastify)
+    handler: (request, reply) => getLiveMatchList(request, reply, fastify),
   });
   fastify.post("/completeMatchesList", {
     schema: Score.getCIds.schema,
@@ -106,10 +106,10 @@ module.exports = async (fastify, opts) => {
     //       mode: "view",
     //     }),
     // ]
-    handler: (request, reply) => getCompleteMatchList(request, reply, fastify)
+    handler: (request, reply) => getCompleteMatchList(request, reply, fastify),
   });
-  fastify.post("/getmenuItemList",{
-    schema : Score.getmenuitemlist.schema,
+  fastify.post("/getmenuItemList", {
+    schema: Score.getmenuitemlist.schema,
     // preHandler: [
     //   (request, reply) => authorize(request, reply, fastify),
     //   (request, reply) =>
@@ -118,23 +118,35 @@ module.exports = async (fastify, opts) => {
     //       mode: "view",
     //     }),
     // ],
-    handler: (request, reply) => getMenuItemList(request, reply, fastify)
+    handler: (request, reply) => getMenuItemList(request, reply, fastify),
   }),
-  fastify.post("/getPagesList",{
-    schema : Score.getmenuitemlist.schema,
-    // preHandler: [
-    //   (request, reply) => authorize(request, reply, fastify),
-    //   (request, reply) =>
-    //     checkPermission(request, reply, fastify, {
-    //       tabName: "Match Types",
-    //       mode: "view",
-    //     }),
-    // ],
-    handler: (request, reply) => getAllPage(request, reply, fastify)
-  }),
-
-  fastify.post("/fullScorecard", {
-    schema: Score.getscoreByEId.schema,
+    fastify.post("/getPagesList", {
+      schema: Score.getmenuitemlist.schema,
+      // preHandler: [
+      //   (request, reply) => authorize(request, reply, fastify),
+      //   (request, reply) =>
+      //     checkPermission(request, reply, fastify, {
+      //       tabName: "Match Types",
+      //       mode: "view",
+      //     }),
+      // ],
+      handler: (request, reply) => getAllPage(request, reply, fastify),
+    }),
+    fastify.post("/fullScorecard", {
+      schema: Score.getscoreByEId.schema,
+      // preHandler: [
+      //   (request, reply) => authorize(request, reply, fastify),
+      //   (request, reply, done) =>
+      //     checkPermission(request, reply, fastify, {
+      //       tabName: "Commentary",
+      //       mode: "view",
+      //     }),
+      // ],
+      handler: (request, reply) =>
+        getAllDetailsByEventId(request, reply, fastify),
+    });
+  fastify.post("/squadList", {
+    schema: Score.getsquadList.schema,
     // preHandler: [
     //   (request, reply) => authorize(request, reply, fastify),
     //   (request, reply, done) =>
@@ -143,7 +155,6 @@ module.exports = async (fastify, opts) => {
     //       mode: "view",
     //     }),
     // ],
-    handler: (request, reply) =>
-      getAllDetailsByEventId(request, reply, fastify),
+    handler: (request, reply) => getCommenrtySquadList(request, reply, fastify),
   });
 };

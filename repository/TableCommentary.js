@@ -2140,6 +2140,55 @@ const getCommentaryBallByBallQuery = async (request, fastify) => {
     }
   );
 };
+
+const getCommnertySquadPlayersList = async (data, fastify, request) => {
+  try {
+    return await fastify.db.query(
+      `WITH CommentaryDetails AS (
+        SELECT "wrCommentaryId","wrTeam1Id", "wrTeam2Id", "wrCommentaryStatus","wrCurrentInnings"
+        FROM "tblCommentaries"
+        WHERE "wrCommentaryId" = (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $1)
+    ),
+    TeamPlayers AS (
+      SELECT p."wrPlayerName" AS pn,
+             p."wrImage" AS pim,
+            "tblCommentaryPlayers"."wrDisplayOrder"  AS ord,
+             CASE
+                 WHEN "wrPlayerTypeId" = 1 THEN 'BatsMan'
+                 WHEN "wrPlayerTypeId" = 2 THEN 'Bowler'
+                 WHEN "wrPlayerTypeId" = 3 THEN 'WicketKeeper'
+                 WHEN "wrPlayerTypeId" = 4 THEN 'AllRounder'
+             END AS pty,
+             CASE
+                 WHEN "wrIsKipper" = true THEN 'true'
+                 WHEN "wrIsKipper" = false THEN 'false'
+             END AS isKep
+      FROM "tblTeamPlayers" t
+      INNER JOIN "tblCommentaryPlayers" ON "tblCommentaryPlayers"."wrPlayerId" = t."wrRefPlayerId"
+                                     AND "tblCommentaryPlayers"."wrTeamId" = t."wrTeamId"
+      INNER JOIN "tblPlayers" p ON p."wrPlayerId" = t."wrRefPlayerId"
+      INNER JOIN CommentaryDetails ON "tblCommentaryPlayers"."wrTeamId" = (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $2)
+      WHERE "tblCommentaryPlayers"."wrTeamId" = (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $2)
+            AND "tblCommentaryPlayers"."wrCommentaryId" = CommentaryDetails."wrCommentaryId"
+            AND p."wrIsActive" = true
+            AND "tblCommentaryPlayers"."wrCurrentInnings" = CommentaryDetails."wrCurrentInnings"
+  )
+  SELECT * FROM TeamPlayers;`,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [data.CommentaryId, data.teamId],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/getCommnertySquadPlayersList",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -2180,4 +2229,5 @@ module.exports = {
   updateMatchTypeInCommentaryQuery,
   changeBowlerInCommentary,
   getCommentaryBallByBallQuery,
+  getCommnertySquadPlayersList,
 };
