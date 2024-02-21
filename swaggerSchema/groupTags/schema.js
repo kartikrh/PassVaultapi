@@ -585,11 +585,10 @@ const MenuItem = {
         type: "object",
         properties: {
           isActive: { type: "boolean" },
-          menuTypeId : { type: "string"} 
+          menuTypeId: { type: "string" },
         },
-        required : ["menuTypeId"]
+        required: ["menuTypeId"],
       },
-
     },
   },
   menuTypeList: {
@@ -1256,7 +1255,7 @@ const Player = {
         properties: {
           isActive: { type: "boolean" },
           eventTypeId: { type: "string" },
-          teamId : { type: "string"}
+          teamId: { type: "string" },
         },
       },
     },
@@ -1677,7 +1676,7 @@ const Commentary = {
           eventTypeId: { type: "string" },
           competitionId: { type: "string" },
           startDate: { type: "string" },
-          endDate: {type : "string"}
+          endDate: { type: "string" },
         },
       },
     },
@@ -1916,8 +1915,8 @@ const Commentary = {
             items: { type: "string" },
           },
           currentInnings: { type: "integer" },
-          addSystemPlayer : { type: "boolean" },
-          systemPlayerCount : { type: "integer" },
+          addSystemPlayer: { type: "boolean" },
+          systemPlayerCount: { type: "integer" },
         },
         required: ["commentaryId"],
       },
@@ -2014,7 +2013,7 @@ const Commentary = {
           commentaryId: { type: "string" },
           bowlerId: { type: "string" },
           currentInnings: { type: "integer" },
-          overId : { type: "string" },
+          overId: { type: "string" },
         },
         required: ["commentaryId", "bowlerId", "currentInnings", "overId"],
       },
@@ -2326,10 +2325,24 @@ const Score = {
       },
     },
   },
+  getsquadList: {
+    schema: {
+      tags: ["Score"],
+      description: "get Commentary by evrentid",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          eventId: { type: "string" },
+        },
+        required: ["eventId"],
+      },
+    },
+  },
   getCIds: {
     schema: {
       tags: ["Score"],
-      description: "get all CommentaryIDS"
+      description: "get all CommentaryIDS",
       // security: [{ bearerAuth: [] }],
     },
   },
@@ -2337,7 +2350,7 @@ const Score = {
     schema: {
       tags: ["Menu Types"],
       description: "get MenuType",
-      security: [{ bearerAuth: [] }]
+      security: [{ bearerAuth: [] }],
     },
   },
 };
@@ -2363,5 +2376,5 @@ module.exports = {
   Compitition,
   Event,
   ImportMarket,
-  Score
+  Score,
 };
