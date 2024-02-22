@@ -875,7 +875,7 @@ const deleteCommentaryService = async (request, fastify) => {
 //     return true;
 //   }
 // };
-const saveCommentaryDetailsService = (request, fastify) => {
+const saveCommentaryDetailsService = async (request, fastify) => {
   const {
     commentaryDetails,
     commentaryTeams,
