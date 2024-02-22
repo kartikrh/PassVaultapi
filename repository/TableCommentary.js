@@ -55,13 +55,13 @@ const insertCommentaryQuery = async (request, fastify) => {
       `
       with insert_data as(
         insert into "tblCommentaries" ("wrEventTypeId","wrMatchTypeId","wrCompetitionId","wrEventId","wrEventDate","wrEventName","wrEventRefId","wrTeam1Id","wrTeam2Id","wrLocation","wrWeather","wrPitch","wrDisplayStatus","wrTarget","wrMarketID","wrTpId","isSignalROn","isMatchTypeUpdated" , "wrCreatedBy" , "wrCreatedDate","wrCommentaryStatus","wrCurrentInnings", "wrSystemPlayerCount") values (
-          (select "wrKey" from "tblEncryptedData" where "wrValue" = $1),
-          (select "wrKey" from "tblEncryptedData" where "wrValue" = $2),
-          (select "wrKey" from "tblEncryptedData" where "wrValue" = $3),
-          (select "wrKey" from "tblEncryptedData" where "wrValue" = $4),
+          $1,
+          $2,
+          $3,
+          $4,
           $5,$6,$7,
-          (select "wrKey" from "tblEncryptedData" where "wrValue" = $8),
-          (select "wrKey" from "tblEncryptedData" where "wrValue" = $9),
+          $8,
+          $9,
           $10,$11,$12,$13,$14,$15,$16,$17,$18,$19,now(),1,
           1,
           $20
@@ -69,27 +69,26 @@ const insertCommentaryQuery = async (request, fastify) => {
       )
 
       select 
-    "wrCommentaryId" as "pId",
-    te7."wrValue" as "commentaryId",
-    te."wrValue" as "matchTypeId",
+    "wrCommentaryId" as "commentaryId",
+    tc."wrMatchTypeId" as "matchTypeId",
     mt."wrMatchType" AS "matchType",
-    te1."wrValue" as "eventTypeId",
-    te2."wrValue" as "team1Id",
-    te3."wrValue" as "team2Id",
+    tc."wrEventTypeId" as "eventTypeId",
+    tc."wrTeam1Id" as "team1Id",
+    tc."wrTeam2Id" as "team2Id",
     tt1."wrTeamName" as "team1Name",
     tt2."wrTeamName" as "team2Name",
-    te8."wrValue" as "competitionId",
-    te9."wrValue" as "eventId",
+    tc."wrCompetitionId" as "competitionId",
+    tc."wrEventId" as "eventId",
     "wrEventDate" as "eventDate",
     "wrEventName" as "eventName",
     "wrEventRefId" as "eventRefId",
     "wrLocation" as "location",
     "wrWeather" as "weather",
     "wrPitch" as "pitch",
-    te4."wrValue" as "homeSideTeam",
-    te5."wrValue" as "tossWonBy",
+    tc."wrHomeSideTeam" as "homeSideTeam",
+    tc."wrTossWonBy" as "tossWonBy",
     "wrChoseTo" as "choseTo",
-    te6."wrValue" as "winnerId",
+    tc."wrWinnerId" as "winnerId",
     "wrWinnerName" as "winnerName",
     "wrIsViewTable" as "isViewTable",
     "wrDisplayStatus" as "displayStatus",
@@ -106,16 +105,6 @@ const insertCommentaryQuery = async (request, fastify) => {
     "wrCurrentInnings" as "currentInnings",
     "wrSystemPlayerCount" as "systemPlayerCount"
     from "insert_data" tc
-    left join "tblEncryptedData" te on tc."wrMatchTypeId" = te."wrKey"
-    left join "tblEncryptedData" te1 on tc."wrEventTypeId" = te1."wrKey"
-    left join "tblEncryptedData" te2 on tc."wrTeam1Id" = te2."wrKey"
-    left join "tblEncryptedData" te3 on tc."wrTeam2Id" = te3."wrKey"
-    left join "tblEncryptedData" te4 on tc."wrHomeSideTeam" = te4."wrKey"
-    left join "tblEncryptedData" te5 on tc."wrTossWonBy" = te5."wrKey"
-    left join "tblEncryptedData" te6 on tc."wrWinnerId" = te6."wrKey"
-    left join "tblEncryptedData" te7 on tc."wrCommentaryId" = te7."wrKey"
-    left join "tblEncryptedData" te8 on tc."wrCompetitionId" = te8."wrKey"
-    left join "tblEncryptedData" te9 on tc."wrEventId" = te9."wrKey"
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"  
     LEFT JOIN "tblMatchTypes" mt ON tc."wrMatchTypeId" = mt."wrMatchTypeId"
@@ -166,22 +155,22 @@ const insertCommentaryTeams = async (request, fastify) => {
       `
       insert into "tblCommentaryTeams" ("wrCommentaryId" , "wrTeamId","wrTeamCaptain","wrTeamKipper" , "wrShortName" , "wrTeamName","wrCurrentInnings","wrIsBattingComplete")
        values (
-        (select "wrKey" from "tblEncryptedData" where "wrValue" = $1),
-        (select "wrKey" from "tblEncryptedData" where "wrValue" = $2),
-        (select "wrKey" from "tblEncryptedData" where "wrValue" = $3),
-        (select "wrKey" from "tblEncryptedData" where "wrValue" = $4),
-        (select "wrTeamShortName" from "tblTeams" where "wrTeamId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $2)),
-        (select "wrTeamName" from "tblTeams" where "wrTeamId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $2)),
+        $1,
+        $2,
+        $3,
+        $4,
+        (select "wrTeamShortName" from "tblTeams" where "wrTeamId" = $2),
+        (select "wrTeamName" from "tblTeams" where "wrTeamId" = $2),
         $8,
         false                
       )
       ,(
-        (select "wrKey" from "tblEncryptedData" where "wrValue" = $1),
-        (select "wrKey" from "tblEncryptedData" where "wrValue" = $5),
-        (select "wrKey" from "tblEncryptedData" where "wrValue" = $6),
-        (select "wrKey" from "tblEncryptedData" where "wrValue" = $7),
-        (select "wrTeamShortName" from "tblTeams" where "wrTeamId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $5)),
-        (select "wrTeamName" from "tblTeams" where "wrTeamId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $5)),
+        $1,
+        $5,
+        $6,
+        $7,
+        (select "wrTeamShortName" from "tblTeams" where "wrTeamId" = $5),
+        (select "wrTeamName" from "tblTeams" where "wrTeamId" = $5),
         $8,
         false
       )
@@ -224,30 +213,25 @@ const insertCommentaryPlayers = async (
         insert into "tblCommentaryPlayers" ("wrCommentaryId" , "wrTeamId" , "wrPlayerId","wrPlayerName", "wrDisplayOrder","wrCurrentInnings",
         "wrBatsmanAverage", "wrBatsmanPreviousStrikeRate", "wrBowlerPreviousEconomy", "wrBowlerAverage")
         values (
-          (select "wrKey" from "tblEncryptedData" where "wrValue" = $1),
-          (select "wrKey" from "tblEncryptedData" where "wrValue" = $2),
-          (select "wrKey" from "tblEncryptedData" where "wrValue" = $3),
-          (select "wrPlayerName" from "tblPlayers" where "wrPlayerId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $3)),
+          $1,
+          $2,
+          $3,
+          (select "wrPlayerName" from "tblPlayers" where "wrPlayerId" = $3),
           $4,
           $5,
-          (select "wrBatsmanAverage" from "tblPlayers" where "wrPlayerId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $3)),
-          (select "wrBatsmanStrikeRate" from "tblPlayers" where "wrPlayerId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $3)),
-          (select "wrBowlerEconomy" from "tblPlayers" where "wrPlayerId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $3)),
-          (select "wrBowlerAverage" from "tblPlayers" where "wrPlayerId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $3))
+          (select "wrBatsmanAverage" from "tblPlayers" where "wrPlayerId" =$3),
+          (select "wrBatsmanStrikeRate" from "tblPlayers" where "wrPlayerId" =$3),
+          (select "wrBowlerEconomy" from "tblPlayers" where "wrPlayerId" =$3),
+          (select "wrBowlerAverage" from "tblPlayers" where "wrPlayerId" =$3)
         )
         RETURNING *   
       ) 
       SELECT 
-      tp."wrValue" as "playerId", 
-      tp1."wrValue" as "teamId",
-      tp2."wrValue" as "commentaryId",
-      tp3."wrValue" as "commentaryPlayerId"
-      FROM "insert_data" id
-      left join "tblEncryptedData" tp on id."wrPlayerId" = tp."wrKey"
-      left join "tblEncryptedData" tp1 on id."wrTeamId" = tp1."wrKey"
-      left join "tblEncryptedData" tp2 on id."wrCommentaryId" = tp2."wrKey"
-      left join "tblEncryptedData" tp3 on id."wrCommentaryPlayerId" = tp3."wrKey"
-
+      "wrPlayerId" as "playerId", 
+      "wrTeamId" as "teamId",
+      "wrCommentaryId" as "commentaryId",
+      "wrCommentaryPlayerId" as "commentaryPlayerId"
+      FROM "insert_data"
     `,
       {
         type: fastify.db.QueryTypes.SELECT,
@@ -284,25 +268,25 @@ const upsertCommentaryPlayers = async (
       SET
         "wrDisplayOrder" = $4
       WHERE
-        "wrCommentaryId" = (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $1)
-        AND "wrTeamId" = (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $2)
-        AND "wrPlayerId" = (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $3)
+        "wrCommentaryId" = $1
+        AND "wrTeamId" = $2
+        AND "wrPlayerId" = $3
         AND "wrCurrentInnings" = $5
       RETURNING *
     )
     INSERT INTO "tblCommentaryPlayers" ("wrCommentaryId", "wrTeamId", "wrPlayerId", "wrPlayerName", "wrDisplayOrder", "wrCurrentInnings",
     "wrBatsmanAverage", "wrBatsmanPreviousStrikeRate", "wrBowlerPreviousEconomy", "wrBowlerAverage")
     SELECT
-      (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $1),
-      (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $2),
-      (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $3),
-      (SELECT "wrPlayerName" FROM "tblPlayers" WHERE "wrPlayerId" = (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $3)),
+      $1,
+      $2,
+      $3,
+      (SELECT "wrPlayerName" FROM "tblPlayers" WHERE "wrPlayerId" = $3),
       $4,
       $5,
-      (SELECT "wrBatsmanAverage" FROM "tblPlayers" WHERE "wrPlayerId" = (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $3)),
-      (SELECT "wrBatsmanStrikeRate" FROM "tblPlayers" WHERE "wrPlayerId" = (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $3)),
-      (SELECT "wrBowlerEconomy" FROM "tblPlayers" WHERE "wrPlayerId" = (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $3)),
-      (SELECT "wrBowlerAverage" FROM "tblPlayers" WHERE "wrPlayerId" = (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $3))
+      (SELECT "wrBatsmanAverage" FROM "tblPlayers" WHERE "wrPlayerId" = $3),
+      (SELECT "wrBatsmanStrikeRate" FROM "tblPlayers" WHERE "wrPlayerId" = $3),
+      (SELECT "wrBowlerEconomy" FROM "tblPlayers" WHERE "wrPlayerId" = $3),
+      (SELECT "wrBowlerAverage" FROM "tblPlayers" WHERE "wrPlayerId" = $3)
     WHERE NOT EXISTS (SELECT 1 FROM upsert);
     
     
@@ -334,15 +318,15 @@ const updateCommentaryQuery = async (request, fastify) => {
     const data = request.body;
     return await fastify.db.query(
       `update "tblCommentaries" set 
-      "wrEventTypeId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1),
-      "wrMatchTypeId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $2),
-      "wrCompetitionId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $3),
-      "wrEventId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $4),
+      "wrEventTypeId" = $1,
+      "wrMatchTypeId" =$2,
+      "wrCompetitionId" = $3,
+      "wrEventId" = $4,
       "wrEventDate" = $5,
       "wrEventName" = $6,
       "wrEventRefId" = $7,
-      "wrTeam1Id" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $8),
-      "wrTeam2Id" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $9),
+      "wrTeam1Id" = $8,
+      "wrTeam2Id" = $9,
       "wrLocation" = $10,
       "wrWeather" = $11,
       "wrPitch" = $12,
@@ -351,7 +335,7 @@ const updateCommentaryQuery = async (request, fastify) => {
       "isSignalROn" = $15,
       "isMatchTypeUpdated" = $16, 
       "wrModifyDate" = now()
-      where "wrCommentaryId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $17)
+      where "wrCommentaryId" = $17	
       `,
       {
         bind: [
@@ -392,12 +376,12 @@ const updateCommentaryTeams = async (request, fastify, data) => {
   try {
     return await fastify.db.query(
       `update "tblCommentaryTeams" set
-      "wrTeamCaptain" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1),
-      "wrTeamKipper" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $2),
-      "wrShortName" = (select "wrTeamShortName" from "tblTeams" where "wrTeamId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $3)),
-      "wrTeamName" = (select "wrTeamName" from "tblTeams" where "wrTeamId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $3)),
+      "wrTeamCaptain" = $1,
+      "wrTeamKipper" = $2,
+      "wrShortName" = (select "wrTeamShortName" from "tblTeams" where "wrTeamId" = $3),
+      "wrTeamName" = (select "wrTeamName" from "tblTeams" where "wrTeamId" = $3),
       "wrCurrentInnings" = $5
-      where "wrCommentaryId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $4) and "wrTeamId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $3)
+      where "wrCommentaryId" = $4 and "wrTeamId" = $3
       AND "wrCurrentInnings" = $5
     `,
       {
@@ -426,7 +410,7 @@ const deleteCommentaryPlayers = async (request, fastify) => {
   try {
     return await fastify.db.query(
       `
-      delete from "tblCommentaryPlayers" where "wrCommentaryId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)
+      delete from "tblCommentaryPlayers" where "wrCommentaryId" = $1
     `,
       {
         type: fastify.db.QueryTypes.SELECT,
@@ -451,26 +435,26 @@ const getCommentaryByIdQuery = async (request, fastify) => {
     const result = await fastify.db.query(
       `
       select 
-      te7."wrValue" as "commentaryId",
-      te."wrValue" as "matchTypeId",
+      "wrCommentaryId" as "commentaryId",
+      tc."wrMatchTypeId" as "matchTypeId",
       mt."wrMatchType" AS "matchType",
-      te1."wrValue" as "eventTypeId",
-      te2."wrValue" as "team1Id",
-      te3."wrValue" as "team2Id",
+      tc."wrEventTypeId" as "eventTypeId",
+      tc."wrTeam1Id" as "team1Id",
+      tc."wrTeam2Id"  as "team2Id",
       tt1."wrTeamName" as "team1Name",
       tt2."wrTeamName" as "team2Name",
-      te8."wrValue" as "competitionId",
-      te9."wrValue" as "eventId",
+      tc."wrCompetitionId" as "competitionId",
+      tc."wrEventId" as "eventId",
       "wrEventDate" as "eventDate",
       "wrEventName" as "eventName",
       "wrEventRefId" as "eventRefId",
       "wrLocation" as "location",
       "wrWeather" as "weather",
       "wrPitch" as "pitch",
-      te4."wrValue" as "homeSideTeam",
-      te5."wrValue" as "tossWonBy",
+      tc."wrHomeSideTeam" as "homeSideTeam",
+      tc."wrTossWonBy" as "tossWonBy",
       "wrChoseTo" as "choseTo",
-      te6."wrValue" as "winnerId",
+      tc."wrWinnerId" as "winnerId",
       "wrWinnerName" as "winnerName",
       "wrIsViewTable" as "isViewTable",
       "wrDisplayStatus" as "displayStatus",
@@ -487,20 +471,10 @@ const getCommentaryByIdQuery = async (request, fastify) => {
       "wrCurrentInnings" as "currentInnings",
       "wrSystemPlayerCount" as "systemPlayerCount"
       from "tblCommentaries" tc
-      left join "tblEncryptedData" te on tc."wrMatchTypeId" = te."wrKey"
-      left join "tblEncryptedData" te1 on tc."wrEventTypeId" = te1."wrKey"
-      left join "tblEncryptedData" te2 on tc."wrTeam1Id" = te2."wrKey"
-      left join "tblEncryptedData" te3 on tc."wrTeam2Id" = te3."wrKey"
-      left join "tblEncryptedData" te4 on tc."wrHomeSideTeam" = te4."wrKey"
-      left join "tblEncryptedData" te5 on tc."wrTossWonBy" = te5."wrKey"
-      left join "tblEncryptedData" te6 on tc."wrWinnerId" = te6."wrKey"
-      left join "tblEncryptedData" te7 on tc."wrCommentaryId" = te7."wrKey"
-      left join "tblEncryptedData" te8 on tc."wrCompetitionId" = te8."wrKey"
-      left join "tblEncryptedData" te9 on tc."wrEventId" = te9."wrKey"
       left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
       left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
       LEFT JOIN "tblMatchTypes" mt ON tc."wrMatchTypeId" = mt."wrMatchTypeId"
-      where "wrCommentaryId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)
+      where "wrCommentaryId" = $1
       `,
       {
         type: fastify.db.QueryTypes.SELECT,
@@ -526,14 +500,11 @@ const getCommentaryTeamsQuery = async (data, fastify, request) => {
 
     const result = await fastify.db.query(
       `select 
-      te."wrValue" as "teamId",
-      te1."wrValue" as "teamCaptain",
-      te2."wrValue" as "teamKipper"
-      from "tblCommentaryTeams" tct
-      left join "tblEncryptedData" te on tct."wrTeamId" = te."wrKey"
-      left join "tblEncryptedData" te1 on tct."wrTeamCaptain" = te1."wrKey"
-      left join "tblEncryptedData" te2 on tct."wrTeamKipper" = te2."wrKey"
-      where "wrCommentaryId" = $1 and "wrTeamId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $2)
+      "wrTeamId" as "teamId",
+      "wrTeamCaptain" as "teamCaptain",
+      "wrTeamKipper" as "teamKipper"
+      from "tblCommentaryTeams"
+      where "wrCommentaryId" = $1 and "wrTeamId" = $2
       `,
       {
         type: fastify.db.QueryTypes.SELECT,
@@ -560,12 +531,11 @@ const getCommentaryPlayersQuery = async (data, fastify, request) => {
     const result = await fastify.db.query(
       `
       select 
-      te."wrValue" as "playerId",
+      "wrPlayerId" as "playerId",
       "wrDisplayOrder" as "displayOrder",
       "wrPlayerName" as "playerName"
-      from "tblCommentaryPlayers" tcp
-      left join "tblEncryptedData" te on tcp."wrPlayerId" = te."wrKey"
-      where "wrCommentaryId" = $1 and "wrTeamId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $2)
+      from "tblCommentaryPlayers"
+      where "wrCommentaryId" = $1 and "wrTeamId" = $2
       order by "wrDisplayOrder"
       `,
       {
@@ -630,12 +600,12 @@ const deleteBallByBallCommentoriesQuery = async (id, request, fastify) => {
   try {
     return await fastify.db.query(
       `WITH delete_partnership AS (
-          DELETE FROM "tblCommentaryPartnerships" WHERE "wrCommentaryBallByBallId" = (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $1)
+          DELETE FROM "tblCommentaryPartnerships" WHERE "wrCommentaryBallByBallId" = $1
         ),
         delete_wicket AS (
-          DELETE FROM "tblCommentaryWickets" WHERE "wrCommentaryBallByBallId" = (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $1)
+          DELETE FROM "tblCommentaryWickets" WHERE "wrCommentaryBallByBallId" = $1
         )
-      DELETE FROM "tblCommentaryBallByBalls" WHERE "wrCommentaryBallByBallId" = (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $1)`,
+      DELETE FROM "tblCommentaryBallByBalls" WHERE "wrCommentaryBallByBallId" = $1`,
       { bind: [id], type: fastify.db.QueryTypes.DELETE }
     );
   } catch (err) {
@@ -654,11 +624,11 @@ const deleteOverCommentoriesQuery = async (id, request, fastify) => {
     return await fastify.db.query(
       `WITH deleted_keys AS (
         DELETE FROM "tblOvers"
-        WHERE "wrOverId" = (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $1)
+        WHERE "wrOverId" = $1
     
     )
     DELETE FROM "tblCommentaryBallByBalls"
-    WHERE "wrOverId" IN (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $1);
+    WHERE "wrOverId" = ANY($1);
       `,
       {
         type: fastify.db.QueryTypes.DELETE,
@@ -1027,10 +997,9 @@ const getAllDisplayStatusQuery = async (fastify) => {
   return await fastify.db.query(
     `
     select 
-    te."wrValue" as "displayStatusId",
+    "wrDisplayStatusId" as "displayStatusId",
     "wrDisplayStatus" as "displayStatus"
-    from "tblDisplayStatuses" tds
-    left join "tblEncryptedData" te on tds."wrDisplayStatusId" = te."wrKey"
+    from "tblDisplayStatuses"
     `,
     {
       type: fastify.db.QueryTypes.SELECT,
@@ -1983,7 +1952,7 @@ const UpdateCommentaryTimeQuery = async (data, fastify, request) => {
     return await fastify.db.query(
       `update "tblCommentaries" set 
       "wrUpdateTime" = now()
-      where "wrCommentaryId" = (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $1)`,
+      where "wrCommentaryId" = $1`,
       {
         type: fastify.db.QueryTypes.UPDATE,
         bind: [data.commentaryId],
@@ -2038,10 +2007,10 @@ const updateCommentaryPlayerIdInCommentaryTeams = async (
     // update for team1
     const query1 = `
     update "tblCommentaryTeams" set
-        "wrCommentaryPlayerTeamCaptain" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1),
-        "wrCommentaryPlayerTeamKipper" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $2)
-      where "wrTeamId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $3)
-      AND "wrCommentaryId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $4)
+        "wrCommentaryPlayerTeamCaptain" = $1,
+        "wrCommentaryPlayerTeamKipper" = $2
+      where "wrTeamId" = $3
+      AND "wrCommentaryId" = $4
       AND "wrCurrentInnings" = $5
     
     `;
@@ -2049,10 +2018,10 @@ const updateCommentaryPlayerIdInCommentaryTeams = async (
     // update for team2
     const query2 = `
     update "tblCommentaryTeams" set
-      "wrCommentaryPlayerTeamCaptain" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1),
-      "wrCommentaryPlayerTeamKipper" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $2)
-      where "wrTeamId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $3)
-      AND "wrCommentaryId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $4)
+      "wrCommentaryPlayerTeamCaptain" = $1,
+      "wrCommentaryPlayerTeamKipper" = $2
+      where "wrTeamId" = $3
+      AND "wrCommentaryId" = $4
       AND "wrCurrentInnings" = $5
     `;
 
@@ -2092,7 +2061,8 @@ const updateCommentaryPlayerIdInCommentaryTeams = async (
 const updateMatchTypeInCommentaryQuery = async (data, fastify, request) => {
   try {
     return await fastify.db.query(
-      `UPDATE "tblCommentaries" SET "wrMatchTypeId" = (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $1) WHERE "wrCommentaryId" = (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $2)`,
+      `UPDATE "tblCommentaries" SET "wrMatchTypeId" = $1 WHERE
+      "wrCommentaryId" = $2`,
       {
         type: fastify.db.QueryTypes.UPDATE,
         bind: [data.matchTypeId, data.commentaryId],
@@ -2113,27 +2083,27 @@ const changeBowlerInCommentary = async (data, request, fastify) => {
     // update bowler in tblOver
     const query1 = `
     update "tblOvers" set
-      "wrBowlerId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)
+      "wrBowlerId" =$1
     WHERE 
-      "wrCommentaryId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $2)
-      AND "wrOverId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $3)
+      "wrCommentaryId" =$2
+      AND "wrOverId" =$3
       AND "wrCurrentInnings" = $4
     `;
     const query2 = `
     update "tblCommentaryBallByBalls" set
-      "wrBowler_ID" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)
+      "wrBowler_ID" =$1
     WHERE 
-      "wrCommentaryId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $2)
-      AND "wrOverId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $3)
+      "wrCommentaryId" =$2
+      AND "wrOverId" =$3
       AND "wrCurrentInnings" = $4
     `;
 
     const query3 = `
     update "tblCommentaryWickets" set
-      "wrBowlerId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)
+      "wrBowlerId" = $1
     WHERE 
-      "wrCommentaryId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $2)
-      AND "wrOverId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $3)
+      "wrCommentaryId" = $2
+      AND "wrOverId" =$3
       AND "wrCurrentInnings" = $4
     `;
 
@@ -2190,21 +2160,16 @@ const changeBowlerInCommentary = async (data, request, fastify) => {
 const getCommentaryBallByBallQuery = async (request, fastify) => {
   return await fastify.db.query(
     `
-    WITH filtered_commentary AS (
-        SELECT *
-        FROM "tblCommentaryBallByBalls"
-        WHERE "wrCommentaryId" = (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $1)
-    )
     SELECT
-        te13."wrValue" AS "commentaryBallByBallId",
-        te1."wrValue" AS "commentaryId",
-        te2."wrValue" AS "teamId",
-        te3."wrValue" AS "overId",
+        "wrCommentaryBallByBallId" AS "commentaryBallByBallId",
+        "wrCommentaryId" AS "commentaryId",
+        "wrTeamId" AS "teamId",
+        "wrOverId" AS "overId",
         "wrOverCount" AS "overCount",
         "wrCurrentOverBalls" AS "currentOverBalls",
-        te4."wrValue" AS "bowlerId",
-        te5."wrValue" AS "batStrikeId",
-        te6."wrValue" AS "batNonStrikeId",
+        "wrBowler_ID" AS "bowlerId",
+        "wrBat_StrikeID" AS "batStrikeId",
+        "wrBat_NONStrikeID" AS "batNonStrikeId",
         "wrBall_IsCount" AS "ballIsCount",
         "wrBall_Type" AS "ballType",
         "wrBall_IsDot" AS "ballIsDot",
@@ -2215,30 +2180,18 @@ const getCommentaryBallByBallQuery = async (request, fastify) => {
         "wrBall_SIX" AS "ballSix",
         "wrBall_IsWicket" AS "ballIsWicket",
         "wrBall_WicketType" AS "ballWicketType",
-        te7."wrValue" AS "ballPlayerId",
-        te8."wrValue" AS "ballBowlerId",
-        te9."wrValue" AS "ballFielderId1",
-        te10."wrValue" AS "ballFielderId2",
+        "wrBall_PlayerID" AS "ballPlayerId",
+        "wrBall_BowlerID" AS "ballBowlerId",
+        "wrBall_FielderID1" AS "ballFielderId1",
+        "wrBall_FielderID2" AS "ballFielderId2",
         "wrOver_isMaiden" AS "overIsMaiden",
-        te11."wrValue" AS "nextBatStrikeId",
-        te12."wrValue" AS "nextBatNonStrikeId",
+        "wrNextBat_StrikeID" AS "nextBatStrikeId",
+        "wrNextBat_NONStrikeID" AS "nextBatNonStrikeId",
         "wrIsDelete" AS "isDelete",
         "wrCurrentInnings" AS "currentInnings"
-    FROM filtered_commentary fc
-    LEFT JOIN "tblEncryptedData" te1 ON fc."wrCommentaryId" = te1."wrKey"
-    LEFT JOIN "tblEncryptedData" te2 ON fc."wrTeamId" = te2."wrKey"
-    LEFT JOIN "tblEncryptedData" te3 ON fc."wrOverId" = te3."wrKey"
-    LEFT JOIN "tblEncryptedData" te4 ON fc."wrBowler_ID" = te4."wrKey"
-    LEFT JOIN "tblEncryptedData" te5 ON fc."wrBat_StrikeID" = te5."wrKey"
-    LEFT JOIN "tblEncryptedData" te6 ON fc."wrBat_NONStrikeID" = te6."wrKey"
-    LEFT JOIN "tblEncryptedData" te7 ON fc."wrBall_PlayerID" = te7."wrKey"
-    LEFT JOIN "tblEncryptedData" te8 ON fc."wrBall_BowlerID" = te8."wrKey"
-    LEFT JOIN "tblEncryptedData" te9 ON fc."wrBall_FielderID1" = te9."wrKey"
-    LEFT JOIN "tblEncryptedData" te10 ON fc."wrBall_FielderID2" = te10."wrKey"
-    LEFT JOIN "tblEncryptedData" te11 ON fc."wrNextBat_StrikeID" = te11."wrKey"
-    LEFT JOIN "tblEncryptedData" te12 ON fc."wrNextBat_NONStrikeID" = te12."wrKey"
-    LEFT JOIN "tblEncryptedData" te13 ON fc."wrCommentaryBallByBallId" = te13."wrKey"
-    ORDER BY fc."wrCommentaryBallByBallId" ASC
+    FROM "tblCommentaryBallByBalls"
+    WHERE "wrCommentaryId" = $1
+    ORDER BY "wrCommentaryBallByBallId" ASC
     `,
     {
       type: fastify.db.QueryTypes.SELECT,

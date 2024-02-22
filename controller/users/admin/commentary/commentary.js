@@ -305,7 +305,7 @@ const getCommentaryTeamList = async (request, reply, fastify) => {
     let result = await getTeamListByEventTypeService(request, fastify);
     result = result.map((item) => {
       return {
-        teamId: item.pId,
+        teamId: item.teamId,
         teamName: item.teamName,
       };
     });

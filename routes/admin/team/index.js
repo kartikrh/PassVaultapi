@@ -69,7 +69,7 @@ module.exports = async (fastify, opts) => {
       (request, reply) =>
         checkPermission(request, reply, fastify, {
           tabName: "Teams",
-          mode: request.body.teamId === "0" ? "add" : "edit",
+          mode: request.body.teamId === 0 ? "add" : "edit",
         }),
     ],
     handler: (request, reply) => saveTeam(request, reply, fastify),

@@ -42,20 +42,19 @@ const insertTeamQuery = async (data, fastify, request) => {
     const result = await fastify.db.query(
       `with insert_data as(
       INSERT INTO "tblTeams" ("wrTeamName","wrTeamShortName", "wrImage", "wrCountry", "wrEventTypeId", "wrCreatedBy", "wrCreatedDate" , "WrTeamJersey")
-      VALUES ($1,$2,$3,$4,(select "wrKey" from "tblEncryptedData" where "wrValue" = $5),$6,$7 , $8)
+      VALUES ($1,$2,$3,$4,$5,$6,$7 , $8)
       RETURNING *    
     )
     SELECT 
-    te."wrValue" as "teamId",
-    te2."wrValue" as "eventTypeId",
+    "wrTeamId" as "teamId",
+    tt."wrEventTypeId" as "eventTypeId",
     "wrTeamName" as "teamName",
     "wrTeamShortName" as "teamShortName",
     "WrTeamJersey" as "jersey",
     tt."wrImage" as "image",
     "wrCountry" as "country",
     "wrEventType" AS "eventType"
-     FROM "insert_data" tt left join "tblEncryptedData" te on tt."wrTeamId" = te."wrKey"
-      left join "tblEncryptedData" te2 on tt."wrEventTypeId" = te2."wrKey"   
+     FROM "insert_data" tt 
       INNER JOIN "tblEventTypes" evt ON tt."wrEventTypeId" = evt."wrEventTypeId" 
     `,
       {
