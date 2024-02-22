@@ -188,7 +188,7 @@ module.exports = async (fastify, opts) => {
       (request, reply, done) =>
         checkPermission(request, reply, fastify, {
           tabName: "Commentary",
-          mode: request.body.commentaryId === "0" ? "add" : "edit",
+          mode: request.body.commentaryId === 0 ? "add" : "edit",
         }),
     ],
     handler: (request, reply) => addCommentary(request, reply, fastify),
@@ -244,7 +244,7 @@ module.exports = async (fastify, opts) => {
   });
 
   fastify.post("/getscore", {
-    schema: Commentary.getByeventId.schema,
+    schema:  Commentary.getBycommentaryEId.schema,
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>

@@ -34,7 +34,7 @@ const {
   getCommnertySquadPlayersList,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
-const { convertDate, wicketType } = require("../utilities");
+const { convertDate, wicketType, decryptEncryptionId } = require("../utilities");
 
 const allCommentaryService = async (request, fastify) => {
   // return global.tblCommentaries;
@@ -598,7 +598,7 @@ const updateCommentaryService = async (request, fastify) => {
 const saveCommentaryService = async (request, fastify) => {
   const { commentaryId } = request.body;
 
-  if (commentaryId === "0") {
+  if (commentaryId === 0) {
     return await createCommentaryService(request, fastify);
   } else {
     return await updateCommentaryService(request, fastify);
@@ -1000,9 +1000,10 @@ const updateCommentaryPlayerDetailsServices = async (
 };
 
 const saveOverService = async (overDetais, fastify, request) => {
-  const { overId } = overDetais;
+  let { overId } = overDetais;
+  overId = parseInt(overId);
 
-  if (overId === "0") {
+  if (overId === 0) {
     return await createOverService(overDetais, fastify, request);
   } else {
     return await updateOverService(overDetais, fastify, request);
@@ -1074,9 +1075,11 @@ const updateOverService = async (data, fastify, request) => {
 };
 
 const ballByBallCommentoriesService = async (data, fastify, request) => {
-  const { commentaryBallByBallId } = data;
+  let { commentaryBallByBallId } = data;
+  commentaryBallByBallId = parseInt(commentaryBallByBallId);
 
-  if (commentaryBallByBallId === "0") {
+
+  if (commentaryBallByBallId === 0) {
     return await createBallByBallCommentoriesService(data, fastify, request);
   } else {
     return await updateBallByBallCommentoriesService(data, fastify, request);
@@ -1135,9 +1138,10 @@ const updateBallByBallCommentoriesService = async (data, fastify, request) => {
 };
 
 const saveCommentaryWicketService = async (data, fastify, request) => {
-  const { commentaryWicketId } = data;
+  let { commentaryWicketId } = data;
+  commentaryWicketId = parseInt(commentaryWicketId);
 
-  if (commentaryWicketId === "0") {
+  if (commentaryWicketId === 0) {
     return await createCommentaryWicketService(data, fastify, request);
   } else {
     return await updateCommentaryWicketService(data, fastify, request);
@@ -1193,9 +1197,10 @@ const updateCommentaryWicketService = async (data, fastify, request) => {
 };
 
 const saveCommentaryPartnershipService = async (data, fastify, request) => {
-  const { commentaryPartnershipId } = data;
+  let { commentaryPartnershipId } = data;
+  commentaryPartnershipId = parseInt(commentaryPartnershipId);
 
-  if (commentaryPartnershipId === "0") {
+  if (commentaryPartnershipId === 0) {
     return await createCommentaryPartnershipService(data, fastify, request);
   } else {
     return await updateCommentaryPartnershipService(data, fastify, request);
@@ -1764,6 +1769,10 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
 };
 
 const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
+  // convert encyption to decryption
+  const decryptedId = await  decryptEncryptionId(request.body.commentaryId ,fastify);
+  request.body.commentaryId = decryptedId;
+  
   const result = await global.tblCommentaries.find(
     (item) => item.commentaryId === request.body.commentaryId
   );
@@ -2815,7 +2824,7 @@ const getTeamListByEventTypeService = async (request) => {
   // get encypted eventTypeId from global
   if (eventTypeId === undefined) {
     return global.tblTeams;
-  } else if (eventTypeId == "0") {
+  } else if (eventTypeId == 0) {
     return global.tblTeams;
   } else if (eventTypeId) {
     let encyptEventTypeId = global.tblEventTypes.find(

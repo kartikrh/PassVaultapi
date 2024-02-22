@@ -190,6 +190,19 @@ const wicketType = {
   9: "Hit Ball Twice",
   10: "Obstruct the Fielding"
 }
+const decryptEncryptionId = async (encryptionKey , fastify) =>{
+ try {
+  const data = await fastify.db.query(`SELECT "wrKey" from "tblEncryptedData" where "wrValue" = $1`,
+  {
+    type: fastify.db.QueryTypes.SELECT,
+    bind: [encryptionKey]
+  })
+
+  return data[0].wrKey;
+ } catch (error) {
+  throw new Error(error);
+ }
+}
 module.exports = {
   ERROR_CODES,
   error,
@@ -205,5 +218,6 @@ module.exports = {
   getMessage,
   getUserChildIds,
   convertDate,
-  wicketType
+  wicketType,
+  decryptEncryptionId
 };

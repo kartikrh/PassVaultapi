@@ -160,6 +160,7 @@ const insertPlayerService = async (request, fastify) => {
         for (let i = 0; i < hashArray.length; i++) {
           if (hashArray[i]) {
             const teamID = hashArray[i].replace(/[\[\]"]/g, "");
+            if(teamID !== "") {
              await insertTeamPlayerQuery(
               {
                 teamId: parseInt(teamID),
@@ -169,6 +170,7 @@ const insertPlayerService = async (request, fastify) => {
               fastify,
               request
             );
+            }
           }
         }
       }
@@ -330,15 +332,17 @@ const updatePlayerService = async (request, fastify) => {
         for (let i = 0; i < hashArray.length; i++) {
           if (hashArray[i]) {
             const teamID = hashArray[i].replace(/[\[\]"]/g, "");
-            await insertTeamPlayerQuery(
-              {
-                teamId: parseInt(teamID),
-                refPlayerId: request.body.playerId,
-                userId: request.userTokenInfo.WrUserId,
-              },
-              fastify,
-              request
-            );
+            if(teamID !== ""){
+              await insertTeamPlayerQuery(
+                {
+                  teamId: parseInt(teamID),
+                  refPlayerId: request.body.playerId,
+                  userId: request.userTokenInfo.WrUserId,
+                },
+                fastify,
+                request
+              );
+            }
           }
         }
       }

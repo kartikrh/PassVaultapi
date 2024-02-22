@@ -23,7 +23,7 @@ const allteamByEventTypeIdService = async (request, fastify) => {
   const { eventTypeId } = request.body;
   if (eventTypeId === undefined) {
     return global.tblTeams;
-  } else if (eventTypeId == "0") {
+  } else if (eventTypeId == 0) {
     return global.tblTeams;
   } else if (eventTypeId) {
     const result = global.tblTeams.filter(
@@ -72,14 +72,15 @@ const createTeamService = async (request, fastify) => {
   }
 
   let imgName, projectName;
+  projectName = global.tblConfigs.find(
+    (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
+  ).value;
   if (request.body.image && request.body.image.length) {
     // generate image name
     imgName = generateImageName({
       name: request.body.teamName,
     });
-    projectName = global.tblConfigs.find(
-      (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
-    ).value;
+   
     const path = await storeImageOnServer({
       image: request.body.image[0],
       project: projectName,
@@ -116,15 +117,18 @@ const createTeamService = async (request, fastify) => {
         for (let i = 0; i < hashArray.length; i++) {
           if (hashArray[i]) {
             const playerID = hashArray[i].replace(/[\[\]"]/g, "");
-            await insertTeamPlayerQuery(
-              {
-                teamId: data.teamId,
-                refPlayerId: playerID,
-                userId: request.userTokenInfo.WrUserId,
-              },
-              fastify,
-              request
-            );
+            if(playerID !== ""){
+              await insertTeamPlayerQuery(
+                {
+                  teamId: data.teamId,
+                  refPlayerId: playerID,
+                  userId: request.userTokenInfo.WrUserId,
+                },
+                fastify,
+                request
+              );
+            }
+            
           }
         }
       }
@@ -180,14 +184,15 @@ const updateTeamService = async (request, fastify) => {
   }
 
   let imgName, projectName;
+  projectName = global.tblConfigs.find(
+    (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
+  ).value;
   if (request.body.image && request.body.image.length) {
     // generate image name
     imgName = generateImageName({
       name: request.body.teamName,
     });
-    projectName = global.tblConfigs.find(
-      (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
-    ).value;
+
     const path = await storeImageOnServer({
       image: request.body.image[0],
       project: projectName,
@@ -228,15 +233,17 @@ const updateTeamService = async (request, fastify) => {
       for (let i = 0; i < hashArray.length; i++) {
         if (hashArray[i]) {
           const playerID = hashArray[i].replace(/[\[\]"]/g, "");
-          await insertTeamPlayerQuery(
-            {
-              teamId: body.teamId,
-              refPlayerId: playerID,
-              userId: request.userTokenInfo.WrUserId,
-            },
-            fastify,
-            request
-          );
+          if(playerID !== ""){
+            await insertTeamPlayerQuery(
+              {
+                teamId: body.teamId,
+                refPlayerId: playerID,
+                userId: request.userTokenInfo.WrUserId,
+              },
+              fastify,
+              request
+            );
+          }
         }
       }
     }
@@ -248,7 +255,7 @@ const updateTeamService = async (request, fastify) => {
 const saveTeamService = async (request, fastify) => {
   const { teamId } = request.body;
 
-  if (teamId === "0") {
+  if (teamId === 0) {
     return createTeamService(request, fastify);
   } else {
     return updateTeamService(request, fastify);

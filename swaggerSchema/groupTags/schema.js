@@ -1081,7 +1081,6 @@ const EventType = {
     },
   },
 };
-
 const Teams = {
   getAll: {
     schema: {
@@ -1091,7 +1090,7 @@ const Teams = {
       body: {
         type: "object",
         properties: {
-          eventTypeId: { type: "string" },
+          eventTypeId: { type: "integer" },
         },
       },
     },
@@ -1118,7 +1117,7 @@ const Teams = {
         type: "object",
         properties: {
           isActive: { type: "boolean" },
-          eventTypeId: { type: "string" },
+          eventTypeId: { type: "integer" },
         },
       },
     },
@@ -1131,7 +1130,7 @@ const Teams = {
       body: {
         type: "object",
         properties: {
-          teamId: { type: "string" },
+          teamId: { type: "integer" },
         },
         required: ["teamId"],
       },
@@ -1145,11 +1144,11 @@ const Teams = {
       body: {
         type: "object",
         properties: {
-          teamId: { type: "string" },
+          teamId: { type: "integer" },
           teamName: { type: "string" },
           teamShortName: { type: "string" },
           country: { type: "string" },
-          eventTypeId: { type: "string" },
+          eventTypeId: { type: "integer" },
           playerId: {
             type: "array",
             items: { type: "string" },
@@ -1169,7 +1168,7 @@ const Teams = {
         properties: {
           teamId: {
             type: "array",
-            items: { type: "string" },
+            items: { type: "integer" },
             minItems: 1,
           },
         },
@@ -1673,8 +1672,8 @@ const Commentary = {
         type: "object",
         properties: {
           commentaryStatus: { type: "integer" },
-          eventTypeId: { type: "string" },
-          competitionId: { type: "string" },
+          eventTypeId: { type: "integer" },
+          competitionId: { type: "integer" },
           startDate: { type: "string" },
           endDate: { type: "string" },
         },
@@ -1689,8 +1688,8 @@ const Commentary = {
       body: {
         type: "object",
         properties: {
-          commentaryId: { type: "string" },
-          matchTypeId: { type: "string" },
+          commentaryId: { type: "integer" },
+          matchTypeId: { type: "integer" },
         },
         required: ["commentaryId", "matchTypeId"],
       },
@@ -1711,7 +1710,7 @@ const Commentary = {
       body: {
         type: "object",
         properties: {
-          commentaryId: { type: "string" },
+          commentaryId: { type: "integer" },
         },
         required: ["commentaryId"],
       },
@@ -1725,7 +1724,7 @@ const Commentary = {
       body: {
         type: "object",
         properties: {
-          eventTypeId: { type: "string" },
+          eventTypeId: { type: "integer" },
         },
       },
     },
@@ -1751,7 +1750,7 @@ const Commentary = {
       body: {
         type: "object",
         properties: {
-          eventTypeId: { type: "string" },
+          eventTypeId: { type: "integer" },
         },
         required: ["eventTypeId"],
       },
@@ -1765,7 +1764,7 @@ const Commentary = {
       body: {
         type: "object",
         properties: {
-          competitionId: { type: "string" },
+          competitionId: { type: "integer" },
         },
         required: ["competitionId"],
       },
@@ -1779,7 +1778,7 @@ const Commentary = {
       body: {
         type: "object",
         properties: {
-          eventId: { type: "string" },
+          eventId: { type: "integer" },
         },
         required: ["eventId"],
       },
@@ -1793,7 +1792,7 @@ const Commentary = {
       body: {
         type: "object",
         properties: {
-          teamId: { type: "string" },
+          teamId: { type: "integer" },
         },
         required: ["teamId"],
       },
@@ -1807,7 +1806,7 @@ const Commentary = {
       body: {
         type: "object",
         properties: {
-          commentaryId: { type: "string" },
+          commentaryId: { type: "integer" },
         },
         required: ["commentaryId"],
       },
@@ -1872,16 +1871,16 @@ const Commentary = {
       body: {
         type: "object",
         properties: {
-          commentaryId: { type: "string" },
-          eventTypeId: { type: "string" },
-          matchTypeId: { type: "string" },
-          competitionId: { type: "string" },
-          eventId: { type: "string" },
+          commentaryId: { type: "integer" },
+          eventTypeId: { type: "integer" },
+          matchTypeId: { type: "integer" },
+          competitionId: { type: "integer" },
+          eventId: { type: "integer" },
           eventDate: { type: "string" },
           eventName: { type: "string" },
           eventRefId: { type: "string" },
-          team1Id: { type: "string" },
-          team2Id: { type: "string" },
+          team1Id: { type: "integer" },
+          team2Id: { type: "integer" },
           location: { type: "string" },
           weather: { type: "integer" },
           pitch: { type: "integer" },
@@ -1902,17 +1901,17 @@ const Commentary = {
           tpId: { type: "integer" },
           isSignalROn: { type: "boolean" },
           isMatchTypeUpdated: { type: "boolean" },
-          team1Captain: { type: "string" },
-          team1Kipper: { type: "string" },
-          team2Captain: { type: "string" },
-          team2Kipper: { type: "string" },
+          team1Captain: { type: "integer" },
+          team1Kipper: { type: "integer" },
+          team2Captain: { type: "integer" },
+          team2Kipper: { type: "integer" },
           team1Players: {
             type: "array",
-            items: { type: "string" },
+            items: { type: "integer" },
           },
           team2Players: {
             type: "array",
-            items: { type: "string" },
+            items: { type: "integer" },
           },
           currentInnings: { type: "integer" },
           addSystemPlayer: { type: "boolean" },
@@ -1930,7 +1929,7 @@ const Commentary = {
       body: {
         type: "object",
         properties: {
-          commentaryId: { type: "string" },
+          commentaryId: { type: "integer" },
           eventName: { type: "string" },
           eventRefId: { type: "string" },
         },
@@ -1948,7 +1947,7 @@ const Commentary = {
         properties: {
           commentaryId: {
             type: "array",
-            items: { type: "string" },
+            items: { type: "integer" },
             minItems: 1,
           },
         },
@@ -1964,7 +1963,7 @@ const Commentary = {
       body: {
         type: "object",
         properties: {
-          commentaryOverId: { type: "string" },
+          commentaryOverId: { type: "integer" },
         },
         required: ["commentaryOverId"],
       },
@@ -1978,7 +1977,7 @@ const Commentary = {
       body: {
         type: "object",
         properties: {
-          commentaryBallByBallId: { type: "string" },
+          commentaryBallByBallId: { type: "integer" },
         },
         required: ["commentaryBallByBallId"],
       },
@@ -2010,10 +2009,10 @@ const Commentary = {
       body: {
         type: "object",
         properties: {
-          commentaryId: { type: "string" },
-          bowlerId: { type: "string" },
+          commentaryId: { type: "integer" },
+          bowlerId: { type: "integer" },
           currentInnings: { type: "integer" },
-          overId: { type: "string" },
+          overId: { type: "integer" },
         },
         required: ["commentaryId", "bowlerId", "currentInnings", "overId"],
       },
