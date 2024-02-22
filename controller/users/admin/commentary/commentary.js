@@ -18,6 +18,7 @@ const {
   changeBowlerOfCommentaryService,
   getMatchListByStatus,
   getAllDetailsByEventIdService,
+  getTeamListByEventTypeService,
   getCommenrtySquadDetailsService,
   getPartnershipListService,
 } = require("../../../../services/commentry");
@@ -299,6 +300,21 @@ const getAllDetailsByEventId = async (request, reply, fastify) => {
   }
 };
 
+const getCommentaryTeamList = async (request, reply, fastify) => {
+  try {
+    let result = await getTeamListByEventTypeService(request, fastify);
+    result = result.map((item) => {
+      return {
+        teamId: item.pId,
+        teamName: item.teamName,
+      };
+    });
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/getTeamList", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+}
 const getCommenrtySquadList = async (request, reply, fastify) => {
   try {
     const result = await getCommenrtySquadDetailsService(request, fastify);
@@ -341,6 +357,7 @@ module.exports = {
   getCompleteMatchList,
   getLiveMatchList,
   getAllDetailsByEventId,
+  getCommentaryTeamList,
   getCommenrtySquadList,
   getPartnershipList,
 };

@@ -44,7 +44,7 @@ module.exports = async (fastify, opts) => {
       (request, reply) =>
         checkPermission(request, reply, fastify, {
           tabName: "Match Types",
-          mode: request.body.matchTypeId === "0" ? "add" : "edit",
+          mode: request.body.matchTypeId === 0 ? "add" : "edit",
         }),
     ],
     handler: (request, reply) => saveMatchType(request, reply, fastify),

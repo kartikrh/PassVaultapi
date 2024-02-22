@@ -797,6 +797,84 @@ const deleteCommentaryService = async (request, fastify) => {
 };
 
 //update commentary details according to new flow
+// const saveCommentaryDetailsService = async (request, fastify) => {
+//   const {
+//     commentaryDetails,
+//     commentaryTeams,
+//     commentaryPlayers,
+//     commentaryOvers,
+//     commentaryBallByBall,
+//     commentaryWicket,
+//     commentaryPartnership,
+//   } = request.body;
+
+//   let response = {};
+//   let _CommentaryId = "";  
+//   //Get Commentry ID
+//   if (commentaryDetails) {
+//     _CommentaryId = commentaryDetails.commentaryId;
+//   }
+//   //end here Commenrtyid
+//   if (commentaryDetails) {
+//     await updateCommentaryDetailsServices(commentaryDetails, fastify, request);
+//   }
+
+//   if (commentaryTeams && commentaryTeams.length) {
+//     for (const team of commentaryTeams) {
+//       await updateCommentaryTeamsServices(team, fastify, request);
+//     }
+//   }
+
+//   if (commentaryPlayers && commentaryPlayers.length) {
+//     for (const player of commentaryPlayers) {
+//       await updateCommentaryPlayerDetailsServices(player, fastify, request);
+//     }
+//   }
+
+//   if (commentaryOvers) {
+//     response.overdetails = await saveOverService(
+//       commentaryOvers,
+//       fastify,
+//       request
+//     );
+//   }
+
+//   if (commentaryBallByBall) {
+//     response.commentaryBallByBallDetails = await ballByBallCommentoriesService(
+//       commentaryBallByBall,
+//       fastify,
+//       request
+//     );
+//   }
+
+//   if (commentaryWicket) {
+//     response.commentaryWicketDetails = await saveCommentaryWicketService(
+//       commentaryWicket,
+//       fastify,
+//       request
+//     );
+//   }
+
+//   if (commentaryPartnership) {
+//     response.commentaryPartnershipDetails =
+//       await saveCommentaryPartnershipService(
+//         commentaryPartnership,
+//         fastify,
+//         request
+//       );
+//   }
+//   if (_CommentaryId) {
+//     const _id = {
+//       commentaryId: _CommentaryId,
+//     };
+//     await UpdateCommentaryTime(_id, fastify, request);
+//   }
+//   if (Object.keys(response).length) {
+//     return response;
+//   } else {
+//     return true;
+//   }
+// };
 const saveCommentaryDetailsService = async (request, fastify) => {
   const {
     commentaryDetails,
@@ -809,6 +887,7 @@ const saveCommentaryDetailsService = async (request, fastify) => {
   } = request.body;
 
   let response = {};
+  let promises = []
   let _CommentaryId = "";
   //Get Commentry ID
   if (commentaryDetails) {
@@ -819,62 +898,40 @@ const saveCommentaryDetailsService = async (request, fastify) => {
     await updateCommentaryDetailsServices(commentaryDetails, fastify, request);
   }
 
-  if (commentaryTeams && commentaryTeams.length) {
-    for (const team of commentaryTeams) {
-      await updateCommentaryTeamsServices(team, fastify, request);
-    }
-  }
 
-  if (commentaryPlayers && commentaryPlayers.length) {
-    for (const player of commentaryPlayers) {
-      await updateCommentaryPlayerDetailsServices(player, fastify, request);
-    }
+  // Update Commentary Teams
+  if (commentaryTeams) {
+    commentaryTeams?.forEach(team => {
+      promises.push(updateCommentaryTeamsServices(team, fastify, request));
+    });
   }
+  // Update Commentary Players
+  if (commentaryPlayers) {
+    commentaryPlayers?.forEach(player => {
+      promises.push(updateCommentaryPlayerDetailsServices(player, fastify, request));
+    });
+  }
+  commentaryOvers && promises.push(saveOverService(commentaryOvers, fastify, request));
+  commentaryBallByBall && promises.push(ballByBallCommentoriesService(commentaryBallByBall, fastify, request));
+  commentaryWicket && promises.push(saveCommentaryWicketService(commentaryWicket, fastify, request));
+  commentaryPartnership && promises.push(saveCommentaryPartnershipService(commentaryPartnership, fastify, request));
+  commentaryDetails &&  promises.push(updateCommentaryDetailsServices(commentaryDetails, fastify, request));
+  return Promise.all(promises)
+    .then(results => {
+      results.forEach(result => {
+        // console.log(result);
+        if (result) {
+          result["name"] && (response[result.name] = result.value);
+        }
+      });
+      return Object.keys(response).length ? response : true;
+    })
 
-  if (commentaryOvers) {
-    response.overdetails = await saveOverService(
-      commentaryOvers,
-      fastify,
-      request
-    );
-  }
-
-  if (commentaryBallByBall) {
-    response.commentaryBallByBallDetails = await ballByBallCommentoriesService(
-      commentaryBallByBall,
-      fastify,
-      request
-    );
-  }
-
-  if (commentaryWicket) {
-    response.commentaryWicketDetails = await saveCommentaryWicketService(
-      commentaryWicket,
-      fastify,
-      request
-    );
-  }
-
-  if (commentaryPartnership) {
-    response.commentaryPartnershipDetails =
-      await saveCommentaryPartnershipService(
-        commentaryPartnership,
-        fastify,
-        request
-      );
-  }
-  if (_CommentaryId) {
-    const _id = {
-      commentaryId: _CommentaryId,
-    };
-    await UpdateCommentaryTime(_id, fastify, request);
-  }
-  if (Object.keys(response).length) {
-    return response;
-  } else {
-    return true;
-  }
+    .catch(error => {
+      throw error; // Propagate the error
+    });
 };
+ 
 
 const updateCommentaryDetailsServices = async (
   commentaryDetails,
@@ -889,16 +946,19 @@ const updateCommentaryDetailsServices = async (
     throw new Error("Commentary with this id not Found");
   }
 
-  console.time("updateCommentaryDetailsQuery");
+  // console.time("updateCommentaryDetailsQuery");
   await updateCommentaryDetailsQuery(commentaryDetails, fastify, request);
-  console.timeEnd("updateCommentaryDetailsQuery");
+  // console.timeEnd("updateCommentaryDetailsQuery");
 
   global.tblCommentaries[index] = commentaryDetails;
 
-  return commentaryDetails;
+  return {
+    name : "commentaryDetails",
+    value : commentaryDetails
+  };
 };
 
-const updateCommentaryTeamsServices = async (teamDetails, fastify, request) => {
+const   updateCommentaryTeamsServices = async (teamDetails, fastify, request) => {
   const index = global.tblCommentaryTeams.findIndex(
     (item) =>
       item.commentaryId === teamDetails.commentaryId &&
@@ -909,9 +969,9 @@ const updateCommentaryTeamsServices = async (teamDetails, fastify, request) => {
     throw new Error("Commentary with this id not Found");
   }
 
-  console.time("updateCommentaryTeamsQuery");
+  // console.time("updateCommentaryTeamsQuery")
   await updateCommentaryTeamsQuery(teamDetails, fastify, request);
-  console.timeEnd("updateCommentaryTeamsQuery");
+  // console.timeEnd("updateCommentaryTeamsQuery")
 
   global.tblCommentaryTeams[index] = teamDetails;
 
@@ -930,9 +990,9 @@ const updateCommentaryPlayerDetailsServices = async (
   if (index === -1) {
     throw new Error("Commentary with this id not Found");
   }
-  console.time("updateCommentaryPlayersQuery");
+  // console.time("updateCommentaryPlayersQuery")
   await updateCommentaryPlayersQuery(playerDetails, fastify, request);
-  console.timeEnd("updateCommentaryPlayersQuery");
+  // console.timeEnd("updateCommentaryPlayersQuery")
 
   global.tblCommentaryPlayers[index] = playerDetails;
 
@@ -980,13 +1040,16 @@ const createOverService = async (data, fastify, request) => {
     throw new Error("Bowler with this id not Found");
   }
 
-  console.time("createOverQuery");
+  // // console.time("createOverQuery")
   const addOver = await createOverQuery(data, fastify, request);
-  console.timeEnd("createOverQuery");
+  // // console.timeEnd("createOverQuery")
 
   global.tblOvers.push(addOver);
 
-  return addOver;
+  return {
+    name : "overdetails",
+    value : addOver
+  };
 };
 
 const updateOverService = async (data, fastify, request) => {
@@ -998,13 +1061,16 @@ const updateOverService = async (data, fastify, request) => {
     throw new Error("Over with this id not Found");
   }
 
-  console.time("updateOverQuery");
+  // // console.time("updateOverQuery")
   await updateOverQuery(data, fastify, request);
-  console.timeEnd("updateOverQuery");
+  // // console.timeEnd("updateOverQuery")
 
   global.tblOvers[indexOver] = data;
 
-  return data;
+  return {
+    name : "overdetails",
+    value : data
+  }
 };
 
 const ballByBallCommentoriesService = async (data, fastify, request) => {
@@ -1026,13 +1092,13 @@ const createBallByBallCommentoriesService = async (data, fastify, request) => {
     throw new Error("Commentary with this id not Found");
   }
 
-  console.time("createBallByBallCommentoriesQuery");
+  // console.time("createBallByBallCommentoriesQuery")
   const addBallByBallCommentories = await createBallByBallCommentoriesQuery(
     data,
     fastify,
     request
   );
-  console.timeEnd("createBallByBallCommentoriesQuery");
+  // console.timeEnd("createBallByBallCommentoriesQuery")
 
   let dataToreturn = {
     ...data,
@@ -1041,7 +1107,10 @@ const createBallByBallCommentoriesService = async (data, fastify, request) => {
 
   global.tblCommentaryBallByBall.push(dataToreturn);
 
-  return dataToreturn;
+  return {
+    name : "commentaryBallByBallDetails",
+    value : dataToreturn
+  };
 };
 
 const updateBallByBallCommentoriesService = async (data, fastify, request) => {
@@ -1053,13 +1122,16 @@ const updateBallByBallCommentoriesService = async (data, fastify, request) => {
     throw new Error("BallByBall with this id not Found");
   }
 
-  console.time("updateBallByBallCommentoriesQuery");
+  // console.time("updateBallByBallCommentoriesQuery")
   await updateBallByBallCommentoriesQuery(data, fastify, request);
-  console.timeEnd("updateBallByBallCommentoriesQuery");
+  // console.timeEnd("updateBallByBallCommentoriesQuery")
 
   global.tblCommentaryBallByBall[indexBallByBall] = data;
 
-  return data;
+  return {
+    name : "commentaryBallByBallDetails",
+    value : data
+  };
 };
 
 const saveCommentaryWicketService = async (data, fastify, request) => {
@@ -1081,17 +1153,21 @@ const createCommentaryWicketService = async (data, fastify, request) => {
     throw new Error("Commentary with this id not Found");
   }
 
-  console.time("createCommentaryWicketQuery");
+  // console.time("createCommentaryWicketQuery")
   const addCommentaryWicket = await createCommentaryWicketQuery(
     data,
     fastify,
     request
   );
-  console.timeEnd("createCommentaryWicketQuery");
+  // console.timeEnd("createCommentaryWicketQuery")
 
   global.tblCommentaryWicket.push(addCommentaryWicket);
 
-  return addCommentaryWicket;
+  return {
+    name : "commentaryWicketDetails",
+    value : addCommentaryWicket
+  
+  };
 };
 
 const updateCommentaryWicketService = async (data, fastify, request) => {
@@ -1103,13 +1179,17 @@ const updateCommentaryWicketService = async (data, fastify, request) => {
     throw new Error("Wicket with this id not Found");
   }
 
-  console.time("updateCommentaryWicketQuery");
+  // console.time("updateCommentaryWicketQuery")
   await updateCommentaryWicketQuery(data, fastify, request);
-  console.timeEnd("updateCommentaryWicketQuery");
+  // console.timeEnd("updateCommentaryWicketQuery")
 
   global.tblCommentaryWicket[indexWicket] = data;
 
-  return data;
+  return {
+    name : "commentaryWicketDetails",
+    value : data
+  
+  };
 };
 
 const saveCommentaryPartnershipService = async (data, fastify, request) => {
@@ -1130,17 +1210,20 @@ const createCommentaryPartnershipService = async (data, fastify, request) => {
   if (index === -1) {
     throw new Error("Commentary with this id not Found");
   }
-  console.time("createCommentaryPartnershipQuery");
+  // console.time("createCommentaryPartnershipQuery")
   const addCommentaryPartnership = await createCommentaryPartnershipQuery(
     data,
     fastify,
     request
   );
-  console.timeEnd("createCommentaryPartnershipQuery");
+  // console.timeEnd("createCommentaryPartnershipQuery")
 
   global.tblCommentaryPartnership.push(addCommentaryPartnership);
 
-  return addCommentaryPartnership;
+  return {
+    name : "commentaryPartnershipDetails",
+    value : addCommentaryPartnership
+  };
 };
 
 const updateCommentaryPartnershipService = async (data, fastify, request) => {
@@ -1152,13 +1235,16 @@ const updateCommentaryPartnershipService = async (data, fastify, request) => {
     throw new Error("Partnership with this id not Found");
   }
 
-  console.time("updateCommentaryPartnershipQuery");
+  // console.time("updateCommentaryPartnershipQuery")
   await updateCommentaryPartnershipQuery(data, fastify, request);
-  console.timeEnd("updateCommentaryPartnershipQuery");
+  // console.timeEnd("updateCommentaryPartnershipQuery")
 
   global.tblCommentaryPartnership[indexPartnership] = data;
 
-  return data;
+  return {
+    name : "commentaryPartnershipDetails",
+    value : data
+  };
 };
 
 const deleteBallByBallCommentoriesService = async (request, fastify) => {
@@ -2724,6 +2810,23 @@ const getInningDataByInningNumber = async (commentaryId, inningNumber) => {
   };
 };
 
+const getTeamListByEventTypeService = async (request) => {
+  const { eventTypeId } = request.body;
+  // get encypted eventTypeId from global
+  if (eventTypeId === undefined) {
+    return global.tblTeams;
+  } else if (eventTypeId == "0") {
+    return global.tblTeams;
+  } else if (eventTypeId) {
+    let encyptEventTypeId = global.tblEventTypes.find(
+      (item) => item.pId === eventTypeId
+    );
+    const result = global.tblTeams.filter(
+      (item) => item.eventTypeId === encyptEventTypeId
+    );
+    return result;
+  }
+}
 const getCommenrtySquadDetailsService = async (request, fastify) => {
   const { eventId } = request.body;
   const commentary = global.tblCommentaries.find(
@@ -2947,6 +3050,8 @@ const getPartnershipListService = async (request, fastify) => {
       item.currentInnings === currentInnings
   );
 
+  const partnershipList = [];
+
   // Iterate over tblCommentaryPartnership
   commentaryPartnership.forEach((partnership) => {
     const {
@@ -2961,27 +3066,146 @@ const getPartnershipListService = async (request, fastify) => {
     const CommenrtyPlayers = global.tblCommentaryPlayers.find(
       (Cplayer) => Cplayer.commentaryPlayerId === batter1Id
     );
-    //console.log(CommenrtyPlayers);
+
+    const CommenrtyPlayers1 = global.tblCommentaryPlayers.find(
+      (Cplayer) => Cplayer.commentaryPlayerId === batter2Id
+    );
 
     // Find player information from tblPlayers
-    // const player1Info = global.tblPlayers.find(
-    //   (player) => player.playerid === batter1Id
-    // );
+    const player1Info = global.tblPlayers.find(
+      (player) => player.playerId === CommenrtyPlayers.playerId
+    );
+    console.log(player1Info);
 
-    // if (player1Info) {
-    //   const { name, image, team } = player1Info;
-    //   partnershipList.push({
-    //     playerName: name,
-    //     playerImage: image,
-    //     playerTeam: team,
-    //     runs,
-    //     balls,
-    //   });
-    // }
+    if (player1Info) {
+      const { player0Name, image0 } = player1Info;
+      const { player1Name, image1 } = player2Info;
+      partnershipList.push({
+        pl1n: player0Name,
+        pl1i: image0,
+        runs,
+        balls,
+        pl1n: player1Name,
+        pl1i: image1,
+      });
+    }
   });
   dataToreturn.par = commentaryPartnership;
   return dataToreturn;
 };
+
+
+const getCommentaryTeamsListService = async (request, fastify) => {
+  const currentInnings = commentary.currentInnings;
+  const commentaryTeamsOne = await global.tblCommentaryTeams.find(
+    (item) =>
+      item.commentaryId === commentary.commentaryId &&
+      item.teamId === commentary.team1Id &&
+      item.currentInnings === currentInnings
+  );
+  const commentaryTeamsTwo = await global.tblCommentaryTeams.find(
+    (item) =>
+      item.commentaryId === commentary.commentaryId &&
+      item.teamId === commentary.team2Id &&
+      item.currentInnings === currentInnings
+  );
+  //Event Type
+  // // let eventType = await global.tblEventTypes.find(
+  // //   (eventType) => eventType.eventTypeId === commentary.eventTypeId
+  // // );
+
+  // // let competition = await global.tblCompetitions.find(
+  // //   (competition) => competition.competitionId === commentary.competitionId
+  // // );
+  //get team data from team table
+  const team1 = await global.tblTeams.find(
+    (team) => team.teamId === commentary.team1Id
+  );
+  const team2 = await global.tblTeams.find(
+    (team) => team.teamId === commentary.team2Id
+  );
+
+  let dataToreturn = {
+    es: {},
+  };
+
+  let teamScore1, teamScore2;
+  if (commentaryTeamsOne) {
+    const wicket1 =
+      commentaryTeamsOne.teamWicket === null
+        ? 0
+        : commentaryTeamsOne.teamWicket;
+    const overs1 =
+      commentaryTeamsOne.teamOver === null ? 0.0 : commentaryTeamsOne.teamOver;
+    teamScore1 = commentaryTeamsOne?.teamScore ?? 0;
+    teamScore1 = teamScore1 + "/" + wicket1 + "(" + overs1 + ")";
+  }
+
+  if (commentaryTeamsTwo) {
+    t2sn = commentaryTeamsTwo.shortName;
+    t2n = commentaryTeamsTwo.teamName;
+    const wicket1 =
+      commentaryTeamsTwo.teamWicket === null
+        ? 0
+        : commentaryTeamsTwo.teamWicket;
+    const overs1 =
+      commentaryTeamsTwo.teamOver === null ? 0.0 : commentaryTeamsTwo.teamOver;
+    teamScore2 = commentaryTeamsTwo?.teamScore ?? 0;
+    teamScore2 = teamScore2 + "/" + wicket1 + "(" + overs1 + ")";
+  }
+
+  let crr, rrr;
+  if (commentaryTeamsOne.teamStatus == 1) {
+    crr = commentaryTeamsOne.crr;
+    rrr = commentaryTeamsOne.rrr;
+  } else {
+    crr = commentaryTeamsTwo.crr;
+    rrr = commentaryTeamsTwo.rrr;
+  }
+
+  let es = {
+    eid: commentary.eventRefId || "",
+    // ety: eventType?.eventType || "",
+    // mtyp: commentary.matchType || "",
+    // com: competition?.competition || "",
+    en: commentary.eventName || "",
+    ed: convertDate(commentary.eventDate, "DD/MM/YYYY") || "",
+    et: convertDate(commentary.eventDate, "hh:mm:ss") || "",
+    te1n: commentaryTeamsOne.teamName || "",
+    te2n: commentaryTeamsTwo.teamName || "",
+    s1n: commentaryTeamsOne.shortName || "",
+    s2n: commentaryTeamsTwo.shortName || "",
+    te1i: team1.image || "",
+    te2i: team2.image || "",
+    t1jr: team1.jersey || "",
+    t2jr: team2.jersey || "",
+    // loc: commentary.location || "",
+    // t1s: teamScore1 || "",
+    // t2s: teamScore2 || "",
+    // dis: commentary.displayStatus || "",
+    // rmk: commentary.rmk || "",
+    // te1crr: commentaryTeamsOne.crr || 0,
+    // te2crr: commentaryTeamsTwo.crr || 0,
+    // te1rrr: commentaryTeamsOne.rrr || 0,
+    // te2rrr: commentaryTeamsTwo.rrr || 0,
+    // crr: crr || 0,
+    // rrr: rrr || 0,
+    // cst: commentary.commentaryStatus,
+  };
+
+  dataToreturn.es = es;
+  let data = {
+    CommentaryId: commentary.commentaryId,
+    teamId: commentaryTeamsOne.teamId,
+  };
+  let TeamPlayes1 = await getCommnertySquadPlayersList(data, fastify, request);
+  data.teamId = commentaryTeamsTwo.teamId;
+  let TeamPlayes2 = await getCommnertySquadPlayersList(data, fastify, request);
+  dataToreturn.pl1 = TeamPlayes1;
+  dataToreturn.pl2 = TeamPlayes2;
+  return dataToreturn;
+};
+
 
 module.exports = {
   allCommentaryService,
@@ -3004,6 +3228,8 @@ module.exports = {
   changeBowlerOfCommentaryService,
   getMatchListByStatus,
   getAllDetailsByEventIdService,
+  getTeamListByEventTypeService,
   getCommenrtySquadDetailsService,
   getPartnershipListService,
+  getCommentaryTeamsListService
 };

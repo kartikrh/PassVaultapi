@@ -3,9 +3,9 @@ const { errorLogger } = require("../utilities/logger");
 const getAllEventsQuery = async (fastify) => {
   return await fastify.db.query(
     `select 
-        ted."wrValue" as "eventId",
-        ted1."wrValue" as "eventTypeId",
-        ted2."wrValue" as "competitionId",
+        "wrEventId" as "eventId",
+        te."wrEventTypeId" as "eventTypeId",
+        te."wrCompetitionId" as "competitionId",
         tet."wrEventType" as "eventType",
         tc."wrCompetition" as "competition",
         te."wrEventName" as "eventName",
@@ -16,9 +16,6 @@ const getAllEventsQuery = async (fastify) => {
         te."wrTimeZone" as "timeZone",
         te."wrVenue" as "venue"
      from "tblEvents" te 
-     left join "tblEncryptedData" ted on te."wrEventId" = ted."wrKey"
-     left join "tblEncryptedData" ted1 on te."wrEventTypeId" = ted1."wrKey"
-     left join "tblEncryptedData" ted2 on te."wrCompetitionId" = ted2."wrKey"
      left join "tblEventTypes" tet on te."wrEventTypeId" = tet."wrEventTypeId"
      left join "tblCompetitions" tc on te."wrCompetitionId" = tc."wrCompetitionId"
      `,
@@ -26,6 +23,32 @@ const getAllEventsQuery = async (fastify) => {
       type: fastify.db.QueryTypes.SELECT,
     }
   );
+  // return await fastify.db.query(
+  //   `select 
+  //       "wrEventId" as "pId",
+  //       ted."wrValue" as "eventId",
+  //       ted1."wrValue" as "eventTypeId",
+  //       ted2."wrValue" as "competitionId",
+  //       tet."wrEventType" as "eventType",
+  //       tc."wrCompetition" as "competition",
+  //       te."wrEventName" as "eventName",
+  //       te."wrEventDate" as "eventDate",
+  //       te."wrRefID" as "refId",
+  //       te."wrIsActive" as "isActive",
+  //       te."wrCountryCode" as "countryCode",
+  //       te."wrTimeZone" as "timeZone",
+  //       te."wrVenue" as "venue"
+  //    from "tblEvents" te 
+  //    left join "tblEncryptedData" ted on te."wrEventId" = ted."wrKey"
+  //    left join "tblEncryptedData" ted1 on te."wrEventTypeId" = ted1."wrKey"
+  //    left join "tblEncryptedData" ted2 on te."wrCompetitionId" = ted2."wrKey"
+  //    left join "tblEventTypes" tet on te."wrEventTypeId" = tet."wrEventTypeId"
+  //    left join "tblCompetitions" tc on te."wrCompetitionId" = tc."wrCompetitionId"
+  //    `,
+  //   {
+  //     type: fastify.db.QueryTypes.SELECT,
+  //   }
+  // );
 };
 
 const insertEventQuery = async (request, fastify) => {
@@ -48,8 +71,8 @@ const insertEventQuery = async (request, fastify) => {
             "wrTimeZone",
             "wrVenue"
         ) values (
-           (select "wrKey" from "tblEncryptedData" where "wrValue" = $1),
-              (select "wrKey" from "tblEncryptedData" where "wrValue" = $2),
+            $1,
+            $2,
             $3,
             $4,
             $5,
@@ -64,9 +87,9 @@ const insertEventQuery = async (request, fastify) => {
     )
 
     select 
-    ted."wrValue" as "eventId",
-    ted1."wrValue" as "eventTypeId",
-    ted2."wrValue" as "competitionId",
+    "wrEventId" as "eventId",
+    te."wrEventTypeId" as "eventTypeId",
+    te."wrCompetitionId" as "competitionId",
     tet."wrEventType" as "eventType",
     tc."wrCompetition" as "competition",
     te."wrEventName" as "eventName",
@@ -77,9 +100,6 @@ const insertEventQuery = async (request, fastify) => {
     te."wrTimeZone" as "timeZone",
     te."wrVenue" as "venue"
     from "insert_data" te 
-    left join "tblEncryptedData" ted on te."wrEventId" = ted."wrKey"
-    left join "tblEncryptedData" ted1 on te."wrEventTypeId" = ted1."wrKey"
-    left join "tblEncryptedData" ted2 on te."wrCompetitionId" = ted2."wrKey"
     left join "tblEventTypes" tet on te."wrEventTypeId" = tet."wrEventTypeId"
     left join "tblCompetitions" tc on te."wrCompetitionId" = tc."wrCompetitionId"
     `,
@@ -117,8 +137,8 @@ const updateEventQuery = async (data, fastify, request) => {
     return await fastify.db.query(
       `
         update "tblEvents" set
-        "wrEventTypeId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1),
-        "wrCompetitionId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $2),
+        "wrEventTypeId" = $1,
+        "wrCompetitionId" = $2,
         "wrEventName" = $3,
         "wrEventDate" = $4,
         "wrRefID" = $5,
@@ -128,7 +148,7 @@ const updateEventQuery = async (data, fastify, request) => {
         "wrCountryCode" = $8,
         "wrTimeZone" = $9,
         "wrVenue" = $10
-        where "wrEventId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $11)
+        where "wrEventId" = $11
         returning *
         `,
       {
@@ -163,7 +183,7 @@ const deleteEventQuery = async (eventId, fastify, request) => {
   try {
     return await fastify.db.query(
       `
-            delete from "tblEvents" where "wrEventId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = ANY($1))
+            delete from "tblEvents" where "wrEventId" = ANY ($1)
             `,
       {
         bind: [eventId],

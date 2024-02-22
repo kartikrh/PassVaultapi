@@ -84,7 +84,7 @@ module.exports = async (fastify, opts) => {
       (request, reply) =>
         checkPermission(request, reply, fastify, {
           tabName: "Events",
-          mode: request.body.eventId === "0" ? "add" : "edit",
+          mode: request.body.eventId === 0 ? "add" : "edit",
         }),
     ],
     handler: (request, reply) => saveEvent(request, reply, fastify),

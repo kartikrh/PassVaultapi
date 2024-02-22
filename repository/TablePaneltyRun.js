@@ -3,11 +3,11 @@ const { errorLogger } = require("../utilities/logger");
 const allPaneltyRunsQuery = async (fastify) => {
   return await fastify.db.query(
     `select 
-      "wrValue" as "paneltyId",
+      "wrPaneltyId" as "paneltyId",
       "wrRun" as "run",
       "wrDesc" as "desc",
       "wrIsActive" as "isActive"
-      from "tblPaneltyRuns" tb inner join "tblEncryptedData" te on tb."wrPaneltyId" = te."wrKey"`,
+      from "tblPaneltyRuns"`,
     {
       type: fastify.db.QueryTypes.SELECT,
     }
@@ -21,11 +21,11 @@ const insertPaneltyRunQuery = async (data, fastify, request) => {
         insert into "tblPaneltyRuns" ("wrRun","wrDesc","wrIsActive","wrCreatedDate","wrCreatedBy") values ($1,$2,$3,$4,$5) returning *
     )
     select 
-    "wrValue" as "paneltyId",
+    "wrPaneltyId" as "paneltyId",
     "wrRun" as "run",
     "wrDesc" as "desc",
     "wrIsActive" as "isActive"
-    from "insert_data" tb inner join "tblEncryptedData" te on tb."wrPaneltyId" = te."wrKey"
+    from "insert_data"
     `,
       {
         bind: [
@@ -53,7 +53,7 @@ const insertPaneltyRunQuery = async (data, fastify, request) => {
 const updatePaneltyRunQuery = async (data, fastify, request) => {
   try {
     await fastify.db.query(
-      `update "tblPaneltyRuns" set "wrRun" = $1, "wrDesc" = $2, "wrIsActive" = $3, "wrModifyDate" = $4, "wrModifyBy" = $5 where "wrPaneltyId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $6)`,
+      `update "tblPaneltyRuns" set "wrRun" = $1, "wrDesc" = $2, "wrIsActive" = $3, "wrModifyDate" = $4, "wrModifyBy" = $5 where "wrPaneltyId" = $6`,
       {
         bind: [
           data.run,
@@ -80,7 +80,7 @@ const updatePaneltyRunQuery = async (data, fastify, request) => {
 const deletePaneltyRunQuery = async (paneltyId, fastify, request) => {
   try {
     return await fastify.db.query(
-      `delete from "tblPaneltyRuns" where "wrPaneltyId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = ANY($1))`,
+      `delete from "tblPaneltyRuns" where "wrPaneltyId" = ANY($1)`,
       {
         bind: [paneltyId],
         type: fastify.db.QueryTypes.DELETE,

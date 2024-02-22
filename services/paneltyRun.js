@@ -76,7 +76,7 @@ const updatePaneltyRunService = async (request, fastify) => {
 const savePaneltyRunService = async (request, fastify) => {
   const { paneltyId } = request.body;
 
-  if (paneltyId === "0") {
+  if (paneltyId === 0) {
     return await insertPaneltyRunService(request, fastify);
   } else {
     return await updatePaneltyRunService(request, fastify);

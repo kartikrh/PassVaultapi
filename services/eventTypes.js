@@ -143,7 +143,7 @@ const updateEventTypeService = async (request, fastify) => {
 const saveEventTypeService = async (request, fastify) => {
   const { eventTypeId } = request.body;
 
-  if (eventTypeId === "0") {
+  if (eventTypeId === 0) {
     return await createEventTypeService(request, fastify);
   } else {
     return await updateEventTypeService(request, fastify);

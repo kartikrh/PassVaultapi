@@ -20,22 +20,20 @@ const insertTeamPlayerQuery = async (data, fastify, request) => {
   try {
     const result = await fastify.db.query(
       `with display_order as (
-      select COALESCE(max("wrPlayerOrder"),0) as "playerOrder" from "tblTeamPlayers" where "wrTeamId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)
+      select COALESCE(max("wrPlayerOrder"),0) as "playerOrder" from "tblTeamPlayers" where "wrTeamId" =$1
     ),
     insert_team_player as (
       insert into "tblTeamPlayers" ("wrTeamId", "wrRefPlayerId", "wrPlayerOrder","wrCreatedDate", "wrCreatedBy")
-      values ((select "wrKey" from "tblEncryptedData" where "wrValue" = $1), (select "wrKey" from "tblEncryptedData" where "wrValue" = $2), (  select "playerOrder" from display_order) + 1, $3, $4)
+      values ($1,$2, (  select "playerOrder" from display_order) + 1, $3, $4)
       returning *
     )
 
     select 
-        te."wrValue" as "teamPlayerId",
-        te2."wrValue" as "teamId",
-        te3."wrValue" as "refPlayerId",
+        "wrTeamPlayerId" as "teamPlayerId",
+        "wrTeamId" as "teamId",
+        "wrRefPlayerId" as "refPlayerId",
         "wrPlayerOrder" as "playerOrder"
-         from "insert_team_player" tp left join "tblEncryptedData" te on tp."wrTeamPlayerId" = te."wrKey"
-         left join "tblEncryptedData" te2 on tp."wrTeamId" = te2."wrKey"
-         left join "tblEncryptedData" te3 on tp."wrRefPlayerId" = te3."wrKey"
+         from "insert_team_player"
 
     `,
       {
@@ -59,7 +57,7 @@ const insertTeamPlayerQuery = async (data, fastify, request) => {
 const deleteTeamPlayerByTeamIdQuery = async (teamId, fastify, request) => {
   try {
     return await fastify.db.query(
-      `delete from "tblTeamPlayers" where "wrTeamId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)
+      `delete from "tblTeamPlayers" where "wrTeamId" = $1
     `,
       {
         bind: [teamId],
@@ -80,7 +78,7 @@ const deleteTeamPlayerByTeamIdQuery = async (teamId, fastify, request) => {
 const deleteTeamPlayerByPlayerIdQuery = async (playerId, fastify, request) => {
   try {
     return await fastify.db.query(
-      `delete from "tblTeamPlayers" where "wrRefPlayerId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)
+      `delete from "tblTeamPlayers" where "wrRefPlayerId" = $1
     `,
       {
         bind: [playerId],

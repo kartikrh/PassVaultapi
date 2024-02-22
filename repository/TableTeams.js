@@ -3,21 +3,38 @@ const { errorLogger } = require("../utilities/logger");
 const allTeamQuery = async (fastify) => {
   return await fastify.db.query(
     `SELECT 
-    te."wrValue" as "teamId",
-    te2."wrValue" as "eventTypeId",
+    "wrTeamId" as "teamId",
+    tt."wrEventTypeId" as "eventTypeId",
     "wrTeamName" as "teamName",
     "wrTeamShortName" as "teamShortName",
     "WrTeamJersey" as "jersey",
     tt."wrImage" as "image",
     "wrCountry" as "country",
     et."wrEventType" AS "eventType"
-     FROM "tblTeams" tt left join "tblEncryptedData" te on tt."wrTeamId" = te."wrKey"
-      left join "tblEncryptedData" te2 on tt."wrEventTypeId" = te2."wrKey"
+     FROM "tblTeams" tt
       LEFT JOIN "tblEventTypes" et ON tt."wrEventTypeId" = et."wrEventTypeId"`,
     {
       type: fastify.db.QueryTypes.SELECT,
     }
   );
+  // return await fastify.db.query(
+  //   `SELECT 
+  //   "wrTeamId" as "pId",
+  //   te."wrValue" as "teamId",
+  //   te2."wrValue" as "eventTypeId",
+  //   "wrTeamName" as "teamName",
+  //   "wrTeamShortName" as "teamShortName",
+  //   "WrTeamJersey" as "jersey",
+  //   tt."wrImage" as "image",
+  //   "wrCountry" as "country",
+  //   et."wrEventType" AS "eventType"
+  //    FROM "tblTeams" tt left join "tblEncryptedData" te on tt."wrTeamId" = te."wrKey"
+  //     left join "tblEncryptedData" te2 on tt."wrEventTypeId" = te2."wrKey"
+  //     LEFT JOIN "tblEventTypes" et ON tt."wrEventTypeId" = et."wrEventTypeId"`,
+  //   {
+  //     type: fastify.db.QueryTypes.SELECT,
+  //   }
+  // );
 };
 
 const insertTeamQuery = async (data, fastify, request) => {
@@ -122,12 +139,12 @@ const getAllPlayersByTeamIdQuery = async (teamId, fastify, request) => {
   try {
     return await fastify.db.query(
       `SELECT      
-      "wrValue" as "playerId",
+      "wrRefPlayerId" as "playerId",
       "wrPlayerName" as "playerName",
       "wrIsKipper" as "isKipper"     
-      FROM "tblTeamPlayers" tp left join "tblEncryptedData" ted on tp."wrRefPlayerId" = ted."wrKey"
+      FROM "tblTeamPlayers" tp 
       left join "tblPlayers" pl on tp."wrRefPlayerId" = pl."wrPlayerId"
-      where tp."wrTeamId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)`,
+      where tp."wrTeamId" = $1`,
       {
         bind: [teamId],
         type: fastify.db.QueryTypes.SELECT,

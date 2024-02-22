@@ -4,23 +4,42 @@ const getAllCompititionQuery = async (fastify) => {
   return await fastify.db.query(
     `
     select 
-    te."wrValue" as "competitionId",
+    "wrCompetitionId" as "competitionId",
     "wrCompetition" as "competition",
-    te1."wrValue" as "eventTypeId",
+    tc."wrEventTypeId" as "eventTypeId",
     "wrEventType" as "eventType",
     tc."wrRefID" as "refId",
     tc."wrImage" as "image",
     tc."wrIsActive" as "isActive",
     tc."wrDisplayOrder" as "displayOrder"
     from "tblCompetitions" tc 
-    inner join "tblEncryptedData" te on tc."wrCompetitionId" = te."wrKey"
     inner join "tblEventTypes" tev on tc."wrEventTypeId" = tev."wrEventTypeId"
-    inner join "tblEncryptedData" te1 on tc."wrEventTypeId" = te1."wrKey" 
     `,
     {
       type: fastify.db.QueryTypes.SELECT,
     }
   );
+  // return await fastify.db.query(
+  //   `
+  //   select 
+  //   "wrCompetitionId" as "pId",
+  //   te."wrValue" as "competitionId",
+  //   "wrCompetition" as "competition",
+  //   te1."wrValue" as "eventTypeId",
+  //   "wrEventType" as "eventType",
+  //   tc."wrRefID" as "refId",
+  //   tc."wrImage" as "image",
+  //   tc."wrIsActive" as "isActive",
+  //   tc."wrDisplayOrder" as "displayOrder"
+  //   from "tblCompetitions" tc 
+  //   inner join "tblEncryptedData" te on tc."wrCompetitionId" = te."wrKey"
+  //   inner join "tblEventTypes" tev on tc."wrEventTypeId" = tev."wrEventTypeId"
+  //   inner join "tblEncryptedData" te1 on tc."wrEventTypeId" = te1."wrKey" 
+  //   `,
+  //   {
+  //     type: fastify.db.QueryTypes.SELECT,
+  //   }
+  // );
 };
 
 const insertCompetitionQuery = async (request, fastify) => {
@@ -31,30 +50,28 @@ const insertCompetitionQuery = async (request, fastify) => {
       `
         with display as (
             select max("wrDisplayOrder") as "display_order" from "tblCompetitions" where "wrEventTypeId" =  (
-                select "wrKey" from "tblEncryptedData" where "wrValue" = $2
+               $2
             )
         ),
         inser_data as (
             
             insert into "tblCompetitions" ("wrCompetition" , "wrEventTypeId" , "wrRefID" , "wrImage" ,"wrIsActive" , "wrCreatedBy" , "wrCreatedDate","wrDisplayOrder" ) values ($1 ,
-                 (select "wrKey" from "tblEncryptedData" where "wrValue" = $2),
+                 $2,
                  $3,$4,$5,$6,now(),(select COALESCE("display_order" , 0) from "display") + 1
                  ) returning *
         )
 
         select 
-        te."wrValue" as "competitionId",
+        "wrCompetitionId" as "competitionId",
         "wrCompetition" as "competition",
-        te1."wrValue" as "eventTypeId",
+        tc."wrEventTypeId" as "eventTypeId",
         "wrEventType" as "eventType",
         tc."wrRefID" as "refId",
         tc."wrImage" as "image",
         tc."wrIsActive" as "isActive",
         tc."wrDisplayOrder" as "displayOrder"
-        from "inser_data" tc 
-        inner join "tblEncryptedData" te on tc."wrCompetitionId" = te."wrKey"
+        from "inser_data" tc
         inner join "tblEventTypes" tev on tc."wrEventTypeId" = tev."wrEventTypeId"
-        inner join "tblEncryptedData" te1 on tc."wrEventTypeId" = te1."wrKey" 
     `,
       {
         bind: [
@@ -84,10 +101,7 @@ const insertCompetitionQuery = async (request, fastify) => {
 const deleteCompetitionQuery = async (request, fastify) => {
   try {
     return await fastify.db.query(
-      `delete from "tblCompetitions" where "wrCompetitionId"  in (
-            select "wrKey" from "tblEncryptedData" where "wrValue" = ANY($1)
-      )
-        `,
+      `delete from "tblCompetitions" where "wrCompetitionId" = ANY ($1)`,
       {
         bind: [request.body.competitionId],
         type: fastify.db.QueryTypes.DELETE,
@@ -110,13 +124,13 @@ const updateCompititionQuery = async (data, fastify, request) => {
       `
       update "tblCompetitions" set
         "wrCompetition" = $1,
-        "wrEventTypeId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $2),
+        "wrEventTypeId" = $2,
         "wrRefID" = $3,
         "wrImage" = $4,
         "wrIsActive" = $5,
         "wrModifyBy" = $6,
         "wrModifyDate" = now()
-        where "wrCompetitionId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $7)
+        where "wrCompetitionId" = $7
         `,
       {
         bind: [
@@ -146,7 +160,7 @@ const updateDisplayOrderQuery = async (data, fastify, request) => {
   try {
     return await fastify.db.query(
       `
-        update "tblCompetitions" set "wrDisplayOrder" = $2 where "wrCompetitionId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)
+        update "tblCompetitions" set "wrDisplayOrder" = $2 where "wrCompetitionId" = $1
         `,
       {
         bind: [data.competitionId, data.displayOrder],
