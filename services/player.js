@@ -156,20 +156,13 @@ const insertPlayerService = async (request, fastify) => {
       const jsonString = JSON.stringify(hashString);
       // Convert the string back to an array of values
       const hashArray = jsonString.split(",");
-      // for (let team of request.body.teamId) {
-      //   const checkTeamId = global.tblTeams.find((item) => item.teamId === team);
-      //   if (!checkTeamId) {
-      //     throw new Error("Team with this id not Found");
-      //   }
-      // }
-
       if (hashArray.length) {
         for (let i = 0; i < hashArray.length; i++) {
           if (hashArray[i]) {
             const teamID = hashArray[i].replace(/[\[\]"]/g, "");
-            await insertTeamPlayerQuery(
+             await insertTeamPlayerQuery(
               {
-                teamId: teamID,
+                teamId: parseInt(teamID),
                 refPlayerId: result.playerId,
                 userId: request.userTokenInfo.WrUserId,
               },
@@ -339,7 +332,7 @@ const updatePlayerService = async (request, fastify) => {
             const teamID = hashArray[i].replace(/[\[\]"]/g, "");
             await insertTeamPlayerQuery(
               {
-                teamId: teamID,
+                teamId: parseInt(teamID),
                 refPlayerId: request.body.playerId,
                 userId: request.userTokenInfo.WrUserId,
               },
@@ -379,6 +372,9 @@ const savePlayerService = async (request, fastify) => {
 const deletePlayerService = async (request, fastify) => {
   const { playerId } = request.body;
 
+  for (const id of playerId) {
+    await deleteTeamPlayerByPlayerIdQuery(id, fastify, request);
+  }
   // delete images
   for (const id of playerId) {
     const player = global.tblPlayers.find((item) => item.playerId === id);
@@ -389,11 +385,6 @@ const deletePlayerService = async (request, fastify) => {
     }
   }
   await deletePlayerQuery(playerId, fastify, request);
-
-  for (const id of playerId) {
-    await deleteTeamPlayerByPlayerIdQuery(id, fastify, request);
-  }
-
   global.tblPlayers = global.tblPlayers.filter(
     (item) => !playerId.includes(item.playerId)
   );

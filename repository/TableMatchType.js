@@ -260,9 +260,7 @@ const updateMatchTypeQuery = async (data, fastify, request) => {
     const result = await fastify.db.query(
       `UPDATE "tblMatchTypes" SET ${updateColumns.join(
         ", "
-      )} WHERE "wrMatchTypeId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $${
-        updateValues.length
-      }) returning 
+      )} WHERE "wrMatchTypeId" =$${updateValues.length} returning 
     "wrMatchType" as "matchType",
     "wrMatchRefType" as "matchRefType",
     "wrNoOfIningsPerSide" as "noOfIningsPerSide",

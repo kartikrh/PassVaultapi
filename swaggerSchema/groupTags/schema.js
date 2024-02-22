@@ -1202,7 +1202,7 @@ const PaneltyRuns = {
       body: {
         type: "object",
         properties: {
-          paneltyId: { type: "string" },
+          paneltyId: { type: "integer" },
         },
         required: ["paneltyId"],
       },
@@ -1216,7 +1216,7 @@ const PaneltyRuns = {
       body: {
         type: "object",
         properties: {
-          paneltyId: { type: "string" },
+          paneltyId: { type: "integer" },
           run: { type: "integer" },
           desc: { type: "string" },
           isActive: { type: "boolean" },
@@ -1235,7 +1235,7 @@ const PaneltyRuns = {
         properties: {
           paneltyId: {
             type: "array",
-            items: { type: "string" },
+            items: { type: "integer" },
             minItems: 1,
           },
         },
@@ -1326,7 +1326,7 @@ const Player = {
           displayName: { type: "string" },
           teamId: {
             type: "array",
-            items: { type: "integer" },
+            items: { type: "string" },
           },
           isSystemPlayer: { type: "boolean" },
         },

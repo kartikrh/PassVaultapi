@@ -247,7 +247,7 @@ const updatePlayerStatsQuery = async (data, fastify, request) => {
 
 const deletePlayerQuery = async (playerId, fastify, request) => {
   try {
-    console.log("playerId", playerId)
+
     return await fastify.db.query(
       `delete from "tblPlayers" where "wrPlayerId" =  ANY($1)`,
       {
