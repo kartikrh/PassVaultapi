@@ -14,7 +14,7 @@ module.exports = (sequelize) => {
         type: DataTypes.STRING(2000),
         allowNull: true,
       },
-      wrIsxActive: {
+      wrIsActive: {
         type: DataTypes.BOOLEAN,
         allowNull: true,
       },
