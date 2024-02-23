@@ -34,7 +34,11 @@ const {
   getCommnertySquadPlayersList,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
-const { convertDate, wicketType, decryptEncryptionId } = require("../utilities");
+const {
+  convertDate,
+  wicketType,
+  decryptEncryptionId,
+} = require("../utilities");
 
 const allCommentaryService = async (request, fastify) => {
   // return global.tblCommentaries;
@@ -809,7 +813,7 @@ const deleteCommentaryService = async (request, fastify) => {
 //   } = request.body;
 
 //   let response = {};
-//   let _CommentaryId = "";  
+//   let _CommentaryId = "";
 //   //Get Commentry ID
 //   if (commentaryDetails) {
 //     _CommentaryId = commentaryDetails.commentaryId;
@@ -887,7 +891,7 @@ const saveCommentaryDetailsService = async (request, fastify) => {
   } = request.body;
 
   let response = {};
-  let promises = []
+  let promises = [];
   let _CommentaryId = "";
   //Get Commentry ID
   if (commentaryDetails) {
@@ -898,27 +902,41 @@ const saveCommentaryDetailsService = async (request, fastify) => {
     await updateCommentaryDetailsServices(commentaryDetails, fastify, request);
   }
 
-
   // Update Commentary Teams
   if (commentaryTeams) {
-    commentaryTeams?.forEach(team => {
+    commentaryTeams?.forEach((team) => {
       promises.push(updateCommentaryTeamsServices(team, fastify, request));
     });
   }
   // Update Commentary Players
   if (commentaryPlayers) {
-    commentaryPlayers?.forEach(player => {
-      promises.push(updateCommentaryPlayerDetailsServices(player, fastify, request));
+    commentaryPlayers?.forEach((player) => {
+      promises.push(
+        updateCommentaryPlayerDetailsServices(player, fastify, request)
+      );
     });
   }
-  commentaryOvers && promises.push(saveOverService(commentaryOvers, fastify, request));
-  commentaryBallByBall && promises.push(ballByBallCommentoriesService(commentaryBallByBall, fastify, request));
-  commentaryWicket && promises.push(saveCommentaryWicketService(commentaryWicket, fastify, request));
-  commentaryPartnership && promises.push(saveCommentaryPartnershipService(commentaryPartnership, fastify, request));
-  commentaryDetails &&  promises.push(updateCommentaryDetailsServices(commentaryDetails, fastify, request));
+  commentaryOvers &&
+    promises.push(saveOverService(commentaryOvers, fastify, request));
+  commentaryBallByBall &&
+    promises.push(
+      ballByBallCommentoriesService(commentaryBallByBall, fastify, request)
+    );
+  commentaryWicket &&
+    promises.push(
+      saveCommentaryWicketService(commentaryWicket, fastify, request)
+    );
+  commentaryPartnership &&
+    promises.push(
+      saveCommentaryPartnershipService(commentaryPartnership, fastify, request)
+    );
+  commentaryDetails &&
+    promises.push(
+      updateCommentaryDetailsServices(commentaryDetails, fastify, request)
+    );
   return Promise.all(promises)
-    .then(results => {
-      results.forEach(result => {
+    .then((results) => {
+      results.forEach((result) => {
         // console.log(result);
         if (result) {
           result["name"] && (response[result.name] = result.value);
@@ -927,11 +945,10 @@ const saveCommentaryDetailsService = async (request, fastify) => {
       return Object.keys(response).length ? response : true;
     })
 
-    .catch(error => {
+    .catch((error) => {
       throw error; // Propagate the error
     });
 };
- 
 
 const updateCommentaryDetailsServices = async (
   commentaryDetails,
@@ -953,12 +970,12 @@ const updateCommentaryDetailsServices = async (
   global.tblCommentaries[index] = commentaryDetails;
 
   return {
-    name : "commentaryDetails",
-    value : commentaryDetails
+    name: "commentaryDetails",
+    value: commentaryDetails,
   };
 };
 
-const   updateCommentaryTeamsServices = async (teamDetails, fastify, request) => {
+const updateCommentaryTeamsServices = async (teamDetails, fastify, request) => {
   const index = global.tblCommentaryTeams.findIndex(
     (item) =>
       item.commentaryId === teamDetails.commentaryId &&
@@ -1048,8 +1065,8 @@ const createOverService = async (data, fastify, request) => {
   global.tblOvers.push(addOver);
 
   return {
-    name : "overdetails",
-    value : addOver
+    name: "overdetails",
+    value: addOver,
   };
 };
 
@@ -1069,15 +1086,14 @@ const updateOverService = async (data, fastify, request) => {
   global.tblOvers[indexOver] = data;
 
   return {
-    name : "overdetails",
-    value : data
-  }
+    name: "overdetails",
+    value: data,
+  };
 };
 
 const ballByBallCommentoriesService = async (data, fastify, request) => {
   let { commentaryBallByBallId } = data;
   commentaryBallByBallId = parseInt(commentaryBallByBallId);
-
 
   if (commentaryBallByBallId === 0) {
     return await createBallByBallCommentoriesService(data, fastify, request);
@@ -1111,8 +1127,8 @@ const createBallByBallCommentoriesService = async (data, fastify, request) => {
   global.tblCommentaryBallByBall.push(dataToreturn);
 
   return {
-    name : "commentaryBallByBallDetails",
-    value : dataToreturn
+    name: "commentaryBallByBallDetails",
+    value: dataToreturn,
   };
 };
 
@@ -1132,8 +1148,8 @@ const updateBallByBallCommentoriesService = async (data, fastify, request) => {
   global.tblCommentaryBallByBall[indexBallByBall] = data;
 
   return {
-    name : "commentaryBallByBallDetails",
-    value : data
+    name: "commentaryBallByBallDetails",
+    value: data,
   };
 };
 
@@ -1168,9 +1184,8 @@ const createCommentaryWicketService = async (data, fastify, request) => {
   global.tblCommentaryWicket.push(addCommentaryWicket);
 
   return {
-    name : "commentaryWicketDetails",
-    value : addCommentaryWicket
-  
+    name: "commentaryWicketDetails",
+    value: addCommentaryWicket,
   };
 };
 
@@ -1190,9 +1205,8 @@ const updateCommentaryWicketService = async (data, fastify, request) => {
   global.tblCommentaryWicket[indexWicket] = data;
 
   return {
-    name : "commentaryWicketDetails",
-    value : data
-  
+    name: "commentaryWicketDetails",
+    value: data,
   };
 };
 
@@ -1226,8 +1240,8 @@ const createCommentaryPartnershipService = async (data, fastify, request) => {
   global.tblCommentaryPartnership.push(addCommentaryPartnership);
 
   return {
-    name : "commentaryPartnershipDetails",
-    value : addCommentaryPartnership
+    name: "commentaryPartnershipDetails",
+    value: addCommentaryPartnership,
   };
 };
 
@@ -1247,8 +1261,8 @@ const updateCommentaryPartnershipService = async (data, fastify, request) => {
   global.tblCommentaryPartnership[indexPartnership] = data;
 
   return {
-    name : "commentaryPartnershipDetails",
-    value : data
+    name: "commentaryPartnershipDetails",
+    value: data,
   };
 };
 
@@ -1770,9 +1784,12 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
 
 const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
   // convert encyption to decryption
-  const decryptedId = await  decryptEncryptionId(request.body.commentaryId ,fastify);
+  const decryptedId = await decryptEncryptionId(
+    request.body.commentaryId,
+    fastify
+  );
   request.body.commentaryId = decryptedId;
-  
+
   const result = await global.tblCommentaries.find(
     (item) => item.commentaryId === request.body.commentaryId
   );
@@ -2835,7 +2852,7 @@ const getTeamListByEventTypeService = async (request) => {
     );
     return result;
   }
-}
+};
 const getCommenrtySquadDetailsService = async (request, fastify) => {
   const { eventId } = request.body;
   const commentary = global.tblCommentaries.find(
@@ -3084,25 +3101,25 @@ const getPartnershipListService = async (request, fastify) => {
     const player1Info = global.tblPlayers.find(
       (player) => player.playerId === CommenrtyPlayers.playerId
     );
-    console.log(player1Info);
+
+    const player2Info = global.tblPlayers.find(
+      (player) => player.playerId === CommenrtyPlayers.playerId
+    );
 
     if (player1Info) {
-      const { player0Name, image0 } = player1Info;
-      const { player1Name, image1 } = player2Info;
       partnershipList.push({
-        pl1n: player0Name,
-        pl1i: image0,
-        runs,
-        balls,
-        pl1n: player1Name,
-        pl1i: image1,
+        pl1n: batter1Name,
+        pl1i: player1Info.image,
+        runs: totalRuns,
+        ball: totalBalls,
+        pl2n: batter2Name,
+        pl2i: player2Info.image,
       });
     }
   });
-  dataToreturn.par = commentaryPartnership;
+  dataToreturn.par = partnershipList;
   return dataToreturn;
 };
-
 
 const getCommentaryTeamsListService = async (request, fastify) => {
   const currentInnings = commentary.currentInnings;
@@ -3215,7 +3232,6 @@ const getCommentaryTeamsListService = async (request, fastify) => {
   return dataToreturn;
 };
 
-
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -3240,5 +3256,5 @@ module.exports = {
   getTeamListByEventTypeService,
   getCommenrtySquadDetailsService,
   getPartnershipListService,
-  getCommentaryTeamsListService
+  getCommentaryTeamsListService,
 };

@@ -701,7 +701,6 @@ const getAllCommentaryTeamsQuery = async (fastify) => {
   // {
   //   type: fastify.db.QueryTypes.SELECT,
   // })
-
 };
 
 const getAllCommentaryPlayerQuery = async (fastify) => {
@@ -818,7 +817,7 @@ const getAllCommentaryPlayerQuery = async (fastify) => {
   //   "wrCurrentInnings" as "currentInnings",
   //   "wrBatsmanPreviousStrikeRate" as "batsmanPreviousStrikeRate",
   //   "wrBowlerPreviousEconomy" as "bowlerPreviousEconomy"
-  //   from "tblCommentaryPlayers" 
+  //   from "tblCommentaryPlayers"
   //   `,
   //   {
   //     type: fastify.db.QueryTypes.SELECT,
@@ -907,7 +906,7 @@ const getAllCommentaryBallByBallQuery = async (fastify) => {
   //   left join "tblEncryptedData" te9 on tcb."wrBall_FielderID1" = te9."wrKey"
   //   left join "tblEncryptedData" te10 on tcb."wrBall_FielderID2" = te10."wrKey"
   //   left join "tblEncryptedData" te11 on tcb."wrNextBat_StrikeID" = te11."wrKey"
-  //   left join "tblEncryptedData" te12 on tcb."wrNextBat_NONStrikeID" = te12."wrKey"    
+  //   left join "tblEncryptedData" te12 on tcb."wrNextBat_NONStrikeID" = te12."wrKey"
   //   `,
   //   {
   //     type: fastify.db.QueryTypes.SELECT,
@@ -917,7 +916,7 @@ const getAllCommentaryBallByBallQuery = async (fastify) => {
 
 const getAllOversQuery = async (fastify) => {
   return await fastify.db.query(
-      `
+    `
       select
       "wrOverId" as "overId",
       "wrCommentaryId" as "commentaryId",
@@ -947,10 +946,10 @@ const getAllOversQuery = async (fastify) => {
       "wrCurrentInnings" as "currentInnings"
       from "tblOvers" 
       `,
-      {
-        type: fastify.db.QueryTypes.SELECT,
-      }
-    );
+    {
+      type: fastify.db.QueryTypes.SELECT,
+    }
+  );
   // return await fastify.db.query(
   //   `
   //   select
@@ -1038,7 +1037,7 @@ const getAllCommentaryWicketQuery = async (fastify) => {
   );
   // return await fastify.db.query(
   //   `
-  //   select 
+  //   select
   //   "wrCommentaryWicketId" as "pId",
   //   te."wrValue" as "commentaryWicketId",
   //   te1."wrValue" as "commentaryId",
@@ -1077,7 +1076,7 @@ const getAllCommentaryWicketQuery = async (fastify) => {
 
 const getAllCommentaryPartnershipQuery = async (fastify) => {
   return await fastify.db.query(
-      `
+    `
       select 
       "wrCommentaryPartnershipId" as "commentaryPartnershipId",
       "wrCommentaryId" as "commentaryId",
@@ -1093,13 +1092,13 @@ const getAllCommentaryPartnershipQuery = async (fastify) => {
       "wrCommentaryBallByBallId" as "commentaryBallByBallId"
       from "tblCommentaryPartnerships"
       `,
-      {
-        type: fastify.db.QueryTypes.SELECT,
-      }
-    );
+    {
+      type: fastify.db.QueryTypes.SELECT,
+    }
+  );
   // return await fastify.db.query(
   //   `
-  //   select 
+  //   select
   //   te."wrValue" as "commentaryPartnershipId",
   //   te1."wrValue" as "commentaryId",
   //   te2."wrValue" as "teamId",
@@ -1118,7 +1117,7 @@ const getAllCommentaryPartnershipQuery = async (fastify) => {
   //   left join "tblEncryptedData" te2 on tcw."wrTeamId" = te2."wrKey"
   //   left join "tblEncryptedData" te3 on tcw."wrBatter1Id" = te3."wrKey"
   //   left join "tblEncryptedData" te4 on tcw."wrBatter2Id" = te4."wrKey"
-  //   left join "tblEncryptedData" te5 on tcw."wrCommentaryBallByBallId" = te5."wrKey"  
+  //   left join "tblEncryptedData" te5 on tcw."wrCommentaryBallByBallId" = te5."wrKey"
 
   //   `,
   //   {
@@ -1407,7 +1406,7 @@ const updateCommentaryDetailsQuery = async (data, fastify, request) => {
       {
         bind: [data.displayStatus, data.commentaryId],
       }
-    )
+    );
     return result;
   } catch (err) {
     errorLogger(
@@ -2206,7 +2205,7 @@ const getCommnertySquadPlayersList = async (data, fastify, request) => {
       `WITH CommentaryDetails AS (
         SELECT "wrCommentaryId","wrTeam1Id", "wrTeam2Id", "wrCommentaryStatus","wrCurrentInnings"
         FROM "tblCommentaries"
-        WHERE "wrCommentaryId" = (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $1)
+        WHERE "wrCommentaryId" =  $1
     ),
     TeamPlayers AS (
       SELECT p."wrPlayerName" AS pn,
@@ -2226,8 +2225,8 @@ const getCommnertySquadPlayersList = async (data, fastify, request) => {
       INNER JOIN "tblCommentaryPlayers" ON "tblCommentaryPlayers"."wrPlayerId" = t."wrRefPlayerId"
                                      AND "tblCommentaryPlayers"."wrTeamId" = t."wrTeamId"
       INNER JOIN "tblPlayers" p ON p."wrPlayerId" = t."wrRefPlayerId"
-      INNER JOIN CommentaryDetails ON "tblCommentaryPlayers"."wrTeamId" = (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $2)
-      WHERE "tblCommentaryPlayers"."wrTeamId" = (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $2)
+      INNER JOIN CommentaryDetails ON "tblCommentaryPlayers"."wrTeamId" =  $2
+      WHERE "tblCommentaryPlayers"."wrTeamId" = $2
             AND "tblCommentaryPlayers"."wrCommentaryId" = CommentaryDetails."wrCommentaryId"
             AND p."wrIsActive" = true
             AND "tblCommentaryPlayers"."wrCurrentInnings" = CommentaryDetails."wrCurrentInnings"
