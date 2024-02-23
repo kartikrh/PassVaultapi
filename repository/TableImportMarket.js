@@ -9,7 +9,7 @@ const insertEventTypeQuery = async (data, fastify, request) => {
               $1,$2,$3,$4,(select COALESCE(max("wrDisplayOrder") , 0) as result from "tblEventTypes") + 1,$5,$6,$7,$8) returning *
         )        
         select 
-        "wrValue" as "eventTypeId",
+        "wrEventTypeId" as "eventTypeId",
         "wrEventType" as "eventType",
         "wrRefId" as "refId",
         "wrImage" as "image",
@@ -17,7 +17,7 @@ const insertEventTypeQuery = async (data, fastify, request) => {
         "wrDisplayOrder" as "displayOrder",
         "wrRemark" as "remark",
         "wrIsHighlight" as "isHighlight"
-         from insert_data id left join "tblEncryptedData" ed on id."wrEventTypeId" = ed."wrKey"`,
+         from insert_data id`,
       {
         type: fastify.db.QueryTypes.SELECT,
         bind: [
@@ -47,7 +47,7 @@ const insertEventTypeQuery = async (data, fastify, request) => {
 const updateEventTypeQuery = async (data, fastify, request) => {
   try {
     return await fastify.db.query(
-      `Update "tblEventTypes" set "wrEventType" = $1,"wrRefId" = $2,"wrImage" = $3,"wrIsActive" = $4,"wrRemark" = $5,"wrIsHighlight" = $6,"wrModifyDate" = $7,"wrModifyBy" = $8 where "wrEventTypeId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $9)`,
+      `Update "tblEventTypes" set "wrEventType" = $1,"wrRefId" = $2,"wrImage" = $3,"wrIsActive" = $4,"wrRemark" = $5,"wrIsHighlight" = $6,"wrModifyDate" = $7,"wrModifyBy" = $8 where "wrEventTypeId" = $9`,
       {
         type: fastify.db.QueryTypes.UPDATE,
         bind: [
@@ -81,31 +81,25 @@ const insertCompetitionQuery = async (request, fastify) => {
     const result = await fastify.db.query(
       `
         with display as (
-            select max("wrDisplayOrder") as "display_order" from "tblCompetitions" where "wrEventTypeId" =  (
-                select "wrKey" from "tblEncryptedData" where "wrValue" = $2
-            )
+            select max("wrDisplayOrder") as "display_order" from "tblCompetitions" where "wrEventTypeId" = $2
         ),
         inser_data as (
-            
             insert into "tblCompetitions" ("wrCompetition" , "wrEventTypeId" , "wrRefID" , "wrImage" ,"wrIsActive" , "wrCreatedBy" , "wrCreatedDate","wrDisplayOrder" ) values ($1 ,
-              (select "wrKey" from "tblEncryptedData" where "wrValue" = $2),
+                $2,
                  $3,$4,$5,$6,now(),(select COALESCE("display_order" , 0) from "display") + 1
                  ) returning *
         )
-
         select 
-        te."wrValue" as "competitionId",
-        "wrCompetition" as "competition",
-        te1."wrValue" as "eventTypeId",
+        "wrCompetitionId" as "competitionId",
+        tc."wrCompetition" as "competition",
+        tc."wrEventTypeId" as "eventTypeId",
         "wrEventType" as "eventType",
         tc."wrRefID" as "refId",
         tc."wrImage" as "image",
         tc."wrIsActive" as "isActive",
         tc."wrDisplayOrder" as "displayOrder"
         from "inser_data" tc 
-        inner join "tblEncryptedData" te on tc."wrCompetitionId" = te."wrKey"
         inner join "tblEventTypes" tev on tc."wrEventTypeId" = tev."wrEventTypeId"
-        inner join "tblEncryptedData" te1 on tc."wrEventTypeId" = te1."wrKey" 
     `,
       {
         bind: [
@@ -138,13 +132,13 @@ const updateCompititionQuery = async (data, fastify, request) => {
       `
       update "tblCompetitions" set
         "wrCompetition" = $1,
-        "wrEventTypeId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $2),
+        "wrEventTypeId" = $2,
         "wrRefID" = $3,
         "wrImage" = $4,
         "wrIsActive" = $5,
         "wrModifyBy" = $6,
         "wrModifyDate" = now()
-        where "wrCompetitionId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $7)
+        where "wrCompetitionId" = $7
         `,
       {
         bind: [
@@ -190,8 +184,8 @@ const insertEventQuery = async (request, fastify) => {
             "wrTimeZone",
             "wrVenue"
         ) values (
-           (select "wrKey" from "tblEncryptedData" where "wrValue" = $1),
-              (select "wrKey" from "tblEncryptedData" where "wrValue" = $2),
+            $1,
+            $2,
             $3,
             $4,
             $5,
@@ -206,9 +200,9 @@ const insertEventQuery = async (request, fastify) => {
     )
 
     select 
-    ted."wrValue" as "eventId",
-    ted1."wrValue" as "eventTypeId",
-    ted2."wrValue" as "competitionId",
+    te."wrEventId" as "eventId",
+    te."wrEventTypeId" as "eventTypeId",
+    te."wrCompetitionId" as "competitionId",
     tet."wrEventType" as "eventType",
     tc."wrCompetition" as "competition",
     te."wrEventName" as "eventName",
@@ -218,10 +212,7 @@ const insertEventQuery = async (request, fastify) => {
     te."wrCountryCode" as "countryCode",
     te."wrTimeZone" as "timeZone",
     te."wrVenue" as "venue"
-    from "insert_data" te 
-    left join "tblEncryptedData" ted on te."wrEventId" = ted."wrKey"
-    left join "tblEncryptedData" ted1 on te."wrEventTypeId" = ted1."wrKey"
-    left join "tblEncryptedData" ted2 on te."wrCompetitionId" = ted2."wrKey"
+    from "insert_data" te
     left join "tblEventTypes" tet on te."wrEventTypeId" = tet."wrEventTypeId"
     left join "tblCompetitions" tc on te."wrCompetitionId" = tc."wrCompetitionId"
     `,
@@ -244,7 +235,6 @@ const insertEventQuery = async (request, fastify) => {
 
     return result[0];
   } catch (err) {
-    console.log("err", err);
     errorLogger(
       fastify,
       err.message,
@@ -260,8 +250,8 @@ const updateEventQuery = async (data, fastify, request) => {
     return await fastify.db.query(
       `
         update "tblEvents" set
-        "wrEventTypeId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1),
-        "wrCompetitionId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $2),
+        "wrEventTypeId" = $1,
+        "wrCompetitionId" = $2,
         "wrEventName" = $3,
         "wrEventDate" = $4,
         "wrRefID" = $5,
@@ -271,7 +261,7 @@ const updateEventQuery = async (data, fastify, request) => {
         "wrCountryCode" = $8,
         "wrTimeZone" = $9,
         "wrVenue" = $10
-        where "wrEventId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $11)
+        where "wrEventId" = $11
         returning *
         `,
       {
