@@ -314,7 +314,7 @@ const getCommentaryTeamList = async (request, reply, fastify) => {
     errorLogger(fastify, err.message, path + "/getTeamList", request);
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
-}
+};
 const getCommenrtySquadList = async (request, reply, fastify) => {
   try {
     const result = await getCommenrtySquadDetailsService(request, fastify);
