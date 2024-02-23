@@ -2597,13 +2597,15 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
     teamScore2 = teamScore2 + "/" + wicket1 + "(" + overs1 + ")";
   }
 
-  let crr, rrr;
+  let crr, rrr, BattingTeamId;
   if (commentaryTeamsOne.teamStatus == 1) {
     crr = commentaryTeamsOne.crr;
     rrr = commentaryTeamsOne.rrr;
+    BattingTeamId = commentaryTeamsOne.teamId;
   } else {
     crr = commentaryTeamsTwo.crr;
     rrr = commentaryTeamsTwo.rrr;
+    BattingTeamId = commentaryTeamsTwo.teamId;
   }
   let es = {
     eid: commentary.eventRefId || "",
@@ -2648,6 +2650,68 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
     );
     dataToreturn["cci" + i] = inningData;
   }
+
+  let data = {
+    CommentaryId: commentary.commentaryId,
+    teamId: commentaryTeamsOne.teamId,
+  };
+  let TeamPlayes1 = await getCommnertySquadPlayersList(data, fastify, request);
+  data.teamId = commentaryTeamsTwo.teamId;
+  let TeamPlayes2 = await getCommnertySquadPlayersList(data, fastify, request);
+  dataToreturn.Sqt1 = TeamPlayes1;
+  dataToreturn.Sqt2 = TeamPlayes2;
+
+  //Partnership data
+
+  const commentaryPartnership = await global.tblCommentaryPartnership.filter(
+    (item) =>
+      item.commentaryId === commentary.commentaryId &&
+      item.teamId === BattingTeamId &&
+      item.currentInnings === currentInnings
+  );
+
+  const partnershipList = [];
+
+  // Iterate over tblCommentaryPartnership
+  commentaryPartnership.forEach((partnership) => {
+    const {
+      batter1Id,
+      batter1Name,
+      batter2Id,
+      batter2Name,
+      totalRuns,
+      totalBalls,
+    } = partnership;
+
+    const CommenrtyPlayers = global.tblCommentaryPlayers.find(
+      (Cplayer) => Cplayer.commentaryPlayerId === batter1Id
+    );
+
+    const CommenrtyPlayers1 = global.tblCommentaryPlayers.find(
+      (Cplayer) => Cplayer.commentaryPlayerId === batter2Id
+    );
+
+    // Find player information from tblPlayers
+    const player1Info = global.tblPlayers.find(
+      (player) => player.playerId === CommenrtyPlayers.playerId
+    );
+
+    const player2Info = global.tblPlayers.find(
+      (player) => player.playerId === CommenrtyPlayers1.playerId
+    );
+
+    if (player1Info) {
+      partnershipList.push({
+        pl1n: batter1Name,
+        pl1i: player1Info.image,
+        runs: totalRuns,
+        ball: totalBalls,
+        pl2n: batter2Name,
+        pl2i: player2Info.image,
+      });
+    }
+  });
+  dataToreturn.par = partnershipList;
 
   return dataToreturn;
 };
