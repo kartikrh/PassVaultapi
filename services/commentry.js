@@ -162,6 +162,10 @@ const commentaryDetailsByIdService = async (request, fastify) => {
     (item) => item.commentaryId === request.body.commentaryId
   );
 
+  const commentaryDisplayStatus = await global.tblDisplayStatus.filter(
+    (item) => item.displayStatusId !== 0
+  );
+
   const allDetails = {
     commentaryDetails: { ...result },
     commentaryTeams,
@@ -170,6 +174,7 @@ const commentaryDetailsByIdService = async (request, fastify) => {
     commentaryBallByBall,
     commentaryWicket,
     commentaryPartnership,
+    commentaryDisplayStatus,
   };
 
   return allDetails;
