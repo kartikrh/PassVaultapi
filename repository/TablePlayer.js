@@ -256,7 +256,6 @@ const deletePlayerQuery = async (playerId, fastify, request) => {
       }
     );
   } catch (err) {
-    console.log(err)
     errorLogger(
       fastify,
       err.message,

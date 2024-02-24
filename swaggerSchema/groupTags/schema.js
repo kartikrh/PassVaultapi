@@ -2369,6 +2369,89 @@ const Score = {
     },
   },
 };
+const News = {
+  getAll: {
+    schema: {
+      tags: ["News"],
+      description: "get all News",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+  getById: {
+    schema: {
+      tags: ["News"],
+      description: "get News by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          newsId: { type: "integer" },
+        },
+        required: ["newsId"],
+      },
+    },
+  },
+  save: {
+    schema: {
+      tags: ["News"],
+      description: "save News",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          newsId: { type: "integer" },
+          title: { type: "string" },
+          news: { type: "string" },
+          isPermanent : { type: "boolean" },
+          isActive: { type: "boolean" },
+          startDate: { type: "string" },
+          endDate: { type: "string" },
+        },
+        required: ["newsId"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["News"],
+      description: "delete News",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          newsId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["newsId"],
+      },
+    },
+  },
+  activeInactiveNews: {
+   schema: {
+     tags: ["News"],
+     description: "active inactive news",
+     security: [{ bearerAuth: [] }],
+     body: {
+       type: "object",
+       properties: {
+         newsId: { type: "integer" },
+         isActive: { type: "boolean" },
+       },
+       required: ["newsId", "isActive"],
+     },
+   },
+  },
+};
+
 module.exports = {
   Auth,
   Tabs,
@@ -2392,4 +2475,5 @@ module.exports = {
   Event,
   ImportMarket,
   Score,
+  News
 };

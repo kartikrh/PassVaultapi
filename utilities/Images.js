@@ -84,7 +84,6 @@ const removeImageFromServer = async (args) =>{
         path : args.path
     }
   );
-  console.log(result.data);
   if(!result.data.success){
     throw new Error(result.data.error.message);
   }

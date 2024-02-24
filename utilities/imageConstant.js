@@ -48,6 +48,14 @@ const ImgModuleConfig = {
     height: 0,
     width: 0,
   },
+  News: {
+    type: "news",
+    formate: ".jpg,.png,.jpeg,.avif,.webp",
+    size: 0,
+    height: 0,
+    width: 0,
+  },
+  
 };
 
 module.exports = {

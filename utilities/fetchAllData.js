@@ -30,7 +30,7 @@ const {
   getAllCommentaryWicketQuery,
   getAllCommentaryPartnershipQuery,
 } = require("../repository/TableCommentary");
-
+const {getAllNewsQuery} = require("../repository/TableNews");
 const fetchAllDataFromDb = async (fastify, reply) => {
   try {
     const getAllTabs = await getAllActiveInactiveTabsQuery(fastify);
@@ -65,6 +65,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const getAllCommentaryPartnership = await getAllCommentaryPartnershipQuery(
       fastify
     );
+    const getAllNews = await getAllNewsQuery(fastify);
 
     global.tblTabs = getAllTabs;
     global.tblRoles = getAllRoles;
@@ -94,6 +95,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblOvers = getAllOvers;
     global.tblCommentaryWicket = getAllCommentaryWicket;
     global.tblCommentaryPartnership = getAllCommentaryPartnership;
+    global.tblNews = getAllNews;
 
     console.log("Okkkk");
 

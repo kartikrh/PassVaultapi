@@ -1,0 +1,175 @@
+const { errorLogger } = require("../utilities/logger");
+
+
+const getAllNewsQuery = async (fastify) => {
+    return await fastify.db.query(
+        `select 
+            "wrNewsId" as "newsId",
+            "wrTitle" as "title",
+            "wrNews" as "news",
+            "wrImage" as "image",
+            "wrIsActive" as "isActive",
+            "wrIsPermanent" as "isPermanent",
+            "wrStartDate" as "startDate",
+            "wrEndDate" as "endDate"
+        from "tblNews"
+        `,
+        {
+            type: fastify.db.QueryTypes.SELECT
+        }
+    );
+}
+const insertNewsQuery = async (data ,request, fastify) => {
+    try {
+        const result = await fastify.db.query(
+            `
+                with insert_data as (
+                    insert into "tblNews" (
+                        "wrTitle",
+                        "wrNews",
+                        "wrImage",
+                        "wrIsActive",
+                        "wrIsPermanent",
+                        "wrStartDate",
+                        "wrEndDate",
+                        "wrCreatedBy",
+                        "wrCreatedDate"
+                    )
+                values ($1, $2, $3, $4, $5, $6, $7, $8, now()) returning *
+                )
+                select 
+                    "wrNewsId" as "newsId",
+                    "wrTitle" as "title",
+                    "wrNews" as "news",
+                    "wrImage" as "image",
+                    "wrIsActive" as "isActive",
+                    "wrIsPermanent" as "isPermanent",
+                    "wrStartDate" as "startDate",
+                    "wrEndDate" as "endDate"
+                from "insert_data"
+            `,
+            {
+                type: fastify.db.QueryTypes.INSERT,
+                bind : [
+                    data.title,
+                    data.news,
+                    data.image || null,
+                    data.isActive || false,
+                    data.isPermanent || false,
+                    data.startDate ? new Date(data.startDate) : null,
+                    data.endDate ? new Date(data.endDate) : null,
+                    data.userId
+                ]
+            }
+        );
+        return result[0];
+    } catch (err) {
+        errorLogger(
+            fastify,
+            err.message,
+            "DB ERROR --> repository/TableEvent/insertNewsQuery",
+            request
+        );
+        throw new Error(err.message);
+    }
+}
+const updateNewsQuery = async (data ,request, fastify) => {
+    try {
+        return await fastify.db.query(
+            `
+                update "tblNews" set
+                "wrTitle" = $1,
+                "wrNews" = $2,
+                "wrImage" = $3,
+                "wrIsActive" = $4,
+                "wrIsPermanent" = $5,
+                "wrStartDate" = $6,
+                "wrEndDate" = $7,
+                "wrModifyBy" = $8,
+                "wrModifyDate" = now()
+                where "wrNewsId" = $9
+            `,
+            {
+                bind: [
+                   data.title,
+                   data.news,
+                   data.image || null,
+                   data.isActive || false,
+                   data.isPermanent || false,
+                   data.startDate,
+                   data.endDate,
+                   data.userId,
+                   data.newsId
+                ]
+            }
+        );
+
+    } catch (err) {
+        errorLogger(
+            fastify,
+            err.message,
+            "DB ERROR --> repository/TableEvent/updateNewsQuery",
+            request
+        );
+        throw new Error(err.message);
+    }
+}   
+const deleteNewsQuery = async (data,request, fastify) => {
+    try {
+        return await fastify.db.query(
+            `
+                delete from "tblNews" where "wrNewsId" = ANY ($1)
+            `,
+            {
+                type : fastify.db.QueryTypes.DELETE,
+                bind: [
+                    request.body.newsId
+                ]
+            }
+        );
+    } catch (err) {
+        errorLogger(
+            fastify,
+            err.message,
+            "DB ERROR --> repository/TableEvent/deleteNewsQuery",
+            request
+        );
+        throw new Error(err.message);
+    }
+}
+const activeInactiveNewsQuery = async (data,request, fastify) => {
+    try {
+        return await fastify.db.query(
+            `
+                update "tblNews" set
+                "wrIsActive" = $1,
+                "wrModifyBy" = $2,
+                "wrModifyDate" = now()
+                where "wrNewsId" = $3
+            `,
+            {
+                bind: [
+                    data.isActive,
+                    data.userId,
+                    data.newsId
+                ]
+            }
+        );
+    } catch (err) {
+        errorLogger(
+            fastify,
+            err.message,
+            "DB ERROR --> repository/TableEvent/activeInactiveNewsQuery",
+            request
+        );
+        throw new Error(err.message);
+    }
+
+}
+module.exports = {
+    insertNewsQuery,
+    updateNewsQuery,
+    deleteNewsQuery,
+    getAllNewsQuery,
+    activeInactiveNewsQuery
+}
