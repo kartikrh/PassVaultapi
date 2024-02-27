@@ -663,6 +663,13 @@ const getAllCommentaryTeamsQuery = async (fastify) => {
   "wrCrr" as "crr",
   "wrRrr" as "rrr",
   "wrTeamStatus" as "teamStatus",
+  "wrTeamTrialRuns" as "teamTrialRuns",
+  "wrTeamLeadRuns" as "teamLeadRuns",
+  "wrTeamWideRuns" as "teamWideRuns",
+  "wrTeamByRuns" as "teamByRuns",
+  "wrTeamLegByRuns" as "teamLegByRuns",
+  "wrTeamNoBallRuns" as "teamNoBallRuns",
+  "wrTeamPenaltyRuns" as "teamPenaltyRuns",
   "wrIsWin" as "isWin",
   tct."wrCurrentInnings" as "currentInnings", 
   tct."wrIsBattingComplete" as "isBattingComplete",
@@ -1435,7 +1442,12 @@ const updateCommentaryTeamsQuery = async (data, fastify, request) => {
         "wrTeamStatus" = $10,
         "wrIsWin" = $11,
         "wrCurrentInnings" = $12,
-        "wrIsBattingComplete" = $13
+        "wrIsBattingComplete" = $13,
+        "wrTeamWideRuns"  = $16,
+        "wrTeamByRuns"  = $17,
+        "wrTeamLegByRuns"  = $18,
+        "wrTeamNoBallRuns"  = $19,
+        "wrTeamPenaltyRuns"  = $20
         where "wrCommentaryTeamId" = $14
         AND "wrCurrentInnings" = $15
       `,
@@ -1456,6 +1468,11 @@ const updateCommentaryTeamsQuery = async (data, fastify, request) => {
           data.isBattingComplete,
           data.commentaryTeamId,
           data.currentInnings,
+          data.teamWideRuns,
+          data.teamByRuns,
+          data.teamLegByRuns,
+          data.teamNoBallRuns,
+          data.teamPenaltyRuns,
         ],
         type: fastify.db.QueryTypes.UPDATE,
       }
