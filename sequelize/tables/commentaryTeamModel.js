@@ -70,23 +70,48 @@ module.exports = (sequelize) => {
         type: DataTypes.BOOLEAN,
         allowNull: true,
       },
-      wrCommentaryPlayerTeamCaptain : {
+      wrCommentaryPlayerTeamCaptain: {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
-      wrCommentaryPlayerTeamKipper : {
+      wrCommentaryPlayerTeamKipper: {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
-      wrTeamTrialRuns : {
-        type : DataTypes.INTEGER,
-        allowNull : true,
-        defaultValue : 0
+      wrTeamTrialRuns: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        defaultValue: 0,
       },
-      wrTeamLeadRuns : {
-        type : DataTypes.INTEGER,
-        allowNull : true,
-        defaultValue : 0
+      wrTeamLeadRuns: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        defaultValue: 0,
+      },
+      wrTeamWideRuns: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        defaultValue: 0,
+      },
+      wrTeamByRuns: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        defaultValue: 0,
+      },
+      wrTeamLegByRuns: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        defaultValue: 0,
+      },
+      wrTeamNoBallRuns: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        defaultValue: 0,
+      },
+      wrTeamPenaltyRuns: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        defaultValue: 0,
       },
     },
     {

@@ -2521,204 +2521,480 @@ const getMatchListByStatus = async (body, request, fastify) => {
 
   return resultArr;
 };
+//old Function Without Optimization
+// const getAllDetailsByEventIdService123 = async (request, fastify) => {
+//   const { eventId } = request.body;
+//   const commentary = global.tblCommentaries.find(
+//     (item) => item.eventRefId === eventId
+//   );
+//   if (!commentary) {
+//     throw new Error("Commentary with this id not Found");
+//   }
+//   const currentInnings = commentary.currentInnings;
+//   const commentaryTeamsOne = await global.tblCommentaryTeams.find(
+//     (item) =>
+//       item.commentaryId === commentary.commentaryId &&
+//       item.teamId === commentary.team1Id &&
+//       item.currentInnings === currentInnings
+//   );
+//   const commentaryTeamsTwo = await global.tblCommentaryTeams.find(
+//     (item) =>
+//       item.commentaryId === commentary.commentaryId &&
+//       item.teamId === commentary.team2Id &&
+//       item.currentInnings === currentInnings
+//   );
+//   //Event Type
+//   let eventType = await global.tblEventTypes.find(
+//     (eventType) => eventType.eventTypeId === commentary.eventTypeId
+//   );
 
+//   let competition = await global.tblCompetitions.find(
+//     (competition) => competition.competitionId === commentary.competitionId
+//   );
+//   //get team data from team table
+//   const team1 = await global.tblTeams.find(
+//     (team) => team.teamId === commentary.team1Id
+//   );
+//   const team2 = await global.tblTeams.find(
+//     (team) => team.teamId === commentary.team2Id
+//   );
+
+//   let dataToreturn = {
+//     es: {},
+//   };
+//   //Old One
+//   let _es = {
+//     eid: commentary.eventRefId || "",
+//     ety: eventType?.eventType || "",
+//     ena: commentary.eventName,
+//     cst: commentary.commentaryStatus,
+//     tn1: commentaryTeamsOne.teamName,
+//     tn2: commentaryTeamsTwo.teamName,
+//     tsn1: commentaryTeamsOne.shortName,
+//     tsn2: commentaryTeamsTwo.shortName,
+//     tim1: team1.image,
+//     tim2: team2.image,
+//     cci: commentary.currentInnings,
+//   };
+
+//   let teamScore1, teamScore2;
+//   if (commentaryTeamsOne) {
+//     const wicket1 =
+//       commentaryTeamsOne.teamWicket === null
+//         ? 0
+//         : commentaryTeamsOne.teamWicket;
+//     const overs1 =
+//       commentaryTeamsOne.teamOver === null ? 0.0 : commentaryTeamsOne.teamOver;
+//     teamScore1 = commentaryTeamsOne?.teamScore ?? 0;
+//     teamScore1 = teamScore1 + "/" + wicket1 + "(" + overs1 + ")";
+//   }
+
+//   if (commentaryTeamsTwo) {
+//     t2sn = commentaryTeamsTwo.shortName;
+//     t2n = commentaryTeamsTwo.teamName;
+//     const wicket1 =
+//       commentaryTeamsTwo.teamWicket === null
+//         ? 0
+//         : commentaryTeamsTwo.teamWicket;
+//     const overs1 =
+//       commentaryTeamsTwo.teamOver === null ? 0.0 : commentaryTeamsTwo.teamOver;
+//     teamScore2 = commentaryTeamsTwo?.teamScore ?? 0;
+//     teamScore2 = teamScore2 + "/" + wicket1 + "(" + overs1 + ")";
+//   }
+
+//   let crr, rrr, BattingTeamId;
+//   if (commentaryTeamsOne.teamStatus == 1) {
+//     crr = commentaryTeamsOne.crr;
+//     rrr = commentaryTeamsOne.rrr;
+//     BattingTeamId = commentaryTeamsOne.teamId;
+//   } else {
+//     crr = commentaryTeamsTwo.crr;
+//     rrr = commentaryTeamsTwo.rrr;
+//     BattingTeamId = commentaryTeamsTwo.teamId;
+//   }
+//   let es = {
+//     eid: commentary.eventRefId || "",
+//     ety: eventType?.eventType || "",
+//     mtyp: commentary.matchType || "",
+//     com: competition?.competition || "",
+//     en: commentary.eventName || "",
+//     ed: convertDate(commentary.eventDate, "DD/MM/YYYY") || "",
+//     et: convertDate(commentary.eventDate, "hh:mm:ss") || "",
+//     te1n: commentaryTeamsOne.teamName || "",
+//     te2n: commentaryTeamsTwo.teamName || "",
+//     s1n: commentaryTeamsOne.shortName || "",
+//     s2n: commentaryTeamsTwo.shortName || "",
+//     te1i: team1.image || "",
+//     te2i: team2.image || "",
+//     t1jr: team1.jersey || "",
+//     t2jr: team2.jersey || "",
+//     loc: commentary.location || "",
+//     t1s: teamScore1 || "",
+//     t2s: teamScore2 || "",
+//     dis: commentary.displayStatus || "",
+//     rmk: commentary.rmk || "",
+//     te1crr: commentaryTeamsOne.crr || 0,
+//     te2crr: commentaryTeamsTwo.crr || 0,
+//     te1rrr: commentaryTeamsOne.rrr || 0,
+//     te2rrr: commentaryTeamsTwo.rrr || 0,
+//     crr: crr || 0,
+//     rrr: rrr || 0,
+//     cst: commentary.commentaryStatus,
+//   };
+
+//   dataToreturn.es = es;
+
+//   if (commentary.commentaryStatus === 1) {
+//     return dataToreturn;
+//   }
+//   // get the all innings data
+//   for (let i = 1; i <= commentary.currentInnings; i++) {
+//     let inningData = await getInningDataByInningNumber(
+//       commentary.commentaryId,
+//       i
+//     );
+//     dataToreturn["cci" + i] = inningData;
+//   }
+
+//   let data = {
+//     CommentaryId: commentary.commentaryId,
+//     teamId: commentaryTeamsOne.teamId,
+//   };
+//   let TeamPlayes1 = await getCommnertySquadPlayersList(data, fastify, request);
+//   data.teamId = commentaryTeamsTwo.teamId;
+//   let TeamPlayes2 = await getCommnertySquadPlayersList(data, fastify, request);
+//   dataToreturn.Sqt1 = TeamPlayes1;
+//   dataToreturn.Sqt2 = TeamPlayes2;
+
+//   //Partnership data
+
+//   const commentaryPartnership = await global.tblCommentaryPartnership.filter(
+//     (item) =>
+//       item.commentaryId === commentary.commentaryId &&
+//       item.teamId === BattingTeamId &&
+//       item.currentInnings === currentInnings
+//   );
+
+//   const partnershipList = [];
+
+//   // Iterate over tblCommentaryPartnership
+//   commentaryPartnership.forEach((partnership) => {
+//     const {
+//       batter1Id,
+//       batter1Name,
+//       batter2Id,
+//       batter2Name,
+//       totalRuns,
+//       totalBalls,
+//     } = partnership;
+
+//     const CommenrtyPlayers = global.tblCommentaryPlayers.find(
+//       (Cplayer) => Cplayer.commentaryPlayerId === batter1Id
+//     );
+
+//     const CommenrtyPlayers1 = global.tblCommentaryPlayers.find(
+//       (Cplayer) => Cplayer.commentaryPlayerId === batter2Id
+//     );
+
+//     // Find player information from tblPlayers
+//     const player1Info = global.tblPlayers.find(
+//       (player) => player.playerId === CommenrtyPlayers.playerId
+//     );
+
+//     const player2Info = global.tblPlayers.find(
+//       (player) => player.playerId === CommenrtyPlayers1.playerId
+//     );
+
+//     if (player1Info) {
+//       partnershipList.push({
+//         pl1n: batter1Name,
+//         pl1i: player1Info.image,
+//         runs: totalRuns,
+//         ball: totalBalls,
+//         pl2n: batter2Name,
+//         pl2i: player2Info.image,
+//       });
+//     }
+//   });
+//   dataToreturn.par = partnershipList;
+
+//   return dataToreturn;
+// };
+//New one Function With Optimization
 const getAllDetailsByEventIdService = async (request, fastify) => {
-  const { eventId } = request.body;
-  const commentary = global.tblCommentaries.find(
-    (item) => item.eventRefId === eventId
-  );
-  if (!commentary) {
-    throw new Error("Commentary with this id not Found");
-  }
-  const currentInnings = commentary.currentInnings;
-  const commentaryTeamsOne = await global.tblCommentaryTeams.find(
-    (item) =>
-      item.commentaryId === commentary.commentaryId &&
-      item.teamId === commentary.team1Id &&
-      item.currentInnings === currentInnings
-  );
-  const commentaryTeamsTwo = await global.tblCommentaryTeams.find(
-    (item) =>
-      item.commentaryId === commentary.commentaryId &&
-      item.teamId === commentary.team2Id &&
-      item.currentInnings === currentInnings
-  );
-  //Event Type
-  let eventType = await global.tblEventTypes.find(
-    (eventType) => eventType.eventTypeId === commentary.eventTypeId
-  );
-
-  let competition = await global.tblCompetitions.find(
-    (competition) => competition.competitionId === commentary.competitionId
-  );
-  //get team data from team table
-  const team1 = await global.tblTeams.find(
-    (team) => team.teamId === commentary.team1Id
-  );
-  const team2 = await global.tblTeams.find(
-    (team) => team.teamId === commentary.team2Id
-  );
-
-  let dataToreturn = {
-    es: {},
-  };
-  //Old One
-  let _es = {
-    eid: commentary.eventRefId || "",
-    ety: eventType?.eventType || "",
-    ena: commentary.eventName,
-    cst: commentary.commentaryStatus,
-    tn1: commentaryTeamsOne.teamName,
-    tn2: commentaryTeamsTwo.teamName,
-    tsn1: commentaryTeamsOne.shortName,
-    tsn2: commentaryTeamsTwo.shortName,
-    tim1: team1.image,
-    tim2: team2.image,
-    cci: commentary.currentInnings,
-  };
-
-  let teamScore1, teamScore2;
-  if (commentaryTeamsOne) {
-    const wicket1 =
-      commentaryTeamsOne.teamWicket === null
-        ? 0
-        : commentaryTeamsOne.teamWicket;
-    const overs1 =
-      commentaryTeamsOne.teamOver === null ? 0.0 : commentaryTeamsOne.teamOver;
-    teamScore1 = commentaryTeamsOne?.teamScore ?? 0;
-    teamScore1 = teamScore1 + "/" + wicket1 + "(" + overs1 + ")";
-  }
-
-  if (commentaryTeamsTwo) {
-    t2sn = commentaryTeamsTwo.shortName;
-    t2n = commentaryTeamsTwo.teamName;
-    const wicket1 =
-      commentaryTeamsTwo.teamWicket === null
-        ? 0
-        : commentaryTeamsTwo.teamWicket;
-    const overs1 =
-      commentaryTeamsTwo.teamOver === null ? 0.0 : commentaryTeamsTwo.teamOver;
-    teamScore2 = commentaryTeamsTwo?.teamScore ?? 0;
-    teamScore2 = teamScore2 + "/" + wicket1 + "(" + overs1 + ")";
-  }
-
-  let crr, rrr, BattingTeamId;
-  if (commentaryTeamsOne.teamStatus == 1) {
-    crr = commentaryTeamsOne.crr;
-    rrr = commentaryTeamsOne.rrr;
-    BattingTeamId = commentaryTeamsOne.teamId;
-  } else {
-    crr = commentaryTeamsTwo.crr;
-    rrr = commentaryTeamsTwo.rrr;
-    BattingTeamId = commentaryTeamsTwo.teamId;
-  }
-  let es = {
-    eid: commentary.eventRefId || "",
-    ety: eventType?.eventType || "",
-    mtyp: commentary.matchType || "",
-    com: competition?.competition || "",
-    en: commentary.eventName || "",
-    ed: convertDate(commentary.eventDate, "DD/MM/YYYY") || "",
-    et: convertDate(commentary.eventDate, "hh:mm:ss") || "",
-    te1n: commentaryTeamsOne.teamName || "",
-    te2n: commentaryTeamsTwo.teamName || "",
-    s1n: commentaryTeamsOne.shortName || "",
-    s2n: commentaryTeamsTwo.shortName || "",
-    te1i: team1.image || "",
-    te2i: team2.image || "",
-    t1jr: team1.jersey || "",
-    t2jr: team2.jersey || "",
-    loc: commentary.location || "",
-    t1s: teamScore1 || "",
-    t2s: teamScore2 || "",
-    dis: commentary.displayStatus || "",
-    rmk: commentary.rmk || "",
-    te1crr: commentaryTeamsOne.crr || 0,
-    te2crr: commentaryTeamsTwo.crr || 0,
-    te1rrr: commentaryTeamsOne.rrr || 0,
-    te2rrr: commentaryTeamsTwo.rrr || 0,
-    crr: crr || 0,
-    rrr: rrr || 0,
-    cst: commentary.commentaryStatus,
-  };
-
-  dataToreturn.es = es;
-
-  if (commentary.commentaryStatus === 1) {
-    return dataToreturn;
-  }
-  // get the all innings data
-  for (let i = 1; i <= commentary.currentInnings; i++) {
-    let inningData = await getInningDataByInningNumber(
-      commentary.commentaryId,
-      i
+  try {
+    const { eventId } = request.body;
+    const commentary = global.tblCommentaries.find(
+      (item) => item.eventRefId === eventId
     );
-    dataToreturn["cci" + i] = inningData;
-  }
-
-  let data = {
-    CommentaryId: commentary.commentaryId,
-    teamId: commentaryTeamsOne.teamId,
-  };
-  let TeamPlayes1 = await getCommnertySquadPlayersList(data, fastify, request);
-  data.teamId = commentaryTeamsTwo.teamId;
-  let TeamPlayes2 = await getCommnertySquadPlayersList(data, fastify, request);
-  dataToreturn.Sqt1 = TeamPlayes1;
-  dataToreturn.Sqt2 = TeamPlayes2;
-
-  //Partnership data
-
-  const commentaryPartnership = await global.tblCommentaryPartnership.filter(
-    (item) =>
-      item.commentaryId === commentary.commentaryId &&
-      item.teamId === BattingTeamId &&
-      item.currentInnings === currentInnings
-  );
-
-  const partnershipList = [];
-
-  // Iterate over tblCommentaryPartnership
-  commentaryPartnership.forEach((partnership) => {
-    const {
-      batter1Id,
-      batter1Name,
-      batter2Id,
-      batter2Name,
-      totalRuns,
-      totalBalls,
-    } = partnership;
-
-    const CommenrtyPlayers = global.tblCommentaryPlayers.find(
-      (Cplayer) => Cplayer.commentaryPlayerId === batter1Id
-    );
-
-    const CommenrtyPlayers1 = global.tblCommentaryPlayers.find(
-      (Cplayer) => Cplayer.commentaryPlayerId === batter2Id
-    );
-
-    // Find player information from tblPlayers
-    const player1Info = global.tblPlayers.find(
-      (player) => player.playerId === CommenrtyPlayers.playerId
-    );
-
-    const player2Info = global.tblPlayers.find(
-      (player) => player.playerId === CommenrtyPlayers1.playerId
-    );
-
-    if (player1Info) {
-      partnershipList.push({
-        pl1n: batter1Name,
-        pl1i: player1Info.image,
-        runs: totalRuns,
-        ball: totalBalls,
-        pl2n: batter2Name,
-        pl2i: player2Info.image,
-      });
+    if (!commentary) {
+      throw new Error("Commentary with this id not Found");
     }
-  });
-  dataToreturn.par = partnershipList;
+    const currentInnings = commentary.currentInnings;
 
-  return dataToreturn;
+    // Promisify all necessary asynchronous operations
+    const [
+      commentaryTeamsOne,
+      commentaryTeamsTwo,
+      eventType,
+      competition,
+      team1,
+      team2,
+      overs,
+      commentryBallByBall,
+    ] = await Promise.all([
+      global.tblCommentaryTeams.find(
+        (item) =>
+          item.commentaryId === commentary.commentaryId &&
+          item.teamId === commentary.team1Id &&
+          item.currentInnings === currentInnings
+      ),
+      global.tblCommentaryTeams.find(
+        (item) =>
+          item.commentaryId === commentary.commentaryId &&
+          item.teamId === commentary.team2Id &&
+          item.currentInnings === currentInnings
+      ),
+      global.tblEventTypes.find(
+        (eventType) => eventType.eventTypeId === commentary.eventTypeId
+      ),
+      global.tblCompetitions.find(
+        (competition) => competition.competitionId === commentary.competitionId
+      ),
+      global.tblTeams.find((team) => team.teamId === commentary.team1Id),
+      global.tblTeams.find((team) => team.teamId === commentary.team2Id),
+      global.tblCommentaryBallByBall.filter(
+        (ball) =>
+          ball.commentaryId === commentary.commentaryId &&
+          ball.currentInnings === currentInnings
+      ),
+      global.tblOvers.filter(
+        (ov) =>
+          ov.commentaryId === commentary.commentaryId &&
+          ov.currentInnings === currentInnings
+      ),
+    ]);
+    let dataToreturn = {
+      es: {
+        eid: commentary.eventRefId || "",
+        ety: eventType?.eventType || "",
+        ena: commentary.eventName,
+        cst: commentary.commentaryStatus,
+        tn1: commentaryTeamsOne.teamName,
+        tn2: commentaryTeamsTwo.teamName,
+        tsn1: commentaryTeamsOne.shortName,
+        tsn2: commentaryTeamsTwo.shortName,
+        tim1: team1.image,
+        tim2: team2.image,
+        cci: commentary.currentInnings,
+      },
+    };
+
+    let teamScore1, teamScore2;
+    if (commentaryTeamsOne) {
+      const wicket1 =
+        commentaryTeamsOne.teamWicket === null
+          ? 0
+          : commentaryTeamsOne.teamWicket;
+      const overs1 =
+        commentaryTeamsOne.teamOver === null
+          ? 0.0
+          : commentaryTeamsOne.teamOver;
+      teamScore1 = commentaryTeamsOne?.teamScore ?? 0;
+      teamScore1 = teamScore1 + "/" + wicket1 + "(" + overs1 + ")";
+    }
+
+    if (commentaryTeamsTwo) {
+      t2sn = commentaryTeamsTwo.shortName;
+      t2n = commentaryTeamsTwo.teamName;
+      const wicket1 =
+        commentaryTeamsTwo.teamWicket === null
+          ? 0
+          : commentaryTeamsTwo.teamWicket;
+      const overs1 =
+        commentaryTeamsTwo.teamOver === null
+          ? 0.0
+          : commentaryTeamsTwo.teamOver;
+      teamScore2 = commentaryTeamsTwo?.teamScore ?? 0;
+      teamScore2 = teamScore2 + "/" + wicket1 + "(" + overs1 + ")";
+    }
+
+    let crr, rrr, BattingTeamId, BowlingTeamId;
+    if (commentaryTeamsOne.teamStatus == 1) {
+      crr = commentaryTeamsOne.crr;
+      rrr = commentaryTeamsOne.rrr;
+      BattingTeamId = commentaryTeamsOne.teamId;
+      BowlingTeamId = commentaryTeamsTwo.teamId;
+    } else {
+      crr = commentaryTeamsTwo.crr;
+      rrr = commentaryTeamsTwo.rrr;
+      BattingTeamId = commentaryTeamsTwo.teamId;
+      BowlingTeamId = commentaryTeamsOne.teamId;
+    }
+    let es = {
+      eid: commentary.eventRefId || "",
+      ety: eventType?.eventType || "",
+      mtyp: commentary.matchType || "",
+      com: competition?.competition || "",
+      en: commentary.eventName || "",
+      ed: convertDate(commentary.eventDate, "DD/MM/YYYY") || "",
+      et: convertDate(commentary.eventDate, "hh:mm:ss") || "",
+      te1n: commentaryTeamsOne.teamName || "",
+      te2n: commentaryTeamsTwo.teamName || "",
+      s1n: commentaryTeamsOne.shortName || "",
+      s2n: commentaryTeamsTwo.shortName || "",
+      te1i: team1.image || "",
+      te2i: team2.image || "",
+      t1jr: team1.jersey || "",
+      t2jr: team2.jersey || "",
+      loc: commentary.location || "",
+      t1s: teamScore1 || "",
+      t2s: teamScore2 || "",
+      dis: commentary.displayStatus || "",
+      rmk: commentary.rmk || "",
+      te1crr: commentaryTeamsOne.crr || 0,
+      te2crr: commentaryTeamsTwo.crr || 0,
+      te1rrr: commentaryTeamsOne.rrr || 0,
+      te2rrr: commentaryTeamsTwo.rrr || 0,
+      crr: crr || 0,
+      rrr: rrr || 0,
+      cst: commentary.commentaryStatus,
+    };
+
+    dataToreturn.es = es;
+
+    if (commentary.commentaryStatus === 1) {
+      return dataToreturn;
+    }
+
+    // get the all innings data
+    const inningDataPromises = [];
+    for (let i = 1; i <= commentary.currentInnings; i++) {
+      inningDataPromises.push(
+        getInningDataByInningNumber(commentary.commentaryId, i)
+      );
+    }
+    const inningsData = await Promise.all(inningDataPromises);
+    inningsData.forEach((inningData, index) => {
+      dataToreturn["cci" + (index + 1)] = inningData;
+    });
+
+    let data = {
+      CommentaryId: commentary.commentaryId,
+      teamId: commentaryTeamsOne.teamId,
+    };
+    let TeamPlayes1 = await getCommnertySquadPlayersList(
+      data,
+      fastify,
+      request
+    );
+    data.teamId = commentaryTeamsTwo.teamId;
+    let TeamPlayes2 = await getCommnertySquadPlayersList(
+      data,
+      fastify,
+      request
+    );
+    dataToreturn.Sqt1 = TeamPlayes1;
+    dataToreturn.Sqt2 = TeamPlayes2;
+
+    //Partnership data
+
+    const commentaryPartnership = await global.tblCommentaryPartnership.filter(
+      (item) =>
+        item.commentaryId === commentary.commentaryId &&
+        item.teamId === BattingTeamId &&
+        item.currentInnings === currentInnings
+    );
+
+    const partnershipList = [];
+
+    // Iterate over tblCommentaryPartnership
+    commentaryPartnership.forEach((partnership) => {
+      const {
+        batter1Id,
+        batter1Name,
+        batter2Id,
+        batter2Name,
+        totalRuns,
+        totalBalls,
+      } = partnership;
+
+      const CommenrtyPlayers = global.tblCommentaryPlayers.find(
+        (Cplayer) => Cplayer.commentaryPlayerId === batter1Id
+      );
+
+      const CommenrtyPlayers1 = global.tblCommentaryPlayers.find(
+        (Cplayer) => Cplayer.commentaryPlayerId === batter2Id
+      );
+
+      // Find player information from tblPlayers
+      const player1Info = global.tblPlayers.find(
+        (player) => player.playerId === CommenrtyPlayers.playerId
+      );
+
+      const player2Info = global.tblPlayers.find(
+        (player) => player.playerId === CommenrtyPlayers1.playerId
+      );
+
+      if (player1Info) {
+        partnershipList.push({
+          pl1n: batter1Name,
+          pl1i: player1Info.image,
+          runs: totalRuns,
+          ball: totalBalls,
+          pl2n: batter2Name,
+          pl2i: player2Info.image,
+        });
+      }
+    });
+    dataToreturn.par = partnershipList;
+
+    //commnerty Ball-by-ball
+
+    ///demo
+    // {
+    //   "commentaryBallByBallId": 3912,
+    //   "commentaryId": 471,
+    //   "teamId": 97,
+    //   "overId": 943,
+    //   "overCount": "0.100",
+    //   "currentOverBalls": 1,
+    //   "bowlerId": 16707,
+    //   "batStrikeId": 16695,
+    //   "batNonStrikeId": 16696,
+    //   "ballIsCount": true,
+    //   "ballType": 1,
+    //   "ballIsDot": false,
+    //   "ballRun": 4,
+    //   "ballExtraRun": 0,
+    //   "ballIsBoundry": true,
+    //   "ballFour": 1,
+    //   "ballSix": 0,
+    //   "ballIsWicket": false,
+    //   "ballWicketType": 0,
+    //   "ballPlayerId": 16695,
+    //   "ballBowlerId": 16707,
+    //   "ballFielderId1": null,
+    //   "ballFielderId2": null,
+    //   "overIsMaiden": false,
+    //   "nextBatStrikeId": 16695,
+    //   "nextBatNonStrikeId": 16696,
+    //   "isDelete": false,
+    //   "currentInnings": 1
+    // }
+    let currentBowlingTeam = commentryBallByBall.filter(
+      (ball) => ball.teamId === BowlingTeamId
+    );
+    let CommnertyList = [];
+    // currentBowlingTeam.forEach((ball) => {});
+    dataToreturn.bbb = currentBowlingTeam;
+    dataToreturn.ov = overs;
+    return dataToreturn;
+  } catch (error) {
+    // Handle errors here
+    console.error(error);
+    throw error;
+  }
 };
 
 const getInningDataByInningNumber = async (commentaryId, inningNumber) => {

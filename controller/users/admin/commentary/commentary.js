@@ -94,9 +94,9 @@ const deleteCommentary = async (request, reply, fastify) => {
 };
 const saveCommentaryDetails = async (request, reply, fastify) => {
   try {
-    console.time("saveCommentaryDetails");
+    //console.time("saveCommentaryDetails");
     const result = await saveCommentaryDetailsService(request, fastify);
-    console.timeEnd("saveCommentaryDetails");
+    //console.timeEnd("saveCommentaryDetails");
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, path + "/addCommentary", request);
