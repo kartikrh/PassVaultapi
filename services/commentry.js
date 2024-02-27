@@ -2740,8 +2740,8 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
       competition,
       team1,
       team2,
-      overs,
       commentryBallByBall,
+      overs,
     ] = await Promise.all([
       global.tblCommentaryTeams.find(
         (item) =>
@@ -2952,6 +2952,33 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
     //commnerty Ball-by-ball
 
     ///demo
+
+    // "overId": 1030,
+    // "commentaryId": 499,
+    // "teamId": 97,
+    // "over": 0,
+    // "ballCount": 6,
+    // "bowlerId": 17881,
+    // "totalRun": 11,
+    // "totalFour": 0,
+    // "totalSix": 0,
+    // "totalWideBall": 0,
+    // "totalWideRun": 0,
+    // "totalNoball": 0,
+    // "totalNoBallRun": 0,
+    // "totalByesRun": 0,
+    // "totalLegByesRun": 0,
+    // "totalPanelty": 0,
+    // "totalWicket": 0,
+    // "dotBall": 0,
+    // "isComplete": true,
+    // "powerplay": null,
+    // "isOverInPowerplay": false,
+    // "powerplayType": 1,
+    // "isMaiden": false,
+    // "date": "2024-02-21T08:58:39.082Z",
+    // "isDelete": null,
+    // "currentInnings": 1
     // {
     //   "commentaryBallByBallId": 3912,
     //   "commentaryId": 471,
@@ -2982,13 +3009,53 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
     //   "isDelete": false,
     //   "currentInnings": 1
     // }
-    let currentBowlingTeam = commentryBallByBall.filter(
-      (ball) => ball.teamId === BowlingTeamId
-    );
-    let CommnertyList = [];
-    // currentBowlingTeam.forEach((ball) => {});
-    dataToreturn.bbb = currentBowlingTeam;
-    dataToreturn.ov = overs;
+    let oversList = [];
+
+    overs.forEach((_over) => {
+      const { overId, over, totalRun, teamId, bowlerId } = _over;
+      let ballsList = [];
+
+      let _overBalls = commentryBallByBall.filter(
+        (item) => item.overId === overId
+      );
+
+      _overBalls.forEach((_b) => {
+        const {
+          commentaryBallByBallId,
+          overCount,
+          batStrikeId,
+          batNonStrikeId,
+          ballType,
+          ballRun,
+          ballExtraRun,
+          ballIsBoundry,
+          ballIsWicket,
+        } = _b;
+        ballsList.push({
+          bid: commentaryBallByBallId,
+          ovc: overCount,
+          st: batStrikeId,
+          nst: batNonStrikeId,
+          bty: ballType,
+          runs: ballRun,
+          ext: ballExtraRun,
+          isB: ballIsBoundry,
+          wik: ballIsWicket,
+        });
+      });
+
+      oversList.push({
+        oid: overId,
+        ov: over + 1,
+        runs: totalRun,
+        bid: bowlerId,
+        tid: teamId,
+        ball: ballsList,
+      });
+    });
+
+    dataToreturn.ov = oversList;
+
     return dataToreturn;
   } catch (error) {
     // Handle errors here
