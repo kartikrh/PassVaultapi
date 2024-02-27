@@ -3067,6 +3067,7 @@ const getInningDataByInningNumber = async (commentaryId, inningNumber) => {
         0 + player.bowlerByeBallRun ||
         0 + player.bowlerLegByeBallRun ||
         0,
+      eco: player.bowlerEconomy,
     };
   });
 
@@ -3152,6 +3153,7 @@ const getInningDataByInningNumber = async (commentaryId, inningNumber) => {
         0 + player.bowlerByeBallRun ||
         0 + player.bowlerLegByeBallRun ||
         0,
+      eco: player.bowlerEconomy,
     };
   });
 
