@@ -3010,7 +3010,7 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
     let oversList = [];
 
     overs.forEach((_over) => {
-      const { overId, over, totalRun, teamId, bowlerId } = _over;
+      const { overId, over, totalRun, teamId, bowlerId, totalWicket } = _over;
       let ballsList = [];
 
       let _overBalls = commentryBallByBall.filter(
@@ -3051,6 +3051,7 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
         runs: totalRun,
         bid: bowlerId,
         tid: teamId,
+        twk: totalWicket,
         ball: ballsList,
       });
     });
