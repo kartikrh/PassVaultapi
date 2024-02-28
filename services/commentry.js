@@ -2764,14 +2764,12 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
       global.tblTeams.find((team) => team.teamId === commentary.team1Id),
       global.tblTeams.find((team) => team.teamId === commentary.team2Id),
       global.tblCommentaryBallByBall.filter(
-        (ball) =>
-          ball.commentaryId === commentary.commentaryId 
-          // ball.currentInnings === currentInnings
+        (ball) => ball.commentaryId === commentary.commentaryId
+        // ball.currentInnings === currentInnings
       ),
       global.tblOvers.filter(
-        (ov) =>
-          ov.commentaryId === commentary.commentaryId 
-          // ov.currentInnings === currentInnings
+        (ov) => ov.commentaryId === commentary.commentaryId
+        // ov.currentInnings === currentInnings
       ),
     ]);
     let dataToreturn = {
