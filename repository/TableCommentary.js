@@ -1407,11 +1407,12 @@ const updateCommentaryDetailsQuery = async (data, fastify, request) => {
       `update "tblCommentaries" set
         "wrDisplayStatus" = $1,
         "wrModifyDate" = now(),
-        "wrUpdateTime" = now()
-      where "wrCommentaryId" = $2
+        "wrUpdateTime" = now(),
+        "wrCommentaryStatus" = $3
+        where "wrCommentaryId" = $2
       `,
       {
-        bind: [data.displayStatus, data.commentaryId],
+        bind: [data.displayStatus, data.commentaryId, data.commentaryStatus],
       }
     );
     return result;
