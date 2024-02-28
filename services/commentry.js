@@ -2765,13 +2765,13 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
       global.tblTeams.find((team) => team.teamId === commentary.team2Id),
       global.tblCommentaryBallByBall.filter(
         (ball) =>
-          ball.commentaryId === commentary.commentaryId &&
-          ball.currentInnings === currentInnings
+          ball.commentaryId === commentary.commentaryId 
+          // ball.currentInnings === currentInnings
       ),
       global.tblOvers.filter(
         (ov) =>
-          ov.commentaryId === commentary.commentaryId &&
-          ov.currentInnings === currentInnings
+          ov.commentaryId === commentary.commentaryId 
+          // ov.currentInnings === currentInnings
       ),
     ]);
     let dataToreturn = {
@@ -2863,9 +2863,9 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
 
     dataToreturn.es = es;
 
-    if (commentary.commentaryStatus === 1) {
-      return dataToreturn;
-    }
+    // if (commentary.commentaryStatus === 1) {
+    //   return dataToreturn;
+    // }
 
     // get the all innings data
     const inningDataPromises = [];
@@ -3042,6 +3042,9 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
           isB: ballIsBoundry,
           wik: ballIsWicket,
         });
+
+        // descending order of balls
+        ballsList = ballsList.sort((a, b) => b.ovc - a.ovc);
       });
 
       oversList.push({
@@ -3053,6 +3056,9 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
         ball: ballsList,
       });
     });
+
+    // descending order of overs
+    oversList = oversList.sort((a, b) => b.ov - a.ov);
 
     dataToreturn.ov = oversList;
 
