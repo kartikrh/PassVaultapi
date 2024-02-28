@@ -2225,7 +2225,9 @@ const getCommnertySquadPlayersList = async (data, fastify, request) => {
         WHERE "wrCommentaryId" =  $1
     ),
     TeamPlayers AS (
-      SELECT p."wrPlayerName" AS pn,
+      SELECT
+      p."wrPlayerId" AS pid,
+      p."wrPlayerName" AS pn,
              p."wrImage" AS pim,
             "tblCommentaryPlayers"."wrDisplayOrder"  AS ord,
              CASE
