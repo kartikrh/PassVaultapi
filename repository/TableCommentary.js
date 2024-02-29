@@ -536,6 +536,8 @@ const getCommentaryPlayersQuery = async (data, fastify, request) => {
       select 
       "wrPlayerId" as "playerId",
       "wrDisplayOrder" as "displayOrder",
+      "wrBatterOrder" as "batterOrder",
+      "wrBowlerOrder" as "bowlerOrder",
       "wrPlayerName" as "playerName"
       from "tblCommentaryPlayers"
       where "wrCommentaryId" = $1 and "wrTeamId" = $2
@@ -765,6 +767,8 @@ const getAllCommentaryPlayerQuery = async (fastify) => {
     "wrBowlerEconomy" as "bowlerEconomy",
     "wrBowlerAverage" as "bowlerAverage",
     "wrCurrentInnings" as "currentInnings",
+    "wrBatterOrder" as "batterOrder",
+    "wrBowlerOrder" as "bowlerOrder",
     "wrBatsmanPreviousStrikeRate" as "batsmanPreviousStrikeRate",
     "wrBowlerPreviousEconomy" as "bowlerPreviousEconomy"
     from "tblCommentaryPlayers"
@@ -1540,9 +1544,11 @@ const updateCommentaryPlayersQuery = async (data, fastify, request) => {
       "wrBatsmanAverage" = $41,
       "wrBatsmanStrikeRate" = $42,
       "wrBowlerEconomy" = $43,
-      "wrBowlerAverage" = $44 
-      where "wrCommentaryPlayerId" = $45	
-      AND "wrCurrentInnings" = $46
+      "wrBowlerAverage" = $44,
+      "wrBatterOrder" = $45,
+      "wrBowlerOrder" = $46
+      where "wrCommentaryPlayerId" = $47
+      AND "wrCurrentInnings" = $48
       `,
       {
         bind: [
@@ -1590,6 +1596,8 @@ const updateCommentaryPlayersQuery = async (data, fastify, request) => {
           data.batsmanStrikeRate,
           data.bowlerEconomy,
           data.bowlerAverage,
+          data.batterOrder,
+          data.bowlerOrder,
           data.commentaryPlayerId,
           data.currentInnings,
         ],

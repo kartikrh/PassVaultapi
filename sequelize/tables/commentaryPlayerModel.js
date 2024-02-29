@@ -211,6 +211,14 @@ module.exports = (sequelize) => {
         type: DataTypes.DECIMAL(9, 2),
         allowNull: true,
       },
+      wrBatterOrder : {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      wrBowlerOrder : {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
     },
     {
       timestamps: false,
