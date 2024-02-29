@@ -22,6 +22,8 @@ const {
   getCommentaryDetailsBycommentaryEventId,
   changeBowlerOfCommentary,
   getCommentaryTeamList,
+  updateShowClientOfCommentary,
+  updatePlayersShowOfCommentary,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -336,5 +338,31 @@ module.exports = async (fastify, opts) => {
     ],
     handler: (request, reply) =>
       changeBowlerOfCommentary(request, reply, fastify),
-  })
+  });
+  fastify.post("/updateShowClient", {
+    schema : Commentary.updateShowClient.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "edit",
+        }),
+    ],
+    handler: (request, reply) =>
+      updateShowClientOfCommentary(request, reply, fastify),
+  });
+  fastify.post("/updatePlayersShow", {
+    schema : Commentary.updatePlayersShow.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "edit",
+        }),
+    ],
+    handler: (request, reply) =>
+    updatePlayersShowOfCommentary(request, reply, fastify),
+  });
 };

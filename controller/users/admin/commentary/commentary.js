@@ -21,6 +21,8 @@ const {
   getTeamListByEventTypeService,
   getCommenrtySquadDetailsService,
   getPartnershipListService,
+  changeShowClientService,
+  changePlayerShowService,
 } = require("../../../../services/commentry");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -335,6 +337,27 @@ const getPartnershipList = async (request, reply, fastify) => {
   }
 };
 
+
+const updateShowClientOfCommentary = async (request, reply, fastify) => {
+  try {
+    const result = await changeShowClientService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/updateShowClientOfCommentary", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
+
+const updatePlayersShowOfCommentary = async (request, reply, fastify) => {
+  try {
+    const result = await changePlayerShowService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/updatePlayersShowOfCommentary", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 module.exports = {
   getAllCommentaries,
   getCommentaryById,
@@ -360,4 +383,6 @@ module.exports = {
   getCommentaryTeamList,
   getCommenrtySquadList,
   getPartnershipList,
+  updateShowClientOfCommentary,
+  updatePlayersShowOfCommentary
 };
