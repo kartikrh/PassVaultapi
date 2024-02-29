@@ -24,7 +24,7 @@ const getAllCommentaryQuery = async (fastify) => {
     "wrChoseTo" as "choseTo",
     "wrWinnerId" as "winnerId",
     "wrWinnerName" as "winnerName",
-    "wrIsViewTable" as "isViewTable",
+    "wrIsClientShow" as "isClientShow",
     "wrDisplayStatus" as "displayStatus",
     "wrRmk" as "rmk",
     "wrCommentaryUserId" as "commentaryUserId",
@@ -37,7 +37,8 @@ const getAllCommentaryQuery = async (fastify) => {
     "isSignalROn" as "isSignalROn",
     "isMatchTypeUpdated" as "isMatchTypeUpdated",
     "wrCurrentInnings" as "currentInnings",
-    "wrSystemPlayerCount" as "systemPlayerCount"
+    "wrSystemPlayerCount" as "systemPlayerCount",
+    "wrIsPlayersShow" as "isPlayersShow"
     from "tblCommentaries" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -90,7 +91,7 @@ const insertCommentaryQuery = async (request, fastify) => {
     "wrChoseTo" as "choseTo",
     tc."wrWinnerId" as "winnerId",
     "wrWinnerName" as "winnerName",
-    "wrIsViewTable" as "isViewTable",
+    "wrIsClientShow" as "isClientShow",
     "wrDisplayStatus" as "displayStatus",
     "wrRmk" as "rmk",
     "wrCommentaryUserId" as "commentaryUserId",
@@ -103,7 +104,8 @@ const insertCommentaryQuery = async (request, fastify) => {
     "isSignalROn" as "isSignalROn",
     "isMatchTypeUpdated" as "isMatchTypeUpdated",
     "wrCurrentInnings" as "currentInnings",
-    "wrSystemPlayerCount" as "systemPlayerCount"
+    "wrSystemPlayerCount" as "systemPlayerCount",
+    "wrIsPlayersShow" as "isPlayersShow"
     from "insert_data" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"  
@@ -456,7 +458,7 @@ const getCommentaryByIdQuery = async (request, fastify) => {
       "wrChoseTo" as "choseTo",
       tc."wrWinnerId" as "winnerId",
       "wrWinnerName" as "winnerName",
-      "wrIsViewTable" as "isViewTable",
+      "wrIsClientShow" as "isClientShow",
       "wrDisplayStatus" as "displayStatus",
       "wrRmk" as "rmk",
       "wrCommentaryUserId" as "commentaryUserId",
@@ -469,7 +471,8 @@ const getCommentaryByIdQuery = async (request, fastify) => {
       "isSignalROn" as "isSignalROn",
       "isMatchTypeUpdated" as "isMatchTypeUpdated",
       "wrCurrentInnings" as "currentInnings",
-      "wrSystemPlayerCount" as "systemPlayerCount"
+      "wrSystemPlayerCount" as "systemPlayerCount",
+      "wrIsPlayersShow" as "isPlayersShow"
       from "tblCommentaries" tc
       left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
       left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -2267,6 +2270,54 @@ const getCommnertySquadPlayersList = async (data, fastify, request) => {
     throw new Error(err.message);
   }
 };
+const updateShowClientQuery = async (data , request , fastify) => {
+  try {
+    // update query
+    return await fastify.db.query(
+      `update "tblCommentaries" set
+      "wrIsClientShow" = $1
+      where "wrCommentaryId" = $2
+      `,
+      {
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [data.isClientShow, data.commentaryId],
+      }
+    );
+
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCommentary/updateShowClientQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+}
+const updatePlayerShowQuery = async (data , request , fastify) => {
+  try {
+    // update query
+    return await fastify.db.query(
+      `update "tblCommentaries" set
+      "wrIsPlayersShow" = $1
+      where "wrCommentaryId" = $2
+      `,
+      {
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [data.isPlayersShow, data.commentaryId],
+      }
+    );
+
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCommentary/updatePlayerShowQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+}
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -2308,4 +2359,6 @@ module.exports = {
   changeBowlerInCommentary,
   getCommentaryBallByBallQuery,
   getCommnertySquadPlayersList,
+  updateShowClientQuery,
+  updatePlayerShowQuery
 };

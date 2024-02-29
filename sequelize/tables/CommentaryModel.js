@@ -78,9 +78,10 @@ module.exports = (sequelize) => {
         type: DataTypes.STRING(400),
         allowNull: true,
       },
-      wrIsViewTable: {
+      wrIsClientShow: {
         type: DataTypes.BOOLEAN,
         allowNull: true,
+        defaultValue: true,
       },
       wrDisplayStatus: {
         type: DataTypes.STRING(400),
@@ -146,6 +147,10 @@ module.exports = (sequelize) => {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
+      wrIsPlayersShow:{
+        type: DataTypes.BOOLEAN,
+        defaultValue: true,
+      }
     },
     {
       timestamps: false,

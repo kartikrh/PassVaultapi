@@ -32,6 +32,8 @@ const {
   changeBowlerInCommentary,
   getCommentaryBallByBallQuery,
   getCommnertySquadPlayersList,
+  updateShowClientQuery,
+  updatePlayerShowQuery,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -3650,7 +3652,39 @@ const getCommentaryTeamsListService = async (request, fastify) => {
   dataToreturn.pl2 = TeamPlayes2;
   return dataToreturn;
 };
+const changeShowClientService = async (request, fastify) =>{
+  // validate commentary id
+  const commentary = global.tblCommentaries.findIndex(
+    (item) => item.commentaryId === request.body.commentaryId
+  );
+  if (commentary == -1) {
+    throw new Error("Commentary with this id not Found");
+  }
 
+  // update showClient
+  await updateShowClientQuery(request.body ,request , fastify);
+
+  global.tblCommentaries[commentary].isClientShow = request.body.isClientShow;
+
+  return "Commentary Updated successfully";
+}
+
+const changePlayerShowService = async (request, fastify) =>{
+  // validate commentary id
+  const commentary = global.tblCommentaries.findIndex(
+    (item) => item.commentaryId === request.body.commentaryId
+  );
+  if (commentary == -1) {
+    throw new Error("Commentary with this id not Found");
+  }
+
+  // update showClient
+  await updatePlayerShowQuery(request.body ,request , fastify);
+
+  global.tblCommentaries[commentary].isPlayersShow = request.body.isPlayersShow;
+
+  return "Commentary Updated successfully";
+}
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -3676,4 +3710,6 @@ module.exports = {
   getCommenrtySquadDetailsService,
   getPartnershipListService,
   getCommentaryTeamsListService,
+  changeShowClientService,
+  changePlayerShowService
 };

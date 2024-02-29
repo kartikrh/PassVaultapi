@@ -1889,7 +1889,7 @@ const Commentary = {
           // choseTo: { type: "integer" },
           // winnerId: { type: "string" },
           // winnerName: { type: "string" },
-          // isViewTable: { type: "boolean" },
+          // isClientShow: { type: "boolean" },
           displayStatus: { type: "string" },
           // commentaryStatus: { type: "integer" },
           // rmk: { type: "string" },
@@ -2015,6 +2015,36 @@ const Commentary = {
           overId: { type: "integer" },
         },
         required: ["commentaryId", "bowlerId", "currentInnings", "overId"],
+      },
+    },
+  },
+  updateShowClient: {
+    schema: {
+      tags: ["Commentary"],
+      description: "update ShowClient",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+          isClientShow: { type: "boolean" },
+        },
+        required: ["commentaryId", "isClientShow"],
+      },
+    },
+  },
+  updatePlayersShow: {
+    schema: {
+      tags: ["Commentary"],
+      description: "update ShowClient",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+          isPlayersShow: { type: "boolean" },
+        },
+        required: ["commentaryId", "isPlayersShow"],
       },
     },
   },
