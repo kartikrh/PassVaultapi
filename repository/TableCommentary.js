@@ -628,7 +628,7 @@ const deleteOverCommentoriesQuery = async (id, request, fastify) => {
     
     )
     DELETE FROM "tblCommentaryBallByBalls"
-    WHERE "wrOverId" = ANY($1);
+    WHERE "wrOverId" = $1;
       `,
       {
         type: fastify.db.QueryTypes.DELETE,

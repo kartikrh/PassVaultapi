@@ -2861,9 +2861,9 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
 
     dataToreturn.es = es;
 
-    // if (commentary.commentaryStatus === 1) {
-    //   return dataToreturn;
-    // }
+    if (commentary.commentaryStatus === 1) {
+      return dataToreturn;
+    }
 
     // get the all innings data
     const inningDataPromises = [];
