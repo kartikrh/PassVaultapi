@@ -87,7 +87,7 @@ const insertTeamQuery = async (data, fastify, request) => {
 const updateTeamQuery = async (data, fastify, request) => {
   try {
     return await fastify.db.query(
-      `UPDATE "tblTeams" SET "wrTeamName" = $1, "wrTeamShortName" = $2,"wrImage" = $3, "wrCountry" = $4, "wrEventTypeId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $5), "wrModifyBy" = $6, "wrModifyDate" = $7,"WrTeamJersey"=$8  WHERE "wrTeamId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $9)`,
+      `UPDATE "tblTeams" SET "wrTeamName" = $1, "wrTeamShortName" = $2,"wrImage" = $3, "wrCountry" = $4, "wrEventTypeId" = $5, "wrModifyBy" = $6, "wrModifyDate" = $7,"WrTeamJersey"=$8  WHERE "wrTeamId" = $9`,
       {
         bind: [
           data.teamName,
@@ -117,7 +117,7 @@ const updateTeamQuery = async (data, fastify, request) => {
 const deleteTeamQuery = async (teamId, fastify, request) => {
   try {
     return await fastify.db.query(
-      `DELETE FROM "tblTeams" WHERE "wrTeamId" in  (select "wrKey" from "tblEncryptedData" where "wrValue" = ANY($1))`,
+      `DELETE FROM "tblTeams" WHERE "wrTeamId" = $1`,
       {
         bind: [teamId],
         type: fastify.db.QueryTypes.DELETE,
