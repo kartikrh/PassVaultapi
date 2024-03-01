@@ -9,6 +9,7 @@ const {
   signOutUser,
   verifyTokenUser,
   ckImageUpload,
+  generalImageUpload,
 } = require("../controller/users/index");
 const { Auth } = require("../swaggerSchema/groupTags/schema");
 const { authorize } = require("../controller/middleware/index");
@@ -55,5 +56,10 @@ module.exports = async function (fastify, opts) {
     schema: Auth.ckUpload.schema,
     preHandler: [(request, reply) => authorize(request, reply, fastify)],
     handler: (request, reply) => ckImageUpload(request, reply, fastify),
+  });
+  fastify.post("/imgUpload", {
+    schema: Auth.imgUpload.schema,
+    preHandler: [(request, reply) => authorize(request, reply, fastify)],
+    handler: (request, reply) => generalImageUpload(request, reply, fastify),
   });
 };
