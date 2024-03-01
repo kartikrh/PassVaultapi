@@ -3103,7 +3103,7 @@ const getInningDataByInningNumber = async (commentaryId, inningNumber) => {
 
   const bat1 = commentaryPlayers_batter.map((player) => {
     return {
-      pid: player.playerId,
+      pid: player.commentaryPlayerId,
       btn: player.playerName,
       ot: player.isBatterOut ? "OUT" : "NOT OUT",
       rt: player.isBatterRetir ? "RET" : "",
@@ -3126,7 +3126,7 @@ const getInningDataByInningNumber = async (commentaryId, inningNumber) => {
 
   const bow2 = commentaryPlayers_bowler.map((player) => {
     return {
-      pid: player.playerId,
+      pid: player.commentaryPlayerId,
       pln: player.playerName,
       ovr: player.bowlerOver || 0,
       mov: player.bowlerMaidenOver || 0,
@@ -3194,7 +3194,7 @@ const getInningDataByInningNumber = async (commentaryId, inningNumber) => {
 
   const bat2 = commentaryPlayers_batter2.map((player) => {
     return {
-      pid: player.playerId,
+      pid: player.commentaryPlayerId,
       btn: player.playerName,
       ot: player.isBatterOut ? "OUT" : "NOT OUT",
       rt: player.isBatterRetir ? "RET" : "",
@@ -3216,7 +3216,7 @@ const getInningDataByInningNumber = async (commentaryId, inningNumber) => {
 
   const bow1 = commentaryPlayers_bowler2.map((player) => {
     return {
-      pid: player.playerId,
+      pid: player.commentaryPlayerId,
       pln: player.playerName,
       ovr: player.bowlerOver || 0,
       mov: player.bowlerMaidenOver || 0,
