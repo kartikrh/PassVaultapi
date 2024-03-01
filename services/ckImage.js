@@ -19,7 +19,24 @@ const ckImageUploadService = async (request) => {
         return imagePath;
     }
 }
-
+const imgUploadService = async (request) =>{
+    if(request.body.image && request.body.image.length){
+        const module = request.body.module.toLowerCase();
+        const imgName = `${module}_` + generateFileName();
+        const imgConfig = ImgModuleConfig.CK_Images;
+        const projectName = global.tblConfigs.find((item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()).value;
+        const imagePath = await storeImageOnServer({
+            image: request.body.image[0],
+            project: projectName,
+            name: imgName,
+            ...imgConfig
+        });
+        return {
+            path : imagePath,
+        };
+    }
+}
 module.exports = {
     ckImageUploadService,
+    imgUploadService
 };

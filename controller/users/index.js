@@ -17,7 +17,7 @@ const {
 } = require("../../services/user");
 const { errorLogger } = require("../../utilities/logger");
 const fetchAllDataFromDb = require("../../utilities/fetchAllData");
-const { ckImageUploadService } = require("../../services/ckImage");
+const { ckImageUploadService, imgUploadService } = require("../../services/ckImage");
 
 let commonPath = "controller/users";
 
@@ -106,6 +106,15 @@ const ckImageUpload = async (request, reply, fastify) => {
   }
 }
 
+const generalImageUpload = async (request, reply, fastify) => {
+  try {
+    const result = await imgUploadService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/generalImageUpload", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+}
 const getAllUsers = async (request, reply, fastify) => {
   try {
     const result = await getAllUsersService(request, fastify);
@@ -233,4 +242,5 @@ module.exports = {
   deleteUser,
   updateUserPassword,
   changeUserPassword,
+  generalImageUpload
 };

@@ -119,6 +119,21 @@ const Auth = {
       },
     },
   },
+  imgUpload: {
+    schema: {
+      tags: ["imgUpload"],
+      description: "Image Upload",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          module : { type: "string" },
+          image: { type: "array" },
+        },
+        required: ["module", "image"],
+      },
+    },
+  },
 };
 
 const Tabs = {
