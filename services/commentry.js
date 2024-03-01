@@ -2478,12 +2478,18 @@ const getMatchListByStatus = async (body, request, fastify) => {
       (team) => team.teamId === item.team2Id
     );
 
-    if (commentaryTeamsOne.teamStatus == 1) {
-      crr = commentaryTeamsOne.crr;
-      rrr = commentaryTeamsOne.rrr;
-    } else {
-      crr = commentaryTeamsTwo.crr;
-      rrr = commentaryTeamsTwo.rrr;
+    if(body.type == 'scheduled'){
+      crr = 0;
+      rrr = 0;
+    }
+    else {
+      if (commentaryTeamsOne.teamStatus == 1) {
+        crr = commentaryTeamsOne.crr;
+        rrr = commentaryTeamsOne.rrr;
+      } else {
+        crr = commentaryTeamsTwo.crr;
+        rrr = commentaryTeamsTwo.rrr;
+      }
     }
 
     let details = {

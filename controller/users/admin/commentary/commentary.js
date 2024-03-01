@@ -245,7 +245,7 @@ const getScheduleMatchList = async (request, reply, fastify) => {
     );
     const body = {
       commentaryData,
-      type: "schedule",
+      type: "scheduled",
     };
 
     const result = await getMatchListByStatus(body, request, fastify);
