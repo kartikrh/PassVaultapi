@@ -246,7 +246,7 @@ module.exports = async (fastify, opts) => {
   });
 
   fastify.post("/getscore", {
-    schema:  Commentary.getBycommentaryEId.schema,
+    schema: Commentary.getBycommentaryEId.schema,
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
@@ -327,7 +327,7 @@ module.exports = async (fastify, opts) => {
       getMatchTypeListByCommentary(request, reply, fastify),
   });
   fastify.post("/changeBowler", {
-    schema : Commentary.changeBowler.schema,
+    schema: Commentary.changeBowler.schema,
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
@@ -340,7 +340,7 @@ module.exports = async (fastify, opts) => {
       changeBowlerOfCommentary(request, reply, fastify),
   });
   fastify.post("/updateShowClient", {
-    schema : Commentary.updateShowClient.schema,
+    schema: Commentary.updateShowClient.schema,
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
@@ -353,7 +353,7 @@ module.exports = async (fastify, opts) => {
       updateShowClientOfCommentary(request, reply, fastify),
   });
   fastify.post("/updatePlayersShow", {
-    schema : Commentary.updatePlayersShow.schema,
+    schema: Commentary.updatePlayersShow.schema,
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
@@ -363,6 +363,6 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request, reply) =>
-    updatePlayersShowOfCommentary(request, reply, fastify),
+      updatePlayersShowOfCommentary(request, reply, fastify),
   });
 };
