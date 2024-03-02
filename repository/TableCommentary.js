@@ -2283,7 +2283,8 @@ const updateShowClientQuery = async (data, request, fastify) => {
     // update query
     return await fastify.db.query(
       `update "tblCommentaries" set
-      "wrIsClientShow" = $1
+      "wrIsClientShow" = $1,
+      "wrUpdateTime" = now()
       where "wrCommentaryId" = $2
       `,
       {
