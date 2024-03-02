@@ -127,7 +127,7 @@ const Auth = {
       body: {
         type: "object",
         properties: {
-          module : { type: "string" },
+          module: { type: "string" },
           image: { type: "array" },
         },
         required: ["module", "image"],
@@ -1269,7 +1269,7 @@ const Player = {
         properties: {
           isActive: { type: "boolean" },
           eventTypeId: { type: "integer" },
-          teamId : { type: "integer"}
+          teamId: { type: "integer" },
         },
       },
     },
@@ -2089,7 +2089,6 @@ const Compitition = {
         type: "object",
         properties: {
           isActive: { type: "boolean" },
-
         },
       },
     },
@@ -2413,6 +2412,20 @@ const Score = {
       security: [{ bearerAuth: [] }],
     },
   },
+  getEventDetails: {
+    schema: {
+      tags: ["Score"],
+      description: "getEventbyEventID",
+      security: [{ bearerAuth: [] }],
+      querystring: {
+        type: "object",
+        properties: {
+          eventId: { type: "string" },
+        },
+        required: ["eventId"],
+      },
+    },
+  },
 };
 const News = {
   getAll: {
@@ -2453,7 +2466,7 @@ const News = {
           newsId: { type: "integer" },
           title: { type: "string" },
           news: { type: "string" },
-          isPermanent : { type: "boolean" },
+          isPermanent: { type: "boolean" },
           isActive: { type: "boolean" },
           startDate: { type: "string" },
           endDate: { type: "string" },
@@ -2481,19 +2494,19 @@ const News = {
     },
   },
   activeInactiveNews: {
-   schema: {
-     tags: ["News"],
-     description: "active inactive news",
-     security: [{ bearerAuth: [] }],
-     body: {
-       type: "object",
-       properties: {
-         newsId: { type: "integer" },
-         isActive: { type: "boolean" },
-       },
-       required: ["newsId", "isActive"],
-     },
-   },
+    schema: {
+      tags: ["News"],
+      description: "active inactive news",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          newsId: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["newsId", "isActive"],
+      },
+    },
   },
 };
 
@@ -2520,5 +2533,5 @@ module.exports = {
   Event,
   ImportMarket,
   Score,
-  News
+  News,
 };

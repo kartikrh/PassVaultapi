@@ -14,6 +14,7 @@ const {
   getAllDetailsByEventId,
   getCommenrtySquadList,
   getPartnershipList,
+  getNodeEventbyEid,
 } = require("../../../controller/users/admin/commentary/commentary");
 const { getMenuItemList } = require("../../../controller/users/admin/menuType");
 const { Score } = require("../../../swaggerSchema/groupTags/schema");
@@ -170,5 +171,10 @@ module.exports = async (fastify, opts) => {
     //     }),
     // ],
     handler: (request, reply) => getPartnershipList(request, reply, fastify),
+  });
+
+  fastify.get("/getScoreEventInfo", {
+    schema: Score.getEventDetails.schema,
+    handler: (request, reply) => getNodeEventbyEid(request, reply, fastify),
   });
 };
