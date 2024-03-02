@@ -2278,7 +2278,7 @@ const getCommnertySquadPlayersList = async (data, fastify, request) => {
     throw new Error(err.message);
   }
 };
-const updateShowClientQuery = async (data , request , fastify) => {
+const updateShowClientQuery = async (data, request, fastify) => {
   try {
     // update query
     return await fastify.db.query(
@@ -2291,7 +2291,6 @@ const updateShowClientQuery = async (data , request , fastify) => {
         bind: [data.isClientShow, data.commentaryId],
       }
     );
-
   } catch (error) {
     errorLogger(
       fastify,
@@ -2301,8 +2300,8 @@ const updateShowClientQuery = async (data , request , fastify) => {
     );
     throw new Error(error.message);
   }
-}
-const updatePlayerShowQuery = async (data , request , fastify) => {
+};
+const updatePlayerShowQuery = async (data, request, fastify) => {
   try {
     // update query
     return await fastify.db.query(
@@ -2315,7 +2314,6 @@ const updatePlayerShowQuery = async (data , request , fastify) => {
         bind: [data.isPlayersShow, data.commentaryId],
       }
     );
-
   } catch (error) {
     errorLogger(
       fastify,
@@ -2325,7 +2323,7 @@ const updatePlayerShowQuery = async (data , request , fastify) => {
     );
     throw new Error(error.message);
   }
-}
+};
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -2368,5 +2366,5 @@ module.exports = {
   getCommentaryBallByBallQuery,
   getCommnertySquadPlayersList,
   updateShowClientQuery,
-  updatePlayerShowQuery
+  updatePlayerShowQuery,
 };
