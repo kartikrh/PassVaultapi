@@ -1363,6 +1363,7 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
     rmk: "",
     win: "",
     cst: "",
+    ics: result.isClientShow
   };
   let eid;
   let til;
@@ -1404,6 +1405,7 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
   let mtype = 0;
   let bovr = 0;
   let cst;
+  let ics;
   // Basic elements are set
   cid = result.commentaryId;
   eid = result.eventRefId.toString();
@@ -1414,6 +1416,7 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
   t2nid = result.team2Id;
   mtype = result.matchTypeId;
   cst = result.commentaryStatus;
+  ics = result.isClientShow;
   //teams set
   const commentaryTeamsOne = await global.tblCommentaryTeams.filter(
     (item) =>
@@ -1510,6 +1513,7 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
     resultArr.rmk = "Toss Not Done Yet";
     resultArr.win = "";
     resultArr.cst = result.commentaryStatus;
+    result.ics = result.isClientShow;
   }
   if (getstatus == 2) {
     const _tosswonby = result.tossWonBy;
@@ -1559,6 +1563,7 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
     resultArr.rmk = toss;
     resultArr.win = "";
     resultArr.cst = result.commentaryStatus;
+    resultArr.ics = result.isClientShow;
   }
   if (getstatus === 3) {
     const _tosswonby = result.tossWonBy;
@@ -1665,6 +1670,7 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
     resultArr.rmk = result.rmk;
     resultArr.win = "";
     resultArr.cst = result.commentaryStatus;
+    resultArr.ics = result.isClientShow;
   }
 
   let eventType = await global.tblEventTypes.find(
@@ -1836,6 +1842,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     rmk: "",
     win: "",
     cst: "",
+    ics: result.isClientShow,
   };
   let eid;
   let til;
@@ -1876,6 +1883,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
   let ballid = 0;
   let mtype = 0;
   let bovr = 0;
+  let ics;
   // Basic elements are set
   cid = result.commentaryId;
   eid = result.eventRefId.toString();
@@ -1886,6 +1894,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
   t2nid = result.team2Id;
   mtype = result.matchTypeId;
   cst = result.commentaryStatus;
+  ics = result.isClientShow;
   //teams set
   const commentaryTeamsOne = await global.tblCommentaryTeams.filter(
     (item) =>
@@ -1988,6 +1997,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     resultArr.rmk = "Toss Not Done Yet";
     resultArr.win = "";
     resultArr.cst = result.commentaryStatus;
+    resultArr.ics = result.isClientShow;
   }
   if (getstatus == 2) {
     const _tosswonby = result.tossWonBy;
@@ -2037,6 +2047,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     resultArr.rmk = toss;
     resultArr.win = "";
     resultArr.cst = result.commentaryStatus;
+    resultArr.ics = result.isClientShow;
   }
   // if (getstatus == 3) {
   //   const _tosswonby = result.tossWonBy;
@@ -2189,6 +2200,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     resultArr.rmk = result.rmk;
     resultArr.win = "";
     resultArr.cst = result.commentaryStatus;
+    resultArr.ics = result.isClientShow;
   }
 
   let eventType = await global.tblEventTypes.find(
@@ -3056,6 +3068,7 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
       oversList.push({
         oid: overId,
         ov: over + 1,
+        cin : currentInnings,
         runs: totalRun,
         bid: bowlerId,
         tid: teamId,
