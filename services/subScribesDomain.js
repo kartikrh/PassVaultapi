@@ -3,6 +3,7 @@ const {
   deleteSubScribeDomainQuery,
   updateDomainStatusQuery,
   insertSubScribeSubDomainQuery,
+  getDomainByIdQuery,
 } = require("../repository/TableSubScibesDomain");
 
 const allSubScribesDomainService = async (request) => {
@@ -25,15 +26,16 @@ const subScribeDomainByIdService = async (request) => {
 const saveSubScribeDomainService = async (request, fastify) => {
   // check if domain exist
   let domainData = global.tblSubScribesDomain.find(
-    (d) => d.siteDomain.toLowerCase() === request.body.siteDomain.toLowerCase()
+    (d) => d.siteDomain?.toLowerCase() === request.body.siteDomain?.toLowerCase()
   );
   if(domainData){
+    await insertSubScribeDomain(request, fastify);
     return {
       isApproved: domainData.isApproved,
     };
   }
   else{
-    insertSubScribeDomain(request, fastify);
+    await insertSubScribeDomain(request, fastify);
     return {
       isApproved: false,
     }
@@ -52,15 +54,15 @@ const deleteSubScribeDomainService = async (request, fastify) => {
 const insertSubScribeDomain = async (request, fastify) => {
   // check if domain exist
   let domainData = global.tblSubScribesDomain.find(
-    (d) => d.siteDomain.toLowerCase() === request.body.siteDomain.toLowerCase()
+    (d) => d.siteDomain?.toLowerCase() === request.body.siteDomain?.toLowerCase()
   );
 
   if (!domainData) {
     domainData = await insertSubScribeDomainQuery(request, fastify);
-    if(request.body.subDomain && request.body.subDomain.length > 0){
+    if(request.body.subDomains && request.body.subDomains.length > 0){
         const body = {
           subScribesDomainId: domainData.subScribesDomainId,
-          subDomain: subDomain,
+          subDomains: request.body.subDomains,
         };
         await insertSubScribeSubDomainQuery(body ,request, fastify);
     }
@@ -68,20 +70,20 @@ const insertSubScribeDomain = async (request, fastify) => {
     global.tblSubScribesDomain.push(data);
     return data;
   }
-  // check if domain exist but any subDomain is new
-  if(request.body.subDomain && request.body.subDomain.length > 0){
-    // check which subDomain is new
+  // check if domain exist but any subDomains is new
+  if(request.body.subDomains && request.body.subDomains.length > 0){
+    // check which subDomains is new
     const subDomainInDB = global.tblSubScribesSubDomain.filter(
       (d) => d.subScribesDomainId === domainData.subScribesDomainId
-    );
+    ).map((d) => d.siteSubDomain.toLowerCase());
 
-    const newSubDomain = request.body.subDomain.filter(
-      (d) => !subDomainInDB.includes(d)
+    const newSubDomain = request.body.subDomains.filter(
+      (d) => !subDomainInDB.includes(d.toLowerCase())
     );
     if(newSubDomain.length > 0){
       const body = {
         subScribesDomainId: domainData.subScribesDomainId,
-        subDomain: newSubDomain,
+        subDomains: newSubDomain,
       };
       await insertSubScribeSubDomainQuery(body ,request, fastify);
     }

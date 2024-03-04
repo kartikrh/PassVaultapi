@@ -45,13 +45,15 @@ const getDomainByIdQuery = async (id,fastify) =>{
             "wrSiteName" as "siteName",
             "wrSiteDomain" as "siteDomain",
             "wrIsApproved" as "isApproved",
-            "wrSiteSubDomain" as "siteSubDomain"
+            CAST(count(tssd."wrSubScribesSubDomainId") as integer) as "subDomainCount"
         FROM
             "tblSubScribesDomains" tsd
         LEFT JOIN
             "tblSubScribesSubDomains" tssd ON tsd."wrSubScribesDomainId" = tssd."wrSubScribesDomainId"
         WHERE
             tsd."wrSubScribesDomainId" = $1
+        GROUP BY
+            tsd."wrSubScribesDomainId"
         `,
         {
             type: fastify.db.QueryTypes.SELECT,
@@ -67,11 +69,13 @@ const insertSubScribeDomainQuery = async (request,fastify) =>{
             `WITH insert_data AS (
                 INSERT INTO "tblSubScribesDomains"(
                     "wrSiteName",
-                    "wrSiteDomain"
+                    "wrSiteDomain",
+                    "wrCreatedDate"
                 )
                 VALUES (
                     $1,
-                    $2
+                    $2,
+                    now()
                 )
                 RETURNING *
             )
@@ -178,7 +182,7 @@ const updateDomainStatusQuery = async (request,fastify) =>{
 const insertSubScribeSubDomainQuery = async (body ,request,fastify) =>{
     try {
         // insert sub domain
-        const values = body.subDomain.map((item) => {
+        const values = body.subDomains.map((item) => {
             return `(${body.subScribesDomainId}, '${item}', now())`
         }).join(',');
 
