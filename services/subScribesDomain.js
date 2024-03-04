@@ -2,6 +2,8 @@ const {
   insertSubScribeDomainQuery,
   deleteSubScribeDomainQuery,
   updateDomainStatusQuery,
+  insertSubScribeSubDomainQuery,
+  getDomainByIdQuery,
 } = require("../repository/TableSubScibesDomain");
 
 const allSubScribesDomainService = async (request) => {
@@ -22,7 +24,22 @@ const subScribeDomainByIdService = async (request) => {
   return result || null;
 };
 const saveSubScribeDomainService = async (request, fastify) => {
-  return await insertSubScribeDomain(request, fastify);
+  // check if domain exist
+  let domainData = global.tblSubScribesDomain.find(
+    (d) => d.siteDomain?.toLowerCase() === request.body.siteDomain?.toLowerCase()
+  );
+  if(domainData){
+    await insertSubScribeDomain(request, fastify);
+    return {
+      isApproved: domainData.isApproved,
+    };
+  }
+  else{
+    await insertSubScribeDomain(request, fastify);
+    return {
+      isApproved: false,
+    }
+  }
 };
 const deleteSubScribeDomainService = async (request, fastify) => {
   const { subScribesDomainId } = request.body;
@@ -37,16 +54,48 @@ const deleteSubScribeDomainService = async (request, fastify) => {
 const insertSubScribeDomain = async (request, fastify) => {
   // check if domain exist
   let domainData = global.tblSubScribesDomain.find(
-    (d) => d.siteDomain.toLowerCase() === request.body.siteDomain.toLowerCase()
+    (d) => d.siteDomain?.toLowerCase() === request.body.siteDomain?.toLowerCase()
   );
-  // if no data found then insert
-  if (domainData) {
-    throw new Error("Domain already exist");
+
+  if (!domainData) {
+    domainData = await insertSubScribeDomainQuery(request, fastify);
+    if(request.body.subDomains && request.body.subDomains.length > 0){
+        const body = {
+          subScribesDomainId: domainData.subScribesDomainId,
+          subDomains: request.body.subDomains,
+        };
+        await insertSubScribeSubDomainQuery(body ,request, fastify);
+    }
+    const data = await getDomainByIdQuery(domainData.subScribesDomainId, fastify);
+    global.tblSubScribesDomain.push(data);
+    return data;
   }
-  const createData = await insertSubScribeDomainQuery(request, fastify);
-  global.tblSubScribesDomain.push(createData);
-  return createData;
-};
+  // check if domain exist but any subDomains is new
+  if(request.body.subDomains && request.body.subDomains.length > 0){
+    // check which subDomains is new
+    const subDomainInDB = global.tblSubScribesSubDomain.filter(
+      (d) => d.subScribesDomainId === domainData.subScribesDomainId
+    ).map((d) => d.siteSubDomain.toLowerCase());
+
+    const newSubDomain = request.body.subDomains.filter(
+      (d) => !subDomainInDB.includes(d.toLowerCase())
+    );
+    if(newSubDomain.length > 0){
+      const body = {
+        subScribesDomainId: domainData.subScribesDomainId,
+        subDomains: newSubDomain,
+      };
+      await insertSubScribeSubDomainQuery(body ,request, fastify);
+    }
+  }
+  const data = await getDomainByIdQuery(domainData.subScribesDomainId, fastify);
+  // update domain
+  const index = global.tblSubScribesDomain.findIndex(
+    (d) => d.subScribesDomainId === domainData.subScribesDomainId
+  );
+  global.tblSubScribesDomain[index] = data;
+  return data;
+}
 const approveDomainService = async (request, fastify) => {
   // validate domain
   const index = global.tblSubScribesDomain.findIndex(

@@ -2836,17 +2836,21 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
       teamScore2 = teamScore2 + "/" + wicket1 + "(" + overs1 + ")";
     }
 
-    let crr, rrr, BattingTeamId, BowlingTeamId;
+    let crr, rrr, BattingTeamId, BowlingTeamId , batId , bowlId;
     if (commentaryTeamsOne.teamStatus == 1) {
       crr = commentaryTeamsOne.crr;
       rrr = commentaryTeamsOne.rrr;
       BattingTeamId = commentaryTeamsOne.commentaryTeamId;
       BowlingTeamId = commentaryTeamsTwo.commentaryTeamId;
+      batId = commentaryTeamsOne.teamId;
+      bowlId = commentaryTeamsTwo.teamId;
     } else {
       crr = commentaryTeamsTwo.crr;
       rrr = commentaryTeamsTwo.rrr;
       BattingTeamId = commentaryTeamsTwo.commentaryTeamId;
       BowlingTeamId = commentaryTeamsOne.commentaryTeamId;
+      batId = commentaryTeamsTwo.teamId;
+      bowlId = commentaryTeamsOne.teamId;
     }
     let es = {
       eid: commentary.eventRefId || "",
@@ -2880,6 +2884,8 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
       bati: BattingTeamId,
       t1id: commentaryTeamsOne.commentaryTeamId,
       t2id: commentaryTeamsTwo.commentaryTeamId,
+      boid: bowlId,
+      baid: batId,
     };
 
     dataToreturn.es = es;
