@@ -1363,7 +1363,7 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
     rmk: "",
     win: "",
     cst: "",
-    ics: result.isClientShow
+    ics: result.isClientShow,
   };
   let eid;
   let til;
@@ -2490,11 +2490,10 @@ const getMatchListByStatus = async (body, request, fastify) => {
       (team) => team.teamId === item.team2Id
     );
 
-    if(body.type == 'scheduled'){
+    if (body.type == "scheduled") {
       crr = 0;
       rrr = 0;
-    }
-    else {
+    } else {
       if (commentaryTeamsOne.teamStatus == 1) {
         crr = commentaryTeamsOne.crr;
         rrr = commentaryTeamsOne.rrr;
@@ -2877,6 +2876,8 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
       crr: crr || 0,
       rrr: rrr || 0,
       cst: commentary.commentaryStatus,
+      bowi: BowlingTeamId,
+      bati: BattingTeamId,
     };
 
     dataToreturn.es = es;
@@ -3068,7 +3069,7 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
       oversList.push({
         oid: overId,
         ov: over + 1,
-        cin : currentInnings,
+        cin: currentInnings,
         runs: totalRun,
         bid: bowlerId,
         tid: teamId,
