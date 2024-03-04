@@ -31,6 +31,10 @@ const {
   getAllCommentaryPartnershipQuery,
 } = require("../repository/TableCommentary");
 const {getAllNewsQuery} = require("../repository/TableNews");
+const {
+  getAllSubScribesDomainQuery,
+  getAllSubScribesSubDomainQuery,
+} = require("../repository/TableSubScibesDomain");
 const fetchAllDataFromDb = async (fastify, reply) => {
   try {
     const getAllTabs = await getAllActiveInactiveTabsQuery(fastify);
@@ -66,6 +70,8 @@ const fetchAllDataFromDb = async (fastify, reply) => {
       fastify
     );
     const getAllNews = await getAllNewsQuery(fastify);
+    const getAllsubScribesDomain = await getAllSubScribesDomainQuery(fastify);
+    const getAllsubScribesSubDomain = await getAllSubScribesSubDomainQuery(fastify);
 
     global.tblTabs = getAllTabs;
     global.tblRoles = getAllRoles;
@@ -96,6 +102,8 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblCommentaryWicket = getAllCommentaryWicket;
     global.tblCommentaryPartnership = getAllCommentaryPartnership;
     global.tblNews = getAllNews;
+    global.tblSubScribesDomain = getAllsubScribesDomain;
+    global.tblSubScribesSubDomain = getAllsubScribesSubDomain;
 
     console.log("Okkkk");
 

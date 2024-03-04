@@ -2840,13 +2840,13 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
     if (commentaryTeamsOne.teamStatus == 1) {
       crr = commentaryTeamsOne.crr;
       rrr = commentaryTeamsOne.rrr;
-      BattingTeamId = commentaryTeamsOne.teamId;
-      BowlingTeamId = commentaryTeamsTwo.teamId;
+      BattingTeamId = commentaryTeamsOne.commentaryTeamId;
+      BowlingTeamId = commentaryTeamsTwo.commentaryTeamId;
     } else {
       crr = commentaryTeamsTwo.crr;
       rrr = commentaryTeamsTwo.rrr;
-      BattingTeamId = commentaryTeamsTwo.teamId;
-      BowlingTeamId = commentaryTeamsOne.teamId;
+      BattingTeamId = commentaryTeamsTwo.commentaryTeamId;
+      BowlingTeamId = commentaryTeamsOne.commentaryTeamId;
     }
     let es = {
       eid: commentary.eventRefId || "",
@@ -2878,10 +2878,26 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
       cst: commentary.commentaryStatus,
       bowi: BowlingTeamId,
       bati: BattingTeamId,
+      t1id: commentaryTeamsOne.commentaryTeamId,
+      t2id: commentaryTeamsTwo.commentaryTeamId,
     };
 
     dataToreturn.es = es;
 
+    const commentaryTeam = await global.tblCommentaryTeams.filter(
+      (item) =>
+        item.commentaryId === commentary.commentaryId 
+    ).map((item) => {
+      return {
+        cid : item.commentaryId,
+        ctid : item.commentaryTeamId,
+        cci : item.currentInnings,
+        tid : item.teamId,
+        ten : item.teamName,
+        tes : item.shortName
+      }
+    });
+    dataToreturn.td = commentaryTeam;
     if (commentary.commentaryStatus === 1) {
       return dataToreturn;
     }
@@ -2967,67 +2983,6 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
       }
     });
     dataToreturn.par = partnershipList;
-
-    //commnerty Ball-by-ball
-
-    ///demo
-
-    // "overId": 1030,
-    // "commentaryId": 499,
-    // "teamId": 97,
-    // "over": 0,
-    // "ballCount": 6,
-    // "bowlerId": 17881,
-    // "totalRun": 11,
-    // "totalFour": 0,
-    // "totalSix": 0,
-    // "totalWideBall": 0,
-    // "totalWideRun": 0,
-    // "totalNoball": 0,
-    // "totalNoBallRun": 0,
-    // "totalByesRun": 0,
-    // "totalLegByesRun": 0,
-    // "totalPanelty": 0,
-    // "totalWicket": 0,
-    // "dotBall": 0,
-    // "isComplete": true,
-    // "powerplay": null,
-    // "isOverInPowerplay": false,
-    // "powerplayType": 1,
-    // "isMaiden": false,
-    // "date": "2024-02-21T08:58:39.082Z",
-    // "isDelete": null,
-    // "currentInnings": 1
-    // {
-    //   "commentaryBallByBallId": 3912,
-    //   "commentaryId": 471,
-    //   "teamId": 97,
-    //   "overId": 943,
-    //   "overCount": "0.100",
-    //   "currentOverBalls": 1,
-    //   "bowlerId": 16707,
-    //   "batStrikeId": 16695,
-    //   "batNonStrikeId": 16696,
-    //   "ballIsCount": true,
-    //   "ballType": 1,
-    //   "ballIsDot": false,
-    //   "ballRun": 4,
-    //   "ballExtraRun": 0,
-    //   "ballIsBoundry": true,
-    //   "ballFour": 1,
-    //   "ballSix": 0,
-    //   "ballIsWicket": false,
-    //   "ballWicketType": 0,
-    //   "ballPlayerId": 16695,
-    //   "ballBowlerId": 16707,
-    //   "ballFielderId1": null,
-    //   "ballFielderId2": null,
-    //   "overIsMaiden": false,
-    //   "nextBatStrikeId": 16695,
-    //   "nextBatNonStrikeId": 16696,
-    //   "isDelete": false,
-    //   "currentInnings": 1
-    // }
     let oversList = [];
 
     overs.forEach((_over) => {
@@ -3082,6 +3037,7 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
     oversList = oversList.sort((a, b) => b.ov - a.ov);
 
     dataToreturn.ov = oversList;
+  
 
     return dataToreturn;
   } catch (error) {
@@ -3127,6 +3083,7 @@ const getInningDataByInningNumber = async (commentaryId, inningNumber) => {
       six: player.batSix || 0,
       dot: player.batDotBall || 0,
       sr: player.batsmanStrikeRate || 0,
+      tid : currentBattingTeam.commentaryTeamId
     };
   });
 
@@ -3162,6 +3119,8 @@ const getInningDataByInningNumber = async (commentaryId, inningNumber) => {
         0 + player.bowlerLegByeBallRun ||
         0,
       eco: player.bowlerEconomy,
+      tid : currentBowlingTeam.commentaryTeamId
+      
     };
   });
 
@@ -3178,6 +3137,7 @@ const getInningDataByInningNumber = async (commentaryId, inningNumber) => {
       sco1: player.teamScore,
       ovr1: player.overCount,
       wkt1: player.wicketCount,
+      tid : currentBattingTeam.commentaryTeamId
     };
   });
 
@@ -3218,6 +3178,7 @@ const getInningDataByInningNumber = async (commentaryId, inningNumber) => {
       six: player.batSix || 0,
       dot: player.batDotBall || 0,
       sr: player.batsmanStrikeRate || 0,
+      tid : currentBowlingTeam.commentaryTeamId
     };
   });
 
@@ -3248,6 +3209,7 @@ const getInningDataByInningNumber = async (commentaryId, inningNumber) => {
         0 + player.bowlerLegByeBallRun ||
         0,
       eco: player.bowlerEconomy,
+      tid : currentBattingTeam.commentaryTeamId
     };
   });
 
@@ -3264,6 +3226,7 @@ const getInningDataByInningNumber = async (commentaryId, inningNumber) => {
       sco1: player.teamScore,
       ovr1: player.overCount,
       wkt1: player.wicketCount,
+      tid : currentBowlingTeam.commentaryTeamId
     };
   });
 
