@@ -62,7 +62,7 @@ module.exports = async (fastify, opts) => {
     ],
     handler: (request, reply) => deleteSubScribeDomain(request, reply, fastify),
   });
-  fastify.post("/domainApprove", {
+  fastify.post("/isDomainApprove", {
     schema: SubScribesDomain.domainApprove.schema,
     preHandler: [
         (request, reply) => authorize(request, reply, fastify),
