@@ -37,6 +37,30 @@ const getAllSubScribesSubDomainQuery = async (fastify) =>{
         }
     )
 }
+const getDomainByIdQuery = async (id,fastify) =>{
+    return await fastify.db.query(
+        `
+        SELECT 
+            tsd."wrSubScribesDomainId" as "subScribesDomainId",
+            "wrSiteName" as "siteName",
+            "wrSiteDomain" as "siteDomain",
+            "wrIsApproved" as "isApproved",
+            "wrSiteSubDomain" as "siteSubDomain"
+        FROM
+            "tblSubScribesDomains" tsd
+        LEFT JOIN
+            "tblSubScribesSubDomains" tssd ON tsd."wrSubScribesDomainId" = tssd."wrSubScribesDomainId"
+        WHERE
+            tsd."wrSubScribesDomainId" = $1
+        `,
+        {
+            type: fastify.db.QueryTypes.SELECT,
+            bind: [
+                id
+            ]
+        }
+    )
+}
 const insertSubScribeDomainQuery = async (request,fastify) =>{
     try {
         const createData = await fastify.db.query(
@@ -85,7 +109,7 @@ const deleteSubScribeDomainQuery = async (id,fastify) =>{
            // delete sub domains
         await fastify.db.query(
             `
-            DELETE FROM "tblSubScribesSubDomain" 
+            DELETE FROM "tblSubScribesSubDomains" 
             WHERE 
                 "wrSubScribesDomainId" = $1
             `,
@@ -151,10 +175,46 @@ const updateDomainStatusQuery = async (request,fastify) =>{
           throw new Error(err.message);
     }
 }
+const insertSubScribeSubDomainQuery = async (body ,request,fastify) =>{
+    try {
+        // insert sub domain
+        const values = body.subDomain.map((item) => {
+            return `(${body.subScribesDomainId}, '${item}', now())`
+        }).join(',');
+
+        await fastify.db.query(
+            `
+            INSERT INTO "tblSubScribesSubDomains"(
+                "wrSubScribesDomainId",
+                "wrSiteSubDomain",
+                "wrCreatedDate"
+            )
+            VALUES 
+                ${values}
+            `,
+            {
+                type: fastify.db.QueryTypes.INSERT
+            }
+        );
+        
+        return true;
+      
+    } catch (err) {
+        errorLogger(
+            fastify,
+            err.message,
+            "DB ERROR --> repository/TableSubScribesDomain.js/updateDomainStatusQuery",
+            request
+          );
+          throw new Error(err.message);
+    }
+}
 module.exports = {
     getAllSubScribesDomainQuery,
     getAllSubScribesSubDomainQuery,
     insertSubScribeDomainQuery,
     deleteSubScribeDomainQuery,
-    updateDomainStatusQuery
+    updateDomainStatusQuery,
+    insertSubScribeSubDomainQuery,
+    getDomainByIdQuery
 }
