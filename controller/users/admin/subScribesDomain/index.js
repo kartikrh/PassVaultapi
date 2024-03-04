@@ -1,0 +1,58 @@
+const { allSubScribesDomainService ,subScribeDomainByIdService, saveSubScribeDomainService, deleteSubScribeDomainService, approveDomainService} = require("../../../../services/subScribesDomain");
+const { error, success,ERROR_CODES } = require("../../../../utilities");
+const { errorLogger } = require("../../../../utilities/logger");
+
+const commonPath = "controller/users/admin/subScribesDomai/index.js";
+const getAllSubScribesDomain = async (request, reply, fastify) => {
+    try {
+        const result = await allSubScribesDomainService(request);
+        reply.status(200).send(success(result, 200));
+    } catch (err) {
+        errorLogger(fastify, err.message, commonPath + "/getAllSubScribesDomain", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+    }
+};
+
+const getSubscribeDomainById = async (request, reply, fastify) => {
+    try {
+        const result = await subScribeDomainByIdService(request,fastify);
+        reply.status(200).send(success(result, 200));
+    } catch (err) {
+        errorLogger(fastify, err.message, commonPath + "/getAllSubScribesDomain", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+    }
+};
+const saveSubScribeDomain = async (request, reply, fastify) => {
+    try {
+        const result = await saveSubScribeDomainService(request,fastify);
+        reply.status(200).send(success(result, 200));
+    } catch (err) {
+        errorLogger(fastify, err.message, commonPath + "/saveSubScribeDomain", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+    }
+};
+const deleteSubScribeDomain = async (request, reply, fastify) => {
+    try {
+        const result = await deleteSubScribeDomainService(request,fastify);
+        reply.status(200).send(success(result, 200));
+    } catch (err) {
+        errorLogger(fastify, err.message, commonPath + "/deleteSubScribeDomain", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+    }
+};
+const approveDomain = async (request, reply, fastify) => {
+    try {
+        const result = await approveDomainService(request,fastify);
+        reply.status(200).send(success(result, 200));
+    } catch (err) {
+        errorLogger(fastify, err.message, commonPath + "/approveDomain", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+    }
+};
+module.exports = {
+    getAllSubScribesDomain,
+    getSubscribeDomainById,
+    saveSubScribeDomain,
+    deleteSubScribeDomain,
+    approveDomain
+}

@@ -1,0 +1,160 @@
+const { errorLogger } = require("../utilities/logger")
+
+const getAllSubScribesDomainQuery = async (fastify) =>{
+    const data =  await fastify.db.query(
+        `
+        SELECT 
+            tsd."wrSubScribesDomainId" as "subScribesDomainId",
+            "wrSiteName" as "siteName",
+            "wrSiteDomain" as "siteDomain",
+            "wrIsApproved" as "isApproved",
+            CAST(count(tssd."wrSubScribesSubDomainId") as integer) as "subDomainCount"
+        FROM
+            "tblSubScribesDomains" tsd
+        LEFT JOIN
+            "tblSubScribesSubDomains" tssd ON tsd."wrSubScribesDomainId" = tssd."wrSubScribesDomainId"
+        GROUP BY
+            tsd."wrSubScribesDomainId"
+        `,
+        {
+            type: fastify.db.QueryTypes.SELECT
+        }
+    )
+    return data;
+}
+const getAllSubScribesSubDomainQuery = async (fastify) =>{
+    return await fastify.db.query(
+        `
+        SELECT 
+            "wrSubScribesSubDomainId" as "subScribesSubDomainId",
+            "wrSubScribesDomainId" as "subScribesDomainId",
+            "wrSiteSubDomain" as "siteSubDomain"
+        FROM
+            "tblSubScribesSubDomains"
+        `,
+        {
+            type: fastify.db.QueryTypes.SELECT
+        }
+    )
+}
+const insertSubScribeDomainQuery = async (request,fastify) =>{
+    try {
+        const createData = await fastify.db.query(
+            `WITH insert_data AS (
+                INSERT INTO "tblSubScribesDomains"(
+                    "wrSiteName",
+                    "wrSiteDomain"
+                )
+                VALUES (
+                    $1,
+                    $2
+                )
+                RETURNING *
+            )
+            SELECT 
+                "wrSubScribesDomainId" as "subScribesDomainId",
+                "wrSiteName" as "siteName",
+                "wrSiteDomain" as "siteDomain",
+                "wrIsApproved" as "isApproved"
+            FROM insert_data
+            `,
+            {
+                type: fastify.db.QueryTypes.SELECT,
+                bind: [
+                    request.body.siteName,
+                    request.body.siteDomain
+                ]
+            }
+        );
+
+        return createData[0];
+
+    } catch (err) {
+        errorLogger(
+            fastify,
+            err.message,
+            "DB ERROR --> repository/TableSubScribesDomain.js/insertSubScribeDomainQuery",
+            request
+          );
+          throw new Error(err.message);
+    }
+}
+
+const deleteSubScribeDomainQuery = async (id,fastify) =>{
+    try {
+           // delete sub domains
+        await fastify.db.query(
+            `
+            DELETE FROM "tblSubScribesSubDomain" 
+            WHERE 
+                "wrSubScribesDomainId" = $1
+            `,
+            {
+                type: fastify.db.QueryTypes.DELETE,
+                bind: [
+                    id
+                ]
+            }
+        );
+        // delete domain
+        await fastify.db.query(
+            `
+            DELETE FROM "tblSubScribesDomains" 
+            WHERE 
+                "wrSubScribesDomainId" = $1
+            `,
+            {
+                type: fastify.db.QueryTypes.DELETE,
+                bind: [
+                    id
+                ]
+            }
+        );
+    return "Domain Deleted Successfully";
+    } catch (err) {
+        errorLogger(
+            fastify,
+            err.message,
+            "DB ERROR --> repository/TableSubScribesDomain.js/deleteSubScribeDomainQuery",
+            request
+          );
+          throw new Error(err.message);
+    }
+}
+
+const updateDomainStatusQuery = async (request,fastify) =>{
+    try {
+        await fastify.db.query(
+            `
+            UPDATE "tblSubScribesDomains" 
+            SET 
+                "wrIsApproved" = $1
+            WHERE 
+                "wrSubScribesDomainId" = $2
+            `,
+            {
+                type: fastify.db.QueryTypes.UPDATE,
+                bind: [
+                    request.body.isApproved,
+                    request.body.subScribesDomainId
+                ]
+            }
+        );
+        return true;
+    } catch (err) {
+        errorLogger(
+            fastify,
+            err.message,
+            "DB ERROR --> repository/TableSubScribesDomain.js/updateDomainStatusQuery",
+            request
+          );
+          throw new Error(err.message);
+    }
+}
+module.exports = {
+    getAllSubScribesDomainQuery,
+    getAllSubScribesSubDomainQuery,
+    insertSubScribeDomainQuery,
+    deleteSubScribeDomainQuery,
+    updateDomainStatusQuery
+}

@@ -2509,7 +2509,86 @@ const News = {
     },
   },
 };
-
+const SubScribesDomain = {
+  getAll: {
+    schema: {
+      tags: ["SubScribesDomain"],
+      description: "get all SubScribesDomain",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          isApproved: { type: "boolean" },
+        },
+      },
+    },
+  },
+  getById: {
+    schema: {
+      tags: ["SubScribesDomain"],
+      description: "get SubScribesDomain by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          subScribesDomainId: { type: "integer" },
+        },
+        required: ["subScribesDomainId"],
+      },
+    },
+  },
+  save: {
+    schema: {
+      tags: ["SubScribesDomain"],
+      description: "save SubScribesDomain",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          subScribesDomainId: { type: "integer" },
+          siteName : { type: "string" },
+          siteDomain : { type: "string" },
+          isApproved: { type: "boolean" },
+          subDomains : { type: "array", items: { type: "string" } },
+        },
+        required: ["subScribesDomainId"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["SubScribesDomain"],
+      description: "delete SubScribesDomain",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          subScribesDomainId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["subScribesDomainId"],
+      },
+    },
+  },
+  domainApprove: {
+    schema: {
+      tags: ["SubScribesDomain"],
+      description: "active inactive SubScribesDomain",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          subScribesDomainId: { type: "integer" },
+          isApproved: { type: "boolean" },
+        },
+        required: ["subScribesDomainId", "isApproved"],
+      },
+    },
+  },
+};
 module.exports = {
   Auth,
   Tabs,
@@ -2533,5 +2612,6 @@ module.exports = {
   Event,
   ImportMarket,
   Score,
-  News,
+  SubScribesDomain,
+  News
 };
