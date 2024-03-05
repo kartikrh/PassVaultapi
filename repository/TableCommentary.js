@@ -382,7 +382,7 @@ const updateCommentaryTeams = async (request, fastify, data) => {
       "wrTeamKipper" = $2,
       "wrShortName" = (select "wrTeamShortName" from "tblTeams" where "wrTeamId" = $3),
       "wrTeamName" = (select "wrTeamName" from "tblTeams" where "wrTeamId" = $3),
-      "wrCurrentInnings" = $5
+      "wrCurrentInnings" = $5,
       "wrTeamBattingOrder" = $6
       where "wrCommentaryId" = $4 and "wrTeamId" = $3
       AND "wrCurrentInnings" = $5
