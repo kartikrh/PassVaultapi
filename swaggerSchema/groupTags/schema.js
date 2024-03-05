@@ -2545,7 +2545,6 @@ const SubScribesDomain = {
       body: {
         type: "object",
         properties: {
-          subScribesDomainId: { type: "integer" },
           siteName : { type: "string" },
           siteDomain : { type: "string" },
           isApproved: { type: "boolean" },

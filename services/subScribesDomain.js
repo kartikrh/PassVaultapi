@@ -64,7 +64,10 @@ const insertSubScribeDomain = async (request, fastify) => {
           subScribesDomainId: domainData.subScribesDomainId,
           subDomains: request.body.subDomains,
         };
-        await insertSubScribeSubDomainQuery(body ,request, fastify);
+        const subDomainData = await insertSubScribeSubDomainQuery(body ,request, fastify);
+        global.tblSubScribesSubDomain.push(
+          ...subDomainData
+        );
     }
     const data = await getDomainByIdQuery(domainData.subScribesDomainId, fastify);
     global.tblSubScribesDomain.push(data);
@@ -85,7 +88,8 @@ const insertSubScribeDomain = async (request, fastify) => {
         subScribesDomainId: domainData.subScribesDomainId,
         subDomains: newSubDomain,
       };
-      await insertSubScribeSubDomainQuery(body ,request, fastify);
+      const subDomain = await insertSubScribeSubDomainQuery(body ,request, fastify);
+      global.tblSubScribesSubDomain.push(...subDomain);    
     }
   }
   const data = await getDomainByIdQuery(domainData.subScribesDomainId, fastify);

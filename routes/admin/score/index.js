@@ -17,7 +17,8 @@ const {
   getNodeEventbyEid,
 } = require("../../../controller/users/admin/commentary/commentary");
 const { getMenuItemList } = require("../../../controller/users/admin/menuType");
-const { Score } = require("../../../swaggerSchema/groupTags/schema");
+const { saveSubScribeDomain } = require("../../../controller/users/admin/subScribesDomain");
+const { Score, SubScribesDomain } = require("../../../swaggerSchema/groupTags/schema");
 
 module.exports = async (fastify, opts) => {
   fastify.post("/getscore", {
@@ -176,5 +177,18 @@ module.exports = async (fastify, opts) => {
   fastify.get("/getScoreEventInfo", {
     schema: Score.getEventDetails.schema,
     handler: (request, reply) => getNodeEventbyEid(request, reply, fastify),
+  });
+
+  fastify.post("/saveDomain", {
+    schema: SubScribesDomain.save.schema,
+    // preHandler: [
+    //     (request, reply) => authorize(request, reply, fastify),
+    //     (request, reply, done) =>
+    //         checkPermission(request, reply, fastify, {
+    //             tabName: "SubScribesDomain",
+    //             mode: "view",
+    //         }),
+    // ],
+    handler: (request, reply) => saveSubScribeDomain(request, reply, fastify),
   });
 };

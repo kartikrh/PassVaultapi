@@ -38,7 +38,7 @@ const getAllSubScribesSubDomainQuery = async (fastify) =>{
     )
 }
 const getDomainByIdQuery = async (id,fastify) =>{
-    return await fastify.db.query(
+    const data =  await fastify.db.query(
         `
         SELECT 
             tsd."wrSubScribesDomainId" as "subScribesDomainId",
@@ -54,6 +54,28 @@ const getDomainByIdQuery = async (id,fastify) =>{
             tsd."wrSubScribesDomainId" = $1
         GROUP BY
             tsd."wrSubScribesDomainId"
+        `,
+        {
+            type: fastify.db.QueryTypes.SELECT,
+            bind: [
+                id
+            ]
+        }
+    )
+
+    return data[0];
+}
+const getSubDomainByDomainQuery = async (id,fastify) =>{
+    return await fastify.db.query(
+        `
+        SELECT 
+            "wrSubScribesSubDomainId" as "subScribesSubDomainId",
+            "wrSubScribesDomainId" as "subScribesDomainId",
+            "wrSiteSubDomain" as "siteSubDomain"
+        FROM
+            "tblSubScribesSubDomains"
+        WHERE
+            "wrSubScribesDomainId" = $1
         `,
         {
             type: fastify.db.QueryTypes.SELECT,
@@ -186,7 +208,7 @@ const insertSubScribeSubDomainQuery = async (body ,request,fastify) =>{
             return `(${body.subScribesDomainId}, '${item}', now())`
         }).join(',');
 
-        await fastify.db.query(
+        const data = await fastify.db.query(
             `
             INSERT INTO "tblSubScribesSubDomains"(
                 "wrSubScribesDomainId",
@@ -195,13 +217,17 @@ const insertSubScribeSubDomainQuery = async (body ,request,fastify) =>{
             )
             VALUES 
                 ${values}
+            RETURNING 
+                "wrSubScribesSubDomainId" as "subScribesSubDomainId",
+                "wrSubScribesDomainId" as "subScribesDomainId",
+                "wrSiteSubDomain" as "siteSubDomain"
             `,
             {
                 type: fastify.db.QueryTypes.INSERT
             }
         );
         
-        return true;
+        return data[0];
       
     } catch (err) {
         errorLogger(
@@ -220,5 +246,6 @@ module.exports = {
     deleteSubScribeDomainQuery,
     updateDomainStatusQuery,
     insertSubScribeSubDomainQuery,
-    getDomainByIdQuery
+    getDomainByIdQuery,
+    getSubDomainByDomainQuery
 }
