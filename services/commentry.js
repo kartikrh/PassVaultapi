@@ -2900,7 +2900,8 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
         cci : item.currentInnings,
         tid : item.teamId,
         ten : item.teamName,
-        tes : item.shortName
+        tes : item.shortName,
+        isbc : item.isBattingComplete
       }
     });
     dataToreturn.td = commentaryTeam;
@@ -3048,8 +3049,8 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
     return dataToreturn;
   } catch (error) {
     // Handle errors here
-    console.error(error);
-    throw error;
+    console.log(error);
+    throw new Error("Error in getting data");
   }
 };
 
