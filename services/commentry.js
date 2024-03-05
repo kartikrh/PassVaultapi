@@ -2988,9 +2988,9 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
 
     const commentaryPartnership = await global.tblCommentaryPartnership.filter(
       (item) =>
-        item.commentaryId === commentary.commentaryId &&
-        item.teamId === batId &&
-        item.currentInnings === currentInnings
+        item.commentaryId === commentary.commentaryId
+        // item.teamId === batId &&
+        // item.currentInnings === currentInnings
     );
 
     const partnershipList = [];
@@ -3031,7 +3031,8 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
           ball: totalBalls,
           pl2n: batter2Name,
           pl2i: player2Info.image,
-          tid : partnership.teamId
+          tid : partnership.teamId,
+          cci : partnership.currentInnings
         });
       }
     });
