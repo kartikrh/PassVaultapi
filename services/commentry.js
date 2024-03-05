@@ -2894,6 +2894,15 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
       (item) =>
         item.commentaryId === commentary.commentaryId 
     ).map((item) => {
+      let tJer , timg;
+      if(item.teamId === team1.teamId){
+        tJer = team1.jersey;
+        timg = team1.image;
+      }
+      if(item.teamId === team2.teamId){
+        tJer = team2.jersey;
+        timg = team2.image;
+      }
       return {
         cid : item.commentaryId,
         ctid : item.commentaryTeamId,
@@ -2901,7 +2910,9 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
         tid : item.teamId,
         ten : item.teamName,
         tes : item.shortName,
-        isbc : item.isBattingComplete
+        isbc : item.isBattingComplete,
+        tJer : tJer || "",
+        timg : timg || ""
       }
     });
     dataToreturn.td = commentaryTeam;
@@ -3050,7 +3061,7 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
   } catch (error) {
     // Handle errors here
     // console.error(error);
-    throw new Error("Error in getting data");
+    throw new Error("Error in getting data", error);
   }
 };
 
