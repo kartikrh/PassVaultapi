@@ -113,6 +113,10 @@ module.exports = (sequelize) => {
         allowNull: true,
         defaultValue: 0,
       },
+      wrTeamBattingOrder : {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
     },
     {
       timestamps: false,

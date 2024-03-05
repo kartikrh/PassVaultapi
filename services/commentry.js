@@ -2945,7 +2945,8 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
         tes : item.shortName,
         isbc : item.isBattingComplete,
         tJer : tJer || "",
-        timg : timg || ""
+        timg : timg || "",
+        batOrd : item.teamBattingOrder,
       }
     });
     dataToreturn.td = commentaryTeam;
@@ -3030,6 +3031,7 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
           ball: totalBalls,
           pl2n: batter2Name,
           pl2i: player2Info.image,
+          tid : partnership.teamId
         });
       }
     });
@@ -3094,7 +3096,7 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
   } catch (error) {
     // Handle errors here
     // console.error(error);
-    throw new Error("Error in getting data", error);
+    throw new Error(error);
   }
 };
 
