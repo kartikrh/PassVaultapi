@@ -2240,8 +2240,10 @@ const getCommnertySquadPlayersList = async (data, fastify, request) => {
       SELECT
       "tblCommentaryPlayers"."wrCommentaryPlayerId" AS pid,
       p."wrPlayerName" AS pn,
-             p."wrImage" AS pim,
-            "tblCommentaryPlayers"."wrDisplayOrder"  AS ord,
+            p."wrImage" AS pim,
+           
+            "tblCommentaryPlayers"."wrBatterOrder"  AS bato,
+		        "tblCommentaryPlayers"."wrBowlerOrder"  AS bowo,
              CASE
                  WHEN "wrPlayerTypeId" = 1 THEN 'BatsMan'
                  WHEN "wrPlayerTypeId" = 2 THEN 'Bowler'
