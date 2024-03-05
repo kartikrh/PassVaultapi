@@ -2550,7 +2550,7 @@ const SubScribesDomain = {
           isApproved: { type: "boolean" },
           subDomains : { type: "array", items: { type: "string" } },
         },
-        required: ["subScribesDomainId"],
+        required: ["siteDomain"],
       },
     },
   },

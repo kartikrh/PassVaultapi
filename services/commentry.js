@@ -925,6 +925,39 @@ const saveCommentaryDetailsService = async (request, fastify) => {
   }
   commentaryOvers &&
     promises.push(saveOverService(commentaryOvers, fastify, request));
+
+  let savecommentaryBallByBall, savecommentaryWicket, savecommentaryPartnership;
+  if(commentaryWicket){
+    // first create ball by ball commentary
+    savecommentaryBallByBall = await ballByBallCommentoriesService(commentaryBallByBall, fastify, request)
+    savecommentaryPartnership = await saveCommentaryPartnershipService({
+      ...commentaryPartnership,
+      commentaryBallByBallId: savecommentaryBallByBall.value.commentaryBallByBallId
+    }, fastify, request)
+    savecommentaryWicket = await saveCommentaryWicketService({
+      ...commentaryWicket,
+      commentaryBallByBallId: savecommentaryBallByBall.value.commentaryBallByBallId
+    }, fastify, request)
+
+    commentaryDetails &&
+    promises.push(
+      updateCommentaryDetailsServices(commentaryDetails, fastify, request)
+    );
+    return Promise.all(promises)
+    .then((results) => {
+      results.forEach((result) => {
+        // console.log(result);
+        if (result) {
+          result["name"] && (response[result.name] = result.value);
+        }
+        response.commentaryBallByBallDetails  = savecommentaryBallByBall.value;
+        response.commentaryWicketDetails = savecommentaryWicket.value;
+        response.commentaryPartnershipDetails = savecommentaryPartnership.value;
+      });
+      return Object.keys(response).length ? response : true;
+    })
+    
+  }
   commentaryBallByBall &&
     promises.push(
       ballByBallCommentoriesService(commentaryBallByBall, fastify, request)
@@ -2955,7 +2988,7 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
     const commentaryPartnership = await global.tblCommentaryPartnership.filter(
       (item) =>
         item.commentaryId === commentary.commentaryId &&
-        item.teamId === BattingTeamId &&
+        item.teamId === batId &&
         item.currentInnings === currentInnings
     );
 
