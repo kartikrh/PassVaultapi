@@ -3049,7 +3049,7 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
     return dataToreturn;
   } catch (error) {
     // Handle errors here
-    console.log(error);
+    // console.error(error);
     throw new Error("Error in getting data");
   }
 };
