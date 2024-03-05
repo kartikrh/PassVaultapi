@@ -1078,7 +1078,7 @@ const createOverService = async (data, fastify, request) => {
 
   const indexTeam = global.tblCommentaryTeams.findIndex(
     (item) =>
-      item.commentaryId === data.commentaryId && item.commentaryTeamId === data.teamId
+      item.commentaryId === data.commentaryId && item.teamId === data.teamId
   );
 
   if (indexTeam === -1) {
