@@ -202,6 +202,25 @@ const deleteMatchTypeQuery = async (matchTypeId, fastify, request) => {
     throw new Error(err.message);
   }
 };
+const deleteMatchTypePredictorQuery = async (matchTypeId, fastify, request) => {
+  try {
+    return await fastify.db.query(
+      `delete from "tblMatchTypePredictors" where "wrMatchTypeId" = ANY($1)`,
+      {
+        bind: [matchTypeId],
+        type: fastify.db.QueryTypes.DELETE,
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableMatchType/deleteMatchTypeQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
 
 const updateMatchTypeQuery = async (data, fastify, request) => {
   try {
@@ -318,4 +337,5 @@ module.exports = {
   insertMatchTypeQuery,
   deleteMatchTypeQuery,
   updateMatchTypeQuery,
+  deleteMatchTypePredictorQuery
 };
