@@ -2588,6 +2588,105 @@ const SubScribesDomain = {
     },
   },
 };
+const MatchTypePredictor = {
+  getAll: {
+    schema: {
+      tags: ["MatchTypePredictor"],
+      description: "get all MatchTypePredictor",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {},
+      },
+    },
+  },
+  getById: {
+    schema: {
+      tags: ["MatchTypePredictor"],
+      description: "get MatchTypePredictor by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          matchTypePredictorId: { type: "integer" },
+        },
+        required: ["matchTypePredictorId"],
+      },
+    },
+  },
+  getByMatchTypeId: {
+    schema: {
+      tags: ["MatchTypePredictor"],
+      description: "get MatchTypePredictor by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          matchTypeId: { type: "integer" },
+        },
+        required: ["matchTypeId"],
+      },
+    },
+  },
+  deleteByMatchTypeId: {
+    schema: {
+      tags: ["MatchTypePredictor"],
+      description: "get MatchTypePredictor by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          matchTypeId: { type: "integer" },
+        },
+        required: ["matchTypeId"],
+      },
+    },
+  },
+  save: {
+    schema: {
+      tags: ["MatchTypePredictor"],
+      description: "save MatchTypePredictor",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          matchTypeId : { type: "integer" },
+          predictorData : {
+            type : "array",
+            items : {
+              type : "object",
+              properties : {
+                over : { type : "integer" },
+                ball : { type : "number" },
+                runPerBall : { type : "number"},
+                order : { type : "integer"}
+              },
+            }
+          }
+        },
+        required: ["matchTypeId" , "predictorData"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["MatchTypePredictor"],
+      description: "delete MatchTypePredictor",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          matchTypePredictorId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["matchTypePredictorId"],
+      },
+    },
+  },
+};
 module.exports = {
   Auth,
   Tabs,
@@ -2612,5 +2711,6 @@ module.exports = {
   ImportMarket,
   Score,
   SubScribesDomain,
-  News
+  News,
+  MatchTypePredictor
 };

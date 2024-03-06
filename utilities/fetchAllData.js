@@ -35,6 +35,9 @@ const {
   getAllSubScribesDomainQuery,
   getAllSubScribesSubDomainQuery,
 } = require("../repository/TableSubScibesDomain");
+const {
+  getAllMatchTypePredictorQuery
+} = require("../repository/TableMatchTypePredictor");
 const fetchAllDataFromDb = async (fastify, reply) => {
   try {
     const getAllTabs = await getAllActiveInactiveTabsQuery(fastify);
@@ -72,6 +75,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const getAllNews = await getAllNewsQuery(fastify);
     const getAllsubScribesDomain = await getAllSubScribesDomainQuery(fastify);
     const getAllsubScribesSubDomain = await getAllSubScribesSubDomainQuery(fastify);
+    const getAllMatchTypePredictor = await getAllMatchTypePredictorQuery(fastify);
 
     global.tblTabs = getAllTabs;
     global.tblRoles = getAllRoles;
@@ -104,6 +108,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblNews = getAllNews;
     global.tblSubScribesDomain = getAllsubScribesDomain;
     global.tblSubScribesSubDomain = getAllsubScribesSubDomain;
+    global.tblMatchTypePredictor = getAllMatchTypePredictor;
 
     console.log("Okkkk");
 

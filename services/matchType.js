@@ -2,6 +2,7 @@ const {
   insertMatchTypeQuery,
   deleteMatchTypeQuery,
   updateMatchTypeQuery,
+  deleteMatchTypePredictorQuery,
 } = require("../repository/TableMatchType");
 
 const allMatchTypesService = async () => {
@@ -124,9 +125,13 @@ const saveMatchTypeService = async (request, fastify) => {
 const deleteMatchTypeService = async (request, fastify) => {
   const { matchTypeId } = request.body;
 
+  await deleteMatchTypePredictorQuery(matchTypeId, fastify, request);
   await deleteMatchTypeQuery(matchTypeId, fastify, request);
 
   global.tblMatchTypes = global.tblMatchTypes.filter(
+    (item) => !matchTypeId.includes(item.matchTypeId)
+  );
+  global.tblMatchTypePredictor = global.tblMatchTypePredictor.filter(
     (item) => !matchTypeId.includes(item.matchTypeId)
   );
 
