@@ -927,36 +927,48 @@ const saveCommentaryDetailsService = async (request, fastify) => {
     promises.push(saveOverService(commentaryOvers, fastify, request));
 
   let savecommentaryBallByBall, savecommentaryWicket, savecommentaryPartnership;
-  if(commentaryWicket){
+  if (commentaryWicket) {
     // first create ball by ball commentary
-    savecommentaryBallByBall = await ballByBallCommentoriesService(commentaryBallByBall, fastify, request)
-    savecommentaryPartnership = await saveCommentaryPartnershipService({
-      ...commentaryPartnership,
-      commentaryBallByBallId: savecommentaryBallByBall.value.commentaryBallByBallId
-    }, fastify, request)
-    savecommentaryWicket = await saveCommentaryWicketService({
-      ...commentaryWicket,
-      commentaryBallByBallId: savecommentaryBallByBall.value.commentaryBallByBallId
-    }, fastify, request)
+    savecommentaryBallByBall = await ballByBallCommentoriesService(
+      commentaryBallByBall,
+      fastify,
+      request
+    );
+    savecommentaryPartnership = await saveCommentaryPartnershipService(
+      {
+        ...commentaryPartnership,
+        commentaryBallByBallId:
+          savecommentaryBallByBall.value.commentaryBallByBallId,
+      },
+      fastify,
+      request
+    );
+    savecommentaryWicket = await saveCommentaryWicketService(
+      {
+        ...commentaryWicket,
+        commentaryBallByBallId:
+          savecommentaryBallByBall.value.commentaryBallByBallId,
+      },
+      fastify,
+      request
+    );
 
     commentaryDetails &&
-    promises.push(
-      updateCommentaryDetailsServices(commentaryDetails, fastify, request)
-    );
-    return Promise.all(promises)
-    .then((results) => {
+      promises.push(
+        updateCommentaryDetailsServices(commentaryDetails, fastify, request)
+      );
+    return Promise.all(promises).then((results) => {
       results.forEach((result) => {
         // console.log(result);
         if (result) {
           result["name"] && (response[result.name] = result.value);
         }
-        response.commentaryBallByBallDetails  = savecommentaryBallByBall.value;
+        response.commentaryBallByBallDetails = savecommentaryBallByBall.value;
         response.commentaryWicketDetails = savecommentaryWicket.value;
         response.commentaryPartnershipDetails = savecommentaryPartnership.value;
       });
       return Object.keys(response).length ? response : true;
-    })
-    
+    });
   }
   commentaryBallByBall &&
     promises.push(
@@ -2869,7 +2881,7 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
       teamScore2 = teamScore2 + "/" + wicket1 + "(" + overs1 + ")";
     }
 
-    let crr, rrr, BattingTeamId, BowlingTeamId , batId , bowlId;
+    let crr, rrr, BattingTeamId, BowlingTeamId, batId, bowlId;
     if (commentaryTeamsOne.teamStatus == 1) {
       crr = commentaryTeamsOne.crr;
       rrr = commentaryTeamsOne.rrr;
@@ -2923,32 +2935,31 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
 
     dataToreturn.es = es;
 
-    const commentaryTeam = await global.tblCommentaryTeams.filter(
-      (item) =>
-        item.commentaryId === commentary.commentaryId 
-    ).map((item) => {
-      let tJer , timg;
-      if(item.teamId === team1.teamId){
-        tJer = team1.jersey;
-        timg = team1.image;
-      }
-      if(item.teamId === team2.teamId){
-        tJer = team2.jersey;
-        timg = team2.image;
-      }
-      return {
-        cid : item.commentaryId,
-        ctid : item.commentaryTeamId,
-        cci : item.currentInnings,
-        tid : item.teamId,
-        ten : item.teamName,
-        tes : item.shortName,
-        isbc : item.isBattingComplete,
-        tJer : tJer || "",
-        timg : timg || "",
-        batOrd : item.teamBattingOrder,
-      }
-    });
+    const commentaryTeam = await global.tblCommentaryTeams
+      .filter((item) => item.commentaryId === commentary.commentaryId)
+      .map((item) => {
+        let tJer, timg;
+        if (item.teamId === team1.teamId) {
+          tJer = team1.jersey;
+          timg = team1.image;
+        }
+        if (item.teamId === team2.teamId) {
+          tJer = team2.jersey;
+          timg = team2.image;
+        }
+        return {
+          cid: item.commentaryId,
+          ctid: item.commentaryTeamId,
+          cci: item.currentInnings,
+          tid: item.teamId,
+          ten: item.teamName,
+          tes: item.shortName,
+          isbc: item.isBattingComplete,
+          tJer: tJer || "",
+          timg: timg || "",
+          batOrd: item.teamBattingOrder,
+        };
+      });
     dataToreturn.td = commentaryTeam;
     if (commentary.commentaryStatus === 1) {
       return dataToreturn;
@@ -2987,10 +2998,9 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
     //Partnership data
 
     const commentaryPartnership = await global.tblCommentaryPartnership.filter(
-      (item) =>
-        item.commentaryId === commentary.commentaryId
-        // item.teamId === batId &&
-        // item.currentInnings === currentInnings
+      (item) => item.commentaryId === commentary.commentaryId
+      // item.teamId === batId &&
+      // item.currentInnings === currentInnings
     );
 
     const partnershipList = [];
@@ -3031,8 +3041,8 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
           ball: totalBalls,
           pl2n: batter2Name,
           pl2i: player2Info.image,
-          tid : partnership.teamId,
-          cci : partnership.currentInnings
+          tid: partnership.teamId,
+          cci: partnership.currentInnings,
         });
       }
     });
@@ -3091,7 +3101,6 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
     oversList = oversList.sort((a, b) => b.ov - a.ov);
 
     dataToreturn.ov = oversList;
-  
 
     return dataToreturn;
   } catch (error) {
@@ -3137,8 +3146,8 @@ const getInningDataByInningNumber = async (commentaryId, inningNumber) => {
       six: player.batSix || 0,
       dot: player.batDotBall || 0,
       sr: player.batsmanStrikeRate || 0,
-      tid : currentBattingTeam.commentaryTeamId,
-      batO : player.battingOrder || null
+      tid: currentBattingTeam.commentaryTeamId,
+      batO: player.batterOrder || null,
     };
   });
 
@@ -3174,9 +3183,8 @@ const getInningDataByInningNumber = async (commentaryId, inningNumber) => {
         0 + player.bowlerLegByeBallRun ||
         0,
       eco: player.bowlerEconomy,
-      tid : currentBowlingTeam.commentaryTeamId,
-      bowlO : player.bowlerOrder || null
-      
+      tid: currentBowlingTeam.commentaryTeamId,
+      bowlO: player.bowlerOrder || null,
     };
   });
 
@@ -3193,7 +3201,7 @@ const getInningDataByInningNumber = async (commentaryId, inningNumber) => {
       sco1: player.teamScore,
       ovr1: player.overCount,
       wkt1: player.wicketCount,
-      tid : currentBattingTeam.commentaryTeamId
+      tid: currentBattingTeam.commentaryTeamId,
     };
   });
 
@@ -3234,7 +3242,8 @@ const getInningDataByInningNumber = async (commentaryId, inningNumber) => {
       six: player.batSix || 0,
       dot: player.batDotBall || 0,
       sr: player.batsmanStrikeRate || 0,
-      tid : currentBowlingTeam.commentaryTeamId
+      tid: currentBowlingTeam.commentaryTeamId,
+      batO: player.batterOrder || null,
     };
   });
 
@@ -3265,7 +3274,8 @@ const getInningDataByInningNumber = async (commentaryId, inningNumber) => {
         0 + player.bowlerLegByeBallRun ||
         0,
       eco: player.bowlerEconomy,
-      tid : currentBattingTeam.commentaryTeamId
+      tid: currentBattingTeam.commentaryTeamId,
+      bowlO: player.bowlerOrder || null,
     };
   });
 
@@ -3282,7 +3292,7 @@ const getInningDataByInningNumber = async (commentaryId, inningNumber) => {
       sco1: player.teamScore,
       ovr1: player.overCount,
       wkt1: player.wicketCount,
-      tid : currentBowlingTeam.commentaryTeamId
+      tid: currentBowlingTeam.commentaryTeamId,
     };
   });
 
