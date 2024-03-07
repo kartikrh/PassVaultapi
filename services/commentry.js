@@ -2931,6 +2931,7 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
       t2id: commentaryTeamsTwo.commentaryTeamId,
       boid: bowlId,
       baid: batId,
+      ics: commentary.isClientShow,
     };
 
     dataToreturn.es = es;
