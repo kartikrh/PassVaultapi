@@ -3150,6 +3150,7 @@ const getInningDataByInningNumber = async (commentaryId, inningNumber) => {
       sr: player.batsmanStrikeRate || 0,
       tid: currentBattingTeam.commentaryTeamId,
       batO: player.batterOrder || null,
+      inp: player.isPlay || false,
     };
   });
 
@@ -3187,6 +3188,7 @@ const getInningDataByInningNumber = async (commentaryId, inningNumber) => {
       eco: player.bowlerEconomy,
       tid: currentBowlingTeam.commentaryTeamId,
       bowlO: player.bowlerOrder || null,
+      inp: player.isPlay || false,
     };
   });
 
@@ -3246,6 +3248,8 @@ const getInningDataByInningNumber = async (commentaryId, inningNumber) => {
       sr: player.batsmanStrikeRate || 0,
       tid: currentBowlingTeam.commentaryTeamId,
       batO: player.batterOrder || null,
+      inp: player.isPlay || null,
+      inp: player.isPlay || false,
     };
   });
 
@@ -3278,6 +3282,7 @@ const getInningDataByInningNumber = async (commentaryId, inningNumber) => {
       eco: player.bowlerEconomy,
       tid: currentBattingTeam.commentaryTeamId,
       bowlO: player.bowlerOrder || null,
+      inp: player.isPlay || false,
     };
   });
 
