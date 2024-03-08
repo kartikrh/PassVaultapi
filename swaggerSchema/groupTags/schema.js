@@ -2335,6 +2335,19 @@ const ImportMarket = {
 };
 
 const MarketTemplate = {
+  getAll: {
+    schema: {
+      tags: ["Market Template"],
+      security: [{ bearerAuth: [] }],
+      description: "get all market template",
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
   save: {
     schema: {
       tags: ["Market Template"],
@@ -2343,7 +2356,9 @@ const MarketTemplate = {
       body: {
         type: "object",
         properties: {
+          marketTemplateId: { type: "integer" },
           matchTypeId: { type: "integer" },
+          wrTemplateName: { type: "string" },
           wrIsPredefineMarket: { type: "boolean" },
           wrIsPreMatchOnly: { type: "boolean" },
           wrIsPreMatchMarket: { type: "boolean" },

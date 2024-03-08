@@ -16,6 +16,10 @@ module.exports = (sequelize) => {
         allowNull: false,
         autoIncrement: true,
       },
+      wrTemplateName: {
+        type: DataTypes.STRING(400),
+        allowNull: true,
+      },
       wrMatchTypeID: {
         type: DataTypes.INTEGER,
         allowNull: false,
