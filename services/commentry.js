@@ -1031,7 +1031,8 @@ const updateCommentaryTeamsServices = async (teamDetails, fastify, request) => {
   const index = global.tblCommentaryTeams.findIndex(
     (item) =>
       item.commentaryId === teamDetails.commentaryId &&
-      item.teamId === teamDetails.teamId
+      //item.teamId === teamDetails.teamId &&
+      item.commentaryTeamId === teamDetails.commentaryTeamId
   );
 
   if (index === -1) {

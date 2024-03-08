@@ -39,7 +39,7 @@ module.exports = (sequelize) => {
         allowNull: true,
       },
       wrTeamOver: {
-        type: DataTypes.DECIMAL(5, 2),
+        type: DataTypes.DOUBLE,
         allowNull: true,
       },
       wrTeamWicket: {
@@ -113,7 +113,7 @@ module.exports = (sequelize) => {
         allowNull: true,
         defaultValue: 0,
       },
-      wrTeamBattingOrder : {
+      wrTeamBattingOrder: {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
