@@ -67,7 +67,8 @@ module.exports = async function (fastify, opts) {
       require("./sequelize/tables/subScribesDomainModel")(fastify.db);
       require("./sequelize/tables/subScribesSubDomainModel")(fastify.db);
       require("./sequelize/tables/matchTypePredictorModel")(fastify.db);
-
+      require("./sequelize/tables/marketTemplateModel")(fastify.db);
+      require("./sequelize/tables/eventMarketsModel")(fastify.db);
       try {
         await fastify.db.sync();
         await featchData(fastify);

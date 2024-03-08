@@ -2333,6 +2333,59 @@ const ImportMarket = {
     },
   },
 };
+
+const MarketTemplate = {
+  getAll: {
+    schema: {
+      tags: ["Market Template"],
+      security: [{ bearerAuth: [] }],
+      description: "get all market template",
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+  save: {
+    schema: {
+      tags: ["Market Template"],
+      security: [{ bearerAuth: [] }],
+      description: "save market template",
+      body: {
+        type: "object",
+        properties: {
+          marketTemplateId: { type: "integer" },
+          matchTypeId: { type: "integer" },
+          wrTemplateName: { type: "string" },
+          wrIsPredefineMarket: { type: "boolean" },
+          wrIsPreMatchOnly: { type: "boolean" },
+          wrIsPreMatchMarket: { type: "boolean" },
+          wrIsOver: { type: "boolean" },
+          wrOver: { type: "string" },
+          wrIsPlayer: { type: "boolean" },
+          wrPlayerID: { type: "integer" },
+          wrIsAutoCancel: { type: "boolean" },
+          wrAutoOpenType: { type: "integer" },
+          wrAutoOpen: { type: "number" },
+          wrAutoCloseType: { type: "integer" },
+          wrBeforeAutoClose: { type: "number" },
+          wrAutoSuspendType: { type: "integer" },
+          wrBeforeAutoSuspend: { type: "number" },
+          wrIsBallStart: { type: "boolean" },
+          wrIsAutoResultSet: { type: "boolean" },
+          wrAutoResultType: { type: "integer" },
+          wrAutoResultafterBall: { type: "number" },
+          wrAfterWicketAutoSuspend: { type: "integer" },
+          wrAfterWicketNotCreated: { type: "integer" },
+          wrCreatedBy: { type: "integer" },
+          wrIsActive: { type: "boolean" }
+        },
+      },
+    },
+  },
+}
 const Score = {
   getAllUpdatedIds: {
     schema: {
@@ -2709,6 +2762,7 @@ module.exports = {
   Compitition,
   Event,
   ImportMarket,
+  MarketTemplate,
   Score,
   SubScribesDomain,
   News,
