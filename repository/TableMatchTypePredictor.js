@@ -63,7 +63,8 @@ const createMatchTypePredictorQuery = async (body,request, fastify) => {
             "wrMatchTypeId" as "matchTypeId",
             "wrOver" as "over",
             "wrBall" as "ball",
-            "wrRunPerBall" as "runPerBall"
+            "wrRunPerBall" as "runPerBall",
+            "wrOrder" as "order"
         `;
 
         const data = await fastify.db.query(
