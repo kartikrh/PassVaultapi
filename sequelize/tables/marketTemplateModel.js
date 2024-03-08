@@ -1,11 +1,11 @@
 const { DataTypes } = require("sequelize");
-marketTime = {"Ball": 1, "over": 2} //nullable
+// marketTime = {"Ball": 1, "over": 2} //nullable
 //wrAutoOpenType
 //wrAutoCloseType
 //wrAutoSuspendType
 
 // new
-// wrtemplatename
+// wrTemplateName
 module.exports = (sequelize) => {
   const marketTemplateModel = sequelize.define(
     "tblMarketTemplate",

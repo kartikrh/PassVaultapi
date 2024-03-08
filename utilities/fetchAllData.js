@@ -114,7 +114,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblSubScribesDomain = getAllsubScribesDomain;
     global.tblSubScribesSubDomain = getAllsubScribesSubDomain;
     global.tblMatchTypePredictor = getAllMatchTypePredictor;
-    global.tblMarketTemplate = getAllMarketTemplate; //MarketTemplate
+    global.tblMarketTemplate = getAllMarketTemplate;
     global.tblEventMarkets = getAllEventMarkets;
 
     console.log("Okkkk");

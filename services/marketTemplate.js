@@ -15,6 +15,14 @@ const getAllMarketTemplateService = async (request) => {
   }
 };
 
+const getMarketTemplateIdService = async (request) => {
+  const { marketTemplateId } = request.body;
+  const result = global.tblMarketTemplate.find(
+    (item) => item.marketTemplateId === marketTemplateId
+  );
+  return result || null;
+};
+
 const createMarketTemplateService = async (request, fastify) => {
 
   const data = await insertMarketTemplateQuery(
@@ -22,6 +30,7 @@ const createMarketTemplateService = async (request, fastify) => {
     fastify,
     request
   );
+  console.log("🚀 ~ createMarketTemplateService ~ request.body:", request.body)
 
   global.tblMarketTemplate.push(data);
   return data;
@@ -43,5 +52,6 @@ const saveMarketTemplateService = async (request, fastify) => {
 
 module.exports = {
   saveMarketTemplateService,
-  getAllMarketTemplateService
+  getAllMarketTemplateService,
+  getMarketTemplateIdService
 };
