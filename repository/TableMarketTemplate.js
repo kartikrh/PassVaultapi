@@ -5,30 +5,30 @@ const getAllMarketTemplateQuery = async (fastify) => {
         `SELECT
       "wrID" AS "marketTemplateId",
       "wrMatchTypeID" AS "matchTypeId",
-      "wrTemplateName",
-      "wrIsPredefineMarket",
-      "wrIsPreMatchOnly",
-      "wrIsPreMatchMarket",
-      "wrIsOver",
-      "wrOver",
-      "wrIsPlayer",
-      "wrPlayerID",
-      "wrIsAutoCancel",
-      "wrAutoOpenType",
-      "wrAutoOpen",
-      "wrAutoCloseType",
-      "wrBeforeAutoClose",
-      "wrAutoSuspendType",
-      "wrBeforeAutoSuspend",
-      "wrIsBallStart",
-      "wrIsAutoResultSet",
-      "wrAutoResultType",
-      "wrAutoResultafterBall",
-      "wrAfterWicketAutoSuspend",
-      "wrAfterWicketNotCreated",
-      "wrCreatedBy",
+      "wrTemplateName" as "templateName",
+      "wrIsPredefineMarket" as "isPredefineMarket",
+      "wrIsPreMatchOnly" as "isPreMatchOnly",
+      "wrIsPreMatchMarket" as "isPreMatchMarket",
+      "wrIsOver" as "isOver",
+      "wrOver" as "over",
+      "wrIsPlayer" as "isPlayer",
+      "wrPlayerID" as "playerID",
+      "wrIsAutoCancel" as "isAutoCancel",
+      "wrAutoOpenType" as "autoOpenType",
+      "wrAutoOpen" as "autoOpen",
+      "wrAutoCloseType" as "autoCloseType",
+      "wrBeforeAutoClose" as "beforeAutoClose",
+      "wrAutoSuspendType" as "autoSuspendType",
+      "wrBeforeAutoSuspend" as "beforeAutoSuspend",
+      "wrIsBallStart" as "isBallStart",
+      "wrIsAutoResultSet" as "isAutoResultSet",
+      "wrAutoResultType" as "autoResultType",
+      "wrAutoResultafterBall" as "autoResultafterBall",
+      "wrAfterWicketAutoSuspend" as "afterWicketAutoSuspend",
+      "wrAfterWicketNotCreated" as "afterWicketNotCreated",
+      "wrCreatedBy" as "createdBy",
       "wrIsActive" as "isActive"
-  FROM "tblMarketTemplate";
+  FROM "tblMarketTemplates";
   `,
         {
             type: fastify.db.QueryTypes.SELECT,
@@ -40,11 +40,11 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
     try {
         const result = await fastify.db.query(
             `with insert_data as(
-              insert into "tblMarketTemplate" ("wrTemplateName","wrMatchTypeID","wrIsPredefineMarket","wrIsPreMatchOnly","wrIsPreMatchMarket","wrIsOver","wrOver","wrIsPlayer","wrPlayerID","wrIsAutoCancel","wrAutoOpenType","wrAutoOpen","wrAutoCloseType","wrBeforeAutoClose","wrAutoSuspendType","wrBeforeAutoSuspend","wrIsBallStart","wrIsAutoResultSet","wrAutoResultType","wrAutoResultafterBall","wrAfterWicketAutoSuspend","wrAfterWicketNotCreated","wrCreatedBy","wrIsActive") values (
+              insert into "tblMarketTemplates" ("wrTemplateName","wrMatchTypeID","wrIsPredefineMarket","wrIsPreMatchOnly","wrIsPreMatchMarket","wrIsOver","wrOver","wrIsPlayer","wrPlayerID","wrIsAutoCancel","wrAutoOpenType","wrAutoOpen","wrAutoCloseType","wrBeforeAutoClose","wrAutoSuspendType","wrBeforeAutoSuspend","wrIsBallStart","wrIsAutoResultSet","wrAutoResultType","wrAutoResultafterBall","wrAfterWicketAutoSuspend","wrAfterWicketNotCreated","wrCreatedBy","wrIsActive") values (
                 $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24) returning *
           )        
           select 
-        "wrTemplateName",
+        "wrTemplateName" as "templateName,
         "wrMatchTypeID" as "matchTypeID",
         "wrIsPredefineMarket" as "isPredefineMarket",
         "wrIsPreMatchOnly" as "isPreMatchOnly",
@@ -72,11 +72,11 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
             {
                 type: fastify.db.QueryTypes.SELECT,
                 bind: [
-                    data.wrTemplateName || null,
+                    data.templateName || null,
                     data.matchTypeID || null,
                     data.isPredefineMarket || null,
                     data.isPreMatchOnly || null,
-                    data.insertMarketTemplateQuerysPreMatchMarket || null,
+                    data.isPreMatchMarket || null,
                     data.isOver || null,
                     data.over || null,
                     data.isPlayer || null,
@@ -104,7 +104,27 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
         errorLogger(
             fastify,
             err.message,
-            "DB ERROR --> repository/TableMarketTemplate.js/insertMarketTemplateQuery",
+            "DB ERROR --> repository/TableMarketTemplate/insertMarketTemplateQuery",
+            request
+        );
+        throw new Error(err.message);
+    }
+};
+
+const deleteMarketTemplateQuery = async (marketTemplateId, fastify, request) => {
+    try {
+        return await fastify.db.query(
+            `delete from "tblMarketTemplates" where "wrID" = ANY ($1)`,
+            {
+                bind: [marketTemplateId],
+                type: fastify.db.QueryTypes.SELECT,
+            }
+        );
+    } catch (err) {
+        errorLogger(
+            fastify,
+            err.message,
+            "DB ERROR --> repository/TableMarketTemplate/deleteMarketTemplateQuery",
             request
         );
         throw new Error(err.message);
@@ -113,5 +133,6 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
 
 module.exports = {
     getAllMarketTemplateQuery,
-    insertMarketTemplateQuery
+    insertMarketTemplateQuery,
+    deleteMarketTemplateQuery
 };

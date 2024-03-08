@@ -1,4 +1,4 @@
-const { insertMarketTemplateQuery } = require("../repository/TableMarketTemplate");
+const { insertMarketTemplateQuery, deleteMarketTemplateQuery } = require("../repository/TableMarketTemplate");
 
 const getAllMarketTemplateService = async (request) => {
   const { isActive } = request.body;
@@ -15,8 +15,17 @@ const getAllMarketTemplateService = async (request) => {
   }
 };
 
+const getMarketTemplateIdService = async (request) => {
+  const { marketTemplateId } = request.body;
+  const result = global.tblMarketTemplate.find(
+    (item) => item.marketTemplateId === marketTemplateId
+  );
+  return result || null;
+};
+
 const createMarketTemplateService = async (request, fastify) => {
 
+  console.log("🚀 ~ createMarketTemplateService ~ request.body:", request.body)
   const data = await insertMarketTemplateQuery(
     request.body,
     fastify,
@@ -41,7 +50,21 @@ const saveMarketTemplateService = async (request, fastify) => {
   }
 };
 
+const deleteMarketTemplateService = async (request, fastify) => {
+  const { marketTemplateId } = request.body;
+
+  await deleteMarketTemplateQuery(marketTemplateId, fastify, request);
+
+  global.tblMarketTemplate = global.tblMarketTemplate.filter(
+    (item) => !marketTemplateId.includes(item.marketTemplateId)
+  );
+
+  return `Event(s) deleted successfully`;
+};
+
 module.exports = {
   saveMarketTemplateService,
-  getAllMarketTemplateService
+  getAllMarketTemplateService,
+  getMarketTemplateIdService,
+  deleteMarketTemplateService
 };
