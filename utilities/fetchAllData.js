@@ -38,6 +38,9 @@ const {
 const {
   getAllMatchTypePredictorQuery
 } = require("../repository/TableMatchTypePredictor");
+const { getAllMarketTemplateQuery } = require("../repository/TableMarketTemplate");
+const { getAllEventMarketsQuery } = require("../repository/TableEventMarkets");
+
 const fetchAllDataFromDb = async (fastify, reply) => {
   try {
     const getAllTabs = await getAllActiveInactiveTabsQuery(fastify);
@@ -76,6 +79,8 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const getAllsubScribesDomain = await getAllSubScribesDomainQuery(fastify);
     const getAllsubScribesSubDomain = await getAllSubScribesSubDomainQuery(fastify);
     const getAllMatchTypePredictor = await getAllMatchTypePredictorQuery(fastify);
+    const getAllEventMarkets = await getAllEventMarketsQuery(fastify);
+    const getAllMarketTemplate = await getAllMarketTemplateQuery(fastify);
 
     global.tblTabs = getAllTabs;
     global.tblRoles = getAllRoles;
@@ -109,6 +114,8 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblSubScribesDomain = getAllsubScribesDomain;
     global.tblSubScribesSubDomain = getAllsubScribesSubDomain;
     global.tblMatchTypePredictor = getAllMatchTypePredictor;
+    global.tblMarketTemplate = getAllMarketTemplate; //MarketTemplate
+    global.tblEventMarkets = getAllEventMarkets;
 
     console.log("Okkkk");
 
