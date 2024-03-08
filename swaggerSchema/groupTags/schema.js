@@ -2400,6 +2400,24 @@ const MarketTemplate = {
       },
     },
   },
+  delete: {
+    schema: {
+      tags: ["Market Template"],
+      description: "delete market template",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          eventId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["marketTemplateId"],
+      },
+    },
+  },
 }
 const Score = {
   getAllUpdatedIds: {

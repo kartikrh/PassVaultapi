@@ -1,21 +1,21 @@
 const { authorize } = require("../../../controller/middleware");
-const { saveMarketTemplate, getAllMarketTemplate, getMarketTemplateId } = require("../../../controller/users/admin/marketTemplate");
+const { saveMarketTemplate, getAllMarketTemplate, getMarketTemplateId, deleteMarketTemplate } = require("../../../controller/users/admin/marketTemplate");
 const { MarketTemplate } = require("../../../swaggerSchema/groupTags/schema");
 
 module.exports = async function (fastify, opts) {
   fastify.post("/all", {
     schema: MarketTemplate.getAll.schema,
-    // preHandler: [
-    //   (request, reply) => authorize(request, reply, fastify),
-    // ],
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+    ],
     handler: (request, reply) => getAllMarketTemplate(request, reply, fastify),
   });
 
   fastify.post("/byId", {
     schema: MarketTemplate.getById.schema,
-    // preHandler: [
-    //   (request, reply) => authorize(request, reply, fastify),
-    // ],
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+    ],
     handler: (request, reply) => getMarketTemplateId(request, reply, fastify),
   });
 
@@ -24,5 +24,13 @@ module.exports = async function (fastify, opts) {
     // preHandler: [(request, reply) => authorize(request, reply, fastify)],
     handler: (request, reply) =>
       saveMarketTemplate(request, reply, fastify),
+  });
+
+  fastify.post("/delete", {
+    schema: MarketTemplate.delete.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+    ],
+    handler: (request, reply) => deleteMarketTemplate(request, reply, fastify),
   });
 };
