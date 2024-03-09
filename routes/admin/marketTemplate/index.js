@@ -1,6 +1,6 @@
 const { authorize, checkPermission } = require("../../../controller/middleware");
-const { saveMarketTemplate, getAllMarketTemplate, getMarketTemplateId, deleteMarketTemplate } = require("../../../controller/users/admin/marketTemplate");
-const { MarketTemplate } = require("../../../swaggerSchema/groupTags/schema");
+const { saveMarketTemplate, getAllMarketTemplate, getMarketTemplateId, deleteMarketTemplate, getMatchTypeList, activeInactiveMarketTemplate } = require("../../../controller/users/admin/marketTemplate");
+const { MarketTemplate, Commentary } = require("../../../swaggerSchema/groupTags/schema");
 
 module.exports = async function (fastify, opts) {
   fastify.post("/all", {
@@ -54,5 +54,31 @@ module.exports = async function (fastify, opts) {
       }),
     ],
     handler: (request, reply) => deleteMarketTemplate(request, reply, fastify),
+  });
+
+  fastify.post("/matchTypeList", {
+    schema: Commentary.matchTypeList.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Market Templates",
+          mode: "view",
+      }),
+    ],
+    handler: (request, reply) => getMatchTypeList(request, reply, fastify),
+  });
+
+  fastify.post("/activeInactiveTemplate", {
+    schema: MarketTemplate.activeInactiveTemplate.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Market Templates",
+          mode: "edit",
+      }),
+    ],
+    handler: (request, reply) => activeInactiveMarketTemplate(request, reply, fastify),
   });
 };
