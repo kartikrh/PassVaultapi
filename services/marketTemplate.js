@@ -1,4 +1,4 @@
-const { insertMarketTemplateQuery, deleteMarketTemplateQuery, updateMarketTemplateQuery } = require("../repository/TableMarketTemplate");
+const { insertMarketTemplateQuery, deleteMarketTemplateQuery, updateMarketTemplateQuery, updateStatusMarketTemplateQuery } = require("../repository/TableMarketTemplate");
 
 const getAllMarketTemplateService = async (request) => {
   const { isActive } = request.body;
@@ -42,8 +42,14 @@ const createMarketTemplateService = async (request, fastify) => {
     request
   );
 
-  global.tblMarketTemplate.push(data);
-  return data;
+  global.tblMarketTemplate.push({
+    ...data,
+    matchType : matchType.matchType
+  });
+  return {
+    ...data,
+    matchType : matchType.matchType
+  };
 };
 
 const updateMarketTemplateService = async (request, fastify) => {
@@ -96,10 +102,14 @@ const updateMarketTemplateService = async (request, fastify) => {
     (item) => item.marketTemplateId === marketTemplateId
   );
   global.tblMarketTemplate[index] = {
-    ...body
+    ...body,
+    matchType : matchType.matchType
   };
 
-  return body;
+  return {
+    ...body,
+    matchType : matchType.matchType
+  };
 };
 
 const saveMarketTemplateService = async (request, fastify) => {
@@ -121,12 +131,42 @@ const deleteMarketTemplateService = async (request, fastify) => {
     (item) => !marketTemplateId.includes(item.marketTemplateId)
   );
 
-  return `Event(s) deleted successfully`;
+  return `Market Template(s) deleted successfully`;
 };
+const getMatchTypeListService = async (request, fastify) => {
+  let result;
+  
+    result = global.tblMatchTypes.map((item) => ({
+      matchTypeId: item.matchTypeId,
+      matchType: item.matchType,
+    }));
 
+  return result;
+};
+const activeInactiveTemplateService = async (request, fastify) => {
+  // validate marketTemplateId
+  const { marketTemplateId } = request.body;
+  const index = global.tblMarketTemplate.findIndex(
+    (item) => item.marketTemplateId === marketTemplateId
+  );
+
+  if (index === -1) {
+    throw new Error("MarketTemplate with this id not found");
+  }
+
+  await updateStatusMarketTemplateQuery(
+    request,
+    fastify
+  );
+  global.tblMarketTemplate[index].isActive = request.body.isActive;
+
+  return `MarketTemplate updated successfully`;
+}
 module.exports = {
   saveMarketTemplateService,
   getAllMarketTemplateService,
   getMarketTemplateIdService,
-  deleteMarketTemplateService
+  deleteMarketTemplateService,
+  getMatchTypeListService,
+  activeInactiveTemplateService
 };

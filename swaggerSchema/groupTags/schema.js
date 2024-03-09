@@ -2407,11 +2407,26 @@ const MarketTemplate = {
       body: {
         type: "object",
         properties: {
-          eventId: {
+          marketTemplateId: {
             type: "array",
             items: { type: "integer" },
             minItems: 1,
           },
+        },
+        required: ["marketTemplateId"],
+      },
+    },
+  },
+  activeInactiveTemplate: {
+    schema: {
+      tags: ["Market Template"],
+      description: "delete market template",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          marketTemplateId: { type: "integer" },
+          isActive: { type: "boolean" },
         },
         required: ["marketTemplateId"],
       },

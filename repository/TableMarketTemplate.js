@@ -5,6 +5,7 @@ const getAllMarketTemplateQuery = async (fastify) => {
         `SELECT
       "wrID" AS "marketTemplateId",
       "wrMatchTypeID" AS "matchTypeId",
+      tm."wrMatchType" as "matchType",
       "wrTemplateName" as "templateName",
       "wrIsPredefineMarket" as "isPredefineMarket",
       "wrIsPreMatchOnly" as "isPreMatchOnly",
@@ -26,9 +27,10 @@ const getAllMarketTemplateQuery = async (fastify) => {
       "wrAutoResultafterBall" as "autoResultafterBall",
       "wrAfterWicketAutoSuspend" as "afterWicketAutoSuspend",
       "wrAfterWicketNotCreated" as "afterWicketNotCreated",
-      "wrCreatedBy" as "createdBy",
+      tmt."wrCreatedBy" as "createdBy",
       "wrIsActive" as "isActive"
-  FROM "tblMarketTemplates";
+  FROM "tblMarketTemplates" tmt
+  LEFT JOIN "tblMatchTypes" tm ON tmt."wrMatchTypeID" = "tm"."wrMatchTypeId"
   `,
         {
             type: fastify.db.QueryTypes.SELECT,
@@ -201,10 +203,29 @@ const deleteMarketTemplateQuery = async (marketTemplateId, fastify, request) => 
         throw new Error(err.message);
     }
 };
-
+const updateStatusMarketTemplateQuery = async (request , fastify) => {
+    try {
+        return await fastify.db.query(
+            `UPDATE "tblMarketTemplates" SET "wrIsActive" = $1 WHERE "wrID" = $2`,
+            {
+                bind: [request.body.isActive, request.body.marketTemplateId],
+                type: fastify.db.QueryTypes.SELECT,
+            }
+        );
+    } catch (err) {
+        errorLogger(
+            fastify,
+            err.message,
+            "DB ERROR --> repository/TableMarketTemplate/deleteMarketTemplateQuery",
+            request
+        );
+        throw new Error(err.message);
+    }
+}
 module.exports = {
     getAllMarketTemplateQuery,
     insertMarketTemplateQuery,
     deleteMarketTemplateQuery,
-    updateMarketTemplateQuery
+    updateMarketTemplateQuery,
+    updateStatusMarketTemplateQuery
 };
