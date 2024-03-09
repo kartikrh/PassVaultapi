@@ -1,18 +1,24 @@
 const { insertMarketTemplateQuery, deleteMarketTemplateQuery, updateMarketTemplateQuery, updateStatusMarketTemplateQuery } = require("../repository/TableMarketTemplate");
 
 const getAllMarketTemplateService = async (request) => {
-  const { isActive } = request.body;
+  const { isActive , matchTypeId } = request.body;
+  let result;
   if (isActive !== undefined) {
-    const result = global.tblMarketTemplate.filter(
+     result = global.tblMarketTemplate.filter(
       (item) => item.isActive === isActive
     );
-    return result;
   } else {
-    const result = global.tblMarketTemplate.filter(
+    result = global.tblMarketTemplate.filter(
       (item) => item.isActive === true
     );
-    return result;
   }
+  if(matchTypeId){
+    result = result.filter(
+      (item) => item.matchTypeID === matchTypeId
+    );
+  }
+  return result;
+
 };
 
 const getMarketTemplateIdService = async (request) => {

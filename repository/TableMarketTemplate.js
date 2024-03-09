@@ -4,7 +4,7 @@ const getAllMarketTemplateQuery = async (fastify) => {
     return await fastify.db.query(
         `SELECT
       "wrID" AS "marketTemplateId",
-      "wrMatchTypeID" AS "matchTypeId",
+      "wrMatchTypeID" AS "matchTypeID",
       tm."wrMatchType" as "matchType",
       "wrTemplateName" as "templateName",
       "wrIsPredefineMarket" as "isPredefineMarket",
