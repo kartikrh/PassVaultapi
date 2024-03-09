@@ -2344,6 +2344,7 @@ const MarketTemplate = {
         type: "object",
         properties: {
           isActive: { type: "boolean" },
+          matchTypeId: { type: "integer"}
         },
       },
     },
