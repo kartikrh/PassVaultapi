@@ -24,6 +24,7 @@ const {
   changeShowClientService,
   changePlayerShowService,
   getNodeEventbyEidService,
+  testStoreProcedureService,
 } = require("../../../../services/commentry");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -98,7 +99,8 @@ const deleteCommentary = async (request, reply, fastify) => {
 const saveCommentaryDetails = async (request, reply, fastify) => {
   try {
     //console.time("saveCommentaryDetails");
-    const result = await saveCommentaryDetailsService(request, fastify);
+    const result = await testStoreProcedureService(request, fastify);
+    // const result = await saveCommentaryDetailsService(request, fastify);
     //console.timeEnd("saveCommentaryDetails");
     reply.status(200).send(success(result, 200));
   } catch (err) {
@@ -377,6 +379,18 @@ const getNodeEventbyEid = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+
+const testStoreProcedure = async (request, reply, fastify) => {
+  try {
+    const result = await testStoreProcedureService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/testStoreProcedure", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
+
 module.exports = {
   getAllCommentaries,
   getCommentaryById,
@@ -405,4 +419,5 @@ module.exports = {
   updateShowClientOfCommentary,
   updatePlayersShowOfCommentary,
   getNodeEventbyEid,
+  testStoreProcedure
 };
