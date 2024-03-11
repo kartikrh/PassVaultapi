@@ -41,6 +41,7 @@ const {
   wicketType,
   decryptEncryptionId,
 } = require("../utilities");
+const { getAllPlayersByTeamIdQuery } = require("../repository/TableTeams");
 
 const allCommentaryService = async (request, fastify) => {
   // return global.tblCommentaries;
@@ -1283,6 +1284,129 @@ const testStoreProcedureService = async (request, fastify) => {
   console.log(error);
   throw error;
  }
+}
+const getTeamAndPlayerListService = async (request, fastify) => {
+  // get commentary details
+  let commentaryDetails = await global.tblCommentaries.find(
+    (item) => item.commentaryId === request.body.commentaryId
+  );
+  if(!commentaryDetails){
+    throw new Error("Commentary with this id not Found");
+  }
+  // get unique team id from commentary teams
+  const arrOfTeamId = [];
+  let commentaryTeams = await global.tblCommentaryTeams.filter(
+    (item) => item.commentaryId === request.body.commentaryId
+  ).reduce((acc, curr) => {
+    if (!acc.find((team) => team.teamId === curr.teamId)) {
+      arrOfTeamId.push(curr.teamId);
+      acc.push({
+        teamId: curr.teamId,
+        teamName: curr.teamName,
+        shortName: curr.shortName
+      });
+    }
+    return acc;
+  }, []);
+
+  // get unique player id from commentary players for this teamId 
+
+  // find teamPlayer for each team  
+  for (team of arrOfTeamId) {
+    let commentaryTeamPlayers = await global.tblCommentaryPlayers.filter(
+      (item) => item.commentaryId === request.body.commentaryId && item.teamId === team
+    ).reduce((acc, curr) => {
+      if(!acc.find((player) => player.playerId === curr.playerId)){
+        acc.push({
+          teamId: curr.teamId,
+          playerId: curr.playerId,
+          playerName: curr.playerName,
+          commentaryPlayerId : curr.commentaryPlayerId
+        });
+      }
+      return acc;
+    }
+    , []);
+    let index = commentaryTeams.findIndex((item) => item.teamId === team);
+    commentaryTeams[index].commentaryTeamPlayers = commentaryTeamPlayers;
+
+    //all players for this team from tblTeamPlayers
+    let teamPlayers =  await getAllPlayersByTeamIdQuery(team, fastify, request);
+    commentaryTeams[index].teamPlayers = teamPlayers;
+  }
+  
+
+  return {
+    commentaryDetails,
+    commentaryTeams
+  }
+
+
+}
+const addTeamPlayerService = async (request, fastify) => {
+  // validate commentaryId
+  const {teamId , commentaryId , playerId} = request.body;
+  let commentary = global.tblCommentaries.find(
+    (item) => item.commentaryId === commentaryId
+  );
+  if(!commentary){
+    throw new Error("Commentary with this id not Found");
+  }
+  // validate teamId
+  let commentaryTeamIndex = global.tblCommentaryTeams.find(
+    (item) => item.commentaryId === commentaryId && item.teamId === teamId
+  );
+  if(commentaryTeamIndex === -1){
+    throw new Error("Team with this id not Found");
+  }
+  // validate playerId
+  let commentaryPlayerIndex = global.tblPlayers.findIndex(
+    (item) => item.playerId === playerId
+  );
+  if(commentaryPlayerIndex === -1){
+    throw new Error("Player with this id not Found");
+  }
+  // find the max displayOrder for this teamId
+  let maxDisplayOrder = 0;
+  let commentaryPlayer = global.tblCommentaryPlayers.filter(
+    (item) => item.commentaryId === commentaryId && item.teamId === teamId
+  );
+  if(commentaryPlayer.length){
+    maxDisplayOrder = Math.max(...commentaryPlayer.map((item) => item.displayOrder));
+  }
+  // insert the new player as per inning
+  // get total inning for this match
+  let matchType = global.tblMatchTypes.find(
+    (item) => item.matchTypeId === commentary.matchTypeId
+  );
+  console.log(matchType);
+  const totalInning = matchType?.noOfIningsPerSide;
+
+  for (let i = 0; i < totalInning; i++) {
+    const currentInning = i + 1;
+    await insertCommentaryPlayers(
+      {
+        commentaryId,
+        teamId,
+        playerId,
+        displayOrder: maxDisplayOrder + 1,
+      },
+      currentInning,
+      fastify,
+      request
+    );
+  }
+
+  global.tblCommentaryPlayers = await getAllCommentaryPlayerQuery(fastify);
+
+  return {
+    message: "Player added successfully",
+  };
+
+}
+const deleteTeamPlayerService = async (request, fastify) => {
+  // validate commentaryId
+ return true;
 }
 
 const updateCommentaryDetailsServices = async (
@@ -4184,5 +4308,8 @@ module.exports = {
   changeShowClientService,
   changePlayerShowService,
   getNodeEventbyEidService,
-  testStoreProcedureService
+  testStoreProcedureService,
+  getTeamAndPlayerListService,
+  addTeamPlayerService,
+  deleteTeamPlayerService
 };
