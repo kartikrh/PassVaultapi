@@ -1878,6 +1878,23 @@ const Commentary = {
       // security: [{ bearerAuth: [] }],
     },
   },
+  addTeamPlayers : {
+    schema: {
+      tags: ["Commentary"],
+      description: "add team players",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+          teamId: { type: "integer" },
+          playerId : {type : "integer"},
+       
+        },
+        required: ["commentaryId", "teamId", "playerId" ],	
+      },
+    },
+  },
   save: {
     schema: {
       tags: ["Commentary"],

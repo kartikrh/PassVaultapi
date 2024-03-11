@@ -25,6 +25,9 @@ const {
   updateShowClientOfCommentary,
   updatePlayersShowOfCommentary,
   testStoreProcedure,
+  getTeamAndPlayerList,
+  addTeamPlayer,
+  deleteTeamPlayer,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -371,4 +374,17 @@ module.exports = async (fastify, opts) => {
     handler: (request, reply) =>
       testStoreProcedure(request, reply, fastify),
   });
+  fastify.post("/getTeamAndPlayerById", {
+    schema : Commentary.getById.schema,
+    handler: (request, reply) => getTeamAndPlayerList(request, reply, fastify)
+  })
+  fastify.post("/addTeamPlayer",{
+    schema : Commentary.addTeamPlayers.schema,
+    handler: (request, reply) => addTeamPlayer(request, reply, fastify)
+  })
+  fastify.post("/deleteTeamPlayer",{
+    schema : Commentary.addTeamPlayers.schema,
+    handler: (request, reply) => deleteTeamPlayer(request, reply, fastify)
+  })
+
 };

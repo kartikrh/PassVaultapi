@@ -25,6 +25,9 @@ const {
   changePlayerShowService,
   getNodeEventbyEidService,
   testStoreProcedureService,
+  getTeamAndPlayerListService,
+  addTeamPlayerService,
+  deleteTeamPlayerService,
 } = require("../../../../services/commentry");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -389,6 +392,33 @@ const testStoreProcedure = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const getTeamAndPlayerList = async (request, reply, fastify) => {
+  try {
+    const result = await getTeamAndPlayerListService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/getTeamAndPlayerList", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const addTeamPlayer = async (request, reply, fastify) => {
+  try {
+    const result = await addTeamPlayerService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/addTeamPlayer", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const deleteTeamPlayer = async (request, reply, fastify) => {
+  try {
+    const result = await deleteTeamPlayerService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/deleteTeamPlayer", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 
 
 module.exports = {
@@ -419,5 +449,8 @@ module.exports = {
   updateShowClientOfCommentary,
   updatePlayersShowOfCommentary,
   getNodeEventbyEid,
-  testStoreProcedure
+  testStoreProcedure,
+  getTeamAndPlayerList,
+  addTeamPlayer,
+  deleteTeamPlayer
 };
