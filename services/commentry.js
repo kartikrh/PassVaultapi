@@ -1002,6 +1002,289 @@ const saveCommentaryDetailsService = async (request, fastify) => {
     });
 };
 
+const testStoreProcedureService = async (request, fastify) => {
+  // check sp
+ try {
+  const {
+    commentaryTeams,
+    commentaryPlayers,
+    commentaryOvers,
+    commentaryBallByBall,
+    commentaryWicket,
+    commentaryPartnership,
+    commentaryDetails,
+    deleteCommentaryBallByBallId,
+    deleteOverId
+  } = request.body;
+
+  let commentaryIndex , overIndex , ballByBallIndex, wicketIndex , partnershipIndex;
+  // validate CommentaryId 
+  if(commentaryDetails){
+    commentaryIndex = global.tblCommentaries.findIndex(
+      (item) => item.commentaryId === commentaryDetails.commentaryId
+    );
+    if(commentaryIndex === -1){
+      throw new Error("Commentary with this id not Found");
+    }
+  }
+  // check if delete ballByBall 
+  if(deleteCommentaryBallByBallId){
+    let deleteBallIndex = global.tblCommentaryBallByBall.findIndex(
+      (item) => item.commentaryBallByBallId === deleteCommentaryBallByBallId
+    );
+    if(deleteBallIndex === -1){
+      throw new Error("Delete BallByBall with this id not Found");
+    }
+  }
+  if(deleteOverId){
+    let deleteOverIndex = global.tblOvers.findIndex(
+      (item) => item.overId === deleteOverId
+    );
+    if(deleteOverIndex === -1){
+      throw new Error("Delete Over with this id not Found");
+    }
+  }
+  // validate commentaryTeams
+  if(commentaryTeams){
+    commentaryTeams.forEach((team) => {
+      const index = global.tblCommentaryTeams.findIndex(
+        (item) =>
+          item.commentaryId === team.commentaryId &&
+          item.commentaryTeamId === team.commentaryTeamId
+      )
+      if(index === -1){
+        throw new Error("Commentary Team with this id not Found");
+      }
+    });
+  }
+  // validate commentaryPlayers
+  if(commentaryPlayers){
+    commentaryPlayers.forEach((player) => {
+      const index = global.tblCommentaryPlayers.findIndex(
+        (item) => item.commentaryPlayerId === player.commentaryPlayerId
+      )
+      if(index === -1){
+        throw new Error("Commentary Player with this id not Found");
+      }
+    });
+  }
+  //validate over
+  if(commentaryOvers){
+    if(commentaryOvers.overId == 0){
+      overIndex = global.tblCommentaries.findIndex(
+        (item) => item.commentaryId === commentaryOvers.commentaryId
+      );
+    
+      if (overIndex === -1) {
+        throw new Error("Commentary with this id not Found");
+      }
+      const indexTeam = global.tblCommentaryTeams.findIndex(
+        (item) =>
+          item.commentaryId === commentaryOvers.commentaryId && item.teamId === commentaryOvers.teamId
+      );
+    
+      if (indexTeam === -1) {
+        throw new Error("Team with this id not Found");
+      }
+      const indexBowler = global.tblCommentaryPlayers.findIndex((item) => {
+        return (
+          item.commentaryId === commentaryOvers.commentaryId &&
+          item.teamId === commentaryOvers.teamId &&
+          item.commentaryPlayerId === commentaryOvers.bowlerId
+        );
+      });
+    
+      if (indexBowler === -1) {
+        throw new Error("Bowler with this id not Found");
+      }
+    }
+    else{
+      overIndex = global.tblOvers.findIndex(
+        (item) => item.overId === commentaryOvers.overId
+      );
+      if (overIndex === -1) {
+        throw new Error("Over with this id not Found");
+      }
+    }
+  }
+  //validate ballByBall
+  if(commentaryBallByBall){
+    if(commentaryBallByBall.commentaryBallByBallId == 0){
+      ballByBallIndex = global.tblCommentaries.findIndex(
+        (item) => item.commentaryId === commentaryBallByBall.commentaryId
+      );
+      if (ballByBallIndex === -1) {
+        throw new Error("Commentary with this id not Found");
+      }
+    }
+    else{
+      ballByBallIndex = global.tblCommentaryBallByBall.findIndex(
+        (item) => item.commentaryBallByBallId === commentaryBallByBall.commentaryBallByBallId
+      );
+      if (ballByBallIndex === -1) {
+        throw new Error("BallByBall with this id not Found");
+      }
+    }
+  }
+  //validate wicket
+  if(commentaryWicket){
+    if(commentaryWicket.wicketId == 0){
+      wicketIndex = global.tblCommentaries.findIndex(
+        (item) => item.commentaryId === commentaryWicket.commentaryId
+      );
+      if (wicketIndex === -1) {
+        throw new Error("Commentary with this id not Found");
+      }
+    }
+    else{
+      wicketIndex = global.tblCommentaryWicket.findIndex(
+        (item) => item.wicketId === commentaryWicket.wicketId
+      );
+      if (wicketIndex === -1) {
+        throw new Error("Wicket with this id not Found");
+      }
+    }
+  }
+  //validate partnership
+  if(commentaryPartnership){
+    if(commentaryPartnership.partnershipId == 0){
+      partnershipIndex = global.tblCommentaries.findIndex(
+        (item) => item.commentaryId === commentaryPartnership.commentaryId
+      );
+      if (partnershipIndex === -1) {
+        throw new Error("Commentary with this id not Found");
+      }
+    }
+    else{
+      partnershipIndex = global.tblCommentaryPartnership.findIndex(
+        (item) => item.partnershipId === commentaryPartnership.partnershipId
+      );
+      if (partnershipIndex === -1) {
+        throw new Error("Partnership with this id not Found");
+      }
+    }
+  }
+ 
+  let updatedData =  await fastify.db.query(
+    `CALL proc_setcommentary(
+      $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11 ,$12,$13,$14
+    )`,
+    {
+      bind: [
+        commentaryTeams ? JSON.stringify(commentaryTeams) : null,
+        commentaryPlayers ? JSON.stringify(commentaryPlayers) : null,
+        commentaryOvers ? commentaryOvers: null,
+        commentaryBallByBall ? JSON.stringify(commentaryBallByBall) : null,
+        commentaryWicket ? JSON.stringify(commentaryWicket) : null,
+        commentaryPartnership ? JSON.stringify(commentaryPartnership) : null,
+        commentaryDetails ? JSON.stringify(commentaryDetails) : null,
+        deleteCommentaryBallByBallId ? deleteCommentaryBallByBallId : null,
+        deleteOverId ? deleteOverId : null,
+        null ,// commentaryOverDetails,
+        null ,// commentaryBallByBallDetails,
+        null ,// commentaryWicketDetails,
+        null ,// commentaryPartnershipDetails,
+        null // commentaryDetailsDetails,
+      ],
+      type: fastify.db.QueryTypes.SELECT,
+    }
+  );
+  // if got object then push in global obj else update the global
+  updatedData = updatedData[0];
+  const response = {};
+
+  if(commentaryDetails){
+    global.tblCommentaries[commentaryIndex] = commentaryDetails;
+    response.commentaryDetails = commentaryDetails;
+  }
+  if(deleteCommentaryBallByBallId){
+    global.tblCommentaryBallByBall = global.tblCommentaryBallByBall.filter(
+      (item) => item.commentaryBallByBallId !== deleteCommentaryBallByBallId
+    );
+    global.tblCommentaryWicket = global.tblCommentaryWicket.filter(
+      (item) => item.commentaryBallByBallId !== deleteCommentaryBallByBallId
+    );
+    global.tblCommentaryPartnership = global.tblCommentaryPartnership.filter(
+      (item) => item.commentaryBallByBallId !== deleteCommentaryBallByBallId
+    );
+  }
+  if(deleteOverId){
+    global.tblOvers = global.tblOvers.filter(
+      (item) => item.overId !== deleteOverId
+    );
+    global.tblCommentaryBallByBall = global.tblCommentaryBallByBall.filter(
+      (item) => item.overId !== deleteOverId
+    );
+  }
+
+  if(commentaryTeams){
+    commentaryTeams.forEach((team) => {
+      const index = global.tblCommentaryTeams.findIndex(
+        (item) =>
+          item.commentaryId === team.commentaryId &&
+          item.commentaryTeamId === team.commentaryTeamId
+      )
+      global.tblCommentaryTeams[index] = team;
+    });
+  }
+  if(commentaryPlayers){
+    commentaryPlayers.forEach((player) => {
+      const index = global.tblCommentaryPlayers.findIndex(
+        (item) => item.commentaryPlayerId === player.commentaryPlayerId
+      )
+      global.tblCommentaryPlayers[index] = player;
+    });
+  }
+  if(commentaryOvers){
+    if(updatedData.overDetails){
+      global.tblOvers.push(updatedData.overDetails);
+      response.overdetails = updatedData.overDetails;
+    }
+    else {
+      global.tblOvers[overIndex] = commentaryOvers;
+      response.overdetails = commentaryOvers;
+    }
+  }
+  if(commentaryBallByBall){
+    if(updatedData.commentaryBallByBallDetails){
+      global.tblCommentaryBallByBall.push(updatedData.commentaryBallByBallDetails);
+      response.commentaryBallByBallDetails = updatedData.commentaryBallByBallDetails;
+    }
+    else {
+      global.tblCommentaryBallByBall[ballByBallIndex] = commentaryBallByBall;
+      response.commentaryBallByBallDetails = commentaryBallByBall;
+    }
+  }
+  if(commentaryWicket){
+    if(updatedData.commentaryWicketDetails){
+      global.tblCommentaryWicket.push(updatedData.commentaryWicketDetails);
+      response.commentaryWicketDetails = updatedData.commentaryWicketDetails;
+    }
+    else {
+      global.tblCommentaryWicket[wicketIndex] = commentaryWicket;
+      response.commentaryWicketDetails = commentaryWicket;
+    }
+  }
+  if(commentaryPartnership){
+    if(updatedData.commentaryPartnershipDetails){
+      global.tblCommentaryPartnership.push(updatedData.commentaryPartnershipDetails);
+      response.commentaryPartnershipDetails = updatedData.commentaryPartnershipDetails;
+    }
+    else {
+      global.tblCommentaryPartnership[partnershipIndex] = commentaryPartnership;
+      response.commentaryPartnershipDetails = commentaryPartnership;
+    }
+  }
+  // which i get from request i want to return only that object 
+  return response;
+ 
+
+ } catch (error) {
+  console.log(error);
+  throw error;
+ }
+}
+
 const updateCommentaryDetailsServices = async (
   commentaryDetails,
   fastify,
@@ -3901,4 +4184,5 @@ module.exports = {
   changeShowClientService,
   changePlayerShowService,
   getNodeEventbyEidService,
+  testStoreProcedureService
 };

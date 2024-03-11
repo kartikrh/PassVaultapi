@@ -24,6 +24,7 @@ const {
   getCommentaryTeamList,
   updateShowClientOfCommentary,
   updatePlayersShowOfCommentary,
+  testStoreProcedure,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -364,5 +365,10 @@ module.exports = async (fastify, opts) => {
     ],
     handler: (request, reply) =>
       updatePlayersShowOfCommentary(request, reply, fastify),
+  });
+  fastify.post("/testSP", {
+    schema: Commentary.saveDetails.schema,
+    handler: (request, reply) =>
+      testStoreProcedure(request, reply, fastify),
   });
 };
