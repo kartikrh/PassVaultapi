@@ -28,6 +28,7 @@ const {
   getTeamAndPlayerList,
   addTeamPlayer,
   deleteTeamPlayer,
+  loadTeamPlayer,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -385,6 +386,10 @@ module.exports = async (fastify, opts) => {
   fastify.post("/deleteTeamPlayer",{
     schema : Commentary.addTeamPlayers.schema,
     handler: (request, reply) => deleteTeamPlayer(request, reply, fastify)
+  })
+  fastify.post("/loadTeamPlayer",{
+    schema : Commentary.loadTeamPlayer.schema,
+    handler: (request, reply) => loadTeamPlayer(request, reply, fastify)
   })
 
 };

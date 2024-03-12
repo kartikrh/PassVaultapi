@@ -1895,6 +1895,20 @@ const Commentary = {
       },
     },
   },
+  loadTeamPlayer : {
+    schema : {
+      tags: ["Commentary"],
+      description: "load team players",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          teamId: { type: "integer" },
+        },
+        required: [ "teamId"],
+      },
+    },
+  },
   save: {
     schema: {
       tags: ["Commentary"],
