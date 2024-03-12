@@ -34,6 +34,7 @@ const {
   getCommnertySquadPlayersList,
   updateShowClientQuery,
   updatePlayerShowQuery,
+  deleteCommentaryPlayerById,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -1379,7 +1380,7 @@ const addTeamPlayerService = async (request, fastify) => {
   let matchType = global.tblMatchTypes.find(
     (item) => item.matchTypeId === commentary.matchTypeId
   );
-  console.log(matchType);
+
   const totalInning = matchType?.noOfIningsPerSide;
 
   for (let i = 0; i < totalInning; i++) {
@@ -1399,16 +1400,67 @@ const addTeamPlayerService = async (request, fastify) => {
 
   global.tblCommentaryPlayers = await getAllCommentaryPlayerQuery(fastify);
 
-  return {
-    message: "Player added successfully",
-  };
+  return "Player added successfully";
 
 }
 const deleteTeamPlayerService = async (request, fastify) => {
   // validate commentaryId
- return true;
-}
+  const {teamId , commentaryId , playerId} = request.body;
+  let commentary = global.tblCommentaries.find(
+    (item) => item.commentaryId === commentaryId
+  );
+  if(!commentary){
+    throw new Error("Commentary with this id not Found");
+  }
+  // validate teamId
+  let commentaryTeamIndex = global.tblCommentaryTeams.find(
+    (item) => item.commentaryId === commentaryId && item.teamId === teamId
+  );
+  if(commentaryTeamIndex === -1){
+    throw new Error("Team with this id not Found");
+  }
+  // validate playerId
+  let commentaryPlayerIndex = global.tblCommentaryPlayers.findIndex(
+    (item) => item.playerId === playerId
+  );
+  if(commentaryPlayerIndex === -1){
+    throw new Error("Commentary Player with this id not Found");
+  }
 
+  // delete the player from commentaryPlayer
+  await deleteCommentaryPlayerById(
+    {
+      commentaryId,
+      teamId,
+      playerId,
+    },
+    request,
+    fastify
+  );
+
+  global.tblCommentaryPlayers = global.tblCommentaryPlayers.filter(
+    (item) =>
+      !(item.commentaryId === commentaryId &&
+      item.teamId === teamId &&
+      item.playerId === playerId)
+  );
+
+  return "Player deleted successfully";
+
+}
+const loadTeamPlayerService = async (request, fastify) => {
+  // validate teamId
+  const {teamId} = request.body;
+  let team = global.tblTeams.find(
+    (item) => item.teamId === teamId
+  );
+  if(!team){
+    throw new Error("Team with this id not Found");
+  }
+  // get all players for this team
+  let teamPlayers = await getAllPlayersByTeamIdQuery(teamId, fastify, request);
+  return teamPlayers;
+}
 const updateCommentaryDetailsServices = async (
   commentaryDetails,
   fastify,
@@ -4311,5 +4363,6 @@ module.exports = {
   testStoreProcedureService,
   getTeamAndPlayerListService,
   addTeamPlayerService,
-  deleteTeamPlayerService
+  deleteTeamPlayerService,
+  loadTeamPlayerService
 };
