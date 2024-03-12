@@ -1328,6 +1328,10 @@ const getTeamAndPlayerListService = async (request, fastify) => {
       return acc;
     }
     , []);
+
+    // remove the systemPlayers from commentaryTeamPlayers
+    const systemPlayer = global.tblPlayers.filter((item) => item.isSystemPlayer === true).map((item) => item.playerId);
+    commentaryTeamPlayers = commentaryTeamPlayers.filter((item) => !systemPlayer.includes(item.playerId));
     let index = commentaryTeams.findIndex((item) => item.teamId === team);
     commentaryTeams[index].commentaryTeamPlayers = commentaryTeamPlayers;
 
