@@ -16,11 +16,18 @@ const fastifyMultipart = require("@fastify/multipart");
 const fastifyStatic = require("@fastify/static");
 const { generateToken } = require("./utilities/tokenization");
 const { isJson, getMessage, getTitle } = require("./utilities");
+const Sentry = require("@sentry/node");
+const Tracing = require("@sentry/tracing");
 // require("./database/connnection");
 
 // Pass --options via CLI arguments in command to enable these options.
 module.exports.options = {};
 global.tblData = {};
+
+Sentry.init({
+  dsn: "https://63ad218f0a5097a8f6e9af4cdbc49722@o4506895600254976.ingest.us.sentry.io/4506896360669185",
+  tracesSampleRate: 1.0, // Adjust this value in production
+});
 
 module.exports = async function (fastify, opts) {
   fastify
@@ -80,11 +87,10 @@ module.exports = async function (fastify, opts) {
   // Configure fastify to use `multipart/form-data` requests
   fastify.register(fastifyMultipart, {
     throwFileSizeLimit: true,
-        addToBody: true,
-        limits: {
-            fileSize: 10 * 1024 * 1024,
-        }
-    
+    addToBody: true,
+    limits: {
+      fileSize: 10 * 1024 * 1024,
+    },
   });
 
   fastify.register(require("@fastify/compress"), {
@@ -120,55 +126,87 @@ module.exports = async function (fastify, opts) {
     // Record the request start time in nanoseconds
     request.startTime = process.hrtime.bigint();
     request.startTimeTimeStemp = new Date();
+    const transaction = Sentry.startTransaction({
+      name: `${request.method} ${request.url}`,
+      op: "http.server",
+      description: "HTTP request",
+    });
+
+    request.sentryTx = transaction;
+
     done();
   });
 
   fastify.addHook("onSend", (request, reply, payload, done) => {
     let newPayload = payload;
     const originalUrl = request.originalUrl; // get original url
-    const urlDestructor = originalUrl.split('/'); // split original url
-    const urlLastParameter = [...urlDestructor].pop().split('.');
-    const urlExceptions = ['/documentation/json', "/documentation"];
-    
-    if (urlLastParameter.length === 1 && !urlExceptions.includes(originalUrl) && isJson(newPayload)) {
+    const urlDestructor = originalUrl.split("/"); // split original url
+    const urlLastParameter = [...urlDestructor].pop().split(".");
+    const urlExceptions = ["/documentation/json", "/documentation"];
+
+    if (
+      urlLastParameter.length === 1 &&
+      !urlExceptions.includes(originalUrl) &&
+      isJson(newPayload)
+    ) {
       newPayload = JSON.parse(newPayload);
       newPayload.title = getTitle(urlDestructor[2] || urlDestructor[1]);
-      newPayload.message = getMessage(newPayload, reply.statusCode, urlLastParameter[0]);
+      newPayload.message = getMessage(
+        newPayload,
+        reply.statusCode,
+        urlLastParameter[0]
+      );
       const urlTokenExceptions = ["/signout", "/verifyToken"];
       const urlTokenGeneration = ["/signin", "/signup"];
       const allowedStatusCodes = [200, 500, 403, 400];
       if (allowedStatusCodes.includes(reply.statusCode)) {
-        if (urlTokenGeneration.includes(originalUrl) && newPayload?.result?.token) {
+        if (
+          urlTokenGeneration.includes(originalUrl) &&
+          newPayload?.result?.token
+        ) {
           newPayload.token = newPayload.result.token;
         } else if (
           request.userTokenInfo &&
           !urlTokenExceptions.includes(originalUrl)
         ) {
-          const { ipAdress, iat, exp, ...userLoginInfo} = request.userTokenInfo;
+          const { ipAdress, iat, exp, ...userLoginInfo } =
+            request.userTokenInfo;
           newPayload.token = generateToken(userLoginInfo);
         }
       }
       newPayload = JSON.stringify(newPayload);
     }
 
+    const transaction = Sentry.startTransaction({
+      name: `${request.method} ${request.url}`,
+      op: "http.server",
+      description: "HTTP request",
+    });
+
+    request.sentryTx = transaction;
+
     done(null, newPayload);
   });
 
   fastify.addHook("onResponse", (request, reply, done) => {
     const logger = false;
-    const responseTimeInNanoseconds = process.hrtime.bigint() - request.startTime;
+    const responseTimeInNanoseconds =
+      process.hrtime.bigint() - request.startTime;
     const responseTimeInMilliseconds = Number(responseTimeInNanoseconds) / 1e6;
     request.responseTime = responseTimeInMilliseconds;
-    
+
     // if path include /commentary then do log in db
     if (request.originalUrl.includes("/commentary")) {
       request.endTimeTimeStemp = new Date();
       responseLogInDB(request, fastify);
     }
-  
+
     if (request.startTime && logger) {
       responseLogger(request);
     }
+
+    request.sentryTx.setHttpStatus(reply.statusCode);
+    request.sentryTx.finish();
     done();
   });
 
@@ -246,4 +284,25 @@ module.exports = async function (fastify, opts) {
     dir: path.join(__dirname, "routes"),
     options: Object.assign({}, opts),
   });
+
+  fastify.setErrorHandler(function (error, request, reply) {
+    console.error(error);
+    Sentry.captureException(error);
+    reply.status(500).send({ error: "Internal Server Error" });
+  });
 };
+
+// const transaction = Sentry.startTransaction({
+//   op: "test",
+//   name: "My First Test Transaction",
+// });
+
+// setTimeout(() => {
+//   try {
+//     foo();
+//   } catch (e) {
+//     Sentry.captureException(e);
+//   } finally {
+//     transaction.finish();
+//   }
+// }, 99);
