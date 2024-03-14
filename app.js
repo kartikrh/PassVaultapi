@@ -27,11 +27,6 @@ global.tblData = {};
 Sentry.init({
   dsn: "https://63ad218f0a5097a8f6e9af4cdbc49722@o4506895600254976.ingest.us.sentry.io/4506896360669185",
   tracesSampleRate: 1.0, // Adjust this value in production
-  integrations: [
-    new Sentry.Integrations.Postgres({
-      usePgNative: true, // Default: false
-    }),
-  ],
 });
 
 module.exports = async function (fastify, opts) {
