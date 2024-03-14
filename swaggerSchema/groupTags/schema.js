@@ -1895,6 +1895,20 @@ const Commentary = {
       },
     },
   },
+  loadTeamPlayer : {
+    schema : {
+      tags: ["Commentary"],
+      description: "load team players",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          teamId: { type: "integer" },
+        },
+        required: [ "teamId"],
+      },
+    },
+  },
   save: {
     schema: {
       tags: ["Commentary"],
@@ -1950,6 +1964,20 @@ const Commentary = {
           systemPlayerCount: { type: "integer" },
         },
         required: ["commentaryId"],
+      },
+    },
+  },
+  saveShortCommentary: {
+    schema: {
+      tags: ["Commentary"],
+      description: "save Commentary",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryDetails: { type: "object" },
+        },
+        required: ["commentaryDetails"],
       },
     },
   },
@@ -2805,6 +2833,35 @@ const MatchTypePredictor = {
     },
   },
 };
+const EventMarket = {
+  getAll: {
+    schema: {
+      tags: ["EventMarket"],
+      description: "get all EventMarket",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+         
+        },
+      },
+    },
+  },
+  getDetailsByCId:{
+    schema: {
+      tags: ["EventMarket"],
+      description: "get all EventMarket",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId : { type : "integer"}
+        },
+        required : ["commentaryId"]
+      },
+    },
+  },
+}
 module.exports = {
   Auth,
   Tabs,
@@ -2831,5 +2888,6 @@ module.exports = {
   Score,
   SubScribesDomain,
   News,
-  MatchTypePredictor
+  MatchTypePredictor,
+  EventMarket
 };

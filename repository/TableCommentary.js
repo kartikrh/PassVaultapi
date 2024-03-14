@@ -431,6 +431,33 @@ const deleteCommentaryPlayers = async (request, fastify) => {
     throw new Error(err.message);
   }
 };
+const deleteCommentaryPlayerById = async (data,request, fastify) => {
+  try {
+    // delete commentary player by id
+    return await fastify.db.query(
+      `delete from "tblCommentaryPlayers" where "wrPlayerId" = $1
+      AND "wrCommentaryId" = $2
+      AND "wrTeamId" = $3`,
+      {
+        type: fastify.db.QueryTypes.DELETE,
+        bind: [
+          data.playerId,
+          data.commentaryId,
+          data.teamId,
+        ],
+      }
+    );
+
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableConfig/deleteCommentaryPlayerById",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
 
 const getCommentaryByIdQuery = async (request, fastify) => {
   try {
@@ -2375,4 +2402,5 @@ module.exports = {
   getCommnertySquadPlayersList,
   updateShowClientQuery,
   updatePlayerShowQuery,
+  deleteCommentaryPlayerById
 };
