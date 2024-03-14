@@ -35,6 +35,7 @@ const {
   updateShowClientQuery,
   updatePlayerShowQuery,
   deleteCommentaryPlayerById,
+  getAllCommentaryQuery,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -1277,6 +1278,12 @@ const testStoreProcedureService = async (request, fastify) => {
         response.commentaryPartnershipDetails = commentaryPartnership;
       }
     }
+    if(deleteCommentaryBallByBallId){
+      response.deleteCommentaryBallByBallId = true;
+    }
+    if(deleteOverId){
+      response.deleteOverId = true;
+    }
     // which i get from request i want to return only that object 
     return response;
 
@@ -1407,6 +1414,25 @@ const addTeamPlayerService = async (request, fastify) => {
   return "Player added successfully";
 
 }
+// const getshortService = async (request, fastify) => {
+//   // get commentary details
+//   let commentaryDetails =  global.tblCommentaries.find(
+//     (item) => item.commentaryId === request.body.commentaryId
+//   );
+//   const teamPlayers = global.tblCommentaryPlayers.filter(
+//     (item) => item.commentaryId === request.body.commentaryId
+//     && item.currentInnings == 2
+//   );
+//   const commentaryTeams = global.tblCommentaryTeams.filter(
+//     (item) => item.commentaryId === request.body.commentaryId
+//     && item.currentInnings == 2
+//   );
+//   return {
+//     commentaryDetails,
+//     teamPlayers,
+//     commentaryTeams
+//   }
+// }
 const deleteTeamPlayerService = async (request, fastify) => {
   // validate commentaryId
   const { teamId, commentaryId, playerId } = request.body;
@@ -1464,6 +1490,40 @@ const loadTeamPlayerService = async (request, fastify) => {
   // get all players for this team
   let teamPlayers = await getAllPlayersByTeamIdQuery(teamId, fastify, request);
   return teamPlayers;
+}
+const saveShortCommentaryService = async (request, fastify) => {
+  try {
+    const {commentaryDetails , ...rest} = request.body;
+  let teamArr = [];
+  let teamPlayerArr = [];
+  for (let key in rest) {
+    const { teamPlayers, ...rest1 } = rest[key];
+    teamArr.push(rest1);
+    teamPlayerArr.push(...teamPlayers)
+  }
+  //save details in commentary
+  const a = await fastify.db.query(
+    `CALL proc_save_shortCommentary(
+      $1, $2, $3
+    )`,
+    {
+      bind: [
+        JSON.stringify(commentaryDetails) || null,
+        JSON.stringify(teamArr) || null,
+        JSON.stringify(teamPlayerArr) || null
+      ],
+      type: fastify.db.QueryTypes.SELECT,
+    }
+  );
+
+  global.tblCommentaries = await getAllCommentaryQuery(fastify);
+  global.tblCommentaryTeams = await getAllCommentaryTeamsQuery(fastify);
+  global.tblCommentaryPlayers = await getAllCommentaryPlayerQuery(fastify);
+
+  return "Short Commentary saved successfully";
+  } catch (error) {
+    throw error;
+  }
 }
 const updateCommentaryDetailsServices = async (
   commentaryDetails,
@@ -4368,5 +4428,7 @@ module.exports = {
   getTeamAndPlayerListService,
   addTeamPlayerService,
   deleteTeamPlayerService,
-  loadTeamPlayerService
+  loadTeamPlayerService,
+  saveShortCommentaryService,
+  // getshortService
 };

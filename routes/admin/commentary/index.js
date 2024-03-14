@@ -29,6 +29,7 @@ const {
   addTeamPlayer,
   deleteTeamPlayer,
   loadTeamPlayer,
+  saveShortCommentary,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -391,5 +392,18 @@ module.exports = async (fastify, opts) => {
     schema : Commentary.loadTeamPlayer.schema,
     handler: (request, reply) => loadTeamPlayer(request, reply, fastify)
   })
+  
+  fastify.post("/saveShortCommentary", {
+    schema: Commentary.saveShortCommentary.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "add"
+        }),
+    ],
+    handler: (request, reply) => saveShortCommentary(request, reply, fastify),
+  });
 
 };
