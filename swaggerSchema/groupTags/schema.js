@@ -1967,6 +1967,20 @@ const Commentary = {
       },
     },
   },
+  saveShortCommentary: {
+    schema: {
+      tags: ["Commentary"],
+      description: "save Commentary",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryDetails: { type: "object" },
+        },
+        required: ["commentaryDetails"],
+      },
+    },
+  },
   clone: {
     schema: {
       tags: ["Commentary"],
@@ -2819,6 +2833,35 @@ const MatchTypePredictor = {
     },
   },
 };
+const EventMarket = {
+  getAll: {
+    schema: {
+      tags: ["EventMarket"],
+      description: "get all EventMarket",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+         
+        },
+      },
+    },
+  },
+  getDetailsByCId:{
+    schema: {
+      tags: ["EventMarket"],
+      description: "get all EventMarket",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId : { type : "integer"}
+        },
+        required : ["commentaryId"]
+      },
+    },
+  },
+}
 module.exports = {
   Auth,
   Tabs,
@@ -2845,5 +2888,6 @@ module.exports = {
   Score,
   SubScribesDomain,
   News,
-  MatchTypePredictor
+  MatchTypePredictor,
+  EventMarket
 };

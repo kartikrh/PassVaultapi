@@ -29,6 +29,7 @@ const {
   addTeamPlayerService,
   deleteTeamPlayerService,
   loadTeamPlayerService,
+  saveShortCommentaryService,
 } = require("../../../../services/commentry");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -402,6 +403,15 @@ const getTeamAndPlayerList = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+// const getshort = async (request, reply, fastify) => {
+//   try {
+//     const result = await getshortService(request, fastify);
+//     reply.status(200).send(success(result, 200));
+//   } catch (err) {
+//     errorLogger(fastify, err.message, path + "/getshort", request);
+//     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+//   }
+// };
 const addTeamPlayer = async (request, reply, fastify) => {
   try {
     const result = await addTeamPlayerService(request, fastify);
@@ -429,7 +439,15 @@ const loadTeamPlayer = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
-
+const saveShortCommentary = async (request, reply, fastify) => {
+  try {
+    const result = await saveShortCommentaryService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/saveShortCommentary", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 
 
 module.exports = {
@@ -464,5 +482,6 @@ module.exports = {
   getTeamAndPlayerList,
   addTeamPlayer,
   deleteTeamPlayer,
-  loadTeamPlayer
+  loadTeamPlayer,
+  saveShortCommentary
 };
