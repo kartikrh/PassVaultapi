@@ -2275,13 +2275,13 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
   );
 
   const cbt = commentaryPlayers_batter.map((player) => {
-    let bati = global.tblPlayers.find(
+    let playerData = global.tblPlayers.find(
       (item) => item.playerId === player.playerId
-    ).image;
+    );
     return {
       pid: player.playerId,
       batn: player.playerName,
-      bati: bati,
+      bati: playerData.image,
       trun: player.batRun || 0,
       tball: player.batBall || 0,
       t4: player.batFour || 0,
@@ -2289,17 +2289,18 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
       sr: player.batSrr || 0,
       os: player.onStrike,
       str: parseFloat(player.batsmanStrikeRate) || 0.0,
+      isp : playerData.isSystemPlayer
     };
   });
 
   const cbl = commentaryPlayersBowler.map((bowler) => {
-    let bli = global.tblPlayers.find(
+    let playerData = global.tblPlayers.find(
       (item) => item.playerId === bowler.playerId
-    ).image;
+    );
     return {
       pid: bowler.playerId,
       pn: bowler.playerName,
-      bli: bli,
+      bli: playerData.image,
       tov: bowler.bowlerOver || 0,
       cob: bowler.bowlerCurrentBall || 0,
       trun: bowler.bowlerRun || 0,
@@ -2319,6 +2320,7 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
         0 + bowler.bowlerByeBallRun ||
         0 + bowler.bowlerLegByeBallRun ||
         0,
+      isp : playerData.isSystemPlayer
     };
   });
 
@@ -2802,13 +2804,13 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
   );
 
   const cbt = commentaryPlayers_batter.map((player) => {
-    let bati = global.tblPlayers.find(
+    let playerData = global.tblPlayers.find(
       (item) => item.playerId === player.playerId
-    ).image;
+    );
     return {
       pid: player.playerId,
       batn: player.playerName,
-      bati: bati,
+      bati: playerData.image,
       trun: player.batRun || 0,
       tball: player.batBall || 0,
       t4: player.batFour || 0,
@@ -2816,17 +2818,18 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
       sr: player.batSrr || 0,
       os: player.onStrike,
       str: parseFloat(player.batsmanStrikeRate) || 0.0,
+      isp : playerData.isSystemPlayer
     };
   });
 
   const cbl = commentaryPlayersBowler.map((bowler) => {
-    let bli = global.tblPlayers.find(
+    let playerData = global.tblPlayers.find(
       (item) => item.playerId === bowler.playerId
-    ).image;
+    );
     return {
       pid: bowler.playerId,
       pn: bowler.playerName,
-      bli: bli,
+      bli: playerData.image,
       tov: bowler.bowlerOver || 0,
       cob: bowler.bowlerCurrentBall || 0,
       trun: bowler.bowlerRun || 0,
@@ -2846,6 +2849,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
         0 + bowler.bowlerByeBallRun ||
         0 + bowler.bowlerLegByeBallRun ||
         0,
+      isp : playerData.isSystemPlayer
     };
   });
 
