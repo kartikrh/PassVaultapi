@@ -8,8 +8,8 @@ const dbPg = require("./sequelize/config/config")();
 const swagger = require("@fastify/swagger");
 const swaggerUi = require("@fastify/swagger-ui");
 const featchData = require("./utilities/fetchAllData");
-const { Server } = require("socket.io"); // Import Socket.IO
-const { connection, socketMiddleware } = require("./socketIo");
+// const { Server } = require("socket.io"); // Import Socket.IO
+// const { connection, socketMiddleware } = require("./socketIo");
 const { fastifyRateLimit } = require("@fastify/rate-limit");
 const { responseLogger, responseLogInDB } = require("./utilities/logger");
 const fastifyMultipart = require("@fastify/multipart");
@@ -251,17 +251,17 @@ module.exports = async function (fastify, opts) {
   });
 
   //  socket.io
-  const io = new Server(fastify.server, {
-    cors: {
-      origin: "*",
-    },
-  });
+  // const io = new Server(fastify.server, {
+  //   cors: {
+  //     origin: "*",
+  //   },
+  // });
 
   // //Assign socketIo to global variable
-  global.socketIo = io;
+  // global.socketIo = io;
 
-  io.use(socketMiddleware);
-  io.on("connection", connection);
+  // io.use(socketMiddleware);
+  // io.on("connection", connection);
 
   // fastify.addHook("onRequest", (request, reply, done) => {
   //   const ip = requestIp.getClientIp(request);
