@@ -2834,19 +2834,6 @@ const MatchTypePredictor = {
   },
 };
 const EventMarket = {
-  getAll: {
-    schema: {
-      tags: ["EventMarket"],
-      description: "get all EventMarket",
-      security: [{ bearerAuth: [] }],
-      body: {
-        type: "object",
-        properties: {
-         
-        },
-      },
-    },
-  },
   getDetailsByCId:{
     schema: {
       tags: ["EventMarket"],
@@ -2860,6 +2847,41 @@ const EventMarket = {
         required : ["commentaryId"]
       },
     },
+  },
+  getAll:{
+    schema : {
+      tags: ["EventMarket"],
+      description: "get all EventMarket",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          isActive : { type : "boolean"},
+          eventTypeId : { type : "integer"},
+          competitionId : { type : "integer"},
+          eventId : { type : "integer"},
+          status : { type : "integer"},
+        }
+      }
+    }
+  },
+  createEventMarket:{
+    schema : {
+      tags: ["EventMarket"],
+      description: "create EventMarket",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          eventMarket: {
+            type : "array",
+            items : {
+              type : "object",
+            }
+          }
+        },
+      }
+    }
   },
 }
 module.exports = {
