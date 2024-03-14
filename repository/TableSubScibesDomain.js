@@ -8,7 +8,12 @@ const getAllSubScribesDomainQuery = async (fastify) =>{
             "wrSiteName" as "siteName",
             "wrSiteDomain" as "siteDomain",
             "wrIsApproved" as "isApproved",
-            CAST(count(tssd."wrSubScribesSubDomainId") as integer) as "subDomainCount"
+            CAST(count(tssd."wrSubScribesSubDomainId") as integer) as "subDomainCount",
+            json_agg(json_build_object(
+                'subScribesSubDomainId', tssd."wrSubScribesSubDomainId",
+                'subScribesDomainId', tssd."wrSubScribesDomainId",
+                'siteSubDomain', tssd."wrSiteSubDomain"
+            )) as "subDomains"
         FROM
             "tblSubScribesDomains" tsd
         LEFT JOIN
@@ -45,7 +50,12 @@ const getDomainByIdQuery = async (id,fastify) =>{
             "wrSiteName" as "siteName",
             "wrSiteDomain" as "siteDomain",
             "wrIsApproved" as "isApproved",
-            CAST(count(tssd."wrSubScribesSubDomainId") as integer) as "subDomainCount"
+            CAST(count(tssd."wrSubScribesSubDomainId") as integer) as "subDomainCount",
+            json_agg(json_build_object(
+                'subScribesSubDomainId', tssd."wrSubScribesSubDomainId",
+                'subScribesDomainId', tssd."wrSubScribesDomainId",
+                'siteSubDomain', tssd."wrSiteSubDomain"
+            )) as "subDomains"
         FROM
             "tblSubScribesDomains" tsd
         LEFT JOIN
