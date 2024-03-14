@@ -10,12 +10,12 @@ module.exports = (sequelize) => {
         allowNull: false,
         autoIncrement: true,
       },
-      wrcommentaryid: {
+      wrCommentaryId: {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
-      wrEventID: {
-        type: DataTypes.INTEGER,
+      wrEventRefID: {
+        type: DataTypes.STRING,
         allowNull: false,
       },
       wrTeamID: {
@@ -146,6 +146,34 @@ module.exports = (sequelize) => {
         type: DataTypes.BOOLEAN,
         allowNull: false,
       },
+      wrOverCount: {
+        type: DataTypes.DOUBLE,
+        allowNull: true,
+      },
+      wrUnder : {
+        type: DataTypes.DOUBLE,
+        allowNull: true,
+      },
+      wrYes : {
+        type: DataTypes.DOUBLE,
+        allowNull: true,
+      },
+      wrYesPoint : {
+        type: DataTypes.DOUBLE,
+        allowNull: true,
+      },
+      wrNo : {
+        type: DataTypes.DOUBLE,
+        allowNull: true,
+      },
+      wrNoPoint : {
+        type: DataTypes.DOUBLE,
+        allowNull: true,
+      },
+      wrData :{
+        type: DataTypes.STRING,
+        allowNull: true,
+      }
     },
     {
       timestamps: false,
