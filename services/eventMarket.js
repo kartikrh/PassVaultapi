@@ -66,10 +66,10 @@ const getAllEventMarketsService = async (request ,fastify) => {
         let commentaryId = global.tblCommentaries.filter((item) => item.eventId === eventId).map((item) => item.commentaryId);
         eventMarket = eventMarket.filter((item) => commentaryId.includes(item.commentaryId));
     }
-    if(status){
+    if(status !== undefined){
         eventMarket = eventMarket.filter((item) => item.status === status);
     }
-    if(isActive){
+    if(isActive !== undefined){
         eventMarket = eventMarket.filter((item) => item.isActive === isActive);
     }
     return eventMarket;
@@ -159,7 +159,21 @@ const updateAllowMarketsService = async (request ,fastify) => {
     await changeIsAllowEventMarketQuery(request.body,request,fastify);
     global.tblEventMarkets[eventMarket].isAllow = isAllow;
     return "Event Market updated successfully";
-
+}
+const getEventListByCompetitionIdsService = async (request ,fastify) => {
+    // validate competitionId
+    const {competitionId} = request.body;
+    let competition = global.tblCompetitions.find((item) => item.competitionId === competitionId);
+    if (!competition) {
+        throw new Error("Competition with this id not Found");
+    }
+    // get the eventlist by competitionId
+    let eventList = global.tblEvents.filter((item) => item.competitionId === competitionId)
+                    .map((item) => ({
+                        eventId: item.eventId,
+                        eventName: item.eventName
+                    }));
+    return eventList;
 
 }
 
@@ -169,5 +183,6 @@ module.exports = {
     createEventMarketsService,
     deleteEventMarketsService,
     activeInactiveMarketsService,
-    updateAllowMarketsService
+    updateAllowMarketsService,
+    getEventListByCompetitionIdsService
 };

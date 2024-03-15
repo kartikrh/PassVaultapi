@@ -1,16 +1,18 @@
-const { getDetailsByCId, getAllEventMarket, createEventMarket, deleteEventMarket, activeInactiveMarket, updateAllowMarket } = require("../../../controller/users/admin/eventMarket");
-const { EventMarket } = require("../../../swaggerSchema/groupTags/schema");
+const { getDetailsByCId, getAllEventMarket, createEventMarket, deleteEventMarket, activeInactiveMarket, updateAllowMarket, getEventListByCompetitionId } = require("../../../controller/users/admin/eventMarket");
+const { EventMarket, Commentary } = require("../../../swaggerSchema/groupTags/schema");
 const {
     authorize,
     checkPermission,
   } = require("../../../controller/middleware");
+const { getEventTypeList } = require("../../../controller/users/admin/eventTypes");
+const { getCompetitionListByeventTypeId } = require("../../../controller/users/admin/competition");
 module.exports = async (fastify, opts) => {
     fastify.post("/all", {  
         schema: EventMarket.getAll.schema,
         preHandler: [
             (request, reply) => authorize(request, reply, fastify),
             (request, reply) => checkPermission(request, reply, fastify, {
-                tabName: "EventMarket",
+                tabName: "Event Markets",
                 mode: "view"
             })
         ],
@@ -21,7 +23,7 @@ module.exports = async (fastify, opts) => {
         preHandler: [
             (request, reply) => authorize(request, reply, fastify),
             (request, reply) => checkPermission(request, reply, fastify, {
-                tabName: "EventMarket",
+                tabName: "Event Markets",
                 mode: "view"
             })
         ],
@@ -32,7 +34,7 @@ module.exports = async (fastify, opts) => {
         preHandler: [
             (request, reply) => authorize(request, reply, fastify),
             (request, reply) => checkPermission(request, reply, fastify, {
-                tabName: "EventMarket",
+                tabName: "Event Markets",
                 mode: "add"
             })
         ],
@@ -43,7 +45,7 @@ module.exports = async (fastify, opts) => {
         preHandler: [
             (request, reply) => authorize(request, reply, fastify),
             (request, reply) => checkPermission(request, reply, fastify, {
-                tabName: "EventMarket",
+                tabName: "Event Markets",
                 mode: "delete"
             })
         ],
@@ -54,7 +56,7 @@ module.exports = async (fastify, opts) => {
         preHandler: [
             (request, reply) => authorize(request, reply, fastify),
             (request, reply) => checkPermission(request, reply, fastify, {
-                tabName: "EventMarket",
+                tabName: "Event Markets",
                 mode: "delete"
             })
         ],
@@ -65,10 +67,46 @@ module.exports = async (fastify, opts) => {
         preHandler: [
             (request, reply) => authorize(request, reply, fastify),
             (request, reply) => checkPermission(request, reply, fastify, {
-                tabName: "EventMarket",
+                tabName: "Event Markets",
                 mode: "delete"
             })
         ],
         handler: (request, reply) => updateAllowMarket(request, reply, fastify)
+    })
+    fastify.post("/eventTypeList", {
+        schema: Commentary.eventTypeList.schema,
+        preHandler: [
+          (request, reply) => authorize(request, reply, fastify),
+          (request, reply) =>
+            checkPermission(request, reply, fastify, {
+              tabName: "Event Markets",
+              mode: "view",
+            }),
+        ],
+        handler: (request, reply) => getEventTypeList(request, reply, fastify),
+    });
+    fastify.post("/competitionListByEventTypeId", {
+        schema: Commentary.competitionListByEventTypeId.schema,
+        preHandler: [
+          (request, reply) => authorize(request, reply, fastify),
+          (request, reply) =>
+            checkPermission(request, reply, fastify, {
+              tabName: "Event Markets",
+              mode: "view",
+            }),
+        ],
+        handler: (request, reply) => getCompetitionListByeventTypeId(request, reply, fastify),
+    });
+    fastify.post("/eventListByCompetitionId", {
+        schema: Commentary.eventListByCompetitionId.schema,
+        preHandler: [
+          (request, reply) => authorize(request, reply, fastify),
+          (request, reply) =>
+            checkPermission(request, reply, fastify, {
+              tabName: "Event Markets",
+              mode: "view",
+            }),
+        ],
+        handler: (request, reply) => getEventListByCompetitionId(request, reply, fastify),
     })
 };
