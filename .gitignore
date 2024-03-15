@@ -58,3 +58,4 @@ profile-*
 profile*
 *clinic*
 *flamegraph*
+.env.local
