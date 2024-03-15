@@ -38,7 +38,8 @@ const getAllCommentaryQuery = async (fastify) => {
     "isMatchTypeUpdated" as "isMatchTypeUpdated",
     "wrCurrentInnings" as "currentInnings",
     "wrSystemPlayerCount" as "systemPlayerCount",
-    "wrIsPlayersShow" as "isPlayersShow"
+    "wrIsPlayersShow" as "isPlayersShow",
+    "wrIsPredictMarket" as "isPredictMarket"
     from "tblCommentaries" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -56,7 +57,7 @@ const insertCommentaryQuery = async (request, fastify) => {
       `
       with insert_data as(
         insert into "tblCommentaries" ("wrEventTypeId","wrMatchTypeId","wrCompetitionId","wrEventId",
-        "wrEventDate","wrEventName","wrEventRefId","wrTeam1Id","wrTeam2Id","wrLocation","wrWeather","wrPitch","wrDisplayStatus","wrTarget","wrMarketID","wrTpId","isSignalROn","isMatchTypeUpdated" , "wrCreatedBy" , "wrCreatedDate","wrCommentaryStatus","wrCurrentInnings", "wrSystemPlayerCount") values (
+        "wrEventDate","wrEventName","wrEventRefId","wrTeam1Id","wrTeam2Id","wrLocation","wrWeather","wrPitch","wrDisplayStatus","wrTarget","wrMarketID","wrTpId","isSignalROn","isMatchTypeUpdated" , "wrCreatedBy" , "wrCreatedDate","wrCommentaryStatus","wrCurrentInnings", "wrSystemPlayerCount","wrIsPredictMarket") values (
           $1,
           $2,
           $3,
@@ -66,7 +67,8 @@ const insertCommentaryQuery = async (request, fastify) => {
           $9,
           $10,$11,$12,$13,$14,$15,$16,$17,$18,$19,now(),1,
           1,
-          $20
+          $20,
+          $21
         ) returning *         
       )
 
@@ -106,7 +108,8 @@ const insertCommentaryQuery = async (request, fastify) => {
     "isMatchTypeUpdated" as "isMatchTypeUpdated",
     "wrCurrentInnings" as "currentInnings",
     "wrSystemPlayerCount" as "systemPlayerCount",
-    "wrIsPlayersShow" as "isPlayersShow"
+    "wrIsPlayersShow" as "isPlayersShow",
+    "wrIsPredictMarket" as "isPredictMarket"
     from "insert_data" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"  
@@ -134,6 +137,7 @@ const insertCommentaryQuery = async (request, fastify) => {
           data.isMatchTypeUpdated || false,
           request.userTokenInfo.WrUserId,
           data.systemPlayerCount || null,
+          data.isPredictMarket || false,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -335,7 +339,8 @@ const updateCommentaryQuery = async (request, fastify) => {
       "wrPitch" = $12,
       "wrTarget" = $13 ,
       "isSignalROn" = $14,
-      "isMatchTypeUpdated" = $15, 
+      "isMatchTypeUpdated" = $15,
+      "wrIsPredictMarket" = $17, 
       "wrModifyDate" = now()
       where "wrCommentaryId" = $16	
       `,
@@ -357,6 +362,7 @@ const updateCommentaryQuery = async (request, fastify) => {
           data.isSignalROn,
           data.isMatchTypeUpdated || false,
           data.commentaryId,
+          data.isPredictMarket,
         ],
 
         type: fastify.db.QueryTypes.UPDATE,
@@ -439,14 +445,9 @@ const deleteCommentaryPlayerById = async (data, request, fastify) => {
       AND "wrTeamId" = $3`,
       {
         type: fastify.db.QueryTypes.DELETE,
-        bind: [
-          data.playerId,
-          data.commentaryId,
-          data.teamId,
-        ],
+        bind: [data.playerId, data.commentaryId, data.teamId],
       }
     );
-
   } catch (err) {
     errorLogger(
       fastify,
@@ -500,7 +501,8 @@ const getCommentaryByIdQuery = async (request, fastify) => {
       "isMatchTypeUpdated" as "isMatchTypeUpdated",
       "wrCurrentInnings" as "currentInnings",
       "wrSystemPlayerCount" as "systemPlayerCount",
-      "wrIsPlayersShow" as "isPlayersShow"
+      "wrIsPlayersShow" as "isPlayersShow",
+      "wrIsPredictMarket" as "isPredictMarket"
       from "tblCommentaries" tc
       left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
       left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -2383,6 +2385,32 @@ const updatePlayerShowQuery = async (data, request, fastify) => {
     throw new Error(error.message);
   }
 };
+
+const updateisPredictMarketInCommentaryQuery = async (
+  data,
+  fastify,
+  request
+) => {
+  try {
+    return await fastify.db.query(
+      `UPDATE "tblCommentaries" SET "wrIsPredictMarket" = $1 WHERE
+      "wrCommentaryId" = $2`,
+      {
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [data.isPredictMarket, data.commentaryId],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/updateMatchTypeInCommentaryQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -2415,7 +2443,6 @@ module.exports = {
   updateCommentaryPartnershipQuery,
   deleteBallByBallCommentoriesQuery,
   deleteOverCommentoriesQuery,
-  //nitesh Updated
   UpdateCommentaryTimeQuery,
   getCommentaryID_Socket,
   upsertCommentaryPlayers,
@@ -2427,5 +2454,6 @@ module.exports = {
   updateShowClientQuery,
   updatePlayerShowQuery,
   deleteCommentaryPlayerById,
-  updateCommentaryStatusQuery
+  updateCommentaryStatusQuery,
+  updateisPredictMarketInCommentaryQuery,
 };
