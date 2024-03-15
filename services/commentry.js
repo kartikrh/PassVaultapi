@@ -1017,10 +1017,20 @@ const testStoreProcedureService = async (request, fastify) => {
       commentaryPartnership,
       commentaryDetails,
       deleteCommentaryBallByBallId,
-      deleteOverId
+      deleteOverId,
+      commentaryId
     } = request.body;
 
     let commentaryIndex, overIndex, ballByBallIndex, wicketIndex, partnershipIndex;
+
+    if(commentaryId){
+      let commentaryData = global.tblCommentaries.findIndex(
+        (item) => item.commentaryId === commentaryId
+      );
+      if (commentaryData === -1) {
+        throw new Error("Commentary with this id not Found");
+      }
+    }
     // validate CommentaryId 
     if (commentaryDetails) {
       commentaryIndex = global.tblCommentaries.findIndex(
@@ -1170,7 +1180,7 @@ const testStoreProcedureService = async (request, fastify) => {
 
     let updatedData = await fastify.db.query(
       `CALL proc_setcommentary(
-      $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11 ,$12,$13,$14
+      $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11 ,$12,$13,$14 ,$15
     )`,
       {
         bind: [
@@ -1183,6 +1193,7 @@ const testStoreProcedureService = async (request, fastify) => {
           commentaryDetails ? JSON.stringify(commentaryDetails) : null,
           deleteCommentaryBallByBallId ? deleteCommentaryBallByBallId : null,
           deleteOverId ? deleteOverId : null,
+          commentaryId,
           null,// commentaryOverDetails,
           null,// commentaryBallByBallDetails,
           null,// commentaryWicketDetails,
@@ -3580,7 +3591,7 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
     let oversList = [];
 
     overs.forEach((_over) => {
-      const { overId, over, totalRun, teamId, bowlerId, totalWicket } = _over;
+      const { overId, over, totalRun, teamId, bowlerId, totalWicket ,teamStatus} = _over;
       let ballsList = [];
 
       let _overBalls = commentryBallByBall.filter(
@@ -3624,6 +3635,7 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
         tid: teamId,
         twk: totalWicket,
         ball: ballsList,
+        ts : teamStatus
       });
     });
 

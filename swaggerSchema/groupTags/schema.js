@@ -1936,7 +1936,7 @@ const Commentary = {
           // winnerId: { type: "string" },
           // winnerName: { type: "string" },
           // isClientShow: { type: "boolean" },
-          displayStatus: { type: "string" },
+          // displayStatus: { type: "string" },
           // commentaryStatus: { type: "integer" },
           // rmk: { type: "string" },
           // commentaryUserId: { type: "integer" },
@@ -2051,13 +2051,14 @@ const Commentary = {
       body: {
         type: "object",
         properties: {
+          commentaryId : { type: "integer" },
           commentaryDetails: { type: "object" },
           commentaryTeams: { type: "array", items: { type: "object" } },
           commentaryPlayers: { type: "array", items: { type: "object" } },
           // commentaryOvers: { type: "array", items: { type: "object" } },
           commentaryOvers: { type: "object" },
         },
-        required: [],
+        required: ["commentaryId"],
       },
     },
   },
@@ -2883,6 +2884,55 @@ const EventMarket = {
       }
     }
   },
+  delete : {
+    schema : {
+      tags: ["EventMarket"],
+      description: "delete EventMarket",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          eventMarketId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["eventMarketId"],
+      },
+    
+    }
+  },
+  activeInactiveMarket:{
+    schema : {
+      tags: ["EventMarket"],
+      description: "active inactive EventMarket",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          eventMarketId : { type : "integer"},
+          isActive : { type : "boolean"}
+        },
+        required : ["eventMarketId", "isActive"]
+      }
+    }
+  },
+  updateAllowMarket:{
+    schema : {
+      tags: ["EventMarket"],
+      description: "update allow market",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          eventMarketId : { type : "integer"},
+          isAllow : { type : "boolean"}
+        },
+        required : ["eventMarketId", "isAllow"]
+      }
+    }
+  }
 }
 module.exports = {
   Auth,
