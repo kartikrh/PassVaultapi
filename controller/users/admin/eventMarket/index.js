@@ -1,5 +1,5 @@
 
-const { getDetailsByCIdService, getAllEventMarketsService, createEventMarketsService, deleteEventMarketsService, activeInactiveMarketsService, updateAllowMarketsService } = require("../../../../services/eventMarket");
+const { getDetailsByCIdService, getAllEventMarketsService, createEventMarketsService, deleteEventMarketsService, activeInactiveMarketsService, updateAllowMarketsService, getEventListByCompetitionIdsService } = require("../../../../services/eventMarket");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
 
@@ -58,6 +58,16 @@ const updateAllowMarket = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const getEventListByCompetitionId = async (request, reply, fastify) => {
+  try {
+    const result = await getEventListByCompetitionIdsService(request ,fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/getEventListByCompetitionId", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
 
 module.exports = {
     getDetailsByCId,
@@ -65,5 +75,6 @@ module.exports = {
     createEventMarket,
     deleteEventMarket,
     activeInactiveMarket,
-    updateAllowMarket
+    updateAllowMarket,
+    getEventListByCompetitionId
 };
