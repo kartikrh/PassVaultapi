@@ -30,6 +30,7 @@ const {
   deleteTeamPlayer,
   loadTeamPlayer,
   saveShortCommentary,
+  updateCommentaryStatus
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -200,6 +201,18 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request, reply) => addCommentary(request, reply, fastify),
+  });
+  fastify.post("/updateCommentaryStatus", {
+    schema: Commentary.updateCommentaryStatus.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "edit",
+        }),
+    ],
+    handler: (request, reply) => updateCommentaryStatus(request, reply, fastify),
   });
 
   fastify.post("/clone", {
@@ -377,22 +390,22 @@ module.exports = async (fastify, opts) => {
       testStoreProcedure(request, reply, fastify),
   });
   fastify.post("/getTeamAndPlayerById", {
-    schema : Commentary.getById.schema,
+    schema: Commentary.getById.schema,
     handler: (request, reply) => getTeamAndPlayerList(request, reply, fastify)
   })
-  fastify.post("/addTeamPlayer",{
-    schema : Commentary.addTeamPlayers.schema,
+  fastify.post("/addTeamPlayer", {
+    schema: Commentary.addTeamPlayers.schema,
     handler: (request, reply) => addTeamPlayer(request, reply, fastify)
   })
-  fastify.post("/deleteTeamPlayer",{
-    schema : Commentary.addTeamPlayers.schema,
+  fastify.post("/deleteTeamPlayer", {
+    schema: Commentary.addTeamPlayers.schema,
     handler: (request, reply) => deleteTeamPlayer(request, reply, fastify)
   })
-  fastify.post("/loadTeamPlayer",{
-    schema : Commentary.loadTeamPlayer.schema,
+  fastify.post("/loadTeamPlayer", {
+    schema: Commentary.loadTeamPlayer.schema,
     handler: (request, reply) => loadTeamPlayer(request, reply, fastify)
   })
-  
+
   fastify.post("/saveShortCommentary", {
     schema: Commentary.saveShortCommentary.schema,
     preHandler: [
