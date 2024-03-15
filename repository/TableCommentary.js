@@ -55,7 +55,8 @@ const insertCommentaryQuery = async (request, fastify) => {
     const result = await fastify.db.query(
       `
       with insert_data as(
-        insert into "tblCommentaries" ("wrEventTypeId","wrMatchTypeId","wrCompetitionId","wrEventId","wrEventDate","wrEventName","wrEventRefId","wrTeam1Id","wrTeam2Id","wrLocation","wrWeather","wrPitch","wrDisplayStatus","wrTarget","wrMarketID","wrTpId","isSignalROn","isMatchTypeUpdated" , "wrCreatedBy" , "wrCreatedDate","wrCommentaryStatus","wrCurrentInnings", "wrSystemPlayerCount") values (
+        insert into "tblCommentaries" ("wrEventTypeId","wrMatchTypeId","wrCompetitionId","wrEventId",
+        "wrEventDate","wrEventName","wrEventRefId","wrTeam1Id","wrTeam2Id","wrLocation","wrWeather","wrPitch","wrDisplayStatus","wrTarget","wrMarketID","wrTpId","isSignalROn","isMatchTypeUpdated" , "wrCreatedBy" , "wrCreatedDate","wrCommentaryStatus","wrCurrentInnings", "wrSystemPlayerCount") values (
           $1,
           $2,
           $3,
@@ -125,7 +126,7 @@ const insertCommentaryQuery = async (request, fastify) => {
           data.location || null,
           data.weather || null,
           data.pitch || null,
-          null,
+          "Toss Pending!!",
           null,
           data.marketId || null,
           data.tpId || null,
@@ -332,12 +333,11 @@ const updateCommentaryQuery = async (request, fastify) => {
       "wrLocation" = $10,
       "wrWeather" = $11,
       "wrPitch" = $12,
-      "wrDisplayStatus" = $13,
-      "wrTarget" = $14 ,
-      "isSignalROn" = $15,
-      "isMatchTypeUpdated" = $16, 
+      "wrTarget" = $13 ,
+      "isSignalROn" = $14,
+      "isMatchTypeUpdated" = $15, 
       "wrModifyDate" = now()
-      where "wrCommentaryId" = $17	
+      where "wrCommentaryId" = $16	
       `,
       {
         bind: [
@@ -353,7 +353,6 @@ const updateCommentaryQuery = async (request, fastify) => {
           data.location || null,
           data.weather || null,
           data.pitch || null,
-          data.displayStatus || null,
           data.target || null,
           data.isSignalROn,
           data.isMatchTypeUpdated || false,
@@ -431,7 +430,7 @@ const deleteCommentaryPlayers = async (request, fastify) => {
     throw new Error(err.message);
   }
 };
-const deleteCommentaryPlayerById = async (data,request, fastify) => {
+const deleteCommentaryPlayerById = async (data, request, fastify) => {
   try {
     // delete commentary player by id
     return await fastify.db.query(
@@ -987,7 +986,8 @@ const getAllOversQuery = async (fastify) => {
       "wrIsMaiden" as "isMaiden",
       "wrDate" as "date",
       "wrIsDelete" as "isDelete",
-      "wrCurrentInnings" as "currentInnings"
+      "wrCurrentInnings" as "currentInnings",
+      "wrTeamScore" as "teamScore"
       from "tblOvers" 
       `,
     {
@@ -1450,6 +1450,30 @@ const updateCommentaryDetailsQuery = async (data, fastify, request) => {
       `,
       {
         bind: [data.displayStatus, data.commentaryId, data.commentaryStatus],
+      }
+    );
+    return result;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableConfig/updateCommentaryDetailsQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+const updateCommentaryStatusQuery = async (data, fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `update "tblCommentaries" set
+        "wrDisplayStatus" = $1,
+        "wrModifyDate" = now(),
+        "wrUpdateTime" = now()
+        where "wrCommentaryId" = $2
+      `,
+      {
+        bind: [data.displayStatus, data.commentaryId],
       }
     );
     return result;
@@ -2402,5 +2426,6 @@ module.exports = {
   getCommnertySquadPlayersList,
   updateShowClientQuery,
   updatePlayerShowQuery,
-  deleteCommentaryPlayerById
+  deleteCommentaryPlayerById,
+  updateCommentaryStatusQuery
 };

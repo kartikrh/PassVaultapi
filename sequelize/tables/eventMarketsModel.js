@@ -10,12 +10,12 @@ module.exports = (sequelize) => {
         allowNull: false,
         autoIncrement: true,
       },
-      wrcommentaryid: {
+      wrCommentaryId: {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
-      wrEventID: {
-        type: DataTypes.INTEGER,
+      wrEventRefID: {
+        type: DataTypes.STRING,
         allowNull: false,
       },
       wrTeamID: {
@@ -55,7 +55,7 @@ module.exports = (sequelize) => {
         allowNull: false,
       },
       wrOver: {
-        type: DataTypes.STRING(100),
+        type: DataTypes.DOUBLE,
         allowNull: true,
       },
       wrIsPlayer: {
@@ -122,9 +122,10 @@ module.exports = (sequelize) => {
         type: DataTypes.BOOLEAN,
         allowNull: false,
       },
-      WrIsBetAllow: {
+      wrIsAllow: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
+        defaultValue: false,
       },
       wrCloseTime: {
         type: DataTypes.DATE,
@@ -145,7 +146,12 @@ module.exports = (sequelize) => {
       wrIsResult: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
+        defaultValue: false,
       },
+      wrData :{
+        type: DataTypes.STRING,
+        allowNull: true,
+      }
     },
     {
       timestamps: false,

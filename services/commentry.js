@@ -36,6 +36,7 @@ const {
   updatePlayerShowQuery,
   deleteCommentaryPlayerById,
   getAllCommentaryQuery,
+  updateCommentaryStatusQuery,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -1017,10 +1018,20 @@ const testStoreProcedureService = async (request, fastify) => {
       commentaryPartnership,
       commentaryDetails,
       deleteCommentaryBallByBallId,
-      deleteOverId
+      deleteOverId,
+      commentaryId
     } = request.body;
 
     let commentaryIndex, overIndex, ballByBallIndex, wicketIndex, partnershipIndex;
+
+    if(commentaryId){
+      let commentaryData = global.tblCommentaries.findIndex(
+        (item) => item.commentaryId === commentaryId
+      );
+      if (commentaryData === -1) {
+        throw new Error("Commentary with this id not Found");
+      }
+    }
     // validate CommentaryId 
     if (commentaryDetails) {
       commentaryIndex = global.tblCommentaries.findIndex(
@@ -1170,7 +1181,7 @@ const testStoreProcedureService = async (request, fastify) => {
 
     let updatedData = await fastify.db.query(
       `CALL proc_setcommentary(
-      $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11 ,$12,$13,$14
+      $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11 ,$12,$13,$14 ,$15
     )`,
       {
         bind: [
@@ -1183,6 +1194,7 @@ const testStoreProcedureService = async (request, fastify) => {
           commentaryDetails ? JSON.stringify(commentaryDetails) : null,
           deleteCommentaryBallByBallId ? deleteCommentaryBallByBallId : null,
           deleteOverId ? deleteOverId : null,
+          commentaryId,
           null,// commentaryOverDetails,
           null,// commentaryBallByBallDetails,
           null,// commentaryWicketDetails,
@@ -1278,10 +1290,10 @@ const testStoreProcedureService = async (request, fastify) => {
         response.commentaryPartnershipDetails = commentaryPartnership;
       }
     }
-    if(deleteCommentaryBallByBallId){
+    if (deleteCommentaryBallByBallId) {
       response.deleteCommentaryBallByBallId = true;
     }
-    if(deleteOverId){
+    if (deleteOverId) {
       response.deleteOverId = true;
     }
     // which i get from request i want to return only that object 
@@ -1493,38 +1505,78 @@ const loadTeamPlayerService = async (request, fastify) => {
 }
 const saveShortCommentaryService = async (request, fastify) => {
   try {
-    const {commentaryDetails , ...rest} = request.body;
-  let teamArr = [];
-  let teamPlayerArr = [];
-  for (let key in rest) {
-    const { teamPlayers, ...rest1 } = rest[key];
-    teamArr.push(rest1);
-    teamPlayerArr.push(...teamPlayers)
-  }
-  //save details in commentary
-  const a = await fastify.db.query(
-    `CALL proc_save_shortCommentary(
+    const { commentaryDetails, ...rest } = request.body;
+    let teamArr = [];
+    let teamPlayerArr = [];
+    for (let key in rest) {
+      const { teamPlayers, ...rest1 } = rest[key];
+      teamArr.push(rest1);
+      teamPlayerArr.push(...teamPlayers)
+    }
+    //save details in commentary
+    const a = await fastify.db.query(
+      `CALL proc_save_shortCommentary(
       $1, $2, $3
     )`,
-    {
-      bind: [
-        JSON.stringify(commentaryDetails) || null,
-        JSON.stringify(teamArr) || null,
-        JSON.stringify(teamPlayerArr) || null
-      ],
-      type: fastify.db.QueryTypes.SELECT,
-    }
-  );
+      {
+        bind: [
+          JSON.stringify(commentaryDetails) || null,
+          JSON.stringify(teamArr) || null,
+          JSON.stringify(teamPlayerArr) || null
+        ],
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
 
-  global.tblCommentaries = await getAllCommentaryQuery(fastify);
-  global.tblCommentaryTeams = await getAllCommentaryTeamsQuery(fastify);
-  global.tblCommentaryPlayers = await getAllCommentaryPlayerQuery(fastify);
+    global.tblCommentaries = await getAllCommentaryQuery(fastify);
+    global.tblCommentaryTeams = await getAllCommentaryTeamsQuery(fastify);
+    global.tblCommentaryPlayers = await getAllCommentaryPlayerQuery(fastify);
 
-  return "Short Commentary saved successfully";
+    return "Short Commentary saved successfully";
   } catch (error) {
     throw error;
   }
 }
+
+const updateCommentaryStatusService = async (request, fastify) => {
+  const { commentaryId, displayStatus } = request.body;
+
+  // Validate input
+  if (!commentaryId || displayStatus === undefined) {
+    throw new Error('Invalid input: commentaryId and displayStatus are required');
+  }
+
+  // Find the index of the commentary to update
+  const index = global.tblCommentaries.findIndex(
+    (item) => item.commentaryId === commentaryId
+  );
+
+  // Check if the commentary exists
+  if (index === -1) {
+    throw new Error('Commentary with this id not found');
+  }
+
+  // Prepare the commentary details for update
+  const commentaryDetails = {
+    commentaryId,
+    displayStatus
+  };
+
+  // Update the commentary status in the database
+  await updateCommentaryStatusQuery(commentaryDetails, fastify, request);
+
+  // Update the commentary status in the global array
+  global.tblCommentaries[index] = {
+    ...global.tblCommentaries[index],
+    ...commentaryDetails
+  };
+
+  // Return the updated commentary details
+  return {
+    name: 'commentaryDetails',
+    value: commentaryDetails,
+  };
+};
 const updateCommentaryDetailsServices = async (
   commentaryDetails,
   fastify,
@@ -2275,13 +2327,13 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
   );
 
   const cbt = commentaryPlayers_batter.map((player) => {
-    let bati = global.tblPlayers.find(
+    let playerData = global.tblPlayers.find(
       (item) => item.playerId === player.playerId
-    ).image;
+    );
     return {
       pid: player.playerId,
       batn: player.playerName,
-      bati: bati,
+      bati: playerData.image,
       trun: player.batRun || 0,
       tball: player.batBall || 0,
       t4: player.batFour || 0,
@@ -2289,17 +2341,18 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
       sr: player.batSrr || 0,
       os: player.onStrike,
       str: parseFloat(player.batsmanStrikeRate) || 0.0,
+      isp: playerData.isSystemPlayer
     };
   });
 
   const cbl = commentaryPlayersBowler.map((bowler) => {
-    let bli = global.tblPlayers.find(
+    let playerData = global.tblPlayers.find(
       (item) => item.playerId === bowler.playerId
-    ).image;
+    );
     return {
       pid: bowler.playerId,
       pn: bowler.playerName,
-      bli: bli,
+      bli: playerData.image,
       tov: bowler.bowlerOver || 0,
       cob: bowler.bowlerCurrentBall || 0,
       trun: bowler.bowlerRun || 0,
@@ -2319,6 +2372,7 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
         0 + bowler.bowlerByeBallRun ||
         0 + bowler.bowlerLegByeBallRun ||
         0,
+      isp: playerData.isSystemPlayer
     };
   });
 
@@ -2802,13 +2856,13 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
   );
 
   const cbt = commentaryPlayers_batter.map((player) => {
-    let bati = global.tblPlayers.find(
+    let playerData = global.tblPlayers.find(
       (item) => item.playerId === player.playerId
-    ).image;
+    );
     return {
       pid: player.playerId,
       batn: player.playerName,
-      bati: bati,
+      bati: playerData.image,
       trun: player.batRun || 0,
       tball: player.batBall || 0,
       t4: player.batFour || 0,
@@ -2816,17 +2870,18 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
       sr: player.batSrr || 0,
       os: player.onStrike,
       str: parseFloat(player.batsmanStrikeRate) || 0.0,
+      isp: playerData.isSystemPlayer
     };
   });
 
   const cbl = commentaryPlayersBowler.map((bowler) => {
-    let bli = global.tblPlayers.find(
+    let playerData = global.tblPlayers.find(
       (item) => item.playerId === bowler.playerId
-    ).image;
+    );
     return {
       pid: bowler.playerId,
       pn: bowler.playerName,
-      bli: bli,
+      bli: playerData.image,
       tov: bowler.bowlerOver || 0,
       cob: bowler.bowlerCurrentBall || 0,
       trun: bowler.bowlerRun || 0,
@@ -2846,6 +2901,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
         0 + bowler.bowlerByeBallRun ||
         0 + bowler.bowlerLegByeBallRun ||
         0,
+      isp: playerData.isSystemPlayer
     };
   });
 
@@ -3576,7 +3632,7 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
     let oversList = [];
 
     overs.forEach((_over) => {
-      const { overId, over, totalRun, teamId, bowlerId, totalWicket } = _over;
+      const { overId, over, totalRun, teamId, bowlerId, totalWicket ,teamScore} = _over;
       let ballsList = [];
 
       let _overBalls = commentryBallByBall.filter(
@@ -3620,6 +3676,7 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
         tid: teamId,
         twk: totalWicket,
         ball: ballsList,
+        ts : teamScore
       });
     });
 
@@ -4430,5 +4487,6 @@ module.exports = {
   deleteTeamPlayerService,
   loadTeamPlayerService,
   saveShortCommentaryService,
+  updateCommentaryStatusService
   // getshortService
 };

@@ -4,17 +4,35 @@ const getAllSubScribesDomainQuery = async (fastify) =>{
     const data =  await fastify.db.query(
         `
         SELECT 
-            tsd."wrSubScribesDomainId" as "subScribesDomainId",
-            "wrSiteName" as "siteName",
-            "wrSiteDomain" as "siteDomain",
-            "wrIsApproved" as "isApproved",
-            CAST(count(tssd."wrSubScribesSubDomainId") as integer) as "subDomainCount"
-        FROM
-            "tblSubScribesDomains" tsd
-        LEFT JOIN
-            "tblSubScribesSubDomains" tssd ON tsd."wrSubScribesDomainId" = tssd."wrSubScribesDomainId"
-        GROUP BY
-            tsd."wrSubScribesDomainId"
+        tsd."wrSubScribesDomainId" as "subScribesDomainId",
+        "wrSiteName" as "siteName",
+        "wrSiteDomain" as "siteDomain",
+        "wrIsApproved" as "isApproved",
+        CAST(COUNT(tssd."wrSubScribesSubDomainId") as integer) as "subDomainCount",
+        COALESCE(
+            CASE
+                WHEN COUNT(tssd."wrSubScribesSubDomainId") > 0 THEN
+                    JSON_AGG(
+                        JSON_BUILD_OBJECT(
+                            'subScribesSubDomainId', tssd."wrSubScribesSubDomainId",
+                            'subScribesDomainId', tssd."wrSubScribesDomainId",
+                            'siteSubDomain', tssd."wrSiteSubDomain"
+                        ) ORDER BY tssd."wrSubScribesSubDomainId" ASC
+                    )
+                ELSE
+                    '[]'::JSON
+            END,
+            '[]'
+        ) as "subDomains"
+    FROM
+        "tblSubScribesDomains" tsd
+    LEFT JOIN
+        "tblSubScribesSubDomains" tssd ON tsd."wrSubScribesDomainId" = tssd."wrSubScribesDomainId"
+    GROUP BY
+        tsd."wrSubScribesDomainId";  
+    
+
+
         `,
         {
             type: fastify.db.QueryTypes.SELECT
@@ -45,7 +63,23 @@ const getDomainByIdQuery = async (id,fastify) =>{
             "wrSiteName" as "siteName",
             "wrSiteDomain" as "siteDomain",
             "wrIsApproved" as "isApproved",
-            CAST(count(tssd."wrSubScribesSubDomainId") as integer) as "subDomainCount"
+            CAST(count(tssd."wrSubScribesSubDomainId") as integer) as "subDomainCount",
+            COALESCE(
+                CASE
+                    WHEN COUNT(tssd."wrSubScribesSubDomainId") > 0 THEN
+                        JSON_AGG(
+                            JSON_BUILD_OBJECT(
+                                'subScribesSubDomainId', tssd."wrSubScribesSubDomainId",
+                                'subScribesDomainId', tssd."wrSubScribesDomainId",
+                                'siteSubDomain', tssd."wrSiteSubDomain"
+                            ) ORDER BY tssd."wrSubScribesSubDomainId" ASC
+                        )
+                    ELSE
+                        '[]'::JSON
+                END,
+                '[]'
+            ) as "subDomains"
+            
         FROM
             "tblSubScribesDomains" tsd
         LEFT JOIN
