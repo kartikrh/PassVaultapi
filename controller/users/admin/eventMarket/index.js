@@ -1,5 +1,5 @@
 
-const { getDetailsByCIdService, getAllEventMarketsService, createEventMarketsService } = require("../../../../services/eventMarket");
+const { getDetailsByCIdService, getAllEventMarketsService, createEventMarketsService, deleteEventMarketsService, activeInactiveMarketsService, updateAllowMarketsService } = require("../../../../services/eventMarket");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
 
@@ -31,8 +31,39 @@ const createEventMarket = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const deleteEventMarket = async (request, reply, fastify) => {
+  try {
+    const result = await deleteEventMarketsService(request ,fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/deleteEventMarket", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const activeInactiveMarket = async (request, reply, fastify) => {
+  try {
+    const result = await activeInactiveMarketsService(request ,fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/activeInactiveMarket", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const updateAllowMarket = async (request, reply, fastify) => {
+  try {
+    const result = await updateAllowMarketsService(request ,fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/updateAllowMarket", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
 module.exports = {
     getDetailsByCId,
     getAllEventMarket,
-    createEventMarket
+    createEventMarket,
+    deleteEventMarket,
+    activeInactiveMarket,
+    updateAllowMarket
 };

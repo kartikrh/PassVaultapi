@@ -203,6 +203,16 @@ const decryptEncryptionId = async (encryptionKey , fastify) =>{
   throw new Error(error);
  }
 }
+const EventMarketStatus = {
+  NotOpen :	0,
+  Open:	1,
+  Inactive:	2,
+  Suspend:	3,
+  Close:	4,
+  Settled	:5,
+  Cancel:	6
+
+}
 module.exports = {
   ERROR_CODES,
   error,
@@ -219,5 +229,6 @@ module.exports = {
   getUserChildIds,
   convertDate,
   wicketType,
-  decryptEncryptionId
+  decryptEncryptionId,
+  EventMarketStatus
 };
