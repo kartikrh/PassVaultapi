@@ -147,10 +147,15 @@ module.exports = (sequelize) => {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
-      wrIsPlayersShow:{
+      wrIsPlayersShow: {
         type: DataTypes.BOOLEAN,
         defaultValue: true,
-      }
+      },
+      wrIsPredictMarket: {
+        type: DataTypes.BOOLEAN,
+        allowNull: true,
+        defaultValue: true,
+      },
     },
     {
       timestamps: false,

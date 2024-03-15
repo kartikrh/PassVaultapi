@@ -30,7 +30,8 @@ const {
   deleteTeamPlayer,
   loadTeamPlayer,
   saveShortCommentary,
-  updateCommentaryStatus
+  updateCommentaryStatus,
+  updateisPredictMarketInCommentary,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -212,7 +213,8 @@ module.exports = async (fastify, opts) => {
           mode: "edit",
         }),
     ],
-    handler: (request, reply) => updateCommentaryStatus(request, reply, fastify),
+    handler: (request, reply) =>
+      updateCommentaryStatus(request, reply, fastify),
   });
 
   fastify.post("/clone", {
@@ -386,25 +388,24 @@ module.exports = async (fastify, opts) => {
   });
   fastify.post("/testSP", {
     schema: Commentary.saveDetails.schema,
-    handler: (request, reply) =>
-      testStoreProcedure(request, reply, fastify),
+    handler: (request, reply) => testStoreProcedure(request, reply, fastify),
   });
   fastify.post("/getTeamAndPlayerById", {
     schema: Commentary.getById.schema,
-    handler: (request, reply) => getTeamAndPlayerList(request, reply, fastify)
-  })
+    handler: (request, reply) => getTeamAndPlayerList(request, reply, fastify),
+  });
   fastify.post("/addTeamPlayer", {
     schema: Commentary.addTeamPlayers.schema,
-    handler: (request, reply) => addTeamPlayer(request, reply, fastify)
-  })
+    handler: (request, reply) => addTeamPlayer(request, reply, fastify),
+  });
   fastify.post("/deleteTeamPlayer", {
     schema: Commentary.addTeamPlayers.schema,
-    handler: (request, reply) => deleteTeamPlayer(request, reply, fastify)
-  })
+    handler: (request, reply) => deleteTeamPlayer(request, reply, fastify),
+  });
   fastify.post("/loadTeamPlayer", {
     schema: Commentary.loadTeamPlayer.schema,
-    handler: (request, reply) => loadTeamPlayer(request, reply, fastify)
-  })
+    handler: (request, reply) => loadTeamPlayer(request, reply, fastify),
+  });
 
   fastify.post("/saveShortCommentary", {
     schema: Commentary.saveShortCommentary.schema,
@@ -413,10 +414,22 @@ module.exports = async (fastify, opts) => {
       (request, reply, done) =>
         checkPermission(request, reply, fastify, {
           tabName: "Commentary",
-          mode: "add"
+          mode: "add",
         }),
     ],
     handler: (request, reply) => saveShortCommentary(request, reply, fastify),
   });
-
+  fastify.post("/changePredictMarket", {
+    schema: Commentary.changePredictMarket.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "view",
+        }),
+    ],
+    handler: (request, reply) =>
+      updateisPredictMarketInCommentary(request, reply, fastify),
+  });
 };

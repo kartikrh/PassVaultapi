@@ -9,7 +9,6 @@ const {
   saveCommentaryDetailsService,
   deleteBallByBallCommentoriesService,
   deleteOverCommentoriesService,
-  //nitesh Updated
   commentaryDetailsByEventIdService,
   commentaryDetailsByCommentaryIdService,
   getCurrentUpdatedCommentaryIDService,
@@ -31,6 +30,7 @@ const {
   loadTeamPlayerService,
   saveShortCommentaryService,
   updateCommentaryStatusService,
+  updateisPredictMarketInCommentaryService,
 } = require("../../../../services/commentry");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -87,7 +87,12 @@ const updateCommentaryStatus = async (request, reply, fastify) => {
     const result = await updateCommentaryStatusService(request, fastify);
     reply.status(200).send(success(result, 200));
   } catch (err) {
-    errorLogger(fastify, err.message, path + "/updateCommentaryStatus", request);
+    errorLogger(
+      fastify,
+      err.message,
+      path + "/updateCommentaryStatus",
+      request
+    );
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
@@ -459,7 +464,23 @@ const saveShortCommentary = async (request, reply, fastify) => {
   }
 };
 
-
+const updateisPredictMarketInCommentary = async (request, reply, fastify) => {
+  try {
+    const result = await updateisPredictMarketInCommentaryService(
+      request,
+      fastify
+    );
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      path + "/updateisPredictMarketInCommentaryService",
+      request
+    );
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 module.exports = {
   getAllCommentaries,
   getCommentaryById,
@@ -494,5 +515,6 @@ module.exports = {
   deleteTeamPlayer,
   loadTeamPlayer,
   saveShortCommentary,
-  updateCommentaryStatus
+  updateCommentaryStatus,
+  updateisPredictMarketInCommentary,
 };
