@@ -987,7 +987,7 @@ const getAllOversQuery = async (fastify) => {
       "wrDate" as "date",
       "wrIsDelete" as "isDelete",
       "wrCurrentInnings" as "currentInnings",
-      "wrTeamStatus" as "teamStatus"
+      "wrTeamScore" as "teamScore"
       from "tblOvers" 
       `,
     {
