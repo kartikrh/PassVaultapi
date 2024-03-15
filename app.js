@@ -1,6 +1,5 @@
 "use strict";
 require("dotenv").config();
-
 const path = require("path");
 const AutoLoad = require("@fastify/autoload");
 const fsequelize = require("fastify-sequelize");
@@ -24,10 +23,13 @@ const Tracing = require("@sentry/tracing");
 module.exports.options = {};
 global.tblData = {};
 
-Sentry.init({
-  dsn: "https://63ad218f0a5097a8f6e9af4cdbc49722@o4506895600254976.ingest.us.sentry.io/4506896360669185",
-  tracesSampleRate: 1.0, // Adjust this value in production
-});
+if (process.env.ENABLE_SENTRY === "TRUE") {
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+    tracesSampleRate: 1.0,
+  });
+}
+
 
 module.exports = async function (fastify, opts) {
   fastify
@@ -126,13 +128,15 @@ module.exports = async function (fastify, opts) {
     // Record the request start time in nanoseconds
     request.startTime = process.hrtime.bigint();
     request.startTimeTimeStemp = new Date();
-    const transaction = Sentry.startTransaction({
-      name: `${request.method} ${request.url}`,
-      op: "http.server",
-      description: "HTTP request",
-    });
 
-    request.sentryTx = transaction;
+    if (process.env.ENABLE_SENTRY === "TRUE") {
+      const transaction = Sentry.startTransaction({
+        name: `${request.method} ${request.url}`,
+        op: "http.server",
+        description: "HTTP request",
+      });
+      request.sentryTx = transaction;
+    }
 
     done();
   });
@@ -177,13 +181,14 @@ module.exports = async function (fastify, opts) {
       newPayload = JSON.stringify(newPayload);
     }
 
-    const transaction = Sentry.startTransaction({
-      name: `${request.method} ${request.url}`,
-      op: "http.server",
-      description: "HTTP request",
-    });
-
-    request.sentryTx = transaction;
+    if (process.env.ENABLE_SENTRY === "TRUE") {
+      const transaction = Sentry.startTransaction({
+        name: `${request.method} ${request.url}`,
+        op: "http.server",
+        description: "HTTP request",
+      });
+      request.sentryTx = transaction;
+    }
 
     done(null, newPayload);
   });
@@ -205,8 +210,11 @@ module.exports = async function (fastify, opts) {
       responseLogger(request);
     }
 
-    request.sentryTx.setHttpStatus(reply.statusCode);
-    request.sentryTx.finish();
+    if (process.env.ENABLE_SENTRY === "TRUE") {
+      request.sentryTx.setHttpStatus(reply.statusCode);
+      request.sentryTx.finish();
+    }
+
     done();
   });
 
@@ -287,22 +295,9 @@ module.exports = async function (fastify, opts) {
 
   fastify.setErrorHandler(function (error, request, reply) {
     console.error(error);
-    Sentry.captureException(error);
+    if (process.env.ENABLE_SENTRY === "TRUE") {
+      Sentry.captureException(error);
+    }
     reply.status(500).send({ error: "Internal Server Error" });
   });
 };
-
-// const transaction = Sentry.startTransaction({
-//   op: "test",
-//   name: "My First Test Transaction",
-// });
-
-// setTimeout(() => {
-//   try {
-//     foo();
-//   } catch (e) {
-//     Sentry.captureException(e);
-//   } finally {
-//     transaction.finish();
-//   }
-// }, 99);

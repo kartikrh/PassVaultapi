@@ -30,6 +30,7 @@ const {
   deleteTeamPlayerService,
   loadTeamPlayerService,
   saveShortCommentaryService,
+  updateCommentaryStatusService,
 } = require("../../../../services/commentry");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -78,6 +79,15 @@ const addCommentary = async (request, reply, fastify) => {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, path + "/addCommentary", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const updateCommentaryStatus = async (request, reply, fastify) => {
+  try {
+    const result = await updateCommentaryStatusService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/updateCommentaryStatus", request);
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
@@ -483,5 +493,6 @@ module.exports = {
   addTeamPlayer,
   deleteTeamPlayer,
   loadTeamPlayer,
-  saveShortCommentary
+  saveShortCommentary,
+  updateCommentaryStatus
 };
