@@ -1878,7 +1878,7 @@ const Commentary = {
       // security: [{ bearerAuth: [] }],
     },
   },
-  addTeamPlayers : {
+  addTeamPlayers: {
     schema: {
       tags: ["Commentary"],
       description: "add team players",
@@ -1888,15 +1888,15 @@ const Commentary = {
         properties: {
           commentaryId: { type: "integer" },
           teamId: { type: "integer" },
-          playerId : {type : "integer"},
-       
+          playerId: { type: "integer" },
+
         },
-        required: ["commentaryId", "teamId", "playerId" ],	
+        required: ["commentaryId", "teamId", "playerId"],
       },
     },
   },
-  loadTeamPlayer : {
-    schema : {
+  loadTeamPlayer: {
+    schema: {
       tags: ["Commentary"],
       description: "load team players",
       security: [{ bearerAuth: [] }],
@@ -1905,7 +1905,7 @@ const Commentary = {
         properties: {
           teamId: { type: "integer" },
         },
-        required: [ "teamId"],
+        required: ["teamId"],
       },
     },
   },
@@ -1962,6 +1962,21 @@ const Commentary = {
           currentInnings: { type: "integer" },
           addSystemPlayer: { type: "boolean" },
           systemPlayerCount: { type: "integer" },
+        },
+        required: ["commentaryId"],
+      },
+    },
+  },
+  updateCommentaryStatus: {
+    schema: {
+      tags: ["Commentary"],
+      description: "update Commentary status",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+          displayStatus: { type: "string" },
         },
         required: ["commentaryId"],
       },
@@ -2390,7 +2405,7 @@ const MarketTemplate = {
         type: "object",
         properties: {
           isActive: { type: "boolean" },
-          matchTypeId: { type: "integer"}
+          matchTypeId: { type: "integer" }
         },
       },
     },
@@ -2426,7 +2441,7 @@ const MarketTemplate = {
           isOver: { type: "boolean" },
           over: { type: "string" },
           isPlayer: { type: "boolean" },
-          playerName : { type: "string" },
+          playerName: { type: "string" },
           isAutoCancel: { type: "boolean" },
           autoOpenType: { type: "integer" },
           autoOpen: { type: "number" },
@@ -2692,10 +2707,10 @@ const SubScribesDomain = {
       body: {
         type: "object",
         properties: {
-          siteName : { type: "string" },
-          siteDomain : { type: "string" },
+          siteName: { type: "string" },
+          siteDomain: { type: "string" },
           isApproved: { type: "boolean" },
-          subDomains : { type: "array", items: { type: "string" } },
+          subDomains: { type: "array", items: { type: "string" } },
         },
         required: ["siteDomain"],
       },
@@ -2797,21 +2812,21 @@ const MatchTypePredictor = {
       body: {
         type: "object",
         properties: {
-          matchTypeId : { type: "integer" },
-          predictorData : {
-            type : "array",
-            items : {
-              type : "object",
-              properties : {
-                over : { type : "integer" },
-                ball : { type : "number" },
-                runPerBall : { type : "number"},
-                order : { type : "integer"}
+          matchTypeId: { type: "integer" },
+          predictorData: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                over: { type: "integer" },
+                ball: { type: "number" },
+                runPerBall: { type: "number" },
+                order: { type: "integer" }
               },
             }
           }
         },
-        required: ["matchTypeId" , "predictorData"],
+        required: ["matchTypeId", "predictorData"],
       },
     },
   },
@@ -2849,7 +2864,7 @@ const EventMarket = {
       },
     },
   },
-  getAll:{
+  getAll: {
     schema : {
       tags: ["EventMarket"],
       description: "get all EventMarket",

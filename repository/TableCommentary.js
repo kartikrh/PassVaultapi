@@ -430,7 +430,7 @@ const deleteCommentaryPlayers = async (request, fastify) => {
     throw new Error(err.message);
   }
 };
-const deleteCommentaryPlayerById = async (data,request, fastify) => {
+const deleteCommentaryPlayerById = async (data, request, fastify) => {
   try {
     // delete commentary player by id
     return await fastify.db.query(
@@ -1463,6 +1463,30 @@ const updateCommentaryDetailsQuery = async (data, fastify, request) => {
     throw new Error(err.message);
   }
 };
+const updateCommentaryStatusQuery = async (data, fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `update "tblCommentaries" set
+        "wrDisplayStatus" = $1,
+        "wrModifyDate" = now(),
+        "wrUpdateTime" = now()
+        where "wrCommentaryId" = $2
+      `,
+      {
+        bind: [data.displayStatus, data.commentaryId],
+      }
+    );
+    return result;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableConfig/updateCommentaryDetailsQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
 
 const updateCommentaryTeamsQuery = async (data, fastify, request) => {
   try {
@@ -2402,5 +2426,6 @@ module.exports = {
   getCommnertySquadPlayersList,
   updateShowClientQuery,
   updatePlayerShowQuery,
-  deleteCommentaryPlayerById
+  deleteCommentaryPlayerById,
+  updateCommentaryStatusQuery
 };
