@@ -1710,6 +1710,21 @@ const Commentary = {
       },
     },
   },
+  changePredictMarket: {
+    schema: {
+      tags: ["Commentary"],
+      description: "change PredictMarket",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+          isPredictMarket: { type: "boolean" },
+        },
+        required: ["commentaryId", "isPredictMarket"],
+      },
+    },
+  },
   matchTypeList: {
     schema: {
       tags: ["Commentary"],
@@ -1889,7 +1904,6 @@ const Commentary = {
           commentaryId: { type: "integer" },
           teamId: { type: "integer" },
           playerId: { type: "integer" },
-
         },
         required: ["commentaryId", "teamId", "playerId"],
       },
@@ -1962,6 +1976,7 @@ const Commentary = {
           currentInnings: { type: "integer" },
           addSystemPlayer: { type: "boolean" },
           systemPlayerCount: { type: "integer" },
+          isPredictMarket: { type: "boolean" },
         },
         required: ["commentaryId"],
       },
@@ -2066,7 +2081,7 @@ const Commentary = {
       body: {
         type: "object",
         properties: {
-          commentaryId : { type: "integer" },
+          commentaryId: { type: "integer" },
           commentaryDetails: { type: "object" },
           commentaryTeams: { type: "array", items: { type: "object" } },
           commentaryPlayers: { type: "array", items: { type: "object" } },
@@ -2405,7 +2420,7 @@ const MarketTemplate = {
         type: "object",
         properties: {
           isActive: { type: "boolean" },
-          matchTypeId: { type: "integer" }
+          matchTypeId: { type: "integer" },
         },
       },
     },
@@ -2455,7 +2470,7 @@ const MarketTemplate = {
           autoResultafterBall: { type: "number" },
           afterWicketAutoSuspend: { type: "integer" },
           afterWicketNotCreated: { type: "integer" },
-          isActive: { type: "boolean" }
+          isActive: { type: "boolean" },
         },
         required: ["marketTemplateId", "matchTypeID", "playerName"],
       },
@@ -2494,7 +2509,7 @@ const MarketTemplate = {
       },
     },
   },
-}
+};
 const Score = {
   getAllUpdatedIds: {
     schema: {
@@ -2821,10 +2836,10 @@ const MatchTypePredictor = {
                 over: { type: "integer" },
                 ball: { type: "number" },
                 runPerBall: { type: "number" },
-                order: { type: "integer" }
+                order: { type: "integer" },
               },
-            }
-          }
+            },
+          },
         },
         required: ["matchTypeId", "predictorData"],
       },
@@ -2850,7 +2865,7 @@ const MatchTypePredictor = {
   },
 };
 const EventMarket = {
-  getDetailsByCId:{
+  getDetailsByCId: {
     schema: {
       tags: ["EventMarket"],
       description: "get all EventMarket",
@@ -2858,31 +2873,31 @@ const EventMarket = {
       body: {
         type: "object",
         properties: {
-          commentaryId : { type : "integer"}
+          commentaryId: { type: "integer" },
         },
-        required : ["commentaryId"]
+        required: ["commentaryId"],
       },
     },
   },
   getAll: {
-    schema : {
+    schema: {
       tags: ["EventMarket"],
       description: "get all EventMarket",
       security: [{ bearerAuth: [] }],
       body: {
         type: "object",
         properties: {
-          isActive : { type : "boolean"},
-          eventTypeId : { type : "integer"},
-          competitionId : { type : "integer"},
-          eventId : { type : "integer"},
-          status : { type : "integer"},
-        }
-      }
-    }
+          isActive: { type: "boolean" },
+          eventTypeId: { type: "integer" },
+          competitionId: { type: "integer" },
+          eventId: { type: "integer" },
+          status: { type: "integer" },
+        },
+      },
+    },
   },
-  createEventMarket:{
-    schema : {
+  createEventMarket: {
+    schema: {
       tags: ["EventMarket"],
       description: "create EventMarket",
       security: [{ bearerAuth: [] }],
@@ -2890,49 +2905,49 @@ const EventMarket = {
         type: "object",
         properties: {
           eventMarket: {
-            type : "array",
-            items : {
-              type : "object",
-              properties : {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
                 eventMarketId: { type: "integer" },
                 commentaryId: { type: "integer" },
-                eventRefId : { type : "string"},
-                teamId : { type : "integer"},
-                inningsId : { type : "integer"},
-                marketName : { type : "string"},
-                margin : { type : "number"},
-                status : { type : "integer"},
-                isPredefineMarket : { type : "boolean"},
-                isPreMatchOnly : { type : "boolean"},
-                isOver : { type : "boolean"},
-                over : { type : "number"},
-                isPlayer : { type : "boolean"},
-                playerName : { type : "string"},
-                isAutoCancel : { type : "boolean"},
-                autoOpenType : { type : "integer"},
-                autoOpen : { type : "number"},
-                autoCloseType : { type : "integer"},
-                beforeAutoClose : { type : "number"},
-                autoSuspendType : { type : "integer"},
-                beforeAutoSuspend : { type : "number"},
-                isBallStart : { type : "boolean"},
-                isAutoResultSet : { type : "boolean"},
-                autoResultType : { type : "integer"},
-                autoResultafterBall : { type : "number"},
-                afterWicketAutoSuspend : { type : "integer"},
-                afterWicketNotCreated : { type : "integer"},
-                isActive : { type : "boolean"},
-                isAllow : { type : "boolean"},
-                data : { type : "string"}
+                eventRefId: { type: "string" },
+                teamId: { type: "integer" },
+                inningsId: { type: "integer" },
+                marketName: { type: "string" },
+                margin: { type: "number" },
+                status: { type: "integer" },
+                isPredefineMarket: { type: "boolean" },
+                isPreMatchOnly: { type: "boolean" },
+                isOver: { type: "boolean" },
+                over: { type: "number" },
+                isPlayer: { type: "boolean" },
+                playerName: { type: "string" },
+                isAutoCancel: { type: "boolean" },
+                autoOpenType: { type: "integer" },
+                autoOpen: { type: "number" },
+                autoCloseType: { type: "integer" },
+                beforeAutoClose: { type: "number" },
+                autoSuspendType: { type: "integer" },
+                beforeAutoSuspend: { type: "number" },
+                isBallStart: { type: "boolean" },
+                isAutoResultSet: { type: "boolean" },
+                autoResultType: { type: "integer" },
+                autoResultafterBall: { type: "number" },
+                afterWicketAutoSuspend: { type: "integer" },
+                afterWicketNotCreated: { type: "integer" },
+                isActive: { type: "boolean" },
+                isAllow: { type: "boolean" },
+                data: { type: "string" },
               },
-            }
-          }
+            },
+          },
         },
-      }
-    }
+      },
+    },
   },
-  delete : {
-    schema : {
+  delete: {
+    schema: {
       tags: ["EventMarket"],
       description: "delete EventMarket",
       security: [{ bearerAuth: [] }],
@@ -2947,40 +2962,39 @@ const EventMarket = {
         },
         required: ["eventMarketId"],
       },
-    
-    }
+    },
   },
-  activeInactiveMarket:{
-    schema : {
+  activeInactiveMarket: {
+    schema: {
       tags: ["EventMarket"],
       description: "active inactive EventMarket",
       security: [{ bearerAuth: [] }],
       body: {
         type: "object",
         properties: {
-          eventMarketId : { type : "integer"},
-          isActive : { type : "boolean"}
+          eventMarketId: { type: "integer" },
+          isActive: { type: "boolean" },
         },
-        required : ["eventMarketId", "isActive"]
-      }
-    }
+        required: ["eventMarketId", "isActive"],
+      },
+    },
   },
-  updateAllowMarket:{
-    schema : {
+  updateAllowMarket: {
+    schema: {
       tags: ["EventMarket"],
       description: "update allow market",
       security: [{ bearerAuth: [] }],
       body: {
         type: "object",
         properties: {
-          eventMarketId : { type : "integer"},
-          isAllow : { type : "boolean"}
+          eventMarketId: { type: "integer" },
+          isAllow: { type: "boolean" },
         },
-        required : ["eventMarketId", "isAllow"]
-      }
-    }
-  }
-}
+        required: ["eventMarketId", "isAllow"],
+      },
+    },
+  },
+};
 module.exports = {
   Auth,
   Tabs,
@@ -3008,5 +3022,5 @@ module.exports = {
   SubScribesDomain,
   News,
   MatchTypePredictor,
-  EventMarket
+  EventMarket,
 };
