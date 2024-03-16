@@ -285,7 +285,7 @@ const updateEventMarketQuery = async (data,request,fastify ) => {
         });
 
         // update wrData using runnertable
-        const dataToStore = marketRunner[0];
+        const dataToStore = marketRunner;
 
         const query3 = `UPDATE "tblEventMarkets" SET "wrData" = $1 WHERE "wrID" = $2`;
         await fastify.db.query(query3, {
@@ -450,7 +450,7 @@ const createEventMarketQuery = async (data,request,fastify) => {
 
         // update wrData using runnertable
 
-        const dataToStore = marketRunner[0];
+        const dataToStore = marketRunner;
 
         const query3 = `UPDATE "tblEventMarkets" SET "wrData" = $1 WHERE "wrID" = $2`;
         await fastify.db.query(query3, {
@@ -762,6 +762,42 @@ const updateEventMarketRateQuery = async (data,request,fastify) => {
                 }
             );
         }
+
+        // get the runner market runner data
+        const query3 = `SELECT 
+            "wrRunnerId" as "runnerId",
+            "wrEventMarketId" as "eventMarketId",
+            "wrRunner" as "runner",
+            "wrLine" as "line",
+            "wrOverRate" as "overRate",
+            "wrUnderRate" as "underRate",
+            "wrYesRate" as "yesRate",
+            "wrYesPoint" as "yesPoint",
+            "wrNoRate" as "noRate",
+            "wrNoPoint" as "noPoint",
+            "wrLastUpdate" as "lastUpdate",
+            "wrSelectionId" as "selectionId",
+            "wrSelectionStatus" as "selectionStatus"
+        FROM "tblMarketRunners" WHERE "wrEventMarketId" = $1`;
+
+        const marketRunner =  await fastify.db.query(query3, {
+            bind: [data.eventMarketId],
+            type: fastify.db.QueryTypes.SELECT
+        });
+
+        // update eventmarket data with runner data
+        const dataToStore = marketRunner;
+
+        const query4 = `UPDATE "tblEventMarkets" SET "wrData" = $1 WHERE "wrID" = $2`;
+        await fastify.db.query(query4, {
+            bind: [
+                JSON.stringify(dataToStore),
+                data.eventMarketId
+            ],
+            type: fastify.db.QueryTypes.SELECT
+        });
+
+
 
         return eventMarket;
     } catch (error) {
