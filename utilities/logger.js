@@ -60,5 +60,29 @@ const responseLogInDB = async (request, fastify) => {
     console.log(err);
   }
 };
+const marketLogger = async (data , request , fastify) => {
+  const {
+    eventMarketId,
+    actionType,
+    value,
+  } = data;
+  try {
+    return await fastify.db.query(
+      `INSERT INTO "tblMarketLogs" ("wrEventMarketId", "wrActionType", "wrValue", "wrUserId", "wrCreatedDate") VALUES ($1, $2, $3, $4, $5)`,
+      {
+        type: fastify.db.QueryTypes.INSERT,
+        bind: [
+          eventMarketId,
+          actionType,
+          value,
+          request.userTokenInfo.WrUserId,
+          new Date(),
+        ],
+      }
+    );
+  } catch (err) {
+    console.log(err);
+  }
+}
 
-module.exports = { errorLogger, responseLogger ,responseLogInDB};
+module.exports = { errorLogger, responseLogger ,responseLogInDB , marketLogger};

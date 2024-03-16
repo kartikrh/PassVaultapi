@@ -215,6 +215,13 @@ const EventMarketStatus = {
   Settled	:5,
   Cancel:	6
 }
+
+const MarketActionType = {
+  isresultSet : 1,
+  setResult : 2,
+  marketCancel : 3,
+  closeMarket : 4
+}
 const callPredictorMarket = async (data , endpoint ,fastify ,request) =>{
   try {
     const predictorURL = global.tblConfigs.find((item) => item.key === configConstants.MARKET_PREDICTOR).value;
@@ -223,10 +230,8 @@ const callPredictorMarket = async (data , endpoint ,fastify ,request) =>{
     const result = await axios.post(url, {
       ...data
     });
-    console.log("Predictor Market Response", result.data);
     return result;
   } catch (error) {
-    console.log("Error in callPredictorMarket", error.message);
     errorLogger(
       fastify,
       error.message,
@@ -255,5 +260,6 @@ module.exports = {
   wicketType,
   decryptEncryptionId,
   EventMarketStatus,
-  callPredictorMarket
+  callPredictorMarket,
+  MarketActionType
 };
