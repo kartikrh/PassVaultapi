@@ -4581,6 +4581,43 @@ const updateisPredictMarketInCommentaryService = async (request, fastify) => {
   global.tblCommentaries[index] = updatedData;
   return updatedData;
 };
+
+const getEventDetailsByCIdService = async (request, fastify) => {
+  try {
+    const { commentaryId } = request.body;
+    const commentary = global.tblCommentaries.find(
+      (item) => item.commentaryId === commentaryId
+    );
+    if (!commentary) {
+      throw new Error("Commentary with this id not Found");
+    }
+
+    // Promisify all necessary asynchronous operations
+    const [eventType, competition] = await Promise.all([
+      global.tblEventTypes.find(
+        (eventType) => eventType.eventTypeId === commentary.eventTypeId
+      ),
+      global.tblCompetitions.find(
+        (competition) => competition.competitionId === commentary.competitionId
+      ),
+    ]);
+    let dataToreturn = {
+      es: {
+        eid: commentary.eventRefId || "",
+        ety: eventType?.eventType || "",
+        mtyp: commentary.matchType || "",
+        com: competition?.competition || "",
+        en: commentary.eventName || "",
+        ed: convertDate(commentary.eventDate, "DD/MM/YYYY") || "",
+        et: convertDate(commentary.eventDate, "hh:mm:ss") || "",
+        cci: commentary.currentInnings,
+      },
+    };
+    return dataToreturn;
+  } catch (error) {
+    //throw new Error(error);
+  }
+};
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -4616,5 +4653,6 @@ module.exports = {
   saveShortCommentaryService,
   updateCommentaryStatusService,
   updateisPredictMarketInCommentaryService,
+  getEventDetailsByCIdService,
   // getshortService
 };
