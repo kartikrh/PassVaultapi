@@ -151,7 +151,16 @@ module.exports = (sequelize) => {
       wrData :{
         type: DataTypes.STRING,
         allowNull: true,
-      }
+      },
+      wrLastUpdate :{
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+      wrIsSendData :{
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
     },
     {
       timestamps: false,

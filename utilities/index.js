@@ -242,6 +242,12 @@ const callPredictorMarket = async (data , endpoint ,fastify ,request) =>{
   }
 
 }
+const MarketUpdateType = {
+  marketInitilization : 1,
+  predictMarket : 2,
+  marketViewer : 3,
+}
+
 module.exports = {
   ERROR_CODES,
   error,
@@ -261,5 +267,6 @@ module.exports = {
   decryptEncryptionId,
   EventMarketStatus,
   callPredictorMarket,
-  MarketActionType
+  MarketActionType,
+  MarketUpdateType
 };

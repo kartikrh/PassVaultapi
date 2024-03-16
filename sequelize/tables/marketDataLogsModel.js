@@ -1,0 +1,40 @@
+const { DataTypes } = require("sequelize");
+
+module.exports = (sequelize) => {
+  const MarketDataLogsModel = sequelize.define(
+    "tblMarketDataLogs",
+    {
+      wrID: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        allowNull: false,
+        autoIncrement: true,
+      },
+      wrCommentaryId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
+      wrEventMarketId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
+      wrData :{
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      wrUpdateType :{
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
+      wrCreatedDate :{
+        type: DataTypes.DATE,
+        defaultValue: new Date(),
+        allowNull: true,
+      },
+    },
+    {
+      timestamps: false,
+    }
+  );
+  return MarketDataLogsModel;
+};

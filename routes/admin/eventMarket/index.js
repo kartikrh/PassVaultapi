@@ -110,6 +110,7 @@ module.exports = async (fastify, opts) => {
         handler: (request, reply) => getEventListByCompetitionId(request, reply, fastify),
     })
     fastify.post("/pendingMarketList", {
+        schema: EventMarket.getAll.schema, 
         preHandler: [
           (request, reply) => authorize(request, reply, fastify),
           (request, reply) =>

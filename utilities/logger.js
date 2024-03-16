@@ -1,3 +1,4 @@
+const { MarketUpdateType } = require(".");
 const ResponseLog = require("../database/schema/responseLogger");
 
 const errorLogger = async (fastify, errMessage, errStack, request) => {
@@ -84,5 +85,31 @@ const marketLogger = async (data , request , fastify) => {
     console.log(err);
   }
 }
+const marketDataLogger = async (data , request , fastify) => {
+  try {
+    const {
+      eventMarketId,
+      commentaryId,
+      dataTosave,
+      updateType,
+    } = data;
 
-module.exports = { errorLogger, responseLogger ,responseLogInDB , marketLogger};
+    return await fastify.db.query(
+      `INSERT INTO "tblMarketDataLogs" ("wrEventMarketId", "wrCommentaryId", "wrData", "wrUpdateType", "wrCreatedDate") VALUES ($1, $2, $3, $4, $5)`,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [
+          eventMarketId,
+          commentaryId,
+          JSON.stringify(dataTosave),
+          updateType,
+          new Date(),
+        ],
+      }
+    );
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+module.exports = { errorLogger, responseLogger ,responseLogInDB , marketLogger ,marketDataLogger};

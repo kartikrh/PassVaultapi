@@ -1,4 +1,4 @@
-const { updateEventMarketQuery, getAllEventMarketsQuery, createManyEventMarketQuery, deleteEventMarketQuery, changeIsActiveEventMarketQuery, changeIsAllowEventMarketQuery, changeIsResultEventMarketQuery } = require("../repository/TableEventMarkets");
+const { updateEventMarketQuery, getAllEventMarketsQuery, createManyEventMarketQuery, deleteEventMarketQuery, changeIsActiveEventMarketQuery, changeIsAllowEventMarketQuery, changeIsResultEventMarketQuery, createEventMarketQuery } = require("../repository/TableEventMarkets");
 const {EventMarketStatus, MarketActionType} = require("../utilities/index");
 const { marketLogger } = require("../utilities/logger");
 const getDetailsByCIdService = async (request, fastify) => {
@@ -88,7 +88,7 @@ const createEventMarketsService = async (request ,fastify) => {
     for (let item of eventMarket) {
         if(item.eventMarketId == 0){
             // validate the commentaryId
-            let commentary = global.tblCommentaries.find((item) => item.commentaryId === item.commentaryId);
+            let commentary = global.tblCommentaries.find((c) => c.commentaryId === item.commentaryId);
             if (!commentary) {
                 throw new Error("Commentary with this id not Found");
             }
@@ -96,12 +96,12 @@ const createEventMarketsService = async (request ,fastify) => {
         }
         else{
             // validate the eventMarketId
-            let eventMarket = global.tblEventMarkets.find((item) => item.eventMarketId === item.eventMarketId);
+            let eventMarket = global.tblEventMarkets.find((e) => e.eventMarketId === item.eventMarketId);
             if (!eventMarket) {
                 throw new Error("EventMarket with this id not Found");
             } 
             // validate the commentaryId
-            let commentary = global.tblCommentaries.find((item) => item.commentaryId === item.commentaryId);
+            let commentary = global.tblCommentaries.find((c) => c.commentaryId === item.commentaryId);
             if (!commentary) {
                 throw new Error("Commentary with this id not Found");
             }
@@ -111,7 +111,9 @@ const createEventMarketsService = async (request ,fastify) => {
 
     // create the eventMarket
     if(arrayForCreate.length > 0){
-        await createManyEventMarketQuery(arrayForCreate,request,fastify);
+        for (let item of arrayForCreate) {
+            await createEventMarketQuery(item,request,fastify);
+        }
     }
     // update the eventMarket
     if(arrayForUpdate.length > 0){
@@ -178,9 +180,32 @@ const getEventListByCompetitionIdsService = async (request ,fastify) => {
 
 }
 const marketListResultFalseService = async (request ,fastify) => {
-    const eventMarket = global.tblEventMarkets.filter((item)=>{
-        return item.isResult === false && item.result !== null;
+    const {isActive , eventTypeId , competitionId, eventId , status} = request.body;
+    let eventMarket = global.tblEventMarkets.filter((item)=>{
+        return item.isResult === false && item.result !== null
+        && item.status == EventMarketStatus.Settled
     })
+    if(eventTypeId){
+        // get the commentaryId from tblCommentaries
+        let commentaryId = global.tblCommentaries.filter((item) => item.eventTypeId === eventTypeId).map((item) => item.commentaryId);
+        eventMarket = eventMarket.filter((item) => commentaryId.includes(item.commentaryId));
+    }
+    if(competitionId){
+        // get the commentaryId from tblCommentaries
+        let commentaryId = global.tblCommentaries.filter((item) => item.competitionId === competitionId).map((item) => item.commentaryId);
+        eventMarket = eventMarket.filter((item) => commentaryId.includes(item.commentaryId));
+    }
+    if(eventId){
+        // get the commentaryId from tblCommentaries
+        let commentaryId = global.tblCommentaries.filter((item) => item.eventId === eventId).map((item) => item.commentaryId);
+        eventMarket = eventMarket.filter((item) => commentaryId.includes(item.commentaryId));
+    }
+    if(status !== undefined){
+        eventMarket = eventMarket.filter((item) => item.status === status);
+    }
+    if(isActive !== undefined){
+        eventMarket = eventMarket.filter((item) => item.isActive === isActive);
+    }
 
     return eventMarket;
 }
