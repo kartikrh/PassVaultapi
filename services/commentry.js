@@ -44,6 +44,8 @@ const {
   convertDate,
   wicketType,
   decryptEncryptionId,
+  callPredictorMarket,
+  EventMarketStatus,
 } = require("../utilities");
 const { getAllPlayersByTeamIdQuery } = require("../repository/TableTeams");
 
@@ -183,6 +185,18 @@ const commentaryDetailsByIdService = async (request, fastify) => {
     commentaryPartnership,
     commentaryDisplayStatus,
   };
+
+  
+  if (result.isPredictMarket == true) {
+      callPredictorMarket({
+        commentary_id : result.commentaryId,
+        match_type_id : result.matchTypeId,
+      },
+      "/api/loadcommentary",
+      fastify,
+      request
+    );
+  }
 
   return allDetails;
 };
@@ -410,6 +424,19 @@ const createCommentaryService = async (request, fastify) => {
   global.tblCommentaries.push(addCommentry);
   global.tblCommentaryPlayers = await getAllCommentaryPlayerQuery(fastify);
   global.tblCommentaryTeams = await getAllCommentaryTeamsQuery(fastify);
+
+  // call predictor market
+  if (addCommentry.isPredictMarket == true) {
+    callPredictorMarket({
+        commentary_id : addCommentry.commentaryId,
+        match_type_id : addCommentry.matchTypeId,
+      },
+      "/api/loadcommentary",
+      fastify,
+      request
+    );
+  }
+
 
   return addCommentry;
 };
@@ -795,6 +822,17 @@ const cloneCommentaryService = async (request, fastify) => {
   global.tblCommentaryPlayers = await getAllCommentaryPlayerQuery(fastify);
   global.tblCommentaryTeams = await getAllCommentaryTeamsQuery(fastify);
 
+  if(newCommentary.isPredictMarket == true) {
+    callPredictorMarket({
+      commentary_id : newCommentary.commentaryId,
+      match_type_id : newCommentary.matchTypeId,
+    },
+      "/api/loadcommentary",
+      fastify,
+      request
+    );
+  }
+
   return newCommentary;
 };
 
@@ -1029,11 +1067,12 @@ const testStoreProcedureService = async (request, fastify) => {
       wicketIndex,
       partnershipIndex;
 
+    let commentaryData;
     if (commentaryId) {
-      let commentaryData = global.tblCommentaries.findIndex(
+      commentaryData = global.tblCommentaries.find(
         (item) => item.commentaryId === commentaryId
       );
-      if (commentaryData === -1) {
+      if (!commentaryData) {
         throw new Error("Commentary with this id not Found");
       }
     }
@@ -1270,6 +1309,27 @@ const testStoreProcedureService = async (request, fastify) => {
         );
         response.commentaryBallByBallDetails =
           updatedData.commentaryBallByBallDetails;
+          // call the predictor market
+          if (commentaryData.isPredictMarket) {
+            let strikeTeam = global.tblCommentaryTeams.find(
+              (item) =>
+                item.commentaryId === commentaryBallByBall.commentaryId &&
+                item.teamStatus === 1
+            );
+            callPredictorMarket(
+              {
+                commentary_id: commentaryData.commentaryId,
+                match_type_id: commentaryData.matchTypeId,
+                ball : commentaryBallByBall.overCount,
+                run : commentaryBallByBall.ballRun,
+                total_score: strikeTeam.totalScore,
+                strike_team_id : strikeTeam.teamId
+              },
+              "/api/predictscore",
+              fastify,
+              request
+            );
+          }
       } else {
         global.tblCommentaryBallByBall[ballByBallIndex] = commentaryBallByBall;
         response.commentaryBallByBallDetails = commentaryBallByBall;
@@ -1565,6 +1625,20 @@ const updateCommentaryStatusService = async (request, fastify) => {
   // Check if the commentary exists
   if (index === -1) {
     throw new Error("Commentary with this id not found");
+  }
+
+  // call predictor endpoint
+  if(global.tblCommentaries[index].isPredictMarket){
+    callPredictorMarket(
+      {
+        commentary_id: commentaryId,
+        status: EventMarketStatus.Suspend,
+        match_type_id: global.tblCommentaries[index].matchTypeId,
+      },
+      "/api/updatemarketstatus",
+      fastify,
+      request
+    );
   }
 
   // Prepare the commentary details for update
@@ -2998,6 +3072,17 @@ const updateMatchTypeInCommentaryService = async (request, fastify) => {
   const updatedData = await getCommentaryByIdQuery(request, fastify);
 
   global.tblCommentaries[index] = updatedData;
+  
+  if (updatedData.isPredictMarket == true) {
+    callPredictorMarket({
+        commentary_id : commentaryId,
+        match_type_id : matchTypeId
+      },
+      "/api/loadcommentary",
+      fastify,
+      request
+    );
+  }
   return updatedData;
 };
 const getMatchTypeListByCommentaryService = async (request, fastify) => {
