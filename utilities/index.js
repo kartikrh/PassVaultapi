@@ -230,10 +230,8 @@ const callPredictorMarket = async (data , endpoint ,fastify ,request) =>{
     const result = await axios.post(url, {
       ...data
     });
-    console.log("Predictor Market Response", result.data);
     return result;
   } catch (error) {
-    console.log("Error in callPredictorMarket", error.message);
     errorLogger(
       fastify,
       error.message,
