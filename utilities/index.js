@@ -215,6 +215,13 @@ const EventMarketStatus = {
   Settled	:5,
   Cancel:	6
 }
+
+const MarketActionType = {
+  isresultSet : 1,
+  setResult : 2,
+  marketCancel : 3,
+  closeMarket : 4
+}
 const callPredictorMarket = async (data , endpoint ,fastify ,request) =>{
   try {
     const predictorURL = global.tblConfigs.find((item) => item.key === configConstants.MARKET_PREDICTOR).value;
@@ -255,5 +262,6 @@ module.exports = {
   wicketType,
   decryptEncryptionId,
   EventMarketStatus,
-  callPredictorMarket
+  callPredictorMarket,
+  MarketActionType
 };

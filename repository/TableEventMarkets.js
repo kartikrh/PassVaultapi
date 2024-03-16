@@ -277,11 +277,29 @@ const changeIsAllowEventMarketQuery = async (data,request,fastify) => {
         throw new Error(error.message);
     }
 }
+const changeIsResultEventMarketQuery = async (data,request,fastify) => {
+    try {
+        const query = `UPDATE "tblEventMarkets" SET "wrIsResult" = $1 WHERE "wrID" = $2`;
+        return await fastify.db.query(query, {
+            bind: [data.isResult, data.eventMarketId],
+            type: fastify.db.QueryTypes.SELECT
+        });
+    } catch (error) {
+        errorLogger(
+            fastify,
+            error.message,
+            "DB ERROR --> repository/TableEventmarket.js/changeIsResultEventMarketQuery",
+            request
+          );
+        throw new Error(error.message);
+    }
+}
 module.exports = {
     getAllEventMarketsQuery,
     createManyEventMarketQuery,
     updateEventMarketQuery,
     deleteEventMarketQuery,
     changeIsActiveEventMarketQuery,
-    changeIsAllowEventMarketQuery
+    changeIsAllowEventMarketQuery,
+    changeIsResultEventMarketQuery
 };

@@ -2879,6 +2879,21 @@ const EventMarket = {
       },
     },
   },
+  changeResultOfMarket : {
+    schema: {
+      tags: ["EventMarket"],
+      description: "change result of market",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          eventMarketId: { type: "integer" },
+          isResult : { type: "boolean" },
+        },
+        required: ["eventMarketId", "isResult"],
+      },
+    },
+  },
   getAll: {
     schema: {
       tags: ["EventMarket"],

@@ -1,5 +1,6 @@
-const { updateEventMarketQuery, getAllEventMarketsQuery, createManyEventMarketQuery, deleteEventMarketQuery, changeIsActiveEventMarketQuery, changeIsAllowEventMarketQuery } = require("../repository/TableEventMarkets");
-const {EventMarketStatus} = require("../utilities/index")
+const { updateEventMarketQuery, getAllEventMarketsQuery, createManyEventMarketQuery, deleteEventMarketQuery, changeIsActiveEventMarketQuery, changeIsAllowEventMarketQuery, changeIsResultEventMarketQuery } = require("../repository/TableEventMarkets");
+const {EventMarketStatus, MarketActionType} = require("../utilities/index");
+const { marketLogger } = require("../utilities/logger");
 const getDetailsByCIdService = async (request, fastify) => {
     const {commentaryId} = request.body;
     const commentary = global.tblCommentaries.find((item) => item.commentaryId === commentaryId);
@@ -176,7 +177,35 @@ const getEventListByCompetitionIdsService = async (request ,fastify) => {
     return eventList;
 
 }
+const marketListResultFalseService = async (request ,fastify) => {
+    const eventMarket = global.tblEventMarkets.filter((item)=>{
+        return item.isResult === false && item.result !== null;
+    })
 
+    return eventMarket;
+}
+const changeResultOfMarketService = async (request ,fastify) => {
+    const {eventMarketId,isResult} = request.body;
+    let eventMarket = global.tblEventMarkets.findIndex((item) => item.eventMarketId === eventMarketId);
+    if (eventMarket === -1) {
+        throw new Error("EventMarket with this id not Found");
+    }
+    // if isresult is true then dont allow to change the result
+    if(global.tblEventMarkets[eventMarket].isResult){
+        throw new Error("Result of this market is already set");
+    }
+    await changeIsResultEventMarketQuery(request.body,request,fastify);
+    global.tblEventMarkets[eventMarket].isResult = isResult;
+
+    marketLogger({
+        eventMarketId,
+        actionType: MarketActionType.isresultSet,
+        value: isResult
+    }, request, fastify);
+
+
+    return "Event Market updated successfully";
+}
 module.exports = {
     getDetailsByCIdService,
     getAllEventMarketsService,
@@ -184,5 +213,7 @@ module.exports = {
     deleteEventMarketsService,
     activeInactiveMarketsService,
     updateAllowMarketsService,
-    getEventListByCompetitionIdsService
+    getEventListByCompetitionIdsService,
+    marketListResultFalseService,
+    changeResultOfMarketService
 };

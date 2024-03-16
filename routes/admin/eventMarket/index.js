@@ -1,4 +1,4 @@
-const { getDetailsByCId, getAllEventMarket, createEventMarket, deleteEventMarket, activeInactiveMarket, updateAllowMarket, getEventListByCompetitionId } = require("../../../controller/users/admin/eventMarket");
+const { getDetailsByCId, getAllEventMarket, createEventMarket, deleteEventMarket, activeInactiveMarket, updateAllowMarket, getEventListByCompetitionId, marketListResultFalse, changeResultOfMarket } = require("../../../controller/users/admin/eventMarket");
 const { EventMarket, Commentary } = require("../../../swaggerSchema/groupTags/schema");
 const {
     authorize,
@@ -108,5 +108,28 @@ module.exports = async (fastify, opts) => {
             }),
         ],
         handler: (request, reply) => getEventListByCompetitionId(request, reply, fastify),
+    })
+    fastify.post("/pendingMarketList", {
+        preHandler: [
+          (request, reply) => authorize(request, reply, fastify),
+          (request, reply) =>
+            checkPermission(request, reply, fastify, {
+              tabName: "Event Markets",
+              mode: "view",
+            }),
+        ],
+        handler: (request, reply) => marketListResultFalse(request, reply, fastify),
+    })
+    fastify.post("/setMarketIsResult", {
+        schema : EventMarket.changeResultOfMarket.schema,
+        preHandler: [
+          (request, reply) => authorize(request, reply, fastify),
+          (request, reply) =>
+            checkPermission(request, reply, fastify, {
+              tabName: "Event Markets",
+              mode: "view",
+            }),
+        ],
+        handler: (request, reply) => changeResultOfMarket(request, reply, fastify),
     })
 };

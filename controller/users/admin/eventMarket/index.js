@@ -1,5 +1,5 @@
 
-const { getDetailsByCIdService, getAllEventMarketsService, createEventMarketsService, deleteEventMarketsService, activeInactiveMarketsService, updateAllowMarketsService, getEventListByCompetitionIdsService } = require("../../../../services/eventMarket");
+const { getDetailsByCIdService, getAllEventMarketsService, createEventMarketsService, deleteEventMarketsService, activeInactiveMarketsService, updateAllowMarketsService, getEventListByCompetitionIdsService, marketListResultFalseService, changeResultOfMarketService } = require("../../../../services/eventMarket");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
 
@@ -68,6 +68,25 @@ const getEventListByCompetitionId = async (request, reply, fastify) => {
   }
 };
 
+const marketListResultFalse = async (request, reply, fastify) => {
+  try {
+    const result = await marketListResultFalseService(request ,fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/marketListResultFalse", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
+const changeResultOfMarket = async (request, reply, fastify) => {
+  try {
+    const result = await changeResultOfMarketService(request ,fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/changeResultOfMarket", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 
 module.exports = {
     getDetailsByCId,
@@ -76,5 +95,7 @@ module.exports = {
     deleteEventMarket,
     activeInactiveMarket,
     updateAllowMarket,
-    getEventListByCompetitionId
+    getEventListByCompetitionId,
+    marketListResultFalse,
+    changeResultOfMarket
 };
