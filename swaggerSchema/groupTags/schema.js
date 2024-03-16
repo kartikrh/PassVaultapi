@@ -1842,6 +1842,20 @@ const Commentary = {
       },
     },
   },
+  getDetailsByCId: {
+    schema: {
+      tags: ["Commentary"],
+      description: "get Commentary by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+        },
+        required: ["commentaryId"],
+      },
+    },
+  },
   getByeventId: {
     schema: {
       tags: ["Commentary"],
@@ -2879,7 +2893,7 @@ const EventMarket = {
       },
     },
   },
-  changeResultOfMarket : {
+  changeResultOfMarket: {
     schema: {
       tags: ["EventMarket"],
       description: "change result of market",
@@ -2888,7 +2902,7 @@ const EventMarket = {
         type: "object",
         properties: {
           eventMarketId: { type: "integer" },
-          isResult : { type: "boolean" },
+          isResult: { type: "boolean" },
         },
         required: ["eventMarketId", "isResult"],
       },
