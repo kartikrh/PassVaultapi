@@ -32,6 +32,7 @@ const {
   saveShortCommentary,
   updateCommentaryStatus,
   updateisPredictMarketInCommentary,
+  getEventDetailsByCId,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -431,5 +432,17 @@ module.exports = async (fastify, opts) => {
     ],
     handler: (request, reply) =>
       updateisPredictMarketInCommentary(request, reply, fastify),
+  });
+  fastify.post("/getEventDetailsByCId", {
+    schema: Commentary.getDetailsByCId.schema,
+    // preHandler: [
+    //   (request, reply) => authorize(request, reply, fastify),
+    //   (request, reply, done) =>
+    //     checkPermission(request, reply, fastify, {
+    //       tabName: "Commentary",
+    //       mode: "view",
+    //     }),
+    // ],
+    handler: (request, reply) => getEventDetailsByCId(request, reply, fastify),
   });
 };
