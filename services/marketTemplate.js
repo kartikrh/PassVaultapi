@@ -1,4 +1,5 @@
 const { insertMarketTemplateQuery, deleteMarketTemplateQuery, updateMarketTemplateQuery, updateStatusMarketTemplateQuery } = require("../repository/TableMarketTemplate");
+const { callPredictorMarket } = require("../utilities");
 
 const getAllMarketTemplateService = async (request) => {
   const { isActive , matchTypeId } = request.body;
@@ -74,6 +75,15 @@ const updateMarketTemplateService = async (request, fastify) => {
   if (!matchType) {
     throw new Error("MatchType with this id not found");
   }
+  callPredictorMarket(
+    {
+      match_type_id: matchTypeID,
+      is_market_template : true
+    },
+    "/api/updatemarketpredictors",
+    fastify,
+    request
+  );
  
   const body = {
     marketTemplateId,

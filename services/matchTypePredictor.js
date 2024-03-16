@@ -1,6 +1,7 @@
 const { createMatchTypePredictorQuery,
     deletePredictorByMatchTypeQuery,
     deletePredictorQuery } = require("../repository/TableMatchTypePredictor");
+const { callPredictorMarket } = require("../utilities");
 
 const savePredictorDataService = async (request, fastify) => {
     // validate match type Id
@@ -10,6 +11,15 @@ const savePredictorDataService = async (request, fastify) => {
     if (!matchType) {
         throw new Error("Match Type not found for give id");
     }
+    callPredictorMarket(
+        {
+          match_type_id: matchType.matchTypeId,
+          is_market_template : false
+        },
+        "/api/updatemarketpredictors",
+        fastify,
+        request
+    );
     // check if there is data for this predictor
     const predictor = global.tblMatchTypePredictor.find(
         (item) => item.matchTypeId === request.body.matchTypeId

@@ -2,6 +2,7 @@ const ResponseLog = require("../database/schema/responseLogger");
 
 const errorLogger = async (fastify, errMessage, errStack, request) => {
   try {
+    
     return await fastify.db.query(
       `INSERT INTO "tblErrorLogs" ("wrErrMessage", "wrErrStack", "wrDomain","wrUserId","wrUserIp", "wrCreatedDate" ,"wrApi") VALUES ($1, $2, $3, $4, $5, $6 ,$7)`,
       {

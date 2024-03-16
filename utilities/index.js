@@ -1,6 +1,9 @@
 const uaParser = require("ua-parser-js");
 const crypto = require("crypto");
 const moment = require("moment");
+const { default: axios } = require("axios");
+const configConstants = require("./configConstants");
+const { errorLogger } = require("./logger");
 const ERROR_CODES = {
   INVALID_INPUT: "INVALID_INPUT",
   SERVER_ERROR: "SERVER_ERROR",
@@ -211,6 +214,27 @@ const EventMarketStatus = {
   Close:	4,
   Settled	:5,
   Cancel:	6
+}
+const callPredictorMarket = async (data , endpoint ,fastify ,request) =>{
+  try {
+    const predictorURL = global.tblConfigs.find((item) => item.key === configConstants.MARKET_PREDICTOR).value;
+    const url = `${predictorURL}${endpoint}`;
+  
+    const result = await axios.post(url, {
+      ...data
+    });
+    console.log("Predictor Market Response", result.data);
+    return result;
+  } catch (error) {
+    console.log("Error in callPredictorMarket", error.message);
+    errorLogger(
+      fastify,
+      error.message,
+      "/utilities/index.js/callPredictorMarket",
+      request
+    )
+    // throw new Error(error.message);
+  }
 
 }
 module.exports = {
@@ -230,5 +254,6 @@ module.exports = {
   convertDate,
   wicketType,
   decryptEncryptionId,
-  EventMarketStatus
+  EventMarketStatus,
+  callPredictorMarket
 };

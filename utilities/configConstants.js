@@ -3,5 +3,6 @@ const configConstants = {
     FILE_UPLOAD_URL : "FILEUPLOADURI",
     PROJECT_NAME : "PROJECTCODE",
     COMMENTARY_EVENT_DAY_INTERVAL : "EVENTDAYINTERVAL",	
+    MARKET_PREDICTOR : "MARKETPREDICTOR",
 }
 module.exports = configConstants;
