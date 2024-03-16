@@ -1,4 +1,4 @@
-const { MarketUpdateType } = require("../utilities");
+const { MarketUpdateType, EventMarketStatus } = require("../utilities");
 const { errorLogger, marketDataLogger } = require("../utilities/logger");
 
 const getAllEventMarketsQuery = async (fastify) => {
@@ -554,6 +554,102 @@ const changeIsResultEventMarketQuery = async (data,request,fastify) => {
         throw new Error(error.message);
     }
 }
+const getMarketListByCIdQuery = async (data,request,fastify) => {
+    try {
+        const {commentaryId} = data;
+
+        const query = `WITH "MarketRunners_CTE" AS (
+            SELECT 
+                "wrEventMarketId" as "eventMarketId",
+                "wrRunnerId" as "runnerId",
+                "wrRunner" as "runner",
+                "wrLine" as "line",
+                "wrOverRate" as "overRate",
+                "wrUnderRate" as "underRate",
+                "wrYesRate" as "yesRate",
+                "wrYesPoint" as "yesPoint",
+                "wrNoRate" as "noRate",
+                "wrNoPoint" as "noPoint",
+                "wrLastUpdate" as "lastUpdate",
+                "wrSelectionId" as "selectionId",
+                "wrSelectionStatus" as "selectionStatus"
+            FROM "tblMarketRunners"
+        )
+        SELECT
+            "wrID" AS "eventMarketId",
+            tem."wrCommentaryId" AS "commentaryId",
+            tem."wrEventRefID" AS "eventRefId",
+            tc."wrEventName" AS "eventName",
+            tc."wrEventDate" AS "eventDate",
+            tcom."wrCompetition" AS "competitionName",
+            tet."wrEventType" AS "eventTypeName",
+            "wrTeamID" AS "teamId",
+            "wrInningsID" AS "inningsId",
+            "wrMarketName" AS "marketName",
+            "wrMargin" AS "margin",
+            "wrStatus" AS "status",
+            "wrIsPredefineMarket" as "isPredefineMarket",
+            "wrIsPreMatchOnly" as "isPreMatchOnly",
+            "wrIsPreMatchMarket" as "isPreMatchMarket",
+            "wrIsOver" as "isOver",
+            "wrOver" as "over",
+            "wrIsPlayer" as "isPlayer",
+            "wrPlayerID" as "playerId",
+            "wrIsAutoCancel" as "isAutoCancel",
+            "wrAutoOpenType" as "autoOpenType", 
+            "wrAutoOpen" as "autoOpen",
+            "wrAutoCloseType" as "autoCloseType",
+            "wrBeforeAutoClose" as "beforeAutoClose",
+            "wrAutoSuspendType" as "autoSuspendType",
+            "wrBeforeAutoSuspend"  as "beforeAutoSuspend",
+            "wrIsBallStart" as "isBallStart",
+            "wrIsAutoResultSet" as "isAutoResultSet",
+            "wrAutoResultType" as "autoResultType",
+            "wrAutoResultafterBall" as "autoResultafterBall",   
+            "wrAfterWicketAutoSuspend" as "afterWicketAutoSuspend",   
+            "wrAfterWicketNotCreated" as "afterWicketNotCreated",
+            tem."wrIsActive" as "isActive", 
+            "wrIsAllow" as "isAllow",
+            "wrCloseTime" as "closeTime",
+            "wrOpenTime" as "openTime",
+            "wrSettledTime" as "settledTime",
+            "wrResult" as "result",
+            "wrIsResult" as "isResult",
+            "wrData" as "data",
+            (
+                SELECT json_agg("MarketRunners_CTE".*)
+                FROM "MarketRunners_CTE"
+                WHERE "MarketRunners_CTE"."eventMarketId" = tem."wrID"
+            ) as "marketRunners"
+        FROM "tblEventMarkets" tem
+        LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
+        LEFT JOIN "tblCompetitions" tcom ON tcom."wrCompetitionId" = tc."wrCompetitionId"
+        LEFT JOIN "tblEventTypes" tet ON tet."wrEventTypeId" = tc."wrEventTypeId" 
+
+        WHERE tem."wrCommentaryId" = $1
+        AND tem."wrStatus" NOT IN ($2 ,$3,$4)
+        `;
+        return await fastify.db.query(query, {
+            type: fastify.db.QueryTypes.SELECT,
+            bind: [commentaryId ,
+                EventMarketStatus.Close,
+                EventMarketStatus.Settled,
+                EventMarketStatus.Cancel
+            ]
+        });
+
+
+        
+    } catch (error) {
+        errorLogger(
+            fastify,
+            error.message,
+            "DB ERROR --> repository/TableEventmarket.js/getMarketListByCIdQuery",
+            request
+          );
+        throw new Error(error.message);
+    }
+}
 module.exports = {
     getAllEventMarketsQuery,
     createManyEventMarketQuery,
@@ -562,5 +658,6 @@ module.exports = {
     changeIsActiveEventMarketQuery,
     changeIsAllowEventMarketQuery,
     changeIsResultEventMarketQuery,
-    createEventMarketQuery
+    createEventMarketQuery,
+    getMarketListByCIdQuery
 };
