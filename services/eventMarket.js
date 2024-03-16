@@ -1,4 +1,4 @@
-const { updateEventMarketQuery, getAllEventMarketsQuery, createManyEventMarketQuery, deleteEventMarketQuery, changeIsActiveEventMarketQuery, changeIsAllowEventMarketQuery, changeIsResultEventMarketQuery, createEventMarketQuery, getMarketListByCIdQuery } = require("../repository/TableEventMarkets");
+const { updateEventMarketQuery, getAllEventMarketsQuery, createManyEventMarketQuery, deleteEventMarketQuery, changeIsActiveEventMarketQuery, changeIsAllowEventMarketQuery, changeIsResultEventMarketQuery, createEventMarketQuery, getMarketListByCIdQuery, updateEventMarketRateQuery } = require("../repository/TableEventMarkets");
 const {EventMarketStatus, MarketActionType} = require("../utilities/index");
 const { marketLogger } = require("../utilities/logger");
 const getDetailsByCIdService = async (request, fastify) => {
@@ -243,6 +243,19 @@ const marketListByCIdService = async (request ,fastify) => {
     return marketList;
 
 }
+const updateMarketRateService = async (request ,fastify) => {
+    // i got array of eventMarket i want to update this data
+    const {eventMarket} = request.body;
+
+    for (let item of eventMarket) {
+        // update the eventMarket
+        await updateEventMarketRateQuery(item,request,fastify);
+    }
+
+    global.tblEventMarkets = await getAllEventMarketsQuery(fastify);
+
+    return "Event Market updated successfully";
+}
 module.exports = {
     getDetailsByCIdService,
     getAllEventMarketsService,
@@ -253,5 +266,6 @@ module.exports = {
     getEventListByCompetitionIdsService,
     marketListResultFalseService,
     changeResultOfMarketService,
-    marketListByCIdService
+    marketListByCIdService,
+    updateMarketRateService
 };

@@ -2893,7 +2893,35 @@ const EventMarket = {
       },
     },
   },
-  changeResultOfMarket: {
+  updateMarketRate :{
+    schema : {
+      tags: ["EventMarket"],
+      description: "update market rate",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          eventMarket :{
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                marketRunners : {
+                  type : "array",
+                  items : {
+                    type : "object",
+                  }
+                }
+              },
+              required : ["marketRunners"]
+            },
+          }
+        },
+        required: ["eventMarket"],
+      },
+    },
+  },
+  changeResultOfMarket : {
     schema: {
       tags: ["EventMarket"],
       description: "change result of market",
