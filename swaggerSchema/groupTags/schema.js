@@ -2911,6 +2911,20 @@ const EventMarket = {
       },
     },
   },
+  marketListByCId:{
+    schema: {
+      tags: ["EventMarket"],
+      description: "get all EventMarket",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+        },
+        required: ["commentaryId"],
+      },
+    },
+  },
   createEventMarket: {
     schema: {
       tags: ["EventMarket"],
