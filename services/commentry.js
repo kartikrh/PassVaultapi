@@ -136,12 +136,32 @@ const commentaryByIdService = async (request, fastify) => {
 };
 
 const commentaryDetailsByIdService = async (request, fastify) => {
-  const result = await global.tblCommentaries.find(
+  let commentary = await global.tblCommentaries.find(
     (item) => item.commentaryId === request.body.commentaryId
   );
-  if (!result) {
+  if (!commentary) {
     throw new Error("Commentary with this id not Found");
   }
+
+  const [eventType, competition] = await Promise.all([
+    global.tblEventTypes.find(
+      (eventType) => eventType.eventTypeId === commentary.eventTypeId
+    ),
+    global.tblCompetitions.find(
+      (competition) => competition.competitionId === commentary.competitionId
+    ),
+  ]);
+  let dataToreturn = {
+    
+      eid: commentary.eventRefId || "",
+      ety: eventType?.eventType || "",
+      mtyp: commentary.matchType || "",
+      com: competition?.competition || "",
+      en: commentary.eventName || "",
+      ed: convertDate(commentary.eventDate, "DD/MM/YYYY") || "",
+      et: convertDate(commentary.eventDate, "hh:mm:ss") || "",
+      cci: commentary.currentInnings
+  };
 
   const commentaryTeams = await global.tblCommentaryTeams.filter(
     (item) => item.commentaryId === request.body.commentaryId
@@ -176,7 +196,7 @@ const commentaryDetailsByIdService = async (request, fastify) => {
   );
 
   const allDetails = {
-    commentaryDetails: { ...result },
+    commentaryDetails: { ...commentary , ...dataToreturn },
     commentaryTeams,
     commentaryPlayers,
     commentaryOvers,
@@ -186,12 +206,12 @@ const commentaryDetailsByIdService = async (request, fastify) => {
     commentaryDisplayStatus,
   };
 
-  if (result.isPredictMarket == true) {
+  if (commentary.isPredictMarket == true) {
     callPredictorMarket(
       {
-        commentary_id: result.commentaryId,
-        match_type_id: result.matchTypeId,
-        event_id : result.eventRefId
+        commentary_id: commentary.commentaryId,
+        match_type_id: commentary.matchTypeId,
+        event_id : commentary.eventRefId
       },
       "/api/loadcommentary",
       fastify,
