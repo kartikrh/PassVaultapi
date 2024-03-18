@@ -1,4 +1,3 @@
-const { MarketUpdateType } = require(".");
 const ResponseLog = require("../database/schema/responseLogger");
 
 const errorLogger = async (fastify, errMessage, errStack, request) => {
