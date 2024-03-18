@@ -689,8 +689,9 @@ const updateEventMarketRateQuery = async (data,request,fastify) => {
                 "wrIsActive" = $28,
                 "wrIsAllow" = $29,
                 "wrData" = $30,
-                "wrLastUpdate" = now()::timestamp
-            WHERE "wrID" = $31
+                "wrLastUpdate" = now()::timestamp,
+                "wrIsSendData" = $31
+            WHERE "wrID" = $32
             RETURNING "wrID" as "eventMarketId"`,
             {
                 bind: [
@@ -724,6 +725,7 @@ const updateEventMarketRateQuery = async (data,request,fastify) => {
                     data.isActive,
                     data.isAllow,
                     data.data,
+                    data.isSendData,
                     data.eventMarketId
                 ],
                 type: fastify.db.QueryTypes.SELECT
