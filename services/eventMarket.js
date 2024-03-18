@@ -1,4 +1,5 @@
 const { updateEventMarketQuery, getAllEventMarketsQuery, createManyEventMarketQuery, deleteEventMarketQuery, changeIsActiveEventMarketQuery, changeIsAllowEventMarketQuery, changeIsResultEventMarketQuery, createEventMarketQuery, getMarketListByCIdQuery, updateEventMarketRateQuery, createEventMarketInDBQuery,changeMarketCancelQuery, changeMarketResultQuery } = require("../repository/TableEventMarkets");
+const configConstants = require("../utilities/configConstants");
 const {EventMarketStatus, MarketActionType} = require("../utilities/index");
 const { marketLogger } = require("../utilities/logger");
 const getDetailsByCIdService = async (request, fastify) => {
