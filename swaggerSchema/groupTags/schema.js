@@ -2981,6 +2981,38 @@ const EventMarket = {
       },
     },
   },
+  changeMarketCancel: {
+    schema: {
+      tags: ["EventMarket"],
+      description: "change market to cancel",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          eventMarketId: { type: "integer" },
+          commentaryId: { type: "integer" },
+          password: { type: "string" },
+        },
+        required: ["eventMarketId", "commentaryId", "password"],
+      },
+    },
+  },
+  changeMarketResult: {
+    schema: {
+      tags: ["EventMarket"],
+      description: "change market to result",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          eventMarketId: { type: "integer" },
+          commentaryId: { type: "integer" },
+          result: { type: "string" },
+        },
+        required: ["eventMarketId", "commentaryId", "result"],
+      },
+    },
+  },
   getAll: {
     schema: {
       tags: ["EventMarket"],

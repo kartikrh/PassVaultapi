@@ -2,8 +2,8 @@ const { MarketUpdateType, EventMarketStatus } = require("../utilities");
 const { errorLogger, marketDataLogger } = require("../utilities/logger");
 
 const getAllEventMarketsQuery = async (fastify) => {
-    return await fastify.db.query(
-        `SELECT
+  return await fastify.db.query(
+    `SELECT
         "wrID" AS "eventMarketId",
         tem."wrCommentaryId" AS "commentaryId",
         tem."wrEventRefID" AS "eventRefId",
@@ -69,10 +69,11 @@ const getAllEventMarketsQuery = async (fastify) => {
     );
 };
 
-const createManyEventMarketQuery = async (data,request,fastify) => {
-    try {
-        const values = data.map((item) => {
-            return `(
+const createManyEventMarketQuery = async (data, request, fastify) => {
+  try {
+    const values = data
+      .map((item) => {
+        return `(
                 ${item.commentaryId},
                 '${item.eventRefId}',
                 ${item.teamId},
@@ -106,9 +107,10 @@ const createManyEventMarketQuery = async (data,request,fastify) => {
                 '${item.data}',
                 now()::timestamp
             )`;
-        }).join(',');
+      })
+      .join(",");
 
-        const query = `INSERT INTO "tblEventMarkets"(
+    const query = `INSERT INTO "tblEventMarkets"(
             "wrCommentaryId",
             "wrEventRefID",
             "wrTeamID",
@@ -982,6 +984,73 @@ const createEventMarketInDBQuery = async (data,request,fastify) => {
       throw new Error(error.message);
   }   
 }
+const changeMarketCancelQuery = async (data, request, fastify) => {
+    try {
+      const query = `UPDATE "tblEventMarkets"
+          SET "wrStatus" =$1
+          WHERE "wrCommentaryId" = $2
+          AND "wrID" = $3
+          AND "wrStatus"  = $4`;
+      return await fastify.db.query(query, {
+        bind: [
+          EventMarketStatus.Cancel,
+          data.commentaryId,
+          data.eventMarketId,
+          EventMarketStatus.Close,
+        ],
+        type: fastify.db.QueryTypes.SELECT,
+      });
+    } catch (error) {
+      errorLogger(
+        fastify,
+        error.message,
+        "DB ERROR --> repository/TableEventmarket.js/changeMarketCancelQuery",
+        request
+      );
+      throw new Error(error.message);
+    }
+  };
+  const changeMarketResultQuery = async (data, request, fastify) => {
+    try {
+      const query = `UPDATE "tblEventMarkets"
+        SET 
+        "wrStatus" = $1,
+        "wrResult" = $2,
+        "wrIsResult" = $3,
+        "wrSettledTime" = now()::timestamp
+        WHERE
+          "wrID" = $4
+        AND
+          "wrCommentaryId" = $5
+        AND
+          "wrStatus" = $6
+        AND 
+          "wrIsResult" = $7
+        AND 
+          "wrResult" IS NULL
+       `;
+      return await fastify.db.query(query, {
+        bind: [
+          EventMarketStatus.Settled,
+          data.result,
+          true,
+          data.eventMarketId,
+          data.commentaryId,
+          EventMarketStatus.Close,
+          false,
+        ],
+        type: fastify.db.QueryTypes.SELECT,
+      });
+    } catch (error) {
+      errorLogger(
+        fastify,
+        error.message,
+        "DB ERROR --> repository/TableEventmarket.js/changeMarketResultService",
+        request
+      );
+      throw new Error(error.message);
+    }
+  };
 module.exports = {
     getAllEventMarketsQuery,
     createManyEventMarketQuery,
@@ -993,5 +1062,7 @@ module.exports = {
     createEventMarketQuery,
     getMarketListByCIdQuery,
     updateEventMarketRateQuery,
-    createEventMarketInDBQuery
+    createEventMarketInDBQuery,
+    changeMarketCancelQuery,
+    changeMarketResultQuery
 };
