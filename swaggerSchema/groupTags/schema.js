@@ -2879,7 +2879,7 @@ const EventMarket = {
       },
     },
   },
-  changeResultOfMarket : {
+  changeResultOfMarket: {
     schema: {
       tags: ["EventMarket"],
       description: "change result of market",
@@ -2888,9 +2888,41 @@ const EventMarket = {
         type: "object",
         properties: {
           eventMarketId: { type: "integer" },
-          isResult : { type: "boolean" },
+          isResult: { type: "boolean" },
         },
         required: ["eventMarketId", "isResult"],
+      },
+    },
+  },
+  changeMarketCancel: {
+    schema: {
+      tags: ["EventMarket"],
+      description: "change market to cancel",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          eventMarketId: { type: "integer" },
+          commentaryId: { type: "integer" },
+          password: { type: "string" },
+        },
+        required: ["eventMarketId", "commentaryId", "password"],
+      },
+    },
+  },
+  changeMarketResult: {
+    schema: {
+      tags: ["EventMarket"],
+      description: "change market to result",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          eventMarketId: { type: "integer" },
+          commentaryId: { type: "integer" },
+          result: { type: "integer" },
+        },
+        required: ["eventMarketId", "commentaryId", "result"],
       },
     },
   },

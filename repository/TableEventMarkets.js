@@ -1,8 +1,8 @@
 const { errorLogger } = require("../utilities/logger");
 
 const getAllEventMarketsQuery = async (fastify) => {
-    return await fastify.db.query(
-        `SELECT
+  return await fastify.db.query(
+    `SELECT
         "wrID" AS "eventMarketId",
         tem."wrCommentaryId" AS "commentaryId",
         tem."wrEventRefID" AS "eventRefId",
@@ -49,16 +49,17 @@ const getAllEventMarketsQuery = async (fastify) => {
     LEFT JOIN "tblEventTypes" tet ON tet."wrEventTypeId" = tc."wrEventTypeId"
 
     `,
-        {
-            type: fastify.db.QueryTypes.SELECT,
-        }
-    );
+    {
+      type: fastify.db.QueryTypes.SELECT,
+    }
+  );
 };
 
-const createManyEventMarketQuery = async (data,request,fastify) => {
-    try {
-        const values = data.map((item) => {
-            return `(
+const createManyEventMarketQuery = async (data, request, fastify) => {
+  try {
+    const values = data
+      .map((item) => {
+        return `(
                 ${item.commentaryId},
                 '${item.eventRefId}',
                 ${item.teamId},
@@ -91,9 +92,10 @@ const createManyEventMarketQuery = async (data,request,fastify) => {
                 now()::timestamp,
                 '${item.data}'
             )`;
-        }).join(',');
+      })
+      .join(",");
 
-        const query = `INSERT INTO "tblEventMarkets"(
+    const query = `INSERT INTO "tblEventMarkets"(
             "wrCommentaryId",
             "wrEventRefID",
             "wrTeamID",
@@ -126,25 +128,25 @@ const createManyEventMarketQuery = async (data,request,fastify) => {
             "wrOpenTime",
             "wrData"
         ) VALUES ${values}`;
-    
-        return await fastify.db.query(query, {
-            type: fastify.db.QueryTypes.SELECT
-        });
-    } catch (err) {
-        console.log(err);
-        errorLogger(
-            fastify,
-            err.message,
-            "DB ERROR --> repository/TableEventmarket.js/createManyEventMarketQuery",
-            request
-          );
-        throw new Error(err.message);
-    }
-}
-const updateEventMarketQuery = async (data,request,fastify ) => {
-    try {
-       return await fastify.db.query(
-            `
+
+    return await fastify.db.query(query, {
+      type: fastify.db.QueryTypes.SELECT,
+    });
+  } catch (err) {
+    console.log(err);
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableEventmarket.js/createManyEventMarketQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+const updateEventMarketQuery = async (data, request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `
             UPDATE "tblEventMarkets"
             SET
             "wrCommentaryId" = $1,
@@ -178,128 +180,183 @@ const updateEventMarketQuery = async (data,request,fastify ) => {
             "wrIsAllow" = $29,
             "wrData" = $30
             WHERE "wrID" = $31`,
-            {
-                bind: [
-                    data.commentaryId,
-                    data.eventRefId,
-                    data.teamId,
-                    data.inningsId,
-                    data.marketName,
-                    data.margin,
-                    data.status,
-                    data.isPredefineMarket,
-                    data.isPreMatchOnly,
-                    data.isPreMatchMarket,
-                    data.isOver,
-                    data.over,
-                    data.isPlayer,
-                    data.playerId,
-                    data.isAutoCancel,
-                    data.autoOpenType,
-                    data.autoOpen,
-                    data.autoCloseType,
-                    data.beforeAutoClose,
-                    data.autoSuspendType,
-                    data.beforeAutoSuspend,
-                    data.isBallStart,
-                    data.isAutoResultSet,
-                    data.autoResultType,
-                    data.autoResultafterBall,
-                    data.afterWicketAutoSuspend,
-                    data.afterWicketNotCreated,
-                    data.isActive,
-                    data.isAllow,
-                    data.data,
-                    data.eventMarketId
-                ],
-                type: fastify.db.QueryTypes.SELECT
-            });
-    } catch (error) {
-        errorLogger(
-            fastify,
-            error.message,
-            "DB ERROR --> repository/TableEventmarket.js/updateEventMarketQuery",
-            request
-          );
-        throw new Error(error.message);
-        
-    }
-}
-const deleteEventMarketQuery = async (data,request,fastify) => {
-    try {
-        return await fastify.db.query(
-            `DELETE FROM "tblEventMarkets" WHERE "wrID" = ANY($1)`,
-            {
-                bind: [data],
-                type: fastify.db.QueryTypes.SELECT
-            });
-    } catch (error) {
-        errorLogger(
-            fastify,
-            error.message,
-            "DB ERROR --> repository/TableEventmarket.js/deleteEventMarketQuery",
-            request
-          );
-        throw new Error(error.message);
-    }
-}
-const changeIsActiveEventMarketQuery = async (data,request,fastify) => {
-    try {
-        const query = `UPDATE "tblEventMarkets" SET "wrIsActive" = $1 WHERE "wrID" = $2`;
-        return await fastify.db.query(query, {
-            bind: [data.isActive, data.eventMarketId],
-            type: fastify.db.QueryTypes.SELECT
-        });
-    } catch (error) {
-        errorLogger(
-            fastify,
-            error.message,
-            "DB ERROR --> repository/TableEventmarket.js/changeIsActiveEventMarketQuery",
-            request
-          );
-        throw new Error(error.message);
-    }
-}
-const changeIsAllowEventMarketQuery = async (data,request,fastify) => {
-    try {
-        const query = `UPDATE "tblEventMarkets" SET "wrIsAllow" = $1 WHERE "wrID" = $2`;
-        return await fastify.db.query(query, {
-            bind: [data.isAllow, data.eventMarketId],
-            type: fastify.db.QueryTypes.SELECT
-        });
-    } catch (error) {
-        errorLogger(
-            fastify,
-            error.message,
-            "DB ERROR --> repository/TableEventmarket.js/changeIsAllowEventMarketQuery",
-            request
-          );
-        throw new Error(error.message);
-    }
-}
-const changeIsResultEventMarketQuery = async (data,request,fastify) => {
-    try {
-        const query = `UPDATE "tblEventMarkets" SET "wrIsResult" = $1 WHERE "wrID" = $2`;
-        return await fastify.db.query(query, {
-            bind: [data.isResult, data.eventMarketId],
-            type: fastify.db.QueryTypes.SELECT
-        });
-    } catch (error) {
-        errorLogger(
-            fastify,
-            error.message,
-            "DB ERROR --> repository/TableEventmarket.js/changeIsResultEventMarketQuery",
-            request
-          );
-        throw new Error(error.message);
-    }
-}
+      {
+        bind: [
+          data.commentaryId,
+          data.eventRefId,
+          data.teamId,
+          data.inningsId,
+          data.marketName,
+          data.margin,
+          data.status,
+          data.isPredefineMarket,
+          data.isPreMatchOnly,
+          data.isPreMatchMarket,
+          data.isOver,
+          data.over,
+          data.isPlayer,
+          data.playerId,
+          data.isAutoCancel,
+          data.autoOpenType,
+          data.autoOpen,
+          data.autoCloseType,
+          data.beforeAutoClose,
+          data.autoSuspendType,
+          data.beforeAutoSuspend,
+          data.isBallStart,
+          data.isAutoResultSet,
+          data.autoResultType,
+          data.autoResultafterBall,
+          data.afterWicketAutoSuspend,
+          data.afterWicketNotCreated,
+          data.isActive,
+          data.isAllow,
+          data.data,
+          data.eventMarketId,
+        ],
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/updateEventMarketQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+};
+const deleteEventMarketQuery = async (data, request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `DELETE FROM "tblEventMarkets" WHERE "wrID" = ANY($1)`,
+      {
+        bind: [data],
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/deleteEventMarketQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+};
+const changeIsActiveEventMarketQuery = async (data, request, fastify) => {
+  try {
+    const query = `UPDATE "tblEventMarkets" SET "wrIsActive" = $1 WHERE "wrID" = $2`;
+    return await fastify.db.query(query, {
+      bind: [data.isActive, data.eventMarketId],
+      type: fastify.db.QueryTypes.SELECT,
+    });
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/changeIsActiveEventMarketQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+};
+const changeIsAllowEventMarketQuery = async (data, request, fastify) => {
+  try {
+    const query = `UPDATE "tblEventMarkets" SET "wrIsAllow" = $1 WHERE "wrID" = $2`;
+    return await fastify.db.query(query, {
+      bind: [data.isAllow, data.eventMarketId],
+      type: fastify.db.QueryTypes.SELECT,
+    });
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/changeIsAllowEventMarketQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+};
+const changeIsResultEventMarketQuery = async (data, request, fastify) => {
+  try {
+    const query = `UPDATE "tblEventMarkets" SET "wrIsResult" = $1 WHERE "wrID" = $2`;
+    return await fastify.db.query(query, {
+      bind: [data.isResult, data.eventMarketId],
+      type: fastify.db.QueryTypes.SELECT,
+    });
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/changeIsResultEventMarketQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+};
+const changeMarketCancelQuery = async (data, request, fastify) => {
+  try {
+    const query = `UPDATE "tblEventMarkets"
+        SET "wrStatus" = EventMarket.Cancel
+        WHERE "wrCommentaryId" = $2
+        AND "wrEventMarketId" = $1
+        AND "wrStatus"  = EventMarket.Close`;
+    return await fastify.db.query(query, {
+      bind: [data.eventMarketId, data.commentaryId, data.password],
+      type: fastify.db.QueryTypes.SELECT,
+    });
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/changeMarketCancelQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+};
+const changeMarketResultQuery = async (data, request, fastify) => {
+  try {
+    const query = `UPDATE "tblEventMarkets"
+      SET 
+      "wrStatus" = EventMarketStatus.Settled,
+      "wrResult" = $3,
+      "wrIsResult" = true
+      WHERE
+      "wrEventMarketID" = $1
+      AND
+      "wrCommentaryId" = $2
+      AND
+      "wrStatus" = EventMarketStatus.Closed
+      AND
+      "wrIsResult" = false
+      AND
+      "wrResult" = null`;
+    return await fastify.db.query(query, {
+      bind: [data.eventMarketId, data.commentaryId, data.result],
+      type: fastify.db.QueryTypes.SELECT,
+    });
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/changeMarketResultService",
+      request
+    );
+    throw new Error(error.message);
+  }
+};
 module.exports = {
-    getAllEventMarketsQuery,
-    createManyEventMarketQuery,
-    updateEventMarketQuery,
-    deleteEventMarketQuery,
-    changeIsActiveEventMarketQuery,
-    changeIsAllowEventMarketQuery,
-    changeIsResultEventMarketQuery
+  getAllEventMarketsQuery,
+  createManyEventMarketQuery,
+  updateEventMarketQuery,
+  deleteEventMarketQuery,
+  changeIsActiveEventMarketQuery,
+  changeIsAllowEventMarketQuery,
+  changeIsResultEventMarketQuery,
+  changeMarketCancelQuery,
+  changeMarketResultQuery,
 };
