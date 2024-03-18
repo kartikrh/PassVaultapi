@@ -583,7 +583,8 @@ const getMarketListByCIdQuery = async (data,request,fastify) => {
             tc."wrEventDate" AS "eventDate",
             tcom."wrCompetition" AS "competitionName",
             tet."wrEventType" AS "eventTypeName",
-            "wrTeamID" AS "teamId",
+            tem."wrTeamID" AS "teamId",
+            tt."wrTeamName" AS "teamName",
             "wrInningsID" AS "inningsId",
             "wrMarketName" AS "marketName",
             "wrMargin" AS "margin",
@@ -627,7 +628,8 @@ const getMarketListByCIdQuery = async (data,request,fastify) => {
         FROM "tblEventMarkets" tem
         LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
         LEFT JOIN "tblCompetitions" tcom ON tcom."wrCompetitionId" = tc."wrCompetitionId"
-        LEFT JOIN "tblEventTypes" tet ON tet."wrEventTypeId" = tc."wrEventTypeId" 
+        LEFT JOIN "tblEventTypes" tet ON tet."wrEventTypeId" = tc."wrEventTypeId"
+        LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = tem."wrTeamID" 
 
         WHERE tem."wrCommentaryId" = $1
         AND tem."wrStatus" NOT IN ($2 ,$3,$4)
@@ -806,7 +808,6 @@ const updateEventMarketRateQuery = async (data,request,fastify) => {
 
         return eventMarket;
     } catch (error) {
-        console.log(error);
         errorLogger(
             fastify,
             error.message,
@@ -815,6 +816,171 @@ const updateEventMarketRateQuery = async (data,request,fastify) => {
           );
         throw new Error(error.message);
     }
+}
+const createEventMarketInDBQuery = async (data,request,fastify) => {
+  try {
+      const query = `INSERT INTO "tblEventMarkets"(
+          "wrCommentaryId",
+          "wrEventRefID",
+          "wrTeamID",
+          "wrInningsID",
+          "wrMarketName",
+          "wrMargin",
+          "wrStatus",
+          "wrIsPredefineMarket",
+          "wrIsPreMatchOnly",
+          "wrIsPreMatchMarket",
+          "wrIsOver",
+          "wrOver",
+          "wrIsPlayer",
+          "wrPlayerID",
+          "wrIsAutoCancel",
+          "wrAutoOpenType",
+          "wrAutoOpen",
+          "wrAutoCloseType",
+          "wrBeforeAutoClose",
+          "wrAutoSuspendType",
+          "wrBeforeAutoSuspend",
+          "wrIsBallStart",
+          "wrIsAutoResultSet",
+          "wrAutoResultType",
+          "wrAutoResultafterBall",
+          "wrAfterWicketAutoSuspend",
+          "wrAfterWicketNotCreated",
+          "wrIsActive",
+          "wrIsAllow",
+          "wrOpenTime",
+          "wrData",
+          "wrLastUpdate"
+      ) VALUES (
+          $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,
+          $16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,now()::timestamp,$30,now()::timestamp
+      ) RETURNING "wrID" as "eventMarketId"
+      `;
+   
+      const eventMarket =  await fastify.db.query(query, {
+          bind: [
+              data.commentaryId,
+              data.eventRefId,
+              data.teamId,
+              data.inningsId,
+              data.marketName,
+              data.margin,
+              data.status,
+              data.isPredefineMarket,
+              data.isPreMatchOnly,
+              data.isPreMatchMarket,
+              data.isOver,
+              data.over,
+              data.isPlayer,
+              data.playerId,
+              data.isAutoCancel,
+              data.autoOpenType,
+              data.autoOpen,
+              data.autoCloseType,
+              data.beforeAutoClose,
+              data.autoSuspendType,
+              data.beforeAutoSuspend,
+              data.isBallStart,
+              data.isAutoResultSet,
+              data.autoResultType,
+              data.autoResultafterBall,
+              data.afterWicketAutoSuspend,
+              data.afterWicketNotCreated,
+              data.isActive,
+              data.isAllow,
+              data.data
+          ],
+          type: fastify.db.QueryTypes.SELECT
+      });
+
+      const eventMarketId = eventMarket[0].eventMarketId;
+
+      // create market runners for each market
+      const query2 = `INSERT INTO "tblMarketRunners"(
+          "wrEventMarketId",
+          "wrRunner",
+          "wrLine",
+          "wrOverRate",
+          "wrUnderRate",
+          "wrYesRate",
+          "wrYesPoint",
+          "wrNoRate",
+          "wrNoPoint",
+          "wrLastUpdate",
+          "wrSelectionId",
+          "wrSelectionStatus"
+      ) VALUES
+      (
+          $1,$2,$3,$4,$5,$6,$7,$8,$9,now(),$10,$11
+      )
+      RETURNING "wrRunnerId" as "runnerId",
+          "wrEventMarketId" as "eventMarketId",
+          "wrRunner" as "runner",
+          "wrLine" as "line",
+          "wrOverRate" as "overRate",
+          "wrUnderRate" as "underRate",
+          "wrYesRate" as "yesRate",
+          "wrYesPoint" as "yesPoint",
+          "wrNoRate" as "noRate",
+          "wrNoPoint" as "noPoint",
+          "wrLastUpdate" as "lastUpdate",
+          "wrSelectionId" as "selectionId",
+          "wrSelectionStatus" as "selectionStatus"    
+      `;
+
+      let marketRunner = await fastify.db.query(query2, {
+          bind: [
+              eventMarketId,
+              `${data.marketName} Bet`,
+              data.line || null,
+              data.overRate || null,
+              data.underRate || null,
+              data.yesRate || null,
+              data.yesPoint || null,
+              data.noRate || null,
+              data.noPoint || null,
+              `${eventMarketId}01`,
+              data.status
+          ],
+          type: fastify.db.QueryTypes.SELECT
+      });
+
+      // update wrData using runnertable
+
+      const dataToStore = marketRunner;
+
+      const query3 = `UPDATE "tblEventMarkets" SET "wrData" = $1 WHERE "wrID" = $2`;
+      await fastify.db.query(query3, {
+          bind: [
+              JSON.stringify(dataToStore),
+              eventMarketId
+          ],
+          type: fastify.db.QueryTypes.SELECT
+      });
+
+      // add log for market creation
+      marketDataLogger(
+          {
+              eventMarketId,
+              commentaryId: data.commentaryId,
+              dataTosave: dataToStore,
+              updateType: MarketUpdateType.marketInitilization
+          },
+          request,
+          fastify
+      );
+
+      return eventMarket;
+  }catch (error) {
+      errorLogger(
+          fastify,
+          error.message,
+          "DB ERROR --> repository/TableEventmarket.js/createEventMarketInDBQuery",
+          request
+        );
+      throw new Error(error.message);
+  }   
 }
 module.exports = {
     getAllEventMarketsQuery,
@@ -826,5 +992,6 @@ module.exports = {
     changeIsResultEventMarketQuery,
     createEventMarketQuery,
     getMarketListByCIdQuery,
-    updateEventMarketRateQuery
+    updateEventMarketRateQuery,
+    createEventMarketInDBQuery
 };

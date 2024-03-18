@@ -1,4 +1,4 @@
-const { updateEventMarketQuery, getAllEventMarketsQuery, createManyEventMarketQuery, deleteEventMarketQuery, changeIsActiveEventMarketQuery, changeIsAllowEventMarketQuery, changeIsResultEventMarketQuery, createEventMarketQuery, getMarketListByCIdQuery, updateEventMarketRateQuery } = require("../repository/TableEventMarkets");
+const { updateEventMarketQuery, getAllEventMarketsQuery, createManyEventMarketQuery, deleteEventMarketQuery, changeIsActiveEventMarketQuery, changeIsAllowEventMarketQuery, changeIsResultEventMarketQuery, createEventMarketQuery, getMarketListByCIdQuery, updateEventMarketRateQuery, createEventMarketInDBQuery } = require("../repository/TableEventMarkets");
 const {EventMarketStatus, MarketActionType} = require("../utilities/index");
 const { marketLogger } = require("../utilities/logger");
 const getDetailsByCIdService = async (request, fastify) => {
@@ -256,6 +256,17 @@ const updateMarketRateService = async (request ,fastify) => {
 
     return "Event Market updated successfully";
 }
+const saveEventMarketService = async (request ,fastify) => {
+    // save eventMarket in DB
+    const eventMarket = await createEventMarketInDBQuery(request.body,request,fastify);
+
+    global.tblEventMarkets = await getAllEventMarketsQuery(fastify);
+
+    return {
+        ...request.body,
+        eventMarketId: eventMarket[0].eventMarketId,
+    };
+}
 module.exports = {
     getDetailsByCIdService,
     getAllEventMarketsService,
@@ -267,5 +278,6 @@ module.exports = {
     marketListResultFalseService,
     changeResultOfMarketService,
     marketListByCIdService,
-    updateMarketRateService
+    updateMarketRateService,
+    saveEventMarketService
 };
