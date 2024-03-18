@@ -2920,7 +2920,7 @@ const EventMarket = {
         properties: {
           eventMarketId: { type: "integer" },
           commentaryId: { type: "integer" },
-          result: { type: "integer" },
+          result: { type: "string" },
         },
         required: ["eventMarketId", "commentaryId", "result"],
       },

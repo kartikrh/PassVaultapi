@@ -1,3 +1,4 @@
+const { EventMarketStatus } = require("../utilities");
 const { errorLogger } = require("../utilities/logger");
 
 const getAllEventMarketsQuery = async (fastify) => {
@@ -300,12 +301,17 @@ const changeIsResultEventMarketQuery = async (data, request, fastify) => {
 const changeMarketCancelQuery = async (data, request, fastify) => {
   try {
     const query = `UPDATE "tblEventMarkets"
-        SET "wrStatus" = EventMarket.Cancel
+        SET "wrStatus" =$1
         WHERE "wrCommentaryId" = $2
-        AND "wrEventMarketId" = $1
-        AND "wrStatus"  = EventMarket.Close`;
+        AND "wrID" = $3
+        AND "wrStatus"  = $4`;
     return await fastify.db.query(query, {
-      bind: [data.eventMarketId, data.commentaryId, data.password],
+      bind: [
+        EventMarketStatus.Cancel,
+        data.commentaryId,
+        data.eventMarketId,
+        EventMarketStatus.Close,
+      ],
       type: fastify.db.QueryTypes.SELECT,
     });
   } catch (error) {
@@ -320,23 +326,33 @@ const changeMarketCancelQuery = async (data, request, fastify) => {
 };
 const changeMarketResultQuery = async (data, request, fastify) => {
   try {
+    console.log(data);
     const query = `UPDATE "tblEventMarkets"
       SET 
-      "wrStatus" = EventMarketStatus.Settled,
-      "wrResult" = $3,
-      "wrIsResult" = true
+      "wrStatus" = $1,
+      "wrResult" = $2,
+      "wrIsResult" = $3
       WHERE
-      "wrEventMarketID" = $1
+        "wrID" = $4
       AND
-      "wrCommentaryId" = $2
+        "wrCommentaryId" = $5
       AND
-      "wrStatus" = EventMarketStatus.Closed
-      AND
-      "wrIsResult" = false
-      AND
-      "wrResult" = null`;
+        "wrStatus" = $6
+      AND 
+        "wrIsResult" = $7
+      AND 
+        "wrResult" IS NULL
+     `;
     return await fastify.db.query(query, {
-      bind: [data.eventMarketId, data.commentaryId, data.result],
+      bind: [
+        EventMarketStatus.Settled,
+        data.result,
+        true,
+        data.eventMarketId,
+        data.commentaryId,
+        EventMarketStatus.Close,
+        false,
+      ],
       type: fastify.db.QueryTypes.SELECT,
     });
   } catch (error) {

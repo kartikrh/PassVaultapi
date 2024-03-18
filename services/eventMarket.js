@@ -1,4 +1,5 @@
 const { updateEventMarketQuery, getAllEventMarketsQuery, createManyEventMarketQuery, deleteEventMarketQuery, changeIsActiveEventMarketQuery, changeIsAllowEventMarketQuery, changeIsResultEventMarketQuery, changeMarketCancelQuery, changeMarketResultQuery } = require("../repository/TableEventMarkets");
+const configConstants = require("../utilities/configConstants");
 const {EventMarketStatus, MarketActionType} = require("../utilities/index");
 const { marketLogger } = require("../utilities/logger");
 const getDetailsByCIdService = async (request, fastify) => {
@@ -215,10 +216,16 @@ const changeMarketCancelService = async (request ,fastify) => {
     if (!commentary) {
         throw new Error("Commentary with this id not Found");
     }
+    // get password from config
+    const configPassword = global.tblConfigs.find((item) => item.key ===configConstants.PASSWORD).value;
+    if(configPassword !== password){
+        throw new Error("Password is incorrect");
+    }
     await changeMarketCancelQuery(request.body, request, fastify);
-    // global.tblEventMarkets[eventMarket]
     
-    return "Market Cancel updated succesfully"
+    global.tblEventMarkets[eventMarket].status = EventMarketStatus.Cancel;
+    
+    return "Market Cancel updated succesfully";
 }
 const changeMarketResultService = async (request ,fastify) => {
     const {eventMarketId, commentaryId, result} = request.body;

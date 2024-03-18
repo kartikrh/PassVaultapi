@@ -139,7 +139,7 @@ module.exports = async (fastify, opts) => {
           (request, reply) =>
             checkPermission(request, reply, fastify, {
               tabName: "Event Markets",
-              mode: "view",
+              mode: "edit",
             }),
         ],
         handler: (request, reply) => changeMarketCancel(request, reply, fastify),
@@ -151,7 +151,7 @@ module.exports = async (fastify, opts) => {
           (request, reply) =>
             checkPermission(request, reply, fastify, {
               tabName: "Event Markets",
-              mode: "view",
+              mode: "edit",
             }),
         ],
         handler: (request, reply) => changeMarketResult(request, reply, fastify),

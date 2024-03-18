@@ -4,5 +4,6 @@ const configConstants = {
     PROJECT_NAME : "PROJECTCODE",
     COMMENTARY_EVENT_DAY_INTERVAL : "EVENTDAYINTERVAL",	
     MARKET_PREDICTOR : "MARKETPREDICTOR",
+    PASSWORD : "PASSWORD",
 }
 module.exports = configConstants;
