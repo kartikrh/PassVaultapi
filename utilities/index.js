@@ -3,7 +3,7 @@ const crypto = require("crypto");
 const moment = require("moment");
 const { default: axios } = require("axios");
 const configConstants = require("./configConstants");
-const { errorLogger } = require("./logger");
+const { errorLogger, tblPredictorAPILogger } = require("./logger");
 const ERROR_CODES = {
   INVALID_INPUT: "INVALID_INPUT",
   SERVER_ERROR: "SERVER_ERROR",
@@ -223,27 +223,43 @@ const MarketActionType = {
   closeMarket : 4
 }
 const callPredictorMarket = async (data , endpoint ,fastify ,request) =>{
+  let requestStartTime = new Date();
+  let loggerConfig = global.tblConfigs.find((item) => item.key === configConstants.ISPREDICTORLOGGER).value;
   try {
     const predictorURL = global.tblConfigs.find((item) => item.key === configConstants.MARKET_PREDICTOR).value;
     const url = `${predictorURL}${endpoint}`;
-  
     const result = await axios.post(url, {
       ...data
     });
-    errorLogger(
-      fastify,
-      predictorURL,
-      "/utilities/index.js/callPredictorMarket",
-      request
-    )
+
+    if (loggerConfig == "true"){
+      tblPredictorAPILogger(
+        {
+          endPoint : endpoint,
+          requestBody : data,
+          requestStartTime : requestStartTime,
+          requestEndTime : new Date(),
+          response : result.data
+        },
+        request,
+        fastify
+      );
+    }
     return result;
   } catch (error) {
-    errorLogger(
-      fastify,
-      error.message,
-      "/utilities/index.js/callPredictorMarket",
-      request
-    )
+    if(loggerConfig == "true"){
+      tblPredictorAPILogger(
+        {
+          endPoint : endpoint,
+          requestBody : data,
+          requestStartTime : requestStartTime,
+          requestEndTime : new Date(),
+          response : error.message
+        },
+        request,
+        fastify
+      );
+    }
     // throw new Error(error.message);
   }
 
