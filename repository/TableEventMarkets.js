@@ -326,12 +326,12 @@ const changeMarketCancelQuery = async (data, request, fastify) => {
 };
 const changeMarketResultQuery = async (data, request, fastify) => {
   try {
-    console.log(data);
     const query = `UPDATE "tblEventMarkets"
       SET 
       "wrStatus" = $1,
       "wrResult" = $2,
-      "wrIsResult" = $3
+      "wrIsResult" = $3,
+      "wrSettledTime" = now()::timestamp
       WHERE
         "wrID" = $4
       AND
