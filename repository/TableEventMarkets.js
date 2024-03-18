@@ -616,11 +616,14 @@ const getMarketListByCIdQuery = async (data,request,fastify) => {
             "wrResult" as "result",
             "wrIsResult" as "isResult",
             "wrData" as "data",
+            tem."wrLastUpdate" as "lastUpdate",
+            "wrIsSendData" as "isSendData",
             (
                 SELECT json_agg("MarketRunners_CTE".*)
                 FROM "MarketRunners_CTE"
                 WHERE "MarketRunners_CTE"."eventMarketId" = tem."wrID"
             ) as "marketRunners"
+           
         FROM "tblEventMarkets" tem
         LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
         LEFT JOIN "tblCompetitions" tcom ON tcom."wrCompetitionId" = tc."wrCompetitionId"
