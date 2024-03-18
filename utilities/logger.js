@@ -111,4 +111,24 @@ const marketDataLogger = async (data , request , fastify) => {
   }
 }
 
-module.exports = { errorLogger, responseLogger ,responseLogInDB , marketLogger ,marketDataLogger};
+const tblPredictorAPILogger = async (data, request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `INSERT INTO "tblPredictorAPILogs" ("wrEndpoint", "wrRequestBody", "wrRequestStartTime", "wrRequestEndTime", "wrResponse") VALUES ($1, $2, $3, $4, $5)`,
+      {
+        type: fastify.db.QueryTypes.INSERT,
+        bind: [
+          data.endPoint,
+          JSON.stringify(data.requestBody),
+          data.requestStartTime,
+          data.requestEndTime,
+          JSON.stringify(data.response),
+        ],
+      }
+    );
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+module.exports = { errorLogger, responseLogger ,responseLogInDB , marketLogger ,marketDataLogger,tblPredictorAPILogger};
