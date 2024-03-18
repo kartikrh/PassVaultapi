@@ -2921,6 +2921,51 @@ const EventMarket = {
       },
     },
   },
+  save : {
+    schema : {
+      tags : ["EventMarket"],
+      description : "save market",
+      security: [{ bearerAuth: [] }],
+      body : {
+        type  : "object",
+        properties : {
+          eventMarketId : { type : "integer"},
+          eventMarketId: { type: "integer" },
+          commentaryId: { type: "integer" },
+          eventRefId: { type: "string" },
+          teamId: { type: "integer" },
+          inningsId: { type: "integer" },
+          marketName: { type: "string" },
+          margin: { type: "number" },
+          status: { type: "integer" },
+          isPredefineMarket: { type: "boolean" },
+          isPreMatchOnly: { type: "boolean" },
+          isOver: { type: "boolean" },
+          over: { type: "number" },
+          isPlayer: { type: "boolean" },
+          playerName: { type: "string" },
+          isAutoCancel: { type: "boolean" },
+          autoOpenType: { type: "integer" },
+          autoOpen: { type: "number" },
+          autoCloseType: { type: "integer" },
+          beforeAutoClose: { type: "number" },
+          autoSuspendType: { type: "integer" },
+          beforeAutoSuspend: { type: "number" },
+          isBallStart: { type: "boolean" },
+          isAutoResultSet: { type: "boolean" },
+          autoResultType: { type: "integer" },
+          autoResultafterBall: { type: "number" },
+          afterWicketAutoSuspend: { type: "integer" },
+          afterWicketNotCreated: { type: "integer" },
+          isActive: { type: "boolean" },
+          isAllow: { type: "boolean" },
+          data: { type: "string" },
+          isSendData : { type : "boolean"},
+        },
+        required : ["eventMarketId"]
+      }
+    }
+  },
   changeResultOfMarket : {
     schema: {
       tags: ["EventMarket"],
@@ -2933,6 +2978,38 @@ const EventMarket = {
           isResult: { type: "boolean" },
         },
         required: ["eventMarketId", "isResult"],
+      },
+    },
+  },
+  changeMarketCancel: {
+    schema: {
+      tags: ["EventMarket"],
+      description: "change market to cancel",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          eventMarketId: { type: "integer" },
+          commentaryId: { type: "integer" },
+          password: { type: "string" },
+        },
+        required: ["eventMarketId", "commentaryId", "password"],
+      },
+    },
+  },
+  changeMarketResult: {
+    schema: {
+      tags: ["EventMarket"],
+      description: "change market to result",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          eventMarketId: { type: "integer" },
+          commentaryId: { type: "integer" },
+          result: { type: "string" },
+        },
+        required: ["eventMarketId", "commentaryId", "result"],
       },
     },
   },
@@ -3010,6 +3087,7 @@ const EventMarket = {
                 isActive: { type: "boolean" },
                 isAllow: { type: "boolean" },
                 data: { type: "string" },
+                isSendData : { type : "boolean"},
               },
             },
           },

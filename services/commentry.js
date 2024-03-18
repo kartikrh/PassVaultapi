@@ -191,6 +191,7 @@ const commentaryDetailsByIdService = async (request, fastify) => {
       {
         commentary_id: result.commentaryId,
         match_type_id: result.matchTypeId,
+        event_id : result.eventRefId
       },
       "/api/loadcommentary",
       fastify,
@@ -431,6 +432,7 @@ const createCommentaryService = async (request, fastify) => {
       {
         commentary_id: addCommentry.commentaryId,
         match_type_id: addCommentry.matchTypeId,
+        event_id : addCommentry.eventRefId
       },
       "/api/loadcommentary",
       fastify,
@@ -827,6 +829,7 @@ const cloneCommentaryService = async (request, fastify) => {
       {
         commentary_id: newCommentary.commentaryId,
         match_type_id: newCommentary.matchTypeId,
+        event_id : newCommentary.eventRefId
       },
       "/api/loadcommentary",
       fastify,
@@ -3082,6 +3085,7 @@ const updateMatchTypeInCommentaryService = async (request, fastify) => {
       {
         commentary_id: commentaryId,
         match_type_id: matchTypeId,
+        event_id: updatedData.eventRefId,
       },
       "/api/loadcommentary",
       fastify,

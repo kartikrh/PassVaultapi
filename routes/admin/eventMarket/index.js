@@ -1,4 +1,4 @@
-const { getDetailsByCId, getAllEventMarket, createEventMarket, deleteEventMarket, activeInactiveMarket, updateAllowMarket, getEventListByCompetitionId, marketListResultFalse, changeResultOfMarket, marketListByCId, updateMarketRate } = require("../../../controller/users/admin/eventMarket");
+const { getDetailsByCId, getAllEventMarket, createEventMarket, deleteEventMarket, activeInactiveMarket, updateAllowMarket, getEventListByCompetitionId, marketListResultFalse, changeResultOfMarket, marketListByCId, updateMarketRate, saveEventMarket ,changeMarketCancel, changeMarketResult} = require("../../../controller/users/admin/eventMarket");
 const { EventMarket, Commentary } = require("../../../swaggerSchema/groupTags/schema");
 const {
     authorize,
@@ -132,6 +132,30 @@ module.exports = async (fastify, opts) => {
             }),
         ],
         handler: (request, reply) => changeResultOfMarket(request, reply, fastify),
+    }),
+    fastify.post("/setMarketCancel", {
+        schema : EventMarket.changeMarketCancel.schema,
+        preHandler: [
+          (request, reply) => authorize(request, reply, fastify),
+          (request, reply) =>
+            checkPermission(request, reply, fastify, {
+              tabName: "Event Markets",
+              mode: "edit",
+            }),
+        ],
+        handler: (request, reply) => changeMarketCancel(request, reply, fastify),
+    }),
+    fastify.post("/setMarketResult", {
+        schema : EventMarket.changeMarketResult.schema,
+        preHandler: [
+          (request, reply) => authorize(request, reply, fastify),
+          (request, reply) =>
+            checkPermission(request, reply, fastify, {
+              tabName: "Event Markets",
+              mode: "edit",
+            }),
+        ],
+        handler: (request, reply) => changeMarketResult(request, reply, fastify),
     })
     fastify.post("/marketListByCId",{
         schema: EventMarket.marketListByCId.schema,
@@ -154,5 +178,17 @@ module.exports = async (fastify, opts) => {
             })
         ],
         handler: (request, reply) => updateMarketRate(request, reply, fastify)
+    })
+
+    fastify.post("/save",{
+        schema: EventMarket.save.schema,
+        preHandler: [
+            (request, reply) => authorize(request, reply, fastify),
+            (request, reply) => checkPermission(request, reply, fastify, {
+                tabName: "Event Markets",
+                mode: "add"
+            })
+        ],
+        handler: (request, reply) => saveEventMarket(request, reply, fastify)
     })
 };

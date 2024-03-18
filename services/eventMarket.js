@@ -1,4 +1,5 @@
-const { updateEventMarketQuery, getAllEventMarketsQuery, createManyEventMarketQuery, deleteEventMarketQuery, changeIsActiveEventMarketQuery, changeIsAllowEventMarketQuery, changeIsResultEventMarketQuery, createEventMarketQuery, getMarketListByCIdQuery, updateEventMarketRateQuery } = require("../repository/TableEventMarkets");
+const { updateEventMarketQuery, getAllEventMarketsQuery, createManyEventMarketQuery, deleteEventMarketQuery, changeIsActiveEventMarketQuery, changeIsAllowEventMarketQuery, changeIsResultEventMarketQuery, createEventMarketQuery, getMarketListByCIdQuery, updateEventMarketRateQuery, createEventMarketInDBQuery,changeMarketCancelQuery, changeMarketResultQuery } = require("../repository/TableEventMarkets");
+const configConstants = require("../utilities/configConstants");
 const {EventMarketStatus, MarketActionType} = require("../utilities/index");
 const { marketLogger } = require("../utilities/logger");
 const getDetailsByCIdService = async (request, fastify) => {
@@ -228,7 +229,6 @@ const changeResultOfMarketService = async (request ,fastify) => {
         value: isResult
     }, request, fastify);
 
-
     return "Event Market updated successfully";
 }
 const marketListByCIdService = async (request ,fastify) => {
@@ -256,6 +256,53 @@ const updateMarketRateService = async (request ,fastify) => {
 
     return "Event Market updated successfully";
 }
+const saveEventMarketService = async (request ,fastify) => {
+    // save eventMarket in DB
+    const eventMarket = await createEventMarketInDBQuery(request.body,request,fastify);
+
+    global.tblEventMarkets = await getAllEventMarketsQuery(fastify);
+
+    return {
+        ...request.body,
+        eventMarketId: eventMarket[0].eventMarketId,
+    };
+}
+const changeMarketCancelService = async (request ,fastify) => {
+    const {eventMarketId, commentaryId, password} = request.body;
+    let eventMarket = global.tblEventMarkets.findIndex((item) => item.eventMarketId === eventMarketId);
+    let commentary = global.tblCommentaries.find((item) => item.commentaryId === commentaryId);
+    if (eventMarket === -1) {
+        throw new Error("EventMarket with this id not Found");
+    }
+    if (!commentary) {
+        throw new Error("Commentary with this id not Found");
+    }
+    // get password from config
+    const configPassword = global.tblConfigs.find((item) => item.key ===configConstants.PASSWORD).value;
+    if(configPassword !== password){
+        throw new Error("Password is incorrect");
+    }
+    await changeMarketCancelQuery(request.body, request, fastify);
+    
+    global.tblEventMarkets[eventMarket].status = EventMarketStatus.Cancel;
+    
+    return "Market Cancel updated succesfully";
+}
+const changeMarketResultService = async (request ,fastify) => {
+    const {eventMarketId, commentaryId, result} = request.body;
+    let eventMarket = global.tblEventMarkets.findIndex((item) => item.eventMarketId === eventMarketId);
+    let commentary = global.tblCommentaries.find((item) => item.commentaryId === commentaryId);
+    if (eventMarket === -1) {
+        throw new Error("EventMarket with this id not Found");
+    }
+    if (!commentary) {
+        throw new Error("Commentary with this id not Found");
+    }
+   await changeMarketResultQuery(request.body, request, fastify);
+   global.tblEventMarkets[eventMarket].result = result;
+
+   return "Market Result updated succesfully"
+}
 module.exports = {
     getDetailsByCIdService,
     getAllEventMarketsService,
@@ -267,5 +314,8 @@ module.exports = {
     marketListResultFalseService,
     changeResultOfMarketService,
     marketListByCIdService,
-    updateMarketRateService
+    updateMarketRateService,
+    saveEventMarketService,
+    changeMarketCancelService,
+    changeMarketResultService
 };
