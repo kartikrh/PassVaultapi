@@ -97,6 +97,8 @@ const updateMarketTemplateService = async (request, fastify) => {
     isPlayer: request.body.hasOwnProperty("isPlayer") ? request.body.isPlayer : marketTemplate.isPlayer,
     playerName: request.body.playerName || marketTemplate.playerName,
     isAutoCancel: request.body.hasOwnProperty("isAutoCancel") ? request.body.isAutoCancel : marketTemplate.isAutoCancel,
+    createType: request.body.hasOwnProperty("createType") ? request.body.createType : marketTemplate.createType,
+    create: request.body.hasOwnProperty("create") ? request.body.create : marketTemplate.create,
     autoOpenType: request.body.hasOwnProperty("autoOpenType") ? request.body.autoOpenType : marketTemplate.autoOpenType,
     autoOpen: request.body.hasOwnProperty("autoOpen") ? request.body.autoOpen : marketTemplate.autoOpen,
     autoCloseType: request.body.hasOwnProperty("autoCloseType") ? request.body.autoCloseType : marketTemplate.autoCloseType,

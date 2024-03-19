@@ -282,11 +282,14 @@ const changeMarketCancelService = async (request ,fastify) => {
     if(configPassword !== password){
         throw new Error("Password is incorrect");
     }
-    await changeMarketCancelQuery(request.body, request, fastify);
-    
-    global.tblEventMarkets[eventMarket].status = EventMarketStatus.Cancel;
-    
-    return "Market Cancel updated succesfully";
+    const currentStatus = global.tblEventMarkets[eventMarket].status;
+    if (currentStatus === EventMarketStatus.Close) {
+        await changeMarketCancelQuery(request.body, request, fastify);
+        global.tblEventMarkets[eventMarket].status = EventMarketStatus.Cancel;
+        return "Market Cancel updated successfully";
+    } else {
+        throw new Error("Market is not currently closed, so it cannot be canceled");
+    }
 }
 const changeMarketResultService = async (request ,fastify) => {
     const {eventMarketId, commentaryId, result} = request.body;
@@ -298,10 +301,15 @@ const changeMarketResultService = async (request ,fastify) => {
     if (!commentary) {
         throw new Error("Commentary with this id not Found");
     }
-   await changeMarketResultQuery(request.body, request, fastify);
-   global.tblEventMarkets[eventMarket].result = result;
-
-   return "Market Result updated succesfully"
+    const currentStatus = global.tblEventMarkets[eventMarket].status;
+    const currentResult = global.tblEventMarkets[eventMarket].result;
+    if (currentStatus === EventMarketStatus.Close && currentResult === null) {
+        await changeMarketResultQuery(request.body, request, fastify);
+        global.tblEventMarkets[eventMarket].result = result;
+        return "Market result updated successfully";
+    } else {
+        throw new Error("Market is not closed or result is already set, so it cannot be updated");
+    }
 }
 const changeMarketCloseService = async (request ,fastify) => {
     const {eventMarketId, commentaryId} = request.body;
@@ -313,11 +321,16 @@ const changeMarketCloseService = async (request ,fastify) => {
     if (!commentary) {
         throw new Error("Commentary with this id not Found");
     }
-    await changeMarketCloseQuery(request.body, request, fastify);
-    
-    global.tblEventMarkets[eventMarket].status = EventMarketStatus.Close;
-    
-    return "Market Close updated succesfully";
+    const currentStatus = global.tblEventMarkets[eventMarket].status;
+    if (![EventMarketStatus.Settled, EventMarketStatus.Cancel, EventMarketStatus.Close].includes(currentStatus)) {
+        await changeMarketCloseQuery(request.body, request, fastify);
+
+        global.tblEventMarkets[eventMarket].status = EventMarketStatus.Close;
+
+        return "Market close updated successfully";
+    } else {
+        return "Market is already settled, canceled, or closed, so it cannot be updated to close.";
+    }
 }
 module.exports = {
     getDetailsByCIdService,
