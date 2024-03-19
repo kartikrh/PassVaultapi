@@ -33,6 +33,7 @@ const {
   updateCommentaryStatus,
   updateisPredictMarketInCommentary,
   getEventDetailsByCId,
+  saveCommentaryDetailsAPI,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -445,4 +446,8 @@ module.exports = async (fastify, opts) => {
     // ],
     handler: (request, reply) => getEventDetailsByCId(request, reply, fastify),
   });
+  fastify.post("/saveCommentaryDetails", {
+    // schema: Commentary.saveCommentaryDetails.schema,
+    handler: (request, reply) => saveCommentaryDetailsAPI(request, reply, fastify),
+  })
 };
