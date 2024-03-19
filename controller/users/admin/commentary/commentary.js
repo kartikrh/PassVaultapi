@@ -32,6 +32,7 @@ const {
   updateCommentaryStatusService,
   updateisPredictMarketInCommentaryService,
   getEventDetailsByCIdService,
+  saveCommentaryDetailsAPIService,
 } = require("../../../../services/commentry");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -491,6 +492,15 @@ const getEventDetailsByCId = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const saveCommentaryDetailsAPI = async (request, reply, fastify) => {
+  try {
+    const result = await saveCommentaryDetailsAPIService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/saveCommentaryDetailsAPI", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 module.exports = {
   getAllCommentaries,
   getCommentaryById,
@@ -528,4 +538,5 @@ module.exports = {
   updateCommentaryStatus,
   updateisPredictMarketInCommentary,
   getEventDetailsByCId,
+  saveCommentaryDetailsAPI
 };
