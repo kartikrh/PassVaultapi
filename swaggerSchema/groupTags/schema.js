@@ -2893,43 +2893,43 @@ const EventMarket = {
       },
     },
   },
-  updateMarketRate :{
-    schema : {
+  updateMarketRate: {
+    schema: {
       tags: ["EventMarket"],
       description: "update market rate",
       security: [{ bearerAuth: [] }],
       body: {
         type: "object",
         properties: {
-          eventMarket :{
+          eventMarket: {
             type: "array",
             items: {
               type: "object",
               properties: {
-                marketRunners : {
-                  type : "array",
-                  items : {
-                    type : "object",
-                  }
-                }
+                marketRunners: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                  },
+                },
               },
-              required : ["marketRunners"]
+              required: ["marketRunners"],
             },
-          }
+          },
         },
         required: ["eventMarket"],
       },
     },
   },
-  save : {
-    schema : {
-      tags : ["EventMarket"],
-      description : "save market",
+  save: {
+    schema: {
+      tags: ["EventMarket"],
+      description: "save market",
       security: [{ bearerAuth: [] }],
-      body : {
-        type  : "object",
-        properties : {
-          eventMarketId : { type : "integer"},
+      body: {
+        type: "object",
+        properties: {
+          eventMarketId: { type: "integer" },
           eventMarketId: { type: "integer" },
           commentaryId: { type: "integer" },
           eventRefId: { type: "string" },
@@ -2960,13 +2960,13 @@ const EventMarket = {
           isActive: { type: "boolean" },
           isAllow: { type: "boolean" },
           data: { type: "string" },
-          isSendData : { type : "boolean"},
+          isSendData: { type: "boolean" },
         },
-        required : ["eventMarketId"]
-      }
-    }
+        required: ["eventMarketId"],
+      },
+    },
   },
-  changeResultOfMarket : {
+  changeResultOfMarket: {
     schema: {
       tags: ["EventMarket"],
       description: "change result of market",
@@ -3030,7 +3030,7 @@ const EventMarket = {
       },
     },
   },
-  marketListByCId:{
+  marketListByCId: {
     schema: {
       tags: ["EventMarket"],
       description: "get all EventMarket",
@@ -3087,7 +3087,7 @@ const EventMarket = {
                 isActive: { type: "boolean" },
                 isAllow: { type: "boolean" },
                 data: { type: "string" },
-                isSendData : { type : "boolean"},
+                isSendData: { type: "boolean" },
               },
             },
           },
@@ -3140,6 +3140,21 @@ const EventMarket = {
           isAllow: { type: "boolean" },
         },
         required: ["eventMarketId", "isAllow"],
+      },
+    },
+  },
+  changeMarketClose: {
+    schema: {
+      tags: ["EventMarket"],
+      description: "change market to close",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          eventMarketId: { type: "integer" },
+          commentaryId: { type: "integer" },
+        },
+        required: ["eventMarketId", "commentaryId"],
       },
     },
   },

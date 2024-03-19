@@ -1,4 +1,4 @@
-const { updateEventMarketQuery, getAllEventMarketsQuery, createManyEventMarketQuery, deleteEventMarketQuery, changeIsActiveEventMarketQuery, changeIsAllowEventMarketQuery, changeIsResultEventMarketQuery, createEventMarketQuery, getMarketListByCIdQuery, updateEventMarketRateQuery, createEventMarketInDBQuery,changeMarketCancelQuery, changeMarketResultQuery } = require("../repository/TableEventMarkets");
+const { updateEventMarketQuery, getAllEventMarketsQuery, createManyEventMarketQuery, deleteEventMarketQuery, changeIsActiveEventMarketQuery, changeIsAllowEventMarketQuery, changeIsResultEventMarketQuery, createEventMarketQuery, getMarketListByCIdQuery, updateEventMarketRateQuery, createEventMarketInDBQuery,changeMarketCancelQuery, changeMarketResultQuery, changeMarketCloseQuery } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
 const {EventMarketStatus, MarketActionType} = require("../utilities/index");
 const { marketLogger } = require("../utilities/logger");
@@ -303,6 +303,22 @@ const changeMarketResultService = async (request ,fastify) => {
 
    return "Market Result updated succesfully"
 }
+const changeMarketCloseService = async (request ,fastify) => {
+    const {eventMarketId, commentaryId} = request.body;
+    let eventMarket = global.tblEventMarkets.findIndex((item) => item.eventMarketId === eventMarketId);
+    let commentary = global.tblCommentaries.find((item) => item.commentaryId === commentaryId);
+    if (eventMarket === -1) {
+        throw new Error("EventMarket with this id not Found");
+    }
+    if (!commentary) {
+        throw new Error("Commentary with this id not Found");
+    }
+    await changeMarketCloseQuery(request.body, request, fastify);
+    
+    global.tblEventMarkets[eventMarket].status = EventMarketStatus.Close;
+    
+    return "Market Close updated succesfully";
+}
 module.exports = {
     getDetailsByCIdService,
     getAllEventMarketsService,
@@ -317,5 +333,6 @@ module.exports = {
     updateMarketRateService,
     saveEventMarketService,
     changeMarketCancelService,
-    changeMarketResultService
+    changeMarketResultService,
+    changeMarketCloseService
 };
