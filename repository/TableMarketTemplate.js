@@ -15,6 +15,8 @@ const getAllMarketTemplateQuery = async (fastify) => {
       "wrIsPlayer" as "isPlayer",
       "wrPlayerName" as "playerName",
       "wrIsAutoCancel" as "isAutoCancel",
+      "wrCreateType" as "createType",
+      "wrCreate" as "create",
       "wrAutoOpenType" as "autoOpenType",
       "wrAutoOpen" as "autoOpen",
       "wrAutoCloseType" as "autoCloseType",
@@ -42,8 +44,8 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
     try {
         const result = await fastify.db.query(
             `with insert_data as(
-              insert into "tblMarketTemplates" ("wrTemplateName","wrMatchTypeID","wrIsPredefineMarket","wrIsPreMatchOnly","wrIsPreMatchMarket","wrIsOver","wrOver","wrIsPlayer","wrPlayerName","wrIsAutoCancel","wrAutoOpenType","wrAutoOpen","wrAutoCloseType","wrBeforeAutoClose","wrAutoSuspendType","wrBeforeAutoSuspend","wrIsBallStart","wrIsAutoResultSet","wrAutoResultType","wrAutoResultafterBall","wrAfterWicketAutoSuspend","wrAfterWicketNotCreated","wrCreatedBy","wrIsActive") values (
-                $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24) returning *
+              insert into "tblMarketTemplates" ("wrTemplateName","wrMatchTypeID","wrIsPredefineMarket","wrIsPreMatchOnly","wrIsPreMatchMarket","wrIsOver","wrOver","wrIsPlayer","wrPlayerName","wrIsAutoCancel","wrCreateType","wrCreate","wrAutoOpenType","wrAutoOpen","wrAutoCloseType","wrBeforeAutoClose","wrAutoSuspendType","wrBeforeAutoSuspend","wrIsBallStart","wrIsAutoResultSet","wrAutoResultType","wrAutoResultafterBall","wrAfterWicketAutoSuspend","wrAfterWicketNotCreated","wrCreatedBy","wrIsActive") values (
+                $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26) returning *
           )        
         select 
         "wrID" AS "marketTemplateId",
@@ -57,6 +59,8 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
         "wrIsPlayer" as "isPlayer",
         "wrPlayerName" as "playerName",
         "wrIsAutoCancel" as "isAutoCancel",
+        "wrCreateType" as "createType",
+        "wrCreate" as "create",
         "wrAutoOpenType" as "autoOpenType",
         "wrAutoOpen" as "autoOpen",
         "wrAutoCloseType" as "autoCloseType",
@@ -85,6 +89,8 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
                     data.hasOwnProperty("isPlayer") ? data.isPlayer : null,
                     data.playerName || null,
                     data.hasOwnProperty("isAutoCancel") ? data.isAutoCancel : null,
+                    data.hasOwnProperty("createType") ? data.createType : null,
+                    data.hasOwnProperty("create") ? data.create : null,
                     data.hasOwnProperty("autoOpenType") ? data.autoOpenType : null,
                     data.hasOwnProperty("autoOpen") ? data.autoOpen : null,
                     data.hasOwnProperty("autoCloseType") ? data.autoCloseType : null,
@@ -128,20 +134,22 @@ const updateMarketTemplateQuery = async (data, fastify, request) => {
                 "wrIsPlayer" = $8,
                 "wrPlayerName" = $9,
                 "wrIsAutoCancel" = $10,
-                "wrAutoOpenType" = $11,
-                "wrAutoOpen" = $12,
-                "wrAutoCloseType" = $13,
-                "wrBeforeAutoClose" = $14,
-                "wrAutoSuspendType" = $15,
-                "wrBeforeAutoSuspend" = $16,
-                "wrIsBallStart" = $17,
-                "wrIsAutoResultSet" = $18,
-                "wrAutoResultType" = $19,
-                "wrAutoResultafterBall" = $20,
-                "wrAfterWicketAutoSuspend" = $21,
-                "wrAfterWicketNotCreated" = $22,
-                "wrIsActive" = $23
-            WHERE "wrID" = $24
+                "wrCreateType" = $11,
+                "wrCreate" = $12,
+                "wrAutoOpenType" = $13,
+                "wrAutoOpen" = $14,
+                "wrAutoCloseType" = $15,
+                "wrBeforeAutoClose" = $16,
+                "wrAutoSuspendType" = $17,
+                "wrBeforeAutoSuspend" = $18,
+                "wrIsBallStart" = $19,
+                "wrIsAutoResultSet" = $20,
+                "wrAutoResultType" = $21,
+                "wrAutoResultafterBall" = $22,
+                "wrAfterWicketAutoSuspend" = $23,
+                "wrAfterWicketNotCreated" = $24,
+                "wrIsActive" = $25
+            WHERE "wrID" = $26
             `,
             {
                 bind: [
@@ -155,6 +163,8 @@ const updateMarketTemplateQuery = async (data, fastify, request) => {
                     data.isPlayer ,
                     data.playerName ,
                     data.isAutoCancel ,
+                    data.createType,
+                    data.create,
                     data.autoOpenType ,
                     data.autoOpen ,
                     data.autoCloseType ,
