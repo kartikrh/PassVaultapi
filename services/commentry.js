@@ -1601,14 +1601,23 @@ const loadTeamPlayerService = async (request, fastify) => {
 };
 const saveShortCommentaryService = async (request, fastify) => {
   try {
-    const { commentaryDetails, ...rest } = request.body;
-    let teamArr = [];
-    let teamPlayerArr = [];
-    for (let key in rest) {
-      const { teamPlayers, ...rest1 } = rest[key];
-      teamArr.push(rest1);
-      teamPlayerArr.push(...teamPlayers);
+    // const { commentaryDetails, ...rest } = request.body;
+    // let teamArr = [];
+    // let teamPlayerArr = [];
+    // for (let key in rest) {
+    //   const { teamPlayers, ...rest1 } = rest[key];
+    //   teamArr.push(rest1);
+    //   teamPlayerArr.push(...teamPlayers);
+    // }
+    const {commentaryDetails , commentaryTeams, commentaryPlayers} = request.body;
+    // validate commentaryId
+    let commentaryIndex = global.tblCommentaries.findIndex(
+      (item) => item.commentaryId === commentaryDetails.commentaryId
+    );
+    if (commentaryIndex === -1) {
+      throw new Error("Commentary with this id not Found");
     }
+
     //save details in commentary
     const a = await fastify.db.query(
       `CALL proc_save_shortCommentary(
@@ -1617,8 +1626,8 @@ const saveShortCommentaryService = async (request, fastify) => {
       {
         bind: [
           JSON.stringify(commentaryDetails) || null,
-          JSON.stringify(teamArr) || null,
-          JSON.stringify(teamPlayerArr) || null,
+          JSON.stringify(commentaryTeams) || null,
+          JSON.stringify(commentaryPlayers) || null,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
