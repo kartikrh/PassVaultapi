@@ -1051,6 +1051,34 @@ const changeMarketCancelQuery = async (data, request, fastify) => {
       throw new Error(error.message);
     }
   };
+  const changeMarketCloseQuery = async (data, request, fastify) => {
+    try {
+      const query = `UPDATE "tblEventMarkets"
+          SET "wrStatus" =$1
+          WHERE "wrCommentaryId" = $2
+          AND "wrID" = $3
+          AND "wrStatus" NOT IN ($4, $5, $6)`
+      return await fastify.db.query(query, {
+        bind: [
+          EventMarketStatus.Close,
+          data.commentaryId,
+          data.eventMarketId,
+          EventMarketStatus.Close,
+          EventMarketStatus.Settled,
+          EventMarketStatus.Cancel,
+        ],
+        type: fastify.db.QueryTypes.SELECT,
+      });
+    } catch (error) {
+      errorLogger(
+        fastify,
+        error.message,
+        "DB ERROR --> repository/TableEventmarket.js/changeMarketCloseQuery",
+        request
+      );
+      throw new Error(error.message);
+    }
+  };
 module.exports = {
     getAllEventMarketsQuery,
     createManyEventMarketQuery,
@@ -1064,5 +1092,6 @@ module.exports = {
     updateEventMarketRateQuery,
     createEventMarketInDBQuery,
     changeMarketCancelQuery,
-    changeMarketResultQuery
+    changeMarketResultQuery,
+    changeMarketCloseQuery
 };
