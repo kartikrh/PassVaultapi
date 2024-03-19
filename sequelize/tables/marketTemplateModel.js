@@ -56,6 +56,14 @@ module.exports = (sequelize) => {
         type: DataTypes.BOOLEAN,
         allowNull: false,
       },
+      wrCreateType: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      wrCreate: {
+        type: DataTypes.DECIMAL(10, 2),
+        allowNull: true,
+      },
       wrAutoOpenType: {
         type: DataTypes.INTEGER,
         allowNull: true,

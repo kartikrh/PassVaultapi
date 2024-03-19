@@ -2472,6 +2472,8 @@ const MarketTemplate = {
           isPlayer: { type: "boolean" },
           playerName: { type: "string" },
           isAutoCancel: { type: "boolean" },
+          createType: {type: "integer"},
+          create: {type: "number"},
           autoOpenType: { type: "integer" },
           autoOpen: { type: "number" },
           autoCloseType: { type: "integer" },
