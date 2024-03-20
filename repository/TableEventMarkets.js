@@ -1111,6 +1111,59 @@ const suspendEventMarketQuery = async (data, request, fastify) => {
           throw new Error(error.message);
     }
 };
+const closeEventMarketByTeamIdQuery = async (data, request, fastify) => {
+    try {
+        const query = `
+            UPDATE "tblEventMarkets"
+            SET "wrStatus" = $1
+            WHERE "wrTeamID" = $2
+            AND "wrCommentaryId" = $3
+            AND "wrInningsID" = $4
+            RETURNING "wrID" as "eventMarketId"
+        `;
+
+        return await fastify.db.query(query, {
+            bind: [
+                EventMarketStatus.Close,
+                data.teamId,
+                data.commentaryId,
+                data.inningsId
+            ],
+            type: fastify.db.QueryTypes.SELECT
+        });
+    } catch (error) {
+        errorLogger(
+            fastify,
+            error.message,
+            "DB ERROR --> repository/TableEventmarket.js/suspendEventMarketQuery",
+            request
+          );
+        throw new Error(error.message);
+    }
+}
+const getMarketLogsByCIdQuery = async (data,request,fastify) => {
+    try {
+        //get market logs by commentary id
+        const query = `SELECT
+            CAST(COUNT(*) as integer) FROM "tblMarketLogs"
+            WHERE "wrCommentaryId" = $1
+            AND "wrActionType" = $2
+        `;
+
+        return await fastify.db.query(query, {
+            type: fastify.db.QueryTypes.SELECT,
+            bind: [data.commentaryId, data.actionType]
+        });
+    } catch (error) {
+        errorLogger(
+            fastify,
+            error.message,
+            "DB ERROR --> repository/TableEventmarket.js/getMarketLogsByCIdQuery",
+            request
+          );
+        throw new Error(error.message);
+    }
+}
 module.exports = {
     getAllEventMarketsQuery,
     createManyEventMarketQuery,
@@ -1126,5 +1179,7 @@ module.exports = {
     changeMarketCancelQuery,
     changeMarketResultQuery,
     changeMarketCloseQuery,
-    suspendEventMarketQuery
+    suspendEventMarketQuery,
+    closeEventMarketByTeamIdQuery,
+    getMarketLogsByCIdQuery
 };

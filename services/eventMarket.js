@@ -1,4 +1,4 @@
-const { updateEventMarketQuery, getAllEventMarketsQuery, createManyEventMarketQuery, deleteEventMarketQuery, changeIsActiveEventMarketQuery, changeIsAllowEventMarketQuery, changeIsResultEventMarketQuery, createEventMarketQuery, getMarketListByCIdQuery, updateEventMarketRateQuery, createEventMarketInDBQuery,changeMarketCancelQuery, changeMarketResultQuery, changeMarketCloseQuery, suspendEventMarketQuery } = require("../repository/TableEventMarkets");
+const { updateEventMarketQuery, getAllEventMarketsQuery, createManyEventMarketQuery, deleteEventMarketQuery, changeIsActiveEventMarketQuery, changeIsAllowEventMarketQuery, changeIsResultEventMarketQuery, createEventMarketQuery, getMarketListByCIdQuery, updateEventMarketRateQuery, createEventMarketInDBQuery,changeMarketCancelQuery, changeMarketResultQuery, changeMarketCloseQuery, suspendEventMarketQuery, closeEventMarketByTeamIdQuery, getMarketLogsByCIdQuery } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
 const {EventMarketStatus, MarketActionType} = require("../utilities/index");
 const { marketLogger } = require("../utilities/logger");
@@ -350,9 +350,40 @@ const suspendMarketByCIdService = async (request ,fastify) => {
 
 }
 
-const closeEventMarketByTeamService = async (data,request ,fastify) => {
-    // get the eventmarket by commentaryId and teamId and inningsId
-    return;
+const handleMarketCloseService = async (data,request ,fastify) => {
+    // check the eventMarket close log for this commentaryId
+    const checkLog = await getMarketLogsByCIdQuery({
+        commentaryId: data.commentaryId,
+        actionType: MarketActionType.closeMarketOnTossWin
+    }, request, fastify);
+    if(checkLog[0].count > 0){
+        return "Market already closed";
+    }
+    // close the market for bowling team for this commentary
+    let bowlingTeam = global.tblCommentaryTeams.find((item) => item.commentaryId == data.commentaryId 
+                && item.currentInnings === data.inningsId 
+                && item.teamStatus == 2);
+
+    const updateData = await closeEventMarketByTeamIdQuery({
+        commentaryId: data.commentaryId,
+        teamId: bowlingTeam.teamId,
+        inningsId: data.inningsId
+    }, request, fastify);
+
+    for(let item of updateData){
+        let eventMarket = global.tblEventMarkets.findIndex((e) => e.eventMarketId === item.eventMarketId);
+        if(eventMarket){
+            global.tblEventMarkets[eventMarket].status = EventMarketStatus.Close;
+        }
+    }
+
+    marketLogger({
+        commentaryId: data.commentaryId,
+        actionType: MarketActionType.closeMarketOnTossWin,
+        value: `eventMarketStatus : ${EventMarketStatus.Close}`
+    }, request, fastify);
+
+    return "Market closed successfully";
 }
 module.exports = {
     getDetailsByCIdService,
@@ -371,5 +402,6 @@ module.exports = {
     changeMarketResultService,
     changeMarketCloseService,
     suspendMarketByCIdService,
-    closeEventMarketByTeamService
+    handleMarketCloseService
+    
 };

@@ -220,7 +220,8 @@ const MarketActionType = {
   isresultSet : 1,
   setResult : 2,
   marketCancel : 3,
-  closeMarket : 4
+  closeMarket : 4,
+  closeMarketOnTossWin : 5,
 }
 const callPredictorMarket = async (data , endpoint ,fastify ,request) =>{
   let requestStartTime = new Date();

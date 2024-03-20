@@ -68,15 +68,16 @@ const marketLogger = async (data , request , fastify) => {
   } = data;
   try {
     return await fastify.db.query(
-      `INSERT INTO "tblMarketLogs" ("wrEventMarketId", "wrActionType", "wrValue", "wrUserId", "wrCreatedDate") VALUES ($1, $2, $3, $4, $5)`,
+      `INSERT INTO "tblMarketLogs" ("wrEventMarketId", "wrActionType", "wrValue", "wrUserId", "wrCreatedDate" , "wrCommentaryId") VALUES ($1, $2, $3, $4, $5 ,$6)`,
       {
         type: fastify.db.QueryTypes.INSERT,
         bind: [
-          eventMarketId,
+          eventMarketId || null,
           actionType,
           value,
           request.userTokenInfo.WrUserId,
           new Date(),
+          data.commentaryId || null,
         ],
       }
     );
