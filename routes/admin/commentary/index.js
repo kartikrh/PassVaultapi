@@ -447,7 +447,15 @@ module.exports = async (fastify, opts) => {
     handler: (request, reply) => getEventDetailsByCId(request, reply, fastify),
   });
   fastify.post("/saveCommentaryDetails", {
-    // schema: Commentary.saveCommentaryDetails.schema,
+    schema: Commentary.saveCommentaryDetails.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "edit",
+        }),
+    ],
     handler: (request, reply) => saveCommentaryDetailsAPI(request, reply, fastify),
   })
 };

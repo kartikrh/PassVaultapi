@@ -2106,6 +2106,25 @@ const Commentary = {
       },
     },
   },
+  saveCommentaryDetails: {
+    schema: {
+      tags: ["Commentary"],
+      description: "save Commentary details",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryDetails : { type: "object" },
+          commentaryTeams : { type: "array", items: { type: "object" } },
+          commentaryOvers : { type: "array", items: { type: "object" } },
+          commentaryBallByBall : { type: "array", items: { type: "object" } },
+          commentaryWickets : { type: "array", items: { type: "object" } },
+          commentaryPartnership : { type: "array", items: { type: "object" } },
+        },
+        required: ["commentaryDetails"],
+      },
+    },
+  },
   changeBowler: {
     schema: {
       tags: ["Commentary"],
@@ -2920,6 +2939,23 @@ const EventMarket = {
           },
         },
         required: ["eventMarket"],
+      },
+    },
+  },
+  suspendMarketByCId:{
+    schema : {
+      tags: ["EventMarket"],
+      description: "suspend market",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { 
+            type : "array",
+            items : { type : "integer" }
+          },
+        },
+        required: ["commentaryId"],
       },
     },
   },

@@ -1,4 +1,4 @@
-const { updateEventMarketQuery, getAllEventMarketsQuery, createManyEventMarketQuery, deleteEventMarketQuery, changeIsActiveEventMarketQuery, changeIsAllowEventMarketQuery, changeIsResultEventMarketQuery, createEventMarketQuery, getMarketListByCIdQuery, updateEventMarketRateQuery, createEventMarketInDBQuery,changeMarketCancelQuery, changeMarketResultQuery, changeMarketCloseQuery } = require("../repository/TableEventMarkets");
+const { updateEventMarketQuery, getAllEventMarketsQuery, createManyEventMarketQuery, deleteEventMarketQuery, changeIsActiveEventMarketQuery, changeIsAllowEventMarketQuery, changeIsResultEventMarketQuery, createEventMarketQuery, getMarketListByCIdQuery, updateEventMarketRateQuery, createEventMarketInDBQuery,changeMarketCancelQuery, changeMarketResultQuery, changeMarketCloseQuery, suspendEventMarketQuery } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
 const {EventMarketStatus, MarketActionType} = require("../utilities/index");
 const { marketLogger } = require("../utilities/logger");
@@ -332,6 +332,28 @@ const changeMarketCloseService = async (request ,fastify) => {
         return "Market is already settled, canceled, or closed, so it cannot be updated to close.";
     }
 }
+const suspendMarketByCIdService = async (request ,fastify) => {
+    let { commentaryId} = request.body;
+    // i have array of commentaryId i want to get the eventMarketId
+    // array of commentaryId not one value
+    let eventMarkets = global.tblEventMarkets.filter(item => commentaryId.includes(item.commentaryId));
+    if(eventMarkets.length == 0){
+        throw new Error("No market found for this commentary");
+    }
+
+    const updateMarket = await suspendEventMarketQuery(request.body, request, fastify);
+    for(let item of updateMarket){
+        let eventMarket = global.tblEventMarkets.findIndex((e) => e.eventMarketId === item.eventMarketId);
+        global.tblEventMarkets[eventMarket].status = EventMarketStatus.Suspend;
+    }
+    return "Market suspended successfully";
+
+}
+
+const closeEventMarketByTeamService = async (data,request ,fastify) => {
+    // get the eventmarket by commentaryId and teamId and inningsId
+    return;
+}
 module.exports = {
     getDetailsByCIdService,
     getAllEventMarketsService,
@@ -347,5 +369,7 @@ module.exports = {
     saveEventMarketService,
     changeMarketCancelService,
     changeMarketResultService,
-    changeMarketCloseService
+    changeMarketCloseService,
+    suspendMarketByCIdService,
+    closeEventMarketByTeamService
 };
