@@ -1,5 +1,5 @@
 
-const { getDetailsByCIdService, getAllEventMarketsService, createEventMarketsService, deleteEventMarketsService, activeInactiveMarketsService, updateAllowMarketsService, getEventListByCompetitionIdsService, marketListResultFalseService, changeResultOfMarketService, changeMarketCancelService, changeMarketResultService, marketListByCIdService, saveEventMarketService, updateMarketRateService, changeMarketCloseService } = require("../../../../services/eventMarket");
+const { getDetailsByCIdService, getAllEventMarketsService, createEventMarketsService, deleteEventMarketsService, activeInactiveMarketsService, updateAllowMarketsService, getEventListByCompetitionIdsService, marketListResultFalseService, changeResultOfMarketService, changeMarketCancelService, changeMarketResultService, marketListByCIdService, saveEventMarketService, updateMarketRateService, changeMarketCloseService, suspendMarketByCIdService } = require("../../../../services/eventMarket");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
 
@@ -144,6 +144,16 @@ const changeMarketClose = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const suspendMarketByCId = async (request, reply, fastify) => {
+  try {
+    const result = await suspendMarketByCIdService(request ,fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/suspendMarketByCId", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
 
 module.exports = {
     getDetailsByCId,
@@ -160,5 +170,6 @@ module.exports = {
     saveEventMarket,
     changeMarketCancel,
     changeMarketResult,
-    changeMarketClose
+    changeMarketClose,
+    suspendMarketByCId
 };
