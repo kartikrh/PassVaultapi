@@ -2121,7 +2121,7 @@ const Commentary = {
           commentaryWickets : { type: "array", items: { type: "object" } },
           commentaryPartnership : { type: "array", items: { type: "object" } },
         },
-        required: ["commentaryDetails"],
+        required: [],
       },
     },
   },

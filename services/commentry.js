@@ -4682,19 +4682,16 @@ const saveCommentaryDetailsAPIService = async (request, fastify) => {
     commentaryPartnership,
   } = request.body;
 
-  let commentaryIndex;
-  commentaryIndex = global.tblCommentaries.findIndex(
-    (item) => item.commentaryId === commentaryDetails.commentaryId
-  );
-  if (commentaryIndex == -1) {
-    throw new Error("Commentary with this id not Found");
-  }
+  
 
   // call the sp to save the commentary details
   await saveCommentaryDetailsAPIQuery(request.body, fastify, request);
 
   if(commentaryDetails){
-    global.tblCommentaries[commentaryIndex] = commentaryDetails;
+    const commentaryIndex = global.tblCommentaries.findIndex(
+      (item) => item.commentaryId === commentaryDetails.commentaryId
+    );
+    commentaryIndex !== -1 ? global.tblCommentaries[commentaryIndex] = commentaryDetails : null;
   }
   if(commentaryTeams){
     for(let team of commentaryTeams){
