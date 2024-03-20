@@ -2410,7 +2410,46 @@ const updateisPredictMarketInCommentaryQuery = async (
     throw new Error(err.message);
   }
 };
+const saveCommentaryDetailsAPIQuery = async (data, fastify, request) => {
+  try {
+    // call the sp to save the commentary details
+    const {
+      commentaryDetails,
+      commentaryTeams,
+      commentaryOvers,
+      commentaryBallByBall,
+      commentaryWickets,
+      commentaryPartnership,
+    } = data;
 
+    const result = await fastify.db.query(
+      `
+        CALL proc_update_commentarydetails($1, $2 ,$3 ,$4,$5,$6)
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [
+          commentaryTeams ? JSON.stringify(commentaryTeams) : null,
+          commentaryOvers ? JSON.stringify(commentaryOvers) : null,
+          commentaryBallByBall ? JSON.stringify(commentaryBallByBall) : null,
+          commentaryWickets ? JSON.stringify(commentaryWickets) : null,
+          commentaryPartnership ? JSON.stringify(commentaryPartnership) : null,
+          commentaryDetails ? JSON.stringify(commentaryDetails) : null,
+        ],
+      }
+    );
+
+    return result;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/saveCommentaryDetailsAPIQuery",
+      request
+    );
+    throw new Error(err.message)
+  }
+}
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -2456,4 +2495,5 @@ module.exports = {
   deleteCommentaryPlayerById,
   updateCommentaryStatusQuery,
   updateisPredictMarketInCommentaryQuery,
+  saveCommentaryDetailsAPIQuery
 };

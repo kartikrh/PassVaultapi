@@ -38,6 +38,11 @@ const {
   getAllCommentaryQuery,
   updateCommentaryStatusQuery,
   updateisPredictMarketInCommentaryQuery,
+  getAllCommentaryBallByBallQuery,
+  getAllOversQuery,
+  getAllCommentaryWicketQuery,
+  getAllCommentaryPartnershipQuery,
+  saveCommentaryDetailsAPIQuery,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -4657,13 +4662,25 @@ const getEventDetailsByCIdService = async (request, fastify) => {
 };
 const saveCommentaryDetailsAPIService = async (request, fastify) => {
   // validate commentary id
+  const {commentaryDetails} = request.body;
   const commentary = global.tblCommentaries.findIndex(
-    (item) => item.commentaryId === request.body.commentaryId
+    (item) => item.commentaryId === commentaryDetails.commentaryId
   );
   if (commentary == -1) {
     throw new Error("Commentary with this id not Found");
   }
-  return;
+
+  // call the sp to save the commentary details
+  await saveCommentaryDetailsAPIQuery(request.body, fastify, request);
+
+  global.tblCommentaries = await getAllCommentaryQuery(fastify);
+  global.tblCommentaryTeams = await getAllCommentaryTeamsQuery(fastify);
+  global.tblCommentaryBallByBall = await getAllCommentaryBallByBallQuery(fastify)
+  global.tblOvers = await getAllOversQuery(fastify);
+  global.tblCommentaryWicket = await getAllCommentaryWicketQuery(fastify);
+  global.tblCommentaryPartnership = await getAllCommentaryPartnershipQuery(fastify);
+
+  return "Commentary Updated successfully";
   
 }
 module.exports = {
