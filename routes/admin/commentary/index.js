@@ -251,7 +251,7 @@ module.exports = async (fastify, opts) => {
       (request, reply, done) =>
         checkPermission(request, reply, fastify, {
           tabName: "Commentary",
-          mode: "delete",
+          mode: "edit",
         }),
     ],
     handler: (request, reply) => saveCommentaryDetails(request, reply, fastify),
