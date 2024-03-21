@@ -34,14 +34,20 @@ const getDetailsByCIdService = async (request, fastify) => {
     }
 
     // get marketTemplate where matchType is commentary.matchTypeId
-    const marketTemplate = await getAllEventMarketsQuery(fastify);
-    const eventMarket = marketTemplate.filter(
+    const marketTemplate = global.tblMarketTemplate.filter((item) => item.matchTypeID === commentary.matchTypeId);
+    // let eventMarket = global.tblEventMarkets.filter(
+    //     (item) => item.commentaryId === commentaryId
+    //     && item.status !== EventMarketStatus.Cancel 
+    //     && item.status !== EventMarketStatus.Close 
+    //     && item.status !== EventMarketStatus.Settled
+    // );
+    let eventMarket = await getAllEventMarketsQuery(fastify);
+    eventMarket = eventMarket.filter(
         (item) => item.commentaryId === commentaryId
         && item.status !== EventMarketStatus.Cancel 
         && item.status !== EventMarketStatus.Close 
         && item.status !== EventMarketStatus.Settled
     );
-    
     return {
         commentary,
         matchType,
