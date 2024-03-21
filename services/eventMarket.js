@@ -110,20 +110,29 @@ const createEventMarketsService = async (request ,fastify) => {
         }
     }
 
+    let createdData = [];
+    let updatedData = [];
     // create the eventMarket
     if(arrayForCreate.length > 0){
         for (let item of arrayForCreate) {
-            await createEventMarketQuery(item,request,fastify);
+            let createEvent = await createEventMarketQuery(item,request,fastify);
+            createdData.push(createEvent);
         }
     }
     // update the eventMarket
     if(arrayForUpdate.length > 0){
         for (let item of arrayForUpdate) {
-            await updateEventMarketQuery(item,request,fastify);
+            let updateEvent =  await updateEventMarketQuery(item,request,fastify);
+            updatedData.push(updateEvent);
         }
     }
 
-    global.tblEventMarkets = await getAllEventMarketsQuery(fastify);
+   global.tblEventMarkets.push(...createdData);
+   // update the eventMarket
+    for(let item of updatedData){
+        let eventMarket = global.tblEventMarkets.findIndex((e) => e.eventMarketId === item.eventMarketId);
+        global.tblEventMarkets[eventMarket] = item;
+    }
 
     return "Event Market saved successfully";
 }
@@ -247,12 +256,17 @@ const updateMarketRateService = async (request ,fastify) => {
     // i got array of eventMarket i want to update this data
     const {eventMarket} = request.body;
 
+    let updatedData = [];
     for (let item of eventMarket) {
         // update the eventMarket
-        await updateEventMarketRateQuery(item,request,fastify);
+        let data = await updateEventMarketRateQuery(item,request,fastify);
+        updatedData.push(data);
     }
 
-    global.tblEventMarkets = await getAllEventMarketsQuery(fastify);
+    for(let item of updatedData){
+        let eventMarket = global.tblEventMarkets.findIndex((e) => e.eventMarketId === item.eventMarketId);
+        global.tblEventMarkets[eventMarket] = item;
+    }
 
     return "Event Market updated successfully";
 }
@@ -281,7 +295,7 @@ const createEventMarketService = async (request ,fastify) => {
 const updateEventMarketService = async (request ,fastify) => {
     const {eventMarketId , commentaryId} = request.body;
     // validate the eventMarketId
-    let eventMarketIndex = global.tblEventMarkets.find((item) => item.eventMarketId === eventMarketId);
+    let eventMarketIndex = global.tblEventMarkets.findIndex((item) => item.eventMarketId === eventMarketId);
     if (eventMarketIndex == -1) {
         throw new Error("EventMarket with this id not Found");
     }
