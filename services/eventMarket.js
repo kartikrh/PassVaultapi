@@ -1,6 +1,6 @@
-const { updateEventMarketQuery, getAllEventMarketsQuery, createManyEventMarketQuery, deleteEventMarketQuery, changeIsActiveEventMarketQuery, changeIsAllowEventMarketQuery, changeIsResultEventMarketQuery, createEventMarketQuery, getMarketListByCIdQuery, updateEventMarketRateQuery, createEventMarketInDBQuery,changeMarketCancelQuery, changeMarketResultQuery, changeMarketCloseQuery, suspendEventMarketQuery, closeEventMarketByTeamIdQuery, getMarketLogsByCIdQuery } = require("../repository/TableEventMarkets");
+const { updateEventMarketQuery, getAllEventMarketsQuery, createManyEventMarketQuery, deleteEventMarketQuery, changeIsActiveEventMarketQuery, changeIsAllowEventMarketQuery, changeIsResultEventMarketQuery, createEventMarketQuery, getMarketListByCIdQuery, updateEventMarketRateQuery, createEventMarketInDBQuery,changeMarketCancelQuery, changeMarketResultQuery, changeMarketCloseQuery, suspendEventMarketQuery, closeEventMarketByTeamIdQuery, getMarketLogsByCIdQuery, cancelEventMarketByTeamIdQuery } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
-const {EventMarketStatus, MarketActionType} = require("../utilities/index");
+const {EventMarketStatus, MarketActionType, ActionTypeForMarketCancel} = require("../utilities/index");
 const { marketLogger } = require("../utilities/logger");
 const getDetailsByCIdService = async (request, fastify) => {
     const {commentaryId} = request.body;
@@ -257,15 +257,46 @@ const updateMarketRateService = async (request ,fastify) => {
     return "Event Market updated successfully";
 }
 const saveEventMarketService = async (request ,fastify) => {
-    // save eventMarket in DB
+    if(request.body.eventMarketId == 0){
+        return await createEventMarketService(request,fastify);
+    }else{
+        return await updateEventMarketService(request,fastify);
+    }
+}
+const createEventMarketService = async (request ,fastify) => {
+    const { commentaryId} = request.body;
+    // validate the commentaryId
+    let commentary = global.tblCommentaries.find((item) => item.commentaryId === commentaryId);
+    if (!commentary) {
+        throw new Error("Commentary with this id not Found");
+    }
+    // create the eventMarket
     const eventMarket = await createEventMarketInDBQuery(request.body,request,fastify);
 
-    global.tblEventMarkets = await getAllEventMarketsQuery(fastify);
+    global.tblEventMarkets.push(eventMarket);
 
-    return {
-        ...request.body,
-        eventMarketId: eventMarket[0].eventMarketId,
-    };
+    return eventMarket;
+
+}
+const updateEventMarketService = async (request ,fastify) => {
+    const {eventMarketId , commentaryId} = request.body;
+    // validate the eventMarketId
+    let eventMarketIndex = global.tblEventMarkets.find((item) => item.eventMarketId === eventMarketId);
+    if (eventMarketIndex == -1) {
+        throw new Error("EventMarket with this id not Found");
+    }
+    // validate the commentaryId
+    let commentary = global.tblCommentaries.find((item) => item.commentaryId === commentaryId);
+    if (!commentary) {
+        throw new Error("Commentary with this id not Found");
+    }
+    // update the eventMarket
+    const updateData = await updateEventMarketQuery(request.body,request,fastify);
+
+    global.tblEventMarkets[eventMarketIndex] = updateData;
+
+    return updateData;
+
 }
 const changeMarketCancelService = async (request ,fastify) => {
     const {eventMarketId, commentaryId, password} = request.body;
@@ -374,6 +405,21 @@ const handleMarketCloseService = async (data,request ,fastify) => {
         let eventMarket = global.tblEventMarkets.findIndex((e) => e.eventMarketId === item.eventMarketId);
         if(eventMarket){
             global.tblEventMarkets[eventMarket].status = EventMarketStatus.Close;
+        }
+    }
+
+    // cancel the market as per actionType
+    const cancelMarket = await cancelEventMarketByTeamIdQuery({
+        commentaryId: data.commentaryId,
+        teamId: bowlingTeam.teamId,
+        inningsId: data.inningsId,
+        actionType : ActionTypeForMarketCancel.winCloseCancel
+    }, request, fastify);
+
+    for(let item of cancelMarket){
+        let eventMarket = global.tblEventMarkets.findIndex((e) => e.eventMarketId === item.eventMarketId);
+        if(eventMarket){
+            global.tblEventMarkets[eventMarket].status = EventMarketStatus.Cancel;
         }
     }
 

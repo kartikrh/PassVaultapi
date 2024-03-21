@@ -161,6 +161,11 @@ module.exports = (sequelize) => {
         allowNull: false,
         defaultValue: false,
       },
+      wrActionType :{
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        defaultValue: 0,
+      },
     },
     {
       timestamps: false,

@@ -30,7 +30,8 @@ const getAllMarketTemplateQuery = async (fastify) => {
       "wrAfterWicketAutoSuspend" as "afterWicketAutoSuspend",
       "wrAfterWicketNotCreated" as "afterWicketNotCreated",
       tmt."wrCreatedBy" as "createdBy",
-      "wrIsActive" as "isActive"
+      "wrIsActive" as "isActive",
+      tmt."wrActionType" as "actionType"
   FROM "tblMarketTemplates" tmt
   LEFT JOIN "tblMatchTypes" tm ON tmt."wrMatchTypeID" = "tm"."wrMatchTypeId"
   `,
@@ -44,8 +45,11 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
     try {
         const result = await fastify.db.query(
             `with insert_data as(
-              insert into "tblMarketTemplates" ("wrTemplateName","wrMatchTypeID","wrIsPredefineMarket","wrIsPreMatchOnly","wrIsPreMatchMarket","wrIsOver","wrOver","wrIsPlayer","wrPlayerName","wrIsAutoCancel","wrCreateType","wrCreate","wrAutoOpenType","wrAutoOpen","wrAutoCloseType","wrBeforeAutoClose","wrAutoSuspendType","wrBeforeAutoSuspend","wrIsBallStart","wrIsAutoResultSet","wrAutoResultType","wrAutoResultafterBall","wrAfterWicketAutoSuspend","wrAfterWicketNotCreated","wrCreatedBy","wrIsActive") values (
-                $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26) returning *
+              insert into "tblMarketTemplates" ("wrTemplateName","wrMatchTypeID","wrIsPredefineMarket","wrIsPreMatchOnly","wrIsPreMatchMarket","wrIsOver","wrOver","wrIsPlayer",
+              "wrPlayerName","wrIsAutoCancel","wrCreateType","wrCreate","wrAutoOpenType","wrAutoOpen","wrAutoCloseType","wrBeforeAutoClose",
+              "wrAutoSuspendType","wrBeforeAutoSuspend","wrIsBallStart","wrIsAutoResultSet","wrAutoResultType","wrAutoResultafterBall",
+              "wrAfterWicketAutoSuspend","wrAfterWicketNotCreated","wrCreatedBy","wrIsActive" , "wrActionType") values (
+                $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26, $27) returning *
           )        
         select 
         "wrID" AS "marketTemplateId",
@@ -74,7 +78,8 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
         "wrAfterWicketAutoSuspend" as "afterWicketAutoSuspend",
         "wrAfterWicketNotCreated" as "afterWicketNotCreated",
         "wrCreatedBy" as "createdBy",
-        "wrIsActive" as "isActive"
+        "wrIsActive" as "isActive",
+        "wrActionType" as "actionType"
          from insert_data`,
             {
                 type: fastify.db.QueryTypes.SELECT,
@@ -148,8 +153,9 @@ const updateMarketTemplateQuery = async (data, fastify, request) => {
                 "wrAutoResultafterBall" = $22,
                 "wrAfterWicketAutoSuspend" = $23,
                 "wrAfterWicketNotCreated" = $24,
-                "wrIsActive" = $25
-            WHERE "wrID" = $26
+                "wrIsActive" = $25,
+                "wrActionType" = $26
+            WHERE "wrID" = $27
             `,
             {
                 bind: [
@@ -178,7 +184,8 @@ const updateMarketTemplateQuery = async (data, fastify, request) => {
                     data.afterWicketAutoSuspend ,
                     data.afterWicketNotCreated ,
                     data.isActive,
-                    data.marketTemplateId
+                    data.marketTemplateId,
+                    data.actionType
                 ],
                 type: fastify.db.QueryTypes.SELECT,
             })

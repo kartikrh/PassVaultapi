@@ -186,7 +186,7 @@ module.exports = async (fastify, opts) => {
             (request, reply) => authorize(request, reply, fastify),
             (request, reply) => checkPermission(request, reply, fastify, {
                 tabName: "Event Markets",
-                mode: "add"
+                mode: request.body.eventMarketId == 0 ? "add" : "edit"
             })
         ],
         handler: (request, reply) => saveEventMarket(request, reply, fastify)
