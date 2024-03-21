@@ -4712,7 +4712,7 @@ const saveCommentaryDetailsAPIService = async (request, fastify) => {
   if(commentaryBallByBall){
     for(let ball of commentaryBallByBall){
       let ballIndex = global.tblCommentaryBallByBall.findIndex(
-        (item) => item.ballId === ball.ballId
+        (item) => item.commentaryBallByBallId === ball.commentaryBallByBallId
       );
       ballIndex !== -1 ? global.tblCommentaryBallByBall[ballIndex] = ball : null;
     }
@@ -4720,7 +4720,7 @@ const saveCommentaryDetailsAPIService = async (request, fastify) => {
   if(commentaryWickets){
     for(let wicket of commentaryWickets){
       let wicketIndex = global.tblCommentaryWicket.findIndex(
-        (item) => item.wicketId === wicket.wicketId
+        (item) => item.commentaryWicketId === wicket.commentaryWicketId
       );
       wicketIndex !== -1 ? global.tblCommentaryWicket[wicketIndex] = wicket : null;
     }
@@ -4728,7 +4728,7 @@ const saveCommentaryDetailsAPIService = async (request, fastify) => {
   if(commentaryPartnership){
     for(let partnership of commentaryPartnership){
       let partnershipIndex = global.tblCommentaryPartnership.findIndex(
-        (item) => item.partnershipId === partnership.partnershipId
+        (item) => item.commentaryPartnershipId === partnership.commentaryPartnershipId
       );
       partnershipIndex !== -1 ? global.tblCommentaryPartnership[partnershipIndex] = partnership : null;
     }
