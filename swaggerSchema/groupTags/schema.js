@@ -2914,6 +2914,18 @@ const EventMarket = {
       },
     },
   },
+  byId :{
+    tags : ["EventMarket"],
+    description : "get market by id",
+    security : [{bearerAuth : []}],
+    body : {
+      type : "object",
+      properties : {
+        eventMarketId : { type : "integer" }
+      },
+      required : ["eventMarketId"]
+    }
+  },
   updateMarketRate: {
     schema: {
       tags: ["EventMarket"],
@@ -2999,6 +3011,7 @@ const EventMarket = {
           isAllow: { type: "boolean" },
           data: { type: "string" },
           isSendData: { type: "boolean" },
+          actionType: { type: "integer" },
         },
         required: ["eventMarketId"],
       },
