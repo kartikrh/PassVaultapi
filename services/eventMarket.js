@@ -77,7 +77,12 @@ const getAllEventMarketsService = async (request ,fastify) => {
     return eventMarket;
 
 }
+const getEventMarketByIdService = async (request ,fastify) => {
+    const {eventMarketId} = request.body;
+    let eventMarket = global.tblEventMarkets.find((item) => item.eventMarketId === eventMarketId);
+    return eventMarket;
 
+}
 const createEventMarketsService = async (request ,fastify) => { 
     const {
         eventMarket
@@ -462,6 +467,7 @@ module.exports = {
     changeMarketResultService,
     changeMarketCloseService,
     suspendMarketByCIdService,
-    handleMarketCloseService
+    handleMarketCloseService,
+    getEventMarketByIdService
     
 };
