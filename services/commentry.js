@@ -1225,7 +1225,7 @@ const testStoreProcedureService = async (request, fastify) => {
     }
     //validate wicket
     if (commentaryWicket) {
-      if (commentaryWicket.wicketId == 0) {
+      if (commentaryWicket.commentaryWicketId == 0) {
         wicketIndex = global.tblCommentaries.findIndex(
           (item) => item.commentaryId === commentaryWicket.commentaryId
         );
@@ -1234,7 +1234,7 @@ const testStoreProcedureService = async (request, fastify) => {
         }
       } else {
         wicketIndex = global.tblCommentaryWicket.findIndex(
-          (item) => item.wicketId === commentaryWicket.wicketId
+          (item) => item.commentaryWicketId === commentaryWicket.commentaryWicketId
         );
         if (wicketIndex === -1) {
           throw new Error("Wicket with this id not Found");
@@ -1243,7 +1243,7 @@ const testStoreProcedureService = async (request, fastify) => {
     }
     //validate partnership
     if (commentaryPartnership) {
-      if (commentaryPartnership.partnershipId == 0) {
+      if (commentaryPartnership.commentaryPartnershipId == 0) {
         partnershipIndex = global.tblCommentaries.findIndex(
           (item) => item.commentaryId === commentaryPartnership.commentaryId
         );
@@ -1252,7 +1252,7 @@ const testStoreProcedureService = async (request, fastify) => {
         }
       } else {
         partnershipIndex = global.tblCommentaryPartnership.findIndex(
-          (item) => item.partnershipId === commentaryPartnership.partnershipId
+          (item) => item.commentaryPartnershipId === commentaryPartnership.commentaryPartnershipId
         );
         if (partnershipIndex === -1) {
           throw new Error("Partnership with this id not Found");
