@@ -110,6 +110,7 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
                     data.hasOwnProperty("afterWicketNotCreated") ? data.afterWicketNotCreated : null,
                     data.createdBy || null,
                     data.hasOwnProperty("isActive") ? data.isActive : null,
+                    data.hasOwnProperty("actionType") ? data.actionType : 0
                 ],
             }
         );
