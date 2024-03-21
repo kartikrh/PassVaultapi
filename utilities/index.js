@@ -120,7 +120,7 @@ const getTitle = (str) => {
 
 const getMessage = (payload, code, type) => {
   const sendErrorMessage = (defaultMessage) => {
-    const message = typeof payload?.error === "string" ? payload.error : payload?.error?.message;
+    let message = typeof payload?.error === "string" ? payload.error : payload?.error?.message;
     if (!message) message = defaultMessage;
     return message;
   }
@@ -270,7 +270,10 @@ const MarketUpdateType = {
   predictMarket : 2,
   marketViewer : 3,
 }
-
+const ActionTypeForMarketCancel ={
+  winClose : 1,
+  winCloseCancel : 2,
+}
 module.exports = {
   ERROR_CODES,
   error,
@@ -291,5 +294,6 @@ module.exports = {
   EventMarketStatus,
   callPredictorMarket,
   MarketActionType,
-  MarketUpdateType
+  MarketUpdateType,
+  ActionTypeForMarketCancel
 };

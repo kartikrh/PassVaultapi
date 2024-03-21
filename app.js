@@ -14,7 +14,7 @@ const { responseLogger, responseLogInDB } = require("./utilities/logger");
 const fastifyMultipart = require("@fastify/multipart");
 const fastifyStatic = require("@fastify/static");
 const { generateToken } = require("./utilities/tokenization");
-const { isJson, getMessage, getTitle } = require("./utilities");
+const { isJson, getMessage, getTitle, ERROR_CODES ,error } = require("./utilities");
 const Sentry = require("@sentry/node");
 const Tracing = require("@sentry/tracing");
 // require("./database/connnection");
@@ -293,10 +293,13 @@ module.exports = async function (fastify, opts) {
     options: Object.assign({}, opts),
   });
 
-  fastify.setErrorHandler(function (error, request, reply) {
-    console.error(error);
+  fastify.setErrorHandler(function (err, request, reply) {
+    console.error(err);
     if (process.env.ENABLE_SENTRY === "TRUE") {
-      Sentry.captureException(error);
+      Sentry.captureException(err);
+    }
+    if(err.statusCode = 400){
+      reply.status(400).send(error(err.message, ERROR_CODES.INVALID_INPUT, 400));
     }
     reply.status(500).send({ error: "Internal Server Error" });
   });
