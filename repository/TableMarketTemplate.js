@@ -185,8 +185,9 @@ const updateMarketTemplateQuery = async (data, fastify, request) => {
                     data.afterWicketAutoSuspend ,
                     data.afterWicketNotCreated ,
                     data.isActive,
-                    data.marketTemplateId,
-                    data.actionType
+                    data.actionType,
+                    data.marketTemplateId
+                   
                 ],
                 type: fastify.db.QueryTypes.SELECT,
             })

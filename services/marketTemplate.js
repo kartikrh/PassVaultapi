@@ -112,6 +112,7 @@ const updateMarketTemplateService = async (request, fastify) => {
     afterWicketAutoSuspend: request.body.hasOwnProperty("afterWicketAutoSuspend") ? request.body.afterWicketAutoSuspend : marketTemplate.afterWicketAutoSuspend,
     afterWicketNotCreated: request.body.hasOwnProperty("afterWicketNotCreated") ? request.body.afterWicketNotCreated : marketTemplate.afterWicketNotCreated,
     isActive: request.body.hasOwnProperty("isActive") ? request.body.isActive : marketTemplate.isActive,
+    actionType : request.body.actionType || marketTemplate.actionType,
   }
   // update marketTemplate
   await updateMarketTemplateQuery(body, fastify ,request);
