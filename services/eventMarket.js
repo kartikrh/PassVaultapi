@@ -34,8 +34,8 @@ const getDetailsByCIdService = async (request, fastify) => {
     }
 
     // get marketTemplate where matchType is commentary.matchTypeId
-    const marketTemplate = global.tblMarketTemplate.filter((item) => item.matchTypeID === commentary.matchTypeId);
-    const eventMarket = global.tblEventMarkets.filter(
+    const marketTemplate = await getAllEventMarketsQuery(fastify);
+    const eventMarket = marketTemplate.filter(
         (item) => item.commentaryId === commentaryId
         && item.status !== EventMarketStatus.Cancel 
         && item.status !== EventMarketStatus.Close 
