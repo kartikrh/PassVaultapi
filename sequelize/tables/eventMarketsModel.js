@@ -166,6 +166,10 @@ module.exports = (sequelize) => {
         allowNull: true,
         defaultValue: 0,
       },
+      wrMarketTemplateId :{
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
     },
     {
       timestamps: false,
