@@ -1,5 +1,5 @@
 const { authorize, checkPermission } = require("../../../controller/middleware");
-const { saveMarketTemplate, getAllMarketTemplate, getMarketTemplateId, deleteMarketTemplate, getMatchTypeList, activeInactiveMarketTemplate } = require("../../../controller/users/admin/marketTemplate");
+const { saveMarketTemplate, getAllMarketTemplate, getMarketTemplateId, deleteMarketTemplate, getMatchTypeList, activeInactiveMarketTemplate, getByMatchTypeId } = require("../../../controller/users/admin/marketTemplate");
 const { MarketTemplate, Commentary } = require("../../../swaggerSchema/groupTags/schema");
 
 module.exports = async function (fastify, opts) {
@@ -81,4 +81,15 @@ module.exports = async function (fastify, opts) {
     ],
     handler: (request, reply) => activeInactiveMarketTemplate(request, reply, fastify),
   });
+  fastify.post("/getByMatchTypeId",{
+    schema: MarketTemplate.getByMatchTypeId.schema,
+    preHandler: [
+        (request, reply) => authorize(request, reply, fastify),
+        (request, reply) => checkPermission(request, reply, fastify, {
+            tabName: "Market Templates",
+            mode: "view"
+        })
+    ],
+    handler: (request, reply) => getByMatchTypeId(request, reply, fastify)
+  })
 };

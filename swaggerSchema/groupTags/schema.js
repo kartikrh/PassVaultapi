@@ -2458,6 +2458,20 @@ const MarketTemplate = {
       },
     },
   },
+  getByMatchTypeId: {
+    schema: {
+      tags: ["EventMarket"],
+      description: "get all EventMarket",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          matchTypeId: { type: "integer" },
+        },
+        required: ["matchTypeId"],
+      },
+    },
+  },
   getById: {
     schema: {
       tags: ["Market Template"],
