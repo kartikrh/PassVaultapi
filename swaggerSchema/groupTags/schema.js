@@ -2971,6 +2971,32 @@ const EventMarket = {
       },
     },
   },
+  commentaryTypeList : {
+    schema : {
+      tags: ["EventMarket"],
+      description: "get all commentary type",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+  marketTemplateTypeList : {
+    schema : {
+      tags: ["EventMarket"],
+      description: "get market template by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+        },
+      },
+    },
+  },
   save: {
     schema: {
       tags: ["EventMarket"],

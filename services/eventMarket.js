@@ -405,7 +405,16 @@ const suspendMarketByCIdService = async (request ,fastify) => {
     return "Market suspended successfully";
 
 }
-
+const commentaryTypeService = async (request ,fastify) => {
+    const result = global.tblCommentaries.filter(
+        (item) => item.commentaryStatus === 1 || item.commentaryStatus === 2
+    );
+    return result || null;
+}
+const marketTemplateTypeService = async (request ,fastify) => {
+    const { commentaryId } = request.body;
+    return null
+}
 const handleMarketCloseService = async (data,request ,fastify) => {
     // check the eventMarket close log for this commentaryId
     const checkLog = await getMarketLogsByCIdQuery({
@@ -474,6 +483,7 @@ module.exports = {
     changeMarketCloseService,
     suspendMarketByCIdService,
     handleMarketCloseService,
-    getEventMarketByIdService
-    
+    getEventMarketByIdService,
+    commentaryTypeService,
+    marketTemplateTypeService
 };
