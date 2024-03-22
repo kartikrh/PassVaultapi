@@ -47,6 +47,8 @@ const getAllEventMarketsQuery = async (fastify) => {
         "wrData" as "data",
         tem."wrLastUpdate" as "lastUpdate",
         "wrIsSendData" as "isSendData",
+        tem."wrActionType" as "actionType",
+        tem."wrMarketTemplateId" as "marketTemplateId",
         tr."wrRunnerId" as "runnerId",
         tr."wrRunner" as "runner",
         tr."wrLine" as "line",
@@ -58,15 +60,13 @@ const getAllEventMarketsQuery = async (fastify) => {
         tr."wrNoPoint" as "noPoint",
         tr."wrLastUpdate" as "runnerLastUpdate",
         tr."wrSelectionId" as "selectionId",
-        tr."wrSelectionStatus" as "selectionStatus",
-        tem."wrActionType" as "actionType"
+        tr."wrSelectionStatus" as "selectionStatus"
     FROM "tblEventMarkets" tem
     LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
     LEFT JOIN "tblCompetitions" tcom ON tcom."wrCompetitionId" = tc."wrCompetitionId"
     LEFT JOIN "tblEventTypes" tet ON tet."wrEventTypeId" = tc."wrEventTypeId"
-   LEFT JOIN "tblMarketRunners" tr ON tr."wrEventMarketId" = tem."wrID"
-   LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = tem."wrTeamID"
-   `
+    LEFT JOIN "tblMarketRunners" tr ON tr."wrEventMarketId" = tem."wrID"
+    LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = tem."wrTeamID"`
    ,
         {
             type: fastify.db.QueryTypes.SELECT,
@@ -111,7 +111,9 @@ const createManyEventMarketQuery = async (data, request, fastify) => {
                 now()::timestamp,
                 '${item.data}',
                 now()::timestamp,
-                ${item.actionType}
+                ${item.actionType},
+                ${item.isSendData},
+                ${item.marketTemplateId}
             )`;
       })
       .join(",");
@@ -149,7 +151,9 @@ const createManyEventMarketQuery = async (data, request, fastify) => {
             "wrOpenTime",
             "wrData",
             "wrLastUpdate",
-            "wrActionType"
+            "wrActionType",
+            "wrIsSendData",
+            "wrMarketTemplateId"
         ) VALUES ${values} 
         RETURNING "wrID" as "eventMarketId"`;
         return await fastify.db.query(query, {
@@ -334,7 +338,9 @@ const updateEventMarketQuery = async (data,request,fastify ) => {
             "wrData" as "data",
             "wrLastUpdate" as "lastUpdate",
             "wrIsSendData" as "isSendData",
-            "wrActionType" as "actionType"
+            "wrActionType" as "actionType",
+            "wrMarketTemplateId" as "marketTemplateId"
+        
         `;
         const eventMarketData = await fastify.db.query(query3, {
             bind: [
@@ -403,10 +409,11 @@ const createEventMarketQuery = async (data,request,fastify) => {
             "wrData",
             "wrLastUpdate",
             "wrIsSendData",
-            "wrActionType"
+            "wrActionType",
+            "wrMarketTemplateId"
         ) VALUES (
             $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,
-            $16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,now()::timestamp,$30,now()::timestamp,$31, $32
+            $16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,now()::timestamp,$30,now()::timestamp,$31, $32 , $33
         ) RETURNING "wrID" as "eventMarketId"
         `;
      
@@ -443,7 +450,8 @@ const createEventMarketQuery = async (data,request,fastify) => {
                 data.isAllow,
                 data.data,
                 data.isSendData || false,
-                data.actionType || 0
+                data.actionType || 0,
+                data.marketTemplateId 
             ],
             type: fastify.db.QueryTypes.SELECT
         });
@@ -540,7 +548,8 @@ const createEventMarketQuery = async (data,request,fastify) => {
             "wrData" as "data",
             "wrLastUpdate" as "lastUpdate",
             "wrIsSendData" as "isSendData",
-            "wrActionType" as "actionType"
+            "wrActionType" as "actionType",
+            "wrMarketTemplateId" as "marketTemplateId"
         `;
         const eventMarketData = await fastify.db.query(query3, {
             bind: [
@@ -708,6 +717,8 @@ const getMarketListByCIdQuery = async (data,request,fastify) => {
             "wrData" as "data",
             tem."wrLastUpdate" as "lastUpdate",
             "wrIsSendData" as "isSendData",
+            tem."wrActionType" as "actionType",
+            tem."wrMarketTemplateId" as "marketTemplateId",
             (
                 SELECT json_agg("MarketRunners_CTE".*)
                 FROM "MarketRunners_CTE"
@@ -719,7 +730,6 @@ const getMarketListByCIdQuery = async (data,request,fastify) => {
         LEFT JOIN "tblCompetitions" tcom ON tcom."wrCompetitionId" = tc."wrCompetitionId"
         LEFT JOIN "tblEventTypes" tet ON tet."wrEventTypeId" = tc."wrEventTypeId"
         LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = tem."wrTeamID" 
-
         WHERE tem."wrCommentaryId" = $1
         AND tem."wrStatus" NOT IN ($2 ,$3,$4)
         `;
@@ -919,7 +929,8 @@ const updateEventMarketRateQuery = async (data,request,fastify) => {
             "wrData" as "data",
             "wrLastUpdate" as "lastUpdate",
             "wrIsSendData" as "isSendData",
-            "wrActionType" as "actionType"
+            "wrActionType" as "actionType",
+            "wrMarketTemplateId" as "marketTemplateId"
         `;
         const eventmarketData = await fastify.db.query(query4, {
             bind: [
@@ -978,10 +989,11 @@ const createEventMarketInDBQuery = async (data,request,fastify) => {
           "wrData",
           "wrLastUpdate",
           "wrIsSendData",
-        "wrActionType"
+          "wrActionType",
+          "wrMarketTemplateId"
       ) VALUES (
           $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,
-          $16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,now()::timestamp,$30,now()::timestamp ,$31, $32
+          $16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,now()::timestamp,$30,now()::timestamp ,$31, $32,$33
       ) RETURNING 
         "wrID" as "eventMarketId"
       `;
@@ -1019,7 +1031,8 @@ const createEventMarketInDBQuery = async (data,request,fastify) => {
               data.isAllow,
               data.data,
               data.isSendData || false,
-              data.actionType || 0
+              data.actionType || 0,
+              data.marketTemplateId
           ],
           type: fastify.db.QueryTypes.SELECT
       });
@@ -1116,7 +1129,8 @@ const createEventMarketInDBQuery = async (data,request,fastify) => {
             "wrData" as "data",
             "wrIsSendData" as "isSendData",
             "wrLastUpdate" as "lastUpdate",
-            "wrActionType" as "actionType"
+            "wrActionType" as "actionType",
+            "wrMarketTemplateId" as "marketTemplateId"
       `;
       const eventMarketData = await fastify.db.query(query3, {
           bind: [
