@@ -181,11 +181,20 @@ const activeInactiveTemplateService = async (request, fastify) => {
 
   return `MarketTemplate updated successfully`;
 }
+const getByMatchTypeIdService = async (request, fastify) => {
+  const {matchTypeId} = request.body;
+  
+  let marketTemplate = global.tblMarketTemplate.filter(
+    (item) => item.matchTypeID === matchTypeId
+  );
+  return marketTemplate;
+}
 module.exports = {
   saveMarketTemplateService,
   getAllMarketTemplateService,
   getMarketTemplateIdService,
   deleteMarketTemplateService,
   getMatchTypeListService,
-  activeInactiveTemplateService
+  activeInactiveTemplateService,
+  getByMatchTypeIdService
 };
