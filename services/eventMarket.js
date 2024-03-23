@@ -406,7 +406,7 @@ const updateMarketRateService = async (request, fastify) => {
       match_type_id: commentary.matchTypeId,
       strike_team_id: teamOnStrike.teamId,
       current_score: teamOnStrike.teamScore,
-      current_over: teamOnStrike.teamOver,
+      current_over: parseFloat(teamOnStrike.teamOver),
       overs: updatedOvers,
     },
     "/api/updateline",
