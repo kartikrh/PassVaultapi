@@ -53,7 +53,7 @@ const {
   EventMarketStatus,
 } = require("../utilities");
 const { getAllPlayersByTeamIdQuery } = require("../repository/TableTeams");
-const {  handleMarketCloseService } = require("./eventMarket");
+const { handleMarketCloseService } = require("./eventMarket");
 
 const allCommentaryService = async (request, fastify) => {
   // return global.tblCommentaries;
@@ -149,7 +149,7 @@ const commentaryDetailsByIdService = async (request, fastify) => {
     throw new Error("Commentary with this id not Found");
   }
 
-  const [eventType, competition , matchType] = await Promise.all([
+  const [eventType, competition, matchType] = await Promise.all([
     global.tblEventTypes.find(
       (eventType) => eventType.eventTypeId === commentary.eventTypeId
     ),
@@ -161,15 +161,14 @@ const commentaryDetailsByIdService = async (request, fastify) => {
     ),
   ]);
   let dataToreturn = {
-    
-      eid: commentary.eventRefId || "",
-      ety: eventType?.eventType || "",
-      mtyp: commentary.matchType || "",
-      com: competition?.competition || "",
-      en: commentary.eventName || "",
-      ed: convertDate(commentary.eventDate, "DD/MM/YYYY") || "",
-      et: convertDate(commentary.eventDate, "hh:mm:ss") || "",
-      cci: commentary.currentInnings
+    eid: commentary.eventRefId || "",
+    ety: eventType?.eventType || "",
+    mtyp: commentary.matchType || "",
+    com: competition?.competition || "",
+    en: commentary.eventName || "",
+    ed: convertDate(commentary.eventDate, "DD/MM/YYYY") || "",
+    et: convertDate(commentary.eventDate, "hh:mm:ss") || "",
+    cci: commentary.currentInnings,
   };
 
   const commentaryTeams = await global.tblCommentaryTeams.filter(
@@ -205,8 +204,8 @@ const commentaryDetailsByIdService = async (request, fastify) => {
   );
 
   const allDetails = {
-    commentaryDetails: { ...commentary , ...dataToreturn },
-    matchTypeDetails : matchType,
+    commentaryDetails: { ...commentary, ...dataToreturn },
+    matchTypeDetails: matchType,
     commentaryTeams,
     commentaryPlayers,
     commentaryOvers,
@@ -216,12 +215,12 @@ const commentaryDetailsByIdService = async (request, fastify) => {
     commentaryDisplayStatus,
   };
 
-  if (commentary.isPredictMarket == true && commentary.commentaryStatus == 2) {
+  if (commentary.isPredictMarket == true) {
     callPredictorMarket(
       {
         commentary_id: commentary.commentaryId,
         match_type_id: commentary.matchTypeId,
-        event_id : commentary.eventRefId
+        event_id: commentary.eventRefId,
       },
       "/api/loadcommentary",
       fastify,
@@ -462,7 +461,7 @@ const createCommentaryService = async (request, fastify) => {
       {
         commentary_id: addCommentry.commentaryId,
         match_type_id: addCommentry.matchTypeId,
-        event_id : addCommentry.eventRefId
+        event_id: addCommentry.eventRefId,
       },
       "/api/loadcommentary",
       fastify,
@@ -859,7 +858,7 @@ const cloneCommentaryService = async (request, fastify) => {
       {
         commentary_id: newCommentary.commentaryId,
         match_type_id: newCommentary.matchTypeId,
-        event_id : newCommentary.eventRefId
+        event_id: newCommentary.eventRefId,
       },
       "/api/loadcommentary",
       fastify,
@@ -1234,7 +1233,8 @@ const testStoreProcedureService = async (request, fastify) => {
         }
       } else {
         wicketIndex = global.tblCommentaryWicket.findIndex(
-          (item) => item.commentaryWicketId === commentaryWicket.commentaryWicketId
+          (item) =>
+            item.commentaryWicketId === commentaryWicket.commentaryWicketId
         );
         if (wicketIndex === -1) {
           throw new Error("Wicket with this id not Found");
@@ -1252,7 +1252,9 @@ const testStoreProcedureService = async (request, fastify) => {
         }
       } else {
         partnershipIndex = global.tblCommentaryPartnership.findIndex(
-          (item) => item.commentaryPartnershipId === commentaryPartnership.commentaryPartnershipId
+          (item) =>
+            item.commentaryPartnershipId ===
+            commentaryPartnership.commentaryPartnershipId
         );
         if (partnershipIndex === -1) {
           throw new Error("Partnership with this id not Found");
@@ -1404,11 +1406,19 @@ const testStoreProcedureService = async (request, fastify) => {
     if (deleteOverId) {
       response.deleteOverId = true;
     }
-    if(commentaryDetails && previousCommentaryStatus == 1 && statusToUpdate == 2){
-      handleMarketCloseService({
-        commentaryId : commentaryDetails.commentaryId,
-        inningsId : commentaryDetails.currentInnings,
-      }, request,fastify);
+    if (
+      commentaryDetails &&
+      previousCommentaryStatus == 1 &&
+      statusToUpdate == 2
+    ) {
+      handleMarketCloseService(
+        {
+          commentaryId: commentaryDetails.commentaryId,
+          inningsId: commentaryDetails.currentInnings,
+        },
+        request,
+        fastify
+      );
     }
     // which i get from request i want to return only that object
     return response;
@@ -1629,7 +1639,8 @@ const saveShortCommentaryService = async (request, fastify) => {
     //   teamArr.push(rest1);
     //   teamPlayerArr.push(...teamPlayers);
     // }
-    const {commentaryDetails , commentaryTeams, commentaryPlayers} = request.body;
+    const { commentaryDetails, commentaryTeams, commentaryPlayers } =
+      request.body;
     // validate commentaryId
     let commentaryIndex = global.tblCommentaries.findIndex(
       (item) => item.commentaryId === commentaryDetails.commentaryId
@@ -4682,62 +4693,67 @@ const saveCommentaryDetailsAPIService = async (request, fastify) => {
     commentaryPartnership,
   } = request.body;
 
-  
-
   // call the sp to save the commentary details
   await saveCommentaryDetailsAPIQuery(request.body, fastify, request);
 
-  if(commentaryDetails){
+  if (commentaryDetails) {
     const commentaryIndex = global.tblCommentaries.findIndex(
       (item) => item.commentaryId === commentaryDetails.commentaryId
     );
-    commentaryIndex !== -1 ? global.tblCommentaries[commentaryIndex] = commentaryDetails : null;
+    commentaryIndex !== -1
+      ? (global.tblCommentaries[commentaryIndex] = commentaryDetails)
+      : null;
   }
-  if(commentaryTeams){
-    for(let team of commentaryTeams){
+  if (commentaryTeams) {
+    for (let team of commentaryTeams) {
       let teamIndex = global.tblCommentaryTeams.findIndex(
         (item) => item.commentaryTeamId === team.commentaryTeamId
       );
-      teamIndex !== -1 ? global.tblCommentaryTeams[teamIndex] = team : null;
+      teamIndex !== -1 ? (global.tblCommentaryTeams[teamIndex] = team) : null;
     }
   }
-  if(commentaryOvers){
-    for(let over of commentaryOvers){
+  if (commentaryOvers) {
+    for (let over of commentaryOvers) {
       let overIndex = global.tblOvers.findIndex(
         (item) => item.overId === over.overId
       );
-      overIndex !== -1 ? global.tblOvers[overIndex] = over : null;
+      overIndex !== -1 ? (global.tblOvers[overIndex] = over) : null;
     }
   }
-  if(commentaryBallByBall){
-    for(let ball of commentaryBallByBall){
+  if (commentaryBallByBall) {
+    for (let ball of commentaryBallByBall) {
       let ballIndex = global.tblCommentaryBallByBall.findIndex(
         (item) => item.commentaryBallByBallId === ball.commentaryBallByBallId
       );
-      ballIndex !== -1 ? global.tblCommentaryBallByBall[ballIndex] = ball : null;
+      ballIndex !== -1
+        ? (global.tblCommentaryBallByBall[ballIndex] = ball)
+        : null;
     }
   }
-  if(commentaryWickets){
-    for(let wicket of commentaryWickets){
+  if (commentaryWickets) {
+    for (let wicket of commentaryWickets) {
       let wicketIndex = global.tblCommentaryWicket.findIndex(
         (item) => item.commentaryWicketId === wicket.commentaryWicketId
       );
-      wicketIndex !== -1 ? global.tblCommentaryWicket[wicketIndex] = wicket : null;
+      wicketIndex !== -1
+        ? (global.tblCommentaryWicket[wicketIndex] = wicket)
+        : null;
     }
   }
-  if(commentaryPartnership){
-    for(let partnership of commentaryPartnership){
+  if (commentaryPartnership) {
+    for (let partnership of commentaryPartnership) {
       let partnershipIndex = global.tblCommentaryPartnership.findIndex(
-        (item) => item.commentaryPartnershipId === partnership.commentaryPartnershipId
+        (item) =>
+          item.commentaryPartnershipId === partnership.commentaryPartnershipId
       );
-      partnershipIndex !== -1 ? global.tblCommentaryPartnership[partnershipIndex] = partnership : null;
+      partnershipIndex !== -1
+        ? (global.tblCommentaryPartnership[partnershipIndex] = partnership)
+        : null;
     }
   }
-
 
   return "Commentary Updated successfully";
-  
-}
+};
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -4774,6 +4790,6 @@ module.exports = {
   updateCommentaryStatusService,
   updateisPredictMarketInCommentaryService,
   getEventDetailsByCIdService,
-  saveCommentaryDetailsAPIService
+  saveCommentaryDetailsAPIService,
   // getshortService
 };
