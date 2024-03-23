@@ -641,9 +641,35 @@ const suspendMarketByCIdService = async (request, fastify) => {
   return "Market suspended successfully";
 };
 const commentaryTypeService = async (request, fastify) => {
-  const result = global.tblCommentaries.filter(
+  let result = global.tblCommentaries.filter(
     (item) => item.commentaryStatus === 1 || item.commentaryStatus === 2
   );
+
+  // get commentary Teams for this commentary
+  for (let item of result) {
+    // unique teamid for this commentary
+    const teams = global.tblCommentaryTeams.filter(
+      (team) => team.commentaryId === item.commentaryId
+    )
+    .map((team) => {
+      return {
+        teamId: team.teamId,
+        teamName: team.teamName,
+        shortName: team.shortName
+      }
+    })
+    .filter((value, index, self) => self.findIndex((t) => t.teamId === value.teamId) === index);
+      
+    item.teams = teams;
+
+    const totalInnings = global.tblMatchTypes.find(
+      (match) => match.matchTypeId === item.matchTypeId
+    ).noOfIningsPerSide;
+
+    item.totalInnings = totalInnings;
+    
+  }
+
   return result || null;
 };
 const marketTemplateTypeService = async (request, fastify) => {
