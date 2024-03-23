@@ -737,6 +737,16 @@ const handleMarketCloseService = async (data, request, fastify) => {
       global.tblEventMarkets[eventMarket].status = EventMarketStatus.Cancel;
     }
   }
+  // callPredictorMarket(
+  //   {
+  //     commentary_id: commentary.commentaryId,
+  //     match_type_id: commentary.matchTypeId,
+  //     event_id : commentary.eventRefId
+  //   },
+  //   "/api/loadcommentary",
+  //   fastify,
+  //   request
+  // );
 
   marketLogger(
     {

@@ -1,4 +1,4 @@
-const { MarketUpdateType, EventMarketStatus } = require("../utilities");
+const { MarketUpdateType, EventMarketStatus, ActionTypeForMarketCancel } = require("../utilities");
 const { errorLogger, marketDataLogger } = require("../utilities/logger");
 
 const getAllEventMarketsQuery = async (fastify) => {
@@ -1355,6 +1355,7 @@ const closeEventMarketByTeamIdQuery = async (data, request, fastify) => {
             WHERE "wrTeamID" = $2
             AND "wrCommentaryId" = $3
             AND "wrInningsID" = $4
+            AND "wrActionType" IN ($5,$6)
             RETURNING "wrID" as "eventMarketId"
         `;
 
@@ -1364,7 +1365,9 @@ const closeEventMarketByTeamIdQuery = async (data, request, fastify) => {
                 EventMarketStatus.Close,
                 data.teamId,
                 data.commentaryId,
-                data.inningsId
+                data.inningsId,
+                ActionTypeForMarketCancel.winClose,
+                ActionTypeForMarketCancel.winCloseCancel
             ],
             type: fastify.db.QueryTypes.SELECT
         });
