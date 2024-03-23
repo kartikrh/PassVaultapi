@@ -658,12 +658,20 @@ const createEventMarketQuery = async (data,request,fastify) => {
 }
 const deleteEventMarketQuery = async (data,request,fastify) => {
     try {
-        return await fastify.db.query(
+        const result = await fastify.db.query(
             `DELETE FROM "tblEventMarkets" WHERE "wrID" = ANY($1)`,
             {
                 bind: [data],
                 type: fastify.db.QueryTypes.SELECT
             });
+       // delete market runners for this market
+        const query2 = `DELETE FROM "tblMarketRunners" 
+        WHERE "wrEventMarketId" = ANY($1)`;
+        await fastify.db.query(query2, {
+            bind: [data],
+            type: fastify.db.QueryTypes.SELECT
+        });
+        return result;
     } catch (error) {
         errorLogger(
             fastify,
@@ -1462,7 +1470,6 @@ const upsertEventMarketSPQuery = async (data, request, fastify) => {
         
         return result[0];
     } catch (error) {
-        console.log(error);
         errorLogger(
             fastify,
             error.message,
