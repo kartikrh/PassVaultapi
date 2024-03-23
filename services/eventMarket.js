@@ -129,6 +129,7 @@ const getAllEventMarketsService = async (request, fastify) => {
   if (isActive !== undefined) {
     eventMarket = eventMarket.filter((item) => item.isActive === isActive);
   }
+  eventMarket = eventMarket.sort((a, b) => b.eventMarketId - a.eventMarketId);
   return eventMarket;
 };
 const getEventMarketByIdService = async (request, fastify) => {
