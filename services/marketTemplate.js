@@ -113,6 +113,9 @@ const updateMarketTemplateService = async (request, fastify) => {
     afterWicketNotCreated: request.body.hasOwnProperty("afterWicketNotCreated") ? request.body.afterWicketNotCreated : marketTemplate.afterWicketNotCreated,
     isActive: request.body.hasOwnProperty("isActive") ? request.body.isActive : marketTemplate.isActive,
     actionType : request.body.actionType || marketTemplate.actionType,
+    marketTypeId : request.body.marketTypeId || marketTemplate.marketTypeId,
+    marketTypeCategoryId : request.body.marketTypeCategoryId || marketTemplate.marketTypeCategoryId,
+    margin : request.body.margin || marketTemplate.margin,
   }
   // update marketTemplate
   await updateMarketTemplateQuery(body, fastify ,request);
