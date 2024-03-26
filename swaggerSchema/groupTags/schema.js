@@ -2041,6 +2041,24 @@ const Commentary = {
       },
     },
   },
+  loadMultiCommentary: {
+    schema: {
+      tags: ["Commentary"],
+      description: "Load Commentary",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["commentaryId"],
+      },
+    },
+  },
   delete: {
     schema: {
       tags: ["Commentary"],
@@ -2114,12 +2132,12 @@ const Commentary = {
       body: {
         type: "object",
         properties: {
-          commentaryDetails : { type: "object" },
-          commentaryTeams : { type: "array", items: { type: "object" } },
-          commentaryOvers : { type: "array", items: { type: "object" } },
-          commentaryBallByBall : { type: "array", items: { type: "object" } },
-          commentaryWickets : { type: "array", items: { type: "object" } },
-          commentaryPartnership : { type: "array", items: { type: "object" } },
+          commentaryDetails: { type: "object" },
+          commentaryTeams: { type: "array", items: { type: "object" } },
+          commentaryOvers: { type: "array", items: { type: "object" } },
+          commentaryBallByBall: { type: "array", items: { type: "object" } },
+          commentaryWickets: { type: "array", items: { type: "object" } },
+          commentaryPartnership: { type: "array", items: { type: "object" } },
         },
         required: [],
       },
@@ -2458,8 +2476,8 @@ const MarketTemplate = {
       },
     },
   },
-  markeTypeList : {
-    schema : {
+  markeTypeList: {
+    schema: {
       tags: ["EventMarket"],
       description: "get all market type",
       security: [{ bearerAuth: [] }],
@@ -2471,8 +2489,8 @@ const MarketTemplate = {
       },
     },
   },
-  getCategoryByMarketType :{
-    schema : {
+  getCategoryByMarketType: {
+    schema: {
       tags: ["EventMarket"],
       description: "get all category by market type",
       security: [{ bearerAuth: [] }],
@@ -2533,8 +2551,8 @@ const MarketTemplate = {
           isPlayer: { type: "boolean" },
           playerName: { type: "string" },
           isAutoCancel: { type: "boolean" },
-          createType: {type: "integer"},
-          create: {type: "number"},
+          createType: { type: "integer" },
+          create: { type: "number" },
           autoOpenType: { type: "integer" },
           autoOpen: { type: "number" },
           autoCloseType: { type: "integer" },
@@ -2548,11 +2566,11 @@ const MarketTemplate = {
           afterWicketAutoSuspend: { type: "integer" },
           afterWicketNotCreated: { type: "integer" },
           isActive: { type: "boolean" },
-          marketTypeId : { type: "integer" },
-          marketTypeCategoryId : { type: "integer" },
-          margin : { type: "number" },
+          marketTypeId: { type: "integer" },
+          marketTypeCategoryId: { type: "integer" },
+          margin: { type: "number" },
         },
-        required: ["marketTemplateId", "matchTypeID", "playerName" , "marketTypeId" , "marketTypeCategoryId" , "margin"],
+        required: ["marketTemplateId", "matchTypeID", "playerName", "marketTypeId", "marketTypeCategoryId", "margin"],
       },
     },
   },
@@ -2959,16 +2977,16 @@ const EventMarket = {
       },
     },
   },
-  byId :{
-    tags : ["EventMarket"],
-    description : "get market by id",
-    security : [{bearerAuth : []}],
-    body : {
-      type : "object",
-      properties : {
-        eventMarketId : { type : "integer" }
+  byId: {
+    tags: ["EventMarket"],
+    description: "get market by id",
+    security: [{ bearerAuth: [] }],
+    body: {
+      type: "object",
+      properties: {
+        eventMarketId: { type: "integer" }
       },
-      required : ["eventMarketId"]
+      required: ["eventMarketId"]
     }
   },
   updateMarketRate: {
@@ -2999,25 +3017,25 @@ const EventMarket = {
       },
     },
   },
-  suspendMarketByCId:{
-    schema : {
+  suspendMarketByCId: {
+    schema: {
       tags: ["EventMarket"],
       description: "suspend market",
       security: [{ bearerAuth: [] }],
       body: {
         type: "object",
         properties: {
-          commentaryId: { 
-            type : "array",
-            items : { type : "integer" }
+          commentaryId: {
+            type: "array",
+            items: { type: "integer" }
           },
         },
         required: ["commentaryId"],
       },
     },
   },
-  commentaryTypeList : {
-    schema : {
+  commentaryTypeList: {
+    schema: {
       tags: ["EventMarket"],
       description: "get all commentary type",
       security: [{ bearerAuth: [] }],
@@ -3029,8 +3047,8 @@ const EventMarket = {
       },
     },
   },
-  marketTemplateTypeList : {
-    schema : {
+  marketTemplateTypeList: {
+    schema: {
       tags: ["EventMarket"],
       description: "get market template by id",
       security: [{ bearerAuth: [] }],
@@ -3084,10 +3102,10 @@ const EventMarket = {
           isSendData: { type: "boolean" },
           actionType: { type: "integer" },
           marketTemplateId: { type: "integer" },
-          marketTypeId : { type: "integer" },
-          marketTypeCategoryId : { type: "integer" },
+          marketTypeId: { type: "integer" },
+          marketTypeCategoryId: { type: "integer" },
         },
-        required: ["eventMarketId" , "marketTypeId" , "marketTypeCategoryId"],
+        required: ["eventMarketId", "marketTypeId", "marketTypeCategoryId"],
       },
     },
   },
@@ -3214,10 +3232,10 @@ const EventMarket = {
                 data: { type: "string" },
                 isSendData: { type: "boolean" },
                 marketTemplateId: { type: "integer" },
-                marketTypeId : { type: "integer" },
-                marketTypeCategoryId : { type: "integer" },
+                marketTypeId: { type: "integer" },
+                marketTypeCategoryId: { type: "integer" },
               },
-              required : ["marketTypeId" , "marketTypeCategoryId"]
+              required: ["marketTypeId", "marketTypeCategoryId"]
             },
           },
         },

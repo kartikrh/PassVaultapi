@@ -33,6 +33,7 @@ const {
   updateisPredictMarketInCommentaryService,
   getEventDetailsByCIdService,
   saveCommentaryDetailsAPIService,
+  loadMultiCommentaryService,
 } = require("../../../../services/commentry");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -108,7 +109,15 @@ const cloneCommentary = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
-
+const loadMultiCommentary = async (request, reply, fastify) => {
+  try {
+    const result = await loadMultiCommentaryService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/loadMultiCommentary", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 const deleteCommentary = async (request, reply, fastify) => {
   try {
     const result = await deleteCommentaryService(request, fastify);
@@ -538,5 +547,6 @@ module.exports = {
   updateCommentaryStatus,
   updateisPredictMarketInCommentary,
   getEventDetailsByCId,
-  saveCommentaryDetailsAPI
+  saveCommentaryDetailsAPI,
+  loadMultiCommentary
 };

@@ -869,6 +869,33 @@ const cloneCommentaryService = async (request, fastify) => {
   return newCommentary;
 };
 
+const loadMultiCommentaryService = async (request, fastify) => {
+  const { commentaryId } = request.body;
+
+  for (const currId of commentaryId) {
+    const originalCommentary = global.tblCommentaries.find(
+      (item) => item.commentaryId === currId
+    );
+
+    if (!originalCommentary) {
+      throw new Error("Commentary with this id not Found");
+    } else if (originalCommentary?.commentaryStatus === 2) {
+
+    }
+    callPredictorMarket(
+      {
+        commentary_id: originalCommentary.commentaryId,
+        match_type_id: originalCommentary.matchTypeId,
+        event_id: originalCommentary.eventRefId,
+      },
+      "/api/loadcommentary",
+      fastify,
+      request
+    );
+  }
+  return `Commentaries loaded successfully`;
+};
+
 const deleteCommentaryService = async (request, fastify) => {
   const { commentaryId } = request.body;
 
@@ -4791,5 +4818,6 @@ module.exports = {
   updateisPredictMarketInCommentaryService,
   getEventDetailsByCIdService,
   saveCommentaryDetailsAPIService,
+  loadMultiCommentaryService
   // getshortService
 };
