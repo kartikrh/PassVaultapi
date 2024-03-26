@@ -1,5 +1,5 @@
 const { authorize, checkPermission } = require("../../../controller/middleware");
-const { saveMarketTemplate, getAllMarketTemplate, getMarketTemplateId, deleteMarketTemplate, getMatchTypeList, activeInactiveMarketTemplate, getByMatchTypeId } = require("../../../controller/users/admin/marketTemplate");
+const { saveMarketTemplate, getAllMarketTemplate, getMarketTemplateId, deleteMarketTemplate, getMatchTypeList, activeInactiveMarketTemplate, getByMatchTypeId, getMarketTypeList, getCategoryByMarketType } = require("../../../controller/users/admin/marketTemplate");
 const { MarketTemplate, Commentary } = require("../../../swaggerSchema/groupTags/schema");
 
 module.exports = async function (fastify, opts) {
@@ -91,5 +91,27 @@ module.exports = async function (fastify, opts) {
         })
     ],
     handler: (request, reply) => getByMatchTypeId(request, reply, fastify)
+  })
+  fastify.post("/markeTypeList",{
+    schema: MarketTemplate.markeTypeList.schema,
+    preHandler: [
+        (request, reply) => authorize(request, reply, fastify),
+        (request, reply) => checkPermission(request, reply, fastify, {
+            tabName: "Event Markets",
+            mode: "view"
+        })
+    ],
+    handler: (request, reply) => getMarketTypeList(request, reply, fastify)
+  })
+  fastify.post("/getCategoryByMarketType",{
+    schema: MarketTemplate.getCategoryByMarketType.schema,
+    preHandler: [
+        (request, reply) => authorize(request, reply, fastify),
+        (request, reply) => checkPermission(request, reply, fastify, {
+            tabName: "Event Markets",
+            mode: "view"
+        })
+    ],
+    handler: (request, reply) => getCategoryByMarketType(request, reply, fastify)
   })
 };

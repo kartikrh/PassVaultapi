@@ -125,6 +125,18 @@ module.exports = (sequelize) => {
         allowNull: true,
         defaultValue: 0,
       },
+      wrMarketTypeId :{
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      wrMarketTypeCategoryId :{
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      wrMargin :{
+        type: DataTypes.DECIMAL(10, 2),
+        allowNull: true,
+      },
     },
     {
       timestamps: false,

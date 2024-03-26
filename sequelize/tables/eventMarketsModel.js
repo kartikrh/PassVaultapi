@@ -170,6 +170,14 @@ module.exports = (sequelize) => {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
+      wrMarketTypeId :{
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      wrMarketTypeCategoryId :{
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
     },
     {
       timestamps: false,

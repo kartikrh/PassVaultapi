@@ -30,15 +30,19 @@ const {
   getAllCommentaryWicketQuery,
   getAllCommentaryPartnershipQuery,
 } = require("../repository/TableCommentary");
-const {getAllNewsQuery} = require("../repository/TableNews");
+const { getAllNewsQuery } = require("../repository/TableNews");
 const {
   getAllSubScribesDomainQuery,
   getAllSubScribesSubDomainQuery,
 } = require("../repository/TableSubScibesDomain");
 const {
-  getAllMatchTypePredictorQuery
+  getAllMatchTypePredictorQuery,
 } = require("../repository/TableMatchTypePredictor");
-const { getAllMarketTemplateQuery } = require("../repository/TableMarketTemplate");
+const {
+  getAllMarketTemplateQuery,
+  getAllMarketTypeCategoriesQuery,
+  getAllMarketTypeQuery
+} = require("../repository/TableMarketTemplate");
 const { getAllEventMarketsQuery } = require("../repository/TableEventMarkets");
 
 const fetchAllDataFromDb = async (fastify, reply) => {
@@ -77,10 +81,16 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     );
     const getAllNews = await getAllNewsQuery(fastify);
     const getAllsubScribesDomain = await getAllSubScribesDomainQuery(fastify);
-    const getAllsubScribesSubDomain = await getAllSubScribesSubDomainQuery(fastify);
-    const getAllMatchTypePredictor = await getAllMatchTypePredictorQuery(fastify);
+    const getAllsubScribesSubDomain = await getAllSubScribesSubDomainQuery(
+      fastify
+    );
+    const getAllMatchTypePredictor = await getAllMatchTypePredictorQuery(
+      fastify
+    );
     const getAllEventMarkets = await getAllEventMarketsQuery(fastify);
     const getAllMarketTemplate = await getAllMarketTemplateQuery(fastify);
+    const getAllMarketTypeCategories = await getAllMarketTypeCategoriesQuery(fastify);
+    const getAllMarketType = await getAllMarketTypeQuery(fastify);
 
     global.tblTabs = getAllTabs;
     global.tblRoles = getAllRoles;
@@ -116,6 +126,8 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblMatchTypePredictor = getAllMatchTypePredictor;
     global.tblMarketTemplate = getAllMarketTemplate;
     global.tblEventMarkets = getAllEventMarkets;
+    global.tblMarketTypeCategories = getAllMarketTypeCategories;
+    global.tblMarketTypes = getAllMarketType;
 
     console.log("Okkkk");
 

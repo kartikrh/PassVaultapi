@@ -1,4 +1,4 @@
-const { saveMarketTemplateService, getAllMarketTemplateService, getMarketTemplateIdService, deleteMarketTemplateService, getMatchTypeListService, activeInactiveTemplateService, getByMatchTypeIdService } = require("../../../../services/marketTemplate");
+const { saveMarketTemplateService, getAllMarketTemplateService, getMarketTemplateIdService, deleteMarketTemplateService, getMatchTypeListService, activeInactiveTemplateService, getByMatchTypeIdService, getMarketTypeListService, getCategoryByMarketTypeService } = require("../../../../services/marketTemplate");
 const { error, success, ERROR_CODES } = require("../../../../utilities");
 const { errorLogger } = require("../../../../utilities/logger");
 
@@ -69,7 +69,24 @@ const getByMatchTypeId = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
-
+const getMarketTypeList = async (request, reply, fastify) => {
+  try {
+    const result = await getMarketTypeListService(request ,fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/getMarketTypeList", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const getCategoryByMarketType = async (request, reply, fastify) => {
+  try {
+    const result = await getCategoryByMarketTypeService(request ,fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/getCategoryByMarketType", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 
 module.exports = {
   getAllMarketTemplate,
@@ -78,5 +95,7 @@ module.exports = {
   deleteMarketTemplate,
   getMatchTypeList,
   activeInactiveMarketTemplate,
-  getByMatchTypeId
+  getByMatchTypeId,
+  getMarketTypeList,
+  getCategoryByMarketType
 };

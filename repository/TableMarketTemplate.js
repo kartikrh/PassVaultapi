@@ -241,10 +241,52 @@ const updateStatusMarketTemplateQuery = async (request , fastify) => {
         throw new Error(err.message);
     }
 }
+const getAllMarketTypeQuery = async (fastify) => {
+    const result = await fastify.db.query(
+        `
+        SELECT
+            "wrId" as "marketTypeId",
+            "wrEnumId" as "enumId",
+            "wrMarketTypeName" as "marketTypeName",
+            "wrDisplayOrder" as "displayOrder",
+            "wrIsActive" as "isActive"
+        FROM "tblMarketTypes"
+        ORDER BY "wrDisplayOrder" ASC
+        `,
+        {
+            type: fastify.db.QueryTypes.SELECT,
+        }
+    );
+
+    return result;
+};
+
+const getAllMarketTypeCategoriesQuery = async (fastify) => {
+    const result = await fastify.db.query(
+        `
+        SELECT
+            "wrId" as "marketTypeCategoryId",
+            "wrMarketTypeId" as "marketTypeId",
+            "wrCategoryName" as "categoryName",
+            "wrDisplayOrder" as "displayOrder",
+            "wrIsActive" as "isActive"
+        FROM "tblMarketTypeCategories"
+        ORDER BY "wrDisplayOrder" ASC
+        `,
+        {
+            type: fastify.db.QueryTypes.SELECT,
+        }
+    );
+
+    return result;
+};
+
 module.exports = {
     getAllMarketTemplateQuery,
     insertMarketTemplateQuery,
     deleteMarketTemplateQuery,
     updateMarketTemplateQuery,
-    updateStatusMarketTemplateQuery
+    updateStatusMarketTemplateQuery,
+    getAllMarketTypeQuery,
+    getAllMarketTypeCategoriesQuery
 };
