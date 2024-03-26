@@ -879,19 +879,20 @@ const loadMultiCommentaryService = async (request, fastify) => {
 
     if (!originalCommentary) {
       throw new Error("Commentary with this id not Found");
-    } else if (originalCommentary?.commentaryStatus === 2) {
-
+    } 
+    if(originalCommentary.isPredictMarket == true  && (originalCommentary.commentaryStatus == 2 || originalCommentary.commentaryStatus == 3)){
+      callPredictorMarket(
+        {
+          commentary_id: originalCommentary.commentaryId,
+          match_type_id: originalCommentary.matchTypeId,
+          event_id: originalCommentary.eventRefId,
+        },
+        "/api/loadcommentary",
+        fastify,
+        request
+      );
     }
-    callPredictorMarket(
-      {
-        commentary_id: originalCommentary.commentaryId,
-        match_type_id: originalCommentary.matchTypeId,
-        event_id: originalCommentary.eventRefId,
-      },
-      "/api/loadcommentary",
-      fastify,
-      request
-    );
+    
   }
   return `Commentaries loaded successfully`;
 };
