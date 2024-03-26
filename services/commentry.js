@@ -1436,6 +1436,7 @@ const testStoreProcedureService = async (request, fastify) => {
     }
     if (
       commentaryDetails &&
+      commentaryData.isPredictMarket == true &&
       previousCommentaryStatus == 1 &&
       statusToUpdate == 2
     ) {
@@ -1447,7 +1448,20 @@ const testStoreProcedureService = async (request, fastify) => {
         request,
         fastify
       );
+
+      callPredictorMarket(
+        {
+          commentary_id: commentaryDetails.commentaryId,
+          match_type_id: commentaryDetails.matchTypeId,
+          event_id: commentaryDetails.eventRefId,
+        },
+        "/api/loadcommentary",
+        fastify,
+        request
+      );
     }
+
+   
     // which i get from request i want to return only that object
     return response;
   } catch (error) {
