@@ -215,7 +215,7 @@ const commentaryDetailsByIdService = async (request, fastify) => {
     commentaryDisplayStatus,
   };
 
-  if (commentary.isPredictMarket == true) {
+  if (commentary.isPredictMarket == true && (commentary.commentaryStatus == 2 || commentary.commentaryStatus == 3)) {
     callPredictorMarket(
       {
         commentary_id: commentary.commentaryId,
