@@ -34,7 +34,9 @@ const getAllMarketTemplateQuery = async (fastify) => {
       tmt."wrActionType" as "actionType",
       tmt."wrMarketTypeId" as "marketTypeId",
       tmt."wrMarketTypeCategoryId" as "marketTypeCategoryId",
-      tmt."wrMargin" as "margin"
+      tmt."wrMargin" as "margin",
+      tmt."wrCreateRefId" as "createRefId",
+      tmt."wrOpenRefId" as "openRefId"
   FROM "tblMarketTemplates" tmt
   LEFT JOIN "tblMatchTypes" tm ON tmt."wrMatchTypeID" = "tm"."wrMatchTypeId"
   `,
@@ -52,9 +54,9 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
               "wrPlayerName","wrIsAutoCancel","wrCreateType","wrCreate","wrAutoOpenType","wrAutoOpen","wrAutoCloseType","wrBeforeAutoClose",
               "wrAutoSuspendType","wrBeforeAutoSuspend","wrIsBallStart","wrIsAutoResultSet","wrAutoResultType","wrAutoResultafterBall",
               "wrAfterWicketAutoSuspend","wrAfterWicketNotCreated","wrCreatedBy","wrIsActive" , "wrActionType",
-              "wrMarketTypeId","wrMarketTypeCategoryId","wrMargin"
+              "wrMarketTypeId","wrMarketTypeCategoryId","wrMargin" , "wrCreateRefId" , "wrOpenRefId"
               ) values (
-                $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26, $27, $28, $29, $30
+                $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26, $27, $28, $29, $30, $31, $32
                 ) returning *
           )        
         select 
@@ -88,7 +90,9 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
         "wrActionType" as "actionType",
         "wrMarketTypeId" as "marketTypeId",
         "wrMarketTypeCategoryId" as "marketTypeCategoryId",
-        "wrMargin" as "margin"
+        "wrMargin" as "margin",
+        "wrCreateRefId" as "createRefId",
+        "wrOpenRefId" as "openRefId"
          from insert_data`,
             {
                 type: fastify.db.QueryTypes.SELECT,
@@ -122,7 +126,9 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
                     data.hasOwnProperty("actionType") ? data.actionType : 0,
                     data.marketTypeId,
                     data.marketTypeCategoryId,
-                    data.margin
+                    data.margin,
+                    data.createRefId,
+                    data.openRefId
                 ],
             }
         );
@@ -170,8 +176,10 @@ const updateMarketTemplateQuery = async (data, fastify, request) => {
                 "wrActionType" = $26,
                 "wrMarketTypeId" = $27,
                 "wrMarketTypeCategoryId" = $28,
-                "wrMargin" = $29
-            WHERE "wrID" = $30
+                "wrMargin" = $29,
+                "wrCreateRefId" = $30,
+                "wrOpenRefId" = $31
+            WHERE "wrID" = $32
             `,
             {
                 bind: [
@@ -204,6 +212,8 @@ const updateMarketTemplateQuery = async (data, fastify, request) => {
                     data.marketTypeId ,
                     data.marketTypeCategoryId ,
                     data.margin ,
+                    data.createRefId,
+                    data.openRefId,
                     data.marketTemplateId
                    
                 ],

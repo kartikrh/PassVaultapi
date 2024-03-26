@@ -116,6 +116,8 @@ const updateMarketTemplateService = async (request, fastify) => {
     marketTypeId : request.body.marketTypeId || marketTemplate.marketTypeId,
     marketTypeCategoryId : request.body.marketTypeCategoryId || marketTemplate.marketTypeCategoryId,
     margin : request.body.margin || marketTemplate.margin,
+    createRefId : request.body.createRefId || marketTemplate.createRefId,
+    openRefId : request.body.openRefId || marketTemplate.openRefId,
   }
   // update marketTemplate
   await updateMarketTemplateQuery(body, fastify ,request);

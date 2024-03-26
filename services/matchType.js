@@ -4,6 +4,7 @@ const {
   updateMatchTypeQuery,
   deleteMatchTypePredictorQuery,
 } = require("../repository/TableMatchType");
+const { createMatchTypePredictorQuery } = require("../repository/TableMatchTypePredictor");
 
 const allMatchTypesService = async () => {
   return global.tblMatchTypes;
@@ -64,6 +65,29 @@ const cloneMatchTypeService = async (request, fastify) => {
     fastify,
     request
   );
+
+  // clone the matchType predictor 
+  const predictorData = global.tblMatchTypePredictor.filter(
+    (item) => item.matchTypeId === request.body.matchTypeId
+  );
+
+  const predictorDataClone = predictorData.map((item) => ({
+    ...item,
+    matchTypeId: data.matchTypeId,
+  }));
+
+  const predictor = await createMatchTypePredictorQuery(
+    {
+      matchTypeId: data.matchTypeId,
+      predictorData: predictorDataClone,
+    },
+    request,
+    fastify
+  )
+
+  global.tblMatchTypePredictor.push(...predictor);
+
+
 
   global.tblMatchTypes.push(data);
   return data;
