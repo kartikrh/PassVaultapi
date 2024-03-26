@@ -247,4 +247,5 @@ module.exports = async (fastify, opts) => {
         ],
         handler: (request, reply) => getMarketTemplateTypeList(request, reply, fastify)
     })
+   
 };

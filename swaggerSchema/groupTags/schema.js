@@ -2458,6 +2458,34 @@ const MarketTemplate = {
       },
     },
   },
+  markeTypeList : {
+    schema : {
+      tags: ["EventMarket"],
+      description: "get all market type",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+  getCategoryByMarketType :{
+    schema : {
+      tags: ["EventMarket"],
+      description: "get all category by market type",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          marketTypeId: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["marketTypeId"],
+      }
+    }
+  },
   getByMatchTypeId: {
     schema: {
       tags: ["EventMarket"],

@@ -189,6 +189,31 @@ const getByMatchTypeIdService = async (request, fastify) => {
   );
   return marketTemplate;
 }
+const getMarketTypeListService = async (request, fastify) => {
+  const {isActive} = request.body;
+  let result;
+  if (isActive !== undefined) {
+     result = global.tblMarketTypes.filter(
+      (item) => item.isActive === isActive
+    );
+  } else {
+    result = global.tblMarketTypes;
+  }
+
+  return result;
+}
+const getCategoryByMarketTypeService = async (request, fastify) => {
+  const {marketTypeId , isActive  } = request.body;
+  let result = global.tblMarketTypeCategories.filter(
+    (item) => item.marketTypeId === marketTypeId
+  );
+  if (isActive !== undefined) {
+    result = result.filter(
+      (item) => item.isActive === isActive
+    );
+  }
+  return result;
+}
 module.exports = {
   saveMarketTemplateService,
   getAllMarketTemplateService,
@@ -196,5 +221,7 @@ module.exports = {
   deleteMarketTemplateService,
   getMatchTypeListService,
   activeInactiveTemplateService,
-  getByMatchTypeIdService
+  getByMatchTypeIdService,
+  getMarketTypeListService,
+  getCategoryByMarketTypeService
 };
