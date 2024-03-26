@@ -267,7 +267,8 @@ const getAllMarketTypeQuery = async (fastify) => {
             "wrEnumId" as "enumId",
             "wrMarketTypeName" as "marketTypeName",
             "wrDisplayOrder" as "displayOrder",
-            "wrIsActive" as "isActive"
+            "wrIsActive" as "isActive",
+            "wrDisplayName" as "displayName"	
         FROM "tblMarketTypes"
         ORDER BY "wrDisplayOrder" ASC
         `,
@@ -287,7 +288,9 @@ const getAllMarketTypeCategoriesQuery = async (fastify) => {
             "wrMarketTypeId" as "marketTypeId",
             "wrCategoryName" as "categoryName",
             "wrDisplayOrder" as "displayOrder",
-            "wrIsActive" as "isActive"
+            "wrIsActive" as "isActive",
+            "wrIsDefault" as "isDefault",
+            "wrDisplayName" as "displayName"
         FROM "tblMarketTypeCategories"
         ORDER BY "wrDisplayOrder" ASC
         `,
