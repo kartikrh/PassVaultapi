@@ -34,6 +34,7 @@ const {
   updateisPredictMarketInCommentary,
   getEventDetailsByCId,
   saveCommentaryDetailsAPI,
+  loadMultiCommentary,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
