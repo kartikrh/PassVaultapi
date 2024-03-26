@@ -25,7 +25,11 @@ module.exports = (sequelize) => {
         wrIsActive : {
             type: DataTypes.BOOLEAN,
             allowNull: false
-        }
+        },
+        wrDisplayName : {
+            type: DataTypes.STRING,
+            allowNull: false
+        },
     },
     {
         timestamps: false,
