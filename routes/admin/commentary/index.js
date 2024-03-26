@@ -231,7 +231,18 @@ module.exports = async (fastify, opts) => {
     ],
     handler: (request, reply) => cloneCommentary(request, reply, fastify),
   });
-
+  fastify.post("/loadMultiCommentary", {
+    schema: Commentary.loadMultiCommentary.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "add",
+        }),
+    ],
+    handler: (request, reply) => loadMultiCommentary(request, reply, fastify),
+  });
   fastify.post("/delete", {
     schema: Commentary.delete.schema,
     preHandler: [
