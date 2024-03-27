@@ -3390,7 +3390,26 @@ const MarketTemplateRunner = {
       },
     },
   },
+  delete :{
+    schema: {
+      tags: ["Market Template Runner"],
+      description: "delete Market Template Runner",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          marketTemplateRunnerId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["marketTemplateRunnerId"],
+      },
+    },
+  },
 }
+
 module.exports = {
   Auth,
   Tabs,

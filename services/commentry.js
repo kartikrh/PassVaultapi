@@ -1401,6 +1401,16 @@ const testStoreProcedureService = async (request, fastify) => {
             request
           );
         }
+        if(commentaryDetails && commentaryData.isPredictMarket == true && statusToUpdate == 4){
+          callPredictorMarket(
+            {
+              commentary_id: commentaryDetails.commentaryId
+            },
+            "/api/endcommentary",
+            fastify,
+            request
+          );
+        }
       } else {
         global.tblCommentaryBallByBall[ballByBallIndex] = commentaryBallByBall;
         response.commentaryBallByBallDetails = commentaryBallByBall;

@@ -44,7 +44,9 @@ const {
   getAllMarketTypeQuery
 } = require("../repository/TableMarketTemplate");
 const { getAllEventMarketsQuery } = require("../repository/TableEventMarkets");
-
+const {
+  getAllMarketTemplateRunnerQuery,
+} = require("../repository/TableMarketTemplateRunner");
 const fetchAllDataFromDb = async (fastify, reply) => {
   try {
     const getAllTabs = await getAllActiveInactiveTabsQuery(fastify);
@@ -91,6 +93,9 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const getAllMarketTemplate = await getAllMarketTemplateQuery(fastify);
     const getAllMarketTypeCategories = await getAllMarketTypeCategoriesQuery(fastify);
     const getAllMarketType = await getAllMarketTypeQuery(fastify);
+    const getAllMarketTemplateRunner = await getAllMarketTemplateRunnerQuery(
+      fastify
+    );
 
     global.tblTabs = getAllTabs;
     global.tblRoles = getAllRoles;
@@ -128,6 +133,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblEventMarkets = getAllEventMarkets;
     global.tblMarketTypeCategories = getAllMarketTypeCategories;
     global.tblMarketTypes = getAllMarketType;
+    global.tblMarketTemplateRunners = getAllMarketTemplateRunner;
 
     console.log("Okkkk");
 

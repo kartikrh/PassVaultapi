@@ -78,6 +78,8 @@ module.exports = async function (fastify, opts) {
       require("./sequelize/tables/matchTypePredictorModel")(fastify.db);
       require("./sequelize/tables/marketTemplateModel")(fastify.db);
       require("./sequelize/tables/eventMarketsModel")(fastify.db);
+      require("./sequelize/tables/marketRunnerModel")(fastify.db);
+      require("./sequelize/tables/marketTemplateRunnerModel")(fastify.db);
       try {
         await fastify.db.sync();
         await featchData(fastify);
@@ -201,10 +203,10 @@ module.exports = async function (fastify, opts) {
     request.responseTime = responseTimeInMilliseconds;
 
     // if path include /commentary then do log in db
-    if (request.originalUrl.includes("/commentary")) {
-      request.endTimeTimeStemp = new Date();
-      responseLogInDB(request, fastify);
-    }
+    // if (request.originalUrl.includes("/commentary")) {
+    //   request.endTimeTimeStemp = new Date();
+    //   responseLogInDB(request, fastify);
+    // }
 
     if (request.startTime && logger) {
       responseLogger(request);
