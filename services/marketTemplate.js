@@ -1,4 +1,4 @@
-const { insertMarketTemplateQuery, deleteMarketTemplateQuery, updateMarketTemplateQuery, updateStatusMarketTemplateQuery } = require("../repository/TableMarketTemplate");
+const { insertMarketTemplateQuery, deleteMarketTemplateQuery, updateMarketTemplateQuery, updateStatusMarketTemplateQuery, changePredefineRunnerQuery } = require("../repository/TableMarketTemplate");
 const { callPredictorMarket } = require("../utilities");
 
 const getAllMarketTemplateService = async (request) => {
@@ -118,6 +118,7 @@ const updateMarketTemplateService = async (request, fastify) => {
     margin : request.body.margin || marketTemplate.margin,
     createRefId : request.body.createRefId || marketTemplate.createRefId,
     openRefId : request.body.openRefId || marketTemplate.openRefId,
+    isPredefineRunnerValue : request.body.hasOwnProperty("isPredefineRunnerValue") ? request.body.isPredefineRunnerValue : marketTemplate.isPredefineRunnerValue,
   }
   // update marketTemplate
   await updateMarketTemplateQuery(body, fastify ,request);
@@ -219,6 +220,22 @@ const getCategoryByMarketTypeService = async (request, fastify) => {
   }
   return result;
 }
+const changePredefineRunnerService = async (request, fastify) => {
+  const {marketTemplateId,isPredefineRunnerValue} = request.body;
+  // validate marketTemplateId
+  const index = global.tblMarketTemplate.findIndex(
+    (item) => item.marketTemplateId === marketTemplateId
+  );
+  if(index === -1){
+    throw new Error("MarketTemplate with this id not found");
+  }
+  await changePredefineRunnerQuery(
+    request,
+    fastify
+  );
+  global.tblMarketTemplate[index].isPredefineRunnerValue = isPredefineRunnerValue;
+  return `MarketTemplate updated successfully`;
+}
 module.exports = {
   saveMarketTemplateService,
   getAllMarketTemplateService,
@@ -228,5 +245,6 @@ module.exports = {
   activeInactiveTemplateService,
   getByMatchTypeIdService,
   getMarketTypeListService,
-  getCategoryByMarketTypeService
+  getCategoryByMarketTypeService,
+  changePredefineRunnerService
 };

@@ -1,4 +1,4 @@
-const { saveMarketTemplateService, getAllMarketTemplateService, getMarketTemplateIdService, deleteMarketTemplateService, getMatchTypeListService, activeInactiveTemplateService, getByMatchTypeIdService, getMarketTypeListService, getCategoryByMarketTypeService } = require("../../../../services/marketTemplate");
+const { saveMarketTemplateService, getAllMarketTemplateService, getMarketTemplateIdService, deleteMarketTemplateService, getMatchTypeListService, activeInactiveTemplateService, getByMatchTypeIdService, getMarketTypeListService, getCategoryByMarketTypeService, changePredefineRunnerService } = require("../../../../services/marketTemplate");
 const { error, success, ERROR_CODES } = require("../../../../utilities");
 const { errorLogger } = require("../../../../utilities/logger");
 
@@ -65,7 +65,7 @@ const getByMatchTypeId = async (request, reply, fastify) => {
     const result = await getByMatchTypeIdService(request ,fastify);
     reply.status(200).send(success(result, 200));
   } catch (err) {
-    errorLogger(fastify, err.message, path + "/getByMatchTypeId", request);
+    errorLogger(fastify, err.message, commonPath + "/getByMatchTypeId", request);
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
@@ -74,7 +74,7 @@ const getMarketTypeList = async (request, reply, fastify) => {
     const result = await getMarketTypeListService(request ,fastify);
     reply.status(200).send(success(result, 200));
   } catch (err) {
-    errorLogger(fastify, err.message, path + "/getMarketTypeList", request);
+    errorLogger(fastify, err.message, commonPath + "/getMarketTypeList", request);
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
@@ -83,7 +83,16 @@ const getCategoryByMarketType = async (request, reply, fastify) => {
     const result = await getCategoryByMarketTypeService(request ,fastify);
     reply.status(200).send(success(result, 200));
   } catch (err) {
-    errorLogger(fastify, err.message, path + "/getCategoryByMarketType", request);
+    errorLogger(fastify, err.message, commonPath + "/getCategoryByMarketType", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const changePredefineRunner = async (request, reply, fastify) => {
+  try {
+    const result = await changePredefineRunnerService(request ,fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/changePredefineRunner", request);
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
@@ -97,5 +106,6 @@ module.exports = {
   activeInactiveMarketTemplate,
   getByMatchTypeId,
   getMarketTypeList,
-  getCategoryByMarketType
+  getCategoryByMarketType,
+  changePredefineRunner
 };

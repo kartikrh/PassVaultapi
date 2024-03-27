@@ -36,7 +36,8 @@ const getAllMarketTemplateQuery = async (fastify) => {
       tmt."wrMarketTypeCategoryId" as "marketTypeCategoryId",
       tmt."wrMargin" as "margin",
       tmt."wrCreateRefId" as "createRefId",
-      tmt."wrOpenRefId" as "openRefId"
+      tmt."wrOpenRefId" as "openRefId",
+      tmt."wrIsPredefineRunnerValue" as "isPredefineRunnerValue"
   FROM "tblMarketTemplates" tmt
   LEFT JOIN "tblMatchTypes" tm ON tmt."wrMatchTypeID" = "tm"."wrMatchTypeId"
   `,
@@ -92,7 +93,8 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
         "wrMarketTypeCategoryId" as "marketTypeCategoryId",
         "wrMargin" as "margin",
         "wrCreateRefId" as "createRefId",
-        "wrOpenRefId" as "openRefId"
+        "wrOpenRefId" as "openRefId",
+        "wrIsPredefineRunnerValue" as "isPredefineRunnerValue"
          from insert_data`,
             {
                 type: fastify.db.QueryTypes.SELECT,
@@ -311,7 +313,26 @@ const getAllMarketTypeCategoriesQuery = async (fastify) => {
 
     return result;
 };
-
+const changePredefineRunnerQuery = async (request, fastify) => {
+    try {
+        const result = await fastify.db.query(
+            `UPDATE "tblMarketTemplates" SET "wrIsPredefineRunnerValue" = $1 WHERE "wrID" = $2`,
+            {
+                bind: [request.body.isPredefineRunnerValue, request.body.marketTemplateId],
+                type: fastify.db.QueryTypes.SELECT,
+            }
+        );
+        return result;
+    } catch (err) {
+        errorLogger(
+            fastify,
+            err.message,
+            "DB ERROR --> repository/TableMarketTemplate/changePredefineRunnerQuery",
+            request
+        );
+        throw new Error(err.message);
+    }
+}
 module.exports = {
     getAllMarketTemplateQuery,
     insertMarketTemplateQuery,
@@ -319,5 +340,6 @@ module.exports = {
     updateMarketTemplateQuery,
     updateStatusMarketTemplateQuery,
     getAllMarketTypeQuery,
-    getAllMarketTypeCategoriesQuery
+    getAllMarketTypeCategoriesQuery,
+    changePredefineRunnerQuery
 };
