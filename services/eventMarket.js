@@ -401,19 +401,21 @@ const updateMarketRateService = async (request, fastify) => {
       item.teamStatus === 1
   );
 
-  callPredictorMarket(
-    {
-      commentary_id: commentary.commentaryId,
-      match_type_id: commentary.matchTypeId,
-      strike_team_id: teamOnStrike.teamId,
-      current_score: teamOnStrike.teamScore,
-      current_over: parseFloat(teamOnStrike.teamOver),
-      overs: updatedOvers,
-    },
-    "/api/updateline",
-    fastify,
-    request
-  );
+  if(teamOnStrike){
+    callPredictorMarket(
+      {
+        commentary_id: commentary.commentaryId,
+        match_type_id: commentary.matchTypeId,
+        strike_team_id: teamOnStrike.teamId,
+        current_score: teamOnStrike.teamScore,
+        current_over: parseFloat(teamOnStrike.teamOver),
+        overs: updatedOvers,
+      },
+      "/api/updateline",
+      fastify,
+      request
+    );
+  }
 
   return "Event Market updated successfully";
 };
