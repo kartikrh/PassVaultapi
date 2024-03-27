@@ -812,6 +812,8 @@ const getMarketListByCIdQuery = async (data,request,fastify) => {
             "wrIsSendData" as "isSendData",
             tem."wrActionType" as "actionType",
             tem."wrMarketTemplateId" as "marketTemplateId",
+            tem."wrMarketTypeId" as "marketTypeId",	
+            tem."wrMarketTypeCategoryId" as "marketTypeCategoryId",
             tem."wrCreateRefId" as "createRefId",
             tem."wrOpenRefId" as "openRefId",
             tem."wrCreateType" as "createType",
