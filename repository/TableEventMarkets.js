@@ -812,6 +812,10 @@ const getMarketListByCIdQuery = async (data,request,fastify) => {
             "wrIsSendData" as "isSendData",
             tem."wrActionType" as "actionType",
             tem."wrMarketTemplateId" as "marketTemplateId",
+            tem."wrCreateRefId" as "createRefId",
+            tem."wrOpenRefId" as "openRefId",
+            tem."wrCreateType" as "createType",
+            tem."wrCreate" as "create",
             (
                 SELECT json_agg("MarketRunners_CTE".*)
                 FROM "MarketRunners_CTE"
