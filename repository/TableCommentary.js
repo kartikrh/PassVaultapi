@@ -39,7 +39,8 @@ const getAllCommentaryQuery = async (fastify) => {
     "wrCurrentInnings" as "currentInnings",
     "wrSystemPlayerCount" as "systemPlayerCount",
     "wrIsPlayersShow" as "isPlayersShow",
-    "wrIsPredictMarket" as "isPredictMarket"
+    "wrIsPredictMarket" as "isPredictMarket",
+    tc."wrIsActive"  as "isActive"
     from "tblCommentaries" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -109,7 +110,8 @@ const insertCommentaryQuery = async (request, fastify) => {
     "wrCurrentInnings" as "currentInnings",
     "wrSystemPlayerCount" as "systemPlayerCount",
     "wrIsPlayersShow" as "isPlayersShow",
-    "wrIsPredictMarket" as "isPredictMarket"
+    "wrIsPredictMarket" as "isPredictMarket",
+    tc."wrIsActive"  as "isActive"
     from "insert_data" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"  
@@ -502,7 +504,8 @@ const getCommentaryByIdQuery = async (request, fastify) => {
       "wrCurrentInnings" as "currentInnings",
       "wrSystemPlayerCount" as "systemPlayerCount",
       "wrIsPlayersShow" as "isPlayersShow",
-      "wrIsPredictMarket" as "isPredictMarket"
+      "wrIsPredictMarket" as "isPredictMarket",
+      tc."wrIsActive"  as "isActive"
       from "tblCommentaries" tc
       left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
       left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -2450,6 +2453,28 @@ const saveCommentaryDetailsAPIQuery = async (data, fastify, request) => {
     throw new Error(err.message)
   }
 }
+const activeInactiveCommentaryQuery = async (data, fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `update "tblCommentaries" set
+        "wrIsActive" = $1
+        where "wrCommentaryId" = $2
+      `,
+      {
+        bind: [data.isActive, data.commentaryId],
+      }
+    );
+    return result;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/activeInactiveCommentaryQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+}
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -2495,5 +2520,6 @@ module.exports = {
   deleteCommentaryPlayerById,
   updateCommentaryStatusQuery,
   updateisPredictMarketInCommentaryQuery,
-  saveCommentaryDetailsAPIQuery
+  saveCommentaryDetailsAPIQuery,
+  activeInactiveCommentaryQuery
 };

@@ -53,6 +53,8 @@ const getAllEventMarketsQuery = async (fastify) => {
         tem."wrMarketTypeCategoryId" as "marketTypeCategoryId",
         tem."wrCreateRefId" as "createRefId",
         tem."wrOpenRefId" as "openRefId",
+        tem."wrCreateType" as "createType",
+        tem."wrCreate" as "create",
         tr."wrRunnerId" as "runnerId",
         tr."wrRunner" as "runner",
         tr."wrLine" as "line",
@@ -129,6 +131,8 @@ const getEventMarketByIdsQuery = async (data,request ,fastify) => {
           tem."wrMarketTypeCategoryId" as "marketTypeCategoryId",
           tem."wrCreateRefId" as "createRefId",
           tem."wrOpenRefId" as "openRefId",
+          tem."wrCreateType" as "createType",
+          tem."wrCreate" as "create",
           tr."wrRunnerId" as "runnerId",
           tr."wrRunner" as "runner",
           tr."wrLine" as "line",
@@ -808,6 +812,12 @@ const getMarketListByCIdQuery = async (data,request,fastify) => {
             "wrIsSendData" as "isSendData",
             tem."wrActionType" as "actionType",
             tem."wrMarketTemplateId" as "marketTemplateId",
+            tem."wrMarketTypeId" as "marketTypeId",	
+            tem."wrMarketTypeCategoryId" as "marketTypeCategoryId",
+            tem."wrCreateRefId" as "createRefId",
+            tem."wrOpenRefId" as "openRefId",
+            tem."wrCreateType" as "createType",
+            tem."wrCreate" as "create",
             (
                 SELECT json_agg("MarketRunners_CTE".*)
                 FROM "MarketRunners_CTE"

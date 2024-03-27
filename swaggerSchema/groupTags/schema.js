@@ -1695,6 +1695,21 @@ const Commentary = {
       },
     },
   },
+  activeInactiveCommentary :{
+    schema: {
+      tags: ["Commentary"],
+      description: "active inactive Commentary",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["commentaryId", "isActive"],
+      },
+    },
+  },
   changeMatchType: {
     schema: {
       tags: ["Commentary"],
@@ -3123,6 +3138,8 @@ const EventMarket = {
           marketTypeCategoryId: { type: "integer" },
           createRefId: { type: "string" },
           openRefId: { type: "string" },
+          createType : { type: "integer" },
+          create : { type: "number" },
         },
         required: ["eventMarketId", "marketTypeId", "marketTypeCategoryId"],
       },
@@ -3255,6 +3272,8 @@ const EventMarket = {
                 marketTypeCategoryId: { type: "integer" },
                 createRefId: { type: "string" },
                 openRefId: { type: "string" },
+                createType : { type: "integer" },
+                create : { type: "number" },
               },
               required: ["marketTypeId", "marketTypeCategoryId"]
             },
@@ -3386,7 +3405,26 @@ const MarketTemplateRunner = {
       },
     },
   },
+  delete :{
+    schema: {
+      tags: ["Market Template Runner"],
+      description: "delete Market Template Runner",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          marketTemplateRunnerId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["marketTemplateRunnerId"],
+      },
+    },
+  },
 }
+
 module.exports = {
   Auth,
   Tabs,
