@@ -853,18 +853,18 @@ const cloneCommentaryService = async (request, fastify) => {
   global.tblCommentaryPlayers = await getAllCommentaryPlayerQuery(fastify);
   global.tblCommentaryTeams = await getAllCommentaryTeamsQuery(fastify);
 
-  if (newCommentary.isPredictMarket == true) {
-    callPredictorMarket(
-      {
-        commentary_id: newCommentary.commentaryId,
-        match_type_id: newCommentary.matchTypeId,
-        event_id: newCommentary.eventRefId,
-      },
-      "/api/loadcommentary",
-      fastify,
-      request
-    );
-  }
+  // if (newCommentary.isPredictMarket == true) {
+  //   callPredictorMarket(
+  //     {
+  //       commentary_id: newCommentary.commentaryId,
+  //       match_type_id: newCommentary.matchTypeId,
+  //       event_id: newCommentary.eventRefId,
+  //     },
+  //     "/api/loadcommentary",
+  //     fastify,
+  //     request
+  //   );
+  // }
 
   return newCommentary;
 };
