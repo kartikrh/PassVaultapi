@@ -43,6 +43,7 @@ const {
   getAllCommentaryWicketQuery,
   getAllCommentaryPartnershipQuery,
   saveCommentaryDetailsAPIQuery,
+  activeInactiveCommentaryQuery,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -1401,16 +1402,6 @@ const testStoreProcedureService = async (request, fastify) => {
             request
           );
         }
-        if(commentaryDetails && commentaryData.isPredictMarket == true && statusToUpdate == 4){
-          callPredictorMarket(
-            {
-              commentary_id: commentaryDetails.commentaryId
-            },
-            "/api/endcommentary",
-            fastify,
-            request
-          );
-        }
       } else {
         global.tblCommentaryBallByBall[ballByBallIndex] = commentaryBallByBall;
         response.commentaryBallByBallDetails = commentaryBallByBall;
@@ -1466,6 +1457,17 @@ const testStoreProcedureService = async (request, fastify) => {
           event_id: commentaryDetails.eventRefId,
         },
         "/api/loadcommentary",
+        fastify,
+        request
+      );
+    }
+
+    if(commentaryDetails && commentaryData.isPredictMarket == true && statusToUpdate == 4){
+      callPredictorMarket(
+        {
+          commentary_id: commentaryDetails.commentaryId
+        },
+        "/api/endcommentary",
         fastify,
         request
       );
@@ -4806,6 +4808,20 @@ const saveCommentaryDetailsAPIService = async (request, fastify) => {
 
   return "Commentary Updated successfully";
 };
+const activeInactiveCommentaryService = async (request, fastify) => {
+  // validate commentary id
+  const commentary = global.tblCommentaries.findIndex(
+    (item) => item.commentaryId === request.body.commentaryId
+  );
+  if (commentary == -1) {
+    throw new Error("Commentary with this id not Found");
+  }
+  await activeInactiveCommentaryQuery(request.body, fastify, request);
+
+  global.tblCommentaries[commentary].isActive = request.body.isActive;
+
+  return "Commentary Updated successfully";
+}
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -4843,6 +4859,7 @@ module.exports = {
   updateisPredictMarketInCommentaryService,
   getEventDetailsByCIdService,
   saveCommentaryDetailsAPIService,
-  loadMultiCommentaryService
+  loadMultiCommentaryService,
+  activeInactiveCommentaryService
   // getshortService
 };

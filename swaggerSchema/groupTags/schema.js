@@ -1695,6 +1695,21 @@ const Commentary = {
       },
     },
   },
+  activeInactiveCommentary :{
+    schema: {
+      tags: ["Commentary"],
+      description: "active inactive Commentary",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["commentaryId", "isActive"],
+      },
+    },
+  },
   changeMatchType: {
     schema: {
       tags: ["Commentary"],
