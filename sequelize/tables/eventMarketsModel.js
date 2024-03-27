@@ -178,6 +178,14 @@ module.exports = (sequelize) => {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
+      wrCreateRefId :{
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      wrOpenRefId :{
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
     },
     {
       timestamps: false,

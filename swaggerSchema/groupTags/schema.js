@@ -2572,7 +2572,7 @@ const MarketTemplate = {
           createRefId : { type: "string" },
           openRefId : { type: "string" },
         },
-        required: ["marketTemplateId", "matchTypeID", "playerName", "marketTypeId", "marketTypeCategoryId", "margin"],
+        required: ["marketTemplateId", "matchTypeID", "playerName", "marketTypeId", "marketTypeCategoryId", "margin" ,"createRefId","openRefId"],
       },
     },
   },
@@ -2606,6 +2606,21 @@ const MarketTemplate = {
           isActive: { type: "boolean" },
         },
         required: ["marketTemplateId"],
+      },
+    },
+  },
+  changePredefineRunner: {
+    schema: {
+      tags: ["Market Template"],
+      description: "change predefine runner",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          marketTemplateId: { type: "integer" },
+          isPredefineRunnerValue: { type: "boolean" },
+        },
+        required: ["marketTemplateId", "isPredefineRunnerValue"],
       },
     },
   },
@@ -3106,6 +3121,8 @@ const EventMarket = {
           marketTemplateId: { type: "integer" },
           marketTypeId: { type: "integer" },
           marketTypeCategoryId: { type: "integer" },
+          createRefId: { type: "string" },
+          openRefId: { type: "string" },
         },
         required: ["eventMarketId", "marketTypeId", "marketTypeCategoryId"],
       },
@@ -3236,6 +3253,8 @@ const EventMarket = {
                 marketTemplateId: { type: "integer" },
                 marketTypeId: { type: "integer" },
                 marketTypeCategoryId: { type: "integer" },
+                createRefId: { type: "string" },
+                openRefId: { type: "string" },
               },
               required: ["marketTypeId", "marketTypeCategoryId"]
             },
@@ -3308,6 +3327,66 @@ const EventMarket = {
     },
   },
 };
+const MarketTemplateRunner = {
+  getAll:{
+    schema : {
+      tags: ["Market Template Runner"],
+      description: "get all Market Template Runner",
+      security: [{ bearerAuth: [] }],
+    }
+  },
+  getByTemplateId : {
+    schema : {
+      tags: ["Market Template Runner"],
+      description: "get all Market Template Runner",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          marketTemplateId: { type: "integer" },
+        },
+        required: ["marketTemplateId"],
+      },
+    }
+  },
+  getById : {
+    schema : {
+      tags: ["Market Template Runner"],
+      description: "get Market Template Runner by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          marketTemplateRunnerId: { type: "integer" },
+        },
+        required: ["marketTemplateRunnerId"],
+      },
+    }
+  },
+  save : {
+    schema: {
+      tags: ["Market Template Runner"],
+      description: "save Market Template Runner",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          marketTemplateRunnerId: { type: "integer" },
+          marketTemplateId: { type: "integer" },
+          runner : { type: "string" },
+          line : { type: "number" },
+          overRate : { type: "number" },
+          underRate : { type: "number" },
+          yesRate : { type: "number" },
+          noRate : { type: "number" },
+          yesPoint : { type: "number" },
+          noPoint : { type: "number" }          
+        },
+        required: ["marketTemplateId" , "marketTemplateRunnerId"],
+      },
+    },
+  },
+}
 module.exports = {
   Auth,
   Tabs,
@@ -3336,4 +3415,5 @@ module.exports = {
   News,
   MatchTypePredictor,
   EventMarket,
+  MarketTemplateRunner
 };
