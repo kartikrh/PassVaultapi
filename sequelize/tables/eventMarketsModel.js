@@ -186,6 +186,14 @@ module.exports = (sequelize) => {
         type: DataTypes.STRING,
         allowNull: true,
       },
+      wrCreateType :{
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      wrCreate :{
+        type: DataTypes.DECIMAL(10, 2),
+        allowNull: true,
+      },
     },
     {
       timestamps: false,

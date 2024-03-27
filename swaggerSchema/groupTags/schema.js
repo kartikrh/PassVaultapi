@@ -3123,6 +3123,8 @@ const EventMarket = {
           marketTypeCategoryId: { type: "integer" },
           createRefId: { type: "string" },
           openRefId: { type: "string" },
+          createType : { type: "integer" },
+          create : { type: "number" },
         },
         required: ["eventMarketId", "marketTypeId", "marketTypeCategoryId"],
       },
@@ -3255,6 +3257,8 @@ const EventMarket = {
                 marketTypeCategoryId: { type: "integer" },
                 createRefId: { type: "string" },
                 openRefId: { type: "string" },
+                createType : { type: "integer" },
+                create : { type: "number" },
               },
               required: ["marketTypeId", "marketTypeCategoryId"]
             },
