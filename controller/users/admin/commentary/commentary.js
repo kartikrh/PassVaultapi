@@ -309,7 +309,7 @@ const getCompleteMatchList = async (request, reply, fastify) => {
 const getLiveMatchList = async (request, reply, fastify) => {
   try {
     let commentaryData = global.tblCommentaries.filter(
-      (item) => item.commentaryStatus !== 1 && item.commentaryStatus !== 4
+      (item) => item.commentaryStatus !== 1 && item.commentaryStatus !== 4 && item.isActive == true
     );
     const body = {
       commentaryData,
