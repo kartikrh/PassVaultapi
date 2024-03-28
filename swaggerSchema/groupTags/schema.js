@@ -2605,7 +2605,7 @@ const MarketTemplate = {
           createRefId : { type: "string" },
           openRefId : { type: "string" },
         },
-        required: ["marketTemplateId", "matchTypeID", "playerName", "marketTypeId", "marketTypeCategoryId", "margin" ,"createRefId","openRefId"],
+        required: ["marketTemplateId", "matchTypeID", "playerName", "marketTypeId", "marketTypeCategoryId", "margin" ],
       },
     },
   },

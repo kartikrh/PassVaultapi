@@ -129,8 +129,8 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
                     data.marketTypeId,
                     data.marketTypeCategoryId,
                     data.margin,
-                    data.createRefId,
-                    data.openRefId
+                    data.createRefId || null,
+                    data.openRefId || null,
                 ],
             }
         );
