@@ -194,6 +194,10 @@ module.exports = (sequelize) => {
         type: DataTypes.DECIMAL(10, 2),
         allowNull: true,
       },
+      wrTemplateType :{
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
     },
     {
       timestamps: false,

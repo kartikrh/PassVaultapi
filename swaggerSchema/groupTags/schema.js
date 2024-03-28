@@ -2604,6 +2604,7 @@ const MarketTemplate = {
           margin: { type: "number" },
           createRefId : { type: "string" },
           openRefId : { type: "string" },
+          templateType : { type: "integer" },
         },
         required: ["marketTemplateId", "matchTypeID", "playerName", "marketTypeId", "marketTypeCategoryId", "margin" ],
       },
