@@ -45,6 +45,7 @@ const {
   saveCommentaryDetailsAPIQuery,
   activeInactiveCommentaryQuery,
   closeCommentaryQuery,
+  deleteAllCommentaryQuery,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -4847,6 +4848,22 @@ const closeCommentaryService = async (request, fastify) => {
   }
   return `Commentary(s) closed successfully`;
 }
+const deleteAllCommentaryService = async (request, fastify) => {
+  await deleteAllCommentaryQuery(fastify);
+
+  global.tblCommentaries = [];
+  global.tblCommentaryTeams = [];
+  global.tblCommentaryPlayers = [];
+  global.tblCommentaryWicket = [];
+  global.tblCommentaryPartnership = [];
+  global.tblCommentaryBallByBall = [];
+  global.tblOvers = [];
+  global.tblEventMarkets = [];
+  global.tblMarketRunners = [];
+
+
+  return "All Commentary Deleted successfully";
+}
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -4886,6 +4903,7 @@ module.exports = {
   saveCommentaryDetailsAPIService,
   loadMultiCommentaryService,
   activeInactiveCommentaryService,
-  closeCommentaryService
+  closeCommentaryService,
+  deleteAllCommentaryService
   // getshortService
 };

@@ -2500,6 +2500,26 @@ const closeCommentaryQuery = async (data, fastify, request) => {
   }
 
 }
+const deleteAllCommentaryQuery = async (fastify)=>{
+  try {
+    const result = await fastify.db.query(
+     `SELECT delete_all_commentary()`,
+     {
+        type: fastify.db.QueryTypes.SELECT,
+     }
+    );
+
+    return result;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/closeCommentaryQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+}
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -2547,5 +2567,6 @@ module.exports = {
   updateisPredictMarketInCommentaryQuery,
   saveCommentaryDetailsAPIQuery,
   activeInactiveCommentaryQuery,
-  closeCommentaryQuery
+  closeCommentaryQuery,
+  deleteAllCommentaryQuery
 };
