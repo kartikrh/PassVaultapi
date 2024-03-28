@@ -4831,7 +4831,19 @@ const closeCommentaryService = async (request, fastify) => {
     const index = global.tblCommentaries.findIndex(
       (item) => item.commentaryId === commentaryId
     );
-    index !== -1 ? (global.tblCommentaries[index].commentaryStatus = 4) : null;
+    if(index !== -1){
+      global.tblCommentaries[index].commentaryStatus = 4;
+
+      callPredictorMarket(
+        {
+          commentary_id: commentaryId
+        },
+        "/api/endcommentary",
+        fastify,
+        request
+      );
+    }
+
   }
   return `Commentary(s) closed successfully`;
 }
