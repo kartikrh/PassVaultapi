@@ -375,12 +375,21 @@ const updateMarketRateService = async (request, fastify) => {
   }
   let updatedOvers = [];
   for (let item of eventMarket) {
-    let eventMarket = global.tblEventMarkets.find(
-      (e) => e.eventMarketId === item.eventMarketId
+    // let eventMarket = global.tblEventMarkets.find(
+    //   (e) => e.eventMarketId === item.eventMarketId
+    // );
+    // if (!eventMarket) {
+    //   throw new Error("EventMarket with this id not Found");
+    // }
+    let eventMarket = await getEventMarketByIdsQuery(
+      {
+        eventMarketIds: [item.eventMarketId],
+      },
+      request,
+      fastify
     );
-    if (!eventMarket) {
-      throw new Error("EventMarket with this id not Found");
-    }
+    eventMarket = eventMarket[0];
+
     let data = await updateEventMarketRateQuery(item, request, fastify);
     // console.log(data);
     let diff = data.line - eventMarket.line;
@@ -388,11 +397,21 @@ const updateMarketRateService = async (request, fastify) => {
       over: item.over,
       value: diff,
     });
-    global.tblEventMarkets[
-      global.tblEventMarkets.findIndex(
-        (e) => e.eventMarketId === item.eventMarketId
-      )
-    ] = data;
+    let index = global.tblEventMarkets.findIndex(
+      (e) => e.eventMarketId === item.eventMarketId
+    );
+    if(index !== -1){
+      global.tblEventMarkets[index] = data;
+    }
+    else {
+      global.tblEventMarkets.push(data);
+    }
+
+    // global.tblEventMarkets[
+    //   global.tblEventMarkets.findIndex(
+    //     (e) => e.eventMarketId === item.eventMarketId
+    //   )
+    // ] = data;
   }
 
   const teamOnStrike = global.tblCommentaryTeams.find(
