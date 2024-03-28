@@ -66,7 +66,8 @@ const getAllEventMarketsQuery = async (fastify) => {
         tr."wrNoPoint" as "noPoint",
         tr."wrLastUpdate" as "runnerLastUpdate",
         tr."wrSelectionId" as "selectionId",
-        tr."wrSelectionStatus" as "selectionStatus"
+        tr."wrSelectionStatus" as "selectionStatus",
+        tr."wrOrder" as "order"
     FROM "tblEventMarkets" tem
     LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
     LEFT JOIN "tblCompetitions" tcom ON tcom."wrCompetitionId" = tc."wrCompetitionId"
@@ -144,7 +145,8 @@ const getEventMarketByIdsQuery = async (data,request ,fastify) => {
           tr."wrNoPoint" as "noPoint",
           tr."wrLastUpdate" as "runnerLastUpdate",
           tr."wrSelectionId" as "selectionId",
-          tr."wrSelectionStatus" as "selectionStatus"
+          tr."wrSelectionStatus" as "selectionStatus",
+          tr."wrOrder" as "order"
       FROM "tblEventMarkets" tem
       LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
       LEFT JOIN "tblCompetitions" tcom ON tcom."wrCompetitionId" = tc."wrCompetitionId"
@@ -556,10 +558,11 @@ const createEventMarketQuery = async (data,request,fastify) => {
             "wrNoPoint",
             "wrLastUpdate",
             "wrSelectionId",
-            "wrSelectionStatus"
+            "wrSelectionStatus",
+            "wrOrder"
         ) VALUES
         (
-            $1,$2,$3,$4,$5,$6,$7,$8,$9,now(),$10,$11
+            $1,$2,$3,$4,$5,$6,$7,$8,$9,now(),$10,$11,$12
         )
         RETURNING "wrRunnerId" as "runnerId",
             "wrEventMarketId" as "eventMarketId",
@@ -573,7 +576,8 @@ const createEventMarketQuery = async (data,request,fastify) => {
             "wrNoPoint" as "noPoint",
             "wrLastUpdate" as "lastUpdate",
             "wrSelectionId" as "selectionId",
-            "wrSelectionStatus" as "selectionStatus"    
+            "wrSelectionStatus" as "selectionStatus",
+            "wrOrder" as "order"
         `;
 
         let marketRunner = await fastify.db.query(query2, {
@@ -588,7 +592,8 @@ const createEventMarketQuery = async (data,request,fastify) => {
                 data.noRate || 0,
                 data.noPoint || 0,
                 `${eventMarketId}01`,
-                data.status
+                data.status,
+                1
             ],
             type: fastify.db.QueryTypes.SELECT
         });
@@ -763,7 +768,8 @@ const getMarketListByCIdQuery = async (data,request,fastify) => {
                 "wrNoPoint" as "noPoint",
                 "wrLastUpdate" as "lastUpdate",
                 "wrSelectionId" as "selectionId",
-                "wrSelectionStatus" as "selectionStatus"
+                "wrSelectionStatus" as "selectionStatus",
+                "wrOrder" as "order"
             FROM "tblMarketRunners"
         )
         SELECT
@@ -932,6 +938,7 @@ const updateEventMarketRateQuery = async (data,request,fastify) => {
 
         // update market runners for this market
         for(let runner of data.marketRunners){
+            console.log(runner);
             // update market runners for this market
             await fastify.db.query(
                 `UPDATE "tblMarketRunners" SET
@@ -981,7 +988,8 @@ const updateEventMarketRateQuery = async (data,request,fastify) => {
             "wrNoPoint" as "noPoint",
             "wrLastUpdate" as "lastUpdate",
             "wrSelectionId" as "selectionId",
-            "wrSelectionStatus" as "selectionStatus"
+            "wrSelectionStatus" as "selectionStatus",
+            "wrOrder" as "order"
         FROM "tblMarketRunners" WHERE "wrEventMarketId" = $1`;
 
         const marketRunner =  await fastify.db.query(query3, {
@@ -1115,10 +1123,11 @@ const createEventMarketInDBQuery = async (data,request,fastify) => {
           "wrNoPoint",
           "wrLastUpdate",
           "wrSelectionId",
-          "wrSelectionStatus"
+          "wrSelectionStatus",
+            "wrOrder"
       ) VALUES
       (
-          $1,$2,$3,$4,$5,$6,$7,$8,$9,now(),$10,$11
+          $1,$2,$3,$4,$5,$6,$7,$8,$9,now(),$10,$11,$12
       )
       RETURNING "wrRunnerId" as "runnerId",
           "wrEventMarketId" as "eventMarketId",
@@ -1132,7 +1141,8 @@ const createEventMarketInDBQuery = async (data,request,fastify) => {
           "wrNoPoint" as "noPoint",
           "wrLastUpdate" as "lastUpdate",
           "wrSelectionId" as "selectionId",
-          "wrSelectionStatus" as "selectionStatus"    
+          "wrSelectionStatus" as "selectionStatus",
+          "wrOrder" as "order"    
       `;
 
       let marketRunner = await fastify.db.query(query2, {
@@ -1147,7 +1157,8 @@ const createEventMarketInDBQuery = async (data,request,fastify) => {
               data.noRate || 0,
               data.noPoint || 0,
               `${eventMarketId}01`,
-              data.status
+              data.status,
+              1
           ],
           type: fastify.db.QueryTypes.SELECT
       });

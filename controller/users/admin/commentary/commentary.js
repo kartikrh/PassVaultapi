@@ -35,6 +35,7 @@ const {
   saveCommentaryDetailsAPIService,
   loadMultiCommentaryService,
   activeInactiveCommentaryService,
+  closeCommentaryService,
 } = require("../../../../services/commentry");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -520,6 +521,15 @@ const activeInactiveCommentary = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const closeCommentary = async (request, reply, fastify) => {
+  try {
+    const result = await closeCommentaryService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/closeCommentary", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 module.exports = {
   getAllCommentaries,
   getCommentaryById,
@@ -559,5 +569,6 @@ module.exports = {
   getEventDetailsByCId,
   saveCommentaryDetailsAPI,
   loadMultiCommentary,
-  activeInactiveCommentary
+  activeInactiveCommentary,
+  closeCommentary
 };

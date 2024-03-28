@@ -2475,6 +2475,31 @@ const activeInactiveCommentaryQuery = async (data, fastify, request) => {
     throw new Error(err.message);
   }
 }
+const closeCommentaryQuery = async (data, fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `update "tblCommentaries" set
+        "wrCommentaryStatus" = $1
+        where "wrCommentaryId" = ANY($2)
+      `,
+      {
+        bind: [4, data.commentaryId],
+      }
+    );
+
+    return result;
+    
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/closeCommentaryQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+
+}
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -2521,5 +2546,6 @@ module.exports = {
   updateCommentaryStatusQuery,
   updateisPredictMarketInCommentaryQuery,
   saveCommentaryDetailsAPIQuery,
-  activeInactiveCommentaryQuery
+  activeInactiveCommentaryQuery,
+  closeCommentaryQuery
 };

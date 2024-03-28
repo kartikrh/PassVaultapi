@@ -59,6 +59,10 @@ module.exports = (sequelize) => {
             type: DataTypes.INTEGER,
             allowNull: true,
         },
+        wrOrder :{
+            type: DataTypes.INTEGER,
+            allowNull: true,
+        },
     }, {
       timestamps: false,
     }
