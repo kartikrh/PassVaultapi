@@ -44,6 +44,7 @@ const {
   getAllCommentaryPartnershipQuery,
   saveCommentaryDetailsAPIQuery,
   activeInactiveCommentaryQuery,
+  closeCommentaryQuery,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -4822,6 +4823,18 @@ const activeInactiveCommentaryService = async (request, fastify) => {
 
   return "Commentary Updated successfully";
 }
+const closeCommentaryService = async (request, fastify) => {
+  await closeCommentaryQuery(request.body,fastify, request);
+
+  // update the global variable
+  for (let commentaryId of request.body.commentaryId) {
+    const index = global.tblCommentaries.findIndex(
+      (item) => item.commentaryId === commentaryId
+    );
+    index !== -1 ? (global.tblCommentaries[index].commentaryStatus = 4) : null;
+  }
+  return `Commentary(s) closed successfully`;
+}
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -4860,6 +4873,7 @@ module.exports = {
   getEventDetailsByCIdService,
   saveCommentaryDetailsAPIService,
   loadMultiCommentaryService,
-  activeInactiveCommentaryService
+  activeInactiveCommentaryService,
+  closeCommentaryService
   // getshortService
 };

@@ -382,6 +382,7 @@ const updateMarketRateService = async (request, fastify) => {
       throw new Error("EventMarket with this id not Found");
     }
     let data = await updateEventMarketRateQuery(item, request, fastify);
+    // console.log(data);
     let diff = data.line - eventMarket.line;
     updatedOvers.push({
       over: item.over,

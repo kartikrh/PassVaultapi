@@ -1710,6 +1710,24 @@ const Commentary = {
       },
     },
   },
+  closeCommentary:{
+    schema: {
+      tags: ["Commentary"],
+      description: "close Commentary",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { 
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["commentaryId"],
+      },
+    },
+  },
   changeMatchType: {
     schema: {
       tags: ["Commentary"],
