@@ -8,14 +8,14 @@ const connection = (socket) => {
     // Check if token is not of latest login and multiple login is false
     if (wrToken !== user?.loginToken && !allowMultipleLogin) {
       global.socketIo
-      .to(socket.id)
-      .emit("logout", "You have been removed from the room.");
+        .to(socket.id)
+        .emit("logout", "You have been removed from the room.");
     } else {
       socket.join(userId); // Join the specified room
     }
   }
 
-  socket.on("disconnect", () => {});
+  socket.on("disconnect", () => { });
 };
 
 const socketMiddleware = async (socket, next) => {
@@ -26,25 +26,28 @@ const socketMiddleware = async (socket, next) => {
     if (!token) {
       return next(new Error("Token Not Found"));
     }
+    const PYTHONSOCKETKEY = global.tblConfigs.find(config => config.key === "PYTHONSOCKETKEY")?.value;
 
-    const verifyToken = jwt.verify(
-      token,
-      process.env.SECRET_KEY_TOKEN,
-      (err, decoded) => {
-        if (err) {
-          return next(new Error(err.message));
+    if (!PYTHONSOCKETKEY || PYTHONSOCKETKEY !== token) {
+      const verifyToken = jwt.verify(
+        token,
+        process.env.SECRET_KEY_TOKEN,
+        (err, decoded) => {
+          if (err) {
+            return next(new Error(err.message));
+          }
+          return decoded;
         }
-        return decoded;
+      );
+
+      if (!verifyToken || !verifyToken.WrUserId) {
+        return next(new Error("Invalid Token"));
       }
-    );
 
-    if (!verifyToken || !verifyToken.WrUserId) {
-      return next(new Error("Invalid Token"));
+      socket.userId = verifyToken?.WrEId;
+      socket.allowMultipleLogin = verifyToken?.WrAllowMultipleLogin;
+      socket.wrToken = verifyToken?.wrToken
     }
-
-    socket.userId = verifyToken?.WrEId;
-    socket.allowMultipleLogin = verifyToken?.WrAllowMultipleLogin;
-    socket.wrToken = verifyToken?.wrToken
 
     return next();
   } catch (error) {
