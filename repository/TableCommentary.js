@@ -40,7 +40,8 @@ const getAllCommentaryQuery = async (fastify) => {
     "wrSystemPlayerCount" as "systemPlayerCount",
     "wrIsPlayersShow" as "isPlayersShow",
     "wrIsPredictMarket" as "isPredictMarket",
-    tc."wrIsActive"  as "isActive"
+    tc."wrIsActive"  as "isActive",
+    "wrDelay" as "delay"
     from "tblCommentaries" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -58,7 +59,7 @@ const insertCommentaryQuery = async (request, fastify) => {
       `
       with insert_data as(
         insert into "tblCommentaries" ("wrEventTypeId","wrMatchTypeId","wrCompetitionId","wrEventId",
-        "wrEventDate","wrEventName","wrEventRefId","wrTeam1Id","wrTeam2Id","wrLocation","wrWeather","wrPitch","wrDisplayStatus","wrTarget","wrMarketID","wrTpId","isSignalROn","isMatchTypeUpdated" , "wrCreatedBy" , "wrCreatedDate","wrCommentaryStatus","wrCurrentInnings", "wrSystemPlayerCount","wrIsPredictMarket") values (
+        "wrEventDate","wrEventName","wrEventRefId","wrTeam1Id","wrTeam2Id","wrLocation","wrWeather","wrPitch","wrDisplayStatus","wrTarget","wrMarketID","wrTpId","isSignalROn","isMatchTypeUpdated" , "wrCreatedBy" , "wrCreatedDate","wrCommentaryStatus","wrCurrentInnings", "wrSystemPlayerCount","wrIsPredictMarket","wrDelay") values (
           $1,
           $2,
           $3,
@@ -69,7 +70,8 @@ const insertCommentaryQuery = async (request, fastify) => {
           $10,$11,$12,$13,$14,$15,$16,$17,$18,$19,now(),1,
           1,
           $20,
-          $21
+          $21,
+          $22,
         ) returning *         
       )
 
@@ -111,7 +113,8 @@ const insertCommentaryQuery = async (request, fastify) => {
     "wrSystemPlayerCount" as "systemPlayerCount",
     "wrIsPlayersShow" as "isPlayersShow",
     "wrIsPredictMarket" as "isPredictMarket",
-    tc."wrIsActive"  as "isActive"
+    tc."wrIsActive"  as "isActive",
+    "wrDelay" as "delay"
     from "insert_data" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"  
@@ -140,6 +143,7 @@ const insertCommentaryQuery = async (request, fastify) => {
           request.userTokenInfo.WrUserId,
           data.systemPlayerCount || null,
           data.isPredictMarket || false,
+          data.delay || 0
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -343,7 +347,8 @@ const updateCommentaryQuery = async (request, fastify) => {
       "isSignalROn" = $14,
       "isMatchTypeUpdated" = $15,
       "wrIsPredictMarket" = $17, 
-      "wrModifyDate" = now()
+      "wrModifyDate" = now(),
+      "wrDelay"=$18
       where "wrCommentaryId" = $16	
       `,
       {
@@ -365,6 +370,7 @@ const updateCommentaryQuery = async (request, fastify) => {
           data.isMatchTypeUpdated || false,
           data.commentaryId,
           data.isPredictMarket,
+          data.delay
         ],
 
         type: fastify.db.QueryTypes.UPDATE,
@@ -505,7 +511,8 @@ const getCommentaryByIdQuery = async (request, fastify) => {
       "wrSystemPlayerCount" as "systemPlayerCount",
       "wrIsPlayersShow" as "isPlayersShow",
       "wrIsPredictMarket" as "isPredictMarket",
-      tc."wrIsActive"  as "isActive"
+      tc."wrIsActive"  as "isActive",
+      "wrDelay" as "delay
       from "tblCommentaries" tc
       left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
       left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
