@@ -150,6 +150,11 @@ module.exports = (sequelize) => {
         allowNull: false,
         defaultValue: false,
       },
+      wrTemplateType :{
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      
     },
     {
       timestamps: false,

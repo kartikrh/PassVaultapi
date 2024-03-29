@@ -90,8 +90,8 @@ const updateMarketTemplateService = async (request, fastify) => {
     templateName: request.body.templateName || marketTemplate.templateName,
     matchTypeID: request.body.matchTypeID || marketTemplate.matchTypeID,
     isPredefineMarket: request.body.hasOwnProperty("isPredefineMarket") ? request.body.isPredefineMarket : marketTemplate.isPredefineMarket,
-    isPreMatchOnly: request.body.hasOwnProperty("isPreMatchOnly") ? request.body.isPreMatchOnly : marketTemplate.isPreMatchOnly,
-    isPreMatchMarket: request.body.hasOwnProperty("isPreMatchMarket") ? request.body.isPreMatchMarket : marketTemplate.isPreMatchMarket,
+    // isPreMatchOnly: request.body.hasOwnProperty("isPreMatchOnly") ? request.body.isPreMatchOnly : marketTemplate.isPreMatchOnly,
+    // isPreMatchMarket: request.body.hasOwnProperty("isPreMatchMarket") ? request.body.isPreMatchMarket : marketTemplate.isPreMatchMarket,
     isOver: request.body.hasOwnProperty("isOver") ? request.body.isOver : marketTemplate.isOver,
     over: request.body.over || marketTemplate.over,
     isPlayer: request.body.hasOwnProperty("isPlayer") ? request.body.isPlayer : marketTemplate.isPlayer,
@@ -119,6 +119,7 @@ const updateMarketTemplateService = async (request, fastify) => {
     createRefId : request.body.createRefId || marketTemplate.createRefId,
     openRefId : request.body.openRefId || marketTemplate.openRefId,
     isPredefineRunnerValue : request.body.hasOwnProperty("isPredefineRunnerValue") ? request.body.isPredefineRunnerValue : marketTemplate.isPredefineRunnerValue,
+    templateType : request.body.templateType || marketTemplate.templateType,
   }
   // update marketTemplate
   await updateMarketTemplateQuery(body, fastify ,request);

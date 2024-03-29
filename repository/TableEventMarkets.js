@@ -55,6 +55,7 @@ const getAllEventMarketsQuery = async (fastify) => {
         tem."wrOpenRefId" as "openRefId",
         tem."wrCreateType" as "createType",
         tem."wrCreate" as "create",
+        tem."wrTemplateType" as "templateType",
         tr."wrRunnerId" as "runnerId",
         tr."wrRunner" as "runner",
         tr."wrLine" as "line",
@@ -134,6 +135,7 @@ const getEventMarketByIdsQuery = async (data,request ,fastify) => {
           tem."wrOpenRefId" as "openRefId",
           tem."wrCreateType" as "createType",
           tem."wrCreate" as "create",
+          tem."wrTemplateType" as "templateType",
           tr."wrRunnerId" as "runnerId",
           tr."wrRunner" as "runner",
           tr."wrLine" as "line",
@@ -824,6 +826,7 @@ const getMarketListByCIdQuery = async (data,request,fastify) => {
             tem."wrOpenRefId" as "openRefId",
             tem."wrCreateType" as "createType",
             tem."wrCreate" as "create",
+            tem."wrTemplateType" as "templateType",
             (
                 SELECT json_agg("MarketRunners_CTE".*)
                 FROM "MarketRunners_CTE"
