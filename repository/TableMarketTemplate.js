@@ -36,7 +36,8 @@ const getAllMarketTemplateQuery = async (fastify) => {
       tmt."wrCreateRefId" as "createRefId",
       tmt."wrOpenRefId" as "openRefId",
       tmt."wrIsPredefineRunnerValue" as "isPredefineRunnerValue",
-      tmt."wrTemplateType" as "templateType"
+      tmt."wrTemplateType" as "templateType",
+      "wrDelay" as "delay"
   FROM "tblMarketTemplates" tmt
   LEFT JOIN "tblMatchTypes" tm ON tmt."wrMatchTypeID" = "tm"."wrMatchTypeId"
   `,
@@ -55,9 +56,9 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
               "wrAutoSuspendType","wrBeforeAutoSuspend","wrIsBallStart","wrIsAutoResultSet","wrAutoResultType","wrAutoResultafterBall",
               "wrAfterWicketAutoSuspend","wrAfterWicketNotCreated","wrCreatedBy","wrIsActive" , "wrActionType",
               "wrMarketTypeId","wrMarketTypeCategoryId","wrMargin" , "wrCreateRefId" , "wrOpenRefId",
-              "wrTemplateType"
+              "wrTemplateType", "wrDelay"
               ) values (
-                $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26, $27, $28, $29, $30, $31
+                $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26, $27, $28, $29, $30, $31, $32
                 ) returning *
           )        
         select 
@@ -93,7 +94,8 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
         "wrCreateRefId" as "createRefId",
         "wrOpenRefId" as "openRefId",
         "wrIsPredefineRunnerValue" as "isPredefineRunnerValue",
-        "wrTemplateType" as "templateType"
+        "wrTemplateType" as "templateType",
+        "wrDelay" as "delay"
          from insert_data`,
       {
         type: fastify.db.QueryTypes.SELECT,
@@ -141,6 +143,7 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
           data.createRefId || null,
           data.openRefId || null,
           data.templateType || null,
+          data.delay || 0
         ],
       }
     );
@@ -192,8 +195,9 @@ const updateMarketTemplateQuery = async (data, fastify, request) => {
     //         "wrMargin" = $29,
     //         "wrCreateRefId" = $30,
     //         "wrOpenRefId" = $31,
-    //         "wrTemplateType" = $32
-    //     WHERE "wrID" = $33
+    //         "wrTemplateType" = $32,
+    //         "wrDelay" = $33
+    //     WHERE "wrID" = $34
     //     `,
     //     {
     //         bind: [
@@ -229,6 +233,7 @@ const updateMarketTemplateQuery = async (data, fastify, request) => {
     //             data.createRefId,
     //             data.openRefId,
     //             data.templateType,
+    //             data.delay,
     //             data.marketTemplateId
 
     //         ],
@@ -268,8 +273,9 @@ const updateMarketTemplateQuery = async (data, fastify, request) => {
             "wrMargin" = $27,
             "wrCreateRefId" = $28,
             "wrOpenRefId" = $29,
-            "wrTemplateType" = $30
-        WHERE "wrID" = $31
+            "wrTemplateType" = $30,
+            "wrDelay" = $31
+        WHERE "wrID" = $32
         `,
         {
             bind: [
@@ -303,6 +309,7 @@ const updateMarketTemplateQuery = async (data, fastify, request) => {
                 data.createRefId,
                 data.openRefId,
                 data.templateType,
+                data.delay,
                 data.marketTemplateId
             ],
             type: fastify.db.QueryTypes.SELECT,

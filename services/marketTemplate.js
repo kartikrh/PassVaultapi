@@ -120,6 +120,7 @@ const updateMarketTemplateService = async (request, fastify) => {
     openRefId : request.body.openRefId || marketTemplate.openRefId,
     isPredefineRunnerValue : request.body.hasOwnProperty("isPredefineRunnerValue") ? request.body.isPredefineRunnerValue : marketTemplate.isPredefineRunnerValue,
     templateType : request.body.templateType || marketTemplate.templateType,
+    delay : request.body.delay || marketTemplate.delay,
   }
   // update marketTemplate
   await updateMarketTemplateQuery(body, fastify ,request);

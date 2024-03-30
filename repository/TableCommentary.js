@@ -71,7 +71,7 @@ const insertCommentaryQuery = async (request, fastify) => {
           1,
           $20,
           $21,
-          $22,
+          $22
         ) returning *         
       )
 
@@ -512,7 +512,7 @@ const getCommentaryByIdQuery = async (request, fastify) => {
       "wrIsPlayersShow" as "isPlayersShow",
       "wrIsPredictMarket" as "isPredictMarket",
       tc."wrIsActive"  as "isActive",
-      "wrDelay" as "delay
+      "wrDelay" as "delay"
       from "tblCommentaries" tc
       left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
       left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -2495,7 +2495,7 @@ const closeCommentaryQuery = async (data, fastify, request) => {
     );
 
     return result;
-    
+
   } catch (err) {
     errorLogger(
       fastify,
