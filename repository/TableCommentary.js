@@ -2514,7 +2514,7 @@ const deleteAllCommentaryQuery = async (fastify)=>{
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/closeCommentaryQuery",
+      "DB ERROR --> repository/TableCommentary/deleteAllCommentaryQuery",
       request
     );
     throw new Error(err.message);
