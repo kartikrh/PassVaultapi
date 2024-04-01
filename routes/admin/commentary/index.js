@@ -38,6 +38,7 @@ const {
   activeInactiveCommentary,
   closeCommentary,
   deleteAllCommentary,
+  updateDelayInCommentary,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -508,4 +509,17 @@ module.exports = async (fastify, opts) => {
     ],
     handler: (request, reply) => deleteAllCommentary(request, reply, fastify),
   })
+  fastify.post("/changeDelay", {
+    schema: Commentary.changeDelay.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "view",
+        }),
+    ],
+    handler: (request, reply) =>
+      updateDelayInCommentary(request, reply, fastify),
+  });
 };

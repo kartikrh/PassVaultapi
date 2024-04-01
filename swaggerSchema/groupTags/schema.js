@@ -1743,6 +1743,21 @@ const Commentary = {
       },
     },
   },
+  changeDelay: {
+    schema: {
+      tags: ["Commentary"],
+      description: "change delay",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+          delay: { type: "integer" },
+        },
+        required: ["commentaryId", "delay"],
+      },
+    },
+  },
   changePredictMarket: {
     schema: {
       tags: ["Commentary"],
@@ -3108,6 +3123,25 @@ const EventMarket = {
         properties: {
           commentaryId: { type: "integer" },
         },
+      },
+    },
+  },
+  setdelay: {
+    schema: {
+      tags: ["EventMarket"],
+      description: "set delay EventMarket",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          eventMarketId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+          delay: { type: "integer" }
+        },
+        required: ["eventMarketId", "delay"],
       },
     },
   },

@@ -19,6 +19,7 @@ const {
   cancelEventMarketByTeamIdQuery,
   upsertEventMarketSPQuery,
   getEventMarketByIdsQuery,
+  setDelayEventMarketQuery,
 } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
 const {
@@ -699,6 +700,11 @@ const marketTemplateTypeService = async (request, fastify) => {
   const { commentaryId } = request.body;
   return null;
 };
+const setDelayEventMarketService = async (request, fastify) => {
+  // get the eventMarketId from request
+  await setDelayEventMarketQuery(request.body, request, fastify);
+  return "Event Market delay value added successfully";
+};
 const handleMarketCloseService = async (data, request, fastify) => {
   // check the eventMarket close log for this commentaryId
   const checkLog = await getMarketLogsByCIdQuery(
@@ -803,4 +809,5 @@ module.exports = {
   getEventMarketByIdService,
   commentaryTypeService,
   marketTemplateTypeService,
+  setDelayEventMarketService
 };
