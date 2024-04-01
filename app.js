@@ -205,10 +205,10 @@ module.exports = async function (fastify, opts) {
     request.responseTime = responseTimeInMilliseconds;
 
     // if path include /commentary then do log in db
-    // if (request.originalUrl.includes("/commentary")) {
-    //   request.endTimeTimeStemp = new Date();
-    //   responseLogInDB(request, fastify);
-    // }
+    if (request.originalUrl.includes("/commentary")) {
+      request.endTimeTimeStemp = new Date();
+      responseLogInDB(request, fastify);
+    }
 
     if (request.startTime && logger) {
       responseLogger(request);
