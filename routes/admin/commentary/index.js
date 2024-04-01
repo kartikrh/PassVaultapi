@@ -63,14 +63,14 @@ const { Commentary } = require("../../../swaggerSchema/groupTags/schema");
 module.exports = async (fastify, opts) => {
   fastify.post("/all", {
     schema: Commentary.getAll.schema,
-    // preHandler: [
-    //   (request, reply) => authorize(request, reply, fastify),
-    //   (request, reply) =>
-    //     checkPermission(request, reply, fastify, {
-    //       tabName: "Commentary",
-    //       mode: "view",
-    //     }),
-    // ],
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "view",
+        }),
+    ],
     handler: (request, reply) => getAllCommentaries(request, reply, fastify),
   });
   fastify.post("/matchTypeList", {

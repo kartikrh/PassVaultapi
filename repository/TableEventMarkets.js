@@ -474,7 +474,6 @@ const createEventMarketQuery = async (data,request,fastify) => {
             "wrMargin",
             "wrStatus",
             "wrIsPredefineMarket",
-           
             "wrIsOver",
             "wrOver",
             "wrIsPlayer",
@@ -617,7 +616,6 @@ const createEventMarketQuery = async (data,request,fastify) => {
             "wrMargin" as "margin",
             "wrStatus" as "status",
             "wrIsPredefineMarket" as "isPredefineMarket",
-           
             "wrIsOver" as "isOver",
             "wrOver" as "over",
             "wrIsPlayer" as "isPlayer",
