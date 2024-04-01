@@ -4864,6 +4864,12 @@ const deleteAllCommentaryService = async (request, fastify) => {
 
   return "All Commentary Deleted successfully";
 }
+const getOpenCommentariesService = async (request, fastify) => {
+  const commentaries = global.tblCommentaries.filter(
+    (item) => item.commentaryStatus == 1
+  );
+  return commentaries;
+}
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -4904,6 +4910,7 @@ module.exports = {
   loadMultiCommentaryService,
   activeInactiveCommentaryService,
   closeCommentaryService,
-  deleteAllCommentaryService
+  deleteAllCommentaryService,
+  getOpenCommentariesService
   // getshortService
 };
