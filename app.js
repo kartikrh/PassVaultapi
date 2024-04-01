@@ -14,8 +14,10 @@ const { responseLogger, responseLogInDB } = require("./utilities/logger");
 const fastifyMultipart = require("@fastify/multipart");
 const fastifyStatic = require("@fastify/static");
 const { generateToken } = require("./utilities/tokenization");
-const { isJson, getMessage, getTitle, ERROR_CODES ,error } = require("./utilities");
+const { isJson, getMessage, getTitle, ERROR_CODES, error } = require("./utilities");
 const Sentry = require("@sentry/node");
+const { instrument } = require("@socket.io/admin-ui");
+const bcrypt = require("bcrypt");
 const Tracing = require("@sentry/tracing");
 // require("./database/connnection");
 
@@ -263,8 +265,17 @@ module.exports = async function (fastify, opts) {
   //  socket.io
   const io = new Server(fastify.server, {
     cors: {
-      origin: "*",
+      origin: ["https://admin.socket.io", "https://panel.deployed.live", "http://localhost:3001"],
+      credentials: true,
     },
+  });
+
+  instrument(io, {
+    auth: {
+      type: "basic",
+      username: process.env.SOCKET_ADMIN_USERNAME,
+      password: bcrypt.hashSync(process.env.SOCKET_ADMIN_PASSWORD, 10),
+    }
   });
 
   // //Assign socketIo to global variable
@@ -300,7 +311,7 @@ module.exports = async function (fastify, opts) {
     if (process.env.ENABLE_SENTRY === "TRUE") {
       Sentry.captureException(err);
     }
-    if(err.statusCode = 400){
+    if (err.statusCode = 400) {
       reply.status(400).send(error(err.message, ERROR_CODES.INVALID_INPUT, 400));
     }
     reply.status(500).send({ error: "Internal Server Error" });
