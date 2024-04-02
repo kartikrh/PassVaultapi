@@ -20,6 +20,8 @@ const {
   upsertEventMarketSPQuery,
   getEventMarketByIdsQuery,
   setDelayEventMarketQuery,
+  getDataLogsByMarketQuery,
+  getStatusLogsByMarketQuery,
 } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
 const {
@@ -163,7 +165,7 @@ const createEventMarketsService = async (request, fastify) => {
         {
             eventMarketId: item.eventMarketId,
             commentaryId: item.commentaryId,
-            dataTosave: item.wrData,
+            dataTosave: JSON.parse(item.data),
             updateType: MarketUpdateType.marketInitilization
         },
         request,
@@ -177,7 +179,7 @@ const createEventMarketsService = async (request, fastify) => {
           {
               eventMarketId: item.eventMarketId,
               commentaryId: item.commentaryId,
-              dataTosave: item.wrData,
+              dataTosave: JSON.parse(item.data),
               updateType: MarketUpdateType.marketInitilization,
               lineDiff : item.line - previousLine
           },
@@ -186,7 +188,6 @@ const createEventMarketsService = async (request, fastify) => {
       );
 
     }
-
   }
   return "Event Market saved successfully";
   //     const {
@@ -420,6 +421,7 @@ const updateMarketRateService = async (request, fastify) => {
     eventMarket = eventMarket[0];
 
     let data = await updateEventMarketRateQuery(item, request, fastify);
+    console.log(data);
     let diff = data.line - eventMarket.line;
     updatedOvers.push({
       over: item.over,
@@ -437,9 +439,9 @@ const updateMarketRateService = async (request, fastify) => {
 
     marketDataLogger(
       {
-          eventMarketId: item.eventMarketId,
-          commentaryId: item.commentaryId,
-          dataTosave: item.wrData,
+          eventMarketId: data.eventMarketId,
+          commentaryId: data.commentaryId,
+          dataTosave: JSON.parse(data.data),
           updateType: MarketUpdateType.marketInitilization,
           lineDiff : diff
       },
@@ -525,7 +527,7 @@ const saveEventMarketService = async (request, fastify) => {
         {
             eventMarketId: item.eventMarketId,
             commentaryId: item.commentaryId,
-            dataTosave: item.wrData,
+            dataTosave: JSON.parse(item.data),
             updateType: MarketUpdateType.marketInitilization
         },
         request,
@@ -864,6 +866,20 @@ const handleMarketCloseService = async (data, request, fastify) => {
 
   return "Market closed successfully";
 };
+const getDSReportEventMarketService = async (request, fastify) => {
+  // get data logs for this eventMarketId'
+  const result = await getDataLogsByMarketQuery(request, fastify);
+
+  return result;
+
+}
+const getSLReportEventMarketService = async (request, fastify) => {
+  // get data logs for this eventMarketId'
+  const result = await getStatusLogsByMarketQuery(request, fastify);
+
+  return result;
+
+}
 module.exports = {
   getDetailsByCIdService,
   getAllEventMarketsService,
@@ -885,5 +901,7 @@ module.exports = {
   getEventMarketByIdService,
   commentaryTypeService,
   marketTemplateTypeService,
-  setDelayEventMarketService
+  setDelayEventMarketService,
+  getDSReportEventMarketService,
+  getSLReportEventMarketService
 };
