@@ -99,7 +99,11 @@ const getDetailsByCIdService = async (request, fastify) => {
 const getAllEventMarketsService = async (request, fastify) => {
   const { isActive, eventTypeId, competitionId, eventId, status } =
     request.body;
-  let eventMarket = global.tblEventMarkets;
+  let createWhereStatus = `tem."wrStatus" NOT IN (${EventMarketStatus.Close},${EventMarketStatus.Settled},${EventMarketStatus.Cancel})`
+  if(status !== undefined){
+    createWhereStatus = `tem."wrStatus" = ${status}`	
+  }
+  let eventMarket = await getAllEventMarketsQuery(fastify , createWhereStatus);
   if (eventTypeId) {
     // get the commentaryId from tblCommentaries
     let commentaryId = global.tblCommentaries
@@ -127,9 +131,9 @@ const getAllEventMarketsService = async (request, fastify) => {
       commentaryId.includes(item.commentaryId)
     );
   }
-  if (status !== undefined) {
-    eventMarket = eventMarket.filter((item) => item.status === status);
-  }
+  // if (status !== undefined) {
+  //   eventMarket = eventMarket.filter((item) => item.status === status);
+  // }
   if (isActive !== undefined) {
     eventMarket = eventMarket.filter((item) => item.isActive === isActive);
   }

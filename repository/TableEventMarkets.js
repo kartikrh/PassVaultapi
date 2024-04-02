@@ -1,7 +1,7 @@
 const { MarketUpdateType, EventMarketStatus, ActionTypeForMarketCancel } = require("../utilities");
 const { errorLogger, marketDataLogger } = require("../utilities/logger");
 
-const getAllEventMarketsQuery = async (fastify) => {
+const getAllEventMarketsQuery = async (fastify, whereCondition = null) => {
   return await fastify.db.query(
     `SELECT
         "wrID" AS "eventMarketId",
@@ -73,7 +73,8 @@ const getAllEventMarketsQuery = async (fastify) => {
     LEFT JOIN "tblCompetitions" tcom ON tcom."wrCompetitionId" = tc."wrCompetitionId"
     LEFT JOIN "tblEventTypes" tet ON tet."wrEventTypeId" = tc."wrEventTypeId"
     LEFT JOIN "tblMarketRunners" tr ON tr."wrEventMarketId" = tem."wrID"
-    LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = tem."wrTeamID"`
+    LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = tem."wrTeamID"
+    ${whereCondition ? `WHERE ${whereCondition}` : ""}`
    ,
         {
             type: fastify.db.QueryTypes.SELECT,

@@ -59,7 +59,8 @@ const insertCommentaryQuery = async (request, fastify) => {
       `
       with insert_data as(
         insert into "tblCommentaries" ("wrEventTypeId","wrMatchTypeId","wrCompetitionId","wrEventId",
-        "wrEventDate","wrEventName","wrEventRefId","wrTeam1Id","wrTeam2Id","wrLocation","wrWeather","wrPitch","wrDisplayStatus","wrTarget","wrMarketID","wrTpId","isSignalROn","isMatchTypeUpdated" , "wrCreatedBy" , "wrCreatedDate","wrCommentaryStatus","wrCurrentInnings", "wrSystemPlayerCount","wrIsPredictMarket","wrDelay") values (
+        "wrEventDate","wrEventName","wrEventRefId","wrTeam1Id","wrTeam2Id","wrLocation","wrWeather","wrPitch","wrDisplayStatus","wrTarget","wrMarketID","wrTpId","isSignalROn","isMatchTypeUpdated" , "wrCreatedBy" , "wrCreatedDate","wrCommentaryStatus","wrCurrentInnings", "wrSystemPlayerCount","wrIsPredictMarket",
+        "wrDelay", "wrIsActive", "wrIsClientShow") values (
           $1,
           $2,
           $3,
@@ -71,7 +72,9 @@ const insertCommentaryQuery = async (request, fastify) => {
           1,
           $20,
           $21,
-          $22
+          $22,
+          $23,
+          $24,
         ) returning *         
       )
 
@@ -143,7 +146,9 @@ const insertCommentaryQuery = async (request, fastify) => {
           request.userTokenInfo.WrUserId,
           data.systemPlayerCount || null,
           data.isPredictMarket || false,
-          data.delay || 0
+          data.delay || 0,
+          data.isActive,
+          data.isClientShow
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -348,7 +353,9 @@ const updateCommentaryQuery = async (request, fastify) => {
       "isMatchTypeUpdated" = $15,
       "wrIsPredictMarket" = $17, 
       "wrModifyDate" = now(),
-      "wrDelay"=$18
+      "wrDelay"=$18,
+      "wrIsActive" = $19,
+      "wrIsClientShow" = $20
       where "wrCommentaryId" = $16	
       `,
       {
@@ -370,7 +377,9 @@ const updateCommentaryQuery = async (request, fastify) => {
           data.isMatchTypeUpdated || false,
           data.commentaryId,
           data.isPredictMarket,
-          data.delay
+          data.delay,
+          data.isActive,
+          data.isClientShow
         ],
 
         type: fastify.db.QueryTypes.UPDATE,
