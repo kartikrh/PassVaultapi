@@ -215,7 +215,6 @@ const EventMarketStatus = {
   Settled	:5,
   Cancel:	6
 }
-
 const MarketActionType = {
   isresultSet : 1,
   setResult : 2,

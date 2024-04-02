@@ -31,6 +31,16 @@ module.exports = (sequelize) => {
         defaultValue: new Date(),
         allowNull: true,
       },
+      wrLineDiff :{
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        defaultValue: 0,
+      },
+      wrCreatedBy :{
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        defaultValue: 0,
+      },
     },
     {
       timestamps: false,

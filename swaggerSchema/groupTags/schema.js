@@ -3043,6 +3043,20 @@ const EventMarket = {
       },
     },
   },
+  getDSReport:{
+    schema : {
+      tags: ["EventMarket"],
+      description: "get DS Report",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          eventMarketId: { type: "integer" },
+        },
+        required: ["eventMarketId"],
+      },
+    },
+  },
   byId: {
     tags: ["EventMarket"],
     description: "get market by id",

@@ -20,6 +20,8 @@ const {
   upsertEventMarketSPQuery,
   getEventMarketByIdsQuery,
   setDelayEventMarketQuery,
+  getDataLogsByMarketQuery,
+  getStatusLogsByMarketQuery,
 } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
 const {
@@ -27,8 +29,9 @@ const {
   MarketActionType,
   ActionTypeForMarketCancel,
   callPredictorMarket,
+  MarketUpdateType,
 } = require("../utilities/index");
-const { marketLogger } = require("../utilities/logger");
+const { marketLogger, marketDataLogger } = require("../utilities/logger");
 const getDetailsByCIdService = async (request, fastify) => {
   const { commentaryId } = request.body;
   const commentary = global.tblCommentaries.find(
@@ -156,9 +159,35 @@ const createEventMarketsService = async (request, fastify) => {
     let index = global.tblEventMarkets.findIndex(
       (e) => e.eventMarketId === item.eventMarketId
     );
-    index === -1
-      ? global.tblEventMarkets.push(item)
-      : (global.tblEventMarkets[index] = item);
+    if(index === -1){
+      global.tblEventMarkets.push(item);
+      marketDataLogger(
+        {
+            eventMarketId: item.eventMarketId,
+            commentaryId: item.commentaryId,
+            dataTosave: JSON.parse(item.data),
+            updateType: MarketUpdateType.marketInitilization
+        },
+        request,
+        fastify
+      );
+    }
+    else {
+      let previousLine = global.tblEventMarkets[index].line;
+      global.tblEventMarkets[index] = item;
+      marketDataLogger(
+          {
+              eventMarketId: item.eventMarketId,
+              commentaryId: item.commentaryId,
+              dataTosave: JSON.parse(item.data),
+              updateType: MarketUpdateType.marketInitilization,
+              lineDiff : item.line - previousLine
+          },
+          request,
+          fastify
+      );
+
+    }
   }
   return "Event Market saved successfully";
   //     const {
@@ -392,6 +421,7 @@ const updateMarketRateService = async (request, fastify) => {
     eventMarket = eventMarket[0];
 
     let data = await updateEventMarketRateQuery(item, request, fastify);
+    console.log(data);
     let diff = data.line - eventMarket.line;
     updatedOvers.push({
       over: item.over,
@@ -406,6 +436,18 @@ const updateMarketRateService = async (request, fastify) => {
     else {
       global.tblEventMarkets.push(data);
     }
+
+    marketDataLogger(
+      {
+          eventMarketId: data.eventMarketId,
+          commentaryId: data.commentaryId,
+          dataTosave: JSON.parse(data.data),
+          updateType: MarketUpdateType.marketInitilization,
+          lineDiff : diff
+      },
+      request,
+      fastify
+    );
 
     // global.tblEventMarkets[
     //   global.tblEventMarkets.findIndex(
@@ -480,6 +522,17 @@ const saveEventMarketService = async (request, fastify) => {
     index === -1
       ? global.tblEventMarkets.push(item)
       : (global.tblEventMarkets[index] = item);
+
+    marketDataLogger(
+        {
+            eventMarketId: item.eventMarketId,
+            commentaryId: item.commentaryId,
+            dataTosave: JSON.parse(item.data),
+            updateType: MarketUpdateType.marketInitilization
+        },
+        request,
+        fastify
+    );
   }
   return dataOfmarkets[0];
 
@@ -750,6 +803,15 @@ const handleMarketCloseService = async (data, request, fastify) => {
     if (eventMarket !== -1) {
       global.tblEventMarkets[eventMarket].status = EventMarketStatus.Close;
     }
+    marketLogger(
+      {
+        eventMarketId: item.eventMarketId,
+        actionType: MarketActionType.closeMarket,
+        value: `eventMarketStatus : ${EventMarketStatus.Close}`,
+      },
+      request,
+      fastify
+    );
   }
 
   // cancel the market as per actionType
@@ -771,6 +833,15 @@ const handleMarketCloseService = async (data, request, fastify) => {
     if (eventMarket !== -1) {
       global.tblEventMarkets[eventMarket].status = EventMarketStatus.Cancel;
     }
+    marketLogger(
+      {
+        eventMarketId: item.eventMarketId,
+        actionType: MarketActionType.marketCancel,
+        value: `eventMarketStatus : ${EventMarketStatus.Cancel}`,
+      },
+      request,
+      fastify
+    );
   }
   // callPredictorMarket(
   //   {
@@ -795,6 +866,20 @@ const handleMarketCloseService = async (data, request, fastify) => {
 
   return "Market closed successfully";
 };
+const getDSReportEventMarketService = async (request, fastify) => {
+  // get data logs for this eventMarketId'
+  const result = await getDataLogsByMarketQuery(request, fastify);
+
+  return result;
+
+}
+const getSLReportEventMarketService = async (request, fastify) => {
+  // get data logs for this eventMarketId'
+  const result = await getStatusLogsByMarketQuery(request, fastify);
+
+  return result;
+
+}
 module.exports = {
   getDetailsByCIdService,
   getAllEventMarketsService,
@@ -816,5 +901,7 @@ module.exports = {
   getEventMarketByIdService,
   commentaryTypeService,
   marketTemplateTypeService,
-  setDelayEventMarketService
+  setDelayEventMarketService,
+  getDSReportEventMarketService,
+  getSLReportEventMarketService
 };

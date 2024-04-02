@@ -1,4 +1,4 @@
-const { getDetailsByCId, getAllEventMarket, createEventMarket, deleteEventMarket, activeInactiveMarket, updateAllowMarket, getEventListByCompetitionId, marketListResultFalse, changeResultOfMarket, marketListByCId, updateMarketRate, saveEventMarket ,changeMarketCancel, changeMarketResult, changeMarketClose, suspendMarketByCId, getEventMarketById, getMarketTemplateTypeList, getCommentaryTypeList, setDelayEventMarket} = require("../../../controller/users/admin/eventMarket");
+const { getDetailsByCId, getAllEventMarket, createEventMarket, deleteEventMarket, activeInactiveMarket, updateAllowMarket, getEventListByCompetitionId, marketListResultFalse, changeResultOfMarket, marketListByCId, updateMarketRate, saveEventMarket ,changeMarketCancel, changeMarketResult, changeMarketClose, suspendMarketByCId, getEventMarketById, getMarketTemplateTypeList, getCommentaryTypeList, setDelayEventMarket, getDSReportEventMarket, getSLReportEventMarket} = require("../../../controller/users/admin/eventMarket");
 const { EventMarket, Commentary } = require("../../../swaggerSchema/groupTags/schema");
 const {
     authorize,
@@ -257,5 +257,27 @@ module.exports = async (fastify, opts) => {
             })
         ],
         handler: (request, reply) => setDelayEventMarket(request, reply, fastify)
+    })
+    fastify.post("/getDSReport", {
+        schema: EventMarket.getDSReport.schema,
+        preHandler: [
+            (request, reply) => authorize(request, reply, fastify),
+            (request, reply) => checkPermission(request, reply, fastify, {
+                tabName: "Event Markets",
+                mode: "view"
+            })
+        ],
+        handler: (request, reply) => getDSReportEventMarket(request, reply, fastify)
+    })
+    fastify.post("/getSLReport", {
+        schema: EventMarket.getDSReport.schema,
+        preHandler: [
+            (request, reply) => authorize(request, reply, fastify),
+            (request, reply) => checkPermission(request, reply, fastify, {
+                tabName: "Event Markets",
+                mode: "view"
+            })
+        ],
+        handler: (request, reply) => getSLReportEventMarket(request, reply, fastify)
     })
 };

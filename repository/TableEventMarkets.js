@@ -938,7 +938,7 @@ const updateEventMarketRateQuery = async (data,request,fastify) => {
 
         // update market runners for this market
         for(let runner of data.marketRunners){
-            console.log(runner);
+            // console.log(runner);
             // update market runners for this market
             await fastify.db.query(
                 `UPDATE "tblMarketRunners" SET
@@ -1534,6 +1534,81 @@ const upsertEventMarketSPQuery = async (data, request, fastify) => {
         throw new Error(error.message);
     }
 }
+const getDataLogsByMarketQuery = async (request, fastify) => {
+    try {
+        const data = fastify.db.query(
+            `
+                SELECT
+                    "wrId" as "marketDataLogId",
+                    tmd."wrCommentaryId" as "commentaryId",
+                    tmd."wrEventMarketId" as "eventMarketId",
+                    tem."wrMarketName" as "marketName",
+                    tmd."wrData" as "data",
+                    "wrUpdateType" as "updateType",
+                    "wrCreatedDate" as "createdDate",
+                    "wrCreatedBy" as "createdBy",
+                    tu."WrUserName" as "userName",
+                    "wrLineDiff" as "lineDiff"
+                FROM "tblMarketDataLogs" tmd
+                LEFT JOIN "tblEventMarkets"  tem ON tmd."wrEventMarketId" = tem."wrID"
+                LEFT JOIN "tblUsers" tu ON tmd."wrCreatedBy" = tu."WrUserId"
+                WHERE "wrEventMarketId" = $1
+                ORDER BY "wrId" desc
+            `,{
+                bind: [request.body.eventMarketId],
+                type: fastify.db.QueryTypes.SELECT
+            }
+        );
+        return data;
+
+
+    } catch (error) {
+        errorLogger(
+            fastify,
+            error.message,
+            "DB ERROR --> repository/TableEventmarket.js/upsertEventMarketSPQuery",
+            request
+        );
+        throw new Error(error.message);
+    }
+}
+const getStatusLogsByMarketQuery = async (request, fastify) => {
+    try {
+        const data = fastify.db.query(
+            `
+                SELECT
+                    "wrId" as "logId",
+                    tmd."wrCommentaryId" as "commentaryId",
+                    tmd."wrEventMarketId" as "eventMarketId",
+                    tem."wrMarketName" as "marketName",
+                    tmd."wrActionType" as "actionType",
+                    "wrValue" as "value",
+                    "wrUserId" as "userId",
+                    tu."WrUserName" as "userName",
+                    tmd."wrCreatedDate" as "createdDate"
+                FROM "tblMarketLogs" tmd
+                LEFT JOIN "tblUsers" tu ON tmd."wrUserId" = tu."WrUserId"
+                LEFT JOIN "tblEventMarkets"  tem ON tmd."wrEventMarketId" = tem."wrID"
+                WHERE "wrEventMarketId" = $1
+                ORDER BY "wrId" desc
+            `,{
+                bind: [request.body.eventMarketId],
+                type: fastify.db.QueryTypes.SELECT
+            }
+        );
+        return data;
+
+
+    } catch (error) {
+        errorLogger(
+            fastify,
+            error.message,
+            "DB ERROR --> repository/TableEventmarket.js/upsertEventMarketSPQuery",
+            request
+        );
+        throw new Error(error.message);
+    }
+}
 module.exports = {
     getAllEventMarketsQuery,
     createManyEventMarketQuery,
@@ -1555,5 +1630,7 @@ module.exports = {
     cancelEventMarketByTeamIdQuery,
     upsertEventMarketSPQuery,
     getEventMarketByIdsQuery,
-    setDelayEventMarketQuery
+    setDelayEventMarketQuery,
+    getDataLogsByMarketQuery,
+    getStatusLogsByMarketQuery
 };

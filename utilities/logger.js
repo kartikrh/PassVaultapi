@@ -65,6 +65,7 @@ const marketLogger = async (data , request , fastify) => {
     eventMarketId,
     actionType,
     value,
+    commentaryId
   } = data;
   try {
     return await fastify.db.query(
@@ -77,7 +78,7 @@ const marketLogger = async (data , request , fastify) => {
           value,
           request.userTokenInfo.WrUserId,
           new Date(),
-          data.commentaryId || null,
+          commentaryId || null,
         ],
       }
     );
@@ -92,10 +93,12 @@ const marketDataLogger = async (data , request , fastify) => {
       commentaryId,
       dataTosave,
       updateType,
+      lineDiff
     } = data;
 
     return await fastify.db.query(
-      `INSERT INTO "tblMarketDataLogs" ("wrEventMarketId", "wrCommentaryId", "wrData", "wrUpdateType", "wrCreatedDate") VALUES ($1, $2, $3, $4, $5)`,
+      `INSERT INTO "tblMarketDataLogs" ("wrEventMarketId", "wrCommentaryId", "wrData", "wrUpdateType", "wrCreatedDate",
+      "wrLineDiff", "wrCreatedBy") VALUES ($1, $2, $3, $4, $5 ,$6, $7)`,
       {
         type: fastify.db.QueryTypes.SELECT,
         bind: [
@@ -104,6 +107,8 @@ const marketDataLogger = async (data , request , fastify) => {
           JSON.stringify(dataTosave),
           updateType,
           new Date(),
+          lineDiff || 0,
+          request.userTokenInfo.WrUserId || 0,
         ],
       }
     );
