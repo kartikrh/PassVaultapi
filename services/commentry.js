@@ -219,7 +219,10 @@ const commentaryDetailsByIdService = async (request, fastify) => {
     commentaryDisplayStatus,
   };
 
-  if (commentary.isPredictMarket == true && (commentary.commentaryStatus == 2 || commentary.commentaryStatus == 3)) {
+  if (
+    commentary.isPredictMarket == true &&
+    (commentary.commentaryStatus == 2 || commentary.commentaryStatus == 3)
+  ) {
     callPredictorMarket(
       {
         commentary_id: commentary.commentaryId,
@@ -883,8 +886,12 @@ const loadMultiCommentaryService = async (request, fastify) => {
 
     if (!originalCommentary) {
       throw new Error("Commentary with this id not Found");
-    } 
-    if(originalCommentary.isPredictMarket == true  && (originalCommentary.commentaryStatus == 2 || originalCommentary.commentaryStatus == 3)){
+    }
+    if (
+      originalCommentary.isPredictMarket == true &&
+      (originalCommentary.commentaryStatus == 2 ||
+        originalCommentary.commentaryStatus == 3)
+    ) {
       callPredictorMarket(
         {
           commentary_id: originalCommentary.commentaryId,
@@ -896,7 +903,6 @@ const loadMultiCommentaryService = async (request, fastify) => {
         request
       );
     }
-    
   }
   return `Commentaries loaded successfully`;
 };
@@ -1391,14 +1397,19 @@ const testStoreProcedureService = async (request, fastify) => {
               item.commentaryId === commentaryBallByBall.commentaryId &&
               item.teamStatus === 1
           );
+
+          let decimalOverCount = new Decimal(commentaryBallByBall.overCount);
+          let _wkt = commentaryBallByBall.ballIsWicket;
           callPredictorMarket(
             {
               commentary_id: commentaryData.commentaryId,
               match_type_id: commentaryData.matchTypeId,
-              ball: commentaryBallByBall.overCount,
+              ball: decimalOverCount,
               run: commentaryBallByBall.ballRun,
               total_score: strikeTeam.teamScore,
               strike_team_id: strikeTeam.teamId,
+              wicket: _wkt === true ? 1 : 0,
+              total_wicket: strikeTeam.teamWicket,
             },
             "/api/predictscore",
             fastify,
@@ -1465,10 +1476,14 @@ const testStoreProcedureService = async (request, fastify) => {
       );
     }
 
-    if(commentaryDetails && commentaryData.isPredictMarket == true && statusToUpdate == 4){
+    if (
+      commentaryDetails &&
+      commentaryData.isPredictMarket == true &&
+      statusToUpdate == 4
+    ) {
       callPredictorMarket(
         {
-          commentary_id: commentaryDetails.commentaryId
+          commentary_id: commentaryDetails.commentaryId,
         },
         "/api/endcommentary",
         fastify,
@@ -1476,7 +1491,6 @@ const testStoreProcedureService = async (request, fastify) => {
       );
     }
 
-   
     // which i get from request i want to return only that object
     return response;
   } catch (error) {
@@ -4824,31 +4838,30 @@ const activeInactiveCommentaryService = async (request, fastify) => {
   global.tblCommentaries[commentary].isActive = request.body.isActive;
 
   return "Commentary Updated successfully";
-}
+};
 const closeCommentaryService = async (request, fastify) => {
-  await closeCommentaryQuery(request.body,fastify, request);
+  await closeCommentaryQuery(request.body, fastify, request);
 
   // update the global variable
   for (let commentaryId of request.body.commentaryId) {
     const index = global.tblCommentaries.findIndex(
       (item) => item.commentaryId === commentaryId
     );
-    if(index !== -1){
+    if (index !== -1) {
       global.tblCommentaries[index].commentaryStatus = 4;
 
       callPredictorMarket(
         {
-          commentary_id: commentaryId
+          commentary_id: commentaryId,
         },
         "/api/endcommentary",
         fastify,
         request
       );
     }
-
   }
   return `Commentary(s) closed successfully`;
-}
+};
 const deleteAllCommentaryService = async (request, fastify) => {
   await deleteAllCommentaryQuery(fastify);
 
@@ -4862,15 +4875,14 @@ const deleteAllCommentaryService = async (request, fastify) => {
   global.tblEventMarkets = [];
   global.tblMarketRunners = [];
 
-
   return "All Commentary Deleted successfully";
-}
+};
 const getOpenCommentariesService = async (request, fastify) => {
   const commentaries = global.tblCommentaries.filter(
     (item) => item.commentaryStatus == 1
   );
   return commentaries;
-}
+};
 const updateDelayInCommentaryService = async (request, fastify) => {
   const { commentaryId, delay } = request.body;
   const index = global.tblCommentaries.findIndex(
@@ -4943,6 +4955,6 @@ module.exports = {
   closeCommentaryService,
   deleteAllCommentaryService,
   getOpenCommentariesService,
-  updateDelayInCommentaryService
+  updateDelayInCommentaryService,
   // getshortService
 };
