@@ -702,7 +702,16 @@ const marketTemplateTypeService = async (request, fastify) => {
 };
 const setDelayEventMarketService = async (request, fastify) => {
   // get the eventMarketId from request
-  await setDelayEventMarketQuery(request.body, request, fastify);
+  const updatedId = await setDelayEventMarketQuery(request.body, request, fastify);
+  console.log(updatedId);
+    for(let id of updatedId){
+      let eventMarket = global.tblEventMarkets.findIndex(
+        (item) => item.eventMarketId === id
+      );
+      if(eventMarket !== -1){
+        global.tblEventMarkets[eventMarket].delay = request.body.delay;
+      }   
+    } 
   return "Event Market delay value added successfully";
 };
 const handleMarketCloseService = async (data, request, fastify) => {
