@@ -1419,6 +1419,32 @@ const closeEventMarketByTeamIdQuery = async (data, request, fastify) => {
         throw new Error(error.message);
     }
 }
+const setDelayEventMarketQuery = async (data, request, fastify) => {
+    try {
+        const result = await fastify.db.query(
+            `UPDATE "tblEventMarkets"
+            SET "wrDelay" = $1
+            WHERE 
+            "wrID" = ANY($2)
+            AND
+            "wrStatus" NOT IN ($3,$4,$5)
+            RETURNING "wrID" as "eventMarketId"`,
+            {
+                bind: [data.delay, data.eventMarketId, EventMarketStatus.Settled, EventMarketStatus.Cancel, EventMarketStatus.Close],
+                type: fastify.db.QueryTypes.SELECT
+            }
+        );
+        return result;
+    } catch (error) {
+        errorLogger(
+            fastify,
+            error.message,
+            "DB ERROR --> repository/TableEventmarket.js/setDelayEventMarketQuery",
+            request
+        );
+        throw new Error(error.message);
+    }
+}
 const getMarketLogsByCIdQuery = async (data,request,fastify) => {
     try {
         //get market logs by commentary id
@@ -1528,5 +1554,6 @@ module.exports = {
     getMarketLogsByCIdQuery,
     cancelEventMarketByTeamIdQuery,
     upsertEventMarketSPQuery,
-    getEventMarketByIdsQuery
+    getEventMarketByIdsQuery,
+    setDelayEventMarketQuery
 };

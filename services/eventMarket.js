@@ -19,6 +19,7 @@ const {
   cancelEventMarketByTeamIdQuery,
   upsertEventMarketSPQuery,
   getEventMarketByIdsQuery,
+  setDelayEventMarketQuery,
 } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
 const {
@@ -391,7 +392,6 @@ const updateMarketRateService = async (request, fastify) => {
     eventMarket = eventMarket[0];
 
     let data = await updateEventMarketRateQuery(item, request, fastify);
-    // console.log(data);
     let diff = data.line - eventMarket.line;
     updatedOvers.push({
       over: item.over,
@@ -699,6 +699,19 @@ const marketTemplateTypeService = async (request, fastify) => {
   const { commentaryId } = request.body;
   return null;
 };
+const setDelayEventMarketService = async (request, fastify) => {
+  // get the eventMarketId from request
+  const updatedId = await setDelayEventMarketQuery(request.body, request, fastify);
+    for(let i of updatedId){
+      let eventMarket = global.tblEventMarkets.findIndex(
+        (item) => item.eventMarketId === i.eventMarketId
+      );
+      if(eventMarket !== -1){
+        global.tblEventMarkets[eventMarket].delay = request.body.delay;
+      }   
+    } 
+  return "Event Market delay value added successfully";
+};
 const handleMarketCloseService = async (data, request, fastify) => {
   // check the eventMarket close log for this commentaryId
   const checkLog = await getMarketLogsByCIdQuery(
@@ -803,4 +816,5 @@ module.exports = {
   getEventMarketByIdService,
   commentaryTypeService,
   marketTemplateTypeService,
+  setDelayEventMarketService
 };

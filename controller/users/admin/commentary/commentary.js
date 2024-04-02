@@ -38,6 +38,7 @@ const {
   closeCommentaryService,
   deleteAllCommentaryService,
   getOpenCommentariesService,
+  updateDelayInCommentaryService,
 } = require("../../../../services/commentry");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -550,6 +551,20 @@ const getOpenCommentaries = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const updateDelayInCommentary = async (request, reply, fastify) => {
+  try {
+    const result = await updateDelayInCommentaryService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      path + "/updateDelayInCommentary",
+      request
+    );
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 module.exports = {
   getAllCommentaries,
   getCommentaryById,
@@ -592,5 +607,6 @@ module.exports = {
   activeInactiveCommentary,
   closeCommentary,
   deleteAllCommentary,
-  getOpenCommentaries
+  getOpenCommentaries,
+  updateDelayInCommentary
 };
