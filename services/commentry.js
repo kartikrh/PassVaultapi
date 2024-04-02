@@ -1398,7 +1398,7 @@ const testStoreProcedureService = async (request, fastify) => {
               item.teamStatus === 1
           );
 
-          let decimalOverCount = new Decimal(commentaryBallByBall.overCount);
+          let decimalOverCount = parseFloat(commentaryBallByBall.overCount);
           let _wkt = commentaryBallByBall.ballIsWicket;
           callPredictorMarket(
             {
