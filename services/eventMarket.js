@@ -392,7 +392,6 @@ const updateMarketRateService = async (request, fastify) => {
     eventMarket = eventMarket[0];
 
     let data = await updateEventMarketRateQuery(item, request, fastify);
-    // console.log(data);
     let diff = data.line - eventMarket.line;
     updatedOvers.push({
       over: item.over,
@@ -703,10 +702,9 @@ const marketTemplateTypeService = async (request, fastify) => {
 const setDelayEventMarketService = async (request, fastify) => {
   // get the eventMarketId from request
   const updatedId = await setDelayEventMarketQuery(request.body, request, fastify);
-  console.log(updatedId);
-    for(let id of updatedId){
+    for(let i of updatedId){
       let eventMarket = global.tblEventMarkets.findIndex(
-        (item) => item.eventMarketId === id
+        (item) => item.eventMarketId === i.eventMarketId
       );
       if(eventMarket !== -1){
         global.tblEventMarkets[eventMarket].delay = request.body.delay;
