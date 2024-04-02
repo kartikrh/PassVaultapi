@@ -27,8 +27,9 @@ const {
   MarketActionType,
   ActionTypeForMarketCancel,
   callPredictorMarket,
+  MarketUpdateType,
 } = require("../utilities/index");
-const { marketLogger } = require("../utilities/logger");
+const { marketLogger, marketDataLogger } = require("../utilities/logger");
 const getDetailsByCIdService = async (request, fastify) => {
   const { commentaryId } = request.body;
   const commentary = global.tblCommentaries.find(
@@ -156,9 +157,36 @@ const createEventMarketsService = async (request, fastify) => {
     let index = global.tblEventMarkets.findIndex(
       (e) => e.eventMarketId === item.eventMarketId
     );
-    index === -1
-      ? global.tblEventMarkets.push(item)
-      : (global.tblEventMarkets[index] = item);
+    if(index === -1){
+      global.tblEventMarkets.push(item);
+      marketDataLogger(
+        {
+            eventMarketId: item.eventMarketId,
+            commentaryId: item.commentaryId,
+            dataTosave: item.wrData,
+            updateType: MarketUpdateType.marketInitilization
+        },
+        request,
+        fastify
+      );
+    }
+    else {
+      let previousLine = global.tblEventMarkets[index].line;
+      global.tblEventMarkets[index] = item;
+      marketDataLogger(
+          {
+              eventMarketId: item.eventMarketId,
+              commentaryId: item.commentaryId,
+              dataTosave: item.wrData,
+              updateType: MarketUpdateType.marketInitilization,
+              lineDiff : item.line - previousLine
+          },
+          request,
+          fastify
+      );
+
+    }
+
   }
   return "Event Market saved successfully";
   //     const {
@@ -407,6 +435,18 @@ const updateMarketRateService = async (request, fastify) => {
       global.tblEventMarkets.push(data);
     }
 
+    marketDataLogger(
+      {
+          eventMarketId: item.eventMarketId,
+          commentaryId: item.commentaryId,
+          dataTosave: item.wrData,
+          updateType: MarketUpdateType.marketInitilization,
+          lineDiff : diff
+      },
+      request,
+      fastify
+    );
+
     // global.tblEventMarkets[
     //   global.tblEventMarkets.findIndex(
     //     (e) => e.eventMarketId === item.eventMarketId
@@ -480,6 +520,17 @@ const saveEventMarketService = async (request, fastify) => {
     index === -1
       ? global.tblEventMarkets.push(item)
       : (global.tblEventMarkets[index] = item);
+
+    marketDataLogger(
+        {
+            eventMarketId: item.eventMarketId,
+            commentaryId: item.commentaryId,
+            dataTosave: item.wrData,
+            updateType: MarketUpdateType.marketInitilization
+        },
+        request,
+        fastify
+    );
   }
   return dataOfmarkets[0];
 
@@ -750,6 +801,15 @@ const handleMarketCloseService = async (data, request, fastify) => {
     if (eventMarket !== -1) {
       global.tblEventMarkets[eventMarket].status = EventMarketStatus.Close;
     }
+    marketLogger(
+      {
+        eventMarketId: item.eventMarketId,
+        actionType: MarketActionType.closeMarket,
+        value: `eventMarketStatus : ${EventMarketStatus.Close}`,
+      },
+      request,
+      fastify
+    );
   }
 
   // cancel the market as per actionType
@@ -771,6 +831,15 @@ const handleMarketCloseService = async (data, request, fastify) => {
     if (eventMarket !== -1) {
       global.tblEventMarkets[eventMarket].status = EventMarketStatus.Cancel;
     }
+    marketLogger(
+      {
+        eventMarketId: item.eventMarketId,
+        actionType: MarketActionType.marketCancel,
+        value: `eventMarketStatus : ${EventMarketStatus.Cancel}`,
+      },
+      request,
+      fastify
+    );
   }
   // callPredictorMarket(
   //   {
