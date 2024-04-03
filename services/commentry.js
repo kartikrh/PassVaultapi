@@ -2409,7 +2409,7 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
     resultArr.cst = result.commentaryStatus;
     resultArr.ics = result.isClientShow;
   }
-  if (getstatus === 3) {
+  if (getstatus >= 3) {
     const _tosswonby = result.tossWonBy;
     if (commentaryTeamsOne[0].teamId == _tosswonby) {
       tossteam = commentaryTeamsOne[0].shortName;
@@ -2526,8 +2526,8 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
 
   resultArr.ed = convertDate(result.eventDate, "DD/MM/YYYY") || "";
   resultArr.et = convertDate(result.eventDate, "hh:mm:ss") || "";
-  resultArr.utc = result.eventDate,
-  resultArr.ety = eventType?.eventType || "";
+  (resultArr.utc = result.eventDate),
+    (resultArr.ety = eventType?.eventType || "");
   resultArr.mtyp = result.matchType || "";
   resultArr.com = competition?.competition || "";
   // remove out batsman
@@ -2942,7 +2942,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
   //   resultArr.rmk = toss;
   //   resultArr.win = "";
   // }
-  if (getstatus === 3) {
+  if (getstatus >= 3) {
     const _tosswonby = result.tossWonBy;
     if (commentaryTeamsOne[0].teamId == _tosswonby) {
       tossteam = commentaryTeamsOne[0].shortName;
