@@ -74,7 +74,7 @@ const insertCommentaryQuery = async (request, fastify) => {
           $21,
           $22,
           $23,
-          $24,
+          $24
         ) returning *         
       )
 
