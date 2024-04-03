@@ -273,6 +273,13 @@ const ActionTypeForMarketCancel ={
   winClose : 1,
   winCloseCancel : 2,
 }
+const genrateKey = () => {
+  // Define the format pattern
+  const format = "XXXX-XXXX-XXXX-XXXX";
+  const key = format.replace(/[^\d-]/g, () => Math.floor(Math.random() * 10));
+  return key;
+}
+
 module.exports = {
   ERROR_CODES,
   error,
@@ -294,5 +301,6 @@ module.exports = {
   callPredictorMarket,
   MarketActionType,
   MarketUpdateType,
-  ActionTypeForMarketCancel
+  ActionTypeForMarketCancel,
+  genrateKey
 };
