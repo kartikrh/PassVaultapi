@@ -3493,7 +3493,198 @@ const MarketTemplateRunner = {
     },
   },
 }
-
+const Vendor = {
+  getAll :{
+    schema : {
+      tags: ["Vendors"],
+      description: "get all Vendors",
+      security: [{ bearerAuth: [] }],
+      body :{
+        type : "object",
+        properties : {
+          isActive : { type: "boolean" }
+        }
+      }
+    }
+  },
+  getById :{
+    schema : {
+      tags: ["Vendors"],
+      description: "get Vendors by id",
+      security: [{ bearerAuth: [] }],
+      body : {
+        type : "object",
+        properties : {
+          vendorId : { type: "integer" }
+        },
+        required : ["vendorId"]
+      }
+    }
+  },
+  save :{
+    schema : {
+      tags: ["Vendors"],
+      description: "save Vendors",
+      security: [{ bearerAuth: [] }],
+      body : {
+        type : "object",
+        properties : {
+          vendorId : { type: "integer" },
+          name : { type: "string" },
+          expiryDate : {  
+            type: "string",
+           
+          },
+          isActive : { type: "boolean" },
+          isIPCheck : { type: "boolean" },
+        },
+        required : ["vendorId", "name"]
+      }
+    }
+  },
+  delete :{
+    schema : {
+      tags: ["Vendors"],
+      description: "delete Vendors",
+      security: [{ bearerAuth: [] }],
+      body : {
+        type : "object",
+        properties : {
+          vendorId : {
+            type: "array",
+            items : { type: "integer" },
+            minItems : 1
+          }
+        },
+        required : ["vendorId"]
+      }
+    }
+  },
+  activeInactive :{
+    schema : {
+      tags: ["Vendors"],
+      description: "active inactive Vendors",
+      security: [{ bearerAuth: [] }],
+      body : {
+        type : "object",
+        properties : {
+          vendorId : { type: "integer" },
+          isActive : { type: "boolean" }
+        },
+        required : ["vendorId", "isActive"]
+      }
+    }
+  },
+  isIPCheck:{
+    schema : {
+      tags: ["Vendors"],
+      description: "get all Vendors",
+      security: [{ bearerAuth: [] }],
+      body :{
+        type : "object",
+        properties : {
+          vendorId : { type: "integer" },
+          isIPCheck : { type: "boolean" }
+        },
+        required : ["vendorId", "isIPCheck"]
+      }
+    }
+  }
+  
+}
+const VendorIp = {
+  getAll :{
+    schema : {
+      tags: ["Vendor IP"],
+      description: "get all Vendor IP",
+      security: [{ bearerAuth: [] }],
+      body : {
+        type : "object",
+        properties : {
+          isActive : { type: "boolean" }
+        }
+      }
+    }
+  },
+  getByVendorId :{
+    schema : {
+      tags: ["Vendor IP"],
+      description: "get all Vendor IP",
+      security: [{ bearerAuth: [] }],
+      body : {
+        type : "object",
+        properties : {
+          vendorId : { type: "integer" }
+        },
+        required : ["vendorId"]
+      }
+    }
+  },
+  save : {
+    schema : {
+      tags: ["Vendor IP"],
+      description: "save Vendor IP",
+      security: [{ bearerAuth: [] }],
+      body : {
+        type : "object",
+        properties : {
+          vendorIpId : { type: "integer" }, 
+          vendorId : { type: "integer" },
+          ipAddress : { type: "string" },
+          isActive : { type: "boolean" }
+        },
+        required : [ "vendorIpId","vendorId", "ipAddress"]
+      }
+    }
+  },
+  delete : {
+    schema : {
+      tags: ["Vendor IP"],
+      description: "delete Vendor IP",
+      security: [{ bearerAuth: [] }],
+      body : {
+        type : "object",
+        properties : {
+          vendorIpId : {
+            type: "array",
+            items : { type: "integer" },
+            minItems : 1
+          }
+        },
+        required : ["vendorIpId"]
+      }
+    }
+  },
+  activeInactive : {
+    schema : {
+      tags: ["Vendor IP"],
+      description: "active inactive Vendor IP",
+      security: [{ bearerAuth: [] }],
+      body : {
+        type : "object",
+        properties : {
+          vendorIpId : { type: "integer" },
+          isActive : { type: "boolean" }
+        },
+        required : ["vendorIpId", "isActive"]
+      }
+    }
+  },
+  getById : {
+    schema : {
+      tags: ["Vendor IP"],
+      description: "get Vendor IP by id",
+      security: [{ bearerAuth: [] }],
+      body : {
+        type : "object",
+        properties : {
+          vendorIpId : { type: "integer" }
+        },
+        required : ["vendorIpId"]
+      }
+    }
+  }
+}
 module.exports = {
   Auth,
   Tabs,
@@ -3522,5 +3713,7 @@ module.exports = {
   News,
   MatchTypePredictor,
   EventMarket,
-  MarketTemplateRunner
+  MarketTemplateRunner,
+  Vendor,
+  VendorIp
 };
