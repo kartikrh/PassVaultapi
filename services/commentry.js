@@ -2526,6 +2526,7 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
 
   resultArr.ed = convertDate(result.eventDate, "DD/MM/YYYY") || "";
   resultArr.et = convertDate(result.eventDate, "hh:mm:ss") || "";
+  resultArr.utc = result.eventDate,
   resultArr.ety = eventType?.eventType || "";
   resultArr.mtyp = result.matchType || "";
   resultArr.com = competition?.competition || "";
@@ -3373,6 +3374,7 @@ const getMatchListByStatus = async (body, request, fastify) => {
       en: item.eventName || "",
       ed: convertDate(item.eventDate, "DD/MM/YYYY") || "",
       et: convertDate(item.eventDate, "hh:mm:ss") || "",
+      utc: item.eventDate,
       te1n: commentaryTeamsOne.teamName || "",
       te2n: commentaryTeamsTwo.teamName || "",
       s1n: commentaryTeamsOne.shortName || "",
