@@ -83,7 +83,7 @@ module.exports = async function (fastify, opts) {
       require("./sequelize/tables/marketRunnerModel")(fastify.db);
       require("./sequelize/tables/marketTemplateRunnerModel")(fastify.db);
       require("./sequelize/tables/vendorsModel")(fastify.db);
-      // require("./sequelize/tables/vendorIpModel")(fastify.db);
+      require("./sequelize/tables/vendorIpModel")(fastify.db);
       try {
         await fastify.db.sync();
         await featchData(fastify);

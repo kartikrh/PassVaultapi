@@ -12,8 +12,11 @@ const getAllVendorsQuery = async (fastify) => {
             "wrIsActive" as "isActive",
             "wrIsIPCheck" as "isIPCheck",
             "wrCreatedDate" as "createdDate",
-            "wrCreatedBy" as "createdBy"
+            "wrCreatedBy" as "createdBy",
+            tu."WrUserName" as "createdByName"
         FROM "tblVendors"
+        LEFT JOIN "tblUsers" tu ON tu."WrUserId" = "tblVendors"."wrCreatedBy"
+        ORDER BY "wrId" DESC
     `,
     {
       type: fastify.db.QueryTypes.SELECT,
@@ -48,7 +51,7 @@ const createVendorQuery = async (data, request, fastify) => {
         new Date(),
         request.userTokenInfo.WrUserId,
       ],
-      type : fastify.db.QueryTypes.SELECT
+      type: fastify.db.QueryTypes.SELECT,
     });
     return result[0];
   } catch (err) {
@@ -88,7 +91,7 @@ const updateVendorQuery = async (data, request, fastify) => {
         data.isIPCheck || false,
         data.vendorId,
       ],
-      type : fastify.db.QueryTypes.SELECT
+      type: fastify.db.QueryTypes.SELECT,
     });
     return result[0];
   } catch (err) {
@@ -102,31 +105,30 @@ const updateVendorQuery = async (data, request, fastify) => {
   }
 };
 const deleteVendorQuery = async (vendorId, request, fastify) => {
-    try {
-        const query1 = `DELETE FROM "tblVendorIps" WHERE "wrVendorId" = ANY($1)`
-        await fastify.db.query(query1, {
-          bind: [vendorId],
-          type : fastify.db.QueryTypes.SELECT
-        });
-        const query2 = `
+  try {
+    const query1 = `DELETE FROM "tblVendorIps" WHERE "wrVendorId" = ANY($1)`;
+    await fastify.db.query(query1, {
+      bind: [vendorId],
+      type: fastify.db.QueryTypes.SELECT,
+    });
+    const query2 = `
             DELETE FROM "tblVendors"
             WHERE "wrId" = ANY($1)
         `;
-        return await fastify.db.query(query2, {
-          bind: [vendorId],
-          type : fastify.db.QueryTypes.SELECT
-        });
-    } catch (err) {
-        errorLogger(
-        fastify,
-        err.message,
-        "DB ERROR --> repository/TableVendors/deleteVendorQuery",
-        request
-        );
-        throw new Error(err.message);
-    }
-    
-}
+    return await fastify.db.query(query2, {
+      bind: [vendorId],
+      type: fastify.db.QueryTypes.SELECT,
+    });
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableVendors/deleteVendorQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
 const updateIsActiveVendorQuery = async (data, request, fastify) => {
   try {
     const query = `
@@ -157,7 +159,7 @@ const updateIsActiveVendorQuery = async (data, request, fastify) => {
     );
     throw new Error(err.message);
   }
-}
+};
 const updateIsIPCheckQuery = async (data, request, fastify) => {
   try {
     const query = `
@@ -192,7 +194,7 @@ module.exports = {
   getAllVendorsQuery,
   createVendorQuery,
   updateVendorQuery,
-    deleteVendorQuery,
-    updateIsActiveVendorQuery,
-    updateIsIPCheckQuery
+  deleteVendorQuery,
+  updateIsActiveVendorQuery,
+  updateIsIPCheckQuery
 };
