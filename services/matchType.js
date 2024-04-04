@@ -65,11 +65,14 @@ const cloneMatchTypeService = async (request, fastify) => {
     fastify,
     request
   );
+  global.tblMatchTypes.push(data);
 
   // clone the matchType predictor 
   const predictorData = global.tblMatchTypePredictor.filter(
     (item) => item.matchTypeId === request.body.matchTypeId
   );
+  if(!predictorData.length) return data;
+
 
   const predictorDataClone = predictorData.map((item) => ({
     ...item,
@@ -89,7 +92,6 @@ const cloneMatchTypeService = async (request, fastify) => {
 
 
 
-  global.tblMatchTypes.push(data);
   return data;
 };
 
