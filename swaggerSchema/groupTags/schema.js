@@ -1695,7 +1695,7 @@ const Commentary = {
       },
     },
   },
-  activeInactiveCommentary :{
+  activeInactiveCommentary: {
     schema: {
       tags: ["Commentary"],
       description: "active inactive Commentary",
@@ -1710,7 +1710,7 @@ const Commentary = {
       },
     },
   },
-  closeCommentary:{
+  closeCommentary: {
     schema: {
       tags: ["Commentary"],
       description: "close Commentary",
@@ -1718,7 +1718,7 @@ const Commentary = {
       body: {
         type: "object",
         properties: {
-          commentaryId: { 
+          commentaryId: {
             type: "array",
             items: { type: "integer" },
             minItems: 1,
@@ -2549,8 +2549,8 @@ const MarketTemplate = {
           isActive: { type: "boolean" },
         },
         required: ["marketTypeId"],
-      }
-    }
+      },
+    },
   },
   getByMatchTypeId: {
     schema: {
@@ -2617,11 +2617,18 @@ const MarketTemplate = {
           marketTypeId: { type: "integer" },
           marketTypeCategoryId: { type: "integer" },
           margin: { type: "number" },
-          createRefId : { type: "string" },
-          openRefId : { type: "string" },
-          templateType : { type: "integer" },
+          createRefId: { type: "string" },
+          openRefId: { type: "string" },
+          templateType: { type: "integer" },
         },
-        required: ["marketTemplateId", "matchTypeID", "playerName", "marketTypeId", "marketTypeCategoryId", "margin" ],
+        required: [
+          "marketTemplateId",
+          "matchTypeID",
+          "playerName",
+          "marketTypeId",
+          "marketTypeCategoryId",
+          "margin",
+        ],
       },
     },
   },
@@ -3043,8 +3050,8 @@ const EventMarket = {
       },
     },
   },
-  getDSReport:{
-    schema : {
+  getDSReport: {
+    schema: {
       tags: ["EventMarket"],
       description: "get DS Report",
       security: [{ bearerAuth: [] }],
@@ -3064,10 +3071,10 @@ const EventMarket = {
     body: {
       type: "object",
       properties: {
-        eventMarketId: { type: "integer" }
+        eventMarketId: { type: "integer" },
       },
-      required: ["eventMarketId"]
-    }
+      required: ["eventMarketId"],
+    },
   },
   updateMarketRate: {
     schema: {
@@ -3107,7 +3114,7 @@ const EventMarket = {
         properties: {
           commentaryId: {
             type: "array",
-            items: { type: "integer" }
+            items: { type: "integer" },
           },
         },
         required: ["commentaryId"],
@@ -3153,7 +3160,7 @@ const EventMarket = {
             items: { type: "integer" },
             minItems: 1,
           },
-          delay: { type: "integer" }
+          delay: { type: "integer" },
         },
         required: ["eventMarketId", "delay"],
       },
@@ -3205,9 +3212,9 @@ const EventMarket = {
           marketTypeCategoryId: { type: "integer" },
           createRefId: { type: "string" },
           openRefId: { type: "string" },
-          createType : { type: "integer" },
-          create : { type: "number" },
-          templateType : { type: "integer" },
+          createType: { type: "integer" },
+          create: { type: "number" },
+          templateType: { type: "integer" },
         },
         required: ["eventMarketId", "marketTypeId", "marketTypeCategoryId"],
       },
@@ -3340,11 +3347,11 @@ const EventMarket = {
                 marketTypeCategoryId: { type: "integer" },
                 createRefId: { type: "string" },
                 openRefId: { type: "string" },
-                createType : { type: "integer" },
-                create : { type: "number" },
-                templateType : { type: "integer" },
+                createType: { type: "integer" },
+                create: { type: "number" },
+                templateType: { type: "integer" },
               },
-              required: ["marketTypeId", "marketTypeCategoryId"]
+              required: ["marketTypeId", "marketTypeCategoryId"],
             },
           },
         },
@@ -3416,15 +3423,15 @@ const EventMarket = {
   },
 };
 const MarketTemplateRunner = {
-  getAll:{
-    schema : {
+  getAll: {
+    schema: {
       tags: ["Market Template Runner"],
       description: "get all Market Template Runner",
       security: [{ bearerAuth: [] }],
-    }
+    },
   },
-  getByTemplateId : {
-    schema : {
+  getByTemplateId: {
+    schema: {
       tags: ["Market Template Runner"],
       description: "get all Market Template Runner",
       security: [{ bearerAuth: [] }],
@@ -3435,10 +3442,10 @@ const MarketTemplateRunner = {
         },
         required: ["marketTemplateId"],
       },
-    }
+    },
   },
-  getById : {
-    schema : {
+  getById: {
+    schema: {
       tags: ["Market Template Runner"],
       description: "get Market Template Runner by id",
       security: [{ bearerAuth: [] }],
@@ -3449,9 +3456,9 @@ const MarketTemplateRunner = {
         },
         required: ["marketTemplateRunnerId"],
       },
-    }
+    },
   },
-  save : {
+  save: {
     schema: {
       tags: ["Market Template Runner"],
       description: "save Market Template Runner",
@@ -3461,20 +3468,20 @@ const MarketTemplateRunner = {
         properties: {
           marketTemplateRunnerId: { type: "integer" },
           marketTemplateId: { type: "integer" },
-          runner : { type: "string" },
-          line : { type: "number" },
-          overRate : { type: "number" },
-          underRate : { type: "number" },
-          yesRate : { type: "number" },
-          noRate : { type: "number" },
-          yesPoint : { type: "number" },
-          noPoint : { type: "number" }          
+          runner: { type: "string" },
+          line: { type: "number" },
+          overRate: { type: "number" },
+          underRate: { type: "number" },
+          yesRate: { type: "number" },
+          noRate: { type: "number" },
+          yesPoint: { type: "number" },
+          noPoint: { type: "number" },
         },
-        required: ["marketTemplateId" , "marketTemplateRunnerId"],
+        required: ["marketTemplateId", "marketTemplateRunnerId"],
       },
     },
   },
-  delete :{
+  delete: {
     schema: {
       tags: ["Market Template Runner"],
       description: "delete Market Template Runner",
@@ -3492,199 +3499,261 @@ const MarketTemplateRunner = {
       },
     },
   },
-}
+};
 const Vendor = {
-  getAll :{
-    schema : {
+  getAll: {
+    schema: {
       tags: ["Vendors"],
       description: "get all Vendors",
       security: [{ bearerAuth: [] }],
-      body :{
-        type : "object",
-        properties : {
-          isActive : { type: "boolean" }
-        }
-      }
-    }
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
   },
-  getById :{
-    schema : {
+  getById: {
+    schema: {
       tags: ["Vendors"],
       description: "get Vendors by id",
       security: [{ bearerAuth: [] }],
-      body : {
-        type : "object",
-        properties : {
-          vendorId : { type: "integer" }
+      body: {
+        type: "object",
+        properties: {
+          vendorId: { type: "integer" },
         },
-        required : ["vendorId"]
-      }
-    }
+        required: ["vendorId"],
+      },
+    },
   },
-  save :{
-    schema : {
+  save: {
+    schema: {
       tags: ["Vendors"],
       description: "save Vendors",
       security: [{ bearerAuth: [] }],
-      body : {
-        type : "object",
-        properties : {
-          vendorId : { type: "integer" },
-          name : { type: "string" },
-          expiryDate : {  
+      body: {
+        type: "object",
+        properties: {
+          vendorId: { type: "integer" },
+          name: { type: "string" },
+          expiryDate: {
             type: "string",
-           
           },
-          isActive : { type: "boolean" },
-          isIPCheck : { type: "boolean" },
+          isActive: { type: "boolean" },
+          isIPCheck: { type: "boolean" },
         },
-        required : ["vendorId", "name"]
-      }
-    }
+        required: ["vendorId", "name"],
+      },
+    },
   },
-  delete :{
-    schema : {
+  delete: {
+    schema: {
       tags: ["Vendors"],
       description: "delete Vendors",
       security: [{ bearerAuth: [] }],
-      body : {
-        type : "object",
-        properties : {
-          vendorId : {
+      body: {
+        type: "object",
+        properties: {
+          vendorId: {
             type: "array",
-            items : { type: "integer" },
-            minItems : 1
-          }
+            items: { type: "integer" },
+            minItems: 1,
+          },
         },
-        required : ["vendorId"]
-      }
-    }
+        required: ["vendorId"],
+      },
+    },
   },
-  activeInactive :{
-    schema : {
+  activeInactive: {
+    schema: {
       tags: ["Vendors"],
       description: "active inactive Vendors",
       security: [{ bearerAuth: [] }],
-      body : {
-        type : "object",
-        properties : {
-          vendorId : { type: "integer" },
-          isActive : { type: "boolean" }
+      body: {
+        type: "object",
+        properties: {
+          vendorId: { type: "integer" },
+          isActive: { type: "boolean" },
         },
-        required : ["vendorId", "isActive"]
-      }
-    }
+        required: ["vendorId", "isActive"],
+      },
+    },
   },
-  isIPCheck:{
-    schema : {
+  isIPCheck: {
+    schema: {
       tags: ["Vendors"],
       description: "get all Vendors",
       security: [{ bearerAuth: [] }],
-      body :{
-        type : "object",
-        properties : {
-          vendorId : { type: "integer" },
-          isIPCheck : { type: "boolean" }
+      body: {
+        type: "object",
+        properties: {
+          vendorId: { type: "integer" },
+          isIPCheck: { type: "boolean" },
         },
-        required : ["vendorId", "isIPCheck"]
-      }
-    }
-  }
-  
-}
+        required: ["vendorId", "isIPCheck"],
+      },
+    },
+  },
+};
 const VendorIp = {
-  getAll :{
-    schema : {
+  getAll: {
+    schema: {
       tags: ["Vendor IP"],
       description: "get all Vendor IP",
       security: [{ bearerAuth: [] }],
-      body : {
-        type : "object",
-        properties : {
-          isActive : { type: "boolean" }
-        }
-      }
-    }
-  },
-  getByVendorId :{
-    schema : {
-      tags: ["Vendor IP"],
-      description: "get all Vendor IP",
-      security: [{ bearerAuth: [] }],
-      body : {
-        type : "object",
-        properties : {
-          vendorId : { type: "integer" }
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
         },
-        required : ["vendorId"]
-      }
-    }
+      },
+    },
   },
-  save : {
-    schema : {
+  getByVendorId: {
+    schema: {
+      tags: ["Vendor IP"],
+      description: "get all Vendor IP",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          vendorId: { type: "integer" },
+        },
+        required: ["vendorId"],
+      },
+    },
+  },
+  save: {
+    schema: {
       tags: ["Vendor IP"],
       description: "save Vendor IP",
       security: [{ bearerAuth: [] }],
-      body : {
-        type : "object",
-        properties : {
-          vendorIpId : { type: "integer" }, 
-          vendorId : { type: "integer" },
-          ipAddress : { type: "string" },
-          isActive : { type: "boolean" }
+      body: {
+        type: "object",
+        properties: {
+          vendorIpId: { type: "integer" },
+          vendorId: { type: "integer" },
+          ipAddress: { type: "string" },
+          isActive: { type: "boolean" },
         },
-        required : [ "vendorIpId","vendorId", "ipAddress"]
-      }
-    }
+        required: ["vendorIpId", "vendorId", "ipAddress"],
+      },
+    },
   },
-  delete : {
-    schema : {
+  delete: {
+    schema: {
       tags: ["Vendor IP"],
       description: "delete Vendor IP",
       security: [{ bearerAuth: [] }],
-      body : {
-        type : "object",
-        properties : {
-          vendorIpId : {
+      body: {
+        type: "object",
+        properties: {
+          vendorIpId: {
             type: "array",
-            items : { type: "integer" },
-            minItems : 1
-          }
+            items: { type: "integer" },
+            minItems: 1,
+          },
         },
-        required : ["vendorIpId"]
-      }
-    }
+        required: ["vendorIpId"],
+      },
+    },
   },
-  activeInactive : {
-    schema : {
+  activeInactive: {
+    schema: {
       tags: ["Vendor IP"],
       description: "active inactive Vendor IP",
       security: [{ bearerAuth: [] }],
-      body : {
-        type : "object",
-        properties : {
-          vendorIpId : { type: "integer" },
-          isActive : { type: "boolean" }
+      body: {
+        type: "object",
+        properties: {
+          vendorIpId: { type: "integer" },
+          isActive: { type: "boolean" },
         },
-        required : ["vendorIpId", "isActive"]
-      }
-    }
+        required: ["vendorIpId", "isActive"],
+      },
+    },
   },
-  getById : {
-    schema : {
+  getById: {
+    schema: {
       tags: ["Vendor IP"],
       description: "get Vendor IP by id",
       security: [{ bearerAuth: [] }],
-      body : {
-        type : "object",
-        properties : {
-          vendorIpId : { type: "integer" }
+      body: {
+        type: "object",
+        properties: {
+          vendorIpId: { type: "integer" },
         },
-        required : ["vendorIpId"]
-      }
-    }
-  }
-}
+        required: ["vendorIpId"],
+      },
+    },
+  },
+};
+
+const DisplayStatus = {
+  getAll: {
+    schema: {
+      tags: ["DisplayStatus"],
+      security: [{ bearerAuth: [] }],
+      description: "get all DisplayStatus",
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+  getById: {
+    schema: {
+      tags: ["DisplayStatus"],
+      security: [{ bearerAuth: [] }],
+      description: "get DisplayStatus by id",
+      body: {
+        type: "object",
+        properties: {
+          displayStatusId: { type: "integer" },
+        },
+        required: ["displayStatusId"],
+      },
+    },
+  },
+  save: {
+    schema: {
+      tags: ["DisplayStatus"],
+      security: [{ bearerAuth: [] }],
+      description: "save DisplayStatus",
+      body: {
+        type: "object",
+        properties: {
+          displayStatusId: { type: "integer" },
+          displayStatus: { type: "string" },
+          isActive: { type: "boolean" },
+        },
+        required: ["displayStatusId"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["DisplayStatus"],
+      security: [{ bearerAuth: [] }],
+      description: "delete DisplayStatus",
+      body: {
+        type: "object",
+        properties: {
+          displayStatusId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["displayStatusId"],
+      },
+    },
+  },
+};
 module.exports = {
   Auth,
   Tabs,
@@ -3715,5 +3784,6 @@ module.exports = {
   EventMarket,
   MarketTemplateRunner,
   Vendor,
-  VendorIp
+  VendorIp,
+  DisplayStatus,
 };
