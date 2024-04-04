@@ -26,6 +26,11 @@ const saveVendorIpService = async (request, fastify) => {
     if (!validateVendor) {
         throw new Error("Vendor with this id not found");
     }
+    // check if this ip already exists
+    const validateVendorIp = await global.tblVendorIp.find(vendorIp => vendorIp.ipAddress == request.body.ipAddress && vendorIp.vendorId == request.body.vendorId);
+    if (validateVendorIp) {
+        throw new Error("This Vendor Ip already exists");
+    }
     // create vendorIp object
     const data = await createVendorIpQuery(request.body , request,fastify);
     global.tblVendorIp.push(data);
