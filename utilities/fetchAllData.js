@@ -41,7 +41,7 @@ const {
 const {
   getAllMarketTemplateQuery,
   getAllMarketTypeCategoriesQuery,
-  getAllMarketTypeQuery
+  getAllMarketTypeQuery,
 } = require("../repository/TableMarketTemplate");
 const { getAllEventMarketsQuery } = require("../repository/TableEventMarkets");
 const {
@@ -49,6 +49,9 @@ const {
 } = require("../repository/TableMarketTemplateRunner");
 const { getAllVendorsQuery } = require("../repository/TableVendor");
 const { getAllVendorIpsQuery } = require("../repository/TableVendorIp");
+
+const { allDisplayStatusesQuery } = require("../repository/TableDisplayStatus");
+
 const fetchAllDataFromDb = async (fastify, reply) => {
   try {
     const getAllTabs = await getAllActiveInactiveTabsQuery(fastify);
@@ -78,7 +81,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
       fastify
     );
     const getAllOvers = await getAllOversQuery(fastify);
-    const getAllDisplayStatus = await getAllDisplayStatusQuery(fastify);
+    const getAllDisplayStatus = await allDisplayStatusesQuery(fastify);
     const getAllCommentaryWicket = await getAllCommentaryWicketQuery(fastify);
     const getAllCommentaryPartnership = await getAllCommentaryPartnershipQuery(
       fastify
@@ -93,7 +96,9 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     );
     const getAllEventMarkets = await getAllEventMarketsQuery(fastify);
     const getAllMarketTemplate = await getAllMarketTemplateQuery(fastify);
-    const getAllMarketTypeCategories = await getAllMarketTypeCategoriesQuery(fastify);
+    const getAllMarketTypeCategories = await getAllMarketTypeCategoriesQuery(
+      fastify
+    );
     const getAllMarketType = await getAllMarketTypeQuery(fastify);
     const getAllMarketTemplateRunner = await getAllMarketTemplateRunnerQuery(
       fastify
