@@ -32,14 +32,14 @@ module.exports = async (fastify, opts) => {
 
   fastify.post("/byId", {
     schema: News.getById.schema,
-    preHandler: [
-      (request, reply) => authorize(request, reply, fastify),
-      (request, reply, done) =>
-        checkPermission(request, reply, fastify, {
-          tabName: "News",
-          mode: "view",
-        }),
-    ],
+    // preHandler: [
+    //   (request, reply) => authorize(request, reply, fastify),
+    //   (request, reply, done) =>
+    //     checkPermission(request, reply, fastify, {
+    //       tabName: "News",
+    //       mode: "view",
+    //     }),
+    // ],
     handler: (request, reply) => getNewsById(request, reply, fastify),
   });
 
