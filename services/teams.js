@@ -80,7 +80,7 @@ const createTeamService = async (request, fastify) => {
     imgName = generateImageName({
       name: request.body.teamName,
     });
-   
+
     const path = await storeImageOnServer({
       image: request.body.image[0],
       project: projectName,
@@ -117,7 +117,7 @@ const createTeamService = async (request, fastify) => {
         for (let i = 0; i < hashArray.length; i++) {
           if (hashArray[i]) {
             const playerID = hashArray[i].replace(/[\[\]"]/g, "");
-            if(playerID !== ""){
+            if (playerID !== "") {
               await insertTeamPlayerQuery(
                 {
                   teamId: data.teamId,
@@ -128,7 +128,6 @@ const createTeamService = async (request, fastify) => {
                 request
               );
             }
-            
           }
         }
       }
@@ -162,6 +161,7 @@ const updateTeamService = async (request, fastify) => {
     userId: request.userTokenInfo.WrUserId,
     teamId: request.body.teamId,
     eventType: _getEventType.eventType,
+    teamColor: request.body.teamColor,
   };
 
   const validateTeamName = global.tblTeams.find(
@@ -233,7 +233,7 @@ const updateTeamService = async (request, fastify) => {
       for (let i = 0; i < hashArray.length; i++) {
         if (hashArray[i]) {
           const playerID = hashArray[i].replace(/[\[\]"]/g, "");
-          if(playerID !== ""){
+          if (playerID !== "") {
             await insertTeamPlayerQuery(
               {
                 teamId: body.teamId,

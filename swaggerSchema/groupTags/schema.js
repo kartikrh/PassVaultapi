@@ -1164,11 +1164,11 @@ const Teams = {
           teamShortName: { type: "string" },
           country: { type: "string" },
           eventTypeId: { type: "integer" },
+          teamColor: { type: "string" },
           playerId: {
             type: "array",
             items: { type: "string" },
           },
-          teamColor: { type: "string" },
         },
         required: ["teamId"],
       },
