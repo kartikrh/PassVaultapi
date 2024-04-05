@@ -50,7 +50,7 @@ const updatedisplayStatusesService = async (request, fastify) => {
 
   const body = {
     displayStatus: request.body.displayStatus || checkId.displayStatus,
-    isActive: request.body.isActive || checkId.isActive,
+    isActive: request.body.isActive,
     displayStatusId: request.body.displayStatusId,
   };
 
