@@ -1168,6 +1168,7 @@ const Teams = {
             type: "array",
             items: { type: "string" },
           },
+          teamColor: { type: "string" },
         },
         required: ["teamId"],
       },
@@ -1274,7 +1275,7 @@ const Player = {
       },
     },
   },
-  updateSystemPlayer:{
+  updateSystemPlayer: {
     schema: {
       tags: ["Player"],
       description: "Update System Player",
@@ -1287,7 +1288,7 @@ const Player = {
         },
         required: ["playerId", "isSystemPlayer"],
       },
-    }
+    },
   },
   eventTypeList: {
     schema: {
@@ -2833,6 +2834,7 @@ const News = {
           isActive: { type: "boolean" },
           startDate: { type: "string" },
           endDate: { type: "string" },
+          tags: { type: "string" },
         },
         required: ["newsId"],
       },
