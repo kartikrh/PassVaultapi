@@ -4,6 +4,7 @@ const {
   deletePlayerQuery,
   getAllTeamsByPlayerIdQuery,
   updatePlayerStatsQuery,
+  updateIsSystemPlayerQuery,
 } = require("../repository/TablePlayer");
 const {
   insertTeamPlayerQuery,
@@ -373,6 +374,18 @@ const savePlayerService = async (request, fastify) => {
   }
 };
 
+const updateIsSystemPlayerService = async (request, fastify) => {
+  // vlaidate player id
+  const index = global.tblPlayers.findIndex(
+    (item) => item.playerId === request.body.playerId
+  );
+  if (index === -1) {
+    throw new Error("Player with this id not Found");
+  }
+  await updateIsSystemPlayerQuery(request.body, fastify, request);
+  global.tblPlayers[index].isSystemPlayer = request.body.isSystemPlayer;
+  return 'Player updated successfully';
+};
 const deletePlayerService = async (request, fastify) => {
   const { playerId } = request.body;
 
@@ -470,4 +483,5 @@ module.exports = {
   allPlayerTypeService,
   allPlayerByTeamService,
   updatePlayerStatsService,
+  updateIsSystemPlayerService
 };

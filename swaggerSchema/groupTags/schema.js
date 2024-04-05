@@ -1274,6 +1274,21 @@ const Player = {
       },
     },
   },
+  updateSystemPlayer:{
+    schema: {
+      tags: ["Player"],
+      description: "Update System Player",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          playerId: { type: "integer" },
+          isSystemPlayer: { type: "boolean" },
+        },
+        required: ["playerId", "isSystemPlayer"],
+      },
+    }
+  },
   eventTypeList: {
     schema: {
       tags: ["Player"],
