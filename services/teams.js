@@ -151,6 +151,9 @@ const updateTeamService = async (request, fastify) => {
     (item) => item.eventTypeId === request.body.eventTypeId
   );
 
+  if (!checkTeamId.teamColor) {
+    checkTeamId.teamColor = "#FFFFFF";
+  }
   const body = {
     teamName: request.body.teamName || checkTeamId.teamName,
     teamShortName: request.body.teamShortName || checkTeamId.teamShortName,
@@ -161,7 +164,7 @@ const updateTeamService = async (request, fastify) => {
     userId: request.userTokenInfo.WrUserId,
     teamId: request.body.teamId,
     eventType: _getEventType.eventType,
-    teamColor: request.body.teamColor,
+    teamColor: request.body.teamColor || checkTeamId.teamColor,
   };
 
   const validateTeamName = global.tblTeams.find(
