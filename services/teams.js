@@ -165,6 +165,7 @@ const updateTeamService = async (request, fastify) => {
     teamId: request.body.teamId,
     eventType: _getEventType.eventType,
     teamColor: request.body.teamColor || checkTeamId.teamColor,
+    backgroundColor: request.body.backgroundColor || checkTeamId.backgroundColor,
   };
 
   const validateTeamName = global.tblTeams.find(

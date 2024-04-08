@@ -11,7 +11,8 @@ const allTeamQuery = async (fastify) => {
     tt."wrImage" as "image",
     "wrCountry" as "country",
     et."wrEventType" AS "eventType",
-    tt."wrTeamColor" AS "teamColor"
+    tt."wrTeamColor" AS "teamColor",
+    tt."wrBackgroundColor" AS "backgroundColor"
      FROM "tblTeams" tt
       LEFT JOIN "tblEventTypes" et ON tt."wrEventTypeId" = et."wrEventTypeId"`,
     {
@@ -42,8 +43,8 @@ const insertTeamQuery = async (data, fastify, request) => {
   try {
     const result = await fastify.db.query(
       `with insert_data as(
-      INSERT INTO "tblTeams" ("wrTeamName","wrTeamShortName", "wrImage", "wrCountry", "wrEventTypeId", "wrCreatedBy", "wrCreatedDate" , "WrTeamJersey","wrTeamColor")
-      VALUES ($1,$2,$3,$4,$5,$6,$7 , $8,$9)
+      INSERT INTO "tblTeams" ("wrTeamName","wrTeamShortName", "wrImage", "wrCountry", "wrEventTypeId", "wrCreatedBy", "wrCreatedDate" , "WrTeamJersey","wrTeamColor", "wrBackgroundColor")
+      VALUES ($1,$2,$3,$4,$5,$6,$7 , $8,$9 , $10)
       RETURNING *    
     )
     SELECT 
@@ -55,7 +56,8 @@ const insertTeamQuery = async (data, fastify, request) => {
     tt."wrImage" as "image",
     "wrCountry" as "country",
     "wrEventType" AS "eventType",
-    "wrTeamColor" AS "teamColor"
+    "wrTeamColor" AS "teamColor",
+    "wrBackgroundColor" AS "backgroundColor"
      FROM "insert_data" tt 
       INNER JOIN "tblEventTypes" evt ON tt."wrEventTypeId" = evt."wrEventTypeId" 
     `,
@@ -70,6 +72,7 @@ const insertTeamQuery = async (data, fastify, request) => {
           new Date(),
           data.jersey || null,
           data.teamColor || null,
+          data.backgroundColor || null,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -90,7 +93,9 @@ const insertTeamQuery = async (data, fastify, request) => {
 const updateTeamQuery = async (data, fastify, request) => {
   try {
     return await fastify.db.query(
-      `UPDATE "tblTeams" SET "wrTeamName" = $1, "wrTeamShortName" = $2,"wrImage" = $3, "wrCountry" = $4, "wrEventTypeId" = $5, "wrModifyBy" = $6, "wrModifyDate" = $7,"WrTeamJersey"=$8, "wrTeamColor" = $10  WHERE "wrTeamId" = $9`,
+      `UPDATE "tblTeams" SET "wrTeamName" = $1, "wrTeamShortName" = $2,"wrImage" = $3, "wrCountry" = $4, "wrEventTypeId" = $5, "wrModifyBy" = $6, 
+      "wrModifyDate" = $7,"WrTeamJersey"=$8, "wrTeamColor" = $10, "wrBackgroundColor" = $11
+        WHERE "wrTeamId" = $9`,
       {
         bind: [
           data.teamName,
@@ -103,6 +108,7 @@ const updateTeamQuery = async (data, fastify, request) => {
           data.jersey,
           data.teamId,
           data.teamColor,
+          data.backgroundColor,
         ],
         type: fastify.db.QueryTypes.UPDATE,
       }
