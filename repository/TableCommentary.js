@@ -41,9 +41,7 @@ const getAllCommentaryQuery = async (fastify) => {
     "wrIsPlayersShow" as "isPlayersShow",
     "wrIsPredictMarket" as "isPredictMarket",
     tc."wrIsActive"  as "isActive",
-    "wrDelay" as "delay",
-    tc."wrTeamColor" as "teamColor",
-    tc."wrBackgroundColor" as "backgroundColor"
+    "wrDelay" as "delay"
     from "tblCommentaries" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -736,7 +734,9 @@ const getAllCommentaryTeamsQuery = async (fastify) => {
   tct."wrCurrentInnings" as "currentInnings", 
   tct."wrIsBattingComplete" as "isBattingComplete",
   "wrCommentaryPlayerTeamCaptain" as "commentaryPlayerTeamCaptain",
-  "wrCommentaryPlayerTeamKipper" as "commentaryPlayerTeamKipper"
+  "wrCommentaryPlayerTeamKipper" as "commentaryPlayerTeamKipper",
+  "wrTeamColor" as "teamColor",
+  "wrBackgroundColor" as "backgroundColor"
   from "tblCommentaryTeams" tct 
 
   `,
