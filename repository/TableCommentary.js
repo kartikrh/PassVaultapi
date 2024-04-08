@@ -41,7 +41,9 @@ const getAllCommentaryQuery = async (fastify) => {
     "wrIsPlayersShow" as "isPlayersShow",
     "wrIsPredictMarket" as "isPredictMarket",
     tc."wrIsActive"  as "isActive",
-    "wrDelay" as "delay"
+    "wrDelay" as "delay",
+    tc."wrTeamColor" as "teamColor",
+    tc."wrBackgroundColor" as "backgroundColor"
     from "tblCommentaries" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -171,7 +173,8 @@ const insertCommentaryTeams = async (request, fastify) => {
     const data = request.body;
     return await fastify.db.query(
       `
-      insert into "tblCommentaryTeams" ("wrCommentaryId" , "wrTeamId","wrTeamCaptain","wrTeamKipper" , "wrShortName" , "wrTeamName","wrCurrentInnings","wrIsBattingComplete")
+      insert into "tblCommentaryTeams" ("wrCommentaryId" , "wrTeamId","wrTeamCaptain","wrTeamKipper" , "wrShortName" , "wrTeamName","wrCurrentInnings","wrIsBattingComplete"
+      , "wrTeamColor" , "wrBackgroundColor")
        values (
         $1,
         $2,
@@ -180,7 +183,9 @@ const insertCommentaryTeams = async (request, fastify) => {
         (select "wrTeamShortName" from "tblTeams" where "wrTeamId" = $2),
         (select "wrTeamName" from "tblTeams" where "wrTeamId" = $2),
         $8,
-        false                
+        false,
+        (select "wrTeamColor" from "tblTeams" where "wrTeamId" = $2),
+        (select "wrBackgroundColor" from "tblTeams" where "wrTeamId" = $2)             
       )
       ,(
         $1,
@@ -190,7 +195,9 @@ const insertCommentaryTeams = async (request, fastify) => {
         (select "wrTeamShortName" from "tblTeams" where "wrTeamId" = $5),
         (select "wrTeamName" from "tblTeams" where "wrTeamId" = $5),
         $8,
-        false
+        false,
+        (select "wrTeamColor" from "tblTeams" where "wrTeamId" = $5),
+        (select "wrBackgroundColor" from "tblTeams" where "wrTeamId" = $5)
       )
     `,
       {
@@ -203,7 +210,7 @@ const insertCommentaryTeams = async (request, fastify) => {
           data.team2Id,
           data.team2Captain || null,
           data.team2Kipper || null,
-          data.currentInnings,
+          data.currentInnings
         ],
       }
     );
