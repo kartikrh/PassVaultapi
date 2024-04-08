@@ -117,6 +117,14 @@ module.exports = (sequelize) => {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
+      wrTeamColor : {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      wrBackgroundColor : {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
     },
     {
       timestamps: false,
