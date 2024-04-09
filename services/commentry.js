@@ -1344,9 +1344,11 @@ const testStoreProcedureService = async (request, fastify) => {
         (item) => item.commentaryBallByBallId !== deleteCommentaryBallByBallId
       );
 
-      if(commentaryBallByBall){
+      if (commentaryBallByBall) {
         ballByBallIndex = global.tblCommentaryBallByBall.findIndex(
-          (item) => item.commentaryBallByBallId === commentaryBallByBall.commentaryBallByBallId
+          (item) =>
+            item.commentaryBallByBallId ===
+            commentaryBallByBall.commentaryBallByBallId
         );
       }
     }
@@ -1357,7 +1359,7 @@ const testStoreProcedureService = async (request, fastify) => {
       global.tblCommentaryBallByBall = global.tblCommentaryBallByBall.filter(
         (item) => item.overId !== deleteOverId
       );
-      if(commentaryOvers){
+      if (commentaryOvers) {
         overIndex = global.tblOvers.findIndex(
           (item) => item.overId === commentaryOvers.overId
         );
@@ -1387,11 +1389,15 @@ const testStoreProcedureService = async (request, fastify) => {
         global.tblOvers.push(updatedData.overDetails);
         response.overdetails = updatedData.overDetails;
       } else {
-        if(!deleteOverId){
-          overIndex !== -1 ? global.tblOvers[overIndex] = commentaryOvers : null;
+        if (!deleteOverId) {
+          overIndex !== -1
+            ? (global.tblOvers[overIndex] = commentaryOvers)
+            : null;
         }
-        if(deleteOverId && commentaryOvers.overId !== deleteOverId){
-          overIndex !== -1 ? global.tblOvers[overIndex] = commentaryOvers : null;
+        if (deleteOverId && commentaryOvers.overId !== deleteOverId) {
+          overIndex !== -1
+            ? (global.tblOvers[overIndex] = commentaryOvers)
+            : null;
         }
         response.overdetails = commentaryOvers;
       }
@@ -1436,16 +1442,26 @@ const testStoreProcedureService = async (request, fastify) => {
         // if(ballByBallIndex !== -1){
         //   global.tblCommentaryBallByBall[ballByBallIndex] = commentaryBallByBall;
         // }
-        if(!deleteCommentaryBallByBallId){
-          ballByBallIndex !== -1 ? global.tblCommentaryBallByBall[ballByBallIndex] = commentaryBallByBall : null;
+        if (!deleteCommentaryBallByBallId) {
+          ballByBallIndex !== -1
+            ? (global.tblCommentaryBallByBall[ballByBallIndex] =
+                commentaryBallByBall)
+            : null;
         }
-        if(deleteCommentaryBallByBallId && commentaryBallByBall.commentaryBallByBallId !== deleteCommentaryBallByBallId){
-          ballByBallIndex !== -1 ? global.tblCommentaryBallByBall[ballByBallIndex] = commentaryBallByBall : null;
+        if (
+          deleteCommentaryBallByBallId &&
+          commentaryBallByBall.commentaryBallByBallId !==
+            deleteCommentaryBallByBallId
+        ) {
+          ballByBallIndex !== -1
+            ? (global.tblCommentaryBallByBall[ballByBallIndex] =
+                commentaryBallByBall)
+            : null;
         }
         response.commentaryBallByBallDetails = commentaryBallByBall;
       }
     }
-      if (commentaryWicket) {
+    if (commentaryWicket) {
       if (updatedData.commentaryWicketDetails) {
         global.tblCommentaryWicket.push(updatedData.commentaryWicketDetails);
         response.commentaryWicketDetails = updatedData.commentaryWicketDetails;
@@ -2232,6 +2248,10 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
     win: "",
     cst: "",
     ics: result.isClientShow,
+    t1bg: "",
+    t1co: "",
+    t2bg: "",
+    t2co: "",
   };
   let eid;
   let til;
@@ -2274,6 +2294,10 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
   let bovr = 0;
   let cst;
   let ics;
+  let t1bg;
+  let t1co;
+  let t2bg;
+  let t2co;
   // Basic elements are set
   cid = result.commentaryId;
   eid = result.eventRefId.toString();
@@ -2311,6 +2335,8 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
   if (commentaryTeamsOne.length > 0) {
     t1sn = commentaryTeamsOne[0].shortName;
     t1n = commentaryTeamsOne[0].teamName;
+    t1co = commentaryTeamsOne[0].teamColor || "";
+    t1bg = commentaryTeamsOne[0].backgroundColor || "";
     const wicket1 =
       commentaryTeamsOne[0].teamWicket === null
         ? 0
@@ -2326,6 +2352,9 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
   if (commentaryTeamsTwo.length > 0) {
     t2sn = commentaryTeamsTwo[0].shortName;
     t2n = commentaryTeamsTwo[0].teamName;
+    t2co = commentaryTeamsTwo[0].teamColor || "";
+    t2bg = commentaryTeamsTwo[0].backgroundColor || "";
+
     const wicket1 =
       commentaryTeamsTwo[0].teamWicket === null
         ? 0
@@ -2382,6 +2411,12 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
     resultArr.win = "";
     resultArr.cst = result.commentaryStatus;
     result.ics = result.isClientShow;
+    resultArr.t1n = t1sn;
+    resultArr.t1sn = t1sn;
+    resultArr.t1co = t1co;
+    resultArr.t1bg = t1bg;
+    resultArr.t2co = t2co;
+    resultArr.t2bg = t2bg;
   }
   if (getstatus == 2) {
     const _tosswonby = result.tossWonBy;
@@ -2432,6 +2467,10 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
     resultArr.win = "";
     resultArr.cst = result.commentaryStatus;
     resultArr.ics = result.isClientShow;
+    resultArr.t1co = t1co;
+    resultArr.t1bg = t1bg;
+    resultArr.t2co = t2co;
+    resultArr.t2bg = t2bg;
   }
   if (getstatus >= 3) {
     const _tosswonby = result.tossWonBy;
@@ -2539,6 +2578,10 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
     resultArr.win = "";
     resultArr.cst = result.commentaryStatus;
     resultArr.ics = result.isClientShow;
+    resultArr.t1co = t1co;
+    resultArr.t1bg = t1bg;
+    resultArr.t2co = t2co;
+    resultArr.t2bg = t2bg;
   }
 
   let eventType = await global.tblEventTypes.find(
