@@ -313,7 +313,10 @@ const getCompleteMatchList = async (request, reply, fastify) => {
 const getLiveMatchList = async (request, reply, fastify) => {
   try {
     let commentaryData = global.tblCommentaries.filter(
-      (item) => item.commentaryStatus !== 1 && item.commentaryStatus !== 4 && item.isActive == true
+      (item) =>
+        item.commentaryStatus !== 1 &&
+        item.commentaryStatus !== 4 &&
+        item.isActive == true
     );
     const body = {
       commentaryData,
@@ -511,7 +514,12 @@ const saveCommentaryDetailsAPI = async (request, reply, fastify) => {
     const result = await saveCommentaryDetailsAPIService(request, fastify);
     reply.status(200).send(success(result, 200));
   } catch (err) {
-    errorLogger(fastify, err.message, path + "/saveCommentaryDetailsAPI", request);
+    errorLogger(
+      fastify,
+      err.message,
+      path + "/saveCommentaryDetailsAPI",
+      request
+    );
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
@@ -520,7 +528,12 @@ const activeInactiveCommentary = async (request, reply, fastify) => {
     const result = await activeInactiveCommentaryService(request, fastify);
     reply.status(200).send(success(result, 200));
   } catch (err) {
-    errorLogger(fastify, err.message, path + "/activeInactiveCommentary", request);
+    errorLogger(
+      fastify,
+      err.message,
+      path + "/activeInactiveCommentary",
+      request
+    );
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
@@ -608,5 +621,5 @@ module.exports = {
   closeCommentary,
   deleteAllCommentary,
   getOpenCommentaries,
-  updateDelayInCommentary
+  updateDelayInCommentary,
 };
