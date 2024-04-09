@@ -976,22 +976,35 @@ const updateEventMarketRateQuery = async (data,request,fastify) => {
         }
 
         // get the runner market runner data
-        const query3 = `SELECT 
-            "wrRunnerId" as "runnerId",
-            "wrEventMarketId" as "eventMarketId",
-            "wrRunner" as "runner",
-            "wrLine" as "line",
-            "wrOverRate" as "overRate",
-            "wrUnderRate" as "underRate",
-            "wrYesRate" as "yesRate",
-            "wrYesPoint" as "yesPoint",
-            "wrNoRate" as "noRate",
-            "wrNoPoint" as "noPoint",
-            "wrLastUpdate" as "lastUpdate",
-            "wrSelectionId" as "selectionId",
-            "wrSelectionStatus" as "selectionStatus",
-            "wrOrder" as "order"
-        FROM "tblMarketRunners" WHERE "wrEventMarketId" = $1`;
+        const query3 = `
+            SELECT 
+                tem."wrID" as "id",
+                tem."wrEventRefID" as "eventRefId",
+                tem."wrMarketName" as "marketName",
+                tem."wrStatus" as "status",
+                tem."wrIsActive" as "isActive",
+                tem."wrIsAllow" as "isAllow",
+                json_agg(
+                    json_build_object(
+                        'id', tmr."wrRunnerId",
+                        'selectionId' , tmr."wrSelectionId",
+                        'runner', tmr."wrRunner",
+                        'line', tmr."wrLine",
+                        'over', tmr."wrOverRate",
+                        'under', tmr."wrUnderRate",
+                        'yes', tmr."wrYesRate",
+                        'yesPoint', tmr."wrYesPoint",
+                        'no', tmr."wrNoRate",
+                        'noPoint', tmr."wrNoPoint",
+                        'lastUpdate', tmr."wrLastUpdate"
+                    )
+                ) as "runner"
+            FROM "tblEventMarkets" tem
+            LEFT JOIN "tblMarketRunners" tmr ON tmr."wrEventMarketId" = tem."wrID"
+            WHERE tem."wrID" = $1
+            GROUP BY tem."wrID"
+
+        `;
 
         const marketRunner =  await fastify.db.query(query3, {
             bind: [data.eventMarketId],
@@ -999,13 +1012,13 @@ const updateEventMarketRateQuery = async (data,request,fastify) => {
         });
 
         // update eventmarket data with runner data
-        const dataToStore = marketRunner;
+        const dataToStore = marketRunner[0];
 
         const query4 = `UPDATE "tblEventMarkets" SET "wrData" = $1 WHERE "wrID" = $2`;
         
         await fastify.db.query(query4, {
             bind: [
-                JSON.stringify(dataToStore),
+                dataToStore,
                 data.eventMarketId
             ],
             type: fastify.db.QueryTypes.SELECT
@@ -1514,7 +1527,7 @@ const cancelEventMarketByTeamIdQuery = async (data, request, fastify) => {
 const upsertEventMarketSPQuery = async (data, request, fastify) => {
     try {
         const query = `
-            CALL proc_save_eventmarket($1,$2)
+            CALL proc_save_eventmarket2($1,$2)
         `;
         const result = await fastify.db.query(query, {
             bind: [

@@ -425,7 +425,7 @@ const updateMarketRateService = async (request, fastify) => {
     eventMarket = eventMarket[0];
 
     let data = await updateEventMarketRateQuery(item, request, fastify);
-    console.log(data);
+    // console.log(data);
     let diff = data.line - eventMarket.line;
     updatedOvers.push({
       over: item.over,
