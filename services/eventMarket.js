@@ -744,9 +744,12 @@ const commentaryTypeService = async (request, fastify) => {
 
     const totalInnings = global.tblMatchTypes.find(
       (match) => match.matchTypeId === item.matchTypeId
-    ).noOfIningsPerSide;
+    )
 
-    item.totalInnings = totalInnings;
+    if(!totalInnings){
+      throw new Error("Match Type not found");
+    }
+    item.totalInnings = totalInnings.noOfIningsPerSide;
     
   }
 
