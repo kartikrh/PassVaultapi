@@ -130,18 +130,20 @@ module.exports = async function (fastify, opts) {
     done();
   });
 
-  fastify.addHook("onRequest", (request, reply, done) => {
+  fastify.addHook("onRequest", async (request, reply) => {
     // Record the request start time in nanoseconds
     request.startTime = process.hrtime.bigint();
     request.startTimeTimeStemp = new Date();
     if (request.originalUrl.includes("/commentary/saveDetails")) {
         // request.endTimeTimeStemp = new Date();
-        new Promise((resolve, reject) => {
-          resolve(responseLogInDB(request, fastify));
-        }).then ((res) => {
-          // console.log('res', res);
-          request.errId = res[0].errId;
-        });
+        // new Promise((resolve, reject) => {
+        //   resolve(responseLogInDB(request, fastify));
+        // }).then ((res) => {
+        //   // console.log('res', res);
+        //   request.errId = res[0].errId;
+        // });
+        let result = await responseLogInDB(request, fastify);
+        request.errId = result[0].errId;
     }
 
     if (process.env.ENABLE_SENTRY === "TRUE") {
@@ -153,7 +155,7 @@ module.exports = async function (fastify, opts) {
       request.sentryTx = transaction;
     }
 
-    done();
+    // done();
   });
 
   fastify.addHook("onSend", (request, reply, payload, done) => {
