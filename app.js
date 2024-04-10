@@ -134,6 +134,15 @@ module.exports = async function (fastify, opts) {
     // Record the request start time in nanoseconds
     request.startTime = process.hrtime.bigint();
     request.startTimeTimeStemp = new Date();
+    if (request.originalUrl.includes("/commentary/saveDetails")) {
+        // request.endTimeTimeStemp = new Date();
+        new Promise((resolve, reject) => {
+          resolve(responseLogInDB(request, fastify));
+        }).then ((res) => {
+          // console.log('res', res);
+          request.errId = res[0].errId;
+        });
+    }
 
     if (process.env.ENABLE_SENTRY === "TRUE") {
       const transaction = Sentry.startTransaction({
@@ -207,7 +216,7 @@ module.exports = async function (fastify, opts) {
     request.responseTime = responseTimeInMilliseconds;
 
     // if path include /commentary then do log in db
-    if (request.originalUrl.includes("/commentary")) {
+    if (request.originalUrl.includes("/commentary/saveDetails")) {
       request.endTimeTimeStemp = new Date();
       responseLogInDB(request, fastify);
     }
