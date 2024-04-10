@@ -151,6 +151,17 @@ const saveMatchTypeService = async (request, fastify) => {
 const deleteMatchTypeService = async (request, fastify) => {
   const { matchTypeId } = request.body;
 
+  // check if matchType is use in commentary
+  for (let id of matchTypeId) {
+    const checkMatchType = global.tblCommentaries.find(
+      (item) => item.matchTypeId === id
+    );
+
+    if (checkMatchType) {
+      throw new Error(`One of the MatchType cannot be deleted as it is used in Commentary.`);
+    }
+  }
+
   await deleteMatchTypePredictorQuery(matchTypeId, fastify, request);
   await deleteMatchTypeQuery(matchTypeId, fastify, request);
 

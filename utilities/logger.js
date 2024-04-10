@@ -39,23 +39,51 @@ const responseLogger = async (request) => {
 
 const responseLogInDB = async (request, fastify) => {
   try {
-    return await fastify.db.query(
-      `INSERT INTO "tblResponseLogs" ("wrDomain", "wrPath", "wrResponseTime", "wrUserId", "wrUserIp", "wrRequestBody",
-      "wrRequestStartTime", "wrRequestEndTime") VALUES ($1, $2, $3, $4, $5 ,$6,$7,$8)`,
-      {
-        type: fastify.db.QueryTypes.INSERT,
-        bind: [
-          request.hostname,
-          request.originalUrl,
-          parseInt(request.responseTime),
-          request?.userTokenInfo?.WrUserId || null,
-          request.ip,
-          request.body || null,
-          request.startTimeTimeStemp,
-          request.endTimeTimeStemp,
-        ],
-      }
-    );
+    let data;
+    if(request.errId !== undefined){
+      data = await fastify.db.query(
+        `UPDATE "tblResponseLogs"
+        SET "wrResponseTime" = $1,
+        "wrRequestEndTime" = $2,
+        "wrRequestBody" = $3,
+        "wrUserId" = $4
+        WHERE "wrId" = $5
+        RETURNING "wrId" as "errId"`,
+        {
+          type: fastify.db.QueryTypes.SELECT,
+          bind: [
+            parseInt(request.responseTime),
+            request.endTimeTimeStemp,
+            request.body || null,
+            request?.userTokenInfo?.WrUserId || null,
+            request.errId
+          ]
+        }
+      )
+    } 
+    else {
+      data = await fastify.db.query(
+        `INSERT INTO "tblResponseLogs" ("wrDomain", "wrPath", "wrResponseTime",
+        "wrUserId", "wrUserIp", "wrRequestBody",
+        "wrRequestStartTime", "wrRequestEndTime") VALUES ($1, $2, $3, $4, $5 ,$6,$7,$8)
+        RETURNING "wrId" as "errId"`,
+        {
+          type: fastify.db.QueryTypes.INSERT,
+          bind: [
+            request.hostname,
+            request.originalUrl,
+            parseInt(request.responseTime) || null,
+            request?.userTokenInfo?.WrUserId || null,
+            request.ip,
+            request.body || null,
+            request.startTimeTimeStemp,
+            request.endTimeTimeStemp || null,
+          ],
+        }
+      );
+    }
+
+    return data[0];
   } catch (err) {
     console.log(err);
   }
