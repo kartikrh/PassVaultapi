@@ -4768,6 +4768,138 @@ const getNodeEventbyEidService = async (request, fastify) => {
   }
 };
 
+const getActiveCommertyService = async (fastify) => {
+  const activeCommentaries = global.tblCommentaries.filter(
+    (item) => item.isActive && item.commentaryStatus < 4
+  );
+
+  // Initialize an array to store results for each active commentary
+  const results = [];
+
+  // Iterate over each active commentary
+  for (const commentary of activeCommentaries) {
+    try {
+      const currentInnings = commentary.currentInnings;
+
+      // Promisify all necessary asynchronous operations
+      const [
+        commentaryTeamsOne,
+        commentaryTeamsTwo,
+        eventType,
+        competition,
+        team1,
+        team2,
+        commentryBallByBall,
+        overs,
+      ] = await Promise.all([
+        global.tblCommentaryTeams.find(
+          (item) =>
+            item.commentaryId === commentary.commentaryId &&
+            item.teamId === commentary.team1Id &&
+            item.currentInnings === currentInnings
+        ),
+        global.tblCommentaryTeams.find(
+          (item) =>
+            item.commentaryId === commentary.commentaryId &&
+            item.teamId === commentary.team2Id &&
+            item.currentInnings === currentInnings
+        ),
+        global.tblEventTypes.find(
+          (eventType) => eventType.eventTypeId === commentary.eventTypeId
+        ),
+        global.tblCompetitions.find(
+          (competition) =>
+            competition.competitionId === commentary.competitionId
+        ),
+        global.tblTeams.find((team) => team.teamId === commentary.team1Id),
+        global.tblTeams.find((team) => team.teamId === commentary.team2Id),
+        global.tblCommentaryBallByBall.filter(
+          (ball) => ball.commentaryId === commentary.commentaryId
+          // ball.currentInnings === currentInnings
+        ),
+        global.tblOvers.filter(
+          (ov) => ov.commentaryId === commentary.commentaryId
+          // ov.currentInnings === currentInnings
+        ),
+      ]);
+
+      // Construct the data for this commentary
+      let dataToreturn = {};
+
+      // Calculate team scores
+      let teamScore1, teamScore2;
+      if (commentaryTeamsOne) {
+        const wicket1 =
+          commentaryTeamsOne.teamWicket === null
+            ? 0
+            : commentaryTeamsOne.teamWicket;
+        const overs1 =
+          commentaryTeamsOne.teamOver === null
+            ? 0.0
+            : commentaryTeamsOne.teamOver;
+        teamScore1 = commentaryTeamsOne?.teamScore ?? 0;
+        teamScore1 = teamScore1 + "/" + wicket1 + "(" + overs1 + ")";
+      }
+
+      if (commentaryTeamsTwo) {
+        t2sn = commentaryTeamsTwo.shortName;
+        t2n = commentaryTeamsTwo.teamName;
+        const wicket1 =
+          commentaryTeamsTwo.teamWicket === null
+            ? 0
+            : commentaryTeamsTwo.teamWicket;
+        const overs1 =
+          commentaryTeamsTwo.teamOver === null
+            ? 0.0
+            : commentaryTeamsTwo.teamOver;
+        teamScore2 = commentaryTeamsTwo?.teamScore ?? 0;
+        teamScore2 = teamScore2 + "/" + wicket1 + "(" + overs1 + ")";
+      }
+
+      // // Determine batting and bowling teams
+      // let crr, rrr, BattingTeamId, BowlingTeamId;
+      // if (commentaryTeamsOne.teamStatus == 1) {
+      //   crr = commentaryTeamsOne.crr;
+      //   rrr = commentaryTeamsOne.rrr;
+      //   BattingTeamId = commentaryTeamsOne.teamId;
+      //   BowlingTeamId = commentaryTeamsTwo.teamId;
+      // } else {
+      //   crr = commentaryTeamsTwo.crr;
+      //   rrr = commentaryTeamsTwo.rrr;
+      //   BattingTeamId = commentaryTeamsTwo.teamId;
+      //   BowlingTeamId = commentaryTeamsOne.teamId;
+      // }
+
+      // Construct the object with required data
+      let es = {
+        eid: commentary.eventRefId || "",
+        ety: eventType?.eventType || "",
+        mtyp: commentary.matchType || "",
+        com: competition?.competition || "",
+        en: commentary.eventName || "",
+        ed: convertDate(commentary.eventDate, "DD/MM/YYYY") || "",
+        et: convertDate(commentary.eventDate, "hh:mm:ss") || "",
+        te1n: commentaryTeamsOne.teamName || "",
+        te2n: commentaryTeamsTwo.teamName || "",
+        s1n: commentaryTeamsOne.shortName || "",
+        s2n: commentaryTeamsTwo.shortName || "",
+      };
+
+      // Add data to the object
+      dataToreturn = es;
+
+      // Push data for this commentary to the results array
+      results.push(dataToreturn);
+    } catch (error) {
+      // Handle errors here
+      console.error(error);
+    }
+  }
+
+  // Return results array containing data for all active commentaries
+  return results;
+};
+
 const updateisPredictMarketInCommentaryService = async (request, fastify) => {
   const { commentaryId, isPredictMarket } = request.body;
   const index = global.tblCommentaries.findIndex(
@@ -5025,5 +5157,6 @@ module.exports = {
   deleteAllCommentaryService,
   getOpenCommentariesService,
   updateDelayInCommentaryService,
+  getActiveCommertyService,
   // getshortService
 };
