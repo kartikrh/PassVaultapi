@@ -127,7 +127,7 @@ const updateTeamQuery = async (data, fastify, request) => {
 const deleteTeamQuery = async (teamId, fastify, request) => {
   try {
     return await fastify.db.query(
-      `DELETE FROM "tblTeams" WHERE "wrTeamId" = $1`,
+      `DELETE FROM "tblTeams" WHERE "wrTeamId" = ANY($1)`,
       {
         bind: [teamId],
         type: fastify.db.QueryTypes.DELETE,

@@ -272,12 +272,19 @@ const deleteTeamService = async (request, fastify) => {
   // delete images
   for (id of teamId) {
     const team = global.tblTeams.find((item) => item.teamId === id);
-    if (team && (team.image || team.jersey)) {
+    // if (team && (team.image || team.jersey)) {
+    //   await removeImageFromServer({ path: team.image });
+    //   await removeImageFromServer({ path: team.jersey });
+    // }
+    if(team && team.image) {
       await removeImageFromServer({ path: team.image });
+    }
+    if(team && team.jersey) {
       await removeImageFromServer({ path: team.jersey });
     }
   }
   await deleteTeamQuery(teamId, fastify, request);
+
   for (const team of teamId) {
     await deleteTeamPlayerByTeamIdQuery(team, fastify, request);
   }
