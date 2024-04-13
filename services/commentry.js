@@ -239,6 +239,13 @@ const commentaryDetailsByIdService = async (request, fastify) => {
 };
 
 const createCommentaryService = async (request, fastify) => {
+  // eventRefId should be unique
+  const validateEventRefId = global.tblCommentaries.find(
+    (item) => item.eventRefId === request.body.eventRefId?.trim()
+  );
+  if(validateEventRefId){
+    throw new Error("EventRefId should be unique");
+  }
   if (request.body.eventTypeId) {
     const validateEventTypeId = global.tblEventTypes.find(
       (item) => item.eventTypeId === request.body.eventTypeId
@@ -487,6 +494,16 @@ const updateCommentaryService = async (request, fastify) => {
   if (index === -1) {
     throw new Error("Commentary with this id not Found");
   }
+
+  // eventRefId should be unique
+  const validateEventRefId = global.tblCommentaries.find(
+    (item) => item.eventRefId === request.body.eventRefId?.trim()
+    && item.commentaryId !== request.body.commentaryId
+  );
+  if (validateEventRefId) {
+    throw new Error("EventRefId should be unique");
+  }
+
 
   if (request.body.eventTypeId) {
     const validateEventTypeId = global.tblEventTypes.find(
