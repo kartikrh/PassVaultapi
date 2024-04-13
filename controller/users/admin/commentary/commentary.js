@@ -39,6 +39,7 @@ const {
   deleteAllCommentaryService,
   getOpenCommentariesService,
   updateDelayInCommentaryService,
+  getActiveCommertyService,
 } = require("../../../../services/commentry");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -419,6 +420,16 @@ const getNodeEventbyEid = async (request, reply, fastify) => {
   }
 };
 
+const getActiveCommenrty = async (request, reply, fastify) => {
+  try {
+    const result = await getActiveCommertyService(fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/getActiveCommenrty", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
 const testStoreProcedure = async (request, reply, fastify) => {
   try {
     const result = await testStoreProcedureService(request, fastify);
@@ -622,4 +633,5 @@ module.exports = {
   deleteAllCommentary,
   getOpenCommentaries,
   updateDelayInCommentary,
+  getActiveCommenrty,
 };

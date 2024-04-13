@@ -16,6 +16,7 @@ const {
   getPartnershipList,
   getNodeEventbyEid,
   getOpenCommentaries,
+  getActiveCommenrty,
 } = require("../../../controller/users/admin/commentary/commentary");
 const { getMenuItemList } = require("../../../controller/users/admin/menuType");
 const {
@@ -184,6 +185,10 @@ module.exports = async (fastify, opts) => {
   fastify.get("/getScoreEventInfo", {
     schema: Score.getEventDetails.schema,
     handler: (request, reply) => getNodeEventbyEid(request, reply, fastify),
+  });
+
+  fastify.post("/getScoreEventsList", {
+    handler: (request, reply) => getActiveCommenrty(request, reply, fastify),
   });
 
   fastify.post("/saveDomain", {
