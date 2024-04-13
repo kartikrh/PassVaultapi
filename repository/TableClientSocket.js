@@ -140,7 +140,7 @@ const deleteClientSocketQuery  = async(clientSocketId,request,fastify) =>{
         throw new Error(err.message);
     }
 }
-const updateActionTypeQuery = async(request,fastify) =>{
+const updateActionTypeQuery = async(data,request,fastify) =>{
     try {
         const query = `
             UPDATE "tblClientSockets"
@@ -148,16 +148,16 @@ const updateActionTypeQuery = async(request,fastify) =>{
                 "wrActionType" = $1
             WHERE "wrId" = ANY($2)
         `;
-        const data = await fastify.db.query(query,
+        const result = await fastify.db.query(query,
             {
                 type: fastify.db.QueryTypes.SELECT,
                 bind: [
-                    request.actionType,
-                    request.clientSocketId
+                    data.actionType,
+                    data.clientSocketId
                 ]
             }
         )
-        return data[0];
+        return result[0];
     } catch (err) {
         errorLogger(
             fastify,

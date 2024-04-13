@@ -67,7 +67,8 @@ const getAllEventMarketsQuery = async (fastify, whereCondition = null) => {
         tr."wrSelectionId" as "selectionId",
         tr."wrSelectionStatus" as "selectionStatus",
         tr."wrOrder" as "order",
-        tem."wrDelay" as "delay"
+        tem."wrDelay" as "delay",
+        tr."wrLineRatio" as "lineRatio"
     FROM "tblEventMarkets" tem
     LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
     LEFT JOIN "tblCompetitions" tcom ON tcom."wrCompetitionId" = tc."wrCompetitionId"
@@ -147,7 +148,8 @@ const getEventMarketByIdsQuery = async (data,request ,fastify) => {
           tr."wrSelectionId" as "selectionId",
           tr."wrSelectionStatus" as "selectionStatus",
           tr."wrOrder" as "order",
-          tem."wrDelay" as "delay"
+          tem."wrDelay" as "delay",
+          tr."wrLineRatio" as "lineRatio"
       FROM "tblEventMarkets" tem
       LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
       LEFT JOIN "tblCompetitions" tcom ON tcom."wrCompetitionId" = tc."wrCompetitionId"
@@ -216,7 +218,6 @@ const createManyEventMarketQuery = async (data, request, fastify) => {
             "wrMargin",
             "wrStatus",
             "wrIsPredefineMarket",
-          
             "wrIsOver",
             "wrOver",
             "wrIsPlayer",
@@ -953,8 +954,9 @@ const updateEventMarketRateQuery = async (data,request,fastify) => {
                 "wrNoPoint" = $8,
                 "wrLastUpdate" = now()::timestamp,
                 "wrSelectionStatus" = $9,
-                "wrSelectionId" = $10
-                WHERE "wrRunnerId" = $11
+                "wrSelectionId" = $10,
+                "wrLineRatio" = $11
+                WHERE "wrRunnerId" = $12
                 `,
                 {
                     bind: [
@@ -968,6 +970,7 @@ const updateEventMarketRateQuery = async (data,request,fastify) => {
                         runner.noPoint || 0,
                         runner.selectionStatus,
                         runner.selectionId,
+                        runner.lineRatio || 0,
                         runner.runnerId
                     ],
                     type: fastify.db.QueryTypes.SELECT
@@ -996,7 +999,8 @@ const updateEventMarketRateQuery = async (data,request,fastify) => {
                         'yesPoint', tmr."wrYesPoint",
                         'no', tmr."wrNoRate",
                         'noPoint', tmr."wrNoPoint",
-                        'lastUpdate', tmr."wrLastUpdate"
+                        'lastUpdate', tmr."wrLastUpdate",
+                        'lineRatio', tmr."wrLineRatio"
                     )
                 ) as "runner"
             FROM "tblEventMarkets" tem
