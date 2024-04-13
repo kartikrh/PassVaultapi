@@ -51,6 +51,7 @@ const { getAllVendorsQuery } = require("../repository/TableVendor");
 const { getAllVendorIpsQuery } = require("../repository/TableVendorIp");
 
 const { allDisplayStatusesQuery } = require("../repository/TableDisplayStatus");
+const { getAllClientSocketQuery } = require("../repository/TableClientSocket");
 
 const fetchAllDataFromDb = async (fastify, reply) => {
   try {
@@ -105,7 +106,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     );
     const getAllVendors = await getAllVendorsQuery(fastify);
     const getAllVendorIps = await getAllVendorIpsQuery(fastify);
-
+    const getAllClientSocket = await getAllClientSocketQuery(fastify);
     global.tblTabs = getAllTabs;
     global.tblRoles = getAllRoles;
     global.tblBlocks = getAllBlocks;
@@ -145,7 +146,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblMarketTemplateRunners = getAllMarketTemplateRunner;
     global.tblVendors = getAllVendors;
     global.tblVendorIp = getAllVendorIps;
-
+    global.tblClientSocket = getAllClientSocket;
     console.log("Okkkk");
 
     if (reply) {
