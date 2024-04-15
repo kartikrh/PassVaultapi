@@ -243,7 +243,7 @@ const createCommentaryService = async (request, fastify) => {
   const validateEventRefId = global.tblCommentaries.find(
     (item) => item.eventRefId === request.body.eventRefId?.trim()
   );
-  if(validateEventRefId){
+  if (validateEventRefId) {
     throw new Error("EventRefId should be unique");
   }
   if (request.body.eventTypeId) {
@@ -497,13 +497,13 @@ const updateCommentaryService = async (request, fastify) => {
 
   // eventRefId should be unique
   const validateEventRefId = global.tblCommentaries.find(
-    (item) => item.eventRefId === request.body.eventRefId?.trim()
-    && item.commentaryId !== request.body.commentaryId
+    (item) =>
+      item.eventRefId === request.body.eventRefId?.trim() &&
+      item.commentaryId !== request.body.commentaryId
   );
   if (validateEventRefId) {
     throw new Error("EventRefId should be unique");
   }
-
 
   if (request.body.eventTypeId) {
     const validateEventTypeId = global.tblEventTypes.find(
@@ -4959,7 +4959,7 @@ const getEventDetailsByCIdService = async (request, fastify) => {
         eid: commentary.eventRefId || "",
         ety: eventType?.eventType || "",
         mtyp: commentary.matchType || "",
-        mtyi : commentary.matchTypeId,
+        mtyi: commentary.matchTypeId,
         com: competition?.competition || "",
         en: commentary.eventName || "",
         ed: convertDate(commentary.eventDate, "DD/MM/YYYY") || "",
@@ -5132,6 +5132,90 @@ const updateDelayInCommentaryService = async (request, fastify) => {
   }
   return updatedData;
 };
+
+const getShortCommertyService = async (request, fastify) => {
+  const { eventId } = request.body;
+  const commentary = global.tblCommentaries.find(
+    (item) => item.eventRefId === eventId
+  );
+  if (commentary) {
+    try {
+      const currentInnings = commentary.currentInnings;
+      // Promisify all necessary asynchronous operations
+      const [commentaryTeamsOne, commentaryTeamsTwo, eventType] =
+        await Promise.all([
+          global.tblCommentaryTeams.find(
+            (item) =>
+              item.commentaryId === commentary.commentaryId &&
+              item.teamId === commentary.team1Id &&
+              item.currentInnings === currentInnings
+          ),
+          global.tblCommentaryTeams.find(
+            (item) =>
+              item.commentaryId === commentary.commentaryId &&
+              item.teamId === commentary.team2Id &&
+              item.currentInnings === currentInnings
+          ),
+          global.tblEventTypes.find(
+            (eventType) => eventType.eventTypeId === commentary.eventTypeId
+          ),
+        ]);
+      let dataToreturn = {};
+
+      let teamScore1, teamScore2;
+      if (commentaryTeamsOne) {
+        const wicket1 =
+          commentaryTeamsOne.teamWicket === null
+            ? 0
+            : commentaryTeamsOne.teamWicket;
+        const overs1 =
+          commentaryTeamsOne.teamOver === null
+            ? 0.0
+            : commentaryTeamsOne.teamOver;
+        teamScore1 = commentaryTeamsOne?.teamScore ?? 0;
+        teamScore1 = teamScore1 + "/" + wicket1 + " (" + overs1 + ")";
+      }
+
+      if (commentaryTeamsTwo) {
+        t2sn = commentaryTeamsTwo.shortName;
+        t2n = commentaryTeamsTwo.teamName;
+        const wicket1 =
+          commentaryTeamsTwo.teamWicket === null
+            ? 0
+            : commentaryTeamsTwo.teamWicket;
+        const overs1 =
+          commentaryTeamsTwo.teamOver === null
+            ? 0.0
+            : commentaryTeamsTwo.teamOver;
+        teamScore2 = commentaryTeamsTwo?.teamScore ?? 0;
+        teamScore2 = teamScore2 + "/" + wicket1 + " (" + overs1 + ")";
+      }
+      let es = {
+        eti: parseInt(eventType.refId) || "",
+        eid: commentary.eventRefId || "",
+        en: commentary.eventName || "",
+        te1n: commentaryTeamsOne.teamName || "",
+        te2n: commentaryTeamsTwo.teamName || "",
+        t1s: teamScore1 || "",
+        t2s: teamScore2 || "",
+        pt: 0,
+        t1set: null,
+        t2set: null,
+        t1p: null,
+        t2p: null,
+      };
+
+      dataToreturn = es;
+      return dataToreturn;
+    } catch (error) {
+      // Handle errors here
+      console.error(error);
+    }
+  } else {
+    console.error("Commentary with this id not Found");
+    return null;
+  }
+};
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -5176,5 +5260,6 @@ module.exports = {
   getOpenCommentariesService,
   updateDelayInCommentaryService,
   getActiveCommertyService,
+  getShortCommertyService,
   // getshortService
 };
