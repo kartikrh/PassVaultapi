@@ -4959,6 +4959,7 @@ const getEventDetailsByCIdService = async (request, fastify) => {
         eid: commentary.eventRefId || "",
         ety: eventType?.eventType || "",
         mtyp: commentary.matchType || "",
+        mtyi : commentary.matchTypeId,
         com: competition?.competition || "",
         en: commentary.eventName || "",
         ed: convertDate(commentary.eventDate, "DD/MM/YYYY") || "",

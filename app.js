@@ -84,6 +84,7 @@ module.exports = async function (fastify, opts) {
       require("./sequelize/tables/marketTemplateRunnerModel")(fastify.db);
       require("./sequelize/tables/vendorsModel")(fastify.db);
       require("./sequelize/tables/vendorIpModel")(fastify.db);
+      require("./sequelize/tables/clientSocketModel")(fastify.db);
       try {
         await fastify.db.sync();
         await featchData(fastify);
@@ -297,6 +298,11 @@ module.exports = async function (fastify, opts) {
   io.use(socketMiddleware);
   io.on("connection", connection);
 
+  // connect the as a client to the socket.io admin
+  // fastify.register(AutoLoad, {
+  //   dir: path.join(__dirname, "sockets"),
+  //   options: Object.assign({}, opts),
+  // });
   // fastify.addHook("onRequest", (request, reply, done) => {
   //   const ip = requestIp.getClientIp(request);
   //   request.clintIp = ip;

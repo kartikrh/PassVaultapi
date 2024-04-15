@@ -3771,6 +3771,110 @@ const DisplayStatus = {
     },
   },
 };
+const ClientSocket = {
+  getAll : {
+    schema: {
+      tags: ["ClientSocket"],
+      description: "get all ClientSocket",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+  byId : {
+    schema: {
+      tags: ["ClientSocket"],
+      description: "get ClientSocket by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          clientSocketId: { type: "integer" },
+        },
+        required: ["clientSocketId"],
+      },
+    },
+  },
+  save : {
+    schema: {
+      tags: ["ClientSocket"],
+      description: "save ClientSocket",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          clientSocketId: { type: "integer" },
+          serverName : { type: "string" },
+          url : { type: "string" },
+          isActive: { type: "boolean" },
+          status : { type: "integer" },
+          reconnectDelay : { type: "integer" },
+          reconnectAttempts : { type: "integer" },
+          reconnectMaxDelay : { type: "integer" },
+          reconnectCount : { type: "integer" },
+          actionType : { type: "integer" },
+        },
+        required: ["clientSocketId" , "url"],
+      },
+    },
+  },
+  delete : {
+    schema: {
+      tags: ["ClientSocket"],
+      description: "delete ClientSocket",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          clientSocketId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["clientSocketId"],
+      },
+    },
+  },
+  changeActionType : {  
+    schema: {
+      tags: ["ClientSocket"],
+      description: "change action type",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          clientSocketId: {
+            type : "array",
+            items : { type : "integer" },
+          },  
+          actionType: { type: "integer" },
+        },
+        required: ["clientSocketId" , "actionType"],
+      },
+    },
+  },
+  activeInactive : {
+    schema: {
+      tags: ["ClientSocket"],
+      description: "active inactive ClientSocket",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          clientSocketId: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["clientSocketId", "isActive"],
+      },
+    },
+  },
+  
+}
 module.exports = {
   Auth,
   Tabs,
@@ -3803,4 +3907,5 @@ module.exports = {
   Vendor,
   VendorIp,
   DisplayStatus,
+  ClientSocket
 };

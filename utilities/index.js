@@ -279,7 +279,17 @@ const genrateKey = () => {
   const key = format.replace(/[^\d-]/g, () => Math.floor(Math.random() * 10));
   return key;
 }
-
+const clientSocketStatus = {
+  0 : "None",
+  1 : "Connected",
+  2 : "Disconnected",
+  3 : "Reconnecting",
+}
+const clientSocketActionType = {
+  0 : "None",
+  1 : "Connect",
+  2 : "Disconnect",
+}
 module.exports = {
   ERROR_CODES,
   error,
@@ -302,5 +312,7 @@ module.exports = {
   MarketActionType,
   MarketUpdateType,
   ActionTypeForMarketCancel,
-  genrateKey
+  genrateKey,
+  clientSocketStatus,
+  clientSocketActionType
 };
