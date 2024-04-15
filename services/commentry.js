@@ -2363,7 +2363,7 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
         ? 0.0
         : commentaryTeamsOne[0].teamOver;
     const teamScore1 = commentaryTeamsOne[0]?.teamScore ?? 0;
-    t1s = teamScore1 + "/" + wicket1 + "(" + overs1 + ")";
+    t1s = teamScore1 + "/" + wicket1 + " (" + overs1 + ")";
   }
 
   if (commentaryTeamsTwo.length > 0) {
@@ -2381,7 +2381,7 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
         ? 0.0
         : commentaryTeamsTwo[0].teamOver;
     const teamScore2 = commentaryTeamsTwo[0]?.teamScore ?? 0;
-    t2s = teamScore2 + "/" + wicket1 + "(" + overs1 + ")";
+    t2s = teamScore2 + "/" + wicket1 + " (" + overs1 + ")";
   }
   //teams Images are Ser
   const _teamsC1 = await global.tblTeams.filter(
@@ -2614,6 +2614,7 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
     (resultArr.ety = eventType?.eventType || "");
   resultArr.mtyp = result.matchType || "";
   resultArr.com = competition?.competition || "";
+  resultArr.eti = parseInt(eventType.refId) || "";
   // remove out batsman
   const commentaryPlayers_batter = await global.tblCommentaryPlayers.filter(
     (item) =>
