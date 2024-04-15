@@ -17,6 +17,7 @@ const {
   getNodeEventbyEid,
   getOpenCommentaries,
   getActiveCommenrty,
+  getShortCommerty,
 } = require("../../../controller/users/admin/commentary/commentary");
 const { getMenuItemList } = require("../../../controller/users/admin/menuType");
 const {
@@ -207,5 +208,9 @@ module.exports = async (fastify, opts) => {
   fastify.post("/getCommentary", {
     schema: Commentary.getAll.schema,
     handler: (request, reply) => getOpenCommentaries(request, reply, fastify),
+  });
+  fastify.post("/getShortscoreByEId", {
+    schema: Score.getscoreByEId.schema,
+    handler: (request, reply) => getShortCommerty(request, reply, fastify),
   });
 };
