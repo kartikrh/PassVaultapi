@@ -1,4 +1,4 @@
-const { saveMarketTemplateService, getAllMarketTemplateService, getMarketTemplateIdService, deleteMarketTemplateService, getMatchTypeListService, activeInactiveTemplateService, getByMatchTypeIdService, getMarketTypeListService, getCategoryByMarketTypeService, changePredefineRunnerService } = require("../../../../services/marketTemplate");
+const { saveMarketTemplateService, getAllMarketTemplateService, getMarketTemplateIdService, deleteMarketTemplateService, getMatchTypeListService, activeInactiveTemplateService, getByMatchTypeIdService, getMarketTypeListService, getCategoryByMarketTypeService, changePredefineRunnerService, cloneMarketTemplateService } = require("../../../../services/marketTemplate");
 const { error, success, ERROR_CODES } = require("../../../../utilities");
 const { errorLogger } = require("../../../../utilities/logger");
 
@@ -96,6 +96,15 @@ const changePredefineRunner = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const cloneMarketTemplate = async (request, reply, fastify) => {
+  try {
+    const result = await cloneMarketTemplateService(request ,fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/cloneMarketTemplate", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 
 module.exports = {
   getAllMarketTemplate,
@@ -107,5 +116,6 @@ module.exports = {
   getByMatchTypeId,
   getMarketTypeList,
   getCategoryByMarketType,
-  changePredefineRunner
+  changePredefineRunner,
+  cloneMarketTemplate
 };

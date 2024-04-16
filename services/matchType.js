@@ -160,6 +160,13 @@ const deleteMatchTypeService = async (request, fastify) => {
     if (checkMatchType) {
       throw new Error(`One of the MatchType cannot be deleted as it is used in Commentary.`);
     }
+
+    const checkInMarketTemplate = global.tblMarketTemplate.find(
+      (item) => item.matchTypeID === id
+    );
+    if(checkInMarketTemplate){
+      throw new Error(`One of the MatchType cannot be deleted as it is used in Market Template.`);
+    }
   }
 
   await deleteMatchTypePredictorQuery(matchTypeId, fastify, request);

@@ -2540,6 +2540,21 @@ const MarketTemplate = {
       },
     },
   },
+  clone : {
+    schema: {
+      tags : ["Market Template"],
+      security : [{bearerAuth : []}],
+      description : "clone market template",
+      body : {
+        type : "object",
+        properties : {
+          marketTemplateId : {type : "integer"},
+          matchTypeID : {type : "integer"}
+        },
+        required : ["marketTemplateId", "matchTypeID"]
+      }
+    }
+  },
   markeTypeList: {
     schema: {
       tags: ["EventMarket"],

@@ -238,6 +238,28 @@ const changePredefineRunnerService = async (request, fastify) => {
   global.tblMarketTemplate[index].isPredefineRunnerValue = isPredefineRunnerValue;
   return `MarketTemplate updated successfully`;
 }
+
+const cloneMarketTemplateService = async (request, fastify) => {
+  // validate marketTemplateId
+  const { marketTemplateId } = request.body;
+  const marketTemplate = global.tblMarketTemplate.find(
+    (item) => item.marketTemplateId === marketTemplateId
+  );
+  if (!marketTemplate) {
+    throw new Error("MarketTemplate not found");
+  }
+  let data = await insertMarketTemplateQuery(
+    {
+      ...marketTemplate,
+      matchTypeID : request.body.matchTypeID,
+      createdBy : request.userTokenInfo.WrUserId
+    },
+    fastify,
+    request
+  );
+  global.tblMarketTemplate.push(data);
+  return data;
+}
 module.exports = {
   saveMarketTemplateService,
   getAllMarketTemplateService,
@@ -248,5 +270,6 @@ module.exports = {
   getByMatchTypeIdService,
   getMarketTypeListService,
   getCategoryByMarketTypeService,
-  changePredefineRunnerService
+  changePredefineRunnerService,
+  cloneMarketTemplateService
 };
