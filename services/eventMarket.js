@@ -806,16 +806,19 @@ const setLineRatioService = async (data, request, fastify) => {
     (item) => item.matchTypeId === matchTypeOfCommentary
   ).maxOversInFirstInings;
 
-  // get the open market of this commentary and the isOver true and which have max over
-
-  let eventMarket = global.tblEventMarkets.filter(
+  // get the open market of this commentary and the isOver true and which have max ov
+  const allEventMarket = global.tblEventMarkets.filter(
     (item) =>
       item.commentaryId === data.commentaryId &&
       item.isOver === true &&
-      item.over === maxOver &&
       item.status !== EventMarketStatus.Cancel &&
       item.status !== EventMarketStatus.Close &&
       item.status !== EventMarketStatus.Settled
+  );
+
+  let eventMarket = allEventMarket.filter(
+    (item) =>
+      item.over === maxOver
   );
 
   if (eventMarket.length === 0) {
@@ -849,9 +852,10 @@ const setLineRatioService = async (data, request, fastify) => {
   // get the lineRatio of this matchType
   const lineRatio = (maxLine / sum).toFixed(2);
   // save the line ratio in tblEventMarkets
+  //get tthe eventMarket of batting team
   await setLineRatioEventMarketQuery(
     {
-      eventMarketId  : eventMarket.map((item) => item.eventMarketId),
+      eventMarketId  : allEventMarket.map((item) => item.eventMarketId),
       lineRatio: lineRatio,
     },
     request,
