@@ -22,6 +22,8 @@ const {
   setDelayEventMarketQuery,
   getDataLogsByMarketQuery,
   getStatusLogsByMarketQuery,
+  setLineRatioEventMarketQuery,
+  getRunnersByMarketIdQuery,
 } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
 const {
@@ -773,6 +775,73 @@ const setDelayEventMarketService = async (request, fastify) => {
     } 
   return "Event Market delay value added successfully";
 };
+const setLineRatioService = async (data, request, fastify) => {
+  let matchTypeOfCommentary = global.tblCommentaries.find(
+    (item) => item.commentaryId === data.commentaryId
+  ).matchTypeId;
+
+  if(!matchTypeOfCommentary){
+    throw new Error("Match Type not found");
+  }
+
+  const maxOver = global.tblMatchTypes.find(
+    (item) => item.matchTypeId === matchTypeOfCommentary
+  ).maxOversInFirstInings;
+
+  // get the open market of this commentary and the isOver true and which have max over
+
+  let eventMarket = global.tblEventMarkets.filter(
+    (item) =>
+      item.commentaryId === data.commentaryId &&
+      item.isOver === true &&
+      item.over === maxOver &&
+      item.status !== EventMarketStatus.Cancel &&
+      item.status !== EventMarketStatus.Close &&
+      item.status !== EventMarketStatus.Settled
+  );
+
+  if (eventMarket.length === 0) {
+    return true;
+  }
+
+  // get the marketRunner of this market and get the max line of this runner
+  let maxLine = 0;
+  for (market of eventMarket){
+    const runners = await getRunnersByMarketIdQuery(
+      {
+        eventMarketId: market.eventMarketId,
+      },
+      request,
+      fastify
+    );
+    let runnerMaxLine = runners.reduce((a, b) => (a.line > b.line ? a : b)).line;
+    if (runnerMaxLine > maxLine) {
+      maxLine = runnerMaxLine;
+    }
+  }
+
+  // get the matchType predictorData of this matchType
+  let predictorData = global.tblMatchTypePredictorData.filter(
+    (item) => item.matchTypeId === matchTypeOfCommentary
+  );
+  let sum = 0;
+  for (let item of predictorData) {
+    sum += item.runPerBall;
+  }
+  // get the lineRatio of this matchType
+  const lineRatio = (maxLine / sum).toFixed(2);
+  // save the line ratio in tblEventMarkets
+  await setLineRatioEventMarketQuery(
+    {
+      eventMarketId  : eventMarket.map((item) => item.eventMarketId),
+      lineRatio: lineRatio,
+    },
+    request,
+    fastify
+  );
+
+  return true;
+}
 const handleMarketCloseService = async (data, request, fastify) => {
   // check the eventMarket close log for this commentaryId
   const checkLog = await getMarketLogsByCIdQuery(
@@ -851,17 +920,10 @@ const handleMarketCloseService = async (data, request, fastify) => {
       fastify
     );
   }
-  // callPredictorMarket(
-  //   {
-  //     commentary_id: commentary.commentaryId,
-  //     match_type_id: commentary.matchTypeId,
-  //     event_id : commentary.eventRefId
-  //   },
-  //   "/api/loadcommentary",
-  //   fastify,
-  //   request
-  // );
-
+  // settle the lineration as per requirement
+  const setLineRatio = await setLineRatioService(data, request, fastify);
+  console.log(setLineRatio);
+  
   marketLogger(
     {
       commentaryId: data.commentaryId,
