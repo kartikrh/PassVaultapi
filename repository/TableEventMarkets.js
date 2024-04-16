@@ -1642,7 +1642,7 @@ const getEventMarketRatioQuery = async (data, request, fastify) => {
 }
 const setLineRatioEventMarketQuery = async (data,request,fastify) => {
     try {
-        const query = `UPDATE "tblMarketRunners" SET "wrLineRatio" = $1 WHERE "wrEventMarketId" = ANY($2)`;
+        const query = `UPDATE "tblEventMarkets" SET "wrLineRatio" = $1 WHERE "wrID" = ANY($2)`;
         return await fastify.db.query(query, {
             bind: [data.lineRatio, data.eventMarketId],
             type: fastify.db.QueryTypes.SELECT
