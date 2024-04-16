@@ -148,58 +148,63 @@ module.exports = (sequelize) => {
         allowNull: false,
         defaultValue: false,
       },
-      wrData :{
+      wrData: {
         type: DataTypes.STRING,
         allowNull: true,
       },
-      wrLastUpdate :{
+      wrLastUpdate: {
         type: DataTypes.DATE,
         allowNull: true,
       },
-      wrIsSendData :{
+      wrIsSendData: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
         defaultValue: false,
       },
-      wrActionType :{
+      wrActionType: {
         type: DataTypes.INTEGER,
         allowNull: true,
         defaultValue: 0,
       },
-      wrMarketTemplateId :{
+      wrMarketTemplateId: {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
-      wrMarketTypeId :{
+      wrMarketTypeId: {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
-      wrMarketTypeCategoryId :{
+      wrMarketTypeCategoryId: {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
-      wrCreateRefId :{
+      wrCreateRefId: {
         type: DataTypes.STRING,
         allowNull: true,
       },
-      wrOpenRefId :{
+      wrOpenRefId: {
         type: DataTypes.STRING,
         allowNull: true,
       },
-      wrCreateType :{
+      wrCreateType: {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
-      wrCreate :{
+      wrCreate: {
         type: DataTypes.DECIMAL(10, 2),
         allowNull: true,
       },
-      wrTemplateType :{
+      wrTemplateType: {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
-      wrDelay : {
+      wrDelay: {
         type: DataTypes.INTEGER,
+        allowNull: true,
+        defaultValue: 0,
+      },
+      wrLineRatio: {
+        type: DataTypes.DOUBLE,
         allowNull: true,
         defaultValue: 0,
       },
