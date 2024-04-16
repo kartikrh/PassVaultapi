@@ -99,7 +99,7 @@ const getDetailsByCIdService = async (request, fastify) => {
   };
 };
 const getAllEventMarketsService = async (request, fastify) => {
-  const { isActive, eventTypeId, competitionId, eventId, status } =
+  const { isActive, eventTypeId, competitionId, eventId, status, startDate, endDate } =
     request.body;
   let createWhereStatus = `tem."wrStatus" NOT IN (${EventMarketStatus.Close},${EventMarketStatus.Settled},${EventMarketStatus.Cancel})`
   if(status !== undefined){
@@ -132,6 +132,15 @@ const getAllEventMarketsService = async (request, fastify) => {
     eventMarket = eventMarket.filter((item) =>
       commentaryId.includes(item.commentaryId)
     );
+  }
+   // add dateFilter if provided
+   if (startDate && endDate) {
+    eventMarket = eventMarket?.filter((item) => {
+      return (
+        new Date(item.eventDate) >= new Date(startDate) &&
+        new Date(item.eventDate) <= new Date(endDate)
+      );
+    });
   }
   // if (status !== undefined) {
   //   eventMarket = eventMarket.filter((item) => item.status === status);
@@ -311,7 +320,7 @@ const getEventListByCompetitionIdsService = async (request, fastify) => {
   return eventList;
 };
 const marketListResultFalseService = async (request, fastify) => {
-  const { isActive, eventTypeId, competitionId, eventId, status } =
+  const { isActive, eventTypeId, competitionId, eventId, status, startDate, endDate} =
     request.body;
   let eventMarket = global.tblEventMarkets.filter((item) => {
     return (
@@ -346,6 +355,15 @@ const marketListResultFalseService = async (request, fastify) => {
     eventMarket = eventMarket.filter((item) =>
       commentaryId.includes(item.commentaryId)
     );
+  }
+  // add dateFilter if provided
+  if (startDate && endDate) {
+    eventMarket = eventMarket?.filter((item) => {
+      return (
+        new Date(item.eventDate) >= new Date(startDate) &&
+        new Date(item.eventDate) <= new Date(endDate)
+      );
+    });
   }
   if (status !== undefined) {
     eventMarket = eventMarket.filter((item) => item.status === status);

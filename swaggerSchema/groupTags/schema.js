@@ -3312,6 +3312,8 @@ const EventMarket = {
           competitionId: { type: "integer" },
           eventId: { type: "integer" },
           status: { type: "integer" },
+          startDate: { type: "string" },
+          endDate: { type: "string" },
         },
       },
     },
