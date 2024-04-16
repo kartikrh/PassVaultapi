@@ -257,7 +257,10 @@ const cloneMarketTemplateService = async (request, fastify) => {
     fastify,
     request
   );
-  global.tblMarketTemplate.push(data);
+  global.tblMarketTemplate.push({
+    ...data,
+    matchType : marketTemplate.matchType
+  });
   return data;
 }
 module.exports = {
