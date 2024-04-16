@@ -430,6 +430,7 @@ const updateMarketRateService = async (request, fastify) => {
     updatedOvers.push({
       over: item.over,
       value: diff,
+      line_ratio : data.lineRatio
     });
     let index = global.tblEventMarkets.findIndex(
       (e) => e.eventMarketId === item.eventMarketId
