@@ -1627,6 +1627,33 @@ const getStatusLogsByMarketQuery = async (request, fastify) => {
         throw new Error(error.message);
     }
 }
+const getEventMarketRatioQuery = async (data,request,fastify) => {
+    try {
+        let query = `
+            SELECT 
+                ev."wrOver" as "over",
+                mr."wrLineRatio" as "line_ratio"
+            FROM "tblEventMarkets" ev
+            JOIN "tblMarketRunners" mr ON mr."wrEventMarketId" = ev."wrID"
+            WHERE ev."wrCommentaryId" = $1
+            AND ev."wrTeamID" = $2
+
+        `;
+        return await fastify.db.query(query, {
+            bind: [data.commentaryId, data.teamId],
+            type: fastify.db.QueryTypes.SELECT
+        });
+
+    } catch (error) {
+        errorLogger(
+            fastify,
+            error.message,
+            "DB ERROR --> repository/TableEventmarket.js/upsertEventMarketSPQuery",
+            request
+        );
+        throw new Error(error.message);
+    }
+}
 module.exports = {
     getAllEventMarketsQuery,
     createManyEventMarketQuery,
@@ -1650,5 +1677,6 @@ module.exports = {
     getEventMarketByIdsQuery,
     setDelayEventMarketQuery,
     getDataLogsByMarketQuery,
-    getStatusLogsByMarketQuery
+    getStatusLogsByMarketQuery,
+    getEventMarketRatioQuery
 };

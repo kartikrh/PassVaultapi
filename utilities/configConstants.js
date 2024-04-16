@@ -6,5 +6,6 @@ const configConstants = {
     MARKET_PREDICTOR : "MARKETPREDICTOR",
     PASSWORD : "PASSWORD",
     ISPREDICTORLOGGER : "ISPREDICTORLOGGER",
+    SCORECLIENTAPIURL : "SCORECLIENTAPIURL",
 }
 module.exports = configConstants;

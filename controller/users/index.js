@@ -1,4 +1,4 @@
-const { ERROR_CODES, error, success } = require("../../utilities/index");
+const { ERROR_CODES, error, success, fetchDataForClient } = require("../../utilities/index");
 const {
   signUpUserService,
   signInUserServices,
@@ -91,6 +91,17 @@ const loadDataInMemory = async (request, reply, fastify) => {
       throw new Error("You are not authorized to perform this action");
     }
     await fetchAllDataFromDb(fastify, reply);
+  } catch (err) {
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
+const loadClientDataInMemory = async (request, reply, fastify) => {
+  try {
+    if (!request.userTokenInfo.WrIsSuperAdmin) {
+      throw new Error("You are not authorized to perform this action");
+    }
+    return await fetchDataForClient(fastify, reply);
   } catch (err) {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
@@ -242,5 +253,6 @@ module.exports = {
   deleteUser,
   updateUserPassword,
   changeUserPassword,
-  generalImageUpload
+  generalImageUpload,
+  loadClientDataInMemory
 };

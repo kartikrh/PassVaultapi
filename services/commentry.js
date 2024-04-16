@@ -58,6 +58,7 @@ const {
 } = require("../utilities");
 const { getAllPlayersByTeamIdQuery } = require("../repository/TableTeams");
 const { handleMarketCloseService } = require("./eventMarket");
+const { getEventMarketRatioQuery } = require("../repository/TableEventMarkets");
 
 const allCommentaryService = async (request, fastify) => {
   // return global.tblCommentaries;
@@ -220,14 +221,35 @@ const commentaryDetailsByIdService = async (request, fastify) => {
   };
 
   if (
-    commentary.isPredictMarket == true &&
-    (commentary.commentaryStatus == 2 || commentary.commentaryStatus == 3)
+    commentary.isPredictMarket == true 
+    && (commentary.commentaryStatus == 2 || commentary.commentaryStatus == 3)
   ) {
+    // get the eventMarket from teamOnstrike
+    const teamOnStrike = global.tblCommentaryTeams.find(
+      (item) =>
+        item.commentaryId === commentary.commentaryId &&
+        item.currentInnings === commentary.currentInnings &&
+        item.teamStatus === 1
+    );
+    // array of eventMarket id
+    let eventMarketLine = [];
+    if(teamOnStrike){
+      eventMarketLine  = await getEventMarketRatioQuery(
+        {
+          commentaryId: commentary.commentaryId,
+          teamId: teamOnStrike.teamId,
+
+        },
+        request,
+        fastify
+      );
+    }
     callPredictorMarket(
       {
         commentary_id: commentary.commentaryId,
         match_type_id: commentary.matchTypeId,
         event_id: commentary.eventRefId,
+        line_ratio_data : eventMarketLine
       },
       "/api/loadcommentary",
       fastify,
