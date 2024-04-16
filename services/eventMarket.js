@@ -821,7 +821,7 @@ const setLineRatioService = async (data, request, fastify) => {
   }
 
   // get the matchType predictorData of this matchType
-  let predictorData = global.tblMatchTypePredictorData.filter(
+  let predictorData = global.tblMatchTypePredictor?.filter(
     (item) => item.matchTypeId === matchTypeOfCommentary
   );
   let sum = 0;
