@@ -1625,43 +1625,97 @@ const getEventMarketRatioQuery = async (data, request, fastify) => {
             AND ev."wrTeamID" = $2
 
         `;
-    return await fastify.db.query(query, {
-      bind: [data.commentaryId, data.teamId],
-      type: fastify.db.QueryTypes.SELECT,
-    });
-  } catch (error) {
-    errorLogger(
-      fastify,
-      error.message,
-      "DB ERROR --> repository/TableEventmarket.js/upsertEventMarketSPQuery",
-      request
-    );
-    throw new Error(error.message);
-  }
-};
+        return await fastify.db.query(query, {
+            bind: [data.commentaryId, data.teamId],
+            type: fastify.db.QueryTypes.SELECT
+        });
+
+    } catch (error) {
+        errorLogger(
+            fastify,
+            error.message,
+            "DB ERROR --> repository/TableEventmarket.js/upsertEventMarketSPQuery",
+            request
+        );
+        throw new Error(error.message);
+    }
+}
+const setLineRatioEventMarketQuery = async (data,request,fastify) => {
+    try {
+        const query = `UPDATE "tblMarketRunners" SET "wrLineRatio" = $1 WHERE "wrEventMarketId" = ANY($2)`;
+        return await fastify.db.query(query, {
+            bind: [data.lineRatio, data.eventMarketId],
+            type: fastify.db.QueryTypes.SELECT
+        });
+    } catch (error) {
+        errorLogger(
+            fastify,
+            error.message,
+            "DB ERROR --> repository/TableEventmarket.js/setLineRatioEventMarketQuery",
+            request
+        );
+        throw new Error(error.message);
+    }
+}
+const getRunnersByMarketIdQuery = async (data,request,fastify) => {
+    try {
+        const query = `
+            SELECT
+                "wrRunnerId" as "runnerId",
+                "wrRunner" as "runner",
+                "wrLine" as "line",
+                "wrOverRate" as "overRate",
+                "wrUnderRate" as "underRate",
+                "wrYesRate" as "yesRate",
+                "wrYesPoint" as "yesPoint",
+                "wrNoRate" as "noRate",
+                "wrNoPoint" as "noPoint",
+                "wrLastUpdate" as "lastUpdate",
+                "wrSelectionId" as "selectionId",
+                "wrSelectionStatus" as "selectionStatus",
+                "wrOrder" as "order"
+            FROM "tblMarketRunners"
+            WHERE "wrEventMarketId" = $1
+        `;
+        return await fastify.db.query(query, {
+            type: fastify.db.QueryTypes.SELECT,
+            bind: [data.eventMarketId]
+        });
+    } catch (error) {
+        errorLogger(
+            fastify,
+            error.message,
+            "DB ERROR --> repository/TableEventmarket.js/getRunnersByMarketIdQuery",
+            request
+        );
+        throw new Error(error.message);
+    }
+}
 module.exports = {
-  getAllEventMarketsQuery,
-  createManyEventMarketQuery,
-  updateEventMarketQuery,
-  deleteEventMarketQuery,
-  changeIsActiveEventMarketQuery,
-  changeIsAllowEventMarketQuery,
-  changeIsResultEventMarketQuery,
-  createEventMarketQuery,
-  getMarketListByCIdQuery,
-  updateEventMarketRateQuery,
-  createEventMarketInDBQuery,
-  changeMarketCancelQuery,
-  changeMarketResultQuery,
-  changeMarketCloseQuery,
-  suspendEventMarketQuery,
-  closeEventMarketByTeamIdQuery,
-  getMarketLogsByCIdQuery,
-  cancelEventMarketByTeamIdQuery,
-  upsertEventMarketSPQuery,
-  getEventMarketByIdsQuery,
-  setDelayEventMarketQuery,
-  getDataLogsByMarketQuery,
-  getStatusLogsByMarketQuery,
-  getEventMarketRatioQuery,
+    getAllEventMarketsQuery,
+    createManyEventMarketQuery,
+    updateEventMarketQuery,
+    deleteEventMarketQuery,
+    changeIsActiveEventMarketQuery,
+    changeIsAllowEventMarketQuery,
+    changeIsResultEventMarketQuery,
+    createEventMarketQuery,
+    getMarketListByCIdQuery,
+    updateEventMarketRateQuery,
+    createEventMarketInDBQuery,
+    changeMarketCancelQuery,
+    changeMarketResultQuery,
+    changeMarketCloseQuery,
+    suspendEventMarketQuery,
+    closeEventMarketByTeamIdQuery,
+    getMarketLogsByCIdQuery,
+    cancelEventMarketByTeamIdQuery,
+    upsertEventMarketSPQuery,
+    getEventMarketByIdsQuery,
+    setDelayEventMarketQuery,
+    getDataLogsByMarketQuery,
+    getStatusLogsByMarketQuery,
+    getEventMarketRatioQuery,
+    setLineRatioEventMarketQuery,
+    getRunnersByMarketIdQuery
 };
