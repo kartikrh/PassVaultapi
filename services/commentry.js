@@ -517,6 +517,13 @@ const updateCommentaryService = async (request, fastify) => {
     throw new Error("Commentary with this id not Found");
   }
 
+  // chech if isPredictMarket is true then check if commentaryStatus is 1 or 2
+  if(request.body.isPredictMarket !== undefined && request.body.isPredictMarket == true && global.tblCommentaries[index].isPredictMarket !== request.body.isPredictMarket){
+    if(global.tblCommentaries[index].commentaryStatus !== 1 && global.tblCommentaries[index].commentaryStatus !== 2){
+      throw new Error("Predictor market can't be enabled for inProgress or completed commentary");
+    }
+  }
+
   // eventRefId should be unique
   const validateEventRefId = global.tblCommentaries.find(
     (item) =>
@@ -4948,6 +4955,12 @@ const updateisPredictMarketInCommentaryService = async (request, fastify) => {
 
   if (index == -1) {
     throw new Error("Commentary with this id not Found");
+  }
+
+  if(isPredictMarket == true && isPredictMarket !== global.tblCommentaries[index].isPredictMarket){
+    if(global.tblCommentaries[index].commentaryStatus != 1 && global.tblCommentaries[index].commentaryStatus != 2){
+      throw new Error("Predictor market can't be enabled for inProgress or completed commentary");
+    }
   }
 
   await updateisPredictMarketInCommentaryQuery(request.body, fastify, request);
