@@ -822,6 +822,7 @@ const getMarketListByCIdQuery = async (data, request, fastify) => {
             tem."wrCreate" as "create",
             tem."wrTemplateType" as "templateType",
             tem."wrDelay" as "delay",
+            tem."wrLineRatio" as "lineRatio",
             (
                 SELECT json_agg("MarketRunners_CTE".*)
                 FROM "MarketRunners_CTE"
