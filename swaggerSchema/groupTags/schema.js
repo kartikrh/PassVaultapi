@@ -1711,6 +1711,34 @@ const Commentary = {
       },
     },
   },
+  deleteCommentaryData: {
+    schema: {
+      tags: ["Commentary"],
+      description: "delete Commentary Data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          deleteBallByBall : {
+            type : "array"  ,
+            items : { type : "integer"}
+          },
+          deleteOvers: {
+            type : "array"  ,
+            items : { type : "integer"}
+          },
+          deleteWickets: {
+            type : "array"  ,
+            items : { type : "integer"}
+          },
+          deletePartnership: {
+            type : "array"  ,
+            items : { type : "integer" }
+          },
+        },
+      },
+    },
+  },
   activeInactiveCommentary: {
     schema: {
       tags: ["Commentary"],

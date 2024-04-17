@@ -47,6 +47,7 @@ const {
   closeCommentaryQuery,
   deleteAllCommentaryQuery,
   updateDelayInCommentaryQuery,
+  deleteCommentaryDataQuery,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -5012,6 +5013,7 @@ const saveCommentaryDetailsAPIService = async (request, fastify) => {
   // validate commentary id
   const {
     commentaryDetails,
+    commentaryPlayers,
     commentaryTeams,
     commentaryOvers,
     commentaryBallByBall,
@@ -5036,6 +5038,14 @@ const saveCommentaryDetailsAPIService = async (request, fastify) => {
         (item) => item.commentaryTeamId === team.commentaryTeamId
       );
       teamIndex !== -1 ? (global.tblCommentaryTeams[teamIndex] = team) : null;
+    }
+  }
+  if(commentaryPlayers){
+    for (let player of commentaryPlayers) {
+      let playerIndex = global.tblCommentaryPlayers.findIndex(
+        (item) => item.commentaryPlayerId === player.commentaryPlayerId
+      );
+      playerIndex !== -1 ? (global.tblCommentaryPlayers[playerIndex] = player) : null;
     }
   }
   if (commentaryOvers) {
@@ -5252,6 +5262,37 @@ const getShortCommertyService = async (request, fastify) => {
     return null;
   }
 };
+const deleteCommentaryDataService = async (request, fastify) => {
+  const {
+    deleteWickets,
+    deleteOvers,
+    deletePartnership,
+    deleteBallByBall,
+  } = request.body;
+  const result = await deleteCommentaryDataQuery(request.body, fastify, request);
+
+  if(deleteBallByBall){
+    global.tblCommentaryBallByBall = global.tblCommentaryBallByBall.filter(
+      (ball)=> ! deleteBallByBall.includes(ball.commentaryBallByBallId)
+    )
+  }
+  if(deleteOvers){
+    global.tblOvers = global.tblOvers.filter(
+      (over)=> ! deleteOvers.includes(over.overId)
+    )
+  }
+  if(deleteWickets){
+    global.tblCommentaryWicket = global.tblCommentaryWicket.filter(
+      (wicket)=> ! deleteWickets.includes(wicket.commentaryWicketId)
+    )
+  }
+  if(deletePartnership){
+    global.tblCommentaryPartnership = global.tblCommentaryPartnership.filter(
+      (partnership)=> ! deletePartnership.includes(partnership.commentaryPartnershipId)
+    )
+  }
+  return 'Commentary Data deleted successfully';
+}
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -5297,5 +5338,6 @@ module.exports = {
   updateDelayInCommentaryService,
   getActiveCommertyService,
   getShortCommertyService,
+  deleteCommentaryDataService
   // getshortService
 };
