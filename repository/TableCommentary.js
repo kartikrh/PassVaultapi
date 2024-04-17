@@ -2446,16 +2446,18 @@ const saveCommentaryDetailsAPIQuery = async (data, fastify, request) => {
       commentaryBallByBall,
       commentaryWickets,
       commentaryPartnership,
+      commentaryPlayers
     } = data;
 
     const result = await fastify.db.query(
       `
-        CALL proc_update_commentarydetails($1, $2 ,$3 ,$4,$5,$6)
+        CALL proc_update_commentarydetails($1, $2 ,$3 ,$4,$5,$6 ,$7)
       `,
       {
         type: fastify.db.QueryTypes.SELECT,
         bind: [
           commentaryTeams ? JSON.stringify(commentaryTeams) : null,
+          commentaryPlayers ? JSON.stringify(commentaryPlayers) : null,
           commentaryOvers ? JSON.stringify(commentaryOvers) : null,
           commentaryBallByBall ? JSON.stringify(commentaryBallByBall) : null,
           commentaryWickets ? JSON.stringify(commentaryWickets) : null,
@@ -2563,6 +2565,35 @@ const updateDelayInCommentaryQuery = async (data, fastify, request) => {
     throw new Error(err.message);
   }
 };
+const deleteCommentaryDataQuery = async (data, fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `
+        CALL proc_delete_commentary_data($1,$2,$3,$4)
+      `,
+      {
+        type: fastify.db.QueryTypes.DELETE,
+        bind: [
+          data.deleteBallByBall || null,
+          data.deleteOver || null,
+          data.deleteWickets || null,
+          data.deletePartnership || null,
+        ],
+      }
+    );
+
+    return result;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/deleteCommentaryDataQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+
+}
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -2612,5 +2643,6 @@ module.exports = {
   activeInactiveCommentaryQuery,
   closeCommentaryQuery,
   deleteAllCommentaryQuery,
-  updateDelayInCommentaryQuery
+  updateDelayInCommentaryQuery,
+  deleteCommentaryDataQuery
 };
