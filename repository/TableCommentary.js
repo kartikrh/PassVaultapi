@@ -2451,7 +2451,7 @@ const saveCommentaryDetailsAPIQuery = async (data, fastify, request) => {
 
     const result = await fastify.db.query(
       `
-        CALL proc_update_commentarydetails($1, $2 ,$3 ,$4,$5,$6)
+        CALL proc_update_commentarydetails($1, $2 ,$3 ,$4,$5,$6 ,$7)
       `,
       {
         type: fastify.db.QueryTypes.SELECT,
