@@ -1643,11 +1643,14 @@ const getEventMarketRatioQuery = async (data, request, fastify) => {
 }
 const setLineRatioEventMarketQuery = async (data,request,fastify) => {
     try {
-        const query = `UPDATE "tblEventMarkets" SET "wrLineRatio" = $1 WHERE "wrID" = ANY($2)`;
-        return await fastify.db.query(query, {
-            bind: [data.lineRatio, data.eventMarketId],
+        const query = `
+            CALL update_lineratio_eventMarket($1,$2,$3)
+        `;
+        const result = await fastify.db.query(query, {
+            bind: [data.matchTypeId , data.commentaryId, data.status],
             type: fastify.db.QueryTypes.SELECT
         });
+        return result;
     } catch (error) {
         errorLogger(
             fastify,
