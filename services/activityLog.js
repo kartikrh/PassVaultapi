@@ -19,13 +19,13 @@ const { insertActivityLogQuery, updateActivityLogQuery } = require("../repositor
       fastify
     );
   
-    global.tblActivityLog.push(data[0]);
+    global.tblActivityLogs.push(data[0]);
   
     return data;
   };
   const updateActivityLogService = async (request, fastify) => {
     // validate the activityLogIdId
-    const validateActivityLogId = global.tblActivityLog.find(
+    const validateActivityLogId = global.tblActivityLogs.find(
       (item) => item.activityLogIdId === request.body.activityLogIdId
     );
     if (!validateActivityLogId) {
@@ -39,10 +39,10 @@ const { insertActivityLogQuery, updateActivityLogQuery } = require("../repositor
     };
   
     await updateActivityLogQuery(body, request, fastify);
-    const index = global.tblActivityLog.findIndex(
+    const index = global.tblActivityLogs.findIndex(
       (item) => item.activityLogIdId === request.body.activityLogIdId
     );
-    global.tblActivityLog[index] = body;
+    global.tblActivityLogs[index] = body;
     return body;
   };
 

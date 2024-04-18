@@ -2,7 +2,7 @@ const { DataTypes } = require("sequelize");
 
 module.exports = (sequelize) => {
   const ActivityLogModel = sequelize.define(
-    "tblActivityLog",
+    "tblActivityLogs",
     {
       wrId: {
         type: DataTypes.INTEGER,

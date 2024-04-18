@@ -5,7 +5,7 @@ const insertActivityLogQuery = async (data, request, fastify) => {
     const result = await fastify.db.query(
       `
                 with insert_data as (
-                    insert into "tblActivityLog" (
+                    insert into "tblActivityLogs" (
                         "wrActivityType",
                         "wrRefID",
                         "wrIpAddress",
@@ -44,7 +44,7 @@ const updateActivityLogQuery = async (data, request, fastify) => {
   try {
     return await fastify.db.query(
       `
-                update "tblActivityLog" set
+                update "tblActivityLogs" set
                 "wrActivityType" = $1,
                 "wrRefID" = $2,
                 "wrIpAddress" = $3,
