@@ -1377,8 +1377,20 @@ const testStoreProcedureService = async (request, fastify) => {
     const response = {};
 
     if (commentaryDetails) {
-      global.tblCommentaries[commentaryIndex] = commentaryDetails;
-      response.commentaryDetails = commentaryDetails;
+      global.tblCommentaries[commentaryIndex] = {
+        ...global.tblCommentaries[commentaryIndex],
+        displayStatus : commentaryDetails.displayStatus,
+        updateTime : commentaryDetails.updateTime,
+        modifyDate : commentaryDetails.modifyDate,
+        commentaryStatus : commentaryDetails.commentaryStatus,
+      };
+      response.commentaryDetails = {
+        ...global.tblCommentaries[commentaryIndex],
+        displayStatus : commentaryDetails.displayStatus,
+        updateTime : commentaryDetails.updateTime,
+        modifyDate : commentaryDetails.modifyDate,
+        commentaryStatus : commentaryDetails.commentaryStatus,
+      };
     }
     if (deleteCommentaryBallByBallId) {
       global.tblCommentaryBallByBall = global.tblCommentaryBallByBall.filter(
