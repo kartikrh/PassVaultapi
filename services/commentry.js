@@ -179,19 +179,19 @@ const commentaryDetailsByIdService = async (request, fastify) => {
 
   const commentaryTeams = await global.tblCommentaryTeams.filter(
     (item) => item.commentaryId === request.body.commentaryId
-  );
+  ).sort((a, b) => b.commentaryTeamId - a.commentaryTeamId);
 
   const commentaryPlayers = await global.tblCommentaryPlayers.filter(
     (item) => item.commentaryId === request.body.commentaryId
-  );
+  ).sort((a, b) => b.commentaryPlayerId - a.commentaryPlayerId);
 
   const commentaryOvers = await global.tblOvers.filter(
     (item) => item.commentaryId === request.body.commentaryId
-  );
+  ).sort((a, b) => b.overId - a.overId);
 
   const commentaryBallByBall = await global.tblCommentaryBallByBall.filter(
     (item) => item.commentaryId === request.body.commentaryId
-  );
+  ).sort((a, b) => b.commentaryBallByBallId - a.commentaryBallByBallId);
   // const commentaryBallByBall = await getCommentaryBallByBallQuery(
   //   request,
   //   fastify
@@ -199,11 +199,11 @@ const commentaryDetailsByIdService = async (request, fastify) => {
 
   const commentaryWicket = await global.tblCommentaryWicket.filter(
     (item) => item.commentaryId === request.body.commentaryId
-  );
+  ).sort((a, b) => b.commentaryWicketId - a.commentaryWicketId);
 
   const commentaryPartnership = await global.tblCommentaryPartnership.filter(
     (item) => item.commentaryId === request.body.commentaryId
-  );
+  ).sort((a, b) => b.commentaryPartnershipId - a.commentaryPartnershipId);
 
   const commentaryDisplayStatus = await global.tblDisplayStatus.filter(
     (item) => item.displayStatusId !== 0
