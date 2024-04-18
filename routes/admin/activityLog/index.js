@@ -7,16 +7,16 @@ const { ActivityLog } = require("../../../swaggerSchema/groupTags/schema");
   
   module.exports = async (fastify, opts) => {
 
-    fastify.post("/activityViewer/save", {
-      schema: ActivityLog.activityViewer.schema,
-      preHandler: [
-        (request, reply) => authorize(request, reply, fastify),
-        (request, reply, done) =>
-          checkPermission(request, reply, fastify, {
-            tabName: "ActivityLog",
-            mode: request.body.ActivityLogId === 0 ? "add" : "edit",
-          }),
-      ],
+    fastify.post("/save", {
+      schema: ActivityLog.save.schema,
+      // preHandler: [
+      //   (request, reply) => authorize(request, reply, fastify),
+      //   (request, reply, done) =>
+      //     checkPermission(request, reply, fastify, {
+      //       tabName: "ActivityLog",
+      //       mode: request.body.ActivityLogId === 0 ? "add" : "edit",
+      //     }),
+      // ],
       handler: (request, reply) => saveActivityLog(request, reply, fastify),
     });
 };

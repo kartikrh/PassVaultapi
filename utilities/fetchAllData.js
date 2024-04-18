@@ -147,6 +147,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblVendors = getAllVendors;
     global.tblVendorIp = getAllVendorIps;
     global.tblClientSocket = getAllClientSocket;
+    global.tblActivityLog = [];
     console.log("Okkkk");
 
     if (reply) {
