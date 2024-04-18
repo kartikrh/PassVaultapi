@@ -3921,7 +3921,7 @@ const ClientSocket = {
   
 }
 const ActivityLog = {
-  activityViewer: {
+  save: {
     schema: {
       tags: ["ActivityLog"],
       description: "save ActivityLog",
