@@ -1,5 +1,42 @@
 const { errorLogger } = require("../utilities/logger");
 
+const getAllActivityLogQuery = async (fastify) => {
+  return await fastify.db.query(
+    `select 
+            "wrId" as "activityLogId",
+            "wrActivityType" as "activityType",
+            "wrRefID" as "refId",
+            "wrIpAddress" as "ipAddress"
+        from "tblActivityLogs"
+        `,
+    {
+      type: fastify.db.QueryTypes.SELECT,
+    }
+  );
+};
+
+const deleteActivityLogQuery = async (data, request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `
+                delete from "tblActivityLogs" where "wrId" = ANY ($1)
+            `,
+      {
+        type: fastify.db.QueryTypes.DELETE,
+        bind: [request.body.activityLogId],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableActivityLog/deleteActivityLogQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 const insertActivityLogQuery = async (data, request, fastify) => {
   try {
     const result = await fastify.db.query(
@@ -71,6 +108,8 @@ const updateActivityLogQuery = async (data, request, fastify) => {
   }
 };
 module.exports = {
+  getAllActivityLogQuery,
   insertActivityLogQuery,
-  updateActivityLogQuery
+  updateActivityLogQuery,
+  deleteActivityLogQuery
 };

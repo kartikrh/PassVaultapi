@@ -53,6 +53,7 @@ const { getAllVendorIpsQuery } = require("../repository/TableVendorIp");
 const { allDisplayStatusesQuery } = require("../repository/TableDisplayStatus");
 const { getAllClientSocketQuery } = require("../repository/TableClientSocket");
 const { getAllBannerQuery } = require("../repository/TableBanner");
+const { getAllActivityLogQuery } = require("../repository/TableActivityLog");
 
 const fetchAllDataFromDb = async (fastify, reply) => {
   try {
@@ -90,6 +91,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     );
     const getAllNews = await getAllNewsQuery(fastify);
     const getAllBanners = await getAllBannerQuery(fastify);
+    const getAllActivityLog = await getAllActivityLogQuery(fastify);
     const getAllsubScribesDomain = await getAllSubScribesDomainQuery(fastify);
     const getAllsubScribesSubDomain = await getAllSubScribesSubDomainQuery(
       fastify
@@ -149,7 +151,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblVendors = getAllVendors;
     global.tblVendorIp = getAllVendorIps;
     global.tblClientSocket = getAllClientSocket;
-    global.tblActivityLogs = [];
+    global.tblActivityLogs = getAllActivityLog;
     global.tblBanner = getAllBanners;
 
     console.log("Okkkk");

@@ -3921,6 +3921,51 @@ const ClientSocket = {
   
 }
 const ActivityLog = {
+  getAll: {
+    schema: {
+      tags: ["ActivityLog"],
+      description: "get all ActivityLog",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        // properties: {
+        //   isActive: { type: "boolean" },
+        // },
+      },
+    },
+  },
+  getById: {
+    schema: {
+      tags: ["ActivityLog"],
+      description: "get ActivityLog by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          activityLogId: { type: "integer" },
+        },
+        required: ["activityLogId"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["ActivityLog"],
+      description: "delete ActivityLog",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          activityLogId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["activityLogId"],
+      },
+    },
+  },
   save: {
     schema: {
       tags: ["ActivityLog"],
