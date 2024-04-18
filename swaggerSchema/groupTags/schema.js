@@ -3920,6 +3920,25 @@ const ClientSocket = {
   },
   
 }
+const ActivityLog = {
+  save: {
+    schema: {
+      tags: ["ActivityLog"],
+      description: "save ActivityLog",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          activityLogId: { type: "integer" },
+          activityType: { type: "integer" },
+          refId: { type: "string" },
+          ipAddress: { type: "string" },
+        },
+        required: ["activityLogId"],
+      },
+    },
+  }
+};
 module.exports = {
   Auth,
   Tabs,
@@ -3952,5 +3971,6 @@ module.exports = {
   Vendor,
   VendorIp,
   DisplayStatus,
-  ClientSocket
+  ClientSocket,
+  ActivityLog,
 };
