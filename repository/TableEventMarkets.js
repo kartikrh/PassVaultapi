@@ -437,7 +437,7 @@ const updateEventMarketQuery = async (data, request, fastify) => {
         
         `;
     const eventMarketData = await fastify.db.query(query3, {
-      bind: [JSON.stringify(dataToStore), data.eventMarketId],
+      bind: [dataToStore, data.eventMarketId],
       type: fastify.db.QueryTypes.SELECT,
     });
     marketDataLogger(
@@ -642,7 +642,7 @@ const createEventMarketQuery = async (data, request, fastify) => {
             "wrDelay" as "delay"
         `;
     const eventMarketData = await fastify.db.query(query3, {
-      bind: [JSON.stringify(dataToStore), eventMarketId],
+      bind: [dataToStore, eventMarketId],
       type: fastify.db.QueryTypes.SELECT,
     });
 
@@ -1219,7 +1219,7 @@ const createEventMarketInDBQuery = async (data, request, fastify) => {
             "wrDelay" as "delay"
       `;
     const eventMarketData = await fastify.db.query(query3, {
-      bind: [JSON.stringify(dataToStore), eventMarketId],
+      bind: [dataToStore, eventMarketId],
       type: fastify.db.QueryTypes.SELECT,
     });
 
@@ -1695,6 +1695,37 @@ const getRunnersByMarketIdQuery = async (data,request,fastify) => {
         throw new Error(error.message);
     }
 }
+const getMarketDataByCIdQuery = async (request, fastify) => {
+  try {
+    let query = `
+        SELECT 
+          "wrTeamName" as "teamName",
+          "wrData" as "data"
+        FROM "tblEventMarkets" tem
+        LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = tem."wrTeamID"
+        WHERE "wrCommentaryId" = $1
+        AND tem."wrStatus" NOT IN ($2 ,$3,$4)
+      `;
+    
+    return await fastify.db.query(query, {
+      type: fastify.db.QueryTypes.SELECT,
+      bind: [
+        request.body.commentaryId,
+        EventMarketStatus.Close,
+        EventMarketStatus.Settled,
+        EventMarketStatus.Cancel,
+      ],
+    });
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/getMarketDataByCIdQuery",
+        request
+    );
+    throw new Error(error.message);
+  }
+}
 module.exports = {
     getAllEventMarketsQuery,
     createManyEventMarketQuery,
@@ -1721,5 +1752,6 @@ module.exports = {
     getStatusLogsByMarketQuery,
     getEventMarketRatioQuery,
     setLineRatioEventMarketQuery,
-    getRunnersByMarketIdQuery
+    getRunnersByMarketIdQuery,
+    getMarketDataByCIdQuery
 };
