@@ -24,6 +24,7 @@ const {
   getStatusLogsByMarketQuery,
   setLineRatioEventMarketQuery,
   getRunnersByMarketIdQuery,
+  getMarketDataByCIdQuery,
 } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
 const {
@@ -987,6 +988,23 @@ const getSLReportEventMarketService = async (request, fastify) => {
   return result;
 
 }
+const getMarketDataByCIdService = async (request, fastify) => {
+  const { commentaryId } = request.body;
+  // validate the commentaryId
+  let commentary = global.tblCommentaries.find(
+    (item) => item.commentaryId == commentaryId
+  );
+  if (!commentary) {
+    throw new Error("Commentary with this id not Found");
+  }
+
+  const marketList = await getMarketDataByCIdQuery(
+    request,
+    fastify
+  );
+  return marketList;
+
+}
 module.exports = {
   getDetailsByCIdService,
   getAllEventMarketsService,
@@ -1010,5 +1028,6 @@ module.exports = {
   marketTemplateTypeService,
   setDelayEventMarketService,
   getDSReportEventMarketService,
-  getSLReportEventMarketService
+  getSLReportEventMarketService,
+  getMarketDataByCIdService
 };
