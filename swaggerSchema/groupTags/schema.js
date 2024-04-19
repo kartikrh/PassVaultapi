@@ -3939,6 +3939,90 @@ const ActivityLog = {
     },
   }
 };
+const Banner = {
+  getAll: {
+    schema: {
+      tags: ["Banner"],
+      description: "get all Banners",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+  getById: {
+    schema: {
+      tags: ["Banner"],
+      description: "get Banner by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          bannerId: { type: "integer" },
+        },
+        required: ["bannerId"],
+      },
+    },
+  },
+  save: {
+    schema: {
+      tags: ["Banner"],
+      description: "save Banner",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          bannerId: { type: "integer" },
+          bannerType: { type: "integer" },
+          title: { type: "string" },
+          isPermanent: { type: "boolean" },
+          isActive: { type: "boolean" },
+          startDate: { type: "string" },
+          endDate: { type: "string" },
+          link: { type: "string" },
+          viewerCount: {type: "integer"}
+        },
+        required: ["bannerId"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["Banner"],
+      description: "delete Banner",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          bannerId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["bannerId"],
+      },
+    },
+  },
+  activeInactiveBanner: {
+    schema: {
+      tags: ["Banner"],
+      description: "active inactive banner",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          bannerId: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["bannerId", "isActive"],
+      },
+    },
+  },
+};
 module.exports = {
   Auth,
   Tabs,
@@ -3973,4 +4057,5 @@ module.exports = {
   DisplayStatus,
   ClientSocket,
   ActivityLog,
+  Banner
 };
