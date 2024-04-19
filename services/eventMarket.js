@@ -1002,7 +1002,16 @@ const getMarketDataByCIdService = async (request, fastify) => {
     request,
     fastify
   );
-  return marketList;
+
+  let dataToreturn = marketList.map((item) => {
+    return {
+      teamName : item.teamName,
+      ...JSON.parse(item.data)
+    };
+  })
+
+
+  return dataToreturn;
 
 }
 module.exports = {
