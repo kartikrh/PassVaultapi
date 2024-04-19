@@ -1705,6 +1705,7 @@ const getMarketDataByCIdQuery = async (request, fastify) => {
         LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = tem."wrTeamID"
         WHERE "wrCommentaryId" = $1
         AND tem."wrStatus" NOT IN ($2 ,$3,$4)
+        AND "wrData" IS NOT NULL
       `;
     
     return await fastify.db.query(query, {
