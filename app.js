@@ -280,7 +280,8 @@ module.exports = async function (fastify, opts) {
   //  socket.io
   const io = new Server(fastify.server, {
     cors: {
-      origin: ["https://admin.socket.io", "https://panel.deployed.live", "http://localhost:3001"],
+      origin: ["https://admin.socket.io", "https://panel.deployed.live", "http://localhost:3001",
+    "https://uatpanel.deployed.live"],
       credentials: true,
     },
   });
