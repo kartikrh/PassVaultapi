@@ -28,6 +28,7 @@ const connectClients = async (fastify) => {
 
       // Attach event listeners for connection events
       client.on("connect", () => {
+        console.log(`Connected to ${urlConfig.url}`);
         updateClientSocketStatusQuery({
           clientSocketId : [urlConfig.clientSocketId],
           status : clientSocketStatus.connected
@@ -45,6 +46,7 @@ const connectClients = async (fastify) => {
         console.log(`Connection error: ${error}`);
       });
       client.on("disconnect", () => {
+        console.log(`Disconnected from ${urlConfig.url}`);
         global.clientSocketIo = global.clientSocketIo.filter(
           (c) => c.client !== client
         );
@@ -58,6 +60,7 @@ const connectClients = async (fastify) => {
         global.tblClientSocket[index].status = clientSocketStatus.disconnected;
       });
       client.io.on("reconnect_attempt", (attemptNumber) => {
+        console.log(`Reconnect attempt: ${attemptNumber}`);
         updateReconnectCountQuery({
           clientSocketId : urlConfig.clientSocketId,
           reconnectCount : attemptNumber
