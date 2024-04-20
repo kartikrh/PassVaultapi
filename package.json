@@ -30,7 +30,7 @@
     "@sentry/tracing": "^7.106.1",
     "@socket.io/admin-ui": "^0.5.1",
     "axios": "^1.6.7",
-    "bcrypt": "^5.1.0",
+    "bcrypt": "^5.1.1",
     "crypto": "^1.0.1",
     "dotenv": "^16.3.1",
     "fastify": "^4.21.0",
@@ -45,8 +45,10 @@
     "request-ip": "^3.3.0",
     "sequelize": "^6.32.1",
     "socket.io": "^4.7.2",
+    "socket.io-client": "^4.7.5",
     "ua-parser-js": "^1.0.35",
-    "uuid": "^9.0.0"
+    "uuid": "^9.0.0",
+    "v8-profiler-node8": "^6.4.0"
   },
   "devDependencies": {
     "tap": "^16.1.0"
