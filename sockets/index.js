@@ -13,13 +13,6 @@ const connectClients = async (fastify) => {
       const client = io(urlConfig.url, {
         transport: ["websocket"],
         query: { source: "admin-panel"},
-        transportOptions: {
-          polling: {
-            extraHeaders: {
-              Origin: 'http://localhost:3001'
-            }
-          }
-        },
         reconnection: true,
         reconnectionDelay: urlConfig.reconnectDelay,
         reconnectionDelayMax: urlConfig.reconnectMaxDelay,
@@ -95,7 +88,7 @@ const disconnectClients = async (fastify) => {
     );
     const promises = disconnectClientUrls?.map((client) => {
        const clientInstance = global.clientSocketIo.find((c) => c.clientSocketId === client.clientSocketId);
-       clientInstance.client.disconnect();
+       clientInstance?.client.disconnect();
     });
     await Promise.all(promises);
     const clientIds = disconnectClientUrls.map((c) => c.clientSocketId);
