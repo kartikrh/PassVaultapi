@@ -10,7 +10,6 @@ const connectClients = async (fastify) => {
       (c) => c.isActive === true && c.actionType == clientSocketActionType.connect && c.status !== clientSocketStatus.connected
     );
     const promises = clientUrls.map(async (urlConfig) => {
-      console.log(`Connecting to ${urlConfig.url}...`);
       const client = io(urlConfig.url, {
         transport: ["websocket"],
         query: { source: "admin-panel"},

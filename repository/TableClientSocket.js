@@ -22,6 +22,7 @@ const getAllClientSocketQuery =async (fastify) =>{
 }
 const updateClientSocketStatusQuery = async(data,fastify) =>{
     // if status is disconnected then set reconnect count to 0
+   try {
     let additionalQuery = '';
     if(data.status == clientSocketStatus.disconnected){
         additionalQuery = `, "wrReconnectCount" = 0`
@@ -37,18 +38,27 @@ const updateClientSocketStatusQuery = async(data,fastify) =>{
         WHERE "wrId" = ANY($2)
     `,
     {
-        type: fastify.db.QueryTypes.UPDATE,
+        type: fastify.db.QueryTypes.SELECT,
         bind: [
             data.status,
             data.clientSocketId
         ]
     })
 
-    let index = global.tblClientSocket.findIndex((c) => c.clientSocketId === data.clientSocketId[0]);
-    global.tblClientSocket[index].status = data.status;
-    data.status == clientSocketStatus.connected ? global.tblClientSocket[index].connectCount += 1 : null;
-    data.status == clientSocketStatus.disconnected ? global.tblClientSocket[index].reconnectCount = 0 : null;
+    for (id of data.clientSocketId) {
+        let index = global.tblClientSocket.findIndex((c) => c.clientSocketId === id);
+        global.tblClientSocket[index].status = data.status;
+        if(data.status == clientSocketStatus.disconnected){
+            global.tblClientSocket[index].reconnectCount = 0;
+        }
+        if(data.status == clientSocketStatus.connected){
+            global.tblClientSocket[index].connectCount = global.tblClientSocket[index].connectCount + 1;
+        }
+    }
     return result;
+   } catch (error) {
+        throw new Error(error.message); 
+   }
 }
 const updateReconnectCountQuery = async(data,fastify) =>{
     let result = await fastify.db.query(`
