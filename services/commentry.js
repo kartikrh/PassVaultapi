@@ -1590,6 +1590,17 @@ const testStoreProcedureService = async (request, fastify) => {
       );
     }
 
+    // call the getscore and emit the event data
+    if(global?.clientSocketIo !== undefined && global?.clientSocketIo.length > 0){
+      commentaryDetailsByEventIdService({
+        ...request,
+        body: {
+          eventId: commentaryData.eventRefId,
+        },
+      }, fastify, "callFromSocket");
+    }
+ 
+
     // which i get from request i want to return only that object
     return response;
   } catch (error) {
@@ -2266,7 +2277,7 @@ const deleteOverCommentoriesService = async (request, fastify) => {
   return true;
 };
 
-const commentaryDetailsByEventIdService = async (request, fastify) => {
+const commentaryDetailsByEventIdService = async (request, fastify , functionName = null) => {
   const result = await global.tblCommentaries.find(
     (item) => item.eventRefId === request.body.eventId
   );
@@ -2765,6 +2776,13 @@ const commentaryDetailsByEventIdService = async (request, fastify) => {
     cbl,
     mt,
   };
+  // console.log("allDetails", allDetails);
+  // emit the data for update commentary 
+  if(functionName && functionName == "callFromSocket"){
+    global.clientSocketIo.forEach((socket) => {
+      socket.client.emit("commentaryUpdate", allDetails);
+    });
+  }
 
   return allDetails;
 };

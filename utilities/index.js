@@ -280,15 +280,22 @@ const genrateKey = () => {
   return key;
 }
 const clientSocketStatus = {
-  0 : "None",
-  1 : "Connected",
-  2 : "Disconnected",
-  3 : "Reconnecting",
+  none : 0,
+  connected : 1,
+  disconnected : 2,
+  reconnected : 3
 }
 const clientSocketActionType = {
-  0 : "None",
-  1 : "Connect",
-  2 : "Disconnect",
+  connect : 1,
+  disconnect : 2,
+  reconnect : 3,
+}
+const fetchDataForClient = async (fastify, reply) => {
+  const clientUrl = global.tblConfigs.find((item) => item.key === configConstants.SCORECLIENTAPIURL).value;
+  if(!clientUrl) return 'Client URL not found';
+  const result = await axios.post(`${clientUrl}/loadData` ,{}) ;
+  console.log(result.data);
+  return result.data;
 }
 module.exports = {
   ERROR_CODES,
@@ -314,5 +321,6 @@ module.exports = {
   ActionTypeForMarketCancel,
   genrateKey,
   clientSocketStatus,
-  clientSocketActionType
+  clientSocketActionType,
+  fetchDataForClient,
 };

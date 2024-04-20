@@ -19,7 +19,8 @@ const Sentry = require("@sentry/node");
 const { instrument } = require("@socket.io/admin-ui");
 const bcrypt = require("bcrypt");
 const Tracing = require("@sentry/tracing");
-// require("./database/connnection");
+const { connectClients, disconnectClients } = require("./sockets");
+const { disConnectClientSocketQuery } = require("./repository/TableClientSocket");
 
 // Pass --options via CLI arguments in command to enable these options.
 module.exports.options = {};
@@ -89,6 +90,8 @@ module.exports = async function (fastify, opts) {
       try {
         await fastify.db.sync();
         await featchData(fastify);
+        connectClients(fastify);
+        disconnectClients(fastify);
       } catch (error) {
         console.log("error sync with db", error);
       }
@@ -102,7 +105,15 @@ module.exports = async function (fastify, opts) {
       fileSize: 10 * 1024 * 1024,
     },
   });
-
+  fastify.addHook('preClose', async () => {
+    console.log('preClose hook executed');
+    try {
+      await disConnectClientSocketQuery(fastify);
+      console.log('Cleanup task executed successfully');
+    } catch (error) {
+      console.error('Error during preClose hook execution:', error);
+    }
+  }); 
   fastify.register(require("@fastify/compress"), {
     global: false,
   });
