@@ -14,8 +14,21 @@ const connection = (socket) => {
       socket.join(userId); // Join the specified room
     }
   }
+  socket.on("updatedEventMarket", (data)=>{
+    const {commentaryId , marketData} = data;
+    const clientInRoom = global.socketIo.sockets.adapter.rooms.get(commentaryId); // get sockets in user's room
+    if(clientInRoom?.size){
+      global.socketIo.to(commentaryId).emit("updateMarketData", marketData);
+    }
+  })
 
-  socket.on("disconnect", () => { });
+  socket.on("connectEventMarket", (data) => {
+    const { commentaryId } = data;
+    socket.join(commentaryId);
+  });
+
+  socket.on("disconnect", () => {
+  });
 };
 
 const socketMiddleware = async (socket, next) => {
