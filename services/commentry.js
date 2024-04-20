@@ -1174,6 +1174,7 @@ const testStoreProcedureService = async (request, fastify) => {
       commentaryWicket,
       commentaryPartnership,
       commentaryDetails,
+      createOver,
       deleteCommentaryBallByBallId,
       deleteOverId,
       commentaryId,
@@ -1183,7 +1184,8 @@ const testStoreProcedureService = async (request, fastify) => {
       overIndex,
       ballByBallIndex,
       wicketIndex,
-      partnershipIndex;
+      partnershipIndex,
+      createOverIndex;
 
     let commentaryData;
     if (commentaryId) {
@@ -1287,6 +1289,45 @@ const testStoreProcedureService = async (request, fastify) => {
         }
       }
     }
+    //validate create over
+    if (createOver) {
+      if (createOver.overId == 0) {
+        createOverIndex = global.tblCommentaries.findIndex(
+          (item) => item.commentaryId === createOver.commentaryId
+        );
+
+        if (createOverIndex === -1) {
+          throw new Error("Commentary with this id not Found in create over");
+        }
+        const indexTeam = global.tblCommentaryTeams.findIndex(
+          (item) =>
+            item.commentaryId === commentaryOvers.commentaryId &&
+            item.teamId === commentaryOvers.teamId
+        );
+
+        if (indexTeam === -1) {
+          throw new Error("Team with this id not Found In createOver");
+        }
+        // const indexBowler = global.tblCommentaryPlayers.findIndex((item) => {
+        //   return (
+        //     item.commentaryId === commentaryOvers.commentaryId &&
+        //     item.teamId === commentaryOvers.teamId &&
+        //     item.commentaryPlayerId === commentaryOvers.bowlerId
+        //   );
+        // });
+
+        // if (indexBowler === -1) {
+        //   throw new Error("Bowler with this id not Found");
+        // }
+      } else {
+        createOverIndex = global.tblOvers.findIndex(
+          (item) => item.overId === createOver.overId
+        );
+        if (createOverIndex === -1) {
+          throw new Error("Over with this id not Found");
+        }
+      }
+    }
     //validate ballByBall
     if (commentaryBallByBall) {
       if (commentaryBallByBall.commentaryBallByBallId == 0) {
@@ -1349,7 +1390,7 @@ const testStoreProcedureService = async (request, fastify) => {
 
     let updatedData = await fastify.db.query(
       `CALL proc_setcommentary(
-      $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11 ,$12,$13,$14 ,$15
+      $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11 ,$12,$13,$14 ,$15,$16,$17
     )`,
       {
         bind: [
@@ -1360,6 +1401,7 @@ const testStoreProcedureService = async (request, fastify) => {
           commentaryWicket ? JSON.stringify(commentaryWicket) : null,
           commentaryPartnership ? JSON.stringify(commentaryPartnership) : null,
           commentaryDetails ? JSON.stringify(commentaryDetails) : null,
+          createOver ? JSON.stringify(createOver) : null,
           deleteCommentaryBallByBallId ? deleteCommentaryBallByBallId : null,
           deleteOverId ? deleteOverId : null,
           commentaryId,
@@ -1368,6 +1410,7 @@ const testStoreProcedureService = async (request, fastify) => {
           null, // commentaryWicketDetails,
           null, // commentaryPartnershipDetails,
           null, // commentaryDetailsDetails,
+          null // createOverDetails
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -1383,6 +1426,7 @@ const testStoreProcedureService = async (request, fastify) => {
         updateTime : commentaryDetails.updateTime,
         modifyDate : commentaryDetails.modifyDate,
         commentaryStatus : commentaryDetails.commentaryStatus,
+        commentaryCloseTime : commentaryDetails.commentaryStatus == 4 ? new Date() : null,
       };
       response.commentaryDetails = {
         ...global.tblCommentaries[commentaryIndex],
@@ -1390,6 +1434,7 @@ const testStoreProcedureService = async (request, fastify) => {
         updateTime : commentaryDetails.updateTime,
         modifyDate : commentaryDetails.modifyDate,
         commentaryStatus : commentaryDetails.commentaryStatus,
+        commentaryCloseTime : commentaryDetails.commentaryStatus == 4 ? new Date() : null,
       };
     }
     if (deleteCommentaryBallByBallId) {
@@ -1461,6 +1506,25 @@ const testStoreProcedureService = async (request, fastify) => {
         response.overdetails = commentaryOvers;
       }
     }
+    if (createOver) {
+      if (updatedData.createOverDetails) {
+        global.tblOvers.push(updatedData.createOverDetails);
+        response.createOverDetails = updatedData.createOverDetails;
+      } else {
+        if (!deleteOverId) {
+          createOverIndex !== -1
+            ? (global.tblOvers[createOverIndex] = createOver)
+            : null;
+        }
+        if (deleteOverId && createOver.overId !== deleteOverId) {
+          createOverIndex !== -1
+            ? (global.tblOvers[createOverIndex] = createOver)
+            : null;
+        }
+        response.createOverDetails = createOver;
+      }
+    }
+
     if (commentaryBallByBall) {
       if (updatedData.commentaryBallByBallDetails) {
         global.tblCommentaryBallByBall.push(
@@ -2770,7 +2834,7 @@ const commentaryDetailsByEventIdService = async (request, fastify , functionName
   }));
 
   const allDetails = {
-    cm: { ...resultArr },
+    cm: { ...resultArr , cctime : result.commentaryCloseTime},
     cbb,
     cbt,
     cbl,
