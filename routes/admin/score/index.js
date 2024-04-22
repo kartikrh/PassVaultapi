@@ -23,10 +23,12 @@ const { getMenuItemList } = require("../../../controller/users/admin/menuType");
 const {
   saveSubScribeDomain,
 } = require("../../../controller/users/admin/subScribesDomain");
+const { allCongifService } = require("../../../services/config");
 const {
   Score,
   SubScribesDomain,
   Commentary,
+  Config,
 } = require("../../../swaggerSchema/groupTags/schema");
 
 module.exports = async (fastify, opts) => {
@@ -204,6 +206,11 @@ module.exports = async (fastify, opts) => {
     // ],
     handler: (request, reply) => saveSubScribeDomain(request, reply, fastify),
   });
+
+  fastify.post("/getConfigs",{
+    schema: Config.getAll.schema,
+    handler: (request, reply) => allCongifService(request, reply, fastify),
+  })
 
   fastify.post("/getCommentary", {
     schema: Commentary.getAll.schema,
