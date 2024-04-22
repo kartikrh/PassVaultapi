@@ -33,6 +33,27 @@ if (process.env.ENABLE_SENTRY === "TRUE") {
   });
 }
 
+process.on("uncaughtException", (err) => {
+  console.error('Uncaught Exception occurred:', err);
+  // Log additional diagnostic information
+  console.log('Stack Trace:', err.stack);
+  console.log('Resource usage metrics:', process.resourceUsage());
+  console.log('Memory usage:', process.memoryUsage());
+  // get cpu usage
+  console.log('CPU usage:', process.cpuUsage());
+  if (process.env.ENABLE_SENTRY === "TRUE") {
+    Sentry.captureException(err);
+  }
+  process.exit(1);
+});
+process.on("SIGINT", async () => {
+  console.log('SIGINT signal received');
+  process.exit(0);
+});
+process.on("SIGTERM", async () => {
+  console.log('SIGTERM signal received');
+  process.exit(0);
+});
 
 module.exports = async function (fastify, opts) {
   fastify
