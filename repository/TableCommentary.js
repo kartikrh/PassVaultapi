@@ -2566,6 +2566,26 @@ const updateDelayInCommentaryQuery = async (data, fastify, request) => {
     throw new Error(err.message);
   }
 };
+const updateEventRefIdInCommentaryQuery = async (data, fastify, request) => {
+  try {
+    return await fastify.db.query(
+      `UPDATE "tblCommentaries" SET "wrEventRefId" = $1 WHERE
+      "wrCommentaryId" = $2`,
+      {
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [data.eventRefId, data.commentaryId],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/updateEventRefIdInCommentaryQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
 const deleteCommentaryDataQuery = async (data, fastify, request) => {
   try {
     const result = await fastify.db.query(
@@ -2645,5 +2665,6 @@ module.exports = {
   closeCommentaryQuery,
   deleteAllCommentaryQuery,
   updateDelayInCommentaryQuery,
-  deleteCommentaryDataQuery
+  deleteCommentaryDataQuery,
+  updateEventRefIdInCommentaryQuery
 };
