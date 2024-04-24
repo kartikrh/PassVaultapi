@@ -1802,6 +1802,21 @@ const Commentary = {
       },
     },
   },
+  changeEventRefId: {
+    schema: {
+      tags: ["Commentary"],
+      description: "change Event Ref Id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+          eventRefId: { type: "string" },
+        },
+        required: ["commentaryId", "eventRefId"],
+      },
+    },
+  },
   changePredictMarket: {
     schema: {
       tags: ["Commentary"],

@@ -48,6 +48,7 @@ const {
   deleteAllCommentaryQuery,
   updateDelayInCommentaryQuery,
   deleteCommentaryDataQuery,
+  updateEventRefIdInCommentaryQuery,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -5324,7 +5325,38 @@ const deleteCommentaryDataService = async (request, fastify) => {
     )
   }
   return 'Commentary Data deleted successfully';
-}
+};
+const updateEventRefIdInCommentaryService = async (request, fastify) => {
+  const { commentaryId, eventRefId } = request.body;
+  const index = global.tblCommentaries.findIndex(
+    (item) => item.commentaryId === commentaryId
+  );
+
+  if (index == -1) {
+    throw new Error("Commentary with this id not Found");
+  }
+
+  await updateEventRefIdInCommentaryQuery(request.body, fastify, request);
+
+  const updatedData = await getCommentaryByIdQuery(request, fastify);
+
+  global.tblCommentaries[index] = updatedData;
+
+  if (updatedData.isPredictMarket == true) {
+    callPredictorMarket(
+      {
+        commentary_id: commentaryId,
+        eventRefId: eventRefId,
+        event_id: updatedData.eventRefId,
+      },
+      "/api/loadcommentary",
+      fastify,
+      request
+    );
+  }
+  return updatedData;
+};
+
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -5370,6 +5402,7 @@ module.exports = {
   updateDelayInCommentaryService,
   getActiveCommertyService,
   getShortCommertyService,
-  deleteCommentaryDataService
+  deleteCommentaryDataService,
+  updateEventRefIdInCommentaryService
   // getshortService
 };
