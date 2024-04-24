@@ -111,6 +111,7 @@ module.exports = async function (fastify, opts) {
       try {
         await fastify.db.sync();
         await featchData(fastify);
+        await disConnectClientSocketQuery(fastify);
         connectClients(fastify);
         disconnectClients(fastify);
       } catch (error) {
