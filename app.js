@@ -50,7 +50,7 @@ process.on("uncaughtException", (err) => {
 module.exports = async function (fastify, opts) {
   
   process.stdin.resume(); // so the program will not close instantly
-  process.on("SIGNTERM", async () => {
+  process.on("SIGTERM", async () => {
     console.log("Received SIGTERM signal");
     await disConnectClientSocketQuery(fastify);
     console.log('Cleanup task executed successfully');
