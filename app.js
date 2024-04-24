@@ -46,20 +46,16 @@ process.on("uncaughtException", (err) => {
   }
   process.exit(1);
 });
-process.on("SIGINT", async () => {
-  console.log('SIGINT signal received');
-  process.exit(0);
-});
-process.on("SIGTERM", async () => {
-  console.log('SIGTERM signal received');
-  console.log('Resource usage metrics:', process.resourceUsage());
-  console.log('Memory usage:', process.memoryUsage());
-  // get cpu usage
-  console.log('CPU usage:', process.cpuUsage());
-  process.exit(0);
-});
 
 module.exports = async function (fastify, opts) {
+  
+  process.stdin.resume(); // so the program will not close instantly
+  process.on("SIGNTERM", async () => {
+    console.log("Received SIGTERM signal");
+    await disConnectClientSocketQuery(fastify);
+    console.log('Cleanup task executed successfully');
+    process.exit();
+  });
   fastify
     .register(fsequelize, {
       ...dbPg,
