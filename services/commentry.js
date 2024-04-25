@@ -744,6 +744,15 @@ const cloneCommentaryService = async (request, fastify) => {
     throw new Error("Commentary with this id not Found");
   }
 
+  // check if eventRefId is unique
+  const validateEventRefId = global.tblCommentaries.find(
+    (item) => item.eventRefId === request.body.eventRefId?.trim() 
+  );
+  if (validateEventRefId) {
+    throw new Error("EventRefId should be unique");
+  }
+
+
   const validateMatchTypeId = global.tblMatchTypes.find(
     (item) => item.matchTypeId === originalCommentary.matchTypeId
   );
@@ -5369,6 +5378,13 @@ const updateEventRefIdInCommentaryService = async (request, fastify) => {
 
   if (index == -1) {
     throw new Error("Commentary with this id not Found");
+  }
+  // check if the eventRefId is already assigned to another commentary
+  const commentary = global.tblCommentaries.find(
+    (item) => item.eventRefId === eventRefId.trim()
+  );
+  if (commentary) {
+    throw new Error("EventRefId should be unique");
   }
 
   await updateEventRefIdInCommentaryQuery(request.body, fastify, request);
