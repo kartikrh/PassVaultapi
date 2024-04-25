@@ -267,11 +267,18 @@ const disConnectClientSocketQuery = async (fastify) => {
           "wrStatus" = $1,
           "wrReconnectCount" = $2
         WHERE "wrStatus" = $3 AND "wrIsActive" = $4
+        RETURNING "wrId" as "clientSocketId";
       `,
       {
         type: fastify.db.QueryTypes.SELECT,
         bind: [clientSocketStatus.disconnected, 0 , clientSocketStatus.connected, true]
       });
+      for(let clientSocketId of result){
+        let index = global.tblClientSocket.findIndex((c) => c.clientSocketId === clientSocketId.clientSocketId);
+        global.tblClientSocket[index].status = clientSocketStatus.disconnected;
+        global.tblClientSocket[index].reconnectCount = 0;
+     }
+
       return result;
     } catch (error) {
       throw error; // Re-throw the error to handle it at a higher level if needed
