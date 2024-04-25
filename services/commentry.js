@@ -1396,6 +1396,7 @@ const testStoreProcedureService = async (request, fastify) => {
       };
     }
     if (deleteCommentaryBallByBallId) {
+
       global.tblCommentaryBallByBall = global.tblCommentaryBallByBall.filter(
         (item) => item.commentaryBallByBallId !== deleteCommentaryBallByBallId
       );
@@ -1413,6 +1414,38 @@ const testStoreProcedureService = async (request, fastify) => {
             commentaryBallByBall.commentaryBallByBallId
         );
       }
+      // call predictscore
+      const strikeTeam = global.tblCommentaryTeams.find(
+        (item) =>
+          item.commentaryId === commentaryId &&
+          item.teamStatus === 1
+      );
+      const previousBall = global.tblCommentaryBallByBall
+      .filter(item =>
+        item.commentaryId === commentaryId &&
+        item.ballType > 0 &&
+        item.currentInnings === commentaryData.currentInnings
+      )
+      .sort((a, b) => b.commentaryBallByBallId - a.commentaryBallByBallId)
+      [0];
+      const decimalOverCount = parseFloat(previousBall.overCount);
+      const _wkt = previousBall.ballIsWicket;
+      callPredictorMarket(
+        {
+          commentary_id: commentaryData.commentaryId,
+          match_type_id: commentaryData.matchTypeId,
+          ball: decimalOverCount,
+          run: previousBall.ballRun,
+          total_score: strikeTeam.teamScore,
+          strike_team_id: strikeTeam.teamId,
+          wicket: _wkt === true ? 1 : 0,
+          total_wicket: strikeTeam.teamWicket,
+        },
+        "/api/predictscore",
+        fastify,
+        request
+      );
+
     }
     if (deleteOverId) {
       global.tblOvers = global.tblOvers.filter(
@@ -1484,6 +1517,8 @@ const testStoreProcedureService = async (request, fastify) => {
 
           let decimalOverCount = parseFloat(commentaryBallByBall.overCount);
           let _wkt = commentaryBallByBall.ballIsWicket;
+
+          
           callPredictorMarket(
             {
               commentary_id: commentaryData.commentaryId,
