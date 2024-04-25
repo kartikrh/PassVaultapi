@@ -744,6 +744,15 @@ const cloneCommentaryService = async (request, fastify) => {
     throw new Error("Commentary with this id not Found");
   }
 
+  // check if eventRefId is unique
+  const validateEventRefId = global.tblCommentaries.find(
+    (item) => item.eventRefId === request.body.eventRefId?.trim() 
+  );
+  if (validateEventRefId) {
+    throw new Error("EventRefId should be unique");
+  }
+
+
   const validateMatchTypeId = global.tblMatchTypes.find(
     (item) => item.matchTypeId === originalCommentary.matchTypeId
   );
@@ -1396,6 +1405,7 @@ const testStoreProcedureService = async (request, fastify) => {
       };
     }
     if (deleteCommentaryBallByBallId) {
+
       global.tblCommentaryBallByBall = global.tblCommentaryBallByBall.filter(
         (item) => item.commentaryBallByBallId !== deleteCommentaryBallByBallId
       );
@@ -1413,6 +1423,38 @@ const testStoreProcedureService = async (request, fastify) => {
             commentaryBallByBall.commentaryBallByBallId
         );
       }
+      // call predictscore
+      const strikeTeam = global.tblCommentaryTeams.find(
+        (item) =>
+          item.commentaryId === commentaryId &&
+          item.teamStatus === 1
+      );
+      const previousBall = global.tblCommentaryBallByBall
+      .filter(item =>
+        item.commentaryId === commentaryId &&
+        item.ballType > 0 &&
+        item.currentInnings === commentaryData.currentInnings
+      )
+      .sort((a, b) => b.commentaryBallByBallId - a.commentaryBallByBallId)
+      [0];
+      const decimalOverCount = parseFloat(previousBall.overCount);
+      const _wkt = previousBall.ballIsWicket;
+      callPredictorMarket(
+        {
+          commentary_id: commentaryData.commentaryId,
+          match_type_id: commentaryData.matchTypeId,
+          ball: decimalOverCount,
+          run: previousBall.ballRun,
+          total_score: strikeTeam.teamScore,
+          strike_team_id: strikeTeam.teamId,
+          wicket: _wkt === true ? 1 : 0,
+          total_wicket: strikeTeam.teamWicket,
+        },
+        "/api/predictscore",
+        fastify,
+        request
+      );
+
     }
     if (deleteOverId) {
       global.tblOvers = global.tblOvers.filter(
@@ -1484,6 +1526,8 @@ const testStoreProcedureService = async (request, fastify) => {
 
           let decimalOverCount = parseFloat(commentaryBallByBall.overCount);
           let _wkt = commentaryBallByBall.ballIsWicket;
+
+          
           callPredictorMarket(
             {
               commentary_id: commentaryData.commentaryId,
@@ -5334,6 +5378,13 @@ const updateEventRefIdInCommentaryService = async (request, fastify) => {
 
   if (index == -1) {
     throw new Error("Commentary with this id not Found");
+  }
+  // check if the eventRefId is already assigned to another commentary
+  const commentary = global.tblCommentaries.find(
+    (item) => item.eventRefId === eventRefId.trim()
+  );
+  if (commentary) {
+    throw new Error("EventRefId should be unique");
   }
 
   await updateEventRefIdInCommentaryQuery(request.body, fastify, request);
