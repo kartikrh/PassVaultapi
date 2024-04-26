@@ -333,6 +333,7 @@ const getEventListByCompetitionIdsService = async (request, fastify) => {
     .map((item) => ({
       eventId: item.eventId,
       eventName: item.eventName,
+      eventDate : item.eventDate
     }));
   return eventList;
 };
