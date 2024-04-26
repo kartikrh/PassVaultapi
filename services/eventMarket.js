@@ -48,7 +48,6 @@ const getDetailsByCIdService = async (request, fastify) => {
   // i want to set the commentaryTeam and playerTeam as per innings
   const totalInnings = matchType.noOfIningsPerSide;
   // add extra one where if commentary already toss then i want to set the team as per toss
-  let condition;
  
   const teamAndPlayers = [];
   for (let i = 1; i <= totalInnings; i++) {
