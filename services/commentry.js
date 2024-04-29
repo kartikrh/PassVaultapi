@@ -1394,6 +1394,10 @@ const testStoreProcedureService = async (request, fastify) => {
         modifyDate : commentaryDetails.modifyDate,
         commentaryStatus : commentaryDetails.commentaryStatus,
         commentaryCloseTime : commentaryDetails.commentaryStatus == 4 ? new Date() : null,
+        tossWonBy : commentaryDetails.tossWonBy,
+        choseTo : commentaryDetails.choseTo,
+        winnerId : commentaryDetails.winnerId,
+        winnerName : commentaryDetails.winnerName,
       };
       response.commentaryDetails = {
         ...global.tblCommentaries[commentaryIndex],
@@ -1402,6 +1406,10 @@ const testStoreProcedureService = async (request, fastify) => {
         modifyDate : commentaryDetails.modifyDate,
         commentaryStatus : commentaryDetails.commentaryStatus,
         commentaryCloseTime : commentaryDetails.commentaryStatus == 4 ? new Date() : null,
+        tossWonBy : commentaryDetails.tossWonBy,
+        choseTo : commentaryDetails.choseTo,
+        winnerId : commentaryDetails.winnerId,
+        winnerName : commentaryDetails.winnerName,
       };
     }
     if (deleteCommentaryBallByBallId) {
