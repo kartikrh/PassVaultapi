@@ -42,7 +42,7 @@ const getAllCommentaryQuery = async (fastify) => {
     "wrIsPredictMarket" as "isPredictMarket",
     tc."wrIsActive"  as "isActive",
     "wrDelay" as "delay",
-    "wrResult" as "result",
+    tc."wrResult" as "result",
     tc."wrCommentaryCloseTime" as "commentaryCloseTime"
     from "tblCommentaries" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
