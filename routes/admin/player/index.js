@@ -14,6 +14,7 @@ const {
   getAllPlayerType,
   getAllPlayerByTeam,
   UpdatePlayerStats,
+  updateIsSystemPlayer,
 } = require("../../../controller/users/admin/teamsAndPlayer/players");
 const {
   getTeamList,
@@ -97,6 +98,19 @@ module.exports = async (fastify, opts) => {
     ],
     handler: (request, reply) => savePlayer(request, reply, fastify),
   });
+  fastify.post("/updateSystemPlayer",{
+    schema: Player.updateSystemPlayer.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Players",
+          mode: "edit"
+        }),
+    ],
+    handler: (request, reply) => updateIsSystemPlayer(request, reply, fastify),
+
+  })
   fastify.post("/delete", {
     schema: Player.delete.schema,
     preHandler: [

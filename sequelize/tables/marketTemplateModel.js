@@ -56,6 +56,14 @@ module.exports = (sequelize) => {
         type: DataTypes.BOOLEAN,
         allowNull: false,
       },
+      wrCreateType: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      wrCreate: {
+        type: DataTypes.DECIMAL(10, 2),
+        allowNull: true,
+      },
       wrAutoOpenType: {
         type: DataTypes.INTEGER,
         allowNull: true,
@@ -111,6 +119,45 @@ module.exports = (sequelize) => {
       wrIsActive: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
+      },
+      wrActionType :{
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        defaultValue: 0,
+      },
+      wrMarketTypeId :{
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      wrMarketTypeCategoryId :{
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      wrMargin :{
+        type: DataTypes.DECIMAL(10, 2),
+        allowNull: true,
+      },
+      wrCreateRefId :{
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      wrOpenRefId :{
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      wrIsPredefineRunnerValue :{
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
+      wrTemplateType :{
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      wrDelay : {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        defaultValue: 0,
       },
     },
     {

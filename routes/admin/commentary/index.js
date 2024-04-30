@@ -33,6 +33,14 @@ const {
   updateCommentaryStatus,
   updateisPredictMarketInCommentary,
   getEventDetailsByCId,
+  saveCommentaryDetailsAPI,
+  loadMultiCommentary,
+  activeInactiveCommentary,
+  closeCommentary,
+  deleteAllCommentary,
+  updateDelayInCommentary,
+  deleteCommentaryData,
+  updateEventRefIdInCommentary,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -58,14 +66,14 @@ const { Commentary } = require("../../../swaggerSchema/groupTags/schema");
 module.exports = async (fastify, opts) => {
   fastify.post("/all", {
     schema: Commentary.getAll.schema,
-    // preHandler: [
-    //   (request, reply) => authorize(request, reply, fastify),
-    //   (request, reply) =>
-    //     checkPermission(request, reply, fastify, {
-    //       tabName: "Commentary",
-    //       mode: "view",
-    //     }),
-    // ],
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "view",
+        }),
+    ],
     handler: (request, reply) => getAllCommentaries(request, reply, fastify),
   });
   fastify.post("/matchTypeList", {
@@ -230,7 +238,18 @@ module.exports = async (fastify, opts) => {
     ],
     handler: (request, reply) => cloneCommentary(request, reply, fastify),
   });
-
+  fastify.post("/loadMultiCommentary", {
+    schema: Commentary.loadMultiCommentary.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "add",
+        }),
+    ],
+    handler: (request, reply) => loadMultiCommentary(request, reply, fastify),
+  });
   fastify.post("/delete", {
     schema: Commentary.delete.schema,
     preHandler: [
@@ -250,7 +269,7 @@ module.exports = async (fastify, opts) => {
       (request, reply, done) =>
         checkPermission(request, reply, fastify, {
           tabName: "Commentary",
-          mode: "delete",
+          mode: "edit",
         }),
     ],
     handler: (request, reply) => saveCommentaryDetails(request, reply, fastify),
@@ -444,5 +463,91 @@ module.exports = async (fastify, opts) => {
     //     }),
     // ],
     handler: (request, reply) => getEventDetailsByCId(request, reply, fastify),
+  });
+  fastify.post("/saveCommentaryDetails", {
+    schema: Commentary.saveCommentaryDetails.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "edit",
+        }),
+    ],
+    handler: (request, reply) => saveCommentaryDetailsAPI(request, reply, fastify),
+  })
+  fastify.post("/activeInactiveCommentary", {
+    schema: Commentary.activeInactiveCommentary.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "edit",
+        }),
+    ],
+    handler: (request, reply) => activeInactiveCommentary(request, reply, fastify),
+  })
+  fastify.post("/closeCommentary", {
+    schema: Commentary.closeCommentary.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "edit",
+        }),
+    ],
+    handler: (request, reply) => closeCommentary(request, reply, fastify),
+  })
+  fastify.post("/deleteAllCommentary", {
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "delete",
+        }),
+    ],
+    handler: (request, reply) => deleteAllCommentary(request, reply, fastify),
+  })
+  fastify.post("/changeDelay", {
+    schema: Commentary.changeDelay.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "view",
+        }),
+    ],
+    handler: (request, reply) =>
+      updateDelayInCommentary(request, reply, fastify),
+  });
+  fastify.post("/deleteCommentaryDetails", {
+    schema: Commentary.deleteCommentaryData.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "delete",
+        }),
+    ],
+    handler: (request, reply) =>
+      deleteCommentaryData(request, reply, fastify),
+  })
+  fastify.post("/changeEventRefId", {
+    schema: Commentary.changeEventRefId.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "view",
+        }),
+    ],
+    handler: (request, reply) =>
+    updateEventRefIdInCommentary(request, reply, fastify),
   });
 };

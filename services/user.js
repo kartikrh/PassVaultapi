@@ -65,21 +65,21 @@ async function signInUserServices(request, fastify) {
     global.tblUsers[index].loginToken = body.token;
   }
 
-  // try {
-  //   const clientsInRoom = global.socketIo.sockets.adapter.rooms.get(WrEId); // get sockets in user's room
+  try {
+    const clientsInRoom = global.socketIo.sockets.adapter.rooms.get(WrEId); // get sockets in user's room
 
-  //   // logout all sockets and remove all sockets from the room if multiple login is false and there are multiple sockets available
-  //   if (clientsInRoom?.size && !user.WrAllowMultipleLogin) {
-  //     global.socketIo
-  //       .to(WrEId)
-  //       .emit("logout", "You have been removed from the room.");
-  //     Array.from(clientsInRoom).forEach((id) =>
-  //       global.socketIo.sockets.sockets.get(id).leave(WrEId)
-  //     );
-  //   }
-  // } catch (error) {
-  //   console.log("Error in socket in signin", error);
-  // }
+    // logout all sockets and remove all sockets from the room if multiple login is false and there are multiple sockets available
+    if (clientsInRoom?.size && !user.WrAllowMultipleLogin) {
+      global.socketIo
+        .to(WrEId)
+        .emit("logout", "You have been removed from the room.");
+      Array.from(clientsInRoom).forEach((id) =>
+        global.socketIo.sockets.sockets.get(id).leave(WrEId)
+      );
+    }
+  } catch (error) {
+    console.log("Error in socket in signin", error);
+  }
 
   const tokenPayload = {
     WrUserId: user.WrUserId,
@@ -104,24 +104,24 @@ async function signOutUserServices(request, fastify) {
   const { WrUserId, WrEId, WrAllowMultipleLogin, wrToken } =
     request.userTokenInfo;
 
-  // if (!WrAllowMultipleLogin) {
-  //   try {
-  //     const clientsInRoom = global.socketIo.sockets.adapter.rooms.get(WrEId); // get sockets in user's room
-  //     // global.socketIo
-  //     // .to(WrEId)
-  //     // .emit("logout", "You have been removed from the room.");
+  if (!WrAllowMultipleLogin) {
+    try {
+      const clientsInRoom = global.socketIo.sockets.adapter.rooms.get(WrEId); // get sockets in user's room
+      global.socketIo
+      .to(WrEId)
+      .emit("logout", "You have been removed from the room.");
 
-  //     // Remove socket ids from the user room
-  //     Array.from(clientsInRoom).forEach((id) =>
-  //       global.socketIo.sockets.sockets.get(id).leave(WrEId)
-  //     );
-  //   } catch (error) {
-  //     console.log(
-  //       `Error While Logging out user id ${WrUserId} from current device`,
-  //       error
-  //     );
-  //   }
-  // }
+      // Remove socket ids from the user room
+      Array.from(clientsInRoom).forEach((id) =>
+        global.socketIo.sockets.sockets.get(id).leave(WrEId)
+      );
+    } catch (error) {
+      console.log(
+        `Error While Logging out user id ${WrUserId} from current device`,
+        error
+      );
+    }
+  }
 
   // set wrIsLogin to false in userLoginInfo get wrToken from jwt token
   const userLoginInfo = {
@@ -362,20 +362,20 @@ const updateUserService = async (request, fastify) => {
 
   await updateUserQuery(body, fastify, request);
 
-  // if (!body.isActive) {
-  //   try {
-  //     global.socketIo
-  //       .to(userId)
-  //       .emit("logout", "You have been removed from the room.");
-  //   } catch (error) {
-  //     const originalId = await getOriginalIdFromEncryptedId(userId, fastify);
-  //     console.log(
-  //       `Error While Logging out user id ${originalId} from all device`,
-  //       error
-  //     );
-  //   }
-  //   body.loginToken = null;
-  // }
+  if (!body.isActive) {
+    try {
+      global.socketIo
+        .to(userId)
+        .emit("logout", "You have been removed from the room.");
+    } catch (error) {
+      const originalId = await getOriginalIdFromEncryptedId(userId, fastify);
+      console.log(
+        `Error While Logging out user id ${originalId} from all device`,
+        error
+      );
+    }
+    body.loginToken = null;
+  }
 
   const index = global.tblUsers.findIndex((user) => user.userId === userId);
 

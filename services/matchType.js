@@ -4,6 +4,7 @@ const {
   updateMatchTypeQuery,
   deleteMatchTypePredictorQuery,
 } = require("../repository/TableMatchType");
+const { createMatchTypePredictorQuery } = require("../repository/TableMatchTypePredictor");
 
 const allMatchTypesService = async () => {
   return global.tblMatchTypes;
@@ -64,8 +65,33 @@ const cloneMatchTypeService = async (request, fastify) => {
     fastify,
     request
   );
-
   global.tblMatchTypes.push(data);
+
+  // clone the matchType predictor 
+  const predictorData = global.tblMatchTypePredictor.filter(
+    (item) => item.matchTypeId === request.body.matchTypeId
+  );
+  if(!predictorData.length) return data;
+
+
+  const predictorDataClone = predictorData.map((item) => ({
+    ...item,
+    matchTypeId: data.matchTypeId,
+  }));
+
+  const predictor = await createMatchTypePredictorQuery(
+    {
+      matchTypeId: data.matchTypeId,
+      predictorData: predictorDataClone,
+    },
+    request,
+    fastify
+  )
+
+  global.tblMatchTypePredictor.push(...predictor);
+
+
+
   return data;
 };
 
@@ -124,6 +150,24 @@ const saveMatchTypeService = async (request, fastify) => {
 
 const deleteMatchTypeService = async (request, fastify) => {
   const { matchTypeId } = request.body;
+
+  // check if matchType is use in commentary
+  for (let id of matchTypeId) {
+    const checkMatchType = global.tblCommentaries.find(
+      (item) => item.matchTypeId === id
+    );
+
+    if (checkMatchType) {
+      throw new Error(`One of the MatchType cannot be deleted as it is used in Commentary.`);
+    }
+
+    const checkInMarketTemplate = global.tblMarketTemplate.find(
+      (item) => item.matchTypeID === id
+    );
+    if(checkInMarketTemplate){
+      throw new Error(`One of the MatchType cannot be deleted as it is used in Market Template.`);
+    }
+  }
 
   await deleteMatchTypePredictorQuery(matchTypeId, fastify, request);
   await deleteMatchTypeQuery(matchTypeId, fastify, request);

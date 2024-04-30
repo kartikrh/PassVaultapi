@@ -34,7 +34,7 @@ module.exports = (sequelize) => {
         type: DataTypes.DATE,
         allowNull: true,
       },
-      wrIsActive : {
+      wrIsActive: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
       },
@@ -52,6 +52,10 @@ module.exports = (sequelize) => {
       },
       wrModifyDate: {
         type: DataTypes.DATE,
+        allowNull: true,
+      },
+      wrTabs: {
+        type: DataTypes.STRING(10000),
         allowNull: true,
       },
     },

@@ -3,7 +3,7 @@ const crypto = require("crypto");
 const moment = require("moment");
 const { default: axios } = require("axios");
 const configConstants = require("./configConstants");
-const { errorLogger } = require("./logger");
+const { errorLogger, tblPredictorAPILogger } = require("./logger");
 const ERROR_CODES = {
   INVALID_INPUT: "INVALID_INPUT",
   SERVER_ERROR: "SERVER_ERROR",
@@ -120,7 +120,7 @@ const getTitle = (str) => {
 
 const getMessage = (payload, code, type) => {
   const sendErrorMessage = (defaultMessage) => {
-    const message = typeof payload?.error === "string" ? payload.error : payload?.error?.message;
+    let message = typeof payload?.error === "string" ? payload.error : payload?.error?.message;
     if (!message) message = defaultMessage;
     return message;
   }
@@ -215,35 +215,51 @@ const EventMarketStatus = {
   Settled	:5,
   Cancel:	6
 }
-
 const MarketActionType = {
   isresultSet : 1,
   setResult : 2,
   marketCancel : 3,
-  closeMarket : 4
+  closeMarket : 4,
+  closeMarketOnTossWin : 5,
 }
 const callPredictorMarket = async (data , endpoint ,fastify ,request) =>{
+  let requestStartTime = new Date();
+  let loggerConfig = global.tblConfigs.find((item) => item.key === configConstants.ISPREDICTORLOGGER).value;
   try {
     const predictorURL = global.tblConfigs.find((item) => item.key === configConstants.MARKET_PREDICTOR).value;
     const url = `${predictorURL}${endpoint}`;
-  
     const result = await axios.post(url, {
       ...data
     });
-    errorLogger(
-      fastify,
-      predictorURL,
-      "/utilities/index.js/callPredictorMarket",
-      request
-    )
+
+    if (loggerConfig == "true"){
+      tblPredictorAPILogger(
+        {
+          endPoint : endpoint,
+          requestBody : data,
+          requestStartTime : requestStartTime,
+          requestEndTime : new Date(),
+          response : result.data
+        },
+        request,
+        fastify
+      );
+    }
     return result;
   } catch (error) {
-    errorLogger(
-      fastify,
-      error.message,
-      "/utilities/index.js/callPredictorMarket",
-      request
-    )
+    if(loggerConfig == "true"){
+      tblPredictorAPILogger(
+        {
+          endPoint : endpoint,
+          requestBody : data,
+          requestStartTime : requestStartTime,
+          requestEndTime : new Date(),
+          response : error.message
+        },
+        request,
+        fastify
+      );
+    }
     // throw new Error(error.message);
   }
 
@@ -253,7 +269,34 @@ const MarketUpdateType = {
   predictMarket : 2,
   marketViewer : 3,
 }
-
+const ActionTypeForMarketCancel ={
+  winClose : 1,
+  winCloseCancel : 2,
+}
+const genrateKey = () => {
+  // Define the format pattern
+  const format = "XXXX-XXXX-XXXX-XXXX";
+  const key = format.replace(/[^\d-]/g, () => Math.floor(Math.random() * 10));
+  return key;
+}
+const clientSocketStatus = {
+  none : 0,
+  connected : 1,
+  disconnected : 2,
+  reconnected : 3
+}
+const clientSocketActionType = {
+  connect : 1,
+  disconnect : 2,
+  reconnect : 3,
+}
+const fetchDataForClient = async (fastify, reply) => {
+  const clientUrl = global.tblConfigs.find((item) => item.key === configConstants.SCORECLIENTAPIURL).value;
+  if(!clientUrl) return 'Client URL not found';
+  const result = await axios.post(`${clientUrl}/loadData` ,{}) ;
+  console.log(result.data);
+  return result.data;
+}
 module.exports = {
   ERROR_CODES,
   error,
@@ -274,5 +317,10 @@ module.exports = {
   EventMarketStatus,
   callPredictorMarket,
   MarketActionType,
-  MarketUpdateType
+  MarketUpdateType,
+  ActionTypeForMarketCancel,
+  genrateKey,
+  clientSocketStatus,
+  clientSocketActionType,
+  fetchDataForClient,
 };

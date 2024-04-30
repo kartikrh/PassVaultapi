@@ -80,7 +80,7 @@ const createTeamService = async (request, fastify) => {
     imgName = generateImageName({
       name: request.body.teamName,
     });
-   
+
     const path = await storeImageOnServer({
       image: request.body.image[0],
       project: projectName,
@@ -117,7 +117,7 @@ const createTeamService = async (request, fastify) => {
         for (let i = 0; i < hashArray.length; i++) {
           if (hashArray[i]) {
             const playerID = hashArray[i].replace(/[\[\]"]/g, "");
-            if(playerID !== ""){
+            if (playerID !== "") {
               await insertTeamPlayerQuery(
                 {
                   teamId: data.teamId,
@@ -128,7 +128,6 @@ const createTeamService = async (request, fastify) => {
                 request
               );
             }
-            
           }
         }
       }
@@ -152,6 +151,9 @@ const updateTeamService = async (request, fastify) => {
     (item) => item.eventTypeId === request.body.eventTypeId
   );
 
+  if (!checkTeamId.teamColor) {
+    checkTeamId.teamColor = "#FFFFFF";
+  }
   const body = {
     teamName: request.body.teamName || checkTeamId.teamName,
     teamShortName: request.body.teamShortName || checkTeamId.teamShortName,
@@ -162,6 +164,8 @@ const updateTeamService = async (request, fastify) => {
     userId: request.userTokenInfo.WrUserId,
     teamId: request.body.teamId,
     eventType: _getEventType.eventType,
+    teamColor: request.body.teamColor || checkTeamId.teamColor,
+    backgroundColor: request.body.backgroundColor || checkTeamId.backgroundColor,
   };
 
   const validateTeamName = global.tblTeams.find(
@@ -233,7 +237,7 @@ const updateTeamService = async (request, fastify) => {
       for (let i = 0; i < hashArray.length; i++) {
         if (hashArray[i]) {
           const playerID = hashArray[i].replace(/[\[\]"]/g, "");
-          if(playerID !== ""){
+          if (playerID !== "") {
             await insertTeamPlayerQuery(
               {
                 teamId: body.teamId,
@@ -268,12 +272,19 @@ const deleteTeamService = async (request, fastify) => {
   // delete images
   for (id of teamId) {
     const team = global.tblTeams.find((item) => item.teamId === id);
-    if (team && (team.image || team.jersey)) {
+    // if (team && (team.image || team.jersey)) {
+    //   await removeImageFromServer({ path: team.image });
+    //   await removeImageFromServer({ path: team.jersey });
+    // }
+    if(team && team.image) {
       await removeImageFromServer({ path: team.image });
+    }
+    if(team && team.jersey) {
       await removeImageFromServer({ path: team.jersey });
     }
   }
   await deleteTeamQuery(teamId, fastify, request);
+
   for (const team of teamId) {
     await deleteTeamPlayerByTeamIdQuery(team, fastify, request);
   }

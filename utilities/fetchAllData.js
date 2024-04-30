@@ -30,16 +30,30 @@ const {
   getAllCommentaryWicketQuery,
   getAllCommentaryPartnershipQuery,
 } = require("../repository/TableCommentary");
-const {getAllNewsQuery} = require("../repository/TableNews");
+const { getAllNewsQuery } = require("../repository/TableNews");
 const {
   getAllSubScribesDomainQuery,
   getAllSubScribesSubDomainQuery,
 } = require("../repository/TableSubScibesDomain");
 const {
-  getAllMatchTypePredictorQuery
+  getAllMatchTypePredictorQuery,
 } = require("../repository/TableMatchTypePredictor");
-const { getAllMarketTemplateQuery } = require("../repository/TableMarketTemplate");
+const {
+  getAllMarketTemplateQuery,
+  getAllMarketTypeCategoriesQuery,
+  getAllMarketTypeQuery,
+} = require("../repository/TableMarketTemplate");
 const { getAllEventMarketsQuery } = require("../repository/TableEventMarkets");
+const {
+  getAllMarketTemplateRunnerQuery,
+} = require("../repository/TableMarketTemplateRunner");
+const { getAllVendorsQuery } = require("../repository/TableVendor");
+const { getAllVendorIpsQuery } = require("../repository/TableVendorIp");
+
+const { allDisplayStatusesQuery } = require("../repository/TableDisplayStatus");
+const { getAllClientSocketQuery } = require("../repository/TableClientSocket");
+const { getAllBannerQuery } = require("../repository/TableBanner");
+const { getAllActivityLogQuery } = require("../repository/TableActivityLog");
 
 const fetchAllDataFromDb = async (fastify, reply) => {
   try {
@@ -70,18 +84,33 @@ const fetchAllDataFromDb = async (fastify, reply) => {
       fastify
     );
     const getAllOvers = await getAllOversQuery(fastify);
-    const getAllDisplayStatus = await getAllDisplayStatusQuery(fastify);
+    const getAllDisplayStatus = await allDisplayStatusesQuery(fastify);
     const getAllCommentaryWicket = await getAllCommentaryWicketQuery(fastify);
     const getAllCommentaryPartnership = await getAllCommentaryPartnershipQuery(
       fastify
     );
     const getAllNews = await getAllNewsQuery(fastify);
+    const getAllBanners = await getAllBannerQuery(fastify);
+    const getAllActivityLog = await getAllActivityLogQuery(fastify);
     const getAllsubScribesDomain = await getAllSubScribesDomainQuery(fastify);
-    const getAllsubScribesSubDomain = await getAllSubScribesSubDomainQuery(fastify);
-    const getAllMatchTypePredictor = await getAllMatchTypePredictorQuery(fastify);
+    const getAllsubScribesSubDomain = await getAllSubScribesSubDomainQuery(
+      fastify
+    );
+    const getAllMatchTypePredictor = await getAllMatchTypePredictorQuery(
+      fastify
+    );
     const getAllEventMarkets = await getAllEventMarketsQuery(fastify);
     const getAllMarketTemplate = await getAllMarketTemplateQuery(fastify);
-
+    const getAllMarketTypeCategories = await getAllMarketTypeCategoriesQuery(
+      fastify
+    );
+    const getAllMarketType = await getAllMarketTypeQuery(fastify);
+    const getAllMarketTemplateRunner = await getAllMarketTemplateRunnerQuery(
+      fastify
+    );
+    const getAllVendors = await getAllVendorsQuery(fastify);
+    const getAllVendorIps = await getAllVendorIpsQuery(fastify);
+    const getAllClientSocket = await getAllClientSocketQuery(fastify);
     global.tblTabs = getAllTabs;
     global.tblRoles = getAllRoles;
     global.tblBlocks = getAllBlocks;
@@ -116,6 +145,14 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblMatchTypePredictor = getAllMatchTypePredictor;
     global.tblMarketTemplate = getAllMarketTemplate;
     global.tblEventMarkets = getAllEventMarkets;
+    global.tblMarketTypeCategories = getAllMarketTypeCategories;
+    global.tblMarketTypes = getAllMarketType;
+    global.tblMarketTemplateRunners = getAllMarketTemplateRunner;
+    global.tblVendors = getAllVendors;
+    global.tblVendorIp = getAllVendorIps;
+    global.tblClientSocket = getAllClientSocket;
+    global.tblActivityLogs = getAllActivityLog;
+    global.tblBanner = getAllBanners;
 
     console.log("Okkkk");
 

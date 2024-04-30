@@ -1,5 +1,5 @@
 
-const { getDetailsByCIdService, getAllEventMarketsService, createEventMarketsService, deleteEventMarketsService, activeInactiveMarketsService, updateAllowMarketsService, getEventListByCompetitionIdsService, marketListResultFalseService, changeResultOfMarketService, changeMarketCancelService, changeMarketResultService, marketListByCIdService, saveEventMarketService, updateMarketRateService } = require("../../../../services/eventMarket");
+const { getDetailsByCIdService, getAllEventMarketsService, createEventMarketsService, deleteEventMarketsService, activeInactiveMarketsService, updateAllowMarketsService, getEventListByCompetitionIdsService, marketListResultFalseService, changeResultOfMarketService, changeMarketCancelService, changeMarketResultService, marketListByCIdService, saveEventMarketService, updateMarketRateService, changeMarketCloseService, suspendMarketByCIdService, getEventMarketByIdService, marketTemplateTypeService, commentaryTypeService, setDelayEventMarketService, getDSReportEventMarketService, getSLReportEventMarketService, getMarketDataByCIdService } = require("../../../../services/eventMarket");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
 
@@ -19,6 +19,15 @@ const getAllEventMarket = async (request, reply, fastify) => {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, path + "/getAllEventMarket", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const getEventMarketById = async (request, reply, fastify) => {
+  try {
+    const result = await getEventMarketByIdService(request ,fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/getEventMarketById", request);
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
@@ -135,6 +144,78 @@ const changeMarketResult = async (request, reply, fastify) => {
   }
 };
 
+const changeMarketClose = async (request, reply, fastify) => {
+  try {
+    const result = await changeMarketCloseService(request ,fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/changeMarketClose", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const suspendMarketByCId = async (request, reply, fastify) => {
+  try {
+    const result = await suspendMarketByCIdService(request ,fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/suspendMarketByCId", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const getCommentaryTypeList  = async (request, reply, fastify) => {
+  try {
+    const result = await commentaryTypeService(request ,fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/getCommentaryList", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const getMarketTemplateTypeList  = async (request, reply, fastify) => {
+  try {
+    const result = await marketTemplateTypeService(request ,fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/getMarketTemplateList", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const setDelayEventMarket = async (request, reply, fastify) => {
+  try {
+    const result = await setDelayEventMarketService(request ,fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/setDelayEventMarket", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const getDSReportEventMarket = async (request, reply, fastify) => {
+  try {
+    const result = await getDSReportEventMarketService(request ,fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/getDSReportEventMarket", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const getSLReportEventMarket = async (request, reply, fastify) => {
+  try {
+    const result = await getSLReportEventMarketService(request ,fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/getSLReportEventMarket", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const getMarketDataByCId = async (request, reply, fastify) => {
+  try {
+    const result = await getMarketDataByCIdService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/getMarketDataByCId", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 module.exports = {
     getDetailsByCId,
     getAllEventMarket,
@@ -149,5 +230,14 @@ module.exports = {
     updateMarketRate,
     saveEventMarket,
     changeMarketCancel,
-    changeMarketResult
+    changeMarketResult,
+    changeMarketClose,
+    suspendMarketByCId,
+    getEventMarketById,
+    getCommentaryTypeList,
+    getMarketTemplateTypeList,
+    setDelayEventMarket,
+    getDSReportEventMarket,
+    getSLReportEventMarket,
+    getMarketDataByCId
 };

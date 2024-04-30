@@ -156,6 +156,16 @@ module.exports = (sequelize) => {
         allowNull: true,
         defaultValue: true,
       },
+      wrIsActive : {
+        type: DataTypes.BOOLEAN,
+        allowNull: true,
+        defaultValue: true,
+      },
+      wrDelay : {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        defaultValue: 0,
+      },
     },
     {
       timestamps: false,

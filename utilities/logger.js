@@ -1,4 +1,3 @@
-const { MarketUpdateType } = require(".");
 const ResponseLog = require("../database/schema/responseLogger");
 
 const errorLogger = async (fastify, errMessage, errStack, request) => {
@@ -40,23 +39,51 @@ const responseLogger = async (request) => {
 
 const responseLogInDB = async (request, fastify) => {
   try {
-    return await fastify.db.query(
-      `INSERT INTO "tblResponseLogs" ("wrDomain", "wrPath", "wrResponseTime", "wrUserId", "wrUserIp", "wrRequestBody",
-      "wrRequestStartTime", "wrRequestEndTime") VALUES ($1, $2, $3, $4, $5 ,$6,$7,$8)`,
-      {
-        type: fastify.db.QueryTypes.INSERT,
-        bind: [
-          request.hostname,
-          request.originalUrl,
-          parseInt(request.responseTime),
-          request?.userTokenInfo?.WrUserId || null,
-          request.ip,
-          request.body || null,
-          request.startTimeTimeStemp,
-          request.endTimeTimeStemp,
-        ],
-      }
-    );
+    let data;
+    if(request.errId !== undefined){
+      data = await fastify.db.query(
+        `UPDATE "tblResponseLogs"
+        SET "wrResponseTime" = $1,
+        "wrRequestEndTime" = $2,
+        "wrRequestBody" = $3,
+        "wrUserId" = $4
+        WHERE "wrId" = $5
+        RETURNING "wrId" as "errId"`,
+        {
+          type: fastify.db.QueryTypes.SELECT,
+          bind: [
+            parseInt(request.responseTime),
+            request.endTimeTimeStemp,
+            request.body || null,
+            request?.userTokenInfo?.WrUserId || null,
+            request.errId
+          ]
+        }
+      )
+    } 
+    else {
+      data = await fastify.db.query(
+        `INSERT INTO "tblResponseLogs" ("wrDomain", "wrPath", "wrResponseTime",
+        "wrUserId", "wrUserIp", "wrRequestBody",
+        "wrRequestStartTime", "wrRequestEndTime") VALUES ($1, $2, $3, $4, $5 ,$6,$7,$8)
+        RETURNING "wrId" as "errId"`,
+        {
+          type: fastify.db.QueryTypes.INSERT,
+          bind: [
+            request.hostname,
+            request.originalUrl,
+            parseInt(request.responseTime) || null,
+            request?.userTokenInfo?.WrUserId || null,
+            request.ip,
+            request.body || null,
+            request.startTimeTimeStemp,
+            request.endTimeTimeStemp || null,
+          ],
+        }
+      );
+    }
+
+    return data[0];
   } catch (err) {
     console.log(err);
   }
@@ -66,18 +93,20 @@ const marketLogger = async (data , request , fastify) => {
     eventMarketId,
     actionType,
     value,
+    commentaryId
   } = data;
   try {
     return await fastify.db.query(
-      `INSERT INTO "tblMarketLogs" ("wrEventMarketId", "wrActionType", "wrValue", "wrUserId", "wrCreatedDate") VALUES ($1, $2, $3, $4, $5)`,
+      `INSERT INTO "tblMarketLogs" ("wrEventMarketId", "wrActionType", "wrValue", "wrUserId", "wrCreatedDate" , "wrCommentaryId") VALUES ($1, $2, $3, $4, $5 ,$6)`,
       {
         type: fastify.db.QueryTypes.INSERT,
         bind: [
-          eventMarketId,
+          eventMarketId || null,
           actionType,
           value,
           request.userTokenInfo.WrUserId,
           new Date(),
+          commentaryId || null,
         ],
       }
     );
@@ -92,10 +121,12 @@ const marketDataLogger = async (data , request , fastify) => {
       commentaryId,
       dataTosave,
       updateType,
+      lineDiff
     } = data;
 
     return await fastify.db.query(
-      `INSERT INTO "tblMarketDataLogs" ("wrEventMarketId", "wrCommentaryId", "wrData", "wrUpdateType", "wrCreatedDate") VALUES ($1, $2, $3, $4, $5)`,
+      `INSERT INTO "tblMarketDataLogs" ("wrEventMarketId", "wrCommentaryId", "wrData", "wrUpdateType", "wrCreatedDate",
+      "wrLineDiff", "wrCreatedBy") VALUES ($1, $2, $3, $4, $5 ,$6, $7)`,
       {
         type: fastify.db.QueryTypes.SELECT,
         bind: [
@@ -104,6 +135,8 @@ const marketDataLogger = async (data , request , fastify) => {
           JSON.stringify(dataTosave),
           updateType,
           new Date(),
+          lineDiff || 0,
+          request.userTokenInfo.WrUserId || 0,
         ],
       }
     );
@@ -112,4 +145,24 @@ const marketDataLogger = async (data , request , fastify) => {
   }
 }
 
-module.exports = { errorLogger, responseLogger ,responseLogInDB , marketLogger ,marketDataLogger};
+const tblPredictorAPILogger = async (data, request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `INSERT INTO "tblPredictorAPILogs" ("wrEndpoint", "wrRequestBody", "wrRequestStartTime", "wrRequestEndTime", "wrResponse") VALUES ($1, $2, $3, $4, $5)`,
+      {
+        type: fastify.db.QueryTypes.INSERT,
+        bind: [
+          data.endPoint,
+          JSON.stringify(data.requestBody),
+          data.requestStartTime,
+          data.requestEndTime,
+          JSON.stringify(data.response),
+        ],
+      }
+    );
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+module.exports = { errorLogger, responseLogger ,responseLogInDB , marketLogger ,marketDataLogger,tblPredictorAPILogger};

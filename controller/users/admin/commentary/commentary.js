@@ -32,6 +32,17 @@ const {
   updateCommentaryStatusService,
   updateisPredictMarketInCommentaryService,
   getEventDetailsByCIdService,
+  saveCommentaryDetailsAPIService,
+  loadMultiCommentaryService,
+  activeInactiveCommentaryService,
+  closeCommentaryService,
+  deleteAllCommentaryService,
+  getOpenCommentariesService,
+  updateDelayInCommentaryService,
+  getActiveCommertyService,
+  getShortCommertyService,
+  deleteCommentaryDataService,
+  updateEventRefIdInCommentaryService,
 } = require("../../../../services/commentry");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -107,7 +118,15 @@ const cloneCommentary = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
-
+const loadMultiCommentary = async (request, reply, fastify) => {
+  try {
+    const result = await loadMultiCommentaryService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/loadMultiCommentary", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 const deleteCommentary = async (request, reply, fastify) => {
   try {
     const result = await deleteCommentaryService(request, fastify);
@@ -298,7 +317,10 @@ const getCompleteMatchList = async (request, reply, fastify) => {
 const getLiveMatchList = async (request, reply, fastify) => {
   try {
     let commentaryData = global.tblCommentaries.filter(
-      (item) => item.commentaryStatus !== 1 && item.commentaryStatus !== 4
+      (item) =>
+        item.commentaryStatus !== 1 &&
+        item.commentaryStatus !== 4 &&
+        item.isActive == true
     );
     const body = {
       commentaryData,
@@ -401,6 +423,16 @@ const getNodeEventbyEid = async (request, reply, fastify) => {
   }
 };
 
+const getActiveCommenrty = async (request, reply, fastify) => {
+  try {
+    const result = await getActiveCommertyService(fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/getActiveCommenrty", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
 const testStoreProcedure = async (request, reply, fastify) => {
   try {
     const result = await testStoreProcedureService(request, fastify);
@@ -491,6 +523,108 @@ const getEventDetailsByCId = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const saveCommentaryDetailsAPI = async (request, reply, fastify) => {
+  try {
+    const result = await saveCommentaryDetailsAPIService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      path + "/saveCommentaryDetailsAPI",
+      request
+    );
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const activeInactiveCommentary = async (request, reply, fastify) => {
+  try {
+    const result = await activeInactiveCommentaryService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      path + "/activeInactiveCommentary",
+      request
+    );
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const closeCommentary = async (request, reply, fastify) => {
+  try {
+    const result = await closeCommentaryService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/closeCommentary", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const deleteAllCommentary = async (request, reply, fastify) => {
+  try {
+    const result = await deleteAllCommentaryService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/deleteAllCommentary", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const getOpenCommentaries = async (request, reply, fastify) => {
+  try {
+    const result = await getOpenCommentariesService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/getOpenCommentaries", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const updateDelayInCommentary = async (request, reply, fastify) => {
+  try {
+    const result = await updateDelayInCommentaryService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      path + "/updateDelayInCommentary",
+      request
+    );
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
+const getShortCommerty = async (request, reply, fastify) => {
+  try {
+    const result = await getShortCommertyService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/getShortCommerty", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const deleteCommentaryData = async (request, reply, fastify) => {
+  try {
+    const result = await deleteCommentaryDataService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/deleteCommentaryData", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+}
+const updateEventRefIdInCommentary = async (request, reply, fastify) => {
+  try {
+    const result = await updateEventRefIdInCommentaryService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      path + "/updateEventRefIdInCommentary",
+      request
+    );
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 module.exports = {
   getAllCommentaries,
   getCommentaryById,
@@ -528,4 +662,15 @@ module.exports = {
   updateCommentaryStatus,
   updateisPredictMarketInCommentary,
   getEventDetailsByCId,
+  saveCommentaryDetailsAPI,
+  loadMultiCommentary,
+  activeInactiveCommentary,
+  closeCommentary,
+  deleteAllCommentary,
+  getOpenCommentaries,
+  updateDelayInCommentary,
+  getActiveCommenrty,
+  getShortCommerty,
+  deleteCommentaryData,
+  updateEventRefIdInCommentary
 };

@@ -15,10 +15,21 @@ const {
   getCommenrtySquadList,
   getPartnershipList,
   getNodeEventbyEid,
+  getOpenCommentaries,
+  getActiveCommenrty,
+  getShortCommerty,
 } = require("../../../controller/users/admin/commentary/commentary");
 const { getMenuItemList } = require("../../../controller/users/admin/menuType");
-const { saveSubScribeDomain } = require("../../../controller/users/admin/subScribesDomain");
-const { Score, SubScribesDomain } = require("../../../swaggerSchema/groupTags/schema");
+const {
+  saveSubScribeDomain,
+} = require("../../../controller/users/admin/subScribesDomain");
+const { allCongifService } = require("../../../services/config");
+const {
+  Score,
+  SubScribesDomain,
+  Commentary,
+  Config,
+} = require("../../../swaggerSchema/groupTags/schema");
 
 module.exports = async (fastify, opts) => {
   fastify.post("/getscore", {
@@ -122,32 +133,32 @@ module.exports = async (fastify, opts) => {
     //     }),
     // ],
     handler: (request, reply) => getMenuItemList(request, reply, fastify),
-  }),
-    fastify.post("/getPagesList", {
-      schema: Score.getmenuitemlist.schema,
-      // preHandler: [
-      //   (request, reply) => authorize(request, reply, fastify),
-      //   (request, reply) =>
-      //     checkPermission(request, reply, fastify, {
-      //       tabName: "Match Types",
-      //       mode: "view",
-      //     }),
-      // ],
-      handler: (request, reply) => getAllPage(request, reply, fastify),
-    }),
-    fastify.post("/fullScorecard", {
-      schema: Score.getscoreByEId.schema,
-      // preHandler: [
-      //   (request, reply) => authorize(request, reply, fastify),
-      //   (request, reply, done) =>
-      //     checkPermission(request, reply, fastify, {
-      //       tabName: "Commentary",
-      //       mode: "view",
-      //     }),
-      // ],
-      handler: (request, reply) =>
-        getAllDetailsByEventId(request, reply, fastify),
-    });
+  });
+  fastify.post("/getPagesList", {
+    schema: Score.getmenuitemlist.schema,
+    // preHandler: [
+    //   (request, reply) => authorize(request, reply, fastify),
+    //   (request, reply) =>
+    //     checkPermission(request, reply, fastify, {
+    //       tabName: "Match Types",
+    //       mode: "view",
+    //     }),
+    // ],
+    handler: (request, reply) => getAllPage(request, reply, fastify),
+  });
+  fastify.post("/fullScorecard", {
+    schema: Score.getscoreByEId.schema,
+    // preHandler: [
+    //   (request, reply) => authorize(request, reply, fastify),
+    //   (request, reply, done) =>
+    //     checkPermission(request, reply, fastify, {
+    //       tabName: "Commentary",
+    //       mode: "view",
+    //     }),
+    // ],
+    handler: (request, reply) =>
+      getAllDetailsByEventId(request, reply, fastify),
+  });
   fastify.post("/squadList", {
     schema: Score.getsquadList.schema,
     // preHandler: [
@@ -179,6 +190,10 @@ module.exports = async (fastify, opts) => {
     handler: (request, reply) => getNodeEventbyEid(request, reply, fastify),
   });
 
+  fastify.post("/getScoreEventsList", {
+    handler: (request, reply) => getActiveCommenrty(request, reply, fastify),
+  });
+
   fastify.post("/saveDomain", {
     schema: SubScribesDomain.save.schema,
     // preHandler: [
@@ -190,5 +205,19 @@ module.exports = async (fastify, opts) => {
     //         }),
     // ],
     handler: (request, reply) => saveSubScribeDomain(request, reply, fastify),
+  });
+
+  fastify.post("/getConfigs",{
+    schema: Config.getAll.schema,
+    handler: (request, reply) => allCongifService(request, reply, fastify),
+  })
+
+  fastify.post("/getCommentary", {
+    schema: Commentary.getAll.schema,
+    handler: (request, reply) => getOpenCommentaries(request, reply, fastify),
+  });
+  fastify.post("/getShortscoreByEId", {
+    schema: Score.getscoreByEId.schema,
+    handler: (request, reply) => getShortCommerty(request, reply, fastify),
   });
 };

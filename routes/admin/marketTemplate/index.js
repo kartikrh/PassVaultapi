@@ -1,5 +1,5 @@
 const { authorize, checkPermission } = require("../../../controller/middleware");
-const { saveMarketTemplate, getAllMarketTemplate, getMarketTemplateId, deleteMarketTemplate, getMatchTypeList, activeInactiveMarketTemplate } = require("../../../controller/users/admin/marketTemplate");
+const { saveMarketTemplate, getAllMarketTemplate, getMarketTemplateId, deleteMarketTemplate, getMatchTypeList, activeInactiveMarketTemplate, getByMatchTypeId, getMarketTypeList, getCategoryByMarketType, changePredefineRunner, cloneMarketTemplate } = require("../../../controller/users/admin/marketTemplate");
 const { MarketTemplate, Commentary } = require("../../../swaggerSchema/groupTags/schema");
 
 module.exports = async function (fastify, opts) {
@@ -81,4 +81,61 @@ module.exports = async function (fastify, opts) {
     ],
     handler: (request, reply) => activeInactiveMarketTemplate(request, reply, fastify),
   });
+  fastify.post("/getByMatchTypeId",{
+    schema: MarketTemplate.getByMatchTypeId.schema,
+    preHandler: [
+        (request, reply) => authorize(request, reply, fastify),
+        (request, reply) => checkPermission(request, reply, fastify, {
+            tabName: "Market Templates",
+            mode: "view"
+        })
+    ],
+    handler: (request, reply) => getByMatchTypeId(request, reply, fastify)
+  })
+  fastify.post("/markeTypeList",{
+    schema: MarketTemplate.markeTypeList.schema,
+    preHandler: [
+        (request, reply) => authorize(request, reply, fastify),
+        (request, reply) => checkPermission(request, reply, fastify, {
+            tabName: "Event Markets",
+            mode: "view"
+        })
+    ],
+    handler: (request, reply) => getMarketTypeList(request, reply, fastify)
+  })
+  fastify.post("/getCategoryByMarketType",{
+    schema: MarketTemplate.getCategoryByMarketType.schema,
+    preHandler: [
+        (request, reply) => authorize(request, reply, fastify),
+        (request, reply) => checkPermission(request, reply, fastify, {
+            tabName: "Event Markets",
+            mode: "view"
+        })
+    ],
+    handler: (request, reply) => getCategoryByMarketType(request, reply, fastify)
+  })
+  fastify.post("/changePredefineRunner",{
+    schema: MarketTemplate.changePredefineRunner.schema,
+    preHandler: [
+        (request, reply) => authorize(request, reply, fastify),
+        (request, reply) => checkPermission(request, reply, fastify, {
+            tabName: "Event Markets",
+            mode: "edit"
+        })
+    ],
+    handler: (request, reply) => changePredefineRunner(request, reply, fastify)
+  });
+  fastify.post("/clone", {
+    schema: MarketTemplate.clone.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Market Templates",
+          mode: "add",
+      }),
+    ],
+    handler: (request, reply) =>
+      cloneMarketTemplate(request, reply, fastify),
+  })
 };

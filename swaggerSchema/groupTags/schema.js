@@ -1164,6 +1164,7 @@ const Teams = {
           teamShortName: { type: "string" },
           country: { type: "string" },
           eventTypeId: { type: "integer" },
+          teamColor: { type: "string" },
           playerId: {
             type: "array",
             items: { type: "string" },
@@ -1271,6 +1272,21 @@ const Player = {
           eventTypeId: { type: "integer" },
           teamId: { type: "integer" },
         },
+      },
+    },
+  },
+  updateSystemPlayer: {
+    schema: {
+      tags: ["Player"],
+      description: "Update System Player",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          playerId: { type: "integer" },
+          isSystemPlayer: { type: "boolean" },
+        },
+        required: ["playerId", "isSystemPlayer"],
       },
     },
   },
@@ -1695,6 +1711,67 @@ const Commentary = {
       },
     },
   },
+  deleteCommentaryData: {
+    schema: {
+      tags: ["Commentary"],
+      description: "delete Commentary Data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          deleteBallByBall : {
+            type : "array"  ,
+            items : { type : "integer"}
+          },
+          deleteOvers: {
+            type : "array"  ,
+            items : { type : "integer"}
+          },
+          deleteWickets: {
+            type : "array"  ,
+            items : { type : "integer"}
+          },
+          deletePartnership: {
+            type : "array"  ,
+            items : { type : "integer" }
+          },
+        },
+      },
+    },
+  },
+  activeInactiveCommentary: {
+    schema: {
+      tags: ["Commentary"],
+      description: "active inactive Commentary",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["commentaryId", "isActive"],
+      },
+    },
+  },
+  closeCommentary: {
+    schema: {
+      tags: ["Commentary"],
+      description: "close Commentary",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["commentaryId"],
+      },
+    },
+  },
   changeMatchType: {
     schema: {
       tags: ["Commentary"],
@@ -1707,6 +1784,36 @@ const Commentary = {
           matchTypeId: { type: "integer" },
         },
         required: ["commentaryId", "matchTypeId"],
+      },
+    },
+  },
+  changeDelay: {
+    schema: {
+      tags: ["Commentary"],
+      description: "change delay",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+          delay: { type: "integer" },
+        },
+        required: ["commentaryId", "delay"],
+      },
+    },
+  },
+  changeEventRefId: {
+    schema: {
+      tags: ["Commentary"],
+      description: "change Event Ref Id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+          eventRefId: { type: "string" },
+        },
+        required: ["commentaryId", "eventRefId"],
       },
     },
   },
@@ -2041,6 +2148,24 @@ const Commentary = {
       },
     },
   },
+  loadMultiCommentary: {
+    schema: {
+      tags: ["Commentary"],
+      description: "Load Commentary",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["commentaryId"],
+      },
+    },
+  },
   delete: {
     schema: {
       tags: ["Commentary"],
@@ -2103,6 +2228,25 @@ const Commentary = {
           commentaryOvers: { type: "object" },
         },
         required: ["commentaryId"],
+      },
+    },
+  },
+  saveCommentaryDetails: {
+    schema: {
+      tags: ["Commentary"],
+      description: "save Commentary details",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryDetails: { type: "object" },
+          commentaryTeams: { type: "array", items: { type: "object" } },
+          commentaryOvers: { type: "array", items: { type: "object" } },
+          commentaryBallByBall: { type: "array", items: { type: "object" } },
+          commentaryWickets: { type: "array", items: { type: "object" } },
+          commentaryPartnership: { type: "array", items: { type: "object" } },
+        },
+        required: [],
       },
     },
   },
@@ -2439,6 +2583,63 @@ const MarketTemplate = {
       },
     },
   },
+  clone : {
+    schema: {
+      tags : ["Market Template"],
+      security : [{bearerAuth : []}],
+      description : "clone market template",
+      body : {
+        type : "object",
+        properties : {
+          marketTemplateId : {type : "integer"},
+          matchTypeID : {type : "integer"}
+        },
+        required : ["marketTemplateId", "matchTypeID"]
+      }
+    }
+  },
+  markeTypeList: {
+    schema: {
+      tags: ["EventMarket"],
+      description: "get all market type",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+  getCategoryByMarketType: {
+    schema: {
+      tags: ["EventMarket"],
+      description: "get all category by market type",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          marketTypeId: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["marketTypeId"],
+      },
+    },
+  },
+  getByMatchTypeId: {
+    schema: {
+      tags: ["EventMarket"],
+      description: "get all EventMarket",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          matchTypeId: { type: "integer" },
+        },
+        required: ["matchTypeId"],
+      },
+    },
+  },
   getById: {
     schema: {
       tags: ["Market Template"],
@@ -2472,6 +2673,8 @@ const MarketTemplate = {
           isPlayer: { type: "boolean" },
           playerName: { type: "string" },
           isAutoCancel: { type: "boolean" },
+          createType: { type: "integer" },
+          create: { type: "number" },
           autoOpenType: { type: "integer" },
           autoOpen: { type: "number" },
           autoCloseType: { type: "integer" },
@@ -2485,8 +2688,21 @@ const MarketTemplate = {
           afterWicketAutoSuspend: { type: "integer" },
           afterWicketNotCreated: { type: "integer" },
           isActive: { type: "boolean" },
+          marketTypeId: { type: "integer" },
+          marketTypeCategoryId: { type: "integer" },
+          margin: { type: "number" },
+          createRefId: { type: "string" },
+          openRefId: { type: "string" },
+          templateType: { type: "integer" },
         },
-        required: ["marketTemplateId", "matchTypeID", "playerName"],
+        required: [
+          "marketTemplateId",
+          "matchTypeID",
+          "playerName",
+          "marketTypeId",
+          "marketTypeCategoryId",
+          "margin",
+        ],
       },
     },
   },
@@ -2520,6 +2736,21 @@ const MarketTemplate = {
           isActive: { type: "boolean" },
         },
         required: ["marketTemplateId"],
+      },
+    },
+  },
+  changePredefineRunner: {
+    schema: {
+      tags: ["Market Template"],
+      description: "change predefine runner",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          marketTemplateId: { type: "integer" },
+          isPredefineRunnerValue: { type: "boolean" },
+        },
+        required: ["marketTemplateId", "isPredefineRunnerValue"],
       },
     },
   },
@@ -2661,6 +2892,7 @@ const News = {
           isActive: { type: "boolean" },
           startDate: { type: "string" },
           endDate: { type: "string" },
+          tags: { type: "string" },
         },
         required: ["newsId"],
       },
@@ -2893,43 +3125,131 @@ const EventMarket = {
       },
     },
   },
-  updateMarketRate :{
-    schema : {
+  getDSReport: {
+    schema: {
+      tags: ["EventMarket"],
+      description: "get DS Report",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          eventMarketId: { type: "integer" },
+        },
+        required: ["eventMarketId"],
+      },
+    },
+  },
+  byId: {
+    tags: ["EventMarket"],
+    description: "get market by id",
+    security: [{ bearerAuth: [] }],
+    body: {
+      type: "object",
+      properties: {
+        eventMarketId: { type: "integer" },
+      },
+      required: ["eventMarketId"],
+    },
+  },
+  updateMarketRate: {
+    schema: {
       tags: ["EventMarket"],
       description: "update market rate",
       security: [{ bearerAuth: [] }],
       body: {
         type: "object",
         properties: {
-          eventMarket :{
+          eventMarket: {
             type: "array",
             items: {
               type: "object",
               properties: {
-                marketRunners : {
-                  type : "array",
-                  items : {
-                    type : "object",
-                  }
-                }
+                marketRunners: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                  },
+                },
               },
-              required : ["marketRunners"]
+              required: ["marketRunners"],
             },
-          }
+          },
         },
         required: ["eventMarket"],
       },
     },
   },
-  save : {
-    schema : {
-      tags : ["EventMarket"],
-      description : "save market",
+  suspendMarketByCId: {
+    schema: {
+      tags: ["EventMarket"],
+      description: "suspend market",
       security: [{ bearerAuth: [] }],
-      body : {
-        type  : "object",
-        properties : {
-          eventMarketId : { type : "integer"},
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: {
+            type: "array",
+            items: { type: "integer" },
+          },
+        },
+        required: ["commentaryId"],
+      },
+    },
+  },
+  commentaryTypeList: {
+    schema: {
+      tags: ["EventMarket"],
+      description: "get all commentary type",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+  marketTemplateTypeList: {
+    schema: {
+      tags: ["EventMarket"],
+      description: "get market template by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+        },
+      },
+    },
+  },
+  setdelay: {
+    schema: {
+      tags: ["EventMarket"],
+      description: "set delay EventMarket",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          eventMarketId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+          delay: { type: "integer" },
+        },
+        required: ["eventMarketId", "delay"],
+      },
+    },
+  },
+  save: {
+    schema: {
+      tags: ["EventMarket"],
+      description: "save market",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          eventMarketId: { type: "integer" },
           eventMarketId: { type: "integer" },
           commentaryId: { type: "integer" },
           eventRefId: { type: "string" },
@@ -2960,13 +3280,22 @@ const EventMarket = {
           isActive: { type: "boolean" },
           isAllow: { type: "boolean" },
           data: { type: "string" },
-          isSendData : { type : "boolean"},
+          isSendData: { type: "boolean" },
+          actionType: { type: "integer" },
+          marketTemplateId: { type: "integer" },
+          marketTypeId: { type: "integer" },
+          marketTypeCategoryId: { type: "integer" },
+          createRefId: { type: "string" },
+          openRefId: { type: "string" },
+          createType: { type: "integer" },
+          create: { type: "number" },
+          templateType: { type: "integer" },
         },
-        required : ["eventMarketId"]
-      }
-    }
+        required: ["eventMarketId", "marketTypeId", "marketTypeCategoryId"],
+      },
+    },
   },
-  changeResultOfMarket : {
+  changeResultOfMarket: {
     schema: {
       tags: ["EventMarket"],
       description: "change result of market",
@@ -3026,11 +3355,13 @@ const EventMarket = {
           competitionId: { type: "integer" },
           eventId: { type: "integer" },
           status: { type: "integer" },
+          startDate: { type: "string" },
+          endDate: { type: "string" },
         },
       },
     },
   },
-  marketListByCId:{
+  marketListByCId: {
     schema: {
       tags: ["EventMarket"],
       description: "get all EventMarket",
@@ -3087,8 +3418,17 @@ const EventMarket = {
                 isActive: { type: "boolean" },
                 isAllow: { type: "boolean" },
                 data: { type: "string" },
-                isSendData : { type : "boolean"},
+                isSendData: { type: "boolean" },
+                marketTemplateId: { type: "integer" },
+                marketTypeId: { type: "integer" },
+                marketTypeCategoryId: { type: "integer" },
+                createRefId: { type: "string" },
+                openRefId: { type: "string" },
+                createType: { type: "integer" },
+                create: { type: "number" },
+                templateType: { type: "integer" },
               },
+              required: ["marketTypeId", "marketTypeCategoryId"],
             },
           },
         },
@@ -3143,6 +3483,605 @@ const EventMarket = {
       },
     },
   },
+  changeMarketClose: {
+    schema: {
+      tags: ["EventMarket"],
+      description: "change market to close",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          eventMarketId: { type: "integer" },
+          commentaryId: { type: "integer" },
+        },
+        required: ["eventMarketId", "commentaryId"],
+      },
+    },
+  },
+};
+const MarketTemplateRunner = {
+  getAll: {
+    schema: {
+      tags: ["Market Template Runner"],
+      description: "get all Market Template Runner",
+      security: [{ bearerAuth: [] }],
+    },
+  },
+  getByTemplateId: {
+    schema: {
+      tags: ["Market Template Runner"],
+      description: "get all Market Template Runner",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          marketTemplateId: { type: "integer" },
+        },
+        required: ["marketTemplateId"],
+      },
+    },
+  },
+  getById: {
+    schema: {
+      tags: ["Market Template Runner"],
+      description: "get Market Template Runner by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          marketTemplateRunnerId: { type: "integer" },
+        },
+        required: ["marketTemplateRunnerId"],
+      },
+    },
+  },
+  save: {
+    schema: {
+      tags: ["Market Template Runner"],
+      description: "save Market Template Runner",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          marketTemplateRunnerId: { type: "integer" },
+          marketTemplateId: { type: "integer" },
+          runner: { type: "string" },
+          line: { type: "number" },
+          overRate: { type: "number" },
+          underRate: { type: "number" },
+          yesRate: { type: "number" },
+          noRate: { type: "number" },
+          yesPoint: { type: "number" },
+          noPoint: { type: "number" },
+        },
+        required: ["marketTemplateId", "marketTemplateRunnerId"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["Market Template Runner"],
+      description: "delete Market Template Runner",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          marketTemplateRunnerId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["marketTemplateRunnerId"],
+      },
+    },
+  },
+};
+const Vendor = {
+  getAll: {
+    schema: {
+      tags: ["Vendors"],
+      description: "get all Vendors",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+  getById: {
+    schema: {
+      tags: ["Vendors"],
+      description: "get Vendors by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          vendorId: { type: "integer" },
+        },
+        required: ["vendorId"],
+      },
+    },
+  },
+  save: {
+    schema: {
+      tags: ["Vendors"],
+      description: "save Vendors",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          vendorId: { type: "integer" },
+          name: { type: "string" },
+          expiryDate: {
+            type: "string",
+          },
+          isActive: { type: "boolean" },
+          isIPCheck: { type: "boolean" },
+        },
+        required: ["vendorId", "name"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["Vendors"],
+      description: "delete Vendors",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          vendorId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["vendorId"],
+      },
+    },
+  },
+  activeInactive: {
+    schema: {
+      tags: ["Vendors"],
+      description: "active inactive Vendors",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          vendorId: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["vendorId", "isActive"],
+      },
+    },
+  },
+  isIPCheck: {
+    schema: {
+      tags: ["Vendors"],
+      description: "get all Vendors",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          vendorId: { type: "integer" },
+          isIPCheck: { type: "boolean" },
+        },
+        required: ["vendorId", "isIPCheck"],
+      },
+    },
+  },
+};
+const VendorIp = {
+  getAll: {
+    schema: {
+      tags: ["Vendor IP"],
+      description: "get all Vendor IP",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+  getByVendorId: {
+    schema: {
+      tags: ["Vendor IP"],
+      description: "get all Vendor IP",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          vendorId: { type: "integer" },
+        },
+        required: ["vendorId"],
+      },
+    },
+  },
+  save: {
+    schema: {
+      tags: ["Vendor IP"],
+      description: "save Vendor IP",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          vendorIpId: { type: "integer" },
+          vendorId: { type: "integer" },
+          ipAddress: { type: "string" },
+          isActive: { type: "boolean" },
+        },
+        required: ["vendorIpId", "vendorId", "ipAddress"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["Vendor IP"],
+      description: "delete Vendor IP",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          vendorIpId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["vendorIpId"],
+      },
+    },
+  },
+  activeInactive: {
+    schema: {
+      tags: ["Vendor IP"],
+      description: "active inactive Vendor IP",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          vendorIpId: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["vendorIpId", "isActive"],
+      },
+    },
+  },
+  getById: {
+    schema: {
+      tags: ["Vendor IP"],
+      description: "get Vendor IP by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          vendorIpId: { type: "integer" },
+        },
+        required: ["vendorIpId"],
+      },
+    },
+  },
+};
+
+const DisplayStatus = {
+  getAll: {
+    schema: {
+      tags: ["DisplayStatus"],
+      security: [{ bearerAuth: [] }],
+      description: "get all DisplayStatus",
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+  getById: {
+    schema: {
+      tags: ["DisplayStatus"],
+      security: [{ bearerAuth: [] }],
+      description: "get DisplayStatus by id",
+      body: {
+        type: "object",
+        properties: {
+          displayStatusId: { type: "integer" },
+        },
+        required: ["displayStatusId"],
+      },
+    },
+  },
+  save: {
+    schema: {
+      tags: ["DisplayStatus"],
+      security: [{ bearerAuth: [] }],
+      description: "save DisplayStatus",
+      body: {
+        type: "object",
+        properties: {
+          displayStatusId: { type: "integer" },
+          displayStatus: { type: "string" },
+          isActive: { type: "boolean" },
+        },
+        required: ["displayStatusId"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["DisplayStatus"],
+      security: [{ bearerAuth: [] }],
+      description: "delete DisplayStatus",
+      body: {
+        type: "object",
+        properties: {
+          displayStatusId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["displayStatusId"],
+      },
+    },
+  },
+};
+const ClientSocket = {
+  getAll : {
+    schema: {
+      tags: ["ClientSocket"],
+      description: "get all ClientSocket",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+  byId : {
+    schema: {
+      tags: ["ClientSocket"],
+      description: "get ClientSocket by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          clientSocketId: { type: "integer" },
+        },
+        required: ["clientSocketId"],
+      },
+    },
+  },
+  save : {
+    schema: {
+      tags: ["ClientSocket"],
+      description: "save ClientSocket",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          clientSocketId: { type: "integer" },
+          serverName : { type: "string" },
+          url : { type: "string" },
+          isActive: { type: "boolean" },
+          status : { type: "integer" },
+          reconnectDelay : { type: "integer" },
+          reconnectAttempts : { type: "integer" },
+          reconnectMaxDelay : { type: "integer" },
+          reconnectCount : { type: "integer" },
+          actionType : { type: "integer" },
+        },
+        required: ["clientSocketId" , "url"],
+      },
+    },
+  },
+  delete : {
+    schema: {
+      tags: ["ClientSocket"],
+      description: "delete ClientSocket",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          clientSocketId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["clientSocketId"],
+      },
+    },
+  },
+  changeActionType : {  
+    schema: {
+      tags: ["ClientSocket"],
+      description: "change action type",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          clientSocketId: {
+            type : "array",
+            items : { type : "integer" },
+          },  
+          actionType: { type: "integer" },
+        },
+        required: ["clientSocketId" , "actionType"],
+      },
+    },
+  },
+  activeInactive : {
+    schema: {
+      tags: ["ClientSocket"],
+      description: "active inactive ClientSocket",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          clientSocketId: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["clientSocketId", "isActive"],
+      },
+    },
+  },
+  
+}
+const ActivityLog = {
+  getAll: {
+    schema: {
+      tags: ["ActivityLog"],
+      description: "get all ActivityLog",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        // properties: {
+        //   isActive: { type: "boolean" },
+        // },
+      },
+    },
+  },
+  getById: {
+    schema: {
+      tags: ["ActivityLog"],
+      description: "get ActivityLog by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          activityLogId: { type: "integer" },
+        },
+        required: ["activityLogId"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["ActivityLog"],
+      description: "delete ActivityLog",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          activityLogId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["activityLogId"],
+      },
+    },
+  },
+  save: {
+    schema: {
+      tags: ["ActivityLog"],
+      description: "save ActivityLog",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          activityLogId: { type: "integer" },
+          activityType: { type: "integer" },
+          refId: { type: "string" },
+          ipAddress: { type: "string" },
+        },
+        required: ["activityLogId"],
+      },
+    },
+  }
+};
+const Banner = {
+  getAll: {
+    schema: {
+      tags: ["Banner"],
+      description: "get all Banners",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+  getById: {
+    schema: {
+      tags: ["Banner"],
+      description: "get Banner by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          bannerId: { type: "integer" },
+        },
+        required: ["bannerId"],
+      },
+    },
+  },
+  save: {
+    schema: {
+      tags: ["Banner"],
+      description: "save Banner",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          bannerId: { type: "integer" },
+          bannerType: { type: "integer" },
+          title: { type: "string" },
+          isPermanent: { type: "boolean" },
+          isActive: { type: "boolean" },
+          startDate: { type: "string" },
+          endDate: { type: "string" },
+          link: { type: "string" },
+          viewerCount: {type: "integer"}
+        },
+        required: ["bannerId"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["Banner"],
+      description: "delete Banner",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          bannerId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["bannerId"],
+      },
+    },
+  },
+  activeInactiveBanner: {
+    schema: {
+      tags: ["Banner"],
+      description: "active inactive banner",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          bannerId: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["bannerId", "isActive"],
+      },
+    },
+  },
 };
 module.exports = {
   Auth,
@@ -3172,4 +4111,11 @@ module.exports = {
   News,
   MatchTypePredictor,
   EventMarket,
+  MarketTemplateRunner,
+  Vendor,
+  VendorIp,
+  DisplayStatus,
+  ClientSocket,
+  ActivityLog,
+  Banner
 };

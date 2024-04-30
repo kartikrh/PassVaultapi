@@ -7,17 +7,20 @@ const dbPg = require("./sequelize/config/config")();
 const swagger = require("@fastify/swagger");
 const swaggerUi = require("@fastify/swagger-ui");
 const featchData = require("./utilities/fetchAllData");
-// const { Server } = require("socket.io"); // Import Socket.IO
-// const { connection, socketMiddleware } = require("./socketIo");
+const { Server } = require("socket.io"); // Import Socket.IO
+const { connection, socketMiddleware } = require("./socketIo");
 const { fastifyRateLimit } = require("@fastify/rate-limit");
 const { responseLogger, responseLogInDB } = require("./utilities/logger");
 const fastifyMultipart = require("@fastify/multipart");
 const fastifyStatic = require("@fastify/static");
 const { generateToken } = require("./utilities/tokenization");
-const { isJson, getMessage, getTitle } = require("./utilities");
+const { isJson, getMessage, getTitle, ERROR_CODES, error } = require("./utilities");
 const Sentry = require("@sentry/node");
+const { instrument } = require("@socket.io/admin-ui");
+const bcrypt = require("bcrypt");
 const Tracing = require("@sentry/tracing");
-// require("./database/connnection");
+const { connectClients, disconnectClients } = require("./sockets");
+const { disConnectClientSocketQuery } = require("./repository/TableClientSocket");
 
 // Pass --options via CLI arguments in command to enable these options.
 module.exports.options = {};
@@ -30,8 +33,29 @@ if (process.env.ENABLE_SENTRY === "TRUE") {
   });
 }
 
+process.on("uncaughtException", (err) => {
+  console.error('Uncaught Exception occurred:', err);
+  // Log additional diagnostic information
+  console.log('Stack Trace:', err.stack);
+  console.log('Resource usage metrics:', process.resourceUsage());
+  console.log('Memory usage:', process.memoryUsage());
+  // get cpu usage
+  console.log('CPU usage:', process.cpuUsage());
+  if (process.env.ENABLE_SENTRY === "TRUE") {
+    Sentry.captureException(err);
+  }
+  process.exit(1);
+});
 
 module.exports = async function (fastify, opts) {
+  
+  process.stdin.resume(); // so the program will not close instantly
+  process.on("SIGTERM", async () => {
+    console.log("Received SIGTERM signal");
+    await disConnectClientSocketQuery(fastify);
+    console.log('Cleanup task executed successfully');
+    process.exit();
+  });
   fastify
     .register(fsequelize, {
       ...dbPg,
@@ -78,9 +102,18 @@ module.exports = async function (fastify, opts) {
       require("./sequelize/tables/matchTypePredictorModel")(fastify.db);
       require("./sequelize/tables/marketTemplateModel")(fastify.db);
       require("./sequelize/tables/eventMarketsModel")(fastify.db);
+      require("./sequelize/tables/marketRunnerModel")(fastify.db);
+      require("./sequelize/tables/marketTemplateRunnerModel")(fastify.db);
+      require("./sequelize/tables/vendorsModel")(fastify.db);
+      require("./sequelize/tables/vendorIpModel")(fastify.db);
+      require("./sequelize/tables/clientSocketModel")(fastify.db);
+      require("./sequelize/tables/activityLogModel")(fastify.db);
       try {
         await fastify.db.sync();
         await featchData(fastify);
+        await disConnectClientSocketQuery(fastify);
+        connectClients(fastify);
+        disconnectClients(fastify);
       } catch (error) {
         console.log("error sync with db", error);
       }
@@ -94,7 +127,15 @@ module.exports = async function (fastify, opts) {
       fileSize: 10 * 1024 * 1024,
     },
   });
-
+  fastify.addHook('preClose', async () => {
+    console.log('preClose hook executed');
+    try {
+      await disConnectClientSocketQuery(fastify);
+      console.log('Cleanup task executed successfully');
+    } catch (error) {
+      console.error('Error during preClose hook execution:', error);
+    }
+  }); 
   fastify.register(require("@fastify/compress"), {
     global: false,
   });
@@ -124,10 +165,21 @@ module.exports = async function (fastify, opts) {
     done();
   });
 
-  fastify.addHook("onRequest", (request, reply, done) => {
+  fastify.addHook("onRequest", async (request, reply) => {
     // Record the request start time in nanoseconds
     request.startTime = process.hrtime.bigint();
     request.startTimeTimeStemp = new Date();
+    if (request.originalUrl.includes("/commentary/saveDetails")) {
+        // request.endTimeTimeStemp = new Date();
+        // new Promise((resolve, reject) => {
+        //   resolve(responseLogInDB(request, fastify));
+        // }).then ((res) => {
+        //   // console.log('res', res);
+        //   request.errId = res[0].errId;
+        // });
+        let result = await responseLogInDB(request, fastify);
+        request.errId = result[0].errId;
+    }
 
     if (process.env.ENABLE_SENTRY === "TRUE") {
       const transaction = Sentry.startTransaction({
@@ -138,7 +190,7 @@ module.exports = async function (fastify, opts) {
       request.sentryTx = transaction;
     }
 
-    done();
+    // done();
   });
 
   fastify.addHook("onSend", (request, reply, payload, done) => {
@@ -201,7 +253,7 @@ module.exports = async function (fastify, opts) {
     request.responseTime = responseTimeInMilliseconds;
 
     // if path include /commentary then do log in db
-    if (request.originalUrl.includes("/commentary")) {
+    if (request.originalUrl.includes("/commentary/saveDetails")) {
       request.endTimeTimeStemp = new Date();
       responseLogInDB(request, fastify);
     }
@@ -259,18 +311,33 @@ module.exports = async function (fastify, opts) {
   });
 
   //  socket.io
-  // const io = new Server(fastify.server, {
-  //   cors: {
-  //     origin: "*",
-  //   },
-  // });
+  const io = new Server(fastify.server, {
+    cors: {
+      origin: ["https://admin.socket.io", "https://panel.deployed.live", "http://localhost:3001",
+    "https://uatpanel.deployed.live"],
+      credentials: true,
+    },
+  });
+
+  instrument(io, {
+    auth: {
+      type: "basic",
+      username: process.env.SOCKET_ADMIN_USERNAME,
+      password: bcrypt.hashSync(process.env.SOCKET_ADMIN_PASSWORD, 10),
+    }
+  });
 
   // //Assign socketIo to global variable
-  // global.socketIo = io;
+  global.socketIo = io;
 
-  // io.use(socketMiddleware);
-  // io.on("connection", connection);
+  io.use(socketMiddleware);
+  io.on("connection", connection);
 
+  // connect the as a client to the socket.io admin
+  // fastify.register(AutoLoad, {
+  //   dir: path.join(__dirname, "sockets"),
+  //   options: Object.assign({}, opts),
+  // });
   // fastify.addHook("onRequest", (request, reply, done) => {
   //   const ip = requestIp.getClientIp(request);
   //   request.clintIp = ip;
@@ -293,10 +360,13 @@ module.exports = async function (fastify, opts) {
     options: Object.assign({}, opts),
   });
 
-  fastify.setErrorHandler(function (error, request, reply) {
-    console.error(error);
+  fastify.setErrorHandler(function (err, request, reply) {
+    console.error(err);
     if (process.env.ENABLE_SENTRY === "TRUE") {
-      Sentry.captureException(error);
+      Sentry.captureException(err);
+    }
+    if (err.statusCode = 400) {
+      reply.status(400).send(error(err.message, ERROR_CODES.INVALID_INPUT, 400));
     }
     reply.status(500).send({ error: "Internal Server Error" });
   });

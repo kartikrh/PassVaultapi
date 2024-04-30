@@ -148,18 +148,65 @@ module.exports = (sequelize) => {
         allowNull: false,
         defaultValue: false,
       },
-      wrData :{
+      wrData: {
         type: DataTypes.STRING,
         allowNull: true,
       },
-      wrLastUpdate :{
+      wrLastUpdate: {
         type: DataTypes.DATE,
         allowNull: true,
       },
-      wrIsSendData :{
+      wrIsSendData: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
         defaultValue: false,
+      },
+      wrActionType: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        defaultValue: 0,
+      },
+      wrMarketTemplateId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      wrMarketTypeId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      wrMarketTypeCategoryId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      wrCreateRefId: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      wrOpenRefId: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      wrCreateType: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      wrCreate: {
+        type: DataTypes.DECIMAL(10, 2),
+        allowNull: true,
+      },
+      wrTemplateType: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      wrDelay: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        defaultValue: 0,
+      },
+      wrLineRatio: {
+        type: DataTypes.DOUBLE,
+        allowNull: true,
+        defaultValue: 0,
       },
     },
     {

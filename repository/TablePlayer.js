@@ -335,7 +335,25 @@ const getAllTeamsByPlayerIdQuery = async (playerId, fastify, request) => {
     throw new Error(err.message);
   }
 };
+const updateIsSystemPlayerQuery = async (data, fastify, request) => {
+  try {
+    
+    const query = `update "tblPlayers" set "wrIsSystemPlayer" = $1 where "wrPlayerId" = $2`;
+    return await fastify.db.query(query, {
+      type: fastify.db.QueryTypes.UPDATE,
+      bind: [data.isSystemPlayer, data.playerId],
+    });
 
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TablePlayer/updateIsSystemPlayerQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+}
 module.exports = {
   getAllPlayersQuery,
   insertPlayerQuery,
@@ -345,4 +363,5 @@ module.exports = {
   getAllBowlingTypeQuery,
   getAllTeamsByPlayerIdQuery,
   updatePlayerStatsQuery,
+  updateIsSystemPlayerQuery
 };
