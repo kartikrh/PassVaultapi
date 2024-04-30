@@ -166,8 +166,8 @@ module.exports = (sequelize) => {
         allowNull: true,
         defaultValue: 0,
       },
-      wrResult: {
-        type: DataTypes.STRING(550),
+      wrCommentaryResult: {
+        type: DataTypes.TEXT,
         allowNull: true,
       },
     },
