@@ -42,6 +42,7 @@ const getAllCommentaryQuery = async (fastify) => {
     "wrIsPredictMarket" as "isPredictMarket",
     tc."wrIsActive"  as "isActive",
     "wrDelay" as "delay",
+    "wrResult" as "result",
     tc."wrCommentaryCloseTime" as "commentaryCloseTime"
     from "tblCommentaries" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
@@ -149,7 +150,7 @@ const insertCommentaryQuery = async (request, fastify) => {
           data.isPredictMarket || false,
           data.delay || 0,
           data.isActive,
-          data.isClientShow
+          data.isClientShow,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -209,7 +210,7 @@ const insertCommentaryTeams = async (request, fastify) => {
           data.team2Id,
           data.team2Captain || null,
           data.team2Kipper || null,
-          data.currentInnings
+          data.currentInnings,
         ],
       }
     );
@@ -385,7 +386,7 @@ const updateCommentaryQuery = async (request, fastify) => {
           data.isPredictMarket,
           data.delay,
           data.isActive,
-          data.isClientShow
+          data.isClientShow,
         ],
 
         type: fastify.db.QueryTypes.UPDATE,
@@ -2447,7 +2448,7 @@ const saveCommentaryDetailsAPIQuery = async (data, fastify, request) => {
       commentaryBallByBall,
       commentaryWickets,
       commentaryPartnership,
-      commentaryPlayers
+      commentaryPlayers,
     } = data;
 
     const result = await fastify.db.query(
@@ -2476,9 +2477,9 @@ const saveCommentaryDetailsAPIQuery = async (data, fastify, request) => {
       "DB ERROR --> repository/TableCommentary/saveCommentaryDetailsAPIQuery",
       request
     );
-    throw new Error(err.message)
+    throw new Error(err.message);
   }
-}
+};
 const activeInactiveCommentaryQuery = async (data, fastify, request) => {
   try {
     const result = await fastify.db.query(
@@ -2500,7 +2501,7 @@ const activeInactiveCommentaryQuery = async (data, fastify, request) => {
     );
     throw new Error(err.message);
   }
-}
+};
 const closeCommentaryQuery = async (data, fastify, request) => {
   try {
     const result = await fastify.db.query(
@@ -2514,7 +2515,6 @@ const closeCommentaryQuery = async (data, fastify, request) => {
     );
 
     return result;
-
   } catch (err) {
     errorLogger(
       fastify,
@@ -2524,16 +2524,12 @@ const closeCommentaryQuery = async (data, fastify, request) => {
     );
     throw new Error(err.message);
   }
-
-}
-const deleteAllCommentaryQuery = async (fastify)=>{
+};
+const deleteAllCommentaryQuery = async (fastify) => {
   try {
-    const result = await fastify.db.query(
-     `SELECT delete_all_commentary()`,
-     {
-        type: fastify.db.QueryTypes.SELECT,
-     }
-    );
+    const result = await fastify.db.query(`SELECT delete_all_commentary()`, {
+      type: fastify.db.QueryTypes.SELECT,
+    });
 
     return result;
   } catch (err) {
@@ -2545,7 +2541,7 @@ const deleteAllCommentaryQuery = async (fastify)=>{
     );
     throw new Error(err.message);
   }
-}
+};
 const updateDelayInCommentaryQuery = async (data, fastify, request) => {
   try {
     return await fastify.db.query(
@@ -2613,8 +2609,7 @@ const deleteCommentaryDataQuery = async (data, fastify, request) => {
     );
     throw new Error(err.message);
   }
-
-}
+};
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -2666,5 +2661,5 @@ module.exports = {
   deleteAllCommentaryQuery,
   updateDelayInCommentaryQuery,
   deleteCommentaryDataQuery,
-  updateEventRefIdInCommentaryQuery
+  updateEventRefIdInCommentaryQuery,
 };
