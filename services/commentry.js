@@ -227,7 +227,7 @@ const commentaryDetailsByIdService = async (request, fastify) => {
   };
 
   if (
-    isStopLoadCommerty &&
+    !isStopLoadCommerty &&
     commentary.isPredictMarket == true &&
     (commentary.commentaryStatus == 2 || commentary.commentaryStatus == 3)
   ) {
