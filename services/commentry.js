@@ -149,6 +149,10 @@ const commentaryByIdService = async (request, fastify) => {
 };
 
 const commentaryDetailsByIdService = async (request, fastify) => {
+  let isStopLoadCommerty = false;
+  if (request.body.isStopLoadCommerty) {
+    isStopLoadCommerty = request.body.isStopLoadCommerty;
+  }
   let commentary = await global.tblCommentaries.find(
     (item) => item.commentaryId === request.body.commentaryId
   );
@@ -223,6 +227,7 @@ const commentaryDetailsByIdService = async (request, fastify) => {
   };
 
   if (
+    isStopLoadCommerty &&
     commentary.isPredictMarket == true &&
     (commentary.commentaryStatus == 2 || commentary.commentaryStatus == 3)
   ) {

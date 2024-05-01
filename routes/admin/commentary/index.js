@@ -189,7 +189,7 @@ module.exports = async (fastify, opts) => {
     handler: (request, reply) => getCommentaryById(request, reply, fastify),
   });
   fastify.post("/detailsById", {
-    schema: Commentary.getById.schema,
+    schema: Commentary.getByIdDetails.schema,
     // preHandler: [
     //   (request, reply) => authorize(request, reply, fastify),
     //   (request, reply, done) =>
