@@ -1719,21 +1719,21 @@ const Commentary = {
       body: {
         type: "object",
         properties: {
-          deleteBallByBall : {
-            type : "array"  ,
-            items : { type : "integer"}
+          deleteBallByBall: {
+            type: "array",
+            items: { type: "integer" },
           },
           deleteOvers: {
-            type : "array"  ,
-            items : { type : "integer"}
+            type: "array",
+            items: { type: "integer" },
           },
           deleteWickets: {
-            type : "array"  ,
-            items : { type : "integer"}
+            type: "array",
+            items: { type: "integer" },
           },
           deletePartnership: {
-            type : "array"  ,
-            items : { type : "integer" }
+            type: "array",
+            items: { type: "integer" },
           },
         },
       },
@@ -1944,6 +1944,21 @@ const Commentary = {
         type: "object",
         properties: {
           commentaryId: { type: "integer" },
+        },
+        required: ["commentaryId"],
+      },
+    },
+  },
+  getByIdDetails: {
+    schema: {
+      tags: ["Commentary"],
+      description: "get Commentary by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+          isStopLoadCommerty: { type: "boolean" },
         },
         required: ["commentaryId"],
       },
@@ -2583,20 +2598,20 @@ const MarketTemplate = {
       },
     },
   },
-  clone : {
+  clone: {
     schema: {
-      tags : ["Market Template"],
-      security : [{bearerAuth : []}],
-      description : "clone market template",
-      body : {
-        type : "object",
-        properties : {
-          marketTemplateId : {type : "integer"},
-          matchTypeID : {type : "integer"}
+      tags: ["Market Template"],
+      security: [{ bearerAuth: [] }],
+      description: "clone market template",
+      body: {
+        type: "object",
+        properties: {
+          marketTemplateId: { type: "integer" },
+          matchTypeID: { type: "integer" },
         },
-        required : ["marketTemplateId", "matchTypeID"]
-      }
-    }
+        required: ["marketTemplateId", "matchTypeID"],
+      },
+    },
   },
   markeTypeList: {
     schema: {
@@ -3832,7 +3847,7 @@ const DisplayStatus = {
   },
 };
 const ClientSocket = {
-  getAll : {
+  getAll: {
     schema: {
       tags: ["ClientSocket"],
       description: "get all ClientSocket",
@@ -3845,7 +3860,7 @@ const ClientSocket = {
       },
     },
   },
-  byId : {
+  byId: {
     schema: {
       tags: ["ClientSocket"],
       description: "get ClientSocket by id",
@@ -3859,7 +3874,7 @@ const ClientSocket = {
       },
     },
   },
-  save : {
+  save: {
     schema: {
       tags: ["ClientSocket"],
       description: "save ClientSocket",
@@ -3868,21 +3883,21 @@ const ClientSocket = {
         type: "object",
         properties: {
           clientSocketId: { type: "integer" },
-          serverName : { type: "string" },
-          url : { type: "string" },
+          serverName: { type: "string" },
+          url: { type: "string" },
           isActive: { type: "boolean" },
-          status : { type: "integer" },
-          reconnectDelay : { type: "integer" },
-          reconnectAttempts : { type: "integer" },
-          reconnectMaxDelay : { type: "integer" },
-          reconnectCount : { type: "integer" },
-          actionType : { type: "integer" },
+          status: { type: "integer" },
+          reconnectDelay: { type: "integer" },
+          reconnectAttempts: { type: "integer" },
+          reconnectMaxDelay: { type: "integer" },
+          reconnectCount: { type: "integer" },
+          actionType: { type: "integer" },
         },
-        required: ["clientSocketId" , "url"],
+        required: ["clientSocketId", "url"],
       },
     },
   },
-  delete : {
+  delete: {
     schema: {
       tags: ["ClientSocket"],
       description: "delete ClientSocket",
@@ -3900,7 +3915,7 @@ const ClientSocket = {
       },
     },
   },
-  changeActionType : {  
+  changeActionType: {
     schema: {
       tags: ["ClientSocket"],
       description: "change action type",
@@ -3909,16 +3924,16 @@ const ClientSocket = {
         type: "object",
         properties: {
           clientSocketId: {
-            type : "array",
-            items : { type : "integer" },
-          },  
+            type: "array",
+            items: { type: "integer" },
+          },
           actionType: { type: "integer" },
         },
-        required: ["clientSocketId" , "actionType"],
+        required: ["clientSocketId", "actionType"],
       },
     },
   },
-  activeInactive : {
+  activeInactive: {
     schema: {
       tags: ["ClientSocket"],
       description: "active inactive ClientSocket",
@@ -3933,8 +3948,7 @@ const ClientSocket = {
       },
     },
   },
-  
-}
+};
 const ActivityLog = {
   getAll: {
     schema: {
@@ -3997,7 +4011,7 @@ const ActivityLog = {
         required: ["activityLogId"],
       },
     },
-  }
+  },
 };
 const Banner = {
   getAll: {
@@ -4043,7 +4057,7 @@ const Banner = {
           startDate: { type: "string" },
           endDate: { type: "string" },
           link: { type: "string" },
-          viewerCount: {type: "integer"}
+          viewerCount: { type: "integer" },
         },
         required: ["bannerId"],
       },
@@ -4117,5 +4131,5 @@ module.exports = {
   DisplayStatus,
   ClientSocket,
   ActivityLog,
-  Banner
+  Banner,
 };

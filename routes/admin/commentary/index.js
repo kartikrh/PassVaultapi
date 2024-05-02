@@ -41,6 +41,7 @@ const {
   updateDelayInCommentary,
   deleteCommentaryData,
   updateEventRefIdInCommentary,
+  loadcommentaryapi,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -188,7 +189,7 @@ module.exports = async (fastify, opts) => {
     handler: (request, reply) => getCommentaryById(request, reply, fastify),
   });
   fastify.post("/detailsById", {
-    schema: Commentary.getById.schema,
+    schema: Commentary.getByIdDetails.schema,
     // preHandler: [
     //   (request, reply) => authorize(request, reply, fastify),
     //   (request, reply, done) =>
@@ -474,8 +475,9 @@ module.exports = async (fastify, opts) => {
           mode: "edit",
         }),
     ],
-    handler: (request, reply) => saveCommentaryDetailsAPI(request, reply, fastify),
-  })
+    handler: (request, reply) =>
+      saveCommentaryDetailsAPI(request, reply, fastify),
+  });
   fastify.post("/activeInactiveCommentary", {
     schema: Commentary.activeInactiveCommentary.schema,
     preHandler: [
@@ -486,8 +488,9 @@ module.exports = async (fastify, opts) => {
           mode: "edit",
         }),
     ],
-    handler: (request, reply) => activeInactiveCommentary(request, reply, fastify),
-  })
+    handler: (request, reply) =>
+      activeInactiveCommentary(request, reply, fastify),
+  });
   fastify.post("/closeCommentary", {
     schema: Commentary.closeCommentary.schema,
     preHandler: [
@@ -499,7 +502,7 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request, reply) => closeCommentary(request, reply, fastify),
-  })
+  });
   fastify.post("/deleteAllCommentary", {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
@@ -510,7 +513,7 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request, reply) => deleteAllCommentary(request, reply, fastify),
-  })
+  });
   fastify.post("/changeDelay", {
     schema: Commentary.changeDelay.schema,
     preHandler: [
@@ -534,9 +537,8 @@ module.exports = async (fastify, opts) => {
           mode: "delete",
         }),
     ],
-    handler: (request, reply) =>
-      deleteCommentaryData(request, reply, fastify),
-  })
+    handler: (request, reply) => deleteCommentaryData(request, reply, fastify),
+  });
   fastify.post("/changeEventRefId", {
     schema: Commentary.changeEventRefId.schema,
     preHandler: [
@@ -548,6 +550,19 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request, reply) =>
-    updateEventRefIdInCommentary(request, reply, fastify),
+      updateEventRefIdInCommentary(request, reply, fastify),
+  });
+
+  fastify.post("/loadcommentaryapi", {
+    schema: Commentary.getById.schema,
+    // preHandler: [
+    //   (request, reply) => authorize(request, reply, fastify),
+    //   (request, reply, done) =>
+    //     checkPermission(request, reply, fastify, {
+    //       tabName: "Commentary",
+    //       mode: "view",
+    //     }),
+    // ],
+    handler: (request, reply) => loadcommentaryapi(request, reply, fastify),
   });
 };
