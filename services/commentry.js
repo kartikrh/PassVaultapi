@@ -1437,11 +1437,11 @@ const testStoreProcedureService = async (request, fastify) => {
         );
         global.tblCommentaryTeams[index] = team;
       });
-      sendDataForSocketUpdate.dataToUpdate.push({
-        module : "commentaryTeams",
-        type : "update",
-        data : commentaryTeams
-      });
+      // sendDataForSocketUpdate.dataToUpdate.push({
+      //   module : "commentaryTeams",
+      //   type : "update",
+      //   data : commentaryTeams
+      // });
     }
     if (deleteCommentaryBallByBallId) {
       global.tblCommentaryBallByBall = global.tblCommentaryBallByBall.filter(
