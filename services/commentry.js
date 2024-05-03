@@ -1204,9 +1204,10 @@ const testStoreProcedureService = async (request, fastify) => {
 
     let commentaryIndex,
       overIndex,
-      ballByBallIndex,
+      ballByBallIndex,  
       wicketIndex,
       partnershipIndex;
+
 
     let commentaryData;
     if (commentaryId) {
@@ -1399,6 +1400,10 @@ const testStoreProcedureService = async (request, fastify) => {
     updatedData = updatedData[0];
     const response = {};
 
+    const sendDataForSocketUpdate = {};
+    sendDataForSocketUpdate.commentaryId = commentaryId;
+    sendDataForSocketUpdate.eventRefId = commentaryData.eventRefId;
+    sendDataForSocketUpdate.dataToUpdate = [];
     if (commentaryDetails) {
       global.tblCommentaries[commentaryIndex] = {
         ...global.tblCommentaries[commentaryIndex],
@@ -1426,7 +1431,11 @@ const testStoreProcedureService = async (request, fastify) => {
         winnerId: commentaryDetails.winnerId,
         winnerName: commentaryDetails.winnerName,
       };
-    
+      sendDataForSocketUpdate.dataToUpdate.push({
+        module : "commentaryDetails",
+        type : "update",
+        data : response.commentaryDetails
+      });
     }
     if (commentaryTeams) {
       commentaryTeams.forEach((team) => {
@@ -1437,11 +1446,11 @@ const testStoreProcedureService = async (request, fastify) => {
         );
         global.tblCommentaryTeams[index] = team;
       });
-      // sendDataForSocketUpdate.dataToUpdate.push({
-      //   module : "commentaryTeams",
-      //   type : "update",
-      //   data : commentaryTeams
-      // });
+      sendDataForSocketUpdate.dataToUpdate.push({
+        module : "commentaryTeams",
+        type : "update",
+        data : commentaryTeams
+      });
     }
     if (deleteCommentaryBallByBallId) {
       global.tblCommentaryBallByBall = global.tblCommentaryBallByBall.filter(
@@ -1470,7 +1479,8 @@ const testStoreProcedureService = async (request, fastify) => {
           (item) =>
             item.commentaryId === commentaryId &&
             item.ballType > 0 &&
-            item.currentInnings === commentaryData.currentInnings
+            item.currentInnings === commentaryData.currentInnings &&
+            item.teamId === strikeTeam.teamId
         )
         .sort((a, b) => b.commentaryBallByBallId - a.commentaryBallByBallId)[0];
       if (previousBall) {
@@ -1524,11 +1534,21 @@ const testStoreProcedureService = async (request, fastify) => {
         );
         global.tblCommentaryPlayers[index] = player;
       });
+      sendDataForSocketUpdate.dataToUpdate.push({
+        module : "commentaryPlayers",
+        type : "update",
+        data : commentaryPlayers
+      });
     }
     if (commentaryOvers) {
       if (updatedData.overDetails) {
         global.tblOvers.push(updatedData.overDetails);
         response.overdetails = updatedData.overDetails;
+        sendDataForSocketUpdate.dataToUpdate.push({
+          module : "commentaryOvers",
+          type : "create",
+          data : response.overdetails
+        });
       } else {
         if (!deleteOverId) {
           overIndex !== -1
@@ -1541,7 +1561,13 @@ const testStoreProcedureService = async (request, fastify) => {
             : null;
         }
         response.overdetails = commentaryOvers;
+        sendDataForSocketUpdate.dataToUpdate.push({
+          module : "commentaryOvers",
+          type : "update",
+          data : response.overdetails
+        });
       }
+      
     }
     if (commentaryBallByBall) {
       if (updatedData.commentaryBallByBallDetails) {
@@ -1550,6 +1576,13 @@ const testStoreProcedureService = async (request, fastify) => {
         );
         response.commentaryBallByBallDetails =
           updatedData.commentaryBallByBallDetails;
+        
+        sendDataForSocketUpdate.dataToUpdate.push({
+          module : "commentaryBallByBall",
+          type : "create",
+          data : response.commentaryBallByBallDetails
+        });
+        
         // call the predictor market
         if (
           commentaryData.isPredictMarket &&
@@ -1601,15 +1634,30 @@ const testStoreProcedureService = async (request, fastify) => {
             : null;
         }
         response.commentaryBallByBallDetails = commentaryBallByBall;
+        sendDataForSocketUpdate.dataToUpdate.push({
+          module : "commentaryBallByBall",
+          type : "update",
+          data : response.commentaryBallByBallDetails
+        });
       }
     }
     if (commentaryWicket) {
       if (updatedData.commentaryWicketDetails) {
         global.tblCommentaryWicket.push(updatedData.commentaryWicketDetails);
         response.commentaryWicketDetails = updatedData.commentaryWicketDetails;
+        sendDataForSocketUpdate.dataToUpdate.push({
+          module : "commentaryWicket",
+          type : "create",
+          data : response.commentaryWicketDetails
+        });
       } else {
         global.tblCommentaryWicket[wicketIndex] = commentaryWicket;
         response.commentaryWicketDetails = commentaryWicket;
+        sendDataForSocketUpdate.dataToUpdate.push({
+          module : "commentaryWicket",
+          type : "update",
+          data : response.commentaryWicketDetails
+        });
       }
     }
     if (commentaryPartnership) {
@@ -1619,23 +1667,44 @@ const testStoreProcedureService = async (request, fastify) => {
         );
         response.commentaryPartnershipDetails =
           updatedData.commentaryPartnershipDetails;
+        sendDataForSocketUpdate.dataToUpdate.push({
+          module : "commentaryPartnership",
+          type : "create",
+          data : response.commentaryPartnershipDetails
+        });
       } else {
         global.tblCommentaryPartnership[partnershipIndex] =
           commentaryPartnership;
         response.commentaryPartnershipDetails = commentaryPartnership;
+        sendDataForSocketUpdate.dataToUpdate.push({
+          module : "commentaryPartnership",
+          type : "update",
+          data : response.commentaryPartnershipDetails
+        });
       }
     }
     if (deleteCommentaryBallByBallId) {
       response.deleteCommentaryBallByBallId = true;
+      sendDataForSocketUpdate.dataToUpdate.push({
+        module : "deleteCommentaryBallByBallId",
+        type : "delete",
+        data : deleteCommentaryBallByBallId
+      });
+
     }
     if (deleteOverId) {
       response.deleteOverId = true;
+      sendDataForSocketUpdate.dataToUpdate.push({
+        module : "deleteOverId",
+        type : "delete",
+        data : deleteOverId
+      });
     }
     if (
       commentaryDetails &&
       commentaryData.isPredictMarket == true &&
       previousCommentaryStatus == 1 &&
-      statusToUpdate == 2
+      statusToUpdate == 2 
     ) {
       handleMarketCloseService(
         {
@@ -1685,9 +1754,11 @@ const testStoreProcedureService = async (request, fastify) => {
             eventId: commentaryData.eventRefId,
           },
         },
-        fastify,
-        "callFromSocket"
-      );
+      fastify, "callFromSocket");
+
+      global.clientSocketIo.forEach((socket) => {
+        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+      });
     }
 
     // which i get from request i want to return only that object
