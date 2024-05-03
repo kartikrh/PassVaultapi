@@ -1426,6 +1426,22 @@ const testStoreProcedureService = async (request, fastify) => {
         winnerId: commentaryDetails.winnerId,
         winnerName: commentaryDetails.winnerName,
       };
+    
+    }
+    if (commentaryTeams) {
+      commentaryTeams.forEach((team) => {
+        const index = global.tblCommentaryTeams.findIndex(
+          (item) =>
+            item.commentaryId === team.commentaryId &&
+            item.commentaryTeamId === team.commentaryTeamId
+        );
+        global.tblCommentaryTeams[index] = team;
+      });
+      sendDataForSocketUpdate.dataToUpdate.push({
+        module : "commentaryTeams",
+        type : "update",
+        data : commentaryTeams
+      });
     }
     if (deleteCommentaryBallByBallId) {
       global.tblCommentaryBallByBall = global.tblCommentaryBallByBall.filter(
