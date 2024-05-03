@@ -1471,7 +1471,7 @@ const testStoreProcedureService = async (request, fastify) => {
             wicket: _wkt === true ? 1 : 0,
             total_wicket: strikeTeam.teamWicket,
           },
-          "/api/predictscore",
+          "/api/undoscore",
           fastify,
           request
         );
