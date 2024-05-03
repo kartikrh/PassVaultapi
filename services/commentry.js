@@ -1507,16 +1507,16 @@ const testStoreProcedureService = async (request, fastify) => {
       }
     }
 
-    if (commentaryTeams) {
-      commentaryTeams.forEach((team) => {
-        const index = global.tblCommentaryTeams.findIndex(
-          (item) =>
-            item.commentaryId === team.commentaryId &&
-            item.commentaryTeamId === team.commentaryTeamId
-        );
-        global.tblCommentaryTeams[index] = team;
-      });
-    }
+    // if (commentaryTeams) {
+    //   commentaryTeams.forEach((team) => {
+    //     const index = global.tblCommentaryTeams.findIndex(
+    //       (item) =>
+    //         item.commentaryId === team.commentaryId &&
+    //         item.commentaryTeamId === team.commentaryTeamId
+    //     );
+    //     global.tblCommentaryTeams[index] = team;
+    //   });
+    // }
     if (commentaryPlayers) {
       commentaryPlayers.forEach((player) => {
         const index = global.tblCommentaryPlayers.findIndex(
