@@ -3674,6 +3674,18 @@ const getMatchListByStatus = async (body, request, fastify) => {
       }
     }
 
+    //Tossteam Name
+    const TossTeamName = await global.tblCommentaryTeams.find(
+      (team) =>
+        team.commentaryId === item.commentaryId &&
+        team.teamId === item.tossWonBy &&
+        team.currentInnings === item.currentInnings
+    );
+    let toss = "";
+
+    if (item.choseTo) {
+      toss = item.choseTo === 1 ? "BAT" : "BOWL";
+    }
     let details = {
       rno: rno,
       eid: item.eventRefId || "",
@@ -3684,8 +3696,8 @@ const getMatchListByStatus = async (body, request, fastify) => {
       ed: convertDate(item.eventDate, "DD/MM/YYYY") || "",
       et: convertDate(item.eventDate, "hh:mm:ss") || "",
       utc: item.eventDate,
-      twonby: item.tossWonBy || null,
-      choseto: item.choseTo || null,
+      twonby: TossTeamName.teamName || null,
+      choseto: toss || null,
       te1n: commentaryTeamsOne.teamName || "",
       te2n: commentaryTeamsTwo.teamName || "",
       s1n: commentaryTeamsOne.shortName || "",
