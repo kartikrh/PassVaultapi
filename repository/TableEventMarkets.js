@@ -973,6 +973,20 @@ const updateEventMarketRateQuery = async (data, request, fastify) => {
           type: fastify.db.QueryTypes.SELECT,
         }
       );
+
+      await fastify.db.query(
+        `
+            UPDATE "tblEventMarkets"
+            SET "wrMinOdds" = CASE WHEN "wrMinOdds" < $1 THEN "wrMinOdds" ELSE $1 END,
+                "wrMaxOdds" = CASE WHEN "wrMaxOdds" > $1 THEN "wrMaxOdds" ELSE $1 END
+            WHERE "wrID" = $2
+        `,{
+          bind : [
+            runner.line,
+            runner.eventMarketId,
+          ]
+        }
+      );
     }
 
     // get the runner market runner data
