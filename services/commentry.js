@@ -1755,9 +1755,9 @@ const testStoreProcedureService = async (request, fastify) => {
         "callFromSocket"
       );
 
-      global.clientSocketIo.forEach((socket) => {
-        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
-      });
+      // global.clientSocketIo.forEach((socket) => {
+      //   socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+      // });
     }
 
     // which i get from request i want to return only that object
