@@ -12,7 +12,7 @@ const getAllCommentaryQuery = async (fastify) => {
     tt1."wrTeamName" as "team1Name",
     tt2."wrTeamName" as "team2Name",
     tc."wrCompetitionId" as "competitionId",
-	co."wrCompetition" as "competition",
+	  co."wrCompetition" as "competition",
     tc."wrEventId" as "eventId",
     "wrEventDate" as "eventDate",
     "wrEventName" as "eventName",
