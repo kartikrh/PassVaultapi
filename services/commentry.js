@@ -3719,6 +3719,7 @@ const getMatchListByStatus = async (body, request, fastify) => {
       crr: crr || 0,
       rrr: rrr || 0,
       cst: item.commentaryStatus,
+      res: item.result || "",
     };
 
     resultArr.push(details);
