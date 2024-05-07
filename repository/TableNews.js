@@ -74,7 +74,7 @@ const insertNewsQuery = async (data, request, fastify) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableEvent/insertNewsQuery",
+      "DB ERROR --> repository/TableNews/insertNewsQuery",
       request
     );
     throw new Error(err.message);
@@ -118,7 +118,7 @@ const updateNewsQuery = async (data, request, fastify) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableEvent/updateNewsQuery",
+      "DB ERROR --> repository/TableNews/updateNewsQuery",
       request
     );
     throw new Error(err.message);
@@ -139,7 +139,7 @@ const deleteNewsQuery = async (data, request, fastify) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableEvent/deleteNewsQuery",
+      "DB ERROR --> repository/TableNews/deleteNewsQuery",
       request
     );
     throw new Error(err.message);
@@ -163,16 +163,39 @@ const activeInactiveNewsQuery = async (data, request, fastify) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableEvent/activeInactiveNewsQuery",
+      "DB ERROR --> repository/TableNews/activeInactiveNewsQuery",
       request
     );
     throw new Error(err.message);
   }
 };
+const newsViewersCountQuery = async (data, request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `
+                update "tblNews" set
+                "wrViewerCount" = COALESCE("wrViewerCount", 0) + 1
+                where "wrNewsId" = $1
+            `,
+      {
+        bind: [data.refId],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableNews/newsViewersCountQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+}
 module.exports = {
   insertNewsQuery,
   updateNewsQuery,
   deleteNewsQuery,
   getAllNewsQuery,
   activeInactiveNewsQuery,
+  newsViewersCountQuery
 };
