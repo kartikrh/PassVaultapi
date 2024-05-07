@@ -11,7 +11,8 @@ const getAllNewsQuery = async (fastify) => {
             "wrIsPermanent" as "isPermanent",
             "wrStartDate" as "startDate",
             "wrEndDate" as "endDate",
-            "wrTags" as "tags"
+            "wrTags" as "tags",
+            "wrViewerCount" as "viewerCount"
         from "tblNews"
         `,
     {
@@ -34,9 +35,10 @@ const insertNewsQuery = async (data, request, fastify) => {
                         "wrEndDate",
                         "wrCreatedBy",
                         "wrCreatedDate",
-                        "wrTags"
+                        "wrTags",
+                        "wrViewerCount"
                     )
-                values ($1, $2, $3, $4, $5, $6, $7, $8, now(),$9) returning *
+                values ($1, $2, $3, $4, $5, $6, $7, $8, now(), $9, $10) returning *
                 )
                 select 
                     "wrNewsId" as "newsId",
@@ -47,7 +49,8 @@ const insertNewsQuery = async (data, request, fastify) => {
                     "wrIsPermanent" as "isPermanent",
                     "wrStartDate" as "startDate",
                     "wrEndDate" as "endDate",
-                    "wrTags" as "tags"
+                    "wrTags" as "tags",
+                    "wrViewerCount" as "viewerCount"
                 from "insert_data"
             `,
       {
@@ -62,6 +65,7 @@ const insertNewsQuery = async (data, request, fastify) => {
           data.endDate ? new Date(data.endDate) : null,
           data.userId,
           data.tags,
+          data.viewerCount || null
         ],
       }
     );
@@ -90,7 +94,8 @@ const updateNewsQuery = async (data, request, fastify) => {
                 "wrEndDate" = $7,
                 "wrModifyBy" = $8,
                 "wrModifyDate" = now(),
-                "wrTags" = $10
+                "wrTags" = $10,
+                "wrViewerCount" = $11
                 where "wrNewsId" = $9
             `,
       {
@@ -105,6 +110,7 @@ const updateNewsQuery = async (data, request, fastify) => {
           data.userId,
           data.newsId,
           data.tags,
+          data.viewerCount || null
         ],
       }
     );
