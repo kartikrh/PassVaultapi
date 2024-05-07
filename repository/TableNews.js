@@ -11,7 +11,8 @@ const getAllNewsQuery = async (fastify) => {
             "wrIsPermanent" as "isPermanent",
             "wrStartDate" as "startDate",
             "wrEndDate" as "endDate",
-            "wrTags" as "tags"
+            "wrTags" as "tags",
+            "wrViewerCount" as "viewerCount"
         from "tblNews"
         `,
     {
@@ -34,9 +35,10 @@ const insertNewsQuery = async (data, request, fastify) => {
                         "wrEndDate",
                         "wrCreatedBy",
                         "wrCreatedDate",
-                        "wrTags"
+                        "wrTags",
+                        "wrViewerCount"
                     )
-                values ($1, $2, $3, $4, $5, $6, $7, $8, now(),$9) returning *
+                values ($1, $2, $3, $4, $5, $6, $7, $8, now(), $9, $10) returning *
                 )
                 select 
                     "wrNewsId" as "newsId",
@@ -47,7 +49,8 @@ const insertNewsQuery = async (data, request, fastify) => {
                     "wrIsPermanent" as "isPermanent",
                     "wrStartDate" as "startDate",
                     "wrEndDate" as "endDate",
-                    "wrTags" as "tags"
+                    "wrTags" as "tags",
+                    "wrViewerCount" as "viewerCount"
                 from "insert_data"
             `,
       {
@@ -62,6 +65,7 @@ const insertNewsQuery = async (data, request, fastify) => {
           data.endDate ? new Date(data.endDate) : null,
           data.userId,
           data.tags,
+          data.viewerCount || null
         ],
       }
     );
@@ -70,7 +74,7 @@ const insertNewsQuery = async (data, request, fastify) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableEvent/insertNewsQuery",
+      "DB ERROR --> repository/TableNews/insertNewsQuery",
       request
     );
     throw new Error(err.message);
@@ -90,7 +94,8 @@ const updateNewsQuery = async (data, request, fastify) => {
                 "wrEndDate" = $7,
                 "wrModifyBy" = $8,
                 "wrModifyDate" = now(),
-                "wrTags" = $10
+                "wrTags" = $10,
+                "wrViewerCount" = $11
                 where "wrNewsId" = $9
             `,
       {
@@ -105,6 +110,7 @@ const updateNewsQuery = async (data, request, fastify) => {
           data.userId,
           data.newsId,
           data.tags,
+          data.viewerCount || null
         ],
       }
     );
@@ -112,7 +118,7 @@ const updateNewsQuery = async (data, request, fastify) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableEvent/updateNewsQuery",
+      "DB ERROR --> repository/TableNews/updateNewsQuery",
       request
     );
     throw new Error(err.message);
@@ -133,7 +139,7 @@ const deleteNewsQuery = async (data, request, fastify) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableEvent/deleteNewsQuery",
+      "DB ERROR --> repository/TableNews/deleteNewsQuery",
       request
     );
     throw new Error(err.message);
@@ -157,16 +163,39 @@ const activeInactiveNewsQuery = async (data, request, fastify) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableEvent/activeInactiveNewsQuery",
+      "DB ERROR --> repository/TableNews/activeInactiveNewsQuery",
       request
     );
     throw new Error(err.message);
   }
 };
+const newsViewersCountQuery = async (data, request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `
+                update "tblNews" set
+                "wrViewerCount" = COALESCE("wrViewerCount", 0) + 1
+                where "wrNewsId" = $1
+            `,
+      {
+        bind: [data.refId],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableNews/newsViewersCountQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+}
 module.exports = {
   insertNewsQuery,
   updateNewsQuery,
   deleteNewsQuery,
   getAllNewsQuery,
   activeInactiveNewsQuery,
+  newsViewersCountQuery
 };

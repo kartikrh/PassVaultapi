@@ -2908,6 +2908,7 @@ const News = {
           startDate: { type: "string" },
           endDate: { type: "string" },
           tags: { type: "string" },
+          viewerCount: { type: "integer" },
         },
         required: ["newsId"],
       },
