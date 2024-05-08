@@ -12,6 +12,7 @@ const getAllCommentaryQuery = async (fastify) => {
     tt1."wrTeamName" as "team1Name",
     tt2."wrTeamName" as "team2Name",
     tc."wrCompetitionId" as "competitionId",
+	  co."wrCompetition" as "competition",
     tc."wrEventId" as "eventId",
     "wrEventDate" as "eventDate",
     "wrEventName" as "eventName",
@@ -47,7 +48,8 @@ const getAllCommentaryQuery = async (fastify) => {
     from "tblCommentaries" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
-    LEFT JOIN "tblMatchTypes" mt ON tc."wrMatchTypeId" = mt."wrMatchTypeId"`,
+    LEFT JOIN "tblMatchTypes" mt ON tc."wrMatchTypeId" = mt."wrMatchTypeId"
+	LEFT JOIN "tblCompetitions" co ON tc."wrCompetitionId" = co."wrCompetitionId"`,
     {
       type: fastify.db.QueryTypes.SELECT,
     }
@@ -90,6 +92,7 @@ const insertCommentaryQuery = async (request, fastify) => {
     tt1."wrTeamName" as "team1Name",
     tt2."wrTeamName" as "team2Name",
     tc."wrCompetitionId" as "competitionId",
+    co."wrCompetition" as "competition",
     tc."wrEventId" as "eventId",
     "wrEventDate" as "eventDate",
     "wrEventName" as "eventName",
@@ -124,6 +127,7 @@ const insertCommentaryQuery = async (request, fastify) => {
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"  
     LEFT JOIN "tblMatchTypes" mt ON tc."wrMatchTypeId" = mt."wrMatchTypeId"
+    LEFT JOIN "tblCompetitions" co ON tc."wrCompetitionId" = co."wrCompetitionId"
       `,
       {
         bind: [
@@ -499,6 +503,7 @@ const getCommentaryByIdQuery = async (request, fastify) => {
       tt1."wrTeamName" as "team1Name",
       tt2."wrTeamName" as "team2Name",
       tc."wrCompetitionId" as "competitionId",
+      co."wrCompetition" as "competition",
       tc."wrEventId" as "eventId",
       "wrEventDate" as "eventDate",
       "wrEventName" as "eventName",
@@ -533,6 +538,7 @@ const getCommentaryByIdQuery = async (request, fastify) => {
       left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
       left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
       LEFT JOIN "tblMatchTypes" mt ON tc."wrMatchTypeId" = mt."wrMatchTypeId"
+      LEFT JOIN "tblCompetitions" co ON tc."wrCompetitionId" = co."wrCompetitionId"
       where "wrCommentaryId" = $1
       `,
       {

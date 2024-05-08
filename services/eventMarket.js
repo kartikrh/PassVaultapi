@@ -340,13 +340,14 @@ const getEventListByCompetitionIdsService = async (request, fastify) => {
 const marketListResultFalseService = async (request, fastify) => {
   const { isActive, eventTypeId, competitionId, eventId, status, startDate, endDate} =
     request.body;
-  let eventMarket = global.tblEventMarkets.filter((item) => {
-    return (
-      item.isResult === false &&
-      item.result !== null &&
-      item.status == EventMarketStatus.Settled
-    );
-  });
+  // let eventMarket = global.tblEventMarkets.filter((item) => {
+  //   return (
+  //     item.isResult === false &&
+  //     item.result !== null &&
+  //     item.status == EventMarketStatus.Settled
+  //   );
+  // });
+  let eventMarket = await getAllEventMarketsQuery(fastify, `tem."wrIsResult" = false AND tem."wrResult" IS NOT NULL AND tem."wrStatus" = ${EventMarketStatus.Settled}`);
   if (eventTypeId) {
     // get the commentaryId from tblCommentaries
     let commentaryId = global.tblCommentaries

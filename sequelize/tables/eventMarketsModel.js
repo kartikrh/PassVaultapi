@@ -208,6 +208,21 @@ module.exports = (sequelize) => {
         allowNull: true,
         defaultValue: 0,
       },
+      wrOpenOdds : {
+        type: DataTypes.DOUBLE,
+        allowNull: false,
+        defaultValue : 0
+      },
+      wrMaxOdds : {
+        type: DataTypes.DOUBLE,
+        allowNull: false,
+        defaultValue : 0
+      },
+      wrMinOdds : {
+        type: DataTypes.DOUBLE,
+        allowNull: false,
+        defaultValue : 0
+      },
     },
     {
       timestamps: false,

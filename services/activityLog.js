@@ -3,6 +3,8 @@ const {
   updateActivityLogQuery,
   deleteActivityLogQuery,
 } = require("../repository/TableActivityLog");
+const { bannerViewersCountQuery } = require("../repository/TableBanner");
+const { newsViewersCountQuery } = require("../repository/TableNews");
 
 const getAllActivityLogService = async (request, fastify) => {
   return global.tblActivityLogs;
@@ -44,6 +46,19 @@ const createActivityLogService = async (request, fastify) => {
     fastify
   );
 
+  if(request?.body?.activityType === 1) {
+    const newsIndex = global.tblNews.findIndex((item)=> item.newsId === parseInt(request.body.refId));
+    await newsViewersCountQuery({ ...request.body },request,fastify);
+    if (newsIndex !== -1) {
+      global.tblNews[newsIndex].viewerCount = (global.tblNews[newsIndex].viewerCount || 0) + 1;
+    }
+  } else {
+    const bannerIndex = global.tblBanner.findIndex((item)=> item.bannerId === parseInt(request.body.refId));
+    await bannerViewersCountQuery({ ...request.body },request,fastify);
+    if (bannerIndex !== -1) {
+      global.tblBanner[bannerIndex].viewerCount = (global.tblBanner[bannerIndex].viewerCount || 0) + 1;
+    }
+  }
   global.tblActivityLogs.push(data[0]);
 
   return data;

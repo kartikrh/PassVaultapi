@@ -1399,6 +1399,10 @@ const testStoreProcedureService = async (request, fastify) => {
     updatedData = updatedData[0];
     const response = {};
 
+    // const sendDataForSocketUpdate = {};
+    // sendDataForSocketUpdate.commentaryId = commentaryId;
+    // sendDataForSocketUpdate.eventRefId = commentaryData.eventRefId;
+    // sendDataForSocketUpdate.dataToUpdate = [];
     if (commentaryDetails) {
       global.tblCommentaries[commentaryIndex] = {
         ...global.tblCommentaries[commentaryIndex],
@@ -1426,6 +1430,26 @@ const testStoreProcedureService = async (request, fastify) => {
         winnerId: commentaryDetails.winnerId,
         winnerName: commentaryDetails.winnerName,
       };
+      // sendDataForSocketUpdate.dataToUpdate.push({
+      //   module: "commentaryDetails",
+      //   type: "update",
+      //   data: response.commentaryDetails,
+      // });
+    }
+    if (commentaryTeams) {
+      commentaryTeams.forEach((team) => {
+        const index = global.tblCommentaryTeams.findIndex(
+          (item) =>
+            item.commentaryId === team.commentaryId &&
+            item.commentaryTeamId === team.commentaryTeamId
+        );
+        global.tblCommentaryTeams[index] = team;
+      });
+      // sendDataForSocketUpdate.dataToUpdate.push({
+      //   module: "commentaryTeams",
+      //   type: "update",
+      //   data: commentaryTeams,
+      // });
     }
     if (deleteCommentaryBallByBallId) {
       global.tblCommentaryBallByBall = global.tblCommentaryBallByBall.filter(
@@ -1454,7 +1478,8 @@ const testStoreProcedureService = async (request, fastify) => {
           (item) =>
             item.commentaryId === commentaryId &&
             item.ballType > 0 &&
-            item.currentInnings === commentaryData.currentInnings
+            item.currentInnings === commentaryData.currentInnings &&
+            item.teamId === strikeTeam.teamId
         )
         .sort((a, b) => b.commentaryBallByBallId - a.commentaryBallByBallId)[0];
       if (previousBall) {
@@ -1471,7 +1496,7 @@ const testStoreProcedureService = async (request, fastify) => {
             wicket: _wkt === true ? 1 : 0,
             total_wicket: strikeTeam.teamWicket,
           },
-          "/api/predictscore",
+          "/api/undoscore",
           fastify,
           request
         );
@@ -1490,17 +1515,6 @@ const testStoreProcedureService = async (request, fastify) => {
         );
       }
     }
-
-    if (commentaryTeams) {
-      commentaryTeams.forEach((team) => {
-        const index = global.tblCommentaryTeams.findIndex(
-          (item) =>
-            item.commentaryId === team.commentaryId &&
-            item.commentaryTeamId === team.commentaryTeamId
-        );
-        global.tblCommentaryTeams[index] = team;
-      });
-    }
     if (commentaryPlayers) {
       commentaryPlayers.forEach((player) => {
         const index = global.tblCommentaryPlayers.findIndex(
@@ -1508,11 +1522,21 @@ const testStoreProcedureService = async (request, fastify) => {
         );
         global.tblCommentaryPlayers[index] = player;
       });
+      // sendDataForSocketUpdate.dataToUpdate.push({
+      //   module: "commentaryPlayers",
+      //   type: "update",
+      //   data: commentaryPlayers,
+      // });
     }
     if (commentaryOvers) {
       if (updatedData.overDetails) {
         global.tblOvers.push(updatedData.overDetails);
         response.overdetails = updatedData.overDetails;
+        // sendDataForSocketUpdate.dataToUpdate.push({
+        //   module: "commentaryOvers",
+        //   type: "create",
+        //   data: response.overdetails,
+        // });
       } else {
         if (!deleteOverId) {
           overIndex !== -1
@@ -1525,6 +1549,11 @@ const testStoreProcedureService = async (request, fastify) => {
             : null;
         }
         response.overdetails = commentaryOvers;
+        // sendDataForSocketUpdate.dataToUpdate.push({
+        //   module: "commentaryOvers",
+        //   type: "update",
+        //   data: response.overdetails,
+        // });
       }
     }
     if (commentaryBallByBall) {
@@ -1534,6 +1563,13 @@ const testStoreProcedureService = async (request, fastify) => {
         );
         response.commentaryBallByBallDetails =
           updatedData.commentaryBallByBallDetails;
+
+        // sendDataForSocketUpdate.dataToUpdate.push({
+        //   module: "commentaryBallByBall",
+        //   type: "create",
+        //   data: response.commentaryBallByBallDetails,
+        // });
+
         // call the predictor market
         if (
           commentaryData.isPredictMarket &&
@@ -1585,15 +1621,30 @@ const testStoreProcedureService = async (request, fastify) => {
             : null;
         }
         response.commentaryBallByBallDetails = commentaryBallByBall;
+        // sendDataForSocketUpdate.dataToUpdate.push({
+        //   module: "commentaryBallByBall",
+        //   type: "update",
+        //   data: response.commentaryBallByBallDetails,
+        // });
       }
     }
     if (commentaryWicket) {
       if (updatedData.commentaryWicketDetails) {
         global.tblCommentaryWicket.push(updatedData.commentaryWicketDetails);
         response.commentaryWicketDetails = updatedData.commentaryWicketDetails;
+        // sendDataForSocketUpdate.dataToUpdate.push({
+        //   module: "commentaryWicket",
+        //   type: "create",
+        //   data: response.commentaryWicketDetails,
+        // });
       } else {
         global.tblCommentaryWicket[wicketIndex] = commentaryWicket;
         response.commentaryWicketDetails = commentaryWicket;
+        // sendDataForSocketUpdate.dataToUpdate.push({
+        //   module: "commentaryWicket",
+        //   type: "update",
+        //   data: response.commentaryWicketDetails,
+        // });
       }
     }
     if (commentaryPartnership) {
@@ -1603,17 +1654,37 @@ const testStoreProcedureService = async (request, fastify) => {
         );
         response.commentaryPartnershipDetails =
           updatedData.commentaryPartnershipDetails;
+        // sendDataForSocketUpdate.dataToUpdate.push({
+        //   module: "commentaryPartnership",
+        //   type: "create",
+        //   data: response.commentaryPartnershipDetails,
+        // });
       } else {
         global.tblCommentaryPartnership[partnershipIndex] =
           commentaryPartnership;
         response.commentaryPartnershipDetails = commentaryPartnership;
+        // sendDataForSocketUpdate.dataToUpdate.push({
+        //   module: "commentaryPartnership",
+        //   type: "update",
+        //   data: response.commentaryPartnershipDetails,
+        // });
       }
     }
     if (deleteCommentaryBallByBallId) {
       response.deleteCommentaryBallByBallId = true;
+      // sendDataForSocketUpdate.dataToUpdate.push({
+      //   module: "deleteCommentaryBallByBallId",
+      //   type: "delete",
+      //   data: deleteCommentaryBallByBallId,
+      // });
     }
     if (deleteOverId) {
       response.deleteOverId = true;
+      // sendDataForSocketUpdate.dataToUpdate.push({
+      //   module: "deleteOverId",
+      //   type: "delete",
+      //   data: deleteOverId,
+      // });
     }
     if (
       commentaryDetails &&
@@ -1672,9 +1743,11 @@ const testStoreProcedureService = async (request, fastify) => {
         fastify,
         "callFromSocket"
       );
-    }
 
-    // which i get from request i want to return only that object
+      // global.clientSocketIo.forEach((socket) => {
+      //   socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+      // });
+    }
     return response;
   } catch (error) {
     console.log(error);
@@ -3588,6 +3661,18 @@ const getMatchListByStatus = async (body, request, fastify) => {
       }
     }
 
+    //Tossteam Name
+    const TossTeamName = await global.tblCommentaryTeams.find(
+      (team) =>
+        team.commentaryId === item.commentaryId &&
+        team.teamId === item.tossWonBy &&
+        team.currentInnings === item.currentInnings
+    );
+    let toss = "";
+
+    if (item.choseTo) {
+      toss = item.choseTo === 1 ? "BAT" : "BOWL";
+    }
     let details = {
       rno: rno,
       eid: item.eventRefId || "",
@@ -3598,6 +3683,8 @@ const getMatchListByStatus = async (body, request, fastify) => {
       ed: convertDate(item.eventDate, "DD/MM/YYYY") || "",
       et: convertDate(item.eventDate, "hh:mm:ss") || "",
       utc: item.eventDate,
+      twonby: TossTeamName.teamName || null,
+      choseto: toss || null,
       te1n: commentaryTeamsOne.teamName || "",
       te2n: commentaryTeamsTwo.teamName || "",
       s1n: commentaryTeamsOne.shortName || "",
@@ -3619,6 +3706,7 @@ const getMatchListByStatus = async (body, request, fastify) => {
       crr: crr || 0,
       rrr: rrr || 0,
       cst: item.commentaryStatus,
+      res: item.result || "",
     };
 
     resultArr.push(details);
@@ -4047,112 +4135,120 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
     );
 
     const partnershipList = [];
+    try {
+      // Iterate over tblCommentaryPartnership
+      commentaryPartnership.forEach((partnership) => {
+        const {
+          batter1Id,
+          batter1Name,
+          batter2Id,
+          batter2Name,
+          totalRuns,
+          totalBalls,
+        } = partnership;
 
-    // Iterate over tblCommentaryPartnership
-    commentaryPartnership.forEach((partnership) => {
-      const {
-        batter1Id,
-        batter1Name,
-        batter2Id,
-        batter2Name,
-        totalRuns,
-        totalBalls,
-      } = partnership;
+        const CommenrtyPlayers = global.tblCommentaryPlayers.find(
+          (Cplayer) => Cplayer.commentaryPlayerId === batter1Id
+        );
 
-      const CommenrtyPlayers = global.tblCommentaryPlayers.find(
-        (Cplayer) => Cplayer.commentaryPlayerId === batter1Id
-      );
+        const CommenrtyPlayers1 = global.tblCommentaryPlayers.find(
+          (Cplayer) => Cplayer.commentaryPlayerId === batter2Id
+        );
 
-      const CommenrtyPlayers1 = global.tblCommentaryPlayers.find(
-        (Cplayer) => Cplayer.commentaryPlayerId === batter2Id
-      );
+        // Find player information from tblPlayers
+        const player1Info = global.tblPlayers.find(
+          (player) => player.playerId === CommenrtyPlayers.playerId
+        );
 
-      // Find player information from tblPlayers
-      const player1Info = global.tblPlayers.find(
-        (player) => player.playerId === CommenrtyPlayers.playerId
-      );
+        const player2Info = global.tblPlayers.find(
+          (player) => player.playerId === CommenrtyPlayers1.playerId
+        );
 
-      const player2Info = global.tblPlayers.find(
-        (player) => player.playerId === CommenrtyPlayers1.playerId
-      );
+        if (player1Info) {
+          partnershipList.push({
+            pl1n: batter1Name,
+            pl1i: player1Info.image,
+            runs: totalRuns,
+            ball: totalBalls,
+            pl2n: batter2Name,
+            pl2i: player2Info.image,
+            tid: partnership.teamId,
+            cci: partnership.currentInnings,
+          });
+        }
+      });
+      dataToreturn.par = partnershipList;
+    } catch (e) {
+      dataToreturn.par = partnershipList;
+    }
 
-      if (player1Info) {
-        partnershipList.push({
-          pl1n: batter1Name,
-          pl1i: player1Info.image,
-          runs: totalRuns,
-          ball: totalBalls,
-          pl2n: batter2Name,
-          pl2i: player2Info.image,
-          tid: partnership.teamId,
-          cci: partnership.currentInnings,
-        });
-      }
-    });
-    dataToreturn.par = partnershipList;
     let oversList = [];
 
-    overs.forEach((_over) => {
-      const {
-        overId,
-        over,
-        totalRun,
-        teamId,
-        bowlerId,
-        totalWicket,
-        teamScore,
-      } = _over;
-      let ballsList = [];
-
-      let _overBalls = commentryBallByBall.filter(
-        (item) => item.overId === overId
-      );
-
-      _overBalls.forEach((_b) => {
+    try {
+      overs.forEach((_over) => {
         const {
-          commentaryBallByBallId,
-          overCount,
-          batStrikeId,
-          batNonStrikeId,
-          ballType,
-          ballRun,
-          ballExtraRun,
-          ballIsBoundry,
-          ballIsWicket,
-        } = _b;
-        ballsList.push({
-          bid: commentaryBallByBallId,
-          ovc: overCount,
-          st: batStrikeId,
-          nst: batNonStrikeId,
-          bty: ballType,
-          runs: ballRun,
-          ext: ballExtraRun,
-          isB: ballIsBoundry,
-          wik: ballIsWicket,
+          overId,
+          over,
+          totalRun,
+          teamId,
+          bowlerId,
+          totalWicket,
+          teamScore,
+        } = _over;
+        let ballsList = [];
+
+        let _overBalls = commentryBallByBall.filter(
+          (item) => item.overId === overId
+        );
+
+        _overBalls.forEach((_b) => {
+          const {
+            commentaryBallByBallId,
+            overCount,
+            batStrikeId,
+            batNonStrikeId,
+            ballType,
+            ballRun,
+            ballExtraRun,
+            ballIsBoundry,
+            ballIsWicket,
+          } = _b;
+          ballsList.push({
+            bid: commentaryBallByBallId,
+            ovc: overCount,
+            st: batStrikeId,
+            nst: batNonStrikeId,
+            bty: ballType,
+            runs: ballRun,
+            ext: ballExtraRun,
+            isB: ballIsBoundry,
+            wik: ballIsWicket,
+          });
+
+          // descending order of balls
+          ballsList = ballsList.sort((a, b) => b.ovc - a.ovc);
         });
 
-        // descending order of balls
-        ballsList = ballsList.sort((a, b) => b.ovc - a.ovc);
+        oversList.push({
+          oid: overId,
+          ov: over + 1,
+          cin: currentInnings,
+          runs: totalRun,
+          bid: bowlerId,
+          tid: teamId,
+          twk: totalWicket,
+          ball: ballsList,
+          ts: teamScore,
+        });
       });
 
-      oversList.push({
-        oid: overId,
-        ov: over + 1,
-        cin: currentInnings,
-        runs: totalRun,
-        bid: bowlerId,
-        tid: teamId,
-        twk: totalWicket,
-        ball: ballsList,
-        ts: teamScore,
-      });
-    });
+      // descending order of overs
+      oversList = oversList.sort((a, b) => b.ov - a.ov);
 
-    // descending order of overs
-    oversList = oversList.sort((a, b) => b.ov - a.ov);
-
-    dataToreturn.ov = oversList;
+      dataToreturn.ov = oversList;
+    } catch (e) {
+      dataToreturn.ov = oversList;
+    }
 
     return dataToreturn;
   } catch (error) {
