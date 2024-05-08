@@ -150,6 +150,8 @@ const getAllPlayersByTeamIdQuery = async (teamId, fastify, request) => {
       `SELECT      
       "wrRefPlayerId" as "playerId",
       "wrPlayerName" as "playerName",
+      "wrBatsmanAverage" as "batsmanAverage",
+      "wrBatsmanStrikeRate" as "batsmanStrikeRate",
       "wrIsKipper" as "isKipper"     
       FROM "tblTeamPlayers" tp 
       left join "tblPlayers" pl on tp."wrRefPlayerId" = pl."wrPlayerId"

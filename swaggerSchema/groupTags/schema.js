@@ -2045,6 +2045,24 @@ const Commentary = {
       },
     },
   },
+  updateTeamPlayer: {
+    schema: {
+      tags: ["Commentary"],
+      description: "edit team players",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "array",
+        properties: {
+          commentaryId: { type: "integer" },
+          teamId: { type: "integer" },
+          playerId: { type: "integer" },
+          batsmanAverage: {type: "integer"},
+          batsmanStrikeRate: {type: "integer"}
+        },
+        required: ["commentaryId", "teamId", "playerId"],
+      },
+    },
+  },
   loadTeamPlayer: {
     schema: {
       tags: ["Commentary"],

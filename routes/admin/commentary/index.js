@@ -42,6 +42,7 @@ const {
   deleteCommentaryData,
   updateEventRefIdInCommentary,
   loadcommentaryapi,
+  updateTeamPlayer,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -426,6 +427,10 @@ module.exports = async (fastify, opts) => {
   fastify.post("/loadTeamPlayer", {
     schema: Commentary.loadTeamPlayer.schema,
     handler: (request, reply) => loadTeamPlayer(request, reply, fastify),
+  });
+  fastify.post("/updateTeamPlayer", {
+    schema: Commentary.updateTeamPlayer.schema,
+    handler: (request, reply) => updateTeamPlayer(request, reply, fastify),
   });
 
   fastify.post("/saveShortCommentary", {
