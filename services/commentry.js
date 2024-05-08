@@ -49,6 +49,7 @@ const {
   updateDelayInCommentaryQuery,
   deleteCommentaryDataQuery,
   updateEventRefIdInCommentaryQuery,
+  updateCommentaryPlayerById,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -1794,6 +1795,8 @@ const getTeamAndPlayerListService = async (request, fastify) => {
             teamId: curr.teamId,
             playerId: curr.playerId,
             playerName: curr.playerName,
+            batsmanAverage: curr.batsmanAverage,
+            batsmanStrikeRate: curr.batsmanStrikeRate,
             commentaryPlayerId: curr.commentaryPlayerId,
           });
         }
@@ -1955,6 +1958,63 @@ const loadTeamPlayerService = async (request, fastify) => {
   // get all players for this team
   let teamPlayers = await getAllPlayersByTeamIdQuery(teamId, fastify, request);
   return teamPlayers;
+};
+const updateTeamPlayerService = async (request, fastify) => {
+  const { body: playerDataArray } = request;
+
+  for (const playerData of playerDataArray) {
+  // validate commentaryId
+  const { teamId, commentaryId, playerId, batsmanStrikeRate, batsmanAverage } = playerData;
+  let commentary = global.tblCommentaries.find(
+    (item) => item.commentaryId === +commentaryId
+  );
+  if (!commentary) {
+    throw new Error("Commentary with this id not Found");
+  }
+  // validate teamId
+  let commentaryTeamIndex = global.tblCommentaryTeams.find(
+    (item) => item.commentaryId === +commentaryId && item.teamId === teamId
+  );
+  if (commentaryTeamIndex === -1) {
+    throw new Error("Team with this id not Found");
+  }
+  // validate playerId
+  let commentaryPlayerIndex = global.tblCommentaryPlayers.findIndex(
+    (item) => item.playerId === +playerId
+  );
+  if (commentaryPlayerIndex === -1) {
+    throw new Error("Commentary Player with this id not Found");
+  }
+
+  // update the player from commentaryPlayer
+  await updateCommentaryPlayerById(
+    {
+      commentaryId,
+      teamId,
+      playerId,
+      batsmanStrikeRate,
+      batsmanAverage
+    },
+    request,
+    fastify
+  );
+
+  let player = global.tblCommentaryPlayers.find(
+    (item) =>
+      (
+        item.commentaryId === +commentaryId &&
+        item.teamId === +teamId &&
+        item.playerId === +playerId
+      )
+  );
+  if (player) {
+    player.batsmanStrikeRate = batsmanStrikeRate;
+    player.batsmanAverage = batsmanAverage;
+  } else {
+    throw new Error("Player not found for update");
+  }
+}
+  return "Player updated successfully";
 };
 const saveShortCommentaryService = async (request, fastify) => {
   try {
@@ -5630,6 +5690,7 @@ module.exports = {
   addTeamPlayerService,
   deleteTeamPlayerService,
   loadTeamPlayerService,
+  updateTeamPlayerService,
   saveShortCommentaryService,
   updateCommentaryStatusService,
   updateisPredictMarketInCommentaryService,

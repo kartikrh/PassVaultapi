@@ -487,6 +487,32 @@ const deleteCommentaryPlayerById = async (data, request, fastify) => {
   }
 };
 
+const updateCommentaryPlayerById = async (data, request, fastify) => {
+  try {
+    // update commentary player by id
+    return await fastify.db.query(
+      `update "tblCommentaryPlayers"
+      set "wrBatsmanAverage" = $1, 
+      "wrBatsmanStrikeRate" = $2
+      where "wrPlayerId" = $3
+      AND "wrCommentaryId" = $4
+      AND "wrTeamId" = $5`,
+      {
+        type: fastify.db.QueryTypes.DELETE,
+        bind: [data.batsmanAverage, data.batsmanStrikeRate, data.playerId, data.commentaryId, data.teamId],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/updateCommentaryPlayerById",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 const getCommentaryByIdQuery = async (request, fastify) => {
   try {
     const { commentaryId } = request.body;
@@ -2659,6 +2685,7 @@ module.exports = {
   updateShowClientQuery,
   updatePlayerShowQuery,
   deleteCommentaryPlayerById,
+  updateCommentaryPlayerById,
   updateCommentaryStatusQuery,
   updateisPredictMarketInCommentaryQuery,
   saveCommentaryDetailsAPIQuery,
