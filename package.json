@@ -48,7 +48,8 @@
     "socket.io-client": "^4.7.5",
     "ua-parser-js": "^1.0.35",
     "uuid": "^9.0.0",
-    "v8-profiler-node8": "^6.4.0"
+    "v8-profiler-node8": "^6.4.0",
+    "ws": "^8.17.0"
   },
   "devDependencies": {
     "tap": "^16.1.0"
