@@ -74,7 +74,7 @@ const insertBannerQuery = async (data, request, fastify) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableEvent/insertBannerQuery",
+      "DB ERROR --> repository/TableBanner/insertBannerQuery",
       request
     );
     throw new Error(err.message);
@@ -118,7 +118,7 @@ const updateBannerQuery = async (data, request, fastify) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableEvent/updateBannerQuery",
+      "DB ERROR --> repository/TableBanner/updateBannerQuery",
       request
     );
     throw new Error(err.message);
@@ -139,7 +139,7 @@ const deleteBannerQuery = async (data, request, fastify) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableEvent/deleteBannerQuery",
+      "DB ERROR --> repository/TableBanner/deleteBannerQuery",
       request
     );
     throw new Error(err.message);
@@ -161,16 +161,39 @@ const activeInactiveBannerQuery = async (data, request, fastify) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableEvent/activeInactiveBannerQuery",
+      "DB ERROR --> repository/TableBanner/activeInactiveBannerQuery",
       request
     );
     throw new Error(err.message);
   }
 };
+const bannerViewersCountQuery = async (data, request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `
+                update "tblBanner" set
+                "wrViewerCount" = COALESCE("wrViewerCount", 0) + 1
+                where "wrId" = $1
+            `,
+      {
+        bind: [data.refId],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableBanner/bannerViewersCountQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+}
 module.exports = {
   insertBannerQuery,
   updateBannerQuery,
   deleteBannerQuery,
   getAllBannerQuery,
   activeInactiveBannerQuery,
+  bannerViewersCountQuery
 };
