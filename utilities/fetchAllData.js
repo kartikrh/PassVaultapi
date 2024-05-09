@@ -54,7 +54,8 @@ const { allDisplayStatusesQuery } = require("../repository/TableDisplayStatus");
 const { getAllClientSocketQuery } = require("../repository/TableClientSocket");
 const { getAllBannerQuery } = require("../repository/TableBanner");
 const { getAllActivityLogQuery } = require("../repository/TableActivityLog");
-
+const {getAllAPI} = require("../repository/TableApi");
+const {getAllAPIEndPoint} = require("../repository/TableApiEndPoint");
 const fetchAllDataFromDb = async (fastify, reply) => {
   try {
     const getAllTabs = await getAllActiveInactiveTabsQuery(fastify);
@@ -111,6 +112,8 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const getAllVendors = await getAllVendorsQuery(fastify);
     const getAllVendorIps = await getAllVendorIpsQuery(fastify);
     const getAllClientSocket = await getAllClientSocketQuery(fastify);
+    const getAllAPIs = await getAllAPI(fastify);
+    const getAllAPIEndpoints = await getAllAPIEndPoint(fastify);
     global.tblTabs = getAllTabs;
     global.tblRoles = getAllRoles;
     global.tblBlocks = getAllBlocks;
@@ -153,6 +156,8 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblClientSocket = getAllClientSocket;
     global.tblActivityLogs = getAllActivityLog;
     global.tblBanner = getAllBanners;
+    global.tblAPIs = getAllAPIs;
+    global.tblAPIEndpoints = getAllAPIEndpoints;
 
     console.log("Okkkk");
 
