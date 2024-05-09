@@ -81,7 +81,9 @@ const setShortCommenrty = (eventId) => {
   );
 
   if (!commentary) {
-    throw new Error("Commentary with this id not Found");
+    // throw new Error("Commentary with this id not Found");
+    console.error("Commentary with this id not Found");
+    return null;
   }
 
   const commentaryTeamsOne = global.tblCommentaryTeams.find(
