@@ -2045,6 +2045,24 @@ const Commentary = {
       },
     },
   },
+  updateTeamPlayer: {
+    schema: {
+      tags: ["Commentary"],
+      description: "edit team players",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "array",
+        properties: {
+          commentaryId: { type: "integer" },
+          teamId: { type: "integer" },
+          playerId: { type: "integer" },
+          batsmanAverage: {type: "integer"},
+          batsmanStrikeRate: {type: "integer"}
+        },
+        required: ["commentaryId", "teamId", "playerId"],
+      },
+    },
+  },
   loadTeamPlayer: {
     schema: {
       tags: ["Commentary"],
@@ -4098,6 +4116,166 @@ const Banner = {
     },
   },
 };
+const ApiEndpoints = {
+  getAll: {
+    schema: {
+      tags: ["ApiEndpoints"],
+      description: "get all ApiEndpoints",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+  getById: {
+    schema: {
+      tags: ["ApiEndpoints"],
+      description: "get ApiEndpoints by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          apiEndPointId: { type: "integer" },
+        },
+        required: ["apiEndPointId"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["ApiEndpoints"],
+      description: "delete ApiEndpoints",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          apiEndPointId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["apiEndPointId"],
+      },
+    },
+  },
+  save: {
+    schema: {
+      tags: ["ApiEndpoints"],
+      description: "save ApiEndpoints",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          apiEndPointId: { type: "integer" },
+          serviceType: { type: "integer" },
+          endPoint: { type: "string" },
+          moduleType: { type: "integer" },
+          timeOut: {type: "integer"},
+          isActive: {type: "boolean"}
+        },
+        required: ["apiEndPointId"],
+      },
+    },
+  },
+  activeInactiveApiEndpoints: {
+    schema: {
+      tags: ["ApiEndpoints"],
+      description: "active inactive ApiEndpoints",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          apiEndPointId: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["apiEndPointId", "isActive"],
+      },
+    },
+  },
+};
+const Api = {
+  getAll: {
+    schema: {
+      tags: ["Api"],
+      description: "get all Api",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+  getById: {
+    schema: {
+      tags: ["Api"],
+      description: "get Api by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          apiId: { type: "integer" },
+        },
+        required: ["apiId"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["Api"],
+      description: "delete Api",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          apiId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["apiId"],
+      },
+    },
+  },
+  save: {
+    schema: {
+      tags: ["Api"],
+      description: "save Api",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          apiId: { type: "integer" },
+          type: { type: "integer" },
+          api: { type: "string" },
+          isActive: {type: "boolean"}
+        },
+        required: ["apiId"],
+      },
+    },
+  },
+  activeInactiveApi: {
+    schema: {
+      tags: ["Api"],
+      description: "active inactive Api",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          apiId: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["apiId", "isActive"],
+      },
+    },
+  },
+};
 module.exports = {
   Auth,
   Tabs,
@@ -4133,4 +4311,6 @@ module.exports = {
   ClientSocket,
   ActivityLog,
   Banner,
+  ApiEndpoints,
+  Api
 };

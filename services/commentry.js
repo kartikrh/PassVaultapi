@@ -1,3 +1,4 @@
+const WebSocket = require("ws");
 const {
   insertCommentaryQuery,
   insertCommentaryTeams,
@@ -49,6 +50,7 @@ const {
   updateDelayInCommentaryQuery,
   deleteCommentaryDataQuery,
   updateEventRefIdInCommentaryQuery,
+  updateCommentaryPlayerById,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -1748,11 +1750,92 @@ const testStoreProcedureService = async (request, fastify) => {
       //   socket.client.emit("updateFullscore", sendDataForSocketUpdate);
       // });
     }
+
+    if (global.wss) {
+      let res = {};
+      res.eventname = "ShortScore";
+      res.connectionID = "";
+      let _ShortCommentry = setShortCommenrty(commentaryData.eventRefId);
+      _ShortCommentry = JSON.stringify(_ShortCommentry);
+      res.data = _ShortCommentry;
+      // Iterate over all connected clients and send the update
+      global.wss.clients.forEach(function each(client) {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify(res));
+        }
+      });
+    }
     return response;
   } catch (error) {
     console.log(error);
     throw error;
   }
+};
+
+const setShortCommenrty = (eventId) => {
+  const commentary = global.tblCommentaries.find(
+    (item) => item.eventRefId === eventId
+  );
+
+  if (!commentary) {
+    throw new Error("Commentary with this id not Found");
+  }
+
+  const commentaryTeamsOne = global.tblCommentaryTeams.find(
+    (item) =>
+      item.commentaryId === commentary.commentaryId &&
+      item.teamId === commentary.team1Id &&
+      item.currentInnings === commentary.currentInnings
+  );
+
+  const commentaryTeamsTwo = global.tblCommentaryTeams.find(
+    (item) =>
+      item.commentaryId === commentary.commentaryId &&
+      item.teamId === commentary.team2Id &&
+      item.currentInnings === commentary.currentInnings
+  );
+
+  let teamScore1, teamScore2, t1sn, t1n, t2sn, t2n;
+  if (commentaryTeamsOne) {
+    t1sn = commentaryTeamsTwo.shortName;
+    t1n = commentaryTeamsTwo.teamName;
+    const wicket1 =
+      commentaryTeamsOne.teamWicket === null
+        ? 0
+        : commentaryTeamsOne.teamWicket;
+    const overs1 =
+      commentaryTeamsOne.teamOver === null ? 0.0 : commentaryTeamsOne.teamOver;
+    teamScore1 = commentaryTeamsOne?.teamScore ?? 0;
+    teamScore1 = teamScore1 + "/" + wicket1 + "(" + overs1 + ")";
+  }
+
+  if (commentaryTeamsTwo) {
+    t2sn = commentaryTeamsTwo.shortName;
+    t2n = commentaryTeamsTwo.teamName;
+    const wicket1 =
+      commentaryTeamsTwo.teamWicket === null
+        ? 0
+        : commentaryTeamsTwo.teamWicket;
+    const overs1 =
+      commentaryTeamsTwo.teamOver === null ? 0.0 : commentaryTeamsTwo.teamOver;
+    teamScore2 = commentaryTeamsTwo?.teamScore ?? 0;
+    teamScore2 = teamScore2 + "/" + wicket1 + "(" + overs1 + ")";
+  }
+  let es = {
+    eti: parseInt(commentary.eventTypeId) || "",
+    eid: commentary.eventRefId || "",
+    en: commentary.eventName || "",
+    te1n: t1n || "",
+    te2n: t2n || "",
+    t1s: teamScore1 || "",
+    t2s: teamScore2 || "",
+    pt: 0,
+    t1set: null,
+    t2set: null,
+    t1p: null,
+    t2p: null,
+  };
+  return es;
 };
 const getTeamAndPlayerListService = async (request, fastify) => {
   // get commentary details
@@ -1794,6 +1877,8 @@ const getTeamAndPlayerListService = async (request, fastify) => {
             teamId: curr.teamId,
             playerId: curr.playerId,
             playerName: curr.playerName,
+            batsmanAverage: curr.batsmanAverage,
+            batsmanStrikeRate: curr.batsmanStrikeRate,
             commentaryPlayerId: curr.commentaryPlayerId,
           });
         }
@@ -1956,6 +2041,63 @@ const loadTeamPlayerService = async (request, fastify) => {
   let teamPlayers = await getAllPlayersByTeamIdQuery(teamId, fastify, request);
   return teamPlayers;
 };
+const updateTeamPlayerService = async (request, fastify) => {
+  const { body: playerDataArray } = request;
+
+  for (const playerData of playerDataArray) {
+  // validate commentaryId
+  const { teamId, commentaryId, playerId, batsmanStrikeRate, batsmanAverage } = playerData;
+  let commentary = global.tblCommentaries.find(
+    (item) => item.commentaryId === +commentaryId
+  );
+  if (!commentary) {
+    throw new Error("Commentary with this id not Found");
+  }
+  // validate teamId
+  let commentaryTeamIndex = global.tblCommentaryTeams.find(
+    (item) => item.commentaryId === +commentaryId && item.teamId === teamId
+  );
+  if (commentaryTeamIndex === -1) {
+    throw new Error("Team with this id not Found");
+  }
+  // validate playerId
+  let commentaryPlayerIndex = global.tblCommentaryPlayers.findIndex(
+    (item) => item.playerId === +playerId
+  );
+  if (commentaryPlayerIndex === -1) {
+    throw new Error("Commentary Player with this id not Found");
+  }
+
+  // update the player from commentaryPlayer
+  await updateCommentaryPlayerById(
+    {
+      commentaryId,
+      teamId,
+      playerId,
+      batsmanStrikeRate,
+      batsmanAverage
+    },
+    request,
+    fastify
+  );
+
+  let player = global.tblCommentaryPlayers.find(
+    (item) =>
+      (
+        item.commentaryId === +commentaryId &&
+        item.teamId === +teamId &&
+        item.playerId === +playerId
+      )
+  );
+  if (player) {
+    player.batsmanStrikeRate = batsmanStrikeRate;
+    player.batsmanAverage = batsmanAverage;
+  } else {
+    throw new Error("Player not found for update");
+  }
+}
+  return "Player updated successfully";
+};
 const saveShortCommentaryService = async (request, fastify) => {
   try {
     // const { commentaryDetails, ...rest } = request.body;
@@ -2049,6 +2191,26 @@ const updateCommentaryStatusService = async (request, fastify) => {
     ...global.tblCommentaries[index],
     ...commentaryDetails,
   };
+
+  if (
+    global?.clientSocketIo !== undefined &&
+    global?.clientSocketIo.length > 0
+  ) {
+    commentaryDetailsByEventIdService(
+      {
+        ...request,
+        body: {
+          eventId: global.tblCommentaries[index].eventRefId,
+        },
+      },
+      fastify,
+      "callFromSocket"
+    );
+
+    // global.clientSocketIo.forEach((socket) => {
+    //   socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+    // });
+  }
 
   // Return the updated commentary details
   return {
@@ -5630,6 +5792,7 @@ module.exports = {
   addTeamPlayerService,
   deleteTeamPlayerService,
   loadTeamPlayerService,
+  updateTeamPlayerService,
   saveShortCommentaryService,
   updateCommentaryStatusService,
   updateisPredictMarketInCommentaryService,

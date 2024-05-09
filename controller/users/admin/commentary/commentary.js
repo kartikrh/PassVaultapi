@@ -44,6 +44,7 @@ const {
   deleteCommentaryDataService,
   updateEventRefIdInCommentaryService,
   loadcommentaryService,
+  updateTeamPlayerService,
 } = require("../../../../services/commentry");
 const { getAllCommentariesDataService } = require("../../../../services/score");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
@@ -140,7 +141,7 @@ const deleteCommentary = async (request, reply, fastify) => {
 };
 const saveCommentaryDetails = async (request, reply, fastify) => {
   try {
-    //console.time("saveCommentaryDetails");
+    console.log("saveCommentaryDetails");
     const result = await testStoreProcedureService(request, fastify);
     // const result = await saveCommentaryDetailsService(request, fastify);
     //console.timeEnd("saveCommentaryDetails");
@@ -489,6 +490,15 @@ const loadTeamPlayer = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const updateTeamPlayer = async (request, reply, fastify) => {
+  try {
+    const result = await updateTeamPlayerService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/updateTeamPlayer", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+}; 
 const saveShortCommentary = async (request, reply, fastify) => {
   try {
     const result = await saveShortCommentaryService(request, fastify);
@@ -680,6 +690,7 @@ module.exports = {
   addTeamPlayer,
   deleteTeamPlayer,
   loadTeamPlayer,
+  updateTeamPlayer,
   saveShortCommentary,
   updateCommentaryStatus,
   updateisPredictMarketInCommentary,
