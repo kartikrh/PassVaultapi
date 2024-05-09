@@ -14,13 +14,23 @@ const { responseLogger, responseLogInDB } = require("./utilities/logger");
 const fastifyMultipart = require("@fastify/multipart");
 const fastifyStatic = require("@fastify/static");
 const { generateToken } = require("./utilities/tokenization");
-const { isJson, getMessage, getTitle, ERROR_CODES, error } = require("./utilities");
+const {
+  isJson,
+  getMessage,
+  getTitle,
+  ERROR_CODES,
+  error,
+} = require("./utilities");
 const Sentry = require("@sentry/node");
 const { instrument } = require("@socket.io/admin-ui");
 const bcrypt = require("bcrypt");
 const Tracing = require("@sentry/tracing");
 const { connectClients, disconnectClients } = require("./sockets");
-const { disConnectClientSocketQuery } = require("./repository/TableClientSocket");
+const {
+  disConnectClientSocketQuery,
+} = require("./repository/TableClientSocket");
+const WebSocket = require("ws");
+const WebsocketConnection = require("./websocket");
 
 // Pass --options via CLI arguments in command to enable these options.
 module.exports.options = {};
@@ -34,13 +44,13 @@ if (process.env.ENABLE_SENTRY === "TRUE") {
 }
 
 process.on("uncaughtException", (err) => {
-  console.error('Uncaught Exception occurred:', err);
+  console.error("Uncaught Exception occurred:", err);
   // Log additional diagnostic information
-  console.log('Stack Trace:', err.stack);
-  console.log('Resource usage metrics:', process.resourceUsage());
-  console.log('Memory usage:', process.memoryUsage());
+  console.log("Stack Trace:", err.stack);
+  console.log("Resource usage metrics:", process.resourceUsage());
+  console.log("Memory usage:", process.memoryUsage());
   // get cpu usage
-  console.log('CPU usage:', process.cpuUsage());
+  console.log("CPU usage:", process.cpuUsage());
   if (process.env.ENABLE_SENTRY === "TRUE") {
     Sentry.captureException(err);
   }
@@ -48,12 +58,13 @@ process.on("uncaughtException", (err) => {
 });
 
 module.exports = async function (fastify, opts) {
-  
+  const wss = new WebSocket.Server({ noServer: true });
+
   process.stdin.resume(); // so the program will not close instantly
   process.on("SIGTERM", async () => {
     console.log("Received SIGTERM signal");
     await disConnectClientSocketQuery(fastify);
-    console.log('Cleanup task executed successfully');
+    console.log("Cleanup task executed successfully");
     process.exit();
   });
   fastify
@@ -113,6 +124,7 @@ module.exports = async function (fastify, opts) {
         await featchData(fastify);
         await disConnectClientSocketQuery(fastify);
         connectClients(fastify);
+        //WebsocketConnection(fastify);
         disconnectClients(fastify);
       } catch (error) {
         console.log("error sync with db", error);
@@ -127,15 +139,15 @@ module.exports = async function (fastify, opts) {
       fileSize: 10 * 1024 * 1024,
     },
   });
-  fastify.addHook('preClose', async () => {
-    console.log('preClose hook executed');
+  fastify.addHook("preClose", async () => {
+    console.log("preClose hook executed");
     try {
       await disConnectClientSocketQuery(fastify);
-      console.log('Cleanup task executed successfully');
+      console.log("Cleanup task executed successfully");
     } catch (error) {
-      console.error('Error during preClose hook execution:', error);
+      console.error("Error during preClose hook execution:", error);
     }
-  }); 
+  });
   fastify.register(require("@fastify/compress"), {
     global: false,
   });
@@ -170,15 +182,15 @@ module.exports = async function (fastify, opts) {
     request.startTime = process.hrtime.bigint();
     request.startTimeTimeStemp = new Date();
     if (request.originalUrl.includes("/commentary/saveDetails")) {
-        // request.endTimeTimeStemp = new Date();
-        // new Promise((resolve, reject) => {
-        //   resolve(responseLogInDB(request, fastify));
-        // }).then ((res) => {
-        //   // console.log('res', res);
-        //   request.errId = res[0].errId;
-        // });
-        let result = await responseLogInDB(request, fastify);
-        request.errId = result[0].errId;
+      // request.endTimeTimeStemp = new Date();
+      // new Promise((resolve, reject) => {
+      //   resolve(responseLogInDB(request, fastify));
+      // }).then ((res) => {
+      //   // console.log('res', res);
+      //   request.errId = res[0].errId;
+      // });
+      let result = await responseLogInDB(request, fastify);
+      request.errId = result[0].errId;
     }
 
     if (process.env.ENABLE_SENTRY === "TRUE") {
@@ -313,8 +325,12 @@ module.exports = async function (fastify, opts) {
   //  socket.io
   const io = new Server(fastify.server, {
     cors: {
-      origin: ["https://admin.socket.io", "https://panel.deployed.live", "http://localhost:3001",
-    "https://uatpanel.deployed.live"],
+      origin: [
+        "https://admin.socket.io",
+        "https://panel.deployed.live",
+        "http://localhost:3001",
+        "https://uatpanel.deployed.live",
+      ],
       credentials: true,
     },
   });
@@ -324,7 +340,7 @@ module.exports = async function (fastify, opts) {
       type: "basic",
       username: process.env.SOCKET_ADMIN_USERNAME,
       password: bcrypt.hashSync(process.env.SOCKET_ADMIN_PASSWORD, 10),
-    }
+    },
   });
 
   // //Assign socketIo to global variable
@@ -332,6 +348,22 @@ module.exports = async function (fastify, opts) {
 
   io.use(socketMiddleware);
   io.on("connection", connection);
+
+  fastify.server.on("upgrade", (request, socket, head) => {
+    if (request.url === "/ws") {
+      wss.handleUpgrade(request, socket, head, (ws) => {
+        wss.emit("connection", ws, request);
+      });
+    }
+  });
+
+  // Define your WebSocket connection handling
+  wss.on("connection", (ws, req) => {
+    // Handle WebSocket connections here
+    // You can pass the Fastify instance to your WebSocket connection handling function
+    global.wss = wss;
+    WebsocketConnection(fastify, ws, req);
+  });
 
   // connect the as a client to the socket.io admin
   // fastify.register(AutoLoad, {
@@ -365,8 +397,10 @@ module.exports = async function (fastify, opts) {
     if (process.env.ENABLE_SENTRY === "TRUE") {
       Sentry.captureException(err);
     }
-    if (err.statusCode = 400) {
-      reply.status(400).send(error(err.message, ERROR_CODES.INVALID_INPUT, 400));
+    if ((err.statusCode = 400)) {
+      reply
+        .status(400)
+        .send(error(err.message, ERROR_CODES.INVALID_INPUT, 400));
     }
     reply.status(500).send({ error: "Internal Server Error" });
   });
