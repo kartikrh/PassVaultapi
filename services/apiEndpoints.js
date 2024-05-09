@@ -3,7 +3,7 @@ const {
   insertApiEndPointQuery,
   updateApiEndPointQuery,
   activeInactiveApiEndPointQuery,
-} = require("../repository/TableApiEndPoint");
+} = require("../repository/TableAPIEndPoint");
 
 const getAllApiEndpointsService = async (request, fastify) => {
   return global.tblAPIEndpoints;
