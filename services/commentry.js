@@ -2192,6 +2192,26 @@ const updateCommentaryStatusService = async (request, fastify) => {
     ...commentaryDetails,
   };
 
+  if (
+    global?.clientSocketIo !== undefined &&
+    global?.clientSocketIo.length > 0
+  ) {
+    commentaryDetailsByEventIdService(
+      {
+        ...request,
+        body: {
+          eventId: global.tblCommentaries[index].eventRefId,
+        },
+      },
+      fastify,
+      "callFromSocket"
+    );
+
+    // global.clientSocketIo.forEach((socket) => {
+    //   socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+    // });
+  }
+
   // Return the updated commentary details
   return {
     name: "commentaryDetails",
