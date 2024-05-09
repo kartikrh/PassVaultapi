@@ -4116,6 +4116,87 @@ const Banner = {
     },
   },
 };
+const ApiEndpoints = {
+  getAll: {
+    schema: {
+      tags: ["ApiEndpoints"],
+      description: "get all ApiEndpoints",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+  getById: {
+    schema: {
+      tags: ["ApiEndpoints"],
+      description: "get ApiEndpoints by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          apiEndPointId: { type: "integer" },
+        },
+        required: ["apiEndPointId"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["ApiEndpoints"],
+      description: "delete ApiEndpoints",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          apiEndPointId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["apiEndPointId"],
+      },
+    },
+  },
+  save: {
+    schema: {
+      tags: ["ApiEndpoints"],
+      description: "save ApiEndpoints",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          apiEndPointId: { type: "integer" },
+          serviceType: { type: "integer" },
+          endPoint: { type: "string" },
+          moduleType: { type: "integer" },
+          timeOut: {type: "integer"},
+          isActive: {type: "boolean"}
+        },
+        required: ["apiEndPointId"],
+      },
+    },
+  },
+  activeInactiveApiEndpoints: {
+    schema: {
+      tags: ["ApiEndpoints"],
+      description: "active inactive ApiEndpoints",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          apiEndPointId: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["apiEndPointId", "isActive"],
+      },
+    },
+  },
+};
 module.exports = {
   Auth,
   Tabs,
@@ -4151,4 +4232,5 @@ module.exports = {
   ClientSocket,
   ActivityLog,
   Banner,
+  ApiEndpoints
 };
