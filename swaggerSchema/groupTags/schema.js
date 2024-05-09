@@ -4197,6 +4197,85 @@ const ApiEndpoints = {
     },
   },
 };
+const Api = {
+  getAll: {
+    schema: {
+      tags: ["Api"],
+      description: "get all Api",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+  getById: {
+    schema: {
+      tags: ["Api"],
+      description: "get Api by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          apiId: { type: "integer" },
+        },
+        required: ["apiId"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["Api"],
+      description: "delete Api",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          apiId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["apiId"],
+      },
+    },
+  },
+  save: {
+    schema: {
+      tags: ["Api"],
+      description: "save Api",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          apiId: { type: "integer" },
+          type: { type: "integer" },
+          api: { type: "string" },
+          isActive: {type: "boolean"}
+        },
+        required: ["apiId"],
+      },
+    },
+  },
+  activeInactiveApi: {
+    schema: {
+      tags: ["Api"],
+      description: "active inactive Api",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          apiId: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["apiId", "isActive"],
+      },
+    },
+  },
+};
 module.exports = {
   Auth,
   Tabs,
@@ -4232,5 +4311,6 @@ module.exports = {
   ClientSocket,
   ActivityLog,
   Banner,
-  ApiEndpoints
+  ApiEndpoints,
+  Api
 };
