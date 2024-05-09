@@ -54,8 +54,8 @@ const { allDisplayStatusesQuery } = require("../repository/TableDisplayStatus");
 const { getAllClientSocketQuery } = require("../repository/TableClientSocket");
 const { getAllBannerQuery } = require("../repository/TableBanner");
 const { getAllActivityLogQuery } = require("../repository/TableActivityLog");
-const {getAllAPI} = require("../repository/TableApi");
-const {getAllAPIEndPoint} = require("../repository/TableApiEndPoint");
+const {getAllAPI} = require("../repository/TableAPI");
+const {getAllAPIEndPoint} = require("../repository/TableAPIEndPoint");
 const fetchAllDataFromDb = async (fastify, reply) => {
   try {
     const getAllTabs = await getAllActiveInactiveTabsQuery(fastify);
