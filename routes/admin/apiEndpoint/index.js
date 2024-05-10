@@ -18,7 +18,7 @@ module.exports = async (fastify, opts) => {
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
         checkPermission(request, reply, fastify, {
-          tabName: "ApiEndpoints",
+          tabName: "API Endpoints",
           mode: "view",
         }),
     ],
@@ -31,7 +31,7 @@ module.exports = async (fastify, opts) => {
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
         checkPermission(request, reply, fastify, {
-          tabName: "ApiEndpoints",
+          tabName: "API Endpoints",
           mode: "view",
         }),
     ],
@@ -44,7 +44,7 @@ module.exports = async (fastify, opts) => {
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
         checkPermission(request, reply, fastify, {
-          tabName: "ApiEndpoints",
+          tabName: "API Endpoints",
           mode: request.body.ApiEndpointsId === 0 ? "add" : "edit",
         }),
     ],
@@ -57,7 +57,7 @@ module.exports = async (fastify, opts) => {
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
         checkPermission(request, reply, fastify, {
-          tabName: "ApiEndpoints",
+          tabName: "API Endpoints",
           mode: "delete",
         }),
     ],
@@ -70,7 +70,7 @@ module.exports = async (fastify, opts) => {
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
         checkPermission(request, reply, fastify, {
-          tabName: "ApiEndpoints",
+          tabName: "API Endpoints",
           mode: "edit",
         }),
     ],
