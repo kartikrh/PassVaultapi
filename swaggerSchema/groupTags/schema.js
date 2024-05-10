@@ -1964,6 +1964,20 @@ const Commentary = {
       },
     },
   },
+  getPredictorlogsById: {
+    schema: {
+      tags: ["Commentary"],
+      description: "get Predictor Logs by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+        },
+        required: ["commentaryId"],
+      },
+    },
+  },
   getDetailsByCId: {
     schema: {
       tags: ["Commentary"],
