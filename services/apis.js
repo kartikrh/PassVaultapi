@@ -6,7 +6,11 @@ const {
 } = require("../repository/TableAPI");
 
 const getAllApisService = async (request, fastify) => {
-  return global.tblAPIs;
+  const { isActive } = request.body;
+  if (isActive == undefined) {
+    return global.tblAPIs;
+  }
+  return global.tblAPIs.filter((item) => item.isActive === isActive);
 };
 
 const ApiByIdService = async (request, fastify) => {
