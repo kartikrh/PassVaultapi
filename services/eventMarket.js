@@ -448,12 +448,6 @@ const updateMarketRateService = async (request, fastify) => {
   }
   let updatedOvers = [];
   for (let item of eventMarket) {
-    // let eventMarket = global.tblEventMarkets.find(
-    //   (e) => e.eventMarketId === item.eventMarketId
-    // );
-    // if (!eventMarket) {
-    //   throw new Error("EventMarket with this id not Found");
-    // }
     let eventMarket = await getEventMarketByIdsQuery(
       {
         eventMarketIds: [item.eventMarketId],
@@ -466,10 +460,18 @@ const updateMarketRateService = async (request, fastify) => {
     let data = await updateEventMarketRateQuery(item, request, fastify);
     // console.log(data);
     let diff = data.line - eventMarket.line;
+    let is_onlyover = 0;
+    let category = global.tblMarketTypeCategories.find(
+      (item) => item.marketTypeCategoryId == data.marketTypeCategoryId
+    );
+    if(category && category.categoryName === "Only Over"){
+      is_onlyover = 1;
+    }
     updatedOvers.push({
       over: item.over,
       value: diff,
-      line_ratio : data.lineRatio
+      line_ratio : data.lineRatio,
+      is_onlyover : is_onlyover
     });
     let index = global.tblEventMarkets.findIndex(
       (e) => e.eventMarketId === item.eventMarketId
@@ -481,8 +483,6 @@ const updateMarketRateService = async (request, fastify) => {
       global.tblEventMarkets.push(data);
     }
 
-    // get the marketType category
-    
     marketDataLogger(
       {
           eventMarketId: data.eventMarketId,
@@ -495,11 +495,6 @@ const updateMarketRateService = async (request, fastify) => {
       fastify
     );
 
-    // global.tblEventMarkets[
-    //   global.tblEventMarkets.findIndex(
-    //     (e) => e.eventMarketId === item.eventMarketId
-    //   )
-    // ] = data;
   }
 
   const teamOnStrike = global.tblCommentaryTeams.find(
@@ -510,11 +505,6 @@ const updateMarketRateService = async (request, fastify) => {
   );
 
   if(teamOnStrike){
-    let is_onlyover  = false;
-    const category = global.tblMarketTypeCategories.find((item) => item.marketTypeCategoryId == data.marketTypeCategoryId);
-    if(category && category.categoryName === "Only Over"){
-      is_onlyover = true;
-    }
     callPredictorMarket(
       {
         commentary_id: commentary.commentaryId,
@@ -522,8 +512,7 @@ const updateMarketRateService = async (request, fastify) => {
         strike_team_id: teamOnStrike.teamId,
         current_score: teamOnStrike.teamScore,
         current_over: parseFloat(teamOnStrike.teamOver),
-        overs: updatedOvers,
-        is_onlyover : is_onlyover
+        overs: updatedOvers
       },
       "/api/updateline",
       fastify,
