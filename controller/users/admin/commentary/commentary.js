@@ -45,6 +45,7 @@ const {
   updateEventRefIdInCommentaryService,
   loadcommentaryService,
   updateTeamPlayerService,
+  predictorLogsByIdService,
 } = require("../../../../services/commentry");
 const { getAllCommentariesDataService } = require("../../../../services/score");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
@@ -85,6 +86,15 @@ const getCommentaryDetailsById = async (request, reply, fastify) => {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, path + "/getCommentaryById", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const getPredictorLogsById = async (request, reply, fastify) => {
+  try {
+    const result = await predictorLogsByIdService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/getPredictorLogsById", request);
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
@@ -664,6 +674,7 @@ module.exports = {
   deleteCommentary,
   getAllDisplayStatus,
   getCommentaryDetailsById,
+  getPredictorLogsById,
   saveCommentaryDetails,
   cloneCommentary,
   deleteBallByBallCommentary,

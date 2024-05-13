@@ -649,6 +649,34 @@ const getCommentaryPlayersQuery = async (data, fastify, request) => {
   }
 };
 
+const getPredictorLogsQuery = async (data, fastify, request) => {
+  try {
+    const { commentaryId } = data;
+
+    const result = await fastify.db.query(
+      `
+      select * from "tblPredictorAPILogs"
+      where "wrRequestBody" ->> 'commentary_id' = $1
+      order by "wrId" desc
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [commentaryId],
+      }
+    );
+
+    return result;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/getPredictorLogsQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 const deleteCommentryQuery = async (commentaryId, request, fastify) => {
   try {
     return await fastify.db.query(
@@ -2653,6 +2681,7 @@ module.exports = {
   getCommentaryByIdQuery,
   getCommentaryTeamsQuery,
   getCommentaryPlayersQuery,
+  getPredictorLogsQuery,
   deleteCommentryQuery,
   getAllCommentaryTeamsQuery,
   getAllCommentaryPlayerQuery,

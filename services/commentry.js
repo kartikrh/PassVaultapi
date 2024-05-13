@@ -51,6 +51,7 @@ const {
   deleteCommentaryDataQuery,
   updateEventRefIdInCommentaryQuery,
   updateCommentaryPlayerById,
+  getPredictorLogsQuery,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -148,6 +149,22 @@ const commentaryByIdService = async (request, fastify) => {
   commentary.commentaryId = request.body.commentaryId;
 
   return commentary;
+};
+
+const predictorLogsByIdService = async (request, fastify) => {
+  try {
+    const { commentaryId } = request.body;
+    const commentary = global.tblCommentaries.find(
+      (item) => item.commentaryId === commentaryId
+    );
+    if (!commentary) {
+      throw new Error("Commentary with this id not Found");
+    }
+    const predictorLogsData = await getPredictorLogsQuery({commentaryId: request.body.commentaryId}, fastify, request)
+    return predictorLogsData;
+  } catch (error) {
+    throw new Error(error);
+  }
 };
 
 const commentaryDetailsByIdService = async (request, fastify) => {
@@ -3845,7 +3862,7 @@ const getMatchListByStatus = async (body, request, fastify) => {
       ed: convertDate(item.eventDate, "DD/MM/YYYY") || "",
       et: convertDate(item.eventDate, "hh:mm:ss") || "",
       utc: item.eventDate,
-      twonby: TossTeamName.teamName || null,
+      twonby: TossTeamName?.teamName || null,
       choseto: toss || null,
       te1n: commentaryTeamsOne.teamName || "",
       te2n: commentaryTeamsTwo.teamName || "",
@@ -5768,6 +5785,7 @@ module.exports = {
   deleteCommentaryService,
   allDisplayStatusService,
   commentaryDetailsByIdService,
+  predictorLogsByIdService,
   saveCommentaryDetailsService,
   deleteBallByBallCommentoriesService,
   deleteOverCommentoriesService,
