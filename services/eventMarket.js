@@ -481,13 +481,20 @@ const updateMarketRateService = async (request, fastify) => {
       global.tblEventMarkets.push(data);
     }
 
+    // get the marketType category
+    let is_onlyover  = false;
+    const category = global.tblMarketTypeCategories.find((item) => item.marketTypeCategoryId === data.marketTypeCategoryId);
+    if(category && category.categoryName === "Only Over"){
+      is_onlyover = true;
+    }
     marketDataLogger(
       {
           eventMarketId: data.eventMarketId,
           commentaryId: data.commentaryId,
           dataTosave: JSON.parse(data.data),
           updateType: MarketUpdateType.marketInitilization,
-          lineDiff : diff
+          lineDiff : diff,
+          is_onlyover : is_onlyover
       },
       request,
       fastify
