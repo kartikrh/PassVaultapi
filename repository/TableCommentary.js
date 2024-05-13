@@ -2670,13 +2670,50 @@ const deleteCommentaryDataQuery = async (data, fastify, request) => {
     throw new Error(err.message);
   }
 };
+const getCommentaryDetailByIdQuery = async(data,fastify)=>{
+  try {
+    const commentary =  await fastify.db.query(
+      `
+              SELECT 
+              "wrCommentaryId" as "commentaryId",
+              "wrEventRefId" as "eventId",
+              "wrEventName" as "eventName",
+              "wrEventDate" as "eventDate",
+              "wrCommentaryStatus" as "status",
+              tm."wrMatchType" as "matchType",
+              te."wrEventType" as "eventType",
+              tco."wrCompetition" as "competition",
+              "wrIsPredictMarket" as "isPredictMarket"
+          FROM "tblCommentaries" tc
+          LEFT JOIN "tblMatchTypes" tm ON tc."wrMatchTypeId" = tm."wrMatchTypeId"
+          LEFT JOIN "tblEventTypes" te ON tc."wrEventTypeId" = te."wrEventTypeId"
+          LEFT JOIN "tblCompetitions" tco ON tc."wrCompetitionId" = tco."wrCompetitionId"
+          WHERE "wrCommentaryId" = $1    
+      `,
+      {
+          type : fastify.db.QueryTypes.SELECT,
+          bind : [data.commentaryId]
+      }    
+    )
+    
+    return commentary[0]
+  } catch (error) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/getCommentaryDetailByIdQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+}
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
   insertCommentaryTeams,
   insertCommentaryPlayers,
   updateCommentaryQuery,
-  updateCommentaryTeams,
+  updateCommentaryTeams,  
   deleteCommentaryPlayers,
   getCommentaryByIdQuery,
   getCommentaryTeamsQuery,
@@ -2724,4 +2761,5 @@ module.exports = {
   updateDelayInCommentaryQuery,
   deleteCommentaryDataQuery,
   updateEventRefIdInCommentaryQuery,
+  getCommentaryDetailByIdQuery
 };

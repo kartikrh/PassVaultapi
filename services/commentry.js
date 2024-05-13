@@ -60,6 +60,9 @@ const {
   decryptEncryptionId,
   callPredictorMarket,
   EventMarketStatus,
+  callDataProvider,
+  APIEndpointModuleType,
+  ServiceType,
 } = require("../utilities");
 const { getAllPlayersByTeamIdQuery } = require("../repository/TableTeams");
 const { handleMarketCloseService } = require("./eventMarket");
@@ -530,6 +533,15 @@ const createCommentaryService = async (request, fastify) => {
     );
   }
 
+  if(addCommentry.commentaryStatus != 4 && addCommentry.isPredictMarket == true){
+    callDataProvider({
+      commentaryId : addCommentry.commentaryId,
+      serviceType : ServiceType.dataProviderAPI,
+      moduleType : APIEndpointModuleType.commentaryUpdate
+    },fastify)
+
+  }
+
   return addCommentry;
 };
 
@@ -948,6 +960,16 @@ const cloneCommentaryService = async (request, fastify) => {
   global.tblCommentaries.push(newCommentary);
   global.tblCommentaryPlayers = await getAllCommentaryPlayerQuery(fastify);
   global.tblCommentaryTeams = await getAllCommentaryTeamsQuery(fastify);
+
+  if(newCommentary.isPredictMarket == true && newCommentary.commentaryStatus != 4){
+    callDataProvider({
+        commentary_id: newCommentary.commentaryId,
+        serviceType : ServiceType.dataProviderAPI,
+        moduleType : APIEndpointModuleType.commentaryUpdate
+      },
+      fastify
+    );
+  }
 
   // if (newCommentary.isPredictMarket == true) {
   //   callPredictorMarket(
@@ -1449,6 +1471,13 @@ const testStoreProcedureService = async (request, fastify) => {
         winnerId: commentaryDetails.winnerId,
         winnerName: commentaryDetails.winnerName,
       };
+      if(previousCommentaryStatus != statusToUpdate && statusToUpdate != 4 && commentaryData.isPredictMarket == true){
+        callDataProvider({
+          commentaryId : commentaryId,
+          serviceType : ServiceType.dataProviderAPI,
+          moduleType : APIEndpointModuleType.commentaryUpdate
+        },fastify)
+      }
       // sendDataForSocketUpdate.dataToUpdate.push({
       //   module: "commentaryDetails",
       //   type: "update",
@@ -5360,6 +5389,14 @@ const updateisPredictMarketInCommentaryService = async (request, fastify) => {
   const updatedData = await getCommentaryByIdQuery(request, fastify);
 
   global.tblCommentaries[index] = updatedData;
+  if(global.tblCommentaries[index].isPredictMarket == true){
+    callDataProvider({
+      commentaryId : commentaryId,
+      serviceType : ServiceType.dataProviderAPI,
+      moduleType : APIEndpointModuleType.commentaryUpdate
+    },fastify)
+
+  }
   return updatedData;
 };
 
@@ -5420,7 +5457,10 @@ const saveCommentaryDetailsAPIService = async (request, fastify) => {
       (item) => item.commentaryId === commentaryDetails.commentaryId
     );
     commentaryIndex !== -1
-      ? (global.tblCommentaries[commentaryIndex] = commentaryDetails)
+      ? (global.tblCommentaries[commentaryIndex] = {
+          ...global.tblCommentaries[commentaryIndex],
+          ...commentaryDetails, 
+      })
       : null;
   }
   if (commentaryTeams) {
@@ -5537,9 +5577,37 @@ const deleteAllCommentaryService = async (request, fastify) => {
 };
 const getOpenCommentariesService = async (request, fastify) => {
   const commentaries = global.tblCommentaries.filter(
-    (item) => item.commentaryStatus == 1
-  );
-  return commentaries;
+    (item) => item.commentaryStatus != 4 && item.isPredictMarket == true
+  )
+  let result = [];
+  for (com of commentaries) {
+    let matchType = global.tblMatchTypes.find(
+      (item) => item.matchTypeId === com.matchTypeId
+    );
+    com.matchType = matchType?.matchType || null;
+    let competition = global.tblCompetitions.find(
+      (item) => item.competitionId === com.competitionId
+    );
+    com.competition = competition?.competition || null;
+    let eventType = global.tblEventTypes.find(
+      (item) => item.eventTypeId === com.eventTypeId
+    );
+    com.eventType = eventType?.eventType || null;
+
+    let data = {
+      commentaryId : com.commentaryId,
+      eventId : com.eventRefId,
+      eventName : com.eventName,
+      eventDate : com.eventDate,
+      status : com.commentaryStatus,
+      matchType : com.matchType,
+      competition : com.competition,
+      eventType : com.eventType,
+      isPredictMarket : com.isPredictMarket,
+    }
+    result.push(data);
+  }
+  return result;
 };
 const updateDelayInCommentaryService = async (request, fastify) => {
   const { commentaryId, delay } = request.body;
