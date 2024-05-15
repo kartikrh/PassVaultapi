@@ -2700,11 +2700,11 @@ const getCommentaryDetailByIdQuery = async(data,fastify)=>{
   } catch (error) {
     errorLogger(
       fastify,
-      err.message,
+      error.message,
       "DB ERROR --> repository/TableCommentary/getCommentaryDetailByIdQuery",
       request
     );
-    throw new Error(err.message);
+    throw new Error(error.message);
   }
 }
 module.exports = {
