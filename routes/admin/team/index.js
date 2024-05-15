@@ -3,6 +3,7 @@ const {
   checkPermission,
 } = require("../../../controller/middleware");
 const { getEventTypeList } = require("../../../controller/users/admin/eventTypes");
+const { getCompetitionList } = require("../../../controller/users/admin/competition");
 const {  getAllPlayerList } = require("../../../controller/users/admin/teamsAndPlayer/players");
 const {
   getAllTeams,
@@ -36,6 +37,18 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request, reply) => getEventTypeList(request, reply, fastify),
+  });
+  fastify.post("/competitionListByEventTypeId", {
+    schema: Teams.competitionTypeList.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Teams",
+          mode: "view",
+        }),
+    ],
+    handler: (request, reply) => getCompetitionList(request, reply, fastify),
   });
   fastify.post("/playerList", {
     schema: Teams.playerList.schema,

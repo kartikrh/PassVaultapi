@@ -1106,6 +1106,7 @@ const Teams = {
         type: "object",
         properties: {
           eventTypeId: { type: "integer" },
+          competitionId: { type: "integer" },
         },
       },
     },
@@ -1119,6 +1120,20 @@ const Teams = {
         type: "object",
         properties: {
           isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+  competitionTypeList: {
+    schema: {
+      tags: ["Teams"],
+      security: [{ bearerAuth: [] }],
+      description: "get all competition type",
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+          eventTypeId: { type: "integer" },
         },
       },
     },
@@ -1169,6 +1184,10 @@ const Teams = {
             type: "array",
             items: { type: "string" },
           },
+          competitionId: {
+            type: "array",
+            items: { type: "string" }
+          }
         },
         required: ["teamId"],
       },
