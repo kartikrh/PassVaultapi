@@ -52,6 +52,7 @@ const {
   updateEventRefIdInCommentaryQuery,
   updateCommentaryPlayerById,
   getPredictorLogsQuery,
+  updateResultInCommentaryQuery,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -5431,6 +5432,23 @@ const updateisPredictMarketInCommentaryService = async (request, fastify) => {
   return updatedData;
 };
 
+const updateResultInCommentaryService =  async (request, fastify) => {
+  const { commentaryId, result } = request.body;
+  const index = global.tblCommentaries.findIndex(
+    (item) => item.commentaryId === commentaryId
+  );
+
+  if (index == -1) {
+    throw new Error("Commentary with this id not Found");
+  }
+
+  await updateResultInCommentaryQuery(request.body, fastify, request);
+  
+  global.tblCommentaries[index].result = result;
+  
+  return "Result updated successfully";
+};
+
 const getEventDetailsByCIdService = async (request, fastify) => {
   try {
     const { commentaryId } = request.body;
@@ -5913,6 +5931,7 @@ module.exports = {
   saveShortCommentaryService,
   updateCommentaryStatusService,
   updateisPredictMarketInCommentaryService,
+  updateResultInCommentaryService,
   getEventDetailsByCIdService,
   saveCommentaryDetailsAPIService,
   loadMultiCommentaryService,
