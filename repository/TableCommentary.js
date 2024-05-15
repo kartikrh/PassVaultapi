@@ -2498,6 +2498,32 @@ const updateisPredictMarketInCommentaryQuery = async (
     throw new Error(err.message);
   }
 };
+
+const updateResultInCommentaryQuery = async (
+  data,
+  fastify,
+  request
+) => {
+  try {
+    return await fastify.db.query(
+      `UPDATE "tblCommentaries" SET "wrCommentaryResult" = $1 WHERE
+      "wrCommentaryId" = $2`,
+      {
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [data.result, data.commentaryId],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/updateResultInCommentaryQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 const saveCommentaryDetailsAPIQuery = async (data, fastify, request) => {
   try {
     // call the sp to save the commentary details
@@ -2754,6 +2780,7 @@ module.exports = {
   updateCommentaryPlayerById,
   updateCommentaryStatusQuery,
   updateisPredictMarketInCommentaryQuery,
+  updateResultInCommentaryQuery,
   saveCommentaryDetailsAPIQuery,
   activeInactiveCommentaryQuery,
   closeCommentaryQuery,

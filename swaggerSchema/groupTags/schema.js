@@ -1851,6 +1851,21 @@ const Commentary = {
       },
     },
   },
+  changeResult: {
+    schema: {
+      tags: ["Commentary"],
+      description: "Change Result",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+          result: { type: "string" },
+        },
+        required: ["commentaryId", "result"],
+      },
+    },
+  },
   matchTypeList: {
     schema: {
       tags: ["Commentary"],

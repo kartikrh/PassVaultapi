@@ -44,6 +44,7 @@ const {
   loadcommentaryapi,
   updateTeamPlayer,
   getPredictorLogsById,
+  updateResultInCommentary,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -90,6 +91,18 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request, reply) => getMatchTypeList(request, reply, fastify),
+  });
+  fastify.post("/changeResult", {
+    schema: Commentary.changeResult.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "view",
+        }),
+    ],
+    handler: (request, reply) => updateResultInCommentary(request, reply, fastify),
   });
   fastify.post("/teamList", {
     schema: Commentary.teamList.schema,
