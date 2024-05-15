@@ -775,6 +775,15 @@ const updateCommentaryService = async (request, fastify) => {
   global.tblCommentaryPlayers = await getAllCommentaryPlayerQuery(fastify);
   global.tblCommentaryTeams = await getAllCommentaryTeamsQuery(fastify);
 
+
+  if(updatedData.isPredictMarket == true && updatedData.commentaryStatus != 4){
+    callDataProvider({
+      commentaryId : updatedData.commentaryId,
+      serviceType : ServiceType.dataProviderAPI,
+      moduleType : APIEndpointModuleType.commentaryUpdate
+    },fastify)
+  }
+
   return updatedData;
 };
 
@@ -970,15 +979,11 @@ const cloneCommentaryService = async (request, fastify) => {
   global.tblCommentaryPlayers = await getAllCommentaryPlayerQuery(fastify);
   global.tblCommentaryTeams = await getAllCommentaryTeamsQuery(fastify);
 
-  if (
-    newCommentary.isPredictMarket == true &&
-    newCommentary.commentaryStatus != 4
-  ) {
-    callDataProvider(
-      {
-        commentary_id: newCommentary.commentaryId,
-        serviceType: ServiceType.dataProviderAPI,
-        moduleType: APIEndpointModuleType.commentaryUpdate,
+  if(newCommentary.isPredictMarket == true && newCommentary.commentaryStatus != 4){
+    callDataProvider({
+        commentaryId: newCommentary.commentaryId,
+        serviceType : ServiceType.dataProviderAPI,
+        moduleType : APIEndpointModuleType.commentaryUpdate
       },
       fastify
     );
@@ -1484,19 +1489,13 @@ const testStoreProcedureService = async (request, fastify) => {
         winnerId: commentaryDetails.winnerId,
         winnerName: commentaryDetails.winnerName,
       };
-      if (
-        previousCommentaryStatus != statusToUpdate &&
-        statusToUpdate != 4 &&
-        commentaryData.isPredictMarket == true
-      ) {
-        callDataProvider(
-          {
-            commentaryId: commentaryId,
-            serviceType: ServiceType.dataProviderAPI,
-            moduleType: APIEndpointModuleType.commentaryUpdate,
-          },
-          fastify
-        );
+      if(previousCommentaryStatus != statusToUpdate && commentaryData.isPredictMarket == true){
+    
+        callDataProvider({
+          commentaryId : commentaryId,
+          serviceType : ServiceType.dataProviderAPI,
+          moduleType : APIEndpointModuleType.commentaryUpdate
+        },fastify)
       }
       // sendDataForSocketUpdate.dataToUpdate.push({
       //   module: "commentaryDetails",
