@@ -5437,11 +5437,10 @@ const updateResultInCommentaryService =  async (request, fastify) => {
   }
 
   await updateResultInCommentaryQuery(request.body, fastify, request);
-
-  const updatedData = await getCommentaryByIdQuery(request, fastify);
-
-  global.tblCommentaries[index] = updatedData;
-  return updatedData;
+  
+  global.tblCommentaries[index].result = result;
+  
+  return "Result updated successfully";
 };
 
 const getEventDetailsByCIdService = async (request, fastify) => {
