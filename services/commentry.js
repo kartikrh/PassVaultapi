@@ -311,6 +311,7 @@ const createCommentaryService = async (request, fastify) => {
     }
   }
 
+  request.body.teamMaxOver = null;
   if (request.body.matchTypeId) {
     const validateMatchTypeId = global.tblMatchTypes.find(
       (item) => item.matchTypeId === request.body.matchTypeId
@@ -318,6 +319,7 @@ const createCommentaryService = async (request, fastify) => {
     if (!validateMatchTypeId) {
       throw new Error("MatchType with this id not Found");
     }
+    request.body.teamMaxOver = validateMatchTypeId.maxOversInFirstInings;
   }
 
   if (
@@ -819,6 +821,9 @@ const cloneCommentaryService = async (request, fastify) => {
   const validateMatchTypeId = global.tblMatchTypes.find(
     (item) => item.matchTypeId === originalCommentary.matchTypeId
   );
+  if(!validateMatchTypeId){
+    throw new Error("MatchType with this id not Found");
+  }
 
   const team1 = await getCommentaryTeamsQuery(
     { teamId: originalCommentary.team1Id, commentaryId },
@@ -865,6 +870,7 @@ const cloneCommentaryService = async (request, fastify) => {
     team2Captain: team2.teamCaptain,
     team2Kipper: team2.teamKipper,
     team2Players: filterOutUniquePlayerId(team2Players),
+    teamMaxOver: validateMatchTypeId.maxOversInFirstInings
   };
 
   if (validateMatchTypeId) {

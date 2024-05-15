@@ -178,7 +178,7 @@ const insertCommentaryTeams = async (request, fastify) => {
     return await fastify.db.query(
       `
       insert into "tblCommentaryTeams" ("wrCommentaryId" , "wrTeamId","wrTeamCaptain","wrTeamKipper" , "wrShortName" , "wrTeamName","wrCurrentInnings","wrIsBattingComplete"
-      , "wrTeamColor" , "wrBackgroundColor")
+      , "wrTeamColor" , "wrBackgroundColor" , "wrTeamMaxOver")
        values (
         $1,
         $2,
@@ -189,7 +189,8 @@ const insertCommentaryTeams = async (request, fastify) => {
         $8,
         false,
         (select "wrTeamColor" from "tblTeams" where "wrTeamId" = $2),
-        (select "wrBackgroundColor" from "tblTeams" where "wrTeamId" = $2)             
+        (select "wrBackgroundColor" from "tblTeams" where "wrTeamId" = $2),
+        $9             
       )
       ,(
         $1,
@@ -201,7 +202,8 @@ const insertCommentaryTeams = async (request, fastify) => {
         $8,
         false,
         (select "wrTeamColor" from "tblTeams" where "wrTeamId" = $5),
-        (select "wrBackgroundColor" from "tblTeams" where "wrTeamId" = $5)
+        (select "wrBackgroundColor" from "tblTeams" where "wrTeamId" = $5),
+        $9
       )
     `,
       {
@@ -215,6 +217,7 @@ const insertCommentaryTeams = async (request, fastify) => {
           data.team2Captain || null,
           data.team2Kipper || null,
           data.currentInnings,
+          data.teamMaxOver || null
         ],
       }
     );
@@ -593,7 +596,8 @@ const getCommentaryTeamsQuery = async (data, fastify, request) => {
       `select 
       "wrTeamId" as "teamId",
       "wrTeamCaptain" as "teamCaptain",
-      "wrTeamKipper" as "teamKipper"
+      "wrTeamKipper" as "teamKipper",
+      "wrTeamMaxOver" as "teamMaxOver"
       from "tblCommentaryTeams"
       where "wrCommentaryId" = $1 and "wrTeamId" = $2
       `,
@@ -798,7 +802,8 @@ const getAllCommentaryTeamsQuery = async (fastify) => {
   "wrCommentaryPlayerTeamCaptain" as "commentaryPlayerTeamCaptain",
   "wrCommentaryPlayerTeamKipper" as "commentaryPlayerTeamKipper",
   "wrTeamColor" as "teamColor",
-  "wrBackgroundColor" as "backgroundColor"
+  "wrBackgroundColor" as "backgroundColor",
+  "wrTeamMaxOver" as "teamMaxOver"
   from "tblCommentaryTeams" tct 
 
   `,
