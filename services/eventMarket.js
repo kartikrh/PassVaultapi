@@ -881,6 +881,7 @@ const handleMarketCloseService = async (data, request, fastify) => {
     );
     if (eventMarket !== -1) {
       global.tblEventMarkets[eventMarket].status = EventMarketStatus.Close;
+      global.tblEventMarkets[eventMarket].data = item.data;
     }
     marketLogger(
       {
@@ -911,6 +912,7 @@ const handleMarketCloseService = async (data, request, fastify) => {
     );
     if (eventMarket !== -1) {
       global.tblEventMarkets[eventMarket].status = EventMarketStatus.Cancel;
+      global.tblEventMarkets[eventMarket].data = item.data;
     }
     marketLogger(
       {

@@ -1429,8 +1429,60 @@ const closeEventMarketByTeamIdQuery = async (data, request, fastify) => {
       bind: [EventMarketStatus.Close, result.map((e) => e.eventMarketId)],
       type: fastify.db.QueryTypes.SELECT,
     });
+
+
+    for (market of result) {
+          const query3 = `
+          SELECT 
+              tem."wrID" as "id",
+              tem."wrEventRefID" as "eventRefId",
+              tem."wrMarketName" as "marketName",
+              tem."wrStatus" as "status",
+              tem."wrIsActive" as "isActive",
+              tem."wrIsAllow" as "isAllow",
+              json_agg(
+                  json_build_object(
+                      'id', tmr."wrRunnerId",
+                      'selectionId' , tmr."wrSelectionId",
+                      'runner', tmr."wrRunner",
+                      'line', tmr."wrLine",
+                      'over', tmr."wrOverRate",
+                      'under', tmr."wrUnderRate",
+                      'yes', tmr."wrYesRate",
+                      'yesPoint', tmr."wrYesPoint",
+                      'no', tmr."wrNoRate",
+                      'noPoint', tmr."wrNoPoint",
+                      'lastUpdate', tmr."wrLastUpdate"
+                  )
+              ) as "runner"
+          FROM "tblEventMarkets" tem
+          LEFT JOIN "tblMarketRunners" tmr ON tmr."wrEventMarketId" = tem."wrID"
+          WHERE tem."wrID" = $1
+          GROUP BY tem."wrID"
+
+        `;
+
+        const marketRunner = await fastify.db.query(query3, {
+        bind: [market.eventMarketId],
+        type: fastify.db.QueryTypes.SELECT,
+        });
+
+        // update eventmarket data with runner data
+        const dataToStore = marketRunner[0];
+
+        const query4 = `UPDATE "tblEventMarkets" SET "wrData" = $1 WHERE "wrID" = $2
+        RETURNING "wrData" as "data"`;
+
+        let udpatedData = await fastify.db.query(query4, {
+          bind: [dataToStore, market.eventMarketId],
+          type: fastify.db.QueryTypes.SELECT,
+        });
+
+        market.data= udpatedData[0].data;
+    }
     return result;
   } catch (error) {
+    console.log(error);
     errorLogger(
       fastify,
       error.message,
@@ -1523,6 +1575,57 @@ const cancelEventMarketByTeamIdQuery = async (data, request, fastify) => {
       bind: [EventMarketStatus.Cancel, result.map((e) => e.eventMarketId)],
       type: fastify.db.QueryTypes.SELECT,
     });
+
+    for (market of result) {
+      const query3 = `
+      SELECT 
+          tem."wrID" as "id",
+          tem."wrEventRefID" as "eventRefId",
+          tem."wrMarketName" as "marketName",
+          tem."wrStatus" as "status",
+          tem."wrIsActive" as "isActive",
+          tem."wrIsAllow" as "isAllow",
+          json_agg(
+              json_build_object(
+                  'id', tmr."wrRunnerId",
+                  'selectionId' , tmr."wrSelectionId",
+                  'runner', tmr."wrRunner",
+                  'line', tmr."wrLine",
+                  'over', tmr."wrOverRate",
+                  'under', tmr."wrUnderRate",
+                  'yes', tmr."wrYesRate",
+                  'yesPoint', tmr."wrYesPoint",
+                  'no', tmr."wrNoRate",
+                  'noPoint', tmr."wrNoPoint",
+                  'lastUpdate', tmr."wrLastUpdate"
+              )
+          ) as "runner"
+      FROM "tblEventMarkets" tem
+      LEFT JOIN "tblMarketRunners" tmr ON tmr."wrEventMarketId" = tem."wrID"
+      WHERE tem."wrID" = $1
+      GROUP BY tem."wrID"
+
+    `;
+
+        const marketRunner = await fastify.db.query(query3, {
+        bind: [market.eventMarketId],
+        type: fastify.db.QueryTypes.SELECT,
+        });
+
+        // update eventmarket data with runner data
+        const dataToStore = marketRunner[0];
+
+        const query4 = `UPDATE "tblEventMarkets" SET "wrData" = $1 WHERE "wrID" = $2
+        RETURNING "wrData" as "data"`;
+
+        let udpatedData = await fastify.db.query(query4, {
+          bind: [dataToStore, market.eventMarketId],
+          type: fastify.db.QueryTypes.SELECT,
+        });
+
+        market.data= udpatedData[0].data;
+    }
+
     return result;
   } catch (error) {
     errorLogger(
