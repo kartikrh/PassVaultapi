@@ -1403,7 +1403,7 @@ const closeEventMarketByTeamIdQuery = async (data, request, fastify) => {
   try {
     const query = `
             UPDATE "tblEventMarkets"
-            SET "wrStatus" = $1 , "wrCloseTime" = now()::timestamp
+            SET "wrStatus" = $1 , "wrCloseTime" = now()::timestamp, "wrLastUpdate" = now()::timestamp
             WHERE "wrTeamID" = $2
             AND "wrCommentaryId" = $3
             AND "wrInningsID" = $4
@@ -1552,7 +1552,8 @@ const cancelEventMarketByTeamIdQuery = async (data, request, fastify) => {
     let query = `
             UPDATE "tblEventMarkets"
             SET "wrStatus" = $1,
-            "wrSettledTime" = now()::timestamp
+            "wrSettledTime" = now()::timestamp,
+            "wrLastUpdate" = now()::timestamp
             WHERE "wrTeamID" = $2
             AND "wrCommentaryId" = $3
             AND "wrInningsID" = $4
