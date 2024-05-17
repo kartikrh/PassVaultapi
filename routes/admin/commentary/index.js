@@ -599,7 +599,7 @@ module.exports = async (fastify, opts) => {
     handler: (request, reply) => loadcommentaryapi(request, reply, fastify),
   });
 
-  fastify.post("/changeMaxOverDetail", {
+  fastify.post("/updateDLSDetail", {
     schema : Commentary.changeMaxOverDetail.schema,
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
