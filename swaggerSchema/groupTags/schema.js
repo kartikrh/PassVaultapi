@@ -1758,6 +1758,21 @@ const Commentary = {
       },
     },
   },
+  changeMaxOverDetail : {
+    schema: { 
+      tags: ["Commentary"],
+      description: "change Max Over Detail",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+          teamMaxOver: { type: "integer" },
+        },
+        required: ["commentaryId", "teamMaxOver",],
+      },
+    },
+  },
   activeInactiveCommentary: {
     schema: {
       tags: ["Commentary"],

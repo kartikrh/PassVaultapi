@@ -53,6 +53,7 @@ const {
   updateCommentaryPlayerById,
   getPredictorLogsQuery,
   updateResultInCommentaryQuery,
+  updateMaxOverDetailQuery,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -5893,7 +5894,27 @@ const loadcommentaryService = async (request, fastify) => {
     console.error(error);
   }
 };
+const changeMaxOverDetailService = async (request, fastify) => {
+  // validate commentary id
+  const commentary = global.tblCommentaries.findIndex(
+    (item) => item.commentaryId === request.body.commentaryId
+  );
+  if (commentary == -1) {
+    throw new Error("Commentary with this id not Found");
+  }
+  // update maxOverDetail
+  await updateMaxOverDetailQuery(request.body, fastify, request);
 
+  let commentaryTeams = global.tblCommentaryTeams.filter(
+    (item) => item.commentaryId === request.body.commentaryId
+  );
+  for (let team of commentaryTeams) {
+    team.teamMaxOver = request.body.teamMaxOver;
+  }
+
+  return "Commentary Updated successfully";
+
+}
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -5945,5 +5966,6 @@ module.exports = {
   deleteCommentaryDataService,
   updateEventRefIdInCommentaryService,
   loadcommentaryService,
+  changeMaxOverDetailService
   // getshortService
 };

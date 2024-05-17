@@ -45,6 +45,7 @@ const {
   updateTeamPlayer,
   getPredictorLogsById,
   updateResultInCommentary,
+  changeMaxOverDetail,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -597,4 +598,17 @@ module.exports = async (fastify, opts) => {
     // ],
     handler: (request, reply) => loadcommentaryapi(request, reply, fastify),
   });
+
+  fastify.post("/updateDLSDetail", {
+    schema : Commentary.changeMaxOverDetail.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "edit",
+        }),
+    ],
+    handler : (request, reply) => changeMaxOverDetail(request, reply, fastify)
+  })
 };
