@@ -36,16 +36,17 @@ const allteamByEventTypeIdService = async (request, fastify) => {
     } else if (competitionId == 0) {
       return result
     } else if (competitionId) {
-      const competitionResult = global.tblTeamCompetition.filter(
-        (item) => item.competitionId === competitionId
-      ); 
-      const competitionTeamIds = new Set(competitionResult.map(item => item.teamId));
+      // const competitionResult = global.tblTeamCompetition.filter(
+      //   (item) => item.refCompetitionId === competitionId
+      // ); 
+      // const competitionTeamIds = new Set(competitionResult.map(item => item.teamId));
 
-      const finalResult = result.filter(
-        (item) => competitionTeamIds.has(item.teamId)
-      );
+      // const finalResult = result.filter(
+      //   (item) => competitionTeamIds.includes(item.teamId)
+      // );
 
-      return finalResult;
+      // return finalResult;
+      return result
     }
     // return result;
   }

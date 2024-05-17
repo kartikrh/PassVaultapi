@@ -97,6 +97,7 @@ const deleteTeamCompetitionByCompetitionIdQuery = async (competitionId, fastify,
 };
 
 module.exports = {
+  getAllTeamCompetitionQuery,
   insertTeamCompetitionQuery,
   deleteTeamCompetitionByTeamIdQuery,
   deleteTeamCompetitionByCompetitionIdQuery,
