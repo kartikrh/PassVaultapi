@@ -2738,6 +2738,31 @@ const getCommentaryDetailByIdQuery = async(data,fastify)=>{
     throw new Error(error.message);
   }
 }
+const updateMaxOverDetailQuery = async (data, fastify, request) => {
+  try {
+    const query = `
+        update "tblCommentaryTeams" set
+        "wrTeamMaxOver" = $1
+        where "wrCommentaryId" = $2
+    `;
+
+    const result = await fastify.db.query(query, {
+      type: fastify.db.QueryTypes.UPDATE,
+      bind: [data.teamMaxOver, data.commentaryId],
+    });
+
+    return result;
+
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCommentary/updateMaxOverDetailQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+}
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -2793,5 +2818,6 @@ module.exports = {
   updateDelayInCommentaryQuery,
   deleteCommentaryDataQuery,
   updateEventRefIdInCommentaryQuery,
-  getCommentaryDetailByIdQuery
+  getCommentaryDetailByIdQuery,
+  updateMaxOverDetailQuery
 };
