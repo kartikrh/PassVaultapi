@@ -3,9 +3,9 @@ const { errorLogger } = require("../utilities/logger");
 const getAllTeamCompetitionQuery = async (fastify) => {
   return await fastify.db.query(
     `select 
-        te."wrValue" as "teamCompetitionId",
-        te2."wrValue" as "teamId",
-        te3."wrValue" as "refCompetitionId",
+        tp."wrTeamCompetitionId" as "teamCompetitionId",
+        tp."wrTeamId" as "teamId",
+        tp."wrRefCompetitionId" as "refCompetitionId",
         "wrCompetitionOrder" as "competitionOrder"
          from "tblTeamCompetition" tp left join "tblEncryptedData" te on tp."wrTeamCompetitionId" = te."wrKey"
          left join "tblEncryptedData" te2 on tp."wrTeamId" = te2."wrKey"

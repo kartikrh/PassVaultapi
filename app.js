@@ -60,13 +60,13 @@ if (process.env.ENABLE_SENTRY === "TRUE") {
 module.exports = async function (fastify, opts) {
   const wss = new WebSocket.Server({ noServer: true });
 
-  process.stdin.resume(); // so the program will not close instantly
-  process.on("SIGTERM", async () => {
-    console.log("Received SIGTERM signal");
-    await disConnectClientSocketQuery(fastify);
-    console.log("Cleanup task executed successfully");
-    process.exit();
-  });
+  // process.stdin.resume(); // so the program will not close instantly
+  // process.on("SIGTERM", async () => {
+  //   console.log("Received SIGTERM signal");
+  //   await disConnectClientSocketQuery(fastify);
+  //   console.log("Cleanup task executed successfully");
+  //   process.exit();
+  // });
   fastify
     .register(fsequelize, {
       ...dbPg,
