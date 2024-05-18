@@ -23,33 +23,53 @@ const allTeamsService = async () => {
 
 const allteamByEventTypeIdService = async (request, fastify) => {
   const { eventTypeId, competitionId } = request.body;
-  if (eventTypeId === undefined) {
-    return global.tblTeams;
-  } else if (eventTypeId == 0) {
-    return global.tblTeams;
-  } else if (eventTypeId) {
-    const result = global.tblTeams.filter(
-      (item) => item.eventTypeId === eventTypeId
+  let result = global.tblTeams;
+
+  if(eventTypeId != undefined && eventTypeId != 0) {
+    result = result.filter((item) => item.eventTypeId === eventTypeId);
+  } 
+
+  if(competitionId != undefined && competitionId != 0) {
+    const competitionResult = global.tblTeamCompetition.filter(
+      (item) => item.refCompetitionId === competitionId
     );
-    if (competitionId == undefined) {
-      return result
-    } else if (competitionId == 0) {
-      return result
-    } else if (competitionId) {
-      // const competitionResult = global.tblTeamCompetition.filter(
-      //   (item) => item.refCompetitionId === competitionId
-      // ); 
-      // const competitionTeamIds = new Set(competitionResult.map(item => item.teamId));
-
-      // const finalResult = result.filter(
-      //   (item) => competitionTeamIds.includes(item.teamId)
-      // );
-
-      // return finalResult;
-      return result
-    }
-    // return result;
+    const competitionTeamIds = new Set(competitionResult.map(item => item.teamId));
+    result = result.filter(
+      (item) => competitionTeamIds.has(item.teamId)
+    );
   }
+
+  return result;
+
+
+
+  // if (eventTypeId === undefined) {
+  //   return global.tblTeams;
+  // } else if (eventTypeId == 0) {
+  //   return global.tblTeams;
+  // } else if (eventTypeId) {
+  //   result = global.tblTeams.filter(
+  //     (item) => item.eventTypeId === eventTypeId
+  //   );
+  //   if (competitionId == undefined) {
+  //     return result
+  //   } else if (competitionId == 0) {
+  //     return result
+  //   } else if (competitionId) {
+  //     // const competitionResult = global.tblTeamCompetition.filter(
+  //     //   (item) => item.refCompetitionId === competitionId
+  //     // ); 
+  //     // const competitionTeamIds = new Set(competitionResult.map(item => item.teamId));
+
+  //     // const finalResult = result.filter(
+  //     //   (item) => competitionTeamIds.includes(item.teamId)
+  //     // );
+
+  //     // return finalResult;
+  //     return result
+  //   }
+  //   // return result;
+  // }
 };
 
 const teamByIdService = async (request, fastify) => {
@@ -170,7 +190,7 @@ const createTeamService = async (request, fastify) => {
           if (hashArray[i]) {
             const competitionId = hashArray[i].replace(/[\[\]"]/g, "");
             if (competitionId !== "") {
-              await insertTeamCompetitionQuery(
+              let res = await insertTeamCompetitionQuery(
                 {
                   teamId: data.teamId,
                   refCompetitionId: parseInt(competitionId),
@@ -179,6 +199,7 @@ const createTeamService = async (request, fastify) => {
                 fastify,
                 request
               );
+              global.tblTeamCompetition.push(res);
             }
           }
         }
@@ -305,6 +326,9 @@ const updateTeamService = async (request, fastify) => {
   }
   if (request.body.competitionId) {
     await deleteTeamCompetitionByTeamIdQuery(body.teamId, fastify, request);
+    global.tblTeamCompetition = global.tblTeamCompetition.filter(
+      (item) => item.teamId !== body.teamId
+    );
 
     const hashString = request.body.competitionId;
     // Split the string into an array using commas as the delimiter
@@ -316,7 +340,7 @@ const updateTeamService = async (request, fastify) => {
         if (hashArray[i]) {
           const competitionId = hashArray[i].replace(/[\[\]"]/g, "");
           if (competitionId !== "") {
-            await insertTeamCompetitionQuery(
+            let res =await insertTeamCompetitionQuery(
               {
                 teamId: body.teamId,
                 refCompetitionId: competitionId,
@@ -325,6 +349,7 @@ const updateTeamService = async (request, fastify) => {
               fastify,
               request
             );
+            global.tblTeamCompetition.push(res);
           }
         }
       }
@@ -369,6 +394,9 @@ const deleteTeamService = async (request, fastify) => {
   }
 
   global.tblTeams = global.tblTeams.filter(
+    (item) => !teamId.includes(item.teamId)
+  );
+  global.tblTeamCompetition = global.tblTeamCompetition.filter(
     (item) => !teamId.includes(item.teamId)
   );
 
