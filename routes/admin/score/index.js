@@ -21,6 +21,7 @@ const {
   getAllCommentariesData,
 } = require("../../../controller/users/admin/commentary/commentary");
 const { getMenuItemList } = require("../../../controller/users/admin/menuType");
+const { getMarketsByCommentaryId } = require("../../../controller/users/admin/score");
 const {
   saveSubScribeDomain,
 } = require("../../../controller/users/admin/subScribesDomain");
@@ -224,5 +225,10 @@ module.exports = async (fastify, opts) => {
   fastify.post("/getCommentaries", {
     schema: Commentary.getAll.schema,
     handler: (request, reply) => getAllCommentariesData(request, reply, fastify),
+  })
+
+  fastify.post("/getMarketsByCId" , {
+    // schema: Score.getMarkets.schema,
+    handler: (request, reply) => getMarketsByCommentaryId(request, reply, fastify)
   })
 };
