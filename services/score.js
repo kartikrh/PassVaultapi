@@ -1,3 +1,5 @@
+const { getMarketsByCIdQuery } = require("../repository/TableEventMarkets");
+
 const getAllCommentariesDataService = (request, fastify) => {
     let commentaries = {};
     global.tblCommentaries.filter((c) => {
@@ -35,5 +37,19 @@ const getAllCommentariesDataService = (request, fastify) => {
 
     return commentaries;
 }
-
-module.exports = { getAllCommentariesDataService };
+const getMarketsByCommentaryIdService =async (request , fastify) => {
+    // vlaidate commentry id
+    const commentary = global.tblCommentaries.find((c) => {
+        return c.commentaryId === request.body.commentaryId;
+    });
+    if (!commentary) {
+        throw new Error("Commentary with this id not found");
+    }
+    // check if isPredicted is true
+    if (!commentary.isPredictMarket) {
+        return [];
+    }
+    const getCommentaries = await getMarketsByCIdQuery(request , fastify);
+    return getCommentaries;
+}
+module.exports = { getAllCommentariesDataService ,getMarketsByCommentaryIdService };

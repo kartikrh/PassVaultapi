@@ -1845,6 +1845,74 @@ const getMarketDataByCIdQuery = async (request, fastify) => {
     throw new Error(error.message);
   }
 }
+const getMarketsByCIdQuery = async (request, fastify) => {
+  try {
+  const query = `
+      WITH result_market_data AS (
+        SELECT 
+            "wrID" as "marketId",
+            "wrCommentaryId" as "commentaryId",
+            "wrEventRefID" as "eventId",
+            "wrTeamID" as "teamId",
+            tt."wrTeamName" as "teamName",
+            "wrInningsID" as "inningsId",
+            "wrMarketName" as "marketName",
+            "wrMinOdds" as "minOdds",
+            "wrMaxOdds" as "maxOdds",
+            "wrStatus" as "status",
+            "wrOpenOdds" as "openOdds",
+            "wrResult" as "result"
+        FROM "tblEventMarkets"
+        LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = "tblEventMarkets"."wrTeamID"
+        WHERE "wrCommentaryId" = $1
+        AND "wrStatus" = $2
+    ),
+    open_market_data AS (
+        SELECT
+            "wrID" as "marketId",
+            "wrCommentaryId" as "commentaryId",
+            "wrEventRefID" as "eventId",
+            "wrTeamID" as "teamId",
+            tt."wrTeamName" as "teamName",
+            "wrInningsID" as "inningsId",
+            "wrMarketName" as "marketName",
+            "wrOpenOdds" as "openOdds",
+            "wrStatus" as "status",
+            tmr."wrYesRate" as "yesRate",
+            tmr."wrYesPoint" as "yesPoint",
+            tmr."wrNoRate" as "noRate",
+            tmr."wrNoPoint" as "noPoint"
+        FROM "tblEventMarkets"
+        LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = "tblEventMarkets"."wrTeamID"
+        LEFT JOIN "tblMarketRunners" tmr ON tmr."wrEventMarketId" = "tblEventMarkets"."wrID"
+        WHERE "wrCommentaryId" = $1
+        AND "wrStatus" NOT IN ($2, $3, $4)
+    )
+    SELECT
+        jsonb_build_object(
+            'settledMarkets', (SELECT jsonb_agg(result_market_data) FROM result_market_data),
+            'openMarkets', (SELECT jsonb_agg(open_market_data) FROM open_market_data)
+        ) as result;
+    `;
+
+    const result = await fastify.db.query(query, {
+      type: fastify.db.QueryTypes.SELECT,
+      bind: [request.body.commentaryId , EventMarketStatus.Settled , EventMarketStatus.Cancel , EventMarketStatus.Close],
+    });
+
+    return result[0].result;
+
+  } catch (error) {
+    console.log(error);
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/getMarketDataByCIdQuery",
+        request
+    );
+    throw new Error(error.message);
+  }
+}
 module.exports = {
     getAllEventMarketsQuery,
     createManyEventMarketQuery,
@@ -1872,5 +1940,6 @@ module.exports = {
     getEventMarketRatioQuery,
     setLineRatioEventMarketQuery,
     getRunnersByMarketIdQuery,
-    getMarketDataByCIdQuery
+    getMarketDataByCIdQuery,
+    getMarketsByCIdQuery
 };
