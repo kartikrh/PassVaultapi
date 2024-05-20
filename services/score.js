@@ -1,4 +1,5 @@
 const { getMarketsByCIdQuery } = require("../repository/TableEventMarkets");
+const configConstants = require("../utilities/configConstants");
 
 const getAllCommentariesDataService = (request, fastify) => {
     let commentaries = {};
@@ -50,6 +51,14 @@ const getMarketsByCommentaryIdService =async (request , fastify) => {
         return [];
     }
     const getCommentaries = await getMarketsByCIdQuery(request , fastify);
-    return getCommentaries;
+    const datProviderUrl = global.tblConfigs.find((c) => c.key == configConstants.DATAPROVIDERURL);
+    if(!datProviderUrl){
+        throw new Error("Data provider url not found");
+    }
+
+    return {
+        ...getCommentaries,
+        dataProviderUrl: datProviderUrl.value
+    };
 }
 module.exports = { getAllCommentariesDataService ,getMarketsByCommentaryIdService };
