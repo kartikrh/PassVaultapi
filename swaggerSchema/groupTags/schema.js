@@ -1186,8 +1186,8 @@ const Teams = {
           },
           competitionId: {
             type: "array",
-            items: { type: "string" }
-          }
+            items: { type: "string" },
+          },
         },
         required: ["teamId"],
       },
@@ -1758,8 +1758,8 @@ const Commentary = {
       },
     },
   },
-  changeMaxOverDetail : {
-    schema: { 
+  changeMaxOverDetail: {
+    schema: {
       tags: ["Commentary"],
       description: "change Max Over Detail",
       security: [{ bearerAuth: [] }],
@@ -1769,7 +1769,7 @@ const Commentary = {
           commentaryId: { type: "integer" },
           teamMaxOver: { type: "integer" },
         },
-        required: ["commentaryId", "teamMaxOver",],
+        required: ["commentaryId", "teamMaxOver"],
       },
     },
   },
@@ -2119,8 +2119,8 @@ const Commentary = {
           commentaryId: { type: "integer" },
           teamId: { type: "integer" },
           playerId: { type: "integer" },
-          batsmanAverage: {type: "integer"},
-          batsmanStrikeRate: {type: "integer"}
+          batsmanAverage: { type: "integer" },
+          batsmanStrikeRate: { type: "integer" },
         },
         required: ["commentaryId", "teamId", "playerId"],
       },
@@ -2658,6 +2658,7 @@ const ImportMarket = {
           isAustralian: { type: "string" },
           isEvent: { type: "boolean" },
           isCompitition: { type: "boolean" },
+          isMarket: { type: "boolean" },
         },
       },
     },
@@ -2859,7 +2860,7 @@ const Score = {
       // security: [{ bearerAuth: [] }],
     },
   },
-  getMarkets : {
+  getMarkets: {
     schema: {
       tags: ["Score"],
       description: "get all Markets",
@@ -4251,8 +4252,8 @@ const ApiEndpoints = {
           serviceType: { type: "integer" },
           endPoint: { type: "string" },
           moduleType: { type: "integer" },
-          timeOut: {type: "integer"},
-          isActive: {type: "boolean"}
+          timeOut: { type: "integer" },
+          isActive: { type: "boolean" },
         },
         required: ["apiEndPointId"],
       },
@@ -4331,7 +4332,7 @@ const Api = {
           apiId: { type: "integer" },
           type: { type: "integer" },
           api: { type: "string" },
-          isActive: {type: "boolean"}
+          isActive: { type: "boolean" },
         },
         required: ["apiId"],
       },
@@ -4389,5 +4390,5 @@ module.exports = {
   ActivityLog,
   Banner,
   ApiEndpoints,
-  Api
+  Api,
 };
