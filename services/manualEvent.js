@@ -151,6 +151,7 @@ const MarketListService = async (request, fastify) => {
     if (request.body.isMarket) {
       endpoint = "/listManualMarket";
       postData.eventids = request.body.refID;
+      console.log("JsonObj " + JSON.stringify(postData));
     }
   }
 
@@ -165,6 +166,7 @@ const MarketListService = async (request, fastify) => {
 
   if (response.ok) {
     const responseData = await response.json();
+    console.log("Responce " + JSON.stringify(responseData));
     return responseData;
   } else {
     console.error(`Error: ${response.status} - ${response.statusText}`);
