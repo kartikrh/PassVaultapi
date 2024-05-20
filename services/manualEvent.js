@@ -141,14 +141,17 @@ const MarketListService = async (request, fastify) => {
   } else if (request.body.refID !== "0") {
     if (request.body.isCompitition) {
       endpoint = "/listManualCompetition";
+      postData.refId = request.body.refID;
     }
     if (request.body.isEvent) {
       endpoint = "/listManualevent";
+      postData.refId = request.body.refID;
     }
+
     if (request.body.isMarket) {
       endpoint = "/listManualMarket";
+      postData.eventids = request.body.refID;
     }
-    postData.refId = request.body.refID;
   }
 
   const response = await fetch(apiUrl + endpoint, {
