@@ -48,7 +48,7 @@ const getMarketsByCommentaryIdService =async (request , fastify) => {
     }
     // check if isPredicted is true
     if (!commentary.isPredictMarket) {
-        return [];
+        return null;
     }
     const getCommentaries = await getMarketsByCIdQuery(request , fastify);
     const datProviderUrl = global.tblConfigs.find((c) => c.key == configConstants.DATAPROVIDERURL);
