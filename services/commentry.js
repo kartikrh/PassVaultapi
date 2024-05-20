@@ -285,7 +285,7 @@ const commentaryDetailsByIdService = async (request, fastify) => {
         event_id: commentary.eventRefId,
         line_ratio_data: eventMarketLine,
       },
-      "/api/loadcommentary",
+      "/api/v1/loadcommentary",
       fastify,
       request
     );
@@ -535,7 +535,7 @@ const createCommentaryService = async (request, fastify) => {
         match_type_id: addCommentry.matchTypeId,
         event_id: addCommentry.eventRefId,
       },
-      "/api/loadcommentary",
+      "/api/v1/loadcommentary",
       fastify,
       request
     );
@@ -779,13 +779,18 @@ const updateCommentaryService = async (request, fastify) => {
   global.tblCommentaryPlayers = await getAllCommentaryPlayerQuery(fastify);
   global.tblCommentaryTeams = await getAllCommentaryTeamsQuery(fastify);
 
-
-  if(updatedData.isPredictMarket == true && updatedData.commentaryStatus != 4){
-    callDataProvider({
-      commentaryId : updatedData.commentaryId,
-      serviceType : ServiceType.dataProviderAPI,
-      moduleType : APIEndpointModuleType.commentaryUpdate
-    },fastify)
+  if (
+    updatedData.isPredictMarket == true &&
+    updatedData.commentaryStatus != 4
+  ) {
+    callDataProvider(
+      {
+        commentaryId: updatedData.commentaryId,
+        serviceType: ServiceType.dataProviderAPI,
+        moduleType: APIEndpointModuleType.commentaryUpdate,
+      },
+      fastify
+    );
   }
 
   return updatedData;
@@ -822,7 +827,7 @@ const cloneCommentaryService = async (request, fastify) => {
   const validateMatchTypeId = global.tblMatchTypes.find(
     (item) => item.matchTypeId === originalCommentary.matchTypeId
   );
-  if(!validateMatchTypeId){
+  if (!validateMatchTypeId) {
     throw new Error("MatchType with this id not Found");
   }
 
@@ -871,7 +876,7 @@ const cloneCommentaryService = async (request, fastify) => {
     team2Captain: team2.teamCaptain,
     team2Kipper: team2.teamKipper,
     team2Players: filterOutUniquePlayerId(team2Players),
-    teamMaxOver: validateMatchTypeId.maxOversInFirstInings
+    teamMaxOver: validateMatchTypeId.maxOversInFirstInings,
   };
 
   if (validateMatchTypeId) {
@@ -987,11 +992,15 @@ const cloneCommentaryService = async (request, fastify) => {
   global.tblCommentaryPlayers = await getAllCommentaryPlayerQuery(fastify);
   global.tblCommentaryTeams = await getAllCommentaryTeamsQuery(fastify);
 
-  if(newCommentary.isPredictMarket == true && newCommentary.commentaryStatus != 4){
-    callDataProvider({
+  if (
+    newCommentary.isPredictMarket == true &&
+    newCommentary.commentaryStatus != 4
+  ) {
+    callDataProvider(
+      {
         commentaryId: newCommentary.commentaryId,
-        serviceType : ServiceType.dataProviderAPI,
-        moduleType : APIEndpointModuleType.commentaryUpdate
+        serviceType: ServiceType.dataProviderAPI,
+        moduleType: APIEndpointModuleType.commentaryUpdate,
       },
       fastify
     );
@@ -1035,7 +1044,7 @@ const loadMultiCommentaryService = async (request, fastify) => {
           match_type_id: originalCommentary.matchTypeId,
           event_id: originalCommentary.eventRefId,
         },
-        "/api/loadcommentary",
+        "/api/v1/loadcommentary",
         fastify,
         request
       );
@@ -1497,13 +1506,18 @@ const testStoreProcedureService = async (request, fastify) => {
         winnerId: commentaryDetails.winnerId,
         winnerName: commentaryDetails.winnerName,
       };
-      if(previousCommentaryStatus != statusToUpdate && commentaryData.isPredictMarket == true){
-    
-        callDataProvider({
-          commentaryId : commentaryId,
-          serviceType : ServiceType.dataProviderAPI,
-          moduleType : APIEndpointModuleType.commentaryUpdate
-        },fastify)
+      if (
+        previousCommentaryStatus != statusToUpdate &&
+        commentaryData.isPredictMarket == true
+      ) {
+        callDataProvider(
+          {
+            commentaryId: commentaryId,
+            serviceType: ServiceType.dataProviderAPI,
+            moduleType: APIEndpointModuleType.commentaryUpdate,
+          },
+          fastify
+        );
       }
       // sendDataForSocketUpdate.dataToUpdate.push({
       //   module: "commentaryDetails",
@@ -1571,7 +1585,7 @@ const testStoreProcedureService = async (request, fastify) => {
             wicket: _wkt === true ? 1 : 0,
             total_wicket: strikeTeam.teamWicket,
           },
-          "/api/undoscore",
+          "/api/v1/undoscore",
           fastify,
           request
         );
@@ -1670,7 +1684,7 @@ const testStoreProcedureService = async (request, fastify) => {
               wicket: _wkt === true ? 1 : 0,
               total_wicket: strikeTeam.teamWicket,
             },
-            "/api/predictscore",
+            "/api/v1/predictscore",
             fastify,
             request
           );
@@ -1782,7 +1796,7 @@ const testStoreProcedureService = async (request, fastify) => {
           match_type_id: commentaryDetails.matchTypeId,
           event_id: commentaryDetails.eventRefId,
         },
-        "/api/loadcommentary",
+        "/api/v1/loadcommentary",
         fastify,
         request
       );
@@ -1797,7 +1811,7 @@ const testStoreProcedureService = async (request, fastify) => {
         {
           commentary_id: commentaryDetails.commentaryId,
         },
-        "/api/endcommentary",
+        "/api/v1/endcommentary",
         fastify,
         request
       );
@@ -2248,7 +2262,7 @@ const updateCommentaryStatusService = async (request, fastify) => {
         status: EventMarketStatus.Suspend,
         match_type_id: global.tblCommentaries[index].matchTypeId,
       },
-      "/api/updatemarketstatus",
+      "/api/v1/updatemarketstatus",
       fastify,
       request
     );
@@ -3754,7 +3768,7 @@ const updateMatchTypeInCommentaryService = async (request, fastify) => {
         match_type_id: matchTypeId,
         event_id: updatedData.eventRefId,
       },
-      "/api/loadcommentary",
+      "/api/v1/loadcommentary",
       fastify,
       request
     );
@@ -5433,7 +5447,7 @@ const updateisPredictMarketInCommentaryService = async (request, fastify) => {
   return updatedData;
 };
 
-const updateResultInCommentaryService =  async (request, fastify) => {
+const updateResultInCommentaryService = async (request, fastify) => {
   const { commentaryId, result } = request.body;
   const index = global.tblCommentaries.findIndex(
     (item) => item.commentaryId === commentaryId
@@ -5444,9 +5458,9 @@ const updateResultInCommentaryService =  async (request, fastify) => {
   }
 
   await updateResultInCommentaryQuery(request.body, fastify, request);
-  
+
   global.tblCommentaries[index].result = result;
-  
+
   return "Result updated successfully";
 };
 
@@ -5602,7 +5616,7 @@ const closeCommentaryService = async (request, fastify) => {
         {
           commentary_id: commentaryId,
         },
-        "/api/endcommentary",
+        "/api/v1/endcommentary",
         fastify,
         request
       );
@@ -5682,7 +5696,7 @@ const updateDelayInCommentaryService = async (request, fastify) => {
         delay: delay,
         event_id: updatedData.eventRefId,
       },
-      "/api/loadcommentary",
+      "/api/v1/loadcommentary",
       fastify,
       request
     );
@@ -5835,7 +5849,7 @@ const updateEventRefIdInCommentaryService = async (request, fastify) => {
         eventRefId: eventRefId,
         event_id: updatedData.eventRefId,
       },
-      "/api/loadcommentary",
+      "/api/v1/loadcommentary",
       fastify,
       request
     );
@@ -5882,7 +5896,7 @@ const loadcommentaryService = async (request, fastify) => {
           event_id: commentary.eventRefId,
           line_ratio_data: eventMarketLine,
         },
-        "/api/loadcommentary",
+        "/api/v1/loadcommentary",
         fastify,
         request
       );
@@ -5913,8 +5927,7 @@ const changeMaxOverDetailService = async (request, fastify) => {
   }
 
   return "Commentary Updated successfully";
-
-}
+};
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -5966,6 +5979,6 @@ module.exports = {
   deleteCommentaryDataService,
   updateEventRefIdInCommentaryService,
   loadcommentaryService,
-  changeMaxOverDetailService
+  changeMaxOverDetailService,
   // getshortService
 };
