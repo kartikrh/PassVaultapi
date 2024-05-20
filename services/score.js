@@ -41,7 +41,7 @@ const getAllCommentariesDataService = (request, fastify) => {
 const getMarketsByCommentaryIdService =async (request , fastify) => {
     // vlaidate commentry id
     const commentary = global.tblCommentaries.find((c) => {
-        return c.commentaryId === request.body.commentaryId;
+        return c.eventRefId === request.body.eventId;
     });
     if (!commentary) {
         throw new Error("Commentary with this id not found");

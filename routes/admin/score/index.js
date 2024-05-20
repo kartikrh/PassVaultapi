@@ -228,7 +228,7 @@ module.exports = async (fastify, opts) => {
   })
 
   fastify.post("/getMarketsByCId" , {
-    // schema: Score.getMarkets.schema,
+    schema: Score.getMarkets.schema,
     handler: (request, reply) => getMarketsByCommentaryId(request, reply, fastify)
   })
 };
