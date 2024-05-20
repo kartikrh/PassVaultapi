@@ -1864,7 +1864,7 @@ const getMarketsByCIdQuery = async (request, fastify) => {
             "wrResult" as "result"
         FROM "tblEventMarkets"
         LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = "tblEventMarkets"."wrTeamID"
-        WHERE "wrCommentaryId" = $1
+        WHERE "wrEventRefID" = $1
         AND "wrStatus" = $2
     ),
     open_market_data AS (
@@ -1885,7 +1885,7 @@ const getMarketsByCIdQuery = async (request, fastify) => {
         FROM "tblEventMarkets"
         LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = "tblEventMarkets"."wrTeamID"
         LEFT JOIN "tblMarketRunners" tmr ON tmr."wrEventMarketId" = "tblEventMarkets"."wrID"
-        WHERE "wrCommentaryId" = $1
+        WHERE "wrEventRefID" = $1
         AND "wrStatus" NOT IN ($2, $3, $4)
     )
     SELECT
@@ -1897,7 +1897,7 @@ const getMarketsByCIdQuery = async (request, fastify) => {
 
     const result = await fastify.db.query(query, {
       type: fastify.db.QueryTypes.SELECT,
-      bind: [request.body.commentaryId , EventMarketStatus.Settled , EventMarketStatus.Cancel , EventMarketStatus.Close],
+      bind: [request.body.eventId , EventMarketStatus.Settled , EventMarketStatus.Cancel , EventMarketStatus.Close],
     });
 
     return result[0].result;

@@ -2859,6 +2859,20 @@ const Score = {
       // security: [{ bearerAuth: [] }],
     },
   },
+  getMarkets : {
+    schema: {
+      tags: ["Score"],
+      description: "get all Markets",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          eventId: { type: "string" },
+        },
+        required: ["eventId"],
+      },
+    },
+  },
   getscoreByCId: {
     schema: {
       tags: ["Score"],
