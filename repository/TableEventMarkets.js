@@ -1847,7 +1847,7 @@ const getMarketDataByCIdQuery = async (request, fastify) => {
 }
 const getMarketsByCIdQuery = async (request, fastify) => {
   try {
-    console.log("testing");
+    // console.log("testing");
   const query = `
       WITH result_market_data AS (
         SELECT 
