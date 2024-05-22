@@ -884,7 +884,7 @@ const updateEventMarketRateQuery = async (data, request, fastify) => {
             WHERE "wrID" = $2
         `,
         {
-          bind: [runner.line, runner.eventMarketId],
+          bind: [runner.line, data.eventMarketId],
         }
       );
     }
