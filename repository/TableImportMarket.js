@@ -226,8 +226,8 @@ const insertEventQuery = async (request, fastify) => {
           data.eventId,
           data.isActive || false,
           request.userTokenInfo.WrUserId,
-          data.countryCode || "GB",
-          data.timeZone || "GMT",
+          data.countryCode || "",
+          data.timeZone || "",
           data.venue || "",
         ],
       }
