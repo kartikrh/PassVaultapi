@@ -892,16 +892,16 @@ const updateEventMarketRateQuery = async (data, request, fastify) => {
     // get the runner market runner data
     const query3 = `
             SELECT 
-                tem."wrID" as "id",
-                tem."wrEventRefID" as "eventRefId",
+                tem."wrID" as "marketId",
+                tem."wrEventRefID" as "eventId",
                 tem."wrMarketName" as "marketName",
                 tem."wrStatus" as "status",
                 tem."wrIsActive" as "isActive",
                 tem."wrIsAllow" as "isAllow",
                 json_agg(
                     json_build_object(
-                        'id', tmr."wrRunnerId",
                         'selectionId' , tmr."wrSelectionId",
+                        'status' , tmr."wrSelectionStatus",
                         'runner', tmr."wrRunner",
                         'line', tmr."wrLine",
                         'overRate', tmr."wrOverRate",
@@ -909,8 +909,7 @@ const updateEventMarketRateQuery = async (data, request, fastify) => {
                         'yesRate', tmr."wrYesRate",
                         'yesPoint', tmr."wrYesPoint",
                         'noRate', tmr."wrNoRate",
-                        'noPoint', tmr."wrNoPoint",
-                        'lastUpdate', tmr."wrLastUpdate"
+                        'noPoint', tmr."wrNoPoint"
                     )
                 ) as "runner"
             FROM "tblEventMarkets" tem
