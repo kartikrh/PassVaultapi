@@ -2663,6 +2663,33 @@ const ImportMarket = {
       },
     },
   },
+  setMarketDetails: {
+    schema: {
+      tags: ["ImportMarket"],
+      security: [{ bearerAuth: [] }],
+      description: "Set Market",
+      body: {
+        type: "object",
+        properties: {
+          eventTypeId: { type: "string" },
+          eventTypeName: { type: "string" },
+          competitionId: { type: "string" },
+          competitionName: { type: "string" },
+          eventId: { type: "string" },
+          eventName: { type: "string" },
+          countryCode: { type: "string" },
+          timeZone: { type: "string" },
+          venue: { type: "string" },
+          openDate: { type: "string" },
+          marketID: { type: "string" },
+          marketName: { type: "string" },
+          marketStatus: { type: "integer" },
+          marketType: { type: "string" },
+          marketTypeName: { type: "string" },
+        },
+      },
+    },
+  },
 };
 
 const MarketTemplate = {
