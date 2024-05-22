@@ -452,7 +452,27 @@ const marketListByCIdService = async (request, fastify) => {
     request,
     fastify
   );
-  return marketList;
+
+  // get the team and teamName by commentaryId
+  const teams = global.tblCommentaryTeams
+  .filter((item) => item.commentaryId === commentaryId)
+  .reduce((acc, current) => {
+    if (!acc.some(item => item.teamId === current.teamId)) {
+      acc.push(current);
+    }
+    return acc;
+  }, [])
+  .map((item) => {
+    return {
+      teamId: item.teamId,
+      teamName: item.teamName,
+    };
+  });
+
+  return {
+    marketList,
+    teams,
+  };
 };
 const updateMarketRateService = async (request, fastify) => {
   // i got array of eventMarket i want to update this data
