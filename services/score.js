@@ -40,7 +40,7 @@ const getAllCommentariesDataService = (request, fastify) => {
 }
 const getMarketsByCommentaryIdService =async (request , fastify) => {
     // vlaidate commentry id
-    console.log("called getMarketsByCommentaryIdService")
+    // console.log("called getMarketsByCommentaryIdService")
     const commentary = global.tblCommentaries.find((c) => {
         return c.eventRefId === request.body.eventId;
     });
