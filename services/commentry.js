@@ -1492,6 +1492,7 @@ const testStoreProcedureService = async (request, fastify) => {
         choseTo: commentaryDetails.choseTo,
         winnerId: commentaryDetails.winnerId,
         winnerName: commentaryDetails.winnerName,
+        result: commentaryDetails.result || "",
       };
       response.commentaryDetails = {
         ...global.tblCommentaries[commentaryIndex],
@@ -1505,6 +1506,7 @@ const testStoreProcedureService = async (request, fastify) => {
         choseTo: commentaryDetails.choseTo,
         winnerId: commentaryDetails.winnerId,
         winnerName: commentaryDetails.winnerName,
+        result: commentaryDetails.result || "",
       };
       if (
         previousCommentaryStatus != statusToUpdate &&
