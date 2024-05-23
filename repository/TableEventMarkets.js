@@ -837,14 +837,14 @@ const updateEventMarketRateQuery = async (data, request, fastify) => {
           data.isAllow,
           data.isSendData || false,
           data.lineRatio || 0,
-          data.eventMarketId,
+          data.marketId,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
     );
 
     // update market runners for this market
-    for (let runner of data.marketRunners) {
+    for (let runner of data.runner) {
       // console.log(runner);
       // update market runners for this market
       await fastify.db.query(
@@ -857,9 +857,8 @@ const updateEventMarketRateQuery = async (data, request, fastify) => {
                 "wrNoRate" = $6,
                 "wrNoPoint" = $7,
                 "wrLastUpdate" = now()::timestamp,
-                "wrSelectionStatus" = $8,
-                "wrSelectionId" = $9
-                WHERE "wrRunnerId" = $10
+                "wrSelectionStatus" = $8
+                WHERE "wrRunnerId" = $9
                 `,
         {
           bind: [
@@ -870,8 +869,7 @@ const updateEventMarketRateQuery = async (data, request, fastify) => {
             runner.yesPoint || 0,
             runner.noRate || 0,
             runner.noPoint || 0,
-            runner.selectionStatus,
-            runner.selectionId,
+            runner.status,
             runner.runnerId,
           ],
           type: fastify.db.QueryTypes.SELECT,
@@ -886,7 +884,7 @@ const updateEventMarketRateQuery = async (data, request, fastify) => {
             WHERE "wrID" = $2
         `,
         {
-          bind: [runner.line, data.eventMarketId],
+          bind: [runner.line, data.marketId],
         }
       );
     }
@@ -902,7 +900,7 @@ const updateEventMarketRateQuery = async (data, request, fastify) => {
                 tem."wrIsAllow" as "isAllow",
                 json_agg(
                     json_build_object(
-                        'selectionId' , tmr."wrSelectionId",
+                        'runnerId' , tmr."wrRunnerId",
                         'status' , tmr."wrSelectionStatus",
                         'line', tmr."wrLine",
                         'overRate', tmr."wrOverRate",
@@ -921,7 +919,7 @@ const updateEventMarketRateQuery = async (data, request, fastify) => {
         `;
 
     const marketRunner = await fastify.db.query(query3, {
-      bind: [data.eventMarketId],
+      bind: [data.marketId],
       type: fastify.db.QueryTypes.SELECT,
     });
 
@@ -931,19 +929,20 @@ const updateEventMarketRateQuery = async (data, request, fastify) => {
     const query4 = `UPDATE "tblEventMarkets" SET "wrData" = $1 WHERE "wrID" = $2`;
 
     await fastify.db.query(query4, {
-      bind: [dataToStore, data.eventMarketId],
+      bind: [dataToStore, data.marketId],
       type: fastify.db.QueryTypes.SELECT,
     });
 
     const eventMarketData = await getEventMarketByIdsQuery(
       {
-        eventMarketIds: [data.eventMarketId],
+        eventMarketIds: [data.marketId],
       },
       request,
       fastify
     );
     return eventMarketData[0];
   } catch (error) {
+    console.log(error);
     errorLogger(
       fastify,
       error.message,
