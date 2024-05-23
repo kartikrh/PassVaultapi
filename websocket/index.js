@@ -45,10 +45,10 @@ const WebsocketConnection = function (fastify, ws, req) {
 
   ws.on("message", function incoming(message) {
     try {
-      console.log("received: %s", message);
+      // console.log("received: %s", message);
 
       // Attempt to parse the JSON message
-      const jsonObject = JSON.parse('{ lastUpdate: "2024-05-10T11:21:06.693Z" }');
+      const jsonObject = JSON.parse(message);
 
       // Check the event type
       if (jsonObject.event === "subScribetShortScore") {
