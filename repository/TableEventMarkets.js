@@ -1332,25 +1332,23 @@ const closeEventMarketByTeamIdQuery = async (data, request, fastify) => {
     for (market of result) {
       const query3 = `
           SELECT 
-              tem."wrID" as "id",
-              tem."wrEventRefID" as "eventRefId",
+              tem."wrID" as "marketId",
+              tem."wrEventRefID" as "eventId",
               tem."wrMarketName" as "marketName",
               tem."wrStatus" as "status",
               tem."wrIsActive" as "isActive",
               tem."wrIsAllow" as "isAllow",
               json_agg(
                   json_build_object(
-                      'id', tmr."wrRunnerId",
-                      'selectionId' , tmr."wrSelectionId",
-                      'runner', tmr."wrRunner",
+                      'runnerId', tmr."wrRunnerId",
+                      'status', tmr."wrSelectionStatus",	
                       'line', tmr."wrLine",
-                      'over', tmr."wrOverRate",
-                      'under', tmr."wrUnderRate",
-                      'yes', tmr."wrYesRate",
+                      'overRate', tmr."wrOverRate",
+                      'underRate', tmr."wrUnderRate",
+                      'yesRate', tmr."wrYesRate",
                       'yesPoint', tmr."wrYesPoint",
-                      'no', tmr."wrNoRate",
-                      'noPoint', tmr."wrNoPoint",
-                      'lastUpdate', tmr."wrLastUpdate"
+                      'noRate', tmr."wrNoRate",
+                      'noPoint', tmr."wrNoPoint"
                   )
               ) as "runner"
           FROM "tblEventMarkets" tem
@@ -1478,25 +1476,23 @@ const cancelEventMarketByTeamIdQuery = async (data, request, fastify) => {
     for (market of result) {
       const query3 = `
       SELECT 
-          tem."wrID" as "id",
-          tem."wrEventRefID" as "eventRefId",
+          tem."wrID" as "marketId",
+          tem."wrEventRefID" as "eventId",
           tem."wrMarketName" as "marketName",
           tem."wrStatus" as "status",
           tem."wrIsActive" as "isActive",
           tem."wrIsAllow" as "isAllow",
           json_agg(
               json_build_object(
-                  'id', tmr."wrRunnerId",
-                  'selectionId' , tmr."wrSelectionId",
-                  'runner', tmr."wrRunner",
+                  'runnerId', tmr."wrRunnerId",
+                  'status', tmr."wrSelectionStatus",
                   'line', tmr."wrLine",
-                  'over', tmr."wrOverRate",
-                  'under', tmr."wrUnderRate",
-                  'yes', tmr."wrYesRate",
+                  'overRate', tmr."wrOverRate",
+                  'underRate', tmr."wrUnderRate",
+                  'yesRate', tmr."wrYesRate",
                   'yesPoint', tmr."wrYesPoint",
-                  'no', tmr."wrNoRate",
-                  'noPoint', tmr."wrNoPoint",
-                  'lastUpdate', tmr."wrLastUpdate"
+                  'noRate', tmr."wrNoRate",
+                  'noPoint', tmr."wrNoPoint"
               )
           ) as "runner"
       FROM "tblEventMarkets" tem
