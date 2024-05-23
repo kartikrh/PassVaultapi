@@ -772,12 +772,14 @@ const getMarketListByCIdQuery = async (data, request, fastify) => {
             FROM "tblMarketRunners"
         )
         SELECT
-            "wrID" AS "eventMarketId",
+            "wrID" AS "marketId",
             tem."wrCommentaryId" AS "commentaryId",
+            tem."wrEventRefID" AS "eventId",
             tem."wrTeamID" AS "teamId",
             "wrMarketName" AS "marketName",
             "wrMargin" AS "margin",
             "wrStatus" AS "status",
+            "wrInningsID" as "inningsId",
             "wrOver" as "over",
             tem."wrIsActive" as "isActive", 
             "wrIsAllow" as "isAllow",
