@@ -2723,6 +2723,7 @@ const commentaryDetailsByEventIdService = async (
     win: "",
     cst: "",
     ics: result.isClientShow,
+    iact: result.isActive,
     t1bg: "",
     t1co: "",
     t2bg: "",
@@ -2769,6 +2770,7 @@ const commentaryDetailsByEventIdService = async (
   let bovr = 0;
   let cst;
   let ics;
+  let iact;
   let t1bg;
   let t1co;
   let t2bg;
@@ -2784,6 +2786,7 @@ const commentaryDetailsByEventIdService = async (
   mtype = result.matchTypeId;
   cst = result.commentaryStatus;
   ics = result.isClientShow;
+  iact = result.isActive;
   //teams set
   const commentaryTeamsOne = await global.tblCommentaryTeams.filter(
     (item) =>
@@ -2885,9 +2888,8 @@ const commentaryDetailsByEventIdService = async (
     resultArr.rmk = "Toss Not Done Yet";
     resultArr.win = "";
     resultArr.cst = result.commentaryStatus;
-    result.ics = result.isClientShow;
-    resultArr.t1n = t1sn;
-    resultArr.t1sn = t1sn;
+    resultArr.ics = result.isClientShow;
+    resultArr.iact = result.isActive;
     resultArr.t1co = t1co;
     resultArr.t1bg = t1bg;
     resultArr.t2co = t2co;
@@ -2942,6 +2944,7 @@ const commentaryDetailsByEventIdService = async (
     resultArr.win = "";
     resultArr.cst = result.commentaryStatus;
     resultArr.ics = result.isClientShow;
+    resultArr.iact = result.isActive;
     resultArr.t1co = t1co;
     resultArr.t1bg = t1bg;
     resultArr.t2co = t2co;
@@ -3053,6 +3056,7 @@ const commentaryDetailsByEventIdService = async (
     resultArr.win = result.result || "";
     resultArr.cst = result.commentaryStatus;
     resultArr.ics = result.isClientShow;
+    resultArr.iact = result.isActive;
     resultArr.t1co = t1co;
     resultArr.t1bg = t1bg;
     resultArr.t2co = t2co;
@@ -3241,6 +3245,11 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     win: "",
     cst: "",
     ics: result.isClientShow,
+    iact: result.isActive,
+    t1bg: "",
+    t1co: "",
+    t2bg: "",
+    t2co: "",
   };
   let eid;
   let til;
@@ -3282,6 +3291,11 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
   let mtype = 0;
   let bovr = 0;
   let ics;
+  let iact;
+  let t1bg;
+  let t1co;
+  let t2bg;
+  let t2co;
   // Basic elements are set
   cid = result.commentaryId;
   eid = result.eventRefId.toString();
@@ -3293,6 +3307,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
   mtype = result.matchTypeId;
   cst = result.commentaryStatus;
   ics = result.isClientShow;
+  iact = result.isActive;
   //teams set
   const commentaryTeamsOne = await global.tblCommentaryTeams.filter(
     (item) =>
@@ -3325,6 +3340,8 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
   if (commentaryTeamsOne.length > 0) {
     t1sn = commentaryTeamsOne[0].shortName;
     t1n = commentaryTeamsOne[0].teamName;
+    t1co = commentaryTeamsOne[0].teamColor || "";
+    t1bg = commentaryTeamsOne[0].backgroundColor || "";
     const wicket1 =
       commentaryTeamsOne[0].teamWicket === null
         ? 0
@@ -3340,6 +3357,8 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
   if (commentaryTeamsTwo.length > 0) {
     t2sn = commentaryTeamsTwo[0].shortName;
     t2n = commentaryTeamsTwo[0].teamName;
+    t2co = commentaryTeamsTwo[0].teamColor || "";
+    t2bg = commentaryTeamsTwo[0].backgroundColor || "";
     const wicket1 =
       commentaryTeamsTwo[0].teamWicket === null
         ? 0
@@ -3396,6 +3415,11 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     resultArr.win = "";
     resultArr.cst = result.commentaryStatus;
     resultArr.ics = result.isClientShow;
+    resultArr.iact = result.isActive;
+    resultArr.t1co = t1co;
+    resultArr.t1bg = t1bg;
+    resultArr.t2co = t2co;
+    resultArr.t2bg = t2bg;
   }
   if (getstatus == 2) {
     const _tosswonby = result.tossWonBy;
@@ -3446,6 +3470,11 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     resultArr.win = "";
     resultArr.cst = result.commentaryStatus;
     resultArr.ics = result.isClientShow;
+    resultArr.iact = result.isActive;
+    resultArr.t1co = t1co;
+    resultArr.t1bg = t1bg;
+    resultArr.t2co = t2co;
+    resultArr.t2bg = t2bg;
   }
   // if (getstatus == 3) {
   //   const _tosswonby = result.tossWonBy;
@@ -3599,6 +3628,11 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     resultArr.win = "";
     resultArr.cst = result.commentaryStatus;
     resultArr.ics = result.isClientShow;
+    resultArr.iact = result.isActive;
+    resultArr.t1co = t1co;
+    resultArr.t1bg = t1bg;
+    resultArr.t2co = t2co;
+    resultArr.t2bg = t2bg;
   }
 
   let eventType = await global.tblEventTypes.find(
