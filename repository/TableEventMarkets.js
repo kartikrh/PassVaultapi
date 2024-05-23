@@ -902,7 +902,6 @@ const updateEventMarketRateQuery = async (data, request, fastify) => {
                     json_build_object(
                         'selectionId' , tmr."wrSelectionId",
                         'status' , tmr."wrSelectionStatus",
-                        'runner', tmr."wrRunner",
                         'line', tmr."wrLine",
                         'overRate', tmr."wrOverRate",
                         'underRate', tmr."wrUnderRate",
