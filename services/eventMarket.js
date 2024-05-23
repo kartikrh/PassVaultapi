@@ -487,7 +487,7 @@ const updateMarketRateService = async (request, fastify) => {
   for (let item of eventMarket) {
     let eventMarket = await getEventMarketByIdsQuery(
       {
-        eventMarketIds: [item.eventMarketId],
+        eventMarketIds: [item.marketId],
       },
       request,
       fastify
@@ -511,7 +511,7 @@ const updateMarketRateService = async (request, fastify) => {
       is_onlyover: is_onlyover,
     });
     let index = global.tblEventMarkets.findIndex(
-      (e) => e.eventMarketId === item.eventMarketId
+      (e) => e.eventMarketId === item.marketId
     );
     if (index !== -1) {
       global.tblEventMarkets[index] = data;

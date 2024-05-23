@@ -3303,14 +3303,14 @@ const EventMarket = {
             items: {
               type: "object",
               properties: {
-                marketRunners: {
+                runner: {
                   type: "array",
                   items: {
                     type: "object",
                   },
                 },
               },
-              required: ["marketRunners"],
+              required: ["runner"],
             },
           },
         },
