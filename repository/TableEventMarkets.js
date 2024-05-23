@@ -768,7 +768,7 @@ const getMarketListByCIdQuery = async (data, request, fastify) => {
                 "wrNoRate" as "noRate",
                 "wrNoPoint" as "noPoint",
                 "wrSelectionId" as "selectionId",
-                "wrSelectionStatus" as "selectionStatus"
+                "wrSelectionStatus" as "status"
             FROM "tblMarketRunners"
         )
         SELECT
@@ -789,7 +789,7 @@ const getMarketListByCIdQuery = async (data, request, fastify) => {
                 SELECT json_agg("MarketRunners_CTE".*)
                 FROM "MarketRunners_CTE"
                 WHERE "MarketRunners_CTE"."eventMarketId" = tem."wrID"
-            ) as "marketRunners"
+            ) as "runner"
            
         FROM "tblEventMarkets" tem
         WHERE tem."wrCommentaryId" = $1
