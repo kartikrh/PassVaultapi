@@ -779,7 +779,7 @@ const getMarketListByCIdQuery = async (data, request, fastify) => {
             "wrMarketName" AS "marketName",
             "wrMargin" AS "margin",
             "wrStatus" AS "status",
-            "wrInningsId" as "inningsId",
+            "wrInningsID" as "inningsId",
             "wrOver" as "over",
             tem."wrIsActive" as "isActive", 
             "wrIsAllow" as "isAllow",
