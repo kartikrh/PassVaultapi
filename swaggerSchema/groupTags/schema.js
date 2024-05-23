@@ -1106,6 +1106,7 @@ const Teams = {
         type: "object",
         properties: {
           eventTypeId: { type: "integer" },
+          competitionId: { type: "integer" },
         },
       },
     },
@@ -1119,6 +1120,20 @@ const Teams = {
         type: "object",
         properties: {
           isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+  competitionTypeList: {
+    schema: {
+      tags: ["Teams"],
+      security: [{ bearerAuth: [] }],
+      description: "get all competition type",
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+          eventTypeId: { type: "integer" },
         },
       },
     },
@@ -1166,6 +1181,10 @@ const Teams = {
           eventTypeId: { type: "integer" },
           teamColor: { type: "string" },
           playerId: {
+            type: "array",
+            items: { type: "string" },
+          },
+          competitionId: {
             type: "array",
             items: { type: "string" },
           },
@@ -1739,6 +1758,21 @@ const Commentary = {
       },
     },
   },
+  changeMaxOverDetail: {
+    schema: {
+      tags: ["Commentary"],
+      description: "change Max Over Detail",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+          teamMaxOver: { type: "integer" },
+        },
+        required: ["commentaryId", "teamMaxOver"],
+      },
+    },
+  },
   activeInactiveCommentary: {
     schema: {
       tags: ["Commentary"],
@@ -1829,6 +1863,21 @@ const Commentary = {
           isPredictMarket: { type: "boolean" },
         },
         required: ["commentaryId", "isPredictMarket"],
+      },
+    },
+  },
+  changeResult: {
+    schema: {
+      tags: ["Commentary"],
+      description: "Change Result",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+          result: { type: "string" },
+        },
+        required: ["commentaryId", "result"],
       },
     },
   },
@@ -2070,8 +2119,8 @@ const Commentary = {
           commentaryId: { type: "integer" },
           teamId: { type: "integer" },
           playerId: { type: "integer" },
-          batsmanAverage: {type: "integer"},
-          batsmanStrikeRate: {type: "integer"}
+          batsmanAverage: { type: "integer" },
+          batsmanStrikeRate: { type: "integer" },
         },
         required: ["commentaryId", "teamId", "playerId"],
       },
@@ -2609,6 +2658,34 @@ const ImportMarket = {
           isAustralian: { type: "string" },
           isEvent: { type: "boolean" },
           isCompitition: { type: "boolean" },
+          isMarket: { type: "boolean" },
+        },
+      },
+    },
+  },
+  setMarketDetails: {
+    schema: {
+      tags: ["ImportMarket"],
+      security: [{ bearerAuth: [] }],
+      description: "Set Market",
+      body: {
+        type: "object",
+        properties: {
+          eventTypeId: { type: "string" },
+          eventTypeName: { type: "string" },
+          competitionId: { type: "string" },
+          competitionName: { type: "string" },
+          eventId: { type: "string" },
+          eventName: { type: "string" },
+          countryCode: { type: "string" },
+          timeZone: { type: "string" },
+          venue: { type: "string" },
+          openDate: { type: "string" },
+          marketID: { type: "string" },
+          marketName: { type: "string" },
+          marketStatus: { type: "integer" },
+          marketType: { type: "string" },
+          marketTypeName: { type: "string" },
         },
       },
     },
@@ -2808,6 +2885,20 @@ const Score = {
       tags: ["Score"],
       description: "get all CommentaryIDS",
       // security: [{ bearerAuth: [] }],
+    },
+  },
+  getMarkets: {
+    schema: {
+      tags: ["Score"],
+      description: "get all Markets",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          eventId: { type: "string" },
+        },
+        required: ["eventId"],
+      },
     },
   },
   getscoreByCId: {
@@ -3212,14 +3303,14 @@ const EventMarket = {
             items: {
               type: "object",
               properties: {
-                marketRunners: {
+                runner: {
                   type: "array",
                   items: {
                     type: "object",
                   },
                 },
               },
-              required: ["marketRunners"],
+              required: ["runner"],
             },
           },
         },
@@ -4188,8 +4279,8 @@ const ApiEndpoints = {
           serviceType: { type: "integer" },
           endPoint: { type: "string" },
           moduleType: { type: "integer" },
-          timeOut: {type: "integer"},
-          isActive: {type: "boolean"}
+          timeOut: { type: "integer" },
+          isActive: { type: "boolean" },
         },
         required: ["apiEndPointId"],
       },
@@ -4268,7 +4359,7 @@ const Api = {
           apiId: { type: "integer" },
           type: { type: "integer" },
           api: { type: "string" },
-          isActive: {type: "boolean"}
+          isActive: { type: "boolean" },
         },
         required: ["apiId"],
       },
@@ -4326,5 +4417,5 @@ module.exports = {
   ActivityLog,
   Banner,
   ApiEndpoints,
-  Api
+  Api,
 };

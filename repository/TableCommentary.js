@@ -178,7 +178,7 @@ const insertCommentaryTeams = async (request, fastify) => {
     return await fastify.db.query(
       `
       insert into "tblCommentaryTeams" ("wrCommentaryId" , "wrTeamId","wrTeamCaptain","wrTeamKipper" , "wrShortName" , "wrTeamName","wrCurrentInnings","wrIsBattingComplete"
-      , "wrTeamColor" , "wrBackgroundColor")
+      , "wrTeamColor" , "wrBackgroundColor" , "wrTeamMaxOver")
        values (
         $1,
         $2,
@@ -189,7 +189,8 @@ const insertCommentaryTeams = async (request, fastify) => {
         $8,
         false,
         (select "wrTeamColor" from "tblTeams" where "wrTeamId" = $2),
-        (select "wrBackgroundColor" from "tblTeams" where "wrTeamId" = $2)             
+        (select "wrBackgroundColor" from "tblTeams" where "wrTeamId" = $2),
+        $9             
       )
       ,(
         $1,
@@ -201,7 +202,8 @@ const insertCommentaryTeams = async (request, fastify) => {
         $8,
         false,
         (select "wrTeamColor" from "tblTeams" where "wrTeamId" = $5),
-        (select "wrBackgroundColor" from "tblTeams" where "wrTeamId" = $5)
+        (select "wrBackgroundColor" from "tblTeams" where "wrTeamId" = $5),
+        $9
       )
     `,
       {
@@ -215,6 +217,7 @@ const insertCommentaryTeams = async (request, fastify) => {
           data.team2Captain || null,
           data.team2Kipper || null,
           data.currentInnings,
+          data.teamMaxOver || null,
         ],
       }
     );
@@ -499,7 +502,13 @@ const updateCommentaryPlayerById = async (data, request, fastify) => {
       AND "wrTeamId" = $5`,
       {
         type: fastify.db.QueryTypes.DELETE,
-        bind: [data.batsmanAverage, data.batsmanStrikeRate, data.playerId, data.commentaryId, data.teamId],
+        bind: [
+          data.batsmanAverage,
+          data.batsmanStrikeRate,
+          data.playerId,
+          data.commentaryId,
+          data.teamId,
+        ],
       }
     );
   } catch (err) {
@@ -559,7 +568,9 @@ const getCommentaryByIdQuery = async (request, fastify) => {
       "wrIsPlayersShow" as "isPlayersShow",
       "wrIsPredictMarket" as "isPredictMarket",
       tc."wrIsActive"  as "isActive",
-      "wrDelay" as "delay"
+      "wrDelay" as "delay",
+      tc."wrCommentaryResult" as "result",
+      tc."wrCommentaryCloseTime" as "commentaryCloseTime"
       from "tblCommentaries" tc
       left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
       left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -593,7 +604,8 @@ const getCommentaryTeamsQuery = async (data, fastify, request) => {
       `select 
       "wrTeamId" as "teamId",
       "wrTeamCaptain" as "teamCaptain",
-      "wrTeamKipper" as "teamKipper"
+      "wrTeamKipper" as "teamKipper",
+      "wrTeamMaxOver" as "teamMaxOver"
       from "tblCommentaryTeams"
       where "wrCommentaryId" = $1 and "wrTeamId" = $2
       `,
@@ -798,7 +810,8 @@ const getAllCommentaryTeamsQuery = async (fastify) => {
   "wrCommentaryPlayerTeamCaptain" as "commentaryPlayerTeamCaptain",
   "wrCommentaryPlayerTeamKipper" as "commentaryPlayerTeamKipper",
   "wrTeamColor" as "teamColor",
-  "wrBackgroundColor" as "backgroundColor"
+  "wrBackgroundColor" as "backgroundColor",
+  "wrTeamMaxOver" as "teamMaxOver"
   from "tblCommentaryTeams" tct 
 
   `,
@@ -2498,6 +2511,28 @@ const updateisPredictMarketInCommentaryQuery = async (
     throw new Error(err.message);
   }
 };
+
+const updateResultInCommentaryQuery = async (data, fastify, request) => {
+  try {
+    return await fastify.db.query(
+      `UPDATE "tblCommentaries" SET "wrCommentaryResult" = $1 WHERE
+      "wrCommentaryId" = $2`,
+      {
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [data.result, data.commentaryId],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/updateResultInCommentaryQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 const saveCommentaryDetailsAPIQuery = async (data, fastify, request) => {
   try {
     // call the sp to save the commentary details
@@ -2670,6 +2705,67 @@ const deleteCommentaryDataQuery = async (data, fastify, request) => {
     throw new Error(err.message);
   }
 };
+const getCommentaryDetailByIdQuery = async (data, fastify) => {
+  try {
+    const commentary = await fastify.db.query(
+      `
+              SELECT 
+              "wrCommentaryId" as "commentaryId",
+              "wrEventRefId" as "eventId",
+              "wrEventName" as "eventName",
+              "wrEventDate" as "eventDate",
+              "wrCommentaryStatus" as "status",
+              tm."wrMatchType" as "matchType",
+              te."wrEventType" as "eventType",
+              tco."wrCompetition" as "competition",
+              "wrIsPredictMarket" as "isPredictMarket"
+          FROM "tblCommentaries" tc
+          LEFT JOIN "tblMatchTypes" tm ON tc."wrMatchTypeId" = tm."wrMatchTypeId"
+          LEFT JOIN "tblEventTypes" te ON tc."wrEventTypeId" = te."wrEventTypeId"
+          LEFT JOIN "tblCompetitions" tco ON tc."wrCompetitionId" = tco."wrCompetitionId"
+          WHERE "wrCommentaryId" = $1    
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [data.commentaryId],
+      }
+    );
+
+    return commentary[0];
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCommentary/getCommentaryDetailByIdQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+};
+const updateMaxOverDetailQuery = async (data, fastify, request) => {
+  try {
+    const query = `
+        update "tblCommentaryTeams" set
+        "wrTeamMaxOver" = $1
+        where "wrCommentaryId" = $2
+    `;
+
+    const result = await fastify.db.query(query, {
+      type: fastify.db.QueryTypes.UPDATE,
+      bind: [data.teamMaxOver, data.commentaryId],
+    });
+
+    return result;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCommentary/updateMaxOverDetailQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+};
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -2717,6 +2813,7 @@ module.exports = {
   updateCommentaryPlayerById,
   updateCommentaryStatusQuery,
   updateisPredictMarketInCommentaryQuery,
+  updateResultInCommentaryQuery,
   saveCommentaryDetailsAPIQuery,
   activeInactiveCommentaryQuery,
   closeCommentaryQuery,
@@ -2724,4 +2821,6 @@ module.exports = {
   updateDelayInCommentaryQuery,
   deleteCommentaryDataQuery,
   updateEventRefIdInCommentaryQuery,
+  getCommentaryDetailByIdQuery,
+  updateMaxOverDetailQuery,
 };

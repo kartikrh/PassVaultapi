@@ -7,5 +7,6 @@ const configConstants = {
     PASSWORD : "PASSWORD",
     ISPREDICTORLOGGER : "ISPREDICTORLOGGER",
     SCORECLIENTAPIURL : "SCORECLIENTAPIURL",
+    DATAPROVIDERURL : "DATAPROVIDERURL",
 }
 module.exports = configConstants;

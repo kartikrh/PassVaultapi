@@ -72,7 +72,9 @@ const getAllEventMarketsQuery = async (fastify, whereCondition = null) => {
         tr."wrSelectionStatus" as "selectionStatus",
         tr."wrOrder" as "order",
         tem."wrDelay" as "delay",
-        tem."wrLineRatio" as "lineRatio"
+        tem."wrLineRatio" as "lineRatio",
+        tem."wrRateSource" as "rateSource",
+        tem."wrRateSourceRefID" as "rateSourceRefID"
     FROM "tblEventMarkets" tem
     LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
     LEFT JOIN "tblCompetitions" tcom ON tcom."wrCompetitionId" = tc."wrCompetitionId"
@@ -152,7 +154,9 @@ const getEventMarketByIdsQuery = async (data, request, fastify) => {
           tr."wrSelectionStatus" as "selectionStatus",
           tr."wrOrder" as "order",
           tem."wrDelay" as "delay",
-          tem."wrLineRatio" as "lineRatio"
+          tem."wrLineRatio" as "lineRatio",
+          tem."wrRateSource" as "rateSource",
+          tem."wrRateSourceRefID" as "rateSourceRefID"
       FROM "tblEventMarkets" tem
       LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
       LEFT JOIN "tblCompetitions" tcom ON tcom."wrCompetitionId" = tc."wrCompetitionId"
@@ -304,7 +308,7 @@ const updateEventMarketQuery = async (data, request, fastify) => {
             "wrDelay" = $33
             WHERE "wrID" = $34
             RETURNING 
-                "wrID" as "eventMarketId"
+                "wrID" as "eventMarketId" , "tblEventMarkets" as "eventMarket"
             `,
       {
         bind: [
@@ -756,7 +760,6 @@ const getMarketListByCIdQuery = async (data, request, fastify) => {
             SELECT 
                 "wrEventMarketId" as "eventMarketId",
                 "wrRunnerId" as "runnerId",
-                "wrRunner" as "runner",
                 "wrLine" as "line",
                 "wrOverRate" as "overRate",
                 "wrUnderRate" as "underRate",
@@ -764,76 +767,31 @@ const getMarketListByCIdQuery = async (data, request, fastify) => {
                 "wrYesPoint" as "yesPoint",
                 "wrNoRate" as "noRate",
                 "wrNoPoint" as "noPoint",
-                "wrLastUpdate" as "lastUpdate",
                 "wrSelectionId" as "selectionId",
-                "wrSelectionStatus" as "selectionStatus",
-                "wrOrder" as "order"
+                "wrSelectionStatus" as "status"
             FROM "tblMarketRunners"
         )
         SELECT
-            "wrID" AS "eventMarketId",
+            "wrID" AS "marketId",
             tem."wrCommentaryId" AS "commentaryId",
-            tem."wrEventRefID" AS "eventRefId",
-            tc."wrEventName" AS "eventName",
-            tc."wrEventDate" AS "eventDate",
-            tcom."wrCompetition" AS "competitionName",
-            tet."wrEventType" AS "eventTypeName",
+            tem."wrEventRefID" AS "eventId",
             tem."wrTeamID" AS "teamId",
-            tt."wrTeamName" AS "teamName",
-            "wrInningsID" AS "inningsId",
             "wrMarketName" AS "marketName",
             "wrMargin" AS "margin",
             "wrStatus" AS "status",
-            "wrIsPredefineMarket" as "isPredefineMarket",
-            "wrIsOver" as "isOver",
+            "wrInningsID" as "inningsId",
             "wrOver" as "over",
-            "wrIsPlayer" as "isPlayer",
-            "wrPlayerID" as "playerId",
-            "wrIsAutoCancel" as "isAutoCancel",
-            "wrAutoOpenType" as "autoOpenType", 
-            "wrAutoOpen" as "autoOpen",
-            "wrAutoCloseType" as "autoCloseType",
-            "wrBeforeAutoClose" as "beforeAutoClose",
-            "wrAutoSuspendType" as "autoSuspendType",
-            "wrBeforeAutoSuspend"  as "beforeAutoSuspend",
-            "wrIsBallStart" as "isBallStart",
-            "wrIsAutoResultSet" as "isAutoResultSet",
-            "wrAutoResultType" as "autoResultType",
-            "wrAutoResultafterBall" as "autoResultafterBall",   
-            "wrAfterWicketAutoSuspend" as "afterWicketAutoSuspend",   
-            "wrAfterWicketNotCreated" as "afterWicketNotCreated",
             tem."wrIsActive" as "isActive", 
             "wrIsAllow" as "isAllow",
-            "wrCloseTime" as "closeTime",
-            "wrOpenTime" as "openTime",
-            "wrSettledTime" as "settledTime",
-            "wrResult" as "result",
-            "wrIsResult" as "isResult",
-            "wrData" as "data",
-            tem."wrLastUpdate" as "lastUpdate",
             "wrIsSendData" as "isSendData",
-            tem."wrActionType" as "actionType",
-            tem."wrMarketTemplateId" as "marketTemplateId",
-            tem."wrMarketTypeId" as "marketTypeId",	
-            tem."wrMarketTypeCategoryId" as "marketTypeCategoryId",
-            tem."wrCreateRefId" as "createRefId",
-            tem."wrOpenRefId" as "openRefId",
-            tem."wrCreateType" as "createType",
-            tem."wrCreate" as "create",
-            tem."wrTemplateType" as "templateType",
-            tem."wrDelay" as "delay",
             tem."wrLineRatio" as "lineRatio",
             (
                 SELECT json_agg("MarketRunners_CTE".*)
                 FROM "MarketRunners_CTE"
                 WHERE "MarketRunners_CTE"."eventMarketId" = tem."wrID"
-            ) as "marketRunners"
+            ) as "runner"
            
         FROM "tblEventMarkets" tem
-        LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
-        LEFT JOIN "tblCompetitions" tcom ON tcom."wrCompetitionId" = tc."wrCompetitionId"
-        LEFT JOIN "tblEventTypes" tet ON tet."wrEventTypeId" = tc."wrEventTypeId"
-        LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = tem."wrTeamID" 
         WHERE tem."wrCommentaryId" = $1
         AND tem."wrStatus" NOT IN ($2 ,$3,$4)
         `;
@@ -862,103 +820,48 @@ const updateEventMarketRateQuery = async (data, request, fastify) => {
       `
             UPDATE "tblEventMarkets"
             SET
-                "wrCommentaryId" = $1,
-                "wrEventRefID" = $2,
-                "wrTeamID" = $3,
-                "wrInningsID" = $4,
-                "wrMarketName" = $5,
-                "wrMargin" = $6,
-                "wrStatus" = $7,
-                "wrIsPredefineMarket" = $8,
-                "wrIsOver" = $9,
-                "wrOver" = $10,
-                "wrIsPlayer" = $11,
-                "wrPlayerID" = $12,
-                "wrIsAutoCancel" = $13,
-                "wrAutoOpenType" = $14,
-                "wrAutoOpen" = $15,
-                "wrAutoCloseType" = $16,
-                "wrBeforeAutoClose" = $17,
-                "wrAutoSuspendType" = $18,
-                "wrBeforeAutoSuspend" = $19,
-                "wrIsBallStart" = $20,
-                "wrIsAutoResultSet" = $21,
-                "wrAutoResultType" = $22,
-                "wrAutoResultafterBall" = $23,
-                "wrAfterWicketAutoSuspend" = $24,
-                "wrAfterWicketNotCreated" = $25,
-                "wrIsActive" = $26,
-                "wrIsAllow" = $27,
-                "wrData" = $28,
+                "wrMargin" = $1,
+                "wrStatus" = $2,
+                "wrIsActive" = $3,
+                "wrIsAllow" = $4,
                 "wrLastUpdate" = now()::timestamp,
-                "wrIsSendData" = $29,
-                "wrActionType" = $30,
-                "wrDelay" = $31,
-                "wrLineRatio" = $33
-            WHERE "wrID" = $32
+                "wrIsSendData" = $5,
+                "wrLineRatio" = $6
+            WHERE "wrID" = $7
             RETURNING "wrID" as "eventMarketId"`,
       {
         bind: [
-          data.commentaryId,
-          data.eventRefId,
-          data.teamId,
-          data.inningsId,
-          data.marketName,
           data.margin,
           data.status,
-          data.isPredefineMarket,
-          data.isOver,
-          data.over,
-          data.isPlayer,
-          data.playerId,
-          data.isAutoCancel,
-          data.autoOpenType,
-          data.autoOpen,
-          data.autoCloseType,
-          data.beforeAutoClose,
-          data.autoSuspendType,
-          data.beforeAutoSuspend,
-          data.isBallStart,
-          data.isAutoResultSet,
-          data.autoResultType,
-          data.autoResultafterBall,
-          data.afterWicketAutoSuspend,
-          data.afterWicketNotCreated,
           data.isActive,
           data.isAllow,
-          data.data,
           data.isSendData || false,
-          data.actionType || 0,
-          data.delay || 0,
-          data.eventMarketId,
-          data.lineRatio,
+          data.lineRatio || 0,
+          data.marketId,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
     );
 
     // update market runners for this market
-    for (let runner of data.marketRunners) {
+    for (let runner of data.runner) {
       // console.log(runner);
       // update market runners for this market
       await fastify.db.query(
         `UPDATE "tblMarketRunners" SET
-                "wrRunner" = $1,
-                "wrLine" = $2,
-                "wrOverRate" = $3,
-                "wrUnderRate" = $4,
-                "wrYesRate" = $5,
-                "wrYesPoint" = $6,
-                "wrNoRate" = $7,
-                "wrNoPoint" = $8,
+                "wrLine" = $1,
+                "wrOverRate" = $2,
+                "wrUnderRate" = $3,
+                "wrYesRate" = $4,
+                "wrYesPoint" = $5,
+                "wrNoRate" = $6,
+                "wrNoPoint" = $7,
                 "wrLastUpdate" = now()::timestamp,
-                "wrSelectionStatus" = $9,
-                "wrSelectionId" = $10
-                WHERE "wrRunnerId" = $11
+                "wrSelectionStatus" = $8
+                WHERE "wrRunnerId" = $9
                 `,
         {
           bind: [
-            runner.runner,
             runner.line || 0,
             runner.overRate || 0,
             runner.underRate || 0,
@@ -966,8 +869,7 @@ const updateEventMarketRateQuery = async (data, request, fastify) => {
             runner.yesPoint || 0,
             runner.noRate || 0,
             runner.noPoint || 0,
-            runner.selectionStatus,
-            runner.selectionId,
+            runner.status,
             runner.runnerId,
           ],
           type: fastify.db.QueryTypes.SELECT,
@@ -980,11 +882,9 @@ const updateEventMarketRateQuery = async (data, request, fastify) => {
             SET "wrMinOdds" = CASE WHEN "wrMinOdds" < $1 THEN "wrMinOdds" ELSE $1 END,
                 "wrMaxOdds" = CASE WHEN "wrMaxOdds" > $1 THEN "wrMaxOdds" ELSE $1 END
             WHERE "wrID" = $2
-        `,{
-          bind : [
-            runner.line,
-            runner.eventMarketId,
-          ]
+        `,
+        {
+          bind: [runner.line, data.marketId],
         }
       );
     }
@@ -992,25 +892,23 @@ const updateEventMarketRateQuery = async (data, request, fastify) => {
     // get the runner market runner data
     const query3 = `
             SELECT 
-                tem."wrID" as "id",
-                tem."wrEventRefID" as "eventRefId",
+                tem."wrID" as "marketId",
+                tem."wrEventRefID" as "eventId",
                 tem."wrMarketName" as "marketName",
                 tem."wrStatus" as "status",
                 tem."wrIsActive" as "isActive",
                 tem."wrIsAllow" as "isAllow",
                 json_agg(
                     json_build_object(
-                        'id', tmr."wrRunnerId",
-                        'selectionId' , tmr."wrSelectionId",
-                        'runner', tmr."wrRunner",
+                        'runnerId' , tmr."wrRunnerId",
+                        'status' , tmr."wrSelectionStatus",
                         'line', tmr."wrLine",
-                        'over', tmr."wrOverRate",
-                        'under', tmr."wrUnderRate",
-                        'yes', tmr."wrYesRate",
+                        'overRate', tmr."wrOverRate",
+                        'underRate', tmr."wrUnderRate",
+                        'yesRate', tmr."wrYesRate",
                         'yesPoint', tmr."wrYesPoint",
-                        'no', tmr."wrNoRate",
-                        'noPoint', tmr."wrNoPoint",
-                        'lastUpdate', tmr."wrLastUpdate"
+                        'noRate', tmr."wrNoRate",
+                        'noPoint', tmr."wrNoPoint"
                     )
                 ) as "runner"
             FROM "tblEventMarkets" tem
@@ -1021,7 +919,7 @@ const updateEventMarketRateQuery = async (data, request, fastify) => {
         `;
 
     const marketRunner = await fastify.db.query(query3, {
-      bind: [data.eventMarketId],
+      bind: [data.marketId],
       type: fastify.db.QueryTypes.SELECT,
     });
 
@@ -1031,19 +929,20 @@ const updateEventMarketRateQuery = async (data, request, fastify) => {
     const query4 = `UPDATE "tblEventMarkets" SET "wrData" = $1 WHERE "wrID" = $2`;
 
     await fastify.db.query(query4, {
-      bind: [dataToStore, data.eventMarketId],
+      bind: [dataToStore, data.marketId],
       type: fastify.db.QueryTypes.SELECT,
     });
 
     const eventMarketData = await getEventMarketByIdsQuery(
       {
-        eventMarketIds: [data.eventMarketId],
+        eventMarketIds: [data.marketId],
       },
       request,
       fastify
     );
     return eventMarketData[0];
   } catch (error) {
+    console.log(error);
     errorLogger(
       fastify,
       error.message,
@@ -1403,7 +1302,7 @@ const closeEventMarketByTeamIdQuery = async (data, request, fastify) => {
   try {
     const query = `
             UPDATE "tblEventMarkets"
-            SET "wrStatus" = $1 , "wrCloseTime" = now()::timestamp
+            SET "wrStatus" = $1 , "wrCloseTime" = now()::timestamp, "wrLastUpdate" = now()::timestamp
             WHERE "wrTeamID" = $2
             AND "wrCommentaryId" = $3
             AND "wrInningsID" = $4
@@ -1429,8 +1328,59 @@ const closeEventMarketByTeamIdQuery = async (data, request, fastify) => {
       bind: [EventMarketStatus.Close, result.map((e) => e.eventMarketId)],
       type: fastify.db.QueryTypes.SELECT,
     });
+
+    for (market of result) {
+      const query3 = `
+          SELECT 
+              tem."wrID" as "id",
+              tem."wrEventRefID" as "eventRefId",
+              tem."wrMarketName" as "marketName",
+              tem."wrStatus" as "status",
+              tem."wrIsActive" as "isActive",
+              tem."wrIsAllow" as "isAllow",
+              json_agg(
+                  json_build_object(
+                      'id', tmr."wrRunnerId",
+                      'selectionId' , tmr."wrSelectionId",
+                      'runner', tmr."wrRunner",
+                      'line', tmr."wrLine",
+                      'over', tmr."wrOverRate",
+                      'under', tmr."wrUnderRate",
+                      'yes', tmr."wrYesRate",
+                      'yesPoint', tmr."wrYesPoint",
+                      'no', tmr."wrNoRate",
+                      'noPoint', tmr."wrNoPoint",
+                      'lastUpdate', tmr."wrLastUpdate"
+                  )
+              ) as "runner"
+          FROM "tblEventMarkets" tem
+          LEFT JOIN "tblMarketRunners" tmr ON tmr."wrEventMarketId" = tem."wrID"
+          WHERE tem."wrID" = $1
+          GROUP BY tem."wrID"
+
+        `;
+
+      const marketRunner = await fastify.db.query(query3, {
+        bind: [market.eventMarketId],
+        type: fastify.db.QueryTypes.SELECT,
+      });
+
+      // update eventmarket data with runner data
+      const dataToStore = marketRunner[0];
+
+      const query4 = `UPDATE "tblEventMarkets" SET "wrData" = $1 WHERE "wrID" = $2
+        RETURNING "wrData" as "data"`;
+
+      let udpatedData = await fastify.db.query(query4, {
+        bind: [dataToStore, market.eventMarketId],
+        type: fastify.db.QueryTypes.SELECT,
+      });
+
+      market.data = udpatedData[0].data;
+    }
     return result;
   } catch (error) {
+    console.log(error);
     errorLogger(
       fastify,
       error.message,
@@ -1500,7 +1450,8 @@ const cancelEventMarketByTeamIdQuery = async (data, request, fastify) => {
     let query = `
             UPDATE "tblEventMarkets"
             SET "wrStatus" = $1,
-            "wrSettledTime" = now()::timestamp
+            "wrSettledTime" = now()::timestamp,
+            "wrLastUpdate" = now()::timestamp
             WHERE "wrTeamID" = $2
             AND "wrCommentaryId" = $3
             AND "wrInningsID" = $4
@@ -1523,6 +1474,57 @@ const cancelEventMarketByTeamIdQuery = async (data, request, fastify) => {
       bind: [EventMarketStatus.Cancel, result.map((e) => e.eventMarketId)],
       type: fastify.db.QueryTypes.SELECT,
     });
+
+    for (market of result) {
+      const query3 = `
+      SELECT 
+          tem."wrID" as "id",
+          tem."wrEventRefID" as "eventRefId",
+          tem."wrMarketName" as "marketName",
+          tem."wrStatus" as "status",
+          tem."wrIsActive" as "isActive",
+          tem."wrIsAllow" as "isAllow",
+          json_agg(
+              json_build_object(
+                  'id', tmr."wrRunnerId",
+                  'selectionId' , tmr."wrSelectionId",
+                  'runner', tmr."wrRunner",
+                  'line', tmr."wrLine",
+                  'over', tmr."wrOverRate",
+                  'under', tmr."wrUnderRate",
+                  'yes', tmr."wrYesRate",
+                  'yesPoint', tmr."wrYesPoint",
+                  'no', tmr."wrNoRate",
+                  'noPoint', tmr."wrNoPoint",
+                  'lastUpdate', tmr."wrLastUpdate"
+              )
+          ) as "runner"
+      FROM "tblEventMarkets" tem
+      LEFT JOIN "tblMarketRunners" tmr ON tmr."wrEventMarketId" = tem."wrID"
+      WHERE tem."wrID" = $1
+      GROUP BY tem."wrID"
+
+    `;
+
+      const marketRunner = await fastify.db.query(query3, {
+        bind: [market.eventMarketId],
+        type: fastify.db.QueryTypes.SELECT,
+      });
+
+      // update eventmarket data with runner data
+      const dataToStore = marketRunner[0];
+
+      const query4 = `UPDATE "tblEventMarkets" SET "wrData" = $1 WHERE "wrID" = $2
+        RETURNING "wrData" as "data"`;
+
+      let udpatedData = await fastify.db.query(query4, {
+        bind: [dataToStore, market.eventMarketId],
+        type: fastify.db.QueryTypes.SELECT,
+      });
+
+      market.data = udpatedData[0].data;
+    }
+
     return result;
   } catch (error) {
     errorLogger(
@@ -1640,44 +1642,43 @@ const getEventMarketRatioQuery = async (data, request, fastify) => {
             AND ev."wrTeamID" = $2
 
         `;
-        return await fastify.db.query(query, {
-            bind: [data.commentaryId, data.teamId],
-            type: fastify.db.QueryTypes.SELECT
-        });
-
-    } catch (error) {
-        errorLogger(
-            fastify,
-            error.message,
-            "DB ERROR --> repository/TableEventmarket.js/upsertEventMarketSPQuery",
-            request
-        );
-        throw new Error(error.message);
-    }
-}
-const setLineRatioEventMarketQuery = async (data,request,fastify) => {
-    try {
-        const query = `
+    return await fastify.db.query(query, {
+      bind: [data.commentaryId, data.teamId],
+      type: fastify.db.QueryTypes.SELECT,
+    });
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/upsertEventMarketSPQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+};
+const setLineRatioEventMarketQuery = async (data, request, fastify) => {
+  try {
+    const query = `
             CALL update_lineratio_eventMarket($1,$2,$3)
         `;
-        const result = await fastify.db.query(query, {
-            bind: [data.matchTypeId , data.commentaryId, data.status],
-            type: fastify.db.QueryTypes.SELECT
-        });
-        return result;
-    } catch (error) {
-        errorLogger(
-            fastify,
-            error.message,
-            "DB ERROR --> repository/TableEventmarket.js/setLineRatioEventMarketQuery",
-            request
-        );
-        throw new Error(error.message);
-    }
-}
-const getRunnersByMarketIdQuery = async (data,request,fastify) => {
-    try {
-        const query = `
+    const result = await fastify.db.query(query, {
+      bind: [data.matchTypeId, data.commentaryId, data.status],
+      type: fastify.db.QueryTypes.SELECT,
+    });
+    return result;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/setLineRatioEventMarketQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+};
+const getRunnersByMarketIdQuery = async (data, request, fastify) => {
+  try {
+    const query = `
             SELECT
                 "wrRunnerId" as "runnerId",
                 "wrRunner" as "runner",
@@ -1695,20 +1696,20 @@ const getRunnersByMarketIdQuery = async (data,request,fastify) => {
             FROM "tblMarketRunners"
             WHERE "wrEventMarketId" = $1
         `;
-        return await fastify.db.query(query, {
-            type: fastify.db.QueryTypes.SELECT,
-            bind: [data.eventMarketId]
-        });
-    } catch (error) {
-        errorLogger(
-            fastify,
-            error.message,
-            "DB ERROR --> repository/TableEventmarket.js/getRunnersByMarketIdQuery",
-            request
-        );
-        throw new Error(error.message);
-    }
-}
+    return await fastify.db.query(query, {
+      type: fastify.db.QueryTypes.SELECT,
+      bind: [data.eventMarketId],
+    });
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/getRunnersByMarketIdQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+};
 const getMarketDataByCIdQuery = async (request, fastify) => {
   try {
     let query = `
@@ -1721,7 +1722,7 @@ const getMarketDataByCIdQuery = async (request, fastify) => {
         AND tem."wrStatus" NOT IN ($2 ,$3,$4)
         AND "wrData" IS NOT NULL
       `;
-    
+
     return await fastify.db.query(query, {
       type: fastify.db.QueryTypes.SELECT,
       bind: [
@@ -1736,37 +1737,261 @@ const getMarketDataByCIdQuery = async (request, fastify) => {
       fastify,
       error.message,
       "DB ERROR --> repository/TableEventmarket.js/getMarketDataByCIdQuery",
-        request
+      request
     );
     throw new Error(error.message);
   }
-}
+};
+const getMarketsByCIdQuery = async (request, fastify) => {
+  try {
+    const query = `
+      WITH result_market_data AS (
+        SELECT 
+            "wrID" as "marketId",
+            "wrCommentaryId" as "commentaryId",
+            "wrEventRefID" as "eventId",
+            "wrTeamID" as "teamId",
+            tt."wrTeamName" as "teamName",
+            tt."wrTeamShortName" as "teamShortName",
+            tt."wrImage" as "teamImage",
+            "wrInningsID" as "inningsId",
+            "wrMarketName" as "marketName",
+            "wrMinOdds" as "minOdds",
+            "wrMaxOdds" as "maxOdds",
+            "wrStatus" as "status",
+            "wrOpenOdds" as "openOdds",
+            "wrResult" as "result"
+        FROM "tblEventMarkets"
+        LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = "tblEventMarkets"."wrTeamID"
+        WHERE "wrEventRefID" = $1
+        AND "wrStatus" = $2
+    ),
+    open_market_data AS (
+        SELECT
+            "wrID" as "marketId",
+            "wrCommentaryId" as "commentaryId",
+            "wrEventRefID" as "eventId",
+            "wrTeamID" as "teamId",
+            tt."wrTeamName" as "teamName",
+            tt."wrTeamShortName" as "teamShortName",
+            tt."wrImage" as "teamImage",
+            "wrInningsID" as "inningsId",
+            "wrMarketName" as "marketName",
+            "wrOpenOdds" as "openOdds",
+            "wrStatus" as "status",
+            tmr."wrYesRate" as "yesRate",
+            tmr."wrYesPoint" as "yesPoint",
+            tmr."wrNoRate" as "noRate",
+            tmr."wrNoPoint" as "noPoint"
+        FROM "tblEventMarkets"
+        LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = "tblEventMarkets"."wrTeamID"
+        LEFT JOIN "tblMarketRunners" tmr ON tmr."wrEventMarketId" = "tblEventMarkets"."wrID"
+        WHERE "wrEventRefID" = $1
+        AND "wrStatus" NOT IN ($2, $3, $4)
+    )
+    SELECT
+        jsonb_build_object(
+            'settledMarkets', (SELECT jsonb_agg(result_market_data) FROM result_market_data),
+            'openMarkets', (SELECT jsonb_agg(open_market_data) FROM open_market_data)
+        ) as result;
+    `;
+
+    const result = await fastify.db.query(query, {
+      type: fastify.db.QueryTypes.SELECT,
+      bind: [
+        request.body.eventId,
+        EventMarketStatus.Settled,
+        EventMarketStatus.Cancel,
+        EventMarketStatus.Close,
+      ],
+    });
+
+    return result[0].result;
+  } catch (error) {
+    console.log(error);
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/getMarketDataByCIdQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+};
+
+const createEventMarketMaunalQuery = async (data, request, fastify) => {
+  try {
+    const query = `
+    INSERT INTO "tblEventMarkets"(
+      "wrEventRefID",
+      "wrMarketName",
+      "wrStatus",
+      "wrIsActive",
+      "wrIsAllow",
+      "wrLastUpdate",
+      "wrRateSource",
+      "wrRateSourceRefID",
+      "wrCommentaryId",
+      "wrTeamID",
+      "wrInningsID"
+  ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8,$9,$10,$11)
+        RETURNING "wrID" as "eventMarketId"
+    `;
+    const result = await fastify.db.query(query, {
+      bind: [
+        data.eventID,
+        data.marketName,
+        data.marketStatus,
+        true,
+        false,
+        new Date(),
+        data.rateSource,
+        data.marketID,
+        0,
+        0,
+        0,
+      ],
+      type: fastify.db.QueryTypes.SELECT,
+    });
+    return result[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableEventmarket.js/createEventMarketMaunalQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const updateEventMarketMaunalQuery = async (data, request, fastify) => {
+  try {
+    const query = `
+        UPDATE "tblEventMarkets"
+        SET "wrEventRefID" = $1, "wrMarketName" = $2, "wrStatus" = $3, "wrIsActive" = $4, "wrIsAllow" = $5, "wrLastUpdate" = $6,wrRateSource = $7, "wrRateSourceRefID" =$8
+        WHERE "wrRateSourceRefID" = $8
+        RETURNING "wrID" as "eventMarketId"
+    `;
+    const result = await fastify.db.query(query, {
+      bind: [
+        data.eventID,
+        data.marketName,
+        data.marketStatus,
+        true,
+        false,
+        new Date(),
+        data.rateSource,
+        data.marketID,
+      ],
+      type: fastify.db.QueryTypes.SELECT,
+    });
+    return result[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableVendors/updateEventMarketMaunalQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const createOrUpdateEventRunnerMarketManualQuery = async (
+  data,
+  request,
+  fastify
+) => {
+  try {
+    const checkQuery = `
+      SELECT "wrRunnerId"
+      FROM "tblMarketRunners"
+      WHERE "wrSelectionId" = $1
+    `;
+
+    const checkResult = await fastify.db.query(checkQuery, {
+      bind: [data.selectionID],
+      type: fastify.db.QueryTypes.SELECT,
+    });
+
+    let query;
+    let queryParams;
+
+    if (checkResult.length > 0) {
+      // Record exists, perform update
+      query = `
+        UPDATE "tblMarketRunners"
+        SET "wrRunner" = $2, "wrSelectionId" = $3,"wrEventMarketId" = $4
+        WHERE "wrRunnerId" = $1
+        RETURNING "wrRunnerId" as "runnerId"
+      `;
+      queryParams = [
+        checkResult[0].wrRunnerId,
+        data.runnerName,
+        data.selectionID,
+        data.marketID,
+      ];
+    } else {
+      // Record does not exist, perform insert
+      query = `
+        INSERT INTO "tblMarketRunners"(
+          "wrEventMarketId",
+          "wrRunner",
+          "wrSelectionId"
+        ) VALUES ($1, $2, $3)
+        RETURNING "wrRunnerId" as "runnerId"
+      `;
+      queryParams = [data.marketID, data.runnerName, data.selectionID];
+    }
+
+    const result = await fastify.db.query(query, {
+      bind: queryParams,
+      type: fastify.db.QueryTypes.SELECT,
+    });
+
+    return result[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableEventmarket.js/createOrUpdateEventRunnerMarketManualQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
-    getAllEventMarketsQuery,
-    createManyEventMarketQuery,
-    updateEventMarketQuery,
-    deleteEventMarketQuery,
-    changeIsActiveEventMarketQuery,
-    changeIsAllowEventMarketQuery,
-    changeIsResultEventMarketQuery,
-    createEventMarketQuery,
-    getMarketListByCIdQuery,
-    updateEventMarketRateQuery,
-    createEventMarketInDBQuery,
-    changeMarketCancelQuery,
-    changeMarketResultQuery,
-    changeMarketCloseQuery,
-    suspendEventMarketQuery,
-    closeEventMarketByTeamIdQuery,
-    getMarketLogsByCIdQuery,
-    cancelEventMarketByTeamIdQuery,
-    upsertEventMarketSPQuery,
-    getEventMarketByIdsQuery,
-    setDelayEventMarketQuery,
-    getDataLogsByMarketQuery,
-    getStatusLogsByMarketQuery,
-    getEventMarketRatioQuery,
-    setLineRatioEventMarketQuery,
-    getRunnersByMarketIdQuery,
-    getMarketDataByCIdQuery
+  getAllEventMarketsQuery,
+  createManyEventMarketQuery,
+  updateEventMarketQuery,
+  deleteEventMarketQuery,
+  changeIsActiveEventMarketQuery,
+  changeIsAllowEventMarketQuery,
+  changeIsResultEventMarketQuery,
+  createEventMarketQuery,
+  getMarketListByCIdQuery,
+  updateEventMarketRateQuery,
+  createEventMarketInDBQuery,
+  changeMarketCancelQuery,
+  changeMarketResultQuery,
+  changeMarketCloseQuery,
+  suspendEventMarketQuery,
+  closeEventMarketByTeamIdQuery,
+  getMarketLogsByCIdQuery,
+  cancelEventMarketByTeamIdQuery,
+  upsertEventMarketSPQuery,
+  getEventMarketByIdsQuery,
+  setDelayEventMarketQuery,
+  getDataLogsByMarketQuery,
+  getStatusLogsByMarketQuery,
+  getEventMarketRatioQuery,
+  setLineRatioEventMarketQuery,
+  getRunnersByMarketIdQuery,
+  getMarketDataByCIdQuery,
+  getMarketsByCIdQuery,
+  createEventMarketMaunalQuery,
+  updateEventMarketMaunalQuery,
+  createOrUpdateEventRunnerMarketManualQuery,
 };

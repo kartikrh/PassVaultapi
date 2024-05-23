@@ -52,6 +52,8 @@ const {
   updateEventRefIdInCommentaryQuery,
   updateCommentaryPlayerById,
   getPredictorLogsQuery,
+  updateResultInCommentaryQuery,
+  updateMaxOverDetailQuery,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -60,6 +62,9 @@ const {
   decryptEncryptionId,
   callPredictorMarket,
   EventMarketStatus,
+  callDataProvider,
+  APIEndpointModuleType,
+  ServiceType,
 } = require("../utilities");
 const { getAllPlayersByTeamIdQuery } = require("../repository/TableTeams");
 const { handleMarketCloseService } = require("./eventMarket");
@@ -160,7 +165,11 @@ const predictorLogsByIdService = async (request, fastify) => {
     if (!commentary) {
       throw new Error("Commentary with this id not Found");
     }
-    const predictorLogsData = await getPredictorLogsQuery({commentaryId: request.body.commentaryId}, fastify, request)
+    const predictorLogsData = await getPredictorLogsQuery(
+      { commentaryId: request.body.commentaryId },
+      fastify,
+      request
+    );
     return predictorLogsData;
   } catch (error) {
     throw new Error(error);
@@ -276,7 +285,7 @@ const commentaryDetailsByIdService = async (request, fastify) => {
         event_id: commentary.eventRefId,
         line_ratio_data: eventMarketLine,
       },
-      "/api/loadcommentary",
+      "/api/v1/loadcommentary",
       fastify,
       request
     );
@@ -303,6 +312,7 @@ const createCommentaryService = async (request, fastify) => {
     }
   }
 
+  request.body.teamMaxOver = null;
   if (request.body.matchTypeId) {
     const validateMatchTypeId = global.tblMatchTypes.find(
       (item) => item.matchTypeId === request.body.matchTypeId
@@ -310,6 +320,7 @@ const createCommentaryService = async (request, fastify) => {
     if (!validateMatchTypeId) {
       throw new Error("MatchType with this id not Found");
     }
+    request.body.teamMaxOver = validateMatchTypeId.maxOversInFirstInings;
   }
 
   if (
@@ -524,9 +535,23 @@ const createCommentaryService = async (request, fastify) => {
         match_type_id: addCommentry.matchTypeId,
         event_id: addCommentry.eventRefId,
       },
-      "/api/loadcommentary",
+      "/api/v1/loadcommentary",
       fastify,
       request
+    );
+  }
+
+  if (
+    addCommentry.commentaryStatus != 4 &&
+    addCommentry.isPredictMarket == true
+  ) {
+    callDataProvider(
+      {
+        commentaryId: addCommentry.commentaryId,
+        serviceType: ServiceType.dataProviderAPI,
+        moduleType: APIEndpointModuleType.commentaryUpdate,
+      },
+      fastify
     );
   }
 
@@ -754,6 +779,20 @@ const updateCommentaryService = async (request, fastify) => {
   global.tblCommentaryPlayers = await getAllCommentaryPlayerQuery(fastify);
   global.tblCommentaryTeams = await getAllCommentaryTeamsQuery(fastify);
 
+  if (
+    updatedData.isPredictMarket == true &&
+    updatedData.commentaryStatus != 4
+  ) {
+    callDataProvider(
+      {
+        commentaryId: updatedData.commentaryId,
+        serviceType: ServiceType.dataProviderAPI,
+        moduleType: APIEndpointModuleType.commentaryUpdate,
+      },
+      fastify
+    );
+  }
+
   return updatedData;
 };
 
@@ -788,6 +827,9 @@ const cloneCommentaryService = async (request, fastify) => {
   const validateMatchTypeId = global.tblMatchTypes.find(
     (item) => item.matchTypeId === originalCommentary.matchTypeId
   );
+  if (!validateMatchTypeId) {
+    throw new Error("MatchType with this id not Found");
+  }
 
   const team1 = await getCommentaryTeamsQuery(
     { teamId: originalCommentary.team1Id, commentaryId },
@@ -834,6 +876,7 @@ const cloneCommentaryService = async (request, fastify) => {
     team2Captain: team2.teamCaptain,
     team2Kipper: team2.teamKipper,
     team2Players: filterOutUniquePlayerId(team2Players),
+    teamMaxOver: validateMatchTypeId.maxOversInFirstInings,
   };
 
   if (validateMatchTypeId) {
@@ -949,6 +992,20 @@ const cloneCommentaryService = async (request, fastify) => {
   global.tblCommentaryPlayers = await getAllCommentaryPlayerQuery(fastify);
   global.tblCommentaryTeams = await getAllCommentaryTeamsQuery(fastify);
 
+  if (
+    newCommentary.isPredictMarket == true &&
+    newCommentary.commentaryStatus != 4
+  ) {
+    callDataProvider(
+      {
+        commentaryId: newCommentary.commentaryId,
+        serviceType: ServiceType.dataProviderAPI,
+        moduleType: APIEndpointModuleType.commentaryUpdate,
+      },
+      fastify
+    );
+  }
+
   // if (newCommentary.isPredictMarket == true) {
   //   callPredictorMarket(
   //     {
@@ -987,7 +1044,7 @@ const loadMultiCommentaryService = async (request, fastify) => {
           match_type_id: originalCommentary.matchTypeId,
           event_id: originalCommentary.eventRefId,
         },
-        "/api/loadcommentary",
+        "/api/v1/loadcommentary",
         fastify,
         request
       );
@@ -1435,6 +1492,7 @@ const testStoreProcedureService = async (request, fastify) => {
         choseTo: commentaryDetails.choseTo,
         winnerId: commentaryDetails.winnerId,
         winnerName: commentaryDetails.winnerName,
+        result: commentaryDetails.result || "",
       };
       response.commentaryDetails = {
         ...global.tblCommentaries[commentaryIndex],
@@ -1448,7 +1506,21 @@ const testStoreProcedureService = async (request, fastify) => {
         choseTo: commentaryDetails.choseTo,
         winnerId: commentaryDetails.winnerId,
         winnerName: commentaryDetails.winnerName,
+        result: commentaryDetails.result || "",
       };
+      if (
+        previousCommentaryStatus != statusToUpdate &&
+        commentaryData.isPredictMarket == true
+      ) {
+        callDataProvider(
+          {
+            commentaryId: commentaryId,
+            serviceType: ServiceType.dataProviderAPI,
+            moduleType: APIEndpointModuleType.commentaryUpdate,
+          },
+          fastify
+        );
+      }
       // sendDataForSocketUpdate.dataToUpdate.push({
       //   module: "commentaryDetails",
       //   type: "update",
@@ -1515,7 +1587,7 @@ const testStoreProcedureService = async (request, fastify) => {
             wicket: _wkt === true ? 1 : 0,
             total_wicket: strikeTeam.teamWicket,
           },
-          "/api/undoscore",
+          "/api/v1/undoscore",
           fastify,
           request
         );
@@ -1614,7 +1686,7 @@ const testStoreProcedureService = async (request, fastify) => {
               wicket: _wkt === true ? 1 : 0,
               total_wicket: strikeTeam.teamWicket,
             },
-            "/api/predictscore",
+            "/api/v1/predictscore",
             fastify,
             request
           );
@@ -1726,7 +1798,7 @@ const testStoreProcedureService = async (request, fastify) => {
           match_type_id: commentaryDetails.matchTypeId,
           event_id: commentaryDetails.eventRefId,
         },
-        "/api/loadcommentary",
+        "/api/v1/loadcommentary",
         fastify,
         request
       );
@@ -1741,7 +1813,7 @@ const testStoreProcedureService = async (request, fastify) => {
         {
           commentary_id: commentaryDetails.commentaryId,
         },
-        "/api/endcommentary",
+        "/api/v1/endcommentary",
         fastify,
         request
       );
@@ -2062,57 +2134,61 @@ const updateTeamPlayerService = async (request, fastify) => {
   const { body: playerDataArray } = request;
 
   for (const playerData of playerDataArray) {
-  // validate commentaryId
-  const { teamId, commentaryId, playerId, batsmanStrikeRate, batsmanAverage } = playerData;
-  let commentary = global.tblCommentaries.find(
-    (item) => item.commentaryId === +commentaryId
-  );
-  if (!commentary) {
-    throw new Error("Commentary with this id not Found");
-  }
-  // validate teamId
-  let commentaryTeamIndex = global.tblCommentaryTeams.find(
-    (item) => item.commentaryId === +commentaryId && item.teamId === teamId
-  );
-  if (commentaryTeamIndex === -1) {
-    throw new Error("Team with this id not Found");
-  }
-  // validate playerId
-  let commentaryPlayerIndex = global.tblCommentaryPlayers.findIndex(
-    (item) => item.playerId === +playerId
-  );
-  if (commentaryPlayerIndex === -1) {
-    throw new Error("Commentary Player with this id not Found");
-  }
-
-  // update the player from commentaryPlayer
-  await updateCommentaryPlayerById(
-    {
-      commentaryId,
+    // validate commentaryId
+    const {
       teamId,
+      commentaryId,
       playerId,
       batsmanStrikeRate,
-      batsmanAverage
-    },
-    request,
-    fastify
-  );
+      batsmanAverage,
+    } = playerData;
+    let commentary = global.tblCommentaries.find(
+      (item) => item.commentaryId === +commentaryId
+    );
+    if (!commentary) {
+      throw new Error("Commentary with this id not Found");
+    }
+    // validate teamId
+    let commentaryTeamIndex = global.tblCommentaryTeams.find(
+      (item) => item.commentaryId === +commentaryId && item.teamId === teamId
+    );
+    if (commentaryTeamIndex === -1) {
+      throw new Error("Team with this id not Found");
+    }
+    // validate playerId
+    let commentaryPlayerIndex = global.tblCommentaryPlayers.findIndex(
+      (item) => item.playerId === +playerId
+    );
+    if (commentaryPlayerIndex === -1) {
+      throw new Error("Commentary Player with this id not Found");
+    }
 
-  let player = global.tblCommentaryPlayers.find(
-    (item) =>
-      (
+    // update the player from commentaryPlayer
+    await updateCommentaryPlayerById(
+      {
+        commentaryId,
+        teamId,
+        playerId,
+        batsmanStrikeRate,
+        batsmanAverage,
+      },
+      request,
+      fastify
+    );
+
+    let player = global.tblCommentaryPlayers.find(
+      (item) =>
         item.commentaryId === +commentaryId &&
         item.teamId === +teamId &&
         item.playerId === +playerId
-      )
-  );
-  if (player) {
-    player.batsmanStrikeRate = batsmanStrikeRate;
-    player.batsmanAverage = batsmanAverage;
-  } else {
-    throw new Error("Player not found for update");
+    );
+    if (player) {
+      player.batsmanStrikeRate = batsmanStrikeRate;
+      player.batsmanAverage = batsmanAverage;
+    } else {
+      throw new Error("Player not found for update");
+    }
   }
-}
   return "Player updated successfully";
 };
 const saveShortCommentaryService = async (request, fastify) => {
@@ -2188,7 +2264,7 @@ const updateCommentaryStatusService = async (request, fastify) => {
         status: EventMarketStatus.Suspend,
         match_type_id: global.tblCommentaries[index].matchTypeId,
       },
-      "/api/updatemarketstatus",
+      "/api/v1/updatemarketstatus",
       fastify,
       request
     );
@@ -2647,6 +2723,7 @@ const commentaryDetailsByEventIdService = async (
     win: "",
     cst: "",
     ics: result.isClientShow,
+    iact: result.isActive,
     t1bg: "",
     t1co: "",
     t2bg: "",
@@ -2693,6 +2770,7 @@ const commentaryDetailsByEventIdService = async (
   let bovr = 0;
   let cst;
   let ics;
+  let iact;
   let t1bg;
   let t1co;
   let t2bg;
@@ -2708,6 +2786,7 @@ const commentaryDetailsByEventIdService = async (
   mtype = result.matchTypeId;
   cst = result.commentaryStatus;
   ics = result.isClientShow;
+  iact = result.isActive;
   //teams set
   const commentaryTeamsOne = await global.tblCommentaryTeams.filter(
     (item) =>
@@ -2809,9 +2888,8 @@ const commentaryDetailsByEventIdService = async (
     resultArr.rmk = "Toss Not Done Yet";
     resultArr.win = "";
     resultArr.cst = result.commentaryStatus;
-    result.ics = result.isClientShow;
-    resultArr.t1n = t1sn;
-    resultArr.t1sn = t1sn;
+    resultArr.ics = result.isClientShow;
+    resultArr.iact = result.isActive;
     resultArr.t1co = t1co;
     resultArr.t1bg = t1bg;
     resultArr.t2co = t2co;
@@ -2866,6 +2944,7 @@ const commentaryDetailsByEventIdService = async (
     resultArr.win = "";
     resultArr.cst = result.commentaryStatus;
     resultArr.ics = result.isClientShow;
+    resultArr.iact = result.isActive;
     resultArr.t1co = t1co;
     resultArr.t1bg = t1bg;
     resultArr.t2co = t2co;
@@ -2974,9 +3053,10 @@ const commentaryDetailsByEventIdService = async (
     resultArr.isc = "";
     resultArr.sts = result.commentaryStatus.toString();
     resultArr.rmk = result.rmk;
-    resultArr.win = "";
+    resultArr.win = result.result || "";
     resultArr.cst = result.commentaryStatus;
     resultArr.ics = result.isClientShow;
+    resultArr.iact = result.isActive;
     resultArr.t1co = t1co;
     resultArr.t1bg = t1bg;
     resultArr.t2co = t2co;
@@ -3165,6 +3245,11 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     win: "",
     cst: "",
     ics: result.isClientShow,
+    iact: result.isActive,
+    t1bg: "",
+    t1co: "",
+    t2bg: "",
+    t2co: "",
   };
   let eid;
   let til;
@@ -3206,6 +3291,11 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
   let mtype = 0;
   let bovr = 0;
   let ics;
+  let iact;
+  let t1bg;
+  let t1co;
+  let t2bg;
+  let t2co;
   // Basic elements are set
   cid = result.commentaryId;
   eid = result.eventRefId.toString();
@@ -3217,6 +3307,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
   mtype = result.matchTypeId;
   cst = result.commentaryStatus;
   ics = result.isClientShow;
+  iact = result.isActive;
   //teams set
   const commentaryTeamsOne = await global.tblCommentaryTeams.filter(
     (item) =>
@@ -3249,6 +3340,8 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
   if (commentaryTeamsOne.length > 0) {
     t1sn = commentaryTeamsOne[0].shortName;
     t1n = commentaryTeamsOne[0].teamName;
+    t1co = commentaryTeamsOne[0].teamColor || "";
+    t1bg = commentaryTeamsOne[0].backgroundColor || "";
     const wicket1 =
       commentaryTeamsOne[0].teamWicket === null
         ? 0
@@ -3264,6 +3357,8 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
   if (commentaryTeamsTwo.length > 0) {
     t2sn = commentaryTeamsTwo[0].shortName;
     t2n = commentaryTeamsTwo[0].teamName;
+    t2co = commentaryTeamsTwo[0].teamColor || "";
+    t2bg = commentaryTeamsTwo[0].backgroundColor || "";
     const wicket1 =
       commentaryTeamsTwo[0].teamWicket === null
         ? 0
@@ -3320,6 +3415,11 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     resultArr.win = "";
     resultArr.cst = result.commentaryStatus;
     resultArr.ics = result.isClientShow;
+    resultArr.iact = result.isActive;
+    resultArr.t1co = t1co;
+    resultArr.t1bg = t1bg;
+    resultArr.t2co = t2co;
+    resultArr.t2bg = t2bg;
   }
   if (getstatus == 2) {
     const _tosswonby = result.tossWonBy;
@@ -3370,6 +3470,11 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     resultArr.win = "";
     resultArr.cst = result.commentaryStatus;
     resultArr.ics = result.isClientShow;
+    resultArr.iact = result.isActive;
+    resultArr.t1co = t1co;
+    resultArr.t1bg = t1bg;
+    resultArr.t2co = t2co;
+    resultArr.t2bg = t2bg;
   }
   // if (getstatus == 3) {
   //   const _tosswonby = result.tossWonBy;
@@ -3523,6 +3628,11 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     resultArr.win = "";
     resultArr.cst = result.commentaryStatus;
     resultArr.ics = result.isClientShow;
+    resultArr.iact = result.isActive;
+    resultArr.t1co = t1co;
+    resultArr.t1bg = t1bg;
+    resultArr.t2co = t2co;
+    resultArr.t2bg = t2bg;
   }
 
   let eventType = await global.tblEventTypes.find(
@@ -3694,7 +3804,7 @@ const updateMatchTypeInCommentaryService = async (request, fastify) => {
         match_type_id: matchTypeId,
         event_id: updatedData.eventRefId,
       },
-      "/api/loadcommentary",
+      "/api/v1/loadcommentary",
       fastify,
       request
     );
@@ -5360,7 +5470,34 @@ const updateisPredictMarketInCommentaryService = async (request, fastify) => {
   const updatedData = await getCommentaryByIdQuery(request, fastify);
 
   global.tblCommentaries[index] = updatedData;
+  if (global.tblCommentaries[index].isPredictMarket == true) {
+    callDataProvider(
+      {
+        commentaryId: commentaryId,
+        serviceType: ServiceType.dataProviderAPI,
+        moduleType: APIEndpointModuleType.commentaryUpdate,
+      },
+      fastify
+    );
+  }
   return updatedData;
+};
+
+const updateResultInCommentaryService = async (request, fastify) => {
+  const { commentaryId, result } = request.body;
+  const index = global.tblCommentaries.findIndex(
+    (item) => item.commentaryId === commentaryId
+  );
+
+  if (index == -1) {
+    throw new Error("Commentary with this id not Found");
+  }
+
+  await updateResultInCommentaryQuery(request.body, fastify, request);
+
+  global.tblCommentaries[index].result = result;
+
+  return "Result updated successfully";
 };
 
 const getEventDetailsByCIdService = async (request, fastify) => {
@@ -5420,7 +5557,10 @@ const saveCommentaryDetailsAPIService = async (request, fastify) => {
       (item) => item.commentaryId === commentaryDetails.commentaryId
     );
     commentaryIndex !== -1
-      ? (global.tblCommentaries[commentaryIndex] = commentaryDetails)
+      ? (global.tblCommentaries[commentaryIndex] = {
+          ...global.tblCommentaries[commentaryIndex],
+          ...commentaryDetails,
+        })
       : null;
   }
   if (commentaryTeams) {
@@ -5512,7 +5652,7 @@ const closeCommentaryService = async (request, fastify) => {
         {
           commentary_id: commentaryId,
         },
-        "/api/endcommentary",
+        "/api/v1/endcommentary",
         fastify,
         request
       );
@@ -5537,9 +5677,37 @@ const deleteAllCommentaryService = async (request, fastify) => {
 };
 const getOpenCommentariesService = async (request, fastify) => {
   const commentaries = global.tblCommentaries.filter(
-    (item) => item.commentaryStatus == 1
+    (item) => item.commentaryStatus != 4 && item.isPredictMarket == true
   );
-  return commentaries;
+  let result = [];
+  for (com of commentaries) {
+    let matchType = global.tblMatchTypes.find(
+      (item) => item.matchTypeId === com.matchTypeId
+    );
+    com.matchType = matchType?.matchType || null;
+    let competition = global.tblCompetitions.find(
+      (item) => item.competitionId === com.competitionId
+    );
+    com.competition = competition?.competition || null;
+    let eventType = global.tblEventTypes.find(
+      (item) => item.eventTypeId === com.eventTypeId
+    );
+    com.eventType = eventType?.eventType || null;
+
+    let data = {
+      commentaryId: com.commentaryId,
+      eventId: com.eventRefId,
+      eventName: com.eventName,
+      eventDate: com.eventDate,
+      status: com.commentaryStatus,
+      matchType: com.matchType,
+      competition: com.competition,
+      eventType: com.eventType,
+      isPredictMarket: com.isPredictMarket,
+    };
+    result.push(data);
+  }
+  return result;
 };
 const updateDelayInCommentaryService = async (request, fastify) => {
   const { commentaryId, delay } = request.body;
@@ -5564,7 +5732,7 @@ const updateDelayInCommentaryService = async (request, fastify) => {
         delay: delay,
         event_id: updatedData.eventRefId,
       },
-      "/api/loadcommentary",
+      "/api/v1/loadcommentary",
       fastify,
       request
     );
@@ -5717,7 +5885,7 @@ const updateEventRefIdInCommentaryService = async (request, fastify) => {
         eventRefId: eventRefId,
         event_id: updatedData.eventRefId,
       },
-      "/api/loadcommentary",
+      "/api/v1/loadcommentary",
       fastify,
       request
     );
@@ -5764,7 +5932,7 @@ const loadcommentaryService = async (request, fastify) => {
           event_id: commentary.eventRefId,
           line_ratio_data: eventMarketLine,
         },
-        "/api/loadcommentary",
+        "/api/v1/loadcommentary",
         fastify,
         request
       );
@@ -5776,7 +5944,26 @@ const loadcommentaryService = async (request, fastify) => {
     console.error(error);
   }
 };
+const changeMaxOverDetailService = async (request, fastify) => {
+  // validate commentary id
+  const commentary = global.tblCommentaries.findIndex(
+    (item) => item.commentaryId === request.body.commentaryId
+  );
+  if (commentary == -1) {
+    throw new Error("Commentary with this id not Found");
+  }
+  // update maxOverDetail
+  await updateMaxOverDetailQuery(request.body, fastify, request);
 
+  let commentaryTeams = global.tblCommentaryTeams.filter(
+    (item) => item.commentaryId === request.body.commentaryId
+  );
+  for (let team of commentaryTeams) {
+    team.teamMaxOver = request.body.teamMaxOver;
+  }
+
+  return "Commentary Updated successfully";
+};
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -5814,6 +6001,7 @@ module.exports = {
   saveShortCommentaryService,
   updateCommentaryStatusService,
   updateisPredictMarketInCommentaryService,
+  updateResultInCommentaryService,
   getEventDetailsByCIdService,
   saveCommentaryDetailsAPIService,
   loadMultiCommentaryService,
@@ -5827,5 +6015,6 @@ module.exports = {
   deleteCommentaryDataService,
   updateEventRefIdInCommentaryService,
   loadcommentaryService,
+  changeMaxOverDetailService,
   // getshortService
 };

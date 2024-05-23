@@ -46,6 +46,8 @@ const {
   loadcommentaryService,
   updateTeamPlayerService,
   predictorLogsByIdService,
+  updateResultInCommentaryService,
+  changeMaxOverDetailService,
 } = require("../../../../services/commentry");
 const { getAllCommentariesDataService } = require("../../../../services/score");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
@@ -536,6 +538,25 @@ const updateisPredictMarketInCommentary = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+
+const updateResultInCommentary = async (request, reply, fastify) => {
+  try {
+    const result = await updateResultInCommentaryService(
+      request,
+      fastify
+    );
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      path + "/updateResultInCommentary",
+      request
+    );
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
 const getEventDetailsByCId = async (request, reply, fastify) => {
   try {
     const result = await getEventDetailsByCIdService(request, fastify);
@@ -657,6 +678,15 @@ const loadcommentaryapi = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const changeMaxOverDetail = async (request, reply, fastify) => {
+  try {
+    const result = await changeMaxOverDetailService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/changeMaxOverDetail", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 
 const getAllCommentariesData = async (request, reply, fastify) => {
   try {
@@ -705,6 +735,7 @@ module.exports = {
   saveShortCommentary,
   updateCommentaryStatus,
   updateisPredictMarketInCommentary,
+  updateResultInCommentary,
   getEventDetailsByCId,
   saveCommentaryDetailsAPI,
   loadMultiCommentary,
@@ -718,5 +749,6 @@ module.exports = {
   deleteCommentaryData,
   updateEventRefIdInCommentary,
   loadcommentaryapi,
-  getAllCommentariesData
+  getAllCommentariesData,
+  changeMaxOverDetail
 };

@@ -4,6 +4,7 @@ const moment = require("moment");
 const { default: axios } = require("axios");
 const configConstants = require("./configConstants");
 const { errorLogger, tblPredictorAPILogger } = require("./logger");
+const { getCommentaryDetailByIdQuery } = require("../repository/TableCommentary");
 const ERROR_CODES = {
   INVALID_INPUT: "INVALID_INPUT",
   SERVER_ERROR: "SERVER_ERROR",
@@ -297,6 +298,41 @@ const fetchDataForClient = async (fastify, reply) => {
   console.log(result.data);
   return result.data;
 }
+const callDataProvider = async (data, fastify) =>{
+  try {
+    // find the service which have the type of dataProviderAPI
+    let services = global.tblAPIs.filter((item) => item.type == data.serviceType && item.isActive == true);
+    for (ser of services){
+      // find the endpoint for the service and module
+      let endpoint = global.tblAPIEndpoints.find((item)=>
+        item.serviceType == ser.type && item.moduleType == data.moduleType && item.isActive == true
+      ) 
+      if(endpoint){
+        let url = `${ser.api}${endpoint.endPoint}`;
+        let dataTosend = {};
+        if(data.moduleType == APIEndpointModuleType.commentaryUpdate && data.serviceType == ServiceType.dataProviderAPI){
+          dataTosend = await getCommentaryDetailByIdQuery(data, fastify);
+        }
+        const result = await axios.post(url, {
+          ...dataTosend
+        });
+        return result;
+      }
+    }
+
+    return true  
+  } catch (error) {
+    console.log("error From callDataProvider", error);
+  }
+}
+const ServiceType = {
+   clientAPI : 1,
+    dataProviderAPI : 2,
+}
+const APIEndpointModuleType = {
+  commentaryUpdate : 1,
+  
+}
 module.exports = {
   ERROR_CODES,
   error,
@@ -323,4 +359,7 @@ module.exports = {
   clientSocketStatus,
   clientSocketActionType,
   fetchDataForClient,
+  callDataProvider,
+  ServiceType,
+  APIEndpointModuleType
 };

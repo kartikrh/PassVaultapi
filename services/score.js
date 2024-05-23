@@ -1,3 +1,6 @@
+const { getMarketsByCIdQuery } = require("../repository/TableEventMarkets");
+const configConstants = require("../utilities/configConstants");
+
 const getAllCommentariesDataService = (request, fastify) => {
     let commentaries = {};
     global.tblCommentaries.filter((c) => {
@@ -35,5 +38,31 @@ const getAllCommentariesDataService = (request, fastify) => {
 
     return commentaries;
 }
+const getMarketsByCommentaryIdService =async (request , fastify) => {
+    // vlaidate commentry id
+    // console.log("called getMarketsByCommentaryIdService")
+    const commentary = global.tblCommentaries.find((c) => {
+        return c.eventRefId === request.body.eventId;
+    });
+    if (!commentary) {
+        throw new Error("Commentary with this id not found");
+    }
+    // check if isPredicted is true
+    if (!commentary.isPredictMarket) {
+        return null;
+    }
+    const getCommentaries = await getMarketsByCIdQuery(request , fastify);
+    const datProviderUrl = global.tblConfigs.find((c) => c.key == configConstants.DATAPROVIDERURL);
+    if(!datProviderUrl){
+        throw new Error("Data provider url not found");
+    }
 
-module.exports = { getAllCommentariesDataService };
+    if(!getCommentaries.settledMarket && !getCommentaries.openMarkets){
+        return null;
+    }
+    return {
+        ...getCommentaries,
+        dataProviderUrl: datProviderUrl.value
+    };
+}
+module.exports = { getAllCommentariesDataService ,getMarketsByCommentaryIdService };

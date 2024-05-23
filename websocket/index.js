@@ -41,18 +41,19 @@
 // };
 
 const WebsocketConnection = function (fastify, ws, req) {
-  try {
-    console.log("WebSocket connection established");
+  console.log("WebSocket connection established");
 
-    ws.on("message", function incoming(message) {
-      //console.log("received: %s", message);
+  ws.on("message", function incoming(message) {
+    try {
+      console.log("received: %s", message);
 
-      var jsonObject = JSON.parse(message);
+      // Attempt to parse the JSON message
+      const jsonObject = JSON.parse('{ lastUpdate: "2024-05-10T11:21:06.693Z" }');
 
       // Check the event type
       if (jsonObject.event === "subScribetShortScore") {
-        var data = jsonObject.data;
-        var ids = data.split(",");
+        const data = jsonObject.data;
+        const ids = data.split(",");
 
         let Shortcommentry = [];
         ids.forEach(function (id) {
@@ -66,13 +67,19 @@ const WebsocketConnection = function (fastify, ws, req) {
         res.data = jsonString;
         ws.send(JSON.stringify(res));
       }
-    });
-    ws.on("close", function close() {
-      console.log("Client disconnected");
-    });
-  } catch (error) {
-    console.error("Error in WebsocketConnection:", error);
-  }
+    } catch (error) {
+      // Log the error message and continue
+      console.error("Error parsing message:", error.message);
+    }
+  });
+  
+  ws.on("close", function close() {
+    console.log("Client disconnected");
+  });
+};
+
+module.exports = {
+  WebsocketConnection
 };
 
 const setShortCommenrty = (eventId) => {
