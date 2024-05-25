@@ -1876,19 +1876,19 @@ const testStoreProcedureService = async (request, fastify) => {
           item.commentaryId === commentaryData.commentaryId &&
           item.teamStatus === 1
       );
-      callPredictorMarket(
-        {
-          commentary_id: commentaryData.commentaryId,
-          match_type_id: commentaryData.matchTypeId,
-          event_id: commentaryData.eventRefId,
-          current_team_id:strikeTeam.teamId,
-          total_score:strikeTeam.teamScore,
-          player_details:_sendPrePlayers
-        },
-        "/api/v1/playerpredictscore",
-        fastify,
-        request
-      );
+      // callPredictorMarket(
+      //   {
+      //     commentary_id: commentaryData.commentaryId,
+      //     match_type_id: commentaryData.matchTypeId,
+      //     event_id: commentaryData.eventRefId,
+      //     current_team_id:strikeTeam.teamId,
+      //     total_score:strikeTeam.teamScore,
+      //     player_details:_sendPrePlayers
+      //   },
+      //   "/api/v1/playerpredictscore",
+      //   fastify,
+      //   request
+      // );
     }
 
     return response;
