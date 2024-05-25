@@ -1885,7 +1885,7 @@ const testStoreProcedureService = async (request, fastify) => {
           total_score:strikeTeam.teamScore,
           player_details:_sendPrePlayers
         },
-        "/api/v1/player_predictscore",
+        "/api/v1/playerpredictscore",
         fastify,
         request
       );
