@@ -1283,7 +1283,7 @@ const testStoreProcedureService = async (request, fastify) => {
       ballByBallIndex,
       wicketIndex,
       partnershipIndex;
-
+    let _sendPrePlayers = [];
     let commentaryData;
     if (commentaryId) {
       commentaryData = global.tblCommentaries.find(
@@ -1613,6 +1613,17 @@ const testStoreProcedureService = async (request, fastify) => {
         );
         global.tblCommentaryPlayers[index] = player;
       });
+
+      let _plyers = commentaryPlayers.filter( (_fil) => _fil.isPlay === true && _fil.onStrike !== null );
+      _plyers.forEach((player)=>{
+        let _sendPrePlayer = {};
+        _sendPrePlayer.player_id = player.commentaryPlayerId;
+        _sendPrePlayer.player_name = player.playerName;
+        _sendPrePlayer.team_id = player.teamId;
+        _sendPrePlayer.batRun = player.batRun;
+        _sendPrePlayer.isWicket = player.isBatterOut === false ? 0 : 1;
+        _sendPrePlayers.push(_sendPrePlayer);
+      });
       // sendDataForSocketUpdate.dataToUpdate.push({
       //   module: "commentaryPlayers",
       //   type: "update",
@@ -1854,6 +1865,32 @@ const testStoreProcedureService = async (request, fastify) => {
         }
       });
     }
+
+    if (
+      commentaryDetails && _sendPrePlayers &&
+      commentaryData.isPredictMarket == true &&
+      previousCommentaryStatus == 3
+    ) {
+      let strikeTeam = global.tblCommentaryTeams.find(
+        (item) =>
+          item.commentaryId === commentaryData.commentaryId &&
+          item.teamStatus === 1
+      );
+      // callPredictorMarket(
+      //   {
+      //     commentary_id: commentaryData.commentaryId,
+      //     match_type_id: commentaryData.matchTypeId,
+      //     event_id: commentaryData.eventRefId,
+      //     current_team_id:strikeTeam.teamId,
+      //     total_score:strikeTeam.teamScore,
+      //     player_details:_sendPrePlayers
+      //   },
+      //   "/api/v1/playerpredictscore",
+      //   fastify,
+      //   request
+      // );
+    }
+
     return response;
   } catch (error) {
     console.log(error);
@@ -2864,7 +2901,7 @@ const commentaryDetailsByEventIdService = async (
     resultArr.scot = "";
     resultArr.scor = "";
     resultArr.scov = "";
-    resultArr.t1n = t1sn;
+    resultArr.t1n = t1n;
     resultArr.t1sn = t1sn;
     resultArr.t1s = t1s;
     resultArr.t1im = t1im;
@@ -2919,7 +2956,7 @@ const commentaryDetailsByEventIdService = async (
     resultArr.scot = "";
     resultArr.scor = "";
     resultArr.scov = "";
-    resultArr.t1n = t1sn;
+    resultArr.t1n = t1n;
     resultArr.t1sn = t1sn;
     resultArr.t1s = t1s;
     resultArr.t1im = t1im;
@@ -3031,7 +3068,7 @@ const commentaryDetailsByEventIdService = async (
     resultArr.scot = scot;
     resultArr.scor = scor;
     resultArr.scov = scov;
-    resultArr.t1n = t1sn;
+    resultArr.t1n = t1n;
     resultArr.t1sn = t1sn;
     resultArr.t1s = t1s;
     resultArr.t1im = t1im;
@@ -3390,7 +3427,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     resultArr.scot = "";
     resultArr.scor = "";
     resultArr.scov = "";
-    resultArr.t1n = t1sn;
+    resultArr.t1n = t1n;
     resultArr.t1sn = t1sn;
     resultArr.t1s = t1s;
     resultArr.t1im = t1im;
@@ -3445,7 +3482,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     resultArr.scot = "";
     resultArr.scor = "";
     resultArr.scov = "";
-    resultArr.t1n = t1sn;
+    resultArr.t1n = t1n;
     resultArr.t1sn = t1sn;
     resultArr.t1s = t1s;
     resultArr.t1im = t1im;
@@ -3603,7 +3640,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     resultArr.scot = scot;
     resultArr.scor = scor;
     resultArr.scov = scov;
-    resultArr.t1n = t1sn;
+    resultArr.t1n = t1n;
     resultArr.t1sn = t1sn;
     resultArr.t1s = t1s;
     resultArr.t1im = t1im;
