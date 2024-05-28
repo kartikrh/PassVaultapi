@@ -1,5 +1,4 @@
 const {
-  updateEventMarketQuery,
   getAllEventMarketsQuery,
   deleteEventMarketQuery,
   changeIsActiveEventMarketQuery,
@@ -20,7 +19,6 @@ const {
   getDataLogsByMarketQuery,
   getStatusLogsByMarketQuery,
   setLineRatioEventMarketQuery,
-  getRunnersByMarketIdQuery,
   getMarketDataByCIdQuery,
 } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
@@ -229,60 +227,6 @@ const createEventMarketsService = async (request, fastify) => {
     }
   }
   return "Event Market saved successfully";
-  //     const {
-  //         eventMarket
-  //     } = request.body;
-  //     // diffrent two array on eventMarket Id
-  //     let arrayForCreate = [];
-  //     let arrayForUpdate = [];
-
-  //     for (let item of eventMarket) {
-  //         if(item.eventMarketId == 0){
-  //             // validate the commentaryId
-  //             let commentary = global.tblCommentaries.find((c) => c.commentaryId === item.commentaryId);
-  //             if (!commentary) {
-  //                 throw new Error("Commentary with this id not Found");
-  //             }
-  //             arrayForCreate.push(item);
-  //         }
-  //         else{
-  //             // validate the eventMarketId
-  //             let eventMarket = global.tblEventMarkets.find((e) => e.eventMarketId === item.eventMarketId);
-  //             if (!eventMarket) {
-  //                 throw new Error("EventMarket with this id not Found");
-  //             }
-  //             // validate the commentaryId
-  //             let commentary = global.tblCommentaries.find((c) => c.commentaryId === item.commentaryId);
-  //             if (!commentary) {
-  //                 throw new Error("Commentary with this id not Found");
-  //             }
-  //             arrayForUpdate.push(item);
-  //         }
-  //     }
-
-  //     let createdData = [];
-  //     let updatedData = [];
-  //     // create the eventMarket
-  //     if(arrayForCreate.length > 0){
-  //         for (let item of arrayForCreate) {
-  //             let createEvent = await createEventMarketQuery(item,request,fastify);
-  //             createdData.push(createEvent);
-  //         }
-  //     }
-  //     // update the eventMarket
-  //     if(arrayForUpdate.length > 0){
-  //         for (let item of arrayForUpdate) {
-  //             let updateEvent =  await updateEventMarketQuery(item,request,fastify);
-  //             updatedData.push(updateEvent);
-  //         }
-  //     }
-
-  //    global.tblEventMarkets.push(...createdData);
-  //    // update the eventMarket
-  //     for(let item of updatedData){
-  //         let eventMarket = global.tblEventMarkets.findIndex((e) => e.eventMarketId === item.eventMarketId);
-  //         global.tblEventMarkets[eventMarket] = item;
-  //     }
 };
 
 const deleteEventMarketsService = async (request, fastify) => {
@@ -821,68 +765,6 @@ const setLineRatioService = async (data, request, fastify) => {
   );
 
   return updateLineRatio;
-
-  // const maxOver = global.tblMatchTypes.find(
-  //   (item) => item.matchTypeId === matchTypeOfCommentary
-  // ).maxOversInFirstInings;
-
-  // // get the open market of this commentary and the isOver true and which have max ov
-  // const allEventMarket = global.tblEventMarkets.filter(
-  //   (item) =>
-  //     item.commentaryId === data.commentaryId &&
-  //     item.isOver === true &&
-  //     item.status !== EventMarketStatus.Cancel &&
-  //     item.status !== EventMarketStatus.Close &&
-  //     item.status !== EventMarketStatus.Settled
-  // );
-
-  // let eventMarket = allEventMarket.filter(
-  //   (item) =>
-  //     item.over === maxOver
-  // );
-
-  // if (eventMarket.length === 0) {
-  //   return true;
-  // }
-
-  // // get the marketRunner of this market and get the max line of this runner
-  // let maxLine = 0;
-  // for (market of eventMarket){
-  //   const runners = await getRunnersByMarketIdQuery(
-  //     {
-  //       eventMarketId: market.eventMarketId,
-  //     },
-  //     request,
-  //     fastify
-  //   );
-  //   let runnerMaxLine = runners.reduce((a, b) => (a.line > b.line ? a : b)).line;
-  //   if (runnerMaxLine > maxLine) {
-  //     maxLine = runnerMaxLine;
-  //   }
-  // }
-
-  // // get the matchType predictorData of this matchType
-  // let predictorData = global.tblMatchTypePredictor?.filter(
-  //   (item) => item.matchTypeId === matchTypeOfCommentary
-  // );
-  // let sum = 0;
-  // for (let item of predictorData) {
-  //   sum += item.runPerBall;
-  // }
-  // // get the lineRatio of this matchType
-  // const lineRatio = (maxLine / sum).toFixed(2);
-  // // save the line ratio in tblEventMarkets
-  // //get tthe eventMarket of batting team
-  // await setLineRatioEventMarketQuery(
-  //   {
-  //     eventMarketId  : allEventMarket.map((item) => item.eventMarketId),
-  //     lineRatio: lineRatio,
-  //   },
-  //   request,
-  //   fastify
-  // );
-
-  // return true;
 };
 const handleMarketCloseService = async (data, request, fastify) => {
   // check the eventMarket close log for this commentaryId
