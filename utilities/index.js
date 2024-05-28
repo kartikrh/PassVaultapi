@@ -216,6 +216,10 @@ const EventMarketStatus = {
   Settled	:5,
   Cancel:	6
 }
+
+const EventMarketRateSource = {
+  Manual :	2,
+}
 const MarketActionType = {
   isresultSet : 1,
   setResult : 2,
@@ -361,5 +365,6 @@ module.exports = {
   fetchDataForClient,
   callDataProvider,
   ServiceType,
-  APIEndpointModuleType
+  APIEndpointModuleType,
+  EventMarketRateSource
 };

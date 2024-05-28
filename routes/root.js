@@ -14,6 +14,7 @@ const {
 } = require("../controller/users/index");
 const { Auth } = require("../swaggerSchema/groupTags/schema");
 const { authorize } = require("../controller/middleware/index");
+const { startSignalR, stopSignalR, isSignalRStarted  } = require('../signalrHandler/index');
 
 module.exports = async function (fastify, opts) {
   //! API DEFINITION
@@ -67,5 +68,15 @@ module.exports = async function (fastify, opts) {
     schema: Auth.imgUpload.schema,
     preHandler: [(request, reply) => authorize(request, reply, fastify)],
     handler: (request, reply) => generalImageUpload(request, reply, fastify),
+  });
+    // Single API to start and stop SignalR based on its current state
+  fastify.post("/signalr/toggle", async (request, reply) => {
+    if (isSignalRStarted()) {
+      await stopSignalR();
+      reply.send({ status: "SignalR stopped" });
+    } else {
+      await startSignalR();
+      reply.send({ status: "SignalR started" });
+    }
   });
 };
