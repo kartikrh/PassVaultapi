@@ -222,8 +222,8 @@ module.exports = async (fastify, opts) => {
     schema: Score.getscoreByEId.schema,
     handler: (request, reply) => getShortCommerty(request, reply, fastify),
   });
-  fastify.post("/getCommentaries", {
-    schema: Commentary.getAll.schema,
+  fastify.post("/getLiveCommentaries", {
+    schema: Commentary.getLiveCommentaries.schema,
     handler: (request, reply) => getAllCommentariesData(request, reply, fastify),
   })
 
