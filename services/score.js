@@ -1,10 +1,16 @@
 const { getMarketsByCIdQuery } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
 
-const getAllCommentariesDataService = (request, fastify) => {
+const getAllCommentariesDataService = (request) => {
     let commentaries = {};
     global.tblCommentaries.filter((c) => {
-        return c.commentaryStatus !== 4;
+        if (request.body.eventId) {
+            // If eventId is present, filter by both conditions
+            return c.commentaryStatus != 4 && c.eventRefId == request.body.eventId;
+        } else {
+            // If eventId is not present, filter by commentaryStatus only
+            return c.commentaryStatus != 4;
+        }
     }).forEach((c) => {
         let teams = global.tblCommentaryTeams.filter((t) => {
             return t.commentaryId === c.commentaryId;
@@ -29,7 +35,7 @@ const getAllCommentariesDataService = (request, fastify) => {
             commentaryDetails: c,
             commentaryTeams: teams,
             commentaryPlayers: players,
-            commentaryOvers: overs,
+            commentaryOver: overs,
             commentaryBallByBall: ballByBall,
             commentaryWicket: wickets,
             commentaryPartnership: partnerships

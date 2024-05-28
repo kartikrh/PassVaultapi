@@ -1730,6 +1730,19 @@ const Commentary = {
       },
     },
   },
+  getLiveCommentaries : {
+    schema: {
+      tags: ["Commentary"],
+      description: "get all Commentary",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          eventId : { type: "integer" },
+        },
+      },
+    },
+  },
   deleteCommentaryData: {
     schema: {
       tags: ["Commentary"],
