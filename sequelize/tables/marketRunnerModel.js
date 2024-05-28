@@ -67,6 +67,26 @@ module.exports = (sequelize) => {
             type: DataTypes.DOUBLE,
             allowNull: true,
         },
+        wrBackPrice : {
+          type: DataTypes.DOUBLE,
+          allowNull: true,
+          defaultValue: 0,
+        },
+        wrLayPrice : {
+          type: DataTypes.DOUBLE,
+          allowNull: true,
+          defaultValue: 0,
+        },
+        wrBackSize : {
+          type: DataTypes.DOUBLE,
+          allowNull: true,
+          defaultValue: 0,
+        },
+        wrLaySize : {
+          type: DataTypes.DOUBLE,
+          allowNull: true,
+          defaultValue: 0,
+        },  
     }, {
       timestamps: false,
     }
