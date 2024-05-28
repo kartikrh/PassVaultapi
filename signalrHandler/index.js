@@ -6,7 +6,7 @@ let intervalId;
 
 async function startSignalR() {
   connection = new signalR.HubConnectionBuilder()
-    .withUrl('https://scorerate.cloudd.live/SignalR') // Replace with your SignalR hub URL
+    .withUrl('https://scorerate.cloudd.live/SignalR')
     .build();
 
   try {
@@ -31,22 +31,22 @@ async function startSignalR() {
         const newRateSourceRefIDs  =  _newIDs.join(',');
         try {
           await connection.invoke('ConnectMarketRate', newRateSourceRefIDs);
-          console.log(`Invoked ConnectMarketRate with arguments "${newRateSourceRefIDs}"`);
+          //console.log(`Invoked ConnectMarketRate with arguments "${newRateSourceRefIDs}"`);
         } catch (invokeErr) {
           console.error('Error invoking ConnectMarketRate:', invokeErr);
         }
       }
     };
 
-    // Start interval to check every 10 seconds
+   
     intervalId = setInterval(checkAndUpdateMarketRate, 10000);
 
     connection.on('Rate', (message) => {
-      console.log(`Received Rate message: ${JSON.stringify(message)}`);
+      //console.log(`Received Rate message: ${JSON.stringify(message)}`);
     });
   } catch (err) {
     console.error('Error connecting to SignalR:', err);
-    setTimeout(startSignalR, 5000); // Retry connection after 5 seconds
+    setTimeout(startSignalR, 5000); 
   }
 }
 
@@ -59,6 +59,7 @@ async function stopSignalR() {
         clearInterval(intervalId);
         intervalId = null;
       }
+      global.rateSourceRefIDSet.clear(); // Clear the set
     } catch (err) {
       console.error('Error disconnecting from SignalR:', err);
     }
