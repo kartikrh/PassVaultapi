@@ -68,7 +68,7 @@ const {
 } = require("../utilities");
 const { getAllPlayersByTeamIdQuery } = require("../repository/TableTeams");
 const { handleMarketCloseService } = require("./eventMarket");
-const { getEventMarketRatioQuery } = require("../repository/TableEventMarkets");
+const { getEventMarketRatioQuery, closeEventMarketByCIdQuery } = require("../repository/TableEventMarkets");
 
 const allCommentaryService = async (request, fastify) => {
   // return global.tblCommentaries;
@@ -1820,6 +1820,12 @@ const testStoreProcedureService = async (request, fastify) => {
       commentaryData.isPredictMarket == true &&
       statusToUpdate == 4
     ) {
+      await closeEventMarketByCIdQuery(
+        {
+          commentaryId: commentaryDetails.commentaryId,
+        },
+        fastify
+      )
       callPredictorMarket(
         {
           commentary_id: commentaryDetails.commentaryId,
@@ -5685,6 +5691,7 @@ const closeCommentaryService = async (request, fastify) => {
     if (index !== -1) {
       global.tblCommentaries[index].commentaryStatus = 4;
 
+      await closeEventMarketByCIdQuery({ commentaryId }, fastify);
       callPredictorMarket(
         {
           commentary_id: commentaryId,
