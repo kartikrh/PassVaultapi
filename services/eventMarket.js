@@ -635,10 +635,12 @@ const changeMarketCloseService = async (request, fastify) => {
       EventMarketStatus.Close,
     ].includes(currentStatus)
   ) {
-    await changeMarketCloseQuery(request.body, request, fastify);
+    let updatedData =await changeMarketCloseQuery(request.body, request, fastify);
 
     global.tblEventMarkets[eventMarket].status = EventMarketStatus.Close;
+    global.tblEventMarkets[eventMarket].data = updatedData;
 
+    // console.log("updatedData", updatedData);
     return "Market close updated successfully";
   } else {
     return "Market is already settled, canceled, or closed, so it cannot be updated to close.";
