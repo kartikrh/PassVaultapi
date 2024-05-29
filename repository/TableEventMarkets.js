@@ -1472,10 +1472,15 @@ const closeEventMarketByCIdQuery = async (data , fastify) =>{
         "wrCloseTime" = now()::timestamp,
         "wrLastUpdate" = now()::timestamp
       WHERE "wrCommentaryId" = $2
+      AND "wrStatus" NOT IN ($3, $4, $5)
       RETURNING "wrID" as "marketId"
     `;
     const marketId = await fastify.db.query(query, {
-      bind: [EventMarketStatus.Close, data.commentaryId],
+      bind: [EventMarketStatus.Close, data.commentaryId,
+        EventMarketStatus.Close,
+        EventMarketStatus.Settled,
+        EventMarketStatus.Cancel,
+      ],
       type: fastify.db.QueryTypes.SELECT,
     });
     // update status in runner
