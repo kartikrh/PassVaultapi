@@ -5710,6 +5710,14 @@ const closeCommentaryService = async (request, fastify) => {
         fastify,
         request
       );
+      callDataProvider(
+        {
+          commentaryId: commentaryId,
+          serviceType: ServiceType.dataProviderAPI,
+          moduleType: APIEndpointModuleType.commentaryUpdate,
+        },
+        fastify
+      );
     }
   }
   return `Commentary(s) closed successfully`;
