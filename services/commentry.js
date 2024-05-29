@@ -1875,13 +1875,22 @@ const testStoreProcedureService = async (request, fastify) => {
     if (
       commentaryDetails && _sendPrePlayers &&
       commentaryData.isPredictMarket == true &&
-      previousCommentaryStatus == 3
+      previousCommentaryStatus == 3 && 
+      updatedData.commentaryBallByBallDetails.ballType > 0
     ) {
       let strikeTeam = global.tblCommentaryTeams.find(
         (item) =>
           item.commentaryId === commentaryData.commentaryId &&
           item.teamStatus === 1
       );
+      let decimalOverCount;
+      try {
+       decimalOverCount = parseFloat(commentaryBallByBall.overCount);
+      }
+      catch (error) {
+        decimalOverCount = 0;
+      }
+
       callPredictorMarket(
         {
           commentary_id: commentaryData.commentaryId,
@@ -1889,6 +1898,7 @@ const testStoreProcedureService = async (request, fastify) => {
           event_id: commentaryData.eventRefId,
           current_team_id:strikeTeam.teamId,
           total_score:strikeTeam.teamScore,
+          current_ball:decimalOverCount,
           player_details:_sendPrePlayers
         },
         "/api/v1/playerpredictscore",
