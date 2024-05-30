@@ -1876,7 +1876,7 @@ const testStoreProcedureService = async (request, fastify) => {
       commentaryDetails && _sendPrePlayers &&
       commentaryData.isPredictMarket == true &&
       previousCommentaryStatus == 3 && 
-      updatedData.commentaryBallByBallDetails.ballType > 0
+      updatedData.commentaryBallByBallDetails.ballType
     ) {
       let strikeTeam = global.tblCommentaryTeams.find(
         (item) =>
