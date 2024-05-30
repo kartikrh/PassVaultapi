@@ -500,7 +500,7 @@ const updateMarketRateService = async (request, fastify) => {
   }
 
   //return "Event Market updated successfully";
-  return marketListByCIdService({commentaryId:commentary.commentaryId},fastify)
+  return marketListByCIdService({body: {commentaryId:commentary.commentaryId}},fastify)
 };
 const saveEventMarketService = async (request, fastify) => {
   const { eventMarketId, commentaryId } = request.body;
