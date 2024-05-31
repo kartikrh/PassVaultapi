@@ -1372,7 +1372,7 @@ const updateEventMarketMaunalQuery = async (data, request, fastify) => {
   try {
     const query = `
         UPDATE "tblEventMarkets"
-        SET "wrEventRefID" = $1, "wrMarketName" = $2, "wrStatus" = $3, "wrIsActive" = $4, "wrIsAllow" = $5, "wrLastUpdate" = $6,wrRateSource = $7, "wrRateSourceRefID" =$8
+        SET "wrEventRefID" = $1, "wrMarketName" = $2, "wrStatus" = $3, "wrIsActive" = $4, "wrIsAllow" = $5, "wrLastUpdate" = $6,"wrRateSource" = $7
         WHERE "wrRateSourceRefID" = $8
         RETURNING "wrID" as "eventMarketId"
     `;
@@ -1556,6 +1556,7 @@ const closeEventMarketByCIdQuery = async (data , fastify) =>{
 
 
 const updateEventMarketRunnerMaunalQuery = async (data, fastify) => {
+  console.log('updateEventMarketRunnerMaunalQuery' + JSON.stringify(data));
   try {
     const query = `
         UPDATE "tblMarketRunners"

@@ -302,7 +302,7 @@ const ImportMarketWithRunnerService = async (request, fastify) => {
     //EventMarket Add/Update
     let setEventsMarket;
     const EventsMarketobj = global.tblEventMarkets.find(
-      (item) => item.rateSourceRefID === request.body.marketID
+      (item) => item.rateSourceRefID == request.body.marketID
     );
     if (!EventsMarketobj) {
       let req = {};
@@ -354,11 +354,19 @@ const ImportMarketWithRunnerService = async (request, fastify) => {
       request,
       fastify
     );
-    if (index === -1) {
-      global.tblEventMarkets.push(_data);
-    }
-    else {
-      global.tblEventMarkets[index] = _data;
+    if(_data){
+      for (let _in = 0; _in < _data.length; _in++) {
+           const element = _data[_in];
+           let index2 = global.tblEventMarkets.findIndex(
+            (e) => e.rateSourceRefID === element.rateSourceRefID
+          );
+         if (index2 === -1) {
+           global.tblEventMarkets.push(element);
+         }
+         else {
+           global.tblEventMarkets[index2] = element;
+         }
+      }
     }
   } else {
     throw new Error("Event Type Id not found");
