@@ -4434,22 +4434,6 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
         };
       });
     dataToreturn.td = commentaryTeam;
-    if (commentary.commentaryStatus === 1) {
-      return dataToreturn;
-    }
-
-    // get the all innings data
-    const inningDataPromises = [];
-    for (let i = 1; i <= commentary.currentInnings; i++) {
-      inningDataPromises.push(
-        getInningDataByInningNumber(commentary.commentaryId, i)
-      );
-    }
-    const inningsData = await Promise.all(inningDataPromises);
-    inningsData.forEach((inningData, index) => {
-      dataToreturn["cci" + (index + 1)] = inningData;
-    });
-
     let data = {
       CommentaryId: commentary.commentaryId,
       teamId: commentaryTeamsOne.teamId,
@@ -4467,9 +4451,24 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
     );
     dataToreturn.Sqt1 = TeamPlayes1;
     dataToreturn.Sqt2 = TeamPlayes2;
+    
+    if (commentary.commentaryStatus === 1) {
+      return dataToreturn;
+    }
+
+    // get the all innings data
+    const inningDataPromises = [];
+    for (let i = 1; i <= commentary.currentInnings; i++) {
+      inningDataPromises.push(
+        getInningDataByInningNumber(commentary.commentaryId, i)
+      );
+    }
+    const inningsData = await Promise.all(inningDataPromises);
+    inningsData.forEach((inningData, index) => {
+      dataToreturn["cci" + (index + 1)] = inningData;
+    });
 
     //Partnership data
-
     const commentaryPartnership = await global.tblCommentaryPartnership.filter(
       (item) => item.commentaryId === commentary.commentaryId
       // item.teamId === batId &&
