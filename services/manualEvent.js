@@ -354,7 +354,12 @@ const ImportMarketWithRunnerService = async (request, fastify) => {
       request,
       fastify
     );
-    global.tblEventMarkets.push(_data);
+    if (index === -1) {
+      global.tblEventMarkets.push(_data);
+    }
+    else {
+      global.tblEventMarkets[index] = _data;
+    }
   } else {
     throw new Error("Event Type Id not found");
   }

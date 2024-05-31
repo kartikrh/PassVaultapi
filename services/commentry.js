@@ -1620,7 +1620,7 @@ const testStoreProcedureService = async (request, fastify) => {
         _sendPrePlayer.player_id = player.commentaryPlayerId;
         _sendPrePlayer.player_name = player.playerName;
         _sendPrePlayer.team_id = player.teamId;
-        _sendPrePlayer.batRun = player.batRun;
+        _sendPrePlayer.batRun = player.batRun || 0;
         _sendPrePlayer.isWicket = player.isBatterOut === false ? 0 : 1;
         _sendPrePlayers.push(_sendPrePlayer);
       });
