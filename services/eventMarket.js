@@ -356,18 +356,18 @@ const marketListResultFalseService = async (request, fastify) => {
 };
 const changeResultOfMarketService = async (request, fastify) => {
   const { eventMarketId, isResult } = request.body;
-  let eventMarket = global.tblEventMarkets.findIndex(
-    (item) => item.eventMarketId === eventMarketId
-  );
-  if (eventMarket === -1) {
-    throw new Error("EventMarket with this id not Found");
-  }
+  // let eventMarket = global.tblEventMarkets.findIndex(
+  //   (item) => item.eventMarketId === eventMarketId
+  // );
+  // if (eventMarket === -1) {
+  //   throw new Error("EventMarket with this id not Found");
+  // }
   // if isresult is true then dont allow to change the result
-  if (global.tblEventMarkets[eventMarket].isResult) {
-    throw new Error("Result of this market is already set");
-  }
+  // if (global.tblEventMarkets[eventMarket].isResult) {
+  //   throw new Error("Result of this market is already set");
+  // }          
   await changeIsResultEventMarketQuery(request.body, request, fastify);
-  global.tblEventMarkets[eventMarket].isResult = isResult;
+  // global.tblEventMarkets[eventMarket].isResult = isResult;
 
   marketLogger(
     {
