@@ -1617,7 +1617,7 @@ const testStoreProcedureService = async (request, fastify) => {
       let _plyers = commentaryPlayers.filter( (_fil) => _fil.isPlay === true && _fil.onStrike !== null );
       _plyers.forEach((player)=>{
         let _sendPrePlayer = {};
-        _sendPrePlayer.player_id = player.commentaryPlayerId;
+        _sendPrePlayer.player_id = player.playerId;
         _sendPrePlayer.player_name = player.playerName;
         _sendPrePlayer.team_id = player.teamId;
         _sendPrePlayer.batRun = player.batRun || 0;
@@ -2781,6 +2781,7 @@ const commentaryDetailsByEventIdService = async (
     t1co: "",
     t2bg: "",
     t2co: "",
+    utc: "",
   };
   let eid;
   let til;
@@ -2828,6 +2829,7 @@ const commentaryDetailsByEventIdService = async (
   let t1co;
   let t2bg;
   let t2co;
+  let utc;
   // Basic elements are set
   cid = result.commentaryId;
   eid = result.eventRefId.toString();
@@ -2840,6 +2842,7 @@ const commentaryDetailsByEventIdService = async (
   cst = result.commentaryStatus;
   ics = result.isClientShow;
   iact = result.isActive;
+  utc = result.eventDate;
   //teams set
   const commentaryTeamsOne = await global.tblCommentaryTeams.filter(
     (item) =>
@@ -2947,6 +2950,7 @@ const commentaryDetailsByEventIdService = async (
     resultArr.t1bg = t1bg;
     resultArr.t2co = t2co;
     resultArr.t2bg = t2bg;
+    resultArr.utc= utc;
   }
   if (getstatus == 2) {
     const _tosswonby = result.tossWonBy;
@@ -3002,6 +3006,7 @@ const commentaryDetailsByEventIdService = async (
     resultArr.t1bg = t1bg;
     resultArr.t2co = t2co;
     resultArr.t2bg = t2bg;
+    resultArr.utc= utc;
   }
   if (getstatus >= 3) {
     const _tosswonby = result.tossWonBy;
@@ -3114,6 +3119,7 @@ const commentaryDetailsByEventIdService = async (
     resultArr.t1bg = t1bg;
     resultArr.t2co = t2co;
     resultArr.t2bg = t2bg;
+    resultArr.utc= utc;
   }
 
   let eventType = await global.tblEventTypes.find(
@@ -3252,14 +3258,14 @@ const commentaryDetailsByEventIdService = async (
 
 const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
   // convert encyption to decryption
-  const decryptedId = await decryptEncryptionId(
-    request.body.commentaryId,
-    fastify
-  );
-  request.body.commentaryId = decryptedId;
+  // const decryptedId = await decryptEncryptionId(
+  //   request.body.commentaryId,
+  //   fastify
+  // );
+  // request.body.commentaryId = decryptedId;
 
   const result = await global.tblCommentaries.find(
-    (item) => item.commentaryId === request.body.commentaryId
+    (item) => item.commentaryId == request.body.commentaryId
   );
   if (!result) {
     throw new Error("Commentary with this id not Found");
@@ -3303,6 +3309,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     t1co: "",
     t2bg: "",
     t2co: "",
+    utc:"",
   };
   let eid;
   let til;
@@ -3349,6 +3356,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
   let t1co;
   let t2bg;
   let t2co;
+  let utc;
   // Basic elements are set
   cid = result.commentaryId;
   eid = result.eventRefId.toString();
@@ -3361,6 +3369,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
   cst = result.commentaryStatus;
   ics = result.isClientShow;
   iact = result.isActive;
+  utc = result.eventDate;
   //teams set
   const commentaryTeamsOne = await global.tblCommentaryTeams.filter(
     (item) =>
@@ -3473,6 +3482,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     resultArr.t1bg = t1bg;
     resultArr.t2co = t2co;
     resultArr.t2bg = t2bg;
+    resultArr.utc= utc;
   }
   if (getstatus == 2) {
     const _tosswonby = result.tossWonBy;
@@ -3528,6 +3538,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     resultArr.t1bg = t1bg;
     resultArr.t2co = t2co;
     resultArr.t2bg = t2bg;
+    resultArr.utc= utc;
   }
   // if (getstatus == 3) {
   //   const _tosswonby = result.tossWonBy;
@@ -3686,6 +3697,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     resultArr.t1bg = t1bg;
     resultArr.t2co = t2co;
     resultArr.t2bg = t2bg;
+    resultArr.utc= utc;
   }
 
   let eventType = await global.tblEventTypes.find(
@@ -4404,6 +4416,7 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
       baid: batId,
       ics: commentary.isClientShow,
       cci: commentary.currentInnings,
+      utc: commentary.eventDate,
     };
 
     dataToreturn.es = es;
