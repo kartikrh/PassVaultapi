@@ -567,7 +567,22 @@ const changeMarketCancelService = async (request, fastify) => {
     (item) => item.commentaryId === commentaryId
   );
   if (eventMarket === -1) {
-    throw new Error("EventMarket with this id not Found");
+    // throw new Error("EventMarket with this id not Found");
+    let checkMarketInDb = await getEventMarketByIdsQuery(
+      {
+        eventMarketIds: [eventMarketId],
+      },
+      request,
+      fastify
+    );
+    if (checkMarketInDb.length == 0) {
+      throw new Error("EventMarket with this id not Found");
+    } else {
+      global.tblEventMarkets.push(checkMarketInDb[0]);
+      eventMarket = global.tblEventMarkets.findIndex(
+        (item) => item.eventMarketId === eventMarketId
+      );
+    }
   }
   if (!commentary) {
     throw new Error("Commentary with this id not Found");
@@ -622,9 +637,27 @@ const changeMarketCloseService = async (request, fastify) => {
   let commentary = global.tblCommentaries.find(
     (item) => item.commentaryId === commentaryId
   );
+  let checkMarketInDb ;
   if (eventMarket === -1) {
-    throw new Error("EventMarket with this id not Found");
+    // throw new Error("EventMarket with this id not Found");
+    checkMarketInDb = await getEventMarketByIdsQuery(
+      {
+        eventMarketIds: [eventMarketId],
+      },
+      request,
+      fastify
+    );
+    if(checkMarketInDb.length == 0){
+      throw new Error("EventMarket with this id not Found");
+    }
+    else {
+      global.tblEventMarkets.push(checkMarketInDb[0]);
+      eventMarket = global.tblEventMarkets.findIndex(
+        (item) => item.eventMarketId === eventMarketId
+      );
+    }
   }
+
   if (!commentary) {
     throw new Error("Commentary with this id not Found");
   }
