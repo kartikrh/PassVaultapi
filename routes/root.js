@@ -70,12 +70,12 @@ module.exports = async function (fastify, opts) {
     handler: (request, reply) => generalImageUpload(request, reply, fastify),
   });
     // Single API to start and stop SignalR based on its current state
-  fastify.post("/signalr/toggle", async (request, reply) => {
-    if (isSignalRStarted()) {
-      await stopSignalR();
+  fastify.post("/signalr/toggle", async (request, reply,fastify) => {
+    if (isSignalRStarted(fastify)) {
+      await stopSignalR(fastify);
       reply.send({ status: "SignalR stopped" });
     } else {
-      await startSignalR();
+      await startSignalR(fastify);
       reply.send({ status: "SignalR started" });
     }
   });

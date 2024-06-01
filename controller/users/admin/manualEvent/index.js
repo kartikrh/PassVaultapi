@@ -7,6 +7,8 @@ const {
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
 
+let commonPath = "controller/users/admin/manualEvent";
+
 const importMarketController = async (request, reply, fastify) => {
   try {
     const result = await ImportMarketService(request, fastify);
