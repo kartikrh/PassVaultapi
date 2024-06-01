@@ -560,15 +560,30 @@ const saveEventMarketService = async (request, fastify) => {
 
 const changeMarketCancelService = async (request, fastify) => {
   const { eventMarketId, commentaryId, password } = request.body;
-  // let eventMarket = global.tblEventMarkets.findIndex(
-  //   (item) => item.eventMarketId === eventMarketId
-  // );
+  let eventMarket = global.tblEventMarkets.findIndex(
+    (item) => item.eventMarketId === eventMarketId
+  );
   let commentary = global.tblCommentaries.find(
     (item) => item.commentaryId === commentaryId
   );
-  // if (eventMarket === -1) {
-  //   throw new Error("EventMarket with this id not Found");
-  // }
+  if (eventMarket === -1) {
+    // throw new Error("EventMarket with this id not Found");
+    let checkMarketInDb = await getEventMarketByIdsQuery(
+      {
+        eventMarketIds: [eventMarketId],
+      },
+      request,
+      fastify
+    );
+    if (checkMarketInDb.length == 0) {
+      throw new Error("EventMarket with this id not Found");
+    } else {
+      global.tblEventMarkets.push(checkMarketInDb[0]);
+      eventMarket = global.tblEventMarkets.findIndex(
+        (item) => item.eventMarketId === eventMarketId
+      );
+    }
+  }
   if (!commentary) {
     throw new Error("Commentary with this id not Found");
   }
@@ -579,10 +594,10 @@ const changeMarketCancelService = async (request, fastify) => {
   if (configPassword !== password) {
     throw new Error("Password is incorrect");
   }
-  // const currentStatus = global.tblEventMarkets[eventMarket].status;
+  const currentStatus = global.tblEventMarkets[eventMarket].status;
   if (currentStatus === EventMarketStatus.Close) {
     await changeMarketCancelQuery(request.body, request, fastify);
-    // global.tblEventMarkets[eventMarket].status = EventMarketStatus.Cancel;
+    global.tblEventMarkets[eventMarket].status = EventMarketStatus.Cancel;
     return "Market Cancel updated successfully";
   } else {
     throw new Error("Market is not currently closed, so it cannot be canceled");
