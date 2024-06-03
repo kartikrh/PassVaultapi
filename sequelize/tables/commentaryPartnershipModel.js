@@ -54,6 +54,26 @@ module.exports = (sequelize) => {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
+      wrBatter1Balls : {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        defaultValue: 0
+      },
+      wrBatter2Balls : {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        defaultValue: 0
+      },
+      wrBatter1Runs : {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        defaultValue: 0
+      },
+      wrBatter2Runs : {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        defaultValue: 0
+      },
     },
     {
       timestamps: false,
