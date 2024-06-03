@@ -73,6 +73,8 @@ const {
 const { getAllPlayersByTeamIdQuery } = require("../repository/TableTeams");
 const { handleMarketCloseService } = require("./eventMarket");
 const { getEventMarketRatioQuery, closeEventMarketByCIdQuery } = require("../repository/TableEventMarkets");
+const configConstants = require("../utilities/configConstants");
+
 
 const allCommentaryService = async (request, fastify) => {
   // return global.tblCommentaries;
@@ -1706,23 +1708,26 @@ const testStoreProcedureService = async (request, fastify) => {
             fastify,
             request
           );
-          if(_wkt || _bory){
-            try {
-              const now = new Date();
-              const formattedDate = formatDateToISOString(now);
-              callfds(
-                {
-                  Id: 0,
-                  EventId: parseInt(commentaryData.eventRefId),
-                  BWDateTime: (await formattedDate).toString,
-                  Type: _bory === true ? "2" : _wkt === true ? "1" : ""
-                },
-                "/api/transactions/SaveBoundryWicket",
-                fastify,
-                request
-              ); 
-            } catch (error) {
-              
+          const isFDS = global.tblConfigs.find((item) => item.key === configConstants.ISFRAUDDET_DECTIONAPI).value;
+          if(isFDS && isFDS == 'true'){
+            if(_wkt || _bory){
+              try {
+                const now = new Date();
+                const formattedDate = formatDateToISOString(now);
+                callfds(
+                  {
+                    Id: 0,
+                    EventId: parseInt(commentaryData.eventRefId),
+                    BWDateTime: (await formattedDate).toString,
+                    Type: _bory === true ? "2" : _wkt === true ? "1" : ""
+                  },
+                  "/api/transactions/SaveBoundryWicket",
+                  fastify,
+                  request
+                ); 
+              } catch (error) {
+
+              }
             }
           }
 
