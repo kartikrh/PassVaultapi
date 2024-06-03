@@ -124,54 +124,53 @@ async function startSignalR(fastify) {
                     try {
                       let _data2 = await updateEventMarketRunnerMaunalQuery(items, _fastify);
                     } catch (error) {
-                      console.error('Error connecting to SignalR:', error);
+                      console.error('updateEventMarketRunnerMaunalQuery:', error);
                     }
                   }
                 }
-                let _eventMarketId = await  UpdateEventMarketByCIdFromSocketQuery({eventMarketId:EventsMarketobj.eventMarketId},_fastify);
-                 
-                const dataOfmarkets = await  getEventMarketByIdsQuery(
+                let _isThreadDone = await  UpdateEventMarketByCIdFromSocketQuery({eventMarketId:EventsMarketobj.eventMarketId},_fastify);
+                if(_isThreadDone){
+                  const dataOfmarkets = await  getEventMarketByIdsQuery(
                    {
-                     eventMarketIds: [_eventMarketId],
+                     eventMarketIds: [EventsMarketobj.eventMarketId],
                    },
                    request,
                    _fastify
-                 );
-                
-                 for (let item of dataOfmarkets) {
-                   let index = global.tblEventMarkets.findIndex(
-                     (e) => e.eventMarketId === item.eventMarketId
                    );
-                   if (index === -1) {
-                     global.tblEventMarkets.push(item);
-                     marketDataLogger(
-                       {
-                         eventMarketId: item.eventMarketId,
-                         commentaryId: item.commentaryId,
-                         dataTosave: JSON.parse(item.data),
-                         updateType: MarketUpdateType.marketInitilization,
-                       },
-                       request,
-                       fastify
-                     );
-                   } else {
-                     let previousLine = global.tblEventMarkets[index].line;
-                     global.tblEventMarkets[index] = item;
-                     marketDataLogger(
-                       {
-                         eventMarketId: item.eventMarketId,
-                         commentaryId: item.commentaryId,
-                         dataTosave: JSON.parse(item.data),
-                         updateType: MarketUpdateType.marketInitilization,
-                         lineDiff: item.line - previousLine,
-                       },
-                       request,
-                       fastify
-                     );
-                   }
+                   for (let item of dataOfmarkets) {
+                    let index = global.tblEventMarkets.findIndex(
+                      (e) => e.eventMarketId === item.eventMarketId
+                    );
+                    if (index === -1) {
+                      global.tblEventMarkets.push(item);
+                      marketDataLogger(
+                        {
+                          eventMarketId: item.eventMarketId,
+                          commentaryId: item.commentaryId,
+                          dataTosave: JSON.parse(item.data),
+                          updateType: MarketUpdateType.marketInitilization,
+                        },
+                        request,
+                        fastify
+                      );
+                    } else {
+                      let previousLine = global.tblEventMarkets[index].line;
+                      global.tblEventMarkets[index] = item;
+                      marketDataLogger(
+                        {
+                          eventMarketId: item.eventMarketId,
+                          commentaryId: item.commentaryId,
+                          dataTosave: JSON.parse(item.data),
+                          updateType: MarketUpdateType.marketInitilization,
+                          lineDiff: item.line - previousLine,
+                        },
+                        request,
+                        fastify
+                      );
+                    }
+                  }
                 }
               }
-
             }
           }
         } catch (error) {

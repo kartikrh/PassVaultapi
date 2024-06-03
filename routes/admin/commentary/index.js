@@ -46,6 +46,7 @@ const {
   getPredictorLogsById,
   updateResultInCommentary,
   changeMaxOverDetail,
+  AddSuperOverCommentary,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -610,5 +611,19 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler : (request, reply) => changeMaxOverDetail(request, reply, fastify)
-  })
+  });
+
+  fastify.post("/addSuperOver", {
+    schema: Commentary.saveSuperOver.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: request.body.commentaryId === 0 ? "add" : "edit",
+        }),
+    ],
+    handler: (request, reply) => AddSuperOverCommentary(request, reply, fastify),
+  });
+
 };
