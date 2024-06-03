@@ -3,6 +3,8 @@ const { ImportMarketService, MarketListService } = require("../../../../services
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
 
+let commonPath = "controller/users/admin/ImportMarket";
+
 const importMarketController = async (request, reply, fastify) => {
   try {
     const result = await ImportMarketService(request, fastify);

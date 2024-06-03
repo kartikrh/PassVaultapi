@@ -2381,6 +2381,7 @@ const getCommentaryBallByBallQuery = async (request, fastify) => {
     ORDER BY "wrCommentaryBallByBallId" ASC
     `,
     {
+
       type: fastify.db.QueryTypes.SELECT,
       bind: [request.body.commentaryId],
     }
