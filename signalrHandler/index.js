@@ -83,13 +83,13 @@ async function startSignalR(fastify) {
                           groupedRates[selectionId].lay.push(rate);
                       }
                   }
-                  else if(rate.pr === 1){
-                    if (rate.ib) {
-                      groupedRates[selectionId].back.push(rate);
-                  } else {
-                      groupedRates[selectionId].lay.push(rate);
-                  }
-                  }
+                  // else if(rate.pr === 1){
+                  //   if (rate.ib) {
+                  //     groupedRates[selectionId].back.push(rate);
+                  // } else {
+                  //     groupedRates[selectionId].lay.push(rate);
+                  // }
+                  // }
               });
 
               // Create the desired output structure
