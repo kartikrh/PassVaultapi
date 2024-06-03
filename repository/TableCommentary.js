@@ -2795,6 +2795,93 @@ const updateMaxOverDetailQuery = async (data, fastify, request) => {
     throw new Error(error.message);
   }
 };
+
+const updateSuperOverCommentaryQuery = async (data, fastify) => {
+  try {
+    return await fastify.db.query(
+      `update "tblCommentaries" set 
+      "wrCurrentInnings" = $2
+      where "wrCommentaryId" = $1	
+      `,
+      {
+        bind: [
+          data.commentaryId || null,
+          data.currentInnings || null,
+        ],
+
+        type: fastify.db.QueryTypes.UPDATE,
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableConfig/updateConfigQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const insertCommentarySuperOverTeams = async (request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `
+      insert into "tblCommentaryTeams" ("wrCommentaryId" , "wrTeamId","wrTeamCaptain","wrTeamKipper" , "wrShortName" , "wrTeamName","wrCurrentInnings","wrIsBattingComplete"
+      , "wrTeamColor" , "wrBackgroundColor" , "wrTeamMaxOver")
+       values (
+        $1,
+        $2,
+        $3,
+        $4,
+        (select "wrTeamShortName" from "tblTeams" where "wrTeamId" = $2),
+        (select "wrTeamName" from "tblTeams" where "wrTeamId" = $2),
+        $8,
+        false,
+        (select "wrTeamColor" from "tblTeams" where "wrTeamId" = $2),
+        (select "wrBackgroundColor" from "tblTeams" where "wrTeamId" = $2),
+        $9             
+      )
+      ,(
+        $1,
+        $5,
+        $6,
+        $7,
+        (select "wrTeamShortName" from "tblTeams" where "wrTeamId" = $5),
+        (select "wrTeamName" from "tblTeams" where "wrTeamId" = $5),
+        $8,
+        false,
+        (select "wrTeamColor" from "tblTeams" where "wrTeamId" = $5),
+        (select "wrBackgroundColor" from "tblTeams" where "wrTeamId" = $5),
+        $9
+      )
+    `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [
+          request.body.data.commentaryId,
+          request.body.data.team1Id,
+          request.body.data.team1Captain || null,
+          request.body.data.team1Kipper || null,
+          request.body.data.team2Id,
+          request.body.data.team2Captain || null,
+          request.body.data.team2Kipper || null,
+          request.body.data.currentInnings,
+          request.body.data.teamMaxOver || null,
+        ],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableConfig/insertConfigQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -2852,4 +2939,6 @@ module.exports = {
   updateEventRefIdInCommentaryQuery,
   getCommentaryDetailByIdQuery,
   updateMaxOverDetailQuery,
+  updateSuperOverCommentaryQuery,
+  insertCommentarySuperOverTeams
 };
