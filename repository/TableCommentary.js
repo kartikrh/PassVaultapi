@@ -811,7 +811,8 @@ const getAllCommentaryTeamsQuery = async (fastify) => {
   "wrCommentaryPlayerTeamKipper" as "commentaryPlayerTeamKipper",
   "wrTeamColor" as "teamColor",
   "wrBackgroundColor" as "backgroundColor",
-  "wrTeamMaxOver" as "teamMaxOver"
+  "wrTeamMaxOver" as "teamMaxOver",
+  "wrIsSuperOver" as "isSuperOver"
   from "tblCommentaryTeams" tct 
 
   `,
@@ -2828,7 +2829,7 @@ const insertCommentarySuperOverTeams = async (request, fastify) => {
     return await fastify.db.query(
       `
       insert into "tblCommentaryTeams" ("wrCommentaryId" , "wrTeamId","wrTeamCaptain","wrTeamKipper" , "wrShortName" , "wrTeamName","wrCurrentInnings","wrIsBattingComplete"
-      , "wrTeamColor" , "wrBackgroundColor" , "wrTeamMaxOver")
+      , "wrTeamColor" , "wrBackgroundColor" , "wrTeamMaxOver", "wrIsSuperOver")
        values (
         $1,
         $2,
@@ -2868,6 +2869,7 @@ const insertCommentarySuperOverTeams = async (request, fastify) => {
           request.body.data.team2Kipper || null,
           request.body.data.currentInnings,
           request.body.data.teamMaxOver || null,
+          true
         ],
       }
     );
