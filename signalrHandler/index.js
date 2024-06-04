@@ -50,12 +50,7 @@ async function startSignalR(fastify) {
       intervalId = setInterval(checkAndUpdateMarketRate, _SignalRInterwal || 10000);
 
       connection.on('Rate', async (message) => {
-        //console.log(`Received Rate message: ${JSON.stringify(message)}`);
-        //this following code is not permanemt its just modle exmple i will remove this
         try {
-          // let _getMessage = '{"mi":3917979,"ms":1,"tm":670.12,"ip":false,"ia":true,"rt":[{"si":11439862,"lpt":"2.74","ib":true,"re":2.68,"rv":12,"pr":0,"pt":0,"rd":null},{"si":11439862,"lpt":"2.74","ib":true,"re":2.6,"rv":99,"pr":1,"pt":0,"rd":null},{"si":11439862,"lpt":"2.74","ib":true,"re":2.54,"rv":24,"pr":2,"pt":0,"rd":null},{"si":11439862,"lpt":"2.74","ib":false,"re":2.74,"rv":44,"pr":0,"pt":0,"rd":null},{"si":11439862,"lpt":"2.74","ib":false,"re":2.76,"rv":70,"pr":1,"pt":0,"rd":null},{"si":11439862,"lpt":"2.74","ib":false,"re":2.8,"rv":230,"pr":2,"pt":0,"rd":null},{"si":9433864,"lpt":"1.58","ib":true,"re":1.58,"rv":6,"pr":0,"pt":0,"rd":null},{"si":9433864,"lpt":"1.58","ib":true,"re":1.57,"rv":102,"pr":1,"pt":0,"rd":null},{"si":9433864,"lpt":"1.58","ib":true,"re":1.56,"rv":250,"pr":2,"pt":0,"rd":null},{"si":9433864,"lpt":"1.58","ib":false,"re":1.6,"rv":20,"pr":0,"pt":0,"rd":null},{"si":9433864,"lpt":"1.58","ib":false,"re":1.63,"rv":158,"pr":1,"pt":0,"rd":null},{"si":9433864,"lpt":"1.58","ib":false,"re":1.65,"rv":232,"pr":2,"pt":0,"rd":null}]}';
-          // let _message = JSON.parse(_getMessage);
-          // let _getMessage = message;
           let _message = message;
           if(_message.rt){
             //console.log(_message);
@@ -83,13 +78,13 @@ async function startSignalR(fastify) {
                           groupedRates[selectionId].lay.push(rate);
                       }
                   }
-                  else if(rate.pr === 1){
-                    if (rate.ib) {
-                      groupedRates[selectionId].back.push(rate);
-                  } else {
-                      groupedRates[selectionId].lay.push(rate);
-                  }
-                  }
+                  // else if(rate.pr === 1){
+                  //   if (rate.ib) {
+                  //     groupedRates[selectionId].back.push(rate);
+                  // } else {
+                  //     groupedRates[selectionId].lay.push(rate);
+                  // }
+                  // }
               });
 
               // Create the desired output structure
