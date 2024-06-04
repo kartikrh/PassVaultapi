@@ -427,7 +427,7 @@ const updateEventMarketRateQuery = async (data, request, fastify) => {
           data.status,
           data.isActive,
           data.isAllow,
-          data.isSendData || false,
+          data.isSendData || true,
           data.lineRatio || 0,
           data.marketId,
         ],
