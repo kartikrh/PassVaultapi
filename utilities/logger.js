@@ -128,7 +128,7 @@ const marketDataLogger = async (data , request , fastify) => {
 
     return await fastify.db.query(
       `INSERT INTO "tblMarketDataLogs" ("wrEventMarketId", "wrCommentaryId", "wrData", "wrUpdateType", "wrCreatedDate",
-      "wrLineDiff", "wrCreatedBy", "wrIsSendData") VALUES ($1, $2, $3, $4, $5 ,$6, $7)`,
+      "wrLineDiff", "wrCreatedBy", "wrIsSendData") VALUES ($1, $2, $3, $4, $5 ,$6, $7 , $8)`,
       {
         type: fastify.db.QueryTypes.SELECT,
         bind: [

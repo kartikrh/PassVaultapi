@@ -840,7 +840,7 @@ const closeEventMarketByTeamIdQuery = async (data, request, fastify) => {
   try {
     const query = `
             UPDATE "tblEventMarkets"
-            SET "wrStatus" = $1 , "wrCloseTime" = now()::timestamp, "wrLastUpdate" = now()::timestamp
+            SET "wrStatus" = $1 , "wrCloseTime" = now()::timestamp, "wrLastUpdate" = now()::timestamp , "wrIsSendData" = true
             WHERE "wrTeamID" = $2
             AND "wrCommentaryId" = $3
             AND "wrInningsID" = $4
@@ -914,10 +914,22 @@ const closeEventMarketByTeamIdQuery = async (data, request, fastify) => {
       });
 
       market.data = udpatedData[0].data;
+
+      marketDataLogger(
+        {
+           eventMarketId : market.eventMarketId,
+           commentaryId : data.commentaryId,
+           dataTosave : dataToStore,
+           updateType : MarketUpdateType.marketInitilization,
+           isSendData : true
+        },
+        request,
+        fastify
+      )
     }
+
     return result;
   } catch (error) {
-    console.log(error);
     errorLogger(
       fastify,
       error.message,
@@ -988,7 +1000,8 @@ const cancelEventMarketByTeamIdQuery = async (data, request, fastify) => {
             UPDATE "tblEventMarkets"
             SET "wrStatus" = $1,
             "wrSettledTime" = now()::timestamp,
-            "wrLastUpdate" = now()::timestamp
+            "wrLastUpdate" = now()::timestamp,
+            "wrIsSendData" = true
             WHERE "wrTeamID" = $2
             AND "wrCommentaryId" = $3
             AND "wrInningsID" = $4
@@ -1059,6 +1072,14 @@ const cancelEventMarketByTeamIdQuery = async (data, request, fastify) => {
       });
 
       market.data = udpatedData[0].data;
+
+      marketDataLogger({
+        eventMarketId : market.eventMarketId,
+        commentaryId : data.commentaryId,
+        dataTosave : JSON.parse(dataToStore),
+        updateType : MarketUpdateType.marketInitilization,
+        isSendData : true
+      })
     }
 
     return result;
