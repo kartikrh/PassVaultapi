@@ -206,6 +206,7 @@ const createEventMarketsService = async (request, fastify) => {
           commentaryId: item.commentaryId,
           dataTosave: JSON.parse(item.data),
           updateType: MarketUpdateType.marketInitilization,
+          isSendData : true
         },
         request,
         fastify
@@ -220,6 +221,7 @@ const createEventMarketsService = async (request, fastify) => {
           dataTosave: JSON.parse(item.data),
           updateType: MarketUpdateType.marketInitilization,
           lineDiff: item.line - previousLine,
+          isSendData : true
         },
         request,
         fastify
@@ -356,18 +358,18 @@ const marketListResultFalseService = async (request, fastify) => {
 };
 const changeResultOfMarketService = async (request, fastify) => {
   const { eventMarketId, isResult } = request.body;
-  let eventMarket = global.tblEventMarkets.findIndex(
-    (item) => item.eventMarketId === eventMarketId
-  );
-  if (eventMarket === -1) {
-    throw new Error("EventMarket with this id not Found");
-  }
+  // let eventMarket = global.tblEventMarkets.findIndex(
+  //   (item) => item.eventMarketId === eventMarketId
+  // );
+  // if (eventMarket === -1) {
+  //   throw new Error("EventMarket with this id not Found");
+  // }
   // if isresult is true then dont allow to change the result
-  if (global.tblEventMarkets[eventMarket].isResult) {
-    throw new Error("Result of this market is already set");
-  }
+  // if (global.tblEventMarkets[eventMarket].isResult) {
+  //   throw new Error("Result of this market is already set");
+  // }          
   await changeIsResultEventMarketQuery(request.body, request, fastify);
-  global.tblEventMarkets[eventMarket].isResult = isResult;
+  // global.tblEventMarkets[eventMarket].isResult = isResult;
 
   marketLogger(
     {
@@ -470,6 +472,7 @@ const updateMarketRateService = async (request, fastify) => {
         dataTosave: JSON.parse(data.data),
         updateType: MarketUpdateType.marketInitilization,
         lineDiff: diff,
+        isSendData : true
       },
       request,
       fastify
@@ -550,6 +553,7 @@ const saveEventMarketService = async (request, fastify) => {
         commentaryId: item.commentaryId,
         dataTosave: JSON.parse(item.data),
         updateType: MarketUpdateType.marketInitilization,
+        isSendData : true
       },
       request,
       fastify
@@ -567,7 +571,22 @@ const changeMarketCancelService = async (request, fastify) => {
     (item) => item.commentaryId === commentaryId
   );
   if (eventMarket === -1) {
-    throw new Error("EventMarket with this id not Found");
+    // throw new Error("EventMarket with this id not Found");
+    let checkMarketInDb = await getEventMarketByIdsQuery(
+      {
+        eventMarketIds: [eventMarketId],
+      },
+      request,
+      fastify
+    );
+    if (checkMarketInDb.length == 0) {
+      throw new Error("EventMarket with this id not Found");
+    } else {
+      global.tblEventMarkets.push(checkMarketInDb[0]);
+      eventMarket = global.tblEventMarkets.findIndex(
+        (item) => item.eventMarketId === eventMarketId
+      );
+    }
   }
   if (!commentary) {
     throw new Error("Commentary with this id not Found");
@@ -622,9 +641,27 @@ const changeMarketCloseService = async (request, fastify) => {
   let commentary = global.tblCommentaries.find(
     (item) => item.commentaryId === commentaryId
   );
+  let checkMarketInDb ;
   if (eventMarket === -1) {
-    throw new Error("EventMarket with this id not Found");
+    // throw new Error("EventMarket with this id not Found");
+    checkMarketInDb = await getEventMarketByIdsQuery(
+      {
+        eventMarketIds: [eventMarketId],
+      },
+      request,
+      fastify
+    );
+    if(checkMarketInDb.length == 0){
+      throw new Error("EventMarket with this id not Found");
+    }
+    else {
+      global.tblEventMarkets.push(checkMarketInDb[0]);
+      eventMarket = global.tblEventMarkets.findIndex(
+        (item) => item.eventMarketId === eventMarketId
+      );
+    }
   }
+
   if (!commentary) {
     throw new Error("Commentary with this id not Found");
   }

@@ -3,6 +3,7 @@ const {
   importMarketController,
   ListEventTypesAPIcontroller,
   marketListController,
+  importMarketwithRunnerController
 } = require("../../../controller/users/admin/ImportMarket/index");
 const { ImportMarket } = require("../../../swaggerSchema/groupTags/schema");
 const configConstants = require("../../../utilities/configConstants");
@@ -20,5 +21,12 @@ module.exports = async function (fastify, opts) {
     preHandler: [(request, reply) => authorize(request, reply, fastify)],
     handler: (request, reply) =>
       marketListController(request, reply, fastify),
+  });
+
+  fastify.post("/importEventWithMarket", {
+    schema: ImportMarket.setMarketDetails.schema,
+    preHandler: [(request, reply) => authorize(request, reply, fastify)],
+    handler: (request, reply) =>
+      importMarketwithRunnerController(request, reply, fastify),
   });
 };
