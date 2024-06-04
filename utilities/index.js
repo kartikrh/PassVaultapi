@@ -269,6 +269,38 @@ const callPredictorMarket = async (data , endpoint ,fastify ,request) =>{
   }
 
 }
+
+//fraud check Api
+const callfds = async (data , endpoint ,fastify ,request) =>{
+  try {
+    const now = new Date();
+    const formattedDate = formatDateToISOString(now);  
+    data.BWDateTime = formattedDate.toString();
+    const fdsURL = global.tblConfigs.find((item) => item.key === configConstants.FRAUDDET_DECTIONAPI).value;
+    if(fdsURL){
+      const url = `${fdsURL}${endpoint}`;
+      const result = await axios.post(url, {
+        ...data
+      });
+      return result;
+    }
+  } catch (error) {
+    console.error(error.message);
+    // throw new Error(error.message);
+  }
+}
+
+const formatDateToISOString = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+  
+  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+}
+
 const MarketUpdateType = {
   marketInitilization : 1,
   predictMarket : 2,
@@ -366,5 +398,7 @@ module.exports = {
   callDataProvider,
   ServiceType,
   APIEndpointModuleType,
-  EventMarketRateSource
+  EventMarketRateSource,
+  callfds,
+  formatDateToISOString
 };

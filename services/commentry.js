@@ -54,6 +54,8 @@ const {
   getPredictorLogsQuery,
   updateResultInCommentaryQuery,
   updateMaxOverDetailQuery,
+  updateSuperOverCommentaryQuery,
+  insertCommentarySuperOverTeams
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -65,10 +67,14 @@ const {
   callDataProvider,
   APIEndpointModuleType,
   ServiceType,
+  callfds,
+  formatDateToISOString
 } = require("../utilities");
 const { getAllPlayersByTeamIdQuery } = require("../repository/TableTeams");
 const { handleMarketCloseService } = require("./eventMarket");
 const { getEventMarketRatioQuery, closeEventMarketByCIdQuery } = require("../repository/TableEventMarkets");
+const configConstants = require("../utilities/configConstants");
+
 
 const allCommentaryService = async (request, fastify) => {
   // return global.tblCommentaries;
@@ -1685,6 +1691,7 @@ const testStoreProcedureService = async (request, fastify) => {
 
           let decimalOverCount = parseFloat(commentaryBallByBall.overCount);
           let _wkt = commentaryBallByBall.ballIsWicket;
+          let _bory = commentaryBallByBall.ballIsBoundry;
 
           callPredictorMarket(
             {
@@ -1701,6 +1708,29 @@ const testStoreProcedureService = async (request, fastify) => {
             fastify,
             request
           );
+          const isFDS = global.tblConfigs.find((item) => item.key === configConstants.ISFRAUDDET_DECTIONAPI).value;
+          if(isFDS && isFDS == 'true'){
+            if(_wkt || _bory){
+              try {
+                const now = new Date();
+                const formattedDate = formatDateToISOString(now);
+                callfds(
+                  {
+                    Id: 0,
+                    EventId: parseInt(commentaryData.eventRefId),
+                    BWDateTime: (await formattedDate).toString,
+                    Type: _bory === true ? "2" : _wkt === true ? "1" : ""
+                  },
+                  "/api/transactions/SaveBoundryWicket",
+                  fastify,
+                  request
+                ); 
+              } catch (error) {
+
+              }
+            }
+          }
+
         }
       } else {
         // if(ballByBallIndex !== -1){
@@ -6038,6 +6068,107 @@ const changeMaxOverDetailService = async (request, fastify) => {
 
   return "Commentary Updated successfully";
 };
+
+const AddSuperOverCommentaryService = async (request, fastify) => {
+  const {commentaryId,teamMaxOver} = request.body;
+  const commentary = global.tblCommentaries.find(
+    (item) => item.commentaryId == commentaryId
+  );
+  if (!commentary) {
+    throw new Error("Commentary with this id not Found");
+  }
+
+
+  const index = global.tblCommentaries.findIndex(
+    (item) => item.commentaryId === commentaryId
+  );
+
+  const commentaryTeams = global.tblCommentaryTeams.filter(
+    (item) => item.commentaryId == commentaryId && item.currentInnings === commentary.currentInnings
+  );
+  
+  if(!commentaryTeams){
+    throw new Error("Commenrty Teams with this commentaryId not Found");
+  }
+
+  let Teamdata = {};
+  Teamdata.commentaryId = commentaryId;
+  Teamdata.teamMaxOver = teamMaxOver || 1;
+  for (let team of commentaryTeams) {
+    if(team.teamId == commentary.team1Id){
+      Teamdata.team1Id = team.teamId;
+      Teamdata.team1Captain = team.teamCaptain;
+      Teamdata.team1Kipper = team.teamKipper;
+    }
+    if(team.teamId == commentary.team2Id){
+      Teamdata.team2Id = team.teamId;
+      Teamdata.team2Captain = team.teamCaptain;
+      Teamdata.team2Kipper = team.teamKipper;
+    }
+  }
+  const commentaryTeam1Players = global.tblCommentaryPlayers.filter(
+    (item) => item.commentaryId === commentaryId && item.teamId === commentary.team1Id && item.currentInnings === commentary.currentInnings
+  );
+
+  const commentaryTeam2Players = global.tblCommentaryPlayers.filter(
+    (item) => item.commentaryId === commentaryId && item.teamId === commentary.team2Id && item.currentInnings === commentary.currentInnings
+  );
+
+  if((!commentaryTeam1Players && commentaryTeam1Players.length > 0) && (!commentaryTeam2Players && commentaryTeam2Players.length > 0)){
+    throw new Error("Commenrty Teams Players with this commentaryId not Found");
+  }
+
+   const Playersdata = [
+        ...commentaryTeam1Players.map((item, i) => {
+          return {
+            commentaryId: commentary.commentaryId,
+            teamId: item.teamId,
+            playerId: item.playerId,
+            displayOrder: i + 1,
+          };
+        }),
+        ...commentaryTeam2Players.map((item, i) => {
+          return {
+            commentaryId: commentary.commentaryId,
+            teamId: item.teamId,
+            playerId: item.playerId,
+            displayOrder: i + 1,
+          };
+        }),
+      ];
+
+      let _cin = parseInt(commentary.currentInnings) + 1;
+
+      if(Teamdata){
+         try {
+          await updateSuperOverCommentaryQuery({commentaryId: commentary.commentaryId ,currentInnings:_cin}, fastify);
+          Teamdata.currentInnings = _cin;
+           await insertCommentarySuperOverTeams({body : {data:Teamdata}}, fastify);
+         } catch (error) {
+          throw new Error(error);
+         }
+
+         for (let info of Playersdata) {
+          try {
+            let playerData = await insertCommentaryPlayers(
+              info,
+              _cin,
+              fastify,
+              request
+            );
+          } catch (error) {
+
+          }
+         }
+      }
+
+  const updatedData = await getCommentaryByIdQuery({body : {commentaryId: commentary.commentaryId}}, fastify)
+  global.tblCommentaries[index] = updatedData;
+  global.tblCommentaryPlayers = await getAllCommentaryPlayerQuery(fastify);
+  global.tblCommentaryTeams = await getAllCommentaryTeamsQuery(fastify);
+  
+  return await commentaryDetailsByIdService({body : {commentaryId: commentary.commentaryId}}, fastify);
+};
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -6090,5 +6221,6 @@ module.exports = {
   updateEventRefIdInCommentaryService,
   loadcommentaryService,
   changeMaxOverDetailService,
+  AddSuperOverCommentaryService
   // getshortService
 };

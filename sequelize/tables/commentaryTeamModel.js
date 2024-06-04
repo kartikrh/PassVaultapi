@@ -129,6 +129,10 @@ module.exports = (sequelize) => {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
+      wrIsSuperOver: {
+        type: DataTypes.BOOLEAN,
+        allowNull: true,
+      },
     },
     {
       timestamps: false,

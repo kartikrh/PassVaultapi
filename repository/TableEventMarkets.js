@@ -1625,7 +1625,7 @@ const UpdateEventMarketByCIdFromSocketQuery = async (data , fastify) =>{
       });
 
       const query2 = `UPDATE "tblEventMarkets" SET "wrData" = $1 WHERE "wrID" = $2
-        RETURNING "wrData" as "data"`;
+        RETURNING "wrID" as "eventMarketId"`;
 
       await fastify.db.query(query2, {
         bind: [_data[0], data.eventMarketId],
