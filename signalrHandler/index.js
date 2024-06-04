@@ -83,13 +83,13 @@ async function startSignalR(fastify) {
                           groupedRates[selectionId].lay.push(rate);
                       }
                   }
-                  // else if(rate.pr === 1){
-                  //   if (rate.ib) {
-                  //     groupedRates[selectionId].back.push(rate);
-                  // } else {
-                  //     groupedRates[selectionId].lay.push(rate);
-                  // }
-                  // }
+                  else if(rate.pr === 1){
+                    if (rate.ib) {
+                      groupedRates[selectionId].back.push(rate);
+                  } else {
+                      groupedRates[selectionId].lay.push(rate);
+                  }
+                  }
               });
 
               // Create the desired output structure
@@ -134,7 +134,7 @@ async function startSignalR(fastify) {
                    {
                      eventMarketIds: [EventsMarketobj.eventMarketId],
                    },
-                   request,
+                   null,
                    _fastify
                    );
                    for (let item of dataOfmarkets) {
@@ -150,7 +150,7 @@ async function startSignalR(fastify) {
                           dataTosave: JSON.parse(item.data),
                           updateType: MarketUpdateType.marketInitilization,
                         },
-                        request,
+                        null,
                         fastify
                       );
                     } else {
@@ -162,9 +162,9 @@ async function startSignalR(fastify) {
                           commentaryId: item.commentaryId,
                           dataTosave: JSON.parse(item.data),
                           updateType: MarketUpdateType.marketInitilization,
-                          lineDiff: item.line - previousLine,
+                          lineDiff: item.line - (previousLine || 0),
                         },
-                        request,
+                        null,
                         fastify
                       );
                     }
@@ -174,7 +174,7 @@ async function startSignalR(fastify) {
             }
           }
         } catch (error) {
-
+          console.error(error);
         }
       });
     } catch (err) {
@@ -193,6 +193,7 @@ async function stopSignalR(fastify) {
         clearInterval(intervalId);
         intervalId = null;
       }
+      global.rateSourceRefIDSet = null;
       global.rateSourceRefIDSet.clear(); // Clear the set
     } catch (err) {
       console.error('Error disconnecting from SignalR:', err);
