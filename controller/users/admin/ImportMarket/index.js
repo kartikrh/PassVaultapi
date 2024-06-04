@@ -1,4 +1,4 @@
-const { ImportMarketService, MarketListService } = require("../../../../services/ImportMarket.js");
+const { ImportMarketService, MarketListService,ImportMarketWithRunnerService } = require("../../../../services/ImportMarket.js");
 
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -35,7 +35,23 @@ const marketListController = async (request, reply, fastify) => {
   }
 };
 
+const importMarketwithRunnerController = async (request, reply, fastify) => {
+  try {
+    const result = await ImportMarketWithRunnerService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      commonPath + "/importMarketwithRunnerController",
+      request
+    );
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
 module.exports = {
   importMarketController,
   marketListController,
+  importMarketwithRunnerController
 };
