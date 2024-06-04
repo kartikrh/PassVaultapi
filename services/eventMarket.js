@@ -206,6 +206,7 @@ const createEventMarketsService = async (request, fastify) => {
           commentaryId: item.commentaryId,
           dataTosave: JSON.parse(item.data),
           updateType: MarketUpdateType.marketInitilization,
+          isSendData : true
         },
         request,
         fastify
@@ -220,6 +221,7 @@ const createEventMarketsService = async (request, fastify) => {
           dataTosave: JSON.parse(item.data),
           updateType: MarketUpdateType.marketInitilization,
           lineDiff: item.line - previousLine,
+          isSendData : true
         },
         request,
         fastify
@@ -470,6 +472,7 @@ const updateMarketRateService = async (request, fastify) => {
         dataTosave: JSON.parse(data.data),
         updateType: MarketUpdateType.marketInitilization,
         lineDiff: diff,
+        isSendData : true
       },
       request,
       fastify
@@ -550,6 +553,7 @@ const saveEventMarketService = async (request, fastify) => {
         commentaryId: item.commentaryId,
         dataTosave: JSON.parse(item.data),
         updateType: MarketUpdateType.marketInitilization,
+        isSendData : true
       },
       request,
       fastify
