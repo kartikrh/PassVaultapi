@@ -455,8 +455,8 @@ const updateMarketRateService = async (request, fastify) => {
       value: diff,
       line_ratio: data.lineRatio,
       is_onlyover: is_onlyover,
-      is_allow:item.isActive,
-      is_active:item.isAllow,
+      is_allow:item.isAllow,
+      is_active:item.isActive,
       is_senddata:item.isSendData,
     });
     let index = global.tblEventMarkets.findIndex(
