@@ -7,6 +7,13 @@ const {
   insertEventQuery,
 } = require("../repository/TableImportMarket");
 
+const {
+  createEventMarketMaunalQuery,
+  updateEventMarketMaunalQuery,
+  createOrUpdateEventRunnerMarketManualQuery,
+  getEventMarketByIdsQuery,
+} = require("../repository/TableEventMarkets");
+
 const ImportMarketService = async (request, fastify) => {
   if (request.userTokenInfo.WrUserId) {
     //EventType Add/Update
