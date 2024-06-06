@@ -279,6 +279,12 @@ const updateTeamService = async (request, fastify) => {
   }
 
   if (request.body.jersey && request.body.jersey.length) {
+
+    // generate image name
+    imgName = generateImageName({
+      name: request.body.teamName,
+    });
+    
     body.jersey = await storeImageOnServer({
       image: request.body.jersey[0],
       project: projectName,
