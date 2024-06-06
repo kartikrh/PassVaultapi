@@ -3,7 +3,7 @@ const crypto = require("crypto");
 const moment = require("moment");
 const { default: axios } = require("axios");
 const configConstants = require("./configConstants");
-const { errorLogger, tblPredictorAPILogger } = require("./logger");
+const { errorLogger, tblPredictorAPILogger ,tblThirdPartyAPILogger} = require("./logger");
 const { getCommentaryDetailByIdQuery } = require("../repository/TableCommentary");
 const ERROR_CODES = {
   INVALID_INPUT: "INVALID_INPUT",
@@ -272,6 +272,7 @@ const callPredictorMarket = async (data , endpoint ,fastify ,request) =>{
 
 //fraud check Api
 const callfds = async (data , endpoint ,fastify ,request) =>{
+  let requestStartTime = new Date();
   try {
     const now = new Date();
     const formattedDate = formatDateToISOString(now);  
@@ -282,10 +283,34 @@ const callfds = async (data , endpoint ,fastify ,request) =>{
       const result = await axios.post(url, {
         ...data
       });
+
+      await tblThirdPartyAPILogger(
+        {
+          endPoint : endpoint,
+          requestBody : data,
+          requestStartTime : requestStartTime,
+          requestEndTime : new Date(),
+          response : result.data
+        },
+        request,
+        fastify
+      );
+
       return result;
     }
   } catch (error) {
-    console.error(error.message);
+    //console.error(error.message);
+    await tblThirdPartyAPILogger(
+      {
+        endPoint : endpoint,
+        requestBody : data,
+        requestStartTime : requestStartTime,
+        requestEndTime : new Date(),
+        response : error.message
+      },
+      request,
+      fastify
+    );
     // throw new Error(error.message);
   }
 }

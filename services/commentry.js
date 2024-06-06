@@ -2401,7 +2401,7 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
               try {
                 const now = new Date();
                 const formattedDate = formatDateToISOString(now);
-                callfds(
+               await callfds(
                   {
                     Id: 0,
                     EventId: parseInt(commentaryData.eventRefId),
