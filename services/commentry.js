@@ -2453,13 +2453,11 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         if(isFDS && isFDS == 'true'){
           if(_wkt || _bory){
             try {
-              const now = new Date();
-              const formattedDate = formatDateToISOString(now);
              await callfds(
                 {
                   Id: 0,
                   EventId: parseInt(commentaryData.eventRefId),
-                  BWDateTime: (await formattedDate).toString,
+                  BWDateTime: '',
                   Type: _bory === true ? "2" : _wkt === true ? "1" : ""
                 },
                 "/api/transactions/SaveBoundryWicket",
