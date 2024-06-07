@@ -811,7 +811,8 @@ const getAllCommentaryTeamsQuery = async (fastify) => {
   "wrCommentaryPlayerTeamKipper" as "commentaryPlayerTeamKipper",
   "wrTeamColor" as "teamColor",
   "wrBackgroundColor" as "backgroundColor",
-  "wrTeamMaxOver" as "teamMaxOver"
+  "wrTeamMaxOver" as "teamMaxOver",
+  "wrIsSuperOver" as "isSuperOver"
   from "tblCommentaryTeams" tct 
 
   `,
@@ -1236,7 +1237,11 @@ const getAllCommentaryPartnershipQuery = async (fastify) => {
       "wrTotalBalls" as "totalBalls",
       "wrExtras" as "extras",
       "wrCurrentInnings" as "currentInnings",
-      "wrCommentaryBallByBallId" as "commentaryBallByBallId"
+      "wrCommentaryBallByBallId" as "commentaryBallByBallId",
+      "wrBatter1Balls" as "batter1Balls",
+      "wrBatter2Balls" as "batter2Balls",
+      "wrBatter1Runs" as "batter1Runs",
+      "wrBatter2Runs" as "batter2Runs"
       from "tblCommentaryPartnerships"
       `,
     {
@@ -1280,14 +1285,22 @@ const createCommentaryPartnershipQuery = async (data, fastify, request) => {
     const result = await fastify.db.query(
       `
       with insert_partnership as (
-        insert into "tblCommentaryPartnerships" ("wrCommentaryId", "wrTeamId", "wrBatter1Id", "wrBatter2Id", "wrBatter1Name", "wrBatter2Name", "wrTotalRuns", "wrTotalBalls", "wrExtras" , "wrCommentaryBallByBallId","wrCurrentInnings") values (
+        insert into "tblCommentaryPartnerships" ("wrCommentaryId", "wrTeamId", "wrBatter1Id", "wrBatter2Id", 
+        "wrBatter1Name", "wrBatter2Name", "wrTotalRuns", "wrTotalBalls", "wrExtras" ,
+         "wrCommentaryBallByBallId","wrCurrentInnings",
+        "wrBatter1Balls", "wrBatter2Balls", "wrBatter1Runs", "wrBatter2Runs"
+        ) values (
           $1,
           $2,
           $3,
           $4,
           $5,$6,$7,$8,$9,
          $10,
-          $11
+          $11,
+          $12,
+          $13,
+          $14,
+          $15
         ) 
         returning *
       )
@@ -1304,7 +1317,11 @@ const createCommentaryPartnershipQuery = async (data, fastify, request) => {
     "wrTotalBalls" as "totalBalls",
     "wrExtras" as "extras",
     "wrCommentaryBallByBallId" as "commentaryBallByBallId",
-    "wrCurrentInnings" as "currentInnings"
+    "wrCurrentInnings" as "currentInnings",
+    "wrBatter1Balls" as "batter1Balls",
+    "wrBatter2Balls" as "batter2Balls",
+    "wrBatter1Runs" as "batter1Runs",
+    "wrBatter2Runs" as "batter2Runs"
     from "insert_partnership"
 
       
@@ -1323,6 +1340,10 @@ const createCommentaryPartnershipQuery = async (data, fastify, request) => {
           data.extras,
           data.commentaryBallByBallId,
           data.currentInnings,
+          data.batter1Balls || 0,
+          data.batter2Balls || 0,
+          data.batter1Runs || 0,
+          data.batter2Runs || 0,
         ],
       }
     );
@@ -1353,8 +1374,12 @@ const updateCommentaryPartnershipQuery = async (data, fastify, request) => {
       "wrTotalRuns" = $7,
       "wrTotalBalls" = $8,
       "wrExtras" = $9,
-      "wrCommentaryBallByBallId" =$10
-      where "wrCommentaryPartnershipId" = $11
+      "wrCommentaryBallByBallId" =$10,
+      "wrBatter1Balls" = $11,
+      "wrBatter2Balls" = $12,
+      "wrBatter1Runs" = $13,
+      "wrBatter2Runs" = $14
+      where "wrCommentaryPartnershipId" = $15
       `,
       {
         type: fastify.db.QueryTypes.UPDATE,
@@ -1369,6 +1394,10 @@ const updateCommentaryPartnershipQuery = async (data, fastify, request) => {
           data.totalBalls,
           data.extras,
           data.commentaryBallByBallId,
+          data.batter1Balls,
+          data.batter2Balls,
+          data.batter1Runs,
+          data.batter2Runs,
           data.commentaryPartnershipId,
         ],
       }
@@ -2767,6 +2796,94 @@ const updateMaxOverDetailQuery = async (data, fastify, request) => {
     throw new Error(error.message);
   }
 };
+
+const updateSuperOverCommentaryQuery = async (data, fastify) => {
+  try {
+    return await fastify.db.query(
+      `update "tblCommentaries" set 
+      "wrCurrentInnings" = $2
+      where "wrCommentaryId" = $1	
+      `,
+      {
+        bind: [
+          data.commentaryId || null,
+          data.currentInnings || null,
+        ],
+
+        type: fastify.db.QueryTypes.UPDATE,
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableConfig/updateConfigQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const insertCommentarySuperOverTeams = async (request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `
+      insert into "tblCommentaryTeams" ("wrCommentaryId" , "wrTeamId","wrTeamCaptain","wrTeamKipper" , "wrShortName" , "wrTeamName","wrCurrentInnings","wrIsBattingComplete"
+      , "wrTeamColor" , "wrBackgroundColor" , "wrTeamMaxOver", "wrIsSuperOver")
+       values (
+        $1,
+        $2,
+        $3,
+        $4,
+        (select "wrTeamShortName" from "tblTeams" where "wrTeamId" = $2),
+        (select "wrTeamName" from "tblTeams" where "wrTeamId" = $2),
+        $8,
+        false,
+        (select "wrTeamColor" from "tblTeams" where "wrTeamId" = $2),
+        (select "wrBackgroundColor" from "tblTeams" where "wrTeamId" = $2),
+        $9             
+      )
+      ,(
+        $1,
+        $5,
+        $6,
+        $7,
+        (select "wrTeamShortName" from "tblTeams" where "wrTeamId" = $5),
+        (select "wrTeamName" from "tblTeams" where "wrTeamId" = $5),
+        $8,
+        false,
+        (select "wrTeamColor" from "tblTeams" where "wrTeamId" = $5),
+        (select "wrBackgroundColor" from "tblTeams" where "wrTeamId" = $5),
+        $9
+      )
+    `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [
+          request.body.data.commentaryId,
+          request.body.data.team1Id,
+          request.body.data.team1Captain || null,
+          request.body.data.team1Kipper || null,
+          request.body.data.team2Id,
+          request.body.data.team2Captain || null,
+          request.body.data.team2Kipper || null,
+          request.body.data.currentInnings,
+          request.body.data.teamMaxOver || null,
+          true
+        ],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableConfig/insertConfigQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -2824,4 +2941,6 @@ module.exports = {
   updateEventRefIdInCommentaryQuery,
   getCommentaryDetailByIdQuery,
   updateMaxOverDetailQuery,
+  updateSuperOverCommentaryQuery,
+  insertCommentarySuperOverTeams
 };

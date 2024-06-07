@@ -2212,6 +2212,21 @@ const Commentary = {
       },
     },
   },
+  saveSuperOver: {
+    schema: {
+      tags: ["Commentary"],
+      description: "save SuperOver Commentary",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+          teamMaxOver: { type: "integer" },
+        },
+        required: ["commentaryId"],
+      },
+    },
+  },
   updateCommentaryStatus: {
     schema: {
       tags: ["Commentary"],

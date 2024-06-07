@@ -122,12 +122,13 @@ const marketDataLogger = async (data , request , fastify) => {
       commentaryId,
       dataTosave,
       updateType,
-      lineDiff
+      lineDiff,
+      isSendData
     } = data;
 
     return await fastify.db.query(
       `INSERT INTO "tblMarketDataLogs" ("wrEventMarketId", "wrCommentaryId", "wrData", "wrUpdateType", "wrCreatedDate",
-      "wrLineDiff", "wrCreatedBy") VALUES ($1, $2, $3, $4, $5 ,$6, $7)`,
+      "wrLineDiff", "wrCreatedBy", "wrIsSendData") VALUES ($1, $2, $3, $4, $5 ,$6, $7 , $8)`,
       {
         type: fastify.db.QueryTypes.SELECT,
         bind: [
@@ -138,6 +139,7 @@ const marketDataLogger = async (data , request , fastify) => {
           new Date(),
           lineDiff || 0,
           request.userTokenInfo.WrUserId || 0,
+          isSendData || true
         ],
       }
     );
@@ -167,4 +169,23 @@ const tblPredictorAPILogger = async (data, request, fastify) => {
   }
 }
 
-module.exports = { errorLogger, responseLogger ,responseLogInDB , marketLogger ,marketDataLogger,tblPredictorAPILogger};
+const tblThirdPartyAPILogger = async (data, request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `INSERT INTO "tblThirdPartyApiLogs" ("wrEndPoint", "wrRequestBody", "wrRequestStartTime", "wrRequestEndTime", "wrResponse") VALUES ($1, $2, $3, $4, $5)`,
+      {
+        type: fastify.db.QueryTypes.INSERT,
+        bind: [
+          data.endPoint,
+          JSON.stringify(data.requestBody),
+          data.requestStartTime,
+          data.requestEndTime,
+          JSON.stringify(data.response),
+        ],
+      }
+    );
+  } catch (error) {
+    console.log(error);
+  }
+}
+module.exports = { errorLogger, responseLogger ,responseLogInDB , marketLogger ,marketDataLogger,tblPredictorAPILogger,tblThirdPartyAPILogger};

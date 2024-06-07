@@ -3,7 +3,7 @@ const crypto = require("crypto");
 const moment = require("moment");
 const { default: axios } = require("axios");
 const configConstants = require("./configConstants");
-const { errorLogger, tblPredictorAPILogger } = require("./logger");
+const { errorLogger, tblPredictorAPILogger ,tblThirdPartyAPILogger} = require("./logger");
 const { getCommentaryDetailByIdQuery } = require("../repository/TableCommentary");
 const ERROR_CODES = {
   INVALID_INPUT: "INVALID_INPUT",
@@ -269,6 +269,63 @@ const callPredictorMarket = async (data , endpoint ,fastify ,request) =>{
   }
 
 }
+
+//fraud check Api
+const callfds = async (data , endpoint ,fastify ,request) =>{
+  let requestStartTime = new Date();
+  try {
+    const now = new Date();
+    const formattedDate = formatDateToISOString(now);  
+    data.BWDateTime = formattedDate.toString();
+    const fdsURL = global.tblConfigs.find((item) => item.key === configConstants.FRAUDDET_DECTIONAPI).value;
+    if(fdsURL){
+      const url = `${fdsURL}${endpoint}`;
+      const result = await axios.post(url, {
+        ...data
+      });
+
+      await tblThirdPartyAPILogger(
+        {
+          endPoint : endpoint,
+          requestBody : data,
+          requestStartTime : requestStartTime,
+          requestEndTime : new Date(),
+          response : result.data
+        },
+        request,
+        fastify
+      );
+
+      return result;
+    }
+  } catch (error) {
+    //console.error(error.message);
+    await tblThirdPartyAPILogger(
+      {
+        endPoint : endpoint,
+        requestBody : data,
+        requestStartTime : requestStartTime,
+        requestEndTime : new Date(),
+        response : error.message
+      },
+      request,
+      fastify
+    );
+    // throw new Error(error.message);
+  }
+}
+
+const formatDateToISOString = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+  
+  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+}
+
 const MarketUpdateType = {
   marketInitilization : 1,
   predictMarket : 2,
@@ -366,5 +423,7 @@ module.exports = {
   callDataProvider,
   ServiceType,
   APIEndpointModuleType,
-  EventMarketRateSource
+  EventMarketRateSource,
+  callfds,
+  formatDateToISOString
 };

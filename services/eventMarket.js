@@ -206,6 +206,7 @@ const createEventMarketsService = async (request, fastify) => {
           commentaryId: item.commentaryId,
           dataTosave: JSON.parse(item.data),
           updateType: MarketUpdateType.marketInitilization,
+          isSendData : true
         },
         request,
         fastify
@@ -220,6 +221,7 @@ const createEventMarketsService = async (request, fastify) => {
           dataTosave: JSON.parse(item.data),
           updateType: MarketUpdateType.marketInitilization,
           lineDiff: item.line - previousLine,
+          isSendData : true
         },
         request,
         fastify
@@ -453,6 +455,10 @@ const updateMarketRateService = async (request, fastify) => {
       value: diff,
       line_ratio: data.lineRatio,
       is_onlyover: is_onlyover,
+      is_allow:item.isAllow,
+      is_active:item.isActive,
+      is_senddata:item.isSendData,
+      data: data.data,
     });
     let index = global.tblEventMarkets.findIndex(
       (e) => e.eventMarketId === item.marketId
@@ -470,6 +476,7 @@ const updateMarketRateService = async (request, fastify) => {
         dataTosave: JSON.parse(data.data),
         updateType: MarketUpdateType.marketInitilization,
         lineDiff: diff,
+        isSendData : true
       },
       request,
       fastify
@@ -550,6 +557,7 @@ const saveEventMarketService = async (request, fastify) => {
         commentaryId: item.commentaryId,
         dataTosave: JSON.parse(item.data),
         updateType: MarketUpdateType.marketInitilization,
+        isSendData : true
       },
       request,
       fastify
