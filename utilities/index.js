@@ -275,7 +275,14 @@ const callfds = async (data , endpoint ,fastify ,request) =>{
   let requestStartTime = new Date();
   try {
     const now = new Date();
-    const formattedDate = formatDateToISOString(now);  
+    let formattedDate;
+    const offset = global.tblConfigs.find((item) => item.key === configConstants.SERVER_OFFSET_TIMEZONE).value;
+    if(offset){
+      formattedDate = formatDateToISOStringwithOffset(now, offset);
+    }
+    else{
+      formattedDate = formatDateToISOString(now);  
+    }
     data.BWDateTime = formattedDate.toString();
     const fdsURL = global.tblConfigs.find((item) => item.key === configConstants.FRAUDDET_DECTIONAPI).value;
     if(fdsURL){
@@ -325,6 +332,25 @@ const formatDateToISOString = (date) => {
   
   return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
 }
+
+const formatDateToISOStringwithOffset = (date, offset) => {
+  // Parse the offset to extract hours and minutes
+  const sign = offset[0] === '-' ? -1 : 1;
+  const [hours, minutes] = offset.slice(1).split(':').map(Number);
+  const totalOffsetMilliseconds = sign * (hours * 60 + minutes) * 60 * 1000;
+  
+  // Adjust the date by the total offset in milliseconds
+  const adjustedDate = new Date(date.getTime() + totalOffsetMilliseconds);
+
+  const year = adjustedDate.getFullYear();
+  const month = String(adjustedDate.getMonth() + 1).padStart(2, '0');
+  const day = String(adjustedDate.getDate()).padStart(2, '0');
+  const hoursStr = String(adjustedDate.getHours()).padStart(2, '0');
+  const minutesStr = String(adjustedDate.getMinutes()).padStart(2, '0');
+  const seconds = String(adjustedDate.getSeconds()).padStart(2, '0');
+  
+  return `${year}-${month}-${day}T${hoursStr}:${minutesStr}:${seconds}`;
+};
 
 const MarketUpdateType = {
   marketInitilization : 1,
@@ -425,5 +451,6 @@ module.exports = {
   APIEndpointModuleType,
   EventMarketRateSource,
   callfds,
-  formatDateToISOString
+  formatDateToISOString,
+  formatDateToISOStringwithOffset
 };
