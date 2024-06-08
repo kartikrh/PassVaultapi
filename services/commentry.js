@@ -2333,6 +2333,8 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           const _player = global.tblPlayers.filter((item) => item.playerId === player.playerId);
           if (_player.length > 0) {
               player.playerimage = _player[0].image;
+              player.playerType = _player[0].playerType;
+              player.isKipper = _player[0].isKipper;
           }
         }); 
       } catch (error) {
@@ -2447,28 +2449,28 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
       }
        // call Third Party API
        if (updatedData.commentaryBallByBallDetails.ballType > 0) {
-        let _wkt = commentaryBallByBall.ballIsWicket;
-        let _bory = commentaryBallByBall.ballIsBoundry;
-        const isFDS = global.tblConfigs.find((item) => item.key === configConstants.ISFRAUDDET_DECTIONAPI).value;
-        if(isFDS && isFDS == 'true'){
-          if(_wkt || _bory){
-            try {
-             await callfds(
-                {
-                  Id: 0,
-                  EventId: parseInt(commentaryData.eventRefId),
-                  BWDateTime: '',
-                  Type: _bory === true ? "2" : _wkt === true ? "1" : ""
-                },
-                "/api/transactions/SaveBoundryWicket",
-                fastify,
-                request
-              ); 
-            } catch (error) {
-
+          try {
+            let _wkt = commentaryBallByBall.ballIsWicket;
+            let _bory = commentaryBallByBall.ballIsBoundry;
+            const isFDS = global.tblConfigs.find((item) => item.key === configConstants.ISFRAUDDET_DECTIONAPI).value;
+            if(isFDS && isFDS == 'true'){
+              if(_wkt || _bory){
+                 await callfds(
+                    {
+                      Id: 0,
+                      EventId: parseInt(commentaryData.eventRefId),
+                      BWDateTime: '',
+                      Type: _bory === true ? "2" : _wkt === true ? "1" : ""
+                    },
+                    "/api/transactions/SaveBoundryWicket",
+                    fastify,
+                    request
+                  ); 
+              }
             }
+          } catch (error) {
+
           }
-        }
        }
     }
     if (commentaryWicket) {

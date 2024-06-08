@@ -34,6 +34,8 @@ const getAllCommentariesDataService = (request) => {
                 const _player = global.tblPlayers.filter((item) => item.playerId === player.playerId);
                 if (_player.length > 0) {
                     player.playerimage = _player[0].image;
+                    player.playerType = _player[0].playerType;
+                    player.isKipper = _player[0].isKipper;
                 }
             });   
         } catch (error) {
