@@ -276,11 +276,15 @@ const callfds = async (data , endpoint ,fastify ,request) =>{
   try {
     const now = new Date();
     let formattedDate;
-    const offset = global.tblConfigs.find((item) => item.key === configConstants.SERVER_OFFSET_TIMEZONE).value;
-    if(offset){
-      formattedDate = formatDateToISOStringwithOffset(now, offset);
-    }
-    else{
+    try {
+      const offset = global.tblConfigs.find((item) => item.key === configConstants.SERVER_OFFSET_TIMEZONE).value;
+      if(offset){
+        formattedDate = formatDateToISOStringwithOffset(now, offset);
+      }
+      else{
+        formattedDate = formatDateToISOString(now);  
+      }
+    } catch (error) {
       formattedDate = formatDateToISOString(now);  
     }
     data.BWDateTime = formattedDate.toString();
