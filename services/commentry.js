@@ -2229,6 +2229,17 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         );
         global.tblCommentaryTeams[index] = team;
       });
+      try {
+        commentaryTeams.forEach(async (team) => {
+          const _teamsC1 = global.tblTeams.filter((item) => item.teamId === team.teamId);
+          if (_teamsC1.length > 0) {
+              team.image = _teamsC1[0].image;
+              team.jersey = _teamsC1[0].jersey;
+          }
+        });
+      } catch (error) {
+        
+      }
       sendDataForSocketUpdate.dataToUpdate.push({
         module: "commentaryTeams",
         type: "update",
@@ -2317,6 +2328,19 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         _sendPrePlayer.isWicket = player.isBatterOut === false ? 0 : 1;
         _sendPrePlayers.push(_sendPrePlayer);
       });
+      try {
+        commentaryPlayers.forEach(async (player) => {
+          const _player = global.tblPlayers.filter((item) => item.playerId === player.playerId);
+          if (_player.length > 0) {
+              player.playerimage = _player[0].image;
+              player.playerType = _player[0].playerType;
+              player.isKipper = _player[0].isKipper;
+          }
+        }); 
+      } catch (error) {
+        
+      }
+
       sendDataForSocketUpdate.dataToUpdate.push({
         module: "commentaryPlayers",
         type: "update",
@@ -2395,29 +2419,6 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
             fastify,
             request
           );
-          const isFDS = global.tblConfigs.find((item) => item.key === configConstants.ISFRAUDDET_DECTIONAPI).value;
-          if(isFDS && isFDS == 'true'){
-            if(_wkt || _bory){
-              try {
-                const now = new Date();
-                const formattedDate = formatDateToISOString(now);
-                callfds(
-                  {
-                    Id: 0,
-                    EventId: parseInt(commentaryData.eventRefId),
-                    BWDateTime: (await formattedDate).toString,
-                    Type: _bory === true ? "2" : _wkt === true ? "1" : ""
-                  },
-                  "/api/transactions/SaveBoundryWicket",
-                  fastify,
-                  request
-                ); 
-              } catch (error) {
-
-              }
-            }
-          }
-
         }
       } else {
         // if(ballByBallIndex !== -1){
@@ -2446,6 +2447,31 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           data: response.commentaryBallByBallDetails,
         });
       }
+       // call Third Party API
+       if (updatedData.commentaryBallByBallDetails.ballType > 0) {
+          try {
+            let _wkt = commentaryBallByBall.ballIsWicket;
+            let _bory = commentaryBallByBall.ballIsBoundry;
+            const isFDS = global.tblConfigs.find((item) => item.key === configConstants.ISFRAUDDET_DECTIONAPI).value;
+            if(isFDS && isFDS == 'true'){
+              if(_wkt || _bory){
+                 await callfds(
+                    {
+                      Id: 0,
+                      EventId: parseInt(commentaryData.eventRefId),
+                      BWDateTime: '',
+                      Type: _bory === true ? "2" : _wkt === true ? "1" : ""
+                    },
+                    "/api/transactions/SaveBoundryWicket",
+                    fastify,
+                    request
+                  ); 
+              }
+            }
+          } catch (error) {
+
+          }
+       }
     }
     if (commentaryWicket) {
       if (updatedData.commentaryWicketDetails) {
@@ -2473,6 +2499,24 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         );
         response.commentaryPartnershipDetails =
           updatedData.commentaryPartnershipDetails;
+        if(response.commentaryPartnershipDetails){
+          try {
+            const partnership = response.commentaryPartnershipDetails;
+            // Find player 1 image
+            const _player1 = commentaryPlayers.filter((item) => item.commentaryPlayerId === partnership.batter1Id);
+            if (_player1.length > 0) {
+              response.commentaryPartnershipDetails.player1image = _player1[0].playerimage;
+            }
+            
+            // Find player 2 image
+            const _player2 = commentaryPlayers.filter((item) => item.commentaryPlayerId === partnership.batter2Id);
+            if (_player2.length > 0) {
+              response.commentaryPartnershipDetails.player2image = _player2[0].playerimage;
+            } 
+          } catch (error) {
+            
+          }
+        }
         sendDataForSocketUpdate.dataToUpdate.push({
           module: "commentaryPartnership",
           type: "create",
@@ -2482,6 +2526,26 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         global.tblCommentaryPartnership[partnershipIndex] =
           commentaryPartnership;
         response.commentaryPartnershipDetails = commentaryPartnership;
+
+        if(response.commentaryPartnershipDetails){
+          try {
+            const partnership = response.commentaryPartnershipDetails;
+            // Find player 1 image
+            const _player1 = commentaryPlayers.filter((item) => item.commentaryPlayerId === partnership.batter1Id);
+            if (_player1.length > 0) {
+              response.commentaryPartnershipDetails.player1image = _player1[0].playerimage;
+            }
+            
+            // Find player 2 image
+            const _player2 = commentaryPlayers.filter((item) => item.commentaryPlayerId === partnership.batter2Id);
+            if (_player2.length > 0) {
+              response.commentaryPartnershipDetails.player2image = _player2[0].playerimage;
+            } 
+          } catch (error) {
+            
+          }
+        }
+
         sendDataForSocketUpdate.dataToUpdate.push({
           module: "commentaryPartnership",
           type: "update",
@@ -2492,9 +2556,12 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
     if (deleteCommentaryBallByBallId) {
       response.deleteCommentaryBallByBallId = true;
       sendDataForSocketUpdate.dataToUpdate.push({
-        module: "deleteCommentaryBallByBallId",
+        // module: "deleteCommentaryBallByBallId",
+        // type: "delete",
+        // data: deleteCommentaryBallByBallId,
+        module: "commentaryBallByBall",
         type: "delete",
-        data: deleteCommentaryBallByBallId,
+        data: {commentaryBallByBallId: deleteCommentaryBallByBallId},
       });
     }
     if (deleteOverId) {

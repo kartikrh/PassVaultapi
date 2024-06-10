@@ -11,13 +11,36 @@ const getAllCommentariesDataService = (request) => {
             // If eventId is not present, filter by commentaryStatus only
             return c.commentaryStatus != 4;
         }
-    }).forEach((c) => {
+    }).forEach(async (c) => {
         let teams = global.tblCommentaryTeams.filter((t) => {
             return t.commentaryId === c.commentaryId;
         });
+        try {
+            teams.forEach(async (team) => {
+                const _teamsC1 = global.tblTeams.filter((item) => item.teamId === team.teamId);
+                if (_teamsC1.length > 0) {
+                    team.image = _teamsC1[0].image;
+                    team.jersey = _teamsC1[0].jersey;
+                }
+            });   
+        } catch (error) {
+            
+        }
         let players = global.tblCommentaryPlayers.filter((p) => {
             return p.commentaryId === c.commentaryId;
         });
+        try {
+            players.forEach(async (player) => {
+                const _player = global.tblPlayers.filter((item) => item.playerId === player.playerId);
+                if (_player.length > 0) {
+                    player.playerimage = _player[0].image;
+                    player.playerType = _player[0].playerType;
+                    player.isKipper = _player[0].isKipper;
+                }
+            });   
+        } catch (error) {
+            
+        }
         let overs = global.tblOvers.filter((o) => {
             return o.commentaryId === c.commentaryId;
         });
@@ -30,6 +53,22 @@ const getAllCommentariesDataService = (request) => {
         let partnerships = global.tblCommentaryPartnership.filter((p) => {
             return p.commentaryId === c.commentaryId;
         });
+        try {
+            partnerships.forEach(async (partnership) => {
+                const _player1 = players.filter((item) => item.commentaryPlayerId === partnership.batter1Id);
+    
+                if (_player1.length > 0) {
+                    partnership.player1image = _player1[0].playerimage;
+                }
+                const _player2 = players.filter((item) => item.commentaryPlayerId === partnership.batter2Id);
+                if (_player2.length > 0) {
+                    partnership.player2image = _player2[0].playerimage;
+                }
+            });   
+        } catch (error) {
+            
+        }
+
         commentaries[c.eventRefId] = {
             commentaryId : c.commentaryId,
             eventrefId : c.eventRefId,
