@@ -2556,9 +2556,12 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
     if (deleteCommentaryBallByBallId) {
       response.deleteCommentaryBallByBallId = true;
       sendDataForSocketUpdate.dataToUpdate.push({
-        module: "deleteCommentaryBallByBallId",
+        // module: "deleteCommentaryBallByBallId",
+        // type: "delete",
+        // data: deleteCommentaryBallByBallId,
+        module: "commentaryBallByBall",
         type: "delete",
-        data: deleteCommentaryBallByBallId,
+        data: {commentaryBallByBallId: deleteCommentaryBallByBallId},
       });
     }
     if (deleteOverId) {
