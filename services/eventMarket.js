@@ -422,7 +422,7 @@ const marketListByCIdService = async (request, fastify) => {
 };
 const updateMarketRateService = async (request, fastify) => {
   // i got array of eventMarket i want to update this data
-  const { eventMarket } = request.body;
+  const { eventMarket,isSend, isSave} = request.body;
   const commentary = global.tblCommentaries.find(
     (item) => item.commentaryId === request.body.eventMarket[0].commentaryId
   );
@@ -455,6 +455,10 @@ const updateMarketRateService = async (request, fastify) => {
       value: diff,
       line_ratio: data.lineRatio,
       is_onlyover: is_onlyover,
+      is_allow:item.isAllow,
+      is_active:item.isActive,
+      is_senddata:item.isSendData,
+      data: data.data,
     });
     let index = global.tblEventMarkets.findIndex(
       (e) => e.eventMarketId === item.marketId
@@ -486,7 +490,7 @@ const updateMarketRateService = async (request, fastify) => {
       item.teamStatus === 1
   );
 
-  if (teamOnStrike) {
+  if (teamOnStrike && !isSend && isSave) {
     callPredictorMarket(
       {
         commentary_id: commentary.commentaryId,
