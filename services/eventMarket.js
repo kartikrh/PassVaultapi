@@ -613,23 +613,32 @@ const changeMarketCancelService = async (request, fastify) => {
 };
 const changeMarketResultService = async (request, fastify) => {
   const { eventMarketId, commentaryId, result } = request.body;
-  let eventMarket = global.tblEventMarkets.findIndex(
-    (item) => item.eventMarketId === eventMarketId
-  );
+  // let eventMarket = global.tblEventMarkets.findIndex(
+  //   (item) => item.eventMarketId === eventMarketId
+  // );
   let commentary = global.tblCommentaries.find(
     (item) => item.commentaryId === commentaryId
   );
-  if (eventMarket === -1) {
-    throw new Error("EventMarket with this id not Found");
-  }
+  // if (eventMarket === -1) {
+  //   throw new Error("EventMarket with this id not Found");
+  // }
   if (!commentary) {
     throw new Error("Commentary with this id not Found");
   }
-  const currentStatus = global.tblEventMarkets[eventMarket].status;
-  const currentResult = global.tblEventMarkets[eventMarket].result;
+  let eventMarket = await getEventMarketByIdsQuery(
+    {
+      eventMarketIds: [eventMarketId],
+    },
+    request,
+    fastify
+  );
+  // const currentStatus = global.tblEventMarkets[eventMarket].status;
+  // const currentResult = global.tblEventMarkets[eventMarket].result;
+  const currentStatus = eventMarket[0].status;
+  const currentResult = eventMarket[0].result;
   if (currentStatus === EventMarketStatus.Close && currentResult === null) {
     await changeMarketResultQuery(request.body, request, fastify);
-    global.tblEventMarkets[eventMarket].result = result;
+    // global.tblEventMarkets[eventMarket].result = result;
     return "Market result updated successfully";
   } else {
     throw new Error(
@@ -677,11 +686,10 @@ const changeMarketCloseService = async (request, fastify) => {
       EventMarketStatus.Close,
     ].includes(currentStatus)
   ) {
-    let updatedData =await changeMarketCloseQuery(request.body, request, fastify);
+    await changeMarketCloseQuery(request.body, request, fastify);
 
     // global.tblEventMarkets[eventMarket].status = EventMarketStatus.Close;
     // global.tblEventMarkets[eventMarket].data = updatedData;
-
     // console.log("updatedData", updatedData);
     return "Market close updated successfully";
   } else {
