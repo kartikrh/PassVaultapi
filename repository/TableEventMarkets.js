@@ -555,6 +555,8 @@ const changeMarketCancelQuery = async (data, request, fastify) => {
   try {
     const query = `UPDATE "tblEventMarkets"
           SET "wrStatus" =$1,
+          "wrIsResult" = true,
+          "wrResult" = null,
           "wrLastUpdate" = now()::timestamp
           WHERE "wrCommentaryId" = $2
           AND "wrID" = $3
