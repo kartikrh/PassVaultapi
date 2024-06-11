@@ -422,7 +422,7 @@ const marketListByCIdService = async (request, fastify) => {
 };
 const updateMarketRateService = async (request, fastify) => {
   // i got array of eventMarket i want to update this data
-  const { eventMarket,issend, issave} = request.body;
+  const { eventMarket,isSend, isSave} = request.body;
   const commentary = global.tblCommentaries.find(
     (item) => item.commentaryId === request.body.eventMarket[0].commentaryId
   );
@@ -490,7 +490,7 @@ const updateMarketRateService = async (request, fastify) => {
       item.teamStatus === 1
   );
 
-  if (teamOnStrike && !issend && issave) {
+  if (teamOnStrike && !isSend && isSave) {
     callPredictorMarket(
       {
         commentary_id: commentary.commentaryId,
