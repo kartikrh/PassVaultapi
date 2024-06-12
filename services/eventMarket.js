@@ -20,6 +20,7 @@ const {
   getStatusLogsByMarketQuery,
   setLineRatioEventMarketQuery,
   getMarketDataByCIdQuery,
+  UpdateResulOrApproveEventMarketQuery,
 } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
 const {
@@ -422,7 +423,7 @@ const marketListByCIdService = async (request, fastify) => {
 };
 const updateMarketRateService = async (request, fastify) => {
   // i got array of eventMarket i want to update this data
-  const { eventMarket } = request.body;
+  const { eventMarket,isSend, isSave} = request.body;
   const commentary = global.tblCommentaries.find(
     (item) => item.commentaryId === request.body.eventMarket[0].commentaryId
   );
@@ -490,7 +491,7 @@ const updateMarketRateService = async (request, fastify) => {
       item.teamStatus === 1
   );
 
-  if (teamOnStrike) {
+  if (teamOnStrike && !isSend && isSave) {
     callPredictorMarket(
       {
         commentary_id: commentary.commentaryId,
@@ -568,13 +569,13 @@ const saveEventMarketService = async (request, fastify) => {
 
 const changeMarketCancelService = async (request, fastify) => {
   const { eventMarketId, commentaryId, password } = request.body;
-  let eventMarket = global.tblEventMarkets.findIndex(
-    (item) => item.eventMarketId === eventMarketId
-  );
-  let commentary = global.tblCommentaries.find(
-    (item) => item.commentaryId === commentaryId
-  );
-  if (eventMarket === -1) {
+  // let eventMarket = global.tblEventMarkets.findIndex(
+  //   (item) => item.eventMarketId === eventMarketId
+  // );
+  // let commentary = global.tblCommentaries.find(
+  //   (item) => item.commentaryId === commentaryId
+  // );
+  // if (eventMarket === -1) {
     // throw new Error("EventMarket with this id not Found");
     let checkMarketInDb = await getEventMarketByIdsQuery(
       {
@@ -583,18 +584,18 @@ const changeMarketCancelService = async (request, fastify) => {
       request,
       fastify
     );
-    if (checkMarketInDb.length == 0) {
-      throw new Error("EventMarket with this id not Found");
-    } else {
-      global.tblEventMarkets.push(checkMarketInDb[0]);
-      eventMarket = global.tblEventMarkets.findIndex(
-        (item) => item.eventMarketId === eventMarketId
-      );
-    }
-  }
-  if (!commentary) {
-    throw new Error("Commentary with this id not Found");
-  }
+    // if (checkMarketInDb.length == 0) {
+    //   throw new Error("EventMarket with this id not Found");
+    // } else {
+    //   global.tblEventMarkets.push(checkMarketInDb[0]);
+    //   eventMarket = global.tblEventMarkets.findIndex(
+    //     (item) => item.eventMarketId === eventMarketId
+    //   );
+    // }
+  // }
+  // if (!commentary) {
+  //   throw new Error("Commentary with this id not Found");
+  // }
   // get password from config
   const configPassword = global.tblConfigs.find(
     (item) => item.key === configConstants.PASSWORD
@@ -602,10 +603,10 @@ const changeMarketCancelService = async (request, fastify) => {
   if (configPassword !== password) {
     throw new Error("Password is incorrect");
   }
-  const currentStatus = global.tblEventMarkets[eventMarket].status;
+  const currentStatus = checkMarketInDb[0].status;
   if (currentStatus === EventMarketStatus.Close) {
     await changeMarketCancelQuery(request.body, request, fastify);
-    global.tblEventMarkets[eventMarket].status = EventMarketStatus.Cancel;
+    // global.tblEventMarkets[eventMarket].status = EventMarketStatus.Cancel;
     return "Market Cancel updated successfully";
   } else {
     throw new Error("Market is not currently closed, so it cannot be canceled");
@@ -613,23 +614,32 @@ const changeMarketCancelService = async (request, fastify) => {
 };
 const changeMarketResultService = async (request, fastify) => {
   const { eventMarketId, commentaryId, result } = request.body;
-  let eventMarket = global.tblEventMarkets.findIndex(
-    (item) => item.eventMarketId === eventMarketId
-  );
+  // let eventMarket = global.tblEventMarkets.findIndex(
+  //   (item) => item.eventMarketId === eventMarketId
+  // );
   let commentary = global.tblCommentaries.find(
     (item) => item.commentaryId === commentaryId
   );
-  if (eventMarket === -1) {
-    throw new Error("EventMarket with this id not Found");
-  }
+  // if (eventMarket === -1) {
+  //   throw new Error("EventMarket with this id not Found");
+  // }
   if (!commentary) {
     throw new Error("Commentary with this id not Found");
   }
-  const currentStatus = global.tblEventMarkets[eventMarket].status;
-  const currentResult = global.tblEventMarkets[eventMarket].result;
+  let eventMarket = await getEventMarketByIdsQuery(
+    {
+      eventMarketIds: [eventMarketId],
+    },
+    request,
+    fastify
+  );
+  // const currentStatus = global.tblEventMarkets[eventMarket].status;
+  // const currentResult = global.tblEventMarkets[eventMarket].result;
+  const currentStatus = eventMarket[0].status;
+  const currentResult = eventMarket[0].result;
   if (currentStatus === EventMarketStatus.Close && currentResult === null) {
     await changeMarketResultQuery(request.body, request, fastify);
-    global.tblEventMarkets[eventMarket].result = result;
+    // global.tblEventMarkets[eventMarket].result = result;
     return "Market result updated successfully";
   } else {
     throw new Error(
@@ -639,14 +649,14 @@ const changeMarketResultService = async (request, fastify) => {
 };
 const changeMarketCloseService = async (request, fastify) => {
   const { eventMarketId, commentaryId } = request.body;
-  let eventMarket = global.tblEventMarkets.findIndex(
-    (item) => item.eventMarketId === eventMarketId
-  );
+  // let eventMarket = global.tblEventMarkets.findIndex(
+  //   (item) => item.eventMarketId === eventMarketId
+  // );
   let commentary = global.tblCommentaries.find(
     (item) => item.commentaryId === commentaryId
   );
   let checkMarketInDb ;
-  if (eventMarket === -1) {
+  // if (eventMarket === -1) {
     // throw new Error("EventMarket with this id not Found");
     checkMarketInDb = await getEventMarketByIdsQuery(
       {
@@ -655,21 +665,21 @@ const changeMarketCloseService = async (request, fastify) => {
       request,
       fastify
     );
-    if(checkMarketInDb.length == 0){
-      throw new Error("EventMarket with this id not Found");
-    }
-    else {
-      global.tblEventMarkets.push(checkMarketInDb[0]);
-      eventMarket = global.tblEventMarkets.findIndex(
-        (item) => item.eventMarketId === eventMarketId
-      );
-    }
-  }
+    // if(checkMarketInDb.length == 0){
+    //   throw new Error("EventMarket with this id not Found");
+    // }
+    // else {
+    //   global.tblEventMarkets.push(checkMarketInDb[0]);
+    //   eventMarket = global.tblEventMarkets.findIndex(
+    //     (item) => item.eventMarketId === eventMarketId
+    //   );
+    // }
+  // }
 
   if (!commentary) {
     throw new Error("Commentary with this id not Found");
   }
-  const currentStatus = global.tblEventMarkets[eventMarket].status;
+  const currentStatus = checkMarketInDb[0].status;
   if (
     ![
       EventMarketStatus.Settled,
@@ -677,11 +687,10 @@ const changeMarketCloseService = async (request, fastify) => {
       EventMarketStatus.Close,
     ].includes(currentStatus)
   ) {
-    let updatedData =await changeMarketCloseQuery(request.body, request, fastify);
+    await changeMarketCloseQuery(request.body, request, fastify);
 
-    global.tblEventMarkets[eventMarket].status = EventMarketStatus.Close;
-    global.tblEventMarkets[eventMarket].data = updatedData;
-
+    // global.tblEventMarkets[eventMarket].status = EventMarketStatus.Close;
+    // global.tblEventMarkets[eventMarket].data = updatedData;
     // console.log("updatedData", updatedData);
     return "Market close updated successfully";
   } else {
@@ -938,6 +947,37 @@ const getMarketDataByCIdService = async (request, fastify) => {
 
   return dataToreturn;
 };
+
+const UpdateResulOrApproveEventMarketService = async (request, fastify) => {
+  const { eventMarketId, isResult, result } = request.body;
+          
+  await UpdateResulOrApproveEventMarketQuery(request.body, request, fastify);
+  if(isResult && result){
+    marketLogger(
+      {
+        eventMarketId,
+        actionType: MarketActionType.setAndFinalizeResult,
+        value: isResult,
+      },
+      request,
+      fastify
+    );
+  }
+  if(!isResult && result){
+    marketLogger(
+      {
+        eventMarketId,
+        actionType: MarketActionType.setResult,
+        value: isResult,
+      },
+      request,
+      fastify
+    );
+  }
+
+  return "Event Market updated successfully";
+};
+
 module.exports = {
   getDetailsByCIdService,
   getAllEventMarketsService,
@@ -963,4 +1003,5 @@ module.exports = {
   getDSReportEventMarketService,
   getSLReportEventMarketService,
   getMarketDataByCIdService,
+  UpdateResulOrApproveEventMarketService,
 };
