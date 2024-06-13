@@ -392,6 +392,7 @@ const fetchDataForClient = async (fastify, reply) => {
 }
 const callDataProvider = async (data, fastify) =>{
   try {
+    // return true;
     // find the service which have the type of dataProviderAPI
     let services = global.tblAPIs.filter((item) => item.type == data.serviceType && item.isActive == true);
     for (ser of services){
@@ -405,10 +406,23 @@ const callDataProvider = async (data, fastify) =>{
         if(data.moduleType == APIEndpointModuleType.commentaryUpdate && data.serviceType == ServiceType.dataProviderAPI){
           dataTosend = await getCommentaryDetailByIdQuery(data, fastify);
         }
+        else if(data.moduleType == APIEndpointModuleType.vendorUpdate && data.serviceType == ServiceType.dataProviderAPI
+          || data.moduleType == APIEndpointModuleType.vendorIpUpdate && data.serviceType == ServiceType.dataProviderAPI)
+        {
+          dataTosend = {
+            ...data.data,
+            type : data.type
+          };
+        }
+        
         const result = await axios.post(url, {
           ...dataTosend
         });
         return result;
+      }
+      else {
+        console.log("Endpoint not found for service type : ", ser.type, " and module type : ", data.moduleType);
+        return;
       }
     }
 
@@ -423,7 +437,8 @@ const ServiceType = {
 }
 const APIEndpointModuleType = {
   commentaryUpdate : 1,
-  
+  vendorUpdate : 2,
+  vendorIpUpdate : 3
 }
 module.exports = {
   ERROR_CODES,
