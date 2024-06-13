@@ -3457,6 +3457,8 @@ const EventMarket = {
           createType: { type: "integer" },
           create: { type: "number" },
           templateType: { type: "integer" },
+          isDefaultBetAllowed: { type: "boolean" },
+          isDefaultMarketActive: { type: "boolean" },
         },
         required: ["eventMarketId", "marketTypeId", "marketTypeCategoryId"],
       },
