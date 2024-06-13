@@ -149,7 +149,7 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
           data.templateType || null,
           data.delay || 0,
           data.isDefaultBetAllowed,
-          data.isisDefaultMarketActive
+          data.isDefaultMarketActive
         ],
       }
     );
@@ -319,7 +319,7 @@ const updateMarketTemplateQuery = async (data, fastify, request) => {
                 data.delay,
                 data.marketTemplateId,
                 data.isDefaultBetAllowed,
-                data.isisDefaultMarketActive
+                data.isDefaultMarketActive
             ],
             type: fastify.db.QueryTypes.SELECT,
         }
