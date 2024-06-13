@@ -1,6 +1,6 @@
 
 const { createVendorQuery, deleteVendorQuery, updateIsActiveVendorQuery, updateIsIPCheckQuery, updateVendorQuery } = require("../repository/TableVendor");
-const { genrateKey } = require("../utilities");
+const { genrateKey, callDataProvider, ServiceType, APIEndpointModuleType } = require("../utilities");
 
 const getAllVendorService = async(request , fastify) => {
     const {isActive} = request.body;
@@ -48,6 +48,14 @@ const createVendorService = async(request , fastify) => {
     const data = await createVendorQuery(body,request , fastify);
 
     global.tblVendors.push(data);
+
+    callDataProvider({
+        vendorId : data.vendorId,
+        serviceType : ServiceType.dataProviderAPI,
+        moduleType : APIEndpointModuleType.vendorUpdate,
+        data : data,
+        type : "create"
+    })
     return data;
 }
 const updateVendorService = async(request , fastify) => {
@@ -78,7 +86,13 @@ const updateVendorService = async(request , fastify) => {
 
     const index = global.tblVendors.findIndex((item) => item.vendorId === vendorId);
     global.tblVendors[index] = data;
-
+    callDataProvider({
+        vendorId : data.vendorId,
+        serviceType : ServiceType.dataProviderAPI,
+        moduleType : APIEndpointModuleType.vendorUpdate,
+        data : data,
+        type : "update"
+    })
     return data;
 }
 const deleteVendorService = async(request , fastify) => {
@@ -90,6 +104,16 @@ const deleteVendorService = async(request , fastify) => {
     global.tblVendorIp = global.tblVendorIp.filter((item) =>
         !vendorId.includes(item.vendorId)
     );
+
+    callDataProvider({    
+        vendorId :vendorId,
+        serviceType : ServiceType.dataProviderAPI,
+        moduleType : APIEndpointModuleType.vendorUpdate,
+        data : {
+            vendorId : vendorId
+        },    
+        type : "delete"
+    })
 
     return `Vendor(s) deleted successfully`;
 }
@@ -103,6 +127,13 @@ const activeInactiveVendorService = async(request , fastify) => {
     const data = await updateIsActiveVendorQuery(request.body,request , fastify);
 
     global.tblVendors[index].isActive = request.body.isActive;
+    callDataProvider({    
+        vendorId :vendorId,
+        serviceType : ServiceType.dataProviderAPI,
+        moduleType : APIEndpointModuleType.vendorUpdate,
+        data : data,    
+        type : "update"
+    })
     return `Vendor status updated successfully`;
 }
 const updateIsIPCheckService = async(request , fastify) => {
@@ -113,6 +144,14 @@ const updateIsIPCheckService = async(request , fastify) => {
     }
     await updateIsIPCheckQuery(request.body,request , fastify);
     global.tblVendors[index].isIPCheck = isIPCheck;
+
+    callDataProvider({
+        vendorId : vendorId,
+        serviceType : ServiceType.dataProviderAPI,
+        moduleType : APIEndpointModuleType.vendorUpdate,
+        data : global.tblVendors[index],
+        type : "update"
+    })
     return `Vendor updated successfully`;
 }
 module.exports = {
