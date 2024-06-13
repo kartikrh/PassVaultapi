@@ -20,6 +20,7 @@ const {
   getStatusLogsByMarketQuery,
   setLineRatioEventMarketQuery,
   getMarketDataByCIdQuery,
+  UpdateResulOrApproveEventMarketQuery,
 } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
 const {
@@ -946,6 +947,37 @@ const getMarketDataByCIdService = async (request, fastify) => {
 
   return dataToreturn;
 };
+
+const UpdateResulOrApproveEventMarketService = async (request, fastify) => {
+  const { eventMarketId, isResult, result } = request.body;
+          
+  await UpdateResulOrApproveEventMarketQuery(request.body, request, fastify);
+  if(isResult && result){
+    marketLogger(
+      {
+        eventMarketId,
+        actionType: MarketActionType.setAndFinalizeResult,
+        value: isResult,
+      },
+      request,
+      fastify
+    );
+  }
+  if(!isResult && result){
+    marketLogger(
+      {
+        eventMarketId,
+        actionType: MarketActionType.setResult,
+        value: isResult,
+      },
+      request,
+      fastify
+    );
+  }
+
+  return "Event Market updated successfully";
+};
+
 module.exports = {
   getDetailsByCIdService,
   getAllEventMarketsService,
@@ -971,4 +1003,5 @@ module.exports = {
   getDSReportEventMarketService,
   getSLReportEventMarketService,
   getMarketDataByCIdService,
+  UpdateResulOrApproveEventMarketService,
 };
