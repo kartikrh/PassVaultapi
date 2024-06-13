@@ -159,6 +159,14 @@ module.exports = (sequelize) => {
         allowNull: true,
         defaultValue: 0,
       },
+      wrIsDefaultBetAllowed: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+      },
+      wrIsDefaultMarketActive: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+      },
     },
     {
       timestamps: false,
