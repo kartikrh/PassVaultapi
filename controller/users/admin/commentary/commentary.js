@@ -155,7 +155,6 @@ const deleteCommentary = async (request, reply, fastify) => {
 };
 const saveCommentaryDetails = async (request, reply, fastify) => {
   try {
-    console.log("saveCommentaryDetails");
     //const result = await testStoreProcedureService(request, fastify);
     const result = await syncCommentaryStatsWithAPIAndSocket(request, fastify);
     // const result = await saveCommentaryDetailsService(request, fastify);
