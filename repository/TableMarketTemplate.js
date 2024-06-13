@@ -155,7 +155,6 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
     );
     return result[0];
   } catch (err) {
-    console.log(err);
     errorLogger(
       fastify,
       err.message,
