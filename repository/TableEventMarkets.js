@@ -261,7 +261,6 @@ const createManyEventMarketQuery = async (data, request, fastify) => {
       type: fastify.db.QueryTypes.SELECT,
     });
   } catch (err) {
-    console.log(err);
     errorLogger(
       fastify,
       err.message,
@@ -540,7 +539,6 @@ const updateEventMarketRateQuery = async (data, request, fastify) => {
     );
     return eventMarketData[0];
   } catch (error) {
-    console.log(error);
     errorLogger(
       fastify,
       error.message,
@@ -1135,7 +1133,8 @@ const getDataLogsByMarketQuery = async (request, fastify) => {
                     "wrCreatedDate" as "createdDate",
                     "wrCreatedBy" as "createdBy",
                     tu."WrUserName" as "userName",
-                    "wrLineDiff" as "lineDiff"
+                    "wrLineDiff" as "lineDiff",
+                    "wrIsSendData" as "isSendData"
                 FROM "tblMarketDataLogs" tmd
                 LEFT JOIN "tblEventMarkets"  tem ON tmd."wrEventMarketId" = tem."wrID"
                 LEFT JOIN "tblUsers" tu ON tmd."wrCreatedBy" = tu."WrUserId"
@@ -1339,7 +1338,6 @@ const getMarketsByCIdQuery = async (request, fastify) => {
 
     return result[0].result;
   } catch (error) {
-    console.log(error);
     errorLogger(
       fastify,
       error.message,
