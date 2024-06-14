@@ -2846,6 +2846,8 @@ const MarketTemplate = {
           createRefId: { type: "string" },
           openRefId: { type: "string" },
           templateType: { type: "integer" },
+          isDefaultBetAllowed: { type: "boolean" },
+          isDefaultMarketActive: { type: "boolean" },
         },
         required: [
           "marketTemplateId",

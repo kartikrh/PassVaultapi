@@ -279,9 +279,9 @@ const updateMarketTemplateQuery = async (data, fastify, request) => {
             "wrCreateRefId" = $28,
             "wrOpenRefId" = $29,
             "wrTemplateType" = $30,
+            "wrDelay" = $31,
             "wrIsDefaultBetAllowed" = $33,
-            "wrIsDefaultMarketActive"= $34,
-            "wrDelay" = $31
+            "wrIsDefaultMarketActive"= $34
         WHERE "wrID" = $32
         `,
         {
