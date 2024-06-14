@@ -2841,7 +2841,8 @@ const insertCommentarySuperOverTeams = async (request, fastify) => {
         false,
         (select "wrTeamColor" from "tblTeams" where "wrTeamId" = $2),
         (select "wrBackgroundColor" from "tblTeams" where "wrTeamId" = $2),
-        $9             
+        $9,
+        $10             
       )
       ,(
         $1,
@@ -2854,7 +2855,8 @@ const insertCommentarySuperOverTeams = async (request, fastify) => {
         false,
         (select "wrTeamColor" from "tblTeams" where "wrTeamId" = $5),
         (select "wrBackgroundColor" from "tblTeams" where "wrTeamId" = $5),
-        $9
+        $9,
+        $10 
       )
     `,
       {

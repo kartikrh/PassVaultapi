@@ -166,6 +166,8 @@ const updateMarketTemplateService = async (request, fastify) => {
       : marketTemplate.isPredefineRunnerValue,
     templateType: request.body.templateType || marketTemplate.templateType,
     delay: request.body.delay || marketTemplate.delay,
+    isDefaultBetAllowed: request.body.isDefaultBetAllowed || false,
+    isDefaultMarketActive: request.body.isDefaultMarketActive || false,
   };
   // update marketTemplate
   await updateMarketTemplateQuery(body, fastify, request);
