@@ -10,10 +10,6 @@ const getAllMarketTemplateRunnerQuery = async (fastify) => {
                 "wrLine" as "line",
                 "wrOverRate" as "overRate",
                 "wrUnderRate" as "underRate",
-                "wrYesRate" as "yesRate",
-                "wrYesPoint" as "yesPoint",
-                "wrNoRate" as "noRate",
-                "wrNoPoint" as "noPoint",
                 "wrLastUpdate" as "lastUpdate",
                 "wrSelectionId" as "selectionId",
                 "wrOrder" as "order",
@@ -42,10 +38,6 @@ const createMarketTemplateRunnerQuery = async (request, fastify) => {
                     "wrLine",
                     "wrOverRate",
                     "wrUnderRate",
-                    "wrYesRate",
-                    "wrYesPoint",
-                    "wrNoRate",
-                    "wrNoPoint",
                     "wrLastUpdate",
                     "wrSelectionId",
                     "wrOrder",
@@ -54,10 +46,10 @@ const createMarketTemplateRunnerQuery = async (request, fastify) => {
                     "wrBackSize",
                     "wrLaySize"
                 )
-                select $1,$2,$3,$4,$5,$6,$7,$8,$9,now(),
+                select $1,$2,$3,$4,$5,now(),
                 ($1 || '0' || ((SELECT count FROM count_parent) + 1)::TEXT),
                 (select count from count_parent) + 1,
-                $10,$11,$12,$13
+                $6,$7,$8,$9
                 RETURNING 
                     "wrId" as "marketTemplateRunnerId",
                     "wrMarketTemplateId" as "marketTemplateId",
@@ -65,10 +57,6 @@ const createMarketTemplateRunnerQuery = async (request, fastify) => {
                     "wrLine" as "line",
                     "wrOverRate" as "overRate",
                     "wrUnderRate" as "underRate",
-                    "wrYesRate" as "yesRate",
-                    "wrYesPoint" as "yesPoint",
-                    "wrNoRate" as "noRate",
-                    "wrNoPoint" as "noPoint",
                     "wrLastUpdate" as "lastUpdate",
                     "wrSelectionId" as "selectionId",
                     "wrOrder" as "order",
@@ -77,9 +65,7 @@ const createMarketTemplateRunnerQuery = async (request, fastify) => {
                     "wrBackSize" as "backSize",
                     "wrLaySize" as "laySize"
             )
-            select * from insert_data
-          
-            
+            select * from insert_data  
         `;
         const result = await fastify.db.query(
             query,
@@ -90,10 +76,6 @@ const createMarketTemplateRunnerQuery = async (request, fastify) => {
                     request.body.line,
                     request.body.overRate,
                     request.body.underRate,
-                    request.body.yesRate || 0,
-                    request.body.yesPoint || 0,
-                    request.body.noRate || 0,
-                    request.body.noPoint || 0,
                     request.body.backPrice || 0,
                     request.body.layPrice || 0,
                     request.body.backSize || 0,
@@ -123,15 +105,11 @@ const updateMarketTemplateRunnerQuery   = async (request, fastify) => {
                 "wrLine" = $3,
                 "wrOverRate" = $4,
                 "wrUnderRate" = $5,
-                "wrYesRate" = $6,
-                "wrYesPoint" = $7,
-                "wrNoRate" = $8,
-                "wrNoPoint" = $9,
                 "wrLastUpdate" = now(),
-                "wrBackPrice" = $10,
-                "wrLayPrice" = $11,
-                "wrBackSize" = $12,
-                "wrLaySize" = $13
+                "wrBackPrice" = $6,
+                "wrLayPrice" = $7,
+                "wrBackSize" = $8,
+                "wrLaySize" = $9
             WHERE "wrId" = $1
             RETURNING 
                 "wrId" as "marketTemplateRunnerId",
@@ -140,10 +118,6 @@ const updateMarketTemplateRunnerQuery   = async (request, fastify) => {
                 "wrLine" as "line",
                 "wrOverRate" as "overRate",
                 "wrUnderRate" as "underRate",
-                "wrYesRate" as "yesRate",
-                "wrYesPoint" as "yesPoint",
-                "wrNoRate" as "noRate",
-                "wrNoPoint" as "noPoint",
                 "wrLastUpdate" as "lastUpdate",
                 "wrSelectionId" as "selectionId",
                 "wrOrder" as "order",
@@ -162,10 +136,6 @@ const updateMarketTemplateRunnerQuery   = async (request, fastify) => {
                     request.body.line,
                     request.body.overRate,
                     request.body.underRate,
-                    request.body.yesRate || 0,
-                    request.body.yesPoint || 0,
-                    request.body.noRate || 0,
-                    request.body.noPoint || 0,
                     request.body.backPrice || 0,
                     request.body.layPrice || 0,
                     request.body.backSize || 0,

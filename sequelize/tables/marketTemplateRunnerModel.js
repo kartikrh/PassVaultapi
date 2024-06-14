@@ -30,22 +30,6 @@ module.exports = (sequelize) => {
           type: DataTypes.DOUBLE,
           allowNull: true,
         },
-        wrYesRate :{
-          type: DataTypes.DOUBLE,
-          allowNull: true,
-        },
-        wrYesPoint :{
-          type: DataTypes.DOUBLE,
-          allowNull: true,
-        },
-        wrNoRate :{
-          type: DataTypes.DOUBLE,
-          allowNull: true,
-        },
-        wrNoPoint :{
-            type: DataTypes.DOUBLE,
-            allowNull: true,
-        },
         wrLastUpdate :{
             type: DataTypes.DATE,
             defaultValue: new Date(),
