@@ -2448,7 +2448,7 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         });
       }
        // call Third Party API
-       if (updatedData.commentaryBallByBallDetails.ballType > 0) {
+       if (response.commentaryBallByBallDetails.ballType > 0) {
           try {
             let _wkt = commentaryBallByBall.ballIsWicket;
             let _bory = commentaryBallByBall.ballIsBoundry;
