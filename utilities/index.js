@@ -431,6 +431,39 @@ const callDataProvider = async (data, fastify) =>{
     console.log("error From callDataProvider", error);
   }
 }
+const callClientAPI = async (data,request, fastify) =>{
+  try {
+    let clientServices = global.tblAPIs.filter((item) => item.type == data.serviceType && item.isActive == true);
+    if(clientServices.length == 0){
+      return true;
+    }
+    for (ser of clientServices){
+      let endPoint = global.tblAPIEndpoints.find((item)=> item.serviceType == ser.type && item.moduleType == data.moduleType &&
+        item.isActive == true)
+      if(endPoint){
+        let url = `${ser.api}${endPoint.endPoint}`;
+        let dataTosend = data.data;
+        const result = await axios.post(url, {
+          ...dataTosend
+        });
+        return result;
+      }
+      else {
+        console.log("Endpoint not found for service type : ", ser.type, " and module type : ", data.moduleType);
+        return;
+      }
+    }
+    return true;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> utilities/index/callClientAPI",
+      request
+    );
+    throw new Error(error.message);
+  }
+}
 const ServiceType = {
    clientAPI : 1,
     dataProviderAPI : 2,
@@ -472,5 +505,6 @@ module.exports = {
   EventMarketRateSource,
   callfds,
   formatDateToISOString,
-  formatDateToISOStringwithOffset
+  formatDateToISOStringwithOffset,
+  callClientAPI
 };
