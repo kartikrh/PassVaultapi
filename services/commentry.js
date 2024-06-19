@@ -68,7 +68,8 @@ const {
   APIEndpointModuleType,
   ServiceType,
   callfds,
-  formatDateToISOString
+  formatDateToISOString,
+  callClientAPI
 } = require("../utilities");
 const { getAllPlayersByTeamIdQuery } = require("../repository/TableTeams");
 const { handleMarketCloseService } = require("./eventMarket");
@@ -561,6 +562,20 @@ const createCommentaryService = async (request, fastify) => {
     );
   }
 
+  let cData = await getMatchDataByCId({
+    commentaryId: addCommentry.commentaryId,
+  }, request, fastify);
+  
+  callClientAPI(
+    {
+      serviceType : ServiceType.clientAPI,
+      moduleType : APIEndpointModuleType.commentaryUpdate,
+      data : cData
+    },
+    request,
+    fastify
+  );
+
   return addCommentry;
 };
 
@@ -1024,6 +1039,19 @@ const cloneCommentaryService = async (request, fastify) => {
   //     request
   //   );
   // }
+  let cData = await getMatchDataByCId({
+    commentaryId: newCommentary.commentaryId,
+  }, request, fastify);
+
+  callClientAPI(
+    {
+      serviceType : ServiceType.clientAPI,
+      moduleType : APIEndpointModuleType.commentaryUpdate,
+      data : cData
+    },
+    request,
+    fastify
+  );
 
   return newCommentary;
 };
@@ -2213,6 +2241,21 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           },
           fastify
         );
+      }
+      if(previousCommentaryStatus != statusToUpdate){
+        const cData = await getMatchDataByCId({
+          commentaryId: commentaryId,
+        }, request, fastify);
+      
+        callClientAPI(
+          {
+            serviceType : ServiceType.clientAPI,
+            moduleType : APIEndpointModuleType.commentaryUpdate,
+            data : cData
+          },
+          request,
+          fastify
+        )
       }
       sendDataForSocketUpdate.dataToUpdate.push({
         module: "commentaryDetails",
@@ -4855,6 +4898,144 @@ const getMatchListByStatus = async (body, request, fastify) => {
 
   return resultArr;
 };
+const getMatchDataByCId = async (data ,request, fastify) => {
+  let com = global.tblCommentaries.find(
+    (item) => item.commentaryId === data.commentaryId
+  );
+  if(!com){
+    throw new Error("Commentary with this id not Found");
+  }
+  let rno = 0;
+  let type = null;
+  let status = com.commentaryStatus;
+  if(status != 4 && status != 1){
+    type = "live";
+  }
+  else if(status == 4){
+    type = "completed";
+  }
+  else if(status == 1){
+    type = "scheduled";
+  }
+  const isRun = type == "scheduled" || "completed" ? false : true;
+  let crr , rrr;
+  let eventType = await global.tblEventTypes.find(
+    (e) => e.eventTypeId == com.eventTypeId
+  )
+  let competition = await global.tblCompetitions.find(
+    (c)=> c.competitionId == com.competitionId
+  )
+  //teams set
+  const commentaryTeamsOne = await global.tblCommentaryTeams.find(
+    (team) =>
+      team.commentaryId === com.commentaryId &&
+      team.teamId === com.team1Id &&
+      team.currentInnings === com.currentInnings
+  );
+
+  const commentaryTeamsTwo = await global.tblCommentaryTeams.find(
+    (team) =>
+      team.commentaryId === com.commentaryId &&
+      team.teamId === com.team2Id &&
+      team.currentInnings === com.currentInnings
+  );
+  let teamScore1, teamScore2;
+  if (commentaryTeamsOne) {
+    const wicket1 =
+      commentaryTeamsOne.teamWicket === null
+        ? 0
+        : commentaryTeamsOne.teamWicket;
+    const overs1 =
+      commentaryTeamsOne.teamOver === null
+        ? 0.0
+        : commentaryTeamsOne.teamOver;
+    teamScore1 = commentaryTeamsOne?.teamScore ?? 0;
+    teamScore1 = teamScore1 + "/" + wicket1 + "(" + overs1 + ")";
+  }
+
+  if (commentaryTeamsTwo) {
+    t2sn = commentaryTeamsTwo.shortName;
+    t2n = commentaryTeamsTwo.teamName;
+    const wicket1 =
+      commentaryTeamsTwo.teamWicket === null
+        ? 0
+        : commentaryTeamsTwo.teamWicket;
+    const overs1 =
+      commentaryTeamsTwo.teamOver === null
+        ? 0.0
+        : commentaryTeamsTwo.teamOver;
+    teamScore2 = commentaryTeamsTwo?.teamScore ?? 0;
+    teamScore2 = teamScore2 + "/" + wicket1 + "(" + overs1 + ")";
+  }
+  const team1 = await global.tblTeams.find(
+    (team) => team.teamId == com.team1Id
+  )
+  const team2 = await global.tblTeams.find(
+    (team) => team.teamId == com.team2Id
+  )
+  if(type == "scheduled"){
+    crr = 0;
+    rrr = 0;
+  }
+  else {
+    if(commentaryTeamsOne.teamStatus == 1){
+      crr = commentaryTeamsOne.crr;
+      rrr = commentaryTeamsTwo.rrr;
+    }
+    else{
+      crr = commentaryTeamsTwo.crr;
+      rrr = commentaryTeamsTwo.rrr;
+    }
+  }
+  const TossTeamName = await global.tblCommentaryTeams.find(
+    (t) =>
+        t.commentaryId  == com.commentaryId &&
+        t.teamId == com.tossWonBy &&
+        t.currentInnings == com.currentInnings
+  )
+  let toss = "";
+  if(com.choseTo){
+    toss = com.choseTo == 1 ? "BAT" : "BOWL";
+  }
+  let comDetails = {
+    rno: rno,
+    eid : com.eventRefId || "",
+    ety : eventType?.eventType || "",
+    mtyp : com.matchType || "",
+    com : competition?.competition || "",
+    en : com.eventName || "",
+    ed : convertDate(com.eventDate, "DD/MM/YYYY") || "",
+    et : convertDate(com.eventDate, "hh:mm:ss") || "",
+    utc : com.eventDate,
+    twonby : TossTeamName?.teamName || null,
+    choseto : toss || null,
+    te1n : commentaryTeamsOne.teamName || "",
+    te2n : commentaryTeamsTwo.teamName || "",
+    s1n : commentaryTeamsOne.shortName || "",
+    s2n : commentaryTeamsTwo.shortName || "",
+    te1i : team1.image || "",
+    te2i : team2.image || "",
+    t1jr : team1.jersey || "",
+    t2jr : team2.jersey || "",
+    loc : com.location || "",
+    isrun : isRun,
+    t1s : teamScore1 || "",
+    t2s : teamScore2 || "",
+    dis : com.displayStatus || "",
+    rmk : com.rmk || "",
+    te1crr : commentaryTeamsOne.crr || 0,
+    te2crr : commentaryTeamsTwo.crr || 0,
+    te1rrr : commentaryTeamsOne.rrr || 0,
+    te2rrr : commentaryTeamsTwo.rrr || 0,
+    crr : crr || 0,
+    rrr : rrr || 0,
+    cst : com.commentaryStatus,
+    res : com.result || "",
+    type
+  };
+  return comDetails;
+  
+}
 //old Function Without Optimization
 // const getAllDetailsByEventIdService123 = async (request, fastify) => {
 //   const { eventId } = request.body;
@@ -6517,6 +6698,19 @@ const closeCommentaryService = async (request, fastify) => {
         },
         fastify
       );
+      const cData = await getMatchDataByCId({
+        commentaryId: commentaryId,
+      }, request, fastify);
+    
+      callClientAPI(
+        {
+          serviceType : ServiceType.clientAPI,
+          moduleType : APIEndpointModuleType.commentaryUpdate,
+          data : cData
+        },
+        request,
+        fastify
+      )
     }
   }
   return `Commentary(s) closed successfully`;
@@ -6980,5 +7174,6 @@ module.exports = {
   changeMaxOverDetailService,
   AddSuperOverCommentaryService,
   // getshortService,
-  syncCommentaryStatsWithAPIAndSocket
+  syncCommentaryStatsWithAPIAndSocket,
+  getMatchDataByCId
 };
