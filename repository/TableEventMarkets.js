@@ -261,7 +261,6 @@ const createManyEventMarketQuery = async (data, request, fastify) => {
       type: fastify.db.QueryTypes.SELECT,
     });
   } catch (err) {
-    console.log(err);
     errorLogger(
       fastify,
       err.message,
@@ -540,7 +539,6 @@ const updateEventMarketRateQuery = async (data, request, fastify) => {
     );
     return eventMarketData[0];
   } catch (error) {
-    console.log(error);
     errorLogger(
       fastify,
       error.message,
@@ -1135,7 +1133,8 @@ const getDataLogsByMarketQuery = async (request, fastify) => {
                     "wrCreatedDate" as "createdDate",
                     "wrCreatedBy" as "createdBy",
                     tu."WrUserName" as "userName",
-                    "wrLineDiff" as "lineDiff"
+                    "wrLineDiff" as "lineDiff",
+                    "wrIsSendData" as "isSendData"
                 FROM "tblMarketDataLogs" tmd
                 LEFT JOIN "tblEventMarkets"  tem ON tmd."wrEventMarketId" = tem."wrID"
                 LEFT JOIN "tblUsers" tu ON tmd."wrCreatedBy" = tu."WrUserId"
@@ -1339,7 +1338,6 @@ const getMarketsByCIdQuery = async (request, fastify) => {
 
     return result[0].result;
   } catch (error) {
-    console.log(error);
     errorLogger(
       fastify,
       error.message,
@@ -1670,8 +1668,35 @@ const UpdateEventMarketByCIdFromSocketQuery = async (data , fastify) =>{
     );
     throw new Error(err.message);
   }
+};
 
-}
+const UpdateResulOrApproveEventMarketQuery = async (data, request, fastify) => {
+  try {
+    if(data.isResult && data.result){
+      const query = `UPDATE "tblEventMarkets" SET "wrIsResult" = $1, "wrResult" = $2 WHERE "wrID" = $3`;
+      return await fastify.db.query(query, {
+        bind: [data.isResult,data.result, data.eventMarketId],
+        type: fastify.db.QueryTypes.SELECT,
+      });
+    }
+    if(!data.isResult && data.result){
+      const query = `UPDATE "tblEventMarkets" SET "wrResult" = $1 WHERE "wrID" = $2`;
+      return await fastify.db.query(query, {
+        bind: [data.result, data.eventMarketId],
+        type: fastify.db.QueryTypes.SELECT,
+      });
+    }
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/UpdateResulOrApproveEventMarketQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+};
+
 module.exports = {
   getAllEventMarketsQuery,
   createManyEventMarketQuery,
@@ -1702,5 +1727,6 @@ module.exports = {
   createOrUpdateEventRunnerMarketManualQuery,
   closeEventMarketByCIdQuery,
   updateEventMarketRunnerMaunalQuery,
-  UpdateEventMarketByCIdFromSocketQuery
+  UpdateEventMarketByCIdFromSocketQuery,
+  UpdateResulOrApproveEventMarketQuery,
 };

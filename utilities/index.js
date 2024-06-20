@@ -226,6 +226,7 @@ const MarketActionType = {
   marketCancel : 3,
   closeMarket : 4,
   closeMarketOnTossWin : 5,
+  setAndFinalizeResult:6
 }
 const callPredictorMarket = async (data , endpoint ,fastify ,request) =>{
   let requestStartTime = new Date();
@@ -391,6 +392,7 @@ const fetchDataForClient = async (fastify, reply) => {
 }
 const callDataProvider = async (data, fastify) =>{
   try {
+    // return true;
     // find the service which have the type of dataProviderAPI
     let services = global.tblAPIs.filter((item) => item.type == data.serviceType && item.isActive == true);
     for (ser of services){
@@ -404,10 +406,23 @@ const callDataProvider = async (data, fastify) =>{
         if(data.moduleType == APIEndpointModuleType.commentaryUpdate && data.serviceType == ServiceType.dataProviderAPI){
           dataTosend = await getCommentaryDetailByIdQuery(data, fastify);
         }
+        else if(data.moduleType == APIEndpointModuleType.vendorUpdate && data.serviceType == ServiceType.dataProviderAPI
+          || data.moduleType == APIEndpointModuleType.vendorIpUpdate && data.serviceType == ServiceType.dataProviderAPI)
+        {
+          dataTosend = {
+            ...data.data,
+            type : data.type
+          };
+        }
+        
         const result = await axios.post(url, {
           ...dataTosend
         });
         return result;
+      }
+      else {
+        console.log("Endpoint not found for service type : ", ser.type, " and module type : ", data.moduleType);
+        return;
       }
     }
 
@@ -416,13 +431,47 @@ const callDataProvider = async (data, fastify) =>{
     console.log("error From callDataProvider", error);
   }
 }
+const callClientAPI = async (data,request, fastify) =>{
+  try {
+    let clientServices = global.tblAPIs.filter((item) => item.type == data.serviceType && item.isActive == true);
+    if(clientServices.length == 0){
+      return true;
+    }
+    for (ser of clientServices){
+      let endPoint = global.tblAPIEndpoints.find((item)=> item.serviceType == ser.type && item.moduleType == data.moduleType &&
+        item.isActive == true)
+      if(endPoint){
+        let url = `${ser.api}${endPoint.endPoint}`;
+        let dataTosend = data.data;
+        const result = await axios.post(url, {
+          ...dataTosend
+        });
+        return result;
+      }
+      else {
+        console.log("Endpoint not found for service type : ", ser.type, " and module type : ", data.moduleType);
+        return;
+      }
+    }
+    return true;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> utilities/index/callClientAPI",
+      request
+    );
+    throw new Error(error.message);
+  }
+}
 const ServiceType = {
    clientAPI : 1,
     dataProviderAPI : 2,
 }
 const APIEndpointModuleType = {
   commentaryUpdate : 1,
-  
+  vendorUpdate : 2,
+  vendorIpUpdate : 3
 }
 module.exports = {
   ERROR_CODES,
@@ -456,5 +505,6 @@ module.exports = {
   EventMarketRateSource,
   callfds,
   formatDateToISOString,
-  formatDateToISOStringwithOffset
+  formatDateToISOStringwithOffset,
+  callClientAPI
 };

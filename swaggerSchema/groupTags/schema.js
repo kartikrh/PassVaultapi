@@ -2846,6 +2846,8 @@ const MarketTemplate = {
           createRefId: { type: "string" },
           openRefId: { type: "string" },
           templateType: { type: "integer" },
+          isDefaultBetAllowed: { type: "boolean" },
+          isDefaultMarketActive: { type: "boolean" },
         },
         required: [
           "marketTemplateId",
@@ -3457,6 +3459,8 @@ const EventMarket = {
           createType: { type: "integer" },
           create: { type: "number" },
           templateType: { type: "integer" },
+          isDefaultBetAllowed: { type: "boolean" },
+          isDefaultMarketActive: { type: "boolean" },
         },
         required: ["eventMarketId", "marketTypeId", "marketTypeCategoryId"],
       },
@@ -3472,6 +3476,22 @@ const EventMarket = {
         properties: {
           eventMarketId: { type: "integer" },
           isResult: { type: "boolean" },
+        },
+        required: ["eventMarketId", "isResult"],
+      },
+    },
+  },
+  updateOrApproveResultOfMarket: {
+    schema: {
+      tags: ["EventMarket"],
+      description: "change result of market",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          eventMarketId: { type: "integer" },
+          isResult: { type: "boolean" },
+          result: { type: "integer" },
         },
         required: ["eventMarketId", "isResult"],
       },
@@ -3716,10 +3736,6 @@ const MarketTemplateRunner = {
           line: { type: "number" },
           overRate: { type: "number" },
           underRate: { type: "number" },
-          yesRate: { type: "number" },
-          noRate: { type: "number" },
-          yesPoint: { type: "number" },
-          noPoint: { type: "number" },
         },
         required: ["marketTemplateId", "marketTemplateRunnerId"],
       },

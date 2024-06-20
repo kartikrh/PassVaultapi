@@ -37,6 +37,8 @@ const getAllMarketTemplateQuery = async (fastify) => {
       tmt."wrOpenRefId" as "openRefId",
       tmt."wrIsPredefineRunnerValue" as "isPredefineRunnerValue",
       tmt."wrTemplateType" as "templateType",
+      tmt."wrIsDefaultBetAllowed" as "isDefaultBetAllowed",
+      tmt."wrIsDefaultMarketActive" as "isDefaultMarketActive",
       "wrDelay" as "delay"
   FROM "tblMarketTemplates" tmt
   LEFT JOIN "tblMatchTypes" tm ON tmt."wrMatchTypeID" = "tm"."wrMatchTypeId"
@@ -56,9 +58,9 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
               "wrAutoSuspendType","wrBeforeAutoSuspend","wrIsBallStart","wrIsAutoResultSet","wrAutoResultType","wrAutoResultafterBall",
               "wrAfterWicketAutoSuspend","wrAfterWicketNotCreated","wrCreatedBy","wrIsActive" , "wrActionType",
               "wrMarketTypeId","wrMarketTypeCategoryId","wrMargin" , "wrCreateRefId" , "wrOpenRefId",
-              "wrTemplateType", "wrDelay"
+              "wrTemplateType", "wrDelay","wrIsDefaultBetAllowed","wrIsDefaultMarketActive"
               ) values (
-                $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26, $27, $28, $29, $30, $31, $32
+                $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26, $27, $28, $29, $30, $31, $32,$33,$34
                 ) returning *
           )        
         select 
@@ -95,6 +97,8 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
         "wrOpenRefId" as "openRefId",
         "wrIsPredefineRunnerValue" as "isPredefineRunnerValue",
         "wrTemplateType" as "templateType",
+        "wrIsDefaultBetAllowed" as "isDefaultBetAllowed",
+        "wrIsDefaultMarketActive" as "isDefaultMarketActive",
         "wrDelay" as "delay"
          from insert_data`,
       {
@@ -143,13 +147,14 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
           data.createRefId || null,
           data.openRefId || null,
           data.templateType || null,
-          data.delay || 0
+          data.delay || 0,
+          data.isDefaultBetAllowed,
+          data.isDefaultMarketActive
         ],
       }
     );
     return result[0];
   } catch (err) {
-    console.log(err);
     errorLogger(
       fastify,
       err.message,
@@ -274,7 +279,9 @@ const updateMarketTemplateQuery = async (data, fastify, request) => {
             "wrCreateRefId" = $28,
             "wrOpenRefId" = $29,
             "wrTemplateType" = $30,
-            "wrDelay" = $31
+            "wrDelay" = $31,
+            "wrIsDefaultBetAllowed" = $33,
+            "wrIsDefaultMarketActive"= $34
         WHERE "wrID" = $32
         `,
         {
@@ -310,7 +317,9 @@ const updateMarketTemplateQuery = async (data, fastify, request) => {
                 data.openRefId,
                 data.templateType,
                 data.delay,
-                data.marketTemplateId
+                data.marketTemplateId,
+                data.isDefaultBetAllowed,
+                data.isDefaultMarketActive
             ],
             type: fastify.db.QueryTypes.SELECT,
         }

@@ -6,7 +6,7 @@ const getAllCommentariesDataService = (request) => {
     global.tblCommentaries.filter((c) => {
         if (request.body.eventId) {
             // If eventId is present, filter by both conditions
-            return c.commentaryStatus != 4 && c.eventRefId == request.body.eventId;
+            return c.eventRefId == request.body.eventId;
         } else {
             // If eventId is not present, filter by commentaryStatus only
             return c.commentaryStatus != 4;
