@@ -138,7 +138,7 @@ const marketDataLogger = async (data , request , fastify) => {
           updateType,
           new Date(),
           lineDiff || 0,
-          request.userTokenInfo.WrUserId || 0,
+          request?.userTokenInfo?.WrUserId || 0,
           isSendData || true
         ],
       }

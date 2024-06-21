@@ -812,9 +812,9 @@ const getAllCommentaryTeamsQuery = async (fastify) => {
   "wrTeamColor" as "teamColor",
   "wrBackgroundColor" as "backgroundColor",
   "wrTeamMaxOver" as "teamMaxOver",
-  "wrIsSuperOver" as "isSuperOver"
+  "wrIsSuperOver" as "isSuperOver",
+  "wrTeamPredictionPercentage" as "teamPredictionPercentage"
   from "tblCommentaryTeams" tct 
-
   `,
     {
       type: fastify.db.QueryTypes.SELECT,
@@ -2886,6 +2886,83 @@ const insertCommentarySuperOverTeams = async (request, fastify) => {
   }
 };
 
+
+// const updateCommentaryTeamPredictionPrecentageQuery = async (data, fastify) => {
+//   try {
+//     return await fastify.db.query(
+//       `update "tblCommentaryTeams" set 
+//       "wrTeamPredictionPercentage" = $1
+//       where "wrCommentaryTeamId" = $2
+//       `,
+//       {
+//         bind: [
+//           data.teamPredictionPercentage || null,
+//           data.commentaryTeamId || null,
+//         ],
+
+//         type: fastify.db.QueryTypes.UPDATE,
+//       }
+//     );
+//   } catch (err) {
+//     errorLogger(
+//       fastify,
+//       err.message,
+//       "DB ERROR --> repository/TableConfig/updateConfigQuery",
+//       request
+//     );
+//     throw new Error(err.message);
+//   }
+// };
+
+const updateCommentaryTeamPredictionPrecentageQuery = async (data, fastify) => {
+  try {
+
+     await fastify.db.query(
+      `update "tblCommentaryTeams" set 
+      "wrTeamPredictionPercentage" = $1
+      where "wrCommentaryId" = $2 AND "wrCurrentInnings" = $3 AND "wrCommentaryTeamId" = $4
+      `,
+      {
+        bind: [
+          data.teamPredictionPercentage || null,
+          data.commentaryId || null,
+          data.currentInnings || null,
+          data.commentaryTeamId || null,
+        ],
+
+        type: fastify.db.QueryTypes.UPDATE,
+      }
+    );
+    await fastify.db.query(
+      `update "tblCommentaryTeams" set 
+      "wrTeamPredictionPercentage" = $1
+      where "wrCommentaryId" = $2 AND "wrCurrentInnings" = $3 AND "wrCommentaryTeamId" <> $4
+      `,
+      {
+        bind: [
+          data.team2PredictionPercentage || null,
+          data.commentaryId || null,
+          data.currentInnings || null,
+          data.commentaryTeamId || null,
+        ],
+
+        type: fastify.db.QueryTypes.UPDATE,
+      }
+    );
+    
+    return { success: true };
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/updateCommentaryTeamPredictionPrecentageQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -2944,5 +3021,6 @@ module.exports = {
   getCommentaryDetailByIdQuery,
   updateMaxOverDetailQuery,
   updateSuperOverCommentaryQuery,
-  insertCommentarySuperOverTeams
+  insertCommentarySuperOverTeams,
+  updateCommentaryTeamPredictionPrecentageQuery
 };
