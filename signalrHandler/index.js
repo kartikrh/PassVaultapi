@@ -2,6 +2,7 @@ const signalR = require('@microsoft/signalr');
 const {EventMarketStatus, EventMarketRateSource,MarketUpdateType} = require('../utilities/index');
 const { marketLogger, marketDataLogger } = require("../utilities/logger");
 const {updateEventMarketRunnerMaunalQuery,getEventMarketByIdsQuery,UpdateEventMarketByCIdFromSocketQuery} = require('../repository/TableEventMarkets');
+const {updateCommentaryTeamPredictionPrecentageQuery} = require('../repository/TableCommentary');
 
 const configConstants = require('../utilities/configConstants');
 let connection;
@@ -20,7 +21,7 @@ async function startSignalR(fastify) {
     try {
       await connection.start();
       console.log('SignalR Connected');
-
+      global.selectionData = {};
       // Function to check and invoke ConnectMarketRate if new IDs are added
       const checkAndUpdateMarketRate = async (_fastify) => {
         let _MarketsIds = global.tblEventMarkets.filter(
@@ -62,8 +63,6 @@ async function startSignalR(fastify) {
             if(EventsMarketobj)
             { 
               const groupedRates = {};
-
-              // Grouping rates by selectionId
               data.rt.forEach(rate => {
                   const selectionId = rate.si;
                   if (!groupedRates[selectionId]) {
@@ -78,13 +77,6 @@ async function startSignalR(fastify) {
                           groupedRates[selectionId].lay.push(rate);
                       }
                   }
-                  // else if(rate.pr === 1){
-                  //   if (rate.ib) {
-                  //     groupedRates[selectionId].back.push(rate);
-                  // } else {
-                  //     groupedRates[selectionId].lay.push(rate);
-                  // }
-                  // }
               });
 
               // Create the desired output structure
@@ -118,6 +110,72 @@ async function startSignalR(fastify) {
                   if (_selectionidData) {
                     try {
                       let _data2 = await updateEventMarketRunnerMaunalQuery(items, _fastify);
+                      if(_selectionidData.commentaryId != 0){
+                        try {
+                          if (!global.selectionData[items.selectionId]) {
+                            global.selectionData[items.selectionId] = {
+                                backSize: [],
+                                laySize: []
+                            };
+                           }
+                          
+                           if (items.backSize !== undefined) {
+                            global.selectionData[items.selectionId].backSize.push(items.backSize);
+                           }
+                           if (items.laySize !== undefined) {
+                            global.selectionData[items.selectionId].laySize.push(items.laySize);
+                          }
+
+                          let selection = global.selectionData[items.selectionId];
+                          let _minRate;
+                          if (selection && selection.laySize.length > 0) {
+                            _minRate = Math.min(...selection.laySize);
+                          } else {
+                              return 0; // or some other value indicating no prices are available
+                          }
+                          if(_minRate != 0){
+                            let vRatesTeam = (1 / parseFloat(_minRate)) * 100;
+                            // vRatesTeam = parseInt(vRatesTeam.toFixed(0));
+                            vRatesTeam = Math.round(vRatesTeam);
+
+                            let commentary = await global.tblCommentaries.find(
+                              (item) => item.commentaryId === _selectionidData.commentaryId
+                            );
+                            let teams = global.tblCommentaryTeams.find(
+                              (item) =>
+                                item.commentaryId === commentary.commentaryId &&
+                                item.currentInnings === commentary.currentInnings && 
+                                item.teamName === _data2.runner
+                            );
+
+                            let _update = {};
+                            _update.commentaryTeamId = teams.commentaryTeamId;
+                            _update.teamPredictionPercentage = vRatesTeam;
+                            _update.team2PredictionPercentage = 100 - parseInt(data.teamPredictionPercentage);
+                            _update.currentInnings = commentary.currentInnings;
+                            _update.commentaryId = _selectionidData.commentaryId;
+
+                            const index = global.tblCommentaryTeams.findIndex(
+                              (item) =>
+                                item.commentaryId === ommentary.commentaryId &&
+                                item.commentaryTeamId === teams.commentaryTeamId
+                            );
+                            global.tblCommentaryTeams[index].teamPredictionPercentage  = data.teamPredictionPercentage;
+
+                            const _index = global.tblCommentaryTeams.findIndex(
+                              (item) =>
+                                item.commentaryId === data.commentaryId &&
+                                item.commentaryTeamId !== data.commentaryTeamId && 
+                                item.currentInnings === data.currentInnings
+                            );
+                            global.tblCommentaryTeams[_index].teamPredictionPercentage  = parseInt(_update.team2PredictionPercentage);
+                            
+                            await updateCommentaryTeamPredictionPrecentageQuery(_update, fastify);
+                          }
+                        } catch (error) {
+                          console.error(error.message);
+                        }
+                      }
                     } catch (error) {
                       console.error('updateEventMarketRunnerMaunalQuery:', error);
                     }
@@ -190,6 +248,7 @@ async function stopSignalR(fastify) {
       }
       global.rateSourceRefIDSet = null;
       global.rateSourceRefIDSet.clear(); // Clear the set
+      global.selectionData = {};
     } catch (err) {
       console.error('Error disconnecting from SignalR:', err);
     }

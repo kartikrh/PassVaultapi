@@ -3660,6 +3660,7 @@ const commentaryDetailsByEventIdService = async (
   let t2bg;
   let t2co;
   let utc;
+  let tpp1 , tpp2;
   // Basic elements are set
   cid = result.commentaryId;
   eid = result.eventRefId.toString();
@@ -3711,6 +3712,7 @@ const commentaryDetailsByEventIdService = async (
         : commentaryTeamsOne[0].teamOver;
     const teamScore1 = commentaryTeamsOne[0]?.teamScore ?? 0;
     t1s = teamScore1 + "/" + wicket1 + " (" + overs1 + ")";
+    tpp1 = commentaryTeamsOne[0]?.teamPredictionPercentage ?? 0;
   }
 
   if (commentaryTeamsTwo.length > 0) {
@@ -3729,6 +3731,7 @@ const commentaryDetailsByEventIdService = async (
         : commentaryTeamsTwo[0].teamOver;
     const teamScore2 = commentaryTeamsTwo[0]?.teamScore ?? 0;
     t2s = teamScore2 + "/" + wicket1 + " (" + overs1 + ")";
+    tpp2 = commentaryTeamsTwo[0]?.teamPredictionPercentage ?? 0;
   }
   //teams Images are Ser
   const _teamsC1 = await global.tblTeams.filter(
@@ -3966,6 +3969,8 @@ const commentaryDetailsByEventIdService = async (
   resultArr.mtyp = result.matchType || "";
   resultArr.com = competition?.competition || "";
   resultArr.eti = parseInt(eventType.refId) || "";
+  resultArr.tpp1 =tpp1;
+  resultArr.tpp2 =tpp2;
   // remove out batsman
   const commentaryPlayers_batter = await global.tblCommentaryPlayers.filter(
     (item) =>
@@ -4187,6 +4192,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
   let t2bg;
   let t2co;
   let utc;
+  let tpp1 , tpp2;
   // Basic elements are set
   cid = result.commentaryId;
   eid = result.eventRefId.toString();
@@ -4244,6 +4250,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
         : commentaryTeamsOne[0].teamOver;
     const teamScore1 = commentaryTeamsOne[0]?.teamScore ?? 0;
     t1s = teamScore1 + "/" + wicket1 + "(" + overs1 + ")";
+    tpp1 = commentaryTeamsOne[0]?.teamPredictionPercentage ?? 0;
   }
 
   if (commentaryTeamsTwo.length > 0) {
@@ -4261,6 +4268,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
         : commentaryTeamsTwo[0].teamOver;
     const teamScore2 = commentaryTeamsTwo[0]?.teamScore ?? 0;
     t2s = teamScore2 + "/" + wicket1 + "(" + overs1 + ")";
+    tpp2 = commentaryTeamsTwo[0]?.teamPredictionPercentage ?? 0;
   }
   //teams Images are Ser
   const _teamsC1 = await global.tblTeams.filter(
@@ -4542,6 +4550,9 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
   resultArr.ety = eventType?.eventType || "";
   resultArr.mtyp = result.matchType || "";
   resultArr.com = competition?.competition || "";
+  resultArr.eti = parseInt(eventType.refId) || "";
+  resultArr.tpp1 =tpp1;
+  resultArr.tpp2 =tpp2;
   const commentaryPlayers_batter = await global.tblCommentaryPlayers.filter(
     (item) =>
       item.commentaryId === cid &&
