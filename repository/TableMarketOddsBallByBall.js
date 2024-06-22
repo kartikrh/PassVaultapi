@@ -210,21 +210,44 @@ const createMarketOddsBallByBallBYID = async (data, fastify, request) => {
       `INSERT INTO "tblMarketOddsBallByBall" (
         "wrCommentaryId", 
         "wrCommentaryBallByBallId", 
+        "wrTeamId", 
         "wrDateTime"
       ) VALUES (
-        $1, $2
+        $1, $2,$3,$4
       ) RETURNING *
       `,
       {
         bind: [
           data.commentaryId,
           data.commentaryBallByBallId,
+          data.team1Id,
           new Date()
         ],
         type: fastify.db.QueryTypes.INSERT,
       }
     );
-    return result[0];
+
+    const _result = await fastify.db.query(
+      `INSERT INTO "tblMarketOddsBallByBall" (
+        "wrCommentaryId", 
+        "wrCommentaryBallByBallId", 
+        "wrTeamId", 
+        "wrDateTime"
+      ) VALUES (
+        $1, $2,$3,$4
+      ) RETURNING *
+      `,
+      {
+        bind: [
+          data.commentaryId,
+          data.commentaryBallByBallId,
+          data.team2Id,
+          new Date()
+        ],
+        type: fastify.db.QueryTypes.INSERT,
+      }
+    );
+    return true;
   } catch (err) {
     errorLogger(
       fastify,
@@ -232,7 +255,9 @@ const createMarketOddsBallByBallBYID = async (data, fastify, request) => {
       "DB ERROR --> repository/TableMarketOddsBallByBall/createMarketOdds",
       request
     );
-    throw new Error(err.message);
+    // throw new Error(err.message);
+    console.log(err.message);
+    return false;
   }
 };
 
@@ -241,14 +266,16 @@ const updateLatestMarketOddsBallByBall = async (data, fastify, request) => {
     // Get the latest wrCommentaryBallByBallId
     const latestEntry = await fastify.db.query(
       `
-      SELECT "wrCommentaryBallByBallId" 
+      SELECT "wrCommentaryBallByBallId","wrId"
       FROM "tblMarketOddsBallByBall"
       WHERE "wrCommentaryId" = $1
-      ORDER BY "wrDateTime" DESC
+      AND "wrTeamId" = $2
+      AND "wrRunnerName" IS NULL
+      ORDER BY "wrDateTime" ASC
       LIMIT 1
       `,
       {
-        bind: [data.commentaryId],
+        bind: [data.commentaryId,data.teamId],
         type: fastify.db.QueryTypes.SELECT,
       }
     );
@@ -258,7 +285,12 @@ const updateLatestMarketOddsBallByBall = async (data, fastify, request) => {
       throw new Error('No entries found to update.');
     }
 
-    const latestWrCommentaryBallByBallId = latestEntry[0].wrCommentaryBallByBallId;
+    //const latestWrCommentaryBallByBallId = latestEntry[0].wrCommentaryBallByBallId;
+    const latestWrId = latestEntry[0].wrId;
+
+    if (!latestWrId) {
+      return false;
+    }
 
     // Update the latest entry
     const result = await fastify.db.query(
@@ -274,9 +306,10 @@ const updateLatestMarketOddsBallByBall = async (data, fastify, request) => {
         "wrLaySize" = $7,
         "wrMarketName" = $8,
         "wrRunnerName" = $9,
-        "wrDateTime" = $10
+        "wrDateTime" = $10,
+        "wrSelectionId" = $12
       WHERE  
-         "wrCommentaryBallByBallId" = $11
+         "wrId" = $11
       RETURNING *
       `,
       {
@@ -291,13 +324,14 @@ const updateLatestMarketOddsBallByBall = async (data, fastify, request) => {
           data.MarketName,
           data.RunnerName,
           new Date(),
-          latestWrCommentaryBallByBallId
+          latestWrId,
+          data.selectionId
         ],
         type: fastify.db.QueryTypes.UPDATE,
       }
     );
 
-    return result[0];
+    return true;
   } catch (err) {
     errorLogger(
       fastify,
@@ -305,7 +339,9 @@ const updateLatestMarketOddsBallByBall = async (data, fastify, request) => {
       "DB ERROR --> repository/TableMarketOddsBallByBall/updateLatestMarketOdds",
       request
     );
-    throw new Error(err.message);
+    //console.log(err.message);
+    return false;
+    //throw new Error(err.message);
   }
 };
 
