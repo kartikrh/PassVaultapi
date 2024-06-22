@@ -9,9 +9,12 @@ const configConstants = require('../utilities/configConstants');
 let connection;
 global.rateSourceRefIDSet = new Set();
 let intervalId;
+let _fastify;
 
 async function startSignalR(fastify) {
-  const _fastify = fastify;
+  if(fastify){
+   _fastify = fastify;
+  }
   const _SignalRURL = global.tblConfigs.find((item) => item.key === configConstants.MARKETRTETHIRDPARTY).value;
   const _SignalRInterwal = global.tblConfigs.find((item) => item.key === configConstants.INTERVAL_MarketTHIRDPARTY).value;
   if(_SignalRURL){
@@ -124,6 +127,19 @@ async function startSignalR(fastify) {
                           _updateData.MarketName = _selectionidData.marketName;
                           _updateData.RunnerName = _selectionidData.runner;
                           _updateData.commentaryId = _selectionidData.commentaryId;
+                          _updateData.selectionId = _selectionidData.selectionId;
+
+                          let commentary = await global.tblCommentaries.find(
+                            (item) => item.commentaryId === _selectionidData.commentaryId
+                          );
+                          let teams = global.tblCommentaryTeams.find(
+                            (item) =>
+                              item.commentaryId === commentary.commentaryId &&
+                              item.currentInnings === commentary.currentInnings && 
+                              item.teamName === _data2.runner
+                          );
+                          _updateData.teamId = teams.teamId;
+
                           await updateLatestMarketOddsBallByBall(_updateData,_fastify,_selectionidData.commentaryId);
                         } catch (error) {}
                         try {
@@ -207,7 +223,7 @@ async function startSignalR(fastify) {
                    );
                    for (let item of dataOfmarkets) {
                     let index = global.tblEventMarkets.findIndex(
-                      (e) => e.eventMarketId === item.eventMarketId
+                      (e) => e.selectionId == item.selectionId
                     );
                     if (index === -1) {
                       global.tblEventMarkets.push(item);
@@ -261,8 +277,7 @@ async function stopSignalR(fastify) {
         clearInterval(intervalId);
         intervalId = null;
       }
-      global.rateSourceRefIDSet = null;
-      global.rateSourceRefIDSet.clear(); // Clear the set
+      global.rateSourceRefIDSet = new Set();
       global.selectionData = {};
     } catch (err) {
       console.error('Error disconnecting from SignalR:', err);

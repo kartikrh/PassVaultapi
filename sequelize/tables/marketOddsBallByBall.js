@@ -62,6 +62,14 @@ module.exports = (sequelize) => {
         type: DataTypes.DATE,
         allowNull: true,
       },
+      wrTeamId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      wrSelectionId: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+      },
     },
     {
       timestamps: false,
