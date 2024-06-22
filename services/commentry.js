@@ -72,9 +72,11 @@ const {
   callClientAPI
 } = require("../utilities");
 const { getAllPlayersByTeamIdQuery } = require("../repository/TableTeams");
+const { createMarketOddsBallByBallBYID } = require("../repository/TableMarketOddsBallByBall");
 const { handleMarketCloseService } = require("./eventMarket");
 const { getEventMarketRatioQuery, closeEventMarketByCIdQuery } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
+
 
 
 const allCommentaryService = async (request, fastify) => {
@@ -2431,6 +2433,14 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           type: "create",
           data: response.commentaryBallByBallDetails,
         });
+
+        try {
+          const _dataForOds = {
+            commentaryId: commentaryId,
+            commentaryBallByBallId: commentaryBallByBallId
+          };
+          await createMarketOddsBallByBallBYID(_dataForOds, fastify, request);
+        } catch (error) {}
 
         // call the predictor market
         if (
