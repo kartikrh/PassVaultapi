@@ -3,6 +3,7 @@ const {EventMarketStatus, EventMarketRateSource,MarketUpdateType} = require('../
 const { marketLogger, marketDataLogger } = require("../utilities/logger");
 const {updateEventMarketRunnerMaunalQuery,getEventMarketByIdsQuery,UpdateEventMarketByCIdFromSocketQuery} = require('../repository/TableEventMarkets');
 const {updateCommentaryTeamPredictionPrecentageQuery} = require('../repository/TableCommentary');
+const {updateLatestMarketOddsBallByBall} = require('../repository/TableMarketOddsBallByBall');
 
 const configConstants = require('../utilities/configConstants');
 let connection;
@@ -112,6 +113,20 @@ async function startSignalR(fastify) {
                       let _data2 = await updateEventMarketRunnerMaunalQuery(items, _fastify);
                       if(_selectionidData.commentaryId != 0){
                         try {
+                          let _updateData= {};
+                          _updateData.EventMarketId = _selectionidData.eventMarketId;
+                          _updateData.RunnerId = _selectionidData.runnerId;
+                          _updateData.MarketStatus = _selectionidData.status;
+                          _updateData.BackPrice = _selectionidData.backPrice;
+                          _updateData.LayPrice = _selectionidData.layPrice;
+                          _updateData.BackSize = _selectionidData.backSize;
+                          _updateData.LaySize = _selectionidData.laySize;
+                          _updateData.MarketName = _selectionidData.marketName;
+                          _updateData.RunnerName = _selectionidData.runner;
+                          _updateData.commentaryId = _selectionidData.commentaryId;
+                          await updateLatestMarketOddsBallByBall(_updateData,_fastify,_selectionidData.commentaryId);
+                        } catch (error) {}
+                        try {
                           if (!global.selectionData[items.selectionId]) {
                             global.selectionData[items.selectionId] = {
                                 backSize: [],
@@ -151,26 +166,26 @@ async function startSignalR(fastify) {
                             let _update = {};
                             _update.commentaryTeamId = teams.commentaryTeamId;
                             _update.teamPredictionPercentage = vRatesTeam;
-                            _update.team2PredictionPercentage = 100 - parseInt(data.teamPredictionPercentage);
+                            _update.team2PredictionPercentage = 100 - parseInt(_update.teamPredictionPercentage);
                             _update.currentInnings = commentary.currentInnings;
                             _update.commentaryId = _selectionidData.commentaryId;
 
                             const index = global.tblCommentaryTeams.findIndex(
                               (item) =>
-                                item.commentaryId === ommentary.commentaryId &&
+                                item.commentaryId === commentary.commentaryId &&
                                 item.commentaryTeamId === teams.commentaryTeamId
                             );
-                            global.tblCommentaryTeams[index].teamPredictionPercentage  = data.teamPredictionPercentage;
+                            global.tblCommentaryTeams[index].teamPredictionPercentage  = _update.teamPredictionPercentage;
 
                             const _index = global.tblCommentaryTeams.findIndex(
                               (item) =>
-                                item.commentaryId === data.commentaryId &&
-                                item.commentaryTeamId !== data.commentaryTeamId && 
-                                item.currentInnings === data.currentInnings
+                                item.commentaryId === commentary.commentaryId &&
+                                item.commentaryTeamId !== teams.commentaryTeamId && 
+                                item.currentInnings === commentary.currentInnings
                             );
                             global.tblCommentaryTeams[_index].teamPredictionPercentage  = parseInt(_update.team2PredictionPercentage);
                             
-                            await updateCommentaryTeamPredictionPrecentageQuery(_update, fastify);
+                            await updateCommentaryTeamPredictionPrecentageQuery(_update, _fastify);
                           }
                         } catch (error) {
                           console.error(error.message);
@@ -204,7 +219,7 @@ async function startSignalR(fastify) {
                           updateType: MarketUpdateType.marketInitilization,
                         },
                         null,
-                        fastify
+                        _fastify
                       );
                     } else {
                       let previousLine = global.tblEventMarkets[index].line;
@@ -218,7 +233,7 @@ async function startSignalR(fastify) {
                           lineDiff: item.line - (previousLine || 0),
                         },
                         null,
-                        fastify
+                        _fastify
                       );
                     }
                   }
