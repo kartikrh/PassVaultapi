@@ -72,7 +72,7 @@ const {
   callClientAPI
 } = require("../utilities");
 const { getAllPlayersByTeamIdQuery } = require("../repository/TableTeams");
-const { createMarketOddsBallByBallBYID } = require("../repository/TableMarketOddsBallByBall");
+const { createMarketOddsBallByBallBYID,deleteMarketOddsBallByBall } = require("../repository/TableMarketOddsBallByBall");
 const { handleMarketCloseService } = require("./eventMarket");
 const { getEventMarketRatioQuery, closeEventMarketByCIdQuery } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
@@ -1745,29 +1745,26 @@ const testStoreProcedureService = async (request, fastify) => {
             fastify,
             request
           );
-          const isFDS = global.tblConfigs.find((item) => item.key === configConstants.ISFRAUDDET_DECTIONAPI).value;
-          if(isFDS && isFDS == 'true'){
-            if(_wkt || _bory){
-              try {
-                const now = new Date();
-                const formattedDate = formatDateToISOString(now);
-                callfds(
-                  {
-                    Id: 0,
-                    EventId: parseInt(commentaryData.eventRefId),
-                    BWDateTime: (await formattedDate).toString,
-                    Type: _bory === true ? "2" : _wkt === true ? "1" : ""
-                  },
-                  "/api/transactions/SaveBoundryWicket",
-                  fastify,
-                  request
-                ); 
-              } catch (error) {
-
+          try {
+            const isFDS = global.tblConfigs.find((item) => item.key === configConstants.ISFRAUDDET_DECTIONAPI).value;
+            if(isFDS && isFDS == 'true'){
+              if(_wkt || _bory){
+                  const now = new Date();
+                  const formattedDate = formatDateToISOString(now);
+                  callfds(
+                    {
+                      Id: 0,
+                      EventId: parseInt(commentaryData.eventRefId),
+                      BWDateTime: (await formattedDate).toString,
+                      Type: _bory === true ? "2" : _wkt === true ? "1" : ""
+                    },
+                    "/api/transactions/SaveBoundryWicket",
+                    fastify,
+                    request
+                  ); 
               }
             }
-          }
-
+         } catch (error) {}
         }
       } else {
         // if(ballByBallIndex !== -1){
@@ -2301,6 +2298,12 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
       global.tblCommentaryPartnership = global.tblCommentaryPartnership.filter(
         (item) => item.commentaryBallByBallId !== deleteCommentaryBallByBallId
       );
+      try {
+        _deleteBallID = {}
+        _deleteBallID.commentaryBallByBallId = deleteCommentaryBallByBallId;
+        _deleteBallID.commentaryId = commentaryId;
+        await deleteMarketOddsBallByBall(_deleteBallID,fastify,request)
+      } catch (error) {}
 
       if (commentaryBallByBall) {
         ballByBallIndex = global.tblCommentaryBallByBall.findIndex(
@@ -2435,14 +2438,17 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         });
 
         try {
-          if(updatedData.commentaryBallByBallDetails.ballType > 0){
-            const _dataForOds = {
-              commentaryId: commentaryId,
-              commentaryBallByBallId: updatedData.commentaryBallByBallDetails.commentaryBallByBallId,
-              team1Id: commentaryData.team1Id,
-              team2Id: commentaryData.team2Id,
-            };
-            await createMarketOddsBallByBallBYID(_dataForOds, fastify, request);
+          const _ifFindCid = global.tblEventMarkets.find((e) => e.commentaryId == commentaryId);
+          if(_ifFindCid){
+            if(updatedData.commentaryBallByBallDetails.ballType > 0){
+              const _dataForOds = {
+                commentaryId: commentaryId,
+                commentaryBallByBallId: updatedData.commentaryBallByBallDetails.commentaryBallByBallId,
+                team1Id: commentaryData.team1Id,
+                team2Id: commentaryData.team2Id,
+              };
+              await createMarketOddsBallByBallBYID(_dataForOds, fastify, request);
+            }
           }
         } catch (error) {}
 

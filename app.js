@@ -29,6 +29,7 @@ const { connectClients, disconnectClients } = require("./sockets");
 const {
   disConnectClientSocketQuery,
 } = require("./repository/TableClientSocket");
+const {startSignalR} = require("./signalrHandler/index.js")
 const WebSocket = require("ws");
 const WebsocketConnection = require("./websocket");
 
@@ -123,6 +124,7 @@ module.exports = async function (fastify, opts) {
         await fastify.db.sync();
         await featchData(fastify);
         await disConnectClientSocketQuery(fastify);
+        await startSignalR(fastify);
         connectClients(fastify);
         //WebsocketConnection(fastify);
         disconnectClients(fastify);
