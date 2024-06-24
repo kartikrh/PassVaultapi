@@ -390,6 +390,7 @@ const getMarketListByCIdQuery = async (data, request, fastify) => {
         FROM "tblEventMarkets" tem
         WHERE tem."wrCommentaryId" = $1
         AND tem."wrStatus" NOT IN ($2 ,$3,$4)
+        AND tem."wrRateSource" IS NOT NULL
         `;
     return await fastify.db.query(query, {
       type: fastify.db.QueryTypes.SELECT,
@@ -648,7 +649,7 @@ const changeMarketResultQuery = async (data, request, fastify) => {
         AND 
           "wrResult" IS NULL
        `;
-     await fastify.db.query(query, {
+    await fastify.db.query(query, {
       bind: [
         EventMarketStatus.Settled,
         data.result,
@@ -728,7 +729,7 @@ const changeMarketCloseQuery = async (data, request, fastify) => {
           AND "wrID" = $3
           AND "wrStatus" NOT IN ($4, $5, $6)
           `;
-     await fastify.db.query(query, {
+    await fastify.db.query(query, {
       bind: [
         EventMarketStatus.Close,
         data.commentaryId,
@@ -922,11 +923,11 @@ const closeEventMarketByTeamIdQuery = async (data, request, fastify) => {
 
       marketDataLogger(
         {
-           eventMarketId : market.eventMarketId,
-           commentaryId : data.commentaryId,
-           dataTosave : dataToStore,
-           updateType : MarketUpdateType.marketInitilization,
-           isSendData : true
+          eventMarketId: market.eventMarketId,
+          commentaryId: data.commentaryId,
+          dataTosave: dataToStore,
+          updateType: MarketUpdateType.marketInitilization,
+          isSendData: true
         },
         request,
         fastify
@@ -1079,11 +1080,11 @@ const cancelEventMarketByTeamIdQuery = async (data, request, fastify) => {
       market.data = udpatedData[0].data;
 
       marketDataLogger({
-        eventMarketId : market.eventMarketId,
-        commentaryId : data.commentaryId,
-        dataTosave : JSON.parse(dataToStore),
-        updateType : MarketUpdateType.marketInitilization,
-        isSendData : true
+        eventMarketId: market.eventMarketId,
+        commentaryId: data.commentaryId,
+        dataTosave: JSON.parse(dataToStore),
+        updateType: MarketUpdateType.marketInitilization,
+        isSendData: true
       })
     }
 
@@ -1491,7 +1492,7 @@ const createOrUpdateEventRunnerMarketManualQuery = async (
     throw new Error(err.message);
   }
 };
-const closeEventMarketByCIdQuery = async (data , fastify) =>{
+const closeEventMarketByCIdQuery = async (data, fastify) => {
   try {
     const query = `
       UPDATE "tblEventMarkets" SET
@@ -1504,9 +1505,9 @@ const closeEventMarketByCIdQuery = async (data , fastify) =>{
     `;
     const marketId = await fastify.db.query(query, {
       bind: [EventMarketStatus.Close, data.commentaryId,
-        EventMarketStatus.Close,
-        EventMarketStatus.Settled,
-        EventMarketStatus.Cancel,
+      EventMarketStatus.Close,
+      EventMarketStatus.Settled,
+      EventMarketStatus.Cancel,
       ],
       type: fastify.db.QueryTypes.SELECT,
     });
@@ -1517,13 +1518,13 @@ const closeEventMarketByCIdQuery = async (data , fastify) =>{
         "wrSelectionStatus" = $1
       WHERE "wrEventMarketId" = ANY($2)
     `;
-    
+
     await fastify.db.query(query2, {
       bind: [EventMarketStatus.Close, marketId.map((e) => e.marketId)],
       type: fastify.db.QueryTypes.SELECT,
     });
 
-    for (let mar of marketId){
+    for (let mar of marketId) {
       const query = `
             SELECT 
             tem."wrID" as "marketId",
@@ -1618,9 +1619,9 @@ const updateEventMarketRunnerMaunalQuery = async (data, fastify) => {
   }
 };
 
-const UpdateEventMarketByCIdFromSocketQuery = async (data , fastify) =>{
+const UpdateEventMarketByCIdFromSocketQuery = async (data, fastify) => {
   try {
-      const query = `
+    const query = `
             SELECT 
             tem."wrID" as "marketId",
             tem."wrEventRefID" as "eventId",
@@ -1648,18 +1649,18 @@ const UpdateEventMarketByCIdFromSocketQuery = async (data , fastify) =>{
         GROUP BY tem."wrID"
       `;
 
-      let _data = await fastify.db.query(query, {
-        bind: [data.eventMarketId],
-        type: fastify.db.QueryTypes.SELECT,
-      });
+    let _data = await fastify.db.query(query, {
+      bind: [data.eventMarketId],
+      type: fastify.db.QueryTypes.SELECT,
+    });
 
-      const query2 = `UPDATE "tblEventMarkets" SET "wrData" = $1 WHERE "wrID" = $2
+    const query2 = `UPDATE "tblEventMarkets" SET "wrData" = $1 WHERE "wrID" = $2
         RETURNING "wrID" as "eventMarketId"`;
 
-      await fastify.db.query(query2, {
-        bind: [_data[0], data.eventMarketId],
-        type: fastify.db.QueryTypes.SELECT,
-      });
+    await fastify.db.query(query2, {
+      bind: [_data[0], data.eventMarketId],
+      type: fastify.db.QueryTypes.SELECT,
+    });
     return true;
 
   } catch (err) {
@@ -1675,14 +1676,14 @@ const UpdateEventMarketByCIdFromSocketQuery = async (data , fastify) =>{
 
 const UpdateResulOrApproveEventMarketQuery = async (data, request, fastify) => {
   try {
-    if(data.isResult && data.result){
+    if (data.isResult && data.result) {
       const query = `UPDATE "tblEventMarkets" SET "wrIsResult" = $1, "wrResult" = $2 WHERE "wrID" = $3`;
       return await fastify.db.query(query, {
-        bind: [data.isResult,data.result, data.eventMarketId],
+        bind: [data.isResult, data.result, data.eventMarketId],
         type: fastify.db.QueryTypes.SELECT,
       });
     }
-    if(!data.isResult && data.result){
+    if (!data.isResult && data.result) {
       const query = `UPDATE "tblEventMarkets" SET "wrResult" = $1 WHERE "wrID" = $2`;
       return await fastify.db.query(query, {
         bind: [data.result, data.eventMarketId],
@@ -1699,9 +1700,9 @@ const UpdateResulOrApproveEventMarketQuery = async (data, request, fastify) => {
     throw new Error(error.message);
   }
 };
-const updateComInMarketQuery = async (data,request,fastify)=>{
+const updateComInMarketQuery = async (data, request, fastify) => {
   try {
-    let {eventRefId,commentaryId} = data;
+    let { eventRefId, commentaryId } = data;
     let query = `
       UPDATE "tblEventMarkets" SET
         "wrCommentaryId" = $1
@@ -1710,7 +1711,7 @@ const updateComInMarketQuery = async (data,request,fastify)=>{
     `;
 
     const result = await fastify.db.query(query, {
-      bind: [commentaryId,eventRefId],
+      bind: [commentaryId, eventRefId],
       type: fastify.db.QueryTypes.SELECT,
     });
     return result;
