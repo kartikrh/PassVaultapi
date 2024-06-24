@@ -303,6 +303,19 @@ const ImportMarketWithRunnerService = async (request, fastify) => {
     );
     if (!EventsMarketobj) {
       let req = {};
+
+      try {
+        let _resComm = global.tblCommentaries.find((i) => i.eventRefId == request.body.eventId);
+        if(_resComm){
+          req.commentaryId = _resComm.commentaryId;
+        }
+        else{
+          req.commentaryId = 0;
+        }
+      } catch (error) {
+        req.commentaryId = 0;
+      }
+
       req.eventID = request.body.eventId;
       req.marketName = request.body.marketName;
       req.marketStatus = request.body.marketStatus;
@@ -315,6 +328,19 @@ const ImportMarketWithRunnerService = async (request, fastify) => {
       );
     } else {
       let req = {};
+
+      try {
+        let _resComm = global.tblCommentaries.find((i) => i.eventRefId == request.body.eventId);
+        if(_resComm){
+          req.commentaryId = _resComm.commentaryId;
+        }
+        else{
+          req.commentaryId = 0;
+        }
+      } catch (error) {
+        req.commentaryId = 0;
+      }
+      
       req.eventID = request.body.eventId;
       req.marketName = request.body.marketName;
       req.marketStatus = request.body.marketStatus;
