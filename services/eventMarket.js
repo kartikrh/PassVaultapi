@@ -21,6 +21,7 @@ const {
   setLineRatioEventMarketQuery,
   getMarketDataByCIdQuery,
   UpdateResulOrApproveEventMarketQuery,
+  updateComInMarketQuery,
 } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
 const {
@@ -637,7 +638,7 @@ const changeMarketResultService = async (request, fastify) => {
   // const currentResult = global.tblEventMarkets[eventMarket].result;
   const currentStatus = eventMarket[0].status;
   const currentResult = eventMarket[0].result;
-  if (currentStatus === EventMarketStatus.Close && currentResult === null) {
+  if (currentStatus === EventMarketStatus.Close && currentResult == null) {
     await changeMarketResultQuery(request.body, request, fastify);
     // global.tblEventMarkets[eventMarket].result = result;
     return "Market result updated successfully";
@@ -977,6 +978,18 @@ const UpdateResulOrApproveEventMarketService = async (request, fastify) => {
 
   return "Event Market updated successfully";
 };
+const updateComInMarketService = async (data,request, fastify) => {
+  let updateData = await updateComInMarketQuery(data, request, fastify);
+  for (let item of updateData) {
+    let eventMarket = global.tblEventMarkets.findIndex(
+      (e) => e.eventMarketId === item.eventMarketId
+    );
+    if (eventMarket !== -1) {
+      global.tblEventMarkets[eventMarket].commentaryId = item.commentaryId;
+    }
+  }
+  return "Event Market updated successfully";
+}
 
 module.exports = {
   getDetailsByCIdService,
@@ -1004,4 +1017,5 @@ module.exports = {
   getSLReportEventMarketService,
   getMarketDataByCIdService,
   UpdateResulOrApproveEventMarketService,
+  updateComInMarketService
 };

@@ -1134,7 +1134,7 @@ const getDataLogsByMarketQuery = async (request, fastify) => {
                     "wrCreatedBy" as "createdBy",
                     tu."WrUserName" as "userName",
                     "wrLineDiff" as "lineDiff",
-                    "wrIsSendData" as "isSendData"
+                    tmd."wrIsSendData" as "isSendData"
                 FROM "tblMarketDataLogs" tmd
                 LEFT JOIN "tblEventMarkets"  tem ON tmd."wrEventMarketId" = tem."wrID"
                 LEFT JOIN "tblUsers" tu ON tmd."wrCreatedBy" = tu."WrUserId"
@@ -1582,7 +1582,7 @@ const closeEventMarketByCIdQuery = async (data , fastify) =>{
 
 
 const updateEventMarketRunnerMaunalQuery = async (data, fastify) => {
-  console.log('updateEventMarketRunnerMaunalQuery' + JSON.stringify(data));
+  // console.log('updateEventMarketRunnerMaunalQuery' + JSON.stringify(data));
   try {
     const query = `
         UPDATE "tblMarketRunners"
@@ -1696,7 +1696,31 @@ const UpdateResulOrApproveEventMarketQuery = async (data, request, fastify) => {
     throw new Error(error.message);
   }
 };
+const updateComInMarketQuery = async (data,request,fastify)=>{
+  try {
+    let {eventRefId,commentaryId} = data;
+    let query = `
+      UPDATE "tblEventMarkets" SET
+        "wrCommentaryId" = $1
+      WHERE "wrEventRefID" = $2
+      RETURNING "wrID" as "eventMarketId"
+    `;
 
+    const result = await fastify.db.query(query, {
+      bind: [commentaryId,eventRefId],
+      type: fastify.db.QueryTypes.SELECT,
+    });
+    return result;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/updateComInMarketQuery",
+      request
+    )
+    throw new Error(error.message)
+  }
+}
 module.exports = {
   getAllEventMarketsQuery,
   createManyEventMarketQuery,
@@ -1729,4 +1753,5 @@ module.exports = {
   updateEventMarketRunnerMaunalQuery,
   UpdateEventMarketByCIdFromSocketQuery,
   UpdateResulOrApproveEventMarketQuery,
+  updateComInMarketQuery
 };

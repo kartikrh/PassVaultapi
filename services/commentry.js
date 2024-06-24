@@ -72,7 +72,7 @@ const {
   callClientAPI
 } = require("../utilities");
 const { getAllPlayersByTeamIdQuery } = require("../repository/TableTeams");
-const { handleMarketCloseService } = require("./eventMarket");
+const { handleMarketCloseService, updateComInMarketService } = require("./eventMarket");
 const { getEventMarketRatioQuery, closeEventMarketByCIdQuery } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
 
@@ -561,6 +561,10 @@ const createCommentaryService = async (request, fastify) => {
       fastify
     );
   }
+  updateComInMarketService({
+    commentaryId : addCommentry.commentaryId,
+    eventRefId : addCommentry.eventRefId,
+  },request,fastify);
 
   let cData = await getMatchDataByCId({
     commentaryId: addCommentry.commentaryId,
@@ -1026,6 +1030,11 @@ const cloneCommentaryService = async (request, fastify) => {
       fastify
     );
   }
+  updateComInMarketService({
+    commentaryId : newCommentary.commentaryId,
+    eventRefId : newCommentary.eventRefId,
+  },request,fastify);
+
 
   // if (newCommentary.isPredictMarket == true) {
   //   callPredictorMarket(
