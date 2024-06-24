@@ -461,7 +461,7 @@ const callClientAPI = async (data,request, fastify) =>{
       "DB ERROR --> utilities/index/callClientAPI",
       request
     );
-    throw new Error(error.message);
+    // throw new Error(error.message);
   }
 }
 const ServiceType = {

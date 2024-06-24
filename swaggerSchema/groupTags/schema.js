@@ -1738,7 +1738,7 @@ const Commentary = {
       body: {
         type: "object",
         properties: {
-          eventId : { type: "integer" },
+          eventId : { type: "string" },
         },
       },
     },

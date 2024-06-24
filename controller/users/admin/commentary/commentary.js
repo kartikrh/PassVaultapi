@@ -318,7 +318,7 @@ const getScheduleMatchList = async (request, reply, fastify) => {
 const getCompleteMatchList = async (request, reply, fastify) => {
   try {
     let commentaryData = global.tblCommentaries.filter(
-      (item) => item.commentaryStatus === 4
+      (item) => item.commentaryStatus == 4
     );
     const body = {
       commentaryData,
