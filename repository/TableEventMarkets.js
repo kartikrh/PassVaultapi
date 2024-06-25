@@ -390,7 +390,7 @@ const getMarketListByCIdQuery = async (data, request, fastify) => {
         FROM "tblEventMarkets" tem
         WHERE tem."wrCommentaryId" = $1
         AND tem."wrStatus" NOT IN ($2 ,$3,$4)
-        AND tem."wrRateSource" <> 1
+        AND tem."wrRateSource" = 1
         `;
     return await fastify.db.query(query, {
       type: fastify.db.QueryTypes.SELECT,
