@@ -372,6 +372,8 @@ const getMarketListByCIdQuery = async (data, request, fastify) => {
             tem."wrCommentaryId" AS "commentaryId",
             tem."wrEventRefID" AS "eventId",
             tem."wrTeamID" AS "teamId",
+            tem."wrMarketTypeCategoryId" AS "marketTypeCategoryId",
+            mtc."wrCategoryName" AS "categoryName",
             "wrMarketName" AS "marketName",
             "wrMargin" AS "margin",
             "wrStatus" AS "status",
@@ -388,6 +390,7 @@ const getMarketListByCIdQuery = async (data, request, fastify) => {
             ) as "runner"
            
         FROM "tblEventMarkets" tem
+        INNER JOIN "tblMarketTypeCategories" mtc ON tem."wrMarketTypeCategoryId" = mtc."wrId"
         WHERE tem."wrCommentaryId" = $1
         AND tem."wrStatus" NOT IN ($2 ,$3,$4)
         AND tem."wrRateSource" = 1
