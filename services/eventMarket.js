@@ -1073,5 +1073,4 @@ module.exports = {
   UpdateResulOrApproveEventMarketService,
   updateComInMarketService,
   marketListcategoryNameByCIdService,
-  getMarketTypeCategoryService,
 };
