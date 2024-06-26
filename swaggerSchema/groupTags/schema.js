@@ -3294,6 +3294,13 @@ const EventMarket = {
       },
     },
   },
+  getMarketTypeCategory : {
+    schema  : {
+      tags : ["EventMarket"],
+      description : "get all Market Type Category",
+      secaurity : [{bearerAuth : []}]
+    }
+  },
   getDSReport: {
     schema: {
       tags: ["EventMarket"],
