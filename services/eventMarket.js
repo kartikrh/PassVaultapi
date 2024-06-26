@@ -23,6 +23,7 @@ const {
   UpdateResulOrApproveEventMarketQuery,
   updateComInMarketQuery,
   getMarketListWithCategoryNameByCIdQuery,
+  getAllMarketTypeCategoryQuery,
 } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
 const {
@@ -1045,6 +1046,11 @@ const marketListcategoryNameByCIdService = async (request, fastify) => {
     categories,
   };
 };
+}
+const getMarketTypeCategoryService = async(request , fastify) =>{
+  let getData = await getAllMarketTypeCategoryQuery(request , fastify);
+  return getData;
+}
 
 module.exports = {
   getDetailsByCIdService,
@@ -1073,5 +1079,6 @@ module.exports = {
   getMarketDataByCIdService,
   UpdateResulOrApproveEventMarketService,
   updateComInMarketService,
-  marketListcategoryNameByCIdService
+  marketListcategoryNameByCIdService,
+  getMarketTypeCategoryService,
 };

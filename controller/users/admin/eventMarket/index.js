@@ -1,5 +1,4 @@
-
-const { getDetailsByCIdService, getAllEventMarketsService, createEventMarketsService, deleteEventMarketsService, activeInactiveMarketsService, updateAllowMarketsService, getEventListByCompetitionIdsService, marketListResultFalseService, changeResultOfMarketService, changeMarketCancelService, changeMarketResultService, marketListByCIdService, saveEventMarketService, updateMarketRateService, changeMarketCloseService, suspendMarketByCIdService, getEventMarketByIdService, marketTemplateTypeService, commentaryTypeService, setDelayEventMarketService, getDSReportEventMarketService, getSLReportEventMarketService, getMarketDataByCIdService,UpdateResulOrApproveEventMarketService,marketListcategoryNameByCIdService } = require("../../../../services/eventMarket");
+const { getDetailsByCIdService, getAllEventMarketsService, createEventMarketsService, deleteEventMarketsService, activeInactiveMarketsService, updateAllowMarketsService, getEventListByCompetitionIdsService, marketListResultFalseService, changeResultOfMarketService, changeMarketCancelService, changeMarketResultService, marketListByCIdService, saveEventMarketService, updateMarketRateService, changeMarketCloseService, suspendMarketByCIdService, getEventMarketByIdService, marketTemplateTypeService, commentaryTypeService, setDelayEventMarketService, getDSReportEventMarketService, getSLReportEventMarketService, getMarketDataByCIdService,UpdateResulOrApproveEventMarketService, getMarketTypeCategoryService,marketListcategoryNameByCIdService } = require("../../../../services/eventMarket");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
 
@@ -227,6 +226,7 @@ const UpdateResulOrApproveEventMarket = async (request, reply, fastify) => {
   }
 };
 
+
 const marketListcategoryNameByCId = async (request, reply, fastify) => {
   try {
     const result = await marketListcategoryNameByCIdService(request ,fastify);
@@ -236,6 +236,18 @@ const marketListcategoryNameByCId = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+
+
+const getMarketTypeCategory = async (request , reply , fastify)=>{
+  try {
+    const result = await getMarketTypeCategoryService(request,fastify);
+    reply.status(200).send(success(result , 200))
+  }
+  catch(error){
+    errorLogger(fastify , error.message , path + "/getMarketTypeCategory" , request);
+    reply.status(200).send(error(error.message , ERROR_CODES.SERVER_ERROR , 200))
+  }
+}
 
 module.exports = {
     getDetailsByCId,
@@ -262,5 +274,6 @@ module.exports = {
     getSLReportEventMarket,
     getMarketDataByCId,
     UpdateResulOrApproveEventMarket,
-    marketListcategoryNameByCId
+    marketListcategoryNameByCId,
+    getMarketTypeCategory,
 };

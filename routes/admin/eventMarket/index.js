@@ -1,4 +1,5 @@
-const { getDetailsByCId, getAllEventMarket, createEventMarket, deleteEventMarket, activeInactiveMarket, updateAllowMarket, getEventListByCompetitionId, marketListResultFalse, changeResultOfMarket, marketListByCId, updateMarketRate, saveEventMarket ,changeMarketCancel, changeMarketResult, changeMarketClose, suspendMarketByCId, getEventMarketById, getMarketTemplateTypeList, getCommentaryTypeList, setDelayEventMarket, getDSReportEventMarket, getSLReportEventMarket, getMarketDataByCId,UpdateResulOrApproveEventMarket,marketListcategoryNameByCId} = require("../../../controller/users/admin/eventMarket");
+const { getDetailsByCId, getAllEventMarket, createEventMarket, deleteEventMarket, activeInactiveMarket, updateAllowMarket, getEventListByCompetitionId, marketListResultFalse, changeResultOfMarket, marketListByCId, updateMarketRate, saveEventMarket ,changeMarketCancel, changeMarketResult, changeMarketClose, suspendMarketByCId, getEventMarketById, getMarketTemplateTypeList, getCommentaryTypeList, setDelayEventMarket, getDSReportEventMarket, getSLReportEventMarket, getMarketDataByCId,UpdateResulOrApproveEventMarket, getMarketTypeCategory,marketListcategoryNameByCId} = require("../../../controller/users/admin/eventMarket");
+
 const { EventMarket, Commentary } = require("../../../swaggerSchema/groupTags/schema");
 const {
     authorize,
@@ -303,15 +304,28 @@ module.exports = async (fastify, opts) => {
         ],
         handler: (request, reply) => UpdateResulOrApproveEventMarket(request, reply, fastify),
     });
-    fastify.post("/marketListwithCategoryNameByCId",{
-        schema: EventMarket.marketListByCId.schema,
+    fastify.post("/getMarketTypeCategory",{
+        schema : EventMarket.getMarketTypeCategory.schema,
         preHandler: [
             (request, reply) => authorize(request, reply, fastify),
-            (request, reply) => checkPermission(request, reply, fastify, {
+            (request, reply) => checkPermission(request, reply, fastify,{
                 tabName: "Event Markets",
-                mode: "view"
+                mode: "view"            
             })
         ],
-        handler: (request, reply) => marketListcategoryNameByCId(request, reply, fastify)
-    })
+        handler : (request, reply) => getMarketTypeCategory(request, reply, fastify)
+    });
+      
+      fastify.post("/getMarketTypeCategory", {
+        schema : EventMarket.getMarketTypeCategory.schema,
+        preHandler: [
+          (request, reply) => authorize(request, reply, fastify),
+          (request, reply) =>
+            checkPermission(request, reply, fastify, {
+              tabName: "Event Markets",
+              mode: "view",
+            }),
+        ],
+        handler: (request, reply) => marketListcategoryNameByCId(request, reply, fastify),
+    });
 };
