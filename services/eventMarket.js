@@ -93,9 +93,9 @@ const getDetailsByCIdService = async (request, fastify) => {
   //     && item.status !== EventMarketStatus.Close
   //     && item.status !== EventMarketStatus.Settled
   // );
-  let eventMarket;
-  let whereCondition = `tem."wrCommentaryId" = ${commentaryId} AND tem."wrStatus" NOT IN (${EventMarketStatus.Close},${EventMarketStatus.Settled},${EventMarketStatus.Cancel})`;
-
+  let eventMarket,LDOMARKETSIDS;
+  LDOMARKETSIDS = global.tblConfigs.find(config => config.key === "LDOMARKET")?.value ?? "0";
+  let whereCondition = `tem."wrCommentaryId" = ${commentaryId} AND tem."wrStatus" NOT IN (${EventMarketStatus.Close},${EventMarketStatus.Settled},${EventMarketStatus.Cancel}) AND tem."wrMarketTypeCategoryId" NOT IN (${LDOMARKETSIDS})`;
   if (commentary.commentaryStatus != 1) {
     let battingTeam = global.tblCommentaryTeams.find(
       (item) =>
@@ -114,7 +114,7 @@ const getDetailsByCIdService = async (request, fastify) => {
     matchType,
     teamAndPlayers,
     marketTemplate,
-    eventMarket,
+    eventMarket,  
   };
 };
 const getAllEventMarketsService = async (request, fastify) => {
@@ -461,6 +461,7 @@ const updateMarketRateService = async (request, fastify) => {
       is_active:item.isActive,
       is_senddata:item.isSendData,
       data: data.data,
+      market_type_category_id:parseInt(data.marketTypeCategory),
     });
     let index = global.tblEventMarkets.findIndex(
       (e) => e.eventMarketId === item.marketId
