@@ -316,7 +316,7 @@ module.exports = async (fastify, opts) => {
         handler : (request, reply) => getMarketTypeCategory(request, reply, fastify)
     });
       
-      fastify.post("/getMarketTypeCategory", {
+      fastify.post("/marketListcategoryNameByCId", {
         schema : EventMarket.getMarketTypeCategory.schema,
         preHandler: [
           (request, reply) => authorize(request, reply, fastify),
