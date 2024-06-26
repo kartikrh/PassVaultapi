@@ -103,7 +103,7 @@ const getMarketsByCommentaryIdService =async (request , fastify) => {
         throw new Error("Data provider url not found");
     }
 
-    if(!getCommentaries.settledMarket && !getCommentaries.openMarkets){
+    if(!getCommentaries.settledMarkets && !getCommentaries.openMarkets){
         return null;
     }
     return {
