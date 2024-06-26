@@ -470,7 +470,7 @@ const updateMarketRateService = async (request, fastify) => {
       is_active:item.isActive,
       is_senddata:item.isSendData,
       data: data.data,
-      market_type_category_id:parseInt(data.marketTypeCategory),
+      market_type_category_id:parseInt(data.marketTypeCategoryId),
     });
     let index = global.tblEventMarkets.findIndex(
       (e) => e.eventMarketId === item.marketId
