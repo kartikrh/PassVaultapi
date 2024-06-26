@@ -22,6 +22,7 @@ const {
   getMarketDataByCIdQuery,
   UpdateResulOrApproveEventMarketQuery,
   updateComInMarketQuery,
+  getAllMarketTypeCategoryQuery,
 } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
 const {
@@ -991,6 +992,10 @@ const updateComInMarketService = async (data,request, fastify) => {
   }
   return "Event Market updated successfully";
 }
+const getMarketTypeCategoryService = async(request , fastify) =>{
+  let getData = await getAllMarketTypeCategoryQuery(request , fastify);
+  return getData;
+}
 
 module.exports = {
   getDetailsByCIdService,
@@ -1018,5 +1023,6 @@ module.exports = {
   getSLReportEventMarketService,
   getMarketDataByCIdService,
   UpdateResulOrApproveEventMarketService,
-  updateComInMarketService
+  updateComInMarketService,
+  getMarketTypeCategoryService
 };

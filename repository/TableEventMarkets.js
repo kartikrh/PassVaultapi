@@ -1725,6 +1725,38 @@ const updateComInMarketQuery = async (data, request, fastify) => {
     throw new Error(error.message)
   }
 }
+const getAllMarketTypeCategoryQuery = async (request , fastify) =>{
+  try{
+    let query = `
+      SELECT  
+        "wrId" as "id",
+        "wrMarketTypeId" as "marketTypeId",
+        "wrCategoryName" as "categoryName",
+        "wrDisplayOrder" as "displayOrder",
+        "wrIsActive" as "isActive",
+        "wrDisplayName" as "displayName",
+        "wrIsDefault" as "isDefault"
+      FROM "tblMarketTypeCategories"
+    `;
+
+    const result = await fastify.db.query(
+      query , 
+      {
+        type : fastify.db.QueryTypes.SELECT
+      }
+    )
+
+    return result;
+  }catch(error){
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/getAllMarketTypeCategoryQuery",
+      request
+    )
+    throw new Error(error.message)
+  }
+}
 module.exports = {
   getAllEventMarketsQuery,
   createManyEventMarketQuery,
@@ -1757,5 +1789,6 @@ module.exports = {
   updateEventMarketRunnerMaunalQuery,
   UpdateEventMarketByCIdFromSocketQuery,
   UpdateResulOrApproveEventMarketQuery,
-  updateComInMarketQuery
+  updateComInMarketQuery,
+  getAllMarketTypeCategoryQuery
 };
