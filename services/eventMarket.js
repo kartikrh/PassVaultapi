@@ -22,6 +22,7 @@ const {
   getMarketDataByCIdQuery,
   UpdateResulOrApproveEventMarketQuery,
   updateComInMarketQuery,
+  getMarketListWithCategoryNameByCIdQuery,
   getAllMarketTypeCategoryQuery,
 } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
@@ -417,10 +418,18 @@ const marketListByCIdService = async (request, fastify) => {
       teamName: item.teamName,
     };
   });
+  // 
+  let categories = global.tblMarketTypeCategories.filter(
+      (item) => item.marketTypeCategoryId > 0
+  ).map(item => ({
+      marketTypeCategoryId: item.marketTypeCategoryId,
+      categoryName: item.categoryName
+  }));
 
   return {
     marketList,
     teams,
+    categories,
   };
 };
 const updateMarketRateService = async (request, fastify) => {
@@ -991,6 +1000,52 @@ const updateComInMarketService = async (data,request, fastify) => {
     }
   }
   return "Event Market updated successfully";
+};
+
+const marketListcategoryNameByCIdService = async (request, fastify) => {
+  const { commentaryId } = request.body;
+  // validate the commentaryId
+  let commentary = global.tblCommentaries.find(
+    (item) => item.commentaryId === commentaryId
+  );
+  if (!commentary) {
+    throw new Error("Commentary with this id not Found");
+  }
+
+  const marketList = await getMarketListWithCategoryNameByCIdQuery(
+    request.body,
+    request,
+    fastify
+  );
+
+  // get the team and teamName by commentaryId
+  const teams = global.tblCommentaryTeams
+  .filter((item) => item.commentaryId === commentaryId)
+  .reduce((acc, current) => {
+    if (!acc.some(item => item.teamId === current.teamId)) {
+      acc.push(current);
+    }
+    return acc;
+  }, [])
+  .map((item) => {
+    return {
+      teamId: item.teamId,
+      teamName: item.teamName,
+    };
+  });
+  //
+  let categories = global.tblMarketTypeCategories.filter(
+      (item) => item.marketTypeCategoryId > 0
+  ).map(item => ({
+      marketTypeCategoryId: item.marketTypeCategoryId,
+      categoryName: item.categoryName
+  }));
+  return {
+    marketList,
+    teams,
+    categories,
+  };
+};
 }
 const getMarketTypeCategoryService = async(request , fastify) =>{
   let getData = await getAllMarketTypeCategoryQuery(request , fastify);
@@ -1024,5 +1079,6 @@ module.exports = {
   getMarketDataByCIdService,
   UpdateResulOrApproveEventMarketService,
   updateComInMarketService,
-  getMarketTypeCategoryService
+  marketListcategoryNameByCIdService,
+  getMarketTypeCategoryService,
 };
