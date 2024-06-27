@@ -22,6 +22,7 @@ const {
   getMarketDataByCIdQuery,
   UpdateResulOrApproveEventMarketQuery,
   updateComInMarketQuery,
+  getMarketListWithCategoryNameByCIdQuery,
 } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
 const {
@@ -93,9 +94,9 @@ const getDetailsByCIdService = async (request, fastify) => {
   //     && item.status !== EventMarketStatus.Close
   //     && item.status !== EventMarketStatus.Settled
   // );
-  let eventMarket;
-  let whereCondition = `tem."wrCommentaryId" = ${commentaryId} AND tem."wrStatus" NOT IN (${EventMarketStatus.Close},${EventMarketStatus.Settled},${EventMarketStatus.Cancel})`;
-
+  let eventMarket,LDOMARKETSIDS;
+  LDOMARKETSIDS = global.tblConfigs.find(config => config.key === "LDOMARKET")?.value ?? "0";
+  let whereCondition = `tem."wrCommentaryId" = ${commentaryId} AND tem."wrStatus" NOT IN (${EventMarketStatus.Close},${EventMarketStatus.Settled},${EventMarketStatus.Cancel}) AND tem."wrMarketTypeCategoryId" NOT IN (${LDOMARKETSIDS})`;
   if (commentary.commentaryStatus != 1) {
     let battingTeam = global.tblCommentaryTeams.find(
       (item) =>
@@ -114,7 +115,7 @@ const getDetailsByCIdService = async (request, fastify) => {
     matchType,
     teamAndPlayers,
     marketTemplate,
-    eventMarket,
+    eventMarket,  
   };
 };
 const getAllEventMarketsService = async (request, fastify) => {
@@ -416,10 +417,18 @@ const marketListByCIdService = async (request, fastify) => {
       teamName: item.teamName,
     };
   });
+  // 
+  let categories = global.tblMarketTypeCategories.filter(
+      (item) => item.marketTypeCategoryId > 0
+  ).map(item => ({
+      marketTypeCategoryId: item.marketTypeCategoryId,
+      categoryName: item.categoryName
+  }));
 
   return {
     marketList,
     teams,
+    categories,
   };
 };
 const updateMarketRateService = async (request, fastify) => {
@@ -461,6 +470,7 @@ const updateMarketRateService = async (request, fastify) => {
       is_active:item.isActive,
       is_senddata:item.isSendData,
       data: data.data,
+      market_type_category_id:parseInt(data.marketTypeCategoryId),
     });
     let index = global.tblEventMarkets.findIndex(
       (e) => e.eventMarketId === item.marketId
@@ -989,8 +999,52 @@ const updateComInMarketService = async (data,request, fastify) => {
     }
   }
   return "Event Market updated successfully";
-}
+};
 
+const marketListcategoryNameByCIdService = async (request, fastify) => {
+  const { commentaryId } = request.body;
+  // validate the commentaryId
+  let commentary = global.tblCommentaries.find(
+    (item) => item.commentaryId === commentaryId
+  );
+  if (!commentary) {
+    throw new Error("Commentary with this id not Found");
+  }
+
+  const marketList = await getMarketListWithCategoryNameByCIdQuery(
+    request.body,
+    request,
+    fastify
+  );
+
+  // get the team and teamName by commentaryId
+  const teams = global.tblCommentaryTeams
+  .filter((item) => item.commentaryId === commentaryId)
+  .reduce((acc, current) => {
+    if (!acc.some(item => item.teamId === current.teamId)) {
+      acc.push(current);
+    }
+    return acc;
+  }, [])
+  .map((item) => {
+    return {
+      teamId: item.teamId,
+      teamName: item.teamName,
+    };
+  });
+  //
+  let categories = global.tblMarketTypeCategories.filter(
+      (item) => item.marketTypeCategoryId > 0
+  ).map(item => ({
+      marketTypeCategoryId: item.marketTypeCategoryId,
+      categoryName: item.categoryName
+  }));
+  return {
+    marketList,
+    teams,
+    categories,
+  };
+};
 module.exports = {
   getDetailsByCIdService,
   getAllEventMarketsService,
@@ -1017,5 +1071,6 @@ module.exports = {
   getSLReportEventMarketService,
   getMarketDataByCIdService,
   UpdateResulOrApproveEventMarketService,
-  updateComInMarketService
+  updateComInMarketService,
+  marketListcategoryNameByCIdService,
 };
