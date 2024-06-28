@@ -568,19 +568,21 @@ const createCommentaryService = async (request, fastify) => {
     eventRefId : addCommentry.eventRefId,
   },request,fastify);
 
-  let cData = await getMatchDataByCId({
-    commentaryId: addCommentry.commentaryId,
-  }, request, fastify);
-  
-  callClientAPI(
-    {
-      serviceType : ServiceType.clientAPI,
-      moduleType : APIEndpointModuleType.commentaryUpdate,
-      data : cData
-    },
-    request,
-    fastify
-  );
+  if(addCommentry.isActive){
+    let cData = await getMatchDataByCId({
+      commentaryId: addCommentry.commentaryId,
+    }, request, fastify);
+    
+    callClientAPI(
+      {
+        serviceType : ServiceType.clientAPI,
+        moduleType : APIEndpointModuleType.commentaryUpdate,
+        data : cData
+      },
+      request,
+      fastify
+    );
+  }
 
   return addCommentry;
 };
@@ -1050,20 +1052,21 @@ const cloneCommentaryService = async (request, fastify) => {
   //     request
   //   );
   // }
-  let cData = await getMatchDataByCId({
-    commentaryId: newCommentary.commentaryId,
-  }, request, fastify);
-
-  callClientAPI(
-    {
-      serviceType : ServiceType.clientAPI,
-      moduleType : APIEndpointModuleType.commentaryUpdate,
-      data : cData
-    },
-    request,
-    fastify
-  );
-
+  if(newCommentary.isActive){
+    let cData = await getMatchDataByCId({
+      commentaryId: newCommentary.commentaryId,
+    }, request, fastify);
+  
+    callClientAPI(
+      {
+        serviceType : ServiceType.clientAPI,
+        moduleType : APIEndpointModuleType.commentaryUpdate,
+        data : cData
+      },
+      request,
+      fastify
+    );
+  }
   return newCommentary;
 };
 
@@ -1102,12 +1105,25 @@ const deleteCommentaryService = async (request, fastify) => {
   const { commentaryId } = request.body;
 
   for (const commentary of commentaryId) {
+    let eventId = global.tblCommentaries.find(
+      (item) => item.commentaryId === commentary
+    );
+    eventIdArr.push(eventId.eventRefId);
     await deleteCommentryQuery(commentary, request, fastify);
   }
 
   global.tblCommentaries = global.tblCommentaries.filter(
     (item) => !commentaryId.includes(item.commentaryId)
   );
+
+  callClientAPI({
+    serviceType : ServiceType.clientAPI,
+    moduleType : APIEndpointModuleType.commentaryUpdate,
+    data : {
+      type : "deleteEvent",
+      eventId : eventIdArr
+    }
+  },request ,fastify)
 
   return `Commentaries deleted successfully`;
 };
@@ -6229,6 +6245,21 @@ const changeShowClientService = async (request, fastify) => {
   await updateShowClientQuery(request.body, request, fastify);
 
   global.tblCommentaries[commentary].isClientShow = request.body.isClientShow;
+  if(global.tblCommentaries[commentary].isActive){
+    const cData = await getMatchDataByCId({
+      commentaryId: request.body.commentaryId,
+    }, request, fastify);
+
+    callClientAPI(
+      {
+        serviceType : ServiceType.clientAPI,
+        moduleType : APIEndpointModuleType.commentaryUpdate,
+        data : cData
+      },
+      request,
+      fastify
+    )
+  }
 
   return "Commentary Updated successfully";
 };
@@ -6708,6 +6739,22 @@ const activeInactiveCommentaryService = async (request, fastify) => {
 
   global.tblCommentaries[commentary].isActive = request.body.isActive;
 
+  let cData = await getMatchDataByCId({
+    commentaryId: request.body.commentaryId,
+  }, request, fastify);
+  callClientAPI(
+    {
+      serviceType : ServiceType.clientAPI,
+      moduleType : APIEndpointModuleType.commentaryUpdate,
+      data : {
+        ...cData,
+        isActive : request.body.isActive,
+        type : "activeInactive"
+      }
+    },
+    request,
+    fastify
+  )
   return "Commentary Updated successfully";
 };
 const closeCommentaryService = async (request, fastify) => {
