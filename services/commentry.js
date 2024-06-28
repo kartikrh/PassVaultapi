@@ -1103,6 +1103,7 @@ const loadMultiCommentaryService = async (request, fastify) => {
 
 const deleteCommentaryService = async (request, fastify) => {
   const { commentaryId } = request.body;
+  let eventIdArr = [];
 
   for (const commentary of commentaryId) {
     let eventId = global.tblCommentaries.find(
