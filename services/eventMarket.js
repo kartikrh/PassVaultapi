@@ -172,9 +172,9 @@ const getAllEventMarketsService = async (request, fastify) => {
   // if (status !== undefined) {
   //   eventMarket = eventMarket.filter((item) => item.status === status);
   // }
-  if (isActive !== undefined) {
-    eventMarket = eventMarket.filter((item) => item.isActive === isActive);
-  }
+  // if (isActive !== undefined) {
+  //   eventMarket = eventMarket.filter((item) => item.isActive === isActive);
+  // }
   eventMarket = eventMarket.sort((a, b) => b.eventMarketId - a.eventMarketId);
   return eventMarket;
 };
@@ -353,9 +353,9 @@ const marketListResultFalseService = async (request, fastify) => {
   if (status !== undefined) {
     eventMarket = eventMarket.filter((item) => item.status === status);
   }
-  if (isActive !== undefined) {
-    eventMarket = eventMarket.filter((item) => item.isActive === isActive);
-  }
+  // if (isActive !== undefined) {
+  //   eventMarket = eventMarket.filter((item) => item.isActive === isActive);
+  // }
 
   return eventMarket;
 };
