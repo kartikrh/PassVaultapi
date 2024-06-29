@@ -109,13 +109,20 @@ const getDetailsByCIdService = async (request, fastify) => {
   } else {
     eventMarket = await getAllEventMarketsQuery(fastify, whereCondition);
   }
-
+  //
+  let categories = global.tblMarketTypeCategories.filter(
+    (item) => item.marketTypeCategoryId > 0
+  ).map(item => ({
+      marketTypeCategoryId: item.marketTypeCategoryId,
+      categoryName: item.categoryName
+  }));
   return {
     commentary,
     matchType,
     teamAndPlayers,
     marketTemplate,
-    eventMarket,  
+    eventMarket,
+    categories,
   };
 };
 const getAllEventMarketsService = async (request, fastify) => {
