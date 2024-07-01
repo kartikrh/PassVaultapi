@@ -114,7 +114,7 @@ async function startSignalR(fastify) {
                       const _selectionidData = global.tblEventMarkets.find(
                         (e) => e.selectionId == items.selectionId
                       );
-                      if (_selectionidData) {
+                      if (_selectionidData && _selectionidData.runner !== 'The Draw') {
                         try {
                           let _data2 = await updateEventMarketRunnerMaunalQuery(items, _fastify);
                           if(_selectionidData.commentaryId != 0){
