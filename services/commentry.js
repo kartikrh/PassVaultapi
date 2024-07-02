@@ -3658,6 +3658,7 @@ const commentaryDetailsByEventIdService = async (
     t2bg: "",
     t2co: "",
     utc: "",
+    loc : result.location,
   };
   let eid;
   let til;

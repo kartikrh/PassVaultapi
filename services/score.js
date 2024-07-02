@@ -72,6 +72,7 @@ const getAllCommentariesDataService = (request) => {
         commentaries[c.eventRefId] = {
             commentaryId : c.commentaryId,
             eventrefId : c.eventRefId,
+            commentaryStatus : c.commentaryStatus,
             commentaryDetails: c,
             commentaryTeams: teams,
             commentaryPlayers: players,
