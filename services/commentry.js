@@ -74,7 +74,7 @@ const {
 const { getAllPlayersByTeamIdQuery } = require("../repository/TableTeams");
 const { handleMarketCloseService, updateComInMarketService } = require("./eventMarket");
 const { createMarketOddsBallByBallBYID, deleteMarketOddsBallByBall } = require("../repository/TableMarketOddsBallByBall");
-const { getEventMarketRatioQuery, closeEventMarketByCIdQuery } = require("../repository/TableEventMarkets");
+const { getEventMarketRatioQuery, closeEventMarketByCIdQuery, getMarketsByCategoryQuery } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
 
 
@@ -3194,6 +3194,25 @@ const updateCommentaryStatusService = async (request, fastify) => {
         match_type_id: global.tblCommentaries[index].matchTypeId,
       },
       "/api/v1/updatemarketstatus",
+      fastify,
+      request
+    );
+    let getCategory = global.tblMarketTypeCategories.filter((item)=> 
+      item.categoryName.toLowerCase() == 'player' || item.categoryName.toLowerCase() == 'wicket'
+    ).map((c) => c.marketTypeCategoryId);
+    // getmarket id's from tblEventMarkets
+    let market = await getMarketsByCategoryQuery({
+      categoryId : getCategory,
+      commentaryId : commentaryId
+    },request,fastify)
+
+    callPredictorMarket(
+      {
+        commentary_id: commentaryId,
+        status: EventMarketStatus.Suspend,
+        event_market_id: market.map((m) => m.eventMarketId),
+      },
+      "/api/v1/updateplayerstatus",
       fastify,
       request
     );
