@@ -17,6 +17,7 @@ const {
   signOutUser,
   getOriginalIdFromEncryptedId,
   updateUserPasswordQuery,
+  loginRegistrationClient,
 } = require("../repository/TableUser");
 const {
   deviceInfo,
@@ -478,6 +479,28 @@ const changeUserPasswordByUSerIDService = async (request, fastify) => {
 
   return "Password changed successfully";
 };
+
+async function loginRegistrationClientService({ body }, fastify) {
+  try {
+
+    if(body.password){
+      const hashedPassword = encrypt(body.password);
+    
+      body.password = hashedPassword;
+    }
+  
+    const results = await loginRegistrationClient(body, fastify);
+  
+    const payload = { clientId: results.wrClientID };
+    const token = generateToken(payload);
+  
+    return { token };
+        
+  } catch (error) {
+    return null;
+  }
+}
+
 module.exports = {
   signUpUserService,
   signInUserServices,
@@ -493,4 +516,5 @@ module.exports = {
   deleteUserService,
   changeUserPasswordService,
   changeUserPasswordByUSerIDService,
+  loginRegistrationClientService,
 };

@@ -134,6 +134,25 @@ const Auth = {
       },
     },
   },
+  clientLogin: {
+    schema: {
+      tags: ["Auth"],
+      description: "clinetLogin",
+      body: {
+        type: "object",
+        properties: {
+          userName: { type: "string" },
+          password: { type: "string" },
+          deviceInfo: { type: "string" },
+          token: { type: "string" },
+          googleID: { type: "string" },
+          mobileNo: { type: "string" },
+          ipAddress: { type: "string" },
+        },
+        required: ["userName"],
+      },
+    },
+  },
 };
 
 const Tabs = {
