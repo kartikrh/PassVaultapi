@@ -374,6 +374,100 @@ const updateUserPasswordQuery = async (body, fastify, request) => {
   }
 };
 
+async function loginRegistrationClient(body, fastify) {
+  try {
+    const { userName, password, deviceInfo, token, googleID, mobileNo, ipAddress } = body;
+
+    let data;
+
+    if (!googleID && !token) {
+      // Check if user exists by userName (wrEmailID)
+      data = await fastify.db.query(
+        `SELECT "wrClientID", "wrGoogleID", "wrPassword", "wrUserName", "wrIsAllowMultiLogin", "wrIpAddress"
+         FROM "tblClient"
+         WHERE "wrEmailID" = $1 AND "wrIsDelete" = false;`,
+        {
+          type: QueryTypes.SELECT,
+          bind: [userName],
+        }
+      );
+
+      if (data.length === 0) {
+        // Registering via registration form
+        const registrationData = await fastify.db.query(
+          `INSERT INTO "tblClient" (
+            "wrClientName", "wrUserName", "wrPassword", "wrIsAllowMultiLogin", "wrCreatedDate", 
+            "wrEmailID", "wrMobileNo", "wrIpAddress", "wrIsActive", "wrIsEmailVerified","wrIsDelete"
+          ) VALUES (
+            $1, $2, $3, $4, now(), $5, $6, $7, true, false,false
+          ) RETURNING "wrClientID";`,
+          {
+            type: QueryTypes.INSERT,
+            bind: [userName, userName, password, true, userName, mobileNo, ipAddress],
+          }
+        );
+        return registrationData[0][0];
+      }
+    } else {
+      // Handle Google login or existing user login
+      data = await fastify.db.query(
+        `WITH user_data AS (
+          SELECT
+            "wrClientID", "wrGoogleID", "wrPassword", "wrUserName", "wrIsAllowMultiLogin", "wrIpAddress"
+          FROM "tblClient"
+          WHERE ("wrUserName" = $1 AND "wrPassword" = $2 AND "wrIsDelete" = false)
+             OR ("wrGoogleID" = $5 AND "wrIsDelete" = false)
+        ),
+        insert_data AS (
+          INSERT INTO "tblUserLoginInfos" ("wrClientID", "wrInfo", "wrIsLogin", "wrToken", "wrCreatedDate")
+          SELECT
+            ud."wrClientID",
+            $3, 
+            true,
+            $4,
+            now()
+          FROM user_data ud
+          WHERE EXISTS (SELECT 1 FROM user_data)
+        ),
+        insert_invalid_data AS (
+          INSERT INTO "tblUserLoginInfos" ("wrClientID", "wrInfo", "wrIsLogin", "wrToken", "wrCreatedDate") 
+          SELECT 
+            null, $3, false, null, now() 
+          WHERE NOT EXISTS (SELECT 1 FROM user_data)
+        ),
+        update_loginInfo AS (
+          UPDATE "tblUserLoginInfos" SET "wrIsLogin" = false
+          WHERE "wrClientID" IN (
+            SELECT "wrClientID" FROM "tblClient" 
+            WHERE "wrClientID" IN (SELECT "wrClientID" FROM user_data) AND "wrIsAllowMultiLogin" = false
+          )
+        ),
+        insert_google_user AS (
+          INSERT INTO "tblClient" ("wrGoogleID", "wrIsAllowMultiLogin", "wrCreatedDate", "wrEmailID", "wrIsActive", "wrIsEmailVerified","wrIsDelete")
+          SELECT
+            $5, true, now(), $1, true, true ,false
+          WHERE NOT EXISTS (SELECT 1 FROM user_data)
+          RETURNING "wrClientID"
+        )
+        SELECT * FROM user_data
+        UNION ALL
+        SELECT * FROM insert_google_user;
+        `,
+        {
+          type: QueryTypes.SELECT,
+          bind: [userName, password, deviceInfo, token, googleID],
+        }
+      );
+    }
+
+    return data[0];
+
+  } catch (error) {
+    return error.message;
+  }
+}
+
+
 module.exports = {
   signInUser,
   signUpUser,
@@ -388,4 +482,5 @@ module.exports = {
   deleteUserQuery,
   getOriginalIdFromEncryptedId,
   updateUserPasswordQuery,
+  loginRegistrationClient,
 };
