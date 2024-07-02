@@ -11,6 +11,7 @@ const {
   ckImageUpload,
   generalImageUpload,
   loadClientDataInMemory,
+  loginRegistrationClient,
 } = require("../controller/users/index");
 const { Auth } = require("../swaggerSchema/groupTags/schema");
 const { authorize } = require("../controller/middleware/index");
@@ -80,5 +81,10 @@ module.exports = async function (fastify, opts) {
           reply.send({ status: "SignalR started" });
         }
       }
+    });
+
+    fastify.post("/signupClient", {
+      schema: Auth.clientLogin.schema,
+      handler: (request, reply) => loginRegistrationClient(request, reply, fastify),
     });
 };
