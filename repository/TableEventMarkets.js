@@ -1814,7 +1814,33 @@ ORDER BY "categoryName", "marketId";
     throw new Error(error.message);
   }
 };
+const getMarketsByCategoryQuery = async (data,request, fastify, )=>{
+  try{
+    let query = `
+      SELECT 
+        "wrID" as "eventMarketId"
+      FROM "tblEventMarkets"
+      WHERE "wrCommentaryId" = $1
+      AND "wrMarketTypeCategoryId" = ANY($2)
+    `;
 
+    let result = await fastify.db.query(
+      query ,
+      {
+        bind: [data.commentaryId, data.categoryId],	
+      }
+    )
+
+    return result[0];
+  }catch(error){
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/getMarketsByCategoryQuery",
+      request
+    )
+  }
+}
 module.exports = {
   getAllEventMarketsQuery,
   createManyEventMarketQuery,
@@ -1848,5 +1874,6 @@ module.exports = {
   UpdateEventMarketByCIdFromSocketQuery,
   UpdateResulOrApproveEventMarketQuery,
   updateComInMarketQuery,
-  getMarketListWithCategoryNameByCIdQuery
+  getMarketListWithCategoryNameByCIdQuery,
+  getMarketsByCategoryQuery
 };
