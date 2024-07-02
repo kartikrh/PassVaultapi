@@ -84,17 +84,18 @@ const allCommentaryService = async (request, fastify) => {
   const { commentaryStatus, eventTypeId, competitionId, startDate, endDate } =
     request.body;
   let result;
-  if (commentaryStatus === undefined || commentaryStatus === 0) {
+  if (commentaryStatus === undefined) {
     result = global.tblCommentaries.filter(
       (item) => item.commentaryStatus !== 4
     );
-  } else if(commentaryStatus == null){
-    result = global.tblCommentaries;
   }
-  else {
+  if(commentaryStatus && commentaryStatus != 0) {
     result = global.tblCommentaries.filter(
       (item) => item.commentaryStatus === commentaryStatus
     );
+  }
+  if(commentaryStatus == 0){
+    result = global.tblCommentaries;
   }
   // if eventTypeId is provided then filter commentary by eventTypeId
   if (eventTypeId) {
