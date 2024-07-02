@@ -88,7 +88,10 @@ const allCommentaryService = async (request, fastify) => {
     result = global.tblCommentaries.filter(
       (item) => item.commentaryStatus !== 4
     );
-  } else {
+  } else if(commentaryStatus == null){
+    result = global.tblCommentaries;
+  }
+  else {
     result = global.tblCommentaries.filter(
       (item) => item.commentaryStatus === commentaryStatus
     );
