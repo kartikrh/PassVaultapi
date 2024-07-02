@@ -136,10 +136,11 @@ const getAllEventMarketsService = async (request, fastify) => {
     endDate,
   } = request.body;
   let createWhereStatus = `tem."wrStatus" NOT IN (${EventMarketStatus.Close},${EventMarketStatus.Settled},${EventMarketStatus.Cancel})`;
-  if (status !== undefined && status != null) {
+  
+  if (status !== undefined && status != 0) {
     createWhereStatus = `tem."wrStatus" = ${status}`;
   }
-  if(status == null){
+  if(status == 0){
     createWhereStatus = null;
   }
   let eventMarket = await getAllEventMarketsQuery(fastify, createWhereStatus);
