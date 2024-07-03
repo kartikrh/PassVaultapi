@@ -14,6 +14,7 @@ const {
   getUserDecryptedPassword,
   changeUserPasswordByUSerIDService,
   getAllUsersWithCurrentService,
+  loginRegistrationClientService,
 } = require("../../services/user");
 const { errorLogger } = require("../../utilities/logger");
 const fetchAllDataFromDb = require("../../utilities/fetchAllData");
@@ -235,7 +236,15 @@ const changeUserPassword = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
-
+async function loginRegistrationClient(request, reply, fastify) {
+  try {
+    const result = await loginRegistrationClientService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/loginRegistrationClient", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+}
 module.exports = {
   signUpUser,
   signInUser,
@@ -254,5 +263,6 @@ module.exports = {
   updateUserPassword,
   changeUserPassword,
   generalImageUpload,
-  loadClientDataInMemory
+  loadClientDataInMemory,
+  loginRegistrationClient
 };

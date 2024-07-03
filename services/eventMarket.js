@@ -86,7 +86,7 @@ const getDetailsByCIdService = async (request, fastify) => {
 
   // get marketTemplate where matchType is commentary.matchTypeId
   const marketTemplate = global.tblMarketTemplate.filter(
-    (item) => item.matchTypeID === commentary.matchTypeId
+     (item) => item.matchTypeID === commentary.matchTypeId
   );
   // let eventMarket = global.tblEventMarkets.filter(
   //     (item) => item.commentaryId === commentaryId
@@ -109,13 +109,20 @@ const getDetailsByCIdService = async (request, fastify) => {
   } else {
     eventMarket = await getAllEventMarketsQuery(fastify, whereCondition);
   }
-
+  //
+  let categories = global.tblMarketTypeCategories.filter(
+    (item) => item.marketTypeCategoryId > 0
+  ).map(item => ({
+      marketTypeCategoryId: item.marketTypeCategoryId,
+      categoryName: item.categoryName
+  }));
   return {
     commentary,
     matchType,
     teamAndPlayers,
     marketTemplate,
-    eventMarket,  
+    eventMarket,
+    categories,
   };
 };
 const getAllEventMarketsService = async (request, fastify) => {
@@ -129,8 +136,12 @@ const getAllEventMarketsService = async (request, fastify) => {
     endDate,
   } = request.body;
   let createWhereStatus = `tem."wrStatus" NOT IN (${EventMarketStatus.Close},${EventMarketStatus.Settled},${EventMarketStatus.Cancel})`;
-  if (status !== undefined) {
+  
+  if (status !== undefined && status != 0) {
     createWhereStatus = `tem."wrStatus" = ${status}`;
+  }
+  if(status == 0){
+    createWhereStatus = null;
   }
   let eventMarket = await getAllEventMarketsQuery(fastify, createWhereStatus);
   if (eventTypeId) {
@@ -172,9 +183,9 @@ const getAllEventMarketsService = async (request, fastify) => {
   // if (status !== undefined) {
   //   eventMarket = eventMarket.filter((item) => item.status === status);
   // }
-  if (isActive !== undefined) {
-    eventMarket = eventMarket.filter((item) => item.isActive === isActive);
-  }
+  // if (isActive !== undefined) {
+  //   eventMarket = eventMarket.filter((item) => item.isActive === isActive);
+  // }
   eventMarket = eventMarket.sort((a, b) => b.eventMarketId - a.eventMarketId);
   return eventMarket;
 };
@@ -353,9 +364,9 @@ const marketListResultFalseService = async (request, fastify) => {
   if (status !== undefined) {
     eventMarket = eventMarket.filter((item) => item.status === status);
   }
-  if (isActive !== undefined) {
-    eventMarket = eventMarket.filter((item) => item.isActive === isActive);
-  }
+  // if (isActive !== undefined) {
+  //   eventMarket = eventMarket.filter((item) => item.isActive === isActive);
+  // }
 
   return eventMarket;
 };

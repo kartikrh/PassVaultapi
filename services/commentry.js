@@ -74,7 +74,7 @@ const {
 const { getAllPlayersByTeamIdQuery } = require("../repository/TableTeams");
 const { handleMarketCloseService, updateComInMarketService } = require("./eventMarket");
 const { createMarketOddsBallByBallBYID, deleteMarketOddsBallByBall } = require("../repository/TableMarketOddsBallByBall");
-const { getEventMarketRatioQuery, closeEventMarketByCIdQuery } = require("../repository/TableEventMarkets");
+const { getEventMarketRatioQuery, closeEventMarketByCIdQuery, getMarketsByCategoryQuery } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
 
 
@@ -84,14 +84,18 @@ const allCommentaryService = async (request, fastify) => {
   const { commentaryStatus, eventTypeId, competitionId, startDate, endDate } =
     request.body;
   let result;
-  if (commentaryStatus === undefined || commentaryStatus === 0) {
+  if (commentaryStatus === undefined) {
     result = global.tblCommentaries.filter(
       (item) => item.commentaryStatus !== 4
     );
-  } else {
+  }
+  if(commentaryStatus && commentaryStatus != 0) {
     result = global.tblCommentaries.filter(
       (item) => item.commentaryStatus === commentaryStatus
     );
+  }
+  if(commentaryStatus == 0){
+    result = global.tblCommentaries;
   }
   // if eventTypeId is provided then filter commentary by eventTypeId
   if (eventTypeId) {
@@ -568,19 +572,21 @@ const createCommentaryService = async (request, fastify) => {
     eventRefId : addCommentry.eventRefId,
   },request,fastify);
 
-  let cData = await getMatchDataByCId({
-    commentaryId: addCommentry.commentaryId,
-  }, request, fastify);
-  
-  callClientAPI(
-    {
-      serviceType : ServiceType.clientAPI,
-      moduleType : APIEndpointModuleType.commentaryUpdate,
-      data : cData
-    },
-    request,
-    fastify
-  );
+  if(addCommentry.isActive){
+    let cData = await getMatchDataByCId({
+      commentaryId: addCommentry.commentaryId,
+    }, request, fastify);
+    
+    callClientAPI(
+      {
+        serviceType : ServiceType.clientAPI,
+        moduleType : APIEndpointModuleType.commentaryUpdate,
+        data : cData
+      },
+      request,
+      fastify
+    );
+  }
 
   return addCommentry;
 };
@@ -1050,20 +1056,21 @@ const cloneCommentaryService = async (request, fastify) => {
   //     request
   //   );
   // }
-  let cData = await getMatchDataByCId({
-    commentaryId: newCommentary.commentaryId,
-  }, request, fastify);
-
-  callClientAPI(
-    {
-      serviceType : ServiceType.clientAPI,
-      moduleType : APIEndpointModuleType.commentaryUpdate,
-      data : cData
-    },
-    request,
-    fastify
-  );
-
+  if(newCommentary.isActive){
+    let cData = await getMatchDataByCId({
+      commentaryId: newCommentary.commentaryId,
+    }, request, fastify);
+  
+    callClientAPI(
+      {
+        serviceType : ServiceType.clientAPI,
+        moduleType : APIEndpointModuleType.commentaryUpdate,
+        data : cData
+      },
+      request,
+      fastify
+    );
+  }
   return newCommentary;
 };
 
@@ -1100,14 +1107,28 @@ const loadMultiCommentaryService = async (request, fastify) => {
 
 const deleteCommentaryService = async (request, fastify) => {
   const { commentaryId } = request.body;
+  let eventIdArr = [];
 
   for (const commentary of commentaryId) {
+    let eventId = global.tblCommentaries.find(
+      (item) => item.commentaryId === commentary
+    );
+    eventIdArr.push(eventId.eventRefId);
     await deleteCommentryQuery(commentary, request, fastify);
   }
 
   global.tblCommentaries = global.tblCommentaries.filter(
     (item) => !commentaryId.includes(item.commentaryId)
   );
+
+  callClientAPI({
+    serviceType : ServiceType.clientAPI,
+    moduleType : APIEndpointModuleType.commentaryUpdate,
+    data : {
+      type : "deleteEvent",
+      eventId : eventIdArr
+    }
+  },request ,fastify)
 
   return `Commentaries deleted successfully`;
 };
@@ -3180,6 +3201,25 @@ const updateCommentaryStatusService = async (request, fastify) => {
       fastify,
       request
     );
+    let getCategory = global.tblMarketTypeCategories.filter((item)=> 
+      item.categoryName.toLowerCase() == 'player' || item.categoryName.toLowerCase() == 'wicket'
+    ).map((c) => c.marketTypeCategoryId);
+    // getmarket id's from tblEventMarkets
+    let market = await getMarketsByCategoryQuery({
+      categoryId : getCategory,
+      commentaryId : commentaryId
+    },request,fastify)
+
+    callPredictorMarket(
+      {
+        commentary_id: commentaryId,
+        status: EventMarketStatus.Suspend,
+        event_market_id: market.map((m) => m.eventMarketId),
+      },
+      "/api/v1/updateplayerstatus",
+      fastify,
+      request
+    );
   }
 
   // Prepare the commentary details for update
@@ -3641,6 +3681,7 @@ const commentaryDetailsByEventIdService = async (
     t2bg: "",
     t2co: "",
     utc: "",
+    loc : result.location,
   };
   let eid;
   let til;
@@ -6229,6 +6270,21 @@ const changeShowClientService = async (request, fastify) => {
   await updateShowClientQuery(request.body, request, fastify);
 
   global.tblCommentaries[commentary].isClientShow = request.body.isClientShow;
+  if(global.tblCommentaries[commentary].isActive){
+    const cData = await getMatchDataByCId({
+      commentaryId: request.body.commentaryId,
+    }, request, fastify);
+
+    callClientAPI(
+      {
+        serviceType : ServiceType.clientAPI,
+        moduleType : APIEndpointModuleType.commentaryUpdate,
+        data : cData
+      },
+      request,
+      fastify
+    )
+  }
 
   return "Commentary Updated successfully";
 };
@@ -6708,6 +6764,22 @@ const activeInactiveCommentaryService = async (request, fastify) => {
 
   global.tblCommentaries[commentary].isActive = request.body.isActive;
 
+  let cData = await getMatchDataByCId({
+    commentaryId: request.body.commentaryId,
+  }, request, fastify);
+  callClientAPI(
+    {
+      serviceType : ServiceType.clientAPI,
+      moduleType : APIEndpointModuleType.commentaryUpdate,
+      data : {
+        ...cData,
+        isActive : request.body.isActive,
+        type : "activeInactive"
+      }
+    },
+    request,
+    fastify
+  )
   return "Commentary Updated successfully";
 };
 const closeCommentaryService = async (request, fastify) => {
