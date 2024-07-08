@@ -11,7 +11,9 @@ const {
   ckImageUpload,
   generalImageUpload,
   loadClientDataInMemory,
-  loginRegistrationClient,
+  registrationClient,
+  loginClient,
+  //loginRegistrationClient,
 } = require("../controller/users/index");
 const { Auth } = require("../swaggerSchema/groupTags/schema");
 const { authorize } = require("../controller/middleware/index");
@@ -70,21 +72,28 @@ module.exports = async function (fastify, opts) {
     preHandler: [(request, reply) => authorize(request, reply, fastify)],
     handler: (request, reply) => generalImageUpload(request, reply, fastify),
   });
-    // Single API to start and stop SignalR based on its current state
-    fastify.post("/signalr/toggle", {
-      handler: async (request, reply) => {
-        if (isSignalRStarted(fastify)) {
-          await stopSignalR(fastify);
-          reply.send({ status: "SignalR stopped" });
-        } else {
-          await startSignalR(fastify);
-          reply.send({ status: "SignalR started" });
-        }
+  // Single API to start and stop SignalR based on its current state
+  fastify.post("/signalr/toggle", {
+    handler: async (request, reply) => {
+      if (isSignalRStarted(fastify)) {
+        await stopSignalR(fastify);
+        reply.send({ status: "SignalR stopped" });
+      } else {
+        await startSignalR(fastify);
+        reply.send({ status: "SignalR started" });
       }
-    });
-
-    fastify.post("/signupClient", {
-      schema: Auth.clientLogin.schema,
-      handler: (request, reply) => loginRegistrationClient(request, reply, fastify),
-    });
+    }
+  });
+  // fastify.post("/signupClient", {
+  //   schema: Auth.clientLogin.schema,
+  //   handler: (request, reply) => loginRegistrationClient(request, reply, fastify),
+  // });
+  fastify.post("/signupClient", {
+    schema: Auth.clientregistration.schema,
+    handler: (request, reply) => registrationClient(request, reply, fastify),
+  });
+  fastify.post("/signinClient", {
+    schema: Auth.clientLogin.schema,
+    handler: (request, reply) => loginClient(request, reply, fastify),
+  });
 };
