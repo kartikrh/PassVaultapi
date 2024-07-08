@@ -18,6 +18,8 @@ const {
   getOriginalIdFromEncryptedId,
   updateUserPasswordQuery,
   loginRegistrationClient,
+  registerClient,
+  loginClient,
 } = require("../repository/TableUser");
 const {
   deviceInfo,
@@ -480,22 +482,79 @@ const changeUserPasswordByUSerIDService = async (request, fastify) => {
   return "Password changed successfully";
 };
 
-async function loginRegistrationClientService({ body }, fastify) {
+// async function loginRegistrationClientService({ body }, fastify) {
+//   try {
+
+//     if(body.password){
+//       const hashedPassword = encrypt(body.password);
+    
+//       body.password = hashedPassword;
+//     }
+  
+//     const results = await loginRegistrationClient(body, fastify);
+  
+//     const payload = { clientId: results.wrClientID };
+//     const token = generateToken(payload);
+  
+//     return { token };
+        
+//   } catch (error) {
+//     return null;
+//   }
+// }
+
+async function loginClientService({ body }, fastify) {
   try {
 
-    if(body.password){
-      const hashedPassword = encrypt(body.password);
-    
-      body.password = hashedPassword;
+    let results;
+    if (body.googleID || body.token) {
+        // Google Login
+        results = await loginClient(body, fastify);
+    } else {
+      // Normal login or registration
+      if (body.password) {
+        const hashedPassword = encrypt(body.password);
+        body.password = hashedPassword;
+        results = await loginClient(body, fastify);
+      }
     }
-  
-    const results = await loginRegistrationClient(body, fastify);
-  
+
+    if (!results || results === "User not found") {
+      return { error: results };
+    }
+
     const payload = { clientId: results.wrClientID };
     const token = generateToken(payload);
-  
+
     return { token };
-        
+
+  } catch (error) {
+    return error;
+  }
+}
+
+async function registrationClientService({ body }, fastify) {
+  try {
+    if (body.password) {
+      const hashedPassword = encrypt(body.password);
+      body.password = hashedPassword;
+    }
+
+    let results;
+    results = await registerClient(body, fastify);
+
+    if (results === "Username and Email is already exists") {
+      return { error: results };
+    }
+    if(results.wrClientID){
+    const payload = { clientId: results.wrClientID };
+    const token = generateToken(payload);
+    return { token };
+    }
+    else{
+      return { error: results };
+    }
+
   } catch (error) {
     return null;
   }
@@ -516,5 +575,7 @@ module.exports = {
   deleteUserService,
   changeUserPasswordService,
   changeUserPasswordByUSerIDService,
-  loginRegistrationClientService,
+  //loginRegistrationClientService,
+  loginClientService,
+  registrationClientService,
 };
