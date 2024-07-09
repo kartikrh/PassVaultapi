@@ -2243,6 +2243,7 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         winnerId: commentaryDetails.winnerId,
         winnerName: commentaryDetails.winnerName,
         result: commentaryDetails.result || "",
+        currentInnings: commentaryDetails.currentInnings,
       };
       response.commentaryDetails = {
         ...global.tblCommentaries[commentaryIndex],
@@ -2257,6 +2258,7 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         winnerId: commentaryDetails.winnerId,
         winnerName: commentaryDetails.winnerName,
         result: commentaryDetails.result || "",
+        currentInnings: commentaryDetails.currentInnings
       };
       if (
         previousCommentaryStatus != statusToUpdate &&
