@@ -32,7 +32,7 @@ async function startSignalR(fastify) {
           // Function to check and invoke ConnectMarketRate if new IDs are added
           const checkAndUpdateMarketRate = async (_fastify) => {
             let _MarketsIds = global.tblEventMarkets.filter(
-              (item) => item.rateSource === EventMarketRateSource.Manual && item.status > EventMarketStatus.NotOpen && item.status < EventMarketStatus.Close
+              (item) => item.rateSource === EventMarketRateSource.Manual && item.status != EventMarketStatus.NotOpen && item.status != EventMarketStatus.Close
             );
           
             let _newIDs = [];
