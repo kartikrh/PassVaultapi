@@ -515,6 +515,7 @@ async function loginClientService({ body }, fastify) {
       if (body.password) {
         const hashedPassword = encrypt(body.password);
         body.password = hashedPassword;
+        body.token = uuidv4();
         results = await loginClient(body, fastify);
       }
     }
@@ -526,7 +527,7 @@ async function loginClientService({ body }, fastify) {
     const payload = { clientId: results.wrClientID };
     const token = generateToken(payload);
 
-    return { token };
+    return { token , details: results};
 
   } catch (error) {
     return error;
@@ -549,7 +550,7 @@ async function registrationClientService({ body }, fastify) {
     if(results.wrClientID){
     const payload = { clientId: results.wrClientID };
     const token = generateToken(payload);
-    return { token };
+    return { token, details: results };
     }
     else{
       return { error: results };
