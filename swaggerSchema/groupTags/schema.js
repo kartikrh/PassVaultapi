@@ -4469,6 +4469,62 @@ const Api = {
     },
   },
 };
+
+const Devices = {
+  getById: {
+    schema: {
+      tags: ["Devices"],
+      description: "get Config by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          deviceId: { type: "integer" },
+        },
+        required: ["deviceId"],
+      },
+    },
+  },
+  save: {
+    schema: {
+      tags: ["Devices"],
+      description: "save Devices",
+      security: [{ bearerAuth: [] }],
+
+      body: {
+        type: "object",
+        properties: {
+          deviceId: { type: "string" },
+          name: { type: "string" },
+          pushEndpoint: { type: "string" },
+          pushP256DH: { type: "string" },
+          pushAuth: { type: "string" },
+          userId: { type: "integer" },
+          userType: { type: "integer" },
+        },
+        required: ["name", "pushEndpoint", "pushP256DH","pushAuth"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["Devices"],
+      description: "delete Devices",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          configId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["deviceId"],
+      },
+    },
+  },
+};
 module.exports = {
   Auth,
   Tabs,
@@ -4506,4 +4562,5 @@ module.exports = {
   Banner,
   ApiEndpoints,
   Api,
+  Devices
 };
