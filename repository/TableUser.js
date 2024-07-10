@@ -517,13 +517,13 @@ async function registerClient(body, fastify) {
       } else {
         const registrationData = await fastify.db.query(
           `INSERT INTO "tblClient" (
-            "wrGoogleID", "wrIsAllowMultiLogin", "wrCreatedDate", "wrEmailID", "wrIsActive", "wrIsEmailVerified", "wrIsDelete"
+            "wrGoogleID", "wrIsAllowMultiLogin", "wrCreatedDate", "wrEmailID", "wrIsActive", "wrIsEmailVerified", "wrIsDelete","wrUserName","wrMobileNo"
           ) VALUES (
-            $1, true, now(), $2, true, true, false
+            $1, true, now(), $2, true, true, false ,$3,$4
           ) RETURNING "wrClientID" as "clientId", "wrGoogleID" as "googleId", "wrUserName" as "userName", "wrIsAllowMultiLogin" as "isAllowMultiLogin","wrEmailID" as "emailId" ,"wrMobileNo" as "mobileNo";`,
           {
             type: QueryTypes.INSERT,
-            bind: [googleID, email],
+            bind: [googleID, email,userName,mobileNo],
           }
         );
         return registrationData[0][0];
