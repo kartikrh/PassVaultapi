@@ -17,11 +17,11 @@ const deviceByIdService = async (request) => {
 };
 
 const createDeviceService = async (request, fastify) => {
-  const devices = global.tblDevices || [];
-  const checkName = devices.find((item) => item.name.toLowerCase() === request.body.name.trim().toLowerCase());
-  if (checkName) {
-    throw new Error("Device with this name already exists");
-  }
+  //const devices = global.tblDevices || [];
+  // const checkName = devices.find((item) => item.name.toLowerCase() === request.body.name.trim().toLowerCase());
+  // if (checkName) {
+  //   throw new Error("Device with this name already exists");
+  // }
 
   const data = await insertDeviceQuery(
     {
