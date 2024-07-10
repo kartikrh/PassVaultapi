@@ -20,6 +20,7 @@ const {
   loginRegistrationClient,
   registerClient,
   loginClient,
+  updateClient,
 } = require("../repository/TableUser");
 const {
   deviceInfo,
@@ -561,6 +562,18 @@ async function registrationClientService({ body }, fastify) {
   }
 }
 
+async function updateClientService({ body }, fastify) {
+  try {
+    let results;
+    results = await updateClient(body, fastify);
+
+    return "Client Update successfully";
+
+  } catch (error) {
+    return null;
+  }
+}
+
 module.exports = {
   signUpUserService,
   signInUserServices,
@@ -579,4 +592,5 @@ module.exports = {
   //loginRegistrationClientService,
   loginClientService,
   registrationClientService,
+  updateClientService
 };
