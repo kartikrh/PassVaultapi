@@ -39,7 +39,14 @@ const insertDeviceQuery = async (data, fastify, request) => {
         "wrUserId",
         "wrUserType"
       ) VALUES ($1, $2, $3, $4, now(), $5, $6)
-      RETURNING *`,
+      RETURNING "wrDeviceId" as "deviceId",
+        "wrName" as "name",
+        "wrPushEndpoint" as "pushEndpoint",
+        "wrPushP256DH" as "pushP256DH",
+        "wrPushAuth" as "pushAuth",
+        "wrCreatedDate" as "createdDate",
+        "wrUserId" as "userId",
+        "wrUserType" as "userType"`,
       {
         type: fastify.db.QueryTypes.INSERT,
         bind: [
