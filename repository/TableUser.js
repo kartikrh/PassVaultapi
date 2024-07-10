@@ -565,15 +565,15 @@ async function loginClient(body, fastify) {
         );
         return registrationData[0][0];
       }
-    } else if (userName && password) {
+    } else if (email && password) {
       // Handle normal login
       let data = await fastify.db.query(
         `SELECT "wrClientID" as "clientId", "wrGoogleID" as "googleId", "wrUserName" as "userName", "wrIsAllowMultiLogin" as "isAllowMultiLogin","wrEmailID" as "emailId","wrMobileNo" as "mobileNo"
          FROM "tblClient"
-         WHERE "wrUserName" = $1 AND "wrPassword" = $2 AND "wrIsDelete" = false;`,
+         WHERE "wrEmailID" = $1 AND "wrPassword" = $2 AND "wrIsDelete" = false;`,
         {
           type: QueryTypes.SELECT,
-          bind: [userName, password],
+          bind: [email, password],
         }
       );
 
