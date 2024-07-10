@@ -53,7 +53,7 @@ const insertDeviceQuery = async (data, fastify, request) => {
       }
     );
 
-    return result[0];
+    return result[0][0];
   } catch (err) {
     errorLogger(
       fastify,

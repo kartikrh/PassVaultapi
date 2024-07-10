@@ -18,7 +18,7 @@ const deviceByIdService = async (request) => {
 
 const createDeviceService = async (request, fastify) => {
   const devices = global.tblDevices || [];
-  const checkpushP256DH = devices.find((item) => item.pushP256DH === request.body.pushP256DH.trim());
+  const checkpushP256DH = devices.find((item) => item.pushP256DH === request.body.pushP256DH);
   if (checkpushP256DH) {
     return checkpushP256DH;
   }
