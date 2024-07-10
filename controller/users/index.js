@@ -17,6 +17,7 @@ const {
   //loginRegistrationClientService,
   loginClientService,
   registrationClientService,
+  updateClientService,
 } = require("../../services/user");
 const { errorLogger } = require("../../utilities/logger");
 const fetchAllDataFromDb = require("../../utilities/fetchAllData");
@@ -266,6 +267,16 @@ async function loginClient(request, reply, fastify) {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 }
+
+async function updateClient(request, reply, fastify) {
+  try {
+    const result = await updateClientService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/updateClient", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+}
 module.exports = {
   signUpUser,
   signInUser,
@@ -288,4 +299,5 @@ module.exports = {
   //loginRegistrationClient,
   registrationClient,
   loginClient,
+  updateClient,
 };

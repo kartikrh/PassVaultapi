@@ -141,6 +141,7 @@ const Auth = {
       body: {
         type: "object",
         properties: {
+          email: { type: "string" },
           userName: { type: "string" },
           password: { type: "string" },
           deviceInfo: { type: "string" },
@@ -155,7 +156,7 @@ const Auth = {
   clientregistration: {
     schema: {
       tags: ["Auth"],
-      description: "clinetLogin",
+      description: "clientregistration",
       body: {
         type: "object",
         properties: {
@@ -166,8 +167,25 @@ const Auth = {
           token: { type: "string" },
           googleID: { type: "string" },
           mobileNo: { type: "string" },
+          ipAddress: { type: "string" },
         },
         required: ["userName"],
+      },
+    },
+  },
+  clientUpdate: {
+    schema: {
+      tags: ["Auth"],
+      description: "clientUpdate",
+      body: {
+        type: "object",
+        properties: {
+          clientId : {type: "integer"},
+          fullName: { type: "string" },
+          email: { type: "string" },
+          mobileNo: { type: "string" },
+        },
+        required: ["clientId"],
       },
     },
   },

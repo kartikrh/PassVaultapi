@@ -492,7 +492,7 @@ async function registerClient(body, fastify) {
             "wrEmailID", "wrMobileNo", "wrIpAddress", "wrIsActive", "wrIsEmailVerified", "wrIsDelete"
           ) VALUES (
             $1, $2, $3, $4, now(), $5, $6, $7, true, false, false
-          ) RETURNING "wrClientID","wrClientName","wrUserName", "wrIsAllowMultiLogin","wrEmailID";`,
+          ) RETURNING "wrClientID" as "clientId", "wrGoogleID" as "googleId", "wrUserName" as "userName", "wrIsAllowMultiLogin" as "isAllowMultiLogin","wrEmailID" as "emailId" ,"wrMobileNo" as "mobileNo";`,
           {
             type: QueryTypes.INSERT,
             bind: [fullName,userName, password, false, email, mobileNo, ipAddress],
@@ -520,7 +520,7 @@ async function registerClient(body, fastify) {
             "wrGoogleID", "wrIsAllowMultiLogin", "wrCreatedDate", "wrEmailID", "wrIsActive", "wrIsEmailVerified", "wrIsDelete"
           ) VALUES (
             $1, true, now(), $2, true, true, false
-          ) RETURNING "wrClientID","wrGoogleID","wrUserName", "wrIsAllowMultiLogin","wrEmailID";;`,
+          ) RETURNING "wrClientID" as "clientId", "wrGoogleID" as "googleId", "wrUserName" as "userName", "wrIsAllowMultiLogin" as "isAllowMultiLogin","wrEmailID" as "emailId" ,"wrMobileNo" as "mobileNo";`,
           {
             type: QueryTypes.INSERT,
             bind: [googleID, email],
@@ -535,12 +535,12 @@ async function registerClient(body, fastify) {
 }
 async function loginClient(body, fastify) {
   try {
-    const { userName, password, deviceInfo, token, googleID } = body;
+    const { userName,email, password, deviceInfo, token, googleID } = body;
 
     if (googleID && token) {
       // Handle Google login
       let data = await fastify.db.query(
-        `SELECT "wrClientID", "wrGoogleID", "wrUserName", "wrIsAllowMultiLogin","wrEmailID"
+        `SELECT "wrClientID" as "clientId", "wrGoogleID" as "googleId", "wrUserName" as "userName", "wrIsAllowMultiLogin" as "isAllowMultiLogin","wrEmailID" as "emailId" ,"wrMobileNo" as "mobileNo"
          FROM "tblClient"
          WHERE "wrGoogleID" = $1 AND "wrIsDelete" = false;`,
         {
@@ -554,13 +554,13 @@ async function loginClient(body, fastify) {
       } else {
         const registrationData = await fastify.db.query(
           `INSERT INTO "tblClient" (
-            "wrGoogleID", "wrIsAllowMultiLogin", "wrCreatedDate", "wrEmailID", "wrIsActive", "wrIsEmailVerified", "wrIsDelete"
+            "wrGoogleID", "wrIsAllowMultiLogin", "wrCreatedDate", "wrEmailID", "wrIsActive", "wrIsEmailVerified", "wrIsDelete","wrUserName"
           ) VALUES (
-            $1, true, now(), $2, true, true, false
-          ) RETURNING "wrClientID","wrGoogleID","wrUserName", "wrIsAllowMultiLogin","wrEmailID";`,
+            $1, true, now(), $2, true, true, false , $3
+          ) RETURNING "wrClientID" as "clientId", "wrGoogleID" as "googleId", "wrUserName" as "userName", "wrIsAllowMultiLogin" as "isAllowMultiLogin","wrEmailID" as "emailId","wrMobileNo" as "mobileNo";`,
           {
             type: QueryTypes.INSERT,
-            bind: [googleID, userName],
+            bind: [googleID,email, userName],
           }
         );
         return registrationData[0][0];
@@ -568,7 +568,7 @@ async function loginClient(body, fastify) {
     } else if (userName && password) {
       // Handle normal login
       let data = await fastify.db.query(
-        `SELECT "wrClientID", "wrUserName", "wrIsAllowMultiLogin", "wrEmailID"
+        `SELECT "wrClientID" as "clientId", "wrGoogleID" as "googleId", "wrUserName" as "userName", "wrIsAllowMultiLogin" as "isAllowMultiLogin","wrEmailID" as "emailId","wrMobileNo" as "mobileNo"
          FROM "tblClient"
          WHERE "wrUserName" = $1 AND "wrPassword" = $2 AND "wrIsDelete" = false;`,
         {
@@ -584,7 +584,7 @@ async function loginClient(body, fastify) {
            VALUES ($1, $2, true, $3, now());`,
           {
             type: QueryTypes.INSERT,
-            bind: [data[0].wrClientID, deviceInfo, token],
+            bind: [data[0].clientId, deviceInfo, token],
           }
         );
         return data[0];
@@ -599,6 +599,30 @@ async function loginClient(body, fastify) {
   }
 }
 
+const updateClient = async (body, fastify) => {
+  try {
+    const {clientId,fullName,email,mobileNo } = body;
+
+    return await fastify.db.query(
+      `update "tblClient" set "wrClientName" = $2,"wrEmailID" = $3,"wrMobileNo" = $4
+      where "wrClientID" = $1`,
+      {
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [
+          clientId,fullName,email,mobileNo
+        ],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableConfig/updateConfigQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
 
 module.exports = {
   signInUser,
@@ -616,5 +640,6 @@ module.exports = {
   updateUserPasswordQuery,
   loginRegistrationClient,
   registerClient,
-  loginClient
+  loginClient,
+  updateClient
 };
