@@ -11,7 +11,7 @@ module.exports = (sequelize) => {
         autoIncrement: true,
       },
       wrName: {
-        type: DataTypes.STRING(200),
+        type: DataTypes.TEXT,
         allowNull: true,
       },
       wrPushEndpoint: {
