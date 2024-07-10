@@ -466,6 +466,138 @@ async function loginRegistrationClient(body, fastify) {
     return error.message;
   }
 }
+async function registerClient(body, fastify) {
+  try {
+    const {fullName,email, userName, password,token, googleID, mobileNo, ipAddress } = body;
+
+    if (!googleID && !token) {
+      // Check if user exists by userName (wrEmailID)
+      let data = await fastify.db.query(
+        `SELECT "wrClientID", "wrEmailID"
+         FROM "tblClient"
+         WHERE "wrUserName" = $1 AND "wrIsDelete" = false AND "wrEmailID" = $2;`,
+        {
+          type: QueryTypes.SELECT,
+          bind: [userName,email],
+        }
+      );
+
+      if (data.length > 0) {
+        return "Username and Email is already exists";
+      } else {
+        // Register new user
+        const registrationData = await fastify.db.query(
+          `INSERT INTO "tblClient" (
+            "wrClientName", "wrUserName", "wrPassword", "wrIsAllowMultiLogin", "wrCreatedDate", 
+            "wrEmailID", "wrMobileNo", "wrIpAddress", "wrIsActive", "wrIsEmailVerified", "wrIsDelete"
+          ) VALUES (
+            $1, $2, $3, $4, now(), $5, $6, $7, true, false, false
+          ) RETURNING "wrClientID","wrClientName","wrUserName", "wrIsAllowMultiLogin","wrEmailID";`,
+          {
+            type: QueryTypes.INSERT,
+            bind: [fullName,userName, password, false, email, mobileNo, ipAddress],
+          }
+        );
+        return registrationData[0][0];
+      }
+    } else {
+      // Handle Google registration
+      let data = await fastify.db.query(
+        `SELECT "wrClientID", "wrGoogleID"
+         FROM "tblClient"
+         WHERE "wrGoogleID" = $1 AND "wrIsDelete" = false;`,
+        {
+          type: QueryTypes.SELECT,
+          bind: [googleID],
+        }
+      );
+
+      if (data.length > 0) {
+        return data[0];
+      } else {
+        const registrationData = await fastify.db.query(
+          `INSERT INTO "tblClient" (
+            "wrGoogleID", "wrIsAllowMultiLogin", "wrCreatedDate", "wrEmailID", "wrIsActive", "wrIsEmailVerified", "wrIsDelete"
+          ) VALUES (
+            $1, true, now(), $2, true, true, false
+          ) RETURNING "wrClientID","wrGoogleID","wrUserName", "wrIsAllowMultiLogin","wrEmailID";;`,
+          {
+            type: QueryTypes.INSERT,
+            bind: [googleID, email],
+          }
+        );
+        return registrationData[0][0];
+      }
+    }
+  } catch (error) {
+    return error.message;
+  }
+}
+async function loginClient(body, fastify) {
+  try {
+    const { userName, password, deviceInfo, token, googleID } = body;
+
+    if (googleID && token) {
+      // Handle Google login
+      let data = await fastify.db.query(
+        `SELECT "wrClientID", "wrGoogleID", "wrUserName", "wrIsAllowMultiLogin","wrEmailID"
+         FROM "tblClient"
+         WHERE "wrGoogleID" = $1 AND "wrIsDelete" = false;`,
+        {
+          type: QueryTypes.SELECT,
+          bind: [googleID],
+        }
+      );
+
+      if (data.length > 0) {
+        return data[0];
+      } else {
+        const registrationData = await fastify.db.query(
+          `INSERT INTO "tblClient" (
+            "wrGoogleID", "wrIsAllowMultiLogin", "wrCreatedDate", "wrEmailID", "wrIsActive", "wrIsEmailVerified", "wrIsDelete"
+          ) VALUES (
+            $1, true, now(), $2, true, true, false
+          ) RETURNING "wrClientID","wrGoogleID","wrUserName", "wrIsAllowMultiLogin","wrEmailID";`,
+          {
+            type: QueryTypes.INSERT,
+            bind: [googleID, userName],
+          }
+        );
+        return registrationData[0][0];
+      }
+    } else if (userName && password) {
+      // Handle normal login
+      let data = await fastify.db.query(
+        `SELECT "wrClientID", "wrUserName", "wrIsAllowMultiLogin", "wrEmailID"
+         FROM "tblClient"
+         WHERE "wrUserName" = $1 AND "wrPassword" = $2 AND "wrIsDelete" = false;`,
+        {
+          type: QueryTypes.SELECT,
+          bind: [userName, password],
+        }
+      );
+
+      if (data.length > 0) {
+        // Insert login information
+        await fastify.db.query(
+          `INSERT INTO "tblUserLoginInfos" ("wrClientID", "wrInfo", "wrIsLogin", "wrToken", "wrCreatedDate")
+           VALUES ($1, $2, true, $3, now());`,
+          {
+            type: QueryTypes.INSERT,
+            bind: [data[0].wrClientID, deviceInfo, token],
+          }
+        );
+        return data[0];
+      } else {
+        return "User not found";
+      }
+    } else {
+      return "User not found";
+    }
+  } catch (error) {
+    return error.message;
+  }
+}
 
 
 module.exports = {
@@ -483,4 +615,6 @@ module.exports = {
   getOriginalIdFromEncryptedId,
   updateUserPasswordQuery,
   loginRegistrationClient,
+  registerClient,
+  loginClient
 };

@@ -146,8 +146,26 @@ const Auth = {
           deviceInfo: { type: "string" },
           token: { type: "string" },
           googleID: { type: "string" },
-          mobileNo: { type: "string" },
           ipAddress: { type: "string" },
+        },
+        required: ["userName"],
+      },
+    },
+  },
+  clientregistration: {
+    schema: {
+      tags: ["Auth"],
+      description: "clinetLogin",
+      body: {
+        type: "object",
+        properties: {
+          fullName: { type: "string" },
+          email: { type: "string" },
+          userName: { type: "string" },
+          password: { type: "string" },
+          token: { type: "string" },
+          googleID: { type: "string" },
+          mobileNo: { type: "string" },
         },
         required: ["userName"],
       },
