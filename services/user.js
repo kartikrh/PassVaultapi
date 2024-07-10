@@ -525,7 +525,7 @@ async function loginClientService({ body }, fastify) {
       return { error: results };
     }
 
-    const payload = { clientId: results.wrClientID };
+    const payload = { clientId: results.clientId };
     const token = generateToken(payload);
 
     return { token , details: results};
@@ -548,15 +548,14 @@ async function registrationClientService({ body }, fastify) {
     if (results === "Username and Email is already exists") {
       return { error: results };
     }
-    if(results.wrClientID){
-    const payload = { clientId: results.wrClientID };
+    if(results.clientId){
+    const payload = { clientId: results.clientId };
     const token = generateToken(payload);
     return { token, details: results };
     }
     else{
       return { error: results };
     }
-
   } catch (error) {
     return null;
   }
