@@ -601,28 +601,42 @@ async function loginClient(body, fastify) {
 
 const updateClient = async (body, fastify) => {
   try {
-    const {clientId,fullName,email,mobileNo } = body;
+    const { clientId, fullName, email, mobileNo } = body;
 
-    return await fastify.db.query(
-      `update "tblClient" set "wrClientName" = $2,"wrEmailID" = $3,"wrMobileNo" = $4
-      where "wrClientID" = $1`,
+    // Check if the client ID exists
+    const clientExists = await fastify.db.query(
+      `SELECT 1 FROM "tblClient" WHERE "wrClientID" = $1`,
       {
-        type: fastify.db.QueryTypes.UPDATE,
-        bind: [
-          clientId,fullName,email,mobileNo
-        ],
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [clientId],
       }
     );
+
+    if (clientExists.length === 0) {
+      return "Client ID does not exist" ;
+    }
+
+    // Proceed with the update if client ID exists
+    await fastify.db.query(
+      `UPDATE "tblClient" SET "wrClientName" = $2, "wrEmailID" = $3, "wrMobileNo" = $4
+      WHERE "wrClientID" = $1`,
+      {
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [clientId, fullName, email, mobileNo],
+      }
+    );
+
+    return "Client updated successfully";
   } catch (err) {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableConfig/updateConfigQuery",
-      request
+      "DB ERROR --> repository/TableConfig/updateConfigQuery"
     );
     throw new Error(err.message);
   }
 };
+
 
 module.exports = {
   signInUser,
