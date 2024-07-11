@@ -61,7 +61,7 @@ async function startSignalR(fastify) {
             try {
               let _message = message;
               if(_message.rt){
-                //console.log(_message);
+                console.log("Get Rates");
                 const data = _message;
               
                 const EventsMarketobj = global.tblEventMarkets.find(
@@ -116,6 +116,7 @@ async function startSignalR(fastify) {
                       );
                       if (_selectionidData && _selectionidData.runner !== 'The Draw') {
                         try {
+                          console.log('updateEventMarketRunnerMaunalQuery');
                           let _data2 = await updateEventMarketRunnerMaunalQuery(items, _fastify);
                           if(_selectionidData.commentaryId != 0){
                             try {
@@ -144,7 +145,8 @@ async function startSignalR(fastify) {
                               _updateData.teamId = teams.teamId;
                             
                               await updateLatestMarketOddsBallByBall(_updateData,_fastify,_selectionidData.commentaryId);
-                            } catch (error) {}
+                              console.log('Updated latest ball');
+                            } catch (error) {console.log('Error after Updated latest ball',error);}
                             try {
                               if (!global.selectionData[items.selectionId]) {
                                 global.selectionData[items.selectionId] = {
@@ -205,6 +207,7 @@ async function startSignalR(fastify) {
                                 global.tblCommentaryTeams[_index].teamPredictionPercentage  = parseInt(_update.team2PredictionPercentage);
 
                                 await updateCommentaryTeamPredictionPrecentageQuery(_update, _fastify);
+                                console.log('updateCommentaryTeamPredictionPrecentageQuery');
                               }
                             } catch (error) {
                               console.error(error.message);
