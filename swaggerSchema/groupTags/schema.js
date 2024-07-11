@@ -4543,6 +4543,27 @@ const Devices = {
     },
   },
 };
+
+const sendPushNotification = {
+  send: {
+    schema: {
+      tags: ["sendPushNotification"],
+      description: "send PushNotification",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          title: { type: "string" },
+          message: { type: "string" },
+          url: { type: "string" },
+          image: { type: "string" },
+          icon: { type: "string" },
+        },
+        required: ["title", "message"],
+      },
+    },
+  },
+};
 module.exports = {
   Auth,
   Tabs,
@@ -4580,5 +4601,6 @@ module.exports = {
   Banner,
   ApiEndpoints,
   Api,
-  Devices
+  Devices,
+  sendPushNotification
 };
