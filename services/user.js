@@ -565,8 +565,7 @@ async function updateClientService({ body }, fastify) {
   try {
     let results;
     results = await updateClient(body, fastify);
-
-    return "Client Update successfully";
+    return results;
 
   } catch (error) {
     return null;
