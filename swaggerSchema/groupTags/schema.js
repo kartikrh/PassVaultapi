@@ -4577,6 +4577,8 @@ const Devices = {
           pushAuth: { type: "string" },
           userId: { type: "integer" },
           userType: { type: "integer" },
+          deviceType: { type: "integer" },
+          mobileToken: { type: "string" },
         },
         required: ["name", "pushEndpoint", "pushP256DH","pushAuth"],
       },
