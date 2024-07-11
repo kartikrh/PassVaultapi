@@ -3869,6 +3869,7 @@ const commentaryDetailsByEventIdService = async (
     resultArr.t2co = t2co;
     resultArr.t2bg = t2bg;
     resultArr.utc= utc;
+    resultArr.tsi = []
   }
   if (getstatus == 2) {
     const _tosswonby = result.tossWonBy;
@@ -3925,6 +3926,7 @@ const commentaryDetailsByEventIdService = async (
     resultArr.t2co = t2co;
     resultArr.t2bg = t2bg;
     resultArr.utc= utc;
+    resultArr.tsi = []
   }
   if (getstatus >= 3) {
     const _tosswonby = result.tossWonBy;
@@ -4038,6 +4040,37 @@ const commentaryDetailsByEventIdService = async (
     resultArr.t2co = t2co;
     resultArr.t2bg = t2bg;
     resultArr.utc= utc;
+    resultArr.tsi = []
+
+    // get team score
+    if(currentInning > 1){
+      for(let i = 1 ; i<= currentInning; i++){
+        let t1 = await global.tblCommentaryTeams.find(
+          (item) =>
+            item.commentaryId === cid &&
+            item.teamStatus === 1 &&
+            item.currentInnings === i
+        );
+        let t2 = await global.tblCommentaryTeams.find(
+          (item) =>
+            item.commentaryId === cid &&
+            item.teamStatus === 2 &&
+            item.currentInnings === i
+        );
+        let t1Score = t1?.teamScore ?? '0';
+        let t2Score = t2?.teamScore ?? '0';
+        let t1Wicket = t1?.teamWicket ?? 0;
+        let t2Wicket = t2?.teamWicket ?? 0;
+        let t1Over = t1?.teamOver ?? 0.0;
+        let t2Over = t2?.teamOver ?? 0.0;
+        resultArr.tsi.push({
+          t1s : t1Score + "/" + t1Wicket + " (" + t1Over + ")",
+          t2s : t2Score + "/" + t2Wicket + " (" + t2Over + ")",
+          inning : i
+        })
+
+      }
+    }
   }
 
   let eventType = await global.tblEventTypes.find(
@@ -4987,7 +5020,56 @@ const getMatchListByStatus = async (body, request, fastify) => {
       rrr: rrr || '0',
       cst: item.commentaryStatus,
       res: item.result || "",
+      tsi : []
     };
+
+    if(item.currentInnings > 1){
+      for(let i = 1 ; i<= item.currentInnings ; i++){
+        let t1 = await global.tblCommentaryTeams.find(
+          (team) =>
+            team.commentaryId === item.commentaryId &&
+            team.teamId === item.team1Id &&
+            team.currentInnings === i
+        );
+        let t2 = await global.tblCommentaryTeams.find(
+          (team) =>
+            team.commentaryId === item.commentaryId &&
+            team.teamId === item.team2Id &&
+            team.currentInnings === i
+        );
+        let teamScore1, teamScore2;
+        if (t1) {
+          const wicket1 =
+            t1.teamWicket === null
+              ? 0
+              : t1.teamWicket;
+          const overs1 =
+            t1.teamOver === null
+              ? 0.0
+              : t1.teamOver;
+          teamScore1 = t1?.teamScore ?? '0';
+          teamScore1 = teamScore1 + "/" + wicket1 + "(" + overs1 + ")";
+        }
+        if (t2) {
+          const wicket1 =
+            t2.teamWicket === null
+              ? 0
+              : t2.teamWicket;
+          const overs1 =
+            t2.teamOver === null
+              ? 0.0
+              : t2.teamOver;
+          teamScore2 = t2?.teamScore ?? '0';
+          teamScore2 = teamScore2 + "/" + wicket1 + "(" + overs1 + ")";
+        }
+        details.tsi.push({
+          t1s : teamScore1,
+          t2s : teamScore2,
+          inning : i
+        })
+
+      }
+    }
 
     resultArr.push(details);
   }

@@ -4487,6 +4487,64 @@ const Api = {
     },
   },
 };
+const Notification = {
+  getAll :{
+    schema : {
+      tags : ["Notification"],
+      description : "get all Notification",
+      secaurity : [{bearerAuth : []}]
+    }
+  },
+  getById :{
+    schema :{
+      tags : ["Notification"],
+      description : "get Notification By Id",
+      secaurity : [{bearerAuth : []}],
+      body :{
+        type : "object",
+        properties : {
+          notificationId : {type : "integer"}
+        },
+        required :["notificationId"]
+      }
+    }
+  },
+  save : {
+    schema : {
+      tags : ["Notification"],
+      description : "save Notification",
+      secaurity : [{bearerAuth : []}],
+      body :{
+        type : "object",
+        properties : {
+          notificationId : {type : "integer"},
+          title : {type : "string"},
+          description : {type : "string"},
+          sendType : {type : "integer"},
+          commentaryId : {type : "integer"},
+        }
+      }
+    }
+  },
+  delete : {
+    schema : {
+      tags : ["Notification"],
+      description : "delete Notification",
+      secaurity : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          notificationId : {
+            type : "array",
+            items : {type : "integer"},
+            minItems : 1
+          }
+        },
+        required : ["notificationId"]
+      }
+    }
+  }
+}
 
 const Devices = {
   getById: {
@@ -4601,6 +4659,7 @@ module.exports = {
   Banner,
   ApiEndpoints,
   Api,
+  Notification,
   Devices,
   sendPushNotification
 };
