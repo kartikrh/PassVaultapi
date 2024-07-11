@@ -38,6 +38,14 @@ module.exports = (sequelize) => {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
+      wrDeviceType: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      wrMobileToken: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
     },
     {
       timestamps: false,
