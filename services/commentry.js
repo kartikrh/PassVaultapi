@@ -2026,6 +2026,7 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
       deleteCommentaryBallByBallId,
       deleteOverId,
       commentaryId,
+      isEndInnings
     } = request.body;
 
     let commentaryIndex,
@@ -2754,13 +2755,14 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
       });
     }
 
+    let strikeTeam;
     if (
       commentaryDetails && _sendPrePlayers &&
       commentaryData.isPredictMarket == true &&
       previousCommentaryStatus == 3 && 
       updatedData.commentaryBallByBallDetails
     ) {
-      let strikeTeam = global.tblCommentaryTeams.find(
+      strikeTeam = global.tblCommentaryTeams.find(
         (item) =>
           item.commentaryId === commentaryData.commentaryId &&
           item.teamStatus === 1
@@ -2788,7 +2790,18 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         request
       );
     }
-
+    if(isEndInnings && isEndInnings == true){
+      callPredictorMarket(
+        {
+          commentary_id: commentaryData.commentaryId,
+          match_type_id: commentaryData.matchTypeId,
+          strike_team_id : strikeTeam.teamId,
+        },
+        "/api/v1/endinnings",
+        fastify,
+        request
+      );
+    }
     return response;
   } catch (error) {
     console.log(error);
