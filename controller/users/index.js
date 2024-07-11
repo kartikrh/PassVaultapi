@@ -18,6 +18,8 @@ const {
   loginClientService,
   registrationClientService,
   updateClientService,
+  sendNotificationWebService,
+  sendNotificationMobileService,
 } = require("../../services/user");
 const { errorLogger } = require("../../utilities/logger");
 const fetchAllDataFromDb = require("../../utilities/fetchAllData");
@@ -277,6 +279,26 @@ async function updateClient(request, reply, fastify) {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 }
+
+async function sendNotificationWeb(request, reply, fastify) {
+  try {
+    const result = await sendNotificationWebService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/sendNotificationWeb", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+}
+
+async function sendNotificationMobile(request, reply, fastify) {
+  try {
+    const result = await sendNotificationMobileService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/sendNotificationMobile", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+}
 module.exports = {
   signUpUser,
   signInUser,
@@ -300,4 +322,6 @@ module.exports = {
   registrationClient,
   loginClient,
   updateClient,
+  sendNotificationWeb,
+  sendNotificationMobile
 };
