@@ -4048,13 +4048,13 @@ const commentaryDetailsByEventIdService = async (
         let t1 = await global.tblCommentaryTeams.find(
           (item) =>
             item.commentaryId === cid &&
-            item.teamStatus === 1 &&
+            item.teamId == result.team1Id &&
             item.currentInnings === i
         );
         let t2 = await global.tblCommentaryTeams.find(
           (item) =>
             item.commentaryId === cid &&
-            item.teamStatus === 2 &&
+            item.teamId === result.team2Id&&
             item.currentInnings === i
         );
         let t1Score = t1?.teamScore ?? '0';
