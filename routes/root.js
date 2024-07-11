@@ -13,6 +13,7 @@ const {
   loadClientDataInMemory,
   registrationClient,
   loginClient,
+  updateClient,
   //loginRegistrationClient,
 } = require("../controller/users/index");
 const { Auth } = require("../swaggerSchema/groupTags/schema");
@@ -95,5 +96,9 @@ module.exports = async function (fastify, opts) {
   fastify.post("/signinClient", {
     schema: Auth.clientLogin.schema,
     handler: (request, reply) => loginClient(request, reply, fastify),
+  });
+  fastify.post("/updateClient", {
+    schema: Auth.clientUpdate.schema,
+    handler: (request, reply) => updateClient(request, reply, fastify),
   });
 };

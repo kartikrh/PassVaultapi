@@ -141,6 +141,7 @@ const Auth = {
       body: {
         type: "object",
         properties: {
+          email: { type: "string" },
           userName: { type: "string" },
           password: { type: "string" },
           deviceInfo: { type: "string" },
@@ -155,7 +156,7 @@ const Auth = {
   clientregistration: {
     schema: {
       tags: ["Auth"],
-      description: "clinetLogin",
+      description: "clientregistration",
       body: {
         type: "object",
         properties: {
@@ -166,8 +167,25 @@ const Auth = {
           token: { type: "string" },
           googleID: { type: "string" },
           mobileNo: { type: "string" },
+          ipAddress: { type: "string" },
         },
         required: ["userName"],
+      },
+    },
+  },
+  clientUpdate: {
+    schema: {
+      tags: ["Auth"],
+      description: "clientUpdate",
+      body: {
+        type: "object",
+        properties: {
+          clientId : {type: "integer"},
+          fullName: { type: "string" },
+          email: { type: "string" },
+          mobileNo: { type: "string" },
+        },
+        required: ["clientId"],
       },
     },
   },
@@ -4527,6 +4545,83 @@ const Notification = {
     }
   }
 }
+
+const Devices = {
+  getById: {
+    schema: {
+      tags: ["Devices"],
+      description: "get Config by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          deviceId: { type: "integer" },
+        },
+        required: ["deviceId"],
+      },
+    },
+  },
+  save: {
+    schema: {
+      tags: ["Devices"],
+      description: "save Devices",
+      security: [{ bearerAuth: [] }],
+
+      body: {
+        type: "object",
+        properties: {
+          deviceId: { type: "string" },
+          name: { type: "string" },
+          pushEndpoint: { type: "string" },
+          pushP256DH: { type: "string" },
+          pushAuth: { type: "string" },
+          userId: { type: "integer" },
+          userType: { type: "integer" },
+        },
+        required: ["name", "pushEndpoint", "pushP256DH","pushAuth"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["Devices"],
+      description: "delete Devices",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          configId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["deviceId"],
+      },
+    },
+  },
+};
+
+const sendPushNotification = {
+  send: {
+    schema: {
+      tags: ["sendPushNotification"],
+      description: "send PushNotification",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          title: { type: "string" },
+          message: { type: "string" },
+          url: { type: "string" },
+          image: { type: "string" },
+          icon: { type: "string" },
+        },
+        required: ["title", "message"],
+      },
+    },
+  },
+};
 module.exports = {
   Auth,
   Tabs,
@@ -4564,5 +4659,7 @@ module.exports = {
   Banner,
   ApiEndpoints,
   Api,
-  Notification
+  Notification,
+  Devices,
+  sendPushNotification
 };

@@ -18,6 +18,7 @@ const {
 const { getAllMatchTypeQuery } = require("../repository/TableMatchType");
 const { getAllUsersQuery } = require("../repository/TableUser");
 const { getAllCongigQuery } = require("../repository/TableConfig");
+const { getAllDevicesQuery } = require("../repository/TableDevice");
 const { getAllCompititionQuery } = require("../repository/TableCompitition");
 const { getAllEventsQuery } = require("../repository/TableEvent");
 const {
@@ -78,6 +79,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const getAllPlayerTypes = await getAllPlayerTypeQuery(fastify);
     const getAllBowlingTypes = await getAllBowlingTypeQuery(fastify);
     const getAllConfigs = await getAllCongigQuery(fastify);
+    const getAllDevices = await getAllDevicesQuery(fastify);
     const getAllCommentary = await getAllCommentaryQuery(fastify);
     const getAllCompetition = await getAllCompititionQuery(fastify);
     const getAllEvents = await getAllEventsQuery(fastify);
@@ -136,6 +138,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblPlayerTypes = getAllPlayerTypes;
     global.tblBowlingTypes = getAllBowlingTypes;
     global.tblConfigs = getAllConfigs;
+    global.tblDevices = getAllDevices;
     global.tblCompetitions = getAllCompetition;
     global.tblEvents = getAllEvents;
     global.tblDisplayStatus = getAllDisplayStatus;
