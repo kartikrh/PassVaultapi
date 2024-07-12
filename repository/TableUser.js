@@ -117,15 +117,27 @@ async function getMaxKey(fastify) {
 }
 
 async function checkValidQuery(body, fastify) {
+  if(body.WrUserId){
+    const data = await fastify.db.query(
+      `select * from "tblUserLoginInfos"  where "wrToken" = $1 and "wrIsLogin" = true and "WrUserType" = $2 and "WrUserId" = $3 `,
+      {
+        type: QueryTypes.SELECT,
+        bind: [body.wrToken, body.WrUserType, body.WrUserId],
+      }
+    );
+    return !!data.length;
+ } 
+ else if(body.WrClientId)
+ {
   const data = await fastify.db.query(
-    `select * from "tblUserLoginInfos"  where "wrToken" = $1 and "wrIsLogin" = true and "WrUserType" = $2 and "WrUserId" = $3 `,
+    `select * from "tblUserLoginInfos"  where "wrToken" = $1 and "wrIsLogin" = true and "WrUserType" = $2 and "wrClientID" = $3 `,
     {
       type: QueryTypes.SELECT,
-      bind: [body.wrToken, body.WrUserType, body.WrUserId],
+      bind: [body.wrToken, body.WrUserType, body.WrClientId],
     }
   );
-
   return !!data.length;
+ }
 }
 
 const getOriginalIdFromEncryptedId = async (encryptedId, fastify) => {
@@ -550,6 +562,15 @@ async function loginClient(body, fastify) {
       );
 
       if (data.length > 0) {
+         // Insert login information
+         await fastify.db.query(
+          `INSERT INTO "tblUserLoginInfos" ("wrClientID", "wrInfo", "wrIsLogin", "wrToken", "wrCreatedDate")
+           VALUES ($1, $2, true, $3, now());`,
+          {
+            type: QueryTypes.INSERT,
+            bind: [data[0].clientId, deviceInfo, token],
+          }
+        );
         return data[0];
       } else {
         const registrationData = await fastify.db.query(
@@ -561,6 +582,16 @@ async function loginClient(body, fastify) {
           {
             type: QueryTypes.INSERT,
             bind: [googleID,email, userName],
+          }
+        );
+
+         // Insert login information
+         await fastify.db.query(
+          `INSERT INTO "tblUserLoginInfos" ("wrClientID", "wrInfo", "wrIsLogin", "wrToken", "wrCreatedDate")
+           VALUES ($1, $2, true, $3, now());`,
+          {
+            type: QueryTypes.INSERT,
+            bind: [registrationData[0][0].clientId, deviceInfo, token],
           }
         );
         return registrationData[0][0];
@@ -580,13 +611,13 @@ async function loginClient(body, fastify) {
       if (data.length > 0) {
         // Insert login information
         await fastify.db.query(
-          `INSERT INTO "tblUserLoginInfos" ("wrClientID", "wrInfo", "wrIsLogin", "wrToken", "wrCreatedDate")
-           VALUES ($1, $2, true, $3, now());`,
-          {
-            type: QueryTypes.INSERT,
-            bind: [data[0].clientId, deviceInfo, token],
-          }
-        );
+         `INSERT INTO "tblUserLoginInfos" ("wrClientID", "wrInfo", "wrIsLogin", "wrToken", "wrCreatedDate")
+          VALUES ($1, $2, true, $3, now());`,
+         {
+           type: QueryTypes.INSERT,
+           bind: [data[0].clientId, deviceInfo, token],
+         }
+       );
         return data[0];
       } else {
         return "User not found";
@@ -636,7 +667,34 @@ const updateClient = async (body, fastify) => {
     throw new Error(err.message);
   }
 };
+async function loginClientLogAdded(body, fastify) {
+  try {
+    const { clientId,deviceInfo, token } = body;
+    // Insert login information
+     await fastify.db.query(
+       `INSERT INTO "tblUserLoginInfos" ("wrClientID", "wrInfo", "wrIsLogin", "wrToken", "wrCreatedDate")
+        VALUES ($1, $2, true, $3, now());`,
+       {
+         type: QueryTypes.INSERT,
+         bind: [clientId, deviceInfo, token],
+       }
+     );
+     return true;
+  } catch (error) {
+    return error.message;
+  }
+}
 
+async function signOutClient(body, fastify) {
+  const { WrClientId, wrToken } = body;
+  await fastify.db.query(
+    `UPDATE "tblUserLoginInfos" set "wrIsLogin" = false where "wrClientID" = $1 and "wrToken" = $2`,
+    {
+      type: QueryTypes.RAW,
+      bind: [WrClientId, wrToken],
+    }
+  );
+}
 
 module.exports = {
   signInUser,
@@ -655,5 +713,7 @@ module.exports = {
   loginRegistrationClient,
   registerClient,
   loginClient,
-  updateClient
+  updateClient,
+  loginClientLogAdded,
+  signOutClient
 };
