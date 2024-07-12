@@ -16,6 +16,7 @@ const {
   updateClient,
   sendNotificationWeb,
   sendNotificationMobile,
+  signOutClient
   //loginRegistrationClient,
 } = require("../controller/users/index");
 const { Auth ,sendPushNotification} = require("../swaggerSchema/groupTags/schema");
@@ -107,8 +108,9 @@ module.exports = async function (fastify, opts) {
     schema: sendPushNotification.send.schema,
     handler: (request, reply) => sendNotificationWeb(request, reply, fastify),
   });
-  // fastify.post("/sendNotificationMobile", {
-  //   schema: sendPushNotification.send.schema,
-  //   handler: (request, reply) => sendNotificationMobile(request, reply, fastify),
-  // });
+  fastify.post("/signOutClient", {
+    schema: Auth.signOut.schema,
+    preHandler: [(request, reply) => authorize(request, reply, fastify)],
+    handler: (request, reply) => signOutClient(request, reply, fastify),
+  });
 };
