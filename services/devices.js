@@ -18,9 +18,27 @@ const deviceByIdService = async (request) => {
 
 const createDeviceService = async (request, fastify) => {
   const devices = global.tblDevices || [];
-  const checkpushP256DH = devices.find((item) => item.pushP256DH === request.body.pushP256DH);
-  if (checkpushP256DH) {
-    return checkpushP256DH;
+  if(request.body.deviceType == 1){
+   const checkpushP256DH = devices.find((item) => item.pushP256DH === request.body.pushP256DH && item.pushP256DH !== '');
+   if (checkpushP256DH) {
+     return checkpushP256DH;
+   }
+
+   const data = await insertDeviceQuery(
+     {
+       ...request.body
+     },
+     fastify,
+     request
+   );
+
+   global.tblDevices.push(data);
+   return data;
+ }
+ if(request.body.deviceType == 2){
+  const checkmobileToken = devices.find((item) => item.mobileToken === request.body.mobileToken && item.mobileToken !== '');
+  if (checkmobileToken) {
+    return checkmobileToken;
   }
 
   const data = await insertDeviceQuery(
@@ -33,6 +51,7 @@ const createDeviceService = async (request, fastify) => {
 
   global.tblDevices.push(data);
   return data;
+}
 };
 
 const updateDeviceService = async (request, fastify) => {
