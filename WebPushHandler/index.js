@@ -67,6 +67,7 @@ async function sendNotification(title, message, url, image, icon) {
     notification: {
       title,
       body: message,
+      image,
     },
   };
 
