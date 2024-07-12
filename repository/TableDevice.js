@@ -11,7 +11,9 @@ const getAllDevicesQuery = async (fastify) => {
         "wrPushAuth" as "pushAuth",
         "wrCreatedDate" as "createdDate",
         "wrUserId" as "userId",
-        "wrUserType" as "userType"
+        "wrUserType" as "userType",
+        "wrDeviceType" as "deviceType",
+        "wrMobileToken" as "mobileToken"
       FROM "tblDevices"`,
       {
         type: fastify.db.QueryTypes.SELECT,
@@ -37,23 +39,36 @@ const insertDeviceQuery = async (data, fastify, request) => {
         "wrPushAuth",
         "wrCreatedDate",
         "wrUserId",
-        "wrUserType"
-      ) VALUES ($1, $2, $3, $4, now(), $5, $6)
-      RETURNING *`,
+        "wrUserType",
+        "wrDeviceType",
+        "wrMobileToken"
+      ) VALUES ($1, $2, $3, $4, now(), $5, $6,$7,$8)
+      RETURNING "wrDeviceId" as "deviceId",
+        "wrName" as "name",
+        "wrPushEndpoint" as "pushEndpoint",
+        "wrPushP256DH" as "pushP256DH",
+        "wrPushAuth" as "pushAuth",
+        "wrCreatedDate" as "createdDate",
+        "wrUserId" as "userId",
+        "wrUserType" as "userType",
+        "wrDeviceType" as "deviceType",
+        "wrMobileToken" as "mobileToken"`,
       {
         type: fastify.db.QueryTypes.INSERT,
         bind: [
           data.name,
-          data.pushEndpoint,
-          data.pushP256DH,
-          data.pushAuth,
-          data.userId,
-          data.userType
+          data.pushEndpoint || "",
+          data.pushP256DH || "",
+          data.pushAuth || "",
+          data.userId || 0,
+          data.userType || 0,
+          data.deviceType || 0,
+          data.mobileToken || ""
         ],
       }
     );
 
-    return result[0];
+    return result[0][0];
   } catch (err) {
     errorLogger(
       fastify,

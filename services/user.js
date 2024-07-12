@@ -4,6 +4,7 @@ const { v4: uuidv4 } = require("uuid");
 const requestIp = require("request-ip");
 const path = require("path");
 const {ImgModuleConfig} = require("../utilities/imageConstant");
+const {sendNotification,sendMobileNotifications} = require("../WebPushHandler/index");
 
 const {
   signUpUser,
@@ -20,6 +21,7 @@ const {
   loginRegistrationClient,
   registerClient,
   loginClient,
+  updateClient,
 } = require("../repository/TableUser");
 const {
   deviceInfo,
@@ -524,7 +526,7 @@ async function loginClientService({ body }, fastify) {
       return { error: results };
     }
 
-    const payload = { clientId: results.wrClientID };
+    const payload = { clientId: results.clientId };
     const token = generateToken(payload);
 
     return { token , details: results};
@@ -547,14 +549,46 @@ async function registrationClientService({ body }, fastify) {
     if (results === "Username and Email is already exists") {
       return { error: results };
     }
-    if(results.wrClientID){
-    const payload = { clientId: results.wrClientID };
+    if(results.clientId){
+    const payload = { clientId: results.clientId };
     const token = generateToken(payload);
     return { token, details: results };
     }
     else{
       return { error: results };
     }
+  } catch (error) {
+    return null;
+  }
+}
+
+async function updateClientService({ body }, fastify) {
+  try {
+    let results;
+    results = await updateClient(body, fastify);
+    return results;
+
+  } catch (error) {
+    return null;
+  }
+}
+
+async function sendNotificationWebService({ body }, fastify) {
+  try {
+    const {title, message, url, image, icon} = body;
+    const results = await sendNotification(title, message, url, image, icon);
+    return results;
+
+  } catch (error) {
+    return null;
+  }
+}
+
+async function sendNotificationMobileService({ body }, fastify) {
+  try {
+    const {title, message, url, image, icon} = body;
+    const results = await sendMobileNotifications(title, message, url, image, icon);
+    return results;
 
   } catch (error) {
     return null;
@@ -579,4 +613,7 @@ module.exports = {
   //loginRegistrationClientService,
   loginClientService,
   registrationClientService,
+  updateClientService,
+  sendNotificationWebService,
+  sendNotificationMobileService
 };

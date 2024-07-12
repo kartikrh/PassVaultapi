@@ -11,7 +11,7 @@ module.exports = (sequelize) => {
         autoIncrement: true,
       },
       wrName: {
-        type: DataTypes.STRING(200),
+        type: DataTypes.TEXT,
         allowNull: true,
       },
       wrPushEndpoint: {
@@ -36,6 +36,14 @@ module.exports = (sequelize) => {
       },
       wrUserType: {
         type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      wrDeviceType: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      wrMobileToken: {
+        type: DataTypes.TEXT,
         allowNull: true,
       },
     },

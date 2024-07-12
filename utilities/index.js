@@ -473,6 +473,46 @@ const APIEndpointModuleType = {
   vendorUpdate : 2,
   vendorIpUpdate : 3
 }
+const NotificationSendType = {
+  all : 1,
+  onlyLoggedInUser : 2,
+  pushNotification : 3
+}
+const sendNotification = (data , request , fastify) =>{
+  try {
+    let eventName;
+    switch(data.sendType){
+      case NotificationSendType.all:
+        eventName = "onSendNotificationToAll";
+        break;
+      case NotificationSendType.onlyLoggedInUser:
+        eventName = "onSendNotificationToLoggedInUser";
+        break;
+      case NotificationSendType.pushNotification:
+        eventName = "onSendPushNotification";
+        break;
+    }
+    if( 
+      global?.clientSocketIo !== undefined &&
+      global?.clientSocketIo.length > 0
+    ){
+      global.clientSocketIo.forEach((socket) => {
+        socket.client.emit(eventName, data);
+      });
+    }
+
+    return true;
+  } catch (error) {
+    console.log("error From sendNotification", error);
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> utilities/index/sendNotification",
+      request
+    );
+    // throw new Error(error.message);
+  }
+}
 module.exports = {
   ERROR_CODES,
   error,
@@ -506,5 +546,7 @@ module.exports = {
   callfds,
   formatDateToISOString,
   formatDateToISOStringwithOffset,
-  callClientAPI
+  callClientAPI,
+  NotificationSendType,
+  sendNotification
 };

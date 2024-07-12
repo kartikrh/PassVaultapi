@@ -141,6 +141,7 @@ const Auth = {
       body: {
         type: "object",
         properties: {
+          email: { type: "string" },
           userName: { type: "string" },
           password: { type: "string" },
           deviceInfo: { type: "string" },
@@ -155,7 +156,7 @@ const Auth = {
   clientregistration: {
     schema: {
       tags: ["Auth"],
-      description: "clinetLogin",
+      description: "clientregistration",
       body: {
         type: "object",
         properties: {
@@ -166,8 +167,25 @@ const Auth = {
           token: { type: "string" },
           googleID: { type: "string" },
           mobileNo: { type: "string" },
+          ipAddress: { type: "string" },
         },
         required: ["userName"],
+      },
+    },
+  },
+  clientUpdate: {
+    schema: {
+      tags: ["Auth"],
+      description: "clientUpdate",
+      body: {
+        type: "object",
+        properties: {
+          clientId : {type: "integer"},
+          fullName: { type: "string" },
+          email: { type: "string" },
+          mobileNo: { type: "string" },
+        },
+        required: ["clientId"],
       },
     },
   },
@@ -4469,6 +4487,64 @@ const Api = {
     },
   },
 };
+const Notification = {
+  getAll :{
+    schema : {
+      tags : ["Notification"],
+      description : "get all Notification",
+      secaurity : [{bearerAuth : []}]
+    }
+  },
+  getById :{
+    schema :{
+      tags : ["Notification"],
+      description : "get Notification By Id",
+      secaurity : [{bearerAuth : []}],
+      body :{
+        type : "object",
+        properties : {
+          notificationId : {type : "integer"}
+        },
+        required :["notificationId"]
+      }
+    }
+  },
+  save : {
+    schema : {
+      tags : ["Notification"],
+      description : "save Notification",
+      secaurity : [{bearerAuth : []}],
+      body :{
+        type : "object",
+        properties : {
+          notificationId : {type : "integer"},
+          title : {type : "string"},
+          description : {type : "string"},
+          sendType : {type : "integer"},
+          commentaryId : {type : "integer"},
+        }
+      }
+    }
+  },
+  delete : {
+    schema : {
+      tags : ["Notification"],
+      description : "delete Notification",
+      secaurity : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          notificationId : {
+            type : "array",
+            items : {type : "integer"},
+            minItems : 1
+          }
+        },
+        required : ["notificationId"]
+      }
+    }
+  }
+}
 
 const Devices = {
   getById: {
@@ -4501,6 +4577,8 @@ const Devices = {
           pushAuth: { type: "string" },
           userId: { type: "integer" },
           userType: { type: "integer" },
+          deviceType: { type: "integer" },
+          mobileToken: { type: "string" },
         },
         required: ["name", "pushEndpoint", "pushP256DH","pushAuth"],
       },
@@ -4521,6 +4599,27 @@ const Devices = {
           },
         },
         required: ["deviceId"],
+      },
+    },
+  },
+};
+
+const sendPushNotification = {
+  send: {
+    schema: {
+      tags: ["sendPushNotification"],
+      description: "send PushNotification",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          title: { type: "string" },
+          message: { type: "string" },
+          url: { type: "string" },
+          image: { type: "string" },
+          icon: { type: "string" },
+        },
+        required: ["title", "message"],
       },
     },
   },
@@ -4562,5 +4661,7 @@ module.exports = {
   Banner,
   ApiEndpoints,
   Api,
-  Devices
+  Notification,
+  Devices,
+  sendPushNotification
 };

@@ -13,9 +13,12 @@ const {
   loadClientDataInMemory,
   registrationClient,
   loginClient,
+  updateClient,
+  sendNotificationWeb,
+  sendNotificationMobile,
   //loginRegistrationClient,
 } = require("../controller/users/index");
-const { Auth } = require("../swaggerSchema/groupTags/schema");
+const { Auth ,sendPushNotification} = require("../swaggerSchema/groupTags/schema");
 const { authorize } = require("../controller/middleware/index");
 const { startSignalR, stopSignalR, isSignalRStarted  } = require('../signalrHandler/index');
 
@@ -96,4 +99,16 @@ module.exports = async function (fastify, opts) {
     schema: Auth.clientLogin.schema,
     handler: (request, reply) => loginClient(request, reply, fastify),
   });
+  fastify.post("/updateClient", {
+    schema: Auth.clientUpdate.schema,
+    handler: (request, reply) => updateClient(request, reply, fastify),
+  });
+  fastify.post("/sendNotificationWeb", {
+    schema: sendPushNotification.send.schema,
+    handler: (request, reply) => sendNotificationWeb(request, reply, fastify),
+  });
+  // fastify.post("/sendNotificationMobile", {
+  //   schema: sendPushNotification.send.schema,
+  //   handler: (request, reply) => sendNotificationMobile(request, reply, fastify),
+  // });
 };
