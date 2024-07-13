@@ -3028,7 +3028,20 @@ const Score = {
       },
     },
   },
-
+  getNotificationByClient:{
+    schema : {
+      tags : ["Notification"],
+      description : "get Notification By Client",
+      secaurity : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          clientId : {type : "integer"}
+        },
+        required : ["clientId"]
+      }
+    }
+  },
   getPartnershipList: {
     schema: {
       tags: ["Score"],
@@ -3606,6 +3619,7 @@ const EventMarket = {
           status: { type: "integer" },
           startDate: { type: "string" },
           endDate: { type: "string" },
+          rateSourceRefId : {type : "integer"}
         },
       },
     },

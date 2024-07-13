@@ -5,6 +5,7 @@ const { default: axios } = require("axios");
 const configConstants = require("./configConstants");
 const { errorLogger, tblPredictorAPILogger ,tblThirdPartyAPILogger} = require("./logger");
 const { getCommentaryDetailByIdQuery } = require("../repository/TableCommentary");
+const { saveNotificationLogsQuery } = require("../repository/TableNotification");
 const ERROR_CODES = {
   INVALID_INPUT: "INVALID_INPUT",
   SERVER_ERROR: "SERVER_ERROR",
@@ -496,6 +497,7 @@ const sendNotification = (data , request , fastify) =>{
       global?.clientSocketIo !== undefined &&
       global?.clientSocketIo.length > 0
     ){
+      saveNotificationLogsQuery(data,request, fastify);
       global.clientSocketIo.forEach((socket) => {
         socket.client.emit(eventName, data);
       });
