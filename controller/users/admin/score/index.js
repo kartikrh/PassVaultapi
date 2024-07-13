@@ -1,4 +1,4 @@
-const { getMarketsByCommentaryIdService } = require("../../../../services/score");
+const { getMarketsByCommentaryIdService, getNotificationByClientService } = require("../../../../services/score");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
 
@@ -14,6 +14,16 @@ const getMarketsByCommentaryId = async (request, reply, fastify) => {
   }
 };
 
+const getNotificationByClient = async (request , reply , fastify) =>{
+  try {
+    const result = await getNotificationByClientService(request , fastify)
+    reply.status(200).send(success(result,200))
+  } catch (error) {
+    errorLogger(fastify,error.message,commonPath + "/getNotificationByClient",request)
+    reply.status(200).send(error(error.message,ERROR_CODES.SERVER_ERROR,200))
+  }
+}
 module.exports = {
-    getMarketsByCommentaryId
+    getMarketsByCommentaryId,
+    getNotificationByClient
 }
