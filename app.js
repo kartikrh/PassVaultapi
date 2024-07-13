@@ -32,6 +32,8 @@ const {
 const {startSignalR} = require("./signalrHandler/index.js")
 const WebSocket = require("ws");
 const WebsocketConnection = require("./websocket");
+const webPush = require("web-push");
+const {webPushset} = require("./WebPushHandler/index.js");
 
 // Pass --options via CLI arguments in command to enable these options.
 module.exports.options = {};
@@ -128,6 +130,7 @@ module.exports = async function (fastify, opts) {
         connectClients(fastify);
         //WebsocketConnection(fastify);
         disconnectClients(fastify);
+        webPushset(webPush);
       } catch (error) {
         console.log("error sync with db", error);
       }

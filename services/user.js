@@ -4,6 +4,7 @@ const { v4: uuidv4 } = require("uuid");
 const requestIp = require("request-ip");
 const path = require("path");
 const {ImgModuleConfig} = require("../utilities/imageConstant");
+const {sendNotification,sendMobileNotifications} = require("../WebPushHandler/index");
 
 const {
   signUpUser,
@@ -21,6 +22,7 @@ const {
   registerClient,
   loginClient,
   updateClient,
+  signOutClient
 } = require("../repository/TableUser");
 const {
   deviceInfo,
@@ -506,7 +508,6 @@ const changeUserPasswordByUSerIDService = async (request, fastify) => {
 
 async function loginClientService({ body }, fastify) {
   try {
-
     let results;
     if (body.googleID || body.token) {
         // Google Login
@@ -525,8 +526,20 @@ async function loginClientService({ body }, fastify) {
       return { error: results };
     }
 
-    const payload = { clientId: results.clientId };
-    const token = generateToken(payload);
+    const tokenPayload = {
+      WrClientId: results.clientId,
+      WrUserType: 0,
+      WrRoleId: 0,
+      WrUserName: body.userName,
+      WrIsSuperAdmin: false,
+      WrParentId: 0,
+      WrAllowMultipleLogin: false,
+      wrToken: body.token,
+    };
+  
+    //* token created
+
+    const token = generateToken(tokenPayload);
 
     return { token , details: results};
 
@@ -572,6 +585,40 @@ async function updateClientService({ body }, fastify) {
   }
 }
 
+async function sendNotificationWebService({ body }, fastify) {
+  try {
+    const {title, message, url, image, icon} = body;
+    const results = await sendNotification(title, message, url, image, icon);
+    return results;
+
+  } catch (error) {
+    return null;
+  }
+}
+
+async function sendNotificationMobileService({ body }, fastify) {
+  try {
+    const {title, message, url, image, icon} = body;
+    const results = await sendMobileNotifications(title, message, url, image, icon);
+    return results;
+
+  } catch (error) {
+    return null;
+  }
+}
+
+async function signOutClientService(request, fastify) {
+  try {
+    const { WrClientId, wrToken } =
+    request.userTokenInfo;
+    const results = await signOutClient({ WrClientId, wrToken },fastify);
+    return results;
+
+  } catch (error) {
+    return null;
+  }
+}
+
 module.exports = {
   signUpUserService,
   signInUserServices,
@@ -590,5 +637,8 @@ module.exports = {
   //loginRegistrationClientService,
   loginClientService,
   registrationClientService,
-  updateClientService
+  updateClientService,
+  sendNotificationWebService,
+  sendNotificationMobileService,
+  signOutClientService
 };
