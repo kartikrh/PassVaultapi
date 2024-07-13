@@ -3619,6 +3619,7 @@ const EventMarket = {
           status: { type: "integer" },
           startDate: { type: "string" },
           endDate: { type: "string" },
+          rateSourceRefId : {type : "integer"}
         },
       },
     },
