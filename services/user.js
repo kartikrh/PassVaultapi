@@ -609,9 +609,19 @@ async function sendNotificationMobileService({ body }, fastify) {
 
 async function signOutClientService(request, fastify) {
   try {
-    const { WrClientId, wrToken } =
-    request.userTokenInfo;
-    const results = await signOutClient({ WrClientId, wrToken },fastify);
+    let token = request.headers.authorization;
+    token = token?.split(" ")[1];
+    const secretKey = process.env.SECRET_KEY_TOKEN;
+
+    const valid = jwt.verify(token, secretKey);
+    const decode = jwt.decode(token, secretKey);
+    const user = await checkValidQuery(decode, fastify);
+
+    //const { WrClientId, wrToken } = request.userTokenInfo;
+    if (!user) {
+      throw new Error("Invalid Token");
+    }
+    const results = await signOutClient({ WrClientId:decode.WrClientId, wrToken:decode.wrToken },fastify);
     return results;
 
   } catch (error) {

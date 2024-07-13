@@ -110,7 +110,7 @@ module.exports = async function (fastify, opts) {
   });
   fastify.post("/signOutClient", {
     schema: Auth.signOut.schema,
-    preHandler: [(request, reply) => authorize(request, reply, fastify)],
+    //preHandler: [(request, reply) => authorize(request, reply, fastify)],
     handler: (request, reply) => signOutClient(request, reply, fastify),
   });
 };
