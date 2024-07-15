@@ -147,6 +147,7 @@ const getAllEventMarketsService = async (request, fastify) => {
   if(rateSourceRefId && rateSourceRefId != 0){
     createWhereStatus = `tem."wrRateSource" = ${rateSourceRefId}`;
   }
+  console.log("createWhereStatus",createWhereStatus);
   let eventMarket = await getAllEventMarketsQuery(fastify, createWhereStatus);
   if (eventTypeId) {
     // get the commentaryId from tblCommentaries
