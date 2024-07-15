@@ -145,7 +145,7 @@ const getAllEventMarketsService = async (request, fastify) => {
     createWhereStatus = null;
   }
   if(rateSourceRefId && rateSourceRefId != 0){
-    createWhereStatus = `tem."wrRateSourceRefID" = ${rateSourceRefId}`;
+    createWhereStatus = `tem."wrRateSource" = ${rateSourceRefId}`;
   }
   let eventMarket = await getAllEventMarketsQuery(fastify, createWhereStatus);
   if (eventTypeId) {
