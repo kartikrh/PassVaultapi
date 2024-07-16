@@ -480,7 +480,7 @@ const NotificationSendType = {
   onlyLoggedInUser : 2,
   pushNotification : 3
 }
-const sendNotificationByType = (data , request , fastify) =>{
+const sendNotificationByType =async (data , request , fastify) =>{
   try {
     let eventName;
     switch(data.sendType){
@@ -502,14 +502,17 @@ const sendNotificationByType = (data , request , fastify) =>{
         return true;
         break;
     }
+    saveNotificationLogsQuery(data,request, fastify);
     if( 
       global?.clientSocketIo !== undefined &&
       global?.clientSocketIo.length > 0
     ){
-      saveNotificationLogsQuery(data,request, fastify);
       global.clientSocketIo.forEach((socket) => {
         socket.client.emit(eventName, data);
       });
+    }
+    else {
+      console.log("Client Socket Not Found");
     }
 
     return true;

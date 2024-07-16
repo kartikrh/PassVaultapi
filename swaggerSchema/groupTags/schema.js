@@ -3042,6 +3042,24 @@ const Score = {
       }
     }
   },
+  markreadNotification :{
+    schema : {
+      tags : ["Score"],
+      description : "Mark Read Notification",
+      secaurity : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          notificationId : {
+            type : "array",
+            items : {type : "integer"},
+          },
+          clientId : {type : "integer"}
+        },
+        required : ["notificationId", "clientId"]
+      },
+    }
+  },
   getPartnershipList: {
     schema: {
       tags: ["Score"],
@@ -4536,6 +4554,7 @@ const Notification = {
           description : {type : "string"},
           sendType : {type : "integer"},
           commentaryId : {type : "integer"},
+          url : {type : "string"}
         }
       }
     }
@@ -4553,6 +4572,20 @@ const Notification = {
             items : {type : "integer"},
             minItems : 1
           }
+        },
+        required : ["notificationId"]
+      }
+    }
+  },
+  sendNotification : {
+    schema : {
+      tags : ["Notification"],
+      description : "send Notification",
+      secaurity : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          notificationId : {type : "integer"},
         },
         required : ["notificationId"]
       }

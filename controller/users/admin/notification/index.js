@@ -1,5 +1,5 @@
 
-const { getAllNotificationService, getNotificationByIdService, saveNotificationService, deleteNotificationService, getEventListService } = require("../../../../services/notification");
+const { getAllNotificationService, getNotificationByIdService, saveNotificationService, deleteNotificationService, getEventListService, sendNotService } = require("../../../../services/notification");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
 
@@ -51,11 +51,21 @@ const deleteNotification = async (request , reply , fastify) =>{
         reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
     }
 }
+const sendNot = async (request , reply , fastify) =>{
+    try {
+        const result = await sendNotService(request ,fastify);
+        reply.status(200).send(success(result,200));
+    } catch (err) {
+        errorLogger(fastify, err.message, commonPath + "/sendNot", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+    }
+}
 
 module.exports ={
     getAllNotification,
     getNotificationById,
     saveNotification,
     deleteNotification,
-    getEventList
+    getEventList,
+    sendNot
 }

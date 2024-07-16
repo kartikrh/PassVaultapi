@@ -112,9 +112,11 @@ const updateNotificationService =  async (request,fastify)=>{
         name :title
     })
     if(image && image.length){
-        removeImageFromServer({
-            path : global.tblNotifications[index].image
-        })
+        if(global.tblNotifications[index].image){
+            removeImageFromServer({
+                path : global.tblNotifications[index].image
+            })
+        }
         let path = await storeImageOnServer({
             image : image[0],
             project : projectName,
@@ -124,9 +126,11 @@ const updateNotificationService =  async (request,fastify)=>{
         request.body.image = path
     }
     if(icon && icon.length){
-        removeImageFromServer({
-            path : global.tblNotifications[index].icon
-        })
+        if(global.tblNotifications[index].icon){
+            removeImageFromServer({
+                path : global.tblNotifications[index].icon
+            })
+        }
         let path = await storeImageOnServer({
             image : icon[0],
            project : projectName,
@@ -171,11 +175,22 @@ const deleteNotificationService = async(request,fastify)=>{
 
     return "Notification(s) deleted successfully";
 }
-
+const sendNotService = async(request,fastify)=>{
+    const {notificationId} = request.body;
+    let index = global.tblNotifications.findIndex(
+        (item)=> item.notificationId == notificationId
+    )
+    if(index == -1){
+        throw new Error("Notification with this id not found");
+    }
+    await sendNotificationByType(global.tblNotifications[index],request,fastify);
+    return "Notification sent successfully";
+}   
 module.exports = {
     getAllNotificationService,
     getNotificationByIdService,
     saveNotificationService,
     deleteNotificationService,
-    getEventListService
+    getEventListService,
+    sendNotService
 }
