@@ -269,7 +269,8 @@ async function startSignalR(fastify) {
           });
         } catch (err) {
           console.error('Error connecting to SignalR:', err);
-          setTimeout(startSignalR, 5000); 
+          setTimeout(startSignalR, 300000); 
+          throw new Error(err);
         }
       }
     } else{
@@ -288,10 +289,13 @@ async function startSignalR(fastify) {
           }
         }, 300000); // 5 minutes
       } catch (error) {
-        
+        console.error('Error disconnecting from SignalR:', error);
+        throw new Error(error);
       }
     }
-  } catch (error) { }
+  } catch (error) { 
+    throw new Error(error);
+  }
 }
 
 async function stopSignalR(fastify) {
@@ -307,6 +311,7 @@ async function stopSignalR(fastify) {
       global.selectionData = {};
     } catch (err) {
       console.error('Error disconnecting from SignalR:', err);
+      throw new Error(err);
     }
   }
 }

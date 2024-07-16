@@ -79,13 +79,18 @@ module.exports = async function (fastify, opts) {
   // Single API to start and stop SignalR based on its current state
   fastify.post("/signalr/toggle", {
     handler: async (request, reply) => {
-      if (isSignalRStarted(fastify)) {
-        await stopSignalR(fastify);
-        reply.send({ status: "SignalR stopped" });
-      } else {
-        await startSignalR(fastify);
-        reply.send({ status: "SignalR started" });
+      try {
+        if (isSignalRStarted(fastify)) {
+          await stopSignalR(fastify);
+          reply.send({ status: "SignalR stopped" });
+        } else {
+          await startSignalR(fastify);
+          reply.send({ status: "SignalR started" });
+        }
+      } catch (error) {
+        return error;
       }
+
     }
   });
   // fastify.post("/signupClient", {
