@@ -515,7 +515,7 @@ async function registerClient(body, fastify) {
     } else {
       // Handle Google registration
       let data = await fastify.db.query(
-        `SELECT "wrClientID", "wrGoogleID"
+        `SELECT "wrClientID" as "clientId", "wrGoogleID" as "googleId", "wrUserName" as "userName", "wrIsAllowMultiLogin" as "isAllowMultiLogin","wrEmailID" as "emailId" ,"wrMobileNo" as "mobileNo"
          FROM "tblClient"
          WHERE "wrGoogleID" = $1 AND "wrIsDelete" = false;`,
         {
@@ -562,15 +562,6 @@ async function loginClient(body, fastify) {
       );
 
       if (data.length > 0) {
-         // Insert login information
-         await fastify.db.query(
-          `INSERT INTO "tblUserLoginInfos" ("wrClientID", "wrInfo", "wrIsLogin", "wrToken", "wrCreatedDate")
-           VALUES ($1, $2, true, $3, now());`,
-          {
-            type: QueryTypes.INSERT,
-            bind: [data[0].clientId, deviceInfo, token],
-          }
-        );
         return data[0];
       } else {
         const registrationData = await fastify.db.query(

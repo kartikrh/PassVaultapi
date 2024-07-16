@@ -2,7 +2,7 @@
 const { DataTypes } = require("sequelize");
 
 module.exports = (sequelize) => {
-  const UserModel = sequelize.define(
+  const ClientModel = sequelize.define(
     "tblClient",
     {
       wrClientID: {

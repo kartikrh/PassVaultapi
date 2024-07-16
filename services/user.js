@@ -515,7 +515,7 @@ async function loginClientService({ body }, fastify) {
         // Google Login
         results = await loginClient(body, fastify);
     } else {
-      // Normal login or registration
+      // Manual login
       if (body.password) {
         const hashedPassword = encrypt(body.password);
         body.password = hashedPassword;
@@ -542,7 +542,6 @@ async function loginClientService({ body }, fastify) {
     //* token created
 
     const token = generateToken(tokenPayload);
-
     return { token , details: results};
 
   } catch (error) {
@@ -614,17 +613,22 @@ async function signOutClientService(request, fastify) {
     let token = request.headers.authorization;
     token = token?.split(" ")[1];
     const secretKey = process.env.SECRET_KEY_TOKEN;
+    if(token){
+      const valid = jwt.verify(token, secretKey);
+      const decode = jwt.decode(token, secretKey);
+      const user = await checkValidQuery(decode, fastify);
+      
 
-    const valid = jwt.verify(token, secretKey);
-    const decode = jwt.decode(token, secretKey);
-    const user = await checkValidQuery(decode, fastify);
-
-    //const { WrClientId, wrToken } = request.userTokenInfo;
-    if (!user) {
-      throw new Error("Invalid Token");
-    }
-    const results = await signOutClient({ WrClientId:decode.WrClientId, wrToken:decode.wrToken },fastify);
-    return results;
+      //const { WrClientId, wrToken } = request.userTokenInfo;
+      if (!user) {
+        throw new Error("Invalid Token");
+      }
+      const results = await signOutClient({ WrClientId:decode.WrClientId, wrToken:decode.wrToken },fastify);
+      return results;
+  }
+  else{
+    return "Invalid Token";
+  }
 
   } catch (error) {
     return null;
