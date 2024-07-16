@@ -2631,7 +2631,8 @@ const closeCommentaryQuery = async (data, fastify, request) => {
   try {
     const result = await fastify.db.query(
       `update "tblCommentaries" set
-        "wrCommentaryStatus" = $1
+        "wrCommentaryStatus" = $1,
+        "wrCommentaryCloseTime" = now()
         where "wrCommentaryId" = ANY($2)
       `,
       {
@@ -2748,7 +2749,8 @@ const getCommentaryDetailByIdQuery = async (data, fastify) => {
               tm."wrMatchType" as "matchType",
               te."wrEventType" as "eventType",
               tco."wrCompetition" as "competition",
-              "wrIsPredictMarket" as "isPredictMarket"
+              "wrIsPredictMarket" as "isPredictMarket",
+              tc."wrCommentaryCloseTime" as "commentaryCloseTime"
           FROM "tblCommentaries" tc
           LEFT JOIN "tblMatchTypes" tm ON tc."wrMatchTypeId" = tm."wrMatchTypeId"
           LEFT JOIN "tblEventTypes" te ON tc."wrEventTypeId" = te."wrEventTypeId"
