@@ -1,5 +1,5 @@
 const { updateNotificationQuery, deleteNotificationQuery, insertNotificationQuery } = require("../repository/TableNotification");
-const { sendNotification } = require("../utilities");
+const { sendNotificationByType } = require("../utilities");
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
 const { generateImageName, storeImageOnServer, removeImage, removeImageFromServer } = require("../utilities/Images");
@@ -36,7 +36,7 @@ const saveNotificationService = async(request,fastify) =>{
     }
     if(isSendNow){
         //send notification
-        sendNotification(result , request,fastify);
+        sendNotificationByType(result , request,fastify);
     }   
     return result;
     
