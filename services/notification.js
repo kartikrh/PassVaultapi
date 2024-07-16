@@ -13,7 +13,8 @@ const getEventListService = async(request) =>{
         return {
             commentaryId : item.commentaryId,
             eventDate : item.eventDate,
-            eventName : item.eventName
+            eventName : item.eventName,
+            eventRefId : item.eventRefId
         }
     });
     return result || [];
