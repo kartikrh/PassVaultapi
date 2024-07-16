@@ -289,6 +289,7 @@ async function startSignalR(fastify) {
           }
         }, 300000); // 5 minutes
       } catch (error) {
+        console.error('Error disconnecting from SignalR:', error);
         throw new Error(error);
       }
     }
