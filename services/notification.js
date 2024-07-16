@@ -153,12 +153,16 @@ const deleteNotificationService = async(request,fastify)=>{
             (item)=> item.notificationId == not
         )
         if(index != -1){
-            removeImageFromServer({
-                path : global.tblNotifications[index].image
-            })
-            removeImageFromServer({
-                path : global.tblNotifications[index].icon
-            })
+            if(global.tblNotifications[index].image){
+                removeImageFromServer({
+                    path : global.tblNotifications[index].image
+                })
+            }
+            if(global.tblNotifications[index].icon){
+                removeImageFromServer({
+                    path : global.tblNotifications[index].icon
+                })
+            }
         }
     }
     global.tblNotifications = global.tblNotifications.filter(
