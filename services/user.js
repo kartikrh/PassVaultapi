@@ -22,6 +22,7 @@ const {
   registerClient,
   loginClient,
   updateClient,
+  signOutClient
 } = require("../repository/TableUser");
 const {
   deviceInfo,
@@ -110,16 +111,18 @@ async function signOutUserServices(request, fastify) {
     request.userTokenInfo;
 
   if (!WrAllowMultipleLogin) {
-    try {
+    try {  
       const clientsInRoom = global.socketIo.sockets.adapter.rooms.get(WrEId); // get sockets in user's room
       global.socketIo
       .to(WrEId)
       .emit("logout", "You have been removed from the room.");
 
       // Remove socket ids from the user room
-      Array.from(clientsInRoom).forEach((id) =>
-        global.socketIo.sockets.sockets.get(id).leave(WrEId)
-      );
+      if(clientsInRoom?.size){
+        Array.from(clientsInRoom).forEach((id) =>
+          global.socketIo.sockets.sockets.get(id).leave(WrEId)
+        );
+      }
     } catch (error) {
       console.log(
         `Error While Logging out user id ${WrUserId} from current device`,
@@ -507,13 +510,12 @@ const changeUserPasswordByUSerIDService = async (request, fastify) => {
 
 async function loginClientService({ body }, fastify) {
   try {
-
     let results;
     if (body.googleID || body.token) {
         // Google Login
         results = await loginClient(body, fastify);
     } else {
-      // Normal login or registration
+      // Manual login
       if (body.password) {
         const hashedPassword = encrypt(body.password);
         body.password = hashedPassword;
@@ -526,9 +528,20 @@ async function loginClientService({ body }, fastify) {
       return { error: results };
     }
 
-    const payload = { clientId: results.clientId };
-    const token = generateToken(payload);
+    const tokenPayload = {
+      WrClientId: results.clientId,
+      WrUserType: 0,
+      WrRoleId: 0,
+      WrUserName: body.userName,
+      WrIsSuperAdmin: false,
+      WrParentId: 0,
+      WrAllowMultipleLogin: false,
+      wrToken: body.token,
+    };
+  
+    //* token created
 
+    const token = generateToken(tokenPayload);
     return { token , details: results};
 
   } catch (error) {
@@ -595,6 +608,33 @@ async function sendNotificationMobileService({ body }, fastify) {
   }
 }
 
+async function signOutClientService(request, fastify) {
+  try {
+    let token = request.headers.authorization;
+    token = token?.split(" ")[1];
+    const secretKey = process.env.SECRET_KEY_TOKEN;
+    if(token){
+      const valid = jwt.verify(token, secretKey);
+      const decode = jwt.decode(token, secretKey);
+      const user = await checkValidQuery(decode, fastify);
+      
+
+      //const { WrClientId, wrToken } = request.userTokenInfo;
+      if (!user) {
+        throw new Error("Invalid Token");
+      }
+      const results = await signOutClient({ WrClientId:decode.WrClientId, wrToken:decode.wrToken },fastify);
+      return results;
+  }
+  else{
+    return "Invalid Token";
+  }
+
+  } catch (error) {
+    return null;
+  }
+}
+
 module.exports = {
   signUpUserService,
   signInUserServices,
@@ -615,5 +655,6 @@ module.exports = {
   registrationClientService,
   updateClientService,
   sendNotificationWebService,
-  sendNotificationMobileService
+  sendNotificationMobileService,
+  signOutClientService
 };

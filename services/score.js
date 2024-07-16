@@ -1,5 +1,6 @@
 const { getMarketsByCIdQuery } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
+const { getNotificationLogByClientQuery } = require("../repository/TableNotification");
 
 const getAllCommentariesDataService = (request) => {
     let commentaries = {};
@@ -112,4 +113,8 @@ const getMarketsByCommentaryIdService =async (request , fastify) => {
         dataProviderUrl: datProviderUrl.value
     };
 }
-module.exports = { getAllCommentariesDataService ,getMarketsByCommentaryIdService };
+const getNotificationByClientService = async (request , fastify)=>{
+    let data = await getNotificationLogByClientQuery(request.body,request ,fastify);
+    return data;
+}
+module.exports = { getAllCommentariesDataService ,getMarketsByCommentaryIdService , getNotificationByClientService };

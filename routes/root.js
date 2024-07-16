@@ -16,6 +16,7 @@ const {
   updateClient,
   sendNotificationWeb,
   sendNotificationMobile,
+  signOutClient
   //loginRegistrationClient,
 } = require("../controller/users/index");
 const { Auth ,sendPushNotification} = require("../swaggerSchema/groupTags/schema");
@@ -78,13 +79,18 @@ module.exports = async function (fastify, opts) {
   // Single API to start and stop SignalR based on its current state
   fastify.post("/signalr/toggle", {
     handler: async (request, reply) => {
-      if (isSignalRStarted(fastify)) {
-        await stopSignalR(fastify);
-        reply.send({ status: "SignalR stopped" });
-      } else {
-        await startSignalR(fastify);
-        reply.send({ status: "SignalR started" });
+      try {
+        if (isSignalRStarted(fastify)) {
+          await stopSignalR(fastify);
+          reply.send({ status: "SignalR stopped" });
+        } else {
+          await startSignalR(fastify);
+          reply.send({ status: "SignalR started" });
+        }
+      } catch (error) {
+        return error;
       }
+
     }
   });
   // fastify.post("/signupClient", {
@@ -107,8 +113,9 @@ module.exports = async function (fastify, opts) {
     schema: sendPushNotification.send.schema,
     handler: (request, reply) => sendNotificationWeb(request, reply, fastify),
   });
-  // fastify.post("/sendNotificationMobile", {
-  //   schema: sendPushNotification.send.schema,
-  //   handler: (request, reply) => sendNotificationMobile(request, reply, fastify),
-  // });
+  fastify.post("/signOutClient", {
+    schema: Auth.signOut.schema,
+    //preHandler: [(request, reply) => authorize(request, reply, fastify)],
+    handler: (request, reply) => signOutClient(request, reply, fastify),
+  });
 };

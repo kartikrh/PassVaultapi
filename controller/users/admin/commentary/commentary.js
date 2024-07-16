@@ -149,7 +149,7 @@ const deleteCommentary = async (request, reply, fastify) => {
     const result = await deleteCommentaryService(request, fastify);
     reply.status(200).send(success(result, 200));
   } catch (err) {
-    errorLogger(fastify, err.message, path + "/addCommentary", request);
+    errorLogger(fastify, err.message, path + "/delete", request);
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
@@ -161,7 +161,7 @@ const saveCommentaryDetails = async (request, reply, fastify) => {
     //console.timeEnd("saveCommentaryDetails");
     reply.status(200).send(success(result, 200));
   } catch (err) {
-    errorLogger(fastify, err.message, path + "/addCommentary", request);
+    errorLogger(fastify, err.message, path + "/saveDetails", request);
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };

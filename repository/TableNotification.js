@@ -154,10 +154,72 @@ const deleteNotificationQuery = (request , fastify) =>{
         )
         throw new Error(error.message);
     }
+}  
+const saveNotificationLogsQuery = (data,request,fastify) =>{
+    try {
+        const query = `INSERT INTO "tblNotificationLogs" ("wrNotificationId", "wrClientId", "wrIsRead")
+        SELECT $1, "wrClientID", $2 
+        FROM "tblClient";`
+
+        const result = fastify.db.query(query,{
+            bind : [
+                data.notificationId,
+                false
+            ]
+        });
+
+        return result;
+    } catch (error) {
+        errorLogger(
+            fastify,
+            error.message,
+            "repository/TableNotification/saveNotificationLogsQuery",
+            request
+        )
+        throw new Error(error.message);
+    }
+}
+const getNotificationLogByClientQuery = async (data , request , fastify)=>{
+    try {
+        const query = `
+            SELECT
+                "wrNotificationId" as "notificationId",
+                "wrClientId" as "clientId",
+                "wrIsRead" as "isRead",
+                tn."wrId" as "notificationId",
+                tn."wrTitle" as "title",
+                tn."wrDescription" as "description",
+                tn."wrSendType" as "sendType",
+                tn."wrCommentaryId" as "commentaryId",
+                tn."wrUrl" as "url",
+                tn."wrImage" as "image",
+                tn."wrIcon" as "icon"
+            FROM "tblNotificationLogs"
+            LEFT JOIN "tblNotifications" tn ON tn."wrId" = "tblNotificationLogs"."wrNotificationId"
+            WHERE "tblNotificationLogs"."wrClientId" = $1;
+        `;
+
+        const result = await fastify.db.query(query,{
+            bind : [data.clientId]
+        });
+
+        return result;
+
+    } catch (error) {
+        errorLogger(
+            fastify ,
+            error.message,
+            "repository/TableNotification/getNotificationLogByClientQuery",
+            request
+        )
+        throw new Error(error.message);
+    }
 }
 module.exports = {
     getAllNotificationQuery,
     updateNotificationQuery,
     insertNotificationQuery,
-    deleteNotificationQuery
+    deleteNotificationQuery,
+    saveNotificationLogsQuery,
+    getNotificationLogByClientQuery
 }
