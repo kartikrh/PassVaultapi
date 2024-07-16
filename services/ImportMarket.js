@@ -13,6 +13,7 @@ const {
   createOrUpdateEventRunnerMarketManualQuery,
   getEventMarketByIdsQuery,
 } = require("../repository/TableEventMarkets");
+const configConstants = require("../utilities/configConstants");
 
 const ImportMarketService = async (request, fastify) => {
   if (request.userTokenInfo.WrUserId) {
@@ -137,7 +138,11 @@ const ImportMarketService = async (request, fastify) => {
 };
 
 const MarketListService = async (request, fastify) => {
-  const apiUrl = process.env.IMPORTMARKET_API;
+  // const apiUrl = process.env.IMPORTMARKET_API;
+  const apiUrl = global.tblConfigs.find((item) => item.key == configConstants.IMPORTMARKET_API)?.value;
+  if(!apiUrl){
+    throw new Error("IMPORTMARKET_API not found in tblConfigs");
+  }
   let endpoint;
   let postData = {
     isaustralian: request.body.isAustralian,
