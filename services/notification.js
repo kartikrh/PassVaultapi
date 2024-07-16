@@ -8,6 +8,16 @@ const getAllNotificationService = async(request) =>{
     let result = global.tblNotifications;
     return result || [];
 }
+const getEventListService = async(request) =>{
+    let result = global.tblCommentaries.map((item)=>{
+        return {
+            commentaryId : item.commentaryId,
+            eventDate : item.eventDate,
+            eventName : item.eventName
+        }
+    });
+    return result || [];
+}
 const getNotificationByIdService = async(request) =>{
     let result = global.tblNotifications.find(
         (item)=> item.notificationId == request.body.notificationId
@@ -161,5 +171,6 @@ module.exports = {
     getAllNotificationService,
     getNotificationByIdService,
     saveNotificationService,
-    deleteNotificationService
+    deleteNotificationService,
+    getEventListService
 }
