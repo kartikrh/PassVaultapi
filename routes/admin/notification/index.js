@@ -1,5 +1,5 @@
 const { authorize, checkPermission } = require("../../../controller/middleware");
-const { getAllNotification, getNotificationById, saveNotification, deleteNotification, getEventList } = require("../../../controller/users/admin/notification");
+const { getAllNotification, getNotificationById, saveNotification, deleteNotification, getEventList, sendNot } = require("../../../controller/users/admin/notification");
 const { Notification } = require("../../../swaggerSchema/groupTags/schema");
 
 module.exports = async (fastify,opts) =>{
@@ -64,5 +64,17 @@ module.exports = async (fastify,opts) =>{
                 })
         ],
         handler : (request,reply) => deleteNotification(request,reply,fastify)
+    })
+    fastify.post("/sendNotification", {
+        schema : Notification.sendNotification.schema,
+        preHandler : [
+            (request,reply) => authorize(request,reply,fastify),
+            (request,reply,done) => 
+                checkPermission(request,reply,fastify,{
+                    tabName : "Notification",
+                    mode : "view"
+                })
+        ],
+        handler : (request,reply) => sendNot(request,reply,fastify)
     })
 }
