@@ -5,6 +5,7 @@ const {
   insertCompetitionQuery,
   updateCompititionQuery,
   insertEventQuery,
+  updateMarketRunnerTeambySelectionId
 } = require("../repository/TableImportMarket");
 
 const {
@@ -401,8 +402,84 @@ const ImportMarketWithRunnerService = async (request, fastify) => {
   }
 };
 
+const listManualMarketService = async (request, fastify) => {
+  try {
+    // const apiUrl = process.env.IMPORTMARKET_API;
+    const {isAustralian, refID} = request.body
+    const apiUrl = global.tblConfigs.find((item) => item.key == configConstants.IMPORTMARKET_API)?.value;
+    if(!apiUrl){
+      throw new Error("IMPORTMARKET_API not found in tblConfigs");
+    }
+    let endpoint = "/listManualMarket";
+  
+    let postData = {
+      isaustralian: isAustralian,
+      eventids:refID
+    }
+  
+    const response = await fetch(apiUrl + endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(postData),
+    });
+    let responseData;
+    if (response.ok) {
+      responseData = await response.json();
+      const commentary = global.tblCommentaries.find(
+        (item) => item.eventRefId === eventId
+      );
+      responseData.teamsDetails = {};
+      if (commentary) {
+        const currentInnings = commentary.currentInnings;
+      
+        const [commentaryTeamsOne, commentaryTeamsTwo] =
+          await Promise.all([
+            global.tblCommentaryTeams.find(
+              (item) =>
+                item.commentaryId === commentary.commentaryId &&
+                item.teamId === commentary.team1Id &&
+                item.currentInnings === currentInnings
+            ),
+            global.tblCommentaryTeams.find(
+              (item) =>
+                item.commentaryId === commentary.commentaryId &&
+                item.teamId === commentary.team2Id &&
+                item.currentInnings === currentInnings
+            ),
+          ]);
+          responseData.teamsDetails.team1Id = commentaryTeamsOne.teamId;
+          responseData.teamsDetails.team1Name = commentaryTeamsOne.teamName;
+          responseData.teamsDetails.team2Id = commentaryTeamsTwo.teamId;
+          responseData.teamsDetails.team1Name = commentaryTeamsOne.teamName;
+      }
+      return responseData
+    } else {
+      console.error(`Error: ${response.status} - ${response.statusText}`);
+      throw new Error("Error while fetching data from import market");
+    }
+      
+  } catch (error) {
+    throw new Error(error);
+  }
+}
+const updateTeamIdBySelectionIdService = async (request, fastify) => {
+  if (request.userTokenInfo.WrUserId) {
+    try {
+      await updateMarketRunnerTeambySelectionId({
+        ...request.body
+      }, fastify, request);
+    } catch (error) {
+      throw new Error(error);
+    }
+  }
+}
+
 module.exports = {
   ImportMarketService,
   MarketListService,
-  ImportMarketWithRunnerService
+  ImportMarketWithRunnerService,
+  listManualMarketService,
+  updateTeamIdBySelectionIdService
 };

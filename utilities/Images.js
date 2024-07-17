@@ -49,6 +49,7 @@ const removeImage = async (imageName) => {
   }
 };
 const storeImageOnServer = async (args) => {
+   try {
     const formData = new FormData();
     formData.append("project", args.project);
     formData.append("type", args.type);
@@ -74,20 +75,29 @@ const storeImageOnServer = async (args) => {
       throw new Error(result.data.error.message);
     }
     return result.data.result;
+   } catch (error) {
+      console.log("Error in storeImageOnServer", error);
+      throw new Error(error.message);
+   }
 }
 
 const removeImageFromServer = async (args) =>{
-  const fileUploadURL = global.tblConfigs.find((item) => item.key === FILE_UPLOAD_URL).value;
-  const result = await axios.post(
-    `${fileUploadURL}/delete`,
-    {
-        path : args.path
+  try {
+    const fileUploadURL = global.tblConfigs.find((item) => item.key === FILE_UPLOAD_URL).value;
+    const result = await axios.post(
+      `${fileUploadURL}/delete`,
+      {
+          path : args.path
+      }
+    );
+    if(!result.data.success){
+      throw new Error(result.data.error.message);
     }
-  );
-  if(!result.data.success){
-    throw new Error(result.data.error.message);
+    return result.data.result;
+  } catch (error) {
+    console.log("Error in removeImageFromServer", error);
+    throw new Error(error.message);
   }
-  return result.data.result;
 }
 
 const generateImageName = (args) => {

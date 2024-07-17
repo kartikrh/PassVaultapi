@@ -2773,6 +2773,23 @@ const ImportMarket = {
       },
     },
   },
+  updateTeamIdForSelectionId: {
+    schema: {
+      tags: ["ImportMarket"],
+      description: "Update Team Id for selection",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            selectionId: { type: "integer" },
+            teamId: { type: "integer" },
+          },
+        },
+      },
+    },
+  },
 };
 
 const MarketTemplate = {
@@ -3040,6 +3057,24 @@ const Score = {
         },
         required : ["clientId"]
       }
+    }
+  },
+  markreadNotification :{
+    schema : {
+      tags : ["Score"],
+      description : "Mark Read Notification",
+      secaurity : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          notificationId : {
+            type : "array",
+            items : {type : "integer"},
+          },
+          clientId : {type : "integer"}
+        },
+        required : ["notificationId", "clientId"]
+      },
     }
   },
   getPartnershipList: {
@@ -4536,6 +4571,7 @@ const Notification = {
           description : {type : "string"},
           sendType : {type : "integer"},
           commentaryId : {type : "integer"},
+          url : {type : "string"}
         }
       }
     }
@@ -4553,6 +4589,20 @@ const Notification = {
             items : {type : "integer"},
             minItems : 1
           }
+        },
+        required : ["notificationId"]
+      }
+    }
+  },
+  sendNotification : {
+    schema : {
+      tags : ["Notification"],
+      description : "send Notification",
+      secaurity : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          notificationId : {type : "integer"},
         },
         required : ["notificationId"]
       }
