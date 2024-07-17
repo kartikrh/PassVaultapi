@@ -3,7 +3,8 @@ const {
   importMarketController,
   ListEventTypesAPIcontroller,
   marketListController,
-  importMarketwithRunnerController
+  importMarketwithRunnerController,
+  listManualMarket
 } = require("../../../controller/users/admin/ImportMarket/index");
 const { ImportMarket } = require("../../../swaggerSchema/groupTags/schema");
 const configConstants = require("../../../utilities/configConstants");
@@ -28,5 +29,19 @@ module.exports = async function (fastify, opts) {
     preHandler: [(request, reply) => authorize(request, reply, fastify)],
     handler: (request, reply) =>
       importMarketwithRunnerController(request, reply, fastify),
+  });
+
+  fastify.post("/getlistManualMarket", {
+    schema: ImportMarket.getMarket.schema,
+    preHandler: [(request, reply) => authorize(request, reply, fastify)],
+    handler: (request, reply) =>
+      listManualMarket(request, reply, fastify),
+  });
+
+  fastify.post("/updateTeamId", {
+    schema: ImportMarket.updateTeamIdForSelectionId.schema,
+    preHandler: [(request, reply) => authorize(request, reply, fastify)],
+    handler: (request, reply) =>
+      listManualMarket(request, reply, fastify),
   });
 };

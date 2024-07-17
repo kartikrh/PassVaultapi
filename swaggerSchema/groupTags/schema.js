@@ -2773,6 +2773,23 @@ const ImportMarket = {
       },
     },
   },
+  updateTeamIdForSelectionId: {
+    schema: {
+      tags: ["ImportMarket"],
+      description: "Update Team Id for selection",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            selectionId: { type: "integer" },
+            teamId: { type: "integer" },
+          },
+        },
+      },
+    },
+  },
 };
 
 const MarketTemplate = {
