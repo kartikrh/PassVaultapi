@@ -388,6 +388,34 @@ async function AddUpdateMarket(request, fastify) {
   }
 }
 
+const updateMarketRunnerTeambySelectionId = async (data, fastify, request) => {
+  try {
+    const queries = data.map(({ selectionId, teamId }) => ({
+      query: `UPDATE "tblMarketRunners" SET "wrTeamId" = $1 WHERE "wrSelectionId" = $2`,
+      values: [teamId, selectionId],
+    }));
+
+    await fastify.db.transaction(async (t) => {
+      for (const { query, values } of queries) {
+        await fastify.db.query(query, {
+          type: fastify.db.QueryTypes.UPDATE,
+          bind: values,
+          transaction: t,
+        });
+      }
+    });
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableMarketRunners.js/updateMarketRunnerTeambySelectionId",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+
 module.exports = {
   AddUpdateMarket,
   insertEventTypeQuery,
@@ -396,4 +424,5 @@ module.exports = {
   updateCompititionQuery,
   insertEventQuery,
   updateEventQuery,
+  updateMarketRunnerTeambySelectionId,
 };
