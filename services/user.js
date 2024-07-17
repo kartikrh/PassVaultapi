@@ -579,10 +579,14 @@ async function updateClientService({ body }, fastify) {
   try {
     let results;
     results = await updateClient(body, fastify);
-    return results;
-
+    if (results === "Client ID does not exist") {
+      return { error: results };
+    }
+    else{
+    return { success: results };
+    }
   } catch (error) {
-    return null;
+    return { error: error };
   }
 }
 

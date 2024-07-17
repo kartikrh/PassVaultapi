@@ -70,6 +70,10 @@ module.exports = (sequelize) => {
           type: DataTypes.DOUBLE,
           allowNull: true,
           defaultValue: 0,
+        },
+        wrTeamId :{
+          type: DataTypes.INTEGER,
+          allowNull: true,
         },  
     }, {
       timestamps: false,
