@@ -6,6 +6,7 @@ const configConstants = require("./configConstants");
 const { errorLogger, tblPredictorAPILogger ,tblThirdPartyAPILogger} = require("./logger");
 const { getCommentaryDetailByIdQuery } = require("../repository/TableCommentary");
 const { saveNotificationLogsQuery } = require("../repository/TableNotification");
+const { sendNotification } = require("../WebPushHandler");
 const ERROR_CODES = {
   INVALID_INPUT: "INVALID_INPUT",
   SERVER_ERROR: "SERVER_ERROR",
@@ -479,7 +480,7 @@ const NotificationSendType = {
   onlyLoggedInUser : 2,
   pushNotification : 3
 }
-const sendNotification = (data , request , fastify) =>{
+const sendNotificationByType =async (data , request , fastify) =>{
   try {
     let eventName;
     switch(data.sendType){
@@ -490,26 +491,37 @@ const sendNotification = (data , request , fastify) =>{
         eventName = "onSendNotificationToLoggedInUser";
         break;
       case NotificationSendType.pushNotification:
-        eventName = "onSendPushNotification";
+        // eventName = "onSendPushNotification";
+        sendNotification(
+          data.title,
+          data.description,
+          data.url,
+          data.image,
+          data.icon
+        );
+        return true;
         break;
     }
+    saveNotificationLogsQuery(data,request, fastify);
     if( 
       global?.clientSocketIo !== undefined &&
       global?.clientSocketIo.length > 0
     ){
-      saveNotificationLogsQuery(data,request, fastify);
       global.clientSocketIo.forEach((socket) => {
         socket.client.emit(eventName, data);
       });
     }
+    else {
+      console.log("Client Socket Not Found");
+    }
 
     return true;
   } catch (error) {
-    console.log("error From sendNotification", error);
+    console.log("error From sendNotificationByType", error);
     errorLogger(
       fastify,
       error.message,
-      "DB ERROR --> utilities/index/sendNotification",
+      "DB ERROR --> utilities/index/sendNotificationByType",
       request
     );
     // throw new Error(error.message);
@@ -550,5 +562,5 @@ module.exports = {
   formatDateToISOStringwithOffset,
   callClientAPI,
   NotificationSendType,
-  sendNotification
+  sendNotificationByType
 };

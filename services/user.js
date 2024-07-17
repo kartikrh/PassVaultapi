@@ -111,16 +111,18 @@ async function signOutUserServices(request, fastify) {
     request.userTokenInfo;
 
   if (!WrAllowMultipleLogin) {
-    try {
+    try {  
       const clientsInRoom = global.socketIo.sockets.adapter.rooms.get(WrEId); // get sockets in user's room
       global.socketIo
       .to(WrEId)
       .emit("logout", "You have been removed from the room.");
 
       // Remove socket ids from the user room
-      Array.from(clientsInRoom).forEach((id) =>
-        global.socketIo.sockets.sockets.get(id).leave(WrEId)
-      );
+      if(clientsInRoom?.size){
+        Array.from(clientsInRoom).forEach((id) =>
+          global.socketIo.sockets.sockets.get(id).leave(WrEId)
+        );
+      }
     } catch (error) {
       console.log(
         `Error While Logging out user id ${WrUserId} from current device`,

@@ -193,14 +193,19 @@ const getNotificationLogByClientQuery = async (data , request , fastify)=>{
                 tn."wrCommentaryId" as "commentaryId",
                 tn."wrUrl" as "url",
                 tn."wrImage" as "image",
-                tn."wrIcon" as "icon"
+                tn."wrIcon" as "icon",
+                (
+                    SELECT COUNT(*) FROM "tblNotificationLogs"
+                    WHERE "tblNotificationLogs"."wrClientId" = $1 AND "tblNotificationLogs"."wrIsRead" = false
+                ) as "unreadNotification"
             FROM "tblNotificationLogs"
             LEFT JOIN "tblNotifications" tn ON tn."wrId" = "tblNotificationLogs"."wrNotificationId"
             WHERE "tblNotificationLogs"."wrClientId" = $1;
         `;
 
         const result = await fastify.db.query(query,{
-            bind : [data.clientId]
+            bind : [data.clientId],
+            type : fastify.db.QueryTypes.SELECT
         });
 
         return result;
@@ -215,11 +220,38 @@ const getNotificationLogByClientQuery = async (data , request , fastify)=>{
         throw new Error(error.message);
     }
 }
+const updateNotificationLogByClientQuery = async (data,request,fastify) =>{
+    try {
+        const query = `
+            UPDATE "tblNotificationLogs"
+            SET "wrIsRead" = true
+            WHERE "wrClientId" = $1 AND "wrNotificationId" = ANY($2)
+        `;
+        const result = await fastify.db.query(query,{
+            bind : [
+                data.clientId,
+                data.notificationId
+            ],
+            type : fastify.db.QueryTypes.UPDATE
+        });
+        return result;
+
+    } catch (error) {
+        errorLogger(
+            fastify ,
+            error.message,
+            "repository/TableNotification/updateNotificationLogByClientQuery",
+            request
+        )
+        throw new Error(error.message);
+    }
+}
 module.exports = {
     getAllNotificationQuery,
     updateNotificationQuery,
     insertNotificationQuery,
     deleteNotificationQuery,
     saveNotificationLogsQuery,
-    getNotificationLogByClientQuery
+    getNotificationLogByClientQuery,
+    updateNotificationLogByClientQuery
 }

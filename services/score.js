@@ -1,6 +1,6 @@
 const { getMarketsByCIdQuery } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
-const { getNotificationLogByClientQuery } = require("../repository/TableNotification");
+const { getNotificationLogByClientQuery, updateNotificationLogByClientQuery } = require("../repository/TableNotification");
 
 const getAllCommentariesDataService = (request) => {
     let commentaries = {};
@@ -115,6 +115,19 @@ const getMarketsByCommentaryIdService =async (request , fastify) => {
 }
 const getNotificationByClientService = async (request , fastify)=>{
     let data = await getNotificationLogByClientQuery(request.body,request ,fastify);
-    return data;
+    if(data.length == 0){
+       return null
+    }
+    return {
+        notData : data,
+        unreadNot : data[0].unreadNotification ? parseInt(data[0].unreadNotification) : 0,
+        totalNot : data.length
+    };
 }
-module.exports = { getAllCommentariesDataService ,getMarketsByCommentaryIdService , getNotificationByClientService };
+const markReadNotificationService = async (request , fastify) => {
+    const updateData = await updateNotificationLogByClientQuery(request.body,request ,fastify);
+    return true;
+}
+module.exports = { getAllCommentariesDataService ,getMarketsByCommentaryIdService , getNotificationByClientService,
+    markReadNotificationService
+ };

@@ -1,4 +1,4 @@
-const { getMarketsByCommentaryIdService, getNotificationByClientService } = require("../../../../services/score");
+const { getMarketsByCommentaryIdService, getNotificationByClientService, markReadNotificationService } = require("../../../../services/score");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
 
@@ -18,12 +18,22 @@ const getNotificationByClient = async (request , reply , fastify) =>{
   try {
     const result = await getNotificationByClientService(request , fastify)
     reply.status(200).send(success(result,200))
-  } catch (error) {
-    errorLogger(fastify,error.message,commonPath + "/getNotificationByClient",request)
-    reply.status(200).send(error(error.message,ERROR_CODES.SERVER_ERROR,200))
+  } catch (err) {
+    errorLogger(fastify,err.message,commonPath + "/getNotificationByClient",request)
+    reply.status(200).send(error(err.message,ERROR_CODES.SERVER_ERROR,200))
+  }
+}
+const markReadNotification = async (request , reply , fastify) =>{
+  try {
+    const result = await markReadNotificationService(request , fastify)
+    reply.status(200).send(success(result,200))
+  } catch (err) {
+    errorLogger(fastify,err.message,commonPath + "/markReadNotification",request)
+    reply.status(200).send(error(err.message,ERROR_CODES.SERVER_ERROR,200))
   }
 }
 module.exports = {
     getMarketsByCommentaryId,
-    getNotificationByClient
+    getNotificationByClient,
+    markReadNotification
 }
