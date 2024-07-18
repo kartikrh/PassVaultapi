@@ -70,7 +70,7 @@ const insertNotificationQuery =async (data,request , fastify) =>{
             data.image || null,
             data.icon || null,
             data.url || null,
-            data.isSendNow || false
+            data.isSend || false
         ]
     });
 
@@ -127,7 +127,7 @@ const updateNotificationQuery =async (data,request , fastify) =>{
                 data.image || null,
                 data.icon || null,
                 data.url || null,
-                data.isSendNow,
+                data.isSend,
                 data.notificationId
             ]
         });
@@ -276,6 +276,33 @@ const updateNotificationLogByClientQuery = async (data,request,fastify) =>{
         throw new Error(error.message);
     }
 }
+const updateIsSendNotQuery = async (data,request,fastify) =>{
+    try {
+        const query = `
+            UPDATE "tblNotifications"
+            SET
+                "wrIsSend" = $1
+            WHERE "wrId" = $2
+        `;
+
+        const result = fastify.db.query(query,{
+            bind : [
+                data.isSend,
+                data.notificationId
+            ],
+            type : fastify.db.QueryTypes.UPDATE
+        });
+        return result;
+    }catch(err){
+        errorLogger(
+            fastify,
+            err.message,
+            "repository/TableNotification/updateIsSendNotQuery",
+            request
+        )
+        throw new Error(err.message);
+    }	
+}
 module.exports = {
     getAllNotificationQuery,
     updateNotificationQuery,
@@ -283,5 +310,6 @@ module.exports = {
     deleteNotificationQuery,
     saveNotificationLogsQuery,
     getNotificationLogByClientQuery,
-    updateNotificationLogByClientQuery
+    updateNotificationLogByClientQuery,
+    updateIsSendNotQuery
 }
