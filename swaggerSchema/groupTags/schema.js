@@ -2797,7 +2797,7 @@ const ImportMarket = {
         items: {
           type: "object",
           properties: {
-            selectionId: { type: "integer" },
+            selectionId: { type: "string" },
             teamId: { type: "integer" },
           },
         },
