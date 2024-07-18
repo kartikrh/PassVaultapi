@@ -1095,6 +1095,7 @@ const cancelEventMarketByTeamIdQuery = async (data, request, fastify) => {
 
     return result;
   } catch (error) {
+    console.log(error);
     errorLogger(
       fastify,
       error.message,
