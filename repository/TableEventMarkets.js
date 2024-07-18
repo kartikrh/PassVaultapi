@@ -1600,6 +1600,7 @@ const updateEventMarketRunnerMaunalQuery = async (data, fastify) => {
         WHERE "wrSelectionId" = $5
         RETURNING "wrEventMarketId" as "eventMarketId",
         "wrRunner" as "runner",
+        "wrTeamId" as "teamId",
         "wrSelectionId" as "eventSelectionId"
 
     `;
