@@ -28,6 +28,7 @@ const getNotificationByIdService = async(request) =>{
 const saveNotificationService = async(request,fastify) =>{
     const {notificationId , isSendNow} = request.body;
     let result;
+    
     if(notificationId == 0){
         result = await createNotificationService(request,fastify);
     }
@@ -37,7 +38,8 @@ const saveNotificationService = async(request,fastify) =>{
     if(isSendNow){
         //send notification
         sendNotificationByType(result , request,fastify);
-    }   
+    }  
+     
     return result;
     
 }
@@ -91,6 +93,8 @@ const createNotificationService = async(request,fastify)=>{
 }
 const updateNotificationService =  async (request,fastify)=>{
     const {notificationId ,title, commentaryId , image , icon} = request.body;
+    console.log(typeof(request.body.isSendNow))
+    const isSendNow = request.body.isSendNow == "true" ? true : false;
     if(commentaryId){
         let cIndex = global.tblCommentaries.findIndex((item)=>item.commentaryId == commentaryId);
         if(cIndex == -1){
@@ -103,6 +107,11 @@ const updateNotificationService =  async (request,fastify)=>{
     if(index == -1){
         throw new Error("Notification with this id not found");
     }
+    // console.log(isSendNow)
+    if(global.tblNotifications[index].isSend == true && isSendNow == false){
+        throw new Error("Notification already sent, you can't update it now.");
+    }
+    
     // remove old image and store new 
     let imgName, projectName;
     projectName = global.tblConfigs.find(

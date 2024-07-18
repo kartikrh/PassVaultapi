@@ -120,7 +120,7 @@ const getNotificationByClientService = async (request , fastify)=>{
     }
     return {
         notData : data,
-        unreadNot : data[0].unreadNotification ? parseInt(data[0].unreadNotification) : 0,
+        unreadNot : data[0].unreadCount ? parseInt(data[0].unreadCount) : 0,
         totalNot : data.length
     };
 }

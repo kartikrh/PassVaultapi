@@ -1,3 +1,4 @@
+const {  getPagination, pageLimit } = require("../utilities");
 const { errorLogger } = require("../utilities/logger");
 
 const getAllNotificationQuery = (fastify) =>{
@@ -14,7 +15,8 @@ const getAllNotificationQuery = (fastify) =>{
             "wrCreatedAt" as "createdAt",
             "wrCreatedBy" as "createdBy",
             "wrModifyAt" as "modifyAt",
-            "wrModifyBy" as "modifyBy"
+            "wrModifyBy" as "modifyBy",
+            "wrIsSend" as "isSend"
         FROM "tblNotifications"
     `;
 
@@ -36,10 +38,11 @@ const insertNotificationQuery =async (data,request , fastify) =>{
             "wrCreatedAt",
             "wrImage",
             "wrIcon",
-            "wrUrl"
+            "wrUrl",
+            "wrIsSend"
         )
         VALUES(
-        $1 , $2 , $3 , $4 , $5 , $6 , $7 , $8 , $9
+        $1 , $2 , $3 , $4 , $5 , $6 , $7 , $8 , $9 , $10
         )
         RETURNING "wrId" as "notificationId",
         "wrTitle" as "title",
@@ -52,7 +55,8 @@ const insertNotificationQuery =async (data,request , fastify) =>{
         "wrModifyBy" as "modifyBy",
         "wrImage" as "image",
         "wrIcon" as "icon",
-        "wrUrl" as "url"
+        "wrUrl" as "url",
+        "wrIsSend" as "isSend"
     `;
 
     const result =await fastify.db.query(query,{
@@ -65,7 +69,8 @@ const insertNotificationQuery =async (data,request , fastify) =>{
             new Date(),
             data.image || null,
             data.icon || null,
-            data.url || null
+            data.url || null,
+            data.isSendNow || false
         ]
     });
 
@@ -93,8 +98,9 @@ const updateNotificationQuery =async (data,request , fastify) =>{
                 "wrModifyAt" = $6,
                 "wrImage" = $7,
                 "wrIcon" = $8,
-                "wrUrl" = $9
-            WHERE "wrId" = $10
+                "wrUrl" = $9,
+                "wrIsSend" = $10
+            WHERE "wrId" = $11
             RETURNING "wrId" as "notificationId",
             "wrTitle" as "title",
             "wrDescription" as "description",
@@ -106,7 +112,8 @@ const updateNotificationQuery =async (data,request , fastify) =>{
             "wrModifyBy" as "modifyBy",
             "wrImage" as "image",
             "wrIcon" as "icon",
-            "wrUrl" as "url"
+            "wrUrl" as "url",
+            "wrIsSend" as "isSend"
         `;
 
         const result = await fastify.db.query(query,{
@@ -120,6 +127,7 @@ const updateNotificationQuery =async (data,request , fastify) =>{
                 data.image || null,
                 data.icon || null,
                 data.url || null,
+                data.isSendNow,
                 data.notificationId
             ]
         });
@@ -181,11 +189,10 @@ const saveNotificationLogsQuery = (data,request,fastify) =>{
 }
 const getNotificationLogByClientQuery = async (data , request , fastify)=>{
     try {
-        const query = `
-            SELECT
-                "wrNotificationId" as "notificationId",
-                "wrClientId" as "clientId",
-                "wrIsRead" as "isRead",
+        const {skip , take} = getPagination(data.page , pageLimit.notifcationLog.limit);
+        const query = `   
+            SELECT 
+                tn."wrId" as "notificationId",
                 tn."wrId" as "notificationId",
                 tn."wrTitle" as "title",
                 tn."wrDescription" as "description",
@@ -194,17 +201,27 @@ const getNotificationLogByClientQuery = async (data , request , fastify)=>{
                 tn."wrUrl" as "url",
                 tn."wrImage" as "image",
                 tn."wrIcon" as "icon",
-                (
-                    SELECT COUNT(*) FROM "tblNotificationLogs"
-                    WHERE "tblNotificationLogs"."wrClientId" = $1 AND "tblNotificationLogs"."wrIsRead" = false
-                ) as "unreadNotification"
-            FROM "tblNotificationLogs"
-            LEFT JOIN "tblNotifications" tn ON tn."wrId" = "tblNotificationLogs"."wrNotificationId"
-            WHERE "tblNotificationLogs"."wrClientId" = $1;
+                CASE 
+                    WHEN tnl."wrNotificationId" IS NOT NULL THEN true 
+                    ELSE false 
+                END as "isRead",
+                COUNT(CASE WHEN tnl."wrNotificationId" IS NULL THEN 1 END) OVER () as "unreadCount"
+            FROM 
+                "tblNotifications" tn 
+            LEFT JOIN 
+                "tblNotificationLogs" tnl 
+            ON 
+                tnl."wrNotificationId" = tn."wrId"
+                AND tnl."wrClientId" = $1
+            WHERE 
+                tn."wrIsSend" = true
+            ORDER BY 
+                tn."wrCreatedAt" DESC
+            offset $2 limit $3	
         `;
 
         const result = await fastify.db.query(query,{
-            bind : [data.clientId],
+            bind : [data.clientId, skip , take],
             type : fastify.db.QueryTypes.SELECT
         });
 
@@ -222,18 +239,31 @@ const getNotificationLogByClientQuery = async (data , request , fastify)=>{
 }
 const updateNotificationLogByClientQuery = async (data,request,fastify) =>{
     try {
-        const query = `
-            UPDATE "tblNotificationLogs"
-            SET "wrIsRead" = true
-            WHERE "wrClientId" = $1 AND "wrNotificationId" = ANY($2)
-        `;
-        const result = await fastify.db.query(query,{
+        // const query = `
+        //     INSERT MANY INTO "tblNotificationLogs" ("wrNotificationId", "wrClientId", "wrIsRead")
+        //     VALUES ($1 , $2 , $3)
+        // `;
+        // const result = await fastify.db.query(query,{
+        //     bind : [
+        //         data.clientId,
+        //         data.notificationId
+        //     ],
+        //     type : fastify.db.QueryTypes.UPDATE
+        // });
+        // return result;
+        //notification id is arr of ids add entries for all ids against this client
+        const query = `INSERT INTO "tblNotificationLogs" ("wrNotificationId", "wrClientId", "wrIsRead")
+        SELECT "wrNotificationId", $1, $2
+        FROM unnest($3::int[]) as "wrNotificationId";`
+
+        const result = fastify.db.query(query,{
             bind : [
                 data.clientId,
+                true,
                 data.notificationId
-            ],
-            type : fastify.db.QueryTypes.UPDATE
+            ]
         });
+
         return result;
 
     } catch (error) {

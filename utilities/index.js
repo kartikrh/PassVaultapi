@@ -5,7 +5,6 @@ const { default: axios } = require("axios");
 const configConstants = require("./configConstants");
 const { errorLogger, tblPredictorAPILogger ,tblThirdPartyAPILogger} = require("./logger");
 const { getCommentaryDetailByIdQuery } = require("../repository/TableCommentary");
-const { saveNotificationLogsQuery } = require("../repository/TableNotification");
 const { sendNotification } = require("../WebPushHandler");
 const ERROR_CODES = {
   INVALID_INPUT: "INVALID_INPUT",
@@ -502,7 +501,7 @@ const sendNotificationByType =async (data , request , fastify) =>{
         return true;
         break;
     }
-    saveNotificationLogsQuery(data,request, fastify);
+    // saveNotificationLogsQuery(data,request, fastify);
     if( 
       global?.clientSocketIo !== undefined &&
       global?.clientSocketIo.length > 0
@@ -525,6 +524,23 @@ const sendNotificationByType =async (data , request , fastify) =>{
       request
     );
     // throw new Error(error.message);
+  }
+}
+const pageLimit = {
+  notifcationLog : {
+      limit : 20
+  }
+}
+const getPagination = (page, size) => {
+  if (page < 1 || size < 1) {
+    throw new Error("Page number and page size must be greater than zero.");
+  }
+  const skip = (page - 1) * size;
+  const take = size;
+
+  return {
+    skip ,
+    take 
   }
 }
 module.exports = {
@@ -562,5 +578,7 @@ module.exports = {
   formatDateToISOStringwithOffset,
   callClientAPI,
   NotificationSendType,
-  sendNotificationByType
+  sendNotificationByType,
+  pageLimit,
+  getPagination
 };
