@@ -3067,9 +3067,10 @@ const Score = {
       body : {
         type : "object",
         properties : {
-          clientId : {type : "integer"}
+          clientId : {type : "integer"},
+          page : {type : "integer"},
         },
-        required : ["clientId"]
+        required : ["clientId", "page"]
       }
     }
   },

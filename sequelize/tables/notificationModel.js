@@ -57,7 +57,13 @@ module.exports = (sequelize) => {
         type : DataTypes.TEXT,
         allowNull : true,
         defaultValue : null
-      }
+      },
+      wrIsSend : {
+        type : DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue : false,
+      },
+      
     },
     {
       timestamps: false,
