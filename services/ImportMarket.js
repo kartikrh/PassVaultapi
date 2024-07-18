@@ -426,9 +426,9 @@ const listManualMarketService = async (request, fastify) => {
     });
     let responseData;
     if (response.ok) {
-      responseData = await response.json();
+     responseData = await response.json();
       const commentary = global.tblCommentaries.find(
-        (item) => item.eventRefId === eventId
+        (item) => item.eventRefId === refID
       );
       responseData.teamsDetails = {};
       if (commentary) {
@@ -452,7 +452,7 @@ const listManualMarketService = async (request, fastify) => {
           responseData.teamsDetails.team1Id = commentaryTeamsOne.teamId;
           responseData.teamsDetails.team1Name = commentaryTeamsOne.teamName;
           responseData.teamsDetails.team2Id = commentaryTeamsTwo.teamId;
-          responseData.teamsDetails.team1Name = commentaryTeamsOne.teamName;
+          responseData.teamsDetails.team2Name = commentaryTeamsOne.teamName;
       }
       return responseData
     } else {

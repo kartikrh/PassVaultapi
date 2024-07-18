@@ -2476,6 +2476,20 @@ const Commentary = {
       },
     },
   },
+  updateTeamPrediction: {
+    schema: {
+      tags: ["Commentary"],
+      description: "updateTeamPrediction Commentary",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+        },
+        required: ["commentaryId"],
+      },
+    },
+  },
 };
 
 const Compitition = {
