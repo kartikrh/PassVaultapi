@@ -124,7 +124,7 @@ const insertCommentaryQuery = async (request, fastify) => {
     "wrIsPlayersShow" as "isPlayersShow",
     "wrIsPredictMarket" as "isPredictMarket",
     tc."wrIsActive"  as "isActive",
-    tc."wrIsTeamPredictionOn" as "isTeamPredictionOn"
+    tc."wrIsTeamPredictionOn" as "isTeamPredictionOn",
     "wrDelay" as "delay"
     from "insert_data" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
