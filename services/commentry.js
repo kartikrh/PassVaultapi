@@ -2473,6 +2473,7 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
 
         try {
           const _ifFindCid = global.tblEventMarkets.find((e) => e.commentaryId == commentaryId);
+          //
           if(_ifFindCid){
             if(updatedData.commentaryBallByBallDetails.ballType > 0){
               const _dataForOds = {
