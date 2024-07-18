@@ -452,7 +452,7 @@ const listManualMarketService = async (request, fastify) => {
           responseData.teamsDetails.team1Id = commentaryTeamsOne.teamId;
           responseData.teamsDetails.team1Name = commentaryTeamsOne.teamName;
           responseData.teamsDetails.team2Id = commentaryTeamsTwo.teamId;
-          responseData.teamsDetails.team2Name = commentaryTeamsOne.teamName;
+          responseData.teamsDetails.team2Name = commentaryTeamsTwo.teamName;
       }
       return responseData
     } else {
@@ -467,9 +467,7 @@ const listManualMarketService = async (request, fastify) => {
 const updateTeamIdBySelectionIdService = async (request, fastify) => {
   if (request.userTokenInfo.WrUserId) {
     try {
-      await updateMarketRunnerTeambySelectionId({
-        ...request.body
-      }, fastify, request);
+     return await updateMarketRunnerTeambySelectionId(fastify, request);
     } catch (error) {
       throw new Error(error);
     }

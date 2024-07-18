@@ -388,15 +388,68 @@ async function AddUpdateMarket(request, fastify) {
   }
 }
 
-const updateMarketRunnerTeambySelectionId = async (data, fastify, request) => {
+// const updateMarketRunnerTeambySelectionId = async (fastify, request) => {
+//   try {
+//     const data = request.body;
+//     const queries = data.map(({ selectionId, teamId }) => ({
+//       query: `UPDATE "tblMarketRunners" SET "wrTeamId" = $1 WHERE "wrSelectionId" = $2`,
+//       values: [teamId, selectionId],
+//     }));
+
+//     await fastify.db.transaction(async (t) => {
+//       for (const { query, values } of queries) {
+//         await fastify.db.query(query, {
+//           type: fastify.db.QueryTypes.UPDATE,
+//           bind: values,
+//           transaction: t,
+//         });
+//       }
+//     });
+//   } catch (err) {
+//     errorLogger(
+//       fastify,
+//       err.message,
+//       "DB ERROR --> repository/TableMarketRunners.js/updateMarketRunnerTeambySelectionId",
+//       request
+//     );
+//     throw new Error(err.message);
+//   }
+// };
+
+const updateMarketRunnerTeambySelectionId = async (fastify, request) => {
   try {
-    const queries = data.map(({ selectionId, teamId }) => ({
-      query: `UPDATE "tblMarketRunners" SET "wrTeamId" = $1 WHERE "wrSelectionId" = $2`,
-      values: [teamId, selectionId],
+    const data = request.body;
+    const notFoundSelectionIds = [];
+
+    const queries = await Promise.all(data.map(async ({ selectionId, teamId }) => {
+      // Check if selectionId exists in tblMarketRunners
+      const selectionExists = await fastify.db.query(
+        `SELECT COUNT(*) FROM "tblMarketRunners" WHERE "wrSelectionId" = $1`,
+        {
+          bind: [selectionId],
+          type: fastify.db.QueryTypes.SELECT,
+        }
+      );
+
+      if (selectionExists[0].count > 0) {
+        // If exists, prepare update query
+        return {
+          query: `UPDATE "tblMarketRunners" SET "wrTeamId" = $1 WHERE "wrSelectionId" = $2`,
+          values: [teamId, selectionId],
+        };
+      } else {
+        // If not found, store selectionId in notFoundSelectionIds array
+        notFoundSelectionIds.push(selectionId);
+        return null; // Return null or undefined for items not to be updated
+      }
     }));
 
+    // Remove null values from queries array
+    const validQueries = queries.filter(query => query !== null);
+
+    // Execute updates in transaction
     await fastify.db.transaction(async (t) => {
-      for (const { query, values } of queries) {
+      for (const { query, values } of validQueries) {
         await fastify.db.query(query, {
           type: fastify.db.QueryTypes.UPDATE,
           bind: values,
@@ -404,6 +457,18 @@ const updateMarketRunnerTeambySelectionId = async (data, fastify, request) => {
         });
       }
     });
+
+    // Format response message
+    let responseMessage = '';
+    if (notFoundSelectionIds.length > 0) {
+      responseMessage = `${notFoundSelectionIds.join(', ')} these selection IDs not found`;
+    } else {
+      responseMessage = 'Team Id is successfully updated in Runners Table';
+    }
+
+    // Return formatted response
+    return responseMessage;
+
   } catch (err) {
     errorLogger(
       fastify,
