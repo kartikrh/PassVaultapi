@@ -1087,7 +1087,7 @@ const cancelEventMarketByTeamIdQuery = async (data, request, fastify) => {
       marketDataLogger({
         eventMarketId: market.eventMarketId,
         commentaryId: data.commentaryId,
-        dataTosave: JSON.parse(dataToStore),
+        dataTosave: typeof(dataToStore) === 'string' ? JSON.parse(dataToStore) : dataToStore,
         updateType: MarketUpdateType.marketInitilization,
         isSendData: true
       })
