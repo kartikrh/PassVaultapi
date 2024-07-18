@@ -4586,7 +4586,8 @@ const Notification = {
           description : {type : "string"},
           sendType : {type : "integer"},
           commentaryId : {type : "integer"},
-          url : {type : "string"}
+          url : {type : "string"},
+          isSend : {type : "boolean"},
         }
       }
     }
