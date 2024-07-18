@@ -2472,17 +2472,19 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         });
 
         try {
-          const _ifFindCid = global.tblEventMarkets.find((e) => e.commentaryId == commentaryId);
           //
-          if(_ifFindCid){
-            if(updatedData.commentaryBallByBallDetails.ballType > 0){
-              const _dataForOds = {
-                commentaryId: commentaryId,
-                commentaryBallByBallId: updatedData.commentaryBallByBallDetails.commentaryBallByBallId,
-                team1Id: commentaryData.team1Id,
-                team2Id: commentaryData.team2Id,
-              };
-              await createMarketOddsBallByBallBYID(_dataForOds, fastify, request);
+          if(commentaryData.isTeamPredictionOn){
+            const _ifFindCid = global.tblEventMarkets.find((e) => e.commentaryId == commentaryId);
+            if(_ifFindCid){
+              if(updatedData.commentaryBallByBallDetails.ballType > 0){
+                const _dataForOds = {
+                  commentaryId: commentaryId,
+                  commentaryBallByBallId: updatedData.commentaryBallByBallDetails.commentaryBallByBallId,
+                  team1Id: commentaryData.team1Id,
+                  team2Id: commentaryData.team2Id,
+                };
+                await createMarketOddsBallByBallBYID(_dataForOds, fastify, request);
+              }
             }
           }
         } catch (error) {}
