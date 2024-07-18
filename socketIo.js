@@ -1,6 +1,8 @@
 const jwt = require("jsonwebtoken");
+const { errorLogger } = require("./utilities/logger");
+const { getEventMarketByIdsQuery } = require("./repository/TableEventMarkets");
 
-const connection = (socket) => {
+const connection = (socket , fastify) => {
   const { userId, allowMultipleLogin, wrToken } = socket;
   if (userId) {
     const user = global.tblUsers.find((user) => user.userId === userId);
@@ -14,13 +16,77 @@ const connection = (socket) => {
       socket.join(userId); // Join the specified room
     }
   }
-  socket.on("updatedEventMarket", (data)=>{
-    const {commentaryId , marketData} = data;
-    const clientInRoom = global.socketIo.sockets.adapter.rooms.get(commentaryId); // get sockets in user's room
-    if(clientInRoom?.size){
-      global.socketIo.to(commentaryId).emit("updateMarketData", marketData);
+  socket.on("updatedEventMarket", async (data) => {
+    try {
+      const { commentaryId, marketData } = data;
+      const clientInRoom = global.socketIo.sockets.adapter.rooms.get(commentaryId);
+      if (clientInRoom?.size) {
+        global.socketIo.to(commentaryId).emit("updateMarketData", marketData );
+      }
+      let marketIdArr = marketData.map((item) =>{
+        let mark = JSON.parse(item);
+        return mark.marketId;
+      });
+      let marketToUpdate = await getEventMarketByIdsQuery(
+        {
+          eventMarketIds: marketIdArr
+        },
+        null,
+        fastify
+      )
+      marketToUpdate?.map((data) => {
+        let index = global.tblEventMarkets.findIndex((market) => market.eventMarketId === data.eventMarketId);
+        if(index != -1){
+          global.tblEventMarkets[index] = data;
+        }
+        else {
+          global.tblEventMarkets.push(data);
+        }
+      })
+      console.log("Event Market Updated successfully");
+
+      return true;
+  
+    // let marketDataToUpdate = marketData;
+
+    // // console.log("marketDataToUpdate", marketDataToUpdate);
+    // let runnerData = [];
+    // let marketDataLog = [];
+  
+    // for (let data of marketDataToUpdate) {
+    //   data = JSON.parse(data);
+    //   runnerData.push(...data.runner);
+    //   marketDataLog.push({
+    //     commentaryId,
+    //     eventMarketId: data.id,
+    //     data: data,
+    //     updateType: MarketUpdateType.predictMarket
+    //   });
+      
+    // }
+    //   await fastify.db.query(
+    //     `CALL proc_update_eventmarket_runner(
+    //       $1, $2, $3
+    //     )`,
+    //     {
+    //       bind: [
+    //         JSON.stringify(runnerData),
+    //         JSON.stringify(marketDataLog),
+    //         null
+    //       ]
+    //     }
+    //   );
+    } catch (error) {
+      errorLogger(
+        fastify,
+        error.message,
+        "ERROR --> socketIo.js/updatedEventMarket",
+        null
+      );
+      console.error("error:", error);
     }
-  })
+  });
+  
 
   socket.on("connectEventMarket", (data) => {
     const { commentaryId } = data;

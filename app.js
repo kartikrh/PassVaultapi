@@ -352,7 +352,7 @@ module.exports = async function (fastify, opts) {
   global.socketIo = io;
 
   io.use(socketMiddleware);
-  io.on("connection", connection);
+  io.on("connection", (socket) => connection(socket, fastify));
 
   fastify.server.on("upgrade", (request, socket, head) => {
     if (request.url === "/ws") {
