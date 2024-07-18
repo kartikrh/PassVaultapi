@@ -50,6 +50,7 @@ const {
   changeMaxOverDetailService,
   AddSuperOverCommentaryService,
   syncCommentaryStatsWithAPIAndSocket,
+  updateTeamPredictionService,
 } = require("../../../../services/commentry");
 const { getAllCommentariesDataService } = require("../../../../services/score");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
@@ -715,6 +716,21 @@ const AddSuperOverCommentary = async (request, reply, fastify) => {
   }
 };
 
+const updateTeamPrediction = async (request, reply, fastify) => {
+  try {
+    const result = await updateTeamPredictionService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      path + "/updateTeamPrediction",
+      request
+    );
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
 module.exports = {
   getAllCommentaries,
   getCommentaryById,
@@ -769,5 +785,6 @@ module.exports = {
   loadcommentaryapi,
   getAllCommentariesData,
   changeMaxOverDetail,
-  AddSuperOverCommentary
+  AddSuperOverCommentary,
+  updateTeamPrediction
 };

@@ -55,7 +55,8 @@ const {
   updateResultInCommentaryQuery,
   updateMaxOverDetailQuery,
   updateSuperOverCommentaryQuery,
-  insertCommentarySuperOverTeams
+  insertCommentarySuperOverTeams,
+  updateTeamPrediction
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -7329,6 +7330,25 @@ const AddSuperOverCommentaryService = async (request, fastify) => {
   
   return await commentaryDetailsByIdService({body : {commentaryId: commentary.commentaryId}}, fastify);
 };
+
+const updateTeamPredictionService = async (request, fastify) => {
+  const { commentaryId } = request.body;
+  const index = global.tblCommentaries.findIndex(
+    (item) => item.commentaryId === commentaryId
+  );
+
+  if (index == -1) {
+    throw new Error("Commentary with this id not Found");
+  }
+
+  await updateTeamPrediction(request, fastify);
+
+  const updatedData = await getCommentaryByIdQuery(request, fastify);
+
+  global.tblCommentaries[index] = updatedData;
+
+  return updatedData;
+};
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -7384,5 +7404,6 @@ module.exports = {
   AddSuperOverCommentaryService,
   // getshortService,
   syncCommentaryStatsWithAPIAndSocket,
-  getMatchDataByCId
+  getMatchDataByCId,
+  updateTeamPredictionService
 };
