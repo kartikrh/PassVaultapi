@@ -2973,9 +2973,9 @@ const updateTeamPrediction = async (request, fastify) => {
   const { commentaryId } = request.body;
 
   try {
-    // Get wrTeam1Id and wrTeam2Id from tblCommentaries
+    // Get wrTeam1Id, wrTeam2Id, and wrIsTeamPredictionOn from tblCommentaries
     const result = await fastify.db.query(
-      `SELECT "wrTeam1Id", "wrTeam2Id" FROM "tblCommentaries" WHERE "wrCommentaryId" = $1`,
+      `SELECT "wrTeam1Id", "wrTeam2Id", "wrIsTeamPredictionOn" FROM "tblCommentaries" WHERE "wrCommentaryId" = $1`,
       {
         type: fastify.db.QueryTypes.SELECT,
         bind: [commentaryId],
@@ -2985,23 +2985,31 @@ const updateTeamPrediction = async (request, fastify) => {
     if (result.length === 0) {
       throw new Error("No commentary found with the given ID");
     }
-    await fastify.db.query(
-      `UPDATE "tblCommentaries" SET "wrIsTeamPredictionOn" = false  WHERE "wrCommentaryId" = $1`,
-      {
-        type: fastify.db.QueryTypes.UPDATE,
-        bind: [commentaryId],
-      }
-    );
-    const { wrTeam1Id, wrTeam2Id } = result[0];
 
-    // Update wrTeamPredictionPercentage in tblCommentaryTeams
+    const { wrTeam1Id, wrTeam2Id, wrIsTeamPredictionOn } = result[0];
+
+    // Toggle the value of wrIsTeamPredictionOn
+    const newWrIsTeamPredictionOn = !wrIsTeamPredictionOn;
+
+    // Update wrIsTeamPredictionOn in tblCommentaries
     await fastify.db.query(
-      `UPDATE "tblCommentaryTeams" SET "wrTeamPredictionPercentage" = NULL WHERE "wrTeamId" IN ($1, $2)`,
+      `UPDATE "tblCommentaries" SET "wrIsTeamPredictionOn" = $1 WHERE "wrCommentaryId" = $2`,
       {
         type: fastify.db.QueryTypes.UPDATE,
-        bind: [wrTeam1Id, wrTeam2Id],
+        bind: [newWrIsTeamPredictionOn, commentaryId],
       }
     );
+
+    // If wrIsTeamPredictionOn is now false, update wrTeamPredictionPercentage
+    if (!newWrIsTeamPredictionOn) {
+      await fastify.db.query(
+        `UPDATE "tblCommentaryTeams" SET "wrTeamPredictionPercentage" = NULL WHERE "wrTeamId" IN ($1, $2)`,
+        {
+          type: fastify.db.QueryTypes.UPDATE,
+          bind: [wrTeam1Id, wrTeam2Id],
+        }
+      );
+    }
 
     return { message: "Update successful" };
   } catch (error) {
@@ -3014,6 +3022,7 @@ const updateTeamPrediction = async (request, fastify) => {
     throw new Error(error.message);
   }
 };
+
 
 module.exports = {
   getAllCommentaryQuery,
