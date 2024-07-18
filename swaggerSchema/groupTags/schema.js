@@ -4688,6 +4688,89 @@ const sendPushNotification = {
     },
   },
 };
+
+const Template = {
+  getAll: {
+    schema: {
+      tags: ["Template"],
+      description: "get all Template",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+  getById: {
+    schema: {
+      tags: ["Template"],
+      description: "get Template by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          templateId: { type: "integer" },
+        },
+        required: ["templateId"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["Template"],
+      description: "delete Template",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+            templateId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        isActive: { type: "boolean" },
+        },
+        required: ["templateId"],
+      },
+    },
+  },
+  save: {
+    schema: {
+      tags: ["Template"],
+      description: "save Template",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          templateId: { type: "integer" },
+          templateType: { type: "integer" },
+          type: { type: "integer" },
+          title: {type: "string"},
+          description: {type: "string"},
+          isActive: {type: "boolean"},
+        },
+        required: ["templateId", "templateType", "type", "title"],
+      },
+    },
+  },
+  activeInactiveTemplate: {
+    schema: {
+      tags: ["Template"],
+      description: "active inactive Template",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          templateId: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["templateId", "isActive"],
+      },
+    },
+  },
+};
 module.exports = {
   Auth,
   Tabs,
@@ -4727,5 +4810,6 @@ module.exports = {
   Api,
   Notification,
   Devices,
-  sendPushNotification
+  sendPushNotification,
+  Template
 };
