@@ -60,8 +60,9 @@ async function startSignalR(fastify) {
           connection.on('Rate', async (message) => {
             try {
               let _message = message;
+              let commentary;
               if(_message.rt){
-                console.log("Get Rates");
+                //console.log("Get Rates");
                 const data = _message;
               
                 const EventsMarketobj = global.tblEventMarkets.find(
@@ -116,7 +117,7 @@ async function startSignalR(fastify) {
                       );
                       if (_selectionidData && _selectionidData.runner !== 'The Draw') {
                         try {
-                          console.log('updateEventMarketRunnerMaunalQuery');
+                          //console.log('updateEventMarketRunnerMaunalQuery');
                           let _data2 = await updateEventMarketRunnerMaunalQuery(items, _fastify);
                           if(_selectionidData.commentaryId != 0){
                             try {
@@ -133,19 +134,21 @@ async function startSignalR(fastify) {
                               _updateData.commentaryId = _selectionidData.commentaryId;
                               _updateData.selectionId = _selectionidData.selectionId;
                             
-                              let commentary = await global.tblCommentaries.find(
+                              commentary = await global.tblCommentaries.find(
                                 (item) => item.commentaryId === _selectionidData.commentaryId
                               );
-                              let teams = global.tblCommentaryTeams.find(
-                                (item) =>
-                                  item.commentaryId === commentary.commentaryId &&
-                                  item.currentInnings === commentary.currentInnings && 
-                                  item.teamName === _data2.runner
-                              );
-                              _updateData.teamId = teams.teamId;
-                            
-                              await updateLatestMarketOddsBallByBall(_updateData,_fastify,_selectionidData.commentaryId);
-                              console.log('Updated latest ball');
+                              if(commentary.isTeamPredictionOn)
+                              {
+                                let teams = global.tblCommentaryTeams.find(
+                                  (item) =>
+                                    item.commentaryId === commentary.commentaryId &&
+                                    item.currentInnings === commentary.currentInnings && 
+                                    item.teamName === _data2.runner
+                                );
+                                _updateData.teamId = teams.teamId;
+                                await updateLatestMarketOddsBallByBall(_updateData,_fastify,_selectionidData.commentaryId);
+                                //console.log('Updated latest ball');
+                              }
                             } catch (error) {console.log('Error after Updated latest ball',error);}
                             try {
                               if (!global.selectionData[items.selectionId]) {
@@ -173,17 +176,25 @@ async function startSignalR(fastify) {
                                 let vRatesTeam = (1 / parseFloat(_minRate)) * 100;
                                 // vRatesTeam = parseInt(vRatesTeam.toFixed(0));
                                 vRatesTeam = Math.round(vRatesTeam);
-                              
+                                let teams;
                                 let commentary = await global.tblCommentaries.find(
                                   (item) => item.commentaryId === _selectionidData.commentaryId
                                 );
-                                let teams = global.tblCommentaryTeams.find(
+
+                                teams = global.tblCommentaryTeams.find(
                                   (item) =>
                                     item.commentaryId === commentary.commentaryId &&
                                     item.currentInnings === commentary.currentInnings && 
-                                    item.teamName === _data2.runner
+                                    item.teamName === _data2.teamId
                                 );
-                              
+                                if(!teams){
+                                  teams = global.tblCommentaryTeams.find(
+                                    (item) =>
+                                      item.commentaryId === commentary.commentaryId &&
+                                      item.currentInnings === commentary.currentInnings && 
+                                      item.teamName === _data2.runner
+                                  );
+                                }
                                 let _update = {};
                                 _update.commentaryTeamId = teams.commentaryTeamId;
                                 _update.teamPredictionPercentage = vRatesTeam;
@@ -205,9 +216,11 @@ async function startSignalR(fastify) {
                                     item.currentInnings === commentary.currentInnings
                                 );
                                 global.tblCommentaryTeams[_index].teamPredictionPercentage  = parseInt(_update.team2PredictionPercentage);
-
-                                await updateCommentaryTeamPredictionPrecentageQuery(_update, _fastify);
-                                console.log('updateCommentaryTeamPredictionPrecentageQuery');
+                                if(commentary.isTeamPredictionOn)
+                                {
+                                  await updateCommentaryTeamPredictionPrecentageQuery(_update, _fastify);
+                                  //console.log('updateCommentaryTeamPredictionPrecentageQuery');
+                                }
                               }
                             } catch (error) {
                               console.error(error.message);
