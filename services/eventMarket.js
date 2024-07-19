@@ -141,12 +141,14 @@ const getAllEventMarketsService = async (request, fastify) => {
   if (status !== undefined && status != 0) {
     createWhereStatus = `tem."wrStatus" = ${status}`;
   }
-  if(status == 0){
+  if(status != undefined && status == 0){
     createWhereStatus = null;
   }
   if(rateSourceRefId && rateSourceRefId != 0){
-    createWhereStatus = `tem."wrRateSource" = ${rateSourceRefId}`;
+    createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrRateSourceRefId" = ${rateSourceRefId}` : `tem."wrRateSourceRefId" = ${rateSourceRefId}`;	
   }
+  console.log("createWhereStatus",createWhereStatus);
+
   let eventMarket = await getAllEventMarketsQuery(fastify, createWhereStatus);
   if (eventTypeId) {
     // get the commentaryId from tblCommentaries
