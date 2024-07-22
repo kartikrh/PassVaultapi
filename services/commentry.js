@@ -2412,6 +2412,12 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
       });
       try {
         commentaryPlayers.forEach(async (player) => {
+          if (player.bowlerOver !== null && player.bowlerOver !== undefined) {
+            player.bowlerOver = player.bowlerOver.toString();
+          }
+          if (player.bowlerEconomy === "NaN") {
+            player.bowlerEconomy = null;
+          }
           const _player = global.tblPlayers.filter((item) => item.playerId === player.playerId);
           if (_player.length > 0) {
               player.playerimage = _player[0].image;
@@ -2468,7 +2474,7 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         sendDataForSocketUpdate.dataToUpdate.push({
           module: "commentaryBallByBall",
           type: "create",
-          data: response.commentaryBallByBallDetails,
+          data: {...response.commentaryBallByBallDetails, overCount: response.commentaryBallByBallDetails.overCount !== null ? response.commentaryBallByBallDetails.overCount.toString() : null},
         });
 
         try {
@@ -2544,7 +2550,7 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         sendDataForSocketUpdate.dataToUpdate.push({
           module: "commentaryBallByBall",
           type: "update",
-          data: response.commentaryBallByBallDetails,
+          data: {...response.commentaryBallByBallDetails, overCount: response.commentaryBallByBallDetails.overCount !== null ? response.commentaryBallByBallDetails.overCount.toString() : null},
         });
       }
        // call Third Party API
