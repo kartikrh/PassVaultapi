@@ -54,6 +54,11 @@ const getAllCommentariesDataService = (request) => {
         let ballByBall = global.tblCommentaryBallByBall.filter((b) => {
             return b.commentaryId === c.commentaryId;
         });
+        ballByBall.forEach(async (ball) => {
+            if (ball.overCount !== null && ball.overCount !== undefined) {
+                ball.overCount = ball.overCount.toString();
+            }
+        });
         let wickets = global.tblCommentaryWicket.filter((w) => {
             return w.commentaryId === c.commentaryId;
         });
