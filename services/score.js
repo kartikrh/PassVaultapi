@@ -32,6 +32,12 @@ const getAllCommentariesDataService = (request) => {
         });
         try {
             players.forEach(async (player) => {
+                if (player.bowlerOver !== null && player.bowlerOver !== undefined) {
+                    player.bowlerOver = player.bowlerOver.toString();
+                }
+                if (player.bowlerEconomy === "NaN") {
+                    player.bowlerEconomy = null;
+                }
                 const _player = global.tblPlayers.filter((item) => item.playerId === player.playerId);
                 if (_player.length > 0) {
                     player.playerimage = _player[0].image;
