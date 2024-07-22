@@ -139,12 +139,21 @@ async function startSignalR(fastify) {
                               );
                               if(commentary.isTeamPredictionOn)
                               {
-                                let teams = global.tblCommentaryTeams.find(
+                                let teams;
+                                teams = global.tblCommentaryTeams.find(
                                   (item) =>
                                     item.commentaryId === commentary.commentaryId &&
                                     item.currentInnings === commentary.currentInnings && 
-                                    item.teamName === _data2.runner
+                                    item.teamName === _data2.teamId
                                 );
+                                if(!teams){
+                                  teams = global.tblCommentaryTeams.find(
+                                    (item) =>
+                                      item.commentaryId === commentary.commentaryId &&
+                                      item.currentInnings === commentary.currentInnings && 
+                                      item.teamName === _data2.runner
+                                  );
+                                }
                                 _updateData.teamId = teams.teamId;
                                 await updateLatestMarketOddsBallByBall(_updateData,_fastify,_selectionidData.commentaryId);
                                 //console.log('Updated latest ball');

@@ -161,7 +161,7 @@ const MarketListService = async (request, fastify) => {
       postData.refId = request.body.refID;
     }
     if (request.body.isMarket) {
-      endpoint = "/listMarket";
+      endpoint = "/listManualMarket";
       postData.eventids = request.body.refID;
       //console.log("JsonObj " + JSON.stringify(postData));
     }

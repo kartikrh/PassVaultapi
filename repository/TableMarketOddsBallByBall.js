@@ -282,7 +282,7 @@ const updateLatestMarketOddsBallByBall = async (data, fastify, request) => {
 
 
     if (!latestEntry.length) {
-      throw new Error('No entries found to update.');
+      return false;
     }
 
     //const latestWrCommentaryBallByBallId = latestEntry[0].wrCommentaryBallByBallId;
