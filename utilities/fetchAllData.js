@@ -60,6 +60,8 @@ const {getAllAPIEndPoint} = require("../repository/TableAPIEndPoint");
 const { getAllTeamCompetitionQuery } = require("../repository/TableTeamCompetition");
 const { getAllNotificationQuery } = require("../repository/TableNotification");
 const { getAllTemplateQuery } = require("../repository/TableTemplate");
+const { getAllOtpQuery } = require("../repository/TableOtp");
+const { getAllClientQuery } = require("../repository/TableClient");
 const fetchAllDataFromDb = async (fastify, reply) => {
   try {
     const getAllTabs = await getAllActiveInactiveTabsQuery(fastify);
@@ -122,6 +124,8 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const getAllTeamCompetition = await getAllTeamCompetitionQuery(fastify);
     const getAllNotification = await getAllNotificationQuery(fastify);
     const getAllTemplate = await getAllTemplateQuery(fastify);
+    const getAllOtp = await getAllOtpQuery(fastify);
+    const getAllClient = await getAllClientQuery(fastify);
     global.tblTabs = getAllTabs;
     global.tblRoles = getAllRoles;
     global.tblBlocks = getAllBlocks;
@@ -170,6 +174,8 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblTeamCompetition = getAllTeamCompetition;
     global.tblNotifications = getAllNotification;
     global.tblTemplate = getAllTemplate;
+    global.tblOtp = getAllOtp;
+    global.tblClient = getAllClient;
 
     console.log("Okkkk");
 

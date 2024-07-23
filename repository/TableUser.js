@@ -545,9 +545,128 @@ async function registerClient(body, fastify) {
     return error.message;
   }
 }
+async function registerClientDetails(body, fastify) {
+  try {
+    const {fullName, userName, email, mobileNo, token, googleID, ipAddress } = body;
+
+    if (!googleID && !token) {
+      // Check if user exists by userName (wrEmailID)
+      let data = await fastify.db.query(
+        `SELECT "wrClientID", "wrEmailID"
+         FROM "tblClient"
+         WHERE "wrMobileNo" = $1 AND "wrIsDelete" = false AND "wrEmailID" = $2;`,
+        {
+          type: QueryTypes.SELECT,
+          bind: [mobileNo, email],
+        }
+      );
+
+      if (data.length > 0) {
+        return "MobileNo and Email is already exists";
+      } else {
+        // Register new user
+        const registrationData = await fastify.db.query(
+          `INSERT INTO "tblClient" (
+            "wrClientName", "wrIsAllowMultiLogin", "wrCreatedDate", 
+            "wrEmailID", "wrMobileNo", "wrIpAddress", "wrIsActive", "wrIsEmailVerified", "wrIsDelete", "wrRegistrationProcessStatus", "wrUserName"
+          ) VALUES (
+            $1, $2, now(), $3, $4, $5, true, false, false, $6, $7
+          ) RETURNING "wrClientID" as "clientId", "wrGoogleID" as "googleId", "wrUserName" as "userName", "wrIsAllowMultiLogin" as "isAllowMultiLogin","wrEmailID" as "emailId" ,"wrMobileNo" as "mobileNo", "wrRegistrationProcessStatus" as "registrationProcessStatus", "wrUserName" as "userName", "wrClientName" as "fullName";`,
+          {
+            type: QueryTypes.INSERT,
+            bind: [fullName, false, email, mobileNo, ipAddress, 1, userName],
+          }
+        );
+        return registrationData[0][0];
+      }
+    } else {
+      // Handle Google registration
+      let data = await fastify.db.query(
+        `SELECT "wrClientID" as "clientId", "wrGoogleID" as "googleId", "wrUserName" as "userName", "wrIsAllowMultiLogin" as "isAllowMultiLogin","wrEmailID" as "emailId" ,"wrMobileNo" as "mobileNo"
+         FROM "tblClient"
+         WHERE "wrGoogleID" = $1 AND "wrIsDelete" = false;`,
+        {
+          type: QueryTypes.SELECT,
+          bind: [googleID],
+        }
+      );
+
+      if (data.length > 0) {
+        return data[0];
+      } else {
+        const registrationData = await fastify.db.query(
+          `INSERT INTO "tblClient" (
+            "wrGoogleID", "wrIsAllowMultiLogin", "wrCreatedDate", "wrEmailID", "wrIsActive", "wrIsEmailVerified", "wrIsDelete","wrMobileNo"
+          ) VALUES (
+            $1, true, now(), $2, true, true, false ,$3
+          ) RETURNING "wrClientID" as "clientId", "wrGoogleID" as "googleId", "wrUserName" as "userName", "wrIsAllowMultiLogin" as "isAllowMultiLogin","wrEmailID" as "emailId" ,"wrMobileNo" as "mobileNo";`,
+          {
+            type: QueryTypes.INSERT,
+            bind: [googleID, email, mobileNo],
+          }
+        );
+        return registrationData[0][0];
+      }
+    }
+  } catch (error) {
+    return error.message;
+  }
+}
+async function insertOtpQuery(body, fastify) {
+  try {
+    const {clientId, otp } = body;
+
+        const registrationData = await fastify.db.query(
+          `INSERT INTO "tblOtp" (
+            "wrUserId", "wrOtp", "wrCreatedDate", "wrExperiedTime"
+          ) VALUES (
+            $1, $2, now(), now()
+          ) RETURNING "wrUserId" as "userId", "wrOtp" as "otp";`,
+          {
+            type: QueryTypes.INSERT,
+            bind: [clientId, otp],
+          }
+        );
+        return registrationData[0];
+  } catch (error) {
+    return error.message;
+  }
+}
+async function registerClientOtpValidation(body, fastify) {
+  try {
+    const {email, otp, clientId} = body;
+        await fastify.db.query(
+          `UPDATE "tblClient" set "wrRegistrationProcessStatus" = $2
+           WHERE "wrClientID" = $1`,
+          {
+            type: QueryTypes.INSERT,
+            bind: [clientId, 2],
+          }
+        );
+        return "Status updated successfully";
+  } catch (error) {
+    return error.message;
+  }
+}
+async function registerClientPassword(body, fastify) {
+  try {
+    const {email, password, clientId} = body;
+        await fastify.db.query(
+          `UPDATE "tblClient" set "wrPassword" = $2, "wrRegistrationProcessStatus" = $3, "wrIsUserActive" = $4
+           WHERE "wrClientID" = $1`,
+          {
+            type: QueryTypes.INSERT,
+            bind: [clientId, password, 3, 1],
+          }
+        );
+        return "Password added successfully";
+  } catch (error) {
+    return error.message;
+  }
+}
 async function loginClient(body, fastify) {
   try {
-    const { userName,email, password, deviceInfo, token, googleID } = body;
+    const { userName, email, password, deviceInfo, token, googleID } = body;
 
     if (googleID && token) {
       // Handle Google login
@@ -572,7 +691,7 @@ async function loginClient(body, fastify) {
           ) RETURNING "wrClientID" as "clientId", "wrGoogleID" as "googleId", "wrUserName" as "userName", "wrIsAllowMultiLogin" as "isAllowMultiLogin","wrEmailID" as "emailId","wrMobileNo" as "mobileNo";`,
           {
             type: QueryTypes.INSERT,
-            bind: [googleID,email, userName],
+            bind: [googleID, email, userName],
           }
         );
 
@@ -590,7 +709,7 @@ async function loginClient(body, fastify) {
     } else if (email && password) {
       // Handle normal login
       let data = await fastify.db.query(
-        `SELECT "wrClientID" as "clientId", "wrGoogleID" as "googleId", "wrUserName" as "userName", "wrIsAllowMultiLogin" as "isAllowMultiLogin","wrEmailID" as "emailId","wrMobileNo" as "mobileNo"
+        `SELECT "wrClientID" as "clientId", "wrGoogleID" as "googleId", "wrUserName" as "userName", "wrIsAllowMultiLogin" as "isAllowMultiLogin","wrEmailID" as "emailId","wrMobileNo" as "mobileNo","wrClientName" as "fullName"
          FROM "tblClient"
          WHERE "wrEmailID" = $1 AND "wrPassword" = $2 AND "wrIsDelete" = false;`,
         {
@@ -706,5 +825,9 @@ module.exports = {
   loginClient,
   updateClient,
   loginClientLogAdded,
-  signOutClient
+  signOutClient,
+  registerClientDetails,
+  insertOtpQuery,
+  registerClientOtpValidation,
+  registerClientPassword,
 };

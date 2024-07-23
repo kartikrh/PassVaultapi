@@ -173,6 +173,107 @@ const Auth = {
       },
     },
   },
+  signupClientDetails: {
+    schema: {
+      tags: ["Auth"],
+      description: "signupClientDetails",
+      body: {
+        type: "object",
+        properties: {
+          fullName: { type: "string" },
+          email: { type: "string" },
+          userName: { type: "string" },
+          mobileNo: { type: "string" },
+          token: { type: "string" },
+          googleID: { type: "string" },
+          ipAddress: { type: "string" },
+        },
+        required: ["email"],
+      },
+    },
+  },
+  resendOtp: {
+    schema: {
+      tags: ["Auth"],
+      description: "resendOtp",
+      body: {
+        type: "object",
+        properties: {
+          clientId: { type: "integer" },
+          email: { type: "string" },
+          mobileNo: { type: "string" },
+        },
+        required: ["clientId"],
+      },
+    },
+  },
+  clientDetailsById: {
+    schema: {
+      tags: ["Auth"],
+      description: "clientDetailsById",
+      body: {
+        type: "object",
+        properties: {
+          clientId: { type: "integer" },
+        },
+        required: ["clientId"],
+      },
+    },
+  },
+  validateMobileno: {
+    schema: {
+      tags: ["Auth"],
+      description: "validateMobileno",
+      body: {
+        type: "object",
+        properties: {
+          email: { type: "string" },
+          mobileNo: { type: "string" },
+          clientId: { type: "integer"},
+          // token: { type: "string" },
+          // googleID: { type: "string" },
+          // ipAddress: { type: "string" },
+        },
+        required: ["email", "mobileNo"],
+      },
+    },
+  },
+  verifyOtp: {
+    schema: {
+      tags: ["Auth"],
+      description: "verifyOtp",
+      body: {
+        type: "object",
+        properties: {
+          otp: { type: "string" },
+          email: { type: "string" },
+          clientId: { type: "integer"},
+          // token: { type: "string" },
+          // googleID: { type: "string" },
+          // ipAddress: { type: "string" },
+        },
+        required: ["email", "otp"],
+      },
+    },
+  },
+  confirmPassword: {
+    schema: {
+      tags: ["Auth"],
+      description: "confirmPassword",
+      body: {
+        type: "object",
+        properties: {
+          email: { type: "string" },
+          password: { type: "string" },
+          clientId: { type: "integer"},
+          // token: { type: "string" },
+          // googleID: { type: "string" },
+          // ipAddress: { type: "string" },
+        },
+        required: ["email", "password"],
+      },
+    },
+  },
   clientUpdate: {
     schema: {
       tags: ["Auth"],

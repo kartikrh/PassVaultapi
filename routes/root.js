@@ -16,7 +16,13 @@ const {
   updateClient,
   sendNotificationWeb,
   sendNotificationMobile,
-  signOutClient
+  signOutClient,
+  registerDetails,
+  registerMobile,
+  validateOtp,
+  setPassword,
+  clientDetailsById,
+  resendOtp
   //loginRegistrationClient,
 } = require("../controller/users/index");
 const { Auth ,sendPushNotification} = require("../swaggerSchema/groupTags/schema");
@@ -100,6 +106,26 @@ module.exports = async function (fastify, opts) {
   fastify.post("/signupClient", {
     schema: Auth.clientregistration.schema,
     handler: (request, reply) => registrationClient(request, reply, fastify),
+  });
+  fastify.post("/signupClientDetails", {
+    schema: Auth.signupClientDetails.schema,
+    handler: (request, reply) => registerDetails(request, reply, fastify),
+  });
+  fastify.post("/resendOtp", {
+    schema: Auth.resendOtp.schema,
+    handler: (request, reply) => resendOtp(request, reply, fastify),
+  });
+  fastify.post("/clientDetailsById", {  
+    schema: Auth.clientDetailsById.schema,
+    handler: (request, reply) => clientDetailsById(request, reply, fastify)
+  });
+  fastify.post("/verifyOtp", {
+    schema: Auth.verifyOtp.schema,
+    handler: (request, reply) => validateOtp(request, reply, fastify),
+  });
+  fastify.post("/confirmPassword", {
+    schema: Auth.confirmPassword.schema,
+    handler: (request, reply) => setPassword(request, reply, fastify),
   });
   fastify.post("/signinClient", {
     schema: Auth.clientLogin.schema,
