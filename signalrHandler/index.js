@@ -28,6 +28,7 @@ async function startSignalR(fastify) {
         try {
           await connection.start();
           console.log('SignalR Connected');
+          global.SignalRData = [];
           global.selectionData = {};
           // Function to check and invoke ConnectMarketRate if new IDs are added
           const checkAndUpdateMarketRate = async (_fastify) => {
@@ -155,7 +156,39 @@ async function startSignalR(fastify) {
                                   );
                                 }
                                 _updateData.teamId = teams.teamId;
-                                await updateLatestMarketOddsBallByBall(_updateData,_fastify,_selectionidData.commentaryId);
+                                const { EventMarketId } = _updateData;
+                                const key = `${EventMarketId}`;
+                                if (global.SignalRData[key]) {
+                                  // Update the existing entry
+                                  global.SignalRData[key] = {
+                                      ...global.SignalRData[key], // Preserve other properties if needed
+                                      commentaryId: _updateData.commentaryId,
+                                      teamId: _updateData.teamId,
+                                      MarketStatus: _updateData.MarketStatus,
+                                      BackPrice: _updateData.BackPrice,
+                                      LayPrice: _updateData.LayPrice,
+                                      BackSize: _updateData.BackSize,
+                                      LaySize: _updateData.LaySize,
+                                      MarketName: _updateData.MarketName,
+                                      RunnerName: _updateData.RunnerName,
+                                  };
+                              } else {
+                                  // Create a new entry
+                                  global.SignalRData[key] = {
+                                      commentaryId: _updateData.commentaryId,
+                                      teamId: _updateData.teamId,
+                                      EventMarketId:_updateData.EventMarketId,
+                                      RunnerId:_updateData.RunnerId,
+                                      MarketStatus: _updateData.MarketStatus,
+                                      BackPrice: _updateData.BackPrice,
+                                      LayPrice: _updateData.LayPrice,
+                                      BackSize: _updateData.BackSize,
+                                      LaySize: _updateData.LaySize,
+                                      MarketName: _updateData.MarketName,
+                                      selectionId:_updateData.selectionId,
+                                  };
+                                }
+                                //await updateLatestMarketOddsBallByBall(_updateData,_fastify,_selectionidData.commentaryId);
                                 //console.log('Updated latest ball');
                               }
                             } catch (error) {console.log('Error after Updated latest ball',error);}
@@ -240,48 +273,48 @@ async function startSignalR(fastify) {
                         }
                       }
                     }
-                    let _isThreadDone = await  UpdateEventMarketByCIdFromSocketQuery({eventMarketId:EventsMarketobj.eventMarketId},_fastify);
-                    if(_isThreadDone){
-                      const dataOfmarkets = await  getEventMarketByIdsQuery(
-                       {
-                         eventMarketIds: [EventsMarketobj.eventMarketId],
-                       },
-                       null,
-                       _fastify
-                       );
-                       for (let item of dataOfmarkets) {
-                        let index = global.tblEventMarkets.findIndex(
-                          (e) => e.selectionId == item.selectionId
-                        );
-                        if (index === -1) {
-                          global.tblEventMarkets.push(item);
-                          marketDataLogger(
-                            {
-                              eventMarketId: item.eventMarketId,
-                              commentaryId: item.commentaryId,
-                              dataTosave: JSON.parse(item.data),
-                              updateType: MarketUpdateType.marketInitilization,
-                            },
-                            null,
-                            _fastify
-                          );
-                        } else {
-                          let previousLine = global.tblEventMarkets[index].line;
-                          global.tblEventMarkets[index] = item;
-                          marketDataLogger(
-                            {
-                              eventMarketId: item.eventMarketId,
-                              commentaryId: item.commentaryId,
-                              dataTosave: JSON.parse(item.data),
-                              updateType: MarketUpdateType.marketInitilization,
-                              lineDiff: item.line - (previousLine || 0),
-                            },
-                            null,
-                            _fastify
-                          );
-                        }
-                      }
-                    }
+                    // let _isThreadDone = await  UpdateEventMarketByCIdFromSocketQuery({eventMarketId:EventsMarketobj.eventMarketId},_fastify);
+                    // if(_isThreadDone){
+                    //   const dataOfmarkets = await  getEventMarketByIdsQuery(
+                    //    {
+                    //      eventMarketIds: [EventsMarketobj.eventMarketId],
+                    //    },
+                    //    null,
+                    //    _fastify
+                    //    );
+                    //    for (let item of dataOfmarkets) {
+                    //     let index = global.tblEventMarkets.findIndex(
+                    //       (e) => e.selectionId == item.selectionId
+                    //     );
+                    //     if (index === -1) {
+                    //       global.tblEventMarkets.push(item);
+                    //       marketDataLogger(
+                    //         {
+                    //           eventMarketId: item.eventMarketId,
+                    //           commentaryId: item.commentaryId,
+                    //           dataTosave: JSON.parse(item.data),
+                    //           updateType: MarketUpdateType.marketInitilization,
+                    //         },
+                    //         null,
+                    //         _fastify
+                    //       );
+                    //     } else {
+                    //       let previousLine = global.tblEventMarkets[index].line;
+                    //       global.tblEventMarkets[index] = item;
+                    //       marketDataLogger(
+                    //         {
+                    //           eventMarketId: item.eventMarketId,
+                    //           commentaryId: item.commentaryId,
+                    //           dataTosave: JSON.parse(item.data),
+                    //           updateType: MarketUpdateType.marketInitilization,
+                    //           lineDiff: item.line - (previousLine || 0),
+                    //         },
+                    //         null,
+                    //         _fastify
+                    //       );
+                    //     }
+                    //   }
+                    // }
                   }
                 }
               }
@@ -304,6 +337,7 @@ async function startSignalR(fastify) {
           const isSON = global.tblConfigs.find((item) => item.key === configConstants.ISMARKETOODS_SIGNALRON).value;
           if (isSON === 'true') {
             if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
+              global.rateSourceRefIDSet = new Set();
               await startSignalR(_fastify);
             }
           } else {
