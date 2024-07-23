@@ -48,6 +48,7 @@ const connection = (socket , fastify) => {
           global.tblEventMarkets.push(data);
         }
         //call
+        console.log("createMarketOddsBallByBallBulkInsert Data saved calling " + data.eventMarketId + "  and BallID" + ballbybllId);
         await createMarketOddsBallByBallBYIDFromSocketIo(ballbybllId,data,fastify);
         console.log("createMarketOddsBallByBallBulkInsert Data saved calling " + data.eventMarketId);
       })
