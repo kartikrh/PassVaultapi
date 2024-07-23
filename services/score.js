@@ -32,6 +32,12 @@ const getAllCommentariesDataService = (request) => {
         });
         try {
             players.forEach(async (player) => {
+                if (player.bowlerOver !== null && player.bowlerOver !== undefined) {
+                    player.bowlerOver = player.bowlerOver.toString();
+                }
+                if (player.bowlerEconomy === "NaN") {
+                    player.bowlerEconomy = null;
+                }
                 const _player = global.tblPlayers.filter((item) => item.playerId === player.playerId);
                 if (_player.length > 0) {
                     player.playerimage = _player[0].image;
@@ -47,6 +53,11 @@ const getAllCommentariesDataService = (request) => {
         });
         let ballByBall = global.tblCommentaryBallByBall.filter((b) => {
             return b.commentaryId === c.commentaryId;
+        });
+        ballByBall.forEach(async (ball) => {
+            if (ball.overCount !== null && ball.overCount !== undefined) {
+                ball.overCount = ball.overCount.toString();
+            }
         });
         let wickets = global.tblCommentaryWicket.filter((w) => {
             return w.commentaryId === c.commentaryId;
@@ -120,7 +131,7 @@ const getNotificationByClientService = async (request , fastify)=>{
     }
     return {
         notData : data,
-        unreadNot : data[0].unreadNotification ? parseInt(data[0].unreadNotification) : 0,
+        unreadNot : data[0].unreadCount ? parseInt(data[0].unreadCount) : 0,
         totalNot : data.length
     };
 }

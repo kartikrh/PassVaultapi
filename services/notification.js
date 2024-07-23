@@ -26,18 +26,20 @@ const getNotificationByIdService = async(request) =>{
     return result || null;
 }
 const saveNotificationService = async(request,fastify) =>{
-    const {notificationId , isSendNow} = request.body;
+    const {notificationId , isSend} = request.body;
     let result;
+    
     if(notificationId == 0){
         result = await createNotificationService(request,fastify);
     }
     else {
         result = await updateNotificationService(request,fastify);
     }
-    if(isSendNow){
+    if(isSend){
         //send notification
         sendNotificationByType(result , request,fastify);
-    }   
+    }  
+     
     return result;
     
 }
@@ -91,6 +93,8 @@ const createNotificationService = async(request,fastify)=>{
 }
 const updateNotificationService =  async (request,fastify)=>{
     const {notificationId ,title, commentaryId , image , icon} = request.body;
+    console.log(typeof(request.body.isSend))
+    const isSend = request.body.isSend == "true" ? true : false;
     if(commentaryId){
         let cIndex = global.tblCommentaries.findIndex((item)=>item.commentaryId == commentaryId);
         if(cIndex == -1){
@@ -103,6 +107,11 @@ const updateNotificationService =  async (request,fastify)=>{
     if(index == -1){
         throw new Error("Notification with this id not found");
     }
+    // console.log(isSend)
+    if(global.tblNotifications[index].isSend == true && isSend == false){
+        throw new Error("Notification already sent, you can't update it now.");
+    }
+    
     // remove old image and store new 
     let imgName, projectName;
     projectName = global.tblConfigs.find(
@@ -183,6 +192,13 @@ const sendNotService = async(request,fastify)=>{
     if(index == -1){
         throw new Error("Notification with this id not found");
     }
+    if(!global.tblNotifications[index].isSend){
+        await updateIsSendNotQuery({
+            notificationId,
+            isSend : true
+        },request,fastify);
+        global.tblNotifications[index].isSend = true;
+    }   
     await sendNotificationByType(global.tblNotifications[index],request,fastify);
     return "Notification sent successfully";
 }   

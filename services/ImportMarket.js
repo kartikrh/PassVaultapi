@@ -161,7 +161,7 @@ const MarketListService = async (request, fastify) => {
       postData.refId = request.body.refID;
     }
     if (request.body.isMarket) {
-      endpoint = "/listMarket";
+      endpoint = "/listManualMarket";
       postData.eventids = request.body.refID;
       //console.log("JsonObj " + JSON.stringify(postData));
     }
@@ -426,9 +426,9 @@ const listManualMarketService = async (request, fastify) => {
     });
     let responseData;
     if (response.ok) {
-      responseData = await response.json();
+     responseData = await response.json();
       const commentary = global.tblCommentaries.find(
-        (item) => item.eventRefId === eventId
+        (item) => item.eventRefId === refID
       );
       responseData.teamsDetails = {};
       if (commentary) {
@@ -452,7 +452,7 @@ const listManualMarketService = async (request, fastify) => {
           responseData.teamsDetails.team1Id = commentaryTeamsOne.teamId;
           responseData.teamsDetails.team1Name = commentaryTeamsOne.teamName;
           responseData.teamsDetails.team2Id = commentaryTeamsTwo.teamId;
-          responseData.teamsDetails.team1Name = commentaryTeamsOne.teamName;
+          responseData.teamsDetails.team2Name = commentaryTeamsTwo.teamName;
       }
       return responseData
     } else {
@@ -467,9 +467,7 @@ const listManualMarketService = async (request, fastify) => {
 const updateTeamIdBySelectionIdService = async (request, fastify) => {
   if (request.userTokenInfo.WrUserId) {
     try {
-      await updateMarketRunnerTeambySelectionId({
-        ...request.body
-      }, fastify, request);
+     return await updateMarketRunnerTeambySelectionId(fastify, request);
     } catch (error) {
       throw new Error(error);
     }

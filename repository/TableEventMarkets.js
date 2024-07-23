@@ -1087,7 +1087,7 @@ const cancelEventMarketByTeamIdQuery = async (data, request, fastify) => {
       marketDataLogger({
         eventMarketId: market.eventMarketId,
         commentaryId: data.commentaryId,
-        dataTosave: JSON.parse(dataToStore),
+        dataTosave: typeof(dataToStore) === 'string' ? JSON.parse(dataToStore) : dataToStore,
         updateType: MarketUpdateType.marketInitilization,
         isSendData: true
       })
@@ -1095,6 +1095,7 @@ const cancelEventMarketByTeamIdQuery = async (data, request, fastify) => {
 
     return result;
   } catch (error) {
+    console.log("error from market",error);
     errorLogger(
       fastify,
       error.message,
@@ -1599,6 +1600,7 @@ const updateEventMarketRunnerMaunalQuery = async (data, fastify) => {
         WHERE "wrSelectionId" = $5
         RETURNING "wrEventMarketId" as "eventMarketId",
         "wrRunner" as "runner",
+        "wrTeamId" as "teamId",
         "wrSelectionId" as "eventSelectionId"
 
     `;
@@ -1681,14 +1683,14 @@ const UpdateEventMarketByCIdFromSocketQuery = async (data, fastify) => {
 
 const UpdateResulOrApproveEventMarketQuery = async (data, request, fastify) => {
   try {
-    if (data.isResult && data.result) {
+    if (data.isResult && data.result != null) {
       const query = `UPDATE "tblEventMarkets" SET "wrIsResult" = $1, "wrResult" = $2 WHERE "wrID" = $3`;
       return await fastify.db.query(query, {
         bind: [data.isResult, data.result, data.eventMarketId],
         type: fastify.db.QueryTypes.SELECT,
       });
     }
-    if (!data.isResult && data.result) {
+    if (!data.isResult && data.result != null) {
       const query = `UPDATE "tblEventMarkets" SET "wrResult" = $1 WHERE "wrID" = $2`;
       return await fastify.db.query(query, {
         bind: [data.result, data.eventMarketId],

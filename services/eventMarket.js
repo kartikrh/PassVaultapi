@@ -141,12 +141,14 @@ const getAllEventMarketsService = async (request, fastify) => {
   if (status !== undefined && status != 0) {
     createWhereStatus = `tem."wrStatus" = ${status}`;
   }
-  if(status == 0){
+  if(status != undefined && status == 0){
     createWhereStatus = null;
   }
   if(rateSourceRefId && rateSourceRefId != 0){
-    createWhereStatus = `tem."wrRateSource" = ${rateSourceRefId}`;
+    createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrRateSource" = ${rateSourceRefId}` : `tem."wrRateSource" = ${rateSourceRefId}`;	
   }
+  console.log("createWhereStatus",createWhereStatus);
+
   let eventMarket = await getAllEventMarketsQuery(fastify, createWhereStatus);
   if (eventTypeId) {
     // get the commentaryId from tblCommentaries
@@ -222,7 +224,7 @@ const createEventMarketsService = async (request, fastify) => {
         {
           eventMarketId: item.eventMarketId,
           commentaryId: item.commentaryId,
-          dataTosave: JSON.parse(item.data),
+          dataTosave: typeof(item.data) === "string" ? JSON.parse(item.data) : item.data,
           updateType: MarketUpdateType.marketInitilization,
           isSendData : true
         },
@@ -236,7 +238,7 @@ const createEventMarketsService = async (request, fastify) => {
         {
           eventMarketId: item.eventMarketId,
           commentaryId: item.commentaryId,
-          dataTosave: JSON.parse(item.data),
+          dataTosave: typeof(item.data) === "string" ? JSON.parse(item.data) : item.data,
           updateType: MarketUpdateType.marketInitilization,
           lineDiff: item.line - previousLine,
           isSendData : true
@@ -500,7 +502,7 @@ const updateMarketRateService = async (request, fastify) => {
       {
         eventMarketId: data.eventMarketId,
         commentaryId: data.commentaryId,
-        dataTosave: JSON.parse(data.data),
+        dataTosave: typeof(data.data) === "string" ? JSON.parse(data.data) : data.data,
         updateType: MarketUpdateType.marketInitilization,
         lineDiff: diff,
         isSendData : true
@@ -582,7 +584,7 @@ const saveEventMarketService = async (request, fastify) => {
       {
         eventMarketId: item.eventMarketId,
         commentaryId: item.commentaryId,
-        dataTosave: JSON.parse(item.data),
+        dataTosave: typeof(item.data) === "string" ? JSON.parse(item.data) : item.data,
         updateType: MarketUpdateType.marketInitilization,
         isSendData : true
       },

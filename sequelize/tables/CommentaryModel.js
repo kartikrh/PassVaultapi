@@ -170,6 +170,11 @@ module.exports = (sequelize) => {
         type: DataTypes.TEXT,
         allowNull: true,
       },
+      wrIsTeamPredictionOn: {
+        type: DataTypes.BOOLEAN,
+        allowNull: true,
+        defaultValue: true,
+      },
     },
     {
       timestamps: false,

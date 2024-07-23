@@ -47,6 +47,7 @@ const {
   updateResultInCommentary,
   changeMaxOverDetail,
   AddSuperOverCommentary,
+  updateTeamPrediction,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -625,5 +626,16 @@ module.exports = async (fastify, opts) => {
     ],
     handler: (request, reply) => AddSuperOverCommentary(request, reply, fastify),
   });
-
+  fastify.post("/updateTeamPrediction", {
+    schema: Commentary.updateTeamPrediction.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: request.body.commentaryId === 0 ? "add" : "edit",
+        }),
+    ],
+    handler: (request, reply) => updateTeamPrediction(request, reply, fastify),
+  });
 };

@@ -44,7 +44,8 @@ const getAllCommentaryQuery = async (fastify) => {
     tc."wrIsActive"  as "isActive",
     "wrDelay" as "delay",
     tc."wrCommentaryResult" as "result",
-    tc."wrCommentaryCloseTime" as "commentaryCloseTime"
+    tc."wrCommentaryCloseTime" as "commentaryCloseTime",
+    tc."wrIsTeamPredictionOn" as "isTeamPredictionOn"
     from "tblCommentaries" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -64,7 +65,7 @@ const insertCommentaryQuery = async (request, fastify) => {
       with insert_data as(
         insert into "tblCommentaries" ("wrEventTypeId","wrMatchTypeId","wrCompetitionId","wrEventId",
         "wrEventDate","wrEventName","wrEventRefId","wrTeam1Id","wrTeam2Id","wrLocation","wrWeather","wrPitch","wrDisplayStatus","wrTarget","wrMarketID","wrTpId","isSignalROn","isMatchTypeUpdated" , "wrCreatedBy" , "wrCreatedDate","wrCommentaryStatus","wrCurrentInnings", "wrSystemPlayerCount","wrIsPredictMarket",
-        "wrDelay", "wrIsActive", "wrIsClientShow") values (
+        "wrDelay", "wrIsActive", "wrIsClientShow","wrIsTeamPredictionOn") values (
           $1,
           $2,
           $3,
@@ -78,7 +79,8 @@ const insertCommentaryQuery = async (request, fastify) => {
           $21,
           $22,
           $23,
-          $24
+          $24,
+          $25
         ) returning *         
       )
 
@@ -122,6 +124,7 @@ const insertCommentaryQuery = async (request, fastify) => {
     "wrIsPlayersShow" as "isPlayersShow",
     "wrIsPredictMarket" as "isPredictMarket",
     tc."wrIsActive"  as "isActive",
+    tc."wrIsTeamPredictionOn" as "isTeamPredictionOn",
     "wrDelay" as "delay"
     from "insert_data" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
@@ -155,6 +158,7 @@ const insertCommentaryQuery = async (request, fastify) => {
           data.delay || 0,
           data.isActive,
           data.isClientShow,
+          true,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -570,7 +574,8 @@ const getCommentaryByIdQuery = async (request, fastify) => {
       tc."wrIsActive"  as "isActive",
       "wrDelay" as "delay",
       tc."wrCommentaryResult" as "result",
-      tc."wrCommentaryCloseTime" as "commentaryCloseTime"
+      tc."wrCommentaryCloseTime" as "commentaryCloseTime",
+      tc."wrIsTeamPredictionOn" as "isTeamPredictionOn"
       from "tblCommentaries" tc
       left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
       left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -2964,6 +2969,60 @@ const updateCommentaryTeamPredictionPrecentageQuery = async (data, fastify) => {
   }
 };
 
+const updateTeamPrediction = async (request, fastify) => {
+  const { commentaryId } = request.body;
+
+  try {
+    // Get wrTeam1Id, wrTeam2Id, and wrIsTeamPredictionOn from tblCommentaries
+    const result = await fastify.db.query(
+      `SELECT "wrTeam1Id", "wrTeam2Id", "wrIsTeamPredictionOn" FROM "tblCommentaries" WHERE "wrCommentaryId" = $1`,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [commentaryId],
+      }
+    );
+
+    if (result.length === 0) {
+      throw new Error("No commentary found with the given ID");
+    }
+
+    const { wrTeam1Id, wrTeam2Id, wrIsTeamPredictionOn } = result[0];
+
+    // Toggle the value of wrIsTeamPredictionOn
+    const newWrIsTeamPredictionOn = !wrIsTeamPredictionOn;
+
+    // Update wrIsTeamPredictionOn in tblCommentaries
+    await fastify.db.query(
+      `UPDATE "tblCommentaries" SET "wrIsTeamPredictionOn" = $1 WHERE "wrCommentaryId" = $2`,
+      {
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [newWrIsTeamPredictionOn, commentaryId],
+      }
+    );
+
+    // If wrIsTeamPredictionOn is now false, update wrTeamPredictionPercentage
+    if (!newWrIsTeamPredictionOn) {
+      await fastify.db.query(
+        `UPDATE "tblCommentaryTeams" SET "wrTeamPredictionPercentage" = NULL WHERE "wrTeamId" IN ($1, $2)`,
+        {
+          type: fastify.db.QueryTypes.UPDATE,
+          bind: [wrTeam1Id, wrTeam2Id],
+        }
+      );
+    }
+
+    return { message: "Update successful" };
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCommentary/updatePlayerShowAndTeamPrediction",
+      request
+    );
+    throw new Error(error.message);
+  }
+};
+
 
 module.exports = {
   getAllCommentaryQuery,
@@ -3024,5 +3083,6 @@ module.exports = {
   updateMaxOverDetailQuery,
   updateSuperOverCommentaryQuery,
   insertCommentarySuperOverTeams,
-  updateCommentaryTeamPredictionPrecentageQuery
+  updateCommentaryTeamPredictionPrecentageQuery,
+  updateTeamPrediction
 };

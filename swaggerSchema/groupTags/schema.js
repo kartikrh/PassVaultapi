@@ -2476,6 +2476,20 @@ const Commentary = {
       },
     },
   },
+  updateTeamPrediction: {
+    schema: {
+      tags: ["Commentary"],
+      description: "updateTeamPrediction Commentary",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+        },
+        required: ["commentaryId"],
+      },
+    },
+  },
 };
 
 const Compitition = {
@@ -2783,7 +2797,7 @@ const ImportMarket = {
         items: {
           type: "object",
           properties: {
-            selectionId: { type: "integer" },
+            selectionId: { type: "string" },
             teamId: { type: "integer" },
           },
         },
@@ -3053,9 +3067,10 @@ const Score = {
       body : {
         type : "object",
         properties : {
-          clientId : {type : "integer"}
+          clientId : {type : "integer"},
+          page : {type : "integer"},
         },
-        required : ["clientId"]
+        required : ["clientId", "page"]
       }
     }
   },
@@ -4571,7 +4586,8 @@ const Notification = {
           description : {type : "string"},
           sendType : {type : "integer"},
           commentaryId : {type : "integer"},
-          url : {type : "string"}
+          url : {type : "string"},
+          isSend : {type : "boolean"},
         }
       }
     }
@@ -4688,6 +4704,89 @@ const sendPushNotification = {
     },
   },
 };
+
+const Template = {
+  getAll: {
+    schema: {
+      tags: ["Template"],
+      description: "get all Template",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+  getById: {
+    schema: {
+      tags: ["Template"],
+      description: "get Template by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          templateId: { type: "integer" },
+        },
+        required: ["templateId"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["Template"],
+      description: "delete Template",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+            templateId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        isActive: { type: "boolean" },
+        },
+        required: ["templateId"],
+      },
+    },
+  },
+  save: {
+    schema: {
+      tags: ["Template"],
+      description: "save Template",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          templateId: { type: "integer" },
+          templateType: { type: "integer" },
+          type: { type: "integer" },
+          title: {type: "string"},
+          description: {type: "string"},
+          isActive: {type: "boolean"},
+        },
+        required: ["templateId", "templateType", "type", "title"],
+      },
+    },
+  },
+  activeInactiveTemplate: {
+    schema: {
+      tags: ["Template"],
+      description: "active inactive Template",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          templateId: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["templateId", "isActive"],
+      },
+    },
+  },
+};
 module.exports = {
   Auth,
   Tabs,
@@ -4727,5 +4826,6 @@ module.exports = {
   Api,
   Notification,
   Devices,
-  sendPushNotification
+  sendPushNotification,
+  Template
 };

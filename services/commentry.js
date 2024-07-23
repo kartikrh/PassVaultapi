@@ -55,7 +55,8 @@ const {
   updateResultInCommentaryQuery,
   updateMaxOverDetailQuery,
   updateSuperOverCommentaryQuery,
-  insertCommentarySuperOverTeams
+  insertCommentarySuperOverTeams,
+  updateTeamPrediction
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -2411,6 +2412,12 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
       });
       try {
         commentaryPlayers.forEach(async (player) => {
+          if (player.bowlerOver !== null && player.bowlerOver !== undefined) {
+            player.bowlerOver = player.bowlerOver.toString();
+          }
+          if (player.bowlerEconomy === "NaN") {
+            player.bowlerEconomy = null;
+          }
           const _player = global.tblPlayers.filter((item) => item.playerId === player.playerId);
           if (_player.length > 0) {
               player.playerimage = _player[0].image;
@@ -2467,20 +2474,23 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         sendDataForSocketUpdate.dataToUpdate.push({
           module: "commentaryBallByBall",
           type: "create",
-          data: response.commentaryBallByBallDetails,
+          data: {...response.commentaryBallByBallDetails, overCount: response.commentaryBallByBallDetails.overCount !== null ? response.commentaryBallByBallDetails.overCount.toString() : null},
         });
 
         try {
-          const _ifFindCid = global.tblEventMarkets.find((e) => e.commentaryId == commentaryId);
-          if(_ifFindCid){
-            if(updatedData.commentaryBallByBallDetails.ballType > 0){
-              const _dataForOds = {
-                commentaryId: commentaryId,
-                commentaryBallByBallId: updatedData.commentaryBallByBallDetails.commentaryBallByBallId,
-                team1Id: commentaryData.team1Id,
-                team2Id: commentaryData.team2Id,
-              };
-              await createMarketOddsBallByBallBYID(_dataForOds, fastify, request);
+          //
+          if(commentaryData.isTeamPredictionOn){
+            const _ifFindCid = global.tblEventMarkets.find((e) => e.commentaryId == commentaryId);
+            if(_ifFindCid){
+              if(updatedData.commentaryBallByBallDetails.ballType > 0){
+                const _dataForOds = {
+                  commentaryId: commentaryId,
+                  commentaryBallByBallId: updatedData.commentaryBallByBallDetails.commentaryBallByBallId,
+                  team1Id: commentaryData.team1Id,
+                  team2Id: commentaryData.team2Id,
+                };
+                await createMarketOddsBallByBallBYID(_dataForOds, fastify, request);
+              }
             }
           }
         } catch (error) {}
@@ -2540,7 +2550,7 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         sendDataForSocketUpdate.dataToUpdate.push({
           module: "commentaryBallByBall",
           type: "update",
-          data: response.commentaryBallByBallDetails,
+          data: {...response.commentaryBallByBallDetails, overCount: response.commentaryBallByBallDetails.overCount !== null ? response.commentaryBallByBallDetails.overCount.toString() : null},
         });
       }
        // call Third Party API
@@ -7329,6 +7339,25 @@ const AddSuperOverCommentaryService = async (request, fastify) => {
   
   return await commentaryDetailsByIdService({body : {commentaryId: commentary.commentaryId}}, fastify);
 };
+
+const updateTeamPredictionService = async (request, fastify) => {
+  const { commentaryId } = request.body;
+  const index = global.tblCommentaries.findIndex(
+    (item) => item.commentaryId === commentaryId
+  );
+
+  if (index == -1) {
+    throw new Error("Commentary with this id not Found");
+  }
+
+  await updateTeamPrediction(request, fastify);
+
+  const updatedData = await getCommentaryByIdQuery(request, fastify);
+
+  global.tblCommentaries[index] = updatedData;
+
+  return updatedData;
+};
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -7384,5 +7413,6 @@ module.exports = {
   AddSuperOverCommentaryService,
   // getshortService,
   syncCommentaryStatsWithAPIAndSocket,
-  getMatchDataByCId
+  getMatchDataByCId,
+  updateTeamPredictionService
 };
