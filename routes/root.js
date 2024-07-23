@@ -28,6 +28,7 @@ const {
 const { Auth ,sendPushNotification} = require("../swaggerSchema/groupTags/schema");
 const { authorize } = require("../controller/middleware/index");
 const { startSignalR, stopSignalR, isSignalRStarted  } = require('../signalrHandler/index');
+const { errorLogger } = require("../utilities/logger");
 
 module.exports = async function (fastify, opts) {
   //! API DEFINITION
@@ -97,6 +98,20 @@ module.exports = async function (fastify, opts) {
         return error;
       }
 
+    }
+  });
+  fastify.post("/signalr/checkStatus", {
+    handler: async (request, reply) => {
+      try {
+        const result = isSignalRStarted(fastify);
+        console.log("SignalR status: ", result);
+        reply.send({ status : true , statusCode :200 , data: {
+          isSignalRStarted: result || false
+        }});
+      } catch (error) {
+        errorLogger(fastify, error.message, "signalr/checkStatus" , request);
+        return error;
+      }
     }
   });
   // fastify.post("/signupClient", {
