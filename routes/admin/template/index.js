@@ -39,14 +39,14 @@ const { Template } = require("../../../swaggerSchema/groupTags/schema");
 
     fastify.post("/save", {
       schema: Template.save.schema,
-      // preHandler: [
-      //   (request, reply) => authorize(request, reply, fastify),
+       preHandler: [
+         (request, reply) => authorize(request, reply, fastify)
       //   (request, reply, done) =>
       //     checkPermission(request, reply, fastify, {
       //       tabName: "Template",
       //       mode: request.body.templateId === 0 ? "add" : "edit",
       //     }),
-      // ],
+       ],
       handler: (request, reply) => saveTemplate(request, reply, fastify),
     });
 
