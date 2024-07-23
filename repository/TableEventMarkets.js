@@ -1683,14 +1683,14 @@ const UpdateEventMarketByCIdFromSocketQuery = async (data, fastify) => {
 
 const UpdateResulOrApproveEventMarketQuery = async (data, request, fastify) => {
   try {
-    if (data.isResult && data.result) {
+    if (data.isResult && data.result != null) {
       const query = `UPDATE "tblEventMarkets" SET "wrIsResult" = $1, "wrResult" = $2 WHERE "wrID" = $3`;
       return await fastify.db.query(query, {
         bind: [data.isResult, data.result, data.eventMarketId],
         type: fastify.db.QueryTypes.SELECT,
       });
     }
-    if (!data.isResult && data.result) {
+    if (!data.isResult && data.result != null) {
       const query = `UPDATE "tblEventMarkets" SET "wrResult" = $1 WHERE "wrID" = $2`;
       return await fastify.db.query(query, {
         bind: [data.result, data.eventMarketId],
