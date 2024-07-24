@@ -27,10 +27,11 @@ const connection = (socket , fastify) => {
       if (clientInRoom?.size) {
         global.socketIo.to(commentaryId).emit("updateMarketData", marketData );
       }
-      let ballbybllId = marketData[0].ballByBallId;
+      let ballbybllId;
       let marketIdArr = marketData.map((item) =>{
         let mark = JSON.parse(item);
         MarketArr.push(mark);
+        ballbybllId = mark.ballByBallId;
         return mark.marketId;
       });
       let marketToUpdate = await getEventMarketByIdsQuery(
