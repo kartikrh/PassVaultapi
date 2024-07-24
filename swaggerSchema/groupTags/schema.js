@@ -199,11 +199,9 @@ const Auth = {
       body: {
         type: "object",
         properties: {
-          clientId: { type: "integer" },
           email: { type: "string" },
-          mobileNo: { type: "string" },
         },
-        required: ["clientId"],
+        required: ["email"],
       },
     },
   },
@@ -220,24 +218,6 @@ const Auth = {
       },
     },
   },
-  validateMobileno: {
-    schema: {
-      tags: ["Auth"],
-      description: "validateMobileno",
-      body: {
-        type: "object",
-        properties: {
-          email: { type: "string" },
-          mobileNo: { type: "string" },
-          clientId: { type: "integer"},
-          // token: { type: "string" },
-          // googleID: { type: "string" },
-          // ipAddress: { type: "string" },
-        },
-        required: ["email", "mobileNo"],
-      },
-    },
-  },
   verifyOtp: {
     schema: {
       tags: ["Auth"],
@@ -247,30 +227,51 @@ const Auth = {
         properties: {
           otp: { type: "string" },
           email: { type: "string" },
-          clientId: { type: "integer"},
-          // token: { type: "string" },
-          // googleID: { type: "string" },
-          // ipAddress: { type: "string" },
         },
         required: ["email", "otp"],
       },
     },
   },
-  confirmPassword: {
+  setPassword: {
     schema: {
       tags: ["Auth"],
-      description: "confirmPassword",
+      description: "setPassword",
       body: {
         type: "object",
         properties: {
           email: { type: "string" },
           password: { type: "string" },
-          clientId: { type: "integer"},
-          // token: { type: "string" },
-          // googleID: { type: "string" },
-          // ipAddress: { type: "string" },
         },
         required: ["email", "password"],
+      },
+    },
+  },
+  updateClientPassword: {
+    schema: {
+      tags: ["Auth"],
+      description: "updateClientPassword",
+      body: {
+        type: "object",
+        properties: {
+          email: { type: "string" },
+          oldPassword: { type: "string" },
+          newPassword: {type: "string"},
+          clientId: { type: "integer"},
+        },
+        required: ["clientId", "oldPassword", "newPassword"],
+      },
+    },
+  },
+  forgetPassword: {
+    schema: {
+      tags: ["Auth"],
+      description: "forgetPassword",
+      body: {
+        type: "object",
+        properties: {
+          email: { type: "string" },
+        },
+        required: ["email"],
       },
     },
   },

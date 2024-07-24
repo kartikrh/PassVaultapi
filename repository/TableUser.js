@@ -706,7 +706,7 @@ async function registerClientDetails(body, fastify) {
 }
 async function insertOtpQuery(body, fastify) {
   try {
-    const {clientId, otp } = body;
+    const {clientId, otp} = body;
 
         const registrationData = await fastify.db.query(
           `INSERT INTO "tblOtp" (
@@ -742,16 +742,32 @@ async function registerClientOtpValidation(body, fastify) {
 }
 async function registerClientPassword(body, fastify) {
   try {
-    const {email, password, clientId} = body;
+    const {email, password} = body;
         await fastify.db.query(
           `UPDATE "tblClient" set "wrPassword" = $2, "wrRegistrationProcessStatus" = $3, "wrIsUserActive" = $4
+           WHERE "wrEmailID" = $1`,
+          {
+            type: QueryTypes.INSERT,
+            bind: [email, password, 3, 1],
+          }
+        );
+        return "Password set successfully";
+  } catch (error) {
+    return error.message;
+  }
+}
+async function updateClientPassword(body, fastify) {
+  try {
+    const {email, newPassword, clientId} = body;
+        await fastify.db.query(
+          `UPDATE "tblClient" set "wrPassword" = $2
            WHERE "wrClientID" = $1`,
           {
             type: QueryTypes.INSERT,
-            bind: [clientId, password, 3, 1],
+            bind: [clientId, newPassword],
           }
         );
-        return "Password added successfully";
+        return "Password updated successfully";
   } catch (error) {
     return error.message;
   }
@@ -963,4 +979,5 @@ module.exports = {
   insertOtpQuery,
   registerClientOtpValidation,
   registerClientPassword,
+  updateClientPassword,
 };

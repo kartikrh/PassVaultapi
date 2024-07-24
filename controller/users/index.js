@@ -26,7 +26,9 @@ const {
   validateOtpService,
   setPasswordService,
   clientDetailsByIdService,
-  resendOtpService
+  resendOtpService,
+  updateClientPasswordService,
+  forgetPasswordService
 } = require("../../services/user");
 const { errorLogger } = require("../../utilities/logger");
 const fetchAllDataFromDb = require("../../utilities/fetchAllData");
@@ -312,6 +314,24 @@ async function setPassword(request, reply, fastify) {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 }
+async function updateClientPassword(request, reply, fastify) {
+  try {
+    const result = await updateClientPasswordService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/updateClientPassword", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+}
+async function forgetPassword(request, reply, fastify) {
+  try {
+    const result = await forgetPasswordService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/forgetPassword", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+}
 async function loginClient(request, reply, fastify) {
   try {
     const result = await loginClientService(request, fastify);
@@ -391,5 +411,7 @@ module.exports = {
   validateOtp,
   setPassword,
   clientDetailsById,
-  resendOtp
+  resendOtp,
+  updateClientPassword,
+  forgetPassword,
 };
