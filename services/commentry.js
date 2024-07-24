@@ -2498,32 +2498,38 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
                 const entry = signalRDataMap.get(mapKey);
           
                 if (entry) {
-                  const _dataForOds = {
-                    commentaryId: commentaryId,
-                    commentaryBallByBallId: updatedData.commentaryBallByBallDetails.commentaryBallByBallId,
-                    teamId: entry.teamId,
-                    EventMarketId: entry.EventMarketId,
-                    RunnerId: entry.RunnerId,
-                    MarketStatus: entry.MarketStatus,
-                    BackPrice: entry.BackPrice,
-                    LayPrice: entry.LayPrice,
-                    BackSize: entry.BackSize,
-                    LaySize: entry.LaySize,
-                    MarketName: entry.MarketName,
-                    RunnerName: entry.RunnerName,
-                    selectionId: entry.selectionId
-                  };
-          
-                  try {
-                    await createMarketOddsBallByBallBYID(_dataForOds, fastify, request);
-                  } catch (error) {
-                    errorLogger(
-                      fastify,
-                      error.message,
-                      "ERROR --> createMarketOddsBallByBallBYID",
-                      request
-                    );
-                    console.log(error.message);
+                  const currentTime = new Date();
+                  const entryTime = new Date(entry.timestamp);
+                  const timeDifference = (currentTime - entryTime) / 1000; 
+                  if (timeDifference <= 25) {
+
+                    const _dataForOds = {
+                      commentaryId: commentaryId,
+                      commentaryBallByBallId: updatedData.commentaryBallByBallDetails.commentaryBallByBallId,
+                      teamId: entry.teamId,
+                      EventMarketId: entry.EventMarketId,
+                      RunnerId: entry.RunnerId,
+                      MarketStatus: entry.MarketStatus,
+                      BackPrice: entry.BackPrice,
+                      LayPrice: entry.LayPrice,
+                      BackSize: entry.BackSize,
+                      LaySize: entry.LaySize,
+                      MarketName: entry.MarketName,
+                      RunnerName: entry.RunnerName,
+                      selectionId: entry.selectionId
+                    };
+                  
+                    try {
+                      await createMarketOddsBallByBallBYID(_dataForOds, fastify, request);
+                    } catch (error) {
+                      errorLogger(
+                        fastify,
+                        error.message,
+                        "ERROR --> createMarketOddsBallByBallBYID",
+                        request
+                      );
+                      console.log(error.message);
+                    }
                   }
                 }
               }

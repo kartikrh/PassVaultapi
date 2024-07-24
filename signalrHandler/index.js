@@ -8,6 +8,7 @@ const {updateLatestMarketOddsBallByBall} = require('../repository/TableMarketOdd
 const configConstants = require('../utilities/configConstants');
 let connection;
 global.rateSourceRefIDSet = new Set();
+global.isAdminStoppedSignalR = false;
 let intervalId;
 let _fastify;
 let checkConfigIntervalId = null;
@@ -28,6 +29,7 @@ async function startSignalR(fastify) {
         try {
           await connection.start();
           console.log('SignalR Connected');
+          global.isAdminStoppedSignalR = false;
           global.SignalRData = [];
           global.selectionData = {};
           // Function to check and invoke ConnectMarketRate if new IDs are added
@@ -72,24 +74,43 @@ async function startSignalR(fastify) {
                 if(EventsMarketobj)
                 { 
                   const groupedRates = {};
+                  if(data.rt.length >= 12){
+                    data.rt.forEach(rate => {
+                        const selectionId = rate.si;
+                        if (!groupedRates[selectionId]) {
+                            groupedRates[selectionId] = { back: [], lay: [] };
+                        }
+                      
+                        // Separate into back and lay rates where pr is 0
+                        if (rate.pr === 0) {
+                            if (rate.ib) {
+                                groupedRates[selectionId].back.push(rate);
+                            } else {
+                                groupedRates[selectionId].lay.push(rate);
+                            }
+                        }
+                    });
+                }
+                else{
                   data.rt.forEach(rate => {
-                      const selectionId = rate.si;
-                      if (!groupedRates[selectionId]) {
-                          groupedRates[selectionId] = { back: [], lay: [] };
-                      }
-                    
-                      // Separate into back and lay rates where pr is 0
-                      if (rate.pr === 1) {
-                          if (rate.ib) {
-                              groupedRates[selectionId].back.push(rate);
-                          } else {
-                              groupedRates[selectionId].lay.push(rate);
-                          }
-                      }
+                    const selectionId = rate.si;
+                    if (!groupedRates[selectionId]) {
+                        groupedRates[selectionId] = { back: [], lay: [] };
+                    }
+                  
+                    // Separate into back and lay rates where pr is 0
+                    if (rate.pr === 1) {
+                        if (rate.ib) {
+                            groupedRates[selectionId].back.push(rate);
+                        } else {
+                            groupedRates[selectionId].lay.push(rate);
+                        }
+                    }
                   });
-                
+                }
                   // Create the desired output structure
                   const _blrbsids = [];
+                  const currentTime = new Date().toISOString();
                   Object.keys(groupedRates).forEach(selectionId => {
                       const rates = groupedRates[selectionId];
                       const backRates = rates.back.length ? rates.back : [{ rv: null, re: null }];
@@ -102,7 +123,8 @@ async function startSignalR(fastify) {
                                   backSize: backRate.re,
                                   layPrice: layRate.rv,
                                   laySize: layRate.re,
-                                  selectionId: parseInt(selectionId, 10)
+                                  selectionId: parseInt(selectionId, 10),
+                                  timestamp: currentTime // Add timestamp here
                               });
                           });
                       });
@@ -112,7 +134,9 @@ async function startSignalR(fastify) {
                   if(_blrbsids && _blrbsids.length)
                   {
                      let marketId;
+                     
                      for (const items of _blrbsids) {
+                      let _time = items.timestamp;
                       const _selectionidData = global.tblEventMarkets.find(
                         (e) => e.selectionId == items.selectionId
                       );
@@ -171,6 +195,7 @@ async function startSignalR(fastify) {
                                       LaySize: _updateData.LaySize,
                                       MarketName: _updateData.MarketName,
                                       RunnerName: _updateData.RunnerName,
+                                      timestamp: _time,
                                   };
                               } else {
                                   // Create a new entry
@@ -186,6 +211,7 @@ async function startSignalR(fastify) {
                                       LaySize: _updateData.LaySize,
                                       MarketName: _updateData.MarketName,
                                       selectionId:_updateData.selectionId,
+                                      timestamp: _time
                                   };
                                 }
                                 //await updateLatestMarketOddsBallByBall(_updateData,_fastify,_selectionidData.commentaryId);
@@ -336,14 +362,14 @@ async function startSignalR(fastify) {
         checkConfigIntervalId = setInterval(async () => {
           const isSON = global.tblConfigs.find((item) => item.key === configConstants.ISMARKETOODS_SIGNALRON).value;
           if (isSON === 'true') {
-            if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
+            if (!global.isAdminStoppedSignalR && (!connection || connection.state !== signalR.HubConnectionState.Connected)) {
               global.rateSourceRefIDSet = new Set();
               await startSignalR(_fastify);
             }
           } else {
             await stopSignalR();
           }
-        }, 300000); // 5 minutes
+        }, 300000); // 5 minutes 300000
       } catch (error) {
         //console.error('Error disconnecting from SignalR:', error);
         throw new Error(error);
@@ -363,6 +389,7 @@ async function stopSignalR(fastify) {
         clearInterval(intervalId);
         intervalId = null;
       }
+      global.isAdminStoppedSignalR = true;
       global.rateSourceRefIDSet = new Set();
       global.selectionData = {};
     } catch (err) {
