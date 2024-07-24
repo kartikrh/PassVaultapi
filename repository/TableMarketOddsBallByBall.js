@@ -294,7 +294,7 @@ const createMarketOddsBallByBallBYID = async (data, fastify, request) => {
       fastify,
       err.message,
       "DB ERROR --> repository/TableMarketOddsBallByBall/createMarketOdds",
-      request
+      null
     );
     console.log(err.message);
     return false;

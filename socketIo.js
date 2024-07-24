@@ -21,6 +21,7 @@ const connection = (socket , fastify) => {
   socket.on("updatedEventMarket", async (data) => {
     try {
       let MarketArr = [];
+      console.log("marketData", marketData);
       const { commentaryId, marketData } = data;
       const clientInRoom = global.socketIo.sockets.adapter.rooms.get(commentaryId);
       if (clientInRoom?.size) {
@@ -48,7 +49,7 @@ const connection = (socket , fastify) => {
           global.tblEventMarkets.push(data);
         }
         //call
-        console.log("createMarketOddsBallByBallBulkInsert Data saved calling " + data.eventMarketId + "  and BallID" + ballbybllId);
+        console.log("createMarketOddsBallByBallBulkInsert Data saved calling " + data.eventMarketId + "  and BallID " + ballbybllId);
         await createMarketOddsBallByBallBYIDFromSocketIo(ballbybllId,data,fastify);
         console.log("createMarketOddsBallByBallBulkInsert Data saved calling " + data.eventMarketId);
       })
