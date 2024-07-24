@@ -150,10 +150,10 @@ async function startSignalR(fastify) {
                               _updateData.EventMarketId = _selectionidData.eventMarketId;
                               _updateData.RunnerId = _selectionidData.runnerId;
                               _updateData.MarketStatus = _selectionidData.status;
-                              _updateData.BackPrice = _selectionidData.backPrice;
-                              _updateData.LayPrice = _selectionidData.layPrice;
-                              _updateData.BackSize = _selectionidData.backSize;
-                              _updateData.LaySize = _selectionidData.laySize;
+                              _updateData.BackPrice = items.backPrice;
+                              _updateData.LayPrice = items.layPrice;
+                              _updateData.BackSize = items.backSize;
+                              _updateData.LaySize = items.laySize;
                               _updateData.MarketName = _selectionidData.marketName;
                               _updateData.RunnerName = _selectionidData.runner;
                               _updateData.commentaryId = _selectionidData.commentaryId;
