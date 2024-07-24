@@ -88,6 +88,16 @@ module.exports = (sequelize) => {
         type: DataTypes.BOOLEAN,
         allowNull: true,
       },
+      wrFacebookId :{
+        type : DataTypes.STRING,
+        allowNull : true,
+        defaultValue : null
+      },
+      wrProvider : {
+        type : DataTypes.INTEGER,
+        allowNull : true,
+        defaultValue : null
+      }
     },
     {
       timestamps: false,

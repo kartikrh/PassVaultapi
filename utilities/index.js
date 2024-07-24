@@ -543,6 +543,11 @@ const getPagination = (page, size) => {
     take 
   }
 }
+const clientProvider = {
+  Manual : 1,
+  Google : 2,
+  Facebook : 3,
+}
 module.exports = {
   ERROR_CODES,
   error,
@@ -580,5 +585,6 @@ module.exports = {
   NotificationSendType,
   sendNotificationByType,
   pageLimit,
-  getPagination
+  getPagination,
+  clientProvider
 };

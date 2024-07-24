@@ -36,6 +36,7 @@ const {
 } = require("../utilities/index");
 const { generateToken } = require("../utilities/tokenization");
 const configConstants = require("../utilities/configConstants");
+const { errorLogger } = require("../utilities/logger");
 
 async function signUpUserService({ body }, fastify) {
   const hashedPassword = encrypt(body.password);
@@ -516,7 +517,7 @@ const changeUserPasswordByUSerIDService = async (request, fastify) => {
 async function loginClientService({ body }, fastify) {
   try {
     let results;
-    if (body.googleID || body.token) {
+    if (body.googleID || body.token || body.facebookId) {
         // Google Login
         results = await loginClient(body, fastify);
     } else {
@@ -585,10 +586,17 @@ async function registerDetailsService({ body }, fastify) {
     let response;
     response = await registerClientDetails(body, fastify);
 
-    if (response === "MobileNo and Email is already exists") {
-      return { error: response };
+    // if (response === "MobileNo and Email is already exists") {
+    //   return { error: response };
+    // }
+    let isOtpSend = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP);
+    if(isOtpSend){
+      isOtpSend = isOtpSend.value;
     }
-    const isOtpSend = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP).value;
+    else {
+      throw new Error("Config not found");
+    }
+
     if(response.clientId){
       const payload = { clientId: response.clientId };
       const token = generateToken(payload);
@@ -614,11 +622,18 @@ async function registerDetailsService({ body }, fastify) {
       }
 
       return { token, details: response };
-    } else {
-        return { error: response };
+    }
+    else{
+      return { error: response };
     }
   } catch (error) {
-    return null;
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR->> services/user.js -> registerDetailsService",
+      null
+    )
+    throw new Error(error);
   }
 };
 async function resendOtpService({ body }, fastify) {
