@@ -63,7 +63,7 @@ async function startSignalR(fastify) {
               let _message = message;
               let commentary;
               if(_message.rt){
-                //console.log("Get Rates");
+                console.log("Get Rates");
                 const data = _message;
               
                 const EventsMarketobj = global.tblEventMarkets.find(
@@ -261,7 +261,7 @@ async function startSignalR(fastify) {
                                 if(commentary.isTeamPredictionOn)
                                 {
                                   await updateCommentaryTeamPredictionPrecentageQuery(_update, _fastify);
-                                  //console.log('updateCommentaryTeamPredictionPrecentageQuery');
+                                  console.log('updateCommentaryTeamPredictionPrecentageQuery');
                                 }
                               }
                             } catch (error) {
