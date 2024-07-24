@@ -651,7 +651,7 @@ async function registerClientDetails(body, fastify) {
             "wrClientName", "wrIsAllowMultiLogin", "wrCreatedDate", 
             "wrEmailID", "wrMobileNo", "wrIpAddress", "wrIsActive", "wrIsEmailVerified", "wrIsDelete", "wrRegistrationProcessStatus", "wrUserName", "wrProvider"
           ) VALUES (
-            $1, $2, now(), $3, $4, $5, true, false, false, $6, $7
+            $1, $2, now(), $3, $4, $5, true, false, false, $6, $7 , $8
           ) RETURNING "wrClientID" as "clientId", "wrGoogleID" as "googleId", "wrUserName" as "userName", "wrIsAllowMultiLogin" as "isAllowMultiLogin","wrEmailID" as "emailId" ,"wrMobileNo" as "mobileNo", "wrRegistrationProcessStatus" as "registrationProcessStatus", 
            "wrUserName" as "userName", "wrClientName" as "fullName" , "wrProvider" as "provider";`,
           {
