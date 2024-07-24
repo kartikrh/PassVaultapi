@@ -21,7 +21,7 @@ const connection = (socket , fastify) => {
   socket.on("updatedEventMarket", async (data) => {
     try {
       let MarketArr = [];
-      console.log("marketData", data);
+      //console.log("marketData", data);
       const { commentaryId, marketData } = data;
       const clientInRoom = global.socketIo.sockets.adapter.rooms.get(commentaryId);
       if (clientInRoom?.size) {
@@ -50,9 +50,11 @@ const connection = (socket , fastify) => {
           global.tblEventMarkets.push(data);
         }
         //call
-        console.log("createMarketOddsBallByBallBulkInsert Data saved calling " + data.eventMarketId + "  and BallID " + ballbybllId);
-        await createMarketOddsBallByBallBYIDFromSocketIo(ballbybllId,data,fastify);
-        console.log("createMarketOddsBallByBallBulkInsert Data saved calling " + data.eventMarketId);
+        //console.log("createMarketOddsBallByBallBulkInsert Data saved calling " + data.eventMarketId + "  and BallID " + ballbybllId);
+        if(ballbybllId){
+         await createMarketOddsBallByBallBYIDFromSocketIo(ballbybllId,data,fastify);
+        }
+        //console.log("createMarketOddsBallByBallBulkInsert Data saved calling " + data.eventMarketId);
       })
       console.log("Event Market Updated successfully");
       return true;
