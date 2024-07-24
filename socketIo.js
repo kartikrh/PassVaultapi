@@ -21,7 +21,7 @@ const connection = (socket , fastify) => {
   socket.on("updatedEventMarket", async (data) => {
     try {
       let MarketArr = [];
-      console.log("marketData", marketData);
+      console.log("marketData", data);
       const { commentaryId, marketData } = data;
       const clientInRoom = global.socketIo.sockets.adapter.rooms.get(commentaryId);
       if (clientInRoom?.size) {
