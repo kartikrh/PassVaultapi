@@ -8,7 +8,8 @@ const getAllClientQuery = async (fastify) => {
             "wrEmailID" as "emailId",
             "wrCreatedDate" as "createdDate",
             "wrClientName" as "fullName",
-            "wrRegistrationProcessStatus" as "registrationProcessStatus"
+            "wrRegistrationProcessStatus" as "registrationProcessStatus",
+            "wrIsUserActive" as "isUserActive"
         from "tblClient"
         `,
     {
