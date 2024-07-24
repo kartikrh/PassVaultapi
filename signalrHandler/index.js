@@ -63,7 +63,7 @@ async function startSignalR(fastify) {
               let _message = message;
               let commentary;
               if(_message.rt){
-                console.log("Get Rates");
+                //console.log("Get Rates");
                 const data = _message;
               
                 const EventsMarketobj = global.tblEventMarkets.find(
@@ -79,7 +79,7 @@ async function startSignalR(fastify) {
                       }
                     
                       // Separate into back and lay rates where pr is 0
-                      if (rate.pr === 0) {
+                      if (rate.pr === 1) {
                           if (rate.ib) {
                               groupedRates[selectionId].back.push(rate);
                           } else {
@@ -92,8 +92,8 @@ async function startSignalR(fastify) {
                   const _blrbsids = [];
                   Object.keys(groupedRates).forEach(selectionId => {
                       const rates = groupedRates[selectionId];
-                      const backRates = rates.back;
-                      const layRates = rates.lay;
+                      const backRates = rates.back.length ? rates.back : [{ rv: null, re: null }];
+                      const layRates = rates.lay.length ? rates.lay : [{ rv: null, re: null }];
                   
                       backRates.forEach(backRate => {
                           layRates.forEach(layRate => {
@@ -156,8 +156,8 @@ async function startSignalR(fastify) {
                                   );
                                 }
                                 _updateData.teamId = teams.teamId;
-                                const { EventMarketId } = _updateData;
-                                const key = `${EventMarketId}`;
+                                const { EventMarketId,selectionId } = _updateData;
+                                const key = `${EventMarketId}_${selectionId}`;
                                 if (global.SignalRData[key]) {
                                   // Update the existing entry
                                   global.SignalRData[key] = {
@@ -261,7 +261,7 @@ async function startSignalR(fastify) {
                                 if(commentary.isTeamPredictionOn)
                                 {
                                   await updateCommentaryTeamPredictionPrecentageQuery(_update, _fastify);
-                                  console.log('updateCommentaryTeamPredictionPrecentageQuery');
+                                  //console.log('updateCommentaryTeamPredictionPrecentageQuery');
                                 }
                               }
                             } catch (error) {

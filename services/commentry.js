@@ -2488,13 +2488,13 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
               
               for (const key in global.SignalRData) {
                 const entry = global.SignalRData[key];
-                const mapKey = `${entry.EventMarketId}`;
+                const mapKey = `${entry.EventMarketId}_${entry.selectionId}`;
                 signalRDataMap.set(mapKey, entry);
               }
           
               for (const _ifFindCid of filteredCid) {
-                const { eventMarketId } = _ifFindCid;
-                const mapKey = `${eventMarketId}`;
+                const { eventMarketId ,selectionId} = _ifFindCid;
+                const mapKey = `${eventMarketId}_${selectionId}`;
                 const entry = signalRDataMap.get(mapKey);
           
                 if (entry) {
