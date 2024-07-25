@@ -186,7 +186,7 @@ module.exports = async function (fastify, opts) {
     // Record the request start time in nanoseconds
     request.startTime = process.hrtime.bigint();
     request.startTimeTimeStemp = new Date();
-    if (request.originalUrl.includes("/commentary/saveDetails")) {
+    if (request.originalUrl.includes("/commentary/saveDetails") || request.originalUrl.includes("/commentary/saveCommentaryDetails")) {
       // request.endTimeTimeStemp = new Date();
       // new Promise((resolve, reject) => {
       //   resolve(responseLogInDB(request, fastify));
