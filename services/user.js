@@ -719,7 +719,6 @@ async function validateOtpService({ body }, fastify) {
       throw new Error("Invalid OTP");
     }
   } catch (error) {
-    console.log("error",error);
     errorLogger(
       fastify,
       error.message,
