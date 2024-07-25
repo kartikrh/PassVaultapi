@@ -680,7 +680,17 @@ async function resendOtpService({ body }, fastify) {
   }
 };
 const clientDetailsByIdService = async (request, fastify) => {
-  const { clientId } = request.body;
+  const { email } = request.body;
+
+  const findUser = global.tblClient.find(
+    (item) => item.emailId === email
+  );
+
+  if(!findUser) {
+    throw new Error("Invalid User");
+  }
+    
+  const clientId = findUser.clientId;
 
   let clientDetails = await global.tblClient.find(
     (item) => item.clientId === clientId

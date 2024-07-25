@@ -205,16 +205,16 @@ const Auth = {
       },
     },
   },
-  clientDetailsById: {
+  clientDetailsByEmailId: {
     schema: {
       tags: ["Auth"],
-      description: "clientDetailsById",
+      description: "clientDetailsByEmailId",
       body: {
         type: "object",
         properties: {
-          clientId: { type: "integer" },
+          email: { type: "string" },
         },
-        required: ["clientId"],
+        required: ["email"],
       },
     },
   },
