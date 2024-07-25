@@ -578,7 +578,13 @@ async function registrationClientService({ body }, fastify) {
       return { error: results };
     }
   } catch (error) {
-    return null;
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR->> services/user.js -> registrationClientService",
+      null
+    )
+    throw new Error(error);
   }
 }
 
@@ -664,7 +670,13 @@ async function resendOtpService({ body }, fastify) {
 
       return "Otp sent successfully";
   } catch (error) {
-    return null;
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR->> services/user.js -> resendOtpService",
+      null
+    )
+    throw new Error(error);
   }
 };
 const clientDetailsByIdService = async (request, fastify) => {
@@ -707,7 +719,14 @@ async function validateOtpService({ body }, fastify) {
       throw new Error("Invalid OTP");
     }
   } catch (error) {
-    throw error;
+    console.log("error",error);
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR->> services/user.js -> validateOtpService",
+      null
+    )
+    throw new Error(error);
   }
 }
 
@@ -731,7 +750,13 @@ async function setPasswordService({ body }, fastify) {
 
     return clientData;
   } catch (error) {
-    return null;
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR->> services/user.js -> setPasswordService",
+      null
+    )
+    throw new Error(error);
   }
 }
 
@@ -768,7 +793,13 @@ async function updateClientPasswordService({ body }, fastify) {
 
     return clientData;
   } catch (error) {
-    return null;
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR->> services/user.js -> updateClientPasswordService",
+      null
+    )
+    throw new Error(error);
   }
 }
 
@@ -793,7 +824,13 @@ async function forgetPasswordService({ body }, fastify) {
 
     return "Otp sent successfully"
   } catch (error) {
-    return null;
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR->> services/user.js -> forgetPasswordService",
+      null
+    )
+    throw new Error(error);
   }
 }
 async function updateClientService({ body }, fastify) {
