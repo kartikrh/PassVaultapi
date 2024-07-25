@@ -188,4 +188,36 @@ const tblThirdPartyAPILogger = async (data, request, fastify) => {
     console.log(error);
   }
 }
-module.exports = { errorLogger, responseLogger ,responseLogInDB , marketLogger ,marketDataLogger,tblPredictorAPILogger,tblThirdPartyAPILogger};
+
+const commentaryLogger = async (data, request, fastify) => {
+  try {
+    const query = `
+      INSERT INTO "tblCommentaryLogs"
+      (
+        "wrCommentaryId",
+        "wrRequestBody",
+        "wrResponse",
+        "wrGlobal",
+        "wrExtraData",
+        "wrCreatedBy"
+      )
+      VALUES ($1, $2, $3, $4, $5, $6)
+    `;
+    return await fastify.db.query(query, {
+      type: fastify.db.QueryTypes.SELECT,
+      bind: [
+        data.commentaryId,
+        data.requestBody,
+        data.response,
+        data.global,
+        data.extra || null,
+        request?.userTokenInfo?.WrUserId || null,
+      ],  
+    });
+
+  } catch (error) {
+    console.log(error);
+  }
+}
+module.exports = { errorLogger, responseLogger ,responseLogInDB , marketLogger ,
+  marketDataLogger,tblPredictorAPILogger,tblThirdPartyAPILogger,commentaryLogger};
