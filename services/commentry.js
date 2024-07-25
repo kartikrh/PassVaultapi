@@ -2479,20 +2479,62 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
 
         try {
           //
-          if(commentaryData.isTeamPredictionOn){
-            const _ifFindCid = global.tblEventMarkets.find((e) => e.commentaryId == commentaryId);
-            if(_ifFindCid){
-              if(updatedData.commentaryBallByBallDetails.ballType > 0){
-                const _dataForOds = {
-                  commentaryId: commentaryId,
-                  commentaryBallByBallId: updatedData.commentaryBallByBallDetails.commentaryBallByBallId,
-                  team1Id: commentaryData.team1Id,
-                  team2Id: commentaryData.team2Id,
-                };
-                await createMarketOddsBallByBallBYID(_dataForOds, fastify, request);
+          if (commentaryData.isTeamPredictionOn) {
+            const filteredCid = global.tblEventMarkets.filter((e) => e.commentaryId === commentaryId && e.rateSource === 2);
+          
+            if (filteredCid.length > 0 && updatedData.commentaryBallByBallDetails.ballType > 0) {
+              // Create a map for SignalRData entries
+              const signalRDataMap = new Map();
+              
+              for (const key in global.SignalRData) {
+                const entry = global.SignalRData[key];
+                const mapKey = `${entry.EventMarketId}_${entry.selectionId}`;
+                signalRDataMap.set(mapKey, entry);
+              }
+          
+              for (const _ifFindCid of filteredCid) {
+                const { eventMarketId ,selectionId} = _ifFindCid;
+                const mapKey = `${eventMarketId}_${selectionId}`;
+                const entry = signalRDataMap.get(mapKey);
+          
+                if (entry) {
+                  const currentTime = new Date();
+                  const entryTime = new Date(entry.timestamp);
+                  const timeDifference = (currentTime - entryTime) / 1000; 
+                  if (timeDifference <= 25) {
+
+                    const _dataForOds = {
+                      commentaryId: commentaryId,
+                      commentaryBallByBallId: updatedData.commentaryBallByBallDetails.commentaryBallByBallId,
+                      teamId: entry.teamId,
+                      EventMarketId: entry.EventMarketId,
+                      RunnerId: entry.RunnerId,
+                      MarketStatus: entry.MarketStatus,
+                      BackPrice: entry.BackPrice,
+                      LayPrice: entry.LayPrice,
+                      BackSize: entry.BackSize,
+                      LaySize: entry.LaySize,
+                      MarketName: entry.MarketName,
+                      RunnerName: entry.RunnerName,
+                      selectionId: entry.selectionId
+                    };
+                  
+                    try {
+                      await createMarketOddsBallByBallBYID(_dataForOds, fastify, request);
+                    } catch (error) {
+                      errorLogger(
+                        fastify,
+                        error.message,
+                        "ERROR --> createMarketOddsBallByBallBYID",
+                        request
+                      );
+                      console.log(error.message);
+                    }
+                  }
+                }
               }
             }
-          }
+          }          
         } catch (error) {}
 
         // call the predictor market

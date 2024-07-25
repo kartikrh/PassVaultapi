@@ -439,7 +439,8 @@ const marketListByCIdService = async (request, fastify) => {
       (item) => item.marketTypeCategoryId > 0
   ).map(item => ({
       marketTypeCategoryId: item.marketTypeCategoryId,
-      categoryName: item.categoryName
+      categoryName: item.categoryName,
+      displayOrder : item.displayOrder
   }));
 
   return {
@@ -1012,7 +1013,7 @@ const updateComInMarketService = async (data,request, fastify) => {
       (e) => e.eventMarketId === item.eventMarketId
     );
     if (eventMarket !== -1) {
-      global.tblEventMarkets[eventMarket].commentaryId = item.commentaryId;
+      global.tblEventMarkets[eventMarket].commentaryId = data.commentaryId;
     }
   }
   return "Event Market updated successfully";

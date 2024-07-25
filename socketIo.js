@@ -1,6 +1,8 @@
 const jwt = require("jsonwebtoken");
 const { errorLogger } = require("./utilities/logger");
 const { getEventMarketByIdsQuery } = require("./repository/TableEventMarkets");
+const { MarketActionType } = require("./utilities");
+const {createMarketOddsBallByBallBYIDFromSocketIo} = require("./repository/TableMarketOddsBallByBall")
 
 const connection = (socket , fastify) => {
   const { userId, allowMultipleLogin, wrToken } = socket;
@@ -18,13 +20,18 @@ const connection = (socket , fastify) => {
   }
   socket.on("updatedEventMarket", async (data) => {
     try {
+      let MarketArr = [];
+      //console.log("marketData", data);
       const { commentaryId, marketData } = data;
       const clientInRoom = global.socketIo.sockets.adapter.rooms.get(commentaryId);
       if (clientInRoom?.size) {
         global.socketIo.to(commentaryId).emit("updateMarketData", marketData );
       }
+      let ballbybllId;
       let marketIdArr = marketData.map((item) =>{
         let mark = JSON.parse(item);
+        MarketArr.push(mark);
+        ballbybllId = mark.ballByBallId;
         return mark.marketId;
       });
       let marketToUpdate = await getEventMarketByIdsQuery(
@@ -34,7 +41,7 @@ const connection = (socket , fastify) => {
         null,
         fastify
       )
-      marketToUpdate?.map((data) => {
+      marketToUpdate?.map(async (data) => {
         let index = global.tblEventMarkets.findIndex((market) => market.eventMarketId === data.eventMarketId);
         if(index != -1){
           global.tblEventMarkets[index] = data;
@@ -42,9 +49,14 @@ const connection = (socket , fastify) => {
         else {
           global.tblEventMarkets.push(data);
         }
+        //call
+        //console.log("createMarketOddsBallByBallBulkInsert Data saved calling " + data.eventMarketId + "  and BallID " + ballbybllId);
+        if(ballbybllId){
+         await createMarketOddsBallByBallBYIDFromSocketIo(ballbybllId,data,fastify);
+        }
+        //console.log("createMarketOddsBallByBallBulkInsert Data saved calling " + data.eventMarketId);
       })
       console.log("Event Market Updated successfully");
-
       return true;
   
     // let marketDataToUpdate = marketData;

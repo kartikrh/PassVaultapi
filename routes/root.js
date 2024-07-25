@@ -16,12 +16,21 @@ const {
   updateClient,
   sendNotificationWeb,
   sendNotificationMobile,
-  signOutClient
+  signOutClient,
+  registerDetails,
+  registerMobile,
+  validateOtp,
+  setPassword,
+  clientDetailsById,
+  resendOtp,
+  updateClientPassword,
+  forgetPassword
   //loginRegistrationClient,
 } = require("../controller/users/index");
 const { Auth ,sendPushNotification} = require("../swaggerSchema/groupTags/schema");
 const { authorize } = require("../controller/middleware/index");
 const { startSignalR, stopSignalR, isSignalRStarted  } = require('../signalrHandler/index');
+const { errorLogger } = require("../utilities/logger");
 
 module.exports = async function (fastify, opts) {
   //! API DEFINITION
@@ -93,6 +102,20 @@ module.exports = async function (fastify, opts) {
 
     }
   });
+  fastify.post("/signalr/checkStatus", {
+    handler: async (request, reply) => {
+      try {
+        const result = isSignalRStarted(fastify);
+        console.log("SignalR status: ", result);
+        reply.send({ status : true , statusCode :200 , data: {
+          isSignalRStarted: result || false
+        }});
+      } catch (error) {
+        errorLogger(fastify, error.message, "signalr/checkStatus" , request);
+        return error;
+      }
+    }
+  });
   // fastify.post("/signupClient", {
   //   schema: Auth.clientLogin.schema,
   //   handler: (request, reply) => loginRegistrationClient(request, reply, fastify),
@@ -100,6 +123,34 @@ module.exports = async function (fastify, opts) {
   fastify.post("/signupClient", {
     schema: Auth.clientregistration.schema,
     handler: (request, reply) => registrationClient(request, reply, fastify),
+  });
+  fastify.post("/signupClientDetails", {
+    schema: Auth.signupClientDetails.schema,
+    handler: (request, reply) => registerDetails(request, reply, fastify),
+  });
+  fastify.post("/resendOtp", {
+    schema: Auth.resendOtp.schema,
+    handler: (request, reply) => resendOtp(request, reply, fastify),
+  });
+  fastify.post("/clientDetailsById", {  
+    schema: Auth.clientDetailsById.schema,
+    handler: (request, reply) => clientDetailsById(request, reply, fastify)
+  });
+  fastify.post("/verifyOtp", {
+    schema: Auth.verifyOtp.schema,
+    handler: (request, reply) => validateOtp(request, reply, fastify),
+  });
+  fastify.post("/setPassword", {
+    schema: Auth.setPassword.schema,
+    handler: (request, reply) => setPassword(request, reply, fastify),
+  });
+  fastify.post("/changeClientPassword", {
+    schema: Auth.updateClientPassword.schema,
+    handler: (request, reply) => updateClientPassword(request, reply, fastify),
+  });
+  fastify.post("/forgetPassword", {
+    schema: Auth.forgetPassword.schema,
+    handler: (request, reply) => forgetPassword(request, reply, fastify),
   });
   fastify.post("/signinClient", {
     schema: Auth.clientLogin.schema,

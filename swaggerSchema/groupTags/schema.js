@@ -173,6 +173,108 @@ const Auth = {
       },
     },
   },
+  signupClientDetails: {
+    schema: {
+      tags: ["Auth"],
+      description: "signupClientDetails",
+      body: {
+        type: "object",
+        properties: {
+          fullName: { type: "string" },
+          email: { type: "string" },
+          userName: { type: "string" },
+          mobileNo: { type: "string" },
+          token: { type: "string" },
+          googleID: { type: "string" },
+          ipAddress: { type: "string" },
+        },
+        required: ["email"],
+      },
+    },
+  },
+  resendOtp: {
+    schema: {
+      tags: ["Auth"],
+      description: "resendOtp",
+      body: {
+        type: "object",
+        properties: {
+          email: { type: "string" },
+        },
+        required: ["email"],
+      },
+    },
+  },
+  clientDetailsById: {
+    schema: {
+      tags: ["Auth"],
+      description: "clientDetailsById",
+      body: {
+        type: "object",
+        properties: {
+          clientId: { type: "integer" },
+        },
+        required: ["clientId"],
+      },
+    },
+  },
+  verifyOtp: {
+    schema: {
+      tags: ["Auth"],
+      description: "verifyOtp",
+      body: {
+        type: "object",
+        properties: {
+          otp: { type: "string" },
+          email: { type: "string" },
+        },
+        required: ["email", "otp"],
+      },
+    },
+  },
+  setPassword: {
+    schema: {
+      tags: ["Auth"],
+      description: "setPassword",
+      body: {
+        type: "object",
+        properties: {
+          email: { type: "string" },
+          password: { type: "string" },
+        },
+        required: ["email", "password"],
+      },
+    },
+  },
+  updateClientPassword: {
+    schema: {
+      tags: ["Auth"],
+      description: "updateClientPassword",
+      body: {
+        type: "object",
+        properties: {
+          email: { type: "string" },
+          oldPassword: { type: "string" },
+          newPassword: {type: "string"},
+          clientId: { type: "integer"},
+        },
+        required: ["clientId", "oldPassword", "newPassword"],
+      },
+    },
+  },
+  forgetPassword: {
+    schema: {
+      tags: ["Auth"],
+      description: "forgetPassword",
+      body: {
+        type: "object",
+        properties: {
+          email: { type: "string" },
+        },
+        required: ["email"],
+      },
+    },
+  },
   clientUpdate: {
     schema: {
       tags: ["Auth"],

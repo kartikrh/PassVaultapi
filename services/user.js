@@ -22,7 +22,12 @@ const {
   registerClient,
   loginClient,
   updateClient,
-  signOutClient
+  signOutClient,
+  registerClientDetails,
+  insertOtpQuery,
+  registerClientPassword,
+  registerClientOtpValidation,
+  updateClientPassword
 } = require("../repository/TableUser");
 const {
   deviceInfo,
@@ -31,6 +36,8 @@ const {
   getUserChildIds,
 } = require("../utilities/index");
 const { generateToken } = require("../utilities/tokenization");
+const configConstants = require("../utilities/configConstants");
+const { errorLogger } = require("../utilities/logger");
 
 async function signUpUserService({ body }, fastify) {
   const hashedPassword = encrypt(body.password);
@@ -511,7 +518,7 @@ const changeUserPasswordByUSerIDService = async (request, fastify) => {
 async function loginClientService({ body }, fastify) {
   try {
     let results;
-    if (body.googleID || body.token) {
+    if (body.googleID || body.token || body.facebookId) {
         // Google Login
         results = await loginClient(body, fastify);
     } else {
@@ -575,6 +582,220 @@ async function registrationClientService({ body }, fastify) {
   }
 }
 
+async function registerDetailsService({ body }, fastify) {
+  try {
+    let response;
+    response = await registerClientDetails(body, fastify);
+
+    // if (response === "MobileNo and Email is already exists") {
+    //   return { error: response };
+    // }
+    let isOtpSend = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP);
+    if(isOtpSend){
+      isOtpSend = isOtpSend.value;
+    }
+    else {
+      throw new Error("Config not found");
+    }
+
+    if(response.clientId){
+      const payload = { clientId: response.clientId };
+      const token = generateToken(payload);
+
+      global.tblClient.push(response);
+      
+      if(response.mobileNo && isOtpSend === "true"){
+        // const generateOTP = () => {
+        //   return Math.floor(100000 + Math.random() * 900000).toString();
+        // };
+        const otp = 1234
+        const result = await insertOtpQuery({...body, otp, clientId: response.clientId}, fastify);
+        global.tblOtp.push(result[0]);
+
+      } else {
+        await registerClientOtpValidation({...body, clientId: response.clientId}, fastify);
+
+        const index = global.tblClient.findIndex(
+          (item) => item.clientId === response.clientId
+        );
+
+        global.tblClient[index].registrationProcessStatus = 2
+      }
+
+      return { token, details: response };
+    }
+    else{
+      return { error: response };
+    }
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR->> services/user.js -> registerDetailsService",
+      null
+    )
+    throw new Error(error);
+  }
+};
+async function resendOtpService({ body }, fastify) {
+  try {
+    const { email } = body;
+
+    const findUser = global.tblClient.find(
+      (item) => item.emailId === email
+    );
+
+    if(!findUser) {
+      throw new Error("Invalid User");
+    }
+    const clientId = findUser.clientId;
+    const mobileNo = findUser.mobileNo;
+    
+    const isOtpSend = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP).value;
+
+      if(mobileNo && isOtpSend === "true"){
+        // const generateOTP = () => {
+        //   return Math.floor(100000 + Math.random() * 900000).toString();
+        // };
+        const otp = 1234
+        const result = await insertOtpQuery({...body, otp, clientId: clientId}, fastify);
+        global.tblOtp.push(result[0]);
+      }
+
+      return "Otp sent successfully";
+  } catch (error) {
+    return null;
+  }
+};
+const clientDetailsByIdService = async (request, fastify) => {
+  const { clientId } = request.body;
+
+  let clientDetails = await global.tblClient.find(
+    (item) => item.clientId === clientId
+  );
+  return clientDetails;
+};
+async function validateOtpService({ body }, fastify) {
+  try {
+    //check expiration time
+    const {email, otp} = body;
+
+    const findUser = global.tblClient.find(
+      (item) => item.emailId === email
+    );
+
+    if(!findUser) {
+      throw new Error("Invalid User");
+    }
+    const clientId = findUser.clientId;
+
+    const data = global.tblOtp.filter((item)=>item.userId === clientId)
+    data.sort((a, b) => b.otpId - a.otpId)
+
+    if(otp === data[0]?.otp){
+      await registerClientOtpValidation({...body, clientId: clientId}, fastify);
+
+      const index = global.tblClient.findIndex(
+        (item) => item.clientId === clientId
+      );
+
+      if (index !== -1) {
+        global.tblClient[index].registrationProcessStatus = 2;
+      } 
+      return "OTP validated successfully" 
+    } else {
+      throw new Error("Invalid OTP");
+    }
+  } catch (error) {
+    throw error;
+  }
+}
+
+async function setPasswordService({ body }, fastify) {
+  try {
+    if (body.password) {
+      const hashedPassword = encrypt(body.password);
+      body.password = hashedPassword;
+    }
+
+    await registerClientPassword(body, fastify);
+
+    const index = global.tblClient.findIndex(
+      (item) => item.emailId === body.email
+    );
+
+    let clientData = global.tblClient[index]
+    clientData.password = body.password;
+    clientData.registrationProcessStatus = 3;
+    clientData.isUserActive = 1;
+
+    return clientData;
+  } catch (error) {
+    return null;
+  }
+}
+
+async function updateClientPasswordService({ body }, fastify) {
+  try {
+    const { oldPassword, newPassword, email, clientId } = body;
+
+    const findUser = global.tblClient.find(
+      (item) => item.clientId === clientId
+    );
+
+    if(!findUser) {
+      throw new Error("Invalid User");
+    }
+
+    const decryptedPassword = decrypt(findUser.password);
+
+    if(decryptedPassword !== oldPassword) {
+      throw new Error("Old Password is incorrect");
+    }
+
+    if (newPassword) {
+      const hashedPassword = encrypt(newPassword);
+      newPassword = hashedPassword;
+    }
+
+    await updateClientPassword(body, fastify);
+
+    const index = global.tblClient.findIndex(
+      (item) => item.clientId === clientId
+    );
+    let clientData = global.tblClient[index]
+    clientData.password = newPassword;
+
+    return clientData;
+  } catch (error) {
+    return null;
+  }
+}
+
+async function forgetPasswordService({ body }, fastify) {
+  try {
+    const { email } = body;
+    const findUser = global.tblClient.find(
+      (item) => item.emailId === email
+    );
+
+    if(!findUser) {
+      throw new Error("Invalid User");
+    }
+    const mobileNo = findUser.mobileNo;
+    const clientId = findUser.clientId;
+
+    if(mobileNo){
+      const otp = 1234
+      const result = await insertOtpQuery({...body, otp, clientId: clientId}, fastify);
+      global.tblOtp.push(result[0]);
+    }
+
+    return "Otp sent successfully"
+  } catch (error) {
+    return null;
+  }
+}
 async function updateClientService({ body }, fastify) {
   try {
     let results;
@@ -660,5 +881,12 @@ module.exports = {
   updateClientService,
   sendNotificationWebService,
   sendNotificationMobileService,
-  signOutClientService
+  signOutClientService,
+  registerDetailsService,
+  validateOtpService,
+  setPasswordService,
+  clientDetailsByIdService,
+  resendOtpService,
+  updateClientPasswordService,
+  forgetPasswordService,
 };

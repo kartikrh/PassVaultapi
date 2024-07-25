@@ -206,61 +206,157 @@ const deleteMarketOddsBallByBall = async (data, fastify, request) => {
 
 const createMarketOddsBallByBallBYID = async (data, fastify, request) => {
   try {
+    const insertData = [
+      data.commentaryId,
+      data.commentaryBallByBallId,
+      data.teamId,
+      data.EventMarketId,
+      data.RunnerId,
+      data.MarketStatus,
+      data.BackPrice,
+      data.LayPrice,
+      data.BackSize,
+      data.LaySize,
+      data.MarketName,
+      data.RunnerName,
+      new Date(),
+      data.selectionId
+    ];
+
     const result = await fastify.db.query(
       `INSERT INTO "tblMarketOddsBallByBall" (
         "wrCommentaryId", 
         "wrCommentaryBallByBallId", 
         "wrTeamId", 
-        "wrDateTime"
+        "wrEventMarketId",
+        "wrRunnerId",
+        "wrMarketStatus",
+        "wrBackPrice",
+        "wrLayPrice",
+        "wrBackSize",
+        "wrLaySize",
+        "wrMarketName",
+        "wrRunnerName",
+        "wrDateTime",
+        "wrSelectionId"
       ) VALUES (
-        $1, $2,$3,$4
-      ) RETURNING *
-      `,
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
+      ) RETURNING *`,
       {
-        bind: [
-          data.commentaryId,
-          data.commentaryBallByBallId,
-          data.team1Id,
-          new Date()
-        ],
+        bind: insertData,
         type: fastify.db.QueryTypes.INSERT,
       }
     );
 
-    const _result = await fastify.db.query(
-      `INSERT INTO "tblMarketOddsBallByBall" (
-        "wrCommentaryId", 
-        "wrCommentaryBallByBallId", 
-        "wrTeamId", 
-        "wrDateTime"
-      ) VALUES (
-        $1, $2,$3,$4
-      ) RETURNING *
-      `,
-      {
-        bind: [
-          data.commentaryId,
-          data.commentaryBallByBallId,
-          data.team2Id,
-          new Date()
-        ],
-        type: fastify.db.QueryTypes.INSERT,
-      }
-    );
+    // const result2 = await fastify.db.query(
+    //   `INSERT INTO "tblMarketOddsBallByBall" (
+    //     "wrCommentaryId", 
+    //     "wrCommentaryBallByBallId", 
+    //     "wrTeamId", 
+    //     "wrEventMarketId",
+    //     "wrRunnerId",
+    //     "wrMarketStatus",
+    //     "wrBackPrice",
+    //     "wrLayPrice",
+    //     "wrBackSize",
+    //     "wrLaySize",
+    //     "wrMarketName",
+    //     "wrRunnerName",
+    //     "wrDateTime",
+    //     "wrSelectionId"
+    //   ) VALUES (
+    //     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
+    //   ) RETURNING *`,
+    //   {
+    //     bind: [
+    //       data.commentaryId,
+    //       data.commentaryBallByBallId,
+    //       data.team2Id,
+    //       data.EventMarketId,
+    //       data.RunnerId,
+    //       data.MarketStatus,
+    //       data.BackPrice,
+    //       data.LayPrice,
+    //       data.BackSize,
+    //       data.LaySize,
+    //       data.MarketName,
+    //       data.RunnerName,
+    //       new Date(),
+    //       data.selectionId
+    //     ],
+    //     type: fastify.db.QueryTypes.INSERT,
+    //   }
+    // );
+
     return true;
   } catch (err) {
     errorLogger(
       fastify,
       err.message,
       "DB ERROR --> repository/TableMarketOddsBallByBall/createMarketOdds",
-      request
+      null
     );
-    // throw new Error(err.message);
     console.log(err.message);
     return false;
   }
 };
 
+const createMarketOddsBallByBallBYIDFromSocketIo = async (ballbybllId,data, fastify) => {
+  try {
+    const insertData = [
+      data.commentaryId,
+      ballbybllId,
+      data.teamId,
+      data.eventMarketId,
+      data.runnerId,
+      data.status,
+      data.backPrice,
+      data.layPrice,
+      data.backSize,
+      data.laySize,
+      data.marketName,
+      data.runner,
+      new Date(),
+      data.selectionId
+    ];
+
+    const result = await fastify.db.query(
+      `INSERT INTO "tblMarketOddsBallByBall" (
+        "wrCommentaryId", 
+        "wrCommentaryBallByBallId", 
+        "wrTeamId", 
+        "wrEventMarketId",
+        "wrRunnerId",
+        "wrMarketStatus",
+        "wrBackPrice",
+        "wrLayPrice",
+        "wrBackSize",
+        "wrLaySize",
+        "wrMarketName",
+        "wrRunnerName",
+        "wrDateTime",
+        "wrSelectionId"
+      ) VALUES (
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
+      ) RETURNING *`,
+      {
+        bind: insertData,
+        type: fastify.db.QueryTypes.INSERT,
+      }
+    );
+
+    return result[0]; // Return the inserted record
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableMarketOddsBallByBall/createMarketOdds",
+      null
+    );
+    console.log(err.message);
+    return false;
+  }
+};
 const updateLatestMarketOddsBallByBall = async (data, fastify, request) => {
   try {
     // Get the latest wrCommentaryBallByBallId
@@ -345,6 +441,85 @@ const updateLatestMarketOddsBallByBall = async (data, fastify, request) => {
   }
 };
 
+const createMarketOddsBallByBallBulkInsert = async (dataArray, fastify) => {
+  try {
+    if (dataArray.length === 0) return false; // No data to insert
+
+    // Initialize arrays to hold the values for the query
+    const values = [];
+    let placeholders = '';
+
+    // Flatten the array and build placeholders
+    let index = 1;
+    dataArray.forEach(data => {
+      data.runner.forEach(runner => {
+        values.push(
+          data.commentaryId,
+          data.ballByBallId,
+          data.teamId,
+          data.marketId,
+          runner.runnerId,
+          data.status,
+          runner.backPrice,
+          runner.layPrice,
+          runner.backSize,
+          runner.laySize,
+          data.marketName,
+          runner.line, // Assuming you want to store `line` from runner
+          new Date(),
+          data.eventId
+        );
+
+        // Append placeholders
+        placeholders += `(
+          $${index++}, $${index++}, $${index++}, $${index++}, $${index++},
+          $${index++}, $${index++}, $${index++}, $${index++}, $${index++},
+          $${index++}, $${index++}, $${index++}, $${index++}
+        ),`;
+      });
+    });
+
+    // Remove the trailing comma from the placeholders string
+    placeholders = placeholders.slice(0, -1);
+
+    // Construct the bulk insert query
+    const query = `
+      INSERT INTO "tblMarketOddsBallByBall" (
+        "wrCommentaryId", 
+        "wrCommentaryBallByBallId", 
+        "wrTeamId", 
+        "wrEventMarketId",
+        "wrRunnerId",
+        "wrMarketStatus",
+        "wrBackPrice",
+        "wrLayPrice",
+        "wrBackSize",
+        "wrLaySize",
+        "wrMarketName",
+        "wrRunnerName",
+        "wrDateTime",
+        "wrSelectionId"
+      ) VALUES ${placeholders}
+      RETURNING *`;
+
+    // Execute the bulk insert query
+    const result = await fastify.db.query(query, {
+      bind: values,
+      type: fastify.db.QueryTypes.INSERT,
+    });
+
+    return result;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableMarketOddsBallByBall/createMarketOddsBulkInsert",
+      null
+    );
+    console.log(err.message);
+    return false;
+  }
+};
 
 module.exports = {
   getAllMarketOddsBallByBall,
@@ -353,5 +528,7 @@ module.exports = {
   updateMarketOddsBallByBall,
   deleteMarketOddsBallByBall,
   createMarketOddsBallByBallBYID,
-  updateLatestMarketOddsBallByBall
+  updateLatestMarketOddsBallByBall,
+  createMarketOddsBallByBallBYIDFromSocketIo,
+  createMarketOddsBallByBallBulkInsert
 };
