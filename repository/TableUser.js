@@ -701,7 +701,6 @@ async function registerClientDetails(body, fastify) {
       null
     );
     throw new Error(error.message);
-
   }
 }
 async function insertOtpQuery(body, fastify) {
@@ -721,7 +720,13 @@ async function insertOtpQuery(body, fastify) {
         );
         return registrationData[0];
   } catch (error) {
-    return error.message;
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableUser/insertOtpQuery",
+      null
+    );
+    throw new Error(error.message);
   }
 }
 async function registerClientOtpValidation(body, fastify) {
@@ -737,7 +742,13 @@ async function registerClientOtpValidation(body, fastify) {
         );
         return "Status updated successfully";
   } catch (error) {
-    return error.message;
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableUser/registerClientOtpValidation",
+      null
+    );
+    throw new Error(error.message);
   }
 }
 async function registerClientPassword(body, fastify) {
@@ -753,7 +764,13 @@ async function registerClientPassword(body, fastify) {
         );
         return "Password set successfully";
   } catch (error) {
-    return error.message;
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableUser/registerClientPassword",
+      null
+    );
+    throw new Error(error.message);
   }
 }
 async function updateClientPassword(body, fastify) {
@@ -769,7 +786,13 @@ async function updateClientPassword(body, fastify) {
         );
         return "Password updated successfully";
   } catch (error) {
-    return error.message;
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableUser/updateClientPassword",
+      null
+    );
+    throw new Error(error.message);
   }
 }
 async function loginClient(body, fastify) {
