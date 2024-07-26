@@ -354,7 +354,7 @@ async function startSignalR(fastify) {
         } catch (err) {
           console.error('Error connecting to SignalR:', err);
           setTimeout(startSignalR, 300000); 
-          throw new Error(err);
+          //throw new Error(err);
         }
       }
     } else{
@@ -398,7 +398,7 @@ async function stopSignalR(fastify) {
       global.selectionData = {};
     } catch (err) {
       console.error('Error disconnecting from SignalR:', err);
-      throw new Error(err);
+      //throw new Error(err);
     }
   }
 }
