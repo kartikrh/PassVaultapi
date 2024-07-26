@@ -374,12 +374,13 @@ async function startSignalR(fastify) {
           }
         }, 300000); // 5 minutes 300000
       } catch (error) {
-        //console.error('Error disconnecting from SignalR:', error);
-        throw new Error(error);
+        console.error('Error disconnecting from SignalR:', error);
+        //throw new Error(error);
       }
     }
   } catch (error) { 
-    throw new Error(error);
+    console.error('Error disconnecting from SignalR:');
+    //throw new Error(error);
   }
 }
 
