@@ -126,7 +126,7 @@ module.exports = async function (fastify, opts) {
         await fastify.db.sync();
         await featchData(fastify);
         await disConnectClientSocketQuery(fastify);
-        await startSignalR(fastify);
+        //await startSignalR(fastify);
         connectClients(fastify);
         //WebsocketConnection(fastify);
         disconnectClients(fastify);
