@@ -45,7 +45,12 @@ if (process.env.ENABLE_SENTRY === "TRUE") {
     tracesSampleRate: 1.0,
   });
 }
-
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+});
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
 // process.on("uncaughtException", (err) => {
 //   console.error("Uncaught Exception occurred:", err);
 //   // Log additional diagnostic information
