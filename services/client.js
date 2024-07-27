@@ -36,6 +36,7 @@ const saveClientService = async (request, fastify) => {
     return await updateClientService(request, fastify);
   }
 };
+
 const createClientService = async (request, fastify) => {
   const data = await insertClientQuery(
     {
@@ -48,6 +49,7 @@ const createClientService = async (request, fastify) => {
   global.tblClient.push(data[0]);
   return data;
 };
+
 const updateClientService = async (request, fastify) => {
   // validate the clientId
   const validateClientId = global.tblClient.find(
