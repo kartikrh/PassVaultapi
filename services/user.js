@@ -608,7 +608,7 @@ async function registerDetailsService({ body }, fastify) {
       const payload = { clientId: response.clientId };
       const token = generateToken(payload);
 
-      global.tblClient.push(response);
+      global.tblClient.push({...response, isActive: true, isUserActive: 0});
       
       if(response.mobileNo && isOtpSend === "true"){
         // const generateOTP = () => {

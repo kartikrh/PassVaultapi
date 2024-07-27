@@ -653,7 +653,7 @@ async function registerClientDetails(body, fastify) {
           ) VALUES (
             $1, $2, now(), $3, $4, $5, true, false, false, $6, $7 , $8
           ) RETURNING "wrClientID" as "clientId", "wrGoogleID" as "googleId", "wrUserName" as "userName", "wrIsAllowMultiLogin" as "isAllowMultiLogin","wrEmailID" as "emailId" ,"wrMobileNo" as "mobileNo", "wrRegistrationProcessStatus" as "registrationProcessStatus", 
-           "wrUserName" as "userName", "wrClientName" as "fullName" , "wrProvider" as "provider";`,
+           "wrUserName" as "userName", "wrClientName" as "fullName" , "wrProvider" as "provider", "wrIsActive" as "isActive", "wrIsUserActive" as "isUserActive";`,
           {
             type: QueryTypes.INSERT,
             bind: [fullName, false, email, mobileNo, ipAddress, 1, userName , clientProvider.Manual],
