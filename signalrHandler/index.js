@@ -354,7 +354,6 @@ async function startSignalR(fastify) {
             }
           });
         } catch (err) {
-          //console.error('Error connecting to SignalR:', err);
           errorLogger(
             _fastify,
             err,
@@ -387,10 +386,10 @@ async function startSignalR(fastify) {
           }
         }, 60000); // 5 minutes 300000
       } catch (error) {
+        console.error('Error disconnecting from SignalR:', error);
       }
     }
   } catch (error) { 
-    console.error('Error disconnecting from SignalR');
   }
 }
 
