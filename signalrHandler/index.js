@@ -296,7 +296,7 @@ async function startSignalR(fastify) {
                                 } 
                               }
                             } catch (error) {
-                              console.error(error.message);
+                              //console.error(error.message);
                             }
                           }
                         } catch (error) {
@@ -356,7 +356,7 @@ async function startSignalR(fastify) {
         } catch (err) {
           errorLogger(
             _fastify,
-            err,
+            err.message,
             "ERROR --> startSignalR",
             null
           );
@@ -368,23 +368,22 @@ async function startSignalR(fastify) {
     if (!checkConfigIntervalId) {
       try {
         checkConfigIntervalId = setInterval(async () => {
-          console.log("SignalR Reconnect Attemp: " +connectionCount);
           const isSON = global.tblConfigs.find((item) => item.key === configConstants.ISMARKETOODS_SIGNALRON).value;
           const SrCount = global.tblConfigs.find((item) => item.key === configConstants.SIGNALRRECONNECTCOUNT).value;
           if (isSON === 'true') {
             if(connectionCount == SrCount){
                 clearInterval(checkConfigIntervalId);
-                checkConfigIntervalId = null;
                 return;
             }
             if (!global.isAdminStoppedSignalR && (!connection || connection.state !== signalR.HubConnectionState.Connected)) {
+              console.log("SignalR Reconnect Attemp: " +connectionCount);
               global.rateSourceRefIDSet = new Set();
               await startSignalR(_fastify);
             }
           } else {
             await stopSignalR();
           }
-        }, 60000); // 5 minutes 300000
+        }, 6000); // 5 minutes 300000
       } catch (error) {
         console.error('Error disconnecting from SignalR:', error);
       }
