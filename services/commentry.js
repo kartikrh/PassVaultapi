@@ -256,19 +256,8 @@ const commentaryDetailsByIdService = async (request, fastify) => {
   const commentaryDisplayStatus = await global.tblDisplayStatus.filter(
     (item) => item.displayStatusId !== 0
   );
-
-  const allDetails = {
-    commentaryDetails: { ...commentary, ...dataToreturn },
-    matchTypeDetails: matchType,
-    commentaryTeams,
-    commentaryPlayers,
-    commentaryOvers,
-    commentaryBallByBall,
-    commentaryWicket,
-    commentaryPartnership,
-    commentaryDisplayStatus,
-  };
-
+  let _resFromPredictAPI;
+  let callPrediction = {};
   if (
     !isStopLoadCommerty &&
     commentary.isPredictMarket == true &&
@@ -293,7 +282,11 @@ const commentaryDetailsByIdService = async (request, fastify) => {
         fastify
       );
     }
-    callPredictorMarket(
+    // data: {
+    //   status_code: 500,
+    //   error_msg: 'the JSON object must be str, bytes or bytearray, not NoneType'
+    // }
+    _resFromPredictAPI = await callPredictorMarket(
       {
         commentary_id: commentary.commentaryId,
         match_type_id: commentary.matchTypeId,
@@ -304,8 +297,25 @@ const commentaryDetailsByIdService = async (request, fastify) => {
       fastify,
       request
     );
+    // Check for error_msg in the response
+    if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
+      callPrediction.predictioncallSuccess = false;
+      callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
+      callPrediction.endPoint = '/api/v1/loadcommentary';
+    }
   }
-
+  const allDetails = {
+    commentaryDetails: { ...commentary, ...dataToreturn },
+    matchTypeDetails: matchType,
+    commentaryTeams,
+    commentaryPlayers,
+    commentaryOvers,
+    commentaryBallByBall,
+    commentaryWicket,
+    commentaryPartnership,
+    commentaryDisplayStatus,
+    callPrediction
+  };
   return allDetails;
 };
 
@@ -542,9 +552,11 @@ const createCommentaryService = async (request, fastify) => {
   global.tblCommentaryPlayers = await getAllCommentaryPlayerQuery(fastify);
   global.tblCommentaryTeams = await getAllCommentaryTeamsQuery(fastify);
 
+  let _resFromPredictAPI;
+  let callPrediction = {};
   // call predictor market
   if (addCommentry.isPredictMarket == true) {
-    callPredictorMarket(
+    _resFromPredictAPI = await callPredictorMarket(
       {
         commentary_id: addCommentry.commentaryId,
         match_type_id: addCommentry.matchTypeId,
@@ -554,6 +566,15 @@ const createCommentaryService = async (request, fastify) => {
       fastify,
       request
     );
+    if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
+      callPrediction.predictioncallSuccess = false;
+      callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
+      callPrediction.endPoint = '/api/v1/loadcommentary';
+    }else {
+      callPrediction.predictioncallSuccess = true;
+      callPrediction.predictionMessage = 'Prediction call successful';
+      callPrediction.endPoint = '/api/v1/loadcommentary';
+    }
   }
 
   if (
@@ -590,7 +611,7 @@ const createCommentaryService = async (request, fastify) => {
     );
   }
 
-  return addCommentry;
+  return {...addCommentry,callPrediction};
 };
 
 const updateCommentaryService = async (request, fastify) => {
@@ -4960,9 +4981,10 @@ const updateMatchTypeInCommentaryService = async (request, fastify) => {
   const updatedData = await getCommentaryByIdQuery(request, fastify);
 
   global.tblCommentaries[index] = updatedData;
-
+  let _resFromPredictAPI;
+  let callPrediction = {};s
   if (updatedData.isPredictMarket == true) {
-    callPredictorMarket(
+    _resFromPredictAPI = await callPredictorMarket(
       {
         commentary_id: commentaryId,
         match_type_id: matchTypeId,
@@ -4972,8 +4994,17 @@ const updateMatchTypeInCommentaryService = async (request, fastify) => {
       fastify,
       request
     );
+    if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
+      callPrediction.predictioncallSuccess = false;
+      callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
+      callPrediction.endPoint = '/api/v1/loadcommentary';
+    }else {
+      callPrediction.predictioncallSuccess = true;
+      callPrediction.predictionMessage = 'Prediction call successful';
+      callPrediction.endPoint = '/api/v1/loadcommentary';
+    }
   }
-  return updatedData;
+  return {...updatedData,callPrediction};
 };
 const getMatchTypeListByCommentaryService = async (request, fastify) => {
   const { commentaryId } = request.body;
@@ -7021,7 +7052,8 @@ const activeInactiveCommentaryService = async (request, fastify) => {
 };
 const closeCommentaryService = async (request, fastify) => {
   await closeCommentaryQuery(request.body, fastify, request);
-
+  let _resFromPredictAPI;
+  let callPrediction = {};
   // update the global variable
   for (let commentaryId of request.body.commentaryId) {
     const index = global.tblCommentaries.findIndex(
@@ -7031,7 +7063,7 @@ const closeCommentaryService = async (request, fastify) => {
       global.tblCommentaries[index].commentaryStatus = 4;
 
       await closeEventMarketByCIdQuery({ commentaryId }, fastify);
-      callPredictorMarket(
+      _resFromPredictAPI = await callPredictorMarket(
         {
           commentary_id: commentaryId,
         },
@@ -7039,6 +7071,15 @@ const closeCommentaryService = async (request, fastify) => {
         fastify,
         request
       );
+      if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
+        callPrediction.predictioncallSuccess = false;
+        callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
+        callPrediction.endPoint = '/api/v1/endcommentary';
+      }else {
+        callPrediction.predictioncallSuccess = true;
+        callPrediction.predictionMessage = 'Prediction call successful';
+        callPrediction.endPoint = '/api/v1/endcommentary';
+      }
       callDataProvider(
         {
           commentaryId: commentaryId,
@@ -7128,9 +7169,10 @@ const updateDelayInCommentaryService = async (request, fastify) => {
   const updatedData = await getCommentaryByIdQuery(request, fastify);
 
   global.tblCommentaries[index] = updatedData;
-
+  let _resFromPredictAPI;
+  let callPrediction = {};
   if (updatedData.isPredictMarket == true) {
-    callPredictorMarket(
+    _resFromPredictAPI = await callPredictorMarket(
       {
         commentary_id: commentaryId,
         delay: delay,
@@ -7140,8 +7182,17 @@ const updateDelayInCommentaryService = async (request, fastify) => {
       fastify,
       request
     );
+    if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
+      callPrediction.predictioncallSuccess = false;
+      callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
+      callPrediction.endPoint = '/api/v1/loadcommentary';
+    }else {
+      callPrediction.predictioncallSuccess = true;
+      callPrediction.predictionMessage = 'Prediction call successful';
+      callPrediction.endPoint = '/api/v1/loadcommentary';
+    }
   }
-  return updatedData;
+  return {...updatedData,callPrediction};
 };
 
 const getShortCommertyService = async (request, fastify) => {
@@ -7281,9 +7332,10 @@ const updateEventRefIdInCommentaryService = async (request, fastify) => {
   const updatedData = await getCommentaryByIdQuery(request, fastify);
 
   global.tblCommentaries[index] = updatedData;
-
+  let _resFromPredictAPI;
+  let callPrediction = {};
   if (updatedData.isPredictMarket == true) {
-    callPredictorMarket(
+    _resFromPredictAPI = await callPredictorMarket(
       {
         commentary_id: commentaryId,
         eventRefId: eventRefId,
@@ -7293,8 +7345,18 @@ const updateEventRefIdInCommentaryService = async (request, fastify) => {
       fastify,
       request
     );
+    if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
+      callPrediction.predictioncallSuccess = false;
+      callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
+      callPrediction.endPoint = '/api/v1/loadcommentary';
+    }else {
+      callPrediction.predictioncallSuccess = true;
+      callPrediction.predictionMessage = 'Prediction call successful';
+      callPrediction.endPoint = '/api/v1/loadcommentary';
+    }
   }
-  return updatedData;
+
+  return {...updatedData,callPrediction};
 };
 
 const loadcommentaryService = async (request, fastify) => {
@@ -7305,7 +7367,8 @@ const loadcommentaryService = async (request, fastify) => {
     if (!commentary) {
       throw new Error("Commentary with this id not Found");
     }
-
+    let _resFromPredictAPI;
+    let callPrediction = {};
     if (
       commentary.isPredictMarket == true &&
       (commentary.commentaryStatus == 2 || commentary.commentaryStatus == 3)
@@ -7329,7 +7392,7 @@ const loadcommentaryService = async (request, fastify) => {
           fastify
         );
       }
-      callPredictorMarket(
+      _resFromPredictAPI = await callPredictorMarket(
         {
           commentary_id: commentary.commentaryId,
           match_type_id: commentary.matchTypeId,
@@ -7340,9 +7403,21 @@ const loadcommentaryService = async (request, fastify) => {
         fastify,
         request
       );
-    }
 
-    return "Request Send Successfully!!!";
+      if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
+        callPrediction.predictioncallSuccess = false;
+        callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
+        callPrediction.endPoint = '/api/v1/loadcommentary';
+      }else {
+        callPrediction.predictioncallSuccess = true;
+        callPrediction.predictionMessage = 'Prediction call successful';
+        callPrediction.endPoint = '/api/v1/loadcommentary';
+      }
+    }
+    return {
+      message: "Request Send Successfully!!!",
+      callPrediction: callPrediction,
+    };
   } catch (error) {
     // Handle errors here
     console.error(error);

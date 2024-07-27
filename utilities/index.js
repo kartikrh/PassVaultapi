@@ -266,6 +266,7 @@ const callPredictorMarket = async (data , endpoint ,fastify ,request) =>{
         request,
         fastify
       );
+      return error.message;
     }
     // throw new Error(error.message);
   }

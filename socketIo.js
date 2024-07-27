@@ -98,6 +98,10 @@ const connection = (socket , fastify) => {
       console.error("error:", error);
     }
   });
+
+  socket.on("ping" , () =>{
+    socket.emit("pong")
+  })
   
 
   socket.on("connectEventMarket", (data) => {
