@@ -132,8 +132,8 @@ module.exports = async function (fastify, opts) {
     schema: Auth.resendOtp.schema,
     handler: (request, reply) => resendOtp(request, reply, fastify),
   });
-  fastify.post("/clientDetailsById", {  
-    schema: Auth.clientDetailsById.schema,
+  fastify.post("/clientDetailsByEmailId", {  
+    schema: Auth.clientDetailsByEmailId.schema,
     handler: (request, reply) => clientDetailsById(request, reply, fastify)
   });
   fastify.post("/verifyOtp", {

@@ -578,7 +578,13 @@ async function registrationClientService({ body }, fastify) {
       return { error: results };
     }
   } catch (error) {
-    return null;
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR->> services/user.js -> registrationClientService",
+      null
+    )
+    throw new Error(error);
   }
 }
 
@@ -664,11 +670,27 @@ async function resendOtpService({ body }, fastify) {
 
       return "Otp sent successfully";
   } catch (error) {
-    return null;
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR->> services/user.js -> resendOtpService",
+      null
+    )
+    throw new Error(error);
   }
 };
 const clientDetailsByIdService = async (request, fastify) => {
-  const { clientId } = request.body;
+  const { email } = request.body;
+
+  const findUser = global.tblClient.find(
+    (item) => item.emailId === email
+  );
+
+  if(!findUser) {
+    throw new Error("Invalid User");
+  }
+    
+  const clientId = findUser.clientId;
 
   let clientDetails = await global.tblClient.find(
     (item) => item.clientId === clientId
@@ -701,13 +723,20 @@ async function validateOtpService({ body }, fastify) {
 
       if (index !== -1) {
         global.tblClient[index].registrationProcessStatus = 2;
+        global.tblClient[index].isMobileVerified = true;
       } 
       return "OTP validated successfully" 
     } else {
       throw new Error("Invalid OTP");
     }
   } catch (error) {
-    throw error;
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR->> services/user.js -> validateOtpService",
+      null
+    )
+    throw new Error(error);
   }
 }
 
@@ -731,7 +760,13 @@ async function setPasswordService({ body }, fastify) {
 
     return clientData;
   } catch (error) {
-    return null;
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR->> services/user.js -> setPasswordService",
+      null
+    )
+    throw new Error(error);
   }
 }
 
@@ -768,7 +803,13 @@ async function updateClientPasswordService({ body }, fastify) {
 
     return clientData;
   } catch (error) {
-    return null;
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR->> services/user.js -> updateClientPasswordService",
+      null
+    )
+    throw new Error(error);
   }
 }
 
@@ -793,7 +834,13 @@ async function forgetPasswordService({ body }, fastify) {
 
     return "Otp sent successfully"
   } catch (error) {
-    return null;
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR->> services/user.js -> forgetPasswordService",
+      null
+    )
+    throw new Error(error);
   }
 }
 async function updateClientService({ body }, fastify) {

@@ -4,9 +4,10 @@ const { marketLogger, marketDataLogger } = require("../utilities/logger");
 const {updateEventMarketRunnerMaunalQuery,getEventMarketByIdsQuery,UpdateEventMarketByCIdFromSocketQuery} = require('../repository/TableEventMarkets');
 const {updateCommentaryTeamPredictionPrecentageQuery} = require('../repository/TableCommentary');
 const {updateLatestMarketOddsBallByBall} = require('../repository/TableMarketOddsBallByBall');
+const { errorLogger } = require("../utilities/logger");
 
 const configConstants = require('../utilities/configConstants');
-let connection;
+let connection,connectionCount =0;
 global.rateSourceRefIDSet = new Set();
 global.isAdminStoppedSignalR = false;
 let intervalId;
@@ -23,6 +24,7 @@ async function startSignalR(fastify) {
       const _SignalRURL = global.tblConfigs.find((item) => item.key === configConstants.MARKETRTETHIRDPARTY).value;
       const _SignalRInterwal = global.tblConfigs.find((item) => item.key === configConstants.INTERVAL_MarketTHIRDPARTY).value;
       if(_SignalRURL){
+        connectionCount++;
         connection = new signalR.HubConnectionBuilder()
           .withUrl(_SignalRURL)
           .build();
@@ -179,40 +181,42 @@ async function startSignalR(fastify) {
                                       item.teamName === _data2.runner
                                   );
                                 }
-                                _updateData.teamId = teams.teamId;
-                                const { EventMarketId,selectionId } = _updateData;
-                                const key = `${EventMarketId}_${selectionId}`;
-                                if (global.SignalRData[key]) {
-                                  // Update the existing entry
-                                  global.SignalRData[key] = {
-                                      ...global.SignalRData[key], // Preserve other properties if needed
-                                      commentaryId: _updateData.commentaryId,
-                                      teamId: _updateData.teamId,
-                                      MarketStatus: _updateData.MarketStatus,
-                                      BackPrice: _updateData.BackPrice,
-                                      LayPrice: _updateData.LayPrice,
-                                      BackSize: _updateData.BackSize,
-                                      LaySize: _updateData.LaySize,
-                                      MarketName: _updateData.MarketName,
-                                      RunnerName: _updateData.RunnerName,
-                                      timestamp: _time,
-                                  };
-                              } else {
-                                  // Create a new entry
-                                  global.SignalRData[key] = {
-                                      commentaryId: _updateData.commentaryId,
-                                      teamId: _updateData.teamId,
-                                      EventMarketId:_updateData.EventMarketId,
-                                      RunnerId:_updateData.RunnerId,
-                                      MarketStatus: _updateData.MarketStatus,
-                                      BackPrice: _updateData.BackPrice,
-                                      LayPrice: _updateData.LayPrice,
-                                      BackSize: _updateData.BackSize,
-                                      LaySize: _updateData.LaySize,
-                                      MarketName: _updateData.MarketName,
-                                      selectionId:_updateData.selectionId,
-                                      timestamp: _time
-                                  };
+                                if(teams){
+                                  _updateData.teamId = teams.teamId;
+                                  const { EventMarketId,selectionId } = _updateData;
+                                  const key = `${EventMarketId}_${selectionId}`;
+                                  if (global.SignalRData[key]) {
+                                    // Update the existing entry
+                                    global.SignalRData[key] = {
+                                        ...global.SignalRData[key], // Preserve other properties if needed
+                                        commentaryId: _updateData.commentaryId,
+                                        teamId: _updateData.teamId,
+                                        MarketStatus: _updateData.MarketStatus,
+                                        BackPrice: _updateData.BackPrice,
+                                        LayPrice: _updateData.LayPrice,
+                                        BackSize: _updateData.BackSize,
+                                        LaySize: _updateData.LaySize,
+                                        MarketName: _updateData.MarketName,
+                                        RunnerName: _updateData.RunnerName,
+                                        timestamp: _time,
+                                    };
+                                  } else {
+                                      // Create a new entry
+                                      global.SignalRData[key] = {
+                                          commentaryId: _updateData.commentaryId,
+                                          teamId: _updateData.teamId,
+                                          EventMarketId:_updateData.EventMarketId,
+                                          RunnerId:_updateData.RunnerId,
+                                          MarketStatus: _updateData.MarketStatus,
+                                          BackPrice: _updateData.BackPrice,
+                                          LayPrice: _updateData.LayPrice,
+                                          BackSize: _updateData.BackSize,
+                                          LaySize: _updateData.LaySize,
+                                          MarketName: _updateData.MarketName,
+                                          selectionId:_updateData.selectionId,
+                                          timestamp: _time
+                                      };
+                                    }
                                 }
                                 //await updateLatestMarketOddsBallByBall(_updateData,_fastify,_selectionidData.commentaryId);
                                 //console.log('Updated latest ball');
@@ -263,35 +267,36 @@ async function startSignalR(fastify) {
                                       item.teamName === _data2.runner
                                   );
                                 }
-                                let _update = {};
-                                _update.commentaryTeamId = teams.commentaryTeamId;
-                                _update.teamPredictionPercentage = vRatesTeam;
-                                _update.team2PredictionPercentage = 100 - parseInt(_update.teamPredictionPercentage);
-                                _update.currentInnings = commentary.currentInnings;
-                                _update.commentaryId = _selectionidData.commentaryId;
-                              
-                                const index = global.tblCommentaryTeams.findIndex(
-                                  (item) =>
-                                    item.commentaryId === commentary.commentaryId &&
-                                    item.commentaryTeamId === teams.commentaryTeamId
-                                );
-                                global.tblCommentaryTeams[index].teamPredictionPercentage  = _update.teamPredictionPercentage;
-                              
-                                const _index = global.tblCommentaryTeams.findIndex(
-                                  (item) =>
-                                    item.commentaryId === commentary.commentaryId &&
-                                    item.commentaryTeamId !== teams.commentaryTeamId && 
-                                    item.currentInnings === commentary.currentInnings
-                                );
-                                global.tblCommentaryTeams[_index].teamPredictionPercentage  = parseInt(_update.team2PredictionPercentage);
-                                if(commentary.isTeamPredictionOn)
-                                {
-                                  await updateCommentaryTeamPredictionPrecentageQuery(_update, _fastify);
-                                  //console.log('updateCommentaryTeamPredictionPrecentageQuery');
-                                }
+                                if(teams){
+                                  if(commentary.isTeamPredictionOn){
+                                    let _update = {};
+                                    _update.commentaryTeamId = teams.commentaryTeamId;
+                                    _update.teamPredictionPercentage = vRatesTeam;
+                                    _update.team2PredictionPercentage = 100 - parseInt(_update.teamPredictionPercentage);
+                                    _update.currentInnings = commentary.currentInnings;
+                                    _update.commentaryId = _selectionidData.commentaryId;
+
+                                    const index = global.tblCommentaryTeams.findIndex(
+                                      (item) =>
+                                        item.commentaryId === commentary.commentaryId &&
+                                        item.commentaryTeamId === teams.commentaryTeamId
+                                    );
+                                    global.tblCommentaryTeams[index].teamPredictionPercentage  = _update.teamPredictionPercentage;
+                                  
+                                    const _index = global.tblCommentaryTeams.findIndex(
+                                      (item) =>
+                                        item.commentaryId === commentary.commentaryId &&
+                                        item.commentaryTeamId !== teams.commentaryTeamId && 
+                                        item.currentInnings === commentary.currentInnings
+                                    );
+                                    global.tblCommentaryTeams[_index].teamPredictionPercentage  = parseInt(_update.team2PredictionPercentage);
+                                    await updateCommentaryTeamPredictionPrecentageQuery(_update, _fastify);
+                                    //console.log('updateCommentaryTeamPredictionPrecentageQuery');
+                                  }
+                                } 
                               }
                             } catch (error) {
-                              console.error(error.message);
+                              //console.error(error.message);
                             }
                           }
                         } catch (error) {
@@ -345,13 +350,16 @@ async function startSignalR(fastify) {
                 }
               }
             } catch (error) {
-              console.error(error);
+              //console.error(error);
             }
           });
         } catch (err) {
-          console.error('Error connecting to SignalR:', err);
-          setTimeout(startSignalR, 300000); 
-          throw new Error(err);
+          errorLogger(
+            _fastify,
+            err.message,
+            "ERROR --> startSignalR",
+            null
+          );
         }
       }
     } else{
@@ -361,22 +369,26 @@ async function startSignalR(fastify) {
       try {
         checkConfigIntervalId = setInterval(async () => {
           const isSON = global.tblConfigs.find((item) => item.key === configConstants.ISMARKETOODS_SIGNALRON).value;
+          const SrCount = global.tblConfigs.find((item) => item.key === configConstants.SIGNALRRECONNECTCOUNT).value;
           if (isSON === 'true') {
+            if(connectionCount == SrCount){
+                clearInterval(checkConfigIntervalId);
+                return;
+            }
             if (!global.isAdminStoppedSignalR && (!connection || connection.state !== signalR.HubConnectionState.Connected)) {
+              console.log("SignalR Reconnect Attemp: " +connectionCount);
               global.rateSourceRefIDSet = new Set();
               await startSignalR(_fastify);
             }
           } else {
             await stopSignalR();
           }
-        }, 300000); // 5 minutes 300000
+        }, 6000); // 5 minutes 300000
       } catch (error) {
-        //console.error('Error disconnecting from SignalR:', error);
-        throw new Error(error);
+        console.error('Error disconnecting from SignalR:', error);
       }
     }
   } catch (error) { 
-    throw new Error(error);
   }
 }
 
@@ -389,12 +401,16 @@ async function stopSignalR(fastify) {
         clearInterval(intervalId);
         intervalId = null;
       }
+      if (checkConfigIntervalId) {
+        clearInterval(checkConfigIntervalId);
+        checkConfigIntervalId = null;
+      }
       global.isAdminStoppedSignalR = true;
       global.rateSourceRefIDSet = new Set();
       global.selectionData = {};
     } catch (err) {
       console.error('Error disconnecting from SignalR:', err);
-      throw new Error(err);
+      //throw new Error(err);
     }
   }
 }

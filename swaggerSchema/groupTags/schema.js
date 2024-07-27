@@ -205,16 +205,16 @@ const Auth = {
       },
     },
   },
-  clientDetailsById: {
+  clientDetailsByEmailId: {
     schema: {
       tags: ["Auth"],
-      description: "clientDetailsById",
+      description: "clientDetailsByEmailId",
       body: {
         type: "object",
         properties: {
-          clientId: { type: "integer" },
+          email: { type: "string" },
         },
-        required: ["clientId"],
+        required: ["email"],
       },
     },
   },
@@ -4889,6 +4889,96 @@ const Template = {
     },
   },
 };
+
+const Client = {
+  getAll: {
+    schema: {
+      tags: ["Client"],
+      description: "get all Client",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+  getById: {
+    schema: {
+      tags: ["Client"],
+      description: "get Client by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          clientId: { type: "integer" },
+        },
+        required: ["clientId"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["Client"],
+      description: "delete Client",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+            clientId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        isActive: { type: "boolean" },
+        },
+        required: ["clientId"],
+      },
+    },
+  },
+  save: {
+    schema: {
+      tags: ["Client"],
+      description: "save Client",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          clientId: { type: "integer" },
+          fullName: { type: "string" },
+          userName: { type: "string" },
+          isAllowMultiLogin: {type: "boolean"},
+          isDelete: { type: "boolean"},
+          isEmailVerified: {type: "boolean"},
+          emailId: {type: "string"},
+          isMobileVerified: {type: "boolean"},
+          mobileNo: {type: "string"},
+          registrationProcessStatus: {type: "integer"},
+          isUserActive: {type: "integer"},
+          provider: {type: "integer"},
+          isActive: {type: "boolean"},
+        },
+        required: ["clientId", "fullName", "emailId"],
+      },
+    },
+  },
+  activeInactiveClient: {
+    schema: {
+      tags: ["Client"],
+      description: "active inactive Client",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          clientId: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["clientId", "isActive"],
+      },
+    },
+  },
+};
 module.exports = {
   Auth,
   Tabs,
@@ -4929,5 +5019,6 @@ module.exports = {
   Notification,
   Devices,
   sendPushNotification,
-  Template
+  Template,
+  Client,
 };

@@ -45,7 +45,12 @@ if (process.env.ENABLE_SENTRY === "TRUE") {
     tracesSampleRate: 1.0,
   });
 }
-
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+});
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
 // process.on("uncaughtException", (err) => {
 //   console.error("Uncaught Exception occurred:", err);
 //   // Log additional diagnostic information
@@ -186,7 +191,7 @@ module.exports = async function (fastify, opts) {
     // Record the request start time in nanoseconds
     request.startTime = process.hrtime.bigint();
     request.startTimeTimeStemp = new Date();
-    if (request.originalUrl.includes("/commentary/saveDetails")) {
+    if (request.originalUrl.includes("/commentary/saveDetails") || request.originalUrl.includes("/commentary/saveCommentaryDetails")) {
       // request.endTimeTimeStemp = new Date();
       // new Promise((resolve, reject) => {
       //   resolve(responseLogInDB(request, fastify));
