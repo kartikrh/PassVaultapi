@@ -2548,7 +2548,6 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
                         "ERROR --> createMarketOddsBallByBallBYID",
                         request
                       );
-                      console.log(error.message);
                     }
                   }
                 }
