@@ -6,7 +6,7 @@ const getAllClientService = async (request, fastify) => {
     return global.tblClient;
   }
   if(isUserActive !== undefined && isActive !== undefined){
-    return global.tblClient.filter((item)=> item.isUserActive === isUserActive && item.isActive === isActive)
+    return global.tblClient.filter((item)=> item.isUserActive == isUserActive && item.isActive === isActive)
   }
   return global.tblClient.filter((item) => item.isActive === isActive);
 };
