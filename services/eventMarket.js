@@ -519,9 +519,10 @@ const updateMarketRateService = async (request, fastify) => {
       item.currentInnings === commentary.currentInnings &&
       item.teamStatus === 1
   );
-
+  let _resFromPredictAPI;
+  let callPrediction = {};
   if (teamOnStrike && !isSend && isSave) {
-    callPredictorMarket(
+    _resFromPredictAPI = await callPredictorMarket(
       {
         commentary_id: commentary.commentaryId,
         match_type_id: commentary.matchTypeId,
@@ -534,10 +535,25 @@ const updateMarketRateService = async (request, fastify) => {
       fastify,
       request
     );
+      // Check for error_msg in the response
+    if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
+      callPrediction.predictioncallSuccess = false;
+      callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
+      callPrediction.endPoint = '/api/v1/updateline';
+    }else {
+      callPrediction.predictioncallSuccess = true;
+      callPrediction.predictionMessage = 'Prediction call successful';
+      callPrediction.endPoint = '/api/v1/updateline';
+    }
   }
 
   //return "Event Market updated successfully";
-  return marketListByCIdService({body: {commentaryId:commentary.commentaryId}},fastify)
+  const data = marketListByCIdService({body: {commentaryId:commentary.commentaryId}},fastify)
+  const result = {
+    ...data,
+    callPrediction,
+  };
+  return result;
 };
 const saveEventMarketService = async (request, fastify) => {
   const { eventMarketId, commentaryId } = request.body;
@@ -790,13 +806,28 @@ const suspendMarketByCIdService = async (request, fastify) => {
       };
     });
 
-  callPredictorMarket(
+  let _resFromPredictAPI;
+  let callPrediction = {};
+  _resFromPredictAPI = await callPredictorMarket(
     commentaryArr,
     "/api/v1/suspendallmarkets",
     fastify,
     request
   );
-  return "Market suspended successfully";
+  if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
+    callPrediction.predictioncallSuccess = false;
+    callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
+    callPrediction.endPoint = '/api/v1/suspendallmarkets';
+  }else {
+    callPrediction.predictioncallSuccess = true;
+    callPrediction.predictionMessage = 'Prediction call successful';
+    callPrediction.endPoint = '/api/v1/suspendallmarkets';
+  }
+
+  return {
+    message: "Market suspended successfully",
+    callPrediction: callPrediction,
+  };
 };
 const commentaryTypeService = async (request, fastify) => {
   let result = global.tblCommentaries.filter(
