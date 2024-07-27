@@ -717,13 +717,45 @@ const changeMarketCloseService = async (request, fastify) => {
     ].includes(currentStatus)
   ) {
     await changeMarketCloseQuery(request.body, request, fastify);
-
+    let _resFromPredictAPI;
+    let callPrediction = {};
     // global.tblEventMarkets[eventMarket].status = EventMarketStatus.Close;
     // global.tblEventMarkets[eventMarket].data = updatedData;
     // console.log("updatedData", updatedData);
-    return "Market close updated successfully";
+    const strikeTeam = global.tblCommentaryTeams.find(
+      (item) => item.commentaryId === commentaryId && item.teamStatus === 1
+    );
+    _resFromPredictAPI = await callPredictorMarket(
+      {
+        commentary_id: parseInt(commentaryId),
+        status: parseInt(EventMarketStatus.Close),
+        match_type_id: parseInt(commentary.matchTypeId),
+        event_market_id: parseInt(eventMarketId),
+        strike_team: strikeTeam.teamId,
+      },
+      "/api/v1/marketmanualclose",
+      fastify,
+      request
+    );
+    if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
+      callPrediction.predictioncallSuccess = false;
+      callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
+      callPrediction.endPoint = '/api/v1/marketmanualclose';
+    }else {
+      callPrediction.predictioncallSuccess = true;
+      callPrediction.predictionMessage = 'Prediction call successful';
+      callPrediction.endPoint = '/api/v1/marketmanualclose';
+    }
+
+    return {
+      message: "Market close updated successfully",
+      callPrediction: callPrediction,
+    };
   } else {
-    return "Market is already settled, canceled, or closed, so it cannot be updated to close.";
+    return {
+      message: "Market is already settled, canceled, or closed, so it cannot be updated to close.",
+      callPrediction: {},
+    };
   }
 };
 const suspendMarketByCIdService = async (request, fastify) => {

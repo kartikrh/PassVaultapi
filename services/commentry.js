@@ -256,19 +256,8 @@ const commentaryDetailsByIdService = async (request, fastify) => {
   const commentaryDisplayStatus = await global.tblDisplayStatus.filter(
     (item) => item.displayStatusId !== 0
   );
-
-  const allDetails = {
-    commentaryDetails: { ...commentary, ...dataToreturn },
-    matchTypeDetails: matchType,
-    commentaryTeams,
-    commentaryPlayers,
-    commentaryOvers,
-    commentaryBallByBall,
-    commentaryWicket,
-    commentaryPartnership,
-    commentaryDisplayStatus,
-  };
-
+  let _resFromPredictAPI;
+  let callPrediction = {};
   if (
     !isStopLoadCommerty &&
     commentary.isPredictMarket == true &&
@@ -293,7 +282,11 @@ const commentaryDetailsByIdService = async (request, fastify) => {
         fastify
       );
     }
-    callPredictorMarket(
+    // data: {
+    //   status_code: 500,
+    //   error_msg: 'the JSON object must be str, bytes or bytearray, not NoneType'
+    // }
+    _resFromPredictAPI = await callPredictorMarket(
       {
         commentary_id: commentary.commentaryId,
         match_type_id: commentary.matchTypeId,
@@ -304,8 +297,25 @@ const commentaryDetailsByIdService = async (request, fastify) => {
       fastify,
       request
     );
+    // Check for error_msg in the response
+    if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
+      callPrediction.predictioncallSuccess = false;
+      callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
+      callPrediction.endPoint = '/api/v1/loadcommentary';
+    }
   }
-
+  const allDetails = {
+    commentaryDetails: { ...commentary, ...dataToreturn },
+    matchTypeDetails: matchType,
+    commentaryTeams,
+    commentaryPlayers,
+    commentaryOvers,
+    commentaryBallByBall,
+    commentaryWicket,
+    commentaryPartnership,
+    commentaryDisplayStatus,
+    callPrediction
+  };
   return allDetails;
 };
 
