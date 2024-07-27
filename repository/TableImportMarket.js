@@ -457,6 +457,16 @@ const updateMarketRunnerTeambySelectionId = async (fastify, request) => {
         });
       }
     });
+    
+     // Update local variable global.tblEventMarkets
+     data.forEach(({ selectionId, teamId }) => {
+       global.tblEventMarkets = global.tblEventMarkets.map(event => {
+         if (event.selectionId === selectionId) {
+           return { ...event, teamId };
+         }
+         return event;
+       });
+     });
 
     // Format response message
     let responseMessage = '';
