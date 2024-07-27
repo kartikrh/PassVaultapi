@@ -723,6 +723,7 @@ async function validateOtpService({ body }, fastify) {
 
       if (index !== -1) {
         global.tblClient[index].registrationProcessStatus = 2;
+        global.tblClient[index].isMobileVerified = true;
       } 
       return "OTP validated successfully" 
     } else {
