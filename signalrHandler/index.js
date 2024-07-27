@@ -354,7 +354,6 @@ async function startSignalR(fastify) {
             }
           });
         } catch (err) {
-          console.error('Error connecting to SignalR:', err);
           errorLogger(
             _fastify,
             err,
@@ -369,7 +368,7 @@ async function startSignalR(fastify) {
     if (!checkConfigIntervalId) {
       try {
         checkConfigIntervalId = setInterval(async () => {
-          console.log(connectionCount);
+          console.log("SignalR Reconnect Attemp: " +connectionCount);
           const isSON = global.tblConfigs.find((item) => item.key === configConstants.ISMARKETOODS_SIGNALRON).value;
           const SrCount = global.tblConfigs.find((item) => item.key === configConstants.SIGNALRRECONNECTCOUNT).value;
           if (isSON === 'true') {
@@ -391,7 +390,6 @@ async function startSignalR(fastify) {
       }
     }
   } catch (error) { 
-    console.error('Error disconnecting from SignalR:');
   }
 }
 
