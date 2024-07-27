@@ -75,7 +75,10 @@ const updateMarketTemplateService = async (request, fastify) => {
   if (!matchType) {
     throw new Error("MatchType with this id not found");
   }
-  callPredictorMarket(
+  let _resFromPredictAPI;
+  let callPrediction = {};
+
+  _resFromPredictAPI = await callPredictorMarket(
     {
       match_type_id: matchTypeID,
       is_market_template: true,
@@ -84,7 +87,15 @@ const updateMarketTemplateService = async (request, fastify) => {
     fastify,
     request
   );
-
+  if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
+    callPrediction.predictioncallSuccess = false;
+    callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
+    callPrediction.endPoint = '/api/v1/updatemarketpredictors';
+  }else {
+    callPrediction.predictioncallSuccess = true;
+    callPrediction.predictionMessage = 'Prediction call successful';
+    callPrediction.endPoint = '/api/v1/updatemarketpredictors';
+  }
   const body = {
     marketTemplateId,
     templateName: request.body.templateName || marketTemplate.templateName,
@@ -183,6 +194,7 @@ const updateMarketTemplateService = async (request, fastify) => {
   return {
     ...body,
     matchType: matchType.matchType,
+    callPrediction,
   };
 };
 

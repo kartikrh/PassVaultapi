@@ -13,7 +13,9 @@ const savePredictorDataService = async (request, fastify) => {
   if (!matchType) {
     throw new Error("Match Type not found for give id");
   }
-  callPredictorMarket(
+  let _resFromPredictAPI;
+  let callPrediction = {};
+  _resFromPredictAPI = await callPredictorMarket(
     {
       match_type_id: matchType.matchTypeId,
       is_market_template: false,
@@ -22,6 +24,16 @@ const savePredictorDataService = async (request, fastify) => {
     fastify,
     request
   );
+  // Check for error_msg in the response
+  if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
+    callPrediction.predictioncallSuccess = false;
+    callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
+    callPrediction.endPoint = '/api/v1/updatemarketpredictors';
+  }else {
+    callPrediction.predictioncallSuccess = true;
+    callPrediction.predictionMessage = 'Prediction call successful';
+    callPrediction.endPoint = '/api/v1/updatemarketpredictors';
+  }
   // check if there is data for this predictor
   const predictor = global.tblMatchTypePredictor.find(
     (item) => item.matchTypeId === request.body.matchTypeId
@@ -41,8 +53,12 @@ const savePredictorDataService = async (request, fastify) => {
     fastify
   );
   global.tblMatchTypePredictor.push(...data);
-
-  return data;
+  // Add callPrediction to the data object
+  const result = {
+    ...data,
+    callPrediction,
+  };
+  return result;
 };
 const getAllPredictorDataService = async (request, fastify) => {
   return global.tblMatchTypePredictor;
