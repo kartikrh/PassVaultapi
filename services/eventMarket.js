@@ -86,7 +86,7 @@ const getDetailsByCIdService = async (request, fastify) => {
 
   // get marketTemplate where matchType is commentary.matchTypeId
   const marketTemplate = global.tblMarketTemplate.filter(
-     (item) => item.matchTypeID === commentary.matchTypeId
+    (item) => item.matchTypeID === commentary.matchTypeId
   );
   // let eventMarket = global.tblEventMarkets.filter(
   //     (item) => item.commentaryId === commentaryId
@@ -94,7 +94,7 @@ const getDetailsByCIdService = async (request, fastify) => {
   //     && item.status !== EventMarketStatus.Close
   //     && item.status !== EventMarketStatus.Settled
   // );
-  let eventMarket,LDOMARKETSIDS;
+  let eventMarket, LDOMARKETSIDS;
   LDOMARKETSIDS = global.tblConfigs.find(config => config.key === "LDOMARKET")?.value ?? "0";
   let whereCondition = `tem."wrCommentaryId" = ${commentaryId} AND tem."wrStatus" NOT IN (${EventMarketStatus.Close},${EventMarketStatus.Settled},${EventMarketStatus.Cancel}) AND tem."wrMarketTypeCategoryId" NOT IN (${LDOMARKETSIDS})`;
   if (commentary.commentaryStatus != 1) {
@@ -113,8 +113,8 @@ const getDetailsByCIdService = async (request, fastify) => {
   let categories = global.tblMarketTypeCategories.filter(
     (item) => item.marketTypeCategoryId > 0
   ).map(item => ({
-      marketTypeCategoryId: item.marketTypeCategoryId,
-      categoryName: item.categoryName
+    marketTypeCategoryId: item.marketTypeCategoryId,
+    categoryName: item.categoryName
   }));
   return {
     commentary,
@@ -137,17 +137,17 @@ const getAllEventMarketsService = async (request, fastify) => {
     rateSourceRefId
   } = request.body;
   let createWhereStatus = `tem."wrStatus" NOT IN (${EventMarketStatus.Close},${EventMarketStatus.Settled},${EventMarketStatus.Cancel})`;
-  
+
   if (status !== undefined && status != 0) {
     createWhereStatus = `tem."wrStatus" = ${status}`;
   }
-  if(status != undefined && status == 0){
+  if (status != undefined && status == 0) {
     createWhereStatus = null;
   }
-  if(rateSourceRefId && rateSourceRefId != 0){
-    createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrRateSource" = ${rateSourceRefId}` : `tem."wrRateSource" = ${rateSourceRefId}`;	
+  if (rateSourceRefId && rateSourceRefId != 0) {
+    createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrRateSource" = ${rateSourceRefId}` : `tem."wrRateSource" = ${rateSourceRefId}`;
   }
-  console.log("createWhereStatus",createWhereStatus);
+  console.log("createWhereStatus", createWhereStatus);
 
   let eventMarket = await getAllEventMarketsQuery(fastify, createWhereStatus);
   if (eventTypeId) {
@@ -224,9 +224,9 @@ const createEventMarketsService = async (request, fastify) => {
         {
           eventMarketId: item.eventMarketId,
           commentaryId: item.commentaryId,
-          dataTosave: typeof(item.data) === "string" ? JSON.parse(item.data) : item.data,
+          dataTosave: typeof (item.data) === "string" ? JSON.parse(item.data) : item.data,
           updateType: MarketUpdateType.marketInitilization,
-          isSendData : true
+          isSendData: true
         },
         request,
         fastify
@@ -238,10 +238,10 @@ const createEventMarketsService = async (request, fastify) => {
         {
           eventMarketId: item.eventMarketId,
           commentaryId: item.commentaryId,
-          dataTosave: typeof(item.data) === "string" ? JSON.parse(item.data) : item.data,
+          dataTosave: typeof (item.data) === "string" ? JSON.parse(item.data) : item.data,
           updateType: MarketUpdateType.marketInitilization,
           lineDiff: item.line - previousLine,
-          isSendData : true
+          isSendData: true
         },
         request,
         fastify
@@ -421,26 +421,26 @@ const marketListByCIdService = async (request, fastify) => {
 
   // get the team and teamName by commentaryId
   const teams = global.tblCommentaryTeams
-  .filter((item) => item.commentaryId === commentaryId)
-  .reduce((acc, current) => {
-    if (!acc.some(item => item.teamId === current.teamId)) {
-      acc.push(current);
-    }
-    return acc;
-  }, [])
-  .map((item) => {
-    return {
-      teamId: item.teamId,
-      teamName: item.teamName,
-    };
-  });
+    .filter((item) => item.commentaryId === commentaryId)
+    .reduce((acc, current) => {
+      if (!acc.some(item => item.teamId === current.teamId)) {
+        acc.push(current);
+      }
+      return acc;
+    }, [])
+    .map((item) => {
+      return {
+        teamId: item.teamId,
+        teamName: item.teamName,
+      };
+    });
   // 
   let categories = global.tblMarketTypeCategories.filter(
-      (item) => item.marketTypeCategoryId > 0
+    (item) => item.marketTypeCategoryId > 0
   ).map(item => ({
-      marketTypeCategoryId: item.marketTypeCategoryId,
-      categoryName: item.categoryName,
-      displayOrder : item.displayOrder
+    marketTypeCategoryId: item.marketTypeCategoryId,
+    categoryName: item.categoryName,
+    displayOrder: item.displayOrder
   }));
 
   return {
@@ -451,7 +451,7 @@ const marketListByCIdService = async (request, fastify) => {
 };
 const updateMarketRateService = async (request, fastify) => {
   // i got array of eventMarket i want to update this data
-  const { eventMarket,isSend, isSave} = request.body;
+  const { eventMarket, isSend, isSave } = request.body;
   const commentary = global.tblCommentaries.find(
     (item) => item.commentaryId === request.body.eventMarket[0].commentaryId
   );
@@ -484,11 +484,11 @@ const updateMarketRateService = async (request, fastify) => {
       value: diff,
       line_ratio: data.lineRatio,
       is_onlyover: is_onlyover,
-      is_allow:item.isAllow,
-      is_active:item.isActive,
-      is_senddata:item.isSendData,
+      is_allow: item.isAllow,
+      is_active: item.isActive,
+      is_senddata: item.isSendData,
       data: data.data,
-      market_type_category_id:parseInt(data.marketTypeCategoryId),
+      market_type_category_id: parseInt(data.marketTypeCategoryId),
     });
     let index = global.tblEventMarkets.findIndex(
       (e) => e.eventMarketId === item.marketId
@@ -503,10 +503,10 @@ const updateMarketRateService = async (request, fastify) => {
       {
         eventMarketId: data.eventMarketId,
         commentaryId: data.commentaryId,
-        dataTosave: typeof(data.data) === "string" ? JSON.parse(data.data) : data.data,
+        dataTosave: typeof (data.data) === "string" ? JSON.parse(data.data) : data.data,
         updateType: MarketUpdateType.marketInitilization,
         lineDiff: diff,
-        isSendData : true
+        isSendData: true
       },
       request,
       fastify
@@ -519,10 +519,9 @@ const updateMarketRateService = async (request, fastify) => {
       item.currentInnings === commentary.currentInnings &&
       item.teamStatus === 1
   );
-  let _resFromPredictAPI;
-  let callPrediction = {};
+
   if (teamOnStrike && !isSend && isSave) {
-    _resFromPredictAPI = await callPredictorMarket(
+    callPredictorMarket(
       {
         commentary_id: commentary.commentaryId,
         match_type_id: commentary.matchTypeId,
@@ -535,25 +534,10 @@ const updateMarketRateService = async (request, fastify) => {
       fastify,
       request
     );
-      // Check for error_msg in the response
-    if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
-      callPrediction.predictioncallSuccess = false;
-      callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
-      callPrediction.endPoint = '/api/v1/updateline';
-    }else {
-      callPrediction.predictioncallSuccess = true;
-      callPrediction.predictionMessage = 'Prediction call successful';
-      callPrediction.endPoint = '/api/v1/updateline';
-    }
   }
 
   //return "Event Market updated successfully";
-  const data = marketListByCIdService({body: {commentaryId:commentary.commentaryId}},fastify)
-  const result = {
-    ...data,
-    callPrediction,
-  };
-  return result;
+  return marketListByCIdService({ body: { commentaryId: commentary.commentaryId } }, fastify)
 };
 const saveEventMarketService = async (request, fastify) => {
   const { eventMarketId, commentaryId } = request.body;
@@ -601,9 +585,9 @@ const saveEventMarketService = async (request, fastify) => {
       {
         eventMarketId: item.eventMarketId,
         commentaryId: item.commentaryId,
-        dataTosave: typeof(item.data) === "string" ? JSON.parse(item.data) : item.data,
+        dataTosave: typeof (item.data) === "string" ? JSON.parse(item.data) : item.data,
         updateType: MarketUpdateType.marketInitilization,
-        isSendData : true
+        isSendData: true
       },
       request,
       fastify
@@ -621,22 +605,22 @@ const changeMarketCancelService = async (request, fastify) => {
   //   (item) => item.commentaryId === commentaryId
   // );
   // if (eventMarket === -1) {
-    // throw new Error("EventMarket with this id not Found");
-    let checkMarketInDb = await getEventMarketByIdsQuery(
-      {
-        eventMarketIds: [eventMarketId],
-      },
-      request,
-      fastify
-    );
-    // if (checkMarketInDb.length == 0) {
-    //   throw new Error("EventMarket with this id not Found");
-    // } else {
-    //   global.tblEventMarkets.push(checkMarketInDb[0]);
-    //   eventMarket = global.tblEventMarkets.findIndex(
-    //     (item) => item.eventMarketId === eventMarketId
-    //   );
-    // }
+  // throw new Error("EventMarket with this id not Found");
+  let checkMarketInDb = await getEventMarketByIdsQuery(
+    {
+      eventMarketIds: [eventMarketId],
+    },
+    request,
+    fastify
+  );
+  // if (checkMarketInDb.length == 0) {
+  //   throw new Error("EventMarket with this id not Found");
+  // } else {
+  //   global.tblEventMarkets.push(checkMarketInDb[0]);
+  //   eventMarket = global.tblEventMarkets.findIndex(
+  //     (item) => item.eventMarketId === eventMarketId
+  //   );
+  // }
   // }
   // if (!commentary) {
   //   throw new Error("Commentary with this id not Found");
@@ -700,25 +684,25 @@ const changeMarketCloseService = async (request, fastify) => {
   let commentary = global.tblCommentaries.find(
     (item) => item.commentaryId === commentaryId
   );
-  let checkMarketInDb ;
+  let checkMarketInDb;
   // if (eventMarket === -1) {
-    // throw new Error("EventMarket with this id not Found");
-    checkMarketInDb = await getEventMarketByIdsQuery(
-      {
-        eventMarketIds: [eventMarketId],
-      },
-      request,
-      fastify
-    );
-    // if(checkMarketInDb.length == 0){
-    //   throw new Error("EventMarket with this id not Found");
-    // }
-    // else {
-    //   global.tblEventMarkets.push(checkMarketInDb[0]);
-    //   eventMarket = global.tblEventMarkets.findIndex(
-    //     (item) => item.eventMarketId === eventMarketId
-    //   );
-    // }
+  // throw new Error("EventMarket with this id not Found");
+  checkMarketInDb = await getEventMarketByIdsQuery(
+    {
+      eventMarketIds: [eventMarketId],
+    },
+    request,
+    fastify
+  );
+  // if(checkMarketInDb.length == 0){
+  //   throw new Error("EventMarket with this id not Found");
+  // }
+  // else {
+  //   global.tblEventMarkets.push(checkMarketInDb[0]);
+  //   eventMarket = global.tblEventMarkets.findIndex(
+  //     (item) => item.eventMarketId === eventMarketId
+  //   );
+  // }
   // }
 
   if (!commentary) {
@@ -757,7 +741,7 @@ const changeMarketCloseService = async (request, fastify) => {
       callPrediction.predictioncallSuccess = false;
       callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
       callPrediction.endPoint = '/api/v1/marketmanualclose';
-    }else {
+    } else {
       callPrediction.predictioncallSuccess = true;
       callPrediction.predictionMessage = 'Prediction call successful';
       callPrediction.endPoint = '/api/v1/marketmanualclose';
@@ -806,28 +790,13 @@ const suspendMarketByCIdService = async (request, fastify) => {
       };
     });
 
-  let _resFromPredictAPI;
-  let callPrediction = {};
-  _resFromPredictAPI = await callPredictorMarket(
+  callPredictorMarket(
     commentaryArr,
     "/api/v1/suspendallmarkets",
     fastify,
     request
   );
-  if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
-    callPrediction.predictioncallSuccess = false;
-    callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
-    callPrediction.endPoint = '/api/v1/suspendallmarkets';
-  }else {
-    callPrediction.predictioncallSuccess = true;
-    callPrediction.predictionMessage = 'Prediction call successful';
-    callPrediction.endPoint = '/api/v1/suspendallmarkets';
-  }
-
-  return {
-    message: "Market suspended successfully",
-    callPrediction: callPrediction,
-  };
+  return "Market suspended successfully";
 };
 const commentaryTypeService = async (request, fastify) => {
   let result = global.tblCommentaries.filter(
@@ -1042,9 +1011,9 @@ const getMarketDataByCIdService = async (request, fastify) => {
 
 const UpdateResulOrApproveEventMarketService = async (request, fastify) => {
   const { eventMarketId, isResult, result } = request.body;
-          
+
   await UpdateResulOrApproveEventMarketQuery(request.body, request, fastify);
-  if(isResult && result){
+  if (isResult && result) {
     marketLogger(
       {
         eventMarketId,
@@ -1055,7 +1024,7 @@ const UpdateResulOrApproveEventMarketService = async (request, fastify) => {
       fastify
     );
   }
-  if(!isResult && result){
+  if (!isResult && result) {
     marketLogger(
       {
         eventMarketId,
@@ -1069,7 +1038,7 @@ const UpdateResulOrApproveEventMarketService = async (request, fastify) => {
 
   return "Event Market updated successfully";
 };
-const updateComInMarketService = async (data,request, fastify) => {
+const updateComInMarketService = async (data, request, fastify) => {
   let updateData = await updateComInMarketQuery(data, request, fastify);
   for (let item of updateData) {
     let eventMarket = global.tblEventMarkets.findIndex(
@@ -1100,25 +1069,25 @@ const marketListcategoryNameByCIdService = async (request, fastify) => {
 
   // get the team and teamName by commentaryId
   const teams = global.tblCommentaryTeams
-  .filter((item) => item.commentaryId === commentaryId)
-  .reduce((acc, current) => {
-    if (!acc.some(item => item.teamId === current.teamId)) {
-      acc.push(current);
-    }
-    return acc;
-  }, [])
-  .map((item) => {
-    return {
-      teamId: item.teamId,
-      teamName: item.teamName,
-    };
-  });
+    .filter((item) => item.commentaryId === commentaryId)
+    .reduce((acc, current) => {
+      if (!acc.some(item => item.teamId === current.teamId)) {
+        acc.push(current);
+      }
+      return acc;
+    }, [])
+    .map((item) => {
+      return {
+        teamId: item.teamId,
+        teamName: item.teamName,
+      };
+    });
   //
   let categories = global.tblMarketTypeCategories.filter(
-      (item) => item.marketTypeCategoryId > 0
+    (item) => item.marketTypeCategoryId > 0
   ).map(item => ({
-      marketTypeCategoryId: item.marketTypeCategoryId,
-      categoryName: item.categoryName
+    marketTypeCategoryId: item.marketTypeCategoryId,
+    categoryName: item.categoryName
   }));
   return {
     marketList,
