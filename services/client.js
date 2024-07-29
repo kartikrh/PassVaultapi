@@ -62,16 +62,16 @@ const updateClientService = async (request, fastify) => {
     clientId: request.body.clientId,
     fullName: request.body.fullName || validateClientId.fullName,
     userName: request.body.userName || validateClientId.userName,
-    isAllowMultiLogin: request.body.isAllowMultiLogin || validateClientId.isAllowMultiLogin,
-    isDelete: request.body.isDelete || validateClientId.isDelete,
-    isEmailVerified: request.body.isEmailVerified || validateClientId.isEmailVerified,
+    isAllowMultiLogin: request.body.isAllowMultiLogin,
+    isDelete: request.body.isDelete,
+    isEmailVerified: request.body.isEmailVerified,
     emailId: request.body.emailId || validateClientId.emailId,
-    isMobileVerified: request.body.isMobileVerified || validateClientId.isMobileVerified,
+    isMobileVerified: request.body.isMobileVerified,
     mobileNo: request.body.mobileNo || validateClientId.mobileNo,
     registrationProcessStatus: request.body.registrationProcessStatus || validateClientId.registrationProcessStatus,
-    isUserActive: request.body.isUserActive || validateClientId.isUserActive,
+    isUserActive: request.body.isUserActive,
     provider: request.body.provider || validateClientId.provider,
-    isActive: request.body.isActive || validateClientId.isActive,
+    isActive: request.body.isActive,
   };
 
   await updateClientQuery(body, request, fastify);
