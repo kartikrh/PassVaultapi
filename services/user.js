@@ -552,7 +552,13 @@ async function loginClientService({ body }, fastify) {
     return { token , details: results};
 
   } catch (error) {
-    return error;
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR->> services/user.js -> loginClientService",
+      null
+    )
+    throw new Error(error);
   }
 }
 
@@ -758,7 +764,13 @@ async function setPasswordService({ body }, fastify) {
     clientData.registrationProcessStatus = 3;
     clientData.isUserActive = 1;
 
-    return clientData;
+    if(clientData?.clientId) {
+    const payload = { clientId: clientData.clientId };
+    const token = generateToken(payload); 
+    return { token, details: clientData };
+    } else {
+      return "Error in set password"
+    }
   } catch (error) {
     errorLogger(
       fastify,
