@@ -610,8 +610,8 @@ const createCommentaryService = async (request, fastify) => {
       fastify
     );
   }
-
-  return {...addCommentry,callPrediction};
+  addCommentry.callPrediction = callPrediction
+  return addCommentry;
 };
 
 const updateCommentaryService = async (request, fastify) => {
@@ -4982,7 +4982,7 @@ const updateMatchTypeInCommentaryService = async (request, fastify) => {
 
   global.tblCommentaries[index] = updatedData;
   let _resFromPredictAPI;
-  let callPrediction = {};s
+  let callPrediction = {};
   if (updatedData.isPredictMarket == true) {
     _resFromPredictAPI = await callPredictorMarket(
       {
@@ -5004,7 +5004,8 @@ const updateMatchTypeInCommentaryService = async (request, fastify) => {
       callPrediction.endPoint = '/api/v1/loadcommentary';
     }
   }
-  return {...updatedData,callPrediction};
+  updatedData.callPrediction = callPrediction;
+  return updatedData;
 };
 const getMatchTypeListByCommentaryService = async (request, fastify) => {
   const { commentaryId } = request.body;
@@ -7073,11 +7074,7 @@ const closeCommentaryService = async (request, fastify) => {
       );
       if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
         callPrediction.predictioncallSuccess = false;
-        callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
-        callPrediction.endPoint = '/api/v1/endcommentary';
-      }else {
-        callPrediction.predictioncallSuccess = true;
-        callPrediction.predictionMessage = 'Prediction call successful';
+        callPrediction.predictionMessage += "when Update commentaryStatus to closed there is Error for CommenrtyID :"+ commentaryId  + " "+ _resFromPredictAPI.data.error_msg +", ";
         callPrediction.endPoint = '/api/v1/endcommentary';
       }
       callDataProvider(
@@ -7103,7 +7100,11 @@ const closeCommentaryService = async (request, fastify) => {
       )
     }
   }
-  return `Commentary(s) closed successfully`;
+  //return `Commentary(s) closed successfully`;
+  return {
+    message: "Commentary(s) closed successfully",
+    callPrediction: callPrediction,
+  };
 };
 const deleteAllCommentaryService = async (request, fastify) => {
   await deleteAllCommentaryQuery(fastify);
@@ -7192,7 +7193,8 @@ const updateDelayInCommentaryService = async (request, fastify) => {
       callPrediction.endPoint = '/api/v1/loadcommentary';
     }
   }
-  return {...updatedData,callPrediction};
+  updatedData.callPrediction = callPrediction;
+  return updatedData;
 };
 
 const getShortCommertyService = async (request, fastify) => {
@@ -7356,7 +7358,8 @@ const updateEventRefIdInCommentaryService = async (request, fastify) => {
     }
   }
 
-  return {...updatedData,callPrediction};
+  updatedData.callPrediction = callPrediction;
+  return updatedData;
 };
 
 const loadcommentaryService = async (request, fastify) => {
