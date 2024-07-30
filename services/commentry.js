@@ -2074,6 +2074,8 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
       partnershipIndex;
     let _sendPrePlayers = [];
     let commentaryData;
+    let _resFromPredictAPI;
+    let callPredictions = [];
     if (commentaryId) {
       commentaryData = global.tblCommentaries.find(
         (item) => item.commentaryId === commentaryId
@@ -2411,9 +2413,10 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         )
         .sort((a, b) => b.commentaryBallByBallId - a.commentaryBallByBallId)[0];
       if (previousBall) {
+        _resFromPredictAPI = null;
         const decimalOverCount = parseFloat(previousBall.overCount);
         const _wkt = previousBall.ballIsWicket;
-        callPredictorMarket(
+        _resFromPredictAPI = await callPredictorMarket(
           {
             commentary_id: commentaryData.commentaryId,
             match_type_id: commentaryData.matchTypeId,
@@ -2428,6 +2431,14 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           fastify,
           request
         );
+        let callPrediction = {};
+        if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
+          callPrediction.predictioonAPI = "undoscore"
+          callPrediction.predictioncallSuccess = false;
+          callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
+          callPrediction.endPoint = '/api/v1/undoscore';
+          callPredictions.push(callPrediction);
+        }
       }
     }
     if (deleteOverId) {
@@ -2606,8 +2617,8 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           let decimalOverCount = parseFloat(commentaryBallByBall.overCount);
           let _wkt = commentaryBallByBall.ballIsWicket;
           let _bory = commentaryBallByBall.ballIsBoundry;
-
-          callPredictorMarket(
+          _resFromPredictAPI = null;
+          _resFromPredictAPI = await callPredictorMarket(
             {
               commentary_id: commentaryData.commentaryId,
               match_type_id: commentaryData.matchTypeId,
@@ -2622,6 +2633,14 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
             fastify,
             request
           );
+          let callPrediction = {};
+          if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
+            callPrediction.predictioonAPI = "predictscore"
+            callPrediction.predictioncallSuccess = false;
+            callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
+            callPrediction.endPoint = '/api/v1/predictscore';
+            callPredictions.push(callPrediction);
+          }
         }
       } else {
         // if(ballByBallIndex !== -1){
@@ -2829,8 +2848,8 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         request,
         fastify
       );
-
-      callPredictorMarket(
+      _resFromPredictAPI = null;
+      _resFromPredictAPI = await callPredictorMarket(
         {
           commentary_id: commentaryDetails.commentaryId,
           match_type_id: commentaryDetails.matchTypeId,
@@ -2840,6 +2859,14 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         fastify,
         request
       );
+      let callPrediction = {};
+      if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
+        callPrediction.predictioonAPI = "loadcommentary"
+        callPrediction.predictioncallSuccess = false;
+        callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
+        callPrediction.endPoint = '/api/v1/loadcommentary';
+        callPredictions.push(callPrediction);
+      }
     }
 
     if (
@@ -2853,7 +2880,8 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         },
         fastify
       )
-      callPredictorMarket(
+      _resFromPredictAPI = null;
+      _resFromPredictAPI = await  callPredictorMarket(
         {
           commentary_id: commentaryDetails.commentaryId,
         },
@@ -2861,6 +2889,14 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         fastify,
         request
       );
+      let callPrediction = {};
+      if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
+        callPrediction.predictioonAPI = "endcommentary"
+        callPrediction.predictioncallSuccess = false;
+        callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
+        callPrediction.endPoint = '/api/v1/endcommentary';
+        callPredictions.push(callPrediction);
+      }
     }
 
     // call the getscore and emit the event data
@@ -2918,8 +2954,8 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
       catch (error) {
         decimalOverCount = 0;
       }
-
-      callPredictorMarket(
+      _resFromPredictAPI = null;
+      _resFromPredictAPI = await callPredictorMarket(
         {
           commentary_id: commentaryData.commentaryId,
           match_type_id: commentaryData.matchTypeId,
@@ -2933,9 +2969,18 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         fastify,
         request
       );
+      let callPrediction = {};
+      if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
+        callPrediction.predictioonAPI = "playerpredictscore"
+        callPrediction.predictioncallSuccess = false;
+        callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
+        callPrediction.endPoint = '/api/v1/playerpredictscore';
+        callPredictions.push(callPrediction);
+      }
     }
     if(isEndInnings && isEndInnings == true){
-      callPredictorMarket(
+      _resFromPredictAPI = null;
+      _resFromPredictAPI = await callPredictorMarket(
         {
           commentary_id: commentaryData.commentaryId,
           match_type_id: commentaryData.matchTypeId,
@@ -2945,6 +2990,14 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         fastify,
         request
       );
+      let callPrediction = {};
+      if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
+        callPrediction.predictioonAPI = "endinnings"
+        callPrediction.predictioncallSuccess = false;
+        callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
+        callPrediction.endPoint = '/api/v1/endinnings';
+        callPredictions.push(callPrediction);
+      }
     }
     commentaryLogger(
       {
@@ -2961,6 +3014,7 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
       request,
       fastify
     );
+    response.callPredictions = callPredictions;
     return response;
   } catch (error) {
     // console.log(error);
