@@ -1100,7 +1100,7 @@ const cloneCommentaryService = async (request, fastify) => {
 const loadMultiCommentaryService = async (request, fastify) => {
   const { commentaryId } = request.body;
   let _resFromPredictAPI;
-  let callPrediction = {};
+  let callPredictions = [];
   for (const currId of commentaryId) {
     const originalCommentary = global.tblCommentaries.find(
       (item) => item.commentaryId === currId
@@ -1114,6 +1114,7 @@ const loadMultiCommentaryService = async (request, fastify) => {
       (originalCommentary.commentaryStatus == 2 ||
         originalCommentary.commentaryStatus == 3)
     ) {
+      _resFromPredictAPI = null;
       _resFromPredictAPI = await callPredictorMarket(
         {
           commentary_id: originalCommentary.commentaryId,
@@ -1124,18 +1125,21 @@ const loadMultiCommentaryService = async (request, fastify) => {
         fastify,
         request
       );
+      let callPrediction = {}
       // Check for error_msg in the response
       if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
+        callPrediction.Cid = currId;
         callPrediction.predictioncallSuccess = false;
-        callPrediction.predictionMessage += "For Commentary ID "+ currId + " " + _resFromPredictAPI.data.error_msg;
-        callPrediction.endPoint = '/api/v1/updateline';
+        callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
+        callPrediction.endPoint = '/api/v1/loadcommentary';
+        callPredictions.push(callPrediction);
       }
     }
   }
   //return `Commentaries loaded successfully`;
   return {
     message: "Commentaries loaded successfully",
-    callPrediction: callPrediction,
+    callPredictions: callPredictions,
   };
 };
 
@@ -3376,9 +3380,7 @@ const updateCommentaryStatusService = async (request, fastify) => {
     throw new Error("Commentary with this id not found");
   }
   let _resFromPredictAPI;
-  let callPrediction = {};
-  let _resFromPredictAPI2;
-  let callPrediction2 = {};
+  let callPredictions = [];
   // call predictor endpoint
   if (global.tblCommentaries[index].isPredictMarket) {
     _resFromPredictAPI = await callPredictorMarket(
@@ -3391,13 +3393,15 @@ const updateCommentaryStatusService = async (request, fastify) => {
       fastify,
       request
     );
-    
+    let callPrediction = {};
     if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
       callPrediction.predictioncallSuccess = false;
       callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
       callPrediction.endPoint = '/api/v1/updatemarketstatus';
+      callPredictions.push(callPrediction);
+      callPrediction = {};
     }
-
+    _resFromPredictAPI = null;
     let getCategory = global.tblMarketTypeCategories.filter((item)=> 
       item.categoryName.toLowerCase() == 'player' || item.categoryName.toLowerCase() == 'wicket'
     ).map((c) => c.marketTypeCategoryId);
@@ -3407,7 +3411,7 @@ const updateCommentaryStatusService = async (request, fastify) => {
       commentaryId : commentaryId
     },request,fastify)
 
-    _resFromPredictAPI2 = await callPredictorMarket(
+    _resFromPredictAPI = await callPredictorMarket(
       {
         commentary_id: commentaryId,
         status: EventMarketStatus.Suspend,
@@ -3417,10 +3421,13 @@ const updateCommentaryStatusService = async (request, fastify) => {
       fastify,
       request
     );
-    if (_resFromPredictAPI2.data && _resFromPredictAPI2.data.error_msg) {
-      callPrediction2.predictioncallSuccess = false;
-      callPrediction2.predictionMessage = _resFromPredictAPI.data.error_msg;
-      callPrediction2.endPoint = '/api/v1/updateplayerstatus';
+  
+    if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
+      callPrediction.predictioncall2Success = false;
+      callPrediction.predictionCall2Message = _resFromPredictAPI.data.error_msg;
+      callPrediction.endPoint2 = '/api/v1/updateplayerstatus';
+      callPredictions.push(callPrediction);
+      callPrediction = {};
     }
   }
 
@@ -3458,8 +3465,7 @@ const updateCommentaryStatusService = async (request, fastify) => {
     //   socket.client.emit("updateFullscore", sendDataForSocketUpdate);
     // });
   }
-  commentaryDetails.callPrediction2 = callPrediction2;
-  commentaryDetails.callPrediction = callPrediction;
+  commentaryDetails.callPredictions = callPredictions;
   // Return the updated commentary details
   return {
     name: "commentaryDetails",
@@ -7081,7 +7087,7 @@ const activeInactiveCommentaryService = async (request, fastify) => {
 const closeCommentaryService = async (request, fastify) => {
   await closeCommentaryQuery(request.body, fastify, request);
   let _resFromPredictAPI;
-  let callPrediction = {};
+  let callPredictions = [];
   // update the global variable
   for (let commentaryId of request.body.commentaryId) {
     const index = global.tblCommentaries.findIndex(
@@ -7099,11 +7105,15 @@ const closeCommentaryService = async (request, fastify) => {
         fastify,
         request
       );
+      let callPrediction = {}
       if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
+        callPrediction.Cid = commentaryId;
         callPrediction.predictioncallSuccess = false;
-        callPrediction.predictionMessage += "when Update commentaryStatus to closed there is Error for CommenrtyID :"+ commentaryId  + " "+ _resFromPredictAPI.data.error_msg +", ";
+        callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
         callPrediction.endPoint = '/api/v1/endcommentary';
+        callPredictions.push(callPrediction);
       }
+      _resFromPredictAPI = null;
       callDataProvider(
         {
           commentaryId: commentaryId,
@@ -7130,7 +7140,7 @@ const closeCommentaryService = async (request, fastify) => {
   //return `Commentary(s) closed successfully`;
   return {
     message: "Commentary(s) closed successfully",
-    callPrediction: callPrediction,
+    callPredictions: callPredictions,
   };
 };
 const deleteAllCommentaryService = async (request, fastify) => {
