@@ -532,7 +532,8 @@ async function loginClientService({ body }, fastify) {
     }
 
     if (!results || results === "User not found") {
-      return { error: results };
+      //return { error: results };
+      throw new Error(results);
     }
 
     const tokenPayload = {
@@ -860,13 +861,14 @@ async function updateClientService({ body }, fastify) {
     let results;
     results = await updateClient(body, fastify);
     if (results === "Client ID does not exist") {
-      return { error: results };
+      throw new Error(results);
+      //return { error: results };
     }
     else{
-    return { success: results };
+    return results;
     }
   } catch (error) {
-    return { error: error };
+    throw new Error(error);
   }
 }
 
