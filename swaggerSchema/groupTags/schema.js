@@ -1661,6 +1661,7 @@ const MatchType = {
           isWideBallCountInPartnership: { type: "boolean" },
           isPenaltyRunsInPartnership: { type: "boolean" },
           valueOfFrontFootNoBall: { type: "integer" },
+          isStrikeChangeonOverComplete: { type: "boolean" },
         },
         required: ["matchTypeId"],
       },

@@ -158,6 +158,11 @@ module.exports = (sequelize) => {
         type: DataTypes.DATE,
         allowNull: true,
       },
+      wrIsStrikeChangeonOverComplete: {
+        type: DataTypes.BOOLEAN,
+        allowNull: true,
+        defaultValue: true,
+      },
     },
     {
       timestamps: false,
