@@ -168,7 +168,7 @@ const insertMatchTypeQuery = async (data, fastify, request) => {
           data.valueOfFrontFootNoBall || 0,
           data.userId,
           new Date(),
-          data.isStrikeChangeonOverComplete || true
+          data.isStrikeChangeonOverComplete || true,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
