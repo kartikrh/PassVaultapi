@@ -908,7 +908,13 @@ async function loginClient(body, fastify) {
       return "User not found";
     }
   } catch (error) {
-    return error.message;
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableUser/loginClient",
+      null
+    );
+    throw new Error(error.message);
   }
 }
 
