@@ -4437,10 +4437,11 @@ const commentaryDetailsByEventIdService = async (
     bty: ball.ballType || '0',
     isb: ball.ballIsBoundry,
     isdel: ball.isDelete,
+    cd : ball.createdDate,
   }));
 
   const allDetails = {
-    cm: { ...resultArr, cctime: result.commentaryCloseTime },
+    cm: { ...resultArr, cctime: result.commentaryCloseTime , res : result.result},
     cbb,
     cbt,
     cbl,
@@ -5015,6 +5016,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     bty: ball.ballType || '0',
     isb: ball.ballIsBoundry,
     isdel: ball.isDelete,
+    cd : ball.createdDate
   }));
 
   const allDetails = {
@@ -6111,6 +6113,7 @@ const getInningDataByInningNumber = async (commentaryId, inningNumber) => {
       ovr1: player.overCount,
       wkt1: player.wicketCount,
       tid: currentBattingTeam.commentaryTeamId,
+      cd : player.createdDate
     };
   });
 
@@ -6205,6 +6208,7 @@ const getInningDataByInningNumber = async (commentaryId, inningNumber) => {
       ovr1: player.overCount,
       wkt1: player.wicketCount,
       tid: currentBowlingTeam.commentaryTeamId,
+      cd : player.createdDate
     };
   });
 
@@ -6981,6 +6985,22 @@ const updateResultInCommentaryService = async (request, fastify) => {
   await updateResultInCommentaryQuery(request.body, fastify, request);
 
   global.tblCommentaries[index].result = result;
+
+  if(global.tblCommentaries[index].isActive){
+    let cData = await getMatchDataByCId({
+      commentaryId: commentaryId,
+    }, request, fastify);
+
+    callClientAPI(
+      {
+        serviceType : ServiceType.clientAPI,
+        moduleType : APIEndpointModuleType.commentaryUpdate,
+        data : cData
+      },
+      request,
+      fastify
+    )
+  }
 
   return "Result updated successfully";
 };

@@ -1007,7 +1007,8 @@ const getAllCommentaryBallByBallQuery = async (fastify) => {
     "wrNextBat_StrikeID" as "nextBatStrikeId",
     "wrNextBat_NONStrikeID" as "nextBatNonStrikeId",
     "wrIsDelete" as "isDelete",
-    "wrCurrentInnings" as "currentInnings"
+    "wrCurrentInnings" as "currentInnings",
+    "wrCreatedDate" as "createdDate"
     from "tblCommentaryBallByBalls"
     `,
     {
@@ -1181,7 +1182,8 @@ const getAllCommentaryWicketQuery = async (fastify) => {
     "wrPlayerBalls" as "playerBalls",
     "wrWicketCount" as "wicketCount",
     "wrBallCount" as "ballCount",
-    "wrCurrentInnings" as "currentInnings"
+    "wrCurrentInnings" as "currentInnings",
+    "wrCreatedDate" as "createdDate"
     from "tblCommentaryWickets" 
     `,
     {
@@ -1246,7 +1248,8 @@ const getAllCommentaryPartnershipQuery = async (fastify) => {
       "wrBatter1Balls" as "batter1Balls",
       "wrBatter2Balls" as "batter2Balls",
       "wrBatter1Runs" as "batter1Runs",
-      "wrBatter2Runs" as "batter2Runs"
+      "wrBatter2Runs" as "batter2Runs",
+      "wrCreatedDate" as "createdDate"
       from "tblCommentaryPartnerships"
       `,
     {
