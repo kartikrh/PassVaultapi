@@ -4979,6 +4979,28 @@ const Client = {
     },
   },
 };
+const weblogs = {
+  save: {
+    schema: {
+      tags: ["weblogs"],
+      description: "save weblogs",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          wRId: {type: "integer"},
+          request: { type: "string" },
+          requestTime: { type: "string" },
+          generatedFrom: { type: "string" },
+          comment: { type: "string" },
+          response: { type: "string" },
+          responseTime: { type: "string" },
+        },
+        required: ["wRId"],
+      },
+    },
+  },
+};
 module.exports = {
   Auth,
   Tabs,
@@ -5021,4 +5043,5 @@ module.exports = {
   sendPushNotification,
   Template,
   Client,
+  weblogs
 };

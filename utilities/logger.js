@@ -219,5 +219,66 @@ const commentaryLogger = async (data, request, fastify) => {
     console.log(error);
   }
 }
+
+
+const updateWebRequestLogs = async (request, fastify) => {
+  try {
+    let data;
+    if (request.wRId !== 0) {
+      data = await fastify.db.query(
+        `UPDATE "webRequestLogs"
+        SET "response" = $1,
+            "responseTime" = $2,
+            "generatedFrom" = $3,
+            "comment" = $4,
+            "UserID" = $6
+        WHERE "webRequestLogId" = $5
+        RETURNING "webRequestLogId" as "wRId"`,
+        {
+          type: fastify.db.QueryTypes.SELECT,
+          bind: [
+            request.response,
+            request.responseTime,
+            request.generatedFrom || null,
+            request.comment,
+            request?.userTokenInfo?.WrUserId || null,
+            request.wRId
+          ]
+        }
+      );
+    } else {
+      data = await fastify.db.query(
+        `INSERT INTO "webRequestLogs" (
+          "request", 
+          "requestTime", 
+          "generatedFrom", 
+          "comment", 
+          "response", 
+          "responseTime",
+          "UserID"
+        ) VALUES ($1, $2, $3, $4, $5, $6,$7)
+        RETURNING "webRequestLogId" as "wRId"`,
+        {
+          type: fastify.db.QueryTypes.INSERT,
+          bind: [
+            request.request,
+            request.requestTime,
+            request.generatedFrom || null,
+            request.comment,
+            request.response || null,
+            request.responseTime,
+            request?.userTokenInfo?.WrUserId || null,
+          ]
+        }
+      );
+    }
+
+    return data[0];
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+
 module.exports = { errorLogger, responseLogger ,responseLogInDB , marketLogger ,
-  marketDataLogger,tblPredictorAPILogger,tblThirdPartyAPILogger,commentaryLogger};
+  marketDataLogger,tblPredictorAPILogger,tblThirdPartyAPILogger,commentaryLogger,updateWebRequestLogs};
