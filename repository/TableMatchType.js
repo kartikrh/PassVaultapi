@@ -128,7 +128,8 @@ const insertMatchTypeQuery = async (data, fastify, request) => {
         "wrIsExtraBallWhenWideBallInLastOver" as "isExtraBallWhenWideBallInLastOver",
         "wrIsWideBallCountInPartnership" as "isWideBallCountInPartnership",
         "wrIsPenaltyRunsInPartnership" as "isPenaltyRunsInPartnership",
-        "wrValueOfFrontFootNoBall" as "valueOfFrontFootNoBall"
+        "wrValueOfFrontFootNoBall" as "valueOfFrontFootNoBall",
+        "wrIsStrikeChangeonOverComplete" as "isStrikeChangeonOverComplete"
         from "insert_data"
     `,
       {
