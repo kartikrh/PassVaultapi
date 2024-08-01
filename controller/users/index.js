@@ -30,7 +30,7 @@ const {
   updateClientPasswordService,
   forgetPasswordService
 } = require("../../services/user");
-const { errorLogger } = require("../../utilities/logger");
+const { errorLogger,updateWebRequestLogs } = require("../../utilities/logger");
 const fetchAllDataFromDb = require("../../utilities/fetchAllData");
 const { ckImageUploadService, imgUploadService } = require("../../services/ckImage");
 
@@ -381,6 +381,16 @@ async function signOutClient(request, reply, fastify) {
     reply.status(200).send(error(err.message, ERROR_CODES.AUTH_ERROR, 200));
   }
 }
+
+async function AddUpdateWebLogs(request, reply, fastify) {
+  try {
+    const result = await updateWebRequestLogs(request, fastify);
+    reply.status(200).send(result);
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.AUTH_ERROR, 200));
+  }
+}
 module.exports = {
   signUpUser,
   signInUser,
@@ -414,4 +424,5 @@ module.exports = {
   resendOtp,
   updateClientPassword,
   forgetPassword,
+  AddUpdateWebLogs
 };

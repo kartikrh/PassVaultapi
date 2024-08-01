@@ -24,10 +24,11 @@ const {
   clientDetailsById,
   resendOtp,
   updateClientPassword,
-  forgetPassword
+  forgetPassword,
+  AddUpdateWebLogs
   //loginRegistrationClient,
 } = require("../controller/users/index");
-const { Auth ,sendPushNotification} = require("../swaggerSchema/groupTags/schema");
+const { Auth ,sendPushNotification,weblogs} = require("../swaggerSchema/groupTags/schema");
 const { authorize } = require("../controller/middleware/index");
 const { startSignalR, stopSignalR, isSignalRStarted  } = require('../signalrHandler/index');
 const { errorLogger } = require("../utilities/logger");
@@ -168,5 +169,10 @@ module.exports = async function (fastify, opts) {
     schema: Auth.signOut.schema,
     //preHandler: [(request, reply) => authorize(request, reply, fastify)],
     handler: (request, reply) => signOutClient(request, reply, fastify),
+  });
+  fastify.post("/addUpdateWebLogs", {
+    schema: weblogs.save.schema,
+    preHandler: [(request, reply) => authorize(request, reply, fastify)],
+    handler: (request, reply) => AddUpdateWebLogs(request, reply, fastify),
   });
 };
