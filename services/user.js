@@ -520,6 +520,7 @@ async function loginClientService({ body }, fastify) {
     let results;
     if (body.googleID || body.token || body.facebookId) {
         // Google Login
+        body.token = uuidv4();
         results = await loginClient(body, fastify);
     } else {
       // Manual login

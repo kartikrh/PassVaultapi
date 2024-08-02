@@ -825,7 +825,7 @@ async function loginClient(body, fastify) {
             bind: [googleID, email, userName , clientProvider.Google],
           }
         );
-
+        
          // Insert login information
          await fastify.db.query(
           `INSERT INTO "tblUserLoginInfos" ("wrClientID", "wrInfo", "wrIsLogin", "wrToken", "wrCreatedDate")
