@@ -158,10 +158,14 @@ module.exports = (sequelize) => {
         type: DataTypes.DATE,
         allowNull: true,
       },
-      wrIsStrikeChangeonOverComplete: {
+      wrIsAutoChangeStriker: {
         type: DataTypes.BOOLEAN,
         allowNull: true,
         defaultValue: true,
+      },
+      wrAutoChangeStrikerAfterBall: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
       },
     },
     {
