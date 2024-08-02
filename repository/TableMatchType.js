@@ -172,7 +172,7 @@ const insertMatchTypeQuery = async (data, fastify, request) => {
           data.valueOfFrontFootNoBall || 0,
           data.userId,
           new Date(),
-          data.isAutoChangeStriker || true,
+          data.isAutoChangeStriker === undefined ? false : data.isAutoChangeStriker,
           data.autoChangeStrikerAfterBall,
         ],
         type: fastify.db.QueryTypes.SELECT,
