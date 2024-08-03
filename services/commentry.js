@@ -2413,31 +2413,34 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         )
         .sort((a, b) => b.commentaryBallByBallId - a.commentaryBallByBallId)[0];
       if (previousBall) {
-        _resFromPredictAPI = null;
-        const decimalOverCount = parseFloat(previousBall.overCount);
-        const _wkt = previousBall.ballIsWicket;
-        _resFromPredictAPI = await callPredictorMarket(
-          {
-            commentary_id: commentaryData.commentaryId,
-            match_type_id: commentaryData.matchTypeId,
-            ball: decimalOverCount,
-            run: previousBall.ballRun,
-            total_score: strikeTeam.teamScore,
-            strike_team_id: strikeTeam.teamId,
-            wicket: _wkt === true ? 1 : 0,
-            total_wicket: strikeTeam.teamWicket,
-          },
-          "/api/v1/undoscore",
-          fastify,
-          request
-        );
-        let callPrediction = {};
-        if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
-          callPrediction.predictioonAPI = "undoscore"
-          callPrediction.predictioncallSuccess = false;
-          callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
-          callPrediction.endPoint = '/api/v1/undoscore';
-          callPredictions.push(callPrediction);
+        if(commentaryData.isPredictMarket)
+        {
+          _resFromPredictAPI = null;
+          const decimalOverCount = parseFloat(previousBall.overCount);
+          const _wkt = previousBall.ballIsWicket;
+          _resFromPredictAPI = await callPredictorMarket(
+            {
+              commentary_id: commentaryData.commentaryId,
+              match_type_id: commentaryData.matchTypeId,
+              ball: decimalOverCount,
+              run: previousBall.ballRun,
+              total_score: strikeTeam.teamScore,
+              strike_team_id: strikeTeam.teamId,
+              wicket: _wkt === true ? 1 : 0,
+              total_wicket: strikeTeam.teamWicket,
+            },
+            "/api/v1/undoscore",
+            fastify,
+            request
+          );
+          let callPrediction = {};
+          if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
+            callPrediction.predictioonAPI = "undoscore"
+            callPrediction.predictioncallSuccess = false;
+            callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
+            callPrediction.endPoint = '/api/v1/undoscore';
+            callPredictions.push(callPrediction);
+          }
         }
       }
     }
