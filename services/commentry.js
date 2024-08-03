@@ -2413,31 +2413,34 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         )
         .sort((a, b) => b.commentaryBallByBallId - a.commentaryBallByBallId)[0];
       if (previousBall) {
-        _resFromPredictAPI = null;
-        const decimalOverCount = parseFloat(previousBall.overCount);
-        const _wkt = previousBall.ballIsWicket;
-        _resFromPredictAPI = await callPredictorMarket(
-          {
-            commentary_id: commentaryData.commentaryId,
-            match_type_id: commentaryData.matchTypeId,
-            ball: decimalOverCount,
-            run: previousBall.ballRun,
-            total_score: strikeTeam.teamScore,
-            strike_team_id: strikeTeam.teamId,
-            wicket: _wkt === true ? 1 : 0,
-            total_wicket: strikeTeam.teamWicket,
-          },
-          "/api/v1/undoscore",
-          fastify,
-          request
-        );
-        let callPrediction = {};
-        if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
-          callPrediction.predictioonAPI = "undoscore"
-          callPrediction.predictioncallSuccess = false;
-          callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
-          callPrediction.endPoint = '/api/v1/undoscore';
-          callPredictions.push(callPrediction);
+        if(commentaryData.isPredictMarket)
+        {
+          _resFromPredictAPI = null;
+          const decimalOverCount = parseFloat(previousBall.overCount);
+          const _wkt = previousBall.ballIsWicket;
+          _resFromPredictAPI = await callPredictorMarket(
+            {
+              commentary_id: commentaryData.commentaryId,
+              match_type_id: commentaryData.matchTypeId,
+              ball: decimalOverCount,
+              run: previousBall.ballRun,
+              total_score: strikeTeam.teamScore,
+              strike_team_id: strikeTeam.teamId,
+              wicket: _wkt === true ? 1 : 0,
+              total_wicket: strikeTeam.teamWicket,
+            },
+            "/api/v1/undoscore",
+            fastify,
+            request
+          );
+          let callPrediction = {};
+          if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
+            callPrediction.predictioonAPI = "undoscore"
+            callPrediction.predictioncallSuccess = false;
+            callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
+            callPrediction.endPoint = '/api/v1/undoscore';
+            callPredictions.push(callPrediction);
+          }
         }
       }
     }
@@ -4437,10 +4440,11 @@ const commentaryDetailsByEventIdService = async (
     bty: ball.ballType || '0',
     isb: ball.ballIsBoundry,
     isdel: ball.isDelete,
+    cd : ball.createdDate,
   }));
 
   const allDetails = {
-    cm: { ...resultArr, cctime: result.commentaryCloseTime },
+    cm: { ...resultArr, cctime: result.commentaryCloseTime , res : result.result},
     cbb,
     cbt,
     cbl,
@@ -5015,6 +5019,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     bty: ball.ballType || '0',
     isb: ball.ballIsBoundry,
     isdel: ball.isDelete,
+    cd : ball.createdDate
   }));
 
   const allDetails = {
@@ -6111,6 +6116,7 @@ const getInningDataByInningNumber = async (commentaryId, inningNumber) => {
       ovr1: player.overCount,
       wkt1: player.wicketCount,
       tid: currentBattingTeam.commentaryTeamId,
+      cd : player.createdDate
     };
   });
 
@@ -6205,6 +6211,7 @@ const getInningDataByInningNumber = async (commentaryId, inningNumber) => {
       ovr1: player.overCount,
       wkt1: player.wicketCount,
       tid: currentBowlingTeam.commentaryTeamId,
+      cd : player.createdDate
     };
   });
 
@@ -6981,6 +6988,22 @@ const updateResultInCommentaryService = async (request, fastify) => {
   await updateResultInCommentaryQuery(request.body, fastify, request);
 
   global.tblCommentaries[index].result = result;
+
+  if(global.tblCommentaries[index].isActive){
+    let cData = await getMatchDataByCId({
+      commentaryId: commentaryId,
+    }, request, fastify);
+
+    callClientAPI(
+      {
+        serviceType : ServiceType.clientAPI,
+        moduleType : APIEndpointModuleType.commentaryUpdate,
+        data : cData
+      },
+      request,
+      fastify
+    )
+  }
 
   return "Result updated successfully";
 };

@@ -74,6 +74,11 @@ module.exports = (sequelize) => {
         allowNull: true,
         defaultValue: 0
       },
+      wrCreatedDate: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
     },
     {
       timestamps: false,

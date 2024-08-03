@@ -13,27 +13,27 @@ const savePredictorDataService = async (request, fastify) => {
   if (!matchType) {
     throw new Error("Match Type not found for give id");
   }
-  let _resFromPredictAPI;
-  let callPrediction = {};
-  _resFromPredictAPI = await callPredictorMarket(
-    {
-      match_type_id: matchType.matchTypeId,
-      is_market_template: false,
-    },
-    "/api/v1/updatemarketpredictors",
-    fastify,
-    request
-  );
-  // Check for error_msg in the response
-  if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
-    callPrediction.predictioncallSuccess = false;
-    callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
-    callPrediction.endPoint = '/api/v1/updatemarketpredictors';
-  }else {
-    callPrediction.predictioncallSuccess = true;
-    callPrediction.predictionMessage = 'Prediction call successful';
-    callPrediction.endPoint = '/api/v1/updatemarketpredictors';
-  }
+  // let _resFromPredictAPI;
+   let callPrediction = {};
+  // _resFromPredictAPI = await callPredictorMarket(
+  //   {
+  //     match_type_id: matchType.matchTypeId,
+  //     is_market_template: false,
+  //   },
+  //   "/api/v1/updatemarketpredictors",
+  //   fastify,
+  //   request
+  // );
+  // // Check for error_msg in the response
+  // if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
+  //   callPrediction.predictioncallSuccess = false;
+  //   callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
+  //   callPrediction.endPoint = '/api/v1/updatemarketpredictors';
+  // }else {
+  //   callPrediction.predictioncallSuccess = true;
+  //   callPrediction.predictionMessage = 'Prediction call successful';
+  //   callPrediction.endPoint = '/api/v1/updatemarketpredictors';
+  // }
   // check if there is data for this predictor
   const predictor = global.tblMatchTypePredictor.find(
     (item) => item.matchTypeId === request.body.matchTypeId
