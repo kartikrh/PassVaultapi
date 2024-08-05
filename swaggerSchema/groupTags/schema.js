@@ -205,6 +205,32 @@ const Auth = {
       },
     },
   },
+  verifyEmail: {
+    schema: {
+      tags: ["Auth"],
+      description: "verifyEmail",
+      body: {
+        type: "object",
+        properties: {
+          email: { type: "string" },
+        },
+        required: ["email"],
+      },
+    },
+  },
+  verifyEmailToken: {
+    schema: {
+      tags: ["Auth"],
+      description: "verifyEmailToken",
+      body: {
+        type: "object",
+        properties: {
+          token: { type: "string" },
+        },
+        required: ["token"],
+      },
+    },
+  },
   clientDetailsByEmailId: {
     schema: {
       tags: ["Auth"],
