@@ -2085,7 +2085,7 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
       }
     }
 
-    let previousCommentaryStatus, statusToUpdate;
+    let previousCommentaryStatus, statusToUpdate , balltypeOfdeleteBall;
     // validate CommentaryId
     if (commentaryDetails) {
       commentaryIndex = global.tblCommentaries.findIndex(
@@ -2105,6 +2105,7 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
       if (deleteBallIndex === -1) {
         throw new Error("Delete BallByBall with this id not Found");
       }
+      balltypeOfdeleteBall = global.tblCommentaryBallByBall[deleteBallIndex].ballType; 
     }
     if (deleteOverId) {
       let deleteOverIndex = global.tblOvers.findIndex(
@@ -2412,7 +2413,7 @@ const  syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
             item.teamId === strikeTeam.teamId
         )
         .sort((a, b) => b.commentaryBallByBallId - a.commentaryBallByBallId)[0];
-      if (previousBall) {
+      if (balltypeOfdeleteBall > 0 && previousBall) { 
         if(commentaryData.isPredictMarket)
         {
           _resFromPredictAPI = null;

@@ -4,6 +4,7 @@ const { v4: uuidv4 } = require("uuid");
 const requestIp = require("request-ip");
 const path = require("path");
 const {ImgModuleConfig} = require("../utilities/imageConstant");
+const nodemailer = require('nodemailer');
 const {sendNotification,sendMobileNotifications} = require("../WebPushHandler/index");
 
 const {
@@ -664,6 +665,7 @@ async function resendOtpService({ body }, fastify) {
     }
     const clientId = findUser.clientId;
     const mobileNo = findUser.mobileNo;
+    const emailId = findUser.emailId;
     
     const isOtpSend = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP).value;
 
@@ -674,6 +676,12 @@ async function resendOtpService({ body }, fastify) {
         const otp = 1234
         const result = await insertOtpQuery({...body, otp, clientId: clientId}, fastify);
         global.tblOtp.push(result[0]);
+      } else if(emailId && isOtpSend === "true") {
+        const otp = await sendOtpEmail(emailId);
+        const result = await insertOtpQuery({...body, otp, clientId: clientId}, fastify);
+        global.tblOtp.push(result[0]);
+      } else {
+        return "Invalid Credentials"
       }
 
       return "Otp sent successfully";
@@ -827,6 +835,35 @@ async function updateClientPasswordService({ body }, fastify) {
   }
 }
 
+async function sendOtpEmail(emailId) {
+  try {
+  const otp = Math.floor(1000 + Math.random() * 9000);
+
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: 'apoorva.wpa@gmail.com',
+        pass: 'gdejmqzmfyynrcpy'
+    }
+  });
+
+  const mailOptions = {
+    from: 'ScoreClient',
+    to: emailId,
+    subject: 'Your OTP Code',
+    text: `Your OTP code is ${otp}`,
+    html: `<b>Hello there! ${otp}</b>`
+  };
+
+    const info = await transporter.sendMail(mailOptions);
+    // console.log('Email sent: ' + info.response);
+    return otp;
+  } catch (error) {
+    console.error('Error sending email: ', error);
+    throw error;
+  }
+}
+
 async function forgetPasswordService({ body }, fastify) {
   try {
     const { email } = body;
@@ -839,11 +876,18 @@ async function forgetPasswordService({ body }, fastify) {
     }
     const mobileNo = findUser.mobileNo;
     const clientId = findUser.clientId;
+    const emailId = findUser.emailId;
 
     if(mobileNo){
       const otp = 1234
       const result = await insertOtpQuery({...body, otp, clientId: clientId}, fastify);
       global.tblOtp.push(result[0]);
+    } else if(emailId) {
+      const otp = await sendOtpEmail(emailId);
+      const result = await insertOtpQuery({...body, otp, clientId: clientId}, fastify);
+      global.tblOtp.push(result[0]);
+    } else {
+      return "Invalid Credentials"
     }
 
     return "Otp sent successfully"
