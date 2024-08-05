@@ -4,6 +4,7 @@ const { v4: uuidv4 } = require("uuid");
 const requestIp = require("request-ip");
 const path = require("path");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
+const nodemailer = require('nodemailer');
 const { sendNotification, sendMobileNotifications } = require("../WebPushHandler/index");
 
 const {
@@ -652,6 +653,36 @@ async function registerDetailsService({ body }, fastify) {
     throw new Error(error);
   }
 };
+
+async function sendOtpEmail(emailId) {
+  try {
+  const otp = Math.floor(1000 + Math.random() * 9000);
+
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: 'apoorva.wpa@gmail.com',
+        pass: 'gdejmqzmfyynrcpy'
+    }
+  });
+
+  const mailOptions = {
+    from: 'ScoreClient',
+    to: emailId,
+    subject: 'Your OTP Code',
+    text: `Your OTP code is ${otp}`,
+    html: `<b>Hello there! ${otp}</b>`
+  };
+
+    const info = await transporter.sendMail(mailOptions);
+    // console.log('Email sent: ' + info.response);
+    return otp;
+  } catch (error) {
+    console.error('Error sending email: ', error);
+    throw error;
+  }
+}
+
 async function resendOtpService({ body }, fastify) {
   try {
     const { email } = body;
@@ -665,6 +696,7 @@ async function resendOtpService({ body }, fastify) {
     }
     const clientId = findUser.clientId;
     const mobileNo = findUser.mobileNo;
+    const emailId = findUser.emailId;
 
     const isOtpSend = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP).value;
 
@@ -675,6 +707,12 @@ async function resendOtpService({ body }, fastify) {
       const otp = 1234
       const result = await insertOtpQuery({ ...body, otp, clientId: clientId }, fastify);
       global.tblOtp.push(result[0]);
+    } else if(emailId && isOtpSend === "true") {
+      const otp = await sendOtpEmail(emailId);
+      const result = await insertOtpQuery({...body, otp, clientId: clientId}, fastify);
+      global.tblOtp.push(result[0]);
+    } else {
+      return "Invalid Credentials"
     }
 
     return "Otp sent successfully";
@@ -688,6 +726,107 @@ async function resendOtpService({ body }, fastify) {
     throw new Error(error);
   }
 };
+
+async function verifyLinkEmail(user) {
+  try {
+  const secretKey = process.env.SECRET_KEY_TOKEN;
+
+  const emailToken = jwt.sign({
+    email: user?.emailId,
+    clientId: user?.clientId
+  }, secretKey, { expiresIn: '24h' });
+
+  const scoreClientUrl = global.tblConfigs.find((item) => item.key === configConstants.SCORECLIENTAPIENDPOINT).value;
+
+  const verificationUrl = `${scoreClientUrl}/verify-email?token=${emailToken}`;
+  
+  const mailOptions = {
+    from: 'ScoreClient',
+    to: user.emailId,
+    subject: 'Verify Your Email',
+    html: `Please click the following link to verify your email: <a href="${verificationUrl}">${verificationUrl}</a>`
+  };
+  
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: 'apoorva.wpa@gmail.com',
+        pass: 'gdejmqzmfyynrcpy'
+    }
+  });
+
+    const info = await transporter.sendMail(mailOptions);
+    // console.log('Email sent: ' + info.response);
+    return info.response;
+  } catch (error) {
+    console.error('Error sending email: ', error);
+    throw error;
+  }
+}
+
+async function verifyEmailService({ body }, fastify) {
+  try {
+    const { email } = body;
+
+    const findUser = global.tblClient.find(
+      (item) => item.emailId === email
+    );
+
+    if(!findUser) {
+      throw new Error("Invalid User");
+    }
+    const emailId = findUser.emailId;
+    
+      if(emailId) {
+        verifyLinkEmail(findUser);
+      } else {
+        return "Invalid Credentials"
+      }
+
+      return "Verification link sent to gmail successfully";
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR->> services/user.js -> verifyEmailService",
+      null
+    )
+    throw new Error(error);
+  }
+};
+
+async function verifyEmailTokenService({ body }, fastify) {
+  try {
+    const { token } = body;
+    const secretKey = process.env.SECRET_KEY_TOKEN;
+    const decoded = jwt.verify(token, secretKey);
+    const { email, clientId } = decoded;
+    
+    if(email && clientId){
+      const index = global.tblClient.findIndex(
+        (item) => item.clientId === clientId
+      );
+      if(index !== -1){ 
+        global.tblClient[index].isEmailVerified = true
+        return { success: true, message: 'Email verified successfully', email, clientId };
+      }
+      else {
+        return { success: false, message: 'User Not Found' };
+      }
+    } else {
+      return { success: false, message: 'Email verification failed' };
+    }
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR->> services/user.js -> verifyEmailTokenService",
+      null
+    )
+    throw new Error(error);
+  }
+};
+
 const clientDetailsByIdService = async (request, fastify) => {
   const { email } = request.body;
 
@@ -840,11 +979,18 @@ async function forgetPasswordService({ body }, fastify) {
     }
     const mobileNo = findUser.mobileNo;
     const clientId = findUser.clientId;
+    const emailId = findUser.emailId;
 
     if (mobileNo) {
       const otp = 1234
       const result = await insertOtpQuery({ ...body, otp, clientId: clientId }, fastify);
       global.tblOtp.push(result[0]);
+    } else if(emailId) {
+      const otp = await sendOtpEmail(emailId);
+      const result = await insertOtpQuery({...body, otp, clientId: clientId}, fastify);
+      global.tblOtp.push(result[0]);
+    } else {
+      return "Invalid Credentials"
     }
 
     return "Otp sent successfully"
@@ -952,4 +1098,6 @@ module.exports = {
   resendOtpService,
   updateClientPasswordService,
   forgetPasswordService,
+  verifyEmailService,
+  verifyEmailTokenService
 };

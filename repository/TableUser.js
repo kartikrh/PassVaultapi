@@ -726,7 +726,7 @@ async function insertOtpQuery(body, fastify) {
             "wrUserId", "wrOtp", "wrCreatedDate", "wrExperiedTime"
           ) VALUES (
             $1, $2, now(), now()
-          ) RETURNING "wrUserId" as "userId", "wrOtp" as "otp";`,
+          ) RETURNING "wrUserId" as "userId", "wrOtp" as "otp", "wrCreatedDate" as "createdDate", "wrExperiedTime" as "expiredTime", "wrId" as "otpId";`,
       {
         type: QueryTypes.INSERT,
         bind: [clientId, otp],
