@@ -118,7 +118,7 @@ async function getMaxKey(fastify) {
 }
 
 async function checkValidQuery(body, fastify) {
-  if(body.WrUserId){
+  if (body.WrUserId) {
     const data = await fastify.db.query(
       `select * from "tblUserLoginInfos"  where "wrToken" = $1 and "wrIsLogin" = true and "WrUserType" = $2 and "WrUserId" = $3 `,
       {
@@ -127,18 +127,17 @@ async function checkValidQuery(body, fastify) {
       }
     );
     return !!data.length;
- } 
- else if(body.WrClientId)
- {
-  const data = await fastify.db.query(
-    `select * from "tblUserLoginInfos"  where "wrToken" = $1 and "wrIsLogin" = true and "WrUserType" = $2 and "wrClientID" = $3 `,
-    {
-      type: QueryTypes.SELECT,
-      bind: [body.wrToken, body.WrUserType, body.WrClientId],
-    }
-  );
-  return !!data.length;
- }
+  }
+  else if (body.WrClientId) {
+    const data = await fastify.db.query(
+      `select * from "tblUserLoginInfos"  where "wrToken" = $1 and "wrIsLogin" = true and "WrUserType" = $2 and "wrClientID" = $3 `,
+      {
+        type: QueryTypes.SELECT,
+        bind: [body.wrToken, body.WrUserType, body.WrClientId],
+      }
+    );
+    return !!data.length;
+  }
 }
 
 const getOriginalIdFromEncryptedId = async (encryptedId, fastify) => {
@@ -481,9 +480,9 @@ async function loginRegistrationClient(body, fastify) {
 }
 async function registerClient(body, fastify) {
   try {
-    const {fullName,email, userName, password,token, googleID, mobileNo, ipAddress ,facebookId } = body;
+    const { fullName, email, userName, password, token, googleID, mobileNo, ipAddress, facebookId } = body;
 
-    if(facebookId && token){
+    if (facebookId && token) {
       // check if user exust by facebookId
       let query1 =
         `
@@ -502,7 +501,7 @@ async function registerClient(body, fastify) {
         type: fastify.db.QueryTypes.SELECT,
         bind: [facebookId],
       });
-      if(checkData.length > 0){
+      if (checkData.length > 0) {
         return checkData[0]
       }
       else {
@@ -529,7 +528,7 @@ async function registerClient(body, fastify) {
          WHERE "wrUserName" = $1 AND "wrIsDelete" = false AND "wrEmailID" = $2;`,
         {
           type: QueryTypes.SELECT,
-          bind: [userName,email],
+          bind: [userName, email],
         }
       );
 
@@ -546,7 +545,7 @@ async function registerClient(body, fastify) {
           ) RETURNING "wrClientID" as "clientId", "wrGoogleID" as "googleId", "wrUserName" as "userName", "wrIsAllowMultiLogin" as "isAllowMultiLogin","wrEmailID" as "emailId" ,"wrMobileNo" as "mobileNo";`,
           {
             type: QueryTypes.INSERT,
-            bind: [fullName,userName, password, false, email, mobileNo, ipAddress],
+            bind: [fullName, userName, password, false, email, mobileNo, ipAddress],
           }
         );
         return registrationData[0][0];
@@ -574,7 +573,7 @@ async function registerClient(body, fastify) {
           ) RETURNING "wrClientID" as "clientId", "wrGoogleID" as "googleId", "wrUserName" as "userName", "wrIsAllowMultiLogin" as "isAllowMultiLogin","wrEmailID" as "emailId" ,"wrMobileNo" as "mobileNo";`,
           {
             type: QueryTypes.INSERT,
-            bind: [googleID, email,userName,mobileNo],
+            bind: [googleID, email, userName, mobileNo],
           }
         );
         return registrationData[0][0];
@@ -586,9 +585,9 @@ async function registerClient(body, fastify) {
 }
 async function registerClientDetails(body, fastify) {
   try {
-    const {fullName, userName, email, mobileNo, token, googleID, ipAddress , facebookId } = body;
+    const { fullName, userName, email, mobileNo, token, googleID, ipAddress, facebookId } = body;
 
-    if(facebookId && token){
+    if (facebookId && token) {
       // check if user exust by facebookId
       let query1 =
         `
@@ -598,6 +597,7 @@ async function registerClientDetails(body, fastify) {
             "wrFacebookId" as "facebookId",
             "wrUserName" as "userName",
             "wrIsAllowMultiLogin" as "isAllowMultiLogin",
+            "wrRegistrationProcessStatus" as "registrationProcessStatus",
             "wrEmailID" as "emailId",
             "wrMobileNo" as "mobileNo",
             "wrProvider" as "provider"
@@ -608,23 +608,23 @@ async function registerClientDetails(body, fastify) {
         type: fastify.db.QueryTypes.SELECT,
         bind: [facebookId],
       });
-      if(checkData.length > 0){
+      if (checkData.length > 0) {
         return checkData[0]
       }
       else {
         const registrationData = await fastify.db.query(
           `INSERT INTO "tblClient" (
             "wrFacebookId", "wrIsAllowMultiLogin", "wrCreatedDate", "wrEmailID", "wrIsActive", "wrIsDelete","wrUserName" , 
-            "wrProvider"
+            "wrProvider", "wrRegistrationProcessStatus"
           ) VALUES (
-            $1, true, now(), $2, true, false , $3 , $4
+            $1, true, now(), $2, true, false , $3 , $4, 2
           ) RETURNING "wrClientID" as "clientId", "wrFacebookId" as "facebookId", "wrUserName" as "userName", 
-           "wrIsAllowMultiLogin" as "isAllowMultiLogin","wrEmailID" as "emailId",
+           "wrIsAllowMultiLogin" as "isAllowMultiLogin","wrEmailID" as "emailId", "wrRegistrationProcessStatus" as "registrationProcessStatus",
            "wrProvider" as "provider",
            "wrMobileNo" as "mobileNo";`,
           {
             type: fastify.db.QueryTypes.SELECT,
-            bind: [facebookId, email, userName , clientProvider.Facebook],
+            bind: [facebookId, email, userName, clientProvider.Facebook],
           }
         );
         return registrationData[0];
@@ -633,8 +633,20 @@ async function registerClientDetails(body, fastify) {
     if (!googleID && !token) {
       // Check if user exists by userName (wrEmailID)
       let data = await fastify.db.query(
-        `SELECT "wrClientID", "wrEmailID"
-         FROM "tblClient"
+        `SELECT 
+            "wrClientName" as "fullName",
+            "wrIsUserActive" as "isUserActive",
+            "wrIsActive" as "isActive",
+            "wrRegistrationProcessStatus" as "registrationProcessStatus",
+            "wrClientID" as "clientId",
+            "wrGoogleID" as "googleId",
+            "wrFacebookId" as "facebookId",
+            "wrUserName" as "userName",
+            "wrIsAllowMultiLogin" as "isAllowMultiLogin",
+            "wrEmailID" as "emailId",
+            "wrMobileNo" as "mobileNo",
+            "wrProvider" as "provider"
+          FROM "tblClient"
          WHERE "wrMobileNo" = $1 AND "wrIsDelete" = false AND "wrEmailID" = $2;`,
         {
           type: QueryTypes.SELECT,
@@ -643,7 +655,8 @@ async function registerClientDetails(body, fastify) {
       );
 
       if (data.length > 0) {
-        throw new Error("Mobile number and Email is already exists");
+        // throw new Error("Mobile number and Email is already exists");
+        return data[0]
       } else {
         // Register new user
         const registrationData = await fastify.db.query(
@@ -656,7 +669,7 @@ async function registerClientDetails(body, fastify) {
            "wrUserName" as "userName", "wrClientName" as "fullName" , "wrProvider" as "provider", "wrIsActive" as "isActive", "wrIsUserActive" as "isUserActive";`,
           {
             type: QueryTypes.INSERT,
-            bind: [fullName, false, email, mobileNo, ipAddress, 1, userName , clientProvider.Manual],
+            bind: [fullName, false, email, mobileNo, ipAddress, 1, userName, clientProvider.Manual],
           }
         );
         return registrationData[0][0];
@@ -665,7 +678,7 @@ async function registerClientDetails(body, fastify) {
       // Handle Google registration
       let data = await fastify.db.query(
         `SELECT "wrClientID" as "clientId", "wrGoogleID" as "googleId", "wrUserName" as "userName", "wrIsAllowMultiLogin" as "isAllowMultiLogin",
-        "wrEmailID" as "emailId" ,"wrMobileNo" as "mobileNo", "wrProvider" as "provider"
+        "wrRegistrationProcessStatus" as "registrationProcessStatus", "wrEmailID" as "emailId" ,"wrMobileNo" as "mobileNo", "wrProvider" as "provider"
          FROM "tblClient"
          WHERE "wrGoogleID" = $1 AND "wrIsDelete" = false;`,
         {
@@ -674,20 +687,21 @@ async function registerClientDetails(body, fastify) {
         }
       );
 
+
       if (data.length > 0) {
         return data[0];
       } else {
         const registrationData = await fastify.db.query(
           `INSERT INTO "tblClient" (
             "wrGoogleID", "wrIsAllowMultiLogin", "wrCreatedDate", "wrEmailID", "wrIsActive", "wrIsEmailVerified", 
-            "wrIsDelete","wrMobileNo" , "wrProvider"
+            "wrIsDelete","wrMobileNo" , "wrProvider", "wrRegistrationProcessStatus"
           ) VALUES (
-            $1, true, now(), $2, true, true, false ,$3 ,$4
+            $1, true, now(), $2, true, true, false ,$3 ,$4, 2
           ) RETURNING "wrClientID" as "clientId", "wrGoogleID" as "googleId", "wrUserName" as "userName", "wrIsAllowMultiLogin" as "isAllowMultiLogin","wrEmailID" as "emailId" ,
-           "wrMobileNo" as "mobileNo" , "wrProvider" as "provider";`,
+           "wrMobileNo" as "mobileNo" , "wrProvider" as "provider", "wrRegistrationProcessStatus" as "registrationProcessStatus";`,
           {
             type: QueryTypes.INSERT,
-            bind: [googleID, email, mobileNo , clientProvider.Google],
+            bind: [googleID, email, mobileNo, clientProvider.Google],
           }
         );
         return registrationData[0][0];
@@ -705,20 +719,20 @@ async function registerClientDetails(body, fastify) {
 }
 async function insertOtpQuery(body, fastify) {
   try {
-    const {clientId, otp} = body;
+    const { clientId, otp } = body;
 
-        const registrationData = await fastify.db.query(
-          `INSERT INTO "tblOtp" (
+    const registrationData = await fastify.db.query(
+      `INSERT INTO "tblOtp" (
             "wrUserId", "wrOtp", "wrCreatedDate", "wrExperiedTime"
           ) VALUES (
             $1, $2, now(), now()
-          ) RETURNING "wrUserId" as "userId", "wrOtp" as "otp", "wrCreatedDate" as "createdDate", "wrExperiedTime" as "expiredTime", "wrId" as "otpId";`,
-          {
-            type: QueryTypes.INSERT,
-            bind: [clientId, otp],
-          }
-        );
-        return registrationData[0];
+          ) RETURNING "wrUserId" as "userId", "wrOtp" as "otp";`,
+      {
+        type: QueryTypes.INSERT,
+        bind: [clientId, otp],
+      }
+    );
+    return registrationData[0];
   } catch (error) {
     errorLogger(
       fastify,
@@ -731,16 +745,16 @@ async function insertOtpQuery(body, fastify) {
 }
 async function registerClientOtpValidation(body, fastify) {
   try {
-    const {email, otp, clientId} = body;
-        await fastify.db.query(
-          `UPDATE "tblClient" set "wrRegistrationProcessStatus" = $2, "wrIsMobileVerified" = $3
+    const { email, otp, clientId } = body;
+    await fastify.db.query(
+      `UPDATE "tblClient" set "wrRegistrationProcessStatus" = $2, "wrIsMobileVerified" = $3
            WHERE "wrClientID" = $1`,
-          {
-            type: QueryTypes.INSERT,
-            bind: [clientId, 2, true],
-          }
-        );
-        return "Status updated successfully";
+      {
+        type: QueryTypes.INSERT,
+        bind: [clientId, 2, true],
+      }
+    );
+    return "Status updated successfully";
   } catch (error) {
     errorLogger(
       fastify,
@@ -753,16 +767,16 @@ async function registerClientOtpValidation(body, fastify) {
 }
 async function registerClientPassword(body, fastify) {
   try {
-    const {email, password} = body;
-        await fastify.db.query(
-          `UPDATE "tblClient" set "wrPassword" = $2, "wrRegistrationProcessStatus" = $3, "wrIsUserActive" = $4
+    const { email, password } = body;
+    await fastify.db.query(
+      `UPDATE "tblClient" set "wrPassword" = $2, "wrRegistrationProcessStatus" = $3, "wrIsUserActive" = $4
            WHERE "wrEmailID" = $1`,
-          {
-            type: QueryTypes.INSERT,
-            bind: [email, password, 3, 1],
-          }
-        );
-        return "Password set successfully";
+      {
+        type: QueryTypes.INSERT,
+        bind: [email, password, 3, 1],
+      }
+    );
+    return "Password set successfully";
   } catch (error) {
     errorLogger(
       fastify,
@@ -775,16 +789,16 @@ async function registerClientPassword(body, fastify) {
 }
 async function updateClientPassword(body, fastify) {
   try {
-    const {email, newPassword, clientId} = body;
-        await fastify.db.query(
-          `UPDATE "tblClient" set "wrPassword" = $2
+    const { email, newPassword, clientId } = body;
+    await fastify.db.query(
+      `UPDATE "tblClient" set "wrPassword" = $2
            WHERE "wrClientID" = $1`,
-          {
-            type: QueryTypes.INSERT,
-            bind: [clientId, newPassword],
-          }
-        );
-        return "Password updated successfully";
+      {
+        type: QueryTypes.INSERT,
+        bind: [clientId, newPassword],
+      }
+    );
+    return "Password updated successfully";
   } catch (error) {
     errorLogger(
       fastify,
@@ -797,7 +811,7 @@ async function updateClientPassword(body, fastify) {
 }
 async function loginClient(body, fastify) {
   try {
-    const { userName, email, password, deviceInfo, token, googleID , facebookId} = body;
+    const { userName, email, password, deviceInfo, token, googleID, facebookId } = body;
     if (googleID && token) {
       // Handle Google login
       let data = await fastify.db.query(
@@ -822,12 +836,12 @@ async function loginClient(body, fastify) {
            "wrEmailID" as "emailId","wrMobileNo" as "mobileNo" , "wrProvider" as "provider";`,
           {
             type: QueryTypes.INSERT,
-            bind: [googleID, email, userName , clientProvider.Google],
+            bind: [googleID, email, userName, clientProvider.Google],
           }
         );
-        
-         // Insert login information
-         await fastify.db.query(
+
+        // Insert login information
+        await fastify.db.query(
           `INSERT INTO "tblUserLoginInfos" ("wrClientID", "wrInfo", "wrIsLogin", "wrToken", "wrCreatedDate")
            VALUES ($1, $2, true, $3, now());`,
           {
@@ -838,7 +852,7 @@ async function loginClient(body, fastify) {
         return registrationData[0][0];
       }
     }
-    else if(facebookId && token){
+    else if (facebookId && token) {
       // check if user exust by facebookId
       let query1 =
         `
@@ -858,7 +872,7 @@ async function loginClient(body, fastify) {
         type: fastify.db.QueryTypes.SELECT,
         bind: [facebookId],
       });
-      if(checkData.length > 0){
+      if (checkData.length > 0) {
         return checkData[0]
       }
       else {
@@ -870,15 +884,29 @@ async function loginClient(body, fastify) {
           ) RETURNING "wrClientID" as "clientId", "wrFacebookId" as "facebookId", "wrUserName" as "userName", "wrIsAllowMultiLogin" as "isAllowMultiLogin","wrEmailID" as "emailId","wrMobileNo" as "mobileNo";`,
           {
             type: fastify.db.QueryTypes.SELECT,
-            bind: [facebookId, email, userName , clientProvider.Facebook],
+            bind: [facebookId, email, userName, clientProvider.Facebook],
           }
         );
         return registrationData[0];
       }
-    } 
+    }
     else if (email && password) {
       // Handle normal login
       let data = await fastify.db.query(
+        `SELECT "wrClientID" as "clientId", "wrGoogleID" as "googleId", "wrUserName" as "userName",
+         "wrIsAllowMultiLogin" as "isAllowMultiLogin","wrEmailID" as "emailId",
+         "wrMobileNo" as "mobileNo","wrClientName" as "fullName", "wrProvider" as "provider"
+         FROM "tblClient"
+         WHERE "wrEmailID" = $1 AND "wrIsDelete" = false;`,
+        {
+          type: QueryTypes.SELECT,
+          bind: [email],
+        }
+      );
+      if(data.length <= 0) {
+        return "User not found";
+      }
+      let validatePassword = await fastify.db.query(
         `SELECT "wrClientID" as "clientId", "wrGoogleID" as "googleId", "wrUserName" as "userName",
          "wrIsAllowMultiLogin" as "isAllowMultiLogin","wrEmailID" as "emailId",
          "wrMobileNo" as "mobileNo","wrClientName" as "fullName", "wrProvider" as "provider"
@@ -889,20 +917,20 @@ async function loginClient(body, fastify) {
           bind: [email, password],
         }
       );
-
+      if (validatePassword.length <= 0) {
+        return "Invalid password";
+      }
       if (data.length > 0) {
         // Insert login information
         await fastify.db.query(
-         `INSERT INTO "tblUserLoginInfos" ("wrClientID", "wrInfo", "wrIsLogin", "wrToken", "wrCreatedDate")
+          `INSERT INTO "tblUserLoginInfos" ("wrClientID", "wrInfo", "wrIsLogin", "wrToken", "wrCreatedDate")
           VALUES ($1, $2, true, $3, now());`,
-         {
-           type: QueryTypes.INSERT,
-           bind: [data[0].clientId, deviceInfo, token],
-         }
-       );
+          {
+            type: QueryTypes.INSERT,
+            bind: [data[0].clientId, deviceInfo, token],
+          }
+        );
         return data[0];
-      } else {
-        return "User not found";
       }
     } else {
       return "User not found";
@@ -932,7 +960,7 @@ const updateClient = async (body, fastify) => {
     );
 
     if (clientExists.length === 0) {
-      return "Client ID does not exist" ;
+      return "Client ID does not exist";
     }
 
     // Proceed with the update if client ID exists
@@ -957,17 +985,17 @@ const updateClient = async (body, fastify) => {
 };
 async function loginClientLogAdded(body, fastify) {
   try {
-    const { clientId,deviceInfo, token } = body;
+    const { clientId, deviceInfo, token } = body;
     // Insert login information
-     await fastify.db.query(
-       `INSERT INTO "tblUserLoginInfos" ("wrClientID", "wrInfo", "wrIsLogin", "wrToken", "wrCreatedDate")
+    await fastify.db.query(
+      `INSERT INTO "tblUserLoginInfos" ("wrClientID", "wrInfo", "wrIsLogin", "wrToken", "wrCreatedDate")
         VALUES ($1, $2, true, $3, now());`,
-       {
-         type: QueryTypes.INSERT,
-         bind: [clientId, deviceInfo, token],
-       }
-     );
-     return true;
+      {
+        type: QueryTypes.INSERT,
+        bind: [clientId, deviceInfo, token],
+      }
+    );
+    return true;
   } catch (error) {
     return error.message;
   }
