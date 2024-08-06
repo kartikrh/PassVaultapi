@@ -124,6 +124,10 @@ module.exports = (sequelize) => {
         allowNull: false,
         defaultValue: DataTypes.NOW,
       },
+      wrAutoStrikeBallCount :{
+        type : DataTypes.INTEGER,
+        defaultValue : null
+      }
     },
     {
       timestamps: false,

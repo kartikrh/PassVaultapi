@@ -28,7 +28,8 @@ const {
   insertOtpQuery,
   registerClientPassword,
   registerClientOtpValidation,
-  updateClientPassword
+  updateClientPassword,
+  verifyEmail
 } = require("../repository/TableUser");
 const {
   deviceInfo,
@@ -731,10 +732,12 @@ async function verifyLinkEmail(user) {
   try {
   const secretKey = process.env.SECRET_KEY_TOKEN;
 
+  const expirationTime = global.tblConfigs.find((item) => item.key === configConstants.EMAILVERIFICATIONEXPIRATIONTIME).value;
+  
   const emailToken = jwt.sign({
     email: user?.emailId,
     clientId: user?.clientId
-  }, secretKey, { expiresIn: '24h' });
+  }, secretKey, { expiresIn: expirationTime });
 
   const scoreClientUrl = global.tblConfigs.find((item) => item.key === configConstants.SCORECLIENTAPIENDPOINT).value;
 
@@ -808,6 +811,7 @@ async function verifyEmailTokenService({ body }, fastify) {
       );
       if(index !== -1){ 
         global.tblClient[index].isEmailVerified = true
+        await verifyEmail({ ...body, clientId: clientId }, fastify);
         return { success: true, message: 'Email verified successfully', email, clientId };
       }
       else {

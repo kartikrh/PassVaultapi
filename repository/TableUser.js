@@ -774,6 +774,28 @@ async function registerClientOtpValidation(body, fastify) {
     throw new Error(error.message);
   }
 }
+async function verifyEmail(body, fastify) {
+  try {
+    const { clientId } = body;
+    await fastify.db.query(
+      `UPDATE "tblClient" set "wrIsEmailVerified" = $2
+           WHERE "wrClientID" = $1`,
+      {
+        type: QueryTypes.INSERT,
+        bind: [clientId, true],
+      }
+    );
+    return "Email verified successfully";
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableUser/verifyEmail",
+      null
+    );
+    throw new Error(error.message);
+  }
+}
 async function registerClientPassword(body, fastify) {
   try {
     const { email, password } = body;
@@ -824,7 +846,8 @@ async function loginClient(body, fastify) {
     if (googleID && token) {
       // Handle Google login
       let data = await fastify.db.query(
-        `SELECT "wrClientID" as "clientId", "wrGoogleID" as "googleId", "wrUserName" as "userName", "wrIsAllowMultiLogin" as "isAllowMultiLogin","wrEmailID" as "emailId" ,"wrMobileNo" as "mobileNo"
+        `SELECT "wrClientID" as "clientId", "wrGoogleID" as "googleId", "wrUserName" as "userName", "wrIsAllowMultiLogin" as "isAllowMultiLogin","wrEmailID" as "emailId" ,"wrMobileNo" as "mobileNo",
+        "wrRegistrationProcessStatus" as "registrationProcessStatus", "wrProvider" as "provider"
          FROM "tblClient"
          WHERE "wrGoogleID" = $1 AND "wrIsDelete" = false;`,
         {
@@ -842,7 +865,8 @@ async function loginClient(body, fastify) {
           ) VALUES (
             $1, true, now(), $2, true, true, false , $3 , $4
           ) RETURNING "wrClientID" as "clientId", "wrGoogleID" as "googleId", "wrUserName" as "userName", "wrIsAllowMultiLogin" as "isAllowMultiLogin",
-           "wrEmailID" as "emailId","wrMobileNo" as "mobileNo" , "wrProvider" as "provider";`,
+           "wrEmailID" as "emailId","wrMobileNo" as "mobileNo" , "wrProvider" as "provider" ,
+            "wrRegistrationProcessStatus" as "registrationProcessStatus";`,
           {
             type: QueryTypes.INSERT,
             bind: [googleID, email, userName, clientProvider.Google],
@@ -873,7 +897,8 @@ async function loginClient(body, fastify) {
             "wrIsAllowMultiLogin" as "isAllowMultiLogin",
             "wrEmailID" as "emailId",
             "wrMobileNo" as "mobileNo",
-            "wrProvider" as "provider"
+            "wrProvider" as "provider",
+            "wrRegistrationProcessStatus" as "registrationProcessStatus"
           FROM "tblClient"
           WHERE "wrFacebookId" = $1 AND "wrIsDelete" = false;
         `;
@@ -890,7 +915,8 @@ async function loginClient(body, fastify) {
             "wrFacebookId", "wrIsAllowMultiLogin", "wrCreatedDate", "wrEmailID", "wrIsActive","wrIsDelete","wrUserName", "wrProvider"
           ) VALUES (
             $1, true, now(), $2, true ,false, $3 ,$4
-          ) RETURNING "wrClientID" as "clientId", "wrFacebookId" as "facebookId", "wrUserName" as "userName", "wrIsAllowMultiLogin" as "isAllowMultiLogin","wrEmailID" as "emailId","wrMobileNo" as "mobileNo";`,
+          ) RETURNING "wrClientID" as "clientId", "wrFacebookId" as "facebookId", "wrUserName" as "userName", "wrIsAllowMultiLogin" as "isAllowMultiLogin","wrEmailID" as "emailId",
+           "wrMobileNo" as "mobileNo" , "wrRegistrationProcessStatus" as "registrationProcessStatus";`,
           {
             type: fastify.db.QueryTypes.SELECT,
             bind: [facebookId, email, userName, clientProvider.Facebook],
@@ -904,7 +930,8 @@ async function loginClient(body, fastify) {
       let data = await fastify.db.query(
         `SELECT "wrClientID" as "clientId", "wrGoogleID" as "googleId", "wrUserName" as "userName",
          "wrIsAllowMultiLogin" as "isAllowMultiLogin","wrEmailID" as "emailId",
-         "wrMobileNo" as "mobileNo","wrClientName" as "fullName", "wrProvider" as "provider"
+         "wrMobileNo" as "mobileNo","wrClientName" as "fullName", "wrProvider" as "provider",
+         "wrRegistrationProcessStatus" as "registrationProcessStatus"
          FROM "tblClient"
          WHERE "wrEmailID" = $1 AND "wrIsDelete" = false;`,
         {
@@ -918,7 +945,8 @@ async function loginClient(body, fastify) {
       let validatePassword = await fastify.db.query(
         `SELECT "wrClientID" as "clientId", "wrGoogleID" as "googleId", "wrUserName" as "userName",
          "wrIsAllowMultiLogin" as "isAllowMultiLogin","wrEmailID" as "emailId",
-         "wrMobileNo" as "mobileNo","wrClientName" as "fullName", "wrProvider" as "provider"
+         "wrMobileNo" as "mobileNo","wrClientName" as "fullName", "wrProvider" as "provider",
+          "wrRegistrationProcessStatus" as "registrationProcessStatus"
          FROM "tblClient"
          WHERE "wrEmailID" = $1 AND "wrPassword" = $2 AND "wrIsDelete" = false;`,
         {
@@ -1046,4 +1074,5 @@ module.exports = {
   registerClientOtpValidation,
   registerClientPassword,
   updateClientPassword,
+  verifyEmail,
 };

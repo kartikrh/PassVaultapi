@@ -1008,7 +1008,8 @@ const getAllCommentaryBallByBallQuery = async (fastify) => {
     "wrNextBat_NONStrikeID" as "nextBatNonStrikeId",
     "wrIsDelete" as "isDelete",
     "wrCurrentInnings" as "currentInnings",
-    "wrCreatedDate" as "createdDate"
+    "wrCreatedDate" as "createdDate",
+    "wrAutoStrikeBallCount" as "autoStrikeBallCount"
     from "tblCommentaryBallByBalls"
     `,
     {
@@ -2412,7 +2413,8 @@ const getCommentaryBallByBallQuery = async (request, fastify) => {
         "wrNextBat_StrikeID" AS "nextBatStrikeId",
         "wrNextBat_NONStrikeID" AS "nextBatNonStrikeId",
         "wrIsDelete" AS "isDelete",
-        "wrCurrentInnings" AS "currentInnings"
+        "wrCurrentInnings" AS "currentInnings",
+        "wrAutoStrikeBallCount" as "autoStrikeBallCount"
     FROM "tblCommentaryBallByBalls"
     WHERE "wrCommentaryId" = $1
     ORDER BY "wrCommentaryBallByBallId" ASC
