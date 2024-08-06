@@ -5029,6 +5029,80 @@ const weblogs = {
     },
   },
 };
+
+
+const MailSettings = {
+  save: {
+    schema: {
+      tags: ["Mail settings"],
+      description: "save mail settings",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          email: { type: "string" },
+          password: { type: "string" },
+          userName: { type: "string" },
+          mailType: { type: "integer" },
+          smtpAddress: { type: "string" },
+          portNumber: { type: "string" },
+          isEnableSSL: { type: "boolean" },
+          isActive: { type: "boolean" },
+          isDefault: { type: "boolean" },
+        },
+        required: ["id", "email", "userName", "password", "mailType"],
+      },
+    },
+  },
+
+  delete: {
+    schema: {
+      tags: ["Mail settings"],
+      description: "delete mail settings",
+      body: {
+        type: "object",
+        properties: {
+          id: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["id"],
+      },
+    },
+  },
+
+  getById: {
+    schema: {
+      tags: ["Mail settings"],
+      description: "get mail settings by id",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+        },
+        required: ["id"],
+      },
+    },
+  },
+
+  isDefaultStage: {
+    schema: {
+      tags: ["Mail settings"],
+      description: "change isDefault stage by id",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          isDefault: { type: "string" },
+        },
+        required: ["id", "isDefault"],
+      },
+    },
+  },
+};
+
 module.exports = {
   Auth,
   Tabs,
@@ -5071,5 +5145,6 @@ module.exports = {
   sendPushNotification,
   Template,
   Client,
-  weblogs
+  weblogs,
+  MailSettings
 };
