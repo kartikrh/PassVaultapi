@@ -4445,7 +4445,7 @@ const commentaryDetailsByEventIdService = async (
   }));
 
   const allDetails = {
-    cm: { ...resultArr, cctime: result.commentaryCloseTime , res : result.result},
+    cm: { ...resultArr, ci : result.currentInnings, cctime: result.commentaryCloseTime , res : result.result},
     cbb,
     cbt,
     cbl,
