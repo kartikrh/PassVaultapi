@@ -28,7 +28,9 @@ const {
   clientDetailsByIdService,
   resendOtpService,
   updateClientPasswordService,
-  forgetPasswordService
+  forgetPasswordService,
+  verifyEmailService,
+  verifyEmailTokenService
 } = require("../../services/user");
 const { errorLogger,updateWebRequestLogs } = require("../../utilities/logger");
 const fetchAllDataFromDb = require("../../utilities/fetchAllData");
@@ -287,6 +289,24 @@ async function resendOtp(request, reply, fastify) {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 }
+async function verifyEmail(request, reply, fastify) {
+  try {
+    const result = await verifyEmailService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/verifyEmail", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+}
+async function verifyEmailToken(request, reply, fastify) {
+  try {
+    const result = await verifyEmailTokenService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/verifyEmailToken", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+}
 async function clientDetailsById(request, reply, fastify) {
   try {
     const result = await clientDetailsByIdService(request, fastify);
@@ -424,5 +444,7 @@ module.exports = {
   resendOtp,
   updateClientPassword,
   forgetPassword,
-  AddUpdateWebLogs
+  AddUpdateWebLogs,
+  verifyEmail,
+  verifyEmailToken,
 };
