@@ -3,9 +3,9 @@ const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
 const requestIp = require("request-ip");
 const path = require("path");
-const { ImgModuleConfig } = require("../utilities/imageConstant");
+const {ImgModuleConfig} = require("../utilities/imageConstant");
 const nodemailer = require('nodemailer');
-const { sendNotification, sendMobileNotifications } = require("../WebPushHandler/index");
+const {sendNotification,sendMobileNotifications} = require("../WebPushHandler/index");
 
 const {
   signUpUser,
@@ -697,23 +697,23 @@ async function resendOtpService({ body }, fastify) {
     const clientId = findUser.clientId;
     const mobileNo = findUser.mobileNo;
     const emailId = findUser.emailId;
-
+    
     const isOtpSend = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP).value;
 
-    if (mobileNo && isOtpSend === "true") {
-      // const generateOTP = () => {
-      //   return Math.floor(100000 + Math.random() * 900000).toString();
-      // };
-      const otp = 1234
-      const result = await insertOtpQuery({ ...body, otp, clientId: clientId }, fastify);
-      global.tblOtp.push(result[0]);
-    } else if(emailId && isOtpSend === "true") {
-      const otp = await sendOtpEmail(emailId);
-      const result = await insertOtpQuery({...body, otp, clientId: clientId}, fastify);
-      global.tblOtp.push(result[0]);
-    } else {
-      return "Invalid Credentials"
-    }
+      if(mobileNo && isOtpSend === "true"){
+        // const generateOTP = () => {
+        //   return Math.floor(100000 + Math.random() * 900000).toString();
+        // };
+        const otp = 1234
+        const result = await insertOtpQuery({...body, otp, clientId: clientId}, fastify);
+        global.tblOtp.push(result[0]);
+      } else if(emailId && isOtpSend === "true") {
+        const otp = await sendOtpEmail(emailId);
+        const result = await insertOtpQuery({...body, otp, clientId: clientId}, fastify);
+        global.tblOtp.push(result[0]);
+      } else {
+        return "Invalid Credentials"
+      }
 
     return "Otp sent successfully";
   } catch (error) {
@@ -979,18 +979,11 @@ async function forgetPasswordService({ body }, fastify) {
     }
     const mobileNo = findUser.mobileNo;
     const clientId = findUser.clientId;
-    const emailId = findUser.emailId;
 
     if (mobileNo) {
       const otp = 1234
       const result = await insertOtpQuery({ ...body, otp, clientId: clientId }, fastify);
       global.tblOtp.push(result[0]);
-    } else if(emailId) {
-      const otp = await sendOtpEmail(emailId);
-      const result = await insertOtpQuery({...body, otp, clientId: clientId}, fastify);
-      global.tblOtp.push(result[0]);
-    } else {
-      return "Invalid Credentials"
     }
 
     return "Otp sent successfully"

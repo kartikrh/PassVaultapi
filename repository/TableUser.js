@@ -609,6 +609,9 @@ async function registerClientDetails(body, fastify) {
         bind: [facebookId],
       });
       if (checkData.length > 0) {
+        if (checkData[0].registrationProcessStatus === 3) {
+          throw new Error("User is already exists");
+        }
         return checkData[0]
       }
       else {
@@ -656,6 +659,9 @@ async function registerClientDetails(body, fastify) {
 
       if (data.length > 0) {
         // throw new Error("Mobile number and Email is already exists");
+        if (data[0].registrationProcessStatus === 3) {
+          throw new Error("User is already exists");
+        }
         return data[0]
       } else {
         // Register new user
@@ -689,6 +695,9 @@ async function registerClientDetails(body, fastify) {
 
 
       if (data.length > 0) {
+        if (data[0].registrationProcessStatus === 3) {
+          throw new Error("User is already exists");
+        }
         return data[0];
       } else {
         const registrationData = await fastify.db.query(
@@ -903,7 +912,7 @@ async function loginClient(body, fastify) {
           bind: [email],
         }
       );
-      if(data.length <= 0) {
+      if (data.length <= 0) {
         return "User not found";
       }
       let validatePassword = await fastify.db.query(
