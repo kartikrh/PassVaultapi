@@ -765,6 +765,28 @@ async function registerClientOtpValidation(body, fastify) {
     throw new Error(error.message);
   }
 }
+async function verifyEmail(body, fastify) {
+  try {
+    const { clientId } = body;
+    await fastify.db.query(
+      `UPDATE "tblClient" set "wrIsEmailVerified" = $2
+           WHERE "wrClientID" = $1`,
+      {
+        type: QueryTypes.INSERT,
+        bind: [clientId, true],
+      }
+    );
+    return "Email verified successfully";
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableUser/verifyEmail",
+      null
+    );
+    throw new Error(error.message);
+  }
+}
 async function registerClientPassword(body, fastify) {
   try {
     const { email, password } = body;
@@ -1037,4 +1059,5 @@ module.exports = {
   registerClientOtpValidation,
   registerClientPassword,
   updateClientPassword,
+  verifyEmail,
 };
