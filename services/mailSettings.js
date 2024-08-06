@@ -1,6 +1,75 @@
 const { insertMailSettingsQuery, updateMailSettingsQuery, deleteMailSettingsQuery, isDefaultChangeQuery, isDefaultFalseQuery } = require("../repository/TableMailSettings");
 const bcrypt = require("bcrypt");
 
+const saveMailSettings = async (request, fastify, data) => {
+    const validateEmail = global.tblMailSettings.find((item) =>
+        item?.email?.toLowerCase() === data.body?.email?.toLowerCase()
+    );
+    if (validateEmail) {
+        throw new Error("Email already exists");
+    }
+    const saveData = await insertMailSettingsQuery(data.body, fastify, request);
+    if (data.body.mailType === 1 && data.body.isDefault === true ||
+        data.body.mailType === 2 && data.body.isDefault === true) {
+        await isDefaultFalseQuery(saveData, fastify, request)
+        global.tblMailSettings.forEach((item) => {
+            if (item.id !== saveData.id && item.mailType === data.body.mailType) {
+                item.isDefault = false;
+            }
+        });
+    }
+    global.tblMailSettings.push(saveData);
+    return saveData;
+}
+
+const editMailSettings = async (request, fastify, data) => {
+    const updateData = {
+        id: data.body.id,
+        email: data.body.email,
+        userName: data.body.userName,
+        password: data.body.password,
+        mailType: data.body.mailType,
+        smtpAddress: data.body.smtpAddress,
+        portNumber: data.body.portNumber,
+        isEnableSSL: data.body.isEnableSSL,
+        isActive: data.body.isActive,
+        isDefault: data.body.isDefault,
+    };
+    const validateEmail = global.tblMailSettings.find((item) =>
+        item?.email?.toLowerCase() === updateData?.email?.toLowerCase() &&
+        item.id !== updateData.id
+    );
+    if (validateEmail) {
+        throw new Error("Email already exists");
+    }
+
+    const validate = global.tblMailSettings.find((item) =>
+        item.id === updateData.id
+    );
+    if (!validate) {
+        throw new Error("Mail settings id not found");
+    }
+
+    if (updateData.mailType === 1 && updateData.isDefault === true ||
+        updateData.mailType === 2 && updateData.isDefault === true) {
+        await isDefaultFalseQuery(updateData, fastify, request)
+        global.tblMailSettings.forEach((item) => {
+            if (item.id !== updateData.id && item.mailType === updateData.mailType) {
+                item.isDefault = false;
+            }
+        });
+    }
+
+    await updateMailSettingsQuery(updateData, fastify, request);
+    const index = global.tblMailSettings.findIndex(
+        (item) => item.id === updateData.id
+    );
+    if (index !== -1) {
+        global.tblMailSettings[index] = updateData;
+    }
+    return updateData
+}
+
 const allMailSettings = async (request) => {
     const result = global.tblMailSettings;
     return result;
@@ -19,63 +88,9 @@ const createMailSettings = async (request, fastify) => {
     request.body.password = password
 
     if (request.body.id === 0) {
-        const validateEmail = global.tblMailSettings.find((item) =>
-            item?.email?.toLowerCase() === request?.body?.email?.toLowerCase()
-        );
-        if (validateEmail) {
-            throw new Error("Email already exists");
-        }
-        if (request.body.mailType === 1 && request.body.isDefault === true ||
-            request.body.mailType === 2 && request.body.isDefault === true) {
-            await isDefaultFalseQuery(request.body, fastify, request)
-            global.tblMailSettings.forEach((item) => {
-                if (item.id !== request.body.id && item.mailType === request.body.mailType) {
-                    item.isDefault = false;
-                }
-            });
-        }
-        const saveData = await insertMailSettingsQuery(request.body, fastify, request);
-        global.tblMailSettings.push(saveData);
-        return saveData;
+        return await saveMailSettings(request.body, fastify, request);
     } else {
-        const updateData = {
-            id: request.body.id,
-            email: request.body.email,
-            userName: request.body.userName,
-            password: request.body.password,
-            mailType: request.body.mailType,
-            smtpAddress: request.body.smtpAddress,
-            portNumber: request.body.portNumber,
-            isEnableSSL: request.body.isEnableSSL,
-            isActive: request.body.isActive,
-            isDefault: request.body.isDefault,
-        };
-        const validateEmail = global.tblMailSettings.find((item) =>
-            item?.email?.toLowerCase() === updateData?.email?.toLowerCase() &&
-            item.id !== updateData.id
-        );
-        if (validateEmail) {
-            throw new Error("Email already exists");
-        }
-
-        if (updateData.mailType === 1 && updateData.isDefault === true ||
-            updateData.mailType === 2 && updateData.isDefault === true) {
-            await isDefaultFalseQuery(updateData, fastify, request)
-            global.tblMailSettings.forEach((item) => {
-                if (item.id !== updateData.id && item.mailType === updateData.mailType) {
-                    item.isDefault = false;
-                }
-            });
-        }
-
-        await updateMailSettingsQuery(updateData, fastify, request);
-        const index = global.tblMailSettings.findIndex(
-            (item) => item.id === updateData.id
-        );
-
-        global.tblMailSettings[index] = updateData;
-
-        return updateData
+        return await editMailSettings(request.body, fastify, request);
     }
 };
 
@@ -93,13 +108,15 @@ const deleteMailSettings = async (request, fastify) => {
 
 const changeIsDefaultStage = async (request, fastify) => {
     const body = request.body;
+    body.isDefault = Boolean(body.isDefault);
+
     const result = global.tblMailSettings.find(
         (item) => item.id === body.id
     );
-    
-    if (result.mailType === 1 && body.isDefault === true || result.mailType === 2 && body.isDefault === true) {
-        body.mailType = result.mailType
-        await isDefaultFalseQuery(body, fastify, request)
+
+    if (result.mailType === 1 && body.isDefault || result.mailType === 2 && body.isDefault) {
+        body.mailType = result.mailType;
+        await isDefaultFalseQuery(body, fastify, request);
         global.tblMailSettings.forEach((item) => {
             if (item.id !== body.id && item.mailType === body.mailType) {
                 item.isDefault = false;
@@ -112,7 +129,9 @@ const changeIsDefaultStage = async (request, fastify) => {
         (item) => item.id === body.id
     );
 
-    global.tblMailSettings[index].isDefault = body.isDefault;
+    if (index !== -1) {
+        global.tblMailSettings[index].isDefault = body.isDefault;
+    }
 
     return `IsDefault stage changed successfully`;
 };
