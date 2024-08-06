@@ -1,10 +1,11 @@
 const { errorLogger } = require("../utilities/logger");
 
 
-const getAllMarketOddsBallByBall = async (data, fastify, request) => {
+const getAllMarketOddsBallByBall = async (fastify) => {
   try {
     return await fastify.db.query(
-          `SELECT 
+      `SELECT 
+        "wrId" AS "id",
         "wrCommentaryId" AS "commentaryId",
         "wrCommentaryBallByBallId" AS "commentaryBallByBallId",
         "wrEventMarketId" AS "eventMarketId",
@@ -29,7 +30,7 @@ const getAllMarketOddsBallByBall = async (data, fastify, request) => {
       fastify,
       err.message,
       "DB ERROR --> repository/TableMarketOddsBallByBall/getAllMarketOddsBallByBall",
-      request
+      null
     );
     throw new Error(err.message);
   }
@@ -338,7 +339,21 @@ const createMarketOddsBallByBallBYIDFromSocketIo = async (ballbybllId,data, fast
         "wrSelectionId"
       ) VALUES (
         $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
-      ) RETURNING *`,
+      ) RETURNING 
+        "wrId" as "id",
+        "wrCommentaryId" as "commentaryId",
+        "wrCommentaryBallByBallId" as "commentaryBallByBallId",
+        "wrEventMarketId" as "eventMarketId",
+        "wrRunnerId" as "runnerId",
+        "wrMarketStatus" as "marketStatus",
+        "wrBackPrice" as "backPrice",
+        "wrLayPrice" as "layPrice",
+        "wrBackSize" as "backSize",
+        "wrLaySize" as "laySize",
+        "wrMarketName" as "marketName",
+        "wrRunnerName" as "runnerName",
+        "wrDateTime" as "dateTime"
+      `,
       {
         bind: insertData,
         type: fastify.db.QueryTypes.INSERT,
