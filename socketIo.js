@@ -41,7 +41,8 @@ const connection = (socket , fastify) => {
         null,
         fastify
       )
-      marketToUpdate?.map(async (data) => {
+      const marketOdd = [];
+      for (let data of marketToUpdate) {
         let index = global.tblEventMarkets.findIndex((market) => market.eventMarketId === data.eventMarketId);
         if(index != -1){
           global.tblEventMarkets[index] = data;
@@ -49,13 +50,25 @@ const connection = (socket , fastify) => {
         else {
           global.tblEventMarkets.push(data);
         }
-        //call
-        //console.log("createMarketOddsBallByBallBulkInsert Data saved calling " + data.eventMarketId + "  and BallID " + ballbybllId);
-        if(ballbybllId){
-         await createMarketOddsBallByBallBYIDFromSocketIo(ballbybllId,data,fastify);
+        if (ballbybllId) {
+          let ballData = await createMarketOddsBallByBallBYIDFromSocketIo(ballbybllId, data, fastify);
+          if (ballData) {
+            global.tblMarketOddsBallByBall.push(data);
+            marketOdd.push(data);
+          }
         }
-        //console.log("createMarketOddsBallByBallBulkInsert Data saved calling " + data.eventMarketId);
-      })
+      }
+      global.clientSocketIo.forEach((socket) => {
+        socket.client.emit("updateFullscore", 
+          {
+            dataToUpdate : [{
+              module: "marketOddsBallByBall",
+              data: marketOdd,
+              type : "create"          
+            }]
+          }
+        );
+      });
       console.log("Event Market Updated successfully");
       return true;
   
