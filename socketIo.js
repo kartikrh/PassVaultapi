@@ -53,8 +53,8 @@ const connection = (socket , fastify) => {
         if (ballbybllId) {
           let ballData = await createMarketOddsBallByBallBYIDFromSocketIo(ballbybllId, data, fastify);
           if (ballData) {
-            global.tblMarketOddsBallByBall.push(data);
-            marketOdd.push(data);
+            global.tblMarketOddsBallByBall.push(ballData);
+            marketOdd.push(ballData);
           }
         }
       }
