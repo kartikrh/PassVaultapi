@@ -58,16 +58,19 @@ const connection = (socket , fastify) => {
           }
         }
       }
+      let commentaryData = global.tblCommentaries.find((commentary) => commentary.commentaryId === commentaryId);
+      const sendDataForSocketUpdate = {};
+      sendDataForSocketUpdate.commentaryId = commentaryId;
+      sendDataForSocketUpdate.eventRefId = commentaryData.eventRefId;
+      sendDataForSocketUpdate.dataToUpdate = [
+        {
+          module: "marketOddsBallByBall",
+          data: marketOdd,
+          type : "create"
+        }
+      ];
       global.clientSocketIo.forEach((socket) => {
-        socket.client.emit("updateFullscore", 
-          {
-            dataToUpdate : [{
-              module: "marketOddsBallByBall",
-              data: marketOdd,
-              type : "create"          
-            }]
-          }
-        );
+        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
       });
       console.log("Event Market Updated successfully");
       return true;
