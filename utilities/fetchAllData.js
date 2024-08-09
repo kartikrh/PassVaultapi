@@ -63,6 +63,7 @@ const { getAllTemplateQuery } = require("../repository/TableTemplate");
 const { getAllOtpQuery } = require("../repository/TableOtp");
 const { getAllClientQuery } = require("../repository/TableClient");
 const { allMailSettingsQuery } = require('../repository/TableMailSettings');
+const { getAllMarketOddsBallByBall } = require("../repository/TableMarketOddsBallByBall");
 
 const fetchAllDataFromDb = async (fastify, reply) => {
   try {
@@ -129,7 +130,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const getAllOtp = await getAllOtpQuery(fastify);
     const getAllClient = await getAllClientQuery(fastify);
     const getAllMailSettings = await allMailSettingsQuery(fastify);
-
+    const marketOddBallByBall = await getAllMarketOddsBallByBall(fastify);
     global.tblTabs = getAllTabs;
     global.tblRoles = getAllRoles;
     global.tblBlocks = getAllBlocks;
@@ -181,6 +182,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblOtp = getAllOtp;
     global.tblClient = getAllClient;
     global.tblMailSettings = getAllMailSettings;
+    global.tblMarketOddsBallByBall = marketOddBallByBall;
 
     console.log("Okkkk");
 
