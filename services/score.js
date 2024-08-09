@@ -80,7 +80,7 @@ const getAllCommentariesDataService = (request) => {
         } catch (error) {
             
         }
-        let marketOddsBallByBall = global.tblMarketOddsBallByBall.filter((m) => {
+        let marketOddsBallByBall = global.tblMarketOddsBallByBall?.filter((m) => {
             return m.commentaryId === c.commentaryId;
         });
 
