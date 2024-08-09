@@ -29,7 +29,8 @@ const {
   registerClientPassword,
   registerClientOtpValidation,
   updateClientPassword,
-  verifyEmail
+  verifyEmail,
+  verifyMobileOtp
 } = require("../repository/TableUser");
 const {
   deviceInfo,
@@ -780,6 +781,85 @@ async function verifyLinkEmail(user) {
   }
 }
 
+async function verifyMobileService({ body }, fastify) {
+  try {
+    const { email } = body;
+
+    const findUser = global.tblClient.find(
+      (item) => item.emailId === email
+    );
+
+    if(!findUser) {
+      throw new Error("Invalid User");
+    }
+    const clientId = findUser.clientId;
+    const mobileNo = findUser.mobileNo;
+    
+      if(mobileNo) {
+        // const generateOTP = () => {
+        //   return Math.floor(100000 + Math.random() * 900000).toString();
+        // };
+        const otp = 1234
+        const result = await insertOtpQuery({ ...body, otp, clientId: clientId }, fastify);
+        global.tblOtp.push(result[0]);
+      } else {
+        return "Invalid Credentials"
+      }
+
+      return "Otp sent to your registered mobile number.";
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR->> services/user.js -> verifyMobileService",
+      null
+    )
+    throw new Error(error);
+  }
+};
+
+async function verifyMobileOtpService({ body }, fastify) {
+  try {
+    //check expiration time
+    const { email, otp } = body;
+
+    const findUser = global.tblClient.find(
+      (item) => item.emailId === email
+    );
+
+    if (!findUser) {
+      throw new Error("Invalid User");
+    }
+    const clientId = findUser.clientId;
+
+    const data = global.tblOtp.filter((item) => item.userId === clientId)
+    data.sort((a, b) => b.otpId - a.otpId)
+
+    if (otp === data[0]?.otp) {
+      await verifyMobileOtp({ ...body, clientId: clientId }, fastify);
+
+      const index = global.tblClient.findIndex(
+        (item) => item.clientId === clientId
+      );
+
+      if (index !== -1) {
+        global.tblClient[index].isMobileVerified = true;
+      }
+      return "OTP validated successfully"
+    } else {
+      throw new Error("Invalid OTP");
+    }
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR->> services/user.js -> verifyMobileOtpService",
+      null
+    )
+    throw new Error(error);
+  }
+}
+
 async function verifyEmailService({ body }, fastify) {
   try {
     const { email } = body;
@@ -1109,5 +1189,7 @@ module.exports = {
   updateClientPasswordService,
   forgetPasswordService,
   verifyEmailService,
-  verifyEmailTokenService
+  verifyEmailTokenService,
+  verifyMobileService,
+  verifyMobileOtpService,
 };
