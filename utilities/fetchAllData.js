@@ -55,14 +55,14 @@ const { allDisplayStatusesQuery } = require("../repository/TableDisplayStatus");
 const { getAllClientSocketQuery } = require("../repository/TableClientSocket");
 const { getAllBannerQuery } = require("../repository/TableBanner");
 const { getAllActivityLogQuery } = require("../repository/TableActivityLog");
-const {getAllAPI} = require("../repository/TableAPI");
-const {getAllAPIEndPoint} = require("../repository/TableAPIEndPoint");
+const { getAllAPI } = require("../repository/TableAPI");
+const { getAllAPIEndPoint } = require("../repository/TableAPIEndPoint");
 const { getAllTeamCompetitionQuery } = require("../repository/TableTeamCompetition");
 const { getAllNotificationQuery } = require("../repository/TableNotification");
 const { getAllTemplateQuery } = require("../repository/TableTemplate");
 const { getAllOtpQuery } = require("../repository/TableOtp");
 const { getAllClientQuery } = require("../repository/TableClient");
-const { getAllMarketOddsBallByBall } = require("../repository/TableMarketOddsBallByBall");
+const { allMailSettingsQuery } = require('../repository/TableMailSettings');
 
 const fetchAllDataFromDb = async (fastify, reply) => {
   try {
@@ -128,7 +128,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const getAllTemplate = await getAllTemplateQuery(fastify);
     const getAllOtp = await getAllOtpQuery(fastify);
     const getAllClient = await getAllClientQuery(fastify);
-    const getAllMarketOddBalls = await getAllMarketOddsBallByBall(fastify);
+    const getAllMailSettings = await allMailSettingsQuery(fastify);
 
     global.tblTabs = getAllTabs;
     global.tblRoles = getAllRoles;
@@ -180,7 +180,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblTemplate = getAllTemplate;
     global.tblOtp = getAllOtp;
     global.tblClient = getAllClient;
-    global.tblMarketOddsBallByBall = getAllMarketOddBalls
+    global.tblMailSettings = getAllMailSettings;
 
     console.log("Okkkk");
 
