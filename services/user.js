@@ -712,21 +712,22 @@ async function resendOtpService({ body }, fastify) {
     const emailId = findUser.emailId;
     
     const isOtpSend = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP).value;
-
-      if(mobileNo && isOtpSend === "true"){
-        // const generateOTP = () => {
-        //   return Math.floor(100000 + Math.random() * 900000).toString();
-        // };
-        const otp = 1234
-        const result = await insertOtpQuery({...body, otp, clientId: clientId}, fastify);
-        global.tblOtp.push(result[0]);
-      } else if(emailId && isOtpSend === "true") {
-        const otp = await sendOtpEmail(emailId);
-        const result = await insertOtpQuery({...body, otp, clientId: clientId}, fastify);
-        global.tblOtp.push(result[0]);
-      } else {
-        return "Invalid Credentials"
-      }
+    const isEmailOtpSend = global.tblConfigs.find((item) => item.key === configConstants.ISSENDEMAILOTP).value;
+    
+    if (mobileNo && isOtpSend === "true") {
+      // const generateOTP = () => {
+      //   return Math.floor(100000 + Math.random() * 900000).toString();
+      // };
+      const otp = 1234
+      const result = await insertOtpQuery({ ...body, otp, clientId: clientId }, fastify);
+      global.tblOtp.push(result[0]);
+    } else if(emailId && isEmailOtpSend === "true") {
+      const otp = await sendOtpEmail(emailId);
+      const result = await insertOtpQuery({...body, otp, clientId: clientId}, fastify);
+      global.tblOtp.push(result[0]);
+    } else {
+      return "Invalid Credentials"
+    }
 
     return "Otp sent successfully";
   } catch (error) {
