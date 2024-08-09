@@ -356,7 +356,7 @@ const createMarketOddsBallByBallBYIDFromSocketIo = async (ballbybllId,data, fast
       `,
       {
         bind: insertData,
-        type: fastify.db.QueryTypes.INSERT,
+        type: fastify.db.QueryTypes.SELECT,
       }
     );
 

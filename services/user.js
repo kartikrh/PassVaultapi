@@ -524,6 +524,7 @@ async function loginClientService({ body }, fastify) {
       // Google Login
       body.token = uuidv4();
       results = await loginClient(body, fastify);
+      global.tblClient.push({ ...results });
     } else {
       // Manual login
       if (body.password) {
