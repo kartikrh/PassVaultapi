@@ -1,0 +1,205 @@
+const { errorLogger } = require("../utilities/logger");
+
+const allMailSettingsQuery = async (fastify) => {
+    try {
+        return await fastify.db.query(
+            `SELECT 
+            "wrId" as "id",
+            "wrEmail" as "email",
+            "wrUserName" as "userName",
+            "wrPassword" as "password",
+            "wrMailType" as "mailType",
+            "wrSmtpAddress" as "smtpAddress",
+            "wrPortNumber" as "portNumber",
+            "wrIsEnableSSL" as "isEnableSSL",
+            "wrIsActive" as "isActive",
+            "wrIsDefault" as "isDefault"
+            FROM "tblMailSettings" ORDER BY "wrId" asc;`,
+            { type: fastify.db.QueryTypes.SELECT }
+        );
+    } catch (err) {
+        errorLogger(
+            fastify,
+            err.message,
+            "DB ERROR --> repository/TableMailSettings.js/allMailSettingsQuery",
+            null
+        );
+        throw new Error(err.message);
+    }
+};
+
+const insertMailSettingsQuery = async (data, fastify, request) => {
+    try {
+        const result = await fastify.db.query(
+            `WITH insert_data AS (
+            INSERT INTO "tblMailSettings" (
+            "wrEmail", "wrUserName", "wrPassword", "wrMailType", "wrSmtpAddress",
+            "wrPortNumber", "wrIsEnableSSL", "wrIsActive", "wrIsDefault"
+            ) 
+            VALUES (
+                $1, $2, $3, $4, $5, $6, $7, $8, $9
+            ) 
+            RETURNING *
+            )        
+            SELECT 
+            "wrId" AS "id",
+            "wrEmail" AS "email",
+            "wrUserName" AS "userName",
+            "wrPassword" AS "password",
+            "wrMailType" AS "mailType",
+            "wrSmtpAddress" AS "smtpAddress",
+            "wrPortNumber" AS "portNumber",
+            "wrIsEnableSSL" AS "isEnableSSL",
+            "wrIsActive" AS "isActive",
+            "wrIsDefault" AS "isDefault"
+            FROM insert_data;`,
+            {
+                type: fastify.db.QueryTypes.SELECT,
+                bind: [
+                    data.email,
+                    data.userName,
+                    data.password,
+                    data.mailType,
+                    data.smtpAddress || null,
+                    data.portNumber || null,
+                    data.isEnableSSL || false,
+                    data.isActive || false,
+                    data.isDefault || false,
+                ],
+            }
+        );
+        return result[0];
+    } catch (err) {
+        errorLogger(
+            fastify,
+            err.message,
+            "DB ERROR --> repository/TableMailSettings.js/insertMailSettingsQuery",
+            request
+        );
+        throw new Error(err.message);
+    }
+};
+
+
+const getMailSettingsById = async (body, fastify) => {
+    try {
+        return await fastify.db.query(
+            `update "tblMailSettings" set "wrId" = $1`,
+            {
+                bind: [body.id],
+            }
+        );
+    } catch (err) {
+        errorLogger(
+            fastify,
+            err.message,
+            "DB ERROR --> repository/TableMailSettings.js/getMailSettingsById",
+            request
+        );
+        throw new Error(err.message);
+    }
+};
+
+const updateMailSettingsQuery = async (data, fastify, request) => {
+    try {
+        return await fastify.db.query(
+            `Update "tblMailSettings" set 
+            "wrEmail" = $1,"wrUserName" = $2,"wrPassword" = $3,"wrMailType" = $4,
+            "wrSmtpAddress" = $5,"wrPortNumber" = $6,"wrIsEnableSSL" = $7, "wrIsActive" = $8, "wrIsDefault" = $9
+            where "wrId" = $10;`,
+            {
+                type: fastify.db.QueryTypes.UPDATE,
+                bind: [
+                    data.email,
+                    data.userName,
+                    data.password,
+                    data.mailType,
+                    data.smtpAddress,
+                    data.portNumber,
+                    data.isEnableSSL,
+                    data.isActive,
+                    data.isDefault || false,
+                    data.id
+                ],
+            }
+        );
+    } catch (err) {
+        errorLogger(
+            fastify,
+            err.message,
+            "DB ERROR --> repository/TableMailSettings.js/updateMailSettingsQuery",
+            request
+        );
+        throw new Error(err.message);
+    }
+};
+
+const deleteMailSettingsQuery = async (id, fastify, request) => {
+    try {
+        return await fastify.db.query(
+            `delete from "tblMailSettings" where "wrId" = ANY ($1)`,
+            {
+                type: fastify.db.QueryTypes.DELETE,
+                bind: [id],
+            }
+        );
+    } catch (err) {
+        errorLogger(
+            fastify,
+            err.message,
+            "DB ERROR --> repository/TableMailSettings.js/deleteMailSettingsQuery",
+            request
+        );
+        throw new Error(err.message);
+    }
+};
+
+const isDefaultChangeQuery = async (data, fastify, request) => {
+    try {
+        return await fastify.db.query(
+            `UPDATE "tblMailSettings" SET "wrIsDefault" = $1 where "wrId" = $2`,
+            {
+                type: fastify.db.QueryTypes.UPDATE,
+                bind: [data.isDefault, data.id],
+            }
+        );
+    } catch (err) {
+        errorLogger(
+            fastify,
+            err.message,
+            "DB ERROR --> repository/TableMailSettings.js/deleteMailSettingsQuery",
+            request
+        );
+        throw new Error(err.message);
+    }
+};
+
+const isDefaultFalseQuery = async (data, fastify, request) => {
+    try {
+        return await fastify.db.query(
+            `UPDATE "tblMailSettings" SET "wrIsDefault" = $1 WHERE "wrId" != $2 AND "wrMailType" = $3`,
+            {
+                type: fastify.db.QueryTypes.UPDATE,
+                bind: [false, data.id, data.mailType],
+            }
+        );
+    } catch (err) {
+        errorLogger(
+            fastify,
+            err.message,
+            "DB ERROR --> repository/TableMailSettings.js/deleteMailSettingsQuery",
+            request
+        );
+        throw new Error(err.message);
+    }
+};
+
+module.exports = {
+    allMailSettingsQuery,
+    insertMailSettingsQuery,
+    getMailSettingsById,
+    updateMailSettingsQuery,
+    deleteMailSettingsQuery,
+    isDefaultChangeQuery,
+    isDefaultFalseQuery
+};

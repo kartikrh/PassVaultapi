@@ -3,9 +3,9 @@ const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
 const requestIp = require("request-ip");
 const path = require("path");
-const { ImgModuleConfig } = require("../utilities/imageConstant");
+const {ImgModuleConfig} = require("../utilities/imageConstant");
 const nodemailer = require('nodemailer');
-const { sendNotification, sendMobileNotifications } = require("../WebPushHandler/index");
+const {sendNotification,sendMobileNotifications} = require("../WebPushHandler/index");
 
 const {
   signUpUser,
@@ -615,6 +615,13 @@ async function registerDetailsService({ body }, fastify) {
       throw new Error("Config not found");
     }
 
+    let isEmailOtpSend = global.tblConfigs.find((item) => item.key === configConstants.ISSENDEMAILOTP);
+    if (isEmailOtpSend) {
+      isEmailOtpSend = isEmailOtpSend.value;
+    }
+    else {
+      throw new Error("Config not found");
+    }
     // if(response.clientId){
 
     const payload = { clientId: response.clientId };
@@ -630,6 +637,10 @@ async function registerDetailsService({ body }, fastify) {
       const result = await insertOtpQuery({ ...body, otp, clientId: response.clientId }, fastify);
       global.tblOtp.push(result[0]);
 
+    } else if(response.emailId && isEmailOtpSend === "true"){
+      const otp = await sendOtpEmail(response.emailId);
+      const result = await insertOtpQuery({...body, otp, clientId: response.clientId }, fastify);
+      global.tblOtp.push(result[0]);
     } else {
       await registerClientOtpValidation({ ...body, clientId: response.clientId }, fastify);
 
@@ -699,9 +710,10 @@ async function resendOtpService({ body }, fastify) {
     const clientId = findUser.clientId;
     const mobileNo = findUser.mobileNo;
     const emailId = findUser.emailId;
-
+    
     const isOtpSend = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP).value;
-
+    const isEmailOtpSend = global.tblConfigs.find((item) => item.key === configConstants.ISSENDEMAILOTP).value;
+    
     if (mobileNo && isOtpSend === "true") {
       // const generateOTP = () => {
       //   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -709,7 +721,7 @@ async function resendOtpService({ body }, fastify) {
       const otp = 1234
       const result = await insertOtpQuery({ ...body, otp, clientId: clientId }, fastify);
       global.tblOtp.push(result[0]);
-    } else if(emailId && isOtpSend === "true") {
+    } else if(emailId && isEmailOtpSend === "true") {
       const otp = await sendOtpEmail(emailId);
       const result = await insertOtpQuery({...body, otp, clientId: clientId}, fastify);
       global.tblOtp.push(result[0]);
@@ -984,18 +996,11 @@ async function forgetPasswordService({ body }, fastify) {
     }
     const mobileNo = findUser.mobileNo;
     const clientId = findUser.clientId;
-    const emailId = findUser.emailId;
 
     if (mobileNo) {
       const otp = 1234
       const result = await insertOtpQuery({ ...body, otp, clientId: clientId }, fastify);
       global.tblOtp.push(result[0]);
-    } else if(emailId) {
-      const otp = await sendOtpEmail(emailId);
-      const result = await insertOtpQuery({...body, otp, clientId: clientId}, fastify);
-      global.tblOtp.push(result[0]);
-    } else {
-      return "Invalid Credentials"
     }
 
     return "Otp sent successfully"

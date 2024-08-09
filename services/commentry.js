@@ -4368,7 +4368,7 @@ const commentaryDetailsByEventIdService = async (
     return {
       pid: player.playerId,
       batn: player.playerName,
-      bati: playerData.image,
+      bati: playerData?.image,
       trun: player.batRun || '0',
       tball: player.batBall || '0',
       t4: player.batFour || '0',
@@ -4376,7 +4376,7 @@ const commentaryDetailsByEventIdService = async (
       sr: player.batSrr || '0',
       os: player.onStrike,
       str: parseFloat(player.batsmanStrikeRate) || '0',
-      isp: playerData.isSystemPlayer,
+      isp: playerData?.isSystemPlayer,
     };
   });
 
@@ -4387,7 +4387,7 @@ const commentaryDetailsByEventIdService = async (
     return {
       pid: bowler.playerId,
       pn: bowler.playerName,
-      bli: playerData.image,
+      bli: playerData?.image,
       tov: bowler.bowlerOver || '0',
       cob: bowler.bowlerCurrentBall || '0',
       trun: bowler.bowlerRun || '0',
@@ -4407,7 +4407,7 @@ const commentaryDetailsByEventIdService = async (
         0 + bowler.bowlerByeBallRun ||
         0 + bowler.bowlerLegByeBallRun ||
         0,
-      isp: playerData.isSystemPlayer,
+      isp: playerData?.isSystemPlayer,
     };
   });
 
