@@ -6,6 +6,8 @@ const path = require("path");
 const {ImgModuleConfig} = require("../utilities/imageConstant");
 const nodemailer = require('nodemailer');
 const {sendNotification,sendMobileNotifications} = require("../WebPushHandler/index");
+const { SENDEMAILTYPE } = require("../utilities/configConstants");
+const { typesOfServices } = require('../utilities/index');
 
 const {
   signUpUser,
@@ -755,21 +757,36 @@ async function verifyLinkEmail(user) {
   const scoreClientUrl = global.tblConfigs.find((item) => item.key === configConstants.SCORECLIENTAPIENDPOINT).value;
 
   const verificationUrl = `${scoreClientUrl}/verify-email?token=${emailToken}`;
-  
-  const mailOptions = {
-    from: 'ScoreClient',
-    to: user.emailId,
-    subject: 'Verify Your Email',
-    html: `Please click the following link to verify your email: <a href="${verificationUrl}">${verificationUrl}</a>`
-  };
-  
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: 'apoorva.wpa@gmail.com',
-        pass: 'gdejmqzmfyynrcpy'
+
+    let mailType = global.tblConfigs.find(
+      (item) => item.key.toLowerCase() === SENDEMAILTYPE.toLowerCase()
+    );
+    if (mailType) {
+      mailType = parseInt(mailType.value);
     }
-  });
+    else {
+      throw new Error("Config not found");
+    }
+
+    const result = global.tblMailSettings.find(
+      (item) => item.mailType === mailType && item.isDefault === true
+    );
+    let serviceType = mailType === 1 ? typesOfServices.GmailService : typesOfServices.SmtpService;
+
+    const mailOptions = {
+      from: 'ScoreClient',
+      to: user.emailId,
+      subject: 'Verify Your Email',
+      html: `Please click the following link to verify your email: <a href="${verificationUrl}">${verificationUrl}</a>`
+    };
+
+    const transporter = nodemailer.createTransport({
+    service: serviceType,
+    auth: {
+        user: result.email,
+        pass: decrypt(result.password)
+      }
+    });
 
     const info = await transporter.sendMail(mailOptions);
     // console.log('Email sent: ' + info.response);

@@ -549,6 +549,11 @@ const clientProvider = {
   Google : 2,
   Facebook : 3,
 }
+const typesOfServices = {
+  GmailService: 'gmail',
+  SmtpService: 'smtp',
+}
+
 module.exports = {
   ERROR_CODES,
   error,
@@ -587,5 +592,6 @@ module.exports = {
   sendNotificationByType,
   pageLimit,
   getPagination,
-  clientProvider
+  clientProvider,
+  typesOfServices
 };
