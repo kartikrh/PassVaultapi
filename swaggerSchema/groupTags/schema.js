@@ -205,6 +205,33 @@ const Auth = {
       },
     },
   },
+  verifyMobile: {
+    schema: {
+      tags: ["Auth"],
+      description: "verifyMobile",
+      body: {
+        type: "object",
+        properties: {
+          email: { type: "string" },
+        },
+        required: ["email"],
+      },
+    },
+  },
+  verifyMobileOtp: {
+    schema: {
+      tags: ["Auth"],
+      description: "verifyMobileOtp",
+      body: {
+        type: "object",
+        properties: {
+          otp: { type: "string" },
+          email: { type: "string" },
+        },
+        required: ["email", "otp"],
+      },
+    },
+  },
   verifyEmail: {
     schema: {
       tags: ["Auth"],
