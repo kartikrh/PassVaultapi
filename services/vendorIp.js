@@ -42,7 +42,18 @@ const saveVendorIpService = async (request, fastify) => {
         moduleType : APIEndpointModuleType.vendorIpUpdate,
         data : data,
         type : "create"
-    },fastify);
+    },
+    fastify
+    ).catch((err) => {
+        console.log("call data provider console", err);
+        errorLogger(
+          fastify,
+          err.message,
+          "ERROR --> services/commentary.js/saveVendorIpService",
+          request
+        );
+        throw new Error(err.message);
+      });
     return data;
 
 }
@@ -60,7 +71,18 @@ const deleteVendorIpService = async (request, fastify) => {
             vendorIpId : vendorIpId 
         },
         type : "delete"
-    },fastify);
+    },
+    fastify
+    ).catch((err) => {
+    console.log("call data provider console", err);
+    errorLogger(
+      fastify,
+      err.message,
+      "ERROR --> services/commentary.js/deleteVendorIpService",
+      request
+    );
+    throw new Error(err.message);
+  });
     return `VendorIp (s) deleted successfully`;
 }
 const activeInactiveVendorIpService = async (request, fastify) => {
@@ -77,7 +99,18 @@ const activeInactiveVendorIpService = async (request, fastify) => {
         moduleType : APIEndpointModuleType.vendorIpUpdate,
         data : global.tblVendorIp[index],
         type : "update"
-    },fastify);
+    },
+    fastify
+    ).catch((err) => {
+    console.log("call data provider console", err);
+    errorLogger(
+      fastify,
+      err.message,
+      "ERROR --> services/commentary.js/activeInactiveVendorIpService",
+      request
+    );
+    throw new Error(err.message);
+  });
     
     return `VendorIp updated successfully`;
 }

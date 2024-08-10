@@ -32,7 +32,7 @@ const {
   callPredictorMarket,
   MarketUpdateType,
 } = require("../utilities/index");
-const { marketLogger, marketDataLogger } = require("../utilities/logger");
+const { marketLogger, marketDataLogger, errorLogger } = require("../utilities/logger");
 const getDetailsByCIdService = async (request, fastify) => {
   const { commentaryId } = request.body;
   const commentary = global.tblCommentaries.find(
@@ -230,7 +230,16 @@ const createEventMarketsService = async (request, fastify) => {
         },
         request,
         fastify
-      );
+      ).catch((err) => {
+        console.log("market data logger console", err);
+        errorLogger(
+          fastify,
+          err.message,
+          "ERROR --> services/commentary.js/createEventMarketsService",
+          request
+        );
+        throw new Error(err.message);
+      });
     } else {
       let previousLine = global.tblEventMarkets[index].line;
       global.tblEventMarkets[index] = item;
@@ -245,7 +254,16 @@ const createEventMarketsService = async (request, fastify) => {
         },
         request,
         fastify
-      );
+      ).catch((err) => {
+        console.log("market data logger console", err);
+        errorLogger(
+          fastify,
+          err.message,
+          "ERROR --> services/commentary.js/createEventMarketsService",
+          request
+        );
+        throw new Error(err.message);
+      });;
     }
   }
   return "Event Market saved successfully";
@@ -399,7 +417,16 @@ const changeResultOfMarketService = async (request, fastify) => {
     },
     request,
     fastify
-  );
+  ).catch((err) => {
+    console.log("market data logger console", err);
+    errorLogger(
+      fastify,
+      err.message,
+      "ERROR --> services/commentary.js/changeResultOfMarketService",
+      request
+    );
+    throw new Error(err.message);
+  });
 
   return "Event Market updated successfully";
 };
@@ -510,7 +537,16 @@ const updateMarketRateService = async (request, fastify) => {
       },
       request,
       fastify
-    );
+    ).catch((err) => {
+      console.log("market data logger console", err);
+      errorLogger(
+        fastify,
+        err.message,
+        "ERROR --> services/commentary.js/updateMarketRateService",
+        request
+      );
+      throw new Error(err.message);
+    });
   }
 
   const teamOnStrike = global.tblCommentaryTeams.find(
@@ -528,19 +564,28 @@ const updateMarketRateService = async (request, fastify) => {
         match_type_id: commentary.matchTypeId,
         strike_team_id: teamOnStrike.teamId,
         current_score: teamOnStrike.teamScore || 0,
-        current_over: parseFloat(teamOnStrike.teamOver) ||0.0,
+        current_over: parseFloat(teamOnStrike.teamOver) || 0.0,
         overs: updatedOvers,
       },
       "/api/v1/updateline",
       fastify,
       request
-    );
+    ).catch((err) => {
+      console.log("call predictor market console", err);
+      errorLogger(
+        fastify,
+        err.message,
+        "ERROR --> services/commentary.js/createEventMarketsService",
+        request
+      );
+      throw new Error(err.message);
+    });
     // Check for error_msg in the response
     if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
       callPrediction.predictioncallSuccess = false;
       callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
       callPrediction.endPoint = '/api/v1/updateline';
-    }else {
+    } else {
       callPrediction.predictioncallSuccess = true;
       callPrediction.predictionMessage = 'Prediction call successful';
       callPrediction.endPoint = '/api/v1/updateline';
@@ -548,10 +593,10 @@ const updateMarketRateService = async (request, fastify) => {
   }
 
   //return "Event Market updated successfully";
- // return marketListByCIdService({ body: { commentaryId: commentary.commentaryId } }, fastify)
- let data = await marketListByCIdService({ body: { commentaryId: commentary.commentaryId } }, fastify);
- data.callPrediction = callPrediction;
- return data;
+  // return marketListByCIdService({ body: { commentaryId: commentary.commentaryId } }, fastify)
+  let data = await marketListByCIdService({ body: { commentaryId: commentary.commentaryId } }, fastify);
+  data.callPrediction = callPrediction;
+  return data;
 };
 const saveEventMarketService = async (request, fastify) => {
   const { eventMarketId, commentaryId } = request.body;
@@ -605,7 +650,16 @@ const saveEventMarketService = async (request, fastify) => {
       },
       request,
       fastify
-    );
+    ).catch((err) => {
+      console.log("market data logger console", err);
+      errorLogger(
+        fastify,
+        err.message,
+        "ERROR --> services/commentary.js/saveEventMarketService",
+        request
+      );
+      throw new Error(err.message);
+    });
   }
   return dataOfmarkets[0];
 };
@@ -750,7 +804,16 @@ const changeMarketCloseService = async (request, fastify) => {
       "/api/v1/marketmanualclose",
       fastify,
       request
-    );
+    ).catch((err) => {
+      console.log("call predictor market console", err);
+      errorLogger(
+        fastify,
+        err.message,
+        "ERROR --> services/commentary.js/changeMarketCloseService",
+        request
+      );
+      throw new Error(err.message);
+    });
     if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
       callPrediction.predictioncallSuccess = false;
       callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
@@ -810,19 +873,28 @@ const suspendMarketByCIdService = async (request, fastify) => {
     "/api/v1/suspendallmarkets",
     fastify,
     request
-  );
+  ).catch((err) => {
+    console.log("call predictor market console", err);
+    errorLogger(
+      fastify,
+      err.message,
+      "ERROR --> services/commentary.js/suspendMarketByIdService",
+      request
+    );
+    throw new Error(err.message);
+  });
   if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
     callPrediction.predictioncallSuccess = false;
     callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
     callPrediction.endPoint = '/api/v1/suspendallmarkets';
-  }else {
+  } else {
     callPrediction.predictioncallSuccess = true;
     callPrediction.predictionMessage = 'Prediction call successful';
     callPrediction.endPoint = '/api/v1/suspendallmarkets';
   }
   return {
-   message: 'Market suspended successfully',
-   callPrediction: callPrediction,
+    message: 'Market suspended successfully',
+    callPrediction: callPrediction,
   };
   //return "Market suspended successfully";
 };
@@ -955,7 +1027,16 @@ const handleMarketCloseService = async (data, request, fastify) => {
       },
       request,
       fastify
-    );
+    ).catch((err) => {
+      console.log("market data logger console", err);
+      errorLogger(
+        fastify,
+        err.message,
+        "ERROR --> services/commentary.js/handleMarketCloseService",
+        request
+      );
+      throw new Error(err.message);
+    });
   }
 
   // cancel the market as per actionType
@@ -986,7 +1067,16 @@ const handleMarketCloseService = async (data, request, fastify) => {
       },
       request,
       fastify
-    );
+    ).catch((err) => {
+      console.log("market data logger console", err);
+      errorLogger(
+        fastify,
+        err.message,
+        "ERROR --> services/commentary.js/handleMarketCloseService",
+        request
+      );
+      throw new Error(err.message);
+    });
   }
   // settle the lineration as per requirement
   await setLineRatioService(data, request, fastify);
@@ -999,7 +1089,16 @@ const handleMarketCloseService = async (data, request, fastify) => {
     },
     request,
     fastify
-  );
+  ).catch((err) => {
+    console.log("market data logger console", err);
+    errorLogger(
+      fastify,
+      err.message,
+      "ERROR --> services/commentary.js/handleMarketCloseService",
+      request
+    );
+    throw new Error(err.message);
+  });
 
   return "Market closed successfully";
 };
@@ -1050,7 +1149,16 @@ const UpdateResulOrApproveEventMarketService = async (request, fastify) => {
       },
       request,
       fastify
-    );
+    ).catch((err) => {
+      console.log("market data logger console", err);
+      errorLogger(
+        fastify,
+        err.message,
+        "ERROR --> services/commentary.js/updateResulOrApproveEventMarketService",
+        request
+      );
+      throw new Error(err.message);
+    });;
   }
   if (!isResult && result) {
     marketLogger(
@@ -1061,7 +1169,16 @@ const UpdateResulOrApproveEventMarketService = async (request, fastify) => {
       },
       request,
       fastify
-    );
+    ).catch((err) => {
+      console.log("market data logger console", err);
+      errorLogger(
+        fastify,
+        err.message,
+        "ERROR --> services/commentary.js/UpdateResulOrApproveEventMarketService",
+        request
+      );
+      throw new Error(err.message);
+    });
   }
 
   return "Event Market updated successfully";

@@ -1,6 +1,7 @@
 
 const { createVendorQuery, deleteVendorQuery, updateIsActiveVendorQuery, updateIsIPCheckQuery, updateVendorQuery } = require("../repository/TableVendor");
 const { genrateKey, callDataProvider, ServiceType, APIEndpointModuleType } = require("../utilities");
+const { errorLogger } = require("../utilities/logger");
 
 const getAllVendorService = async(request , fastify) => {
     const {isActive} = request.body;
@@ -55,7 +56,16 @@ const createVendorService = async(request , fastify) => {
         moduleType : APIEndpointModuleType.vendorUpdate,
         data : data,
         type : "create"
-    })
+    }).catch((err) => {
+        console.log("call data provider console", err);
+        errorLogger(
+          fastify,
+          err.message,
+          "ERROR --> services/commentary.js/createVendorService",
+          request
+        );
+        throw new Error(err.message);
+      });
     return data;
 }
 const updateVendorService = async(request , fastify) => {
@@ -92,7 +102,16 @@ const updateVendorService = async(request , fastify) => {
         moduleType : APIEndpointModuleType.vendorUpdate,
         data : data,
         type : "update"
-    })
+    }).catch((err) => {
+        console.log("call data provider console", err);
+        errorLogger(
+          fastify,
+          err.message,
+          "ERROR --> services/commentary.js/updateVendorService",
+          request
+        );
+        throw new Error(err.message);
+      });
     return data;
 }
 const deleteVendorService = async(request , fastify) => {
@@ -113,7 +132,16 @@ const deleteVendorService = async(request , fastify) => {
             vendorId : vendorId
         },    
         type : "delete"
-    })
+    }).catch((err) => {
+        console.log("call data provider console", err);
+        errorLogger(
+          fastify,
+          err.message,
+          "ERROR --> services/commentary.js/deleteVendorService",
+          request
+        );
+        throw new Error(err.message);
+      });
 
     return `Vendor(s) deleted successfully`;
 }
@@ -133,7 +161,16 @@ const activeInactiveVendorService = async(request , fastify) => {
         moduleType : APIEndpointModuleType.vendorUpdate,
         data : data,    
         type : "update"
-    })
+    }).catch((err) => {
+        console.log("call data provider console", err);
+        errorLogger(
+          fastify,
+          err.message,
+          "ERROR --> services/commentary.js/activeInactiveVendorService",
+          request
+        );
+        throw new Error(err.message);
+      });
     return `Vendor status updated successfully`;
 }
 const updateIsIPCheckService = async(request , fastify) => {
@@ -151,7 +188,16 @@ const updateIsIPCheckService = async(request , fastify) => {
         moduleType : APIEndpointModuleType.vendorUpdate,
         data : global.tblVendors[index],
         type : "update"
-    })
+    }).catch((err) => {
+        console.log("call data provider console", err);
+        errorLogger(
+          fastify,
+          err.message,
+          "ERROR --> services/commentary.js/updateIsIPCheckService",
+          request
+        );
+        throw new Error(err.message);
+      });
     return `Vendor updated successfully`;
 }
 module.exports = {
