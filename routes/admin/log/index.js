@@ -1,5 +1,4 @@
-const { getAllResponseLogs, getAllThirdPartyApiLogs, getAllPredictorAPILogs } = require("../../../controller/users/admin/log/index");
-// const { MailSettings } = require("../../../swaggerSchema/groupTags/schema");
+const { getAllResponseLogs, getAllThirdPartyApiLogs, getAllPredictorAPILogs, getAllCommentaryLogs, getAllErrorLogs } = require("../../../controller/users/admin/log/index");
 
 module.exports = async (fastify, opts) => {
     fastify.post("/responseLogs", {
@@ -7,12 +6,18 @@ module.exports = async (fastify, opts) => {
     });
 
     fastify.post("/predictorLogs", {
-        // schema: MailSettings.getById.schema,
         handler: (request, reply) => getAllPredictorAPILogs(request, reply, fastify)
     });
 
     fastify.post("/thirdpartyLogs", {
-        // schema: MailSettings.save.schema,
         handler: (request, reply) => getAllThirdPartyApiLogs(request, reply, fastify)
+    });
+
+    fastify.post("/commentaryLogs", {
+        handler: (request, reply) => getAllCommentaryLogs(request, reply, fastify)
+    });
+
+    fastify.post("/errorLogs", {
+        handler: (request, reply) => getAllErrorLogs(request, reply, fastify)
     });
 };

@@ -77,8 +77,63 @@ const allPredictorAPILogsQuery = async (fastify) => {
     }
 };
 
+const allCommentaryLogsQuery = async (fastify) => {
+    try {
+        return await fastify.db.query(
+            `SELECT 
+            "wrId" as "id",
+            "wrCommentaryId" as "commentaryId",
+            "wrRequestBody" as "requestBody",
+            "wrResponse" as "response",
+            "wrGlobal" as "global",
+            "wrExtraData" as "extraData",
+            "wrCreatedDate" as "createdDate",
+            "wrCreatedBy" as "createdBy"
+            FROM "tblCommentaryLogs";`,
+            { type: fastify.db.QueryTypes.SELECT }
+        );
+    } catch (err) {
+        errorLogger(
+            fastify,
+            err.message,
+            "DB ERROR --> repository/TableLogs.js/allCommentaryLogsQuery",
+            null
+        );
+        throw new Error(err.message);
+    }
+};
+
+const allErrorLogsQuery = async (fastify) => {
+    try {
+        return await fastify.db.query(
+            `SELECT 
+            "wrErrId" as "errId",
+            "wrErrMessage" as "errMessage",
+            "wrErrStack" as "errStack",
+            "wrDomain" as "domain",
+            "wrUserId" as "userId",
+            "wrUserIp" as "userIp",
+            "wrApi" as "api",
+            "wrCreatedDate" as "createdDate",
+            "wrRequestBody" as "requestBody"
+            FROM "tblErrorLogs";`,
+            { type: fastify.db.QueryTypes.SELECT }
+        );
+    } catch (err) {
+        errorLogger(
+            fastify,
+            err.message,
+            "DB ERROR --> repository/TableLogs.js/allErrorLogsQuery",
+            null
+        );
+        throw new Error(err.message);
+    }
+};
+
 module.exports = {
     allResponseLogsQuery,
     allThirdPartyApiLogsQuery,
     allPredictorAPILogsQuery,
+    allCommentaryLogsQuery,
+    allErrorLogsQuery
 };

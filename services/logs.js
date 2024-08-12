@@ -1,47 +1,23 @@
-const filtering = async (dataSource, request) => {
-    const { startDate, endDate, page = 1, limit = 10, requestbody = {} } = request.body || {};
-    let result = dataSource;
+const applyFiltersAndPagination = (logs, filters) => {
+    const { startDate, endDate, page = 1, limit = 20, commentaryId } = filters;
 
+    let result = logs;
+    
     if (startDate && endDate) {
-        result = result?.filter((item) => {
-            return (
-                new Date(item.requestStartTime) >= new Date(startDate) &&
-                new Date(item.requestStartTime) <= new Date(endDate)
-            );
+        result = result.filter(item => {
+            const date = new Date(item.requestStartTime || item.createdDate);
+            return date >= new Date(startDate) && date <= new Date(endDate);
         });
     }
 
-    if (requestbody && Object.keys(requestbody).length > 0) {
-        result = result?.filter((item) => {
-            return Object.entries(requestbody).every(([key, value]) => {
-                const requestBodyItem = item.requestBody ? item.requestBody[key] : null;
-                if (Array.isArray(requestBodyItem)) {
-                    return requestBodyItem.some((subItem) =>
-                        Object.entries(value).every(([subKey, subValue]) =>
-                            subItem[subKey] === subValue
-                        )
-                    );
-                } else if (typeof requestBodyItem === 'object' && requestBodyItem !== null) {
-                    return Object.entries(value).every(([subKey, subValue]) => {
-                        if (Array.isArray(requestBodyItem[subKey])) {
-                            return requestBodyItem[subKey].some((nestedItem) =>
-                                Object.entries(subValue).every(([nestedKey, nestedValue]) =>
-                                    nestedItem[nestedKey] === nestedValue
-                                )
-                            );
-                        }
-                        return requestBodyItem[subKey] === subValue;
-                    });
-                }
-                return requestBodyItem === value;
-            });
-        });
+    if (commentaryId) {
+        result = result.filter(item => item.commentaryId === commentaryId);
     }
 
-    result.sort((a, b) => new Date(b.requestStartTime) - new Date(a.requestStartTime));
+    result.sort((a, b) => new Date(b.requestStartTime || b.createdDate) - new Date(a.requestStartTime || a.createdDate));
+
     const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedResult = result.slice(startIndex, endIndex);
+    const paginatedResult = result.slice(startIndex, startIndex + limit);
 
     return {
         totalRecords: result.length,
@@ -49,22 +25,32 @@ const filtering = async (dataSource, request) => {
         totalPages: Math.ceil(result.length / limit),
         data: paginatedResult,
     };
-}
+};
 
 const allResponseLogs = async (request) => {
-    return await filtering(global.responseLogs, request);
+    return applyFiltersAndPagination(global.responseLogs, request.body || {});
 };
 
 const allThirdPartyApiLogs = async (request) => {
-    return await filtering(global.thirdPartyAPILogs, request);
+    return applyFiltersAndPagination(global.thirdPartyAPILogs, request.body || {});
 };
 
 const allPredictorAPILogs = async (request) => {
-    return await filtering(global.predictorAPILogs, request);
+    return applyFiltersAndPagination(global.predictorAPILogs, request.body || {});
+};
+
+const allCommentaryLogs = async (request) => {
+    return applyFiltersAndPagination(global.commentaryLogs, request.body || {});
+};
+
+const allErrorLogs = async (request) => {
+    return applyFiltersAndPagination(global.errorLogs, request.body || {});
 };
 
 module.exports = {
     allResponseLogs,
     allThirdPartyApiLogs,
-    allPredictorAPILogs
+    allPredictorAPILogs,
+    allCommentaryLogs,
+    allErrorLogs
 };
