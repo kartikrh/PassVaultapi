@@ -566,15 +566,7 @@ const updateMarketRateService = async (request, fastify) => {
       "/api/v1/updateline",
       fastify,
       request
-    ).catch((err) => {
-      console.log("call predictor market console", err);
-      errorLogger(
-        fastify,
-        err.message,
-        "ERROR --> services/commentary.js/createEventMarketsService",
-        request
-      );
-    });
+    );
     // Check for error_msg in the response
     if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
       callPrediction.predictioncallSuccess = false;
@@ -798,15 +790,7 @@ const changeMarketCloseService = async (request, fastify) => {
       "/api/v1/marketmanualclose",
       fastify,
       request
-    ).catch((err) => {
-      console.log("call predictor market console", err);
-      errorLogger(
-        fastify,
-        err.message,
-        "ERROR --> services/commentary.js/changeMarketCloseService",
-        request
-      );
-    });
+    );
     if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
       callPrediction.predictioncallSuccess = false;
       callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
@@ -866,15 +850,7 @@ const suspendMarketByCIdService = async (request, fastify) => {
     "/api/v1/suspendallmarkets",
     fastify,
     request
-  ).catch((err) => {
-    console.log("call predictor market console", err);
-    errorLogger(
-      fastify,
-      err.message,
-      "ERROR --> services/commentary.js/suspendMarketByIdService",
-      request
-    );
-  });
+  );
   if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
     callPrediction.predictioncallSuccess = false;
     callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
