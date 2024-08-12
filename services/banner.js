@@ -36,7 +36,8 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
   
       const projectName = global.tblConfigs.find(
         (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
-      ).value;
+      )?.value;
+      
       const path = await storeImageOnServer({
         image: request.body.image[0],
         project: projectName,

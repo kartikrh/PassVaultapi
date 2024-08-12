@@ -46,6 +46,11 @@ module.exports = (sequelize) => {
         type: DataTypes.DATE,
         allowNull: true,
       },
+      wrIsDefault:{
+        type : DataTypes.BOOLEAN,
+        allowNull : false,
+        defaultValue : false
+      }
     },
     {
       timestamps: false,
