@@ -8,7 +8,8 @@ const getAllTemplateQuery = async (fastify) => {
             "wrType" as "type",
             "wrTitle" as "title",
             "wrDescription" as "description",
-            "wrIsActive" as "isActive"
+            "wrIsActive" as "isActive",
+            "wrIsDefault" as "isDefault"
         from "tblTemplate"
         `,
     {
@@ -51,9 +52,10 @@ const insertTemplateQuery = async (data, request, fastify) => {
                         "wrDescription",
                         "wrIsActive",
                         "wrCreatedBy",
-                        "wrCreatedDate"
+                        "wrCreatedDate",
+                        "wrIsDefault"
                     )
-                values ($1, $2, $3, $4, $5, $6, now()) returning *
+                values ($1, $2, $3, $4, $5, $6, now() , $7) returning *
                 )
                 select 
                     "wrId" as "templateId",
@@ -61,7 +63,8 @@ const insertTemplateQuery = async (data, request, fastify) => {
                     "wrType" as "type",
                     "wrTitle" as "title",
                     "wrDescription" as "description",
-                    "wrIsActive" as "isActive"
+                    "wrIsActive" as "isActive",
+                    "wrIsDefault" as "isDefault"
                 from "insert_data"
             `,
       {
@@ -73,6 +76,7 @@ const insertTemplateQuery = async (data, request, fastify) => {
           data.description,
           data.isActive || false,
           request.userTokenInfo.WrUserId,
+          data.isDefault || false,
         ],
       }
     );
@@ -98,8 +102,9 @@ const updateTemplateQuery = async (data, request, fastify) => {
                 "wrDescription" = $4,
                 "wrIsActive" = $5, 
                 "wrModifyBy" = $6,
-                "wrModifyDate" = now()
-                where "wrId" = $7
+                "wrModifyDate" = now(),
+                "wrIsDefault" = $7
+                where "wrId" = $8
             `,
       {
         bind: [
@@ -109,6 +114,7 @@ const updateTemplateQuery = async (data, request, fastify) => {
           data.description,
           data.isActive || false,
           request.userTokenInfo.WrUserId,
+          data.isDefault,
           data.templateId
         ],
       }
@@ -146,10 +152,72 @@ const activeInactiveTemplateQuery = async (data, request, fastify) => {
     throw new Error(err.message);
   }
 };
+const setIsDefaultFalseTemplateQuery = async (data,request,fastify)=>{
+  try {
+    const query = `
+      UPDATE "tblTemplate"
+      SET "wrIsDefault" = false
+      WHERE "wrTemplateType" = $1 AND "wrType" = $2
+    `;
+
+    const result = await fastify.db.query(
+      query,
+      {
+        type : fastify.db.QueryTypes.UPDATE,
+        bind : [
+          data.templateType,
+          data.type
+        ]
+      }
+    )
+
+    return result;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableTemplate/setIsDefaultFalseTemplateQuery",
+      request
+    )
+    throw new Error(err.message)
+  }
+
+}
+const updateIsDefaultQuery = async(data , request , fastify) =>{
+  try {
+    const result = await fastify.db.query(
+      `
+        UPDATE "tblTemplate"
+        SET
+        "wrIsDefault" = $1
+        WHERE "wrId" = $2
+      `,
+      {
+        type : fastify.db.QueryTypes.UPDATE,
+        bind : [
+          data.isDefault,
+          data.templateId
+        ]
+      }
+    )
+
+    return result;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableTemplate/updateIsDefaultQuery",
+      request
+    )
+    throw new Error(err.message)
+  }
+}
 module.exports = {
   getAllTemplateQuery,
   insertTemplateQuery,
   updateTemplateQuery,
   deleteTemplateQuery,
-  activeInactiveTemplateQuery
+  activeInactiveTemplateQuery,
+  setIsDefaultFalseTemplateQuery,
+  updateIsDefaultQuery
 };

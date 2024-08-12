@@ -430,6 +430,13 @@ const callDataProvider = async (data, fastify) =>{
 
     return true  
   } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> utilities/index/callDataProvider",
+      null
+    );
+    
     console.log("error From callDataProvider", error);
   }
 }
@@ -554,6 +561,15 @@ const typesOfServices = {
   SmtpService: 'smtp',
 }
 
+const templateModel = {
+  MobileNo : 1,
+  Email : 2,
+}
+const templateType = {
+  Welcome : 1,
+  Verify : 2,
+  NewsLetter : 3
+}
 module.exports = {
   ERROR_CODES,
   error,
@@ -593,5 +609,7 @@ module.exports = {
   pageLimit,
   getPagination,
   clientProvider,
-  typesOfServices
+  typesOfServices,
+  templateModel,
+  templateType
 };

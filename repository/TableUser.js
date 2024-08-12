@@ -754,13 +754,13 @@ async function insertOtpQuery(body, fastify) {
 }
 async function registerClientOtpValidation(body, fastify) {
   try {
-    const { email, otp, clientId } = body;
+    const { email, otp, clientId, isMobileVerify, isEmailVerify } = body;
     await fastify.db.query(
-      `UPDATE "tblClient" set "wrRegistrationProcessStatus" = $2, "wrIsMobileVerified" = $3
+      `UPDATE "tblClient" set "wrRegistrationProcessStatus" = $2, "wrIsMobileVerified" = $3, "wrIsEmailVerified" = $4
            WHERE "wrClientID" = $1`,
       {
         type: QueryTypes.INSERT,
-        bind: [clientId, 2, true],
+        bind: [clientId, 2, isMobileVerify, isEmailVerify],
       }
     );
     return "Status updated successfully";
