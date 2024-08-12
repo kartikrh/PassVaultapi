@@ -896,7 +896,7 @@ async function verifyEmailService({ body }, fastify) {
     const emailId = findUser.emailId;
     
       if(emailId) {
-        verifyLinkEmail(findUser);
+        await verifyLinkEmail(findUser);
       } else {
         return "Invalid Credentials"
       }
