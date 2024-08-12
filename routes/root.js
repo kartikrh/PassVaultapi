@@ -27,7 +27,9 @@ const {
   forgetPassword,
   AddUpdateWebLogs,
   verifyEmail,
-  verifyEmailToken
+  verifyEmailToken,
+  verifyMobile,
+  verifyMobileOtp
   //loginRegistrationClient,
 } = require("../controller/users/index");
 const { Auth ,sendPushNotification,weblogs} = require("../swaggerSchema/groupTags/schema");
@@ -134,6 +136,14 @@ module.exports = async function (fastify, opts) {
   fastify.post("/resendOtp", {
     schema: Auth.resendOtp.schema,
     handler: (request, reply) => resendOtp(request, reply, fastify),
+  });
+  fastify.post("/verifyMobile", {
+    schema: Auth.verifyMobile.schema,
+    handler: (request, reply) => verifyMobile(request, reply, fastify),
+  });
+  fastify.post("/verifyMobileOtp", {
+    schema: Auth.verifyMobileOtp.schema,
+    handler: (request, reply) => verifyMobileOtp(request, reply, fastify),
   });
   fastify.post("/verifyEmail", {
     schema: Auth.verifyEmail.schema,

@@ -754,13 +754,13 @@ async function insertOtpQuery(body, fastify) {
 }
 async function registerClientOtpValidation(body, fastify) {
   try {
-    const { email, otp, clientId } = body;
+    const { email, otp, clientId, isMobileVerify, isEmailVerify } = body;
     await fastify.db.query(
-      `UPDATE "tblClient" set "wrRegistrationProcessStatus" = $2, "wrIsMobileVerified" = $3
+      `UPDATE "tblClient" set "wrRegistrationProcessStatus" = $2, "wrIsMobileVerified" = $3, "wrIsEmailVerified" = $4
            WHERE "wrClientID" = $1`,
       {
         type: QueryTypes.INSERT,
-        bind: [clientId, 2, true],
+        bind: [clientId, 2, isMobileVerify, isEmailVerify],
       }
     );
     return "Status updated successfully";
@@ -769,6 +769,28 @@ async function registerClientOtpValidation(body, fastify) {
       fastify,
       error.message,
       "DB ERROR --> repository/TableUser/registerClientOtpValidation",
+      null
+    );
+    throw new Error(error.message);
+  }
+}
+async function verifyMobileOtp(body, fastify) {
+  try {
+    const { email, otp, clientId } = body;
+    await fastify.db.query(
+      `UPDATE "tblClient" set "wrIsMobileVerified" = $2
+           WHERE "wrClientID" = $1`,
+      {
+        type: QueryTypes.INSERT,
+        bind: [clientId, true],
+      }
+    );
+    return "Status updated successfully";
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableUser/verifyMobileOtp",
       null
     );
     throw new Error(error.message);
@@ -1075,4 +1097,5 @@ module.exports = {
   registerClientPassword,
   updateClientPassword,
   verifyEmail,
+  verifyMobileOtp,
 };

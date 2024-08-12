@@ -29,7 +29,8 @@ const {
   registerClientPassword,
   registerClientOtpValidation,
   updateClientPassword,
-  verifyEmail
+  verifyEmail,
+  verifyMobileOtp
 } = require("../repository/TableUser");
 const {
   deviceInfo,
@@ -607,6 +608,8 @@ async function registerDetailsService({ body }, fastify) {
     // if (response === "MobileNo and Email is already exists") {
     //   return { error: response };
     // }
+    let isMobileVerify = false;
+    let isEmailVerify = false;
     let isOtpSend = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP);
     if (isOtpSend) {
       isOtpSend = isOtpSend.value;
@@ -633,25 +636,28 @@ async function registerDetailsService({ body }, fastify) {
       // const generateOTP = () => {
       //   return Math.floor(100000 + Math.random() * 900000).toString();
       // };
+      isMobileVerify = true;
       const otp = 1234
       const result = await insertOtpQuery({ ...body, otp, clientId: response.clientId }, fastify);
       global.tblOtp.push(result[0]);
 
     } else if(response.emailId && isEmailOtpSend === "true"){
+      isEmailVerify = true;
       const otp = await sendOtpEmail(response.emailId);
       const result = await insertOtpQuery({...body, otp, clientId: response.clientId }, fastify);
       global.tblOtp.push(result[0]);
     } else {
-      await registerClientOtpValidation({ ...body, clientId: response.clientId }, fastify);
+      await registerClientOtpValidation({ ...body, clientId: response.clientId, isMobileVerify, isEmailVerify }, fastify);
 
       const index = global.tblClient.findIndex(
         (item) => item.clientId === response.clientId
       );
-
+      response.registrationProcessStatus = 2;
       global.tblClient[index].registrationProcessStatus = 2
     }
-
-    return { token, details: response };
+    response.isEmailVerify = isEmailVerify;
+    response.isMobileVerify = isMobileVerify;
+    return { token, details: response};
     // }
     // else{
     //   return { error: response };
@@ -780,6 +786,85 @@ async function verifyLinkEmail(user) {
   }
 }
 
+async function verifyMobileService({ body }, fastify) {
+  try {
+    const { email } = body;
+
+    const findUser = global.tblClient.find(
+      (item) => item.emailId === email
+    );
+
+    if(!findUser) {
+      throw new Error("Invalid User");
+    }
+    const clientId = findUser.clientId;
+    const mobileNo = findUser.mobileNo;
+    
+      if(mobileNo) {
+        // const generateOTP = () => {
+        //   return Math.floor(100000 + Math.random() * 900000).toString();
+        // };
+        const otp = 1234
+        const result = await insertOtpQuery({ ...body, otp, clientId: clientId }, fastify);
+        global.tblOtp.push(result[0]);
+      } else {
+        return "Invalid Credentials"
+      }
+
+      return "Otp sent to your registered mobile number.";
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR->> services/user.js -> verifyMobileService",
+      null
+    )
+    throw new Error(error);
+  }
+};
+
+async function verifyMobileOtpService({ body }, fastify) {
+  try {
+    //check expiration time
+    const { email, otp } = body;
+
+    const findUser = global.tblClient.find(
+      (item) => item.emailId === email
+    );
+
+    if (!findUser) {
+      throw new Error("Invalid User");
+    }
+    const clientId = findUser.clientId;
+
+    const data = global.tblOtp.filter((item) => item.userId === clientId)
+    data.sort((a, b) => b.otpId - a.otpId)
+
+    if (otp === data[0]?.otp) {
+      await verifyMobileOtp({ ...body, clientId: clientId }, fastify);
+
+      const index = global.tblClient.findIndex(
+        (item) => item.clientId === clientId
+      );
+
+      if (index !== -1) {
+        global.tblClient[index].isMobileVerified = true;
+      }
+      return "OTP validated successfully"
+    } else {
+      throw new Error("Invalid OTP");
+    }
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR->> services/user.js -> verifyMobileOtpService",
+      null
+    )
+    throw new Error(error);
+  }
+}
+
 async function verifyEmailService({ body }, fastify) {
   try {
     const { email } = body;
@@ -865,7 +950,7 @@ const clientDetailsByIdService = async (request, fastify) => {
 async function validateOtpService({ body }, fastify) {
   try {
     //check expiration time
-    const { email, otp } = body;
+    const { email, otp, isMobileVerify, isEmailVerify } = body;
 
     const findUser = global.tblClient.find(
       (item) => item.emailId === email
@@ -880,7 +965,7 @@ async function validateOtpService({ body }, fastify) {
     data.sort((a, b) => b.otpId - a.otpId)
 
     if (otp === data[0]?.otp) {
-      await registerClientOtpValidation({ ...body, clientId: clientId }, fastify);
+      await registerClientOtpValidation({ ...body, clientId: clientId, isMobileVerify, isEmailVerify }, fastify);
 
       const index = global.tblClient.findIndex(
         (item) => item.clientId === clientId
@@ -888,7 +973,8 @@ async function validateOtpService({ body }, fastify) {
 
       if (index !== -1) {
         global.tblClient[index].registrationProcessStatus = 2;
-        global.tblClient[index].isMobileVerified = true;
+        global.tblClient[index].isMobileVerified = isMobileVerify;
+        global.tblClient[index].isEmailVerified = isEmailVerify;
       }
       return "OTP validated successfully"
     } else {
@@ -996,11 +1082,18 @@ async function forgetPasswordService({ body }, fastify) {
     }
     const mobileNo = findUser.mobileNo;
     const clientId = findUser.clientId;
+    const emailId = findUser.emailId;
 
     if (mobileNo) {
       const otp = 1234
       const result = await insertOtpQuery({ ...body, otp, clientId: clientId }, fastify);
       global.tblOtp.push(result[0]);
+    } else if(emailId) {
+      const otp = await sendOtpEmail(emailId);
+      const result = await insertOtpQuery({...body, otp, clientId: clientId}, fastify);
+      global.tblOtp.push(result[0]);
+    } else {
+      return "Invalid Credentials"
     }
 
     return "Otp sent successfully"
@@ -1109,5 +1202,7 @@ module.exports = {
   updateClientPasswordService,
   forgetPasswordService,
   verifyEmailService,
-  verifyEmailTokenService
+  verifyEmailTokenService,
+  verifyMobileService,
+  verifyMobileOtpService,
 };
