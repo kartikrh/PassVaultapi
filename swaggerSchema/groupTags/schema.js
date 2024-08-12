@@ -4896,6 +4896,7 @@ const Template = {
           title: {type: "string"},
           description: {type: "string"},
           isActive: {type: "boolean"},
+          isDefault : {type : "boolean"}
         },
         required: ["templateId", "templateType", "type", "title"],
       },
@@ -4916,6 +4917,21 @@ const Template = {
       },
     },
   },
+  updateIsDefault : {
+    schema : {
+      tags : ["Template"],
+      description : "update isDefault",
+      secaurity : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          templateId : {type : "integer"},
+          isDefault : {type : "boolean"}
+        },
+        required : ["templateId" , "isDefault"]
+      }
+    }
+  }
 };
 
 const Client = {

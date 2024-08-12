@@ -2,7 +2,7 @@ const {
     authorize,
     checkPermission,
   } = require("../../../controller/middleware");
-const { getAllTemplate, getTemplateById, saveTemplate, deleteTemplate, activeInactiveTemplate } = require("../../../controller/users/admin/template");
+const { getAllTemplate, getTemplateById, saveTemplate, deleteTemplate, activeInactiveTemplate, updateIsDefault } = require("../../../controller/users/admin/template");
 const { Template } = require("../../../swaggerSchema/groupTags/schema");
   
   module.exports = async (fastify, opts) => {
@@ -75,4 +75,17 @@ const { Template } = require("../../../swaggerSchema/groupTags/schema");
       ],
       handler: (request, reply) => activeInactiveTemplate(request, reply, fastify),
     });
+
+    fastify.post("/updateIsDefault",{
+      schema : Template.updateIsDefault.schema,
+      preHandler : [
+        (request ,reply) => authorize(request , reply , fastify),
+        (request , reply , done) => 
+            checkPermission(request , reply , fastify,{
+              tabName : "Template",
+              mode : "edit"
+          })
+      ],
+      handler : (request, reply) => updateIsDefault(request , reply , fastify)
+    })
 };
