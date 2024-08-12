@@ -238,7 +238,6 @@ const createEventMarketsService = async (request, fastify) => {
           "ERROR --> services/commentary.js/createEventMarketsService",
           request
         );
-        throw new Error(err.message);
       });
     } else {
       let previousLine = global.tblEventMarkets[index].line;
@@ -262,7 +261,6 @@ const createEventMarketsService = async (request, fastify) => {
           "ERROR --> services/commentary.js/createEventMarketsService",
           request
         );
-        throw new Error(err.message);
       });;
     }
   }
@@ -425,7 +423,6 @@ const changeResultOfMarketService = async (request, fastify) => {
       "ERROR --> services/commentary.js/changeResultOfMarketService",
       request
     );
-    throw new Error(err.message);
   });
 
   return "Event Market updated successfully";
@@ -545,7 +542,6 @@ const updateMarketRateService = async (request, fastify) => {
         "ERROR --> services/commentary.js/updateMarketRateService",
         request
       );
-      throw new Error(err.message);
     });
   }
 
@@ -578,7 +574,6 @@ const updateMarketRateService = async (request, fastify) => {
         "ERROR --> services/commentary.js/createEventMarketsService",
         request
       );
-      throw new Error(err.message);
     });
     // Check for error_msg in the response
     if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
@@ -658,7 +653,6 @@ const saveEventMarketService = async (request, fastify) => {
         "ERROR --> services/commentary.js/saveEventMarketService",
         request
       );
-      throw new Error(err.message);
     });
   }
   return dataOfmarkets[0];
@@ -812,7 +806,6 @@ const changeMarketCloseService = async (request, fastify) => {
         "ERROR --> services/commentary.js/changeMarketCloseService",
         request
       );
-      throw new Error(err.message);
     });
     if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
       callPrediction.predictioncallSuccess = false;
@@ -881,7 +874,6 @@ const suspendMarketByCIdService = async (request, fastify) => {
       "ERROR --> services/commentary.js/suspendMarketByIdService",
       request
     );
-    throw new Error(err.message);
   });
   if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
     callPrediction.predictioncallSuccess = false;
@@ -1035,7 +1027,6 @@ const handleMarketCloseService = async (data, request, fastify) => {
         "ERROR --> services/commentary.js/handleMarketCloseService",
         request
       );
-      throw new Error(err.message);
     });
   }
 
@@ -1075,7 +1066,6 @@ const handleMarketCloseService = async (data, request, fastify) => {
         "ERROR --> services/commentary.js/handleMarketCloseService",
         request
       );
-      throw new Error(err.message);
     });
   }
   // settle the lineration as per requirement
@@ -1097,7 +1087,6 @@ const handleMarketCloseService = async (data, request, fastify) => {
       "ERROR --> services/commentary.js/handleMarketCloseService",
       request
     );
-    throw new Error(err.message);
   });
 
   return "Market closed successfully";
@@ -1157,7 +1146,6 @@ const UpdateResulOrApproveEventMarketService = async (request, fastify) => {
         "ERROR --> services/commentary.js/updateResulOrApproveEventMarketService",
         request
       );
-      throw new Error(err.message);
     });;
   }
   if (!isResult && result) {
@@ -1177,7 +1165,6 @@ const UpdateResulOrApproveEventMarketService = async (request, fastify) => {
         "ERROR --> services/commentary.js/UpdateResulOrApproveEventMarketService",
         request
       );
-      throw new Error(err.message);
     });
   }
 

@@ -140,61 +140,25 @@ const commentaryByIdService = async (request, fastify) => {
     { teamId: commentary.team1Id, commentaryId: request.body.commentaryId },
     fastify,
     request
-  ).catch((err) => {
-    console.log("get commentary teams query console", err);
-    errorLogger(
-      fastify,
-      err.message,
-      "ERROR --> services/commentary.js/commentaryByIdService",
-      request
-    );
-    throw new Error(err.message);
-  });
+  );
 
   const team2 = await getCommentaryTeamsQuery(
     { teamId: commentary.team2Id, commentaryId: request.body.commentaryId },
     fastify,
     request
-  ).catch((err) => {
-    console.log("get commentary teams query console", err);
-    errorLogger(
-      fastify,
-      err.message,
-      "ERROR --> services/commentary.js/commentaryByIdService",
-      request
-    );
-    throw new Error(err.message);
-  });
+  );
 
   const team1Players = await getCommentaryPlayersQuery(
     { teamId: commentary.team1Id, commentaryId: request.body.commentaryId },
     fastify,
     request
-  ).catch((err) => {
-    console.log("get commentary players query console", err);
-    errorLogger(
-      fastify,
-      err.message,
-      "ERROR --> services/commentary.js/commentaryByIdService",
-      request
-    );
-    throw new Error(err.message);
-  });
+  );
 
   const team2Players = await getCommentaryPlayersQuery(
     { teamId: commentary.team2Id, commentaryId: request.body.commentaryId },
     fastify,
     request
-  ).catch((err) => {
-    console.log("get commentary players query console", err);
-    errorLogger(
-      fastify,
-      err.message,
-      "ERROR --> services/commentary.js/commentaryByIdService",
-      request
-    );
-    throw new Error(err.message);
-  });
+  );
 
   commentary.team1Captain = team1.teamCaptain;
   commentary.team1Kipper = team1.teamKipper;
@@ -220,16 +184,7 @@ const predictorLogsByIdService = async (request, fastify) => {
       { commentaryId: request.body.commentaryId },
       fastify,
       request
-    ).catch((err) => {
-      console.log("get predictor logs query console", err);
-      errorLogger(
-        fastify,
-        err.message,
-        "ERROR --> services/commentary.js/predictorLogsByIdService",
-        request
-      );
-      throw new Error(err.message);
-    });
+    );
     return predictorLogsData;
   } catch (error) {
     throw new Error(error);
@@ -325,16 +280,7 @@ const commentaryDetailsByIdService = async (request, fastify) => {
         },
         request,
         fastify
-      ).catch((err) => {
-        console.log("get Event market ratio query console", err);
-        errorLogger(
-          fastify,
-          err.message,
-          "ERROR --> services/commentary.js/commentaryDetailsByIdService",
-          request
-        );
-        throw new Error(err.message);
-      });
+      );
     }
     // data: {
     //   status_code: 500,
@@ -355,10 +301,9 @@ const commentaryDetailsByIdService = async (request, fastify) => {
       errorLogger(
         fastify,
         err.message,
-        "ERROR --> services/commentary.js/commentaryByIdService",
+        "ERROR --> services/commentary.js/CommentaryDetailsByIdService",
         request
       );
-      throw new Error(err.message);
     });
     // Check for error_msg in the response
     if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
@@ -511,16 +456,7 @@ const createCommentaryService = async (request, fastify) => {
       const TotalInnning = validateMatchTypeId?.noOfIningsPerSide;
       for (let i = 0; i < TotalInnning; i++) {
         request.body.currentInnings = i + 1;
-        await insertCommentaryTeams(request, fastify).catch((err) => {
-          console.log("get insert commentary teams console", err);
-          errorLogger(
-            fastify,
-            err.message,
-            "ERROR --> services/commentary.js/commentaryByIdService",
-            request
-          );
-          throw new Error(err.message);
-        });;
+        await insertCommentaryTeams(request, fastify);
         const data = [
           ...request.body.team1Players.map((item, i) => {
             return {
@@ -545,16 +481,7 @@ const createCommentaryService = async (request, fastify) => {
             request.body.currentInnings,
             fastify,
             request
-          ).catch((err) => {
-            console.log("get insert commentary players console", err);
-            errorLogger(
-              fastify,
-              err.message,
-              "ERROR --> services/commentary.js/commentaryByIdService",
-              request
-            );
-            throw new Error(err.message);
-          });
+          );
 
           if (info.playerId === request.body.team1Captain) {
             commentaryPlayerId.team1Captain = playerData[0].commentaryPlayerId;
@@ -576,16 +503,7 @@ const createCommentaryService = async (request, fastify) => {
           },
           fastify,
           request
-        ).catch((err) => {
-          console.log("get commentary teams query console", err);
-          errorLogger(
-            fastify,
-            err.message,
-            "ERROR --> services/commentary.js/commentaryByIdService",
-            request
-          );
-          throw new Error(err.message);
-        });
+        );
       }
     } else {
       const currentinning = 1;
@@ -616,16 +534,7 @@ const createCommentaryService = async (request, fastify) => {
           currentinning,
           fastify,
           request
-        ).catch((err) => {
-          console.log("insert commentary players console", err);
-          errorLogger(
-            fastify,
-            err.message,
-            "ERROR --> services/commentary.js/createCommentaryService",
-            request
-          );
-          throw new Error(err.message);
-        });
+        );
         if (info.playerId === request.body.team1Captain) {
           commentaryPlayerId.team1Captain = playerData[0].commentaryPlayerId;
         }
@@ -643,16 +552,7 @@ const createCommentaryService = async (request, fastify) => {
         { ...commentaryPlayerId, currentInnings: request.body.currentInnings },
         fastify,
         request
-      ).catch((err) => {
-        console.log("call update commentary player id in commentary teams console", err);
-        errorLogger(
-          fastify,
-          err.message,
-          "ERROR --> services/commentary.js/createCommentaryService",
-          request
-        );
-        throw new Error(err.message);
-      });
+      );
     }
   }
 
@@ -681,7 +581,6 @@ const createCommentaryService = async (request, fastify) => {
         "ERROR --> services/commentary.js/createCommentaryService",
         request
       );
-      throw new Error(err.message);
     });
     if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
       callPrediction.predictioncallSuccess = false;
@@ -713,7 +612,6 @@ const createCommentaryService = async (request, fastify) => {
         "ERROR --> services/commentary.js/createCommentaryService",
         request
       );
-      throw new Error(err.message);
     });
   }
   updateComInMarketService({
@@ -727,22 +625,12 @@ const createCommentaryService = async (request, fastify) => {
       "ERROR --> services/commentary.js/createCommentaryService",
       request
     );
-    throw new Error(err.message);
   });
 
   if (addCommentry.isActive) {
     let cData = await getMatchDataByCId({
       commentaryId: addCommentry.commentaryId,
-    }, request, fastify).catch((err) => {
-      console.log("get match data by cid console", err);
-      errorLogger(
-        fastify,
-        err.message,
-        "ERROR --> services/commentary.js/createCommentaryService",
-        request
-      );
-      throw new Error(err.message);
-    });
+    }, request, fastify);
 
     callClientAPI(
       {
@@ -760,7 +648,6 @@ const createCommentaryService = async (request, fastify) => {
         "ERROR --> services/commentary.js/createCommentaryService",
         request
       );
-      throw new Error(err.message);
     });
   }
   addCommentry.callPrediction = callPrediction
@@ -1007,7 +894,6 @@ const updateCommentaryService = async (request, fastify) => {
         "ERROR --> services/commentary.js/updateCommentaryService",
         request
       );
-      throw new Error(err.message);
     });
   }
 
@@ -1053,61 +939,25 @@ const cloneCommentaryService = async (request, fastify) => {
     { teamId: originalCommentary.team1Id, commentaryId },
     fastify,
     request
-  ).catch((err) => {
-    console.log("get commentary teams query console", err);
-    errorLogger(
-      fastify,
-      err.message,
-      "ERROR --> services/commentary.js/cloneCommentaryService",
-      request
-    );
-    throw new Error(err.message);
-  });
+  );
 
   const team2 = await getCommentaryTeamsQuery(
     { teamId: originalCommentary.team2Id, commentaryId },
     fastify,
     request
-  ).catch((err) => {
-    console.log("get commentary teams query console", err);
-    errorLogger(
-      fastify,
-      err.message,
-      "ERROR --> services/commentary.js/cloneCommentaryService",
-      request
-    );
-    throw new Error(err.message);
-  });
+  );
 
   const team1Players = await getCommentaryPlayersQuery(
     { teamId: originalCommentary.team1Id, commentaryId },
     fastify,
     request
-  ).catch((err) => {
-    console.log("get commetary players query console", err);
-    errorLogger(
-      fastify,
-      err.message,
-      "ERROR --> services/commentary.js/cloneCommentaryService",
-      request
-    );
-    throw new Error(err.message);
-  });
+  );
 
   const team2Players = await getCommentaryPlayersQuery(
     { teamId: originalCommentary.team2Id, commentaryId },
     fastify,
     request
-  ).catch((err) => {
-    console.log("get commentary players query console", err);
-    errorLogger(
-      fastify,
-      err.message,
-      "ERROR --> services/commentary.js/cloneCommentaryService",
-      request
-    );
-    throw new Error(err.message);
-  });
+  );
 
   request.body = {
     ...originalCommentary,
@@ -1172,16 +1022,7 @@ const cloneCommentaryService = async (request, fastify) => {
             currentInning,
             fastify,
             request
-          ).catch((err) => {
-            console.log("insert commentary players console", err);
-            errorLogger(
-              fastify,
-              err.message,
-              "ERROR --> services/commentary.js/cloneCommentaryService",
-              request
-            );
-            throw new Error(err.message);
-          });
+          );
           if (playerData[0].playerId === request.body.team1Captain) {
             commentaryPlayer.team1Captain = playerData[0].commentaryPlayerId;
           }
@@ -1230,16 +1071,7 @@ const cloneCommentaryService = async (request, fastify) => {
           currentInning,
           fastify,
           request
-        ).catch((err) => {
-          console.log("insert commentary players console", err);
-          errorLogger(
-            fastify,
-            err.message,
-            "ERROR --> services/commentary.js/cloneCommentaryService",
-            request
-          );
-          throw new Error(err.message);
-        });
+        );
         if (palyerData[0].playerId === request.body.team1Captain) {
           commentaryPlayer.team1Captain = palyerData[0].commentaryPlayerId;
         }
@@ -1257,16 +1089,7 @@ const cloneCommentaryService = async (request, fastify) => {
         { ...commentaryPlayer, currentInnings: request.body.currentInnings },
         fastify,
         request
-      ).catch((err) => {
-        console.log("update Commentary Player Id In Commentary Teams console", err);
-        errorLogger(
-          fastify,
-          err.message,
-          "ERROR --> services/commentary.js/cloneCommentaryService",
-          request
-        );
-        throw new Error(err.message);
-      });
+      );
     }
   }
   global.tblCommentaries.push(newCommentary);
@@ -1292,7 +1115,6 @@ const cloneCommentaryService = async (request, fastify) => {
         "ERROR --> services/commentary.js/cloneCommentaryService",
         request
       );
-      throw new Error(err.message);
     });
   }
   updateComInMarketService({
@@ -1306,7 +1128,6 @@ const cloneCommentaryService = async (request, fastify) => {
       "ERROR --> services/commentary.js/cloneCommentaryService",
       request
     );
-    throw new Error(err.message);
   });
 
 
@@ -1325,16 +1146,7 @@ const cloneCommentaryService = async (request, fastify) => {
   if (newCommentary.isActive) {
     let cData = await getMatchDataByCId({
       commentaryId: newCommentary.commentaryId,
-    }, request, fastify).catch((err) => {
-      console.log("get match data by cid console", err);
-      errorLogger(
-        fastify,
-        err.message,
-        "ERROR --> services/commentary.js/cloneCommentaryService",
-        request
-      );
-      throw new Error(err.message);
-    });
+    }, request, fastify);
 
     callClientAPI(
       {
@@ -1352,7 +1164,6 @@ const cloneCommentaryService = async (request, fastify) => {
         "ERROR --> services/commentary.js/cloneCommentaryService",
         request
       );
-      throw new Error(err.message);
     });
   }
   return newCommentary;
@@ -1393,7 +1204,6 @@ const loadMultiCommentaryService = async (request, fastify) => {
           "ERROR --> services/commentary.js/loadMultiCommentaryService",
           request
         );
-        throw new Error(err.message);
       });
       let callPrediction = {}
       // Check for error_msg in the response
@@ -1444,7 +1254,6 @@ const deleteCommentaryService = async (request, fastify) => {
       "ERROR --> services/commentary.js/deleteCommentaryService",
       request
     );
-    throw new Error(err.message);
   });
 
   return `Commentaries deleted successfully`;
@@ -1576,16 +1385,7 @@ const saveCommentaryDetailsService = async (request, fastify) => {
       commentaryBallByBall,
       fastify,
       request
-    ).catch((err) => {
-      console.log("ball by ball commentaries service console", err);
-      errorLogger(
-        fastify,
-        err.message,
-        "ERROR --> services/commentary.js/saveCommentaryDetailsService",
-        request
-      );
-      throw new Error(err.message);
-    });
+    );
     savecommentaryPartnership = await saveCommentaryPartnershipService(
       {
         ...commentaryPartnership,
@@ -1594,16 +1394,7 @@ const saveCommentaryDetailsService = async (request, fastify) => {
       },
       fastify,
       request
-    ).catch((err) => {
-      console.log("save commentary pratenership service console", err);
-      errorLogger(
-        fastify,
-        err.message,
-        "ERROR --> services/commentary.js/saveCommentaryDetailsService",
-        request
-      );
-      throw new Error(err.message);
-    });
+    );
     savecommentaryWicket = await saveCommentaryWicketService(
       {
         ...commentaryWicket,
@@ -1612,16 +1403,7 @@ const saveCommentaryDetailsService = async (request, fastify) => {
       },
       fastify,
       request
-    ).catch((err) => {
-      console.log("save commentary wicket service console", err);
-      errorLogger(
-        fastify,
-        err.message,
-        "ERROR --> services/commentary.js/saveCommentaryDetailsService",
-        request
-      );
-      throw new Error(err.message);
-    });
+    );
 
     commentaryDetails &&
       promises.push(
@@ -1937,7 +1719,6 @@ const testStoreProcedureService = async (request, fastify) => {
             "ERROR --> services/commentary.js/testStoreProcedureService",
             request
           );
-          throw new Error(err.message);
         });
       }
       // close the market if commentary Close
@@ -2019,7 +1800,6 @@ const testStoreProcedureService = async (request, fastify) => {
             "ERROR --> services/commentary.js/testStoreProcedureService",
             request
           );
-          throw new Error(err.message);
         });
       }
     }
@@ -2144,7 +1924,6 @@ const testStoreProcedureService = async (request, fastify) => {
               "ERROR --> services/commentary.js/testStoreProcedureService",
               request
             );
-            throw new Error(err.message);
           });
           try {
             const isFDS = global.tblConfigs.find((item) => item.key === configConstants.ISFRAUDDET_DECTIONAPI).value;
@@ -2170,7 +1949,6 @@ const testStoreProcedureService = async (request, fastify) => {
                     "ERROR --> services/commentary.js/testStoreProcedureService",
                     request
                   );
-                  throw new Error(err.message);
                 });
               }
             }
@@ -2287,7 +2065,6 @@ const testStoreProcedureService = async (request, fastify) => {
           "ERROR --> services/commentary.js/testStoreProcedureService",
           request
         );
-        throw new Error(err.message);
       });
 
       callPredictorMarket(
@@ -2307,7 +2084,6 @@ const testStoreProcedureService = async (request, fastify) => {
           "ERROR --> services/commentary.js/testStoreProcedureService",
           request
         );
-        throw new Error(err.message);
       });
     }
 
@@ -2321,16 +2097,7 @@ const testStoreProcedureService = async (request, fastify) => {
           commentaryId: commentaryDetails.commentaryId,
         },
         fastify
-      ).catch((err) => {
-        console.log("close event market by cid query console", err);
-        errorLogger(
-          fastify,
-          err.message,
-          "ERROR --> services/commentary.js/testStoreProcedureService",
-          request
-        );
-        throw new Error(err.message);
-      });
+      );
       callPredictorMarket(
         {
           commentary_id: commentaryDetails.commentaryId,
@@ -2346,7 +2113,6 @@ const testStoreProcedureService = async (request, fastify) => {
           "ERROR --> services/commentary.js/testStoreProcedureService",
           request
         );
-        throw new Error(err.message);
       });
     }
 
@@ -2372,7 +2138,6 @@ const testStoreProcedureService = async (request, fastify) => {
           "ERROR --> services/commentary.js/testStoreProcedureService",
           request
         );
-        throw new Error(err.message);
       });
 
       global.clientSocketIo?.forEach((socket) => {
@@ -2435,7 +2200,6 @@ const testStoreProcedureService = async (request, fastify) => {
           "ERROR --> services/commentary.js/testStoreProcedureService",
           request
         );
-        throw new Error(err.message);
       });
     }
 
@@ -2717,7 +2481,6 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
             "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
             request
           );
-          throw new Error(err.message);
         });
       }
       if (previousCommentaryStatus != statusToUpdate) {
@@ -2726,16 +2489,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         },
           request,
           fastify
-        ).catch((err) => {
-          console.log("get march data by cid console", err);
-          errorLogger(
-            fastify,
-            err.message,
-            "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
-            request
-          );
-          throw new Error(err.message);
-        });
+        );
 
         callClientAPI(
           {
@@ -2753,7 +2507,6 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
             "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
             request
           );
-          throw new Error(err.message);
         });
       }
       sendDataForSocketUpdate.dataToUpdate.push({
@@ -2811,7 +2564,6 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
           request
         );
-        throw new Error(err.message);
       }
 
       if (commentaryBallByBall) {
@@ -2875,7 +2627,6 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
               "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
               request
             );
-            throw new Error(err.message);
           });
           let callPrediction = {};
           if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
@@ -3057,7 +2808,6 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
             "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
             request
           );
-          throw new Error(err.message);
         }
 
         // call the predictor market
@@ -3097,7 +2847,6 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
               "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
               request
             );
-            throw new Error(err.message);
           });
           let callPrediction = {};
           if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
@@ -3162,7 +2911,6 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
                   "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
                   request
                 );
-                throw new Error(err.message);
               });
             }
           }
@@ -3174,7 +2922,6 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
             "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
             request
           );
-          throw new Error(err.message);
         }
       }
     }
@@ -3336,7 +3083,6 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
           request
         );
-        throw new Error(err.message);
       });
       _resFromPredictAPI = null;
       _resFromPredictAPI = await callPredictorMarket(
@@ -3356,7 +3102,6 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
           request
         );
-        throw new Error(err.message);
       });
       let callPrediction = {};
       if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
@@ -3378,16 +3123,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           commentaryId: commentaryDetails.commentaryId,
         },
         fastify
-      ).catch((err) => {
-        console.log("close event market by cid query console", err);
-        errorLogger(
-          fastify,
-          err.message,
-          "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
-          request
-        );
-        throw new Error(err.message);
-      });
+      );
       _resFromPredictAPI = null;
       _resFromPredictAPI = await callPredictorMarket(
         {
@@ -3404,7 +3140,6 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
           request
         );
-        throw new Error(err.message);
       });
       let callPrediction = {};
       if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
@@ -3430,16 +3165,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         },
         fastify,
         "callFromSocket"
-      ).catch((err) => {
-        console.log("commentary details by event id service console", err);
-        errorLogger(
-          fastify,
-          err.message,
-          "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
-          request
-        );
-        throw new Error(err.message);
-      });
+      );
 
       global.clientSocketIo.forEach((socket) => {
         socket.client.emit("updateFullscore", sendDataForSocketUpdate);
@@ -3502,7 +3228,6 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
           request
         );
-        throw new Error(err.message);
       });
       let callPrediction = {};
       if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
@@ -3532,7 +3257,6 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
           request
         );
-        throw new Error(err.message);
       });
       let callPrediction = {};
       if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
@@ -3565,7 +3289,6 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
         request
       );
-      throw new Error(err.message);
     });
     response.callPredictions = callPredictions;
     return response;
@@ -3595,7 +3318,6 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
         request
       );
-      throw new Error(err.message);
     });
     throw error;
   }
@@ -3787,16 +3509,7 @@ const addTeamPlayerService = async (request, fastify) => {
       currentInning,
       fastify,
       request
-    ).catch((err) => {
-      console.log("insert commentary players console", err);
-      errorLogger(
-        fastify,
-        err.message,
-        "ERROR --> services/commentary.js/addTeamPlayersService",
-        request
-      );
-      throw new Error(err.message);
-    });
+    );
   }
 
   global.tblCommentaryPlayers = await getAllCommentaryPlayerQuery(fastify);
@@ -3855,16 +3568,7 @@ const deleteTeamPlayerService = async (request, fastify) => {
     },
     request,
     fastify
-  ).catch((err) => {
-    console.log("delete commentary player by id console", err);
-    errorLogger(
-      fastify,
-      err.message,
-      "ERROR --> services/commentary.js/deletTeamPlayerService",
-      request
-    );
-    throw new Error(err.message);
-  });
+  );
 
   global.tblCommentaryPlayers = global.tblCommentaryPlayers.filter(
     (item) =>
@@ -3885,16 +3589,7 @@ const loadTeamPlayerService = async (request, fastify) => {
     throw new Error("Team with this id not Found");
   }
   // get all players for this team
-  let teamPlayers = await getAllPlayersByTeamIdQuery(teamId, fastify, request).catch((err) => {
-    console.log("get all players by team id query console", err);
-    errorLogger(
-      fastify,
-      err.message,
-      "ERROR --> services/commentary.js/loadTeamPlayerService",
-      request
-    );
-    throw new Error(err.message);
-  });
+  let teamPlayers = await getAllPlayersByTeamIdQuery(teamId, fastify, request);
   return teamPlayers;
 };
 const updateTeamPlayerService = async (request, fastify) => {
@@ -3941,16 +3636,7 @@ const updateTeamPlayerService = async (request, fastify) => {
       },
       request,
       fastify
-    ).catch((err) => {
-      console.log("update commentary playe by id console", err);
-      errorLogger(
-        fastify,
-        err.message,
-        "ERROR --> services/commentary.js/updateTeamPlayerService",
-        request
-      );
-      throw new Error(err.message);
-    });
+    );
 
     let player = global.tblCommentaryPlayers.find(
       (item) =>
@@ -4052,7 +3738,6 @@ const updateCommentaryStatusService = async (request, fastify) => {
         "ERROR --> services/commentary.js/updateCommentaryStatusService",
         request
       );
-      throw new Error(err.message);
     });
     let callPrediction = {};
     if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
@@ -4070,16 +3755,7 @@ const updateCommentaryStatusService = async (request, fastify) => {
     let market = await getMarketsByCategoryQuery({
       categoryId: getCategory,
       commentaryId: commentaryId
-    }, request, fastify).catch((err) => {
-      console.log("get marketsByCategory query console", err);
-      errorLogger(
-        fastify,
-        err.message,
-        "ERROR --> services/commentary.js/updateCommentaryStatusService",
-        request
-      );
-      throw new Error(err.message);
-    });
+    }, request, fastify);
 
     _resFromPredictAPI = await callPredictorMarket(
       {
@@ -4098,7 +3774,6 @@ const updateCommentaryStatusService = async (request, fastify) => {
         "ERROR --> services/commentary.js/updateCommentaryStatusService",
         request
       );
-      throw new Error(err.message);
     });
 
     if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
@@ -4138,16 +3813,7 @@ const updateCommentaryStatusService = async (request, fastify) => {
       },
       fastify,
       "callFromSocket"
-    ).catch((err) => {
-      console.log("commentary details by event id service console", err);
-      errorLogger(
-        fastify,
-        err.message,
-        "ERROR --> services/commentary.js/updateCommentaryStatusService",
-        request
-      );
-      throw new Error(err.message);
-    });
+    );
 
     // global.clientSocketIo.forEach((socket) => {
     //   socket.client.emit("updateFullscore", sendDataForSocketUpdate);
@@ -4327,16 +3993,7 @@ const createBallByBallCommentoriesService = async (data, fastify, request) => {
     data,
     fastify,
     request
-  ).catch((err) => {
-    console.log("create ball by ball commentaries query console", err);
-    errorLogger(
-      fastify,
-      err.message,
-      "ERROR --> services/commentary.js/createBallByBallCommentoriesService",
-      request
-    );
-    throw new Error(err.message);
-  });
+  );
   // console.timeEnd("createBallByBallCommentoriesQuery")
 
   let dataToreturn = {
@@ -4398,16 +4055,7 @@ const createCommentaryWicketService = async (data, fastify, request) => {
     data,
     fastify,
     request
-  ).catch((err) => {
-    console.log("create commentary wicket query console", err);
-    errorLogger(
-      fastify,
-      err.message,
-      "ERROR --> services/commentary.js/creatCommentaryWicketSerive",
-      request
-    );
-    throw new Error(err.message);
-  });
+  );
   // console.timeEnd("createCommentaryWicketQuery")
 
   global.tblCommentaryWicket.push(addCommentaryWicket);
@@ -4463,16 +4111,7 @@ const createCommentaryPartnershipService = async (data, fastify, request) => {
     data,
     fastify,
     request
-  ).catch((err) => {
-    console.log("create commentary partenserhip query console", err);
-    errorLogger(
-      fastify,
-      err.message,
-      "ERROR --> services/commentary.js/creatCommentaryPartnershipService",
-      request
-    );
-    throw new Error(err.message);
-  });
+  );
   // console.timeEnd("createCommentaryPartnershipQuery")
 
   global.tblCommentaryPartnership.push(addCommentaryPartnership);
@@ -5751,7 +5390,6 @@ const updateMatchTypeInCommentaryService = async (request, fastify) => {
         "ERROR --> services/commentary.js/updateMatchTypeInCommentaryService",
         request
       );
-      throw new Error(err.message);
     });
     if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
       callPrediction.predictioncallSuccess = false;
@@ -5824,16 +5462,7 @@ const changeBowlerOfCommentaryService = async (request, fastify) => {
     },
     request,
     fastify
-  ).catch((err) => {
-    console.log("change bowler in commentary console", err);
-    errorLogger(
-      fastify,
-      err.message,
-      "ERROR --> services/commentary.js/changeBowlerOfCommentaryService",
-      request
-    );
-    throw new Error(err.message);
-  });
+  );
 
   return updatedData;
 };
@@ -6543,31 +6172,13 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
       data,
       fastify,
       request
-    ).catch((err) => {
-      console.log("get commentary squad player list console", err);
-      errorLogger(
-        fastify,
-        err.message,
-        "ERROR --> services/commentary.js/getAllDetailsByEventIdService",
-        request
-      );
-      throw new Error(err.message);
-    });
+    );
     data.teamId = commentaryTeamsTwo.teamId;
     let TeamPlayes2 = await getCommnertySquadPlayersList(
       data,
       fastify,
       request
-    ).catch((err) => {
-      console.log("get commentary squad player list console", err);
-      errorLogger(
-        fastify,
-        err.message,
-        "ERROR --> services/commentary.js/getAllDetailsByEventIdService",
-        request
-      );
-      throw new Error(err.message);
-    });
+    );
     dataToreturn.Sqt1 = TeamPlayes1;
     dataToreturn.Sqt2 = TeamPlayes2;
 
@@ -7048,27 +6659,9 @@ const getCommenrtySquadDetailsService = async (request, fastify) => {
     CommentaryId: commentary.commentaryId,
     teamId: commentaryTeamsOne.teamId,
   };
-  let TeamPlayes1 = await getCommnertySquadPlayersList(data, fastify, request).catch((err) => {
-    console.log("get commentary squad player list console", err);
-    errorLogger(
-      fastify,
-      err.message,
-      "ERROR --> services/commentary.js/getAllDetailsDetailsService",
-      request
-    );
-    throw new Error(err.message);
-  });
+  let TeamPlayes1 = await getCommnertySquadPlayersList(data, fastify, request);
   data.teamId = commentaryTeamsTwo.teamId;
-  let TeamPlayes2 = await getCommnertySquadPlayersList(data, fastify, request).catch((err) => {
-    console.log("get commentary squad player list console", err);
-    errorLogger(
-      fastify,
-      err.message,
-      "ERROR --> services/commentary.js/getAllDetailsByDetailsService",
-      request
-    );
-    throw new Error(err.message);
-  });
+  let TeamPlayes2 = await getCommnertySquadPlayersList(data, fastify, request);
   dataToreturn.pl1 = TeamPlayes1;
   dataToreturn.pl2 = TeamPlayes2;
   return dataToreturn;
@@ -7327,27 +6920,9 @@ const getCommentaryTeamsListService = async (request, fastify) => {
     CommentaryId: commentary.commentaryId,
     teamId: commentaryTeamsOne.teamId,
   };
-  let TeamPlayes1 = await getCommnertySquadPlayersList(data, fastify, request).catch((err) => {
-    console.log("get commentary squad player list console", err);
-    errorLogger(
-      fastify,
-      err.message,
-      "ERROR --> services/commentary.js/getCommentaryTeamListService",
-      request
-    );
-    throw new Error(err.message);
-  });
+  let TeamPlayes1 = await getCommnertySquadPlayersList(data, fastify, request);
   data.teamId = commentaryTeamsTwo.teamId;
-  let TeamPlayes2 = await getCommnertySquadPlayersList(data, fastify, request).catch((err) => {
-    console.log("get commentary squad player list console", err);
-    errorLogger(
-      fastify,
-      err.message,
-      "ERROR --> services/commentary.js/getCommentaryTeamListService",
-      request
-    );
-    throw new Error(err.message);
-  });
+  let TeamPlayes2 = await getCommnertySquadPlayersList(data, fastify, request);
   dataToreturn.pl1 = TeamPlayes1;
   dataToreturn.pl2 = TeamPlayes2;
   return dataToreturn;
@@ -7386,7 +6961,6 @@ const changeShowClientService = async (request, fastify) => {
         "ERROR --> services/commentary.js/changeShowClientService",
         request
       );
-      throw new Error(err.message);
     });
   }
 
@@ -7719,7 +7293,6 @@ const updateisPredictMarketInCommentaryService = async (request, fastify) => {
         "ERROR --> services/commentary.js/updateisPredictMarketInCommentaryService",
         request
       );
-      throw new Error(err.message);
     });
   }
   return updatedData;
@@ -7760,7 +7333,6 @@ const updateResultInCommentaryService = async (request, fastify) => {
         "ERROR --> services/commentary.js/updateResultInCommentaryService",
         request
       );
-      throw new Error(err.message);
     });
   }
 
@@ -7917,7 +7489,15 @@ const activeInactiveCommentaryService = async (request, fastify) => {
     },
     request,
     fastify
-  )
+  ).catch((err) => {
+    console.log("call client api console", err);
+    errorLogger(
+      fastify,
+      err.message,
+      "ERROR --> services/commentary.js/activeInactiveCommentaryService",
+      request
+    );
+  });
   return "Commentary Updated successfully";
 };
 const closeCommentaryService = async (request, fastify) => {
@@ -7945,10 +7525,9 @@ const closeCommentaryService = async (request, fastify) => {
         errorLogger(
           fastify,
           err.message,
-          "ERROR --> services/commentary.js/closeEventMarketByCIdQuery",
+          "ERROR --> services/commentary.js/closeCommentaryService",
           request
         );
-        throw new Error(err.message);
       });
       let callPrediction = {}
       if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
@@ -7974,7 +7553,6 @@ const closeCommentaryService = async (request, fastify) => {
           "ERROR --> services/commentary.js/closeEventMarketByCIdQuery",
           request
         );
-        throw new Error(err.message);
       });
       const cData = await getMatchDataByCId({
         commentaryId: commentaryId,
@@ -7996,7 +7574,6 @@ const closeCommentaryService = async (request, fastify) => {
           "ERROR --> services/commentary.js/closeEventMarketByCIdQuery",
           request
         );
-        throw new Error(err.message);
       });
     }
   }
@@ -8067,16 +7644,7 @@ const updateDelayInCommentaryService = async (request, fastify) => {
 
   await updateDelayInCommentaryQuery(request.body, fastify, request);
 
-  const updatedData = await getCommentaryByIdQuery(request, fastify).catch((err) => {
-    console.log("getCommentaryByIdQuery console", err);
-    errorLogger(
-      fastify,
-      err.message,
-      "ERROR --> services/commentary.js/updateDelayInCommentaryService",
-      request
-    );
-    throw new Error(err.message);
-  });
+  const updatedData = await getCommentaryByIdQuery(request, fastify);
 
   global.tblCommentaries[index] = updatedData;
   let _resFromPredictAPI;
@@ -8099,7 +7667,6 @@ const updateDelayInCommentaryService = async (request, fastify) => {
         "ERROR --> services/commentary.js/updateDelayInCommentaryService",
         request
       );
-      throw new Error(err.message);
     });
     if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
       callPrediction.predictioncallSuccess = false;
@@ -8272,7 +7839,6 @@ const updateEventRefIdInCommentaryService = async (request, fastify) => {
         "ERROR --> services/commentary.js/updateEventRefIdInCommentaryService",
         request
       );
-      throw new Error(err.message);
     });
     if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
       callPrediction.predictioncallSuccess = false;
@@ -8320,16 +7886,7 @@ const loadcommentaryService = async (request, fastify) => {
           },
           request,
           fastify
-        ).catch((err) => {
-          console.log("get event market reatio query console", err);
-          errorLogger(
-            fastify,
-            err.message,
-            "ERROR --> services/commentary.js/loadCommentaryService",
-            request
-          );
-          throw new Error(err.message);
-        });
+        );
       }
       _resFromPredictAPI = await callPredictorMarket(
         {
@@ -8349,7 +7906,6 @@ const loadcommentaryService = async (request, fastify) => {
           "ERROR --> services/commentary.js/loadCommentaryService",
           request
         );
-        throw new Error(err.message);
       });
 
       if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
@@ -8487,21 +8043,11 @@ const AddSuperOverCommentaryService = async (request, fastify) => {
           "ERROR --> services/commentary.js/AddSuperOverCommentaryService",
           request
         );
-        throw new Error(err.message);
       }
     }
   }
 
-  const updatedData = await getCommentaryByIdQuery({ body: { commentaryId: commentary.commentaryId } }, fastify).catch((err) => {
-    console.log("get commentary by id query console", err);
-    errorLogger(
-      fastify,
-      err.message,
-      "ERROR --> services/commentary.js/AddSuperOverCommentaryService",
-      request
-    );
-    throw new Error(err.message);
-  });
+  const updatedData = await getCommentaryByIdQuery({ body: { commentaryId: commentary.commentaryId } }, fastify);
   global.tblCommentaries[index] = updatedData;
   global.tblCommentaryPlayers = await getAllCommentaryPlayerQuery(fastify);
   global.tblCommentaryTeams = await getAllCommentaryTeamsQuery(fastify);
@@ -8521,16 +8067,7 @@ const updateTeamPredictionService = async (request, fastify) => {
 
   await updateTeamPrediction(request, fastify);
 
-  const updatedData = await getCommentaryByIdQuery(request, fastify).catch((err) => {
-    console.log("get commentary by id query console", err);
-    errorLogger(
-      fastify,
-      err.message,
-      "ERROR --> services/commentary.js/updateTeamPredictionService",
-      request
-    );
-    throw new Error(err.message);
-  });
+  const updatedData = await getCommentaryByIdQuery(request, fastify);
 
   global.tblCommentaries[index] = updatedData;
 

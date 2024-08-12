@@ -64,6 +64,7 @@ const { getAllOtpQuery } = require("../repository/TableOtp");
 const { getAllClientQuery } = require("../repository/TableClient");
 const { allMailSettingsQuery } = require('../repository/TableMailSettings');
 const { getAllMarketOddsBallByBall } = require("../repository/TableMarketOddsBallByBall");
+const { allResponseLogsQuery, allThirdPartyApiLogsQuery, allPredictorAPILogsQuery } = require("../repository/TableLogs");
 
 const fetchAllDataFromDb = async (fastify, reply) => {
   try {
@@ -131,6 +132,10 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const getAllClient = await getAllClientQuery(fastify);
     const getAllMailSettings = await allMailSettingsQuery(fastify);
     const marketOddBallByBall = await getAllMarketOddsBallByBall(fastify);
+    const responseLogs = await allResponseLogsQuery(fastify);
+    const thirdPartyAPILogs = await allThirdPartyApiLogsQuery(fastify);
+    const predictorAPILogs = await allPredictorAPILogsQuery(fastify);
+
     global.tblTabs = getAllTabs;
     global.tblRoles = getAllRoles;
     global.tblBlocks = getAllBlocks;
@@ -183,6 +188,9 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblClient = getAllClient;
     global.tblMailSettings = getAllMailSettings;
     global.tblMarketOddsBallByBall = marketOddBallByBall;
+    global.responseLogs = responseLogs;
+    global.thirdPartyAPILogs = thirdPartyAPILogs;
+    global.predictorAPILogs = predictorAPILogs
 
     console.log("Okkkk");
 

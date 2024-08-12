@@ -64,7 +64,6 @@ const createVendorService = async(request , fastify) => {
           "ERROR --> services/commentary.js/createVendorService",
           request
         );
-        throw new Error(err.message);
       });
     return data;
 }
@@ -110,7 +109,6 @@ const updateVendorService = async(request , fastify) => {
           "ERROR --> services/commentary.js/updateVendorService",
           request
         );
-        throw new Error(err.message);
       });
     return data;
 }
@@ -140,7 +138,6 @@ const deleteVendorService = async(request , fastify) => {
           "ERROR --> services/commentary.js/deleteVendorService",
           request
         );
-        throw new Error(err.message);
       });
 
     return `Vendor(s) deleted successfully`;
@@ -169,7 +166,6 @@ const activeInactiveVendorService = async(request , fastify) => {
           "ERROR --> services/commentary.js/activeInactiveVendorService",
           request
         );
-        throw new Error(err.message);
       });
     return `Vendor status updated successfully`;
 }
@@ -196,7 +192,6 @@ const updateIsIPCheckService = async(request , fastify) => {
           "ERROR --> services/commentary.js/updateIsIPCheckService",
           request
         );
-        throw new Error(err.message);
       });
     return `Vendor updated successfully`;
 }

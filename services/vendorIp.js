@@ -1,5 +1,6 @@
 const { createVendorIpQuery, deleteVendorIpQuery, updateIsActiveVendorIpQuery } = require("../repository/TableVendorIp");
 const { callDataProvider, ServiceType, APIEndpointModuleType } = require("../utilities");
+const { errorLogger } = require("../utilities/logger");
 
 const getAllVendorIpervice = async (request, fastify) => {
     const {isActive} = request.body;
@@ -52,7 +53,6 @@ const saveVendorIpService = async (request, fastify) => {
           "ERROR --> services/commentary.js/saveVendorIpService",
           request
         );
-        throw new Error(err.message);
       });
     return data;
 
@@ -81,7 +81,6 @@ const deleteVendorIpService = async (request, fastify) => {
       "ERROR --> services/commentary.js/deleteVendorIpService",
       request
     );
-    throw new Error(err.message);
   });
     return `VendorIp (s) deleted successfully`;
 }
@@ -109,7 +108,6 @@ const activeInactiveVendorIpService = async (request, fastify) => {
       "ERROR --> services/commentary.js/activeInactiveVendorIpService",
       request
     );
-    throw new Error(err.message);
   });
     
     return `VendorIp updated successfully`;
