@@ -81,25 +81,6 @@ const insertMailSettingsQuery = async (data, fastify, request) => {
 };
 
 
-const getMailSettingsById = async (body, fastify) => {
-    try {
-        return await fastify.db.query(
-            `update "tblMailSettings" set "wrId" = $1`,
-            {
-                bind: [body.id],
-            }
-        );
-    } catch (err) {
-        errorLogger(
-            fastify,
-            err.message,
-            "DB ERROR --> repository/TableMailSettings.js/getMailSettingsById",
-            request
-        );
-        throw new Error(err.message);
-    }
-};
-
 const updateMailSettingsQuery = async (data, fastify, request) => {
     try {
         return await fastify.db.query(
@@ -197,7 +178,6 @@ const isDefaultFalseQuery = async (data, fastify, request) => {
 module.exports = {
     allMailSettingsQuery,
     insertMailSettingsQuery,
-    getMailSettingsById,
     updateMailSettingsQuery,
     deleteMailSettingsQuery,
     isDefaultChangeQuery,

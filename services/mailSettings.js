@@ -1,5 +1,5 @@
 const { insertMailSettingsQuery, updateMailSettingsQuery, deleteMailSettingsQuery, isDefaultChangeQuery, isDefaultFalseQuery } = require("../repository/TableMailSettings");
-const bcrypt = require("bcrypt");
+const { encrypt } = require("../utilities/index");
 
 const saveMailSettings = async (request, fastify, data) => {
     const validateEmail = global.tblMailSettings.find((item) =>
@@ -84,7 +84,7 @@ const mailSettingsById = async (request) => {
 };
 
 const createMailSettings = async (request, fastify) => {
-    let password = bcrypt.hashSync(request.body.password, 10);
+    let password = encrypt(request.body.password);
     request.body.password = password
 
     if (request.body.id === 0) {

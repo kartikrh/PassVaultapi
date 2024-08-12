@@ -556,6 +556,11 @@ const clientProvider = {
   Google : 2,
   Facebook : 3,
 }
+const typesOfServices = {
+  GmailService: 'gmail',
+  SmtpService: 'smtp',
+}
+
 const templateModel = {
   MobileNo : 1,
   Email : 2,
@@ -604,6 +609,7 @@ module.exports = {
   pageLimit,
   getPagination,
   clientProvider,
+  typesOfServices,
   templateModel,
   templateType
 };
