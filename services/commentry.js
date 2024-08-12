@@ -3165,8 +3165,16 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         },
         fastify,
         "callFromSocket"
-      );
-
+      ).catch((err) => {
+        console.log("err in commentaryDetailsByEventIdService", err);
+        errorLogger(
+          fastify,
+          err.message,
+          "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
+          request
+        );
+        
+      })
       global.clientSocketIo.forEach((socket) => {
         socket.client.emit("updateFullscore", sendDataForSocketUpdate);
       });
