@@ -32,10 +32,11 @@ const {
   verifyMobileOtp
   //loginRegistrationClient,
 } = require("../controller/users/index");
-const { Auth ,sendPushNotification,weblogs} = require("../swaggerSchema/groupTags/schema");
+const { Auth ,sendPushNotification,weblogs, Config} = require("../swaggerSchema/groupTags/schema");
 const { authorize } = require("../controller/middleware/index");
 const { startSignalR, stopSignalR, isSignalRStarted  } = require('../signalrHandler/index');
 const { errorLogger } = require("../utilities/logger");
+const { getAllConfigData } = require("../controller/users/admin/Page/config");
 
 module.exports = async function (fastify, opts) {
   //! API DEFINITION
@@ -194,5 +195,9 @@ module.exports = async function (fastify, opts) {
     schema: weblogs.save.schema,
     preHandler: [(request, reply) => authorize(request, reply, fastify)],
     handler: (request, reply) => AddUpdateWebLogs(request, reply, fastify),
+  });
+  fastify.post("/config", {
+    schema: Config.allConfig.schema,
+    handler: (request, reply) => getAllConfigData(request, reply, fastify),
   });
 };

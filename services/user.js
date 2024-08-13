@@ -677,23 +677,42 @@ async function registerDetailsService({ body }, fastify) {
 
 async function sendOtpEmail(emailId) {
   try {
-  const otp = Math.floor(1000 + Math.random() * 9000);
+    const otp = Math.floor(1000 + Math.random() * 9000);
 
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: 'apoorva.wpa@gmail.com',
-        pass: 'gdejmqzmfyynrcpy'
+    let mailType = global.tblConfigs.find(
+      (item) => item.key.toLowerCase() === SENDEMAILTYPE.toLowerCase()
+    );
+    if (mailType) {
+      mailType = parseInt(mailType.value);
     }
-  });
+    else {
+      throw new Error("Config not found");
+    }
 
-  const mailOptions = {
-    from: 'ScoreClient',
-    to: emailId,
-    subject: 'Your OTP Code',
-    text: `Your OTP code is ${otp}`,
-    html: `<b>Hello there! ${otp}</b>`
-  };
+    const result = global.tblMailSettings.find(
+      (item) => item.mailType === mailType && item.isDefault === true
+    );
+    let serviceType = mailType === 1 ? typesOfServices.GmailService : typesOfServices.SmtpService;
+
+    let templateData = global.tblTemplate.find(
+      (item) => item.isActive === true && item.isDefault === true
+    );
+    let template = templateData ? templateData.description.replace('{{OTP}}', otp) : `<p>Hello there! ${otp}</p>`;
+
+    const transporter = nodemailer.createTransport({
+      service: serviceType,
+      auth: {
+        user: result.email,
+        pass: decrypt(result.password)
+      }
+    });
+
+    const mailOptions = {
+      from: 'ScoreClient',
+      to: emailId,
+      subject: 'Your OTP Code',
+      html: template
+    };
 
     const info = await transporter.sendMail(mailOptions);
     // console.log('Email sent: ' + info.response);

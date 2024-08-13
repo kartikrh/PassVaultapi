@@ -3,6 +3,7 @@ const {
   configByIdService,
   saveConfigService,
   deleteConfigService,
+  allConfigDetails
 } = require("../../../../services/config");
 
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
@@ -55,9 +56,20 @@ const deleteConfig = async (request, reply, fastify) => {
   }
 };
 
+const getAllConfigData = async (request, reply, fastify) => {
+  try {
+    const result = await allConfigDetails(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/getAllConfigData", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
 module.exports = {
   getAllCongig,
   getConfigById,
   saveConfig,
   deleteConfig,
+  getAllConfigData
 };
