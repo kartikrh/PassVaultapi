@@ -6,7 +6,7 @@ let commonPath = "controller/users/admin/log/index.js";
 
 const getAllResponseLogs = async (request, reply, fastify) => {
     try {
-        const result = await allResponseLogs(request);
+        const result = await allResponseLogs(request, fastify);
         reply.status(200).send(success(result, 200));
     } catch (err) {
         errorLogger(fastify, err.message, commonPath + "/getAllResponseLogs", request);
@@ -16,7 +16,7 @@ const getAllResponseLogs = async (request, reply, fastify) => {
 
 const getAllThirdPartyApiLogs = async (request, reply, fastify) => {
     try {
-        const result = await allThirdPartyApiLogs(request);
+        const result = await allThirdPartyApiLogs(request, fastify);
         reply.status(200).send(success(result, 200));
     } catch (err) {
         errorLogger(fastify, err.message, commonPath + "/getAllThirdPartyApiLogs", request);
