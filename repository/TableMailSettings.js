@@ -175,11 +175,35 @@ const isDefaultFalseQuery = async (data, fastify, request) => {
     }
 };
 
+const activeInactiveMailSettingsQuery = async (data, request, fastify) => {
+    try {
+      return await fastify.db.query(
+        `
+                  update "tblMailSettings" set
+                  "wrIsActive" = $1
+                  where "wrId" = $2
+              `,
+        {
+          bind: [data.isActive, data.id],
+        }
+      );
+    } catch (err) {
+      errorLogger(
+        fastify,
+        err.message,
+        "DB ERROR --> repository/TableMailSettings.js/activeInactiveMailSettingsQuery",
+        request
+      );
+      throw new Error(err.message);
+    }
+  };
+
 module.exports = {
     allMailSettingsQuery,
     insertMailSettingsQuery,
     updateMailSettingsQuery,
     deleteMailSettingsQuery,
     isDefaultChangeQuery,
-    isDefaultFalseQuery
+    isDefaultFalseQuery,
+    activeInactiveMailSettingsQuery
 };
