@@ -883,7 +883,7 @@ async function loginClient(body, fastify) {
       } else {
         const registrationData = await fastify.db.query(
           `INSERT INTO "tblClient" (
-            "wrGoogleID", "wrIsAllowMultiLogin", "wrCreatedDate", "wrEmailID", "wrIsActive", "wrIsEmailVerified", "wrIsDelete","wrUserName" , "wrProvider", wrRegistrationProcessStatus, wrIsUserActive
+            "wrGoogleID", "wrIsAllowMultiLogin", "wrCreatedDate", "wrEmailID", "wrIsActive", "wrIsEmailVerified", "wrIsDelete","wrUserName" , "wrProvider", "wrRegistrationProcessStatus", "wrIsUserActive"
           ) VALUES (
             $1, true, now(), $2, true, true, false , $3 , $4, $5, $6
           ) RETURNING "wrClientID" as "clientId", "wrGoogleID" as "googleId", "wrUserName" as "userName", "wrIsAllowMultiLogin" as "isAllowMultiLogin",
@@ -934,7 +934,7 @@ async function loginClient(body, fastify) {
       else {
         const registrationData = await fastify.db.query(
           `INSERT INTO "tblClient" (
-            "wrFacebookId", "wrIsAllowMultiLogin", "wrCreatedDate", "wrEmailID", "wrIsActive","wrIsDelete","wrUserName", "wrProvider", wrRegistrationProcessStatus, wrIsUserActive
+            "wrFacebookId", "wrIsAllowMultiLogin", "wrCreatedDate", "wrEmailID", "wrIsActive","wrIsDelete","wrUserName", "wrProvider", "wrRegistrationProcessStatus", "wrIsUserActive"
           ) VALUES (
             $1, true, now(), $2, true ,false, $3 ,$4, $5, $6
           ) RETURNING "wrClientID" as "clientId", "wrFacebookId" as "facebookId", "wrUserName" as "userName", "wrIsAllowMultiLogin" as "isAllowMultiLogin","wrEmailID" as "emailId",
