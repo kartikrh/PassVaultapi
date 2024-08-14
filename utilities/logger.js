@@ -41,7 +41,7 @@ const responseLogger = async (request) => {
 
 const responseLogInDB = async (request, fastify) => {
   try {
-    let addLog = global.tblConfig.find((x) => x.key == ISCOMMENTARYLOGGER)?.value || "false";
+    let addLog = global.tblConfigs.find((x) => x.key == ISCOMMENTARYLOGGER)?.value || "false";
     if (addLog == "false") {
       return true;
     }
@@ -196,7 +196,7 @@ const tblThirdPartyAPILogger = async (data, request, fastify) => {
 
 const commentaryLogger = async (data, request, fastify) => {
   try {
-    let addLog = global.tblConfig.find((x) => x.key == ISCOMMENTARYLOGGER)?.value || "false";
+    let addLog = global.tblConfigs.find((x) => x.key == ISCOMMENTARYLOGGER)?.value || "false";
     if (addLog == "false") {
       return true;
     }
