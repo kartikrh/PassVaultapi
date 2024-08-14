@@ -888,7 +888,7 @@ async function loginClient(body, fastify) {
             $1, true, now(), $2, true, true, false , $3 , $4, $5, $6
           ) RETURNING "wrClientID" as "clientId", "wrGoogleID" as "googleId", "wrUserName" as "userName", "wrIsAllowMultiLogin" as "isAllowMultiLogin",
            "wrEmailID" as "emailId","wrMobileNo" as "mobileNo" , "wrProvider" as "provider" ,
-            "wrRegistrationProcessStatus" as "registrationProcessStatus", "wrIsEmailVerified" as "isEmailVerified", "wrIsUserActive" as "isUserActive";`,
+            "wrRegistrationProcessStatus" as "registrationProcessStatus", "wrIsEmailVerified" as "isEmailVerified", "wrIsUserActive" as "isUserActive", "wrIsActive" as "isActive", "wrCreatedDate" as "createdDate", "wrIsMobileVerified" as "isMobileVerified", "wrIsDelete" as "isDelete", "wrClientName" as "fullName";`,
           {
             type: QueryTypes.INSERT,
             bind: [googleID, email, userName, clientProvider.Google, 3, 1],
@@ -938,7 +938,7 @@ async function loginClient(body, fastify) {
           ) VALUES (
             $1, true, now(), $2, true ,false, $3 ,$4, $5, $6
           ) RETURNING "wrClientID" as "clientId", "wrFacebookId" as "facebookId", "wrUserName" as "userName", "wrIsAllowMultiLogin" as "isAllowMultiLogin","wrEmailID" as "emailId",
-           "wrMobileNo" as "mobileNo" , "wrRegistrationProcessStatus" as "registrationProcessStatus", "wrIsEmailVerified" as "isEmailVerified", "wrIsUserActive" as "isUserActive";`,
+           "wrMobileNo" as "mobileNo" , "wrProvider" as "provider", "wrRegistrationProcessStatus" as "registrationProcessStatus", "wrIsEmailVerified" as "isEmailVerified", "wrIsUserActive" as "isUserActive", "wrIsActive" as "isActive", "wrCreatedDate" as "createdDate", "wrIsMobileVerified" as "isMobileVerified", "wrIsDelete" as "isDelete", "wrClientName" as "fullName";`,
           {
             type: fastify.db.QueryTypes.SELECT,
             bind: [facebookId, email, userName, clientProvider.Facebook, 3, 1],
