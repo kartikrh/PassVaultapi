@@ -296,15 +296,7 @@ const commentaryDetailsByIdService = async (request, fastify) => {
       "/api/v1/loadcommentary",
       fastify,
       request
-    ).catch((err) => {
-      console.log("call predictor market console", err);
-      errorLogger(
-        fastify,
-        err.message,
-        "ERROR --> services/commentary.js/CommentaryDetailsByIdService",
-        request
-      );
-    });
+    );
     // Check for error_msg in the response
     if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
       callPrediction.predictioncallSuccess = false;
@@ -573,15 +565,7 @@ const createCommentaryService = async (request, fastify) => {
       "/api/v1/loadcommentary",
       fastify,
       request
-    ).catch((err) => {
-      console.log("call predictor market console", err);
-      errorLogger(
-        fastify,
-        err.message,
-        "ERROR --> services/commentary.js/createCommentaryService",
-        request
-      );
-    });
+    );
     if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
       callPrediction.predictioncallSuccess = false;
       callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
@@ -1196,15 +1180,7 @@ const loadMultiCommentaryService = async (request, fastify) => {
         "/api/v1/loadcommentary",
         fastify,
         request
-      ).catch((err) => {
-        console.log("call predictor market console", err);
-        errorLogger(
-          fastify,
-          err.message,
-          "ERROR --> services/commentary.js/loadMultiCommentaryService",
-          request
-        );
-      });
+      );
       let callPrediction = {}
       // Check for error_msg in the response
       if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
@@ -2619,15 +2595,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
             "/api/v1/undoscore",
             fastify,
             request
-          ).catch((err) => {
-            console.log("call predictor market console", err);
-            errorLogger(
-              fastify,
-              err.message,
-              "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
-              request
-            );
-          });
+          );
           let callPrediction = {};
           if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
             callPrediction.predictioonAPI = "undoscore"
@@ -2839,15 +2807,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
             "/api/v1/predictscore",
             fastify,
             request
-          ).catch((err) => {
-            console.log("call predictor market console", err);
-            errorLogger(
-              fastify,
-              err.message,
-              "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
-              request
-            );
-          });
+          );
           let callPrediction = {};
           if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
             callPrediction.predictioonAPI = "predictscore"
@@ -3094,15 +3054,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         "/api/v1/loadcommentary",
         fastify,
         request
-      ).catch((err) => {
-        console.log("call predictor market console", err);
-        errorLogger(
-          fastify,
-          err.message,
-          "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
-          request
-        );
-      });
+      );
       let callPrediction = {};
       if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
         callPrediction.predictioonAPI = "loadcommentary"
@@ -3132,15 +3084,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         "/api/v1/endcommentary",
         fastify,
         request
-      ).catch((err) => {
-        console.log("call predictor market 1212 console", err);
-        errorLogger(
-          fastify,
-          err.message,
-          "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
-          request
-        );
-      });
+      );
       let callPrediction = {};
       if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
         callPrediction.predictioonAPI = "endcommentary"
@@ -3228,15 +3172,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         "/api/v1/playerpredictscore",
         fastify,
         request
-      ).catch((err) => {
-        console.log("call predictor market 7474 console", err);
-        errorLogger(
-          fastify,
-          err.message,
-          "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
-          request
-        );
-      });
+      );
       let callPrediction = {};
       if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
         callPrediction.predictioonAPI = "playerpredictscore"
@@ -3257,15 +3193,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         "/api/v1/endinnings",
         fastify,
         request
-      ).catch((err) => {
-        console.log("call predictor market 123 console", err);
-        errorLogger(
-          fastify,
-          err.message,
-          "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
-          request
-        );
-      });
+      );
       let callPrediction = {};
       if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
         callPrediction.predictioonAPI = "endinnings"
@@ -3734,19 +3662,12 @@ const updateCommentaryStatusService = async (request, fastify) => {
         commentary_id: commentaryId,
         status: EventMarketStatus.Suspend,
         match_type_id: global.tblCommentaries[index].matchTypeId,
+        is_open_market:false
       },
       "/api/v1/updatemarketstatus",
       fastify,
       request
-    ).catch((err) => {
-      console.log("call predictor market console", err);
-      errorLogger(
-        fastify,
-        err.message,
-        "ERROR --> services/commentary.js/updateCommentaryStatusService",
-        request
-      );
-    });
+    );
     let callPrediction = {};
     if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
       callPrediction.predictioncallSuccess = false;
@@ -3774,15 +3695,7 @@ const updateCommentaryStatusService = async (request, fastify) => {
       "/api/v1/updateplayerstatus",
       fastify,
       request
-    ).catch((err) => {
-      console.log("call predictor market console", err);
-      errorLogger(
-        fastify,
-        err.message,
-        "ERROR --> services/commentary.js/updateCommentaryStatusService",
-        request
-      );
-    });
+    );
 
     if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
       callPrediction.predictioncall2Success = false;
@@ -5390,15 +5303,7 @@ const updateMatchTypeInCommentaryService = async (request, fastify) => {
       "/api/v1/loadcommentary",
       fastify,
       request
-    ).catch((err) => {
-      console.log("call predictor market console", err);
-      errorLogger(
-        fastify,
-        err.message,
-        "ERROR --> services/commentary.js/updateMatchTypeInCommentaryService",
-        request
-      );
-    });
+    );
     if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
       callPrediction.predictioncallSuccess = false;
       callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
@@ -7528,15 +7433,7 @@ const closeCommentaryService = async (request, fastify) => {
         "/api/v1/endcommentary",
         fastify,
         request
-      ).catch((err) => {
-        console.log("call predictor market console", err);
-        errorLogger(
-          fastify,
-          err.message,
-          "ERROR --> services/commentary.js/closeCommentaryService",
-          request
-        );
-      });
+      );
       let callPrediction = {}
       if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
         callPrediction.Cid = commentaryId;
@@ -7667,15 +7564,7 @@ const updateDelayInCommentaryService = async (request, fastify) => {
       "/api/v1/loadcommentary",
       fastify,
       request
-    ).catch((err) => {
-      console.log("call predictor market console", err);
-      errorLogger(
-        fastify,
-        err.message,
-        "ERROR --> services/commentary.js/updateDelayInCommentaryService",
-        request
-      );
-    });
+    );
     if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
       callPrediction.predictioncallSuccess = false;
       callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
@@ -7839,15 +7728,7 @@ const updateEventRefIdInCommentaryService = async (request, fastify) => {
       "/api/v1/loadcommentary",
       fastify,
       request
-    ).catch((err) => {
-      console.log("call predictor market console", err);
-      errorLogger(
-        fastify,
-        err.message,
-        "ERROR --> services/commentary.js/updateEventRefIdInCommentaryService",
-        request
-      );
-    });
+    );
     if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
       callPrediction.predictioncallSuccess = false;
       callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
@@ -7906,15 +7787,7 @@ const loadcommentaryService = async (request, fastify) => {
         "/api/v1/loadcommentary",
         fastify,
         request
-      ).catch((err) => {
-        console.log("call predictor market console", err);
-        errorLogger(
-          fastify,
-          err.message,
-          "ERROR --> services/commentary.js/loadCommentaryService",
-          request
-        );
-      });
+      );
 
       if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
         callPrediction.predictioncallSuccess = false;

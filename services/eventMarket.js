@@ -480,6 +480,7 @@ const updateMarketRateService = async (request, fastify) => {
     (item) => item.commentaryId === request.body.eventMarket[0].commentaryId
   );
   if (!commentary) {
+    //here
     throw new Error("Commentary with this id not Found");
   }
   let updatedOvers = [];
@@ -543,6 +544,7 @@ const updateMarketRateService = async (request, fastify) => {
         request
       );
     });
+    
   }
 
   const teamOnStrike = global.tblCommentaryTeams.find(
@@ -552,7 +554,7 @@ const updateMarketRateService = async (request, fastify) => {
       item.teamStatus === 1
   );
   let _resFromPredictAPI;
-  let callPrediction = {};
+  let callPredictions = [];
   if (teamOnStrike && !isSend && isSave) {
     _resFromPredictAPI = await callPredictorMarket(
       {
@@ -566,15 +568,8 @@ const updateMarketRateService = async (request, fastify) => {
       "/api/v1/updateline",
       fastify,
       request
-    ).catch((err) => {
-      console.log("call predictor market console", err);
-      errorLogger(
-        fastify,
-        err.message,
-        "ERROR --> services/commentary.js/createEventMarketsService",
-        request
-      );
-    });
+    );
+    let callPrediction = {}
     // Check for error_msg in the response
     if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
       callPrediction.predictioncallSuccess = false;
@@ -585,12 +580,40 @@ const updateMarketRateService = async (request, fastify) => {
       callPrediction.predictionMessage = 'Prediction call successful';
       callPrediction.endPoint = '/api/v1/updateline';
     }
+    callPredictions.push(callPrediction);
   }
-
+  if(commentary.isPredictMarket && request.body.action)
+  {
+    _resFromPredictAPI = null;
+    let isOpenMarket = (request.body.action.toUpperCase() === "SUSPEND" || request.body.action.toUpperCase() === "PUBLISH");
+    _resFromPredictAPI = await callPredictorMarket(
+      {
+        commentary_id: commentary.commentaryId,
+        status: request.body.eventMarket[0].status,
+        match_type_id: commentary.matchTypeId,
+        is_open_market:isOpenMarket  
+      },
+      "/api/v1/updatemarketstatus",
+      fastify,
+      request
+    );
+    let callPrediction = {}
+    // Check for error_msg in the response
+    if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
+      callPrediction.predictioncallSuccess = false;
+      callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
+      callPrediction.endPoint = '/api/v1/updatemarketstatus';
+    } else {
+      callPrediction.predictioncallSuccess = true;
+      callPrediction.predictionMessage = 'Prediction call successful';
+      callPrediction.endPoint = '/api/v1/updatemarketstatus';
+    }
+    callPredictions.push(callPrediction);
+  }
   //return "Event Market updated successfully";
   // return marketListByCIdService({ body: { commentaryId: commentary.commentaryId } }, fastify)
   let data = await marketListByCIdService({ body: { commentaryId: commentary.commentaryId } }, fastify);
-  data.callPrediction = callPrediction;
+  data.callPrediction = callPredictions;
   return data;
 };
 const saveEventMarketService = async (request, fastify) => {
@@ -798,15 +821,7 @@ const changeMarketCloseService = async (request, fastify) => {
       "/api/v1/marketmanualclose",
       fastify,
       request
-    ).catch((err) => {
-      console.log("call predictor market console", err);
-      errorLogger(
-        fastify,
-        err.message,
-        "ERROR --> services/commentary.js/changeMarketCloseService",
-        request
-      );
-    });
+    );
     if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
       callPrediction.predictioncallSuccess = false;
       callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
@@ -866,15 +881,7 @@ const suspendMarketByCIdService = async (request, fastify) => {
     "/api/v1/suspendallmarkets",
     fastify,
     request
-  ).catch((err) => {
-    console.log("call predictor market console", err);
-    errorLogger(
-      fastify,
-      err.message,
-      "ERROR --> services/commentary.js/suspendMarketByIdService",
-      request
-    );
-  });
+  );
   if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
     callPrediction.predictioncallSuccess = false;
     callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;

@@ -3,12 +3,14 @@ const {
     singleGetMailSettings,
     saveMailSettings,
     deleteMailSetting,
-    isDefaultStage
+    isDefaultStage,
+    activeInactiveMails
 } = require("../../../controller/users/admin/mailSettings");
 const { MailSettings } = require("../../../swaggerSchema/groupTags/schema");
 
 module.exports = async (fastify, opts) => {
     fastify.post("/all", {
+        schema: MailSettings.getAll.schema,
         handler: (request, reply) => getAllMailSettings(request, reply, fastify),
     });
 
@@ -30,5 +32,10 @@ module.exports = async (fastify, opts) => {
     fastify.post("/isDefault", {
         schema: MailSettings.isDefaultStage.schema,
         handler: (request, reply) => isDefaultStage(request, reply, fastify),
+    });
+
+    fastify.post("/activeInactiveApi", {
+        schema: MailSettings.activeInactiveApi.schema,
+        handler: (request, reply) => activeInactiveMails(request, reply, fastify),
     });
 };

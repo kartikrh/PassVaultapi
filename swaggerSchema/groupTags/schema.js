@@ -1924,6 +1924,24 @@ const Config = {
       },
     },
   },
+  allConfig: {
+    schema: {
+      tags: ["Config"],
+      description: "Get filtered config details",
+      body: {
+        type: "object",
+        properties: {
+          keys: {
+            type: "array",
+            items: {
+              type: "string",
+            },
+          },
+        },
+        required: ["keys"],
+      },
+    },
+  }
 };
 
 const Commentary = {
@@ -5077,6 +5095,19 @@ const weblogs = {
 
 
 const MailSettings = {
+  getAll: {
+    schema: {
+      tags: ["Mail settings"],
+      description: "get all Mail settings",
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+
   save: {
     schema: {
       tags: ["Mail settings"],
@@ -5143,6 +5174,21 @@ const MailSettings = {
           isDefault: { type: "string" },
         },
         required: ["id", "isDefault"],
+      },
+    },
+  },
+
+  activeInactiveApi: {
+    schema: {
+      tags: ["Mail settings"],
+      description: "active inactive Mail settings",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["id", "isActive"],
       },
     },
   },

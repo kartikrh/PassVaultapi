@@ -95,9 +95,19 @@ const deleteConfigService = async (request, fastify) => {
   return `Config(s) deleted successfully`;
 };
 
+const allConfigDetails = async (request) => {
+  let result = global.tblConfigs;
+
+  const validKeys = request.body.keys.map(element => element.toLowerCase());
+  result = result.filter(item => validKeys.includes(item.key.toLowerCase()));
+
+  return result
+};
+
 module.exports = {
   allCongifService,
   configByIdService,
   saveConfigService,
   deleteConfigService,
+  allConfigDetails
 };
