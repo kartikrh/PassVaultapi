@@ -539,7 +539,7 @@ const pageLimit = {
       limit : 20
   }
 }
-const getPagination = (page, size) => {
+const getPagination = (page = 1, size = 20) => {
   if (page < 1 || size < 1) {
     throw new Error("Page number and page size must be greater than zero.");
   }
