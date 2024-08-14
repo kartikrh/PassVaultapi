@@ -5193,7 +5193,36 @@ const MailSettings = {
     },
   },
 };
-
+const Logs = {
+  eventByCompetition : {
+    schema : {
+      tags : ["Logs"],
+      description : "get logs by competition",
+      security : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          competitionId : {type : "integer"}
+        },
+        required : ["competitionId"]
+      }
+    }
+  },
+  getComByCompetition : {
+    schema : {
+      tags : ["Logs"],
+      description : "get logs by event",
+      security : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          competitionId : {type : "integer"}
+        },
+        required : ["competitionId"]
+      }
+    }
+  },
+}
 module.exports = {
   Auth,
   Tabs,
@@ -5237,5 +5266,6 @@ module.exports = {
   Template,
   Client,
   weblogs,
-  MailSettings
+  MailSettings,
+  Logs
 };
