@@ -3662,6 +3662,7 @@ const updateCommentaryStatusService = async (request, fastify) => {
         commentary_id: commentaryId,
         status: EventMarketStatus.Suspend,
         match_type_id: global.tblCommentaries[index].matchTypeId,
+        is_open_market:false
       },
       "/api/v1/updatemarketstatus",
       fastify,
