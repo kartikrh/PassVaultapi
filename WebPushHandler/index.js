@@ -1,5 +1,8 @@
 const configConstants = require('../utilities/configConstants');
 const { default: axios } = require("axios");
+const {JWT} = require('google-auth-library');
+const Json_keys = require('../jwt.keys.json');
+
 async function _sendNotification(title, message, url, image, icon) {
     const payload = JSON.stringify({ title, message, url, image, icon });
   
@@ -35,18 +38,23 @@ async function _sendNotification(title, message, url, image, icon) {
     };
   
     try {
-       const MobilwNotificationurl = global.tblConfigs.find((item) => item.key === configConstants.MOBILE_NOTIFICATION_URL).value;
-       const Authorization = global.tblConfigs.find((item) => item.key === configConstants.AUTHORIZATION_KEY).value;
-        
+      const MobilwNotificationurl = global.tblConfigs.find((item) => item.key === configConstants.MOBILE_NOTIFICATION_URL).value;
+      //const Authorization = global.tblConfigs.find((item) => item.key === configConstants.AUTHORIZATION_KEY).value;
+      const accessToken = await getAccessToken();
+      //MobilwNotificationurl = 'https://fcm.googleapis.com/v1/projects/ogin-ee30d/messages:send';
       // Get devices from global.tblDevices whose deviceType is 2
       const mobileDevices = global.tblDevices.filter(device => device.deviceType === 2);
   
       // Send notifications
       const promises = mobileDevices.map(device => {
-        const notificationPayload = { ...payload, to: device.mobileToken };
+        let _Resjson = {}
+        _Resjson.message = mobilePayload;
+        _Resjson.message.token = device.token
+        const notificationPayload = { ..._Resjson };
+        //const notificationPayload = { ...payload, to: device.mobileToken };
         return axios.post(MobilwNotificationurl, notificationPayload, {
           headers: {
-            'Authorization': Authorization,
+            'Authorization': 'Bearer ' + accessToken,
             'Content-Type': 'application/json',
           },
         }).catch(error => {
@@ -91,20 +99,24 @@ async function sendNotification(title, message, url, image, icon) {
         };
       }
     });
-
+    //const Authorization = global.tblConfigs.find((item) => item.key === configConstants.AUTHORIZATION_KEY).value;
+    //MobilwNotificationurl = 'https://fcm.googleapis.com/v1/projects/login-ee30d/messages:send';
     const MobilwNotificationurl = global.tblConfigs.find((item) => item.key === configConstants.MOBILE_NOTIFICATION_URL).value;
-    const Authorization = global.tblConfigs.find((item) => item.key === configConstants.AUTHORIZATION_KEY).value;
-
+    const accessToken = await getAccessToken();
+    //const accessToken = "";
     const promises = subscriptions.map(device => {
       if (device.type === 'web') {
         return global.webPush.sendNotification(device.subscription, webPushPayload).catch(error => {
           console.error("Error sending web notification:", error);
         });
       } else if (device.type === 'mobile') {
-        const notificationPayload = { ...mobilePayload, to: device.token };
+        let _Resjson = {}
+        _Resjson.message = mobilePayload;
+        _Resjson.message.token = device.token
+        const notificationPayload = { ..._Resjson };
         return axios.post(MobilwNotificationurl, notificationPayload, {
           headers: {
-            'Authorization': Authorization,
+            'Authorization': 'Bearer ' + accessToken,
             'Content-Type': 'application/json',
           },
         }).catch(error => {
@@ -121,10 +133,14 @@ async function sendNotification(title, message, url, image, icon) {
 
   async function webPushset(webpush){
     try {
-        const publicVapidKey = global.tblConfigs.find((item) => item.key === configConstants.PUBLIC_VAPID_KEY).value;
-        const privateVapidKey = global.tblConfigs.find((item) => item.key === configConstants.PRIVATE_VAPID_KEY).value;
+        const publicVapidKey = global.tblConfigs.find((item) => item.key === configConstants.PUBLIC_VAPID_KEY)?.value;
+        const privateVapidKey = global.tblConfigs.find((item) => item.key === configConstants.PRIVATE_VAPID_KEY)?.value;
+        if(!publicVapidKey || !privateVapidKey){
+            console.error("Vapid key is not set");
+            return;
+        }
 
-        webpush.setVapidDetails(
+        webpush?.setVapidDetails(
           'mailto:nitesh@ziwotech.com',
           publicVapidKey,
           privateVapidKey
@@ -135,7 +151,25 @@ async function sendNotification(title, message, url, image, icon) {
         console.error("Error WebPush notification: ", error);
     }
   }
-  
+
+  function getAccessToken() {
+    return new Promise(function(resolve, reject) {
+      const jwtClient = new JWT(
+        Json_keys.client_email,
+        null,
+        Json_keys.private_key,
+        ['https://www.googleapis.com/auth/cloud-platform'],
+        null
+      );
+      jwtClient.authorize(function(err, tokens) {
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve(tokens.access_token);
+      });
+    });
+  }
   module.exports = {
     sendNotification,
     webPushset,

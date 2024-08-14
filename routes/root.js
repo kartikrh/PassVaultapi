@@ -126,14 +126,6 @@ module.exports = async function (fastify, opts) {
   //   schema: Auth.clientLogin.schema,
   //   handler: (request, reply) => loginRegistrationClient(request, reply, fastify),
   // });
-  fastify.post("/signupClient", {
-    schema: Auth.clientregistration.schema,
-    handler: (request, reply) => registrationClient(request, reply, fastify),
-  });
-  fastify.post("/signupClientDetails", {
-    schema: Auth.signupClientDetails.schema,
-    handler: (request, reply) => registerDetails(request, reply, fastify),
-  });
   fastify.post("/resendOtp", {
     schema: Auth.resendOtp.schema,
     handler: (request, reply) => resendOtp(request, reply, fastify),
@@ -178,6 +170,19 @@ module.exports = async function (fastify, opts) {
     schema: Auth.clientLogin.schema,
     handler: (request, reply) => loginClient(request, reply, fastify),
   });
+  fastify.post("/signupClient", {
+    schema: Auth.clientregistration.schema,
+    handler: (request, reply) => registrationClient(request, reply, fastify),
+  });
+  fastify.post("/signupClientDetails", {
+    schema: Auth.signupClientDetails.schema,
+    handler: (request, reply) => registerDetails(request, reply, fastify),
+  });
+  fastify.post("/signOutClient", {
+    schema: Auth.signOut.schema,
+    //preHandler: [(request, reply) => authorize(request, reply, fastify)],
+    handler: (request, reply) => signOutClient(request, reply, fastify),
+  });
   fastify.post("/updateClient", {
     schema: Auth.clientUpdate.schema,
     handler: (request, reply) => updateClient(request, reply, fastify),
@@ -185,11 +190,6 @@ module.exports = async function (fastify, opts) {
   fastify.post("/sendNotificationWeb", {
     schema: sendPushNotification.send.schema,
     handler: (request, reply) => sendNotificationWeb(request, reply, fastify),
-  });
-  fastify.post("/signOutClient", {
-    schema: Auth.signOut.schema,
-    //preHandler: [(request, reply) => authorize(request, reply, fastify)],
-    handler: (request, reply) => signOutClient(request, reply, fastify),
   });
   fastify.post("/addUpdateWebLogs", {
     schema: weblogs.save.schema,

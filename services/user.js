@@ -579,14 +579,16 @@ async function registrationClientService({ body }, fastify) {
 
     let results;
     results = await registerClient(body, fastify);
-
-    if (results === "Username and Email is already exists") {
-      return { error: results };
-    }
-    if (results.clientId) {
-      const payload = { clientId: results.clientId };
-      const token = generateToken(payload);
-      return { token, details: results };
+    if (typeof results === "string") {
+      if (results.includes("already exists")) {
+        return { error: results };
+      }
+    }else if (typeof results === "object" && results !== null) {
+      if (results.clientId) {
+        const payload = { clientId: results.clientId };
+        const token = generateToken(payload);
+        return { token, details: results };
+      }
     }
     else {
       return { error: results };
@@ -836,7 +838,15 @@ async function verifyMobileService({ body }, fastify) {
     const clientId = findUser.clientId;
     const mobileNo = findUser.mobileNo;
     
-      if(mobileNo) {
+    let isOtpSend = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP);
+    if (isOtpSend) {
+      isOtpSend = isOtpSend.value;
+    }
+    else {
+      throw new Error("Config not found");
+    }
+
+      if(mobileNo && isOtpSend === "true") {
         // const generateOTP = () => {
         //   return Math.floor(100000 + Math.random() * 900000).toString();
         // };
@@ -1116,23 +1126,44 @@ async function forgetPasswordService({ body }, fastify) {
     if (!findUser) {
       throw new Error("Invalid User");
     }
+    let isMobileVerify = false;
+    let isEmailVerify = false;
+
+    let isOtpSend = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP);
+    if (isOtpSend) {
+      isOtpSend = isOtpSend.value;
+    }
+    else {
+      throw new Error("Config not found");
+    }
+
+    let isEmailOtpSend = global.tblConfigs.find((item) => item.key === configConstants.ISSENDEMAILOTP);
+    if (isEmailOtpSend) {
+      isEmailOtpSend = isEmailOtpSend.value;
+    }
+    else {
+      throw new Error("Config not found");
+    }
+
     const mobileNo = findUser.mobileNo;
     const clientId = findUser.clientId;
     const emailId = findUser.emailId;
 
-    if (mobileNo) {
+    if (mobileNo && isOtpSend === "true") {
+      isMobileVerify = true;
       const otp = 1234
       const result = await insertOtpQuery({ ...body, otp, clientId: clientId }, fastify);
       global.tblOtp.push(result[0]);
-    } else if(emailId) {
+    } else if(emailId && isEmailOtpSend === "true") {
+      isEmailVerify = true;
       const otp = await sendOtpEmail(emailId);
       const result = await insertOtpQuery({...body, otp, clientId: clientId}, fastify);
       global.tblOtp.push(result[0]);
     } else {
       return "Invalid Credentials"
     }
-
-    return "Otp sent successfully"
+    const message = "Otp sent successfully";
+    return {message, isMobileVerify, isEmailVerify}
   } catch (error) {
     errorLogger(
       fastify,
@@ -1147,7 +1178,7 @@ async function updateClientService({ body }, fastify) {
   try {
     let results;
     results = await updateClient(body, fastify);
-    if (results === "Client ID does not exist") {
+    if (results === "Client ID does not exist" || results === "Email is already in use by another client" || results === "Mobile number is already in use by another client") {
       throw new Error(results);
       //return { error: results };
     }
