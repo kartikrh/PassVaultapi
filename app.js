@@ -404,7 +404,7 @@ module.exports = async function (fastify, opts) {
   });
 
   fastify.setErrorHandler(function (err, request, reply) {
-    console.error(err);
+    console.error("err",err);
     if (process.env.ENABLE_SENTRY === "TRUE") {
       Sentry.captureException(err);
     }
