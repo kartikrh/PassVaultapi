@@ -1,4 +1,5 @@
 const ResponseLog = require("../database/schema/responseLogger");
+const { ISCOMMENTARYLOGGER } = require("./configConstants");
 
 const errorLogger = async (fastify, errMessage, errStack, request) => {
   try {
@@ -40,6 +41,10 @@ const responseLogger = async (request) => {
 
 const responseLogInDB = async (request, fastify) => {
   try {
+    let addLog = global.tblConfig.find((x) => x.key == ISCOMMENTARYLOGGER)?.value || "false";
+    if (addLog == "false") {
+      return true;
+    }
     let data;
     if(request.errId !== undefined){
       data = await fastify.db.query(
@@ -191,6 +196,10 @@ const tblThirdPartyAPILogger = async (data, request, fastify) => {
 
 const commentaryLogger = async (data, request, fastify) => {
   try {
+    let addLog = global.tblConfig.find((x) => x.key == ISCOMMENTARYLOGGER)?.value || "false";
+    if (addLog == "false") {
+      return true;
+    }
     const query = `
       INSERT INTO "tblCommentaryLogs"
       (
@@ -217,6 +226,12 @@ const commentaryLogger = async (data, request, fastify) => {
 
   } catch (error) {
     console.log(error);
+    errorLogger(
+      fastify,
+      "Error in commentaryLogger",
+      error,
+      request
+    )
   }
 }
 
