@@ -579,14 +579,16 @@ async function registrationClientService({ body }, fastify) {
 
     let results;
     results = await registerClient(body, fastify);
-
-    if (results === "Username and Email is already exists") {
-      return { error: results };
-    }
-    if (results.clientId) {
-      const payload = { clientId: results.clientId };
-      const token = generateToken(payload);
-      return { token, details: results };
+    if (typeof results === "string") {
+      if (results.includes("already exists")) {
+        return { error: results };
+      }
+    }else if (typeof results === "object" && results !== null) {
+      if (results.clientId) {
+        const payload = { clientId: results.clientId };
+        const token = generateToken(payload);
+        return { token, details: results };
+      }
     }
     else {
       return { error: results };
@@ -1176,7 +1178,7 @@ async function updateClientService({ body }, fastify) {
   try {
     let results;
     results = await updateClient(body, fastify);
-    if (results === "Client ID does not exist") {
+    if (results === "Client ID does not exist" || results === "Email is already in use by another client" || results === "Mobile number is already in use by another client") {
       throw new Error(results);
       //return { error: results };
     }

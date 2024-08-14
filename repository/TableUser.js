@@ -485,8 +485,7 @@ async function registerClient(body, fastify) {
     if (facebookId && token) {
       // check if user exust by facebookId
       let query1 =
-        `
-          SELECT 
+        ` SELECT 
             "wrClientID" as "clientId",
             "wrGoogleID" as "googleId",
             "wrFacebookId" as "facebookId",
@@ -523,25 +522,38 @@ async function registerClient(body, fastify) {
     if (!googleID && !token) {
       // Check if user exists by userName (wrEmailID)
       let data = await fastify.db.query(
-        `SELECT "wrClientID", "wrEmailID"
-         FROM "tblClient"
-         WHERE "wrUserName" = $1 AND "wrIsDelete" = false AND "wrEmailID" = $2;`,
+        // `SELECT "wrMobileNo", "wrEmailID"
+        //  FROM "tblClient"
+        //  WHERE "wrMobileNo" = $1 AND "wrIsDelete" = false AND "wrEmailID" = $2;`,
+        `SELECT 
+            CASE 
+              WHEN COUNT(*) = 1 AND "wrProvider" = 1 THEN 'MobileNo OR Email is already exists for manually'
+              WHEN COUNT(*) = 1 AND "wrProvider" = 2 THEN 'MobileNo OR Email is already exists for google login'
+              WHEN COUNT(*) = 1 AND "wrProvider" = 3 THEN 'MobileNo OR Email is already exists for fb login'
+              WHEN COUNT(*) > 1 AND "wrProvider" = 1 THEN 'MobileNo AND Email are already exists for manually'
+              WHEN COUNT(*) > 1 AND "wrProvider" = 2 THEN 'MobileNo AND Email are already exists for google login'
+              WHEN COUNT(*) > 1 AND "wrProvider" = 3 THEN 'MobileNo AND Email are already exists for fb login'
+            END as result
+          FROM "tblClient"
+          WHERE ("wrMobileNo" = $1 OR "wrEmailID" = $2) 
+          AND "wrIsDelete" = false
+          GROUP BY "wrProvider";`,
         {
           type: QueryTypes.SELECT,
-          bind: [userName, email],
+          bind: [mobileNo, email],
         }
       );
 
       if (data.length > 0) {
-        return "Username and Email is already exists";
+        return  data[0].result;
       } else {
         // Register new user
         const registrationData = await fastify.db.query(
           `INSERT INTO "tblClient" (
             "wrClientName", "wrUserName", "wrPassword", "wrIsAllowMultiLogin", "wrCreatedDate", 
-            "wrEmailID", "wrMobileNo", "wrIpAddress", "wrIsActive", "wrIsEmailVerified", "wrIsDelete"
+            "wrEmailID", "wrMobileNo", "wrIpAddress", "wrIsActive", "wrIsEmailVerified", "wrIsDelete","wrIsMobileVerified", "wrProvider","wrRegistrationProcessStatus"
           ) VALUES (
-            $1, $2, $3, $4, now(), $5, $6, $7, true, false, false
+            $1, $2, $3, $4, now(), $5, $6, $7, false, false, false ,false,1,1
           ) RETURNING "wrClientID" as "clientId", "wrGoogleID" as "googleId", "wrUserName" as "userName", "wrIsAllowMultiLogin" as "isAllowMultiLogin","wrEmailID" as "emailId" ,"wrMobileNo" as "mobileNo";`,
           {
             type: QueryTypes.INSERT,
@@ -1005,13 +1017,53 @@ async function loginClient(body, fastify) {
   }
 }
 
+// const updateClient = async (body, fastify) => {
+//   try {
+//     const { clientId, fullName, email, mobileNo } = body;
+
+//     // Check if the client ID exists
+//     const clientExists = await fastify.db.query(
+//       `SELECT 1 FROM "tblClient" WHERE "wrClientID" = $1`,
+//       {
+//         type: fastify.db.QueryTypes.SELECT,
+//         bind: [clientId],
+//       }
+//     );
+
+//     if (clientExists.length === 0) {
+//       return "Client ID does not exist";
+//     }
+
+//     // Proceed with the update if client ID exists
+//     await fastify.db.query(
+//       `UPDATE "tblClient" SET "wrClientName" = $2, "wrEmailID" = $3, "wrMobileNo" = $4
+//       WHERE "wrClientID" = $1`,
+//       {
+//         type: fastify.db.QueryTypes.UPDATE,
+//         bind: [clientId, fullName, email, mobileNo],
+//       }
+//     );
+
+//     return "Client updated successfully";
+//   } catch (err) {
+//     errorLogger(
+//       fastify,
+//       err.message,
+//       "DB ERROR --> repository/TableConfig/updateConfigQuery"
+//     );
+//     throw new Error(err.message);
+//   }
+// };
+
 const updateClient = async (body, fastify) => {
   try {
     const { clientId, fullName, email, mobileNo } = body;
 
     // Check if the client ID exists
     const clientExists = await fastify.db.query(
-      `SELECT 1 FROM "tblClient" WHERE "wrClientID" = $1`,
+      `SELECT "wrEmailID", "wrMobileNo" 
+       FROM "tblClient" 
+       WHERE "wrClientID" = $1`,
       {
         type: fastify.db.QueryTypes.SELECT,
         bind: [clientId],
@@ -1022,17 +1074,84 @@ const updateClient = async (body, fastify) => {
       return "Client ID does not exist";
     }
 
-    // Proceed with the update if client ID exists
-    await fastify.db.query(
-      `UPDATE "tblClient" SET "wrClientName" = $2, "wrEmailID" = $3, "wrMobileNo" = $4
-      WHERE "wrClientID" = $1`,
+    const existingClient = clientExists[0];
+    let emailChanged = false;
+    let mobileNoChanged = false;
+
+    // Check if the new email already exists for another client
+    const emailExists = await fastify.db.query(
+      `SELECT 1 FROM "tblClient" WHERE "wrEmailID" = $1 AND "wrClientID" != $2`,
       {
-        type: fastify.db.QueryTypes.UPDATE,
-        bind: [clientId, fullName, email, mobileNo],
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [email, clientId],
       }
     );
 
-    return "Client updated successfully";
+    if (emailExists.length > 0) {
+      return "Email is already in use by another client";
+    }
+
+    // Check if the new mobileNo already exists for another client
+    const mobileNoExists = await fastify.db.query(
+      `SELECT 1 FROM "tblClient" WHERE "wrMobileNo" = $1 AND "wrClientID" != $2`,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [mobileNo, clientId],
+      }
+    );
+
+    if (mobileNoExists.length > 0) {
+      return "Mobile number is already in use by another client";
+    }
+
+    // Determine if email or mobileNo has changed
+    if (existingClient.wrEmailID !== email) {
+      emailChanged = true;
+    }
+    if (existingClient.wrMobileNo !== mobileNo) {
+      mobileNoChanged = true;
+    }
+
+    let updateQuery = `UPDATE "tblClient" SET "wrClientName" = $2, "wrEmailID" = $3, "wrMobileNo" = $4`;
+    const updateParams = [clientId, fullName, email, mobileNo];
+
+    if (emailChanged || mobileNoChanged) {
+      updateQuery += `, "wrRegistrationProcessStatus" = 2`;
+    }
+
+    if (emailChanged) {
+      updateQuery += `, "wrIsEmailVerified" = false`;
+    }
+
+    if (mobileNoChanged) {
+      updateQuery += `, "wrIsMobileVerified" = false`;
+    }
+
+    updateQuery += ` WHERE "wrClientID" = $1`;
+
+    // Proceed with the update
+    await fastify.db.query(updateQuery, {
+      type: fastify.db.QueryTypes.UPDATE,
+      bind: updateParams,
+    });
+
+    // Return the updated client details
+    const updatedClient = await fastify.db.query(
+      `SELECT "wrClientID" as "clientId", 
+              "wrGoogleID" as "googleId", 
+              "wrUserName" as "userName", 
+              "wrIsAllowMultiLogin" as "isAllowMultiLogin",
+              "wrEmailID" as "emailId", 
+              "wrMobileNo" as "mobileNo" 
+       FROM "tblClient" 
+       WHERE "wrClientID" = $1`,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [clientId],
+      }
+    );
+
+    return updatedClient[0];
   } catch (err) {
     errorLogger(
       fastify,
@@ -1042,6 +1161,7 @@ const updateClient = async (body, fastify) => {
     throw new Error(err.message);
   }
 };
+
 async function loginClientLogAdded(body, fastify) {
   try {
     const { clientId, deviceInfo, token } = body;

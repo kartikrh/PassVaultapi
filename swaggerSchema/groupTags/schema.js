@@ -169,7 +169,7 @@ const Auth = {
           mobileNo: { type: "string" },
           ipAddress: { type: "string" },
         },
-        required: ["userName"],
+        required: ["email","mobileNo"],
       },
     },
   },
