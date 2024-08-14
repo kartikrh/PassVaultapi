@@ -1,4 +1,7 @@
-const { getAllResponseLogs, getAllThirdPartyApiLogs, getAllPredictorAPILogs, getAllCommentaryLogs, getAllErrorLogs } = require("../../../controller/users/admin/log/index");
+const { getCompetitionListByeventTypeId } = require("../../../controller/users/admin/competition");
+const { getEventTypeList } = require("../../../controller/users/admin/eventTypes");
+const { getAllResponseLogs, getAllThirdPartyApiLogs, getAllPredictorAPILogs, getAllCommentaryLogs, getAllErrorLogs, getEventByCompetition, getComByEvent } = require("../../../controller/users/admin/log/index");
+const { Commentary, Logs } = require("../../../swaggerSchema/groupTags/schema");
 
 module.exports = async (fastify, opts) => {
     fastify.post("/responseLogs", {
@@ -20,4 +23,17 @@ module.exports = async (fastify, opts) => {
     fastify.post("/errorLogs", {
         handler: (request, reply) => getAllErrorLogs(request, reply, fastify)
     });
+    fastify.post("/eventTypeList", {
+        schema: Commentary.eventTypeList.schema,
+        handler: (request, reply) => getEventTypeList(request, reply, fastify),
+    });
+    fastify.post("/competitionListByEventTypeId", {
+        schema: Commentary.competitionListByEventTypeId.schema,
+        handler: (request, reply) =>
+          getCompetitionListByeventTypeId(request, reply, fastify),
+    });
+    fastify.post("/getComByCompetition", {
+        schema: Logs.getComByCompetition.schema,
+        handler: (request, reply) => getComByEvent(request, reply, fastify),
+    })
 };

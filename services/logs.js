@@ -46,11 +46,37 @@ const allCommentaryLogs = async (request) => {
 const allErrorLogs = async (request) => {
     return applyFiltersAndPagination(global.errorLogs, request.body || {});
 };
-
+const allEventByCompetition = async(request) =>{
+    const {competitionId} = request.body;
+    let result = global.tblEvents.filter((item)=>
+        item.competitionId === competitionId
+    ).map((item)=>{
+        return {
+            eventId: item.eventId,
+            eventName: item.eventName
+        }
+    });
+    return result;
+}
+const getComByEventId = async(request) =>{
+    const {competitionId} = request.body;
+    let result = global.tblCommentaries.filter((item)=>
+        item.competitionId === competitionId
+    ).map((item)=>{
+        return {
+            commentaryId: item.commentaryId,
+            eventName: item.eventName,
+            eventRefId : item.eventRefId,
+        }
+    });
+    return result;
+}
 module.exports = {
     allResponseLogs,
     allThirdPartyApiLogs,
     allPredictorAPILogs,
     allCommentaryLogs,
-    allErrorLogs
+    allErrorLogs,
+    allEventByCompetition,
+    getComByEventId
 };

@@ -3,6 +3,7 @@ global.clientSocketIo = [];
 const { io } = require("socket.io-client");
 const { clientSocketActionType, clientSocketStatus } = require("../utilities");
 const { updateClientSocketStatusQuery, updateReconnectCountQuery } = require("../repository/TableClientSocket");
+const { errorLogger } = require("../utilities/logger");
 
 const connectClients = async (fastify) => {
   try {
@@ -78,6 +79,12 @@ const connectClients = async (fastify) => {
     await Promise.all(promises);
   } catch (error) {
     console.log("Error connecting clients:", error);
+    errorLogger(
+      fastify,
+      error.message,
+      "ERROR --> socketIo.js/connectClients",
+      null
+    );
     // console.error("Error connecting clients:", error);
   }
 };
@@ -104,6 +111,12 @@ const disconnectClients = async (fastify) => {
     });
     global.clientSocketIo = global.clientSocketIo.filter((c) => !disconnectClientUrls.includes(c.clientSocketId));
   } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "ERROR --> socketIo.js/disconnectClients",
+      null
+    )
     console.log("Error disconnecting clients:", error);
   }
 }
@@ -121,6 +134,12 @@ const disconnectInactiveClients = async (fastify) => {
     return true;
   } catch (error) {
     console.log("Error disconnecting inactive clients:", error);
+    errorLogger(
+      fastify,
+      error.message,
+      "ERROR --> socketIo.js/disconnectInactiveClients",
+      null
+    );
   }
 }
 module.exports = { connectClients ,disconnectClients,disconnectInactiveClients };
