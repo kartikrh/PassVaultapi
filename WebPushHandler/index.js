@@ -1,6 +1,6 @@
 const configConstants = require('../utilities/configConstants');
 const { default: axios } = require("axios");
-const {JWT} = require('google-auth-library');
+// const {JWT} = require('google-auth-library');
 const Json_keys = require('../jwt.keys.json');
 
 async function _sendNotification(title, message, url, image, icon) {
@@ -132,10 +132,14 @@ async function sendNotification(title, message, url, image, icon) {
 
   async function webPushset(webpush){
     try {
-        const publicVapidKey = global.tblConfigs.find((item) => item.key === configConstants.PUBLIC_VAPID_KEY).value;
-        const privateVapidKey = global.tblConfigs.find((item) => item.key === configConstants.PRIVATE_VAPID_KEY).value;
+        const publicVapidKey = global.tblConfigs.find((item) => item.key === configConstants.PUBLIC_VAPID_KEY)?.value;
+        const privateVapidKey = global.tblConfigs.find((item) => item.key === configConstants.PRIVATE_VAPID_KEY)?.value;
+        if(!publicVapidKey || !privateVapidKey){
+            console.error("Vapid key is not set");
+            return;
+        }
 
-        webpush.setVapidDetails(
+        webpush?.setVapidDetails(
           'mailto:nitesh@ziwotech.com',
           publicVapidKey,
           privateVapidKey
