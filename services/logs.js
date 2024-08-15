@@ -1,8 +1,16 @@
+const {
+    allResponseLogsQuery,
+    allThirdPartyApiLogsQuery,
+    allPredictorAPILogsQuery,
+    allCommentaryLogsQuery,
+    allErrorLogsQuery
+} = require("../repository/TableLogs");
+
 const applyFiltersAndPagination = (logs, filters) => {
     const { startDate, endDate, page = 1, limit = 20, commentaryId } = filters;
 
     let result = logs;
-    
+
     if (startDate && endDate) {
         result = result.filter(item => {
             const date = new Date(item.requestStartTime || item.createdDate);
@@ -27,24 +35,24 @@ const applyFiltersAndPagination = (logs, filters) => {
     };
 };
 
-const allResponseLogs = async (request) => {
-    return applyFiltersAndPagination(global.responseLogs, request.body || {});
+const allResponseLogs = async (request, fastify) => {
+    return await allResponseLogsQuery(request.body || {},request, fastify);
 };
 
-const allThirdPartyApiLogs = async (request) => {
-    return applyFiltersAndPagination(global.thirdPartyAPILogs, request.body || {});
+const allThirdPartyApiLogs = async (request, fastify) => {
+    return await allThirdPartyApiLogsQuery(request.body || {}, request, fastify);
 };
 
-const allPredictorAPILogs = async (request) => {
-    return applyFiltersAndPagination(global.predictorAPILogs, request.body || {});
+const allPredictorAPILogs = async (request, fastify) => {
+    return await allPredictorAPILogsQuery(request.body || {},request, fastify);
 };
 
-const allCommentaryLogs = async (request) => {
-    return applyFiltersAndPagination(global.commentaryLogs, request.body || {});
+const allCommentaryLogs = async (request, fastify) => {
+    return await allCommentaryLogsQuery(request.body || {},request, fastify);
 };
 
-const allErrorLogs = async (request) => {
-    return applyFiltersAndPagination(global.errorLogs, request.body || {});
+const allErrorLogs = async (request, fastify) => {
+    return await allErrorLogsQuery(request.body || {},request, fastify);
 };
 const allEventByCompetition = async(request) =>{
     const {competitionId} = request.body;

@@ -64,13 +64,6 @@ const { getAllOtpQuery } = require("../repository/TableOtp");
 const { getAllClientQuery } = require("../repository/TableClient");
 const { allMailSettingsQuery } = require('../repository/TableMailSettings');
 const { getAllMarketOddsBallByBall } = require("../repository/TableMarketOddsBallByBall");
-const {
-  allResponseLogsQuery,
-  allThirdPartyApiLogsQuery,
-  allPredictorAPILogsQuery,
-  allCommentaryLogsQuery,
-  allErrorLogsQuery
-} = require("../repository/TableLogs");
 
 const fetchAllDataFromDb = async (fastify, reply) => {
   try {
