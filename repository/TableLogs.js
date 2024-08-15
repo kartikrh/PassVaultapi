@@ -1,9 +1,12 @@
+const { getPagination } = require("../utilities");
 const { errorLogger } = require("../utilities/logger");
 
-const allResponseLogsQuery = async (filters, fastify) => {
-    const { startDate, endDate, page = 1, limit = 20 } = filters;
-
+const allResponseLogsQuery = async (body,request, fastify) => {
     try {
+        const { startDate, endDate, page, limit  } = body;
+        const {skip , take} = getPagination(page, limit);
+        const where = startDate && endDate ? `WHERE "wrRequestStartTime" BETWEEN ${new Date(startDate)} AND ${new Date(endDate)}` : '';
+
         const query = `
             SELECT 
                 "wrId" as "id",
@@ -17,35 +20,26 @@ const allResponseLogsQuery = async (filters, fastify) => {
                 "wrRequestEndTime" as "requestEndTime"
             FROM 
                 "tblResponseLogs"
-            ${startDate && endDate ? `WHERE "wrRequestStartTime" BETWEEN :startDate AND :endDate` : ''}
+            ${where} 
             ORDER BY "wrId" DESC
-            LIMIT :limit OFFSET :offset;
+            LIMIT $1 OFFSET $2;
         `;
-
-        const offset = (page - 1) * limit;
-
         const data = await fastify.db.query(query, {
             type: fastify.db.QueryTypes.SELECT,
-            replacements: {
-                startDate: startDate ? new Date(startDate) : null,
-                endDate: endDate ? new Date(endDate) : null,
-                limit: limit,
-                offset: offset,
-            },
+            bind : [
+                take,
+                skip
+            ]
         });
 
         const totalRecordsQuery = `
             SELECT COUNT(*) as "count"
             FROM "tblResponseLogs"
-            ${startDate && endDate ? `WHERE "wrRequestStartTime" BETWEEN :startDate AND :endDate` : ''}
+            ${where}
         `;
 
         const totalRecordsResult = await fastify.db.query(totalRecordsQuery, {
-            type: fastify.db.QueryTypes.SELECT,
-            replacements: {
-                startDate: startDate ? new Date(startDate) : null,
-                endDate: endDate ? new Date(endDate) : null,
-            },
+            type: fastify.db.QueryTypes.SELECT
         });
 
         const totalRecords = parseInt(totalRecordsResult[0].count, 10);
@@ -58,20 +52,22 @@ const allResponseLogsQuery = async (filters, fastify) => {
             data: data,
         };
     } catch (err) {
+        console.log(err);
         errorLogger(
             fastify,
             err.message,
             "DB ERROR --> repository/TableLogs.js/allResponseLogsQuery",
-            null
+            request
         );
         throw new Error(err.message);
     }
 };
 
-const allThirdPartyApiLogsQuery = async (filters, fastify) => {
-    const { startDate, endDate, page = 1, limit = 20 } = filters;
-
+const allThirdPartyApiLogsQuery = async (body, request, fastify) => {
     try {
+        const { startDate, endDate, page , limit } = body;
+        const {skip , take} = getPagination(page, limit);
+        const where = startDate && endDate ? `WHERE "wrRequestStartTime" BETWEEN ${new Date(startDate)} AND ${new Date(endDate)}` : '';
         const query = `
             SELECT 
                 "wrId" as "id",
@@ -82,35 +78,27 @@ const allThirdPartyApiLogsQuery = async (filters, fastify) => {
                 "wrResponse" as "response"
             FROM 
                 "tblThirdPartyApiLogs"
-            ${startDate && endDate ? `WHERE "wrRequestStartTime" BETWEEN :startDate AND :endDate` : ''}
+            ${where}
             ORDER BY "wrId" DESC
-            LIMIT :limit OFFSET :offset;
+            LIMIT $1 OFFSET $2;
         `;
-
-        const offset = (page - 1) * limit;
 
         const data = await fastify.db.query(query, {
             type: fastify.db.QueryTypes.SELECT,
-            replacements: {
-                startDate: startDate ? new Date(startDate) : null,
-                endDate: endDate ? new Date(endDate) : null,
-                limit: limit,
-                offset: offset,
-            },
+            bind : [
+                take,
+                skip
+            ]
         });
 
         const totalRecordsQuery = `
             SELECT COUNT(*) as "count"
             FROM "tblThirdPartyApiLogs"
-            ${startDate && endDate ? `WHERE "wrRequestStartTime" BETWEEN :startDate AND :endDate` : ''}
+            ${where}
         `;
 
         const totalRecordsResult = await fastify.db.query(totalRecordsQuery, {
-            type: fastify.db.QueryTypes.SELECT,
-            replacements: {
-                startDate: startDate ? new Date(startDate) : null,
-                endDate: endDate ? new Date(endDate) : null,
-            },
+            type: fastify.db.QueryTypes.SELECT
         });
 
         const totalRecords = parseInt(totalRecordsResult[0].count, 10);
@@ -127,16 +115,18 @@ const allThirdPartyApiLogsQuery = async (filters, fastify) => {
             fastify,
             err.message,
             "DB ERROR --> repository/TableLogs.js/allThirdPartyApiLogsQuery",
-            null
+            request
         );
         throw new Error(err.message);
     }
 };
 
-const allPredictorAPILogsQuery = async (filters, fastify) => {
-    const { startDate, endDate, page = 1, limit = 20, commentaryId } = filters;
-
+const allPredictorAPILogsQuery = async (body,request, fastify) => {
     try {
+        const { startDate, endDate, page, limit, commentaryId } = body;
+        const {skip , take} = getPagination(page, limit);
+        let where = startDate && endDate ? `WHERE "wrRequestStartTime" BETWEEN ${new Date(startDate)} AND ${new Date(endDate)}` : null;
+        where = commentaryId ? (where ? `${where} AND "wrCommentaryId" = ${commentaryId}` : `WHERE "wrCommentaryId" = ${commentaryId}`) : where;
         const query = `
             SELECT 
                 "wrId" as "id",
@@ -148,39 +138,26 @@ const allPredictorAPILogsQuery = async (filters, fastify) => {
                 "wrCommentaryId" as "commentaryId"
             FROM 
                 "tblPredictorAPILogs"
-            ${startDate && endDate ? `WHERE "wrRequestStartTime" BETWEEN :startDate AND :endDate` : ''}
-            ${commentaryId ? (startDate && endDate ? ' AND ' : ' WHERE ') + '"wrCommentaryId" = :commentaryId' : ''}
+            ${where ? where : ''}
             ORDER BY "wrId" DESC
-            LIMIT :limit OFFSET :offset;
+            LIMIT $1 OFFSET $2;
         `;
-
-        const offset = (page - 1) * limit;
-
         const data = await fastify.db.query(query, {
             type: fastify.db.QueryTypes.SELECT,
-            replacements: {
-                startDate: startDate ? new Date(startDate) : null,
-                endDate: endDate ? new Date(endDate) : null,
-                commentaryId: commentaryId || null,
-                limit: limit,
-                offset: offset,
-            },
+            bind : [
+                take,
+                skip
+            ]
         });
 
         const totalRecordsQuery = `
             SELECT COUNT(*) as "count"
             FROM "tblPredictorAPILogs"
-            ${startDate && endDate ? `WHERE "wrRequestStartTime" BETWEEN :startDate AND :endDate` : ''}
-            ${commentaryId ? (startDate && endDate ? ' AND ' : ' WHERE ') + '"wrCommentaryId" = :commentaryId' : ''}
+            ${where ? where : ''}
         `;
 
         const totalRecordsResult = await fastify.db.query(totalRecordsQuery, {
             type: fastify.db.QueryTypes.SELECT,
-            replacements: {
-                startDate: startDate ? new Date(startDate) : null,
-                endDate: endDate ? new Date(endDate) : null,
-                commentaryId: commentaryId || null,
-            },
         });
 
         const totalRecords = parseInt(totalRecordsResult[0].count, 10);
@@ -197,16 +174,18 @@ const allPredictorAPILogsQuery = async (filters, fastify) => {
             fastify,
             err.message,
             "DB ERROR --> repository/TableLogs.js/allPredictorAPILogsQuery",
-            null
+            request
         );
         throw new Error(err.message);
     }
 };
 
-const allCommentaryLogsQuery = async (filters, fastify) => {
-    const { commentaryId, startDate, endDate, page = 1, limit = 20 } = filters;
-
+const allCommentaryLogsQuery = async (body,request, fastify) => {
     try {
+        const { commentaryId, startDate, endDate, page = 1, limit = 20 } = body;
+        const {skip , take} = getPagination(page, limit);
+        let where = commentaryId ? `WHERE "wrCommentaryId" = ${commentaryId}` :null;
+        where = startDate && endDate ? (where ? `${where} AND "wrCreatedDate" BETWEEN ${new Date(startDate)} AND ${new Date(endDate)}` : `WHERE "wrCreatedDate" BETWEEN ${new Date(startDate)} AND ${new Date(endDate)}`) : where;
         const query = `
             SELECT 
                 "wrId" as "id",
@@ -219,39 +198,26 @@ const allCommentaryLogsQuery = async (filters, fastify) => {
                 "wrCreatedBy" as "createdBy"
             FROM 
                 "tblCommentaryLogs"
-            ${commentaryId ? `WHERE "wrCommentaryId" = :commentaryId` : ''}
-            ${startDate && endDate ? `${commentaryId ? ' AND ' : ' WHERE '} "wrCreatedDate" BETWEEN :startDate AND :endDate` : ''}
+            ${where ? where : ''}
             ORDER BY "wrId" DESC
-            LIMIT :limit OFFSET :offset;
+            LIMIT $1 OFFSET $2;
         `;
-
-        const offset = (page - 1) * limit;
-
         const data = await fastify.db.query(query, {
             type: fastify.db.QueryTypes.SELECT,
-            replacements: {
-                commentaryId: commentaryId || null,
-                startDate: startDate ? new Date(startDate) : null,
-                endDate: endDate ? new Date(endDate) : null,
-                limit: limit,
-                offset: offset,
-            },
+            bind : [
+                take,
+                skip
+            ]
         });
 
         const totalRecordsQuery = `
             SELECT COUNT(*) as "count"
             FROM "tblCommentaryLogs"
-            ${commentaryId ? `WHERE "wrCommentaryId" = :commentaryId` : ''}
-            ${startDate && endDate ? `${commentaryId ? ' AND ' : ' WHERE '} "wrCreatedDate" BETWEEN :startDate AND :endDate` : ''}
+            ${where ? where : ''}
         `;
 
         const totalRecordsResult = await fastify.db.query(totalRecordsQuery, {
             type: fastify.db.QueryTypes.SELECT,
-            replacements: {
-                commentaryId: commentaryId || null,
-                startDate: startDate ? new Date(startDate) : null,
-                endDate: endDate ? new Date(endDate) : null,
-            },
         });
 
         const totalRecords = parseInt(totalRecordsResult[0].count, 10);
@@ -268,16 +234,17 @@ const allCommentaryLogsQuery = async (filters, fastify) => {
             fastify,
             err.message,
             "DB ERROR --> repository/TableLogs.js/allCommentaryLogsQuery",
-            null
+            request
         );
         throw new Error(err.message);
     }
 };
 
-const allErrorLogsQuery = async (filters, fastify) => {
-    const { startDate, endDate, page = 1, limit = 20 } = filters;
-
+const allErrorLogsQuery = async (body ,request, fastify) => {
     try {
+        const { startDate, endDate, page = 1, limit = 20 } = body;
+        const {skip , take} = getPagination(page, limit);
+        const where = startDate && endDate ? `WHERE "wrCreatedDate" BETWEEN ${new Date(startDate)} AND ${new Date(endDate)}` : '';
         const query = `
             SELECT 
                 "wrErrId" as "errId",
@@ -289,37 +256,29 @@ const allErrorLogsQuery = async (filters, fastify) => {
                 "wrApi" as "api",
                 "wrCreatedDate" as "createdDate",
                 "wrRequestBody" as "requestBody"
-            FROM 
+            FROM
                 "tblErrorLogs"
-            ${startDate && endDate ? `WHERE "wrCreatedDate" BETWEEN :startDate AND :endDate` : ''}
+            ${where}
             ORDER BY "wrErrId" DESC
-            LIMIT :limit OFFSET :offset;
+            LIMIT $1 OFFSET $2;
+
         `;
-
-        const offset = (page - 1) * limit;
-
         const data = await fastify.db.query(query, {
             type: fastify.db.QueryTypes.SELECT,
-            replacements: {
-                startDate: startDate ? new Date(startDate) : null,
-                endDate: endDate ? new Date(endDate) : null,
-                limit: limit,
-                offset: offset,
-            },
-        });
+            bind : [
+                take,
+                skip
+            ]
+        }); 
 
         const totalRecordsQuery = `
             SELECT COUNT(*) as "count"
             FROM "tblErrorLogs"
-            ${startDate && endDate ? `WHERE "wrCreatedDate" BETWEEN :startDate AND :endDate` : ''}
+            ${where}
         `;
 
         const totalRecordsResult = await fastify.db.query(totalRecordsQuery, {
             type: fastify.db.QueryTypes.SELECT,
-            replacements: {
-                startDate: startDate ? new Date(startDate) : null,
-                endDate: endDate ? new Date(endDate) : null,
-            },
         });
 
         const totalRecords = parseInt(totalRecordsResult[0].count, 10);
@@ -336,7 +295,7 @@ const allErrorLogsQuery = async (filters, fastify) => {
             fastify,
             err.message,
             "DB ERROR --> repository/TableLogs.js/allErrorLogsQuery",
-            null
+            request
         );
         throw new Error(err.message);
     }

@@ -36,23 +36,23 @@ const applyFiltersAndPagination = (logs, filters) => {
 };
 
 const allResponseLogs = async (request, fastify) => {
-    return await allResponseLogsQuery(request.body || {}, fastify);
+    return await allResponseLogsQuery(request.body || {},request, fastify);
 };
 
 const allThirdPartyApiLogs = async (request, fastify) => {
-    return await allThirdPartyApiLogsQuery(request.body || {}, fastify);
+    return await allThirdPartyApiLogsQuery(request.body || {}, request, fastify);
 };
 
 const allPredictorAPILogs = async (request, fastify) => {
-    return await allPredictorAPILogsQuery(request.body || {}, fastify);
+    return await allPredictorAPILogsQuery(request.body || {},request, fastify);
 };
 
 const allCommentaryLogs = async (request, fastify) => {
-    return await allCommentaryLogsQuery(request.body || {}, fastify);
+    return await allCommentaryLogsQuery(request.body || {},request, fastify);
 };
 
 const allErrorLogs = async (request, fastify) => {
-    return await allErrorLogsQuery(request.body || {}, fastify);
+    return await allErrorLogsQuery(request.body || {},request, fastify);
 };
 const allEventByCompetition = async(request) =>{
     const {competitionId} = request.body;
