@@ -587,6 +587,7 @@ async function registrationClientService({ body }, fastify) {
       if (results.clientId) {
         const payload = { clientId: results.clientId };
         const token = generateToken(payload);
+        global.tblClient.push({ ...results });
         return { token, details: results };
       }
     }
