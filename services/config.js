@@ -137,7 +137,14 @@ const deleteConfigService = async (request, fastify) => {
     },
     request,
     fastify
-  )
+  ).catch((err) => {
+    errorLogger(
+      fastify,
+      err.message,
+      "API ERROR --> services/config/deleteConfigService",
+      request
+    )
+  });
 
   return `Config(s) deleted successfully`;
 };
