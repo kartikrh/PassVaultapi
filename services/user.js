@@ -808,13 +808,24 @@ async function verifyLinkEmail(user) {
       html: `Please click the following link to verify your email: <a href="${verificationUrl}">${verificationUrl}</a>`
     };
 
-    const transporter = nodemailer.createTransport({
+    let transporter 
+    {serviceType === "gmail" ?
+    transporter = nodemailer.createTransport({
     service: serviceType,
     auth: {
         user: result.email,
         pass: decrypt(result.password)
       }
-    });
+    }):
+    transporter = nodemailer.createTransport({
+      host: result.smtpAddress,
+      port: result.portNumber,
+      auth: {
+          user: result.email,
+          pass: decrypt(result.password)
+      }
+    })
+   }
 
     const info = await transporter.sendMail(mailOptions);
     // console.log('Email sent: ' + info.response);
