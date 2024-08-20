@@ -474,7 +474,7 @@ const marketListByCIdService = async (request, fastify) => {
 };
 const updateMarketRateService = async (request, fastify) => {
   // i got array of eventMarket i want to update this data
-  const { eventMarket, isSend, isSave } = request.body;
+  const { eventMarket } = request.body;
   const commentary = global.tblCommentaries.find(
     (item) => item.commentaryId === request.body.eventMarket[0].commentaryId
   );
@@ -554,7 +554,7 @@ const updateMarketRateService = async (request, fastify) => {
   );
   let _resFromPredictAPI;
   let callPredictions = [];
-  if (teamOnStrike && !isSend && isSave) {
+  if (teamOnStrike && request.body.action && (request.body.action.toUpperCase() === "SAVE_ALL")) {
     _resFromPredictAPI = await callPredictorMarket(
       {
         commentary_id: commentary.commentaryId,
@@ -581,7 +581,7 @@ const updateMarketRateService = async (request, fastify) => {
     }
     callPredictions.push(callPrediction);
   }
-  if(commentary.isPredictMarket && request.body.action)
+  if(commentary.isPredictMarket && request.body.action && (request.body.action.toUpperCase() === "SUSPEND" || request.body.action.toUpperCase() === "PUBLISH"))
   {
     _resFromPredictAPI = null;
     let isOpenMarket = (request.body.action.toUpperCase() === "SUSPEND" || request.body.action.toUpperCase() === "PUBLISH");
