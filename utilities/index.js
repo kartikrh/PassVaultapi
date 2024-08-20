@@ -406,7 +406,19 @@ const callDataProvider = async (data, fastify) =>{
         let url = `${ser.api}${endpoint.endPoint}`;
         let dataTosend = {};
         if(data.moduleType == APIEndpointModuleType.commentaryUpdate && data.serviceType == ServiceType.dataProviderAPI){
-          dataTosend = await getCommentaryDetailByIdQuery(data, fastify);
+          if(data.type == "delete"){
+            dataTosend = {
+              commentaryId : data.commentaryId
+            }
+          }
+          else {
+            dataTosend = await getCommentaryDetailByIdQuery(data, fastify);
+          }
+
+          dataTosend = {
+            ...dataTosend,
+            type : data.type
+          };
         }
         else if(data.moduleType == APIEndpointModuleType.vendorUpdate && data.serviceType == ServiceType.dataProviderAPI
           || data.moduleType == APIEndpointModuleType.vendorIpUpdate && data.serviceType == ServiceType.dataProviderAPI)
