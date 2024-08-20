@@ -936,7 +936,15 @@ const closeEventMarketByTeamIdQuery = async (data, request, fastify) => {
         },
         request,
         fastify
-      )
+      ).catch((err) => {
+        console.log("market data logger console", err);
+        errorLogger(
+          fastify,
+          err.message,
+          "ERROR --> repository/TableEventmarket.js/closeEventMarketByTeamIdQuery",
+          request
+        );
+      });
     }
 
     return result;
@@ -1090,7 +1098,15 @@ const cancelEventMarketByTeamIdQuery = async (data, request, fastify) => {
         dataTosave: typeof(dataToStore) === 'string' ? JSON.parse(dataToStore) : dataToStore,
         updateType: MarketUpdateType.marketInitilization,
         isSendData: true
-      })
+      }).catch((err) => {
+        console.log("market data logger console", err);
+        errorLogger(
+          fastify,
+          err.message,
+          "ERROR --> repository/TableEventmarket.js/closeEventMarketByTeamIdQuery",
+          request
+        );
+      });
     }
 
     return result;

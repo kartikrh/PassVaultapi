@@ -3,6 +3,8 @@ const {
   updateConfigQuery,
   deleteConfigQuery,
 } = require("../repository/TableConfig");
+const { callClientAPI, ServiceType, APIEndpointModuleType } = require("../utilities");
+const { errorLogger } = require("../utilities/logger");
 
 const allCongifService = async (request,fastify) => {
   // return global.tblConfigs;
@@ -35,6 +37,23 @@ const createConfigService = async (request, fastify) => {
     }, fastify, request);
 
   global.tblConfigs.push(data);
+    callClientAPI(
+      {
+        serviceType : ServiceType.clientAPI,
+        moduleType : APIEndpointModuleType.updateConfig,
+        data : data
+      },
+      request,
+      fastify
+    ).catch((err) => {
+      errorLogger(
+        fastify,
+        err.message,
+        "API ERROR --> services/config/createConfigService",
+        request
+      )
+    });
+  
   return data;
 };
 
@@ -71,7 +90,22 @@ const updateConfigService = async (request, fastify) => {
   const index = global.tblConfigs.findIndex((item) => item.configId === configId);
 
   global.tblConfigs[index] = data;
-
+    callClientAPI(
+      {
+        serviceType : ServiceType.clientAPI,
+        moduleType : APIEndpointModuleType.updateConfig,
+        data : data
+      },
+      request,
+      fastify
+    ).catch((err) => {
+      errorLogger(
+        fastify,
+        err.message,
+        "API ERROR --> services/config/updateConfigService",
+        request
+      )
+    });
   return data;
 };
 
@@ -92,7 +126,36 @@ const deleteConfigService = async (request, fastify) => {
 
   global.tblConfigs = global.tblConfigs.filter((item) => !configId.includes(item.configId));
 
+  callClientAPI(
+    {
+      serviceType : ServiceType.clientAPI,
+      moduleType : APIEndpointModuleType.updateConfig,
+      data : {
+        type : "delete",
+        configId : configId
+      }
+    },
+    request,
+    fastify
+  ).catch((err) => {
+    errorLogger(
+      fastify,
+      err.message,
+      "API ERROR --> services/config/deleteConfigService",
+      request
+    )
+  });
+
   return `Config(s) deleted successfully`;
+};
+
+const allConfigDetails = async (request) => {
+  let result = global.tblConfigs;
+
+  const validKeys = request.body.keys.map(element => element.toLowerCase());
+  result = result.filter(item => validKeys.includes(item.key.toLowerCase()));
+
+  return result
 };
 
 module.exports = {
@@ -100,4 +163,5 @@ module.exports = {
   configByIdService,
   saveConfigService,
   deleteConfigService,
+  allConfigDetails
 };

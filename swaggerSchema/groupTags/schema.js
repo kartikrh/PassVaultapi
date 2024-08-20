@@ -169,7 +169,7 @@ const Auth = {
           mobileNo: { type: "string" },
           ipAddress: { type: "string" },
         },
-        required: ["userName"],
+        required: ["email","mobileNo"],
       },
     },
   },
@@ -202,6 +202,33 @@ const Auth = {
           email: { type: "string" },
         },
         required: ["email"],
+      },
+    },
+  },
+  verifyMobile: {
+    schema: {
+      tags: ["Auth"],
+      description: "verifyMobile",
+      body: {
+        type: "object",
+        properties: {
+          email: { type: "string" },
+        },
+        required: ["email"],
+      },
+    },
+  },
+  verifyMobileOtp: {
+    schema: {
+      tags: ["Auth"],
+      description: "verifyMobileOtp",
+      body: {
+        type: "object",
+        properties: {
+          otp: { type: "string" },
+          email: { type: "string" },
+        },
+        required: ["email", "otp"],
       },
     },
   },
@@ -253,6 +280,8 @@ const Auth = {
         properties: {
           otp: { type: "string" },
           email: { type: "string" },
+          isMobileVerify: {type: "boolean"},
+          isEmailVerify: {type: "boolean"},
         },
         required: ["email", "otp"],
       },
@@ -1895,6 +1924,24 @@ const Config = {
       },
     },
   },
+  allConfig: {
+    schema: {
+      tags: ["Config"],
+      description: "Get filtered config details",
+      body: {
+        type: "object",
+        properties: {
+          keys: {
+            type: "array",
+            items: {
+              type: "string",
+            },
+          },
+        },
+        required: ["keys"],
+      },
+    },
+  }
 };
 
 const Commentary = {
@@ -4896,6 +4943,7 @@ const Template = {
           title: {type: "string"},
           description: {type: "string"},
           isActive: {type: "boolean"},
+          isDefault : {type : "boolean"}
         },
         required: ["templateId", "templateType", "type", "title"],
       },
@@ -4916,6 +4964,21 @@ const Template = {
       },
     },
   },
+  updateIsDefault : {
+    schema : {
+      tags : ["Template"],
+      description : "update isDefault",
+      secaurity : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          templateId : {type : "integer"},
+          isDefault : {type : "boolean"}
+        },
+        required : ["templateId" , "isDefault"]
+      }
+    }
+  }
 };
 
 const Client = {
@@ -5032,6 +5095,19 @@ const weblogs = {
 
 
 const MailSettings = {
+  getAll: {
+    schema: {
+      tags: ["Mail settings"],
+      description: "get all Mail settings",
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+
   save: {
     schema: {
       tags: ["Mail settings"],
@@ -5101,8 +5177,67 @@ const MailSettings = {
       },
     },
   },
-};
 
+  activeInactiveApi: {
+    schema: {
+      tags: ["Mail settings"],
+      description: "active inactive Mail settings",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["id", "isActive"],
+      },
+    },
+  },
+};
+const Logs = {
+  eventByCompetition : {
+    schema : {
+      tags : ["Logs"],
+      description : "get logs by competition",
+      security : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          competitionId : {type : "integer"}
+        },
+        required : ["competitionId"]
+      }
+    }
+  },
+  getComByCompetition : {
+    schema : {
+      tags : ["Logs"],
+      description : "get logs by event",
+      security : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          competitionId : {type : "integer"}
+        },
+        required : ["competitionId"]
+      }
+    }
+  },
+  responseLogs : {
+    schema :{
+      tags : ["Logs"],
+      description : "get Response Log",
+      secaurity : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          page : {type : "integer"},
+          limit : {type : "integer"}
+        },
+        required : ["page", "limit"]
+      }
+    }
+  }
+}
 module.exports = {
   Auth,
   Tabs,
@@ -5146,5 +5281,6 @@ module.exports = {
   Template,
   Client,
   weblogs,
-  MailSettings
+  MailSettings,
+  Logs
 };

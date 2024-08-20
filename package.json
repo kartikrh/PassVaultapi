@@ -40,6 +40,7 @@
     "fastify-plugin": "^4.0.0",
     "fastify-sequelize": "^1.0.4",
     "formidable": "^3.5.1",
+    "google-auth-library": "^9.13.0",
     "jsonwebtoken": "^9.0.1",
     "mongoose": "^7.5.2",
     "nodemailer": "^6.9.14",

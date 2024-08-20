@@ -3,6 +3,7 @@ global.clientSocketIo = [];
 const { io } = require("socket.io-client");
 const { clientSocketActionType, clientSocketStatus } = require("../utilities");
 const { updateClientSocketStatusQuery, updateReconnectCountQuery } = require("../repository/TableClientSocket");
+const { errorLogger } = require("../utilities/logger");
 
 const connectClients = async (fastify) => {
   try {
@@ -62,6 +63,102 @@ const connectClients = async (fastify) => {
         let index = global.tblClientSocket.findIndex((c) => c.clientSocketId === urlConfig.clientSocketId);
         global.tblClientSocket[index].reconnectCount = attemptNumber;
       });
+      // client.on("updatedEventMarket", async (data) => {
+      //   try {
+      //     let MarketArr = [];
+      //     //console.log("marketData", data);
+      //     const { commentaryId, marketData } = data;
+      //     const clientInRoom = global.socketIo.sockets.adapter.rooms.get(commentaryId);
+      //     if (clientInRoom?.size) {
+      //       global.socketIo.to(commentaryId).emit("updateMarketData", marketData );
+      //     }
+      //     let ballbybllId;
+      //     let marketIdArr = marketData.map((item) =>{
+      //       let mark = JSON.parse(item);
+      //       MarketArr.push(mark);
+      //       ballbybllId = mark.ballByBallId;
+      //       return mark.marketId;
+      //     });
+      //     let marketToUpdate = await getEventMarketByIdsQuery(
+      //       {
+      //         eventMarketIds: marketIdArr
+      //       },
+      //       null,
+      //       fastify
+      //     )
+      //     const marketOdd = [];
+      //     for (let data of marketToUpdate) {
+      //       let index = global.tblEventMarkets.findIndex((market) => market.eventMarketId === data.eventMarketId);
+      //       if(index != -1){
+      //         global.tblEventMarkets[index] = data;
+      //       }
+      //       else {
+      //         global.tblEventMarkets.push(data);
+      //       }
+      //       if (ballbybllId) {
+      //         let ballData = await createMarketOddsBallByBallBYIDFromSocketIo(ballbybllId, data, fastify);
+      //         if (ballData) {
+      //           global.tblMarketOddsBallByBall.push(bal  lData);
+      //           marketOdd.push(ballData);
+      //         }
+      //       }
+      //     }
+      //     let commentaryData = global.tblCommentaries.find((commentary) => commentary.commentaryId === commentaryId);
+      //     const sendDataForSocketUpdate = {};
+      //     sendDataForSocketUpdate.commentaryId = commentaryId;
+      //     sendDataForSocketUpdate.eventRefId = commentaryData.eventRefId;
+      //     sendDataForSocketUpdate.dataToUpdate = [
+      //       {
+      //         module: "marketOddsBallByBall",
+      //         data: marketOdd,
+      //         type : "create"
+      //       }
+      //     ];
+      //     global.clientSocketIo.forEach((socket) => {
+      //       socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+      //     });
+      //     console.log("Event Market Updated successfully");
+      //     return true;
+      
+      //   // let marketDataToUpdate = marketData;
+    
+      //   // // console.log("marketDataToUpdate", marketDataToUpdate);
+      //   // let runnerData = [];
+      //   // let marketDataLog = [];
+      
+      //   // for (let data of marketDataToUpdate) {
+      //   //   data = JSON.parse(data);
+      //   //   runnerData.push(...data.runner);
+      //   //   marketDataLog.push({
+      //   //     commentaryId,
+      //   //     eventMarketId: data.id,
+      //   //     data: data,
+      //   //     updateType: MarketUpdateType.predictMarket
+      //   //   });
+          
+      //   // }
+      //   //   await fastify.db.query(
+      //   //     `CALL proc_update_eventmarket_runner(
+      //   //       $1, $2, $3
+      //   //     )`,
+      //   //     {
+      //   //       bind: [
+      //   //         JSON.stringify(runnerData),
+      //   //         JSON.stringify(marketDataLog),
+      //   //         null
+      //   //       ]
+      //   //     }
+      //   //   );
+      //   } catch (error) {
+      //     errorLogger(
+      //       fastify,
+      //       error.message,
+      //       "ERROR --> socketIo.js/updatedEventMarket",
+      //       null
+      //     );
+      //     console.error("error:", error);
+      //   }
+      // });
       // client.io.on("reconnect", (attemptNumber) => {
       //   console.log(`Reconnected after ${attemptNumber} attempts`);
       //   updateClientSocketStatusQuery({
@@ -78,6 +175,12 @@ const connectClients = async (fastify) => {
     await Promise.all(promises);
   } catch (error) {
     console.log("Error connecting clients:", error);
+    errorLogger(
+      fastify,
+      error.message,
+      "ERROR --> socketIo.js/connectClients",
+      null
+    );
     // console.error("Error connecting clients:", error);
   }
 };
@@ -104,6 +207,12 @@ const disconnectClients = async (fastify) => {
     });
     global.clientSocketIo = global.clientSocketIo.filter((c) => !disconnectClientUrls.includes(c.clientSocketId));
   } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "ERROR --> socketIo.js/disconnectClients",
+      null
+    )
     console.log("Error disconnecting clients:", error);
   }
 }
@@ -121,6 +230,12 @@ const disconnectInactiveClients = async (fastify) => {
     return true;
   } catch (error) {
     console.log("Error disconnecting inactive clients:", error);
+    errorLogger(
+      fastify,
+      error.message,
+      "ERROR --> socketIo.js/disconnectInactiveClients",
+      null
+    );
   }
 }
 module.exports = { connectClients ,disconnectClients,disconnectInactiveClients };

@@ -27,13 +27,16 @@ const {
   forgetPassword,
   AddUpdateWebLogs,
   verifyEmail,
-  verifyEmailToken
+  verifyEmailToken,
+  verifyMobile,
+  verifyMobileOtp
   //loginRegistrationClient,
 } = require("../controller/users/index");
-const { Auth ,sendPushNotification,weblogs} = require("../swaggerSchema/groupTags/schema");
+const { Auth ,sendPushNotification,weblogs, Config} = require("../swaggerSchema/groupTags/schema");
 const { authorize } = require("../controller/middleware/index");
 const { startSignalR, stopSignalR, isSignalRStarted  } = require('../signalrHandler/index');
 const { errorLogger } = require("../utilities/logger");
+const { getAllConfigData } = require("../controller/users/admin/Page/config");
 
 module.exports = async function (fastify, opts) {
   //! API DEFINITION
@@ -123,17 +126,17 @@ module.exports = async function (fastify, opts) {
   //   schema: Auth.clientLogin.schema,
   //   handler: (request, reply) => loginRegistrationClient(request, reply, fastify),
   // });
-  fastify.post("/signupClient", {
-    schema: Auth.clientregistration.schema,
-    handler: (request, reply) => registrationClient(request, reply, fastify),
-  });
-  fastify.post("/signupClientDetails", {
-    schema: Auth.signupClientDetails.schema,
-    handler: (request, reply) => registerDetails(request, reply, fastify),
-  });
   fastify.post("/resendOtp", {
     schema: Auth.resendOtp.schema,
     handler: (request, reply) => resendOtp(request, reply, fastify),
+  });
+  fastify.post("/verifyMobile", {
+    schema: Auth.verifyMobile.schema,
+    handler: (request, reply) => verifyMobile(request, reply, fastify),
+  });
+  fastify.post("/verifyMobileOtp", {
+    schema: Auth.verifyMobileOtp.schema,
+    handler: (request, reply) => verifyMobileOtp(request, reply, fastify),
   });
   fastify.post("/verifyEmail", {
     schema: Auth.verifyEmail.schema,
@@ -167,6 +170,19 @@ module.exports = async function (fastify, opts) {
     schema: Auth.clientLogin.schema,
     handler: (request, reply) => loginClient(request, reply, fastify),
   });
+  fastify.post("/signupClient", {
+    schema: Auth.clientregistration.schema,
+    handler: (request, reply) => registrationClient(request, reply, fastify),
+  });
+  fastify.post("/signupClientDetails", {
+    schema: Auth.signupClientDetails.schema,
+    handler: (request, reply) => registerDetails(request, reply, fastify),
+  });
+  fastify.post("/signOutClient", {
+    schema: Auth.signOut.schema,
+    //preHandler: [(request, reply) => authorize(request, reply, fastify)],
+    handler: (request, reply) => signOutClient(request, reply, fastify),
+  });
   fastify.post("/updateClient", {
     schema: Auth.clientUpdate.schema,
     handler: (request, reply) => updateClient(request, reply, fastify),
@@ -175,14 +191,13 @@ module.exports = async function (fastify, opts) {
     schema: sendPushNotification.send.schema,
     handler: (request, reply) => sendNotificationWeb(request, reply, fastify),
   });
-  fastify.post("/signOutClient", {
-    schema: Auth.signOut.schema,
-    //preHandler: [(request, reply) => authorize(request, reply, fastify)],
-    handler: (request, reply) => signOutClient(request, reply, fastify),
-  });
   fastify.post("/addUpdateWebLogs", {
     schema: weblogs.save.schema,
     preHandler: [(request, reply) => authorize(request, reply, fastify)],
     handler: (request, reply) => AddUpdateWebLogs(request, reply, fastify),
+  });
+  fastify.post("/config", {
+    schema: Config.allConfig.schema,
+    handler: (request, reply) => getAllConfigData(request, reply, fastify),
   });
 };

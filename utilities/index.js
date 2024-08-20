@@ -430,6 +430,13 @@ const callDataProvider = async (data, fastify) =>{
 
     return true  
   } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> utilities/index/callDataProvider",
+      null
+    );
+    
     console.log("error From callDataProvider", error);
   }
 }
@@ -473,7 +480,8 @@ const ServiceType = {
 const APIEndpointModuleType = {
   commentaryUpdate : 1,
   vendorUpdate : 2,
-  vendorIpUpdate : 3
+  vendorIpUpdate : 3,
+  updateConfig : 4,	
 }
 const NotificationSendType = {
   all : 1,
@@ -532,7 +540,7 @@ const pageLimit = {
       limit : 20
   }
 }
-const getPagination = (page, size) => {
+const getPagination = (page = 1, size = 20) => {
   if (page < 1 || size < 1) {
     throw new Error("Page number and page size must be greater than zero.");
   }
@@ -548,6 +556,24 @@ const clientProvider = {
   Manual : 1,
   Google : 2,
   Facebook : 3,
+}
+const typesOfServices = {
+  GmailService: 'gmail',
+  SmtpService: 'smtp',
+}
+
+const templateModel = {
+  MobileNo : 1,
+  Email : 2,
+}
+const templateType = {
+  Welcome : 1,
+  Verify : 2,
+  NewsLetter : 3
+}
+const getIpAddress = (req) => {
+  const ip = req.ip || req.headers['x-forwarded-for'] || request.raw.connection.remoteAddress;
+  return ip;
 }
 module.exports = {
   ERROR_CODES,
@@ -587,5 +613,9 @@ module.exports = {
   sendNotificationByType,
   pageLimit,
   getPagination,
-  clientProvider
+  clientProvider,
+  typesOfServices,
+  templateModel,
+  templateType,
+  getIpAddress
 };

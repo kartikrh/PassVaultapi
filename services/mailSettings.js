@@ -1,5 +1,5 @@
-const { insertMailSettingsQuery, updateMailSettingsQuery, deleteMailSettingsQuery, isDefaultChangeQuery, isDefaultFalseQuery } = require("../repository/TableMailSettings");
-const bcrypt = require("bcrypt");
+const { insertMailSettingsQuery, updateMailSettingsQuery, deleteMailSettingsQuery, isDefaultChangeQuery, isDefaultFalseQuery, activeInactiveMailSettingsQuery } = require("../repository/TableMailSettings");
+const { encrypt } = require("../utilities/index");
 
 const saveMailSettings = async (request, fastify, data) => {
     const validateEmail = global.tblMailSettings.find((item) =>
@@ -71,8 +71,12 @@ const editMailSettings = async (request, fastify, data) => {
 }
 
 const allMailSettings = async (request) => {
-    const result = global.tblMailSettings;
-    return result;
+    const { isActive } = request.body;
+    if (isActive == undefined) {
+        return global.tblMailSettings;
+    }
+    return global.tblMailSettings.filter((item) => item.isActive === isActive);
+
 };
 
 const mailSettingsById = async (request) => {
@@ -84,7 +88,7 @@ const mailSettingsById = async (request) => {
 };
 
 const createMailSettings = async (request, fastify) => {
-    let password = bcrypt.hashSync(request.body.password, 10);
+    let password = encrypt(request.body.password);
     request.body.password = password
 
     if (request.body.id === 0) {
@@ -136,10 +140,34 @@ const changeIsDefaultStage = async (request, fastify) => {
     return `IsDefault stage changed successfully`;
 };
 
+const activeInactiveMailSettings = async (request, fastify) => {
+    const { id, isActive } = request.body;
+    const validateApiId = global.tblMailSettings.find((item) => item.id === id);
+    if (!validateApiId) {
+        throw new Error("Mail settings with this Id not found");
+    }
+    await activeInactiveMailSettingsQuery(
+        {
+            id,
+            isActive,
+        },
+        request,
+        fastify
+    );
+
+    const index = global.tblMailSettings.findIndex((item) => item.id === id);
+    if (index != -1) {
+        global.tblMailSettings[index].isActive = isActive;
+    }
+
+    return `Mail settings updated successfully`;
+};
+
 module.exports = {
     allMailSettings,
     mailSettingsById,
     createMailSettings,
     deleteMailSettings,
-    changeIsDefaultStage
+    changeIsDefaultStage,
+    activeInactiveMailSettings
 };

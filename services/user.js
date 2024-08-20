@@ -6,6 +6,8 @@ const path = require("path");
 const {ImgModuleConfig} = require("../utilities/imageConstant");
 const nodemailer = require('nodemailer');
 const {sendNotification,sendMobileNotifications} = require("../WebPushHandler/index");
+const { SENDEMAILTYPE } = require("../utilities/configConstants");
+const { typesOfServices } = require('../utilities/index');
 
 const {
   signUpUser,
@@ -29,7 +31,8 @@ const {
   registerClientPassword,
   registerClientOtpValidation,
   updateClientPassword,
-  verifyEmail
+  verifyEmail,
+  verifyMobileOtp
 } = require("../repository/TableUser");
 const {
   deviceInfo,
@@ -567,23 +570,27 @@ async function loginClientService({ body }, fastify) {
   }
 }
 
-async function registrationClientService({ body }, fastify) {
+async function registrationClientService(request, fastify) {
   try {
+    let body = request.body;
     if (body.password) {
       const hashedPassword = encrypt(body.password);
       body.password = hashedPassword;
     }
 
     let results;
-    results = await registerClient(body, fastify);
-
-    if (results === "Username and Email is already exists") {
-      return { error: results };
-    }
-    if (results.clientId) {
-      const payload = { clientId: results.clientId };
-      const token = generateToken(payload);
-      return { token, details: results };
+    results = await registerClient(body,request, fastify);
+    if (typeof results === "string") {
+      if (results.includes("already exists")) {
+        return { error: results };
+      }
+    }else if (typeof results === "object" && results !== null) {
+      if (results.clientId) {
+        const payload = { clientId: results.clientId };
+        const token = generateToken(payload);
+        global.tblClient.push({ ...results });
+        return { token, details: results };
+      }
     }
     else {
       return { error: results };
@@ -607,6 +614,8 @@ async function registerDetailsService({ body }, fastify) {
     // if (response === "MobileNo and Email is already exists") {
     //   return { error: response };
     // }
+    let isMobileVerify = false;
+    let isEmailVerify = false;
     let isOtpSend = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP);
     if (isOtpSend) {
       isOtpSend = isOtpSend.value;
@@ -633,25 +642,28 @@ async function registerDetailsService({ body }, fastify) {
       // const generateOTP = () => {
       //   return Math.floor(100000 + Math.random() * 900000).toString();
       // };
+      isMobileVerify = true;
       const otp = 1234
       const result = await insertOtpQuery({ ...body, otp, clientId: response.clientId }, fastify);
       global.tblOtp.push(result[0]);
 
     } else if(response.emailId && isEmailOtpSend === "true"){
+      isEmailVerify = true;
       const otp = await sendOtpEmail(response.emailId);
       const result = await insertOtpQuery({...body, otp, clientId: response.clientId }, fastify);
       global.tblOtp.push(result[0]);
     } else {
-      await registerClientOtpValidation({ ...body, clientId: response.clientId }, fastify);
+      await registerClientOtpValidation({ ...body, clientId: response.clientId, isMobileVerify, isEmailVerify }, fastify);
 
       const index = global.tblClient.findIndex(
         (item) => item.clientId === response.clientId
       );
-
+      response.registrationProcessStatus = 2;
       global.tblClient[index].registrationProcessStatus = 2
     }
-
-    return { token, details: response };
+    response.isEmailVerify = isEmailVerify;
+    response.isMobileVerify = isMobileVerify;
+    return { token, details: response};
     // }
     // else{
     //   return { error: response };
@@ -669,23 +681,42 @@ async function registerDetailsService({ body }, fastify) {
 
 async function sendOtpEmail(emailId) {
   try {
-  const otp = Math.floor(1000 + Math.random() * 9000);
+    const otp = Math.floor(1000 + Math.random() * 9000);
 
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: 'apoorva.wpa@gmail.com',
-        pass: 'gdejmqzmfyynrcpy'
+    let mailType = global.tblConfigs.find(
+      (item) => item.key.toLowerCase() === SENDEMAILTYPE.toLowerCase()
+    );
+    if (mailType) {
+      mailType = parseInt(mailType.value);
     }
-  });
+    else {
+      throw new Error("Config not found");
+    }
 
-  const mailOptions = {
-    from: 'ScoreClient',
-    to: emailId,
-    subject: 'Your OTP Code',
-    text: `Your OTP code is ${otp}`,
-    html: `<b>Hello there! ${otp}</b>`
-  };
+    const result = global.tblMailSettings.find(
+      (item) => item.mailType === mailType && item.isDefault === true
+    );
+    let serviceType = mailType === 1 ? typesOfServices.GmailService : typesOfServices.SmtpService;
+
+    let templateData = global.tblTemplate.find(
+      (item) => item.isActive === true && item.isDefault === true
+    );
+    let template = templateData ? templateData.description.replace('{{OTP}}', otp) : `<p>Hello there! ${otp}</p>`;
+
+    const transporter = nodemailer.createTransport({
+      service: serviceType,
+      auth: {
+        user: result.email,
+        pass: decrypt(result.password)
+      }
+    });
+
+    const mailOptions = {
+      from: 'ScoreClient',
+      to: emailId,
+      subject: 'Your OTP Code',
+      html: template
+    };
 
     const info = await transporter.sendMail(mailOptions);
     // console.log('Email sent: ' + info.response);
@@ -755,21 +786,47 @@ async function verifyLinkEmail(user) {
   const scoreClientUrl = global.tblConfigs.find((item) => item.key === configConstants.SCORECLIENTAPIENDPOINT).value;
 
   const verificationUrl = `${scoreClientUrl}/verify-email?token=${emailToken}`;
-  
-  const mailOptions = {
-    from: 'ScoreClient',
-    to: user.emailId,
-    subject: 'Verify Your Email',
-    html: `Please click the following link to verify your email: <a href="${verificationUrl}">${verificationUrl}</a>`
-  };
-  
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: 'apoorva.wpa@gmail.com',
-        pass: 'gdejmqzmfyynrcpy'
+
+    let mailType = global.tblConfigs.find(
+      (item) => item.key.toLowerCase() === SENDEMAILTYPE.toLowerCase()
+    );
+    if (mailType) {
+      mailType = parseInt(mailType.value);
     }
-  });
+    else {
+      throw new Error("Config not found");
+    }
+
+    const result = global.tblMailSettings.find(
+      (item) => item.mailType === mailType && item.isDefault === true
+    );
+    let serviceType = mailType === 1 ? typesOfServices.GmailService : typesOfServices.SmtpService;
+
+    const mailOptions = {
+      from: 'ScoreClient',
+      to: user.emailId,
+      subject: 'Verify Your Email',
+      html: `Please click the following link to verify your email: <a href="${verificationUrl}">${verificationUrl}</a>`
+    };
+
+    let transporter 
+    {serviceType === "gmail" ?
+    transporter = nodemailer.createTransport({
+    service: serviceType,
+    auth: {
+        user: result.email,
+        pass: decrypt(result.password)
+      }
+    }):
+    transporter = nodemailer.createTransport({
+      host: result.smtpAddress,
+      port: result.portNumber,
+      auth: {
+          user: result.email,
+          pass: decrypt(result.password)
+      }
+    })
+   }
 
     const info = await transporter.sendMail(mailOptions);
     // console.log('Email sent: ' + info.response);
@@ -777,6 +834,93 @@ async function verifyLinkEmail(user) {
   } catch (error) {
     console.error('Error sending email: ', error);
     throw error;
+  }
+}
+
+async function verifyMobileService({ body }, fastify) {
+  try {
+    const { email } = body;
+
+    const findUser = global.tblClient.find(
+      (item) => item.emailId === email
+    );
+
+    if(!findUser) {
+      throw new Error("Invalid User");
+    }
+    const clientId = findUser.clientId;
+    const mobileNo = findUser.mobileNo;
+    
+    let isOtpSend = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP);
+    if (isOtpSend) {
+      isOtpSend = isOtpSend.value;
+    }
+    else {
+      throw new Error("Config not found");
+    }
+
+      if(mobileNo && isOtpSend === "true") {
+        // const generateOTP = () => {
+        //   return Math.floor(100000 + Math.random() * 900000).toString();
+        // };
+        const otp = 1234
+        const result = await insertOtpQuery({ ...body, otp, clientId: clientId }, fastify);
+        global.tblOtp.push(result[0]);
+      } else {
+        return "Invalid Credentials"
+      }
+
+      return "Otp sent to your registered mobile number.";
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR->> services/user.js -> verifyMobileService",
+      null
+    )
+    throw new Error(error);
+  }
+};
+
+async function verifyMobileOtpService({ body }, fastify) {
+  try {
+    //check expiration time
+    const { email, otp } = body;
+
+    const findUser = global.tblClient.find(
+      (item) => item.emailId === email
+    );
+
+    if (!findUser) {
+      throw new Error("Invalid User");
+    }
+    const clientId = findUser.clientId;
+
+    const data = global.tblOtp.filter((item) => item.userId === clientId)
+    data.sort((a, b) => b.otpId - a.otpId)
+
+    if (otp === data[0]?.otp) {
+      await verifyMobileOtp({ ...body, clientId: clientId }, fastify);
+
+      const index = global.tblClient.findIndex(
+        (item) => item.clientId === clientId
+      );
+
+      if (index !== -1) {
+        global.tblClient[index].isMobileVerified = true;
+      }
+      return "OTP validated successfully"
+    } else {
+      throw new Error("Invalid OTP");
+    }
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR->> services/user.js -> verifyMobileOtpService",
+      null
+    )
+    throw new Error(error);
   }
 }
 
@@ -794,7 +938,7 @@ async function verifyEmailService({ body }, fastify) {
     const emailId = findUser.emailId;
     
       if(emailId) {
-        verifyLinkEmail(findUser);
+        await verifyLinkEmail(findUser);
       } else {
         return "Invalid Credentials"
       }
@@ -865,7 +1009,7 @@ const clientDetailsByIdService = async (request, fastify) => {
 async function validateOtpService({ body }, fastify) {
   try {
     //check expiration time
-    const { email, otp } = body;
+    const { email, otp, isMobileVerify, isEmailVerify } = body;
 
     const findUser = global.tblClient.find(
       (item) => item.emailId === email
@@ -880,7 +1024,7 @@ async function validateOtpService({ body }, fastify) {
     data.sort((a, b) => b.otpId - a.otpId)
 
     if (otp === data[0]?.otp) {
-      await registerClientOtpValidation({ ...body, clientId: clientId }, fastify);
+      await registerClientOtpValidation({ ...body, clientId: clientId, isMobileVerify, isEmailVerify }, fastify);
 
       const index = global.tblClient.findIndex(
         (item) => item.clientId === clientId
@@ -888,7 +1032,8 @@ async function validateOtpService({ body }, fastify) {
 
       if (index !== -1) {
         global.tblClient[index].registrationProcessStatus = 2;
-        global.tblClient[index].isMobileVerified = true;
+        global.tblClient[index].isMobileVerified = isMobileVerify;
+        global.tblClient[index].isEmailVerified = isEmailVerify;
       }
       return "OTP validated successfully"
     } else {
@@ -994,16 +1139,44 @@ async function forgetPasswordService({ body }, fastify) {
     if (!findUser) {
       throw new Error("Invalid User");
     }
+    let isMobileVerify = false;
+    let isEmailVerify = false;
+
+    let isOtpSend = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP);
+    if (isOtpSend) {
+      isOtpSend = isOtpSend.value;
+    }
+    else {
+      throw new Error("Config not found");
+    }
+
+    let isEmailOtpSend = global.tblConfigs.find((item) => item.key === configConstants.ISSENDEMAILOTP);
+    if (isEmailOtpSend) {
+      isEmailOtpSend = isEmailOtpSend.value;
+    }
+    else {
+      throw new Error("Config not found");
+    }
+
     const mobileNo = findUser.mobileNo;
     const clientId = findUser.clientId;
+    const emailId = findUser.emailId;
 
-    if (mobileNo) {
+    if (mobileNo && isOtpSend === "true") {
+      isMobileVerify = true;
       const otp = 1234
       const result = await insertOtpQuery({ ...body, otp, clientId: clientId }, fastify);
       global.tblOtp.push(result[0]);
+    } else if(emailId && isEmailOtpSend === "true") {
+      isEmailVerify = true;
+      const otp = await sendOtpEmail(emailId);
+      const result = await insertOtpQuery({...body, otp, clientId: clientId}, fastify);
+      global.tblOtp.push(result[0]);
+    } else {
+      return "Invalid Credentials"
     }
-
-    return "Otp sent successfully"
+    const message = "Otp sent successfully";
+    return {message, isMobileVerify, isEmailVerify}
   } catch (error) {
     errorLogger(
       fastify,
@@ -1018,7 +1191,7 @@ async function updateClientService({ body }, fastify) {
   try {
     let results;
     results = await updateClient(body, fastify);
-    if (results === "Client ID does not exist") {
+    if (results === "Client ID does not exist" || results === "Email is already in use by another client" || results === "Mobile number is already in use by another client") {
       throw new Error(results);
       //return { error: results };
     }
@@ -1109,5 +1282,7 @@ module.exports = {
   updateClientPasswordService,
   forgetPasswordService,
   verifyEmailService,
-  verifyEmailTokenService
+  verifyEmailTokenService,
+  verifyMobileService,
+  verifyMobileOtpService,
 };
