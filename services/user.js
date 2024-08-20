@@ -570,15 +570,16 @@ async function loginClientService({ body }, fastify) {
   }
 }
 
-async function registrationClientService({ body }, fastify) {
+async function registrationClientService(request, fastify) {
   try {
+    let body = request.body;
     if (body.password) {
       const hashedPassword = encrypt(body.password);
       body.password = hashedPassword;
     }
 
     let results;
-    results = await registerClient(body, fastify);
+    results = await registerClient(body,request, fastify);
     if (typeof results === "string") {
       if (results.includes("already exists")) {
         return { error: results };

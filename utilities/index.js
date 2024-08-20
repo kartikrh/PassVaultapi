@@ -571,6 +571,10 @@ const templateType = {
   Verify : 2,
   NewsLetter : 3
 }
+const getIpAddress = (req) => {
+  const ip = req.ip || req.headers['x-forwarded-for'] || request.raw.connection.remoteAddress;
+  return ip;
+}
 module.exports = {
   ERROR_CODES,
   error,
@@ -612,5 +616,6 @@ module.exports = {
   clientProvider,
   typesOfServices,
   templateModel,
-  templateType
+  templateType,
+  getIpAddress
 };
