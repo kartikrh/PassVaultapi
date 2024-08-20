@@ -27,18 +27,24 @@ const thirdPartyApiseByIdService = async (request) => {
 };
 
 const createThirdPartyApisService = async (request, fastify) => {
+  const validateUrl = global.tblThirdPartyApis.find((item) => item.url.toLowerCase() === request.body.url.toLowerCase());
+  if(validateUrl){
+    throw new Error("URL already exists");
+  }
   const data = await insertThirdPartyApisQuery(request.body, fastify, request);
   global.tblThirdPartyApis.push(data);
   return data;
 };
 
 const updateThirdPartyApisService = async (request, fastify) => {
-  const checkId = global.tblThirdPartyApis.find(
-    (item) => item.id === request.body.id
-  );
-
+  const checkId = global.tblThirdPartyApis.find((item) => item.id === request.body.id);
   if (!checkId) {
     throw new Error("ID not Found");
+  }
+
+  const validateUrl = global.tblThirdPartyApis.find((item) => item.url.toLowerCase() === request.body.url.toLowerCase());
+  if(validateUrl){
+    throw new Error("URL already exists");
   }
 
   const data = {
