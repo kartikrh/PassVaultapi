@@ -1140,10 +1140,13 @@ const updateClient = async (body, fastify) => {
     const updatedClient = await fastify.db.query(
       `SELECT "wrClientID" as "clientId", 
               "wrGoogleID" as "googleId", 
+              "wrFacebookId" as "facebookId",
               "wrUserName" as "userName", 
               "wrIsAllowMultiLogin" as "isAllowMultiLogin",
+              "wrRegistrationProcessStatus" as "registrationProcessStatus", 
               "wrEmailID" as "emailId", 
-              "wrMobileNo" as "mobileNo" 
+              "wrMobileNo" as "mobileNo",
+              "wrProvider" as "provider" 
        FROM "tblClient" 
        WHERE "wrClientID" = $1`,
       {
