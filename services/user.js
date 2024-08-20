@@ -1196,6 +1196,10 @@ async function updateClientService({ body }, fastify) {
       //return { error: results };
     }
     else {
+      const index = global.tblClient.findIndex(
+        (item) => item.clientId === results.clientId
+      );
+      global.tblClient[index] = results;
       return results;
     }
   } catch (error) {
