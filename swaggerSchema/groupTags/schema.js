@@ -5238,6 +5238,86 @@ const Logs = {
     }
   }
 }
+const ThirdPartyApis = {
+  getAll: {
+    schema: {
+      tags: ["Third party Apis"],
+      description: "get all Third party Apis",
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+
+  save: {
+    schema: {
+      tags: ["Third party Apis"],
+      description: "save Third party Api",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          providerName: { type: "string" },
+          url: { type: "string" },
+          type: { type: "integer" },
+          isActive: { type: "boolean" },
+          isConnect: { type: "boolean" },
+        },
+        required: ["id", "providerName", "type"],
+      },
+    },
+  },
+
+  delete: {
+    schema: {
+      tags: ["Third party Apis"],
+      description: "delete Third party Api",
+      body: {
+        type: "object",
+        properties: {
+          id: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["id"],
+      },
+    },
+  },
+
+  getById: {
+    schema: {
+      tags: ["Third party Apis"],
+      description: "get Third party Api by id",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+        },
+        required: ["id"],
+      },
+    },
+  },
+
+  activeInactive: {
+    schema: {
+      tags: ["Third party Apis"],
+      description: "active inactive Third party Api",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["id", "isActive"],
+      },
+    },
+  },
+};
 module.exports = {
   Auth,
   Tabs,
@@ -5282,5 +5362,6 @@ module.exports = {
   Client,
   weblogs,
   MailSettings,
-  Logs
+  Logs,
+  ThirdPartyApis
 };

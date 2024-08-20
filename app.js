@@ -128,6 +128,7 @@ module.exports = async function (fastify, opts) {
       require("./sequelize/tables/clientSocketModel")(fastify.db);
       require("./sequelize/tables/activityLogModel")(fastify.db);
       require("./sequelize/tables/mailSettingsModel")(fastify.db);
+      require("./sequelize/tables/thirdPartyApisModel")(fastify.db);
       try {
         await fastify.db.sync();
         await featchData(fastify);
