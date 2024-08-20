@@ -5222,6 +5222,21 @@ const Logs = {
       }
     }
   },
+  responseLogs : {
+    schema :{
+      tags : ["Logs"],
+      description : "get Response Log",
+      secaurity : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          page : {type : "integer"},
+          limit : {type : "integer"}
+        },
+        required : ["page", "limit"]
+      }
+    }
+  }
 }
 module.exports = {
   Auth,
