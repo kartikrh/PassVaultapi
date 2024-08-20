@@ -481,7 +481,7 @@ async function loginRegistrationClient(body, fastify) {
 async function registerClient(body, request ,fastify) {
   try {
     const { fullName, email, userName, password, token, googleID, mobileNo, ipAddress, facebookId } = body;
-    const ip = getIpAddress(request);
+    // const ip = getIpAddress(request);
 
     if (facebookId && token) {
       // check if user exust by facebookId
@@ -558,7 +558,7 @@ async function registerClient(body, request ,fastify) {
           ) RETURNING "wrClientID" as "clientId", "wrGoogleID" as "googleId", "wrUserName" as "userName", "wrIsAllowMultiLogin" as "isAllowMultiLogin","wrEmailID" as "emailId" ,"wrMobileNo" as "mobileNo", "wrClientName" as "fullName", "wrRegistrationProcessStatus" as "registrationProcessStatus", "wrIsUserActive" as "isUserActive", "wrIsActive" as "isActive", "wrProvider" as "provider", "wrIsEmailVerified" as "isEmailVerified", "wrIsMobileVerified" as "isMobileVerified", "wrIsDelete" as "isDelete", "wrCreatedDate" as "createdDate";`,
           {
             type: QueryTypes.INSERT,
-            bind: [fullName, userName, password, false, email, mobileNo, ip],
+            bind: [fullName, userName, password, false, email, mobileNo, ipAddress],
           }
         );
         return registrationData[0][0];
