@@ -141,6 +141,7 @@ const Auth = {
       body: {
         type: "object",
         properties: {
+          fullName: { type: "string" },
           email: { type: "string" },
           userName: { type: "string" },
           password: { type: "string" },
