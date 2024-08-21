@@ -469,16 +469,16 @@ const marketListByCIdService = async (request, fastify) => {
   let players = global.tblCommentaryPlayers.find(
     (item) => item.commentaryId === commentaryId
   );
-  if (player) {
-    player = {
-      teamId: player.teamId,
-      playerId: player.playerId,
-      commentaryPlayerId: player.commentaryPlayerId,
-      playerName: player.playerName,
-      batsmanAverage: player.batsmanAverage,
-      batsmanStrikeRate: player.batsmanStrikeRate,
-      bowlerEconomy: player.bowlerEconomy,
-      bowlerAverage: player.bowlerAverage,
+  if (players) {
+    players = {
+      teamId: players.teamId,
+      playerId: players.playerId,
+      commentaryPlayerId: players.commentaryPlayerId,
+      playerName: players.playerName,
+      batsmanAverage: players.batsmanAverage,
+      batsmanStrikeRate: players.batsmanStrikeRate,
+      bowlerEconomy: players.bowlerEconomy,
+      bowlerAverage: players.bowlerAverage,
     };
   }
   return {
