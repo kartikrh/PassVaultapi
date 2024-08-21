@@ -29,7 +29,7 @@ const { connectClients, disconnectClients } = require("./sockets");
 const {
   disConnectClientSocketQuery,
 } = require("./repository/TableClientSocket");
-const {startSignalR} = require("./signalrHandler/index.js")
+const {startSignalR} = require("./signalrHandler/MockSignalR.js")
 const WebSocket = require("ws");
 const WebsocketConnection = require("./websocket");
 const webPush = require("web-push");
