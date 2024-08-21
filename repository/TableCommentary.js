@@ -2945,22 +2945,22 @@ const updateCommentaryTeamPredictionPrecentageQuery = async (data, fastify) => {
         type: fastify.db.QueryTypes.UPDATE,
       }
     );
-    await fastify.db.query(
-      `update "tblCommentaryTeams" set 
-      "wrTeamPredictionPercentage" = $1
-      where "wrCommentaryId" = $2 AND "wrCurrentInnings" = $3 AND "wrCommentaryTeamId" <> $4
-      `,
-      {
-        bind: [
-          data.team2PredictionPercentage || null,
-          data.commentaryId || null,
-          data.currentInnings || null,
-          data.commentaryTeamId || null,
-        ],
+    // await fastify.db.query(
+    //   `update "tblCommentaryTeams" set 
+    //   "wrTeamPredictionPercentage" = $1
+    //   where "wrCommentaryId" = $2 AND "wrCurrentInnings" = $3 AND "wrCommentaryTeamId" <> $4
+    //   `,
+    //   {
+    //     bind: [
+    //       data.team2PredictionPercentage || null,
+    //       data.commentaryId || null,
+    //       data.currentInnings || null,
+    //       data.commentaryTeamId || null,
+    //     ],
 
-        type: fastify.db.QueryTypes.UPDATE,
-      }
-    );
+    //     type: fastify.db.QueryTypes.UPDATE,
+    //   }
+    // );
     
     return { success: true };
   } catch (err) {
