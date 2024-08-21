@@ -1142,6 +1142,7 @@ const updateClient = async (body, fastify) => {
               "wrGoogleID" as "googleId", 
               "wrFacebookId" as "facebookId",
               "wrUserName" as "userName", 
+              "wrClientName" as "fullName",
               "wrIsAllowMultiLogin" as "isAllowMultiLogin",
               "wrRegistrationProcessStatus" as "registrationProcessStatus", 
               "wrEmailID" as "emailId", 
