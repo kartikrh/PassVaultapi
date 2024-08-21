@@ -201,7 +201,7 @@ module.exports = async function (fastify, opts) {
       //   request.errId = res[0].errId;
       // });
       let result = await responseLogInDB(request, fastify);
-      request.errId = result[0].errId;
+      request.errId = result[0]?.errId;
     }
 
     if (process.env.ENABLE_SENTRY === "TRUE") {
