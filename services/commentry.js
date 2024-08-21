@@ -2209,7 +2209,7 @@ const testStoreProcedureService = async (request, fastify) => {
 const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
   // check sp
   try {
-    const {
+    let {
       commentaryTeams,
       commentaryPlayers,
       commentaryOvers,
@@ -2286,12 +2286,15 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
     }
     // validate commentaryPlayers
     if (commentaryPlayers) {
+      commentaryPlayers = commentaryPlayers.filter((player) => player.commentaryPlayerId != null || player.commentaryPlayerId != undefined);
       commentaryPlayers.forEach((player) => {
-        const index = global.tblCommentaryPlayers.findIndex(
-          (item) => item.commentaryPlayerId === player.commentaryPlayerId
-        );
-        if (index === -1) {
-          throw new Error("Commentary Player with this id not Found");
+        if(player.commentaryPlayerId){
+          const index = global.tblCommentaryPlayers.findIndex(
+            (item) => item.commentaryPlayerId === player.commentaryPlayerId
+          );
+          if (index === -1) {
+            throw new Error("Commentary Player with this id not Found");
+          }
         }
       });
     }
