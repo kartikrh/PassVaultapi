@@ -466,10 +466,26 @@ const marketListByCIdService = async (request, fastify) => {
     displayOrder: item.displayOrder
   }));
 
+  let players = global.tblCommentaryPlayers.find(
+    (item) => item.commentaryId === commentaryId
+  );
+  if (player) {
+    player = {
+      teamId: player.teamId,
+      playerId: player.playerId,
+      commentaryPlayerId: player.commentaryPlayerId,
+      playerName: player.playerName,
+      batsmanAverage: player.batsmanAverage,
+      batsmanStrikeRate: player.batsmanStrikeRate,
+      bowlerEconomy: player.bowlerEconomy,
+      bowlerAverage: player.bowlerAverage,
+    };
+  }
   return {
     marketList,
     teams,
     categories,
+    players,
   };
 };
 const updateMarketRateService = async (request, fastify) => {
