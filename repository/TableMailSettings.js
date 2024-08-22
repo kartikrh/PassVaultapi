@@ -71,7 +71,7 @@ const insertMailSettingsQuery = async (data, fastify, request) => {
                     data.isEnableSSL || false,
                     data.isActive || false,
                     data.isDefault || false,
-                    data.userId
+                    request.userTokenInfo.WrUserId
                 ],
             }
         );
@@ -107,7 +107,7 @@ const updateMailSettingsQuery = async (data, fastify, request) => {
                     data.isEnableSSL,
                     data.isActive,
                     data.isDefault || false,
-                    data.userId,
+                    request.userTokenInfo.WrUserId,
                     data.id
                 ],
             }
