@@ -908,7 +908,7 @@ async function verifyMobileOtpService({ body }, fastify) {
 
       if (index !== -1) {
         global.tblClient[index].isMobileVerified = true;
-        global.tblClient[index].registrationProcessStatus = 3;
+        global.tblClient[index].registrationProcessStatus = 2;
         global.tblClient[index].isUserActive = 1;
       }
       return "OTP validated successfully"
@@ -971,7 +971,7 @@ async function verifyEmailTokenService({ body }, fastify) {
       if(index !== -1){ 
         await verifyEmail({ ...body, clientId: clientId }, fastify);
         global.tblClient[index].isEmailVerified = true;
-        global.tblClient[index].registrationProcessStatus = 3;
+        global.tblClient[index].registrationProcessStatus = 2;
         global.tblClient[index].isUserActive = 1;
         return { success: true, message: 'Email verified successfully', email, clientId };
       }
