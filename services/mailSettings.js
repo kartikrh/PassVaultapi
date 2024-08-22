@@ -1,5 +1,5 @@
 const { insertMailSettingsQuery, updateMailSettingsQuery, deleteMailSettingsQuery, isDefaultChangeQuery, isDefaultFalseQuery, activeInactiveMailSettingsQuery } = require("../repository/TableMailSettings");
-const { encrypt } = require("../utilities/index");
+const { encrypt, decrypt } = require("../utilities/index");
 
 const saveMailSettings = async (request, fastify, data) => {
     const validateEmail = global.tblMailSettings.find((item) =>
@@ -84,6 +84,9 @@ const mailSettingsById = async (request) => {
     const result = global.tblMailSettings.find(
         (item) => item.id === id
     );
+    if(result.password){
+       result.password = decrypt(result.password)
+    }
     return result || null;
 };
 
