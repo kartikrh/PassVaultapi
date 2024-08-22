@@ -1,3 +1,4 @@
+const { authorize } = require("../../../controller/middleware");
 const {
     getAllMailSettings,
     singleGetMailSettings,
