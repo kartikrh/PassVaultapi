@@ -1149,7 +1149,9 @@ const updateClient = async (body, fastify) => {
               "wrMobileNo" as "mobileNo",
               "wrProvider" as "provider", 
               "wrIsUserActive" as "isUserActive",
-              "wrIsActive" as "isActive"
+              "wrIsActive" as "isActive",
+              "wrIsEmailVerified" AS "isEmailVerified",
+              "wrIsMobileVerified" AS "isMobileVerified"
        FROM "tblClient" 
        WHERE "wrClientID" = $1`,
       {

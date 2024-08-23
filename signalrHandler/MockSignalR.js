@@ -169,7 +169,7 @@ const processRateQueue = async () => {
       // Process the winPerList and update the market
       for (const winPer of winPerList) {
         try {
-          console.log(`Selection ID: ${winPer.selectionid}, Min Lay Value: ${winPer.rate}, Win Percentage: ${winPer.winper}`);
+          //console.log(`Selection ID: ${winPer.selectionid}, Min Lay Value: ${winPer.rate}, Win Percentage: ${winPer.winper}`);
           const _selectionidData = global.tblEventMarkets.find(
             (e) => e.selectionId == winPer.selectionid
           );
@@ -201,7 +201,6 @@ const processRateQueue = async () => {
                 const _update = {
                   commentaryTeamId: teams.commentaryTeamId,
                   teamPredictionPercentage: winPer.winper,
-                  //team2PredictionPercentage: parseInt(100 - winPer.winper),
                   currentInnings: commentary.currentInnings,
                   commentaryId: _selectionidData.commentaryId
                 };
@@ -212,14 +211,6 @@ const processRateQueue = async () => {
                     item.commentaryTeamId === teams.commentaryTeamId
                 );
                 global.tblCommentaryTeams[index].teamPredictionPercentage  = parseInt(_update.teamPredictionPercentage);
-              
-                // const _index = global.tblCommentaryTeams.findIndex(
-                //   (item) =>
-                //     item.commentaryId === commentary.commentaryId &&
-                //     item.commentaryTeamId !== teams.commentaryTeamId && 
-                //     item.currentInnings === commentary.currentInnings
-                // );
-                // global.tblCommentaryTeams[_index].teamPredictionPercentage  = parseInt(_update.team2PredictionPercentage);
 
                 await updateCommentaryTeamPredictionPrecentageQuery(_update, _fastify);
               }
