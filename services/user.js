@@ -908,6 +908,8 @@ async function verifyMobileOtpService({ body }, fastify) {
 
       if (index !== -1) {
         global.tblClient[index].isMobileVerified = true;
+        global.tblClient[index].registrationProcessStatus = 2;
+        global.tblClient[index].isUserActive = 1;
       }
       return "OTP validated successfully"
     } else {
@@ -967,8 +969,10 @@ async function verifyEmailTokenService({ body }, fastify) {
         (item) => item.clientId === clientId
       );
       if(index !== -1){ 
-        global.tblClient[index].isEmailVerified = true
         await verifyEmail({ ...body, clientId: clientId }, fastify);
+        global.tblClient[index].isEmailVerified = true;
+        global.tblClient[index].registrationProcessStatus = 2;
+        global.tblClient[index].isUserActive = 1;
         return { success: true, message: 'Email verified successfully', email, clientId };
       }
       else {
@@ -1196,6 +1200,10 @@ async function updateClientService({ body }, fastify) {
       //return { error: results };
     }
     else {
+      const index = global.tblClient.findIndex(
+        (item) => item.clientId === results.clientId
+      );
+      global.tblClient[index] = results;
       return results;
     }
   } catch (error) {
