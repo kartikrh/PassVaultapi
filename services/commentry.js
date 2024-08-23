@@ -586,6 +586,7 @@ const createCommentaryService = async (request, fastify) => {
         commentaryId: addCommentry.commentaryId,
         serviceType: ServiceType.dataProviderAPI,
         moduleType: APIEndpointModuleType.commentaryUpdate,
+        type : "create"
       },
       fastify
     ).catch((err) => {
@@ -868,6 +869,7 @@ const updateCommentaryService = async (request, fastify) => {
         commentaryId: updatedData.commentaryId,
         serviceType: ServiceType.dataProviderAPI,
         moduleType: APIEndpointModuleType.commentaryUpdate,
+        type : "update"
       },
       fastify
     ).catch((err) => {
@@ -1089,6 +1091,7 @@ const cloneCommentaryService = async (request, fastify) => {
         commentaryId: newCommentary.commentaryId,
         serviceType: ServiceType.dataProviderAPI,
         moduleType: APIEndpointModuleType.commentaryUpdate,
+        type : "create"
       },
       fastify
     ).catch((err) => {
@@ -1232,6 +1235,23 @@ const deleteCommentaryService = async (request, fastify) => {
     );
   });
 
+  callDataProvider(
+    {
+      commentaryId: commentaryId,
+      serviceType: ServiceType.dataProviderAPI,
+      moduleType: APIEndpointModuleType.commentaryUpdate,
+      type : "delete"
+    },
+    fastify
+  ).catch((err) => {
+    console.log("call data provider console", err);
+    errorLogger(
+      fastify,
+      err.message,
+      "ERROR --> services/commentary.js/deleteCommentaryService",
+      request
+    );
+  });
   return `Commentaries deleted successfully`;
 };
 
@@ -1677,14 +1697,14 @@ const testStoreProcedureService = async (request, fastify) => {
         result: commentaryDetails.result || "",
       };
       if (
-        previousCommentaryStatus != statusToUpdate &&
-        commentaryData.isPredictMarket == true
+        previousCommentaryStatus != statusToUpdate
       ) {
         callDataProvider(
           {
             commentaryId: commentaryId,
             serviceType: ServiceType.dataProviderAPI,
             moduleType: APIEndpointModuleType.commentaryUpdate,
+            type : statusToUpdate == 4 ? "close" : "update"
           },
           fastify
         ).catch((err) => {
@@ -2189,7 +2209,7 @@ const testStoreProcedureService = async (request, fastify) => {
 const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
   // check sp
   try {
-    const {
+    let {
       commentaryTeams,
       commentaryPlayers,
       commentaryOvers,
@@ -2266,12 +2286,15 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
     }
     // validate commentaryPlayers
     if (commentaryPlayers) {
+      commentaryPlayers = commentaryPlayers.filter((player) => player.commentaryPlayerId != null || player.commentaryPlayerId != undefined);
       commentaryPlayers.forEach((player) => {
-        const index = global.tblCommentaryPlayers.findIndex(
-          (item) => item.commentaryPlayerId === player.commentaryPlayerId
-        );
-        if (index === -1) {
-          throw new Error("Commentary Player with this id not Found");
+        if(player.commentaryPlayerId){
+          const index = global.tblCommentaryPlayers.findIndex(
+            (item) => item.commentaryPlayerId === player.commentaryPlayerId
+          );
+          if (index === -1) {
+            throw new Error("Commentary Player with this id not Found");
+          }
         }
       });
     }
@@ -2439,14 +2462,14 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         currentInnings: commentaryDetails.currentInnings
       };
       if (
-        previousCommentaryStatus != statusToUpdate &&
-        commentaryData.isPredictMarket == true
+        previousCommentaryStatus != statusToUpdate
       ) {
         callDataProvider(
           {
             commentaryId: commentaryId,
             serviceType: ServiceType.dataProviderAPI,
             moduleType: APIEndpointModuleType.commentaryUpdate,
+            type : statusToUpdate == 4 ? "close" : "update"
           },
           fastify
         ).catch((err) => {
@@ -7195,6 +7218,24 @@ const updateisPredictMarketInCommentaryService = async (request, fastify) => {
       {
         commentaryId: commentaryId,
         serviceType: ServiceType.dataProviderAPI,
+        moduleType: APIEndpointModuleType.commentaryUpdate
+      },
+      fastify
+    ).catch((err) => {
+      console.log("call data provider console", err);
+      errorLogger(
+        fastify,
+        err.message,
+        "ERROR --> services/commentary.js/updateisPredictMarketInCommentaryService",
+        request
+      );
+    });
+  }
+  else{
+    callDataProvider(
+      {
+        commentaryId: commentaryId,
+        serviceType: ServiceType.dataProviderAPI,
         moduleType: APIEndpointModuleType.commentaryUpdate,
       },
       fastify
@@ -7448,6 +7489,7 @@ const closeCommentaryService = async (request, fastify) => {
           commentaryId: commentaryId,
           serviceType: ServiceType.dataProviderAPI,
           moduleType: APIEndpointModuleType.commentaryUpdate,
+          type : "close"
         },
         fastify
       ).catch((err) => {

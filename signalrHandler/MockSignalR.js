@@ -9,6 +9,7 @@ const { errorLogger } = require("../utilities/logger");
 
 const configConstants = require('../utilities/configConstants');
 let connection,_fastify,updateMarketRateIntervalId,checkConfigIntervalId,IntervalId;
+let connectionCount =0;
 // Initialize a global queue
 global.rateSourceRefIDSet = new Set();
 global.isAdminStoppedSignalR = false;
@@ -39,7 +40,7 @@ async function startSignalR(fastify) {
         //? Here We Update To Globale Data For SignalR Values
         connection.on('Rate', async (message) => {
           try {
-            if(data.mi){
+            if(message.mi){
               // Find if the market ID already exists in the rateQueue
               const existingIndex = global.rateQueue.findIndex((item) => item.mi === message.mi);
 
@@ -56,7 +57,7 @@ async function startSignalR(fastify) {
           } catch (error) {
             errorLogger(
               _fastify,
-              err,
+              error,
               "Error SignalrR --> signalrHandler/startSignalR/ConnectionEvent_Rate",
               null
             );
@@ -168,15 +169,15 @@ const processRateQueue = async () => {
       // Process the winPerList and update the market
       for (const winPer of winPerList) {
         try {
-          console.log(`Selection ID: ${winPer.selectionid}, Min Lay Value: ${winPer.rate}, Win Percentage: ${winPer.winper}`);
+          //console.log(`Selection ID: ${winPer.selectionid}, Min Lay Value: ${winPer.rate}, Win Percentage: ${winPer.winper}`);
           const _selectionidData = global.tblEventMarkets.find(
-            (e) => e.selectionId === winPer.selectionid
+            (e) => e.selectionId == winPer.selectionid
           );
 
           if (_selectionidData) {
             let teams;
             let commentary = global.tblCommentaries.find(
-              (item) => item.commentaryId === _selectionidData.commentaryId
+              (item) => item.commentaryId == _selectionidData.commentaryId
             );
 
             if (commentary) {
@@ -184,7 +185,7 @@ const processRateQueue = async () => {
                 (item) =>
                   item.commentaryId === commentary.commentaryId &&
                   item.currentInnings === commentary.currentInnings &&
-                  item.teamName === _selectionidData.teamId
+                  item.teamName == _selectionidData.teamId
               );
 
               if (!teams) {
@@ -192,7 +193,7 @@ const processRateQueue = async () => {
                   (item) =>
                     item.commentaryId === commentary.commentaryId &&
                     item.currentInnings === commentary.currentInnings &&
-                    item.teamName === _selectionidData.runner
+                    item.teamName == _selectionidData.runner
                 );
               }
 
@@ -200,7 +201,6 @@ const processRateQueue = async () => {
                 const _update = {
                   commentaryTeamId: teams.commentaryTeamId,
                   teamPredictionPercentage: winPer.winper,
-                  team2PredictionPercentage: parseInt(100 - winPer.winper),
                   currentInnings: commentary.currentInnings,
                   commentaryId: _selectionidData.commentaryId
                 };
@@ -211,14 +211,6 @@ const processRateQueue = async () => {
                     item.commentaryTeamId === teams.commentaryTeamId
                 );
                 global.tblCommentaryTeams[index].teamPredictionPercentage  = parseInt(_update.teamPredictionPercentage);
-              
-                const _index = global.tblCommentaryTeams.findIndex(
-                  (item) =>
-                    item.commentaryId === commentary.commentaryId &&
-                    item.commentaryTeamId !== teams.commentaryTeamId && 
-                    item.currentInnings === commentary.currentInnings
-                );
-                global.tblCommentaryTeams[_index].teamPredictionPercentage  = parseInt(_update.team2PredictionPercentage);
 
                 await updateCommentaryTeamPredictionPrecentageQuery(_update, _fastify);
               }
@@ -327,9 +319,8 @@ const createUpdateGlobalSignalRData = async (message) => {
           const _selectionidData = global.tblEventMarkets.find(
             (e) => e.selectionId == items.selectionId
           );
-
+          let _updateData= {};
           if(_selectionidData && _selectionidData.commentaryId != 0){
-            let _updateData= {};
             _updateData.EventMarketId = _selectionidData.eventMarketId;
             _updateData.RunnerId = _selectionidData.runnerId;
             _updateData.MarketStatus = _selectionidData.status;
@@ -405,7 +396,7 @@ const createUpdateGlobalSignalRData = async (message) => {
   } catch (error) {
     errorLogger(
       _fastify,
-      err,
+      error,
       "Error SignalrR --> signalrHandler/CreateUpdateSignalRData",
       null
     );

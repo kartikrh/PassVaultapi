@@ -47,7 +47,23 @@ module.exports = (sequelize) => {
                 type: DataTypes.BOOLEAN,
                 allowNull: false,
                 defaultValue: false
-            }
+            },
+            wrCreatedBy: {
+                type: DataTypes.INTEGER,
+            },
+            wrCreatedDate: {
+                type: DataTypes.DATE,
+                allowNull: true,
+                defaultValue: DataTypes.NOW,
+            },
+            wrModifiedBy: {
+                type: DataTypes.INTEGER,
+            },
+            wrModifiedDate: {
+                type: DataTypes.DATE,
+                allowNull: true,
+                defaultValue: DataTypes.NOW,
+            },
         },
         {
             timestamps: false,

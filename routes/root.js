@@ -183,6 +183,7 @@ module.exports = async function (fastify, opts) {
     //preHandler: [(request, reply) => authorize(request, reply, fastify)],
     handler: (request, reply) => signOutClient(request, reply, fastify),
   });
+
   fastify.post("/updateClient", {
     schema: Auth.clientUpdate.schema,
     handler: (request, reply) => updateClient(request, reply, fastify),

@@ -1,3 +1,4 @@
+const { authorize } = require("../../../controller/middleware");
 const {
     getAllMailSettings,
     singleGetMailSettings,
@@ -21,6 +22,14 @@ module.exports = async (fastify, opts) => {
 
     fastify.post("/save", {
         schema: MailSettings.save.schema,
+        preHandler: [
+            (request, reply) => authorize(request, reply, fastify),
+            // (request, reply, done) =>
+            //  checkPermission(request, reply, fastify, {
+            //    tabName: "MailSettings",
+            //    mode: request.body.clientId === 0 ? "add" : "edit",
+            //  }),
+          ],
         handler: (request, reply) => saveMailSettings(request, reply, fastify),
     });
 
