@@ -2659,7 +2659,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
       let _plyers = commentaryPlayers.filter((_fil) => _fil.isPlay === true && _fil.onStrike !== null);
       _plyers.forEach((player) => {
         let _sendPrePlayer = {};
-        _sendPrePlayer.player_id = player.playerId;
+        _sendPrePlayer.player_id = player.commentaryPlayerId;
         _sendPrePlayer.player_name = player.playerName;
         _sendPrePlayer.team_id = player.teamId;
         _sendPrePlayer.batRun = player.batRun || '0';
