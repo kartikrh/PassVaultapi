@@ -1,5 +1,5 @@
 const { insertMailSettingsQuery, updateMailSettingsQuery, deleteMailSettingsQuery, isDefaultChangeQuery, isDefaultFalseQuery, activeInactiveMailSettingsQuery } = require("../repository/TableMailSettings");
-const { encrypt } = require("../utilities/index");
+const { encrypt, decrypt } = require("../utilities/index");
 
 const saveMailSettings = async (request, fastify, data) => {
     const validateEmail = global.tblMailSettings.find((item) =>
@@ -11,7 +11,7 @@ const saveMailSettings = async (request, fastify, data) => {
     const saveData = await insertMailSettingsQuery(data.body, fastify, request);
     if (data.body.mailType === 1 && data.body.isDefault === true ||
         data.body.mailType === 2 && data.body.isDefault === true) {
-        await isDefaultFalseQuery(saveData, fastify, request)
+        await isDefaultFalseQuery(saveData, fastify, {...request.body})
         global.tblMailSettings.forEach((item) => {
             if (item.id !== saveData.id && item.mailType === data.body.mailType) {
                 item.isDefault = false;
@@ -52,7 +52,7 @@ const editMailSettings = async (request, fastify, data) => {
 
     if (updateData.mailType === 1 && updateData.isDefault === true ||
         updateData.mailType === 2 && updateData.isDefault === true) {
-        await isDefaultFalseQuery(updateData, fastify, request)
+        await isDefaultFalseQuery(updateData, fastify, {...request.body})
         global.tblMailSettings.forEach((item) => {
             if (item.id !== updateData.id && item.mailType === updateData.mailType) {
                 item.isDefault = false;
@@ -84,7 +84,8 @@ const mailSettingsById = async (request) => {
     const result = global.tblMailSettings.find(
         (item) => item.id === id
     );
-    return result || null;
+    const decryptPassword = await decrypt(result.password);
+    return {...result, password: decryptPassword} || null;
 };
 
 const createMailSettings = async (request, fastify) => {
@@ -92,9 +93,9 @@ const createMailSettings = async (request, fastify) => {
     request.body.password = password
 
     if (request.body.id === 0) {
-        return await saveMailSettings(request.body, fastify, request);
+        return await saveMailSettings(request, fastify, request);
     } else {
-        return await editMailSettings(request.body, fastify, request);
+        return await editMailSettings(request, fastify, request);
     }
 };
 

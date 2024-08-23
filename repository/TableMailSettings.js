@@ -13,7 +13,11 @@ const allMailSettingsQuery = async (fastify) => {
             "wrPortNumber" as "portNumber",
             "wrIsEnableSSL" as "isEnableSSL",
             "wrIsActive" as "isActive",
-            "wrIsDefault" as "isDefault"
+            "wrIsDefault" as "isDefault",
+            "wrCreatedBy" as "createdBy",
+            "wrCreatedDate" as "createdDate",
+            "wrModifiedBy" as "modifiedBy",
+            "wrModifiedDate" as "modifiedDate"
             FROM "tblMailSettings" ORDER BY "wrId" asc;`,
             { type: fastify.db.QueryTypes.SELECT }
         );
@@ -34,10 +38,10 @@ const insertMailSettingsQuery = async (data, fastify, request) => {
             `WITH insert_data AS (
             INSERT INTO "tblMailSettings" (
             "wrEmail", "wrUserName", "wrPassword", "wrMailType", "wrSmtpAddress",
-            "wrPortNumber", "wrIsEnableSSL", "wrIsActive", "wrIsDefault"
+            "wrPortNumber", "wrIsEnableSSL", "wrIsActive", "wrIsDefault", "wrCreatedDate", "wrCreatedBy"
             ) 
             VALUES (
-                $1, $2, $3, $4, $5, $6, $7, $8, $9
+                $1, $2, $3, $4, $5, $6, $7, $8, $9, now(), $10
             ) 
             RETURNING *
             )        
@@ -51,7 +55,9 @@ const insertMailSettingsQuery = async (data, fastify, request) => {
             "wrPortNumber" AS "portNumber",
             "wrIsEnableSSL" AS "isEnableSSL",
             "wrIsActive" AS "isActive",
-            "wrIsDefault" AS "isDefault"
+            "wrIsDefault" AS "isDefault",
+            "wrCreatedDate" AS "createdDate",
+            "wrCreatedBy" AS "createdBy"
             FROM insert_data;`,
             {
                 type: fastify.db.QueryTypes.SELECT,
@@ -65,6 +71,7 @@ const insertMailSettingsQuery = async (data, fastify, request) => {
                     data.isEnableSSL || false,
                     data.isActive || false,
                     data.isDefault || false,
+                    request.userTokenInfo.WrUserId
                 ],
             }
         );
@@ -86,8 +93,8 @@ const updateMailSettingsQuery = async (data, fastify, request) => {
         return await fastify.db.query(
             `Update "tblMailSettings" set 
             "wrEmail" = $1,"wrUserName" = $2,"wrPassword" = $3,"wrMailType" = $4,
-            "wrSmtpAddress" = $5,"wrPortNumber" = $6,"wrIsEnableSSL" = $7, "wrIsActive" = $8, "wrIsDefault" = $9
-            where "wrId" = $10;`,
+            "wrSmtpAddress" = $5,"wrPortNumber" = $6,"wrIsEnableSSL" = $7, "wrIsActive" = $8, "wrIsDefault" = $9, "wrModifiedDate" = now(), "wrModifiedBy" = $10
+            where "wrId" = $11;`,
             {
                 type: fastify.db.QueryTypes.UPDATE,
                 bind: [
@@ -100,6 +107,7 @@ const updateMailSettingsQuery = async (data, fastify, request) => {
                     data.isEnableSSL,
                     data.isActive,
                     data.isDefault || false,
+                    request.userTokenInfo.WrUserId,
                     data.id
                 ],
             }

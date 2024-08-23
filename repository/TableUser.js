@@ -791,11 +791,11 @@ async function verifyMobileOtp(body, fastify) {
   try {
     const { email, otp, clientId } = body;
     await fastify.db.query(
-      `UPDATE "tblClient" set "wrIsMobileVerified" = $2
+      `UPDATE "tblClient" set "wrIsMobileVerified" = $2, "wrRegistrationProcessStatus" = $3, "wrIsUserActive" = $4
            WHERE "wrClientID" = $1`,
       {
         type: QueryTypes.INSERT,
-        bind: [clientId, true],
+        bind: [clientId, true, 2, 1],
       }
     );
     return "Status updated successfully";
@@ -813,11 +813,11 @@ async function verifyEmail(body, fastify) {
   try {
     const { clientId } = body;
     await fastify.db.query(
-      `UPDATE "tblClient" set "wrIsEmailVerified" = $2
+      `UPDATE "tblClient" set "wrIsEmailVerified" = $2, "wrRegistrationProcessStatus" = $3, "wrIsUserActive" = $4
            WHERE "wrClientID" = $1`,
       {
         type: QueryTypes.INSERT,
-        bind: [clientId, true],
+        bind: [clientId, true, 2, 1],
       }
     );
     return "Email verified successfully";
@@ -1147,7 +1147,9 @@ const updateClient = async (body, fastify) => {
               "wrRegistrationProcessStatus" as "registrationProcessStatus", 
               "wrEmailID" as "emailId", 
               "wrMobileNo" as "mobileNo",
-              "wrProvider" as "provider" 
+              "wrProvider" as "provider", 
+              "wrIsUserActive" as "isUserActive",
+              "wrIsActive" as "isActive"
        FROM "tblClient" 
        WHERE "wrClientID" = $1`,
       {
