@@ -5318,6 +5318,21 @@ const ThirdPartyApis = {
       },
     },
   },
+
+  isDefaultStage: {
+    schema: {
+      tags: ["Third party Apis"],
+      description: "change isDefault stage by id",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          isDefault: { type: "boolean" },
+        },
+        required: ["id", "isDefault"],
+      },
+    },
+  },
 };
 module.exports = {
   Auth,

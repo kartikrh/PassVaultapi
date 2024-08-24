@@ -7,6 +7,7 @@ const {updateLatestMarketOddsBallByBall} = require('../repository/TableMarketOdd
 const { ERROR_CODES, error, success } = require("../utilities/index");
 const { errorLogger } = require("../utilities/logger");
 const { updateThirdPartyApisQuery } = require('../repository/TableThirdPartyApis');
+const { thirdPartyApiType } = require('../utilities/index');
 
 const configConstants = require('../utilities/configConstants');
 let connection,_fastify,updateMarketRateIntervalId,checkConfigIntervalId,IntervalId;
@@ -25,7 +26,7 @@ async function startSignalR(fastify, request) {
       if(fastify){
         _fastify = fastify;
       }
-      const _SignalRURLs = global.tblThirdPartyApis.filter((item) => item.isActive === true && item.type === 1);
+      const _SignalRURLs = global.tblThirdPartyApis.filter((item) => item.isActive === true && item.type === thirdPartyApiType.Socket && item.isDefault === true);
       const _SignalRInterwal = global.tblConfigs.find((item) => item.key === configConstants.INTERVAL_MarketTHIRDPARTY)?.value || 10000;
       if(_SignalRURLs.length > 0){
       for (const thirdParty of _SignalRURLs) {
@@ -106,7 +107,7 @@ async function stopSignalR(fastify, request) {
       global.isAdminStoppedSignalR = true;
       global.rateSourceRefIDSet = new Set();
 
-      const _SignalRURLs = global.tblThirdPartyApis.filter((item) => item.isActive === true && item.type === 1 && item.isConnect === true);
+      const _SignalRURLs = global.tblThirdPartyApis.filter((item) => item.isActive === true && item.type === thirdPartyApiType.Socket && item.isConnect === true);
       if(_SignalRURLs.length > 0){
         for (const thirdParty of _SignalRURLs) {
           thirdParty.isConnect = false
@@ -193,7 +194,7 @@ const processRateQueue = async () => {
       // Process the winPerList and update the market
       for (const winPer of winPerList) {
         try {
-          //console.log(`Selection ID: ${winPer.selectionid}, Min Lay Value: ${winPer.rate}, Win Percentage: ${winPer.winper}`);
+          console.log(`Selection ID: ${winPer.selectionid}, Min Lay Value: ${winPer.rate}, Win Percentage: ${winPer.winper}`);
           const _selectionidData = global.tblEventMarkets.find(
             (e) => e.selectionId == winPer.selectionid
           );
