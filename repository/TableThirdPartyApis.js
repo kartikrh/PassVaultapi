@@ -9,7 +9,8 @@ const allThirdPartyApisQuery = async (fastify) => {
             "wrUrl" as "url",
             "wrType" as "type",
             "wrIsActive" as "isActive",
-            "wrIsConnect" as "isConnect"
+            "wrIsConnect" as "isConnect",
+            "wrIsDefault" as "isDefault"
             FROM "tblThirdPartyApis" ORDER BY "wrId" asc;`,
       { type: fastify.db.QueryTypes.SELECT }
     );
@@ -29,10 +30,10 @@ const insertThirdPartyApisQuery = async (data, fastify, request) => {
     const result = await fastify.db.query(
       `WITH insert_data AS (
             INSERT INTO "tblThirdPartyApis" (
-            "wrProviderName", "wrUrl", "wrType", "wrIsActive", "wrIsConnect"
+            "wrProviderName", "wrUrl", "wrType", "wrIsActive", "wrIsConnect", "wrIsDefault"
             ) 
             VALUES (
-                $1, $2, $3, $4, $5
+                $1, $2, $3, $4, $5, $6
             ) 
             RETURNING *
             )        
@@ -42,7 +43,8 @@ const insertThirdPartyApisQuery = async (data, fastify, request) => {
             "wrUrl" AS "url",
             "wrType" AS "type",
             "wrIsActive" AS "isActive",
-            "wrIsConnect" AS "isConnect"
+            "wrIsConnect" AS "isConnect",
+            "wrIsDefault" as "isDefault"
             FROM insert_data;`,
       {
         type: fastify.db.QueryTypes.SELECT,
@@ -52,6 +54,7 @@ const insertThirdPartyApisQuery = async (data, fastify, request) => {
           data.type,
           data.isActive || false,
           data.isConnect || false,
+          data.isDefault || false,
         ],
       }
     );
@@ -72,8 +75,8 @@ const updateThirdPartyApisQuery = async (data, fastify, request) => {
     return await fastify.db.query(
       `Update "tblThirdPartyApis" set 
             "wrProviderName" = $1,"wrUrl" = $2,"wrType" = $3,"wrIsActive" = $4,
-            "wrIsConnect" = $5
-            where "wrId" = $6;`,
+            "wrIsConnect" = $5, "wrIsDefault" = $6
+            where "wrId" = $7;`,
       {
         type: fastify.db.QueryTypes.UPDATE,
         bind: [
@@ -82,6 +85,7 @@ const updateThirdPartyApisQuery = async (data, fastify, request) => {
           data.type,
           data.isActive || false,
           data.isConnect || false,
+          data.isDefault || false,
           data.id,
         ],
       }
@@ -140,10 +144,52 @@ const activeInactiveThirdPartyApisQuery = async (data, request, fastify) => {
   }
 };
 
+const isDefaultChangeQuery = async (data, fastify, request) => {
+  try {
+      return await fastify.db.query(
+          `UPDATE "tblThirdPartyApis" SET "wrIsDefault" = $1 where "wrId" = $2`,
+          {
+              type: fastify.db.QueryTypes.UPDATE,
+              bind: [data.isDefault, data.id],
+          }
+      );
+  } catch (err) {
+      errorLogger(
+          fastify,
+          err.message,
+          "DB ERROR --> repository/TableThirdPartyApis.js/isDefaultChangeQuery",
+          request
+      );
+      throw new Error(err.message);
+  }
+};
+
+const isDefaultFalseQuery = async (data, fastify, request) => {
+  try {
+      return await fastify.db.query(
+          `UPDATE "tblThirdPartyApis" SET "wrIsDefault" = $1 WHERE "wrId" != $2 AND "wrType" = $3`,
+          {
+              type: fastify.db.QueryTypes.UPDATE,
+              bind: [false, data.id, data.type],
+          }
+      );
+  } catch (err) {
+      errorLogger(
+          fastify,
+          err.message,
+          "DB ERROR --> repository/TableThirdPartyApis.js/isDefaultFalseQuery",
+          request
+      );
+      throw new Error(err.message);
+  }
+};
+
 module.exports = {
   allThirdPartyApisQuery,
   insertThirdPartyApisQuery,
   updateThirdPartyApisQuery,
   deleteThirdPartApisQuery,
   activeInactiveThirdPartyApisQuery,
+  isDefaultChangeQuery,
+  isDefaultFalseQuery
 };

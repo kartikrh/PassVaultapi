@@ -6,6 +6,8 @@ const {updateCommentaryTeamPredictionPrecentageQuery} = require('../repository/T
 const {updateLatestMarketOddsBallByBall} = require('../repository/TableMarketOddsBallByBall');
 const { ERROR_CODES, error, success } = require("../utilities/index");
 const { errorLogger } = require("../utilities/logger");
+const { updateThirdPartyApisQuery } = require('../repository/TableThirdPartyApis');
+const { thirdPartyApiType } = require('../utilities/index');
 
 const configConstants = require('../utilities/configConstants');
 let connection,_fastify,updateMarketRateIntervalId,checkConfigIntervalId,IntervalId;
@@ -17,16 +19,19 @@ global.rateQueue = [];
 global.SignalRData = [];
 
 //Method for Start Signa
-async function startSignalR(fastify) {
+async function startSignalR(fastify, request) {
   try {
     const isSON = global.tblConfigs.find((item) => item.key === configConstants.ISMARKETOODS_SIGNALRON).value;
     if(isSON && isSON == 'true'){
       if(fastify){
         _fastify = fastify;
       }
-      const _SignalRURL = global.tblConfigs.find((item) => item.key === configConstants.MARKETRTETHIRDPARTY).value;
-      const _SignalRInterwal = global.tblConfigs.find((item) => item.key === configConstants.INTERVAL_MarketTHIRDPARTY).value;
-      if(_SignalRURL){
+      const _SignalRURLs = global.tblThirdPartyApis.filter((item) => item.isActive === true && item.type === thirdPartyApiType.Socket && item.isDefault === true);
+      const _SignalRInterwal = global.tblConfigs.find((item) => item.key === configConstants.INTERVAL_MarketTHIRDPARTY)?.value || 10000;
+      if(_SignalRURLs.length > 0){
+      for (const thirdParty of _SignalRURLs) {
+        const _SignalRURL = thirdParty.url;
+        if (_SignalRURL) {
         connectionCount++;
         connection = new signalR.HubConnectionBuilder()
         .withUrl(_SignalRURL)
@@ -53,6 +58,8 @@ async function startSignalR(fastify) {
               }
 
               await createUpdateGlobalSignalRData(message);
+              thirdParty.isConnect = true
+              await updateConnectionStatus(thirdParty, fastify, request);
             }
           } catch (error) {
             errorLogger(
@@ -68,6 +75,8 @@ async function startSignalR(fastify) {
         IntervalId = setInterval(processRateQueue, 30000); // Process the queue every 0.5 minutes
         if (!checkConfigIntervalId) {
           checkConfigIntervalId = setInterval(reConnectSignalR, 300000);// 5 minutes 300000
+            }
+          }
         }
       }
     }
@@ -82,7 +91,7 @@ async function startSignalR(fastify) {
   }
 }
 //Method For Stopped Connection
-async function stopSignalR(fastify) {
+async function stopSignalR(fastify, request) {
   if (connection) {
     try {
       await connection.stop();
@@ -97,6 +106,14 @@ async function stopSignalR(fastify) {
       }
       global.isAdminStoppedSignalR = true;
       global.rateSourceRefIDSet = new Set();
+
+      const _SignalRURLs = global.tblThirdPartyApis.filter((item) => item.isActive === true && item.type === thirdPartyApiType.Socket && item.isConnect === true);
+      if(_SignalRURLs.length > 0){
+        for (const thirdParty of _SignalRURLs) {
+          thirdParty.isConnect = false
+          await updateConnectionStatus(thirdParty, fastify, request)
+        }
+      }
     } catch (err) {
       errorLogger(
         _fastify,
@@ -122,10 +139,18 @@ const reConnectSignalR = async () => {
         checkConfigIntervalId = null;
         return;
     }
-    if (!global.isAdminStoppedSignalR && (!connection || connection.state !== signalR.HubConnectionState.Connected)) {
-      global.rateSourceRefIDSet = new Set();
-      await startSignalR(_fastify);
+    const _SignalRURLs = global.tblThirdPartyApis.filter((item) => item.isActive === true && item.type === thirdPartyApiType.Socket && item.isDefault === true);
+    if (_SignalRURLs.length > 0) {
+      for (const thirdParty of _SignalRURLs) {
+        if (!global.isAdminStoppedSignalR && (!connection || connection.state !== signalR.HubConnectionState.Connected)) {
+          global.rateSourceRefIDSet = new Set();
+          const connectionExists = connection && connection.state === signalR.HubConnectionState.Connected;
+          if (!connectionExists) {
+            await startSignalR(_fastify, request);
+          }
+      }
     }
+  }
   } else {
     await stopSignalR();
   }
@@ -169,7 +194,7 @@ const processRateQueue = async () => {
       // Process the winPerList and update the market
       for (const winPer of winPerList) {
         try {
-          //console.log(`Selection ID: ${winPer.selectionid}, Min Lay Value: ${winPer.rate}, Win Percentage: ${winPer.winper}`);
+          console.log(`Selection ID: ${winPer.selectionid}, Min Lay Value: ${winPer.rate}, Win Percentage: ${winPer.winper}`);
           const _selectionidData = global.tblEventMarkets.find(
             (e) => e.selectionId == winPer.selectionid
           );
@@ -354,6 +379,7 @@ const createUpdateGlobalSignalRData = async (message) => {
                 _updateData.teamId = teams.teamId;
               }
             }
+            await updateLatestMarketOddsBallByBall(_updateData, _fastify, request);
           }
 
           const { EventMarketId,selectionId } = _updateData;
@@ -404,10 +430,36 @@ const createUpdateGlobalSignalRData = async (message) => {
   }
 }
 
+const updateConnectionStatus = async(data, fastify, request) => {
+  try {
+    const index = global.tblThirdPartyApis.findIndex(
+      (item) => item.id === data.id
+    );
+  
+    if (index !== -1) {
+      global.tblThirdPartyApis[index].isConnect = data.isConnect;
+    }
+    const updateData = {
+      providerName: data.providerName,
+      url:  data.url,
+      type: data.type,
+      isActive: data.isActive,
+      isConnect: data.isConnect,
+      id: data.id,
+    };
+    await updateThirdPartyApisQuery(updateData, fastify, request);
+  } catch (error) {
+    errorLogger(
+      _fastify,
+      error,
+      "Error SignalrR --> signalrHandler/updateConnectionStatus",
+      null
+    );
+  }
+}
+
 module.exports = {
   startSignalR,
   stopSignalR,
   isSignalRStarted
 };
-
-
