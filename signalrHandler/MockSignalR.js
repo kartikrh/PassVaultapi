@@ -165,7 +165,7 @@ const processRateQueue = async () => {
           winper: winPer
         };
       });
-      console.log('\n================================')
+      //console.log('\n================================')
       // Process the winPerList and update the market
       for (const winPer of winPerList) {
         try {
@@ -175,7 +175,7 @@ const processRateQueue = async () => {
           );
 
           if (_selectionidData) {
-            console.log(`Runner Name : ${_selectionidData.runner} , Win Percentage: ${winPer.winper}`);
+            //console.log(`Runner Name : ${_selectionidData.runner} , Win Percentage: ${winPer.winper}`);
             let teams;
             let commentary = global.tblCommentaries.find(
               (item) => item.commentaryId == _selectionidData.commentaryId
