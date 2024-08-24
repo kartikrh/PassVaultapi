@@ -34,7 +34,7 @@ const {
 } = require("../controller/users/index");
 const { Auth ,sendPushNotification,weblogs, Config} = require("../swaggerSchema/groupTags/schema");
 const { authorize } = require("../controller/middleware/index");
-const { startSignalR, stopSignalR, isSignalRStarted  } = require('../signalrHandler/MockSignalR');
+const { startSignalR, stopSignalR, isSignalRStarted  } = require('../signalrHandler/index');
 const { errorLogger } = require("../utilities/logger");
 const { getAllConfigData } = require("../controller/users/admin/Page/config");
 
