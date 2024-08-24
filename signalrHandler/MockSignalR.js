@@ -139,7 +139,7 @@ const reConnectSignalR = async () => {
         checkConfigIntervalId = null;
         return;
     }
-    const _SignalRURLs = global.tblThirdPartyApis.filter((item) => item.isActive === true && item.type === 1);
+    const _SignalRURLs = global.tblThirdPartyApis.filter((item) => item.isActive === true && item.type === thirdPartyApiType.Socket && item.isDefault === true);
     if (_SignalRURLs.length > 0) {
       for (const thirdParty of _SignalRURLs) {
         if (!global.isAdminStoppedSignalR && (!connection || connection.state !== signalR.HubConnectionState.Connected)) {
