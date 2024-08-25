@@ -19,7 +19,7 @@ global.rateQueue = [];
 global.SignalRData = [];
 
 //Method for Start Signa
-async function startSignalR(fastify, request) {
+async function startSignalR(fastify) {
   try {
     const isSON = global.tblConfigs.find((item) => item.key === configConstants.ISMARKETOODS_SIGNALRON).value;
     if(isSON && isSON == 'true'){
@@ -59,7 +59,7 @@ async function startSignalR(fastify, request) {
 
               await createUpdateGlobalSignalRData(message);
               thirdParty.isConnect = true
-              await updateConnectionStatus(thirdParty, fastify, request);
+              await updateConnectionStatus(thirdParty, fastify);
             }
           } catch (error) {
             errorLogger(
@@ -91,7 +91,7 @@ async function startSignalR(fastify, request) {
   }
 }
 //Method For Stopped Connection
-async function stopSignalR(fastify, request) {
+async function stopSignalR(fastify) {
   if (connection) {
     try {
       await connection.stop();
@@ -111,7 +111,7 @@ async function stopSignalR(fastify, request) {
       if(_SignalRURLs.length > 0){
         for (const thirdParty of _SignalRURLs) {
           thirdParty.isConnect = false
-          await updateConnectionStatus(thirdParty, fastify, request)
+          await updateConnectionStatus(thirdParty, fastify)
         }
       }
     } catch (err) {
@@ -146,7 +146,7 @@ const reConnectSignalR = async () => {
           global.rateSourceRefIDSet = new Set();
           const connectionExists = connection && connection.state === signalR.HubConnectionState.Connected;
           if (!connectionExists) {
-            await startSignalR(_fastify, request);
+            await startSignalR(_fastify);
           }
       }
     }
@@ -379,7 +379,7 @@ const createUpdateGlobalSignalRData = async (message) => {
                 _updateData.teamId = teams.teamId;
               }
             }
-            await updateLatestMarketOddsBallByBall(_updateData, _fastify, request);
+            await updateLatestMarketOddsBallByBall(_updateData, _fastify);
           }
 
           const { EventMarketId,selectionId } = _updateData;
@@ -430,7 +430,7 @@ const createUpdateGlobalSignalRData = async (message) => {
   }
 }
 
-const updateConnectionStatus = async(data, fastify, request) => {
+const updateConnectionStatus = async(data, fastify) => {
   try {
     const index = global.tblThirdPartyApis.findIndex(
       (item) => item.id === data.id
@@ -447,7 +447,7 @@ const updateConnectionStatus = async(data, fastify, request) => {
       isConnect: data.isConnect,
       id: data.id,
     };
-    await updateThirdPartyApisQuery(updateData, fastify, request);
+    await updateThirdPartyApisQuery(updateData, fastify);
   } catch (error) {
     errorLogger(
       _fastify,
