@@ -292,6 +292,7 @@ async function startSignalR(fastify) {
                                     global.tblCommentaryTeams[_index].teamPredictionPercentage  = parseInt(_update.team2PredictionPercentage);
                                     await updateCommentaryTeamPredictionPrecentageQuery(_update, _fastify);
                                     //console.log('updateCommentaryTeamPredictionPrecentageQuery');
+                                    //console.log('updateCommentaryTeamPredictionPrecentageQuery');
                                   }
                                 } 
                               }

@@ -2,20 +2,20 @@
 const getAllClientQuery = async (fastify) => {
   return await fastify.db.query(
     `select 
-            "wrClientID" as "clientId",
-            "wrClientName" as "fullName",
-            "wrUserName" as "userName",
-            "wrIsAllowMultiLogin" as "isAllowMultiLogin",
-            "wrIsDelete" as "isDelete",
-            "wrIsEmailVerified" as "isEmailVerified",
-            "wrEmailID" as "emailId",
-            "wrIsMobileVerified" as "isMobileVerified",
-            "wrMobileNo" as "mobileNo",
-            "wrRegistrationProcessStatus" as "registrationProcessStatus",
-            "wrIsUserActive" as "isUserActive",
-            "wrProvider" as "provider",
-            "wrCreatedDate" as "createdDate",
-            "wrIsActive" as "isActive"
+            "wrClientID" as "clientId", 
+              "wrGoogleID" as "googleId", 
+              "wrFacebookId" as "facebookId",
+              "wrUserName" as "userName", 
+              "wrClientName" as "fullName",
+              "wrIsAllowMultiLogin" as "isAllowMultiLogin",
+              "wrRegistrationProcessStatus" as "registrationProcessStatus", 
+              "wrEmailID" as "emailId", 
+              "wrMobileNo" as "mobileNo",
+              "wrProvider" as "provider", 
+              "wrIsUserActive" as "isUserActive",
+              "wrIsActive" as "isActive",
+              "wrIsEmailVerified" AS "isEmailVerified",
+              "wrIsMobileVerified" AS "isMobileVerified"
         from "tblClient"
         `,
     {

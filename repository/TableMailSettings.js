@@ -156,7 +156,7 @@ const isDefaultChangeQuery = async (data, fastify, request) => {
         errorLogger(
             fastify,
             err.message,
-            "DB ERROR --> repository/TableMailSettings.js/deleteMailSettingsQuery",
+            "DB ERROR --> repository/TableMailSettings.js/isDefaultChangeQuery",
             request
         );
         throw new Error(err.message);
@@ -176,7 +176,7 @@ const isDefaultFalseQuery = async (data, fastify, request) => {
         errorLogger(
             fastify,
             err.message,
-            "DB ERROR --> repository/TableMailSettings.js/deleteMailSettingsQuery",
+            "DB ERROR --> repository/TableMailSettings.js/isDefaultFalseQuery",
             request
         );
         throw new Error(err.message);

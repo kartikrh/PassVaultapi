@@ -1,3 +1,4 @@
+const { updateAverageOfPlayerQuery } = require("../repository/TableCommentary");
 const {
   getAllEventMarketsQuery,
   deleteEventMarketQuery,
@@ -466,23 +467,23 @@ const marketListByCIdService = async (request, fastify) => {
     displayOrder: item.displayOrder
   }));
 
-  let players = global.tblCommentaryPlayers
-  .filter((item) => item.commentaryId === commentaryId)
-  .map((player) => ({
-    teamId: player.teamId,
-    playerId: player.playerId,
-    commentaryPlayerId: player.commentaryPlayerId,
-    playerName: player.playerName,
-    batsmanAverage: player.batsmanAverage,
-    batsmanStrikeRate: player.batsmanStrikeRate,
-    bowlerEconomy: player.bowlerEconomy,
-    bowlerAverage: player.bowlerAverage,
-  }));
+  // let players = global.tblCommentaryPlayers
+  // .filter((item) => item.commentaryId === commentaryId)
+  // .map((player) => ({
+  //   teamId: player.teamId,
+  //   playerId: player.playerId,
+  //   commentaryPlayerId: player.commentaryPlayerId,
+  //   playerName: player.playerName,
+  //   batsmanAverage: player.batsmanAverage,
+  //   batsmanStrikeRate: player.batsmanStrikeRate,
+  //   bowlerEconomy: player.bowlerEconomy,
+  //   bowlerAverage: player.bowlerAverage,
+  // }));
   return {
     marketList,
     teams,
     categories,
-    players,
+    //players,
   };
 };
 const updateMarketRateService = async (request, fastify) => {
@@ -496,6 +497,7 @@ const updateMarketRateService = async (request, fastify) => {
     throw new Error("Commentary with this id not Found");
   }
   let updatedOvers = [];
+  let playerMarket = [];
   for (let item of eventMarket) {
     let eventMarket = await getEventMarketByIdsQuery(
       {
@@ -507,6 +509,9 @@ const updateMarketRateService = async (request, fastify) => {
     eventMarket = eventMarket[0];
 
     let data = await updateEventMarketRateQuery(item, request, fastify);
+    if(data.isPlayer){
+      playerMarket.push(data);
+    }
     // console.log(data);
     let diff = data.line - eventMarket.line;
     let is_onlyover = 0;
@@ -622,6 +627,30 @@ const updateMarketRateService = async (request, fastify) => {
     }
     callPredictions.push(callPrediction);
   }
+
+  if(playerMarket.length > 0){
+    for (let p of playerMarket){
+      let comPlayer = global.tblCommentaryPlayers.findIndex(
+        (item) => item.commentaryPlayerId === p.playerId
+      );
+      if (comPlayer === -1) {
+        errorLogger(
+          fastify,
+          "Player with this id not Found",
+          "ERROR --> services/commentary.js/updateMarketRateService",
+          request
+        );
+        continue;
+      }
+      let avg = p.line - global.tblCommentaryPlayers[comPlayer].batRun;
+      await updateAverageOfPlayerQuery({
+        commentaryPlayerId: p.playerId,
+        batsmanAverage: avg,
+      }, request, fastify);	
+      global.tblCommentaryPlayers[comPlayer].batsmanAverage = avg;
+    }
+  }
+
   //return "Event Market updated successfully";
   // return marketListByCIdService({ body: { commentaryId: commentary.commentaryId } }, fastify)
   let data = await marketListByCIdService({ body: { commentaryId: commentary.commentaryId } }, fastify);

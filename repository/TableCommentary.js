@@ -3027,6 +3027,30 @@ const updateTeamPrediction = async (request, fastify) => {
     throw new Error(error.message);
   }
 };
+const updateAverageOfPlayerQuery = async (data, request,fastify) => {
+  try {
+    let result = await fastify.db.query(
+      `update "tblCommentaryPlayers" set
+      "wrBatsmanAverage" = $1
+      where "wrCommentaryPlayerId" = $2
+      `,
+      {
+        bind: [data.batsmanAverage, data.commentaryPlayerId],
+      }
+    );
+
+    return result;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCommentary/updateAverageOfPlayerQuery",
+      request
+    );
+    throw new Error(error.message);
+    
+  }
+}
 
 
 module.exports = {
@@ -3089,5 +3113,6 @@ module.exports = {
   updateSuperOverCommentaryQuery,
   insertCommentarySuperOverTeams,
   updateCommentaryTeamPredictionPrecentageQuery,
-  updateTeamPrediction
+  updateTeamPrediction,
+  updateAverageOfPlayerQuery
 };

@@ -587,6 +587,11 @@ const getIpAddress = (req) => {
   const ip = req.ip || req.headers['x-forwarded-for'] || request.raw.connection.remoteAddress;
   return ip;
 }
+const thirdPartyApiType = {
+  Socket : 1,
+  API : 2
+}
+
 module.exports = {
   ERROR_CODES,
   error,
@@ -629,5 +634,6 @@ module.exports = {
   typesOfServices,
   templateModel,
   templateType,
-  getIpAddress
+  getIpAddress,
+  thirdPartyApiType
 };
