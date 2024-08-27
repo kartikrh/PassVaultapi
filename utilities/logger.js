@@ -156,7 +156,7 @@ const marketDataLogger = async (data , request , fastify) => {
 const tblPredictorAPILogger = async (data, request, fastify) => {
   try {
     return await fastify.db.query(
-      `INSERT INTO "tblPredictorAPILogs" ("wrEndpoint", "wrRequestBody", "wrRequestStartTime", "wrRequestEndTime", "wrResponse", "wrCommentaryId") VALUES ($1, $2, $3, $4, $5, $6)`,
+      `INSERT INTO "tblPredictorAPILogs" ("wrEndpoint", "wrRequestBody", "wrRequestStartTime", "wrRequestEndTime", "wrResponse", "wrCommentaryId", "wrCreatedBy") VALUES ($1, $2, $3, $4, $5, $6, $7)`,
       {
         type: fastify.db.QueryTypes.INSERT,
         bind: [
@@ -166,6 +166,7 @@ const tblPredictorAPILogger = async (data, request, fastify) => {
           data.requestEndTime,
           JSON.stringify(data.response),
           data.commentary_id || null,
+          request?.userTokenInfo?.WrUserId || null,
         ],
       }
     );
@@ -177,7 +178,7 @@ const tblPredictorAPILogger = async (data, request, fastify) => {
 const tblThirdPartyAPILogger = async (data, request, fastify) => {
   try {
     return await fastify.db.query(
-      `INSERT INTO "tblThirdPartyApiLogs" ("wrEndPoint", "wrRequestBody", "wrRequestStartTime", "wrRequestEndTime", "wrResponse") VALUES ($1, $2, $3, $4, $5)`,
+      `INSERT INTO "tblThirdPartyApiLogs" ("wrEndPoint", "wrRequestBody", "wrRequestStartTime", "wrRequestEndTime", "wrResponse", "wrCreatedBy") VALUES ($1, $2, $3, $4, $5, $6)`,
       {
         type: fastify.db.QueryTypes.INSERT,
         bind: [
@@ -186,6 +187,7 @@ const tblThirdPartyAPILogger = async (data, request, fastify) => {
           data.requestStartTime,
           data.requestEndTime,
           JSON.stringify(data.response),
+          request?.userTokenInfo?.WrUserId || null,
         ],
       }
     );

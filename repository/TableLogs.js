@@ -9,19 +9,22 @@ const allResponseLogsQuery = async (body,request, fastify) => {
 
         const query = `
             SELECT 
-                "wrId" as "id",
-                "wrDomain" as "domain",
-                "wrPath" as "path",
-                "wrResponseTime" as "responseTime",
-                "wrUserId" as "userId",
-                "wrUserIp" as "userIp",
-                "wrRequestBody" as "requestBody",
-                "wrRequestStartTime" as "requestStartTime",
-                "wrRequestEndTime" as "requestEndTime"
+                logs."wrId" as "id",
+                logs."wrDomain" as "domain",
+                logs."wrPath" as "path",
+                logs."wrResponseTime" as "responseTime",
+                logs."wrUserId" as "userId",
+                logs."wrUserIp" as "userIp",
+                logs."wrRequestBody" as "requestBody",
+                logs."wrRequestStartTime" as "requestStartTime",
+                logs."wrRequestEndTime" as "requestEndTime",
+                users."WrUserName" as "createdBy"
             FROM 
-                "tblResponseLogs"
+                "tblResponseLogs" logs
+            LEFT JOIN
+                "tblUsers" users ON logs."wrUserId" = users."WrUserId"
             ${where} 
-            ORDER BY "wrId" DESC
+            ORDER BY logs."wrId" DESC
             LIMIT $1 OFFSET $2;
         `;
         const data = await fastify.db.query(query, {
@@ -70,16 +73,19 @@ const allThirdPartyApiLogsQuery = async (body, request, fastify) => {
         const where = startDate && endDate ? `WHERE "wrRequestStartTime" BETWEEN '${startDate}' AND '${endDate}'` : '';
         const query = `
             SELECT 
-                "wrId" as "id",
-                "wrEndPoint" as "endPoint",
-                "wrRequestBody" as "requestBody",
-                "wrRequestStartTime" as "requestStartTime",
-                "wrRequestEndTime" as "requestEndTime",
-                "wrResponse" as "response"
+                logs."wrId" as "id",
+                logs."wrEndPoint" as "endPoint",
+                logs."wrRequestBody" as "requestBody",
+                logs."wrRequestStartTime" as "requestStartTime",
+                logs."wrRequestEndTime" as "requestEndTime",
+                logs."wrResponse" as "response",
+                users."WrUserName" as "createdBy"
             FROM 
-                "tblThirdPartyApiLogs"
+                "tblThirdPartyApiLogs" logs
+            LEFT JOIN
+                "tblUsers" users ON logs."wrCreatedBy" = users."WrUserId"
             ${where}
-            ORDER BY "wrId" DESC
+            ORDER BY logs."wrId" DESC
             LIMIT $1 OFFSET $2;
         `;
 
@@ -129,17 +135,20 @@ const allPredictorAPILogsQuery = async (body,request, fastify) => {
         where = commentaryId ? (where ? `${where} AND "wrCommentaryId" = ${commentaryId}` : `WHERE "wrCommentaryId" = ${commentaryId}`) : where;
         const query = `
             SELECT 
-                "wrId" as "id",
-                "wrEndpoint" as "endPoint",
-                "wrRequestBody" as "requestBody",
-                "wrRequestStartTime" as "requestStartTime",
-                "wrRequestEndTime" as "requestEndTime",
-                "wrResponse" as "response",
-                "wrCommentaryId" as "commentaryId"
+                logs."wrId" as "id",
+                logs."wrEndpoint" as "endPoint",
+                logs."wrRequestBody" as "requestBody",
+                logs."wrRequestStartTime" as "requestStartTime",
+                logs."wrRequestEndTime" as "requestEndTime",
+                logs."wrResponse" as "response",
+                logs."wrCommentaryId" as "commentaryId",
+                users."WrUserName" as "createdBy"
             FROM 
-                "tblPredictorAPILogs"
+                "tblPredictorAPILogs" logs
+            LEFT JOIN
+                "tblUsers" users ON logs."wrCreatedBy" = users."WrUserId"
             ${where ? where : ''}
-            ORDER BY "wrId" DESC
+            ORDER BY logs."wrId" DESC
             LIMIT $1 OFFSET $2;
         `;
         const data = await fastify.db.query(query, {
@@ -188,18 +197,20 @@ const allCommentaryLogsQuery = async (body,request, fastify) => {
         where = startDate && endDate ? (where ? `${where} AND "wrCreatedDate" BETWEEN '${startDate}' AND '${endDate}'` : `WHERE "wrCreatedDate" BETWEEN '${startDate}' AND '${endDate}'`) : where;
         const query = `
             SELECT 
-                "wrId" as "id",
-                "wrCommentaryId" as "commentaryId",
-                "wrRequestBody" as "requestBody",
-                "wrResponse" as "response",
-                "wrGlobal" as "global",
-                "wrExtraData" as "extraData",
-                "wrCreatedDate" as "createdDate",
-                "wrCreatedBy" as "createdBy"
+                logs."wrId" as "id",
+                logs."wrCommentaryId" as "commentaryId",
+                logs."wrRequestBody" as "requestBody",
+                logs."wrResponse" as "response",
+                logs."wrGlobal" as "global",
+                logs."wrExtraData" as "extraData",
+                logs."wrCreatedDate" as "createdDate",
+                users."WrUserName" as "createdBy"
             FROM 
-                "tblCommentaryLogs"
+                "tblCommentaryLogs" logs
+            LEFT JOIN
+                "tblUsers" users ON logs."wrCreatedBy" = users."WrUserId"
             ${where ? where : ''}
-            ORDER BY "wrId" DESC
+            ORDER BY logs."wrId" DESC
             LIMIT $1 OFFSET $2;
         `;
         const data = await fastify.db.query(query, {
@@ -247,21 +258,23 @@ const allErrorLogsQuery = async (body ,request, fastify) => {
         const where = startDate && endDate ? `WHERE "wrCreatedDate" BETWEEN '${startDate}' AND '${endDate}'` : '';
         const query = `
             SELECT 
-                "wrErrId" as "errId",
-                "wrErrMessage" as "errMessage",
-                "wrErrStack" as "errStack",
-                "wrDomain" as "domain",
-                "wrUserId" as "userId",
-                "wrUserIp" as "userIp",
-                "wrApi" as "api",
-                "wrCreatedDate" as "createdDate",
-                "wrRequestBody" as "requestBody"
+                logs."wrErrId" as "errId",
+                logs."wrErrMessage" as "errMessage",
+                logs."wrErrStack" as "errStack",
+                logs."wrDomain" as "domain",
+                logs."wrUserId" as "userId",
+                logs."wrUserIp" as "userIp",
+                logs."wrApi" as "api",
+                logs."wrCreatedDate" as "createdDate",
+                logs."wrRequestBody" as "requestBody",
+                users."WrUserName" as "createdBy"
             FROM
-                "tblErrorLogs"
+            "tblErrorLogs" logs
+            LEFT JOIN
+                "tblUsers" users ON logs."wrUserId" = users."WrUserId"
             ${where}
-            ORDER BY "wrErrId" DESC
+            ORDER BY logs."wrErrId" DESC
             LIMIT $1 OFFSET $2;
-
         `;
         const data = await fastify.db.query(query, {
             type: fastify.db.QueryTypes.SELECT,
