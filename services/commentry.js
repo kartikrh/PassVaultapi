@@ -4586,7 +4586,8 @@ const commentaryDetailsByEventIdService = async (
     (item) =>
       item.commentaryId === cid &&
       item.teamId === batid &&
-      item.onStrike !== null &&
+      // item.onStrike !== null &&
+      item.isPlay == true &&
       item.currentInnings === currentInning &&
       (item.isBatterOut === false || item.isBatterOut === null)
   );
