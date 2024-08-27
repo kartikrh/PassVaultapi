@@ -4,6 +4,7 @@ const {
   saveThirdPartyApis,
   deleteThirdPartApis,
   activeInactiveThirdPartyApis,
+  isDefaultStage
 } = require("../../../controller/users/admin/thirdPartyApi");
 const { ThirdPartyApis } = require("../../../swaggerSchema/groupTags/schema");
 
@@ -31,5 +32,10 @@ module.exports = async (fastify, opts) => {
   fastify.post("/activeInactive", {
     schema: ThirdPartyApis.activeInactive.schema,
     handler: (request, reply) => activeInactiveThirdPartyApis(request, reply, fastify),
+  });
+  
+  fastify.post("/isDefault", {
+    schema: ThirdPartyApis.isDefaultStage.schema,
+    handler: (request, reply) => isDefaultStage(request, reply, fastify),
   });
 };
