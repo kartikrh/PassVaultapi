@@ -580,13 +580,17 @@ async function registerClient(body, request ,fastify) {
       } else {
         const registrationData = await fastify.db.query(
           `INSERT INTO "tblClient" (
-            "wrGoogleID", "wrIsAllowMultiLogin", "wrCreatedDate", "wrEmailID", "wrIsActive", "wrIsEmailVerified", "wrIsDelete","wrUserName","wrMobileNo","wrIpAddress"
+            "wrGoogleID", "wrIsAllowMultiLogin", "wrCreatedDate", "wrEmailID", "wrIsActive", "wrIsEmailVerified", "wrIsDelete","wrUserName","wrMobileNo",
+            "wrIpAddress", "wrIsUserActive"
           ) VALUES (
-            $1, true, now(), $2, true, true, false ,$3,$4 ,$5
-          ) RETURNING "wrClientID" as "clientId", "wrGoogleID" as "googleId", "wrUserName" as "userName", "wrIsAllowMultiLogin" as "isAllowMultiLogin","wrEmailID" as "emailId" ,"wrMobileNo" as "mobileNo";`,
+            $1, true, now(), $2, true, true, false ,$3,$4 ,$5,$6
+          ) RETURNING "wrClientID" as "clientId", "wrGoogleID" as "googleId", "wrUserName" as "userName", 
+           "wrIsAllowMultiLogin" as "isAllowMultiLogin","wrEmailID" as "emailId" ,"wrMobileNo" as "mobileNo",
+           "wrIsUserActive" as "isUserActive";`,
+           
           {
             type: QueryTypes.INSERT,
-            bind: [googleID, email, userName, mobileNo , ipAddress]
+            bind: [googleID, email, userName, mobileNo , ipAddress , 1]
           }
         );
         return registrationData[0][0];
@@ -977,6 +981,9 @@ async function loginClient(body, fastify) {
       );
       if (data.length <= 0) {
         return "User not found";
+      }
+      if(data[0].isUserActive === 1){
+        return "User is not active";
       }
       let validatePassword = await fastify.db.query(
         `SELECT "wrClientID" as "clientId", "wrGoogleID" as "googleId", "wrUserName" as "userName",

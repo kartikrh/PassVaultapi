@@ -207,7 +207,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
       });
     }
   } catch (error) {
-    console.log("error in fetchAllDataFromDb", error.message);
+    console.log("error in fetchAllDataFromDb", error.message,error);
     if (reply) {
       reply.status(200).send({
         status: 200,
