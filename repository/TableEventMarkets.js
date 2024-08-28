@@ -1841,6 +1841,7 @@ const getMarketsByCategoryQuery = async (data,request, fastify, )=>{
         "wrID" as "eventMarketId"
       FROM "tblEventMarkets"
       WHERE "wrCommentaryId" = $1
+      AND "wrStatus" = 1
       AND "wrMarketTypeCategoryId" = ANY($2)
     `;
 
