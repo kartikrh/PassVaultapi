@@ -972,7 +972,8 @@ async function loginClient(body, fastify) {
         `SELECT "wrClientID" as "clientId", "wrGoogleID" as "googleId", "wrUserName" as "userName",
          "wrIsAllowMultiLogin" as "isAllowMultiLogin","wrEmailID" as "emailId",
          "wrMobileNo" as "mobileNo","wrClientName" as "fullName", "wrProvider" as "provider",
-         "wrRegistrationProcessStatus" as "registrationProcessStatus"
+         "wrRegistrationProcessStatus" as "registrationProcessStatus",
+         "wrIsUserActive" as "isUserActive"
          FROM "tblClient"
          WHERE "wrEmailID" = $1 AND "wrIsDelete" = false;`,
         {
