@@ -983,7 +983,7 @@ async function loginClient(body, fastify) {
       if (data.length <= 0) {
         return "User not found";
       }
-      if(data[0].isUserActive === 1){
+      if(data[0].isUserActive != 1){
         return "User is not active";
       }
       let validatePassword = await fastify.db.query(
