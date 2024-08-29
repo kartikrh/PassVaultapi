@@ -552,9 +552,10 @@ async function registerClient(body, request ,fastify) {
         const registrationData = await fastify.db.query(
           `INSERT INTO "tblClient" (
             "wrClientName", "wrUserName", "wrPassword", "wrIsAllowMultiLogin", "wrCreatedDate", 
-            "wrEmailID", "wrMobileNo", "wrIpAddress", "wrIsActive", "wrIsEmailVerified", "wrIsDelete","wrIsMobileVerified", "wrProvider","wrRegistrationProcessStatus", "wrIsUserActive"
+            "wrEmailID", "wrMobileNo", "wrIpAddress", "wrIsActive", "wrIsEmailVerified", "wrIsDelete","wrIsMobileVerified", "wrProvider","wrRegistrationProcessStatus",
+             "wrIsUserActive"
           ) VALUES (
-            $1, $2, $3, $4, now(), $5, $6, $7, true, false, false ,false,1,1,0
+            $1, $2, $3, $4, now(), $5, $6, $7, true, false, false ,false,1,1,1
           ) RETURNING "wrClientID" as "clientId", "wrGoogleID" as "googleId", "wrUserName" as "userName", "wrIsAllowMultiLogin" as "isAllowMultiLogin","wrEmailID" as "emailId" ,"wrMobileNo" as "mobileNo", "wrClientName" as "fullName", "wrRegistrationProcessStatus" as "registrationProcessStatus", "wrIsUserActive" as "isUserActive", "wrIsActive" as "isActive", "wrProvider" as "provider", "wrIsEmailVerified" as "isEmailVerified", "wrIsMobileVerified" as "isMobileVerified", "wrIsDelete" as "isDelete", "wrCreatedDate" as "createdDate";`,
           {
             type: QueryTypes.INSERT,
