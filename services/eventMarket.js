@@ -516,22 +516,28 @@ const updateMarketRateService = async (request, fastify) => {
     let diff = data.line - eventMarket.line;
     let is_onlyover = 0;
     let category = global.tblMarketTypeCategories.find(
-      (item) => item.marketTypeCategoryId == data.marketTypeCategoryId
+      (cat) => cat.marketTypeCategoryId == data.marketTypeCategoryId
     );
-    if (category && category.categoryName === "Only Over") {
-      is_onlyover = 1;
+    if(category){
+      if(category.categoryName.toLowerCase() != "player" && category.categoryName.toLowerCase() != "wicket"){
+        if (category.categoryName === "Only Over") {
+          is_onlyover = 1;
+        }
+        updatedOvers.push({
+          over: item.over,
+          value: diff,
+          line_ratio: data.lineRatio,
+          is_onlyover: is_onlyover,
+          is_allow: item.isAllow,
+          is_active: item.isActive,
+          is_senddata: item.isSendData,
+          data: data.data,
+          market_type_category_id: parseInt(data.marketTypeCategoryId),
+        });
+      }
     }
-    updatedOvers.push({
-      over: item.over,
-      value: diff,
-      line_ratio: data.lineRatio,
-      is_onlyover: is_onlyover,
-      is_allow: item.isAllow,
-      is_active: item.isActive,
-      is_senddata: item.isSendData,
-      data: data.data,
-      market_type_category_id: parseInt(data.marketTypeCategoryId),
-    });
+   
+   
     let index = global.tblEventMarkets.findIndex(
       (e) => e.eventMarketId === item.marketId
     );
