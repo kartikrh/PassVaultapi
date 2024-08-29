@@ -516,7 +516,7 @@ const updateMarketRateService = async (request, fastify) => {
     let diff = data.line - eventMarket.line;
     let is_onlyover = 0;
     let category = global.tblMarketTypeCategories.find(
-      (item) => item.marketTypeCategoryId == data.marketTypeCategoryId
+      (cat) => cat.marketTypeCategoryId == data.marketTypeCategoryId
     );
     if(category){
       if(category.categoryName.toLowerCase() != "player" && category.categoryName.toLowerCase() != "wicket"){
