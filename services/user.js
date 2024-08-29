@@ -538,7 +538,7 @@ async function loginClientService({ body }, fastify) {
       }
     }
 
-    if (!results || results === "User not found" || results === "Invalid password") {
+    if (!results || results === "User not found" || results === "Invalid password" || results === "User is not active") {
       //return { error: results };
       throw new Error(results);
     }
