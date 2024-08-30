@@ -4695,6 +4695,7 @@ const commentaryDetailsByEventIdService = async (
   // console.log("allDetails", allDetails);
   // emit the data for update commentary
   if (functionName && functionName == "callFromSocket") {
+    console.log("callFromSocket",allDetails);
     global.clientSocketIo.forEach((socket) => {
       socket.client.emit("commentaryUpdate", allDetails);
     });
