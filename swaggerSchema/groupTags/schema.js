@@ -5334,6 +5334,38 @@ const ThirdPartyApis = {
     },
   },
 };
+const CommentaryScoringLogs = {
+  getAll: {
+    schema: {
+      tags: ["Commentary Scoring Logs"],
+      description: "get all Commentary Scoring Logs",
+      body: {
+        type: "object",
+        properties: {
+          page: { type: "integer" },
+          limit: { type: "integer" },
+          commentaryId: { type: "integer" },
+        },
+      },
+    },
+  },
+
+  save: {
+    schema: {
+      tags: ["Commentary Scoring Logs"],
+      description: "save Commentary Scoring Log",
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+          userId: { type: "integer" },
+          userName: { type: "string" }
+        },
+        required: ["commentaryId", "userId", "userName"],
+      },
+    },
+  },
+};
 module.exports = {
   Auth,
   Tabs,
@@ -5379,5 +5411,6 @@ module.exports = {
   weblogs,
   MailSettings,
   Logs,
-  ThirdPartyApis
+  ThirdPartyApis,
+  CommentaryScoringLogs
 };
