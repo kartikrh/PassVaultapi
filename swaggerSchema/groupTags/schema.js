@@ -5237,6 +5237,24 @@ const Logs = {
         required : ["page", "limit"]
       }
     }
+  },
+  undoLogs : {
+    schema : {
+      tags : ["Logs"],
+      description : "undo Logs",
+      security : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          skip : {type : "integer"},
+          limit : {type : "integer"},
+          commentaryId : {type : "integer"},
+          startDate : {type : "string"},
+          endDate : {type : "string"}
+        },
+        required : ["page", "limit"]
+      }
+    }
   }
 }
 const ThirdPartyApis = {
