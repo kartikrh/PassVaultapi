@@ -45,12 +45,14 @@ const getAllCommentaryQuery = async (fastify) => {
     "wrDelay" as "delay",
     tc."wrCommentaryResult" as "result",
     tc."wrCommentaryCloseTime" as "commentaryCloseTime",
-    tc."wrIsTeamPredictionOn" as "isTeamPredictionOn"
+    tc."wrIsTeamPredictionOn" as "isTeamPredictionOn",
+    tu."WrUserName" as "createdBy"
     from "tblCommentaries" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
     LEFT JOIN "tblMatchTypes" mt ON tc."wrMatchTypeId" = mt."wrMatchTypeId"
-	LEFT JOIN "tblCompetitions" co ON tc."wrCompetitionId" = co."wrCompetitionId"`,
+	LEFT JOIN "tblCompetitions" co ON tc."wrCompetitionId" = co."wrCompetitionId"
+  LEFT JOIN "tblUsers" tu ON tc."wrCreatedBy" = tu."WrUserId"`,
     {
       type: fastify.db.QueryTypes.SELECT,
     }
