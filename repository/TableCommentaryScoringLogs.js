@@ -81,8 +81,8 @@ const insertCommentaryScoringLogsQuery = async (data, fastify, request) => {
                 type: fastify.db.QueryTypes.SELECT,
                 bind: [
                     data.commentaryId,
-                    data.userId,
-                    data.userName
+                    request.userTokenInfo.WrUserId,
+                    request.userTokenInfo.WrUserName
                 ],
             }
         );
