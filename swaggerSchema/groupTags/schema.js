@@ -5356,6 +5356,7 @@ const CommentaryScoringLogs = {
   getAll: {
     schema: {
       tags: ["Commentary Scoring Logs"],
+      security: [{ bearerAuth: [] }],
       description: "get all Commentary Scoring Logs",
       body: {
         type: "object",
@@ -5371,15 +5372,14 @@ const CommentaryScoringLogs = {
   save: {
     schema: {
       tags: ["Commentary Scoring Logs"],
+      security: [{ bearerAuth: [] }],
       description: "save Commentary Scoring Log",
       body: {
         type: "object",
         properties: {
-          commentaryId: { type: "integer" },
-          userId: { type: "integer" },
-          userName: { type: "string" }
+          commentaryId: { type: "integer" }
         },
-        required: ["commentaryId", "userId", "userName"],
+        required: ["commentaryId"],
       },
     },
   },
