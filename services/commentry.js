@@ -2136,6 +2136,24 @@ const testStoreProcedureService = async (request, fastify) => {
         );
       });
 
+      if(commentaryId){
+        let marketRunner = global.tblEventMarkets.filter((item) => item.commentaryId == commentaryId)
+        marketRunner = marketRunner.map((item) => {
+          return {
+              runnerId: item.runnerId,
+              runner: item.runner,
+              selectionId: item.selectionId,
+              backSize: item.backSize,
+              laySize: item.laySize
+          }
+      });
+        sendDataForSocketUpdate.dataToUpdate.push({
+          module: "marketRunner",
+          type: "update",
+          data: marketRunner,
+        });
+      }
+
       global.clientSocketIo?.forEach((socket) => {
         socket.client.emit("updateFullscore", sendDataForSocketUpdate);
       });
@@ -3142,6 +3160,25 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         );
         
       })
+
+      if(commentaryId){
+        let marketRunner = global.tblEventMarkets.filter((item) => item.commentaryId == commentaryId)
+        marketRunner = marketRunner.map((item) => {
+          return {
+              runnerId: item.runnerId,
+              runner: item.runner,
+              selectionId: item.selectionId,
+              backSize: item.backSize,
+              laySize: item.laySize
+          }
+      });
+        sendDataForSocketUpdate.dataToUpdate.push({
+          module: "marketRunner",
+          type: "update",
+          data: marketRunner,
+        });
+      }
+
       global.clientSocketIo.forEach((socket) => {
         socket.client.emit("updateFullscore", sendDataForSocketUpdate);
       });
