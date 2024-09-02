@@ -202,6 +202,7 @@ const commentaryLogger = async (data, request, fastify) => {
     if (addLog == "false") {
       return true;
     }
+    let comment = request.body.deleteCommentaryBallByBallId || request.body.deleteOverId ? "delete" : null;
     const query = `
       INSERT INTO "tblCommentaryLogs"
       (
@@ -210,9 +211,10 @@ const commentaryLogger = async (data, request, fastify) => {
         "wrResponse",
         "wrGlobal",
         "wrExtraData",
-        "wrCreatedBy"
+        "wrCreatedBy",
+        "wrComment"
       )
-      VALUES ($1, $2, $3, $4, $5, $6)
+      VALUES ($1, $2, $3, $4, $5, $6,$7)
     `;
     return await fastify.db.query(query, {
       type: fastify.db.QueryTypes.SELECT,
@@ -223,6 +225,7 @@ const commentaryLogger = async (data, request, fastify) => {
         data.global,
         data.extra || null,
         request?.userTokenInfo?.WrUserId || null,
+        comment || null,
       ],  
     });
 
