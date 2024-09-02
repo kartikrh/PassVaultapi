@@ -85,6 +85,20 @@ const getAllCommentariesDataService = (request) => {
                 let marketOddsBallByBall = global.tblMarketOddsBallByBall.filter((m) => {
                     return m.commentaryId === c.commentaryId;
                 });
+
+                let marketRunner = global.tblEventMarkets.filter((m) => {
+                    return m.commentaryId === c.commentaryId;
+                });
+
+                marketRunner = marketRunner.map((item) => {
+                    return {
+                        runnerId: item.runnerId,
+                        runner: item.runner,
+                        selectionId: item.selectionId,
+                        backSize: item.backSize,
+                        laySize: item.laySize
+                    }
+                });
         
                 commentaries[c.eventRefId] = {
                     commentaryId : c.commentaryId,
@@ -97,7 +111,8 @@ const getAllCommentariesDataService = (request) => {
                     commentaryBallByBall: ballByBall,
                     commentaryWicket: wickets,
                     commentaryPartnership: partnerships,
-                    marketOddsBallByBall : marketOddsBallByBall
+                    marketOddsBallByBall : marketOddsBallByBall,
+                    marketRunner: marketRunner
                 };
         }
     
