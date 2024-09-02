@@ -318,10 +318,13 @@ const allUndoLogsQuery = async (data, request, fastify)=>{
         const { startDate, endDate, page = 1, limit = 20 , commentaryId } = data;
         let {skip , take} = getPagination(page, limit);
         // let where = `where "wrRequestBody" ->> 'deleteCommentaryBallByBallId' is not null`;
-        let where = commentaryId ? `"wrCommentaryId" = ${commentaryId}` : null;
-        where = startDate && endDate ? (where ? `${where} AND "wrCreatedDate" BETWEEN '${startDate}' AND '${endDate}'` : `WHERE "wrCreatedDate" BETWEEN '${startDate}' AND '${endDate}'`) : where;
+        let where = commentaryId ? `logs."wrCommentaryId" = ${commentaryId}` : null;
+        // where = where ? `${where} AND logs."wrRequestBody" ->> 'deleteCommentaryBallByBallId' is not null` : `logs."wrRequestBody" ->> 'deleteCommentaryBallByBallId' is not null`;
+        where = where ? `${where} AND logs."wrComment" = 'delete' ` : `logs."wrComment" = 'delete'`;
+        where = startDate && endDate ? (where ? `${where} AND logs."wrCreatedDate" BETWEEN '${startDate}' AND '${endDate}'` : `logs."wrCreatedDate" BETWEEN '${startDate}' AND '${endDate}'`) : where;
 
-        where = where ? `WHERE ${where} AND "wrRequestBody" ->> 'deleteCommentaryBallByBallId' is not null` : `WHERE "wrRequestBody" ->> 'deleteCommentaryBallByBallId' is not null`;
+
+        // console.log('where', where);
 
         const query = `
             SELECT
@@ -335,7 +338,7 @@ const allUndoLogsQuery = async (data, request, fastify)=>{
                 "tblCommentaryLogs" logs
             LEFT JOIN
                 "tblUsers" users ON logs."wrCreatedBy" = users."WrUserId"
-            ${where}
+            ${where ? `WHERE ${where}` : ''}
             ORDER BY logs."wrId" DESC
             LIMIT $1 OFFSET $2;
         `;
@@ -349,8 +352,8 @@ const allUndoLogsQuery = async (data, request, fastify)=>{
     
         const totalRecordsQuery = `
             SELECT COUNT(*) as "count"
-            FROM "tblCommentaryLogs"
-            ${where}
+            FROM "tblCommentaryLogs" logs
+            ${where ? `WHERE ${where}` : ''}
         `;
         const totalRecordsResult = await fastify.db.query(totalRecordsQuery, {
             type: fastify.db.QueryTypes.SELECT
