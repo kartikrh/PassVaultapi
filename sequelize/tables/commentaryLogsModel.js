@@ -39,6 +39,14 @@ module.exports = (sequelize) => {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
+      wrComment : {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
+      wrApiName : {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
     },
     {
       timestamps: false,
