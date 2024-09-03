@@ -335,6 +335,7 @@ const createUpdateGlobalSignalRData = async (message) => {
       (item) => item.rateSourceRefID === data.mi
     );
     if(EventsMarketobj){
+      console.log(data.rt);
       const groupedRates = {};
         data.rt.forEach(rate => {
           if (rate.pr === 0) {
