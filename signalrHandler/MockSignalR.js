@@ -206,6 +206,52 @@ const processRateQueue = async () => {
               (item) => item.commentaryId == _selectionidData.commentaryId
             );
 
+          let _isThreadDone = await UpdateEventMarketByCIdFromSocketQuery({eventMarketId: EventsMarketobj.eventMarketId}, _fastify);
+          if(_isThreadDone){
+            const dataOfmarkets = await getEventMarketByIdsQuery(
+             {
+               eventMarketIds: [EventsMarketobj.eventMarketId],
+             },
+             null,
+             _fastify
+             );
+             for (let item of dataOfmarkets) {
+              let index = global.tblEventMarkets.findIndex(
+                (e) => e.selectionId == item.selectionId
+              );
+              if (index === -1) {
+                global.tblEventMarkets.push(item);               
+                marketDataLogger(
+                  {
+                    eventMarketId: item.eventMarketId,
+                    commentaryId: item.commentaryId,
+                    dataTosave: JSON.parse(item.data),
+                    updateType: MarketUpdateType.marketInitilization,
+                  },
+                  null,
+                  _fastify
+                );
+              } else {
+                let previousLine = global.tblEventMarkets[index].line;
+                global.tblEventMarkets[index] = item;               
+                marketDataLogger(
+                  {
+                    eventMarketId: item.eventMarketId,
+                    commentaryId: item.commentaryId,
+                    dataTosave: JSON.parse(item.data),
+                    updateType: MarketUpdateType.marketInitilization,
+                    lineDiff: item.line - (previousLine || 0),
+                  },
+                  null,
+                  _fastify
+                );
+              }
+            }
+            // const globalEventData = global.tblEventMarkets.filter((item) => item.commentaryId == 2313)
+            // console.log("global.tblEventMarkets:", globalEventData);
+            
+          }
+
             if (commentary) {
               teams = global.tblCommentaryTeams.find(
                 (item) =>
@@ -345,6 +391,9 @@ const createUpdateGlobalSignalRData = async (message) => {
           const _selectionidData = global.tblEventMarkets.find(
             (e) => e.selectionId == items.selectionId
           );
+
+          await updateEventMarketRunnerMaunalQuery(items, _fastify);
+
           let _updateData= {};
           if(_selectionidData && _selectionidData.commentaryId != 0){
             _updateData.EventMarketId = _selectionidData.eventMarketId;

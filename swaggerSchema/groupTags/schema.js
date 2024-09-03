@@ -5237,6 +5237,24 @@ const Logs = {
         required : ["page", "limit"]
       }
     }
+  },
+  undoLogs : {
+    schema : {
+      tags : ["Logs"],
+      description : "undo Logs",
+      security : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          skip : {type : "integer"},
+          limit : {type : "integer"},
+          commentaryId : {type : "integer"},
+          startDate : {type : "string"},
+          endDate : {type : "string"}
+        },
+        required : ["page", "limit"]
+      }
+    }
   }
 }
 const ThirdPartyApis = {
@@ -5334,6 +5352,38 @@ const ThirdPartyApis = {
     },
   },
 };
+const CommentaryScoringLogs = {
+  getAll: {
+    schema: {
+      tags: ["Commentary Scoring Logs"],
+      security: [{ bearerAuth: [] }],
+      description: "get all Commentary Scoring Logs",
+      body: {
+        type: "object",
+        properties: {
+          page: { type: "integer" },
+          limit: { type: "integer" },
+          commentaryId: { type: "integer" },
+        },
+      },
+    },
+  },
+
+  save: {
+    schema: {
+      tags: ["Commentary Scoring Logs"],
+      security: [{ bearerAuth: [] }],
+      description: "save Commentary Scoring Log",
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" }
+        },
+        required: ["commentaryId"],
+      },
+    },
+  },
+};
 module.exports = {
   Auth,
   Tabs,
@@ -5379,5 +5429,6 @@ module.exports = {
   weblogs,
   MailSettings,
   Logs,
-  ThirdPartyApis
+  ThirdPartyApis,
+  CommentaryScoringLogs
 };

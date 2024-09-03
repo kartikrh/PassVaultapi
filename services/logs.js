@@ -3,7 +3,8 @@ const {
     allThirdPartyApiLogsQuery,
     allPredictorAPILogsQuery,
     allCommentaryLogsQuery,
-    allErrorLogsQuery
+    allErrorLogsQuery,
+    allUndoLogsQuery
 } = require("../repository/TableLogs");
 
 const applyFiltersAndPagination = (logs, filters) => {
@@ -79,6 +80,9 @@ const getComByEventId = async(request) =>{
     });
     return result;
 }
+const allUndoLogs = async(request, fastify) => {
+    return await allUndoLogsQuery(request.body || {},request, fastify);
+};  
 module.exports = {
     allResponseLogs,
     allThirdPartyApiLogs,
@@ -86,5 +90,6 @@ module.exports = {
     allCommentaryLogs,
     allErrorLogs,
     allEventByCompetition,
-    getComByEventId
+    getComByEventId,
+    allUndoLogs
 };

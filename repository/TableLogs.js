@@ -313,11 +313,76 @@ const allErrorLogsQuery = async (body ,request, fastify) => {
         throw new Error(err.message);
     }
 };
+const allUndoLogsQuery = async (data, request, fastify)=>{
+    try {
+        const { startDate, endDate, page = 1, limit = 20 , commentaryId } = data;
+        let {skip , take} = getPagination(page, limit);
+        // let where = `where "wrRequestBody" ->> 'deleteCommentaryBallByBallId' is not null`;
+        let where = commentaryId ? `logs."wrCommentaryId" = ${commentaryId}` : null;
+        // where = where ? `${where} AND logs."wrRequestBody" ->> 'deleteCommentaryBallByBallId' is not null` : `logs."wrRequestBody" ->> 'deleteCommentaryBallByBallId' is not null`;
+        where = where ? `${where} AND logs."wrComment" = 'delete' ` : `logs."wrComment" = 'delete'`;
+        where = startDate && endDate ? (where ? `${where} AND logs."wrCreatedDate" BETWEEN '${startDate}' AND '${endDate}'` : `logs."wrCreatedDate" BETWEEN '${startDate}' AND '${endDate}'`) : where;
 
+
+        // console.log('where', where);
+
+        const query = `
+            SELECT
+                logs."wrId" as "id",
+                logs."wrRequestBody" as "requestBody",
+                logs."wrResponse" as "response",
+                logs."wrCreatedDate" as "createdDate",
+                logs."wrCommentaryId" as "commentaryId",
+                users."WrUserName" as "createdBy"
+            FROM
+                "tblCommentaryLogs" logs
+            LEFT JOIN
+                "tblUsers" users ON logs."wrCreatedBy" = users."WrUserId"
+            ${where ? `WHERE ${where}` : ''}
+            ORDER BY logs."wrId" DESC
+            LIMIT $1 OFFSET $2;
+        `;
+        const result = await fastify.db.query(query, {
+            type: fastify.db.QueryTypes.SELECT,
+            bind : [
+                take,
+                skip
+            ]
+        });
+    
+        const totalRecordsQuery = `
+            SELECT COUNT(*) as "count"
+            FROM "tblCommentaryLogs" logs
+            ${where ? `WHERE ${where}` : ''}
+        `;
+        const totalRecordsResult = await fastify.db.query(totalRecordsQuery, {
+            type: fastify.db.QueryTypes.SELECT
+        });
+   
+        const totalRecords = parseInt(totalRecordsResult[0].count, 10);
+        const totalPages = Math.ceil(totalRecords / take);
+
+        return {
+            totalRecords: totalRecords,
+            currentPage: page,
+            totalPages: totalPages,
+            data: result,
+        };
+    } catch (error) {
+        errorLogger(
+            fastify,
+            error.message,
+            "DB ERROR --> repository/TableLogs.js/allUndoLogsQuery",
+            request
+        )
+        throw new Error(error.message);
+    }
+}
 module.exports = {
     allResponseLogsQuery,
     allThirdPartyApiLogsQuery,
     allPredictorAPILogsQuery,
     allCommentaryLogsQuery,
-    allErrorLogsQuery
+    allErrorLogsQuery,
+    allUndoLogsQuery
 };
