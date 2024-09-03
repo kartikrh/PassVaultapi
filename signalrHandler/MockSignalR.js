@@ -352,16 +352,18 @@ const createUpdateGlobalSignalRData = async (message) => {
             }
           }
         });
+        //check if lay or back is lenght is zero 
         data.rt.forEach(rate => {
           if (rate.pr === 1) {
             const selectionId = rate.si;
             if (!groupedRates[selectionId]) {
               groupedRates[selectionId] = { back: [], lay: [] };
-              if (rate.ib) {
-                groupedRates[selectionId].back.push(rate);
-              } else {
-                groupedRates[selectionId].lay.push(rate);
-              }
+            }
+            // Separate into back and lay rates where pr is 1
+            if (rate.ib) {
+              groupedRates[selectionId].back.push(rate);
+            } else {
+              groupedRates[selectionId].lay.push(rate);
             }
           }
         });
