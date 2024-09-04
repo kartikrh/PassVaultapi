@@ -265,7 +265,7 @@ const processRateQueue = async () => {
                   (item) =>
                     item.commentaryId === commentary.commentaryId &&
                     item.currentInnings === commentary.currentInnings &&
-                    item.teamName == _selectionidData.runner
+                    item.teamName.toLowerCase() == _selectionidData.runner.toLowerCase()
                 );
               }
 
@@ -320,7 +320,7 @@ const checkAndUpdateMarketRate = async (_fastify) => {
   } catch (error) {
     errorLogger(
       _fastify,
-      err,
+      error,
       "Error SignalrR --> signalrHandler/checkAndUpdateMarketRate",
       null
     );
