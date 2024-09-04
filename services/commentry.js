@@ -4722,12 +4722,25 @@ const commentaryDetailsByEventIdService = async (
     cd: ball.createdDate,
   }));
 
+  const marketRunnerData = await global.tblEventMarkets.filter((item) => item.commentaryId == cid)
+
+  const mr = marketRunnerData.map((runner) => {
+    return {
+      rid: runner?.runnerId,
+      rn: runner?.runner,
+      sid: runner?.selectionId,
+      bs: runner?.backSize,
+      ls: runner?.laySize,
+    };
+  });
+
   const allDetails = {
     cm: { ...resultArr, ci: result.currentInnings, cctime: result.commentaryCloseTime, res: result.result },
     cbb,
     cbt,
     cbl,
     mt,
+    mr
   };
   // console.log("allDetails", allDetails);
   // emit the data for update commentary
