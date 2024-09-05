@@ -717,6 +717,15 @@ const deleteCommentryQuery = async (commentaryId, request, fastify) => {
       ),
       delete_wicket as (
         delete from "tblCommentaryWickets" where "wrCommentaryId" = $1
+      ),
+      delete_com_log as (
+        delete from "tblCommentaryLogs" where "wrCommentaryId" = $1
+      ),
+      delete_predict_logs as (
+        delete from "tblPredictorAPILogs" where "wrCommentaryId" = $1
+      ),
+      delete_com_scoring_log as (
+        delete from "tblComScoringLogs" where "wrCommentaryId" = $1
       )
       delete from "tblCommentaries" where "wrCommentaryId" = $1
       `,
