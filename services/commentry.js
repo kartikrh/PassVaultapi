@@ -4262,8 +4262,8 @@ const commentaryDetailsByEventIdService = async (
   let tossteam;
   let tossType;
   let cid = 0;
-  let batid = 0;
-  let ballid = 0;
+  let batid = null;
+  let ballid = null;
   let mtype = 0;
   let bovr = 0;
   let cst;
@@ -4398,6 +4398,8 @@ const commentaryDetailsByEventIdService = async (
     resultArr.t2co = t2co;
     resultArr.t2bg = t2bg;
     resultArr.utc = utc;
+    resultArr.batid = null;
+    resultArr.ballid = null;
     resultArr.tsi = []
   }
   if (getstatus == 2) {
@@ -4408,12 +4410,20 @@ const commentaryDetailsByEventIdService = async (
         result.choseTo === 1
           ? " won the toss and opt to bat"
           : " won the toss and opt to bowl";
+      if(commentaryTeamsOne[0].teamStatus == 1){
+        resultArr.batid = commentaryTeamsOne[0].teamId;
+        resultArr.ballid = commentaryTeamsTwo[0].teamId;
+      }
     } else {
       tossteam = commentaryTeamsTwo[0].shortName;
       tossType =
         result.choseTo === 1
           ? " won the toss and opt to bat"
           : " won the toss and opt to bowl";
+      if(commentaryTeamsTwo[0].teamStatus == 1){
+        resultArr.batid = commentaryTeamsTwo[0].teamId;
+        resultArr.ballid = commentaryTeamsOne[0].teamId;
+      }
     }
 
     toss = tossteam + tossType;
@@ -4569,6 +4579,8 @@ const commentaryDetailsByEventIdService = async (
     resultArr.t2co = t2co;
     resultArr.t2bg = t2bg;
     resultArr.utc = utc;
+    resultArr.batid = batid;
+    resultArr.ballid = ballid;
     resultArr.tsi = []
 
     // get team score
@@ -5482,7 +5494,7 @@ const getMatchListByStatus = async (body, request, fastify) => {
         team.teamId === item.team2Id &&
         team.currentInnings === item.currentInnings
     );
-    let teamScore1, teamScore2;
+    let teamScore1, teamScore2 ,batId,ballId;
     if (commentaryTeamsOne) {
       const wicket1 =
         commentaryTeamsOne.teamWicket === null
@@ -5525,9 +5537,13 @@ const getMatchListByStatus = async (body, request, fastify) => {
       if (commentaryTeamsOne.teamStatus == 1) {
         crr = commentaryTeamsOne.crr;
         rrr = commentaryTeamsOne.rrr;
+        batId = commentaryTeamsOne.teamId;
+        ballId = commentaryTeamsTwo.teamId;
       } else {
         crr = commentaryTeamsTwo.crr;
         rrr = commentaryTeamsTwo.rrr;
+        batId = commentaryTeamsTwo.teamId;
+        ballId = commentaryTeamsOne.teamId;
       }
     }
 
@@ -5578,7 +5594,14 @@ const getMatchListByStatus = async (body, request, fastify) => {
       rrr: rrr || '0',
       cst: item.commentaryStatus,
       res: item.result || "",
-      tsi: []
+      tsi: [],
+      t1bg : commentaryTeamsOne.backgroundColor || null,
+      t2bg : commentaryTeamsTwo.backgroundColor || null,
+      t1co : commentaryTeamsOne.teamColor || null,
+      t2co : commentaryTeamsTwo.teamColor || null,
+      batId : batId || null,
+      ballId : ballId || null,
+      // bowT : item.bowlingTeam || null,
     };
 
     if (item.currentInnings > 1) {
