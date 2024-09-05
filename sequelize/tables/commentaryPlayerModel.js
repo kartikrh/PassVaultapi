@@ -86,10 +86,6 @@ module.exports = (sequelize) => {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
-      wrBowler_Status: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-      },
       wrBowler_Over: {
         type: DataTypes.DECIMAL(5, 3),
         allowNull: true,
