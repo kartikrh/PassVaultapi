@@ -19,6 +19,7 @@ const allCommentaryScoringLogsQuery = async (body, request, fastify) => {
                 comp."wrCompetition" as "competition",
                 com."wrCommentaryStatus" as "commentaryStatus",
                 com."wrEventId" as "eventId",
+                com."wrEventRefId" as "eventRefId",
                 comp."wrCompetitionId" as "competitionId",
                 com."wrEventDate" as "eventDate",
                 logs."wrCreatedDate" as "createdDate"
