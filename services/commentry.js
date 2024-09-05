@@ -4226,6 +4226,8 @@ const commentaryDetailsByEventIdService = async (
     t2co: "",
     utc: "",
     loc: result.location,
+    t1id : result.team1Id,
+    t2id : result.team2Id,
   };
   let eid;
   let til;
@@ -5601,6 +5603,9 @@ const getMatchListByStatus = async (body, request, fastify) => {
       t2co : commentaryTeamsTwo.teamColor || null,
       batId : batId || null,
       ballId : ballId || null,
+      t1id : item.team1Id || null,
+      t2id : item.team2Id || null,
+      
       // bowT : item.bowlingTeam || null,
     };
 
