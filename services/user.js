@@ -703,13 +703,28 @@ async function sendOtpEmail(emailId) {
     );
     let template = templateData ? templateData.description.replace('{{OTP}}', otp) : `<p>Hello there! ${otp}</p>`;
 
-    const transporter = nodemailer.createTransport({
-      service: serviceType,
-      auth: {
-        user: result.email,
-        pass: decrypt(result.password)
-      }
-    });
+    let transporter;
+    if (serviceType === typesOfServices.GmailService) {
+      transporter = nodemailer.createTransport({
+        service: serviceType,
+        auth: {
+          user: result.email,
+          pass: decrypt(result.password)
+        }
+      });
+    } else if (serviceType === typesOfServices.SmtpService) {
+      transporter = nodemailer.createTransport({
+        host: result.smtpAddress,
+        port: result.portNumber,
+        secure: false,
+        auth: {
+          user: result.email,
+          pass: decrypt(result.password)
+        }
+      });
+    } else {
+      throw new Error("Unsupported service type");
+    }
 
     const mailOptions = {
       from: 'ScoreClient',
@@ -809,24 +824,28 @@ async function verifyLinkEmail(user) {
       html: `Please click the following link to verify your email: <a href="${verificationUrl}">${verificationUrl}</a>`
     };
 
-    let transporter 
-    {serviceType === "gmail" ?
-    transporter = nodemailer.createTransport({
-    service: serviceType,
-    auth: {
-        user: result.email,
-        pass: decrypt(result.password)
-      }
-    }):
-    transporter = nodemailer.createTransport({
-      host: result.smtpAddress,
-      port: result.portNumber,
-      auth: {
+    let transporter;
+    if (serviceType === typesOfServices.GmailService) {
+      transporter = nodemailer.createTransport({
+        service: serviceType,
+        auth: {
           user: result.email,
           pass: decrypt(result.password)
-      }
-    })
-   }
+        }
+      });
+    } else if (serviceType === typesOfServices.SmtpService) {
+      transporter = nodemailer.createTransport({
+        host: result.smtpAddress,
+        port: result.portNumber,
+        secure: false,
+        auth: {
+          user: result.email,
+          pass: decrypt(result.password)
+        }
+      });
+    } else {
+      throw new Error("Unsupported service type");
+    }
 
     const info = await transporter.sendMail(mailOptions);
     // console.log('Email sent: ' + info.response);
