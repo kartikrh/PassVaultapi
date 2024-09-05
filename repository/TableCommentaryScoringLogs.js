@@ -3,23 +3,35 @@ const { errorLogger } = require("../utilities/logger");
 
 const allCommentaryScoringLogsQuery = async (body, request, fastify) => {
     try {
-        const { page = 1, limit = 20, commentaryId } = body;
+        const { page = 1, limit = 20, commentaryId , startDate , endDate } = body;
         const {skip , take} = getPagination(page, limit);
-        let where = '';
-        where = commentaryId ? `WHERE "wrCommentaryId" = ${commentaryId}` : where;
+        let where = null;
+        where = commentaryId ? `logs."wrCommentaryId" = ${commentaryId}` : where;
+        where = startDate && endDate ? `${where ? where + ' AND ' : ''} logs."wrCreatedDate" BETWEEN '${startDate}' AND '${endDate}'` : where;
 
         const query = `
             SELECT 
                 "wrId" as "id",
-                "wrCommentaryId" as "commentaryId",
+                logs."wrCommentaryId" as "commentaryId",
                 "wrUserId" as "userId",
-                "wrUserName" as "userName"
+                "wrUserName" as "userName",
+                com."wrEventName" as "eventName",
+                comp."wrCompetition" as "competition",
+                com."wrCommentaryStatus" as "commentaryStatus",
+                com."wrEventId" as "eventId",
+                comp."wrCompetitionId" as "competitionId",
+                com."wrEventDate" as "eventDate",
+                logs."wrCreatedDate" as "createdDate"
             FROM 
                 "tblComScoringLogs" logs
-            ${where ? where : ''}
+            LEFT JOIN "tblCommentaries" com ON com."wrCommentaryId" = logs."wrCommentaryId"
+            LEFT JOIN "tblCompetitions" comp ON comp."wrCompetitionId" = com."wrCompetitionId"
+            ${where ? `WHERE ${where}` : ''}
             ORDER BY "wrId" DESC
             LIMIT $1 OFFSET $2;
         `;
+
+        console.log(query);
         const data = await fastify.db.query(query, {
             type: fastify.db.QueryTypes.SELECT,
             bind : [
@@ -30,8 +42,8 @@ const allCommentaryScoringLogsQuery = async (body, request, fastify) => {
 
         const totalRecordsQuery = `
             SELECT COUNT(*) as "count"
-            FROM "tblComScoringLogs"
-            ${where ? where : ''}
+            FROM "tblComScoringLogs" logs
+            ${where ? `WHERE ${where}` : ''}
         `;
 
         const totalRecordsResult = await fastify.db.query(totalRecordsQuery, {
