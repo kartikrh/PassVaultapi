@@ -131,8 +131,8 @@ const allPredictorAPILogsQuery = async (body,request, fastify) => {
     try {
         const { startDate, endDate, page, limit, commentaryId } = body;
         const {skip , take} = getPagination(page, limit);
-        let where = startDate && endDate ? `WHERE "wrRequestStartTime" BETWEEN '${startDate}' AND '${endDate}'` : null;
-        where = commentaryId ? (where ? `${where} AND "wrCommentaryId" = ${commentaryId}` : `WHERE "wrCommentaryId" = ${commentaryId}`) : where;
+        let where = startDate && endDate ? `WHERE logs."wrRequestStartTime" BETWEEN '${startDate}' AND '${endDate}'` : null;
+        where = commentaryId ? (where ? `${where} AND logs."wrCommentaryId" = ${commentaryId}` : `WHERE logs."wrCommentaryId" = ${commentaryId}`) : where;
         const query = `
             SELECT 
                 logs."wrId" as "id",
@@ -142,11 +142,20 @@ const allPredictorAPILogsQuery = async (body,request, fastify) => {
                 logs."wrRequestEndTime" as "requestEndTime",
                 logs."wrResponse" as "response",
                 logs."wrCommentaryId" as "commentaryId",
-                users."WrUserName" as "createdBy"
+                users."WrUserName" as "createdBy",
+                comp."wrCompetition" as "competition",
+                com."wrEventName" as "eventName",
+                com."wrEventRefId" as "eventRefId",
+                com."wrEventDate" as "eventDate",
+                com."wrCommentaryStatus" as "commentaryStatus"
             FROM 
                 "tblPredictorAPILogs" logs
             LEFT JOIN
                 "tblUsers" users ON logs."wrCreatedBy" = users."WrUserId"
+            LEFT JOIN
+                "tblCommentaries" com ON logs."wrCommentaryId" = com."wrCommentaryId"
+            LEFT JOIN
+                "tblCompetitions" comp ON com."wrCompetitionId" = comp."wrCompetitionId"
             ${where ? where : ''}
             ORDER BY logs."wrId" DESC
             LIMIT $1 OFFSET $2;
@@ -161,7 +170,7 @@ const allPredictorAPILogsQuery = async (body,request, fastify) => {
 
         const totalRecordsQuery = `
             SELECT COUNT(*) as "count"
-            FROM "tblPredictorAPILogs"
+            FROM "tblPredictorAPILogs" logs
             ${where ? where : ''}
         `;
 
@@ -193,8 +202,8 @@ const allCommentaryLogsQuery = async (body,request, fastify) => {
     try {
         const { commentaryId, startDate, endDate, page = 1, limit = 20 } = body;
         const {skip , take} = getPagination(page, limit);
-        let where = commentaryId ? `WHERE "wrCommentaryId" = ${commentaryId}` :null;
-        where = startDate && endDate ? (where ? `${where} AND "wrCreatedDate" BETWEEN '${startDate}' AND '${endDate}'` : `WHERE "wrCreatedDate" BETWEEN '${startDate}' AND '${endDate}'`) : where;
+        let where = commentaryId ? `WHERE logs."wrCommentaryId" = ${commentaryId}` :null;
+        where = startDate && endDate ? (where ? `${where} AND logs."wrCreatedDate" BETWEEN '${startDate}' AND '${endDate}'` : `WHERE logs."wrCreatedDate" BETWEEN '${startDate}' AND '${endDate}'`) : where;
         const query = `
             SELECT 
                 logs."wrId" as "id",
@@ -204,11 +213,20 @@ const allCommentaryLogsQuery = async (body,request, fastify) => {
                 logs."wrGlobal" as "global",
                 logs."wrExtraData" as "extraData",
                 logs."wrCreatedDate" as "createdDate",
-                users."WrUserName" as "createdBy"
+                users."WrUserName" as "createdBy",
+                comp."wrCompetition" as "competition",
+                com."wrEventName" as "eventName",
+                com."wrEventRefId" as "eventRefId",
+                com."wrEventDate" as "eventDate",
+                com."wrCommentaryStatus" as "commentaryStatus"
             FROM 
                 "tblCommentaryLogs" logs
             LEFT JOIN
                 "tblUsers" users ON logs."wrCreatedBy" = users."WrUserId"
+            LEFT JOIN 
+                "tblCommentaries" com ON logs."wrCommentaryId" = com."wrCommentaryId"
+            LEFT JOIN
+                "tblCompetitions" comp ON com."wrCompetitionId" = comp."wrCompetitionId"
             ${where ? where : ''}
             ORDER BY logs."wrId" DESC
             LIMIT $1 OFFSET $2;
@@ -223,7 +241,7 @@ const allCommentaryLogsQuery = async (body,request, fastify) => {
 
         const totalRecordsQuery = `
             SELECT COUNT(*) as "count"
-            FROM "tblCommentaryLogs"
+            FROM "tblCommentaryLogs" logs
             ${where ? where : ''}
         `;
 
@@ -333,11 +351,20 @@ const allUndoLogsQuery = async (data, request, fastify)=>{
                 logs."wrResponse" as "response",
                 logs."wrCreatedDate" as "createdDate",
                 logs."wrCommentaryId" as "commentaryId",
-                users."WrUserName" as "createdBy"
+                users."WrUserName" as "createdBy",
+                comp."wrCompetition" as "competition",
+                com."wrEventName" as "eventName",
+                com."wrEventRefId" as "eventRefId",
+                com."wrEventDate" as "eventDate",
+                com."wrCommentaryStatus" as "commentaryStatus"
             FROM
                 "tblCommentaryLogs" logs
             LEFT JOIN
                 "tblUsers" users ON logs."wrCreatedBy" = users."WrUserId"
+            LEFT JOIN
+                "tblCommentaries" com ON logs."wrCommentaryId" = com."wrCommentaryId"
+            LEFT JOIN
+                "tblCompetitions" comp ON com."wrCompetitionId" = comp."wrCompetitionId"
             ${where ? `WHERE ${where}` : ''}
             ORDER BY logs."wrId" DESC
             LIMIT $1 OFFSET $2;

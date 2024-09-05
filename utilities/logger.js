@@ -165,7 +165,7 @@ const tblPredictorAPILogger = async (data, request, fastify) => {
           data.requestStartTime,
           data.requestEndTime,
           JSON.stringify(data.response),
-          data.commentary_id || null,
+          data.requestBody.commentary_id || null,
           request?.userTokenInfo?.WrUserId || null,
         ],
       }
