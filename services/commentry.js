@@ -3334,7 +3334,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         request
       );
     });
-    //response.callPredictions = callPredictions;
+    response.callPredictions = callPredictions;
     return response;
   } catch (error) {
     console.log("console value 7418596", error);
