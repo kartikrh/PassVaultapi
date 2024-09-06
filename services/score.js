@@ -88,7 +88,7 @@ const getAllCommentariesDataService = async (request,fastify) => {
                 // });
                 let marketOddsBallByBall = await getAllMarketOddsBallByBallByCommentaryId({
                     commentaryId: c.commentaryId
-                },fastify);
+                },fastify) || [];
 
                 let marketRunner = global.tblEventMarkets.filter((m) => {
                     return m.commentaryId === c.commentaryId;
