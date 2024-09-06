@@ -4813,6 +4813,13 @@ const commentaryDetailsByEventIdService = async (
     });
   }
 
+  if (functionName && functionName == "runnersFromSocket") {
+    console.log("runnersFromSocket", allDetails);
+    global.clientSocketIo.forEach((socket) => {
+      socket.client.emit("commentaryUpdate", allDetails);
+    });
+  }
+
   return allDetails;
 };
 
