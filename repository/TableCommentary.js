@@ -717,6 +717,15 @@ const deleteCommentryQuery = async (commentaryId, request, fastify) => {
       ),
       delete_wicket as (
         delete from "tblCommentaryWickets" where "wrCommentaryId" = $1
+      ),
+      delete_com_log as (
+        delete from "tblCommentaryLogs" where "wrCommentaryId" = $1
+      ),
+      delete_predict_logs as (
+        delete from "tblPredictorAPILogs" where "wrCommentaryId" = $1
+      ),
+      delete_com_scoring_log as (
+        delete from "tblComScoringLogs" where "wrCommentaryId" = $1
       )
       delete from "tblCommentaries" where "wrCommentaryId" = $1
       `,
@@ -878,7 +887,6 @@ const getAllCommentaryPlayerQuery = async (fastify) => {
     "wrBat_BowlerID" as "bowlerId",
     "wrBat_FielderID1" as "fielderId1",
     "wrBat_FielderID2" as "fielderId2",
-    "wrBowler_Status" as "bowlerStatus",
     "wrBowler_Over" as "bowlerOver",
     "wrBowler_CurrentBall" as "bowlerCurrentBall",
     "wrBowler_TotalBall" as "bowlerTotalBall",
@@ -1716,7 +1724,6 @@ const updateCommentaryPlayersQuery = async (data, fastify, request) => {
       "wrBat_BowlerID" = $14,
       "wrBat_FielderID1" = $15,
       "wrBat_FielderID2" =$16,
-      "wrBowler_Status" = $17,
       "wrBowler_Over" = $18,
       "wrBowler_CurrentBall" = $19,
       "wrBowler_TotalBall" = $20,
@@ -1767,7 +1774,7 @@ const updateCommentaryPlayersQuery = async (data, fastify, request) => {
           data.bowlerId,
           data.fielderId1,
           data.fielderId2,
-          data.bowlerStatus,
+          0,
           data.bowlerOver,
           data.bowlerCurrentBall,
           data.bowlerTotalBall,
