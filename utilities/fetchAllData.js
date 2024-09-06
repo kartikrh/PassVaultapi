@@ -131,7 +131,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const getAllOtp = await getAllOtpQuery(fastify);
     const getAllClient = await getAllClientQuery(fastify);
     const getAllMailSettings = await allMailSettingsQuery(fastify);
-    const marketOddBallByBall = await getAllMarketOddsBallByBall(fastify);
+    // const marketOddBallByBall = await getAllMarketOddsBallByBall(fastify);
     const thirdPartyApis = await allThirdPartyApisQuery(fastify);
     // const responseLogs = await allResponseLogsQuery(fastify);
     // const thirdPartyAPILogs = await allThirdPartyApiLogsQuery(fastify);
