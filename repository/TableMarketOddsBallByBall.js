@@ -35,7 +35,45 @@ const getAllMarketOddsBallByBall = async (fastify) => {
     throw new Error(err.message);
   }
 };
+const getAllMarketOddsBallByBallByCommentaryId = async (data, fastify) => {
+  try {
+    let query = `SELECT 
+        "wrId" AS "id",
+        "wrCommentaryId" AS "commentaryId",
+        "wrCommentaryBallByBallId" AS "commentaryBallByBallId",
+        "wrEventMarketId" AS "eventMarketId",
+        "wrRunnerId" AS "runnerId",
+        "wrMarketStatus" AS "marketStatus",
+        "wrBackPrice" AS "backPrice",
+        "wrLayPrice" AS "layPrice",
+        "wrBackSize" AS "backSize",
+        "wrLaySize" AS "laySize",
+        "wrMarketName" AS "marketName",
+        "wrRunnerName" AS "runnerName",
+        "wrDateTime" AS "dateTime"
+    FROM 
+        "tblMarketOddsBallByBall"
+    WHERE "wrCommentaryId" = $1`;
+    
+    const result = await fastify.db.query(query,
+      {
+        bind: [data.commentaryId],
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+    return result;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "ERROR --> repository/TableMarketOddsBallByBall/getAllMarketOddsBallByBallByCommentaryId",
+      null
+    );
+    throw new Error(error.message);
+    
+  }
 
+}
 const createMarketOddsBallByBall = async (data, fastify, request) => {
   try {
     const result = await fastify.db.query(
@@ -545,5 +583,6 @@ module.exports = {
   createMarketOddsBallByBallBYID,
   updateLatestMarketOddsBallByBall,
   createMarketOddsBallByBallBYIDFromSocketIo,
-  createMarketOddsBallByBallBulkInsert
+  createMarketOddsBallByBallBulkInsert,
+  getAllMarketOddsBallByBallByCommentaryId
 };

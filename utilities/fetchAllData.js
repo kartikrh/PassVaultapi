@@ -190,7 +190,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblOtp = getAllOtp;
     global.tblClient = getAllClient;
     global.tblMailSettings = getAllMailSettings;
-    global.tblMarketOddsBallByBall = marketOddBallByBall;
+    // global.tblMarketOddsBallByBall = marketOddBallByBall;
     global.tblThirdPartyApis = thirdPartyApis;
     // global.responseLogs = responseLogs;
     // global.thirdPartyAPILogs = thirdPartyAPILogs;
