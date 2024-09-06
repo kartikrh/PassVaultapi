@@ -76,6 +76,7 @@ const getComByEventId = async(request) =>{
             commentaryId: item.commentaryId,
             eventName: item.eventName,
             eventRefId : item.eventRefId,
+            eventDate : item.eventDate
         }
     });
     return result;
