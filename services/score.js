@@ -1,8 +1,9 @@
 const { getMarketsByCIdQuery } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
 const { getNotificationLogByClientQuery, updateNotificationLogByClientQuery } = require("../repository/TableNotification");
+const { getAllMarketOddsBallByBallByCommentaryId } = require("../repository/TableMarketOddsBallByBall");
 
-const getAllCommentariesDataService = (request) => {
+const getAllCommentariesDataService = async (request,fastify) => {
     try {
         let commentaries = {};
         let com = global.tblCommentaries.filter((c) => {
@@ -82,9 +83,12 @@ const getAllCommentariesDataService = (request) => {
                 } catch (error) {
                     
                 }
-                let marketOddsBallByBall = global.tblMarketOddsBallByBall.filter((m) => {
-                    return m.commentaryId === c.commentaryId;
-                });
+                // let marketOddsBallByBall = global.tblMarketOddsBallByBall.filter((m) => {
+                //     return m.commentaryId === c.commentaryId;
+                // });
+                let marketOddsBallByBall = await getAllMarketOddsBallByBallByCommentaryId({
+                    commentaryId: c.commentaryId
+                },fastify) || [];
 
                 let marketRunner = global.tblEventMarkets.filter((m) => {
                     return m.commentaryId === c.commentaryId;
