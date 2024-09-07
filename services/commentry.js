@@ -3369,7 +3369,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
       request,
       fastify
     ).catch((err) => {
-      console.log("commentary logger 010101 console", err);
+      console.log("commentary logger console", err);
       errorLogger(
         fastify,
         err.message,
