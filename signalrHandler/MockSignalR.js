@@ -4,6 +4,7 @@ const { marketLogger, marketDataLogger } = require("../utilities/logger");
 const {updateEventMarketRunnerMaunalQuery,getEventMarketByIdsQuery,UpdateEventMarketByCIdFromSocketQuery} = require('../repository/TableEventMarkets');
 const {updateCommentaryTeamPredictionPrecentageQuery} = require('../repository/TableCommentary');
 const {updateLatestMarketOddsBallByBall} = require('../repository/TableMarketOddsBallByBall');
+const { commentaryDetailsByEventIdService } = require('../services/commentry');
 const { ERROR_CODES, error, success } = require("../utilities/index");
 const { errorLogger } = require("../utilities/logger");
 const { updateThirdPartyApisQuery } = require('../repository/TableThirdPartyApis');
@@ -43,7 +44,7 @@ async function startSignalR(fastify) {
         await checkAndUpdateMarketRate();
 
         //? Here We Update To Globale Data For SignalR Values
-        connection.on('Rate', async (message) => {
+        connection.on('Rate', async (message, request) => {
           try {
             if(message.mi){
               // Find if the market ID already exists in the rateQueue
@@ -57,7 +58,7 @@ async function startSignalR(fastify) {
                 global.rateQueue.push(message);
               }
 
-              await createUpdateGlobalSignalRData(message);
+              await createUpdateGlobalSignalRData(message, request);
               thirdParty.isConnect = true
               await updateConnectionStatus(thirdParty, fastify);
             }
@@ -246,10 +247,7 @@ const processRateQueue = async () => {
                   _fastify
                 );
               }
-            }
-            // const globalEventData = global.tblEventMarkets.filter((item) => item.commentaryId == 2313)
-            // console.log("global.tblEventMarkets:", globalEventData);
-            
+            }            
           }
 
             if (commentary) {
@@ -327,7 +325,7 @@ const checkAndUpdateMarketRate = async (_fastify) => {
   }
 };
  
-const createUpdateGlobalSignalRData = async (message) => {
+const createUpdateGlobalSignalRData = async (message, request) => {
   try {
     const data = message;
     let commentary;
@@ -335,7 +333,6 @@ const createUpdateGlobalSignalRData = async (message) => {
       (item) => item.rateSourceRefID === data.mi
     );
     if(EventsMarketobj){
-      console.log(data.rt);
       const groupedRates = {};
         data.rt.forEach(rate => {
           if (rate.pr === 0) {
@@ -394,6 +391,58 @@ const createUpdateGlobalSignalRData = async (message) => {
           const _selectionidData = global.tblEventMarkets.find(
             (e) => e.selectionId == items.selectionId
           );
+
+          const sendDataForSocketUpdate = {};
+          sendDataForSocketUpdate.commentaryId = _selectionidData.commentaryId;
+          sendDataForSocketUpdate.eventRefId = _selectionidData.eventRefId;
+          sendDataForSocketUpdate.dataToUpdate = [];
+
+          let marketRunner = global.tblEventMarkets.filter(
+            (item) => item.eventRefId == _selectionidData.eventRefId
+          );
+          marketRunner = marketRunner.map((item) => {
+            return {
+              runnerId: item.runnerId,
+              runner: item.runner,
+              selectionId: item.selectionId,
+              backSize: item.backSize,
+              laySize: item.laySize,
+            };
+          });
+          
+          sendDataForSocketUpdate.dataToUpdate.push({
+            module: "marketRunner",
+            type: "update",
+            data: marketRunner,
+          });
+          
+          if (
+            global?.clientSocketIo !== undefined &&
+            global?.clientSocketIo.length > 0
+          ) {
+            await commentaryDetailsByEventIdService(
+              {
+                ...request,
+                body: {
+                  eventId: _selectionidData.eventRefId,
+                },
+              },
+              _fastify,
+              "runnersFromSocket"
+            ).catch((err) => {
+              errorLogger(
+                _fastify,
+                err.message,
+                "ERROR --> signalrHandler/MockSignalR.js/createUpdateGlobalSignalRData",
+                request
+              );
+            });
+
+            global.clientSocketIo.forEach((socket) => {
+              socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+            });
+          }
+          
 
           await updateEventMarketRunnerMaunalQuery(items, _fastify);
 
@@ -496,6 +545,7 @@ const updateConnectionStatus = async(data, fastify) => {
       url:  data.url,
       type: data.type,
       isActive: data.isActive,
+      isDefault: data.isDefault,
       isConnect: data.isConnect,
       id: data.id,
     };
