@@ -100,7 +100,9 @@ const getAllCommentariesDataService = async (request,fastify) => {
                         runner: item.runner,
                         selectionId: item.selectionId,
                         backSize: item.backSize,
-                        laySize: item.laySize
+                        laySize: item.laySize,
+                        teamId: item.teamId,
+                        teamName: item.teamName
                     }
                 });
         

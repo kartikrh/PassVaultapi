@@ -2144,7 +2144,9 @@ const testStoreProcedureService = async (request, fastify) => {
               runner: item.runner,
               selectionId: item.selectionId,
               backSize: item.backSize,
-              laySize: item.laySize
+              laySize: item.laySize,
+              teamId: item.teamId,
+              teamName: item.teamName
           }
       });
         sendDataForSocketUpdate.dataToUpdate.push({
@@ -3201,7 +3203,9 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
               runner: item.runner,
               selectionId: item.selectionId,
               backSize: item.backSize,
-              laySize: item.laySize
+              laySize: item.laySize,
+              teamId: item.teamId,
+              teamName: item.teamName
           }
       });
         sendDataForSocketUpdate.dataToUpdate.push({
@@ -4793,6 +4797,8 @@ const commentaryDetailsByEventIdService = async (
       sid: runner?.selectionId,
       bs: runner?.backSize,
       ls: runner?.laySize,
+      tid: runner?.teamId,
+      tn: runner?.teamName
     };
   });
 
@@ -4814,7 +4820,6 @@ const commentaryDetailsByEventIdService = async (
   }
 
   if (functionName && functionName == "runnersFromSocket") {
-    console.log("runnersFromSocket", allDetails);
     global.clientSocketIo.forEach((socket) => {
       socket.client.emit("commentaryUpdate", allDetails);
     });
@@ -5616,6 +5621,18 @@ const getMatchListByStatus = async (body, request, fastify) => {
     if (item.choseTo) {
       toss = item.choseTo === 1 ? "BAT" : "BOWL";
     }
+    const marketRunnerData = await global.tblEventMarkets.filter((elem) => elem.commentaryId == item.commentaryId)
+    const mr = marketRunnerData.map((runner) => {
+      return {
+        rid: runner?.runnerId,
+        rn: runner?.runner,
+        sid: runner?.selectionId,
+        bs: runner?.backSize,
+        ls: runner?.laySize,
+        tid: runner?.teamId,
+        tn: runner?.teamName
+      };
+    });
     let details = {
       rno: rno,
       eid: item.eventRefId || "",
@@ -5660,7 +5677,7 @@ const getMatchListByStatus = async (body, request, fastify) => {
       ballId : ballId || null,
       t1id : item.team1Id || null,
       t2id : item.team2Id || null,
-      
+      mr: mr
       // bowT : item.bowlingTeam || null,
     };
 

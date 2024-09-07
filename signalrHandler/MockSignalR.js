@@ -4,6 +4,7 @@ const { marketLogger, marketDataLogger } = require("../utilities/logger");
 const {updateEventMarketRunnerMaunalQuery,getEventMarketByIdsQuery,UpdateEventMarketByCIdFromSocketQuery} = require('../repository/TableEventMarkets');
 const {updateCommentaryTeamPredictionPrecentageQuery} = require('../repository/TableCommentary');
 const {updateLatestMarketOddsBallByBall} = require('../repository/TableMarketOddsBallByBall');
+const { commentaryDetailsByEventIdService } = require('../services/commentry');
 const { ERROR_CODES, error, success } = require("../utilities/index");
 const { errorLogger } = require("../utilities/logger");
 const { updateThirdPartyApisQuery } = require('../repository/TableThirdPartyApis');
@@ -43,7 +44,7 @@ async function startSignalR(fastify) {
         await checkAndUpdateMarketRate();
 
         //? Here We Update To Globale Data For SignalR Values
-        connection.on('Rate', async (message) => {
+        connection.on('Rate', async (message, request) => {
           try {
             if(message.mi){
               // Find if the market ID already exists in the rateQueue
@@ -57,7 +58,7 @@ async function startSignalR(fastify) {
                 global.rateQueue.push(message);
               }
 
-              await createUpdateGlobalSignalRData(message);
+              await createUpdateGlobalSignalRData(message, request);
               thirdParty.isConnect = true
               await updateConnectionStatus(thirdParty, fastify);
             }
@@ -324,7 +325,7 @@ const checkAndUpdateMarketRate = async (_fastify) => {
   }
 };
  
-const createUpdateGlobalSignalRData = async (message) => {
+const createUpdateGlobalSignalRData = async (message, request) => {
   try {
     const data = message;
     let commentary;
@@ -419,7 +420,7 @@ const createUpdateGlobalSignalRData = async (message) => {
             global?.clientSocketIo !== undefined &&
             global?.clientSocketIo.length > 0
           ) {
-            commentaryDetailsByEventIdService(
+            await commentaryDetailsByEventIdService(
               {
                 ...request,
                 body: {
