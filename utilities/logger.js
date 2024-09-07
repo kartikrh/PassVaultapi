@@ -212,9 +212,10 @@ const commentaryLogger = async (data, request, fastify) => {
         "wrGlobal",
         "wrExtraData",
         "wrCreatedBy",
-        "wrComment"
+        "wrComment",
+        "wrApiName"
       )
-      VALUES ($1, $2, $3, $4, $5, $6,$7)
+      VALUES ($1, $2, $3, $4, $5, $6,$7, $8)
     `;
     return await fastify.db.query(query, {
       type: fastify.db.QueryTypes.SELECT,
@@ -222,10 +223,11 @@ const commentaryLogger = async (data, request, fastify) => {
         data.commentaryId,
         data.requestBody,
         data.response,
-        data.global,
+        data.global || null,
         data.extra || null,
         request?.userTokenInfo?.WrUserId || null,
         comment || null,
+        data.apiName || null,
       ],  
     });
 
