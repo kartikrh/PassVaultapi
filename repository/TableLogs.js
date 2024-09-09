@@ -405,11 +405,53 @@ const allUndoLogsQuery = async (data, request, fastify)=>{
         throw new Error(error.message);
     }
 }
+
+const allResponseLogsWithoutFilertsQuery = async (fastify) => {
+
+    try {
+        return await fastify.db.query(
+          `SELECT 
+                logs."wrId" as "id",
+                logs."wrCommentaryId" as "commentaryId",
+                logs."wrRequestBody" as "requestBody",
+                logs."wrResponse" as "response",
+                logs."wrGlobal" as "global",
+                logs."wrExtraData" as "extraData",
+                logs."wrCreatedDate" as "createdDate",
+                users."WrUserName" as "createdBy",
+                comp."wrCompetition" as "competition",
+                com."wrEventName" as "eventName",
+                com."wrEventRefId" as "eventRefId",
+                com."wrEventDate" as "eventDate",
+                com."wrCommentaryStatus" as "commentaryStatus"
+            FROM 
+                "tblCommentaryLogs" logs
+            LEFT JOIN
+                "tblUsers" users ON logs."wrCreatedBy" = users."WrUserId"
+            LEFT JOIN 
+                "tblCommentaries" com ON logs."wrCommentaryId" = com."wrCommentaryId"
+            LEFT JOIN
+                "tblCompetitions" comp ON com."wrCompetitionId" = comp."wrCompetitionId"
+                ORDER BY logs."wrId" DESC
+                `,
+          { type: fastify.db.QueryTypes.SELECT }
+        );
+      } catch (err) {
+        errorLogger(
+          fastify,
+          err.message,
+          "DB ERROR --> repository/TableThirdPartyApis.js/allThirdPartyApisQuery",
+          null
+        );
+        throw new Error(err.message);
+      }
+};
 module.exports = {
     allResponseLogsQuery,
     allThirdPartyApiLogsQuery,
     allPredictorAPILogsQuery,
     allCommentaryLogsQuery,
     allErrorLogsQuery,
-    allUndoLogsQuery
+    allUndoLogsQuery,
+    allResponseLogsWithoutFilertsQuery
 };
