@@ -87,7 +87,8 @@ const updateNewsService = async (request, fastify) => {
     image: validateNewsId.image,
     userId: request.userTokenInfo.WrUserId,
     tags: request.body.tags,
-    viewerCount: request.body.viewerCount
+    viewerCount: request.body.viewerCount,
+    credit : request.body.credit || validateNewsId.credit
   };
   if (request.body.image && request.body.image.length) {
     const imgName = generateImageName({
