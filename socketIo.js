@@ -71,14 +71,16 @@ const connection = (socket , fastify) => {
       ];
       
       if(commentaryId){
-        let marketRunner = global.tblEventMarkets.filter((item) => item.commentaryId == commentaryId)
+        let marketRunner = global.tblEventMarkets.filter((item) => item.commentaryId == commentaryId && item.rateSource === 2)
         marketRunner = marketRunner.map((item) => {
           return {
               runnerId: item.runnerId,
               runner: item.runner,
               selectionId: item.selectionId,
               backSize: item.backSize,
-              laySize: item.laySize
+              laySize: item.laySize,
+              teamId: item.teamId,
+              teamName: item.teamName
           }
       });
         sendDataForSocketUpdate.dataToUpdate.push({

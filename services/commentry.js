@@ -2137,7 +2137,7 @@ const testStoreProcedureService = async (request, fastify) => {
       });
 
       if(commentaryId){
-        let marketRunner = global.tblEventMarkets.filter((item) => item.commentaryId == commentaryId)
+        let marketRunner = global.tblEventMarkets.filter((item) => item.commentaryId == commentaryId && item.rateSource === 2)
         marketRunner = marketRunner.map((item) => {
           return {
               runnerId: item.runnerId,
@@ -3196,7 +3196,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
       })
 
       if(commentaryId){
-        let marketRunner = global.tblEventMarkets.filter((item) => item.commentaryId == commentaryId)
+        let marketRunner = global.tblEventMarkets.filter((item) => item.commentaryId == commentaryId && item.rateSource === 2)
         marketRunner = marketRunner.map((item) => {
           return {
               runnerId: item.runnerId,
@@ -4798,7 +4798,7 @@ const commentaryDetailsByEventIdService = async (
     cd: ball.createdDate,
   }));
 
-  const marketRunnerData = await global.tblEventMarkets.filter((item) => item.commentaryId == cid)
+  const marketRunnerData = await global.tblEventMarkets.filter((item) => item.commentaryId == cid && item.rateSource === 2)
 
   const mr = marketRunnerData.map((runner) => {
     return {
@@ -5631,7 +5631,8 @@ const getMatchListByStatus = async (body, request, fastify) => {
     if (item.choseTo) {
       toss = item.choseTo === 1 ? "BAT" : "BOWL";
     }
-    const marketRunnerData = await global.tblEventMarkets.filter((elem) => elem.commentaryId == item.commentaryId)
+    const marketRunnerData = await global.tblEventMarkets.filter((elem) => 
+      elem.commentaryId == item.commentaryId && item.rateSource === 2)
     const mr = marketRunnerData.map((runner) => {
       return {
         rid: runner?.runnerId,

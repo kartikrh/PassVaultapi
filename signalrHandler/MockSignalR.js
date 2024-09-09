@@ -398,7 +398,7 @@ const createUpdateGlobalSignalRData = async (message, request) => {
           sendDataForSocketUpdate.dataToUpdate = [];
 
           let marketRunner = global.tblEventMarkets.filter(
-            (item) => item.eventRefId == _selectionidData.eventRefId
+            (item) => item.eventRefId == _selectionidData.eventRefId && item.rateSource === 2
           );
           marketRunner = marketRunner.map((item) => {
             return {
@@ -407,6 +407,8 @@ const createUpdateGlobalSignalRData = async (message, request) => {
               selectionId: item.selectionId,
               backSize: item.backSize,
               laySize: item.laySize,
+              teamId: item.teamId,
+              teamName: item.teamName
             };
           });
           
