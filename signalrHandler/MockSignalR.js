@@ -333,64 +333,101 @@ const createUpdateGlobalSignalRData = async (message, request) => {
       (item) => item.rateSourceRefID === data.mi
     );
     if(EventsMarketobj){
+      // const groupedRates = {};
+      //   data.rt.forEach(rate => {
+      //     if (rate.pr === 0) {
+      //       const selectionId = rate.si;
+      //       if (!groupedRates[selectionId]) {
+      //           groupedRates[selectionId] = { back: [], lay: [] };
+      //       }
+      //       // Separate into back and lay rates where pr is 0
+      //       if (rate.pr === 0) {
+      //           if (rate.ib) {
+      //               groupedRates[selectionId].back.push(rate);
+      //           } else {
+      //               groupedRates[selectionId].lay.push(rate);
+      //           }
+      //       }
+      //     }
+      //   });
+      //   //check if lay or back is lenght is zero 
+      //   data.rt.forEach(rate => {
+      //     if (rate.pr === 1) {
+      //       const selectionId = rate.si;
+      //       if (!groupedRates[selectionId]) {
+      //         groupedRates[selectionId] = { back: [], lay: [] };
+      //       }
+      //       // Separate into back and lay rates where pr is 1
+      //       if (rate.ib) {
+      //         groupedRates[selectionId].back.push(rate);
+      //       } else {
+      //         groupedRates[selectionId].lay.push(rate);
+      //       }
+      //     }
+      //   });
+
       const groupedRates = {};
-        data.rt.forEach(rate => {
-          if (rate.pr === 0) {
-            const selectionId = rate.si;
-            if (!groupedRates[selectionId]) {
-                groupedRates[selectionId] = { back: [], lay: [] };
-            }
-            // Separate into back and lay rates where pr is 0
-            if (rate.pr === 0) {
-                if (rate.ib) {
-                    groupedRates[selectionId].back.push(rate);
-                } else {
-                    groupedRates[selectionId].lay.push(rate);
-                }
-            }
+
+      data.rt.forEach(rate => {
+        const selectionId = rate.si;
+      
+        if (!groupedRates[selectionId]) {
+          groupedRates[selectionId] = { back: [], lay: [] };
+        }
+      
+        // If pr is 0, process it and skip further pr === 1 checks
+        if (rate.pr === 0) {
+          if (rate.ib) {
+            groupedRates[selectionId].back.push(rate);
+          } else {
+            groupedRates[selectionId].lay.push(rate);
           }
-        });
-        //check if lay or back is lenght is zero 
-        data.rt.forEach(rate => {
-          if (rate.pr === 1) {
-            const selectionId = rate.si;
-            if (!groupedRates[selectionId]) {
-              groupedRates[selectionId] = { back: [], lay: [] };
-            }
-            // Separate into back and lay rates where pr is 1
-            if (rate.ib) {
-              groupedRates[selectionId].back.push(rate);
-            } else {
-              groupedRates[selectionId].lay.push(rate);
-            }
+          groupedRates[selectionId].hasPr0 = true;
+        }
+      });
+      
+      data.rt.forEach(rate => {
+        const selectionId = rate.si;
+        if (rate.pr === 1 && !groupedRates[selectionId].hasPr0) {
+          if (rate.ib) {
+            groupedRates[selectionId].back.push(rate);
+          } else {
+            groupedRates[selectionId].lay.push(rate);
           }
-        });
-      const _blrbsids = []; //Back and Lay Rates by SelectionIds  blrbsids
-      const currentTime = new Date().toISOString();
+        }
+      });
+      
       Object.keys(groupedRates).forEach(selectionId => {
-          const rates = groupedRates[selectionId];
-          const backRates = rates.back.length ? rates.back : [{ rv: null, re: null }];
-          const layRates = rates.lay.length ? rates.lay : [{ rv: null, re: null }];
-        
-          backRates.forEach(backRate => {
+        delete groupedRates[selectionId].hasPr0;
+      });
+
+const _blrbsids = []; //Back and Lay Rates by SelectionIds  blrbsids
+const currentTime = new Date().toISOString();
+Object.keys(groupedRates).forEach(selectionId => {
+  const rates = groupedRates[selectionId];
+  const backRates = rates.back.length ? rates.back : [{ rv: null, re: null }];
+  const layRates = rates.lay.length ? rates.lay : [{ rv: null, re: null }];
+  
+  backRates.forEach(backRate => {
               layRates.forEach(layRate => {
                 _blrbsids.push({
-                      backPrice: backRate.rv,
+                  backPrice: backRate.rv,
                       backSize: backRate.re,
                       layPrice: layRate.rv,
                       laySize: layRate.re,
                       selectionId: parseInt(selectionId, 10),
                       timestamp: currentTime // Add timestamp here
+                    });
                   });
+                });
               });
-          });
-      });
-      if(_blrbsids && _blrbsids.length){
-        for (const items of _blrbsids) {
-          let _time = items.timestamp;
-          const _selectionidData = global.tblEventMarkets.find(
-            (e) => e.selectionId == items.selectionId
-          );
+              if(_blrbsids && _blrbsids.length){
+                for (const items of _blrbsids) {
+                  let _time = items.timestamp;
+                  const _selectionidData = global.tblEventMarkets.find(
+                    (e) => e.selectionId == items.selectionId
+                  );
+// console.log(items);
 
           const sendDataForSocketUpdate = {};
           sendDataForSocketUpdate.commentaryId = _selectionidData.commentaryId;
