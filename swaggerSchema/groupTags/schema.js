@@ -5398,6 +5398,87 @@ const CommentaryScoringLogs = {
     },
   },
 };
+const ClientVideo = {
+  getAll: {
+    schema: {
+      tags: ["Client Video"],
+      description: "get all client video",
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+
+  save: {
+    schema: {
+      tags: ["Client Video"],
+      security: [{ bearerAuth: [] }],
+      description: "save client video",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          title: { type: "string" },
+          URL: { type: "string" },
+          isActive: { type: "boolean" },
+          credit: { type: "string" },
+          viewerCount: { type: "integer" },
+        },
+        required: ["id", "title", "URL"],
+      },
+    },
+  },
+
+  delete: {
+    schema: {
+      tags: ["Client Video"],
+      description: "delete client video",
+      body: {
+        type: "object",
+        properties: {
+          id: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["id"],
+      },
+    },
+  },
+
+  getById: {
+    schema: {
+      tags: ["Client Video"],
+      description: "get client video by id",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+        },
+        required: ["id"],
+      },
+    },
+  },
+
+  activeInactiveApi: {
+    schema: {
+      tags: ["Client Video"],
+      description: "active inactive Client video",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["id", "isActive"],
+      },
+    },
+  },
+};
 module.exports = {
   Auth,
   Tabs,
@@ -5444,5 +5525,6 @@ module.exports = {
   MailSettings,
   Logs,
   ThirdPartyApis,
-  CommentaryScoringLogs
+  CommentaryScoringLogs,
+  ClientVideo
 };

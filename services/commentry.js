@@ -5656,8 +5656,16 @@ const getMatchListByStatus = async (body, request, fastify) => {
       toss = item.choseTo === 1 ? "BAT" : "BOWL";
     }
     const marketRunnerData = await global.tblEventMarkets.filter((elem) => 
-      elem.commentaryId == item.commentaryId && item.rateSource === 2)
+      elem.commentaryId == item.commentaryId && elem.rateSource === 2)
     const mr = marketRunnerData.map((runner) => {
+      let teamNameData
+      if(runner.teamId){
+      teamNameData = global.tblCommentaryTeams.find((t) => t.teamId === runner.teamId)
+      }
+      if(!runner.teamId){
+          teamNameData = global.tblCommentaryTeams.find((t) => 
+              t.teamName.toLowerCase() == runner.runner.toLowerCase())
+      }
       return {
         rid: runner?.runnerId,
         rn: runner?.runner,
@@ -5665,7 +5673,7 @@ const getMatchListByStatus = async (body, request, fastify) => {
         bs: runner?.backSize,
         ls: runner?.laySize,
         tid: runner?.teamId,
-        tn: runner?.teamName
+        tn: teamNameData?.teamName || null
       };
     });
     let details = {
