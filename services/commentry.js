@@ -2139,6 +2139,14 @@ const testStoreProcedureService = async (request, fastify) => {
       if(commentaryId){
         let marketRunner = global.tblEventMarkets.filter((item) => item.commentaryId == commentaryId && item.rateSource === 2)
         marketRunner = marketRunner.map((item) => {
+          let teamNameData
+          if(item.teamId){
+          teamNameData = global.tblCommentaryTeams.find((elem) => elem.teamId === item.teamId)
+          }
+          if(!item.teamId){
+              teamNameData = global.tblCommentaryTeams.find((t) => 
+                  t.teamName.toLowerCase() == item.runner.toLowerCase())
+          }
           return {
               runnerId: item.runnerId,
               runner: item.runner,
@@ -2146,7 +2154,7 @@ const testStoreProcedureService = async (request, fastify) => {
               backSize: item.backSize,
               laySize: item.laySize,
               teamId: item.teamId,
-              teamName: item.teamName
+              teamName: teamNameData?.teamName || null
           }
       });
         sendDataForSocketUpdate.dataToUpdate.push({
@@ -3198,6 +3206,14 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
       if(commentaryId){
         let marketRunner = global.tblEventMarkets.filter((item) => item.commentaryId == commentaryId && item.rateSource === 2)
         marketRunner = marketRunner.map((item) => {
+          let teamNameData
+          if(item.teamId){
+          teamNameData = global.tblCommentaryTeams.find((elem) => elem.teamId === item.teamId)
+          }
+          if(!item.teamId){
+              teamNameData = global.tblCommentaryTeams.find((t) => 
+                  t.teamName.toLowerCase() == item.runner.toLowerCase())
+          }
           return {
               runnerId: item.runnerId,
               runner: item.runner,
@@ -3205,7 +3221,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
               backSize: item.backSize,
               laySize: item.laySize,
               teamId: item.teamId,
-              teamName: item.teamName
+              teamName: teamNameData?.teamName || null
           }
       });
         sendDataForSocketUpdate.dataToUpdate.push({
@@ -4801,6 +4817,14 @@ const commentaryDetailsByEventIdService = async (
   const marketRunnerData = await global.tblEventMarkets.filter((item) => item.commentaryId == cid && item.rateSource === 2)
 
   const mr = marketRunnerData.map((runner) => {
+    let teamNameData
+    if(runner.teamId){
+    teamNameData = global.tblCommentaryTeams.find((elem) => elem.teamId === runner.teamId)
+    }
+    if(!runner.teamId){
+        teamNameData = global.tblCommentaryTeams.find((t) => 
+            t.teamName.toLowerCase() == runner.runner.toLowerCase())
+    }
     return {
       rid: runner?.runnerId,
       rn: runner?.runner,
@@ -4808,7 +4832,7 @@ const commentaryDetailsByEventIdService = async (
       bs: runner?.backSize,
       ls: runner?.laySize,
       tid: runner?.teamId,
-      tn: runner?.teamName
+      tn: teamNameData?.teamName || null
     };
   });
 
