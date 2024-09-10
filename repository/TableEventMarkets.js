@@ -1862,6 +1862,62 @@ const getMarketsByCategoryQuery = async (data,request, fastify, )=>{
     )
   }
 }
+
+const getMarketByGraphByRefIdQuery = async (data, request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `WITH RankedRunners AS (
+            SELECT 
+                mrb."wrCommentaryBallByBallId",
+                ov."wrCurrentInnings",
+                bb."wrOverCount",
+                ov."wrOver",
+                mrb."wrRunnerName",
+                mrb."wrMarketName",
+                mrb."wrBackSize",
+                mrb."wrLaySize",
+                mrb."wrBackPrice",
+                mrb."wrLayPrice",
+                ROW_NUMBER() OVER (PARTITION BY mrb."wrCommentaryBallByBallId" ORDER BY mrb."wrBackSize" ASC) AS rn
+            FROM "tblMarketOddsBallByBall" mrb
+            LEFT JOIN "tblCommentaries" cs ON mrb."wrCommentaryId" = cs."wrCommentaryId"
+            LEFT JOIN "tblCompetitions" com ON com."wrCompetitionId" = cs."wrCompetitionId"
+            LEFT JOIN "tblMatchTypes" mty ON mty."wrMatchTypeId" = cs."wrMatchTypeId"
+            LEFT JOIN "tblCommentaryBallByBalls" bb ON mrb."wrCommentaryBallByBallId" = bb."wrCommentaryBallByBallId"
+            LEFT JOIN "tblOvers" ov ON ov."wrOverId" = bb."wrOverId"
+            WHERE mrb."wrCommentaryId" = $1 
+        )
+        SELECT 
+            "wrCommentaryBallByBallId",
+            "wrCurrentInnings",
+            "wrOverCount",
+            "wrOver",
+            "wrRunnerName",
+            "wrMarketName",
+            "wrBackSize",
+            "wrLaySize",
+            "wrBackPrice",
+            "wrLayPrice"
+        FROM RankedRunners
+        WHERE rn = 1
+        ORDER BY 
+            "wrCurrentInnings" DESC,   -- First, sort by innings in descending order
+            "wrOver" DESC;             -- Then sort by over within each innings in descending order`,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [data.commentaryId],
+      }
+    );
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/getMarketByGraphByRefIdQuery",
+      request
+    )
+  }
+
+};
 module.exports = {
   getAllEventMarketsQuery,
   createManyEventMarketQuery,
@@ -1896,5 +1952,6 @@ module.exports = {
   UpdateResulOrApproveEventMarketQuery,
   updateComInMarketQuery,
   getMarketListWithCategoryNameByCIdQuery,
-  getMarketsByCategoryQuery
+  getMarketsByCategoryQuery,
+  getMarketByGraphByRefIdQuery
 };

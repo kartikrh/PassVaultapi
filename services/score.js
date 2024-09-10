@@ -1,4 +1,4 @@
-const { getMarketsByCIdQuery } = require("../repository/TableEventMarkets");
+const { getMarketsByCIdQuery,getMarketByGraphByRefIdQuery } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
 const { getNotificationLogByClientQuery, updateNotificationLogByClientQuery } = require("../repository/TableNotification");
 const { getAllMarketOddsBallByBallByCommentaryId } = require("../repository/TableMarketOddsBallByBall");
@@ -177,6 +177,21 @@ const markReadNotificationService = async (request , fastify) => {
     const updateData = await updateNotificationLogByClientQuery(request.body,request ,fastify);
     return true;
 }
+
+const getMarketByGraphByRefIdService =async (request , fastify) => {
+    const commentary = global.tblCommentaries.find((c) => {
+        return c.eventRefId === request.body.eventId;
+    });
+    if (!commentary) {
+        throw new Error("Commentary with this id not found");
+    }
+    const getGraphsData = await getMarketByGraphByRefIdQuery( {
+        commentaryId: parseInt(commentary.commentaryId)
+      },request , fastify);
+
+    return getGraphsData;
+}
 module.exports = { getAllCommentariesDataService ,getMarketsByCommentaryIdService , getNotificationByClientService,
-    markReadNotificationService
+    markReadNotificationService,
+    getMarketByGraphByRefIdService
  };

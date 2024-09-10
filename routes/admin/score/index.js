@@ -21,7 +21,7 @@ const {
   getAllCommentariesData,
 } = require("../../../controller/users/admin/commentary/commentary");
 const { getMenuItemList } = require("../../../controller/users/admin/menuType");
-const { getMarketsByCommentaryId, getNotificationByClient, markReadNotification } = require("../../../controller/users/admin/score");
+const { getMarketsByCommentaryId, getNotificationByClient, markReadNotification ,getMarketByGraphByRefId } = require("../../../controller/users/admin/score");
 const {
   saveSubScribeDomain,
 } = require("../../../controller/users/admin/subScribesDomain");
@@ -238,5 +238,9 @@ module.exports = async (fastify, opts) => {
   fastify.post("/markRead",{
     schema : Score.markreadNotification.schema,
     handler : (request,reply) => markReadNotification(request,reply,fastify)
+  });
+  fastify.post("/getMarketsGraphsByEId" , {
+    schema: Score.getGraphsEvent.schema,
+    handler: (request, reply) => getMarketByGraphByRefId(request, reply, fastify)
   })
 };
