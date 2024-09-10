@@ -438,6 +438,14 @@ Object.keys(groupedRates).forEach(selectionId => {
             (item) => item.eventRefId == _selectionidData.eventRefId && item.rateSource === 2
           );
           marketRunner = marketRunner.map((item) => {
+            let teamNameData
+            if(item.teamId){
+            teamNameData = global.tblCommentaryTeams.find((elem) => elem.teamId === item.teamId)
+            }
+            if(!item.teamId){
+                teamNameData = global.tblCommentaryTeams.find((t) => 
+                    t.teamName.toLowerCase() == item.runner.toLowerCase())
+            }
             return {
               runnerId: item.runnerId,
               runner: item.runner,
@@ -445,7 +453,7 @@ Object.keys(groupedRates).forEach(selectionId => {
               backSize: item.backSize,
               laySize: item.laySize,
               teamId: item.teamId,
-              teamName: item.teamName
+              teamName: teamNameData?.teamName || null
             };
           });
           
