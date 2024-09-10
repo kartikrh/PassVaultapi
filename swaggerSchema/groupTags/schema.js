@@ -3312,6 +3312,20 @@ const Score = {
       },
     },
   },
+  getGraphsEvent: {
+    schema: {
+      tags: ["Score"],
+      description: "get Markets Graphs by EventID",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          eventId: { type: "string" },
+        },
+        required: ["eventId"],
+      },
+    },
+  },
 };
 const News = {
   getAll: {
