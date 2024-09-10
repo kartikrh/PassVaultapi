@@ -91,7 +91,7 @@ const getAllCommentariesDataService = async (request,fastify) => {
                 },fastify) || [];
 
                 let marketRunner = global.tblEventMarkets.filter((m) => {
-                    return m.commentaryId === c.commentaryId && item.rateSource === 2
+                    return m.commentaryId === c.commentaryId && m.rateSource === 2
                 });
 
                 marketRunner = marketRunner.map((item) => {
