@@ -81,98 +81,99 @@ module.exports = async function (fastify, opts) {
       instance: "db", // tells the plugin to create a Sequelize instance with the name "db"
       models: path.join(__dirname, "sequelize", "tables", "userModel.js"),
     })
-    // .after(async () => {
-    //   // Load models and sync DB
-    //   const models = [
-    //     "userModel", "userLoginInfoModel", "tabsModel", "roleModel", "encryptionData",
-    //     "permissionModel", "blockModel", "menuTypeModel", "menuItemModel", "menuItemTypeModel",
-    //     "pageModel", "pageAliasModel", "pageFormateModel", "eventTypeModel", "teamModel", 
-    //     "teamPlayersModel", "paneltyRunsModel", "playerModel", "matchTypeModel", "errorLogModel", 
-    //     "playerTypeModel", "bowlingTypeModel", "configModel", "CommentaryModel", "commentaryTeamModel", 
-    //     "commentaryPlayerModel", "compititionModel", "eventModel", "commentaryBallByBallModel", 
-    //     "commentaryPartnershipModel", "commentaryWicketModel", "overModel", "displayStatusModel", 
-    //     "newsModel", "subScribesDomainModel", "subScribesSubDomainModel", "matchTypePredictorModel", 
-    //     "marketTemplateModel", "eventMarketsModel", "marketRunnerModel", "marketTemplateRunnerModel", 
-    //     "vendorsModel", "vendorIpModel", "clientSocketModel", "activityLogModel", "mailSettingsModel", 
-    //     "thirdPartyApisModel", "commentaryScoringLogsModel", "clientVideoModel"
-    //   ];
-      
-    //   models.forEach((model) => require(`./sequelize/tables/${model}`)(fastify.db));
-    //   setImmediate(async () => {
-    //     try {
-    //       await featchData(fastify);
-    //       await disConnectClientSocketQuery(fastify);
-    //       await startSignalR(fastify);
-    //       connectClients(fastify);
-    //       disconnectClients(fastify);
-    //       webPushset(webPush);
-    //     } catch (error) {
-    //       console.error("Error during post-sync operations:", error);
-    //     }
-    //   });
     .after(async () => {
-      require("./sequelize/tables/userModel")(fastify.db);
-      require("./sequelize/tables/userLoginInfoModel")(fastify.db);
-      require("./sequelize/tables/tabsModel")(fastify.db);
-      require("./sequelize/tables/roleModel")(fastify.db);
-      require("./sequelize/tables/encryptionData")(fastify.db);
-      require("./sequelize/tables/permissionModel")(fastify.db);
-      require("./sequelize/tables/blockModel")(fastify.db);
-      require("./sequelize/tables/menuTypeModel")(fastify.db);
-      require("./sequelize/tables/menuItemModel")(fastify.db);
-      require("./sequelize/tables/menuItemTypeModel")(fastify.db);
-      require("./sequelize/tables/pageModel")(fastify.db);
-      require("./sequelize/tables/pageAliasModel")(fastify.db);
-      require("./sequelize/tables/pageFormateModel")(fastify.db);
-      require("./sequelize/tables/eventTypeModel")(fastify.db);
-      require("./sequelize/tables/teamModel")(fastify.db);
-      require("./sequelize/tables/teamPlayersModel")(fastify.db);
-      require("./sequelize/tables/paneltyRunsModel")(fastify.db);
-      require("./sequelize/tables/playerModel")(fastify.db);
-      require("./sequelize/tables/matchTypeModel")(fastify.db);
-      require("./sequelize/tables/errorLogModel")(fastify.db);
-      require("./sequelize/tables/playerTypeModel")(fastify.db);
-      require("./sequelize/tables/bowlingTypeModel")(fastify.db);
-      require("./sequelize/tables/configModel")(fastify.db);
-      require("./sequelize/tables/CommentaryModel")(fastify.db);
-      require("./sequelize/tables/commentaryTeamModel")(fastify.db);
-      require("./sequelize/tables/commentaryPlayerModel")(fastify.db);
-      require("./sequelize/tables/compititionModel")(fastify.db);
-      require("./sequelize/tables/eventModel")(fastify.db);
-      require("./sequelize/tables/commentaryBallByBallModel")(fastify.db);
-      require("./sequelize/tables/commentaryPartnershipModel")(fastify.db);
-      require("./sequelize/tables/commentaryWicketModel")(fastify.db);
-      require("./sequelize/tables/overModel")(fastify.db);
-      require("./sequelize/tables/displayStatusModel")(fastify.db);
-      require("./sequelize/tables/newsModel")(fastify.db);
-      require("./sequelize/tables/subScribesDomainModel")(fastify.db);
-      require("./sequelize/tables/subScribesSubDomainModel")(fastify.db);
-      require("./sequelize/tables/matchTypePredictorModel")(fastify.db);
-      require("./sequelize/tables/marketTemplateModel")(fastify.db);
-      require("./sequelize/tables/eventMarketsModel")(fastify.db);
-      require("./sequelize/tables/marketRunnerModel")(fastify.db);
-      require("./sequelize/tables/marketTemplateRunnerModel")(fastify.db);
-      require("./sequelize/tables/vendorsModel")(fastify.db);
-      require("./sequelize/tables/vendorIpModel")(fastify.db);
-      require("./sequelize/tables/clientSocketModel")(fastify.db);
-      require("./sequelize/tables/activityLogModel")(fastify.db);
-      require("./sequelize/tables/mailSettingsModel")(fastify.db);
-      require("./sequelize/tables/thirdPartyApisModel")(fastify.db);
-      require("./sequelize/tables/commentaryScoringLogsModel")(fastify.db);
-      require("./sequelize/tables/clientVideoModel.js")(fastify.db);
-      try {
-        await fastify.db.sync();
-        await featchData(fastify);
-        await disConnectClientSocketQuery(fastify);
-        await startSignalR(fastify);
-        connectClients(fastify);
-        //WebsocketConnection(fastify);
-        disconnectClients(fastify);
-        webPushset(webPush);
-      } catch (error) {
-        console.log("error sync with db", error);
-      }
+      // Load models and sync DB
+      const models = [
+        "userModel", "userLoginInfoModel", "tabsModel", "roleModel", "encryptionData",
+        "permissionModel", "blockModel", "menuTypeModel", "menuItemModel", "menuItemTypeModel",
+        "pageModel", "pageAliasModel", "pageFormateModel", "eventTypeModel", "teamModel", 
+        "teamPlayersModel", "paneltyRunsModel", "playerModel", "matchTypeModel", "errorLogModel", 
+        "playerTypeModel", "bowlingTypeModel", "configModel", "CommentaryModel", "commentaryTeamModel", 
+        "commentaryPlayerModel", "compititionModel", "eventModel", "commentaryBallByBallModel", 
+        "commentaryPartnershipModel", "commentaryWicketModel", "overModel", "displayStatusModel", 
+        "newsModel", "subScribesDomainModel", "subScribesSubDomainModel", "matchTypePredictorModel", 
+        "marketTemplateModel", "eventMarketsModel", "marketRunnerModel", "marketTemplateRunnerModel", 
+        "vendorsModel", "vendorIpModel", "clientSocketModel", "activityLogModel", "mailSettingsModel", 
+        "thirdPartyApisModel", "commentaryScoringLogsModel", "clientVideoModel"
+      ];
+      
+      models.forEach((model) => require(`./sequelize/tables/${model}`)(fastify.db));
+      setImmediate(async () => {
+        try {
+          await featchData(fastify);
+          await disConnectClientSocketQuery(fastify);
+          await startSignalR(fastify);
+          connectClients(fastify);
+          disconnectClients(fastify);
+          webPushset(webPush);
+        } catch (error) {
+          console.error("Error during post-sync operations:", error);
+        }
+      });
     });
+    // .after(async () => {
+    //   require("./sequelize/tables/userModel")(fastify.db);
+    //   require("./sequelize/tables/userLoginInfoModel")(fastify.db);
+    //   require("./sequelize/tables/tabsModel")(fastify.db);
+    //   require("./sequelize/tables/roleModel")(fastify.db);
+    //   require("./sequelize/tables/encryptionData")(fastify.db);
+    //   require("./sequelize/tables/permissionModel")(fastify.db);
+    //   require("./sequelize/tables/blockModel")(fastify.db);
+    //   require("./sequelize/tables/menuTypeModel")(fastify.db);
+    //   require("./sequelize/tables/menuItemModel")(fastify.db);
+    //   require("./sequelize/tables/menuItemTypeModel")(fastify.db);
+    //   require("./sequelize/tables/pageModel")(fastify.db);
+    //   require("./sequelize/tables/pageAliasModel")(fastify.db);
+    //   require("./sequelize/tables/pageFormateModel")(fastify.db);
+    //   require("./sequelize/tables/eventTypeModel")(fastify.db);
+    //   require("./sequelize/tables/teamModel")(fastify.db);
+    //   require("./sequelize/tables/teamPlayersModel")(fastify.db);
+    //   require("./sequelize/tables/paneltyRunsModel")(fastify.db);
+    //   require("./sequelize/tables/playerModel")(fastify.db);
+    //   require("./sequelize/tables/matchTypeModel")(fastify.db);
+    //   require("./sequelize/tables/errorLogModel")(fastify.db);
+    //   require("./sequelize/tables/playerTypeModel")(fastify.db);
+    //   require("./sequelize/tables/bowlingTypeModel")(fastify.db);
+    //   require("./sequelize/tables/configModel")(fastify.db);
+    //   require("./sequelize/tables/CommentaryModel")(fastify.db);
+    //   require("./sequelize/tables/commentaryTeamModel")(fastify.db);
+    //   require("./sequelize/tables/commentaryPlayerModel")(fastify.db);
+    //   require("./sequelize/tables/compititionModel")(fastify.db);
+    //   require("./sequelize/tables/eventModel")(fastify.db);
+    //   require("./sequelize/tables/commentaryBallByBallModel")(fastify.db);
+    //   require("./sequelize/tables/commentaryPartnershipModel")(fastify.db);
+    //   require("./sequelize/tables/commentaryWicketModel")(fastify.db);
+    //   require("./sequelize/tables/overModel")(fastify.db);
+    //   require("./sequelize/tables/displayStatusModel")(fastify.db);
+    //   require("./sequelize/tables/newsModel")(fastify.db);
+    //   require("./sequelize/tables/subScribesDomainModel")(fastify.db);
+    //   require("./sequelize/tables/subScribesSubDomainModel")(fastify.db);
+    //   require("./sequelize/tables/matchTypePredictorModel")(fastify.db);
+    //   require("./sequelize/tables/marketTemplateModel")(fastify.db);
+    //   require("./sequelize/tables/eventMarketsModel")(fastify.db);
+    //   require("./sequelize/tables/marketRunnerModel")(fastify.db);
+    //   require("./sequelize/tables/marketTemplateRunnerModel")(fastify.db);
+    //   require("./sequelize/tables/vendorsModel")(fastify.db);
+    //   require("./sequelize/tables/vendorIpModel")(fastify.db);
+    //   require("./sequelize/tables/clientSocketModel")(fastify.db);
+    //   require("./sequelize/tables/activityLogModel")(fastify.db);
+    //   require("./sequelize/tables/mailSettingsModel")(fastify.db);
+    //   require("./sequelize/tables/thirdPartyApisModel")(fastify.db);
+    //   require("./sequelize/tables/commentaryScoringLogsModel")(fastify.db);
+    //   require("./sequelize/tables/clientVideoModel.js")(fastify.db);
+    //   try {
+    //     await fastify.db.sync();
+    //     await featchData(fastify);
+    //     await disConnectClientSocketQuery(fastify);
+    //     await startSignalR(fastify);
+    //     connectClients(fastify);
+    //     //WebsocketConnection(fastify);
+    //     disconnectClients(fastify);
+    //     webPushset(webPush);
+    //   } catch (error) {
+    //     console.log("error sync with db", error);
+    //   }
+    // });
 
   // Configure fastify to use `multipart/form-data` requests
   fastify.register(fastifyMultipart, {
