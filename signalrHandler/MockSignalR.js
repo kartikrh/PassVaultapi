@@ -4,6 +4,7 @@ const { marketLogger, marketDataLogger } = require("../utilities/logger");
 const {updateEventMarketRunnerMaunalQuery,getEventMarketByIdsQuery,UpdateEventMarketByCIdFromSocketQuery} = require('../repository/TableEventMarkets');
 const {updateCommentaryTeamPredictionPrecentageQuery} = require('../repository/TableCommentary');
 const {updateLatestMarketOddsBallByBall} = require('../repository/TableMarketOddsBallByBall');
+const { commentaryDetailsByEventIdService } = require('../services/commentry');
 const { ERROR_CODES, error, success } = require("../utilities/index");
 const { errorLogger } = require("../utilities/logger");
 const { updateThirdPartyApisQuery } = require('../repository/TableThirdPartyApis');
@@ -43,7 +44,7 @@ async function startSignalR(fastify) {
         await checkAndUpdateMarketRate();
 
         //? Here We Update To Globale Data For SignalR Values
-        connection.on('Rate', async (message) => {
+        connection.on('Rate', async (message, request) => {
           try {
             if(message.mi){
               // Find if the market ID already exists in the rateQueue
@@ -57,7 +58,7 @@ async function startSignalR(fastify) {
                 global.rateQueue.push(message);
               }
 
-              await createUpdateGlobalSignalRData(message);
+              await createUpdateGlobalSignalRData(message, request);
               thirdParty.isConnect = true
               await updateConnectionStatus(thirdParty, fastify);
             }
@@ -246,10 +247,7 @@ const processRateQueue = async () => {
                   _fastify
                 );
               }
-            }
-            // const globalEventData = global.tblEventMarkets.filter((item) => item.commentaryId == 2313)
-            // console.log("global.tblEventMarkets:", globalEventData);
-            
+            }            
           }
 
             if (commentary) {
@@ -327,7 +325,7 @@ const checkAndUpdateMarketRate = async (_fastify) => {
   }
 };
  
-const createUpdateGlobalSignalRData = async (message) => {
+const createUpdateGlobalSignalRData = async (message, request) => {
   try {
     const data = message;
     let commentary;
@@ -335,65 +333,163 @@ const createUpdateGlobalSignalRData = async (message) => {
       (item) => item.rateSourceRefID === data.mi
     );
     if(EventsMarketobj){
-      console.log(data.rt);
+      // const groupedRates = {};
+      //   data.rt.forEach(rate => {
+      //     if (rate.pr === 0) {
+      //       const selectionId = rate.si;
+      //       if (!groupedRates[selectionId]) {
+      //           groupedRates[selectionId] = { back: [], lay: [] };
+      //       }
+      //       // Separate into back and lay rates where pr is 0
+      //       if (rate.pr === 0) {
+      //           if (rate.ib) {
+      //               groupedRates[selectionId].back.push(rate);
+      //           } else {
+      //               groupedRates[selectionId].lay.push(rate);
+      //           }
+      //       }
+      //     }
+      //   });
+      //   //check if lay or back is lenght is zero 
+      //   data.rt.forEach(rate => {
+      //     if (rate.pr === 1) {
+      //       const selectionId = rate.si;
+      //       if (!groupedRates[selectionId]) {
+      //         groupedRates[selectionId] = { back: [], lay: [] };
+      //       }
+      //       // Separate into back and lay rates where pr is 1
+      //       if (rate.ib) {
+      //         groupedRates[selectionId].back.push(rate);
+      //       } else {
+      //         groupedRates[selectionId].lay.push(rate);
+      //       }
+      //     }
+      //   });
+
       const groupedRates = {};
-        data.rt.forEach(rate => {
-          if (rate.pr === 0) {
-            const selectionId = rate.si;
-            if (!groupedRates[selectionId]) {
-                groupedRates[selectionId] = { back: [], lay: [] };
-            }
-            // Separate into back and lay rates where pr is 0
-            if (rate.pr === 0) {
-                if (rate.ib) {
-                    groupedRates[selectionId].back.push(rate);
-                } else {
-                    groupedRates[selectionId].lay.push(rate);
-                }
-            }
+
+      data.rt.forEach(rate => {
+        const selectionId = rate.si;
+      
+        if (!groupedRates[selectionId]) {
+          groupedRates[selectionId] = { back: [], lay: [] };
+        }
+      
+        // If pr is 0, process it and skip further pr === 1 checks
+        if (rate.pr === 0) {
+          if (rate.ib) {
+            groupedRates[selectionId].back.push(rate);
+          } else {
+            groupedRates[selectionId].lay.push(rate);
           }
-        });
-        //check if lay or back is lenght is zero 
-        data.rt.forEach(rate => {
-          if (rate.pr === 1) {
-            const selectionId = rate.si;
-            if (!groupedRates[selectionId]) {
-              groupedRates[selectionId] = { back: [], lay: [] };
-            }
-            // Separate into back and lay rates where pr is 1
-            if (rate.ib) {
-              groupedRates[selectionId].back.push(rate);
-            } else {
-              groupedRates[selectionId].lay.push(rate);
-            }
+          groupedRates[selectionId].hasPr0 = true;
+        }
+      });
+      
+      data.rt.forEach(rate => {
+        const selectionId = rate.si;
+        if (rate.pr === 1 && !groupedRates[selectionId].hasPr0) {
+          if (rate.ib) {
+            groupedRates[selectionId].back.push(rate);
+          } else {
+            groupedRates[selectionId].lay.push(rate);
           }
-        });
-      const _blrbsids = []; //Back and Lay Rates by SelectionIds  blrbsids
-      const currentTime = new Date().toISOString();
+        }
+      });
+      
       Object.keys(groupedRates).forEach(selectionId => {
-          const rates = groupedRates[selectionId];
-          const backRates = rates.back.length ? rates.back : [{ rv: null, re: null }];
-          const layRates = rates.lay.length ? rates.lay : [{ rv: null, re: null }];
-        
-          backRates.forEach(backRate => {
+        delete groupedRates[selectionId].hasPr0;
+      });
+
+const _blrbsids = []; //Back and Lay Rates by SelectionIds  blrbsids
+const currentTime = new Date().toISOString();
+Object.keys(groupedRates).forEach(selectionId => {
+  const rates = groupedRates[selectionId];
+  const backRates = rates.back.length ? rates.back : [{ rv: null, re: null }];
+  const layRates = rates.lay.length ? rates.lay : [{ rv: null, re: null }];
+  
+  backRates.forEach(backRate => {
               layRates.forEach(layRate => {
                 _blrbsids.push({
-                      backPrice: backRate.rv,
+                  backPrice: backRate.rv,
                       backSize: backRate.re,
                       layPrice: layRate.rv,
                       laySize: layRate.re,
                       selectionId: parseInt(selectionId, 10),
                       timestamp: currentTime // Add timestamp here
+                    });
                   });
+                });
               });
-          });
-      });
-      if(_blrbsids && _blrbsids.length){
-        for (const items of _blrbsids) {
-          let _time = items.timestamp;
-          const _selectionidData = global.tblEventMarkets.find(
-            (e) => e.selectionId == items.selectionId
+              if(_blrbsids && _blrbsids.length){
+                for (const items of _blrbsids) {
+                  let _time = items.timestamp;
+                  const _selectionidData = global.tblEventMarkets.find(
+                    (e) => e.selectionId == items.selectionId
+                  );
+// console.log(items);
+
+          const sendDataForSocketUpdate = {};
+          sendDataForSocketUpdate.commentaryId = _selectionidData.commentaryId;
+          sendDataForSocketUpdate.eventRefId = _selectionidData.eventRefId;
+          sendDataForSocketUpdate.dataToUpdate = [];
+
+          let marketRunner = global.tblEventMarkets.filter(
+            (item) => item.eventRefId == _selectionidData.eventRefId && item.rateSource === 2
           );
+          marketRunner = marketRunner.map((item) => {
+            let teamNameData
+            if(item.teamId){
+            teamNameData = global.tblCommentaryTeams.find((elem) => elem.teamId === item.teamId)
+            }
+            if(!item.teamId){
+                teamNameData = global.tblCommentaryTeams.find((t) => 
+                    t.teamName.toLowerCase() == item.runner.toLowerCase())
+            }
+            return {
+              runnerId: item.runnerId,
+              runner: item.runner,
+              selectionId: item.selectionId,
+              backSize: item.backSize,
+              laySize: item.laySize,
+              teamId: item.teamId,
+              teamName: teamNameData?.teamName || null
+            };
+          });
+          
+          sendDataForSocketUpdate.dataToUpdate.push({
+            module: "marketRunner",
+            type: "update",
+            data: marketRunner,
+          });
+          
+          if (
+            global?.clientSocketIo !== undefined &&
+            global?.clientSocketIo.length > 0
+          ) {
+            await commentaryDetailsByEventIdService(
+              {
+                ...request,
+                body: {
+                  eventId: _selectionidData.eventRefId,
+                },
+              },
+              _fastify,
+              "runnersFromSocket"
+            ).catch((err) => {
+              errorLogger(
+                _fastify,
+                err.message,
+                "ERROR --> signalrHandler/MockSignalR.js/createUpdateGlobalSignalRData",
+                request
+              );
+            });
+
+            global.clientSocketIo.forEach((socket) => {
+              socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+            });
+          }
+          
 
           await updateEventMarketRunnerMaunalQuery(items, _fastify);
 
@@ -496,6 +592,7 @@ const updateConnectionStatus = async(data, fastify) => {
       url:  data.url,
       type: data.type,
       isActive: data.isActive,
+      isDefault: data.isDefault,
       isConnect: data.isConnect,
       id: data.id,
     };

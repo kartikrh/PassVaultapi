@@ -12,7 +12,8 @@ const getAllNewsQuery = async (fastify) => {
             "wrStartDate" as "startDate",
             "wrEndDate" as "endDate",
             "wrTags" as "tags",
-            "wrViewerCount" as "viewerCount"
+            "wrViewerCount" as "viewerCount",
+            "wrCredit" as "credit"
         from "tblNews"
         `,
     {
@@ -36,9 +37,10 @@ const insertNewsQuery = async (data, request, fastify) => {
                         "wrCreatedBy",
                         "wrCreatedDate",
                         "wrTags",
-                        "wrViewerCount"
+                        "wrViewerCount",
+                        "wrCredit"
                     )
-                values ($1, $2, $3, $4, $5, $6, $7, $8, now(), $9, $10) returning *
+                values ($1, $2, $3, $4, $5, $6, $7, $8, now(), $9, $10,$11) returning *
                 )
                 select 
                     "wrNewsId" as "newsId",
@@ -50,7 +52,8 @@ const insertNewsQuery = async (data, request, fastify) => {
                     "wrStartDate" as "startDate",
                     "wrEndDate" as "endDate",
                     "wrTags" as "tags",
-                    "wrViewerCount" as "viewerCount"
+                    "wrViewerCount" as "viewerCount",
+                    "wrCredit" as "credit"
                 from "insert_data"
             `,
       {
@@ -65,7 +68,8 @@ const insertNewsQuery = async (data, request, fastify) => {
           data.endDate ? new Date(data.endDate) : null,
           data.userId,
           data.tags,
-          data.viewerCount || null
+          data.viewerCount || null,
+          data.credit || null
         ],
       }
     );
@@ -95,7 +99,8 @@ const updateNewsQuery = async (data, request, fastify) => {
                 "wrModifyBy" = $8,
                 "wrModifyDate" = now(),
                 "wrTags" = $10,
-                "wrViewerCount" = $11
+                "wrViewerCount" = $11,
+                "wrCredit" = $12
                 where "wrNewsId" = $9
             `,
       {
@@ -110,7 +115,8 @@ const updateNewsQuery = async (data, request, fastify) => {
           data.userId,
           data.newsId,
           data.tags,
-          data.viewerCount || null
+          data.viewerCount || null,
+          data.credit || null
         ],
       }
     );

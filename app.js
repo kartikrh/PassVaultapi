@@ -81,6 +81,35 @@ module.exports = async function (fastify, opts) {
       instance: "db", // tells the plugin to create a Sequelize instance with the name "db"
       models: path.join(__dirname, "sequelize", "tables", "userModel.js"),
     })
+    // .after(async () => {
+    //   // Load models and sync DB
+    //   const models = [
+    //     "userModel", "userLoginInfoModel", "tabsModel", "roleModel", "encryptionData",
+    //     "permissionModel", "blockModel", "menuTypeModel", "menuItemModel", "menuItemTypeModel",
+    //     "pageModel", "pageAliasModel", "pageFormateModel", "eventTypeModel", "teamModel", 
+    //     "teamPlayersModel", "paneltyRunsModel", "playerModel", "matchTypeModel", "errorLogModel", 
+    //     "playerTypeModel", "bowlingTypeModel", "configModel", "CommentaryModel", "commentaryTeamModel", 
+    //     "commentaryPlayerModel", "compititionModel", "eventModel", "commentaryBallByBallModel", 
+    //     "commentaryPartnershipModel", "commentaryWicketModel", "overModel", "displayStatusModel", 
+    //     "newsModel", "subScribesDomainModel", "subScribesSubDomainModel", "matchTypePredictorModel", 
+    //     "marketTemplateModel", "eventMarketsModel", "marketRunnerModel", "marketTemplateRunnerModel", 
+    //     "vendorsModel", "vendorIpModel", "clientSocketModel", "activityLogModel", "mailSettingsModel", 
+    //     "thirdPartyApisModel", "commentaryScoringLogsModel", "clientVideoModel"
+    //   ];
+      
+    //   models.forEach((model) => require(`./sequelize/tables/${model}`)(fastify.db));
+    //   setImmediate(async () => {
+    //     try {
+    //       await featchData(fastify);
+    //       await disConnectClientSocketQuery(fastify);
+    //       await startSignalR(fastify);
+    //       connectClients(fastify);
+    //       disconnectClients(fastify);
+    //       webPushset(webPush);
+    //     } catch (error) {
+    //       console.error("Error during post-sync operations:", error);
+    //     }
+    //   });
     .after(async () => {
       require("./sequelize/tables/userModel")(fastify.db);
       require("./sequelize/tables/userLoginInfoModel")(fastify.db);
@@ -130,6 +159,7 @@ module.exports = async function (fastify, opts) {
       require("./sequelize/tables/mailSettingsModel")(fastify.db);
       require("./sequelize/tables/thirdPartyApisModel")(fastify.db);
       require("./sequelize/tables/commentaryScoringLogsModel")(fastify.db);
+      require("./sequelize/tables/clientVideoModel.js")(fastify.db);
       try {
         await fastify.db.sync();
         await featchData(fastify);

@@ -1,4 +1,4 @@
-const { getMarketsByCIdQuery } = require("../repository/TableEventMarkets");
+const { getMarketsByCIdQuery,getMarketByGraphByRefIdQuery } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
 const { getNotificationLogByClientQuery, updateNotificationLogByClientQuery } = require("../repository/TableNotification");
 const { getAllMarketOddsBallByBallByCommentaryId } = require("../repository/TableMarketOddsBallByBall");
@@ -91,16 +91,26 @@ const getAllCommentariesDataService = async (request,fastify) => {
                 },fastify) || [];
 
                 let marketRunner = global.tblEventMarkets.filter((m) => {
-                    return m.commentaryId === c.commentaryId;
+                    return m.commentaryId === c.commentaryId && m.rateSource === 2
                 });
-
+                
                 marketRunner = marketRunner.map((item) => {
+                    let teamNameData
+                    if(item.teamId){
+                    teamNameData = global.tblCommentaryTeams.find((elem) => elem.teamId === item.teamId)
+                    }
+                    if(!item.teamId){
+                        teamNameData = global.tblCommentaryTeams.find((t) => 
+                            t.teamName.toLowerCase() == item.runner.toLowerCase())
+                    }
                     return {
                         runnerId: item.runnerId,
                         runner: item.runner,
                         selectionId: item.selectionId,
                         backSize: item.backSize,
-                        laySize: item.laySize
+                        laySize: item.laySize,
+                        teamId: item.teamId,
+                        teamName: teamNameData?.teamName || null
                     }
                 });
         
@@ -167,6 +177,21 @@ const markReadNotificationService = async (request , fastify) => {
     const updateData = await updateNotificationLogByClientQuery(request.body,request ,fastify);
     return true;
 }
+
+const getMarketByGraphByRefIdService =async (request , fastify) => {
+    const commentary = global.tblCommentaries.find((c) => {
+        return c.eventRefId === request.body.eventId;
+    });
+    if (!commentary) {
+        throw new Error("Commentary with this id not found");
+    }
+    const getGraphsData = await getMarketByGraphByRefIdQuery( {
+        commentaryId: parseInt(commentary.commentaryId)
+      },request , fastify);
+
+    return getGraphsData;
+}
 module.exports = { getAllCommentariesDataService ,getMarketsByCommentaryIdService , getNotificationByClientService,
-    markReadNotificationService
+    markReadNotificationService,
+    getMarketByGraphByRefIdService
  };

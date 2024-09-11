@@ -62,6 +62,11 @@ module.exports = (sequelize) => {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
+      wrCredit : {
+        type : DataTypes.TEXT,
+        allowNull : true,
+        defaultValue : null
+      }
     },
     {
       timestamps: false,

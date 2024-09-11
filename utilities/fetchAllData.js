@@ -65,6 +65,7 @@ const { getAllClientQuery } = require("../repository/TableClient");
 const { allMailSettingsQuery } = require('../repository/TableMailSettings');
 const { getAllMarketOddsBallByBall } = require("../repository/TableMarketOddsBallByBall");
 const { allThirdPartyApisQuery } = require('../repository/TableThirdPartyApis');
+const { allClientVideoQuery } = require("../repository/TableClientVideo");
 
 const fetchAllDataFromDb = async (fastify, reply) => {
   try {
@@ -131,8 +132,9 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const getAllOtp = await getAllOtpQuery(fastify);
     const getAllClient = await getAllClientQuery(fastify);
     const getAllMailSettings = await allMailSettingsQuery(fastify);
-    // const marketOddBallByBall = await getAllMarketOddsBallByBall(fastify);
+    const marketOddBallByBall = await getAllMarketOddsBallByBall(fastify);
     const thirdPartyApis = await allThirdPartyApisQuery(fastify);
+    const clientVideos = await allClientVideoQuery(fastify);
     // const responseLogs = await allResponseLogsQuery(fastify);
     // const thirdPartyAPILogs = await allThirdPartyApiLogsQuery(fastify);
     // const predictorAPILogs = await allPredictorAPILogsQuery(fastify);
@@ -190,15 +192,16 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblOtp = getAllOtp;
     global.tblClient = getAllClient;
     global.tblMailSettings = getAllMailSettings;
-    // global.tblMarketOddsBallByBall = marketOddBallByBall;
+    global.tblMarketOddsBallByBall = marketOddBallByBall;
     global.tblThirdPartyApis = thirdPartyApis;
+    global.tblClientVideos = clientVideos;
     // global.responseLogs = responseLogs;
     // global.thirdPartyAPILogs = thirdPartyAPILogs;
     // global.predictorAPILogs = predictorAPILogs;
     // global.commentaryLogs = commentaryLogs;
     // global.errorLogs = errorLogs
 
-    console.log("Okkkk");
+    console.log("Okkkk - Data Synchronized successfully");
 
     if (reply) {
       reply.status(200).send({

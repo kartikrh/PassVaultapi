@@ -402,40 +402,47 @@ const ImportMarketWithRunnerService = async (request, fastify) => {
   }
 };
 
+
 const listManualMarketService = async (request, fastify) => {
   try {
     // const apiUrl = process.env.IMPORTMARKET_API;
-    const {isAustralian, refID} = request.body
-    const apiUrl = global.tblConfigs.find((item) => item.key == configConstants.IMPORTMARKET_API)?.value;
-    if(!apiUrl){
-      throw new Error("IMPORTMARKET_API not found in tblConfigs");
-    }
-    let endpoint = "/listManualMarket";
-  
-    let postData = {
-      isaustralian: isAustralian,
-      eventids:refID
-    }
-  
-    const response = await fetch(apiUrl + endpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(postData),
-    });
-    let responseData;
-    if (response.ok) {
-     responseData = await response.json();
-      const commentary = global.tblCommentaries.find(
-        (item) => item.eventRefId === refID
-      );
-      responseData.teamsDetails = {};
-      if (commentary) {
-        const currentInnings = commentary.currentInnings;
-      
-        const [commentaryTeamsOne, commentaryTeamsTwo] =
-          await Promise.all([
+    const { isAustralian, refID } = request.body;
+
+    let response = global.tblEventMarkets.filter(
+      (item) => item.eventRefId == refID && item.rateSource === 2
+    );
+
+    // const apiUrl = global.tblConfigs.find((item) => item.key == configConstants.IMPORTMARKET_API)?.value;
+    // if(!apiUrl){
+    //   throw new Error("IMPORTMARKET_API not found in tblConfigs");
+    // }
+    // let endpoint = "/listManualMarket";
+
+    // let postData = {
+    //   isaustralian: isAustralian,
+    //   eventids:refID
+    // }
+
+    // const response = await fetch(apiUrl + endpoint, {
+    //   method: "POST",
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //   },
+    //   body: JSON.stringify(postData),
+    // });
+    let responseData = {};
+    if (response) {
+      //  responseData = await response.json();
+      responseData.data = response  
+      // for (let res of responseData) {
+        const commentary = global.tblCommentaries.find(
+          (item) => item.eventRefId === refID
+        );
+        responseData.teamsDetails = {};
+        if (commentary) {
+          const currentInnings = commentary.currentInnings;
+
+          const [commentaryTeamsOne, commentaryTeamsTwo] = await Promise.all([
             global.tblCommentaryTeams.find(
               (item) =>
                 item.commentaryId === commentary.commentaryId &&
@@ -449,21 +456,27 @@ const listManualMarketService = async (request, fastify) => {
                 item.currentInnings === currentInnings
             ),
           ]);
+          // res.team1Id = commentaryTeamsOne.teamId;
+          // res.team1Name = commentaryTeamsOne.teamName;
+          // res.team2Id = commentaryTeamsTwo.teamId;
+          // res.team2Name = commentaryTeamsTwo.teamName;
           responseData.teamsDetails.team1Id = commentaryTeamsOne.teamId;
           responseData.teamsDetails.team1Name = commentaryTeamsOne.teamName;
           responseData.teamsDetails.team2Id = commentaryTeamsTwo.teamId;
           responseData.teamsDetails.team2Name = commentaryTeamsTwo.teamName;
+        // }
       }
       return responseData
     } else {
-      console.error(`Error: ${response.status} - ${response.statusText}`);
+      // console.error(`Error: ${response.status} - ${response.statusText}`);
       throw new Error("Error while fetching data from import market");
     }
-      
   } catch (error) {
+    console.log(error);
+    
     throw new Error(error);
   }
-}
+};
 const updateTeamIdBySelectionIdService = async (request, fastify) => {
   if (request.userTokenInfo.WrUserId) {
     try {
@@ -481,3 +494,16 @@ module.exports = {
   listManualMarketService,
   updateTeamIdBySelectionIdService
 };
+
+// "result": {
+//   "appissuccess": true,
+//   "appdata": [],
+//   "appmessage": "",
+//   "appstatuscode": 200,
+//   "teamsDetails": {
+//       "team1Id": 555,
+//       "team1Name": "VTU MU Pleven",
+//       "team2Id": 556,
+//       "team2Name": "Sofia Stars"
+//   }
+// },

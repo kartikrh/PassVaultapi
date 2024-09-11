@@ -71,14 +71,24 @@ const connection = (socket , fastify) => {
       ];
       
       if(commentaryId){
-        let marketRunner = global.tblEventMarkets.filter((item) => item.commentaryId == commentaryId)
+        let marketRunner = global.tblEventMarkets.filter((item) => item.commentaryId == commentaryId && item.rateSource === 2)
         marketRunner = marketRunner.map((item) => {
+          let teamNameData
+          if(item.teamId){
+          teamNameData = global.tblCommentaryTeams.find((elem) => elem.teamId === item.teamId)
+          }
+          if(!item.teamId){
+              teamNameData = global.tblCommentaryTeams.find((t) => 
+                  t.teamName.toLowerCase() == item.runner.toLowerCase())
+          }
           return {
               runnerId: item.runnerId,
               runner: item.runner,
               selectionId: item.selectionId,
               backSize: item.backSize,
-              laySize: item.laySize
+              laySize: item.laySize,
+              teamId: item.teamId,
+              teamName: teamNameData?.teamName || null
           }
       });
         sendDataForSocketUpdate.dataToUpdate.push({
