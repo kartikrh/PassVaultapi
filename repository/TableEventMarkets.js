@@ -1638,7 +1638,8 @@ const updateEventMarketRunnerMaunalQuery = async (data, fastify) => {
       "DB ERROR --> repository/TableVendors/updateEventMarketRunnerMaunalQuery",
       null
     );
-    throw new Error(err.message);
+   // throw new Error(err.message);
+   return err.message;
   }
 };
 
@@ -1918,6 +1919,33 @@ const getMarketByGraphByRefIdQuery = async (data, request, fastify) => {
   }
 
 };
+
+const updateMarketStatusFromSignalRQuery = async (data, request, fastify) => {
+  try {
+    let { rateSourceRefID, status } = data;
+    let query = `
+      UPDATE "tblEventMarkets" SET
+        "wrStatus" = $1
+      WHERE "wrRateSourceRefID" = $2
+      RETURNING "wrID" as "eventMarketId"
+    `;
+
+    const result = await fastify.db.query(query, {
+      bind: [status,rateSourceRefID],
+      type: fastify.db.QueryTypes.SELECT,
+    });
+    return result;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/updateMarketStatusFromSignalRQuery",
+      request
+    )
+    throw new Error(error.message)
+  }
+};
+
 module.exports = {
   getAllEventMarketsQuery,
   createManyEventMarketQuery,
@@ -1953,5 +1981,6 @@ module.exports = {
   updateComInMarketQuery,
   getMarketListWithCategoryNameByCIdQuery,
   getMarketsByCategoryQuery,
-  getMarketByGraphByRefIdQuery
+  getMarketByGraphByRefIdQuery,
+  updateMarketStatusFromSignalRQuery
 };

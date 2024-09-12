@@ -5476,27 +5476,27 @@ const updateMatchTypeInCommentaryService = async (request, fastify) => {
   global.tblCommentaries[index] = updatedData;
   let _resFromPredictAPI;
   let callPrediction = {};
-  if (updatedData.isPredictMarket == true) {
-    _resFromPredictAPI = await callPredictorMarket(
-      {
-        commentary_id: commentaryId,
-        match_type_id: matchTypeId,
-        event_id: updatedData.eventRefId,
-      },
-      "/api/v1/loadcommentary",
-      fastify,
-      request
-    );
-    if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
-      callPrediction.predictioncallSuccess = false;
-      callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
-      callPrediction.endPoint = '/api/v1/loadcommentary';
-    } else {
-      callPrediction.predictioncallSuccess = true;
-      callPrediction.predictionMessage = 'Prediction call successful';
-      callPrediction.endPoint = '/api/v1/loadcommentary';
-    }
-  }
+  // if (updatedData.isPredictMarket == true) {
+  //   _resFromPredictAPI = await callPredictorMarket(
+  //     {
+  //       commentary_id: commentaryId,
+  //       match_type_id: matchTypeId,
+  //       event_id: updatedData.eventRefId,
+  //     },
+  //     "/api/v1/loadcommentary",
+  //     fastify,
+  //     request
+  //   );
+  //   if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
+  //     callPrediction.predictioncallSuccess = false;
+  //     callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
+  //     callPrediction.endPoint = '/api/v1/loadcommentary';
+  //   } else {
+  //     callPrediction.predictioncallSuccess = true;
+  //     callPrediction.predictionMessage = 'Prediction call successful';
+  //     callPrediction.endPoint = '/api/v1/loadcommentary';
+  //   }
+  // }
   updatedData.callPrediction = callPrediction;
   return updatedData;
 };
@@ -5657,25 +5657,31 @@ const getMatchListByStatus = async (body, request, fastify) => {
     }
     const marketRunnerData = await global.tblEventMarkets.filter((elem) => 
       elem.commentaryId == item.commentaryId && elem.rateSource === 2)
-    const mr = marketRunnerData.map((runner) => {
-      let teamNameData
-      if(runner.teamId){
-      teamNameData = global.tblCommentaryTeams.find((t) => t.teamId === runner.teamId)
-      }
-      if(!runner.teamId){
-          teamNameData = global.tblCommentaryTeams.find((t) => 
-              t.teamName.toLowerCase() == runner.runner.toLowerCase())
-      }
-      return {
-        rid: runner?.runnerId,
-        rn: runner?.runner,
-        sid: runner?.selectionId,
-        bs: runner?.backSize,
-        ls: runner?.laySize,
-        tid: runner?.teamId,
-        tn: teamNameData?.teamName || null
-      };
-    });
+    let mr;
+    try {
+       mr = marketRunnerData.map((runner) => {
+        let teamNameData
+        if(runner.teamId){
+        teamNameData = global.tblCommentaryTeams.find((t) => t.teamId === runner.teamId)
+        }
+        if(!runner.teamId){
+            teamNameData = global.tblCommentaryTeams.find((t) => 
+                t.teamName.toLowerCase() == runner?.runner?.toLowerCase())
+        }
+        return {
+          rid: runner?.runnerId,
+          rn: runner?.runner,
+          sid: runner?.selectionId,
+          bs: runner?.backSize,
+          ls: runner?.laySize,
+          tid: runner?.teamId,
+          tn: teamNameData?.teamName || null
+        };
+      });
+    } catch (error) {
+      console.log(error)
+    }
+
     let details = {
       rno: rno,
       eid: item.eventRefId || "",
