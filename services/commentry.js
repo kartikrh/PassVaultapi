@@ -5590,7 +5590,7 @@ const getMatchListByStatus = async (body, request, fastify) => {
         team.teamId === item.team2Id &&
         team.currentInnings === item.currentInnings
     );
-    let teamScore1, teamScore2 ,batId,ballId;
+    let teamScore1, teamScore2 ,batid,ballid;
     if (commentaryTeamsOne) {
       const wicket1 =
         commentaryTeamsOne.teamWicket === null
@@ -5633,13 +5633,13 @@ const getMatchListByStatus = async (body, request, fastify) => {
       if (commentaryTeamsOne.teamStatus == 1) {
         crr = commentaryTeamsOne.crr;
         rrr = commentaryTeamsOne.rrr;
-        batId = commentaryTeamsOne.teamId;
-        ballId = commentaryTeamsTwo.teamId;
+        batid = commentaryTeamsOne.teamId;
+        ballid = commentaryTeamsTwo.teamId;
       } else {
         crr = commentaryTeamsTwo.crr;
         rrr = commentaryTeamsTwo.rrr;
-        batId = commentaryTeamsTwo.teamId;
-        ballId = commentaryTeamsOne.teamId;
+        batid = commentaryTeamsTwo.teamId;
+        ballid = commentaryTeamsOne.teamId;
       }
     }
 
@@ -5716,8 +5716,8 @@ const getMatchListByStatus = async (body, request, fastify) => {
       t2bg : commentaryTeamsTwo.backgroundColor || null,
       t1co : commentaryTeamsOne.teamColor || null,
       t2co : commentaryTeamsTwo.teamColor || null,
-      batId : batId || null,
-      ballId : ballId || null,
+      batid : batid || null,
+      ballid : ballid || null,
       t1id : item.team1Id || null,
       t2id : item.team2Id || null,
       mr: mr
@@ -5797,7 +5797,7 @@ const getMatchDataByCId = async (data, request, fastify) => {
     type = "scheduled";
   }
   const isRun = type == "scheduled" || "completed" ? false : true;
-  let crr, rrr;
+  let crr, rrr , batid ,ballid;
   let eventType = await global.tblEventTypes.find(
     (e) => e.eventTypeId == com.eventTypeId
   )
@@ -5860,10 +5860,14 @@ const getMatchDataByCId = async (data, request, fastify) => {
     if (commentaryTeamsOne.teamStatus == 1) {
       crr = commentaryTeamsOne.crr;
       rrr = commentaryTeamsTwo.rrr;
+      batid = commentaryTeamsOne.teamId;
+      ballid = commentaryTeamsTwo.teamId;
     }
     else {
       crr = commentaryTeamsTwo.crr;
       rrr = commentaryTeamsTwo.rrr;
+      batid = commentaryTeamsTwo.teamId;
+      ballid = commentaryTeamsOne.teamId;
     }
   }
   const TossTeamName = await global.tblCommentaryTeams.find(
@@ -5911,7 +5915,9 @@ const getMatchDataByCId = async (data, request, fastify) => {
     rrr: rrr || '0',
     cst: com.commentaryStatus,
     res: com.result || "",
-    type
+    type,
+    batid : batid || null,
+    ballid : ballid || null,
   };
   return comDetails;
 
