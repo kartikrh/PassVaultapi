@@ -438,7 +438,7 @@ const createUpdateGlobalSignalRData = async (message, request) => {
           _data.rateSourceRefID = parseInt(data.mi);
           _data.status = parseInt(data.ms);
           await updateMarketStatusFromSignalRQuery(_data, request, _fastify);
-          
+
           const groupedRates = {};
 
           data.rt.forEach(rate => {
@@ -493,10 +493,10 @@ const createUpdateGlobalSignalRData = async (message, request) => {
               backRates.forEach(backRate => {
                   layRates.forEach(layRate => {
                       _blrbsids.push({
-                          backPrice: backRate.rv,
-                          backSize: backRate.re,
-                          layPrice: layRate.rv,
-                          laySize: layRate.re,
+                          backSize: backRate.rv,
+                          backPrice : backRate.re,
+                          laySize: layRate.rv,
+                          layPrice: layRate.re,
                           selectionId: parseInt(selectionId, 10),
                           timestamp: currentTime // Add timestamp here
                       });
