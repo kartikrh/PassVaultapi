@@ -4004,6 +4004,20 @@ const EventMarket = {
       },
     },
   },
+  changeStatus : {
+    schema : {
+      tags : ["EventMarket"],
+      description : "change market status",
+      security : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          password : {type : "string"},
+        },
+        required : ["password"]
+      }
+    }
+  },
 };
 const MarketTemplateRunner = {
   getAll: {
@@ -5085,6 +5099,20 @@ const Client = {
       },
     },
   },
+  verifyEmail : {
+    schema : {
+      tags : ["Client"],
+      description : "verify email",
+      security : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          clientId : {type : "integer"}
+        },
+        required : ["clientId"]
+      }
+    }
+  },
 };
 const weblogs = {
   save: {
@@ -5480,6 +5508,208 @@ const ClientVideo = {
     },
   },
 };
+const Award = {
+  getAll : {
+    schema : {
+      tags : ["Award"],
+      description : "get all Award",
+      security : [{bearerAuth : []}]
+    }
+  },
+  getById : {
+    schema : {
+      tags : ["Award"],
+      description : "get Award by id",
+      security : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          id : {type : "integer"}
+        },
+        required : ["id"]
+      }
+    }
+  },
+  save : {
+    schema : {
+      tags : ["Award"],
+      description : "save Award",
+      security : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          id : {type : "integer"},
+          name : {type : "string"},
+          isShowOnSummary : {type : "boolean"},
+          isActive : {type : "boolean"}
+        },
+        required : ["id", "name"]
+      }
+    }
+  },
+  delete : {
+    schema : {
+      tags : ["Award"],
+      description : "delete Award",
+      security : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          id : {
+            type : "array",
+            items : {type : "integer"},
+            minItems : 1
+          }
+        },
+        required : ["id"]
+      }
+    }
+  },
+  activeInactive : {
+    schema : {
+      tags : ["Award"],
+      description : "active inactive Award",
+      security : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          id : {type : "integer"},
+          isActive : {type : "boolean"}
+        },
+        required : ["id", "isActive"]
+      }
+    }
+  },
+  updateDisplayOrder : {
+    schema : {
+      tags : ["Award"],
+      description : "update display order",
+      security : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          award : {
+            type : "array",
+            items : {
+              type : "object",
+              properties : {
+                id : {type : "integer"},
+                displayOrder : {type : "integer"}
+              },
+              required : ["id", "displayOrder"]
+            },
+            minItems : 1
+          }
+        },
+        required : ["award"]
+      }
+    }
+  }
+};
+const CommentaryAward = {
+  getAll : {
+    schema : {
+      tags : ["Commentary Award"],
+      description : "get all Commentary Award",
+      security : [{bearerAuth : []}]
+    }
+  },
+  getById : {
+    schema : {
+      tags : ["Commentary Award"],
+      description : "get Commentary Award by id",
+      security : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          id : {type : "integer"}
+        },
+        required : ["id"]
+      }
+    }
+  },
+  save : {
+    schema : {
+      tags : ["Commentary Award"],
+      description : "save Commentary Award",
+      security : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          id : {type : "integer"},
+          commentaryId : {type : "integer"},
+          awardId : {type : "integer"},
+          teamId : {type : "integer"},
+          playerId : {type : "integer"},
+        },
+        required : ["id", "commentaryId", "awardId"]
+      }
+    }
+  },
+  delete : {
+    schema : {
+      tags : ["Commentary Award"],
+      description : "delete Commentary Award",
+      security : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          id : {
+            type : "array",
+            items : {type : "integer"},
+            minItems : 1
+          }
+        },
+        required : ["id"]
+      }
+    }
+  },
+  commentaryList : {
+    schema : {
+      tags : ["Commentary Award"],
+      description : "get Commentary List",
+      security : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          status : {type : "integer"},
+          eventTypeId : {type : "integer"},
+          competitionId : {type : "integer"},
+
+        }
+      }
+    }
+  },
+  comTeamList : {
+    schema : {
+      tags : ["Commentary Award"],
+      description : "get Commentary Team List",
+      security : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          commentaryId : {type : "integer"}
+        },
+        required : ["commentaryId"]
+      }
+    }
+  },
+  comPlayerList : {
+    schema : {
+      tags : ["Commentary Award"],
+      description : "get Commentary Player List",
+      security : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          commentaryId : {type : "integer"},
+          teamId : {type : "integer"}
+        },
+        required : ["commentaryId"]
+      }
+    }
+  },
+}
 module.exports = {
   Auth,
   Tabs,
@@ -5527,5 +5757,7 @@ module.exports = {
   Logs,
   ThirdPartyApis,
   CommentaryScoringLogs,
-  ClientVideo
+  ClientVideo,
+  Award,
+  CommentaryAward
 };
