@@ -2926,6 +2926,22 @@ const updateCommentaryBattingTeamQuery = async (data, fastify) => {
         type: fastify.db.QueryTypes.UPDATE,
       }
     );
+
+    await fastify.db.query(
+      `update "tblCommentaryTeams" set 
+      "wrTeamStatus" = 2
+      where "wrCommentaryId" = $1 AND "wrCurrentInnings" = $2 AND "wrTeamId" <> $3
+      `,
+      {
+        bind: [
+          data.commentaryId || null,
+          data.currentInnings || null,
+          data.battingTeamId || null,
+        ],
+
+        type: fastify.db.QueryTypes.UPDATE,
+      }
+    );
     
     return { success: true };
   } catch (err) {
