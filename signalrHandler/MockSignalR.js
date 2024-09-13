@@ -263,7 +263,7 @@ const processRateQueue = async () => {
                 (item) =>
                   item.commentaryId === commentary.commentaryId &&
                   item.currentInnings === commentary.currentInnings &&
-                  item.teamName == _selectionidData.teamId
+                  item.teamId == _selectionidData.teamId
               );
 
               if (!teams) {
