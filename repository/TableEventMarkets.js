@@ -1917,7 +1917,6 @@ const getMarketByGraphByRefIdQuery = async (data, request, fastify) => {
       request
     )
   }
-
 };
 
 const updateMarketStatusFromSignalRQuery = async (data, request, fastify) => {
@@ -1945,7 +1944,90 @@ const updateMarketStatusFromSignalRQuery = async (data, request, fastify) => {
     throw new Error(error.message)
   }
 };
+const closeMarketQuery = async (request, fastify) => {
+  try {
+    let query1 = `
+      UPDATE "tblMarketRunners"
+      set 
+      "wrSelectionStatus" = $1
+      where "wrSelectionStatus" NOT IN ($2,$3,$4)
+    `
+    await fastify.db.query(query1, {
+      bind: [EventMarketStatus.Close, EventMarketStatus.Settled, EventMarketStatus.Cancel, EventMarketStatus.Close],
+      type: fastify.db.QueryTypes.SELECT,
+    });
 
+    let query2 = `
+      UPDATE "tblEventMarkets"
+      set
+        "wrStatus" = $1,
+        "wrCloseTime" = now()::timestamp,
+        "wrLastUpdate" = now()::timestamp,
+        "wrData" = jsonb_set(
+                jsonb_set("wrData"::jsonb, '{status}', '$1'::jsonb, false),
+                '{runner, 0, status}', '$1'::jsonb, false
+              )::json
+      where "wrStatus" NOT IN ($2,$3,$4)
+    `;
+    await fastify.db.query(query2, {
+      bind: [EventMarketStatus.Close, EventMarketStatus.Settled, EventMarketStatus.Cancel, EventMarketStatus.Close],
+      type: fastify.db.QueryTypes.SELECT,
+    });
+
+    return true;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/updateMarketStatusFromSignalRQuery",
+      request
+    )
+    throw new Error(error.message)
+  }
+};
+
+const cancelMarketQuery = async (request, fastify) => {
+  try {
+    let query1 = `
+      UPDATE "tblMarketRunners"
+      set
+      "wrSelectionStatus" = $1
+      where "wrSelectionStatus" = $2
+    `;
+    await fastify.db.query(query1, {
+      bind: [EventMarketStatus.Cancel, EventMarketStatus.Close],
+      type: fastify.db.QueryTypes.SELECT,
+    });
+
+    let query2 = `
+      UPDATE "tblEventMarkets"
+      set
+        "wrStatus" = $1,
+        "wrLastUpdate" = now()::timestamp,
+        "wrData" = jsonb_set(
+                jsonb_set("wrData"::jsonb, '{status}', '$1'::jsonb, false),
+                '{runner, 0, status}', '$1'::jsonb, false
+              )::json,
+        "wrIsResult" = true,
+        "wrResult" = null
+      where "wrStatus" = $2
+    `;
+    await fastify.db.query(query2, {
+      bind: [EventMarketStatus.Cancel, EventMarketStatus.Close],
+      type: fastify.db.QueryTypes.SELECT,
+    });
+
+    return true;
+} catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/cancelMarketQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+}
 module.exports = {
   getAllEventMarketsQuery,
   createManyEventMarketQuery,
@@ -1982,5 +2064,7 @@ module.exports = {
   getMarketListWithCategoryNameByCIdQuery,
   getMarketsByCategoryQuery,
   getMarketByGraphByRefIdQuery,
-  updateMarketStatusFromSignalRQuery
+  updateMarketStatusFromSignalRQuery,
+  closeMarketQuery,
+  cancelMarketQuery
 };
