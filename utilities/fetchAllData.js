@@ -66,6 +66,9 @@ const { allMailSettingsQuery } = require('../repository/TableMailSettings');
 const { getAllMarketOddsBallByBall } = require("../repository/TableMarketOddsBallByBall");
 const { allThirdPartyApisQuery } = require('../repository/TableThirdPartyApis');
 const { allClientVideoQuery } = require("../repository/TableClientVideo");
+// const { allCommentaryLogsQuery2 } = require("../repository/TableLogs");
+const { getAllAwardQuery } = require("../repository/TableAward");
+const { getAllCommentaryAwardQuery } = require("../repository/TableCommentaryAward");
 
 const fetchAllDataFromDb = async (fastify, reply) => {
   try {
@@ -136,6 +139,9 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const thirdPartyApis = await allThirdPartyApisQuery(fastify);
     const clientVideos = await allClientVideoQuery(fastify);
     // const responseLogs = await allResponseLogsQuery(fastify);
+    const getAllAward = await getAllAwardQuery(fastify);
+    const getAllCommentaryAward = await getAllCommentaryAwardQuery(fastify);
+    // const responseLogs = await allCommentaryLogsQuery2(fastify);
     // const thirdPartyAPILogs = await allThirdPartyApiLogsQuery(fastify);
     // const predictorAPILogs = await allPredictorAPILogsQuery(fastify);
     // const commentaryLogs = await allCommentaryLogsQuery(fastify);
@@ -195,6 +201,8 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblMarketOddsBallByBall = marketOddBallByBall;
     global.tblThirdPartyApis = thirdPartyApis;
     global.tblClientVideos = clientVideos;
+    global.tblAwards = getAllAward;
+    global.tblCommentaryAwards = getAllCommentaryAward;
     // global.responseLogs = responseLogs;
     // global.thirdPartyAPILogs = thirdPartyAPILogs;
     // global.predictorAPILogs = predictorAPILogs;

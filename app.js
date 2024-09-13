@@ -94,7 +94,7 @@ module.exports = async function (fastify, opts) {
         "newsModel", "subScribesDomainModel", "subScribesSubDomainModel", "matchTypePredictorModel", 
         "marketTemplateModel", "eventMarketsModel", "marketRunnerModel", "marketTemplateRunnerModel", 
         "vendorsModel", "vendorIpModel", "clientSocketModel", "activityLogModel", "mailSettingsModel", 
-        "thirdPartyApisModel", "commentaryScoringLogsModel", "clientVideoModel"
+        "thirdPartyApisModel", "commentaryScoringLogsModel", "clientVideoModel", "awardModel", "commentaryAwardModel",
       ];
       
       models.forEach((model) => require(`./sequelize/tables/${model}`)(fastify.db));
