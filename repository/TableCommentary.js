@@ -127,12 +127,14 @@ const insertCommentaryQuery = async (request, fastify) => {
     "wrIsPredictMarket" as "isPredictMarket",
     tc."wrIsActive"  as "isActive",
     tc."wrIsTeamPredictionOn" as "isTeamPredictionOn",
+    tu."WrUserName" as "createdBy",
     "wrDelay" as "delay"
     from "insert_data" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"  
     LEFT JOIN "tblMatchTypes" mt ON tc."wrMatchTypeId" = mt."wrMatchTypeId"
     LEFT JOIN "tblCompetitions" co ON tc."wrCompetitionId" = co."wrCompetitionId"
+    LEFT JOIN "tblUsers" tu ON tc."wrCreatedBy" = tu."WrUserId"
       `,
       {
         bind: [
@@ -3070,7 +3072,7 @@ const updateTeamPrediction = async (request, fastify) => {
         }
       );
     }
-
+    
     return { message: "Update successful" };
   } catch (error) {
     errorLogger(

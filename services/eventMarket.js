@@ -24,6 +24,8 @@ const {
   UpdateResulOrApproveEventMarketQuery,
   updateComInMarketQuery,
   getMarketListWithCategoryNameByCIdQuery,
+  closeMarketQuery,
+  cancelMarketQuery,
 } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
 const {
@@ -1281,6 +1283,43 @@ const marketListcategoryNameByCIdService = async (request, fastify) => {
     categories,
   };
 };
+const setAllMarketCloseService = async (request, fastify) => {
+  let { password } = request.body;
+  // get password from config
+  const configPassword = global.tblConfigs.find(
+    (item) => item.key === configConstants.ALLMARKETCLOSEPASS
+  ).value;
+  if (!configPassword) {
+    throw new Error("Password not found in config");
+  }
+  if(password !== configPassword){
+    throw new Error("Password is incorrect");
+  }
+
+  // close market which is open
+  await closeMarketQuery(request, fastify);
+
+  return "All Market closed successfully";
+
+};
+const setCloseMarketCancelService = async (request, fastify) => {
+  let { password } = request.body;
+  // get password from config
+  const configPassword = global.tblConfigs.find(
+    (item) => item.key === configConstants.ALLMARKETCLOSEPASS
+  ).value;
+  if (!configPassword) {
+    throw new Error("Password not found in config");
+  }
+  if(password !== configPassword){
+    throw new Error("Password is incorrect");
+  }
+
+  // close market which is open
+  await cancelMarketQuery(request, fastify);
+
+  return "All Market canceled successfully";
+}
 module.exports = {
   getDetailsByCIdService,
   getAllEventMarketsService,
@@ -1309,4 +1348,6 @@ module.exports = {
   UpdateResulOrApproveEventMarketService,
   updateComInMarketService,
   marketListcategoryNameByCIdService,
+  setAllMarketCloseService,
+  setCloseMarketCancelService
 };

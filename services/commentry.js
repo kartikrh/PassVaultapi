@@ -2146,7 +2146,7 @@ const testStoreProcedureService = async (request, fastify) => {
           }
           if(!item.teamId){
               teamNameData = global.tblCommentaryTeams.find((t) => 
-                  t.teamName.toLowerCase() == item.runner.toLowerCase())
+                  t.teamName.toLowerCase() == item.runner?.toLowerCase())
           }
           return {
               runnerId: item.runnerId,
@@ -3213,7 +3213,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           }
           if(!item.teamId){
               teamNameData = global.tblCommentaryTeams.find((t) => 
-                  t.teamName.toLowerCase() == item.runner.toLowerCase())
+                  t.teamName.toLowerCase() == item.runner?.toLowerCase())
           }
           return {
               runnerId: item.runnerId,
@@ -3873,7 +3873,15 @@ const updateCommentaryStatusService = async (request, fastify) => {
       },
       fastify,
       "callFromSocket"
-    );
+    ).catch((err) => {
+      console.log("err in commentaryDetailsByEventIdService/updateCommentaryStatusService", err);
+      errorLogger(
+        fastify,
+        err.message,
+        "ERROR --> services/commentary.js/updateCommentaryStatusService",
+        request
+      );
+    });
 
     // global.clientSocketIo.forEach((socket) => {
     //   socket.client.emit("updateFullscore", sendDataForSocketUpdate);
@@ -4824,7 +4832,7 @@ const commentaryDetailsByEventIdService = async (
     }
     if(!runner.teamId){
         teamNameData = global.tblCommentaryTeams.find((t) => 
-            t.teamName.toLowerCase() == runner.runner.toLowerCase())
+            t.teamName.toLowerCase() == runner.runner?.toLowerCase())
     }
     return {
       rid: runner?.runnerId,
