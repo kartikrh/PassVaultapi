@@ -2488,7 +2488,8 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         winnerId: commentaryDetails.winnerId,
         winnerName: commentaryDetails.winnerName,
         result: commentaryDetails.result || "",
-        currentInnings: commentaryDetails.currentInnings
+        currentInnings: commentaryDetails.currentInnings,
+        isPredict: commentaryDetails.isPredictMarket
       };
       if (
         previousCommentaryStatus != statusToUpdate
@@ -2772,7 +2773,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
 
         try {
           //
-          if (commentaryData.isTeamPredictionOn) {
+          if (commentaryData.isPredictMarket) {
             const filteredCid = global.tblEventMarkets.filter((e) => e.commentaryId === commentaryId && e.rateSource === 2);
 
             if (filteredCid.length > 0 && updatedData.commentaryBallByBallDetails.ballType > 0) {
@@ -4719,6 +4720,7 @@ const commentaryDetailsByEventIdService = async (
   resultArr.eti = parseInt(eventType.refId) || "";
   resultArr.tpp1 = tpp1;
   resultArr.tpp2 = tpp2;
+  resultArr.isPr = result.isPredictMarket === null ? false : result.isPredictMarket;
   // remove out batsman
   const commentaryPlayers_batter = await global.tblCommentaryPlayers.filter(
     (item) =>
@@ -5158,52 +5160,6 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     resultArr.t2bg = t2bg;
     resultArr.utc = utc;
   }
-  // if (getstatus == 3) {
-  //   const _tosswonby = result.tossWonBy;
-  //   if (commentaryTeamsOne[0].teamId == _tosswonby) {
-  //     tossteam = commentaryTeamsOne[0].shortName;
-  //     tossType =
-  //       result.choseTo === 1
-  //         ? " won the toss and opt to bat"
-  //         : " won the toss and opt to bowl";
-  //   } else {
-  //     tossteam = commentaryTeamsTwo[0].shortName;
-  //     tossType =
-  //       result.choseTo === 1
-  //         ? " won the toss and opt to bat"
-  //         : " won the toss and opt to bowl";
-  //   }
-
-  //   toss = tossteam + tossType;
-  //   // Assign values to the resultArr object
-  //   resultArr.eid = result.eventId.toString();
-  //   resultArr.til = result.eventName;
-  //   resultArr.toss = toss;
-  //   resultArr.scot = "";
-  //   resultArr.scor = "";
-  //   resultArr.scov = "";
-  //   resultArr.t1n = t1sn;
-  //   resultArr.t1sn = t1sn;
-  //   resultArr.t1s = t1s;
-  //   resultArr.t1im = t1im;
-  //   resultArr.t2n = t2n;
-  //   resultArr.t2sn = t2sn;
-  //   resultArr.t2s = t2s;
-  //   resultArr.t2im = t2im;
-  //   resultArr.par = "";
-  //   resultArr.lawkt = "";
-  //   resultArr.rer = "";
-  //   resultArr.reb = "";
-  //   resultArr.crr = "";
-  //   resultArr.rrr = "";
-  //   resultArr.cin = "";
-  //   resultArr.tmd = "";
-  //   resultArr.dis = "";
-  //   resultArr.isc = "";
-  //   resultArr.sts = result.commentaryStatus.toString();
-  //   resultArr.rmk = toss;
-  //   resultArr.win = "";
-  // }
   if (getstatus >= 3) {
     const _tosswonby = result.tossWonBy;
     if (commentaryTeamsOne[0].teamId == _tosswonby) {
@@ -5333,6 +5289,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
   resultArr.eti = parseInt(eventType.refId) || "";
   resultArr.tpp1 = tpp1;
   resultArr.tpp2 = tpp2;
+  resultArr.isPr = result.isPredictMarket;
   const commentaryPlayers_batter = await global.tblCommentaryPlayers.filter(
     (item) =>
       item.commentaryId === cid &&
@@ -5735,6 +5692,8 @@ const getMatchListByStatus = async (body, request, fastify) => {
       ballid : ballid || null,
       t1id : item.team1Id || null,
       t2id : item.team2Id || null,
+      isPr : item.isPredictMarket,
+      ics :  item.isClientShow,
       mr: mr
       // bowT : item.bowlingTeam || null,
     };
