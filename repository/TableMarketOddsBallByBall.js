@@ -286,47 +286,7 @@ const createMarketOddsBallByBallBYID = async (data, fastify, request) => {
         type: fastify.db.QueryTypes.INSERT,
       }
     );
-
-    // const result2 = await fastify.db.query(
-    //   `INSERT INTO "tblMarketOddsBallByBall" (
-    //     "wrCommentaryId", 
-    //     "wrCommentaryBallByBallId", 
-    //     "wrTeamId", 
-    //     "wrEventMarketId",
-    //     "wrRunnerId",
-    //     "wrMarketStatus",
-    //     "wrBackPrice",
-    //     "wrLayPrice",
-    //     "wrBackSize",
-    //     "wrLaySize",
-    //     "wrMarketName",
-    //     "wrRunnerName",
-    //     "wrDateTime",
-    //     "wrSelectionId"
-    //   ) VALUES (
-    //     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
-    //   ) RETURNING *`,
-    //   {
-    //     bind: [
-    //       data.commentaryId,
-    //       data.commentaryBallByBallId,
-    //       data.team2Id,
-    //       data.EventMarketId,
-    //       data.RunnerId,
-    //       data.MarketStatus,
-    //       data.BackPrice,
-    //       data.LayPrice,
-    //       data.BackSize,
-    //       data.LaySize,
-    //       data.MarketName,
-    //       data.RunnerName,
-    //       new Date(),
-    //       data.selectionId
-    //     ],
-    //     type: fastify.db.QueryTypes.INSERT,
-    //   }
-    // );
-
+    
     return true;
   } catch (err) {
     errorLogger(
