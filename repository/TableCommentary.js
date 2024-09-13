@@ -2823,6 +2823,7 @@ const updateSuperOverCommentaryQuery = async (data, fastify) => {
     return await fastify.db.query(
       `update "tblCommentaries" set 
       "wrCurrentInnings" = $2
+      ,"wrCommentaryStatus" = 2
       where "wrCommentaryId" = $1	
       `,
       {
