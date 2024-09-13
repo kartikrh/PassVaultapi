@@ -2455,6 +2455,7 @@ const Commentary = {
         properties: {
           commentaryId: { type: "integer" },
           teamMaxOver: { type: "integer" },
+          battingTeamId : { type: "integer" },
         },
         required: ["commentaryId"],
       },
