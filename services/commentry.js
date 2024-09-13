@@ -56,7 +56,8 @@ const {
   updateMaxOverDetailQuery,
   updateSuperOverCommentaryQuery,
   insertCommentarySuperOverTeams,
-  updateTeamPrediction
+  updateTeamPrediction,
+  updateCommentaryBattingTeamQuery
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -8176,7 +8177,7 @@ const changeMaxOverDetailService = async (request, fastify) => {
 };
 
 const AddSuperOverCommentaryService = async (request, fastify) => {
-  const { commentaryId, teamMaxOver } = request.body;
+  const { commentaryId, teamMaxOver ,battingTeamId} = request.body;
   const commentary = global.tblCommentaries.find(
     (item) => item.commentaryId == commentaryId
   );
@@ -8251,9 +8252,13 @@ const AddSuperOverCommentaryService = async (request, fastify) => {
       Teamdata.currentInnings = _cin;
       await insertCommentarySuperOverTeams({ body: { data: Teamdata } }, fastify);
     } catch (error) {
-      throw new Error(error);
+      //throw new Error(error);
     }
-
+    try {
+      await updateCommentaryBattingTeamQuery({ commentaryId: commentary.commentaryId,
+         currentInnings: _cin ,
+         battingTeamId: battingTeamId}, fastify);
+    } catch (error) {}
     for (let info of Playersdata) {
       try {
         let playerData = await insertCommentaryPlayers(

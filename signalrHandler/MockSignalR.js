@@ -352,11 +352,11 @@ const createUpdateGlobalSignalRData = async (message, request) => {
           }
           return item; // Return the item unchanged if it doesn't match
         });
+        let _data = {};
+        _data.rateSourceRefID = parseInt(data.mi);
+        _data.status = parseInt(data.ms);
+        await updateMarketStatusFromSignalRQuery(_data, request, _fastify);
         for (var i = 0; i < EventsMarketobj.length; i++) {
-          let _data = {};
-          _data.rateSourceRefID = parseInt(data.mi);
-          _data.status = parseInt(data.ms);
-          await updateMarketStatusFromSignalRQuery(_data, request, _fastify);
           let _runner = {};
           _runner = EventsMarketobj[i];
           if(_runner.commentaryId != '0'){
@@ -434,7 +434,11 @@ const createUpdateGlobalSignalRData = async (message, request) => {
           //       }
           //     }
           //   });
-
+          let _data = {};
+          _data.rateSourceRefID = parseInt(data.mi);
+          _data.status = parseInt(data.ms);
+          await updateMarketStatusFromSignalRQuery(_data, request, _fastify);
+          
           const groupedRates = {};
 
           data.rt.forEach(rate => {
