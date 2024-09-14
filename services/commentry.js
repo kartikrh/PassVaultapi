@@ -75,8 +75,8 @@ const {
 } = require("../utilities");
 const { getAllPlayersByTeamIdQuery } = require("../repository/TableTeams");
 const { handleMarketCloseService, updateComInMarketService } = require("./eventMarket");
-const { createMarketOddsBallByBallBYID, deleteMarketOddsBallByBall } = require("../repository/TableMarketOddsBallByBall");
-const { getEventMarketRatioQuery, closeEventMarketByCIdQuery, getMarketsByCategoryQuery } = require("../repository/TableEventMarkets");
+const { createMarketOddsBallByBallBYID, deleteMarketOddsBallByBall,createMarketOddsBallInSaveDetails } = require("../repository/TableMarketOddsBallByBall");
+const { getEventMarketRatioQuery, closeEventMarketByCIdQuery, getMarketsByCategoryQuery,getEventMarketByIdsQuery } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
 const { commentaryLogger, errorLogger } = require("../utilities/logger");
 
@@ -2777,56 +2777,120 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
             const filteredCid = global.tblEventMarkets.filter((e) => e.commentaryId === commentaryId && e.rateSource === 2);
 
             if (filteredCid.length > 0 && updatedData.commentaryBallByBallDetails.ballType > 0) {
-              // Create a map for SignalRData entries
-              const signalRDataMap = new Map();
-
-              for (const key in global.SignalRData) {
-                const entry = global.SignalRData[key];
-                const mapKey = `${entry.EventMarketId}_${entry.selectionId}`;
-                signalRDataMap.set(mapKey, entry);
-              }
-
-              for (const _ifFindCid of filteredCid) {
-                const { eventMarketId, selectionId } = _ifFindCid;
-                const mapKey = `${eventMarketId}_${selectionId}`;
-                const entry = signalRDataMap.get(mapKey);
-
-                if (entry) {
-                  const currentTime = new Date();
-                  const entryTime = new Date(entry.timestamp);
-                  const timeDifference = (currentTime - entryTime) / 1000;
-                  if (timeDifference <= 25) {
-
-                    const _dataForOds = {
+              // Iterate over tblEventMarkets to build the final structure
+              const _dataForOds = filteredCid.reduce((acc, entry) => {
+                const mapKey = `${entry.eventMarketId}_${entry.selectionId}`;
+              
+                // Check if the mapKey exists in SignalRData
+                if (global.SignalRData[mapKey]) {
+                  const matchedItem = global.SignalRData[mapKey];
+              
+                  // Create the runner data structure
+                  const runnerData = {
+                    teamId: matchedItem.teamId,
+                    RunnerId: matchedItem.RunnerId,
+                    BackPrice: matchedItem.BackPrice,
+                    LayPrice: matchedItem.LayPrice,
+                    BackSize: matchedItem.BackSize,
+                    LaySize: matchedItem.LaySize,
+                    RunnerName: matchedItem.RunnerName,
+                    selectionId: matchedItem.selectionId,
+                    timestamp: matchedItem.timestamp
+                  };
+              
+                  // Check if EventMarketId already exists in acc
+                  if (!acc[entry.eventMarketId]) {
+                    // Initialize a new object for this EventMarketId
+                    acc[entry.eventMarketId] = {
                       commentaryId: commentaryId,
                       commentaryBallByBallId: updatedData.commentaryBallByBallDetails.commentaryBallByBallId,
-                      teamId: entry.teamId,
-                      EventMarketId: entry.EventMarketId,
-                      RunnerId: entry.RunnerId,
-                      MarketStatus: entry.MarketStatus,
-                      BackPrice: entry.BackPrice,
-                      LayPrice: entry.LayPrice,
-                      BackSize: entry.BackSize,
-                      LaySize: entry.LaySize,
-                      MarketName: entry.MarketName,
-                      RunnerName: entry.RunnerName,
-                      selectionId: entry.selectionId
+                      EventMarketId: entry.eventMarketId,
+                      MarketStatus: entry.status,
+                      MarketName: entry.marketName,
+                      Data: [] // Initialize Data array
                     };
-
-                    try {
-                      await createMarketOddsBallByBallBYID(_dataForOds, fastify, request);
-                    } catch (error) {
-                      console.log("create market odds ball by ball by id console", error);
-                      errorLogger(
-                        fastify,
-                        error.message,
-                        "ERROR --> createMarketOddsBallByBallBYID",
-                        request
-                      );
-                    }
                   }
+              
+                  // Push the runner data into the Data array
+                  acc[entry.eventMarketId].Data.push(runnerData);
                 }
+              
+                return acc;
+              }, {});
+              
+              // Convert the result into an array if needed
+              const resultArray = Object.values(_dataForOds);
+              
+              // Optionally stringify the Data array within each EventMarketId object
+              resultArray.forEach(obj => {
+                obj.Data = JSON.stringify(obj.Data);
+              });
+              
+              try {
+                await createMarketOddsBallInSaveDetails(resultArray[0], fastify, request);
+                sendDataForSocketUpdate.dataToUpdate.push({
+                  module: "marketOddsBallByBall",
+                  data: resultArray[0],
+                  type : "create"
+                });
+              } catch (error) {
+                console.log("create market odds ball by ball by id console", error);
+                errorLogger(
+                  fastify,
+                  error.message,
+                  "ERROR --> createMarketOddsBallInSaveDetails",
+                  request
+                );
               }
+              // Create a map for SignalRData entries
+              // const signalRDataMap = new Map();
+              // for (const key in global.SignalRData) {
+              //   const entry = global.SignalRData[key];
+              //   const mapKey = `${entry.EventMarketId}_${entry.selectionId}`;
+              //   signalRDataMap.set(mapKey, entry);
+              // }
+
+              // for (const _ifFindCid of filteredCid) {
+              //   const { eventMarketId, selectionId } = _ifFindCid;
+              //   const mapKey = `${eventMarketId}_${selectionId}`;
+              //   const entry = signalRDataMap.get(mapKey);
+
+              //   if (entry) {
+              //     const currentTime = new Date();
+              //     const entryTime = new Date(entry.timestamp);
+              //     const timeDifference = (currentTime - entryTime) / 1000;
+              //     if (timeDifference <= 25) {
+
+              //       const _dataForOds = {
+              //         commentaryId: commentaryId,
+              //         commentaryBallByBallId: updatedData.commentaryBallByBallDetails.commentaryBallByBallId,
+              //         teamId: entry.teamId,
+              //         EventMarketId: entry.EventMarketId,
+              //         RunnerId: entry.RunnerId,
+              //         MarketStatus: entry.MarketStatus,
+              //         BackPrice: entry.BackPrice,
+              //         LayPrice: entry.LayPrice,
+              //         BackSize: entry.BackSize,
+              //         LaySize: entry.LaySize,
+              //         MarketName: entry.MarketName,
+              //         RunnerName: entry.RunnerName,
+              //         selectionId: entry.selectionId
+              //       };
+
+              //       try {
+              //         await createMarketOddsBallByBallBYID(_dataForOds, fastify, request);
+              //       } catch (error) {
+              //         console.log("create market odds ball by ball by id console", error);
+              //         errorLogger(
+              //           fastify,
+              //           error.message,
+              //           "ERROR --> createMarketOddsBallByBallBYID",
+              //           request
+              //         );
+              //       }
+              //     }
+              //   }
+              // }
             }
           }
         } catch (error) {
