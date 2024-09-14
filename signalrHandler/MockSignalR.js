@@ -402,38 +402,6 @@ const createUpdateGlobalSignalRData = async (message, request) => {
         }
       }
       else if (EventsMarketobj && data.rt !== null && data.ms == EventMarketStatus.Open) {
-          // const groupedRates = {};
-          //   data.rt.forEach(rate => {
-          //     if (rate.pr === 0) {
-          //       const selectionId = rate.si;
-          //       if (!groupedRates[selectionId]) {
-          //           groupedRates[selectionId] = { back: [], lay: [] };
-          //       }
-          //       // Separate into back and lay rates where pr is 0
-          //       if (rate.pr === 0) {
-          //           if (rate.ib) {
-          //               groupedRates[selectionId].back.push(rate);
-          //           } else {
-          //               groupedRates[selectionId].lay.push(rate);
-          //           }
-          //       }
-          //     }
-          //   });
-          //   //check if lay or back is lenght is zero 
-          //   data.rt.forEach(rate => {
-          //     if (rate.pr === 1) {
-          //       const selectionId = rate.si;
-          //       if (!groupedRates[selectionId]) {
-          //         groupedRates[selectionId] = { back: [], lay: [] };
-          //       }
-          //       // Separate into back and lay rates where pr is 1
-          //       if (rate.ib) {
-          //         groupedRates[selectionId].back.push(rate);
-          //       } else {
-          //         groupedRates[selectionId].lay.push(rate);
-          //       }
-          //     }
-          //   });
           let _data = {};
           _data.rateSourceRefID = parseInt(data.mi);
           _data.status = parseInt(data.ms);
