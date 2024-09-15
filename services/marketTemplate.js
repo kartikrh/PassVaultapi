@@ -323,6 +323,38 @@ const cloneMarketTemplateService = async (request, fastify) => {
     matchType: validateMatchType.matchType,
   };
 };
+
+const getMarketTypeAndCategoryByMarketTypeService = async (request, fastify) => {
+  const { isActive } = request.body;
+  let result;
+
+  if (isActive !== undefined) {
+    result = global.tblMarketTypes.filter((item) => item.isActive === isActive);
+  } else {
+    result = global.tblMarketTypes;
+  }
+
+  result = result.map((item) => {
+    let categories = global.tblMarketTypeCategories.filter(
+      (elem) => elem.marketTypeId === item.marketTypeId
+    );
+    if (isActive !== undefined) {
+      categories = categories.filter((item) => item.isActive === isActive);
+    }
+    const mappedCategories = categories.map((category) => ({
+      id: category.marketTypeCategoryId,
+      marketTypeCategori: category.categoryName,
+    }));
+    return {
+      id: item.marketTypeId,
+      marketType: item.marketTypeName,
+      marketTypeCategories: mappedCategories,
+    };
+  });
+
+  return result;
+};
+
 module.exports = {
   saveMarketTemplateService,
   getAllMarketTemplateService,
@@ -335,4 +367,5 @@ module.exports = {
   getCategoryByMarketTypeService,
   changePredefineRunnerService,
   cloneMarketTemplateService,
+  getMarketTypeAndCategoryByMarketTypeService
 };
