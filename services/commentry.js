@@ -76,7 +76,7 @@ const {
 const { getAllPlayersByTeamIdQuery } = require("../repository/TableTeams");
 const { handleMarketCloseService, updateComInMarketService } = require("./eventMarket");
 const { createMarketOddsBallByBallBYID, deleteMarketOddsBallByBall,createMarketOddsBallInSaveDetails } = require("../repository/TableMarketOddsBallByBall");
-const { getEventMarketRatioQuery, closeEventMarketByCIdQuery, getMarketsByCategoryQuery,getEventMarketByIdsQuery } = require("../repository/TableEventMarkets");
+const { getEventMarketRatioQuery, closeEventMarketByCIdQuery, getMarketsByCategoryQuery,getEventMarketByIdsQuery,getMarketsByComIdQuery } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
 const { commentaryLogger, errorLogger } = require("../utilities/logger");
 
@@ -7481,22 +7481,28 @@ const updateisPredictMarketInCommentaryService = async (request, fastify) => {
     });
   }
   else{
-    callDataProvider(
-      {
-        commentaryId: commentaryId,
-        serviceType: ServiceType.dataProviderAPI,
-        moduleType: APIEndpointModuleType.commentaryUpdate,
-      },
-      fastify
-    ).catch((err) => {
-      console.log("call data provider console", err);
-      errorLogger(
-        fastify,
-        err.message,
-        "ERROR --> services/commentary.js/updateisPredictMarketInCommentaryService",
-        request
-      );
-    });
+    let market = await getMarketsByComIdQuery({
+      commentaryId: commentaryId,
+    }, request, fastify);
+    if (market.marketCount == 0) {
+      callDataProvider(
+        {
+          commentaryId: [commentaryId],
+          serviceType: ServiceType.dataProviderAPI,
+          moduleType: APIEndpointModuleType.commentaryUpdate,
+          type : "delete"
+        },
+        fastify
+      ).catch((err) => {
+        console.log("call data provider console", err);
+        errorLogger(
+          fastify,
+          err.message,
+          "ERROR --> services/commentary.js/updateisPredictMarketInCommentaryService",
+          request
+        );
+      });
+    }
   }
   return updatedData;
 };
