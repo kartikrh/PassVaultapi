@@ -3173,6 +3173,19 @@ const MarketTemplate = {
       },
     },
   },
+  getCategoriesByMarketType: {
+    schema: {
+      tags: ["Market Template"],
+      description: "get market categories based on the market type",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
 };
 const Score = {
   getAllUpdatedIds: {
@@ -5113,6 +5126,38 @@ const Client = {
       }
     }
   },
+  UserActiveInactive: {
+    schema: {
+      tags: ["Client"],
+      description: "User active inactive",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          clientId: { type: "integer" },
+          isUserActive: { type: "integer" },
+        },
+        required: ["clientId", "isUserActive"],
+      },
+    },
+  },
+  EmailAndMobileVerify: {
+    schema: {
+      tags: ["Client"],
+      description: "Verify Email / Mobile number",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          clientId: { type: "integer" },
+          type: { type: "integer" },
+          isEmailVerified: { type: "boolean" },
+          isMobileVerified: { type: "boolean" },
+        },
+        required: ["clientId", "type"],
+      },
+    },
+  },
 };
 const weblogs = {
   save: {
@@ -5710,6 +5755,85 @@ const CommentaryAward = {
     }
   },
 }
+const SocialMedia = {
+  getAll: {
+    schema: {
+      tags: ["Social media"],
+      description: "get all Social media data",
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+
+  save: {
+    schema: {
+      tags: ["Social media"],
+      security: [{ bearerAuth: [] }],
+      description: "save Social media data",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          name: { type: "string" },
+          link: { type: "string" },
+          isActive: { type: "boolean" },
+        },
+        required: ["id", "name", "link"],
+      },
+    },
+  },
+
+  delete: {
+    schema: {
+      tags: ["Social media"],
+      description: "delete Social media data",
+      body: {
+        type: "object",
+        properties: {
+          id: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["id"],
+      },
+    },
+  },
+
+  getById: {
+    schema: {
+      tags: ["Social media"],
+      description: "get Social media data by id",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+        },
+        required: ["id"],
+      },
+    },
+  },
+
+  activeInactiveApi: {
+    schema: {
+      tags: ["Social media"],
+      description: "active inactive Social media data",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["id", "isActive"],
+      },
+    },
+  },
+};
 module.exports = {
   Auth,
   Tabs,
@@ -5759,5 +5883,6 @@ module.exports = {
   CommentaryScoringLogs,
   ClientVideo,
   Award,
-  CommentaryAward
+  CommentaryAward,
+  SocialMedia
 };
