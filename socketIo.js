@@ -2,7 +2,7 @@ const jwt = require("jsonwebtoken");
 const { errorLogger } = require("./utilities/logger");
 const { getEventMarketByIdsQuery } = require("./repository/TableEventMarkets");
 const { MarketActionType } = require("./utilities");
-const {createMarketOddsBallByBallBYIDFromSocketIo} = require("./repository/TableMarketOddsBallByBall")
+const {createMarketOddsBallByBallBYIDFromSocketIo,createMarketOddsBallInSaveDetails} = require("./repository/TableMarketOddsBallByBall")
 
 const connection = (socket , fastify) => {
   const { userId, allowMultipleLogin, wrToken } = socket;
@@ -122,13 +122,16 @@ const connection = (socket , fastify) => {
       const sendDataForSocketUpdate = {};
       sendDataForSocketUpdate.commentaryId = commentaryId;
       sendDataForSocketUpdate.eventRefId = commentaryData.eventRefId;
-      sendDataForSocketUpdate.dataToUpdate = [
-        {
-          module: "marketOddsBallByBall",
-          data: marketOdd,
-          type : "create"
-        }
-      ];
+
+      if(marketOdd.length > 0) {
+        sendDataForSocketUpdate.dataToUpdate = [
+          {
+            module: "marketOddsBallByBall",
+            data: marketOdd,
+            type : "create"
+          }
+        ];
+      }
       
       if(commentaryId){
         let marketRunner = global.tblEventMarkets.filter((item) => item.commentaryId == commentaryId && item.rateSource === 2)
@@ -152,7 +155,7 @@ const connection = (socket , fastify) => {
               teamId: item.teamId,
               teamName: teamNameData?.teamName || null
           }
-      });
+        });
         sendDataForSocketUpdate.dataToUpdate.push({
           module: "marketRunner",
           type: "update",
