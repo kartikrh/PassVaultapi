@@ -2028,6 +2028,29 @@ const cancelMarketQuery = async (request, fastify) => {
     throw new Error(error.message);
   }
 }
+const getMarketsByComIdQuery = async (data,request, fastify) => {
+  try {
+    let query = `
+      SELECT CAST(COUNT(*) as integerA) as "marketCount"
+      FROM "tblEventMarkets" 
+      WHERE "wrCommentaryId" = $1
+      AND "wrStatus" NOT IN ($2,$3)
+    `;
+    const result = await fastify.db.query(query, {
+      bind: [data.commentaryId, EventMarketStatus.Settled, EventMarketStatus.Cancel],
+      type: fastify.db.QueryTypes.SELECT,
+    });
+    return result[0];
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/getMarketsByComIdQuery",
+      request
+    )
+    throw new Error(error.message)
+  }
+}
 module.exports = {
   getAllEventMarketsQuery,
   createManyEventMarketQuery,
@@ -2066,5 +2089,6 @@ module.exports = {
   getMarketByGraphByRefIdQuery,
   updateMarketStatusFromSignalRQuery,
   closeMarketQuery,
-  cancelMarketQuery
+  cancelMarketQuery,
+  getMarketsByComIdQuery
 };
