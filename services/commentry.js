@@ -2137,35 +2137,35 @@ const testStoreProcedureService = async (request, fastify) => {
         );
       });
 
-      if(commentaryId){
-        let marketRunner = global.tblEventMarkets.filter((item) => item.commentaryId == commentaryId && item.rateSource === 2)
-        marketRunner = marketRunner.map((item) => {
-          let teamNameData
-          if(item.teamId){
-          teamNameData = global.tblCommentaryTeams.find((elem) => elem.teamId === item.teamId)
-          }
-          if(!item.teamId){
-              teamNameData = global.tblCommentaryTeams.find((t) => 
-                  t.teamName.toLowerCase() == item.runner?.toLowerCase())
-          }
-          return {
-              runnerId: item.runnerId,
-              runner: item.runner,
-              selectionId: item.selectionId,
-              backSize: item.backSize,
-              laySize: item.laySize,
-              backPrice: item.backPrice,
-              layPrice: item.layPrice,
-              teamId: item.teamId,
-              teamName: teamNameData?.teamName || null
-          }
-      });
-        sendDataForSocketUpdate.dataToUpdate.push({
-          module: "marketRunner",
-          type: "update",
-          data: marketRunner,
-        });
-      }
+      // if(commentaryId){
+      //   let marketRunner = global.tblEventMarkets.filter((item) => item.commentaryId == commentaryId && item.rateSource === 2)
+      //   marketRunner = marketRunner.map((item) => {
+      //     let teamNameData
+      //     if(item.teamId){
+      //     teamNameData = global.tblCommentaryTeams.find((elem) => elem.teamId === item.teamId)
+      //     }
+      //     if(!item.teamId){
+      //         teamNameData = global.tblCommentaryTeams.find((t) => 
+      //             t.teamName.toLowerCase() == item.runner?.toLowerCase())
+      //     }
+      //     return {
+      //         runnerId: item.runnerId,
+      //         runner: item.runner,
+      //         selectionId: item.selectionId,
+      //         backSize: item.backSize,
+      //         laySize: item.laySize,
+      //         backPrice: item.backPrice,
+      //         layPrice: item.layPrice,
+      //         teamId: item.teamId,
+      //         teamName: teamNameData?.teamName || null
+      //     }
+      // });
+      //   sendDataForSocketUpdate.dataToUpdate.push({
+      //     module: "marketRunner",
+      //     type: "update",
+      //     data: marketRunner,
+      //   });
+      // }
 
       global.clientSocketIo?.forEach((socket) => {
         socket.client.emit("updateFullscore", sendDataForSocketUpdate);
@@ -3273,35 +3273,35 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         
       })
 
-      if(commentaryId){
-        let marketRunner = global.tblEventMarkets.filter((item) => item.commentaryId == commentaryId && item.rateSource === 2)
-        marketRunner = marketRunner.map((item) => {
-          let teamNameData
-          if(item.teamId){
-          teamNameData = global.tblCommentaryTeams.find((elem) => elem.teamId === item.teamId)
-          }
-          if(!item.teamId){
-              teamNameData = global.tblCommentaryTeams.find((t) => 
-                  t.teamName.toLowerCase() == item.runner?.toLowerCase())
-          }
-          return {
-              runnerId: item.runnerId,
-              runner: item.runner,
-              selectionId: item.selectionId,
-              backSize: item.backSize,
-              laySize: item.laySize,
-              backPrice: item.backPrice,
-              layPrice: item.layPrice,
-              teamId: item.teamId,
-              teamName: teamNameData?.teamName || null
-          }
-      });
-        sendDataForSocketUpdate.dataToUpdate.push({
-          module: "marketRunner",
-          type: "update",
-          data: marketRunner,
-        });
-      }
+      // if(commentaryId){
+      //   let marketRunner = global.tblEventMarkets.filter((item) => item.commentaryId == commentaryId && item.rateSource === 2)
+      //   marketRunner = marketRunner.map((item) => {
+      //     let teamNameData
+      //     if(item.teamId){
+      //     teamNameData = global.tblCommentaryTeams.find((elem) => elem.teamId === item.teamId)
+      //     }
+      //     if(!item.teamId){
+      //         teamNameData = global.tblCommentaryTeams.find((t) => 
+      //             t.teamName.toLowerCase() == item.runner?.toLowerCase())
+      //     }
+      //     return {
+      //         runnerId: item.runnerId,
+      //         runner: item.runner,
+      //         selectionId: item.selectionId,
+      //         backSize: item.backSize,
+      //         laySize: item.laySize,
+      //         backPrice: item.backPrice,
+      //         layPrice: item.layPrice,
+      //         teamId: item.teamId,
+      //         teamName: teamNameData?.teamName || null
+      //     }
+      // });
+      //   sendDataForSocketUpdate.dataToUpdate.push({
+      //     module: "marketRunner",
+      //     type: "update",
+      //     data: marketRunner,
+      //   });
+      // }
 
       global.clientSocketIo.forEach((socket) => {
         socket.client.emit("updateFullscore", sendDataForSocketUpdate);
@@ -4895,29 +4895,29 @@ const commentaryDetailsByEventIdService = async (
     cd: ball.createdDate,
   }));
 
-  const marketRunnerData = await global.tblEventMarkets.filter((item) => item.commentaryId == cid && item.rateSource === 2)
+  // const marketRunnerData = await global.tblEventMarkets.filter((item) => item.commentaryId == cid && item.rateSource === 2)
 
-  const mr = marketRunnerData.map((runner) => {
-    let teamNameData
-    if(runner.teamId){
-    teamNameData = global.tblCommentaryTeams.find((elem) => elem.teamId === runner.teamId)
-    }
-    if(!runner.teamId){
-        teamNameData = global.tblCommentaryTeams.find((t) => 
-            t.teamName.toLowerCase() == runner.runner?.toLowerCase())
-    }
-    return {
-      rid: runner?.runnerId,
-      rn: runner?.runner,
-      sid: runner?.selectionId,
-      bs: runner?.backSize,
-      ls: runner?.laySize,
-      bp: runner?.backPrice,
-      lp: runner?.layPrice,
-      tid: runner?.teamId,
-      tn: teamNameData?.teamName || null
-    };
-  });
+  // const mr = marketRunnerData.map((runner) => {
+  //   let teamNameData
+  //   if(runner.teamId){
+  //   teamNameData = global.tblCommentaryTeams.find((elem) => elem.teamId === runner.teamId)
+  //   }
+  //   if(!runner.teamId){
+  //       teamNameData = global.tblCommentaryTeams.find((t) => 
+  //           t.teamName.toLowerCase() == runner.runner?.toLowerCase())
+  //   }
+  //   return {
+  //     rid: runner?.runnerId,
+  //     rn: runner?.runner,
+  //     sid: runner?.selectionId,
+  //     bs: runner?.backSize,
+  //     ls: runner?.laySize,
+  //     bp: runner?.backPrice,
+  //     lp: runner?.layPrice,
+  //     tid: runner?.teamId,
+  //     tn: teamNameData?.teamName || null
+  //   };
+  // });
 
   const allDetails = {
     cm: { ...resultArr, ci: result.currentInnings, cctime: result.commentaryCloseTime, res: result.result },
@@ -4925,7 +4925,7 @@ const commentaryDetailsByEventIdService = async (
     cbt,
     cbl,
     mt,
-    mr
+    // mr
   };
   // console.log("allDetails", allDetails);
   // emit the data for update commentary
@@ -4936,11 +4936,11 @@ const commentaryDetailsByEventIdService = async (
     });
   }
 
-  if (functionName && functionName == "runnersFromSocket") {
-    global.clientSocketIo.forEach((socket) => {
-      socket.client.emit("commentaryUpdate", allDetails);
-    });
-  }
+  // if (functionName && functionName == "runnersFromSocket") {
+  //   global.clientSocketIo.forEach((socket) => {
+  //     socket.client.emit("commentaryUpdate", allDetails);
+  //   });
+  // }
 
   return allDetails;
 };
@@ -5693,34 +5693,34 @@ const getMatchListByStatus = async (body, request, fastify) => {
     if (item.choseTo) {
       toss = item.choseTo === 1 ? "BAT" : "BOWL";
     }
-    const marketRunnerData = await global.tblEventMarkets.filter((elem) => 
-      elem.commentaryId == item.commentaryId && elem.rateSource === 2)
-    let mr;
-    try {
-       mr = marketRunnerData.map((runner) => {
-        let teamNameData
-        if(runner.teamId){
-        teamNameData = global.tblCommentaryTeams.find((t) => t.teamId === runner.teamId)
-        }
-        if(!runner.teamId){
-            teamNameData = global.tblCommentaryTeams.find((t) => 
-                t.teamName.toLowerCase() == runner?.runner?.toLowerCase())
-        }
-        return {
-          rid: runner?.runnerId,
-          rn: runner?.runner,
-          sid: runner?.selectionId,
-          bs: runner?.backSize,
-          ls: runner?.laySize,
-          bp: runner?.backPrice,
-          lp: runner?.layPrice,
-          tid: runner?.teamId,
-          tn: teamNameData?.teamName || null
-        };
-      });
-    } catch (error) {
-      console.log(error)
-    }
+    // const marketRunnerData = await global.tblEventMarkets.filter((elem) => 
+    //   elem.commentaryId == item.commentaryId && elem.rateSource === 2)
+    // let mr;
+    // try {
+    //    mr = marketRunnerData.map((runner) => {
+    //     let teamNameData
+    //     if(runner.teamId){
+    //     teamNameData = global.tblCommentaryTeams.find((t) => t.teamId === runner.teamId)
+    //     }
+    //     if(!runner.teamId){
+    //         teamNameData = global.tblCommentaryTeams.find((t) => 
+    //             t.teamName.toLowerCase() == runner?.runner?.toLowerCase())
+    //     }
+    //     return {
+    //       rid: runner?.runnerId,
+    //       rn: runner?.runner,
+    //       sid: runner?.selectionId,
+    //       bs: runner?.backSize,
+    //       ls: runner?.laySize,
+    //       bp: runner?.backPrice,
+    //       lp: runner?.layPrice,
+    //       tid: runner?.teamId,
+    //       tn: teamNameData?.teamName || null
+    //     };
+    //   });
+    // } catch (error) {
+    //   console.log(error)
+    // }
 
     let details = {
       rno: rno,
@@ -5768,7 +5768,7 @@ const getMatchListByStatus = async (body, request, fastify) => {
       t2id : item.team2Id || null,
       isPr : item.isPredictMarket,
       ics :  item.isClientShow,
-      mr: mr
+      // mr: mr
       // bowT : item.bowlingTeam || null,
     };
 

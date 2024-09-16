@@ -156,20 +156,20 @@ const connection = (socket , fastify) => {
               teamName: teamNameData?.teamName || null
           }
         });
-        sendDataForSocketUpdate.dataToUpdate.push({
-          module: "marketRunner",
-          type: "update",
-          data: marketRunner,
+        // sendDataForSocketUpdate.dataToUpdate.push({
+        //   module: "marketRunner",
+        //   type: "update",
+        //   data: marketRunner,
+        // });
+        global.clientSocketIo.forEach((socket) => {
+          socket.client.emit("updateRunnerData", marketRunner);
         });
       }
       
-      global.clientSocketIo.forEach((socket) => {
-        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
-      });
+      // global.clientSocketIo.forEach((socket) => {
+      //   socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+      // });
 
-      global.clientSocketIo.forEach((socket) => {
-        socket.client.emit("updateRunnerData", sendDataForSocketUpdate.dataToUpdate);
-      });
       console.log("Event Market Updated successfully");
       return true;
   
