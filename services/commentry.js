@@ -2783,7 +2783,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
               const _dataForOds = filteredCid.reduce((acc, entry) => {
                 const mapKey = `${entry.eventMarketId}_${entry.selectionId}`;
               
-                console.log("global.SignalRData:", global.SignalRData);
+                //console.log("global.SignalRData:", global.SignalRData);
                 // Check if the mapKey exists in SignalRData
                 if (global.SignalRData[mapKey]) {
                   const matchedItem = global.SignalRData[mapKey];
@@ -2800,7 +2800,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
                     selectionId: matchedItem.selectionId,
                     timestamp: matchedItem.timestamp
                   };
-              console.log("runnerDAta:", runnerData);
+                  //console.log("runnerDAta:", runnerData);
               
                   // Check if EventMarketId already exists in acc
                   if (!acc[entry.eventMarketId]) {
