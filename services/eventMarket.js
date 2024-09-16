@@ -26,6 +26,8 @@ const {
   getMarketListWithCategoryNameByCIdQuery,
   closeMarketQuery,
   cancelMarketQuery,
+  getAllEventMarketsAndRunnersQuery,
+  getAllRateSourceEventMarketQuery
 } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
 const {
@@ -1320,6 +1322,64 @@ const setCloseMarketCancelService = async (request, fastify) => {
 
   return "All Market canceled successfully";
 }
+
+const getAllEventMarketsAndRunnersService = async (fastify, request, functionName = null) => {
+  let eventMarkets = await getAllRateSourceEventMarketQuery(fastify, request.body);
+  // const sendDataForSocketUpdate = {};
+  eventMarkets = await Promise.all(eventMarkets.map(async (runner) => {
+    // sendDataForSocketUpdate.commentaryId = runner.commentaryId;
+    // sendDataForSocketUpdate.eventRefId = runner.eventRefId;
+
+    let marketRunnerData = await getAllEventMarketsAndRunnersQuery(fastify, runner);
+
+    marketRunnerData = marketRunnerData.map((item) => {
+      let teamNameData;
+      
+      if (item.teamId) {
+        teamNameData = global.tblCommentaryTeams.find(
+          (elem) => elem?.teamId === item?.teamId
+        );
+      } 
+      if(!item.teamId) {
+        teamNameData = global.tblCommentaryTeams.find(
+          (t) => t.teamName?.toLowerCase() === item?.runner?.toLowerCase()
+        );
+      }
+      return {
+        runnerId: item.runnerId,
+        runner: item.runner,
+        selectionId: item.selectionId,
+        backSize: item.backSize,
+        laySize: item.laySize,
+        backPrice: item.backPrice,
+        layPrice: item.layPrice,
+        teamId: item.teamId,
+        teamName: teamNameData?.teamName || null,
+      };
+    });
+
+    return {
+      eventMarketId: runner.eventMarketId,
+      eventRefId: runner.eventRefId,
+      runners: marketRunnerData,
+    };
+  }));
+  // sendDataForSocketUpdate.dataToUpdate = [];
+
+  // sendDataForSocketUpdate.dataToUpdate.push({
+  //   module: "marketRunner",
+  //   type: "update",
+  //   data: eventMarkets,
+  // });
+
+  if (functionName && functionName === "marketRunnersFromSocket") {
+    global.clientSocketIo.forEach((socket) => {
+      socket.client.emit("updateRunnerData", eventMarkets);
+    });
+  }
+
+  return eventMarkets;
+};
 module.exports = {
   getDetailsByCIdService,
   getAllEventMarketsService,
@@ -1349,5 +1409,6 @@ module.exports = {
   updateComInMarketService,
   marketListcategoryNameByCIdService,
   setAllMarketCloseService,
-  setCloseMarketCancelService
+  setCloseMarketCancelService,
+  getAllEventMarketsAndRunnersService
 };

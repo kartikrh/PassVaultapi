@@ -76,6 +76,13 @@ const ImgModuleConfig = {
     height: 0,
     width: 0,
   },
+  SocialMedia: {
+    type: "socialMedia",
+    formate: ".jpg,.png,.jpeg,.avif,.webp",
+    size: 0,
+    height: 0,
+    width: 0,
+  },
 };
 
 module.exports = {

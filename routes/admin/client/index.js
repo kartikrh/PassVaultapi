@@ -2,7 +2,7 @@ const {
     authorize,
     checkPermission,
   } = require("../../../controller/middleware");
-const { getAllClient, getClientById, saveClient, deleteClient, activeInactiveClient } = require("../../../controller/users/admin/client");
+const { getAllClient, getClientById, saveClient, deleteClient, activeInactiveClient, isUserActiveInactive, emailAndMobileVerify } = require("../../../controller/users/admin/client");
 const { Client } = require("../../../swaggerSchema/groupTags/schema");
   
   module.exports = async (fastify, opts) => {
@@ -74,5 +74,31 @@ const { Client } = require("../../../swaggerSchema/groupTags/schema");
           }),
       ],
       handler: (request, reply) => activeInactiveClient(request, reply, fastify),
+    });
+
+    fastify.post("/isUserActiveInactiveClient", {
+      schema: Client.UserActiveInactive.schema,
+      preHandler: [
+        (request, reply) => authorize(request, reply, fastify),
+        (request, reply, done) =>
+          checkPermission(request, reply, fastify, {
+            tabName: "Client",
+            mode: "edit",
+          }),
+      ],
+      handler: (request, reply) => isUserActiveInactive(request, reply, fastify),
+    });
+
+    fastify.post("/emailAndMobileVerify", {
+      schema: Client.EmailAndMobileVerify.schema,
+      preHandler: [
+        (request, reply) => authorize(request, reply, fastify),
+        (request, reply, done) =>
+          checkPermission(request, reply, fastify, {
+            tabName: "Client",
+            mode: "edit",
+          }),
+      ],
+      handler: (request, reply) => emailAndMobileVerify(request, reply, fastify),
     });
 };

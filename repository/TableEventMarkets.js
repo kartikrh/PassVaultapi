@@ -1879,6 +1879,7 @@ const getMarketByGraphByRefIdQuery = async (data, request, fastify) => {
                 mrb."wrLaySize",
                 mrb."wrBackPrice",
                 mrb."wrLayPrice",
+                mrd."wrData",
                 ROW_NUMBER() OVER (PARTITION BY mrb."wrCommentaryBallByBallId" ORDER BY mrb."wrBackSize" ASC) AS rn
             FROM "tblMarketOddsBallByBall" mrb
             LEFT JOIN "tblCommentaries" cs ON mrb."wrCommentaryId" = cs."wrCommentaryId"
@@ -2051,6 +2052,44 @@ const getMarketsByComIdQuery = async (data,request, fastify) => {
     throw new Error(error.message)
   }
 }
+
+const getAllEventMarketsAndRunnersQuery = async (fastify, data) => {  
+  return await fastify.db.query(
+    `SELECT
+        "wrEventMarketId" as "eventMarketId",
+        "wrRunnerId" as "runnerId",
+        "wrRunner" as "runner",
+        "wrBackPrice" as "backPrice",
+        "wrLayPrice" as "layPrice",
+        "wrBackSize" as "backSize",
+        "wrLaySize" as "laySize",
+        "wrSelectionId" as "selectionId",
+        "wrTeamId" as "teamId"
+    FROM "tblMarketRunners"
+    WHERE "wrEventMarketId" = $1;`,
+    {
+      type: fastify.db.QueryTypes.SELECT,
+      bind: [data.eventMarketId],
+    }
+  );
+};
+
+const getAllRateSourceEventMarketQuery = async (fastify, data) => {  
+  return await fastify.db.query(
+    `SELECT
+        "wrID" as "eventMarketId",
+        "wrEventRefID" as "eventRefId",
+        "wrRateSource" as "rateSource",
+        "wrCommentaryId" as "commentaryId"
+    FROM "tblEventMarkets"
+    WHERE "wrEventRefID" = $1 AND "wrRateSource" = 2;`,
+    {
+      type: fastify.db.QueryTypes.SELECT,
+      bind: [data.eventId],
+    }
+  );
+};
+
 module.exports = {
   getAllEventMarketsQuery,
   createManyEventMarketQuery,
@@ -2090,5 +2129,7 @@ module.exports = {
   updateMarketStatusFromSignalRQuery,
   closeMarketQuery,
   cancelMarketQuery,
-  getMarketsByComIdQuery
+  getMarketsByComIdQuery,
+  getAllEventMarketsAndRunnersQuery,
+  getAllRateSourceEventMarketQuery
 };
