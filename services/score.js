@@ -101,7 +101,7 @@ const getAllCommentariesDataService = async (request,fastify) => {
                     }
                     if(!item.teamId){
                         teamNameData = global.tblCommentaryTeams.find((t) => 
-                            t.teamName.toLowerCase() == item.runner.toLowerCase())
+                            t.teamName.toLowerCase() == item.runner?.toLowerCase())
                     }
                     return {
                         runnerId: item.runnerId,
@@ -109,6 +109,8 @@ const getAllCommentariesDataService = async (request,fastify) => {
                         selectionId: item.selectionId,
                         backSize: item.backSize,
                         laySize: item.laySize,
+                        backPrice: item.backPrice,
+                        layPrice: item.layPrice,
                         teamId: item.teamId,
                         teamName: teamNameData?.teamName || null
                     }

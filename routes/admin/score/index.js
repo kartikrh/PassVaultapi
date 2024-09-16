@@ -20,6 +20,7 @@ const {
   getShortCommerty,
   getAllCommentariesData,
 } = require("../../../controller/users/admin/commentary/commentary");
+const { getAllEventMarketsAndRunners } = require('../../../controller/users/admin/eventMarket');
 const { getMenuItemList } = require("../../../controller/users/admin/menuType");
 const { getMarketsByCommentaryId, getNotificationByClient, markReadNotification ,getMarketByGraphByRefId } = require("../../../controller/users/admin/score");
 const {
@@ -242,5 +243,8 @@ module.exports = async (fastify, opts) => {
   fastify.post("/getMarketsGraphsByEId" , {
     schema: Score.getGraphsEvent.schema,
     handler: (request, reply) => getMarketByGraphByRefId(request, reply, fastify)
+  })
+  fastify.post("/getMarketRunners" , {
+    handler: (request, reply) => getAllEventMarketsAndRunners(request, reply, fastify)
   })
 };

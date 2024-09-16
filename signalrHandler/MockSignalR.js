@@ -9,6 +9,7 @@ const { ERROR_CODES, error, success } = require("../utilities/index");
 const { errorLogger } = require("../utilities/logger");
 const { updateThirdPartyApisQuery } = require('../repository/TableThirdPartyApis');
 const { thirdPartyApiType } = require('../utilities/index');
+const { getAllEventMarketsAndRunnersService } = require("../services/eventMarket")
 
 const configConstants = require('../utilities/configConstants');
 let connection,_fastify,updateMarketRateIntervalId,checkConfigIntervalId,IntervalId;
@@ -44,13 +45,15 @@ async function startSignalR(fastify) {
         connectionCount++;
         connection = new signalR.HubConnectionBuilder()
         .withUrl(_SignalRURL)
+        .withAutomaticReconnect([0, 2000, 10000, 30000])
         .build();
         await connection.start();
         console.log('SignalR Connected');
         global.isAdminStoppedSignalR = false;
 
         await checkAndUpdateMarketRate();
-
+        thirdParty.isConnect = true
+        await updateConnectionStatus(thirdParty, fastify);
         //? Here We Update To Globale Data For SignalR Values
         connection.on('Rate', async (message, request) => {
           try {
@@ -67,8 +70,6 @@ async function startSignalR(fastify) {
               // Remove entries where item.ms !== 1
               global.rateQueue = global.rateQueue.filter((item) => item.ms === 1);
               await createUpdateGlobalSignalRData(message, request);
-              thirdParty.isConnect = true
-              await updateConnectionStatus(thirdParty, fastify);
             }
           } catch (error) {
             errorLogger(
@@ -199,17 +200,17 @@ const processRateQueue = async () => {
           winper: winPer
         };
       });
-      //console.log('\n================================')
+      console.log('\n================================')
       // Process the winPerList and update the market
       for (const winPer of winPerList) {
         try {
-          //console.log(`Selection ID: ${winPer.selectionid}, Min Lay Value: ${winPer.rate}, Win Percentage: ${winPer.winper}`);
+          console.log(`Selection ID: ${winPer.selectionid}, Min Lay Value: ${winPer.rate}, Win Percentage: ${winPer.winper}`);
           const _selectionidData = global.tblEventMarkets.find(
             (e) => e.selectionId == winPer.selectionid
           );
 
           if (_selectionidData) {
-            //console.log(`Runner Name : ${_selectionidData.runner} , Win Percentage: ${winPer.winper}`);
+            console.log(`Runner Name : ${_selectionidData.runner} , Win Percentage: ${winPer.winper}`);
             let teams;
             let commentary = global.tblCommentaries.find(
               (item) => item.commentaryId == _selectionidData.commentaryId
@@ -502,6 +503,8 @@ const createUpdateGlobalSignalRData = async (message, request) => {
                           selectionId: item.selectionId,
                           backSize: item.backSize,
                           laySize: item.laySize,
+                          backPrice: item.backPrice,
+                          layPrice: item.layPrice,
                           teamId: item.teamId,
                           teamName: teamNameData?.teamName || null
                       };
@@ -514,29 +517,56 @@ const createUpdateGlobalSignalRData = async (message, request) => {
                   });
 
                   if (
-                      global?.clientSocketIo !== undefined &&
-                      global?.clientSocketIo.length > 0
+                    global?.clientSocketIo !== undefined &&
+                    global?.clientSocketIo.length > 0
                   ) {
-                      await commentaryDetailsByEventIdService({
-                              ...request,
-                              body: {
-                                  eventId: _selectionidData.eventRefId,
-                              },
+                    try {
+                      await commentaryDetailsByEventIdService(
+                        {
+                          ...request,
+                          body: {
+                            eventId: _selectionidData.eventRefId,
                           },
-                          _fastify,
-                          "runnersFromSocket"
-                      ).catch((err) => {
-                          errorLogger(
-                              _fastify,
-                              err.message,
-                              "ERROR --> signalrHandler/MockSignalR.js/createUpdateGlobalSignalRData",
-                              request
-                          );
-                      });
-
-                      global.clientSocketIo.forEach((socket) => {
-                          socket.client.emit("updateFullscore", sendDataForSocketUpdate);
-                      });
+                        },
+                        _fastify,
+                        "runnersFromSocket"
+                      );
+                    } catch (err) {
+                      errorLogger(
+                        _fastify,
+                        err.message,
+                        "ERROR --> signalrHandler/MockSignalR.js/createUpdateGlobalSignalRData",
+                        request
+                      );
+                    }
+                  
+                    try {
+                      await getAllEventMarketsAndRunnersService(
+                        _fastify,
+                        {
+                          ...request,
+                          body: {
+                            eventId: _selectionidData.eventRefId,
+                          },
+                        },
+                        "marketRunnersFromSocket"
+                      );
+                    } catch (error) {
+                      errorLogger(
+                        _fastify,
+                        error.message,
+                        "ERROR --> signalrHandler/MockSignalR.js/getAllEventMarketsAndRunnersService",
+                        request
+                      );
+                    }
+                  
+                    global.clientSocketIo.forEach((socket) => {
+                      socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+                    });
+                  
+                    global.clientSocketIo.forEach((socket) => {
+                      socket.client.emit("updateRunnerData", sendDataForSocketUpdate);
+                    });
                   }
 
 
