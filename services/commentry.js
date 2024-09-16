@@ -2834,7 +2834,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
                 await createMarketOddsBallInSaveDetails(resultArray[0], fastify, request);
                 sendDataForSocketUpdate.dataToUpdate.push({
                   module: "marketOddsBallByBall",
-                  data: resultArray[0],
+                  data: resultArray,
                   type : "create"
                 });
               } catch (error) {
