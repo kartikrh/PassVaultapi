@@ -136,33 +136,52 @@ async function stopSignalR(fastify) {
 }
 //Get IF SignalR is connection is Connected
 function isSignalRStarted(fastify)  {
-  return connection && connection.state === signalR.HubConnectionState.Connected;
+  try {
+   return connection && connection.state === signalR.HubConnectionState.Connected;
+  } catch (err) {
+    errorLogger(
+      _fastify,
+      err,
+      "Error SignalrR --> signalrHandler/isSignalRStarted",
+      null
+    );
+  }
 } 
 
 //reconnections SignalR is connection is NotConnected
 const reConnectSignalR = async () => {
-  const isSON = global.tblConfigs.find((item) => item.key === configConstants.ISMARKETOODS_SIGNALRON).value;
-  const SrCount = global.tblConfigs.find((item) => item.key === configConstants.SIGNALRRECONNECTCOUNT).value;
-  if (isSON === 'true') {
-    if(connectionCount == SrCount){
-        clearInterval(checkConfigIntervalId);
-        checkConfigIntervalId = null;
-        return;
-    }
-    const _SignalRURLs = global.tblThirdPartyApis.filter((item) => item.isActive === true && item.type === thirdPartyApiType.Socket && item.isDefault === true);
-    if (_SignalRURLs.length > 0) {
-      for (const thirdParty of _SignalRURLs) {
-        if (!global.isAdminStoppedSignalR && (!connection || connection.state !== signalR.HubConnectionState.Connected)) {
-          global.rateSourceRefIDSet = new Set();
-          const connectionExists = connection && connection.state === signalR.HubConnectionState.Connected;
-          if (!connectionExists) {
-            await startSignalR(_fastify);
-          }
+  try {
+    const isSON = global.tblConfigs.find((item) => item.key === configConstants.ISMARKETOODS_SIGNALRON).value;
+    const SrCount = global.tblConfigs.find((item) => item.key === configConstants.SIGNALRRECONNECTCOUNT).value;
+    if (isSON === 'true') {
+      if(connectionCount == SrCount){
+          clearInterval(checkConfigIntervalId);
+          checkConfigIntervalId = null;
+          return;
+      }
+      const _SignalRURLs = global.tblThirdPartyApis.filter((item) => item.isActive === true && item.type === thirdPartyApiType.Socket && item.isDefault === true);
+      if (_SignalRURLs.length > 0) {
+        for (const thirdParty of _SignalRURLs) {
+          if (!global.isAdminStoppedSignalR && (!connection || connection.state !== signalR.HubConnectionState.Connected)) {
+            global.rateSourceRefIDSet = new Set();
+            const connectionExists = connection && connection.state === signalR.HubConnectionState.Connected;
+            if (!connectionExists) {
+              await connection.stop();
+              await startSignalR(_fastify);
+            }
+        }
       }
     }
-  }
-  } else {
-    await stopSignalR();
+    } else {
+      await stopSignalR();
+    }
+  } catch (err) {
+    errorLogger(
+      _fastify,
+      err,
+      "Error SignalrR --> signalrHandler/reConnectSignalR",
+      null
+    );
   }
 }
 
