@@ -2154,6 +2154,8 @@ const testStoreProcedureService = async (request, fastify) => {
               selectionId: item.selectionId,
               backSize: item.backSize,
               laySize: item.laySize,
+              backPrice: item.backPrice,
+              layPrice: item.layPrice,
               teamId: item.teamId,
               teamName: teamNameData?.teamName || null
           }
@@ -2781,6 +2783,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
               const _dataForOds = filteredCid.reduce((acc, entry) => {
                 const mapKey = `${entry.eventMarketId}_${entry.selectionId}`;
               
+                console.log("global.SignalRData:", global.SignalRData);
                 // Check if the mapKey exists in SignalRData
                 if (global.SignalRData[mapKey]) {
                   const matchedItem = global.SignalRData[mapKey];
@@ -2797,6 +2800,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
                     selectionId: matchedItem.selectionId,
                     timestamp: matchedItem.timestamp
                   };
+              console.log("runnerDAta:", runnerData);
               
                   // Check if EventMarketId already exists in acc
                   if (!acc[entry.eventMarketId]) {
@@ -3286,6 +3290,8 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
               selectionId: item.selectionId,
               backSize: item.backSize,
               laySize: item.laySize,
+              backPrice: item.backPrice,
+              layPrice: item.layPrice,
               teamId: item.teamId,
               teamName: teamNameData?.teamName || null
           }
@@ -4906,6 +4912,8 @@ const commentaryDetailsByEventIdService = async (
       sid: runner?.selectionId,
       bs: runner?.backSize,
       ls: runner?.laySize,
+      bp: runner?.backPrice,
+      lp: runner?.layPrice,
       tid: runner?.teamId,
       tn: teamNameData?.teamName || null
     };
@@ -5704,6 +5712,8 @@ const getMatchListByStatus = async (body, request, fastify) => {
           sid: runner?.selectionId,
           bs: runner?.backSize,
           ls: runner?.laySize,
+          bp: runner?.backPrice,
+          lp: runner?.layPrice,
           tid: runner?.teamId,
           tn: teamNameData?.teamName || null
         };

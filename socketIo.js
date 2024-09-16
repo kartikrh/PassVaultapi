@@ -139,7 +139,7 @@ const connection = (socket , fastify) => {
           }
           if(!item.teamId){
               teamNameData = global.tblCommentaryTeams.find((t) => 
-                  t.teamName.toLowerCase() == item.runner.toLowerCase())
+                  t.teamName.toLowerCase() == item.runner?.toLowerCase())
           }
           return {
               runnerId: item.runnerId,
@@ -147,6 +147,8 @@ const connection = (socket , fastify) => {
               selectionId: item.selectionId,
               backSize: item.backSize,
               laySize: item.laySize,
+              backPrice: item.backPrice,
+              layPrice: item.layPrice,
               teamId: item.teamId,
               teamName: teamNameData?.teamName || null
           }
@@ -160,6 +162,10 @@ const connection = (socket , fastify) => {
       
       global.clientSocketIo.forEach((socket) => {
         socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+      });
+
+      global.clientSocketIo.forEach((socket) => {
+        socket.client.emit("updateRunnerData", sendDataForSocketUpdate.dataToUpdate);
       });
       console.log("Event Market Updated successfully");
       return true;
