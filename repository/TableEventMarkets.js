@@ -1895,14 +1895,8 @@ const getMarketByGraphByRefIdQuery = async (data, request, fastify) => {
                 ov."wrCurrentInnings",
                 bb."wrOverCount",
                 ov."wrOver",
-                mrb."wrRunnerName",
-                mrb."wrMarketName",
-                mrb."wrBackSize",
-                mrb."wrLaySize",
-                mrb."wrBackPrice",
-                mrb."wrLayPrice",
-                mrd."wrData",
-                ROW_NUMBER() OVER (PARTITION BY mrb."wrCommentaryBallByBallId" ORDER BY mrb."wrBackSize" ASC) AS rn
+                mrb."wrData",
+                ROW_NUMBER() OVER (PARTITION BY mrb."wrCommentaryBallByBallId") AS rn
             FROM "tblMarketOddsBallByBall" mrb
             LEFT JOIN "tblCommentaries" cs ON mrb."wrCommentaryId" = cs."wrCommentaryId"
             LEFT JOIN "tblCompetitions" com ON com."wrCompetitionId" = cs."wrCompetitionId"
@@ -1916,12 +1910,7 @@ const getMarketByGraphByRefIdQuery = async (data, request, fastify) => {
             "wrCurrentInnings",
             "wrOverCount",
             "wrOver",
-            "wrRunnerName",
-            "wrMarketName",
-            "wrBackSize",
-            "wrLaySize",
-            "wrBackPrice",
-            "wrLayPrice"
+            "wrData"
         FROM RankedRunners
         WHERE rn = 1
         ORDER BY 
