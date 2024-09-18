@@ -27,7 +27,8 @@ const {
   closeMarketQuery,
   cancelMarketQuery,
   getAllEventMarketsAndRunnersQuery,
-  getAllRateSourceEventMarketQuery
+  getAllRateSourceEventMarketQuery,
+  getEventMarketsQuery
 } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
 const {
@@ -153,7 +154,7 @@ const getAllEventMarketsService = async (request, fastify) => {
     createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrRateSource" = ${rateSourceRefId}` : `tem."wrRateSource" = ${rateSourceRefId}`;
   }
  
-  let eventMarket = await getAllEventMarketsQuery(fastify, createWhereStatus);
+  let eventMarket = await getEventMarketsQuery(fastify, createWhereStatus);
   if (eventTypeId) {
     // get the commentaryId from tblCommentaries
     let commentaryId = global.tblCommentaries
@@ -511,6 +512,14 @@ const updateMarketRateService = async (request, fastify) => {
       fastify
     );
     eventMarket = eventMarket[0];
+    if(
+      eventMarket.status === EventMarketStatus.Close ||
+      eventMarket.status === EventMarketStatus.Settled ||
+      eventMarket.status === EventMarketStatus.Cancel
+    ){
+      // continue the loop and dont update the market
+      continue;
+    }
 
     let data = await updateEventMarketRateQuery(item, request, fastify);
     if(data.isPlayer){

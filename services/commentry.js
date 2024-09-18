@@ -6063,6 +6063,8 @@ const getMatchDataByCId = async (data, request, fastify) => {
     type,
     batid : batid || null,
     ballid : ballid || null,
+    t1id : com.team1Id || null,
+    t2id : com.team2Id || null,
   };
   return comDetails;
 
