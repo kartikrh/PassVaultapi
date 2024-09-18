@@ -2960,7 +2960,7 @@ const ImportMarket = {
           marketID: { type: "string" },
           marketName: { type: "string" },
           marketStatus: { type: "integer" },
-          marketType: { type: "string" },
+          marketType: { type: "integer" },
           marketTypeName: { type: "string" },
         },
       },
