@@ -1334,11 +1334,8 @@ const setCloseMarketCancelService = async (request, fastify) => {
 
 const getAllEventMarketsAndRunnersService = async (fastify, request, functionName = null) => {
   let eventMarkets = await getAllRateSourceEventMarketQuery(fastify, request.body);
-  // const sendDataForSocketUpdate = {};
+  
   eventMarkets = await Promise.all(eventMarkets.map(async (runner) => {
-    // sendDataForSocketUpdate.commentaryId = runner.commentaryId;
-    // sendDataForSocketUpdate.eventRefId = runner.eventRefId;
-
     let marketRunnerData = await getAllEventMarketsAndRunnersQuery(fastify, runner);
 
     marketRunnerData = marketRunnerData.map((item) => {
@@ -1373,20 +1370,12 @@ const getAllEventMarketsAndRunnersService = async (fastify, request, functionNam
       runners: marketRunnerData,
     };
   }));
-  // sendDataForSocketUpdate.dataToUpdate = [];
-
-  // sendDataForSocketUpdate.dataToUpdate.push({
-  //   module: "marketRunner",
-  //   type: "update",
-  //   data: eventMarkets,
-  // });
 
   if (functionName && functionName === "marketRunnersFromSocket") {
     global.clientSocketIo.forEach((socket) => {
       socket.client.emit("updateRunnerData", eventMarkets);
     });
   }
-
   return eventMarkets;
 };
 module.exports = {

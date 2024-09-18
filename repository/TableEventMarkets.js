@@ -1318,6 +1318,7 @@ const getMarketsByCIdQuery = async (request, fastify) => {
         LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = "tblEventMarkets"."wrTeamID"
         WHERE "wrEventRefID" = $1
         AND "wrStatus" = $2
+        AND "wrRateSource" <> 2
     ),
     open_market_data AS (
         SELECT
@@ -1341,6 +1342,7 @@ const getMarketsByCIdQuery = async (request, fastify) => {
         LEFT JOIN "tblMarketRunners" tmr ON tmr."wrEventMarketId" = "tblEventMarkets"."wrID"
         WHERE "wrEventRefID" = $1
         AND "wrStatus" NOT IN ($2, $3, $4)
+        AND "wrRateSource" <> 2
     )
     SELECT
         jsonb_build_object(
@@ -1373,6 +1375,23 @@ const getMarketsByCIdQuery = async (request, fastify) => {
 
 const createEventMarketMaunalQuery = async (data, request, fastify) => {
   try {
+
+    let marketTypeId = 0;
+
+    const marketTypeQuery = `
+          SELECT "wrId" 
+        FROM "tblMarketTypes" 
+        WHERE "wrEnumId" = $1;
+      `;
+    const marketTypeResult = await fastify.db.query(marketTypeQuery, {
+      bind: [data.marketType],
+      type: fastify.db.QueryTypes.SELECT,
+    });
+
+    if (marketTypeResult.length > 0) {
+      marketTypeId = marketTypeResult[0].wrId;
+    }
+
     const query = `
     INSERT INTO "tblEventMarkets"(
       "wrEventRefID",
@@ -1385,8 +1404,9 @@ const createEventMarketMaunalQuery = async (data, request, fastify) => {
       "wrRateSourceRefID",
       "wrCommentaryId",
       "wrTeamID",
-      "wrInningsID"
-  ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8,$9,$10,$11)
+      "wrInningsID",
+      "wrMarketTypeId"
+  ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8,$9,$10,$11,$12)
         RETURNING "wrID" as "eventMarketId"
     `;
     const result = await fastify.db.query(query, {
@@ -1402,6 +1422,7 @@ const createEventMarketMaunalQuery = async (data, request, fastify) => {
         data.commentaryId,
         0,
         0,
+        marketTypeId
       ],
       type: fastify.db.QueryTypes.SELECT,
     });
@@ -1418,6 +1439,7 @@ const createEventMarketMaunalQuery = async (data, request, fastify) => {
 };
 
 const updateEventMarketMaunalQuery = async (data, request, fastify) => {
+
   try {
     const query = `
         UPDATE "tblEventMarkets"
@@ -1435,7 +1457,7 @@ const updateEventMarketMaunalQuery = async (data, request, fastify) => {
         new Date(),
         data.rateSource,
         data.marketID,
-        data.commentaryId,
+        data.commentaryId
       ],
       type: fastify.db.QueryTypes.SELECT,
     });
@@ -1873,14 +1895,8 @@ const getMarketByGraphByRefIdQuery = async (data, request, fastify) => {
                 ov."wrCurrentInnings",
                 bb."wrOverCount",
                 ov."wrOver",
-                mrb."wrRunnerName",
-                mrb."wrMarketName",
-                mrb."wrBackSize",
-                mrb."wrLaySize",
-                mrb."wrBackPrice",
-                mrb."wrLayPrice",
-                mrd."wrData",
-                ROW_NUMBER() OVER (PARTITION BY mrb."wrCommentaryBallByBallId" ORDER BY mrb."wrBackSize" ASC) AS rn
+                mrb."wrData",
+                ROW_NUMBER() OVER (PARTITION BY mrb."wrCommentaryBallByBallId") AS rn
             FROM "tblMarketOddsBallByBall" mrb
             LEFT JOIN "tblCommentaries" cs ON mrb."wrCommentaryId" = cs."wrCommentaryId"
             LEFT JOIN "tblCompetitions" com ON com."wrCompetitionId" = cs."wrCompetitionId"
@@ -1894,12 +1910,7 @@ const getMarketByGraphByRefIdQuery = async (data, request, fastify) => {
             "wrCurrentInnings",
             "wrOverCount",
             "wrOver",
-            "wrRunnerName",
-            "wrMarketName",
-            "wrBackSize",
-            "wrLaySize",
-            "wrBackPrice",
-            "wrLayPrice"
+            "wrData"
         FROM RankedRunners
         WHERE rn = 1
         ORDER BY 

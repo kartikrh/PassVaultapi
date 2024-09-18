@@ -5,23 +5,24 @@ const getAllMarketOddsBallByBall = async (fastify) => {
   try {
     return await fastify.db.query(
       `SELECT 
-        "wrId" AS "id",
-        "wrCommentaryId" AS "commentaryId",
-        "wrCommentaryBallByBallId" AS "commentaryBallByBallId",
-        "wrEventMarketId" AS "eventMarketId",
-        "wrRunnerId" AS "runnerId",
-        "wrMarketStatus" AS "marketStatus",
-        "wrBackPrice" AS "backPrice",
-        "wrLayPrice" AS "layPrice",
-        "wrBackSize" AS "backSize",
-        "wrLaySize" AS "laySize",
-        "wrMarketName" AS "marketName",
-        "wrRunnerName" AS "runnerName",
-        "wrDateTime" AS "dateTime",
-        "wrData" as "data"
-    FROM 
-        "tblMarketOddsBallByBall";
-    `,
+          mobb."wrId" AS "id",
+          mobb."wrCommentaryId" AS "commentaryId",
+          mobb."wrCommentaryBallByBallId" AS "commentaryBallByBallId",
+          mobb."wrEventMarketId" AS "eventMarketId",
+          mobb."wrMarketStatus" AS "marketStatus",
+          mobb."wrMarketName" AS "marketName",
+          mobb."wrData" AS "data",
+          mobb."wrDateTime" AS "dateTime",
+          em."wrRateSource" AS "rateSource",
+          CASE 
+              WHEN em."wrMarketTypeId" IS NULL THEN'0'
+              WHEN em."wrMarketTypeId" = 0 THEN '0'
+              ELSE em."wrMarketTypeId"::TEXT
+          END AS "marketTypeId"
+      FROM 
+          "tblMarketOddsBallByBall" AS mobb
+      LEFT JOIN "tblEventMarkets" em ON mobb."wrEventMarketId" = em."wrID"
+      LEFT JOIN "tblMarketTypes" mty ON em."wrMarketTypeId" = mty."wrId"`,
       {
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -39,23 +40,25 @@ const getAllMarketOddsBallByBall = async (fastify) => {
 const getAllMarketOddsBallByBallByCommentaryId = async (data, fastify) => {
   try {
     let query = `SELECT 
-        "wrId" AS "id",
-        "wrCommentaryId" AS "commentaryId",
-        "wrCommentaryBallByBallId" AS "commentaryBallByBallId",
-        "wrEventMarketId" AS "eventMarketId",
-        "wrRunnerId" AS "runnerId",
-        "wrMarketStatus" AS "marketStatus",
-        "wrBackPrice" AS "backPrice",
-        "wrLayPrice" AS "layPrice",
-        "wrBackSize" AS "backSize",
-        "wrLaySize" AS "laySize",
-        "wrMarketName" AS "marketName",
-        "wrRunnerName" AS "runnerName",
-        "wrDateTime" AS "dateTime",
-        "wrData" as "data"
-    FROM 
-        "tblMarketOddsBallByBall"
-    WHERE "wrCommentaryId" = $1`;
+          mobb."wrId" AS "id",
+          mobb."wrCommentaryId" AS "commentaryId",
+          mobb."wrCommentaryBallByBallId" AS "commentaryBallByBallId",
+          mobb."wrEventMarketId" AS "eventMarketId",
+          mobb."wrMarketStatus" AS "marketStatus",
+          mobb."wrMarketName" AS "marketName",
+          mobb."wrData" AS "data",
+          mobb."wrDateTime" AS "dateTime",
+          em."wrRateSource" AS "rateSource",
+          CASE 
+              WHEN em."wrMarketTypeId" IS NULL THEN'0'
+              WHEN em."wrMarketTypeId" = 0 THEN '0'
+              ELSE em."wrMarketTypeId"::TEXT
+          END AS "marketTypeId"
+      FROM 
+          "tblMarketOddsBallByBall" AS mobb
+      LEFT JOIN "tblEventMarkets" em ON mobb."wrEventMarketId" = em."wrID"
+      LEFT JOIN "tblMarketTypes" mty ON em."wrMarketTypeId" = mty."wrId"
+    WHERE mobb."wrCommentaryId" = $1`;
     
     const result = await fastify.db.query(query,
       {
@@ -81,23 +84,24 @@ const getMarketOddsBallByBallById = async (id, fastify, request) => {
     const result = await fastify.db.query(
       `
       SELECT 
-        "wrCommentaryId" AS "commentaryId",
-        "wrCommentaryBallByBallId" AS "commentaryBallByBallId",
-        "wrEventMarketId" AS "eventMarketId",
-        "wrRunnerId" AS "runnerId",
-        "wrMarketStatus" AS "marketStatus",
-        "wrBackPrice" AS "backPrice",
-        "wrLayPrice" AS "layPrice",
-        "wrBackSize" AS "backSize",
-        "wrLaySize" AS "laySize",
-        "wrMarketName" AS "marketName",
-        "wrRunnerName" AS "runnerName",
-        "wrDateTime" AS "dateTime",
-        "wrData" as "data"
+          mobb."wrId" AS "id",
+          mobb."wrCommentaryId" AS "commentaryId",
+          mobb."wrCommentaryBallByBallId" AS "commentaryBallByBallId",
+          mobb."wrEventMarketId" AS "eventMarketId",
+          mobb."wrMarketStatus" AS "marketStatus",
+          mobb."wrMarketName" AS "marketName",
+          mobb."wrData" AS "data",
+          mobb."wrDateTime" AS "dateTime",
+          CASE 
+              WHEN em."wrMarketTypeId" IS NULL THEN'0'
+              WHEN em."wrMarketTypeId" = 0 THEN '0'
+              ELSE em."wrMarketTypeId"::TEXT
+          END AS "marketTypeId"
       FROM 
-        "tblMarketOddsBallByBall"
-      WHERE 
-        "wrId" = $1
+          "tblMarketOddsBallByBall" AS mobb
+      LEFT JOIN "tblEventMarkets" em ON mobb."wrEventMarketId" = em."wrID"
+      LEFT JOIN "tblMarketTypes" mty ON em."wrMarketTypeId" = mty."wrId"
+    WHERE mobb."wrId" = $1
       `,
       {
         bind: [id],
@@ -536,7 +540,7 @@ const createMarketOddsBallByBallBulkInsert = async (dataArray, fastify) => {
     return false;
   }
 };
-const createMarketOddsBallInSaveDetails = async (data, fastify, request) => {
+const createMarketOddsBallInSaveDetails = async (data, fastify, request = null) => {
   try {
     const insertData = [
       data.commentaryId,
@@ -548,7 +552,7 @@ const createMarketOddsBallInSaveDetails = async (data, fastify, request) => {
       new Date(),
     ];
 
-    const result = await fastify.db.query(
+    const insertResult  = await fastify.db.query(
       `INSERT INTO "tblMarketOddsBallByBall" (
         "wrCommentaryId", 
         "wrCommentaryBallByBallId",
@@ -559,22 +563,42 @@ const createMarketOddsBallInSaveDetails = async (data, fastify, request) => {
         "wrDateTime"
       ) VALUES (
         $1, $2, $3, $4, $5, $6, $7
-      ) RETURNING 
-        "wrId" as "id",
-        "wrCommentaryId" as "commentaryId",
-        "wrCommentaryBallByBallId" as "commentaryBallByBallId",
-        "wrEventMarketId" as "eventMarketId",
-        "wrMarketStatus" as "marketStatus",
-        "wrMarketName" as "marketName",
-        "wrData" as "data",
-        "wrDateTime" as "dateTime"`,
+      ) RETURNING "wrId" as "id"`,
       {
         bind: insertData,
         type: fastify.db.QueryTypes.INSERT,
       }
     );
     
-    return true;
+    const wrId = insertResult[0][0].id;
+    const result = await fastify.db.query(
+      `SELECT 
+          mobb."wrId" AS "id",
+          mobb."wrCommentaryId" AS "commentaryId",
+          mobb."wrCommentaryBallByBallId" AS "commentaryBallByBallId",
+          mobb."wrEventMarketId" AS "eventMarketId",
+          mobb."wrMarketStatus" AS "marketStatus",
+          mobb."wrMarketName" AS "marketName",
+          mobb."wrData" AS "data",
+          mobb."wrDateTime" AS "dateTime",
+          em."wrRateSource" AS "rateSource",
+          CASE 
+              WHEN em."wrMarketTypeId" IS NULL THEN '0'
+              WHEN em."wrMarketTypeId" = 0 THEN '0'
+              ELSE em."wrMarketTypeId"::TEXT
+          END AS "marketTypeId"
+      FROM 
+          "tblMarketOddsBallByBall" AS mobb
+      LEFT JOIN "tblEventMarkets" em ON mobb."wrEventMarketId" = em."wrID"
+      LEFT JOIN "tblMarketTypes" mty ON em."wrMarketTypeId" = mty."wrId"
+      WHERE mobb."wrId" = $1`,
+      {
+        bind: [wrId],
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+
+    return result[0];
   } catch (err) {
     errorLogger(
       fastify,
