@@ -223,7 +223,7 @@ const processRateQueue = async () => {
       // Process the winPerList and update the market
       for (const winPer of winPerList) {
         try {
-          console.log(`Selection ID: ${winPer.selectionid}, Min Lay Value: ${winPer.rate}, Win Percentage: ${winPer.winper}`);
+          //console.log(`Selection ID: ${winPer.selectionid}, Min Lay Value: ${winPer.rate}, Win Percentage: ${winPer.winper}`);
           const _selectionidData = global.tblEventMarkets.find(
             (e) => e.selectionId == winPer.selectionid
           );
@@ -504,30 +504,31 @@ const createUpdateGlobalSignalRData = async (message, request) => {
                   // sendDataForSocketUpdate.eventRefId = _selectionidData.eventRefId;
                   // sendDataForSocketUpdate.dataToUpdate = [];
 
-                  // let marketRunner = global.tblEventMarkets.filter(
-                  //     (item) => item.eventRefId == _selectionidData.eventRefId && item.rateSource === 2
-                  // );
-                  // marketRunner = marketRunner.map((item) => {
-                  //     let teamNameData
-                  //     if (item.teamId) {
-                  //         teamNameData = global.tblCommentaryTeams.find((elem) => elem.teamId === item.teamId)
-                  //     }
-                  //     if (!item.teamId) {
-                  //         teamNameData = global.tblCommentaryTeams.find((t) =>
-                  //             t.teamName.toLowerCase() == item.runner.toLowerCase())
-                  //     }
-                  //     return {
-                  //         runnerId: item.runnerId,
-                  //         runner: item.runner,
-                  //         selectionId: item.selectionId,
-                  //         backSize: item.backSize,
-                  //         laySize: item.laySize,
-                  //         backPrice: item.backPrice,
-                  //         layPrice: item.layPrice,
-                  //         teamId: item.teamId,
-                  //         teamName: teamNameData?.teamName || null
-                  //     };
-                  // });
+                  let marketRunner = global.tblEventMarkets.filter(
+                      (item) => item.eventRefId == _selectionidData.eventRefId && item.rateSource === 2
+                  );
+                  marketRunner = marketRunner.map((item) => {
+                      let teamNameData
+                      if (item.teamId) {
+                          teamNameData = global.tblCommentaryTeams.find((elem) => elem.teamId === item.teamId)
+                      }
+                      if (!item.teamId) {
+                          teamNameData = global.tblCommentaryTeams.find((t) =>
+                              t.teamName.toLowerCase() == item.runner.toLowerCase())
+                      }
+                      return {
+                          runnerId: item.runnerId,
+                          runner: item.runner,
+                          selectionId: item.selectionId,
+                          backSize: item.backSize,
+                          laySize: item.laySize,
+                          backPrice: item.backPrice,
+                          layPrice: item.layPrice,
+                          teamId: item.teamId,
+                          teamName: teamNameData?.teamName || null
+                      };
+                  });
+
 
                   // sendDataForSocketUpdate.dataToUpdate.push({
                   //     module: "marketRunner",
@@ -578,11 +579,14 @@ const createUpdateGlobalSignalRData = async (message, request) => {
                         request
                       );
                     }
-                  
                     // global.clientSocketIo.forEach((socket) => {
                     //   socket.client.emit("updateFullscore", sendDataForSocketUpdate);
                     // });
-                  
+
+                    // broadcast to all connected clients
+                    global.clientSocketIo.forEach((socket) => {
+                      socket.client.emit("updateRunnerData", marketRunner);
+                    });
                   }
 
 

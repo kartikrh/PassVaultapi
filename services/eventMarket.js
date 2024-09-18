@@ -1367,7 +1367,6 @@ const getAllEventMarketsAndRunnersService = async (fastify, request, functionNam
       socket.client.emit("updateRunnerData", eventMarkets);
     });
   }
-
   return eventMarkets;
 };
 module.exports = {
