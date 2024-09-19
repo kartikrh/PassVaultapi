@@ -24,6 +24,11 @@ const {
   UpdateResulOrApproveEventMarketQuery,
   updateComInMarketQuery,
   getMarketListWithCategoryNameByCIdQuery,
+  closeMarketQuery,
+  cancelMarketQuery,
+  getAllEventMarketsAndRunnersQuery,
+  getAllRateSourceEventMarketQuery,
+  getEventMarketsQuery
 } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
 const {
@@ -149,7 +154,7 @@ const getAllEventMarketsService = async (request, fastify) => {
     createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrRateSource" = ${rateSourceRefId}` : `tem."wrRateSource" = ${rateSourceRefId}`;
   }
  
-  let eventMarket = await getAllEventMarketsQuery(fastify, createWhereStatus);
+  let eventMarket = await getEventMarketsQuery(fastify, createWhereStatus);
   if (eventTypeId) {
     // get the commentaryId from tblCommentaries
     let commentaryId = global.tblCommentaries
@@ -507,6 +512,14 @@ const updateMarketRateService = async (request, fastify) => {
       fastify
     );
     eventMarket = eventMarket[0];
+    if(
+      eventMarket.status === EventMarketStatus.Close ||
+      eventMarket.status === EventMarketStatus.Settled ||
+      eventMarket.status === EventMarketStatus.Cancel
+    ){
+      // continue the loop and dont update the market
+      continue;
+    }
 
     let data = await updateEventMarketRateQuery(item, request, fastify);
     if(data.isPlayer){
@@ -1281,6 +1294,90 @@ const marketListcategoryNameByCIdService = async (request, fastify) => {
     categories,
   };
 };
+const setAllMarketCloseService = async (request, fastify) => {
+  let { password } = request.body;
+  // get password from config
+  const configPassword = global.tblConfigs.find(
+    (item) => item.key === configConstants.ALLMARKETCLOSEPASS
+  ).value;
+  if (!configPassword) {
+    throw new Error("Password not found in config");
+  }
+  if(password !== configPassword){
+    throw new Error("Password is incorrect");
+  }
+
+  // close market which is open
+  await closeMarketQuery(request, fastify);
+
+  return "All Market closed successfully";
+
+};
+const setCloseMarketCancelService = async (request, fastify) => {
+  let { password } = request.body;
+  // get password from config
+  const configPassword = global.tblConfigs.find(
+    (item) => item.key === configConstants.ALLMARKETCLOSEPASS
+  ).value;
+  if (!configPassword) {
+    throw new Error("Password not found in config");
+  }
+  if(password !== configPassword){
+    throw new Error("Password is incorrect");
+  }
+
+  // close market which is open
+  await cancelMarketQuery(request, fastify);
+
+  return "All Market canceled successfully";
+}
+
+const getAllEventMarketsAndRunnersService = async (fastify, request, functionName = null) => {
+  let eventMarkets = await getAllRateSourceEventMarketQuery(fastify, request.body);
+  
+  eventMarkets = await Promise.all(eventMarkets.map(async (runner) => {
+    let marketRunnerData = await getAllEventMarketsAndRunnersQuery(fastify, runner);
+
+    marketRunnerData = marketRunnerData.map((item) => {
+      let teamNameData;
+      
+      if (item.teamId) {
+        teamNameData = global.tblCommentaryTeams.find(
+          (elem) => elem?.teamId === item?.teamId
+        );
+      } 
+      if(!item.teamId) {
+        teamNameData = global.tblCommentaryTeams.find(
+          (t) => t.teamName?.toLowerCase() === item?.runner?.toLowerCase()
+        );
+      }
+      return {
+        runnerId: item.runnerId,
+        runner: item.runner,
+        selectionId: item.selectionId,
+        backSize: item.backSize,
+        laySize: item.laySize,
+        backPrice: item.backPrice,
+        layPrice: item.layPrice,
+        teamId: item.teamId,
+        teamName: teamNameData?.teamName || null,
+      };
+    });
+
+    return {
+      eventMarketId: runner.eventMarketId,
+      eventRefId: runner.eventRefId,
+      runners: marketRunnerData,
+    };
+  }));
+
+  if (functionName && functionName === "marketRunnersFromSocket") {
+    global.clientSocketIo.forEach((socket) => {
+      socket.client.emit("updateRunnerData", eventMarkets);
+    });
+  }
+  return eventMarkets;
+};
 module.exports = {
   getDetailsByCIdService,
   getAllEventMarketsService,
@@ -1309,4 +1406,7 @@ module.exports = {
   UpdateResulOrApproveEventMarketService,
   updateComInMarketService,
   marketListcategoryNameByCIdService,
+  setAllMarketCloseService,
+  setCloseMarketCancelService,
+  getAllEventMarketsAndRunnersService
 };

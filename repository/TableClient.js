@@ -188,10 +188,83 @@ const activeInactiveClientQuery = async (data, request, fastify) => {
     throw new Error(err.message);
   }
 };
+
+const isUserActiveInactiveQuery = async (data, request, fastify) => {
+  try {
+    return await fastify.db.query(
+            `
+            update "tblClient" set
+            "wrIsUserActive" = $1
+            where "wrClientID" = $2
+            `,
+      {
+        bind: [data.isUserActive, data.clientId],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableClient/isUserActiveInactiveQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const clientEmailVerifyQuery = async (data, request, fastify) => {
+  try {
+    return await fastify.db.query(
+            `
+            update "tblClient" set
+            "wrIsEmailVerified" = $1
+            where "wrClientID" = $2
+            `,
+      {
+        bind: [data.isEmailVerified, data.clientId],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableClient/clientEmailVerifyQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const clientMobileVerifyQuery = async (data, request, fastify) => {
+  try {
+    return await fastify.db.query(
+            `
+            update "tblClient" set
+            "wrIsMobileVerified" = $1
+            where "wrClientID" = $2
+            `,
+      {
+        bind: [data.isMobileVerified, data.clientId],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableClient/clientMobileVerifyQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllClientQuery,
   insertClientQuery,
   updateClientQuery,
   deleteClientQuery,
-  activeInactiveClientQuery
+  activeInactiveClientQuery,
+  isUserActiveInactiveQuery,
+  clientEmailVerifyQuery,
+  clientMobileVerifyQuery
 };

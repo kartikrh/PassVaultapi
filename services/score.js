@@ -90,29 +90,31 @@ const getAllCommentariesDataService = async (request,fastify) => {
                     commentaryId: c.commentaryId
                 },fastify) || [];
 
-                let marketRunner = global.tblEventMarkets.filter((m) => {
-                    return m.commentaryId === c.commentaryId && m.rateSource === 2
-                });
+                // let marketRunner = global.tblEventMarkets.filter((m) => {
+                //     return m.commentaryId === c.commentaryId && m.rateSource === 2
+                // });
                 
-                marketRunner = marketRunner.map((item) => {
-                    let teamNameData
-                    if(item.teamId){
-                    teamNameData = global.tblCommentaryTeams.find((elem) => elem.teamId === item.teamId)
-                    }
-                    if(!item.teamId){
-                        teamNameData = global.tblCommentaryTeams.find((t) => 
-                            t.teamName.toLowerCase() == item.runner.toLowerCase())
-                    }
-                    return {
-                        runnerId: item.runnerId,
-                        runner: item.runner,
-                        selectionId: item.selectionId,
-                        backSize: item.backSize,
-                        laySize: item.laySize,
-                        teamId: item.teamId,
-                        teamName: teamNameData?.teamName || null
-                    }
-                });
+                // marketRunner = marketRunner.map((item) => {
+                //     let teamNameData
+                //     if(item.teamId){
+                //     teamNameData = global.tblCommentaryTeams.find((elem) => elem.teamId === item.teamId)
+                //     }
+                //     if(!item.teamId){
+                //         teamNameData = global.tblCommentaryTeams.find((t) => 
+                //             t.teamName.toLowerCase() == item.runner?.toLowerCase())
+                //     }
+                //     return {
+                //         runnerId: item.runnerId,
+                //         runner: item.runner,
+                //         selectionId: item.selectionId,
+                //         backSize: item.backSize,
+                //         laySize: item.laySize,
+                //         backPrice: item.backPrice,
+                //         layPrice: item.layPrice,
+                //         teamId: item.teamId,
+                //         teamName: teamNameData?.teamName || null
+                //     }
+                // });
         
                 commentaries[c.eventRefId] = {
                     commentaryId : c.commentaryId,
@@ -126,7 +128,7 @@ const getAllCommentariesDataService = async (request,fastify) => {
                     commentaryWicket: wickets,
                     commentaryPartnership: partnerships,
                     marketOddsBallByBall : marketOddsBallByBall,
-                    marketRunner: marketRunner
+                    // marketRunner: marketRunner
                 };
         }
     

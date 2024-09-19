@@ -1,0 +1,150 @@
+const { errorLogger } = require("../utilities/logger")
+
+const getAllCommentaryAwardQuery = async (fastify) => {
+    return await fastify.db.query(
+        `
+            SELECT 
+                "wrId" as "id",
+                "wrCommentaryId" as "commentaryId",
+                "wrAwardId" as "awardId",
+                "wrTeamId" as "teamId",
+                "wrPlayerId" as "playerId",
+                "wrCreatedAt" as "createdAt",
+                "wrCreatedBy" as "createdBy",
+                "wrModifyAt" as "modifyAt",
+                "wrModifyBy" as "modifyBy"
+            FROM "tblCommentaryAwards"
+            ORDER BY "wrId" DESC
+        `,
+        {
+            type : fastify.db.QueryTypes.SELECT
+        } 
+    )
+}
+const addCommentaryAwardQuery = async (data,request,fastify) => {
+    try {
+        let query = `
+            INSERT INTO "tblCommentaryAwards"
+            (
+                "wrCommentaryId",
+                "wrAwardId",
+                "wrTeamId",
+                "wrPlayerId",
+                "wrCreatedBy"
+            )
+            VALUES
+            ($1 , $2 , $3 , $4 , $5)
+            RETURNING 
+            "wrId" as "id",
+            "wrCommentaryId" as "commentaryId",
+            "wrAwardId" as "awardId",
+            "wrTeamId" as "teamId",
+            "wrPlayerId" as "playerId",
+            "wrCreatedAt" as "createdAt",
+            "wrCreatedBy" as "createdBy",
+            "wrModifyAt" as "modifyAt",
+            "wrModifyBy" as "modifyBy"
+        `;
+
+        let values = [
+            data.commentaryId,
+            data.awardId,
+            data.teamId || null,
+            data.playerId || null,
+            request.userTokenInfo.WrUserId
+        ]
+
+        const result = await fastify.db.query(query,{
+            type : fastify.db.QueryTypes.SELECT,
+            bind : values
+        })
+
+        return result[0];
+
+    } catch (error) {
+        errorLogger(
+            fastify,
+            error.message,
+            "DB ERROR --> repository/TableCommentaryAward/addCommentaryAward",
+            request
+        )
+        throw new Error(error.message)
+    }
+}
+const updateCommentaryAwardQuery = async (data,request,fastify) => {
+    try {
+        const query = `
+            UPDATE "tblCommentaryAwards"
+            SET
+                "wrCommentaryId" = $1,
+                "wrAwardId" = $2,
+                "wrTeamId" = $3,
+                "wrPlayerId" = $4,
+                "wrModifyBy" = $5,
+                "wrModifyAt" = now()
+            WHERE
+                "wrId" = $6
+            RETURNING
+                "wrId" as "id",
+                "wrCommentaryId" as "commentaryId",
+                "wrAwardId" as "awardId",
+                "wrTeamId" as "teamId",
+                "wrPlayerId" as "playerId",
+                "wrCreatedAt" as "createdAt",
+                "wrCreatedBy" as "createdBy",
+                "wrModifyAt" as "modifyAt",
+                "wrModifyBy" as "modifyBy"
+        `;
+        const values = [
+            data.commentaryId,
+            data.awardId,
+            data.teamId || null,
+            data.playerId || null,
+            request.userTokenInfo.WrUserId,
+            data.id
+        ]
+        const result = await fastify.db.query(query,{
+            type : fastify.db.QueryTypes.SELECT,
+            bind : values
+        })
+        return result[0];
+
+    } catch (error) {
+        errorLogger(
+            fastify,
+            error.message,
+            "DB ERROR --> repository/TableCommentaryAward/updateCommentaryAward",
+            request
+        )
+        throw new Error(error.message)
+    }   
+}
+const deleteCommentaryAwardQuery = async (request,fastify) => {
+    try {
+        const query = `
+            DELETE FROM "tblCommentaryAwards"
+            WHERE
+                "wrId" = ANY($1)
+        `;
+        await fastify.db.query(query,{
+            type : fastify.db.QueryTypes.SELECT,
+            bind : [request.body.id]
+        })
+        return true;
+    } catch (error) {
+        errorLogger(
+            fastify,
+            error.message,
+            "DB ERROR --> repository/TableCommentaryAward/deleteCommentaryAward",
+            request
+        )
+        throw new Error(error.message)
+    }
+}
+
+module.exports = {
+    getAllCommentaryAwardQuery,
+    addCommentaryAwardQuery,
+    updateCommentaryAwardQuery,
+    deleteCommentaryAwardQuery
+}

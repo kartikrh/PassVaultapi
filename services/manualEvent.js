@@ -388,18 +388,18 @@ const ImportMarketWithRunnerService = async (request, fastify) => {
       for (let _in = 0; _in < _data.length; _in++) {
            const element = _data[_in];
            let index2 = global.tblEventMarkets.findIndex(
-            (e) => e.rateSourceRefID === element.rateSourceRefID
+            (e) => e.rateSourceRefID === element.rateSourceRefID && e.selectionId === element.selectionId
           );
          if (index2 === -1) {
            global.tblEventMarkets.push(element);
-         }
-         else {
+         } else {
            global.tblEventMarkets[index2] = element;
          }
       }
     }
   } else {
-    throw new Error("Event Type Id not found");
+    console.log("Event Type Id not found");
+    // throw new Error("Event Type Id not found");
   }
 };
 module.exports = {

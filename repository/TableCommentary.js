@@ -127,12 +127,14 @@ const insertCommentaryQuery = async (request, fastify) => {
     "wrIsPredictMarket" as "isPredictMarket",
     tc."wrIsActive"  as "isActive",
     tc."wrIsTeamPredictionOn" as "isTeamPredictionOn",
+    tu."WrUserName" as "createdBy",
     "wrDelay" as "delay"
     from "insert_data" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"  
     LEFT JOIN "tblMatchTypes" mt ON tc."wrMatchTypeId" = mt."wrMatchTypeId"
     LEFT JOIN "tblCompetitions" co ON tc."wrCompetitionId" = co."wrCompetitionId"
+    LEFT JOIN "tblUsers" tu ON tc."wrCreatedBy" = tu."WrUserId"
       `,
       {
         bind: [
@@ -2823,6 +2825,7 @@ const updateSuperOverCommentaryQuery = async (data, fastify) => {
     return await fastify.db.query(
       `update "tblCommentaries" set 
       "wrCurrentInnings" = $2
+      ,"wrCommentaryStatus" = 2
       where "wrCommentaryId" = $1	
       `,
       {
@@ -2907,7 +2910,52 @@ const insertCommentarySuperOverTeams = async (request, fastify) => {
   }
 };
 
+const updateCommentaryBattingTeamQuery = async (data, fastify) => {
+  try {
 
+     await fastify.db.query(
+      `update "tblCommentaryTeams" set 
+      "wrTeamStatus" = 1
+      where "wrCommentaryId" = $1 AND "wrCurrentInnings" = $2 AND "wrTeamId" = $3
+      `,
+      {
+        bind: [
+          data.commentaryId || null,
+          data.currentInnings || null,
+          data.battingTeamId || null,
+        ],
+
+        type: fastify.db.QueryTypes.UPDATE,
+      }
+    );
+
+    await fastify.db.query(
+      `update "tblCommentaryTeams" set 
+      "wrTeamStatus" = 2
+      where "wrCommentaryId" = $1 AND "wrCurrentInnings" = $2 AND "wrTeamId" <> $3
+      `,
+      {
+        bind: [
+          data.commentaryId || null,
+          data.currentInnings || null,
+          data.battingTeamId || null,
+        ],
+
+        type: fastify.db.QueryTypes.UPDATE,
+      }
+    );
+    
+    return { success: true };
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/updateCommentaryBattingTeamQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
 // const updateCommentaryTeamPredictionPrecentageQuery = async (data, fastify) => {
 //   try {
 //     return await fastify.db.query(
@@ -3024,7 +3072,7 @@ const updateTeamPrediction = async (request, fastify) => {
         }
       );
     }
-
+    
     return { message: "Update successful" };
   } catch (error) {
     errorLogger(
@@ -3123,5 +3171,6 @@ module.exports = {
   insertCommentarySuperOverTeams,
   updateCommentaryTeamPredictionPrecentageQuery,
   updateTeamPrediction,
-  updateAverageOfPlayerQuery
+  updateAverageOfPlayerQuery,
+  updateCommentaryBattingTeamQuery
 };
