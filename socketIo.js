@@ -103,7 +103,7 @@ const connection = (socket , fastify) => {
 
         for (let index = 0; index < result.length; index++) {
           try {
-            await createMarketOddsBallInSaveDetails(result[index], fastify, request);
+            await createMarketOddsBallInSaveDetails(result[index], fastify);
           } catch (error) {
             console.log("create market odds ball by ball by id console", error);
             errorLogger(
