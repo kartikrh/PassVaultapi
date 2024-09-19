@@ -86,7 +86,7 @@ const connection = (socket , fastify) => {
             // If not, create a new entry for this eventMarketId
             const newEvent = {
               commentaryId: item.commentaryId,
-              commentaryBallByBallId: item.commentaryBallByBallId || null, // Adjust as needed
+              commentaryBallByBallId: ballbybllId || null, // Adjust as needed
               EventMarketId: item.eventMarketId,
               MarketStatus: item.status,
               MarketName: item.marketName,
