@@ -27,6 +27,7 @@ const {
   saveSubScribeDomain,
 } = require("../../../controller/users/admin/subScribesDomain");
 const { allCongifService } = require("../../../services/config");
+const { getAllBanners } = require("../../../controller/users/admin/banner");
 const {
   Score,
   SubScribesDomain,
@@ -245,6 +246,11 @@ module.exports = async (fastify, opts) => {
     handler: (request, reply) => getMarketByGraphByRefId(request, reply, fastify)
   })
   fastify.post("/getMarketRunners" , {
+    schema: Score.getMarketRunners.schema,
     handler: (request, reply) => getAllEventMarketsAndRunners(request, reply, fastify)
+  })
+  fastify.post("/getBanners" , {
+    schema: Score.getBanners.schema,
+    handler: (request, reply) => getAllBanners(request, reply, fastify)
   })
 };

@@ -3340,6 +3340,31 @@ const Score = {
       },
     },
   },
+  getMarketRunners: {
+    schema: {
+      tags: ["Score"],
+      description: "get Markets Runners data by EventID",
+      body: {
+        type: "object",
+        properties: {
+          eventId: { type: "string" },
+        },
+        required: ["eventId"],
+      },
+    },
+  },
+  getBanners: {
+    schema: {
+      tags: ["Score"],
+      description: "get Banners",
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
 };
 const News = {
   getAll: {

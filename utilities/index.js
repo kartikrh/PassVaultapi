@@ -493,7 +493,8 @@ const APIEndpointModuleType = {
   commentaryUpdate : 1,
   vendorUpdate : 2,
   vendorIpUpdate : 3,
-  updateConfig : 4,	
+  updateConfig : 4,
+  updateBanner: 5
 }
 const NotificationSendType = {
   all : 1,

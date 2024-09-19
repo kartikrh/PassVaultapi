@@ -1482,11 +1482,11 @@ const createOrUpdateEventRunnerMarketManualQuery = async (
     const checkQuery = `
       SELECT "wrRunnerId"
       FROM "tblMarketRunners"
-      WHERE "wrSelectionId" = $1
+      WHERE "wrSelectionId" = $1 AND "wrEventMarketId" = $2
     `;
 
     const checkResult = await fastify.db.query(checkQuery, {
-      bind: [data.selectionID],
+      bind: [data.selectionID, data.marketID],
       type: fastify.db.QueryTypes.SELECT,
     });
 
@@ -1629,19 +1629,39 @@ const closeEventMarketByCIdQuery = async (data, fastify) => {
 
 const updateEventMarketRunnerMaunalQuery = async (data, fastify) => {
   try {
-    const query = `
-        UPDATE "tblMarketRunners"
-        SET "wrBackPrice" = $1
-        ,"wrBackSize"= $2
-        ,"wrLayPrice" = $3
-        ,"wrLaySize" = $4
-        WHERE "wrSelectionId" = $5
-        RETURNING "wrEventMarketId" as "eventMarketId",
-        "wrRunner" as "runner",
-        "wrTeamId" as "teamId",
-        "wrSelectionId" as "eventSelectionId"
+    // const query = `
+    //     UPDATE "tblMarketRunners"
+    //     SET "wrBackPrice" = $1
+    //     ,"wrBackSize"= $2
+    //     ,"wrLayPrice" = $3
+    //     ,"wrLaySize" = $4
+    //     WHERE "wrSelectionId" = $5
+    //     RETURNING "wrEventMarketId" as "eventMarketId",
+    //     "wrRunner" as "runner",
+    //     "wrTeamId" as "teamId",
+    //     "wrSelectionId" as "eventSelectionId"
 
-    `;
+    // `;
+    const query = `
+            WITH matched_markets AS (
+            SELECT tem."wrID"
+            FROM "tblEventMarkets" tem
+            WHERE tem."wrRateSourceRefID" = $6
+            )
+            UPDATE "tblMarketRunners" tmr
+            SET "wrBackPrice" = $1,
+                "wrBackSize" = $2,
+                "wrLayPrice" = $3,
+                "wrLaySize" = $4
+            FROM matched_markets
+            WHERE tmr."wrSelectionId" = $5
+            AND tmr."wrEventMarketId" = matched_markets."wrID"
+            RETURNING 
+              tmr."wrEventMarketId" as "eventMarketId",
+              tmr."wrRunner" as "runner",
+              tmr."wrTeamId" as "teamId",
+              tmr."wrSelectionId" as "eventSelectionId";
+        `;
     const result = await fastify.db.query(query, {
       bind: [
         data.backPrice,
@@ -1649,6 +1669,7 @@ const updateEventMarketRunnerMaunalQuery = async (data, fastify) => {
         data.layPrice,
         data.laySize,
         data.selectionId,
+        data.rateSourceRefID
       ],
       type: fastify.db.QueryTypes.SELECT,
     });
