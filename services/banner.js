@@ -6,6 +6,7 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
   } = require("../utilities/Images");
   const { PROJECT_NAME } = require("../utilities/configConstants");
   const { ImgModuleConfig } = require("../utilities/imageConstant");
+  const { APIEndpointModuleType, ServiceType, callClientAPI } = require("../utilities");
   
   const getAllBannerService = async (request, fastify) => {
     const { isActive } = request.body;
@@ -54,6 +55,22 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
       request,
       fastify
     );
+    callClientAPI(
+      {
+        serviceType : ServiceType.clientAPI,
+        moduleType : APIEndpointModuleType.updateBanner,
+        data : data
+      },
+      request,
+      fastify
+    ).catch((err) => {
+      errorLogger(
+        fastify,
+        err.message,
+        "API ERROR --> services/banner/createBannerService",
+        request
+      )
+    });
   
     global.tblBanner.push(data[0]);
   
@@ -83,7 +100,7 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
       image: validateBannerId.image,
       userId: request.userTokenInfo.WrUserId,
       link: request.body.link,
-      viewerCount: request.body.viewerCount
+      viewerCount: request.body.viewerCount || validateBannerId.viewerCount
     };
     if (request.body.image && request.body.image.length) {
       const imgName = generateImageName({
@@ -102,6 +119,22 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
     }
   
     await updateBannerQuery(body, request, fastify);
+    callClientAPI(
+      {
+        serviceType : ServiceType.clientAPI,
+        moduleType : APIEndpointModuleType.updateBanner,
+        data : body
+      },
+      request,
+      fastify
+    ).catch((err) => {
+      errorLogger(
+        fastify,
+        err.message,
+        "API ERROR --> services/banner/updateBannerService",
+        request
+      )
+    });
     const index = global.tblBanner.findIndex(
       (item) => item.bannerId === request.body.bannerId
     );
@@ -122,6 +155,25 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
     }
     // delete the banner
     await deleteBannerQuery(bannerId, request, fastify);
+    callClientAPI(
+      {
+        serviceType : ServiceType.clientAPI,
+        moduleType : APIEndpointModuleType.updateBanner,
+        data : {
+          type : "delete",
+          bannerId : bannerId
+        }
+      },
+      request,
+      fastify
+    ).catch((err) => {
+      errorLogger(
+        fastify,
+        err.message,
+        "API ERROR --> services/banner/deleteBannerService",
+        request
+      )
+    });
     global.tblBanner = global.tblBanner.filter(
       (item) => !bannerId.includes(item.bannerId)
     );

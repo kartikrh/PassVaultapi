@@ -588,9 +588,19 @@ const createUpdateGlobalSignalRData = async (message, request) => {
                       socket.client.emit("updateRunnerData", marketRunner);
                     });
                   }
-
-
-                  await updateEventMarketRunnerMaunalQuery(items, _fastify);
+          
+                  let EventRunnerData = {
+                    backSize: items.backSize,
+                    backPrice: items.backPrice,
+                    laySize: items.laySize,
+                    layPrice: items.layPrice,
+                    selectionId: items.selectionId,
+                    rateSourceRefID: data.mi,
+                    timestamp: items.timestamp,
+                  }
+                  
+                 await updateEventMarketRunnerMaunalQuery(EventRunnerData, _fastify);
+                //  await updateEventMarketRunnerMaunalQuery(items, _fastify);
 
                   let _updateData = {};
                   if (_selectionidData && _selectionidData.commentaryId != 0) {
