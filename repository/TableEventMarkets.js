@@ -1896,12 +1896,13 @@ const getMarketByGraphByRefIdQuery = async (data, request, fastify) => {
                 bb."wrOverCount",
                 ov."wrOver",
                 mrb."wrData",
-                ROW_NUMBER() OVER (PARTITION BY mrb."wrCommentaryBallByBallId") AS rn
+                ROW_NUMBER() OVER (PARTITION BY mrb."wrCommentaryBallByBallId" ORDER BY mrb."wrCommentaryBallByBallId" DESC) AS rn
             FROM "tblMarketOddsBallByBall" mrb
             LEFT JOIN "tblCommentaries" cs ON mrb."wrCommentaryId" = cs."wrCommentaryId"
             LEFT JOIN "tblCompetitions" com ON com."wrCompetitionId" = cs."wrCompetitionId"
             LEFT JOIN "tblMatchTypes" mty ON mty."wrMatchTypeId" = cs."wrMatchTypeId"
-            LEFT JOIN "tblCommentaryBallByBalls" bb ON mrb."wrCommentaryBallByBallId" = bb."wrCommentaryBallByBallId"
+            LEFT JOIN "tblCommentaryBallByBalls" bb ON mrb."wrCommentaryBallByBallId" = bb."w
+          rCommentaryBallByBallId"
             LEFT JOIN "tblOvers" ov ON ov."wrOverId" = bb."wrOverId"
             WHERE mrb."wrCommentaryId" = $1 
         )
