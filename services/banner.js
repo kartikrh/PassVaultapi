@@ -195,6 +195,26 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
       request,
       fastify
     );
+    callClientAPI(
+      {
+        serviceType : ServiceType.clientAPI,
+        moduleType : APIEndpointModuleType.updateBanner,
+        data : {
+          type: "status",
+          bannerId : bannerId,
+          isActive: isActive
+        }
+      },
+      request,
+      fastify
+    ).catch((err) => {
+      errorLogger(
+        fastify,
+        err.message,
+        "API ERROR --> services/banner/activeInactiveBannerService",
+        request
+      )
+    });
   
     const index = global.tblBanner.findIndex((item) => item.bannerId === bannerId);
     global.tblBanner[index].isActive = isActive;
