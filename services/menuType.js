@@ -5,6 +5,8 @@ const {
   validatMenuTypeQuery,
   getAllMenuTypesQuery,
 } = require("../repository/TableMenuTypes");
+const { callClientAPI, ServiceType, APIEndpointModuleType } = require("../utilities");
+const { errorLogger } = require("../utilities/logger");
 
 const allMenuTypeService = async (request , fastify) => {
   // return global.tblMenuTypes;
@@ -108,6 +110,23 @@ const createMenuTypeService = async (request, fastify) => {
 
   global.tblMenuTypes.push(data);
 
+  if(data.isActive){
+    callClientAPI(
+      {
+        serviceType : ServiceType.clientAPI, 
+        moduleType : APIEndpointModuleType.updateMenuList,
+        data : {
+          module : "menuTypes",
+          type : "add",
+          data : data
+        }
+      },
+      request,
+      fastify
+    ).catch(err => 
+      errorLogger(fastify, err.message, "services/menuType.js/createMenuTypeService - callClientAPI", request)
+    );
+  }
   return data;
 };
 
@@ -165,6 +184,24 @@ const updateMenuTypeService = async (request, fastify) => {
     blockId: body.blockId,
     menuTypeId: request.body.menuTypeId,
   };
+  if(result.isActive){
+      callClientAPI(
+        {
+          serviceType : ServiceType.clientAPI, 
+          moduleType : APIEndpointModuleType.updateMenuList,
+          data : {
+            module : "menuTypes",
+            type : "update",
+            data : global.tblMenuTypes[index]
+          }
+        },
+        request,
+        fastify
+      ).catch(err => 
+        errorLogger(fastify, err.message, "services/menuType.js/updateMenuTypeService - callClientAPI", request)
+      );
+    
+  }
 
   return {
     ...result,
@@ -195,6 +232,24 @@ const deleteMenuTypeService = async (request, fastify) => {
   global.tblMenuTypes = global.tblMenuTypes.filter(
     (menuType) => !encryptedIds.includes(menuType.menuTypeId)
   );
+    callClientAPI(
+      {
+        serviceType : ServiceType.clientAPI, 
+        moduleType : APIEndpointModuleType.updateMenuList,
+        data : {
+          module : "menuTypes",
+          type : "delete",
+          data : {
+            menuTypeId : encryptedIds
+          }
+        }
+      },
+      request,
+      fastify
+    ).catch(err => 
+      errorLogger(fastify, err.message, "services/menuType.js/createMenuTypeService - callClientAPI", request)
+    );
+  
 
   return "Menu Item type(s) deleted successfully";
 };

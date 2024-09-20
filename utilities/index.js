@@ -486,15 +486,17 @@ const callClientAPI = async (data,request, fastify) =>{
   }
 }
 const ServiceType = {
-   clientAPI : 1,
-    dataProviderAPI : 2,
+  clientAPI : 1,
+  dataProviderAPI : 2,
 }
 const APIEndpointModuleType = {
   commentaryUpdate : 1,
   vendorUpdate : 2,
   vendorIpUpdate : 3,
-  updateConfig : 4,
-  updateBanner: 5
+  updateConfig : 4,	
+  updateBanner: 5,
+  updateSeoModule : 6,
+  updateMenuList : 7,
 }
 const NotificationSendType = {
   all : 1,

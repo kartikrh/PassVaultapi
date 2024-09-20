@@ -4,9 +4,11 @@ const {
   validatePageFormatQuery,
   deletePageFormatQuery,
 } = require("../repository/TablePageFormate");
+const { ServiceType, APIEndpointModuleType, callClientAPI } = require("../utilities");
 const { removeImageFromServer, storeImageOnServer, generateImageName } = require("../utilities/Images");
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const {ImgModuleConfig} = require("../utilities/imageConstant");
+const { errorLogger } = require("../utilities/logger");
 const allPageFormatService = async (request,fastify) => {
   // return global.tblPageFormats;
   const {isActive} = request.body;
@@ -65,6 +67,27 @@ const addPageFormatService = async (request, fastify) => {
     request
   );
   global.tblPageFormats.push(data);
+  if(data.isActive){
+    callClientAPI({
+      serviceType: ServiceType.clientAPI,
+      moduleType: APIEndpointModuleType.updateSeoModule,
+      data: {
+        type : "add",
+        module : "pageFormats",
+        data : data
+      },
+    },
+    request,
+    fastify
+    ).catch((error) => {
+      errorLogger(
+        fastify,
+        error.message ,
+        "services/pageFormate.js/addPageFormatService - callClientAPI",
+        request
+      );
+    });
+  }
   return data;
 };
 
@@ -126,6 +149,27 @@ const updatePageFormatService = async (request, fastify) => {
 
   global.tblPageFormats[index] = data;
 
+  if(data.isActive){
+    callClientAPI({
+      serviceType: ServiceType.clientAPI,
+      moduleType: APIEndpointModuleType.updateSeoModule,
+      data: {
+        type : "update",
+        module : "pageFormats",
+        data : data
+      },
+    },
+    request,
+    fastify
+    ).catch((error) => {
+      errorLogger(
+        fastify,
+        error.message ,
+        "services/pageFormate.js/updatePageFormatService - callClientAPI",
+        request
+      );
+    });
+  }
   return data;
 };
 
@@ -160,6 +204,25 @@ const deletePageFormatService = async (request, fastify) => {
   global.tblPageFormats = global.tblPageFormats.filter(
     (item) => !encryptedIds.includes(item.pageFormatId)
   );
+
+  callClientAPI({
+    serviceType: ServiceType.clientAPI,
+    moduleType: APIEndpointModuleType.updateSeoModule,
+    data: {
+      type : "delete",
+      module : "pageFormats",
+      data : {
+        pageFormatId : request.body.pageFormatId,
+      }
+    },
+  }, request , fastify).catch((error) => {
+    errorLogger(
+      fastify,
+      error.message,
+      "services/pageFormate.js/deletePageFormatService - callClientAPI",
+      request
+    );
+  });
 
   return "Page formate(s) deleted successfully";
 };
