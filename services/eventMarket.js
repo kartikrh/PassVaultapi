@@ -340,6 +340,7 @@ const marketListResultFalseService = async (request, fastify) => {
     status,
     startDate,
     endDate,
+    rateSourceRefId
   } = request.body;
   // let eventMarket = global.tblEventMarkets.filter((item) => {
   //   return (
@@ -348,10 +349,16 @@ const marketListResultFalseService = async (request, fastify) => {
   //     item.status == EventMarketStatus.Settled
   //   );
   // });
+  let createWhereStatus = `tem."wrIsResult" = false AND tem."wrResult" IS NOT NULL AND tem."wrStatus" = ${EventMarketStatus.Settled}`;
+  if (rateSourceRefId && rateSourceRefId != 0) {
+    createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrRateSource" = ${rateSourceRefId}` : `tem."wrRateSource" = ${rateSourceRefId}`;
+  }
   let eventMarket = await getAllEventMarketsQuery(
     fastify,
-    `tem."wrIsResult" = false AND tem."wrResult" IS NOT NULL AND tem."wrStatus" = ${EventMarketStatus.Settled}`
+    createWhereStatus
   );
+
+  
   if (eventTypeId) {
     // get the commentaryId from tblCommentaries
     let commentaryId = global.tblCommentaries
