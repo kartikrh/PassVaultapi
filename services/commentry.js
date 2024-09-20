@@ -2774,7 +2774,8 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         });
 
         if(updatedData.commentaryBallByBallDetails.ballType > 0){
-          let resultArray = await addinMarketBallbyballOdds(commentaryId,updatedData.commentaryBallByBallDetails, fastify).catch((err) => {
+          let _results = [];
+          let result = await addinMarketBallbyballOdds(commentaryId,updatedData.commentaryBallByBallDetails, fastify).catch((err) => {
               errorLogger(
                 fastify,
                 err.message,
@@ -2782,13 +2783,17 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
                 request
               );
             });
-          if(resultArray && resultArray.length > 0) {
-            sendDataForSocketUpdate.dataToUpdate.push({
-              module: "marketOddsBallByBall",
-              data: resultArray,
-              type : "create"
-            });
-          }
+            if(result)
+            {
+              _results.push(result);
+              if(_results && _results.length > 0) {
+                sendDataForSocketUpdate.dataToUpdate.push({
+                  module: "marketOddsBallByBall",
+                  data: _results,
+                  type : "create"
+                });
+              }
+            }
         }
         // try {
         //     const filteredCid = global.tblEventMarkets.filter((e) => e.commentaryId === commentaryId && e.rateSource === 2);
@@ -3491,9 +3496,9 @@ const addinMarketBallbyballOdds = async (commentaryId, objball,fastify) =>{
         _resultArray.forEach(obj => {
           obj.Data = JSON.stringify(obj.Data);
         });
-        
+        let res;
         try {
-          let res = await createMarketOddsBallInSaveDetails(_resultArray[0], fastify, null);
+          res = await createMarketOddsBallInSaveDetails(_resultArray[0], fastify, null);
           global.tblMarketOddsBallByBall.push(res);
         } catch (error) {
           console.log("create market odds ball by ball by id console", error);
@@ -3504,7 +3509,7 @@ const addinMarketBallbyballOdds = async (commentaryId, objball,fastify) =>{
             null
           );
         }
-        return _resultArray;
+        return res;
         // Create a map for SignalRData entries
         // const signalRDataMap = new Map();
         // for (const key in global.SignalRData) {
