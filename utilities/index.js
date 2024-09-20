@@ -496,6 +496,7 @@ const APIEndpointModuleType = {
   updateConfig : 4,	
   updateSeoModule : 5,
   updateMenuList : 6,
+  updateBanner: 5
 }
 const NotificationSendType = {
   all : 1,
