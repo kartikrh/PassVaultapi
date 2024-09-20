@@ -4,6 +4,8 @@ const {
   validateBlockQuery,
   deleteBlockQuery,
 } = require("../repository/TableBlock");
+const { callClientAPI, ServiceType, APIEndpointModuleType } = require("../utilities");
+const { errorLogger } = require("../utilities/logger");
 
 const allBlocksService = async (request, fastify) => {
   // return global.tblBlocks;
@@ -46,7 +48,28 @@ const createBlockService = async (request, fastify) => {
     request
   );
 
+
+
+
   global.tblBlocks.push(data);
+
+  if(data.isShowContent){
+  callClientAPI(
+    {
+      serviceType: ServiceType.clientAPI,
+      moduleType: APIEndpointModuleType.updateSeoModule,
+      data: {
+        module : "blocks",
+        type : "add",
+        data : data	
+      }
+    },
+    request,
+    fastify
+  ).catch((err) => {
+    errorLogger(fastify, err.message, "services/blocks.js/createBlockService - callClientAPI", request);
+  });
+  }
   return data;
 };
 
@@ -96,7 +119,24 @@ const updateBlockService = async (request, fastify) => {
 
   global.tblBlocks[index] = { ...result, blockId: request.body.blockId };
 
+    callClientAPI(
+      {
+        serviceType: ServiceType.clientAPI,
+        moduleType: APIEndpointModuleType.updateSeoModule,
+        data: {
+          module : "blocks",
+          type : "update",
+          data : global.tblBlocks[index]	
+        }
+      },
+      request,
+      fastify
+    ).catch((err) => {
+      errorLogger(fastify, err.message, "services/blocks.js/updateBlockService - callClientAPI", request);
+    });
+  
   return { ...result, blockId: request.body.blockId };
+  
 };
 
 const deleteBlockService = async (request, fastify) => {
@@ -121,7 +161,24 @@ const deleteBlockService = async (request, fastify) => {
   global.tblBlocks = global.tblBlocks.filter(
     (block) => !encryptedIds.includes(block.blockId)
   );
-
+  
+  callClientAPI(
+    {
+      serviceType: ServiceType.clientAPI,
+      moduleType: APIEndpointModuleType.updateSeoModule,
+      data: {
+        module : "blocks",
+        type : "delete",
+        data : {
+          blockId : request.body.blockId,
+        }	
+      }
+    },
+    request,
+    fastify
+  ).catch((err) => {
+    errorLogger(fastify, err.message, "services/blocks.js/deleteBlockService - callClientAPI", request);
+  });
   return "Block(s) deleted successfully";
 };
 

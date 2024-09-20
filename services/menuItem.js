@@ -11,7 +11,10 @@ const {
 } = require("../repository/TableMenuItem");
 const {
   updatePageService, addPageService
-} = require('../services/page')
+} = require('../services/page');
+const { ServiceType, APIEndpointModuleType, callClientAPI } = require("../utilities");
+const { errorLogger } = require("../utilities/logger");
+const { getAllMenuItemListService } = require("./menuType");
 const allMenuItemService = async (request,fastify) => {
   // return global.tblMenuItems;
   const {isActive} = request.body;
@@ -96,6 +99,24 @@ const createMenuItemService = async (request, fastify) => {
   );
 
   global.tblMenuItems.push(data);
+  if(data.isActive){
+    callClientAPI(
+      {
+        serviceType : ServiceType.clientAPI, 
+        moduleType : APIEndpointModuleType.updateMenuList,
+        data : {
+          module : "menuItems",
+          type : "update",
+          data : data
+        }
+      },
+      request,
+      fastify
+    ).catch(err => 
+      errorLogger(fastify, err.message, "services/menuItem.js/createMenuItemService - callClientAPI", request)
+    );
+    
+  }
   return data;
 };
 
@@ -177,6 +198,23 @@ const updateMenuItemService = async (request, fastify) => {
     (item) => item.menuItemId === request.body.menuItemId
   );
   global.tblMenuItems[index] = { ...body, userId: undefined };
+  if(body.isActive){
+      callClientAPI(
+        {
+          serviceType : ServiceType.clientAPI, 
+          moduleType : APIEndpointModuleType.updateMenuList,
+          data : {
+            module : "menuItems",
+            type : "update",
+            data : global.tblMenuItems[index]
+          }
+        },
+        request,
+        fastify
+      ).catch(err => 
+        errorLogger(fastify, err.message, "services/menuItem.js/createMenuItemService - callClientAPI", request)
+      );
+  }
   return `Menu Item updated successfully`;
 };
 
@@ -217,6 +255,25 @@ const deleteMenuItemService = async (request, fastify) => {
   global.tblMenuItems = global.tblMenuItems.filter(
     (item) => !encryptedIds.includes(item.menuItemId)
   );
+    callClientAPI(
+      {
+        serviceType : ServiceType.clientAPI, 
+        moduleType : APIEndpointModuleType.updateMenuList,
+        data : {
+          module : "menuItems",
+          type : "update",
+          data : {
+            menuItemId : request.body.menuItemId,
+          }
+        }
+      },
+      request,
+      fastify
+    ).catch(err => 
+      errorLogger(fastify, err.message, "services/menuItem.js/createMenuItemService - callClientAPI", request)
+    );
+    
+  
 
   return "Menu item(s) deleted successfully";
 };
@@ -270,6 +327,21 @@ const updateMenuItemStatusService = async (request, fastify) => {
     ...global.tblMenuItems[index],
     isActive,
   };
+    callClientAPI(
+      {
+        serviceType : ServiceType.clientAPI, 
+        moduleType : APIEndpointModuleType.updateMenuList,
+        data : {
+          module : "menuItems",
+          type : isActive ? "active" : "inactive",
+          data : menu
+        }
+      },
+      request,
+      fastify
+    ).catch(err => 
+      errorLogger(fastify, err.message, "services/menuItem.js/createMenuItemService - callClientAPI", request)
+    );
 
   return `Menu Item status updated successfully`;
   
@@ -302,7 +374,21 @@ const updateMenuItemDisplayOrderService = async (request, fastify) => {
 
   const getAllMenuItems = await allMenuItemsQuery(fastify);
   global.tblMenuItems = getAllMenuItems;
-
+    callClientAPI(
+      {
+        serviceType : ServiceType.clientAPI, 
+        moduleType : APIEndpointModuleType.updateMenuList,
+        data : {
+          module : "menuItems",
+          type : "updateOrder",
+          data : request.body
+        }
+      },
+      request,
+      fastify
+    ).catch(err => 
+      errorLogger(fastify, err.message, "services/menuItem.js/createMenuItemService - callClientAPI", request)
+    );
   return "Order chaged successfully";
 
 };

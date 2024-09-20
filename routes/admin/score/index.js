@@ -3,6 +3,8 @@ const {
   checkPermission,
 } = require("../../../controller/middleware");
 const { getAllPage } = require("../../../controller/users/admin/Page/page");
+const { getAllPageFormats } = require("../../../controller/users/admin/Page/pageFormate");
+const { getAllBlocks } = require("../../../controller/users/admin/blocks");
 const {
   getCommentaryDetailsByEventId,
   getCommentaryDetailsBycommentaryId,
@@ -21,7 +23,9 @@ const {
   getAllCommentariesData,
 } = require("../../../controller/users/admin/commentary/commentary");
 const { getAllEventMarketsAndRunners } = require('../../../controller/users/admin/eventMarket');
-const { getMenuItemList } = require("../../../controller/users/admin/menuType");
+const { getAllMenuItems } = require("../../../controller/users/admin/menuItem");
+const { getMenuItemList, getAllMenuTypes } = require("../../../controller/users/admin/menuType");
+const { getAllNews, getNewsById } = require("../../../controller/users/admin/news");
 const { getMarketsByCommentaryId, getNotificationByClient, markReadNotification ,getMarketByGraphByRefId } = require("../../../controller/users/admin/score");
 const {
   saveSubScribeDomain,
@@ -246,5 +250,23 @@ module.exports = async (fastify, opts) => {
   })
   fastify.post("/getMarketRunners" , {
     handler: (request, reply) => getAllEventMarketsAndRunners(request, reply, fastify)
+  })
+  fastify.post("/getAllBlock", {
+    handler: (request, reply) => getAllBlocks(request, reply, fastify)
+  })
+  fastify.post("/getPageFormat", {
+    handler: (request, reply) => getAllPageFormats(request, reply, fastify)
+  })
+  fastify.post("/getAllNews", {
+    handler: (request, reply) => getAllNews(request, reply, fastify)
+  })
+  fastify.post("/newsById", {
+    handler: (request, reply) => getNewsById(request, reply, fastify)
+  })
+  fastify.post("/getMenutype", {
+    handler: (request, reply) => getAllMenuTypes(request, reply, fastify)
+  })
+  fastify.post("/getMenuItem", {
+    handler: (request, reply) => getAllMenuItems(request, reply, fastify)
   })
 };

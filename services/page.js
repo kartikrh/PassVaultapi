@@ -5,6 +5,8 @@ const {
   validatePageIdInPageAlias,
   deletePageQuery,
 } = require("../repository/TablePage");
+const { callClientAPI, ServiceType, APIEndpointModuleType } = require("../utilities");
+const { errorLogger } = require("../utilities/logger");
 
 const allPageService = async (fastify) => {
   return global.tblPages;
@@ -35,6 +37,25 @@ const addPageService = async (request, fastify) => {
 
   global.tblPages.push(data);
 
+  callClientAPI({
+    serviceType: ServiceType.clientAPI,
+    moduleType: APIEndpointModuleType.updateMenuList,
+    data: {
+      type : "add",
+      module : "pages",
+      data : data
+    },
+  },
+  request,
+  fastify
+  ).catch((error) => {
+    errorLogger(
+      fastify,
+      error.message ,
+      "services/page.js/addPageService - callClientAPI",
+      request
+    );
+  });
   return data;
 };
 
@@ -89,12 +110,33 @@ const updatePageService = async (request, fastify) => {
     whiteLabelId : body.whiteLabelId,
   };
 
+  callClientAPI({
+    serviceType: ServiceType.clientAPI,
+    moduleType: APIEndpointModuleType.updateMenuList,
+    data: {
+      type : "update",
+      module : "pages",
+      data : global.tblPages[index]
+    },
+  }, request , fastify).catch((error) => {
+    errorLogger(
+      fastify,
+      error.message,
+      "services/page.js/updatePageService - callClientAPI",
+      request
+    );
+  });
+
   return {
     ...result,
     pageId: request.body.pageId,
     pageFormatId: body.pageFormatId,
     whiteLabelId : body.whiteLabelId,
   };
+
+ 
+
+
 };
 
 const deletePageService = async (request, fastify) => {
@@ -132,6 +174,24 @@ const deletePageService = async (request, fastify) => {
     (item) => !encryptedIds.includes(item.pageId)
   );
 
+  callClientAPI({
+    serviceType: ServiceType.clientAPI,
+    moduleType: APIEndpointModuleType.updateMenuList,
+    data: {
+      type : "delete",
+      module : "pages",
+      data : {
+        pageId : request.body.pageId,
+      }
+    },
+  }, request , fastify).catch((error) => {
+    errorLogger(
+      fastify,
+      error.message,
+      "services/page.js/deletePageService - callClientAPI",
+      request
+    );
+  });
   return "Page(s) deleted successfully";
 };
 
