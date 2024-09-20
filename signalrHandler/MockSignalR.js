@@ -360,7 +360,7 @@ const createUpdateGlobalSignalRData = async (message, request) => {
       const EventsMarketobj = global.tblEventMarkets.filter(
           (item) => item.rateSourceRefID === data.mi
       );
-      if(EventsMarketobj.length > 0 && data.ms !== EventMarketStatus.Open)
+      if(EventsMarketobj.length > 0 && data.rt !== null && data.ms !== EventMarketStatus.Open)
       {
         global.tblEventMarkets = global.tblEventMarkets.map(item => {
           if (item.rateSourceRefID === data.mi) {
@@ -419,6 +419,145 @@ const createUpdateGlobalSignalRData = async (message, request) => {
               }
             }
           }
+          const groupedRates = {};
+
+          data.rt.forEach(rate => {
+              const selectionId = rate.si;
+
+              if (!groupedRates[selectionId]) {
+                  groupedRates[selectionId] = {
+                      back: [],
+                      lay: []
+                  };
+              }
+
+              // If pr is 0, process it and skip further pr === 1 checks
+              if (rate.pr === 0) {
+                  if (rate.ib) {
+                      groupedRates[selectionId].back.push(rate);
+                  } else {
+                      groupedRates[selectionId].lay.push(rate);
+                  }
+                  groupedRates[selectionId].hasPr0 = true;
+              }
+          });
+
+          data.rt.forEach(rate => {
+              const selectionId = rate.si;
+              if (rate.pr === 1 && !groupedRates[selectionId].hasPr0) {
+                  if (rate.ib) {
+                      groupedRates[selectionId].back.push(rate);
+                  } else {
+                      groupedRates[selectionId].lay.push(rate);
+                  }
+              }
+          });
+
+          Object.keys(groupedRates).forEach(selectionId => {
+              delete groupedRates[selectionId].hasPr0;
+          });
+
+          const _blrbsids = []; //Back and Lay Rates by SelectionIds  blrbsids
+          const currentTime = new Date().toISOString();
+          Object.keys(groupedRates).forEach(selectionId => {
+              const rates = groupedRates[selectionId];
+              const backRates = rates.back.length ? rates.back : [{
+                  rv: null,
+                  re: null
+              }];
+              const layRates = rates.lay.length ? rates.lay : [{
+                  rv: null,
+                  re: null
+              }];
+
+              backRates.forEach(backRate => {
+                  layRates.forEach(layRate => {
+                      _blrbsids.push({
+                          backSize: backRate.rv,
+                          backPrice : backRate.re,
+                          laySize: layRate.rv,
+                          layPrice: layRate.re,
+                          selectionId: parseInt(selectionId, 10),
+                          timestamp: currentTime // Add timestamp here
+                      });
+                  });
+              });
+          });
+          if (_blrbsids && _blrbsids.length) {
+              for (const items of _blrbsids) {
+                  const _selectionidData = global.tblEventMarkets.find(
+                      (e) => e.selectionId == items.selectionId
+                  );
+
+                  let marketRunner = global.tblEventMarkets.filter(
+                      (item) => item.eventRefId == _selectionidData.eventRefId && item.rateSource === 2
+                  );
+                  marketRunner = marketRunner.map((item) => {
+                      let teamNameData
+                      if (item.teamId) {
+                          teamNameData = global.tblCommentaryTeams.find((elem) => elem.teamId === item.teamId)
+                      }
+                      if (!item.teamId) {
+                        teamNameData = global.tblCommentaryTeams.find((t) =>
+                          t.teamName?.toLowerCase().trim() === item.runner?.toLowerCase().trim()
+                      );
+                      }
+                      return {
+                          runnerId: item.runnerId,
+                          runner: item.runner,
+                          selectionId: item.selectionId,
+                          backSize: item.backSize,
+                          laySize: item.laySize,
+                          backPrice: item.backPrice,
+                          layPrice: item.layPrice,
+                          teamId: item.teamId,
+                          teamName: teamNameData?.teamName || null
+                      };
+                  });
+
+                  if (
+                    global?.clientSocketIo !== undefined &&
+                    global?.clientSocketIo.length > 0
+                  ) {
+                    try {
+                      await getAllEventMarketsAndRunnersService(
+                        _fastify,
+                        {
+                          ...request,
+                          body: {
+                            eventId: _selectionidData.eventRefId,
+                          },
+                        },
+                        "marketRunnersFromSocket"
+                      );
+                    } catch (error) {
+                      errorLogger(
+                        _fastify,
+                        error.message,
+                        "ERROR --> signalrHandler/MockSignalR.js/getAllEventMarketsAndRunnersService",
+                        request
+                      );
+                    }
+                    // broadcast to all connected clients
+                    global.clientSocketIo.forEach((socket) => {
+                      socket.client.emit("updateRunnerData", marketRunner);
+                    });
+                  }
+          
+                  let eventRunnerData = {
+                    backSize: items.backSize,
+                    backPrice: items.backPrice,
+                    laySize: items.laySize,
+                    layPrice: items.layPrice,
+                    selectionId: items.selectionId,
+                    rateSourceRefID: data.mi,
+                    timestamp: items.timestamp,
+                  }
+                  
+                 await updateEventMarketRunnerMaunalQuery(eventRunnerData, _fastify);
+                //  await updateEventMarketRunnerMaunalQuery(items, _fastify);
+              }
+            }
         }
       }
       else if (EventsMarketobj && data.rt !== null && data.ms == EventMarketStatus.Open) {
@@ -513,8 +652,9 @@ const createUpdateGlobalSignalRData = async (message, request) => {
                           teamNameData = global.tblCommentaryTeams.find((elem) => elem.teamId === item.teamId)
                       }
                       if (!item.teamId) {
-                          teamNameData = global.tblCommentaryTeams.find((t) =>
-                              t.teamName.toLowerCase() == item.runner.toLowerCase())
+                        teamNameData = global.tblCommentaryTeams.find((t) =>
+                          t.teamName?.toLowerCase().trim() === item.runner?.toLowerCase().trim()
+                      );
                       }
                       return {
                           runnerId: item.runnerId,
