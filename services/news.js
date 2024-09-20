@@ -4,6 +4,7 @@ const {
   updateNewsQuery,
   activeInactiveNewsQuery,
 } = require("../repository/TableNews");
+const { callClientAPI, ServiceType, APIEndpointModuleType } = require("../utilities");
 const {
   generateImageName,
   storeImageOnServer,
@@ -61,6 +62,27 @@ const createNewsService = async (request, fastify) => {
 
   global.tblNews.push(data[0]);
 
+  if(data[0].isActive){
+    callClientAPI(
+     {
+        serviceType : ServiceType.clientAPI,
+        moduleType : APIEndpointModuleType.updateSeoModule,
+        data : {
+          module : 'news',
+          type : "add",
+          data : data[0]
+        }
+     }, request, fastify)
+    .catch((err) => {
+      errorLogger(
+        fastify,
+        err.message,
+        "services/news.js/createNewsService - callClientAPI",
+        request
+      );
+    });
+  }
+
   return data;
 };
 const updateNewsService = async (request, fastify) => {
@@ -111,6 +133,26 @@ const updateNewsService = async (request, fastify) => {
     (item) => item.newsId === request.body.newsId
   );
   global.tblNews[index] = body;
+  if(body.isActive){
+    callClientAPI(
+      {
+        serviceType : ServiceType.clientAPI,
+        moduleType : APIEndpointModuleType.updateSeoModule,
+        data : {
+          module : 'news',
+          type : "update",
+          data : body
+        }
+      }, request, fastify)
+    .catch((err) => {
+      errorLogger(
+        fastify,
+        err.message,
+        "services/news.js/createNewsService - callClientAPI",
+        request
+      );
+    });
+  }
   return body;
 };
 const deleteNewsService = async (request, fastify) => {
@@ -130,6 +172,26 @@ const deleteNewsService = async (request, fastify) => {
   global.tblNews = global.tblNews.filter(
     (item) => !newsId.includes(item.newsId)
   );
+  
+    callClientAPI({
+      serviceType : ServiceType.clientAPI,
+      moduleType : APIEndpointModuleType.updateSeoModule,
+      data : {
+        module : 'news',
+        type : "delete",
+        data : {
+          newsId : newsId
+        }
+      }
+    }, request, fastify)
+    .catch((err) => {
+      errorLogger(
+        fastify,
+        err.message,
+        "services/news.js/createNewsService - callClientAPI",
+        request
+      );
+    });
   return `News deleted successfully`;
 };
 const activeInactiveNewsService = async (request, fastify) => {
@@ -151,7 +213,25 @@ const activeInactiveNewsService = async (request, fastify) => {
 
   const index = global.tblNews.findIndex((item) => item.newsId === newsId);
   global.tblNews[index].isActive = isActive;
-
+    callClientAPI(
+      {
+        serviceType : ServiceType.clientAPI,
+        moduleType : APIEndpointModuleType.updateSeoModule,
+        data : {
+          module : 'news',
+          type : isActive ? "active" : "inactive",
+          data : global.tblNews[index]
+        }
+      }, request, fastify)
+    .catch((err) => {
+      errorLogger(
+        fastify,
+        err.message,
+        "services/news.js/createNewsService - callClientAPI",
+        request
+      );
+    });
+  
   return `News updated successfully`;
 };
 module.exports = {

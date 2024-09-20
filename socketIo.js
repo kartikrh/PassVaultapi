@@ -86,7 +86,7 @@ const connection = (socket , fastify) => {
             // If not, create a new entry for this eventMarketId
             const newEvent = {
               commentaryId: item.commentaryId,
-              commentaryBallByBallId: item.commentaryBallByBallId || null, // Adjust as needed
+              commentaryBallByBallId: ballbybllId || null, // Adjust as needed
               EventMarketId: item.eventMarketId,
               MarketStatus: item.status,
               MarketName: item.marketName,
@@ -103,7 +103,7 @@ const connection = (socket , fastify) => {
 
         for (let index = 0; index < result.length; index++) {
           try {
-            await createMarketOddsBallInSaveDetails(result[index], fastify, request);
+            await createMarketOddsBallInSaveDetails(result[index], fastify);
           } catch (error) {
             console.log("create market odds ball by ball by id console", error);
             errorLogger(
