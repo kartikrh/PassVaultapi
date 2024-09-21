@@ -131,40 +131,43 @@ const connection = (socket , fastify) => {
             type : "create"
           }
         ];
+        global.clientSocketIo.forEach((socket) => {
+          socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+        });
       }
       
-      if(commentaryId){
-        let marketRunner = global.tblEventMarkets.filter((item) => item.commentaryId == commentaryId && item.rateSource === 2)
-        marketRunner = marketRunner.map((item) => {
-          let teamNameData
-          if(item.teamId){
-          teamNameData = global.tblCommentaryTeams.find((elem) => elem.teamId === item.teamId)
-          }
-          if(!item.teamId){
-              teamNameData = global.tblCommentaryTeams.find((t) => 
-                  t.teamName.toLowerCase() == item.runner?.toLowerCase())
-          }
-          return {
-              runnerId: item.runnerId,
-              runner: item.runner,
-              selectionId: item.selectionId,
-              backSize: item.backSize,
-              laySize: item.laySize,
-              backPrice: item.backPrice,
-              layPrice: item.layPrice,
-              teamId: item.teamId,
-              teamName: teamNameData?.teamName || null
-          }
-        });
-        // sendDataForSocketUpdate.dataToUpdate.push({
-        //   module: "marketRunner",
-        //   type: "update",
-        //   data: marketRunner,
-        // });
-        global.clientSocketIo.forEach((socket) => {
-          socket.client.emit("updateRunnerData", marketRunner);
-        });
-      }
+      // if(commentaryId){
+      //   let marketRunner = global.tblEventMarkets.filter((item) => item.commentaryId == commentaryId && item.rateSource === 2)
+      //   marketRunner = marketRunner.map((item) => {
+      //     let teamNameData
+      //     if(item.teamId){
+      //     teamNameData = global.tblCommentaryTeams.find((elem) => elem.teamId === item.teamId)
+      //     }
+      //     if(!item.teamId){
+      //         teamNameData = global.tblCommentaryTeams.find((t) => 
+      //             t.teamName.toLowerCase() == item.runner?.toLowerCase())
+      //     }
+      //     return {
+      //         runnerId: item.runnerId,
+      //         runner: item.runner,
+      //         selectionId: item.selectionId,
+      //         backSize: item.backSize,
+      //         laySize: item.laySize,
+      //         backPrice: item.backPrice,
+      //         layPrice: item.layPrice,
+      //         teamId: item.teamId,
+      //         teamName: teamNameData?.teamName || null
+      //     }
+      //   });
+      //   // sendDataForSocketUpdate.dataToUpdate.push({
+      //   //   module: "marketRunner",
+      //   //   type: "update",
+      //   //   data: marketRunner,
+      //   // });
+      //   global.clientSocketIo.forEach((socket) => {
+      //     socket.client.emit("updateRunnerData", marketRunner);
+      //   });
+      // }
       
       // global.clientSocketIo.forEach((socket) => {
       //   socket.client.emit("updateFullscore", sendDataForSocketUpdate);
@@ -172,36 +175,6 @@ const connection = (socket , fastify) => {
 
       console.log("Event Market Updated successfully");
       return true;
-  
-    // let marketDataToUpdate = marketData;
-
-    // // console.log("marketDataToUpdate", marketDataToUpdate);
-    // let runnerData = [];
-    // let marketDataLog = [];
-  
-    // for (let data of marketDataToUpdate) {
-    //   data = JSON.parse(data);
-    //   runnerData.push(...data.runner);
-    //   marketDataLog.push({
-    //     commentaryId,
-    //     eventMarketId: data.id,
-    //     data: data,
-    //     updateType: MarketUpdateType.predictMarket
-    //   });
-      
-    // }
-    //   await fastify.db.query(
-    //     `CALL proc_update_eventmarket_runner(
-    //       $1, $2, $3
-    //     )`,
-    //     {
-    //       bind: [
-    //         JSON.stringify(runnerData),
-    //         JSON.stringify(marketDataLog),
-    //         null
-    //       ]
-    //     }
-    //   );
     } catch (error) {
       errorLogger(
         fastify,
