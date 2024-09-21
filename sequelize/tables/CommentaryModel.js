@@ -175,6 +175,11 @@ module.exports = (sequelize) => {
         allowNull: true,
         defaultValue: true,
       },
+      wrLineRatio: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        defaultValue: 5,
+      },
     },
     {
       timestamps: false,

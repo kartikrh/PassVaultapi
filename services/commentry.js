@@ -57,7 +57,8 @@ const {
   updateSuperOverCommentaryQuery,
   insertCommentarySuperOverTeams,
   updateTeamPrediction,
-  updateCommentaryBattingTeamQuery
+  updateCommentaryBattingTeamQuery,
+  updateLineRationQuery
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -8456,6 +8457,72 @@ const updateTeamPredictionService = async (request, fastify) => {
 
   return updatedData;
 };
+
+const updateLineRationService = async (request, fastify) => {
+  const { commentaryId, lineRatio } = request.body;
+  try {
+    const index = global.tblCommentaries.findIndex(
+      (item) => item.commentaryId === commentaryId
+    );
+    if (index == -1) {
+      throw new Error("Commentary with this id not Found");
+    }
+    
+
+    await updateLineRationQuery({ commentaryId, lineRatio }, request, fastify);
+    
+    global.tblCommentaries[index].lineRatio = lineRatio;
+    // console.log(global.tblCommentaries[index]);
+    
+    commentaryLogger(
+      {
+        commentaryId: commentaryId,
+        requestBody: request.body,
+        response: {
+          message: "Line-ratio updated successfully",
+        },
+        global: null,
+        extra: null,
+        apiName: "/updatLineRatio",
+      },
+      request,
+      fastify
+    ).catch((err) => {
+      errorLogger(
+        fastify,
+        err.message,
+        "ERROR --> services/commentary.js/updateLineRationService",
+        request
+      );
+    });
+
+    return `Line-ratio updated successfully`;
+  } catch (error) {
+  commentaryLogger(
+      {
+         commentaryId: commentaryId,
+          requestBody: request.body,
+          response: {
+            error: error.message,
+          },
+          global:null,
+          extra: null,
+          apiName : "/updateLineRation"
+      },
+      request,
+      fastify
+    ).catch((err) => {
+      errorLogger(
+        fastify,
+        err.message,
+        "ERROR --> services/commentary.js/updateLineRationService",
+        request
+      );
+    });
+    throw new Error(error);
+  }
+};
+
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -8512,5 +8579,6 @@ module.exports = {
   // getshortService,
   syncCommentaryStatsWithAPIAndSocket,
   getMatchDataByCId,
-  updateTeamPredictionService
+  updateTeamPredictionService,
+  updateLineRationService
 };
