@@ -55,7 +55,7 @@ const insertSocialMediaQuery = async (data, fastify, request) => {
                 bind: [
                     data.name,
                     data.link,
-                    data.image,
+                    data.image || "",
                     data.isActive || false,
                     request.userTokenInfo.WrUserId
                 ],
