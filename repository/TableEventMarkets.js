@@ -2065,7 +2065,7 @@ const cancelMarketQuery = async (request, fastify) => {
 const getMarketsByComIdQuery = async (data,request, fastify) => {
   try {
     let query = `
-      SELECT CAST(COUNT(*) as integerA) as "marketCount"
+      SELECT CAST(COUNT(*) as integer) as "marketCount"
       FROM "tblEventMarkets" 
       WHERE "wrCommentaryId" = $1
       AND "wrStatus" NOT IN ($2,$3)
