@@ -8472,6 +8472,8 @@ const updateLineRationService = async (request, fastify) => {
     await updateLineRationQuery({ commentaryId, lineRatio }, request, fastify);
     
     global.tblCommentaries[index].lineRatio = lineRatio;
+    // console.log(global.tblCommentaries[index]);
+    
     commentaryLogger(
       {
         commentaryId: commentaryId,
