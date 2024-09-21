@@ -7,6 +7,7 @@ const {
   insertEventQuery,
   updateMarketRunnerTeambySelectionId
 } = require("../repository/TableImportMarket");
+const { getAllEventMarketsQuery }= require('../repository/TableEventMarkets');
 
 const {
   createEventMarketMaunalQuery,
@@ -411,9 +412,12 @@ const listManualMarketService = async (request, fastify) => {
     // const apiUrl = process.env.IMPORTMARKET_API;
     const { isAustralian, refID } = request.body;
 
-    let response = global.tblEventMarkets.filter(
-      (item) => item.eventRefId == refID && item.rateSource === 2
-    );
+    // let response = global.tblEventMarkets.filter(
+    //   (item) => item.eventRefId == refID && item.rateSource === 2
+    // );
+
+    let whereCondition = `tem."wrEventRefID" = '${refID}' AND tem."wrRateSource" = 2`;
+    let response = await getAllEventMarketsQuery(fastify, whereCondition);
 
     // const apiUrl = global.tblConfigs.find((item) => item.key == configConstants.IMPORTMARKET_API)?.value;
     // if(!apiUrl){
