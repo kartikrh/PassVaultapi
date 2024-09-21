@@ -1,7 +1,8 @@
 const {  
     addCommentaryAwardQuery,
     updateCommentaryAwardQuery,
-    deleteCommentaryAwardQuery
+    deleteCommentaryAwardQuery,
+    assignAwardQuery
  } = require("../repository/TableCommentaryAward");
 
 const getAllComAwardService = async (fastify) => {
@@ -106,7 +107,35 @@ const getCommentaryPlayerByComService = async (request, fastify) => {
     })
     return result;
 }
+const assignAwardService = async (request, fastify) => {
+    const {comAwards} = request.body;
+    for (let a of comAwards) {
+        let comI = global.tblCommentaries.findIndex((item) => item.commentaryId === a.commentaryId);
+        if(comI === -1){
+            throw new Error("Commentary with this Id not found");
+        }
+        if(a.teamId){
+            let teamI = global.tblTeams.findIndex((item) => item.teamId === a.teamId);
+            if(teamI === -1){
+                throw new Error("Team with this Id not found");
+            }
+        }
+        if(a.playerId){
+            let playerI = global.tblPlayers.findIndex((item) => item.playerId === a.playerId);
+            if(playerI === -1){
+                throw new Error("Player with this Id not found");
+            }
+        }
+    }
+    let addAward = await assignAwardQuery(comAwards, request, fastify);
+    global.tblCommentaryAwards.push(...addAward); 
+    return addAward;
 
+}
+const getAssignAwardService = async (request, fastify) => {
+    let result = global.tblCommentaryAwards.filter((item) => item.commentaryId === request.body.commentaryId);
+    return result;
+}
 module.exports = {
     getAllComAwardService,
     getComAwardByIdService,
@@ -114,5 +143,7 @@ module.exports = {
     deleteComAwardService,
     getCommentariesService,
     getCommentaryTeamService,
-    getCommentaryPlayerByComService
+    getCommentaryPlayerByComService,
+    assignAwardService,
+    getAssignAwardService
 }

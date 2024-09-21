@@ -5,7 +5,9 @@ const {
     deleteComAwardService, 
     getCommentariesService,
     getCommentaryTeamService,
-    getCommentaryPlayerByComService} = require("../../../../services/commentaryAward");
+    getCommentaryPlayerByComService,
+    assignAwardService,
+    getAssignAwardService} = require("../../../../services/commentaryAward");
 const { error, success, ERROR_CODES } = require("../../../../utilities");
 const { errorLogger } = require("../../../../utilities/logger");
 let commonPath = "controller/users/admin/commentaryAward/index.js";
@@ -74,6 +76,26 @@ const getCommentaryPlayerByCom = async (request, reply, fastify) => {
         reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
     }
 }
+const assignAward = async (request, reply, fastify) => {
+    try {
+        const result = await assignAwardService(request, fastify);
+        reply.status(200).send(success(result, 200));
+    }
+    catch (err) {
+        errorLogger(fastify, err.message, commonPath + "/assignAward", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+    }
+}
+const getAssignAward = async (request, reply, fastify) => {
+    try {
+        const result = await getAssignAwardService(request, fastify);
+        reply.status(200).send(success(result, 200));
+    }
+    catch (err) {
+        errorLogger(fastify, err.message, commonPath + "/getAssignAward", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+    }
+}
 module.exports = {
     getAllCommentaryAward,
     getCommentaryAwardById,
@@ -81,5 +103,7 @@ module.exports = {
     deleteCommentaryAward,
     getCommentaries,
     getCommentaryTeam,
-    getCommentaryPlayerByCom
+    getCommentaryPlayerByCom,
+    assignAward,
+    getAssignAward
 }
