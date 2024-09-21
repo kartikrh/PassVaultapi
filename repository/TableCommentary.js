@@ -43,6 +43,7 @@ const getAllCommentaryQuery = async (fastify) => {
     "wrIsPredictMarket" as "isPredictMarket",
     tc."wrIsActive"  as "isActive",
     "wrDelay" as "delay",
+    "wrLineRatio" as "lineRatio",
     tc."wrCommentaryResult" as "result",
     tc."wrCommentaryCloseTime" as "commentaryCloseTime",
     tc."wrIsTeamPredictionOn" as "isTeamPredictionOn",
@@ -3109,6 +3110,27 @@ const updateAverageOfPlayerQuery = async (data, request,fastify) => {
   }
 }
 
+const updateLineRationQuery = async (data, request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `update "tblCommentaries" set
+      "wrLineRatio" = $1
+      where "wrCommentaryId" = $2`,
+      {
+        bind: [data.lineRatio, data.commentaryId],
+      }
+    );
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCommentary/updateLineRationQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+}
+
 
 module.exports = {
   getAllCommentaryQuery,
@@ -3172,5 +3194,6 @@ module.exports = {
   updateCommentaryTeamPredictionPrecentageQuery,
   updateTeamPrediction,
   updateAverageOfPlayerQuery,
-  updateCommentaryBattingTeamQuery
+  updateCommentaryBattingTeamQuery,
+  updateLineRationQuery
 };
