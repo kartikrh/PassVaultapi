@@ -2669,6 +2669,21 @@ const Commentary = {
       },
     },
   },
+  updateLineRatio: {
+    schema: {
+      tags: ["Commentary"],
+      description: "update Line ratio",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+          lineRatio: { type: "integer" },
+        },
+        required: ["commentaryId", "lineRatio"],
+      },
+    },
+  },
 };
 
 const Compitition = {
