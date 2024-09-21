@@ -33,7 +33,6 @@ const {
   
     const saveData = await insertSocialMediaQuery(data.body, fastify, request);
     global.tblSocialMedia.push(saveData);
-    console.log("global.tblSocialMedia1111", global.tblSocialMedia);
 
     return saveData;
   };
@@ -79,7 +78,6 @@ const {
     if(index != -1){
       global.tblSocialMedia[index] = modifiedData[0];
     }
-    console.log("global.tblSocialMedia2222", global.tblSocialMedia);
 
     return modifiedData[0];
   };
@@ -89,7 +87,6 @@ const {
     let runnersValues = global.tblEventMarkets.filter(
       (e) => e.rateSourceRefID == 7046074
     );
-    console.log("index2index2index2:", runnersValues);
     if (isActive !== undefined) {
       const result = global.tblSocialMedia.filter(
         (item) => item.isActive === isActive

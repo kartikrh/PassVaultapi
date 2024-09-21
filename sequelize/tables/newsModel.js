@@ -2,7 +2,7 @@ const { DataTypes } = require("sequelize");
 
 module.exports = (sequelize) => {
   const NewsModel = sequelize.define(
-    "tblTeam",
+    "tblNews",
     {
       wrNewsId: {
         type: DataTypes.INTEGER,
@@ -63,6 +63,16 @@ module.exports = (sequelize) => {
         allowNull: true,
       },
       wrCredit : {
+        type : DataTypes.TEXT,
+        allowNull : true,
+        defaultValue : null
+      },
+      wrSEO : {
+        type : DataTypes.TEXT,
+        allowNull : true,
+        defaultValue : null
+      },
+      wrSEODescription : {
         type : DataTypes.TEXT,
         allowNull : true,
         defaultValue : null
