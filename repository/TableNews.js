@@ -13,7 +13,9 @@ const getAllNewsQuery = async (fastify) => {
             "wrEndDate" as "endDate",
             "wrTags" as "tags",
             "wrViewerCount" as "viewerCount",
-            "wrCredit" as "credit"
+            "wrCredit" as "credit",
+            "wrSEO" as "SEO",
+            "wrSEODescription" as "SEODescription"
         from "tblNews"
         `,
     {
@@ -38,9 +40,11 @@ const insertNewsQuery = async (data, request, fastify) => {
                         "wrCreatedDate",
                         "wrTags",
                         "wrViewerCount",
-                        "wrCredit"
+                        "wrCredit",
+                        "wrSEO",
+                        "wrSEODescription"
                     )
-                values ($1, $2, $3, $4, $5, $6, $7, $8, now(), $9, $10,$11) returning *
+                values ($1, $2, $3, $4, $5, $6, $7, $8, now(), $9, $10, $11, $12, $13) returning *
                 )
                 select 
                     "wrNewsId" as "newsId",
@@ -53,7 +57,9 @@ const insertNewsQuery = async (data, request, fastify) => {
                     "wrEndDate" as "endDate",
                     "wrTags" as "tags",
                     "wrViewerCount" as "viewerCount",
-                    "wrCredit" as "credit"
+                    "wrCredit" as "credit",
+                    "wrSEO" as "SEO",
+                    "wrSEODescription" as "SEODescription"
                 from "insert_data"
             `,
       {
@@ -69,7 +75,9 @@ const insertNewsQuery = async (data, request, fastify) => {
           data.userId,
           data.tags,
           data.viewerCount || null,
-          data.credit || null
+          data.credit || null,
+          data.SEO || null,
+          data.SEODescription || null
         ],
       }
     );
@@ -100,7 +108,9 @@ const updateNewsQuery = async (data, request, fastify) => {
                 "wrModifyDate" = now(),
                 "wrTags" = $10,
                 "wrViewerCount" = $11,
-                "wrCredit" = $12
+                "wrCredit" = $12,
+                "wrSEO" = $13,
+                "wrSEODescription" = $14
                 where "wrNewsId" = $9
             `,
       {
@@ -116,7 +126,9 @@ const updateNewsQuery = async (data, request, fastify) => {
           data.newsId,
           data.tags,
           data.viewerCount || null,
-          data.credit || null
+          data.credit || null,
+          data.SEO || null,
+          data.SEODescription || null
         ],
       }
     );
