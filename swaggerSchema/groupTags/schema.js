@@ -5914,6 +5914,130 @@ const SocialMedia = {
     },
   },
 };
+const Article = {
+  getAll: {
+    schema: {
+      tags: ["Article"],
+      description: "get all Articles",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+  getById: {
+    schema: {
+      tags: ["Article"],
+      description: "get Article by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+        },
+        required: ["id"],
+      },
+    },
+  },
+  save: {
+    schema: {
+      tags: ["Article"],
+      description: "save Article",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          title: { type: "string" },
+          article: { type: "string" },
+          isPermanent: { type: "boolean" },
+          isActive: { type: "boolean" },
+          startDate: { type: "string" },
+          endDate: { type: "string" },
+          tags: { type: "string" },
+          viewerCount: { type: "integer" },
+          credit: { type: "string" },
+          SEO: { type: "string" },
+          SEODescription: { type: "string" },
+        },
+        required: ["id", "title", "article"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["Article"],
+      description: "delete Article",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["id"],
+      },
+    },
+  },
+  activeInactiveArticle: {
+    schema: {
+      tags: ["Article"],
+      description: "active inactive Article",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["id", "isActive"],
+      },
+    },
+  },
+};
+
+const TournamentTeamPlayers = {
+  getAll: {
+    schema: {
+      tags: ["Tournament Team Players"],
+      description: "get all Tournament Team Players",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionId: { type: "integer" },
+          teamId: { type: "integer" },
+        },
+      },
+    },
+  },
+  save: {
+    schema: {
+      tags: ["Tournament Team Players"],
+      description: "save Tournament Team Players",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            competitionId: { type: "integer" },
+            teamId: { type: "integer" },
+            playerId: { type: "integer" },
+            playerName: { type: "string" },
+          },
+          required: ["competitionId", "teamId", "playerId", "playerName"],
+        },
+      },
+    },
+  },
+};
 module.exports = {
   Auth,
   Tabs,
@@ -5964,5 +6088,7 @@ module.exports = {
   ClientVideo,
   Award,
   CommentaryAward,
-  SocialMedia
+  SocialMedia,
+  Article,
+  TournamentTeamPlayers
 };

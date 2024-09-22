@@ -84,9 +84,6 @@ const {
   
   const allSocialMediaService = async (request) => {
     const { isActive } = request.body || {};
-    let runnersValues = global.tblEventMarkets.filter(
-      (e) => e.rateSourceRefID == 7046074
-    );
     if (isActive !== undefined) {
       const result = global.tblSocialMedia.filter(
         (item) => item.isActive === isActive

@@ -79,6 +79,31 @@ module.exports = (sequelize) => {
         allowNull: false,
         defaultValue: DataTypes.NOW,
       },
+      wrTotalFour : {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        defaultValue: 0
+      },
+      wrTotalSix : {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        defaultValue: 0
+      },
+      wrTotalExtra : {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        defaultValue: 0
+      },
+      wrTotalWide : {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        defaultValue: 0
+      },
+      wrTotalNoBall : {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        defaultValue: 0
+      },
     },
     {
       timestamps: false,
