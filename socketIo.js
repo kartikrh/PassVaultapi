@@ -2,7 +2,7 @@ const jwt = require("jsonwebtoken");
 const { errorLogger } = require("./utilities/logger");
 const { getEventMarketByIdsQuery } = require("./repository/TableEventMarkets");
 const { MarketActionType } = require("./utilities");
-const {createMarketOddsBallByBallBYIDFromSocketIo,createMarketOddsBallInSaveDetails} = require("./repository/TableMarketOddsBallByBall")
+const {createMarketOddsBallByBallBYIDFromSocketIo,createMarketOddsBallInSaveDetails,CheckAndCreateMarketOddsBallInSaveDetails} = require("./repository/TableMarketOddsBallByBall")
 
 const connection = (socket , fastify) => {
   const { userId, allowMultipleLogin, wrToken } = socket;
@@ -104,12 +104,12 @@ const connection = (socket , fastify) => {
         for (let index = 0; index < result.length; index++) {
           let res;
           try {
-            res = await createMarketOddsBallInSaveDetails(result[index], fastify);
+            res = await CheckAndCreateMarketOddsBallInSaveDetails(result[index], fastify);
           } catch (error) {
             errorLogger(
               fastify,
               error.message,
-              "ERROR --> createMarketOddsBallInSaveDetails",
+              "ERROR --> CheckAndCreateMarketOddsBallInSaveDetails",
               request
             );
           }

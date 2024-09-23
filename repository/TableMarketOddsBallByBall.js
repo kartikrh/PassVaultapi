@@ -563,10 +563,6 @@ const createMarketOddsBallInSaveDetails = async (data, fastify, request = null) 
         "wrDateTime"
       ) VALUES 
       ($1, $2, $3, $4, $5, $6, $7)
-      ON CONFLICT ("wrCommentaryId", "wrCommentaryBallByBallId", "wrEventMarketId")
-      DO UPDATE SET 
-        "wrData" = EXCLUDED."wrData",
-        "wrDateTime" = EXCLUDED."wrDateTime"
       RETURNING "wrId" as "id"`,
       {
         bind: insertData,
@@ -614,6 +610,113 @@ const createMarketOddsBallInSaveDetails = async (data, fastify, request = null) 
     return false;
   }
 };
+
+const CheckAndCreateMarketOddsBallInSaveDetails = async (data, fastify, request = null) => {
+  try {
+    const selectQuery = `
+      SELECT "wrId"
+      FROM "tblMarketOddsBallByBall"
+      WHERE "wrCommentaryId" = $1
+        AND "wrCommentaryBallByBallId" = $2
+        AND "wrEventMarketId" = $3
+    `;
+
+    // Check if the record exists
+    const existingRecord = await fastify.db.query(selectQuery, {
+      bind: [data.commentaryId, data.commentaryBallByBallId, data.eventMarketId],
+      type: fastify.db.QueryTypes.SELECT,
+    });
+
+    let wrId;
+
+    if (existingRecord.length > 0) {
+      // Record exists, so update it
+      wrId = existingRecord[0].wrId;
+      const updateQuery = `
+        UPDATE "tblMarketOddsBallByBall"
+        SET "wrData" = $4,
+            "wrDateTime" = $5
+        WHERE "wrId" = $6
+      `;
+
+      await fastify.db.query(updateQuery, {
+        bind: [data.data, new Date(), wrId],
+        type: fastify.db.QueryTypes.UPDATE,
+      });
+    } else {
+      // Record does not exist, so insert it
+      const insertData = [
+        data.commentaryId,
+        data.commentaryBallByBallId,
+        data.eventMarketId,
+        data.marketStatus,
+        data.marketName,
+        data.data,
+        new Date(),
+      ];
+
+      const insertResult = await fastify.db.query(
+        `INSERT INTO "tblMarketOddsBallByBall" (
+          "wrCommentaryId", 
+          "wrCommentaryBallByBallId",
+          "wrEventMarketId",
+          "wrMarketStatus",
+          "wrMarketName",
+          "wrData",
+          "wrDateTime"
+        ) VALUES (
+          $1, $2, $3, $4, $5, $6, $7
+        ) RETURNING "wrId" as "id"`,
+        {
+          bind: insertData,
+          type: fastify.db.QueryTypes.INSERT,
+        }
+      );
+
+      wrId = insertResult[0][0].id; // Assign wrId from the inserted record
+    }
+
+    // Fetch the full details and return
+    const result = await fastify.db.query(
+      `SELECT 
+          mobb."wrId" AS "id",
+          mobb."wrCommentaryId" AS "commentaryId",
+          mobb."wrCommentaryBallByBallId" AS "commentaryBallByBallId",
+          mobb."wrEventMarketId" AS "eventMarketId",
+          mobb."wrMarketStatus" AS "marketStatus",
+          mobb."wrMarketName" AS "marketName",
+          mobb."wrData" AS "data",
+          mobb."wrDateTime" AS "dateTime",
+          em."wrRateSource" AS "rateSource",
+          CASE 
+              WHEN em."wrMarketTypeId" IS NULL THEN '0'
+              WHEN em."wrMarketTypeId" = 0 THEN '0'
+              ELSE em."wrMarketTypeId"::TEXT
+          END AS "marketTypeId"
+      FROM 
+          "tblMarketOddsBallByBall" AS mobb
+      LEFT JOIN "tblEventMarkets" em ON mobb."wrEventMarketId" = em."wrID"
+      LEFT JOIN "tblMarketTypes" mty ON em."wrMarketTypeId" = mty."wrId"
+      WHERE mobb."wrId" = $1`,
+      {
+        bind: [wrId],
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+
+    return result[0]; // Return the full details
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableMarketOddsBallByBall/CheckAndCreateMarketOddsBallInSaveDetails",
+      null
+    );
+    console.log(err.message);
+    return false;
+  }
+};
+
 module.exports = {
   getAllMarketOddsBallByBall,
   createMarketOddsBallByBall,
@@ -625,5 +728,6 @@ module.exports = {
   createMarketOddsBallByBallBYIDFromSocketIo,
   createMarketOddsBallByBallBulkInsert,
   getAllMarketOddsBallByBallByCommentaryId,
-  createMarketOddsBallInSaveDetails
+  createMarketOddsBallInSaveDetails,
+  CheckAndCreateMarketOddsBallInSaveDetails
 };
