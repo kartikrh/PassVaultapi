@@ -281,7 +281,7 @@ const getAllEventMarketsAndRunners = async (request, reply, fastify)=>{
 }
 const cancelSettleMarket = async (request, reply, fastify)=>{
   try {
-    const result = await cancelSettleMarketService(fastify, request);
+    const result = await cancelSettleMarketService(request,fastify);
     reply.status(200).send(success(result, 200))
   }
   catch(err){
