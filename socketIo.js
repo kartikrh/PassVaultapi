@@ -96,16 +96,16 @@ const connection = (socket , fastify) => {
           }
         });
 
-              // Convert Data array to JSON strings
+        // Convert Data array to JSON strings
         result.forEach(event => {
           event.data = JSON.stringify(event.data);
         });
 
         for (let index = 0; index < result.length; index++) {
+          let res;
           try {
-            await createMarketOddsBallInSaveDetails(result[index], fastify);
+            res = await createMarketOddsBallInSaveDetails(result[index], fastify);
           } catch (error) {
-            console.log("create market odds ball by ball by id console", error);
             errorLogger(
               fastify,
               error.message,
@@ -113,8 +113,28 @@ const connection = (socket , fastify) => {
               request
             );
           }
-          global.tblMarketOddsBallByBall.push(result[index]);
-          marketOdd.push(result[index]);
+
+          const tblMarketOddsIndex = global.tblMarketOddsBallByBall.findIndex(item => item.commentaryId === res.commentaryId
+            && item.eventMarketId === res.eventMarketId
+            && item.commentaryBallByBallId === res.commentaryBallByBallId
+          );
+
+          if (tblMarketOddsIndex !== -1) {
+            global.tblMarketOddsBallByBall[tblMarketOddsIndex] = res;
+          } else {
+            global.tblMarketOddsBallByBall.push(res);
+          }
+
+          const marketOddIndex  = marketOdd.findIndex(item => item.commentaryId === res.commentaryId
+            && item.eventMarketId === res.eventMarketId
+            && item.commentaryBallByBallId === res.commentaryBallByBallId
+          );  
+
+          if (marketOddIndex !== -1) {
+            marketOdd[marketOddIndex] = res;
+          } else {
+            marketOdd.push(res);
+          }
         }
       }
 

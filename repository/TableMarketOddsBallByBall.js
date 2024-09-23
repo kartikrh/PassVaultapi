@@ -561,9 +561,13 @@ const createMarketOddsBallInSaveDetails = async (data, fastify, request = null) 
         "wrMarketName",
         "wrData",
         "wrDateTime"
-      ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7
-      ) RETURNING "wrId" as "id"`,
+      ) VALUES 
+      ($1, $2, $3, $4, $5, $6, $7)
+      ON CONFLICT ("wrCommentaryId", "wrCommentaryBallByBallId", "wrEventMarketId")
+      DO UPDATE SET 
+        "wrData" = EXCLUDED."wrData",
+        "wrDateTime" = EXCLUDED."wrDateTime"
+      RETURNING "wrId" as "id"`,
       {
         bind: insertData,
         type: fastify.db.QueryTypes.INSERT,
