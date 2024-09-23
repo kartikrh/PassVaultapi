@@ -1307,7 +1307,7 @@ const setAllMarketCloseService = async (request, fastify) => {
   // get password from config
   const configPassword = global.tblConfigs.find(
     (item) => item.key == configConstants.ALLMARKETCLOSEPASS
-  ).value;
+  )?.value;
   if (!configPassword) {
     throw new Error("Password not found in config");
   }
@@ -1326,7 +1326,7 @@ const setCloseMarketCancelService = async (request, fastify) => {
   // get password from config
   const configPassword = global.tblConfigs.find(
     (item) => item.key == configConstants.ALLMARKETCANCELPASS
-  ).value;
+  )?.value;
   if (!configPassword) {
     throw new Error("Password not found in config");
   }
