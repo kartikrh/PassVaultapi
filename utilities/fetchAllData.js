@@ -70,6 +70,8 @@ const { allClientVideoQuery } = require("../repository/TableClientVideo");
 const { getAllAwardQuery } = require("../repository/TableAward");
 const { getAllCommentaryAwardQuery } = require("../repository/TableCommentaryAward");
 const { allSocialMediaQuery } = require("../repository/TableSocialMedia");
+const { getAllArticlesQuery } = require("../repository/TableArticles");
+const { getAllTournamentTeamPlayersQuery } = require("../repository/TableTournamentsTeamPlayers");
 
 const fetchAllDataFromDb = async (fastify, reply) => {
   try {
@@ -143,6 +145,8 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const getAllAward = await getAllAwardQuery(fastify);
     const getAllCommentaryAward = await getAllCommentaryAwardQuery(fastify);
     const getAllSocialMediaData = await allSocialMediaQuery(fastify);
+    const getAllArticlesData = await getAllArticlesQuery(fastify);
+    const getAllTournamentTeamPlayers = await getAllTournamentTeamPlayersQuery(fastify);
     // const responseLogs = await allCommentaryLogsQuery2(fastify);
     // const thirdPartyAPILogs = await allThirdPartyApiLogsQuery(fastify);
     // const predictorAPILogs = await allPredictorAPILogsQuery(fastify);
@@ -206,6 +210,8 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblAwards = getAllAward;
     global.tblCommentaryAwards = getAllCommentaryAward;
     global.tblSocialMedia = getAllSocialMediaData;
+    global.tblArticles = getAllArticlesData;
+    global.tblTournamentTeamPlayers = getAllTournamentTeamPlayers;
     // global.responseLogs = responseLogs;
     // global.thirdPartyAPILogs = thirdPartyAPILogs;
     // global.predictorAPILogs = predictorAPILogs;

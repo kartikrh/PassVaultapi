@@ -83,6 +83,13 @@ const ImgModuleConfig = {
     height: 0,
     width: 0,
   },
+  Article: {
+    type: "article",
+    formate: ".jpg,.png,.jpeg,.avif,.webp",
+    size: 0,
+    height: 0,
+    width: 0,
+  },
 };
 
 module.exports = {

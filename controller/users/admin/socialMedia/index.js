@@ -35,8 +35,6 @@ const saveSocialMedia = async (request, reply, fastify) => {
         const result = await createSocialMediaService(request, fastify);
         reply.status(200).send(success(result, 200));
     } catch (err) {
-        console.log(err);
-        
         errorLogger(fastify, err.message, commonPath + "/saveSocialMedia", request);
         reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
     }

@@ -1113,7 +1113,9 @@ const getAllOversQuery = async (fastify) => {
       "wrDate" as "date",
       "wrIsDelete" as "isDelete",
       "wrCurrentInnings" as "currentInnings",
-      "wrTeamScore" as "teamScore"
+      "wrTeamScore" as "teamScore",
+      "wrIsPowerPlay" as "isPowerPlay",
+      "wrPowerPlayName" as "powerPlayName"
       from "tblOvers" 
       `,
     {
@@ -1265,7 +1267,12 @@ const getAllCommentaryPartnershipQuery = async (fastify) => {
       "wrBatter2Balls" as "batter2Balls",
       "wrBatter1Runs" as "batter1Runs",
       "wrBatter2Runs" as "batter2Runs",
-      "wrCreatedDate" as "createdDate"
+      "wrCreatedDate" as "createdDate",
+      "wrTotalFour" as "totalFour",
+      "wrTotalSix" as "totalSix",
+      "wrTotalExtra" as "totalExtra",
+      "wrTotalWide" as "totalWide",
+      "wrTotalNoBall" as "totalNoBall"
       from "tblCommentaryPartnerships"
       `,
     {
