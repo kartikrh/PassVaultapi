@@ -1993,16 +1993,22 @@ const closeMarketQuery = async (request, fastify) => {
 
     let query2 = `
       UPDATE "tblEventMarkets"
-      set
-        "wrStatus" = $1,
-        "wrCloseTime" = now()::timestamp,
-        "wrLastUpdate" = now()::timestamp,
-        "wrData" = jsonb_set(
-                jsonb_set("wrData"::jsonb, '{status}', '$1'::jsonb, false),
-                '{runner, 0, status}', '$1'::jsonb, false
-              )::json
+    SET
+      "wrStatus" = $1,
+      "wrCloseTime" = now()::timestamp,
+      "wrLastUpdate" = now()::timestamp,
+      "wrData" = jsonb_set(
+        jsonb_set("wrData"::jsonb, '{status}', '4'::jsonb, false),
+        '{runner}', (
+          SELECT jsonb_agg(
+            jsonb_set(runner_elem, '{status}', '4'::jsonb, false)
+          )
+          FROM jsonb_array_elements("wrData"::jsonb->'runner') AS runner(runner_elem)
+        ),
+        false
+      )::json
       where "wrStatus" NOT IN ($2,$3,$4)
-    `;
+        `;
     await fastify.db.query(query2, {
       bind: [EventMarketStatus.Close, EventMarketStatus.Settled, EventMarketStatus.Cancel, EventMarketStatus.Close],
       type: fastify.db.QueryTypes.SELECT,
@@ -2038,10 +2044,16 @@ const cancelMarketQuery = async (request, fastify) => {
       set
         "wrStatus" = $1,
         "wrLastUpdate" = now()::timestamp,
-        "wrData" = jsonb_set(
-                jsonb_set("wrData"::jsonb, '{status}', '$1'::jsonb, false),
-                '{runner, 0, status}', '$1'::jsonb, false
-              )::json,
+       "wrData" = jsonb_set(
+          jsonb_set("wrData"::jsonb, '{status}', '6'::jsonb, false),
+          '{runner}', (
+            SELECT jsonb_agg(
+              jsonb_set(runner_elem, '{status}', '6'::jsonb, false)
+            )
+            FROM jsonb_array_elements("wrData"::jsonb->'runner') AS runner(runner_elem)
+          ),
+          false
+        )::json
         "wrIsResult" = true,
         "wrResult" = null
       where "wrStatus" = $2
