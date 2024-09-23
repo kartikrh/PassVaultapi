@@ -98,7 +98,7 @@ const connection = (socket , fastify) => {
 
               // Convert Data array to JSON strings
         result.forEach(event => {
-          event.data = JSON.stringify(event.Data);
+          event.data = JSON.stringify(event.data);
         });
 
         for (let index = 0; index < result.length; index++) {
