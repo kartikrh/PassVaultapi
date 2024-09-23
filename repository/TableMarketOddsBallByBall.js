@@ -545,10 +545,10 @@ const createMarketOddsBallInSaveDetails = async (data, fastify, request = null) 
     const insertData = [
       data.commentaryId,
       data.commentaryBallByBallId,
-      data.EventMarketId,
-      data.MarketStatus,
-      data.MarketName,
-      data.Data,
+      data.eventMarketId,
+      data.marketStatus,
+      data.marketName,
+      data.data,
       new Date(),
     ];
 

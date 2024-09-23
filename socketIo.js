@@ -87,10 +87,10 @@ const connection = (socket , fastify) => {
             const newEvent = {
               commentaryId: item.commentaryId,
               commentaryBallByBallId: ballbybllId || null, // Adjust as needed
-              EventMarketId: item.eventMarketId,
-              MarketStatus: item.status,
-              MarketName: item.marketName,
-              Data: [runnerData] // Initialize with the first runner's data
+              eventMarketId: item.eventMarketId,
+              marketStatus: item.status,
+              marketName: item.marketName,
+              data: [runnerData] // Initialize with the first runner's data
             };
             result.push(newEvent);
           }
@@ -98,7 +98,7 @@ const connection = (socket , fastify) => {
 
               // Convert Data array to JSON strings
         result.forEach(event => {
-          event.Data = JSON.stringify(event.Data);
+          event.data = JSON.stringify(event.Data);
         });
 
         for (let index = 0; index < result.length; index++) {

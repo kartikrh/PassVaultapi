@@ -3476,15 +3476,15 @@ const addinMarketBallbyballOdds = async (commentaryId, objball,fastify) =>{
               acc[entry.eventMarketId] = {
                 commentaryId: commentaryId,
                 commentaryBallByBallId: objball.commentaryBallByBallId,
-                EventMarketId: entry.eventMarketId,
-                MarketStatus: entry.status,
-                MarketName: entry.marketName,
-                Data: [] // Initialize Data array
+                eventMarketId: entry.eventMarketId,
+                marketStatus: entry.status,
+                marketName: entry.marketName,
+                data: [] // Initialize Data array
               };
             }
         
             // Push the runner data into the Data array
-            acc[entry.eventMarketId].Data.push(runnerData);
+            acc[entry.eventMarketId].data.push(runnerData);
           }
         
           return acc;
@@ -3495,7 +3495,7 @@ const addinMarketBallbyballOdds = async (commentaryId, objball,fastify) =>{
         
         // Optionally stringify the Data array within each EventMarketId object
         _resultArray.forEach(obj => {
-          obj.Data = JSON.stringify(obj.Data);
+          obj.data = JSON.stringify(obj.data);
         });
         let res;
         try {
