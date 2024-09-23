@@ -2053,7 +2053,7 @@ const cancelMarketQuery = async (request, fastify) => {
             FROM jsonb_array_elements("wrData"::jsonb->'runner') AS runner(runner_elem)
           ),
           false
-        )::json
+        )::json,
         "wrIsResult" = true,
         "wrResult" = null
       where "wrStatus" = $2
