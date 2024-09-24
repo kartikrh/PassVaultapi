@@ -66,9 +66,13 @@ async function startSignalR(fastify) {
                 global.rateQueue.push(message);
               }
               global.rateQueue = global.rateQueue.filter((item) => item.ms === 1);
-              IntervalRunner = setInterval(async () => {
+              IntervalRunner = setTimeout(async () => {
                 await createUpdateGlobalSignalRData(message, request);
               }, _RateUpdate);
+              
+              IntervalId = setTimeout(async () => {
+                await processRateQueue();
+              }, _RateUpdate); 
             }
           } catch (error) {
             errorLogger(
@@ -81,9 +85,6 @@ async function startSignalR(fastify) {
         });
         //? Function For Intervals
         updateMarketRateIntervalId = setInterval(checkAndUpdateMarketRate, _SignalRInterwal || 10000);        
-        IntervalId = setInterval(async () => {
-          await processRateQueue();
-        }, _RateUpdate); 
 
         if (!checkConfigIntervalId) {
           checkConfigIntervalId = setInterval(reConnectSignalR, 300000);// 5 minutes 300000
