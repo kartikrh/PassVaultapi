@@ -66,9 +66,13 @@ async function startSignalR(fastify) {
                 global.rateQueue.push(message);
               }
               global.rateQueue = global.rateQueue.filter((item) => item.ms === 1);
-              IntervalRunner = setInterval(async () => {
+              IntervalRunner = setTimeout(async () => {
                 await createUpdateGlobalSignalRData(message, request);
               }, _RateUpdate);
+              
+              IntervalId = setTimeout(async () => {
+                await processRateQueue();
+              }, _RateUpdate); 
             }
           } catch (error) {
             errorLogger(
