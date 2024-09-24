@@ -85,9 +85,6 @@ async function startSignalR(fastify) {
         });
         //? Function For Intervals
         updateMarketRateIntervalId = setInterval(checkAndUpdateMarketRate, _SignalRInterwal || 10000);        
-        IntervalId = setInterval(async () => {
-          await processRateQueue();
-        }, _RateUpdate); 
 
         if (!checkConfigIntervalId) {
           checkConfigIntervalId = setInterval(reConnectSignalR, 300000);// 5 minutes 300000
