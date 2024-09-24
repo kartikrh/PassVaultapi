@@ -390,6 +390,7 @@ async function startSignalR(fastify) {
       }
     }
   } catch (error) { 
+    console.log('Error in startSignalR:', error);
   }
 }
 
