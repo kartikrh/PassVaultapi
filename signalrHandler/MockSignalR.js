@@ -224,6 +224,8 @@ const processRateQueue = async () => {
           winper: winPer
         };
       });
+
+      await updateMarketRunnerDataOnSocket(data);
       // console.log('\n================================')
       // Process the winPerList and update the market
       for (const winPer of winPerList) {
@@ -490,39 +492,7 @@ const createUpdateGlobalSignalRData = async (message, request) => {
           });
           if (_blrbsids && _blrbsids.length) {
               for (const items of _blrbsids) {
-                  const _selectionidData = global.tblEventMarkets.find(
-                      (e) => e.selectionId == items.selectionId
-                  );
 
-                  if (
-                    global?.clientSocketIo !== undefined &&
-                    global?.clientSocketIo.length > 0
-                  ) {
-                    try {
-                      await getAllEventMarketsAndRunnersService(
-                        _fastify,
-                        {
-                          ...request,
-                          body: {
-                            eventId: _selectionidData.eventRefId,
-                          },
-                        },
-                        "marketRunnersFromSocket"
-                      );
-                    } catch (error) {
-                      errorLogger(
-                        _fastify,
-                        error.message,
-                        "ERROR --> signalrHandler/MockSignalR.js/getAllEventMarketsAndRunnersService",
-                        request
-                      );
-                    }
-                    // // broadcast to all connected clients
-                    // global.clientSocketIo.forEach((socket) => {
-                    //   socket.client.emit("updateRunnerData", marketRunner);
-                    // });
-                  }
-          
                   let eventRunnerData = {
                     backSize: items.backSize,
                     backPrice: items.backPrice,
@@ -534,6 +504,21 @@ const createUpdateGlobalSignalRData = async (message, request) => {
                   }
                   
                  await updateEventMarketRunnerMaunalQuery(eventRunnerData, _fastify);
+
+                 const runnerIndex = global.tblEventMarkets.findIndex(elem => 
+                  elem.selectionId == items.selectionId && elem.rateSourceRefID == data.mi
+                );
+              
+                if (runnerIndex !== -1) {
+                  const { backPrice, layPrice, backSize, laySize } = items;
+                  global.tblEventMarkets[runnerIndex] = {
+                    ...global.tblEventMarkets[runnerIndex],
+                    backPrice, 
+                    layPrice, 
+                    backSize, 
+                    laySize
+                  };
+                }                
               }
             }
         }
@@ -615,36 +600,6 @@ const createUpdateGlobalSignalRData = async (message, request) => {
                       (e) => e.selectionId == items.selectionId
                   );
                   // console.log(items);
-
-                  if (
-                    global?.clientSocketIo !== undefined &&
-                    global?.clientSocketIo.length > 0
-                  ) {                  
-                    try {
-                      await getAllEventMarketsAndRunnersService(
-                        _fastify,
-                        {
-                          ...request,
-                          body: {
-                            eventId: _selectionidData.eventRefId,
-                          },
-                        },
-                        "marketRunnersFromSocket"
-                      );
-                    } catch (error) {
-                      errorLogger(
-                        _fastify,
-                        error.message,
-                        "ERROR --> signalrHandler/MockSignalR.js/getAllEventMarketsAndRunnersService",
-                        request
-                      );
-                    }
-                    
-                    // // broadcast to all connected clients
-                    // global.clientSocketIo.forEach((socket) => {
-                    //   socket.client.emit("updateRunnerData", marketRunner);
-                    // });
-                  }
           
                   let EventRunnerData = {
                     backSize: items.backSize,
@@ -657,6 +612,21 @@ const createUpdateGlobalSignalRData = async (message, request) => {
                   }
                   
                  await updateEventMarketRunnerMaunalQuery(EventRunnerData, _fastify);
+
+                 const runnerIndex = global.tblEventMarkets.findIndex(elem => 
+                  elem.selectionId == items.selectionId && elem.rateSourceRefID == data.mi
+                );
+              
+                if (runnerIndex !== -1) {
+                  const { backPrice, layPrice, backSize, laySize } = items;
+                  global.tblEventMarkets[runnerIndex] = {
+                    ...global.tblEventMarkets[runnerIndex],
+                    backPrice, 
+                    layPrice, 
+                    backSize, 
+                    laySize
+                  };
+                }
 
                   let _updateData = {};
                   if (_selectionidData && _selectionidData.commentaryId != 0) {
@@ -741,6 +711,88 @@ const createUpdateGlobalSignalRData = async (message, request) => {
           "Error SignalrR --> signalrHandler/CreateUpdateSignalRData",
           null
       );
+  }
+}
+
+const updateMarketRunnerDataOnSocket = async(data) => {
+  try {
+    const marketDataMap = new Map();
+
+    const _runnersData = global.tblEventMarkets.filter(
+      (item) => item.rateSourceRefID === data.mi
+    );
+// console.log("rinn", _runnersData);
+
+    _runnersData.forEach((item) => {
+      const runnerIndex = global.tblEventMarkets.findIndex(elem => 
+        elem.selectionId == item.selectionId && elem.rateSourceRefID == data.mi
+      );
+      let teamNameData = null;
+
+      if (item.teamId) {
+        teamNameData = global.tblCommentaryTeams.find(
+          (elem) => elem?.teamId === item?.teamId
+        );
+      } 
+      if (!item.teamId) {
+        teamNameData = global.tblCommentaryTeams.find(
+          (t) => t.teamName?.toLowerCase() === item?.runner?.toLowerCase()
+        );
+      }
+
+      const runner = {
+        runnerId: global.tblEventMarkets[runnerIndex].runnerId,
+        runner: global.tblEventMarkets[runnerIndex].runner,
+        selectionId: global.tblEventMarkets[runnerIndex].selectionId,
+        backPrice: global.tblEventMarkets[runnerIndex].backPrice,
+        backSize: global.tblEventMarkets[runnerIndex].backSize,
+        layPrice: global.tblEventMarkets[runnerIndex].layPrice,
+        laySize: global.tblEventMarkets[runnerIndex].laySize,
+        // backPrice: item.backPrice,
+        // backSize: item.backSize,
+        // layPrice: item.layPrice,
+        // laySize: item.laySize,
+        teamId: global.tblEventMarkets[runnerIndex].teamId,
+        teamName: teamNameData?.teamName || null,
+      };
+
+      if (marketDataMap.has(item.eventMarketId)) {
+        const existingMarket = marketDataMap.get(item.eventMarketId);
+        const existingRunnerIndex = existingMarket.runners.findIndex(
+          (r) => r.selectionId === item.selectionId
+        );
+
+        if (existingRunnerIndex === -1) {
+          existingMarket.runners.push(runner);
+        } else {
+          existingMarket.runners[existingRunnerIndex] = runner;
+        }
+      } else {
+        marketDataMap.set(item.eventMarketId, {
+          eventMarketId: item.eventMarketId,
+          eventRefId: item.eventRefId,
+          runners: [runner]
+        });
+      }
+    });
+
+    const runnerValues = Array.from(marketDataMap.values());
+
+    if (
+      global?.clientSocketIo !== undefined &&
+      global?.clientSocketIo.length > 0
+    ) {
+      global.clientSocketIo.forEach((socket) => {
+        socket.client.emit("updateRunnerData", runnerValues);
+      });
+    }
+  } catch (error) {
+    errorLogger(
+      _fastify,
+      error,
+      "Error SignalrR --> signalrHandler/updateMarketRunnerDataOnSocket",
+      null
+    );
   }
 }
 
