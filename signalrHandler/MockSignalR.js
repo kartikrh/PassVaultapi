@@ -12,7 +12,7 @@ const { thirdPartyApiType } = require('../utilities/index');
 const { getAllEventMarketsAndRunnersService } = require("../services/eventMarket")
 
 const configConstants = require('../utilities/configConstants');
-let connection,_fastify,updateMarketRateIntervalId,checkConfigIntervalId,IntervalId;
+let connection,_fastify,updateMarketRateIntervalId,checkConfigIntervalId,IntervalRunner,IntervalId;
 let connectionCount =0;
 // Initialize a global queue
 global.rateSourceRefIDSet = new Set();
@@ -61,15 +61,14 @@ async function startSignalR(fastify) {
               // Find if the market ID already exists in the rateQueue
               const existingIndex = global.rateQueue.findIndex((item) => item.mi === message.mi);
               if (existingIndex !== -1) {
-                // Update the existing entry
                 global.rateQueue[existingIndex] = message;
               } else {
-                // Add a new entry
                 global.rateQueue.push(message);
               }
-              // Remove entries where item.ms !== 1
               global.rateQueue = global.rateQueue.filter((item) => item.ms === 1);
-              await createUpdateGlobalSignalRData(message, request);
+              IntervalRunner = setInterval(async () => {
+                await createUpdateGlobalSignalRData(message, request);
+              }, _RateUpdate);
             }
           } catch (error) {
             errorLogger(
@@ -81,8 +80,11 @@ async function startSignalR(fastify) {
           }
         });
         //? Function For Intervals
-        updateMarketRateIntervalId = setInterval(checkAndUpdateMarketRate, _SignalRInterwal || 10000);
-        IntervalId = setInterval(await processRateQueue, _RateUpdate); // Process the queue every 5 Seconds
+        updateMarketRateIntervalId = setInterval(checkAndUpdateMarketRate, _SignalRInterwal || 10000);        
+        IntervalId = setInterval(async () => {
+          await processRateQueue();
+        }, _RateUpdate); 
+
         if (!checkConfigIntervalId) {
           checkConfigIntervalId = setInterval(reConnectSignalR, 300000);// 5 minutes 300000
             }
@@ -113,6 +115,8 @@ async function stopSignalR(fastify) {
       if (IntervalId) {
         clearInterval(IntervalId);
         IntervalId = null;
+        clearInterval(IntervalRunner);
+        IntervalRunner = null;
       }
       global.isAdminStoppedSignalR = true;
       global.rateSourceRefIDSet = new Set();

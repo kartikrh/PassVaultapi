@@ -2,7 +2,7 @@ const jwt = require("jsonwebtoken");
 const { errorLogger } = require("./utilities/logger");
 const { getEventMarketByIdsQuery } = require("./repository/TableEventMarkets");
 const { MarketActionType } = require("./utilities");
-const {createMarketOddsBallByBallBYIDFromSocketIo,createMarketOddsBallInSaveDetails} = require("./repository/TableMarketOddsBallByBall")
+const {createMarketOddsBallByBallBYIDFromSocketIo,createMarketOddsBallInSaveDetails,CheckAndCreateMarketOddsBallInSaveDetails} = require("./repository/TableMarketOddsBallByBall")
 
 const connection = (socket , fastify) => {
   const { userId, allowMultipleLogin, wrToken } = socket;
@@ -87,34 +87,54 @@ const connection = (socket , fastify) => {
             const newEvent = {
               commentaryId: item.commentaryId,
               commentaryBallByBallId: ballbybllId || null, // Adjust as needed
-              EventMarketId: item.eventMarketId,
-              MarketStatus: item.status,
-              MarketName: item.marketName,
-              Data: [runnerData] // Initialize with the first runner's data
+              eventMarketId: item.eventMarketId,
+              marketStatus: item.status,
+              marketName: item.marketName,
+              data: [runnerData] // Initialize with the first runner's data
             };
             result.push(newEvent);
           }
         });
 
-              // Convert Data array to JSON strings
+        // Convert Data array to JSON strings
         result.forEach(event => {
-          event.Data = JSON.stringify(event.Data);
+          event.data = JSON.stringify(event.data);
         });
 
         for (let index = 0; index < result.length; index++) {
+          let res;
           try {
-            await createMarketOddsBallInSaveDetails(result[index], fastify);
+            res = await CheckAndCreateMarketOddsBallInSaveDetails(result[index], fastify);
           } catch (error) {
-            console.log("create market odds ball by ball by id console", error);
             errorLogger(
               fastify,
               error.message,
-              "ERROR --> createMarketOddsBallInSaveDetails",
+              "ERROR --> CheckAndCreateMarketOddsBallInSaveDetails",
               request
             );
           }
-          global.tblMarketOddsBallByBall.push(result[index]);
-          marketOdd.push(result[index]);
+
+          const tblMarketOddsIndex = global.tblMarketOddsBallByBall.findIndex(item => item.commentaryId === res.commentaryId
+            && item.eventMarketId === res.eventMarketId
+            && item.commentaryBallByBallId === res.commentaryBallByBallId
+          );
+
+          if (tblMarketOddsIndex !== -1) {
+            global.tblMarketOddsBallByBall[tblMarketOddsIndex] = res;
+          } else {
+            global.tblMarketOddsBallByBall.push(res);
+          }
+
+          const marketOddIndex  = marketOdd.findIndex(item => item.commentaryId === res.commentaryId
+            && item.eventMarketId === res.eventMarketId
+            && item.commentaryBallByBallId === res.commentaryBallByBallId
+          );  
+
+          if (marketOddIndex !== -1) {
+            marketOdd[marketOddIndex] = res;
+          } else {
+            marketOdd.push(res);
+          }
         }
       }
 
@@ -131,40 +151,43 @@ const connection = (socket , fastify) => {
             type : "create"
           }
         ];
+        global.clientSocketIo.forEach((socket) => {
+          socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+        });
       }
       
-      if(commentaryId){
-        let marketRunner = global.tblEventMarkets.filter((item) => item.commentaryId == commentaryId && item.rateSource === 2)
-        marketRunner = marketRunner.map((item) => {
-          let teamNameData
-          if(item.teamId){
-          teamNameData = global.tblCommentaryTeams.find((elem) => elem.teamId === item.teamId)
-          }
-          if(!item.teamId){
-              teamNameData = global.tblCommentaryTeams.find((t) => 
-                  t.teamName.toLowerCase() == item.runner?.toLowerCase())
-          }
-          return {
-              runnerId: item.runnerId,
-              runner: item.runner,
-              selectionId: item.selectionId,
-              backSize: item.backSize,
-              laySize: item.laySize,
-              backPrice: item.backPrice,
-              layPrice: item.layPrice,
-              teamId: item.teamId,
-              teamName: teamNameData?.teamName || null
-          }
-        });
-        // sendDataForSocketUpdate.dataToUpdate.push({
-        //   module: "marketRunner",
-        //   type: "update",
-        //   data: marketRunner,
-        // });
-        global.clientSocketIo.forEach((socket) => {
-          socket.client.emit("updateRunnerData", marketRunner);
-        });
-      }
+      // if(commentaryId){
+      //   let marketRunner = global.tblEventMarkets.filter((item) => item.commentaryId == commentaryId && item.rateSource === 2)
+      //   marketRunner = marketRunner.map((item) => {
+      //     let teamNameData
+      //     if(item.teamId){
+      //     teamNameData = global.tblCommentaryTeams.find((elem) => elem.teamId === item.teamId)
+      //     }
+      //     if(!item.teamId){
+      //         teamNameData = global.tblCommentaryTeams.find((t) => 
+      //             t.teamName.toLowerCase() == item.runner?.toLowerCase())
+      //     }
+      //     return {
+      //         runnerId: item.runnerId,
+      //         runner: item.runner,
+      //         selectionId: item.selectionId,
+      //         backSize: item.backSize,
+      //         laySize: item.laySize,
+      //         backPrice: item.backPrice,
+      //         layPrice: item.layPrice,
+      //         teamId: item.teamId,
+      //         teamName: teamNameData?.teamName || null
+      //     }
+      //   });
+      //   // sendDataForSocketUpdate.dataToUpdate.push({
+      //   //   module: "marketRunner",
+      //   //   type: "update",
+      //   //   data: marketRunner,
+      //   // });
+      //   global.clientSocketIo.forEach((socket) => {
+      //     socket.client.emit("updateRunnerData", marketRunner);
+      //   });
+      // }
       
       // global.clientSocketIo.forEach((socket) => {
       //   socket.client.emit("updateFullscore", sendDataForSocketUpdate);
@@ -172,36 +195,6 @@ const connection = (socket , fastify) => {
 
       console.log("Event Market Updated successfully");
       return true;
-  
-    // let marketDataToUpdate = marketData;
-
-    // // console.log("marketDataToUpdate", marketDataToUpdate);
-    // let runnerData = [];
-    // let marketDataLog = [];
-  
-    // for (let data of marketDataToUpdate) {
-    //   data = JSON.parse(data);
-    //   runnerData.push(...data.runner);
-    //   marketDataLog.push({
-    //     commentaryId,
-    //     eventMarketId: data.id,
-    //     data: data,
-    //     updateType: MarketUpdateType.predictMarket
-    //   });
-      
-    // }
-    //   await fastify.db.query(
-    //     `CALL proc_update_eventmarket_runner(
-    //       $1, $2, $3
-    //     )`,
-    //     {
-    //       bind: [
-    //         JSON.stringify(runnerData),
-    //         JSON.stringify(marketDataLog),
-    //         null
-    //       ]
-    //     }
-    //   );
     } catch (error) {
       errorLogger(
         fastify,

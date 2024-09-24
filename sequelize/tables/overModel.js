@@ -114,6 +114,14 @@ module.exports = (sequelize) => {
         type: DataTypes.STRING,
         allowNull: true,
       },
+      wrIsPowerPlay: {
+        type: DataTypes.BOOLEAN,
+        allowNull: true,
+      },
+      wrPowerPlayName : {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
     },
     {
       timestamps: false,

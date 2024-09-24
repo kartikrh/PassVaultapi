@@ -43,6 +43,7 @@ const getAllCommentaryQuery = async (fastify) => {
     "wrIsPredictMarket" as "isPredictMarket",
     tc."wrIsActive"  as "isActive",
     "wrDelay" as "delay",
+    "wrLineRatio" as "lineRatio",
     tc."wrCommentaryResult" as "result",
     tc."wrCommentaryCloseTime" as "commentaryCloseTime",
     tc."wrIsTeamPredictionOn" as "isTeamPredictionOn",
@@ -579,12 +580,14 @@ const getCommentaryByIdQuery = async (request, fastify) => {
       "wrDelay" as "delay",
       tc."wrCommentaryResult" as "result",
       tc."wrCommentaryCloseTime" as "commentaryCloseTime",
-      tc."wrIsTeamPredictionOn" as "isTeamPredictionOn"
+      tc."wrIsTeamPredictionOn" as "isTeamPredictionOn",
+      tu."WrUserName" as "createdBy"
       from "tblCommentaries" tc
       left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
       left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
       LEFT JOIN "tblMatchTypes" mt ON tc."wrMatchTypeId" = mt."wrMatchTypeId"
       LEFT JOIN "tblCompetitions" co ON tc."wrCompetitionId" = co."wrCompetitionId"
+      LEFT JOIN "tblUsers" tu ON tc."wrCreatedBy" = tu."WrUserId"
       where "wrCommentaryId" = $1
       `,
       {
@@ -1110,7 +1113,9 @@ const getAllOversQuery = async (fastify) => {
       "wrDate" as "date",
       "wrIsDelete" as "isDelete",
       "wrCurrentInnings" as "currentInnings",
-      "wrTeamScore" as "teamScore"
+      "wrTeamScore" as "teamScore",
+      "wrIsPowerPlay" as "isPowerPlay",
+      "wrPowerPlayName" as "powerPlayName"
       from "tblOvers" 
       `,
     {
@@ -1262,7 +1267,12 @@ const getAllCommentaryPartnershipQuery = async (fastify) => {
       "wrBatter2Balls" as "batter2Balls",
       "wrBatter1Runs" as "batter1Runs",
       "wrBatter2Runs" as "batter2Runs",
-      "wrCreatedDate" as "createdDate"
+      "wrCreatedDate" as "createdDate",
+      "wrTotalFour" as "totalFour",
+      "wrTotalSix" as "totalSix",
+      "wrTotalExtra" as "totalExtra",
+      "wrTotalWide" as "totalWide",
+      "wrTotalNoBall" as "totalNoBall"
       from "tblCommentaryPartnerships"
       `,
     {
@@ -3109,6 +3119,27 @@ const updateAverageOfPlayerQuery = async (data, request,fastify) => {
   }
 }
 
+const updateLineRationQuery = async (data, request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `update "tblCommentaries" set
+      "wrLineRatio" = $1
+      where "wrCommentaryId" = $2`,
+      {
+        bind: [data.lineRatio, data.commentaryId],
+      }
+    );
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCommentary/updateLineRationQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+}
+
 
 module.exports = {
   getAllCommentaryQuery,
@@ -3172,5 +3203,6 @@ module.exports = {
   updateCommentaryTeamPredictionPrecentageQuery,
   updateTeamPrediction,
   updateAverageOfPlayerQuery,
-  updateCommentaryBattingTeamQuery
+  updateCommentaryBattingTeamQuery,
+  updateLineRationQuery
 };

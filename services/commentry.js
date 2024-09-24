@@ -57,7 +57,8 @@ const {
   updateSuperOverCommentaryQuery,
   insertCommentarySuperOverTeams,
   updateTeamPrediction,
-  updateCommentaryBattingTeamQuery
+  updateCommentaryBattingTeamQuery,
+  updateLineRationQuery
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -2775,14 +2776,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
 
         if(updatedData.commentaryBallByBallDetails.ballType > 0){
           let _results = [];
-          let result = await addinMarketBallbyballOdds(commentaryId,updatedData.commentaryBallByBallDetails, fastify).catch((err) => {
-              errorLogger(
-                fastify,
-                err.message,
-                "ERROR --> services/commentary.js/addinMarketBallbyballOdds",
-                request
-              );
-            });
+          let result = await addinMarketBallbyballOdds(commentaryId,updatedData.commentaryBallByBallDetails, fastify);
             if(result)
             {
               _results.push(result);
@@ -2795,89 +2789,6 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
               }
             }
         }
-        // try {
-        //     const filteredCid = global.tblEventMarkets.filter((e) => e.commentaryId === commentaryId && e.rateSource === 2);
-
-        //     if (filteredCid.length > 0 && updatedData.commentaryBallByBallDetails.ballType > 0) {
-        //       // Iterate over tblEventMarkets to build the final structure
-        //       const _dataForOds = filteredCid.reduce((acc, entry) => {
-        //         const mapKey = `${entry.eventMarketId}_${entry.selectionId}`;
-              
-        //         //console.log("global.SignalRData:", global.SignalRData);
-        //         // Check if the mapKey exists in SignalRData
-        //         if (global.SignalRData[mapKey]) {
-        //           const matchedItem = global.SignalRData[mapKey];
-              
-        //           // Create the runner data structure
-        //           const runnerData = {
-        //             teamId: matchedItem.teamId,
-        //             RunnerId: matchedItem.RunnerId,
-        //             BackPrice: matchedItem.BackPrice,
-        //             LayPrice: matchedItem.LayPrice,
-        //             BackSize: matchedItem.BackSize,
-        //             LaySize: matchedItem.LaySize,
-        //             RunnerName: matchedItem.RunnerName,
-        //             selectionId: matchedItem.selectionId,
-        //             timestamp: matchedItem.timestamp
-        //           };
-        //           //console.log("runnerDAta:", runnerData);
-              
-        //           // Check if EventMarketId already exists in acc
-        //           if (!acc[entry.eventMarketId]) {
-        //             // Initialize a new object for this EventMarketId
-        //             acc[entry.eventMarketId] = {
-        //               commentaryId: commentaryId,
-        //               commentaryBallByBallId: updatedData.commentaryBallByBallDetails.commentaryBallByBallId,
-        //               EventMarketId: entry.eventMarketId,
-        //               MarketStatus: entry.status,
-        //               MarketName: entry.marketName,
-        //               Data: [] // Initialize Data array
-        //             };
-        //           }
-              
-        //           // Push the runner data into the Data array
-        //           acc[entry.eventMarketId].Data.push(runnerData);
-        //         }
-              
-        //         return acc;
-        //       }, {});
-              
-        //       // Convert the result into an array if needed
-        //       const resultArray = Object.values(_dataForOds);
-              
-        //       // Optionally stringify the Data array within each EventMarketId object
-        //       resultArray.forEach(obj => {
-        //         obj.Data = JSON.stringify(obj.Data);
-        //       });
-              
-        //       try {
-        //         await createMarketOddsBallInSaveDetails(resultArray[0], fastify, request);
-        //         sendDataForSocketUpdate.dataToUpdate.push({
-        //           module: "marketOddsBallByBall",
-        //           data: resultArray,
-        //           type : "create"
-        //         });
-        //       } catch (error) {
-        //         console.log("create market odds ball by ball by id console", error);
-        //         errorLogger(
-        //           fastify,
-        //           error.message,
-        //           "ERROR --> createMarketOddsBallInSaveDetails",
-        //           request
-        //         );
-        //       }
-        //     }
-        // } catch (error) {
-        //   console.log("error in console", error)
-        //   errorLogger(
-        //     fastify,
-        //     error.message,
-        //     "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
-        //     request
-        //   );
-        // }
-
-        // call the predictor market
         if (
           commentaryData.isPredictMarket &&
           updatedData.commentaryBallByBallDetails.ballType > 0
@@ -3449,8 +3360,6 @@ const addinMarketBallbyballOdds = async (commentaryId, objball,fastify) =>{
         // Iterate over tblEventMarkets to build the final structure
         const _dataForOds = filteredCid.reduce((acc, entry) => {
           const mapKey = `${entry.eventMarketId}_${entry.selectionId}`;
-        
-          //console.log("global.SignalRData:", global.SignalRData);
           // Check if the mapKey exists in SignalRData
           if (global.SignalRData[mapKey]) {
             const matchedItem = global.SignalRData[mapKey];
@@ -3467,7 +3376,6 @@ const addinMarketBallbyballOdds = async (commentaryId, objball,fastify) =>{
               selectionId: matchedItem.selectionId,
               timestamp: matchedItem.timestamp
             };
-            //console.log("runnerDAta:", runnerData);
         
             // Check if EventMarketId already exists in acc
             if (!acc[entry.eventMarketId]) {
@@ -3475,15 +3383,13 @@ const addinMarketBallbyballOdds = async (commentaryId, objball,fastify) =>{
               acc[entry.eventMarketId] = {
                 commentaryId: commentaryId,
                 commentaryBallByBallId: objball.commentaryBallByBallId,
-                EventMarketId: entry.eventMarketId,
-                MarketStatus: entry.status,
-                MarketName: entry.marketName,
-                Data: [] // Initialize Data array
+                eventMarketId: entry.eventMarketId,
+                marketStatus: entry.status,
+                marketName: entry.marketName,
+                data: [] // Initialize Data array
               };
             }
-        
-            // Push the runner data into the Data array
-            acc[entry.eventMarketId].Data.push(runnerData);
+            acc[entry.eventMarketId].data.push(runnerData);
           }
         
           return acc;
@@ -3494,74 +3400,28 @@ const addinMarketBallbyballOdds = async (commentaryId, objball,fastify) =>{
         
         // Optionally stringify the Data array within each EventMarketId object
         _resultArray.forEach(obj => {
-          obj.Data = JSON.stringify(obj.Data);
+          obj.data = JSON.stringify(obj.data);
         });
         let res;
-        try {
-          res = await createMarketOddsBallInSaveDetails(_resultArray[0], fastify, null);
-          global.tblMarketOddsBallByBall.push(res);
-        } catch (error) {
-          console.log("create market odds ball by ball by id console", error);
-          errorLogger(
-            fastify,
-            error.message,
-            "ERROR --> createMarketOddsBallInSaveDetails",
-            null
-          );
+        if(_resultArray.length > 0) {
+          try {
+            res = await createMarketOddsBallInSaveDetails(_resultArray[0], fastify, null);
+            global.tblMarketOddsBallByBall.push(res);
+          } catch (error) {
+            errorLogger(
+              fastify,
+              error.message,
+              "ERROR --> createMarketOddsBallInSaveDetails",
+              null
+            );
+          }
+          return res;
         }
-        return res;
-        // Create a map for SignalRData entries
-        // const signalRDataMap = new Map();
-        // for (const key in global.SignalRData) {
-        //   const entry = global.SignalRData[key];
-        //   const mapKey = `${entry.EventMarketId}_${entry.selectionId}`;
-        //   signalRDataMap.set(mapKey, entry);
-        // }
-
-        // for (const _ifFindCid of filteredCid) {
-        //   const { eventMarketId, selectionId } = _ifFindCid;
-        //   const mapKey = `${eventMarketId}_${selectionId}`;
-        //   const entry = signalRDataMap.get(mapKey);
-
-        //   if (entry) {
-        //     const currentTime = new Date();
-        //     const entryTime = new Date(entry.timestamp);
-        //     const timeDifference = (currentTime - entryTime) / 1000;
-        //     if (timeDifference <= 25) {
-
-        //       const _dataForOds = {
-        //         commentaryId: commentaryId,
-        //         commentaryBallByBallId: updatedData.commentaryBallByBallDetails.commentaryBallByBallId,
-        //         teamId: entry.teamId,
-        //         EventMarketId: entry.EventMarketId,
-        //         RunnerId: entry.RunnerId,
-        //         MarketStatus: entry.MarketStatus,
-        //         BackPrice: entry.BackPrice,
-        //         LayPrice: entry.LayPrice,
-        //         BackSize: entry.BackSize,
-        //         LaySize: entry.LaySize,
-        //         MarketName: entry.MarketName,
-        //         RunnerName: entry.RunnerName,
-        //         selectionId: entry.selectionId
-        //       };
-
-        //       try {
-        //         await createMarketOddsBallByBallBYID(_dataForOds, fastify, request);
-        //       } catch (error) {
-        //         console.log("create market odds ball by ball by id console", error);
-        //         errorLogger(
-        //           fastify,
-        //           error.message,
-        //           "ERROR --> createMarketOddsBallByBallBYID",
-        //           request
-        //         );
-        //       }
-        //     }
-        //   }
-        // }
+        else{
+          return null;
+        }
       }
   } catch (error) {
-    console.log("error in console", error)
     errorLogger(
       fastify,
       error.message,
@@ -8456,6 +8316,72 @@ const updateTeamPredictionService = async (request, fastify) => {
 
   return updatedData;
 };
+
+const updateLineRationService = async (request, fastify) => {
+  const { commentaryId, lineRatio } = request.body;
+  try {
+    const index = global.tblCommentaries.findIndex(
+      (item) => item.commentaryId === commentaryId
+    );
+    if (index == -1) {
+      throw new Error("Commentary with this id not Found");
+    }
+    
+
+    await updateLineRationQuery({ commentaryId, lineRatio }, request, fastify);
+    
+    global.tblCommentaries[index].lineRatio = lineRatio;
+    // console.log(global.tblCommentaries[index]);
+    
+    commentaryLogger(
+      {
+        commentaryId: commentaryId,
+        requestBody: request.body,
+        response: {
+          message: "Line-ratio updated successfully",
+        },
+        global: null,
+        extra: null,
+        apiName: "/updatLineRatio",
+      },
+      request,
+      fastify
+    ).catch((err) => {
+      errorLogger(
+        fastify,
+        err.message,
+        "ERROR --> services/commentary.js/updateLineRationService",
+        request
+      );
+    });
+
+    return `Line-ratio updated successfully`;
+  } catch (error) {
+  commentaryLogger(
+      {
+         commentaryId: commentaryId,
+          requestBody: request.body,
+          response: {
+            error: error.message,
+          },
+          global:null,
+          extra: null,
+          apiName : "/updateLineRation"
+      },
+      request,
+      fastify
+    ).catch((err) => {
+      errorLogger(
+        fastify,
+        err.message,
+        "ERROR --> services/commentary.js/updateLineRationService",
+        request
+      );
+    });
+    throw new Error(error);
+  }
+};
+
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -8512,5 +8438,6 @@ module.exports = {
   // getshortService,
   syncCommentaryStatsWithAPIAndSocket,
   getMatchDataByCId,
-  updateTeamPredictionService
+  updateTeamPredictionService,
+  updateLineRationService
 };

@@ -28,7 +28,8 @@ const {
   cancelMarketQuery,
   getAllEventMarketsAndRunnersQuery,
   getAllRateSourceEventMarketQuery,
-  getEventMarketsQuery
+  getEventMarketsQuery,
+  cancelSettledMarketQuery
 } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
 const {
@@ -1305,8 +1306,8 @@ const setAllMarketCloseService = async (request, fastify) => {
   let { password } = request.body;
   // get password from config
   const configPassword = global.tblConfigs.find(
-    (item) => item.key === configConstants.ALLMARKETCLOSEPASS
-  ).value;
+    (item) => item.key == configConstants.ALLMARKETCLOSEPASS
+  )?.value;
   if (!configPassword) {
     throw new Error("Password not found in config");
   }
@@ -1324,8 +1325,8 @@ const setCloseMarketCancelService = async (request, fastify) => {
   let { password } = request.body;
   // get password from config
   const configPassword = global.tblConfigs.find(
-    (item) => item.key === configConstants.ALLMARKETCLOSEPASS
-  ).value;
+    (item) => item.key == configConstants.ALLMARKETCANCELPASS
+  )?.value;
   if (!configPassword) {
     throw new Error("Password not found in config");
   }
@@ -1385,6 +1386,35 @@ const getAllEventMarketsAndRunnersService = async (fastify, request, functionNam
   }
   return eventMarkets;
 };
+const cancelSettleMarketService = async (request, fastify) => {
+  let { eventMarketId, password } = request.body;
+  // get password from config
+  const configPassword = global.tblConfigs.find(
+    (item) => item.key === configConstants.PASSWORD
+  ).value;
+  if (configPassword !== password) {
+    throw new Error("Password is incorrect");
+  }
+  let checkMarketInDb = await getEventMarketByIdsQuery(
+    {
+      eventMarketIds: [eventMarketId],
+    },
+    request,
+    fastify
+  );
+  if (checkMarketInDb.length == 0) {
+    throw new Error("EventMarket with this id not Found");
+  }
+  await cancelSettledMarketQuery(request.body, request, fastify);
+  let eventIndex = global.tblEventMarkets.findIndex(
+    (e) => e.eventMarketId === eventMarketId
+  );
+  if (eventIndex !== -1) {
+    global.tblEventMarkets[eventIndex].status = EventMarketStatus.Cancel;
+  }
+  return "Market Cancel updated successfully";
+
+}
 module.exports = {
   getDetailsByCIdService,
   getAllEventMarketsService,
@@ -1415,5 +1445,6 @@ module.exports = {
   marketListcategoryNameByCIdService,
   setAllMarketCloseService,
   setCloseMarketCancelService,
-  getAllEventMarketsAndRunnersService
+  getAllEventMarketsAndRunnersService,
+  cancelSettleMarketService
 };

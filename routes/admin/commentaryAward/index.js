@@ -6,7 +6,9 @@ const {
     deleteCommentaryAward,
     getCommentaries,
     getCommentaryTeam,
-    getCommentaryPlayerByCom
+    getCommentaryPlayerByCom,
+    assignAward,
+    getAssignAward
  } = require("../../../controller/users/admin/commentaryAward")
 const { CommentaryAward } = require("../../../swaggerSchema/groupTags/schema")
 
@@ -94,5 +96,29 @@ module.exports = async(fastify,opts) =>{
                 })
         ],
         handler : (request,reply) => getCommentaryPlayerByCom(request,reply,fastify)
+    })
+    fastify.post("/assignAward", {
+        schema : CommentaryAward.assignAward.schema,
+        preHandler : [
+            (request,reply) => authorize(request,reply,fastify),
+            (request,reply) => 
+                checkPermission(request,reply,fastify,{
+                    tabName : "CommentaryAward",
+                    mode : "edit"
+                })
+        ],
+        handler : (request,reply) => assignAward(request,reply,fastify)
+    })
+    fastify.post("/getAssignAward", {
+        schema : CommentaryAward.getAssignAward.schema,
+        preHandler : [
+            (request,reply) => authorize(request,reply,fastify),
+            (request,reply) => 
+                checkPermission(request,reply,fastify,{
+                    tabName : "CommentaryAward",
+                    mode : "edit"
+                })
+        ],
+        handler : (request,reply) => getAssignAward(request,reply,fastify)
     })
 }

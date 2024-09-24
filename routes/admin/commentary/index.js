@@ -48,6 +48,7 @@ const {
   changeMaxOverDetail,
   AddSuperOverCommentary,
   updateTeamPrediction,
+  updateLineRatio
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -637,5 +638,17 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request, reply) => updateTeamPrediction(request, reply, fastify),
+  });
+  fastify.post("/updatLineRatio", {
+    schema: Commentary.updateLineRatio.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "edit",
+        }),
+    ],
+    handler: (request, reply) => updateLineRatio(request, reply, fastify),
   });
 };
