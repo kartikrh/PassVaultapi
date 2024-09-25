@@ -2389,6 +2389,7 @@ const Commentary = {
           playerId: { type: "integer" },
           batsmanAverage: { type: "integer" },
           batsmanStrikeRate: { type: "integer" },
+          isInPlayingEleven: { type: "boolean" },
         },
         required: ["commentaryId", "teamId", "playerId"],
       },
