@@ -1364,7 +1364,7 @@ const setCloseMarketCancelService = async (request, fastify) => {
   return "All Market canceled successfully";
 }
 
-const getAllEventMarketsAndRunnersService = async (fastify, request, functionName = null) => {
+const getAllEventMarketsAndRunnersService = async (fastify, request) => {
   let eventMarkets = await getAllRateSourceEventMarketQuery(fastify, request.body);
   
   eventMarkets = await Promise.all(eventMarkets.map(async (runner) => {
@@ -1403,11 +1403,6 @@ const getAllEventMarketsAndRunnersService = async (fastify, request, functionNam
     };
   }));
 
-  if (functionName && functionName === "marketRunnersFromSocket") {
-    global.clientSocketIo.forEach((socket) => {
-      socket.client.emit("updateRunnerData", eventMarkets);
-    });
-  }
   return eventMarkets;
 };
 const cancelSettleMarketService = async (request, fastify) => {
