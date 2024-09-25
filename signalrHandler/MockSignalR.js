@@ -11,6 +11,21 @@ const { updateThirdPartyApisQuery } = require('../repository/TableThirdPartyApis
 const { thirdPartyApiType } = require('../utilities/index');
 const { getAllEventMarketsAndRunnersService } = require("../services/eventMarket")
 
+
+/**
+ * This function establishes a SignalR connection to the event service, allowing us to receive live rates.
+ * 
+ * The startSignalR function is initiated to check for available markets. If markets are found, data is retrieved
+ * from the event service and added to global.rateQueue. The data is then used to update the global.SignalRData data and 
+ * initiate a runner that updates the database.
+ * 
+ * Next, the processRateQueue function is invoked to calculate prediction percentages, update team information,
+ * and updates market ,log market data to the database.
+ * 
+ * Finally, Socket.IO emits the updated rates from the local data to the client side.
+ */
+
+
 const configConstants = require('../utilities/configConstants');
 let connection,_fastify,updateMarketRateIntervalId,checkConfigIntervalId,IntervalRunner,IntervalId;
 let connectionCount =0;
@@ -66,13 +81,7 @@ async function startSignalR(fastify) {
                 global.rateQueue.push(message);
               }
               global.rateQueue = global.rateQueue.filter((item) => item.ms === 1);
-              IntervalRunner = setTimeout(async () => {
-                await createUpdateGlobalSignalRData(message, request);
-              }, _RateUpdate);
-              
-              IntervalId = setTimeout(async () => {
-                await processRateQueue();
-              }, _RateUpdate); 
+              await createUpdateGlobalSignalRData(message, request);
             }
           } catch (error) {
             errorLogger(
@@ -85,7 +94,9 @@ async function startSignalR(fastify) {
         });
         //? Function For Intervals
         updateMarketRateIntervalId = setInterval(checkAndUpdateMarketRate, _SignalRInterwal || 10000);        
-
+        IntervalId = setInterval(async () => {
+          await processRateQueue();
+        }, _RateUpdate);
         if (!checkConfigIntervalId) {
           checkConfigIntervalId = setInterval(reConnectSignalR, 300000);// 5 minutes 300000
             }
@@ -224,8 +235,6 @@ const processRateQueue = async () => {
           winper: winPer
         };
       });
-
-      await updateMarketRunnerDataOnSocket(data);
       // console.log('\n================================')
       // Process the winPerList and update the market
       for (const winPer of winPerList) {
@@ -326,6 +335,7 @@ const processRateQueue = async () => {
         }
       }
     }
+    await updateMarketRunnerDataOnSocket(data);
   }
 };
 
@@ -359,7 +369,8 @@ const checkAndUpdateMarketRate = async (_fastify) => {
     );
   }
 };
- 
+
+//create and Update Local Market Rate
 const createUpdateGlobalSignalRData = async (message, request) => {
   try {
       const data = message;
@@ -367,163 +378,149 @@ const createUpdateGlobalSignalRData = async (message, request) => {
       const EventsMarketobj = global.tblEventMarkets.filter(
           (item) => item.rateSourceRefID === data.mi
       );
-      if(EventsMarketobj.length > 0 && data.rt !== null && data.ms !== EventMarketStatus.Open)
-      {
-        global.tblEventMarkets = global.tblEventMarkets.map(item => {
-          if (item.rateSourceRefID === data.mi) {
-              // Update the status of the matched item
-              return {
-                  ...item,
-                  status: EventMarketStatus.Suspend
-              };
-          }
-          return item; // Return the item unchanged if it doesn't match
-        });
-        let _data = {};
-        _data.rateSourceRefID = parseInt(data.mi);
-        _data.status = parseInt(data.ms);
-        await updateMarketStatusFromSignalRQuery(_data, request, _fastify);
-        for (var i = 0; i < EventsMarketobj.length; i++) {
-          let _runner = {};
-          _runner = EventsMarketobj[i];
-          if(_runner.commentaryId != '0'){
-            let commentary = global.tblCommentaries.find(
-                (item) => item.commentaryId == _runner.commentaryId
-            );
-            if (commentary) {
-              let teams;
-              teams = global.tblCommentaryTeams.find(
-                (item) =>
-                  item.commentaryId === commentary.commentaryId &&
-                  item.currentInnings === commentary.currentInnings &&
-                  item.teamName == _runner.teamId
-              );
-
-              if (!teams) {
-                teams = global.tblCommentaryTeams.find(
-                  (item) =>
-                    item.commentaryId === commentary.commentaryId &&
-                    item.currentInnings === commentary.currentInnings &&
-                    item.teamName.toLowerCase() == _runner.runner.toLowerCase().trim()
-                );
-              }
-              if (teams && commentary.isTeamPredictionOn) {
-                const _update = {
-                  commentaryTeamId: teams.commentaryTeamId,
-                  teamPredictionPercentage: "0",
-                  currentInnings: commentary.currentInnings,
-                  commentaryId: _runner.commentaryId
-                };
-
-                const index = global.tblCommentaryTeams.findIndex(
-                  (item) =>
-                    item.commentaryId === commentary.commentaryId &&
-                    item.commentaryTeamId === teams.commentaryTeamId
-                );
-                global.tblCommentaryTeams[index].teamPredictionPercentage  = parseInt(_update.teamPredictionPercentage);
-
-                await updateCommentaryTeamPredictionPrecentageQuery(_update, _fastify);
-              }
-            }
-          }
-          const groupedRates = {};
-
-          data.rt.forEach(rate => {
-              const selectionId = rate.si;
-
-              if (!groupedRates[selectionId]) {
-                  groupedRates[selectionId] = {
-                      back: [],
-                      lay: []
+      if (EventsMarketobj.length > 0 && data.rt !== null && data.ms !== EventMarketStatus.Open) {
+          global.tblEventMarkets = global.tblEventMarkets.map(item => {
+              if (item.rateSourceRefID === data.mi) {
+                  // Update the status of the matched item
+                  return {
+                      ...item,
+                      status: EventMarketStatus.Suspend
                   };
               }
+              return item; // Return the item unchanged if it doesn't match
+          });
+          let _data = {};
+          _data.rateSourceRefID = parseInt(data.mi);
+          _data.status = parseInt(data.ms);
+          await updateMarketStatusFromSignalRQuery(_data, request, _fastify);
+          for (var i = 0; i < EventsMarketobj.length; i++) {
+              let _runner = {};
+              _runner = EventsMarketobj[i];
+              if (_runner.commentaryId != '0') {
+                  let commentary = global.tblCommentaries.find(
+                      (item) => item.commentaryId == _runner.commentaryId
+                  );
+                  if (commentary) {
+                      let teams;
+                      teams = global.tblCommentaryTeams.find(
+                          (item) =>
+                          item.commentaryId === commentary.commentaryId &&
+                          item.currentInnings === commentary.currentInnings &&
+                          item.teamName == _runner.teamId
+                      );
 
-              // If pr is 0, process it and skip further pr === 1 checks
-              if (rate.pr === 0) {
-                  if (rate.ib) {
-                      groupedRates[selectionId].back.push(rate);
-                  } else {
-                      groupedRates[selectionId].lay.push(rate);
+                      if (!teams) {
+                          teams = global.tblCommentaryTeams.find(
+                              (item) =>
+                              item.commentaryId === commentary.commentaryId &&
+                              item.currentInnings === commentary.currentInnings &&
+                              item.teamName.toLowerCase() == _runner.runner.toLowerCase().trim()
+                          );
+                      }
+                      if (teams && commentary.isTeamPredictionOn) {
+                          const _update = {
+                              commentaryTeamId: teams.commentaryTeamId,
+                              teamPredictionPercentage: "0",
+                              currentInnings: commentary.currentInnings,
+                              commentaryId: _runner.commentaryId
+                          };
+
+                          const index = global.tblCommentaryTeams.findIndex(
+                              (item) =>
+                              item.commentaryId === commentary.commentaryId &&
+                              item.commentaryTeamId === teams.commentaryTeamId
+                          );
+                          global.tblCommentaryTeams[index].teamPredictionPercentage = parseInt(_update.teamPredictionPercentage);
+
+                          await updateCommentaryTeamPredictionPrecentageQuery(_update, _fastify);
+                      }
                   }
-                  groupedRates[selectionId].hasPr0 = true;
               }
-          });
+              const groupedRates = {};
 
-          data.rt.forEach(rate => {
-              const selectionId = rate.si;
-              if (rate.pr === 1 && !groupedRates[selectionId].hasPr0) {
-                  if (rate.ib) {
-                      groupedRates[selectionId].back.push(rate);
-                  } else {
-                      groupedRates[selectionId].lay.push(rate);
+              data.rt.forEach(rate => {
+                  const selectionId = rate.si;
+
+                  if (!groupedRates[selectionId]) {
+                      groupedRates[selectionId] = {
+                          back: [],
+                          lay: []
+                      };
                   }
-              }
-          });
 
-          Object.keys(groupedRates).forEach(selectionId => {
-              delete groupedRates[selectionId].hasPr0;
-          });
+                  // If pr is 0, process it and skip further pr === 1 checks
+                  if (rate.pr === 0) {
+                      if (rate.ib) {
+                          groupedRates[selectionId].back.push(rate);
+                      } else {
+                          groupedRates[selectionId].lay.push(rate);
+                      }
+                      groupedRates[selectionId].hasPr0 = true;
+                  }
+              });
 
-          const _blrbsids = []; //Back and Lay Rates by SelectionIds  blrbsids
-          const currentTime = new Date().toISOString();
-          Object.keys(groupedRates).forEach(selectionId => {
-              const rates = groupedRates[selectionId];
-              const backRates = rates.back.length ? rates.back : [{
-                  rv: null,
-                  re: null
-              }];
-              const layRates = rates.lay.length ? rates.lay : [{
-                  rv: null,
-                  re: null
-              }];
+              data.rt.forEach(rate => {
+                  const selectionId = rate.si;
+                  if (rate.pr === 1 && !groupedRates[selectionId].hasPr0) {
+                      if (rate.ib) {
+                          groupedRates[selectionId].back.push(rate);
+                      } else {
+                          groupedRates[selectionId].lay.push(rate);
+                      }
+                  }
+              });
 
-              backRates.forEach(backRate => {
-                  layRates.forEach(layRate => {
-                      _blrbsids.push({
-                          backSize: backRate.rv,
-                          backPrice : backRate.re,
-                          laySize: layRate.rv,
-                          layPrice: layRate.re,
-                          selectionId: parseInt(selectionId, 10),
-                          timestamp: currentTime // Add timestamp here
+              Object.keys(groupedRates).forEach(selectionId => {
+                  delete groupedRates[selectionId].hasPr0;
+              });
+
+              const _blrbsids = []; //Back and Lay Rates by SelectionIds  blrbsids
+              const currentTime = new Date().toISOString();
+              Object.keys(groupedRates).forEach(selectionId => {
+                  const rates = groupedRates[selectionId];
+                  const backRates = rates.back.length ? rates.back : [{
+                      rv: null,
+                      re: null
+                  }];
+                  const layRates = rates.lay.length ? rates.lay : [{
+                      rv: null,
+                      re: null
+                  }];
+
+                  backRates.forEach(backRate => {
+                      layRates.forEach(layRate => {
+                          _blrbsids.push({
+                              backSize: backRate.rv,
+                              backPrice: backRate.re,
+                              laySize: layRate.rv,
+                              layPrice: layRate.re,
+                              selectionId: parseInt(selectionId, 10),
+                              timestamp: currentTime // Add timestamp here
+                          });
                       });
                   });
               });
-          });
-          if (_blrbsids && _blrbsids.length) {
-              for (const items of _blrbsids) {
+              if (_blrbsids && _blrbsids.length) {
+                  for (const items of _blrbsids) {
+                      const _selectionidData = global.tblEventMarkets.find(
+                          (e) => e.selectionId == items.selectionId
+                      );
 
-                  let eventRunnerData = {
-                    backSize: items.backSize,
-                    backPrice: items.backPrice,
-                    laySize: items.laySize,
-                    layPrice: items.layPrice,
-                    selectionId: items.selectionId,
-                    rateSourceRefID: data.mi,
-                    timestamp: items.timestamp,
+                      let eventRunnerData = {
+                          backSize: items.backSize,
+                          backPrice: items.backPrice,
+                          laySize: items.laySize,
+                          layPrice: items.layPrice,
+                          selectionId: items.selectionId,
+                          rateSourceRefID: data.mi,
+                          timestamp: items.timestamp,
+                      }
+
+                      await updateEventMarketRunnerMaunalQuery(eventRunnerData, _fastify);
                   }
-                  
-                 await updateEventMarketRunnerMaunalQuery(eventRunnerData, _fastify);
-
-                 const runnerIndex = global.tblEventMarkets.findIndex(elem => 
-                  elem.selectionId == items.selectionId && elem.rateSourceRefID == data.mi
-                );
-              
-                if (runnerIndex !== -1) {
-                  const { backPrice, layPrice, backSize, laySize } = items;
-                  global.tblEventMarkets[runnerIndex] = {
-                    ...global.tblEventMarkets[runnerIndex],
-                    backPrice, 
-                    layPrice, 
-                    backSize, 
-                    laySize
-                  };
-                }                
               }
-            }
-        }
-      }
-      else if (EventsMarketobj && data.rt !== null && data.ms == EventMarketStatus.Open) {
+          }
+      } else if (EventsMarketobj && data.rt !== null && data.ms == EventMarketStatus.Open) {
           let _data = {};
           _data.rateSourceRefID = parseInt(data.mi);
           _data.status = parseInt(data.ms);
@@ -584,7 +581,7 @@ const createUpdateGlobalSignalRData = async (message, request) => {
                   layRates.forEach(layRate => {
                       _blrbsids.push({
                           backSize: backRate.rv,
-                          backPrice : backRate.re,
+                          backPrice: backRate.re,
                           laySize: layRate.rv,
                           layPrice: layRate.re,
                           selectionId: parseInt(selectionId, 10),
@@ -599,34 +596,18 @@ const createUpdateGlobalSignalRData = async (message, request) => {
                   const _selectionidData = global.tblEventMarkets.find(
                       (e) => e.selectionId == items.selectionId
                   );
-                  // console.log(items);
-          
-                  let EventRunnerData = {
-                    backSize: items.backSize,
-                    backPrice: items.backPrice,
-                    laySize: items.laySize,
-                    layPrice: items.layPrice,
-                    selectionId: items.selectionId,
-                    rateSourceRefID: data.mi,
-                    timestamp: items.timestamp,
-                  }
-                  
-                 await updateEventMarketRunnerMaunalQuery(EventRunnerData, _fastify);
 
-                 const runnerIndex = global.tblEventMarkets.findIndex(elem => 
-                  elem.selectionId == items.selectionId && elem.rateSourceRefID == data.mi
-                );
-              
-                if (runnerIndex !== -1) {
-                  const { backPrice, layPrice, backSize, laySize } = items;
-                  global.tblEventMarkets[runnerIndex] = {
-                    ...global.tblEventMarkets[runnerIndex],
-                    backPrice, 
-                    layPrice, 
-                    backSize, 
-                    laySize
-                  };
-                }
+                  let EventRunnerData = {
+                      backSize: items.backSize,
+                      backPrice: items.backPrice,
+                      laySize: items.laySize,
+                      layPrice: items.layPrice,
+                      selectionId: items.selectionId,
+                      rateSourceRefID: data.mi,
+                      timestamp: items.timestamp,
+                  }
+
+                  await updateEventMarketRunnerMaunalQuery(EventRunnerData, _fastify);
 
                   let _updateData = {};
                   if (_selectionidData && _selectionidData.commentaryId != 0) {
@@ -661,7 +642,7 @@ const createUpdateGlobalSignalRData = async (message, request) => {
                               _updateData.teamId = teams.teamId;
                           }
                       }
-                     // await updateLatestMarketOddsBallByBall(_updateData, _fastify);
+                      // await updateLatestMarketOddsBallByBall(_updateData, _fastify);
                   }
 
                   const {
@@ -714,88 +695,7 @@ const createUpdateGlobalSignalRData = async (message, request) => {
   }
 }
 
-const updateMarketRunnerDataOnSocket = async(data) => {
-  try {
-    const marketDataMap = new Map();
-
-    const _runnersData = global.tblEventMarkets.filter(
-      (item) => item.rateSourceRefID === data.mi
-    );
-// console.log("rinn", _runnersData);
-
-    _runnersData.forEach((item) => {
-      const runnerIndex = global.tblEventMarkets.findIndex(elem => 
-        elem.selectionId == item.selectionId && elem.rateSourceRefID == data.mi
-      );
-      let teamNameData = null;
-
-      if (item.teamId) {
-        teamNameData = global.tblCommentaryTeams.find(
-          (elem) => elem?.teamId === item?.teamId
-        );
-      } 
-      if (!item.teamId) {
-        teamNameData = global.tblCommentaryTeams.find(
-          (t) => t.teamName?.toLowerCase() === item?.runner?.toLowerCase()
-        );
-      }
-
-      const runner = {
-        runnerId: global.tblEventMarkets[runnerIndex].runnerId,
-        runner: global.tblEventMarkets[runnerIndex].runner,
-        selectionId: global.tblEventMarkets[runnerIndex].selectionId,
-        backPrice: global.tblEventMarkets[runnerIndex].backPrice,
-        backSize: global.tblEventMarkets[runnerIndex].backSize,
-        layPrice: global.tblEventMarkets[runnerIndex].layPrice,
-        laySize: global.tblEventMarkets[runnerIndex].laySize,
-        // backPrice: item.backPrice,
-        // backSize: item.backSize,
-        // layPrice: item.layPrice,
-        // laySize: item.laySize,
-        teamId: global.tblEventMarkets[runnerIndex].teamId,
-        teamName: teamNameData?.teamName || null,
-      };
-
-      if (marketDataMap.has(item.eventMarketId)) {
-        const existingMarket = marketDataMap.get(item.eventMarketId);
-        const existingRunnerIndex = existingMarket.runners.findIndex(
-          (r) => r.selectionId === item.selectionId
-        );
-
-        if (existingRunnerIndex === -1) {
-          existingMarket.runners.push(runner);
-        } else {
-          existingMarket.runners[existingRunnerIndex] = runner;
-        }
-      } else {
-        marketDataMap.set(item.eventMarketId, {
-          eventMarketId: item.eventMarketId,
-          eventRefId: item.eventRefId,
-          runners: [runner]
-        });
-      }
-    });
-
-    const runnerValues = Array.from(marketDataMap.values());
-
-    if (
-      global?.clientSocketIo !== undefined &&
-      global?.clientSocketIo.length > 0
-    ) {
-      global.clientSocketIo.forEach((socket) => {
-        socket.client.emit("updateRunnerData", runnerValues);
-      });
-    }
-  } catch (error) {
-    errorLogger(
-      _fastify,
-      error,
-      "Error SignalrR --> signalrHandler/updateMarketRunnerDataOnSocket",
-      null
-    );
-  }
-}
-
+//Update SignalR Connection Object
 const updateConnectionStatus = async(data, fastify) => {
   try {
     const index = global.tblThirdPartyApis.findIndex(
@@ -822,6 +722,85 @@ const updateConnectionStatus = async(data, fastify) => {
       "Error SignalrR --> signalrHandler/updateConnectionStatus",
       null
     );
+  }
+}
+
+// Update Event Market Runner Maunal
+const updateMarketRunnerDataOnSocket = async (message) => {
+  try {
+      const data = message;
+      const marketDataMap = new Map();
+
+      const _runnersData = global.tblEventMarkets.filter(
+          (item) => item.rateSourceRefID === data.mi
+      );
+
+      _runnersData.forEach((item) => {
+          const runnerIndex = global.tblEventMarkets.findIndex(elem =>
+              elem.selectionId == item.selectionId && elem.rateSourceRefID == data.mi
+          );
+          let teamNameData = null;
+
+          if (item.teamId) {
+              teamNameData = global.tblCommentaryTeams.find(
+                  (elem) => elem?.teamId === item?.teamId
+              );
+          }
+          if (!item.teamId) {
+              teamNameData = global.tblCommentaryTeams.find(
+                  (t) => t.teamName?.toLowerCase() === item?.runner?.toLowerCase()
+              );
+          }
+
+          const runner = {
+              runnerId: global.tblEventMarkets[runnerIndex].runnerId,
+              runner: global.tblEventMarkets[runnerIndex].runner,
+              selectionId: global.tblEventMarkets[runnerIndex].selectionId,
+              backPrice: global.tblEventMarkets[runnerIndex].backPrice,
+              backSize: global.tblEventMarkets[runnerIndex].backSize,
+              layPrice: global.tblEventMarkets[runnerIndex].layPrice,
+              laySize: global.tblEventMarkets[runnerIndex].laySize,
+              teamId: global.tblEventMarkets[runnerIndex].teamId,
+              teamName: teamNameData?.teamName || null,
+          };
+
+          if (marketDataMap.has(item.eventMarketId)) {
+              const existingMarket = marketDataMap.get(item.eventMarketId);
+              const existingRunnerIndex = existingMarket.runners.findIndex(
+                  (r) => r.selectionId === item.selectionId
+              );
+
+              if (existingRunnerIndex === -1) {
+                  existingMarket.runners.push(runner);
+              } else {
+                  existingMarket.runners[existingRunnerIndex] = runner;
+              }
+          } else {
+              marketDataMap.set(item.eventMarketId, {
+                  eventMarketId: item.eventMarketId,
+                  eventRefId: item.eventRefId,
+                  runners: [runner]
+              });
+          }
+      });
+
+      const runnerValues = Array.from(marketDataMap.values());
+
+      if (
+          global?.clientSocketIo !== undefined &&
+          global?.clientSocketIo.length > 0
+      ) {
+          global.clientSocketIo.forEach((socket) => {
+              socket.client.emit("updateRunnerData", runnerValues);
+          });
+      }
+  } catch (error) {
+      errorLogger(
+          _fastify,
+          error,
+          "Error SignalrR --> signalrHandler/updateMarketRunnerDataOnSocket",
+          null
+      );
   }
 }
 

@@ -38,6 +38,7 @@ const {
   ActionTypeForMarketCancel,
   callPredictorMarket,
   MarketUpdateType,
+  commentaryStatus,
 } = require("../utilities/index");
 const { marketLogger, marketDataLogger, errorLogger } = require("../utilities/logger");
 const getDetailsByCIdService = async (request, fastify) => {
@@ -210,6 +211,29 @@ const getEventMarketByIdService = async (request, fastify) => {
 };
 const createEventMarketsService = async (request, fastify) => {
   const { eventMarket } = request.body;
+  // check the commentaryId
+  const commentary = global.tblCommentaries.find(
+    (item) => item.commentaryId === eventMarket[0].commentaryId
+  );
+  if (!commentary) {
+    throw new Error("Commentary with this id not Found");
+  }
+  // check if toss done
+  if(commentary.commentaryStatus != commentaryStatus.OPEN || commentary.commentaryStatus != commentaryStatus.COMPLETED){
+    // check if in eventMarket batting team market not to create
+    let bowling = global.tblCommentaryTeams.find(
+      (item) =>
+        item.commentaryId === commentary.commentaryId &&
+        item.currentInnings === commentary.currentInnings &&
+        item.teamStatus === 1 
+    );
+    let market = eventMarket.find(
+      (item) => item.teamId === bowling.teamId
+    );
+    if(market){
+      throw new Error(`${bowling.teamName}'s market not created because this team is not on Strike`);
+    }
+  }
   const result = await upsertEventMarketSPQuery(eventMarket, request, fastify);
 
   const dataOfmarkets = await getEventMarketByIdsQuery(
@@ -1410,6 +1434,16 @@ const cancelSettleMarketService = async (request, fastify) => {
   return "Market Cancel updated successfully";
 
 }
+const getMarketTypeCategoryService = async (request, fastify) => {
+  let data = global.tblMarketTypeCategories.filter(
+    (item) => item.marketTypeCategoryId == request.body.marketTypeCategoryId
+  ).map(item => ({
+    marketTypeCategoryId: item.marketTypeCategoryId,
+    categoryName: item.categoryName,
+    displayOrder: item.displayOrder
+  }));
+  return data;
+}
 module.exports = {
   getDetailsByCIdService,
   getAllEventMarketsService,
@@ -1441,5 +1475,6 @@ module.exports = {
   setAllMarketCloseService,
   setCloseMarketCancelService,
   getAllEventMarketsAndRunnersService,
-  cancelSettleMarketService
+  cancelSettleMarketService,
+  getMarketTypeCategoryService
 };
