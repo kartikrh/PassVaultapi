@@ -2019,7 +2019,7 @@ const closeMarketQuery = async (request, fastify) => {
     errorLogger(
       fastify,
       error.message,
-      "DB ERROR --> repository/TableEventmarket.js/updateMarketStatusFromSignalRQuery",
+      "DB ERROR --> repository/TableEventmarket.js/closeMarketQuery",
       request
     )
     throw new Error(error.message)

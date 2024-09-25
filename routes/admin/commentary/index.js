@@ -48,7 +48,8 @@ const {
   changeMaxOverDetail,
   AddSuperOverCommentary,
   updateTeamPrediction,
-  updateLineRatio
+  updateLineRatio,
+  deleteBallFromMemory
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -651,4 +652,8 @@ module.exports = async (fastify, opts) => {
     ],
     handler: (request, reply) => updateLineRatio(request, reply, fastify),
   });
+  fastify.post("/dltBallfromMeomory",{
+    schema: Commentary.dltBallfromMeomory.schema,
+    handler: (request, reply) => deleteBallFromMemory(request, reply, fastify)
+  })
 };

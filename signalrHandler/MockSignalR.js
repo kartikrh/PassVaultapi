@@ -66,9 +66,13 @@ async function startSignalR(fastify) {
                 global.rateQueue.push(message);
               }
               global.rateQueue = global.rateQueue.filter((item) => item.ms === 1);
-              IntervalRunner = setInterval(async () => {
+              IntervalRunner = setTimeout(async () => {
                 await createUpdateGlobalSignalRData(message, request);
               }, _RateUpdate);
+              
+              IntervalId = setTimeout(async () => {
+                await processRateQueue();
+              }, _RateUpdate); 
             }
           } catch (error) {
             errorLogger(
@@ -81,9 +85,6 @@ async function startSignalR(fastify) {
         });
         //? Function For Intervals
         updateMarketRateIntervalId = setInterval(checkAndUpdateMarketRate, _SignalRInterwal || 10000);        
-        IntervalId = setInterval(async () => {
-          await processRateQueue();
-        }, _RateUpdate); 
 
         if (!checkConfigIntervalId) {
           checkConfigIntervalId = setInterval(reConnectSignalR, 300000);// 5 minutes 300000
@@ -493,32 +494,6 @@ const createUpdateGlobalSignalRData = async (message, request) => {
                       (e) => e.selectionId == items.selectionId
                   );
 
-                  let marketRunner = global.tblEventMarkets.filter(
-                      (item) => item.eventRefId == _selectionidData.eventRefId && item.rateSource === 2
-                  );
-                  marketRunner = marketRunner.map((item) => {
-                      let teamNameData
-                      if (item.teamId) {
-                          teamNameData = global.tblCommentaryTeams.find((elem) => elem.teamId === item.teamId)
-                      }
-                      if (!item.teamId) {
-                        teamNameData = global.tblCommentaryTeams.find((t) =>
-                          t.teamName?.toLowerCase().trim() === item.runner?.toLowerCase().trim()
-                      );
-                      }
-                      return {
-                          runnerId: item.runnerId,
-                          runner: item.runner,
-                          selectionId: item.selectionId,
-                          backSize: item.backSize,
-                          laySize: item.laySize,
-                          backPrice: item.backPrice,
-                          layPrice: item.layPrice,
-                          teamId: item.teamId,
-                          teamName: teamNameData?.teamName || null
-                      };
-                  });
-
                   if (
                     global?.clientSocketIo !== undefined &&
                     global?.clientSocketIo.length > 0
@@ -542,10 +517,10 @@ const createUpdateGlobalSignalRData = async (message, request) => {
                         request
                       );
                     }
-                    // broadcast to all connected clients
-                    global.clientSocketIo.forEach((socket) => {
-                      socket.client.emit("updateRunnerData", marketRunner);
-                    });
+                    // // broadcast to all connected clients
+                    // global.clientSocketIo.forEach((socket) => {
+                    //   socket.client.emit("updateRunnerData", marketRunner);
+                    // });
                   }
           
                   let eventRunnerData = {
@@ -559,7 +534,6 @@ const createUpdateGlobalSignalRData = async (message, request) => {
                   }
                   
                  await updateEventMarketRunnerMaunalQuery(eventRunnerData, _fastify);
-                //  await updateEventMarketRunnerMaunalQuery(items, _fastify);
               }
             }
         }
@@ -642,68 +616,10 @@ const createUpdateGlobalSignalRData = async (message, request) => {
                   );
                   // console.log(items);
 
-                  // const sendDataForSocketUpdate = {};
-                  // sendDataForSocketUpdate.commentaryId = _selectionidData.commentaryId;
-                  // sendDataForSocketUpdate.eventRefId = _selectionidData.eventRefId;
-                  // sendDataForSocketUpdate.dataToUpdate = [];
-
-                  let marketRunner = global.tblEventMarkets.filter(
-                      (item) => item.eventRefId == _selectionidData.eventRefId && item.rateSource === 2
-                  );
-                  marketRunner = marketRunner.map((item) => {
-                      let teamNameData
-                      if (item.teamId) {
-                          teamNameData = global.tblCommentaryTeams.find((elem) => elem.teamId === item.teamId)
-                      }
-                      if (!item.teamId) {
-                        teamNameData = global.tblCommentaryTeams.find((t) =>
-                          t.teamName?.toLowerCase().trim() === item.runner?.toLowerCase().trim()
-                      );
-                      }
-                      return {
-                          runnerId: item.runnerId,
-                          runner: item.runner,
-                          selectionId: item.selectionId,
-                          backSize: item.backSize,
-                          laySize: item.laySize,
-                          backPrice: item.backPrice,
-                          layPrice: item.layPrice,
-                          teamId: item.teamId,
-                          teamName: teamNameData?.teamName || null
-                      };
-                  });
-
-
-                  // sendDataForSocketUpdate.dataToUpdate.push({
-                  //     module: "marketRunner",
-                  //     type: "update",
-                  //     data: marketRunner,
-                  // });
-
                   if (
                     global?.clientSocketIo !== undefined &&
                     global?.clientSocketIo.length > 0
-                  ) {
-                    // try {
-                    //   await commentaryDetailsByEventIdService(
-                    //     {
-                    //       ...request,
-                    //       body: {
-                    //         eventId: _selectionidData.eventRefId,
-                    //       },
-                    //     },
-                    //     _fastify,
-                    //     "runnersFromSocket"
-                    //   );
-                    // } catch (err) {
-                    //   errorLogger(
-                    //     _fastify,
-                    //     err.message,
-                    //     "ERROR --> signalrHandler/MockSignalR.js/createUpdateGlobalSignalRData",
-                    //     request
-                    //   );
-                    // }
-                  
+                  ) {                  
                     try {
                       await getAllEventMarketsAndRunnersService(
                         _fastify,
@@ -723,14 +639,11 @@ const createUpdateGlobalSignalRData = async (message, request) => {
                         request
                       );
                     }
+                    
+                    // // broadcast to all connected clients
                     // global.clientSocketIo.forEach((socket) => {
-                    //   socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+                    //   socket.client.emit("updateRunnerData", marketRunner);
                     // });
-
-                    // broadcast to all connected clients
-                    global.clientSocketIo.forEach((socket) => {
-                      socket.client.emit("updateRunnerData", marketRunner);
-                    });
                   }
           
                   let EventRunnerData = {
@@ -744,7 +657,6 @@ const createUpdateGlobalSignalRData = async (message, request) => {
                   }
                   
                  await updateEventMarketRunnerMaunalQuery(EventRunnerData, _fastify);
-                //  await updateEventMarketRunnerMaunalQuery(items, _fastify);
 
                   let _updateData = {};
                   if (_selectionidData && _selectionidData.commentaryId != 0) {

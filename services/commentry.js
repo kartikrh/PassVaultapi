@@ -8381,7 +8381,19 @@ const updateLineRationService = async (request, fastify) => {
     throw new Error(error);
   }
 };
-
+const deleteBallFromMemorynService = async (request, fastify) => {
+  const { commentaryBallByBallId } = request.body;
+  global.tblCommentaryBallByBall = global.tblCommentaryBallByBall.filter(
+    (item) => !commentaryBallByBallId.includes(item.commentaryBallByBallId)
+  );
+  global.tblCommentaryPartnership = global.tblCommentaryPartnership.filter(
+    (item) => !commentaryBallByBallId.includes(item.commentaryBallByBallId)
+  );
+  global.tblCommentaryWicket = global.tblCommentaryWicket.filter(
+    (item) => !commentaryBallByBallId.includes(item.commentaryBallByBallId)
+  );
+  return "Ball deleted successfully";
+};
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -8439,5 +8451,6 @@ module.exports = {
   syncCommentaryStatsWithAPIAndSocket,
   getMatchDataByCId,
   updateTeamPredictionService,
-  updateLineRationService
+  updateLineRationService,
+  deleteBallFromMemorynService
 };
