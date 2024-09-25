@@ -3680,6 +3680,20 @@ const EventMarket = {
       },
     },
   },
+  getMarketTypeCategory:{
+    schema : {
+      tags : ["EventMarket"],
+      description : "get all Market Type Category",
+      secaurity : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          marketTypeCategoryId : {type : "integer"},
+        },
+        required : ["marketTypeCategoryId"]
+      }
+    },
+  },
   getMarketTypeCategory : {
     schema  : {
       tags : ["EventMarket"],
