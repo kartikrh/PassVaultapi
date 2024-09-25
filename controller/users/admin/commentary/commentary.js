@@ -51,7 +51,8 @@ const {
   AddSuperOverCommentaryService,
   syncCommentaryStatsWithAPIAndSocket,
   updateTeamPredictionService,
-  updateLineRationService
+  updateLineRationService,
+  deleteBallFromMemorynService
 } = require("../../../../services/commentry");
 const { getAllCommentariesDataService } = require("../../../../services/score");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
@@ -741,6 +742,15 @@ const updateLineRatio = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const deleteBallFromMemory = async (request, reply, fastify) => {
+  try {
+    const result = await deleteBallFromMemorynService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/deleteBallFromMemory", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 
 module.exports = {
   getAllCommentaries,
@@ -798,5 +808,6 @@ module.exports = {
   changeMaxOverDetail,
   AddSuperOverCommentary,
   updateTeamPrediction,
-  updateLineRatio
+  updateLineRatio,
+  deleteBallFromMemory
 };
