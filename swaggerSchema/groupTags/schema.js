@@ -1963,6 +1963,28 @@ const Commentary = {
       },
     },
   },
+  dltBallfromMeomory: {
+    schema: {
+      tags: ["Commentary"],
+      description: "delete Commentary Data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          body : {
+            type: "object",
+            properties: {
+              commentaryBallByBallId : {
+                type: "array",
+                items: { type: "integer" },
+                },
+              }
+            },
+        },
+        required: ["commentaryBallByBallId"],
+      },
+    },
+  },
   getLiveCommentaries : {
     schema: {
       tags: ["Commentary"],
