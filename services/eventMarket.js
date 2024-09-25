@@ -1440,7 +1440,8 @@ const getMarketTypeCategoryService = async (request, fastify) => {
   ).map(item => ({
     marketTypeCategoryId: item.marketTypeCategoryId,
     categoryName: item.categoryName,
-    displayOrder: item.displayOrder
+    displayOrder: item.displayOrder,
+    displayName : item.displayName
   }));
   return data;
 }
