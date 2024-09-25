@@ -16,11 +16,11 @@ const { getAllEventMarketsAndRunnersService } = require("../services/eventMarket
  * This function establishes a SignalR connection to the event service, allowing us to receive live rates.
  * 
  * The startSignalR function is initiated to check for available markets. If markets are found, data is retrieved
- * from the event service and added to global.rateQueue. The data is then used to update the local data and 
+ * from the event service and added to global.rateQueue. The data is then used to update the global.SignalRData data and 
  * initiate a runner that updates the database.
  * 
  * Next, the processRateQueue function is invoked to calculate prediction percentages, update team information,
- * and log market data.
+ * and updates market ,log market data to the database.
  * 
  * Finally, Socket.IO emits the updated rates from the local data to the client side.
  */
