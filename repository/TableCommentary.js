@@ -505,15 +505,17 @@ const updateCommentaryPlayerById = async (data, request, fastify) => {
     return await fastify.db.query(
       `update "tblCommentaryPlayers"
       set "wrBatsmanAverage" = $1, 
-      "wrBatsmanStrikeRate" = $2
-      where "wrPlayerId" = $3
-      AND "wrCommentaryId" = $4
-      AND "wrTeamId" = $5`,
+      "wrBatsmanStrikeRate" = $2,
+      "wrIsInPlayingEleven" = $3
+      where "wrPlayerId" = $4
+      AND "wrCommentaryId" = $5
+      AND "wrTeamId" = $6`,
       {
         type: fastify.db.QueryTypes.DELETE,
         bind: [
           data.batsmanAverage,
           data.batsmanStrikeRate,
+          data.isInPlayingEleven,
           data.playerId,
           data.commentaryId,
           data.teamId,
@@ -923,7 +925,8 @@ const getAllCommentaryPlayerQuery = async (fastify) => {
     "wrBatterOrder" as "batterOrder",
     "wrBowlerOrder" as "bowlerOrder",
     "wrBatsmanPreviousStrikeRate" as "batsmanPreviousStrikeRate",
-    "wrBowlerPreviousEconomy" as "bowlerPreviousEconomy"
+    "wrBowlerPreviousEconomy" as "bowlerPreviousEconomy",
+    "wrIsInPlayingEleven" as "isInPlayingEleven"
     from "tblCommentaryPlayers"
     `,
     {

@@ -185,10 +185,12 @@ const assignAwardQuery = async(data,request,fastify) => {
         SELECT 
             inserted.*,
             team."wrTeamName" as "teamName",
-            player."wrPlayerName" as "playerName"
+            player."wrPlayerName" as "playerName",
+            award."wrName" as "awardName"
         FROM inserted
         LEFT JOIN "tblPlayers" player ON player."wrPlayerId" = inserted."playerId"
-        LEFT JOIN "tblTeams" team ON team."wrTeamId" = inserted."teamId";
+        LEFT JOIN "tblTeams" team ON team."wrTeamId" = inserted."teamId"
+        LEFT JOIN "tblAwards" award ON award."wrId" = inserted."awardId"
         `;  
         const result = await fastify.db.query(query,{
             type : fastify.db.QueryTypes.SELECT

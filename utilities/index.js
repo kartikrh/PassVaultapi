@@ -594,7 +594,12 @@ const thirdPartyApiType = {
   Socket : 1,
   API : 2
 }
-
+const commentaryStatus = {
+  OPEN : 1,
+  TOSSDONE : 2,
+  INPROGRESS : 3,
+  COMPLETED : 4,
+}
 module.exports = {
   ERROR_CODES,
   error,
@@ -638,5 +643,6 @@ module.exports = {
   templateModel,
   templateType,
   getIpAddress,
-  thirdPartyApiType
+  thirdPartyApiType,
+  commentaryStatus
 };

@@ -26,12 +26,6 @@ const addTournamentTeamPlayersService = async (request, fastify) => {
       userId: request.userTokenInfo.WrUserId,
     };
 
-    const data = await insertTournamentTeamPlayersQuery(
-      insertData,
-      request,
-      fastify
-    );
-
     const existingPlayers = global.tblTournamentTeamPlayers.filter(
       (elem) =>
         elem.competitionId === item.competitionId && elem.teamId === item.teamId
@@ -49,6 +43,12 @@ const addTournamentTeamPlayersService = async (request, fastify) => {
         (el) => !existingPlayerIds.includes(el.id)
       );
     }
+
+    const data = await insertTournamentTeamPlayersQuery(
+      insertData,
+      request,
+      fastify
+    );
     
     global.tblTournamentTeamPlayers.push(data[0]);
   });

@@ -2389,6 +2389,7 @@ const Commentary = {
           playerId: { type: "integer" },
           batsmanAverage: { type: "integer" },
           batsmanStrikeRate: { type: "integer" },
+          isInPlayingEleven: { type: "boolean" },
         },
         required: ["commentaryId", "teamId", "playerId"],
       },
@@ -3678,6 +3679,20 @@ const EventMarket = {
         },
         required: ["commentaryId"],
       },
+    },
+  },
+  getMarketTypeCategory:{
+    schema : {
+      tags : ["EventMarket"],
+      description : "get all Market Type Category",
+      secaurity : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          marketTypeCategoryId : {type : "integer"},
+        },
+        required : ["marketTypeCategoryId"]
+      }
     },
   },
   getMarketTypeCategory : {
