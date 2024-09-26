@@ -219,19 +219,21 @@ const createEventMarketsService = async (request, fastify) => {
     throw new Error("Commentary with this id not Found");
   }
   // check if toss done
-  if(commentary.commentaryStatus != commentaryStatus.OPEN || commentary.commentaryStatus != commentaryStatus.COMPLETED){
+  if(commentary.commentaryStatus != commentaryStatus.OPEN && commentary.commentaryStatus != commentaryStatus.COMPLETED){
     // check if in eventMarket batting team market not to create
     let bowling = global.tblCommentaryTeams.find(
       (item) =>
         item.commentaryId === commentary.commentaryId &&
         item.currentInnings === commentary.currentInnings &&
-        item.teamStatus === 1 
+        item.teamStatus !== 1 
     );
-    let market = eventMarket.find(
-      (item) => item.teamId === bowling.teamId
-    );
-    if(market){
-      throw new Error(`${bowling.teamName}'s market not created because this team is not on Strike`);
+    if(bowling){
+      let market = eventMarket.find(
+        (item) => item.teamId === bowling.teamId
+      );
+      if(market){
+        throw new Error(`${bowling.teamName}'s market not created because this team is not on Strike`);
+      }
     }
   }
   const result = await upsertEventMarketSPQuery(eventMarket, request, fastify);
