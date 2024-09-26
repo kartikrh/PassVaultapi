@@ -32,6 +32,8 @@ const {
 } = require("../../../controller/users/admin/subScribesDomain");
 const { allCongifService } = require("../../../services/config");
 const { getAllBanners } = require("../../../controller/users/admin/banner");
+const { getMarketTypeAndCategoryByMarketType } = require("../../../controller/users/admin/marketTemplate");
+
 const {
   Score,
   SubScribesDomain,
@@ -275,4 +277,7 @@ module.exports = async (fastify, opts) => {
     schema: Score.getBanners.schema,
     handler: (request, reply) => getAllBanners(request, reply, fastify)
   })
+  fastify.post("/getMarketTypeAndCategory", {
+    handler: (request, reply) => getMarketTypeAndCategoryByMarketType(request, reply, fastify),
+  });
 };

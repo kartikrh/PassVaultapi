@@ -344,10 +344,12 @@ const getMarketTypeAndCategoryByMarketTypeService = async (request, fastify) => 
     const mappedCategories = categories.map((category) => ({
       id: category.marketTypeCategoryId,
       marketTypeCategori: category.categoryName,
+      displayOrder: category.displayOrder
     }));
     return {
       id: item.marketTypeId,
       marketType: item.marketTypeName,
+      displayOrder: item.displayOrder,
       marketTypeCategories: mappedCategories,
     };
   });
