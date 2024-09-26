@@ -634,9 +634,9 @@ const CheckAndCreateMarketOddsBallInSaveDetails = async (data, fastify, request 
       wrId = existingRecord[0].wrId;
       const updateQuery = `
         UPDATE "tblMarketOddsBallByBall"
-        SET "wrData" = $4,
-            "wrDateTime" = $5
-        WHERE "wrId" = $6
+        SET "wrData" = $1,
+            "wrDateTime" = $2
+        WHERE "wrId" = $3
       `;
 
       await fastify.db.query(updateQuery, {
