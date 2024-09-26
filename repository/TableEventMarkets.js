@@ -4,6 +4,7 @@ const {
   ActionTypeForMarketCancel,
 } = require("../utilities");
 const { errorLogger, marketDataLogger } = require("../utilities/logger");
+const { getPagination } = require("../utilities");
 
 const getAllEventMarketsQuery = async (fastify, whereCondition = null) => {
   return await fastify.db.query(
@@ -1144,41 +1145,75 @@ const upsertEventMarketSPQuery = async (data, request, fastify) => {
 };
 const getDataLogsByMarketQuery = async (request, fastify) => {
   try {
-    const data = fastify.db.query(
-      `
-                SELECT
-                    "wrId" as "marketDataLogId",
-                    tmd."wrCommentaryId" as "commentaryId",
-                    tmd."wrEventMarketId" as "eventMarketId",
-                    tem."wrMarketName" as "marketName",
-                    tmd."wrData" as "data",
-                    "wrUpdateType" as "updateType",
-                    "wrCreatedDate" as "createdDate",
-                    "wrCreatedBy" as "createdBy",
-                    tu."WrUserName" as "userName",
-                    "wrLineDiff" as "lineDiff",
-                    tmd."wrIsSendData" as "isSendData"
-                FROM "tblMarketDataLogs" tmd
-                LEFT JOIN "tblEventMarkets"  tem ON tmd."wrEventMarketId" = tem."wrID"
-                LEFT JOIN "tblUsers" tu ON tmd."wrCreatedBy" = tu."WrUserId"
-                WHERE "wrEventMarketId" = $1
-                ORDER BY "wrId" desc
-            `,
-      {
-        bind: [request.body.eventMarketId],
-        type: fastify.db.QueryTypes.SELECT,
-      }
-    );
-    return data;
-  } catch (error) {
+    const { startDate, endDate, page, limit, eventMarketId } = request.body;
+    const { skip, take } = getPagination(page, limit);
+    
+    let whereConditions = [];
+    
+    if (startDate && endDate) {
+        whereConditions.push(`"wrCreatedDate" BETWEEN '${startDate}' AND '${endDate}'`);
+    }
+    
+    if (eventMarketId) {
+        whereConditions.push(`"wrEventMarketId" = '${eventMarketId}'`);
+    }
+    
+    const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
+    
+    const query = `
+        SELECT
+            tmd."wrId" as "marketDataLogId",
+            tmd."wrCommentaryId" as "commentaryId",
+            tmd."wrEventMarketId" as "eventMarketId",
+            tem."wrMarketName" as "marketName",
+            tmd."wrData" as "data",
+            tmd."wrUpdateType" as "updateType",
+            tmd."wrCreatedDate" as "createdDate",
+            tmd."wrCreatedBy" as "createdBy",
+            tu."WrUserName" as "userName",
+            tmd."wrLineDiff" as "lineDiff",
+            tmd."wrIsSendData" as "isSendData"
+        FROM "tblMarketDataLogs" tmd
+        LEFT JOIN "tblEventMarkets" tem ON tmd."wrEventMarketId" = tem."wrID"
+        LEFT JOIN "tblUsers" tu ON tmd."wrCreatedBy" = tu."WrUserId"
+        ${whereClause}
+        ORDER BY tmd."wrId" DESC
+        LIMIT $1 OFFSET $2;
+    `;
+    
+    const data = await fastify.db.query(query, {
+        bind: [take, skip],
+        type: fastify.db.QueryTypes.SELECT
+    });
+    
+    const totalRecordsQuery = `
+        SELECT COUNT(*) as "count"
+        FROM "tblMarketDataLogs" tmd
+        ${whereClause}
+    `;
+    
+    const totalRecordsResult = await fastify.db.query(totalRecordsQuery, {
+        type: fastify.db.QueryTypes.SELECT
+    });
+    
+    const totalRecords = parseInt(totalRecordsResult[0].count, 10);
+    const totalPages = Math.ceil(totalRecords / take);
+    
+    return {
+        totalRecords: totalRecords,
+        currentPage: page,
+        totalPages: totalPages,
+        data: data,
+    };
+} catch (error) {
     errorLogger(
-      fastify,
-      error.message,
-      "DB ERROR --> repository/TableEventmarket.js/upsertEventMarketSPQuery",
-      request
+        fastify,
+        error.message,
+        "DB ERROR --> repository/TableEventmarket.js/getDataLogsByMarketQuery",
+        request
     );
     throw new Error(error.message);
-  }
+}
 };
 const getStatusLogsByMarketQuery = async (request, fastify) => {
   try {
@@ -1295,7 +1330,7 @@ const getMarketDataByCIdQuery = async (request, fastify) => {
     throw new Error(error.message);
   }
 };
-const getMarketsByCIdQuery = async (request, fastify) => {
+const getMarketsByCIdQuery = async (request, whereCondition, fastify) => {
   try {
     const query = `
       WITH result_market_data AS (
@@ -1313,10 +1348,11 @@ const getMarketsByCIdQuery = async (request, fastify) => {
             "wrMaxOdds" as "maxOdds",
             "wrStatus" as "status",
             "wrOpenOdds" as "openOdds",
+            "wrMarketTypeCategoryId" AS "marketTypeCategoryId",
             "wrResult" as "result"
         FROM "tblEventMarkets"
         LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = "tblEventMarkets"."wrTeamID"
-        WHERE "wrEventRefID" = $1
+        WHERE "wrEventRefID" = $1 ${whereCondition}
         AND "wrStatus" = $2
         AND "wrRateSource" <> 2
     ),
@@ -1336,11 +1372,12 @@ const getMarketsByCIdQuery = async (request, fastify) => {
             tmr."wrBackPrice" as "backPrice",
             tmr."wrLayPrice" as "layPrice",
             tmr."wrBackSize" as "backSize",
+            "wrMarketTypeCategoryId" AS "marketTypeCategoryId",
             tmr."wrLaySize" as "laySize"
         FROM "tblEventMarkets"
         LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = "tblEventMarkets"."wrTeamID"
         LEFT JOIN "tblMarketRunners" tmr ON tmr."wrEventMarketId" = "tblEventMarkets"."wrID"
-        WHERE "wrEventRefID" = $1
+        WHERE "wrEventRefID" = $1 ${whereCondition}
         AND "wrStatus" NOT IN ($2, $3, $4)
         AND "wrRateSource" <> 2
     )
