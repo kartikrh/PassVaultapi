@@ -2337,6 +2337,7 @@ const changeBowlerInCommentary = async (data, request, fastify) => {
       "wrCommentaryId" =$2
       AND "wrOverId" =$3
       AND "wrCurrentInnings" = $4
+    RETURNING "wrOverId" as "overId"
     `;
     const query2 = `
     update "tblCommentaryBallByBalls" set
@@ -2345,6 +2346,7 @@ const changeBowlerInCommentary = async (data, request, fastify) => {
       "wrCommentaryId" =$2
       AND "wrOverId" =$3
       AND "wrCurrentInnings" = $4
+    RETURNING "wrCommentaryBallByBallId" as "commentaryBallByBallId"
     `;
 
     const query3 = `
@@ -2354,6 +2356,7 @@ const changeBowlerInCommentary = async (data, request, fastify) => {
       "wrCommentaryId" = $2
       AND "wrOverId" =$3
       AND "wrCurrentInnings" = $4
+    RETURNING "wrCommentaryWicketId" as "commentaryWicketId"
     `;
 
     const params = [
@@ -2363,32 +2366,54 @@ const changeBowlerInCommentary = async (data, request, fastify) => {
       data.currentInnings,
     ];
 
-    await fastify.db.query(query1, {
-      type: fastify.db.QueryTypes.UPDATE,
+    const overs = await fastify.db.query(query1, {
+      type: fastify.db.QueryTypes.SELECT,
       bind: params,
     });
 
-    await fastify.db.query(query2, {
-      type: fastify.db.QueryTypes.UPDATE,
+    const ballByBall = await fastify.db.query(query2, {
+      type: fastify.db.QueryTypes.SELECT,
       bind: params,
     });
 
-    await fastify.db.query(query3, {
-      type: fastify.db.QueryTypes.UPDATE,
+    const wickets = await fastify.db.query(query3, {
+      type: fastify.db.QueryTypes.SELECT,
       bind: params,
     });
-    global.tblOvers = await getAllOversQuery(fastify);
-    global.tblCommentaryBallByBall = await getAllCommentaryBallByBallQuery(
-      fastify
-    );
-    global.tblCommentaryWickets = await getAllCommentaryWicketQuery(fastify);
+    // global.tblOvers = await getAllOversQuery(fastify);
+    // global.tblCommentaryBallByBall = await getAllCommentaryBallByBallQuery(
+    //   fastify
+    // );
+    // global.tblCommentaryWickets = await getAllCommentaryWicketQuery(fastify)
+    for (let ov of overs){
+      let index = global.tblOvers.findIndex((o) => o.overId === ov.overId);
+      if (index !== -1) {
+        global.tblOvers[index].bowlerId = data.bowlerId;
+      }
+    }
+    for (let ball of ballByBall){
+      let index = global.tblCommentaryBallByBall.findIndex(
+        (b) => b.commentaryBallByBallId === ball.commentaryBallByBallId
+      );
+      if (index !== -1) {
+        global.tblCommentaryBallByBall[index].bowlerId = data.bowlerId;
+      }
+    }
+    for (let wicket of wickets){
+      let index = global.tblCommentaryWicket.findIndex(
+        (w) => w.commentaryWicketId === wicket.commentaryWicketId
+      );
+      if (index !== -1) {
+        global.tblCommentaryWicket[index].bowlerId = data.bowlerId;
+      }
+    }
 
     let commentaryBallByBall = global.tblCommentaryBallByBall.filter(
       (ball) =>
         ball.commentaryId === data.commentaryId && ball.overId === data.overId
     );
 
-    let commentaryWickets = global.tblCommentaryWickets.filter(
+    let commentaryWickets = global.tblCommentaryWicket.filter(
       (wicket) => wicket.commentaryId === data.commentaryId
     );
 
