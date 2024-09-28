@@ -2,7 +2,8 @@ const {
     addCommentaryAwardQuery,
     updateCommentaryAwardQuery,
     deleteCommentaryAwardQuery,
-    assignAwardQuery
+    assignAwardQuery,
+    deleteAwardsQuery
  } = require("../repository/TableCommentaryAward");
 
 const getAllComAwardService = async (fastify) => {
@@ -126,11 +127,23 @@ const assignAwardService = async (request, fastify) => {
                 throw new Error("Player with this Id not found");
             }
         }
-    }
+        const existingAwards = global.tblCommentaryAwards.filter(
+            (elem) =>
+              elem.commentaryId === a.commentaryId && elem.awardId === a.awardId
+          );
+        const awardIds = existingAwards.map((del) => del.id);
+    
+        if (awardIds.length > 0) {
+          await deleteAwardsQuery(awardIds,request,fastify);
+          global.tblCommentaryAwards = global.tblCommentaryAwards.filter(
+            (el) => !awardIds.includes(el.id)
+          );
+        }
+        }
+
     let addAward = await assignAwardQuery(comAwards, request, fastify);
     global.tblCommentaryAwards.push(...addAward); 
     return addAward;
-
 }
 const getAssignAwardService = async (request, fastify) => {
     let result = global.tblCommentaryAwards.filter((item) => item.commentaryId === request.body.commentaryId);
