@@ -207,10 +207,33 @@ const assignAwardQuery = async(data,request,fastify) => {
     }
 }
 
+const deleteAwardsQuery = async (data, request, fastify) => {
+    try {
+      return await fastify.db.query(
+          `
+            delete from "tblCommentaryAwards" where "wrId" = ANY ($1)
+          `,
+        {
+          type: fastify.db.QueryTypes.DELETE,
+          bind: [data],
+        }
+      );
+    } catch (err) {
+      errorLogger(
+        fastify,
+        err.message,
+        "DB ERROR --> repository/TableCommentaryAward/deleteAwardsQuery",
+        request
+      );
+      throw new Error(err.message);
+    }
+  };
+
 module.exports = {
     getAllCommentaryAwardQuery,
     addCommentaryAwardQuery,
     updateCommentaryAwardQuery,
     deleteCommentaryAwardQuery,
-    assignAwardQuery
+    assignAwardQuery,
+    deleteAwardsQuery
 }
