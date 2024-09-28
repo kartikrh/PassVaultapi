@@ -70,6 +70,8 @@ const {
 const {
   getTeamList,
 } = require("../../../controller/users/admin/teamsAndPlayer/teams");
+const { getAllAward } = require("../../../controller/users/admin/award");
+const { assignAward, getAssignAward } = require("../../../controller/users/admin/commentaryAward")
 const { Commentary } = require("../../../swaggerSchema/groupTags/schema");
 
 module.exports = async (fastify, opts) => {
@@ -655,5 +657,41 @@ module.exports = async (fastify, opts) => {
   fastify.post("/dltBallfromMeomory",{
     schema: Commentary.dltBallfromMeomory.schema,
     handler: (request, reply) => deleteBallFromMemory(request, reply, fastify)
+  })
+  fastify.post("/awards", {
+    schema: Commentary.getAllAwards.schema,
+    preHandler: [
+        (request, reply) => authorize(request, reply, fastify),
+        (request, reply, done) =>
+            checkPermission(request, reply, fastify, {
+                tabName: "Commentary",
+                mode: "edit",
+            }),
+    ],
+    handler: (request, reply) => getAllAward(request, reply, fastify),
+  });
+  fastify.post("/assignAward", {
+    schema : Commentary.assignAward.schema,
+    preHandler : [
+        (request,reply) => authorize(request,reply,fastify),
+        (request,reply) => 
+            checkPermission(request,reply,fastify,{
+                tabName : "Commentary",
+                mode : "edit"
+            })
+    ],
+    handler : (request,reply) => assignAward(request,reply,fastify)
+  })
+  fastify.post("/getAssignAward", {
+    schema : Commentary.getAssignAward.schema,
+    preHandler : [
+        (request,reply) => authorize(request,reply,fastify),
+        (request,reply) => 
+            checkPermission(request,reply,fastify,{
+                tabName : "Commentary",
+                mode : "edit"
+            })
+    ],
+    handler : (request,reply) => getAssignAward(request,reply,fastify)
   })
 };

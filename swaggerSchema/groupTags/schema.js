@@ -2707,6 +2707,52 @@ const Commentary = {
       },
     },
   },
+  getAllAwards : {
+    schema : {
+      tags : ["Commentary"],
+      description : "get all Awards",
+      security : [{bearerAuth : []}]
+    }
+  },
+  assignAward :{
+    schema : {
+      tags : ["Commentary Award"],
+      description : "assign Award",
+      security : [{bearerAuth : []}],
+      body : {
+        type :"object",
+        properties : {
+          comAward : {
+            type : "array",
+            items : {
+              type : "object",
+              properties : {
+                commentaryId : {type : "integer"},
+                awardId : {type : "integer"},
+                teamId : {type : "integer"},
+                playerId : {type : "integer"}
+              },
+              required : ["commentaryId", "awardId"]
+            },
+          }
+        },
+      },
+    },
+  },
+  getAssignAward: {
+    schema: {
+      tags: ["Commentary Award"],
+      description: "get assign award",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+        },
+        required: ["commentaryId"],
+      },
+    },
+  },
 };
 
 const Compitition = {
