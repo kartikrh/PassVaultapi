@@ -2780,19 +2780,22 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         });
 
         if(updatedData.commentaryBallByBallDetails.ballType > 0){
-          let _results = [];
-          let result = await addinMarketBallbyballOdds(commentaryId,updatedData.commentaryBallByBallDetails, fastify);
-            if(result)
-            {
-              _results.push(result);
-              if(_results && _results.length > 0) {
-                sendDataForSocketUpdate.dataToUpdate.push({
-                  module: "marketOddsBallByBall",
-                  data: _results,
-                  type : "create"
-                });
+          if(!global.isSignalRStopped)
+          {
+            let _results = [];
+            let result = await addinMarketBallbyballOdds(commentaryId,updatedData.commentaryBallByBallDetails, fastify);
+              if(result)
+              {
+                _results.push(result);
+                if(_results && _results.length > 0) {
+                  sendDataForSocketUpdate.dataToUpdate.push({
+                    module: "marketOddsBallByBall",
+                    data: _results,
+                    type : "create"
+                  });
+                }
               }
-            }
+          }
         }
         if (
           commentaryData.isPredictMarket &&
