@@ -3,6 +3,7 @@ const {
   deleteMatchTypeQuery,
   updateMatchTypeQuery,
   deleteMatchTypePredictorQuery,
+  updateSumOfRunPerBallQuery,
 } = require("../repository/TableMatchType");
 const { createMatchTypePredictorQuery } = require("../repository/TableMatchTypePredictor");
 
@@ -33,6 +34,11 @@ const createMatchTypeService = async (request, fastify) => {
     fastify,
     request
   );
+
+  const validate = global.tblMatchTypePredictor.filter((item) => item.matchTypeId === request.body.matchTypeId);
+  if(validate.length > 0 ){
+    await updateSumOfRunPerBallQuery(request.body.matchTypeId, fastify, request);
+  }
 
   global.tblMatchTypes.push(data);
   return data;
@@ -90,7 +96,10 @@ const cloneMatchTypeService = async (request, fastify) => {
 
   global.tblMatchTypePredictor.push(...predictor);
 
-
+  const validate = global.tblMatchTypePredictor.filter((item) => item.matchTypeId === data.matchTypeId);
+  if(validate.length > 0 ){
+    await updateSumOfRunPerBallQuery(data.matchTypeId, fastify, request);
+  }
 
   return data;
 };
@@ -134,6 +143,11 @@ const updateMatchTypeService = async (request, fastify) => {
     ...data,
     matchTypeId: request.body.matchTypeId,
   };
+
+  const validate = global.tblMatchTypePredictor.filter((item) => item.matchTypeId === request.body.matchTypeId);
+  if(validate.length > 0 ){
+    await updateSumOfRunPerBallQuery(request.body.matchTypeId, fastify, request);
+  }
 
   return { ...data, matchTypeId: request.body.matchTypeId };
 };
