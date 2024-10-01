@@ -3753,7 +3753,8 @@ const updateTeamPlayerService = async (request, fastify) => {
         playerId,
         batsmanStrikeRate,
         batsmanAverage,
-        isInPlayingEleven
+        isInPlayingEleven,
+        boundary
       },
       request,
       fastify
