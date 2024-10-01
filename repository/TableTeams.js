@@ -172,6 +172,31 @@ const getAllPlayersByTeamIdQuery = async (teamId, fastify, request) => {
   }
 };
 
+const getAllPlayersByCompetitionIdTeamIdQuery = async (teamId, fastify, request) => {
+  try {
+    return await fastify.db.query(
+      `SELECT      
+      "wrRefPlayerId" as "playerId",
+      "wrPlayerName" as "playerName"   
+      FROM "tblTeamPlayers" tp 
+      left join "tblPlayers" pl on tp."wrRefPlayerId" = pl."wrPlayerId"
+      where tp."wrTeamId" = $1`,
+      {
+        bind: [teamId],
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableTeams/getAllPlayersByTeamIdQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 const getAllCompetitionByTeamIdQuery = async (teamId, fastify, request) => {
   try {
     return await fastify.db.query(
@@ -203,5 +228,6 @@ module.exports = {
   updateTeamQuery,
   deleteTeamQuery,
   getAllPlayersByTeamIdQuery,
-  getAllCompetitionByTeamIdQuery
+  getAllCompetitionByTeamIdQuery,
+  getAllPlayersByCompetitionIdTeamIdQuery
 };

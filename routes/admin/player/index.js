@@ -15,6 +15,7 @@ const {
   getAllPlayerByTeam,
   UpdatePlayerStats,
   updateIsSystemPlayer,
+  getAllPlayerByCompetitionAndTeam,
 } = require("../../../controller/users/admin/teamsAndPlayer/players");
 const {
   getTeamList,
@@ -75,6 +76,11 @@ module.exports = async (fastify, opts) => {
     schema: Teams.getById.schema,
     preHandler: [(request, reply) => authorize(request, reply, fastify)],
     handler: (request, reply) => getAllPlayerByTeam(request, reply, fastify),
+  });
+  fastify.post("/byTeamIdv1", {
+    schema: Teams.getByTeamIdAndCompetitionId.schema,
+    preHandler: [(request, reply) => authorize(request, reply, fastify)],
+    handler: (request, reply) => getAllPlayerByCompetitionAndTeam(request, reply, fastify),
   });
   fastify.post("/allPlayerTypes", {
     schema: Player.getAll.schema,
