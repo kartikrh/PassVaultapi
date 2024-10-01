@@ -2880,6 +2880,21 @@ const Compitition = {
       },
     },
   },
+  isTrendingStatus: {
+    schema: {
+      tags: ["Compitition"],
+      description: "change isTrending status",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionId: { type: "integer" },
+          isTrending: { type: "boolean" },
+        },
+        required: ["competitionId", "isTrending"],
+      },
+    },
+  },
 };
 
 const Event = {
