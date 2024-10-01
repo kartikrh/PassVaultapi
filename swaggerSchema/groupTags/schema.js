@@ -1379,6 +1379,21 @@ const Teams = {
       },
     },
   },
+  getByTeamIdAndCompetitionId: {
+    schema: {
+      tags: ["Teams"],
+      security: [{ bearerAuth: [] }],
+      description: "get teams by id",
+      body: {
+        type: "object",
+        properties: {
+          teamId: { type: "integer" },
+          competitionId: { type: "integer" },
+        },
+        required: ["teamId", "competitionId"],
+      },
+    },
+  },
   save: {
     schema: {
       tags: ["Teams"],
