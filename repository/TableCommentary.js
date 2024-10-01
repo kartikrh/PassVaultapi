@@ -1278,7 +1278,11 @@ const getAllCommentaryPartnershipQuery = async (fastify) => {
       "wrTotalSix" as "totalSix",
       "wrTotalExtra" as "totalExtra",
       "wrTotalWide" as "totalWide",
-      "wrTotalNoBall" as "totalNoBall"
+      "wrTotalNoBall" as "totalNoBall",
+      "wrP1Ball" as "p1Ball",
+      "wrP2Ball" as "p2Ball",
+      "wrP1Run" as "p1Run",
+      "wrP2Run" as "p2Run"
       from "tblCommentaryPartnerships"
       `,
     {
@@ -2280,8 +2284,8 @@ const updateCommentaryPlayerIdInCommentaryTeams = async (
     await fastify.db.query(query1, {
       type: fastify.db.QueryTypes.UPDATE,
       bind: [
-        data.team1Captain,
-        data.team1Kipper,
+        data.team1Captain || null,
+        data.team1Kipper || null,
         data.team1Id,
         data.commentaryId,
         data.currentInnings,
@@ -2291,8 +2295,8 @@ const updateCommentaryPlayerIdInCommentaryTeams = async (
     await fastify.db.query(query2, {
       type: fastify.db.QueryTypes.UPDATE,
       bind: [
-        data.team2Captain,
-        data.team2Kipper,
+        data.team2Captain || null,
+        data.team2Kipper || null,
         data.team2Id,
         data.commentaryId,
         data.currentInnings,

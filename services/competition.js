@@ -4,16 +4,19 @@ const {
   updateCompititionQuery,
   getAllCompititionQuery,
   updateDisplayOrderQuery,
+  isTrendingChangeStatusQuery,
 } = require("../repository/TableCompitition");
 const {storeImageOnServer, removeImageFromServer, generateImageName } = require("../utilities/Images");
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const {ImgModuleConfig} = require("../utilities/imageConstant");
+const { APIEndpointModuleType, ServiceType, callClientAPI } = require("../utilities");
 
 const allCompetitionService = async (request) => {
-  const { isActive, eventTypeId } = request.body;
+  const { isActive, isTrending, eventTypeId } = request.body;
 
   const filterObject = {
     isActive: isActive,
+    isTrending: isTrending,
     eventTypeId: eventTypeId === 0 ? null : eventTypeId,
   };
   // Additional checks for "0" and undefined
@@ -22,9 +25,9 @@ const allCompetitionService = async (request) => {
       ? null
       : filterObject.eventTypeId;
 
-  if (isActive === undefined) {
+  if (isActive === undefined || isTrending === undefined) {
     const result = global.tblCompetitions.filter(
-      (item) => item.isActive === true
+      (item) => item.isActive === true && item.isTrending === true
     );
     return result;
   } else {
@@ -33,7 +36,9 @@ const allCompetitionService = async (request) => {
         (filterObject.isActive === null ||
           item.isActive === filterObject.isActive) &&
         (filterObject.eventTypeId === null ||
-          item.eventTypeId === filterObject.eventTypeId)
+          item.eventTypeId === filterObject.eventTypeId) &&
+          (filterObject.isTrending === null ||
+            item.isTrending === filterObject.isTrending)
       );
     });
     return result;
@@ -97,6 +102,28 @@ const createCompititionService = async (request, fastify) => {
 
   global.tblCompetitions.push(result);
 
+  if(result.isActive && result.isTrending){
+  callClientAPI(
+    {
+      serviceType : ServiceType.clientAPI,
+      moduleType : APIEndpointModuleType.updateSeoModule,
+      data : {
+        module : "competition",
+        type : "add",
+        data : result
+      }
+    },
+    request,
+    fastify
+  ).catch((err) => {
+    errorLogger(
+      fastify,
+      err.message,
+      "API ERROR --> services/competition.js/createCompititionService - callClientAPI",
+      request
+    )
+  });
+  }
   return result;
 };
 
@@ -118,6 +145,7 @@ const updateCompititionService = async (request, fastify) => {
     isActive: validateId.isActive,
     eventType: validateId.eventType,
     displayOrder: validateId.displayOrder,
+    isTrending: request.body.isTrending || validateId.isTrending,
   };
 
   if ("isActive" in request.body) {
@@ -162,6 +190,28 @@ const updateCompititionService = async (request, fastify) => {
 
   global.tblCompetitions[index] = data;
 
+if(data.isActive && data.isTrending){
+  callClientAPI(
+    {
+      serviceType: ServiceType.clientAPI,
+      moduleType: APIEndpointModuleType.updateSeoModule,
+      data : {
+        module : "competition",
+        type : "update",
+        data : data
+      }
+    },
+    request,
+    fastify
+  ).catch((err) => {
+    errorLogger(
+      fastify,
+      err.message,
+      "API ERROR --> services/competition.js/updateCompititionService - callClientAPI",
+      request
+    )
+  });
+}
   return data;
 };
 
@@ -200,6 +250,27 @@ const deleteCompetitionService = async (request, fastify) => {
     (item) => !competitionId.includes(item.competitionId)
   );
 
+  callClientAPI(
+    {
+      serviceType: ServiceType.clientAPI,
+      moduleType: APIEndpointModuleType.updateSeoModule,
+      data : {
+        module : "competition",
+        type : "delete",
+        data : { competitionId : competitionId }
+      }
+    },
+    request,
+    fastify
+  ).catch((err) => {
+    errorLogger(
+      fastify,
+      err.message,
+      "API ERROR --> services/competition.js/deleteCompetitionService - callClientAPI",
+      request
+    )
+  });
+
   return `Competition(s) deleted successfully`;
 };
 
@@ -223,12 +294,69 @@ const updateDisplayOrderService = async (request, fastify) => {
   }
 
   for (const item of request.body) {
-    await updateDisplayOrderQuery(item, fastify, request);
+    const dispalyOrderData = await updateDisplayOrderQuery(item, fastify, request);
+    callClientAPI(
+      {
+        serviceType: ServiceType.clientAPI,
+        moduleType: APIEndpointModuleType.updateSeoModule,
+        data : {
+          module : "competition",
+          type : "displayOrder",
+          data : dispalyOrderData
+        }
+      },
+      request,
+      fastify
+    ).catch((err) => {
+      errorLogger(
+        fastify,
+        err.message,
+        "API ERROR --> services/competition.js/updateDisplayOrderService - callClientAPI",
+        request
+      )
+    });
   }
 
   global.tblCompetitions = await getAllCompititionQuery(fastify);
 
   return "Display order updated successfully";
+};
+
+const isTrendingChangeStatusService = async (request, fastify) => {
+  const { competitionId, isTrending } = request.body;
+  await isTrendingChangeStatusQuery(
+    {
+      competitionId,
+      isTrending,
+    },
+    request,
+    fastify
+  );
+  const index = global.tblCompetitions.findIndex((item) => item.competitionId == competitionId);
+  if(index != -1){
+    global.tblCompetitions[index].isTrending = isTrending;
+  }
+  
+  callClientAPI(
+    {
+      serviceType : ServiceType.clientAPI,
+      moduleType : APIEndpointModuleType.updateSeoModule,
+      data : {
+        module : "competition",
+        type : isTrending ? "isTrue" : "isFalse",
+        data : global.tblCompetitions[index]
+      }
+    }, request, fastify)
+  .catch((err) => {
+    errorLogger(
+      fastify,
+      err.message,
+      "API ERROR --> services/competition.js/isTrendingChangeStatusService - callClientAPI",
+      request
+    );
+  });
+  
+  return `Competition isTrending status updated successfully`;
 };
 
 module.exports = {
@@ -238,4 +366,5 @@ module.exports = {
   deleteCompetitionService,
   updateDisplayOrderService,
   competitionByeventTypeIdService,
+  isTrendingChangeStatusService
 };
