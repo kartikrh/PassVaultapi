@@ -38,7 +38,8 @@ const getAllMatchTypeQuery = async (fastify) => {
         "wrIsPenaltyRunsInPartnership" as "isPenaltyRunsInPartnership",
         "wrValueOfFrontFootNoBall" as "valueOfFrontFootNoBall",
         "wrIsAutoChangeStriker" as "isAutoChangeStriker",
-        "wrAutoChangeStrikerAfterBall" as "autoChangeStrikerAfterBall"
+        "wrAutoChangeStrikerAfterBall" as "autoChangeStrikerAfterBall",
+        "wrSumOfRunPerBall" as "sumOfRunPerBall"
         from "tblMatchTypes"`,
     {
       type: fastify.db.QueryTypes.SELECT,
@@ -324,7 +325,8 @@ const updateMatchTypeQuery = async (data, fastify, request) => {
     "wrIsPenaltyRunsInPartnership" as "isPenaltyRunsInPartnership",
     "wrValueOfFrontFootNoBall" as "valueOfFrontFootNoBall",
     "wrIsAutoChangeStriker" as "isAutoChangeStriker",
-    "wrAutoChangeStrikerAfterBall" as "autoChangeStrikerAfterBall"
+    "wrAutoChangeStrikerAfterBall" as "autoChangeStrikerAfterBall",
+    "wrSumOfRunPerBall" as "sumOfRunPerBall"
     `,
       {
         bind: updateValues,
@@ -344,10 +346,43 @@ const updateMatchTypeQuery = async (data, fastify, request) => {
   }
 };
 
+const updateSumOfRunPerBallQuery = async(matchTypeId, fastify, request) => {
+  try {
+    const query1 = await fastify.db.query(
+      `
+      SELECT SUM("wrRunPerBall")
+      FROM "tblMatchTypePredictors"
+      WHERE "wrMatchTypeId" = $1;
+      `,
+      {
+        bind: [matchTypeId],
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+    let roundValue = Math.round(query1[0].sum * 100) / 100;
+    return await fastify.db.query(
+      `UPDATE "tblMatchTypes" SET "wrSumOfRunPerBall" = $1 WHERE "wrMatchTypeId" = $2`,
+      {
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [roundValue || 0, matchTypeId],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableMatchType/updateSumOfRunPerBallQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+}
+
 module.exports = {
   getAllMatchTypeQuery,
   insertMatchTypeQuery,
   deleteMatchTypeQuery,
   updateMatchTypeQuery,
-  deleteMatchTypePredictorQuery
+  deleteMatchTypePredictorQuery,
+  updateSumOfRunPerBallQuery
 };

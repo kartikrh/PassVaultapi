@@ -4,6 +4,7 @@ const {
   deletePredictorQuery,
 } = require("../repository/TableMatchTypePredictor");
 const { callPredictorMarket } = require("../utilities");
+const { updateSumOfRunPerBallQuery } = require("../repository/TableMatchType");
 
 const savePredictorDataService = async (request, fastify) => {
   // validate match type Id
@@ -53,6 +54,7 @@ const savePredictorDataService = async (request, fastify) => {
     fastify
   );
   global.tblMatchTypePredictor.push(...data);
+  await updateSumOfRunPerBallQuery(request.body.matchTypeId, fastify, request);
   // Add callPrediction to the data object
   const result = {
     ...data,
