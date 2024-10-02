@@ -199,7 +199,7 @@ const reConnectScoreHub = async () => {
         errorLogger(
             _fastify,
             err,
-            "Error SignalrR --> signalrHandler/reConnectSignalR",
+            "Error SignalrR --> signalrHandler/reConnectScoreHub",
             null
         );
     }

@@ -3,6 +3,7 @@ const { errorLogger } = require("./utilities/logger");
 const { getEventMarketByIdsQuery } = require("./repository/TableEventMarkets");
 const { MarketActionType } = require("./utilities");
 const {createMarketOddsBallByBallBYIDFromSocketIo,createMarketOddsBallInSaveDetails,CheckAndCreateMarketOddsBallInSaveDetails} = require("./repository/TableMarketOddsBallByBall")
+const configConstants = require('./utilities/configConstants');
 
 const connection = (socket , fastify) => {
   const { userId, allowMultipleLogin, wrToken } = socket;
@@ -57,13 +58,23 @@ const connection = (socket , fastify) => {
         //     marketOdd.push(ballData);
         //   }
         // }
-      }
+      } 
 
-      if(ballbybllId)
+      let LDOMARKETSIDS 
+      try {
+        LDOMARKETSIDS = global.tblConfigs.find((item) => item.key === configConstants.LDOMARKET).value.split(',');
+      } catch (error) {LDOMARKETSIDS = ['26', '27', '28'];}
+
+       // Filter out markets that have marketTypeCategoryId present in LDOMARKETSIDS
+      const filteredMarkets = marketToUpdate.filter(
+        (market) => !LDOMARKETSIDS.includes(market.marketTypeCategoryId.toString())
+      );
+
+      if(ballbybllId && filteredMarkets.length > 0)
       {
         const result = [];
 
-        marketToUpdate.forEach(item => {
+        filteredMarkets.forEach(item => {
           // Find if the eventMarketId already exists in the result array
           let existingEvent = result.find(event => event.EventMarketId === item.eventMarketId);
         
