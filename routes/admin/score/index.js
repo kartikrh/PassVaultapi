@@ -33,6 +33,7 @@ const {
 const { allCongifService } = require("../../../services/config");
 const { getAllBanners } = require("../../../controller/users/admin/banner");
 const { getMarketTypeAndCategoryByMarketType } = require("../../../controller/users/admin/marketTemplate");
+const { getAllCompetition } = require("../../../controller/users/admin/competition");
 
 const {
   Score,
@@ -279,5 +280,8 @@ module.exports = async (fastify, opts) => {
   })
   fastify.post("/getMarketTypeAndCategory", {
     handler: (request, reply) => getMarketTypeAndCategoryByMarketType(request, reply, fastify),
+  });
+  fastify.post("/getCompetitions", {
+    handler: (request, reply) => getAllCompetition(request, reply, fastify)
   });
 };

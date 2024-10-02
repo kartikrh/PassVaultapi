@@ -34,6 +34,11 @@ module.exports = (sequelize) => {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
+      wrIsTrending: {
+        type: DataTypes.BOOLEAN,
+        allowNull: true,
+        defaultValue: false
+      },
       wrCreatedBy: {
         type: DataTypes.INTEGER,
         allowNull: true,

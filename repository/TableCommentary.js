@@ -506,7 +506,8 @@ const updateCommentaryPlayerById = async (data, request, fastify) => {
       `update "tblCommentaryPlayers"
       set "wrBatsmanAverage" = $1, 
       "wrBatsmanStrikeRate" = $2,
-      "wrIsInPlayingEleven" = $3
+      "wrIsInPlayingEleven" = $3,
+      "wrBoundary" = $7
       where "wrPlayerId" = $4
       AND "wrCommentaryId" = $5
       AND "wrTeamId" = $6`,
@@ -519,6 +520,7 @@ const updateCommentaryPlayerById = async (data, request, fastify) => {
           data.playerId,
           data.commentaryId,
           data.teamId,
+          data.boundary || 0,
         ],
       }
     );
@@ -926,7 +928,8 @@ const getAllCommentaryPlayerQuery = async (fastify) => {
     "wrBowlerOrder" as "bowlerOrder",
     "wrBatsmanPreviousStrikeRate" as "batsmanPreviousStrikeRate",
     "wrBowlerPreviousEconomy" as "bowlerPreviousEconomy",
-    "wrIsInPlayingEleven" as "isInPlayingEleven"
+    "wrIsInPlayingEleven" as "isInPlayingEleven",
+    "wrBoundary" as "boundary"
     from "tblCommentaryPlayers"
     `,
     {
@@ -1275,7 +1278,11 @@ const getAllCommentaryPartnershipQuery = async (fastify) => {
       "wrTotalSix" as "totalSix",
       "wrTotalExtra" as "totalExtra",
       "wrTotalWide" as "totalWide",
-      "wrTotalNoBall" as "totalNoBall"
+      "wrTotalNoBall" as "totalNoBall",
+      "wrP1Ball" as "p1Ball",
+      "wrP2Ball" as "p2Ball",
+      "wrP1Run" as "p1Run",
+      "wrP2Run" as "p2Run"
       from "tblCommentaryPartnerships"
       `,
     {
@@ -2277,8 +2284,8 @@ const updateCommentaryPlayerIdInCommentaryTeams = async (
     await fastify.db.query(query1, {
       type: fastify.db.QueryTypes.UPDATE,
       bind: [
-        data.team1Captain,
-        data.team1Kipper,
+        data.team1Captain || null,
+        data.team1Kipper || null,
         data.team1Id,
         data.commentaryId,
         data.currentInnings,
@@ -2288,8 +2295,8 @@ const updateCommentaryPlayerIdInCommentaryTeams = async (
     await fastify.db.query(query2, {
       type: fastify.db.QueryTypes.UPDATE,
       bind: [
-        data.team2Captain,
-        data.team2Kipper,
+        data.team2Captain || null,
+        data.team2Kipper || null,
         data.team2Id,
         data.commentaryId,
         data.currentInnings,

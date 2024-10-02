@@ -1,40 +1,14 @@
 const signalR = require('@microsoft/signalr');
 const {EventMarketStatus, EventMarketRateSource,MarketUpdateType} = require('../utilities/index');
-const {marketLogger,marketDataLogger} = require("../utilities/logger");
-const {
-    updateEventMarketRunnerMaunalQuery,
-    getEventMarketByIdsQuery,
-    UpdateEventMarketByCIdFromSocketQuery,
-    updateMarketStatusFromSignalRQuery
-} = require('../repository/TableEventMarkets');
-const {
-    updateCommentaryTeamPredictionPrecentageQuery
-} = require('../repository/TableCommentary');
-const {
-    updateLatestMarketOddsBallByBall
-} = require('../repository/TableMarketOddsBallByBall');
-const {
-    commentaryDetailsByEventIdService
-} = require('../services/commentry');
-const {
-    ERROR_CODES,
-    error,
-    success
-} = require("../utilities/index");
-const {
-    errorLogger
-} = require("../utilities/logger");
-const {
-    updateThirdPartyApisQuery
-} = require('../repository/TableThirdPartyApis');
-const {
-    thirdPartyApiType
-} = require('../utilities/index');
-const {
-    getAllEventMarketsAndRunnersService
-} = require("../services/eventMarket")
-
+const {marketDataLogger} = require("../utilities/logger");
+const {updateEventMarketRunnerMaunalQuery,getEventMarketByIdsQuery,
+    UpdateEventMarketByCIdFromSocketQuery,updateMarketStatusFromSignalRQuery} = require('../repository/TableEventMarkets');
+const {updateCommentaryTeamPredictionPrecentageQuery} = require('../repository/TableCommentary');
+const {errorLogger} = require("../utilities/logger");
+const {updateThirdPartyApisQuery} = require('../repository/TableThirdPartyApis');
+const {thirdPartyApiType} = require('../utilities/index');
 const configConstants = require('../utilities/configConstants');
+
 /**
  * This function establishes a SignalR connection to the event service, allowing us to receive live rates.
  * 
@@ -72,7 +46,7 @@ async function startSignalR(fastify) {
                 _RateUpdate = 500;
             }
 
-            if (_SignalRURLs.length > 0) {
+            if (_SignalRURLs && _SignalRURLs.length > 0) {
                 for (const thirdParty of _SignalRURLs) {
                     const _SignalRURL = thirdParty.url;
                     if (_SignalRURL) {
@@ -168,8 +142,7 @@ async function stopSignalR(fastify) {
             global.isAdminStoppedSignalR = true;
             global.rateSourceRefIDSet = new Set();
             global.isSignalRStopped = true;
-            const _SignalRURLs = global.tblThirdPartyApis.filter((item) => item.isActive === true && item.type === thirdPartyApiType.Socket && item.isConnect === true);
-            if (_SignalRURLs.length > 0) {
+            if (_SignalRURLs && _SignalRURLs.length > 0) {
                 for (const thirdParty of _SignalRURLs) {
                     thirdParty.isConnect = false
                     await updateConnectionStatus(thirdParty, fastify)
@@ -210,17 +183,13 @@ const reConnectScoreHub = async () => {
                 await stopSignalR();
                 return;
             }
-            if (_SignalRURLs.length > 0) {
-                for (const thirdParty of _SignalRURLs) {
-                    if (!global.isAdminStoppedSignalR) {
-                        global.rateSourceRefIDSet = new Set();
-                        if (connection && connection.state !== signalR.HubConnectionState.Connected) {
-                          await connection.start();
-                          await subScribeConnectMarketRate(_fastify);
-                          global.isSignalRStopped = false;
-                          console.log("SignalR Re-Connected.");
-                        }
-                    }
+            if (!global.isAdminStoppedSignalR) {
+                global.rateSourceRefIDSet = new Set();
+                if (connection && connection.state !== signalR.HubConnectionState.Connected) {
+                  await connection.start();
+                  await subScribeConnectMarketRate(_fastify);
+                  global.isSignalRStopped = false;
+                  console.log("SignalR Re-Connected.");
                 }
             }
         } else {
@@ -230,7 +199,7 @@ const reConnectScoreHub = async () => {
         errorLogger(
             _fastify,
             err,
-            "Error SignalrR --> signalrHandler/reConnectSignalR",
+            "Error SignalrR --> signalrHandler/reConnectScoreHub",
             null
         );
     }
@@ -759,7 +728,7 @@ const updateConnectionStatus = async (data, fastify) => {
     }
 }
 
-// Update Event Market Runner Maunal
+//? Update Event Market Runner Maunal
 const updateMarketRunnerDataOnSocket = async (message) => {
     try {
         const data = message;

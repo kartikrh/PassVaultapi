@@ -10,7 +10,7 @@ const {
   insertTeamPlayerQuery,
   deleteTeamPlayerByPlayerIdQuery,
 } = require("../repository/TableTeamPlayer");
-const { getAllPlayersByTeamIdQuery } = require("../repository/TableTeams");
+const { getAllPlayersByTeamIdQuery, getAllPlayersByCompetitionIdTeamIdQuery } = require("../repository/TableTeams");
 const {
   storeImageOnServer,
   generateImageName,
@@ -66,6 +66,30 @@ const allPlayerByTeamService = async (request, fastify) => {
   }
 
   const result = await getAllPlayersByTeamIdQuery(teamId, fastify, request);
+
+  return result;
+};
+
+const allPlayerByCompetitionAndTeamService = async (request, fastify) => {
+  const { competitionId, teamId } = request.body;
+
+  const validateTeamId = global.tblTeams.find((item) => item.teamId === teamId);
+  if (!validateTeamId) {
+    throw new Error("TeamId is not valid");
+  }
+
+  let tournamentTeamPlayers = global.tblTournamentTeamPlayers.filter((elem) => 
+  elem.competitionId == competitionId && elem.teamId == teamId
+  );
+
+  if(tournamentTeamPlayers.length > 0) {
+    return tournamentTeamPlayers.map((player) => ({
+      playerId: player.playerId,
+      playerName: player.playerName,
+    }));
+  }
+  
+  const result = await getAllPlayersByCompetitionIdTeamIdQuery(teamId, fastify, request);
 
   return result;
 };
@@ -483,5 +507,6 @@ module.exports = {
   allPlayerTypeService,
   allPlayerByTeamService,
   updatePlayerStatsService,
-  updateIsSystemPlayerService
+  updateIsSystemPlayerService,
+  allPlayerByCompetitionAndTeamService
 };

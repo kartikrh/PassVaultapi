@@ -1379,6 +1379,21 @@ const Teams = {
       },
     },
   },
+  getByTeamIdAndCompetitionId: {
+    schema: {
+      tags: ["Teams"],
+      security: [{ bearerAuth: [] }],
+      description: "get teams by id",
+      body: {
+        type: "object",
+        properties: {
+          teamId: { type: "integer" },
+          competitionId: { type: "integer" },
+        },
+        required: ["teamId", "competitionId"],
+      },
+    },
+  },
   save: {
     schema: {
       tags: ["Teams"],
@@ -2862,6 +2877,21 @@ const Compitition = {
           },
         },
         minItems: 1,
+      },
+    },
+  },
+  isTrendingStatus: {
+    schema: {
+      tags: ["Compitition"],
+      description: "change isTrending status",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionId: { type: "integer" },
+          isTrending: { type: "boolean" },
+        },
+        required: ["competitionId", "isTrending"],
       },
     },
   },
