@@ -3300,6 +3300,21 @@ const MarketTemplate = {
       },
     },
   },
+  isPerEventStatus: {
+    schema: {
+      tags: ["Market Template"],
+      description: "update isPerEvent status",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          marketTemplateId: { type: "integer" },
+          isPerEvent: { type: "boolean" },
+        },
+        required: ["marketTemplateId", "isPerEvent"],
+      },
+    },
+  },
 };
 const Score = {
   getAllUpdatedIds: {
