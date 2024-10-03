@@ -1,4 +1,4 @@
-const { getDetailsByCIdService, getAllEventMarketsService, createEventMarketsService, deleteEventMarketsService, activeInactiveMarketsService, updateAllowMarketsService, getEventListByCompetitionIdsService, marketListResultFalseService, changeResultOfMarketService, changeMarketCancelService, changeMarketResultService, marketListByCIdService, saveEventMarketService, updateMarketRateService, changeMarketCloseService, suspendMarketByCIdService, getEventMarketByIdService, marketTemplateTypeService, commentaryTypeService, setDelayEventMarketService, getDSReportEventMarketService, getSLReportEventMarketService, getMarketDataByCIdService,UpdateResulOrApproveEventMarketService, getMarketTypeCategoryService,marketListcategoryNameByCIdService, setAllMarketCloseService, setCloseMarketCancelService, getAllEventMarketsAndRunnersService, cancelSettleMarketService } = require("../../../../services/eventMarket");
+const { getDetailsByCIdService, getAllEventMarketsService, createEventMarketsService, deleteEventMarketsService, activeInactiveMarketsService, updateAllowMarketsService, getEventListByCompetitionIdsService, marketListResultFalseService, changeResultOfMarketService, changeMarketCancelService, changeMarketResultService, marketListByCIdService, saveEventMarketService, updateMarketRateService, changeMarketCloseService, suspendMarketByCIdService, getEventMarketByIdService, marketTemplateTypeService, commentaryTypeService, setDelayEventMarketService, getDSReportEventMarketService, getSLReportEventMarketService, getMarketDataByCIdService,UpdateResulOrApproveEventMarketService, getMarketTypeCategoryService,marketListcategoryNameByCIdService, setAllMarketCloseService, setCloseMarketCancelService, getAllEventMarketsAndRunnersService, cancelSettleMarketService, getDetailsByCIdV1Service } = require("../../../../services/eventMarket");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
 
@@ -289,6 +289,15 @@ const cancelSettleMarket = async (request, reply, fastify)=>{
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 }
+const getDetailsByCIdV1 = async (request, reply, fastify) => {
+  try {
+    const result = await getDetailsByCIdV1Service(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/getDetailsByCIdV1", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 
 module.exports = {
     getDetailsByCId,
@@ -320,5 +329,6 @@ module.exports = {
     setAllMarketClose,
     setCloseMarketCancel,
     getAllEventMarketsAndRunners,
-    cancelSettleMarket
+    cancelSettleMarket,
+    getDetailsByCIdV1
 };
