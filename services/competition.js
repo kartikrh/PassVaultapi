@@ -13,36 +13,53 @@ const { APIEndpointModuleType, ServiceType, callClientAPI } = require("../utilit
 
 const allCompetitionService = async (request) => {
   const { isActive, isTrending, eventTypeId } = request.body;
-
-  const filterObject = {
-    isActive: isActive,
-    isTrending: isTrending,
-    eventTypeId: eventTypeId === 0 ? null : eventTypeId,
-  };
-  // Additional checks for "0" and undefined
-  filterObject.eventTypeId =
-    eventTypeId === 0 || eventTypeId === undefined
-      ? null
-      : filterObject.eventTypeId;
-
-  if (isActive === undefined) {
-    const result = global.tblCompetitions.filter(
-      (item) => item.isActive === true
-    );
-    return result;
-  } else {
-    const result = global.tblCompetitions.filter((item) => {
-      return (
-        (filterObject.isActive === null ||
-          item.isActive === filterObject.isActive) &&
-        (filterObject.eventTypeId === null ||
-          item.eventTypeId === filterObject.eventTypeId) &&
-          (filterObject.isTrending === null ||
-            item.isTrending === filterObject.isTrending)
-      );
-    });
-    return result;
+  const result = global.tblCompetitions;
+ 
+  if(eventTypeId) {
+    result = result.filter((item) => item.eventTypeId == eventTypeId);
   }
+  if(isActive !== undefined){ 
+    result = result.filter((item) => item.isActive == isActive);
+  }
+  if(isActive == undefined){
+    result = result.filter((item) => item.isActive == true);
+  }
+  if(isTrending !== undefined) {
+    result = result.filter((item) => item.isTrending == isTrending);
+  }
+
+  return result;
+
+
+  // const filterObject = {
+  //   isActive: isActive,
+  //   isTrending: isTrending,
+  //   eventTypeId: eventTypeId === 0 ? null : eventTypeId,
+  // };
+  // // Additional checks for "0" and undefined
+  // filterObject.eventTypeId =
+  //   eventTypeId === 0 || eventTypeId === undefined
+  //     ? null
+  //     : filterObject.eventTypeId;
+
+  // if (isActive === undefined || isTrending === undefined) {
+  //   const result = global.tblCompetitions.filter(
+  //     (item) => item.isActive === true
+  //   );
+  //   return result;
+  // } else {
+  //   const result = global.tblCompetitions.filter((item) => {
+  //     return (
+  //       (filterObject.isActive === null ||
+  //         item.isActive === filterObject.isActive) &&
+  //       (filterObject.eventTypeId === null ||
+  //         item.eventTypeId === filterObject.eventTypeId) &&
+  //         (filterObject.isTrending === null ||
+  //           item.isTrending === filterObject.isTrending)
+  //     );
+  //   });
+  //   return result;
+  // }
 };
 
 const competitionByIdService = async (request) => {
