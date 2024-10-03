@@ -1447,6 +1447,107 @@ const getMarketTypeCategoryService = async (request, fastify) => {
   }));
   return data;
 }
+const getDetailsByCIdV1Service = async (request, fastify) => {
+  const { commentaryId } = request.body;
+  const commentary = global.tblCommentaries.find(
+    (item) => item.commentaryId === commentaryId
+  );
+  if (!commentary) {
+    throw new Error("Commentary with this id not Found");
+  }
+  // i want this structure as per innings
+  const matchType = global.tblMatchTypes.find(
+    (item) => item.matchTypeId === commentary.matchTypeId
+  );
+
+  // i want to set the commentaryTeam and playerTeam as per innings
+  const totalInnings = matchType.noOfIningsPerSide;
+  // add extra one where if commentary already toss then i want to set the team as per toss
+
+  const teamAndPlayers = [];
+  for (let i = 1; i <= totalInnings; i++) {
+    // get team for this innings
+    let commentaryTeam;
+    if (commentary.commentaryStatus !== 1) {
+      commentaryTeam = global.tblCommentaryTeams.filter(
+        (item) =>
+          item.commentaryId === commentaryId &&
+          item.currentInnings === i &&
+          item.teamStatus === 1
+      );
+    } else {
+      commentaryTeam = global.tblCommentaryTeams.filter(
+        (item) =>
+          item.commentaryId === commentaryId && item.currentInnings === i
+      );
+    }
+    // get players for this innings and commentaryTeam.teamId
+    let teamObj = {};
+    for (team of commentaryTeam) {
+      commentaryPlayers = global.tblCommentaryPlayers.filter(
+        (item) =>
+          item.commentaryId === commentaryId &&
+          item.teamId === team.teamId &&
+          item.currentInnings === i
+      );
+      teamObj = {
+        ...team,
+        players: commentaryPlayers,
+      };
+      teamAndPlayers.push(teamObj);
+    }
+  }
+
+  // get marketTemplate where matchType is commentary.matchTypeId
+  const marketTemplate = global.tblMarketTemplate.filter(
+    (item) => item.matchTypeID === commentary.matchTypeId
+  );
+  // let eventMarket = global.tblEventMarkets.filter(
+  //     (item) => item.commentaryId === commentaryId
+  //     && item.status !== EventMarketStatus.Cancel
+  //     && item.status !== EventMarketStatus.Close
+  //     && item.status !== EventMarketStatus.Settled
+  // );
+  let eventMarket, LDOMARKETSIDS;
+  LDOMARKETSIDS = global.tblConfigs.find(config => config.key === "LDOMARKET")?.value ?? "0";
+  let whereCondition = `tem."wrCommentaryId" = ${commentaryId} AND tem."wrStatus" NOT IN (${EventMarketStatus.Close},${EventMarketStatus.Settled},${EventMarketStatus.Cancel}) AND tem."wrMarketTypeCategoryId" NOT IN (${LDOMARKETSIDS})`;
+  if (commentary.commentaryStatus != 1) {
+    let battingTeam = global.tblCommentaryTeams.find(
+      (item) =>
+        item.commentaryId === commentaryId &&
+        item.currentInnings === 1 &&
+        item.teamStatus === 1
+    );
+    whereCondition += ` AND tem."wrTeamID" = ${battingTeam.teamId}`;
+    eventMarket = await getAllEventMarketsQuery(fastify, whereCondition);
+  } else {
+    eventMarket = await getAllEventMarketsQuery(fastify, whereCondition);
+  }
+  //
+  let categories = global.tblMarketTypeCategories.filter(
+    (item) => item.marketTypeCategoryId > 0
+  ).map(item => ({
+    marketTypeCategoryId: item.marketTypeCategoryId,
+    categoryName: item.categoryName
+  }));
+  let marketTypes = global.tblMarketTypes.filter(
+    (elem) => elem.isActive === true
+  ).map(item => ({
+    marketTypeId: item.marketTypeId,
+    marketTypeName: item.marketTypeName
+  }));
+
+  return {
+    commentary,
+    matchType,
+    teamAndPlayers,
+    marketTemplate,
+    eventMarket,
+    categories,
+    marketTypes
+  };
+};
+
 module.exports = {
   getDetailsByCIdService,
   getAllEventMarketsService,
@@ -1479,5 +1580,6 @@ module.exports = {
   setCloseMarketCancelService,
   getAllEventMarketsAndRunnersService,
   cancelSettleMarketService,
-  getMarketTypeCategoryService
+  getMarketTypeCategoryService,
+  getDetailsByCIdV1Service
 };
