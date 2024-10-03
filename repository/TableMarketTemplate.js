@@ -39,7 +39,8 @@ const getAllMarketTemplateQuery = async (fastify) => {
       tmt."wrTemplateType" as "templateType",
       tmt."wrIsDefaultBetAllowed" as "isDefaultBetAllowed",
       tmt."wrIsDefaultMarketActive" as "isDefaultMarketActive",
-      "wrDelay" as "delay"
+      "wrDelay" as "delay",
+      "wrIsPerEvent" as "isPerEvent"
   FROM "tblMarketTemplates" tmt
   LEFT JOIN "tblMatchTypes" tm ON tmt."wrMatchTypeID" = "tm"."wrMatchTypeId"
   `,
@@ -58,9 +59,9 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
               "wrAutoSuspendType","wrBeforeAutoSuspend","wrIsBallStart","wrIsAutoResultSet","wrAutoResultType","wrAutoResultafterBall",
               "wrAfterWicketAutoSuspend","wrAfterWicketNotCreated","wrCreatedBy","wrIsActive" , "wrActionType",
               "wrMarketTypeId","wrMarketTypeCategoryId","wrMargin" , "wrCreateRefId" , "wrOpenRefId",
-              "wrTemplateType", "wrDelay","wrIsDefaultBetAllowed","wrIsDefaultMarketActive"
+              "wrTemplateType", "wrDelay","wrIsDefaultBetAllowed","wrIsDefaultMarketActive", "wrIsPerEvent"
               ) values (
-                $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26, $27, $28, $29, $30, $31, $32,$33,$34
+                $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26, $27, $28, $29, $30, $31, $32,$33,$34,$35
                 ) returning *
           )        
         select 
@@ -99,7 +100,8 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
         "wrTemplateType" as "templateType",
         "wrIsDefaultBetAllowed" as "isDefaultBetAllowed",
         "wrIsDefaultMarketActive" as "isDefaultMarketActive",
-        "wrDelay" as "delay"
+        "wrDelay" as "delay",
+        "wrIsPerEvent" as "isPerEvent"
          from insert_data`,
       {
         type: fastify.db.QueryTypes.SELECT,
@@ -149,7 +151,8 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
           data.templateType || null,
           data.delay || 0,
           data.isDefaultBetAllowed,
-          data.isDefaultMarketActive
+          data.isDefaultMarketActive,
+          data.isPerEvent || false
         ],
       }
     );
@@ -281,7 +284,8 @@ const updateMarketTemplateQuery = async (data, fastify, request) => {
             "wrTemplateType" = $30,
             "wrDelay" = $31,
             "wrIsDefaultBetAllowed" = $33,
-            "wrIsDefaultMarketActive"= $34
+            "wrIsDefaultMarketActive"= $34,
+            "wrIsPerEvent"= $35
         WHERE "wrID" = $32
         `,
         {
@@ -319,7 +323,8 @@ const updateMarketTemplateQuery = async (data, fastify, request) => {
                 data.delay,
                 data.marketTemplateId,
                 data.isDefaultBetAllowed,
-                data.isDefaultMarketActive
+                data.isDefaultMarketActive,
+                data.isPerEvent
             ],
             type: fastify.db.QueryTypes.SELECT,
         }
@@ -443,6 +448,25 @@ const changePredefineRunnerQuery = async (request, fastify) => {
     throw new Error(err.message);
   }
 };
+const updateIsPerEventStatusQuery = async (request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `UPDATE "tblMarketTemplates" SET "wrIsPerEvent" = $1 WHERE "wrID" = $2`,
+      {
+        bind: [request.body.isPerEvent, request.body.marketTemplateId],
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableMarketTemplate/updateIsPerEventStatusQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
 module.exports = {
   getAllMarketTemplateQuery,
   insertMarketTemplateQuery,
@@ -452,4 +476,5 @@ module.exports = {
   getAllMarketTypeQuery,
   getAllMarketTypeCategoriesQuery,
   changePredefineRunnerQuery,
+  updateIsPerEventStatusQuery,
 };
