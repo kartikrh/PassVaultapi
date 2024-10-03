@@ -145,7 +145,7 @@ const updateCompititionService = async (request, fastify) => {
     isActive: validateId.isActive,
     eventType: validateId.eventType,
     displayOrder: validateId.displayOrder,
-    isTrending: request.body.isTrending || validateId.isTrending,
+    isTrending: request.body.isTrending !== undefined ? Boolean(request.body.isTrending) : validateId.isTrending,
   };
 
   if ("isActive" in request.body) {
