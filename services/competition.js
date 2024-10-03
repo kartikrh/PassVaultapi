@@ -25,9 +25,9 @@ const allCompetitionService = async (request) => {
       ? null
       : filterObject.eventTypeId;
 
-  if (isActive === undefined || isTrending === undefined) {
+  if (isActive === undefined) {
     const result = global.tblCompetitions.filter(
-      (item) => item.isActive === true && item.isTrending === true
+      (item) => item.isActive === true
     );
     return result;
   } else {
