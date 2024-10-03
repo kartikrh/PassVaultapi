@@ -25,24 +25,24 @@ const allCompetitionService = async (request) => {
       ? null
       : filterObject.eventTypeId;
 
-  // if (isActive === undefined || isTrending === undefined) {
-  //   const result = global.tblCompetitions.filter(
-  //     (item) => item.isActive === true
-  //   );
-  //   return result;
-  // } else {
-  //   const result = global.tblCompetitions.filter((item) => {
-  //     return (
-  //       (filterObject.isActive === null ||
-  //         item.isActive === filterObject.isActive) &&
-  //       (filterObject.eventTypeId === null ||
-  //         item.eventTypeId === filterObject.eventTypeId) &&
-  //         (filterObject.isTrending === null ||
-  //           item.isTrending === filterObject.isTrending)
-  //     );
-  //   });
-  //   return result;
-  // }
+  if (isActive === undefined || isTrending === undefined) {
+    const result = global.tblCompetitions.filter(
+      (item) => item.isActive === true
+    );
+    return result;
+  } else {
+    const result = global.tblCompetitions.filter((item) => {
+      return (
+        (filterObject.isActive === null ||
+          item.isActive === filterObject.isActive) &&
+        (filterObject.eventTypeId === null ||
+          item.eventTypeId === filterObject.eventTypeId) &&
+          (filterObject.isTrending === null ||
+            item.isTrending === filterObject.isTrending)
+      );
+    });
+    return result;
+  }
 };
 
 const competitionByIdService = async (request) => {
