@@ -4,6 +4,7 @@ const {
   updateMarketTemplateQuery,
   updateStatusMarketTemplateQuery,
   changePredefineRunnerQuery,
+  updateIsPerEventStatusQuery,
 } = require("../repository/TableMarketTemplate");
 const { callPredictorMarket } = require("../utilities");
 
@@ -179,6 +180,7 @@ const updateMarketTemplateService = async (request, fastify) => {
     delay: request.body.delay || marketTemplate.delay,
     isDefaultBetAllowed: request.body.isDefaultBetAllowed || false,
     isDefaultMarketActive: request.body.isDefaultMarketActive || false,
+    isPerEvent: request.body.isPerEvent !== undefined ? request.body.isPerEvent : marketTemplate.isPerEvent,
   };
   // update marketTemplate
   await updateMarketTemplateQuery(body, fastify, request);
@@ -357,6 +359,22 @@ const getMarketTypeAndCategoryByMarketTypeService = async (request, fastify) => 
   return result;
 };
 
+const isPerEventStatusService = async (request, fastify) => {
+  const { marketTemplateId } = request.body;
+  const index = global.tblMarketTemplate.findIndex(
+    (item) => item.marketTemplateId === marketTemplateId
+  );
+
+  if (index === -1) {
+    throw new Error("MarketTemplate with this id not found");
+  }
+
+  await updateIsPerEventStatusQuery(request, fastify);
+  global.tblMarketTemplate[index].isPerEvent = request.body.isPerEvent;
+
+  return `MarketTemplate updated successfully`;
+};
+
 module.exports = {
   saveMarketTemplateService,
   getAllMarketTemplateService,
@@ -369,5 +387,6 @@ module.exports = {
   getCategoryByMarketTypeService,
   changePredefineRunnerService,
   cloneMarketTemplateService,
-  getMarketTypeAndCategoryByMarketTypeService
+  getMarketTypeAndCategoryByMarketTypeService,
+  isPerEventStatusService
 };
