@@ -458,6 +458,7 @@ const updateIsPerEventStatusQuery = async (request, fastify) => {
       }
     );
   } catch (err) {
+    // console.log("err", err)
     errorLogger(
       fastify,
       err.message,
@@ -467,6 +468,7 @@ const updateIsPerEventStatusQuery = async (request, fastify) => {
     throw new Error(err.message);
   }
 };
+
 module.exports = {
   getAllMarketTemplateQuery,
   insertMarketTemplateQuery,

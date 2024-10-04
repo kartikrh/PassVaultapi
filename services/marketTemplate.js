@@ -180,7 +180,7 @@ const updateMarketTemplateService = async (request, fastify) => {
     delay: request.body.delay || marketTemplate.delay,
     isDefaultBetAllowed: request.body.isDefaultBetAllowed || false,
     isDefaultMarketActive: request.body.isDefaultMarketActive || false,
-    isPerEvent: request.body.isPerEvent !== undefined ? request.body.isPerEvent : marketTemplate.isPerEvent,
+    isPerEvent: request.body.isPerEvent !== undefined ? Boolean(request.body.isPerEvent) : marketTemplate.isPerEvent,
   };
   // update marketTemplate
   await updateMarketTemplateQuery(body, fastify, request);
@@ -232,7 +232,6 @@ const getMatchTypeListService = async (request, fastify) => {
   return result;
 };
 const activeInactiveTemplateService = async (request, fastify) => {
-  // validate marketTemplateId
   const { marketTemplateId } = request.body;
   const index = global.tblMarketTemplate.findIndex(
     (item) => item.marketTemplateId === marketTemplateId
@@ -368,6 +367,7 @@ const isPerEventStatusService = async (request, fastify) => {
   if (index === -1) {
     throw new Error("MarketTemplate with this id not found");
   }
+  // console.log("index", index);
 
   await updateIsPerEventStatusQuery(request, fastify);
   global.tblMarketTemplate[index].isPerEvent = request.body.isPerEvent;

@@ -150,7 +150,8 @@ module.exports = async function (fastify, opts) {
       }),
     ],
     handler: (request, reply) => getMarketTypeAndCategoryByMarketType(request, reply, fastify),
-  })
+  });
+  
   fastify.post("/isPerEvent", {
     schema: MarketTemplate.isPerEventStatus.schema,
     preHandler: [
@@ -163,4 +164,5 @@ module.exports = async function (fastify, opts) {
     ],
     handler: (request, reply) => updateIsPerEventStatus(request, reply, fastify),
   });
+
 };
