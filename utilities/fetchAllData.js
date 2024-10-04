@@ -44,7 +44,7 @@ const {
   getAllMarketTypeCategoriesQuery,
   getAllMarketTypeQuery,
 } = require("../repository/TableMarketTemplate");
-const { getAllEventMarketsQuery } = require("../repository/TableEventMarkets");
+const { getAllEventMarketsQuery, getEventMarketQueryV1 } = require("../repository/TableEventMarkets");
 const {
   getAllMarketTemplateRunnerQuery,
 } = require("../repository/TableMarketTemplateRunner");
@@ -72,6 +72,7 @@ const { getAllCommentaryAwardQuery } = require("../repository/TableCommentaryAwa
 const { allSocialMediaQuery } = require("../repository/TableSocialMedia");
 const { getAllArticlesQuery } = require("../repository/TableArticles");
 const { getAllTournamentTeamPlayersQuery } = require("../repository/TableTournamentsTeamPlayers");
+// const { getMarketRunnerQueryV1 } = require("../repository/TableMarketRunner");
 
 const fetchAllDataFromDb = async (fastify, reply) => {
   try {
@@ -152,7 +153,8 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     // const predictorAPILogs = await allPredictorAPILogsQuery(fastify);
     // const commentaryLogs = await allCommentaryLogsQuery(fastify);
     // const errorLogs = await allErrorLogsQuery(fastify);
-
+    const getEventMarkesV1 = await getEventMarketQueryV1(fastify);
+    // const getEventMarketRunnerV1 = await getMarketRunnerQueryV1(fastify);
     global.tblTabs = getAllTabs;
     global.tblRoles = getAllRoles;
     global.tblBlocks = getAllBlocks;
@@ -212,6 +214,8 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblSocialMedia = getAllSocialMediaData;
     global.tblArticles = getAllArticlesData;
     global.tblTournamentTeamPlayers = getAllTournamentTeamPlayers;
+    global.tblEventMarketsV1 = getEventMarkesV1;
+    // global.tblMarketRunnerV1 = getEventMarketRunnerV1;
     // global.responseLogs = responseLogs;
     // global.thirdPartyAPILogs = thirdPartyAPILogs;
     // global.predictorAPILogs = predictorAPILogs;

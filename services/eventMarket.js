@@ -30,7 +30,10 @@ const {
   getAllRateSourceEventMarketQuery,
   getEventMarketsQuery,
   cancelSettledMarketQuery,
-  getAllEventMarketsQueryV1
+  getAllEventMarketsQueryV1,
+  upsertEventMarketSPQueryV1,
+  updateEventMarketRateQueryV1,
+  getEventMarketByIdsQueryV1
 } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
 const {
@@ -1537,6 +1540,319 @@ const getDetailsByCIdV1Service = async (request, fastify) => {
     marketTypes
   };
 };
+const createEventMarketsServiceV1 = async (request, fastify) => {
+  const { eventMarket } = request.body;
+  // check the commentaryId
+  const commentary = global.tblCommentaries.find(
+    (item) => item.commentaryId === eventMarket[0].commentaryId
+  );
+  if (!commentary) {
+    throw new Error("Commentary with this id not Found");
+  }
+  // check if toss done
+  // if(commentary.commentaryStatus != commentaryStatus.OPEN && commentary.commentaryStatus != commentaryStatus.COMPLETED){
+  //   // check if in eventMarket batting team market not to create
+  //   let bowling = global.tblCommentaryTeams.find(
+  //     (item) =>
+  //       item.commentaryId === commentary.commentaryId &&
+  //       item.currentInnings === commentary.currentInnings &&
+  //       item.teamStatus !== 1 
+  //   );
+  //   if(bowling){
+  //     let market = eventMarket.find(
+  //       (item) => item.teamId === bowling.teamId
+  //     );
+  //     if(market){
+  //       throw new Error(`${bowling.teamName}'s market not created because this team is not on Strike`);
+  //     }
+  //   }
+  // }
+  let multiRunnerMarket = [];
+  let singleRunnerMarket = [];
+  for (let item of eventMarket){
+    let mt = global.tblMarketTypes.find(
+      (e) => e.marketTypeId === item.marketTypeId
+    );
+    if(mt.marketTypeName.toLowerCase() === "fancy" || mt.marketTypeName.toLowerCase() === "linemarket"){
+      singleRunnerMarket.push(item); 
+    }
+    else {
+      multiRunnerMarket.push(item);
+    }
+  }
+  const result = await upsertEventMarketSPQueryV1({
+    singleRunnerMarket,
+    multiRunnerMarket
+  }, request, fastify);
+  for (let item of result){
+    let index = global.tblEventMarketsV1.findIndex(
+      (e) => e.eventMarketId === item.eventMarketId
+    );
+    index === -1
+      ? global.tblEventMarketsV1.push(item)
+      : (global.tblEventMarketsV1[index] = item);
+    
+    marketDataLogger(
+      {
+        eventMarketId: item.eventMarketId,
+        commentaryId: item.commentaryId,
+        dataTosave: typeof (item.data) === "string" ? JSON.parse(item.data) : item.data,
+        updateType: MarketUpdateType.marketInitilization,
+        isSendData: true
+      },
+      request,
+      fastify
+    )
+  }
+  return result;
+};
+const updateMarketRateServiceV1 = async (request, fastify) => {
+  // i got array of eventMarket i want to update this data
+  let { eventMarket } = request.body;
+  const commentary = global.tblCommentaries.find(
+    (item) => item.commentaryId === request.body.eventMarket[0].commentaryId
+  );
+  if (!commentary) {
+    //here
+    throw new Error("Commentary with this id not Found");
+  }
+  let eventMarkets = await getEventMarketByIdsQueryV1(
+    {
+      eventMarketIds: eventMarket.map((item) => item.marketId),
+    },
+    request,
+    fastify
+  );
+  if(eventMarkets.length == 0){
+    throw new Error("EventMarket with this id not Found");
+  }
+  
+  // return true;
+  // remove the market which is already closed , settled,cancel
+  let marketToUpdate = [];
+  for (let item of eventMarket){
+    let market = eventMarkets.find(
+      (e) => e.eventMarketId === item.marketId
+    );
+    if (
+      market.status === EventMarketStatus.Close ||
+      market.status === EventMarketStatus.Settled ||
+      market.status === EventMarketStatus.Cancel
+    ) {
+      continue;
+    }
+    marketToUpdate.push(item);
+  }
+
+  const updatedData = await updateEventMarketRateQueryV1(eventMarket, request, fastify);
+  return updatedData;
+  const playerMarket = [];
+  const updatedOvers = [];
+  const response = [];
+  for (let item of updatedData) {
+    let index = global.tblEventMarketsV1.findIndex(
+      (e) => e.eventMarketId === item.eventMarketId
+    );
+    index === -1
+      ? global.tblEventMarketsV1.push(item)
+      : (global.tblEventMarketsV1[index] = item);
+
+ 
+    if(item.isPlyer){
+      playerMarket.push(item);
+    }
+    let is_onlyover = 0;
+    let category = global.tblMarketTypeCategories.find(
+      (item) => item.marketTypeCategoryId === item.marketTypeCategoryId
+    );
+    if(category && category.categoryName.toLowerCase() != "player" && category.categoryName.toLowerCase() != "wicket"){
+      if(category.categoryName == "Only Over"){
+        is_onlyover = 1;
+      }
+      const lineDiffArr = []
+      let runOld = eventMarkets.find(
+        (e) => e.eventMarketId === item.eventMarketId
+      ).runners;
+      for (let run of item.runners){
+        let rnOld = runOld.find(
+          (e) => e.runnerId === run.runnerId
+        );
+        if(rnOld){
+          let diff = run.line - rnOld.line;
+          lineDiffArr.push({
+            runnerId: run.runnerId,
+            diff: diff
+          })
+        }
+      }
+      updatedOvers.push({
+        over : item.over,
+        value : lineDiffArr,
+        line_ratio : item.lineRatio,
+        is_onlyover : is_onlyover,
+        is_allow : item.isAllow,
+        is_active : item.isActive,
+        is_senddata : item.isSendData,
+        data : item.data,
+        market_type_category_id : parseInt(item.marketTypeCategoryId),
+      })
+    }
+    marketDataLogger(
+      {
+        eventMarketId: item.eventMarketId,
+        commentaryId: item.commentaryId,
+        dataTosave: typeof (item.data) === "string" ? JSON.parse(item.data) : item.data,
+        updateType: MarketUpdateType.marketUpdateRate,
+        lineDiffArr: lineDiffArr,
+        isSendData: true
+      },
+      request,
+      fastify
+    )
+    response.push({
+      marketId : item.eventMarketId,
+      commentaryId : item.commentaryId,
+      eventRefId : item.eventRefId,
+      teamId : item.teamId,
+      marketTypeCategoryId : item.marketTypeCategoryId,
+      categoryName : global.tblMarketTypeCategories.find(
+        (e) => e.marketTypeCategoryId === item.marketTypeCategoryId
+      ).categoryName,
+      marketName : item.marketName,
+      margin : item.margin,
+      status : item.status,
+      over : item.over,
+      isActive : item.isActive,
+      isAllow : item.isAllow,
+      isSendData : item.isSendData,
+      lineRatio : item.lineRatio,
+      runner : item.runners.map((e) => {
+        let {selectionStatus,...rest } = e;
+        return {
+          ...rest,
+          status : selectionStatus
+        }
+      })
+    })
+
+  }
+  const teamOnStrike = global.tblCommentaryTeams.find(
+    (item) =>
+      item.commentaryId === commentary.commentaryId && 
+      item.currentInnings === commentary.currentInnings &&
+      item.teamStatus === 1
+  );
+  let _resFromPredictAPI;
+  let callPredictions = [];
+  if (teamOnStrike && request.body.action && (request.body.action.toUpperCase() === "SAVE_ALL")) {
+    _resFromPredictAPI = await callPredictorMarket(
+      {
+        commentary_id: commentary.commentaryId,
+        match_type_id: commentary.matchTypeId,
+        strike_team_id: teamOnStrike.teamId,
+        current_score: teamOnStrike.teamScore || 0,
+        current_over: parseFloat(teamOnStrike.teamOver) || 0.0,
+        overs: updatedOvers,
+      },
+      "/api/v1/updateline",
+      fastify,
+      request
+    );
+    let callPrediction = {}
+    // Check for error_msg in the response
+    if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
+      callPrediction.predictioncallSuccess = false;
+      callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
+      callPrediction.endPoint = '/api/v1/updateline';
+    } else {
+      callPrediction.predictioncallSuccess = true;
+      callPrediction.predictionMessage = 'Prediction call successful';
+      callPrediction.endPoint = '/api/v1/updateline';
+    }
+    callPredictions.push(callPrediction);
+  }
+  if(commentary.isPredictMarket && request.body.action && (request.body.action.toUpperCase() === "SUSPEND" || request.body.action.toUpperCase() === "PUBLISH"))
+    {
+      _resFromPredictAPI = null;
+      let isOpenMarket = (request.body.action.toUpperCase() === "SUSPEND" || request.body.action.toUpperCase() === "PUBLISH");
+      _resFromPredictAPI = await callPredictorMarket(
+        {
+          commentary_id: commentary.commentaryId,
+          status: request.body.eventMarket[0].status,
+          match_type_id: commentary.matchTypeId,
+          is_open_market:isOpenMarket  
+        },
+        "/api/v1/updatemarketstatus",
+        fastify,
+        request
+      );
+      let callPrediction = {}
+      // Check for error_msg in the response
+      if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
+        callPrediction.predictioncallSuccess = false;
+        callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
+        callPrediction.endPoint = '/api/v1/updatemarketstatus';
+      } else {
+        callPrediction.predictioncallSuccess = true;
+        callPrediction.predictionMessage = 'Prediction call successful';
+        callPrediction.endPoint = '/api/v1/updatemarketstatus';
+      }
+      callPredictions.push(callPrediction);
+  }
+  if(playerMarket.length > 0){
+    for (let p of playerMarket){
+      let comPlayer = global.tblCommentaryPlayers.findIndex(
+        (item) => item.commentaryPlayerId === p.playerId
+      );
+      if (comPlayer === -1) {
+        errorLogger(
+          fastify,
+          "Player with this id not Found",
+          "ERROR --> services/eventMarket.js/updateMarketRateServiceV1",
+          request
+        );
+        continue;
+      }
+      let avg = p.runners[0].line - global.tblCommentaryPlayers[comPlayer].batRun;
+      await updateAverageOfPlayerQuery({
+        commentaryPlayerId: p.playerId,
+        batsmanAverage: avg,
+      }, request, fastify);	
+      global.tblCommentaryPlayers[comPlayer].batsmanAverage = avg;
+    }
+  }
+    // get the team and teamName by commentaryId
+    const teams = global.tblCommentaryTeams
+    .filter((item) => item.commentaryId === commentaryId)
+    .reduce((acc, current) => {
+      if (!acc.some(item => item.teamId === current.teamId)) {
+        acc.push(current);
+      }
+      return acc;
+    }, [])
+    .map((item) => {
+      return {
+        teamId: item.teamId,
+        teamName: item.teamName,
+      };
+    });
+  // 
+  let categories = global.tblMarketTypeCategories.filter(
+    (item) => item.marketTypeCategoryId > 0
+  ).map(item => ({
+    marketTypeCategoryId: item.marketTypeCategoryId,
+    categoryName: item.categoryName,
+    displayOrder: item.displayOrder
+  }));
+
+  return {
+    response,
+    callPredictions,
+    teams,
+    categories
+  };
+
+};
 module.exports = {
   getDetailsByCIdService,
   getAllEventMarketsService,
@@ -1570,5 +1886,7 @@ module.exports = {
   getAllEventMarketsAndRunnersService,
   cancelSettleMarketService,
   getMarketTypeCategoryService,
-  getDetailsByCIdV1Service
+  getDetailsByCIdV1Service,
+  createEventMarketsServiceV1,
+  updateMarketRateServiceV1
 };
