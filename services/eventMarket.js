@@ -29,7 +29,8 @@ const {
   getAllEventMarketsAndRunnersQuery,
   getAllRateSourceEventMarketQuery,
   getEventMarketsQuery,
-  cancelSettledMarketQuery
+  cancelSettledMarketQuery,
+  getAllEventMarketsQueryV1
 } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
 const {
@@ -1508,9 +1509,9 @@ const getDetailsByCIdV1Service = async (request, fastify) => {
         item.teamStatus === 1
     );
     whereCondition += ` AND tem."wrTeamID" = ${battingTeam.teamId}`;
-    eventMarket = await getAllEventMarketsQuery(fastify, whereCondition);
+    eventMarket = await getAllEventMarketsQueryV1(fastify, whereCondition);
   } else {
-    eventMarket = await getAllEventMarketsQuery(fastify, whereCondition);
+    eventMarket = await getAllEventMarketsQueryV1(fastify, whereCondition);
   }
   //
   let categories = global.tblMarketTypeCategories.filter(

@@ -89,6 +89,95 @@ const getAllEventMarketsQuery = async (fastify, whereCondition = null) => {
     }
   );
 };
+const getAllEventMarketsQueryV1 = async (fastify, whereCondition = null) => {
+  return await fastify.db.query(
+    `SELECT
+        "wrID" AS "eventMarketId",
+        tem."wrCommentaryId" AS "commentaryId",
+        tem."wrEventRefID" AS "eventRefId",
+        tc."wrEventName" AS "eventName",
+        tc."wrEventDate" AS "eventDate",
+        tcom."wrCompetition" AS "competitionName",
+        tet."wrEventType" AS "eventTypeName",
+        "wrTeamID" AS "teamId",
+        tt."wrTeamName" AS "teamName",
+        "wrInningsID" AS "inningsId",
+        "wrMarketName" AS "marketName",
+        "wrMargin" AS "margin",
+        "wrStatus" AS "status",
+        "wrIsPredefineMarket" as "isPredefineMarket",
+        "wrIsOver" as "isOver",
+        "wrOver" as "over",
+        "wrIsPlayer" as "isPlayer",
+        "wrPlayerID" as "playerId",
+        "wrIsAutoCancel" as "isAutoCancel",
+        "wrAutoOpenType" as "autoOpenType", 
+        "wrAutoOpen" as "autoOpen",
+        "wrAutoCloseType" as "autoCloseType",
+        "wrBeforeAutoClose" as "beforeAutoClose",
+        "wrAutoSuspendType" as "autoSuspendType",
+        "wrBeforeAutoSuspend"  as "beforeAutoSuspend",
+        "wrIsBallStart" as "isBallStart",
+        "wrIsAutoResultSet" as "isAutoResultSet",
+        "wrAutoResultType" as "autoResultType",
+        "wrAutoResultafterBall" as "autoResultafterBall",	
+        "wrAfterWicketAutoSuspend" as "afterWicketAutoSuspend",	
+        "wrAfterWicketNotCreated" as "afterWicketNotCreated",
+        tem."wrIsActive" as "isActive",	
+        "wrIsAllow" as "isAllow",
+        "wrCloseTime" as "closeTime",
+        "wrOpenTime" as "openTime",
+        "wrSettledTime" as "settledTime",
+        "wrResult" as "result",
+        "wrIsResult" as "isResult",
+        "wrData" as "data",
+        tem."wrLastUpdate" as "lastUpdate",
+        tem."wrIsSendData" as "isSendData",
+        tem."wrActionType" as "actionType",
+        tem."wrMarketTemplateId" as "marketTemplateId",
+        tem."wrMarketTypeId" as "marketTypeId",
+        tem."wrMarketTypeCategoryId" as "marketTypeCategoryId",
+        tem."wrCreateRefId" as "createRefId",
+        tem."wrOpenRefId" as "openRefId",
+        tem."wrCreateType" as "createType",
+        tem."wrCreate" as "create",
+        tem."wrTemplateType" as "templateType",
+        tem."wrDelay" as "delay",
+        tem."wrLineRatio" as "lineRatio",
+        tem."wrRateSource" as "rateSource",
+        tem."wrRateSourceRefID" as "rateSourceRefID",
+        json_agg(
+            json_build_object(
+                'runnerId' , tr."wrRunnerId",
+                'runner', tr."wrRunner",
+                'line', tr."wrLine",
+                'overRate', tr."wrOverRate",
+                'underRate', tr."wrUnderRate",
+                'backPrice', tr."wrBackPrice",
+                'layPrice', tr."wrLayPrice",
+                'backSize', tr."wrBackSize",
+                'laySize', tr."wrLaySize",
+                'runnerLastUpdate', tr."wrLastUpdate",
+                'selectionId', tr."wrSelectionId",
+                'selectionStatus', tr."wrSelectionStatus",
+                'order', tr."wrOrder",
+                'teamId', tr."wrTeamId"
+            )
+        ) as "runners"
+    FROM "tblEventMarkets" tem
+    LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
+    LEFT JOIN "tblCompetitions" tcom ON tcom."wrCompetitionId" = tc."wrCompetitionId"
+    LEFT JOIN "tblEventTypes" tet ON tet."wrEventTypeId" = tc."wrEventTypeId"
+    LEFT JOIN "tblMarketRunners" tr ON tr."wrEventMarketId" = tem."wrID"
+    LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = tem."wrTeamID"
+    ${whereCondition ? `WHERE ${whereCondition}` : ""}
+    GROUP BY tem."wrID", tc."wrEventName", tc."wrEventDate", tcom."wrCompetition", tet."wrEventType", tt."wrTeamName"
+    `,
+    {
+      type: fastify.db.QueryTypes.SELECT,
+    }
+  );
+};
 const getEventMarketByIdsQuery = async (data, request, fastify) => {
   try {
     return await fastify.db.query(
@@ -2370,5 +2459,6 @@ module.exports = {
   getAllEventMarketsAndRunnersQuery,
   getAllRateSourceEventMarketQuery,
   getEventMarketsQuery,
-  cancelSettledMarketQuery
-};
+  cancelSettledMarketQuery,
+  getAllEventMarketsQueryV1
+}
