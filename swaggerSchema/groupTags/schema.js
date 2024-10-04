@@ -3303,7 +3303,7 @@ const MarketTemplate = {
   isPerEventStatus: {
     schema: {
       tags: ["Market Template"],
-      description: "update isPerEvent status",
+      description: "update isPerEvent status for Market Template",
       security: [{ bearerAuth: [] }],
       body: {
         type: "object",

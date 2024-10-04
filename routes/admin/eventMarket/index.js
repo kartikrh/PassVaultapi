@@ -360,7 +360,7 @@ module.exports = async (fastify, opts) => {
             })
         ],
         handler : (request, reply) => cancelSettleMarket(request, reply, fastify)
-    })
+    });
     fastify.post("/getDetailsByCIdV1", {  
         schema: EventMarket.getDetailsByCId.schema,
         preHandler: [
@@ -372,5 +372,4 @@ module.exports = async (fastify, opts) => {
         ],
         handler: (request, reply) => getDetailsByCIdV1(request, reply, fastify)
     });
-    
 };

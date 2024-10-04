@@ -1447,6 +1447,7 @@ const getMarketTypeCategoryService = async (request, fastify) => {
   }));
   return data;
 }
+
 const getDetailsByCIdV1Service = async (request, fastify) => {
   const { commentaryId } = request.body;
   const commentary = global.tblCommentaries.find(
@@ -1455,18 +1456,14 @@ const getDetailsByCIdV1Service = async (request, fastify) => {
   if (!commentary) {
     throw new Error("Commentary with this id not Found");
   }
-  // i want this structure as per innings
   const matchType = global.tblMatchTypes.find(
     (item) => item.matchTypeId === commentary.matchTypeId
   );
 
-  // i want to set the commentaryTeam and playerTeam as per innings
   const totalInnings = matchType.noOfIningsPerSide;
-  // add extra one where if commentary already toss then i want to set the team as per toss
 
   const teamAndPlayers = [];
   for (let i = 1; i <= totalInnings; i++) {
-    // get team for this innings
     let commentaryTeam;
     if (commentary.commentaryStatus !== 1) {
       commentaryTeam = global.tblCommentaryTeams.filter(
@@ -1481,7 +1478,6 @@ const getDetailsByCIdV1Service = async (request, fastify) => {
           item.commentaryId === commentaryId && item.currentInnings === i
       );
     }
-    // get players for this innings and commentaryTeam.teamId
     let teamObj = {};
     for (team of commentaryTeam) {
       commentaryPlayers = global.tblCommentaryPlayers.filter(
@@ -1498,16 +1494,9 @@ const getDetailsByCIdV1Service = async (request, fastify) => {
     }
   }
 
-  // get marketTemplate where matchType is commentary.matchTypeId
   const marketTemplate = global.tblMarketTemplate.filter(
     (item) => item.matchTypeID === commentary.matchTypeId
   );
-  // let eventMarket = global.tblEventMarkets.filter(
-  //     (item) => item.commentaryId === commentaryId
-  //     && item.status !== EventMarketStatus.Cancel
-  //     && item.status !== EventMarketStatus.Close
-  //     && item.status !== EventMarketStatus.Settled
-  // );
   let eventMarket, LDOMARKETSIDS;
   LDOMARKETSIDS = global.tblConfigs.find(config => config.key === "LDOMARKET")?.value ?? "0";
   let whereCondition = `tem."wrCommentaryId" = ${commentaryId} AND tem."wrStatus" NOT IN (${EventMarketStatus.Close},${EventMarketStatus.Settled},${EventMarketStatus.Cancel}) AND tem."wrMarketTypeCategoryId" NOT IN (${LDOMARKETSIDS})`;
@@ -1547,7 +1536,6 @@ const getDetailsByCIdV1Service = async (request, fastify) => {
     marketTypes
   };
 };
-
 module.exports = {
   getDetailsByCIdService,
   getAllEventMarketsService,
