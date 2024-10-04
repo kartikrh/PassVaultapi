@@ -121,11 +121,11 @@ const updateIsPerEventStatus = async (request, reply, fastify) => {
     const result = await isPerEventStatusService(request ,fastify);
     reply.status(200).send(success(result, 200));
   } catch (err) {
+    // console.log("err", err);
     errorLogger(fastify, err.message, commonPath + "/updateIsPerEventStatus", request);
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
-
 module.exports = {
   getAllMarketTemplate,
   saveMarketTemplate,

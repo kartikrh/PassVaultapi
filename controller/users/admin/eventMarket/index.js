@@ -294,11 +294,11 @@ const getDetailsByCIdV1 = async (request, reply, fastify) => {
     const result = await getDetailsByCIdV1Service(request, fastify);
     reply.status(200).send(success(result, 200));
   } catch (err) {
+    // console.log("err", err);
     errorLogger(fastify, err.message, path + "/getDetailsByCIdV1", request);
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
-};
-
+}
 module.exports = {
     getDetailsByCId,
     getAllEventMarket,
