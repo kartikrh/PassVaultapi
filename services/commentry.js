@@ -3713,7 +3713,11 @@ const loadTeamPlayerService = async (request, fastify) => {
 const updateTeamPlayerService = async (request, fastify) => {
   const { body: playerDataArray } = request;
   const sendDataForSocketUpdate = {};
-  sendDataForSocketUpdate.dataToUpdate = [];
+  sendDataForSocketUpdate.dataToUpdate = {
+    module: "commentaryPlayers",
+    type: "update",
+    data: [],
+  };
   for (const playerData of playerDataArray) {
     // validate commentaryId
     const {
@@ -3779,11 +3783,7 @@ const updateTeamPlayerService = async (request, fastify) => {
     sendDataForSocketUpdate.commentaryId = commentary.commentaryId;
     sendDataForSocketUpdate.eventRefId = commentary.eventRefId;
 
-    sendDataForSocketUpdate.dataToUpdate.push({
-      module: "commentaryPlayers",
-      type: "update",
-      data: player,
-    });
+    sendDataForSocketUpdate.dataToUpdate.data.push({...player});
   }
     if (
       global?.clientSocketIo !== undefined &&
