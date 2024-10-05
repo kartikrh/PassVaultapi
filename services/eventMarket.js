@@ -1581,8 +1581,8 @@ const createEventMarketsServiceV1 = async (request, fastify) => {
     }
   }
   const result = await upsertEventMarketSPQueryV1({
-    singleRunnerMarket,
-    multiRunnerMarket
+    singleRunnerMarket : singleRunnerMarket.length > 0 ? singleRunnerMarket : null,
+    multiRunnerMarket : multiRunnerMarket.length > 0 ? multiRunnerMarket : null
   }, request, fastify);
   for (let item of result){
     let index = global.tblEventMarketsV1.findIndex(
