@@ -3712,7 +3712,8 @@ const loadTeamPlayerService = async (request, fastify) => {
 };
 const updateTeamPlayerService = async (request, fastify) => {
   const { body: playerDataArray } = request;
-
+  const sendDataForSocketUpdate = {};
+  sendDataForSocketUpdate.dataToUpdate = [];
   for (const playerData of playerDataArray) {
     // validate commentaryId
     const {
@@ -3774,7 +3775,25 @@ const updateTeamPlayerService = async (request, fastify) => {
     } else {
       throw new Error("Player not found for update");
     }
+
+    sendDataForSocketUpdate.commentaryId = commentary.commentaryId;
+    sendDataForSocketUpdate.eventRefId = commentary.eventRefId;
+
+    sendDataForSocketUpdate.dataToUpdate.push({
+      module: "commentaryPlayers",
+      type: "update",
+      data: player,
+    });
   }
+    if (
+      global?.clientSocketIo !== undefined &&
+      global?.clientSocketIo.length > 0
+    ) {
+      global.clientSocketIo.forEach((socket) => {
+        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+      });
+    }
+  
   return "Player updated successfully";
 };
 const saveShortCommentaryService = async (request, fastify) => {
