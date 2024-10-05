@@ -1501,6 +1501,18 @@ const getDetailsByCIdV1Service = async (request, fastify) => {
   const marketTemplate = global.tblMarketTemplate.filter(
     (item) => item.matchTypeID === commentary.matchTypeId
   );
+  for (temp of marketTemplate) {
+    if(temp.isPredefineRunnerValue == true){
+      // find the runner value
+      let runners = global.tblMarketTemplateRunners.filter(
+        (item) => item.marketTemplateId === temp.marketTemplateId
+      );
+      temp.runners = runners;
+    }
+    else {
+      temp.runners = [];
+    }
+  }
   let eventMarket, LDOMARKETSIDS;
   LDOMARKETSIDS = global.tblConfigs.find(config => config.key === "LDOMARKET")?.value ?? "0";
   let whereCondition = `tem."wrCommentaryId" = ${commentaryId} AND tem."wrStatus" NOT IN (${EventMarketStatus.Close},${EventMarketStatus.Settled},${EventMarketStatus.Cancel}) AND tem."wrMarketTypeCategoryId" NOT IN (${LDOMARKETSIDS})`;
@@ -1521,13 +1533,15 @@ const getDetailsByCIdV1Service = async (request, fastify) => {
     (item) => item.marketTypeCategoryId > 0
   ).map(item => ({
     marketTypeCategoryId: item.marketTypeCategoryId,
-    categoryName: item.categoryName
+    categoryName: item.categoryName,
+    displayOrder: item.displayOrder
   }));
   let marketTypes = global.tblMarketTypes.filter(
     (elem) => elem.isActive === true
   ).map(item => ({
     marketTypeId: item.marketTypeId,
-    marketTypeName: item.marketTypeName
+    marketTypeName: item.marketTypeName,
+    displayOrder: item.displayOrder
   }));
 
   return {
