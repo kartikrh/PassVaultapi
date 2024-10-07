@@ -153,7 +153,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     // const predictorAPILogs = await allPredictorAPILogsQuery(fastify);
     // const commentaryLogs = await allCommentaryLogsQuery(fastify);
     // const errorLogs = await allErrorLogsQuery(fastify);
-    const getEventMarkesV1 = await getEventMarketQueryV1(fastify);
+    // const getEventMarkesV1 = await getEventMarketQueryV1(fastify);
     // const getEventMarketRunnerV1 = await getMarketRunnerQueryV1(fastify);
     global.tblTabs = getAllTabs;
     global.tblRoles = getAllRoles;
@@ -214,7 +214,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblSocialMedia = getAllSocialMediaData;
     global.tblArticles = getAllArticlesData;
     global.tblTournamentTeamPlayers = getAllTournamentTeamPlayers;
-    global.tblEventMarketsV1 = getEventMarkesV1;
+    global.tblEventMarketsV1 = [];
     // global.tblMarketRunnerV1 = getEventMarketRunnerV1;
     // global.responseLogs = responseLogs;
     // global.thirdPartyAPILogs = thirdPartyAPILogs;
