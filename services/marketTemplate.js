@@ -7,6 +7,7 @@ const {
   updateIsPerEventStatusQuery,
 } = require("../repository/TableMarketTemplate");
 const { callPredictorMarket } = require("../utilities");
+const { createMarketTemplateRunnerQuery } = require("../repository/TableMarketTemplateRunner")
 
 const getAllMarketTemplateService = async (request) => {
   const { isActive, matchTypeId } = request.body;
@@ -292,7 +293,7 @@ const changePredefineRunnerService = async (request, fastify) => {
 
 const cloneMarketTemplateService = async (request, fastify) => {
   // validate marketTemplateId
-  const { marketTemplateId, matchTypeID } = request.body;
+  const { marketTemplateId, matchTypeID, templateName } = request.body;
   const marketTemplate = global.tblMarketTemplate.find(
     (item) => item.marketTemplateId === marketTemplateId
   );
@@ -310,6 +311,7 @@ const cloneMarketTemplateService = async (request, fastify) => {
     {
       ...marketTemplate,
       matchTypeID: matchTypeID,
+      templateName: templateName,
       createdBy: request.userTokenInfo.WrUserId,
     },
     fastify,
@@ -319,6 +321,33 @@ const cloneMarketTemplateService = async (request, fastify) => {
     ...data,
     matchType: validateMatchType.matchType,
   });
+
+const validateTemplateRunners = global.tblMarketTemplateRunners.filter(
+  (item) => item.marketTemplateId === marketTemplateId
+);
+
+if (validateTemplateRunners && validateTemplateRunners.length > 0) {
+  for (const elem of validateTemplateRunners) {
+    
+    const request = {
+      body: {
+        marketTemplateId: data.marketTemplateId,
+        runner: elem.runner,
+        line: elem.line,
+        overRate: elem.overRate,
+        underRate: elem.underRate,
+        backPrice: elem.backPrice,
+        layPrice: elem.layPrice,
+        backSize: elem.backSize,
+        laySize: elem.laySize,
+      }
+    };
+
+    const result = await createMarketTemplateRunnerQuery(request, fastify);
+    global.tblMarketTemplateRunners.push(result);
+  }
+}
+
   return {
     ...data,
     matchType: validateMatchType.matchType,
@@ -367,7 +396,6 @@ const isPerEventStatusService = async (request, fastify) => {
   if (index === -1) {
     throw new Error("MarketTemplate with this id not found");
   }
-  // console.log("index", index);
 
   await updateIsPerEventStatusQuery(request, fastify);
   global.tblMarketTemplate[index].isPerEvent = request.body.isPerEvent;
