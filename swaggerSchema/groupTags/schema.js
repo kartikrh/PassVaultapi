@@ -4199,6 +4199,20 @@ const EventMarket = {
       }
     }
   },
+  getDetailsByCIdV1: {
+    schema: {
+      tags: ["EventMarket"],
+      description: "get all EventMarkets with Market types",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+        },
+        required: ["commentaryId"],
+      },
+    },
+  },
 };
 const MarketTemplateRunner = {
   getAll: {

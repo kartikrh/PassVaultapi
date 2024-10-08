@@ -361,7 +361,7 @@ module.exports = async (fastify, opts) => {
         handler : (request, reply) => cancelSettleMarket(request, reply, fastify)
     });
     fastify.post("/getDetailsByCIdV1", {  
-        schema: EventMarket.getDetailsByCId.schema,
+        schema: EventMarket.getDetailsByCIdV1.schema,
         preHandler: [
             (request, reply) => authorize(request, reply, fastify),
             (request, reply) => checkPermission(request, reply, fastify, {
