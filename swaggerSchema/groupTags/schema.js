@@ -4199,6 +4199,20 @@ const EventMarket = {
       }
     }
   },
+  getDetailsByCIdV1: {
+    schema: {
+      tags: ["EventMarket"],
+      description: "get all EventMarkets with Market types",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+        },
+        required: ["commentaryId"],
+      },
+    },
+  },
 };
 const MarketTemplateRunner = {
   getAll: {
@@ -6166,6 +6180,163 @@ const TournamentTeamPlayers = {
     },
   },
 };
+
+const Groups = {
+  getAll: {
+    schema: {
+      tags: ["Groups"],
+      description: "get all Groups",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+  getById: {
+    schema: {
+      tags: ["Groups"],
+      description: "get Groups by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          groupId: { type: "integer" },
+        },
+        required: ["groupId"],
+      },
+    },
+  },
+  save: {
+    schema: {
+      tags: ["Groups"],
+      description: "save Groups",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          groupId: { type: "integer" },
+          groupName: { type: "string" },
+          isActive: { type: "boolean" },
+        },
+        required: ["groupId", "groupName"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["Groups"],
+      description: "delete Groups",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["groupId"],
+      },
+    },
+  },
+  activeInactiveGroup: {
+    schema: {
+      tags: ["Groups"],
+      description: "active inactive Groups",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          groupId: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["groupId", "isActive"],
+      },
+    },
+  },
+};
+
+const TournamentTeamPoints = {
+  getAll: {
+    schema: {
+      tags: ["Tournament Team Points"],
+      description: "get all Tournament Team Points",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionId: { type: "integer" },
+          teamId: { type: "integer" },
+        },
+      },
+    },
+  },
+  save: {
+    schema: {
+      tags: ["Tournament Team Points"],
+      description: "save Tournament Team Points",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            groupId: { type: "integer" },
+            teamId: { type: "integer" },
+            competitionId: { type: "integer" },
+            totalMatches: { type: "integer" },
+            totalWin: { type: "integer" },
+            totalLose: { type: "integer" },
+            totalTie: { type: "integer" },
+            noResult: { type: "integer" },
+            totalPoint: { type: "integer" },
+            isActive: { type: "boolean" },
+            id: { type: "integer" },
+          },
+          required: ["competitionId", "teamId", "id"],
+        },
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["Tournament Team Points"],
+      description: "delete Tournament Team Points",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["id"],
+      },
+    },
+  },
+  activeInactive: {
+    schema: {
+      tags: ["Tournament Team Points"],
+      description: "active inactive Tournament Team Points",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["id", "isActive"],
+      },
+    },
+  },
+};
+
 module.exports = {
   Auth,
   Tabs,
@@ -6218,5 +6389,7 @@ module.exports = {
   CommentaryAward,
   SocialMedia,
   Article,
-  TournamentTeamPlayers
+  TournamentTeamPlayers,
+  Groups,
+  TournamentTeamPoints,
 };
