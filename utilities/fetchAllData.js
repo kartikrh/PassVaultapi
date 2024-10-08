@@ -72,6 +72,8 @@ const { getAllCommentaryAwardQuery } = require("../repository/TableCommentaryAwa
 const { allSocialMediaQuery } = require("../repository/TableSocialMedia");
 const { getAllArticlesQuery } = require("../repository/TableArticles");
 const { getAllTournamentTeamPlayersQuery } = require("../repository/TableTournamentsTeamPlayers");
+const { getAllGroupsQuery } = require("../repository/TableGroups");
+const { getAllTournamentTeamPointsQuery } = require("../repository/TableTournmentTeamPoints");
 // const { getMarketRunnerQueryV1 } = require("../repository/TableMarketRunner");
 
 const fetchAllDataFromDb = async (fastify, reply) => {
@@ -148,6 +150,8 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const getAllSocialMediaData = await allSocialMediaQuery(fastify);
     const getAllArticlesData = await getAllArticlesQuery(fastify);
     const getAllTournamentTeamPlayers = await getAllTournamentTeamPlayersQuery(fastify);
+    const getAllGroups = await getAllGroupsQuery(fastify);
+    const getAllTournamentTeamPoints = await getAllTournamentTeamPointsQuery(fastify);
     // const responseLogs = await allCommentaryLogsQuery2(fastify);
     // const thirdPartyAPILogs = await allThirdPartyApiLogsQuery(fastify);
     // const predictorAPILogs = await allPredictorAPILogsQuery(fastify);
@@ -155,6 +159,8 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     // const errorLogs = await allErrorLogsQuery(fastify);
     // const getEventMarkesV1 = await getEventMarketQueryV1(fastify);
     // const getEventMarketRunnerV1 = await getMarketRunnerQueryV1(fastify);
+
+
     global.tblTabs = getAllTabs;
     global.tblRoles = getAllRoles;
     global.tblBlocks = getAllBlocks;
@@ -215,6 +221,8 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblArticles = getAllArticlesData;
     global.tblTournamentTeamPlayers = getAllTournamentTeamPlayers;
     global.tblEventMarketsV1 = [];
+    global.tblGroups = getAllGroups;
+    global.tblTournamentTeamPoint = getAllTournamentTeamPoints;
     // global.tblMarketRunnerV1 = getEventMarketRunnerV1;
     // global.responseLogs = responseLogs;
     // global.thirdPartyAPILogs = thirdPartyAPILogs;
