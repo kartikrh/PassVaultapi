@@ -2839,6 +2839,7 @@ const Compitition = {
           eventTypeId: { type: "integer" },
           refId: { type: "string" },
           isActive: { type: "boolean" },
+          isTrending : { type: "boolean" },
         },
         required: ["competitionId"],
       },
