@@ -2543,20 +2543,31 @@ const upsertEventMarketSPQueryV1 = async (data, request, fastify) => {
   }
 }
 const updateEventMarketRateQueryV1 = async (data, request, fastify) => {
-  try {
+  try {  
     
     const result =await fastify.db.query(
       `CALL proc_update_market_v1($1,$2,$3)`,
       {
         bind: [
-          data ? JSON.stringify(data) : null,
+          data.singleRunnerMarket ? JSON.stringify(data.singleRunnerMarket) : null,
           null,
           null
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
     );
-    return result[0];
+    const result2 = await fastify.db.query(
+      `CALL proc_update_multirunner_market_v1($1,$2,$3)`,
+      {
+        bind: [
+          data.multiRunnerMarket ? JSON.stringify(data.multiRunnerMarket) : null,
+          null,
+          null
+        ],
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+    return [...result[0].market_data_arr, ...result2[0].market_data_arr];
   } catch (error) {
     errorLogger(
       fastify,
