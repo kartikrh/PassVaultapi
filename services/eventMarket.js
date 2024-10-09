@@ -1513,9 +1513,9 @@ const getDetailsByCIdV1Service = async (request, fastify) => {
       temp.runners = [];
     }
   }
-  let eventMarket, LDOMARKETSIDS;
-  LDOMARKETSIDS = global.tblConfigs.find(config => config.key === "LDOMARKET")?.value ?? "0";
-  let whereCondition = `tem."wrCommentaryId" = ${commentaryId} AND tem."wrStatus" NOT IN (${EventMarketStatus.Close},${EventMarketStatus.Settled},${EventMarketStatus.Cancel}) AND tem."wrMarketTypeCategoryId" NOT IN (${LDOMARKETSIDS})`;
+  let eventMarket;
+  // LDOMARKETSIDS = global.tblConfigs.find(config => config.key === "LDOMARKET")?.value ?? "0";
+  let whereCondition = `tem."wrCommentaryId" = ${commentaryId} AND tem."wrStatus" NOT IN (${EventMarketStatus.Close},${EventMarketStatus.Settled},${EventMarketStatus.Cancel})`;
   if (commentary.commentaryStatus != 1) {
     let battingTeam = global.tblCommentaryTeams.find(
       (item) =>
