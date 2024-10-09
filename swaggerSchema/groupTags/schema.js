@@ -4081,7 +4081,7 @@ const EventMarket = {
                 eventRefId: { type: "string" },
                 // teamId: { type: "integer" },    
                 inningsId: { type: "integer" },
-                marketName: { type: "string" },
+                // marketName: { type: "string" },
                 margin: { type: "number" },
                 status: { type: "integer" },
                 isPredefineMarket: { type: "boolean" },

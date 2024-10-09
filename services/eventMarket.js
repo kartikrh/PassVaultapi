@@ -1583,6 +1583,7 @@ const createEventMarketsServiceV1 = async (request, fastify) => {
   // }
   let multiRunnerMarket = [];
   let singleRunnerMarket = [];
+  let marketNameNullMarket = [];
   for (let item of eventMarket){
     let mt = global.tblMarketTypes.find(
       (e) => e.marketTypeId === item.marketTypeId
@@ -1591,8 +1592,21 @@ const createEventMarketsServiceV1 = async (request, fastify) => {
       singleRunnerMarket.push(item); 
     }
     else {
-      multiRunnerMarket.push(item);
+      if(item.marketName){
+        multiRunnerMarket.push(item);
+      }
+      else {
+        marketNameNullMarket.push(item);
+      }
     }
+  }
+  if(marketNameNullMarket.length > 0){
+    errorLogger(
+      fastify,
+      `Market Name is null for marketTypeIds ${marketNameNullMarket.map(e => e.marketTypeId).join(",")}`,
+      "ERROR --> services/commentary.js/createEventMarketsServiceV1",
+      request
+    );
   }
   const result = await upsertEventMarketSPQueryV1({
     singleRunnerMarket : singleRunnerMarket.length > 0 ? singleRunnerMarket : null,
@@ -1643,7 +1657,8 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
   
   // return true;
   // remove the market which is already closed , settled,cancel
-  let marketToUpdate = [];
+  let signleRunMarket = [];
+  let multiRunMarket = [];
   for (let item of eventMarket){
     let market = eventMarkets.find(
       (e) => e.eventMarketId === item.marketId
@@ -1655,11 +1670,23 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
     ) {
       continue;
     }
-    marketToUpdate.push(item);
+    let marketType = global.tblMarketTypes.find(
+      (e) => e.marketTypeId === market.marketTypeId
+    );
+    if(marketType.marketTypeName.toLowerCase() === "fancy" || marketType.marketTypeName.toLowerCase() === "linemarket"){
+      signleRunMarket.push(item);
+    }
+    else {
+      multiRunMarket.push(item);
+    }
   }
 
-  const updatedData = await updateEventMarketRateQueryV1(eventMarket, request, fastify);
-  return updatedData;
+  const updatedData = await updateEventMarketRateQueryV1({
+    singleRunnerMarket : signleRunMarket.length > 0 ? signleRunMarket : null,
+    multiRunnerMarket : multiRunMarket.length > 0 ? multiRunMarket : null
+  }, request, fastify);
+  
+  // return updatedData;
   const playerMarket = [];
   const updatedOvers = [];
   const response = [];
@@ -1672,57 +1699,52 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
       : (global.tblEventMarketsV1[index] = item);
 
  
-    if(item.isPlyer){
+    if(item.isPlayer){
       playerMarket.push(item);
     }
-    let is_onlyover = 0;
-    let category = global.tblMarketTypeCategories.find(
-      (item) => item.marketTypeCategoryId === item.marketTypeCategoryId
+    let marketType = global.tblMarketTypes.find(
+      (e) => e.marketTypeId === item.marketTypeId
     );
-    if(category && category.categoryName.toLowerCase() != "player" && category.categoryName.toLowerCase() != "wicket"){
-      if(category.categoryName == "Only Over"){
-        is_onlyover = 1;
-      }
-      const lineDiffArr = []
-      let runOld = eventMarkets.find(
-        (e) => e.eventMarketId === item.eventMarketId
-      ).runners;
-      for (let run of item.runners){
-        let rnOld = runOld.find(
-          (e) => e.runnerId === run.runnerId
-        );
-        if(rnOld){
-          let diff = run.line - rnOld.line;
-          lineDiffArr.push({
-            runnerId: run.runnerId,
-            diff: diff
-          })
+    if(marketType.marketTypeName.toLowerCase() === "fancy" || marketType.marketTypeName.toLowerCase() === "linemarket"){
+      let is_onlyover = 0;
+      let category = global.tblMarketTypeCategories.find(
+        (item) => item.marketTypeCategoryId === item.marketTypeCategoryId
+      );
+      let lineDiff = 0;
+      if(category && category.categoryName.toLowerCase() != "player" && category.categoryName.toLowerCase() != "wicket"){
+        if(category.categoryName == "Only Over"){
+          is_onlyover = 1;
         }
+        let runOld = eventMarkets.find(
+          (e) => e.eventMarketId === item.eventMarketId
+        ).runners;
+        lineDiff = runOld[0].line - item.runners[0].line;
+        updatedOvers.push({
+          over : item.over,
+          value : lineDiff,
+          line_ratio : item.lineRatio,
+          is_onlyover : is_onlyover,
+          is_allow : item.isAllow,
+          is_active : item.isActive,
+          is_senddata : item.isSendData,
+          data : item.data,
+          market_type_category_id : parseInt(item.marketTypeCategoryId),
+        })
       }
-      updatedOvers.push({
-        over : item.over,
-        value : lineDiffArr,
-        line_ratio : item.lineRatio,
-        is_onlyover : is_onlyover,
-        is_allow : item.isAllow,
-        is_active : item.isActive,
-        is_senddata : item.isSendData,
-        data : item.data,
-        market_type_category_id : parseInt(item.marketTypeCategoryId),
-      })
+      marketDataLogger(
+        {
+          eventMarketId: item.eventMarketId,
+          commentaryId: item.commentaryId,
+          dataTosave: typeof (item.data) === "string" ? JSON.parse(item.data) : item.data,
+          updateType: MarketUpdateType.marketUpdateRate,
+          lineDiff: lineDiff,
+          isSendData: true
+        },
+        request,
+        fastify
+      )
+    
     }
-    marketDataLogger(
-      {
-        eventMarketId: item.eventMarketId,
-        commentaryId: item.commentaryId,
-        dataTosave: typeof (item.data) === "string" ? JSON.parse(item.data) : item.data,
-        updateType: MarketUpdateType.marketUpdateRate,
-        lineDiffArr: lineDiffArr,
-        isSendData: true
-      },
-      request,
-      fastify
-    )
     response.push({
       marketId : item.eventMarketId,
       commentaryId : item.commentaryId,
@@ -1837,7 +1859,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
   }
     // get the team and teamName by commentaryId
     const teams = global.tblCommentaryTeams
-    .filter((item) => item.commentaryId === commentaryId)
+    .filter((item) => item.commentaryId === eventMarket[0].commentaryId)
     .reduce((acc, current) => {
       if (!acc.some(item => item.teamId === current.teamId)) {
         acc.push(current);
@@ -1850,7 +1872,6 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
         teamName: item.teamName,
       };
     });
-  // 
   let categories = global.tblMarketTypeCategories.filter(
     (item) => item.marketTypeCategoryId > 0
   ).map(item => ({
@@ -1860,7 +1881,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
   }));
 
   return {
-    response,
+    marketList : response, 
     callPredictions,
     teams,
     categories
