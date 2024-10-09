@@ -5880,6 +5880,7 @@ const getMatchListByStatus = async (body, request, fastify) => {
       ety: eventType?.eventType || "",
       mtyp: item.matchType || "",
       com: competition?.competition || "",
+      compId: competition?.competitionId || 0,
       ci: item.currentInnings,
       en: item.eventName || "",
       ed: convertDate(item.eventDate, "DD/MM/YYYY") || "",
