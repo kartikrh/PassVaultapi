@@ -33,7 +33,8 @@ const {
   getAllEventMarketsQueryV1,
   upsertEventMarketSPQueryV1,
   updateEventMarketRateQueryV1,
-  getEventMarketByIdsQueryV1
+  getEventMarketByIdsQueryV1,
+  getMarketListByCIdQueryV1
 } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
 const {
@@ -481,6 +482,65 @@ const marketListByCIdService = async (request, fastify) => {
   }
 
   const marketList = await getMarketListByCIdQuery(
+    request.body,
+    request,
+    fastify
+  );
+
+  // get the team and teamName by commentaryId
+  const teams = global.tblCommentaryTeams
+    .filter((item) => item.commentaryId === commentaryId)
+    .reduce((acc, current) => {
+      if (!acc.some(item => item.teamId === current.teamId)) {
+        acc.push(current);
+      }
+      return acc;
+    }, [])
+    .map((item) => {
+      return {
+        teamId: item.teamId,
+        teamName: item.teamName,
+      };
+    });
+  // 
+  let categories = global.tblMarketTypeCategories.filter(
+    (item) => item.marketTypeCategoryId > 0
+  ).map(item => ({
+    marketTypeCategoryId: item.marketTypeCategoryId,
+    categoryName: item.categoryName,
+    displayOrder: item.displayOrder
+  }));
+
+  // let players = global.tblCommentaryPlayers
+  // .filter((item) => item.commentaryId === commentaryId)
+  // .map((player) => ({
+  //   teamId: player.teamId,
+  //   playerId: player.playerId,
+  //   commentaryPlayerId: player.commentaryPlayerId,
+  //   playerName: player.playerName,
+  //   batsmanAverage: player.batsmanAverage,
+  //   batsmanStrikeRate: player.batsmanStrikeRate,
+  //   bowlerEconomy: player.bowlerEconomy,
+  //   bowlerAverage: player.bowlerAverage,
+  // }));
+  return {
+    marketList,
+    teams,
+    categories,
+    //players,
+  };
+};
+const marketListByCIdServiceV1 = async (request, fastify) => {
+  const { commentaryId } = request.body;
+  // validate the commentaryId
+  let commentary = global.tblCommentaries.find(
+    (item) => item.commentaryId === commentaryId
+  );
+  if (!commentary) {
+    throw new Error("Commentary with this id not Found");
+  }
+
+  const marketList = await getMarketListByCIdQueryV1(
     request.body,
     request,
     fastify
@@ -1632,7 +1692,7 @@ const createEventMarketsServiceV1 = async (request, fastify) => {
       fastify
     )
   }
-  return result;
+  return "Event Market updated successfully";
 };
 const updateMarketRateServiceV1 = async (request, fastify) => {
   // i got array of eventMarket i want to update this data
@@ -1857,34 +1917,34 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
       global.tblCommentaryPlayers[comPlayer].batsmanAverage = avg;
     }
   }
-    // get the team and teamName by commentaryId
-    const teams = global.tblCommentaryTeams
-    .filter((item) => item.commentaryId === eventMarket[0].commentaryId)
-    .reduce((acc, current) => {
-      if (!acc.some(item => item.teamId === current.teamId)) {
-        acc.push(current);
-      }
-      return acc;
-    }, [])
-    .map((item) => {
-      return {
-        teamId: item.teamId,
-        teamName: item.teamName,
-      };
-    });
-  let categories = global.tblMarketTypeCategories.filter(
-    (item) => item.marketTypeCategoryId > 0
-  ).map(item => ({
-    marketTypeCategoryId: item.marketTypeCategoryId,
-    categoryName: item.categoryName,
-    displayOrder: item.displayOrder
-  }));
+  //   // get the team and teamName by commentaryId
+  //   const teams = global.tblCommentaryTeams
+  //   .filter((item) => item.commentaryId === eventMarket[0].commentaryId)
+  //   .reduce((acc, current) => {
+  //     if (!acc.some(item => item.teamId === current.teamId)) {
+  //       acc.push(current);
+  //     }
+  //     return acc;
+  //   }, [])
+  //   .map((item) => {
+  //     return {
+  //       teamId: item.teamId,
+  //       teamName: item.teamName,
+  //     };
+  //   });
+  // let categories = global.tblMarketTypeCategories.filter(
+  //   (item) => item.marketTypeCategoryId > 0
+  // ).map(item => ({
+  //   marketTypeCategoryId: item.marketTypeCategoryId,
+  //   categoryName: item.categoryName,
+  //   displayOrder: item.displayOrder
+  // }));
 
   return {
     marketList : response, 
     callPredictions,
-    teams,
-    categories
+    // teams,
+    // categories
   };
 
 };
@@ -1923,5 +1983,6 @@ module.exports = {
   getMarketTypeCategoryService,
   getDetailsByCIdV1Service,
   createEventMarketsServiceV1,
-  updateMarketRateServiceV1
+  updateMarketRateServiceV1,
+  marketListByCIdServiceV1
 };
