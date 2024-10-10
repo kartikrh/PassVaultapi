@@ -170,6 +170,7 @@ const getAllEventMarketsQueryV1 = async (fastify, whereCondition = null) => {
 								'laySize', tmr."wrLaySize",
 								'teamId', tmr."wrTeamId"
 							)
+              ORDER BY tmr."wrRunnerId" ASC
 						) AS "runners"
 						FROM "tblMarketRunners" tmr
 						WHERE tmr."wrEventMarketId" = tem."wrID"
