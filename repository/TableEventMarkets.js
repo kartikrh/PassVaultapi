@@ -173,6 +173,7 @@ const getAllEventMarketsQueryV1 = async (fastify, whereCondition = null) => {
 						) AS "runners"
 						FROM "tblMarketRunners" tmr
 						WHERE tmr."wrEventMarketId" = tem."wrID"
+            ORDER BY tmr."wrRunnerId" ASC
 					) runner_data ON true
     ${whereCondition ? `WHERE ${whereCondition}` : ""}
     GROUP BY tem."wrID", tc."wrEventName", tc."wrEventDate", tcom."wrCompetition", tet."wrEventType", tt."wrTeamName", runner_data."runners"
@@ -2668,6 +2669,74 @@ const getEventMarketByIdsQueryV1 = async (data, request, fastify) => {
   }
 
 };
+const getMarketListByCIdQueryV1 = async (data, request, fastify) => {
+  try {
+    const { commentaryId } = data;
+
+    const query = `WITH "MarketRunners_CTE" AS (
+            SELECT 
+                "wrEventMarketId" as "eventMarketId",
+                "wrRunnerId" as "runnerId",
+                "wrLine" as "line",
+                "wrOverRate" as "overRate",
+                "wrUnderRate" as "underRate",
+                "wrSelectionId" as "selectionId",
+                "wrSelectionStatus" as "status",
+                "wrBackPrice" as "backPrice",
+                "wrLayPrice" as "layPrice",
+                "wrBackSize" as "backSize",
+                "wrLaySize" as "laySize"
+            FROM "tblMarketRunners"
+            ORDER BY "wrRunnerId" ASC
+        )
+        SELECT
+            "wrID" AS "marketId",
+            tem."wrCommentaryId" AS "commentaryId",
+            tem."wrEventRefID" AS "eventId",
+            tem."wrTeamID" AS "teamId",
+            tem."wrMarketTypeCategoryId" AS "marketTypeCategoryId",
+            mtc."wrCategoryName" AS "categoryName",
+            "wrMarketName" AS "marketName",
+            "wrMargin" AS "margin",
+            "wrStatus" AS "status",
+            "wrInningsID" as "inningsId",
+            "wrOver" as "over",
+            tem."wrIsActive" as "isActive", 
+            "wrIsAllow" as "isAllow",
+            "wrIsSendData" as "isSendData",
+            tem."wrLineRatio" as "lineRatio",
+            tem."wrMarketTypeId" as "marketTypeId",
+            (
+                SELECT json_agg("MarketRunners_CTE".*)
+                FROM "MarketRunners_CTE"
+                WHERE "MarketRunners_CTE"."eventMarketId" = tem."wrID"
+            ) as "runner"
+           
+        FROM "tblEventMarkets" tem
+        INNER JOIN "tblMarketTypeCategories" mtc ON tem."wrMarketTypeCategoryId" = mtc."wrId"
+        WHERE tem."wrCommentaryId" = $1
+        AND tem."wrStatus" NOT IN ($2 ,$3,$4)
+        AND tem."wrRateSource" = 1
+        `;
+    return await fastify.db.query(query, {
+      type: fastify.db.QueryTypes.SELECT,
+      bind: [
+        commentaryId,
+        EventMarketStatus.Close,
+        EventMarketStatus.Settled,
+        EventMarketStatus.Cancel,
+      ],
+    });
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/getMarketListByCIdQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+};
 module.exports = {
   getAllEventMarketsQuery,
   createManyEventMarketQuery,
@@ -2716,5 +2785,6 @@ module.exports = {
   getEventMarketQueryV1,
   upsertEventMarketSPQueryV1,
   updateEventMarketRateQueryV1,
-  getEventMarketByIdsQueryV1
+  getEventMarketByIdsQueryV1,
+  getMarketListByCIdQueryV1
 }
