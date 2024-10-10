@@ -173,7 +173,6 @@ const getAllEventMarketsQueryV1 = async (fastify, whereCondition = null) => {
 						) AS "runners"
 						FROM "tblMarketRunners" tmr
 						WHERE tmr."wrEventMarketId" = tem."wrID"
-            ORDER BY tmr."wrRunnerId" ASC
 					) runner_data ON true
     ${whereCondition ? `WHERE ${whereCondition}` : ""}
     GROUP BY tem."wrID", tc."wrEventName", tc."wrEventDate", tcom."wrCompetition", tet."wrEventType", tt."wrTeamName", runner_data."runners"
