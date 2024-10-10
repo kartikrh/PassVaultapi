@@ -1567,7 +1567,8 @@ const getDetailsByCIdV1Service = async (request, fastify) => {
       let runners = global.tblMarketTemplateRunners.filter(
         (item) => item.marketTemplateId === temp.marketTemplateId
       );
-      temp.runners = runners;
+      // sort the runner by runnerId asc
+      temp.runners = runners.sort((a, b) => a.marketTemplateRunnerId - b.marketTemplateRunnerId);
     }
     else {
       temp.runners = [];
