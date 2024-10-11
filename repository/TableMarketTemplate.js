@@ -167,6 +167,124 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
     throw new Error(err.message);
   }
 };
+
+const insertMarketTemplateInCloneQuery = async (data, fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `with insert_data as(
+              insert into "tblMarketTemplates" ("wrTemplateName","wrMatchTypeID","wrIsPredefineMarket","wrIsOver","wrOver","wrIsPlayer",
+              "wrPlayerName","wrIsAutoCancel","wrCreateType","wrCreate","wrAutoOpenType","wrAutoOpen","wrAutoCloseType","wrBeforeAutoClose",
+              "wrAutoSuspendType","wrBeforeAutoSuspend","wrIsBallStart","wrIsAutoResultSet","wrAutoResultType","wrAutoResultafterBall",
+              "wrAfterWicketAutoSuspend","wrAfterWicketNotCreated","wrCreatedBy","wrIsActive" , "wrActionType",
+              "wrMarketTypeId","wrMarketTypeCategoryId","wrMargin" , "wrCreateRefId" , "wrOpenRefId",
+              "wrTemplateType", "wrDelay","wrIsDefaultBetAllowed","wrIsDefaultMarketActive", "wrIsPerEvent", "wrIsPredefineRunnerValue"
+              ) values (
+                $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26, $27, $28, $29, $30, $31, $32,$33,$34,$35,$36
+                ) returning *
+          )        
+        select 
+        "wrID" AS "marketTemplateId",
+        "wrTemplateName" as "templateName",
+        "wrMatchTypeID" as "matchTypeID",
+        "wrIsPredefineMarket" as "isPredefineMarket",
+        "wrIsOver" as "isOver",
+        "wrOver" as "over",
+        "wrIsPlayer" as "isPlayer",
+        "wrPlayerName" as "playerName",
+        "wrIsAutoCancel" as "isAutoCancel",
+        "wrCreateType" as "createType",
+        "wrCreate" as "create",
+        "wrAutoOpenType" as "autoOpenType",
+        "wrAutoOpen" as "autoOpen",
+        "wrAutoCloseType" as "autoCloseType",
+        "wrBeforeAutoClose" as "beforeAutoClose",
+        "wrAutoSuspendType" as "autoSuspendType",
+        "wrBeforeAutoSuspend" as "beforeAutoSuspend",
+        "wrIsBallStart" as "isBallStart",
+        "wrIsAutoResultSet" as "isAutoResultSet",
+        "wrAutoResultType" as "autoResultType",
+        "wrAutoResultafterBall" as "autoResultafterBall",
+        "wrAfterWicketAutoSuspend" as "afterWicketAutoSuspend",
+        "wrAfterWicketNotCreated" as "afterWicketNotCreated",
+        "wrCreatedBy" as "createdBy",
+        "wrIsActive" as "isActive",
+        "wrActionType" as "actionType",
+        "wrMarketTypeId" as "marketTypeId",
+        "wrMarketTypeCategoryId" as "marketTypeCategoryId",
+        "wrMargin" as "margin",
+        "wrCreateRefId" as "createRefId",
+        "wrOpenRefId" as "openRefId",
+        "wrIsPredefineRunnerValue" as "isPredefineRunnerValue",
+        "wrTemplateType" as "templateType",
+        "wrIsDefaultBetAllowed" as "isDefaultBetAllowed",
+        "wrIsDefaultMarketActive" as "isDefaultMarketActive",
+        "wrDelay" as "delay",
+        "wrIsPerEvent" as "isPerEvent"
+         from insert_data`,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [
+          data.templateName || null,
+          data.matchTypeID || null,
+          data.hasOwnProperty("isPredefineMarket")
+            ? data.isPredefineMarket
+            : null,
+          data.hasOwnProperty("isOver") ? data.isOver : null,
+          data.over || null,
+          data.hasOwnProperty("isPlayer") ? data.isPlayer : null,
+          data.playerName || null,
+          data.hasOwnProperty("isAutoCancel") ? data.isAutoCancel : null,
+          data.hasOwnProperty("createType") ? data.createType : null,
+          data.hasOwnProperty("create") ? data.create : null,
+          data.hasOwnProperty("autoOpenType") ? data.autoOpenType : null,
+          data.hasOwnProperty("autoOpen") ? data.autoOpen : null,
+          data.hasOwnProperty("autoCloseType") ? data.autoCloseType : null,
+          data.hasOwnProperty("beforeAutoClose") ? data.beforeAutoClose : null,
+          data.hasOwnProperty("autoSuspendType") ? data.autoSuspendType : null,
+          data.hasOwnProperty("beforeAutoSuspend")
+            ? data.beforeAutoSuspend
+            : null,
+          data.hasOwnProperty("isBallStart") ? data.isBallStart : null,
+          data.hasOwnProperty("isAutoResultSet") ? data.isAutoResultSet : null,
+          data.hasOwnProperty("autoResultType") ? data.autoResultType : null,
+          data.hasOwnProperty("autoResultafterBall")
+            ? data.autoResultafterBall
+            : null,
+          data.hasOwnProperty("afterWicketAutoSuspend")
+            ? data.afterWicketAutoSuspend
+            : null,
+          data.hasOwnProperty("afterWicketNotCreated")
+            ? data.afterWicketNotCreated
+            : null,
+          data.createdBy || null,
+          data.hasOwnProperty("isActive") ? data.isActive : null,
+          data.hasOwnProperty("actionType") ? data.actionType : 0,
+          data.marketTypeId,
+          data.marketTypeCategoryId,
+          data.margin,
+          data.createRefId || null,
+          data.openRefId || null,
+          data.templateType || null,
+          data.delay || 0,
+          data.isDefaultBetAllowed,
+          data.isDefaultMarketActive,
+          data.isPerEvent || false,
+          data.hasOwnProperty("isPredefineRunnerValue") ? data.isPredefineRunnerValue : null,
+        ],
+      }
+    );
+    return result[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableMarketTemplate/insertMarketTemplateInCloneQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 const updateMarketTemplateQuery = async (data, fastify, request) => {
   try {
     // const result = await fastify.db.query(
@@ -479,4 +597,5 @@ module.exports = {
   getAllMarketTypeCategoriesQuery,
   changePredefineRunnerQuery,
   updateIsPerEventStatusQuery,
+  insertMarketTemplateInCloneQuery,
 };
