@@ -5,6 +5,7 @@ const {
   updateStatusMarketTemplateQuery,
   changePredefineRunnerQuery,
   updateIsPerEventStatusQuery,
+  insertMarketTemplateInCloneQuery
 } = require("../repository/TableMarketTemplate");
 const { callPredictorMarket } = require("../utilities");
 const { createMarketTemplateRunnerQuery } = require("../repository/TableMarketTemplateRunner")
@@ -307,7 +308,7 @@ const cloneMarketTemplateService = async (request, fastify) => {
     throw new Error("MatchType with this id not found");
   }
 
-  let data = await insertMarketTemplateQuery(
+  let data = await insertMarketTemplateInCloneQuery(
     {
       ...marketTemplate,
       matchTypeID: matchTypeID,
@@ -324,7 +325,7 @@ const cloneMarketTemplateService = async (request, fastify) => {
 
 const validateTemplateRunners = global.tblMarketTemplateRunners.filter(
   (item) => item.marketTemplateId === marketTemplateId
-);
+).sort((a, b) => a.order - b.order);
 
 if (validateTemplateRunners && validateTemplateRunners.length > 0) {
   for (const elem of validateTemplateRunners) {
