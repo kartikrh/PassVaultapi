@@ -4087,7 +4087,7 @@ const EventMarket = {
                 isPredefineMarket: { type: "boolean" },
                 isPreMatchOnly: { type: "boolean" },
                 isOver: { type: "boolean" },
-                over: { type: "number" },
+                // over: { type: "number" },
                 isPlayer: { type: "boolean" },
                 playerName: { type: "string" },
                 isAutoCancel: { type: "boolean" },
