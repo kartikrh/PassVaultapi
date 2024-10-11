@@ -59,20 +59,6 @@ const getAllEventMarketsQuery = async (fastify, whereCondition = null) => {
         tem."wrCreateType" as "createType",
         tem."wrCreate" as "create",
         tem."wrTemplateType" as "templateType",
-        tr."wrRunnerId" as "runnerId",
-        tr."wrRunner" as "runner",
-        tr."wrLine" as "line",
-        tr."wrOverRate" as "overRate",
-        tr."wrUnderRate" as "underRate",
-        tr."wrBackPrice" as "backPrice",
-        tr."wrLayPrice" as "layPrice",
-        tr."wrBackSize" as "backSize",
-        tr."wrLaySize" as "laySize",
-        tr."wrLastUpdate" as "runnerLastUpdate",
-        tr."wrSelectionId" as "selectionId",
-        tr."wrSelectionStatus" as "selectionStatus",
-        tr."wrOrder" as "order",
-        tr."wrTeamId" as "teamId",
         tem."wrDelay" as "delay",
         tem."wrLineRatio" as "lineRatio",
         tem."wrRateSource" as "rateSource",
@@ -81,7 +67,6 @@ const getAllEventMarketsQuery = async (fastify, whereCondition = null) => {
     LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
     LEFT JOIN "tblCompetitions" tcom ON tcom."wrCompetitionId" = tc."wrCompetitionId"
     LEFT JOIN "tblEventTypes" tet ON tet."wrEventTypeId" = tc."wrEventTypeId"
-    LEFT JOIN "tblMarketRunners" tr ON tr."wrEventMarketId" = tem."wrID"
     LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = tem."wrTeamID"
     ${whereCondition ? `WHERE ${whereCondition}` : ""}`,
     {
