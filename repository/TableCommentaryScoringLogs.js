@@ -32,7 +32,6 @@ const allCommentaryScoringLogsQuery = async (body, request, fastify) => {
             LIMIT $1 OFFSET $2;
         `;
 
-        console.log(query);
         const data = await fastify.db.query(query, {
             type: fastify.db.QueryTypes.SELECT,
             bind : [
