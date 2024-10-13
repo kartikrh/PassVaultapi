@@ -7,7 +7,7 @@ const getRunnerByTemplateIdService = async (request, fastify) => {
     const {marketTemplateId} = request.body;
     const result = global.tblMarketTemplateRunners.filter(
         (item) => item.marketTemplateId === marketTemplateId
-    );
+    ).sort((a, b) => a.marketTemplateRunnerId - b.marketTemplateRunnerId);    
     return result || [];
 }
 const getRunnerByIdService = async (request, fastify) => {

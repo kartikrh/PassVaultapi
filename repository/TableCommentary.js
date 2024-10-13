@@ -53,7 +53,8 @@ const getAllCommentaryQuery = async (fastify) => {
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
     LEFT JOIN "tblMatchTypes" mt ON tc."wrMatchTypeId" = mt."wrMatchTypeId"
 	LEFT JOIN "tblCompetitions" co ON tc."wrCompetitionId" = co."wrCompetitionId"
-  LEFT JOIN "tblUsers" tu ON tc."wrCreatedBy" = tu."WrUserId"`,
+  LEFT JOIN "tblUsers" tu ON tc."wrCreatedBy" = tu."WrUserId"
+  WHERE "wrIsDelete" = false`,
     {
       type: fastify.db.QueryTypes.SELECT,
     }
@@ -379,7 +380,7 @@ const updateCommentaryQuery = async (request, fastify) => {
       "wrDelay"=$18,
       "wrIsActive" = $19,
       "wrIsClientShow" = $20
-      where "wrCommentaryId" = $16	
+      where "wrCommentaryId" = $16 
       `,
       {
         bind: [
@@ -459,11 +460,15 @@ const deleteCommentaryPlayers = async (request, fastify) => {
   try {
     return await fastify.db.query(
       `
-      delete from "tblCommentaryPlayers" where "wrCommentaryId" = $1
+      UPDATE "tblCommentaryPlayers" SET
+        "wrIsDelete" = $1,
+        "wrDeletedBy" = $2,
+        "wrDeletedAt" = now()
+      WHERE "wrCommentaryId" = $3
     `,
       {
         type: fastify.db.QueryTypes.SELECT,
-        bind: [request.body.commentaryId],
+        bind: [true, request.userTokenInfo.WrUserId, request.body.commentaryId],
       }
     );
   } catch (err) {
@@ -480,12 +485,15 @@ const deleteCommentaryPlayerById = async (data, request, fastify) => {
   try {
     // delete commentary player by id
     return await fastify.db.query(
-      `delete from "tblCommentaryPlayers" where "wrPlayerId" = $1
+      `UPDATE "tblCommentaryPlayers" SET
+        "wrIsDelete" = $4,
+        "wrDeletedAt" = now()
+      where "wrPlayerId" = $1
       AND "wrCommentaryId" = $2
       AND "wrTeamId" = $3`,
       {
         type: fastify.db.QueryTypes.DELETE,
-        bind: [data.playerId, data.commentaryId, data.teamId],
+        bind: [data.playerId, data.commentaryId, data.teamId, true],
       }
     );
   } catch (err) {
@@ -592,7 +600,7 @@ const getCommentaryByIdQuery = async (request, fastify) => {
       LEFT JOIN "tblMatchTypes" mt ON tc."wrMatchTypeId" = mt."wrMatchTypeId"
       LEFT JOIN "tblCompetitions" co ON tc."wrCompetitionId" = co."wrCompetitionId"
       LEFT JOIN "tblUsers" tu ON tc."wrCreatedBy" = tu."WrUserId"
-      where "wrCommentaryId" = $1
+      where "wrCommentaryId" = $1 and "wrIsDelete" = false
       `,
       {
         type: fastify.db.QueryTypes.SELECT,
@@ -623,7 +631,7 @@ const getCommentaryTeamsQuery = async (data, fastify, request) => {
       "wrTeamKipper" as "teamKipper",
       "wrTeamMaxOver" as "teamMaxOver"
       from "tblCommentaryTeams"
-      where "wrCommentaryId" = $1 and "wrTeamId" = $2
+      where "wrCommentaryId" = $1 and "wrTeamId" = $2 and "wrIsDelete" = false
       `,
       {
         type: fastify.db.QueryTypes.SELECT,
@@ -656,7 +664,7 @@ const getCommentaryPlayersQuery = async (data, fastify, request) => {
       "wrBowlerOrder" as "bowlerOrder",
       "wrPlayerName" as "playerName"
       from "tblCommentaryPlayers"
-      where "wrCommentaryId" = $1 and "wrTeamId" = $2
+      where "wrCommentaryId" = $1 and "wrTeamId" = $2 and "wrIsDelete" = false
       order by "wrDisplayOrder"
       `,
       {
@@ -710,44 +718,72 @@ const deleteCommentryQuery = async (commentaryId, request, fastify) => {
     return await fastify.db.query(
       `
       with delete_players as (
-        delete from "tblCommentaryPlayers" where "wrCommentaryId" = $1
+        UPDATE "tblCommentaryPlayers" SET 
+          "wrIsDelete" = $1,
+          "wrDeletedBy" = $2,
+          "wrDeletedAt" = now()
+        WHERE "wrCommentaryId" = $3
       ),
        delete_teams as (
-        delete from "tblCommentaryTeams" where "wrCommentaryId" = $1
+        UPDATE "tblCommentaryTeams" SET
+          "wrIsDelete" = $1,
+          "wrDeletedBy" = $2,
+          "wrDeletedAt" = now()
+        WHERE "wrCommentaryId" = $3
       ),
       delete_overs as (
-        delete from "tblOvers" where "wrCommentaryId" = $1
+        UPDATE "tblOvers" SET
+          "wrIsDelete" = $1,
+          "wrDeletedBy" = $2,
+          "wrDeletedAt" = now()
+        WHERE "wrCommentaryId" = $3
       ),
-      delete_ball_by_ball as (
-        delete from "tblCommentaryBallByBalls" where "wrCommentaryId" = $1
+      delete_ball_by_ball AS (
+        UPDATE "tblCommentaryBallByBalls"
+        SET "wrIsDeletedStatus" = $1,
+            "wrDeletedBy" = $2,
+            "wrDeletedAt" = now()
+        WHERE "wrCommentaryId" = $3
       ),
       delete_partnership as (
-        delete from "tblCommentaryPartnerships" where "wrCommentaryId" = $1
+        UPDATE "tblCommentaryPartnerships"
+          SET "wrIsDelete" = $1,
+            "wrDeletedBy" = $2,
+            "wrDeletedAt" = now()
+          WHERE "wrCommentaryId" = $3
       ),
       delete_wicket as (
-        delete from "tblCommentaryWickets" where "wrCommentaryId" = $1
+        UPDATE "tblCommentaryWickets" SET
+            "wrIsDeletedStatus" = $1,
+            "wrDeletedBy" = $2,
+            "wrDeletedAt" = now()
+        WHERE "wrCommentaryId" = $3
       ),
       delete_com_log as (
-        delete from "tblCommentaryLogs" where "wrCommentaryId" = $1
+        delete from "tblCommentaryLogs" where "wrCommentaryId" = $3
       ),
       delete_predict_logs as (
-        delete from "tblPredictorAPILogs" where "wrCommentaryId" = $1
+        delete from "tblPredictorAPILogs" where "wrCommentaryId" = $3
       ),
       delete_com_scoring_log as (
-        delete from "tblComScoringLogs" where "wrCommentaryId" = $1
+        delete from "tblComScoringLogs" where "wrCommentaryId" = $3
       )
-      delete from "tblCommentaries" where "wrCommentaryId" = $1
+      UPDATE "tblCommentaries"
+        SET "wrIsDelete" = $1,
+         "wrDeletedBy" = $2,
+         "wrDeletedAt" = now()
+        WHERE "wrCommentaryId" = $3;
       `,
       {
         type: fastify.db.QueryTypes.DELETE,
-        bind: [commentaryId],
+        bind: [true, request.userTokenInfo.WrUserId, commentaryId],
       }
     );
   } catch (err) {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableConfig/getConfigByIdQuery",
+      "DB ERROR --> repository/TableConfig/deleteCommentryQuery",
       request
     );
     throw new Error(err.message);
@@ -758,13 +794,28 @@ const deleteBallByBallCommentoriesQuery = async (id, request, fastify) => {
   try {
     return await fastify.db.query(
       `WITH delete_partnership AS (
-          DELETE FROM "tblCommentaryPartnerships" WHERE "wrCommentaryBallByBallId" = $1
+          UPDATE "tblCommentaryPartnerships" SET
+            "wrIsDelete" = $1,
+            "wrDeletedBy" = $2,
+            "wrDeletedAt" = now()
+          WHERE "wrCommentaryBallByBallId" = $3
         ),
         delete_wicket AS (
-          DELETE FROM "tblCommentaryWickets" WHERE "wrCommentaryBallByBallId" = $1
+          UPDATE "tblCommentaryWickets" SET
+            "wrIsDeletedStatus" = $1,
+            "wrDeletedBy" = $2,
+            "wrDeletedAt" = now()
+          WHERE "wrCommentaryBallByBallId" = $3
         )
-      DELETE FROM "tblCommentaryBallByBalls" WHERE "wrCommentaryBallByBallId" = $1`,
-      { bind: [id], type: fastify.db.QueryTypes.DELETE }
+      UPDATE "tblCommentaryBallByBalls"
+        SET "wrIsDeletedStatus" = $1,
+            "wrDeletedBy" = $2,
+            "wrDeletedAt" = now()
+        WHERE "wrCommentaryBallByBallId" = $3`,
+      { 
+        bind: [true, request.userTokenInfo.WrUserId, id], 
+        // type: fastify.db.QueryTypes.DELETE
+      }
     );
   } catch (err) {
     errorLogger(
@@ -781,16 +832,22 @@ const deleteOverCommentoriesQuery = async (id, request, fastify) => {
   try {
     return await fastify.db.query(
       `WITH deleted_keys AS (
-        DELETE FROM "tblOvers"
+        UPDATE "tblOvers" SET
+          "wrIsDelete" = $2,
+          "wrDeletedBy" = $3,
+          "wrDeletedAt" = now()
         WHERE "wrOverId" = $1
     
     )
-    DELETE FROM "tblCommentaryBallByBalls"
-    WHERE "wrOverId" = $1;
+      UPDATE "tblCommentaryBallByBalls"
+        SET "wrIsDeletedStatus" = $2,
+            "wrDeletedBy" = $3,
+            "wrDeletedAt" = now()
+        WHERE "wrOverId" = $1
       `,
       {
-        type: fastify.db.QueryTypes.DELETE,
-        bind: [id],
+        // type: fastify.db.QueryTypes.DELETE,
+        bind: [id, true, request.userTokenInfo.WrUserId],
       }
     );
   } catch (err) {
@@ -840,6 +897,7 @@ const getAllCommentaryTeamsQuery = async (fastify) => {
   "wrIsSuperOver" as "isSuperOver",
   "wrTeamPredictionPercentage" as "teamPredictionPercentage"
   from "tblCommentaryTeams" tct 
+  where "wrIsDelete" = false
   `,
     {
       type: fastify.db.QueryTypes.SELECT,
@@ -931,6 +989,7 @@ const getAllCommentaryPlayerQuery = async (fastify) => {
     "wrIsInPlayingEleven" as "isInPlayingEleven",
     "wrBoundary" as "boundary"
     from "tblCommentaryPlayers"
+    where "wrIsDelete" = false
     `,
     {
       type: fastify.db.QueryTypes.SELECT,
@@ -1032,6 +1091,7 @@ const getAllCommentaryBallByBallQuery = async (fastify) => {
     "wrCreatedDate" as "createdDate",
     "wrAutoStrikeBallCount" as "autoStrikeBallCount"
     from "tblCommentaryBallByBalls"
+    WHERE "wrIsDeletedStatus" = false
     `,
     {
       type: fastify.db.QueryTypes.SELECT,
@@ -1123,6 +1183,7 @@ const getAllOversQuery = async (fastify) => {
       "wrIsPowerPlay" as "isPowerPlay",
       "wrPowerPlayName" as "powerPlayName"
       from "tblOvers" 
+      where "wrIsDelete" = false
       `,
     {
       type: fastify.db.QueryTypes.SELECT,
@@ -1209,6 +1270,7 @@ const getAllCommentaryWicketQuery = async (fastify) => {
     "wrCurrentInnings" as "currentInnings",
     "wrCreatedDate" as "createdDate"
     from "tblCommentaryWickets" 
+    where "wrIsDeletedStatus" = false
     `,
     {
       type: fastify.db.QueryTypes.SELECT,
@@ -1284,6 +1346,7 @@ const getAllCommentaryPartnershipQuery = async (fastify) => {
       "wrP1Run" as "p1Run",
       "wrP2Run" as "p2Run"
       from "tblCommentaryPartnerships"
+      WHERE "wrIsDelete" = false
       `,
     {
       type: fastify.db.QueryTypes.SELECT,
@@ -1619,7 +1682,7 @@ const updateCommentaryDetailsQuery = async (data, fastify, request) => {
         "wrModifyDate" = now(),
         "wrUpdateTime" = now(),
         "wrCommentaryStatus" = $3
-        where "wrCommentaryId" = $2
+        where "wrCommentaryId" = $2 and "wrIsDelete" = false
       `,
       {
         bind: [data.displayStatus, data.commentaryId, data.commentaryStatus],
@@ -1643,7 +1706,7 @@ const updateCommentaryStatusQuery = async (data, fastify, request) => {
         "wrDisplayStatus" = $1,
         "wrModifyDate" = now(),
         "wrUpdateTime" = now()
-        where "wrCommentaryId" = $2
+        where "wrCommentaryId" = $2 and "wrIsDelete" = false
       `,
       {
         bind: [data.displayStatus, data.commentaryId],
@@ -1988,7 +2051,7 @@ const updateBallByBallCommentoriesQuery = async (data, fastify, request) => {
       "wrNextBat_NONStrikeID" = $24,
       "wrIsDelete" = $25
       where "wrCommentaryBallByBallId" = $26
-      AND "wrCurrentInnings" = $27
+      AND "wrCurrentInnings" = $27 AND "wrIsDeletedStatus" = false
       `,
       {
         bind: [
@@ -2208,7 +2271,7 @@ const UpdateCommentaryTimeQuery = async (data, fastify, request) => {
     return await fastify.db.query(
       `update "tblCommentaries" set 
       "wrUpdateTime" = now()
-      where "wrCommentaryId" = $1`,
+      where "wrCommentaryId" = $1 and "wrIsDelete" = false`,
       {
         type: fastify.db.QueryTypes.UPDATE,
         bind: [data.commentaryId],
@@ -2237,7 +2300,7 @@ const getCommentaryID_Socket = async (data, fastify, request) => {
       LEFT JOIN "tblEncryptedData"
       ON "tblCommentaries"."wrCommentaryId" = "tblEncryptedData"."wrKey"
       WHERE
-      "wrUpdateTime" > (CURRENT_TIMESTAMP - INTERVAL '1 second' * $1);`,
+      "wrUpdateTime" > (CURRENT_TIMESTAMP - INTERVAL '1 second' * $1) AND "wrIsDelete" = false;`,
       {
         type: fastify.db.QueryTypes.SELECT,
         bind: [process.env.COMMANTRY_UPDATE_TIME],
@@ -2268,6 +2331,7 @@ const updateCommentaryPlayerIdInCommentaryTeams = async (
       where "wrTeamId" = $3
       AND "wrCommentaryId" = $4
       AND "wrCurrentInnings" = $5
+      AND "wrIsDelete" = false
     
     `;
 
@@ -2279,6 +2343,7 @@ const updateCommentaryPlayerIdInCommentaryTeams = async (
       where "wrTeamId" = $3
       AND "wrCommentaryId" = $4
       AND "wrCurrentInnings" = $5
+      AND "wrIsDelete" = false
     `;
 
     await fastify.db.query(query1, {
@@ -2318,7 +2383,7 @@ const updateMatchTypeInCommentaryQuery = async (data, fastify, request) => {
   try {
     return await fastify.db.query(
       `UPDATE "tblCommentaries" SET "wrMatchTypeId" = $1 WHERE
-      "wrCommentaryId" = $2`,
+      "wrCommentaryId" = $2 AND "wrIsDelete" = false`,
       {
         type: fastify.db.QueryTypes.UPDATE,
         bind: [data.matchTypeId, data.commentaryId],
@@ -2344,6 +2409,7 @@ const changeBowlerInCommentary = async (data, request, fastify) => {
       "wrCommentaryId" =$2
       AND "wrOverId" =$3
       AND "wrCurrentInnings" = $4
+      AND "wrIsDelete" = false
     RETURNING "wrOverId" as "overId"
     `;
     const query2 = `
@@ -2353,6 +2419,7 @@ const changeBowlerInCommentary = async (data, request, fastify) => {
       "wrCommentaryId" =$2
       AND "wrOverId" =$3
       AND "wrCurrentInnings" = $4
+      AND "wrIsDeletedStatus" = false
     RETURNING "wrCommentaryBallByBallId" as "commentaryBallByBallId"
     `;
 
@@ -2363,6 +2430,7 @@ const changeBowlerInCommentary = async (data, request, fastify) => {
       "wrCommentaryId" = $2
       AND "wrOverId" =$3
       AND "wrCurrentInnings" = $4
+      AND "wrIsDeletedStatus" = false
     RETURNING "wrCommentaryWicketId" as "commentaryWicketId"
     `;
 
@@ -2472,7 +2540,7 @@ const getCommentaryBallByBallQuery = async (request, fastify) => {
         "wrCurrentInnings" AS "currentInnings",
         "wrAutoStrikeBallCount" as "autoStrikeBallCount"
     FROM "tblCommentaryBallByBalls"
-    WHERE "wrCommentaryId" = $1
+    WHERE "wrCommentaryId" = $1 AND "wrIsDeletedStatus" = false
     ORDER BY "wrCommentaryBallByBallId" ASC
     `,
     {
@@ -2489,7 +2557,7 @@ const getCommnertySquadPlayersList = async (data, fastify, request) => {
       `WITH CommentaryDetails AS (
         SELECT "wrCommentaryId","wrTeam1Id", "wrTeam2Id", "wrCommentaryStatus","wrCurrentInnings"
         FROM "tblCommentaries"
-        WHERE "wrCommentaryId" =  $1
+        WHERE "wrCommentaryId" =  $1 AND "wrIsDelete" = false
     ),
     TeamPlayers AS (
       SELECT
@@ -2514,7 +2582,7 @@ const getCommnertySquadPlayersList = async (data, fastify, request) => {
                                      AND "tblCommentaryPlayers"."wrTeamId" = t."wrTeamId"
       INNER JOIN "tblPlayers" p ON p."wrPlayerId" = t."wrRefPlayerId"
       INNER JOIN CommentaryDetails ON "tblCommentaryPlayers"."wrTeamId" =  $2
-      WHERE "tblCommentaryPlayers"."wrTeamId" = $2
+      WHERE "tblCommentaryPlayers"."wrTeamId" = $2 AND "wrIsDelete" = false
             AND "tblCommentaryPlayers"."wrCommentaryId" = CommentaryDetails."wrCommentaryId"
             AND p."wrIsActive" = true
             AND "tblCommentaryPlayers"."wrCurrentInnings" = CommentaryDetails."wrCurrentInnings"
@@ -2542,7 +2610,7 @@ const updateShowClientQuery = async (data, request, fastify) => {
       `update "tblCommentaries" set
       "wrIsClientShow" = $1,
       "wrUpdateTime" = now()
-      where "wrCommentaryId" = $2
+      where "wrCommentaryId" = $2 and "wrIsDelete" = false
       `,
       {
         type: fastify.db.QueryTypes.UPDATE,
@@ -2565,7 +2633,7 @@ const updatePlayerShowQuery = async (data, request, fastify) => {
     return await fastify.db.query(
       `update "tblCommentaries" set
       "wrIsPlayersShow" = $1
-      where "wrCommentaryId" = $2
+      where "wrCommentaryId" = $2 and "wrIsDelete" = false
       `,
       {
         type: fastify.db.QueryTypes.UPDATE,
@@ -2591,7 +2659,7 @@ const updateisPredictMarketInCommentaryQuery = async (
   try {
     return await fastify.db.query(
       `UPDATE "tblCommentaries" SET "wrIsPredictMarket" = $1 WHERE
-      "wrCommentaryId" = $2`,
+      "wrCommentaryId" = $2 AND "wrIsDelete" = false`,
       {
         type: fastify.db.QueryTypes.UPDATE,
         bind: [data.isPredictMarket, data.commentaryId],
@@ -2612,7 +2680,7 @@ const updateResultInCommentaryQuery = async (data, fastify, request) => {
   try {
     return await fastify.db.query(
       `UPDATE "tblCommentaries" SET "wrCommentaryResult" = $1 WHERE
-      "wrCommentaryId" = $2`,
+      "wrCommentaryId" = $2 AND "wrIsDelete" = false`,
       {
         type: fastify.db.QueryTypes.UPDATE,
         bind: [data.result, data.commentaryId],
@@ -2676,7 +2744,7 @@ const activeInactiveCommentaryQuery = async (data, fastify, request) => {
     const result = await fastify.db.query(
       `update "tblCommentaries" set
         "wrIsActive" = $1
-        where "wrCommentaryId" = $2
+        where "wrCommentaryId" = $2 and "wrIsDelete" = false
       `,
       {
         bind: [data.isActive, data.commentaryId],
@@ -2699,7 +2767,7 @@ const closeCommentaryQuery = async (data, fastify, request) => {
       `update "tblCommentaries" set
         "wrCommentaryStatus" = $1,
         "wrCommentaryCloseTime" = now()
-        where "wrCommentaryId" = ANY($2)
+        where "wrCommentaryId" = ANY($2) AND "wrIsDelete" = false
       `,
       {
         bind: [4, data.commentaryId],
@@ -2717,10 +2785,13 @@ const closeCommentaryQuery = async (data, fastify, request) => {
     throw new Error(err.message);
   }
 };
-const deleteAllCommentaryQuery = async (fastify) => {
+const deleteAllCommentaryQuery = async (request, fastify) => {
   try {
-    const result = await fastify.db.query(`SELECT delete_all_commentary()`, {
+    const isDelete = true;
+    const deletedBy = request.userTokenInfo.WrUserId;
+    const result = await fastify.db.query(`SELECT delete_all_commentary($1, $2)`, {
       type: fastify.db.QueryTypes.SELECT,
+      bind: [isDelete, deletedBy],
     });
 
     return result;
@@ -2738,7 +2809,7 @@ const updateDelayInCommentaryQuery = async (data, fastify, request) => {
   try {
     return await fastify.db.query(
       `UPDATE "tblCommentaries" SET "wrDelay" = $1 WHERE
-      "wrCommentaryId" = $2`,
+      "wrCommentaryId" = $2 AND "wrIsDelete" = false`,
       {
         type: fastify.db.QueryTypes.UPDATE,
         bind: [data.delay, data.commentaryId],
@@ -2758,7 +2829,7 @@ const updateEventRefIdInCommentaryQuery = async (data, fastify, request) => {
   try {
     return await fastify.db.query(
       `UPDATE "tblCommentaries" SET "wrEventRefId" = $1 WHERE
-      "wrCommentaryId" = $2`,
+      "wrCommentaryId" = $2 AND "wrIsDelete" = false`,
       {
         type: fastify.db.QueryTypes.UPDATE,
         bind: [data.eventRefId, data.commentaryId],
@@ -2776,9 +2847,11 @@ const updateEventRefIdInCommentaryQuery = async (data, fastify, request) => {
 };
 const deleteCommentaryDataQuery = async (data, fastify, request) => {
   try {
+    const isDelete = true;
+    const deletedBy = request.userTokenInfo.WrUserId;
     const result = await fastify.db.query(
       `
-        CALL proc_delete_commentary_data($1,$2,$3,$4)
+        CALL proc_delete_commentary_data($1,$2,$3,$4,$5,$6)
       `,
       {
         type: fastify.db.QueryTypes.DELETE,
@@ -2787,6 +2860,8 @@ const deleteCommentaryDataQuery = async (data, fastify, request) => {
           data.deleteOver || null,
           data.deleteWickets || null,
           data.deletePartnership || null,
+          isDelete,
+          deletedBy,
         ],
       }
     );
@@ -2821,7 +2896,7 @@ const getCommentaryDetailByIdQuery = async (data, fastify) => {
           LEFT JOIN "tblMatchTypes" tm ON tc."wrMatchTypeId" = tm."wrMatchTypeId"
           LEFT JOIN "tblEventTypes" te ON tc."wrEventTypeId" = te."wrEventTypeId"
           LEFT JOIN "tblCompetitions" tco ON tc."wrCompetitionId" = tco."wrCompetitionId"
-          WHERE "wrCommentaryId" = $1    
+          WHERE "wrCommentaryId" = $1 AND "wrIsDelete" = false  
       `,
       {
         type: fastify.db.QueryTypes.SELECT,
@@ -2845,7 +2920,7 @@ const updateMaxOverDetailQuery = async (data, fastify, request) => {
     const query = `
         update "tblCommentaryTeams" set
         "wrTeamMaxOver" = $1
-        where "wrCommentaryId" = $2
+        where "wrCommentaryId" = $2 AND "wrIsDelete" = false
     `;
 
     const result = await fastify.db.query(query, {
@@ -2871,7 +2946,7 @@ const updateSuperOverCommentaryQuery = async (data, fastify) => {
       `update "tblCommentaries" set 
       "wrCurrentInnings" = $2
       ,"wrCommentaryStatus" = 2
-      where "wrCommentaryId" = $1	
+      where "wrCommentaryId" = $1	and "wrIsDelete" = false
       `,
       {
         bind: [
@@ -2961,7 +3036,7 @@ const updateCommentaryBattingTeamQuery = async (data, fastify) => {
      await fastify.db.query(
       `update "tblCommentaryTeams" set 
       "wrTeamStatus" = 1
-      where "wrCommentaryId" = $1 AND "wrCurrentInnings" = $2 AND "wrTeamId" = $3
+      where "wrCommentaryId" = $1 AND "wrCurrentInnings" = $2 AND "wrTeamId" = $3 AND "wrIsDelete" = false
       `,
       {
         bind: [
@@ -2977,7 +3052,7 @@ const updateCommentaryBattingTeamQuery = async (data, fastify) => {
     await fastify.db.query(
       `update "tblCommentaryTeams" set 
       "wrTeamStatus" = 2
-      where "wrCommentaryId" = $1 AND "wrCurrentInnings" = $2 AND "wrTeamId" <> $3
+      where "wrCommentaryId" = $1 AND "wrCurrentInnings" = $2 AND "wrTeamId" <> $3 AND "wrIsDelete" = false
       `,
       {
         bind: [
@@ -3034,7 +3109,7 @@ const updateCommentaryTeamPredictionPrecentageQuery = async (data, fastify) => {
      await fastify.db.query(
       `update "tblCommentaryTeams" set 
       "wrTeamPredictionPercentage" = $1
-      where "wrCommentaryId" = $2 AND "wrCurrentInnings" = $3 AND "wrCommentaryTeamId" = $4
+      where "wrCommentaryId" = $2 AND "wrCurrentInnings" = $3 AND "wrCommentaryTeamId" = $4 AND "wrIsDelete" = false
       `,
       {
         bind: [
@@ -3082,7 +3157,8 @@ const updateTeamPrediction = async (request, fastify) => {
   try {
     // Get wrTeam1Id, wrTeam2Id, and wrIsTeamPredictionOn from tblCommentaries
     const result = await fastify.db.query(
-      `SELECT "wrTeam1Id", "wrTeam2Id", "wrIsTeamPredictionOn" FROM "tblCommentaries" WHERE "wrCommentaryId" = $1`,
+      `SELECT "wrTeam1Id", "wrTeam2Id", "wrIsTeamPredictionOn" FROM "tblCommentaries" WHERE "wrCommentaryId" = $1
+      AND "wrIsDelete" = false`,
       {
         type: fastify.db.QueryTypes.SELECT,
         bind: [commentaryId],
@@ -3100,7 +3176,7 @@ const updateTeamPrediction = async (request, fastify) => {
 
     // Update wrIsTeamPredictionOn in tblCommentaries
     await fastify.db.query(
-      `UPDATE "tblCommentaries" SET "wrIsTeamPredictionOn" = $1 WHERE "wrCommentaryId" = $2`,
+      `UPDATE "tblCommentaries" SET "wrIsTeamPredictionOn" = $1 WHERE "wrCommentaryId" = $2 AND "wrIsDelete" = false`,
       {
         type: fastify.db.QueryTypes.UPDATE,
         bind: [newWrIsTeamPredictionOn, commentaryId],
@@ -3159,7 +3235,7 @@ const updateLineRationQuery = async (data, request, fastify) => {
     return await fastify.db.query(
       `update "tblCommentaries" set
       "wrLineRatio" = $1
-      where "wrCommentaryId" = $2`,
+      where "wrCommentaryId" = $2 and "wrIsDelete" = false`,
       {
         bind: [data.lineRatio, data.commentaryId],
       }

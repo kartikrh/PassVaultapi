@@ -149,7 +149,7 @@ const getAllEventMarketsService = async (request, fastify) => {
     endDate,
     rateSourceRefId
   } = request.body;
-  let createWhereStatus = `tem."wrStatus" NOT IN (${EventMarketStatus.Close},${EventMarketStatus.Settled},${EventMarketStatus.Cancel})`;
+  let createWhereStatus = `tem."wrStatus" NOT IN (${EventMarketStatus.Close},${EventMarketStatus.Settled},${EventMarketStatus.Cancel}) AND tc."wrIsDelete" = false`;
 
   if (status !== undefined && status != 0) {
     createWhereStatus = `tem."wrStatus" = ${status}`;
@@ -381,7 +381,7 @@ const marketListResultFalseService = async (request, fastify) => {
   //     item.status == EventMarketStatus.Settled
   //   );
   // });
-  let createWhereStatus = `tem."wrIsResult" = false AND tem."wrResult" IS NOT NULL AND tem."wrStatus" = ${EventMarketStatus.Settled}`;
+  let createWhereStatus = `tem."wrIsResult" = false AND tem."wrResult" IS NOT NULL AND tem."wrStatus" = ${EventMarketStatus.Settled} AND tc."wrIsDelete" = false`;
   if (rateSourceRefId && rateSourceRefId != 0) {
     createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrRateSource" = ${rateSourceRefId}` : `tem."wrRateSource" = ${rateSourceRefId}`;
   }

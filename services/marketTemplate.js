@@ -325,7 +325,7 @@ const cloneMarketTemplateService = async (request, fastify) => {
 
 const validateTemplateRunners = global.tblMarketTemplateRunners.filter(
   (item) => item.marketTemplateId === marketTemplateId
-).sort((a, b) => a.order - b.order);
+).sort((a, b) => a.marketTemplateRunnerId - b.marketTemplateRunnerId);
 
 if (validateTemplateRunners && validateTemplateRunners.length > 0) {
   for (const elem of validateTemplateRunners) {
