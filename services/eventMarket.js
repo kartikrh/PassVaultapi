@@ -1565,9 +1565,7 @@ const getDetailsByCIdV1Service = async (request, fastify) => {
     }
     return isMatchTypeIdMatch;
   });
-  // const marketTemplate = global.tblMarketTemplate.filter(
-  //   (item) => item.matchTypeID === commentary.matchTypeId
-  // );
+
   for (temp of marketTemplate) {
     if(temp.isPredefineRunnerValue == true){
       // find the runner value
