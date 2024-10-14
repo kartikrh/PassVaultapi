@@ -183,6 +183,7 @@ const updateMarketTemplateService = async (request, fastify) => {
     isDefaultBetAllowed: request.body.isDefaultBetAllowed || false,
     isDefaultMarketActive: request.body.isDefaultMarketActive || false,
     isPerEvent: request.body.isPerEvent !== undefined ? Boolean(request.body.isPerEvent) : marketTemplate.isPerEvent,
+    isShowInAdvanceMarket: request.body.isShowInAdvanceMarket !== undefined ? request.body.isShowInAdvanceMarket : marketTemplate.isShowInAdvanceMarket,
   };
   // update marketTemplate
   await updateMarketTemplateQuery(body, fastify, request);
