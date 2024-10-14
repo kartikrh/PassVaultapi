@@ -209,15 +209,15 @@ const decryptEncryptionId = async (encryptionKey , fastify) =>{
  }
 }
 const EventMarketStatus = {
+  NotOpen :	0,
   Open:	1,
   Inactive:	2,
   Suspend:	3,
   Close:	4,
   Settled	:5,
   Cancel:	6,
-  NotOpen :	7,
-  WIN : 8,
-  LOSE : 9,
+  WIN : 7,
+  LOSE : 8,
 }
 
 const EventMarketRateSource = {
