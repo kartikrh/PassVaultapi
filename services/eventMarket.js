@@ -35,7 +35,8 @@ const {
   updateEventMarketRateQueryV1,
   getEventMarketByIdsQueryV1,
   getMarketListByCIdQueryV1,
-  getMarketWithRunnerQuery
+  getMarketWithRunnerQuery,
+  updateResultMultiMarketQuery
 } = require("../repository/TableEventMarkets");
 const { getRunnerByIdQuery, setResultInRunnerMarketQuery, getRunnerByMarketQuery } = require("../repository/TableMarketRunner");
 const configConstants = require("../utilities/configConstants");
@@ -153,10 +154,10 @@ const getAllEventMarketsService = async (request, fastify) => {
   } = request.body;
   let createWhereStatus = `tem."wrStatus" NOT IN (${EventMarketStatus.Close},${EventMarketStatus.Settled},${EventMarketStatus.Cancel}) AND tc."wrIsDelete" = false`;
 
-  if (status !== undefined && status != 0) {
+  if (status !== undefined && status != -1) {
     createWhereStatus = `tem."wrStatus" = ${status}`;
   }
-  if (status != undefined && status == 0) {
+  if (status != undefined && status == -1) {
     createWhereStatus = null;
   }
   if (rateSourceRefId && rateSourceRefId != 0) {
@@ -2041,6 +2042,59 @@ const pendingMultiRunnerMarketsService = async (request, fastify) => {
 
   return eventMarket;
 };
+const updateMarketResultService = async (request, fastify) => {
+  const { eventMarketId, isResult, result } = request.body;
+
+  let run = await getRunnerByIdQuery(
+    fastify,
+    request,
+    `"wrRunnerId" = ${result} AND "wrEventMarketId" = ${eventMarketId}`
+  );
+  if(!run){
+    throw new Error("Runner with this id not Found");
+  }
+  await updateResultMultiMarketQuery(request.body, request, fastify);
+  if (isResult && result) {
+    marketLogger(
+      {
+        eventMarketId,
+        actionType: MarketActionType.setAndFinalizeResult,
+        value: isResult,
+      },
+      request,
+      fastify
+    ).catch((err) => {
+      console.log("market data logger console", err);
+      errorLogger(
+        fastify,
+        err.message,
+        "ERROR --> services/commentary.js/updateMarketResultService",
+        request
+      );
+    });;
+  }
+  if (!isResult && result) {
+    marketLogger(
+      {
+        eventMarketId,
+        actionType: MarketActionType.setResult,
+        value: isResult,
+      },
+      request,
+      fastify
+    ).catch((err) => {
+      console.log("market data logger console", err);
+      errorLogger(
+        fastify,
+        err.message,
+        "ERROR --> services/commentary.js/updateMarketResultService",
+        request
+      );
+    });
+  }
+
+  return "Event Market updated successfully";
+};
 module.exports = {
   getDetailsByCIdService,
   getAllEventMarketsService,
@@ -2079,5 +2133,6 @@ module.exports = {
   updateMarketRateServiceV1,
   marketListByCIdServiceV1,
   getRunnerByMarketService,
-  pendingMultiRunnerMarketsService
+  pendingMultiRunnerMarketsService,
+  updateMarketResultService
 };
