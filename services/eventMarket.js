@@ -36,6 +36,7 @@ const {
   getEventMarketByIdsQueryV1,
   getMarketListByCIdQueryV1
 } = require("../repository/TableEventMarkets");
+const { getRunnerByIdQuery, setResultInRunnerMarketQuery, getRunnerByMarketQuery } = require("../repository/TableMarketRunner");
 const configConstants = require("../utilities/configConstants");
 const {
   EventMarketStatus,
@@ -905,18 +906,31 @@ const changeMarketResultService = async (request, fastify) => {
     request,
     fastify
   );
-  // const currentStatus = global.tblEventMarkets[eventMarket].status;
-  // const currentResult = global.tblEventMarkets[eventMarket].result;
-  const currentStatus = eventMarket[0].status;
-  const currentResult = eventMarket[0].result;
-  if (currentStatus === EventMarketStatus.Close && currentResult == null) {
-    await changeMarketResultQuery(request.body, request, fastify);
-    // global.tblEventMarkets[eventMarket].result = result;
+  // check marketType 
+  let marketType = global.tblMarketTypes.find(
+    (item) => item.marketTypeId === eventMarket[0].marketTypeId
+  );
+  if (marketType && (marketType.marketTypeName.toLowerCase() === "line market" || marketType.marketTypeName.toLowerCase() === "session market")) {
+    const currentStatus = eventMarket[0].status;
+    const currentResult = eventMarket[0].result;
+    if (currentStatus === EventMarketStatus.Close && currentResult == null) {
+      await changeMarketResultQuery(request.body, request, fastify);
+      // global.tblEventMarkets[eventMarket].result = result;
+      return "Market result updated successfully";
+    } else {
+      throw new Error(
+        "Market is not closed or result is already set, so it cannot be updated"
+      );
+    }
+  }
+  else {
+    // check the runnerId in request
+    let data = await getRunnerByIdQuery(fastify, request , `"wrEventMarketId" = ${eventMarketId} AND "wrRunnerId" = ${result}`);
+     if(!data){
+      throw new Error("Runner with this id not Found");
+    }
+    await setResultInRunnerMarketQuery(request.body, request, fastify);
     return "Market result updated successfully";
-  } else {
-    throw new Error(
-      "Market is not closed or result is already set, so it cannot be updated"
-    );
   }
 };
 const changeMarketCloseService = async (request, fastify) => {
@@ -1949,6 +1963,10 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
   };
 
 };
+const getRunnerByMarketService = async (request, fastify) => {
+  let data = await getRunnerByMarketQuery(request, fastify);
+  return data;
+}
 module.exports = {
   getDetailsByCIdService,
   getAllEventMarketsService,
@@ -1985,5 +2003,6 @@ module.exports = {
   getDetailsByCIdV1Service,
   createEventMarketsServiceV1,
   updateMarketRateServiceV1,
-  marketListByCIdServiceV1
+  marketListByCIdServiceV1,
+  getRunnerByMarketService
 };

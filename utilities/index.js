@@ -216,6 +216,8 @@ const EventMarketStatus = {
   Settled	:5,
   Cancel:	6,
   NotOpen :	7,
+  WIN : 8,
+  LOSE : 9,
 }
 
 const EventMarketRateSource = {
