@@ -902,7 +902,7 @@ const changeMarketResultService = async (request, fastify) => {
   let marketType = global.tblMarketTypes.find(
     (item) => item.marketTypeId === eventMarket[0].marketTypeId
   );
-  if (marketType && (marketType.marketTypeName.toLowerCase() === "line market" || marketType.marketTypeName.toLowerCase() === "session market")) {
+  if (marketType && (marketType.marketTypeName.toLowerCase() === "line market" || marketType.marketTypeName.toLowerCase() === "fancy")) {
     const currentStatus = eventMarket[0].status;
     const currentResult = eventMarket[0].result;
     if (currentStatus === EventMarketStatus.Close && currentResult == null) {
