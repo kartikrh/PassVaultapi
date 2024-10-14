@@ -183,6 +183,7 @@ const updateMarketTemplateService = async (request, fastify) => {
     isDefaultBetAllowed: request.body.isDefaultBetAllowed || false,
     isDefaultMarketActive: request.body.isDefaultMarketActive || false,
     isPerEvent: request.body.isPerEvent !== undefined ? Boolean(request.body.isPerEvent) : marketTemplate.isPerEvent,
+    isShowInAdvanceMarket: request.body.isShowInAdvanceMarket !== undefined ? request.body.isShowInAdvanceMarket : marketTemplate.isShowInAdvanceMarket,
   };
   // update marketTemplate
   await updateMarketTemplateQuery(body, fastify, request);
@@ -325,7 +326,7 @@ const cloneMarketTemplateService = async (request, fastify) => {
 
 const validateTemplateRunners = global.tblMarketTemplateRunners.filter(
   (item) => item.marketTemplateId === marketTemplateId
-).sort((a, b) => a.order - b.order);
+).sort((a, b) => a.marketTemplateRunnerId - b.marketTemplateRunnerId);
 
 if (validateTemplateRunners && validateTemplateRunners.length > 0) {
   for (const elem of validateTemplateRunners) {

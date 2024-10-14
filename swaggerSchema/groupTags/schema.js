@@ -3228,6 +3228,7 @@ const MarketTemplate = {
           templateType: { type: "integer" },
           isDefaultBetAllowed: { type: "boolean" },
           isDefaultMarketActive: { type: "boolean" },
+          isShowInAdvanceMarket: { type: "boolean" },
         },
         required: [
           "marketTemplateId",

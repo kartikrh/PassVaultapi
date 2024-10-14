@@ -1638,7 +1638,7 @@ const testStoreProcedureService = async (request, fastify) => {
 
     let updatedData = await fastify.db.query(
       `CALL proc_setcommentary(
-      $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11 ,$12,$13,$14 ,$15
+      $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11 ,$12,$13,$14 ,$15, $16, $17
     )`,
       {
         bind: [
@@ -1657,6 +1657,8 @@ const testStoreProcedureService = async (request, fastify) => {
           null, // commentaryWicketDetails,
           null, // commentaryPartnershipDetails,
           null, // commentaryDetailsDetails,
+          deleteCommentaryBallByBallId || deleteOverId ? true : false,
+          deleteCommentaryBallByBallId || deleteOverId ? request.userTokenInfo.WrUserId : null,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -2431,7 +2433,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
 
     let updatedData = await fastify.db.query(
       `CALL proc_setcommentary(
-      $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11 ,$12,$13,$14 ,$15
+      $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11 ,$12,$13,$14 ,$15, $16, $17
     )`,
       {
         bind: [
@@ -2450,6 +2452,8 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           null, // commentaryWicketDetails,
           null, // commentaryPartnershipDetails,
           null, // commentaryDetailsDetails,
+          deleteCommentaryBallByBallId || deleteOverId ? true : false,
+          deleteCommentaryBallByBallId || deleteOverId ? request.userTokenInfo.WrUserId : null,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -7994,7 +7998,7 @@ const closeCommentaryService = async (request, fastify) => {
   };
 };
 const deleteAllCommentaryService = async (request, fastify) => {
-  await deleteAllCommentaryQuery(fastify);
+  await deleteAllCommentaryQuery(request, fastify);
 
   global.tblCommentaries = [];
   global.tblCommentaryTeams = [];

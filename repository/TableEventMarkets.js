@@ -7,6 +7,9 @@ const { errorLogger, marketDataLogger } = require("../utilities/logger");
 const { getPagination } = require("../utilities");
 
 const getAllEventMarketsQuery = async (fastify, whereCondition = null) => {
+  if(whereCondition === null){
+    whereCondition = `tc."wrIsDelete" = false`
+  }
   return await fastify.db.query(
     `SELECT
         "wrID" AS "eventMarketId",
@@ -246,7 +249,7 @@ const getEventMarketByIdsQuery = async (data, request, fastify) => {
         LEFT JOIN "tblEventTypes" tet ON tet."wrEventTypeId" = tc."wrEventTypeId"
         LEFT JOIN "tblMarketRunners" tr ON tr."wrEventMarketId" = tem."wrID"
         LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = tem."wrTeamID"
-        WHERE tem."wrID" = ANY($1)`,
+        WHERE tem."wrID" = ANY($1) AND tc."wrIsDelete" = false`,
       {
         type: fastify.db.QueryTypes.SELECT,
         bind: [data.eventMarketIds],
@@ -2642,7 +2645,7 @@ const getEventMarketByIdsQueryV1 = async (data, request, fastify) => {
       LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
       LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = tem."wrTeamID"
       LEFT JOIN "tblMarketRunners" tmr ON tmr."wrEventMarketId" = tem."wrID"
-      WHERE tem."wrID" = ANY($1)
+      WHERE tem."wrID" = ANY($1) AND tc."wrIsDelete" = false
       GROUP BY tem."wrID", tc."wrEventName", tc."wrEventDate", tt."wrTeamName"
     `,
     {

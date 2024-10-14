@@ -150,7 +150,7 @@ const getAllEventMarketsService = async (request, fastify) => {
     endDate,
     rateSourceRefId
   } = request.body;
-  let createWhereStatus = `tem."wrStatus" NOT IN (${EventMarketStatus.Close},${EventMarketStatus.Settled},${EventMarketStatus.Cancel})`;
+  let createWhereStatus = `tem."wrStatus" NOT IN (${EventMarketStatus.Close},${EventMarketStatus.Settled},${EventMarketStatus.Cancel}) AND tc."wrIsDelete" = false`;
 
   if (status !== undefined && status != 0) {
     createWhereStatus = `tem."wrStatus" = ${status}`;
@@ -382,7 +382,7 @@ const marketListResultFalseService = async (request, fastify) => {
   //     item.status == EventMarketStatus.Settled
   //   );
   // });
-  let createWhereStatus = `tem."wrIsResult" = false AND tem."wrResult" IS NOT NULL AND tem."wrStatus" = ${EventMarketStatus.Settled}`;
+  let createWhereStatus = `tem."wrIsResult" = false AND tem."wrResult" IS NOT NULL AND tem."wrStatus" = ${EventMarketStatus.Settled} AND tc."wrIsDelete" = false`;
   if (rateSourceRefId && rateSourceRefId != 0) {
     createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrRateSource" = ${rateSourceRefId}` : `tem."wrRateSource" = ${rateSourceRefId}`;
   }
@@ -1527,7 +1527,7 @@ const getMarketTypeCategoryService = async (request, fastify) => {
 }
 
 const getDetailsByCIdV1Service = async (request, fastify) => {
-  const { commentaryId } = request.body;
+  const { commentaryId, isShowInAdvanceMarket } = request.body;
   const commentary = global.tblCommentaries.find(
     (item) => item.commentaryId === commentaryId
   );
@@ -1572,9 +1572,14 @@ const getDetailsByCIdV1Service = async (request, fastify) => {
     }
   }
 
-  const marketTemplate = global.tblMarketTemplate.filter(
-    (item) => item.matchTypeID === commentary.matchTypeId
-  );
+  const marketTemplate = global.tblMarketTemplate.filter((item) => {
+    const isMatchTypeIdMatch = item.matchTypeID === commentary.matchTypeId;
+    if (request.body.isShowInAdvanceMarket !== undefined) {
+      return isMatchTypeIdMatch && item.isShowInAdvanceMarket == request.body.isShowInAdvanceMarket;
+    }
+    return isMatchTypeIdMatch;
+  });
+
   for (temp of marketTemplate) {
     if(temp.isPredefineRunnerValue == true){
       // find the runner value
