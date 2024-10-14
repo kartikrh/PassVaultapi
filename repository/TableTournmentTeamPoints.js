@@ -183,8 +183,6 @@ const activeInactiveTournamentTeamPointsQuery = async (data, request, fastify) =
       }
     );
   } catch (err) {
-    console.log(err);
-    
     errorLogger(
       fastify,
       err.message,

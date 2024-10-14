@@ -3317,6 +3317,21 @@ const MarketTemplate = {
       },
     },
   },
+  isShowInAdvanceMarket: {
+    schema: {
+      tags: ["Market Template"],
+      description: "update isShowInAdvanceMarket status for Market Template",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          marketTemplateId: { type: "integer" },
+          isShowInAdvanceMarket: { type: "boolean" },
+        },
+        required: ["marketTemplateId", "isShowInAdvanceMarket"],
+      },
+    },
+  },
 };
 const Score = {
   getAllUpdatedIds: {

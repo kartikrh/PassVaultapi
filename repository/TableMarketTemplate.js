@@ -583,11 +583,33 @@ const updateIsPerEventStatusQuery = async (request, fastify) => {
       }
     );
   } catch (err) {
-    // console.log("err", err)
     errorLogger(
       fastify,
       err.message,
       "DB ERROR --> repository/TableMarketTemplate/updateIsPerEventStatusQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const isShowInAdvanceMarketChangeStatusQuery = async (request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `
+                update "tblMarketTemplates" set
+                "wrIsShowInAdvanceMarket" = $1
+                where "wrID" = $2
+            `,
+      {
+        bind: [request.body.isShowInAdvanceMarket, request.body.marketTemplateId],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableMarketTemplate.js/isShowInAdvanceMarketChangeStatusQuery",
       request
     );
     throw new Error(err.message);
@@ -605,4 +627,5 @@ module.exports = {
   changePredefineRunnerQuery,
   updateIsPerEventStatusQuery,
   insertMarketTemplateInCloneQuery,
+  isShowInAdvanceMarketChangeStatusQuery
 };

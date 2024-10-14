@@ -7998,7 +7998,7 @@ const closeCommentaryService = async (request, fastify) => {
   };
 };
 const deleteAllCommentaryService = async (request, fastify) => {
-  await deleteAllCommentaryQuery(request, fastify);
+  await deleteAllCommentaryQuery(fastify);
 
   global.tblCommentaries = [];
   global.tblCommentaryTeams = [];
