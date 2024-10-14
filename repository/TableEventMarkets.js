@@ -1852,6 +1852,49 @@ const UpdateResulOrApproveEventMarketQuery = async (data, request, fastify) => {
     throw new Error(error.message);
   }
 };
+const updateResultMultiMarketQuery = async (data, request, fastify) => {
+  try {
+    if (data.isResult && data.result != null) {
+      const query = `UPDATE "tblEventMarkets" SET "wrIsResult" = $1, "wrResult" = $2 WHERE "wrID" = $3`;
+      await fastify.db.query(query, {
+        bind: [data.isResult, data.result, data.eventMarketId],
+        type: fastify.db.QueryTypes.SELECT,
+      });
+    }
+    if (!data.isResult && data.result != null) {
+      const query = `UPDATE "tblEventMarkets" SET "wrResult" = $1 WHERE "wrID" = $2`;
+       await fastify.db.query(query, {
+        bind: [data.result, data.eventMarketId],
+        type: fastify.db.QueryTypes.SELECT,
+      });
+    }
+    let q1 = `
+      UPDATE "tblMarketRunners" SET
+        "wrSelectionStatus" = $1
+      WHERE "wrRunnerId" = $2
+    `;
+    await fastify.db.query(q1, {
+      bind: [EventMarketStatus.WIN, data.result],
+      type: fastify.db.QueryTypes.SELECT,
+    });
+    const q2 = `UPDATE "tblMarketRunners" SET "wrSelectionStatus" = $1 WHERE
+    "wrEventMarketId" = $2 AND 
+    "wrRunnerId" != $3`;
+    await fastify.db.query(q2, {
+      bind: [EventMarketStatus.LOSE, data.eventMarketId, data.result],
+      type: fastify.db.QueryTypes.SELECT,
+    });
+    return true;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/UpdateResulOrApproveEventMarketQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+};
 const updateComInMarketQuery = async (data, request, fastify) => {
   try {
     let { eventRefId, commentaryId } = data;
@@ -2246,6 +2289,7 @@ const getEventMarketsQuery = async (fastify, whereCondition = null) => {
           "wrIsResult" as "isResult",
           tem."wrLastUpdate" as "lastUpdate",
           tmt."wrMarketTypeName" as "marketTypeName", 
+          tem."wrMarketTypeId" as "marketTypeId",
           tmr."wrRunner" as "resultRunner"
       FROM "tblEventMarkets" tem
       LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
@@ -2775,5 +2819,6 @@ module.exports = {
   updateEventMarketRateQueryV1,
   getEventMarketByIdsQueryV1,
   getMarketListByCIdQueryV1,
-  getMarketWithRunnerQuery
+  getMarketWithRunnerQuery,
+  updateResultMultiMarketQuery
 }
