@@ -3809,6 +3809,20 @@ const EventMarket = {
       },
     },
   },
+  getRunnerByMarket:{
+    schema : {
+      tags : ["EventMarket"],
+      description : "get Runner by market",
+      security : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          eventMarketId : {type : "integer"}
+        },
+        required : ["eventMarketId"]
+      }
+    }
+  },
   byId: {
     tags: ["EventMarket"],
     description: "get market by id",

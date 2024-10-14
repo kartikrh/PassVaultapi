@@ -2310,12 +2310,14 @@ const getEventMarketsQuery = async (fastify, whereCondition = null) => {
           tem."wrDelay" as "delay",
           tem."wrLineRatio" as "lineRatio",
           tem."wrRateSource" as "rateSource",
-          tem."wrRateSourceRefID" as "rateSourceRefID"
+          tem."wrRateSourceRefID" as "rateSourceRefID",
+          tmt."wrMarketTypeName" as "marketTypeName"
       FROM "tblEventMarkets" tem
       LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
       LEFT JOIN "tblCompetitions" tcom ON tcom."wrCompetitionId" = tc."wrCompetitionId"
       LEFT JOIN "tblEventTypes" tet ON tet."wrEventTypeId" = tc."wrEventTypeId"
       LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = tem."wrTeamID"
+      LEFT JOIN "tblMarketTypes" tmt ON tmt."wrId" = tem."wrMarketTypeId"
       ${whereCondition ? `WHERE ${whereCondition}` : ""}`,
       {
       type: fastify.db.QueryTypes.SELECT,
