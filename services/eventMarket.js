@@ -34,7 +34,8 @@ const {
   upsertEventMarketSPQueryV1,
   updateEventMarketRateQueryV1,
   getEventMarketByIdsQueryV1,
-  getMarketListByCIdQueryV1
+  getMarketListByCIdQueryV1,
+  getMarketWithRunnerQuery
 } = require("../repository/TableEventMarkets");
 const { getRunnerByIdQuery, setResultInRunnerMarketQuery, getRunnerByMarketQuery } = require("../repository/TableMarketRunner");
 const configConstants = require("../utilities/configConstants");
@@ -199,13 +200,6 @@ const getAllEventMarketsService = async (request, fastify) => {
       );
     });
   }
-  // if (status !== undefined) {
-  //   eventMarket = eventMarket.filter((item) => item.status === status);
-  // }
-  // if (isActive !== undefined) {
-  //   eventMarket = eventMarket.filter((item) => item.isActive === isActive);
-  // }
-  eventMarket = eventMarket.sort((a, b) => b.eventMarketId - a.eventMarketId);
   return eventMarket;
 };
 const getEventMarketByIdService = async (request, fastify) => {
@@ -375,16 +369,14 @@ const marketListResultFalseService = async (request, fastify) => {
     endDate,
     rateSourceRefId
   } = request.body;
-  // let eventMarket = global.tblEventMarkets.filter((item) => {
-  //   return (
-  //     item.isResult === false &&
-  //     item.result !== null &&
-  //     item.status == EventMarketStatus.Settled
-  //   );
-  // });
+  
   let createWhereStatus = `tem."wrIsResult" = false AND tem."wrResult" IS NOT NULL AND tem."wrStatus" = ${EventMarketStatus.Settled} AND tc."wrIsDelete" = false`;
   if (rateSourceRefId && rateSourceRefId != 0) {
     createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrRateSource" = ${rateSourceRefId}` : `tem."wrRateSource" = ${rateSourceRefId}`;
+  }
+  let mt = global.tblMarketTypes.filter((item) => item.marketTypeName.toLowerCase() === "line market" || item.marketTypeName.toLowerCase() === "fancy").map(item => item.marketTypeId);
+  if(mt.length > 0){
+    createWhereStatus += ` AND tem."wrMarketTypeId" IN (${mt.join(",")})`;
   }
   let eventMarket = await getAllEventMarketsQuery(
     fastify,
@@ -1972,6 +1964,83 @@ const getRunnerByMarketService = async (request, fastify) => {
   let data = await getRunnerByMarketQuery(request, fastify);
   return data;
 }
+const pendingMultiRunnerMarketsService = async (request, fastify) => {
+  const {
+    isActive,
+    eventTypeId,
+    competitionId,
+    eventId,
+    status,
+    startDate,
+    endDate,
+    rateSourceRefId
+  } = request.body;
+
+  let mt = global.tblMarketTypes.filter(
+    (item) => item.marketTypeName.toLowerCase() === "fancy" || item.marketTypeName.toLowerCase() === "linemarket"
+  ).map((item) => item.marketTypeId);
+  
+  let createWhereStatus = `tem."wrIsResult" = false AND tem."wrResult" IS NOT NULL AND tem."wrStatus" = ${EventMarketStatus.Settled} AND tc."wrIsDelete" = false`;
+  if(mt.length > 0){
+    createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrMarketTypeId" NOT IN (${mt.join(",")})` : `tem."wrMarketTypeId" NOT IN (${mt.join(",")}`;
+  }
+  if (rateSourceRefId && rateSourceRefId != 0) {
+    createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrRateSource" = ${rateSourceRefId}` : `tem."wrRateSource" = ${rateSourceRefId}`;
+  }
+  if(mt.length > 0){
+    createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrMarketTypeId" NOT IN (${mt.join(",")})` : `tem."wrMarketTypeId" NOT IN (${mt.join(",")})`;
+  }
+  let eventMarket = await getMarketWithRunnerQuery(
+    fastify,
+    createWhereStatus
+  );
+
+  
+  if (eventTypeId) {
+    // get the commentaryId from tblCommentaries
+    let commentaryId = global.tblCommentaries
+      .filter((item) => item.eventTypeId === eventTypeId)
+      .map((item) => item.commentaryId);
+    eventMarket = eventMarket.filter((item) =>
+      commentaryId.includes(item.commentaryId)
+    );
+  }
+  if (competitionId) {
+    // get the commentaryId from tblCommentaries
+    let commentaryId = global.tblCommentaries
+      .filter((item) => item.competitionId === competitionId)
+      .map((item) => item.commentaryId);
+    eventMarket = eventMarket.filter((item) =>
+      commentaryId.includes(item.commentaryId)
+    );
+  }
+  if (eventId) {
+    // get the commentaryId from tblCommentaries
+    let commentaryId = global.tblCommentaries
+      .filter((item) => item.eventId === eventId)
+      .map((item) => item.commentaryId);
+    eventMarket = eventMarket.filter((item) =>
+      commentaryId.includes(item.commentaryId)
+    );
+  }
+  // add dateFilter if provided
+  if (startDate && endDate) {
+    eventMarket = eventMarket?.filter((item) => {
+      return (
+        new Date(item.eventDate) >= new Date(startDate) &&
+        new Date(item.eventDate) <= new Date(endDate)
+      );
+    });
+  }
+  if (status !== undefined) {
+    eventMarket = eventMarket.filter((item) => item.status === status);
+  }
+  // if (isActive !== undefined) {
+  //   eventMarket = eventMarket.filter((item) => item.isActive === isActive);
+  // }
+
+  return eventMarket;
+};
 module.exports = {
   getDetailsByCIdService,
   getAllEventMarketsService,
@@ -2009,5 +2078,6 @@ module.exports = {
   createEventMarketsServiceV1,
   updateMarketRateServiceV1,
   marketListByCIdServiceV1,
-  getRunnerByMarketService
+  getRunnerByMarketService,
+  pendingMultiRunnerMarketsService
 };
