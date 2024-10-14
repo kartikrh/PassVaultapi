@@ -2785,13 +2785,10 @@ const closeCommentaryQuery = async (data, fastify, request) => {
     throw new Error(err.message);
   }
 };
-const deleteAllCommentaryQuery = async (request, fastify) => {
+const deleteAllCommentaryQuery = async (fastify) => {
   try {
-    const isDelete = true;
-    const deletedBy = request.userTokenInfo.WrUserId;
-    const result = await fastify.db.query(`SELECT delete_all_commentary($1, $2)`, {
+    const result = await fastify.db.query(`SELECT delete_all_commentary()`, {
       type: fastify.db.QueryTypes.SELECT,
-      bind: [isDelete, deletedBy],
     });
 
     return result;
