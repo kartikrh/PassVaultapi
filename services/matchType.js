@@ -34,11 +34,6 @@ const createMatchTypeService = async (request, fastify) => {
     fastify,
     request
   );
-  const validate = global.tblMatchTypePredictor.filter((item) => item.matchTypeId === request.body.matchTypeId);
-  if(validate.length > 0 ){
-     const sumOfRPB = await updateSumOfRunPerBallQuery(request.body.matchTypeId, fastify, request);
-     data.sumOfRunPerBall = sumOfRPB     
-  }
 
   global.tblMatchTypes.push(data);
   return data;

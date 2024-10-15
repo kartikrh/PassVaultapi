@@ -46,6 +46,7 @@ const savePredictorDataService = async (request, fastify) => {
       (item) => item.matchTypeId !== request.body.matchTypeId
     );
   }
+  if(request.body.predictorData.length > 0){
   const data = await createMatchTypePredictorQuery(
     {
       ...request.body,
@@ -54,13 +55,22 @@ const savePredictorDataService = async (request, fastify) => {
     fastify
   );
   global.tblMatchTypePredictor.push(...data);
-  await updateSumOfRunPerBallQuery(request.body.matchTypeId, fastify, request);
+  const sumOfRPB = await updateSumOfRunPerBallQuery(request.body.matchTypeId, fastify, request);
+  const index = global.tblMatchTypes.findIndex(
+    (item) => item.matchTypeId === request.body.matchTypeId
+  );
+  
+  if(index != -1){
+    global.tblMatchTypes[index].sumOfRunPerBall = sumOfRPB
+  }
   // Add callPrediction to the data object
   const result = {
     ...data,
     callPrediction,
   };
   return result;
+ }
+ return { callPrediction }
 };
 const getAllPredictorDataService = async (request, fastify) => {
   return global.tblMatchTypePredictor;
