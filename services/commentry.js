@@ -80,7 +80,7 @@ const { createMarketOddsBallByBallBYID, deleteMarketOddsBallByBall,createMarketO
 const { getEventMarketRatioQuery, closeEventMarketByCIdQuery, getMarketsByCategoryQuery,getEventMarketByIdsQuery,getMarketsByComIdQuery } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
 const { commentaryLogger, errorLogger } = require("../utilities/logger");
-
+const { handleSitemapUpdate } = require("../utilities/SEOIndexing")
 
 
 const allCommentaryService = async (request, fastify) => {
@@ -637,6 +637,20 @@ const createCommentaryService = async (request, fastify) => {
       );
     });
   }
+
+  const urlEventRefId = addCommentry.eventRefId;
+  let teamNames = `${addCommentry.team1Name}-v-${addCommentry.team2Name}`
+  teamNames = teamNames.replace(/ /g, "-");
+  const leagueName = addCommentry.competition.replace(/ /g, "-");
+  let matchDate;
+  if (typeof addCommentry.eventDate === "string") {
+      matchDate = addCommentry.eventDate.split("T")[0];
+  } else if (addCommentry.eventDate instanceof Date) {
+      matchDate = addCommentry.eventDate.toISOString().split("T")[0];
+  } else {
+      matchDate = "";
+  }
+  await handleSitemapUpdate(`full-score/${urlEventRefId}/${matchDate}/${leagueName}/${teamNames}`)
   addCommentry.callPrediction = callPrediction
   return addCommentry;
 };
@@ -1155,6 +1169,20 @@ const cloneCommentaryService = async (request, fastify) => {
       );
     });
   }
+  
+  const urlEventRefId = newCommentary.eventRefId;
+  let teamNames = `${newCommentary.team1Name}-v-${newCommentary.team2Name}`
+  teamNames = teamNames.replace(/ /g, "-");
+  const leagueName = newCommentary.competition.replace(/ /g, "-");
+  let matchDate;
+  if (typeof newCommentary.eventDate === "string") {
+      matchDate = newCommentary.eventDate.split("T")[0];
+  } else if (newCommentary.eventDate instanceof Date) {
+      matchDate = newCommentary.eventDate.toISOString().split("T")[0];
+  } else {
+      matchDate = "";
+  }
+  await handleSitemapUpdate(`full-score/${urlEventRefId}/${matchDate}/${leagueName}/${teamNames}`)
   return newCommentary;
 };
 
