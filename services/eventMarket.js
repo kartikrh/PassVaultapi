@@ -33,8 +33,14 @@ const {
   getAllEventMarketsQueryV1,
   upsertEventMarketSPQueryV1,
   updateEventMarketRateQueryV1,
-  getEventMarketByIdsQueryV1
+  getEventMarketByIdsQueryV1,
+  getMarketListByCIdQueryV1,
+  getMarketWithRunnerQuery,
+  updateResultMultiMarketQuery,
+  closeMarketByATQuery,
+  cancelMarketByATQuery
 } = require("../repository/TableEventMarkets");
+const { getRunnerByIdQuery, setResultInRunnerMarketQuery, getRunnerByMarketQuery } = require("../repository/TableMarketRunner");
 const configConstants = require("../utilities/configConstants");
 const {
   EventMarketStatus,
@@ -148,12 +154,12 @@ const getAllEventMarketsService = async (request, fastify) => {
     endDate,
     rateSourceRefId
   } = request.body;
-  let createWhereStatus = `tem."wrStatus" NOT IN (${EventMarketStatus.Close},${EventMarketStatus.Settled},${EventMarketStatus.Cancel})`;
+  let createWhereStatus = `tem."wrStatus" NOT IN (${EventMarketStatus.Close},${EventMarketStatus.Settled},${EventMarketStatus.Cancel}) AND tc."wrIsDelete" = false`;
 
-  if (status !== undefined && status != 0) {
+  if (status !== undefined && status != -1) {
     createWhereStatus = `tem."wrStatus" = ${status}`;
   }
-  if (status != undefined && status == 0) {
+  if (status != undefined && status == -1) {
     createWhereStatus = null;
   }
   if (rateSourceRefId && rateSourceRefId != 0) {
@@ -197,13 +203,6 @@ const getAllEventMarketsService = async (request, fastify) => {
       );
     });
   }
-  // if (status !== undefined) {
-  //   eventMarket = eventMarket.filter((item) => item.status === status);
-  // }
-  // if (isActive !== undefined) {
-  //   eventMarket = eventMarket.filter((item) => item.isActive === isActive);
-  // }
-  eventMarket = eventMarket.sort((a, b) => b.eventMarketId - a.eventMarketId);
   return eventMarket;
 };
 const getEventMarketByIdService = async (request, fastify) => {
@@ -373,16 +372,14 @@ const marketListResultFalseService = async (request, fastify) => {
     endDate,
     rateSourceRefId
   } = request.body;
-  // let eventMarket = global.tblEventMarkets.filter((item) => {
-  //   return (
-  //     item.isResult === false &&
-  //     item.result !== null &&
-  //     item.status == EventMarketStatus.Settled
-  //   );
-  // });
-  let createWhereStatus = `tem."wrIsResult" = false AND tem."wrResult" IS NOT NULL AND tem."wrStatus" = ${EventMarketStatus.Settled}`;
+  
+  let createWhereStatus = `tem."wrIsResult" = false AND tem."wrResult" IS NOT NULL AND tem."wrStatus" = ${EventMarketStatus.Settled} AND tc."wrIsDelete" = false`;
   if (rateSourceRefId && rateSourceRefId != 0) {
     createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrRateSource" = ${rateSourceRefId}` : `tem."wrRateSource" = ${rateSourceRefId}`;
+  }
+  let mt = global.tblMarketTypes.filter((item) => item.marketTypeName.toLowerCase() === "line market" || item.marketTypeName.toLowerCase() === "fancy").map(item => item.marketTypeId);
+  if(mt.length > 0){
+    createWhereStatus += ` AND tem."wrMarketTypeId" IN (${mt.join(",")})`;
   }
   let eventMarket = await getAllEventMarketsQuery(
     fastify,
@@ -481,6 +478,65 @@ const marketListByCIdService = async (request, fastify) => {
   }
 
   const marketList = await getMarketListByCIdQuery(
+    request.body,
+    request,
+    fastify
+  );
+
+  // get the team and teamName by commentaryId
+  const teams = global.tblCommentaryTeams
+    .filter((item) => item.commentaryId === commentaryId)
+    .reduce((acc, current) => {
+      if (!acc.some(item => item.teamId === current.teamId)) {
+        acc.push(current);
+      }
+      return acc;
+    }, [])
+    .map((item) => {
+      return {
+        teamId: item.teamId,
+        teamName: item.teamName,
+      };
+    });
+  // 
+  let categories = global.tblMarketTypeCategories.filter(
+    (item) => item.marketTypeCategoryId > 0
+  ).map(item => ({
+    marketTypeCategoryId: item.marketTypeCategoryId,
+    categoryName: item.categoryName,
+    displayOrder: item.displayOrder
+  }));
+
+  // let players = global.tblCommentaryPlayers
+  // .filter((item) => item.commentaryId === commentaryId)
+  // .map((player) => ({
+  //   teamId: player.teamId,
+  //   playerId: player.playerId,
+  //   commentaryPlayerId: player.commentaryPlayerId,
+  //   playerName: player.playerName,
+  //   batsmanAverage: player.batsmanAverage,
+  //   batsmanStrikeRate: player.batsmanStrikeRate,
+  //   bowlerEconomy: player.bowlerEconomy,
+  //   bowlerAverage: player.bowlerAverage,
+  // }));
+  return {
+    marketList,
+    teams,
+    categories,
+    //players,
+  };
+};
+const marketListByCIdServiceV1 = async (request, fastify) => {
+  const { commentaryId } = request.body;
+  // validate the commentaryId
+  let commentary = global.tblCommentaries.find(
+    (item) => item.commentaryId === commentaryId
+  );
+  if (!commentary) {
+    throw new Error("Commentary with this id not Found");
+  }
+
+  const marketList = await getMarketListByCIdQueryV1(
     request.body,
     request,
     fastify
@@ -845,18 +901,31 @@ const changeMarketResultService = async (request, fastify) => {
     request,
     fastify
   );
-  // const currentStatus = global.tblEventMarkets[eventMarket].status;
-  // const currentResult = global.tblEventMarkets[eventMarket].result;
-  const currentStatus = eventMarket[0].status;
-  const currentResult = eventMarket[0].result;
-  if (currentStatus === EventMarketStatus.Close && currentResult == null) {
-    await changeMarketResultQuery(request.body, request, fastify);
-    // global.tblEventMarkets[eventMarket].result = result;
+  // check marketType 
+  let marketType = global.tblMarketTypes.find(
+    (item) => item.marketTypeId === eventMarket[0].marketTypeId
+  );
+  if (marketType && (marketType.marketTypeName.toLowerCase() === "line market" || marketType.marketTypeName.toLowerCase() === "fancy")) {
+    const currentStatus = eventMarket[0].status;
+    const currentResult = eventMarket[0].result;
+    if (currentStatus === EventMarketStatus.Close && currentResult == null) {
+      await changeMarketResultQuery(request.body, request, fastify);
+      // global.tblEventMarkets[eventMarket].result = result;
+      return "Market result updated successfully";
+    } else {
+      throw new Error(
+        "Market is not closed or result is already set, so it cannot be updated"
+      );
+    }
+  }
+  else {
+    // check the runnerId in request
+    let data = await getRunnerByIdQuery(fastify, request , `"wrEventMarketId" = ${eventMarketId} AND "wrRunnerId" = ${result}`);
+     if(!data){
+      throw new Error("Runner with this id not Found");
+    }
+    await setResultInRunnerMarketQuery(request.body, request, fastify);
     return "Market result updated successfully";
-  } else {
-    throw new Error(
-      "Market is not closed or result is already set, so it cannot be updated"
-    );
   }
 };
 const changeMarketCloseService = async (request, fastify) => {
@@ -1098,7 +1167,7 @@ const handleMarketCloseService = async (data, request, fastify) => {
       item.teamStatus == 2
   );
 
-  const updateData = await closeEventMarketByTeamIdQuery(
+  let closeMar1 = await closeEventMarketByTeamIdQuery(
     {
       commentaryId: data.commentaryId,
       teamId: bowlingTeam.teamId,
@@ -1107,6 +1176,12 @@ const handleMarketCloseService = async (data, request, fastify) => {
     request,
     fastify
   );
+  // close market Directly
+  let closeMar2 = await closeMarketByATQuery({
+    commentaryId : data.commentaryId
+  },request,fastify)
+
+  const updateData = [...closeMar1, ...closeMar2];
 
   for (let item of updateData) {
     let eventMarket = global.tblEventMarkets.findIndex(
@@ -1136,7 +1211,7 @@ const handleMarketCloseService = async (data, request, fastify) => {
   }
 
   // cancel the market as per actionType
-  const cancelMarket = await cancelEventMarketByTeamIdQuery(
+  let cancelMarket1 = await cancelEventMarketByTeamIdQuery(
     {
       commentaryId: data.commentaryId,
       teamId: bowlingTeam.teamId,
@@ -1146,6 +1221,10 @@ const handleMarketCloseService = async (data, request, fastify) => {
     request,
     fastify
   );
+  let cancelMarket2 = await cancelMarketByATQuery({
+    commentaryId : data.commentaryId
+  }, request, fastify);
+  const cancelMarket = [...cancelMarket1, ...cancelMarket2];
 
   for (let item of cancelMarket) {
     let eventMarket = global.tblEventMarkets.findIndex(
@@ -1174,7 +1253,7 @@ const handleMarketCloseService = async (data, request, fastify) => {
     });
   }
   // settle the lineration as per requirement
-  await setLineRatioService(data, request, fastify);
+  // await setLineRatioService(data, request, fastify);
 
   marketLogger(
     {
@@ -1499,23 +1578,25 @@ const getDetailsByCIdV1Service = async (request, fastify) => {
   }
 
   const marketTemplate = global.tblMarketTemplate.filter(
-    (item) => item.matchTypeID === commentary.matchTypeId
+    (item) => item.matchTypeID === commentary.matchTypeId  && item.isShowInAdvanceMarket === true
   );
+
   for (temp of marketTemplate) {
     if(temp.isPredefineRunnerValue == true){
       // find the runner value
       let runners = global.tblMarketTemplateRunners.filter(
         (item) => item.marketTemplateId === temp.marketTemplateId
       );
-      temp.runners = runners;
+      // sort the runner by runnerId asc
+      temp.runners = runners.sort((a, b) => a.marketTemplateRunnerId - b.marketTemplateRunnerId);
     }
     else {
       temp.runners = [];
     }
   }
-  let eventMarket, LDOMARKETSIDS;
-  LDOMARKETSIDS = global.tblConfigs.find(config => config.key === "LDOMARKET")?.value ?? "0";
-  let whereCondition = `tem."wrCommentaryId" = ${commentaryId} AND tem."wrStatus" NOT IN (${EventMarketStatus.Close},${EventMarketStatus.Settled},${EventMarketStatus.Cancel}) AND tem."wrMarketTypeCategoryId" NOT IN (${LDOMARKETSIDS})`;
+  let eventMarket;
+  // LDOMARKETSIDS = global.tblConfigs.find(config => config.key === "LDOMARKET")?.value ?? "0";
+  let whereCondition = `tem."wrCommentaryId" = ${commentaryId} AND tem."wrStatus" NOT IN (${EventMarketStatus.Close},${EventMarketStatus.Settled},${EventMarketStatus.Cancel})`;
   if (commentary.commentaryStatus != 1) {
     let battingTeam = global.tblCommentaryTeams.find(
       (item) =>
@@ -1583,6 +1664,7 @@ const createEventMarketsServiceV1 = async (request, fastify) => {
   // }
   let multiRunnerMarket = [];
   let singleRunnerMarket = [];
+  let marketNameNullMarket = [];
   for (let item of eventMarket){
     let mt = global.tblMarketTypes.find(
       (e) => e.marketTypeId === item.marketTypeId
@@ -1591,8 +1673,21 @@ const createEventMarketsServiceV1 = async (request, fastify) => {
       singleRunnerMarket.push(item); 
     }
     else {
-      multiRunnerMarket.push(item);
+      if(item.marketName){
+        multiRunnerMarket.push(item);
+      }
+      else {
+        marketNameNullMarket.push(item);
+      }
     }
+  }
+  if(marketNameNullMarket.length > 0){
+    errorLogger(
+      fastify,
+      `Market Name is null for marketTypeIds ${marketNameNullMarket.map(e => e.marketTypeId).join(",")}`,
+      "ERROR --> services/commentary.js/createEventMarketsServiceV1",
+      request
+    );
   }
   const result = await upsertEventMarketSPQueryV1({
     singleRunnerMarket : singleRunnerMarket.length > 0 ? singleRunnerMarket : null,
@@ -1618,7 +1713,7 @@ const createEventMarketsServiceV1 = async (request, fastify) => {
       fastify
     )
   }
-  return result;
+  return "Event Market updated successfully";
 };
 const updateMarketRateServiceV1 = async (request, fastify) => {
   // i got array of eventMarket i want to update this data
@@ -1643,7 +1738,8 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
   
   // return true;
   // remove the market which is already closed , settled,cancel
-  let marketToUpdate = [];
+  let signleRunMarket = [];
+  let multiRunMarket = [];
   for (let item of eventMarket){
     let market = eventMarkets.find(
       (e) => e.eventMarketId === item.marketId
@@ -1655,11 +1751,23 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
     ) {
       continue;
     }
-    marketToUpdate.push(item);
+    let marketType = global.tblMarketTypes.find(
+      (e) => e.marketTypeId === market.marketTypeId
+    );
+    if(marketType.marketTypeName.toLowerCase() === "fancy" || marketType.marketTypeName.toLowerCase() === "linemarket"){
+      signleRunMarket.push(item);
+    }
+    else {
+      multiRunMarket.push(item);
+    }
   }
 
-  const updatedData = await updateEventMarketRateQueryV1(eventMarket, request, fastify);
-  return updatedData;
+  const updatedData = await updateEventMarketRateQueryV1({
+    singleRunnerMarket : signleRunMarket.length > 0 ? signleRunMarket : null,
+    multiRunnerMarket : multiRunMarket.length > 0 ? multiRunMarket : null
+  }, request, fastify);
+  
+  // return updatedData;
   const playerMarket = [];
   const updatedOvers = [];
   const response = [];
@@ -1672,57 +1780,52 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
       : (global.tblEventMarketsV1[index] = item);
 
  
-    if(item.isPlyer){
+    if(item.isPlayer){
       playerMarket.push(item);
     }
-    let is_onlyover = 0;
-    let category = global.tblMarketTypeCategories.find(
-      (item) => item.marketTypeCategoryId === item.marketTypeCategoryId
+    let marketType = global.tblMarketTypes.find(
+      (e) => e.marketTypeId === item.marketTypeId
     );
-    if(category && category.categoryName.toLowerCase() != "player" && category.categoryName.toLowerCase() != "wicket"){
-      if(category.categoryName == "Only Over"){
-        is_onlyover = 1;
-      }
-      const lineDiffArr = []
-      let runOld = eventMarkets.find(
-        (e) => e.eventMarketId === item.eventMarketId
-      ).runners;
-      for (let run of item.runners){
-        let rnOld = runOld.find(
-          (e) => e.runnerId === run.runnerId
-        );
-        if(rnOld){
-          let diff = run.line - rnOld.line;
-          lineDiffArr.push({
-            runnerId: run.runnerId,
-            diff: diff
-          })
+    if(marketType.marketTypeName.toLowerCase() === "fancy" || marketType.marketTypeName.toLowerCase() === "linemarket"){
+      let is_onlyover = 0;
+      let category = global.tblMarketTypeCategories.find(
+        (item) => item.marketTypeCategoryId === item.marketTypeCategoryId
+      );
+      let lineDiff = 0;
+      if(category && category.categoryName.toLowerCase() != "player" && category.categoryName.toLowerCase() != "wicket"){
+        if(category.categoryName == "Only Over"){
+          is_onlyover = 1;
         }
+        let runOld = eventMarkets.find(
+          (e) => e.eventMarketId === item.eventMarketId
+        ).runners;
+        lineDiff = runOld[0].line - item.runners[0].line;
+        updatedOvers.push({
+          over : item.over,
+          value : lineDiff,
+          line_ratio : item.lineRatio,
+          is_onlyover : is_onlyover,
+          is_allow : item.isAllow,
+          is_active : item.isActive,
+          is_senddata : item.isSendData,
+          data : item.data,
+          market_type_category_id : parseInt(item.marketTypeCategoryId),
+        })
       }
-      updatedOvers.push({
-        over : item.over,
-        value : lineDiffArr,
-        line_ratio : item.lineRatio,
-        is_onlyover : is_onlyover,
-        is_allow : item.isAllow,
-        is_active : item.isActive,
-        is_senddata : item.isSendData,
-        data : item.data,
-        market_type_category_id : parseInt(item.marketTypeCategoryId),
-      })
+      marketDataLogger(
+        {
+          eventMarketId: item.eventMarketId,
+          commentaryId: item.commentaryId,
+          dataTosave: typeof (item.data) === "string" ? JSON.parse(item.data) : item.data,
+          updateType: MarketUpdateType.marketUpdateRate,
+          lineDiff: lineDiff,
+          isSendData: true
+        },
+        request,
+        fastify
+      )
+    
     }
-    marketDataLogger(
-      {
-        eventMarketId: item.eventMarketId,
-        commentaryId: item.commentaryId,
-        dataTosave: typeof (item.data) === "string" ? JSON.parse(item.data) : item.data,
-        updateType: MarketUpdateType.marketUpdateRate,
-        lineDiffArr: lineDiffArr,
-        isSendData: true
-      },
-      request,
-      fastify
-    )
     response.push({
       marketId : item.eventMarketId,
       commentaryId : item.commentaryId,
@@ -1835,37 +1938,170 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
       global.tblCommentaryPlayers[comPlayer].batsmanAverage = avg;
     }
   }
-    // get the team and teamName by commentaryId
-    const teams = global.tblCommentaryTeams
-    .filter((item) => item.commentaryId === commentaryId)
-    .reduce((acc, current) => {
-      if (!acc.some(item => item.teamId === current.teamId)) {
-        acc.push(current);
-      }
-      return acc;
-    }, [])
-    .map((item) => {
-      return {
-        teamId: item.teamId,
-        teamName: item.teamName,
-      };
-    });
-  // 
-  let categories = global.tblMarketTypeCategories.filter(
-    (item) => item.marketTypeCategoryId > 0
-  ).map(item => ({
-    marketTypeCategoryId: item.marketTypeCategoryId,
-    categoryName: item.categoryName,
-    displayOrder: item.displayOrder
-  }));
+  //   // get the team and teamName by commentaryId
+  //   const teams = global.tblCommentaryTeams
+  //   .filter((item) => item.commentaryId === eventMarket[0].commentaryId)
+  //   .reduce((acc, current) => {
+  //     if (!acc.some(item => item.teamId === current.teamId)) {
+  //       acc.push(current);
+  //     }
+  //     return acc;
+  //   }, [])
+  //   .map((item) => {
+  //     return {
+  //       teamId: item.teamId,
+  //       teamName: item.teamName,
+  //     };
+  //   });
+  // let categories = global.tblMarketTypeCategories.filter(
+  //   (item) => item.marketTypeCategoryId > 0
+  // ).map(item => ({
+  //   marketTypeCategoryId: item.marketTypeCategoryId,
+  //   categoryName: item.categoryName,
+  //   displayOrder: item.displayOrder
+  // }));
 
   return {
-    response,
+    marketList : response, 
     callPredictions,
-    teams,
-    categories
+    // teams,
+    // categories
   };
 
+};
+const getRunnerByMarketService = async (request, fastify) => {
+  let data = await getRunnerByMarketQuery(request, fastify);
+  return data;
+}
+const pendingMultiRunnerMarketsService = async (request, fastify) => {
+  const {
+    isActive,
+    eventTypeId,
+    competitionId,
+    eventId,
+    status,
+    startDate,
+    endDate,
+    rateSourceRefId
+  } = request.body;
+
+  let mt = global.tblMarketTypes.filter(
+    (item) => item.marketTypeName.toLowerCase() === "fancy" || item.marketTypeName.toLowerCase() === "linemarket"
+  ).map((item) => item.marketTypeId);
+  
+  let createWhereStatus = `tem."wrIsResult" = false AND tem."wrResult" IS NOT NULL AND tem."wrStatus" = ${EventMarketStatus.Settled} AND tc."wrIsDelete" = false`;
+  if(mt.length > 0){
+    createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrMarketTypeId" NOT IN (${mt.join(",")})` : `tem."wrMarketTypeId" NOT IN (${mt.join(",")}`;
+  }
+  if (rateSourceRefId && rateSourceRefId != 0) {
+    createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrRateSource" = ${rateSourceRefId}` : `tem."wrRateSource" = ${rateSourceRefId}`;
+  }
+  if(mt.length > 0){
+    createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrMarketTypeId" NOT IN (${mt.join(",")})` : `tem."wrMarketTypeId" NOT IN (${mt.join(",")})`;
+  }
+  let eventMarket = await getMarketWithRunnerQuery(
+    fastify,
+    createWhereStatus
+  );
+
+  
+  if (eventTypeId) {
+    // get the commentaryId from tblCommentaries
+    let commentaryId = global.tblCommentaries
+      .filter((item) => item.eventTypeId === eventTypeId)
+      .map((item) => item.commentaryId);
+    eventMarket = eventMarket.filter((item) =>
+      commentaryId.includes(item.commentaryId)
+    );
+  }
+  if (competitionId) {
+    // get the commentaryId from tblCommentaries
+    let commentaryId = global.tblCommentaries
+      .filter((item) => item.competitionId === competitionId)
+      .map((item) => item.commentaryId);
+    eventMarket = eventMarket.filter((item) =>
+      commentaryId.includes(item.commentaryId)
+    );
+  }
+  if (eventId) {
+    // get the commentaryId from tblCommentaries
+    let commentaryId = global.tblCommentaries
+      .filter((item) => item.eventId === eventId)
+      .map((item) => item.commentaryId);
+    eventMarket = eventMarket.filter((item) =>
+      commentaryId.includes(item.commentaryId)
+    );
+  }
+  // add dateFilter if provided
+  if (startDate && endDate) {
+    eventMarket = eventMarket?.filter((item) => {
+      return (
+        new Date(item.eventDate) >= new Date(startDate) &&
+        new Date(item.eventDate) <= new Date(endDate)
+      );
+    });
+  }
+  if (status !== undefined) {
+    eventMarket = eventMarket.filter((item) => item.status === status);
+  }
+  // if (isActive !== undefined) {
+  //   eventMarket = eventMarket.filter((item) => item.isActive === isActive);
+  // }
+
+  return eventMarket;
+};
+const updateMarketResultService = async (request, fastify) => {
+  const { eventMarketId, isResult, result } = request.body;
+
+  let run = await getRunnerByIdQuery(
+    fastify,
+    request,
+    `"wrRunnerId" = ${result} AND "wrEventMarketId" = ${eventMarketId}`
+  );
+  if(!run){
+    throw new Error("Runner with this id not Found");
+  }
+  await updateResultMultiMarketQuery(request.body, request, fastify);
+  if (isResult && result) {
+    marketLogger(
+      {
+        eventMarketId,
+        actionType: MarketActionType.setAndFinalizeResult,
+        value: isResult,
+      },
+      request,
+      fastify
+    ).catch((err) => {
+      console.log("market data logger console", err);
+      errorLogger(
+        fastify,
+        err.message,
+        "ERROR --> services/commentary.js/updateMarketResultService",
+        request
+      );
+    });;
+  }
+  if (!isResult && result) {
+    marketLogger(
+      {
+        eventMarketId,
+        actionType: MarketActionType.setResult,
+        value: isResult,
+      },
+      request,
+      fastify
+    ).catch((err) => {
+      console.log("market data logger console", err);
+      errorLogger(
+        fastify,
+        err.message,
+        "ERROR --> services/commentary.js/updateMarketResultService",
+        request
+      );
+    });
+  }
+
+  return "Event Market updated successfully";
 };
 module.exports = {
   getDetailsByCIdService,
@@ -1902,5 +2138,9 @@ module.exports = {
   getMarketTypeCategoryService,
   getDetailsByCIdV1Service,
   createEventMarketsServiceV1,
-  updateMarketRateServiceV1
+  updateMarketRateServiceV1,
+  marketListByCIdServiceV1,
+  getRunnerByMarketService,
+  pendingMultiRunnerMarketsService,
+  updateMarketResultService
 };

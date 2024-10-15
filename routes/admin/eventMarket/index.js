@@ -1,4 +1,4 @@
-const { getDetailsByCId, getAllEventMarket, createEventMarket, deleteEventMarket, activeInactiveMarket, updateAllowMarket, getEventListByCompetitionId, marketListResultFalse, changeResultOfMarket, marketListByCId, updateMarketRate, saveEventMarket ,changeMarketCancel, changeMarketResult, changeMarketClose, suspendMarketByCId, getEventMarketById, getMarketTemplateTypeList, getCommentaryTypeList, setDelayEventMarket, getDSReportEventMarket, getSLReportEventMarket, getMarketDataByCId,UpdateResulOrApproveEventMarket, getMarketTypeCategory,marketListcategoryNameByCId, setAllMarketClose, setCloseMarketCancel, cancelSettleMarket, getDetailsByCIdV1, createEventMarketV1, updateMarketRateV1 } = require("../../../controller/users/admin/eventMarket");
+const { getDetailsByCId, getAllEventMarket, createEventMarket, deleteEventMarket, activeInactiveMarket, updateAllowMarket, getEventListByCompetitionId, marketListResultFalse, changeResultOfMarket, marketListByCId, updateMarketRate, saveEventMarket ,changeMarketCancel, changeMarketResult, changeMarketClose, suspendMarketByCId, getEventMarketById, getMarketTemplateTypeList, getCommentaryTypeList, setDelayEventMarket, getDSReportEventMarket, getSLReportEventMarket, getMarketDataByCId,UpdateResulOrApproveEventMarket, getMarketTypeCategory,marketListcategoryNameByCId, setAllMarketClose, setCloseMarketCancel, cancelSettleMarket, getDetailsByCIdV1, createEventMarketV1, updateMarketRateV1, marketListByCIdV1, getRunnerByMarket, pendingMultiRunnerMarkets, updateMarketResult } = require("../../../controller/users/admin/eventMarket");
 const { EventMarket, Commentary } = require("../../../swaggerSchema/groupTags/schema");
 const {
     authorize,
@@ -393,6 +393,53 @@ module.exports = async (fastify, opts) => {
             })
         ],
         handler: (request, reply) => updateMarketRateV1(request, reply, fastify)
+    })
+    fastify.post("/marketListByCIdV1",{
+        schema: EventMarket.marketListByCId.schema,
+        preHandler: [
+            (request, reply) => authorize(request, reply, fastify),
+            (request, reply) => checkPermission(request, reply, fastify, {
+                tabName: "Event Markets",
+                mode: "view"
+            })
+        ],
+        handler: (request, reply) => marketListByCIdV1(request, reply, fastify)
+    })
+    fastify.post("/getRunnerByMarket",{
+        schema: EventMarket.getRunnerByMarket.schema,
+        preHandler: [
+            (request, reply) => authorize(request, reply, fastify),
+            (request, reply) => checkPermission(request, reply, fastify, {
+                tabName: "Event Markets",
+                mode: "view"
+            })
+        ],
+        handler: (request, reply) => getRunnerByMarket(request, reply, fastify)
+    })
+    fastify.post("/pendingMultiRunnerMarket",{
+        schema: EventMarket.getAll.schema, 
+        preHandler: [
+          (request, reply) => authorize(request, reply, fastify),
+          (request, reply) =>
+            checkPermission(request, reply, fastify, {
+              tabName: "Event Markets",
+              mode: "view",
+            }),
+        ],
+        handler: (request, reply) => pendingMultiRunnerMarkets(request, reply, fastify),
+
+    })
+    fastify.post("/updateResultMultiMarket",{
+        schema: EventMarket.updateOrApproveResultOfMarket.schema,
+        preHandler: [
+          (request, reply) => authorize(request, reply, fastify),
+          (request, reply) =>
+            checkPermission(request, reply, fastify, {
+              tabName: "Event Markets",
+              mode: "edit",
+            }),
+        ],
+        handler: (request, reply) => updateMarketResult(request, reply, fastify),
     })
 };
 

@@ -1,4 +1,4 @@
-const { getDetailsByCIdService, getAllEventMarketsService, createEventMarketsService, deleteEventMarketsService, activeInactiveMarketsService, updateAllowMarketsService, getEventListByCompetitionIdsService, marketListResultFalseService, changeResultOfMarketService, changeMarketCancelService, changeMarketResultService, marketListByCIdService, saveEventMarketService, updateMarketRateService, changeMarketCloseService, suspendMarketByCIdService, getEventMarketByIdService, marketTemplateTypeService, commentaryTypeService, setDelayEventMarketService, getDSReportEventMarketService, getSLReportEventMarketService, getMarketDataByCIdService,UpdateResulOrApproveEventMarketService, getMarketTypeCategoryService,marketListcategoryNameByCIdService, setAllMarketCloseService, setCloseMarketCancelService, getAllEventMarketsAndRunnersService, cancelSettleMarketService,getDetailsByCIdV1Service, createEventMarketsServiceV1, updateMarketRateServiceV1 } = require("../../../../services/eventMarket");
+const { getDetailsByCIdService, getAllEventMarketsService, createEventMarketsService, deleteEventMarketsService, activeInactiveMarketsService, updateAllowMarketsService, getEventListByCompetitionIdsService, marketListResultFalseService, changeResultOfMarketService, changeMarketCancelService, changeMarketResultService, marketListByCIdService, saveEventMarketService, updateMarketRateService, changeMarketCloseService, suspendMarketByCIdService, getEventMarketByIdService, marketTemplateTypeService, commentaryTypeService, setDelayEventMarketService, getDSReportEventMarketService, getSLReportEventMarketService, getMarketDataByCIdService,UpdateResulOrApproveEventMarketService, getMarketTypeCategoryService,marketListcategoryNameByCIdService, setAllMarketCloseService, setCloseMarketCancelService, getAllEventMarketsAndRunnersService, cancelSettleMarketService,getDetailsByCIdV1Service, createEventMarketsServiceV1, updateMarketRateServiceV1, marketListByCIdServiceV1, getRunnerByMarketService, pendingMultiRunnerMarketsService, updateMarketResultService } = require("../../../../services/eventMarket");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
 
@@ -110,6 +110,15 @@ const marketListByCId = async (request, reply, fastify) => {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, path + "/marketListByCId", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const marketListByCIdV1 = async (request, reply, fastify) => {
+  try {
+    const result = await marketListByCIdServiceV1(request ,fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/marketListByCIdV1", request);
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
@@ -317,7 +326,33 @@ const updateMarketRateV1 = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
-
+const getRunnerByMarket = async (request, reply, fastify) => {
+  try {
+    const result = await getRunnerByMarketService(request ,fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/getRunnerByMarket", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const pendingMultiRunnerMarkets = async (request, reply, fastify) => {
+  try {
+    const result = await pendingMultiRunnerMarketsService(request ,fastify, "pendingMultiRunnerMarkets");
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/pendingMultiRunnerMarkets", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const updateMarketResult = async (request, reply, fastify) => {
+  try {
+    const result = await updateMarketResultService(request ,fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/updateMarketResult", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 module.exports = {
     getDetailsByCId,
     getAllEventMarket,
@@ -351,5 +386,9 @@ module.exports = {
     cancelSettleMarket,
     getDetailsByCIdV1,
     createEventMarketV1,
-    updateMarketRateV1
+    updateMarketRateV1,
+    marketListByCIdV1,
+    getRunnerByMarket,
+    pendingMultiRunnerMarkets,
+    updateMarketResult
 };

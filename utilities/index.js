@@ -209,13 +209,15 @@ const decryptEncryptionId = async (encryptionKey , fastify) =>{
  }
 }
 const EventMarketStatus = {
+  NotOpen :	0,
   Open:	1,
   Inactive:	2,
   Suspend:	3,
   Close:	4,
   Settled	:5,
   Cancel:	6,
-  NotOpen :	7,
+  WIN : 7,
+  LOSE : 8,
 }
 
 const EventMarketRateSource = {
@@ -368,6 +370,8 @@ const MarketUpdateType = {
 const ActionTypeForMarketCancel ={
   winClose : 1,
   winCloseCancel : 2,
+  winMustClose : 3,
+  winMustCloseCancel : 4,
 }
 const genrateKey = () => {
   // Define the format pattern

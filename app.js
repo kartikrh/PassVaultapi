@@ -197,9 +197,22 @@ module.exports = async function (fastify, opts) {
   });
 
   //for images static path
+  // fastify.register(fastifyStatic, {
+  //   root: path.join(__dirname, "images"),
+  //   prefix: "/images/",
+  // });
   fastify.register(fastifyStatic, {
     root: path.join(__dirname, "images"),
     prefix: "/images/",
+    serve: true,
+  });
+  
+  // Serve static files from the "public" folder
+  fastify.register(fastifyStatic, {
+    root: path.join(__dirname, "public"),
+    prefix: "/",
+    decorateReply: false,
+    serve: true,
   });
 
   fastify.register(fastifyRateLimit, {

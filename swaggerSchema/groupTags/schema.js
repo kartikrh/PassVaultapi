@@ -3228,6 +3228,7 @@ const MarketTemplate = {
           templateType: { type: "integer" },
           isDefaultBetAllowed: { type: "boolean" },
           isDefaultMarketActive: { type: "boolean" },
+          isShowInAdvanceMarket: { type: "boolean" },
         },
         required: [
           "marketTemplateId",
@@ -3313,6 +3314,21 @@ const MarketTemplate = {
           isPerEvent: { type: "boolean" },
         },
         required: ["marketTemplateId", "isPerEvent"],
+      },
+    },
+  },
+  isShowInAdvanceMarket: {
+    schema: {
+      tags: ["Market Template"],
+      description: "update isShowInAdvanceMarket status for Market Template",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          marketTemplateId: { type: "integer" },
+          isShowInAdvanceMarket: { type: "boolean" },
+        },
+        required: ["marketTemplateId", "isShowInAdvanceMarket"],
       },
     },
   },
@@ -3808,6 +3824,20 @@ const EventMarket = {
       },
     },
   },
+  getRunnerByMarket:{
+    schema : {
+      tags : ["EventMarket"],
+      description : "get Runner by market",
+      security : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          eventMarketId : {type : "integer"}
+        },
+        required : ["eventMarketId"]
+      }
+    }
+  },
   byId: {
     tags: ["EventMarket"],
     description: "get market by id",
@@ -4081,13 +4111,13 @@ const EventMarket = {
                 eventRefId: { type: "string" },
                 // teamId: { type: "integer" },    
                 inningsId: { type: "integer" },
-                marketName: { type: "string" },
+                // marketName: { type: "string" },
                 margin: { type: "number" },
                 status: { type: "integer" },
                 isPredefineMarket: { type: "boolean" },
                 isPreMatchOnly: { type: "boolean" },
                 isOver: { type: "boolean" },
-                over: { type: "number" },
+                // over: { type: "number" },
                 isPlayer: { type: "boolean" },
                 playerName: { type: "string" },
                 isAutoCancel: { type: "boolean" },

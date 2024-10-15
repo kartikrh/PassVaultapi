@@ -5,6 +5,8 @@ const {
   updateStatusMarketTemplateQuery,
   changePredefineRunnerQuery,
   updateIsPerEventStatusQuery,
+  insertMarketTemplateInCloneQuery,
+  isShowInAdvanceMarketChangeStatusQuery
 } = require("../repository/TableMarketTemplate");
 const { callPredictorMarket } = require("../utilities");
 const { createMarketTemplateRunnerQuery } = require("../repository/TableMarketTemplateRunner")
@@ -182,6 +184,7 @@ const updateMarketTemplateService = async (request, fastify) => {
     isDefaultBetAllowed: request.body.isDefaultBetAllowed || false,
     isDefaultMarketActive: request.body.isDefaultMarketActive || false,
     isPerEvent: request.body.isPerEvent !== undefined ? Boolean(request.body.isPerEvent) : marketTemplate.isPerEvent,
+    isShowInAdvanceMarket: request.body.isShowInAdvanceMarket !== undefined ? request.body.isShowInAdvanceMarket : marketTemplate.isShowInAdvanceMarket,
   };
   // update marketTemplate
   await updateMarketTemplateQuery(body, fastify, request);
@@ -307,7 +310,7 @@ const cloneMarketTemplateService = async (request, fastify) => {
     throw new Error("MatchType with this id not found");
   }
 
-  let data = await insertMarketTemplateQuery(
+  let data = await insertMarketTemplateInCloneQuery(
     {
       ...marketTemplate,
       matchTypeID: matchTypeID,
@@ -324,7 +327,7 @@ const cloneMarketTemplateService = async (request, fastify) => {
 
 const validateTemplateRunners = global.tblMarketTemplateRunners.filter(
   (item) => item.marketTemplateId === marketTemplateId
-);
+).sort((a, b) => a.marketTemplateRunnerId - b.marketTemplateRunnerId);
 
 if (validateTemplateRunners && validateTemplateRunners.length > 0) {
   for (const elem of validateTemplateRunners) {
@@ -403,6 +406,22 @@ const isPerEventStatusService = async (request, fastify) => {
   return `MarketTemplate updated successfully`;
 };
 
+const isShowInAdvanceMarketChangeStatusService = async (request, fastify) => {
+  const { marketTemplateId } = request.body;
+  const index = global.tblMarketTemplate.findIndex(
+    (item) => item.marketTemplateId === marketTemplateId
+  );
+
+  if (index === -1) {
+    throw new Error("MarketTemplate with this id not found");
+  }
+
+  await isShowInAdvanceMarketChangeStatusQuery(request, fastify);
+  global.tblMarketTemplate[index].isShowInAdvanceMarket = request.body.isShowInAdvanceMarket;
+
+  return `MarketTemplate isShowInAdvanceMarket status updated successfully`;
+};
+
 module.exports = {
   saveMarketTemplateService,
   getAllMarketTemplateService,
@@ -416,5 +435,6 @@ module.exports = {
   changePredefineRunnerService,
   cloneMarketTemplateService,
   getMarketTypeAndCategoryByMarketTypeService,
-  isPerEventStatusService
+  isPerEventStatusService,
+  isShowInAdvanceMarketChangeStatusService
 };
