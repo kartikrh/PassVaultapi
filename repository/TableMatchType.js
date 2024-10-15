@@ -363,8 +363,6 @@ const updateSumOfRunPerBallQuery = async(matchTypeId, fastify, request) => {
       }
     );
     let roundValue = Math.round(query1[0].sum * 100) / 100;
-    console.log("round", roundValue);
-    
     await fastify.db.query(
       `UPDATE "tblMatchTypes" SET "wrSumOfRunPerBall" = $1 WHERE "wrMatchTypeId" = $2`,
       {
