@@ -1,0 +1,13 @@
+User-agent: *
+Disallow: /login
+Disallow: /contact-us
+Disallow: /about-us
+Disallow: /terms-condition
+Disallow: /privacy-policy
+Disallow: /profile
+Disallow: /admin/
+Disallow: /api/
+Allow: /news/
+Allow: /banners/
+Allow: /full-score/
+Sitemap: https://uat.deployed.live/sitemap.xml

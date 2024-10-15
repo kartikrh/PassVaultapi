@@ -10,7 +10,7 @@
     "test": "tap \"test/**/*.test.js\"",
     "start": "fastify start app.js",
     "info": "fastify print-routes ./routes/root.js",
-    "dev": "fastify start -w -a 0.0.0.0 app.js",
+    "dev": "fastify start -w -a 0.0.0.0 app.js --watch --ignore-watch=public/sitemap.xml",
     "dev:local": "env-cmd -f .env.local npm run dev"
   },
   "keywords": [],
@@ -47,6 +47,7 @@
     "pg": "^8.11.3",
     "request-ip": "^3.3.0",
     "sequelize": "^6.32.1",
+    "sitemap": "^8.0.0",
     "socket.io": "^4.7.2",
     "socket.io-client": "^4.7.5",
     "ua-parser-js": "^1.0.35",

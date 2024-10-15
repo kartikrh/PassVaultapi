@@ -7,6 +7,7 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
   const { PROJECT_NAME } = require("../utilities/configConstants");
   const { ImgModuleConfig } = require("../utilities/imageConstant");
   const { APIEndpointModuleType, ServiceType, callClientAPI } = require("../utilities");
+  const { handleSitemapUpdate } = require("../utilities/SEOIndexing")
   
   const getAllBannerService = async (request, fastify) => {
     const { isActive } = request.body;
@@ -73,6 +74,10 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
     });
   
     global.tblBanner.push(data[0]);
+    const urlId = data[0].bannerId;
+    const urlEndPoint = data[0].title.replace(/ /g, "-");
+  
+    await handleSitemapUpdate(`banners/${urlId}/${urlEndPoint}`)
   
     return data;
   };
