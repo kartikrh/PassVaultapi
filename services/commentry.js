@@ -58,7 +58,8 @@ const {
   insertCommentarySuperOverTeams,
   updateTeamPrediction,
   updateCommentaryBattingTeamQuery,
-  updateLineRationQuery
+  updateLineRationQuery,
+  updateLineRatioComQuery
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -557,27 +558,27 @@ const createCommentaryService = async (request, fastify) => {
   let _resFromPredictAPI;
   let callPrediction = {};
   // call predictor market
-  if (addCommentry.isPredictMarket == true) {
-    _resFromPredictAPI = await callPredictorMarket(
-      {
-        commentary_id: addCommentry.commentaryId,
-        match_type_id: addCommentry.matchTypeId,
-        event_id: addCommentry.eventRefId,
-      },
-      "/api/v1/loadcommentary",
-      fastify,
-      request
-    );
-    if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
-      callPrediction.predictioncallSuccess = false;
-      callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
-      callPrediction.endPoint = '/api/v1/loadcommentary';
-    } else {
-      callPrediction.predictioncallSuccess = true;
-      callPrediction.predictionMessage = 'Prediction call successful';
-      callPrediction.endPoint = '/api/v1/loadcommentary';
-    }
-  }
+  // if (addCommentry.isPredictMarket == true) {
+  //   _resFromPredictAPI = await callPredictorMarket(
+  //     {
+  //       commentary_id: addCommentry.commentaryId,
+  //       match_type_id: addCommentry.matchTypeId,
+  //       event_id: addCommentry.eventRefId,
+  //     },
+  //     "/api/v1/loadcommentary",
+  //     fastify,
+  //     request
+  //   );
+  //   if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
+  //     callPrediction.predictioncallSuccess = false;
+  //     callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
+  //     callPrediction.endPoint = '/api/v1/loadcommentary';
+  //   } else {
+  //     callPrediction.predictioncallSuccess = true;
+  //     callPrediction.predictionMessage = 'Prediction call successful';
+  //     callPrediction.endPoint = '/api/v1/loadcommentary';
+  //   }
+  // }
 
   if (
     addCommentry.commentaryStatus != 4 &&
@@ -3121,14 +3122,22 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           request
         );
       });
-      // let callPrediction = {};
-      // if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
-      //   callPrediction.predictioonAPI = "loadcommentary"
-      //   callPrediction.predictioncallSuccess = false;
-      //   callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
-      //   callPrediction.endPoint = '/api/v1/loadcommentary';
-      //   callPredictions.push(callPrediction);
-      // }
+      setLineRatioInComService(
+        {
+          commentaryId: commentaryDetails.commentaryId,
+          matchTypeId  : commentaryData.matchTypeId
+        },
+        request,
+        fastify
+      ).catch((err) => {
+        console.log("setLineRatioInComService console", err);
+        errorLogger(
+          fastify,
+          err.message,
+          "ERROR --> services/commentary.js/setLineRatioInComService",
+          request
+        );
+      });
     }
 
     if (
@@ -8696,6 +8705,44 @@ const deleteBallFromMemorynService = async (request, fastify) => {
   );
   return "Ball deleted successfully";
 };
+const setLineRatioInComService = async (data , request , fastify) =>{
+  const {commentaryId , matchTypeId} = data;
+  const matchType = global.tblMatchTypes.find(
+    (item) => item.matchTypeId == matchTypeId
+  );
+  if(!matchType){
+    throw new Error("Match Type not found");
+  }
+  let marketType = global.tblMarketTypes.find((item)=> item.marketTypeName.toLowerCase() == "fancy");
+  if(!marketType){
+    throw new Error("Market Type not found");
+  }
+  let marketTypeCategory = global.tblMarketTypeCategories.find((item)=> item.categoryName.toLowerCase() == "session")
+  if(!marketTypeCategory){
+    throw new Error("Market Type Category not found");
+  }
+
+  let result = await updateLineRatioComQuery({
+    commentaryId : commentaryId,
+    marketTypeId : marketType.marketTypeId,
+    marketTypeCategoryId : marketTypeCategory.marketTypeCategoryId,
+    maxOver : matchType.maxOversInFirstInings,
+    sumOfRunPerBall :matchType.sumOfRunPerBall,
+    status : [EventMarketStatus.Close,EventMarketStatus.Settled, EventMarketStatus.Cancel]
+  }, request, fastify);
+
+  let lineRatio = result[0].line_ratio;
+
+  let commentary = global.tblCommentaries.findIndex(
+    (item) => item.commentaryId == commentaryId
+  );
+  // console.log("lineRatio",global.tblCommentaries[commentary].lineRatio);
+  if (commentary !== -1 && lineRatio != null) {
+    global.tblCommentaries[commentary].lineRatio = lineRatio;
+  }
+  return true;
+
+}
 module.exports = {
   allCommentaryService,
   commentaryByIdService,

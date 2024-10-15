@@ -370,6 +370,8 @@ const MarketUpdateType = {
 const ActionTypeForMarketCancel ={
   winClose : 1,
   winCloseCancel : 2,
+  winMustClose : 3,
+  winMustCloseCancel : 4,
 }
 const genrateKey = () => {
   // Define the format pattern

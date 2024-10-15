@@ -36,7 +36,9 @@ const {
   getEventMarketByIdsQueryV1,
   getMarketListByCIdQueryV1,
   getMarketWithRunnerQuery,
-  updateResultMultiMarketQuery
+  updateResultMultiMarketQuery,
+  closeMarketByATQuery,
+  cancelMarketByATQuery
 } = require("../repository/TableEventMarkets");
 const { getRunnerByIdQuery, setResultInRunnerMarketQuery, getRunnerByMarketQuery } = require("../repository/TableMarketRunner");
 const configConstants = require("../utilities/configConstants");
@@ -1165,7 +1167,7 @@ const handleMarketCloseService = async (data, request, fastify) => {
       item.teamStatus == 2
   );
 
-  const updateData = await closeEventMarketByTeamIdQuery(
+  let closeMar1 = await closeEventMarketByTeamIdQuery(
     {
       commentaryId: data.commentaryId,
       teamId: bowlingTeam.teamId,
@@ -1174,6 +1176,12 @@ const handleMarketCloseService = async (data, request, fastify) => {
     request,
     fastify
   );
+  // close market Directly
+  let closeMar2 = await closeMarketByATQuery({
+    commentaryId : data.commentaryId
+  },request,fastify)
+
+  const updateData = [...closeMar1, ...closeMar2];
 
   for (let item of updateData) {
     let eventMarket = global.tblEventMarkets.findIndex(
@@ -1203,7 +1211,7 @@ const handleMarketCloseService = async (data, request, fastify) => {
   }
 
   // cancel the market as per actionType
-  const cancelMarket = await cancelEventMarketByTeamIdQuery(
+  let cancelMarket1 = await cancelEventMarketByTeamIdQuery(
     {
       commentaryId: data.commentaryId,
       teamId: bowlingTeam.teamId,
@@ -1213,6 +1221,10 @@ const handleMarketCloseService = async (data, request, fastify) => {
     request,
     fastify
   );
+  let cancelMarket2 = await cancelMarketByATQuery({
+    commentaryId : data.commentaryId
+  }, request, fastify);
+  const cancelMarket = [...cancelMarket1, ...cancelMarket2];
 
   for (let item of cancelMarket) {
     let eventMarket = global.tblEventMarkets.findIndex(
@@ -1241,7 +1253,7 @@ const handleMarketCloseService = async (data, request, fastify) => {
     });
   }
   // settle the lineration as per requirement
-  await setLineRatioService(data, request, fastify);
+  // await setLineRatioService(data, request, fastify);
 
   marketLogger(
     {
