@@ -436,10 +436,22 @@ const getMarketListByCIdQuery = async (data, request, fastify) => {
             "wrIsAllow" as "isAllow",
             "wrIsSendData" as "isSendData",
             tem."wrLineRatio" as "lineRatio",
-            (
-                SELECT json_agg("MarketRunners_CTE".*)
-                FROM "MarketRunners_CTE"
-                WHERE "MarketRunners_CTE"."eventMarketId" = tem."wrID"
+           (
+                SELECT json_agg(
+                  json_build_object(
+                      'runnerId', "runnerId",
+                      'line', "line",
+                      'overRate', "overRate",
+                      'underRate', "underRate",
+                      'status', "status",
+                      'backPrice', "backPrice",
+                      'layPrice', "layPrice",
+                      'backSize', "backSize",
+                      'laySize', "laySize"
+                  )
+              )
+              FROM "MarketRunners_CTE"
+              WHERE "MarketRunners_CTE"."eventMarketId" = tem."wrID"
             ) as "runner"
            
         FROM "tblEventMarkets" tem
@@ -2681,11 +2693,22 @@ const getMarketListByCIdQueryV1 = async (data, request, fastify) => {
             tem."wrLineRatio" as "lineRatio",
             tem."wrMarketTypeId" as "marketTypeId",
             (
-                SELECT json_agg("MarketRunners_CTE".*)
-                FROM "MarketRunners_CTE"
-                WHERE "MarketRunners_CTE"."eventMarketId" = tem."wrID"
+                SELECT json_agg(
+                  json_build_object(
+                      'runnerId', "runnerId",
+                      'line', "line",
+                      'overRate', "overRate",
+                      'underRate', "underRate",
+                      'status', "status",
+                      'backPrice', "backPrice",
+                      'layPrice', "layPrice",
+                      'backSize', "backSize",
+                      'laySize', "laySize"
+                  )
+              )
+              FROM "MarketRunners_CTE"
+              WHERE "MarketRunners_CTE"."eventMarketId" = tem."wrID"
             ) as "runner"
-           
         FROM "tblEventMarkets" tem
         INNER JOIN "tblMarketTypeCategories" mtc ON tem."wrMarketTypeCategoryId" = mtc."wrId"
         WHERE tem."wrCommentaryId" = $1
