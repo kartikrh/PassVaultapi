@@ -1799,7 +1799,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
         let runOld = eventMarkets.find(
           (e) => e.eventMarketId === item.eventMarketId
         ).runners;
-        lineDiff = runOld[0].line - item.runners[0].line;
+        lineDiff =  item.runners[0].line - runOld[0].line;
         updatedOvers.push({
           over : item.over,
           value : lineDiff,
