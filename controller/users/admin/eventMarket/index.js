@@ -337,7 +337,7 @@ const getRunnerByMarket = async (request, reply, fastify) => {
 };
 const pendingMultiRunnerMarkets = async (request, reply, fastify) => {
   try {
-    const result = await pendingMultiRunnerMarketsService(request ,fastify, "pendingMultiRunnerMarkets");
+    const result = await pendingMultiRunnerMarketsService(request ,fastify);
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, path + "/pendingMultiRunnerMarkets", request);
