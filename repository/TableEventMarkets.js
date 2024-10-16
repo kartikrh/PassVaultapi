@@ -409,6 +409,7 @@ const getMarketListByCIdQuery = async (data, request, fastify) => {
             SELECT 
                 "wrEventMarketId" as "eventMarketId",
                 "wrRunnerId" as "runnerId",
+                "wrRunner" as "runnerName",
                 "wrLine" as "line",
                 "wrOverRate" as "overRate",
                 "wrUnderRate" as "underRate",
@@ -440,6 +441,7 @@ const getMarketListByCIdQuery = async (data, request, fastify) => {
                 SELECT json_agg(
                   json_build_object(
                       'runnerId', "runnerId",
+                      'runnerName', "runnerName",
                       'line', "line",
                       'overRate', "overRate",
                       'underRate', "underRate",
@@ -2663,6 +2665,7 @@ const getMarketListByCIdQueryV1 = async (data, request, fastify) => {
             SELECT 
                 "wrEventMarketId" as "eventMarketId",
                 "wrRunnerId" as "runnerId",
+                "wrRunner" as "runnerName",
                 "wrLine" as "line",
                 "wrOverRate" as "overRate",
                 "wrUnderRate" as "underRate",
@@ -2696,6 +2699,7 @@ const getMarketListByCIdQueryV1 = async (data, request, fastify) => {
                 SELECT json_agg(
                   json_build_object(
                       'runnerId', "runnerId",
+                      'runnerName' , "runnerName",
                       'line', "line",
                       'overRate', "overRate",
                       'underRate', "underRate",

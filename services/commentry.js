@@ -7774,6 +7774,7 @@ const getEventDetailsByCIdService = async (request, fastify) => {
         ed: convertDate(commentary.eventDate, "DD/MM/YYYY") || "",
         et: convertDate(commentary.eventDate, "hh:mm:ss") || "",
         cci: commentary.currentInnings,
+        lr : commentary.lineRatio
       },
     };
     return dataToreturn;

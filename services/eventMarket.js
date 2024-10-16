@@ -1737,7 +1737,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
   }
   
   // return true;
-  // remove the market which is already closed , settled,cancel
+  // remove the market which is already closed , settled,cancel11
   let signleRunMarket = [];
   let multiRunMarket = [];
   for (let item of eventMarket){
@@ -1960,13 +1960,10 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
   //   categoryName: item.categoryName,
   //   displayOrder: item.displayOrder
   // }));
+  let data = await marketListByCIdService({ body: { commentaryId: commentary.commentaryId } }, fastify);
+  data.callPrediction = callPredictions;
 
-  return {
-    marketList : response, 
-    callPredictions,
-    // teams,
-    // categories
-  };
+ return data;
 
 };
 const getRunnerByMarketService = async (request, fastify) => {
