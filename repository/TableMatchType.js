@@ -89,11 +89,12 @@ const insertMatchTypeQuery = async (data, fastify, request) => {
         "wrCreatedBy",
         "wrCreatedDate",
         "wrIsAutoChangeStriker",
-        "wrAutoChangeStrikerAfterBall"
+        "wrAutoChangeStrikerAfterBall",
+        "wrSumOfRunPerBall"
       ) values ( 
         $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,
         $16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,
-        $29,$30,$31,$32,$33,$34,$35,$36 ,$37     
+        $29,$30,$31,$32,$33,$34,$35,$36 ,$37, $38
       ) returning *
     )
 
@@ -133,7 +134,8 @@ const insertMatchTypeQuery = async (data, fastify, request) => {
         "wrIsPenaltyRunsInPartnership" as "isPenaltyRunsInPartnership",
         "wrValueOfFrontFootNoBall" as "valueOfFrontFootNoBall",
         "wrIsAutoChangeStriker" as "isAutoChangeStriker",
-        "wrAutoChangeStrikerAfterBall" as "autoChangeStrikerAfterBall"
+        "wrAutoChangeStrikerAfterBall" as "autoChangeStrikerAfterBall",
+        "wrSumOfRunPerBall" as "sumOfRunPerBall"
         from "insert_data"
     `,
       {
@@ -175,6 +177,7 @@ const insertMatchTypeQuery = async (data, fastify, request) => {
           new Date(),
           data.isAutoChangeStriker === undefined ? false : data.isAutoChangeStriker,
           data.autoChangeStrikerAfterBall,
+          data.sumOfRunPerBall || 0
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -360,13 +363,14 @@ const updateSumOfRunPerBallQuery = async(matchTypeId, fastify, request) => {
       }
     );
     let roundValue = Math.round(query1[0].sum * 100) / 100;
-    return await fastify.db.query(
+    await fastify.db.query(
       `UPDATE "tblMatchTypes" SET "wrSumOfRunPerBall" = $1 WHERE "wrMatchTypeId" = $2`,
       {
         type: fastify.db.QueryTypes.UPDATE,
         bind: [roundValue || 0, matchTypeId],
       }
     );
+    return roundValue
   } catch (err) {
     errorLogger(
       fastify,

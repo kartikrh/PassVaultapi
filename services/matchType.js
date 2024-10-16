@@ -35,11 +35,6 @@ const createMatchTypeService = async (request, fastify) => {
     request
   );
 
-  const validate = global.tblMatchTypePredictor.filter((item) => item.matchTypeId === request.body.matchTypeId);
-  if(validate.length > 0 ){
-    await updateSumOfRunPerBallQuery(request.body.matchTypeId, fastify, request);
-  }
-
   global.tblMatchTypes.push(data);
   return data;
 };
@@ -71,8 +66,7 @@ const cloneMatchTypeService = async (request, fastify) => {
     fastify,
     request
   );
-  global.tblMatchTypes.push(data);
-
+  
   // clone the matchType predictor 
   const predictorData = global.tblMatchTypePredictor.filter(
     (item) => item.matchTypeId === request.body.matchTypeId
@@ -94,12 +88,14 @@ const cloneMatchTypeService = async (request, fastify) => {
     fastify
   )
 
-  global.tblMatchTypePredictor.push(...predictor);
-
-  const validate = global.tblMatchTypePredictor.filter((item) => item.matchTypeId === data.matchTypeId);
+  const validate = global.tblMatchTypePredictor.filter((item) => item.matchTypeId === request.body.matchTypeId);
   if(validate.length > 0 ){
-    await updateSumOfRunPerBallQuery(data.matchTypeId, fastify, request);
+     const sumOfRPB = await updateSumOfRunPerBallQuery(data.matchTypeId, fastify, request);
+     data.sumOfRunPerBall = sumOfRPB
   }
+  global.tblMatchTypes.push(data);
+
+  global.tblMatchTypePredictor.push(...predictor);
 
   return data;
 };
@@ -146,7 +142,8 @@ const updateMatchTypeService = async (request, fastify) => {
 
   const validate = global.tblMatchTypePredictor.filter((item) => item.matchTypeId === request.body.matchTypeId);
   if(validate.length > 0 ){
-    await updateSumOfRunPerBallQuery(request.body.matchTypeId, fastify, request);
+     const sumOfRPB = await updateSumOfRunPerBallQuery(request.body.matchTypeId, fastify, request);
+     global.tblMatchTypes[index].sumOfRunPerBall = sumOfRPB
   }
 
   return { ...data, matchTypeId: request.body.matchTypeId };

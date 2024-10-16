@@ -1532,7 +1532,7 @@ const getMarketTypeCategoryService = async (request, fastify) => {
 }
 
 const getDetailsByCIdV1Service = async (request, fastify) => {
-  const { commentaryId, isShowInAdvanceMarket } = request.body;
+  const { commentaryId } = request.body;
   const commentary = global.tblCommentaries.find(
     (item) => item.commentaryId === commentaryId
   );
@@ -1577,13 +1577,9 @@ const getDetailsByCIdV1Service = async (request, fastify) => {
     }
   }
 
-  const marketTemplate = global.tblMarketTemplate.filter((item) => {
-    const isMatchTypeIdMatch = item.matchTypeID === commentary.matchTypeId;
-    if (request.body.isShowInAdvanceMarket !== undefined) {
-      return isMatchTypeIdMatch && item.isShowInAdvanceMarket == request.body.isShowInAdvanceMarket;
-    }
-    return isMatchTypeIdMatch;
-  });
+  const marketTemplate = global.tblMarketTemplate.filter(
+    (item) => item.matchTypeID === commentary.matchTypeId  && item.isShowInAdvanceMarket === true
+  );
 
   for (temp of marketTemplate) {
     if(temp.isPredefineRunnerValue == true){
