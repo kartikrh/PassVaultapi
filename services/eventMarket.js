@@ -1960,13 +1960,10 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
   //   categoryName: item.categoryName,
   //   displayOrder: item.displayOrder
   // }));
+  let data = await marketListByCIdService({ body: { commentaryId: commentary.commentaryId } }, fastify);
+  data.callPrediction = callPredictions;
 
-  return {
-    marketList : response, 
-    callPredictions,
-    // teams,
-    // categories
-  };
+ return data;
 
 };
 const getRunnerByMarketService = async (request, fastify) => {
