@@ -2716,7 +2716,7 @@ const Commentary = {
         type: "object",
         properties: {
           commentaryId: { type: "integer" },
-          lineRatio: { type: "integer" },
+          // lineRatio: { type: "" },
         },
         required: ["commentaryId", "lineRatio"],
       },
