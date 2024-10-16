@@ -1737,7 +1737,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
   }
   
   // return true;
-  // remove the market which is already closed , settled,cancel
+  // remove the market which is already closed , settled,cancel11
   let signleRunMarket = [];
   let multiRunMarket = [];
   for (let item of eventMarket){
