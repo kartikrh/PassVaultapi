@@ -334,7 +334,7 @@ const updateMenuItemStatusService = async (request, fastify) => {
         data : {
           module : "menuItems",
           type : isActive ? "active" : "inactive",
-          data : menu
+          data : global.tblMenuItems[index]
         }
       },
       request,
