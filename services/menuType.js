@@ -184,7 +184,7 @@ const updateMenuTypeService = async (request, fastify) => {
     blockId: body.blockId,
     menuTypeId: request.body.menuTypeId,
   };
-  if(result.isActive){
+  // if(result.isActive){
       callClientAPI(
         {
           serviceType : ServiceType.clientAPI, 
@@ -200,8 +200,7 @@ const updateMenuTypeService = async (request, fastify) => {
       ).catch(err => 
         errorLogger(fastify, err.message, "services/menuType.js/updateMenuTypeService - callClientAPI", request)
       );
-    
-  }
+  // }
 
   return {
     ...result,
