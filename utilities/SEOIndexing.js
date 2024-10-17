@@ -1,6 +1,7 @@
 const path = require("path");
 const fs = require("fs");
 const { SitemapStream, streamToPromise } = require("sitemap");
+const { SCORECLIENTAPIENDPOINT } = require("./configConstants");
 
 const sitemapPath = path.join(__dirname, "..", "public", "sitemap.xml");
 
@@ -22,7 +23,9 @@ async function handleSitemapUpdate(newUrl) {
       }
     }
     
-    const siteUrl = global.tblClientSocket[0].url;
+    const siteUrl = global.tblConfigs.find(
+      (item) => item.key.toLowerCase() === SCORECLIENTAPIENDPOINT.toLowerCase()
+    ).value;
 
     const fullUrl = `${siteUrl}${newUrl}`;
 
@@ -33,11 +36,21 @@ async function handleSitemapUpdate(newUrl) {
     const sitemap = new SitemapStream({ hostname: `${siteUrl}/` });
     if (existingUrls.length > 0) {
       existingUrls.forEach((url) => {
-        sitemap.write({ url, changefreq: "daily", priority: 1.0 });
+        sitemap.write({
+          url,
+          changefreq: "daily",
+          priority: 1.0,
+          lastmod: new Date().toISOString(),
+        });
       });
     }
 
-    sitemap.write({ url: newUrl, changefreq: "daily", priority: 1.0 });
+    sitemap.write({
+      url: newUrl,
+      changefreq: "daily",
+      priority: 1.0,
+      lastmod: new Date().toISOString(),
+    });
     sitemap.end();
 
     const xmlString = await streamToPromise(sitemap).then((data) =>
