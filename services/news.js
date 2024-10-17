@@ -12,7 +12,7 @@ const {
 } = require("../utilities/Images");
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
-const { handleSitemapUpdate } = require("../utilities/SEOIndexing")
+// const { handleSitemapUpdate } = require("../utilities/SEOIndexing")
 
 const getAllNewsService = async (request, fastify) => {
   const { isActive } = request.body;
@@ -62,10 +62,11 @@ const createNewsService = async (request, fastify) => {
   );
 
   global.tblNews.push(data[0]);
-  const urlId = data[0].newsId;
-  const urlEndPoint = data[0].title.replace(/ /g, "-");
+  
+  // const urlId = data[0].newsId;
+  // const urlEndPoint = data[0].title.replace(/ /g, "-");
 
-  await handleSitemapUpdate(`news/${urlId}/${urlEndPoint}`)
+  // await handleSitemapUpdate(`news/${urlId}/${urlEndPoint}`)
 
   if(data[0].isActive){
     callClientAPI(
