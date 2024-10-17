@@ -40,56 +40,24 @@ const setResultInRunnerMarketQuery = async(data, request,fastify)=>{
             bind: [EventMarketStatus.LOSE, data.result, data.eventMarketId],
             type: fastify.db.QueryTypes.UPDATE
         });
-        // set the status in wrData table
-        let q3 = `SELECT 
-          tem."wrID" as "marketId",
-          tem."wrEventRefID" as "eventId",
-          tem."wrMarketName" as "marketName",
-          tem."wrStatus" as "status",
-          tem."wrIsActive" as "isActive",
-          tem."wrIsAllow" as "isAllow",
-          json_agg(
-              json_build_object(
-                  'runnerId' , tmr."wrRunnerId",
-                  'runner', tmr."wrRunner",
-                  'status' , tmr."wrSelectionStatus",
-                  'line', tmr."wrLine",
-                  'overRate', tmr."wrOverRate",
-                  'underRate', tmr."wrUnderRate",
-                  'backPrice', tmr."wrBackPrice",
-                  'layPrice', tmr."wrLayPrice",
-                  'backSize', tmr."wrBackSize",
-                  'laySize', tmr."wrLaySize"
-              )
-          ) as "runner"
-      FROM "tblEventMarkets" tem
-      LEFT JOIN "tblMarketRunners" tmr ON tmr."wrEventMarketId" = tem."wrID"
-      WHERE tem."wrID" = $1
-      GROUP BY tem."wrID"`;
-
-    let data1 = await fastify.db.query(q3, {
-            bind: [data.eventMarketId],
-            type: fastify.db.QueryTypes.SELECT
-    });
 
     let q4 = `UPDATE "tblEventMarkets"
-        SET "wrData" = $1,
-            "wrStatus" = $2,
-            "wrResult" = $3,
-            "wrIsResult" = $4,
+        SET 
+            "wrStatus" = $1,
+            "wrResult" = $2,
+            "wrIsResult" = $3,
             "wrSettledTime" = now()::timestamp,
             "wrLastUpdate" = now()::timestamp
-        WHERE "wrID" = $5
-        AND "wrCommentaryId" = $6
-        AND "wrStatus" = $7
-        AND "wrIsResult" = $8
+        WHERE "wrID" = $4
+        AND "wrCommentaryId" = $5
+        AND "wrStatus" = $6
+        AND "wrIsResult" = $7
         AND "wrResult" IS NULL
 
     `;
     
     await fastify.db.query(q4, {
         bind: [
-            data1[0],
             EventMarketStatus.Settled,
             data.result,
             true,
@@ -100,6 +68,47 @@ const setResultInRunnerMarketQuery = async(data, request,fastify)=>{
         ],
         type: fastify.db.QueryTypes.UPDATE
     });
+
+     // set the status in wrData table
+     let q3 = `SELECT 
+     tem."wrID" as "marketId",
+     tem."wrEventRefID" as "eventId",
+     tem."wrMarketName" as "marketName",
+     tem."wrStatus" as "status",
+     tem."wrIsActive" as "isActive",
+     tem."wrIsAllow" as "isAllow",
+     json_agg(
+         json_build_object(
+             'runnerId' , tmr."wrRunnerId",
+             'runner', tmr."wrRunner",
+             'status' , tmr."wrSelectionStatus",
+             'line', tmr."wrLine",
+             'overRate', tmr."wrOverRate",
+             'underRate', tmr."wrUnderRate",
+             'backPrice', tmr."wrBackPrice",
+             'layPrice', tmr."wrLayPrice",
+             'backSize', tmr."wrBackSize",
+             'laySize', tmr."wrLaySize"
+         )
+            ) as "runner"
+        FROM "tblEventMarkets" tem
+        LEFT JOIN "tblMarketRunners" tmr ON tmr."wrEventMarketId" = tem."wrID"
+        WHERE tem."wrID" = $1
+        GROUP BY tem."wrID"`;
+
+        let data1 = await fastify.db.query(q3, {
+            bind: [data.eventMarketId],
+            type: fastify.db.QueryTypes.SELECT
+        });
+
+        let q5 = `UPDATE "tblEventMarkets"
+            SET "wrData" = $1
+            WHERE "wrID" = $2
+        `;
+        await fastify.db.query(q5, {
+            bind: [data1[0], data.eventMarketId],
+            type: fastify.db.QueryTypes.UPDATE
+        });
 
 
     return true;
