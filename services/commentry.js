@@ -3254,17 +3254,17 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
     }
 
     let strikeTeam;
+    strikeTeam = global.tblCommentaryTeams.find(
+      (item) =>
+        item.commentaryId === commentaryData.commentaryId &&
+        item.teamStatus === 1
+    );
     if (
       commentaryDetails && _sendPrePlayers &&
       commentaryData.isPredictMarket == true &&
       previousCommentaryStatus == 3 &&
       updatedData.commentaryBallByBallDetails
     ) {
-      strikeTeam = global.tblCommentaryTeams.find(
-        (item) =>
-          item.commentaryId === commentaryData.commentaryId &&
-          item.teamStatus === 1
-      );
       let decimalOverCount;
       try {
         decimalOverCount = parseFloat(commentaryBallByBall.overCount);
