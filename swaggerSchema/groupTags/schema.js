@@ -3789,6 +3789,20 @@ const EventMarket = {
       },
     },
   },
+  getComByComp:{
+    schema : {
+      tags : ["EventMarket"],
+      description : "get Commentary by Competition",
+      security : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          competitionId : {type : "integer"}
+        },
+        required : ["competitionId"]
+      }
+    }
+  },
   getMarketTypeCategory:{
     schema : {
       tags : ["EventMarket"],

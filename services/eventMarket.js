@@ -2100,6 +2100,20 @@ const updateMarketResultService = async (request, fastify) => {
 
   return "Event Market updated successfully";
 };
+const getComByCompIdService = async (request, fastify) => {
+  let commentaryList = global.tblCommentaries.filter(
+    (item) => item.competitionId === request.body.competitionId 
+  ).map((item) => {
+    return {
+      commentaryId: item.commentaryId,
+      eventName: item.eventName,
+      eventDate: item.eventDate,
+      eventRefId: item.eventRefId,
+    }
+  })
+
+  return commentaryList;
+}
 module.exports = {
   getDetailsByCIdService,
   getAllEventMarketsService,
@@ -2139,5 +2153,6 @@ module.exports = {
   marketListByCIdServiceV1,
   getRunnerByMarketService,
   pendingMultiRunnerMarketsService,
-  updateMarketResultService
+  updateMarketResultService,
+  getComByCompIdService
 };
