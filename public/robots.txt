@@ -10,4 +10,4 @@ Disallow: /api/
 Allow: /news/
 Allow: /banners/
 Allow: /full-score/
-Sitemap: https://uat.deployed.live/sitemap.xml
+Sitemap: https://uatpanelapi.deployed.live/sitemap.xml
