@@ -1,57 +1,70 @@
-const path = require("path");
-const fs = require("fs");
-const { SitemapStream, streamToPromise } = require("sitemap");
+// const path = require("path");
+// const fs = require("fs");
+// const { SitemapStream, streamToPromise } = require("sitemap");
+// const { SCORECLIENTAPIENDPOINT } = require("./configConstants");
 
-const sitemapPath = path.join(__dirname, "..", "public", "sitemap.xml");
+// const sitemapPath = path.join(__dirname, "..", "public", "sitemap.xml");
 
-async function handleSitemapUpdate(newUrl) {
-  try {
-    const existingSitemapXml = fs.existsSync(sitemapPath)
-      ? fs.readFileSync(sitemapPath, "utf8")
-      : "";
+// async function handleSitemapUpdate(newUrl) {
+//   try {
+//     const existingSitemapXml = fs.existsSync(sitemapPath)
+//       ? fs.readFileSync(sitemapPath, "utf8")
+//       : "";
 
-    const existingUrls = [];
+//     const existingUrls = [];
 
-    if (existingSitemapXml) {
-      const locMatches = existingSitemapXml.match(/<loc>(.*?)<\/loc>/g);
-      if (locMatches) {
-        locMatches.forEach((locTag) => {
-          const url = locTag.replace("<loc>", "").replace("</loc>", "");
-          existingUrls.push(url);
-        });
-      }
-    }
-    
-    const siteUrl = global.tblClientSocket[0].url;
+//     if (existingSitemapXml) {
+//       const locMatches = existingSitemapXml.match(/<loc>(.*?)<\/loc>/g);
+//       if (locMatches) {
+//         locMatches.forEach((locTag) => {
+//           const url = locTag.replace("<loc>", "").replace("</loc>", "");
+//           existingUrls.push(url);
+//         });
+//       }
+//     }
 
-    const fullUrl = `${siteUrl}${newUrl}`;
+//     const siteUrl = global.tblConfigs.find(
+//       (item) => item.key.toLowerCase() === SCORECLIENTAPIENDPOINT.toLowerCase()
+//     ).value;
 
-    if (existingUrls.includes(fullUrl)) {
-      return { success: false, message: "URL already exists in sitemap" };
-    }
+//     const fullUrl = `${siteUrl}${newUrl}`;
 
-    const sitemap = new SitemapStream({ hostname: `${siteUrl}/` });
-    if (existingUrls.length > 0) {
-      existingUrls.forEach((url) => {
-        sitemap.write({ url, changefreq: "daily", priority: 1.0 });
-      });
-    }
+//     if (existingUrls.includes(fullUrl)) {
+//       return { success: false, message: "URL already exists in sitemap" };
+//     }
 
-    sitemap.write({ url: newUrl, changefreq: "daily", priority: 1.0 });
-    sitemap.end();
+//     const sitemap = new SitemapStream({ hostname: `${siteUrl}/` });
+//     if (existingUrls.length > 0) {
+//       existingUrls.forEach((url) => {
+//         sitemap.write({
+//           url,
+//           changefreq: "daily",
+//           priority: 1.0,
+//           lastmod: new Date().toISOString(),
+//         });
+//       });
+//     }
 
-    const xmlString = await streamToPromise(sitemap).then((data) =>
-      data.toString()
-    );
+//     sitemap.write({
+//       url: newUrl,
+//       changefreq: "daily",
+//       priority: 1.0,
+//       lastmod: new Date().toISOString(),
+//     });
+//     sitemap.end();
 
-    fs.writeFileSync(sitemapPath, xmlString, "utf8");
+//     const xmlString = await streamToPromise(sitemap).then((data) =>
+//       data.toString()
+//     );
 
-    return { success: true, message: "URL added successfully" };
-  } catch (error) {
-    console.log("SEO Indexing error", error);
-  }
-}
+//     fs.writeFileSync(sitemapPath, xmlString, "utf8");
 
-module.exports = {
-  handleSitemapUpdate,
-};
+//     return { success: true, message: "URL added successfully" };
+//   } catch (error) {
+//     console.log("SEO Indexing error", error);
+//   }
+// }
+
+// module.exports = {
+//   handleSitemapUpdate,
+// };
