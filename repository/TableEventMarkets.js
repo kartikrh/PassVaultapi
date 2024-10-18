@@ -2713,7 +2713,6 @@ const getMarketListByCIdQueryV1 = async (data, request, fastify) => {
               WHERE "MarketRunners_CTE"."eventMarketId" = tem."wrID"
             ) as "runner"
         FROM "tblEventMarkets" tem
-        INNER JOIN "tblMarketTypeCategories" mtc ON tem."wrMarketTypeCategoryId" = mtc."wrId"
         WHERE tem."wrCommentaryId" = $1
         AND tem."wrStatus" NOT IN ($2 ,$3,$4)
         AND tem."wrRateSource" = 1
