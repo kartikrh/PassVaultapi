@@ -75,6 +75,7 @@ const { getAllTournamentTeamPlayersQuery } = require("../repository/TableTournam
 const { getAllGroupsQuery } = require("../repository/TableGroups");
 const { getAllTournamentTeamPointsQuery } = require("../repository/TableTournmentTeamPoints");
 // const { getMarketRunnerQueryV1 } = require("../repository/TableMarketRunner");
+const { getAllBattingHistory, getAllBowlingHistory } = require("../repository/TablePlayerHistory");
 
 const fetchAllDataFromDb = async (fastify, reply) => {
   try {
@@ -159,6 +160,8 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     // const errorLogs = await allErrorLogsQuery(fastify);
     // const getEventMarkesV1 = await getEventMarketQueryV1(fastify);
     // const getEventMarketRunnerV1 = await getMarketRunnerQueryV1(fastify);
+    const getAllPlayerBattingHistory = await getAllBattingHistory(fastify);
+    const getAllPlayerBowlingHistory = await getAllBowlingHistory(fastify);
 
 
     global.tblTabs = getAllTabs;
@@ -223,6 +226,8 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblEventMarketsV1 = [];
     global.tblGroups = getAllGroups;
     global.tblTournamentTeamPoint = getAllTournamentTeamPoints;
+    global.tblPlayersBattingHistory = getAllPlayerBattingHistory;
+    global.tblPlayersBowlingHistory = getAllPlayerBowlingHistory;
     // global.tblMarketRunnerV1 = getEventMarketRunnerV1;
     // global.responseLogs = responseLogs;
     // global.thirdPartyAPILogs = thirdPartyAPILogs;
