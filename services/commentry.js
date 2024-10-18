@@ -2305,6 +2305,16 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
     }
 
     let previousCommentaryStatus, statusToUpdate, balltypeOfdeleteBall;
+    let strikeTeamForEndInnings;
+    if(isEndInnings && isEndInnings == true){ 
+      strikeTeamForEndInnings = global.tblCommentaryTeams.find(
+        (item) =>
+          item.commentaryId === commentaryId &&
+          item.teamStatus === 1 &&
+          item.currentInnings === commentaryData.currentInnings
+      );
+    }
+      // get th strike team
     // validate CommentaryId
     if (commentaryDetails) {
       commentaryIndex = global.tblCommentaries.findIndex(
@@ -3311,7 +3321,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         {
           commentary_id: commentaryData.commentaryId,
           match_type_id: commentaryData.matchTypeId,
-          strike_team_id: strikeTeam.teamId,
+          strike_team_id: strikeTeamForEndInnings.teamId,
         },
         "/api/v1/endinnings",
         fastify,
