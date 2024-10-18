@@ -2684,7 +2684,6 @@ const getMarketListByCIdQueryV1 = async (data, request, fastify) => {
             tem."wrEventRefID" AS "eventId",
             tem."wrTeamID" AS "teamId",
             tem."wrMarketTypeCategoryId" AS "marketTypeCategoryId",
-            mtc."wrCategoryName" AS "categoryName",
             "wrMarketName" AS "marketName",
             "wrMargin" AS "margin",
             "wrStatus" AS "status",
