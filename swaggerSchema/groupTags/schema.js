@@ -6381,7 +6381,125 @@ const TournamentTeamPoints = {
     },
   },
 };
-
+const PlayerHistory = {
+  getAll: {
+    schema: {
+      tags: ["PlayerHistory"],
+      description: "get Player's all batting and bowling history",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          playerId: { type: "integer" },
+        },
+        required: ["playerId"],
+      },
+    },
+  },
+  saveBattingHistory: {
+    schema: {
+      tags: ["PlayerHistory"],
+      description: "save Batting history",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            battingHistoryId: { type: "integer" },
+            matchTypeId: { type: "integer" },
+            playerId: { type: "integer" },
+            matchTypeName: { type: "string" },
+            matchCount: { type: "integer" },
+            inningsCount: { type: "integer" },
+            notOut: { type: "integer" },
+            totalRuns: { type: "integer" },
+            highestScore: { type: "integer" },
+            ballsFacedCount: { type: "integer" },
+            countOf100: { type: "integer" },
+            countOf50: { type: "integer" },
+            countOf4: { type: "integer" },
+            countOf6: { type: "integer" },
+            average: { type: "number" },
+            strikeRate: { type: "number" },
+            catchCount: { type: "integer" },
+            stumpCount: { type: "integer" },
+          },
+          required: ["matchTypeId", "playerId"],
+        },
+      },
+    },
+  },
+  saveBowlingHistory: {
+    schema: {
+      tags: ["PlayerHistory"],
+      description: "save Bowling history",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            bowlingHistoryId: { type: "integer" },
+            matchTypeId: { type: "integer" },
+            playerId: { type: "integer" },
+            matchTypeName: { type: "string" },
+            matchCount: { type: "integer" },
+            inningsCount: { type: "integer" },
+            ballCount: { type: "integer" },
+            totalRuns: { type: "integer" },
+            wicketsCount: { type: "integer" },
+            bestBowlingInInnings: { type: "string" },
+            bestBowlingInMatch: { type: "string" },
+            wickets4: { type: "integer" },
+            wickets5: { type: "integer" },
+            wickets10: { type: "integer" },
+            average: { type: "number" },
+            strikeRate: { type: "number" },
+            economy: { type: "number" },
+          },
+          required: ["matchTypeId", "playerId"],
+        },
+      },
+    },
+  },
+  deleteBattingHistory: {
+    schema: {
+      tags: ["PlayerHistory"],
+      description: "delete player batting history",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          battingHistoryId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["battingHistoryId"],
+      },
+    },
+  },
+  deleteBowlingHistory: {
+    schema: {
+      tags: ["PlayerHistory"],
+      description: "delete player bowling history",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          bowlingHistoryId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["bowlingHistoryId"],
+      },
+    },
+  },
+};
 module.exports = {
   Auth,
   Tabs,
@@ -6437,4 +6555,5 @@ module.exports = {
   TournamentTeamPlayers,
   Groups,
   TournamentTeamPoints,
+  PlayerHistory,
 };
