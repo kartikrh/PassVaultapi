@@ -1,0 +1,84 @@
+const {
+  createPlayerBattingHistoryService,
+  createPlayerBowlingHistoryService,
+  getAllPlayersHistoryService,
+  deleteBattingHistoryService,
+  deleteBowlingHistoryService
+} = require("../../../../services/playerHistory");
+const { ERROR_CODES, error, success } = require("../../../../utilities/index");
+const { errorLogger } = require("../../../../utilities/logger");
+
+let commonPath = "controller/users/admin/playerHistory/index.js";
+
+const savePlayerBattingHistory = async (request, reply, fastify) => {
+  try {
+    const result = await createPlayerBattingHistoryService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      commonPath + "/savePlayerBattingHistory",
+      request
+    );
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
+const savePlayerBowlingHistory = async (request, reply, fastify) => {
+  try {
+    const result = await createPlayerBowlingHistoryService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      commonPath + "/savePlayerBowlingHistory",
+      request
+    );
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
+const getAllPlayersHistory = async (request, reply, fastify) => {
+  try {
+    const result = await getAllPlayersHistoryService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      commonPath + "/getAllPlayersHistory",
+      request
+    );
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
+const deleteBattingHistory = async (request, reply, fastify) => {
+  try {
+      const result = await deleteBattingHistoryService(request, fastify);
+      reply.status(200).send(success(result, 200));
+  } catch (err) {
+      errorLogger(fastify, err.message, commonPath + "/deleteBattingHistory", request);
+      reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
+const deleteBowlingHistory = async (request, reply, fastify) => {
+  try {
+      const result = await deleteBowlingHistoryService(request, fastify);
+      reply.status(200).send(success(result, 200));
+  } catch (err) {
+      errorLogger(fastify, err.message, commonPath + "/deleteBowlingHistory", request);
+      reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
+module.exports = {
+  savePlayerBattingHistory,
+  savePlayerBowlingHistory,
+  getAllPlayersHistory,
+  deleteBattingHistory,
+  deleteBowlingHistory,
+};
