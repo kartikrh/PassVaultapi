@@ -1770,7 +1770,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
   // return updatedData;
   const playerMarket = [];
   const updatedOvers = [];
-  const response = [];
+  // const response = [];
   for (let item of updatedData) {
     let index = global.tblEventMarketsV1.findIndex(
       (e) => e.eventMarketId === item.eventMarketId
@@ -1826,31 +1826,32 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
       )
     
     }
-    response.push({
-      marketId : item.eventMarketId,
-      commentaryId : item.commentaryId,
-      eventRefId : item.eventRefId,
-      teamId : item.teamId,
-      marketTypeCategoryId : item.marketTypeCategoryId,
-      categoryName : global.tblMarketTypeCategories.find(
-        (e) => e.marketTypeCategoryId === item.marketTypeCategoryId
-      ).categoryName,
-      marketName : item.marketName,
-      margin : item.margin,
-      status : item.status,
-      over : item.over,
-      isActive : item.isActive,
-      isAllow : item.isAllow,
-      isSendData : item.isSendData,
-      lineRatio : item.lineRatio,
-      runner : item.runners.map((e) => {
-        let {selectionStatus,...rest } = e;
-        return {
-          ...rest,
-          status : selectionStatus
-        }
-      })
-    })
+    // response.push({
+    //   marketId : item.eventMarketId,
+    //   commentaryId : item.commentaryId,
+    //   eventRefId : item.eventRefId,
+    //   teamId : item.teamId,
+    //   marketTypeCategoryId : item.marketTypeCategoryId,
+    //   // categoryName : global.tblMarketTypeCategories.find(
+    //   //   (e) => e.marketTypeCategoryId === item.marketTypeCategoryId
+    //   // ).categoryName,
+    //   marketName : item.marketName,
+    //   margin : item.margin,
+    //   status : item.status,
+    //   over : item.over,
+    //   isActive : item.isActive,
+    //   isAllow : item.isAllow,
+    //   isSendData : item.isSendData,
+    //   lineRatio : item.lineRatio,
+    //   lineType : item.lineType,
+    //   runner : item.runners.map((e) => {
+    //     let {selectionStatus,...rest } = e;
+    //     return {
+    //       ...rest,
+    //       status : selectionStatus
+    //     }
+    //   })
+    // })
 
   }
   const teamOnStrike = global.tblCommentaryTeams.find(
