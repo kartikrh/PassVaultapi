@@ -12,7 +12,9 @@ const getAllCompititionQuery = async (fastify) => {
     tc."wrImage" as "image",
     tc."wrIsActive" as "isActive",
     tc."wrDisplayOrder" as "displayOrder",
-    tc."wrIsTrending" as "isTrending"
+    tc."wrIsTrending" as "isTrending",
+    tc."wrIsEventSnap" as "isEventSnap",
+    tc."wrIsPointTable" as "isPointTable"
     from "tblCompetitions" tc 
     inner join "tblEventTypes" tev on tc."wrEventTypeId" = tev."wrEventTypeId"
     `,
@@ -56,9 +58,12 @@ const insertCompetitionQuery = async (request, fastify) => {
         ),
         inser_data as (
             
-            insert into "tblCompetitions" ("wrCompetition" , "wrEventTypeId" , "wrRefID" , "wrImage" ,"wrIsActive" , "wrCreatedBy" , "wrCreatedDate","wrDisplayOrder", "wrIsTrending" ) values ($1 ,
+            insert into "tblCompetitions" (
+            "wrCompetition" , "wrEventTypeId" , "wrRefID" , "wrImage" ,"wrIsActive" ,
+             "wrCreatedBy" , "wrCreatedDate","wrDisplayOrder", "wrIsTrending", "wrIsEventSnap", "wrIsPointTable" )
+            values ($1 ,
                  $2,
-                 $3,$4,$5,$6,now(),(select COALESCE("display_order" , 0) from "display") + 1, $7
+                 $3,$4,$5,$6,now(),(select COALESCE("display_order" , 0) from "display") + 1, $7, $8, $9
                  ) returning *
         )
 
@@ -71,7 +76,9 @@ const insertCompetitionQuery = async (request, fastify) => {
         tc."wrImage" as "image",
         tc."wrIsActive" as "isActive",
         tc."wrDisplayOrder" as "displayOrder",
-        tc."wrIsTrending" as "isTrending"
+        tc."wrIsTrending" as "isTrending",
+        tc."wrIsEventSnap" as "isEventSnap",
+        tc."wrIsPointTable" as "isPointTable"
         from "inser_data" tc
         inner join "tblEventTypes" tev on tc."wrEventTypeId" = tev."wrEventTypeId"
     `,
@@ -84,6 +91,8 @@ const insertCompetitionQuery = async (request, fastify) => {
           data.isActive || false,
           request.userTokenInfo.WrUserId,
           data.isTrending || false,
+          data.isEventSnap || false,
+          data.isPointTable || false,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -133,8 +142,10 @@ const updateCompititionQuery = async (data, fastify, request) => {
         "wrIsActive" = $5,
         "wrModifyBy" = $6,
         "wrModifyDate" = now(),
-        "wrIsTrending" = $7
-        where "wrCompetitionId" = $8
+        "wrIsTrending" = $7,
+        "wrIsEventSnap" = $8,
+        "wrIsPointTable" = $9
+        where "wrCompetitionId" = $10
         `,
       {
         bind: [
@@ -145,6 +156,8 @@ const updateCompititionQuery = async (data, fastify, request) => {
           data.isActive || false,
           request.userTokenInfo.WrUserId,
           data.isTrending || false,
+          data.isEventSnap,
+          data.isPointTable,
           data.competitionId,
         ],
         type: fastify.db.QueryTypes.SELECT,
@@ -225,11 +238,59 @@ const isTrendingChangeStatusQuery = async (data, request, fastify) => {
   }
 };
 
+const isEventSnapCompetitionQuery = async (data, request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `
+                update "tblCompetitions" set
+                "wrIsEventSnap" = $1
+                where "wrCompetitionId" = $2
+            `,
+      {
+        bind: [data.isEventSnap, data.competitionId],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCompitition.js/isEventSnapCompetitionQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const isPointTableCompetitionQuery = async (data, request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `
+                update "tblCompetitions" set
+                "wrIsPointTable" = $1
+                where "wrCompetitionId" = $2
+            `,
+      {
+        bind: [data.isPointTable, data.competitionId],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCompitition.js/isPointTableCompetitionQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllCompititionQuery,
   insertCompetitionQuery,
   deleteCompetitionQuery,
   updateCompititionQuery,
   updateDisplayOrderQuery,
-  isTrendingChangeStatusQuery
+  isTrendingChangeStatusQuery,
+  isEventSnapCompetitionQuery,
+  isPointTableCompetitionQuery,
 };

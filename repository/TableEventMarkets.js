@@ -33,7 +33,10 @@ const getAllEventMarketsQuery = async (fastify, whereCondition = null) => {
         tem."wrRateSource" as "rateSource",
         tem."wrRateSourceRefID" as "rateSourceRefID",
         tem."wrResult" as "result",
-        tem."wrIsResult" as "isResult"
+        tem."wrIsResult" as "isResult",
+        tem."wrLineType" as "lineType",
+        tem."wrDefaultBackSize" as "defaultBackSize",
+        tem."wrDefaultLaySize" as "defaultLaySize"
     FROM "tblEventMarkets" tem
     LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
     LEFT JOIN "tblCompetitions" tcom ON tcom."wrCompetitionId" = tc."wrCompetitionId"
@@ -102,6 +105,9 @@ const getAllEventMarketsQueryV1 = async (fastify, whereCondition = null) => {
         tem."wrLineRatio" as "lineRatio",
         tem."wrRateSource" as "rateSource",
         tem."wrRateSourceRefID" as "rateSourceRefID",
+        tem."wrLineType" as "lineType",
+        tem."wrDefaultBackSize" as "defaultBackSize",
+        tem."wrDefaultLaySize" as "defaultLaySize",
         COALESCE(runner_data."runners", '[]') as "runners"
     FROM "tblEventMarkets" tem
     LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
@@ -437,6 +443,7 @@ const getMarketListByCIdQuery = async (data, request, fastify) => {
             "wrIsAllow" as "isAllow",
             "wrIsSendData" as "isSendData",
             tem."wrLineRatio" as "lineRatio",
+            tem."wrLineType" as "lineType", 
            (
                 SELECT json_agg(
                   json_build_object(
@@ -2623,6 +2630,9 @@ const getEventMarketByIdsQueryV1 = async (data, request, fastify) => {
           tem."wrLineRatio" as "lineRatio",
           tem."wrRateSource" as "rateSource",
           tem."wrRateSourceRefID" as "rateSourceRefID",
+          tem."wrLineType" as "lineType",
+          tem."wrDefaultBackSize" as "defaultBackSize",
+          tem."wrDefaultLaySize" as "defaultLaySize",
           json_agg(
                   json_build_object(
                       'runnerId', tmr."wrRunnerId",
@@ -2694,6 +2704,7 @@ const getMarketListByCIdQueryV1 = async (data, request, fastify) => {
             "wrIsSendData" as "isSendData",
             tem."wrLineRatio" as "lineRatio",
             tem."wrMarketTypeId" as "marketTypeId",
+            tem."wrLineType" as "lineType", 
             (
                 SELECT json_agg(
                   json_build_object(

@@ -2896,6 +2896,36 @@ const Compitition = {
       },
     },
   },
+  isEventSnap: {
+    schema: {
+      tags: ["Compitition"],
+      description: "change isEventSnap status",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionId: { type: "integer" },
+          isEventSnap: { type: "boolean" },
+        },
+        required: ["competitionId", "isEventSnap"],
+      },
+    },
+  },
+  isPointTable: {
+    schema: {
+      tags: ["Compitition"],
+      description: "change isPointTable status",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionId: { type: "integer" },
+          isPointTable: { type: "boolean" },
+        },
+        required: ["competitionId", "isPointTable"],
+      },
+    },
+  },
 };
 
 const Event = {
@@ -3229,6 +3259,9 @@ const MarketTemplate = {
           isDefaultBetAllowed: { type: "boolean" },
           isDefaultMarketActive: { type: "boolean" },
           isShowInAdvanceMarket: { type: "boolean" },
+          lineType: { type: "integer" },
+          defaultBackSize: { type: "integer" },
+          defaultLaySize: { type: "integer" },
         },
         required: [
           "marketTemplateId",

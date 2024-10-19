@@ -10,6 +10,8 @@ const {
   saveCompetition,
   updateDisplayOrder,
   isTrendingChangeStatus,
+  isEventSnap,
+  isPointTable
 } = require("../../../controller/users/admin/competition");
 const { getEventTypeList } = require("../../../controller/users/admin/eventTypes");
 const { Compitition } = require("../../../swaggerSchema/groupTags/schema");
@@ -112,5 +114,29 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request, reply) => isTrendingChangeStatus(request, reply, fastify),
+  });
+  fastify.post("/isEventSnap", {
+    schema: Compitition.isEventSnap.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "competition",
+          mode: "edit",
+        }),
+    ],
+    handler: (request, reply) => isEventSnap(request, reply, fastify),
+  });
+  fastify.post("/isPointTable", {
+    schema: Compitition.isPointTable.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "competition",
+          mode: "edit",
+        }),
+    ],
+    handler: (request, reply) => isPointTable(request, reply, fastify),
   });
 };
