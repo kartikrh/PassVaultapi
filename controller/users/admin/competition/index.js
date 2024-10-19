@@ -6,6 +6,8 @@ const {
   updateDisplayOrderService,
   competitionByeventTypeIdService,
   isTrendingChangeStatusService,
+  isEventSnapService,
+  isPointTableService,
 } = require("../../../../services/competition");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -117,6 +119,24 @@ const isTrendingChangeStatus = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const isEventSnap = async (request, reply, fastify) => {
+  try {
+    const result = await isEventSnapService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/isEventSnap", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const isPointTable = async (request, reply, fastify) => {
+  try {
+    const result = await isPointTableService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/isPointTable", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 
 module.exports = {
   getAllCompetition,
@@ -127,5 +147,7 @@ module.exports = {
   getCompetitionByeventTypeId,
   getCompetitionListByeventTypeId,
   getCompetitionList,
-  isTrendingChangeStatus
+  isTrendingChangeStatus,
+  isEventSnap,
+  isPointTable
 };
