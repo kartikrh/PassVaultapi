@@ -233,6 +233,21 @@ module.exports = (sequelize) => {
         allowNull: true,
         defaultValue: 0,
       },
+      wrLineType : {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        defaultValue: 0,
+      },
+      wrDefaultBackSize : {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 100,
+      },
+      wrDefaultLaySize : {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 100,
+      },
     },
     {
       timestamps: false,
