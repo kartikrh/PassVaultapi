@@ -185,6 +185,9 @@ const updateMarketTemplateService = async (request, fastify) => {
     isDefaultMarketActive: request.body.isDefaultMarketActive || false,
     isPerEvent: request.body.isPerEvent !== undefined ? Boolean(request.body.isPerEvent) : marketTemplate.isPerEvent,
     isShowInAdvanceMarket: request.body.isShowInAdvanceMarket !== undefined ? request.body.isShowInAdvanceMarket : marketTemplate.isShowInAdvanceMarket,
+    lineType: request.body.lineType || marketTemplate.lineType,
+    defaultBackSize: request.body.defaultBackSize || marketTemplate.defaultBackSize,
+    defaultLaySize: request.body.defaultLaySize || marketTemplate.defaultLaySize,
   };
   // update marketTemplate
   await updateMarketTemplateQuery(body, fastify, request);
