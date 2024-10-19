@@ -605,6 +605,10 @@ const commentaryStatus = {
   INPROGRESS : 3,
   COMPLETED : 4,
 }
+const LineType = {
+  BackLay:	1,
+  Lay: 2,
+}
 module.exports = {
   ERROR_CODES,
   error,
@@ -649,5 +653,6 @@ module.exports = {
   templateType,
   getIpAddress,
   thirdPartyApiType,
-  commentaryStatus
+  commentaryStatus,
+  LineType
 };

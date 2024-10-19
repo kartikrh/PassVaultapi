@@ -5,6 +5,8 @@ const {
   getAllCompititionQuery,
   updateDisplayOrderQuery,
   isTrendingChangeStatusQuery,
+  isEventSnapCompetitionQuery,
+  isPointTableCompetitionQuery,
 } = require("../repository/TableCompitition");
 const {storeImageOnServer, removeImageFromServer, generateImageName } = require("../utilities/Images");
 const { PROJECT_NAME } = require("../utilities/configConstants");
@@ -145,7 +147,9 @@ const updateCompititionService = async (request, fastify) => {
     isActive: validateId.isActive,
     eventType: validateId.eventType,
     displayOrder: validateId.displayOrder,
-    isTrending: validateId.isTrending
+    isTrending: validateId.isTrending,
+    isEventSnap: validateId.isEventSnap,
+    isPointTable: validateId.isPointTable,
   };
 
   if ("isActive" in request.body) {
@@ -153,6 +157,12 @@ const updateCompititionService = async (request, fastify) => {
   }
   if("isTrending" in request.body){
     data.isTrending = request.body.isTrending;
+  }
+  if("isEventSnap" in request.body){
+    data.isEventSnap = request.body.isEventSnap;
+  }
+  if("isPointTable" in request.body){
+    data.isPointTable = request.body.isPointTable;
   }
 
   if (request.body.eventTypeId) {
@@ -362,6 +372,80 @@ const isTrendingChangeStatusService = async (request, fastify) => {
   return `Competition isTrending status updated successfully`;
 };
 
+const isEventSnapService = async (request, fastify) => {
+  const { competitionId, isEventSnap } = request.body;
+  await isEventSnapCompetitionQuery(
+    {
+      competitionId,
+      isEventSnap,
+    },
+    request,
+    fastify
+  );
+  const index = global.tblCompetitions.findIndex((item) => item.competitionId == competitionId);
+  if(index != -1){
+    global.tblCompetitions[index].isEventSnap = isEventSnap;
+  }
+  
+  callClientAPI(
+    {
+      serviceType : ServiceType.clientAPI,
+      moduleType : APIEndpointModuleType.updateSeoModule,
+      data : {
+        module : "competition",
+        type : "update",
+        data : global.tblCompetitions[index]
+      }
+    }, request, fastify)
+  .catch((err) => {
+    errorLogger(
+      fastify,
+      err.message,
+      "API ERROR --> services/competition.js/isEventSnapService - callClientAPI",
+      request
+    );
+  });
+  
+  return `Competition isEventSnap status updated successfully`;
+};
+
+const isPointTableService = async (request, fastify) => {
+  const { competitionId, isPointTable } = request.body;
+  await isPointTableCompetitionQuery(
+    {
+      competitionId,
+      isPointTable,
+    },
+    request,
+    fastify
+  );
+  const index = global.tblCompetitions.findIndex((item) => item.competitionId == competitionId);
+  if(index != -1){
+    global.tblCompetitions[index].isPointTable = isPointTable;
+  }
+  
+  callClientAPI(
+    {
+      serviceType : ServiceType.clientAPI,
+      moduleType : APIEndpointModuleType.updateSeoModule,
+      data : {
+        module : "competition",
+        type : "update",
+        data : global.tblCompetitions[index]
+      }
+    }, request, fastify)
+  .catch((err) => {
+    errorLogger(
+      fastify,
+      err.message,
+      "API ERROR --> services/competition.js/isPointTableService - callClientAPI",
+      request
+    );
+  });
+  
+  return `Competition isEventSnap status updated successfully`;
+};
+
 module.exports = {
   allCompetitionService,
   competitionByIdService,
@@ -369,5 +453,7 @@ module.exports = {
   deleteCompetitionService,
   updateDisplayOrderService,
   competitionByeventTypeIdService,
-  isTrendingChangeStatusService
+  isTrendingChangeStatusService,
+  isEventSnapService,
+  isPointTableService,
 };

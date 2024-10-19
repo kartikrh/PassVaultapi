@@ -41,7 +41,10 @@ const getAllMarketTemplateQuery = async (fastify) => {
       tmt."wrIsDefaultMarketActive" as "isDefaultMarketActive",
       "wrDelay" as "delay",
       "wrIsPerEvent" as "isPerEvent",
-      "wrIsShowInAdvanceMarket" as "isShowInAdvanceMarket"
+      "wrIsShowInAdvanceMarket" as "isShowInAdvanceMarket",
+      "wrLineType" as "lineType",
+      "wrDefaultBackSize" as "defaultBackSize",
+      "wrDefaultLaySize" as "defaultLaySize"
   FROM "tblMarketTemplates" tmt
   LEFT JOIN "tblMatchTypes" tm ON tmt."wrMatchTypeID" = "tm"."wrMatchTypeId"
   `,
@@ -60,9 +63,11 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
               "wrAutoSuspendType","wrBeforeAutoSuspend","wrIsBallStart","wrIsAutoResultSet","wrAutoResultType","wrAutoResultafterBall",
               "wrAfterWicketAutoSuspend","wrAfterWicketNotCreated","wrCreatedBy","wrIsActive" , "wrActionType",
               "wrMarketTypeId","wrMarketTypeCategoryId","wrMargin" , "wrCreateRefId" , "wrOpenRefId",
-              "wrTemplateType", "wrDelay","wrIsDefaultBetAllowed","wrIsDefaultMarketActive", "wrIsPerEvent", "wrIsShowInAdvanceMarket"
+              "wrTemplateType", "wrDelay","wrIsDefaultBetAllowed","wrIsDefaultMarketActive", "wrIsPerEvent", "wrIsShowInAdvanceMarket",
+              "wrLineType", "wrDefaultBackSize", "wrDefaultLaySize"
               ) values (
-                $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26, $27, $28, $29, $30, $31, $32,$33,$34,$35,$36
+                $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26, $27, $28, $29, $30, $31, $32,$33,$34,$35,$36,
+                $37, $38, $39
                 ) returning *
           )        
         select 
@@ -103,7 +108,10 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
         "wrIsDefaultMarketActive" as "isDefaultMarketActive",
         "wrDelay" as "delay",
         "wrIsPerEvent" as "isPerEvent",
-        "wrIsShowInAdvanceMarket" as "isShowInAdvanceMarket"
+        "wrIsShowInAdvanceMarket" as "isShowInAdvanceMarket",
+        "wrLineType" as "lineType",
+        "wrDefaultBackSize" as "defaultBackSize",
+        "wrDefaultLaySize" as "defaultLaySize"
          from insert_data`,
       {
         type: fastify.db.QueryTypes.SELECT,
@@ -155,7 +163,10 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
           data.isDefaultBetAllowed,
           data.isDefaultMarketActive,
           data.isPerEvent || false,
-          data.isShowInAdvanceMarket || false
+          data.isShowInAdvanceMarket || false,
+          data.lineType || 1, // 1 => backlay, 2 => lay
+          data.defaultBackSize || 100,
+          data.defaultLaySize || 100,
         ],
       }
     );
@@ -180,9 +191,11 @@ const insertMarketTemplateInCloneQuery = async (data, fastify, request) => {
               "wrAutoSuspendType","wrBeforeAutoSuspend","wrIsBallStart","wrIsAutoResultSet","wrAutoResultType","wrAutoResultafterBall",
               "wrAfterWicketAutoSuspend","wrAfterWicketNotCreated","wrCreatedBy","wrIsActive" , "wrActionType",
               "wrMarketTypeId","wrMarketTypeCategoryId","wrMargin" , "wrCreateRefId" , "wrOpenRefId",
-              "wrTemplateType", "wrDelay","wrIsDefaultBetAllowed","wrIsDefaultMarketActive", "wrIsPerEvent", "wrIsPredefineRunnerValue", "wrIsShowInAdvanceMarket"
+              "wrTemplateType", "wrDelay","wrIsDefaultBetAllowed","wrIsDefaultMarketActive", "wrIsPerEvent", "wrIsPredefineRunnerValue", "wrIsShowInAdvanceMarket",
+              "wrLineType", "wrDefaultBackSize", "wrDefaultLaySize"
               ) values (
-                $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26, $27, $28, $29, $30, $31, $32,$33,$34,$35,$36,$37
+                $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26, $27, $28, $29, $30, $31, $32,$33,$34,$35,$36,$37,
+                $38, $39, $40
                 ) returning *
           )        
         select 
@@ -223,7 +236,10 @@ const insertMarketTemplateInCloneQuery = async (data, fastify, request) => {
         "wrIsDefaultMarketActive" as "isDefaultMarketActive",
         "wrDelay" as "delay",
         "wrIsPerEvent" as "isPerEvent",
-        "wrIsShowInAdvanceMarket" as "isShowInAdvanceMarket"
+        "wrIsShowInAdvanceMarket" as "isShowInAdvanceMarket",
+        "wrLineType" as "lineType",
+        "wrDefaultBackSize" as "defaultBackSize",
+        "wrDefaultLaySize" as "defaultLaySize"
          from insert_data`,
       {
         type: fastify.db.QueryTypes.SELECT,
@@ -274,7 +290,10 @@ const insertMarketTemplateInCloneQuery = async (data, fastify, request) => {
           data.isDefaultMarketActive,
           data.isPerEvent || false,
           data.hasOwnProperty("isPredefineRunnerValue") ? data.isPredefineRunnerValue : null,
-          data.isShowInAdvanceMarket
+          data.isShowInAdvanceMarket,
+          data.lineType,
+          data.defaultBackSize,
+          data.defaultLaySize,
         ],
       }
     );
@@ -409,7 +428,10 @@ const updateMarketTemplateQuery = async (data, fastify, request) => {
             "wrIsDefaultBetAllowed" = $33,
             "wrIsDefaultMarketActive"= $34,
             "wrIsPerEvent"= $35,
-            "wrIsShowInAdvanceMarket" = $36
+            "wrIsShowInAdvanceMarket" = $36,
+            "wrLineType" = $37,
+            "wrDefaultBackSize" = $38,
+            "wrDefaultLaySize" = $39
         WHERE "wrID" = $32
         `,
         {
@@ -449,7 +471,10 @@ const updateMarketTemplateQuery = async (data, fastify, request) => {
                 data.isDefaultBetAllowed,
                 data.isDefaultMarketActive,
                 data.isPerEvent,
-                data.isShowInAdvanceMarket
+                data.isShowInAdvanceMarket,
+                data.lineType,
+                data.defaultBackSize,
+                data.defaultLaySize,
             ],
             type: fastify.db.QueryTypes.SELECT,
         }
