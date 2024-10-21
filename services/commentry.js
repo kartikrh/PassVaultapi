@@ -85,7 +85,7 @@ const { commentaryLogger, errorLogger } = require("../utilities/logger");
 
 
 const allCommentaryService = async (request, fastify) => {
-  // return global.tblCommentaries; added a commnet 
+  // return global.tblCommentaries;
   const { commentaryStatus, eventTypeId, competitionId, startDate, endDate } =
     request.body;
   let result;
