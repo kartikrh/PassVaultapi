@@ -59,7 +59,7 @@ const getAllPlayersHistory = async (request, reply, fastify) => {
 
 const exportPlayerHistory = async (request, reply, fastify) => {
   try {
-    const buffer = await exportPlayerHistoryService(fastify);
+    const buffer = await exportPlayerHistoryService(fastify, request);
     // reply.status(200).send(success(buffer, 200));
     reply
     .status(200)
