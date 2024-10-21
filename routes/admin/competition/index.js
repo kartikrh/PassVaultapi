@@ -15,6 +15,7 @@ const {
 } = require("../../../controller/users/admin/competition");
 const { getEventTypeList } = require("../../../controller/users/admin/eventTypes");
 const { Compitition } = require("../../../swaggerSchema/groupTags/schema");
+const { getAllMatchTypes } = require("../../../controller/users/admin/matchType");
 
 module.exports = async (fastify, opts) => {
   fastify.post("/all", {
@@ -138,5 +139,17 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request, reply) => isPointTable(request, reply, fastify),
+  });
+  fastify.post("/getMatchTypes", {
+    schema: Compitition.getMatchTypes.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "competition",
+          mode: "edit",
+        }),
+    ],
+    handler: (request, reply) => getAllMatchTypes(request, reply, fastify),
   });
 };

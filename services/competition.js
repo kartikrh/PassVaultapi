@@ -84,6 +84,15 @@ const createCompititionService = async (request, fastify) => {
     throw new Error("EventType with this id not Found");
   }
 
+  if (request.body.matchTypeId !== undefined) {
+    const validate = global.tblMatchTypes.find(
+      (item) => item.matchTypeId === request.body.matchTypeId
+    );
+    if (!validate) {
+      throw new Error('MatchTypeId does not exist');
+    }
+  }
+
   if (request.body.image && request.body.image.length) {
     let imgName = generateImageName({
       name: `${request.body.competition}-${validateEventTypeId.eventType}`,
@@ -150,6 +159,7 @@ const updateCompititionService = async (request, fastify) => {
     isTrending: validateId.isTrending,
     isEventSnap: validateId.isEventSnap,
     isPointTable: validateId.isPointTable,
+    matchTypeId: request.body.matchTypeId || validateId.matchTypeId
   };
 
   if ("isActive" in request.body) {

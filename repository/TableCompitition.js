@@ -14,7 +14,8 @@ const getAllCompititionQuery = async (fastify) => {
     tc."wrDisplayOrder" as "displayOrder",
     tc."wrIsTrending" as "isTrending",
     tc."wrIsEventSnap" as "isEventSnap",
-    tc."wrIsPointTable" as "isPointTable"
+    tc."wrIsPointTable" as "isPointTable",
+    tc."wrMatchTypeId" as "matchTypeId"
     from "tblCompetitions" tc 
     inner join "tblEventTypes" tev on tc."wrEventTypeId" = tev."wrEventTypeId"
     `,
@@ -60,10 +61,10 @@ const insertCompetitionQuery = async (request, fastify) => {
             
             insert into "tblCompetitions" (
             "wrCompetition" , "wrEventTypeId" , "wrRefID" , "wrImage" ,"wrIsActive" ,
-             "wrCreatedBy" , "wrCreatedDate","wrDisplayOrder", "wrIsTrending", "wrIsEventSnap", "wrIsPointTable" )
+             "wrCreatedBy" , "wrCreatedDate","wrDisplayOrder", "wrIsTrending", "wrIsEventSnap", "wrIsPointTable", "wrMatchTypeId" )
             values ($1 ,
                  $2,
-                 $3,$4,$5,$6,now(),(select COALESCE("display_order" , 0) from "display") + 1, $7, $8, $9
+                 $3,$4,$5,$6,now(),(select COALESCE("display_order" , 0) from "display") + 1, $7, $8, $9, $10
                  ) returning *
         )
 
@@ -78,7 +79,8 @@ const insertCompetitionQuery = async (request, fastify) => {
         tc."wrDisplayOrder" as "displayOrder",
         tc."wrIsTrending" as "isTrending",
         tc."wrIsEventSnap" as "isEventSnap",
-        tc."wrIsPointTable" as "isPointTable"
+        tc."wrIsPointTable" as "isPointTable",
+        tc."wrMatchTypeId" as "matchTypeId"
         from "inser_data" tc
         inner join "tblEventTypes" tev on tc."wrEventTypeId" = tev."wrEventTypeId"
     `,
@@ -93,6 +95,7 @@ const insertCompetitionQuery = async (request, fastify) => {
           data.isTrending || false,
           data.isEventSnap || false,
           data.isPointTable || false,
+          data.matchTypeId || null,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -144,7 +147,8 @@ const updateCompititionQuery = async (data, fastify, request) => {
         "wrModifyDate" = now(),
         "wrIsTrending" = $7,
         "wrIsEventSnap" = $8,
-        "wrIsPointTable" = $9
+        "wrIsPointTable" = $9,
+        "wrMatchTypeId" = $11
         where "wrCompetitionId" = $10
         `,
       {
@@ -159,6 +163,7 @@ const updateCompititionQuery = async (data, fastify, request) => {
           data.isEventSnap,
           data.isPointTable,
           data.competitionId,
+          data.matchTypeId,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -193,7 +198,10 @@ const updateDisplayOrderQuery = async (data, fastify, request) => {
         u."wrImage" AS "image",
         u."wrIsActive" AS "isActive",
         u."wrDisplayOrder" AS "displayOrder",
-        u."wrIsTrending" AS "isTrending"
+        u."wrIsTrending" AS "isTrending",
+        u."wrIsEventSnap" as "isEventSnap",
+        u."wrIsPointTable" as "isPointTable",
+        u."wrMatchTypeId" as "matchTypeId"
       FROM updated u
       INNER JOIN "tblEventTypes" et ON u."wrEventTypeId" = et."wrEventTypeId"
       `,

@@ -1757,6 +1757,21 @@ const MatchType = {
       },
     },
   },
+  isHistory: {
+    schema: {
+      security: [{ bearerAuth: [] }],
+      tags: ["Match Type"],
+      description: "Change isHistory Match Type",
+      body: {
+        type: "object",
+        properties: {
+          matchTypeId: { type: "integer" },
+          isHistory: { type: "boolean" },
+        },
+        required: ["matchTypeId", "isHistory"],
+      },
+    },
+  },
 };
 
 const User = {
@@ -2924,6 +2939,13 @@ const Compitition = {
         },
         required: ["competitionId", "isPointTable"],
       },
+    },
+  },
+  getMatchTypes: {
+    schema: {
+      tags: ["Compitition"],
+      security: [{ bearerAuth: [] }],
+      description: "get all Match Types",
     },
   },
 };
