@@ -14,6 +14,7 @@ const {
   updateEventMarketMaunalQuery,
   createOrUpdateEventRunnerMarketManualQuery,
   getEventMarketByIdsQuery,
+  getEventMarketRunnersQuery,
 } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
 
@@ -416,8 +417,8 @@ const listManualMarketService = async (request, fastify) => {
     //   (item) => item.eventRefId == refID && item.rateSource === 2
     // );
 
-    let whereCondition = `tem."wrEventRefID" = '${refID}' AND tem."wrRateSource" = 2 AND tc."wrIsDelete" = false`;
-    let response = await getAllEventMarketsQuery(fastify, whereCondition);
+    // let whereCondition = `tem."wrEventRefID" = '${refID}' AND tem."wrRateSource" = 2 AND tc."wrIsDelete" = false`;
+    let response = await getEventMarketRunnersQuery(refID, fastify, request);
 
     // const apiUrl = global.tblConfigs.find((item) => item.key == configConstants.IMPORTMARKET_API)?.value;
     // if(!apiUrl){
