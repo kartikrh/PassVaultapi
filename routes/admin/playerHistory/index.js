@@ -4,9 +4,15 @@ const {
   savePlayerBowlingHistory,
   getAllPlayersHistory,
   deleteBattingHistory,
-  deleteBowlingHistory
+  deleteBowlingHistory,
+  exportPlayerHistory,
+  importPlayerHistory,
 } = require("../../../controller/users/admin/playerHistory");
 const { PlayerHistory } = require("../../../swaggerSchema/groupTags/schema");
+const multer = require("fastify-multer");
+
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
 module.exports = async (fastify, opts) => {
   fastify.post("/all", {
@@ -15,7 +21,7 @@ module.exports = async (fastify, opts) => {
       (request, reply) => authorize(request, reply, fastify),
       (request, reply) =>
         checkPermission(request, reply, fastify, {
-          tabName: "Match Types",
+          tabName: "Players",
           mode: "view",
         }),
     ],
@@ -28,7 +34,7 @@ module.exports = async (fastify, opts) => {
       (request, reply) => authorize(request, reply, fastify),
       (request, reply) =>
         checkPermission(request, reply, fastify, {
-          tabName: "Match Types",
+          tabName: "Players",
           mode: "add",
         }),
     ],
@@ -41,7 +47,7 @@ module.exports = async (fastify, opts) => {
       (request, reply) => authorize(request, reply, fastify),
       (request, reply) =>
         checkPermission(request, reply, fastify, {
-          tabName: "Match Types",
+          tabName: "Players",
           mode: "add",
         }),
     ],
@@ -54,7 +60,7 @@ module.exports = async (fastify, opts) => {
       (request, reply) => authorize(request, reply, fastify),
       (request, reply) =>
         checkPermission(request, reply, fastify, {
-          tabName: "Match Types",
+          tabName: "Players",
           mode: "delete",
         }),
     ],
@@ -67,10 +73,34 @@ module.exports = async (fastify, opts) => {
       (request, reply) => authorize(request, reply, fastify),
       (request, reply) =>
         checkPermission(request, reply, fastify, {
-          tabName: "Match Types",
+          tabName: "Players",
           mode: "delete",
         }),
     ],
     handler: (request, reply) => deleteBowlingHistory(request, reply, fastify),
+  });
+  fastify.post("/export", {
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Players",
+          mode: "view",
+        }),
+    ],
+    handler: (request, reply) => exportPlayerHistory(request, reply, fastify),
+  });
+  fastify.register(upload.contentParser);
+  fastify.post("/import", {
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Players",
+          mode: "edit",
+        }),
+        upload.single('file')
+    ],
+    handler: (request, reply) => importPlayerHistory(request, reply, fastify),
   });
 };
