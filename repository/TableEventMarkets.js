@@ -3103,7 +3103,7 @@ const getEventMarketRunnersQuery = async (refID, fastify, request) => {
       LEFT JOIN "tblEventTypes" tet ON tet."wrEventTypeId" = tc."wrEventTypeId"
       LEFT JOIN "tblMarketRunners" tr ON tr."wrEventMarketId" = tem."wrID"
       LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = tem."wrTeamID"
-      WHERE tem."wrEventRefID" = $1`,
+      WHERE tem."wrEventRefID" = $1 AND tem."wrRateSource" = 2 AND tc."wrIsDelete" = false`,
       {
         type: fastify.db.QueryTypes.SELECT,
         bind: [refID],
