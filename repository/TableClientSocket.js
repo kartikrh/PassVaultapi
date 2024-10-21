@@ -57,6 +57,12 @@ const updateClientSocketStatusQuery = async(data,fastify) =>{
     }
     return result;
    } catch (error) {
+        errorLogger(
+            fastify,
+            error.message,
+            "DB Error --> repository/TableClientSocket/updateClientSocketStatusQuery",
+            null
+        )
         throw new Error(error.message); 
    }
 }

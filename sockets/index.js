@@ -26,7 +26,9 @@ const connectClients = async (fastify) => {
         updateClientSocketStatusQuery({
           clientSocketId : [urlConfig.clientSocketId],
           status : clientSocketStatus.connected
-        },fastify);
+        },fastify).catch((error) => {
+          console.log("Error updating client socket status:", error);
+        })
         
         global.clientSocketIo.push({
             ...urlConfig,
@@ -47,7 +49,15 @@ const connectClients = async (fastify) => {
         updateClientSocketStatusQuery({
           clientSocketId : [urlConfig.clientSocketId],
           status : clientSocketStatus.disconnected
-        },fastify);
+        },fastify)
+        .catch((error) => {
+          errorLogger(
+            fastify,
+            error.message,
+            "DB Error --> socketIo.js/connectClients",
+            null
+        )
+       })
         
         // update status in global.tblClientSocket
         let index = global.tblClientSocket.findIndex((c) => c.clientSocketId === urlConfig.clientSocketId);
