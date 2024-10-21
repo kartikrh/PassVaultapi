@@ -47,7 +47,8 @@ const getAllCommentaryQuery = async (fastify) => {
     tc."wrCommentaryResult" as "result",
     tc."wrCommentaryCloseTime" as "commentaryCloseTime",
     tc."wrIsTeamPredictionOn" as "isTeamPredictionOn",
-    tu."WrUserName" as "createdBy"
+    tu."WrUserName" as "createdBy",
+    tc."wrHistoryMatchTypeId" as "historyMatchTypeId"
     from "tblCommentaries" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -69,7 +70,7 @@ const insertCommentaryQuery = async (request, fastify) => {
       with insert_data as(
         insert into "tblCommentaries" ("wrEventTypeId","wrMatchTypeId","wrCompetitionId","wrEventId",
         "wrEventDate","wrEventName","wrEventRefId","wrTeam1Id","wrTeam2Id","wrLocation","wrWeather","wrPitch","wrDisplayStatus","wrTarget","wrMarketID","wrTpId","isSignalROn","isMatchTypeUpdated" , "wrCreatedBy" , "wrCreatedDate","wrCommentaryStatus","wrCurrentInnings", "wrSystemPlayerCount","wrIsPredictMarket",
-        "wrDelay", "wrIsActive", "wrIsClientShow","wrIsTeamPredictionOn") values (
+        "wrDelay", "wrIsActive", "wrIsClientShow","wrIsTeamPredictionOn", "wrHistoryMatchTypeId") values (
           $1,
           $2,
           $3,
@@ -84,7 +85,8 @@ const insertCommentaryQuery = async (request, fastify) => {
           $22,
           $23,
           $24,
-          $25
+          $25,
+          $26
         ) returning *         
       )
 
@@ -131,7 +133,8 @@ const insertCommentaryQuery = async (request, fastify) => {
     tc."wrIsTeamPredictionOn" as "isTeamPredictionOn",
     tu."WrUserName" as "createdBy",
     "wrLineRatio" as "lineRatio",
-    "wrDelay" as "delay"
+    "wrDelay" as "delay",
+    tc."wrHistoryMatchTypeId" as "historyMatchTypeId"
     from "insert_data" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"  
@@ -166,6 +169,7 @@ const insertCommentaryQuery = async (request, fastify) => {
           data.isActive,
           data.isClientShow,
           true,
+          data.matchTypeId || null,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -594,7 +598,9 @@ const getCommentaryByIdQuery = async (request, fastify) => {
       tc."wrCommentaryResult" as "result",
       tc."wrCommentaryCloseTime" as "commentaryCloseTime",
       tc."wrIsTeamPredictionOn" as "isTeamPredictionOn",
-      tu."WrUserName" as "createdBy"
+      tu."WrUserName" as "createdBy",
+      tc."wrHistoryMatchTypeId" as "historyMatchTypeId",
+      tc."wrLineRatio" as "lineRatio"	
       from "tblCommentaries" tc
       left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
       left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"

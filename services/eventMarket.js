@@ -104,7 +104,7 @@ const getDetailsByCIdService = async (request, fastify) => {
 
   // get marketTemplate where matchType is commentary.matchTypeId
   const marketTemplate = global.tblMarketTemplate.filter(
-    (item) => item.matchTypeID === commentary.matchTypeId
+    (item) => item.matchTypeID === commentary.matchTypeId  && item.isShowInAdvanceMarket === true && item.isActive === true
   );
   // let eventMarket = global.tblEventMarkets.filter(
   //     (item) => item.commentaryId === commentaryId
@@ -1578,7 +1578,7 @@ const getDetailsByCIdV1Service = async (request, fastify) => {
   }
 
   const marketTemplate = global.tblMarketTemplate.filter(
-    (item) => item.matchTypeID === commentary.matchTypeId  && item.isShowInAdvanceMarket === true
+    (item) => item.matchTypeID === commentary.matchTypeId  && item.isShowInAdvanceMarket === true && item.isActive === true
   );
 
   for (temp of marketTemplate) {
