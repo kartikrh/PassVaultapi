@@ -98,7 +98,8 @@ const getAllPlayersBattingHistory = async (playerId, fastify) => {
               FROM "tblMatchTypes" AS tmt
               LEFT JOIN 
               "tblPlayerBattingHistory" AS tpbh ON tpbh."wrMatchTypeId" = tmt."wrMatchTypeId"
-	          AND tpbh."wrPlayerId" = $1;`,
+	          AND tpbh."wrPlayerId" = $1
+            WHERE tmt."wrIsHistory" = true;`,
       {
         type: fastify.db.QueryTypes.SELECT,
         bind: [playerId],
@@ -139,7 +140,8 @@ const getAllPlayerBowlingHistory = async (playerId, fastify) => {
               FROM "tblMatchTypes" AS tmt
               LEFT JOIN 
               "tblPlayerBowlingHistory" AS tpbh ON tpbh."wrMatchTypeId" = tmt."wrMatchTypeId"
-	          AND tpbh."wrPlayerId" = $1;`,
+	          AND tpbh."wrPlayerId" = $1
+            WHERE tmt."wrIsHistory" = true;`,
       {
         type: fastify.db.QueryTypes.SELECT,
         bind: [playerId],
