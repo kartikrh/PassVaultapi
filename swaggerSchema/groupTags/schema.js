@@ -5907,31 +5907,49 @@ const Award = {
       }
     }
   },
-  updateDisplayOrder : {
-    schema : {
-      tags : ["Award"],
-      description : "update display order",
-      security : [{bearerAuth : []}],
-      body : {
-        type : "object",
-        properties : {
-          award : {
-            type : "array",
-            items : {
-              type : "object",
-              properties : {
-                id : {type : "integer"},
-                displayOrder : {type : "integer"}
-              },
-              required : ["id", "displayOrder"]
-            },
-            minItems : 1
-          }
+  // updateDisplayOrder : {
+  //   schema : {
+  //     tags : ["Award"],
+  //     description : "update display order",
+  //     security : [{bearerAuth : []}],
+  //     body : {
+        // type : "object",
+        // properties : {
+        //   award : {
+        //     type : "array",
+        //     items : {
+        //       type : "object",
+        //       properties : {
+        //         id : {type : "integer"},
+        //         displayOrder : {type : "integer"}
+        //       },
+        //       required : ["id", "displayOrder"]
+        //     },
+        //     minItems : 1
+        //   }
+        // },
+        // required : ["award"]
+    //   }
+    // }
+  // }
+  updateDisplayOrder: {
+    schema: {
+      tags: ["Award"],
+      description: "update display order",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "integer" },
+            displayOrder: { type: "integer" },
+          },
         },
-        required : ["award"]
-      }
-    }
-  }
+        minItems: 1,
+      },
+    },
+  },
 };
 const CommentaryAward = {
   getAll : {
