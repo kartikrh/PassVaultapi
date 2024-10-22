@@ -192,11 +192,55 @@ const activeInactiveTournamentTeamPointsQuery = async (data, request, fastify) =
     throw new Error(err.message);
   }
 };
-
+const updateTeamPointsQuery = async (data, fastify, request) => {
+  try {
+    return await fastify.db.query(
+      `UPDATE "tblTournamentTeamPoint" 
+       SET 
+          "wrTotalMatches" = $1,
+          "wrTotalWin" = $2,
+          "wrTotalLose" = $3
+      WHERE "wrId" = $4
+      RETURNING
+        "wrId" as "id",
+        "wrGroupId" as "groupId",
+        "wrTeamId" as "teamId",
+        "wrCompetitionId" as "competitionId",
+        "wrTotalMatches" as "totalMatches",
+        "wrTotalWin" as "totalWin",
+        "wrTotalLose" as "totalLose",
+        "wrTotalTie" as "totalTie",
+        "wrNoResult" as "noResult",
+        "wrTotalPoint" as "totalPoint",
+        "wrNetRunRate" as "netRunRate",
+        "wrIsActive" as "isActive",
+        "wrCreatedAt" as "createdAt"
+    `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [
+          data.totalMatches,
+          data.totalWin,
+          data.totalLose,
+          data.id,
+        ],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableTournamentTeamPoints.js/updateTournamentTeamPointsQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
 module.exports = {
   getAllTournamentTeamPointsQuery,
   insertTournamentTeamPointsQuery,
   updateTournamentTeamPointsQuery,
   deleteTournamentTeamPointsQuery,
-  activeInactiveTournamentTeamPointsQuery
+  activeInactiveTournamentTeamPointsQuery,
+  updateTeamPointsQuery
 };

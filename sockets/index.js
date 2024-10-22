@@ -208,7 +208,15 @@ const disconnectClients = async (fastify) => {
     updateClientSocketStatusQuery({
       clientSocketId : clientIds,
       status : clientSocketStatus.disconnected
-    },fastify);
+    },fastify)
+    .catch((error) => {
+      errorLogger(
+        fastify,
+        error.message,
+        "DB Error --> socketIo.js/disconnectClients",
+        null
+      );
+    });
     // update in global.tblClientSocket
     global.tblClientSocket.forEach((c) => {
       if (clientIds.includes(c.clientSocketId)) {

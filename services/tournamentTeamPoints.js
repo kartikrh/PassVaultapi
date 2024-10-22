@@ -2,7 +2,8 @@ const {
   insertTournamentTeamPointsQuery,
   updateTournamentTeamPointsQuery,
   deleteTournamentTeamPointsQuery,
-  activeInactiveTournamentTeamPointsQuery
+  activeInactiveTournamentTeamPointsQuery,
+  updateTeamPointsQuery
 } = require("../repository/TableTournmentTeamPoints");
 
 const allTournamentTeamPointsService = async (request) => {
@@ -104,9 +105,51 @@ const activeInactiveTournamentTeamPointsService = async (request, fastify) => {
   return `TournamentTeamPoint isActive stage updated successfully`;
 };
 
+const setTeamPointService = async (data,request, fastify) => {
+  let dataToUpdate = [];
+  for (let m of data){
+    let tp1 = global.tblTournamentTeamPoint.findIndex(t => t.competitionId == m.competitionId && t.teamId == m.team1Id && t.isActive == true);
+    if(tp1 !== -1){
+      dataToUpdate.push({
+        ...global.tblTournamentTeamPoint[tp1],
+        totalMatches: global.tblTournamentTeamPoint[tp1].totalMatches + 1,
+        totalWin : 
+          m.winnerId != null &&
+          m.winnerId == m.team1Id ? global.tblTournamentTeamPoint[tp1].totalWin + 1 : global.tblTournamentTeamPoint[tp1].totalWin,
+        totalLose :
+          m.winnerId != null &&
+         m.winnerId != m.team1Id ? global.tblTournamentTeamPoint[tp1].totalLose + 1 : global.tblTournamentTeamPoint[tp1].totalLose,
+      })
+    }
+    let tp2 = global.tblTournamentTeamPoint.findIndex(t => t.competitionId == m.competitionId && t.teamId == m.team2Id && t.isActive == true);
+    if(tp2 !== -1){
+      dataToUpdate.push({
+        ...global.tblTournamentTeamPoint[tp2],
+        totalMatches: global.tblTournamentTeamPoint[tp2].totalMatches + 1,
+        totalWin : 
+          m.winnerId != null &&
+          m.winnerId == m.team2Id ? global.tblTournamentTeamPoint[tp2].totalWin + 1 : global.tblTournamentTeamPoint[tp2].totalWin,
+        totalLose :
+         m.winnerId != null &&
+         m.winnerId != m.team2Id ? global.tblTournamentTeamPoint[tp2].totalLose + 1 : global.tblTournamentTeamPoint[tp2].totalLose,
+      })
+    }
+  }
+  for(let d of dataToUpdate){
+    await updateTeamPointsQuery(d, fastify, request);
+    const index = global.tblTournamentTeamPoint.findIndex(
+      (ind) => ind.id === d.id
+    );
+    if (index !== -1) {
+      global.tblTournamentTeamPoint[index] = d;
+    }
+  }
+  return `Team point updated successfully`;
+}
 module.exports = {
   allTournamentTeamPointsService,
   saveTournamentTeamPointsService,
   deleteTournamentTeamPointsService,
-  activeInactiveTournamentTeamPointsService
+  activeInactiveTournamentTeamPointsService,
+  setTeamPointService
 };
