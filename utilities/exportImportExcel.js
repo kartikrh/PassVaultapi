@@ -1,5 +1,4 @@
 const ExcelJS = require("exceljs");
-// const nodemailer = require("nodemailer");
 
 const exportExcelFile = async (data, reply) => {
   const workbook = new ExcelJS.Workbook();
@@ -7,10 +6,11 @@ const exportExcelFile = async (data, reply) => {
 
   const columns = [
     { header: "PlayerId", key: "playerId", },
-    { header: "PlayerName", key: "playerName", width: 50 },
     { header: "MatchTypeId", key: "matchTypeId", },
+    { header: "PlayerName", key: "playerName", width: 50 },
     { header: "MatchTypeName", key: "matchTypeName", width: 50 },
     { header: "BattingHistroyId", key: "battingHistoryId", },
+    { header: "BowlingHistoryId", key: "bowlingHistoryId", },
     { header: "MatchCount", key: "matchCount", },
     { header: "InningsCount", key: "inningsCount", },
     { header: "NotOut", key: "notOut", },
@@ -25,15 +25,13 @@ const exportExcelFile = async (data, reply) => {
     { header: "6Count", key: "countOf6", },
     { header: "CatchCount", key: "catchCount", },
     { header: "StumpCount", key: "stumpCount", },
-    { header: "IsOutInHightScore", key: "isOutInHS", },
-    { header: "BowlingHistoryId", key: "bowlingHistoryId", },
     { header: "BowlerPlayedMatchCount", key: "bowlerPlayedMatchCount", },
     { header: "BowlerPlayedInningsCount", key: "bowlerPlayedInningsCount", },
     { header: "BallsCount", key: "ballCount", },
     { header: "RunsFromBowler", key: "runsFromBowler", },
     { header: "WicketsCount", key: "wicketsCount", },
     { header: "BowlerAverage", key: "bowlerAverage", },
-    { header: "BestBowlingInInnings", key: "bestBowlingInInnigs", },
+    { header: "BestBowlingInInnings", key: "bestBowlingInInnings", },
     { header: "BestBowlingInMatch", key: "bestBowlingInMatch", },
     { header: "Economy", key: "economy", },
     { header: "BowlerStrikeRate", key: "bowlerStrikeRate", },
@@ -58,39 +56,7 @@ const exportExcelFile = async (data, reply) => {
     });
   });
   const buffer = await workbook.xlsx.writeBuffer();
-  // const filename = `Players_history_${new Date().toISOString()}.xlsx`;
   
-  // let details = {
-  //   from: "ScoreClient",
-  //   to: "venkatesh2825@gmail.com",
-  //   subject: "Players History",
-  //   text: "All Player History",
-  //   attachments: [
-  //     {
-  //       filename,
-  //       content: buffer,
-  //       contentType:
-  //         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  //     },
-  //   ],
-  // };
-
-  // transporter = nodemailer.createTransport({
-  //   service: "gmail",
-  //   auth: {
-  //     user: "hrsoftech11@gmail.com",
-  //     pass: "udrvnhsoiurkbtni",
-  //   },
-  // });
-  // const info = await transporter.sendMail(details);
-
-// reply
-//     .code(200)
-//     .header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-//     .header('Content-Disposition', `attachment; filename="Players_history_${new Date().toISOString()}.xlsx"`)
-//     .send(buffer);
-
-  // return `File exported successfully`;
   return buffer
 };
 
@@ -106,38 +72,37 @@ const importPlayersHistoryData = async (fileBuffer) => {
     if (rowNumber > 1) {
       const playerData = {
           playerId: row.getCell(1).value,
-          matchTypeId: row.getCell(3).value,
+          matchTypeId: row.getCell(2).value,
           matchTypeName: row.getCell(4).value,
           battingHistoryId: row.getCell(5).value,
-          matchCount: row.getCell(6).value,
-          inningsCount: row.getCell(7).value,
-          notOut: row.getCell(8).value,
-          totalRuns: row.getCell(9).value,
-          highestScore: row.getCell(10).value,
-          average: row.getCell(11).value,
-          ballsFacedCount: row.getCell(12).value,
-          strikeRate: row.getCell(13).value,
-          countOf100: row.getCell(14).value,
-          countOf50: row.getCell(15).value,
-          countOf4: row.getCell(16).value,
-          countOf6: row.getCell(17).value,
-          catchCount: row.getCell(18).value,
-          stumpCount: row.getCell(19).value,
-          isOutInHS: row.getCell(20).value,
-          bowlingHistoryId: row.getCell(21).value,
-          bowlerPlayedMatchCount: row.getCell(22).value,
-          bowlerPlayedInningsCount: row.getCell(23).value,
-          ballCount: row.getCell(24).value,
-          runsFromBowler: row.getCell(25).value,
-          wicketsCount: row.getCell(26).value,
-          bowlerAverage: row.getCell(27).value,
-          bestBowlingInInnings: row.getCell(28).value,
-          bestBowlingInMatch: row.getCell(29).value,
-          economy: row.getCell(30).value,
-          bowlerStrikeRate: row.getCell(31).value,
-          wickets4: row.getCell(32).value,
-          wickets5: row.getCell(33).value,
-          wickets10: row.getCell(34).value,
+          bowlingHistoryId: row.getCell(6).value,
+          matchCount: row.getCell(7).value,
+          inningsCount: row.getCell(8).value,
+          notOut: row.getCell(9).value,
+          totalRuns: row.getCell(10).value,
+          highestScore: row.getCell(11).value,
+          average: row.getCell(12).value,
+          ballsFacedCount: row.getCell(13).value,
+          strikeRate: row.getCell(14).value,
+          countOf100: row.getCell(15).value,
+          countOf50: row.getCell(16).value,
+          countOf4: row.getCell(17).value,
+          countOf6: row.getCell(18).value,
+          catchCount: row.getCell(19).value,
+          stumpCount: row.getCell(20).value,
+          bowlerPlayedMatchCount: row.getCell(21).value,
+          bowlerPlayedInningsCount: row.getCell(22).value,
+          ballCount: row.getCell(23).value,
+          runsFromBowler: row.getCell(24).value,
+          wicketsCount: row.getCell(25).value,
+          bowlerAverage: row.getCell(26).value,
+          bestBowlingInInnings: row.getCell(27).value,
+          bestBowlingInMatch: row.getCell(28).value,
+          economy: row.getCell(29).value,
+          bowlerStrikeRate: row.getCell(30).value,
+          wickets4: row.getCell(31).value,
+          wickets5: row.getCell(32).value,
+          wickets10: row.getCell(33).value,
       };
       rows.push(playerData);
     }

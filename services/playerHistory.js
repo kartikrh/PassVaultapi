@@ -7,12 +7,13 @@ const {
  } = require("../repository/TablePlayerHistory");
  const { exportExcelFile, importPlayersHistoryData } = require("../utilities/exportImportExcel");
 
-const createPlayerBattingHistoryService = async (request, fastify) => {
+const createPlayerBattingHistoryService = async (request, fastify) => {    
   const jsonPayload = JSON.stringify(request.body);
 
-  const result = await fastify.db.query(`CALL upsert_player_batting_history($1)`,
+  const result = await fastify.db.query(
+    `CALL upsert_player_batting_history($1, $2)`, 
     {
-      bind: [jsonPayload],
+      bind: [jsonPayload, request.userTokenInfo.WrUserId], 
       type: fastify.db.QueryTypes.RAW,
     }
   );
@@ -39,9 +40,9 @@ const createPlayerBattingHistoryService = async (request, fastify) => {
 const createPlayerBowlingHistoryService = async (request, fastify) => {
   const jsonPayload = JSON.stringify(request.body);
 
-  const result = await fastify.db.query(`CALL upsert_player_bowling_history($1)`,
+  const result = await fastify.db.query(`CALL upsert_player_bowling_history($1, $2)`,
     {
-      bind: [jsonPayload],
+      bind: [jsonPayload, request.userTokenInfo.WrUserId], 
       type: fastify.db.QueryTypes.RAW,
     }
   );
@@ -73,8 +74,11 @@ const getAllPlayersHistoryService = async (request, fastify) => {
   return {battingHistory, bowlingHistory}
 }
 
-const exportPlayerHistoryService = async (fastify, reply) => {
-  const playerHistory = await exportPlayerHistoryQuery(fastify);
+const exportPlayerHistoryService = async (fastify, request, reply) => {
+  const playerHistory = await exportPlayerHistoryQuery(request.body || {}, fastify);
+  if(playerHistory.length === 0){
+    return `Players data not available`
+  }
   const exportFile = await exportExcelFile(playerHistory, reply);
   return exportFile;
 };
@@ -84,8 +88,8 @@ const importPlayerHistoryService = async (fastify, request) => {
   const playerData = JSON.stringify(playerHistoryData);
 
   // Inset and upate player batting history data in db and global
-  const battingHistory = await fastify.db.query(`CALL upsert_player_batting_history($1)`, {
-    bind: [playerData],
+  const battingHistory = await fastify.db.query(`CALL upsert_player_batting_history($1, $2)`, {
+    bind: [playerData, request.userTokenInfo.WrUserId],
     type: fastify.db.QueryTypes.RAW,
   });
   const updatedData = battingHistory[0] || [];
@@ -105,8 +109,8 @@ const importPlayerHistoryService = async (fastify, request) => {
   });
   
   // Inset and upate player bowling history data in db and global
-  const bowlingHistory = await fastify.db.query(`CALL upsert_player_bowling_history($1)`, {
-    bind: [playerData],
+  const bowlingHistory = await fastify.db.query(`CALL upsert_player_bowling_history($1, $2)`, {
+    bind: [playerData, request.userTokenInfo.WrUserId],
     type: fastify.db.QueryTypes.RAW,
   });
   const updatedDatas = bowlingHistory[0] || [];
@@ -124,9 +128,6 @@ const importPlayerHistoryService = async (fastify, request) => {
       global.tblPlayersBowlingHistory.push(playerBowlingData);
     }
   });
-
-  console.log("global.tblPlayersBattingHistory", global.tblPlayersBattingHistory);
-  console.log("global.tblPlayersBowlingHistory", global.tblPlayersBowlingHistory);
   
   return `Player History data saved successfully`;
 };
