@@ -81,6 +81,8 @@ const { createMarketOddsBallByBallBYID, deleteMarketOddsBallByBall,createMarketO
 const { getEventMarketRatioQuery, closeEventMarketByCIdQuery, getMarketsByCategoryQuery,getEventMarketByIdsQuery,getMarketsByComIdQuery } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
 const { commentaryLogger, errorLogger } = require("../utilities/logger");
+const { setCompEventSnapSerice } = require("./competitionEventSnap");
+const { setTeamPointService } = require("./tournamentTeamPoints");
 // const { handleSitemapUpdate } = require("../utilities/SEOIndexing")
 
 
@@ -7970,9 +7972,13 @@ const activeInactiveCommentaryService = async (request, fastify) => {
   return "Commentary Updated successfully";
 };
 const closeCommentaryService = async (request, fastify) => {
+  
   await closeCommentaryQuery(request.body, fastify, request);
   let _resFromPredictAPI;
   let callPredictions = [];
+
+  let setEventSnap = []
+  let teamPoint = []
   // update the global variable
   for (let commentaryId of request.body.commentaryId) {
     const index = global.tblCommentaries.findIndex(
@@ -8037,8 +8043,42 @@ const closeCommentaryService = async (request, fastify) => {
           request
         );
       });
+      setEventSnap.push({
+        commentaryId: commentaryId,
+        eventRefId : global.tblCommentaries[index].eventRefId,
+        competitionId : global.tblCommentaries[index].competitionId,
+        eventTypeId : global.tblCommentaries[index].eventTypeId,
+      })
+      teamPoint.push({
+        commentaryId: commentaryId,
+        competitionId : global.tblCommentaries[index].competitionId,
+        team1Id : global.tblCommentaries[index].team1Id,
+        team2Id : global.tblCommentaries[index].team2Id,
+        winnerId : global.tblCommentaries[index].winnerId,
+      })
     }
+
   }
+  setCompEventSnapSerice(setEventSnap, request, fastify)
+  .catch((err) => {
+    console.log("setCompEventSnapSerice console", err);
+    errorLogger(
+      fastify,
+      err.message,
+      "ERROR --> services/commentary.js/closeCommentaryService - setCompEventSnapSerice",
+      request
+    );
+  });
+  setTeamPointService(teamPoint, request, fastify)
+  .catch((err) => {
+    console.log("setTeamPointService console", err);
+    errorLogger(
+      fastify,
+      err.message,
+      "ERROR --> services/commentary.js/closeCommentaryService - setTeamPointService",
+      request
+    );
+  });
   //return `Commentary(s) closed successfully`;
   return {
     message: "Commentary(s) closed successfully",
