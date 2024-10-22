@@ -5,7 +5,8 @@ const getAllAwardService = async (request, fastify) => {
     if(isActive == undefined){
         return global.tblAwards;
     }
-    return global.tblAwards.filter((item) => item.isActive === isActive);
+    return global.tblAwards.filter((item) => item.isActive === isActive)
+    .sort((a, b) => a.displayOrder - b.displayOrder);
 }
 const getAwardByIdService = async (request, fastify) => {
     const {id} = request.body;
