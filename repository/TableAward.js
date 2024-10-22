@@ -126,7 +126,8 @@ const deleteAwardQuery = async (request,fastify) =>{
 const updateDisplayOrder = async (body,request, fastify) => {
     try {
         return await fastify.db.query(
-            `update "tblAwards" set "wrDisplayOrder" = $1 where "wrId" = $2 `,
+            // `update "tblAwards" set "wrDisplayOrder" = $1 where "wrId" = $2 `,
+            `update "tblAwards" set "wrDisplayOrder" = $1 where "wrId" in ($2) `,
             {
                 bind: [body.displayOrder, body.id],
             }

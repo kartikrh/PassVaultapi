@@ -180,6 +180,11 @@ module.exports = (sequelize) => {
         allowNull: true,
         defaultValue: 5,
       },
+      wrHistoryMatchTypeId: { 
+        type : DataTypes.INTEGER,	
+        allowNull: true,
+        defaultValue : null
+      }
     },
     {
       timestamps: false,

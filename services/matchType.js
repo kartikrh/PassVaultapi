@@ -4,6 +4,7 @@ const {
   updateMatchTypeQuery,
   deleteMatchTypePredictorQuery,
   updateSumOfRunPerBallQuery,
+  isHistoryChangeInMatchTypeQuery,
 } = require("../repository/TableMatchType");
 const { createMatchTypePredictorQuery } = require("../repository/TableMatchTypePredictor");
 
@@ -193,10 +194,30 @@ const deleteMatchTypeService = async (request, fastify) => {
   return `Match Type(s) deleted successfully`;
 };
 
+const isHistoryChangeInMatchTypeService = async (request, fastify) => {
+  const { isHistory, matchTypeId } = request.body;
+  await isHistoryChangeInMatchTypeQuery(
+    {
+      isHistory,
+      matchTypeId,
+    },
+    request,
+    fastify
+  );
+  const index = global.tblMatchTypes.findIndex((item) => item.matchTypeId == matchTypeId);
+  
+  if(index != -1){
+    global.tblMatchTypes[index].isHistory = isHistory;
+  }
+  
+  return `MatchType isHistory data updated successfully`;
+}
+
 module.exports = {
   allMatchTypesService,
   matchTypeByIdService,
   saveMatchTypeService,
   deleteMatchTypeService,
   cloneMatchTypeService,
+  isHistoryChangeInMatchTypeService,
 };

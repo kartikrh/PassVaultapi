@@ -1757,6 +1757,21 @@ const MatchType = {
       },
     },
   },
+  isHistory: {
+    schema: {
+      security: [{ bearerAuth: [] }],
+      tags: ["Match Type"],
+      description: "Change isHistory Match Type",
+      body: {
+        type: "object",
+        properties: {
+          matchTypeId: { type: "integer" },
+          isHistory: { type: "boolean" },
+        },
+        required: ["matchTypeId", "isHistory"],
+      },
+    },
+  },
 };
 
 const User = {
@@ -2924,6 +2939,13 @@ const Compitition = {
         },
         required: ["competitionId", "isPointTable"],
       },
+    },
+  },
+  getMatchTypes: {
+    schema: {
+      tags: ["Compitition"],
+      security: [{ bearerAuth: [] }],
+      description: "get all Match Types",
     },
   },
 };
@@ -5885,31 +5907,49 @@ const Award = {
       }
     }
   },
-  updateDisplayOrder : {
-    schema : {
-      tags : ["Award"],
-      description : "update display order",
-      security : [{bearerAuth : []}],
-      body : {
-        type : "object",
-        properties : {
-          award : {
-            type : "array",
-            items : {
-              type : "object",
-              properties : {
-                id : {type : "integer"},
-                displayOrder : {type : "integer"}
-              },
-              required : ["id", "displayOrder"]
-            },
-            minItems : 1
-          }
+  // updateDisplayOrder : {
+  //   schema : {
+  //     tags : ["Award"],
+  //     description : "update display order",
+  //     security : [{bearerAuth : []}],
+  //     body : {
+        // type : "object",
+        // properties : {
+        //   award : {
+        //     type : "array",
+        //     items : {
+        //       type : "object",
+        //       properties : {
+        //         id : {type : "integer"},
+        //         displayOrder : {type : "integer"}
+        //       },
+        //       required : ["id", "displayOrder"]
+        //     },
+        //     minItems : 1
+        //   }
+        // },
+        // required : ["award"]
+    //   }
+    // }
+  // }
+  updateDisplayOrder: {
+    schema: {
+      tags: ["Award"],
+      description: "update display order",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "integer" },
+            displayOrder: { type: "integer" },
+          },
         },
-        required : ["award"]
-      }
-    }
-  }
+        minItems: 1,
+      },
+    },
+  },
 };
 const CommentaryAward = {
   getAll : {
@@ -6447,7 +6487,7 @@ const PlayerHistory = {
             inningsCount: { type: "integer" },
             notOut: { type: "integer" },
             totalRuns: { type: "integer" },
-            highestScore: { type: "integer" },
+            highestScore: { type: "string" },
             ballsFacedCount: { type: "integer" },
             countOf100: { type: "integer" },
             countOf50: { type: "integer" },

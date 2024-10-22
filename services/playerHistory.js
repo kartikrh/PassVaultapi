@@ -3,14 +3,17 @@ const {
   getAllPlayersBattingHistory,
   deletePlayerBattingHistoryQuery,
   deletePlayerBowlingHistoryQuery,
+  exportPlayerHistoryQuery,
  } = require("../repository/TablePlayerHistory");
+ const { exportExcelFile, importPlayersHistoryData } = require("../utilities/exportImportExcel");
 
-const createPlayerBattingHistoryService = async (request, fastify) => {
+const createPlayerBattingHistoryService = async (request, fastify) => {    
   const jsonPayload = JSON.stringify(request.body);
 
-  const result = await fastify.db.query(`CALL upsert_player_batting_history($1)`,
+  const result = await fastify.db.query(
+    `CALL upsert_player_batting_history($1, $2)`, 
     {
-      bind: [jsonPayload],
+      bind: [jsonPayload, request.userTokenInfo.WrUserId], 
       type: fastify.db.QueryTypes.RAW,
     }
   );
@@ -37,9 +40,9 @@ const createPlayerBattingHistoryService = async (request, fastify) => {
 const createPlayerBowlingHistoryService = async (request, fastify) => {
   const jsonPayload = JSON.stringify(request.body);
 
-  const result = await fastify.db.query(`CALL upsert_player_bowling_history($1)`,
+  const result = await fastify.db.query(`CALL upsert_player_bowling_history($1, $2)`,
     {
-      bind: [jsonPayload],
+      bind: [jsonPayload, request.userTokenInfo.WrUserId], 
       type: fastify.db.QueryTypes.RAW,
     }
   );
@@ -71,6 +74,64 @@ const getAllPlayersHistoryService = async (request, fastify) => {
   return {battingHistory, bowlingHistory}
 }
 
+const exportPlayerHistoryService = async (fastify, request, reply) => {
+  const playerHistory = await exportPlayerHistoryQuery(request.body || {}, fastify);
+  if(playerHistory.length === 0){
+    return `Players data not available`
+  }
+  const exportFile = await exportExcelFile(playerHistory, reply);
+  return exportFile;
+};
+
+const importPlayerHistoryService = async (fastify, request) => {
+  const playerHistoryData = await importPlayersHistoryData(request.file.buffer);
+  const playerData = JSON.stringify(playerHistoryData);
+
+  // Inset and upate player batting history data in db and global
+  const battingHistory = await fastify.db.query(`CALL upsert_player_batting_history($1, $2)`, {
+    bind: [playerData, request.userTokenInfo.WrUserId],
+    type: fastify.db.QueryTypes.RAW,
+  });
+  const updatedData = battingHistory[0] || [];
+  const battingHistoryData = updatedData[0]._battinghistorydata;
+
+  battingHistoryData.forEach((playerBattingData) => {
+    const battingHistoryId = playerBattingData.battingHistoryId;
+
+    const index = global.tblPlayersBattingHistory.findIndex(
+      (item) => item.battingHistoryId === battingHistoryId
+    );
+    if (index !== -1) {
+      global.tblPlayersBattingHistory[index] = playerBattingData;
+    } else {
+      global.tblPlayersBattingHistory.push(playerBattingData);
+    }
+  });
+  
+  // Inset and upate player bowling history data in db and global
+  const bowlingHistory = await fastify.db.query(`CALL upsert_player_bowling_history($1, $2)`, {
+    bind: [playerData, request.userTokenInfo.WrUserId],
+    type: fastify.db.QueryTypes.RAW,
+  });
+  const updatedDatas = bowlingHistory[0] || [];
+  const bowlingHistoryData = updatedDatas[0]._bowlinghistorydata;
+
+  bowlingHistoryData.forEach((playerBowlingData) => {
+    const bowlingHistoryId = playerBowlingData.bowlingHistoryId;
+
+    const index = global.tblPlayersBowlingHistory.findIndex(
+      (item) => item.bowlingHistoryId === bowlingHistoryId
+    );
+    if (index !== -1) {
+      global.tblPlayersBowlingHistory[index] = playerBowlingData;
+    } else {
+      global.tblPlayersBowlingHistory.push(playerBowlingData);
+    }
+  });
+  
+  return `Player History data saved successfully`;
+};
+
 const deleteBattingHistoryService = async (request, fastify) => {
   const { battingHistoryId } = request.body;
   await deletePlayerBattingHistoryQuery(battingHistoryId, fastify, request);
@@ -96,5 +157,7 @@ module.exports = {
   createPlayerBowlingHistoryService,
   getAllPlayersHistoryService,
   deleteBattingHistoryService,
-  deleteBowlingHistoryService
+  deleteBowlingHistoryService,
+  exportPlayerHistoryService,
+  importPlayerHistoryService,
 };

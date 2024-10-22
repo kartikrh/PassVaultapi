@@ -75,7 +75,7 @@ module.exports = async (fastify, opts) => {
         handler: (request, reply) => activeInactiveAward(request, reply, fastify),
     });
 
-    fastify.post("/updateDisplayOrder", {
+    fastify.post("/changeDisplayOrder", {
         schema: Award.updateDisplayOrder.schema,
         preHandler: [
             (request, reply) => authorize(request, reply, fastify),

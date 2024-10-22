@@ -74,7 +74,7 @@ const responseLogInDB = async (request, fastify) => {
         "wrRequestStartTime", "wrRequestEndTime") VALUES ($1, $2, $3, $4, $5 ,$6,$7,$8)
         RETURNING "wrId" as "errId"`,
         {
-          type: fastify.db.QueryTypes.INSERT,
+          type: fastify.db.QueryTypes.SELECT,
           bind: [
             request.hostname,
             request.originalUrl,

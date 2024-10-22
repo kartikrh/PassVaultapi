@@ -8,6 +8,7 @@ const {
   saveMatchType,
   deleteMatchType,
   cloneMatchType,
+  isHistoryChangeInMatchType
 } = require("../../../controller/users/admin/matchType");
 const { MatchType } = require("../../../swaggerSchema/groupTags/schema");
 
@@ -73,5 +74,17 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request, reply) => deleteMatchType(request, reply, fastify),
+  });
+  fastify.post("/isHistory", {
+    schema: MatchType.isHistory.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Match Types",
+          mode: "edit",
+        }),
+    ],
+    handler: (request, reply) => isHistoryChangeInMatchType(request, reply, fastify),
   });
 };

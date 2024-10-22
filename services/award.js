@@ -5,7 +5,8 @@ const getAllAwardService = async (request, fastify) => {
     if(isActive == undefined){
         return global.tblAwards;
     }
-    return global.tblAwards.filter((item) => item.isActive === isActive);
+    return global.tblAwards.filter((item) => item.isActive === isActive)
+    .sort((a, b) => a.displayOrder - b.displayOrder);
 }
 const getAwardByIdService = async (request, fastify) => {
     const {id} = request.body;
@@ -62,16 +63,25 @@ const activeInactiveAwardService = async (request, fastify) => {
     return `Award Updated successfully`;
 }
 const updateDisplayOrderService = async (request, fastify) => {
-    let {award} = request.body;
-    for (let aw of award) {
-        let index = global.tblAwards.findIndex((item) => item.id === aw.id);
-        if(index === -1){
-            throw new Error("Award with this Id not found");
+    // let {award} = request.body;
+    // for (let aw of award) {
+    //     let index = global.tblAwards.findIndex((item) => item.id === aw.id);
+    //     if(index === -1){
+    //         throw new Error("Award with this Id not found");
+    //     }
+    //     await updateDisplayOrder(aw,request, fastify);
+    //     global.tblAwards[index].displayOrder = aw.displayOrder;
+    // }
+    // return `Display order updated successfully`;
+    for (const item of request.body) {
+        await updateDisplayOrder(item, request, fastify);
+        let index = global.tblAwards.findIndex((elem) => elem.id === item.id);
+        if(index !== -1){
+            global.tblAwards[index].displayOrder = item.displayOrder;
         }
-        await updateDisplayOrder(aw,request, fastify);
-        global.tblAwards[index].displayOrder = aw.displayOrder;
-    }
-    return `Display order updated successfully`;
+      }
+    
+      return `Display order updated successfully`;
 }
 module.exports = {
     getAllAwardService,
