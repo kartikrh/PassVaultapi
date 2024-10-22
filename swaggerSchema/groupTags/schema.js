@@ -6469,7 +6469,7 @@ const PlayerHistory = {
             inningsCount: { type: "integer" },
             notOut: { type: "integer" },
             totalRuns: { type: "integer" },
-            highestScore: { type: "integer" },
+            highestScore: { type: "string" },
             ballsFacedCount: { type: "integer" },
             countOf100: { type: "integer" },
             countOf50: { type: "integer" },
