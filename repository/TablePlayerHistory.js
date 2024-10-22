@@ -22,7 +22,6 @@ const getAllBattingHistory = async (fastify) => {
                 "wr6Count" as "countOf6",
                 "wrCatchCount" as "catchCount",
                 "wrStumpCount" as "stumpCount",
-                "wrIsOutInHS" as "isOutInHS",
                 "wrCreatedBy" as "createdBy",
                 "wrCreatedAt" as "createdAt"
             FROM "tblPlayerBattingHistory";`,
@@ -98,7 +97,6 @@ const getAllPlayersBattingHistory = async (playerId, fastify) => {
                   tpbh."wr6Count" as "countOf6",
                   tpbh."wrCatchCount" as "catchCount",
                   tpbh."wrStumpCount" as "stumpCount",
-                  tpbh."wrIsOutInHS" as "isOutInHS",
                   tpbh."wrCreatedBy" as "createdBy",
                   tpbh."wrCreatedAt" as "createdAt"
               FROM "tblMatchTypes" AS tmt
@@ -171,11 +169,12 @@ const exportPlayerHistoryQuery = async (data, fastify) => {
     let query = `
       SELECT 
               tp."wrPlayerId" AS "playerId",
-              tp."wrPlayerName" AS "playerName",
               tmt."wrMatchTypeId" AS "matchTypeId",
+              tp."wrPlayerName" AS "playerName",
               tmt."wrMatchType" AS "matchTypeName",
               tmt."wrIsHistory" AS "isHistory",
               tpbh."wrBattingHistoryId" as "battingHistoryId",
+              tph."wrBowlingHistoryId" as "bowlingHistoryId",
               tpbh."wrMatchCount" as "matchCount",
               tpbh."wrInningsCount" as "inningsCount",
               tpbh."wrNotOut" as "notOut",
@@ -190,8 +189,6 @@ const exportPlayerHistoryQuery = async (data, fastify) => {
               tpbh."wr6Count" as "countOf6",
               tpbh."wrCatchCount" as "catchCount",
               tpbh."wrStumpCount" as "stumpCount",
-              tpbh."wrIsOutInHS" as "isOutInHS",
-              tph."wrBowlingHistoryId" as "bowlingHistoryId",
               tph."wrMatchCount" as "bowlerPlayedMatchCount",
               tph."wrInningsCount" as "bowlerPlayedInningsCount",
               tph."wrBallCount" as "ballCount",
