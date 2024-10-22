@@ -6297,6 +6297,38 @@ const TournamentTeamPlayers = {
       },
     },
   },
+  playersList: {
+    schema: {
+      tags: ["Tournament Team Players"],
+      description: "get players list by teamId",
+      security: [{ bearerAuth: [] }],
+      body: {
+          type: "object",
+          properties: {
+            teamId: { type: "integer" },
+          },
+          required: ["teamId"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["Tournament Team Players"],
+      description: "delete Tournament Team Players",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["id"],
+      },
+    },
+  }
 };
 
 const Groups = {
@@ -6393,14 +6425,39 @@ const TournamentTeamPoints = {
       },
     },
   },
+  // save: {
+  //   schema: {
+  //     tags: ["Tournament Team Points"],
+  //     description: "save Tournament Team Points",
+  //     security: [{ bearerAuth: [] }],
+  //     body: {
+  //       type: "array",
+  //       items: {
+  //         type: "object",
+  //         properties: {
+  //           groupId: { type: "integer" },
+  //           teamId: { type: "integer" },
+  //           competitionId: { type: "integer" },
+  //           totalMatches: { type: "integer" },
+  //           totalWin: { type: "integer" },
+  //           totalLose: { type: "integer" },
+  //           totalTie: { type: "integer" },
+  //           noResult: { type: "integer" },
+  //           totalPoint: { type: "integer" },
+  //           isActive: { type: "boolean" },
+  //           id: { type: "integer" },
+  //         },
+  //         required: ["competitionId", "teamId", "id"],
+  //       },
+  //     },
+  //   },
+  // },
   save: {
     schema: {
       tags: ["Tournament Team Points"],
       description: "save Tournament Team Points",
       security: [{ bearerAuth: [] }],
       body: {
-        type: "array",
-        items: {
           type: "object",
           properties: {
             groupId: { type: "integer" },
@@ -6416,7 +6473,6 @@ const TournamentTeamPoints = {
             id: { type: "integer" },
           },
           required: ["competitionId", "teamId", "id"],
-        },
       },
     },
   },
@@ -6450,6 +6506,19 @@ const TournamentTeamPoints = {
           isActive: { type: "boolean" },
         },
         required: ["id", "isActive"],
+      },
+    },
+  },
+  teamsList: {
+    schema: {
+      tags: ["Tournament Team Points"],
+      description: "teamsList on Tournament Team Points",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionId: { type: "integer" },
+        },
       },
     },
   },

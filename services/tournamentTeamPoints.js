@@ -20,6 +20,90 @@ const allTournamentTeamPointsService = async (request) => {
   return result;
 };
 
+const createTblTournamentTeamPointsService = async (request, fastify) => {
+  const validateCompetitionId = global.tblCompetitions.find(
+    (item) => item.competitionId === request.body.competitionId);
+    if(!validateCompetitionId){
+      throw new Error('CompetitionId does not existed');
+  }
+
+  const validateTeamId = global.tblTeams.find(
+      (elem) => elem.teamId === request.body.teamId
+    );
+    if(!validateTeamId){
+      throw new Error('TeamId does not existed');
+  }
+  // let groupIdValidation = request.body.groupId === undefined ? null : request.body.groupId
+  const existedValues = global.tblTournamentTeamPoint.find(
+    (item) => item.teamId == request.body.teamId && item.competitionId === request.body.competitionId
+    // && item.groupId === groupIdValidation
+  );
+  if(existedValues){
+    throw new Error("TeamId existed with this competitionId");
+  }
+    
+  const saveData = await insertTournamentTeamPointsQuery(request.body, fastify, request);
+  global.tblTournamentTeamPoint.push(saveData);
+
+  return saveData
+}
+
+const updateTblTournamentTeamPointsService = async (request, fastify) => {
+  const validateId = global.tblTournamentTeamPoint.find(
+    (elem) => elem.id === request.body.id
+  );
+  if (!validateId) {
+    throw new Error("TournamentTeamPoints Id not Found");
+  }
+
+  const validateCompetitionId = global.tblCompetitions.find(
+    (item) => item.competitionId === request.body.competitionId);
+    if(!validateCompetitionId){
+      throw new Error('CompetitionId does not existed');
+  }
+
+  const validateTeamId = global.tblTeams.find(
+      (elem) => elem.teamId === request.body.teamId
+    );
+    if(!validateTeamId){
+      throw new Error('TeamId does not existed');
+  }
+
+  const updateData = {
+    groupId: request.body.groupId === undefined ? validateId.groupId : request.body.groupId,
+    teamId: request.body.teamId === undefined ? validateId.teamId : request.body.teamId,
+    competitionId: request.body.competitionId === undefined ? validateId.competitionId : request.body.competitionId,
+    totalMatches: request.body.totalMatches === undefined ? validateId.totalMatches : request.body.totalMatches,
+    totalWin: request.body.totalWin === undefined ? validateId.totalWin : request.body.totalWin,
+    totalLose: request.body.totalLose === undefined ? validateId.totalLose : request.body.totalLose,
+    totalTie: request.body.totalTie === undefined ? validateId.totalTie : request.body.totalTie,
+    noResult: request.body.noResult === undefined ? validateId.noResult : request.body.noResult,
+    totalPoint: request.body.totalPoint === undefined ? validateId.totalPoint : request.body.totalPoint,
+    netRunRate: request.body.netRunRate === undefined ? validateId.netRunRate : request.body.netRunRate,
+    isActive: request.body.isActive === undefined ? validateId.isActive : request.body.isActive,
+    id: request.body.id,
+  };
+
+  await updateTournamentTeamPointsQuery(updateData, fastify, request);
+
+  const index = global.tblTournamentTeamPoint.findIndex(
+    (ind) => ind.id === request.body.id
+  );
+  if (index !== -1) {
+    global.tblTournamentTeamPoint[index] = updateData;
+  }
+
+  return updateData
+}
+
+const saveTblTournamentTeamPointsService = async (request, fastify) => {
+  if (request.body.id === 0) {
+    return await createTblTournamentTeamPointsService(request, fastify);
+  } else {
+    return await updateTblTournamentTeamPointsService(request, fastify);
+  }
+}
+
 const createTournamentTeamPointsService = async (newItems, fastify, request) => {
   const insertData = newItems.map(async (item) => {
     const saveData = await insertTournamentTeamPointsQuery(item, fastify, request);
@@ -146,10 +230,33 @@ const setTeamPointService = async (data,request, fastify) => {
   }
   return `Team point updated successfully`;
 }
+
+const teamsListService = async (request, fastify) => {
+  let result = global.tblTeams;
+  if(request.body.competitionId != undefined && request.body.competitionId != 0) {
+    const competitionResult = global.tblTeamCompetition.filter(
+      (item) => item.refCompetitionId === request.body.competitionId
+    );
+    const competitionTeamIds = new Set(competitionResult.map(item => item.teamId));
+    result = result.filter(
+      (item) => competitionTeamIds.has(item.teamId)
+    );
+  }
+
+  return result.map((elem) => {
+    return {
+      teamId: elem.teamId,
+      teamName: elem.teamName
+    };
+  });
+}
+
 module.exports = {
   allTournamentTeamPointsService,
   saveTournamentTeamPointsService,
   deleteTournamentTeamPointsService,
   activeInactiveTournamentTeamPointsService,
-  setTeamPointService
+  setTeamPointService,
+  saveTblTournamentTeamPointsService,
+  teamsListService,
 };
