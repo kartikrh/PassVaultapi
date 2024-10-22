@@ -8,6 +8,7 @@ const {
  const { exportExcelFile, importPlayersHistoryData } = require("../utilities/exportImportExcel");
 
 const createPlayerBattingHistoryService = async (request, fastify) => {    
+  await validatePlayerAndMatchType(request.body, request)
   const jsonPayload = JSON.stringify(request.body);
 
   const result = await fastify.db.query(
@@ -38,6 +39,7 @@ const createPlayerBattingHistoryService = async (request, fastify) => {
 };
 
 const createPlayerBowlingHistoryService = async (request, fastify) => {
+  await validatePlayerAndMatchType(request.body, request)
   const jsonPayload = JSON.stringify(request.body);
 
   const result = await fastify.db.query(`CALL upsert_player_bowling_history($1, $2)`,
@@ -85,6 +87,7 @@ const exportPlayerHistoryService = async (fastify, request, reply) => {
 
 const importPlayerHistoryService = async (fastify, request) => {
   const playerHistoryData = await importPlayersHistoryData(request.file.buffer);
+  await validatePlayerAndMatchType(playerHistoryData, request)
   const playerData = JSON.stringify(playerHistoryData);
 
   // Inset and upate player batting history data in db and global
@@ -150,6 +153,21 @@ const deleteBowlingHistoryService = async (request, fastify) => {
   );
 
   return `Bowling History data deleted successfully`;
+};
+
+const validatePlayerAndMatchType = async(payload, request) => {
+  payload.forEach((requestData) => {
+    request.body = {payload}
+    const playerValidation = global.tblPlayers.find((item) => item.playerId === requestData.playerId);
+    if (!playerValidation) {
+      throw new Error(`PlayerId ${requestData.playerId} not existed`)
+    }
+
+    const matchTypeValidation = global.tblMatchTypes.find((elem) => elem.matchTypeId === requestData.matchTypeId);
+    if (!matchTypeValidation) {
+      throw new Error(`MatchTypeId ${requestData.matchTypeId} not existed`);
+    }
+  });
 };
 
 module.exports = {

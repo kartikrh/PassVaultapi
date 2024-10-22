@@ -25,7 +25,7 @@ const getAllTournamentTeamPointsQuery = async (fastify) => {
   );
 };
 
-const insertTournamentTeamPointsQuery = async (data, fastify) => {
+const insertTournamentTeamPointsQuery = async (data, fastify, request) => {
   try {
     const result = await fastify.db.query(
       `
@@ -77,17 +77,17 @@ const insertTournamentTeamPointsQuery = async (data, fastify) => {
       {
         type: fastify.db.QueryTypes.SELECT,
         bind: [
-          data.groupId,
+          data.groupId === undefined ? null : data.groupId,
           data.teamId,
           data.competitionId,
-          data.totalMatches || 0,
-          data.totalWin || 0,
-          data.totalLose || 0,
-          data.totalTie || 0,
-          data.noResult || 0,
-          data.totalPoint || 0,
-          data.netRunRate || 0,
-          data.isActive || false,
+          data.totalMatches === undefined ? null : data.totalMatches,
+          data.totalWin === undefined ? null : data.totalWin,
+          data.totalLose === undefined ? null : data.totalLose,
+          data.totalTie === undefined ? null : data.totalTie,
+          data.noResult === undefined ? null : data.noResult,
+          data.totalPoint === undefined ? null : data.totalPoint,
+          data.netRunRate === undefined ? null : data.netRunRate,
+          data.isActive === undefined ? false : data.isActive,
         ],
       }
     );

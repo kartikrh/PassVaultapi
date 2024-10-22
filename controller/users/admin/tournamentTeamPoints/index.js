@@ -2,7 +2,9 @@ const {
   allTournamentTeamPointsService,
   saveTournamentTeamPointsService,
   deleteTournamentTeamPointsService,
-  activeInactiveTournamentTeamPointsService
+  activeInactiveTournamentTeamPointsService,
+  saveTblTournamentTeamPointsService,
+  teamsListService,
 } = require("../../../../services/tournamentTeamPoints");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -21,7 +23,7 @@ const getAllTournamentTeamPoints = async (request, reply, fastify) => {
 
 const saveTournamentTeamPoints = async (request, reply, fastify) => {
   try {
-    const result = await saveTournamentTeamPointsService(request, fastify);
+    const result = await saveTblTournamentTeamPointsService(request, fastify);
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/saveTournamentTeamPoints", request);
@@ -49,9 +51,20 @@ const activeInactiveTournamentTeamPoints = async (request, reply, fastify) => {
   }
 };
 
+const teamsList = async (request, reply, fastify) => {
+  try {
+    const result = await teamsListService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/teamsList", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
 module.exports = {
   getAllTournamentTeamPoints,
   saveTournamentTeamPoints,
   deleteTournamentTeamPoints,
-  activeInactiveTournamentTeamPoints
+  activeInactiveTournamentTeamPoints,
+  teamsList
 };
