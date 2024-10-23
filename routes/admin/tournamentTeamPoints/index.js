@@ -4,6 +4,7 @@ const {
   saveTournamentTeamPoints,
   deleteTournamentTeamPoints,
   activeInactiveTournamentTeamPoints,
+  teamsList
 } = require("../../../controller/users/admin/tournamentTeamPoints");
 const { getAllTeams  } = require("../../../controller/users/admin/teamsAndPlayer/teams");
 const { TournamentTeamPoints } = require("../../../swaggerSchema/groupTags/schema");
@@ -28,7 +29,7 @@ module.exports = async (fastify, opts) => {
       (request, reply) =>
         checkPermission(request, reply, fastify, {
           tabName: "competition",
-          mode: request.body[0].id === 0 ? "add" : "edit",
+          mode: request.body.id === 0 ? "add" : "edit",
         }),
     ],
     handler: (request, reply) => saveTournamentTeamPoints(request, reply, fastify),
@@ -58,6 +59,7 @@ module.exports = async (fastify, opts) => {
     handler: (request, reply) => activeInactiveTournamentTeamPoints(request, reply, fastify),
   });
   fastify.post("/teamsList", {
+    schema: TournamentTeamPoints.teamsList.schema,
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply) =>
@@ -66,6 +68,6 @@ module.exports = async (fastify, opts) => {
           mode: "view",
         }),
     ],
-    handler: (request, reply) => getAllTeams(request, reply, fastify),
+    handler: (request, reply) => teamsList(request, reply, fastify),
   });
 };

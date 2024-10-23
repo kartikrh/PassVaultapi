@@ -1,6 +1,7 @@
 const {
   insertTournamentTeamPlayersQuery,
   deleteTournamentTeamPlayersQuery,
+  getAllPlayersByTeamIdQuery,
 } = require("../repository/TableTournamentsTeamPlayers");
 
 const allTournamentTeamPlayersService = async (request) => {
@@ -28,20 +29,12 @@ const addTournamentTeamPlayersService = async (request, fastify) => {
 
     const existingPlayers = global.tblTournamentTeamPlayers.filter(
       (elem) =>
-        elem.competitionId === item.competitionId && elem.teamId === item.teamId
+        elem.competitionId === item.competitionId && 
+        elem.teamId === item.teamId && 
+        elem.playerId === item.playerId
     );
-
-    const existingPlayerIds = existingPlayers.map((del) => del.id);
-    
-    if (existingPlayerIds.length > 0) {
-      await deleteTournamentTeamPlayersQuery(
-        existingPlayerIds,
-        request,
-        fastify
-      );
-      global.tblTournamentTeamPlayers = global.tblTournamentTeamPlayers.filter(
-        (el) => !existingPlayerIds.includes(el.id)
-      );
+    if (existingPlayers.length > 0) {
+      return;
     }
 
     const data = await insertTournamentTeamPlayersQuery(
@@ -57,7 +50,29 @@ const addTournamentTeamPlayersService = async (request, fastify) => {
   return "Tournaments Team players added successfully";
 };
 
+const getPlayersByTeamIdService = async(request, fastify) => {
+  const { teamId } = request.body;
+  const tournamentTeamPlayers = global.tblTournamentTeamPlayers.filter(
+    (item) => item.teamId === teamId
+  );
+  const remainingPlayers = await getAllPlayersByTeamIdQuery(teamId, request, fastify)
+  return { tournamentTeamPlayers, remainingPlayers };
+}
+
+const deleteTournamentTeamPlayersService = async (request, fastify) => {
+  const { id } = request.body;
+
+  await deleteTournamentTeamPlayersQuery(id, request, fastify);
+  global.tblTournamentTeamPlayers = global.tblTournamentTeamPlayers.filter(
+    (item) => !id.includes(item.id)
+  );
+
+  return `TournamentTeamPlayer(s) deleted successfully`;
+};
+
 module.exports = {
   allTournamentTeamPlayersService,
   addTournamentTeamPlayersService,
+  getPlayersByTeamIdService,
+  deleteTournamentTeamPlayersService,
 };

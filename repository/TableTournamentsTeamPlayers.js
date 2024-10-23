@@ -87,8 +87,40 @@ const deleteTournamentTeamPlayersQuery = async (data, request, fastify) => {
   }
 };
 
+const getAllPlayersByTeamIdQuery = async (data, request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `SELECT 
+            tp."wrPlayerId" AS "playerId",
+            tp."wrPlayerName" AS "playerName",
+            ttp."wrTeamId" AS "teamId"
+        FROM "tblTeamPlayers" AS ttp
+        LEFT JOIN "tblPlayers" AS tp 
+            ON ttp."wrRefPlayerId" = tp."wrPlayerId"
+        LEFT JOIN "tblTournamentTeamPlayers" AS tttp
+            ON tttp."wrPlayerId" = tp."wrPlayerId" 
+            AND tttp."wrTeamId" = ttp."wrTeamId"
+        WHERE ttp."wrTeamId" = $1
+        AND tttp."wrPlayerId" IS NULL;`,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [data],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableTournamentTeamPlayers/getAllPlayersByTeamIdQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllTournamentTeamPlayersQuery,
   insertTournamentTeamPlayersQuery,
   deleteTournamentTeamPlayersQuery,
+  getAllPlayersByTeamIdQuery
 };
