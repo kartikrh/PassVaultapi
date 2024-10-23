@@ -12,7 +12,7 @@ const allTournamentTeamPointsService = async (request) => {
     const competitionMatch = competitionId !== undefined ? item.competitionId === competitionId : true;
     const teamMatch = teamId !== undefined ? item.teamId === teamId : true;
     const groupMatch = groupId !== undefined ? item.groupId === groupId : true;
-    const isActiveMatch = isActive !== undefined ? item.isActive === isActive : item.isActive === true
+    const isActiveMatch = isActive !== undefined ? item.isActive === isActive : true;
 
     return competitionMatch && teamMatch && groupMatch && isActiveMatch;
   });
