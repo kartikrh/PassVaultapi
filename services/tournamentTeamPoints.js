@@ -1,3 +1,4 @@
+const { deletePlayerByTeamQuery } = require("../repository/TableTournamentsTeamPlayers");
 const {
   insertTournamentTeamPointsQuery,
   updateTournamentTeamPointsQuery,
@@ -167,12 +168,20 @@ const saveTournamentTeamPointsService = async (request, fastify) => {
 };
 
 const deleteTournamentTeamPointsService = async (request, fastify) => {
-  const { id } = request.body;
+  const { id  , teamId, competitionId} = request.body;
 
   await deleteTournamentTeamPointsQuery(id, fastify, request);
+  await deletePlayerByTeamQuery({
+    teamId  : teamId,
+    competitionId : competitionId
+  }, request , fastify)
   global.tblTournamentTeamPoint = global.tblTournamentTeamPoint.filter(
     (item) => !id.includes(item.id)
   );
+  global.tblTournamentTeamPlayers = global.tblTournamentTeamPlayers.filter(
+    (item) => !(teamId.includes(item.teamId) && item.competitionId === competitionId)
+  );
+  
 
   return `TournamentTeamPoint(s) deleted successfully`;
 };
