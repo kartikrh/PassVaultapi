@@ -100,11 +100,12 @@ const getAllPlayersByTeamIdQuery = async (data, request, fastify) => {
         LEFT JOIN "tblTournamentTeamPlayers" AS tttp
             ON tttp."wrPlayerId" = tp."wrPlayerId" 
             AND tttp."wrTeamId" = ttp."wrTeamId"
+            AND tttp."wrCompetitionId" = $2
         WHERE ttp."wrTeamId" = $1
         AND tttp."wrPlayerId" IS NULL;`,
       {
         type: fastify.db.QueryTypes.SELECT,
-        bind: [data],
+        bind: [data.teamId, data.competitionId],
       }
     );
   } catch (err) {
