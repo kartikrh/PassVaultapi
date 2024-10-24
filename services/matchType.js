@@ -7,6 +7,7 @@ const {
   isHistoryChangeInMatchTypeQuery,
 } = require("../repository/TableMatchType");
 const { createMatchTypePredictorQuery } = require("../repository/TableMatchTypePredictor");
+const { MarketTypeId } = require("../utilities");
 
 const allMatchTypesService = async () => {
   return global.tblMatchTypes;
@@ -213,6 +214,9 @@ const isHistoryChangeInMatchTypeService = async (request, fastify) => {
   return `MatchType isHistory data updated successfully`;
 }
 
+const marketTypeService = async (request, fastify) => {
+  return MarketTypeId;
+}
 module.exports = {
   allMatchTypesService,
   matchTypeByIdService,
@@ -220,4 +224,5 @@ module.exports = {
   deleteMatchTypeService,
   cloneMatchTypeService,
   isHistoryChangeInMatchTypeService,
+  marketTypeService
 };

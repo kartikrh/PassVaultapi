@@ -37,6 +37,7 @@ const { authorize } = require("../controller/middleware/index");
 const { startSignalR, stopSignalR, isSignalRStarted  } = require('../signalrHandler/MockSignalR');
 const { errorLogger } = require("../utilities/logger");
 const { getAllConfigData } = require("../controller/users/admin/Page/config");
+const { marketType } = require("../controller/users/admin/matchType");
 
 module.exports = async function (fastify, opts) {
   //! API DEFINITION
@@ -200,5 +201,10 @@ module.exports = async function (fastify, opts) {
   fastify.post("/config", {
     schema: Config.allConfig.schema,
     handler: (request, reply) => getAllConfigData(request, reply, fastify),
+  });
+  fastify.post("/marketType", {
+    // schema: Config.allConfig.schema,
+    preHandler: [(request, reply) => authorize(request, reply, fastify)],
+    handler: (request, reply) => marketType(request, reply, fastify),
   });
 };
