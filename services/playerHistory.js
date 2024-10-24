@@ -9,7 +9,7 @@ const {
 
 const createPlayerBattingHistoryService = async (request, fastify) => {    
   await validatePlayerAndMatchType(request.body, request)
-  const jsonPayload = JSON.stringify(request.body);
+  const jsonPayload = JSON.stringify(request.body.payload);
 
   const result = await fastify.db.query(
     `CALL upsert_player_batting_history($1, $2)`, 
@@ -40,8 +40,7 @@ const createPlayerBattingHistoryService = async (request, fastify) => {
 
 const createPlayerBowlingHistoryService = async (request, fastify) => {
   await validatePlayerAndMatchType(request.body, request)
-  const jsonPayload = JSON.stringify(request.body);
-
+  const jsonPayload = JSON.stringify(request.body.payload);
   const result = await fastify.db.query(`CALL upsert_player_bowling_history($1, $2)`,
     {
       bind: [jsonPayload, request.userTokenInfo.WrUserId], 
