@@ -266,9 +266,15 @@ const insertCommentaryPlayers = async (
           (select "wrPlayerName" from "tblPlayers" where "wrPlayerId" = $3),
           $4,
           $5,
-          (select "wrBatsmanAverage" from "tblPlayers" where "wrPlayerId" =$3),
+          COALESCE(
+            (SELECT "wrAverage" FROM "tblPlayerBattingHistory" WHERE "wrPlayerId" = $3 AND "wrMatchTypeId" = $6),
+            (SELECT "wrBatsmanAverage" FROM "tblPlayers" WHERE "wrPlayerId" = $3)
+          ),
           (select "wrBatsmanStrikeRate" from "tblPlayers" where "wrPlayerId" =$3),
-          (select "wrBowlerEconomy" from "tblPlayers" where "wrPlayerId" =$3),
+          COALESCE(
+            (SELECT "wrEconomy" FROM "tblPlayerBowlingHistory" WHERE "wrPlayerId" = $3 AND "wrMatchTypeId" = $6),
+            (SELECT "wrBowlerEconomy" FROM "tblPlayers" WHERE "wrPlayerId" = $3)
+          ),
           (select "wrBowlerAverage" from "tblPlayers" where "wrPlayerId" =$3)
         )
         RETURNING *   
@@ -288,6 +294,7 @@ const insertCommentaryPlayers = async (
           data.playerId,
           data.displayOrder,
           currentinning,
+          data.matchTypeId,
         ],
       }
     );
