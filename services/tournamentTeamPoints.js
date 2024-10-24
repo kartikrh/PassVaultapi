@@ -174,7 +174,7 @@ const deleteTournamentTeamPointsService = async (request, fastify) => {
   await deletePlayerByTeamQuery({
     teamId  : id,
     competitionId : competitionId
-  })
+  }, request , fastify)
   global.tblTournamentTeamPoint = global.tblTournamentTeamPoint.filter(
     (item) => !id.includes(item.id)
   );
