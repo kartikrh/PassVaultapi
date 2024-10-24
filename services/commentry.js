@@ -474,7 +474,10 @@ const createCommentaryService = async (request, fastify) => {
         ];
         for (let info of data) {
           let playerData = await insertCommentaryPlayers(
-            info,
+            {
+              ...info,
+              matchTypeId: request.body.matchTypeId,
+            },
             request.body.currentInnings,
             fastify,
             request
@@ -527,7 +530,10 @@ const createCommentaryService = async (request, fastify) => {
       ];
       for (let info of data) {
         let playerData = await insertCommentaryPlayers(
-          info,
+          {
+            ...info,
+            matchTypeId: request.body.matchTypeId,
+          },
           currentinning,
           fastify,
           request
@@ -1023,7 +1029,10 @@ const cloneCommentaryService = async (request, fastify) => {
         ];
         for (let info of data) {
           let playerData = await insertCommentaryPlayers(
-            info,
+            {
+              ...info,
+              matchTypeId: request.body.matchTypeId,
+            },
             currentInning,
             fastify,
             request
@@ -1072,7 +1081,10 @@ const cloneCommentaryService = async (request, fastify) => {
       ];
       for (let info of data) {
         let palyerData = await insertCommentaryPlayers(
-          info,
+          {
+            ...info,
+            matchTypeId: request.body.matchTypeId,
+          },
           currentInning,
           fastify,
           request
@@ -3180,14 +3192,40 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           request
         );
       });
-      // let callPrediction = {};
-      // if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
-      //   callPrediction.predictioonAPI = "endcommentary"
-      //   callPrediction.predictioncallSuccess = false;
-      //   callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
-      //   callPrediction.endPoint = '/api/v1/endcommentary';
-      //   callPredictions.push(callPrediction);
-      // }
+      setCompEventSnapSerice([{
+        commentaryId: commentaryDetails.commentaryId,
+        eventRefId: commentaryDetails.eventRefId,
+        competitionId: commentaryDetails.competitionId,
+        eventTypeId : commentaryDetails.eventTypeId,
+      }], request, fastify)
+      .catch((err) => {
+        console.log("setCompEventSnapSerice console", err);
+        errorLogger(
+          fastify,
+          err.message,
+          "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket - setCompEventSnapSerice",
+          request
+        );
+      });
+      setTeamPointService([{
+        commetaryId : commentaryDetails.commentaryId,
+        competitionId: commentaryDetails.competitionId,
+        team1Id : commentaryDetails.team1Id,
+        team2Id : commentaryDetails.team2Id,
+        winnerId : commentaryDetails.winnerId,
+      }], request, fastify)
+      .catch((err) => {
+        console.log("setTeamPointService console", err);
+        errorLogger(
+          fastify,
+          err.message,
+          "ERROR --> services/commentary.js/setTeamPointServicsyncCommentaryStatsWithAPIAndSocket - setTeamPointService",
+          request
+        );
+      });
+
+
+      
     }
 
     // call the getscore and emit the event data
@@ -3676,6 +3714,7 @@ const addTeamPlayerService = async (request, fastify) => {
         teamId,
         playerId,
         displayOrder: maxDisplayOrder + 1,
+        matchTypeId: commentary.matchTypeId,
       },
       currentInning,
       fastify,
@@ -8573,7 +8612,10 @@ const AddSuperOverCommentaryService = async (request, fastify) => {
     for (let info of Playersdata) {
       try {
         let playerData = await insertCommentaryPlayers(
-          info,
+          {
+            ...info,
+            matchTypeId : commentary.matchTypeId,
+          },
           _cin,
           fastify,
           request
