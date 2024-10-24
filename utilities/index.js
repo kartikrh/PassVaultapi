@@ -609,6 +609,15 @@ const LineType = {
   BackLay:	1,
   Lay: 2,
 }
+const MarketTypeId = {
+  "Market": 1,
+  "Bookmarkers" : 3,
+  "ManualOdds" : 5,
+  "Fancy" : 2,
+  "LineMarket" : 4,
+  "MeterPari" : 6,
+  "Sportbook" : 7,
+}
 module.exports = {
   ERROR_CODES,
   error,
@@ -654,5 +663,6 @@ module.exports = {
   getIpAddress,
   thirdPartyApiType,
   commentaryStatus,
-  LineType
+  LineType,
+  MarketTypeId
 };
