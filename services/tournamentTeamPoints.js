@@ -179,8 +179,9 @@ const deleteTournamentTeamPointsService = async (request, fastify) => {
     (item) => !id.includes(item.id)
   );
   global.tblTournamentTeamPlayers = global.tblTournamentTeamPlayers.filter(
-    (item) => !teamId.includes(item.teamId) && item.competitionId === competitionId
+    (item) => !(teamId.includes(item.teamId) && item.competitionId === competitionId)
   );
+  
 
   return `TournamentTeamPoint(s) deleted successfully`;
 };
