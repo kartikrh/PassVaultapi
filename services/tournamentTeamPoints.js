@@ -168,18 +168,18 @@ const saveTournamentTeamPointsService = async (request, fastify) => {
 };
 
 const deleteTournamentTeamPointsService = async (request, fastify) => {
-  const { id  , competitionId} = request.body;
+  const { id  , teamId, competitionId} = request.body;
 
   await deleteTournamentTeamPointsQuery(id, fastify, request);
   await deletePlayerByTeamQuery({
-    teamId  : id,
+    teamId  : teamId,
     competitionId : competitionId
   }, request , fastify)
   global.tblTournamentTeamPoint = global.tblTournamentTeamPoint.filter(
     (item) => !id.includes(item.id)
   );
   global.tblTournamentTeamPlayers = global.tblTournamentTeamPlayers.filter(
-    (item) => !id.includes(item.teamId) && item.competitionId === competitionId
+    (item) => !teamId.includes(item.teamId) && item.competitionId === competitionId
   );
 
   return `TournamentTeamPoint(s) deleted successfully`;
