@@ -51,9 +51,9 @@ const addTournamentTeamPlayersService = async (request, fastify) => {
 };
 
 const getPlayersByTeamIdService = async(request, fastify) => {
-  const { teamId } = request.body;
+  const { teamId , competitionId } = request.body;
   const tournamentTeamPlayers = global.tblTournamentTeamPlayers.filter(
-    (item) => item.teamId === teamId
+    (item) => item.teamId === teamId  && item.competitionId === competitionId
   );
   const remainingPlayers = await getAllPlayersByTeamIdQuery(teamId, request, fastify)
   return { tournamentTeamPlayers, remainingPlayers };
