@@ -57,11 +57,15 @@ const insertTeamPlayerQuery = async (data, fastify, request) => {
 const deleteTeamPlayerByTeamIdQuery = async (teamId, fastify, request) => {
   try {
     return await fastify.db.query(
-      `delete from "tblTeamPlayers" where "wrTeamId" = $1
+      `UPDATE "tblTeamPlayers" SET
+          "wrIsDeleted" = $1,
+          "wrDeletedBy" = $2,
+          "wrDeletedAt" = now()
+      where "wrTeamId" = $3
     `,
       {
-        bind: [teamId],
-        type: fastify.db.QueryTypes.DELETE,
+        bind: [true, request.userTokenInfo.WrUserId, teamId],
+        type: fastify.db.QueryTypes.UPDATE,
       }
     );
   } catch (err) {
@@ -78,11 +82,15 @@ const deleteTeamPlayerByTeamIdQuery = async (teamId, fastify, request) => {
 const deleteTeamPlayerByPlayerIdQuery = async (playerId, fastify, request) => {
   try {
     return await fastify.db.query(
-      `delete from "tblTeamPlayers" where "wrRefPlayerId" = $1
+      `UPDATE "tblTeamPlayers" SET
+          "wrIsDeleted" = $1,
+          "wrDeletedBy" = $2,
+          "wrDeletedAt" = now()
+      WHERE "wrRefPlayerId" = $3
     `,
       {
-        bind: [playerId],
-        type: fastify.db.QueryTypes.DELETE,
+        bind: [true, request.userTokenInfo.WrUserId, playerId],
+        type: fastify.db.QueryTypes.UPDATE,
       }
     );
   } catch (err) {

@@ -18,6 +18,8 @@ const {
 } = require("../utilities/Images");
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
+const { deleteTournamentPlayersByPlayerIdQuery } = require("../repository/TableTournamentsTeamPlayers");
+const { deleteAwardsByPlayerIdQuery } = require("../repository/TableCommentaryAward");
 
 const allPlayerService = async (request,fastify) => {
   const { isActive, eventTypeId , teamId} = request.body;
@@ -425,8 +427,14 @@ const deletePlayerService = async (request, fastify) => {
       });
     }
   }
+  await deleteTournamentPlayersByPlayerIdQuery(playerId, request, fastify);
+  await deleteAwardsByPlayerIdQuery(playerId, request, fastify);
   await deletePlayerQuery(playerId, fastify, request);
   global.tblPlayers = global.tblPlayers.filter(
+    (item) => !playerId.includes(item.playerId)
+  );
+  global.tblCommentaryAwards = global.tblCommentaryAwards.filter((item) => !playerId.includes(item.playerId));
+  global.tblTournamentTeamPlayers = global.tblTournamentTeamPlayers.filter(
     (item) => !playerId.includes(item.playerId)
   );
 

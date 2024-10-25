@@ -18,6 +18,7 @@ const getAllMarketTemplateRunnerQuery = async (fastify) => {
                 "wrBackSize" as "backSize",
                 "wrLaySize" as "laySize"
             FROM "tblMarketTemplateRunners"
+            WHERE "wrIsDeleted" = false;
         `,
         {
             type: fastify.db.QueryTypes.SELECT,
@@ -158,14 +159,17 @@ const updateMarketTemplateRunnerQuery   = async (request, fastify) => {
 const deleteMarketTemplateRunnerQuery = async (request, fastify) => {
     try {
         const query = `
-            DELETE FROM "tblMarketTemplateRunners"
-            WHERE "wrId" = ANY($1)
+            UPDATE "tblMarketTemplateRunners" SET
+                "wrIsDeleted" = $1,
+                "wrDeletedBy" = $2,
+                "wrDeletedAt" = now()
+            WHERE "wrId" = ANY($3)
         `;
 
         await fastify.db.query(
             query,
             {
-                bind: [request.body.marketTemplateRunnerId],
+                bind: [true, request.userTokenInfo.WrUserId, request.body.marketTemplateRunnerId],
                 type: fastify.db.QueryTypes.SELECT,
             }
         );

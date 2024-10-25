@@ -41,7 +41,8 @@ const getAllMatchTypeQuery = async (fastify) => {
         "wrAutoChangeStrikerAfterBall" as "autoChangeStrikerAfterBall",
         "wrSumOfRunPerBall" as "sumOfRunPerBall",
         "wrIsHistory" as "isHistory"
-        from "tblMatchTypes"`,
+        from "tblMatchTypes"
+        where "wrIsDeleted" = false`,
     {
       type: fastify.db.QueryTypes.SELECT,
     }
@@ -202,10 +203,14 @@ const insertMatchTypeQuery = async (data, fastify, request) => {
 const deleteMatchTypeQuery = async (matchTypeId, fastify, request) => {
   try {
     return await fastify.db.query(
-      `delete from "tblMatchTypes" where "wrMatchTypeId" = ANY($1)`,
+      `UPDATE "tblMatchTypes" SET
+          "wrIsDeleted" = $1,
+          "wrDeletedBy" = $2,
+          "wrDeletedAt" = now()
+       WHERE "wrMatchTypeId" = ANY($3)`,
       {
-        bind: [matchTypeId],
-        type: fastify.db.QueryTypes.DELETE,
+        bind: [true, request.userTokenInfo.WrUserId, matchTypeId],
+        type: fastify.db.QueryTypes.UPDATE,
       }
     );
   } catch (err) {
@@ -221,10 +226,14 @@ const deleteMatchTypeQuery = async (matchTypeId, fastify, request) => {
 const deleteMatchTypePredictorQuery = async (matchTypeId, fastify, request) => {
   try {
     return await fastify.db.query(
-      `delete from "tblMatchTypePredictors" where "wrMatchTypeId" = ANY($1)`,
+      `UPDATE "tblMatchTypePredictors" SET
+          "wrIsDeleted" = $1,
+          "wrDeletedBy" = $2,
+          "wrDeletedAt" = now()
+      WHERE "wrMatchTypeId" = ANY($3)`,
       {
-        bind: [matchTypeId],
-        type: fastify.db.QueryTypes.DELETE,
+        bind: [true, request.userTokenInfo.WrUserId, matchTypeId],
+        type: fastify.db.QueryTypes.UPDATE,
       }
     );
   } catch (err) {
