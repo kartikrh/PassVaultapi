@@ -503,7 +503,8 @@ const getCompByEventTypeService = async (request, fastify) => {
   let response = global.tblCompetitions.filter((item) => item.eventTypeId === findEventType.eventTypeId).map((item) => {
     return {
       competitionId: item.competitionId,
-      competition: item.competition
+      competition: item.competition,
+      competitionRefId : item.refId
     }
   });
 
