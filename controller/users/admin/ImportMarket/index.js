@@ -1,4 +1,4 @@
-const { ImportMarketService, MarketListService,ImportMarketWithRunnerService,listManualMarketService,updateTeamIdBySelectionIdService } = require("../../../../services/ImportMarket.js");
+const { ImportMarketService, MarketListService,ImportMarketWithRunnerService,listManualMarketService,updateTeamIdBySelectionIdService, getCompByEventTypeService } = require("../../../../services/ImportMarket.js");
 
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -79,10 +79,20 @@ const updateTeamIdBySelectionId = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const competitionList = async (request, reply, fastify) => {
+  try {
+    const result = await getCompByEventTypeService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (error) {
+    errorLogger(fastify, error.message, commonPath + "/competitionList", request);
+    reply.status(200).send(error(error.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+}
 module.exports = {
   importMarketController,
   marketListController,
   importMarketwithRunnerController,
   listManualMarket,
-  updateTeamIdBySelectionId
+  updateTeamIdBySelectionId,
+  competitionList
 };

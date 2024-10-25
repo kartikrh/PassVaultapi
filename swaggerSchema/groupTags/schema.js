@@ -3089,6 +3089,20 @@ const ImportMarket = {
       },
     },
   },
+  competitionList: {
+    schema : {
+      tags : ["ImportMarket"],
+      description : "get all Compitition",
+      security : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+            eventTypeRefId : {type : "string"},
+        },
+        required : ["eventTypeRefId"]
+      }
+    }
+  },
   getMarket: {
     schema: {
       tags: ["ImportMarket"],
@@ -3177,6 +3191,30 @@ const MarketTemplate = {
         properties: {
           marketTemplateId: { type: "integer" },
           matchTypeID: { type: "integer" },
+        },
+        required: ["marketTemplateId", "matchTypeID"],
+      },
+    },
+  },
+  multiClone: {
+    schema: {
+      tags: ["Market Template"],
+      security: [{ bearerAuth: [] }],
+      description: "clone market template",
+      body: {
+        type: "object",
+        properties: {
+          marketTemplates: {
+            type : "array",
+            items: {
+              type: "object",
+              properties: {
+                marketTemplateId: { type: "integer" },
+                matchTypeID: { type: "integer" },
+              },
+              required: ["marketTemplateId", "matchTypeID"],
+            }
+          }
         },
         required: ["marketTemplateId", "matchTypeID"],
       },
