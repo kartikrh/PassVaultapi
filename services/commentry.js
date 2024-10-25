@@ -73,7 +73,8 @@ const {
   ServiceType,
   callfds,
   formatDateToISOString,
-  callClientAPI
+  callClientAPI,
+  MarketTypeId
 } = require("../utilities");
 const { getAllPlayersByTeamIdQuery } = require("../repository/TableTeams");
 const { handleMarketCloseService, updateComInMarketService } = require("./eventMarket");
@@ -8806,9 +8807,9 @@ const setLineRatioInComService = async (data , request , fastify) =>{
   if(!matchType){
     throw new Error("Match Type not found");
   }
-  let marketType = global.tblMarketTypes.find((item)=> item.marketTypeName.toLowerCase() == "fancy");
+  let marketType = global.tblMarketTypes.find((item)=> item.marketTypeId == MarketTypeId.Fancy);
   if(!marketType){
-    throw new Error("Market Type not found");
+    throw new Error("Market Type Fancy not found");
   }
   let marketTypeCategory = global.tblMarketTypeCategories.find((item)=> item.categoryName.toLowerCase() == "session")
   if(!marketTypeCategory){
