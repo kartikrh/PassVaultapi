@@ -6321,17 +6321,25 @@ const TournamentTeamPlayers = {
       description: "save Tournament Team Players",
       security: [{ bearerAuth: [] }],
       body: {
-        type: "array",
-        items: {
-          type: "object",
-          properties: {
-            competitionId: { type: "integer" },
-            teamId: { type: "integer" },
-            playerId: { type: "integer" },
-            playerName: { type: "string" },
-          },
-          required: ["competitionId", "teamId", "playerId", "playerName"],
+        type: "object",
+        properties: {
+          competitionId: { type: "integer" },
+          teamId: { type: "integer" },
+          teamPlayers : {
+              type : "array",
+              items : {
+                type : "object",
+                properties : {
+                  playerId : {type : "integer"},
+                  teamId : {type : "integer"},
+                  competitionId : {type : "integer"},
+                  playerName : {type : "string"},
+                },
+                required : ["playerId", "teamId", "competitionId", "playerName"]
+              }
+          }
         },
+        required : ["teamPlayers", "competitionId", "teamId"]
       },
     },
   },
