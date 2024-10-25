@@ -49,6 +49,7 @@ const {
   callPredictorMarket,
   MarketUpdateType,
   commentaryStatus,
+  MarketTypeId,
 } = require("../utilities/index");
 const { marketLogger, marketDataLogger, errorLogger } = require("../utilities/logger");
 const getDetailsByCIdService = async (request, fastify) => {
@@ -377,10 +378,10 @@ const marketListResultFalseService = async (request, fastify) => {
   if (rateSourceRefId && rateSourceRefId != 0) {
     createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrRateSource" = ${rateSourceRefId}` : `tem."wrRateSource" = ${rateSourceRefId}`;
   }
-  let mt = global.tblMarketTypes.filter((item) => item.marketTypeName.toLowerCase() === "line market" || item.marketTypeName.toLowerCase() === "fancy").map(item => item.marketTypeId);
-  if(mt.length > 0){
-    createWhereStatus += ` AND tem."wrMarketTypeId" IN (${mt.join(",")})`;
-  }
+  // let mt = global.tblMarketTypes.filter((item) => item.marketTypeName.toLowerCase() === "line market" || item.marketTypeName.toLowerCase() === "fancy").map(item => item.marketTypeId);
+  // if(mt.length > 0){
+    createWhereStatus += ` AND tem."wrMarketTypeId" IN (${MarketTypeId.LineMarket},${MarketTypeId.Fancy})`;
+  // }
   let eventMarket = await getAllEventMarketsQuery(
     fastify,
     createWhereStatus
@@ -905,7 +906,7 @@ const changeMarketResultService = async (request, fastify) => {
   let marketType = global.tblMarketTypes.find(
     (item) => item.marketTypeId === eventMarket[0].marketTypeId
   );
-  if (marketType && (marketType.marketTypeName.toLowerCase() === "line market" || marketType.marketTypeName.toLowerCase() === "fancy")) {
+  if (marketType && (eventMarket[0].marketTypeId === MarketTypeId.Fancy || eventMarket[0].marketTypeId === MarketTypeId.LineMarket)) {
     const currentStatus = eventMarket[0].status;
     const currentResult = eventMarket[0].result;
     if (currentStatus === EventMarketStatus.Close && currentResult == null) {
@@ -1666,10 +1667,21 @@ const createEventMarketsServiceV1 = async (request, fastify) => {
   let singleRunnerMarket = [];
   let marketNameNullMarket = [];
   for (let item of eventMarket){
-    let mt = global.tblMarketTypes.find(
-      (e) => e.marketTypeId === item.marketTypeId
-    );
-    if(mt.marketTypeName.toLowerCase() === "fancy" || mt.marketTypeName.toLowerCase() === "linemarket"){
+    // let mt = global.tblMarketTypes.find(
+    //   (e) => e.marketTypeId === item.marketTypeId
+    // );
+    // if(mt.marketTypeName.toLowerCase() === "fancy" || mt.marketTypeName.toLowerCase() === "linemarket"){
+    //   singleRunnerMarket.push(item); 
+    // }
+    // else {
+    //   if(item.marketName){
+    //     multiRunnerMarket.push(item);
+    //   }
+    //   else {
+    //     marketNameNullMarket.push(item);
+    //   }
+    // }
+    if(item.marketTypeId == MarketTypeId.Fancy || item.marketTypeId == MarketTypeId.LineMarket){
       singleRunnerMarket.push(item); 
     }
     else {
@@ -1751,15 +1763,21 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
     ) {
       continue;
     }
-    let marketType = global.tblMarketTypes.find(
-      (e) => e.marketTypeId === market.marketTypeId
-    );
-    if(marketType.marketTypeName.toLowerCase() === "fancy" || marketType.marketTypeName.toLowerCase() === "linemarket"){
+    if(market.marketTypeId == MarketTypeId.Fancy || market.marketTypeId == MarketTypeId.LineMarket){
       signleRunMarket.push(item);
     }
     else {
       multiRunMarket.push(item);
     }
+    // let marketType = global.tblMarketTypes.find(
+    //   (e) => e.marketTypeId === market.marketTypeId
+    // );
+    // if(marketType.marketTypeName.toLowerCase() === "fancy" || marketType.marketTypeName.toLowerCase() === "linemarket"){
+    //   signleRunMarket.push(item);
+    // }
+    // else {
+    //   multiRunMarket.push(item);
+    // }
   }
 
   const updatedData = await updateEventMarketRateQueryV1({
@@ -1783,10 +1801,11 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
     if(item.isPlayer){
       playerMarket.push(item);
     }
-    let marketType = global.tblMarketTypes.find(
-      (e) => e.marketTypeId === item.marketTypeId
-    );
-    if(marketType.marketTypeName.toLowerCase() === "fancy" || marketType.marketTypeName.toLowerCase() === "linemarket"){
+    // let marketType = global.tblMarketTypes.find(
+    //   (e) => e.marketTypeId === item.marketTypeId
+    // );
+    // if(marketType.marketTypeName.toLowerCase() === "fancy" || marketType.marketTypeName.toLowerCase() === "linemarket"){
+    if(item.marketTypeId == MarketTypeId.Fancy || item.marketTypeId == MarketTypeId.LineMarket){
       let is_onlyover = 0;
       let category = global.tblMarketTypeCategories.find(
         (cat) => cat.marketTypeCategoryId === item.marketTypeCategoryId
@@ -1826,6 +1845,17 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
       )
     
     }
+    marketDataLogger(
+      {
+        eventMarketId: item.eventMarketId,
+        commentaryId: item.commentaryId,
+        dataTosave: typeof (item.data) === "string" ? JSON.parse(item.data) : item.data,
+        updateType: MarketUpdateType.marketUpdateRate,
+        isSendData: true
+      },
+      request,
+      fastify
+    );
     // response.push({
     //   marketId : item.eventMarketId,
     //   commentaryId : item.commentaryId,
@@ -1983,20 +2013,21 @@ const pendingMultiRunnerMarketsService = async (request, fastify) => {
     rateSourceRefId
   } = request.body;
 
-  let mt = global.tblMarketTypes.filter(
-    (item) => item.marketTypeName.toLowerCase() === "fancy" || item.marketTypeName.toLowerCase() === "linemarket"
-  ).map((item) => item.marketTypeId);
+  // let mt = global.tblMarketTypes.filter(
+  //   (item) => item.marketTypeName.toLowerCase() === "fancy" || item.marketTypeName.toLowerCase() === "linemarket"
+  // ).map((item) => item.marketTypeId);
+  
   
   let createWhereStatus = `tem."wrIsResult" = false AND tem."wrResult" IS NOT NULL AND tem."wrStatus" = ${EventMarketStatus.Settled} AND tc."wrIsDelete" = false`;
-  if(mt.length > 0){
-    createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrMarketTypeId" NOT IN (${mt.join(",")})` : `tem."wrMarketTypeId" NOT IN (${mt.join(",")}`;
-  }
+  // if(mt.length > 0){
+    createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrMarketTypeId" NOT IN (${MarketTypeId.Fancy}, ${MarketTypeId.LineMarket})` : `tem."wrMarketTypeId" NOT IN (${MarketTypeId.Fancy}, ${MarketTypeId.LineMarket})`;
+  // }
   if (rateSourceRefId && rateSourceRefId != 0) {
     createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrRateSource" = ${rateSourceRefId}` : `tem."wrRateSource" = ${rateSourceRefId}`;
   }
-  if(mt.length > 0){
-    createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrMarketTypeId" NOT IN (${mt.join(",")})` : `tem."wrMarketTypeId" NOT IN (${mt.join(",")})`;
-  }
+  // if(mt.length > 0){
+  //   createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrMarketTypeId" NOT IN (${mt.join(",")})` : `tem."wrMarketTypeId" NOT IN (${mt.join(",")})`;
+  // }
   let eventMarket = await getMarketWithRunnerQuery(
     fastify,
     createWhereStatus
