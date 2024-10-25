@@ -47,6 +47,7 @@ const getAllMarketTemplateQuery = async (fastify) => {
       "wrDefaultLaySize" as "defaultLaySize"
   FROM "tblMarketTemplates" tmt
   LEFT JOIN "tblMatchTypes" tm ON tmt."wrMatchTypeID" = "tm"."wrMatchTypeId"
+  WHERE tmt."wrIsDeleted" = false;
   `,
     {
       type: fastify.db.QueryTypes.SELECT,
@@ -498,10 +499,14 @@ const deleteMarketTemplateQuery = async (
 ) => {
   try {
     return await fastify.db.query(
-      `delete from "tblMarketTemplates" where "wrID" = ANY ($1)`,
+      `update "tblMarketTemplates" set
+            "wrIsDeleted" = $1,
+            "wrDeletedBy" = $2,
+            "wrDeletedAt" = now()
+      where "wrID" = ANY ($3)`,
       {
-        bind: [marketTemplateId],
-        type: fastify.db.QueryTypes.SELECT,
+        bind: [true, request.userTokenInfo.WrUserId, marketTemplateId],
+        type: fastify.db.QueryTypes.UPDATE,
       }
     );
   } catch (err) {

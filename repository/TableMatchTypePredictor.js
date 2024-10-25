@@ -87,17 +87,21 @@ const createMatchTypePredictorQuery = async (body,request, fastify) => {
         throw new Error(error.message); 
     }
 }
-const deletePredictorByMatchTypeQuery = async (matchTypeId, fastify) => {
+const deletePredictorByMatchTypeQuery = async (matchTypeId, fastify, request) => {
     try {
         const query = `
-            DELETE FROM "tblMatchTypePredictors" 
-            WHERE "wrMatchTypeId" = ${matchTypeId}
+            UPDATE "tblMatchTypePredictors" SET
+                "wrIsDeleted" = $1,
+                "wrDeletedBy" = $2,
+                "wrDeletedAt" = now()
+            WHERE "wrMatchTypeId" = $3
         `;
 
         const data = await fastify.db.query(
             query,
             {
-                type: fastify.db.QueryTypes.DELETE
+                type: fastify.db.QueryTypes.UPDATE,
+                bind: [true, request.userTokenInfo.WrUserId, matchTypeId],
             }
         );
 
@@ -114,13 +118,17 @@ const deletePredictorByMatchTypeQuery = async (matchTypeId, fastify) => {
     }
 
 }
-const deletePredictorQuery = async (matchTypePredictorId, fastify) => {
+const deletePredictorQuery = async (matchTypePredictorId, fastify, request) => {
     try {
        return fastify.db.query(
-            `DELETE FROM "tblMatchTypePredictors" WHERE "wrMatchTypePredictorId" = ANY($1)`,
+            `UPDATE "tblMatchTypePredictors" SET
+                    "wrIsDeleted" = $1,
+                    "wrDeletedBy" = $2,
+                    "wrDeletedAt" = now()
+            WHERE "wrMatchTypePredictorId" = ANY($3)`,
             {
-                bind: [matchTypePredictorId],
-                type: fastify.db.QueryTypes.DELETE
+                bind: [true, request.userTokenInfo.WrUserId, matchTypePredictorId],
+                type: fastify.db.QueryTypes.UPDATE
             }
        )
     } catch (error) {
