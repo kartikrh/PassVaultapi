@@ -243,11 +243,38 @@ const updateTeamPointsQuery = async (data, fastify, request) => {
     throw new Error(err.message);
   }
 };
+
+const deletePointsByTeamIdQuery = async (teamId, request, fastify) => {
+  try {
+    return await fastify.db.query(
+        `
+        update "tblTournamentTeamPoint" set
+            "wrIsDeleted" = $1,
+            "wrDeletedBy" = $2,
+            "wrDeletedAt" = now()
+        where "wrId" = ANY ($3)`,
+      {
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [true, request.userTokenInfo.WrUserId, teamId],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableTournamentTeamPoints.js/deletePointsByTeamIdQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllTournamentTeamPointsQuery,
   insertTournamentTeamPointsQuery,
   updateTournamentTeamPointsQuery,
   deleteTournamentTeamPointsQuery,
   activeInactiveTournamentTeamPointsQuery,
-  updateTeamPointsQuery
+  updateTeamPointsQuery,
+  deletePointsByTeamIdQuery
 };
