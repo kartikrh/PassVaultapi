@@ -494,13 +494,30 @@ const updateTeamIdBySelectionIdService = async (request, fastify) => {
     }
   }
 }
+const getCompByEventTypeService = async (request, fastify) => {
+  const {eventTypeRefId} = request.body;
+  let findEventType = global.tblEventTypes.find((item) => item.refId === eventTypeRefId);
+  if(!findEventType){
+    return [];
+  }
+  let response = global.tblCompetitions.filter((item) => item.eventTypeId === findEventType.eventTypeId).map((item) => {
+    return {
+      competitionId: item.competitionId,
+      competition: item.competition,
+      competitionRefId : item.refId
+    }
+  });
 
+  return response;
+
+}
 module.exports = {
   ImportMarketService,
   MarketListService,
   ImportMarketWithRunnerService,
   listManualMarketService,
-  updateTeamIdBySelectionIdService
+  updateTeamIdBySelectionIdService,
+  getCompByEventTypeService
 };
 
 // "result": {

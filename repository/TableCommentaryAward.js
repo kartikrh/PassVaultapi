@@ -18,6 +18,7 @@ const getAllCommentaryAwardQuery = async (fastify) => {
             FROM "tblCommentaryAwards"
             LEFT JOIN "tblPlayers" as "player" on "player"."wrPlayerId" = "tblCommentaryAwards"."wrPlayerId"
             LEFT JOIN "tblTeams" as "team" on "team"."wrTeamId" = "tblCommentaryAwards"."wrTeamId"
+            WHERE "tblCommentaryAwards"."wrIsDeleted" = false
             ORDER BY "wrId" DESC
         `,
         {
@@ -130,13 +131,15 @@ const updateCommentaryAwardQuery = async (data,request,fastify) => {
 const deleteCommentaryAwardQuery = async (request,fastify) => {
     try {
         const query = `
-            DELETE FROM "tblCommentaryAwards"
-            WHERE
-                "wrId" = ANY($1)
+            UPDATE "tblCommentaryAwards" SET
+              "wrIsDeleted" = $1,
+              "wrDeletedBy" = $2,
+              "wrDeletedAt" = now()
+            WHERE "wrId" = ANY($3)
         `;
         await fastify.db.query(query,{
-            type : fastify.db.QueryTypes.SELECT,
-            bind : [request.body.id]
+            type : fastify.db.QueryTypes.UPDATE,
+            bind : [true, request.userTokenInfo.WrUserId, request.body.id]
         })
         return true;
     } catch (error) {
@@ -227,6 +230,31 @@ const deleteAwardsQuery = async (data, request, fastify) => {
       );
       throw new Error(err.message);
     }
+};
+
+const deleteAwardsByPlayerIdQuery = async (data, request, fastify) => {
+    try {
+      return await fastify.db.query(
+        `UPDATE "tblCommentaryAwards" SET
+              "wrIsDeleted" = $1,
+              "wrDeletedBy" = $2,
+              "wrDeletedAt" = now()
+        where "wrPlayerId" = ANY ($3)
+        `,
+        {
+          type: fastify.db.QueryTypes.UPDATE,
+          bind: [true, request.userTokenInfo.WrUserId, data],
+        }
+      );
+    } catch (err) {
+      errorLogger(
+        fastify,
+        err.message,
+        "DB ERROR --> repository/TableCommentaryAward/deleteAwardsByPlayerIdQuery",
+        request
+      );
+      throw new Error(err.message);
+    }
   };
 
 module.exports = {
@@ -235,5 +263,6 @@ module.exports = {
     updateCommentaryAwardQuery,
     deleteCommentaryAwardQuery,
     assignAwardQuery,
-    deleteAwardsQuery
+    deleteAwardsQuery,
+    deleteAwardsByPlayerIdQuery,
 }

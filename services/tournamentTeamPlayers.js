@@ -18,7 +18,31 @@ const allTournamentTeamPlayersService = async (request) => {
 };
 
 const addTournamentTeamPlayersService = async (request, fastify) => {
-  const insertPromises = request.body.map(async (item) => {
+  // get all the player for the team
+  const {teamPlayers , competitionId , teamId} = request.body
+  let existingPlayers = global.tblTournamentTeamPlayers.filter(
+    (elem) =>
+      elem.competitionId === competitionId &&
+      elem.teamId === teamId
+  );
+
+  // find the existingPlayer and request.body player 
+  const existingPlayerIds = existingPlayers.map((item) => item.playerId);
+  const newPlayerIds = teamPlayers.map((item) => item.playerId);
+
+  // find the player which is not in request.body
+  const newPlayers = existingPlayers.filter(
+    (item) => !newPlayerIds.includes(item.playerId)
+  );
+
+  // delete this player from the existingPlayers
+  await deleteTournamentTeamPlayersQuery(newPlayers.map((item) => item.id), request, fastify);
+  global.tblTournamentTeamPlayers = global.tblTournamentTeamPlayers.filter(
+    (item) => !newPlayers.map((elem) => elem.id).includes(item.id)
+  );
+
+
+  const insertPromises = teamPlayers?.map(async (item) => {
     const insertData = {
       competitionId: item.competitionId,
       teamId: item.teamId,

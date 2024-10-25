@@ -10,7 +10,8 @@ const getAllTournamentTeamPlayersQuery = async (fastify) => {
           "wrPlayerName" as "playerName",
           "wrCreatedBy" as  "createdBy",
           "wrCreatedAt" as "createdAt"
-       FROM "tblTournamentTeamPlayers"`,
+       FROM "tblTournamentTeamPlayers"
+       WHERE "wrIsDeleted" = false`,
     {
       type: fastify.db.QueryTypes.SELECT,
     }
@@ -69,11 +70,15 @@ const deleteTournamentTeamPlayersQuery = async (data, request, fastify) => {
   try {
     return await fastify.db.query(
         `
-          delete from "tblTournamentTeamPlayers" where "wrId" = ANY ($1)
+          update "tblTournamentTeamPlayers" set
+              "wrIsDeleted" = $1,
+              "wrDeletedBy" = $2,
+              "wrDeletedAt" = now()
+          where "wrId" = ANY ($3)
         `,
       {
-        type: fastify.db.QueryTypes.DELETE,
-        bind: [data],
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [true, request.userTokenInfo.WrUserId, data],
       }
     );
   } catch (err) {
@@ -96,12 +101,12 @@ const getAllPlayersByTeamIdQuery = async (data, request, fastify) => {
             ttp."wrTeamId" AS "teamId"
         FROM "tblTeamPlayers" AS ttp
         LEFT JOIN "tblPlayers" AS tp 
-            ON ttp."wrRefPlayerId" = tp."wrPlayerId"
+            ON ttp."wrRefPlayerId" = tp."wrPlayerId" AND tp."wrIsDeleted" = false
         LEFT JOIN "tblTournamentTeamPlayers" AS tttp
             ON tttp."wrPlayerId" = tp."wrPlayerId" 
             AND tttp."wrTeamId" = ttp."wrTeamId"
             AND tttp."wrCompetitionId" = $2
-        WHERE ttp."wrTeamId" = $1
+        WHERE ttp."wrTeamId" = $1 AND ttp."wrIsDeleted" = false
         AND tttp."wrPlayerId" IS NULL;`,
       {
         type: fastify.db.QueryTypes.SELECT,
@@ -122,13 +127,16 @@ const deletePlayerByTeamQuery = async (data, request, fastify) => {
   try {
     return await fastify.db.query(
         `
-          delete from "tblTournamentTeamPlayers"
-          where "wrTeamId" = ANY ($1) AND
-          "wrCompetitionId" = $2
+          update "tblTournamentTeamPlayers" set
+              "wrIsDeleted" = $1,
+              "wrDeletedBy" = $2,
+              "wrDeletedAt" = now()
+          where "wrTeamId" = ANY ($3) AND
+          "wrCompetitionId" = $4
         `,
       {
-        type: fastify.db.QueryTypes.DELETE,
-        bind: [data.teamId, data.competitionId],
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [true, request.userTokenInfo.WrUserId, data.teamId, data.competitionId],
       }
     );
   } catch (err) {
@@ -142,10 +150,63 @@ const deletePlayerByTeamQuery = async (data, request, fastify) => {
   }
 };
 
+const deleteTournamentPlayersByPlayerIdQuery = async (data, request, fastify) => {
+  try {
+    return await fastify.db.query(
+        `
+          update "tblTournamentTeamPlayers" set
+              "wrIsDeleted" = $1,
+              "wrDeletedBy" = $2,
+              "wrDeletedAt" = now()
+          where "wrPlayerId" = ANY ($3);
+        `,
+      {
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [true, request.userTokenInfo.WrUserId, data],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableTournamentTeamPlayers/deleteTournamentPlayersByPlayerIdQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const deletePlayersByTeamIdQuery = async (teamId, request, fastify) => {
+  try {
+    return await fastify.db.query(
+        `
+          update "tblTournamentTeamPlayers" set
+              "wrIsDeleted" = $1,
+              "wrDeletedBy" = $2,
+              "wrDeletedAt" = now()
+          where "wrTeamId" = ANY ($3)`,
+      {
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [true, request.userTokenInfo.WrUserId, teamId],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableTournamentTeamPlayers/deletePlayersByTeamIdQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllTournamentTeamPlayersQuery,
   insertTournamentTeamPlayersQuery,
   deleteTournamentTeamPlayersQuery,
   getAllPlayersByTeamIdQuery,
-  deletePlayerByTeamQuery
+  deletePlayerByTeamQuery,
+  deleteTournamentPlayersByPlayerIdQuery,
+  deletePlayersByTeamIdQuery,
 };

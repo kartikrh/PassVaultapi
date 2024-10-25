@@ -3089,6 +3089,20 @@ const ImportMarket = {
       },
     },
   },
+  competitionList: {
+    schema : {
+      tags : ["ImportMarket"],
+      description : "get all Compitition",
+      security : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+            eventTypeRefId : {type : "string"},
+        },
+        required : ["eventTypeRefId"]
+      }
+    }
+  },
   getMarket: {
     schema: {
       tags: ["ImportMarket"],
@@ -3179,6 +3193,30 @@ const MarketTemplate = {
           matchTypeID: { type: "integer" },
         },
         required: ["marketTemplateId", "matchTypeID"],
+      },
+    },
+  },
+  multiClone: {
+    schema: {
+      tags: ["Market Template"],
+      security: [{ bearerAuth: [] }],
+      description: "clone market template",
+      body: {
+        type: "object",
+        properties: {
+          marketTemplates: {
+            type : "array",
+            items: {
+              type: "object",
+              properties: {
+                marketTemplateId: { type: "integer" },
+                matchTypeID: { type: "integer" },
+              },
+              required: ["marketTemplateId", "matchTypeID"],
+            }
+          }
+        },
+        required: ["marketTemplates"],
       },
     },
   },
@@ -6283,17 +6321,25 @@ const TournamentTeamPlayers = {
       description: "save Tournament Team Players",
       security: [{ bearerAuth: [] }],
       body: {
-        type: "array",
-        items: {
-          type: "object",
-          properties: {
-            competitionId: { type: "integer" },
-            teamId: { type: "integer" },
-            playerId: { type: "integer" },
-            playerName: { type: "string" },
-          },
-          required: ["competitionId", "teamId", "playerId", "playerName"],
+        type: "object",
+        properties: {
+          competitionId: { type: "integer" },
+          teamId: { type: "integer" },
+          teamPlayers : {
+              type : "array",
+              items : {
+                type : "object",
+                properties : {
+                  playerId : {type : "integer"},
+                  teamId : {type : "integer"},
+                  competitionId : {type : "integer"},
+                  playerName : {type : "string"},
+                },
+                required : ["playerId", "teamId", "competitionId", "playerName"]
+              }
+          }
         },
+        required : ["teamPlayers", "competitionId", "teamId"]
       },
     },
   },
