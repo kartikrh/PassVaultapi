@@ -5,7 +5,8 @@ const {
   marketListController,
   importMarketwithRunnerController,
   listManualMarket,
-  updateTeamIdBySelectionId
+  updateTeamIdBySelectionId,
+  competitionList
 } = require("../../../controller/users/admin/ImportMarket/index");
 const { ImportMarket } = require("../../../swaggerSchema/groupTags/schema");
 const configConstants = require("../../../utilities/configConstants");
@@ -44,5 +45,13 @@ module.exports = async function (fastify, opts) {
     preHandler: [(request, reply) => authorize(request, reply, fastify)],
     handler: (request, reply) =>
       updateTeamIdBySelectionId(request, reply, fastify),
+  });
+  fastify.post("/competitionList", {
+    schema: ImportMarket.competitionList.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+    ],
+    handler: (request, reply) =>
+      competitionList(request, reply, fastify)
   });
 };
