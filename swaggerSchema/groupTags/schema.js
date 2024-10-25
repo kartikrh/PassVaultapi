@@ -3216,7 +3216,7 @@ const MarketTemplate = {
             }
           }
         },
-        required: ["marketTemplateId", "matchTypeID"],
+        required: ["marketTemplates"],
       },
     },
   },
