@@ -425,6 +425,67 @@ const isShowInAdvanceMarketChangeStatusService = async (request, fastify) => {
   return `MarketTemplate isShowInAdvanceMarket status updated successfully`;
 };
 
+const cloneMultiMarketTemplateService  = async (request, fastify) => {
+  // validate marketTemplateId
+  // const { marketTemplateId, matchTypeID } = request.body;
+  const {marketTemplates} = request.body;
+  for (let mar of marketTemplates) {
+    const { marketTemplateId, matchTypeID } = mar;
+    const marketTemplate = global.tblMarketTemplate.find(
+      (item) => item.marketTemplateId === marketTemplateId
+    );
+    if (!marketTemplate) {
+      throw new Error("MarketTemplate not found");
+    }
+    const validateMatchType = global.tblMatchTypes.find(
+      (item) => item.matchTypeId === matchTypeID
+    );
+    if (!validateMatchType) {
+      throw new Error("MatchType with this id not found");
+    }
+
+    let data = await insertMarketTemplateInCloneQuery(
+      {
+        ...marketTemplate,
+        matchTypeID: matchTypeID,
+        createdBy: request.userTokenInfo.WrUserId,
+      },
+      fastify,
+      request
+    );
+    global.tblMarketTemplate.push({
+      ...data,
+      matchType: validateMatchType.matchType,
+    });
+
+  const validateTemplateRunners = global.tblMarketTemplateRunners.filter(
+    (item) => item.marketTemplateId === marketTemplateId
+  ).sort((a, b) => a.marketTemplateRunnerId - b.marketTemplateRunnerId);
+
+  if (validateTemplateRunners && validateTemplateRunners.length > 0) {
+    for (const elem of validateTemplateRunners) {
+      
+      const request = {
+        body: {
+          marketTemplateId: data.marketTemplateId,
+          runner: elem.runner,
+          line: elem.line,
+          overRate: elem.overRate,
+          underRate: elem.underRate,
+          backPrice: elem.backPrice,
+          layPrice: elem.layPrice,
+          backSize: elem.backSize,
+          laySize: elem.laySize,
+        }
+      };
+
+      const result = await createMarketTemplateRunnerQuery(request, fastify);
+      global.tblMarketTemplateRunners.push(result);
+    }
+  }
+  }
+  return "Market Template(s) cloned successfully";
+};
 module.exports = {
   saveMarketTemplateService,
   getAllMarketTemplateService,
@@ -439,5 +500,6 @@ module.exports = {
   cloneMarketTemplateService,
   getMarketTypeAndCategoryByMarketTypeService,
   isPerEventStatusService,
-  isShowInAdvanceMarketChangeStatusService
+  isShowInAdvanceMarketChangeStatusService,
+  cloneMultiMarketTemplateService
 };
