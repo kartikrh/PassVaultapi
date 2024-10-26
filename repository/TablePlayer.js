@@ -27,7 +27,8 @@ FROM
     "tblPlayers" tp
     LEFT JOIN "tblEventTypes" tet ON tp."wrEventTypeId" = tet."wrEventTypeId"
     LEFT JOIN "tblPlayerTypes" tpt ON tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
-    LEFT JOIN "tblBowlingTypes" tbt ON tp."wrBowlingStyle" = tbt."wrBowlingTypeId";
+    LEFT JOIN "tblBowlingTypes" tbt ON tp."wrBowlingStyle" = tbt."wrBowlingTypeId"
+    WHERE tp."wrIsDeleted" = false;
 
      `,
     {
@@ -195,7 +196,7 @@ const updatePlayerStatsQuery = async (data, fastify, request) => {
          "wrBowlerEconomy" = $4,
           "wrModifyDate" = $5,
           "wrModifyBy" = $6
-      WHERE "wrPlayerId" = $7`,
+      WHERE "wrPlayerId" = $7 AND "wrIsDeleted" = false`,
       {
         type: fastify.db.QueryTypes.UPDATE,
         bind: [
@@ -249,10 +250,14 @@ const deletePlayerQuery = async (playerId, fastify, request) => {
   try {
 
     return await fastify.db.query(
-      `delete from "tblPlayers" where "wrPlayerId" =  ANY($1)`,
+      `UPDATE "tblPlayers" SET
+            "wrIsDeleted" = $1,
+            "wrDeletedBy" = $2,
+            "wrDeletedAt" = now()
+      WHERE "wrPlayerId" =  ANY($3)`,
       {
-        type: fastify.db.QueryTypes.DELETE,
-        bind: [playerId],
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [true, request.userTokenInfo.WrUserId, playerId],
       }
     );
   } catch (err) {

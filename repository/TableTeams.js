@@ -14,7 +14,8 @@ const allTeamQuery = async (fastify) => {
     tt."wrTeamColor" AS "teamColor",
     tt."wrBackgroundColor" AS "backgroundColor"
      FROM "tblTeams" tt
-      LEFT JOIN "tblEventTypes" et ON tt."wrEventTypeId" = et."wrEventTypeId"`,
+      LEFT JOIN "tblEventTypes" et ON tt."wrEventTypeId" = et."wrEventTypeId"
+      WHERE tt."wrIsDeleted" = false`,
     {
       type: fastify.db.QueryTypes.SELECT,
     }
@@ -127,10 +128,14 @@ const updateTeamQuery = async (data, fastify, request) => {
 const deleteTeamQuery = async (teamId, fastify, request) => {
   try {
     return await fastify.db.query(
-      `DELETE FROM "tblTeams" WHERE "wrTeamId" = ANY($1)`,
+      `UPDATE "tblTeams" SET
+          "wrIsDeleted" = $1,
+          "wrDeletedBy" = $2,
+          "wrDeletedAt" = now()
+      WHERE "wrTeamId" = ANY($3)`,
       {
-        bind: [teamId],
-        type: fastify.db.QueryTypes.DELETE,
+        bind: [true, request.userTokenInfo.WrUserId, teamId],
+        type: fastify.db.QueryTypes.UPDATE,
       }
     );
   } catch (err) {
@@ -154,7 +159,7 @@ const getAllPlayersByTeamIdQuery = async (teamId, fastify, request) => {
       "wrBatsmanStrikeRate" as "batsmanStrikeRate",
       "wrIsKipper" as "isKipper"     
       FROM "tblTeamPlayers" tp 
-      left join "tblPlayers" pl on tp."wrRefPlayerId" = pl."wrPlayerId"
+      left join "tblPlayers" pl on tp."wrRefPlayerId" = pl."wrPlayerId" AND pl."wrIsDeleted" = false
       where tp."wrTeamId" = $1`,
       {
         bind: [teamId],
@@ -179,8 +184,8 @@ const getAllPlayersByCompetitionIdTeamIdQuery = async (teamId, fastify, request)
       "wrRefPlayerId" as "playerId",
       "wrPlayerName" as "playerName"   
       FROM "tblTeamPlayers" tp 
-      left join "tblPlayers" pl on tp."wrRefPlayerId" = pl."wrPlayerId"
-      where tp."wrTeamId" = $1`,
+      left join "tblPlayers" pl on tp."wrRefPlayerId" = pl."wrPlayerId" AND pl."wrIsDeleted" = false
+      where tp."wrTeamId" = $1 AND tp."wrIsDeleted" = false`,
       {
         bind: [teamId],
         type: fastify.db.QueryTypes.SELECT,

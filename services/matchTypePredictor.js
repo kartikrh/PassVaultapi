@@ -41,7 +41,7 @@ const savePredictorDataService = async (request, fastify) => {
   );
   if (predictor) {
     //delete if there is predictor data for the match type
-    await deletePredictorByMatchTypeQuery(request.body.matchTypeId, fastify);
+    await deletePredictorByMatchTypeQuery(request.body.matchTypeId, fastify, request);
     global.tblMatchTypePredictor = global.tblMatchTypePredictor.filter(
       (item) => item.matchTypeId !== request.body.matchTypeId
     );
@@ -98,7 +98,7 @@ const getPredictorByIdService = async (request, fastify) => {
 };
 
 const deletePredictorByMatchTypeService = async (request, fastify) => {
-  await deletePredictorByMatchTypeQuery(request.body.matchTypeId, fastify);
+  await deletePredictorByMatchTypeQuery(request.body.matchTypeId, fastify, request);
   global.tblMatchTypePredictor = global.tblMatchTypePredictor.filter(
     (item) => item.matchTypeId !== request.body.matchTypeId
   );
@@ -107,7 +107,7 @@ const deletePredictorByMatchTypeService = async (request, fastify) => {
 };
 const deletePredictorService = async (request, fastify) => {
   const { matchTypePredictorId } = request.body;
-  await deletePredictorQuery(matchTypePredictorId, fastify);
+  await deletePredictorQuery(matchTypePredictorId, fastify, request);
   global.tblMatchTypePredictor = global.tblMatchTypePredictor.filter(
     (item) => !matchTypePredictorId.includes(item.matchTypePredictorId)
   );

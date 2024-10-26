@@ -18,6 +18,7 @@ const getAllTournamentTeamPointsQuery = async (fastify) => {
         "wrIsActive" as "isActive",
         "wrCreatedAt" as "createdAt"
         from "tblTournamentTeamPoint"
+        where "wrIsDeleted" = false
         `,
     {
       type: fastify.db.QueryTypes.SELECT,
@@ -150,15 +151,21 @@ const updateTournamentTeamPointsQuery = async (data, fastify, request) => {
   }
 };
 
-const deleteTournamentTeamPointsQuery = async (id, fastify, request) => {
+const deleteTournamentTeamPointsQuery = async (data, fastify, request) => {
   try {
     return await fastify.db.query(
-      `delete from "tblTournamentTeamPoint" where "wrId" = ANY ($1)`,
-      {
-        type: fastify.db.QueryTypes.DELETE,
-        bind: [id],
-      }
-    );
+      `
+        update "tblTournamentTeamPoint" set
+            "wrIsDeleted" = $1,
+            "wrDeletedBy" = $2,
+            "wrDeletedAt" = now()
+        where "wrId" = ANY ($3)
+      `,
+    {
+      type: fastify.db.QueryTypes.UPDATE,
+      bind: [true, request.userTokenInfo.WrUserId, data],
+    }
+  );
   } catch (err) {
     errorLogger(
       fastify,
@@ -236,11 +243,38 @@ const updateTeamPointsQuery = async (data, fastify, request) => {
     throw new Error(err.message);
   }
 };
+
+const deletePointsByTeamIdQuery = async (teamId, request, fastify) => {
+  try {
+    return await fastify.db.query(
+        `
+        update "tblTournamentTeamPoint" set
+            "wrIsDeleted" = $1,
+            "wrDeletedBy" = $2,
+            "wrDeletedAt" = now()
+        where "wrId" = ANY ($3)`,
+      {
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [true, request.userTokenInfo.WrUserId, teamId],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableTournamentTeamPoints.js/deletePointsByTeamIdQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllTournamentTeamPointsQuery,
   insertTournamentTeamPointsQuery,
   updateTournamentTeamPointsQuery,
   deleteTournamentTeamPointsQuery,
   activeInactiveTournamentTeamPointsQuery,
-  updateTeamPointsQuery
+  updateTeamPointsQuery,
+  deletePointsByTeamIdQuery
 };
