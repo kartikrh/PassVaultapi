@@ -18,6 +18,7 @@ const getAllCompititionQuery = async (fastify) => {
     tc."wrMatchTypeId" as "matchTypeId"
     from "tblCompetitions" tc 
     inner join "tblEventTypes" tev on tc."wrEventTypeId" = tev."wrEventTypeId"
+    where tev."wrIsDeleted" = false
     `,
     {
       type: fastify.db.QueryTypes.SELECT,
