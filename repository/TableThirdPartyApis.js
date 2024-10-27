@@ -11,7 +11,9 @@ const allThirdPartyApisQuery = async (fastify) => {
             "wrIsActive" as "isActive",
             "wrIsConnect" as "isConnect",
             "wrIsDefault" as "isDefault"
-            FROM "tblThirdPartyApis" ORDER BY "wrId" asc;`,
+            FROM "tblThirdPartyApis"
+            WHERE "wrIsDeleted" = false
+            ORDER BY "wrId" asc;`,
       { type: fastify.db.QueryTypes.SELECT }
     );
   } catch (err) {
@@ -104,10 +106,13 @@ const updateThirdPartyApisQuery = async (data, fastify, request) => {
 const deleteThirdPartApisQuery = async (id, fastify, request) => {
   try {
     return await fastify.db.query(
-      `delete from "tblThirdPartyApis" where "wrId" = ANY ($1)`,
+      `update "tblThirdPartyApis" set
+            "wrIsDeleted" = $1,
+            "wrDeletedAt" = now()
+      where "wrId" = ANY ($2)`,
       {
-        type: fastify.db.QueryTypes.DELETE,
-        bind: [id],
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [true, id],
       }
     );
   } catch (err) {

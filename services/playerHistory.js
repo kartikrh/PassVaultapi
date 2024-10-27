@@ -34,6 +34,7 @@ const createPlayerBattingHistoryService = async (request, fastify) => {
       global.tblPlayersBattingHistory.push(playerData);
     }
   });
+  await saveCommPlayerBatHistoryService(jsonPayload, fastify, request);
 
   return "Player Batting history data added successfully";
 };
@@ -63,6 +64,7 @@ const createPlayerBowlingHistoryService = async (request, fastify) => {
       global.tblPlayersBowlingHistory.push(playerData);
     }
   });
+  await saveCommPlayerBowlHistoryService(jsonPayload, fastify, request);
   
   return "Player Bowling history data added successfully";
 };
@@ -130,6 +132,8 @@ const importPlayerHistoryService = async (fastify, request) => {
       global.tblPlayersBowlingHistory.push(playerBowlingData);
     }
   });
+  await saveCommPlayerBatHistoryService(playerData, fastify, request);
+  await saveCommPlayerBowlHistoryService(playerData, fastify, request);
   
   return `Player History data saved successfully`;
 };
@@ -153,6 +157,43 @@ const deleteBowlingHistoryService = async (request, fastify) => {
 
   return `Bowling History data deleted successfully`;
 };
+
+const saveCommPlayerBatHistoryService = async(jsonPayload, fastify, request) => {
+  const commPlayerbatHistory = await fastify.db.query(
+    `CALL proc_save_commentary_player_bat_history($1, $2)`,
+    {
+      bind: [jsonPayload, request.userTokenInfo.WrUserId], 
+      type: fastify.db.QueryTypes.RAW,
+    }
+  );
+  const commHistoryData = commPlayerbatHistory[0] || [];
+  const battingHistoryData = commHistoryData[0]._battinghistorydata;
+
+  if(battingHistoryData.length > 0){
+    battingHistoryData.forEach((playerData) => {
+        global.tblCommPlayerBatHist.push(playerData);
+    });
+  }
+}
+
+const saveCommPlayerBowlHistoryService = async(jsonPayload, fastify, request) => {
+  const commPlayerbowHistory = await fastify.db.query(
+    `CALL proc_save_commentary_player_bowl_history($1, $2)`,
+    {
+      bind: [jsonPayload, request.userTokenInfo.WrUserId], 
+      type: fastify.db.QueryTypes.RAW,
+    }
+  );
+  const commBowlHistoryData = commPlayerbowHistory[0] || [];
+  const bowlingHistoryData = commBowlHistoryData[0]._bowlinghistorydata;
+
+  if(bowlingHistoryData.length > 0) {
+    bowlingHistoryData.forEach((playerData) => {
+        global.tblCommPlayerBowlHist.push(playerData);
+    });
+  }
+}
+
 
 const validatePlayerAndMatchType = async(payload, request) => {
   payload.forEach((requestData) => {

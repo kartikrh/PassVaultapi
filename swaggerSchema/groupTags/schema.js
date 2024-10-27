@@ -6688,6 +6688,58 @@ const PlayerHistory = {
     },
   },
 };
+const CommentaryPlayerHistory = {
+  getAll: {
+    schema: {
+      tags: ["CommentaryPlayerHistory"],
+      description: "get Player's all commentary batting and bowling history",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          playerId: { type: "integer" },
+        },
+        required: ["playerId"],
+      },
+    },
+  },
+  deleteCommBattingHistory: {
+    schema: {
+      tags: ["CommentaryPlayerHistory"],
+      description: "delete commetary player batting history",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["id"],
+      },
+    },
+  },
+  deleteCommBowlingHistory: {
+    schema: {
+      tags: ["CommentaryPlayerHistory"],
+      description: "delete commentary player bowling history",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["id"],
+      },
+    },
+  },
+};
 module.exports = {
   Auth,
   Tabs,
@@ -6744,4 +6796,5 @@ module.exports = {
   Groups,
   TournamentTeamPoints,
   PlayerHistory,
+  CommentaryPlayerHistory
 };

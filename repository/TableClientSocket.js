@@ -15,6 +15,7 @@ const getAllClientSocketQuery =async (fastify) =>{
             "wrActionType" as "actionType",
             "wrConnectCount" as "connectCount"
         FROM "tblClientSockets"
+        WHERE "wrIsDeleted" = false
     `,
     {
         type: fastify.db.QueryTypes.SELECT, 
@@ -35,7 +36,7 @@ const updateClientSocketStatusQuery = async(data,fastify) =>{
         SET
             "wrStatus" = $1
             ${additionalQuery}
-        WHERE "wrId" = ANY($2)
+        WHERE "wrId" = ANY($2) AND "wrIsDeleted" = false
     `,
     {
         type: fastify.db.QueryTypes.SELECT,
@@ -71,7 +72,7 @@ const updateReconnectCountQuery = async(data,fastify) =>{
         UPDATE "tblClientSockets"
         SET
             "wrReconnectCount" = $1
-        WHERE "wrId" = $2
+        WHERE "wrId" = $2 AND "wrIsDeleted" = false
     `,
     {
         type: fastify.db.QueryTypes.UPDATE,
@@ -186,13 +187,18 @@ const updateClientSocketQuery = async(data,request,fastify) =>{
 const deleteClientSocketQuery  = async(clientSocketId,request,fastify) =>{
     try {
         const query = `
-            DELETE FROM "tblClientSockets"
-            WHERE "wrId" = ANY($1)
+            UPDATE "tblClientSockets" SET
+                "wrIsDeleted" = $1,
+                "wrDeletedBy" = $2,
+                "wrDeletedAt" = now()
+            WHERE "wrId" = ANY($3)
         `;
         const data = await fastify.db.query(query,
             {
                 type: fastify.db.QueryTypes.SELECT,
                 bind: [
+                    true, 
+                    request.userTokenInfo.WrUserId, 
                     clientSocketId
                 ]
             }
@@ -272,7 +278,7 @@ const disConnectClientSocketQuery = async (fastify) => {
         SET
           "wrStatus" = $1,
           "wrReconnectCount" = $2
-        WHERE "wrStatus" = $3 AND "wrIsActive" = $4
+        WHERE "wrStatus" = $3 AND "wrIsActive" = $4 AND "wrIsDeleted" = false
         RETURNING "wrId" as "clientSocketId";
       `,
       {

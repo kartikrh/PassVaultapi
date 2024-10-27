@@ -8,7 +8,8 @@ const getAllBlocksQuery = async (fastify) => {
     "wrIsShowContent" as "isShowContent",
     "wrContent" as "content",
     "wrContainerId" as "containerId"
-    FROM "tblBlocks" tb inner join "tblEncryptedData" te on tb."wrBlockId" = te."wrKey"`,
+    FROM "tblBlocks" tb inner join "tblEncryptedData" te on tb."wrBlockId" = te."wrKey"
+    WHERE tb."wrIsDeleted" = false`,
     {
       type: fastify.db.QueryTypes.SELECT,
     }
@@ -107,14 +108,18 @@ const validateBlockQuery = async (blockId, fastify) => {
   }
 };
 
-const deleteBlockQuery = async (blockIds, fastify) => {
+const deleteBlockQuery = async (blockIds, fastify, request) => {
   try {
     return await fastify.db.query(
-      `delete from "tblBlocks" where "wrBlockId" in 
-    (select "wrKey" from "tblEncryptedData" where "wrValue" = ANY($1::text[]))`,
+      `update "tblBlocks" set
+          "wrIsDeleted" = $1,
+          "wrDeletedBy" = $2,
+          "wrDeletedAt" = now()
+      where "wrBlockId" in 
+    (select "wrKey" from "tblEncryptedData" where "wrValue" = ANY($3::text[]))`,
       {
-        type: fastify.db.Sequelize.QueryTypes.DELETE,
-        bind: [blockIds],
+        type: fastify.db.Sequelize.QueryTypes.UPDATE,
+        bind: [true, request.userTokenInfo.WrUserId, blockIds],
       }
     );
   } catch (err) {
