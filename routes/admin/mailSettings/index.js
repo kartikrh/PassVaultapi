@@ -35,6 +35,9 @@ module.exports = async (fastify, opts) => {
 
     fastify.post("/delete", {
         schema: MailSettings.delete.schema,
+        preHandler: [
+            (request, reply) => authorize(request, reply, fastify),
+        ],
         handler: (request, reply) => deleteMailSetting(request, reply, fastify),
     });
 

@@ -11,6 +11,7 @@ const getAllTemplateQuery = async (fastify) => {
             "wrIsActive" as "isActive",
             "wrIsDefault" as "isDefault"
         from "tblTemplate"
+        where "wrIsDeleted" = false
         `,
     {
       type: fastify.db.QueryTypes.SELECT,
@@ -22,11 +23,15 @@ const deleteTemplateQuery = async (data, request, fastify) => {
   try {
     return await fastify.db.query(
       `
-                delete from "tblTemplate" where "wrId" = ANY ($1)
+                update "tblTemplate" set
+                  "wrIsDeleted" = $1,
+                  "wrDeletedBy" = $2,
+                  "wrDeletedAt" = now()
+                where "wrId" = ANY ($3)
             `,
       {
         type: fastify.db.QueryTypes.DELETE,
-        bind: [request.body.templateId],
+        bind: [true, request.userTokenInfo.WrUserId, request.body.templateId],
       }
     );
   } catch (err) {

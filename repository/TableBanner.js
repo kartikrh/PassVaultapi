@@ -14,6 +14,7 @@ const getAllBannerQuery = async (fastify) => {
             "wrLink" as "link",
             "wrViewerCount" as "viewerCount"
         from "tblBanner"
+        where "wrIsDeleted" = false
         `,
     {
       type: fastify.db.QueryTypes.SELECT,
@@ -128,11 +129,15 @@ const deleteBannerQuery = async (data, request, fastify) => {
   try {
     return await fastify.db.query(
       `
-                delete from "tblBanner" where "wrId" = ANY ($1)
+           UPDATE "tblBanner" SET
+              "wrIsDeleted" = $1,
+              "wrDeletedBy" = $2,
+              "wrDeletedAt" = now()
+           WHERE "wrId" = ANY ($3)
             `,
       {
-        type: fastify.db.QueryTypes.DELETE,
-        bind: [request.body.bannerId],
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [true, request.userTokenInfo.WrUserId, request.body.bannerId],
       }
     );
   } catch (err) {

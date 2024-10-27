@@ -9,7 +9,8 @@ const getAllCongigQuery = async (fastify) => {
     tc."wrIsActive" as "isActive",
     tc."wrDesc" as "desc",
     tc."wrIsForAdmin" as "isForAdmin"
-    FROM "tblConfigs" tc inner join "tblEncryptedData" te on tc."wrId" = te."wrKey"`,
+    FROM "tblConfigs" tc inner join "tblEncryptedData" te on tc."wrId" = te."wrKey"
+    WHERE tc."wrIsDeleted" = false`,
     {
       type: fastify.db.QueryTypes.SELECT,
     }
@@ -90,10 +91,14 @@ const updateConfigQuery = async (data, fastify, request) => {
 const deleteConfigQuery = async (id, fastify, request) => {
   try {
     return await fastify.db.query(
-      `delete from "tblConfigs" where "wrId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = ANY($1))`,
+      `update "tblConfigs" set
+          "wrIsDeleted" = $1,
+          "wrDeletedBy" = $2,
+          "wrDeletedAt" = now()
+      where "wrId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = ANY($3))`,
       {
-        type: fastify.db.QueryTypes.DELETE,
-        bind: [id],
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [true, request.userTokenInfo.WrUserId, id],
       }
     );
   } catch (err) {

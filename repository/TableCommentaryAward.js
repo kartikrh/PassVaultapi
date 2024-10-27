@@ -194,6 +194,7 @@ const assignAwardQuery = async(data,request,fastify) => {
         LEFT JOIN "tblPlayers" player ON player."wrPlayerId" = inserted."playerId"
         LEFT JOIN "tblTeams" team ON team."wrTeamId" = inserted."teamId"
         LEFT JOIN "tblAwards" award ON award."wrId" = inserted."awardId"
+        WHERE award."wrIsDeleted" = false
         `;  
         const result = await fastify.db.query(query,{
             type : fastify.db.QueryTypes.SELECT

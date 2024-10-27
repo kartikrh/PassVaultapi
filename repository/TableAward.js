@@ -12,6 +12,7 @@ const getAllAwardQuery = async (fastify) =>{
                 "wrCreatedAt" as "createdAt",
                 "wrCreatedBy" as "createdBy"
             FROM "tblAwards"    
+            WHERE "wrIsDeleted" = false
             order by "wrDisplayOrder" ASC    
         `,
         {
@@ -106,12 +107,15 @@ const updateAwardQuery = async (data,request, fastify) =>{
 const deleteAwardQuery = async (request,fastify) =>{
     try {
         let query = `
-            DELETE FROM "tblAwards"
-            WHERE "wrId" = ANY($1)
+            UPDATE "tblAwards" SET
+              "wrIsDeleted" = $1,
+              "wrDeletedBy" = $2,
+              "wrDeletedAt" = now()
+            WHERE "wrId" = ANY($3)
         `;
         await fastify.db.query(query,{
-            type: fastify.db.QueryTypes.DELETE,
-            bind: [request.body.id]
+            type: fastify.db.QueryTypes.UPDATE,
+            bind: [true, request.userTokenInfo.WrUserId, request.body.id]
         });
     }catch (error) {
         errorLogger(
