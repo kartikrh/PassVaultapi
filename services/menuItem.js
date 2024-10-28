@@ -352,6 +352,8 @@ const updateMenuItemDisplayOrderService = async (request, fastify) => {
     (item) => menuItemIds.includes(item.menuItemId)
   );
   if (validateAllMenuItem.length !== menuItemIds.length) {
+    const payload = request.body
+    request.body = {payload}
     throw new Error("Invalid Menu Item Ids");
   }
   // check if all menu item's parent id is same

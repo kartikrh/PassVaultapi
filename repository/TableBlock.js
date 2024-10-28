@@ -87,7 +87,8 @@ const updateBlockQuery = async (body, fastify) => {
 const validateBlockQuery = async (blockId, fastify) => {
   try {
     const data = await fastify.db.query(
-      `select "wrBlockName" from "tblMenuTypes" left join "tblBlocks" on "tblBlocks"."wrBlockId" = "tblMenuTypes"."wrBlockId"  where "tblMenuTypes"."wrBlockId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = $1) and "wrIsActive" = true
+      `select "wrBlockName" from "tblMenuTypes" left join "tblBlocks" on "tblBlocks"."wrBlockId" = "tblMenuTypes"."wrBlockId"  
+      where "tblMenuTypes"."wrBlockId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = $1) and "wrIsActive" = true and "tblMenuTypes"."wrIsDeleted" = false
     `,
       {
         type: fastify.db.QueryTypes.SELECT,

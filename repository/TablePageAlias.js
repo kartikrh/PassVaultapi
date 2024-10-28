@@ -12,7 +12,8 @@ const allPageAliases = async (fastify) => {
     from "tblPageAliases" pa 
     left join "tblEncryptedData" et on pa."wrPageAliasId"=et."wrKey" 
     left join "tblEncryptedData" et2 on pa."wrMenuItemId"=et2."wrKey" 
-    left join "tblEncryptedData" et3 on pa."wrPageId"=et3."wrKey"`,
+    left join "tblEncryptedData" et3 on pa."wrPageId"=et3."wrKey"
+    where pa."wrIsDeleted" = false`,
     {
       type: fastify.db.QueryTypes.SELECT,
     }
@@ -107,10 +108,14 @@ const updatePageAliasQuery = async (body, fastify, request) => {
 const deletePageAliasQuery = async (pageAliasId, fastify, request) => {
   try {
     return await fastify.db.query(
-      `delete from "tblPageAliases" where "wrPageAliasId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = ANY($1))`,
+      `update "tblPageAliases" set
+         "wrIsDeleted" = $1,
+         "wrDeletedBy" = $2,
+         "wrDeletedAt" = now()
+      where "wrPageAliasId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = ANY($3))`,
       {
-        type: fastify.db.QueryTypes.DELETE,
-        bind: [pageAliasId],
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [true, request.userTokenInfo.WrUserId, pageAliasId],
       }
     );
   } catch (err) {

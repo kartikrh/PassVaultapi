@@ -8,6 +8,7 @@ const allMenuItemsQuery = async (fastify) => {
         CAST(COUNT(*) AS INTEGER) as "childCount"
       FROM 
         "tblMenuItems"
+      WHERE "wrIsDeleted" = false
       GROUP BY "wrParentId"
     )
     SELECT 
@@ -31,6 +32,7 @@ const allMenuItemsQuery = async (fastify) => {
       "tblEncryptedData" et4 ON mi."wrParentId" = et4."wrKey"
     LEFT JOIN
       ChildCount cc ON mi."wrMenuItemId" = cc."parentId"    
+    WHERE mi."wrIsDeleted" = false
     `,
     {
       type: fastify.db.QueryTypes.SELECT,
@@ -75,7 +77,8 @@ const menuItemByIdQuery = async (menuItemId, fastify, request) => {
         left join "tblEncryptedData" et2 on mi."wrMenuTypeId"=et2."wrKey"
         left join "tblEncryptedData" et3 on mi."wrPageId"=et3."wrKey"
         left join "tblEncryptedData" et4 on mi."wrParentId"=et4."wrKey"
-        left join "tblEncryptedData" et5 on mi."wrMenuItemTypeId"=et5."wrKey" where et."wrValue"= $1`,
+        left join "tblEncryptedData" et5 on mi."wrMenuItemTypeId"=et5."wrKey" 
+        where et."wrValue"= $1 and mi."wrIsDeleted" = false`,
       {
         type: fastify.db.QueryTypes.SELECT,
         bind: [menuItemId],
@@ -103,6 +106,7 @@ const createMenuItemQuery = async (body, fastify, request) => {
     "wrParentId" = (SELECT COALESCE((SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = $3), 0))
     AND
     "wrMenuTypeId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1) 
+    AND "wrIsDeleted" = false
   ),
   add_data as (
     INSERT INTO "tblMenuItems" ("wrMenuTypeId" , "wrMenuItem","wrParentId","wrPageId","wrDisplayOrder","wrIsActive","wrCreatedBy","wrCreatedDate") values(
@@ -192,7 +196,8 @@ const updateMenuItemQuery = async (body, fastify, request) => {
 const validateMenuItemQuery = async (menuItemId, fastify, request) => {
   try {
     const data = await fastify.db.query(
-      `select mi.* from "tblPageAliases" pa left join "tblMenuItems" mi on pa."wrMenuItemId" = mi."wrMenuItemId" where pa."wrMenuItemId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)`,
+      `select mi.* from "tblPageAliases" pa left join "tblMenuItems" mi on pa."wrMenuItemId" = mi."wrMenuItemId" 
+      where pa."wrMenuItemId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = $1) and pa."wrIsDeleted" = false`,
       {
         type: fastify.db.QueryTypes.SELECT,
         bind: [menuItemId],
@@ -214,7 +219,8 @@ const validateMenuItemQuery = async (menuItemId, fastify, request) => {
 const findMenuItemByParentId = async (parentId, fastify, request) => {
   try {
     const data = await fastify.db.query(
-      `select mi.* from "tblMenuItems" mi where mi."wrParentId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)`,
+      `select mi.* from "tblMenuItems" mi 
+      where mi."wrParentId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = $1) and mi."wrIsDeleted" = false`,
       {
         type: fastify.db.QueryTypes.SELECT,
         bind: [parentId],
@@ -236,10 +242,14 @@ const deleteMenuItemQuery = async (menuItemId, fastify, request) => {
   try {
     return await fastify.db.query(
       `
-    delete from "tblMenuItems" where "wrMenuItemId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = ANY ($1))`,
+    update "tblMenuItems" set
+         "wrIsDeleted" = $1,
+         "wrDeletedBy" = $2,
+         "wrDeletedAt" = now()
+    where "wrMenuItemId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = ANY ($3))`,
       {
-        type: fastify.db.QueryTypes.DELETE,
-        bind: [menuItemId],
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [true, request.userTokenInfo.WrUserId, menuItemId],
       }
     );
   } catch (error) {

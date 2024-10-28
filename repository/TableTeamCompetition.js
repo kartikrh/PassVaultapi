@@ -9,7 +9,8 @@ const getAllTeamCompetitionQuery = async (fastify) => {
         "wrCompetitionOrder" as "competitionOrder"
          from "tblTeamCompetition" tp left join "tblEncryptedData" te on tp."wrTeamCompetitionId" = te."wrKey"
          left join "tblEncryptedData" te2 on tp."wrTeamId" = te2."wrKey"
-         left join "tblEncryptedData" te3 on tp."wrRefCompetitionId" = te3."wrKey"`,
+         left join "tblEncryptedData" te3 on tp."wrRefCompetitionId" = te3."wrKey"
+         where tp."wrIsDeleted" = false`,
     {
       type: fastify.db.QueryTypes.SELECT,
     }
@@ -57,11 +58,15 @@ const insertTeamCompetitionQuery = async (data, fastify, request) => {
 const deleteTeamCompetitionByTeamIdQuery = async (teamId, fastify, request) => {
   try {
     return await fastify.db.query(
-      `delete from "tblTeamCompetition" where "wrTeamId" = $1
+      `update "tblTeamCompetition" set
+         "wrIsDeleted" = $1,
+         "wrDeletedBy" = $2,
+         "wrDeletedAt" = now()
+      where "wrTeamId" = $3
     `,
       {
-        bind: [teamId],
-        type: fastify.db.QueryTypes.DELETE,
+        bind: [true, request.userTokenInfo.WrUserId, teamId],
+        type: fastify.db.QueryTypes.UPDATE,
       }
     );
   } catch (err) {
@@ -78,11 +83,15 @@ const deleteTeamCompetitionByTeamIdQuery = async (teamId, fastify, request) => {
 const deleteTeamCompetitionByCompetitionIdQuery = async (competitionId, fastify, request) => {
   try {
     return await fastify.db.query(
-      `delete from "tblTeamCompetition" where "wrRefCompetitionId" = $1
+      `update "tblTeamCompetition" set
+         "wrIsDeleted" = $1,
+         "wrDeletedBy" = $2,
+         "wrDeletedAt" = now()
+      where "wrRefCompetitionId" = $3
     `,
       {
-        bind: [competitionId],
-        type: fastify.db.QueryTypes.DELETE,
+        bind: [true, request.userTokenInfo.WrUserId, competitionId],
+        type: fastify.db.QueryTypes.UPDATE,
       }
     );
   } catch (err) {
