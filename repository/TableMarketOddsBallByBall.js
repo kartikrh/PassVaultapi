@@ -22,7 +22,8 @@ const getAllMarketOddsBallByBall = async (fastify) => {
       FROM 
           "tblMarketOddsBallByBall" AS mobb
       LEFT JOIN "tblEventMarkets" em ON mobb."wrEventMarketId" = em."wrID"
-      LEFT JOIN "tblMarketTypes" mty ON em."wrMarketTypeId" = mty."wrId"`,
+      LEFT JOIN "tblMarketTypes" mty ON em."wrMarketTypeId" = mty."wrId"
+      WHERE em."wrIsDeleted" = false`,
       {
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -58,7 +59,7 @@ const getAllMarketOddsBallByBallByCommentaryId = async (data, fastify) => {
           "tblMarketOddsBallByBall" AS mobb
       LEFT JOIN "tblEventMarkets" em ON mobb."wrEventMarketId" = em."wrID"
       LEFT JOIN "tblMarketTypes" mty ON em."wrMarketTypeId" = mty."wrId"
-    WHERE mobb."wrCommentaryId" = $1`;
+    WHERE mobb."wrCommentaryId" = $1 AND em."wrIsDeleted" = false`;
     
     const result = await fastify.db.query(query,
       {
@@ -101,7 +102,7 @@ const getMarketOddsBallByBallById = async (id, fastify, request) => {
           "tblMarketOddsBallByBall" AS mobb
       LEFT JOIN "tblEventMarkets" em ON mobb."wrEventMarketId" = em."wrID"
       LEFT JOIN "tblMarketTypes" mty ON em."wrMarketTypeId" = mty."wrId"
-    WHERE mobb."wrId" = $1
+    WHERE mobb."wrId" = $1 AND em."wrIsDeleted" = false
       `,
       {
         bind: [id],
@@ -591,7 +592,7 @@ const createMarketOddsBallInSaveDetails = async (data, fastify, request = null) 
           "tblMarketOddsBallByBall" AS mobb
       LEFT JOIN "tblEventMarkets" em ON mobb."wrEventMarketId" = em."wrID"
       LEFT JOIN "tblMarketTypes" mty ON em."wrMarketTypeId" = mty."wrId"
-      WHERE mobb."wrId" = $1`,
+      WHERE mobb."wrId" = $1 AND em."wrIsDeleted" = false`,
       {
         bind: [wrId],
         type: fastify.db.QueryTypes.SELECT,
@@ -697,7 +698,7 @@ const CheckAndCreateMarketOddsBallInSaveDetails = async (data, fastify, request 
           "tblMarketOddsBallByBall" AS mobb
       LEFT JOIN "tblEventMarkets" em ON mobb."wrEventMarketId" = em."wrID"
       LEFT JOIN "tblMarketTypes" mty ON em."wrMarketTypeId" = mty."wrId"
-      WHERE mobb."wrId" = $1`,
+      WHERE mobb."wrId" = $1 AND em."wrIsDeleted" = false`,
       {
         bind: [wrId],
         type: fastify.db.QueryTypes.SELECT,

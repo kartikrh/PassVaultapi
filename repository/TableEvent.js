@@ -18,7 +18,7 @@ const getAllEventsQuery = async (fastify) => {
      from "tblEvents" te 
      left join "tblEventTypes" tet on te."wrEventTypeId" = tet."wrEventTypeId"
      left join "tblCompetitions" tc on te."wrCompetitionId" = tc."wrCompetitionId"
-     `,
+     where te."wrIsDeleted" = false AND tet."wrIsDeleted" = false`,
     {
       type: fastify.db.QueryTypes.SELECT,
     }
@@ -183,10 +183,14 @@ const deleteEventQuery = async (eventId, fastify, request) => {
   try {
     return await fastify.db.query(
       `
-            delete from "tblEvents" where "wrEventId" = ANY ($1)
+            UPDATE "tblEvents" SET
+                "wrIsDeleted" = $1,
+                "wrDeletedBy" = $2,
+                "wrDeletedAt" = now()
+            WHERE "wrEventId" = ANY ($3)
             `,
       {
-        bind: [eventId],
+        bind: [true, request.userTokenInfo.WrUserId, eventId],
         type: fastify.db.QueryTypes.SELECT,
       }
     );
