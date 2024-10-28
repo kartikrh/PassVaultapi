@@ -115,7 +115,7 @@ const getDetailsByCIdService = async (request, fastify) => {
   // );
   let eventMarket, LDOMARKETSIDS;
   LDOMARKETSIDS = global.tblConfigs.find(config => config.key === "LDOMARKET")?.value ?? "0";
-  let whereCondition = `tem."wrCommentaryId" = ${commentaryId} AND tem."wrStatus" NOT IN (${EventMarketStatus.Close},${EventMarketStatus.Settled},${EventMarketStatus.Cancel}) AND tem."wrMarketTypeCategoryId" NOT IN (${LDOMARKETSIDS})`;
+  let whereCondition = `tc."wrIsDelete" = false AND tem."wrIsDeleted" = false AND tem."wrCommentaryId" = ${commentaryId} AND tem."wrStatus" NOT IN (${EventMarketStatus.Close},${EventMarketStatus.Settled},${EventMarketStatus.Cancel}) AND tem."wrMarketTypeCategoryId" NOT IN (${LDOMARKETSIDS})`;
   if (commentary.commentaryStatus != 1) {
     let battingTeam = global.tblCommentaryTeams.find(
       (item) =>
@@ -155,10 +155,10 @@ const getAllEventMarketsService = async (request, fastify) => {
     endDate,
     rateSourceRefId
   } = request.body;
-  let createWhereStatus = `tem."wrStatus" NOT IN (${EventMarketStatus.Close},${EventMarketStatus.Settled},${EventMarketStatus.Cancel}) AND tc."wrIsDelete" = false`;
+  let createWhereStatus = `tem."wrIsDeleted" = false AND tem."wrStatus" NOT IN (${EventMarketStatus.Close},${EventMarketStatus.Settled},${EventMarketStatus.Cancel}) AND tc."wrIsDelete" = false`;
 
   if (status !== undefined && status != -1) {
-    createWhereStatus = `tem."wrStatus" = ${status}`;
+    createWhereStatus = `tc."wrIsDelete" = false AND tem."wrIsDeleted" = false AND tem."wrStatus" = ${status}`;
   }
   if (status != undefined && status == -1) {
     createWhereStatus = null;
@@ -374,7 +374,7 @@ const marketListResultFalseService = async (request, fastify) => {
     rateSourceRefId
   } = request.body;
   
-  let createWhereStatus = `tem."wrIsResult" = false AND tem."wrResult" IS NOT NULL AND tem."wrStatus" = ${EventMarketStatus.Settled} AND tc."wrIsDelete" = false`;
+  let createWhereStatus = `tem."wrIsDeleted" = false AND tem."wrIsResult" = false AND tem."wrResult" IS NOT NULL AND tem."wrStatus" = ${EventMarketStatus.Settled} AND tc."wrIsDelete" = false`;
   if (rateSourceRefId && rateSourceRefId != 0) {
     createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrRateSource" = ${rateSourceRefId}` : `tem."wrRateSource" = ${rateSourceRefId}`;
   }
@@ -902,6 +902,12 @@ const changeMarketResultService = async (request, fastify) => {
     request,
     fastify
   );
+  if(eventMarket.length === 0){
+    throw new Error(
+      "EventMarketId not found"
+    );
+  }
+  
   // check marketType 
   let marketType = global.tblMarketTypes.find(
     (item) => item.marketTypeId === eventMarket[0].marketTypeId
@@ -958,6 +964,9 @@ const changeMarketCloseService = async (request, fastify) => {
   // }
   // }
 
+  if (checkMarketInDb.length === 0) {
+    throw new Error("EventMarketId not Found");
+  }
   if (!commentary) {
     throw new Error("Commentary with this id not Found");
   }
@@ -1597,7 +1606,7 @@ const getDetailsByCIdV1Service = async (request, fastify) => {
   }
   let eventMarket;
   // LDOMARKETSIDS = global.tblConfigs.find(config => config.key === "LDOMARKET")?.value ?? "0";
-  let whereCondition = `tem."wrCommentaryId" = ${commentaryId} AND tem."wrStatus" NOT IN (${EventMarketStatus.Close},${EventMarketStatus.Settled},${EventMarketStatus.Cancel})`;
+  let whereCondition = `tc."wrIsDelete" = false AND tem."wrIsDeleted" = false AND tem."wrCommentaryId" = ${commentaryId} AND tem."wrStatus" NOT IN (${EventMarketStatus.Close},${EventMarketStatus.Settled},${EventMarketStatus.Cancel})`;
   if (commentary.commentaryStatus != 1) {
     let battingTeam = global.tblCommentaryTeams.find(
       (item) =>
@@ -2018,7 +2027,7 @@ const pendingMultiRunnerMarketsService = async (request, fastify) => {
   // ).map((item) => item.marketTypeId);
   
   
-  let createWhereStatus = `tem."wrIsResult" = false AND tem."wrResult" IS NOT NULL AND tem."wrStatus" = ${EventMarketStatus.Settled} AND tc."wrIsDelete" = false`;
+  let createWhereStatus = `tem."wrIsDeleted" = false AND tem."wrIsResult" = false AND tem."wrResult" IS NOT NULL AND tem."wrStatus" = ${EventMarketStatus.Settled} AND tc."wrIsDelete" = false`;
   // if(mt.length > 0){
     createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrMarketTypeId" NOT IN (${MarketTypeId.Fancy}, ${MarketTypeId.LineMarket})` : `tem."wrMarketTypeId" NOT IN (${MarketTypeId.Fancy}, ${MarketTypeId.LineMarket})`;
   // }

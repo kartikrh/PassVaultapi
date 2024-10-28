@@ -12,6 +12,7 @@ const allEventTypesQuery = async (fastify) => {
     "wrRemark" as "remark",
     "wrIsHighlight" as "isHighlight"
      from "tblEventTypes"
+     where "wrIsDeleted" = false
      order by "wrDisplayOrder" asc`,
     {
       type: fastify.db.QueryTypes.SELECT,
@@ -95,10 +96,14 @@ const updateEventTypeQuery = async (data, fastify, request) => {
 const deleteEventTypeQuery = async (eventTypeIds, fastify, request) => {
   try {
     return await fastify.db.query(
-      `delete from "tblEventTypes" where "wrEventTypeId" = ANY ($1)`,
+      `UPDATE "tblEventTypes" SET
+            "wrIsDeleted" = $1,
+            "wrDeletedBy" = $2,
+            "wrDeletedAt" = now()
+      WHERE "wrEventTypeId" = ANY ($3)`,
       {
-        type: fastify.db.QueryTypes.DELETE,
-        bind: [eventTypeIds],
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [true, request.userTokenInfo.WrUserId, eventTypeIds],
       }
     );
   } catch (err) {

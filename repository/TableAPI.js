@@ -6,6 +6,7 @@ const getAllAPI = async (fastify) => {
                 "wrApi" as "api",
                 "wrIsActive" as "isActive"
             from "tblAPIs"
+            where "wrIsDeleted" = false
             `,
         {
           type: fastify.db.QueryTypes.SELECT,
@@ -16,11 +17,15 @@ const deleteApiQuery = async (data, request, fastify) => {
   try {
     return await fastify.db.query(
       `
-                delete from "tblAPIs" where "wrId" = ANY ($1)
+        UPDATE "tblAPIs" SET
+          "wrIsDeleted" = $1,
+          "wrDeletedBy" = $2,
+          "wrDeletedAt" = now()
+        WHERE "wrId" = ANY ($3)
             `,
       {
-        type: fastify.db.QueryTypes.DELETE,
-        bind: [request.body.apiId],
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [true, request.userTokenInfo.WrUserId, request.body.apiId],
       }
     );
   } catch (err) {

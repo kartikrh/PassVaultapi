@@ -142,6 +142,9 @@ const changeIsDefaultStage = async (request, fastify) => {
   const result = global.tblThirdPartyApis.find(
       (item) => item.id === body.id
   );
+  if(!result) {
+    throw new Error("ID not found");
+  }
   
   if (result.type === 1 && body.isDefault === true || result.type === 2 && body.isDefault === true) {
     body.type = result.type;

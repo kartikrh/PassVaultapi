@@ -93,7 +93,7 @@ const setResultInRunnerMarketQuery = async(data, request,fastify)=>{
             ) as "runner"
         FROM "tblEventMarkets" tem
         LEFT JOIN "tblMarketRunners" tmr ON tmr."wrEventMarketId" = tem."wrID"
-        WHERE tem."wrID" = $1
+        WHERE tem."wrID" = $1 AND tem."wrIsDeleted" = false
         GROUP BY tem."wrID"`;
 
         let data1 = await fastify.db.query(q3, {

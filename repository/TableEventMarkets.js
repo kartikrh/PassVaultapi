@@ -8,7 +8,7 @@ const { getPagination } = require("../utilities");
 
 const getAllEventMarketsQuery = async (fastify, whereCondition = null) => {
   if(whereCondition === null){
-    whereCondition = `tc."wrIsDelete" = false`
+    whereCondition = `tc."wrIsDelete" = false AND tem."wrIsDeleted" = false`
   }
   return await fastify.db.query(
     `SELECT
@@ -223,7 +223,7 @@ const getEventMarketByIdsQuery = async (data, request, fastify) => {
         LEFT JOIN "tblEventTypes" tet ON tet."wrEventTypeId" = tc."wrEventTypeId"
         LEFT JOIN "tblMarketRunners" tr ON tr."wrEventMarketId" = tem."wrID"
         LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = tem."wrTeamID"
-        WHERE tem."wrID" = ANY($1) AND tc."wrIsDelete" = false`,
+        WHERE tem."wrID" = ANY($1) AND tc."wrIsDelete" = false AND tem."wrIsDeleted" = false`,
       {
         type: fastify.db.QueryTypes.SELECT,
         bind: [data.eventMarketIds],
@@ -332,9 +332,13 @@ const createManyEventMarketQuery = async (data, request, fastify) => {
 const deleteEventMarketQuery = async (data, request, fastify) => {
   try {
     const result = await fastify.db.query(
-      `DELETE FROM "tblEventMarkets" WHERE "wrID" = ANY($1)`,
+      `UPDATE "tblEventMarkets" SET
+            "wrIsDeleted" = $1,
+            "wrDeletedBy" = $2,
+            "wrDeletedAt" = now()
+      WHERE "wrID" = ANY($3)`,
       {
-        bind: [data],
+        bind: [true, request.userTokenInfo.WrUserId, data],
         type: fastify.db.QueryTypes.SELECT,
       }
     );
@@ -392,7 +396,7 @@ const changeIsAllowEventMarketQuery = async (data, request, fastify) => {
 };
 const changeIsResultEventMarketQuery = async (data, request, fastify) => {
   try {
-    const query = `UPDATE "tblEventMarkets" SET "wrIsResult" = $1 WHERE "wrID" = $2`;
+    const query = `UPDATE "tblEventMarkets" SET "wrIsResult" = $1 WHERE "wrID" = $2 AND "wrIsDeleted" = false`;
     return await fastify.db.query(query, {
       bind: [data.isResult, data.eventMarketId],
       type: fastify.db.QueryTypes.SELECT,
@@ -468,6 +472,7 @@ const getMarketListByCIdQuery = async (data, request, fastify) => {
         WHERE tem."wrCommentaryId" = $1
         AND tem."wrStatus" NOT IN ($2 ,$3,$4)
         AND tem."wrRateSource" = 1
+        AND tem."wrIsDeleted" = false
         `;
     return await fastify.db.query(query, {
       type: fastify.db.QueryTypes.SELECT,
@@ -501,7 +506,7 @@ const updateEventMarketRateQuery = async (data, request, fastify) => {
                 "wrLastUpdate" = now()::timestamp,
                 "wrIsSendData" = $5,
                 "wrLineRatio" = $6
-            WHERE "wrID" = $7
+            WHERE "wrID" = $7 AND "wrIsDeleted" = false
             RETURNING "wrID" as "eventMarketId"`,
       {
         bind: [
@@ -588,7 +593,7 @@ const updateEventMarketRateQuery = async (data, request, fastify) => {
                 ) as "runner"
             FROM "tblEventMarkets" tem
             LEFT JOIN "tblMarketRunners" tmr ON tmr."wrEventMarketId" = tem."wrID"
-            WHERE tem."wrID" = $1
+            WHERE tem."wrID" = $1 AND tem."wrIsDeleted" = false
             GROUP BY tem."wrID"
 
         `;
@@ -767,7 +772,7 @@ const changeMarketResultQuery = async (data, request, fastify) => {
           ) as "runner"
       FROM "tblEventMarkets" tem
       LEFT JOIN "tblMarketRunners" tmr ON tmr."wrEventMarketId" = tem."wrID"
-      WHERE tem."wrID" = $1
+      WHERE tem."wrID" = $1 AND tem."wrIsDeleted" = false
       GROUP BY tem."wrID"`;
 
     const marketRunner = await fastify.db.query(query3, {
@@ -803,7 +808,7 @@ const changeMarketCloseQuery = async (data, request, fastify) => {
           "wrCloseTime" = now()::timestamp,
           "wrLastUpdate" = now()::timestamp
           WHERE "wrCommentaryId" = $2
-          AND "wrID" = $3
+          AND "wrID" = $3 AND "wrIsDeleted" = false
           AND "wrStatus" NOT IN ($4, $5, $6)
           `;
     await fastify.db.query(query, {
@@ -846,7 +851,7 @@ const changeMarketCloseQuery = async (data, request, fastify) => {
           ) as "runner"
       FROM "tblEventMarkets" tem
       LEFT JOIN "tblMarketRunners" tmr ON tmr."wrEventMarketId" = tem."wrID"
-      WHERE tem."wrID" = $1
+      WHERE tem."wrID" = $1 AND tem."wrIsDeleted" = false
       GROUP BY tem."wrID"`;
 
     const marketRunner = await fastify.db.query(query3, {
@@ -1036,7 +1041,7 @@ const setDelayEventMarketQuery = async (data, request, fastify) => {
       `UPDATE "tblEventMarkets"
             SET "wrDelay" = $1
             WHERE 
-            "wrID" = ANY($2)
+            "wrID" = ANY($2) AND "wrIsDeleted" = false
             AND
             "wrStatus" NOT IN ($3,$4,$5)
             RETURNING "wrID" as "eventMarketId"`,
@@ -1141,7 +1146,7 @@ const cancelEventMarketByTeamIdQuery = async (data, request, fastify) => {
           ) as "runner"
       FROM "tblEventMarkets" tem
       LEFT JOIN "tblMarketRunners" tmr ON tmr."wrEventMarketId" = tem."wrID"
-      WHERE tem."wrID" = $1
+      WHERE tem."wrID" = $1 AND tem."wrIsDeleted" = false
       GROUP BY tem."wrID"
 
     `;
@@ -1245,7 +1250,7 @@ const getDataLogsByMarketQuery = async (request, fastify) => {
             tmd."wrLineDiff" as "lineDiff",
             tmd."wrIsSendData" as "isSendData"
         FROM "tblMarketDataLogs" tmd
-        LEFT JOIN "tblEventMarkets" tem ON tmd."wrEventMarketId" = tem."wrID"
+        INNER JOIN "tblEventMarkets" tem ON tmd."wrEventMarketId" = tem."wrID" AND tem."wrIsDeleted" = false
         LEFT JOIN "tblUsers" tu ON tmd."wrCreatedBy" = tu."WrUserId"
         ${whereClause}
         ORDER BY tmd."wrId" DESC
@@ -1260,6 +1265,7 @@ const getDataLogsByMarketQuery = async (request, fastify) => {
     const totalRecordsQuery = `
         SELECT COUNT(*) as "count"
         FROM "tblMarketDataLogs" tmd
+        INNER JOIN "tblEventMarkets" tem ON tmd."wrEventMarketId" = tem."wrID" AND tem."wrIsDeleted" = false
         ${whereClause}
     `;
     
@@ -1303,7 +1309,7 @@ const getStatusLogsByMarketQuery = async (request, fastify) => {
                 FROM "tblMarketLogs" tmd
                 LEFT JOIN "tblUsers" tu ON tmd."wrUserId" = tu."WrUserId"
                 LEFT JOIN "tblEventMarkets"  tem ON tmd."wrEventMarketId" = tem."wrID"
-                WHERE "wrEventMarketId" = $1
+                WHERE "wrEventMarketId" = $1 AND tem."wrIsDeleted" = false
                 ORDER BY "wrId" desc
             `,
       {
@@ -1331,7 +1337,7 @@ const getEventMarketRatioQuery = async (data, request, fastify) => {
             FROM "tblEventMarkets" ev
             JOIN "tblMarketRunners" mr ON mr."wrEventMarketId" = ev."wrID"
             WHERE ev."wrCommentaryId" = $1
-            AND ev."wrTeamID" = $2
+            AND ev."wrTeamID" = $2 AND ev."wrIsDeleted" = false
 
         `;
     return await fastify.db.query(query, {
@@ -1379,7 +1385,7 @@ const getMarketDataByCIdQuery = async (request, fastify) => {
         LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = tem."wrTeamID"
         WHERE "wrCommentaryId" = $1
         AND tem."wrStatus" NOT IN ($2 ,$3,$4)
-        AND "wrData" IS NOT NULL
+        AND "wrData" IS NOT NULL AND tem."wrIsDeleted" = false
       `;
 
     return await fastify.db.query(query, {
@@ -1426,6 +1432,7 @@ const getMarketsByCIdQuery = async (request, whereCondition, fastify) => {
         WHERE "wrEventRefID" = $1 ${whereCondition}
         AND "wrStatus" = $2
         AND "wrRateSource" <> 2
+        AND "wrIsDeleted" = false
     ),
     open_market_data AS (
         SELECT
@@ -1450,7 +1457,7 @@ const getMarketsByCIdQuery = async (request, whereCondition, fastify) => {
         LEFT JOIN "tblMarketRunners" tmr ON tmr."wrEventMarketId" = "tblEventMarkets"."wrID"
         WHERE "wrEventRefID" = $1 ${whereCondition}
         AND "wrStatus" NOT IN ($2, $3, $4)
-        AND "wrRateSource" <> 2
+        AND "wrRateSource" <> 2 AND "wrIsDeleted" = false
     )
     SELECT
         jsonb_build_object(
@@ -1852,14 +1859,14 @@ const UpdateEventMarketByCIdFromSocketQuery = async (data, fastify) => {
 const UpdateResulOrApproveEventMarketQuery = async (data, request, fastify) => {
   try {
     if (data.isResult && data.result != null) {
-      const query = `UPDATE "tblEventMarkets" SET "wrIsResult" = $1, "wrResult" = $2 WHERE "wrID" = $3`;
+      const query = `UPDATE "tblEventMarkets" SET "wrIsResult" = $1, "wrResult" = $2 WHERE "wrID" = $3 AND "wrIsDeleted" = false`;
       return await fastify.db.query(query, {
         bind: [data.isResult, data.result, data.eventMarketId],
         type: fastify.db.QueryTypes.SELECT,
       });
     }
     if (!data.isResult && data.result != null) {
-      const query = `UPDATE "tblEventMarkets" SET "wrResult" = $1 WHERE "wrID" = $2`;
+      const query = `UPDATE "tblEventMarkets" SET "wrResult" = $1 WHERE "wrID" = $2 AND "wrIsDeleted" = false`;
       return await fastify.db.query(query, {
         bind: [data.result, data.eventMarketId],
         type: fastify.db.QueryTypes.SELECT,
@@ -1989,7 +1996,7 @@ EventMarkets_CTE AS (
     INNER JOIN "tblMarketTypeCategories" mtc ON tem."wrMarketTypeCategoryId" = mtc."wrId"
     WHERE tem."wrCommentaryId" = $1
     AND tem."wrStatus" NOT IN ($2,$3,$4)
-    AND tem."wrRateSource" = 1
+    AND tem."wrRateSource" = 1 AND tem."wrIsDeleted" = false
 )
 SELECT 
     "categoryName",
@@ -2036,7 +2043,7 @@ const getMarketsByCategoryQuery = async (data,request, fastify, )=>{
         "wrID" as "eventMarketId"
       FROM "tblEventMarkets"
       WHERE "wrCommentaryId" = $1
-      AND "wrStatus" = 1
+      AND "wrStatus" = 1 AND "wrIsDeleted" = false
       AND "wrMarketTypeCategoryId" = ANY($2)
     `;
 
@@ -2230,7 +2237,7 @@ const getMarketsByComIdQuery = async (data,request, fastify) => {
     let query = `
       SELECT CAST(COUNT(*) as integer) as "marketCount"
       FROM "tblEventMarkets" 
-      WHERE "wrCommentaryId" = $1
+      WHERE "wrCommentaryId" = $1 AND "wrIsDeleted" = false
       AND "wrStatus" NOT IN ($2,$3)
     `;
     const result = await fastify.db.query(query, {
@@ -2278,7 +2285,7 @@ const getAllRateSourceEventMarketQuery = async (fastify, data) => {
         "wrRateSource" as "rateSource",
         "wrCommentaryId" as "commentaryId"
     FROM "tblEventMarkets"
-    WHERE "wrEventRefID" = $1 AND "wrRateSource" = 2;`,
+    WHERE "wrEventRefID" = $1 AND "wrRateSource" = 2 AND "wrIsDeleted" = false;`,
     {
       type: fastify.db.QueryTypes.SELECT,
       bind: [data.eventId],
@@ -2386,7 +2393,7 @@ const cancelSettledMarketQuery = async (data, request, fastify) => {
           ) as "runner"
       FROM "tblEventMarkets" tem
       LEFT JOIN "tblMarketRunners" tmr ON tmr."wrEventMarketId" = tem."wrID"
-      WHERE tem."wrID" = $1
+      WHERE tem."wrID" = $1 AND tem."wrIsDeleted" = false
       GROUP BY tem."wrID"`;
 
     const marketRunner = await fastify.db.query(query3, {
@@ -2491,6 +2498,7 @@ const getEventMarketQueryV1 = async (fastify) => {
       LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
       LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = tem."wrTeamID"
       LEFT JOIN "tblMarketRunners" tmr ON tmr."wrEventMarketId" = tem."wrID"
+      WHERE tem."wrIsDeleted" = false
       GROUP BY tem."wrID", tc."wrEventName", tc."wrEventDate", tt."wrTeamName"
     `,
     {
@@ -2653,7 +2661,7 @@ const getEventMarketByIdsQueryV1 = async (data, request, fastify) => {
       LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
       LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = tem."wrTeamID"
       LEFT JOIN "tblMarketRunners" tmr ON tmr."wrEventMarketId" = tem."wrID"
-      WHERE tem."wrID" = ANY($1) AND tc."wrIsDelete" = false
+      WHERE tem."wrID" = ANY($1) AND tc."wrIsDelete" = false AND tem."wrIsDeleted" = false
       GROUP BY tem."wrID", tc."wrEventName", tc."wrEventDate", tt."wrTeamName"
     `,
     {
@@ -2726,7 +2734,7 @@ const getMarketListByCIdQueryV1 = async (data, request, fastify) => {
         FROM "tblEventMarkets" tem
         WHERE tem."wrCommentaryId" = $1
         AND tem."wrStatus" NOT IN ($2 ,$3,$4)
-        AND tem."wrRateSource" = 1
+        AND tem."wrRateSource" = 1 AND tem."wrIsDeleted" = false
         `;
     return await fastify.db.query(query, {
       type: fastify.db.QueryTypes.SELECT,
@@ -2859,7 +2867,7 @@ const closeMarketByATQuery = async (data, request, fastify) => {
               ) as "runner"
           FROM "tblEventMarkets" tem
           LEFT JOIN "tblMarketRunners" tmr ON tmr."wrEventMarketId" = tem."wrID"
-          WHERE tem."wrID" = $1
+          WHERE tem."wrID" = $1 AND tem."wrIsDeleted" = false
           GROUP BY tem."wrID"
 
         `;
@@ -2967,7 +2975,7 @@ const cancelMarketByATQuery = async (data, request, fastify) => {
           ) as "runner"
       FROM "tblEventMarkets" tem
       LEFT JOIN "tblMarketRunners" tmr ON tmr."wrEventMarketId" = tem."wrID"
-      WHERE tem."wrID" = $1
+      WHERE tem."wrID" = $1 AND tem."wrIsDeleted" = false
       GROUP BY tem."wrID"
 
     `;
@@ -3103,7 +3111,7 @@ const getEventMarketRunnersQuery = async (refID, fastify, request) => {
       LEFT JOIN "tblEventTypes" tet ON tet."wrEventTypeId" = tc."wrEventTypeId"
       LEFT JOIN "tblMarketRunners" tr ON tr."wrEventMarketId" = tem."wrID"
       LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = tem."wrTeamID"
-      WHERE tem."wrEventRefID" = $1 AND tem."wrRateSource" = 2 AND tc."wrIsDelete" = false`,
+      WHERE tem."wrEventRefID" = $1 AND tem."wrRateSource" = 2 AND tc."wrIsDelete" = false AND tem."wrIsDeleted" = false`,
       {
         type: fastify.db.QueryTypes.SELECT,
         bind: [refID],

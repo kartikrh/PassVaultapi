@@ -84,7 +84,10 @@ const mailSettingsById = async (request) => {
     const result = global.tblMailSettings.find(
         (item) => item.id === id
     );
-    const decryptPassword = await decrypt(result.password);
+    let decryptPassword
+    if(result) {
+        decryptPassword = await decrypt(result.password);
+    }
     return {...result, password: decryptPassword} || null;
 };
 
@@ -118,6 +121,10 @@ const changeIsDefaultStage = async (request, fastify) => {
     const result = global.tblMailSettings.find(
         (item) => item.id === body.id
     );
+
+    if (!result) {
+        throw new Error("Mail settings with this Id not found");
+    }
 
     if (result.mailType === 1 && body.isDefault || result.mailType === 2 && body.isDefault) {
         body.mailType = result.mailType;

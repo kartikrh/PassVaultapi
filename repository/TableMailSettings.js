@@ -18,7 +18,9 @@ const allMailSettingsQuery = async (fastify) => {
             "wrCreatedDate" as "createdDate",
             "wrModifiedBy" as "modifiedBy",
             "wrModifiedDate" as "modifiedDate"
-            FROM "tblMailSettings" ORDER BY "wrId" asc;`,
+            FROM "tblMailSettings"
+            WHERE "wrIsDeleted" = false
+            ORDER BY "wrId" asc;`,
             { type: fastify.db.QueryTypes.SELECT }
         );
     } catch (err) {
@@ -126,10 +128,14 @@ const updateMailSettingsQuery = async (data, fastify, request) => {
 const deleteMailSettingsQuery = async (id, fastify, request) => {
     try {
         return await fastify.db.query(
-            `delete from "tblMailSettings" where "wrId" = ANY ($1)`,
+            `update "tblMailSettings" set
+                    "wrIsDeleted" = $1,
+                    "wrDeletedBy" = $2,
+                    "wrDeletedAt" = now()
+            where "wrId" = ANY ($3)`,
             {
-                type: fastify.db.QueryTypes.DELETE,
-                bind: [id],
+                type: fastify.db.QueryTypes.UPDATE,
+                bind: [true, request.userTokenInfo.WrUserId, id],
             }
         );
     } catch (err) {
@@ -146,7 +152,7 @@ const deleteMailSettingsQuery = async (id, fastify, request) => {
 const isDefaultChangeQuery = async (data, fastify, request) => {
     try {
         return await fastify.db.query(
-            `UPDATE "tblMailSettings" SET "wrIsDefault" = $1 where "wrId" = $2`,
+            `UPDATE "tblMailSettings" SET "wrIsDefault" = $1 where "wrId" = $2 AND "wrIsDeleted" = false`,
             {
                 type: fastify.db.QueryTypes.UPDATE,
                 bind: [data.isDefault, data.id],
@@ -166,7 +172,7 @@ const isDefaultChangeQuery = async (data, fastify, request) => {
 const isDefaultFalseQuery = async (data, fastify, request) => {
     try {
         return await fastify.db.query(
-            `UPDATE "tblMailSettings" SET "wrIsDefault" = $1 WHERE "wrId" != $2 AND "wrMailType" = $3`,
+            `UPDATE "tblMailSettings" SET "wrIsDefault" = $1 WHERE "wrId" != $2 AND "wrMailType" = $3 AND "wrIsDeleted" = false`,
             {
                 type: fastify.db.QueryTypes.UPDATE,
                 bind: [false, data.id, data.mailType],

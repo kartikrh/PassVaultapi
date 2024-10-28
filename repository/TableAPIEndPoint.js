@@ -10,6 +10,7 @@ const getAllAPIEndPoint = async (fastify) => {
                 "wrTimeOut" as "timeOut",
                 "wrIsActive" as "isActive"
             from "tblAPIEndpoints"
+            where "wrIsDeleted" = false
             `,
     {
       type: fastify.db.QueryTypes.SELECT,
@@ -21,11 +22,15 @@ const deleteApiEndPointQuery = async (data, request, fastify) => {
   try {
     return await fastify.db.query(
       `
-                delete from "tblAPIEndpoints" where "wrId" = ANY ($1)
+          UPDATE "tblAPIEndpoints" SET
+              "wrIsDeleted" = $1,
+              "wrDeletedBy" = $2,
+              "wrDeletedAt" = now()
+          WHERE "wrId" = ANY ($3)
             `,
       {
-        type: fastify.db.QueryTypes.DELETE,
-        bind: [request.body.apiEndPointId],
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [true, request.userTokenInfo.WrUserId, request.body.apiEndPointId],
       }
     );
   } catch (err) {

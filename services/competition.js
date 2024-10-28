@@ -159,7 +159,11 @@ const updateCompititionService = async (request, fastify) => {
     isTrending: validateId.isTrending,
     isEventSnap: validateId.isEventSnap,
     isPointTable: validateId.isPointTable,
-    matchTypeId: request.body.matchTypeId || validateId.matchTypeId
+    matchTypeId: request.body.matchTypeId || validateId.matchTypeId,
+    winPoint: request.body.winPoint === undefined ? validateId.winPoint : request.body.winPoint,
+    tiePoint: request.body.tiePoint === undefined ? validateId.tiePoint : request.body.tiePoint,
+    cancelPoint: request.body.cancelPoint === undefined ? validateId.cancelPoint : request.body.cancelPoint,
+    lossPoint: request.body.lossPoint === undefined ? validateId.lossPoint : request.body.lossPoint,
   };
 
   if ("isActive" in request.body) {
@@ -169,10 +173,10 @@ const updateCompititionService = async (request, fastify) => {
     data.isTrending = request.body.isTrending;
   }
   if("isEventSnap" in request.body){
-    data.isEventSnap = request.body.isEventSnap;
+    data.isEventSnap = request.body.isEventSnap === 'true';
   }
   if("isPointTable" in request.body){
-    data.isPointTable = request.body.isPointTable;
+    data.isPointTable = request.body.isPointTable === 'true';
   }
 
   if (request.body.eventTypeId) {

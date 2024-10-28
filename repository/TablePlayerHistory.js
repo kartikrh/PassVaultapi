@@ -220,7 +220,7 @@ const exportPlayerHistoryQuery = async (data, fastify) => {
       `;
     }
 
-    query += `WHERE tmt."wrIsHistory" = true AND tp."wrIsDeleted" = false`
+    query += `WHERE tmt."wrIsHistory" = true AND tp."wrIsDeleted" = false AND tmt."wrIsDeleted" = false`
 
     if (data.eventTypeId) {
       query += ` AND tp."wrEventTypeId" = $${bindParams.length + 1}`;
