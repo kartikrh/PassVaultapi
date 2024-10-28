@@ -173,10 +173,10 @@ const updateCompititionService = async (request, fastify) => {
     data.isTrending = request.body.isTrending;
   }
   if("isEventSnap" in request.body){
-    data.isEventSnap = request.body.isEventSnap;
+    data.isEventSnap = request.body.isEventSnap === 'true';
   }
   if("isPointTable" in request.body){
-    data.isPointTable = request.body.isPointTable;
+    data.isPointTable = request.body.isPointTable === 'true';
   }
 
   if (request.body.eventTypeId) {
