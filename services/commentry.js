@@ -3193,40 +3193,44 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           request
         );
       });
-      setCompEventSnapSerice([{
-        commentaryId: commentaryDetails.commentaryId,
-        eventRefId: commentaryDetails.eventRefId,
-        competitionId: commentaryDetails.competitionId,
-        eventTypeId : commentaryDetails.eventTypeId,
-      }], request, fastify)
-      .catch((err) => {
-        console.log("setCompEventSnapSerice console", err);
-        errorLogger(
-          fastify,
-          err.message,
-          "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket - setCompEventSnapSerice",
-          request
-        );
-      });
-      setTeamPointService([{
-        commetaryId : commentaryDetails.commentaryId,
-        competitionId: commentaryDetails.competitionId,
-        team1Id : commentaryDetails.team1Id,
-        team2Id : commentaryDetails.team2Id,
-        winnerId : commentaryDetails.winnerId,
-      }], request, fastify)
-      .catch((err) => {
-        console.log("setTeamPointService console", err);
-        errorLogger(
-          fastify,
-          err.message,
-          "ERROR --> services/commentary.js/setTeamPointServicsyncCommentaryStatsWithAPIAndSocket - setTeamPointService",
-          request
-        );
-      });
-
-
-      
+      let competition = global.tblCompetitions.find(
+        (item) => item.competitionId === commentaryDetails.competitionId
+      );
+      if(competition.isEventSnap == true){
+        setCompEventSnapSerice([{
+          commentaryId: commentaryDetails.commentaryId,
+          eventRefId: commentaryDetails.eventRefId,
+          competitionId: commentaryDetails.competitionId,
+          eventTypeId : commentaryDetails.eventTypeId,
+        }], request, fastify)
+        .catch((err) => {
+          console.log("setCompEventSnapSerice console", err);
+          errorLogger(
+            fastify,
+            err.message,
+            "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket - setCompEventSnapSerice",
+            request
+          );
+        });
+      }
+      if(competition.isPointTable == true){
+        setTeamPointService([{
+          commetaryId : commentaryDetails.commentaryId,
+          competitionId: commentaryDetails.competitionId,
+          team1Id : commentaryDetails.team1Id,
+          team2Id : commentaryDetails.team2Id,
+          winnerId : commentaryDetails.winnerId,
+        }], request, fastify)
+        .catch((err) => {
+          console.log("setTeamPointService console", err);
+          errorLogger(
+            fastify,
+            err.message,
+            "ERROR --> services/commentary.js/setTeamPointServicsyncCommentaryStatsWithAPIAndSocket - setTeamPointService",
+            request
+          );
+        })
+      }
     }
 
     // call the getscore and emit the event data
@@ -8083,42 +8087,55 @@ const closeCommentaryService = async (request, fastify) => {
           request
         );
       });
-      setEventSnap.push({
-        commentaryId: commentaryId,
-        eventRefId : global.tblCommentaries[index].eventRefId,
-        competitionId : global.tblCommentaries[index].competitionId,
-        eventTypeId : global.tblCommentaries[index].eventTypeId,
-      })
-      teamPoint.push({
-        commentaryId: commentaryId,
-        competitionId : global.tblCommentaries[index].competitionId,
-        team1Id : global.tblCommentaries[index].team1Id,
-        team2Id : global.tblCommentaries[index].team2Id,
-        winnerId : global.tblCommentaries[index].winnerId,
-      })
+      // find competition
+      let comp = global.tblCompetitions.find(
+        (item) => item.competitionId === global.tblCommentaries[index].competitionId
+      );
+      if(comp.isEventSnap == true){
+        setEventSnap.push({
+          commentaryId: commentaryId,
+          eventRefId : global.tblCommentaries[index].eventRefId,
+          competitionId : global.tblCommentaries[index].competitionId,
+          eventTypeId : global.tblCommentaries[index].eventTypeId,
+        })
+      }
+      if(comp.isPointTable == true){
+        teamPoint.push({
+          commentaryId: commentaryId,
+          competitionId : global.tblCommentaries[index].competitionId,
+          team1Id : global.tblCommentaries[index].team1Id,
+          team2Id : global.tblCommentaries[index].team2Id,
+          winnerId : global.tblCommentaries[index].winnerId,
+        })
+      }
     }
 
   }
-  setCompEventSnapSerice(setEventSnap, request, fastify)
-  .catch((err) => {
-    console.log("setCompEventSnapSerice console", err);
-    errorLogger(
-      fastify,
-      err.message,
-      "ERROR --> services/commentary.js/closeCommentaryService - setCompEventSnapSerice",
-      request
-    );
-  });
-  setTeamPointService(teamPoint, request, fastify)
-  .catch((err) => {
-    console.log("setTeamPointService console", err);
-    errorLogger(
-      fastify,
-      err.message,
-      "ERROR --> services/commentary.js/closeCommentaryService - setTeamPointService",
-      request
-    );
-  });
+
+  if(setEventSnap.length > 0){
+    setCompEventSnapSerice(setEventSnap, request, fastify)
+    .catch((err) => {
+      console.log("setCompEventSnapSerice console", err);
+      errorLogger(
+        fastify,
+        err.message,
+        "ERROR --> services/commentary.js/closeCommentaryService - setCompEventSnapSerice",
+        request
+      );
+    });
+  }
+  if(teamPoint.length > 0){
+    setTeamPointService(teamPoint, request, fastify)
+    .catch((err) => {
+      console.log("setTeamPointService console", err);
+      errorLogger(
+        fastify,
+        err.message,
+        "ERROR --> services/commentary.js/closeCommentaryService - setTeamPointService",
+        request
+      );
+    });
+  }
   //return `Commentary(s) closed successfully`;
   return {
     message: "Commentary(s) closed successfully",
