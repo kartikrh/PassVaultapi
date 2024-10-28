@@ -20,6 +20,7 @@ const getAllMenuTypesQuery = async (fastify) => {
       "tblEncryptedData" t ON mt."wrBlockId" = t."wrKey"
   LEFT JOIN
       "tblMenuItems" mi ON mt."wrMenuTypeId" = mi."wrMenuTypeId" AND mi."wrParentId" = 0
+  WHERE mt."wrIsDeleted" = false
   GROUP BY
       te."wrValue", t."wrValue", "wrMenuTypeName", mt."wrIsActive", "wrNoOfLevel", b."wrBlockName";
   `,
@@ -107,8 +108,9 @@ const updatetMenuTypeQuery = async (body, fastify, request) => {
 const validatMenuTypeQuery = async (menuTypeId, fastify, request) => {
   try {
     const data = await fastify.db.query(
-      `select "wrMenuTypeName" from "tblMenuItems" mi left join "tblMenuTypes" mt on mt."wrMenuTypeId" = mi."wrMenuTypeId"  where mi."wrMenuTypeId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = $1) and mi."wrIsActive" = true
-      `,
+      `select "wrMenuTypeName" from "tblMenuItems" mi left join "tblMenuTypes" mt on mt."wrMenuTypeId" = mi."wrMenuTypeId"  
+      where mi."wrMenuTypeId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = $1) and mi."wrIsActive" = true
+      and mi."wrIsDeleted" = false`,
       {
         type: fastify.db.QueryTypes.SELECT,
         bind: [menuTypeId],
@@ -130,11 +132,15 @@ const validatMenuTypeQuery = async (menuTypeId, fastify, request) => {
 const deleteMenuTypeQuery = async (menuTypeIds, fastify, request) => {
   try {
     return await fastify.db.query(
-      `delete from "tblMenuTypes" where "wrMenuTypeId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = ANY($1::text[]))
+      `update "tblMenuTypes" set
+         "wrIsDeleted" = $1,
+         "wrDeletedBy" = $2,
+         "wrDeletedAt" = now()
+      where "wrMenuTypeId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = ANY($3::text[]))
       `,
       {
-        type: fastify.db.Sequelize.QueryTypes.DELETE,
-        bind: [menuTypeIds],
+        type: fastify.db.Sequelize.QueryTypes.UPDATE,
+        bind: [true, request.userTokenInfo.WrUserId, menuTypeIds],
       }
     );
   } catch (err) {

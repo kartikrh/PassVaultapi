@@ -6,7 +6,8 @@ const getAllMenuItemTypesQuery = async (fastify) => {
         "wrValue" as "menuItemTypeId",
         "wrMenuItemType" as "menuItemType",
         "wrIsActive" as "isActive"
-         from "tblMenuItemTypes" tb inner join "tblEncryptedData" te on tb."wrMenuItemTypeId" = te."wrKey"`,
+         from "tblMenuItemTypes" tb inner join "tblEncryptedData" te on tb."wrMenuItemTypeId" = te."wrKey"
+         where tb."wrIsDeleted" = false`,
     {
       type: fastify.db.QueryTypes.SELECT,
     }
@@ -82,7 +83,8 @@ const validateMenuItemTypeQuery = async (id, fastify, request) => {
   try {
     const data = await fastify.db.query(
       `select mit.* from "tblMenuItems" mi left join "tblMenuItemTypes" mit on mi."wrMenuItemTypeId" = mit."wrMenuItemTypeId"
-    where mi."wrMenuItemTypeId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = $1) and mi."wrIsActive" = true`,
+    where mi."wrMenuItemTypeId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = $1) and mi."wrIsActive" = true
+    and mi."wrIsDeleted" = false`,
       {
         type: fastify.db.QueryTypes.SELECT,
         bind: [id],
@@ -104,10 +106,14 @@ const validateMenuItemTypeQuery = async (id, fastify, request) => {
 const deleteMenuItemTypeQuery = async (ids, fastify, request) => {
   try {
     return await fastify.db.query(
-      `delete from "tblMenuItemTypes" where "wrMenuItemTypeId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = ANY($1))`,
+      `update "tblMenuItemTypes" set
+         "wrIsDeleted" = $1,
+         "wrDeletedBy" = $2,
+         "wrDeletedAt" = now()
+      where "wrMenuItemTypeId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = ANY($3))`,
       {
         type: fastify.db.QueryTypes.DELETE,
-        bind: [ids],
+        bind: [true, request.userTokenInfo.WrUserId, ids],
       }
     );
   } catch (err) {

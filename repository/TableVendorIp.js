@@ -13,6 +13,7 @@ const getAllVendorIpsQuery = async (fastify) => {
             tu."WrUserName" as "createdByName"
         FROM "tblVendorIps"
         LEFT JOIN "tblUsers" tu ON tu."WrUserId" = "tblVendorIps"."wrCreatedBy"
+        WHERE "wrIsDeleted" = false
         ORDER BY "wrId" DESC
     `,
     {
@@ -58,11 +59,14 @@ const createVendorIpQuery = async (data, request, fastify) => {
 const deleteVendorIpQuery = async (vendorIpId, request, fastify) => {
     try {
         const query = `
-            DELETE FROM "tblVendorIps"
-            WHERE "wrId" = ANY($1)
+            UPDATE "tblVendorIps" SET
+                "wrIsDeleted" = $1,
+                "wrDeletedBy" = $2,
+                "wrDeletedAt" = now()
+            WHERE "wrId" = ANY($3)
         `;
         const result = await fastify.db.query(query, {
-            bind: [vendorIpId],
+            bind: [true, request.userTokenInfo.WrUserId, vendorIpId],
             type : fastify.db.QueryTypes.SELECT
         });
         return result[0];

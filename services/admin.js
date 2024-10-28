@@ -119,7 +119,7 @@ async function deleteTabsService(request, fastify) {
     }
   }
 
-  await deleteTabsQuery(encryptedTabIds, fastify);
+  await deleteTabsQuery(encryptedTabIds, fastify, request);
 
   global.tblTabs = global.tblTabs.filter(
     (item) => !encryptedTabIds.includes(item.encryptedTabId)
