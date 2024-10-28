@@ -159,11 +159,11 @@ const updateCompititionService = async (request, fastify) => {
     isTrending: validateId.isTrending,
     isEventSnap: validateId.isEventSnap,
     isPointTable: validateId.isPointTable,
-    matchTypeId: request.body.matchTypeId || validateId.matchTypeId,
-    winPoint: request.body.winPoint === undefined ? validateId.winPoint : request.body.winPoint,
-    tiePoint: request.body.tiePoint === undefined ? validateId.tiePoint : request.body.tiePoint,
-    cancelPoint: request.body.cancelPoint === undefined ? validateId.cancelPoint : request.body.cancelPoint,
-    lossPoint: request.body.lossPoint === undefined ? validateId.lossPoint : request.body.lossPoint,
+    matchTypeId: request.body.matchTypeId === undefined ? validateId.matchTypeId : parseInt(request.body.matchTypeId, 10),
+    winPoint: request.body.winPoint === undefined ? validateId.winPoint : parseInt(request.body.winPoint, 10),
+    tiePoint: request.body.tiePoint === undefined ? validateId.tiePoint : parseInt(request.body.tiePoint, 10),
+    cancelPoint: request.body.cancelPoint === undefined ? validateId.cancelPoint : parseInt(request.body.cancelPoint, 10),
+    lossPoint: request.body.lossPoint === undefined ? validateId.lossPoint : parseInt(request.body.lossPoint, 10),
   };
 
   if ("isActive" in request.body) {
