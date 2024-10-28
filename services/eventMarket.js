@@ -841,9 +841,12 @@ const changeMarketCancelService = async (request, fastify) => {
   // let eventMarket = global.tblEventMarkets.findIndex(
   //   (item) => item.eventMarketId === eventMarketId
   // );
-  // let commentary = global.tblCommentaries.find(
-  //   (item) => item.commentaryId === commentaryId
-  // );
+  let commentary = global.tblCommentaries.find(
+    (item) => item.commentaryId === commentaryId
+  );
+  if(!commentary){
+    throw new Error("Commentary with this id not Found");
+  }
   // if (eventMarket === -1) {
   // throw new Error("EventMarket with this id not Found");
   let checkMarketInDb = await getEventMarketByIdsQuery(
@@ -876,6 +879,23 @@ const changeMarketCancelService = async (request, fastify) => {
   if (currentStatus === EventMarketStatus.Close) {
     await changeMarketCancelQuery(request.body, request, fastify);
     // global.tblEventMarkets[eventMarket].status = EventMarketStatus.Cancel;
+    if(commentary.commentaryStatus == commentaryStatus.INPROGRESS || commentary.commentaryStatus ==commentaryStatus.COMPLETED){
+      const strikeTeam = global.tblCommentaryTeams.find(
+        (item) => item.commentaryId === commentaryId && item.teamStatus === 1
+      );
+      await callPredictorMarket(
+        {
+          commentary_id: parseInt(commentaryId),
+          status: parseInt(EventMarketStatus.Cancel),
+          match_type_id: parseInt(commentary.matchTypeId),
+          event_market_id: parseInt(eventMarketId),
+          strike_team: strikeTeam.teamId,
+        },
+        "/api/v1/marketmanualclose",
+        fastify,
+        request
+      );
+    }
     return "Market Cancel updated successfully";
   } else {
     throw new Error("Market is not currently closed, so it cannot be canceled");
@@ -918,6 +938,23 @@ const changeMarketResultService = async (request, fastify) => {
     if (currentStatus === EventMarketStatus.Close && currentResult == null) {
       await changeMarketResultQuery(request.body, request, fastify);
       // global.tblEventMarkets[eventMarket].result = result;
+      if(commentary.commentaryStatus === commentaryStatus.INPROGRESS || commentary.commentaryStatus === commentaryStatus.COMPLETED){
+        const strikeTeam = global.tblCommentaryTeams.find(
+          (item) => item.commentaryId === commentaryId && item.teamStatus === 1
+        );
+        await callPredictorMarket(
+          {
+            commentary_id: parseInt(commentaryId),
+            status: parseInt(EventMarketStatus.Settled),
+            match_type_id: parseInt(commentary.matchTypeId),
+            event_market_id: parseInt(eventMarketId),
+            strike_team: strikeTeam.teamId,
+          },
+          "/api/v1/marketmanualclose",
+          fastify,
+          request
+        );
+      }
       return "Market result updated successfully";
     } else {
       throw new Error(
@@ -932,6 +969,23 @@ const changeMarketResultService = async (request, fastify) => {
       throw new Error("Runner with this id not Found");
     }
     await setResultInRunnerMarketQuery(request.body, request, fastify);
+    if(commentary.commentaryStatus === commentaryStatus.INPROGRESS || commentary.commentaryStatus === commentaryStatus.COMPLETED){
+      const strikeTeam = global.tblCommentaryTeams.find(
+        (item) => item.commentaryId === commentaryId && item.teamStatus === 1
+      );
+      await callPredictorMarket(
+        {
+          commentary_id: parseInt(commentaryId),
+          status: parseInt(EventMarketStatus.Settled),
+          match_type_id: parseInt(commentary.matchTypeId),
+          event_market_id: parseInt(eventMarketId),
+          strike_team: strikeTeam.teamId,
+        },
+        "/api/v1/marketmanualclose",
+        fastify,
+        request
+      );
+    }
     return "Market result updated successfully";
   }
 };
@@ -984,29 +1038,31 @@ const changeMarketCloseService = async (request, fastify) => {
     // global.tblEventMarkets[eventMarket].status = EventMarketStatus.Close;
     // global.tblEventMarkets[eventMarket].data = updatedData;
     // console.log("updatedData", updatedData);
-    const strikeTeam = global.tblCommentaryTeams.find(
-      (item) => item.commentaryId === commentaryId && item.teamStatus === 1
-    );
-    _resFromPredictAPI = await callPredictorMarket(
-      {
-        commentary_id: parseInt(commentaryId),
-        status: parseInt(EventMarketStatus.Close),
-        match_type_id: parseInt(commentary.matchTypeId),
-        event_market_id: parseInt(eventMarketId),
-        strike_team: strikeTeam.teamId,
-      },
-      "/api/v1/marketmanualclose",
-      fastify,
-      request
-    );
-    if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
-      callPrediction.predictioncallSuccess = false;
-      callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
-      callPrediction.endPoint = '/api/v1/marketmanualclose';
-    } else {
-      callPrediction.predictioncallSuccess = true;
-      callPrediction.predictionMessage = 'Prediction call successful';
-      callPrediction.endPoint = '/api/v1/marketmanualclose';
+    if(commentary.commentaruStatus === commentaryStatus.INPROGRESS || commentary.commentaryStatus === commentaryStatus.COMPLETED){
+      const strikeTeam = global.tblCommentaryTeams.find(
+        (item) => item.commentaryId === commentaryId && item.teamStatus === 1
+      );
+      _resFromPredictAPI = await callPredictorMarket(
+        {
+          commentary_id: parseInt(commentaryId),
+          status: parseInt(EventMarketStatus.Close),
+          match_type_id: parseInt(commentary.matchTypeId),
+          event_market_id: parseInt(eventMarketId),
+          strike_team: strikeTeam.teamId,
+        },
+        "/api/v1/marketmanualclose",
+        fastify,
+        request
+      );
+      if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
+        callPrediction.predictioncallSuccess = false;
+        callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
+        callPrediction.endPoint = '/api/v1/marketmanualclose';
+      } else {
+        callPrediction.predictioncallSuccess = true;
+        callPrediction.predictionMessage = 'Prediction call successful';
+        callPrediction.endPoint = '/api/v1/marketmanualclose';
+      }
     }
 
     return {
