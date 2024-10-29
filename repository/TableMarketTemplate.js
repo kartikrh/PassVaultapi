@@ -173,8 +173,8 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
           data.lineType || 1, // 1 => backlay, 2 => lay
           data.defaultBackSize || 100,
           data.defaultLaySize || 100,
-          data.beforeSuspendMin,
-          data.beforeCloseMin,
+          data.beforeSuspendMin || null,
+          data.beforeCloseMin || null,
         ],
       }
     );
@@ -305,8 +305,8 @@ const insertMarketTemplateInCloneQuery = async (data, fastify, request) => {
           data.lineType,
           data.defaultBackSize,
           data.defaultLaySize,
-          data.beforeSuspendMin,
-          data.beforeCloseMin,
+          data.beforeSuspendMin || null,
+          data.beforeCloseMin || null,
         ],
       }
     );
@@ -490,8 +490,8 @@ const updateMarketTemplateQuery = async (data, fastify, request) => {
                 data.lineType,
                 data.defaultBackSize,
                 data.defaultLaySize,
-                data.beforeSuspendMin,
-                data.beforeCloseMin,
+                data.beforeSuspendMin || null,
+                data.beforeCloseMin || null,
             ],
             type: fastify.db.QueryTypes.SELECT,
         }
@@ -502,7 +502,7 @@ const updateMarketTemplateQuery = async (data, fastify, request) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableMarketTemplate/deleteMarketTemplateQuery",
+      "DB ERROR --> repository/TableMarketTemplate/updateMarketTemplateQuery",
       request
     );
     throw new Error(err.message);
