@@ -3322,6 +3322,8 @@ const MarketTemplate = {
           lineType: { type: "integer" },
           defaultBackSize: { type: "integer" },
           defaultLaySize: { type: "integer" },
+          beforeSuspendMin: { type: "string" },
+          beforeCloseMin: { type: "string" },
         },
         required: [
           "marketTemplateId",
@@ -3893,6 +3895,22 @@ const EventMarket = {
           competitionId : {type : "integer"}
         },
         required : ["competitionId"]
+      }
+    }
+  },
+  closeSuspendTime:{
+    schema : {
+      tags : ["EventMarket"],
+      description : "upate close and suspend time of event market",
+      security : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          afterSuspendTime : {type : "string"},
+          afterCloseTime : {type : "string"},
+          eventMarketId : {type : "integer"}
+        },
+        required : ["eventMarketId"]
       }
     }
   },

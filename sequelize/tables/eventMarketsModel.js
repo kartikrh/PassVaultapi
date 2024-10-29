@@ -248,6 +248,14 @@ module.exports = (sequelize) => {
         allowNull: false,
         defaultValue: 100,
       },
+      wrAfterCloseTime: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+      wrAfterSuspendTime: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
     },
     {
       timestamps: false,

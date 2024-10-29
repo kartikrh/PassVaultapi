@@ -38,7 +38,8 @@ const {
   getMarketWithRunnerQuery,
   updateResultMultiMarketQuery,
   closeMarketByATQuery,
-  cancelMarketByATQuery
+  cancelMarketByATQuery,
+  updateEventMarketCloseSuspendTimeQuery,
 } = require("../repository/TableEventMarkets");
 const { getRunnerByIdQuery, setResultInRunnerMarketQuery, getRunnerByMarketQuery } = require("../repository/TableMarketRunner");
 const configConstants = require("../utilities/configConstants");
@@ -2259,6 +2260,27 @@ const getComByCompIdService = async (request, fastify) => {
 
   return commentaryList;
 }
+
+const updateEventMarketCloseSuspendTimeService = async (request, fastify) => {
+  const validateId = global.tblEventMarkets.find((item) => item.eventMarketId === request.body.eventMarketId);
+  if(!validateId){
+    throw new Error('EventMarketId not found');
+  }
+
+  let result = await updateEventMarketCloseSuspendTimeQuery(request, fastify);
+  result = result[0]
+  let index = global.tblEventMarkets.findIndex(
+    (item) => item.eventMarketId === request.body.eventMarketId
+  );
+  if (index !== -1) {
+    global.tblEventMarkets[index] = {
+      ...global.tblEventMarkets[index],
+      ...result
+    };
+  }
+
+  return `Close and Suspend EventMarket time updated successfully`;
+}
 module.exports = {
   getDetailsByCIdService,
   getAllEventMarketsService,
@@ -2299,5 +2321,6 @@ module.exports = {
   getRunnerByMarketService,
   pendingMultiRunnerMarketsService,
   updateMarketResultService,
-  getComByCompIdService
+  getComByCompIdService,
+  updateEventMarketCloseSuspendTimeService
 };

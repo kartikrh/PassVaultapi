@@ -160,7 +160,7 @@ const getAllPlayersByTeamIdQuery = async (teamId, fastify, request) => {
       "wrIsKipper" as "isKipper"     
       FROM "tblTeamPlayers" tp 
       left join "tblPlayers" pl on tp."wrRefPlayerId" = pl."wrPlayerId" AND pl."wrIsDeleted" = false
-      where tp."wrTeamId" = $1`,
+      where tp."wrTeamId" = $1 and tp."wrIsDeleted" = false`,
       {
         bind: [teamId],
         type: fastify.db.QueryTypes.SELECT,
@@ -210,7 +210,7 @@ const getAllCompetitionByTeamIdQuery = async (teamId, fastify, request) => {
       "wrCompetition" as "competition"
       FROM "tblTeamCompetition" tp 
       left join "tblCompetitions" pl on tp."wrRefCompetitionId" = pl."wrCompetitionId"
-      where tp."wrTeamId" = $1`,
+      where tp."wrTeamId" = $1 and tp."wrIsDeleted" = false`,
       {
         bind: [teamId],
         type: fastify.db.QueryTypes.SELECT,

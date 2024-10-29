@@ -172,6 +172,14 @@ module.exports = (sequelize) => {
         allowNull: true,
         defaultValue: false,
       },
+      wrBeforeSuspendMin: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      wrBeforeCloseMin: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
     },
     {
       timestamps: false,
