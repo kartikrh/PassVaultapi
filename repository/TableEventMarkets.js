@@ -36,7 +36,9 @@ const getAllEventMarketsQuery = async (fastify, whereCondition = null) => {
         tem."wrIsResult" as "isResult",
         tem."wrLineType" as "lineType",
         tem."wrDefaultBackSize" as "defaultBackSize",
-        tem."wrDefaultLaySize" as "defaultLaySize"
+        tem."wrDefaultLaySize" as "defaultLaySize",
+        tem."wrAfterSuspendTime" as "afterSuspendTime",
+        tem."wrAfterCloseTime" as "afterCloseTime"
     FROM "tblEventMarkets" tem
     LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
     LEFT JOIN "tblCompetitions" tcom ON tcom."wrCompetitionId" = tc."wrCompetitionId"
@@ -108,6 +110,8 @@ const getAllEventMarketsQueryV1 = async (fastify, whereCondition = null) => {
         tem."wrLineType" as "lineType",
         tem."wrDefaultBackSize" as "defaultBackSize",
         tem."wrDefaultLaySize" as "defaultLaySize",
+        tem."wrAfterSuspendTime" as "afterSuspendTime",
+        tem."wrAfterCloseTime" as "afterCloseTime",
         COALESCE(runner_data."runners", '[]') as "runners"
     FROM "tblEventMarkets" tem
     LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
@@ -216,7 +220,9 @@ const getEventMarketByIdsQuery = async (data, request, fastify) => {
             tem."wrDelay" as "delay",
             tem."wrLineRatio" as "lineRatio",
             tem."wrRateSource" as "rateSource",
-            tem."wrRateSourceRefID" as "rateSourceRefID"
+            tem."wrRateSourceRefID" as "rateSourceRefID",
+            tem."wrAfterSuspendTime" as "afterSuspendTime",
+            tem."wrAfterCloseTime" as "afterCloseTime"
         FROM "tblEventMarkets" tem
         LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
         LEFT JOIN "tblCompetitions" tcom ON tcom."wrCompetitionId" = tc."wrCompetitionId"
@@ -2320,6 +2326,8 @@ const getEventMarketsQuery = async (fastify, whereCondition = null) => {
           tem."wrLastUpdate" as "lastUpdate",
           tmt."wrMarketTypeName" as "marketTypeName", 
           tem."wrMarketTypeId" as "marketTypeId",
+          tem."wrAfterSuspendTime" as "afterSuspendTime",
+          tem."wrAfterCloseTime" as "afterCloseTime",
           tmr."wrRunner" as "resultRunner"
       FROM "tblEventMarkets" tem
       LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
@@ -3127,6 +3135,39 @@ const getEventMarketRunnersQuery = async (refID, fastify, request) => {
     throw new Error(error.message);
   }
 };
+
+const updateEventMarketCloseSuspendTimeQuery = async (request, fastify) => {
+  const data = request.body
+  try {
+    const updateTime = await fastify.db.query(
+      `UPDATE "tblEventMarkets" SET
+                "wrAfterSuspendTime" = $1,
+                "wrAfterCloseTime" = $2
+        WHERE "wrID" = $3 AND "wrIsDeleted" = false
+        RETURNING 
+        "wrAfterSuspendTime" as "afterSuspendTime",
+        "wrAfterCloseTime" as "afterCloseTime"`,
+      {
+        bind: [
+          data.afterSuspendTime || null,
+          data.afterCloseTime || null,
+          data.eventMarketId,
+        ],
+        type: fastify.db.QueryTypes.UPDATE,
+      }
+    );
+    return updateTime[0];
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/updateEventMarketCloseSuspendTimeQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+};
+
 module.exports = {
   getAllEventMarketsQuery,
   createManyEventMarketQuery,
@@ -3181,5 +3222,6 @@ module.exports = {
   updateResultMultiMarketQuery,
   closeMarketByATQuery,
   cancelMarketByATQuery,
-  getEventMarketRunnersQuery
+  getEventMarketRunnersQuery,
+  updateEventMarketCloseSuspendTimeQuery,
 }
