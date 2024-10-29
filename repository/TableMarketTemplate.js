@@ -44,7 +44,9 @@ const getAllMarketTemplateQuery = async (fastify) => {
       "wrIsShowInAdvanceMarket" as "isShowInAdvanceMarket",
       "wrLineType" as "lineType",
       "wrDefaultBackSize" as "defaultBackSize",
-      "wrDefaultLaySize" as "defaultLaySize"
+      "wrDefaultLaySize" as "defaultLaySize",
+      "wrBeforeSuspendMin" as "beforeSuspendMin",
+      "wrBeforeCloseMin" as "beforeCloseMin"
   FROM "tblMarketTemplates" tmt
   LEFT JOIN "tblMatchTypes" tm ON tmt."wrMatchTypeID" = "tm"."wrMatchTypeId"
   WHERE tmt."wrIsDeleted" = false;
@@ -66,6 +68,7 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
               "wrMarketTypeId","wrMarketTypeCategoryId","wrMargin" , "wrCreateRefId" , "wrOpenRefId",
               "wrTemplateType", "wrDelay","wrIsDefaultBetAllowed","wrIsDefaultMarketActive", "wrIsPerEvent", "wrIsShowInAdvanceMarket",
               "wrLineType", "wrDefaultBackSize", "wrDefaultLaySize"
+               ,"wrBeforeSuspendMin","wrBeforeCloseMin"
               ) values (
                 $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26, $27, $28, $29, $30, $31, $32,$33,$34,$35,$36,
                 $37, $38, $39
@@ -112,7 +115,9 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
         "wrIsShowInAdvanceMarket" as "isShowInAdvanceMarket",
         "wrLineType" as "lineType",
         "wrDefaultBackSize" as "defaultBackSize",
-        "wrDefaultLaySize" as "defaultLaySize"
+        "wrDefaultLaySize" as "defaultLaySize",
+        "wrBeforeSuspendMin" as "beforeSuspendMin",
+        "wrBeforeCloseMin" as "beforeCloseMin"
          from insert_data`,
       {
         type: fastify.db.QueryTypes.SELECT,
@@ -168,6 +173,8 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
           data.lineType || 1, // 1 => backlay, 2 => lay
           data.defaultBackSize || 100,
           data.defaultLaySize || 100,
+          data.beforeSuspendMin,
+          data.beforeCloseMin,
         ],
       }
     );
@@ -194,6 +201,7 @@ const insertMarketTemplateInCloneQuery = async (data, fastify, request) => {
               "wrMarketTypeId","wrMarketTypeCategoryId","wrMargin" , "wrCreateRefId" , "wrOpenRefId",
               "wrTemplateType", "wrDelay","wrIsDefaultBetAllowed","wrIsDefaultMarketActive", "wrIsPerEvent", "wrIsPredefineRunnerValue", "wrIsShowInAdvanceMarket",
               "wrLineType", "wrDefaultBackSize", "wrDefaultLaySize"
+               ,"wrBeforeSuspendMin","wrBeforeCloseMin"
               ) values (
                 $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26, $27, $28, $29, $30, $31, $32,$33,$34,$35,$36,$37,
                 $38, $39, $40
@@ -240,7 +248,9 @@ const insertMarketTemplateInCloneQuery = async (data, fastify, request) => {
         "wrIsShowInAdvanceMarket" as "isShowInAdvanceMarket",
         "wrLineType" as "lineType",
         "wrDefaultBackSize" as "defaultBackSize",
-        "wrDefaultLaySize" as "defaultLaySize"
+        "wrDefaultLaySize" as "defaultLaySize",
+        "wrBeforeSuspendMin" as "beforeSuspendMin",
+        "wrBeforeCloseMin" as "beforeCloseMin"
          from insert_data`,
       {
         type: fastify.db.QueryTypes.SELECT,
@@ -295,6 +305,8 @@ const insertMarketTemplateInCloneQuery = async (data, fastify, request) => {
           data.lineType,
           data.defaultBackSize,
           data.defaultLaySize,
+          data.beforeSuspendMin,
+          data.beforeCloseMin,
         ],
       }
     );
@@ -432,7 +444,9 @@ const updateMarketTemplateQuery = async (data, fastify, request) => {
             "wrIsShowInAdvanceMarket" = $36,
             "wrLineType" = $37,
             "wrDefaultBackSize" = $38,
-            "wrDefaultLaySize" = $39
+            "wrDefaultLaySize" = $39,
+            "wrBeforeSuspendMin" = $40,
+            "wrBeforeCloseMin" = $41
         WHERE "wrID" = $32
         `,
         {
@@ -476,6 +490,8 @@ const updateMarketTemplateQuery = async (data, fastify, request) => {
                 data.lineType,
                 data.defaultBackSize,
                 data.defaultLaySize,
+                data.beforeSuspendMin,
+                data.beforeCloseMin,
             ],
             type: fastify.db.QueryTypes.SELECT,
         }
