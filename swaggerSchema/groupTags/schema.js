@@ -3898,6 +3898,22 @@ const EventMarket = {
       }
     }
   },
+  closeSuspendTime:{
+    schema : {
+      tags : ["EventMarket"],
+      description : "upate close and suspend time of event market",
+      security : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          afterSuspendTime : {type : "string"},
+          afterCloseTime : {type : "string"},
+          eventMarketId : {type : "integer"}
+        },
+        required : ["eventMarketId"]
+      }
+    }
+  },
   getMarketTypeCategory:{
     schema : {
       tags : ["EventMarket"],
