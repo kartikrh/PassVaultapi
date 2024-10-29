@@ -93,8 +93,8 @@ const deleteRoleService = async (request, fastify) => {
       );
     }
   }
-  await deleteRoleQuery(roleIds, fastify);
-  await deletePermissionQuery(roleIds, fastify);
+  await deleteRoleQuery(roleIds, fastify, request);
+  await deletePermissionQuery(roleIds, fastify, request);
 
   global.tblRoles = global.tblRoles.filter(
     (item) => !roleIds.includes(item.roleId)

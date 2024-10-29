@@ -17,6 +17,7 @@ const getAllNewsQuery = async (fastify) => {
             "wrSEO" as "SEO",
             "wrSEODescription" as "SEODescription"
         from "tblNews"
+        where "wrIsDeleted" = false
         `,
     {
       type: fastify.db.QueryTypes.SELECT,
@@ -146,11 +147,15 @@ const deleteNewsQuery = async (data, request, fastify) => {
   try {
     return await fastify.db.query(
       `
-                delete from "tblNews" where "wrNewsId" = ANY ($1)
+            update "tblNews" set
+              "wrIsDeleted" = $1,
+              "wrDeletedBy" = $2,
+              "wrDeletedAt" = now()
+            where "wrNewsId" = ANY ($3)
             `,
       {
-        type: fastify.db.QueryTypes.DELETE,
-        bind: [request.body.newsId],
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [true, request.userTokenInfo.WrUserId, request.body.newsId],
       }
     );
   } catch (err) {

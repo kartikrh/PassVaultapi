@@ -9,7 +9,8 @@ const allPageFormateQuery = async (fastify) => {
     "wrImage" as "image",
     "wrDescription" as "description",
     "wrIsActive" as "isActive"
-    from "tblPageFormats" tb inner join "tblEncryptedData" te on tb."wrPageFormatId" = te."wrKey"`,
+    from "tblPageFormats" tb inner join "tblEncryptedData" te on tb."wrPageFormatId" = te."wrKey"
+    where tb."wrIsDeleted" = false`,
     {
       type: fastify.db.QueryTypes.SELECT,
     }
@@ -101,7 +102,7 @@ const validatePageFormatQuery = async (pageFormatId, fastify, request) => {
     const data = await fastify.db.query(
       `select tpf.* from "tblPages" tp 
     left join "tblPageFormats" tpf on tp."wrPageFormatId" = tpf."wrPageFormatId"
-    where tp."wrPageFormatId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)`,
+    where tp."wrPageFormatId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = $1) AND tp."wrIsDeleted" = false`,
       {
         type: fastify.db.QueryTypes.SELECT,
         bind: [pageFormatId],
@@ -123,10 +124,14 @@ const validatePageFormatQuery = async (pageFormatId, fastify, request) => {
 const deletePageFormatQuery = async (pageFormatId, fastify, request) => {
   try {
     return await fastify.db.query(
-      `delete from "tblPageFormats" where "wrPageFormatId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = ANY($1))`,
+      `update "tblPageFormats" set
+         "wrIsDeleted" = $1,
+         "wrDeletedBy" = $2,
+         "wrDeletedAt" = now()
+      where "wrPageFormatId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = ANY($3))`,
       {
         type: fastify.db.QueryTypes.DELETE,
-        bind: [pageFormatId],
+        bind: [true, request.userTokenInfo.WrUserId, pageFormatId],
       }
     );
   } catch (err) {

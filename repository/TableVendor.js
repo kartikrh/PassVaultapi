@@ -16,6 +16,7 @@ const getAllVendorsQuery = async (fastify) => {
             tu."WrUserName" as "createdByName"
         FROM "tblVendors"
         LEFT JOIN "tblUsers" tu ON tu."WrUserId" = "tblVendors"."wrCreatedBy"
+        WHERE "wrIsDeleted" = false
         ORDER BY "wrId" DESC
     `,
     {
@@ -106,17 +107,24 @@ const updateVendorQuery = async (data, request, fastify) => {
 };
 const deleteVendorQuery = async (vendorId, request, fastify) => {
   try {
-    const query1 = `DELETE FROM "tblVendorIps" WHERE "wrVendorId" = ANY($1)`;
+    const query1 = `UPDATE "tblVendorIps" SET
+                      "wrIsDeleted" = $1,
+                      "wrDeletedBy" = $2,
+                      "wrDeletedAt" = now()
+                    WHERE "wrVendorId" = ANY($3)`;
     await fastify.db.query(query1, {
-      bind: [vendorId],
+      bind: [true, request.userTokenInfo.WrUserId, vendorId],
       type: fastify.db.QueryTypes.SELECT,
     });
     const query2 = `
-            DELETE FROM "tblVendors"
-            WHERE "wrId" = ANY($1)
+            UPDATE "tblVendors" SET
+              "wrIsDeleted" = $1,
+              "wrDeletedBy" = $2,
+              "wrDeletedAt" = now()
+            WHERE "wrId" = ANY($3)
         `;
     return await fastify.db.query(query2, {
-      bind: [vendorId],
+      bind: [true, request.userTokenInfo.WrUserId, vendorId],
       type: fastify.db.QueryTypes.SELECT,
     });
   } catch (err) {

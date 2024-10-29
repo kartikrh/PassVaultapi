@@ -1,3 +1,5 @@
+const { errorLogger } = require("../utilities/logger")
+
 const getComEventSnapQuery = async (fastify) =>{
     return fastify.db.query(
         `
@@ -26,6 +28,29 @@ const getComEventSnapQuery = async (fastify) =>{
     )
 
 }
+const setEventSnapQuery = async (data,request,fastify) =>{
+    try {
+        const result = await fastify.db.query(
+            `CALL set_compEventSnap_proc($1,$2)`,
+            {
+                type : fastify.db.QueryTypes.SELECT,
+                bind : [
+                    data , null
+                ]
+            }
+        )
+        return result[0].compeventsnap_array;
+    } catch (error) {
+       errorLogger(
+        fastify,
+        error.message,
+        "DB Error --> repository/TableCompetitionEventSnap.js/setEventSnapQuery",
+        request
+       ) 
+       throw new Error(error)
+    }
+}
 module.exports = {
-    getComEventSnapQuery
+    getComEventSnapQuery,
+    setEventSnapQuery
 }

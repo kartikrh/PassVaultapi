@@ -23,6 +23,7 @@ const allPageQuery = async (fastify) => {
      left join "tblEncryptedData" ed on tp."wrPageId" = ed."wrKey"
      left join "tblEncryptedData" tpf on tp."wrPageFormatId" = tpf."wrKey"
      left join "tblEncryptedData" tpwl on tp."wrWhiteLabelId" = tpwl."wrKey"
+     where tp."wrIsDeleted" = false
     `,
     {
       type: fastify.db.QueryTypes.SELECT,
@@ -158,7 +159,9 @@ const updatePageQuery = async (body, fastify, request) => {
 const validatePageIdInMenuItem = async (pageId, fastify, request) => {
   try {
     const data = await fastify.db.query(
-      `select tp.* from "tblMenuItems" mi left join "tblPages" tp on tp."wrPageId" = mi."wrPageId" where mi."wrPageId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = $1) and mi."wrIsActive" = true`,
+      `select tp.* from "tblMenuItems" mi left join "tblPages" tp on tp."wrPageId" = mi."wrPageId" 
+      where mi."wrPageId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = $1) and mi."wrIsActive" = true
+      and mi."wrIsDeleted" = false`,
       {
         type: fastify.db.QueryTypes.SELECT,
         bind: [pageId],
@@ -180,7 +183,8 @@ const validatePageIdInMenuItem = async (pageId, fastify, request) => {
 const validatePageIdInPageAlias = async (pageId, fastify, request) => {
   try {
     const data = await fastify.db.query(
-      `select tp.* from "tblPageAliases" pa left join "tblPages" tp on tp."wrPageId" = pa."wrPageId" where pa."wrPageId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)`,
+      `select tp.* from "tblPageAliases" pa left join "tblPages" tp on tp."wrPageId" = pa."wrPageId" 
+      where pa."wrPageId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = $1) and pa."wrIsDeleted" = false`,
       {
         type: fastify.db.QueryTypes.SELECT,
         bind: [pageId],
@@ -202,10 +206,14 @@ const validatePageIdInPageAlias = async (pageId, fastify, request) => {
 const deletePageQuery = async (pageId, fastify, request) => {
   try {
     const data = await fastify.db.query(
-      `delete from "tblPages" where "wrPageId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = ANY($1))`,
+      `update "tblPages" set
+         "wrIsDeleted" = $1,
+         "wrDeletedBy" = $2,
+         "wrDeletedAt" = now()
+      where "wrPageId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = ANY($3))`,
       {
-        type: fastify.db.QueryTypes.DELETE,
-        bind: [pageId],
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [true, request.userTokenInfo.WrUserId, pageId],
       }
     );
 

@@ -38,7 +38,8 @@ const {
   getMarketWithRunnerQuery,
   updateResultMultiMarketQuery,
   closeMarketByATQuery,
-  cancelMarketByATQuery
+  cancelMarketByATQuery,
+  updateEventMarketCloseSuspendTimeQuery,
 } = require("../repository/TableEventMarkets");
 const { getRunnerByIdQuery, setResultInRunnerMarketQuery, getRunnerByMarketQuery } = require("../repository/TableMarketRunner");
 const configConstants = require("../utilities/configConstants");
@@ -841,9 +842,12 @@ const changeMarketCancelService = async (request, fastify) => {
   // let eventMarket = global.tblEventMarkets.findIndex(
   //   (item) => item.eventMarketId === eventMarketId
   // );
-  // let commentary = global.tblCommentaries.find(
-  //   (item) => item.commentaryId === commentaryId
-  // );
+  let commentary = global.tblCommentaries.find(
+    (item) => item.commentaryId === commentaryId
+  );
+  if(!commentary){
+    throw new Error("Commentary with this id not Found");
+  }
   // if (eventMarket === -1) {
   // throw new Error("EventMarket with this id not Found");
   let checkMarketInDb = await getEventMarketByIdsQuery(
@@ -876,6 +880,23 @@ const changeMarketCancelService = async (request, fastify) => {
   if (currentStatus === EventMarketStatus.Close) {
     await changeMarketCancelQuery(request.body, request, fastify);
     // global.tblEventMarkets[eventMarket].status = EventMarketStatus.Cancel;
+    if(commentary.commentaryStatus == commentaryStatus.INPROGRESS || commentary.commentaryStatus ==commentaryStatus.COMPLETED){
+      const strikeTeam = global.tblCommentaryTeams.find(
+        (item) => item.commentaryId === commentaryId && item.teamStatus === 1
+      );
+      await callPredictorMarket(
+        {
+          commentary_id: parseInt(commentaryId),
+          status: parseInt(EventMarketStatus.Cancel),
+          match_type_id: parseInt(commentary.matchTypeId),
+          event_market_id: parseInt(eventMarketId),
+          strike_team: strikeTeam.teamId,
+        },
+        "/api/v1/marketmanualclose",
+        fastify,
+        request
+      );
+    }
     return "Market Cancel updated successfully";
   } else {
     throw new Error("Market is not currently closed, so it cannot be canceled");
@@ -918,6 +939,23 @@ const changeMarketResultService = async (request, fastify) => {
     if (currentStatus === EventMarketStatus.Close && currentResult == null) {
       await changeMarketResultQuery(request.body, request, fastify);
       // global.tblEventMarkets[eventMarket].result = result;
+      if(commentary.commentaryStatus === commentaryStatus.INPROGRESS || commentary.commentaryStatus === commentaryStatus.COMPLETED){
+        const strikeTeam = global.tblCommentaryTeams.find(
+          (item) => item.commentaryId === commentaryId && item.teamStatus === 1
+        );
+        await callPredictorMarket(
+          {
+            commentary_id: parseInt(commentaryId),
+            status: parseInt(EventMarketStatus.Settled),
+            match_type_id: parseInt(commentary.matchTypeId),
+            event_market_id: parseInt(eventMarketId),
+            strike_team: strikeTeam.teamId,
+          },
+          "/api/v1/marketmanualclose",
+          fastify,
+          request
+        );
+      }
       return "Market result updated successfully";
     } else {
       throw new Error(
@@ -932,6 +970,23 @@ const changeMarketResultService = async (request, fastify) => {
       throw new Error("Runner with this id not Found");
     }
     await setResultInRunnerMarketQuery(request.body, request, fastify);
+    if(commentary.commentaryStatus === commentaryStatus.INPROGRESS || commentary.commentaryStatus === commentaryStatus.COMPLETED){
+      const strikeTeam = global.tblCommentaryTeams.find(
+        (item) => item.commentaryId === commentaryId && item.teamStatus === 1
+      );
+      await callPredictorMarket(
+        {
+          commentary_id: parseInt(commentaryId),
+          status: parseInt(EventMarketStatus.Settled),
+          match_type_id: parseInt(commentary.matchTypeId),
+          event_market_id: parseInt(eventMarketId),
+          strike_team: strikeTeam.teamId,
+        },
+        "/api/v1/marketmanualclose",
+        fastify,
+        request
+      );
+    }
     return "Market result updated successfully";
   }
 };
@@ -984,29 +1039,31 @@ const changeMarketCloseService = async (request, fastify) => {
     // global.tblEventMarkets[eventMarket].status = EventMarketStatus.Close;
     // global.tblEventMarkets[eventMarket].data = updatedData;
     // console.log("updatedData", updatedData);
-    const strikeTeam = global.tblCommentaryTeams.find(
-      (item) => item.commentaryId === commentaryId && item.teamStatus === 1
-    );
-    _resFromPredictAPI = await callPredictorMarket(
-      {
-        commentary_id: parseInt(commentaryId),
-        status: parseInt(EventMarketStatus.Close),
-        match_type_id: parseInt(commentary.matchTypeId),
-        event_market_id: parseInt(eventMarketId),
-        strike_team: strikeTeam.teamId,
-      },
-      "/api/v1/marketmanualclose",
-      fastify,
-      request
-    );
-    if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
-      callPrediction.predictioncallSuccess = false;
-      callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
-      callPrediction.endPoint = '/api/v1/marketmanualclose';
-    } else {
-      callPrediction.predictioncallSuccess = true;
-      callPrediction.predictionMessage = 'Prediction call successful';
-      callPrediction.endPoint = '/api/v1/marketmanualclose';
+    if(commentary.commentaruStatus === commentaryStatus.INPROGRESS || commentary.commentaryStatus === commentaryStatus.COMPLETED){
+      const strikeTeam = global.tblCommentaryTeams.find(
+        (item) => item.commentaryId === commentaryId && item.teamStatus === 1
+      );
+      _resFromPredictAPI = await callPredictorMarket(
+        {
+          commentary_id: parseInt(commentaryId),
+          status: parseInt(EventMarketStatus.Close),
+          match_type_id: parseInt(commentary.matchTypeId),
+          event_market_id: parseInt(eventMarketId),
+          strike_team: strikeTeam.teamId,
+        },
+        "/api/v1/marketmanualclose",
+        fastify,
+        request
+      );
+      if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
+        callPrediction.predictioncallSuccess = false;
+        callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
+        callPrediction.endPoint = '/api/v1/marketmanualclose';
+      } else {
+        callPrediction.predictioncallSuccess = true;
+        callPrediction.predictionMessage = 'Prediction call successful';
+        callPrediction.endPoint = '/api/v1/marketmanualclose';
+      }
     }
 
     return {
@@ -1691,10 +1748,58 @@ const createEventMarketsServiceV1 = async (request, fastify) => {
     //   }
     // }
     if(item.marketTypeId == MarketTypeId.Fancy || item.marketTypeId == MarketTypeId.LineMarket){
-      singleRunnerMarket.push(item); 
+      // singleRunnerMarket.push(item); 
+      if(item.eventMarketId == 0) {
+        if(item?.beforeSuspendMin && item.beforeSuspendMin > 0){
+          let minTominus = item.beforeSuspendMin;
+          let date = new Date(commentary.eventDate); 
+          date.setMinutes(date.getMinutes() - minTominus); // Subtract the minutes
+          let formattedDate = date.toISOString().replace('T', ' ').replace('Z', '+00');
+          item.afterSuspendTime = formattedDate;
+        }
+        else {
+          item.afterSuspendTime = null;
+        }
+        if(item?.beforeCloseMin && item.beforeCloseMin > 0){
+          let minTominus = item.beforeCloseMin;
+          let date = new Date(commentary.eventDate); 
+          date.setMinutes(date.getMinutes() - minTominus); // Subtract the minutes
+          let formattedDate = date.toISOString().replace('T', ' ').replace('Z', '+00');
+          item.afterCloseTime = formattedDate;
+        }
+        else {
+          item.afterCloseTime = null;
+        }
+        singleRunnerMarket.push(item);
+      }
+      else {
+        singleRunnerMarket.push(item);
+      }
     }
     else {
       if(item.marketName){
+        if(item.eventMarketId == 0) {
+          if(item?.beforeSuspendMin && item.beforeSuspendMin > 0){
+            let minTominus = item.beforeSuspendMin;
+            let date = new Date(commentary.eventDate); 
+            date.setMinutes(date.getMinutes() - minTominus); // Subtract the minutes
+            let formattedDate = date.toISOString().replace('T', ' ').replace('Z', '+00');
+            item.afterSuspendTime = formattedDate;
+          }
+          else {
+            item.afterSuspendTime = null;
+          }
+          if(item?.beforeCloseMin && item.beforeCloseMin > 0){
+            let minTominus = item.beforeCloseMin;
+            let date = new Date(commentary.eventDate); 
+            date.setMinutes(date.getMinutes() - minTominus); // Subtract the minutes
+            let formattedDate = date.toISOString().replace('T', ' ').replace('Z', '+00');
+            item.afterCloseTime = formattedDate;
+          }
+          else {
+            item.afterCloseTime = null;
+          }
+        }
         multiRunnerMarket.push(item);
       }
       else {
@@ -2155,6 +2260,30 @@ const getComByCompIdService = async (request, fastify) => {
 
   return commentaryList;
 }
+
+const updateEventMarketCloseSuspendTimeService = async (request, fastify) => {
+  let eventMarket = await getEventMarketByIdsQuery(    {
+    eventMarketIds: [parseInt(request.body.eventMarketId)],
+  }, request, fastify);
+  
+  if(eventMarket.length === 0){
+    throw new Error('EventMarketId not found');
+  }
+
+  let result = await updateEventMarketCloseSuspendTimeQuery(request, fastify);
+  result = result[0]
+  let index = global.tblEventMarkets.findIndex(
+    (item) => item.eventMarketId === request.body.eventMarketId
+  );
+  if (index !== -1) {
+    global.tblEventMarkets[index] = {
+      ...global.tblEventMarkets[index],
+      ...result
+    };
+  }
+
+  return `Close and Suspend EventMarket time updated successfully`;
+}
 module.exports = {
   getDetailsByCIdService,
   getAllEventMarketsService,
@@ -2195,5 +2324,6 @@ module.exports = {
   getRunnerByMarketService,
   pendingMultiRunnerMarketsService,
   updateMarketResultService,
-  getComByCompIdService
+  getComByCompIdService,
+  updateEventMarketCloseSuspendTimeService
 };

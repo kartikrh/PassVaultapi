@@ -6,7 +6,8 @@ const getAllRolesQuery = async (fastify) => {
         r."wrDescription" as "description",
         r."wrDisplayType" as "displayType",
         r."wrCreatedBy" as  "createdBy"
-     FROM "tblRoles" r inner join "tblEncryptedData" e on r."wrRoleId" = e."wrKey"`,
+     FROM "tblRoles" r inner join "tblEncryptedData" e on r."wrRoleId" = e."wrKey"
+     AND r."wrIsDeleted" = false;`,
     {
       type: fastify.db.QueryTypes.SELECT,
     }
@@ -21,7 +22,7 @@ const roleByDisplayTypeQuery = async (displayType, fastify) => {
             r."wrDescription" as "description",
             r."wrDisplayType" as "displayType"
          FROM "tblRoles" r inner join "tblEncryptedData" e on r."wrRoleId" = e."wrKey"
-         where r."wrDisplayType" = $1`,
+         where r."wrDisplayType" = $1 AND r."wrIsDeleted" = false;`,
     {
       type: fastify.db.QueryTypes.SELECT,
       bind: [displayType],
@@ -41,21 +42,29 @@ const valideRoleId = async (roleId, fastify) => {
   return data.length > 0;
 };
 
-const deleteRoleQuery = async (roleId, fastify) => {
+const deleteRoleQuery = async (roleId, fastify, request) => {
   return await fastify.db.query(
-    `delete from "tblRoles" where "wrRoleId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = ANY($1))`,
+    `update "tblRoles" set
+         "wrIsDeleted" = $1,
+         "wrDeletedBy" = $2,
+         "wrDeletedAt" = now()
+    where "wrRoleId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = ANY($3))`,
     {
-      type: fastify.db.QueryTypes.DELETE,
-      bind: [roleId],
+      type: fastify.db.QueryTypes.UPDATE,
+      bind: [true, request.userTokenInfo.WrUserId, roleId],
     }
   );
 };
-const deletePermissionQuery = async (roleId, fastify) => {
+const deletePermissionQuery = async (roleId, fastify, request) => {
   return await fastify.db.query(
-    `delete from "tblPermissions" where "wrRoleId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = ANY($1))`,
+    `update "tblPermissions" set
+         "wrIsDeleted" = $1,
+         "wrDeletedBy" = $2,
+         "wrDeletedAt" = now()
+    where "wrRoleId" in (select "wrKey" from "tblEncryptedData" where "wrValue" = ANY($3))`,
     {
-      type: fastify.db.QueryTypes.DELETE,
-      bind: [roleId],
+      type: fastify.db.QueryTypes.UPDATE,
+      bind: [true, request.userTokenInfo.WrUserId, roleId],
     }
   );
 };
@@ -165,7 +174,7 @@ const roleByIdQuery = async (data, parentRoleId, isSuperAdmin, fastify) => {
       select * from "tblPermissions" where "wrRoleId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)
     ) as tp on tt."wrTabId" = tp."wrTabId"
     left join "tblEncryptedData" te on te."wrKey" = tt."wrTabId"
-    where tt."wrIsActive" = true and tt."wrDisplayType" = $2
+    where tt."wrIsActive" = true and tt."wrDisplayType" = $2 and tt."wrIsDeleted" = false
     `,
       {
         type: fastify.db.QueryTypes.SELECT,
@@ -193,7 +202,7 @@ const roleByIdQuery = async (data, parentRoleId, isSuperAdmin, fastify) => {
       select * from "tblPermissions" where "wrRoleId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)
     ) as tp on tt."wrTabId" = tp."wrTabId"
     left join "tblEncryptedData" te on te."wrKey" = tt."wrTabId"
-    where tt."wrIsActive" = true and tt."wrDisplayType" = $2 AND tpp."wrIsView" = true
+    where tt."wrIsActive" = true and tt."wrDisplayType" = $2 AND tpp."wrIsView" = true AND tt."wrIsDeleted" = false
     `,
       {
         type: fastify.db.QueryTypes.SELECT,
@@ -215,7 +224,7 @@ const permissionByRoleIdQuery = async (data, fastify) => {
       select * from "tblPermissions" where "wrRoleId" = $1
     ) as tp on tt."wrTabId" = tp."wrTabId"
     left join "tblEncryptedData" te on te."wrKey" = tt."wrTabId"
-    where tt."wrDisplayType" = $2 and tt."wrTabName" ilike $3
+    where tt."wrDisplayType" = $2 and tt."wrTabName" ilike $3 and tt."wrIsDeleted" = false
     `,
     {
       type: fastify.db.QueryTypes.SELECT,
