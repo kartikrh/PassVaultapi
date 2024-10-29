@@ -1747,10 +1747,58 @@ const createEventMarketsServiceV1 = async (request, fastify) => {
     //   }
     // }
     if(item.marketTypeId == MarketTypeId.Fancy || item.marketTypeId == MarketTypeId.LineMarket){
-      singleRunnerMarket.push(item); 
+      // singleRunnerMarket.push(item); 
+      if(item.eventMarketId == 0) {
+        if(item?.beforeSuspendMin && item.beforeSuspendMin > 0){
+          let minTominus = item.beforeSuspendMin;
+          let date = new Date(commentary.eventDate); 
+          date.setMinutes(date.getMinutes() - minTominus); // Subtract the minutes
+          let formattedDate = date.toISOString().replace('T', ' ').replace('Z', '+00');
+          item.afterSuspendTime = formattedDate;
+        }
+        else {
+          item.afterSuspendTime = null;
+        }
+        if(item?.beforeCloseMin && item.beforeCloseMin > 0){
+          let minTominus = item.beforeCloseMin;
+          let date = new Date(commentary.eventDate); 
+          date.setMinutes(date.getMinutes() - minTominus); // Subtract the minutes
+          let formattedDate = date.toISOString().replace('T', ' ').replace('Z', '+00');
+          item.afterCloseTime = formattedDate;
+        }
+        else {
+          item.afterCloseTime = null;
+        }
+        singleRunnerMarket.push(item);
+      }
+      else {
+        singleRunnerMarket.push(item);
+      }
     }
     else {
       if(item.marketName){
+        if(item.eventMarketId == 0) {
+          if(item?.beforeSuspendMin && item.beforeSuspendMin > 0){
+            let minTominus = item.beforeSuspendMin;
+            let date = new Date(commentary.eventDate); 
+            date.setMinutes(date.getMinutes() - minTominus); // Subtract the minutes
+            let formattedDate = date.toISOString().replace('T', ' ').replace('Z', '+00');
+            item.afterSuspendTime = formattedDate;
+          }
+          else {
+            item.afterSuspendTime = null;
+          }
+          if(item?.beforeCloseMin && item.beforeCloseMin > 0){
+            let minTominus = item.beforeCloseMin;
+            let date = new Date(commentary.eventDate); 
+            date.setMinutes(date.getMinutes() - minTominus); // Subtract the minutes
+            let formattedDate = date.toISOString().replace('T', ' ').replace('Z', '+00');
+            item.afterCloseTime = formattedDate;
+          }
+          else {
+            item.afterCloseTime = null;
+          }
+        }
         multiRunnerMarket.push(item);
       }
       else {
