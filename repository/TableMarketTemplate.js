@@ -502,7 +502,7 @@ const updateMarketTemplateQuery = async (data, fastify, request) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableMarketTemplate/deleteMarketTemplateQuery",
+      "DB ERROR --> repository/TableMarketTemplate/updateMarketTemplateQuery",
       request
     );
     throw new Error(err.message);
