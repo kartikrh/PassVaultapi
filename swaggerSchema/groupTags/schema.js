@@ -3322,8 +3322,8 @@ const MarketTemplate = {
           lineType: { type: "integer" },
           defaultBackSize: { type: "integer" },
           defaultLaySize: { type: "integer" },
-          beforeSuspendMin: { type: "integer" },
-          beforeCloseMin: { type: "integer" },
+          beforeSuspendMin: { type: "string" },
+          beforeCloseMin: { type: "string" },
         },
         required: [
           "marketTemplateId",

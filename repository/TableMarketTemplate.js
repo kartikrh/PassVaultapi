@@ -67,8 +67,7 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
               "wrAfterWicketAutoSuspend","wrAfterWicketNotCreated","wrCreatedBy","wrIsActive" , "wrActionType",
               "wrMarketTypeId","wrMarketTypeCategoryId","wrMargin" , "wrCreateRefId" , "wrOpenRefId",
               "wrTemplateType", "wrDelay","wrIsDefaultBetAllowed","wrIsDefaultMarketActive", "wrIsPerEvent", "wrIsShowInAdvanceMarket",
-              "wrLineType", "wrDefaultBackSize", "wrDefaultLaySize"
-               ,"wrBeforeSuspendMin","wrBeforeCloseMin"
+              "wrLineType", "wrDefaultBackSize", "wrDefaultLaySize","wrBeforeSuspendMin","wrBeforeCloseMin"
               ) values (
                 $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26, $27, $28, $29, $30, $31, $32,$33,$34,$35,$36,
                 $37, $38, $39 ,$40 ,$41
@@ -173,8 +172,8 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
           data.lineType || 1, // 1 => backlay, 2 => lay
           data.defaultBackSize || 100,
           data.defaultLaySize || 100,
-          data.beforeSuspendMin || null,
-          data.beforeCloseMin || null,
+          data.beforeSuspendMin === undefined ? null : parseInt(data.beforeSuspendMin),
+          data.beforeCloseMin === undefined ? null : parseInt(data.beforeCloseMin),
         ],
       }
     );
