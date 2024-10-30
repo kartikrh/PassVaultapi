@@ -324,7 +324,7 @@ const getAllTeamsByPlayerIdQuery = async (playerId, fastify, request) => {
       "wrTeamName" as "teamName"
        from "tblTeamPlayers" tp
        left join "tblTeams" tt on tp."wrTeamId" = tt."wrTeamId"
-       where "wrRefPlayerId" = $1`,
+       where "wrRefPlayerId" = $1 and tp."wrIsDeleted" = false and tt."wrIsDeleted" = false`,
       {
         type: fastify.db.QueryTypes.SELECT,
         bind: [playerId],
