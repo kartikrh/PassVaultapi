@@ -64,7 +64,6 @@ const updateMarket = async (fastify) => {
                              UPDATE "tblEventMarkets" SET
                               "wrStatus" = $1 ,
                               "wrAfterSuspendTime" = null,
-                              "wrSettledTime" = now(),
                               "wrLastUpdate" = now(),
                               "wrData" = jsonb_set(
                                     jsonb_set("wrData"::jsonb, '{status}', '3'::jsonb, false),
