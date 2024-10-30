@@ -2262,8 +2262,11 @@ const getComByCompIdService = async (request, fastify) => {
 }
 
 const updateEventMarketCloseSuspendTimeService = async (request, fastify) => {
-  const validateId = global.tblEventMarkets.find((item) => item.eventMarketId === request.body.eventMarketId);
-  if(!validateId){
+  let eventMarket = await getEventMarketByIdsQuery(    {
+    eventMarketIds: [parseInt(request.body.eventMarketId)],
+  }, request, fastify);
+  
+  if(eventMarket.length === 0){
     throw new Error('EventMarketId not found');
   }
 
