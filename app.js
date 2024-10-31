@@ -34,6 +34,7 @@ const WebSocket = require("ws");
 const WebsocketConnection = require("./websocket");
 const webPush = require("web-push");
 const {webPushset} = require("./WebPushHandler/index.js");
+const { updateMarket } = require("./utilities/marketUpdate.js");
 
 // Pass --options via CLI arguments in command to enable these options.
 module.exports.options = {};
@@ -106,6 +107,8 @@ module.exports = async function (fastify, opts) {
           connectClients(fastify);
           disconnectClients(fastify);
           webPushset(webPush);
+          updateMarket(fastify)
+          
         } catch (error) {
           console.error("Error during post-sync operations:", error);
         }
