@@ -301,6 +301,37 @@ const updateWebRequestLogs = async (request, fastify) => {
   }
 };
 
+const eventMarketLogger = async (data , request , fastify) => {
+  try {
+    const query = `
+      	INSERT INTO "tblEventMarketLogs"
+        (
+          "wrCommentaryId",
+          "wrRequestBody",
+          "wrResponse",
+          "wrError",
+          "wrCreatedAt",
+          "wrCreatedBy"
+        )
+        VALUES ($1, $2, $3, $4, $5, $6)
+    `;
+    await fastify.db.query(query, {
+      type: fastify.db.QueryTypes.SELECT,
+      bind: [
+        data.commentaryId,
+        JSON.stringify(data.requestBody),
+        JSON.stringify(data.response ) || null,
+        JSON.stringify(data.error) || null,
+        new Date(),
+        request?.userTokenInfo?.WrUserId || null,
+      ],
+    });
+    return true;
+  } catch (error) {
+    console.log(error);
+  }
+}
 
 module.exports = { errorLogger, responseLogger ,responseLogInDB , marketLogger ,
-  marketDataLogger,tblPredictorAPILogger,tblThirdPartyAPILogger,commentaryLogger,updateWebRequestLogs};
+  marketDataLogger,tblPredictorAPILogger,tblThirdPartyAPILogger,commentaryLogger,updateWebRequestLogs,
+  eventMarketLogger};

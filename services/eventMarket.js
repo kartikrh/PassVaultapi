@@ -52,7 +52,7 @@ const {
   commentaryStatus,
   MarketTypeId,
 } = require("../utilities/index");
-const { marketLogger, marketDataLogger, errorLogger } = require("../utilities/logger");
+const { marketLogger, marketDataLogger, errorLogger, eventMarketLogger } = require("../utilities/logger");
 const getDetailsByCIdService = async (request, fastify) => {
   const { commentaryId } = request.body;
   const commentary = global.tblCommentaries.find(
@@ -1703,7 +1703,8 @@ const getDetailsByCIdV1Service = async (request, fastify) => {
   };
 };
 const createEventMarketsServiceV1 = async (request, fastify) => {
-  const { eventMarket } = request.body;
+  try {
+    const { eventMarket } = request.body;
   // check the commentaryId
   const commentary = global.tblCommentaries.find(
     (item) => item.commentaryId === eventMarket[0].commentaryId
@@ -1712,23 +1713,23 @@ const createEventMarketsServiceV1 = async (request, fastify) => {
     throw new Error("Commentary with this id not Found");
   }
   // check if toss done
-  // if(commentary.commentaryStatus != commentaryStatus.OPEN && commentary.commentaryStatus != commentaryStatus.COMPLETED){
-  //   // check if in eventMarket batting team market not to create
-  //   let bowling = global.tblCommentaryTeams.find(
-  //     (item) =>
-  //       item.commentaryId === commentary.commentaryId &&
-  //       item.currentInnings === commentary.currentInnings &&
-  //       item.teamStatus !== 1 
-  //   );
-  //   if(bowling){
-  //     let market = eventMarket.find(
-  //       (item) => item.teamId === bowling.teamId
-  //     );
-  //     if(market){
-  //       throw new Error(`${bowling.teamName}'s market not created because this team is not on Strike`);
-  //     }
-  //   }
-  // }
+  if(commentary.commentaryStatus != commentaryStatus.OPEN && commentary.commentaryStatus != commentaryStatus.COMPLETED){
+    // check if in eventMarket batting team market not to create
+    let bowling = global.tblCommentaryTeams.find(
+      (item) =>
+        item.commentaryId === commentary.commentaryId &&
+        item.currentInnings === commentary.currentInnings &&
+        item.teamStatus !== 1 
+    );
+    if(bowling){
+      let market = eventMarket.find(
+        (item) => item.teamId === bowling.teamId
+      );
+      if(market){
+        throw new Error(`${bowling.teamName}'s market not created because this team is not on Strike`);
+      }
+    }
+  }
   let multiRunnerMarket = [];
   let singleRunnerMarket = [];
   let marketNameNullMarket = [];
@@ -1839,7 +1840,31 @@ const createEventMarketsServiceV1 = async (request, fastify) => {
       fastify
     )
   }
+  eventMarketLogger(
+    {
+      commentaryId: eventMarket[0].commentaryId,
+      requestBody : request.body,
+      response : result
+    },
+    request,
+    fastify
+  )
   return "Event Market updated successfully";
+
+  } catch (error) {
+    eventMarketLogger(
+      {
+        commentaryId: request.body.eventMarket[0].commentaryId,
+        requestBody : request.body,
+        error : {
+          message : error.message,
+        }
+      },
+      request,
+      fastify
+    )
+    throw new Error(error.message);
+  }
 };
 const updateMarketRateServiceV1 = async (request, fastify) => {
   // i got array of eventMarket i want to update this data
