@@ -1663,7 +1663,9 @@ const getDetailsByCIdV1Service = async (request, fastify) => {
   }
   let eventMarket;
   // LDOMARKETSIDS = global.tblConfigs.find(config => config.key === "LDOMARKET")?.value ?? "0";
-  let whereCondition = `tc."wrIsDelete" = false AND tem."wrIsDeleted" = false AND tem."wrCommentaryId" = ${commentaryId} AND tem."wrStatus" NOT IN (${EventMarketStatus.Close},${EventMarketStatus.Settled},${EventMarketStatus.Cancel})`;
+  let whereCondition = `tc."wrIsDelete" = false AND tem."wrIsDeleted" = false AND tem."wrCommentaryId" = ${commentaryId} AND 
+  tem."wrStatus" NOT IN (${EventMarketStatus.Close},${EventMarketStatus.Settled},${EventMarketStatus.Cancel})
+  AND tem."wrRateSource" = 1`;
   if (commentary.commentaryStatus != 1) {
     let battingTeam = global.tblCommentaryTeams.find(
       (item) =>
