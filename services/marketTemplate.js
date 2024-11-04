@@ -192,6 +192,7 @@ const updateMarketTemplateService = async (request, fastify) => {
     beforeSuspendMin: request.body.beforeSuspendMin !== undefined ? parseInt(request.body.beforeSuspendMin) : marketTemplate.beforeSuspendMin,
     beforeCloseMin: request.body.beforeCloseMin !== undefined ? parseInt(request.body.beforeCloseMin) : marketTemplate.beforeCloseMin,
     defaultIsSendData: request.body.hasOwnProperty("defaultIsSendData") ? request.body.defaultIsSendData : marketTemplate.defaultIsSendData,
+    rateDiff: request.body.rateDiff !== undefined ? parseInt(request.body.rateDiff) : marketTemplate.rateDiff,
   };
   // update marketTemplate
   await updateMarketTemplateQuery(body, fastify, request);
