@@ -188,8 +188,8 @@ const updateMarketTemplateService = async (request, fastify) => {
     lineType: request.body.lineType || marketTemplate.lineType,
     defaultBackSize: request.body.defaultBackSize || marketTemplate.defaultBackSize,
     defaultLaySize: request.body.defaultLaySize || marketTemplate.defaultLaySize,
-    beforeSuspendMin: parseInt(request.body.beforeSuspendMin) || marketTemplate.beforeSuspendMin,
-    beforeCloseMin: parseInt(request.body.beforeCloseMin) || marketTemplate.beforeCloseMin,
+    beforeSuspendMin: request.body.beforeSuspendMin !== undefined ? parseInt(request.body.beforeSuspendMin) : marketTemplate.beforeSuspendMin,
+    beforeCloseMin: request.body.beforeCloseMin !== undefined ? parseInt(request.body.beforeCloseMin) : marketTemplate.beforeCloseMin,
   };
   // update marketTemplate
   await updateMarketTemplateQuery(body, fastify, request);
