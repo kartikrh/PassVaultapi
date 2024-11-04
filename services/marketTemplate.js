@@ -6,7 +6,8 @@ const {
   changePredefineRunnerQuery,
   updateIsPerEventStatusQuery,
   insertMarketTemplateInCloneQuery,
-  isShowInAdvanceMarketChangeStatusQuery
+  isShowInAdvanceMarketChangeStatusQuery,
+  defaultIsSendDataChangeQuery
 } = require("../repository/TableMarketTemplate");
 const { callPredictorMarket } = require("../utilities");
 const { createMarketTemplateRunnerQuery } = require("../repository/TableMarketTemplateRunner")
@@ -190,6 +191,7 @@ const updateMarketTemplateService = async (request, fastify) => {
     defaultLaySize: request.body.defaultLaySize || marketTemplate.defaultLaySize,
     beforeSuspendMin: request.body.beforeSuspendMin !== undefined ? parseInt(request.body.beforeSuspendMin) : marketTemplate.beforeSuspendMin,
     beforeCloseMin: request.body.beforeCloseMin !== undefined ? parseInt(request.body.beforeCloseMin) : marketTemplate.beforeCloseMin,
+    defaultIsSendData: request.body.hasOwnProperty("defaultIsSendData") ? request.body.defaultIsSendData : marketTemplate.defaultIsSendData,
   };
   // update marketTemplate
   await updateMarketTemplateQuery(body, fastify, request);
@@ -488,6 +490,22 @@ const cloneMultiMarketTemplateService  = async (request, fastify) => {
   }
   return "Market Template(s) cloned successfully";
 };
+
+const defaultIsSendDataChangeService = async (request, fastify) => {
+  const { marketTemplateId } = request.body;
+  const index = global.tblMarketTemplate.findIndex(
+    (item) => item.marketTemplateId === marketTemplateId
+  );
+
+  if (index === -1) {
+    throw new Error("MarketTemplate with this id not found");
+  }
+
+  await defaultIsSendDataChangeQuery(request, fastify);
+  global.tblMarketTemplate[index].defaultIsSendData = request.body.defaultIsSendData;
+
+  return `MarketTemplate defaultIsSendData status updated successfully`;
+};
 module.exports = {
   saveMarketTemplateService,
   getAllMarketTemplateService,
@@ -503,5 +521,6 @@ module.exports = {
   getMarketTypeAndCategoryByMarketTypeService,
   isPerEventStatusService,
   isShowInAdvanceMarketChangeStatusService,
-  cloneMultiMarketTemplateService
+  cloneMultiMarketTemplateService,
+  defaultIsSendDataChangeService
 };
