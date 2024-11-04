@@ -189,8 +189,8 @@ const updateMarketTemplateService = async (request, fastify) => {
     lineType: request.body.lineType || marketTemplate.lineType,
     defaultBackSize: request.body.defaultBackSize || marketTemplate.defaultBackSize,
     defaultLaySize: request.body.defaultLaySize || marketTemplate.defaultLaySize,
-    beforeSuspendMin: parseInt(request.body.beforeSuspendMin) || marketTemplate.beforeSuspendMin,
-    beforeCloseMin: parseInt(request.body.beforeCloseMin) || marketTemplate.beforeCloseMin,
+    beforeSuspendMin: request.body.beforeSuspendMin !== undefined ? parseInt(request.body.beforeSuspendMin) : marketTemplate.beforeSuspendMin,
+    beforeCloseMin: request.body.beforeCloseMin !== undefined ? parseInt(request.body.beforeCloseMin) : marketTemplate.beforeCloseMin,
     defaultIsSendData: request.body.hasOwnProperty("defaultIsSendData") ? request.body.defaultIsSendData : marketTemplate.defaultIsSendData,
   };
   // update marketTemplate
