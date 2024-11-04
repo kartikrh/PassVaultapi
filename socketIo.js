@@ -16,7 +16,7 @@ const connection = (socket , fastify) => {
         .to(socket.id)
         .emit("logout", "You have been removed from the room.");
     } else {
-      socket.join(userId); // Join the specified room
+      socket.join(userId); 
     }
   }
   socket.on("updatedEventMarket", async (data) => {
