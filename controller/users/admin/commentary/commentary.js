@@ -54,6 +54,7 @@ const {
   updateLineRationService,
   deleteBallFromMemorynService
 } = require("../../../../services/commentry");
+const { getEventSnapByComService } = require("../../../../services/competitionEventSnap");
 const { getAllCommentariesDataService } = require("../../../../services/score");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -752,7 +753,15 @@ const deleteBallFromMemory = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
-
+const getEventSnapByCom = async (request, reply, fastify) => {
+  try {
+    const result = await getEventSnapByComService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/getEventSnapByCom", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 module.exports = {
   getAllCommentaries,
   getCommentaryById,
@@ -810,5 +819,6 @@ module.exports = {
   AddSuperOverCommentary,
   updateTeamPrediction,
   updateLineRatio,
-  deleteBallFromMemory
+  deleteBallFromMemory,
+  getEventSnapByCom
 };
