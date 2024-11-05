@@ -49,7 +49,8 @@ const {
   AddSuperOverCommentary,
   updateTeamPrediction,
   updateLineRatio,
-  deleteBallFromMemory
+  deleteBallFromMemory,
+  getEventSnapByCom
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -693,5 +694,17 @@ module.exports = async (fastify, opts) => {
             })
     ],
     handler : (request,reply) => getAssignAward(request,reply,fastify)
+  })
+  fastify.post("/getEventSnap", {
+    schema : Commentary.getById.schema,
+    preHandler : [
+        (request,reply) => authorize(request,reply,fastify),
+        (request,reply) => 
+            checkPermission(request,reply,fastify,{
+                tabName : "Commentary",
+                mode : "view"
+            })
+    ],
+    handler : (request,reply) => getEventSnapByCom(request,reply,fastify)
   })
 };
