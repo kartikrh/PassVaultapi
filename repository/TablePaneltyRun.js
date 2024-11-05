@@ -7,7 +7,8 @@ const allPaneltyRunsQuery = async (fastify) => {
       "wrRun" as "run",
       "wrDesc" as "desc",
       "wrIsActive" as "isActive"
-      from "tblPaneltyRuns"`,
+      from "tblPaneltyRuns"
+      where "wrIsDeleted" = false`,
     {
       type: fastify.db.QueryTypes.SELECT,
     }
@@ -80,10 +81,14 @@ const updatePaneltyRunQuery = async (data, fastify, request) => {
 const deletePaneltyRunQuery = async (paneltyId, fastify, request) => {
   try {
     return await fastify.db.query(
-      `delete from "tblPaneltyRuns" where "wrPaneltyId" = ANY($1)`,
+      `update "tblPaneltyRuns" set
+            "wrIsDeleted" = $1,
+            "wrDeletedBy" = $2,
+            "wrDeletedAt" = now() 
+      where "wrPaneltyId" = ANY($3)`,
       {
-        bind: [paneltyId],
-        type: fastify.db.QueryTypes.DELETE,
+        bind: [true, request.userTokenInfo.WrUserId, paneltyId],
+        type: fastify.db.QueryTypes.UPDATE,
       }
     );
   } catch (err) {

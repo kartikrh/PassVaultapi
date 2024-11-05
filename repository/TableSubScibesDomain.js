@@ -28,11 +28,9 @@ const getAllSubScribesDomainQuery = async (fastify) =>{
         "tblSubScribesDomains" tsd
     LEFT JOIN
         "tblSubScribesSubDomains" tssd ON tsd."wrSubScribesDomainId" = tssd."wrSubScribesDomainId"
+    WHERE tsd."wrIsDeleted" = false
     GROUP BY
         tsd."wrSubScribesDomainId";  
-    
-
-
         `,
         {
             type: fastify.db.QueryTypes.SELECT
@@ -49,6 +47,7 @@ const getAllSubScribesSubDomainQuery = async (fastify) =>{
             "wrSiteSubDomain" as "siteSubDomain"
         FROM
             "tblSubScribesSubDomains"
+        WHERE "wrIsDeleted" = false
         `,
         {
             type: fastify.db.QueryTypes.SELECT
@@ -83,9 +82,9 @@ const getDomainByIdQuery = async (id,fastify) =>{
         FROM
             "tblSubScribesDomains" tsd
         LEFT JOIN
-            "tblSubScribesSubDomains" tssd ON tsd."wrSubScribesDomainId" = tssd."wrSubScribesDomainId"
+            "tblSubScribesSubDomains" tssd ON tsd."wrSubScribesDomainId" = tssd."wrSubScribesDomainId" AND tssd."wrIsDeleted" = false
         WHERE
-            tsd."wrSubScribesDomainId" = $1
+            tsd."wrSubScribesDomainId" = $1 AND tsd."wrIsDeleted" = false
         GROUP BY
             tsd."wrSubScribesDomainId"
         `,
@@ -109,7 +108,7 @@ const getSubDomainByDomainQuery = async (id,fastify) =>{
         FROM
             "tblSubScribesSubDomains"
         WHERE
-            "wrSubScribesDomainId" = $1
+            "wrSubScribesDomainId" = $1 AND "wrIsDeleted" = false
         `,
         {
             type: fastify.db.QueryTypes.SELECT,
@@ -164,18 +163,23 @@ const insertSubScribeDomainQuery = async (request,fastify) =>{
     }
 }
 
-const deleteSubScribeDomainQuery = async (id,fastify) =>{
+const deleteSubScribeDomainQuery = async (id, fastify, request) =>{
     try {
            // delete sub domains
         await fastify.db.query(
             `
-            DELETE FROM "tblSubScribesSubDomains" 
+            UPDATE "tblSubScribesSubDomains" SET
+                "wrIsDeleted" = $1,
+                "wrDeletedBy" = $2,
+                "wrDeletedAt" = now() 
             WHERE 
-                "wrSubScribesDomainId" = $1
+                "wrSubScribesDomainId" = $3
             `,
             {
                 type: fastify.db.QueryTypes.DELETE,
                 bind: [
+                    true,
+                    request.userTokenInfo.WrUserId,
                     id
                 ]
             }
@@ -183,13 +187,18 @@ const deleteSubScribeDomainQuery = async (id,fastify) =>{
         // delete domain
         await fastify.db.query(
             `
-            DELETE FROM "tblSubScribesDomains" 
+            UPDATE "tblSubScribesDomains" SET
+                "wrIsDeleted" = $1,
+                "wrDeletedBy" = $2,
+                "wrDeletedAt" = now() 
             WHERE 
-                "wrSubScribesDomainId" = $1
+                "wrSubScribesDomainId" = $3
             `,
             {
                 type: fastify.db.QueryTypes.DELETE,
                 bind: [
+                    true,
+                    request.userTokenInfo.WrUserId,
                     id
                 ]
             }
