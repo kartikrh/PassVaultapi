@@ -59,7 +59,8 @@ const {
   updateTeamPrediction,
   updateCommentaryBattingTeamQuery,
   updateLineRationQuery,
-  updateLineRatioComQuery
+  updateLineRatioComQuery,
+  completedCommentaryStatusQuery,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -8855,6 +8856,21 @@ const setLineRatioInComService = async (data , request , fastify) =>{
   return true;
 
 }
+
+const completedCommentaryService = async (request, fastify) => {
+  const { commentaryId } = request.body;
+  await completedCommentaryStatusQuery(commentaryId, fastify, request);
+  for (let comm of request.body.commentaryId) {
+    const index = global.tblCommentaries.findIndex(
+      (item) => item.commentaryId === comm
+    );
+    if (index !== -1) {
+      global.tblCommentaries[index].commentaryStatus = 5;
+    }
+  }
+
+  return `Commentary status updated successfully`;
+};
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -8913,5 +8929,6 @@ module.exports = {
   getMatchDataByCId,
   updateTeamPredictionService,
   updateLineRationService,
-  deleteBallFromMemorynService
+  deleteBallFromMemorynService,
+  completedCommentaryService,
 };
