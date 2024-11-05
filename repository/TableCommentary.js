@@ -3294,6 +3294,28 @@ const updateLineRatioComQuery = async (data, request, fastify) => {
     throw new Error(error.message);
   }
 }
+const completedCommentaryStatusQuery = async (data, fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `update "tblCommentaries" set
+        "wrCommentaryStatus" = $1
+        where "wrCommentaryId" = ANY($2) AND "wrIsDelete" = false
+      `,
+      {
+        bind: [5, data],
+      }
+    );
+    return result;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/completedCommentaryStatusQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
 
 module.exports = {
   getAllCommentaryQuery,
@@ -3359,5 +3381,6 @@ module.exports = {
   updateAverageOfPlayerQuery,
   updateCommentaryBattingTeamQuery,
   updateLineRationQuery,
-  updateLineRatioComQuery
+  updateLineRatioComQuery,
+  completedCommentaryStatusQuery,
 };
