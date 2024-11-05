@@ -1970,6 +1970,9 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
           is_senddata : item.isSendData,
           data : item.data,
           market_type_category_id : parseInt(item.marketTypeCategoryId),
+          lay_size : item.runners[0].laySize,
+          back_size : item.runners[0].backSize,
+          rate_diff : item.rateDiff
         })
       }
       marketDataLogger(
