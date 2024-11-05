@@ -18,6 +18,7 @@ const getAllNotificationQuery = (fastify) =>{
             "wrModifyBy" as "modifyBy",
             "wrIsSend" as "isSend"
         FROM "tblNotifications"
+        WHERE "wrIsDeleted" = false
     `;
 
     const result = fastify.db.query(query,{
@@ -146,11 +147,14 @@ const updateNotificationQuery =async (data,request , fastify) =>{
 const deleteNotificationQuery = (request , fastify) =>{
     try {
         let query = `
-            DELETE FROM "tblNotifications"
-            WHERE "wrId" = ANY($1)
+            UPDATE "tblNotifications" SET
+                "wrIsDeleted" = $1,
+                "wrDeletedBy" = $2,
+                "wrDeletedAt" = now() 
+            WHERE "wrId" = ANY($3)
         `;
         const result = fastify.db.query(query,{
-            bind : [request.body.notificationId]
+            bind : [true, request.userTokenInfo.WrUserId, request.body.notificationId]
         });
         return result;
     } catch (error) {
@@ -214,7 +218,7 @@ const getNotificationLogByClientQuery = async (data , request , fastify)=>{
                 tnl."wrNotificationId" = tn."wrId"
                 AND tnl."wrClientId" = $1
             WHERE 
-                tn."wrIsSend" = true
+                tn."wrIsSend" = true AND tn."wrIsDeleted" = false
             ORDER BY 
                 tn."wrCreatedAt" DESC
             offset $2 limit $3	

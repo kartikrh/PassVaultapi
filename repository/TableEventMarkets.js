@@ -38,6 +38,7 @@ const getAllEventMarketsQuery = async (fastify, whereCondition = null) => {
         tem."wrDefaultBackSize" as "defaultBackSize",
         tem."wrDefaultLaySize" as "defaultLaySize",
         tem."wrAfterSuspendTime" as "afterSuspendTime",
+        tem."wrIsDeleted" as "isDeleted",
         tem."wrAfterCloseTime" as "afterCloseTime"
     FROM "tblEventMarkets" tem
     LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
@@ -112,6 +113,7 @@ const getAllEventMarketsQueryV1 = async (fastify, whereCondition = null) => {
         tem."wrDefaultLaySize" as "defaultLaySize",
         tem."wrAfterSuspendTime" as "afterSuspendTime",
         tem."wrAfterCloseTime" as "afterCloseTime",
+        tem."wrRateDiff" as "rateDiff",
         COALESCE(runner_data."runners", '[]') as "runners"
     FROM "tblEventMarkets" tem
     LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
@@ -1225,68 +1227,149 @@ const upsertEventMarketSPQuery = async (data, request, fastify) => {
     throw new Error(error.message);
   }
 };
+// const getDataLogsByMarketQuery = async (request, fastify) => {
+//   try {
+//     const { startDate, endDate, page, limit, eventMarketId } = request.body;
+//     const { skip, take } = getPagination(page, limit);
+    
+//     let whereConditions = [];
+    
+//     if (startDate && endDate) {
+//         whereConditions.push(`"wrCreatedDate" BETWEEN '${startDate}' AND '${endDate}'`);
+//     }
+    
+//     if (eventMarketId) {
+//         whereConditions.push(`"wrEventMarketId" = '${eventMarketId}'`);
+//     }
+    
+//     const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
+    
+//     const query = `
+//         SELECT
+//             tmd."wrId" as "marketDataLogId",
+//             tmd."wrCommentaryId" as "commentaryId",
+//             tmd."wrEventMarketId" as "eventMarketId",
+//             tem."wrMarketName" as "marketName",
+//             tmd."wrData" as "data",
+//             tmd."wrUpdateType" as "updateType",
+//             tmd."wrCreatedDate" as "createdDate",
+//             tmd."wrCreatedBy" as "createdBy",
+//             tu."WrUserName" as "userName",
+//             tmd."wrLineDiff" as "lineDiff",
+//             tmd."wrIsSendData" as "isSendData"
+//         FROM "tblMarketDataLogs" tmd
+//         INNER JOIN "tblEventMarkets" tem ON tmd."wrEventMarketId" = tem."wrID" AND tem."wrIsDeleted" = false
+//         LEFT JOIN "tblUsers" tu ON tmd."wrCreatedBy" = tu."WrUserId"
+//         ${whereClause}
+//         ORDER BY tmd."wrId" DESC
+//         LIMIT $1 OFFSET $2;
+//     `;
+    
+//     const data = await fastify.db.query(query, {
+//         bind: [take, skip],
+//         type: fastify.db.QueryTypes.SELECT
+//     });
+    
+//     const totalRecordsQuery = `
+//         SELECT COUNT(*) as "count"
+//         FROM "tblMarketDataLogs" tmd
+//         INNER JOIN "tblEventMarkets" tem ON tmd."wrEventMarketId" = tem."wrID" AND tem."wrIsDeleted" = false
+//         ${whereClause}
+//     `;
+    
+//     const totalRecordsResult = await fastify.db.query(totalRecordsQuery, {
+//         type: fastify.db.QueryTypes.SELECT
+//     });
+    
+//     const totalRecords = parseInt(totalRecordsResult[0].count, 10);
+//     const totalPages = Math.ceil(totalRecords / take);
+    
+//     return {
+//         totalRecords: totalRecords,
+//         currentPage: page,
+//         totalPages: totalPages,
+//         data: data,
+//     };
+// } catch (error) {
+//     errorLogger(
+//         fastify,
+//         error.message,
+//         "DB ERROR --> repository/TableEventmarket.js/getDataLogsByMarketQuery",
+//         request
+//     );
+//     throw new Error(error.message);
+// }
+// };
 const getDataLogsByMarketQuery = async (request, fastify) => {
   try {
-    const { startDate, endDate, page, limit, eventMarketId } = request.body;
+    const { startDate, endDate, page = 1, limit = 10, eventMarketId } = request.body;
     const { skip, take } = getPagination(page, limit);
     
     let whereConditions = [];
-    
+    const replacements = { take, skip };
+
     if (startDate && endDate) {
-        whereConditions.push(`"wrCreatedDate" BETWEEN '${startDate}' AND '${endDate}'`);
+        whereConditions.push(`"wrCreatedDate" BETWEEN :startDate AND :endDate`);
+        replacements.startDate = startDate;
+        replacements.endDate = endDate;
     }
-    
+
     if (eventMarketId) {
-        whereConditions.push(`"wrEventMarketId" = '${eventMarketId}'`);
+        whereConditions.push(`"wrEventMarketId" = :eventMarketId`);
+        replacements.eventMarketId = eventMarketId;
     }
-    
+
     const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
-    
+
     const query = `
-        SELECT
-            tmd."wrId" as "marketDataLogId",
-            tmd."wrCommentaryId" as "commentaryId",
-            tmd."wrEventMarketId" as "eventMarketId",
-            tem."wrMarketName" as "marketName",
-            tmd."wrData" as "data",
-            tmd."wrUpdateType" as "updateType",
-            tmd."wrCreatedDate" as "createdDate",
-            tmd."wrCreatedBy" as "createdBy",
-            tu."WrUserName" as "userName",
-            tmd."wrLineDiff" as "lineDiff",
-            tmd."wrIsSendData" as "isSendData"
-        FROM "tblMarketDataLogs" tmd
-        INNER JOIN "tblEventMarkets" tem ON tmd."wrEventMarketId" = tem."wrID" AND tem."wrIsDeleted" = false
-        LEFT JOIN "tblUsers" tu ON tmd."wrCreatedBy" = tu."WrUserId"
-        ${whereClause}
-        ORDER BY tmd."wrId" DESC
-        LIMIT $1 OFFSET $2;
+        WITH MarketData AS (
+            SELECT
+                tmd."wrId" AS "marketDataLogId",
+                tmd."wrCommentaryId" AS "commentaryId",
+                tmd."wrEventMarketId" AS "eventMarketId",
+                tem."wrMarketName" AS "marketName",
+                tmd."wrData" AS "data",
+                tmd."wrUpdateType" AS "updateType",
+                tmd."wrCreatedDate" AS "createdDate",
+                tmd."wrCreatedBy" AS "createdBy",
+                tu."WrUserName" AS "userName",
+                tmd."wrLineDiff" AS "lineDiff",
+                tmd."wrIsSendData" AS "isSendData"
+            FROM "tblMarketDataLogs" tmd
+            INNER JOIN "tblEventMarkets" tem ON tmd."wrEventMarketId" = tem."wrID" AND tem."wrIsDeleted" = false
+            LEFT JOIN "tblUsers" tu ON tmd."wrCreatedBy" = tu."WrUserId"
+            ${whereClause}
+            ORDER BY tmd."wrId" DESC
+            LIMIT :take OFFSET :skip
+        )
+        SELECT * FROM MarketData;
     `;
-    
+
     const data = await fastify.db.query(query, {
-        bind: [take, skip],
-        type: fastify.db.QueryTypes.SELECT
+        replacements,
+        type: fastify.db.QueryTypes.SELECT,
     });
-    
+
     const totalRecordsQuery = `
-        SELECT COUNT(*) as "count"
+        SELECT COUNT(*) AS "count"
         FROM "tblMarketDataLogs" tmd
         INNER JOIN "tblEventMarkets" tem ON tmd."wrEventMarketId" = tem."wrID" AND tem."wrIsDeleted" = false
         ${whereClause}
     `;
     
     const totalRecordsResult = await fastify.db.query(totalRecordsQuery, {
-        type: fastify.db.QueryTypes.SELECT
+        replacements,
+        type: fastify.db.QueryTypes.SELECT,
     });
     
     const totalRecords = parseInt(totalRecordsResult[0].count, 10);
     const totalPages = Math.ceil(totalRecords / take);
-    
+
     return {
-        totalRecords: totalRecords,
+        totalRecords,
         currentPage: page,
-        totalPages: totalPages,
-        data: data,
+        totalPages,
+        data,
     };
 } catch (error) {
     errorLogger(
@@ -2328,6 +2411,7 @@ const getEventMarketsQuery = async (fastify, whereCondition = null) => {
           tem."wrMarketTypeId" as "marketTypeId",
           tem."wrAfterSuspendTime" as "afterSuspendTime",
           tem."wrAfterCloseTime" as "afterCloseTime",
+          tem."wrIsDeleted" as "isDeleted",
           tmr."wrRunner" as "resultRunner"
       FROM "tblEventMarkets" tem
       LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
@@ -2721,6 +2805,7 @@ const getMarketListByCIdQueryV1 = async (data, request, fastify) => {
             tem."wrLineRatio" as "lineRatio",
             tem."wrMarketTypeId" as "marketTypeId",
             tem."wrLineType" as "lineType", 
+            tem."wrRateDiff" as "rateDiff",
             (
                 SELECT json_agg(
                   json_build_object(
@@ -2783,6 +2868,7 @@ const getMarketWithRunnerQuery = async (fastify, whereCondition) => {
         "wrMargin" AS "margin",
         "wrStatus" AS "status",
         tem."wrDelay" AS "delay",
+        tem."wrIsDeleted" as "isDeleted",
         "wrResult" as "result",
         "wrIsResult" as "isResult",
         tmr."wrRunner" as "resultRunner",
@@ -3168,6 +3254,67 @@ const updateEventMarketCloseSuspendTimeQuery = async (request, fastify) => {
   }
 };
 
+const updateEventMarketCloseQuery = async (commentaryId, request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `WITH update_tblEventMarkets AS (
+          UPDATE "tblEventMarkets"
+          SET "wrStatus" = $1,
+              "wrData" = jsonb_set(
+                CASE
+                  WHEN "wrData"::jsonb ? 'status' THEN jsonb_set("wrData"::jsonb, '{status}', $3::jsonb)
+                  ELSE "wrData"::jsonb
+                END,
+                '{runner}',
+                (
+                  CASE
+                    WHEN jsonb_typeof("wrData"::jsonb->'runner') = 'array' THEN
+                      (
+                        SELECT jsonb_agg(
+                          CASE
+                            WHEN jsonb_typeof(r) = 'object' AND r ? 'status' THEN jsonb_set(r, '{status}', $3::jsonb)
+                            ELSE r
+                          END
+                        )
+                        FROM jsonb_array_elements("wrData"::jsonb->'runner') AS r
+                      )
+                    ELSE "wrData"::jsonb->'runner'
+                  END
+                )
+              )::varchar
+          WHERE "wrCommentaryId" = ANY($2)
+            AND "wrStatus" NOT IN ($4, $5, $6, $7)
+            AND "wrIsDeleted" = false
+          RETURNING "wrID"
+        )
+        UPDATE "tblMarketRunners"
+        SET "wrSelectionStatus" = $1
+        WHERE "wrEventMarketId" IN (SELECT "wrID" FROM update_tblEventMarkets);
+        `,
+      {
+        bind: [
+          EventMarketStatus.Close,
+          commentaryId,
+          EventMarketStatus.Close,
+          EventMarketStatus.Settled,
+          EventMarketStatus.Cancel,
+          EventMarketStatus.WIN,
+          EventMarketStatus.LOSE,
+        ],
+        type: fastify.db.QueryTypes.UPDATE,
+      }
+    );
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/updateEventMarketCloseQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+}
+
 module.exports = {
   getAllEventMarketsQuery,
   createManyEventMarketQuery,
@@ -3224,4 +3371,5 @@ module.exports = {
   cancelMarketByATQuery,
   getEventMarketRunnersQuery,
   updateEventMarketCloseSuspendTimeQuery,
+  updateEventMarketCloseQuery,
 }
