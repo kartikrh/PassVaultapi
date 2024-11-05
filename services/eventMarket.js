@@ -156,10 +156,10 @@ const getAllEventMarketsService = async (request, fastify) => {
     endDate,
     rateSourceRefId
   } = request.body;
-  let createWhereStatus = `tem."wrIsDeleted" = false AND tem."wrStatus" NOT IN (${EventMarketStatus.Close},${EventMarketStatus.Settled},${EventMarketStatus.Cancel}) AND tc."wrIsDelete" = false`;
+  let createWhereStatus = `tem."wrStatus" NOT IN (${EventMarketStatus.Close},${EventMarketStatus.Settled},${EventMarketStatus.Cancel}) AND tc."wrIsDelete" = false`;
 
   if (status !== undefined && status != -1) {
-    createWhereStatus = `tc."wrIsDelete" = false AND tem."wrIsDeleted" = false AND tem."wrStatus" = ${status}`;
+    createWhereStatus = `tc."wrIsDelete" = false AND tem."wrStatus" = ${status}`;
   }
   if (status != undefined && status == -1) {
     createWhereStatus = null;
@@ -375,7 +375,7 @@ const marketListResultFalseService = async (request, fastify) => {
     rateSourceRefId
   } = request.body;
   
-  let createWhereStatus = `tem."wrIsDeleted" = false AND tem."wrIsResult" = false AND tem."wrResult" IS NOT NULL AND tem."wrStatus" = ${EventMarketStatus.Settled} AND tc."wrIsDelete" = false`;
+  let createWhereStatus = `tem."wrIsResult" = false AND tem."wrResult" IS NOT NULL AND tem."wrStatus" = ${EventMarketStatus.Settled} AND tc."wrIsDelete" = false`;
   if (rateSourceRefId && rateSourceRefId != 0) {
     createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrRateSource" = ${rateSourceRefId}` : `tem."wrRateSource" = ${rateSourceRefId}`;
   }
@@ -2159,7 +2159,7 @@ const pendingMultiRunnerMarketsService = async (request, fastify) => {
   // ).map((item) => item.marketTypeId);
   
   
-  let createWhereStatus = `tem."wrIsDeleted" = false AND tem."wrIsResult" = false AND tem."wrResult" IS NOT NULL AND tem."wrStatus" = ${EventMarketStatus.Settled} AND tc."wrIsDelete" = false`;
+  let createWhereStatus = `tem."wrIsResult" = false AND tem."wrResult" IS NOT NULL AND tem."wrStatus" = ${EventMarketStatus.Settled} AND tc."wrIsDelete" = false`;
   // if(mt.length > 0){
     createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrMarketTypeId" NOT IN (${MarketTypeId.Fancy}, ${MarketTypeId.LineMarket})` : `tem."wrMarketTypeId" NOT IN (${MarketTypeId.Fancy}, ${MarketTypeId.LineMarket})`;
   // }

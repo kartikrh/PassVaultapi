@@ -44,7 +44,7 @@ const saveSubScribeDomainService = async (request, fastify) => {
 const deleteSubScribeDomainService = async (request, fastify) => {
   const { subScribesDomainId } = request.body;
   for (const id of subScribesDomainId) {
-    await deleteSubScribeDomainQuery(id, fastify);
+    await deleteSubScribeDomainQuery(id, fastify, request);
   }
   global.tblSubScribesDomain = global.tblSubScribesDomain.filter(
     (d) => !subScribesDomainId.includes(d.subScribesDomainId)
