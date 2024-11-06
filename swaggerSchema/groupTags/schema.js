@@ -2783,6 +2783,24 @@ const Commentary = {
       },
     },
   },
+  completedCommentary: {
+    schema: {
+      tags: ["Commentary"],
+      description: "completed Commentary",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["commentaryId"],
+      },
+    },
+  },
 };
 
 const Compitition = {
