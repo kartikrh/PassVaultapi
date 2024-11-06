@@ -179,7 +179,7 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
           data.beforeSuspendMin === undefined ? null : parseInt(data.beforeSuspendMin),
           data.beforeCloseMin === undefined ? null : parseInt(data.beforeCloseMin),
           data.hasOwnProperty("defaultIsSendData") ? data.defaultIsSendData : false,
-          data.rateDiff === undefined ? 1 : parseInt(data.rateDiff),
+          data.rateDiff === undefined ? 1 : data.rateDiff,
         ],
       }
     );
@@ -317,7 +317,7 @@ const insertMarketTemplateInCloneQuery = async (data, fastify, request) => {
           data.beforeSuspendMin || null,
           data.beforeCloseMin || null,
           data.hasOwnProperty("defaultIsSendData") ? data.defaultIsSendData : false,
-          data.rateDiff === undefined ? 1 : parseInt(data.rateDiff),
+          data.rateDiff === undefined ? 1 : data.rateDiff,
         ],
       }
     );
