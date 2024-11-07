@@ -55,7 +55,6 @@ const getEventSnapByComQuery = async (data,request,fastify) =>{
         const result = await fastify.db.query(
             `
                 SELECT 
-                    "wrId" as "id",
                     tces."wrTotalFour" as "Total Four",
                     tces."wrTotalSix" as "Total Six",
                     tces."wrTotalWicket" as "Total Wicket",
