@@ -4402,6 +4402,42 @@ const EventMarket = {
       },
     },
   },
+  closeMarkets: {
+    schema: {
+      tags: ["EventMarket"],
+      description: "close EventMarket(s)",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          eventMarketId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["eventMarketId"],
+      },
+    },
+  },
+  cancelMarkets: {
+    schema: {
+      tags: ["EventMarket"],
+      description: "cancel EventMarket(s)",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          eventMarketId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["eventMarketId"],
+      },
+    },
+  },
 };
 const MarketTemplateRunner = {
   getAll: {

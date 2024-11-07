@@ -27,6 +27,8 @@ const addPageService = async (request, fastify) => {
     if (!validatePageFormateId) {
       throw new Error("Invalid page format id");
     }
+
+    request.body.linkURL = validatePageFormateId.pageName
   }
 
   const data = await insertPageQuery(
@@ -75,6 +77,8 @@ const updatePageService = async (request, fastify) => {
     if (!validatePageFormateId) {
       throw new Error("Invalid page format id");
     }
+
+    request.body.linkURL = validatePageFormateId.pageName
   }
 
   const body = {

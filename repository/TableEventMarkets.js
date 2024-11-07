@@ -3258,33 +3258,22 @@ const updateEventMarketCloseQuery = async (commentaryId, request, fastify) => {
   try {
     return await fastify.db.query(
       `WITH update_tblEventMarkets AS (
-          UPDATE "tblEventMarkets"
-          SET "wrStatus" = $1,
+          UPDATE "tblEventMarkets" SET
+              "wrStatus" = $1,
+              "wrCloseTime" = now()::timestamp,
+              "wrLastUpdate" = now()::timestamp,
               "wrData" = jsonb_set(
-                CASE
-                  WHEN "wrData"::jsonb ? 'status' THEN jsonb_set("wrData"::jsonb, '{status}', $3::jsonb)
-                  ELSE "wrData"::jsonb
-                END,
-                '{runner}',
-                (
-                  CASE
-                    WHEN jsonb_typeof("wrData"::jsonb->'runner') = 'array' THEN
-                      (
-                        SELECT jsonb_agg(
-                          CASE
-                            WHEN jsonb_typeof(r) = 'object' AND r ? 'status' THEN jsonb_set(r, '{status}', $3::jsonb)
-                            ELSE r
-                          END
-                        )
-                        FROM jsonb_array_elements("wrData"::jsonb->'runner') AS r
-                      )
-                    ELSE "wrData"::jsonb->'runner'
-                  END
-                )
-              )::varchar
+                jsonb_set("wrData"::jsonb, '{status}', '4'::jsonb, false),
+                '{runner}', (
+                  SELECT jsonb_agg(
+                    jsonb_set(runner_elem, '{status}', '4'::jsonb, false)
+                  )
+                  FROM jsonb_array_elements("wrData"::jsonb->'runner') AS runner(runner_elem)
+                ),
+                false
+              )::json
           WHERE "wrCommentaryId" = ANY($2)
-            AND "wrStatus" NOT IN ($4, $5, $6, $7)
-            AND "wrIsDeleted" = false
+            AND "wrStatus" NOT IN ($3, $4, $5)
           RETURNING "wrID"
         )
         UPDATE "tblMarketRunners"
@@ -3295,11 +3284,9 @@ const updateEventMarketCloseQuery = async (commentaryId, request, fastify) => {
         bind: [
           EventMarketStatus.Close,
           commentaryId,
-          EventMarketStatus.Close,
           EventMarketStatus.Settled,
           EventMarketStatus.Cancel,
-          EventMarketStatus.WIN,
-          EventMarketStatus.LOSE,
+          EventMarketStatus.Close
         ],
         type: fastify.db.QueryTypes.UPDATE,
       }
@@ -3309,6 +3296,114 @@ const updateEventMarketCloseQuery = async (commentaryId, request, fastify) => {
       fastify,
       error.message,
       "DB ERROR --> repository/TableEventmarket.js/updateEventMarketCloseQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+}
+
+const closeEventMarketsQuery = async (eventMarketId, request, fastify) => {
+  try {
+    let query1 = `
+      UPDATE "tblMarketRunners"
+      set 
+      "wrSelectionStatus" = $2
+      where "wrEventMarketId" = any($1) and "wrSelectionStatus" NOT IN ($3,$4,$5)
+    `
+    await fastify.db.query(query1, {
+      bind: [
+        eventMarketId,
+        EventMarketStatus.Close,
+        EventMarketStatus.Settled,
+        EventMarketStatus.Cancel,
+        EventMarketStatus.Close
+      ],
+      type: fastify.db.QueryTypes.SELECT,
+    });
+
+    let query2 = `
+      UPDATE "tblEventMarkets" SET
+      "wrStatus" = $2,
+      "wrCloseTime" = now()::timestamp,
+      "wrLastUpdate" = now()::timestamp,
+      "wrData" = jsonb_set(
+        jsonb_set("wrData"::jsonb, '{status}', '4'::jsonb, false),
+        '{runner}', (
+          SELECT jsonb_agg(
+            jsonb_set(runner_elem, '{status}', '4'::jsonb, false)
+          )
+          FROM jsonb_array_elements("wrData"::jsonb->'runner') AS runner(runner_elem)
+        ),
+        false
+      )::json
+      where "wrID" = any($1) and "wrStatus" NOT IN ($3,$4,$5)
+        `;
+    await fastify.db.query(query2, {
+      bind: [
+        eventMarketId,
+        EventMarketStatus.Close,
+        EventMarketStatus.Settled,
+        EventMarketStatus.Cancel,
+        EventMarketStatus.Close]
+        ,
+      type: fastify.db.QueryTypes.SELECT,
+    });
+
+    return true;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/closeEventMarketsQuery",
+      request
+    )
+    throw new Error(error.message)
+  }
+};
+
+const cancelEventMarketsQuery = async (eventMarketId, request, fastify) => {
+  try {
+    let query1 = `
+      UPDATE "tblMarketRunners"
+      set
+      "wrSelectionStatus" = $2
+      where "wrEventMarketId" = any($1) and "wrSelectionStatus" = $3
+    `;
+    await fastify.db.query(query1, {
+      bind: [eventMarketId, EventMarketStatus.Cancel, EventMarketStatus.Close],
+      type: fastify.db.QueryTypes.SELECT,
+    });
+
+    let query2 = `
+      UPDATE "tblEventMarkets"
+      set
+        "wrStatus" = $2,
+        "wrLastUpdate" = now()::timestamp,
+       "wrData" = jsonb_set(
+          jsonb_set("wrData"::jsonb, '{status}', '6'::jsonb, false),
+          '{runner}', (
+            SELECT jsonb_agg(
+              jsonb_set(runner_elem, '{status}', '6'::jsonb, false)
+            )
+            FROM jsonb_array_elements("wrData"::jsonb->'runner') AS runner(runner_elem)
+          ),
+          false
+        )::json,
+        "wrIsResult" = true,
+        "wrResult" = null
+      where "wrID" = any($1) and "wrStatus" = $3
+    `;
+    await fastify.db.query(query2, {
+      bind: [eventMarketId, EventMarketStatus.Cancel, EventMarketStatus.Close],
+      type: fastify.db.QueryTypes.SELECT,
+    });
+
+    return true;
+} catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/cancelEventMarketsQuery",
       request
     );
     throw new Error(error.message);
@@ -3372,4 +3467,6 @@ module.exports = {
   getEventMarketRunnersQuery,
   updateEventMarketCloseSuspendTimeQuery,
   updateEventMarketCloseQuery,
+  closeEventMarketsQuery,
+  cancelEventMarketsQuery,
 }
