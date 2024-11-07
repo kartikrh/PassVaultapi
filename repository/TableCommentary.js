@@ -1252,6 +1252,7 @@ const getAllDisplayStatusQuery = async (fastify) => {
     "wrDisplayStatusId" as "displayStatusId",
     "wrDisplayStatus" as "displayStatus"
     from "tblDisplayStatuses"
+    where "wrIsDeleted" = false
     `,
     {
       type: fastify.db.QueryTypes.SELECT,
