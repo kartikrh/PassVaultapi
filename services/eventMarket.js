@@ -2347,7 +2347,19 @@ const closeEventMarketsByIdsService = async (request, fastify) => {
 };
 
 const cancelEventMarketsByIdsService = async (request, fastify) => {
-  let { eventMarketId } = request.body;
+  let { eventMarketId, password } = request.body;
+
+  const configPassword = global.tblConfigs.find(
+    (item) => item.key == configConstants.ALLMARKETCANCELPASS
+  )?.value;
+  
+  if (!configPassword) {
+    throw new Error("Password not found in config");
+  }
+  if(password !== configPassword){
+    throw new Error("Password is incorrect");
+  }
+
   await cancelEventMarketsQuery(eventMarketId, request, fastify);
 
   return "Market(s) canceled successfully";
