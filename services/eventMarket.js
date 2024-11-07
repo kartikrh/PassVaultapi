@@ -40,6 +40,8 @@ const {
   closeMarketByATQuery,
   cancelMarketByATQuery,
   updateEventMarketCloseSuspendTimeQuery,
+  closeEventMarketsQuery,
+  cancelEventMarketsQuery,
 } = require("../repository/TableEventMarkets");
 const { getRunnerByIdQuery, setResultInRunnerMarketQuery, getRunnerByMarketQuery } = require("../repository/TableMarketRunner");
 const configConstants = require("../utilities/configConstants");
@@ -2314,6 +2316,21 @@ const updateEventMarketCloseSuspendTimeService = async (request, fastify) => {
 
   return `Close and Suspend EventMarket time updated successfully`;
 }
+
+const closeEventMarketsByIdsService = async (request, fastify) => {
+  let { eventMarketId } = request.body;
+  await closeEventMarketsQuery(eventMarketId, request, fastify);
+
+  return "Market(s) closed successfully";
+};
+
+const cancelEventMarketsByIdsService = async (request, fastify) => {
+  let { eventMarketId } = request.body;
+  await cancelEventMarketsQuery(eventMarketId, request, fastify);
+
+  return "Market(s) canceled successfully";
+};
+
 module.exports = {
   getDetailsByCIdService,
   getAllEventMarketsService,
@@ -2355,5 +2372,7 @@ module.exports = {
   pendingMultiRunnerMarketsService,
   updateMarketResultService,
   getComByCompIdService,
-  updateEventMarketCloseSuspendTimeService
+  updateEventMarketCloseSuspendTimeService,
+  closeEventMarketsByIdsService,
+  cancelEventMarketsByIdsService,
 };
