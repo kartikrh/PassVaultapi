@@ -4021,7 +4021,7 @@ const updateCommentaryStatusService = async (request, fastify) => {
     }
     _resFromPredictAPI = null;
     let getCategory = global.tblMarketTypeCategories.filter((item) =>
-      item.categoryName.toLowerCase() == 'player' || item.categoryName.toLowerCase() == 'wicket'
+      item.categoryName.toLowerCase() == 'player' || item.categoryName.toLowerCase() == 'wicket' || item.categoryName.toLowerCase() == 'player boundaries'
     ).map((c) => c.marketTypeCategoryId);
     // getmarket id's from tblEventMarkets
     let market = await getMarketsByCategoryQuery({
