@@ -1878,6 +1878,9 @@ const testStoreProcedureService = async (request, fastify) => {
         _sendPrePlayer.team_id = player.teamId;
         _sendPrePlayer.batRun = player.batRun || '0';
         _sendPrePlayer.isWicket = player.isBatterOut === false ? 0 : 1;
+        _sendPrePlayer.current_boundaries = 
+        (isNaN(parseInt(player.batFour ?? 0, 10)) ? 0 : parseInt(player.batFour ?? 0, 10)) +
+        (isNaN(parseInt(player.batSix ?? 0, 10)) ? 0 : parseInt(player.batSix ?? 0, 10));
         _sendPrePlayers.push(_sendPrePlayer);
       });
       // sendDataForSocketUpdate.dataToUpdate.push({
@@ -2770,6 +2773,9 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         _sendPrePlayer.team_id = player.teamId;
         _sendPrePlayer.batRun = player.batRun || '0';
         _sendPrePlayer.isWicket = player.isBatterOut === false ? 0 : 1;
+        _sendPrePlayer.current_boundaries = 
+        (isNaN(parseInt(player.batFour ?? 0, 10)) ? 0 : parseInt(player.batFour ?? 0, 10)) +
+        (isNaN(parseInt(player.batSix ?? 0, 10)) ? 0 : parseInt(player.batSix ?? 0, 10));
         _sendPrePlayers.push(_sendPrePlayer);
       });
       try {
@@ -4015,7 +4021,7 @@ const updateCommentaryStatusService = async (request, fastify) => {
     }
     _resFromPredictAPI = null;
     let getCategory = global.tblMarketTypeCategories.filter((item) =>
-      item.categoryName.toLowerCase() == 'player' || item.categoryName.toLowerCase() == 'wicket'
+      item.categoryName.toLowerCase() == 'player' || item.categoryName.toLowerCase() == 'wicket' || item.categoryName.toLowerCase() == 'player boundaries'
     ).map((c) => c.marketTypeCategoryId);
     // getmarket id's from tblEventMarkets
     let market = await getMarketsByCategoryQuery({

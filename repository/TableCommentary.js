@@ -1252,6 +1252,7 @@ const getAllDisplayStatusQuery = async (fastify) => {
     "wrDisplayStatusId" as "displayStatusId",
     "wrDisplayStatus" as "displayStatus"
     from "tblDisplayStatuses"
+    where "wrIsDeleted" = false
     `,
     {
       type: fastify.db.QueryTypes.SELECT,
@@ -3240,6 +3241,30 @@ const updateAverageOfPlayerQuery = async (data, request,fastify) => {
     
   }
 }
+const updateBoundaryOfPlayerQuery = async (data, request,fastify) => {
+  try {
+    let result = await fastify.db.query(
+      `update "tblCommentaryPlayers" set
+      "wrBoundary" = $1
+      where "wrCommentaryPlayerId" = $2
+      `,
+      {
+        bind: [data.boundary, data.commentaryPlayerId],
+      }
+    );
+
+    return result;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCommentary/updateAverageOfPlayerQuery",
+      request
+    );
+    throw new Error(error.message);
+    
+  }
+}
 
 const updateLineRationQuery = async (data, request, fastify) => {
   try {
@@ -3383,4 +3408,5 @@ module.exports = {
   updateLineRationQuery,
   updateLineRatioComQuery,
   completedCommentaryStatusQuery,
+  updateBoundaryOfPlayerQuery
 };

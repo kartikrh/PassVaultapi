@@ -6,7 +6,8 @@ const allDisplayStatusesQuery = async (fastify) => {
     "wrDisplayStatusId" as "displayStatusId",
     "wrDisplayStatus" as "displayStatus",
     "wrIsActive" as "isActive"
-    from "tblDisplayStatuses"`,
+    from "tblDisplayStatuses"
+    where "wrIsDeleted" = false`,
     {
       type: fastify.db.QueryTypes.SELECT,
     }
@@ -69,10 +70,14 @@ const deleteDisplayStatusesQuery = async (
 ) => {
   try {
     return await fastify.db.query(
-      `delete from "tblDisplayStatuses" where "wrDisplayStatusId" = ANY($1)`,
+      `update "tblDisplayStatuses" set
+          "wrIsDeleted" = $1,
+          "wrDeletedBy" = $2,
+          "wrDeletedAt" = now()
+      where "wrDisplayStatusId" = ANY($3)`,
       {
-        bind: [displayStatusId],
-        type: fastify.db.QueryTypes.DELETE,
+        bind: [true, request.userTokenInfo.WrUserId, displayStatusId],
+        type: fastify.db.QueryTypes.UPDATE,
       }
     );
   } catch (err) {

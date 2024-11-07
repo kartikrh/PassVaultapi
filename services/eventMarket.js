@@ -1,4 +1,4 @@
-const { updateAverageOfPlayerQuery } = require("../repository/TableCommentary");
+const { updateAverageOfPlayerQuery, updateBoundaryOfPlayerQuery } = require("../repository/TableCommentary");
 const {
   getAllEventMarketsQuery,
   deleteEventMarketQuery,
@@ -40,6 +40,8 @@ const {
   closeMarketByATQuery,
   cancelMarketByATQuery,
   updateEventMarketCloseSuspendTimeQuery,
+  closeEventMarketsQuery,
+  cancelEventMarketsQuery,
 } = require("../repository/TableEventMarkets");
 const { getRunnerByIdQuery, setResultInRunnerMarketQuery, getRunnerByMarketQuery } = require("../repository/TableMarketRunner");
 const configConstants = require("../utilities/configConstants");
@@ -1928,6 +1930,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
   
   // return updatedData;
   const playerMarket = [];
+  const boundaryPlayer = [];
   const updatedOvers = [];
   // const response = [];
   for (let item of updatedData) {
@@ -1939,18 +1942,17 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
       : (global.tblEventMarketsV1[index] = item);
 
  
-    if(item.isPlayer){
+    let category = global.tblMarketTypeCategories.find(
+      (cat) => cat.marketTypeCategoryId === item.marketTypeCategoryId
+    );
+    if(category && category.categoryName.toLowerCase() == "player"){
       playerMarket.push(item);
     }
-    // let marketType = global.tblMarketTypes.find(
-    //   (e) => e.marketTypeId === item.marketTypeId
-    // );
-    // if(marketType.marketTypeName.toLowerCase() === "fancy" || marketType.marketTypeName.toLowerCase() === "linemarket"){
+    if(category && category.categoryName.toLowerCase() == "player boundaries"){
+      boundaryPlayer.push(item);
+    }
     if(item.marketTypeId == MarketTypeId.Fancy || item.marketTypeId == MarketTypeId.LineMarket){
       let is_onlyover = 0;
-      let category = global.tblMarketTypeCategories.find(
-        (cat) => cat.marketTypeCategoryId === item.marketTypeCategoryId
-      );
       let lineDiff = 0;
       if(category && category.categoryName.toLowerCase() != "player" && category.categoryName.toLowerCase() != "wicket"){
         if(category.categoryName == "Only Over"){
@@ -2111,6 +2113,28 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
         batsmanAverage: avg,
       }, request, fastify);	
       global.tblCommentaryPlayers[comPlayer].batsmanAverage = avg;
+    }
+  }
+  if(boundaryPlayer.length > 0){
+    for (let bp of boundaryPlayer){
+      let player = global.tblCommentaryPlayers.find(
+        (item) => item.commentaryPlayerId === bp.playerId
+      );
+      if (!player) {
+        errorLogger(
+          fastify,
+          "Player with this id not Found",
+          "ERROR --> services/eventMarket.js/updateMarketRateServiceV1",
+          request
+        );
+        continue;
+      }
+      let count = player.batFour + player.batSix;
+      let boun = (bp.runners[0].line - count).toFixed(2);
+      await updateBoundaryOfPlayerQuery({
+        commentaryPlayerId: bp.playerId,
+        boundary: boun,
+      }, request, fastify);
     }
   }
   //   // get the team and teamName by commentaryId
@@ -2314,6 +2338,33 @@ const updateEventMarketCloseSuspendTimeService = async (request, fastify) => {
 
   return `Close and Suspend EventMarket time updated successfully`;
 }
+
+const closeEventMarketsByIdsService = async (request, fastify) => {
+  let { eventMarketId } = request.body;
+  await closeEventMarketsQuery(eventMarketId, request, fastify);
+
+  return "Market(s) closed successfully";
+};
+
+const cancelEventMarketsByIdsService = async (request, fastify) => {
+  let { eventMarketId, password } = request.body;
+
+  const configPassword = global.tblConfigs.find(
+    (item) => item.key == configConstants.ALLMARKETCANCELPASS
+  )?.value;
+  
+  if (!configPassword) {
+    throw new Error("Password not found in config");
+  }
+  if(password !== configPassword){
+    throw new Error("Password is incorrect");
+  }
+
+  await cancelEventMarketsQuery(eventMarketId, request, fastify);
+
+  return "Market(s) canceled successfully";
+};
+
 module.exports = {
   getDetailsByCIdService,
   getAllEventMarketsService,
@@ -2355,5 +2406,7 @@ module.exports = {
   pendingMultiRunnerMarketsService,
   updateMarketResultService,
   getComByCompIdService,
-  updateEventMarketCloseSuspendTimeService
+  updateEventMarketCloseSuspendTimeService,
+  closeEventMarketsByIdsService,
+  cancelEventMarketsByIdsService,
 };

@@ -8,7 +8,8 @@ const getEventSnapByComService = async (request , fastify) =>{
     let getSnap = await getEventSnapByComQuery({
         commentaryId : request.body.commentaryId
     }, request,fastify);
-    return getSnap;
+    // console.log(getSnap)
+    return getSnap || {};
 }
 module.exports = {
     setCompEventSnapSerice,
