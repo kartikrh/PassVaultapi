@@ -7,6 +7,7 @@ const getAllMenuTypesQuery = async (fastify) => {
     t."wrValue" as "blockId",	
     "wrMenuTypeName" as "menuTypeName",
     b."wrBlockName" as "blockName",
+    b."wrContainerId" as "containerId",
     mt."wrIsActive" as "isActive",
     "wrNoOfLevel" as "noOfLevel",
     CAST(COALESCE(COUNT(mi."wrMenuItemId"), 0) as integer) as "childCount" 
@@ -22,7 +23,7 @@ const getAllMenuTypesQuery = async (fastify) => {
       "tblMenuItems" mi ON mt."wrMenuTypeId" = mi."wrMenuTypeId" AND mi."wrParentId" = 0
   WHERE mt."wrIsDeleted" = false
   GROUP BY
-      te."wrValue", t."wrValue", "wrMenuTypeName", mt."wrIsActive", "wrNoOfLevel", b."wrBlockName";
+      te."wrValue", t."wrValue", "wrMenuTypeName", mt."wrIsActive", "wrNoOfLevel", b."wrBlockName",b."wrContainerId" ;
   `,
     {
       type: fastify.db.QueryTypes.SELECT,

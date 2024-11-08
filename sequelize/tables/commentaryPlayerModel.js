@@ -216,7 +216,7 @@ module.exports = (sequelize) => {
         allowNull: true,
       },
       wrBoundary : {
-        type: DataTypes.INTEGER,
+        type: DataTypes.DOUBLE,
         allowNull: false,
         defaultValue: 0,
       },
