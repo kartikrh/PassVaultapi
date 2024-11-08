@@ -20,6 +20,14 @@ const allMenuTypeService = async (request , fastify) => {
 
 const getAllMenuItemListService = async (request, fastify) => {
   let menuTypeList = global.tblMenuTypes.filter(menuType => menuType.isActive === true);
+  menuTypeList = menuTypeList.map(menuType => {
+    let block = global.tblBlocks.find(block => block.blockId === menuType.blockId);
+    return {
+      ...menuType,
+      blockName : block.blockName,
+      containerId : block.containerId
+    }
+  });
   const result = menuTypeList.map(menuType => {
     let menuItem = global.tblMenuItems.filter(item => item.menuTypeId === menuType.menuTypeId && item.parentId === "0" && item.isActive === true)
                   .map((item)=>{
@@ -43,6 +51,8 @@ const getAllMenuItemListService = async (request, fastify) => {
     return {
       menuTypeId : menuType.menuTypeId,
       menuTypeName : menuType.menuTypeName,
+      blockName : menuType.blockName,
+      containerId : menuType.containerId,
       menuItem : menuItem
     };
   });
@@ -110,7 +120,14 @@ const createMenuTypeService = async (request, fastify) => {
 
   global.tblMenuTypes.push(data);
 
+
   if(data.isActive){
+    let block = global.tblBlocks.find(block => block.blockId === data.blockId);
+    let dataSend = {
+      ...data,
+      blockName : block.blockName,
+      containerId : block.containerId
+    }
     callClientAPI(
       {
         serviceType : ServiceType.clientAPI, 
@@ -118,7 +135,7 @@ const createMenuTypeService = async (request, fastify) => {
         data : {
           module : "menuTypes",
           type : "add",
-          data : data
+          data : dataSend
         }
       },
       request,
@@ -185,6 +202,12 @@ const updateMenuTypeService = async (request, fastify) => {
     menuTypeId: request.body.menuTypeId,
   };
   // if(result.isActive){
+    let block = global.tblBlocks.find(block => block.blockId === body.blockId);
+    const dataSend = {
+      ...global.tblMenuTypes[index],
+      blockName : block.blockName,
+      containerId : block.containerId
+    }
       callClientAPI(
         {
           serviceType : ServiceType.clientAPI, 
@@ -192,7 +215,7 @@ const updateMenuTypeService = async (request, fastify) => {
           data : {
             module : "menuTypes",
             type : "update",
-            data : global.tblMenuTypes[index]
+            data : dataSend
           }
         },
         request,

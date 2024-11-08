@@ -52,6 +52,7 @@ const {
   deleteBallFromMemory,
   getEventSnapByCom,
   completedCommentary,
+  updateEventSnapByCom,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -707,6 +708,18 @@ module.exports = async (fastify, opts) => {
             })
     ],
     handler : (request,reply) => getEventSnapByCom(request,reply,fastify)
+  })
+  fastify.post("/updateEventSnap", {
+    schema : Commentary.getById.schema,
+    preHandler : [
+        (request,reply) => authorize(request,reply,fastify),
+        (request,reply) => 
+            checkPermission(request,reply,fastify,{
+                tabName : "Commentary",
+                mode : "view"
+            })
+    ],
+    handler : (request,reply) => updateEventSnapByCom(request,reply,fastify)
   })
   fastify.post("/completeCommentary", {
     schema: Commentary.completedCommentary.schema,

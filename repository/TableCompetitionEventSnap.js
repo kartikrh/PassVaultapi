@@ -58,20 +58,20 @@ const getEventSnapByComQuery = async (data,request,fastify) =>{
                     tces."wrTotalFour" as "Total Four",
                     tces."wrTotalSix" as "Total Six",
                     tces."wrTotalWicket" as "Total Wicket",
-                    tces."wrTotalWideBall" as "Total Wideball",
+                    tces."wrTotalWideBall" as "Total Wide ball",
                     tces."wrTotalNoBall" as "Total Noball",
                     tces."wrTotalLegByesRun" as "Total Leg ByesRun",
                     tces."wrTotalByesRun" as "Total ByesRun",
                     tces."wrTotal50" as "Total 50",
                     tces."wrTotal100" as "Total 100",
                     tces."wrUnder50" as "Under 50",
-                    tp1."wrPlayerName" as "Most Dotball Bowler",
+                    tp1."wrPlayerName" as "Most Dotball By Bowler",
                     tces."wrMostDotBallCount" as "Most Dotball Count",
                     tces."wrHSPartnershipRun" as "Highest Run by Partnership",
+                    tp2."wrPlayerName" as "Most Runs Conceded by Bowler",
                     tces."wrMostBowlerRun" as "MostRun By Bowler",
-                    tp2."wrPlayerName" as "MostRun Bowler",
-                    "wrMostBowlerWicket" as "Most Wicket By Bowler",
-                    tp3."wrPlayerName" as "Most Wicket Bowler",
+                    tp3."wrPlayerName" as "Most Wicket By Bowler",
+                    "wrMostBowlerWicket" as "Most Wicket Bowler",
                     tces."wrTotalMatchDuckOut" as "Total Match Duck Out",
                     tces."wrExtra" as "Extra Run",
                     tces."wrTotalCatchOut" as "Total CatchOut",
@@ -80,9 +80,8 @@ const getEventSnapByComQuery = async (data,request,fastify) =>{
                     tces."wrTotalLBWOut" as "Total LBWOut",
                     tces."wrTotal30" as "Total 30",
                     tces."wrHSOverRun" as "Highest Run in Over",
-                    to1."wrOver" as "Highest Run Over",
-                    "wrTopBatsManRun" as "Top Run By Batsman",
-                    tp4."wrPlayerName" as "Top Run Batsman"
+                    tp4."wrPlayerName" as "Top Run By Batsman",
+                    "wrTopBatsManRun" as "Top Run Batsman"
                 FROM "tblCompetitionEventSnap" tces
                 LEFT JOIN "tblPlayers" tp1 on tp1."wrPlayerId" = tces."wrMostDotBallBowler"
                 LEFT JOIN "tblPlayers" tp2 on tp2."wrPlayerId" = tces."wrMostRunBowlerId"
