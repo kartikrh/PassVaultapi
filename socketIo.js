@@ -22,7 +22,7 @@ const connection = (socket , fastify) => {
   socket.on("updatedEventMarket", async (data) => {
     try {
       let MarketArr = [];
-      //console.log("marketData", data);
+      //console.log("marketData", dat1a);
       const { commentaryId, marketData } = data;
       const clientInRoom = global.socketIo.sockets.adapter.rooms.get(commentaryId);
       if (clientInRoom?.size) {
