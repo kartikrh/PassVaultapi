@@ -82,6 +82,15 @@ const ImportMarketService = async (request, fastify) => {
         refId: request.body.competitionId,
         image: CompetitionsObj.image,
         isActive: true,
+        displayOrder: CompetitionsObj.displayOrder,
+        isTrending: CompetitionsObj.isTrending,
+        isEventSnap: CompetitionsObj.isEventSnap,
+        isPointTable: CompetitionsObj.isPointTable,
+        matchTypeId : CompetitionsObj.matchTypeId,
+        winPoint : CompetitionsObj.winPoint,
+        tiePoint : CompetitionsObj.tiePoint,
+        cancelPoint : CompetitionsObj.cancelPoint,
+        lossPoint : CompetitionsObj.lossPoint
       };
       await updateCompititionQuery(setCompetitions, fastify, request);
 
