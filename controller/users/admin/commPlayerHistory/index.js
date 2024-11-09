@@ -1,7 +1,8 @@
 const {
-  getAllCommentaryPlayersBattingHistoryService,
-  getAllCommentaryPlayersBowlingHistoryService,
+  getAllCommentaryPlayerHistoryService,
   getCommentaryPlayerHistoryService,
+  updateCommPlayerBatHistoryService,
+  updateCommPlayerBowlHistoryService,
   deleteCommentaryBattingHistoryService,
   deleteCommentaryBowlingHistoryService,
 } = require("../../../../services/commPlayerHistory");
@@ -10,35 +11,20 @@ const { errorLogger } = require("../../../../utilities/logger");
 
 let commonPath = "controller/users/admin/commPlayerHistory/index.js";
 
-// const getAllCommPlayersBatHis = async (request, reply, fastify) => {
-//   try {
-//     const result = await getAllCommentaryPlayersBattingHistoryService(request, fastify);
-//     reply.status(200).send(success(result, 200));
-//   } catch (err) {
-//     errorLogger(
-//       fastify,
-//       err.message,
-//       commonPath + "/getAllCommPlayersBatHis",
-//       request
-//     );
-//     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
-//   }
-// };
-
-// const getAllCommPlayersBowHis = async (request, reply, fastify) => {
-//   try {
-//     const result = await getAllCommentaryPlayersBowlingHistoryService(request, fastify);
-//     reply.status(200).send(success(result, 200));
-//   } catch (err) {
-//     errorLogger(
-//       fastify,
-//       err.message,
-//       commonPath + "/getAllCommPlayersBowHis",
-//       request
-//     );
-//     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
-//   }
-// };
+const getCommPlayerHistory = async (request, reply, fastify) => {
+  try {
+    const result = await getAllCommentaryPlayerHistoryService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      commonPath + "/getAllCommPlayersHistory",
+      request
+    );
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 
 const getAllCommentaryPlayersHistory = async (request, reply, fastify) => {
   try {
@@ -49,6 +35,36 @@ const getAllCommentaryPlayersHistory = async (request, reply, fastify) => {
       fastify,
       err.message,
       commonPath + "/getAllCommentaryPlayersHistory",
+      request
+    );
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
+const updateCommPlayerBatHistory = async (request, reply, fastify) => {
+  try {
+    const result = await updateCommPlayerBatHistoryService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      commonPath + "/updateCommPlayerBatHistory",
+      request
+    );
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
+const updateCommPlayerBowlHistory = async (request, reply, fastify) => {
+  try {
+    const result = await updateCommPlayerBowlHistoryService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      commonPath + "/updateCommPlayerBowlHistory",
       request
     );
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
@@ -86,9 +102,10 @@ const deleteCommBowlingHistory = async (request, reply, fastify) => {
 };
 
 module.exports = {
-//   getAllCommPlayersBatHis,
-//   getAllCommPlayersBowHis,
+  getCommPlayerHistory,
   getAllCommentaryPlayersHistory,
+  updateCommPlayerBatHistory,
+  updateCommPlayerBowlHistory,
   deleteCommBattingHistory,
   deleteCommBowlingHistory,
 };

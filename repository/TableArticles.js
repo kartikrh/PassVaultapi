@@ -21,6 +21,7 @@ const getAllArticlesQuery = async (fastify) => {
             "wrModifyDate" as "modifyDate",
             "wrModifyBy" as "modifyBy"
         from "tblArticles"
+        where "wrIsDeleted" = false
         `,
     {
       type: fastify.db.QueryTypes.SELECT,
@@ -177,11 +178,15 @@ const deleteArticleQuery = async (data, request, fastify) => {
   try {
     return await fastify.db.query(
       `
-        delete from "tblArticles" where "wrId" = ANY ($1)
+        update "tblArticles" set
+              "wrIsDeleted" = $1,
+              "wrDeletedBy" = $2,
+              "wrDeletedAt" = now()
+        where "wrId" = ANY ($3)
         `,
       {
-        type: fastify.db.QueryTypes.DELETE,
-        bind: [request.body.id],
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [true, request.userTokenInfo.WrUserId, request.body.id],
       }
     );
   } catch (err) {

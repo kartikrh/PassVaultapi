@@ -158,7 +158,7 @@ const getAllEventMarketsService = async (request, fastify) => {
     endDate,
     rateSourceRefId
   } = request.body;
-  let createWhereStatus = `tem."wrStatus" NOT IN (${EventMarketStatus.Close},${EventMarketStatus.Settled},${EventMarketStatus.Cancel}) AND tc."wrIsDelete" = false`;
+  let createWhereStatus = `tem."wrStatus" NOT IN (${EventMarketStatus.Close},${EventMarketStatus.Settled},${EventMarketStatus.Cancel}) AND tc."wrIsDelete" = false AND tcom."wrIsDeleted" = false`;
 
   if (status !== undefined && status != -1) {
     createWhereStatus = `tc."wrIsDelete" = false AND tem."wrStatus" = ${status}`;
@@ -377,7 +377,7 @@ const marketListResultFalseService = async (request, fastify) => {
     rateSourceRefId
   } = request.body;
   
-  let createWhereStatus = `tem."wrIsResult" = false AND tem."wrResult" IS NOT NULL AND tem."wrStatus" = ${EventMarketStatus.Settled} AND tc."wrIsDelete" = false`;
+  let createWhereStatus = `tem."wrIsResult" = false AND tem."wrResult" IS NOT NULL AND tem."wrStatus" = ${EventMarketStatus.Settled} AND tc."wrIsDelete" = false AND tcom."wrIsDeleted" = false`;
   if (rateSourceRefId && rateSourceRefId != 0) {
     createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrRateSource" = ${rateSourceRefId}` : `tem."wrRateSource" = ${rateSourceRefId}`;
   }
@@ -967,7 +967,7 @@ const changeMarketResultService = async (request, fastify) => {
   }
   else {
     // check the runnerId in request
-    let data = await getRunnerByIdQuery(fastify, request , `"wrEventMarketId" = ${eventMarketId} AND "wrRunnerId" = ${result}`);
+    let data = await getRunnerByIdQuery(fastify, request , `"wrIsDeleted" = false AND "wrEventMarketId" = ${eventMarketId} AND "wrRunnerId" = ${result}`);
      if(!data){
       throw new Error("Runner with this id not Found");
     }
@@ -1667,7 +1667,7 @@ const getDetailsByCIdV1Service = async (request, fastify) => {
   // LDOMARKETSIDS = global.tblConfigs.find(config => config.key === "LDOMARKET")?.value ?? "0";
   let whereCondition = `tc."wrIsDelete" = false AND tem."wrIsDeleted" = false AND tem."wrCommentaryId" = ${commentaryId} AND 
   tem."wrStatus" NOT IN (${EventMarketStatus.Close},${EventMarketStatus.Settled},${EventMarketStatus.Cancel})
-  AND tem."wrRateSource" = 1`;
+  AND tem."wrRateSource" = 1 AND tr."wrIsDeleted" = false`;
   if (commentary.commentaryStatus != 1) {
     let battingTeam = global.tblCommentaryTeams.find(
       (item) =>
@@ -2193,7 +2193,7 @@ const pendingMultiRunnerMarketsService = async (request, fastify) => {
   // ).map((item) => item.marketTypeId);
   
   
-  let createWhereStatus = `tem."wrIsResult" = false AND tem."wrResult" IS NOT NULL AND tem."wrStatus" = ${EventMarketStatus.Settled} AND tc."wrIsDelete" = false`;
+  let createWhereStatus = `tem."wrIsResult" = false AND tem."wrResult" IS NOT NULL AND tem."wrStatus" = ${EventMarketStatus.Settled} AND tc."wrIsDelete" = false AND tcom."wrIsDeleted" = false`;
   // if(mt.length > 0){
     createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrMarketTypeId" NOT IN (${MarketTypeId.Fancy}, ${MarketTypeId.LineMarket})` : `tem."wrMarketTypeId" NOT IN (${MarketTypeId.Fancy}, ${MarketTypeId.LineMarket})`;
   // }
@@ -2260,7 +2260,7 @@ const updateMarketResultService = async (request, fastify) => {
   let run = await getRunnerByIdQuery(
     fastify,
     request,
-    `"wrRunnerId" = ${result} AND "wrEventMarketId" = ${eventMarketId}`
+    `"wrIsDeleted" = false AND "wrRunnerId" = ${result} AND "wrEventMarketId" = ${eventMarketId}`
   );
   if(!run){
     throw new Error("Runner with this id not Found");

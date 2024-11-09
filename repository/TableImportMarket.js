@@ -432,7 +432,7 @@ const updateMarketRunnerTeambySelectionId = async (fastify, request) => {
     const queries = await Promise.all(data.map(async ({ selectionId, teamId }) => {
       // Check if selectionId exists in tblMarketRunners
       const selectionExists = await fastify.db.query(
-        `SELECT COUNT(*) FROM "tblMarketRunners" WHERE "wrSelectionId" = $1`,
+        `SELECT COUNT(*) FROM "tblMarketRunners" WHERE "wrSelectionId" = $1 AND "wrIsDeleted" = false`,
         {
           bind: [selectionId],
           type: fastify.db.QueryTypes.SELECT,

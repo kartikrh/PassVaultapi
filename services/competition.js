@@ -276,6 +276,9 @@ const deleteCompetitionService = async (request, fastify) => {
   global.tblCompetitions = global.tblCompetitions.filter(
     (item) => !competitionId.includes(item.competitionId)
   );
+  global.tblCommentaries = global.tblCommentaries.filter(
+    (item) => !competitionId.includes(item.competitionId)
+  );
 
   callClientAPI(
     {
@@ -351,6 +354,15 @@ const updateDisplayOrderService = async (request, fastify) => {
 
 const isTrendingChangeStatusService = async (request, fastify) => {
   const { competitionId, isTrending } = request.body;
+
+  const validateId = global.tblCompetitions.find(
+    (item) => item.competitionId === competitionId
+  );
+
+  if (!validateId) {
+    throw new Error("Competition with this id not Found");
+  }
+
   await isTrendingChangeStatusQuery(
     {
       competitionId,
@@ -388,6 +400,15 @@ const isTrendingChangeStatusService = async (request, fastify) => {
 
 const isEventSnapService = async (request, fastify) => {
   const { competitionId, isEventSnap } = request.body;
+
+  const validateId = global.tblCompetitions.find(
+    (item) => item.competitionId === competitionId
+  );
+
+  if (!validateId) {
+    throw new Error("Competition with this id not Found");
+  }
+
   await isEventSnapCompetitionQuery(
     {
       competitionId,
@@ -425,6 +446,15 @@ const isEventSnapService = async (request, fastify) => {
 
 const isPointTableService = async (request, fastify) => {
   const { competitionId, isPointTable } = request.body;
+
+  const validateId = global.tblCompetitions.find(
+    (item) => item.competitionId === competitionId
+  );
+
+  if (!validateId) {
+    throw new Error("Competition with this id not Found");
+  }
+
   await isPointTableCompetitionQuery(
     {
       competitionId,

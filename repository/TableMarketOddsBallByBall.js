@@ -23,7 +23,7 @@ const getAllMarketOddsBallByBall = async (fastify) => {
           "tblMarketOddsBallByBall" AS mobb
       LEFT JOIN "tblEventMarkets" em ON mobb."wrEventMarketId" = em."wrID"
       LEFT JOIN "tblMarketTypes" mty ON em."wrMarketTypeId" = mty."wrId"
-      WHERE em."wrIsDeleted" = false`,
+      WHERE mobb."wrIsDeleted" = false AND em."wrIsDeleted" = false`,
       {
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -59,7 +59,7 @@ const getAllMarketOddsBallByBallByCommentaryId = async (data, fastify) => {
           "tblMarketOddsBallByBall" AS mobb
       LEFT JOIN "tblEventMarkets" em ON mobb."wrEventMarketId" = em."wrID"
       LEFT JOIN "tblMarketTypes" mty ON em."wrMarketTypeId" = mty."wrId"
-    WHERE mobb."wrCommentaryId" = $1 AND em."wrIsDeleted" = false`;
+    WHERE mobb."wrIsDeleted" = false AND mobb."wrCommentaryId" = $1 AND em."wrIsDeleted" = false`;
     
     const result = await fastify.db.query(query,
       {
@@ -102,7 +102,7 @@ const getMarketOddsBallByBallById = async (id, fastify, request) => {
           "tblMarketOddsBallByBall" AS mobb
       LEFT JOIN "tblEventMarkets" em ON mobb."wrEventMarketId" = em."wrID"
       LEFT JOIN "tblMarketTypes" mty ON em."wrMarketTypeId" = mty."wrId"
-    WHERE mobb."wrId" = $1 AND em."wrIsDeleted" = false
+    WHERE mobb."wrIsDeleted" = false AND mobb."wrId" = $1 AND em."wrIsDeleted" = false
       `,
       {
         bind: [id],
@@ -228,14 +228,17 @@ const deleteMarketOddsBallByBall = async (data, fastify, request) => {
   try {
     const result = await fastify.db.query(
       `
-      DELETE FROM "tblMarketOddsBallByBall"
+      UPDATE "tblMarketOddsBallByBall" SET
+        "wrIsDeleted" = $3,
+        "wrDeletedBy" = $4,
+        "wrDeletedAt" = now()
       WHERE 
         "wrCommentaryBallByBallId" = $1
         AND "wrCommentaryId" = $2
       RETURNING *
       `,
       {
-        bind: [data.commentaryBallByBallId, data.commentaryId],
+        bind: [data.commentaryBallByBallId, data.commentaryId, true, request.userTokenInfo.WrUserId],
         type: fastify.db.QueryTypes.DELETE,
       }
     );
@@ -386,6 +389,7 @@ const updateLatestMarketOddsBallByBall = async (data, fastify, request) => {
       SELECT "wrCommentaryBallByBallId","wrId"
       FROM "tblMarketOddsBallByBall"
       WHERE "wrCommentaryId" = $1
+      AND "wrIsDeleted" = false
       AND "wrTeamId" = $2
       AND "wrRunnerName" IS NULL
       ORDER BY "wrDateTime" ASC
@@ -592,7 +596,7 @@ const createMarketOddsBallInSaveDetails = async (data, fastify, request = null) 
           "tblMarketOddsBallByBall" AS mobb
       LEFT JOIN "tblEventMarkets" em ON mobb."wrEventMarketId" = em."wrID"
       LEFT JOIN "tblMarketTypes" mty ON em."wrMarketTypeId" = mty."wrId"
-      WHERE mobb."wrId" = $1 AND em."wrIsDeleted" = false`,
+      WHERE mobb."wrIsDeleted" = false AND mobb."wrId" = $1 AND em."wrIsDeleted" = false`,
       {
         bind: [wrId],
         type: fastify.db.QueryTypes.SELECT,
@@ -618,6 +622,7 @@ const CheckAndCreateMarketOddsBallInSaveDetails = async (data, fastify, request 
       SELECT "wrId"
       FROM "tblMarketOddsBallByBall"
       WHERE "wrCommentaryId" = $1
+        AND "wrIsDeleted" = false
         AND "wrCommentaryBallByBallId" = $2
         AND "wrEventMarketId" = $3
     `;
@@ -698,7 +703,7 @@ const CheckAndCreateMarketOddsBallInSaveDetails = async (data, fastify, request 
           "tblMarketOddsBallByBall" AS mobb
       LEFT JOIN "tblEventMarkets" em ON mobb."wrEventMarketId" = em."wrID"
       LEFT JOIN "tblMarketTypes" mty ON em."wrMarketTypeId" = mty."wrId"
-      WHERE mobb."wrId" = $1 AND em."wrIsDeleted" = false`,
+      WHERE mobb."wrIsDeleted" = false AND mobb."wrId" = $1 AND em."wrIsDeleted" = false`,
       {
         bind: [wrId],
         type: fastify.db.QueryTypes.SELECT,
