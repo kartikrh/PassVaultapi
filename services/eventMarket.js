@@ -636,7 +636,7 @@ const updateMarketRateService = async (request, fastify) => {
         }
         updatedOvers.push({
           over: item.over,
-          value: diff.toFixed(2),
+          value: diff != null ? parseFloat(diff.toFixed(2)) : null,  // Ensure float or null if undefined
           line_ratio: data.lineRatio,
           is_onlyover: is_onlyover,
           is_allow: item.isAllow,
@@ -1954,17 +1954,24 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
     if(item.marketTypeId == MarketTypeId.Fancy || item.marketTypeId == MarketTypeId.LineMarket){
       let is_onlyover = 0;
       let lineDiff = 0;
-      if(category && category.categoryName.toLowerCase() != "player" && category.categoryName.toLowerCase() != "wicket"){
+      if(category && 
+        category.categoryName.toLowerCase() !== "player" && 
+        category.categoryName.toLowerCase() !== "wicket" && 
+        category.categoryName.toLowerCase() !== "player boundaries"){
+
         if(category.categoryName == "Only Over"){
           is_onlyover = 1;
         }
+
         let runOld = eventMarkets.find(
           (e) => e.eventMarketId === item.eventMarketId
         ).runners;
+        
         lineDiff =  item.runners[0].line - runOld[0].line;
+        
         updatedOvers.push({
           over : item.over,
-          value : lineDiff.toFixed(2),
+          value: lineDiff != null ? parseFloat(lineDiff.toFixed(2)) : null,  // Ensure float or null if undefined
           line_ratio : item.lineRatio,
           is_onlyover : is_onlyover,
           is_allow : item.isAllow,
