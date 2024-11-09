@@ -17,6 +17,7 @@ const getAllClientQuery = async (fastify) => {
               "wrIsEmailVerified" AS "isEmailVerified",
               "wrIsMobileVerified" AS "isMobileVerified"
         from "tblClient"
+        where "wrIsDelete" = false
         `,
     {
       type: fastify.db.QueryTypes.SELECT,
@@ -28,11 +29,15 @@ const deleteClientQuery = async (data, request, fastify) => {
   try {
     return await fastify.db.query(
       `
-                delete from "tblClient" where "wrClientID" = ANY ($1)
-            `,
+      UPDATE "tblClient" SET
+        "wrIsDelete" = $1,
+        "wrDeletedBy" = $2,
+        "wrDeletedAt" = now()
+      WHERE "wrClientID" = ANY ($3)
+      `,
       {
-        type: fastify.db.QueryTypes.DELETE,
-        bind: [request.body.clientId],
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [true, request.userTokenInfo.WrUserId, request.body.clientId],
       }
     );
   } catch (err) {

@@ -14,7 +14,8 @@ const getAllDevicesQuery = async (fastify) => {
         "wrUserType" as "userType",
         "wrDeviceType" as "deviceType",
         "wrMobileToken" as "mobileToken"
-      FROM "tblDevices"`,
+      FROM "tblDevices"
+      WHERE "wrIsDeleted" = false`,
       {
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -99,7 +100,7 @@ const updateDeviceQuery = async (data, fastify, request) => {
           data.pushEndpoint,
           data.pushP256DH,
           data.pushAuth,
-          data.userId,
+          data.userId || null,
           data.userType,
           data.deviceId
         ],
@@ -119,9 +120,13 @@ const updateDeviceQuery = async (data, fastify, request) => {
 const deleteDeviceQuery = async (id, fastify, request) => {
   try {
     return await fastify.db.query(
-      `DELETE FROM "tblDevices" WHERE "wrDeviceId" = $1`,
+      `UPDATE "tblDevices" SET
+          "wrIsDeleted" = true,
+          "wrDeletedBy" = null,
+          "wrDeletedAt" = now()
+      WHERE "wrDeviceId" = $1`,
       {
-        type: fastify.db.QueryTypes.DELETE,
+        type: fastify.db.QueryTypes.UPDATE,
         bind: [id],
       }
     );

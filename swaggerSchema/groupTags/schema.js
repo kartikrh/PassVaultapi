@@ -4428,13 +4428,14 @@ const EventMarket = {
       body: {
         type: "object",
         properties: {
+          password: { type: "string"},
           eventMarketId: {
             type: "array",
             items: { type: "integer" },
             minItems: 1,
           },
         },
-        required: ["eventMarketId"],
+        required: ["eventMarketId", "password"],
       },
     },
   },
@@ -6787,6 +6788,95 @@ const CommentaryPlayerHistory = {
           playerId: { type: "integer" },
         },
         required: ["playerId"],
+      },
+    },
+  },
+  byPlayerId: {
+    schema: {
+      tags: ["CommentaryPlayerHistory"],
+      description: "get Player commentary batting and bowling history",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          playerId: { type: "integer" },
+        },
+        required: ["playerId"],
+      },
+    },
+  },
+  updateBatHistory: {
+    schema: {
+      tags: ["CommentaryPlayerHistory"],
+      description: "update Commentary Player Batting history",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          payload: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              id: { type: "integer" },
+              commentaryId: { type: "integer" },
+              commentaryPlayerId: { type: "integer" },
+              matchCount: { type: "integer" },
+              inningsCount: { type: "integer" },
+              notOut: { type: "integer" },
+              totalRuns: { type: "integer" },
+              highestScore: { type: "string" },
+              average: { type: "number" },
+              ballsFacedCount: { type: "integer" },
+              strikeRate: { type: "number" },
+              countOf100: { type: "integer" },
+              countOf50: { type: "integer" },
+              countOf4: { type: "integer" },
+              countOf6: { type: "integer" },
+              catchCount: { type: "integer" },
+              stumpCount: { type: "integer" },
+            },
+            required: ["id"],
+          },
+        },
+       },
+      },
+    },
+  },
+  updateBowlHistory: {
+    schema: {
+      tags: ["CommentaryPlayerHistory"],
+      description: "update Commentary Player Bowling history",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          payload: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              id: { type: "integer" },
+              commentaryId: { type: "integer" },
+              commentaryPlayerId: { type: "integer" },
+              matchCount: { type: "integer" },
+              inningsCount: { type: "integer" },
+              ballCount: { type: "integer" },
+              totalRuns: { type: "integer" },
+              wicketsCount: { type: "integer" },
+              bowlerAverage: { type: "number" },
+              bestBowlingInInnings: { type: "string" },
+              bestBowlingInMatch: { type: "string" },
+              bowlerStrikeRate: { type: "number" },
+              economy: { type: "number" },
+              wickets4: { type: "integer" },
+              wickets5: { type: "integer" },
+              wickets10: { type: "integer" },
+            },
+            required: ["id"],
+          },
+        },
+       },
       },
     },
   },

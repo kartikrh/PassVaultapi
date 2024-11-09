@@ -12,7 +12,7 @@ const allDevicesService = async (request, fastify) => {
 const deviceByIdService = async (request) => {
   const { deviceId } = request.body;
   const devices = global.tblDevices || [];
-  const result = devices.find((item) => item.wrDeviceId === deviceId);
+  const result = devices.find((item) => item.deviceId === deviceId);
   return result || null;
 };
 
@@ -55,39 +55,37 @@ const createDeviceService = async (request, fastify) => {
 };
 
 const updateDeviceService = async (request, fastify) => {
-  const { deviceId } = request.body;
+  const deviceId = parseInt(request.body.deviceId);
   const devices = global.tblDevices || [];
-  const checkId = devices.find((item) => item.wrDeviceId === deviceId);
+  const checkId = devices.find((item) => item.deviceId == deviceId);
 
   if (!checkId) {
     throw new Error("Device with this ID not found");
   }
-  const checkName = devices.find((item) => item.wrName.toLowerCase() === request.body.name.trim().toLowerCase() && item.wrDeviceId !== deviceId);
+  const checkName = devices.find((item) => item.name.toLowerCase() === request.body.name.trim().toLowerCase() && item.deviceId != deviceId);
   if (checkName) {
     throw new Error("Device with this name already exists");
   }
 
   const data = {
-    wrDeviceId: request.body.deviceId,
-    wrName: request.body.name || checkId.wrName,
-    wrPushEndpoint: request.body.pushEndpoint || checkId.wrPushEndpoint,
-    wrPushP256DH: request.body.pushP256DH || checkId.wrPushP256DH,
-    wrPushAuth: request.body.pushAuth || checkId.wrPushAuth,
-    wrCreatedDate: checkId.wrCreatedDate,
-    wrUserId: request.body.userId || checkId.wrUserId,
-    wrUserType: request.body.userType || checkId.wrUserType,
+    deviceId: deviceId,
+    name: request.body.name || checkId.name,
+    pushEndpoint: request.body.pushEndpoint || checkId.pushEndpoint,
+    pushP256DH: request.body.pushP256DH || checkId.pushP256DH,
+    pushAuth: request.body.pushAuth || checkId.pushAuth,
+    userType: request.body.userType || checkId.userType,
+    userId: request.body.userId || checkId.userId,
+    createdDate: checkId.createdDate,
   };
 
   await updateDeviceQuery(
     {
       ...data,
-      userId: request.userTokenInfo.WrUserId,
     },
     fastify,
     request
   );
-
-  const index = devices.findIndex((item) => item.wrDeviceId === deviceId);
+  const index = devices.findIndex((item) => item.deviceId == deviceId);
   devices[index] = data;
 
   return data;
@@ -114,7 +112,7 @@ const deleteDeviceService = async (request, fastify) => {
     await deleteDeviceQuery(deviceId, fastify, request);
   }
 
-  global.tblDevices = global.tblDevices.filter((item) => !deviceIds.includes(item.wrDeviceId));
+  global.tblDevices = global.tblDevices.filter((item) => !deviceIds.includes(item.deviceId));
 
   return `Device(s) deleted successfully`;
 };

@@ -131,6 +131,14 @@ const deleteClientVideoService = async (request, fastify) => {
 
 const activeInactiveClientVideoService = async (request, fastify) => {
   const { id, isActive } = request.body;
+
+  const validateId = global.tblClientVideos.find(
+    (item) => item.id == id
+  );
+  if (!validateId) {
+    throw new Error("Client video with this Id not found");
+  }
+
   await activeInactiveClientVideoQuery(
     {
       id,

@@ -15,7 +15,8 @@ const allClientVideoQuery = async (fastify) => {
             "wrCreatedBy" as "createdBy",
             "wrModifiedBy" as "modifiedBy",
             "wrModifiedAt" as "modifiedAt"
-            FROM "tblClientVideos";`,
+            FROM "tblClientVideos"
+            WHERE "wrIsDeleted" = false;`,
             { type: fastify.db.QueryTypes.SELECT }
         );
     } catch (err) {
@@ -136,10 +137,14 @@ const updateClientVideoQuery = async (data, fastify, request) => {
 const deleteClientVideosQuery = async (id, fastify, request) => {
     try {
         return await fastify.db.query(
-            `delete from "tblClientVideos" where "wrId" = ANY ($1)`,
+            `UPDATE "tblClientVideos" SET
+              "wrIsDeleted" = $1,
+              "wrDeletedBy" = $2,
+              "wrDeletedAt" = now()
+            WHERE "wrId" = ANY ($3)`,
             {
                 type: fastify.db.QueryTypes.DELETE,
-                bind: [id],
+                bind: [true, request.userTokenInfo.WrUserId, id],
             }
         );
     } catch (err) {
