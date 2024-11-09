@@ -1964,7 +1964,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
         lineDiff =  item.runners[0].line - runOld[0].line;
         updatedOvers.push({
           over : item.over,
-          value: diff != null ? parseFloat(diff.toFixed(2)) : null,  // Ensure float or null if undefined
+          value: lineDiff != null ? parseFloat(lineDiff.toFixed(2)) : null,  // Ensure float or null if undefined
           line_ratio : item.lineRatio,
           is_onlyover : is_onlyover,
           is_allow : item.isAllow,
