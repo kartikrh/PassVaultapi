@@ -11,7 +11,9 @@ const {
   updateDisplayOrder,
   isTrendingChangeStatus,
   isEventSnap,
-  isPointTable
+  isPointTable,
+  getEventSnapByCompetitionId,
+  updateEventSnap,
 } = require("../../../controller/users/admin/competition");
 const { getEventTypeList } = require("../../../controller/users/admin/eventTypes");
 const { Compitition } = require("../../../swaggerSchema/groupTags/schema");
@@ -151,5 +153,31 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request, reply) => getAllMatchTypes(request, reply, fastify),
+  });
+
+  fastify.post("/getEventSnap", {
+    schema: Compitition.getEventSnapByCompetitionId.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "competition",
+          mode: "view",
+        }),
+    ],
+    handler: (request, reply) => getEventSnapByCompetitionId(request, reply, fastify),
+  });
+
+  fastify.post("/updateEventSnap", {
+    schema: Compitition.updateEventSnap.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "competition",
+          mode: "edit",
+        }),
+    ],
+    handler: (request, reply) => updateEventSnap(request, reply, fastify),
   });
 };

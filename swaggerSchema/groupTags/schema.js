@@ -2966,6 +2966,58 @@ const Compitition = {
       description: "get all Match Types",
     },
   },
+  getEventSnapByCompetitionId: {
+    schema: {
+      tags: ["Compitition"],
+      description: "get all Match Types",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionId: { type: "integer" },
+        },
+        required: ["competitionId"],
+      },
+    },
+  },
+  updateEventSnap: {
+    schema: {
+      tags: ["Compitition"],
+      description: "get all Match Types",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          payload: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              id: { type: "integer" },
+              commentaryId: { type: "integer" },
+              commentaryPlayerId: { type: "integer" },
+              matchCount: { type: "integer" },
+              inningsCount: { type: "integer" },
+              notOut: { type: "integer" },
+              totalRuns: { type: "integer" },
+              highestScore: { type: "string" },
+              average: { type: "number" },
+              ballsFacedCount: { type: "integer" },
+              strikeRate: { type: "number" },
+              countOf100: { type: "integer" },
+              countOf50: { type: "integer" },
+              countOf4: { type: "integer" },
+              countOf6: { type: "integer" },
+              catchCount: { type: "integer" },
+              stumpCount: { type: "integer" },
+            },
+            required: ["id"],
+          },
+        },
+       },
+      },
+    },
+  },
 };
 
 const Event = {
