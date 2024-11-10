@@ -83,10 +83,10 @@ const updateCommPlayerBowlHistoryService = async (request, fastify) => {
       id: bowlHist.id,
       commentaryId: bowlHist.commentaryId !== undefined ? parseInt(bowlHist.commentaryId) : existingData.commentaryId,
       commentaryPlayerId: bowlHist.commentaryPlayerId !== undefined ? parseInt(bowlHist.commentaryPlayerId) : existingData.commentaryPlayerId,
-      matchCount: bowlHist.matchCount !== undefined ? parseInt(bowlHist.matchCount) : existingData.matchCount,
-      inningsCount: bowlHist.inningsCount !== undefined ? parseInt(bowlHist.inningsCount) : existingData.inningsCount,
+      bowlerPlayedMatchCount: bowlHist.bowlerPlayedMatchCount !== undefined ? parseInt(bowlHist.bowlerPlayedMatchCount) : existingData.bowlerPlayedMatchCount,
+      bowlerPlayedInningsCount: bowlHist.bowlerPlayedInningsCount !== undefined ? parseInt(bowlHist.bowlerPlayedInningsCount) : existingData.bowlerPlayedInningsCount,
       ballCount: bowlHist.ballCount !== undefined ? parseInt(bowlHist.ballCount) : existingData.ballCount,
-      totalRuns: bowlHist.totalRuns !== undefined ? parseInt(bowlHist.totalRuns) : existingData.totalRuns,
+      runsFromBowler: bowlHist.runsFromBowler !== undefined ? parseInt(bowlHist.runsFromBowler) : existingData.runsFromBowler,
       wicketsCount: bowlHist.wicketsCount !== undefined ? parseInt(bowlHist.wicketsCount) : existingData.wicketsCount,
       bestBowlingInInnings: bowlHist.bestBowlingInInnings !== undefined ? bowlHist.bestBowlingInInnings : existingData.bestBowlingInInnings,
       bestBowlingInMatch: bowlHist.bestBowlingInMatch !== undefined ? bowlHist.bestBowlingInMatch : existingData.bestBowlingInMatch,
@@ -101,7 +101,7 @@ const updateCommPlayerBowlHistoryService = async (request, fastify) => {
 
     const index = global.tblCommPlayerBowlHist.findIndex((item) => item.id == bowlHist.id);
     if(index !== -1){
-      global.tblCommPlayerBowlHist[index] = bowlHist
+      global.tblCommPlayerBowlHist[index] = updateData
     }
   };
 

@@ -273,10 +273,10 @@ const updateCommPlayerBowlingHistoryQuery = async(data, fastify, request) => {
         bind: [
           data.commentaryId || 0,
           data.commentaryPlayerId || 0,
-          data.matchCount,
-          data.inningsCount,
+          data.bowlerPlayedMatchCount,
+          data.bowlerPlayedInningsCount,
           data.ballCount,
-          data.totalRuns,
+          data.runsFromBowler,
           data.wicketsCount,
           data.bowlerAverage,
           data.bestBowlingInInnings,
