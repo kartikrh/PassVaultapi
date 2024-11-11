@@ -33,6 +33,9 @@ const getMarketTemplateIdService = async (request) => {
   const result = global.tblMarketTemplate.find(
     (item) => item.marketTemplateId === marketTemplateId
   );
+  if (result && result.rateDiff === 0) {
+    result.rateDiff = result.rateDiff.toString();
+  }
   return result || null;
 };
 
