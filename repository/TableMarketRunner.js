@@ -3,6 +3,9 @@ const { errorLogger } = require("../utilities/logger")
 
 const getRunnerByIdQuery = async(fastify, request , where = null)=>{
     try {
+        if(where == null){
+            `"wrIsDeleted" = false`
+        }
         let result = await fastify.db.query(
             `SELECT * 
             FROM "tblMarketRunners"
@@ -93,7 +96,7 @@ const setResultInRunnerMarketQuery = async(data, request,fastify)=>{
             ) as "runner"
         FROM "tblEventMarkets" tem
         LEFT JOIN "tblMarketRunners" tmr ON tmr."wrEventMarketId" = tem."wrID"
-        WHERE tem."wrID" = $1 AND tem."wrIsDeleted" = false
+        WHERE tem."wrID" = $1 AND tem."wrIsDeleted" = false AND tmr."wrIsDeleted" = false
         GROUP BY tem."wrID"`;
 
         let data1 = await fastify.db.query(q3, {
@@ -138,7 +141,7 @@ const getRunnerByMarketQuery = async(request,fastify)=>{
                 "wrBackSize" as "backSize",
                 "wrLaySize" as "laySize"
             FROM "tblMarketRunners"
-            WHERE "wrEventMarketId" = $1
+            WHERE "wrEventMarketId" = $1 AND "wrIsDeleted" = false
         `;
         let data = await fastify.db.query(q1, {
             bind: [request.body.eventMarketId],

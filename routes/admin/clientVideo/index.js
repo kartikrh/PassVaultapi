@@ -29,11 +29,17 @@ module.exports = async (fastify, opts) => {
 
     fastify.post("/delete", {
         schema: ClientVideo.delete.schema,
+        preHandler: [
+            (request, reply) => authorize(request, reply, fastify),
+          ],
         handler: (request, reply) => deleteClientVideos(request, reply, fastify),
     });
 
     fastify.post("/activeInactiveApi", {
         schema: ClientVideo.activeInactiveApi.schema,
+        preHandler: [
+            (request, reply) => authorize(request, reply, fastify),
+          ],
         handler: (request, reply) => activeInactiveClientVideo(request, reply, fastify),
     });
 };

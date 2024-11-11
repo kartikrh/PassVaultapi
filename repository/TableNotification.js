@@ -171,7 +171,8 @@ const saveNotificationLogsQuery = (data,request,fastify) =>{
     try {
         const query = `INSERT INTO "tblNotificationLogs" ("wrNotificationId", "wrClientId", "wrIsRead")
         SELECT $1, "wrClientID", $2 
-        FROM "tblClient";`
+        FROM "tblClient"
+        WHERE "wrIsDelete" = false;`
 
         const result = fastify.db.query(query,{
             bind : [

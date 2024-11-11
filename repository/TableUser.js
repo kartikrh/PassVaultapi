@@ -30,7 +30,8 @@ async function signInUser(body, fastify) {
       SELECT
         "WrUserId", te."wrValue" as "WrEId", "WrPassword", "WrUserType", "WrRoleId", "WrUserName",
         "WrIsSuperAdmin", "WrParentId", "WrAllowMultipleLogin", "WrSubAdminId" ,"WrUserIp"
-      FROM "tblUsers" left join "tblEncryptedData" te on "WrUserId" = te."wrKey" WHERE "WrUserName" = $1 AND "WrPassword"=$2 AND "WrIsActive" = true
+      FROM "tblUsers" left join "tblEncryptedData" te on "WrUserId" = te."wrKey" 
+      WHERE "WrUserName" = $1 AND "WrPassword"=$2 AND "WrIsActive" = true AND "WrIsDelete" = false
     ),
     insert_data AS (
       INSERT INTO "tblUserLoginInfos" ("WrUserId", "WrUserType", "wrInfo", "wrIsLogin", "wrToken","WrCreatedDate")
@@ -52,7 +53,7 @@ async function signInUser(body, fastify) {
       UPDATE "tblUserLoginInfos" SET "wrIsLogin" = false
       WHERE "WrUserId" IN (
         SELECT "WrUserId" FROM "tblUsers" 
-        WHERE "WrUserId" IN (SELECT "WrUserId" FROM user_data) AND "WrAllowMultipleLogin" = false
+        WHERE "WrUserId" IN (SELECT "WrUserId" FROM user_data) AND "WrAllowMultipleLogin" = false AND "WrIsDelete" = false
       )
     )
     SELECT * FROM user_data;
@@ -292,7 +293,10 @@ const deleteUserQuery = async (request, fastify) => {
     // )`
     return await fastify.db.query(
       `WITH deleted_user AS (
-          DELETE FROM "tblUsers"
+          UPDATE "tblUsers" SET
+              "WrIsDelete" = $4,
+              "WrDeleteBy" = $2,
+              "WrDeleteDate" = now()
           WHERE "WrUserId" in (
             select "wrKey" from "tblEncryptedData" where "wrValue" = ANY($1))
           RETURNING *
@@ -352,7 +356,7 @@ const deleteUserQuery = async (request, fastify) => {
       `,
       {
         type: QueryTypes.UPDATE,
-        bind: [request.body.userId, request.userTokenInfo.WrUserId, new Date()],
+        bind: [request.body.userId, request.userTokenInfo.WrUserId, new Date(), true],
       }
     );
   } catch (err) {

@@ -55,7 +55,7 @@ const getAllCommentaryQuery = async (fastify) => {
     LEFT JOIN "tblMatchTypes" mt ON tc."wrMatchTypeId" = mt."wrMatchTypeId"
 	LEFT JOIN "tblCompetitions" co ON tc."wrCompetitionId" = co."wrCompetitionId"
   LEFT JOIN "tblUsers" tu ON tc."wrCreatedBy" = tu."WrUserId"
-  WHERE "wrIsDelete" = false`,
+  WHERE "wrIsDelete" = false AND co."wrIsDeleted" = false`,
     {
       type: fastify.db.QueryTypes.SELECT,
     }

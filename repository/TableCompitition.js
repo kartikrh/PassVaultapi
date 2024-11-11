@@ -22,7 +22,7 @@ const getAllCompititionQuery = async (fastify) => {
     tc."wrLossPoint" as "lossPoint"
     from "tblCompetitions" tc 
     inner join "tblEventTypes" tev on tc."wrEventTypeId" = tev."wrEventTypeId"
-    where tev."wrIsDeleted" = false
+    where tc."wrIsDeleted" = false and tev."wrIsDeleted" = false
     `,
     {
       type: fastify.db.QueryTypes.SELECT,
@@ -131,9 +131,13 @@ const insertCompetitionQuery = async (request, fastify) => {
 const deleteCompetitionQuery = async (request, fastify) => {
   try {
     return await fastify.db.query(
-      `delete from "tblCompetitions" where "wrCompetitionId" = ANY ($1)`,
+      `update "tblCompetitions" set
+              "wrIsDeleted" = $1,
+              "wrDeletedBy" = $2,
+              "wrDeletedAt" = now()
+      where "wrCompetitionId" = ANY ($3)`,
       {
-        bind: [request.body.competitionId],
+        bind: [true, request.userTokenInfo.WrUserId, request.body.competitionId],
         type: fastify.db.QueryTypes.DELETE,
       }
     );

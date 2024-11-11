@@ -11,6 +11,7 @@ const {
 } = require("../../../../services/competition");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
+const { getEventSnapByCompetitionIdService, updateEventSnapService } = require("../../../../services/competitionEventSnap");
 
 let path = "controller/users/admin/competition/index";
 
@@ -138,6 +139,26 @@ const isPointTable = async (request, reply, fastify) => {
   }
 };
 
+const getEventSnapByCompetitionId = async (request, reply, fastify) => {
+  try {
+    const result = await getEventSnapByCompetitionIdService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/getEventSnapByCompetitionId", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
+const updateEventSnap = async (request, reply, fastify) => {
+  try {
+    const result = await updateEventSnapService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/updateEventSnap", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
 module.exports = {
   getAllCompetition,
   getCompetitionById,
@@ -149,5 +170,7 @@ module.exports = {
   getCompetitionList,
   isTrendingChangeStatus,
   isEventSnap,
-  isPointTable
+  isPointTable,
+  getEventSnapByCompetitionId,
+  updateEventSnap,
 };

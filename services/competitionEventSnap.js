@@ -1,4 +1,9 @@
-const { setEventSnapQuery, getEventSnapByComQuery } = require("../repository/TableCompetitionEventSnap")
+const {
+    setEventSnapQuery,
+    getEventSnapByComQuery,
+    getEventSnapByCompetitionIdQuery,
+    updateEventSnapQuery,
+  } = require("../repository/TableCompetitionEventSnap");
 
 const setCompEventSnapSerice = async (data , request , fastify) =>{
     let setSnap = await setEventSnapQuery(data,request,fastify);
@@ -26,8 +31,22 @@ const updateEventSnapByComService = async (request , fastify) =>{
     let setSnap = await setEventSnapQuery(data,request,fastify);
     return "Eventsnap Updated successfully";
 }
+
+const getEventSnapByCompetitionIdService = async (request, fastify) => {
+    const { competitionId } = request.body;
+    const eventSnapData = await getEventSnapByCompetitionIdQuery(competitionId, request, fastify);
+    return eventSnapData;
+}
+
+const updateEventSnapService = async (request, fastify) => {
+    const eventSnapData = await updateEventSnapQuery(request.body, request, fastify);
+    return eventSnapData;
+}
+
 module.exports = {
     setCompEventSnapSerice,
     getEventSnapByComService,
-    updateEventSnapByComService
+    updateEventSnapByComService,
+    getEventSnapByCompetitionIdService,
+    updateEventSnapService,
 }

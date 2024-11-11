@@ -8,6 +8,7 @@ const getAllGroupsQuery = async (fastify) => {
         "wrGroupName" as "groupName",
         "wrIsActive" as "isActive"
         from "tblGroups"
+        where "wrIsDeleted" = false
         `,
     {
       type: fastify.db.QueryTypes.SELECT,
@@ -75,10 +76,14 @@ const updateGroupQuery = async (data, fastify, request) => {
 const deleteGroupsQuery = async (groupId, fastify, request) => {
   try {
     return await fastify.db.query(
-      `delete from "tblGroups" where "wrGroupId" = ANY ($1)`,
+      `update "tblGroups" set
+              "wrIsDeleted" = $1,
+              "wrDeletedBy" = $2,
+              "wrDeletedAt" = now()
+      where "wrGroupId" = ANY ($3)`,
       {
-        type: fastify.db.QueryTypes.DELETE,
-        bind: [groupId],
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [true, request.userTokenInfo.WrUserId, groupId],
       }
     );
   } catch (err) {
