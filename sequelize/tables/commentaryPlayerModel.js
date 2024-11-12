@@ -220,6 +220,11 @@ module.exports = (sequelize) => {
         allowNull: false,
         defaultValue: 0,
       },
+      wrPlayerBallFaced: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        defaultValue: 0,
+      }
     },
     {
       timestamps: false,

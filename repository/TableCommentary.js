@@ -527,7 +527,8 @@ const updateCommentaryPlayerById = async (data, request, fastify) => {
       set "wrBatsmanAverage" = $1, 
       "wrBatsmanStrikeRate" = $2,
       "wrIsInPlayingEleven" = $3,
-      "wrBoundary" = $7
+      "wrBoundary" = $7,
+      "wrPlayerBallFaced" = $8
       where "wrPlayerId" = $4
       AND "wrCommentaryId" = $5
       AND "wrTeamId" = $6`,
@@ -541,6 +542,7 @@ const updateCommentaryPlayerById = async (data, request, fastify) => {
           data.commentaryId,
           data.teamId,
           data.boundary || 0,
+          data.playerBallFaced || 0,
         ],
       }
     );
@@ -1001,7 +1003,8 @@ const getAllCommentaryPlayerQuery = async (fastify) => {
     "wrBatsmanPreviousStrikeRate" as "batsmanPreviousStrikeRate",
     "wrBowlerPreviousEconomy" as "bowlerPreviousEconomy",
     "wrIsInPlayingEleven" as "isInPlayingEleven",
-    "wrBoundary" as "boundary"
+    "wrBoundary" as "boundary",
+    "wrPlayerBallFaced" as "playerBallFaced"
     from "tblCommentaryPlayers"
     where "wrIsDelete" = false
     `,

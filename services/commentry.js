@@ -3652,7 +3652,8 @@ const getTeamAndPlayerListService = async (request, fastify) => {
             batsmanStrikeRate: curr.batsmanStrikeRate,
             commentaryPlayerId: curr.commentaryPlayerId,
             isInPlayingEleven: curr.isInPlayingEleven,
-            boundary : curr.boundary
+            boundary : curr.boundary,
+            playerBallFaced : curr.playerBallFaced
           });
         }
         return acc;
@@ -3832,7 +3833,8 @@ const updateTeamPlayerService = async (request, fastify) => {
       batsmanStrikeRate,
       batsmanAverage,
       isInPlayingEleven,
-      boundary
+      boundary,
+      playerBallFaced
     } = playerData;
     let commentary = global.tblCommentaries.find(
       (item) => item.commentaryId === +commentaryId
@@ -3864,7 +3866,8 @@ const updateTeamPlayerService = async (request, fastify) => {
         batsmanStrikeRate,
         batsmanAverage,
         isInPlayingEleven,
-        boundary
+        boundary,
+        playerBallFaced
       },
       request,
       fastify
@@ -3881,6 +3884,7 @@ const updateTeamPlayerService = async (request, fastify) => {
       player.batsmanAverage = batsmanAverage;
       player.isInPlayingEleven = isInPlayingEleven;
       player.boundary = boundary;
+      player.playerBallFaced = playerBallFaced;
     } else {
       throw new Error("Player not found for update");
     }
