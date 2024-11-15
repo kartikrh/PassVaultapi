@@ -4,6 +4,7 @@ const {
   validatePageIdInMenuItem,
   validatePageIdInPageAlias,
   deletePageQuery,
+  isDefaultChangesQuery,
 } = require("../repository/TablePage");
 const { callClientAPI, ServiceType, APIEndpointModuleType } = require("../utilities");
 const { errorLogger } = require("../utilities/logger");
@@ -38,6 +39,15 @@ const addPageService = async (request, fastify) => {
   );
 
   global.tblPages.push(data);
+
+  if(request.body.isDefault === true){
+    isDefaultChangesQuery(data.pageId, fastify, request);
+    global.tblPages.forEach((item) => {
+      if (item.pageId !== data.pageId && item.isDeleted === false) {
+          item.isDefault = false;
+      }
+    });
+  }
 
   callClientAPI({
     serviceType: ServiceType.clientAPI,
@@ -113,6 +123,15 @@ const updatePageService = async (request, fastify) => {
     pageFormatId: body.pageFormatId,
     whiteLabelId : body.whiteLabelId,
   };
+
+  if(body.isDefault === true){
+    isDefaultChangesQuery(body.pageId, fastify, request);
+    global.tblPages.forEach((item) => {
+      if (item.pageId !== body.pageId && item.isDeleted === false) {
+          item.isDefault = false;
+      }
+    });
+  }
 
   callClientAPI({
     serviceType: ServiceType.clientAPI,

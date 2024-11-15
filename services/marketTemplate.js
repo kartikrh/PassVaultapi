@@ -7,7 +7,8 @@ const {
   updateIsPerEventStatusQuery,
   insertMarketTemplateInCloneQuery,
   isShowInAdvanceMarketChangeStatusQuery,
-  defaultIsSendDataChangeQuery
+  defaultIsSendDataChangeQuery,
+  allMarketTypesAndCategoriesQuery
 } = require("../repository/TableMarketTemplate");
 const { callPredictorMarket } = require("../utilities");
 const { createMarketTemplateRunnerQuery } = require("../repository/TableMarketTemplateRunner")
@@ -510,6 +511,22 @@ const defaultIsSendDataChangeService = async (request, fastify) => {
 
   return `MarketTemplate defaultIsSendData status updated successfully`;
 };
+
+const allMarketTypesAndCategoriesService = async (request, fastify) => {
+  const result = global.tblMarketTypes.map((item) => {
+    const categoryTypes = global.tblMarketTypeCategories.filter(
+      (elem) => elem.marketTypeId === item.marketTypeId
+    );
+
+    return {
+      ...item,
+      marketTypeCategories: categoryTypes
+    };
+  });
+
+  return result;
+};
+
 module.exports = {
   saveMarketTemplateService,
   getAllMarketTemplateService,
@@ -526,5 +543,6 @@ module.exports = {
   isPerEventStatusService,
   isShowInAdvanceMarketChangeStatusService,
   cloneMultiMarketTemplateService,
-  defaultIsSendDataChangeService
+  defaultIsSendDataChangeService,
+  allMarketTypesAndCategoriesService,
 };
