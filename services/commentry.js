@@ -4033,24 +4033,24 @@ const updateCommentaryStatusService = async (request, fastify) => {
       commentaryId: commentaryId
     }, request, fastify);
 
-    _resFromPredictAPI = await callPredictorMarket(
-      {
-        commentary_id: commentaryId,
-        status: EventMarketStatus.Suspend,
-        event_market_id: market.map((m) => m.eventMarketId),
-      },
-      "/api/v1/updateplayerstatus",
-      fastify,
-      request
-    );
+    // _resFromPredictAPI = await callPredictorMarket(
+    //   {
+    //     commentary_id: commentaryId,
+    //     status: EventMarketStatus.Suspend,
+    //     event_market_id: market.map((m) => m.eventMarketId),
+    //   },
+    //   "/api/v1/updateplayerstatus",
+    //   fastify,
+    //   request
+    // );
 
-    if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
-      callPrediction.predictioncall2Success = false;
-      callPrediction.predictionCall2Message = _resFromPredictAPI.data.error_msg;
-      callPrediction.endPoint2 = '/api/v1/updateplayerstatus';
-      callPredictions.push(callPrediction);
-      callPrediction = {};
-    }
+    // if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
+    //   callPrediction.predictioncall2Success = false;
+    //   callPrediction.predictionCall2Message = _resFromPredictAPI.data.error_msg;
+    //   callPrediction.endPoint2 = '/api/v1/updateplayerstatus';
+    //   callPredictions.push(callPrediction);
+    //   callPrediction = {};
+    // }
   }
 
   // Prepare the commentary details for update
