@@ -691,7 +691,7 @@ const defaultIsSendDataChangeQuery = async (request, fastify) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableMarketTemplate.js/isShowInAdvanceMarketChangeStatusQuery",
+      "DB ERROR --> repository/TableMarketTemplate.js/defaultIsSendDataChangeQuery",
       request
     );
     throw new Error(err.message);

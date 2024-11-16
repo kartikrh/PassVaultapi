@@ -48,11 +48,13 @@ const getAllCommentaryQuery = async (fastify) => {
     tc."wrCommentaryCloseTime" as "commentaryCloseTime",
     tc."wrIsTeamPredictionOn" as "isTeamPredictionOn",
     tu."WrUserName" as "createdBy",
-    tc."wrHistoryMatchTypeId" as "historyMatchTypeId"
+    tc."wrHistoryMatchTypeId" as "historyMatchTypeId",
+    mt2."wrMatchType" AS "historyMatchType"
     from "tblCommentaries" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
     LEFT JOIN "tblMatchTypes" mt ON tc."wrMatchTypeId" = mt."wrMatchTypeId"
+    LEFT JOIN "tblMatchTypes" mt2 ON tc."wrHistoryMatchTypeId" = mt2."wrMatchTypeId"
 	LEFT JOIN "tblCompetitions" co ON tc."wrCompetitionId" = co."wrCompetitionId"
   LEFT JOIN "tblUsers" tu ON tc."wrCreatedBy" = tu."WrUserId"
   WHERE "wrIsDelete" = false AND co."wrIsDeleted" = false`,

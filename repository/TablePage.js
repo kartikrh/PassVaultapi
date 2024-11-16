@@ -16,6 +16,7 @@ const allPageQuery = async (fastify) => {
     "wrSEOWord" as "seoWord",
     "wrSEODescription" as "seoDescription",
     "wrIsDefault" as "isDefault",
+    "wrIsDeleted" as "isDeleted",
     "wrDynamicParameters" as "dynamicParameters",
     "wrIsStatic" as "isStatic",
     tpwl."wrValue" as "whiteLabelId"
@@ -58,6 +59,7 @@ const insertPageQuery = async (body, fastify, request) => {
     "wrSEOWord" as "seoWord",
     "wrSEODescription" as "seoDescription",
     "wrIsDefault" as "isDefault",
+    "wrIsDeleted" as "isDeleted",
     "wrDynamicParameters" as "dynamicParameters",
     "wrIsStatic" as "isStatic",
     tpwl."wrValue" as "whiteLabelId"
@@ -117,6 +119,7 @@ const updatePageQuery = async (body, fastify, request) => {
         "wrSEOWord" as "seoWord",
         "wrSEODescription" as "seoDescription",
         "wrIsDefault" as "isDefault",
+        "wrIsDeleted" as "isDeleted",
         "wrDynamicParameters" as "dynamicParameters",
         "wrIsStatic" as "isStatic"
         `,
@@ -229,6 +232,29 @@ const deletePageQuery = async (pageId, fastify, request) => {
   }
 };
 
+const isDefaultChangesQuery = async(pageId, fastify, request) => {
+  try {
+    return await fastify.db.query(
+      `UPDATE "tblPages" SET
+       "wrIsDefault" = $1
+       WHERE "wrPageId" in (select "wrKey" from "tblEncryptedData" where "wrValue" != $2)
+      `,
+      {
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [false, pageId],
+      }
+    );
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TablePage/isDefaultChangesQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+}
+
 module.exports = {
   allPageQuery,
   insertPageQuery,
@@ -236,4 +262,5 @@ module.exports = {
   validatePageIdInMenuItem,
   validatePageIdInPageAlias,
   deletePageQuery,
+  isDefaultChangesQuery,
 };
