@@ -78,7 +78,7 @@ const {
   MarketTypeId
 } = require("../utilities");
 const { getAllPlayersByTeamIdQuery } = require("../repository/TableTeams");
-const { handleMarketCloseService, updateComInMarketService } = require("./eventMarket");
+const { handleMarketCloseService, updateComInMarketService, suspendMarketService } = require("./eventMarket");
 const { createMarketOddsBallByBallBYID, deleteMarketOddsBallByBall,createMarketOddsBallInSaveDetails } = require("../repository/TableMarketOddsBallByBall");
 const { getEventMarketRatioQuery, closeEventMarketByCIdQuery, getMarketsByCategoryQuery,getEventMarketByIdsQuery,getMarketsByComIdQuery, updateEventMarketCloseQuery } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
@@ -4024,14 +4024,14 @@ const updateCommentaryStatusService = async (request, fastify) => {
       callPrediction = {};
     }
     _resFromPredictAPI = null;
-    let getCategory = global.tblMarketTypeCategories.filter((item) =>
-      item.categoryName.toLowerCase() == 'player' || item.categoryName.toLowerCase() == 'wicket' || item.categoryName.toLowerCase() == 'player boundaries'
-    ).map((c) => c.marketTypeCategoryId);
-    // getmarket id's from tblEventMarkets
-    let market = await getMarketsByCategoryQuery({
-      categoryId: getCategory,
-      commentaryId: commentaryId
-    }, request, fastify);
+    // let getCategory = global.tblMarketTypeCategories.filter((item) =>
+    //   item.categoryName.toLowerCase() == 'player' || item.categoryName.toLowerCase() == 'wicket' || item.categoryName.toLowerCase() == 'player boundaries'
+    // ).map((c) => c.marketTypeCategoryId);
+    // // getmarket id's from tblEventMarkets
+    // let market = await getMarketsByCategoryQuery({
+    //   categoryId: getCategory,
+    //   commentaryId: commentaryId
+    // }, request, fastify);
 
     // _resFromPredictAPI = await callPredictorMarket(
     //   {
@@ -4097,6 +4097,20 @@ const updateCommentaryStatusService = async (request, fastify) => {
   }
   commentaryDetails.callPredictions = callPredictions;
   // Return the updated commentary details
+  if(commentaryDetails[index].isPredictMarket){
+  suspendMarketService({
+    commentaryId: commentaryId,
+  },request,fastify)
+  .catch((err) => {
+    console.log("suspendMarketService console", err);
+    errorLogger(
+      fastify,
+      err.message,
+      "ERROR --> services/commentary.js/updateCommentaryStatusService - suspendMarketService",
+      request
+    );
+  });
+  }
   return {
     name: "commentaryDetails",
     value: commentaryDetails,
