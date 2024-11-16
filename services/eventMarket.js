@@ -42,6 +42,8 @@ const {
   updateEventMarketCloseSuspendTimeQuery,
   closeEventMarketsQuery,
   cancelEventMarketsQuery,
+  getOpenMarketByCIdQuery,
+  suspendMarketQuery,
 } = require("../repository/TableEventMarkets");
 const { getRunnerByIdQuery, setResultInRunnerMarketQuery, getRunnerByMarketQuery } = require("../repository/TableMarketRunner");
 const configConstants = require("../utilities/configConstants");
@@ -1897,7 +1899,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
   let multiRunMarket = [];
   for (let item of eventMarket){
     let market = eventMarkets.find(
-      (e) => e.eventMarketId === item.marketId
+      (e) => e.eventMarketId === parseInt(item.marketId)
     );
     if (
       market.status === EventMarketStatus.Close ||
@@ -2372,6 +2374,45 @@ const cancelEventMarketsByIdsService = async (request, fastify) => {
   return "Market(s) canceled successfully";
 };
 
+const suspendMarketService = async (data,request, fastify) => {
+  const { commentaryId } = data;
+  let category = global.tblConfigs.find(
+    (item) => item.key == configConstants.DONTSUSPENTMARKETTYPECATEGORY
+  )?.value.split(",").map(Number);
+  if(!category){
+    errorLogger(
+      fastify,
+      `Suspend Market Category not found in config`,
+      "ERROR --> services/commentary.js/suspendMarketService",
+      request
+    );
+    return true;
+  }
+
+  let eventMarket = await getOpenMarketByCIdQuery(
+    {
+      commentaryId: commentaryId ,
+      categoryId : category
+    },
+    request,
+    fastify
+  );
+  if(eventMarket.length === 0){
+    return true;
+  }
+  let market = eventMarket.map((item) => item.eventMarketId);
+  const result = await suspendMarketQuery({
+    eventMarketIds: market,
+  }, request, fastify);
+  const clientInRoom = global.socketIo.sockets.adapter.rooms.get(commentaryId);
+  if (clientInRoom?.size) {
+    global.socketIo.to(commentaryId).emit("updateMarketData", result);
+  }
+  return true;
+
+
+
+}
 module.exports = {
   getDetailsByCIdService,
   getAllEventMarketsService,
@@ -2416,4 +2457,5 @@ module.exports = {
   updateEventMarketCloseSuspendTimeService,
   closeEventMarketsByIdsService,
   cancelEventMarketsByIdsService,
+  suspendMarketService
 };

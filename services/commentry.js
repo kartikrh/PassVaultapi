@@ -78,7 +78,7 @@ const {
   MarketTypeId
 } = require("../utilities");
 const { getAllPlayersByTeamIdQuery } = require("../repository/TableTeams");
-const { handleMarketCloseService, updateComInMarketService } = require("./eventMarket");
+const { handleMarketCloseService, updateComInMarketService, suspendMarketService } = require("./eventMarket");
 const { createMarketOddsBallByBallBYID, deleteMarketOddsBallByBall,createMarketOddsBallInSaveDetails } = require("../repository/TableMarketOddsBallByBall");
 const { getEventMarketRatioQuery, closeEventMarketByCIdQuery, getMarketsByCategoryQuery,getEventMarketByIdsQuery,getMarketsByComIdQuery, updateEventMarketCloseQuery } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
@@ -4034,24 +4034,24 @@ const updateCommentaryStatusService = async (request, fastify) => {
       commentaryId: commentaryId
     }, request, fastify);
 
-    // _resFromPredictAPI = await callPredictorMarket(
-    //   {
-    //     commentary_id: commentaryId,
-    //     status: EventMarketStatus.Suspend,
-    //     event_market_id: market.map((m) => m.eventMarketId),
-    //   },
-    //   "/api/v1/updateplayerstatus",
-    //   fastify,
-    //   request
-    // );
+    _resFromPredictAPI = await callPredictorMarket(
+      {
+        commentary_id: commentaryId,
+        status: EventMarketStatus.Suspend,
+        event_market_id: market.map((m) => m.eventMarketId),
+      },
+      "/api/v1/updateplayerstatus",
+      fastify,
+      request
+    );
 
-    // if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
-    //   callPrediction.predictioncall2Success = false;
-    //   callPrediction.predictionCall2Message = _resFromPredictAPI.data.error_msg;
-    //   callPrediction.endPoint2 = '/api/v1/updateplayerstatus';
-    //   callPredictions.push(callPrediction);
-    //   callPrediction = {};
-    // }
+    if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
+      callPrediction.predictioncall2Success = false;
+      callPrediction.predictionCall2Message = _resFromPredictAPI.data.error_msg;
+      callPrediction.endPoint2 = '/api/v1/updateplayerstatus';
+      callPredictions.push(callPrediction);
+      callPrediction = {};
+    }
   }
 
   // Prepare the commentary details for update
@@ -4098,6 +4098,20 @@ const updateCommentaryStatusService = async (request, fastify) => {
   }
   commentaryDetails.callPredictions = callPredictions;
   // Return the updated commentary details
+  // if(commentaryDetails[index].isPredictMarket){
+  // suspendMarketService({
+  //   commentaryId: commentaryId,
+  // },request,fastify)
+  // .catch((err) => {
+  //   console.log("suspendMarketService console", err);
+  //   errorLogger(
+  //     fastify,
+  //     err.message,
+  //     "ERROR --> services/commentary.js/updateCommentaryStatusService - suspendMarketService",
+  //     request
+  //   );
+  // });
+  // }
   return {
     name: "commentaryDetails",
     value: commentaryDetails,
