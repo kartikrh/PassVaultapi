@@ -63,11 +63,11 @@ const connection = (socket , fastify) => {
       let LDOMARKETSIDS 
       try {
         LDOMARKETSIDS = global.tblConfigs.find((item) => item.key === configConstants.LDOMARKET).value.split(',');
-      } catch (error) {LDOMARKETSIDS = ['26', '27', '28'];}
+      } catch (error) {LDOMARKETSIDS = ['26', '27', '28','6'];}
 
        // Filter out markets that have marketTypeCategoryId present in LDOMARKETSIDS
       const filteredMarkets = marketToUpdate.filter(
-        (market) => !LDOMARKETSIDS.includes(market.marketTypeCategoryId.toString())
+        (market) => !LDOMARKETSIDS.includes(market.marketTypeCategoryId.toString()) && market.status === 1
       );
 
       if(ballbybllId && filteredMarkets.length > 0)
