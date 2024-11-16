@@ -225,6 +225,7 @@ const commentaryDetailsByIdService = async (request, fastify) => {
     eid: commentary.eventRefId || "",
     ety: eventType?.eventType || "",
     mtyp: commentary.matchType || "",
+    hmtyp: commentary.historyMatchType || "",
     com: competition?.competition || "",
     en: commentary.eventName || "",
     ed: convertDate(commentary.eventDate, "DD/MM/YYYY") || "",
@@ -4985,6 +4986,7 @@ const commentaryDetailsByEventIdService = async (
   (resultArr.utc = result.eventDate),
     (resultArr.ety = eventType?.eventType || "");
   resultArr.mtyp = result.matchType || "";
+  resultArr.hmtyp = result.historyMatchType || "";
   resultArr.com = competition?.competition || "";
   resultArr.eti = parseInt(eventType.refId) || "";
   resultArr.tpp1 = tpp1;
@@ -5556,6 +5558,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
   resultArr.et = convertDate(result.eventDate, "hh:mm:ss") || "";
   resultArr.ety = eventType?.eventType || "";
   resultArr.mtyp = result.matchType || "";
+  resultArr.hmtyp = result.historyMatchType || "";
   resultArr.com = competition?.competition || "";
   resultArr.eti = parseInt(eventType.refId) || "";
   resultArr.tpp1 = tpp1;
@@ -5988,6 +5991,7 @@ const getMatchListByStatus = async (body, request, fastify) => {
       eid: item.eventRefId || "",
       ety: eventType?.eventType || "",
       mtyp: item.matchType || "",
+      hmtyp: item.historyMatchType || "",
       com: competition?.competition || "",
       compId: competition?.competitionId || 0,
       ci: item.currentInnings,
@@ -6195,6 +6199,7 @@ const getMatchDataByCId = async (data, request, fastify) => {
     eid: com.eventRefId || "",
     ety: eventType?.eventType || "",
     mtyp: com.matchType || "",
+    hmtyp: com.historyMatchType || "",
     com: competition?.competition || "",
     ci: com.currentInnings,
     en: com.eventName || "",
@@ -6550,6 +6555,7 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
       eid: commentary.eventRefId || "",
       ety: eventType?.eventType || "",
       mtyp: commentary.matchType || "",
+      hmtyp: commentary.historyMatchType || "",
       com: competition?.competition || "",
       en: commentary.eventName || "",
       ed: convertDate(commentary.eventDate, "DD/MM/YYYY") || "",
@@ -7078,6 +7084,7 @@ const getCommenrtySquadDetailsService = async (request, fastify) => {
     // ety: eventType?.eventType || "",
     // mtyp: commentary.matchType || "",
     // com: competition?.competition || "",
+    hmtyp: commentary.historyMatchType || "",
     en: commentary.eventName || "",
     ed: convertDate(commentary.eventDate, "DD/MM/YYYY") || "",
     et: convertDate(commentary.eventDate, "hh:mm:ss") || "",
@@ -7180,6 +7187,7 @@ const getPartnershipListService = async (request, fastify) => {
     // ety: eventType?.eventType || "",
     // mtyp: commentary.matchType || "",
     // com: competition?.competition || "",
+    hmtyp: commentary.historyMatchType || "",
     en: commentary.eventName || "",
     ed: convertDate(commentary.eventDate, "DD/MM/YYYY") || "",
     et: convertDate(commentary.eventDate, "hh:mm:ss") || "",
@@ -7339,6 +7347,7 @@ const getCommentaryTeamsListService = async (request, fastify) => {
     // ety: eventType?.eventType || "",
     // mtyp: commentary.matchType || "",
     // com: competition?.competition || "",
+    hmtyp: commentary.historyMatchType || "",
     en: commentary.eventName || "",
     ed: convertDate(commentary.eventDate, "DD/MM/YYYY") || "",
     et: convertDate(commentary.eventDate, "hh:mm:ss") || "",
@@ -7543,6 +7552,7 @@ const getNodeEventbyEidService = async (request, fastify) => {
         eid: commentary.eventRefId || "",
         ety: eventType?.eventType || "",
         mtyp: commentary.matchType || "",
+        hmtyp: commentary.historyMatchType || "",
         com: competition?.competition || "",
         en: commentary.eventName || "",
         ed: convertDate(commentary.eventDate, "DD/MM/YYYY") || "",
@@ -7672,6 +7682,7 @@ const getActiveCommertyService = async (fastify) => {
         eid: commentary.eventRefId || "",
         ety: eventType?.eventType || "",
         mtyp: commentary.matchType || "",
+        hmtyp: commentary.historyMatchType || "",
         com: competition?.competition || "",
         en: commentary.eventName || "",
         ed: convertDate(commentary.eventDate, "DD/MM/YYYY") || "",
@@ -7836,6 +7847,7 @@ const getEventDetailsByCIdService = async (request, fastify) => {
         eid: commentary.eventRefId || "",
         ety: eventType?.eventType || "",
         mtyp: commentary.matchType || "",
+        hmtyp: commentary.historyMatchType || "",
         mtyi: commentary.matchTypeId,
         com: competition?.competition || "",
         en: commentary.eventName || "",
