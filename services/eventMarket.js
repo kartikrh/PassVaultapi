@@ -882,26 +882,24 @@ const changeMarketCancelService = async (request, fastify) => {
   }
   const currentStatus = checkMarketInDb[0].status;
   if (currentStatus === EventMarketStatus.Close) {
-    let mar = await changeMarketCancelQuery(request.body, request, fastify);
+    await changeMarketCancelQuery(request.body, request, fastify);
     // global.tblEventMarkets[eventMarket].status = EventMarketStatus.Cancel;
-    if(commentary.isPredictMarket == true && mar.rateSource == 1){
-      if(commentary.commentaryStatus == commentaryStatus.INPROGRESS || commentary.commentaryStatus ==commentaryStatus.COMPLETED){
-        const strikeTeam = global.tblCommentaryTeams.find(
-          (item) => item.commentaryId === commentaryId && item.teamStatus === 1
-        );
-        await callPredictorMarket(
-          {
-            commentary_id: parseInt(commentaryId),
-            status: parseInt(EventMarketStatus.Cancel),
-            match_type_id: parseInt(commentary.matchTypeId),
-            event_market_id: parseInt(eventMarketId),
-            strike_team: strikeTeam.teamId,
-          },
-          "/api/v1/marketmanualclose",
-          fastify,
-          request
-        );
-      }
+    if(commentary.commentaryStatus == commentaryStatus.INPROGRESS || commentary.commentaryStatus ==commentaryStatus.COMPLETED){
+      const strikeTeam = global.tblCommentaryTeams.find(
+        (item) => item.commentaryId === commentaryId && item.teamStatus === 1
+      );
+      await callPredictorMarket(
+        {
+          commentary_id: parseInt(commentaryId),
+          status: parseInt(EventMarketStatus.Cancel),
+          match_type_id: parseInt(commentary.matchTypeId),
+          event_market_id: parseInt(eventMarketId),
+          strike_team: strikeTeam.teamId,
+        },
+        "/api/v1/marketmanualclose",
+        fastify,
+        request
+      );
     }
     return "Market Cancel updated successfully";
   } else {
@@ -943,9 +941,8 @@ const changeMarketResultService = async (request, fastify) => {
     const currentStatus = eventMarket[0].status;
     const currentResult = eventMarket[0].result;
     if (currentStatus === EventMarketStatus.Close && currentResult == null) {
-      let mar = await changeMarketResultQuery(request.body, request, fastify);
+      await changeMarketResultQuery(request.body, request, fastify);
       // global.tblEventMarkets[eventMarket].result = result;
-      if(commentary.isPredictMarket == true && mar.rateSource == 1){
       if(commentary.commentaryStatus === commentaryStatus.INPROGRESS || commentary.commentaryStatus === commentaryStatus.COMPLETED){
         const strikeTeam = global.tblCommentaryTeams.find(
           (item) => item.commentaryId === commentaryId && item.teamStatus === 1
@@ -962,7 +959,6 @@ const changeMarketResultService = async (request, fastify) => {
           fastify,
           request
         );
-      }
       }
       return "Market result updated successfully";
     } else {
@@ -1041,11 +1037,12 @@ const changeMarketCloseService = async (request, fastify) => {
       EventMarketStatus.Close,
     ].includes(currentStatus)
   ) {
-    let mar = await changeMarketCloseQuery(request.body, request, fastify);
+    await changeMarketCloseQuery(request.body, request, fastify);
     let _resFromPredictAPI;
     let callPrediction = {};
-  
-    if(commentary.isPredictMarket == true && mar.rateSource == 1){
+    // global.tblEventMarkets[eventMarket].status = EventMarketStatus.Close;
+    // global.tblEventMarkets[eventMarket].data = updatedData;
+    // console.log("updatedData", updatedData);
     if(commentary.commentaruStatus === commentaryStatus.INPROGRESS || commentary.commentaryStatus === commentaryStatus.COMPLETED){
       const strikeTeam = global.tblCommentaryTeams.find(
         (item) => item.commentaryId === commentaryId && item.teamStatus === 1
@@ -1071,7 +1068,6 @@ const changeMarketCloseService = async (request, fastify) => {
         callPrediction.predictionMessage = 'Prediction call successful';
         callPrediction.endPoint = '/api/v1/marketmanualclose';
       }
-    }
     }
 
     return {
