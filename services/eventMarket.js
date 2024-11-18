@@ -2004,6 +2004,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
           line : item.runners[0].line,
           is_allow : item.isAllow,
           is_active : item.isActive,
+          is_senddata : item.isSendData,
           data : item.data,
           lay_size : item.runners[0].laySize,
           back_size : item.runners[0].backSize,
