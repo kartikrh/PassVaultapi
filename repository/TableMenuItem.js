@@ -33,6 +33,7 @@ const allMenuItemsQuery = async (fastify) => {
     LEFT JOIN
       ChildCount cc ON mi."wrMenuItemId" = cc."parentId"    
     WHERE mi."wrIsDeleted" = false
+    ORDER BY "wrDisplayOrder" ASC
     `,
     {
       type: fastify.db.QueryTypes.SELECT,
