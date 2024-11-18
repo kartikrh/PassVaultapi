@@ -4099,7 +4099,7 @@ const updateCommentaryStatusService = async (request, fastify) => {
   }
   commentaryDetails.callPredictions = callPredictions;
   // Return the updated commentary details
-  if(commentaryDetails[index].isPredictMarket){
+  if(global.tblCommentaries[index].isPredictMarket){
   suspendMarketService({
     commentaryId: commentaryId,
   },request,fastify)
