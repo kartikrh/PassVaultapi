@@ -85,6 +85,7 @@ const configConstants = require("../utilities/configConstants");
 const { commentaryLogger, errorLogger } = require("../utilities/logger");
 const { setCompEventSnapSerice } = require("./competitionEventSnap");
 const { setTeamPointService } = require("./tournamentTeamPoints");
+const { setPlayerHistoryService } = require("./playerHistory");
 // const { handleSitemapUpdate } = require("../utilities/SEOIndexing")
 
 
@@ -4098,20 +4099,20 @@ const updateCommentaryStatusService = async (request, fastify) => {
   }
   commentaryDetails.callPredictions = callPredictions;
   // Return the updated commentary details
-  // if(commentaryDetails[index].isPredictMarket){
-  // suspendMarketService({
-  //   commentaryId: commentaryId,
-  // },request,fastify)
-  // .catch((err) => {
-  //   console.log("suspendMarketService console", err);
-  //   errorLogger(
-  //     fastify,
-  //     err.message,
-  //     "ERROR --> services/commentary.js/updateCommentaryStatusService - suspendMarketService",
-  //     request
-  //   );
-  // });
-  // }
+  if(commentaryDetails[index].isPredictMarket){
+  suspendMarketService({
+    commentaryId: commentaryId,
+  },request,fastify)
+  .catch((err) => {
+    console.log("suspendMarketService console", err);
+    errorLogger(
+      fastify,
+      err.message,
+      "ERROR --> services/commentary.js/updateCommentaryStatusService - suspendMarketService",
+      request
+    );
+  });
+  }
   return {
     name: "commentaryDetails",
     value: commentaryDetails,
@@ -8054,7 +8055,6 @@ const activeInactiveCommentaryService = async (request, fastify) => {
   return "Commentary Updated successfully";
 };
 const closeCommentaryService = async (request, fastify) => {
-  
   await closeCommentaryQuery(request.body, fastify, request);
   let _resFromPredictAPI;
   let callPredictions = [];
@@ -8174,6 +8174,19 @@ const closeCommentaryService = async (request, fastify) => {
       );
     });
   }
+  setPlayerHistoryService({
+    commentaryId : request.body.commentaryId
+  },request, fastify)
+  .catch
+  ((err) => {
+    console.log("setPlayerHistoryService console", err);
+    errorLogger(
+      fastify,
+      err.message,
+      "ERROR --> services/commentary.js/closeCommentaryService - setPlayerHistoryService",
+      request
+    );
+  });
   //return `Commentary(s) closed successfully`;
   return {
     message: "Commentary(s) closed successfully",
