@@ -3691,6 +3691,25 @@ const Score = {
       },
     },
   },
+  commentaryConsoleFe: {
+    schema: {
+      tags: ["commentaryConsoleFe"],
+      description: "save commentaryConsoleFe",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          over: { type: "integer" },
+          ballCount: { type: "integer" },
+          teamScore: { type: "string" },
+          _over: { type: "string" },
+          _ballCount: { type: "string" },
+          _teamScore: { type: "string" },
+        },
+        required: ["ballCount"],
+      },
+    },
+  },
 };
 const News = {
   getAll: {

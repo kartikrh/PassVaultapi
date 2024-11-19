@@ -3349,6 +3349,54 @@ const completedCommentaryStatusQuery = async (data, fastify, request) => {
   }
 };
 
+
+const insertCommentaryConsoleFeQuery = async (data, fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `with insert_data as (
+        insert into "tblCommnetryConsoleFe" 
+        ("over", "ballCount", "teamScore", "_over", "_ballCount", "_teamScore", "createby", "createdDate") 
+        values ($1, $2, $3, $4, $5, $6, $7, $8) 
+        returning *
+      )
+      select 
+        "over",
+        "ballCount",
+        "teamScore",
+        "_over",
+        "_ballCount",
+        "_teamScore",
+        "createby",
+        "createdDate"
+      from "insert_data"
+      `,
+      {
+        bind: [
+          data.over,
+          data.ballCount,
+          data.teamScore || null,
+          data._over || null,
+          data._ballCount || null,
+          data._teamScore || null,
+          data.createby,
+          new Date(),
+        ],
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+    return result[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentaryConsoleFe/insertCommentaryConsoleFeQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -3415,5 +3463,6 @@ module.exports = {
   updateLineRationQuery,
   updateLineRatioComQuery,
   completedCommentaryStatusQuery,
-  updateBoundaryOfPlayerQuery
+  updateBoundaryOfPlayerQuery,
+  insertCommentaryConsoleFeQuery
 };
