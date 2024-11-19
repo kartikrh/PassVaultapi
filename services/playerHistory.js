@@ -236,6 +236,12 @@ const setPlayerHistoryService = async (data,request, fastify) => {
     let playerArrball = [];
     let playerBowlHist = [];
     for (let p of comPlayer){
+      const matchTypeCommentaries = global.tblCommentaries.filter((elem) => 
+        elem.historyMatchTypeId === matchType.matchTypeId
+      ).map((item) => {
+        return item.commentaryId
+      });
+      const plyOutCount = global.tblCommentaryPlayers.filter((item) => item.playerId === p.playerId && matchTypeCommentaries.includes(item.commentaryId));
       const player = global.tblCommentaryPlayers.filter((item) => item.playerId === p.playerId && item.commentaryId === com );
       const comPlayerId = player.map((item) => item.commentaryPlayerId);
       const playerBattingHistory = global.tblPlayersBattingHistory.find((item) => item.playerId === p.playerId && item.matchTypeId === comdetail.historyMatchTypeId);
@@ -258,15 +264,18 @@ const setPlayerHistoryService = async (data,request, fastify) => {
       let ballCount = overs.reduce((acc, item) => acc + item.ballCount, 0);
       let wicket = overs.reduce((acc, item) => acc + item.totalWicket, 0);
       let ballRun = overs.reduce((acc, item) => acc + item.totalRun, 0);
-      let ballavg = wicket != 0 ? bowlRun / wicket : 0;
-      let bbi = 0;
-      let bbm = 0;
+      // let ballavg = wicket != 0 ? bowlRun / wicket : 0;
+      let ballavg = wicket != 0 ? ballRun / wicket : 0;
+      let bbi = ballRun != 0 ? `${ballRun}/${wicket}` : 0
+      let bbm = ballRun != 0 ? `${ballRun}/${wicket}` : 0;
       let eco = player[0].bowlerEconomy;
       let ballSr = player[0].batsmanStrikeRate;
       let wicket4 = overs.filter((item) => item.totalWicket == 4).length;
       let wicket5 = overs.filter((item) => item.totalWicket == 5).length;
       let wicket10 = overs.filter((item) => item.totalWicket >= 10).length;
-      let batAvg = 0
+      let batOutCount = plyOutCount.filter((item) => item.wicketType !== null).length;
+      let batAvg = batRun / batOutCount
+      // let batAvg = player[0].batsmanAverage
       if(!playerBattingHistory){
         phis = {
           battingHistoryId: 0,
@@ -286,7 +295,8 @@ const setPlayerHistoryService = async (data,request, fastify) => {
           countOf4 : batFour,
           countOf6 : batSix,
           catchCount : catchCount,
-          stumpCount : stumpCount
+          stumpCount : stumpCount,
+          outCount: batOutCount,
         }
 
       }
@@ -313,7 +323,8 @@ const setPlayerHistoryService = async (data,request, fastify) => {
           countOf4 : playerBattingHistory.countOf4 + batFour,
           countOf6 : playerBattingHistory.countOf6 + batSix,
           catchCount : playerBattingHistory.catchCount + catchCount,
-          stumpCount : playerBattingHistory.stumpCount + stumpCount
+          stumpCount : playerBattingHistory.stumpCount + stumpCount,
+          outCount: playerBattingHistory.outCount + batOutCount,
         }
       }
       if(!playeBallHis){
@@ -362,9 +373,12 @@ const setPlayerHistoryService = async (data,request, fastify) => {
       }
       dataToUpdate.push(phis);
       playerBowlHist.push(pbHis);
+      let batsmanOutCount = player.filter((item) => item.wicketType !== null).length;
       cPlayer = {
         commentaryId: com,
         ...phis,
+        outCount: batsmanOutCount,
+        average: batsmanOutCount !== 0 ? batRun / batsmanOutCount : 0,
         playerId: player[0].playerId,
         commentaryPlayerId : player[0].commentaryPlayerId,
         createdBy : request.userTokenInfo.WrUserId
@@ -424,7 +438,8 @@ const setPlayerHistoryService = async (data,request, fastify) => {
     })
 
     await fastify.db.query(`CALL proc_set_complayerballhist($1)`, {
-      bind: [playerArr],
+      // bind: [playerArr],
+      bind: [playerArrball],
       type: fastify.db.QueryTypes.SELECT,
     });
     await createTeamPointLogQuery(
