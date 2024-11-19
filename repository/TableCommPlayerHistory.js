@@ -27,7 +27,8 @@ const getAllCommentaryBattingHistory = async (fastify, whereCondition = null) =>
                 tcpbh."wrCatchCount" as "catchCount",
                 tcpbh."wrStumpCount" as "stumpCount",
                 tcpbh."wrCreatedBy" as "createdBy",
-                tcpbh."wrCreatedAt" as "createdAt"
+                tcpbh."wrCreatedAt" as "createdAt",
+                tcpbh."wrOutCount" as "outCount"
             FROM "tblCommPlayerBatHist" AS tcpbh
             LEFT JOIN "tblCommentaries" AS tc ON tc."wrCommentaryId" = tcpbh."wrCommentaryId" AND tc."wrIsDelete" = false
             LEFT JOIN "tblEvents" AS te ON te."wrEventId" = tc."wrEventId" AND te."wrIsDeleted" = false
@@ -118,7 +119,8 @@ const getCommentaryPlayerBattingHistory = async (playerId, fastify) => {
                   tcpbh."wrCatchCount" as "catchCount",
                   tcpbh."wrStumpCount" as "stumpCount",
                   tcpbh."wrCreatedBy" as "createdBy",
-                  tcpbh."wrCreatedAt" as "createdAt"
+                  tcpbh."wrCreatedAt" as "createdAt",
+                  tcpbh."wrOutCount" as "outCount"
               FROM "tblMatchTypes" AS tmt
               LEFT JOIN 
               "tblCommPlayerBatHist" AS tcpbh ON tcpbh."wrMatchTypeId" = tmt."wrMatchTypeId"
@@ -211,8 +213,9 @@ const updateCommPlayerBattingHistoryQuery = async(data, fastify, request) => {
           "wr4Count" = $13,
           "wr6Count" = $14,
           "wrCatchCount" = $15,
-          "wrStumpCount" = $16
-        WHERE "wrId" = $17
+          "wrStumpCount" = $16,
+          "wrOutCount" = $17
+        WHERE "wrId" = $18
         `,
       {
         bind: [
@@ -232,6 +235,7 @@ const updateCommPlayerBattingHistoryQuery = async(data, fastify, request) => {
           data.countOf6,
           data.catchCount,
           data.stumpCount,
+          data.outCount,
           data.id,
         ],
         type: fastify.db.QueryTypes.SELECT,

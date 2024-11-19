@@ -23,7 +23,8 @@ const getAllBattingHistory = async (fastify) => {
                 "wrCatchCount" as "catchCount",
                 "wrStumpCount" as "stumpCount",
                 "wrCreatedBy" as "createdBy",
-                "wrCreatedAt" as "createdAt"
+                "wrCreatedAt" as "createdAt",
+                "wrOutCount" as "outCount"
             FROM "tblPlayerBattingHistory";`,
       { type: fastify.db.QueryTypes.SELECT }
     );
@@ -98,7 +99,8 @@ const getAllPlayersBattingHistory = async (playerId, fastify) => {
                   tpbh."wrCatchCount" as "catchCount",
                   tpbh."wrStumpCount" as "stumpCount",
                   tpbh."wrCreatedBy" as "createdBy",
-                  tpbh."wrCreatedAt" as "createdAt"
+                  tpbh."wrCreatedAt" as "createdAt",
+                  tpbh."wrOutCount" as "outCount"
               FROM "tblMatchTypes" AS tmt
               LEFT JOIN 
               "tblPlayerBattingHistory" AS tpbh ON tpbh."wrMatchTypeId" = tmt."wrMatchTypeId"
@@ -167,7 +169,7 @@ const getAllPlayerBowlingHistory = async (playerId, fastify) => {
 const exportPlayerHistoryQuery = async (data, fastify) => {
   try {
     let query = `
-      SELECT 
+      SELECT DISTINCT
               tp."wrPlayerId" AS "playerId",
               tmt."wrMatchTypeId" AS "matchTypeId",
               tp."wrPlayerName" AS "playerName",
@@ -189,6 +191,7 @@ const exportPlayerHistoryQuery = async (data, fastify) => {
               tpbh."wr6Count" as "countOf6",
               tpbh."wrCatchCount" as "catchCount",
               tpbh."wrStumpCount" as "stumpCount",
+              tpbh."wrOutCount" as "outCount",
               tph."wrMatchCount" as "bowlerPlayedMatchCount",
               tph."wrInningsCount" as "bowlerPlayedInningsCount",
               tph."wrBallCount" as "ballCount",
