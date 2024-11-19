@@ -3699,8 +3699,11 @@ const Score = {
       body: {
         type: "object",
         properties: {
+          commentaryId: { type: "integer" },
           over: { type: "integer" },
           ballCount: { type: "integer" },
+          temporaryState: { type: "string" },
+          currentState: { type: "string" },
           teamScore: { type: "string" },
           _over: { type: "string" },
           _ballCount: { type: "string" },
