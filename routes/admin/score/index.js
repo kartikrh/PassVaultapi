@@ -21,6 +21,7 @@ const {
   getActiveCommenrty,
   getShortCommerty,
   getAllCommentariesData,
+  insertCommentaryConsoleFe,
 } = require("../../../controller/users/admin/commentary/commentary");
 const { getAllEventMarketsAndRunners } = require('../../../controller/users/admin/eventMarket');
 const { getAllMenuItems } = require("../../../controller/users/admin/menuItem");
@@ -284,4 +285,12 @@ module.exports = async (fastify, opts) => {
   fastify.post("/getCompetitions", {
     handler: (request, reply) => getAllCompetition(request, reply, fastify)
   });
+
+  fastify.post("/commentaryConsoleFe" , {
+    schema: Score.commentaryConsoleFe.schema,
+        preHandler: [
+        (request, reply) => authorize(request, reply, fastify)
+        ],
+    handler: (request, reply) => insertCommentaryConsoleFe(request, reply, fastify)
+  })
 };

@@ -61,6 +61,7 @@ const {
   updateLineRationQuery,
   updateLineRatioComQuery,
   completedCommentaryStatusQuery,
+  insertCommentaryConsoleFeQuery
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -8922,6 +8923,16 @@ const completedCommentaryService = async (request, fastify) => {
 
   return `Commentary status updated successfully`;
 };
+
+
+const insertCommentaryConsoleFeService = async (request, fastify) => {
+  const result = await insertCommentaryConsoleFeQuery(
+    { ...request.body, createby: request.userTokenInfo.WrUserId },
+    fastify,
+    request
+  );
+  return true;
+};
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -8982,4 +8993,5 @@ module.exports = {
   updateLineRationService,
   deleteBallFromMemorynService,
   completedCommentaryService,
+  insertCommentaryConsoleFeService
 };
