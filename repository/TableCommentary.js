@@ -3361,9 +3361,6 @@ const insertCommentaryConsoleFeQuery = async (data, fastify, request) => {
          "temporaryState",
          "commentaryId", 
          "teamScore", 
-         "_over",
-         "_ballCount",
-         "_teamScore",
          "createby", 
          "createdDate") 
         values ($1, 
@@ -3371,16 +3368,13 @@ const insertCommentaryConsoleFeQuery = async (data, fastify, request) => {
          $3, 
          $4,
           $5,
-           $6, $7, $8,$9,$10,$11) 
+           $6, $7, $8) 
         returning *
       )
       select 
         "over",
         "ballCount",
         "teamScore",
-        "_over",
-        "_ballCount",
-        "_teamScore",
         "createby",
         "createdDate"
       from "insert_data"
@@ -3393,9 +3387,6 @@ const insertCommentaryConsoleFeQuery = async (data, fastify, request) => {
           data.temporaryState || null,
           data.commentaryId || null,
           data.teamScore || null,
-          data._over || null,
-          data._ballCount || null,
-          data._teamScore || null,
           data.createby,
           new Date(),
         ],
