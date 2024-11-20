@@ -2717,8 +2717,8 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
               strike_team_id: strikeTeam.teamId,
               wicket: _wkt === true ? 1 : 0,
               total_wicket: strikeTeam.teamWicket,
-              ball_by_ball_id: updatedData.commentaryBallByBallDetails.commentaryBallByBallId
-              ? parseInt(updatedData.commentaryBallByBallDetails.commentaryBallByBallId)
+              ball_by_ball_id: deleteCommentaryBallByBallId
+              ? parseInt(deleteCommentaryBallByBallId)
               : null
             },
             "/api/v1/undoscore",
