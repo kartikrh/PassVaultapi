@@ -274,7 +274,7 @@ const setPlayerHistoryService = async (data,request, fastify) => {
       let wicket5 = overs.filter((item) => item.totalWicket == 5).length;
       let wicket10 = overs.filter((item) => item.totalWicket >= 10).length;
       let batOutCount = plyOutCount.filter((item) => item.wicketType !== null).length;
-      let batAvg = batRun / batOutCount
+      let batAvg = batOutCount !== 0 ? batRun / batOutCount : batRun
       // let batAvg = player[0].batsmanAverage
       if(!playerBattingHistory){
         phis = {
@@ -378,7 +378,7 @@ const setPlayerHistoryService = async (data,request, fastify) => {
         commentaryId: com,
         ...phis,
         outCount: batsmanOutCount,
-        average: batsmanOutCount !== 0 ? batRun / batsmanOutCount : 0,
+        average: batsmanOutCount !== 0 ? batRun / batsmanOutCount : batRun,
         playerId: player[0].playerId,
         commentaryPlayerId : player[0].commentaryPlayerId,
         createdBy : request.userTokenInfo.WrUserId
