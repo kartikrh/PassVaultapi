@@ -7,13 +7,15 @@ const createTeamPointLogQuery = async (data, request , fastify) =>{
                 "wrTeamId",
                 "wrCompetitionId",
                 "wrCommentaryId",
-                "wrCreatedBy"
+                "wrCreatedBy",
+                "wrModule"
             )
             VALUES(
                 $1,
                 $2,
                 $3,
-                $4
+                $4,
+                $5
             )
             RETURNING "wrId" as "id"
         `
@@ -22,10 +24,11 @@ const createTeamPointLogQuery = async (data, request , fastify) =>{
             {
                 type : fastify.db.QueryTypes.SELECT,
                 bind : [
-                    data.teamId,
-                    data.competitionId,
+                    data.teamId || null,
+                    data.competitionId || null, 
                     data.commentaryId,
-                    request.userTokenInfo.WrUserId
+                    request.userTokenInfo.WrUserId,
+                    data.module || null
                 ]
             }
         )
@@ -51,10 +54,11 @@ const getLogByComIdQuery = async (data, request, fastify) => {
                 "wrCreatedBy" as "createdBy",
                 "wrCreatedAt" as "createdAt"
             FROM "tblTeamPointLogs"
-            WHERE "wrCommentaryId" = $1`,
+            WHERE "wrCommentaryId" = $1
+            AND "wrModule" = $2`,
             {
                 type: fastify.db.QueryTypes.SELECT,
-                bind: [data.commentaryId]
+                bind: [data.commentaryId, data.module]
             }
         )
         return result;

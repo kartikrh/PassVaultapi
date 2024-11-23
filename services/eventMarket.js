@@ -1648,9 +1648,19 @@ const getDetailsByCIdV1Service = async (request, fastify) => {
     }
   }
 
-  const marketTemplate = global.tblMarketTemplate.filter(
-    (item) => item.matchTypeID === commentary.matchTypeId  && item.isShowInAdvanceMarket === true && item.isActive === true
-  );
+  let marketTemplate;
+  if(commentary.commentaryStatus == commentaryStatus.OPEN){
+    marketTemplate = global.tblMarketTemplate.filter(
+      (item) => item.matchTypeID === commentary.matchTypeId  && item.isShowInAdvanceMarket === true && item.isActive === true
+    );
+  }
+  else {
+    marketTemplate = global.tblMarketTemplate.filter(
+      (item) => item.matchTypeID === commentary.matchTypeId && item.isActive === true && item.isShowInAdvanceMarket === true
+      && item.isPerEvent === false
+    );
+  }
+
 
   for (temp of marketTemplate) {
     if(temp.isPredefineRunnerValue == true){
@@ -1934,6 +1944,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
   const playerMarket = [];
   const boundaryPlayer = [];
   const updatedOvers = [];
+  const updatePlayerLine = [];
   // const response = [];
   for (let item of updatedData) {
     let index = global.tblEventMarketsV1.findIndex(
@@ -1985,6 +1996,20 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
           back_size : item.runners[0].backSize,
           rate_diff : item.rateDiff
         })
+      }
+      else {
+        updatePlayerLine.push({
+          commentary_player_id : item.playerId,
+          market_type_category_id : item.marketTypeCategoryId,
+          line : item.runners[0].line,
+          is_allow : item.isAllow,
+          is_active : item.isActive,
+          is_senddata : item.isSendData,
+          data : item.data,
+          lay_size : item.runners[0].laySize,
+          back_size : item.runners[0].backSize,
+          rate_diff : item.rateDiff
+        });
       }
       marketDataLogger(
         {
@@ -2073,6 +2098,31 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
       callPrediction.endPoint = '/api/v1/updateline';
     }
     callPredictions.push(callPrediction);
+    if(updatePlayerLine.length > 0){
+      _resFromPredictAPI = await callPredictorMarket(
+        {
+          commentary_id: commentary.commentaryId,
+          match_type_id: commentary.matchTypeId,
+          strike_team_id : teamOnStrike.teamId,
+          players: updatePlayerLine
+        },
+        "/api/v1/updateplayerline",
+        fastify,
+        request
+      );
+      let callPrediction = {}
+      // Check for error_msg in the response
+      if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
+        callPrediction.predictioncallSuccess = false;
+        callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
+        callPrediction.endPoint = '/api/v1/updateplayerline';
+      } else {
+        callPrediction.predictioncallSuccess = true;
+        callPrediction.predictionMessage = 'Prediction call successful';
+        callPrediction.endPoint = '/api/v1/updateplayerline';
+      }
+      callPredictions.push(callPrediction);
+    }
   }
   if(commentary.isPredictMarket && request.body.action && (request.body.action.toUpperCase() === "SUSPEND" || request.body.action.toUpperCase() === "PUBLISH"))
     {

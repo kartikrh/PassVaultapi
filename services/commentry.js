@@ -61,6 +61,7 @@ const {
   updateLineRationQuery,
   updateLineRatioComQuery,
   completedCommentaryStatusQuery,
+  insertCommentaryConsoleFeQuery
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -85,6 +86,7 @@ const configConstants = require("../utilities/configConstants");
 const { commentaryLogger, errorLogger } = require("../utilities/logger");
 const { setCompEventSnapSerice } = require("./competitionEventSnap");
 const { setTeamPointService } = require("./tournamentTeamPoints");
+const { setPlayerHistoryService } = require("./playerHistory");
 // const { handleSitemapUpdate } = require("../utilities/SEOIndexing")
 
 
@@ -123,8 +125,8 @@ const allCommentaryService = async (request, fastify) => {
       );
     });
   }
-  // desc by eventDate
-  result.sort((a, b) => new Date(b.eventDate) - new Date(a.eventDate));
+    // Sort in ascending order by eventDate
+  result.sort((a, b) => new Date(a.eventDate) - new Date(b.eventDate));
   return result;
 };
 
@@ -2715,6 +2717,9 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
               strike_team_id: strikeTeam.teamId,
               wicket: _wkt === true ? 1 : 0,
               total_wicket: strikeTeam.teamWicket,
+              ball_by_ball_id: deleteCommentaryBallByBallId
+              ? parseInt(deleteCommentaryBallByBallId)
+              : null
             },
             "/api/v1/undoscore",
             fastify,
@@ -2889,6 +2894,9 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
               strike_team_id: strikeTeam.teamId,
               wicket: _wkt === true ? 1 : 0,
               total_wicket: strikeTeam.teamWicket,
+              ball_by_ball_id: updatedData.commentaryBallByBallDetails.commentaryBallByBallId
+              ? parseInt(updatedData.commentaryBallByBallDetails.commentaryBallByBallId)
+              : null
             },
             "/api/v1/predictscore",
             fastify,
@@ -4097,21 +4105,21 @@ const updateCommentaryStatusService = async (request, fastify) => {
     // });
   }
   commentaryDetails.callPredictions = callPredictions;
-  // Return the updated commentary details
-  // if(commentaryDetails[index].isPredictMarket){
-  // suspendMarketService({
-  //   commentaryId: commentaryId,
-  // },request,fastify)
-  // .catch((err) => {
-  //   console.log("suspendMarketService console", err);
-  //   errorLogger(
-  //     fastify,
-  //     err.message,
-  //     "ERROR --> services/commentary.js/updateCommentaryStatusService - suspendMarketService",
-  //     request
-  //   );
-  // });
-  // }
+  // Return the updated commentary detailss
+  if(global.tblCommentaries[index].isPredictMarket){
+  suspendMarketService({
+    commentaryId: commentaryId,
+  },request,fastify)
+  .catch((err) => {
+    console.log("suspendMarketService console", err);
+    errorLogger(
+      fastify,
+      err.message,
+      "ERROR --> services/commentary.js/updateCommentaryStatusService - suspendMarketService",
+      request
+    );
+  });
+  }
   return {
     name: "commentaryDetails",
     value: commentaryDetails,
@@ -7099,6 +7107,7 @@ const getCommenrtySquadDetailsService = async (request, fastify) => {
     // mtyp: commentary.matchType || "",
     // com: competition?.competition || "",
     hmtyp: commentary.historyMatchType || "",
+    ety: commentary.eventType || "",
     en: commentary.eventName || "",
     ed: convertDate(commentary.eventDate, "DD/MM/YYYY") || "",
     et: convertDate(commentary.eventDate, "hh:mm:ss") || "",
@@ -7202,6 +7211,7 @@ const getPartnershipListService = async (request, fastify) => {
     // mtyp: commentary.matchType || "",
     // com: competition?.competition || "",
     hmtyp: commentary.historyMatchType || "",
+    ety: commentary.eventType || "",
     en: commentary.eventName || "",
     ed: convertDate(commentary.eventDate, "DD/MM/YYYY") || "",
     et: convertDate(commentary.eventDate, "hh:mm:ss") || "",
@@ -8054,7 +8064,6 @@ const activeInactiveCommentaryService = async (request, fastify) => {
   return "Commentary Updated successfully";
 };
 const closeCommentaryService = async (request, fastify) => {
-  
   await closeCommentaryQuery(request.body, fastify, request);
   let _resFromPredictAPI;
   let callPredictions = [];
@@ -8174,6 +8183,19 @@ const closeCommentaryService = async (request, fastify) => {
       );
     });
   }
+  setPlayerHistoryService({
+    commentaryId : request.body.commentaryId
+  },request, fastify)
+  .catch
+  ((err) => {
+    console.log("setPlayerHistoryService console", err);
+    errorLogger(
+      fastify,
+      err.message,
+      "ERROR --> services/commentary.js/closeCommentaryService - setPlayerHistoryService",
+      request
+    );
+  });
   //return `Commentary(s) closed successfully`;
   return {
     message: "Commentary(s) closed successfully",
@@ -8907,6 +8929,16 @@ const completedCommentaryService = async (request, fastify) => {
 
   return `Commentary status updated successfully`;
 };
+
+
+const insertCommentaryConsoleFeService = async (request, fastify) => {
+  const result = await insertCommentaryConsoleFeQuery(
+    { ...request.body, createby: request.userTokenInfo.WrUserId },
+    fastify,
+    request
+  );
+  return true;
+};
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -8967,4 +8999,5 @@ module.exports = {
   updateLineRationService,
   deleteBallFromMemorynService,
   completedCommentaryService,
+  insertCommentaryConsoleFeService
 };

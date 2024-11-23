@@ -35,6 +35,11 @@ module.exports = (sequelize) => {
             type: DataTypes.INTEGER,
             allowNull: true,
         },
+        wrModule : {
+            type: DataTypes.STRING,
+            allowNull: true,
+            defaultValue : true
+        }
     },
     {
       timestamps: false,

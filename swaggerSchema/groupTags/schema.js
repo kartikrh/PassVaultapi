@@ -3691,6 +3691,25 @@ const Score = {
       },
     },
   },
+  commentaryConsoleFe: {
+    schema: {
+      tags: ["commentaryConsoleFe"],
+      description: "save commentaryConsoleFe",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+          over: { type: "integer" },
+          ballCount: { type: "integer" },
+          temporaryState: { type: "string" },
+          currentState: { type: "string" },
+          teamScore: { type: "string" },
+        },
+        required: ["ballCount"],
+      },
+    },
+  },
 };
 const News = {
   getAll: {
@@ -6752,6 +6771,7 @@ const PlayerHistory = {
             strikeRate: { type: "number" },
             catchCount: { type: "integer" },
             stumpCount: { type: "integer" },
+            outCount: { type: "integer" },
           },
           required: ["matchTypeId", "playerId"],
         },
@@ -6887,6 +6907,7 @@ const CommentaryPlayerHistory = {
               countOf6: { type: "integer" },
               catchCount: { type: "integer" },
               stumpCount: { type: "integer" },
+              outCount: { type: "integer" },
             },
             required: ["id"],
           },

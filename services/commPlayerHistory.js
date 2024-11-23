@@ -59,6 +59,7 @@ const updateCommPlayerBatHistoryService = async (request, fastify) => {
       countOf6: batHist.countOf6 !== undefined ? parseInt(batHist.countOf6) : existingData.countOf6,
       catchCount: batHist.catchCount !== undefined ? parseInt(batHist.catchCount) : existingData.catchCount,
       stumpCount: batHist.stumpCount !== undefined ? parseInt(batHist.stumpCount) : existingData.stumpCount,
+      outCount: batHist.outCount !== undefined ? parseInt(batHist.outCount) : existingData.outCount,
     }
     await updateCommPlayerBattingHistoryQuery(updateData, fastify, request);
 
