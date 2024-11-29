@@ -613,6 +613,10 @@ const LineType = {
   BackLay:	1,
   Lay: 2,
 }
+const VideoLibraryType = {
+  OUR:	1,
+  YOUTUBE: 2,
+}
 const MarketTypeId = {
   "Market": 1,
   "Bookmarkers" : 3,
@@ -669,5 +673,6 @@ module.exports = {
   commentaryStatus,
   LineType,
   MarketTypeId,
-  newsType
+  newsType,
+  VideoLibraryType,
 };
