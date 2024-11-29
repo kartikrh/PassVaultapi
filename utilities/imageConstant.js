@@ -90,6 +90,13 @@ const ImgModuleConfig = {
     height: 0,
     width: 0,
   },
+  LibraryImage: {
+    type: "photoLibrary",
+    formate: ".jpg,.png,.jpeg,.avif,.webp",
+    size: 0,
+    height: 0,
+    width: 0,
+  },
 };
 
 module.exports = {
