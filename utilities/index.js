@@ -591,6 +591,10 @@ const templateType = {
   Verify : 2,
   NewsLetter : 3
 }
+const newsType = {
+  news : 1,
+  article : 2,
+}
 const getIpAddress = (req) => {
   const ip = req.ip || req.headers['x-forwarded-for'] || request.raw.connection.remoteAddress;
   return ip;
@@ -664,5 +668,6 @@ module.exports = {
   thirdPartyApiType,
   commentaryStatus,
   LineType,
-  MarketTypeId
+  MarketTypeId,
+  newsType
 };
