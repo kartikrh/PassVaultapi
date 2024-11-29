@@ -604,7 +604,7 @@ const activeInactiveCommentary = async (request, reply, fastify) => {
 };
 const closeCommentary = async (request, reply, fastify) => {
   try {
-    // console.log("closeCommentary");
+    /// console.log("closeCommentary");
     const result = await closeCommentaryService(request, fastify);
     reply.status(200).send(success(result, 200));
   } catch (err) {
