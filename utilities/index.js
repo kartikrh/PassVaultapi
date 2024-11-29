@@ -400,7 +400,7 @@ const fetchDataForClient = async (fastify, reply) => {
 const callDataProvider = async (data, fastify) =>{
   try {
     // return true;
-    // find the service which have the type of dataProviderAPI
+    /// find the service which have the type of dataProviderAPI
     let services = global.tblAPIs.filter((item) => item.type == data.serviceType && item.isActive == true);
     for (ser of services){
       // find the endpoint for the service and module
@@ -591,6 +591,10 @@ const templateType = {
   Verify : 2,
   NewsLetter : 3
 }
+const newsType = {
+  news : 1,
+  article : 2,
+}
 const getIpAddress = (req) => {
   const ip = req.ip || req.headers['x-forwarded-for'] || request.raw.connection.remoteAddress;
   return ip;
@@ -664,5 +668,6 @@ module.exports = {
   thirdPartyApiType,
   commentaryStatus,
   LineType,
-  MarketTypeId
+  MarketTypeId,
+  newsType
 };
