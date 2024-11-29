@@ -1,3 +1,4 @@
+const { getPlayerBatHistQuery, getPlayeBallHistQuery } = require("../repository/TableCommPlayerHistory");
 const { 
   getAllPlayerBowlingHistory, 
   getAllPlayersBattingHistory,
@@ -457,32 +458,31 @@ const setPlayerHistoryService = async (data,request, fastify) => {
   return true;
 }
 const getPlayerHistDataService = async (request, fastify) => {
-  let result = global.tblCommPlayerBatHist.filter((item) => item.playerId === request.body.playerId
-  && item.matchTypeId === request.body.matchTypeId)
-  .map((item) => {
-    let event = global.tblCommentaries.find((elem) => elem.commentaryId === item.commentaryId);
-    return {
-      ...item,
-      matchTypeName: global.tblMatchTypes.find((elem) => elem.matchTypeId === item.matchTypeId).matchType,
-      eventName : event.eventName,
-      eventDate : event.eventDate,
-    }
-  });
+  const result = await getPlayerBatHistQuery(request.body,request,fastify)
+  // .map((item) => {
+  //   const event = global.tblCommentaries.find((elem) => elem.commentaryId === item.commentaryId);
+  //   return {
+  //     ...item,
+  //     matchTypeName: global.tblMatchTypes.find((elem) => elem.matchTypeId === item.matchTypeId).matchType,
+  //     eventName : event.eventName,
+  //     eventDate : event.eventDate,
+  //   }
+  // });
 
   return result;
 }
 const getPlayerBallHistDataService = async (request, fastify) => {
-  let result = global.tblCommPlayerBowlHist.filter((item) => item.playerId === request.body.playerId
-  && item.matchTypeId === request.body.matchTypeId)
-  .map((item) => {
-    let event = global.tblCommentaries.find((elem) => elem.commentaryId === item.commentaryId);
-    return {
-      ...item,
-      matchTypeName: global.tblMatchTypes.find((elem) => elem.matchTypeId === item.matchTypeId).matchType,
-      eventName : event.eventName,
-      eventDate : event.eventDate,
-    }
-  });
+  let result = await getPlayeBallHistQuery(request.body,request,fastify)
+  // && item.matchTypeId === request.body.matchTypeId)
+  // .map((item) => {
+  //   let event = global.tblCommentaries.find((elem) => elem.commentaryId === item.commentaryId);
+  //   return {
+  //     ...item,
+  //     matchTypeName: global.tblMatchTypes.find((elem) => elem.matchTypeId === item.matchTypeId).matchType,
+  //     eventName : event.eventName,
+  //     eventDate : event.eventDate,
+  //   }
+  // });
 
   return result;
 
