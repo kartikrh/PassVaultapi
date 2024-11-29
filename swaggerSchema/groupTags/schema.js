@@ -7019,6 +7019,155 @@ const CommentaryPlayerHistory = {
     },
   },
 };
+const PhotoLibrary = {
+  getAll: {
+    schema: {
+      tags: ["PhotoLibrary"],
+      description: "get all photoLibrary data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {},
+        required: [],
+      },
+    },
+  },
+  byId: {
+    schema: {
+      tags: ["PhotoLibrary"],
+      description: "get photo library by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          photoLibraryId: { type: "integer" },
+        },
+        required: ["photoLibraryId"],
+      },
+    },
+  },
+  savePhotoLibrary: {
+    schema: {
+      tags: ["PhotoLibrary"],
+      description: "save photo library data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          photoLibraryId: { type: "integer" },
+          title: { type: "string" },
+          SEO: { type: "string" },
+          description: { type: "string" },
+          isPermanent: { type: "boolean" },
+          startDate: { type: "string" },
+          endDate: { type: "string" },
+        },
+        required: ["photoLibraryId", "title"],
+      },
+    },
+  },
+  deletePhotoLibrary: {
+    schema: {
+      tags: ["PhotoLibrary"],
+      description: "delete commetary player batting history",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          photoLibraryId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["photoLibraryId"],
+      },
+    },
+  },
+};
+const LibraryImages = {
+  getAll: {
+    schema: {
+      tags: ["LibraryImages"],
+      description: "get all library images data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          photoLibraryId: { type: "integer" },
+        },
+        required: ["photoLibraryId"],
+      },
+    },
+  },
+  byId: {
+    schema: {
+      tags: ["LibraryImages"],
+      description: "get library images by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+        },
+        required: ["id"],
+      },
+    },
+  },
+  saveLibraryImage: {
+    schema: {
+      tags: ["LibraryImages"],
+      description: "save library image data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          photoLibraryId: { type: "integer" },
+          title: { type: "string" },
+          isDefault: { type: "boolean" },
+          id: { type: "number" },
+        },
+        required: ["photoLibraryId", "id"],
+      },
+    },
+  },
+  deleteLibraryImage: {
+    schema: {
+      tags: ["LibraryImages"],
+      description: "delete library Image",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["id"],
+      },
+    },
+  },
+  updateDisplayOrder: {
+    schema: {
+      tags: ["LibraryImages"],
+      description: "update display order",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "integer" },
+            displayOrder: { type: "integer" },
+          },
+        },
+        minItems: 1,
+      },
+    },
+  },
+};
 module.exports = {
   Auth,
   Tabs,
@@ -7075,5 +7224,7 @@ module.exports = {
   Groups,
   TournamentTeamPoints,
   PlayerHistory,
-  CommentaryPlayerHistory
+  CommentaryPlayerHistory,
+  PhotoLibrary,
+  LibraryImages,
 };
