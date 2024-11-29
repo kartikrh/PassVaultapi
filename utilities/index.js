@@ -400,7 +400,7 @@ const fetchDataForClient = async (fastify, reply) => {
 const callDataProvider = async (data, fastify) =>{
   try {
     // return true;
-    // find the service which have the type of dataProviderAPI
+    /// find the service which have the type of dataProviderAPI
     let services = global.tblAPIs.filter((item) => item.type == data.serviceType && item.isActive == true);
     for (ser of services){
       // find the endpoint for the service and module
