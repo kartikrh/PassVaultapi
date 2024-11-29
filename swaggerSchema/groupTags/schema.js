@@ -1324,6 +1324,20 @@ const Teams = {
       },
     },
   },
+  getTeamPoint : {
+    schema: {
+      tags: ["Teams"],
+      security: [{ bearerAuth: [] }],
+      description: "get team point",
+      body: {
+        type: "object",
+        properties: {
+          teamId : { type: "integer" },
+        },
+        required: ["teamId"],
+      },
+    },
+  },
   eventTypeList: {
     schema: {
       tags: ["Teams"],
@@ -6742,6 +6756,21 @@ const PlayerHistory = {
         required: ["playerId"],
       },
     },
+  },
+  getPlayerHist:{
+    schema : {
+      tags: ["PlayerHistory"],
+      description: "save Batting history",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          playerId: { type: "integer" },
+          matchTypeId: { type: "integer" },
+        },
+        required: ["playerId", "matchTypeId"],
+      },
+    }
   },
   saveBattingHistory: {
     schema: {
