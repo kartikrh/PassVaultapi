@@ -7069,7 +7069,7 @@ const PhotoLibrary = {
   deletePhotoLibrary: {
     schema: {
       tags: ["PhotoLibrary"],
-      description: "delete commetary player batting history",
+      description: "delete photo library data",
       security: [{ bearerAuth: [] }],
       body: {
         type: "object",
@@ -7168,6 +7168,76 @@ const LibraryImages = {
     },
   },
 };
+const VideoLibrary = {
+  getAll: {
+    schema: {
+      tags: ["VideoLibrary"],
+      description: "get all video library data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {},
+        required: [],
+      },
+    },
+  },
+  byId: {
+    schema: {
+      tags: ["VideoLibrary"],
+      description: "get video library by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+        },
+        required: ["id"],
+      },
+    },
+  },
+  saveVideoLibrary: {
+    schema: {
+      tags: ["VideoLibrary"],
+      description: "save video library data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          title: { type: "string" },
+          isPermanent: { type: "boolean" },
+          from: { type: "string" },
+          to: { type: "string" },
+          tag: { type: "string" },
+          SEO: { type: "string" },
+          description: { type: "string" },
+          videoURL: { type: "string"},
+          type: { type: "integer"},
+          commentaryId: { type: "integer"},
+        },
+        required: ["id"],
+      },
+    },
+  },
+  deleteVideoLibrary: {
+    schema: {
+      tags: ["VideoLibrary"],
+      description: "delete video library data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["id"],
+      },
+    },
+  },
+};
 module.exports = {
   Auth,
   Tabs,
@@ -7227,4 +7297,5 @@ module.exports = {
   CommentaryPlayerHistory,
   PhotoLibrary,
   LibraryImages,
+  VideoLibrary,
 };
