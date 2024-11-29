@@ -130,7 +130,6 @@ const editLibraryImageService = async (request, fastify, data) => {
   if (index != -1) {
     global.tblLibraryImages[index] = modifiedData[0];
   }
-console.log("modifiedData", modifiedData)
   return modifiedData[0];
 };
 
