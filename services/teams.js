@@ -421,10 +421,23 @@ const deleteTeamService = async (request, fastify) => {
   return "Team(s) deleted successfully";
 };
 
+const getTeamPointService = async (request, fastify) => {
+  const { teamId } = request.body;
+  const result = global.tblTournamentTeamPoint.filter(
+    (item) => item.teamId === teamId
+  ).map((t) =>{
+    return {
+      competitionName: global.tblCompetitions.find((c) => c.competitionId === t.competitionId).competition,
+      ...t
+    }
+  })
+  return result;
+}
 module.exports = {
   allTeamsService,
   teamByIdService,
   saveTeamService,
   deleteTeamService,
   allteamByEventTypeIdService,
+  getTeamPointService
 };
