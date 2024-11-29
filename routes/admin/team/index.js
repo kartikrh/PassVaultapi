@@ -10,6 +10,7 @@ const {
   getTeamById,
   saveTeam,
   deleteTeam,
+  getTeamPoint,
 } = require("../../../controller/users/admin/teamsAndPlayer/teams");
 const { Teams, EventType, Player } = require("../../../swaggerSchema/groupTags/schema");
 
@@ -100,4 +101,17 @@ module.exports = async (fastify, opts) => {
     ],
     handler: (request, reply) => deleteTeam(request, reply, fastify),
   });
+  
+  fastify.post("/getTeamPoint", {
+    schema: Teams.getTeamPoint.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Teams",
+          mode: "view",
+        }),
+    ],
+    handler: (request, reply) => getTeamPoint(request, reply, fastify),
+  })
 };
