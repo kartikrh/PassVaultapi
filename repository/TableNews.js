@@ -1,3 +1,4 @@
+const { newsType } = require("../utilities");
 const { errorLogger } = require("../utilities/logger");
 
 const getAllNewsQuery = async (fastify) => {
@@ -43,9 +44,10 @@ const insertNewsQuery = async (data, request, fastify) => {
                         "wrViewerCount",
                         "wrCredit",
                         "wrSEO",
-                        "wrSEODescription"
+                        "wrSEODescription",
+                        "wrType"
                     )
-                values ($1, $2, $3, $4, $5, $6, $7, $8, now(), $9, $10, $11, $12, $13) returning *
+                values ($1, $2, $3, $4, $5, $6, $7, $8, now(), $9, $10, $11, $12, $13,$14) returning *
                 )
                 select 
                     "wrNewsId" as "newsId",
@@ -60,7 +62,8 @@ const insertNewsQuery = async (data, request, fastify) => {
                     "wrViewerCount" as "viewerCount",
                     "wrCredit" as "credit",
                     "wrSEO" as "SEO",
-                    "wrSEODescription" as "SEODescription"
+                    "wrSEODescription" as "SEODescription",
+                    "wrType" as "type"
                 from "insert_data"
             `,
       {
@@ -78,7 +81,8 @@ const insertNewsQuery = async (data, request, fastify) => {
           data.viewerCount || null,
           data.credit || null,
           data.SEO || null,
-          data.SEODescription || null
+          data.SEODescription || null,
+          data.type || newsType.news
         ],
       }
     );
@@ -111,7 +115,8 @@ const updateNewsQuery = async (data, request, fastify) => {
                 "wrViewerCount" = $11,
                 "wrCredit" = $12,
                 "wrSEO" = $13,
-                "wrSEODescription" = $14
+                "wrSEODescription" = $14,
+                "wrType" = $15
                 where "wrNewsId" = $9
             `,
       {
@@ -129,7 +134,8 @@ const updateNewsQuery = async (data, request, fastify) => {
           data.viewerCount || null,
           data.credit || null,
           data.SEO || null,
-          data.SEODescription || null
+          data.SEODescription || null,
+          data.type
         ],
       }
     );

@@ -206,7 +206,8 @@ const updateTeamPointsQuery = async (data, fastify, request) => {
        SET 
           "wrTotalMatches" = $1,
           "wrTotalWin" = $2,
-          "wrTotalLose" = $3
+          "wrTotalLose" = $3,
+          "wrTotalPoint" = $5
       WHERE "wrId" = $4
       RETURNING
         "wrId" as "id",
@@ -230,6 +231,7 @@ const updateTeamPointsQuery = async (data, fastify, request) => {
           data.totalWin,
           data.totalLose,
           data.id,
+          data.totalPoint,
         ],
       }
     );

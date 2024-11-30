@@ -345,7 +345,98 @@ const deleteCommentaryPlayerBowlingHistoryQuery = async (id, fastify, request) =
     throw new Error(err.message);
   }
 };
+const getPlayerBatHistQuery = async (data, request , fastify) =>{
+  try {
+    const query = `
+        SELECT 
+                tcpbh."wrId" as "id",
+                tcpbh."wrMatchTypeId" as "matchTypeId",
+                tcpbh."wrPlayerId" as "playerId",
+                tcpbh."wrCommentaryId" as "commentaryId",
+                tcpbh."wrCommentaryPlayerId" as "commentaryPlayerId",
+                tcpbh."wrMatchCount" as "matchCount",
+                tcpbh."wrInningsCount" as "inningsCount",
+                tcpbh."wrNotOut" as "notOut",
+                tcpbh."wrTotalRuns" as "totalRuns",
+                tcpbh."wrHighestScore" as "highestScore",
+                tcpbh."wrAverage"::DOUBLE PRECISION as "average",
+                tcpbh."wrBallsFacedCount" as "ballsFacedCount",
+                tcpbh."wrStrikeRate"::DOUBLE PRECISION as "strikeRate",
+                tcpbh."wr100Count" as "countOf100",
+                tcpbh."wr50Count" as "countOf50",
+                tcpbh."wr4Count" as "countOf4",
+                tcpbh."wr6Count" as "countOf6",
+                tcpbh."wrCatchCount" as "catchCount",
+                tcpbh."wrStumpCount" as "stumpCount",
+                tcpbh."wrCreatedBy" as "createdBy",
+                tcpbh."wrCreatedAt" as "createdAt",
+                tcpbh."wrOutCount" as "outCount",
+                tc."wrEventName" as "eventName",
+                tc."wrEventDate" as "eventDate"
+        FROM "tblCommPlayerBatHist" AS tcpbh
+        LEFT JOIN "tblCommentaries" AS tc ON tc."wrCommentaryId" = tcpbh."wrCommentaryId" AND tc."wrIsDelete" = false
+        WHERE tcpbh."wrPlayerId" = $1 AND tcpbh."wrMatchTypeId" = $2`;
+    const result = await fastify.db.query(query, {
+      type: fastify.db.QueryTypes.SELECT,
+      bind : [data.playerId, data.matchTypeId]
+    });
+    return result;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommPlayerHistory.js/getPlayerBatHistQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+}
+const getPlayeBallHistQuery = async (data , request , fastify)=>{
+  try {
+    const result = await fastify.db.query(
+      `SELECT 
+            tcpbh."wrId" as "id",
+            tcpbh."wrMatchTypeId" as "matchTypeId",
+            tcpbh."wrPlayerId" as "playerId",
+            tcpbh."wrCommentaryId" as "commentaryId",
+            tcpbh."wrCommentaryPlayerId" as "commentaryPlayerId",
+            tcpbh."wrMatchCount" as "bowlerPlayedMatchCount",
+            tcpbh."wrInningsCount" as "bowlerPlayedInningsCount",
+            tcpbh."wrBallCount" as "ballCount",
+            tcpbh."wrTotalRuns" as "runsFromBowler",
+            tcpbh."wrWicketsCount" as "wicketsCount",
+            tcpbh."wrAverage"::DOUBLE PRECISION as "bowlerAverage",
+            tcpbh."wrBestBowlingInInnings" as "bestBowlingInInnings",
+            tcpbh."wrBestBowlingInMatch" as "bestBowlingInMatch",
+            tcpbh."wrEconomy"::DOUBLE PRECISION as "economy",
+            tcpbh."wrStrikeRate"::DOUBLE PRECISION as "bowlerStrikeRate",
+            tcpbh."wr4Wickets" as "wickets4",
+            tcpbh."wr5Wickets" as "wickets5",
+            tcpbh."wr10Wickets" as "wickets10",
+            tcpbh."wrCreatedBy" as "createdBy",
+            tcpbh."wrCreatedAt" as "createdAt",
+            tc."wrEventName" as "eventName",
+            tc."wrEventDate" as "eventDate"
+            FROM "tblCommPlayerBowlHist" AS tcpbh
+            LEFT JOIN "tblCommentaries" AS tc ON tc."wrCommentaryId" = tcpbh."wrCommentaryId" AND tc."wrIsDelete" = false
+            WHERE tcpbh."wrMatchTypeId" = $2 AND tcpbh."wrPlayerId" = $1
+      `,
+      {
+        type : fastify.db.QueryTypes.SELECT,
+        bind : [data.playerId, data.matchTypeId]
 
+      })
+      return result;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommPlayerHistory.js/getPlayeBallHistQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+}
 module.exports = {
   getAllCommentaryBattingHistory,
   getAllCommentaryBowlingHistory,
@@ -355,4 +446,6 @@ module.exports = {
   updateCommPlayerBowlingHistoryQuery,
   deleteCommentaryPlayerBattingHistoryQuery,
   deleteCommentaryPlayerBowlingHistoryQuery,
+  getPlayerBatHistQuery,
+  getPlayeBallHistQuery
 };

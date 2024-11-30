@@ -76,6 +76,7 @@ async function startSignalR(fastify) {
                         connection.on('Rate', async (message, request) => {
                             try {
                                 if (message.mi) {
+                                    await createUpdateGlobalSignalRData(message, request);
                                     // Find if the market ID already exists in the rateQueue
                                     const existingIndex = global.rateQueue.findIndex((item) => item.mi === message.mi);
                                     if (existingIndex !== -1) {
@@ -84,7 +85,6 @@ async function startSignalR(fastify) {
                                         global.rateQueue.push(message);
                                     }
                                     global.rateQueue = global.rateQueue.filter((item) => item.ms === 1);
-                                    await createUpdateGlobalSignalRData(message, request);
                                 }
                             } catch (error) {
                                 errorLogger(
@@ -387,7 +387,7 @@ const createUpdateGlobalSignalRData = async (message, request) => {
                     // Update the status of the matched item
                     return {
                         ...item,
-                        status: EventMarketStatus.Suspend
+                        status: parseInt(data.ms) || 0
                     };
                 }
                 return item; // Return the item unchanged if it doesn't match

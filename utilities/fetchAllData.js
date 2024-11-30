@@ -80,6 +80,8 @@ const {
   getAllCommentaryBattingHistory,
   getAllCommentaryBowlingHistory
 } = require("../repository/TableCommPlayerHistory"); 
+const { getAllPhotoLibraryQuery, getAllLibraryImagesQuery } = require("../repository/TablePhotoLibrary");
+const { getAllVideoLibraryQuery } = require("../repository/TableVideoLibrary");
 
 const fetchAllDataFromDb = async (fastify, reply) => {
   try {
@@ -168,6 +170,9 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const getAllPlayerBowlingHistory = await getAllBowlingHistory(fastify);
     const getAllCommentaryPlayersBattingHistory = await getAllCommentaryBattingHistory(fastify);
     const getAllCommentaryPlayersBowlingHistroy = await getAllCommentaryBowlingHistory(fastify);
+    const getAllPhotoLibrary = await getAllPhotoLibraryQuery(fastify);
+    const getAllLibraryImages = await getAllLibraryImagesQuery(fastify);
+    const getAllVideoLibrary = await getAllVideoLibraryQuery(fastify);
 
 
     global.tblTabs = getAllTabs;
@@ -236,6 +241,9 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblPlayersBowlingHistory = getAllPlayerBowlingHistory;
     global.tblCommPlayerBatHist = getAllCommentaryPlayersBattingHistory;
     global.tblCommPlayerBowlHist = getAllCommentaryPlayersBowlingHistroy;
+    global.tblPhotoLibrary = getAllPhotoLibrary;
+    global.tblLibraryImages = getAllLibraryImages;
+    global.tblVideoLibrary = getAllVideoLibrary;
     // global.tblMarketRunnerV1 = getEventMarketRunnerV1;
     // global.responseLogs = responseLogs;
     // global.thirdPartyAPILogs = thirdPartyAPILogs;

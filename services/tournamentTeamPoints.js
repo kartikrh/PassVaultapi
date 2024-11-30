@@ -199,43 +199,84 @@ const activeInactiveTournamentTeamPointsService = async (request, fastify) => {
   return `TournamentTeamPoint isActive stage updated successfully`;
 };
 
-const setTeamPointService = async (data,request, fastify) => {
-  let dataToUpdate = [];
-  let result = await getLogByComIdQuery({
-    competitionId : data[0].competitionId,
-    commentaryId  : data[0].commentaryId
-  },request,fastify)
-
-  if(result.length == 0){
-    for (let m of data){
-      let tp1 = global.tblTournamentTeamPoint.findIndex(t => t.competitionId == m.competitionId && t.teamId == m.team1Id && t.isActive == true);
-      if(tp1 !== -1){
-        dataToUpdate.push({
-          ...global.tblTournamentTeamPoint[tp1],
-          totalMatches: global.tblTournamentTeamPoint[tp1].totalMatches + 1,
-          totalWin : 
-            m.winnerId != null &&
-            m.winnerId == m.team1Id ? global.tblTournamentTeamPoint[tp1].totalWin + 1 : global.tblTournamentTeamPoint[tp1].totalWin,
-          totalLose :
-            m.winnerId != null &&
-          m.winnerId != m.team1Id ? global.tblTournamentTeamPoint[tp1].totalLose + 1 : global.tblTournamentTeamPoint[tp1].totalLose,
-        })
-      }
-      let tp2 = global.tblTournamentTeamPoint.findIndex(t => t.competitionId == m.competitionId && t.teamId == m.team2Id && t.isActive == true);
-      if(tp2 !== -1){
-        dataToUpdate.push({
-          ...global.tblTournamentTeamPoint[tp2],
-          totalMatches: global.tblTournamentTeamPoint[tp2].totalMatches + 1,
-          totalWin : 
-            m.winnerId != null &&
-            m.winnerId == m.team2Id ? global.tblTournamentTeamPoint[tp2].totalWin + 1 : global.tblTournamentTeamPoint[tp2].totalWin,
-          totalLose :
-          m.winnerId != null &&
-          m.winnerId != m.team2Id ? global.tblTournamentTeamPoint[tp2].totalLose + 1 : global.tblTournamentTeamPoint[tp2].totalLose,
-        })
-      }
+const setTeamPointService = async (data, request, fastify) => {
+  for (let m of data) {
+    let dataToUpdate = [];
+    
+    let res = await getLogByComIdQuery(
+      {
+        competitionId: m.competitionId,
+        commentaryId: m.commentaryId,
+        module : "teamPoint"
+      },
+      request,
+      fastify
+    );
+    if (res.length > 0) {
+      continue;
     }
-    for(let d of dataToUpdate){
+    let comp = global.tblCompetitions.find(
+      (c) => c.competitionId == m.competitionId
+    );
+    let tp1 = global.tblTournamentTeamPoint.findIndex(
+      (t) =>
+        t.competitionId == m.competitionId &&
+        t.teamId == m.team1Id &&
+        t.isActive == true
+    );
+    if (tp1 !== -1) {
+      let ttlPoint = global.tblTournamentTeamPoint[tp1].totalPoint;
+      if(m.winnerId != null && m.winnerId == m.team1Id){
+        ttlPoint = ttlPoint + comp.winPoint;
+      }
+      else if(m.winnerId != null && m.winnerId != m.team1Id){
+        ttlPoint = ttlPoint + comp.lossPoint;
+      }
+      dataToUpdate.push({
+        ...global.tblTournamentTeamPoint[tp1],
+        totalMatches: global.tblTournamentTeamPoint[tp1].totalMatches + 1,
+        totalWin:
+          m.winnerId != null && m.winnerId == m.team1Id
+            ? global.tblTournamentTeamPoint[tp1].totalWin + 1
+            : global.tblTournamentTeamPoint[tp1].totalWin,
+        totalLose:
+          m.winnerId != null && m.winnerId != m.team1Id
+            ? global.tblTournamentTeamPoint[tp1].totalLose + 1
+            : global.tblTournamentTeamPoint[tp1].totalLose,
+        totalPoint : ttlPoint
+
+      });
+    }
+    let tp2 = global.tblTournamentTeamPoint.findIndex(
+      (t) =>
+        t.competitionId == m.competitionId &&
+        t.teamId == m.team2Id &&
+        t.isActive == true
+    );
+    if (tp2 !== -1) {
+      let ttlPoint = global.tblTournamentTeamPoint[tp2].totalPoint;
+      if(m.winnerId != null && m.winnerId == m.team2Id){
+        ttlPoint = ttlPoint + comp.winPoint;
+      }
+      else if(m.winnerId != null && m.winnerId != m.team2Id){
+        ttlPoint = ttlPoint + comp.lossPoint;
+      }
+      dataToUpdate.push({
+        ...global.tblTournamentTeamPoint[tp2],
+        totalMatches: global.tblTournamentTeamPoint[tp2].totalMatches + 1,
+        totalWin:
+          m.winnerId != null && m.winnerId == m.team2Id
+            ? global.tblTournamentTeamPoint[tp2].totalWin + 1
+            : global.tblTournamentTeamPoint[tp2].totalWin,
+        totalLose:
+          m.winnerId != null && m.winnerId != m.team2Id
+            ? global.tblTournamentTeamPoint[tp2].totalLose + 1
+            : global.tblTournamentTeamPoint[tp2].totalLose,
+        totalPoint : ttlPoint
+      });
+    }
+
+    for (let d of dataToUpdate) {
       await updateTeamPointsQuery(d, fastify, request);
       const index = global.tblTournamentTeamPoint.findIndex(
         (ind) => ind.id === d.id
@@ -244,11 +285,10 @@ const setTeamPointService = async (data,request, fastify) => {
         global.tblTournamentTeamPoint[index] = d;
       }
     }
-    await setTeamPointLogService(data,request,fastify)
-  
+    await setTeamPointLogService([m], request, fastify , "teamPoint");
   }
   return `Team point updated successfully`;
-}
+};
 
 const teamsListService = async (request, fastify) => {
   let result = global.tblTeams;
@@ -260,31 +300,42 @@ const teamsListService = async (request, fastify) => {
     result = result.filter(
       (item) => competitionTeamIds.has(item.teamId)
     );
+    result = result.filter((item) => competitionTeamIds.has(item.teamId));
   }
 
   return result.map((elem) => {
     return {
       teamId: elem.teamId,
-      teamName: elem.teamName
+      teamName: elem.teamName,
     };
   });
-}
-const setTeamPointLogService = async (data,request, fastify) => {
-  for (let d of data){
-    await createTeamPointLogQuery({
-      teamId : d.team1Id,
-      competitionId : d.competitionId,
-      commentaryId : d.commentaryId
-    }, request, fastify);
-    await createTeamPointLogQuery({
-      teamId : d.team2Id,
-      competitionId : d.competitionId,
-      commentaryId : d.commentaryId
-    }, request, fastify);
+};
+const setTeamPointLogService = async (data, request, fastify, module) => {
+  for (let d of data) {
+    await createTeamPointLogQuery(
+      {
+        teamId: d.team1Id,
+        competitionId: d.competitionId,
+        commentaryId: d.commentaryId,
+        module : module
+      },
+      request,
+      fastify
+    );
+    await createTeamPointLogQuery(
+      {
+        teamId: d.team2Id,
+        competitionId: d.competitionId,
+        commentaryId: d.commentaryId,
+        module : module
+      },
+      request,
+      fastify
+    );
   }
 
   return true;
-}
+};
 
 module.exports = {
   allTournamentTeamPointsService,
