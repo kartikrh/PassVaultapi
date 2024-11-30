@@ -381,7 +381,9 @@ const createUpdateGlobalSignalRData = async (message, request) => {
         const EventsMarketobj = global.tblEventMarkets.filter(
             (item) => item.rateSourceRefID === data.mi
         );
+        let isCalled = false;
         if (EventsMarketobj.length > 0 && data.rt !== null && data.ms !== EventMarketStatus.Open) {
+            isCalled = true;
             global.tblEventMarkets = global.tblEventMarkets.map(item => {
                 if (item.rateSourceRefID === data.mi) {
                     // Update the status of the matched item
@@ -524,6 +526,7 @@ const createUpdateGlobalSignalRData = async (message, request) => {
                 }
             }
         } else if (EventsMarketobj && data.rt !== null && data.ms == EventMarketStatus.Open) {
+            isCalled = true;
             let _data = {};
             _data.rateSourceRefID = parseInt(data.mi);
             _data.status = parseInt(data.ms);
@@ -686,6 +689,71 @@ const createUpdateGlobalSignalRData = async (message, request) => {
                         };
                     }
                 }
+            }
+        }
+
+        if(!isCalled && EventsMarketobj.length > 0 && data.ms !== EventMarketStatus.Open){
+            try {
+                global.tblEventMarkets = global.tblEventMarkets.map(item => {
+                    if (item.rateSourceRefID === data.mi) {
+                        // Update the status of the matched item
+                        return {
+                            ...item,
+                            status: parseInt(data.ms) || 0
+                        };
+                    }
+                    return item; // Return the item unchanged if it doesn't match
+                });
+                let _data = {};
+                _data.rateSourceRefID = parseInt(data.mi);
+                _data.status = parseInt(data.ms);
+                await updateMarketStatusFromSignalRQuery(_data, request, _fastify);
+                for (var i = 0; i < EventsMarketobj.length; i++) {
+                    let _runner = {};
+                    _runner = EventsMarketobj[i];
+                    if (_runner.commentaryId != '0') {
+                        let commentary = global.tblCommentaries.find(
+                            (item) => item.commentaryId == _runner.commentaryId
+                        );
+                        if (commentary) {
+                            let teams;
+                            teams = global.tblCommentaryTeams.find(
+                                (item) =>
+                                item.commentaryId === commentary.commentaryId &&
+                                item.currentInnings === commentary.currentInnings &&
+                                item.teamName == _runner.teamId
+                            );
+    
+                            if (!teams) {
+                                teams = global.tblCommentaryTeams.find(
+                                    (item) =>
+                                    item.commentaryId === commentary.commentaryId &&
+                                    item.currentInnings === commentary.currentInnings &&
+                                    item.teamName.toLowerCase() == _runner.runner.toLowerCase().trim()
+                                );
+                            }
+                            if (teams && commentary.isTeamPredictionOn) {
+                                const _update = {
+                                    commentaryTeamId: teams.commentaryTeamId,
+                                    teamPredictionPercentage: "0",
+                                    currentInnings: commentary.currentInnings,
+                                    commentaryId: _runner.commentaryId
+                                };
+    
+                                const index = global.tblCommentaryTeams.findIndex(
+                                    (item) =>
+                                    item.commentaryId === commentary.commentaryId &&
+                                    item.commentaryTeamId === teams.commentaryTeamId
+                                );
+                                global.tblCommentaryTeams[index].teamPredictionPercentage = parseInt(_update.teamPredictionPercentage);
+    
+                                await updateCommentaryTeamPredictionPrecentageQuery(_update, _fastify);
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                // Ignore
             }
         }
     } catch (error) {
