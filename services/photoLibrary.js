@@ -61,6 +61,12 @@ const editPhotoLibraryService = async (request, fastify, data) => {
 };
 
 const saveLibraryImageService = async (request, fastify, data) => {
+  const validateId = global.tblLibraryImages.find(
+    (item) => item.title.toLowerCase() == request.body.title.toLowerCase()
+  );
+  if (validateId) {
+    throw new Error("Library image with same title already exists");
+  }
   if (data.body.image && data.body.image.length) {
     const imgName = generateImageName({
       name: data.body.title,
@@ -90,6 +96,12 @@ const editLibraryImageService = async (request, fastify, data) => {
   );
   if (!validateId) {
     throw new Error("Library image data with this Id not found");
+  }
+  const validateTitle = global.tblLibraryImages.find(
+    (item) => item.title.toLowerCase() == request.body.title.toLowerCase() && item.id !== request.body.id
+  );
+  if (validateTitle) {
+    throw new Error("Library image with same title already exists");
   }
 
   if (request.body.image && request.body.image.length) {
