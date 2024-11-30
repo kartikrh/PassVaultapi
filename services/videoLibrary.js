@@ -10,6 +10,7 @@ const {
 } = require("../utilities/Images");
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
+const { VideoLibraryType } = require("../utilities/index");
 
 const saveVideoLibraryService = async (request, fastify) => {
   const validateId = global.tblVideoLibrary.find(
@@ -18,7 +19,7 @@ const saveVideoLibraryService = async (request, fastify) => {
   if (validateId) {
     throw new Error("Video library with same title already exists");
   }
-  if (request.body.type === 1) {
+  if (request.body.type === VideoLibraryType.OUR) {
     if (request.body.videoURL && request.body.videoURL.length) {
       const firstVideo = request.body.videoURL[0];
 
@@ -64,7 +65,7 @@ const editVideoLibraryService = async (request, fastify, data) => {
     throw new Error("Video library with same title already exists");
   }
 
-  if (request.body.type === 1) {
+  if (request.body.type === VideoLibraryType.OUR) {
     if (request.body.videoURL && request.body.videoURL.length) {
       const firstVideo = request.body.videoURL[0];
 
