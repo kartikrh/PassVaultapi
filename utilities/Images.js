@@ -3,7 +3,7 @@ const { generateFileName } = require("./index");
 const path = require("path");
 const { default: axios } = require("axios");
 const FormData = require('form-data');
-const { FILE_UPLOAD_URL } = require("./configConstants");
+const { FILE_UPLOAD_URL, FILEUPLOADMAXSIZE } = require("./configConstants");
 
 const storeImage = async (imageBuffer) => {
   try {
@@ -103,6 +103,14 @@ const storeFileOnServer = async (args) => {
       (item) => item.key === FILE_UPLOAD_URL
     )?.value;
 
+    const fileUploadSize = global.tblConfigs.find(
+      (item) => item.key === FILEUPLOADMAXSIZE
+    )?.value;
+    const maxSize = (fileUploadSize ? parseInt(fileUploadSize) : 50) * 1024 * 1024;
+
+    if (formData?._valueLength > maxSize) {
+      throw new Error(`Video size is too large. Maximum allowed size is ${fileUploadSize} MB.`);
+    }
     const result = await axios.post(
       `${fileUploadURL}/save`,
       formData,
