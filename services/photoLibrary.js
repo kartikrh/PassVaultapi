@@ -128,7 +128,7 @@ const editLibraryImageService = async (request, fastify, data) => {
       image: request.body.image[0],
       project: projectName,
       name: imgName,
-      ...ImgModuleConfig.SocialMedia,
+      ...ImgModuleConfig.LibraryImage,
     });
     request.body.image = path;
   }
