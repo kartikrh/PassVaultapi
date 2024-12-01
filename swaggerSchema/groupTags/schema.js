@@ -7167,6 +7167,21 @@ const LibraryImages = {
       },
     },
   },
+  updateIsDefault: {
+    schema: {
+      tags: ["LibraryImages"],
+      description: "update Default",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          isDefault: { type: "boolean" },
+        },
+        required: ["id", "isDefault"],
+      },
+    },
+  },
 };
 const VideoLibrary = {
   getAll: {

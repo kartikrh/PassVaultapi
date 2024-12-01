@@ -5,6 +5,7 @@ const {
   saveLibraryImage,
   deleteLibraryImages,
   updateDisplayOrder,
+  updateIsDefault,
 } = require("../../../controller/users/admin/photoLibrary");
 const { LibraryImages } = require("../../../swaggerSchema/groupTags/schema");
 
@@ -37,5 +38,11 @@ module.exports = async (fastify, opts) => {
     schema: LibraryImages.updateDisplayOrder.schema,
     preHandler: [(request, reply) => authorize(request, reply, fastify)],
     handler: (request, reply) => updateDisplayOrder(request, reply, fastify),
+  });
+
+  fastify.post("/isDefault", {
+    schema: LibraryImages.updateIsDefault.schema,
+    preHandler: [(request, reply) => authorize(request, reply, fastify)],
+    handler: (request, reply) => updateIsDefault(request, reply, fastify),
   });
 };
