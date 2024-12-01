@@ -56,7 +56,7 @@ const getAllLibraryImagesQuery = async (fastify) => {
               "wrId" AS "id",
               "wrPhotoLibraryId" AS "photoLibraryId",
               "wrTitle" AS "title",
-              "wrImage" AS "description",
+              "wrImage" AS "image",
               "wrDisplayOrder" AS "displayOrder",
               "wrIsDefault" AS "isDefault"
             FROM "tblLibraryImages"
