@@ -183,7 +183,7 @@ const insertLibraryImageQuery = async (data, fastify, request) => {
           bind: [
             data.photoLibraryId,
             data.title,
-            data.image,
+            data.image || null,
             data.isDefault || false,
           ],
         }
@@ -218,7 +218,7 @@ const updateLibraryImageQuery = async (data, fastify, request) => {
         bind: [
           data.photoLibraryId,
           data.title,
-          data.image,
+          data.image || null,
           data.isDefault || false,
           data.id,
         ],
