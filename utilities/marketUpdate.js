@@ -18,7 +18,7 @@ const updateMarket = async (fastify) => {
     getInterval = parseInt(getInterval);
     setInterval(async () => {
         try {
-            console.log('Updating market');
+            // console.log('Updating market');
             let market = await fastify.db.query(
             `
                 SELECT 
@@ -36,7 +36,7 @@ const updateMarket = async (fastify) => {
                 bind: [EventMarketStatus.Cancel, EventMarketStatus.Close, EventMarketStatus.Settled]
             });
             if(market.length > 0){
-                console.log('Market to update', market);
+                // console.log('Market to update', market);
         
                 // change the market status as per time and update in db
                 let intervalForCheck = global.tblConfigs.find((config) => config.key === configConstants.MARKETUPDATEINTERVALMIN)?.value;
@@ -51,7 +51,7 @@ const updateMarket = async (fastify) => {
                 intervalForCheck = parseInt(intervalForCheck);
                 clearInterval(intervalId);
                 intervalId = setInterval(async () => {
-                    console.log('Checking market for update');
+                    // console.log('Checking market for update');
                     if(market.length === 0){
                         clearInterval(intervalId);
                     }
@@ -133,7 +133,7 @@ const updateMarket = async (fastify) => {
                 },intervalForCheck * 60 * 1000);
             }
             else {
-                console.log('No market found to update');
+                // console.log('No market found to update');
                 errorLogger(
                     fastify,
                     "No market found to update",
@@ -142,7 +142,7 @@ const updateMarket = async (fastify) => {
                 )
             }
         } catch (error) {
-            console.log('Error in market update', error);
+            /// console.log('Error in market update', error);
             errorLogger(
                 fastify,
                 error.message,
