@@ -103,10 +103,10 @@ const editVideoLibraryService = async (request, fastify, data) => {
     id: parseInt(request.body.id, 10),
   };
   if(updateData.type === 2) {
-    request.body.video = null
+    updateData.video = null
   }
   if(updateData.type === 1) {
-    request.body.videoURL = null
+    updateData.videoURL = null
   }
 
   const modifiedData = await updateVideoLibraryQuery(
