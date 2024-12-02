@@ -2316,7 +2316,6 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
       isEndInnings
     } = request.body;
 
-    console.log("savedetails request", request.body)
     let commentaryIndex,
       overIndex,
       ballByBallIndex,
@@ -3440,10 +3439,9 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
       );
     });
     response.callPredictions = callPredictions;
-    console.log("savedetails response",response)
     return response;
   } catch (error) {
-    console.log("console value savedetails error", error);
+    console.log("console value 7418596", error);
     await commentaryLogger(
       {
         commentaryId: request.body.commentaryId,
