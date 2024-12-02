@@ -9066,10 +9066,12 @@ const getCommentaryDataService = async (request, fastify) => {
       fs.writeFile(filePath + '.gz', compressedData, (err) => {
         if (err) {
           console.error('Error writing compressed file:', err);
-          fastify.status(500).send({ message: 'Error writing compressed file' });
+          // fastify.status(500).send({ message: 'Error writing compressed file' });
+          return  { message: 'Error writing compressed file' };
         } else {
           console.log('Compressed file successfully saved!');
-          fastify.status(200).send({ message: 'Compressed file successfully created and saved' });
+          // fastify.status(200).send({ message: 'Compressed file successfully created and saved' });
+          return { message: 'Compressed file successfully created and saved' };
         }
       });
 
@@ -9080,7 +9082,8 @@ const getCommentaryDataService = async (request, fastify) => {
         writeStream.write(jsonData, () => {
           writeStream.end(() => {
             console.log('File successfully saved as whole!');
-            fastify.status(200).send({ message: 'File successfully created and saved' });
+            // fastify.status(200).send({ message: 'File successfully created and saved' });
+            return { message: 'File successfully created and saved' };
           });
         });
       } else {
@@ -9096,7 +9099,8 @@ const getCommentaryDataService = async (request, fastify) => {
             if (i === totalChunks - 1) {
               writeStream.end(() => {
                 console.log('File successfully saved in chunks!');
-                fastify.status(200).send({ message: 'File successfully created and saved in chunks' });
+                // fastify.status(200).send({ message: 'File successfully created and saved in chunks' });
+                return { message: 'File successfully created and saved in chunks' };
               });
             }
           });
@@ -9107,12 +9111,12 @@ const getCommentaryDataService = async (request, fastify) => {
     // Error handling
     writeStream.on('error', (err) => {
       console.error('Error writing to file:', err);
-      fastify.status(500).send({ message: 'Error writing to file' });
+      return { message: 'Error writing to file' };
     });
 
   } catch (error) {
     console.error('Unexpected error:', error);
-    fastify.status(500).send({ message: 'Unexpected error occurred' });
+    return { message: 'Unexpected error' };
   }
 };
 
