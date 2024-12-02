@@ -142,7 +142,7 @@ const updateMarket = async (fastify) => {
                 )
             }
         } catch (error) {
-            // console.log('Error in market update', error);
+            /// console.log('Error in market update', error);
             errorLogger(
                 fastify,
                 error.message,
