@@ -6,6 +6,8 @@ const {
   changeDisplayOrderQuery,
   deletePhotoLibraryQuery,
   deleteLibraryImagesQuery,
+  isDefaultChangeQuery,
+  isDefaultFalseQuery,
 } = require("../repository/TablePhotoLibrary");
 const {
   generateImageName,
@@ -61,6 +63,12 @@ const editPhotoLibraryService = async (request, fastify, data) => {
 };
 
 const saveLibraryImageService = async (request, fastify, data) => {
+  const validateId = global.tblLibraryImages.find(
+    (item) => item.title.toLowerCase() == request.body.title.toLowerCase()
+  );
+  if (validateId) {
+    throw new Error("Library image with same title already exists");
+  }
   if (data.body.image && data.body.image.length) {
     const imgName = generateImageName({
       name: data.body.title,
@@ -78,6 +86,17 @@ const saveLibraryImageService = async (request, fastify, data) => {
     });
     data.body.image = path;
   }
+  if (request.body.isDefault === true) {
+    await isDefaultFalseQuery(request.body, fastify, request);
+    global.tblLibraryImages.forEach((item) => {
+      if (
+        item.id !== request.body.id &&
+        item.photoLibraryId === request.body.photoLibraryId
+      ) {
+        item.isDefault = false;
+      }
+    });
+  }
   const saveData = await insertLibraryImageQuery(data.body, fastify, request);
   global.tblLibraryImages.push(saveData);
 
@@ -91,6 +110,12 @@ const editLibraryImageService = async (request, fastify, data) => {
   if (!validateId) {
     throw new Error("Library image data with this Id not found");
   }
+  const validateTitle = global.tblLibraryImages.find(
+    (item) => item.title.toLowerCase() == request.body.title.toLowerCase() && item.id !== request.body.id
+  );
+  if (validateTitle) {
+    throw new Error("Library image with same title already exists");
+  }
 
   if (request.body.image && request.body.image.length) {
     const imgName = generateImageName({
@@ -103,7 +128,7 @@ const editLibraryImageService = async (request, fastify, data) => {
       image: request.body.image[0],
       project: projectName,
       name: imgName,
-      ...ImgModuleConfig.SocialMedia,
+      ...ImgModuleConfig.LibraryImage,
     });
     request.body.image = path;
   }
@@ -116,6 +141,17 @@ const editLibraryImageService = async (request, fastify, data) => {
     isDefault: request.body.isDefault ?? validateId.isDefault,
     id: parseInt(request.body.id, 10),
   };
+  if (request.body.isDefault === true) {
+    await isDefaultFalseQuery(request.body, fastify, request);
+    global.tblLibraryImages.forEach((item) => {
+      if (
+        item.id !== request.body.id &&
+        item.photoLibraryId === request.body.photoLibraryId
+      ) {
+        item.isDefault = false;
+      }
+    });
+  }
 
   const modifiedData = await updateLibraryImageQuery(
     updateData,
@@ -231,6 +267,39 @@ const updateDisplayOrderService = async (request, fastify) => {
   return `Display order updated successfully`;
 };
 
+const updateIsDefultService = async (request, fastify) => {
+  const result = global.tblLibraryImages.find(
+    (item) => item.id === request.body.id
+  );
+
+  if (!result) {
+    throw new Error("Library Image with this Id not found");
+  }
+
+  if (request.body.isDefault === true) {
+    request.body.photoLibraryId = result.photoLibraryId;
+    await isDefaultFalseQuery(request.body, fastify, request);
+    global.tblLibraryImages.forEach((item) => {
+      if (
+        item.id !== request.body.id &&
+        item.photoLibraryId === result.photoLibraryId
+      ) {
+        item.isDefault = false;
+      }
+    });
+  }
+  await isDefaultChangeQuery(request.body, fastify, request);
+  const index = global.tblLibraryImages.findIndex(
+    (item) => item.id === request.body.id
+  );
+
+  if (index !== -1) {
+    global.tblLibraryImages[index].isDefault = request.body.isDefault;
+  }
+
+  return `IsDefault updated successfully`;
+};
+
 module.exports = {
   allPhotoLibraryService,
   allLibraryImagesService,
@@ -241,4 +310,5 @@ module.exports = {
   deletePhotoLibraryService,
   deleteLibraryImagesService,
   updateDisplayOrderService,
+  updateIsDefultService,
 };

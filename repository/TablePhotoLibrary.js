@@ -56,7 +56,7 @@ const getAllLibraryImagesQuery = async (fastify) => {
               "wrId" AS "id",
               "wrPhotoLibraryId" AS "photoLibraryId",
               "wrTitle" AS "title",
-              "wrImage" AS "description",
+              "wrImage" AS "image",
               "wrDisplayOrder" AS "displayOrder",
               "wrIsDefault" AS "isDefault"
             FROM "tblLibraryImages"
@@ -183,7 +183,7 @@ const insertLibraryImageQuery = async (data, fastify, request) => {
           bind: [
             data.photoLibraryId,
             data.title,
-            data.image,
+            data.image || null,
             data.isDefault || false,
           ],
         }
@@ -218,7 +218,7 @@ const updateLibraryImageQuery = async (data, fastify, request) => {
         bind: [
           data.photoLibraryId,
           data.title,
-          data.image,
+          data.image || null,
           data.isDefault || false,
           data.id,
         ],
@@ -317,6 +317,46 @@ async function changeDisplayOrderQuery(body, request, fastify) {
   }
 }
 
+const isDefaultChangeQuery = async (data, fastify, request) => {
+  try {
+      return await fastify.db.query(
+          `UPDATE "tblLibraryImages" SET "wrIsDefault" = $1 where "wrId" = $2 AND "wrIsDeleted" = false`,
+          {
+              type: fastify.db.QueryTypes.UPDATE,
+              bind: [data.isDefault, data.id],
+          }
+      );
+  } catch (err) {
+      errorLogger(
+          fastify,
+          err.message,
+          "DB ERROR --> repository/TablePhotoLibrary.js/isDefaultChangeQuery",
+          request
+      );
+      throw new Error(err.message);
+  }
+};
+
+const isDefaultFalseQuery = async (data, fastify, request) => {
+  try {
+      return await fastify.db.query(
+          `UPDATE "tblLibraryImages" SET "wrIsDefault" = $1 WHERE "wrId" != $2 AND "wrPhotoLibraryId" = $3 AND "wrIsDeleted" = false`,
+          {
+              type: fastify.db.QueryTypes.UPDATE,
+              bind: [false, data.id, data.photoLibraryId],
+          }
+      );
+  } catch (err) {
+      errorLogger(
+          fastify,
+          err.message,
+          "DB ERROR --> repository/TablePhotoLibrary.js/isDefaultFalseQuery",
+          request
+      );
+      throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllPhotoLibraryQuery,
   getAllLibraryImagesQuery,
@@ -327,4 +367,6 @@ module.exports = {
   deletePhotoLibraryQuery,
   deleteLibraryImagesQuery,
   changeDisplayOrderQuery,
+  isDefaultChangeQuery,
+  isDefaultFalseQuery,
 };

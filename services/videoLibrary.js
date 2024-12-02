@@ -3,8 +3,45 @@ const {
   updateVideoLibraryQuery,
   deleteVideoLibraryQuery,
 } = require("../repository/TableVideoLibrary");
+const {
+  generateImageName,
+  removeImageFromServer,
+  storeFileOnServer,
+} = require("../utilities/Images");
+const { PROJECT_NAME } = require("../utilities/configConstants");
+const { ImgModuleConfig } = require("../utilities/imageConstant");
+const { VideoLibraryType } = require("../utilities/index");
 
 const saveVideoLibraryService = async (request, fastify) => {
+  const validateId = global.tblVideoLibrary.find(
+    (item) => item.title.toLowerCase() == request.body.title.toLowerCase()
+  );
+  if (validateId) {
+    throw new Error("Video library with same title already exists");
+  }
+  if (request.body.type === VideoLibraryType.OUR) {
+    if (request.body.videoURL && request.body.videoURL.length) {
+      const firstVideo = request.body.videoURL[0];
+
+      const imgName = generateImageName({
+        name: request.body.title,
+      });
+
+      const projectName = global.tblConfigs.find(
+        (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
+      )?.value;
+
+      const path = await storeFileOnServer({
+        file: firstVideo,
+        project: projectName,
+        name: imgName,
+        ...ImgModuleConfig.VideoLibrary,
+      });
+
+      request.body.videoURL = path;
+    }
+  }
+
   const saveData = await insertVideoLibraryQuery(
     request.body,
     fastify,
@@ -20,6 +57,35 @@ const editVideoLibraryService = async (request, fastify, data) => {
   );
   if (!validateId) {
     throw new Error("Video library data with this Id not found");
+  }
+  const validateTitle = global.tblVideoLibrary.find(
+    (item) => item.title.toLowerCase() == request.body.title.toLowerCase() && item.id !== request.body.id
+  );
+  if (validateTitle) {
+    throw new Error("Video library with same title already exists");
+  }
+
+  if (request.body.type === VideoLibraryType.OUR) {
+    if (request.body.videoURL && request.body.videoURL.length) {
+      const firstVideo = request.body.videoURL[0];
+
+      const imgName = generateImageName({
+        name: request.body.title,
+      });
+
+      const projectName = global.tblConfigs.find(
+        (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
+      )?.value;
+
+      const path = await storeFileOnServer({
+        file: firstVideo,
+        project: projectName,
+        name: imgName,
+        ...ImgModuleConfig.VideoLibrary,
+      });
+
+      request.body.videoURL = path;
+    }
   }
 
   const updateData = {
@@ -74,7 +140,14 @@ const createVideoLibraryService = async (request, fastify) => {
 
 const deleteVideoLibraryService = async (request, fastify) => {
   const { id } = request.body;
-
+  for (const elem of id) {
+    const validateId = global.tblVideoLibrary.find((item) => item.id === elem);
+    if (validateId && validateId.videoURL && validateId.type === 1) {
+      await removeImageFromServer({
+        path: validateId.videoURL,
+      });
+    }
+  }
   await deleteVideoLibraryQuery(id, fastify, request);
   global.tblVideoLibrary = global.tblVideoLibrary.filter(
     (item) => !id.includes(item.id)
