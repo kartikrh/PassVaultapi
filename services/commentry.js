@@ -9034,7 +9034,7 @@ const getCommentaryDataService = async (request, fastify) => {
       overs: global.tblOvers,
       ballByBall: global.tblCommentaryBallByBall,
       partnership: global.tblCommentaryPartnership,
-      wickets: global.tbl.CommentaryWicket,
+      wickets: global.tblCommentaryWicket,
       commentaries: global.tblCommentaries
     };
 
