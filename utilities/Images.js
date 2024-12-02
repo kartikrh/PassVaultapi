@@ -3,7 +3,7 @@ const { generateFileName } = require("./index");
 const path = require("path");
 const { default: axios } = require("axios");
 const FormData = require('form-data');
-const { FILE_UPLOAD_URL } = require("./configConstants");
+const { FILE_UPLOAD_URL, FILEUPLOADMAXSIZE } = require("./configConstants");
 
 const storeImage = async (imageBuffer) => {
   try {
@@ -81,6 +81,54 @@ const storeImageOnServer = async (args) => {
    }
 }
 
+const storeFileOnServer = async (args) => {
+  try {
+    const formData = new FormData();
+    formData.append("project", args.project);
+    formData.append("type", args.type);
+    formData.append("name", args.name);
+    formData.append("format", args.formate);
+    formData.append("size", args.size);
+    formData.append("width", args.width);
+    formData.append("height", args.height);
+
+    const { filename, data } = args.file;
+
+    const fileBuffer = Buffer.from(data, 'base64');
+    const mimeType = args.file.mimetype || "application/octet-stream";
+
+    formData.append("file", fileBuffer, { filename, contentType: mimeType });
+
+    const fileUploadURL = global.tblConfigs.find(
+      (item) => item.key === FILE_UPLOAD_URL
+    )?.value;
+
+    const fileUploadSize = global.tblConfigs.find(
+      (item) => item.key === FILEUPLOADMAXSIZE
+    )?.value;
+    const maxSize = (fileUploadSize ? parseInt(fileUploadSize) : 50) * 1024 * 1024;
+
+    if (formData?._valueLength > maxSize) {
+      throw new Error(`Video size is too large. Maximum allowed size is ${fileUploadSize} MB.`);
+    }
+    const result = await axios.post(
+      `${fileUploadURL}/save`,
+      formData,
+      {
+        headers: formData.getHeaders(),
+      }
+    );
+
+    if (!result.data.success) {
+      throw new Error(result.data.error.message);
+    }
+    return result.data.result;
+  } catch (error) {
+    console.error("Error in storeFileOnServer:", error);
+    throw error;
+  }
+};
+
 const removeImageFromServer = async (args) =>{
   try {
     const fileUploadURL = global.tblConfigs.find((item) => item.key === FILE_UPLOAD_URL).value;
@@ -112,5 +160,6 @@ module.exports = {
   removeImage,
   storeImageOnServer,
   removeImageFromServer,
-  generateImageName
+  generateImageName,
+  storeFileOnServer,
 };
