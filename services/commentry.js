@@ -9034,47 +9034,24 @@ const getCommentaryDataService = async (request, fastify) => {
 
   // Get the current date and time
   const currentDate = new Date();
-  const formattedDate = currentDate.toISOString().replace(/[-T:\.Z]/g, "_");
+  const formattedDate = currentDate.toISOString().replace(/[-T:\.Z]/g, "_"); // Format: YYYY_MM_DD_HH_mm_ss
 
-  // Define the path for the file
+  // Define the path for the file with the current date and time
   const filePath = path.join(__dirname, `commentaryData_${formattedDate}.json`);
 
-  // Convert response to JSON string
-  const jsonData = JSON.stringify(res, null, 2);
-
-  // Function to write large data in chunks
-  const writeDataInChunks = (data, path) => {
-    const chunkSize = 1024 * 1024 * 10; // 10MB per chunk
-    let currentIndex = 0;
-
-    // Create a writable stream
-    const writeStream = fs.createWriteStream(path);
-
-    // Function to write chunks
-    const writeChunk = () => {
-      if (currentIndex < data.length) {
-        const chunk = data.slice(currentIndex, currentIndex + chunkSize);
-        currentIndex += chunkSize;
-        writeStream.write(chunk, () => writeChunk());
-      } else {
-        writeStream.end(() => console.log('File written successfully'));
-      }
-    };
-
-    writeChunk();
-  };
-
-  // Write the data in chunks
-  writeDataInChunks(jsonData, filePath);
-
-  // Return a response to the client
-  fastify.status(200).send({
-    message: 'File successfully created and saved',
+  // Write the response to the file
+  fs.writeFile(filePath, JSON.stringify(res, null, 2), (err) => {
+    if (err) {
+      console.error('Error writing to file:', err);
+      // Return an error response with a status code if something goes wrong
+      fastify.status(500).send({ message: 'Error writing to file' });
+    } else {
+      console.log('Response saved to file:', filePath);
+      // Return a 200 status with a success message
+      fastify.status(200).send({ message: 'File successfully created and saved' });
+    }
   });
-
-  return res;
 };
-
 
 
 module.exports = {
