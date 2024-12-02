@@ -1,8 +1,6 @@
 const WebSocket = require("ws");
 const fs = require('fs');
 const path = require('path');
-const zlib = require('zlib'); // Built-in Node.js module for compression
-const stream = require('stream'); // Built-in Node.js module for streams
 const {
   insertCommentaryQuery,
   insertCommentaryTeams,
@@ -3417,12 +3415,12 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         response: response,
         global: {
           partnership: global.tblCommentaryPartnership.filter(
-            (item) => item?.commentaryId === commentaryId
+            (item) => item.commentaryId === commentaryId
           ),
         },
         extra: {
           ballByBall: global.tblCommentaryBallByBall.filter(
-            (item) => item?.commentaryId === commentaryId
+            (item) => item.commentaryId === commentaryId
           ),
         },
         apiName: "/saveDetails"
@@ -3451,12 +3449,12 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         },
         global: {
           partnership: global.tblCommentaryPartnership.filter(
-            (item) => item?.commentaryId === request.body.commentaryId
+            (item) => item.commentaryId === request.body.commentaryId
           ),
         },
         extra: {
           ballByBall: global.tblCommentaryBallByBall.filter(
-            (item) => item?.commentaryId === request.body.commentaryId
+            (item) => item.commentaryId === request.body.commentaryId
           ),
         },
         apiName: "/saveDetails"
@@ -9024,97 +9022,59 @@ const revertCommentaryService = async (request, fastify) => {
 }
 
 const getCommentaryDataService = async (request, fastify) => {
-  try {
-    // Simulated response data (Replace with actual global variables as needed)
-    let res = {
-      commentaryTeams: global.tblCommentaryTeams,
-      commentaryPlayers: global.tblCommentaryPlayers,
-      overs: global.tblOvers,
-      ballByBall: global.tblCommentaryBallByBall,
-      partnership: global.tblCommentaryPartnership,
-      wickets: global.tblCommentaryWicket,
-      commentaries: global.tblCommentaries
+  let res = {
+    commentaryTeams: global.tblCommentaryTeams,
+    commentaryPlayers: global.tblCommentaryPlayers,
+    overs: global.tblOvers,
+    ballByBall: global.tblCommentaryBallByBall,
+    partnership: global.tblCommentaryPartnership,
+    wickets: global.tblCommentaryWicket,
+    commentaries: global.tblCommentaries
+  };
+
+  // Get the current date and time
+  const currentDate = new Date();
+  const formattedDate = currentDate.toISOString().replace(/[-T:\.Z]/g, "_");
+
+  // Define the path for the file
+  const filePath = path.join(__dirname, `commentaryData_${formattedDate}.json`);
+
+  // Convert response to JSON string
+  const jsonData = JSON.stringify(res, null, 2);
+
+  // Function to write large data in chunks
+  const writeDataInChunks = (data, path) => {
+    const chunkSize = 1024 * 1024 * 10; // 10MB per chunk
+    let currentIndex = 0;
+
+    // Create a writable stream
+    const writeStream = fs.createWriteStream(path);
+
+    // Function to write chunks
+    const writeChunk = () => {
+      if (currentIndex < data.length) {
+        const chunk = data.slice(currentIndex, currentIndex + chunkSize);
+        currentIndex += chunkSize;
+        writeStream.write(chunk, () => writeChunk());
+      } else {
+        writeStream.end(() => console.log('File written successfully'));
+      }
     };
 
-    // Get the current date and time to append to the filename
-    const currentDate = new Date();
-    const formattedDate = currentDate.toISOString().replace(/[-T:\.Z]/g, "_");
+    writeChunk();
+  };
 
-    // Define the path for the file with the current date/time
-    const filePath = path.join(__dirname, `commentaryData_${formattedDate}.json`);
+  // Write the data in chunks
+  writeDataInChunks(jsonData, filePath);
 
-    // Convert the response object to a JSON string
-    const jsonData = JSON.stringify(res, null, 2);
+  // Return a response to the client
+  fastify.status(200).send({
+    message: 'File successfully created and saved',
+  });
 
-    // Determine the chunk size for splitting (e.g., 1MB per chunk)
-    const chunkSize = 1024 * 1024; // 1MB
-    const totalChunks = Math.ceil(jsonData.length / chunkSize);
-
-    console.log(`Data will be split into ${totalChunks} chunks...`);
-
-    // Create a write stream for the file
-    const writeStream = fs.createWriteStream(filePath);
-
-    // Check the size of the data and handle accordingly
-    const maxSize = 1024 * 1024 * 50; // 50MB, adjust as needed
-
-    if (jsonData.length > maxSize) {
-      console.log('Data is too large, splitting into chunks or compressing...');
-
-      // If data is too large, compress it using gzip before writing to the file
-      const compressedData = zlib.gzipSync(jsonData); // Compress the data
-      fs.writeFile(filePath + '.gz', compressedData, (err) => {
-        if (err) {
-          console.error('Error writing compressed file:', err);
-          fastify.status(500).send({ message: 'Error writing compressed file' });
-        } else {
-          console.log('Compressed file successfully saved!');
-          fastify.status(200).send({ message: 'Compressed file successfully created and saved' });
-        }
-      });
-
-    } else {
-      // If the data is small enough, write it directly or chunk it
-      if (jsonData.length <= chunkSize) {
-        // Data is small enough to be written as a whole
-        writeStream.write(jsonData, () => {
-          writeStream.end(() => {
-            console.log('File successfully saved as whole!');
-            fastify.status(200).send({ message: 'File successfully created and saved' });
-          });
-        });
-      } else {
-        // Split into smaller chunks and write
-        let currentIndex = 0;
-        for (let i = 0; i < totalChunks; i++) {
-          // Slice the JSON data into chunks
-          const chunk = jsonData.slice(currentIndex, currentIndex + chunkSize);
-          currentIndex += chunkSize;
-
-          // Write each chunk to the file
-          writeStream.write(chunk, () => {
-            if (i === totalChunks - 1) {
-              writeStream.end(() => {
-                console.log('File successfully saved in chunks!');
-                fastify.status(200).send({ message: 'File successfully created and saved in chunks' });
-              });
-            }
-          });
-        }
-      }
-    }
-
-    // Error handling
-    writeStream.on('error', (err) => {
-      console.error('Error writing to file:', err);
-      fastify.status(500).send({ message: 'Error writing to file' });
-    });
-
-  } catch (error) {
-    console.error('Unexpected error:', error);
-    fastify.status(500).send({ message: 'Unexpected error occurred' });
-  }
+  return res;
 };
+
 
 
 module.exports = {
