@@ -96,12 +96,18 @@ const editVideoLibraryService = async (request, fastify, data) => {
     tag: request.body.tag ?? validateId.tag,
     SEO: request.body.SEO ?? validateId.SEO,
     description: request.body.description ?? validateId.description,
-    video: request.body.video ?? null,
-    videoURL: request.body.videoURL ?? null,
+    video: request.body.video ?? validateId.video,
+    videoURL: request.body.videoURL ?? validateId.videoURL,
     type: request.body.type ?? validateId.type,
     commentaryId: request.body.commentaryId ?? validateId.commentaryId,
     id: parseInt(request.body.id, 10),
   };
+  if(updateData.type === 2) {
+    request.body.video = null
+  }
+  if(updateData.type === 1) {
+    request.body.videoURL = null
+  }
 
   const modifiedData = await updateVideoLibraryQuery(
     updateData,
