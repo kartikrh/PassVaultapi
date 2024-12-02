@@ -3404,7 +3404,30 @@ const insertCommentaryConsoleFeQuery = async (data, fastify, request) => {
     throw new Error(err.message);
   }
 };
-
+const revertCommentaryQuery = async (data, fastify, request) => {
+  try {
+    let result = await fastify.db.query(
+      ` 
+        CALL proc_revert_commentary($1,$2,$3,$4)
+      `,
+      {
+        bind: [data.commentaryId, null , null ,
+          request.userTokenInfo.WrUserId
+        ],
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+    return result[0];
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCommentary/revertCommentaryQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+}
 
 module.exports = {
   getAllCommentaryQuery,
@@ -3473,5 +3496,6 @@ module.exports = {
   updateLineRatioComQuery,
   completedCommentaryStatusQuery,
   updateBoundaryOfPlayerQuery,
-  insertCommentaryConsoleFeQuery
+  insertCommentaryConsoleFeQuery,
+  revertCommentaryQuery
 };

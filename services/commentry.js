@@ -61,7 +61,8 @@ const {
   updateLineRationQuery,
   updateLineRatioComQuery,
   completedCommentaryStatusQuery,
-  insertCommentaryConsoleFeQuery
+  insertCommentaryConsoleFeQuery,
+  revertCommentaryQuery
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -81,12 +82,13 @@ const {
 const { getAllPlayersByTeamIdQuery } = require("../repository/TableTeams");
 const { handleMarketCloseService, updateComInMarketService, suspendMarketService } = require("./eventMarket");
 const { createMarketOddsBallByBallBYID, deleteMarketOddsBallByBall,createMarketOddsBallInSaveDetails } = require("../repository/TableMarketOddsBallByBall");
-const { getEventMarketRatioQuery, closeEventMarketByCIdQuery, getMarketsByCategoryQuery,getEventMarketByIdsQuery,getMarketsByComIdQuery, updateEventMarketCloseQuery } = require("../repository/TableEventMarkets");
+const { getEventMarketRatioQuery, closeEventMarketByCIdQuery, getMarketsByCategoryQuery,getEventMarketByIdsQuery,getMarketsByComIdQuery, updateEventMarketCloseQuery, getMarCountByComQuery } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
 const { commentaryLogger, errorLogger } = require("../utilities/logger");
 const { setCompEventSnapSerice } = require("./competitionEventSnap");
 const { setTeamPointService } = require("./tournamentTeamPoints");
 const { setPlayerHistoryService } = require("./playerHistory");
+const { now } = require("mongoose");
 // const { handleSitemapUpdate } = require("../utilities/SEOIndexing")
 
 
@@ -206,7 +208,7 @@ const commentaryDetailsByIdService = async (request, fastify) => {
     isStopLoadCommerty = request.body.isStopLoadCommerty;
   }
   let commentary = await global.tblCommentaries.find(
-    (item) => item.commentaryId === request.body.commentaryId
+    (item) =>  item.commentaryId != null && item.commentaryId === request.body.commentaryId
   );
   if (!commentary) {
     throw new Error("Commentary with this id not Found");
@@ -236,19 +238,19 @@ const commentaryDetailsByIdService = async (request, fastify) => {
   };
 
   const commentaryTeams = await global.tblCommentaryTeams
-    .filter((item) => item.commentaryId === request.body.commentaryId)
+    .filter((item) => item.commentaryId != null && item.commentaryId === request.body.commentaryId)
     .sort((a, b) => b.commentaryTeamId - a.commentaryTeamId);
 
   const commentaryPlayers = await global.tblCommentaryPlayers
-    .filter((item) => item.commentaryId === request.body.commentaryId)
+    .filter((item) =>  item.commentaryId != null && item.commentaryId === request.body.commentaryId)
     .sort((a, b) => b.commentaryPlayerId - a.commentaryPlayerId);
 
   const commentaryOvers = await global.tblOvers
-    .filter((item) => item.commentaryId === request.body.commentaryId)
+    .filter((item) => item.commentaryId != null && item.commentaryId === request.body.commentaryId)
     .sort((a, b) => b.overId - a.overId);
 
   const commentaryBallByBall = await global.tblCommentaryBallByBall
-    .filter((item) => item.commentaryId === request.body.commentaryId)
+    .filter((item) => item.commentaryId != null && item.commentaryId === request.body.commentaryId)
     .sort((a, b) => b.commentaryBallByBallId - a.commentaryBallByBallId);
   // const commentaryBallByBall = await getCommentaryBallByBallQuery(
   //   request,
@@ -256,11 +258,11 @@ const commentaryDetailsByIdService = async (request, fastify) => {
   // );
 
   const commentaryWicket = await global.tblCommentaryWicket
-    .filter((item) => item.commentaryId === request.body.commentaryId)
+    .filter((item) =>  item.commentaryId != null && item.commentaryId === request.body.commentaryId)
     .sort((a, b) => b.commentaryWicketId - a.commentaryWicketId);
 
   const commentaryPartnership = await global.tblCommentaryPartnership
-    .filter((item) => item.commentaryId === request.body.commentaryId)
+    .filter((item) =>  item.commentaryId != null &&item.commentaryId === request.body.commentaryId)
     .sort((a, b) => b.commentaryPartnershipId - a.commentaryPartnershipId);
 
   const commentaryDisplayStatus = await global.tblDisplayStatus.filter(
@@ -276,6 +278,7 @@ const commentaryDetailsByIdService = async (request, fastify) => {
     // get the eventMarket from teamOnstrike
     const teamOnStrike = global.tblCommentaryTeams.find(
       (item) =>
+        item.commentaryId != null &&
         item.commentaryId === commentary.commentaryId &&
         item.currentInnings === commentary.currentInnings &&
         item.teamStatus === 1
@@ -8939,6 +8942,82 @@ const insertCommentaryConsoleFeService = async (request, fastify) => {
   );
   return true;
 };
+const revertCommentaryService = async (request, fastify) => {
+  const { commentaryId } = request.body;
+  const index = global.tblCommentaries.findIndex(
+    (item) => item.commentaryId === commentaryId
+  );
+  if(index == -1){
+    throw new Error("Commentary with this id not Found");
+  }
+  
+  // let checkMar = await getMarCountByComQuery({ commentaryId },request, fastify);
+  // if(checkMar.marketCount > 0){
+  //   throw new Error("Cannot revert the commentary as markets are already created");
+  // }
+
+  let res = await revertCommentaryQuery(request.body, fastify, request);
+  // console.log("revertCommentaryQuery", r);
+
+  if(res){
+    global.tblCommentaries[index].displayStatus = 'Toss Pending!!';
+    global.tblCommentaries[index].commentaryStatus = 1;
+    global.tblCommentaries[index].target = null;
+    global.tblCommentaries[index].winnerId = null;
+    global.tblCommentaries[index].winnerName = null;
+    global.tblCommentaries[index].tossWonBy = null;
+    global.tblCommentaries[index].choseTo = null;
+    global.tblCommentaries[index].rmk = false;
+    global.tblCommentaries[index].updateTime = new Date();
+    global.tblCommentaries[index].tpId = null;
+    global.tblCommentaries[index].commentaryResult = null;
+    global.tblCommentaries[index].commentaryCloseTime = null;
+
+    const ct = global.tblCommentaryTeams.filter((item) => item.commentaryId === commentaryId);
+    const cp = global.tblCommentaryPlayers.filter((item) => item.commentaryId === commentaryId);
+    if(ct.length > 0){
+      // update the global variable
+      for (let team of ct) {
+        let teamIndex = global.tblCommentaryTeams.findIndex(
+          (item) => item.commentaryTeamId === team.commentaryTeamId
+        );
+        if (teamIndex !== -1) {
+          let updatedData = res.commentary_team_data.find(
+            (item) => item.commentaryTeamId === team.commentaryTeamId
+          );
+          global.tblCommentaryTeams[teamIndex] = updatedData;
+        }
+      }
+    }
+    if(cp.length > 0){
+      // update the global variable
+      for (let player of cp) {
+        let playerIndex = global.tblCommentaryPlayers.findIndex(
+          (item) => item.commentaryPlayerId === player.commentaryPlayerId
+        );
+        if (playerIndex !== -1) {
+          let updatedData = res.commentary_player_data.find(
+            (item) => item.commentaryPlayerId === player.commentaryPlayerId
+          );
+          global.tblCommentaryPlayers[playerIndex] = updatedData;
+        }
+      }
+    }
+  }
+
+  // remvoe over for this commentary
+  global.tblOvers = global.tblOvers.filter((item) => item.commentaryId !== commentaryId);
+  // remove ball by ball for this commentary
+  global.tblCommentaryBallByBall = global.tblCommentaryBallByBall.filter((item) => item.commentaryId !== commentaryId);
+  // remove partnership for this commentary
+  global.tblCommentaryPartnership = global.tblCommentaryPartnership.filter((item) => item.commentaryId !== commentaryId);
+  // remove wicket for this commentary
+  global.tblCommentaryWicket = global.tblCommentaryWicket.filter((item) => item.commentaryId !== commentaryId);
+  
+  return "Commentary reverted successfully";
+
+
+}
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -8999,5 +9078,6 @@ module.exports = {
   updateLineRationService,
   deleteBallFromMemorynService,
   completedCommentaryService,
-  insertCommentaryConsoleFeService
+  insertCommentaryConsoleFeService,
+  revertCommentaryService
 };

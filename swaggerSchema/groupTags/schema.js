@@ -2007,6 +2007,20 @@ const Commentary = {
       },
     },
   },
+  revertCommentary : {
+    schema: {
+      tags: ["Commentary"],
+      description: "revert Commentary",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+        },
+        required: ["commentaryId"],
+      },
+    }
+  },
   dltBallfromMeomory: {
     schema: {
       tags: ["Commentary"],
@@ -7226,6 +7240,7 @@ const VideoLibrary = {
           tag: { type: "string" },
           SEO: { type: "string" },
           description: { type: "string" },
+          videoURL: { type: "string" },
           type: { type: "integer"},
           commentaryId: { type: "integer"},
         },
