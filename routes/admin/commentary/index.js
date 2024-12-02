@@ -54,7 +54,6 @@ const {
   completedCommentary,
   updateEventSnapByCom,
   revertCommentary,
-  getCommentaryData,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -611,7 +610,7 @@ module.exports = async (fastify, opts) => {
   });
 
   fastify.post("/updateDLSDetail", {
-    schema : Commentary.changeMaxOverDetail.schema,
+    schema: Commentary.changeMaxOverDetail.schema,
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
@@ -620,7 +619,7 @@ module.exports = async (fastify, opts) => {
           mode: "edit",
         }),
     ],
-    handler : (request, reply) => changeMaxOverDetail(request, reply, fastify)
+    handler: (request, reply) => changeMaxOverDetail(request, reply, fastify)
   });
 
   fastify.post("/addSuperOver", {
@@ -659,69 +658,69 @@ module.exports = async (fastify, opts) => {
     ],
     handler: (request, reply) => updateLineRatio(request, reply, fastify),
   });
-  fastify.post("/dltBallfromMeomory",{
+  fastify.post("/dltBallfromMeomory", {
     schema: Commentary.dltBallfromMeomory.schema,
     handler: (request, reply) => deleteBallFromMemory(request, reply, fastify)
   })
   fastify.post("/awards", {
     schema: Commentary.getAllAwards.schema,
     preHandler: [
-        (request, reply) => authorize(request, reply, fastify),
-        (request, reply, done) =>
-            checkPermission(request, reply, fastify, {
-                tabName: "Commentary",
-                mode: "edit",
-            }),
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "edit",
+        }),
     ],
     handler: (request, reply) => getAllAward(request, reply, fastify),
   });
   fastify.post("/assignAward", {
-    schema : Commentary.assignAward.schema,
-    preHandler : [
-        (request,reply) => authorize(request,reply,fastify),
-        (request,reply) => 
-            checkPermission(request,reply,fastify,{
-                tabName : "Commentary",
-                mode : "edit"
-            })
+    schema: Commentary.assignAward.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "edit"
+        })
     ],
-    handler : (request,reply) => assignAward(request,reply,fastify)
+    handler: (request, reply) => assignAward(request, reply, fastify)
   })
   fastify.post("/getAssignAward", {
-    schema : Commentary.getAssignAward.schema,
-    preHandler : [
-        (request,reply) => authorize(request,reply,fastify),
-        (request,reply) => 
-            checkPermission(request,reply,fastify,{
-                tabName : "Commentary",
-                mode : "edit"
-            })
+    schema: Commentary.getAssignAward.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "edit"
+        })
     ],
-    handler : (request,reply) => getAssignAward(request,reply,fastify)
+    handler: (request, reply) => getAssignAward(request, reply, fastify)
   })
   fastify.post("/getEventSnap", {
-    schema : Commentary.getById.schema,
-    preHandler : [
-        (request,reply) => authorize(request,reply,fastify),
-        (request,reply) => 
-            checkPermission(request,reply,fastify,{
-                tabName : "Commentary",
-                mode : "view"
-            })
+    schema: Commentary.getById.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "view"
+        })
     ],
-    handler : (request,reply) => getEventSnapByCom(request,reply,fastify)
+    handler: (request, reply) => getEventSnapByCom(request, reply, fastify)
   })
   fastify.post("/updateEventSnap", {
-    schema : Commentary.getById.schema,
-    preHandler : [
-        (request,reply) => authorize(request,reply,fastify),
-        (request,reply) => 
-            checkPermission(request,reply,fastify,{
-                tabName : "Commentary",
-                mode : "view"
-            })
+    schema: Commentary.getById.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "view"
+        })
     ],
-    handler : (request,reply) => updateEventSnapByCom(request,reply,fastify)
+    handler: (request, reply) => updateEventSnapByCom(request, reply, fastify)
   })
   fastify.post("/completeCommentary", {
     schema: Commentary.completedCommentary.schema,
@@ -739,24 +738,12 @@ module.exports = async (fastify, opts) => {
     schema: Commentary.revertCommentary.schema,
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
-      (request, reply) => 
+      (request, reply) =>
         checkPermission(request, reply, fastify, {
           tabName: "Commentary",
           mode: "edit",
         }),
     ],
     handler: (request, reply) => revertCommentary(request, reply, fastify),
-  })
-  fastify.post("/getCommentaryData", {
-    // schema: Commentary.revertCommentary.schema,
-    preHandler: [
-      (request, reply) => authorize(request, reply, fastify),
-      (request, reply) => 
-        checkPermission(request, reply, fastify, {
-          tabName: "Commentary",
-          mode: "view",
-        }),
-    ],
-    handler: (request, reply) => getCommentaryData(request, reply, fastify),
   })
 };
