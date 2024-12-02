@@ -9018,6 +9018,20 @@ const revertCommentaryService = async (request, fastify) => {
 
 
 }
+const getCommentaryDataService = async (request, fastify) => {
+  let res = {
+    commentaryTeams : global.tblCommentaryTeams,
+    commentaryPlayers : global.tblCommentaryPlayers,
+    overs : global.tblOvers,
+    ballByBall : global.tblCommentaryBallByBall,
+    partnership : global.tblCommentaryPartnership,
+    wickets : global.tblCommentaryWicket,
+    commentaries : global.tblCommentaries
+  }
+
+  
+  return res;
+}
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -9079,5 +9093,6 @@ module.exports = {
   deleteBallFromMemorynService,
   completedCommentaryService,
   insertCommentaryConsoleFeService,
-  revertCommentaryService
+  revertCommentaryService,
+  getCommentaryDataService
 };
