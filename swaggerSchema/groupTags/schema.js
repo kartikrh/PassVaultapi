@@ -2007,6 +2007,20 @@ const Commentary = {
       },
     },
   },
+  revertCommentary : {
+    schema: {
+      tags: ["Commentary"],
+      description: "revert Commentary",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+        },
+        required: ["commentaryId"],
+      },
+    }
+  },
   dltBallfromMeomory: {
     schema: {
       tags: ["Commentary"],
