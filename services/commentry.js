@@ -208,7 +208,7 @@ const commentaryDetailsByIdService = async (request, fastify) => {
     isStopLoadCommerty = request.body.isStopLoadCommerty;
   }
   let commentary = await global.tblCommentaries.find(
-    (item) => item.commentaryId === request.body.commentaryId
+    (item) =>  item.commentaryId != null && item.commentaryId === request.body.commentaryId
   );
   if (!commentary) {
     throw new Error("Commentary with this id not Found");
@@ -238,19 +238,19 @@ const commentaryDetailsByIdService = async (request, fastify) => {
   };
 
   const commentaryTeams = await global.tblCommentaryTeams
-    .filter((item) => item.commentaryId === request.body.commentaryId)
+    .filter((item) => item.commentaryId != null && item.commentaryId === request.body.commentaryId)
     .sort((a, b) => b.commentaryTeamId - a.commentaryTeamId);
 
   const commentaryPlayers = await global.tblCommentaryPlayers
-    .filter((item) => item.commentaryId === request.body.commentaryId)
+    .filter((item) =>  item.commentaryId != null && item.commentaryId === request.body.commentaryId)
     .sort((a, b) => b.commentaryPlayerId - a.commentaryPlayerId);
 
   const commentaryOvers = await global.tblOvers
-    .filter((item) => item.commentaryId === request.body.commentaryId)
+    .filter((item) => item.commentaryId != null && item.commentaryId === request.body.commentaryId)
     .sort((a, b) => b.overId - a.overId);
 
   const commentaryBallByBall = await global.tblCommentaryBallByBall
-    .filter((item) => item.commentaryId === request.body.commentaryId)
+    .filter((item) => item.commentaryId != null && item.commentaryId === request.body.commentaryId)
     .sort((a, b) => b.commentaryBallByBallId - a.commentaryBallByBallId);
   // const commentaryBallByBall = await getCommentaryBallByBallQuery(
   //   request,
@@ -258,11 +258,11 @@ const commentaryDetailsByIdService = async (request, fastify) => {
   // );
 
   const commentaryWicket = await global.tblCommentaryWicket
-    .filter((item) => item.commentaryId === request.body.commentaryId)
+    .filter((item) =>  item.commentaryId != null && item.commentaryId === request.body.commentaryId)
     .sort((a, b) => b.commentaryWicketId - a.commentaryWicketId);
 
   const commentaryPartnership = await global.tblCommentaryPartnership
-    .filter((item) => item.commentaryId === request.body.commentaryId)
+    .filter((item) =>  item.commentaryId != null &&item.commentaryId === request.body.commentaryId)
     .sort((a, b) => b.commentaryPartnershipId - a.commentaryPartnershipId);
 
   const commentaryDisplayStatus = await global.tblDisplayStatus.filter(
@@ -278,6 +278,7 @@ const commentaryDetailsByIdService = async (request, fastify) => {
     // get the eventMarket from teamOnstrike
     const teamOnStrike = global.tblCommentaryTeams.find(
       (item) =>
+        item.commentaryId != null &&
         item.commentaryId === commentary.commentaryId &&
         item.currentInnings === commentary.currentInnings &&
         item.teamStatus === 1
