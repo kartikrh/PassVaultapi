@@ -7226,6 +7226,7 @@ const VideoLibrary = {
           tag: { type: "string" },
           SEO: { type: "string" },
           description: { type: "string" },
+          videoURL: { type: "string" },
           type: { type: "integer"},
           commentaryId: { type: "integer"},
         },
