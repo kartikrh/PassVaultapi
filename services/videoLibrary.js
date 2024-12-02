@@ -20,8 +20,8 @@ const saveVideoLibraryService = async (request, fastify) => {
     throw new Error("Video library with same title already exists");
   }
   if (request.body.type === VideoLibraryType.OUR) {
-    if (request.body.videoURL && request.body.videoURL.length) {
-      const firstVideo = request.body.videoURL[0];
+    if (request.body.video && request.body.video.length) {
+      const firstVideo = request.body.video[0];
 
       const imgName = generateImageName({
         name: request.body.title,
@@ -38,7 +38,7 @@ const saveVideoLibraryService = async (request, fastify) => {
         ...ImgModuleConfig.VideoLibrary,
       });
 
-      request.body.videoURL = path;
+      request.body.video = path;
     }
   }
 
@@ -66,8 +66,8 @@ const editVideoLibraryService = async (request, fastify, data) => {
   }
 
   if (request.body.type === VideoLibraryType.OUR) {
-    if (request.body.videoURL && request.body.videoURL.length) {
-      const firstVideo = request.body.videoURL[0];
+    if (request.body.video && request.body.video.length) {
+      const firstVideo = request.body.video[0];
 
       const imgName = generateImageName({
         name: request.body.title,
@@ -84,18 +84,19 @@ const editVideoLibraryService = async (request, fastify, data) => {
         ...ImgModuleConfig.VideoLibrary,
       });
 
-      request.body.videoURL = path;
+      request.body.video = path;
     }
   }
 
   const updateData = {
     title: request.body.title ?? validateId.title,
     isPermanent: request.body.isPermanent ?? validateId.isPermanent,
-    from: request.body.from ?? validateId.from,
-    to: request.body.to ?? validateId.to,
+    from: request.body.from ?? null,
+    to: request.body.to ?? null,
     tag: request.body.tag ?? validateId.tag,
     SEO: request.body.SEO ?? validateId.SEO,
     description: request.body.description ?? validateId.description,
+    video: request.body.video ?? validateId.video,
     videoURL: request.body.videoURL ?? validateId.videoURL,
     type: request.body.type ?? validateId.type,
     type: request.body.type ?? validateId.type,
@@ -142,9 +143,9 @@ const deleteVideoLibraryService = async (request, fastify) => {
   const { id } = request.body;
   for (const elem of id) {
     const validateId = global.tblVideoLibrary.find((item) => item.id === elem);
-    if (validateId && validateId.videoURL && validateId.type === 1) {
+    if (validateId && validateId.video && validateId.type === 1) {
       await removeImageFromServer({
-        path: validateId.videoURL,
+        path: validateId.video,
       });
     }
   }

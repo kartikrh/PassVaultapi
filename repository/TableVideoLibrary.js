@@ -11,6 +11,7 @@ const getAllVideoLibraryQuery = async (fastify) => {
               "wrTag" AS "tag",
               "wrSEO" AS "SEO",
               "wrDescription" AS "description",
+              "wrVideo" AS "video",
               "wrVideoURL" AS "videoURL",
               "wrType" AS "type",
               "wrCommentaryId" AS "commentaryId"
@@ -26,10 +27,10 @@ const insertVideoLibraryQuery = async (data, fastify, request) => {
       `WITH insert_data AS (
               INSERT INTO "tblVideoLibrary" (
               "wrTitle", "wrIsPermanent", "wrFrom", "wrTo", "wrTag",
-              "wrSEO", "wrDescription", "wrVideoURL", "wrType", "wrCommentaryId"
+              "wrSEO", "wrDescription", "wrVideo", "wrVideoURL", "wrType", "wrCommentaryId"
               ) 
               VALUES (
-                  $1, $2, $3, $4, $5, $6, $7, $8, $9, $10
+                  $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11
               ) 
               RETURNING *
               )        
@@ -42,6 +43,7 @@ const insertVideoLibraryQuery = async (data, fastify, request) => {
                 "wrTag" AS "tag",
                 "wrSEO" AS "SEO",
                 "wrDescription" AS "description",
+                "wrVideo" AS "video",
                 "wrVideoURL" AS "videoURL",
                 "wrType" AS "type",
                 "wrCommentaryId" AS "commentaryId"
@@ -56,7 +58,8 @@ const insertVideoLibraryQuery = async (data, fastify, request) => {
           data.tag,
           data.SEO,
           data.description,
-          data.videoURL,
+          data.video || null,
+          data.videoURL || null,
           data.type,
           data.commentaryId || 0
         ],
@@ -64,6 +67,7 @@ const insertVideoLibraryQuery = async (data, fastify, request) => {
     );
     return result[0];
   } catch (err) {
+    console.log("insert", err)
     errorLogger(
       fastify,
       err.message,
@@ -79,8 +83,8 @@ const updateVideoLibraryQuery = async (data, fastify, request) => {
     const result = await fastify.db.query(
       `Update "tblVideoLibrary" set 
               "wrTitle" = $1, "wrIsPermanent" = $2, "wrFrom" = $3, "wrTo" = $4, "wrTag" = $5,
-              "wrSEO" = $6, "wrDescription" = $7, "wrVideoURL" = $8, "wrType" = $9, "wrCommentaryId" = $10
-            where "wrId" = $11
+              "wrSEO" = $6, "wrDescription" = $7, "wrVideo" = $8, "wrVideoURL" = $9, "wrType" = $10, "wrCommentaryId" = $11
+            where "wrId" = $12
             RETURNING 
                 "wrId" AS "id",
                 "wrTitle" AS "title",
@@ -90,6 +94,7 @@ const updateVideoLibraryQuery = async (data, fastify, request) => {
                 "wrTag" AS "tag",
                 "wrSEO" AS "SEO",
                 "wrDescription" AS "description",
+                "wrVideo" AS "video",
                 "wrVideoURL" AS "videoURL",
                 "wrType" AS "type",
                 "wrCommentaryId" AS "commentaryId"`,
@@ -103,7 +108,8 @@ const updateVideoLibraryQuery = async (data, fastify, request) => {
             data.tag,
             data.SEO,
             data.description,
-            data.videoURL,
+            data.video || null,
+            data.videoURL || null,
             data.type,
             data.commentaryId || 0,
             data.id,
@@ -112,6 +118,7 @@ const updateVideoLibraryQuery = async (data, fastify, request) => {
     );
     return result[0];
   } catch (err) {
+    console.log("update", err)
     errorLogger(
       fastify,
       err.message,
