@@ -3440,7 +3440,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
       );
     });
     response.callPredictions = callPredictions;
-    console.log("savedetails response", response)
+    console.log("savedetails response",response)
     return response;
   } catch (error) {
     console.log("console value savedetails error", error);
@@ -9034,7 +9034,7 @@ const getCommentaryDataService = async (request, fastify) => {
       overs: global.tblOvers,
       ballByBall: global.tblCommentaryBallByBall,
       partnership: global.tblCommentaryPartnership,
-      wickets: global.tbl.CommentaryWicket,
+      wickets: global.tblCommentaryWicket,
       commentaries: global.tblCommentaries
     };
 
@@ -9046,7 +9046,7 @@ const getCommentaryDataService = async (request, fastify) => {
     const filePath = path.join(__dirname, `commentaryData_${formattedDate}.json`);
 
     // Convert the response object to a JSON string
-    const jsonData = JSON.stringify(res, null, 2); // This is used for size calculation and compression
+    const jsonData = JSON.stringify(res, null, 2);
 
     // Determine the chunk size for splitting (e.g., 1MB per chunk)
     const chunkSize = 1024 * 1024; // 1MB
@@ -9061,16 +9061,18 @@ const getCommentaryDataService = async (request, fastify) => {
     const maxSize = 1024 * 1024 * 50; // 50MB, adjust as needed
 
     if (jsonData.length > maxSize) {
-      console.log('Data is too large, compressing and saving...');
+      console.log('Data is too large, splitting into chunks or compressing...');
 
       // If data is too large, compress it using gzip before writing to the file
       const compressedData = zlib.gzipSync(jsonData); // Compress the data
       fs.writeFile(filePath + '.gz', compressedData, (err) => {
         if (err) {
           console.error('Error writing compressed file:', err);
-          return { message: 'Error writing compressed file' };
+          // fastify.status(500).send({ message: 'Error writing compressed file' });
+          return  { message: 'Error writing compressed file' };
         } else {
           console.log('Compressed file successfully saved!');
+          // fastify.status(200).send({ message: 'Compressed file successfully created and saved' });
           return { message: 'Compressed file successfully created and saved' };
         }
       });
@@ -9081,7 +9083,8 @@ const getCommentaryDataService = async (request, fastify) => {
         // Data is small enough to be written as a whole
         writeStream.write(jsonData, () => {
           writeStream.end(() => {
-            console.log('File successfully saved as a whole!');
+            console.log('File successfully saved as whole!');
+            /// fastify.status(200).send({ message: 'File successfully created and saved' });
             return { message: 'File successfully created and saved' };
           });
         });
@@ -9098,6 +9101,7 @@ const getCommentaryDataService = async (request, fastify) => {
             if (i === totalChunks - 1) {
               writeStream.end(() => {
                 console.log('File successfully saved in chunks!');
+                // fastify.status(200).send({ message: 'File successfully created and saved in chunks' });
                 return { message: 'File successfully created and saved in chunks' };
               });
             }
@@ -9106,7 +9110,7 @@ const getCommentaryDataService = async (request, fastify) => {
       }
     }
 
-    // Error handling for write stream
+    // Error handling
     writeStream.on('error', (err) => {
       console.error('Error writing to file:', err);
       return { message: 'Error writing to file' };
