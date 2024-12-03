@@ -1970,7 +1970,9 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
       if(category && 
         category.categoryName.toLowerCase() !== "player" && 
         category.categoryName.toLowerCase() !== "wicket" && 
-        category.categoryName.toLowerCase() !== "player boundaries"){
+        category.categoryName.toLowerCase() !== "player boundaries" &&
+        category.categoryName.toLowerCase() !== "player balls faced"
+      ){
 
         if(category.categoryName == "Only Over"){
           is_onlyover = 1;
@@ -2098,6 +2100,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
       callPrediction.endPoint = '/api/v1/updateline';
     }
     callPredictions.push(callPrediction);
+    
     if(updatePlayerLine.length > 0){
       _resFromPredictAPI = await callPredictorMarket(
         {
