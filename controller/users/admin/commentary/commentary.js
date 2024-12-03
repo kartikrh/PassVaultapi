@@ -64,6 +64,7 @@ const { errorLogger } = require("../../../../utilities/logger");
 
 let path = "controller/users/admin/commentary/commentary";
 
+
 const getAllCommentaries = async (request, reply, fastify) => {
   try {
     const result = await allCommentaryService(request, fastify);

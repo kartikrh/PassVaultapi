@@ -307,9 +307,9 @@ const commentaryDetailsByIdService = async (request, fastify) => {
         match_type_id: commentary.matchTypeId,
         event_id: commentary.eventRefId,
         line_ratio_data: eventMarketLine,
-        default_ball_faced: key1?.value || null,
-        default_player_boundaries: key2?.value || null,
-        default_player_runs: key3?.value || null,
+        default_ball_faced: parseInt(key1?.value) || 0,
+        default_player_boundaries: parseInt(key2?.value) || 0,
+        default_player_runs: parseInt(key3?.value) || 0,
       },
       "/api/v1/loadcommentary",
       fastify,
@@ -1240,9 +1240,9 @@ const loadMultiCommentaryService = async (request, fastify) => {
           commentary_id: originalCommentary.commentaryId,
           match_type_id: originalCommentary.matchTypeId,
           event_id: originalCommentary.eventRefId,
-          default_ball_faced: key1?.value || null,
-          default_player_boundaries: key2?.value || null,
-          default_player_runs: key3?.value || null,
+          default_ball_faced: parseInt(key1?.value) || 0,
+          default_player_boundaries: parseInt(key2?.value) || 0,
+          default_player_runs: parseInt(key3?.value) || 0,
         },
         "/api/v1/loadcommentary",
         fastify,
@@ -2796,9 +2796,10 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         _sendPrePlayer.current_boundaries =
           (isNaN(parseInt(player.batFour ?? 0, 10)) ? 0 : parseInt(player.batFour ?? 0, 10)) +
           (isNaN(parseInt(player.batSix ?? 0, 10)) ? 0 : parseInt(player.batSix ?? 0, 10));
-        _sendPrePlayer.balls_faced = player.playerBallFaced || 0;
+        _sendPrePlayer.balls_faced = player.batBall || 0;
         _sendPrePlayers.push(_sendPrePlayer);
       });
+      
       try {
         commentaryPlayers.forEach(async (player) => {
           if (player.bowlerOver !== null && player.bowlerOver !== undefined) {
@@ -3168,9 +3169,9 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           commentary_id: commentaryDetails.commentaryId,
           match_type_id: commentaryDetails.matchTypeId,
           event_id: commentaryDetails.eventRefId,
-          default_ball_faced: key1?.value || null,
-          default_player_boundaries: key2?.value || null,
-          default_player_runs: key3?.value || null,
+          default_ball_faced: parseInt(key1?.value) || 0,
+          default_player_boundaries: parseInt(key2?.value) || 0,
+          default_player_runs: parseInt(key3?.value) || 0,
         },
         "/api/v1/loadcommentary",
         fastify,
@@ -8296,9 +8297,9 @@ const updateDelayInCommentaryService = async (request, fastify) => {
         commentary_id: commentaryId,
         delay: delay,
         event_id: updatedData.eventRefId,
-        default_ball_faced: key1?.value || null,
-        default_player_boundaries: key2?.value || null,
-        default_player_runs: key3?.value || null,
+        default_ball_faced: parseInt(key1?.value) || 0,
+        default_player_boundaries: parseInt(key2?.value) || 0,
+        default_player_runs: parseInt(key3?.value) || 0,
       },
       "/api/v1/loadcommentary",
       fastify,
@@ -8526,9 +8527,9 @@ const updateEventRefIdInCommentaryService = async (request, fastify) => {
         commentary_id: commentaryId,
         eventRefId: eventRefId,
         event_id: updatedData.eventRefId,
-        default_ball_faced: key1?.value || null,
-        default_player_boundaries: key2?.value || null,
-        default_player_runs: key3?.value || null,
+        default_ball_faced: parseInt(key1?.value) || 0,
+        default_player_boundaries: parseInt(key2?.value) || 0,
+        default_player_runs: parseInt(key3?.value) || 0,
       },
       "/api/v1/loadcommentary",
       fastify,
@@ -8591,9 +8592,9 @@ const loadcommentaryService = async (request, fastify) => {
           match_type_id: commentary.matchTypeId,
           event_id: commentary.eventRefId,
           line_ratio_data: eventMarketLine,
-          default_ball_faced: key1?.value || null,
-          default_player_boundaries: key2?.value || null,
-          default_player_runs: key3?.value || null,
+          default_ball_faced: parseInt(key1?.value) || 0,
+          default_player_boundaries: parseInt(key2?.value) || 0,
+          default_player_runs: parseInt(key3?.value) || 0,
         },
         "/api/v1/loadcommentary",
         fastify,
