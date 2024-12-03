@@ -2799,6 +2799,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         _sendPrePlayer.balls_faced = player.batBall || 0;
         _sendPrePlayers.push(_sendPrePlayer);
       });
+      
       try {
         commentaryPlayers.forEach(async (player) => {
           if (player.bowlerOver !== null && player.bowlerOver !== undefined) {
