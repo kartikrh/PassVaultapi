@@ -2796,7 +2796,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         _sendPrePlayer.current_boundaries =
           (isNaN(parseInt(player.batFour ?? 0, 10)) ? 0 : parseInt(player.batFour ?? 0, 10)) +
           (isNaN(parseInt(player.batSix ?? 0, 10)) ? 0 : parseInt(player.batSix ?? 0, 10));
-        _sendPrePlayer.balls_faced = player.playerBallFaced || 0;
+        _sendPrePlayer.balls_faced = player.batBall || 0;
         _sendPrePlayers.push(_sendPrePlayer);
       });
       try {
