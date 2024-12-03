@@ -2100,6 +2100,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
       callPrediction.endPoint = '/api/v1/updateline';
     }
     callPredictions.push(callPrediction);
+    
     if(updatePlayerLine.length > 0){
       _resFromPredictAPI = await callPredictorMarket(
         {
