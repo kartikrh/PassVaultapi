@@ -298,12 +298,18 @@ const commentaryDetailsByIdService = async (request, fastify) => {
     //   status_code: 500,
     //   error_msg: 'the JSON object must be str, bytes or bytearray, not NoneType'
     // }
+    let key1 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTBALLFACED);
+    let key2 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTPLAYERBOUNDARIES);
+    let key3 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTPLAYERRUNS);
     _resFromPredictAPI = await callPredictorMarket(
       {
         commentary_id: commentary.commentaryId,
         match_type_id: commentary.matchTypeId,
         event_id: commentary.eventRefId,
         line_ratio_data: eventMarketLine,
+        default_ball_faced: key1?.value || null,
+        default_player_boundaries: key2?.value || null,
+        default_player_runs: key3?.value || null,
       },
       "/api/v1/loadcommentary",
       fastify,
@@ -1226,11 +1232,17 @@ const loadMultiCommentaryService = async (request, fastify) => {
         originalCommentary.commentaryStatus == 3)
     ) {
       _resFromPredictAPI = null;
+      let key1 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTBALLFACED);
+      let key2 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTPLAYERBOUNDARIES);
+      let key3 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTPLAYERRUNS);
       _resFromPredictAPI = await callPredictorMarket(
         {
           commentary_id: originalCommentary.commentaryId,
           match_type_id: originalCommentary.matchTypeId,
           event_id: originalCommentary.eventRefId,
+          default_ball_faced: key1?.value || null,
+          default_player_boundaries: key2?.value || null,
+          default_player_runs: key3?.value || null,
         },
         "/api/v1/loadcommentary",
         fastify,
@@ -2784,6 +2796,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         _sendPrePlayer.current_boundaries =
           (isNaN(parseInt(player.batFour ?? 0, 10)) ? 0 : parseInt(player.batFour ?? 0, 10)) +
           (isNaN(parseInt(player.batSix ?? 0, 10)) ? 0 : parseInt(player.batSix ?? 0, 10));
+        _sendPrePlayer.balls_faced = player.playerBallFaced || 0;
         _sendPrePlayers.push(_sendPrePlayer);
       });
       try {
@@ -3147,11 +3160,17 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
       });
       //_resFromPredictAPI = null;
       //_resFromPredictAPI = await
+      let key1 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTBALLFACED);
+      let key2 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTPLAYERBOUNDARIES);
+      let key3 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTPLAYERRUNS);
       callPredictorMarket(
         {
           commentary_id: commentaryDetails.commentaryId,
           match_type_id: commentaryDetails.matchTypeId,
           event_id: commentaryDetails.eventRefId,
+          default_ball_faced: key1?.value || null,
+          default_player_boundaries: key2?.value || null,
+          default_player_runs: key3?.value || null,
         },
         "/api/v1/loadcommentary",
         fastify,
@@ -8269,11 +8288,17 @@ const updateDelayInCommentaryService = async (request, fastify) => {
   let _resFromPredictAPI;
   let callPrediction = {};
   if (updatedData.isPredictMarket == true) {
+    let key1 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTBALLFACED);
+    let key2 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTPLAYERBOUNDARIES);
+    let key3 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTPLAYERRUNS);
     _resFromPredictAPI = await callPredictorMarket(
       {
         commentary_id: commentaryId,
         delay: delay,
         event_id: updatedData.eventRefId,
+        default_ball_faced: key1?.value || null,
+        default_player_boundaries: key2?.value || null,
+        default_player_runs: key3?.value || null,
       },
       "/api/v1/loadcommentary",
       fastify,
@@ -8493,11 +8518,17 @@ const updateEventRefIdInCommentaryService = async (request, fastify) => {
   let _resFromPredictAPI;
   let callPrediction = {};
   if (updatedData.isPredictMarket == true) {
+    let key1 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTBALLFACED);
+    let key2 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTPLAYERBOUNDARIES);
+    let key3 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTPLAYERRUNS);
     _resFromPredictAPI = await callPredictorMarket(
       {
         commentary_id: commentaryId,
         eventRefId: eventRefId,
         event_id: updatedData.eventRefId,
+        default_ball_faced: key1?.value || null,
+        default_player_boundaries: key2?.value || null,
+        default_player_runs: key3?.value || null,
       },
       "/api/v1/loadcommentary",
       fastify,
@@ -8551,12 +8582,18 @@ const loadcommentaryService = async (request, fastify) => {
           fastify
         );
       }
+      let key1 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTBALLFACED);
+      let key2 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTPLAYERBOUNDARIES);
+      let key3 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTPLAYERRUNS);
       _resFromPredictAPI = await callPredictorMarket(
         {
           commentary_id: commentary.commentaryId,
           match_type_id: commentary.matchTypeId,
           event_id: commentary.eventRefId,
           line_ratio_data: eventMarketLine,
+          default_ball_faced: key1?.value || null,
+          default_player_boundaries: key2?.value || null,
+          default_player_runs: key3?.value || null,
         },
         "/api/v1/loadcommentary",
         fastify,
