@@ -1,4 +1,4 @@
-const { updateAverageOfPlayerQuery, updateBoundaryOfPlayerQuery } = require("../repository/TableCommentary");
+const { updateAverageOfPlayerQuery, updateBoundaryOfPlayerQuery, updatePbfOfPlayerQuery } = require("../repository/TableCommentary");
 const {
   getAllEventMarketsQuery,
   deleteEventMarketQuery,
@@ -1945,6 +1945,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
   const boundaryPlayer = [];
   const updatedOvers = [];
   const updatePlayerLine = [];
+  const pbfMarket = [];
   // const response = [];
   for (let item of updatedData) {
     let index = global.tblEventMarketsV1.findIndex(
@@ -1963,6 +1964,9 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
     }
     if(category && category.categoryName.toLowerCase() == "player boundaries"){
       boundaryPlayer.push(item);
+    }
+    if(category && category.categoryName.toLowerCase() == "player balls faced"){
+      pbfMarket.push(item);
     }
     if(item.marketTypeId == MarketTypeId.Fancy || item.marketTypeId == MarketTypeId.LineMarket){
       let is_onlyover = 0;
@@ -2196,6 +2200,28 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
       await updateBoundaryOfPlayerQuery({
         commentaryPlayerId: bp.playerId,
         boundary: boun,
+      }, request, fastify);
+    }
+  }
+  if(pbfMarket.length > 0){
+    for (let pf of pbfMarket){
+      let player = global.tblCommentaryPlayers.find(
+        (item) => item.commentaryPlayerId === pf.playerId
+      );
+      if (!player) {
+        errorLogger(
+          fastify,
+          "Player with this id not Found",
+          "ERROR --> services/eventMarket.js/updateMarketRateServiceV1",
+          request
+        );
+        continue;
+      }
+      let count = player.batBall;
+      let pbf =(pf.runners[0].line - count).toFixed(2);
+      await updatePbfOfPlayerQuery({
+        commentaryPlayerId: pf.playerId,
+        ballsFaced: pbf,
       }, request, fastify);
     }
   }
