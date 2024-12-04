@@ -8988,10 +8988,10 @@ const revertCommentaryService = async (request, fastify) => {
     throw new Error("Commentary with this id not Found");
   }
 
-  // let checkMar = await getMarCountByComQuery({ commentaryId },request, fastify);
-  // if(checkMar.marketCount > 0){
-  //   throw new Error("Cannot revert the commentary as markets are already created");
-  // }
+  let checkMar = await getMarCountByComQuery({ commentaryId },request, fastify);
+  if(checkMar.marketCount > 0){
+    throw new Error("Cannot revert the commentary as markets are already created");
+  }
 
   let res = await revertCommentaryQuery(request.body, fastify, request);
   // console.log("revertCommentaryQuery", r);
