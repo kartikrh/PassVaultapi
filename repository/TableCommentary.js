@@ -3521,5 +3521,6 @@ module.exports = {
   completedCommentaryStatusQuery,
   updateBoundaryOfPlayerQuery,
   insertCommentaryConsoleFeQuery,
-  revertCommentaryQuery
+  revertCommentaryQuery,
+  updatePbfOfPlayerQuery
 };
