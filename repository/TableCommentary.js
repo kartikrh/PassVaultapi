@@ -3428,6 +3428,30 @@ const revertCommentaryQuery = async (data, fastify, request) => {
     throw new Error(error.message);
   }
 }
+const updatePbfOfPlayerQuery = async (data, request,fastify) => {
+  try {
+    let result = await fastify.db.query(
+      `update "tblCommentaryPlayers" set
+      "wrPlayerBallFaced" = $1
+      where "wrCommentaryPlayerId" = $2
+      `,
+      {
+        bind: [data.ballsFaced, data.commentaryPlayerId],
+      }
+    );
+
+    return result;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCommentary/updatePbfOfPlayerQuery",
+      request
+    );
+    throw new Error(error.message);
+    
+  }
+}
 
 module.exports = {
   getAllCommentaryQuery,
@@ -3497,5 +3521,6 @@ module.exports = {
   completedCommentaryStatusQuery,
   updateBoundaryOfPlayerQuery,
   insertCommentaryConsoleFeQuery,
-  revertCommentaryQuery
+  revertCommentaryQuery,
+  updatePbfOfPlayerQuery
 };
