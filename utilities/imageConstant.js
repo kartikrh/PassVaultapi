@@ -104,6 +104,13 @@ const ImgModuleConfig = {
     height: 0,
     width: 0,
   },
+  ShotType: {
+    type: "shotType",
+    formate: ".jpg,.png,.jpeg,.avif,.webp",
+    size: 0,
+    height: 0,
+    width: 0,
+  },
 };
 
 module.exports = {
