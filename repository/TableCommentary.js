@@ -3453,6 +3453,59 @@ const updatePbfOfPlayerQuery = async (data, request,fastify) => {
   }
 }
 
+const getCommentaryBallByBallByIdsQuery = async (commentaryBallByBallId, request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `select
+      "wrCommentaryBallByBallId" as "commentaryBallByBallId",
+      "wrCommentaryId" as "commentaryId",
+      "wrTeamId" as "teamId",
+      "wrOverId" as "overId",
+      "wrOverCount" as "overCount",
+      "wrCurrentOverBalls" as "currentOverBalls",
+      "wrBowler_ID" as "bowlerId",
+      "wrBat_StrikeID" as "batStrikeId",
+      "wrBat_NONStrikeID" as "batNonStrikeId",
+      "wrBall_IsCount" as "ballIsCount",
+      "wrBall_Type" as "ballType",
+      "wrBall_IsDot" as "ballIsDot",
+      "wrBall_Run" as "ballRun",
+      "wrBall_ExtraRun" as "ballExtraRun",
+      "wrBall_isBoundry" as "ballIsBoundry",
+      "wrBall_FOUR" as "ballFour",
+      "wrBall_SIX" as "ballSix",
+      "wrBall_IsWicket" as "ballIsWicket",
+      "wrBall_WicketType" as "ballWicketType",
+      "wrBall_PlayerID" as "ballPlayerId",
+      "wrBall_BowlerID" as "ballBowlerId",
+      "wrBall_FielderID1" as "ballFielderId1",
+      "wrBall_FielderID2" as "ballFielderId2",
+      "wrOver_isMaiden" as "overIsMaiden",
+      "wrNextBat_StrikeID" as "nextBatStrikeId",
+      "wrNextBat_NONStrikeID" as "nextBatNonStrikeId",
+      "wrIsDelete" as "isDelete",
+      "wrCurrentInnings" as "currentInnings",
+      "wrCreatedDate" as "createdDate",
+      "wrAutoStrikeBallCount" as "autoStrikeBallCount"
+      from "tblCommentaryBallByBalls"
+      WHERE "wrCommentaryBallByBallId" = ANY($1) AND "wrIsDeletedStatus" = false
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [commentaryBallByBallId]
+      }
+    );
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCommentary.js/getCommentaryBallByBallByIdsQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+}
+
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -3522,5 +3575,6 @@ module.exports = {
   updateBoundaryOfPlayerQuery,
   insertCommentaryConsoleFeQuery,
   revertCommentaryQuery,
-  updatePbfOfPlayerQuery
+  updatePbfOfPlayerQuery,
+  getCommentaryBallByBallByIdsQuery
 };
