@@ -692,7 +692,7 @@ const createUpdateGlobalSignalRData = async (message, request) => {
             }
         }
 
-        if(!isCalled && EventsMarketobj.length > 0 && data.ms !== EventMarketStatus.Open){
+        if(!isCalled && data.rt === null && EventsMarketobj.length > 0 && data.ms !== EventMarketStatus.Open){
             try {
                 global.tblEventMarkets = global.tblEventMarkets.map(item => {
                     if (item.rateSourceRefID === data.mi) {

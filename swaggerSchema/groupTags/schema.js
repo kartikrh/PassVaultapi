@@ -7267,6 +7267,102 @@ const VideoLibrary = {
     },
   },
 };
+const ShotType = {
+  getAll: {
+    schema: {
+      tags: ["ShotType"],
+      description: "get all shot type data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+  byId: {
+    schema: {
+      tags: ["ShotType"],
+      description: "get shot type by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+        },
+        required: ["id"],
+      },
+    },
+  },
+  saveShotType: {
+    schema: {
+      tags: ["ShotType"],
+      description: "save shot type data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          isActive: { type: "boolean" },
+          id: { type: "number" },
+        },
+        required: ["id"],
+      },
+    },
+  },
+  deleteShotType: {
+    schema: {
+      tags: ["ShotType"],
+      description: "delete shot type(s)",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["id"],
+      },
+    },
+  },
+  updateDisplayOrder: {
+    schema: {
+      tags: ["ShotType"],
+      description: "update display order",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "integer" },
+            displayOrder: { type: "integer" },
+          },
+        },
+        minItems: 1,
+      },
+    },
+  },
+  updateIsActive: {
+    schema: {
+      tags: ["ShotType"],
+      description: "update isActive",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["id", "isActive"],
+      },
+    },
+  },
+};
 module.exports = {
   Auth,
   Tabs,
@@ -7327,4 +7423,5 @@ module.exports = {
   PhotoLibrary,
   LibraryImages,
   VideoLibrary,
+  ShotType,
 };

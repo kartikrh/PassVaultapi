@@ -2283,7 +2283,10 @@ const testStoreProcedureService = async (request, fastify) => {
           current_team_id: strikeTeam.teamId,
           total_score: strikeTeam.teamScore,
           current_ball: decimalOverCount,
-          player_details: _sendPrePlayers
+          player_details: _sendPrePlayers,
+          ball_by_ball_id: updatedData.commentaryBallByBallDetails.commentaryBallByBallId
+          ? parseInt(updatedData.commentaryBallByBallDetails.commentaryBallByBallId)
+          : null
         },
         "/api/v1/playerpredictscore",
         fastify,
@@ -3374,7 +3377,10 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           current_team_id: strikeTeam.teamId,
           total_score: strikeTeam.teamScore,
           current_ball: decimalOverCount,
-          player_details: _sendPrePlayers
+          player_details: _sendPrePlayers,
+          ball_by_ball_id: updatedData.commentaryBallByBallDetails.commentaryBallByBallId
+          ? parseInt(updatedData.commentaryBallByBallDetails.commentaryBallByBallId)
+          : null
         },
         "/api/v1/playerpredictscore",
         fastify,
@@ -4126,20 +4132,20 @@ const updateCommentaryStatusService = async (request, fastify) => {
   }
   commentaryDetails.callPredictions = callPredictions;
   // Return the updated commentary detailss
-  if (global.tblCommentaries[index].isPredictMarket) {
-    suspendMarketService({
-      commentaryId: commentaryId,
-    }, request, fastify)
-      .catch((err) => {
-        console.log("suspendMarketService console", err);
-        errorLogger(
-          fastify,
-          err.message,
-          "ERROR --> services/commentary.js/updateCommentaryStatusService - suspendMarketService",
-          request
-        );
-      });
-  }
+  // if (global.tblCommentaries[index].isPredictMarket) {
+  //   suspendMarketService({
+  //     commentaryId: commentaryId,
+  //   }, request, fastify)
+  //     .catch((err) => {
+  //       console.log("suspendMarketService console", err);
+  //       errorLogger(
+  //         fastify,
+  //         err.message,
+  //         "ERROR --> services/commentary.js/updateCommentaryStatusService - suspendMarketService",
+  //         request
+  //       );
+  //     });
+  // }
   return {
     name: "commentaryDetails",
     value: commentaryDetails,
@@ -8988,10 +8994,10 @@ const revertCommentaryService = async (request, fastify) => {
     throw new Error("Commentary with this id not Found");
   }
 
-  // let checkMar = await getMarCountByComQuery({ commentaryId },request, fastify);
-  // if(checkMar.marketCount > 0){
-  //   throw new Error("Cannot revert the commentary as markets are already created");
-  // }
+  let checkMar = await getMarCountByComQuery({ commentaryId },request, fastify);
+  if(checkMar.marketCount > 0){
+    throw new Error("Cannot revert the commentary as markets are already created");
+  }
 
   let res = await revertCommentaryQuery(request.body, fastify, request);
   // console.log("revertCommentaryQuery", r);

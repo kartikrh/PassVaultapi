@@ -183,7 +183,7 @@ module.exports = async function (fastify, opts) {
     throwFileSizeLimit: true,
     addToBody: true,
     limits: {
-      fileSize: 10 * 1024 * 1024,
+      fileSize: 100 * 1024 * 1024,
     },
   });
   fastify.addHook("preClose", async () => {
