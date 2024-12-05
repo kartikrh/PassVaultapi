@@ -3643,3 +3643,4 @@ module.exports = {
   getOpenMarketByCIdQuery,
   suspendMarketQuery
 }
+
