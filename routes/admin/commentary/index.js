@@ -54,6 +54,7 @@ const {
   completedCommentary,
   updateEventSnapByCom,
   revertCommentary,
+  getCommentaryBallByBall,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -745,5 +746,17 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request, reply) => revertCommentary(request, reply, fastify),
+  })
+  fastify.post("/commentaryBallByBallIds", {
+    schema: Commentary.getCommentaryBallByBallData.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "view",
+        }),
+    ],
+    handler: (request, reply) => getCommentaryBallByBall(request, reply, fastify),
   })
 };

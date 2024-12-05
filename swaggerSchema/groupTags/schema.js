@@ -2829,6 +2829,24 @@ const Commentary = {
       },
     },
   },
+  getCommentaryBallByBallData: {
+    schema: {
+      tags: ["Commentary"],
+      description: "get CommentaryBallByBall data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryBallByBallId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["commentaryBallByBallId"],
+      },
+    },
+  },
 };
 
 const Compitition = {
