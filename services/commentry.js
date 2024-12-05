@@ -4126,20 +4126,20 @@ const updateCommentaryStatusService = async (request, fastify) => {
   }
   commentaryDetails.callPredictions = callPredictions;
   // Return the updated commentary detailss
-  if (global.tblCommentaries[index].isPredictMarket) {
-    suspendMarketService({
-      commentaryId: commentaryId,
-    }, request, fastify)
-      .catch((err) => {
-        console.log("suspendMarketService console", err);
-        errorLogger(
-          fastify,
-          err.message,
-          "ERROR --> services/commentary.js/updateCommentaryStatusService - suspendMarketService",
-          request
-        );
-      });
-  }
+  // if (global.tblCommentaries[index].isPredictMarket) {
+  //   suspendMarketService({
+  //     commentaryId: commentaryId,
+  //   }, request, fastify)
+  //     .catch((err) => {
+  //       console.log("suspendMarketService console", err);
+  //       errorLogger(
+  //         fastify,
+  //         err.message,
+  //         "ERROR --> services/commentary.js/updateCommentaryStatusService - suspendMarketService",
+  //         request
+  //       );
+  //     });
+  // }
   return {
     name: "commentaryDetails",
     value: commentaryDetails,
