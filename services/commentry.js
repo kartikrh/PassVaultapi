@@ -2283,7 +2283,10 @@ const testStoreProcedureService = async (request, fastify) => {
           current_team_id: strikeTeam.teamId,
           total_score: strikeTeam.teamScore,
           current_ball: decimalOverCount,
-          player_details: _sendPrePlayers
+          player_details: _sendPrePlayers,
+          ball_by_ball_id: updatedData.commentaryBallByBallDetails.commentaryBallByBallId
+          ? parseInt(updatedData.commentaryBallByBallDetails.commentaryBallByBallId)
+          : null
         },
         "/api/v1/playerpredictscore",
         fastify,
@@ -3374,7 +3377,10 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           current_team_id: strikeTeam.teamId,
           total_score: strikeTeam.teamScore,
           current_ball: decimalOverCount,
-          player_details: _sendPrePlayers
+          player_details: _sendPrePlayers,
+          ball_by_ball_id: updatedData.commentaryBallByBallDetails.commentaryBallByBallId
+          ? parseInt(updatedData.commentaryBallByBallDetails.commentaryBallByBallId)
+          : null
         },
         "/api/v1/playerpredictscore",
         fastify,
