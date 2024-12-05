@@ -3581,6 +3581,32 @@ const suspendMarketQuery = async (data, request, fastify) => {
     throw new Error(error.message);
   }
 }
+const getMarCountByComQuery = async (data, request, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `
+      SELECT COUNT("wrID") as "marketCount"
+      FROM "tblEventMarkets"
+      WHERE "wrCommentaryId" = $1
+
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [data.commentaryId],
+      }
+    )
+    console.log(result)
+    return result[0];
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/getMarCountByCom",
+      request
+    );
+    throw new Error(error.message);
+  }
+}
 module.exports = {
   getAllEventMarketsQuery,
   createManyEventMarketQuery,
@@ -3641,6 +3667,7 @@ module.exports = {
   closeEventMarketsQuery,
   cancelEventMarketsQuery,
   getOpenMarketByCIdQuery,
-  suspendMarketQuery
+  suspendMarketQuery,
+  getMarCountByComQuery
 }
 
