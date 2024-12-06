@@ -56,6 +56,7 @@ const {
   completedCommentaryService,
   insertCommentaryConsoleFeService,
   revertCommentaryService,
+  getCommentaryBallByBallService,
 } = require("../../../../services/commentry");
 const { getEventSnapByComService, updateEventSnapByComService } = require("../../../../services/competitionEventSnap");
 const { getAllCommentariesDataService } = require("../../../../services/score");
@@ -805,6 +806,15 @@ const revertCommentary = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 }
+const getCommentaryBallByBall = async (request, reply, fastify) => {
+  try {
+    const result = await getCommentaryBallByBallService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/getCommentaryBallByBall", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+}
 module.exports = {
   getAllCommentaries,
   getCommentaryById,
@@ -867,5 +877,6 @@ module.exports = {
   completedCommentary,
   updateEventSnapByCom,
   insertCommentaryConsoleFe,
-  revertCommentary
+  revertCommentary,
+  getCommentaryBallByBall,
 };

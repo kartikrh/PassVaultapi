@@ -62,7 +62,8 @@ const {
   updateLineRatioComQuery,
   completedCommentaryStatusQuery,
   insertCommentaryConsoleFeQuery,
-  revertCommentaryQuery
+  revertCommentaryQuery,
+  getCommentaryBallByBallByIdsQuery,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -9061,6 +9062,21 @@ const revertCommentaryService = async (request, fastify) => {
 
 
 }
+
+const getCommentaryBallByBallService = async (request, fastify) => {
+  const { commentaryBallByBallId } = request.body;
+
+  const Data_DBcomBB = await getCommentaryBallByBallByIdsQuery(commentaryBallByBallId, request, fastify);
+  const Data_GLComBB = global.tblCommentaryBallByBall.filter((item) =>
+    commentaryBallByBallId.includes(item.commentaryBallByBallId)
+  );
+
+  return {
+    Data_DBcomBB,
+    Data_GLComBB,
+  }
+}
+
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -9122,5 +9138,6 @@ module.exports = {
   deleteBallFromMemorynService,
   completedCommentaryService,
   insertCommentaryConsoleFeService,
-  revertCommentaryService
+  revertCommentaryService,
+  getCommentaryBallByBallService
 };
