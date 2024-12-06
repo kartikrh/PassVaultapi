@@ -64,6 +64,7 @@ const {
   insertCommentaryConsoleFeQuery,
   revertCommentaryQuery,
   getCommentaryBallByBallByIdsQuery,
+  insertWagonWheelPositionQuery,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -9077,6 +9078,30 @@ const getCommentaryBallByBallService = async (request, fastify) => {
   }
 }
 
+const saveWagonWheelPositionService = async (request, fastify) => {
+  const validateId = global.tblCommentaryBallByBall.find((item) =>
+    item.commentaryBallByBallId === request.body.commentaryBallByBallId
+  );
+  if(!validateId) {
+    throw new Error("Ballbyball with this id not Found");
+  }
+
+  const wagonWheel = await insertWagonWheelPositionQuery(request.body, request, fastify);
+  const index = global.tblCommentaryBallByBall.findIndex((item) =>
+    item.commentaryBallByBallId === request.body.commentaryBallByBallId
+  );
+  if (index !== -1) {
+    global.tblCommentaryBallByBall[index] = {
+      ...global.tblCommentaryBallByBall[index],
+      x2: wagonWheel[0].x2,
+      y2: wagonWheel[0].y2,
+      shortType: wagonWheel[0].shortType,
+      commentryRemark: wagonWheel[0].commentryRemark,
+    };
+  }
+  return wagonWheel[0];
+}
+
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -9139,5 +9164,6 @@ module.exports = {
   completedCommentaryService,
   insertCommentaryConsoleFeService,
   revertCommentaryService,
-  getCommentaryBallByBallService
+  getCommentaryBallByBallService,
+  saveWagonWheelPositionService,
 };
