@@ -55,6 +55,7 @@ const {
   updateEventSnapByCom,
   revertCommentary,
   getCommentaryBallByBall,
+  saveWagonWheel,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -758,5 +759,17 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request, reply) => getCommentaryBallByBall(request, reply, fastify),
+  })
+  fastify.post("/wagonWheel", {
+    schema: Commentary.saveWagonWheel.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "edit",
+        }),
+    ],
+    handler: (request, reply) => saveWagonWheel(request, reply, fastify),
   })
 };

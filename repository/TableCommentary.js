@@ -1110,7 +1110,11 @@ const getAllCommentaryBallByBallQuery = async (fastify) => {
     "wrIsDelete" as "isDelete",
     "wrCurrentInnings" as "currentInnings",
     "wrCreatedDate" as "createdDate",
-    "wrAutoStrikeBallCount" as "autoStrikeBallCount"
+    "wrAutoStrikeBallCount" as "autoStrikeBallCount",
+    "wrX2" as "x2",
+    "wrY2" as "y2",
+    "wrShortType" as "shortType",
+    "wrCommentryRemark" as "commentryRemark"
     from "tblCommentaryBallByBalls"
     WHERE "wrIsDeletedStatus" = false
     `,
@@ -3506,6 +3510,35 @@ const getCommentaryBallByBallByIdsQuery = async (commentaryBallByBallId, request
   }
 }
 
+const insertWagonWheelPositionQuery = async (data, request, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `UPDATE "tblCommentaryBallByBalls" SET 
+              "wrX2" = $1,"wrY2" = $2,"wrShortType" = $3, "wrCommentryRemark" = $4
+              where "wrCommentaryBallByBallId" = $5
+          RETURNING 
+              "wrX2" AS "x2",
+              "wrY2" AS "y2",
+              "wrShortType" AS "shortType",
+              "wrCommentryRemark" AS "commentryRemark",
+              "wrCommentaryBallByBallId" AS "commentaryBallByBallId";`,
+      {
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [data.x2, data.y2, data.shortType || null, data.commentryRemark || null, data.commentaryBallByBallId],
+      }
+    );
+    return result[0];
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCommentary.js/insertWagonWheelPositionQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+}
+
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -3576,5 +3609,6 @@ module.exports = {
   insertCommentaryConsoleFeQuery,
   revertCommentaryQuery,
   updatePbfOfPlayerQuery,
-  getCommentaryBallByBallByIdsQuery
+  getCommentaryBallByBallByIdsQuery,
+  insertWagonWheelPositionQuery,
 };

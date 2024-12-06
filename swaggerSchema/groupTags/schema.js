@@ -2847,6 +2847,24 @@ const Commentary = {
       },
     },
   },
+  saveWagonWheel: {
+    schema: {
+      tags: ["Commentary"],
+      description: "Save positions on wagon wheel",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryBallByBallId: { type: "integer" },
+          x2: { type: "number" },
+          y2: { type: "number" },
+          shortType: { type: "string" },
+          commentryRemark: { type: "string" },
+        },
+        required: ["commentaryBallByBallId", "x2", "y2"],
+      },
+    },
+  },
 };
 
 const Compitition = {
