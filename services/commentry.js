@@ -324,6 +324,11 @@ const commentaryDetailsByIdService = async (request, fastify) => {
       callPrediction.endPoint = '/api/v1/loadcommentary';
     }
   }
+
+  const shotTypes = await global.tblShotType
+  .filter((item) => item?.isActive === true)
+  .sort((a, b) => a.displayOrder - b.displayOrder);
+
   const allDetails = {
     commentaryDetails: { ...commentary, ...dataToreturn },
     matchTypeDetails: matchType,
@@ -334,7 +339,8 @@ const commentaryDetailsByIdService = async (request, fastify) => {
     commentaryWicket,
     commentaryPartnership,
     commentaryDisplayStatus,
-    callPrediction
+    callPrediction,
+    shotTypes
   };
   return allDetails;
 };
