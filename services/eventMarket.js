@@ -1068,7 +1068,7 @@ const changeMarketCloseService = async (request, fastify) => {
     // global.tblEventMarkets[eventMarket].status = EventMarketStatus.Close;
     // global.tblEventMarkets[eventMarket].data = updatedData;
     // console.log("updatedData", updatedData);
-    if(commentary.commentaruStatus === commentaryStatus.INPROGRESS || commentary.commentaryStatus === commentaryStatus.COMPLETED){
+    if(commentary.commentaryStatus === commentaryStatus.INPROGRESS || commentary.commentaryStatus === commentaryStatus.COMPLETED){
       const strikeTeam = global.tblCommentaryTeams.find(
         (item) => item.commentaryId === commentaryId && item.teamStatus === 1
       );
