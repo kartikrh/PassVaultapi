@@ -5,7 +5,6 @@ const {
 } = require("../utilities");
 const { errorLogger, marketDataLogger } = require("../utilities/logger");
 const { getPagination } = require("../utilities");
-const fastify = require("fastify");
 
 const getAllEventMarketsQuery = async (fastify, whereCondition = null) => {
   if(whereCondition === null){
