@@ -3526,11 +3526,11 @@ const saveComTemplateQuery = async (data, request, fastify) => {
     if(data.dltTemplate.length > 0) {
       await fastify.db.query(
         `
-          DELETE FROM "tblCommMatchTypeTemplate" WHERE "wrId" IN ($1)
+          DELETE FROM "tblCommMatchTypeTemplate" WHERE "wrId" = ANY($1)
         `,
         {
           type: fastify.db.QueryTypes.SELECT,
-          bind : [data.dltTemplate.map((item) => item).join(",")]
+          bind : [data.dltTemplate]
         }
       );
    }
@@ -3555,7 +3555,7 @@ const saveComTemplateQuery = async (data, request, fastify) => {
         templateToSave = data.saveTemplates;
       }
       if(templateToSave.length > 0) {
-      await fastify.db.query(
+        	await fastify.db.query(
         `
           INSERT INTO "tblCommMatchTypeTemplate" ("wrCommentaryId", "wrMarketTemplateId", "wrCreatedBy", "wrCreatedAt")
           VALUES 
@@ -3570,7 +3570,9 @@ const saveComTemplateQuery = async (data, request, fastify) => {
 
     return true;
 
+
   } catch (error) {
+    console.log(error);
     errorLogger(
       fastify,
       error.message,
