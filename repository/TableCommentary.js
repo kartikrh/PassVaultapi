@@ -3535,35 +3535,38 @@ const saveComTemplateQuery = async (data, request, fastify) => {
       );
    }
 
-    const existingTemp = await fastify.db.query(
-      `
-        SELECT "wrMarketTemplateId" as "marketTemplateId" FROM "tblCommMatchTypeTemplate" WHERE "wrCommentaryId" = $1
-      `,
-      {
-        type: fastify.db.QueryTypes.SELECT,
-        bind: [data.saveTemplates[0].commentaryId],
-      }
-    );
+   if(data.saveTemplates.length > 0) {
 
-    let templateToSave = []
-    if (existingTemp.length > 0) {
-      templateToSave = data.saveTemplates.filter((item) => !existingTemp.map((temp) => temp.marketTemplateId).includes(item.marketTemplateId));
-    } 
-    else {
-      templateToSave = data.saveTemplates;
-    }
-    if(templateToSave.length > 0) {
-    await fastify.db.query(
-      `
-        INSERT INTO "tblCommMatchTypeTemplate" ("wrCommentaryId", "wrMarketTemplateId", "wrCreatedBy", "wrCreatedAt")
-        VALUES 
-        ${templateToSave.map((item) => `(${item.commentaryId}, ${item.marketTemplateId}, ${request.userTokenInfo.WrUserId}, now())`).join(",")}
-      `,
-      {
-        type: fastify.db.QueryTypes.SELECT,
+      const existingTemp = await fastify.db.query(
+        `
+          SELECT "wrMarketTemplateId" as "marketTemplateId" FROM "tblCommMatchTypeTemplate" WHERE "wrCommentaryId" = $1
+        `,
+        {
+          type: fastify.db.QueryTypes.SELECT,
+          bind: [data.saveTemplates[0].commentaryId],
+        }
+      );
+
+      let templateToSave = []
+      if (existingTemp.length > 0) {
+        templateToSave = data.saveTemplates.filter((item) => !existingTemp.map((temp) => temp.marketTemplateId).includes(item.marketTemplateId));
+      } 
+      else {
+        templateToSave = data.saveTemplates;
       }
-    );
-  }
+      if(templateToSave.length > 0) {
+      await fastify.db.query(
+        `
+          INSERT INTO "tblCommMatchTypeTemplate" ("wrCommentaryId", "wrMarketTemplateId", "wrCreatedBy", "wrCreatedAt")
+          VALUES 
+          ${templateToSave.map((item) => `(${item.commentaryId}, ${item.marketTemplateId}, ${request.userTokenInfo.WrUserId}, now())`).join(",")}
+        `,
+        {
+          type: fastify.db.QueryTypes.SELECT,
+        }
+      );
+    }
+    }
 
     return true;
 
