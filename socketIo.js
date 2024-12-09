@@ -20,10 +20,17 @@ const connection = (socket , fastify) => {
     }
   }
   socket.on("updatedEventMarket", async (data) => {
+    let logId;
+    const requestTime = new Date();
     try {
       let MarketArr = [];
       //console.log("marketData", da1a);
       const { commentaryId, marketData } = data;
+      logId = await fastify.db.query(
+        `INSERT INTO "tblTimeLogs" ("commentaryId","marketData", "requestTime") 
+         VALUES ($1, $2, $3) RETURNING "id"`,
+        [commentaryId, JSON.stringify(marketData), requestTime]
+    );
       const clientInRoom = global.socketIo.sockets.adapter.rooms.get(commentaryId);
       if (clientInRoom?.size) {
         global.socketIo.to(commentaryId).emit("updateMarketData", marketData );
@@ -203,6 +210,17 @@ const connection = (socket , fastify) => {
       // global.clientSocketIo.forEach((socket) => {
       //   socket.client.emit("updateFullscore", sendDataForSocketUpdate);
       // });
+
+      const responseTime = new Date(); // Capture response time
+        const timeTaken = responseTime - requestTime; // Calculate time taken
+
+        // Update log entry with response data
+        await fastify.db.query(
+            `UPDATE "tblTimeLogs" 
+             SET "responseData" = $1, "responseTime" = $2, "timeTaken" = $3
+             WHERE "id" = $4`,
+            [JSON.stringify(marketToUpdate), responseTime, timeTaken, logId]
+        );
 
       console.log("Event Market Updated successfully");
       return true;
