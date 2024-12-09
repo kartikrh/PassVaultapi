@@ -2021,6 +2021,33 @@ const Commentary = {
       },
     }
   },
+  saveComTemplate: {
+    schema: {
+      tags: ["Commentary"],
+      description: "save Commentary Template",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          saveTemplates : {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                commentaryId: { type: "integer" },
+                marketTemplateId: { type: "integer" },
+              },
+            },
+          },
+          dltTemplate: {
+            type: "array",
+            items: { type: "integer" },
+          }
+        },
+        required: ["saveTemplates", "dltTemplate"],
+      },
+    },
+  },
   dltBallfromMeomory: {
     schema: {
       tags: ["Commentary"],
