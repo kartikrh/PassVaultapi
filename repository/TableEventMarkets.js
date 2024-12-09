@@ -3607,6 +3607,51 @@ const getMarCountByComQuery = async (data, request, fastify) => {
     throw new Error(error.message);
   }
 }
+const insertTimeLogs = async(commentaryId, fastify) => {
+  try {
+    const logsData = await fastify.db.query(
+      `INSERT INTO "tblTimeLogs" ("wrCommentaryId", "wrRequestTime")
+       VALUES ($1, NOW())
+       RETURNING "wrId";`,
+       {
+        bind:[commentaryId],
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+    return logsData[0]
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/insertTimeLogs",
+      null
+    );
+    throw new Error(error.message);
+  }
+}
+const updateTimeLogs = async(id, fastify) => {
+  try {
+    return await fastify.db.query(
+      `UPDATE "tblTimeLogs" 
+    SET 
+        "wrResponseTime" = NOW(),
+        "wrTimeTaken" = NOW() - "wrRequestTime"
+    WHERE "wrId" = $1;`,
+    {
+      bind:[id],
+      type: fastify.db.QueryTypes.SELECT,
+    }
+  )
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/updateTimeLogs",
+      null
+    );
+    throw new Error(error.message);
+  }
+}
 module.exports = {
   getAllEventMarketsQuery,
   createManyEventMarketQuery,
@@ -3668,6 +3713,8 @@ module.exports = {
   cancelEventMarketsQuery,
   getOpenMarketByCIdQuery,
   suspendMarketQuery,
-  getMarCountByComQuery
+  getMarCountByComQuery,
+  insertTimeLogs,
+  updateTimeLogs,
 }
 

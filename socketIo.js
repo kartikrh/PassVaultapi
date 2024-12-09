@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const { errorLogger } = require("./utilities/logger");
-const { getEventMarketByIdsQuery } = require("./repository/TableEventMarkets");
+const { getEventMarketByIdsQuery, insertTimeLogs, updateTimeLogs } = require("./repository/TableEventMarkets");
 const { MarketActionType } = require("./utilities");
 const {createMarketOddsBallByBallBYIDFromSocketIo,createMarketOddsBallInSaveDetails,CheckAndCreateMarketOddsBallInSaveDetails} = require("./repository/TableMarketOddsBallByBall")
 const configConstants = require('./utilities/configConstants');
@@ -24,6 +24,7 @@ const connection = (socket , fastify) => {
       let MarketArr = [];
       //console.log("marketData", da1a);
       const { commentaryId, marketData } = data;
+      const timeLogs = await insertTimeLogs(commentaryId, fastify)
       const clientInRoom = global.socketIo.sockets.adapter.rooms.get(commentaryId);
       if (clientInRoom?.size) {
         global.socketIo.to(commentaryId).emit("updateMarketData", marketData );
@@ -203,7 +204,7 @@ const connection = (socket , fastify) => {
       // global.clientSocketIo.forEach((socket) => {
       //   socket.client.emit("updateFullscore", sendDataForSocketUpdate);
       // });
-
+      await updateTimeLogs(timeLogs.wrId, fastify);
       console.log("Event Market Updated successfully");
       return true;
     } catch (error) {
