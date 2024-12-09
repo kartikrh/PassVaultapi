@@ -153,6 +153,12 @@ const updateDisplayOrderService = async (request, fastify) => {
 
 const activeInactiveShotTypeService = async (request, fastify) => {
   const { id, isActive } = request.body;
+  const validateId = global.tblShotType.find(
+    (item) => item.id == id
+  );
+  if (!validateId) {
+    throw new Error("Shot type data with this Id not found");
+  }
   await isActiveInactiveChangeQuery(
     {
       id,

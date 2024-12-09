@@ -1110,7 +1110,11 @@ const getAllCommentaryBallByBallQuery = async (fastify) => {
     "wrIsDelete" as "isDelete",
     "wrCurrentInnings" as "currentInnings",
     "wrCreatedDate" as "createdDate",
-    "wrAutoStrikeBallCount" as "autoStrikeBallCount"
+    "wrAutoStrikeBallCount" as "autoStrikeBallCount",
+    "wrX2" as "x2",
+    "wrY2" as "y2",
+    "wrShortType" as "shortType",
+    "wrCommentryRemark" as "commentryRemark"
     from "tblCommentaryBallByBalls"
     WHERE "wrIsDeletedStatus" = false
     `,
@@ -3574,6 +3578,88 @@ const saveComTemplateQuery = async (data, request, fastify) => {
   }
 }
 
+const getCommentaryBallByBallByIdsQuery = async (commentaryBallByBallId, request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `select
+      "wrCommentaryBallByBallId" as "commentaryBallByBallId",
+      "wrCommentaryId" as "commentaryId",
+      "wrTeamId" as "teamId",
+      "wrOverId" as "overId",
+      "wrOverCount" as "overCount",
+      "wrCurrentOverBalls" as "currentOverBalls",
+      "wrBowler_ID" as "bowlerId",
+      "wrBat_StrikeID" as "batStrikeId",
+      "wrBat_NONStrikeID" as "batNonStrikeId",
+      "wrBall_IsCount" as "ballIsCount",
+      "wrBall_Type" as "ballType",
+      "wrBall_IsDot" as "ballIsDot",
+      "wrBall_Run" as "ballRun",
+      "wrBall_ExtraRun" as "ballExtraRun",
+      "wrBall_isBoundry" as "ballIsBoundry",
+      "wrBall_FOUR" as "ballFour",
+      "wrBall_SIX" as "ballSix",
+      "wrBall_IsWicket" as "ballIsWicket",
+      "wrBall_WicketType" as "ballWicketType",
+      "wrBall_PlayerID" as "ballPlayerId",
+      "wrBall_BowlerID" as "ballBowlerId",
+      "wrBall_FielderID1" as "ballFielderId1",
+      "wrBall_FielderID2" as "ballFielderId2",
+      "wrOver_isMaiden" as "overIsMaiden",
+      "wrNextBat_StrikeID" as "nextBatStrikeId",
+      "wrNextBat_NONStrikeID" as "nextBatNonStrikeId",
+      "wrIsDelete" as "isDelete",
+      "wrCurrentInnings" as "currentInnings",
+      "wrCreatedDate" as "createdDate",
+      "wrAutoStrikeBallCount" as "autoStrikeBallCount"
+      from "tblCommentaryBallByBalls"
+      WHERE "wrCommentaryBallByBallId" = ANY($1) AND "wrIsDeletedStatus" = false
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [commentaryBallByBallId]
+      }
+    );
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCommentary.js/getCommentaryBallByBallByIdsQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+}
+
+const insertWagonWheelPositionQuery = async (data, request, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `UPDATE "tblCommentaryBallByBalls" SET 
+              "wrX2" = $1,"wrY2" = $2,"wrShortType" = $3, "wrCommentryRemark" = $4
+              where "wrCommentaryBallByBallId" = $5
+          RETURNING 
+              "wrX2" AS "x2",
+              "wrY2" AS "y2",
+              "wrShortType" AS "shortType",
+              "wrCommentryRemark" AS "commentryRemark",
+              "wrCommentaryBallByBallId" AS "commentaryBallByBallId";`,
+      {
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [data.x2, data.y2, data.shortType || null, data.commentryRemark || null, data.commentaryBallByBallId],
+      }
+    );
+    return result[0];
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCommentary.js/insertWagonWheelPositionQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+}
+
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -3645,5 +3731,7 @@ module.exports = {
   revertCommentaryQuery,
   updatePbfOfPlayerQuery,
   getTemplateByComIdQuery,
-  saveComTemplateQuery
+  saveComTemplateQuery,
+  getCommentaryBallByBallByIdsQuery,
+  insertWagonWheelPositionQuery,
 };
