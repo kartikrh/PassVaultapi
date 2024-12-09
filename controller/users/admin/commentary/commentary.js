@@ -835,6 +835,9 @@ const saveComTemplates = async (request, reply, fastify) => {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, path + "/saveComTemplates", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+}
 const getCommentaryBallByBall = async (request, reply, fastify) => {
   try {
     const result = await getCommentaryBallByBallService(request, fastify);
