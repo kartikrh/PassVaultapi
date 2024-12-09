@@ -47,6 +47,7 @@ const {
 } = require("../repository/TableEventMarkets");
 const { getRunnerByIdQuery, setResultInRunnerMarketQuery, getRunnerByMarketQuery } = require("../repository/TableMarketRunner");
 const configConstants = require("../utilities/configConstants");
+const { getCommMatchTypeTemplatesQuery } = require("../repository/TableMarketTemplate");
 const {
   EventMarketStatus,
   MarketActionType,
@@ -1674,16 +1675,24 @@ const getDetailsByCIdV1Service = async (request, fastify) => {
   }
 
   let marketTemplate;
-  if(commentary.commentaryStatus == commentaryStatus.OPEN){
-    marketTemplate = global.tblMarketTemplate.filter(
-      (item) => item.matchTypeID === commentary.matchTypeId  && item.isShowInAdvanceMarket === true && item.isActive === true
-    );
+  // if(commentary.commentaryStatus == commentaryStatus.OPEN){
+  //   marketTemplate = global.tblMarketTemplate.filter(
+  //     (item) => item.matchTypeID === commentary.matchTypeId  && item.isShowInAdvanceMarket === true && item.isActive === true
+  //   );
+  // }
+  // else {
+  //   marketTemplate = global.tblMarketTemplate.filter(
+  //     (item) => item.matchTypeID === commentary.matchTypeId && item.isActive === true && item.isShowInAdvanceMarket === true
+  //     && item.isPerEvent === false
+  //   );
+  // }
+
+    if(commentary.commentaryStatus == commentaryStatus.OPEN){
+    marketTemplate = await getCommMatchTypeTemplatesQuery(commentaryId, null, request, fastify);
   }
   else {
-    marketTemplate = global.tblMarketTemplate.filter(
-      (item) => item.matchTypeID === commentary.matchTypeId && item.isActive === true && item.isShowInAdvanceMarket === true
-      && item.isPerEvent === false
-    );
+    let whereCondition = `AND tmt."wrIsPerEvent" = FALSE`
+    marketTemplate = await getCommMatchTypeTemplatesQuery(commentaryId, whereCondition, request, fastify);
   }
 
 
