@@ -3452,6 +3452,127 @@ const updatePbfOfPlayerQuery = async (data, request,fastify) => {
     
   }
 }
+const getTemplateByComIdQuery = async (data,request, fastify) => {
+  try {
+    let r1 = await fastify.db.query(
+      `
+        SELECT  
+          tcm."wrId" as "id",
+          "wrCommentaryId" as "commentaryId",
+          "wrMarketTemplateId" as "marketTemplateId",
+          tmt."wrTemplateName" as "templateName",
+          tmt1."wrId" as "marketTypeId",
+          tmc."wrId" as "marketTypeCategoryId",
+          "wrMarketTypeName" as "marketTypeName",
+          "wrCategoryName" as "categoryName"
+        FROM "tblCommMatchTypeTemplate" tcm
+        LEFT JOIN "tblMarketTemplates" tmt ON tcm."wrMarketTemplateId" = tmt."wrID"
+        LEFT JOIN "tblMarketTypes" tmt1 ON tmt."wrMarketTypeId" = tmt1."wrId"
+        LEFT JOIN "tblMarketTypeCategories" tmc ON tmt."wrMarketTypeCategoryId" = tmc."wrId"
+        WHERE tcm."wrCommentaryId" = $1
+        AND tmt."wrIsDeleted" = false
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [data.commentaryId],
+      }
+    );
+
+    let r2 = await fastify.db.query(
+      `
+        SELECT 
+          tmt."wrID" as "marketTemplateId",
+          tmt."wrTemplateName" as "templateName",
+          "wrMarketTypeName" as "marketTypeName",
+          "wrCategoryName" as "categoryName",
+          tmt1."wrId" as "marketTypeId",
+          tmc."wrId" as "marketTypeCategoryId"
+        FROM "tblMarketTemplates" tmt
+        LEFT JOIN "tblMarketTypes" tmt1 ON tmt."wrMarketTypeId" = tmt1."wrId"
+        LEFT JOIN "tblMarketTypeCategories" tmc ON tmt."wrMarketTypeCategoryId" = tmc."wrId"
+        WHERE tmt."wrIsDeleted" = false
+        AND tmt."wrMatchTypeID" = $1
+        AND tmt."wrID" NOT IN (
+          SELECT "wrMarketTemplateId" FROM "tblCommMatchTypeTemplate" WHERE "wrCommentaryId"= $2
+        ) 
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [data.matchTypeId, data.commentaryId],
+      }
+    );
+
+    return {
+      assignedTemplates: r1,
+      unassignedTemplates: r2,
+    }
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCommentary/getTemplateByComIdQuery",
+      request
+    );
+    throw new Error(error.message);
+    
+  }
+}
+const saveComTemplateQuery = async (data, request, fastify) => {
+  try {
+    if(data.dltTemplate.length > 0) {
+      await fastify.db.query(
+        `
+          DELETE FROM "tblCommMatchTypeTemplate" WHERE "wrId" IN ($1)
+        `,
+        {
+          type: fastify.db.QueryTypes.SELECT,
+          bind : [data.dltTemplate.map((item) => item).join(",")]
+        }
+      );
+   }
+
+    const existingTemp = await fastify.db.query(
+      `
+        SELECT "wrMarketTemplateId" as "marketTemplateId" FROM "tblCommMatchTypeTemplate" WHERE "wrCommentaryId" = $1
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [data.saveTemplates[0].commentaryId],
+      }
+    );
+
+    let templateToSave = []
+    if (existingTemp.length > 0) {
+      templateToSave = data.saveTemplates.filter((item) => !existingTemp.map((temp) => temp.marketTemplateId).includes(item.marketTemplateId));
+    } 
+    else {
+      templateToSave = data.saveTemplates;
+    }
+    if(templateToSave.length > 0) {
+    await fastify.db.query(
+      `
+        INSERT INTO "tblCommMatchTypeTemplate" ("wrCommentaryId", "wrMarketTemplateId", "wrCreatedBy", "wrCreatedAt")
+        VALUES 
+        ${templateToSave.map((item) => `(${item.commentaryId}, ${item.marketTemplateId}, ${request.userTokenInfo.WrUserId}, now())`).join(",")}
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+  }
+
+    return true;
+
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCommentary/saveComTemplateQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+}
 
 module.exports = {
   getAllCommentaryQuery,
@@ -3522,5 +3643,7 @@ module.exports = {
   updateBoundaryOfPlayerQuery,
   insertCommentaryConsoleFeQuery,
   revertCommentaryQuery,
-  updatePbfOfPlayerQuery
+  updatePbfOfPlayerQuery,
+  getTemplateByComIdQuery,
+  saveComTemplateQuery
 };

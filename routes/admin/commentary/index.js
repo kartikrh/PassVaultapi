@@ -54,6 +54,9 @@ const {
   completedCommentary,
   updateEventSnapByCom,
   revertCommentary,
+  getGlobalData,
+  getTemplateByComId,
+  saveComTemplates,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -745,5 +748,41 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request, reply) => revertCommentary(request, reply, fastify),
+  })
+  fastify.post("/getGlobalData",{
+    schema: Commentary.getById.schema,
+    preHandler : [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "view"
+        })
+    ],
+    handler: (request, reply) => getGlobalData(request, reply, fastify)
+  })
+  fastify.post("/getTemplateByCom", {
+    schema : Commentary.getById.schema,
+    preHandler : [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "view"
+        })
+    ],
+    handler : (request, reply) => getTemplateByComId(request, reply, fastify)
+  })
+  fastify.post("/saveComTemplate", {
+    schema : Commentary.saveComTemplate.schema,
+    preHandler : [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "edit"
+        })
+    ],
+    handler : (request, reply) => saveComTemplates(request, reply, fastify)
   })
 };
