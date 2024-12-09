@@ -1,6 +1,7 @@
 const { errorLogger } = require("../utilities/logger");
 
 const getAllBannerQuery = async (fastify) => {
+  
   return await fastify.db.query(
     `select 
             "wrId" as "bannerId",
