@@ -856,6 +856,7 @@ const saveWagonWheel = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 }
+
 module.exports = {
   getAllCommentaries,
   getCommentaryById,
