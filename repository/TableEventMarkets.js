@@ -3610,11 +3610,11 @@ const getMarCountByComQuery = async (data, request, fastify) => {
 const insertTimeLogs = async(commentaryId, fastify) => {
   try {
     const logsData = await fastify.db.query(
-      `INSERT INTO "tblTimeLogs" ("wrCommentaryId", "wrRequestTime")
-       VALUES ($1, NOW())
+      `INSERT INTO "tblTimeLogs" ("wrCommentaryId", "wrRequestTime", "wrCode")
+       VALUES ($1, NOW(), $2)
        RETURNING "wrId";`,
        {
-        bind:[commentaryId],
+        bind:[commentaryId, "optimized code"],
         type: fastify.db.QueryTypes.SELECT,
       }
     );
