@@ -50,7 +50,9 @@ const getAllCommentaryQuery = async (fastify) => {
     tc."wrIsTeamPredictionOn" as "isTeamPredictionOn",
     tu."WrUserName" as "createdBy",
     tc."wrHistoryMatchTypeId" as "historyMatchTypeId",
-    mt2."wrMatchType" AS "historyMatchType"
+    mt2."wrMatchType" AS "historyMatchType",
+    "wrShotType" as "shotType",
+    "wrIsWheelShow" as "isWheelShow"
     from "tblCommentaries" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -3664,6 +3666,54 @@ const insertWagonWheelPositionQuery = async (data, request, fastify) => {
     throw new Error(error.message);
   }
 }
+const updateShotTypeQuery = async (data, request, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `UPDATE 
+        "tblCommentaries" SET
+        "wrShotType" = $1
+        WHERE "wrCommentaryId" = $2
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [data.shotType, data.commentaryId],
+      }
+    );
+    return result;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCommentary.js/updateShotTypeQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+}
+const updateIsWheelShowQuery = async (data, request, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `UPDATE 
+        "tblCommentaries" SET
+        "wrIsWheelShow" = $1
+        WHERE "wrCommentaryId" = $2
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [data.isWheelShow, data.commentaryId],
+      }
+    );
+    return result;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCommentary.js/updateIsWheelShowQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+}
 
 module.exports = {
   getAllCommentaryQuery,
@@ -3739,4 +3789,6 @@ module.exports = {
   saveComTemplateQuery,
   getCommentaryBallByBallByIdsQuery,
   insertWagonWheelPositionQuery,
+  updateShotTypeQuery,
+  updateIsWheelShowQuery
 };
