@@ -2048,6 +2048,36 @@ const Commentary = {
       },
     },
   },
+  upShotType : {
+    schema: {
+      tags: ["Commentary"],
+      description: "update Shot Type",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+          shotType: { type: "boolean" },
+        },
+        required: ["commentaryId", "shotType"],
+      },
+    },
+  },
+  upIsWheelShow : {
+    schema: {
+      tags: ["Commentary"],
+      description: "update Shot Type",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+          isWheelShow: { type: "boolean" },
+        },
+        required: ["commentaryId", "isWheelShow"],
+      },
+    },
+  },
   dltBallfromMeomory: {
     schema: {
       tags: ["Commentary"],

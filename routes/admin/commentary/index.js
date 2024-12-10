@@ -59,6 +59,8 @@ const {
   saveComTemplates,
   getCommentaryBallByBall,
   saveWagonWheel,
+  updateShotType,
+  updateIsWheelShow,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -812,5 +814,29 @@ module.exports = async (fastify, opts) => {
         })
     ],
     handler : (request, reply) => saveComTemplates(request, reply, fastify)
+  })
+  fastify.post("/upShotType", {
+    schema : Commentary.upShotType.schema,
+    preHandler : [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "edit"
+        })
+    ],
+    handler : (request, reply) => updateShotType(request, reply, fastify)
+  })
+  fastify.post("/upIsWheelShow",{
+    schema : Commentary.upIsWheelShow.schema,
+    preHandler : [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "edit"
+        })
+    ],
+    handler : (request, reply) => updateIsWheelShow(request, reply, fastify)
   })
 };

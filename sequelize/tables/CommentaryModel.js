@@ -184,7 +184,17 @@ module.exports = (sequelize) => {
         type : DataTypes.INTEGER,	
         allowNull: true,
         defaultValue : null
-      }
+      },
+      wrShotType : {
+        type : DataTypes.BOOLEAN,
+        allowNull: true,
+        defaultValue : true
+      },
+      wrIsWheelShow : {
+        type : DataTypes.BOOLEAN,
+        allowNull: true,
+        defaultValue : true
+      },
     },
     {
       timestamps: false,

@@ -67,6 +67,8 @@ const {
   saveComTemplateQuery,
   getCommentaryBallByBallByIdsQuery,
   insertWagonWheelPositionQuery,
+  updateShotTypeQuery,
+  updateIsWheelShowQuery,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -9297,6 +9299,30 @@ const saveWagonWheelPositionService = async (request, fastify) => {
   return wagonWheel[0];
 }
 
+const updateShotTypeService = async (request, fastify) => {
+  const {commentaryId , shotType} = request.body;
+  const index = global.tblCommentaries.findIndex(
+    (item) => item?.commentaryId === commentaryId
+  );
+  if (index == -1) {
+    throw new Error("Commentary with this id not Found");
+  }
+  await updateShotTypeQuery(request.body, request,fastify);
+  global.tblCommentaries[index].shotType = shotType;
+  return "shotType updated successfully";
+}
+const updateIsWheelShowService = async (request, fastify) => {
+  const {commentaryId , isWheelShow} = request.body;
+  const index = global.tblCommentaries.findIndex(
+    (item) => item?.commentaryId === commentaryId
+  );
+  if (index == -1) {
+    throw new Error("Commentary with this id not Found");
+  }
+  await updateIsWheelShowQuery(request.body, request ,fastify);
+  global.tblCommentaries[index].isWheelShow = isWheelShow;
+  return "isWheelShow updated successfully";
+}
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -9364,4 +9390,6 @@ module.exports = {
   saveComTemplatesService,
   getCommentaryBallByBallService,
   saveWagonWheelPositionService,
+  updateShotTypeService,
+  updateIsWheelShowService
 };
