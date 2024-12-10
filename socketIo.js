@@ -21,64 +21,65 @@ const connection = (socket , fastify) => {
   }
   socket.on("updatedEventMarket", async (data) => {
     try {
-      let MarketArr = [];
-      //console.log("marketData", da1a);
+      const MarketArr = [];
       const { commentaryId, marketData } = data;
       const timeLogs = await insertTimeLogs(commentaryId, fastify)
+      // Emit update directly if there are clients in the room
       const clientInRoom = global.socketIo.sockets.adapter.rooms.get(commentaryId);
       if (clientInRoom?.size) {
-        global.socketIo.to(commentaryId).emit("updateMarketData", marketData );
+        global.socketIo.to(commentaryId).emit("updateMarketData", marketData);
       }
-      let ballbybllId;
-      let marketIdArr = marketData.map((item) =>{
-        let mark = JSON.parse(item);
+  
+      // Extract market IDs
+      const marketIdArr = marketData.map((item) => {
+        const mark = JSON.parse(item);
         MarketArr.push(mark);
-        ballbybllId = mark.ballByBallId;
         return mark.marketId;
       });
-      let marketToUpdate = await getEventMarketByIdsQuery(
-        {
-          eventMarketIds: marketIdArr
-        },
+  
+      // Fetch markets in parallel
+      const marketToUpdatePromise = getEventMarketByIdsQuery(
+        { eventMarketIds: marketIdArr },
         null,
         fastify
-      )
-      const marketOdd = [];
-      for (let data of marketToUpdate) {
-        let index = global.tblEventMarkets.findIndex((market) => market.eventMarketId === data.eventMarketId);
-        if(index != -1){
+      );
+  
+      // Cache LDOMARKETSIDS
+      let LDOMARKETSIDS;
+      try {
+        LDOMARKETSIDS = global.tblConfigs
+          .find((item) => item.key === configConstants.LDOMARKET)
+          .value.split(",");
+      } catch {
+        LDOMARKETSIDS = ["26", "27", "28", "6"];
+      }
+  
+      // Wait for market data
+      const marketToUpdate = await marketToUpdatePromise;
+  
+      // Update global markets
+      marketToUpdate.forEach((data) => {
+        const index = global.tblEventMarkets.findIndex(
+          (market) => market.eventMarketId === data.eventMarketId
+        );
+        if (index !== -1) {
           global.tblEventMarkets[index] = data;
-        }
-        else {
+        } else {
           global.tblEventMarkets.push(data);
         }
-        // if (ballbybllId) {
-        //   let ballData = await createMarketOddsBallByBallBYIDFromSocketIo(ballbybllId, data, fastify);
-        //   if (ballData) {
-        //     global.tblMarketOddsBallByBall.push(ballData);
-        //     marketOdd.push(ballData);
-        //   }
-        // }
-      } 
-
-      let LDOMARKETSIDS 
-      try {
-        LDOMARKETSIDS = global.tblConfigs.find((item) => item.key === configConstants.LDOMARKET).value.split(',');
-      } catch (error) {LDOMARKETSIDS = ['26', '27', '28','6'];}
-
-       // Filter out markets that have marketTypeCategoryId present in LDOMARKETSIDS
+      });
+  
+      // Filter LDOMARKETS and active markets
       const filteredMarkets = marketToUpdate.filter(
-        (market) => !LDOMARKETSIDS.includes(market.marketTypeCategoryId.toString()) && market.status === 1
+        (market) =>
+          !LDOMARKETSIDS.includes(market.marketTypeCategoryId.toString()) &&
+          market.status === 1
       );
-
-      if(ballbybllId && filteredMarkets.length > 0)
-      {
+  
+      if (filteredMarkets.length > 0) {
         const result = [];
-
-        filteredMarkets.forEach(item => {
-          // Find if the eventMarketId already exists in the result array
-          let existingEvent = result.find(event => event.EventMarketId === item.eventMarketId);
-        
+  
+        filteredMarkets.forEach((item) => {
           const runnerData = {
             teamId: item.teamId,
             RunnerId: item.runnerId,
@@ -88,122 +89,79 @@ const connection = (socket , fastify) => {
             LaySize: item.laySize,
             RunnerName: item.runner,
             selectionId: item.selectionId,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
           };
-        
+  
+          const existingEvent = result.find(
+            (event) => event.eventMarketId === item.eventMarketId
+          );
+  
           if (existingEvent) {
-            // If the eventMarketId exists, just push the new runner data into the Data field
-            existingEvent.Data.push(runnerData);
+            existingEvent.data.push(runnerData);
           } else {
-            // If not, create a new entry for this eventMarketId
-            const newEvent = {
+            result.push({
               commentaryId: item.commentaryId,
-              commentaryBallByBallId: ballbybllId || null, // Adjust as needed
+              commentaryBallByBallId: item.ballByBallId || null,
               eventMarketId: item.eventMarketId,
               marketStatus: item.status,
               marketName: item.marketName,
-              data: [runnerData] // Initialize with the first runner's data
-            };
-            result.push(newEvent);
+              data: [runnerData],
+            });
           }
         });
-
-        // Convert Data array to JSON strings
-        result.forEach(event => {
+  
+        // Convert data to JSON strings
+        result.forEach((event) => {
           event.data = JSON.stringify(event.data);
         });
-
-        for (let index = 0; index < result.length; index++) {
-          let res;
-          try {
-            res = await CheckAndCreateMarketOddsBallInSaveDetails(result[index], fastify);
-          } catch (error) {
-            errorLogger(
-              fastify,
-              error.message,
-              "ERROR --> CheckAndCreateMarketOddsBallInSaveDetails",
-              request
-            );
-          }
-
-          const tblMarketOddsIndex = global.tblMarketOddsBallByBall.findIndex(item => item.commentaryId === res.commentaryId
-            && item.eventMarketId === res.eventMarketId
-            && item.commentaryBallByBallId === res.commentaryBallByBallId
-          );
-
-          if (tblMarketOddsIndex !== -1) {
-            global.tblMarketOddsBallByBall[tblMarketOddsIndex] = res;
-          } else {
-            global.tblMarketOddsBallByBall.push(res);
-          }
-
-          const marketOddIndex  = marketOdd.findIndex(item => item.commentaryId === res.commentaryId
-            && item.eventMarketId === res.eventMarketId
-            && item.commentaryBallByBallId === res.commentaryBallByBallId
-          );  
-
-          if (marketOddIndex !== -1) {
-            marketOdd[marketOddIndex] = res;
-          } else {
-            marketOdd.push(res);
-          }
+  
+        // Process result asynchronously
+        for (const res of result) {
+          CheckAndCreateMarketOddsBallInSaveDetails(res, fastify)
+            .then((savedData) => {
+              const tblMarketOddsIndex = global.tblMarketOddsBallByBall.findIndex(
+                (item) =>
+                  item.commentaryId === savedData.commentaryId &&
+                  item.eventMarketId === savedData.eventMarketId &&
+                  item.commentaryBallByBallId === savedData.commentaryBallByBallId
+              );
+  
+              if (tblMarketOddsIndex !== -1) {
+                global.tblMarketOddsBallByBall[tblMarketOddsIndex] = savedData;
+              } else {
+                global.tblMarketOddsBallByBall.push(savedData);
+              }
+            })
+            .catch((error) => {
+              errorLogger(
+                fastify,
+                error.message,
+                "ERROR --> CheckAndCreateMarketOddsBallInSaveDetails",
+                null
+              );
+            });
         }
       }
-
-      let commentaryData = global.tblCommentaries.find((commentary) => commentary.commentaryId === commentaryId);
-      const sendDataForSocketUpdate = {};
-      sendDataForSocketUpdate.commentaryId = commentaryId;
-      sendDataForSocketUpdate.eventRefId = commentaryData.eventRefId;
-
-      if(marketOdd.length > 0) {
-        sendDataForSocketUpdate.dataToUpdate = [
+  
+      // Emit update to clients
+      const commentaryData = global.tblCommentaries.find(
+        (commentary) => commentary.commentaryId === commentaryId
+      );
+      const sendDataForSocketUpdate = {
+        commentaryId,
+        eventRefId: commentaryData.eventRefId,
+        dataToUpdate: [
           {
             module: "marketOddsBallByBall",
-            data: marketOdd,
-            type : "create"
-          }
-        ];
-        global.clientSocketIo.forEach((socket) => {
-          socket.client.emit("updateFullscore", sendDataForSocketUpdate);
-        });
-      }
-      
-      // if(commentaryId){
-      //   let marketRunner = global.tblEventMarkets.filter((item) => item.commentaryId == commentaryId && item.rateSource === 2)
-      //   marketRunner = marketRunner.map((item) => {
-      //     let teamNameData
-      //     if(item.teamId){
-      //     teamNameData = global.tblCommentaryTeams.find((elem) => elem.teamId === item.teamId)
-      //     }
-      //     if(!item.teamId){
-      //         teamNameData = global.tblCommentaryTeams.find((t) => 
-      //             t.teamName.toLowerCase() == item.runner?.toLowerCase())
-      //     }
-      //     return {
-      //         runnerId: item.runnerId,
-      //         runner: item.runner,
-      //         selectionId: item.selectionId,
-      //         backSize: item.backSize,
-      //         laySize: item.laySize,
-      //         backPrice: item.backPrice,
-      //         layPrice: item.layPrice,
-      //         teamId: item.teamId,
-      //         teamName: teamNameData?.teamName || null
-      //     }
-      //   });
-      //   // sendDataForSocketUpdate.dataToUpdate.push({
-      //   //   module: "marketRunner",
-      //   //   type: "update",
-      //   //   data: marketRunner,
-      //   // });
-      //   global.clientSocketIo.forEach((socket) => {
-      //     socket.client.emit("updateRunnerData", marketRunner);
-      //   });
-      // }
-      
-      // global.clientSocketIo.forEach((socket) => {
-      //   socket.client.emit("updateFullscore", sendDataForSocketUpdate);
-      // });
+            data: [],
+            type: "create",
+          },
+        ],
+      };
+  
+      global.clientSocketIo.forEach((socket) => {
+        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+      });
       await updateTimeLogs(timeLogs.wrId, fastify);
       console.log("Event Market Updated successfully");
       return true;
@@ -217,6 +175,204 @@ const connection = (socket , fastify) => {
       console.error("error:", error);
     }
   });
+  // socket.on("updatedEventMarket", async (data) => {
+  //   try {
+  //     let MarketArr = [];
+  //     //console.log("marketData", da1a);
+  //     const { commentaryId, marketData } = data;
+  //     const timeLogs = await insertTimeLogs(commentaryId, fastify)
+  //     const clientInRoom = global.socketIo.sockets.adapter.rooms.get(commentaryId);
+  //     if (clientInRoom?.size) {
+  //       global.socketIo.to(commentaryId).emit("updateMarketData", marketData );
+  //     }
+  //     let ballbybllId;
+  //     let marketIdArr = marketData.map((item) =>{
+  //       let mark = JSON.parse(item);
+  //       MarketArr.push(mark);
+  //       ballbybllId = mark.ballByBallId;
+  //       return mark.marketId;
+  //     });
+  //     let marketToUpdate = await getEventMarketByIdsQuery(
+  //       {
+  //         eventMarketIds: marketIdArr
+  //       },
+  //       null,
+  //       fastify
+  //     )
+  //     const marketOdd = [];
+  //     for (let data of marketToUpdate) {
+  //       let index = global.tblEventMarkets.findIndex((market) => market.eventMarketId === data.eventMarketId);
+  //       if(index != -1){
+  //         global.tblEventMarkets[index] = data;
+  //       }
+  //       else {
+  //         global.tblEventMarkets.push(data);
+  //       }
+  //       // if (ballbybllId) {
+  //       //   let ballData = await createMarketOddsBallByBallBYIDFromSocketIo(ballbybllId, data, fastify);
+  //       //   if (ballData) {
+  //       //     global.tblMarketOddsBallByBall.push(ballData);
+  //       //     marketOdd.push(ballData);
+  //       //   }
+  //       // }
+  //     } 
+
+  //     let LDOMARKETSIDS 
+  //     try {
+  //       LDOMARKETSIDS = global.tblConfigs.find((item) => item.key === configConstants.LDOMARKET).value.split(',');
+  //     } catch (error) {LDOMARKETSIDS = ['26', '27', '28','6'];}
+
+  //      // Filter out markets that have marketTypeCategoryId present in LDOMARKETSIDS
+  //     const filteredMarkets = marketToUpdate.filter(
+  //       (market) => !LDOMARKETSIDS.includes(market.marketTypeCategoryId.toString()) && market.status === 1
+  //     );
+
+  //     if(ballbybllId && filteredMarkets.length > 0)
+  //     {
+  //       const result = [];
+
+  //       filteredMarkets.forEach(item => {
+  //         // Find if the eventMarketId already exists in the result array
+  //         let existingEvent = result.find(event => event.EventMarketId === item.eventMarketId);
+        
+  //         const runnerData = {
+  //           teamId: item.teamId,
+  //           RunnerId: item.runnerId,
+  //           BackPrice: item.backPrice,
+  //           LayPrice: item.layPrice,
+  //           BackSize: item.backSize,
+  //           LaySize: item.laySize,
+  //           RunnerName: item.runner,
+  //           selectionId: item.selectionId,
+  //           timestamp: new Date().toISOString()
+  //         };
+        
+  //         if (existingEvent) {
+  //           // If the eventMarketId exists, just push the new runner data into the Data field
+  //           existingEvent.Data.push(runnerData);
+  //         } else {
+  //           // If not, create a new entry for this eventMarketId
+  //           const newEvent = {
+  //             commentaryId: item.commentaryId,
+  //             commentaryBallByBallId: ballbybllId || null, // Adjust as needed
+  //             eventMarketId: item.eventMarketId,
+  //             marketStatus: item.status,
+  //             marketName: item.marketName,
+  //             data: [runnerData] // Initialize with the first runner's data
+  //           };
+  //           result.push(newEvent);
+  //         }
+  //       });
+
+  //       // Convert Data array to JSON strings
+  //       result.forEach(event => {
+  //         event.data = JSON.stringify(event.data);
+  //       });
+
+  //       for (let index = 0; index < result.length; index++) {
+  //         let res;
+  //         try {
+  //           res = await CheckAndCreateMarketOddsBallInSaveDetails(result[index], fastify);
+  //         } catch (error) {
+  //           errorLogger(
+  //             fastify,
+  //             error.message,
+  //             "ERROR --> CheckAndCreateMarketOddsBallInSaveDetails",
+  //             request
+  //           );
+  //         }
+
+  //         const tblMarketOddsIndex = global.tblMarketOddsBallByBall.findIndex(item => item.commentaryId === res.commentaryId
+  //           && item.eventMarketId === res.eventMarketId
+  //           && item.commentaryBallByBallId === res.commentaryBallByBallId
+  //         );
+
+  //         if (tblMarketOddsIndex !== -1) {
+  //           global.tblMarketOddsBallByBall[tblMarketOddsIndex] = res;
+  //         } else {
+  //           global.tblMarketOddsBallByBall.push(res);
+  //         }
+
+  //         const marketOddIndex  = marketOdd.findIndex(item => item.commentaryId === res.commentaryId
+  //           && item.eventMarketId === res.eventMarketId
+  //           && item.commentaryBallByBallId === res.commentaryBallByBallId
+  //         );  
+
+  //         if (marketOddIndex !== -1) {
+  //           marketOdd[marketOddIndex] = res;
+  //         } else {
+  //           marketOdd.push(res);
+  //         }
+  //       }
+  //     }
+
+  //     let commentaryData = global.tblCommentaries.find((commentary) => commentary.commentaryId === commentaryId);
+  //     const sendDataForSocketUpdate = {};
+  //     sendDataForSocketUpdate.commentaryId = commentaryId;
+  //     sendDataForSocketUpdate.eventRefId = commentaryData.eventRefId;
+
+  //     if(marketOdd.length > 0) {
+  //       sendDataForSocketUpdate.dataToUpdate = [
+  //         {
+  //           module: "marketOddsBallByBall",
+  //           data: marketOdd,
+  //           type : "create"
+  //         }
+  //       ];
+  //       global.clientSocketIo.forEach((socket) => {
+  //         socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+  //       });
+  //     }
+      
+  //     // if(commentaryId){
+  //     //   let marketRunner = global.tblEventMarkets.filter((item) => item.commentaryId == commentaryId && item.rateSource === 2)
+  //     //   marketRunner = marketRunner.map((item) => {
+  //     //     let teamNameData
+  //     //     if(item.teamId){
+  //     //     teamNameData = global.tblCommentaryTeams.find((elem) => elem.teamId === item.teamId)
+  //     //     }
+  //     //     if(!item.teamId){
+  //     //         teamNameData = global.tblCommentaryTeams.find((t) => 
+  //     //             t.teamName.toLowerCase() == item.runner?.toLowerCase())
+  //     //     }
+  //     //     return {
+  //     //         runnerId: item.runnerId,
+  //     //         runner: item.runner,
+  //     //         selectionId: item.selectionId,
+  //     //         backSize: item.backSize,
+  //     //         laySize: item.laySize,
+  //     //         backPrice: item.backPrice,
+  //     //         layPrice: item.layPrice,
+  //     //         teamId: item.teamId,
+  //     //         teamName: teamNameData?.teamName || null
+  //     //     }
+  //     //   });
+  //     //   // sendDataForSocketUpdate.dataToUpdate.push({
+  //     //   //   module: "marketRunner",
+  //     //   //   type: "update",
+  //     //   //   data: marketRunner,
+  //     //   // });
+  //     //   global.clientSocketIo.forEach((socket) => {
+  //     //     socket.client.emit("updateRunnerData", marketRunner);
+  //     //   });
+  //     // }
+      
+  //     // global.clientSocketIo.forEach((socket) => {
+  //     //   socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+  //     // });
+  //     await updateTimeLogs(timeLogs.wrId, fastify);
+  //     console.log("Event Market Updated successfully");
+  //     return true;
+  //   } catch (error) {
+  //     errorLogger(
+  //       fastify,
+  //       error.message,
+  //       "ERROR --> socketIo.js/updatedEventMarket",
+  //       null
+  //     );
+  //     console.error("error:", error);
+  //   }
+  // });
 
   socket.on("ping" , () =>{
     socket.emit("pong")
