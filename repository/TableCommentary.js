@@ -3477,6 +3477,8 @@ const getTemplateByComIdQuery = async (data,request, fastify) => {
         LEFT JOIN "tblMarketTypeCategories" tmc ON tmt."wrMarketTypeCategoryId" = tmc."wrId"
         WHERE tcm."wrCommentaryId" = $1
         AND tmt."wrIsDeleted" = false
+        AND tmt."wrIsActive" = true
+        AND tmt."wrIsShowInAdvanceMarket" = true
       `,
       {
         type: fastify.db.QueryTypes.SELECT,
@@ -3498,6 +3500,8 @@ const getTemplateByComIdQuery = async (data,request, fastify) => {
         LEFT JOIN "tblMarketTypeCategories" tmc ON tmt."wrMarketTypeCategoryId" = tmc."wrId"
         WHERE tmt."wrIsDeleted" = false
         AND tmt."wrMatchTypeID" = $1
+        AND tmt."wrIsActive" = true
+        AND tmt."wrIsShowInAdvanceMarket" = true
         AND tmt."wrID" NOT IN (
           SELECT "wrMarketTemplateId" FROM "tblCommMatchTypeTemplate" WHERE "wrCommentaryId"= $2
         ) 
