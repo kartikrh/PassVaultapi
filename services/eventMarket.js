@@ -1687,7 +1687,7 @@ const getDetailsByCIdV1Service = async (request, fastify) => {
   //   );
   // }
 
-    if(commentary.commentaryStatus == commentaryStatus.OPEN){
+  if(commentary.commentaryStatus == commentaryStatus.OPEN){
     marketTemplate = await getCommMatchTypeTemplatesQuery(commentaryId, null, request, fastify);
   }
   else {
