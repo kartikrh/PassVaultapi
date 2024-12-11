@@ -1,4 +1,4 @@
-const { getPlayerBatHistQuery, getPlayeBallHistQuery } = require("../repository/TableCommPlayerHistory");
+const { getPlayerBatHistQuery, getPlayeBallHistQuery, upPlayerBatHistQuery, upPlayerBallHistQuery } = require("../repository/TableCommPlayerHistory");
 const { 
   getAllPlayerBowlingHistory, 
   getAllPlayersBattingHistory,
@@ -459,17 +459,15 @@ const setPlayerHistoryService = async (data,request, fastify) => {
 }
 const getPlayerHistDataService = async (request, fastify) => {
   const result = await getPlayerBatHistQuery(request.body,request,fastify)
-  // .map((item) => {
-  //   const event = global.tblCommentaries.find((elem) => elem.commentaryId === item.commentaryId);
-  //   return {
-  //     ...item,
-  //     matchTypeName: global.tblMatchTypes.find((elem) => elem.matchTypeId === item.matchTypeId).matchType,
-  //     eventName : event.eventName,
-  //     eventDate : event.eventDate,
-  //   }
-  // });
-
   return result;
+}
+const upPlayerHistDataService = async (request, fastify) => {
+  await upPlayerBatHistQuery(request.body,request,fastify)
+  return "Player Batting history updated successfully";
+}
+const upPlayerBallHistDataService = async (request, fastify) => {
+  await upPlayerBallHistQuery(request.body,request,fastify)
+  return "Player Bowling history updated successfully";
 }
 const getPlayerBallHistDataService = async (request, fastify) => {
   let result = await getPlayeBallHistQuery(request.body,request,fastify)
@@ -497,5 +495,7 @@ module.exports = {
   importPlayerHistoryService,
   setPlayerHistoryService,
   getPlayerHistDataService,
-  getPlayerBallHistDataService
+  getPlayerBallHistDataService,
+  upPlayerHistDataService,
+  upPlayerBallHistDataService
 };  
