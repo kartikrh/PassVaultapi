@@ -80,6 +80,7 @@ const updateCommPlayerBowlHistoryService = async (request, fastify) => {
     if(!existingData){
       continue;
     }
+    
     const updateData = {
       id: bowlHist.id,
       commentaryId: bowlHist.commentaryId !== undefined ? parseInt(bowlHist.commentaryId) : existingData.commentaryId,
