@@ -7,7 +7,9 @@ const {
   exportPlayerHistoryService,
   importPlayerHistoryService,
   getPlayerHistDataService,
-  getPlayerBallHistDataService
+  getPlayerBallHistDataService,
+  upPlayerHistDataService,
+  upPlayerBallHistDataService
 } = require("../../../../services/playerHistory");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -122,6 +124,24 @@ const getPlayerHistData = async (request, reply, fastify) => {
       reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const upPlayerHistData = async (request, reply, fastify) => {
+  try {
+      const result = await upPlayerHistDataService(request, fastify);
+      reply.status(200).send(success(result, 200));
+  } catch (err) {
+      errorLogger(fastify, err.message, commonPath + "/upPlayerHistData", request);
+      reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const upPlayerBallHistData = async (request, reply, fastify) => {
+  try {
+      const result = await upPlayerBallHistDataService(request, fastify);
+      reply.status(200).send(success(result, 200));
+  } catch (err) {
+      errorLogger(fastify, err.message, commonPath + "/upPlayerBallHistData", request);
+      reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 const getPlayerBallHistData = async (request, reply, fastify) => {
   try {
       const result = await getPlayerBallHistDataService(request, fastify);
@@ -140,5 +160,7 @@ module.exports = {
   exportPlayerHistory,
   importPlayerHistory,
   getPlayerHistData,
-  getPlayerBallHistData
+  getPlayerBallHistData,
+  upPlayerHistData,
+  upPlayerBallHistData
 };

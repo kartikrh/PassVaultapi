@@ -9,6 +9,8 @@ const {
   importPlayerHistory,
   getPlayerHistData,
   getPlayerBallHistData,
+  upPlayerHistData,
+  upPlayerBallHistData,
 } = require("../../../controller/users/admin/playerHistory");
 const { PlayerHistory } = require("../../../swaggerSchema/groupTags/schema");
 const multer = require("fastify-multer");
@@ -116,6 +118,30 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request, reply) => getPlayerHistData(request, reply, fastify),
+  })
+  fastify.post("/upPlayerBatHist", {
+    schema : PlayerHistory.upPlayerBatHist.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Players",
+          mode: "view",
+        }),
+    ],
+    handler: (request, reply) => upPlayerHistData(request, reply, fastify),
+  })
+  fastify.post("/upPlayerBallHist", {
+    schema : PlayerHistory.upPlayerBallHist.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Players",
+          mode: "view",
+        }),
+    ],
+    handler: (request, reply) => upPlayerBallHistData(request, reply, fastify),
   })
   fastify.post("/getPlayerBallHist", {
     schema : PlayerHistory.getPlayerHist.schema,

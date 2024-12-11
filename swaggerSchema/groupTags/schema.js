@@ -6983,6 +6983,62 @@ const PlayerHistory = {
       },
     },
   },
+  upPlayerBatHist: {
+    schema: {
+      tags: ["PlayerHistory"],
+      description: "update player batting history",
+      security: [{ bearerAuth: [] }],
+      body: {
+          type: "object",
+          properties: {
+            id: { type: "integer" },
+            matchCount: { type: "integer" },
+            inningsCount: { type: "integer" },
+            notOut: { type: "integer" },
+            totalRuns: { type: "integer" },
+            highestScore: { type: "string" },
+            average: { type: "number" },
+            ballsFacedCount: { type: "integer" },
+            strikeRate: { type: "number" },
+            countOf100: { type: "integer" },
+            countOf50: { type: "integer" },
+            countOf4: { type: "integer" },
+            countOf6: { type: "integer" },
+            catchCount: { type: "integer" },
+            stumpCount: { type: "integer" },
+            outCount: { type: "integer" },
+          },
+          required: ["id"],
+        },
+      }
+  },
+  upPlayerBallHist: {
+    schema: {
+      tags: ["PlayerHistory"],
+      description: "update player bowling history",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+          properties: {
+            id: { type: "integer" },
+            matchCount: { type: "integer" },
+            inningsCount: { type: "integer" },
+            ballCount: { type: "integer" },
+            totalRuns: { type: "integer" },
+            wicketsCount: { type: "integer" },
+            bowlerAverage: { type: "number" },
+            bestBowlingInInnings: { type: "string" },
+            bestBowlingInMatch: { type: "string" },
+            bowlerStrikeRate: { type: "number" },
+            economy: { type: "number" },
+            wickets4: { type: "integer" },
+            wickets5: { type: "integer" },
+            wickets10: { type: "integer" },
+          },
+          required: ["id"],
+        },
+    },
+  },
 };
 const CommentaryPlayerHistory = {
   getAll: {
