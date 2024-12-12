@@ -76,9 +76,19 @@ const ImportMarketService = async (request, fastify) => {
         competitionId: CompetitionsObj.competitionId,
         competition: request.body.competitionName,
         eventTypeId: CompetitionsObj.eventTypeId,
+        eventType : CompetitionsObj.eventType,
         refId: request.body.competitionId,
         image: CompetitionsObj.image,
         isActive: true,
+        displayOrder: CompetitionsObj.displayOrder,
+        isTrending: CompetitionsObj.isTrending,
+        isEventSnap: CompetitionsObj.isEventSnap,
+        isPointTable: CompetitionsObj.isPointTable,
+        matchTypeId : CompetitionsObj.matchTypeId,
+        winPoint : CompetitionsObj.winPoint,
+        tiePoint : CompetitionsObj.tiePoint,
+        cancelPoint : CompetitionsObj.cancelPoint,
+        lossPoint : CompetitionsObj.lossPoint
       };
       await updateCompititionQuery(setCompetitions, fastify, request);
 
@@ -247,9 +257,19 @@ const ImportMarketWithRunnerService = async (request, fastify) => {
         competitionId: CompetitionsObj.competitionId,
         competition: request.body.competitionName,
         eventTypeId: CompetitionsObj.eventTypeId,
+        eventType : CompetitionsObj.eventType,
         refId: request.body.competitionId,
         image: CompetitionsObj.image,
         isActive: true,
+        displayOrder: CompetitionsObj.displayOrder,
+        isTrending: CompetitionsObj.isTrending,
+        isEventSnap: CompetitionsObj.isEventSnap,
+        isPointTable: CompetitionsObj.isPointTable,
+        matchTypeId : CompetitionsObj.matchTypeId,
+        winPoint : CompetitionsObj.winPoint,
+        tiePoint : CompetitionsObj.tiePoint,
+        cancelPoint : CompetitionsObj.cancelPoint,
+        lossPoint : CompetitionsObj.lossPoint
       };
       await updateCompititionQuery(setCompetitions, fastify, request);
 
