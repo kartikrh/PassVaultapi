@@ -698,6 +698,79 @@ const defaultIsSendDataChangeQuery = async (request, fastify) => {
   }
 };
 
+const getCommMatchTypeTemplatesQuery = async (commentaryId, whereCondition = null, request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `SELECT
+            cmtt."wrId" AS "commMatchTypeTemplateId",
+            tmt."wrID" AS "marketTemplateId",
+            tmt."wrMatchTypeID" AS "matchTypeID",
+            tm."wrMatchType" AS "matchType",
+            tmt."wrTemplateName" AS "templateName",
+            tmt."wrIsPredefineMarket" AS "isPredefineMarket",
+            tmt."wrIsOver" AS "isOver",
+            tmt."wrOver" AS "over",
+            tmt."wrIsPlayer" AS "isPlayer",
+            tmt."wrPlayerName" AS "playerName",
+            tmt."wrIsAutoCancel" AS "isAutoCancel",
+            tmt."wrCreateType" AS "createType",
+            tmt."wrCreate" AS "create",
+            tmt."wrAutoOpenType" AS "autoOpenType",
+            tmt."wrAutoOpen" AS "autoOpen",
+            tmt."wrAutoCloseType" AS "autoCloseType",
+            tmt."wrBeforeAutoClose" AS "beforeAutoClose",
+            tmt."wrAutoSuspendType" AS "autoSuspendType",
+            tmt."wrBeforeAutoSuspend" AS "beforeAutoSuspend",
+            tmt."wrIsBallStart" AS "isBallStart",
+            tmt."wrIsAutoResultSet" AS "isAutoResultSet",
+            tmt."wrAutoResultType" AS "autoResultType",
+            tmt."wrAutoResultafterBall" AS "autoResultafterBall",
+            tmt."wrAfterWicketAutoSuspend" AS "afterWicketAutoSuspend",
+            tmt."wrAfterWicketNotCreated" AS "afterWicketNotCreated",
+            tmt."wrCreatedBy" AS "createdBy",
+            tmt."wrIsActive" AS "isActive",
+            tmt."wrActionType" AS "actionType",
+            tmt."wrMarketTypeId" AS "marketTypeId",
+            tmt."wrMarketTypeCategoryId" AS "marketTypeCategoryId",
+            tmt."wrMargin" AS "margin",
+            tmt."wrCreateRefId" AS "createRefId",
+            tmt."wrOpenRefId" AS "openRefId",
+            tmt."wrIsPredefineRunnerValue" AS "isPredefineRunnerValue",
+            tmt."wrTemplateType" AS "templateType",
+            tmt."wrIsDefaultBetAllowed" AS "isDefaultBetAllowed",
+            tmt."wrIsDefaultMarketActive" AS "isDefaultMarketActive",
+            tmt."wrDelay" AS "delay",
+            tmt."wrIsPerEvent" AS "isPerEvent",
+            tmt."wrIsShowInAdvanceMarket" AS "isShowInAdvanceMarket",
+            tmt."wrLineType" AS "lineType",
+            tmt."wrDefaultBackSize" AS "defaultBackSize",
+            tmt."wrDefaultLaySize" AS "defaultLaySize",
+            tmt."wrBeforeSuspendMin" AS "beforeSuspendMin",
+            tmt."wrBeforeCloseMin" AS "beforeCloseMin",
+            tmt."wrDefaultIsSendData" AS "defaultIsSendData",
+            tmt."wrRateDiff" AS "rateDiff"
+          FROM "tblCommMatchTypeTemplate" AS cmtt
+          LEFT JOIN "tblMarketTemplates" AS tmt ON tmt."wrID" = cmtt."wrMarketTemplateId"
+          LEFT JOIN "tblMatchTypes" AS tm ON tmt."wrMatchTypeID" = tm."wrMatchTypeId"
+          WHERE cmtt."wrCommentaryId" = $1
+            AND tmt."wrIsActive" = TRUE
+            AND tmt."wrIsShowInAdvanceMarket" = TRUE
+            ${whereCondition ? whereCondition : ""};`,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [commentaryId]
+      }
+    );
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableMarketTemplate.js/getCommMatchTypeTemplatesQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+}
 module.exports = {
   getAllMarketTemplateQuery,
   insertMarketTemplateQuery,
@@ -711,4 +784,5 @@ module.exports = {
   insertMarketTemplateInCloneQuery,
   isShowInAdvanceMarketChangeStatusQuery,
   defaultIsSendDataChangeQuery,
+  getCommMatchTypeTemplatesQuery,
 };

@@ -2021,6 +2021,63 @@ const Commentary = {
       },
     }
   },
+  saveComTemplate: {
+    schema: {
+      tags: ["Commentary"],
+      description: "save Commentary Template",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          saveTemplates : {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                commentaryId: { type: "integer" },
+                marketTemplateId: { type: "integer" },
+              },
+            },
+          },
+          dltTemplate: {
+            type: "array",
+            items: { type: "integer" },
+          }
+        },
+        required: ["saveTemplates", "dltTemplate"],
+      },
+    },
+  },
+  upShotType : {
+    schema: {
+      tags: ["Commentary"],
+      description: "update Shot Type",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+          shotType: { type: "boolean" },
+        },
+        required: ["commentaryId", "shotType"],
+      },
+    },
+  },
+  upIsWheelShow : {
+    schema: {
+      tags: ["Commentary"],
+      description: "update Shot Type",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+          isWheelShow: { type: "boolean" },
+        },
+        required: ["commentaryId", "isWheelShow"],
+      },
+    },
+  },
   dltBallfromMeomory: {
     schema: {
       tags: ["Commentary"],
@@ -2844,6 +2901,24 @@ const Commentary = {
           },
         },
         required: ["commentaryBallByBallId"],
+      },
+    },
+  },
+  saveWagonWheel: {
+    schema: {
+      tags: ["Commentary"],
+      description: "Save positions on wagon wheel",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryBallByBallId: { type: "integer" },
+          x2: { type: "number" },
+          y2: { type: "number" },
+          shortType: { type: "string" },
+          commentryRemark: { type: "string" },
+        },
+        required: ["commentaryBallByBallId", "x2", "y2"],
       },
     },
   },
@@ -6906,6 +6981,62 @@ const PlayerHistory = {
         },
         required: ["bowlingHistoryId"],
       },
+    },
+  },
+  upPlayerBatHist: {
+    schema: {
+      tags: ["PlayerHistory"],
+      description: "update player batting history",
+      security: [{ bearerAuth: [] }],
+      body: {
+          type: "object",
+          properties: {
+            id: { type: "integer" },
+            matchCount: { type: "integer" },
+            inningsCount: { type: "integer" },
+            notOut: { type: "integer" },
+            totalRuns: { type: "integer" },
+            highestScore: { type: "string" },
+            average: { type: "number" },
+            ballsFacedCount: { type: "integer" },
+            strikeRate: { type: "number" },
+            countOf100: { type: "integer" },
+            countOf50: { type: "integer" },
+            countOf4: { type: "integer" },
+            countOf6: { type: "integer" },
+            catchCount: { type: "integer" },
+            stumpCount: { type: "integer" },
+            outCount: { type: "integer" },
+          },
+          required: ["id"],
+        },
+      }
+  },
+  upPlayerBallHist: {
+    schema: {
+      tags: ["PlayerHistory"],
+      description: "update player bowling history",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+          properties: {
+            id: { type: "integer" },
+            matchCount: { type: "integer" },
+            inningsCount: { type: "integer" },
+            ballCount: { type: "integer" },
+            totalRuns: { type: "integer" },
+            wicketsCount: { type: "integer" },
+            bowlerAverage: { type: "number" },
+            bestBowlingInInnings: { type: "string" },
+            bestBowlingInMatch: { type: "string" },
+            bowlerStrikeRate: { type: "number" },
+            economy: { type: "number" },
+            wickets4: { type: "integer" },
+            wickets5: { type: "integer" },
+            wickets10: { type: "integer" },
+          },
+          required: ["id"],
+        },
     },
   },
 };

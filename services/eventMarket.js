@@ -47,6 +47,7 @@ const {
 } = require("../repository/TableEventMarkets");
 const { getRunnerByIdQuery, setResultInRunnerMarketQuery, getRunnerByMarketQuery } = require("../repository/TableMarketRunner");
 const configConstants = require("../utilities/configConstants");
+const { getCommMatchTypeTemplatesQuery } = require("../repository/TableMarketTemplate");
 const {
   EventMarketStatus,
   MarketActionType,
@@ -948,15 +949,27 @@ const changeMarketResultService = async (request, fastify) => {
         const strikeTeam = global.tblCommentaryTeams.find(
           (item) => item.commentaryId === commentaryId && item.teamStatus === 1
         );
+        // await callPredictorMarket(
+        //   {
+        //     commentary_id: parseInt(commentaryId),
+        //     status: parseInt(EventMarketStatus.Settled),
+        //     match_type_id: parseInt(commentary.matchTypeId),
+        //     event_market_id: parseInt(eventMarketId),
+        //     strike_team: strikeTeam.teamId,
+        //   },
+        //   "/api/v1/marketmanualclose",
+        //   fastify,
+        //   request
+        // );
         await callPredictorMarket(
           {
             commentary_id: parseInt(commentaryId),
             status: parseInt(EventMarketStatus.Settled),
-            match_type_id: parseInt(commentary.matchTypeId),
             event_market_id: parseInt(eventMarketId),
             strike_team: strikeTeam.teamId,
+            result: parseInt(result)
           },
-          "/api/v1/marketmanualclose",
+          "/api/v1/marketmanualsettle",
           fastify,
           request
         );
@@ -979,15 +992,27 @@ const changeMarketResultService = async (request, fastify) => {
       const strikeTeam = global.tblCommentaryTeams.find(
         (item) => item.commentaryId === commentaryId && item.teamStatus === 1
       );
+      // await callPredictorMarket(
+      //   {
+      //     commentary_id: parseInt(commentaryId),
+      //     status: parseInt(EventMarketStatus.Settled),
+      //     match_type_id: parseInt(commentary.matchTypeId),
+      //     event_market_id: parseInt(eventMarketId),
+      //     strike_team: strikeTeam.teamId,
+      //   },
+      //   "/api/v1/marketmanualclose",
+      //   fastify,
+      //   request
+      // );
       await callPredictorMarket(
         {
           commentary_id: parseInt(commentaryId),
           status: parseInt(EventMarketStatus.Settled),
-          match_type_id: parseInt(commentary.matchTypeId),
           event_market_id: parseInt(eventMarketId),
           strike_team: strikeTeam.teamId,
+          result: parseInt(result)
         },
-        "/api/v1/marketmanualclose",
+        "/api/v1/marketmanualsettle",
         fastify,
         request
       );
@@ -1044,7 +1069,7 @@ const changeMarketCloseService = async (request, fastify) => {
     // global.tblEventMarkets[eventMarket].status = EventMarketStatus.Close;
     // global.tblEventMarkets[eventMarket].data = updatedData;
     // console.log("updatedData", updatedData);
-    if(commentary.commentaruStatus === commentaryStatus.INPROGRESS || commentary.commentaryStatus === commentaryStatus.COMPLETED){
+    if(commentary.commentaryStatus === commentaryStatus.INPROGRESS || commentary.commentaryStatus === commentaryStatus.COMPLETED){
       const strikeTeam = global.tblCommentaryTeams.find(
         (item) => item.commentaryId === commentaryId && item.teamStatus === 1
       );
@@ -1650,16 +1675,24 @@ const getDetailsByCIdV1Service = async (request, fastify) => {
   }
 
   let marketTemplate;
+  // if(commentary.commentaryStatus == commentaryStatus.OPEN){
+  //   marketTemplate = global.tblMarketTemplate.filter(
+  //     (item) => item.matchTypeID === commentary.matchTypeId  && item.isShowInAdvanceMarket === true && item.isActive === true
+  //   );
+  // }
+  // else {
+  //   marketTemplate = global.tblMarketTemplate.filter(
+  //     (item) => item.matchTypeID === commentary.matchTypeId && item.isActive === true && item.isShowInAdvanceMarket === true
+  //     && item.isPerEvent === false
+  //   );
+  // }
+
   if(commentary.commentaryStatus == commentaryStatus.OPEN){
-    marketTemplate = global.tblMarketTemplate.filter(
-      (item) => item.matchTypeID === commentary.matchTypeId  && item.isShowInAdvanceMarket === true && item.isActive === true
-    );
+    marketTemplate = await getCommMatchTypeTemplatesQuery(commentaryId, null, request, fastify);
   }
   else {
-    marketTemplate = global.tblMarketTemplate.filter(
-      (item) => item.matchTypeID === commentary.matchTypeId && item.isActive === true && item.isShowInAdvanceMarket === true
-      && item.isPerEvent === false
-    );
+    let whereCondition = `AND tmt."wrIsPerEvent" = FALSE`
+    marketTemplate = await getCommMatchTypeTemplatesQuery(commentaryId, whereCondition, request, fastify);
   }
 
 

@@ -50,7 +50,9 @@ const getAllCommentaryQuery = async (fastify) => {
     tc."wrIsTeamPredictionOn" as "isTeamPredictionOn",
     tu."WrUserName" as "createdBy",
     tc."wrHistoryMatchTypeId" as "historyMatchTypeId",
-    mt2."wrMatchType" AS "historyMatchType"
+    mt2."wrMatchType" AS "historyMatchType",
+    "wrShotType" as "shotType",
+    "wrIsWheelShow" as "isWheelShow"
     from "tblCommentaries" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -1110,7 +1112,11 @@ const getAllCommentaryBallByBallQuery = async (fastify) => {
     "wrIsDelete" as "isDelete",
     "wrCurrentInnings" as "currentInnings",
     "wrCreatedDate" as "createdDate",
-    "wrAutoStrikeBallCount" as "autoStrikeBallCount"
+    "wrAutoStrikeBallCount" as "autoStrikeBallCount",
+    "wrX2" as "x2",
+    "wrY2" as "y2",
+    "wrShortType" as "shortType",
+    "wrCommentryRemark" as "commentryRemark"
     from "tblCommentaryBallByBalls"
     WHERE "wrIsDeletedStatus" = false
     `,
@@ -3452,6 +3458,134 @@ const updatePbfOfPlayerQuery = async (data, request,fastify) => {
     
   }
 }
+const getTemplateByComIdQuery = async (data,request, fastify) => {
+  try {
+    let r1 = await fastify.db.query(
+      `
+        SELECT  
+          tcm."wrId" as "id",
+          "wrCommentaryId" as "commentaryId",
+          "wrMarketTemplateId" as "marketTemplateId",
+          tmt."wrTemplateName" as "templateName",
+          tmt1."wrId" as "marketTypeId",
+          tmc."wrId" as "marketTypeCategoryId",
+          "wrMarketTypeName" as "marketTypeName",
+          "wrCategoryName" as "categoryName"
+        FROM "tblCommMatchTypeTemplate" tcm
+        LEFT JOIN "tblMarketTemplates" tmt ON tcm."wrMarketTemplateId" = tmt."wrID"
+        LEFT JOIN "tblMarketTypes" tmt1 ON tmt."wrMarketTypeId" = tmt1."wrId"
+        LEFT JOIN "tblMarketTypeCategories" tmc ON tmt."wrMarketTypeCategoryId" = tmc."wrId"
+        WHERE tcm."wrCommentaryId" = $1
+        AND tmt."wrIsDeleted" = false
+        AND tmt."wrIsActive" = true
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [data.commentaryId],
+      }
+    );
+
+    let r2 = await fastify.db.query(
+      `
+        SELECT 
+          tmt."wrID" as "marketTemplateId",
+          tmt."wrTemplateName" as "templateName",
+          "wrMarketTypeName" as "marketTypeName",
+          "wrCategoryName" as "categoryName",
+          tmt1."wrId" as "marketTypeId",
+          tmc."wrId" as "marketTypeCategoryId"
+        FROM "tblMarketTemplates" tmt
+        LEFT JOIN "tblMarketTypes" tmt1 ON tmt."wrMarketTypeId" = tmt1."wrId"
+        LEFT JOIN "tblMarketTypeCategories" tmc ON tmt."wrMarketTypeCategoryId" = tmc."wrId"
+        WHERE tmt."wrIsDeleted" = false
+        AND tmt."wrMatchTypeID" = $1
+        AND tmt."wrIsActive" = true
+        AND tmt."wrID" NOT IN (
+          SELECT "wrMarketTemplateId" FROM "tblCommMatchTypeTemplate" WHERE "wrCommentaryId"= $2
+        ) 
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [data.matchTypeId, data.commentaryId],
+      }
+    );
+
+    return {
+      assignedTemplates: r1,
+      unassignedTemplates: r2,
+    }
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCommentary/getTemplateByComIdQuery",
+      request
+    );
+    throw new Error(error.message);
+    
+  }
+}
+const saveComTemplateQuery = async (data, request, fastify) => {
+  try {
+    if(data.dltTemplate.length > 0) {
+      await fastify.db.query(
+        `
+          DELETE FROM "tblCommMatchTypeTemplate" WHERE "wrId" = ANY($1)
+        `,
+        {
+          type: fastify.db.QueryTypes.SELECT,
+          bind : [data.dltTemplate]
+        }
+      );
+   }
+
+   if(data.saveTemplates.length > 0) {
+
+      const existingTemp = await fastify.db.query(
+        `
+          SELECT "wrMarketTemplateId" as "marketTemplateId" FROM "tblCommMatchTypeTemplate" WHERE "wrCommentaryId" = $1
+        `,
+        {
+          type: fastify.db.QueryTypes.SELECT,
+          bind: [data.saveTemplates[0].commentaryId],
+        }
+      );
+
+      let templateToSave = []
+      if (existingTemp.length > 0) {
+        templateToSave = data.saveTemplates.filter((item) => !existingTemp.map((temp) => temp.marketTemplateId).includes(item.marketTemplateId));
+      } 
+      else {
+        templateToSave = data.saveTemplates;
+      }
+      if(templateToSave.length > 0) {
+        	await fastify.db.query(
+        `
+          INSERT INTO "tblCommMatchTypeTemplate" ("wrCommentaryId", "wrMarketTemplateId", "wrCreatedBy", "wrCreatedAt")
+          VALUES 
+          ${templateToSave.map((item) => `(${item.commentaryId}, ${item.marketTemplateId}, ${request.userTokenInfo.WrUserId}, now())`).join(",")}
+        `,
+        {
+          type: fastify.db.QueryTypes.SELECT,
+        }
+      );
+    }
+    }
+
+    return true;
+
+
+  } catch (error) {
+    console.log(error);
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCommentary/saveComTemplateQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+}
 
 const getCommentaryBallByBallByIdsQuery = async (commentaryBallByBallId, request, fastify) => {
   try {
@@ -3500,6 +3634,83 @@ const getCommentaryBallByBallByIdsQuery = async (commentaryBallByBallId, request
       fastify,
       error.message,
       "DB ERROR --> repository/TableCommentary.js/getCommentaryBallByBallByIdsQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+}
+
+const insertWagonWheelPositionQuery = async (data, request, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `UPDATE "tblCommentaryBallByBalls" SET 
+              "wrX2" = $1,"wrY2" = $2,"wrShortType" = $3, "wrCommentryRemark" = $4
+              where "wrCommentaryBallByBallId" = $5
+          RETURNING 
+              "wrX2" AS "x2",
+              "wrY2" AS "y2",
+              "wrShortType" AS "shortType",
+              "wrCommentryRemark" AS "commentryRemark",
+              "wrCommentaryBallByBallId" AS "commentaryBallByBallId";`,
+      {
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [data.x2, data.y2, data.shortType || null, data.commentryRemark || null, data.commentaryBallByBallId],
+      }
+    );
+    return result[0];
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCommentary.js/insertWagonWheelPositionQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+}
+const updateShotTypeQuery = async (data, request, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `UPDATE 
+        "tblCommentaries" SET
+        "wrShotType" = $1
+        WHERE "wrCommentaryId" = $2
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [data.shotType, data.commentaryId],
+      }
+    );
+    return result;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCommentary.js/updateShotTypeQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+}
+const updateIsWheelShowQuery = async (data, request, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `UPDATE 
+        "tblCommentaries" SET
+        "wrIsWheelShow" = $1
+        WHERE "wrCommentaryId" = $2
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [data.isWheelShow, data.commentaryId],
+      }
+    );
+    return result;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCommentary.js/updateIsWheelShowQuery",
       request
     );
     throw new Error(error.message);
@@ -3576,5 +3787,10 @@ module.exports = {
   insertCommentaryConsoleFeQuery,
   revertCommentaryQuery,
   updatePbfOfPlayerQuery,
-  getCommentaryBallByBallByIdsQuery
+  getTemplateByComIdQuery,
+  saveComTemplateQuery,
+  getCommentaryBallByBallByIdsQuery,
+  insertWagonWheelPositionQuery,
+  updateShotTypeQuery,
+  updateIsWheelShowQuery
 };

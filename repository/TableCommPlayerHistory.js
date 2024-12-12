@@ -391,6 +391,109 @@ const getPlayerBatHistQuery = async (data, request , fastify) =>{
     throw new Error(err.message);
   }
 }
+const upPlayerBatHistQuery = async (data, request , fastify) =>{
+  try {
+    const query = `
+      UPDATE "tblCommPlayerBatHist" SET
+      "wrMatchCount" = $1,
+      "wrInningsCount" = $2,
+      "wrNotOut" = $3,
+      "wrTotalRuns" = $4,
+      "wrHighestScore" = $5,
+      "wrAverage" = $6,
+      "wrBallsFacedCount" = $7,
+      "wrStrikeRate" = $8,
+      "wr100Count" = $9,
+      "wr50Count" = $10,
+      "wr4Count" = $11,
+      "wr6Count" = $12,
+      "wrCatchCount" = $13,
+      "wrStumpCount" = $14,
+      "wrOutCount" = $15
+      WHERE "wrId" = $16
+    `;
+
+    const result = await fastify.db.query(query, {
+      type: fastify.db.QueryTypes.SELECT,
+      bind: [
+        data.matchCount,
+        data.inningsCount,
+        data.notOut,
+        data.totalRuns,
+        data.highestScore,
+        data.average,
+        data.ballsFacedCount,
+        data.strikeRate,
+        data.countOf100,
+        data.countOf50,
+        data.countOf4,
+        data.countOf6,
+        data.catchCount,
+        data.stumpCount,
+        data.outCount,
+        data.id,
+      ],
+    });
+    return result;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommPlayerHistory.js/upPlayerBatHistQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+}
+const upPlayerBallHistQuery = async (data, request , fastify) =>{
+  try{
+    const query = `
+      UPDATE "tblCommPlayerBowlHist" SET
+      "wrMatchCount" = $1,
+      "wrInningsCount" = $2,
+      "wrBallCount" = $3,
+      "wrTotalRuns" = $4,
+      "wrWicketsCount" = $5,
+      "wrAverage" = $6,
+      "wrBestBowlingInInnings" = $7,
+      "wrBestBowlingInMatch" = $8,
+      "wrEconomy" = $9,
+      "wrStrikeRate" = $10,
+      "wr4Wickets" = $11,
+      "wr5Wickets" = $12,
+      "wr10Wickets" = $13
+      WHERE "wrId" = $14
+    `;
+    const result = await fastify.db.query(query, {
+      type: fastify.db.QueryTypes.SELECT,
+      bind: [
+        data.bowlerPlayedMatchCount,
+        data.bowlerPlayedInningsCount,
+        data.ballCount,
+        data.runsFromBowler,
+        data.wicketsCount,
+        data.bowlerAverage,
+        data.bestBowlingInInnings,
+        data.bestBowlingInMatch,
+        data.economy,
+        data.bowlerStrikeRate,
+        data.wickets4,
+        data.wickets5,
+        data.wickets10,
+        data.id,
+      ],
+    });
+    return result;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommPlayerHistory.js/upPlayerBallHistQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+}
 const getPlayeBallHistQuery = async (data , request , fastify)=>{
   try {
     const result = await fastify.db.query(
@@ -447,5 +550,7 @@ module.exports = {
   deleteCommentaryPlayerBattingHistoryQuery,
   deleteCommentaryPlayerBowlingHistoryQuery,
   getPlayerBatHistQuery,
-  getPlayeBallHistQuery
+  getPlayeBallHistQuery,
+  upPlayerBatHistQuery,
+  upPlayerBallHistQuery
 };

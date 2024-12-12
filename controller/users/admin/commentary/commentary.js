@@ -56,7 +56,13 @@ const {
   completedCommentaryService,
   insertCommentaryConsoleFeService,
   revertCommentaryService,
+  getGlobalDataService,
+  getTemplateByComIdService,
+  saveComTemplatesService,
   getCommentaryBallByBallService,
+  saveWagonWheelPositionService,
+  updateShotTypeService,
+  updateIsWheelShowService,
 } = require("../../../../services/commentry");
 const { getEventSnapByComService, updateEventSnapByComService } = require("../../../../services/competitionEventSnap");
 const { getAllCommentariesDataService } = require("../../../../services/score");
@@ -806,12 +812,67 @@ const revertCommentary = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 }
+const getGlobalData = async (request, reply, fastify) => {
+  try {
+    const result = await getGlobalDataService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/getGlobalData", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+}
+
+const getTemplateByComId = async (request, reply, fastify) => {
+  try {
+    const result = await getTemplateByComIdService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/getTemplateByComId", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+}
+const saveComTemplates = async (request, reply, fastify) => {
+  try {
+    const result = await saveComTemplatesService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/saveComTemplates", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+}
 const getCommentaryBallByBall = async (request, reply, fastify) => {
   try {
     const result = await getCommentaryBallByBallService(request, fastify);
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, path + "/getCommentaryBallByBall", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+}
+const saveWagonWheel = async (request, reply, fastify) => {
+  try {
+    const result = await saveWagonWheelPositionService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/saveWagonWheel", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+}
+const updateShotType = async (request, reply, fastify) => {
+  try {
+    const result = await updateShotTypeService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/updateShotType", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+}
+const updateIsWheelShow = async (request, reply, fastify) => {
+  try {
+    const result = await updateIsWheelShowService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/updateIsWheelShow", request);
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 }
@@ -878,5 +939,11 @@ module.exports = {
   updateEventSnapByCom,
   insertCommentaryConsoleFe,
   revertCommentary,
+  getGlobalData,
+  getTemplateByComId,
+  saveComTemplates,
   getCommentaryBallByBall,
-};
+  saveWagonWheel,
+  updateShotType,
+  updateIsWheelShow
+}
