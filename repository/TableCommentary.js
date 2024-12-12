@@ -140,7 +140,9 @@ const insertCommentaryQuery = async (request, fastify) => {
     tu."WrUserName" as "createdBy",
     "wrLineRatio" as "lineRatio",
     "wrDelay" as "delay",
-    tc."wrHistoryMatchTypeId" as "historyMatchTypeId"
+    tc."wrHistoryMatchTypeId" as "historyMatchTypeId",
+    "wrShotType" as "shotType",
+    "wrIsWheelShow" as "isWheelShow"
     from "insert_data" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"  
@@ -149,6 +151,7 @@ const insertCommentaryQuery = async (request, fastify) => {
     LEFT JOIN "tblUsers" tu ON tc."wrCreatedBy" = tu."WrUserId"
       `,
       {
+        
         bind: [
           data.eventTypeId || null,
           data.matchTypeId || null,
@@ -615,7 +618,9 @@ const getCommentaryByIdQuery = async (request, fastify) => {
       tc."wrIsTeamPredictionOn" as "isTeamPredictionOn",
       tu."WrUserName" as "createdBy",
       tc."wrHistoryMatchTypeId" as "historyMatchTypeId",
-      tc."wrLineRatio" as "lineRatio"	
+      tc."wrLineRatio" as "lineRatio",
+      tc."wrShotType" as "shotType",
+      tc."wrIsWheelShow" as "isWheelShow"
       from "tblCommentaries" tc
       left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
       left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
