@@ -151,6 +151,7 @@ const insertCommentaryQuery = async (request, fastify) => {
     LEFT JOIN "tblUsers" tu ON tc."wrCreatedBy" = tu."WrUserId"
       `,
       {
+        
         bind: [
           data.eventTypeId || null,
           data.matchTypeId || null,
