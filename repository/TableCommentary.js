@@ -1129,6 +1129,7 @@ const getAllCommentaryBallByBallQuery = async (fastify) => {
     {
       type: fastify.db.QueryTypes.SELECT,
     }
+    
   );
   // return await fastify.db.query(
   //   `select
