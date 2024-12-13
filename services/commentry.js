@@ -3427,7 +3427,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         item.teamStatus === 1
     );
     if (
-      commentaryDetails && _sendPrePlayers &&
+      commentaryDetails && _sendPrePlayers.length > 0 &&
       commentaryData.isPredictMarket == true &&
       previousCommentaryStatus == 3 &&
       updatedData.commentaryBallByBallDetails
