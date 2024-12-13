@@ -9325,6 +9325,7 @@ const updateIsWheelShowService = async (request, fastify) => {
   let msg = isWheelShow  == true ? "Tracking Ball enabled successfully." : "Tracking Ball disabled successfully.";
   return msg;
 }
+
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
