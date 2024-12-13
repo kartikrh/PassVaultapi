@@ -1121,13 +1121,15 @@ const getAllCommentaryBallByBallQuery = async (fastify) => {
     "wrX2" as "x2",
     "wrY2" as "y2",
     "wrShortType" as "shortType",
-    "wrCommentryRemark" as "commentryRemark"
+    "wrCommentryRemark" as "commentryRemark",
+    "wrCommentaryPartnershipId" as "commentaryPartnershipId"
     from "tblCommentaryBallByBalls"
     WHERE "wrIsDeletedStatus" = false
     `,
     {
       type: fastify.db.QueryTypes.SELECT,
     }
+    
   );
   // return await fastify.db.query(
   //   `select
