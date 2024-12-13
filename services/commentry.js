@@ -3427,7 +3427,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         item.teamStatus === 1
     );
     if (
-      commentaryDetails && _sendPrePlayers &&
+      commentaryDetails && _sendPrePlayers.length > 0 &&
       commentaryData.isPredictMarket == true &&
       previousCommentaryStatus == 3 &&
       updatedData.commentaryBallByBallDetails
@@ -9309,7 +9309,8 @@ const updateShotTypeService = async (request, fastify) => {
   }
   await updateShotTypeQuery(request.body, request,fastify);
   global.tblCommentaries[index].shotType = shotType;
-  return "shotType updated successfully";
+  let msg = shotType == true ? "Shot Type enabled successfully." : "Shot Type disabled successfully.";
+  return msg;
 }
 const updateIsWheelShowService = async (request, fastify) => {
   const {commentaryId , isWheelShow} = request.body;
@@ -9321,8 +9322,10 @@ const updateIsWheelShowService = async (request, fastify) => {
   }
   await updateIsWheelShowQuery(request.body, request ,fastify);
   global.tblCommentaries[index].isWheelShow = isWheelShow;
-  return "isWheelShow updated successfully";
+  let msg = isWheelShow  == true ? "Tracking Ball enabled successfully." : "Tracking Ball disabled successfully.";
+  return msg;
 }
+
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
