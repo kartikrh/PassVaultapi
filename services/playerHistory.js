@@ -337,7 +337,7 @@ const setPlayerHistoryService = async (data,request, fastify) => {
         let sr1 = playerBattingHistory.ballsFacedCount != 0 ? 
         (playerBattingHistory.totalRuns + batRun) / (playerBattingHistory.ballsFacedCount + ballsFacedCount) * 100 
         : playerBattingHistory.strikeRate;
-        let batsmanAvg = playeBallHis.wicketsCount === 0 ? 0 : Math.floor(playerBattingHistory.totalRuns / playerBattingHistory.outCount);
+        let batsmanAvg = playeBallHis.wicketsCount === 0 ? 0 : playerBattingHistory.totalRuns / playerBattingHistory.outCount;        
         phis = {
           battingHistoryId: playerBattingHistory.battingHistoryId,
           matchTypeId: comdetail.historyMatchTypeId,
@@ -385,8 +385,8 @@ const setPlayerHistoryService = async (data,request, fastify) => {
       }
       else {
         let bowlerAvg = 0;
-        if (playeBallHis.wicketsCount > 0 && playeBallHis.totalRuns > 0) {
-            bowlerAvg = Math.floor(playeBallHis.totalRuns / playeBallHis.wicketsCount);
+        if (playeBallHis.wicketsCount > 0 && playeBallHis.runsFromBowler > 0) {
+            bowlerAvg = playeBallHis.runsFromBowler / playeBallHis.wicketsCount;
         }
         
         let totalOvers = 0;
@@ -395,8 +395,8 @@ const setPlayerHistoryService = async (data,request, fastify) => {
         }
         
         let bowlerEconomy = 0;
-        if (totalOvers > 0 && playeBallHis.totalRuns) {
-            bowlerEconomy = playeBallHis.totalRuns / totalOvers;
+        if (totalOvers > 0 && playeBallHis.runsFromBowler) {
+            bowlerEconomy = playeBallHis.runsFromBowler / totalOvers;
         }
         let bowlerStrikeRate = playeBallHis.wicketsCount === 0 ? 0 : playeBallHis.ballCount / playeBallHis.wicketsCount;
         // let BBI = bowlerBBI.find((item) => item.playerid === player[0].playerId)
