@@ -127,7 +127,12 @@ module.exports = (sequelize) => {
       wrAutoStrikeBallCount :{
         type : DataTypes.INTEGER,
         defaultValue : null
-      }
+      },
+      wrCommentaryPartnershipId : { 
+        type : DataTypes.INTEGER,
+        allowNull : true,
+        defaultValue : null
+      },
     },
     {
       timestamps: false,
