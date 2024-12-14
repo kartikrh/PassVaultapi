@@ -35,6 +35,8 @@ const { allCongifService } = require("../../../services/config");
 const { getAllBanners } = require("../../../controller/users/admin/banner");
 const { getMarketTypeAndCategoryByMarketType } = require("../../../controller/users/admin/marketTemplate");
 const { getAllCompetition } = require("../../../controller/users/admin/competition");
+const { getAllVideoLibrary } = require("../../../controller/users/admin/videoLibrary/index");
+const { getAllPhotoLibrary, allLibraryImages } = require("../../../controller/users/admin/photoLibrary/index");
 
 const {
   Score,
@@ -284,6 +286,15 @@ module.exports = async (fastify, opts) => {
   });
   fastify.post("/getCompetitions", {
     handler: (request, reply) => getAllCompetition(request, reply, fastify)
+  });
+  fastify.post("/videoLibrary", {
+    handler: (request, reply) => getAllVideoLibrary(request, reply, fastify)
+  });
+  fastify.post("/photoLibrary", {
+    handler: (request, reply) => getAllPhotoLibrary(request, reply, fastify)
+  });
+  fastify.post("/libraryImage", {
+    handler: (request, reply) => allLibraryImages(request, reply, fastify)
   });
 
   fastify.post("/commentaryConsoleFe" , {

@@ -9,6 +9,7 @@ const {
   deleteLibraryImagesService,
   updateDisplayOrderService,
   updateIsDefultService,
+  getAllLibraryImagesService,
 } = require("../../../../services/photoLibrary");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -38,6 +39,21 @@ const getAllLibraryImages = async (request, reply, fastify) => {
       fastify,
       err.message,
       commonPath + "/getAllLibraryImages",
+      request
+    );
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
+const allLibraryImages = async (request, reply, fastify) => {
+  try {
+    const result = await getAllLibraryImagesService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      commonPath + "/allLibraryImages",
       request
     );
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
@@ -175,4 +191,5 @@ module.exports = {
   deleteLibraryImages,
   updateDisplayOrder,
   updateIsDefault,
+  allLibraryImages,
 };

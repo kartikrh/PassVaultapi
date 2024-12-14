@@ -11,6 +11,7 @@ const {
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
 const { VideoLibraryType } = require("../utilities/index");
+const { callClientAPI, ServiceType, APIEndpointModuleType } = require("../utilities");
 
 const saveVideoLibraryService = async (request, fastify) => {
   const validateId = global.tblVideoLibrary.find(
@@ -48,6 +49,26 @@ const saveVideoLibraryService = async (request, fastify) => {
     request
   );
   global.tblVideoLibrary.push(saveData);
+
+  callClientAPI(
+    {
+       serviceType: ServiceType.clientAPI,
+       moduleType: APIEndpointModuleType.updateSeoModule,
+       data: {
+         module: 'videoLibrary',
+         type: "add",
+         data: saveData
+       }
+    }, request, fastify)
+   .catch((err) => {
+     errorLogger(
+       fastify,
+       err.message,
+       "services/videoLibrary.js/saveVideoLibraryService - callClientAPI",
+       request
+     );
+   });
+
   return saveData;
 };
 
@@ -123,6 +144,25 @@ const editVideoLibraryService = async (request, fastify, data) => {
     global.tblVideoLibrary[index] = modifiedData[0];
   }
 
+  callClientAPI(
+    {
+      serviceType: ServiceType.clientAPI,
+      moduleType: APIEndpointModuleType.updateSeoModule,
+      data: {
+        module: 'videoLibrary',
+        type: "update",
+        data: modifiedData[0]
+      }
+    }, request, fastify)
+  .catch((err) => {
+    errorLogger(
+      fastify,
+      err.message,
+      "services/videoLibrary.js/editVideoLibraryService - callClientAPI",
+      request
+    );
+  });
+
   return modifiedData[0];
 };
 
@@ -158,6 +198,26 @@ const deleteVideoLibraryService = async (request, fastify) => {
   global.tblVideoLibrary = global.tblVideoLibrary.filter(
     (item) => !id.includes(item.id)
   );
+
+  callClientAPI({
+    serviceType: ServiceType.clientAPI,
+    moduleType: APIEndpointModuleType.updateSeoModule,
+    data: {
+      module: 'videoLibrary',
+      type: "delete",
+      data: {
+        id: id
+      }
+    }
+  }, request, fastify)
+  .catch((err) => {
+    errorLogger(
+      fastify,
+      err.message,
+      "services/videoLibrary.js/deleteVideoLibraryQuery - callClientAPI",
+      request
+    );
+  });
 
   return `Video library data deleted successfully`;
 };

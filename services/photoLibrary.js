@@ -16,6 +16,7 @@ const {
 } = require("../utilities/Images");
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
+const { callClientAPI, ServiceType, APIEndpointModuleType } = require("../utilities");
 
 const savePhotoLibraryService = async (request, fastify) => {
   const saveData = await insertPhotoLibraryQuery(
@@ -24,6 +25,24 @@ const savePhotoLibraryService = async (request, fastify) => {
     request
   );
   global.tblPhotoLibrary.push(saveData);
+  callClientAPI(
+    {
+       serviceType: ServiceType.clientAPI,
+       moduleType: APIEndpointModuleType.updateSeoModule,
+       data: {
+         module: 'photoLibrary',
+         type: "add",
+         data: saveData
+       }
+    }, request, fastify)
+   .catch((err) => {
+     errorLogger(
+       fastify,
+       err.message,
+       "services/photoLibrary.js/savePhotoLibraryService - callClientAPI",
+       request
+     );
+   });
   return saveData;
 };
 
@@ -58,6 +77,25 @@ const editPhotoLibraryService = async (request, fastify, data) => {
   if (index != -1) {
     global.tblPhotoLibrary[index] = modifiedData[0];
   }
+
+  callClientAPI(
+    {
+       serviceType: ServiceType.clientAPI,
+       moduleType: APIEndpointModuleType.updateSeoModule,
+       data: {
+         module: 'photoLibrary',
+         type: "update",
+         data: modifiedData[0]
+       }
+    }, request, fastify)
+   .catch((err) => {
+     errorLogger(
+       fastify,
+       err.message,
+       "services/photoLibrary.js/editPhotoLibraryService - callClientAPI",
+       request
+     );
+   });
 
   return modifiedData[0];
 };
@@ -99,6 +137,25 @@ const saveLibraryImageService = async (request, fastify, data) => {
   }
   const saveData = await insertLibraryImageQuery(data.body, fastify, request);
   global.tblLibraryImages.push(saveData);
+
+  callClientAPI(
+    {
+       serviceType: ServiceType.clientAPI,
+       moduleType: APIEndpointModuleType.updateSeoModule,
+       data: {
+         module: 'libraryImage',
+         type: "add",
+         data: saveData
+       }
+    }, request, fastify)
+   .catch((err) => {
+     errorLogger(
+       fastify,
+       err.message,
+       "services/photoLibrary.js/saveLibraryImageService - callClientAPI",
+       request
+     );
+   });
 
   return saveData;
 };
@@ -166,11 +223,34 @@ const editLibraryImageService = async (request, fastify, data) => {
   if (index != -1) {
     global.tblLibraryImages[index] = modifiedData[0];
   }
+
+  callClientAPI(
+    {
+       serviceType: ServiceType.clientAPI,
+       moduleType: APIEndpointModuleType.updateSeoModule,
+       data: {
+         module: 'libraryImage',
+         type: "update",
+         data: modifiedData[0]
+       }
+    }, request, fastify)
+   .catch((err) => {
+     errorLogger(
+       fastify,
+       err.message,
+       "services/photoLibrary.js/editLibraryImageService - callClientAPI",
+       request
+     );
+   });
   return modifiedData[0];
 };
 
 const allPhotoLibraryService = async (request) => {
   return global.tblPhotoLibrary;
+};
+
+const getAllLibraryImagesService = async (request) => {
+  return global.tblLibraryImages;
 };
 
 const allLibraryImagesService = async (request) => {
@@ -232,6 +312,26 @@ const deletePhotoLibraryService = async (request, fastify) => {
     (item) => !photoLibraryId.includes(item.photoLibraryId)
   );
 
+  callClientAPI({
+    serviceType: ServiceType.clientAPI,
+    moduleType: APIEndpointModuleType.updateSeoModule,
+    data: {
+      module: 'photoLibrary',
+      type: "delete",
+      data: {
+        photoLibraryId: photoLibraryId
+      }
+    }
+  }, request, fastify)
+   .catch((err) => {
+     errorLogger(
+       fastify,
+       err.message,
+       "services/photoLibrary.js/deletePhotoLibraryService - callClientAPI",
+       request
+     );
+   });
+
   return `Photo library data deleted successfully`;
 };
 
@@ -250,6 +350,27 @@ const deleteLibraryImagesService = async (request, fastify) => {
     (item) => !id.includes(item.id)
   );
 
+  callClientAPI(
+    {
+       serviceType: ServiceType.clientAPI,
+       moduleType: APIEndpointModuleType.updateSeoModule,
+       data: {
+         module: 'libraryImage',
+         type: "delete",
+         data: {
+          id: id
+        }
+       }
+    }, request, fastify)
+   .catch((err) => {
+     errorLogger(
+       fastify,
+       err.message,
+       "services/photoLibrary.js/deleteLibraryImagesService - callClientAPI",
+       request
+     );
+   });
+
   return `Library image(s) data deleted successfully`;
 };
 
@@ -263,6 +384,25 @@ const updateDisplayOrderService = async (request, fastify) => {
       global.tblLibraryImages[index].displayOrder = item.displayOrder;
     }
   }
+
+  callClientAPI(
+    {
+       serviceType: ServiceType.clientAPI,
+       moduleType: APIEndpointModuleType.updateSeoModule,
+       data: {
+         module: 'libraryImage',
+         type: "displayOrder",
+         data: request.body
+       }
+    }, request, fastify)
+   .catch((err) => {
+     errorLogger(
+       fastify,
+       err.message,
+       "services/photoLibrary.js/updateDisplayOrderService - callClientAPI",
+       request
+     );
+   });
 
   return `Display order updated successfully`;
 };
@@ -297,11 +437,35 @@ const updateIsDefultService = async (request, fastify) => {
     global.tblLibraryImages[index].isDefault = request.body.isDefault;
   }
 
+  callClientAPI(
+    {
+       serviceType: ServiceType.clientAPI,
+       moduleType: APIEndpointModuleType.updateSeoModule,
+       data: {
+         module: 'libraryImage',
+         type: "isDefault",
+         data: {
+          id: request.body.id,
+          isDefault: request.body.isDefault,
+          photoLibraryId: result.photoLibraryId
+         }
+       }
+    }, request, fastify)
+   .catch((err) => {
+     errorLogger(
+       fastify,
+       err.message,
+       "services/photoLibrary.js/updateIsDefultService - callClientAPI",
+       request
+     );
+   });
+
   return `IsDefault updated successfully`;
 };
 
 module.exports = {
   allPhotoLibraryService,
+  getAllLibraryImagesService,
   allLibraryImagesService,
   photoLibraryById,
   libraryImageById,
