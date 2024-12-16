@@ -4086,7 +4086,6 @@ const updateTeamPlayerService = async (request, fastify) => {
 
     sendDataForSocketUpdate.commentaryId = commentary.commentaryId;
     sendDataForSocketUpdate.eventRefId = commentary.eventRefId;
-
     sendDataForSocketUpdate.dataToUpdate[0].data.push({ ...player });
   }
   if (
