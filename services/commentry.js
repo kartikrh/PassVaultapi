@@ -3940,8 +3940,8 @@ const updateTeamPlayerService = async (request, fastify) => {
       batsmanAverage,
       isInPlayingEleven,
       boundary,
-      playerBallFaced,
-      currentInnings
+      playerBallFaced
+      // currentInnings
     } = playerData;
     let commentary = global.tblCommentaries.find(
       (item) => item?.commentaryId === +commentaryId
@@ -3974,8 +3974,8 @@ const updateTeamPlayerService = async (request, fastify) => {
         batsmanAverage,
         isInPlayingEleven,
         boundary,
-        playerBallFaced,
-        currentInnings
+        playerBallFaced
+        // currentInnings
       },
       request,
       fastify
@@ -3985,8 +3985,7 @@ const updateTeamPlayerService = async (request, fastify) => {
       (item) =>
         item?.commentaryId === +commentaryId &&
         item.teamId === +teamId &&
-        item.playerId === +playerId &&
-        item.currentInnings === +currentInnings
+        item.playerId === +playerId 
     );
     if (player) {
       player.batsmanStrikeRate = batsmanStrikeRate;
