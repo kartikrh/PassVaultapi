@@ -4071,7 +4071,8 @@ const updateTeamPlayerService = async (request, fastify) => {
       (item) =>
         item?.commentaryId === +commentaryId &&
         item.teamId === +teamId &&
-        item.playerId === +playerId
+        item.playerId === +playerId &&
+        item.currentInnings === +currentInnings
     );
     if (player) {
       player.batsmanStrikeRate = batsmanStrikeRate;
