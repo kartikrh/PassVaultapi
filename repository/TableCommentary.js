@@ -540,7 +540,8 @@ const updateCommentaryPlayerById = async (data, request, fastify) => {
       "wrPlayerBallFaced" = $8
       where "wrPlayerId" = $4
       AND "wrCommentaryId" = $5
-      AND "wrTeamId" = $6`,
+      AND "wrTeamId" = $6
+      AND "wrCurrentInnings" = $9`,
       {
         type: fastify.db.QueryTypes.DELETE,
         bind: [
@@ -552,6 +553,7 @@ const updateCommentaryPlayerById = async (data, request, fastify) => {
           data.teamId,
           data.boundary || 0,
           data.playerBallFaced || 0,
+          data.currentInnings,
         ],
       }
     );
