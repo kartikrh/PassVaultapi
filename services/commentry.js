@@ -3723,96 +3723,34 @@ const getTeamAndPlayerListService = async (request, fastify) => {
   if (!commentaryDetails) {
     throw new Error("Commentary with this id not Found");
   }
-  let totalInnings
   // get unique team id from commentary teams
   const arrOfTeamId = [];
-  // let commentaryTeams = await global.tblCommentaryTeams
-  //   .filter((item) => item?.commentaryId === request.body.commentaryId)
-  //   .reduce((acc, curr) => {
-  //     if (!acc.find((team) => team.teamId === curr.teamId)) {
-  //       arrOfTeamId.push(curr.teamId);
-  //       acc.push({
-  //         teamId: curr.teamId,
-  //         teamName: curr.teamName,
-  //         shortName: curr.shortName,
-  //       });
-  //     }
-  //     return acc;
-  //   }, []);
-
-    
-    let commentaryTeams = await global.tblCommentaryTeams
+  let commentaryTeams = await global.tblCommentaryTeams
     .filter((item) => item?.commentaryId === request.body.commentaryId)
     .reduce((acc, curr) => {
-      const teamData = {
-        teamId: curr.teamId,
-        teamName: curr.teamName,
-        shortName: curr.shortName,
-        currentInnings: curr.currentInnings
+      if (!acc.find((team) => team.teamId === curr.teamId)) {
+        arrOfTeamId.push(curr.teamId);
+        acc.push({
+          teamId: curr.teamId,
+          teamName: curr.teamName,
+          shortName: curr.shortName,
+        });
       }
-      arrOfTeamId.push(teamData);
-      acc.push({
-        teamId: curr.teamId,
-        teamName: curr.teamName,
-        shortName: curr.shortName,
-        currentInnings: curr.currentInnings,
-      });
       return acc;
     }, []);
 
-    totalInnings = arrOfTeamId.length / 2
-    commentaryDetails.totalInnings = totalInnings
   // get unique player id from commentary players for this teamId
 
   // find teamPlayer for each team
-  // for (team of arrOfTeamId) {
-  //   let commentaryTeamPlayers = await global.tblCommentaryPlayers
-  //     .filter(
-  //       (item) =>
-  //         item?.commentaryId === request.body.commentaryId &&
-  //         item.teamId === team
-  //     )
-  //     .reduce((acc, curr) => {
-  //       if (!acc.find((player) => player.playerId === curr.playerId)) {
-  //         acc.push({
-  //           teamId: curr.teamId,
-  //           playerId: curr.playerId,
-  //           playerName: curr.playerName,
-  //           batsmanAverage: curr.batsmanAverage,
-  //           batsmanStrikeRate: curr.batsmanStrikeRate,
-  //           commentaryPlayerId: curr.commentaryPlayerId,
-  //           isInPlayingEleven: curr.isInPlayingEleven,
-  //           boundary: curr.boundary,
-  //           playerBallFaced: curr.playerBallFaced
-  //         });
-  //       }
-  //       console.log("old Item", acc)
-  //       return acc;
-  //     }, []);
-
-  //   // remove the systemPlayers from commentaryTeamPlayers
-  //   const systemPlayer = global.tblPlayers
-  //     .filter((item) => item.isSystemPlayer === true)
-  //     .map((item) => item.playerId);
-  //   commentaryTeamPlayers = commentaryTeamPlayers.filter(
-  //     (item) => !systemPlayer.includes(item.playerId)
-  //   );
-  //   let index = commentaryTeams.findIndex((item) => item.teamId === team);
-  //   commentaryTeams[index].commentaryTeamPlayers = commentaryTeamPlayers;
-
-  //   //all players for this team from tblTeamPlayers
-  //   let teamPlayers = await getAllPlayersByTeamIdQuery(team, fastify, request);
-  //   commentaryTeams[index].teamPlayers = teamPlayers;
-  // }
-  let teamMap = {};
   for (team of arrOfTeamId) {
     let commentaryTeamPlayers = await global.tblCommentaryPlayers
       .filter(
         (item) =>
           item?.commentaryId === request.body.commentaryId &&
-          item.teamId === team.teamId && item.currentInnings === team.currentInnings
+          item.teamId === team
       )
       .reduce((acc, curr) => {
+        if (!acc.find((player) => player.playerId === curr.playerId)) {
           acc.push({
             teamId: curr.teamId,
             playerId: curr.playerId,
@@ -3822,9 +3760,9 @@ const getTeamAndPlayerListService = async (request, fastify) => {
             commentaryPlayerId: curr.commentaryPlayerId,
             isInPlayingEleven: curr.isInPlayingEleven,
             boundary: curr.boundary,
-            playerBallFaced: curr.playerBallFaced,
-            currentInnings: curr.currentInnings,
+            playerBallFaced: curr.playerBallFaced
           });
+        }
         return acc;
       }, []);
     // remove the systemPlayers from commentaryTeamPlayers
@@ -3834,36 +3772,12 @@ const getTeamAndPlayerListService = async (request, fastify) => {
     commentaryTeamPlayers = commentaryTeamPlayers.filter(
       (item) => !systemPlayer.includes(item.playerId)
     );
-    // let index = commentaryTeams.findIndex((item) => item.teamId === team.teamId && item.currentInnings === team.currentInnings);
-    // commentaryTeams[index].commentaryTeamPlayers = commentaryTeamPlayers;
-    if (!teamMap[team.teamId]) {
-      teamMap[team.teamId] = {
-        teamId: team.teamId,
-        teamName: team.teamName || teamMap[team.teamId]?.teamName,
-        shortName: team.shortName || teamMap[team.teamId]?.shortName,
-        commentaryTeamPlayers: {},
-        teamPlayers: await getAllPlayersByTeamIdQuery(team.teamId, fastify, request),
-      };
-    }
-  
-    // Update teamName and shortName if already initialized
-    teamMap[team.teamId].teamName = team.teamName || teamMap[team.teamId].teamName;
-    teamMap[team.teamId].shortName = team.shortName || teamMap[team.teamId].shortName;
-  
-    // Add players under respective innings
-    const inningsKey = `currentInnings${team.currentInnings}`;
-    if (!teamMap[team.teamId].commentaryTeamPlayers[inningsKey]) {
-      teamMap[team.teamId].commentaryTeamPlayers[inningsKey] = [];
-    }
-    teamMap[team.teamId].commentaryTeamPlayers[inningsKey].push(...commentaryTeamPlayers);
-  
-  // Convert teamMap back to an array
-  commentaryTeams = Object.values(teamMap);
-  
+    let index = commentaryTeams.findIndex((item) => item.teamId === team);
+    commentaryTeams[index].commentaryTeamPlayers = commentaryTeamPlayers;
 
-    // //all players for this team from tblTeamPlayers
-    // let teamPlayers = await getAllPlayersByTeamIdQuery(team.teamId, fastify, request);
-    // commentaryTeams[index].teamPlayers = teamPlayers;
+    //all players for this team from tblTeamPlayers
+    let teamPlayers = await getAllPlayersByTeamIdQuery(team, fastify, request);
+    commentaryTeams[index].teamPlayers = teamPlayers;
   }
 
   return {
@@ -9412,6 +9326,109 @@ const updateIsWheelShowService = async (request, fastify) => {
   return msg;
 }
 
+const getTeamAndPlayerListServiceV1 = async (request, fastify) => {
+  // get commentary details
+  let commentaryDetails = await global.tblCommentaries.find(
+    (item) => item?.commentaryId === request.body.commentaryId
+  );
+  if (!commentaryDetails) {
+    throw new Error("Commentary with this id not Found");
+  }
+  // get unique team id from commentary teams
+  const arrOfTeamId = [];
+  let commentaryTeams = await global.tblCommentaryTeams
+    .filter((item) => item?.commentaryId === request.body.commentaryId)
+    .reduce((acc, curr) => {
+      const teamData = {
+        teamId: curr.teamId,
+        teamName: curr.teamName,
+        shortName: curr.shortName,
+        currentInnings: curr.currentInnings,
+      };
+      arrOfTeamId.push(teamData);
+      acc.push({
+        teamId: curr.teamId,
+        teamName: curr.teamName,
+        shortName: curr.shortName,
+        currentInnings: curr.currentInnings,
+      });
+      return acc;
+    }, []);
+
+  let totalInnings = arrOfTeamId.length / 2;
+  commentaryDetails.totalInnings = totalInnings;
+
+  let teamMap = {};
+  for (team of arrOfTeamId) {
+    let commentaryTeamPlayers = await global.tblCommentaryPlayers
+      .filter(
+        (item) =>
+          item?.commentaryId === request.body.commentaryId &&
+          item.teamId === team.teamId &&
+          item.currentInnings === team.currentInnings
+      )
+      .reduce((acc, curr) => {
+        acc.push({
+          teamId: curr.teamId,
+          playerId: curr.playerId,
+          playerName: curr.playerName,
+          batsmanAverage: curr.batsmanAverage,
+          batsmanStrikeRate: curr.batsmanStrikeRate,
+          commentaryPlayerId: curr.commentaryPlayerId,
+          isInPlayingEleven: curr.isInPlayingEleven,
+          boundary: curr.boundary,
+          playerBallFaced: curr.playerBallFaced,
+          currentInnings: curr.currentInnings,
+        });
+        return acc;
+      }, []);
+    // remove the systemPlayers from commentaryTeamPlayers
+    const systemPlayer = global.tblPlayers
+      .filter((item) => item.isSystemPlayer === true)
+      .map((item) => item.playerId);
+    commentaryTeamPlayers = commentaryTeamPlayers.filter(
+      (item) => !systemPlayer.includes(item.playerId)
+    );
+
+    if (!teamMap[team.teamId]) {
+      teamMap[team.teamId] = {
+        teamId: team.teamId,
+        teamName: team.teamName || teamMap[team.teamId]?.teamName,
+        shortName: team.shortName || teamMap[team.teamId]?.shortName,
+        commentaryTeamPlayers: {},
+        teamPlayers: await getAllPlayersByTeamIdQuery(
+          team.teamId,
+          fastify,
+          request
+        ),
+      };
+    }
+
+    // Update teamName and shortName if already initialized
+    teamMap[team.teamId].teamName =
+      team.teamName || teamMap[team.teamId].teamName;
+    teamMap[team.teamId].shortName =
+      team.shortName || teamMap[team.teamId].shortName;
+
+    // Add players under respective innings
+    const inningsKey = `currentInnings${team.currentInnings}`;
+    if (!teamMap[team.teamId].commentaryTeamPlayers[inningsKey]) {
+      teamMap[team.teamId].commentaryTeamPlayers[inningsKey] = [];
+    }
+    teamMap[team.teamId].commentaryTeamPlayers[inningsKey].push(
+      ...commentaryTeamPlayers
+    );
+
+    // Convert teamMap back to an array
+    commentaryTeams = Object.values(teamMap);
+  }
+
+  return {
+    commentaryDetails,
+    commentaryTeams,
+  };
+};
+
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -9480,5 +9497,6 @@ module.exports = {
   getCommentaryBallByBallService,
   saveWagonWheelPositionService,
   updateShotTypeService,
-  updateIsWheelShowService
+  updateIsWheelShowService,
+  getTeamAndPlayerListServiceV1,
 };

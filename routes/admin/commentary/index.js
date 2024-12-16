@@ -61,6 +61,7 @@ const {
   saveWagonWheel,
   updateShotType,
   updateIsWheelShow,
+  getTeamAndPlayerListV1,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -839,4 +840,8 @@ module.exports = async (fastify, opts) => {
     ],
     handler : (request, reply) => updateIsWheelShow(request, reply, fastify)
   })
+  fastify.post("/getTeamAndPlayerByIdV1", {
+    schema: Commentary.getById.schema,
+    handler: (request, reply) => getTeamAndPlayerListV1(request, reply, fastify),
+  });
 };
