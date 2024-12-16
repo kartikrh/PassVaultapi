@@ -944,7 +944,7 @@ const closeEventMarketByTeamIdQuery = async (data, request, fastify) => {
             WHERE "wrTeamID" = $2
             AND "wrCommentaryId" = $3
             AND "wrInningsID" = $4
-            AND "wrActionType" IN ($5,$6),
+            AND "wrActionType" IN ($5,$6)
             AND "wrStatus" NOT IN ($7,$8,$9)
             RETURNING "wrID" as "eventMarketId"
         `;
@@ -1045,7 +1045,7 @@ const closeEventMarketByTeamIdQuery = async (data, request, fastify) => {
     errorLogger(
       fastify,
       error.message,
-      "DB ERROR --> repository/TableEventmarket.js/suspendEventMarketQuery",
+      "DB ERROR --> repository/TableEventmarket.js/closeEventMarketByTeamIdQuery",
       request
     );
     throw new Error(error.message);
@@ -2926,7 +2926,7 @@ const closeMarketByATQuery = async (data, request, fastify) => {
             UPDATE "tblEventMarkets"
             SET "wrStatus" = $1 , "wrCloseTime" = now()::timestamp, "wrLastUpdate" = now()::timestamp , "wrIsSendData" = true
             WHERE "wrCommentaryId" = $2
-            AND "wrActionType" IN ($3,$4),
+            AND "wrActionType" IN ($3,$4)
             AND "wrStatus" NOT IN ($5,$6,$7)
             RETURNING "wrID" as "eventMarketId"
         `;
@@ -3025,7 +3025,7 @@ const closeMarketByATQuery = async (data, request, fastify) => {
     errorLogger(
       fastify,
       error.message,
-      "DB ERROR --> repository/TableEventmarket.js/suspendEventMarketQuery",
+      "DB ERROR --> repository/TableEventmarket.js/closeMarketByATQuery",
       request
     );
     throw new Error(error.message);
