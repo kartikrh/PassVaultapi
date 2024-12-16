@@ -3723,6 +3723,7 @@ const getTeamAndPlayerListService = async (request, fastify) => {
   if (!commentaryDetails) {
     throw new Error("Commentary with this id not Found");
   }
+  let totalInnings
   // get unique team id from commentary teams
   const arrOfTeamId = [];
   // let commentaryTeams = await global.tblCommentaryTeams
@@ -3759,6 +3760,8 @@ const getTeamAndPlayerListService = async (request, fastify) => {
       return acc;
     }, []);
 
+    totalInnings = arrOfTeamId.length / 2
+    commentaryDetails.totalInnings = totalInnings
   // get unique player id from commentary players for this teamId
 
   // find teamPlayer for each team
