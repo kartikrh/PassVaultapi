@@ -4071,7 +4071,8 @@ const updateTeamPlayerService = async (request, fastify) => {
       (item) =>
         item?.commentaryId === +commentaryId &&
         item.teamId === +teamId &&
-        item.playerId === +playerId
+        item.playerId === +playerId &&
+        item.currentInnings === +currentInnings
     );
     if (player) {
       player.batsmanStrikeRate = batsmanStrikeRate;
@@ -4085,7 +4086,6 @@ const updateTeamPlayerService = async (request, fastify) => {
 
     sendDataForSocketUpdate.commentaryId = commentary.commentaryId;
     sendDataForSocketUpdate.eventRefId = commentary.eventRefId;
-
     sendDataForSocketUpdate.dataToUpdate[0].data.push({ ...player });
   }
   if (
