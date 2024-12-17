@@ -44,6 +44,7 @@ const {
   cancelEventMarketsQuery,
   getOpenMarketByCIdQuery,
   suspendMarketQuery,
+  updatePredefinedQuery,
 } = require("../repository/TableEventMarkets");
 const { getRunnerByIdQuery, setResultInRunnerMarketQuery, getRunnerByMarketQuery } = require("../repository/TableMarketRunner");
 const configConstants = require("../utilities/configConstants");
@@ -1988,6 +1989,9 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
     index === -1
       ? global.tblEventMarketsV1.push(item)
       : (global.tblEventMarketsV1[index] = item);
+    index = global.tblEventMarketsV1.findIndex(
+      (e) => e.eventMarketId === item.eventMarketId
+    );
 
  
     let category = global.tblMarketTypeCategories.find(
@@ -2006,6 +2010,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
     if(item.marketTypeId == MarketTypeId.Fancy || item.marketTypeId == MarketTypeId.LineMarket){
       let is_onlyover = 0;
       let lineDiff = 0;
+      let predefinedValue;
       if(category && 
         category.categoryName.toLowerCase() !== "player" && 
         category.categoryName.toLowerCase() !== "wicket" && 
@@ -2037,6 +2042,20 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
           back_size : item.runners[0].backSize,
           rate_diff : item.rateDiff
         })
+
+        if(lineDiff != null){
+          if(lineDiff > 0){
+            predefinedValue = item.predefinedValue + lineDiff;
+          }
+          else {
+            predefinedValue = item.predefinedValue - Math.abs(lineDiff);
+          }
+          await updatePredefinedQuery({
+            eventMarketId : item.eventMarketId,
+            predefinedValue : predefinedValue
+          }, request, fastify);
+          global.tblEventMarketsV1[index].predefinedValue = predefinedValue;
+        }  
       }
       else {
         updatePlayerLine.push({
@@ -2208,12 +2227,16 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
         );
         continue;
       }
-      let avg = p.runners[0].line - global.tblCommentaryPlayers[comPlayer].batRun;
-      await updateAverageOfPlayerQuery({
-        commentaryPlayerId: p.playerId,
-        batsmanAverage: avg,
-      }, request, fastify);	
-      global.tblCommentaryPlayers[comPlayer].batsmanAverage = avg;
+      let avg = (p.runners[0].line - global.tblCommentaryPlayers[comPlayer].batRun).toFixed(2);
+      await updatePredefinedQuery({
+        eventMarketId: p.eventMarketId,
+        predefinedValue: avg,
+      }, request, fastify)
+      // await updateAverageOfPlayerQuery({
+      //   commentaryPlayerId: p.playerId,
+      //   batsmanAverage: avg,
+      // }, request, fastify);	
+      // global.tblCommentaryPlayers[comPlayer].batsmanAverage = avg;
     }
   }
   if(boundaryPlayer.length > 0){
@@ -2232,10 +2255,15 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
       }
       let count = player.batFour + player.batSix;
       let boun = (bp.runners[0].line - count).toFixed(2);
-      await updateBoundaryOfPlayerQuery({
-        commentaryPlayerId: bp.playerId,
-        boundary: boun,
-      }, request, fastify);
+      await updatePredefinedQuery({
+        eventMarketId: bp.eventMarketId,
+        predefinedValue: boun,
+      }, request, fastify)
+
+      // await updateBoundaryOfPlayerQuery({
+      //   commentaryPlayerId: bp.playerId,
+      //   boundary: boun,
+      // }, request, fastify);
     }
   }
   if(pbfMarket.length > 0){
@@ -2254,10 +2282,15 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
       }
       let count = player.batBall;
       let pbf =(pf.runners[0].line - count).toFixed(2);
-      await updatePbfOfPlayerQuery({
-        commentaryPlayerId: pf.playerId,
-        ballsFaced: pbf,
-      }, request, fastify);
+      await updatePredefinedQuery({
+        eventMarketId: pf.eventMarketId,
+        predefinedValue: pbf,
+      }, request, fastify)
+      
+      // await updatePbfOfPlayerQuery({
+      //   commentaryPlayerId: pf.playerId,
+      //   ballsFaced: pbf,
+      // }, request, fastify);
     }
   }
   //   // get the team and teamName by commentaryId

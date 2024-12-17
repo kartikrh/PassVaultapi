@@ -3652,6 +3652,28 @@ const updateTimeLogs = async(id, fastify) => {
     throw new Error(error.message);
   }
 }
+const updatePredefinedQuery = async (data, request, fastify) => {
+  try {
+    const query = `
+    UPDATE "tblEventMarkets"
+    SET "wrPredefinedValue" = $1
+    WHERE "wrID" = $2
+    
+    `;
+    return await fastify.db.query(query, {
+      type: fastify.db.QueryTypes.UPDATE,
+      bind: [data.predefinedValue, data.eventMarketId],
+    });
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/updatePredefinedQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+}
 module.exports = {
   getAllEventMarketsQuery,
   createManyEventMarketQuery,
@@ -3716,5 +3738,6 @@ module.exports = {
   getMarCountByComQuery,
   insertTimeLogs,
   updateTimeLogs,
+  updatePredefinedQuery
 }
 
