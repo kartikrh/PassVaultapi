@@ -69,6 +69,7 @@ const {
   insertWagonWheelPositionQuery,
   updateShotTypeQuery,
   updateIsWheelShowQuery,
+  insertCommentaryPlayersQuery,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -3787,7 +3788,7 @@ const getTeamAndPlayerListService = async (request, fastify) => {
 };
 const addTeamPlayerService = async (request, fastify) => {
   // validate commentaryId
-  const { teamId, commentaryId, playerId } = request.body;
+  const { teamId, commentaryId, playerId, currentInnings } = request.body;
   let commentary = global.tblCommentaries.find(
     (item) => item?.commentaryId === commentaryId
   );
@@ -3818,29 +3819,51 @@ const addTeamPlayerService = async (request, fastify) => {
       ...commentaryPlayer.map((item) => item.displayOrder)
     );
   }
-  // insert the new player as per inning
-  // get total inning for this match
-  let matchType = global.tblMatchTypes.find(
+  // // insert the new player as per inning
+  // // get total inning for this match
+  // let matchType = global.tblMatchTypes.find(
+  //   (item) => item.matchTypeId === commentary.matchTypeId
+  // );
+
+  // const totalInning = matchType?.noOfIningsPerSide;
+
+  // for (let i = 0; i < totalInning; i++) {
+  //   const currentInning = i + 1;
+  //   await insertCommentaryPlayers(
+  //     {
+  //       commentaryId,
+  //       teamId,
+  //       playerId,
+  //       displayOrder: maxDisplayOrder + 1,
+  //       matchTypeId: commentary.matchTypeId,
+  //     },
+  //     currentInning,
+  //     fastify,
+  //     request
+  //   );
+  // }
+
+    let matchType = global.tblMatchTypes.find(
     (item) => item.matchTypeId === commentary.matchTypeId
   );
 
   const totalInning = matchType?.noOfIningsPerSide;
+  if (currentInnings < 1 || currentInnings > totalInning) {
+    throw new Error("Invalid Current Innings count");
+  }
 
-  for (let i = 0; i < totalInning; i++) {
-    const currentInning = i + 1;
-    await insertCommentaryPlayers(
+    await insertCommentaryPlayersQuery(
       {
         commentaryId,
         teamId,
         playerId,
         displayOrder: maxDisplayOrder + 1,
         matchTypeId: commentary.matchTypeId,
+        currentInnings,
       },
-      currentInning,
       fastify,
       request
     );
-  }
 
   global.tblCommentaryPlayers = await getAllCommentaryPlayerQuery(fastify);
 
@@ -3940,8 +3963,8 @@ const updateTeamPlayerService = async (request, fastify) => {
       batsmanAverage,
       isInPlayingEleven,
       boundary,
-      playerBallFaced
-      // currentInnings
+      playerBallFaced,
+      currentInnings
     } = playerData;
     let commentary = global.tblCommentaries.find(
       (item) => item?.commentaryId === +commentaryId
@@ -3974,8 +3997,8 @@ const updateTeamPlayerService = async (request, fastify) => {
         batsmanAverage,
         isInPlayingEleven,
         boundary,
-        playerBallFaced
-        // currentInnings
+        playerBallFaced,
+        currentInnings
       },
       request,
       fastify
@@ -3985,7 +4008,8 @@ const updateTeamPlayerService = async (request, fastify) => {
       (item) =>
         item?.commentaryId === +commentaryId &&
         item.teamId === +teamId &&
-        item.playerId === +playerId 
+        item.playerId === +playerId &&
+        item.currentInnings === currentInnings
     );
     if (player) {
       player.batsmanStrikeRate = batsmanStrikeRate;
