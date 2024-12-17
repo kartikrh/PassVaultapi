@@ -552,6 +552,7 @@ const updateCommentaryPlayerById = async (data, request, fastify) => {
           data.teamId,
           data.boundary || 0,
           data.playerBallFaced || 0,
+          // data.currentInnings,
         ],
       }
     );
