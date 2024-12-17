@@ -2189,6 +2189,24 @@ const Commentary = {
       },
     },
   },
+  cancelCommentary: {
+    schema: {
+      tags: ["Commentary"],
+      description: "cancel Commentary",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["commentaryId"],
+      },
+    },
+  },
   changeMatchType: {
     schema: {
       tags: ["Commentary"],

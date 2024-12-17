@@ -70,6 +70,7 @@ const {
   updateShotTypeQuery,
   updateIsWheelShowQuery,
   insertCommentaryPlayersQuery,
+  cancelCommentaryQuery,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -9453,6 +9454,83 @@ const getTeamAndPlayerListServiceV1 = async (request, fastify) => {
   };
 };
 
+const cancelCommentaryService = async (request, fastify) => {
+  await cancelCommentaryQuery(request.body, fastify, request);
+  let _resFromPredictAPI;
+  let callPredictions = [];
+
+  // update the global variable
+  for (let commentaryId of request.body.commentaryId) {
+    const index = global.tblCommentaries.findIndex(
+      (item) => item?.commentaryId === commentaryId
+    );
+    if (index !== -1) {
+      global.tblCommentaries[index].commentaryStatus = 4;
+
+      await closeEventMarketByCIdQuery({ commentaryId }, fastify);
+      _resFromPredictAPI = await callPredictorMarket(
+        {
+          commentary_id: commentaryId,
+        },
+        "/api/v1/endcommentary",
+        fastify,
+        request
+      );
+      let callPrediction = {}
+      if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
+        callPrediction.Cid = commentaryId;
+        callPrediction.predictioncallSuccess = false;
+        callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
+        callPrediction.endPoint = '/api/v1/endcommentary';
+        callPredictions.push(callPrediction);
+      }
+      _resFromPredictAPI = null;
+      callDataProvider(
+        {
+          commentaryId: commentaryId,
+          serviceType: ServiceType.dataProviderAPI,
+          moduleType: APIEndpointModuleType.commentaryUpdate,
+          type: "close"
+        },
+        fastify
+      ).catch((err) => {
+        console.log("call data provider console", err);
+        errorLogger(
+          fastify,
+          err.message,
+          "ERROR --> services/commentary.js/closeEventMarketByCIdQuery",
+          request
+        );
+      });
+      const cData = await getMatchDataByCId({
+        commentaryId: commentaryId,
+      }, request, fastify);
+
+      callClientAPI(
+        {
+          serviceType: ServiceType.clientAPI,
+          moduleType: APIEndpointModuleType.commentaryUpdate,
+          data: cData
+        },
+        request,
+        fastify
+      ).catch((err) => {
+        console.log("call client api console", err);
+        errorLogger(
+          fastify,
+          err.message,
+          "ERROR --> services/commentary.js/closeEventMarketByCIdQuery",
+          request
+        );
+      });
+    }
+  }
+  return {
+    message: "Commentary(s) canceled successfully",
+    callPredictions: callPredictions,
+  };
+};
+
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -9523,4 +9601,5 @@ module.exports = {
   updateShotTypeService,
   updateIsWheelShowService,
   getTeamAndPlayerListServiceV1,
+  cancelCommentaryService,
 };
