@@ -64,6 +64,7 @@ const {
   updateShotTypeService,
   updateIsWheelShowService,
   getTeamAndPlayerListServiceV1,
+  cancelCommentaryService,
 } = require("../../../../services/commentry");
 const { getEventSnapByComService, updateEventSnapByComService } = require("../../../../services/competitionEventSnap");
 const { getAllCommentariesDataService } = require("../../../../services/score");
@@ -622,6 +623,15 @@ const closeCommentary = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const cancelCommentary = async (request, reply, fastify) => {
+  try {
+    const result = await cancelCommentaryService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/cancelCommentary", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 const deleteAllCommentary = async (request, reply, fastify) => {
   try {
     const result = await deleteAllCommentaryService(request, fastify);
@@ -957,4 +967,5 @@ module.exports = {
   updateShotType,
   updateIsWheelShow,
   getTeamAndPlayerListV1,
+  cancelCommentary,
 }

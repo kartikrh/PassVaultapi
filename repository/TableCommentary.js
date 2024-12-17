@@ -3787,6 +3787,32 @@ const updateIsWheelShowQuery = async (data, request, fastify) => {
   }
 }
 
+const cancelCommentaryQuery = async (data, fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `update "tblCommentaries" set
+        "wrCommentaryStatus" = $1,
+        "wrCommentaryResult" = $2,
+        "wrCommentaryCloseTime" = now()
+        where "wrCommentaryId" = ANY($3) AND "wrIsDelete" = false
+      `,
+      {
+        bind: [4, "Abandoned", data.commentaryId],
+      }
+    );
+
+    return result;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/cancelCommentaryQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -3864,4 +3890,5 @@ module.exports = {
   updateShotTypeQuery,
   updateIsWheelShowQuery,
   insertCommentaryPlayersQuery,
+  cancelCommentaryQuery,
 };
