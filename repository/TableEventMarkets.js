@@ -114,6 +114,7 @@ const getAllEventMarketsQueryV1 = async (fastify, whereCondition = null) => {
         tem."wrAfterSuspendTime" as "afterSuspendTime",
         tem."wrAfterCloseTime" as "afterCloseTime",
         tem."wrRateDiff" as "rateDiff",
+        tem."wrPredefinedValue" as "predefinedValue",
         COALESCE(runner_data."runners", '[]') as "runners"
     FROM "tblEventMarkets" tem
     LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
@@ -2817,6 +2818,7 @@ const getMarketListByCIdQueryV1 = async (data, request, fastify) => {
             tem."wrMarketTypeId" as "marketTypeId",
             tem."wrLineType" as "lineType", 
             tem."wrRateDiff" as "rateDiff",
+            tem."wrPredefinedValue" as "predefinedValue",
             (
                 SELECT json_agg(
                   json_build_object(
