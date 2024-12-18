@@ -7167,8 +7167,6 @@ const getTeamListByEventTypeService = async (request) => {
   }
   
   return teams;
-
-
 };
 const getCommenrtySquadDetailsService = async (request, fastify) => {
   const { eventId } = request.body;
