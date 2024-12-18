@@ -16,7 +16,8 @@ const getAllMarketTemplateRunnerQuery = async (fastify) => {
                 "wrBackPrice" as "backPrice",
                 "wrLayPrice" as "layPrice",
                 "wrBackSize" as "backSize",
-                "wrLaySize" as "laySize"
+                "wrLaySize" as "laySize",
+                "wrPredefinedValue" as "predefinedValue"
             FROM "tblMarketTemplateRunners"
             WHERE "wrIsDeleted" = false;
         `,
@@ -45,12 +46,13 @@ const createMarketTemplateRunnerQuery = async (request, fastify) => {
                     "wrBackPrice",
                     "wrLayPrice",
                     "wrBackSize",
-                    "wrLaySize"
+                    "wrLaySize",
+                    "wrPredefinedValue"
                 )
                 select $1,$2,$3,$4,$5,now(),
                 ($1 || '0' || ((SELECT count FROM count_parent) + 1)::TEXT),
                 (select count from count_parent) + 1,
-                $6,$7,$8,$9
+                $6,$7,$8,$9,$10
                 RETURNING 
                     "wrId" as "marketTemplateRunnerId",
                     "wrMarketTemplateId" as "marketTemplateId",
@@ -64,7 +66,8 @@ const createMarketTemplateRunnerQuery = async (request, fastify) => {
                     "wrBackPrice" as "backPrice",
                     "wrLayPrice" as "layPrice",
                     "wrBackSize" as "backSize",
-                    "wrLaySize" as "laySize"
+                    "wrLaySize" as "laySize",
+                    "wrPredefinedValue" as "predefinedValue"
             )
             select * from insert_data  
         `;
@@ -81,6 +84,7 @@ const createMarketTemplateRunnerQuery = async (request, fastify) => {
                     request.body.layPrice || 0,
                     request.body.backSize || 0,
                     request.body.laySize || 0,
+                    request.body.predefinedValue,
 
                 ],
                 type: fastify.db.QueryTypes.SELECT,
@@ -110,7 +114,8 @@ const updateMarketTemplateRunnerQuery   = async (request, fastify) => {
                 "wrBackPrice" = $6,
                 "wrLayPrice" = $7,
                 "wrBackSize" = $8,
-                "wrLaySize" = $9
+                "wrLaySize" = $9,
+                "wrPredefinedValue" = $10
             WHERE "wrId" = $1
             RETURNING 
                 "wrId" as "marketTemplateRunnerId",
@@ -125,7 +130,8 @@ const updateMarketTemplateRunnerQuery   = async (request, fastify) => {
                 "wrBackPrice" as "backPrice",
                 "wrLayPrice" as "layPrice",
                 "wrBackSize" as "backSize",
-                "wrLaySize" as "laySize"
+                "wrLaySize" as "laySize",
+                "wrPredefinedValue" as "predefinedValue"
         `;
 
         const result = await fastify.db.query(
@@ -140,7 +146,8 @@ const updateMarketTemplateRunnerQuery   = async (request, fastify) => {
                     request.body.backPrice || 0,
                     request.body.layPrice || 0,
                     request.body.backSize || 0,
-                    request.body.laySize || 0
+                    request.body.laySize || 0,
+                    request.body.predefinedValue,
                 ],
                 type: fastify.db.QueryTypes.SELECT,
             }

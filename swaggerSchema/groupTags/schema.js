@@ -4700,6 +4700,7 @@ const MarketTemplateRunner = {
           line: { type: "number" },
           overRate: { type: "number" },
           underRate: { type: "number" },
+          predefinedValue: { type: "number" },
         },
         required: ["marketTemplateId", "marketTemplateRunnerId"],
       },
