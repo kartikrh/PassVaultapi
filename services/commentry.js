@@ -7133,21 +7133,40 @@ const getInningDataByInningNumber = async (commentaryId, inningNumber) => {
 };
 
 const getTeamListByEventTypeService = async (request) => {
-  const { eventTypeId } = request.body;
+  const { eventTypeId, competitionId } = request.body;
   // get encypted eventTypeId from global
-  if (eventTypeId === undefined) {
-    return global.tblTeams;
-  } else if (eventTypeId == 0) {
-    return global.tblTeams;
-  } else if (eventTypeId) {
-    let encyptEventTypeId = global.tblEventTypes.find(
-      (item) => item.pId === eventTypeId
-    );
-    const result = global.tblTeams.filter(
-      (item) => item.eventTypeId === encyptEventTypeId
-    );
-    return result;
+  // if (eventTypeId === undefined) {
+  //   return global.tblTeams;
+  // } else if (eventTypeId == 0) {
+  //   return global.tblTeams;
+  // } else if (eventTypeId) {
+  //   let encyptEventTypeId = global.tblEventTypes.find(
+  //     (item) => item.pId === eventTypeId
+  //   );
+  //   const result = global.tblTeams.filter(
+  //     (item) => item.eventTypeId === encyptEventTypeId
+  //   );
+  //   return result;
+  // }
+  let teams = global.tblTeams;
+  if(eventTypeId === undefined || eventTypeId == 0){
+    teams = global.tblTeams;
   }
+  if(eventTypeId && eventTypeId != 0){
+    teams = global.tblTeams.filter((item) => item.eventTypeId === eventTypeId);
+  }
+  if(competitionId && competitionId != 0){
+    // teams = global.tblTeams.filter((item) => item.competitionId === competitionId);
+    const competitionResult = global.tblTeamCompetition.filter(
+      (item) => item.refCompetitionId === competitionId
+    );
+    const competitionTeamIds = new Set(competitionResult.map(item => item.teamId));
+    teams = teams.filter(
+      (item) => competitionTeamIds.has(item.teamId)
+    );
+  }
+  
+  return teams;
 };
 const getCommenrtySquadDetailsService = async (request, fastify) => {
   const { eventId } = request.body;
