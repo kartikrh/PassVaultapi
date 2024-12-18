@@ -63,6 +63,10 @@ module.exports = (sequelize) => {
           allowNull: true,
           defaultValue: 0,
         },  
+        wrPredefinedValue :{
+          type: DataTypes.DOUBLE,
+          allowNull: true,
+        },
     }, {
       timestamps: false,
     }
