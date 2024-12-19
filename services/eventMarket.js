@@ -45,6 +45,9 @@ const {
   getOpenMarketByCIdQuery,
   suspendMarketQuery,
   updatePredefinedQuery,
+  playerMarketQuery,
+  boundaryMarketQuery,
+  pbfMarketQuery,
 } = require("../repository/TableEventMarkets");
 const { getRunnerByIdQuery, setResultInRunnerMarketQuery, getRunnerByMarketQuery } = require("../repository/TableMarketRunner");
 const configConstants = require("../utilities/configConstants");
@@ -544,12 +547,59 @@ const marketListByCIdServiceV1 = async (request, fastify) => {
   if (!commentary) {
     throw new Error("Commentary with this id not Found");
   }
+  // let playerMarket = [];
+  // let boundaryMarket = [];
+  // let pbfMarket = [];
+  // let otherMarket = [];
 
-  const marketList = await getMarketListByCIdQueryV1(
-    request.body,
-    request,
-    fastify
+  let catP = global.tblMarketTypeCategories.find(
+    (item) => item.categoryName.toLowerCase() === "player"
   );
+  let catB = global.tblMarketTypeCategories.find(
+    (item) => item.categoryName.toLowerCase() === "player boundaries"
+  );
+  let catPB = global.tblMarketTypeCategories.find(
+    (item) => item.categoryName.toLowerCase() === "player balls faced"
+  );
+  let catW = global.tblMarketTypeCategories.find(
+    (item) => item.categoryName.toLowerCase() === "wicket"
+  );
+
+  const marketList = await Promise.all([
+    playerMarketQuery(
+      { commentaryId : commentaryId, marketTypeCategoryId: catP.marketTypeCategoryId },
+      request,
+      fastify
+    ),
+    boundaryMarketQuery(
+      { commentaryId : commentaryId, marketTypeCategoryId: catB.marketTypeCategoryId },
+      request,
+      fastify
+    ),
+    pbfMarketQuery(
+      { commentaryId : commentaryId, marketTypeCategoryId: catPB.marketTypeCategoryId },
+      request,
+      fastify
+    ),
+    getMarketListByCIdQueryV1(
+      { commentaryId : commentaryId, 
+        playerCategory : catP.marketTypeCategoryId,
+        boundaryCategory : catB.marketTypeCategoryId,
+        pbfCategory : catPB.marketTypeCategoryId,
+        wicket :catW.marketTypeCategoryId
+      },
+      request,
+      fastify
+    )
+  ]);
+
+
+
+  // const marketList = await getMarketListByCIdQueryV1(
+  //   request.body,
+  //   request,
+  //   fastify
+  // );
 
   // get the team and teamName by commentaryId
   const teams = global.tblCommentaryTeams
@@ -588,7 +638,7 @@ const marketListByCIdServiceV1 = async (request, fastify) => {
   //   bowlerAverage: player.bowlerAverage,
   // }));
   return {
-    marketList,
+    marketList : marketList.flat(),
     teams,
     categories,
     //players,
