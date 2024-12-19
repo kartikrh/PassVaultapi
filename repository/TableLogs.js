@@ -453,7 +453,6 @@ const allResultLogsQuery = async (data, request, fastify)=>{
         let {skip , take} = getPagination(page, limit);
         let where = marketId ? `logs."wrMarketId" = ${marketId}` : null;
         where = startDate && endDate ? (where ? `${where} AND logs."wrCreatedAt" BETWEEN '${startDate}' AND '${endDate}'` : `logs."wrCreatedAt" BETWEEN '${startDate}' AND '${endDate}'`) : where;
-        console.log('where', where);
 
         const query = `
             SELECT
