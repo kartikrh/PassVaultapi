@@ -61,7 +61,7 @@ const {
   commentaryStatus,
   MarketTypeId,
 } = require("../utilities/index");
-const { marketLogger, marketDataLogger, errorLogger, eventMarketLogger } = require("../utilities/logger");
+const { marketLogger, marketDataLogger, errorLogger, eventMarketLogger, marektResultLogger } = require("../utilities/logger");
 const getDetailsByCIdService = async (request, fastify) => {
   const { commentaryId } = request.body;
   const commentary = global.tblCommentaries.find(
@@ -1025,6 +1025,14 @@ const changeMarketResultService = async (request, fastify) => {
           fastify,
           request
         );
+        marektResultLogger(
+          {
+            result: result,
+            marketId : eventMarketId,
+          },
+          request,
+          fastify
+        )
       }
       return "Market result updated successfully";
     } else {
@@ -1068,6 +1076,14 @@ const changeMarketResultService = async (request, fastify) => {
         fastify,
         request
       );
+      marektResultLogger(
+        {
+          result: result,
+          marketId : eventMarketId,
+        },
+        request,
+        fastify
+      )
     }
     return "Market result updated successfully";
   }
