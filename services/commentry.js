@@ -7155,18 +7155,24 @@ const getTeamListByEventTypeService = async (request) => {
   if(eventTypeId && eventTypeId != 0){
     teams = global.tblTeams.filter((item) => item.eventTypeId === eventTypeId);
   }
+  let compTeam = []
   if(competitionId && competitionId != 0){
     // teams = global.tblTeams.filter((item) => item.competitionId === competitionId);
     const competitionResult = global.tblTeamCompetition.filter(
       (item) => item.refCompetitionId === competitionId
     );
     const competitionTeamIds = new Set(competitionResult.map(item => item.teamId));
-    teams = teams.filter(
+    compTeam = teams.filter(
       (item) => competitionTeamIds.has(item.teamId)
     );
   }
+  if(compTeam.length === 0){
+    return teams;
+  }
+  return compTeam;
+
   
-  return teams;
+  // return teams;
 };
 const getCommenrtySquadDetailsService = async (request, fastify) => {
   const { eventId } = request.body;
