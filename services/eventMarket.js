@@ -644,6 +644,7 @@ const marketListByCIdServiceV1 = async (request, fastify) => {
     //players,
   };
 };
+
 const updateMarketRateService = async (request, fastify) => {
   // i got array of eventMarket i want to update this data
   const { eventMarket } = request.body;
