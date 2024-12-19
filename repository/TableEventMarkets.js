@@ -461,6 +461,7 @@ const getMarketListByCIdQuery = async (data, request, fastify) => {
             "wrIsSendData" as "isSendData",
             tem."wrLineRatio" as "lineRatio",
             tem."wrLineType" as "lineType", 
+            tem."wrPredefinedValue" as "predefinedValue",
            (
                 SELECT json_agg(
                   json_build_object(
