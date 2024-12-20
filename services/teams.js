@@ -439,27 +439,70 @@ const deleteTeamService = async (request, fastify) => {
 
 const getTeamPointService = async (request, fastify) => {
   const { teamId } = request.body;
-  const result = global.tblTournamentTeamPoint
-    .filter((item) => item.teamId === teamId)
-    .flatMap((t) => {
-      const commentaryData = global.tblCommentaries.filter(
-        (elem) =>
-          [elem.team1Id, elem.team2Id].includes(teamId) 
-      );
 
-      return commentaryData.map((commentary) => ({
-        competitionName: global.tblCompetitions.find(
-          (c) => c.competitionId === t.competitionId
-        ).competition,
-        eventName: commentary.eventName,
-        eventRefId: commentary.eventRefId,
-        eventDate: commentary.eventDate,
-        ...t,
-      })).sort((a, b) => b.eventDate - a.eventDate);
-    });
+  const result = await Promise.all(
+    global.tblCommentaries
+      .filter((elem) => [elem.team1Id, elem.team2Id].includes(teamId))
+      .map(async (item) => {
+        const isTeamInTeam1 = item.team1Id === teamId;
+
+        const teamId1 = isTeamInTeam1 ? item.team1Id : item.team2Id;
+        const teamId2 = isTeamInTeam1 ? item.team2Id : item.team1Id;
+        return {
+          eventDate: item.eventDate,
+          eventRefId: item.eventRefId,
+          eventName: item.eventName,
+          eventTypeId: item.eventTypeId,
+          eventType: global.tblEventTypes.find(
+            (etyp) => etyp.eventTypeId === item.eventTypeId
+          )?.eventType || null,
+          competitionId: item.competitionId,
+          competitionName: global.tblCompetitions.find(
+            (c) => c.competitionId === item.competitionId
+          )?.competition || null,
+          matchTypeId: item.matchTypeId,
+          matchType: global.tblMatchTypes.find(
+            (mtyp) => mtyp.matchTypeId === item.matchTypeId
+          )?.matchType || null,
+          team1Id: teamId1,
+          team1Name: global.tblTeams.find((t) => t.teamId === teamId1)?.teamName || null,
+          team2Id: teamId2,
+          team2Name: global.tblTeams.find((t) => t.teamId === teamId2)?.teamName || null,
+          winnerName: item.winnerName,
+          commentaryResult: item.result,
+        };
+      })
+  );
+
+  result.sort((a, b) => new Date(b.eventDate) - new Date(a.eventDate));
 
   return result;
 };
+
+// const getTeamPointService = async (request, fastify) => {
+//   const { teamId } = request.body;
+//   const result = global.tblTournamentTeamPoint
+//     .filter((item) => item.teamId === teamId)
+//     .flatMap((t) => {
+//       const commentaryData = global.tblCommentaries.filter(
+//         (elem) =>
+//           [elem.team1Id, elem.team2Id].includes(teamId) 
+//       );
+
+//       return commentaryData.map((commentary) => ({
+//         competitionName: global.tblCompetitions.find(
+//           (c) => c.competitionId === t.competitionId
+//         ).competition,
+//         eventName: commentary.eventName,
+//         eventRefId: commentary.eventRefId,
+//         eventDate: commentary.eventDate,
+//         ...t,
+//       })).sort((a, b) => b.eventDate - a.eventDate);
+//     });
+
+//   return result;
+// };
+
 module.exports = {
   allTeamsService,
   teamByIdService,
