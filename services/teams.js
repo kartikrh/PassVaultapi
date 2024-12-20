@@ -421,18 +421,45 @@ const deleteTeamService = async (request, fastify) => {
   return "Team(s) deleted successfully";
 };
 
+// const getTeamPointService = async (request, fastify) => {
+//   const { teamId } = request.body;
+//   const result = global.tblTournamentTeamPoint
+//     .filter((item) => item.teamId === teamId)
+//     .map((t) => {
+
+//       return {
+//         competitionName: global.tblCompetitions.find(
+//           (c) => c.competitionId === t.competitionId
+//         ).competition,
+//         ...t,
+//       };
+//     });
+//   return result;
+// }
+
 const getTeamPointService = async (request, fastify) => {
   const { teamId } = request.body;
-  const result = global.tblTournamentTeamPoint.filter(
-    (item) => item.teamId === teamId
-  ).map((t) =>{
-    return {
-      competitionName: global.tblCompetitions.find((c) => c.competitionId === t.competitionId).competition,
-      ...t
-    }
-  })
+  const result = global.tblTournamentTeamPoint
+    .filter((item) => item.teamId === teamId)
+    .flatMap((t) => {
+      const commentaryData = global.tblCommentaries.filter(
+        (elem) =>
+          [elem.team1Id, elem.team2Id].includes(teamId) 
+      );
+
+      return commentaryData.map((commentary) => ({
+        competitionName: global.tblCompetitions.find(
+          (c) => c.competitionId === t.competitionId
+        ).competition,
+        eventName: commentary.eventName,
+        eventRefId: commentary.eventRefId,
+        eventDate: commentary.eventDate,
+        ...t,
+      })).sort((a, b) => b.eventDate - a.eventDate);
+    });
+
   return result;
-}
+};
 module.exports = {
   allTeamsService,
   teamByIdService,
