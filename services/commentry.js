@@ -7158,8 +7158,8 @@ const getTeamListByEventTypeService = async (request) => {
   let compTeam = []
   if(competitionId && competitionId != 0){
     // teams = global.tblTeams.filter((item) => item.competitionId === competitionId);
-    const competitionResult = global.tblTeamCompetition.filter(
-      (item) => item.refCompetitionId === competitionId
+    const competitionResult = global.tblTournamentTeamPoint.filter(
+      (item) => item.competitionId === competitionId
     );
     const competitionTeamIds = new Set(competitionResult.map(item => item.teamId));
     compTeam = teams.filter(
