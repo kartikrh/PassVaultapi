@@ -81,7 +81,11 @@ const getEventSnapByComQuery = async (data,request,fastify) =>{
                     tces."wrTotal30" as "Total 30",
                     tces."wrHSOverRun" as "Highest Run in Over",
                     tp4."wrPlayerName" as "Top Run By Batsman",
-                    "wrTopBatsManRun" as "Top Run Batsman"
+                    "wrTopBatsManRun" as "Top Run Batsman",
+                    tces."wrMostDotBallBowlerName" as "Most Dotball Bowler Name",
+                    tces."wrMostRunBowlerName" as "Most Runs Conceded Bowler Name",
+                    tces."wrMostWicketBowlerName" as "Most Wickets Bowler Name",
+                    tces."wrTopRunBatsmanName" as "Top Run Batsman Name"
                 FROM "tblCompetitionEventSnap" tces
                 LEFT JOIN "tblPlayers" tp1 on tp1."wrPlayerId" = tces."wrMostDotBallBowler"
                 LEFT JOIN "tblPlayers" tp2 on tp2."wrPlayerId" = tces."wrMostRunBowlerId"
@@ -152,7 +156,11 @@ const getEventSnapByCompetitionIdQuery = async (competitionId, request, fastify)
                 tces."wrHSRunOverId" as "HSRunOverId",
                 tces."wrTopBatsManRun" as "topBatsmanRun",
                 tces."wrTopRunBatsManId" as "topRunBatsmanId",
-                tp4."wrPlayerName" as "topRunBatsmanName"
+                tp4."wrPlayerName" as "topRunBatsmanName",
+                tces."wrMostDotBallBowlerName" as "Most Dotball Bowler Name",
+                tces."wrMostRunBowlerName" as "Most Runs Conceded Bowler Name",
+                tces."wrMostWicketBowlerName" as "Most Wickets Bowler Name",
+                tces."wrTopRunBatsmanName" as "Top Run Batsman Name"
             FROM "tblCompetitionEventSnap" tces
             LEFT JOIN "tblPlayers" tp1 on tp1."wrPlayerId" = tces."wrMostDotBallBowler"
             LEFT JOIN "tblPlayers" tp2 on tp2."wrPlayerId" = tces."wrMostRunBowlerId"
