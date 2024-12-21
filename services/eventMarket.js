@@ -1793,8 +1793,10 @@ const getDetailsByCIdV1Service = async (request, fastify) => {
     );
     whereCondition += ` AND tem."wrTeamID" = ${battingTeam.teamId}`;
     eventMarket = await getAllEventMarketsQueryV1(fastify, whereCondition);
+    eventMarket.sort((a, b) => a.marketName.localeCompare(b.marketName));
   } else {
     eventMarket = await getAllEventMarketsQueryV1(fastify, whereCondition);
+    eventMarket.sort((a, b) => a.marketName.localeCompare(b.marketName));
   }
   //
   let categories = global.tblMarketTypeCategories.filter(
