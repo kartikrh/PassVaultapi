@@ -48,6 +48,7 @@ const getAllMarketTemplateQuery = async (fastify) => {
       "wrBeforeSuspendMin" as "beforeSuspendMin",
       "wrBeforeCloseMin" as "beforeCloseMin",
       "wrDefaultIsSendData" as "defaultIsSendData",
+      "wrHowManyOpenMarkets" as "howManyOpenMarkets",
       "wrRateDiff" as "rateDiff"
   FROM "tblMarketTemplates" tmt
   LEFT JOIN "tblMatchTypes" tm ON tmt."wrMatchTypeID" = "tm"."wrMatchTypeId"
@@ -69,10 +70,11 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
               "wrAfterWicketAutoSuspend","wrAfterWicketNotCreated","wrCreatedBy","wrIsActive" , "wrActionType",
               "wrMarketTypeId","wrMarketTypeCategoryId","wrMargin" , "wrCreateRefId" , "wrOpenRefId",
               "wrTemplateType", "wrDelay","wrIsDefaultBetAllowed","wrIsDefaultMarketActive", "wrIsPerEvent", "wrIsShowInAdvanceMarket",
-              "wrLineType", "wrDefaultBackSize", "wrDefaultLaySize","wrBeforeSuspendMin","wrBeforeCloseMin", "wrDefaultIsSendData", "wrRateDiff"
+              "wrLineType", "wrDefaultBackSize", "wrDefaultLaySize","wrBeforeSuspendMin","wrBeforeCloseMin", "wrDefaultIsSendData",
+              "wrHowManyOpenMarkets", "wrRateDiff"
               ) values (
                 $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26, $27, $28, $29, $30, $31, $32,$33,$34,$35,$36,
-                $37, $38, $39 ,$40 ,$41, $42, $43
+                $37, $38, $39 ,$40 ,$41, $42, $43, $44
                 ) returning *
           )        
         select 
@@ -120,6 +122,7 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
         "wrBeforeSuspendMin" as "beforeSuspendMin",
         "wrBeforeCloseMin" as "beforeCloseMin",
         "wrDefaultIsSendData" as "defaultIsSendData",
+        "wrHowManyOpenMarkets" as "howManyOpenMarkets",
         "wrRateDiff" as "rateDiff"
          from insert_data`,
       {
@@ -179,6 +182,7 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
           data.beforeSuspendMin === undefined ? null : parseInt(data.beforeSuspendMin),
           data.beforeCloseMin === undefined ? null : parseInt(data.beforeCloseMin),
           data.hasOwnProperty("defaultIsSendData") ? data.defaultIsSendData : false,
+          data.howManyOpenMarkets === undefined ? 1 : data.howManyOpenMarkets,
           data.rateDiff === undefined ? 1 : data.rateDiff,
         ],
       }
@@ -206,10 +210,10 @@ const insertMarketTemplateInCloneQuery = async (data, fastify, request) => {
               "wrMarketTypeId","wrMarketTypeCategoryId","wrMargin" , "wrCreateRefId" , "wrOpenRefId",
               "wrTemplateType", "wrDelay","wrIsDefaultBetAllowed","wrIsDefaultMarketActive", "wrIsPerEvent", "wrIsPredefineRunnerValue", "wrIsShowInAdvanceMarket",
               "wrLineType", "wrDefaultBackSize", "wrDefaultLaySize"
-               ,"wrBeforeSuspendMin","wrBeforeCloseMin", "wrDefaultIsSendData", "wrRateDiff"
+               ,"wrBeforeSuspendMin","wrBeforeCloseMin", "wrDefaultIsSendData", "wrHowManyOpenMarkets", "wrRateDiff"
               ) values (
                 $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26, $27, $28, $29, $30, $31, $32,$33,$34,$35,$36,$37,
-                $38, $39, $40 ,$41 ,$42, $43, $44
+                $38, $39, $40 ,$41 ,$42, $43, $44, $45
                 ) returning *
           )        
         select 
@@ -257,6 +261,7 @@ const insertMarketTemplateInCloneQuery = async (data, fastify, request) => {
         "wrBeforeSuspendMin" as "beforeSuspendMin",
         "wrBeforeCloseMin" as "beforeCloseMin",
         "wrDefaultIsSendData" as "defaultIsSendData",
+        "wrHowManyOpenMarkets" as "howManyOpenMarkets",
         "wrRateDiff" as "rateDiff"
          from insert_data`,
       {
@@ -315,6 +320,7 @@ const insertMarketTemplateInCloneQuery = async (data, fastify, request) => {
           data.beforeSuspendMin || null,
           data.beforeCloseMin || null,
           data.hasOwnProperty("defaultIsSendData") ? data.defaultIsSendData : false,
+          data.howManyOpenMarkets === undefined ? 1 : data.howManyOpenMarkets,
           data.rateDiff === undefined ? 1 : data.rateDiff,
         ],
       }
@@ -457,7 +463,8 @@ const updateMarketTemplateQuery = async (data, fastify, request) => {
             "wrBeforeSuspendMin" = $40,
             "wrBeforeCloseMin" = $41,
             "wrDefaultIsSendData" = $42,
-            "wrRateDiff" = $43
+            "wrHowManyOpenMarkets" = $43,
+            "wrRateDiff" = $44
         WHERE "wrID" = $32
         `,
         {
@@ -504,6 +511,7 @@ const updateMarketTemplateQuery = async (data, fastify, request) => {
                 data.beforeSuspendMin || null,
                 data.beforeCloseMin || null,
                 data.defaultIsSendData,
+                data.howManyOpenMarkets,
                 data.rateDiff
             ],
             type: fastify.db.QueryTypes.SELECT,
@@ -748,6 +756,7 @@ const getCommMatchTypeTemplatesQuery = async (commentaryId, whereCondition = nul
             tmt."wrBeforeSuspendMin" AS "beforeSuspendMin",
             tmt."wrBeforeCloseMin" AS "beforeCloseMin",
             tmt."wrDefaultIsSendData" AS "defaultIsSendData",
+            tmt."wrHowManyOpenMarkets" as "howManyOpenMarkets",
             tmt."wrRateDiff" AS "rateDiff"
           FROM "tblCommMatchTypeTemplate" AS cmtt
           LEFT JOIN "tblMarketTemplates" AS tmt ON tmt."wrID" = cmtt."wrMarketTemplateId"

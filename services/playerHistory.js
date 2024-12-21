@@ -598,12 +598,12 @@ const setPlayerHistoryService = async (data,request, fastify) => {
     let playerArrball = [];
     let playerBowlHist = [];
     for (let p of comPlayer){
-      // const matchTypeCommentaries = global.tblCommentaries.filter((elem) => 
-      //   elem.historyMatchTypeId === matchType.matchTypeId
-      // ).map((item) => {
-      //   return item.commentaryId
-      // });
-      // const plyOutCount = global.tblCommentaryPlayers.filter((item) => item.playerId === p.playerId && matchTypeCommentaries.includes(item.commentaryId));
+      const matchTypeCommentaries = global.tblCommentaries.filter((elem) => 
+        elem.historyMatchTypeId === matchType.matchTypeId
+      ).map((item) => {
+        return item.commentaryId
+      });
+      const plyOutCount = global.tblCommentaryPlayers.filter((item) => item.playerId === p.playerId && matchTypeCommentaries.includes(item.commentaryId));
       const player = global.tblCommentaryPlayers.filter((item) => item.playerId === p.playerId && item.commentaryId === com );
       const comPlayerId = player.map((item) => item.commentaryPlayerId);
       const playerBattingHistory = global.tblPlayersBattingHistory.find((item) => item.playerId === p.playerId && item.matchTypeId === comdetail.historyMatchTypeId);
@@ -683,9 +683,18 @@ const setPlayerHistoryService = async (data,request, fastify) => {
         countOf6 : batSix,
         catchCount : catchCount,
         stumpCount : stumpCount,
-        outCount: batOutCount,
+        outCount: player[0].wicketType !== null ? 1 : 0,
         createdBy : request.userTokenInfo.WrUserId,
       };
+      let totalOvers = 0;
+      if (ballCount > 0) {
+          totalOvers = Math.floor(ballCount / 6) + (ballCount % 6) / 6;
+      }
+      
+      let bowlerEconomy = 0;
+      if (totalOvers > 0 && ballRun) {
+          bowlerEconomy = ballRun / totalOvers;
+      }
       let commBowlHist = {
         matchTypeId: comdetail.historyMatchTypeId,
         matchTypeName: matchType.matchType,
@@ -700,8 +709,8 @@ const setPlayerHistoryService = async (data,request, fastify) => {
         bowlerAverage : ballavg,
         bestBowlingInInnings : bbi,
         bestBowlingInMatch : bbm,
-        economy : eco,
-        bowlerStrikeRate : ballSr,
+        economy : bowlerEconomy,
+        bowlerStrikeRate : wicket === 0 ? 0 : ballCount / wicket,
         wickets4 : wicket4,
         wickets5  : wicket5,
         wickets10 : wicket10,
