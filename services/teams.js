@@ -180,34 +180,34 @@ const createTeamService = async (request, fastify) => {
       }
     }
   }
-  if (request.body.competitionId) {
-    const hashString = request.body.competitionId;
-    if (typeof hashString === "object") {
-      // Split the string into an array using commas as the delimiter
-      const jsonString = JSON.stringify(hashString);
-      // Convert the string back to an array of values
-      const hashArray = jsonString.split(",");
-      if (hashArray.length) {
-        for (let i = 0; i < hashArray.length; i++) {
-          if (hashArray[i]) {
-            const competitionId = hashArray[i].replace(/[\[\]"]/g, "");
-            if (competitionId !== "") {
-              let res = await insertTeamCompetitionQuery(
-                {
-                  teamId: data.teamId,
-                  refCompetitionId: parseInt(competitionId),
-                  userId: request.userTokenInfo.WrUserId,
-                },
-                fastify,
-                request
-              );
-              global.tblTeamCompetition.push(res);
-            }
-          }
-        }
-      }
-    }
-  }
+  // if (request.body.competitionId) {
+  //   const hashString = request.body.competitionId;
+  //   if (typeof hashString === "object") {
+  //     // Split the string into an array using commas as the delimiter
+  //     const jsonString = JSON.stringify(hashString);
+  //     // Convert the string back to an array of values
+  //     const hashArray = jsonString.split(",");
+  //     if (hashArray.length) {
+  //       for (let i = 0; i < hashArray.length; i++) {
+  //         if (hashArray[i]) {
+  //           const competitionId = hashArray[i].replace(/[\[\]"]/g, "");
+  //           if (competitionId !== "") {
+  //             let res = await insertTeamCompetitionQuery(
+  //               {
+  //                 teamId: data.teamId,
+  //                 refCompetitionId: parseInt(competitionId),
+  //                 userId: request.userTokenInfo.WrUserId,
+  //               },
+  //               fastify,
+  //               request
+  //             );
+  //             global.tblTeamCompetition.push(res);
+  //           }
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
   global.tblTeams.push(data);
   return data;
 };
@@ -332,37 +332,37 @@ const updateTeamService = async (request, fastify) => {
       }
     }
   }
-  if (request.body.competitionId) {
-    await deleteTeamCompetitionByTeamIdQuery(body.teamId, fastify, request);
-    global.tblTeamCompetition = global.tblTeamCompetition.filter(
-      (item) => item.teamId !== body.teamId
-    );
+  // if (request.body.competitionId) {
+  //   await deleteTeamCompetitionByTeamIdQuery(body.teamId, fastify, request);
+  //   global.tblTeamCompetition = global.tblTeamCompetition.filter(
+  //     (item) => item.teamId !== body.teamId
+  //   );
 
-    const hashString = request.body.competitionId;
-    // Split the string into an array using commas as the delimiter
-    const jsonString = JSON.stringify(hashString);
-    // Convert the string back to an array of values
-    const hashArray = jsonString.split(",");
-    if (hashArray.length) {
-      for (let i = 0; i < hashArray.length; i++) {
-        if (hashArray[i]) {
-          const competitionId = hashArray[i].replace(/[\[\]"]/g, "");
-          if (competitionId !== "") {
-            let res =await insertTeamCompetitionQuery(
-              {
-                teamId: body.teamId,
-                refCompetitionId: competitionId,
-                userId: request.userTokenInfo.WrUserId,
-              },
-              fastify,
-              request
-            );
-            global.tblTeamCompetition.push(res);
-          }
-        }
-      }
-    }
-  }
+  //   const hashString = request.body.competitionId;
+  //   // Split the string into an array using commas as the delimiter
+  //   const jsonString = JSON.stringify(hashString);
+  //   // Convert the string back to an array of values
+  //   const hashArray = jsonString.split(",");
+  //   if (hashArray.length) {
+  //     for (let i = 0; i < hashArray.length; i++) {
+  //       if (hashArray[i]) {
+  //         const competitionId = hashArray[i].replace(/[\[\]"]/g, "");
+  //         if (competitionId !== "") {
+  //           let res =await insertTeamCompetitionQuery(
+  //             {
+  //               teamId: body.teamId,
+  //               refCompetitionId: competitionId,
+  //               userId: request.userTokenInfo.WrUserId,
+  //             },
+  //             fastify,
+  //             request
+  //           );
+  //           global.tblTeamCompetition.push(res);
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
 
   return body;
 };
@@ -398,7 +398,7 @@ const deleteTeamService = async (request, fastify) => {
 
   for (const team of teamId) {
     await deleteTeamPlayerByTeamIdQuery(team, fastify, request);
-    await deleteTeamCompetitionByTeamIdQuery(team, fastify, request);
+    // await deleteTeamCompetitionByTeamIdQuery(team, fastify, request);
   }
 
   await deletePlayersByTeamIdQuery(teamId, request, fastify);
