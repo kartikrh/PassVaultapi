@@ -115,6 +115,7 @@ const getAllEventMarketsQueryV1 = async (fastify, whereCondition = null) => {
         tem."wrAfterCloseTime" as "afterCloseTime",
         tem."wrRateDiff" as "rateDiff",
         tem."wrPredefinedValue" as "predefinedValue",
+        tem."wrWicketNo" as "wicketNo",
         COALESCE(runner_data."runners", '[]') as "runners"
     FROM "tblEventMarkets" tem
     LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
