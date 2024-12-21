@@ -29,6 +29,7 @@ const updateEventSnapByComService = async (request , fastify) =>{
         eventTypeId : com.eventTypeId,
     }]
     let setSnap = await setEventSnapQuery(data,request,fastify);
+    // console.log("setSnap", setSnap);
     return "Eventsnap Updated successfully";
 }
 
