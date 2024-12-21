@@ -1757,10 +1757,12 @@ const getDetailsByCIdV1Service = async (request, fastify) => {
 
   if(commentary.commentaryStatus == commentaryStatus.OPEN){
     marketTemplate = await getCommMatchTypeTemplatesQuery(commentaryId, null, request, fastify);
+    marketTemplate.sort((a, b) => a.templateName.localeCompare(b.templateName));
   }
   else {
     let whereCondition = `AND tmt."wrIsPerEvent" = FALSE`
     marketTemplate = await getCommMatchTypeTemplatesQuery(commentaryId, whereCondition, request, fastify);
+    marketTemplate.sort((a, b) => a.templateName.localeCompare(b.templateName));
   }
 
 
@@ -1801,7 +1803,7 @@ const getDetailsByCIdV1Service = async (request, fastify) => {
     marketTypeCategoryId: item.marketTypeCategoryId,
     categoryName: item.categoryName,
     displayOrder: item.displayOrder
-  }));
+  })).sort((a, b) => a.marketTypeCategoryId - b.marketTypeCategoryId);
   let marketTypes = global.tblMarketTypes.filter(
     (elem) => elem.isActive === true
   ).map(item => ({
