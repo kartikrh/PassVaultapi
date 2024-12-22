@@ -1,10 +1,19 @@
-const { getPlayerBatHistQuery, getPlayeBallHistQuery, upPlayerBatHistQuery, upPlayerBallHistQuery } = require("../repository/TableCommPlayerHistory");
+const { 
+  getPlayerBatHistQuery,
+  getPlayeBallHistQuery, 
+  upPlayerBatHistQuery, 
+  upPlayerBallHistQuery,
+  savePlayerBatHistQuery,
+  savePlayerBallHistQuery,
+} = require("../repository/TableCommPlayerHistory");
 const { 
   getAllPlayerBowlingHistory, 
   getAllPlayersBattingHistory,
   deletePlayerBattingHistoryQuery,
   deletePlayerBowlingHistoryQuery,
   exportPlayerHistoryQuery,
+  getBattingHistoryByPlayerIdQuery,
+  getBowlingHistoryByPlayerIdQuery,
  } = require("../repository/TablePlayerHistory");
 const { getLogByComIdQuery, createTeamPointLogQuery } = require("../repository/TableTeamPointLogs");
  const { exportExcelFile, importPlayersHistoryData } = require("../utilities/exportImportExcel");
@@ -960,12 +969,22 @@ const getPlayerHistDataService = async (request, fastify) => {
   return result;
 }
 const upPlayerHistDataService = async (request, fastify) => {
-  await upPlayerBatHistQuery(request.body,request,fastify)
-  return "Player Batting history updated successfully";
+  if(request.body.id === 0) {
+    await savePlayerBatHistQuery(request.body, request, fastify);
+    return "Player Batting history inserted successfully";
+  } else {
+    const result = await upPlayerBatHistQuery(request.body, request, fastify);
+    return "Player Batting history updated successfully";
+  }
 }
 const upPlayerBallHistDataService = async (request, fastify) => {
-  await upPlayerBallHistQuery(request.body,request,fastify)
-  return "Player Bowling history updated successfully";
+  if(request.body.id === 0){
+    await savePlayerBallHistQuery(request.body, request, fastify);
+    return "Player Bowling history inserted successfully";
+  } else {
+    await upPlayerBallHistQuery(request.body, request, fastify);
+    return "Player Bowling history updated successfully";
+  }
 }
 const getPlayerBallHistDataService = async (request, fastify) => {
   let result = await getPlayeBallHistQuery(request.body,request,fastify)
@@ -983,6 +1002,99 @@ const getPlayerBallHistDataService = async (request, fastify) => {
   return result;
 
 }
+
+const playerBattingHistSummarycalculationService = async (request, fastify) => {
+  const result = await getBattingHistoryByPlayerIdQuery(
+    request.body.playerId,
+    request,
+    fastify
+  );
+  for (const item of result) {
+    item.average = item.outCount > 0 ? item.totalRuns / item.outCount : 0;
+    item.strikeRate =
+      item.ballsFacedCount > 0
+        ? (item.totalRuns / item.ballsFacedCount) * 100
+        : 0;
+
+    const jsonPayload = JSON.stringify([item]);
+
+    await fastify.db.query(
+      `CALL upsert_player_batting_history($1, $2)`,
+      {
+        bind: [jsonPayload, request.userTokenInfo.WrUserId],
+        type: fastify.db.QueryTypes.RAW,
+      }
+    );
+  }
+
+  return "Player batting history updated successfully";
+};
+
+const playerBowlHistSummaryCalculationService = async(request, fastify) => {
+  const result = await getBowlingHistoryByPlayerIdQuery(request.body.playerId, request, fastify);
+
+  for (const item of result) {
+    item.bowlerAverage = item.wicketsCount > 0 ? item.runsFromBowler / item.wicketsCount : 0;
+    let totalOvers = 0;
+    if (item.ballCount > 0) {
+        totalOvers = Math.floor(item.ballCount / 6) + (item.ballCount % 6) / 6;
+    }
+    
+    let bowlerEconomy = 0;
+    if (totalOvers > 0 && item.runsFromBowler) {
+        bowlerEconomy = item.runsFromBowler / totalOvers;
+    }
+    item.economy = bowlerEconomy
+    item.bowlerStrikeRate = item.wicketsCount > 0 
+      ? item.ballCount / item.wicketsCount : 0
+
+    const jsonPayload = JSON.stringify([item]);
+    await fastify.db.query(`CALL upsert_player_bowling_history($1, $2)`,
+    {
+      bind: [jsonPayload, request.userTokenInfo.WrUserId], 
+      type: fastify.db.QueryTypes.RAW,
+    }
+    );
+  }
+
+  return "Player bowling history updated successfully";
+}
+
+const calculationOfCommPlayerBatHistService = async(request, fastify) => {
+  const result = await getPlayerBatHistQuery(request.body, request, fastify);
+  for (const item of result) {
+    item.average = item.outCount > 0 ? item.totalRuns / item.outCount : 0;
+    item.strikeRate = item.ballsFacedCount > 0 
+      ? (item.totalRuns / item.ballsFacedCount) * 100 : 0
+    
+    await upPlayerBatHistQuery(item, request, fastify)
+  }
+
+  return "Player batting history updated successfully";
+}
+
+const calculationOfCommPlayerBowlHistService = async(request, fastify) => {
+  const result = await getPlayeBallHistQuery(request.body, request, fastify);
+  for (const item of result) {
+    item.bowlerAverage = item.wicketsCount > 0 ? item.runsFromBowler / item.wicketsCount : 0;
+    let totalOvers = 0;
+    if (item.ballCount > 0) {
+        totalOvers = Math.floor(item.ballCount / 6) + (item.ballCount % 6) / 6;
+    }
+    
+    let bowlerEconomy = 0;
+    if (totalOvers > 0 && item.runsFromBowler) {
+        bowlerEconomy = item.runsFromBowler / totalOvers;
+    }
+    item.economy = bowlerEconomy
+    item.bowlerStrikeRate = item.wicketsCount > 0 
+      ? item.ballCount / item.wicketsCount : 0
+    
+    await upPlayerBallHistQuery(item, request, fastify);
+  }
+
+  return "Player bowling history updated successfully";
+}
 module.exports = {
   createPlayerBattingHistoryService,
   createPlayerBowlingHistoryService,
@@ -995,5 +1107,9 @@ module.exports = {
   getPlayerHistDataService,
   getPlayerBallHistDataService,
   upPlayerHistDataService,
-  upPlayerBallHistDataService
+  upPlayerBallHistDataService,
+  playerBattingHistSummarycalculationService,
+  playerBowlHistSummaryCalculationService,
+  calculationOfCommPlayerBatHistService,
+  calculationOfCommPlayerBowlHistService,
 };  
