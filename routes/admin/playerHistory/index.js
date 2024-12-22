@@ -11,6 +11,10 @@ const {
   getPlayerBallHistData,
   upPlayerHistData,
   upPlayerBallHistData,
+  calculationOfCommPlayerBatHist,
+  calculationOfCommPlayerBowlHist,
+  playerBatSummarycalculation,
+  playerBowlSummarycalculation,
 } = require("../../../controller/users/admin/playerHistory");
 const { PlayerHistory } = require("../../../swaggerSchema/groupTags/schema");
 const multer = require("fastify-multer");
@@ -126,7 +130,7 @@ module.exports = async (fastify, opts) => {
       (request, reply) =>
         checkPermission(request, reply, fastify, {
           tabName: "Players",
-          mode: "view",
+          mode: "edit",
         }),
     ],
     handler: (request, reply) => upPlayerHistData(request, reply, fastify),
@@ -138,7 +142,7 @@ module.exports = async (fastify, opts) => {
       (request, reply) =>
         checkPermission(request, reply, fastify, {
           tabName: "Players",
-          mode: "view",
+          mode: "edit",
         }),
     ],
     handler: (request, reply) => upPlayerBallHistData(request, reply, fastify),
@@ -154,5 +158,53 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request, reply) => getPlayerBallHistData(request, reply, fastify),
+  })
+  fastify.post("/batSummary", {
+    schema : PlayerHistory.commBatSummaryCalculation.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Players",
+          mode: "edit",
+        }),
+    ],
+    handler: (request, reply) => calculationOfCommPlayerBatHist(request, reply, fastify),
+  })
+  fastify.post("/bowlSummary", {
+    schema : PlayerHistory.commBowlSummaryCalculation.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Players",
+          mode: "edit",
+        }),
+    ],
+    handler: (request, reply) => calculationOfCommPlayerBowlHist(request, reply, fastify),
+  })
+  fastify.post("/playerBatSummary", {
+    schema : PlayerHistory.playerBatSummary.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Players",
+          mode: "edit",
+        }),
+    ],
+    handler: (request, reply) => playerBatSummarycalculation(request, reply, fastify),
+  })
+  fastify.post("/playerBowlSummary", {
+    schema : PlayerHistory.playerBowlSummary.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Players",
+          mode: "edit",
+        }),
+    ],
+    handler: (request, reply) => playerBowlSummarycalculation(request, reply, fastify),
   })
 };
