@@ -17,7 +17,7 @@ const allTournamentTeamPointsService = async (request) => {
     const isActiveMatch = isActive !== undefined ? item.isActive === isActive : true;
 
     return competitionMatch && teamMatch && groupMatch && isActiveMatch;
-  });
+  }).sort((a, b) => b.totalWin - a.totalWin);
 
   return result;
 };
