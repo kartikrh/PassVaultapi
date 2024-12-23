@@ -85,20 +85,20 @@ const getEventSnapByComQuery = async (data,request,fastify) =>{
                     tces."wrMostDotBallBowlerName" as "Most Dotball Bowler Name",
                     tces."wrMostRunBowlerName" as "Most Runs Conceded Bowler Name",
                     tces."wrMostWicketBowlerName" as "Most Wickets Bowler Name",
-                    tces."wrTopRunBatsmanName" as "Top Run Batsman Name",
-                    tc."wrEventDate" as "Event Date",
-                    tc."wrEventName" as "Event Name",
-                    tcp."wrCompetition" as "Competition Name"
+                    tces."wrTopRunBatsmanName" as "Top Run Batsman Name"
                 FROM "tblCompetitionEventSnap" tces
                 LEFT JOIN "tblPlayers" tp1 on tp1."wrPlayerId" = tces."wrMostDotBallBowler"
                 LEFT JOIN "tblPlayers" tp2 on tp2."wrPlayerId" = tces."wrMostRunBowlerId"
                 LEFT JOIN "tblPlayers" tp3 on tp3."wrPlayerId" = tces."wrMostWicketBowlerId"
                 LEFT JOIN "tblPlayers" tp4 on tp4."wrPlayerId" = tces."wrTopRunBatsManId" 
-                LEFT JOIN "tblCommentaries" tc on tc."wrCommentaryId" = tces."wrCommentaryId" 
-                LEFT JOIN "tblCompetitions" tcp on tcp."wrCompetitionId" = tc."wrCompetitionId"
                 WHERE tces."wrCommentaryId" = $1
                 
             `,
+                //     tc."wrEventDate" as "Event Date",
+                //     tc."wrEventName" as "Event Name",
+                //     tcp."wrCompetition" as "Competition Name"
+                // LEFT JOIN "tblCommentaries" tc on tc."wrCommentaryId" = tces."wrCommentaryId" 
+                // LEFT JOIN "tblCompetitions" tcp on tcp."wrCompetitionId" = tc."wrCompetitionId"
             {
                 type : fastify.db.QueryTypes.SELECT,
                 bind : [
@@ -164,18 +164,13 @@ const getEventSnapByCompetitionIdQuery = async (competitionId, request, fastify)
                 tces."wrMostDotBallBowlerName" as "Most Dotball Bowler Name",
                 tces."wrMostRunBowlerName" as "Most Runs Conceded Bowler Name",
                 tces."wrMostWicketBowlerName" as "Most Wickets Bowler Name",
-                tces."wrTopRunBatsmanName" as "Top Run Batsman Name",
-                tc."wrEventDate" as "Event Date",
-                tc."wrEventName" as "Event Name",
-                tcp."wrCompetition" as "Competition Name"
+                tces."wrTopRunBatsmanName" as "Top Run Batsman Name"
             FROM "tblCompetitionEventSnap" tces
             LEFT JOIN "tblPlayers" tp1 on tp1."wrPlayerId" = tces."wrMostDotBallBowler"
             LEFT JOIN "tblPlayers" tp2 on tp2."wrPlayerId" = tces."wrMostRunBowlerId"
             LEFT JOIN "tblPlayers" tp3 on tp3."wrPlayerId" = tces."wrMostWicketBowlerId"
             LEFT JOIN "tblPlayers" tp4 on tp4."wrPlayerId" = tces."wrTopRunBatsManId" 
             LEFT JOIN "tblOvers" to1 on to1."wrOverId" = tces."wrHSRunOverId"
-            LEFT JOIN "tblCommentaries" tc on tc."wrCommentaryId" = tces."wrCommentaryId" 
-            LEFT JOIN "tblCompetitions" tcp on tcp."wrCompetitionId" = tc."wrCompetitionId"
             WHERE tces."wrCompetitionId" = $1`,
             {
                 type : fastify.db.QueryTypes.SELECT,
