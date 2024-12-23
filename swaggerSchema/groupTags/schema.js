@@ -6925,7 +6925,11 @@ const PlayerHistory = {
         type: "object",
         properties: {
           playerId: { type: "integer" },
-          matchTypeId: { type: "integer" },
+          matchTypeId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
         },
         required: ["playerId", "matchTypeId"],
       },
@@ -6940,7 +6944,11 @@ const PlayerHistory = {
         type: "object",
         properties: {
           playerId: { type: "integer" },
-          matchTypeId: { type: "integer" },
+          matchTypeId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
         },
         required: ["playerId", "matchTypeId"],
       },
