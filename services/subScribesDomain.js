@@ -11,10 +11,12 @@ const allSubScribesDomainService = async (request) => {
   if (isApproved !== undefined) {
     const domains = global.tblSubScribesDomain.filter(
       (d) => d.isApproved === isApproved
-    );
+    ).sort((a, b) => b.createdDate - a.createdDate);
     return domains;
   }
-  return global.tblSubScribesDomain;
+  const result = global.tblSubScribesDomain;
+  result.sort((a, b) => b.createdDate - a.createdDate);
+  return result;
 };
 const subScribeDomainByIdService = async (request) => {
   const { subScribesDomainId } = request.body;

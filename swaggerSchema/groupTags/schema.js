@@ -6916,6 +6916,72 @@ const PlayerHistory = {
       },
     }
   },
+  commBatSummaryCalculation:{
+    schema : {
+      tags: ["PlayerHistory"],
+      description: "update bat summary history",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          playerId: { type: "integer" },
+          matchTypeId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["playerId", "matchTypeId"],
+      },
+    }
+  },
+  commBowlSummaryCalculation:{
+    schema : {
+      tags: ["PlayerHistory"],
+      description: "update bowl summary history",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          playerId: { type: "integer" },
+          matchTypeId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["playerId", "matchTypeId"],
+      },
+    }
+  },
+  playerBatSummary:{
+    schema : {
+      tags: ["PlayerHistory"],
+      description: "update player bat summary history",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          playerId: { type: "integer" },
+        },
+        required: ["playerId"],
+      },
+    }
+  },
+  playerBowlSummary:{
+    schema : {
+      tags: ["PlayerHistory"],
+      description: "update player bowl summary history",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          playerId: { type: "integer" },
+        },
+        required: ["playerId"],
+      },
+    }
+  },
   saveBattingHistory: {
     schema: {
       tags: ["PlayerHistory"],

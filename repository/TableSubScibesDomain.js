@@ -8,6 +8,7 @@ const getAllSubScribesDomainQuery = async (fastify) =>{
         "wrSiteName" as "siteName",
         "wrSiteDomain" as "siteDomain",
         "wrIsApproved" as "isApproved",
+        tsd."wrCreatedDate" as "createdDate",
         CAST(COUNT(tssd."wrSubScribesSubDomainId") as integer) as "subDomainCount",
         COALESCE(
             CASE

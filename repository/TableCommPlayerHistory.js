@@ -391,6 +391,78 @@ const getPlayerBatHistQuery = async (data, request , fastify) =>{
     throw new Error(err.message);
   }
 }
+const savePlayerBatHistQuery = async (data, request, fastify) =>{
+  try {
+    const result = await fastify.db.query(
+      `WITH insert_data AS (
+      INSERT INTO "tblCommPlayerBatHist" (
+              "wrMatchTypeId", "wrMatchCount", "wrInningsCount", "wrPlayerId", "wrNotOut", "wrTotalRuns", "wrHighestScore",
+              "wrAverage", "wrBallsFacedCount", "wrStrikeRate", "wr100Count", "wr50Count", "wr4Count",
+              "wr6Count", "wrCatchCount", "wrStumpCount", "wrOutCount", "wrCreatedBy", "wrCreatedAt"
+              ) 
+              VALUES (
+                  $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, now()
+              )
+              RETURNING *
+              )
+              SELECT
+                "wrId" as "id",
+                "wrMatchTypeId" as "matchTypeId",
+                "wrPlayerId" as "playerId",
+                "wrCommentaryId" as "commentaryId",
+                "wrCommentaryPlayerId" as "commentaryPlayerId",
+                "wrMatchCount" as "matchCount",
+                "wrInningsCount" as "inningsCount",
+                "wrNotOut" as "notOut",
+                "wrTotalRuns" as "totalRuns",
+                "wrHighestScore" as "highestScore",
+                "wrAverage"::DOUBLE PRECISION as "average",
+                "wrBallsFacedCount" as "ballsFacedCount",
+                "wrStrikeRate"::DOUBLE PRECISION as "strikeRate",
+                "wr100Count" as "countOf100",
+                "wr50Count" as "countOf50",
+                "wr4Count" as "countOf4",
+                "wr6Count" as "countOf6",
+                "wrCatchCount" as "catchCount",
+                "wrStumpCount" as "stumpCount",
+                "wrCreatedBy" as "createdBy",
+                "wrCreatedAt" as "createdAt",
+                "wrOutCount" as "outCount"
+              FROM insert_data;`,
+      {
+      type: fastify.db.QueryTypes.SELECT,
+      bind: [
+        data.matchTypeId,
+        data.matchCount,
+        data.inningsCount,
+        data.playerId,
+        data.notOut,
+        data.totalRuns,
+        data.highestScore,
+        data.average,
+        data.ballsFacedCount,
+        data.strikeRate,
+        data.countOf100,
+        data.countOf50,
+        data.countOf4,
+        data.countOf6,
+        data.catchCount,
+        data.stumpCount,
+        data.outCount,
+        request.userTokenInfo.WrUserId
+      ],
+    });
+    return result[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommPlayerHistory.js/upPlayerBatHistQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+}
 const upPlayerBatHistQuery = async (data, request , fastify) =>{
   try {
     const query = `
@@ -411,8 +483,29 @@ const upPlayerBatHistQuery = async (data, request , fastify) =>{
       "wrStumpCount" = $14,
       "wrOutCount" = $15
       WHERE "wrId" = $16
-    `;
-
+      RETURNING
+          "wrId" as "id",
+          "wrMatchTypeId" as "matchTypeId",
+          "wrPlayerId" as "playerId",
+          "wrCommentaryId" as "commentaryId",
+          "wrCommentaryPlayerId" as "commentaryPlayerId",
+          "wrMatchCount" as "matchCount",
+          "wrInningsCount" as "inningsCount",
+          "wrNotOut" as "notOut",
+          "wrTotalRuns" as "totalRuns",
+          "wrHighestScore" as "highestScore",
+          "wrAverage"::DOUBLE PRECISION as "average",
+          "wrBallsFacedCount" as "ballsFacedCount",
+          "wrStrikeRate"::DOUBLE PRECISION as "strikeRate",
+          "wr100Count" as "countOf100",
+          "wr50Count" as "countOf50",
+          "wr4Count" as "countOf4",
+          "wr6Count" as "countOf6",
+          "wrCatchCount" as "catchCount",
+          "wrStumpCount" as "stumpCount",
+          "wrCreatedBy" as "createdBy",
+          "wrCreatedAt" as "createdAt",
+          "wrOutCount" as "outCount"`
     const result = await fastify.db.query(query, {
       type: fastify.db.QueryTypes.SELECT,
       bind: [
@@ -445,6 +538,73 @@ const upPlayerBatHistQuery = async (data, request , fastify) =>{
     throw new Error(err.message);
   }
 }
+const savePlayerBallHistQuery = async (data, request , fastify) =>{
+  try{
+    const result = await fastify.db.query(
+    `WITH insert_data AS (
+      INSERT INTO "tblCommPlayerBowlHist" (
+        "wrMatchTypeId", "wrMatchCount", "wrInningsCount", "wrPlayerId", "wrBallCount", "wrTotalRuns", 
+        "wrWicketsCount", "wrAverage", "wrBestBowlingInInnings", "wrBestBowlingInMatch", 
+        "wrEconomy", "wrStrikeRate", "wr4Wickets", "wr5Wickets", "wr10Wickets", "wrCreatedBy",
+        "wrCreatedAt"
+      ) 
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, now())
+      RETURNING *
+      )        
+        SELECT
+          "wrId" as "id",
+          "wrMatchTypeId" as "matchTypeId",
+          "wrPlayerId" as "playerId",
+          "wrCommentaryId" as "commentaryId",
+          "wrCommentaryPlayerId" as "commentaryPlayerId",
+          "wrMatchCount" as "bowlerPlayedMatchCount",
+          "wrInningsCount" as "bowlerPlayedInningsCount",
+          "wrBallCount" as "ballCount",
+          "wrTotalRuns" as "runsFromBowler",
+          "wrWicketsCount" as "wicketsCount",
+          "wrAverage"::DOUBLE PRECISION as "bowlerAverage",
+          "wrBestBowlingInInnings" as "bestBowlingInInnings",
+          "wrBestBowlingInMatch" as "bestBowlingInMatch",
+          "wrEconomy"::DOUBLE PRECISION as "economy",
+          "wrStrikeRate"::DOUBLE PRECISION as "bowlerStrikeRate",
+          "wr4Wickets" as "wickets4",
+          "wr5Wickets" as "wickets5",
+          "wr10Wickets" as "wickets10",
+          "wrCreatedBy" as "createdBy",
+          "wrCreatedAt" as "createdAt"
+          FROM insert_data;`,
+       {
+      type: fastify.db.QueryTypes.SELECT,
+      bind: [
+        data.matchTypeId,
+        data.bowlerPlayedMatchCount,
+        data.bowlerPlayedInningsCount,
+        data.playerId,
+        data.ballCount,
+        data.runsFromBowler,
+        data.wicketsCount,
+        data.bowlerAverage,
+        data.bestBowlingInInnings,
+        data.bestBowlingInMatch,
+        data.economy,
+        data.bowlerStrikeRate,
+        data.wickets4,
+        data.wickets5,
+        data.wickets10,
+        request.userTokenInfo.WrUserId,
+      ],
+    });
+    return result[0]
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommPlayerHistory.js/savePlayerBallHistQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+}
 const upPlayerBallHistQuery = async (data, request , fastify) =>{
   try{
     const query = `
@@ -463,7 +623,27 @@ const upPlayerBallHistQuery = async (data, request , fastify) =>{
       "wr5Wickets" = $12,
       "wr10Wickets" = $13
       WHERE "wrId" = $14
-    `;
+      RETURNING
+          "wrId" as "id",
+          "wrMatchTypeId" as "matchTypeId",
+          "wrPlayerId" as "playerId",
+          "wrCommentaryId" as "commentaryId",
+          "wrCommentaryPlayerId" as "commentaryPlayerId",
+          "wrMatchCount" as "bowlerPlayedMatchCount",
+          "wrInningsCount" as "bowlerPlayedInningsCount",
+          "wrBallCount" as "ballCount",
+          "wrTotalRuns" as "runsFromBowler",
+          "wrWicketsCount" as "wicketsCount",
+          "wrAverage"::DOUBLE PRECISION as "bowlerAverage",
+          "wrBestBowlingInInnings" as "bestBowlingInInnings",
+          "wrBestBowlingInMatch" as "bestBowlingInMatch",
+          "wrEconomy"::DOUBLE PRECISION as "economy",
+          "wrStrikeRate"::DOUBLE PRECISION as "bowlerStrikeRate",
+          "wr4Wickets" as "wickets4",
+          "wr5Wickets" as "wickets5",
+          "wr10Wickets" as "wickets10",
+          "wrCreatedBy" as "createdBy",
+          "wrCreatedAt" as "createdAt"`;
     const result = await fastify.db.query(query, {
       type: fastify.db.QueryTypes.SELECT,
       bind: [
@@ -483,7 +663,7 @@ const upPlayerBallHistQuery = async (data, request , fastify) =>{
         data.id,
       ],
     });
-    return result;
+    return result[0];
   } catch (err) {
     errorLogger(
       fastify,
@@ -552,5 +732,7 @@ module.exports = {
   getPlayerBatHistQuery,
   getPlayeBallHistQuery,
   upPlayerBatHistQuery,
-  upPlayerBallHistQuery
+  upPlayerBallHistQuery,
+  savePlayerBatHistQuery,
+  savePlayerBallHistQuery,
 };

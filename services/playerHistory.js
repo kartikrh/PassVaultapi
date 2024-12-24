@@ -1,10 +1,19 @@
-const { getPlayerBatHistQuery, getPlayeBallHistQuery, upPlayerBatHistQuery, upPlayerBallHistQuery } = require("../repository/TableCommPlayerHistory");
+const { 
+  getPlayerBatHistQuery,
+  getPlayeBallHistQuery, 
+  upPlayerBatHistQuery, 
+  upPlayerBallHistQuery,
+  savePlayerBatHistQuery,
+  savePlayerBallHistQuery,
+} = require("../repository/TableCommPlayerHistory");
 const { 
   getAllPlayerBowlingHistory, 
   getAllPlayersBattingHistory,
   deletePlayerBattingHistoryQuery,
   deletePlayerBowlingHistoryQuery,
   exportPlayerHistoryQuery,
+  getBattingHistoryByPlayerIdQuery,
+  getBowlingHistoryByPlayerIdQuery,
  } = require("../repository/TablePlayerHistory");
 const { getLogByComIdQuery, createTeamPointLogQuery } = require("../repository/TableTeamPointLogs");
  const { exportExcelFile, importPlayersHistoryData } = require("../utilities/exportImportExcel");
@@ -636,14 +645,15 @@ const setPlayerHistoryService = async (data,request, fastify) => {
             : `${wicketInnings2}/${ballRunInnings2}`;
         }
 
+      let wicketsCount = overs.reduce((sum, item) => sum + item.totalWicket, 0);
       let phis = {};
       let cPlayer = {};
       let cPlayerBall = {};
       let pbHis = {};
       let inningCount = player.filter((item)=>item.isInPlayingEleven == true).length; 
-      let ballsFacedCount = player.reduce((acc, item) => acc + item.playerBallFaced, 0);
+      let ballsFacedCount = player.reduce((acc, item) => acc + item.batBall, 0);
       let batRun = player.reduce((acc, item) => acc + item.batRun, 0);
-      let notOut = player.filter((item) => item.isBatterOut == false).length;
+      let notOut = player.filter((item) => item.isBatterOut === false || item.isBatterOut === null).length;
       let sr =  ballsFacedCount != 0 ? (batRun / ballsFacedCount) * 100 : 0;
       let batFour = player.reduce((acc, item) => acc + item.batFour, 0);
       let batSix = player.reduce((acc, item) => acc + item.batSix, 0);
@@ -657,9 +667,12 @@ const setPlayerHistoryService = async (data,request, fastify) => {
       let bbm = wicket != 0 ? `${wicket}/${ballRun}` : 0;
       let eco = player[0].bowlerEconomy;
       let ballSr = player[0].batsmanStrikeRate;
-      let wicket4 = overs.filter((item) => item.totalWicket == 4).length;
-      let wicket5 = overs.filter((item) => item.totalWicket == 5).length;
-      let wicket10 = overs.filter((item) => item.totalWicket >= 10).length;
+      let wicket4 = wicketsCount == 4 ? 4 : 0;
+      let wicket5 = wicketsCount == 5 ? 5 : 0;
+      let wicket10 = wicketsCount >= 10 ? wicketsCount : 0;
+      // let wicket4 = overs.filter((item) => item.totalWicket == 4).length;
+      // let wicket5 = overs.filter((item) => item.totalWicket == 5).length;
+      // let wicket10 = overs.filter((item) => item.totalWicket >= 10).length;
       let batOutCount = plyOutCount.filter((item) => item.wicketType !== null).length;
       let batAvg = batOutCount !== 0 ? batRun / batOutCount : batRun
 
@@ -701,8 +714,8 @@ const setPlayerHistoryService = async (data,request, fastify) => {
         playerId : p.playerId,
         commentaryId: com,
         commentaryPlayerId : player[0].commentaryPlayerId,
-        bowlerPlayedMatchCount : 1,
-        bowlerPlayedInningsCount : inningCount,
+        matchCount : 1,
+        inningsCount : inningCount,
         ballCount : ballCount,
         runsFromBowler : ballRun,
         wicketsCount : wicket,
@@ -744,7 +757,7 @@ const setPlayerHistoryService = async (data,request, fastify) => {
         let sr1 = playerBattingHistory.ballsFacedCount != 0 ? 
         (playerBattingHistory.totalRuns + batRun) / (playerBattingHistory.ballsFacedCount + ballsFacedCount) * 100 
         : playerBattingHistory.strikeRate;
-        let batsmanAvg = playeBallHis.wicketsCount === 0 ? 0 : playerBattingHistory.totalRuns / playerBattingHistory.outCount;        
+        let batsmanAvg = playerBattingHistory.outCount === 0 ? playerBattingHistory.totalRuns : playerBattingHistory.totalRuns / playerBattingHistory.outCount;        
         phis = {
           battingHistoryId: playerBattingHistory.battingHistoryId,
           matchTypeId: comdetail.historyMatchTypeId,
@@ -960,29 +973,108 @@ const getPlayerHistDataService = async (request, fastify) => {
   return result;
 }
 const upPlayerHistDataService = async (request, fastify) => {
-  await upPlayerBatHistQuery(request.body,request,fastify)
-  return "Player Batting history updated successfully";
+  if(request.body.id === 0) {
+    await savePlayerBatHistQuery(request.body, request, fastify);
+    return "Player Batting history inserted successfully";
+  } else {
+    await upPlayerBatHistQuery(request.body, request, fastify);
+    return "Player Batting history updated successfully";
+  }
 }
 const upPlayerBallHistDataService = async (request, fastify) => {
-  await upPlayerBallHistQuery(request.body,request,fastify)
-  return "Player Bowling history updated successfully";
+  if(request.body.id === 0){
+    await savePlayerBallHistQuery(request.body, request, fastify);
+    return "Player Bowling history inserted successfully";
+  } else {
+    await upPlayerBallHistQuery(request.body, request, fastify);
+    return "Player Bowling history updated successfully";
+  }
 }
 const getPlayerBallHistDataService = async (request, fastify) => {
-  let result = await getPlayeBallHistQuery(request.body,request,fastify)
-  // && item.matchTypeId === request.body.matchTypeId)
-  // .map((item) => {
-  //   let event = global.tblCommentaries.find((elem) => elem.commentaryId === item.commentaryId);
-  //   return {
-  //     ...item,
-  //     matchTypeName: global.tblMatchTypes.find((elem) => elem.matchTypeId === item.matchTypeId).matchType,
-  //     eventName : event.eventName,
-  //     eventDate : event.eventDate,
-  //   }
-  // });
-
+  let result = await getPlayeBallHistQuery(request.body,request,fastify);
   return result;
 
 }
+
+const playerBattingHistSummarycalculationService = async (request, fastify) => {
+  const result = await getBattingHistoryByPlayerIdQuery(
+    request.body.playerId,
+    request,
+    fastify
+  );
+  for (const item of result) {
+    item.average = item.outCount > 0 ? item.totalRuns / item.outCount : 0;
+    item.strikeRate =
+      item.ballsFacedCount > 0
+        ? (item.totalRuns / item.ballsFacedCount) * 100
+        : 0;
+
+    const jsonPayload = JSON.stringify([item]);
+
+    await fastify.db.query(
+      `CALL upsert_player_batting_history($1, $2)`,
+      {
+        bind: [jsonPayload, request.userTokenInfo.WrUserId],
+        type: fastify.db.QueryTypes.RAW,
+      }
+    );
+  }
+
+  return "Player batting history updated successfully";
+};
+
+const playerBowlHistSummaryCalculationService = async(request, fastify) => {
+  const result = await getBowlingHistoryByPlayerIdQuery(request.body.playerId, request, fastify);
+
+  for (const item of result) {
+    item.bowlerAverage = item.wicketsCount > 0 ? item.runsFromBowler / item.wicketsCount : 0;
+    let totalOvers = 0;
+    if (item.ballCount > 0) {
+        totalOvers = Math.floor(item.ballCount / 6) + (item.ballCount % 6) / 6;
+    }
+    
+    let bowlerEconomy = 0;
+    if (totalOvers > 0 && item.runsFromBowler) {
+        bowlerEconomy = item.runsFromBowler / totalOvers;
+    }
+    item.economy = bowlerEconomy
+    item.bowlerStrikeRate = item.wicketsCount > 0 
+      ? item.ballCount / item.wicketsCount : 0
+
+    const jsonPayload = JSON.stringify([item]);
+    await fastify.db.query(`CALL upsert_player_bowling_history($1, $2)`,
+    {
+      bind: [jsonPayload, request.userTokenInfo.WrUserId], 
+      type: fastify.db.QueryTypes.RAW,
+    }
+    );
+  }
+
+  return "Player bowling history updated successfully";
+}
+
+const calculationOfCommPlayerBatHistService = async(request, fastify) => {
+  await fastify.db.query(`CALL proc_player_bat_summary_calculation($1)`,
+    {
+      bind: [request.body], 
+      type: fastify.db.QueryTypes.RAW,
+    }
+    );
+
+  return "Player batting history updated successfully";
+}
+
+const calculationOfCommPlayerBowlHistService = async(request, fastify) => {
+  await fastify.db.query(`CALL proc_player_bowl_summary_calculation($1)`,
+    {
+      bind: [request.body], 
+      type: fastify.db.QueryTypes.RAW,
+    }
+    );
+
+  return "Player bowling history updated successfully";
+}
+
 module.exports = {
   createPlayerBattingHistoryService,
   createPlayerBowlingHistoryService,
@@ -995,5 +1087,9 @@ module.exports = {
   getPlayerHistDataService,
   getPlayerBallHistDataService,
   upPlayerHistDataService,
-  upPlayerBallHistDataService
+  upPlayerBallHistDataService,
+  playerBattingHistSummarycalculationService,
+  playerBowlHistSummaryCalculationService,
+  calculationOfCommPlayerBatHistService,
+  calculationOfCommPlayerBowlHistService,
 };  
