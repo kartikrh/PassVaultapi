@@ -571,7 +571,8 @@ const savePlayerBallHistQuery = async (data, request , fastify) =>{
           "wr5Wickets" as "wickets5",
           "wr10Wickets" as "wickets10",
           "wrCreatedBy" as "createdBy",
-          "wrCreatedAt" as "createdAt"`,
+          "wrCreatedAt" as "createdAt"
+          FROM insert_data;`,
        {
       type: fastify.db.QueryTypes.SELECT,
       bind: [
