@@ -2225,10 +2225,11 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
         });
       }
       if(category && category.categoryName.toLowerCase() == "fall of wicket"){
-        let line_diff = allMarkets.find(
-          (e) => e.marketId === item.eventMarketId
-        )?.lineDiff || 0;
-        
+        let runOld = eventMarkets.find(
+          (e) => e.eventMarketId === item.eventMarketId
+        ).runners;
+        let line_diff_wick;
+        line_diff_wick =  item.runners[0].line - runOld[0].line;
         fallOfWicket.push({
           market_id : item.eventMarketId,
           market_type_category_id : item.marketTypeCategoryId,
@@ -2240,7 +2241,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
           lay_size : item.runners[0].laySize,
           back_size : item.runners[0].backSize,
           rate_diff : item.rateDiff,
-          line_diff : line_diff.toFixed(2) || 0
+          line_diff : line_diff_wick.toFixed(2) || 0
         });
       }
       marketDataLogger(
