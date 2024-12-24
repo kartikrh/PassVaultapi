@@ -651,9 +651,9 @@ const setPlayerHistoryService = async (data,request, fastify) => {
       let cPlayerBall = {};
       let pbHis = {};
       let inningCount = player.filter((item)=>item.isInPlayingEleven == true).length; 
-      let ballsFacedCount = player.reduce((acc, item) => acc + item.playerBallFaced, 0);
+      let ballsFacedCount = player.reduce((acc, item) => acc + item.batBall, 0);
       let batRun = player.reduce((acc, item) => acc + item.batRun, 0);
-      let notOut = player.filter((item) => item.isBatterOut == false).length;
+      let notOut = player.filter((item) => item.isBatterOut === false || item.isBatterOut === null).length;
       let sr =  ballsFacedCount != 0 ? (batRun / ballsFacedCount) * 100 : 0;
       let batFour = player.reduce((acc, item) => acc + item.batFour, 0);
       let batSix = player.reduce((acc, item) => acc + item.batSix, 0);
