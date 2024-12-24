@@ -135,8 +135,8 @@ const allCommentaryService = async (request, fastify) => {
       );
     });
   }
-  // Sort in ascending order by eventDate
-  result.sort((a, b) => new Date(a.eventDate) - new Date(b.eventDate));
+  // Sort in descending order by eventDate
+  result.sort((a, b) => new Date(b.eventDate) - new Date(a.eventDate));
   return result;
 };
 
