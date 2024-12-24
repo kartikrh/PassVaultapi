@@ -2139,6 +2139,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
         category.categoryName.toLowerCase() == "player boundaries" ||
         category.categoryName.toLowerCase() == "player balls faced" 
       ) {
+        
         // if(category.categoryName.toLowerCase() == "player"){
         //   let comPlayer = global.tblCommentaryPlayers.findIndex(
         //     (p) => p.commentaryPlayerId === item.playerId
