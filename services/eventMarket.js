@@ -2052,6 +2052,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
   const boundaryPlayer = [];
   const updatedOvers = [];
   const updatePlayerLine = [];
+  const fallOfWicket = [];
   const pbfMarket = [];
   // const response = [];
   for (let item of updatedData) {
@@ -2089,7 +2090,8 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
         category.categoryName.toLowerCase() !== "player" && 
         category.categoryName.toLowerCase() !== "wicket" && 
         category.categoryName.toLowerCase() !== "player boundaries" &&
-        category.categoryName.toLowerCase() !== "player balls faced"
+        category.categoryName.toLowerCase() !== "player balls faced" &&
+        category.categoryName.toLowerCase() !== "fall of wicket" 
       ){
 
         if(category.categoryName == "Only Over"){
@@ -2131,7 +2133,12 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
         //   global.tblEventMarketsV1[index].predefinedValue = predefinedValue;
         // }  
       }
-      else {
+      if( category &&	
+        category.categoryName.toLowerCase() == "player" && 
+        category.categoryName.toLowerCase() == "wicket" && 
+        category.categoryName.toLowerCase() == "player boundaries" &&
+        category.categoryName.toLowerCase() == "player balls faced" 
+      ) {
         // if(category.categoryName.toLowerCase() == "player"){
         //   let comPlayer = global.tblCommentaryPlayers.findIndex(
         //     (p) => p.commentaryPlayerId === item.playerId
@@ -2216,6 +2223,25 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
           line_diff : line_diff.toFixed(2) || 0
         });
       }
+      if(category && category.categoryName.toLowerCase() == "fall of wicket"){
+        let line_diff = allMarkets.find(
+          (e) => e.marketId === item.eventMarketId
+        )?.lineDiff || 0;
+        
+        fallOfWicket.push({
+          market_id : item.eventMarketId,
+          market_type_category_id : item.marketTypeCategoryId,
+          line : item.runners[0].line,
+          is_allow : item.isAllow,
+          is_active : item.isActive,
+          is_senddata : item.isSendData,
+          data : item.data,
+          lay_size : item.runners[0].laySize,
+          back_size : item.runners[0].backSize,
+          rate_diff : item.rateDiff,
+          line_diff : line_diff.toFixed(2) || 0
+        });
+      }
       marketDataLogger(
         {
           eventMarketId: item.eventMarketId,
@@ -2241,36 +2267,8 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
       request,
       fastify
     );
-    // response.push({
-    //   marketId : item.eventMarketId,
-    //   commentaryId : item.commentaryId,
-    //   eventRefId : item.eventRefId,
-    //   teamId : item.teamId,
-    //   marketTypeCategoryId : item.marketTypeCategoryId,
-    //   // categoryName : global.tblMarketTypeCategories.find(
-    //   //   (e) => e.marketTypeCategoryId === item.marketTypeCategoryId
-    //   // ).categoryName,
-    //   marketName : item.marketName,
-    //   margin : item.margin,
-    //   status : item.status,
-    //   over : item.over,
-    //   isActive : item.isActive,
-    //   isAllow : item.isAllow,
-    //   isSendData : item.isSendData,
-    //   lineRatio : item.lineRatio,
-    //   lineType : item.lineType,
-    //   runner : item.runners.map((e) => {
-    //     let {selectionStatus,...rest } = e;
-    //     return {
-    //       ...rest,
-    //       status : selectionStatus
-    //     }
-    //   })
-    // })
-
+   
   }
-  // console.log("updatedOvers", updatedOvers);
-  // console.log("updatePlayerLine", updatePlayerLine);
   const teamOnStrike = global.tblCommentaryTeams.find(
     (item) =>
       item.commentaryId === commentary.commentaryId && 
@@ -2306,13 +2304,14 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
     }
     callPredictions.push(callPrediction);
     
-    if(updatePlayerLine.length > 0){
+    if(updatePlayerLine.length > 0 || fallOfWicket.length > 0){
       _resFromPredictAPI = await callPredictorMarket(
         {
           commentary_id: commentary.commentaryId,
           match_type_id: commentary.matchTypeId,
           strike_team_id : teamOnStrike.teamId,
-          players: updatePlayerLine
+          players: updatePlayerLine,
+          fallOfWicket : fallOfWicket
         },
         "/api/v1/updateplayerline",
         fastify,
