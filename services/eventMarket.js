@@ -2134,9 +2134,9 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
         // }  
       }
       if( category &&	
-        category.categoryName.toLowerCase() == "player" && 
-        category.categoryName.toLowerCase() == "wicket" && 
-        category.categoryName.toLowerCase() == "player boundaries" &&
+        category.categoryName.toLowerCase() == "player" || 
+        category.categoryName.toLowerCase() == "wicket" || 
+        category.categoryName.toLowerCase() == "player boundaries" ||
         category.categoryName.toLowerCase() == "player balls faced" 
       ) {
         // if(category.categoryName.toLowerCase() == "player"){
