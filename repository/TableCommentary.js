@@ -3548,6 +3548,7 @@ const getTemplateByComIdQuery = async (data,request, fastify) => {
         WHERE tcm."wrCommentaryId" = $1
         AND tmt."wrIsDeleted" = false
         AND tmt."wrIsActive" = true
+        ORDER BY tmc."wrDisplayOrder" ASC, tmt."wrTemplateName" ASC;
       `,
       {
         type: fastify.db.QueryTypes.SELECT,
@@ -3573,6 +3574,7 @@ const getTemplateByComIdQuery = async (data,request, fastify) => {
         AND tmt."wrID" NOT IN (
           SELECT "wrMarketTemplateId" FROM "tblCommMatchTypeTemplate" WHERE "wrCommentaryId"= $2
         ) 
+        ORDER BY tmc."wrDisplayOrder" ASC, tmt."wrTemplateName" ASC;
       `,
       {
         type: fastify.db.QueryTypes.SELECT,
