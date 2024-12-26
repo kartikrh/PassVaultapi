@@ -74,4 +74,5 @@ module.exports = async (fastify, opts) => {
     ],
     handler: (request, reply) => approveDomain(request, reply, fastify),
   })
+  
 };
