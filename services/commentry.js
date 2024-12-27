@@ -126,7 +126,6 @@ const allCommentaryService = async (request, fastify) => {
   if (competitionId) {
     result = result.filter((item) => item.competitionId === competitionId);
   }
-  // Sort in descending order by eventDate
   result.sort((a, b) => new Date(a.eventDate) - new Date(b.eventDate));
 
   // add dateFilter if provided
