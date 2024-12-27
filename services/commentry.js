@@ -126,6 +126,9 @@ const allCommentaryService = async (request, fastify) => {
   if (competitionId) {
     result = result.filter((item) => item.competitionId === competitionId);
   }
+  // Sort in descending order by eventDate
+  result.sort((a, b) => new Date(a.eventDate) - new Date(b.eventDate));
+
   // add dateFilter if provided
   if (startDate && endDate) {
     result = result?.filter((item) => {
@@ -133,10 +136,8 @@ const allCommentaryService = async (request, fastify) => {
         new Date(item.eventDate) >= new Date(startDate) &&
         new Date(item.eventDate) <= new Date(endDate)
       );
-    });
+    }).sort((a, b) => new Date(b.eventDate) - new Date(a.eventDate));
   }
-  // Sort in descending order by eventDate
-  result.sort((a, b) => new Date(b.eventDate) - new Date(a.eventDate));
   return result;
 };
 
