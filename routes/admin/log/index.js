@@ -1,7 +1,7 @@
 const { checkPermission, authorize } = require("../../../controller/middleware");
 const { getCompetitionListByeventTypeId } = require("../../../controller/users/admin/competition");
 const { getEventTypeList } = require("../../../controller/users/admin/eventTypes");
-const { getAllResponseLogs, getAllThirdPartyApiLogs, getAllPredictorAPILogs, getAllCommentaryLogs, getAllErrorLogs, getEventByCompetition, getComByEvent, getUndoLogs } = require("../../../controller/users/admin/log/index");
+const { getAllResponseLogs, getAllThirdPartyApiLogs, getAllPredictorAPILogs, getAllCommentaryLogs, getAllErrorLogs, getEventByCompetition, getComByEvent, getUndoLogs, getAllResultLogs } = require("../../../controller/users/admin/log/index");
 const { Commentary, Logs } = require("../../../swaggerSchema/groupTags/schema");
 
 module.exports = async (fastify, opts) => {
@@ -116,5 +116,16 @@ module.exports = async (fastify, opts) => {
             })
         ],
         handler : (request,reply) => getUndoLogs(request,reply,fastify)
+    })
+    fastify.post("/resultLogs",{
+        schema : Logs.resultLogs.schema,
+        preHandler : [
+            (request,reply) => authorize(request,reply,fastify),
+            (request,reply) => checkPermission(request,reply,fastify,{
+                tabName : "Logs",
+                mode : "view"
+            })
+        ],
+        handler : (request,reply) => getAllResultLogs(request,reply,fastify)
     })
 };

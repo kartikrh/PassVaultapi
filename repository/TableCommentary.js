@@ -318,6 +318,67 @@ const insertCommentaryPlayers = async (
   }
 };
 
+const insertCommentaryPlayersQuery = async (
+  data,
+  fastify,
+  request
+) => {
+  try {
+    return await fastify.db.query(
+      `
+      WITH insert_data AS (
+        insert into "tblCommentaryPlayers" ("wrCommentaryId" , "wrTeamId" , "wrPlayerId","wrPlayerName", "wrDisplayOrder","wrCurrentInnings",
+        "wrBatsmanAverage", "wrBatsmanPreviousStrikeRate", "wrBowlerPreviousEconomy", "wrBowlerAverage")
+        values (
+          $1,
+          $2,
+          $3,
+          (select "wrPlayerName" from "tblPlayers" where "wrPlayerId" = $3),
+          $4,
+          $5,
+          COALESCE(
+            (SELECT "wrAverage" FROM "tblPlayerBattingHistory" WHERE "wrPlayerId" = $3 AND "wrMatchTypeId" = $6),
+            (SELECT "wrBatsmanAverage" FROM "tblPlayers" WHERE "wrPlayerId" = $3)
+          ),
+          (select "wrBatsmanStrikeRate" from "tblPlayers" where "wrPlayerId" =$3),
+          COALESCE(
+            (SELECT "wrEconomy" FROM "tblPlayerBowlingHistory" WHERE "wrPlayerId" = $3 AND "wrMatchTypeId" = $6),
+            (SELECT "wrBowlerEconomy" FROM "tblPlayers" WHERE "wrPlayerId" = $3)
+          ),
+          (select "wrBowlerAverage" from "tblPlayers" where "wrPlayerId" =$3)
+        )
+        RETURNING *   
+      ) 
+      SELECT 
+      "wrPlayerId" as "playerId", 
+      "wrTeamId" as "teamId",
+      "wrCommentaryId" as "commentaryId",
+      "wrCommentaryPlayerId" as "commentaryPlayerId"
+      FROM "insert_data"
+    `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [
+          data.commentaryId,
+          data.teamId,
+          data.playerId,
+          data.displayOrder,
+          data.currentInnings,
+          data.matchTypeId,
+        ],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary.js/insertCommentaryPlayersQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 const upsertCommentaryPlayers = async (
   data,
   currentinning,
@@ -540,7 +601,8 @@ const updateCommentaryPlayerById = async (data, request, fastify) => {
       "wrPlayerBallFaced" = $8
       where "wrPlayerId" = $4
       AND "wrCommentaryId" = $5
-      AND "wrTeamId" = $6`,
+      AND "wrTeamId" = $6
+      AND "wrCurrentInnings" = $9`,
       {
         type: fastify.db.QueryTypes.DELETE,
         bind: [
@@ -552,7 +614,7 @@ const updateCommentaryPlayerById = async (data, request, fastify) => {
           data.teamId,
           data.boundary || 0,
           data.playerBallFaced || 0,
-          // data.currentInnings,
+          data.currentInnings,
         ],
       }
     );
@@ -3486,6 +3548,7 @@ const getTemplateByComIdQuery = async (data,request, fastify) => {
         WHERE tcm."wrCommentaryId" = $1
         AND tmt."wrIsDeleted" = false
         AND tmt."wrIsActive" = true
+        ORDER BY tmc."wrDisplayOrder" ASC, tmt."wrTemplateName" ASC;
       `,
       {
         type: fastify.db.QueryTypes.SELECT,
@@ -3511,6 +3574,7 @@ const getTemplateByComIdQuery = async (data,request, fastify) => {
         AND tmt."wrID" NOT IN (
           SELECT "wrMarketTemplateId" FROM "tblCommMatchTypeTemplate" WHERE "wrCommentaryId"= $2
         ) 
+        ORDER BY tmc."wrDisplayOrder" ASC, tmt."wrTemplateName" ASC;
       `,
       {
         type: fastify.db.QueryTypes.SELECT,
@@ -3725,6 +3789,32 @@ const updateIsWheelShowQuery = async (data, request, fastify) => {
   }
 }
 
+const cancelCommentaryQuery = async (data, fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `update "tblCommentaries" set
+        "wrCommentaryStatus" = $1,
+        "wrCommentaryResult" = $2,
+        "wrCommentaryCloseTime" = now()
+        where "wrCommentaryId" = ANY($3) AND "wrIsDelete" = false
+      `,
+      {
+        bind: [4, "Abandoned", data.commentaryId],
+      }
+    );
+
+    return result;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/cancelCommentaryQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -3800,5 +3890,7 @@ module.exports = {
   getCommentaryBallByBallByIdsQuery,
   insertWagonWheelPositionQuery,
   updateShotTypeQuery,
-  updateIsWheelShowQuery
+  updateIsWheelShowQuery,
+  insertCommentaryPlayersQuery,
+  cancelCommentaryQuery,
 };

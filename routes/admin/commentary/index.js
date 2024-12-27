@@ -62,6 +62,7 @@ const {
   updateShotType,
   updateIsWheelShow,
   getTeamAndPlayerListV1,
+  cancelCommentary,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -553,6 +554,18 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request, reply) => closeCommentary(request, reply, fastify),
+  });
+  fastify.post("/cancelCommentary", {
+    schema: Commentary.cancelCommentary.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "edit",
+        }),
+    ],
+    handler: (request, reply) => cancelCommentary(request, reply, fastify),
   });
   fastify.post("/deleteAllCommentary", {
     preHandler: [

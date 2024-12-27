@@ -180,34 +180,34 @@ const createTeamService = async (request, fastify) => {
       }
     }
   }
-  if (request.body.competitionId) {
-    const hashString = request.body.competitionId;
-    if (typeof hashString === "object") {
-      // Split the string into an array using commas as the delimiter
-      const jsonString = JSON.stringify(hashString);
-      // Convert the string back to an array of values
-      const hashArray = jsonString.split(",");
-      if (hashArray.length) {
-        for (let i = 0; i < hashArray.length; i++) {
-          if (hashArray[i]) {
-            const competitionId = hashArray[i].replace(/[\[\]"]/g, "");
-            if (competitionId !== "") {
-              let res = await insertTeamCompetitionQuery(
-                {
-                  teamId: data.teamId,
-                  refCompetitionId: parseInt(competitionId),
-                  userId: request.userTokenInfo.WrUserId,
-                },
-                fastify,
-                request
-              );
-              global.tblTeamCompetition.push(res);
-            }
-          }
-        }
-      }
-    }
-  }
+  // if (request.body.competitionId) {
+  //   const hashString = request.body.competitionId;
+  //   if (typeof hashString === "object") {
+  //     // Split the string into an array using commas as the delimiter
+  //     const jsonString = JSON.stringify(hashString);
+  //     // Convert the string back to an array of values
+  //     const hashArray = jsonString.split(",");
+  //     if (hashArray.length) {
+  //       for (let i = 0; i < hashArray.length; i++) {
+  //         if (hashArray[i]) {
+  //           const competitionId = hashArray[i].replace(/[\[\]"]/g, "");
+  //           if (competitionId !== "") {
+  //             let res = await insertTeamCompetitionQuery(
+  //               {
+  //                 teamId: data.teamId,
+  //                 refCompetitionId: parseInt(competitionId),
+  //                 userId: request.userTokenInfo.WrUserId,
+  //               },
+  //               fastify,
+  //               request
+  //             );
+  //             global.tblTeamCompetition.push(res);
+  //           }
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
   global.tblTeams.push(data);
   return data;
 };
@@ -332,37 +332,37 @@ const updateTeamService = async (request, fastify) => {
       }
     }
   }
-  if (request.body.competitionId) {
-    await deleteTeamCompetitionByTeamIdQuery(body.teamId, fastify, request);
-    global.tblTeamCompetition = global.tblTeamCompetition.filter(
-      (item) => item.teamId !== body.teamId
-    );
+  // if (request.body.competitionId) {
+  //   await deleteTeamCompetitionByTeamIdQuery(body.teamId, fastify, request);
+  //   global.tblTeamCompetition = global.tblTeamCompetition.filter(
+  //     (item) => item.teamId !== body.teamId
+  //   );
 
-    const hashString = request.body.competitionId;
-    // Split the string into an array using commas as the delimiter
-    const jsonString = JSON.stringify(hashString);
-    // Convert the string back to an array of values
-    const hashArray = jsonString.split(",");
-    if (hashArray.length) {
-      for (let i = 0; i < hashArray.length; i++) {
-        if (hashArray[i]) {
-          const competitionId = hashArray[i].replace(/[\[\]"]/g, "");
-          if (competitionId !== "") {
-            let res =await insertTeamCompetitionQuery(
-              {
-                teamId: body.teamId,
-                refCompetitionId: competitionId,
-                userId: request.userTokenInfo.WrUserId,
-              },
-              fastify,
-              request
-            );
-            global.tblTeamCompetition.push(res);
-          }
-        }
-      }
-    }
-  }
+  //   const hashString = request.body.competitionId;
+  //   // Split the string into an array using commas as the delimiter
+  //   const jsonString = JSON.stringify(hashString);
+  //   // Convert the string back to an array of values
+  //   const hashArray = jsonString.split(",");
+  //   if (hashArray.length) {
+  //     for (let i = 0; i < hashArray.length; i++) {
+  //       if (hashArray[i]) {
+  //         const competitionId = hashArray[i].replace(/[\[\]"]/g, "");
+  //         if (competitionId !== "") {
+  //           let res =await insertTeamCompetitionQuery(
+  //             {
+  //               teamId: body.teamId,
+  //               refCompetitionId: competitionId,
+  //               userId: request.userTokenInfo.WrUserId,
+  //             },
+  //             fastify,
+  //             request
+  //           );
+  //           global.tblTeamCompetition.push(res);
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
 
   return body;
 };
@@ -398,7 +398,7 @@ const deleteTeamService = async (request, fastify) => {
 
   for (const team of teamId) {
     await deleteTeamPlayerByTeamIdQuery(team, fastify, request);
-    await deleteTeamCompetitionByTeamIdQuery(team, fastify, request);
+    // await deleteTeamCompetitionByTeamIdQuery(team, fastify, request);
   }
 
   await deletePlayersByTeamIdQuery(teamId, request, fastify);
@@ -421,18 +421,88 @@ const deleteTeamService = async (request, fastify) => {
   return "Team(s) deleted successfully";
 };
 
+// const getTeamPointService = async (request, fastify) => {
+//   const { teamId } = request.body;
+//   const result = global.tblTournamentTeamPoint
+//     .filter((item) => item.teamId === teamId)
+//     .map((t) => {
+
+//       return {
+//         competitionName: global.tblCompetitions.find(
+//           (c) => c.competitionId === t.competitionId
+//         ).competition,
+//         ...t,
+//       };
+//     });
+//   return result;
+// }
+
 const getTeamPointService = async (request, fastify) => {
   const { teamId } = request.body;
-  const result = global.tblTournamentTeamPoint.filter(
-    (item) => item.teamId === teamId
-  ).map((t) =>{
-    return {
-      competitionName: global.tblCompetitions.find((c) => c.competitionId === t.competitionId).competition,
-      ...t
-    }
-  })
+
+  const result = await Promise.all(
+    global.tblCommentaries
+      .filter((elem) => [elem.team1Id, elem.team2Id].includes(teamId))
+      .map(async (item) => {
+        const isTeamInTeam1 = item.team1Id === teamId;
+
+        const teamId1 = isTeamInTeam1 ? item.team1Id : item.team2Id;
+        const teamId2 = isTeamInTeam1 ? item.team2Id : item.team1Id;
+        return {
+          eventDate: item.eventDate,
+          eventRefId: item.eventRefId,
+          eventName: item.eventName,
+          eventTypeId: item.eventTypeId,
+          eventType: global.tblEventTypes.find(
+            (etyp) => etyp.eventTypeId === item.eventTypeId
+          )?.eventType || null,
+          competitionId: item.competitionId,
+          competitionName: global.tblCompetitions.find(
+            (c) => c.competitionId === item.competitionId
+          )?.competition || null,
+          matchTypeId: item.matchTypeId,
+          matchType: global.tblMatchTypes.find(
+            (mtyp) => mtyp.matchTypeId === item.matchTypeId
+          )?.matchType || null,
+          team1Id: teamId1,
+          team1Name: global.tblTeams.find((t) => t.teamId === teamId1)?.teamName || null,
+          team2Id: teamId2,
+          team2Name: global.tblTeams.find((t) => t.teamId === teamId2)?.teamName || null,
+          winnerName: item.winnerName,
+          commentaryResult: item.result,
+        };
+      })
+  );
+
+  result.sort((a, b) => new Date(b.eventDate) - new Date(a.eventDate));
+
   return result;
-}
+};
+
+// const getTeamPointService = async (request, fastify) => {
+//   const { teamId } = request.body;
+//   const result = global.tblTournamentTeamPoint
+//     .filter((item) => item.teamId === teamId)
+//     .flatMap((t) => {
+//       const commentaryData = global.tblCommentaries.filter(
+//         (elem) =>
+//           [elem.team1Id, elem.team2Id].includes(teamId) 
+//       );
+
+//       return commentaryData.map((commentary) => ({
+//         competitionName: global.tblCompetitions.find(
+//           (c) => c.competitionId === t.competitionId
+//         ).competition,
+//         eventName: commentary.eventName,
+//         eventRefId: commentary.eventRefId,
+//         eventDate: commentary.eventDate,
+//         ...t,
+//       })).sort((a, b) => b.eventDate - a.eventDate);
+//     });
+
+//   return result;
+// };
+
 module.exports = {
   allTeamsService,
   teamByIdService,

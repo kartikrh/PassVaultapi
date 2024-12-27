@@ -9,7 +9,11 @@ const {
   getPlayerHistDataService,
   getPlayerBallHistDataService,
   upPlayerHistDataService,
-  upPlayerBallHistDataService
+  upPlayerBallHistDataService,
+  calculationOfCommPlayerBatHistService,
+  calculationOfCommPlayerBowlHistService,
+  playerBattingHistSummarycalculationService,
+  playerBowlHistSummaryCalculationService,
 } = require("../../../../services/playerHistory");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -151,6 +155,42 @@ const getPlayerBallHistData = async (request, reply, fastify) => {
       reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const calculationOfCommPlayerBatHist = async (request, reply, fastify) => {
+  try {
+      const result = await calculationOfCommPlayerBatHistService(request, fastify);
+      reply.status(200).send(success(result, 200));
+  } catch (err) {
+      errorLogger(fastify, err.message, commonPath + "/calculationOfCommPlayerBatHist", request);
+      reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const calculationOfCommPlayerBowlHist = async (request, reply, fastify) => {
+  try {
+      const result = await calculationOfCommPlayerBowlHistService(request, fastify);
+      reply.status(200).send(success(result, 200));
+  } catch (err) {
+      errorLogger(fastify, err.message, commonPath + "/calculationOfCommPlayerBowlHist", request);
+      reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const playerBatSummarycalculation = async (request, reply, fastify) => {
+  try {
+      const result = await playerBattingHistSummarycalculationService(request, fastify);
+      reply.status(200).send(success(result, 200));
+  } catch (err) {
+      errorLogger(fastify, err.message, commonPath + "/playerBatSummarycalculation", request);
+      reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const playerBowlSummarycalculation = async (request, reply, fastify) => {
+  try {
+      const result = await playerBowlHistSummaryCalculationService(request, fastify);
+      reply.status(200).send(success(result, 200));
+  } catch (err) {
+      errorLogger(fastify, err.message, commonPath + "/playerBowlSummarycalculation", request);
+      reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 module.exports = {
   savePlayerBattingHistory,
   savePlayerBowlingHistory,
@@ -162,5 +202,9 @@ module.exports = {
   getPlayerHistData,
   getPlayerBallHistData,
   upPlayerHistData,
-  upPlayerBallHistData
+  upPlayerBallHistData,
+  calculationOfCommPlayerBatHist,
+  calculationOfCommPlayerBowlHist,
+  playerBatSummarycalculation,
+  playerBowlSummarycalculation,
 };

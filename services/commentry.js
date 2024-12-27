@@ -69,6 +69,8 @@ const {
   insertWagonWheelPositionQuery,
   updateShotTypeQuery,
   updateIsWheelShowQuery,
+  insertCommentaryPlayersQuery,
+  cancelCommentaryQuery,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -133,8 +135,8 @@ const allCommentaryService = async (request, fastify) => {
       );
     });
   }
-  // Sort in ascending order by eventDate
-  result.sort((a, b) => new Date(a.eventDate) - new Date(b.eventDate));
+  // Sort in descending order by eventDate
+  result.sort((a, b) => new Date(b.eventDate) - new Date(a.eventDate));
   return result;
 };
 
@@ -3787,7 +3789,7 @@ const getTeamAndPlayerListService = async (request, fastify) => {
 };
 const addTeamPlayerService = async (request, fastify) => {
   // validate commentaryId
-  const { teamId, commentaryId, playerId } = request.body;
+  const { teamId, commentaryId, playerId, currentInnings } = request.body;
   let commentary = global.tblCommentaries.find(
     (item) => item?.commentaryId === commentaryId
   );
@@ -3818,29 +3820,51 @@ const addTeamPlayerService = async (request, fastify) => {
       ...commentaryPlayer.map((item) => item.displayOrder)
     );
   }
-  // insert the new player as per inning
-  // get total inning for this match
-  let matchType = global.tblMatchTypes.find(
+  // // insert the new player as per inning
+  // // get total inning for this match
+  // let matchType = global.tblMatchTypes.find(
+  //   (item) => item.matchTypeId === commentary.matchTypeId
+  // );
+
+  // const totalInning = matchType?.noOfIningsPerSide;
+
+  // for (let i = 0; i < totalInning; i++) {
+  //   const currentInning = i + 1;
+  //   await insertCommentaryPlayers(
+  //     {
+  //       commentaryId,
+  //       teamId,
+  //       playerId,
+  //       displayOrder: maxDisplayOrder + 1,
+  //       matchTypeId: commentary.matchTypeId,
+  //     },
+  //     currentInning,
+  //     fastify,
+  //     request
+  //   );
+  // }
+
+    let matchType = global.tblMatchTypes.find(
     (item) => item.matchTypeId === commentary.matchTypeId
   );
 
   const totalInning = matchType?.noOfIningsPerSide;
+  if (currentInnings < 1 || currentInnings > totalInning) {
+    throw new Error("Invalid Current Innings count");
+  }
 
-  for (let i = 0; i < totalInning; i++) {
-    const currentInning = i + 1;
-    await insertCommentaryPlayers(
+    await insertCommentaryPlayersQuery(
       {
         commentaryId,
         teamId,
         playerId,
         displayOrder: maxDisplayOrder + 1,
         matchTypeId: commentary.matchTypeId,
+        currentInnings,
       },
-      currentInning,
       fastify,
       request
     );
-  }
 
   global.tblCommentaryPlayers = await getAllCommentaryPlayerQuery(fastify);
 
@@ -3940,8 +3964,8 @@ const updateTeamPlayerService = async (request, fastify) => {
       batsmanAverage,
       isInPlayingEleven,
       boundary,
-      playerBallFaced
-      // currentInnings
+      playerBallFaced,
+      currentInnings
     } = playerData;
     let commentary = global.tblCommentaries.find(
       (item) => item?.commentaryId === +commentaryId
@@ -3974,8 +3998,8 @@ const updateTeamPlayerService = async (request, fastify) => {
         batsmanAverage,
         isInPlayingEleven,
         boundary,
-        playerBallFaced
-        // currentInnings
+        playerBallFaced,
+        currentInnings
       },
       request,
       fastify
@@ -3985,7 +4009,8 @@ const updateTeamPlayerService = async (request, fastify) => {
       (item) =>
         item?.commentaryId === +commentaryId &&
         item.teamId === +teamId &&
-        item.playerId === +playerId 
+        item.playerId === +playerId &&
+        item.currentInnings === currentInnings
     );
     if (player) {
       player.batsmanStrikeRate = batsmanStrikeRate;
@@ -7108,21 +7133,46 @@ const getInningDataByInningNumber = async (commentaryId, inningNumber) => {
 };
 
 const getTeamListByEventTypeService = async (request) => {
-  const { eventTypeId } = request.body;
+  const { eventTypeId, competitionId } = request.body;
   // get encypted eventTypeId from global
-  if (eventTypeId === undefined) {
-    return global.tblTeams;
-  } else if (eventTypeId == 0) {
-    return global.tblTeams;
-  } else if (eventTypeId) {
-    let encyptEventTypeId = global.tblEventTypes.find(
-      (item) => item.pId === eventTypeId
-    );
-    const result = global.tblTeams.filter(
-      (item) => item.eventTypeId === encyptEventTypeId
-    );
-    return result;
+  // if (eventTypeId === undefined) {
+  //   return global.tblTeams;
+  // } else if (eventTypeId == 0) {
+  //   return global.tblTeams;
+  // } else if (eventTypeId) {
+  //   let encyptEventTypeId = global.tblEventTypes.find(
+  //     (item) => item.pId === eventTypeId
+  //   );
+  //   const result = global.tblTeams.filter(
+  //     (item) => item.eventTypeId === encyptEventTypeId
+  //   );
+  //   return result;
+  // }
+  let teams = global.tblTeams;
+  if(eventTypeId === undefined || eventTypeId == 0){
+    teams = global.tblTeams;
   }
+  if(eventTypeId && eventTypeId != 0){
+    teams = global.tblTeams.filter((item) => item.eventTypeId === eventTypeId);
+  }
+  let compTeam = []
+  if(competitionId && competitionId != 0){
+    // teams = global.tblTeams.filter((item) => item.competitionId === competitionId);
+    const competitionResult = global.tblTournamentTeamPoint.filter(
+      (item) => item.competitionId === competitionId
+    );
+    const competitionTeamIds = new Set(competitionResult.map(item => item.teamId));
+    compTeam = teams.filter(
+      (item) => competitionTeamIds.has(item.teamId)
+    );
+  }
+  if(compTeam.length === 0){
+    return teams;
+  }
+  return compTeam;
+
+  
+  // return teams;
 };
 const getCommenrtySquadDetailsService = async (request, fastify) => {
   const { eventId } = request.body;
@@ -9429,6 +9479,83 @@ const getTeamAndPlayerListServiceV1 = async (request, fastify) => {
   };
 };
 
+const cancelCommentaryService = async (request, fastify) => {
+  await cancelCommentaryQuery(request.body, fastify, request);
+  let _resFromPredictAPI;
+  let callPredictions = [];
+
+  // update the global variable
+  for (let commentaryId of request.body.commentaryId) {
+    const index = global.tblCommentaries.findIndex(
+      (item) => item?.commentaryId === commentaryId
+    );
+    if (index !== -1) {
+      global.tblCommentaries[index].commentaryStatus = 4;
+
+      await closeEventMarketByCIdQuery({ commentaryId }, fastify);
+      _resFromPredictAPI = await callPredictorMarket(
+        {
+          commentary_id: commentaryId,
+        },
+        "/api/v1/endcommentary",
+        fastify,
+        request
+      );
+      let callPrediction = {}
+      if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
+        callPrediction.Cid = commentaryId;
+        callPrediction.predictioncallSuccess = false;
+        callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
+        callPrediction.endPoint = '/api/v1/endcommentary';
+        callPredictions.push(callPrediction);
+      }
+      _resFromPredictAPI = null;
+      callDataProvider(
+        {
+          commentaryId: commentaryId,
+          serviceType: ServiceType.dataProviderAPI,
+          moduleType: APIEndpointModuleType.commentaryUpdate,
+          type: "close"
+        },
+        fastify
+      ).catch((err) => {
+        console.log("call data provider console", err);
+        errorLogger(
+          fastify,
+          err.message,
+          "ERROR --> services/commentary.js/closeEventMarketByCIdQuery",
+          request
+        );
+      });
+      const cData = await getMatchDataByCId({
+        commentaryId: commentaryId,
+      }, request, fastify);
+
+      callClientAPI(
+        {
+          serviceType: ServiceType.clientAPI,
+          moduleType: APIEndpointModuleType.commentaryUpdate,
+          data: cData
+        },
+        request,
+        fastify
+      ).catch((err) => {
+        console.log("call client api console", err);
+        errorLogger(
+          fastify,
+          err.message,
+          "ERROR --> services/commentary.js/closeEventMarketByCIdQuery",
+          request
+        );
+      });
+    }
+  }
+  return {
+    message: "Commentary(s) canceled successfully",
+    callPredictions: callPredictions,
+  };
+};
+
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -9499,4 +9626,5 @@ module.exports = {
   updateShotTypeService,
   updateIsWheelShowService,
   getTeamAndPlayerListServiceV1,
+  cancelCommentaryService,
 };

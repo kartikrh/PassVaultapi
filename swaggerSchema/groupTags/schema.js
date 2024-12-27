@@ -2189,6 +2189,24 @@ const Commentary = {
       },
     },
   },
+  cancelCommentary: {
+    schema: {
+      tags: ["Commentary"],
+      description: "cancel Commentary",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["commentaryId"],
+      },
+    },
+  },
   changeMatchType: {
     schema: {
       tags: ["Commentary"],
@@ -4682,6 +4700,7 @@ const MarketTemplateRunner = {
           line: { type: "number" },
           overRate: { type: "number" },
           underRate: { type: "number" },
+          predefinedValue: { type: "number" },
         },
         required: ["marketTemplateId", "marketTemplateRunnerId"],
       },
@@ -5943,6 +5962,24 @@ const Logs = {
         required : ["page", "limit"]
       }
     }
+  },
+  resultLogs : {
+    schema : {
+      tags : ["Logs"],
+      description : "result Logs",
+      security : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          skip : {type : "integer"},
+          limit : {type : "integer"},
+          marketId : {type : "integer"},
+          startDate : {type : "string"},
+          endDate : {type : "string"}
+        },
+        required : ["page", "limit"]
+      }
+    }
   }
 }
 const ThirdPartyApis = {
@@ -6876,6 +6913,72 @@ const PlayerHistory = {
           matchTypeId: { type: "integer" },
         },
         required: ["playerId", "matchTypeId"],
+      },
+    }
+  },
+  commBatSummaryCalculation:{
+    schema : {
+      tags: ["PlayerHistory"],
+      description: "update bat summary history",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          playerId: { type: "integer" },
+          matchTypeId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["playerId", "matchTypeId"],
+      },
+    }
+  },
+  commBowlSummaryCalculation:{
+    schema : {
+      tags: ["PlayerHistory"],
+      description: "update bowl summary history",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          playerId: { type: "integer" },
+          matchTypeId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["playerId", "matchTypeId"],
+      },
+    }
+  },
+  playerBatSummary:{
+    schema : {
+      tags: ["PlayerHistory"],
+      description: "update player bat summary history",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          playerId: { type: "integer" },
+        },
+        required: ["playerId"],
+      },
+    }
+  },
+  playerBowlSummary:{
+    schema : {
+      tags: ["PlayerHistory"],
+      description: "update player bowl summary history",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          playerId: { type: "integer" },
+        },
+        required: ["playerId"],
       },
     }
   },

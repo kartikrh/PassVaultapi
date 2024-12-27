@@ -44,6 +44,10 @@ const {
   cancelEventMarketsQuery,
   getOpenMarketByCIdQuery,
   suspendMarketQuery,
+  updatePredefinedQuery,
+  playerMarketQuery,
+  boundaryMarketQuery,
+  pbfMarketQuery,
 } = require("../repository/TableEventMarkets");
 const { getRunnerByIdQuery, setResultInRunnerMarketQuery, getRunnerByMarketQuery } = require("../repository/TableMarketRunner");
 const configConstants = require("../utilities/configConstants");
@@ -57,7 +61,7 @@ const {
   commentaryStatus,
   MarketTypeId,
 } = require("../utilities/index");
-const { marketLogger, marketDataLogger, errorLogger, eventMarketLogger } = require("../utilities/logger");
+const { marketLogger, marketDataLogger, errorLogger, eventMarketLogger, marektResultLogger } = require("../utilities/logger");
 const getDetailsByCIdService = async (request, fastify) => {
   const { commentaryId } = request.body;
   const commentary = global.tblCommentaries.find(
@@ -543,12 +547,59 @@ const marketListByCIdServiceV1 = async (request, fastify) => {
   if (!commentary) {
     throw new Error("Commentary with this id not Found");
   }
+  // let playerMarket = [];
+  // let boundaryMarket = [];
+  // let pbfMarket = [];
+  // let otherMarket = [];
 
-  const marketList = await getMarketListByCIdQueryV1(
-    request.body,
-    request,
-    fastify
+  let catP = global.tblMarketTypeCategories.find(
+    (item) => item.categoryName.toLowerCase() === "player"
   );
+  let catB = global.tblMarketTypeCategories.find(
+    (item) => item.categoryName.toLowerCase() === "player boundaries"
+  );
+  let catPB = global.tblMarketTypeCategories.find(
+    (item) => item.categoryName.toLowerCase() === "player balls faced"
+  );
+  let catW = global.tblMarketTypeCategories.find(
+    (item) => item.categoryName.toLowerCase() === "wicket"
+  );
+
+  const marketList = await Promise.all([
+    playerMarketQuery(
+      { commentaryId : commentaryId, marketTypeCategoryId: catP.marketTypeCategoryId },
+      request,
+      fastify
+    ),
+    boundaryMarketQuery(
+      { commentaryId : commentaryId, marketTypeCategoryId: catB.marketTypeCategoryId },
+      request,
+      fastify
+    ),
+    pbfMarketQuery(
+      { commentaryId : commentaryId, marketTypeCategoryId: catPB.marketTypeCategoryId },
+      request,
+      fastify
+    ),
+    getMarketListByCIdQueryV1(
+      { commentaryId : commentaryId, 
+        playerCategory : catP.marketTypeCategoryId,
+        boundaryCategory : catB.marketTypeCategoryId,
+        pbfCategory : catPB.marketTypeCategoryId,
+        wicket :catW.marketTypeCategoryId
+      },
+      request,
+      fastify
+    )
+  ]);
+
+
+
+  // const marketList = await getMarketListByCIdQueryV1(
+  //   request.body,
+  //   request,
+  //   fastify
+  // );
 
   // get the team and teamName by commentaryId
   const teams = global.tblCommentaryTeams
@@ -587,12 +638,13 @@ const marketListByCIdServiceV1 = async (request, fastify) => {
   //   bowlerAverage: player.bowlerAverage,
   // }));
   return {
-    marketList,
+    marketList : marketList.flat(),
     teams,
     categories,
     //players,
   };
 };
+
 const updateMarketRateService = async (request, fastify) => {
   // i got array of eventMarket i want to update this data
   const { eventMarket } = request.body;
@@ -640,7 +692,7 @@ const updateMarketRateService = async (request, fastify) => {
         }
         updatedOvers.push({
           over: item.over,
-          value: diff != null ? parseFloat(diff.toFixed(2)) : null,  // Ensure float or null if undefined
+          line_diff: diff != null ? parseFloat(diff.toFixed(2)) : null,  // Ensure float or null if undefined
           line_ratio: data.lineRatio,
           is_onlyover: is_onlyover,
           is_allow: item.isAllow,
@@ -973,6 +1025,14 @@ const changeMarketResultService = async (request, fastify) => {
           fastify,
           request
         );
+        marektResultLogger(
+          {
+            result: result,
+            marketId : eventMarketId,
+          },
+          request,
+          fastify
+        )
       }
       return "Market result updated successfully";
     } else {
@@ -1016,6 +1076,14 @@ const changeMarketResultService = async (request, fastify) => {
         fastify,
         request
       );
+      marektResultLogger(
+        {
+          result: result,
+          marketId : eventMarketId,
+        },
+        request,
+        fastify
+      )
     }
     return "Market result updated successfully";
   }
@@ -1689,10 +1757,12 @@ const getDetailsByCIdV1Service = async (request, fastify) => {
 
   if(commentary.commentaryStatus == commentaryStatus.OPEN){
     marketTemplate = await getCommMatchTypeTemplatesQuery(commentaryId, null, request, fastify);
+    marketTemplate.sort((a, b) => a.templateName.localeCompare(b.templateName));
   }
   else {
     let whereCondition = `AND tmt."wrIsPerEvent" = FALSE`
     marketTemplate = await getCommMatchTypeTemplatesQuery(commentaryId, whereCondition, request, fastify);
+    marketTemplate.sort((a, b) => a.templateName.localeCompare(b.templateName));
   }
 
 
@@ -1723,8 +1793,10 @@ const getDetailsByCIdV1Service = async (request, fastify) => {
     );
     whereCondition += ` AND tem."wrTeamID" = ${battingTeam.teamId}`;
     eventMarket = await getAllEventMarketsQueryV1(fastify, whereCondition);
+    eventMarket.sort((a, b) => a.marketName.localeCompare(b.marketName));
   } else {
     eventMarket = await getAllEventMarketsQueryV1(fastify, whereCondition);
+    eventMarket.sort((a, b) => a.marketName.localeCompare(b.marketName));
   }
   //
   let categories = global.tblMarketTypeCategories.filter(
@@ -1733,7 +1805,7 @@ const getDetailsByCIdV1Service = async (request, fastify) => {
     marketTypeCategoryId: item.marketTypeCategoryId,
     categoryName: item.categoryName,
     displayOrder: item.displayOrder
-  }));
+  })).sort((a, b) => a.marketTypeCategoryId - b.marketTypeCategoryId);
   let marketTypes = global.tblMarketTypes.filter(
     (elem) => elem.isActive === true
   ).map(item => ({
@@ -1969,6 +2041,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
     // }
   }
 
+  const allMarkets = [...signleRunMarket, ...multiRunMarket];
   const updatedData = await updateEventMarketRateQueryV1({
     singleRunnerMarket : signleRunMarket.length > 0 ? signleRunMarket : null,
     multiRunnerMarket : multiRunMarket.length > 0 ? multiRunMarket : null
@@ -1979,6 +2052,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
   const boundaryPlayer = [];
   const updatedOvers = [];
   const updatePlayerLine = [];
+  const fallOfWicket = [];
   const pbfMarket = [];
   // const response = [];
   for (let item of updatedData) {
@@ -1988,44 +2062,51 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
     index === -1
       ? global.tblEventMarketsV1.push(item)
       : (global.tblEventMarketsV1[index] = item);
+    index = global.tblEventMarketsV1.findIndex(
+      (e) => e.eventMarketId === item.eventMarketId
+    );
 
  
     let category = global.tblMarketTypeCategories.find(
       (cat) => cat.marketTypeCategoryId === item.marketTypeCategoryId
     );
-    if(category && category.categoryName.toLowerCase() == "player"){
-      playerMarket.push(item);
-    }
+    // if(category && category.categoryName.toLowerCase() == "player"){
+    //   playerMarket.push(item);
+    // }
     
-    if(category && category.categoryName.toLowerCase() == "player boundaries"){
-      boundaryPlayer.push(item);
-    }
-    if(category && category.categoryName.toLowerCase() == "player balls faced"){
-      pbfMarket.push(item);
-    }
+    // if(category && category.categoryName.toLowerCase() == "player boundaries"){
+    //   boundaryPlayer.push(item);
+    // }
+    // if(category && category.categoryName.toLowerCase() == "player balls faced"){
+    //   pbfMarket.push(item);
+    // }
     if(item.marketTypeId == MarketTypeId.Fancy || item.marketTypeId == MarketTypeId.LineMarket){
       let is_onlyover = 0;
-      let lineDiff = 0;
+      let lineDiff = allMarkets.find(
+        (e) => e.marketId === item.eventMarketId
+      )?.lineDiff || 0;
+      // let predefinedValue;
       if(category && 
         category.categoryName.toLowerCase() !== "player" && 
         category.categoryName.toLowerCase() !== "wicket" && 
         category.categoryName.toLowerCase() !== "player boundaries" &&
-        category.categoryName.toLowerCase() !== "player balls faced"
+        category.categoryName.toLowerCase() !== "player balls faced" &&
+        category.categoryName.toLowerCase() !== "fall of wicket" 
       ){
 
         if(category.categoryName == "Only Over"){
           is_onlyover = 1;
         }
 
-        let runOld = eventMarkets.find(
-          (e) => e.eventMarketId === item.eventMarketId
-        ).runners;
+        // let runOld = eventMarkets.find(
+        //   (e) => e.eventMarketId === item.eventMarketId
+        // ).runners;
         
-        lineDiff =  item.runners[0].line - runOld[0].line;
+        // lineDiff =  item.runners[0].line - runOld[0].line;
         
         updatedOvers.push({
           over : item.over,
-          value: lineDiff != null ? parseFloat(lineDiff.toFixed(2)) : null,  // Ensure float or null if undefined
+          line_diff: lineDiff != null ? parseFloat(lineDiff.toFixed(2)) : null,  // Ensure float or null if undefined
           line_ratio : item.lineRatio,
           is_onlyover : is_onlyover,
           is_allow : item.isAllow,
@@ -2035,10 +2116,100 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
           market_type_category_id : parseInt(item.marketTypeCategoryId),
           lay_size : item.runners[0].laySize,
           back_size : item.runners[0].backSize,
-          rate_diff : item.rateDiff
+          rate_diff : item.rateDiff 
         })
+
+        // if(lineDiff != null){
+        //   if(lineDiff > 0){
+        //     predefinedValue = item.predefinedValue + lineDiff;
+        //   }
+        //   else {
+        //     predefinedValue = item.predefinedValue - Math.abs(lineDiff);
+        //   }
+        //   await updatePredefinedQuery({
+        //     eventMarketId : item.eventMarketId,
+        //     predefinedValue : predefinedValue
+        //   }, request, fastify);
+        //   global.tblEventMarketsV1[index].predefinedValue = predefinedValue;
+        // }  
       }
-      else {
+      if( category &&	
+        category.categoryName.toLowerCase() == "player" || 
+        category.categoryName.toLowerCase() == "wicket" || 
+        category.categoryName.toLowerCase() == "player boundaries" ||
+        category.categoryName.toLowerCase() == "player balls faced" 
+      ) {
+        
+        // if(category.categoryName.toLowerCase() == "player"){
+        //   let comPlayer = global.tblCommentaryPlayers.findIndex(
+        //     (p) => p.commentaryPlayerId === item.playerId
+        //   );
+        //   if (comPlayer === -1) {
+        //     errorLogger(
+        //       fastify,
+        //       "Player with this id not Found",
+        //       "ERROR --> services/eventMarket.js/updateMarketRateServiceV1",
+        //       request
+        //     );
+        //     continue;
+        //   }
+        //   let avg = (item.runners[0].line - global.tblCommentaryPlayers[comPlayer].batRun).toFixed(2);
+    
+        //   await updatePredefinedQuery({
+        //     eventMarketId: item.eventMarketId,
+        //     predefinedValue: avg,
+        //   }, request, fastify)
+        //   line_diff = avg - item.predefinedValue;
+        //   global.tblEventMarketsV1[index].predefinedValue = avg;
+        // }
+        // if(category.categoryName.toLowerCase() == "player boundaries"){
+        //   let player = global.tblCommentaryPlayers.find(
+        //     (p1) => p1.commentaryPlayerId === item.playerId
+        //   );
+        //   if (!player) {
+        //     errorLogger(
+        //       fastify,
+        //       "Player with this id not Found",
+        //       "ERROR --> services/eventMarket.js/updateMarketRateServiceV1",
+        //       request
+        //     );
+        //     continue;
+        //   }
+        //   let count = player.batFour + player.batSix;
+        //   let boun = (item.runners[0].line - count).toFixed(2);
+        //   await updatePredefinedQuery({
+        //     eventMarketId: item.eventMarketId,
+        //     predefinedValue: boun,
+        //   }, request, fastify)
+        //   line_diff = boun - item.predefinedValue;
+        //   global.tblEventMarketsV1[index].predefinedValue = boun;
+        // }
+        // if(category.categoryName.toLowerCase() == "player balls faced"){
+        //   let player = global.tblCommentaryPlayers.find(
+        //     (p2) => p2.commentaryPlayerId === item.playerId
+        //   );
+        //   if (!player) {
+        //     errorLogger(
+        //       fastify,
+        //       "Player with this id not Found",
+        //       "ERROR --> services/eventMarket.js/updateMarketRateServiceV1",
+        //       request
+        //     );
+        //     continue;
+        //   }
+        //   let count = player.batBall;
+        //   let pbf =(item.runners[0].line - count).toFixed(2);
+        //   await updatePredefinedQuery({
+        //     eventMarketId: item.eventMarketId,
+        //     predefinedValue: pbf,
+        //   }, request, fastify)
+        //   line_diff = pbf - item.predefinedValue;
+        //   global.tblEventMarketsV1[index].predefinedValue = pbf;
+        // }
+        let line_diff = allMarkets.find(
+          (e) => e.marketId === item.eventMarketId
+        )?.lineDiff || 0;
+        
         updatePlayerLine.push({
           commentary_player_id : item.playerId,
           market_type_category_id : item.marketTypeCategoryId,
@@ -2049,7 +2220,31 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
           data : item.data,
           lay_size : item.runners[0].laySize,
           back_size : item.runners[0].backSize,
-          rate_diff : item.rateDiff
+          rate_diff : item.rateDiff,
+          line_diff : line_diff.toFixed(2) || 0
+        });
+      }
+      if(category && category.categoryName.toLowerCase() == "fall of wicket"){
+        // let runOld = eventMarkets.find(
+        //   (e) => e.eventMarketId === item.eventMarketId
+        // ).runners;
+        // let line_diff_wick;
+        // line_diff_wick =  item.runners[0].line - runOld[0].line;
+        let line_diff_wick = allMarkets.find(
+          (e) => e.marketId === item.eventMarketId
+        )?.lineDiff || 0; 
+        fallOfWicket.push({
+          market_id : item.eventMarketId,
+          market_type_category_id : item.marketTypeCategoryId,
+          line : item.runners[0].line,
+          is_allow : item.isAllow,
+          is_active : item.isActive,
+          is_senddata : item.isSendData,
+          data : item.data,
+          lay_size : item.runners[0].laySize,
+          back_size : item.runners[0].backSize,
+          rate_diff : item.rateDiff,
+          line_diff : line_diff_wick.toFixed(2) || 0
         });
       }
       marketDataLogger(
@@ -2077,33 +2272,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
       request,
       fastify
     );
-    // response.push({
-    //   marketId : item.eventMarketId,
-    //   commentaryId : item.commentaryId,
-    //   eventRefId : item.eventRefId,
-    //   teamId : item.teamId,
-    //   marketTypeCategoryId : item.marketTypeCategoryId,
-    //   // categoryName : global.tblMarketTypeCategories.find(
-    //   //   (e) => e.marketTypeCategoryId === item.marketTypeCategoryId
-    //   // ).categoryName,
-    //   marketName : item.marketName,
-    //   margin : item.margin,
-    //   status : item.status,
-    //   over : item.over,
-    //   isActive : item.isActive,
-    //   isAllow : item.isAllow,
-    //   isSendData : item.isSendData,
-    //   lineRatio : item.lineRatio,
-    //   lineType : item.lineType,
-    //   runner : item.runners.map((e) => {
-    //     let {selectionStatus,...rest } = e;
-    //     return {
-    //       ...rest,
-    //       status : selectionStatus
-    //     }
-    //   })
-    // })
-
+   
   }
   const teamOnStrike = global.tblCommentaryTeams.find(
     (item) =>
@@ -2140,13 +2309,14 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
     }
     callPredictions.push(callPrediction);
     
-    if(updatePlayerLine.length > 0){
+    if(updatePlayerLine.length > 0 || fallOfWicket.length > 0){
       _resFromPredictAPI = await callPredictorMarket(
         {
           commentary_id: commentary.commentaryId,
           match_type_id: commentary.matchTypeId,
           strike_team_id : teamOnStrike.teamId,
-          players: updatePlayerLine
+          players: updatePlayerLine,
+          fallOfWicket : fallOfWicket
         },
         "/api/v1/updateplayerline",
         fastify,
@@ -2194,72 +2364,87 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
       }
       callPredictions.push(callPrediction);
   }
-  if(playerMarket.length > 0){
-    for (let p of playerMarket){
-      let comPlayer = global.tblCommentaryPlayers.findIndex(
-        (item) => item.commentaryPlayerId === p.playerId
-      );
-      if (comPlayer === -1) {
-        errorLogger(
-          fastify,
-          "Player with this id not Found",
-          "ERROR --> services/eventMarket.js/updateMarketRateServiceV1",
-          request
-        );
-        continue;
-      }
-      let avg = p.runners[0].line - global.tblCommentaryPlayers[comPlayer].batRun;
-      await updateAverageOfPlayerQuery({
-        commentaryPlayerId: p.playerId,
-        batsmanAverage: avg,
-      }, request, fastify);	
-      global.tblCommentaryPlayers[comPlayer].batsmanAverage = avg;
-    }
-  }
-  if(boundaryPlayer.length > 0){
-    for (let bp of boundaryPlayer){
-      let player = global.tblCommentaryPlayers.find(
-        (item) => item.commentaryPlayerId === bp.playerId
-      );
-      if (!player) {
-        errorLogger(
-          fastify,
-          "Player with this id not Found",
-          "ERROR --> services/eventMarket.js/updateMarketRateServiceV1",
-          request
-        );
-        continue;
-      }
-      let count = player.batFour + player.batSix;
-      let boun = (bp.runners[0].line - count).toFixed(2);
-      await updateBoundaryOfPlayerQuery({
-        commentaryPlayerId: bp.playerId,
-        boundary: boun,
-      }, request, fastify);
-    }
-  }
-  if(pbfMarket.length > 0){
-    for (let pf of pbfMarket){
-      let player = global.tblCommentaryPlayers.find(
-        (item) => item.commentaryPlayerId === pf.playerId
-      );
-      if (!player) {
-        errorLogger(
-          fastify,
-          "Player with this id not Found",
-          "ERROR --> services/eventMarket.js/updateMarketRateServiceV1",
-          request
-        );
-        continue;
-      }
-      let count = player.batBall;
-      let pbf =(pf.runners[0].line - count).toFixed(2);
-      await updatePbfOfPlayerQuery({
-        commentaryPlayerId: pf.playerId,
-        ballsFaced: pbf,
-      }, request, fastify);
-    }
-  }
+  // if(playerMarket.length > 0){
+  //   for (let p of playerMarket){
+  //     let comPlayer = global.tblCommentaryPlayers.findIndex(
+  //       (item) => item.commentaryPlayerId === p.playerId
+  //     );
+  //     if (comPlayer === -1) {
+  //       errorLogger(
+  //         fastify,
+  //         "Player with this id not Found",
+  //         "ERROR --> services/eventMarket.js/updateMarketRateServiceV1",
+  //         request
+  //       );
+  //       continue;
+  //     }
+  //     let avg = (p.runners[0].line - global.tblCommentaryPlayers[comPlayer].batRun).toFixed(2);
+
+  //     await updatePredefinedQuery({
+  //       eventMarketId: p.eventMarketId,
+  //       predefinedValue: avg,
+  //     }, request, fastify)
+  //     // await updateAverageOfPlayerQuery({
+  //     //   commentaryPlayerId: p.playerId,
+  //     //   batsmanAverage: avg,
+  //     // }, request, fastify);	
+  //     // global.tblCommentaryPlayers[comPlayer].batsmanAverage = avg;
+  //   }
+  // }
+  // if(boundaryPlayer.length > 0){
+  //   for (let bp of boundaryPlayer){
+  //     let player = global.tblCommentaryPlayers.find(
+  //       (item) => item.commentaryPlayerId === bp.playerId
+  //     );
+  //     if (!player) {
+  //       errorLogger(
+  //         fastify,
+  //         "Player with this id not Found",
+  //         "ERROR --> services/eventMarket.js/updateMarketRateServiceV1",
+  //         request
+  //       );
+  //       continue;
+  //     }
+  //     let count = player.batFour + player.batSix;
+  //     let boun = (bp.runners[0].line - count).toFixed(2);
+  //     await updatePredefinedQuery({
+  //       eventMarketId: bp.eventMarketId,
+  //       predefinedValue: boun,
+  //     }, request, fastify)
+
+  //     // await updateBoundaryOfPlayerQuery({
+  //     //   commentaryPlayerId: bp.playerId,
+  //     //   boundary: boun,
+  //     // }, request, fastify);
+  //   }
+  // }
+  // if(pbfMarket.length > 0){
+  //   for (let pf of pbfMarket){
+  //     let player = global.tblCommentaryPlayers.find(
+  //       (item) => item.commentaryPlayerId === pf.playerId
+  //     );
+  //     if (!player) {
+  //       errorLogger(
+  //         fastify,
+  //         "Player with this id not Found",
+  //         "ERROR --> services/eventMarket.js/updateMarketRateServiceV1",
+  //         request
+  //       );
+  //       continue;
+  //     }
+  //     let count = player.batBall;
+  //     let pbf =(pf.runners[0].line - count).toFixed(2);
+  //     await updatePredefinedQuery({
+  //       eventMarketId: pf.eventMarketId,
+  //       predefinedValue: pbf,
+  //     }, request, fastify)
+      
+  //     // await updatePbfOfPlayerQuery({
+  //     //   commentaryPlayerId: pf.playerId,
+  //     //   ballsFaced: pbf,
+  //     // }, request, fastify);
+  //   }
+  // }
   //   // get the team and teamName by commentaryId
   //   const teams = global.tblCommentaryTeams
   //   .filter((item) => item.commentaryId === eventMarket[0].commentaryId)
