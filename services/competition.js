@@ -12,6 +12,7 @@ const {storeImageOnServer, removeImageFromServer, generateImageName } = require(
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const {ImgModuleConfig} = require("../utilities/imageConstant");
 const { APIEndpointModuleType, ServiceType, callClientAPI } = require("../utilities");
+const { getCommentariesResultQuery } = require("../repository/TableCommentary")
 
 const allCompetitionService = async (request) => {
   const { isActive, isTrending, eventTypeId } = request.body;
@@ -490,6 +491,45 @@ const isPointTableService = async (request, fastify) => {
   return `Competition isEventSnap status updated successfully`;
 };
 
+const getCompletedCommentaryResultService = async (request, fastify) => {
+  const { competitionId, teamId, startDate, endDate } = request.body;
+  let result = await getCommentariesResultQuery(request, fastify);
+
+  if(competitionId){
+    result = result.filter((item) => item.competitionId === competitionId);
+  }
+
+  if(teamId) {
+    result = result.filter((item) => item.team1Id === teamId || item.team2Id === teamId);
+  }
+
+  if (startDate && endDate) {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    result = result.filter((item) => {
+      const eventDate = new Date(item.eventDate);
+      return eventDate >= start && eventDate <= end;
+    });
+  }
+
+  // Sort results by eventDate in descending order
+  result = result.sort((a, b) => new Date(b.eventDate) - new Date(a.eventDate));
+  
+  return result;
+};
+
+const getAllTeamListService = async (request, fastify) => {
+  let result = global.tblTeams;
+  result = result.map((item) => {
+    return {
+      teamId: item.teamId,
+      teamName: item.teamName,
+      teamShortName: item.teamShortName,
+    };
+  });
+  return result;
+}
+
 module.exports = {
   allCompetitionService,
   competitionByIdService,
@@ -500,4 +540,6 @@ module.exports = {
   isTrendingChangeStatusService,
   isEventSnapService,
   isPointTableService,
+  getCompletedCommentaryResultService,
+  getAllTeamListService,
 };
