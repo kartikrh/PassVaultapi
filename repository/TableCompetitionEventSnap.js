@@ -65,12 +65,12 @@ const getEventSnapByComQuery = async (data,request,fastify) =>{
                     tces."wrTotal50" as "Total 50",
                     tces."wrTotal100" as "Total 100",
                     tces."wrUnder50" as "Under 50",
-                    tp1."wrPlayerName" as "Most Dotball By Bowler",
+                    tces."wrMostDotBallBowlerName" as "Most Dotball By Bowler",
                     tces."wrMostDotBallCount" as "Most Dotball Count",
                     tces."wrHSPartnershipRun" as "Highest Run by Partnership",
-                    tp2."wrPlayerName" as "Most Runs Conceded by Bowler",
+                    tces."wrMostRunBowlerName" as "Most Runs Conceded by Bowler",
                     tces."wrMostBowlerRun" as "MostRun By Bowler",
-                    tp3."wrPlayerName" as "Most Wicket By Bowler",
+                    tces."wrMostWicketBowlerName" as "Most Wicket By Bowler",
                     "wrMostBowlerWicket" as "Most Wicket Bowler",
                     tces."wrTotalMatchDuckOut" as "Total Match Duck Out",
                     tces."wrExtra" as "Extra Run",
@@ -80,25 +80,20 @@ const getEventSnapByComQuery = async (data,request,fastify) =>{
                     tces."wrTotalLBWOut" as "Total LBWOut",
                     tces."wrTotal30" as "Total 30",
                     tces."wrHSOverRun" as "Highest Run in Over",
-                    tp4."wrPlayerName" as "Top Run By Batsman",
-                    "wrTopBatsManRun" as "Top Run Batsman",
-                    tces."wrMostDotBallBowlerName" as "Most Dotball Bowler Name",
-                    tces."wrMostRunBowlerName" as "Most Runs Conceded Bowler Name",
-                    tces."wrMostWicketBowlerName" as "Most Wickets Bowler Name",
-                    tces."wrTopRunBatsmanName" as "Top Run Batsman Name"
+                    tces."wrTopRunBatsmanName" as "Top Run By Batsman",
+                    "wrTopBatsManRun" as "Top Run Batsman"
                 FROM "tblCompetitionEventSnap" tces
-                LEFT JOIN "tblPlayers" tp1 on tp1."wrPlayerId" = tces."wrMostDotBallBowler"
-                LEFT JOIN "tblPlayers" tp2 on tp2."wrPlayerId" = tces."wrMostRunBowlerId"
-                LEFT JOIN "tblPlayers" tp3 on tp3."wrPlayerId" = tces."wrMostWicketBowlerId"
-                LEFT JOIN "tblPlayers" tp4 on tp4."wrPlayerId" = tces."wrTopRunBatsManId" 
                 WHERE tces."wrCommentaryId" = $1
                 
             `,
-                //     tc."wrEventDate" as "Event Date",
-                //     tc."wrEventName" as "Event Name",
-                //     tcp."wrCompetition" as "Competition Name"
-                // LEFT JOIN "tblCommentaries" tc on tc."wrCommentaryId" = tces."wrCommentaryId" 
-                // LEFT JOIN "tblCompetitions" tcp on tcp."wrCompetitionId" = tc."wrCompetitionId"
+            //     tp1."wrPlayerName" as "Most Dotball By Bowler",
+            //     tp2."wrPlayerName" as "Most Runs Conceded by Bowler",
+            //     tp3."wrPlayerName" as "Most Wicket By Bowler",
+            //     tp4."wrPlayerName" as "Top Run By Batsman",
+            // LEFT JOIN "tblPlayers" tp1 on tp1."wrPlayerId" = tces."wrMostDotBallBowler"
+            // LEFT JOIN "tblPlayers" tp2 on tp2."wrPlayerId" = tces."wrMostRunBowlerId"
+            // LEFT JOIN "tblPlayers" tp3 on tp3."wrPlayerId" = tces."wrMostWicketBowlerId"
+            // LEFT JOIN "tblPlayers" tp4 on tp4."wrPlayerId" = tces."wrTopRunBatsManId" 
             {
                 type : fastify.db.QueryTypes.SELECT,
                 bind : [
@@ -139,16 +134,16 @@ const getEventSnapByCompetitionIdQuery = async (competitionId, request, fastify)
                 tces."wrTotal100" as "total100",
                 tces."wrUnder50" as "under50",
                 tces."wrMostDotBallBowler" as "mostDotBallBowler",
-                tp1."wrPlayerName" as "mostDotBallBowlerName",
+                tces."wrMostDotBallBowlerName" as "mostDotBallBowlerName",
                 tces."wrMostDotBallCount" as "mostDotBallCount",
                 tces."wrHSPartnershipRun" as "HSPartnershipRun",
                 tces."wrHSPartnershipId" as "HSPartnershipId",
                 tces."wrMostBowlerRun" as "mostBowlerRun",
                 tces."wrMostRunBowlerId" as "mostRunBowlerId",
-                tp2."wrPlayerName" as "mostRunBowlerName",
+                tces."wrMostRunBowlerName" as "mostRunBowlerName",
                 tces."wrMostBowlerWicket" as "mostBowlerWicket",
                 tces."wrMostWicketBowlerId" as "mostWicketBowlerId",
-                tp3."wrPlayerName" as "mostWicketBowlerName",
+                tces."wrMostWicketBowlerName" as "mostWicketBowlerName",
                 tces."wrTotalMatchDuckOut" as "totalMatchDuckOut",
                 tces."wrExtra" as "extras",
                 tces."wrTotalCatchOut" as "totalCatchOut",
@@ -160,16 +155,8 @@ const getEventSnapByCompetitionIdQuery = async (competitionId, request, fastify)
                 tces."wrHSRunOverId" as "HSRunOverId",
                 tces."wrTopBatsManRun" as "topBatsmanRun",
                 tces."wrTopRunBatsManId" as "topRunBatsmanId",
-                tp4."wrPlayerName" as "topRunBatsmanName",
-                tces."wrMostDotBallBowlerName" as "Most Dotball Bowler Name",
-                tces."wrMostRunBowlerName" as "Most Runs Conceded Bowler Name",
-                tces."wrMostWicketBowlerName" as "Most Wickets Bowler Name",
-                tces."wrTopRunBatsmanName" as "Top Run Batsman Name"
+                tces."wrTopRunBatsmanName" as "topRunBatsmanName"
             FROM "tblCompetitionEventSnap" tces
-            LEFT JOIN "tblPlayers" tp1 on tp1."wrPlayerId" = tces."wrMostDotBallBowler"
-            LEFT JOIN "tblPlayers" tp2 on tp2."wrPlayerId" = tces."wrMostRunBowlerId"
-            LEFT JOIN "tblPlayers" tp3 on tp3."wrPlayerId" = tces."wrMostWicketBowlerId"
-            LEFT JOIN "tblPlayers" tp4 on tp4."wrPlayerId" = tces."wrTopRunBatsManId" 
             LEFT JOIN "tblOvers" to1 on to1."wrOverId" = tces."wrHSRunOverId"
             WHERE tces."wrCompetitionId" = $1`,
             {
@@ -177,6 +164,18 @@ const getEventSnapByCompetitionIdQuery = async (competitionId, request, fastify)
                 bind : [competitionId]
             }
         )
+        // tp1."wrPlayerName" as "mostDotBallBowlerName",
+        // tp2."wrPlayerName" as "mostRunBowlerName",
+        // tp3."wrPlayerName" as "mostWicketBowlerName",
+        // tp4."wrPlayerName" as "topRunBatsmanName",
+        // tces."wrMostDotBallBowlerName" as "Most Dotball Bowler Name",
+        // tces."wrMostRunBowlerName" as "Most Runs Conceded Bowler Name",
+        // tces."wrMostWicketBowlerName" as "Most Wickets Bowler Name",
+        // tces."wrTopRunBatsmanName" as "Top Run Batsman Name"
+        // LEFT JOIN "tblPlayers" tp1 on tp1."wrPlayerId" = tces."wrMostDotBallBowler"
+        // LEFT JOIN "tblPlayers" tp2 on tp2."wrPlayerId" = tces."wrMostRunBowlerId"
+        // LEFT JOIN "tblPlayers" tp3 on tp3."wrPlayerId" = tces."wrMostWicketBowlerId"
+        // LEFT JOIN "tblPlayers" tp4 on tp4."wrPlayerId" = tces."wrTopRunBatsManId" 
         return result;
     } catch (error) {
         errorLogger(
