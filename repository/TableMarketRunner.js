@@ -105,7 +105,8 @@ const setResultInRunnerMarketQuery = async(data, request,fastify)=>{
         });
 
         let q5 = `UPDATE "tblEventMarkets"
-            SET "wrData" = $1
+            SET "wrData" = $1,
+            "wrLastUpdate" = now()::timestamp
             WHERE "wrID" = $2
         `;
         await fastify.db.query(q5, {

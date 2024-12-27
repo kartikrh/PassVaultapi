@@ -18,7 +18,7 @@ module.exports = async (fastify, opts) => {
         (request, reply) => authorize(request, reply, fastify),
         (request, reply, done) =>
             checkPermission(request, reply, fastify, {
-                tabName: "SubScribesDomain",
+                tabName: "Subscribers",
                 mode: "view",
             }),
     ],
@@ -31,7 +31,7 @@ module.exports = async (fastify, opts) => {
         (request, reply) => authorize(request, reply, fastify),
         (request, reply, done) =>
             checkPermission(request, reply, fastify, {
-                tabName: "SubScribesDomain",
+                tabName: "Subscribers",
                 mode: "view",
             }),
     ],
@@ -56,7 +56,7 @@ module.exports = async (fastify, opts) => {
         (request, reply) => authorize(request, reply, fastify),
         (request, reply, done) =>
             checkPermission(request, reply, fastify, {
-                tabName: "SubScribesDomain",
+                tabName: "Subscribers",
                 mode: "delete",
             }),
     ],
@@ -68,10 +68,11 @@ module.exports = async (fastify, opts) => {
         (request, reply) => authorize(request, reply, fastify),
         (request, reply, done) =>
             checkPermission(request, reply, fastify, {
-                tabName: "SubScribesDomain",
+                tabName: "Subscribers",
                 mode: "edit",
             }),
     ],
     handler: (request, reply) => approveDomain(request, reply, fastify),
   })
+  
 };
