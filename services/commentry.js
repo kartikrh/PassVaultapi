@@ -9491,6 +9491,7 @@ const cancelCommentaryService = async (request, fastify) => {
     );
     if (index !== -1) {
       global.tblCommentaries[index].commentaryStatus = 4;
+      global.tblCommentaries[index].result = "Abandoned";
 
       await closeEventMarketByCIdQuery({ commentaryId }, fastify);
       _resFromPredictAPI = await callPredictorMarket(

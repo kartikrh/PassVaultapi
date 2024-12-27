@@ -12,6 +12,7 @@ const {storeImageOnServer, removeImageFromServer, generateImageName } = require(
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const {ImgModuleConfig} = require("../utilities/imageConstant");
 const { APIEndpointModuleType, ServiceType, callClientAPI } = require("../utilities");
+const { getCommentariesResultQuery } = require("../repository/TableCommentary")
 
 const allCompetitionService = async (request) => {
   const { isActive, isTrending, eventTypeId } = request.body;
@@ -490,6 +491,66 @@ const isPointTableService = async (request, fastify) => {
   return `Competition isEventSnap status updated successfully`;
 };
 
+const getCompletedCommentaryResultService = async (request, fastify) => {
+  const { page = 1, limit = 10, competitionId, teamId, startDate, endDate } = request.body;
+  let result = await getCommentariesResultQuery(request, fastify);
+
+  if(competitionId){
+    result = result.filter((item) => item.competitionId === competitionId);
+  }
+
+  if(teamId) {
+    result = result.filter((item) => item.team1Id === teamId || item.team2Id === teamId);
+  }
+
+  if (startDate && endDate) {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    result = result.filter((item) => {
+      const eventDate = new Date(item.eventDate);
+      return eventDate >= start && eventDate <= end;
+    });
+  }
+
+  // Sort results by eventDate in descending order
+  result = result.sort((a, b) => new Date(b.eventDate) - new Date(a.eventDate));
+
+  const startIndex = (page - 1) * limit;
+  const paginatedResult = result.slice(startIndex, startIndex + limit);
+  
+  return {
+    totalRecords: result.length,
+    currentPage: page,
+    totalPages: Math.ceil(result.length / limit),
+    data: paginatedResult,
+  };
+};
+
+const getAllTeamListService = async (request, fastify) => {
+  let result = global.tblTeams;
+  result = result.map((item) => {
+    return {
+      teamId: item.teamId,
+      teamName: item.teamName,
+      teamShortName: item.teamShortName,
+    };
+  });
+  return result;
+}
+
+const getAllCompetitionListService = async (request, fastify) => {
+  let result = global.tblCompetitions.filter((elem) => elem.isActive === true);
+  result = result.map((item) => {
+    return {
+      competitionId: item.competitionId,
+      competition: item.competition,
+      eventTypeId: item.eventTypeId,
+      eventType: item.eventType,
+    };
+  });
+  return result;
+}
+
 module.exports = {
   allCompetitionService,
   competitionByIdService,
@@ -500,4 +561,7 @@ module.exports = {
   isTrendingChangeStatusService,
   isEventSnapService,
   isPointTableService,
+  getCompletedCommentaryResultService,
+  getAllTeamListService,
+  getAllCompetitionListService,
 };

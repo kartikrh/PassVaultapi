@@ -3119,6 +3119,22 @@ const Compitition = {
       },
     },
   },
+  getCompetitionResult: {
+    schema: {
+      tags: ["Compitition"],
+      description: "get all completed commentaries",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionId: { type: "integer" },
+          teamId: { type: "integer" },
+          startDate: { type: "string" },
+          endDate: { type: "string" },
+        },
+      },
+    },
+  },
   updateEventSnap: {
     schema: {
       tags: ["Compitition"],

@@ -8,6 +8,9 @@ const {
   isTrendingChangeStatusService,
   isEventSnapService,
   isPointTableService,
+  getCompletedCommentaryResultService,
+  getAllTeamListService,
+  getAllCompetitionListService,
 } = require("../../../../services/competition");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -159,6 +162,36 @@ const updateEventSnap = async (request, reply, fastify) => {
   }
 };
 
+const getCommentaryResult = async (request, reply, fastify) => {
+  try {
+    const result = await getCompletedCommentaryResultService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/getCommentaryResult", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
+const getTeamList = async (request, reply, fastify) => {
+  try {
+    const result = await getAllTeamListService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/getTeamList", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
+const allCompetitionsList = async (request, reply, fastify) => {
+  try {
+    const result = await getAllCompetitionListService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/allCompetitionsList", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
 module.exports = {
   getAllCompetition,
   getCompetitionById,
@@ -173,4 +206,7 @@ module.exports = {
   isPointTable,
   getEventSnapByCompetitionId,
   updateEventSnap,
+  getCommentaryResult,
+  getTeamList,
+  allCompetitionsList,
 };

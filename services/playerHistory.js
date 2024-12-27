@@ -686,7 +686,7 @@ const setPlayerHistoryService = async (data,request, fastify) => {
         inningsCount : inningCount,
         notOut : notOut,
         totalRuns : batRun,
-        highestScore : batRun,
+        highestScore : notOut != 0 ? batRun + '*' : batRun,
         average : batAvg,
         ballsFacedCount : ballsFacedCount,
         strikeRate : sr,
