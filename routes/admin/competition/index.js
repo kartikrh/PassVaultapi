@@ -16,6 +16,7 @@ const {
   updateEventSnap,
   getCommentaryResult,
   getTeamList,
+  allCompetitionsList,
 } = require("../../../controller/users/admin/competition");
 const { getEventTypeList } = require("../../../controller/users/admin/eventTypes");
 const { Compitition } = require("../../../swaggerSchema/groupTags/schema");
@@ -206,5 +207,17 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request, reply) => getTeamList(request, reply, fastify),
+  });
+
+  fastify.post("/competitionList", {
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "competition",
+          mode: "view",
+        }),
+    ],
+    handler: (request, reply) => allCompetitionsList(request, reply, fastify),
   });
 };

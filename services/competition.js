@@ -492,7 +492,7 @@ const isPointTableService = async (request, fastify) => {
 };
 
 const getCompletedCommentaryResultService = async (request, fastify) => {
-  const { competitionId, teamId, startDate, endDate } = request.body;
+  const { page = 1, limit = 10, competitionId, teamId, startDate, endDate } = request.body;
   let result = await getCommentariesResultQuery(request, fastify);
 
   if(competitionId){
@@ -514,8 +514,16 @@ const getCompletedCommentaryResultService = async (request, fastify) => {
 
   // Sort results by eventDate in descending order
   result = result.sort((a, b) => new Date(b.eventDate) - new Date(a.eventDate));
+
+  const startIndex = (page - 1) * limit;
+  const paginatedResult = result.slice(startIndex, startIndex + limit);
   
-  return result;
+  return {
+    totalRecords: result.length,
+    currentPage: page,
+    totalPages: Math.ceil(result.length / limit),
+    data: paginatedResult,
+  };
 };
 
 const getAllTeamListService = async (request, fastify) => {
@@ -525,6 +533,19 @@ const getAllTeamListService = async (request, fastify) => {
       teamId: item.teamId,
       teamName: item.teamName,
       teamShortName: item.teamShortName,
+    };
+  });
+  return result;
+}
+
+const getAllCompetitionListService = async (request, fastify) => {
+  let result = global.tblCompetitions.filter((elem) => elem.isActive === true);
+  result = result.map((item) => {
+    return {
+      competitionId: item.competitionId,
+      competition: item.competition,
+      eventTypeId: item.eventTypeId,
+      eventType: item.eventType,
     };
   });
   return result;
@@ -542,4 +563,5 @@ module.exports = {
   isPointTableService,
   getCompletedCommentaryResultService,
   getAllTeamListService,
+  getAllCompetitionListService,
 };
