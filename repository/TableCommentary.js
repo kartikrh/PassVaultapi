@@ -3815,6 +3815,48 @@ const cancelCommentaryQuery = async (data, fastify, request) => {
   }
 };
 
+const getCommentariesResultQuery = async (request, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `SELECT 
+      tc."wrCommentaryId" as "commentaryId",
+      tc."wrTeam1Id" as "team1Id",
+      tc."wrTeam2Id" as "team2Id",
+      tt1."wrTeamName" as "team1Name",
+      tt2."wrTeamName" as "team2Name",
+      tc."wrCompetitionId" as "competitionId",
+	    co."wrCompetition" as "competition",
+      tc."wrEventId" as "eventId",
+      tc."wrEventDate" as "eventDate",
+      tc."wrEventName" as "eventName",
+      tc."wrWinnerId" as "winnerId",
+      tc."wrWinnerName" as "winnerName",
+      tc."wrCommentaryResult" as "result"
+      FROM "tblCommentaries" tc
+      LEFT JOIN "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
+      LEFT JOIN "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
+	    LEFT JOIN "tblCompetitions" co ON tc."wrCompetitionId" = co."wrCompetitionId"
+    WHERE tc."wrIsDelete" = false 
+    AND co."wrIsDeleted" = false 
+    AND tc."wrCommentaryStatus" = 4
+    AND tc."wrIsActive" = true`,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+
+    return result;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/getCommentariesResultQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -3893,4 +3935,5 @@ module.exports = {
   updateIsWheelShowQuery,
   insertCommentaryPlayersQuery,
   cancelCommentaryQuery,
+  getCommentariesResultQuery,
 };
