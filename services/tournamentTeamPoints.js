@@ -232,6 +232,7 @@ const setTeamPointService = async (data, request, fastify) => {
       else if(m.winnerId != null && m.winnerId != m.team1Id){
         ttlPoint = ttlPoint + comp.lossPoint;
       }
+      const team1netRunRate = await setTeamNetRunRateService(m.team1Id, m.competitionId, fastify);
       dataToUpdate.push({
         ...global.tblTournamentTeamPoint[tp1],
         totalMatches: global.tblTournamentTeamPoint[tp1].totalMatches + 1,
@@ -243,8 +244,8 @@ const setTeamPointService = async (data, request, fastify) => {
           m.winnerId != null && m.winnerId != m.team1Id
             ? global.tblTournamentTeamPoint[tp1].totalLose + 1
             : global.tblTournamentTeamPoint[tp1].totalLose,
-        totalPoint : ttlPoint
-
+        totalPoint : ttlPoint,
+        netRunRate: team1netRunRate,
       });
     }
     let tp2 = global.tblTournamentTeamPoint.findIndex(
@@ -261,6 +262,7 @@ const setTeamPointService = async (data, request, fastify) => {
       else if(m.winnerId != null && m.winnerId != m.team2Id){
         ttlPoint = ttlPoint + comp.lossPoint;
       }
+      const team2NetRunRate = await setTeamNetRunRateService(m.team2Id, m.competitionId, fastify);
       dataToUpdate.push({
         ...global.tblTournamentTeamPoint[tp2],
         totalMatches: global.tblTournamentTeamPoint[tp2].totalMatches + 1,
@@ -272,7 +274,8 @@ const setTeamPointService = async (data, request, fastify) => {
           m.winnerId != null && m.winnerId != m.team2Id
             ? global.tblTournamentTeamPoint[tp2].totalLose + 1
             : global.tblTournamentTeamPoint[tp2].totalLose,
-        totalPoint : ttlPoint
+        totalPoint : ttlPoint,
+        netRunRate: team2NetRunRate,
       });
     }
 
@@ -335,6 +338,24 @@ const setTeamPointLogService = async (data, request, fastify, module) => {
   }
 
   return true;
+};
+
+const setTeamNetRunRateService = async (teamId, competitionId, fastify) => {
+  const validateCommentary = global.tblCommentaries.filter((item) => 
+    item.competitionId === competitionId &&
+    (item.team1Id === teamId || item.team2Id === teamId)
+  );
+  if(validateCommentary.length === 0){
+    throw new Error("NO Commentaries found with this team and competition");
+  }
+  const result = await fastify.db.query(
+    `CALL proc_net_run_rate_calculation($1, $2, $3)`,
+    {
+      bind: [teamId, competitionId, 0], 
+      type: fastify.db.QueryTypes.RAW,
+    }
+  )
+  return result[0]?.[0]?.netrunrate;
 };
 
 module.exports = {
