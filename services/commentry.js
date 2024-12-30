@@ -2349,6 +2349,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
     let commentaryData;
     let _resFromPredictAPI;
     let callPredictions = [];
+    let sendPartnership = [];
     if (commentaryId) {
       commentaryData = global.tblCommentaries.find(
         (item) => item?.commentaryId === commentaryId
@@ -3191,6 +3192,11 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           });
         }
       }
+      let boundary = response.commentaryPartnershipDetails.totalSix + response.commentaryPartnershipDetails.totalFour;
+      sendPartnership.push({
+        partnership_no : response.commentaryPartnershipDetails.order,
+        partnership_boundaries : boundary
+      })
     }
     if (deleteCommentaryBallByBallId) {
       response.deleteCommentaryBallByBallId = true;
@@ -3454,7 +3460,8 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           player_details: _sendPrePlayers,
           ball_by_ball_id: updatedData.commentaryBallByBallDetails.commentaryBallByBallId
           ? parseInt(updatedData.commentaryBallByBallDetails.commentaryBallByBallId)
-          : null
+          : null,
+          partnership_details : sendPartnership
         },
         "/api/v1/playerpredictscore",
         fastify,
