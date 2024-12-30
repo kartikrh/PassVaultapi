@@ -1439,6 +1439,7 @@ const getAllCommentaryPartnershipQuery = async (fastify) => {
       "wrTotalExtra" as "totalExtra",
       "wrTotalWide" as "totalWide",
       "wrTotalNoBall" as "totalNoBall",
+      "wrOrder" as "order",
       "wrP1Ball" as "p1Ball",
       "wrP2Ball" as "p2Ball",
       "wrP1Run" as "p1Run",
