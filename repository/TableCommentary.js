@@ -839,6 +839,7 @@ const deleteCommentryQuery = async (commentaryId, request, fastify) => {
         UPDATE "tblCommentaryPartnerships"
           SET "wrIsDelete" = $1,
             "wrDeletedBy" = $2,
+            "wrIsActive" = $4,
             "wrDeletedAt" = now()
           WHERE "wrCommentaryId" = $3
       ),
@@ -866,7 +867,7 @@ const deleteCommentryQuery = async (commentaryId, request, fastify) => {
       `,
       {
         type: fastify.db.QueryTypes.DELETE,
-        bind: [true, request.userTokenInfo.WrUserId, commentaryId],
+        bind: [true, request.userTokenInfo.WrUserId, commentaryId, false],
       }
     );
   } catch (err) {
@@ -887,6 +888,7 @@ const deleteBallByBallCommentoriesQuery = async (id, request, fastify) => {
           UPDATE "tblCommentaryPartnerships" SET
             "wrIsDelete" = $1,
             "wrDeletedBy" = $2,
+            "wrIsActive" = $4,
             "wrDeletedAt" = now()
           WHERE "wrCommentaryBallByBallId" = $3
         ),
@@ -903,7 +905,7 @@ const deleteBallByBallCommentoriesQuery = async (id, request, fastify) => {
             "wrDeletedAt" = now()
         WHERE "wrCommentaryBallByBallId" = $3`,
       { 
-        bind: [true, request.userTokenInfo.WrUserId, id], 
+        bind: [true, request.userTokenInfo.WrUserId, id, false], 
         // type: fastify.db.QueryTypes.DELETE
       }
     );
@@ -1440,6 +1442,7 @@ const getAllCommentaryPartnershipQuery = async (fastify) => {
       "wrTotalWide" as "totalWide",
       "wrTotalNoBall" as "totalNoBall",
       "wrOrder" as "order",
+      "wrIsActive" as "isActive",
       "wrP1Ball" as "p1Ball",
       "wrP2Ball" as "p2Ball",
       "wrP1Run" as "p1Run",
