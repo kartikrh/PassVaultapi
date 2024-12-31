@@ -2218,7 +2218,6 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
         request,
         fastify
       )
-    
     }
     // marketDataLogger(
     //   {
