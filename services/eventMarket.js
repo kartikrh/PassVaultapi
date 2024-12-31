@@ -2203,7 +2203,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
           lay_size : item.runners[0].laySize,
           back_size : item.runners[0].backSize,
           rate_diff : item.rateDiff,
-          line_diff : line_diff_wick.toFixed(2) || 0
+          line_diff : line_diff_boun.toFixed(2) || 0
         });
       }
       marketDataLogger(
@@ -2218,7 +2218,6 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
         request,
         fastify
       )
-    
     }
     // marketDataLogger(
     //   {
