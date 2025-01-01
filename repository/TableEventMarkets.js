@@ -1320,7 +1320,7 @@ const upsertEventMarketSPQuery = async (data, request, fastify) => {
 // };
 const getDataLogsByMarketQuery = async (request, fastify) => {
   try {
-    const { startDate, endDate, page = 1, limit = 10, eventMarketId } = request.body;
+    const { startDate, endDate, page = 1, limit = 10, eventMarketId, createdType, isSendData } = request.body;
     const { skip, take } = getPagination(page, limit);
     
     let whereConditions = [];
@@ -1337,6 +1337,18 @@ const getDataLogsByMarketQuery = async (request, fastify) => {
         replacements.eventMarketId = eventMarketId;
     }
 
+    if (createdType == 1) {
+        whereConditions.push(`tmd."wrCreatedBy" != 0`);
+    }
+
+    if (createdType == 2) {
+        whereConditions.push(`tmd."wrCreatedBy" = 0`);
+    }
+
+    if (isSendData !== undefined && isSendData !== null) {
+        whereConditions.push(`tmd."wrIsSendData" = :isSendData`);
+        replacements.isSendData = isSendData;
+    }
     const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
 
     const query = `
