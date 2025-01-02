@@ -9589,7 +9589,8 @@ const deleteEventResultService = async (request, fastify) => {
   for (const runRate of netRunRateData) {
     const request = {
       body: {
-        runRate,
+        competitionId: runRate.competitionId,
+        teamId: runRate.teamId,
         status,
       },
     };
