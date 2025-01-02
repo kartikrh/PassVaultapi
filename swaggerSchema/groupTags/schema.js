@@ -6901,6 +6901,25 @@ const TournamentTeamPoints = {
       },
     },
   },
+  recalculation: {
+    schema: {
+      tags: ["Tournament Team Points"],
+      description: "recalculation on Tournament Team Points",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionId: { type: "integer" },
+          teamId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["competitionId", "teamId"],
+      },
+    },
+  },
 };
 const PlayerHistory = {
   getAll: {
