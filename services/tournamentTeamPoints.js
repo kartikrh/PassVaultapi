@@ -365,8 +365,6 @@ const netRunRateRe_calculationService = async (request, fastify) => {
     (c) => c.competitionId == competitionId && c.isPointTable == true
   );
   if(!comp) {
-    console.log(request.body);
-    
     if(request.body.status === 1){
       return;
     }
