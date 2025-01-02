@@ -9437,6 +9437,8 @@ const getTeamAndPlayerListServiceV1 = async (request, fastify) => {
           boundary: curr.boundary,
           playerBallFaced: curr.playerBallFaced,
           currentInnings: curr.currentInnings,
+          playerTypeId: curr.playerTypeId,
+          playerType: curr.playerType,
         });
         return acc;
       }, []);
@@ -9583,10 +9585,13 @@ const deleteEventResultService = async (request, fastify) => {
   global.tblCommentaries = global.tblCommentaries.filter(
     (item) => !commentaryId.includes(item?.commentaryId)
   );
-
+  let status = 1
   for (const runRate of netRunRateData) {
     const request = {
-      body: runRate,
+      body: {
+        runRate,
+        status,
+      },
     };
   
     await netRunRateRe_calculationService(request, fastify);

@@ -365,6 +365,9 @@ const netRunRateRe_calculationService = async (request, fastify) => {
     (c) => c.competitionId == competitionId && c.isPointTable == true
   );
   if(!comp) {
+    if(request.body.status === 1){
+      return;
+    }
     throw new Error(`IsPointTable set as Inactive`);
   }
   for (const tId of teamId) {
