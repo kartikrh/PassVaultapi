@@ -3836,11 +3836,19 @@ const getCommentariesResultQuery = async (request, fastify) => {
       tc."wrEventName" as "eventName",
       tc."wrWinnerId" as "winnerId",
       tc."wrWinnerName" as "winnerName",
-      tc."wrCommentaryResult" as "result"
+      tc."wrCommentaryResult" as "result",
+      tct1."wrTeamScore" as "team1Score",
+      tct1."wrTeamOver" as "team1Over",
+      tct1."wrTeamWicket" as "team1Wicket",
+      tct2."wrTeamScore" as "team2Score",
+      tct2."wrTeamOver" as "team2Over",
+      tct2."wrTeamWicket" as "team2Wicket"
       FROM "tblCommentaries" tc
       LEFT JOIN "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
       LEFT JOIN "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
 	    LEFT JOIN "tblCompetitions" co ON tc."wrCompetitionId" = co."wrCompetitionId"
+	    LEFT JOIN "tblCommentaryTeams" tct1 ON tc."wrCommentaryId" = tct1."wrCommentaryId" AND tc."wrTeam1Id" = tct1."wrTeamId"
+	    LEFT JOIN "tblCommentaryTeams" tct2 ON tc."wrCommentaryId" = tct2."wrCommentaryId" AND tc."wrTeam2Id" = tct2."wrTeamId"
     WHERE tc."wrIsDelete" = false 
     AND co."wrIsDeleted" = false 
     AND tc."wrCommentaryStatus" = 4

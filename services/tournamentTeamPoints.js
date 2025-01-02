@@ -346,7 +346,7 @@ const setTeamNetRunRateService = async (teamId, competitionId, fastify) => {
     (item.team1Id === teamId || item.team2Id === teamId)
   );
   if(validateCommentary.length === 0){
-    throw new Error("NO Commentaries found with this team and competition");
+    throw new Error("No Commentaries found with this team and competition");
   }
   const result = await fastify.db.query(
     `CALL proc_net_run_rate_calculation($1, $2, $3)`,
@@ -358,6 +358,80 @@ const setTeamNetRunRateService = async (teamId, competitionId, fastify) => {
   return result[0]?.[0]?.netrunrate;
 };
 
+const netRunRateRe_calculationService = async (request, fastify) => {
+  const { competitionId, teamId } = request.body;
+
+  let comp = global.tblCompetitions.find(
+    (c) => c.competitionId == competitionId && c.isPointTable == true
+  );
+  if(!comp) {
+    throw new Error(`IsPointTable set as Inactive`);
+  }
+  for (const tId of teamId) {
+    let dataToUpdate;
+
+    const validateCommentary = global.tblCommentaries.filter(
+      (elem) =>
+        elem.competitionId === competitionId &&
+        (elem.team1Id === tId || elem.team2Id === tId)
+    );
+
+    if (validateCommentary.length === 0) {
+      throw new Error(
+        `No Commentaries found with competitionId ${competitionId} and teamId ${tId}`
+      );
+    }
+
+    const tp1 = global.tblTournamentTeamPoint.findIndex(
+      (t) =>
+        t.competitionId === competitionId &&
+        t.teamId === tId &&
+        t.isActive === true
+    );
+
+    if (tp1 !== -1) {
+      const teamnetRunRate = await setTeamNetRunRateService(
+        tId,
+        competitionId,
+        fastify
+      );
+      let tMatches = validateCommentary.length;
+      let tWin = validateCommentary.filter((win) => win.winnerId != null && win.winnerId == tId).length;
+      let tLose = validateCommentary.filter((win) => win.winnerId != null && win.winnerId !== tId).length;
+
+
+      let tPoint = 0;
+      validateCommentary.forEach((match) => {
+        if (match.winnerId != null && match.winnerId === tId) {
+          tPoint += comp.winPoint;
+        } else if (match.winnerId != null && match.winnerId !== tId) {
+          tPoint += comp.lossPoint;
+        }
+      });
+
+      dataToUpdate = {
+        ...global.tblTournamentTeamPoint[tp1],
+        totalMatches: tMatches,
+        totalWin: tWin,
+        totalLose: tLose,
+        totalPoint: tPoint,
+        netRunRate: teamnetRunRate,
+      };
+
+      await updateTeamPointsQuery(dataToUpdate, fastify, request);
+
+      const index = global.tblTournamentTeamPoint.findIndex(
+        (ind) => ind.id === dataToUpdate.id
+      );
+      if (index !== -1) {
+        global.tblTournamentTeamPoint[index] = dataToUpdate;
+      }
+    }
+  }
+
+  return "Net run rate calculation successful";
+};
+
 module.exports = {
   allTournamentTeamPointsService,
   saveTournamentTeamPointsService,
@@ -366,4 +440,5 @@ module.exports = {
   setTeamPointService,
   saveTblTournamentTeamPointsService,
   teamsListService,
+  netRunRateRe_calculationService,
 };
