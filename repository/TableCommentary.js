@@ -3823,7 +3823,7 @@ const cancelCommentaryQuery = async (data, fastify, request) => {
 const getCommentariesResultQuery = async (request, fastify) => {
   try {
     const result = await fastify.db.query(
-      `SELECT 
+      `SELECT DISTINCT
       tc."wrCommentaryId" as "commentaryId",
       tc."wrTeam1Id" as "team1Id",
       tc."wrTeam2Id" as "team2Id",
@@ -3847,12 +3847,15 @@ const getCommentariesResultQuery = async (request, fastify) => {
       LEFT JOIN "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
       LEFT JOIN "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
 	    LEFT JOIN "tblCompetitions" co ON tc."wrCompetitionId" = co."wrCompetitionId"
-	    LEFT JOIN "tblCommentaryTeams" tct1 ON tc."wrCommentaryId" = tct1."wrCommentaryId" AND tc."wrTeam1Id" = tct1."wrTeamId"
-	    LEFT JOIN "tblCommentaryTeams" tct2 ON tc."wrCommentaryId" = tct2."wrCommentaryId" AND tc."wrTeam2Id" = tct2."wrTeamId"
-    WHERE tc."wrIsDelete" = false 
-    AND co."wrIsDeleted" = false 
-    AND tc."wrCommentaryStatus" = 4
-    AND tc."wrIsActive" = true`,
+	    LEFT JOIN "tblCommentaryTeams" tct1 
+        ON tc."wrCommentaryId" = tct1."wrCommentaryId" 
+        AND tc."wrTeam1Id" = tct1."wrTeamId"
+      LEFT JOIN "tblCommentaryTeams" tct2 
+        ON tc."wrCommentaryId" = tct2."wrCommentaryId" 
+        AND tc."wrTeam2Id" = tct2."wrTeamId"
+      WHERE tc."wrIsDelete" = false 
+      AND tc."wrIsActive" = true
+      AND tc."wrCommentaryStatus" = 4`,
       {
         type: fastify.db.QueryTypes.SELECT,
       }

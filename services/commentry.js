@@ -97,6 +97,7 @@ const { setCompEventSnapSerice } = require("./competitionEventSnap");
 const { setTeamPointService } = require("./tournamentTeamPoints");
 const { setPlayerHistoryService } = require("./playerHistory");
 const { now } = require("mongoose");
+const { netRunRateRe_calculationService } = require("../services/tournamentTeamPoints");
 // const { handleSitemapUpdate } = require("../utilities/SEOIndexing")
 
 
@@ -9564,6 +9565,71 @@ const cancelCommentaryService = async (request, fastify) => {
   };
 };
 
+const deleteEventResultService = async (request, fastify) => {
+  const { commentaryId } = request.body;
+  let eventIdArr = [];
+  let netRunRateData = [];
+
+  for (const commentary of commentaryId) {
+    let eventId = global.tblCommentaries.find(
+      (item) => item?.commentaryId === commentary
+    );
+    eventIdArr.push(eventId.eventRefId);
+    netRunRateData.push({competitionId: eventId.competitionId, teamId: [eventId.team1Id, eventId.team2Id]});
+    await deleteCommentryQuery(commentary, request, fastify);
+    await updateEventMarketCloseQuery(commentaryId, request, fastify);
+  }
+
+  global.tblCommentaries = global.tblCommentaries.filter(
+    (item) => !commentaryId.includes(item?.commentaryId)
+  );
+
+  for (const runRate of netRunRateData) {
+    const request = {
+      body: runRate,
+    };
+  
+    await netRunRateRe_calculationService(request, fastify);
+  }
+  
+
+  callClientAPI({
+    serviceType: ServiceType.clientAPI,
+    moduleType: APIEndpointModuleType.commentaryUpdate,
+    data: {
+      type: "deleteEvent",
+      eventId: eventIdArr
+    }
+  }, request, fastify).catch((err) => {
+    console.log("call client api console", err);
+    errorLogger(
+      fastify,
+      err.message,
+      "ERROR --> services/commentary.js/deleteEventResultService",
+      request
+    );
+  });
+
+  callDataProvider(
+    {
+      commentaryId: commentaryId,
+      serviceType: ServiceType.dataProviderAPI,
+      moduleType: APIEndpointModuleType.commentaryUpdate,
+      type: "delete"
+    },
+    fastify
+  ).catch((err) => {
+    console.log("call data provider console", err);
+    errorLogger(
+      fastify,
+      err.message,
+      "ERROR --> services/commentary.js/deleteEventResultService",
+      request
+    );
+  });
+  return `Commentaries deleted successfully`;
+};
+
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -9635,4 +9701,5 @@ module.exports = {
   updateIsWheelShowService,
   getTeamAndPlayerListServiceV1,
   cancelCommentaryService,
+  deleteEventResultService,
 };
