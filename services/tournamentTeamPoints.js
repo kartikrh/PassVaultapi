@@ -377,19 +377,38 @@ const netRunRateRe_calculationService = async (request, fastify) => {
     );
 
     if (validateCommentary.length === 0) {
-      throw new Error(
-        `No Commentaries found with competitionId ${competitionId} and teamId ${tId}`
+      const teamIndex = global.tblTournamentTeamPoint.findIndex(
+        (team) =>
+          team.competitionId === competitionId &&
+          team.teamId === tId &&
+          team.isActive === true
       );
+
+      if (teamIndex !== -1) {
+        let data = {
+          ...global.tblTournamentTeamPoint[teamIndex],
+          totalMatches: 0,
+          totalWin: 0,
+          totalLose: 0,
+          totalPoint: 0,
+          netRunRate: 0,
+        };
+
+        await updateTeamPointsQuery(data, fastify, request);
+
+        global.tblTournamentTeamPoint[teamIndex] = data;
+      }
+      continue;
     }
 
-    const tp1 = global.tblTournamentTeamPoint.findIndex(
+    const tp = global.tblTournamentTeamPoint.findIndex(
       (t) =>
         t.competitionId === competitionId &&
         t.teamId === tId &&
         t.isActive === true
     );
 
-    if (tp1 !== -1) {
+    if (tp !== -1) {
       const teamnetRunRate = await setTeamNetRunRateService(
         tId,
         competitionId,
@@ -410,7 +429,7 @@ const netRunRateRe_calculationService = async (request, fastify) => {
       });
 
       dataToUpdate = {
-        ...global.tblTournamentTeamPoint[tp1],
+        ...global.tblTournamentTeamPoint[tp],
         totalMatches: tMatches,
         totalWin: tWin,
         totalLose: tLose,
