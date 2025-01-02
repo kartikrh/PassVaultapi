@@ -3,15 +3,19 @@ const { errorLogger } = require("../utilities/logger");
 const getAllTournamentTeamPlayersQuery = async (fastify) => {
   return await fastify.db.query(
     `SELECT 
-          "wrId" as "id",
-          "wrCompetitionId" as "competitionId",
-          "wrTeamId" as "teamId",
-          "wrPlayerId" as "playerId",
-          "wrPlayerName" as "playerName",
-          "wrCreatedBy" as  "createdBy",
-          "wrCreatedAt" as "createdAt"
-       FROM "tblTournamentTeamPlayers"
-       WHERE "wrIsDeleted" = false`,
+          ttp."wrId" as "id",
+          ttp."wrCompetitionId" as "competitionId",
+          ttp."wrTeamId" as "teamId",
+          ttp."wrPlayerId" as "playerId",
+          ttp."wrPlayerName" as "playerName",
+          ttp."wrCreatedBy" as  "createdBy",
+          ttp."wrCreatedAt" as "createdAt",
+          tp."wrPlayerTypeId" as "playerTypeId",
+          tpt."wrPlayerType" as "playerType"
+      FROM "tblTournamentTeamPlayers" AS ttp
+      LEFT JOIN "tblPlayers" AS tp ON ttp."wrPlayerId" = tp."wrPlayerId"
+      LEFT JOIN "tblPlayerTypes" AS tpt ON tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
+      WHERE ttp."wrIsDeleted" = false`,
     {
       type: fastify.db.QueryTypes.SELECT,
     }
