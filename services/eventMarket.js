@@ -2054,6 +2054,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
   const updatePlayerLine = [];
   const fallOfWicket = [];
   const pbMarket = [];
+  const wlbMarket = [];
   // const response = [];
   for (let item of updatedData) {
     let index = global.tblEventMarketsV1.findIndex(
@@ -2206,6 +2207,25 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
           line_diff : line_diff_boun.toFixed(2) || 0
         });
       }
+      if(category && category.categoryName.toLowerCase() == "wicket lost balls"){
+        let line_diff_wick_ball = allMarkets.find(
+          (e) => e.marketId === item.eventMarketId
+        )?.lineDiff || 0;
+        lineDiff = line_diff_wick_ball;
+        wlbMarket.push({
+          market_id : item.eventMarketId,
+          market_type_category_id : item.marketTypeCategoryId,
+          line : item.runners[0].line,
+          is_allow : item.isAllow,
+          is_active : item.isActive,
+          is_senddata : item.isSendData,
+          data : item.data,
+          lay_size : item.runners[0].laySize,
+          back_size : item.runners[0].backSize,
+          rate_diff : item.rateDiff,
+          line_diff : line_diff_wick_ball.toFixed(2) || 0
+        })
+      }
       marketDataLogger(
         {
           eventMarketId: item.eventMarketId,
@@ -2267,7 +2287,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
     }
     callPredictions.push(callPrediction);
     
-    if(updatePlayerLine.length > 0 || fallOfWicket.length > 0 || pbMarket.length > 0){
+    if(updatePlayerLine.length > 0 || fallOfWicket.length > 0 || pbMarket.length > 0 || wlbMarket.length > 0){
       _resFromPredictAPI = await callPredictorMarket(
         {
           commentary_id: commentary.commentaryId,
@@ -2275,7 +2295,8 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
           strike_team_id : teamOnStrike.teamId,
           players: updatePlayerLine,
           fallOfWicket : fallOfWicket,
-          partnershipBoundaries : pbMarket
+          partnershipBoundaries : pbMarket,
+          wicketLostBalls : wlbMarket
         },
         "/api/v1/updateplayerline",
         fastify,
