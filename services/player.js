@@ -88,6 +88,8 @@ const allPlayerByCompetitionAndTeamService = async (request, fastify) => {
     return tournamentTeamPlayers.map((player) => ({
       playerId: player.playerId,
       playerName: player.playerName,
+      playerTypeId: player.playerTypeId,
+      playerType: player.playerType,
     }));
   }
   

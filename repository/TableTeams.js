@@ -180,11 +180,14 @@ const getAllPlayersByTeamIdQuery = async (teamId, fastify, request) => {
 const getAllPlayersByCompetitionIdTeamIdQuery = async (teamId, fastify, request) => {
   try {
     return await fastify.db.query(
-      `SELECT      
-      "wrRefPlayerId" as "playerId",
-      "wrPlayerName" as "playerName"   
+      `SELECT     
+          tp."wrRefPlayerId" as "playerId",
+          pl."wrPlayerName" as "playerName",
+          pl."wrPlayerTypeId" as "playerTypeId",
+          tpt."wrPlayerType" as "playerType"
       FROM "tblTeamPlayers" tp 
-      left join "tblPlayers" pl on tp."wrRefPlayerId" = pl."wrPlayerId" AND pl."wrIsDeleted" = false
+      LEFT JOIN "tblPlayers" pl ON tp."wrRefPlayerId" = pl."wrPlayerId" AND pl."wrIsDeleted" = false
+      LEFT JOIN "tblPlayerTypes" tpt ON pl."wrPlayerTypeId" = tpt."wrPlayerTypeId"
       where tp."wrTeamId" = $1 AND tp."wrIsDeleted" = false`,
       {
         bind: [teamId],
