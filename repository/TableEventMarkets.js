@@ -39,12 +39,14 @@ const getAllEventMarketsQuery = async (fastify, whereCondition = null) => {
         tem."wrDefaultLaySize" as "defaultLaySize",
         tem."wrAfterSuspendTime" as "afterSuspendTime",
         tem."wrIsDeleted" as "isDeleted",
+        tmr."wrSelectionId" as "selectionId",
         tem."wrAfterCloseTime" as "afterCloseTime"
     FROM "tblEventMarkets" tem
     LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
     LEFT JOIN "tblCompetitions" tcom ON tcom."wrCompetitionId" = tc."wrCompetitionId"
     LEFT JOIN "tblEventTypes" tet ON tet."wrEventTypeId" = tc."wrEventTypeId"
     LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = tem."wrTeamID"
+    LEFT JOIN "tblMarketRunners" tmr ON tmr."wrEventMarketId" = tem."wrID"
     ${whereCondition ? `WHERE ${whereCondition}` : ""}`,
     {
       type: fastify.db.QueryTypes.SELECT,
