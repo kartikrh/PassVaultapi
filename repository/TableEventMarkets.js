@@ -40,6 +40,7 @@ const getAllEventMarketsQuery = async (fastify, whereCondition = null) => {
         tem."wrAfterSuspendTime" as "afterSuspendTime",
         tem."wrIsDeleted" as "isDeleted",
         tmr."wrSelectionId" as "selectionId",
+        tmr."wrRunner" as "runner",
         tem."wrAfterCloseTime" as "afterCloseTime"
     FROM "tblEventMarkets" tem
     LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
