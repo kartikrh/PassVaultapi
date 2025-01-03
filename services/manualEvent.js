@@ -189,6 +189,11 @@ const MarketListService = async (request, fastify) => {
   if (response.ok) {
     const responseData = await response.json();
     //console.log("Responce " + JSON.stringify(responseData));
+    if(request.body.isEvent){
+      responseData.appdata.sort((a, b) => {
+        return new Date(a.eventDate) - new Date(b.eventDate);
+      });
+    }
     return responseData;
   } else {
     console.error(`Error: ${response.status} - ${response.statusText}`);
