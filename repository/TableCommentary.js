@@ -1026,63 +1026,67 @@ const getAllCommentaryTeamsQuery = async (fastify) => {
 const getAllCommentaryPlayerQuery = async (fastify) => {
   return await fastify.db.query(
     `select
-    "wrCommentaryPlayerId" as "commentaryPlayerId",
-    "wrCommentaryId" as "commentaryId",
-    "wrTeamId" as "teamId",
-    "wrPlayerId" as "playerId",
-    "wrPlayerName" as "playerName",
-    "wrDisplayOrder" as "displayOrder",
-    "wrBat_Status" as "batStatus",
-    "wrBat_Run" as "batRun",
-    "wrBat_Ball" as "batBall",
-    "wrBat_DotBall" as "batDotBall",
-    "wrBat_FOUR" as "batFour",
-    "wrBat_SIX" as "batSix",
-    "wrBat_SRR" as "batSrr",
-    "wrBat_BattingOrder" as "battingOrder",
-    "wrBat_IsPlay" as "isPlay",
-    "wrBat_OnStrike" as "onStrike",
-    "wrBat_WicketType" as "wicketType",
-    "wrBat_BowlerID" as "bowlerId",
-    "wrBat_FielderID1" as "fielderId1",
-    "wrBat_FielderID2" as "fielderId2",
-    "wrBowler_Over" as "bowlerOver",
-    "wrBowler_CurrentBall" as "bowlerCurrentBall",
-    "wrBowler_TotalBall" as "bowlerTotalBall",
-    "wrBowler_Run" as "bowlerRun",
-    "wrBowler_DotBall" as "bowlerDotBall",
-    "wrBowler_MaidenOver" as "bowlerMaidenOver",
-    "wrBowler_FOUR" as "bowlerFour",
-    "wrBowler_SIX" as "bowlerSix",
-    "wrBowler_WideBall" as "bowlerWideBall",
-    "wrBowler_NOBall" as "bowlerNoBall",
-    "wrBowler_ByeBall" as "bowlerByeBall",
-    "wrBowler_LegByeBall" as "bowlerLegByeBall",
-    "wrBowler_WideBallRun" as "bowlerWideBallRun",
-    "wrBowler_NOBallRun" as "bowlerNoBallRun",
-    "wrBowler_ByeBallRun" as "bowlerByeBallRun",
-    "wrBowler_LegByeBallRun" as "bowlerLegByeBallRun",
-    "wrBowler_TotalWicket" as "bowlerTotalWicket",
-    "wrBowler_Economy" as "bowlerEconomy",
-    "wrBowler_OnStrike" as "bowlerOnStrike",
-    "wrBowler_PeneltyRun" as "bowlerPeneltyRun",
-    "wrIsBatter_Out" as "isBatterOut",
-    "wrIsBatter_Retir" as "isBatterRetir",
-    "wrSwapName" as "swapName",
-    "wrBatsmanAverage" as "batsmanAverage",
-    "wrBatsmanStrikeRate" as "batsmanStrikeRate",
-    "wrBowlerEconomy" as "bowlerEconomy",
-    "wrBowlerAverage" as "bowlerAverage",
-    "wrCurrentInnings" as "currentInnings",
-    "wrBatterOrder" as "batterOrder",
-    "wrBowlerOrder" as "bowlerOrder",
-    "wrBatsmanPreviousStrikeRate" as "batsmanPreviousStrikeRate",
-    "wrBowlerPreviousEconomy" as "bowlerPreviousEconomy",
-    "wrIsInPlayingEleven" as "isInPlayingEleven",
-    "wrBoundary" as "boundary",
-    "wrPlayerBallFaced" as "playerBallFaced"
-    from "tblCommentaryPlayers"
-    where "wrIsDelete" = false
+        tcp."wrCommentaryPlayerId" as "commentaryPlayerId",
+        tcp."wrCommentaryId" as "commentaryId",
+        tcp."wrTeamId" as "teamId",
+        tcp."wrPlayerId" as "playerId",
+        tcp."wrPlayerName" as "playerName",
+        tcp."wrDisplayOrder" as "displayOrder",
+        tcp."wrBat_Status" as "batStatus",
+        tcp."wrBat_Run" as "batRun",
+        tcp."wrBat_Ball" as "batBall",
+        tcp."wrBat_DotBall" as "batDotBall",
+        tcp."wrBat_FOUR" as "batFour",
+        tcp."wrBat_SIX" as "batSix",
+        tcp."wrBat_SRR" as "batSrr",
+        tcp."wrBat_BattingOrder" as "battingOrder",
+        tcp."wrBat_IsPlay" as "isPlay",
+        tcp."wrBat_OnStrike" as "onStrike",
+        tcp."wrBat_WicketType" as "wicketType",
+        tcp."wrBat_BowlerID" as "bowlerId",
+        tcp."wrBat_FielderID1" as "fielderId1",
+        tcp."wrBat_FielderID2" as "fielderId2",
+        tcp."wrBowler_Over" as "bowlerOver",
+        tcp."wrBowler_CurrentBall" as "bowlerCurrentBall",
+        tcp."wrBowler_TotalBall" as "bowlerTotalBall",
+        tcp."wrBowler_Run" as "bowlerRun",
+        tcp."wrBowler_DotBall" as "bowlerDotBall",
+        tcp."wrBowler_MaidenOver" as "bowlerMaidenOver",
+        tcp."wrBowler_FOUR" as "bowlerFour",
+        tcp."wrBowler_SIX" as "bowlerSix",
+        tcp."wrBowler_WideBall" as "bowlerWideBall",
+        tcp."wrBowler_NOBall" as "bowlerNoBall",
+        tcp."wrBowler_ByeBall" as "bowlerByeBall",
+        tcp."wrBowler_LegByeBall" as "bowlerLegByeBall",
+        tcp."wrBowler_WideBallRun" as "bowlerWideBallRun",
+        tcp."wrBowler_NOBallRun" as "bowlerNoBallRun",
+        tcp."wrBowler_ByeBallRun" as "bowlerByeBallRun",
+        tcp."wrBowler_LegByeBallRun" as "bowlerLegByeBallRun",
+        tcp."wrBowler_TotalWicket" as "bowlerTotalWicket",
+        tcp."wrBowler_Economy" as "bowlerEconomy",
+        tcp."wrBowler_OnStrike" as "bowlerOnStrike",
+        tcp."wrBowler_PeneltyRun" as "bowlerPeneltyRun",
+        tcp."wrIsBatter_Out" as "isBatterOut",
+        tcp."wrIsBatter_Retir" as "isBatterRetir",
+        tcp."wrSwapName" as "swapName",
+        tcp."wrBatsmanAverage" as "batsmanAverage",
+        tcp."wrBatsmanStrikeRate" as "batsmanStrikeRate",
+        tcp."wrBowlerEconomy" as "bowlerEconomy",
+        tcp."wrBowlerAverage" as "bowlerAverage",
+        tcp."wrCurrentInnings" as "currentInnings",
+        tcp."wrBatterOrder" as "batterOrder",
+        tcp."wrBowlerOrder" as "bowlerOrder",
+        tcp."wrBatsmanPreviousStrikeRate" as "batsmanPreviousStrikeRate",
+        tcp."wrBowlerPreviousEconomy" as "bowlerPreviousEconomy",
+        tcp."wrIsInPlayingEleven" as "isInPlayingEleven",
+        tcp."wrBoundary" as "boundary",
+        tcp."wrPlayerBallFaced" as "playerBallFaced",
+        tp."wrPlayerTypeId" as "playerTypeId",
+        tpt."wrPlayerType" as "playerType"
+    from "tblCommentaryPlayers" AS tcp
+    LEFT JOIN "tblPlayers" AS tp ON tcp."wrPlayerId" = tp."wrPlayerId"
+    LEFT JOIN "tblPlayerTypes" AS tpt ON tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
+    where tcp."wrIsDelete" = false
     `,
     {
       type: fastify.db.QueryTypes.SELECT,
@@ -1111,7 +1115,6 @@ const getAllCommentaryPlayerQuery = async (fastify) => {
   //   "wrBat_BowlerID" as "bowlerId",
   //   "wrBat_FielderID1" as "fielderId1",
   //   "wrBat_FielderID2" as "fielderId2",
-  //   "wrBowler_Status" as "bowlerStatus",
   //   "wrBowler_Over" as "bowlerOver",
   //   "wrBowler_CurrentBall" as "bowlerCurrentBall",
   //   "wrBowler_TotalBall" as "bowlerTotalBall",
@@ -1140,9 +1143,15 @@ const getAllCommentaryPlayerQuery = async (fastify) => {
   //   "wrBowlerEconomy" as "bowlerEconomy",
   //   "wrBowlerAverage" as "bowlerAverage",
   //   "wrCurrentInnings" as "currentInnings",
+  //   "wrBatterOrder" as "batterOrder",
+  //   "wrBowlerOrder" as "bowlerOrder",
   //   "wrBatsmanPreviousStrikeRate" as "batsmanPreviousStrikeRate",
-  //   "wrBowlerPreviousEconomy" as "bowlerPreviousEconomy"
+  //   "wrBowlerPreviousEconomy" as "bowlerPreviousEconomy",
+  //   "wrIsInPlayingEleven" as "isInPlayingEleven",
+  //   "wrBoundary" as "boundary",
+  //   "wrPlayerBallFaced" as "playerBallFaced"
   //   from "tblCommentaryPlayers"
+  //   where "wrIsDelete" = false
   //   `,
   //   {
   //     type: fastify.db.QueryTypes.SELECT,
@@ -3823,7 +3832,7 @@ const cancelCommentaryQuery = async (data, fastify, request) => {
 const getCommentariesResultQuery = async (request, fastify) => {
   try {
     const result = await fastify.db.query(
-      `SELECT 
+      `SELECT DISTINCT
       tc."wrCommentaryId" as "commentaryId",
       tc."wrTeam1Id" as "team1Id",
       tc."wrTeam2Id" as "team2Id",
@@ -3836,15 +3845,26 @@ const getCommentariesResultQuery = async (request, fastify) => {
       tc."wrEventName" as "eventName",
       tc."wrWinnerId" as "winnerId",
       tc."wrWinnerName" as "winnerName",
-      tc."wrCommentaryResult" as "result"
+      tc."wrCommentaryResult" as "result",
+      tct1."wrTeamScore" as "team1Score",
+      tct1."wrTeamOver" as "team1Over",
+      tct1."wrTeamWicket" as "team1Wicket",
+      tct2."wrTeamScore" as "team2Score",
+      tct2."wrTeamOver" as "team2Over",
+      tct2."wrTeamWicket" as "team2Wicket"
       FROM "tblCommentaries" tc
       LEFT JOIN "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
       LEFT JOIN "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
 	    LEFT JOIN "tblCompetitions" co ON tc."wrCompetitionId" = co."wrCompetitionId"
-    WHERE tc."wrIsDelete" = false 
-    AND co."wrIsDeleted" = false 
-    AND tc."wrCommentaryStatus" = 4
-    AND tc."wrIsActive" = true`,
+	    LEFT JOIN "tblCommentaryTeams" tct1 
+        ON tc."wrCommentaryId" = tct1."wrCommentaryId" 
+        AND tc."wrTeam1Id" = tct1."wrTeamId"
+      LEFT JOIN "tblCommentaryTeams" tct2 
+        ON tc."wrCommentaryId" = tct2."wrCommentaryId" 
+        AND tc."wrTeam2Id" = tct2."wrTeamId"
+      WHERE tc."wrIsDelete" = false 
+      AND tc."wrIsActive" = true
+      AND tc."wrCommentaryStatus" = 4`,
       {
         type: fastify.db.QueryTypes.SELECT,
       }
