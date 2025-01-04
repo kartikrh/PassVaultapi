@@ -376,7 +376,9 @@ const netRunRateRe_calculationService = async (request, fastify) => {
     const validateCommentary = global.tblCommentaries.filter(
       (elem) =>
         elem.competitionId === competitionId &&
-        (elem.team1Id === tId || elem.team2Id === tId)
+        (elem.team1Id === tId || elem.team2Id === tId) &&
+        elem.commentaryStatus === 4 &&
+        elem.isActive === true
     );
 
     if (validateCommentary.length === 0) {
