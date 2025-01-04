@@ -3843,6 +3843,8 @@ const getCommentariesResultQuery = async (request, fastify) => {
       tc."wrEventId" as "eventId",
       tc."wrEventDate" as "eventDate",
       tc."wrEventName" as "eventName",
+      tc."wrTossWonBy" as "tossWonBy",
+      tt3."wrTeamName" as "tossWonTeam",
       tc."wrWinnerId" as "winnerId",
       tc."wrWinnerName" as "winnerName",
       tc."wrCommentaryResult" as "result",
@@ -3855,6 +3857,7 @@ const getCommentariesResultQuery = async (request, fastify) => {
       FROM "tblCommentaries" tc
       LEFT JOIN "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
       LEFT JOIN "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
+      LEFT JOIN "tblTeams" tt3 on tt3."wrTeamId" = tc."wrTossWonBy"
 	    LEFT JOIN "tblCompetitions" co ON tc."wrCompetitionId" = co."wrCompetitionId"
 	    LEFT JOIN "tblCommentaryTeams" tct1 
         ON tc."wrCommentaryId" = tct1."wrCommentaryId" 
