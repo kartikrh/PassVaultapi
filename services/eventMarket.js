@@ -225,7 +225,12 @@ const getEventMarketByIdService = async (request, fastify) => {
   let eventMarket = global.tblEventMarkets.find(
     (item) => item.eventMarketId === eventMarketId
   );
-  return eventMarket;
+  if(!eventMarket){
+    let whereCondition = `tc."wrIsDelete" = false AND tem."wrIsDeleted" = false AND tcom."wrIsDeleted" = false AND tem."wrID" = ${eventMarketId}`
+    const eventMarketData = await getAllEventMarketsQuery(fastify, whereCondition);
+    eventMarket = eventMarketData[0];
+  }
+  return eventMarket || null;
 };
 const createEventMarketsService = async (request, fastify) => {
   const { eventMarket } = request.body;
@@ -335,14 +340,20 @@ const activeInactiveMarketsService = async (request, fastify) => {
     (item) => item.eventMarketId === eventMarketId
   );
   if (eventMarket === -1) {
-    throw new Error("EventMarket with this id not Found");
+    let whereCondition = `tc."wrIsDelete" = false AND tem."wrIsDeleted" = false AND tcom."wrIsDeleted" = false AND tem."wrID" = ${eventMarketId}`
+    const eventMarketData = await getAllEventMarketsQuery(fastify, whereCondition);
+    if(!eventMarketData || eventMarketData.length === 0) {
+      throw new Error("EventMarket with this id not Found");
+    }
+    eventMarket = eventMarketData[0];
+    await changeIsActiveEventMarketQuery(request.body, request, fastify);
+    global.tblEventMarkets.push({ ...eventMarket, isActive });
+    return "Event Market updated successfully";
+  } else {
+    await changeIsActiveEventMarketQuery(request.body, request, fastify);
+    global.tblEventMarkets[eventMarket].isActive = isActive;
+    return "Event Market updated successfully";
   }
-  // update the eventMarket
-  await changeIsActiveEventMarketQuery(request.body, request, fastify);
-
-  global.tblEventMarkets[eventMarket].isActive = isActive;
-
-  return "Event Market updated successfully";
 };
 const updateAllowMarketsService = async (request, fastify) => {
   const { eventMarketId, isAllow } = request.body;
@@ -350,12 +361,20 @@ const updateAllowMarketsService = async (request, fastify) => {
     (item) => item.eventMarketId === eventMarketId
   );
   if (eventMarket === -1) {
-    throw new Error("EventMarket with this id not Found");
+    let whereCondition = `tc."wrIsDelete" = false AND tem."wrIsDeleted" = false AND tcom."wrIsDeleted" = false AND tem."wrID" = ${eventMarketId}`
+    const eventMarketData = await getAllEventMarketsQuery(fastify, whereCondition);
+    if(!eventMarketData || eventMarketData.length === 0) {
+      throw new Error("EventMarket with this id not Found");
+    }
+    eventMarket = eventMarketData[0];
+    await changeIsAllowEventMarketQuery(request.body, request, fastify);
+    global.tblEventMarkets.push({ ...eventMarket, isAllow });
+    return "Event Market updated successfully";
+  } else {
+    await changeIsAllowEventMarketQuery(request.body, request, fastify);
+    global.tblEventMarkets[eventMarket].isAllow = isAllow;
+    return "Event Market updated successfully";
   }
-
-  await changeIsAllowEventMarketQuery(request.body, request, fastify);
-  global.tblEventMarkets[eventMarket].isAllow = isAllow;
-  return "Event Market updated successfully";
 };
 const getEventListByCompetitionIdsService = async (request, fastify) => {
   // validate competitionId

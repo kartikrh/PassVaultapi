@@ -1857,7 +1857,8 @@ const closeEventMarketByCIdQuery = async (data, fastify) => {
       fastify,
       err.message,
       "DB ERROR --> repository/TableEventmarket.js/closeEventMarketByCIdQuery",
-      request
+      // request
+      null
     );
     throw new Error(err.message);
   }
