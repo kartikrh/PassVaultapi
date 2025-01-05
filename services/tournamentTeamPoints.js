@@ -205,7 +205,7 @@ const setTeamPointService = async (data, request, fastify) => {
     
     let res = await getLogByComIdQuery(
       {
-        competitionId: m.competitionId,
+        // competitionId: m.competitionId,
         commentaryId: m.commentaryId,
         module : "teamPoint"
       },

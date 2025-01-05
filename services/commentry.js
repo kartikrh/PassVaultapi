@@ -3336,7 +3336,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
       }
       if (competition.isPointTable == true) {
         setTeamPointService([{
-          commetaryId: commentaryDetails.commentaryId,
+          commentaryId: commentaryDetails.commentaryId,
           competitionId: commentaryDetails.competitionId,
           team1Id: commentaryDetails.team1Id,
           team2Id: commentaryDetails.team2Id,
