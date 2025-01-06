@@ -2171,6 +2171,21 @@ const Commentary = {
       },
     },
   },
+  isCountInPointCommentary: {
+    schema: {
+      tags: ["Commentary"],
+      description: "isCountInPoint Commentary",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+          isCountInPoint: { type: "boolean" },
+        },
+        required: ["commentaryId", "isCountInPoint"],
+      },
+    },
+  },
   closeCommentary: {
     schema: {
       tags: ["Commentary"],
