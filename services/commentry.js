@@ -9650,7 +9650,6 @@ const isCountInPointCommentaryService = async (request, fastify) => {
   const commentary = global.tblCommentaries.find(
     (item) => item?.commentaryId === request.body.commentaryId
   );
-console.log(global.tblCommentaries[index]);
 
   if(commentary.commentaryStatus === 4) {
     const request = {
