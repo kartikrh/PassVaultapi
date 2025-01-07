@@ -2713,6 +2713,24 @@ const Commentary = {
       },
     },
   },
+  changeIsCountInPoint: {
+    schema: {
+      tags: ["Commentary"],
+      description: "change Commentary isCountInPoint",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["commentaryId"],
+      },
+    },
+  },
   deleteOvers: {
     schema: {
       tags: ["Commentary"],

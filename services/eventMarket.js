@@ -166,13 +166,15 @@ const getAllEventMarketsService = async (request, fastify) => {
     endDate,
     rateSourceRefId
   } = request.body;
-  let createWhereStatus = `tem."wrStatus" NOT IN (${EventMarketStatus.Close},${EventMarketStatus.Settled},${EventMarketStatus.Cancel}) AND tc."wrIsDelete" = false AND tcom."wrIsDeleted" = false`;
+  // let createWhereStatus = `tem."wrStatus" NOT IN (${EventMarketStatus.Close},${EventMarketStatus.Settled},${EventMarketStatus.Cancel}) AND tc."wrIsDelete" = false AND tcom."wrIsDeleted" = false`;
+  let createWhereStatus = `tem."wrStatus" NOT IN (${EventMarketStatus.Settled},${EventMarketStatus.Cancel}) AND tc."wrIsDelete" = false`;
 
   if (status !== undefined && status != -1) {
     createWhereStatus = `tc."wrIsDelete" = false AND tem."wrStatus" = ${status}`;
   }
   if (status != undefined && status == -1) {
-    createWhereStatus = null;
+    // createWhereStatus = null;
+    createWhereStatus = `tc."wrIsDelete" = false`;
   }
   if (rateSourceRefId && rateSourceRefId != 0) {
     createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrRateSource" = ${rateSourceRefId}` : `tem."wrRateSource" = ${rateSourceRefId}`;
