@@ -65,6 +65,7 @@ const {
   cancelCommentary,
   deleteEventResults,
   isCountInPointCommentary,
+  multiIsCountInPointCommentary,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -884,5 +885,18 @@ module.exports = async (fastify, opts) => {
         })
     ],
     handler : (request, reply) => isCountInPointCommentary(request, reply, fastify)
+  })
+
+  fastify.post("/changeIsCountInPoint",{
+    schema: Commentary.changeIsCountInPoint.schema,
+    preHandler : [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "edit"
+        })
+    ],
+    handler : (request, reply) => multiIsCountInPointCommentary(request, reply, fastify)
   })
 };

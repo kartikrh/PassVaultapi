@@ -174,7 +174,7 @@ const getAllEventMarketsService = async (request, fastify) => {
   }
   if (status != undefined && status == -1) {
     // createWhereStatus = null;
-    createWhereStatus = `tc."wrIsDelete" = false AND tcom."wrIsDeleted" = false`;
+    createWhereStatus = `tc."wrIsDelete" = false`;
   }
   if (rateSourceRefId && rateSourceRefId != 0) {
     createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrRateSource" = ${rateSourceRefId}` : `tem."wrRateSource" = ${rateSourceRefId}`;
