@@ -343,7 +343,10 @@ const setTeamPointLogService = async (data, request, fastify, module) => {
 const setTeamNetRunRateService = async (teamId, competitionId, fastify) => {
   const validateCommentary = global.tblCommentaries.filter((item) => 
     item.competitionId === competitionId &&
-    (item.team1Id === teamId || item.team2Id === teamId)
+    (item.team1Id === teamId || item.team2Id === teamId) &&
+    item.commentaryStatus === 4 &&
+    item.isActive === true &&
+    item.isCountInPoint === true
   );
   if(validateCommentary.length === 0){
     throw new Error("No Commentaries found with this team and competition");
@@ -378,7 +381,8 @@ const netRunRateRe_calculationService = async (request, fastify) => {
         elem.competitionId === competitionId &&
         (elem.team1Id === tId || elem.team2Id === tId) &&
         elem.commentaryStatus === 4 &&
-        elem.isActive === true
+        elem.isActive === true &&
+        elem.isCountInPoint === true
     );
 
     if (validateCommentary.length === 0) {

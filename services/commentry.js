@@ -71,6 +71,7 @@ const {
   updateIsWheelShowQuery,
   insertCommentaryPlayersQuery,
   cancelCommentaryQuery,
+  isCountInPOintCommentaryChangeQuery,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -9636,6 +9637,35 @@ const deleteEventResultService = async (request, fastify) => {
   return `Commentaries deleted successfully`;
 };
 
+const isCountInPointCommentaryService = async (request, fastify) => {
+  const index = global.tblCommentaries.findIndex(
+    (item) => item?.commentaryId === request.body.commentaryId
+  );
+  if (index == -1) {
+    throw new Error("Commentary with this id not Found");
+  }
+  await isCountInPOintCommentaryChangeQuery(request.body, fastify, request);
+  global.tblCommentaries[index].isCountInPoint = request.body.isCountInPoint;
+
+  const commentary = global.tblCommentaries.find(
+    (item) => item?.commentaryId === request.body.commentaryId
+  );
+
+  if(commentary.commentaryStatus === 4) {
+    const request = {
+      body: {
+        competitionId: commentary.competitionId,
+        teamId: [commentary.team1Id, commentary.team2Id],
+        status: 1
+      }
+    }
+    
+      await netRunRateRe_calculationService(request, fastify);
+    }
+
+  return "Commentary Updated successfully";
+};
+
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -9708,4 +9738,5 @@ module.exports = {
   getTeamAndPlayerListServiceV1,
   cancelCommentaryService,
   deleteEventResultService,
+  isCountInPointCommentaryService,
 };

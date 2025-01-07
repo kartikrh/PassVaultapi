@@ -51,6 +51,7 @@ const getAllCommentaryQuery = async (fastify) => {
     tu."WrUserName" as "createdBy",
     tc."wrHistoryMatchTypeId" as "historyMatchTypeId",
     mt2."wrMatchType" AS "historyMatchType",
+    tc."wrIsCountInPoint" as "isCountInPoint",
     "wrShotType" as "shotType",
     "wrIsWheelShow" as "isWheelShow"
     from "tblCommentaries" tc
@@ -76,7 +77,7 @@ const insertCommentaryQuery = async (request, fastify) => {
       with insert_data as(
         insert into "tblCommentaries" ("wrEventTypeId","wrMatchTypeId","wrCompetitionId","wrEventId",
         "wrEventDate","wrEventName","wrEventRefId","wrTeam1Id","wrTeam2Id","wrLocation","wrWeather","wrPitch","wrDisplayStatus","wrTarget","wrMarketID","wrTpId","isSignalROn","isMatchTypeUpdated" , "wrCreatedBy" , "wrCreatedDate","wrCommentaryStatus","wrCurrentInnings", "wrSystemPlayerCount","wrIsPredictMarket",
-        "wrDelay", "wrIsActive", "wrIsClientShow","wrIsTeamPredictionOn", "wrHistoryMatchTypeId") values (
+        "wrDelay", "wrIsActive", "wrIsClientShow","wrIsTeamPredictionOn", "wrHistoryMatchTypeId", "wrIsCountInPoint") values (
           $1,
           $2,
           $3,
@@ -92,7 +93,8 @@ const insertCommentaryQuery = async (request, fastify) => {
           $23,
           $24,
           $25,
-          $26
+          $26,
+          $27
         ) returning *         
       )
 
@@ -141,6 +143,7 @@ const insertCommentaryQuery = async (request, fastify) => {
     "wrLineRatio" as "lineRatio",
     "wrDelay" as "delay",
     tc."wrHistoryMatchTypeId" as "historyMatchTypeId",
+    tc."wrIsCountInPoint" as "isCountInPoint",
     "wrShotType" as "shotType",
     "wrIsWheelShow" as "isWheelShow"
     from "insert_data" tc
@@ -179,6 +182,7 @@ const insertCommentaryQuery = async (request, fastify) => {
           data.isClientShow,
           true,
           data.matchTypeId || null,
+          data.isCountInPoint
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -461,7 +465,8 @@ const updateCommentaryQuery = async (request, fastify) => {
       "wrModifyDate" = now(),
       "wrDelay"=$18,
       "wrIsActive" = $19,
-      "wrIsClientShow" = $20
+      "wrIsClientShow" = $20,
+      "wrIsCountInPoint" = $21
       where "wrCommentaryId" = $16 
       `,
       {
@@ -486,6 +491,7 @@ const updateCommentaryQuery = async (request, fastify) => {
           data.delay,
           data.isActive,
           data.isClientShow,
+          data.isCountInPoint,
         ],
 
         type: fastify.db.QueryTypes.UPDATE,
@@ -683,7 +689,8 @@ const getCommentaryByIdQuery = async (request, fastify) => {
       tc."wrHistoryMatchTypeId" as "historyMatchTypeId",
       tc."wrLineRatio" as "lineRatio",
       tc."wrShotType" as "shotType",
-      tc."wrIsWheelShow" as "isWheelShow"
+      tc."wrIsWheelShow" as "isWheelShow",
+      tc."wrIsCountInPoint" as "isCountInPoint"
       from "tblCommentaries" tc
       left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
       left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -3853,7 +3860,8 @@ const getCommentariesResultQuery = async (request, fastify) => {
       tct1."wrTeamWicket" as "team1Wicket",
       tct2."wrTeamScore" as "team2Score",
       tct2."wrTeamOver" as "team2Over",
-      tct2."wrTeamWicket" as "team2Wicket"
+      tct2."wrTeamWicket" as "team2Wicket",
+      tc."wrIsCountInPoint" as "isCountInPoint"
       FROM "tblCommentaries" tc
       LEFT JOIN "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
       LEFT JOIN "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -3867,6 +3875,7 @@ const getCommentariesResultQuery = async (request, fastify) => {
         AND tc."wrTeam2Id" = tct2."wrTeamId"
       WHERE tc."wrIsDelete" = false 
       AND tc."wrIsActive" = true
+      AND tc."wrIsCountInPoint" = true
       AND tc."wrCommentaryStatus" = 4`,
       {
         type: fastify.db.QueryTypes.SELECT,
@@ -3879,6 +3888,29 @@ const getCommentariesResultQuery = async (request, fastify) => {
       fastify,
       err.message,
       "DB ERROR --> repository/TableCommentary/getCommentariesResultQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const isCountInPOintCommentaryChangeQuery = async (data, fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `update "tblCommentaries" set
+        "wrIsCountInPoint" = $1
+        where "wrCommentaryId" = $2 and "wrIsDelete" = false
+      `,
+      {
+        bind: [data.isCountInPoint, data.commentaryId],
+      }
+    );
+    return result;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/isCountInPOintCommentaryChangeQuery",
       request
     );
     throw new Error(err.message);
@@ -3964,4 +3996,5 @@ module.exports = {
   insertCommentaryPlayersQuery,
   cancelCommentaryQuery,
   getCommentariesResultQuery,
+  isCountInPOintCommentaryChangeQuery,
 };
