@@ -9666,6 +9666,41 @@ const isCountInPointCommentaryService = async (request, fastify) => {
   return "Commentary Updated successfully";
 };
 
+const multiIsCountInPointCommentaryService = async (request, fastify) => {
+  const { commentaryId } = request.body;
+  let netRunRateData = [];
+
+  for (const commentary of commentaryId) {
+    let commentaryData = global.tblCommentaries.find(
+      (item) => item?.commentaryId === commentary
+    );
+    if(!commentaryData){
+      continue;
+    }
+    netRunRateData.push({competitionId: commentaryData.competitionId, teamId: [commentaryData.team1Id, commentaryData.team2Id]});
+    await isCountInPOintCommentaryChangeQuery({isCountInPoint: false, commentaryId: commentary}, fastify, request);
+    const index = global.tblCommentaries.findIndex(
+      (item) => item?.commentaryId === commentary
+    );
+    global.tblCommentaries[index].isCountInPoint = false;
+  }
+
+  let status = 1
+  for (const runRate of netRunRateData) {
+    const request = {
+      body: {
+        competitionId: runRate.competitionId,
+        teamId: runRate.teamId,
+        status,
+      },
+    };
+  
+    await netRunRateRe_calculationService(request, fastify);
+  }
+
+  return `Commentaries isCountInPoint updated successfully`;
+};
+
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -9739,4 +9774,5 @@ module.exports = {
   cancelCommentaryService,
   deleteEventResultService,
   isCountInPointCommentaryService,
+  multiIsCountInPointCommentaryService,
 };
