@@ -429,12 +429,12 @@ const updateMarketRunnerTeambySelectionId = async (fastify, request) => {
     const data = request.body;
     const notFoundSelectionIds = [];
 
-    const queries = await Promise.all(data.map(async ({ selectionId, teamId }) => {
+    const queries = await Promise.all(data.map(async ({ selectionId, teamId , runnerId}) => {
       // Check if selectionId exists in tblMarketRunners
       const selectionExists = await fastify.db.query(
-        `SELECT COUNT(*) FROM "tblMarketRunners" WHERE "wrSelectionId" = $1 AND "wrIsDeleted" = false`,
+        `SELECT COUNT(*) FROM "tblMarketRunners" WHERE "wrRunnerId" = $1 AND "wrIsDeleted" = false`,
         {
-          bind: [selectionId],
+          bind: [runnerId],
           type: fastify.db.QueryTypes.SELECT,
         }
       );
@@ -442,8 +442,8 @@ const updateMarketRunnerTeambySelectionId = async (fastify, request) => {
       if (selectionExists[0].count > 0) {
         // If exists, prepare update query
         return {
-          query: `UPDATE "tblMarketRunners" SET "wrTeamId" = $1 WHERE "wrSelectionId" = $2`,
-          values: [teamId, selectionId],
+          query: `UPDATE "tblMarketRunners" SET "wrTeamId" = $1 WHERE "wrRunnerId" = $2`,
+          values: [teamId, runnerId],
         };
       } else {
         // If not found, store selectionId in notFoundSelectionIds array

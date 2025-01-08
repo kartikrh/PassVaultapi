@@ -3273,6 +3273,34 @@ const getEventMarketRunnersQuery = async (refID, fastify, request) => {
     throw new Error(error.message);
   }
 };
+const getExtrenalMarketQuery = async(refID,fastify, request) => {
+  try {
+    return await fastify.db.query(
+      `SELECT
+        "wrID" AS "eventMarketId",
+        "wrMarketName" AS "marketName",
+        tr."wrRunnerId" as "runnerId",
+        tr."wrRunner" as "runner",
+        tr."wrTeamId" as "teamId"
+      FROM "tblEventMarkets" tem
+      LEFT JOIN "tblMarketRunners" tr ON tr."wrEventMarketId" = tem."wrID"
+      WHERE tem."wrEventRefID" = $1 AND tem."wrRateSource" = 2 AND tem."wrIsDeleted" = false AND tr."wrIsDeleted" = false`,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [refID],
+      }
+    );
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/getExtrenalMarketQuery",
+      request
+    );
+    throw new Error(error.message);
+    
+  }
+}
 
 const updateEventMarketCloseSuspendTimeQuery = async (request, fastify) => {
   const data = request.body
@@ -4041,6 +4069,7 @@ module.exports = {
   updatePredefinedQuery,
   playerMarketQuery,
   boundaryMarketQuery,
-  pbfMarketQuery
+  pbfMarketQuery,
+  getExtrenalMarketQuery
 }
 
