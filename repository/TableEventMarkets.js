@@ -3286,6 +3286,7 @@ const getExtrenalMarketQuery = async(refID,fastify, request) => {
       FROM "tblEventMarkets" tem
       LEFT JOIN "tblMarketRunners" tr ON tr."wrEventMarketId" = tem."wrID"
       WHERE tem."wrEventRefID" = $1 AND tem."wrRateSource" = 2 AND tem."wrIsDeleted" = false AND tr."wrIsDeleted" = false`,
+      
       {
         type: fastify.db.QueryTypes.SELECT,
         bind: [refID],
