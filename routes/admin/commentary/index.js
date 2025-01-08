@@ -913,4 +913,5 @@ module.exports = async (fastify, opts) => {
     handler: (request, reply) =>
       getRunnerOfMarket(request, reply, fastify),
   })
+  
 };
