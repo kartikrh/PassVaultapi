@@ -7,7 +7,7 @@ const {
   insertEventQuery,
   updateMarketRunnerTeambySelectionId
 } = require("../repository/TableImportMarket");
-const { getAllEventMarketsQuery, getExtrenalMarketQuery }= require('../repository/TableEventMarkets');
+const { getAllEventMarketsQuery }= require('../repository/TableEventMarkets');
 
 const {
   createEventMarketMaunalQuery,
@@ -443,7 +443,7 @@ const listManualMarketService = async (request, fastify) => {
     // );
 
     // let whereCondition = `tem."wrEventRefID" = '${refID}' AND tem."wrRateSource" = 2 AND tc."wrIsDelete" = false`;
-    let response = await getExtrenalMarketQuery(refID, fastify, request);
+    let response = await getEventMarketRunnersQuery(refID, fastify, request);
 
     // const apiUrl = global.tblConfigs.find((item) => item.key == configConstants.IMPORTMARKET_API)?.value;
     // if(!apiUrl){
