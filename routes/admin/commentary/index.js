@@ -66,6 +66,7 @@ const {
   deleteEventResults,
   isCountInPointCommentary,
   multiIsCountInPointCommentary,
+  getRunnerOfMarket,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -88,7 +89,7 @@ const {
 } = require("../../../controller/users/admin/teamsAndPlayer/teams");
 const { getAllAward } = require("../../../controller/users/admin/award");
 const { assignAward, getAssignAward } = require("../../../controller/users/admin/commentaryAward")
-const { Commentary } = require("../../../swaggerSchema/groupTags/schema");
+const { Commentary, ImportMarket } = require("../../../swaggerSchema/groupTags/schema");
 
 module.exports = async (fastify, opts) => {
   fastify.post("/all", {
@@ -898,5 +899,18 @@ module.exports = async (fastify, opts) => {
         })
     ],
     handler : (request, reply) => multiIsCountInPointCommentary(request, reply, fastify)
+  })
+  fastify.post("/getRunnerOfMarket",{
+    schema: ImportMarket.getMarket.schema,
+    preHandler : [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "view"
+        })
+    ],
+    handler: (request, reply) =>
+      getRunnerOfMarket(request, reply, fastify),
   })
 };
