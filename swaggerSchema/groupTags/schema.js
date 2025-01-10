@@ -2973,6 +2973,20 @@ const Commentary = {
       },
     },
   },
+  getEventMarketsByCommentaryId: {
+    schema: {
+      tags: ["Commentary"],
+      description: "get eventMarkets by Commentary",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+        },
+        required: ["commentaryId"],
+      },
+    },
+  },
 };
 
 const Compitition = {

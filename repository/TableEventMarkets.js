@@ -4004,6 +4004,83 @@ const pbfMarketQuery = async (data, request, fastify) => {
     throw new Error(error.message);
   }
 }
+const getEventMarketsByCommId = async (commentaryId, request, fastify) => {
+  try {
+    const query = 
+    `SELECT 
+          tem."wrID" as "eventMarketId",
+          tem."wrEventRefID" as "eventId",
+          tem."wrCommentaryId" as "commentaryId",
+          tem."wrMarketName" as "marketName",
+          tem."wrStatus" as "status",
+          tem."wrMargin" as "margin",
+          tem."wrCloseTime" as "closeTime",
+          tem."wrOpenTime" as "openTime",
+          tem."wrSettledTime" as "settledTime",
+          tem."wrRateSource" as "rateSource",
+          tem."wrRateSourceRefID" as "rateSourceRefId",
+          tem."wrMarketTypeId" as "marketTypeId",
+          tmt."wrMarketTypeName" as "marketTypeName",
+          tem."wrMarketTypeCategoryId" as "marketTypeCategoryId",
+          tmtc."wrCategoryName" as "categoryName",
+          COALESCE(
+              json_agg(
+                  json_build_object(
+                      'runnerId', tmr."wrRunnerId",
+                      'runner', tmr."wrRunner",
+                      'status', tmr."wrSelectionStatus",
+                      'line', tmr."wrLine",
+                      'overRate', tmr."wrOverRate",
+                      'underRate', tmr."wrUnderRate",
+                      'selectionId', tmr."wrSelectionId",
+                      'selectionStatus', tmr."wrSelectionStatus",
+                      'order', tmr."wrOrder",
+                      'lineRatio', tmr."wrLineRatio",
+                      'backPrice', tmr."wrBackPrice",
+                      'layPrice', tmr."wrLayPrice",
+                      'backSize', tmr."wrBackSize",
+                      'laySize', tmr."wrLaySize",
+                      'teamId', tmr."wrTeamId",
+                      'lastUpdate', tmr."wrLastUpdate"
+                  ) 
+              ) FILTER (WHERE tmr."wrRunnerId" IS NOT NULL), 
+              '[]'::json
+          ) as "runner"
+      FROM "tblEventMarkets" tem
+      LEFT JOIN "tblMarketRunners" tmr ON tmr."wrEventMarketId" = tem."wrID" AND tmr."wrIsDeleted" = false
+      LEFT JOIN "tblMarketTypes" tmt ON tmt."wrId" = tem."wrMarketTypeId"
+      LEFT JOIN "tblMarketTypeCategories" tmtc ON tmtc."wrId" = tem."wrMarketTypeCategoryId"
+      WHERE tem."wrCommentaryId" = $1 AND tem."wrIsDeleted" = false
+      AND tem."wrRateSource" = 2
+      AND tem."wrStatus" NOT IN ($2 ,$3,$4)
+      GROUP BY 
+      tem."wrID",
+      tmt."wrMarketTypeName",
+      tmtc."wrCategoryName";
+      `;
+
+        return await fastify.db.query(query, {
+          type: fastify.db.QueryTypes.SELECT,
+          bind: [
+            commentaryId,
+            EventMarketStatus.Close,
+            EventMarketStatus.Settled,
+            EventMarketStatus.Cancel,
+          ],
+        });
+
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/getEventMarketsByCommId",
+      request
+    );
+    throw new Error(error.message);
+  }
+}
+
+
 module.exports = {
   getAllEventMarketsQuery,
   createManyEventMarketQuery,
@@ -4072,6 +4149,7 @@ module.exports = {
   playerMarketQuery,
   boundaryMarketQuery,
   pbfMarketQuery,
-  getExtrenalMarketQuery
+  getExtrenalMarketQuery,
+  getEventMarketsByCommId,
 }
 

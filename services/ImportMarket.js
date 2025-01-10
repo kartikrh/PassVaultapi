@@ -544,16 +544,3 @@ module.exports = {
   updateTeamIdBySelectionIdService,
   getCompByEventTypeService
 };
-
-// "result": {
-//   "appissuccess": true,
-//   "appdata": [],
-//   "appmessage": "",
-//   "appstatuscode": 200,
-//   "teamsDetails": {
-//       "team1Id": 555,
-//       "team1Name": "VTU MU Pleven",
-//       "team2Id": 556,
-//       "team2Name": "Sofia Stars"
-//   }
-// },
