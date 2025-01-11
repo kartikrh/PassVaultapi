@@ -67,6 +67,7 @@ const {
   isCountInPointCommentary,
   multiIsCountInPointCommentary,
   getRunnerOfMarket,
+  getAllCommentaryEventMarkets,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -912,6 +913,18 @@ module.exports = async (fastify, opts) => {
     ],
     handler: (request, reply) =>
       getRunnerOfMarket(request, reply, fastify),
+  })
+  fastify.post("/eventMarkets",{
+    schema: Commentary.getEventMarketsByCommentaryId.schema,
+    preHandler : [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "view"
+        })
+    ],
+    handler: (request, reply) => getAllCommentaryEventMarkets(request, reply, fastify),
   })
   
 };

@@ -91,7 +91,7 @@ const {
 const { getAllPlayersByTeamIdQuery } = require("../repository/TableTeams");
 const { handleMarketCloseService, updateComInMarketService, suspendMarketService } = require("./eventMarket");
 const { createMarketOddsBallByBallBYID, deleteMarketOddsBallByBall, createMarketOddsBallInSaveDetails } = require("../repository/TableMarketOddsBallByBall");
-const { getEventMarketRatioQuery, closeEventMarketByCIdQuery, getMarketsByCategoryQuery, getEventMarketByIdsQuery, getMarketsByComIdQuery, updateEventMarketCloseQuery, getMarCountByComQuery, getExtrenalMarketQuery } = require("../repository/TableEventMarkets");
+const { getEventMarketRatioQuery, closeEventMarketByCIdQuery, getMarketsByCategoryQuery, getEventMarketByIdsQuery, getMarketsByComIdQuery, updateEventMarketCloseQuery, getMarCountByComQuery, getExtrenalMarketQuery, getEventMarketsByCommId } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
 const { commentaryLogger, errorLogger } = require("../utilities/logger");
 const { setCompEventSnapSerice } = require("./competitionEventSnap");
@@ -9776,6 +9776,18 @@ const getRunnerOfMarketService = async (request, fastify) => {
     throw new Error(error);
   }
 };
+
+const getEventMarketAndRunnersService = async (request, fastify) => {
+  const { commentaryId } = request.body;
+
+  const validate = global.tblCommentaries.find((item) => item.commentaryId === commentaryId);
+  if(!validate) {
+    throw new Error("Commentary with this ID not found");
+  }
+  const result = await getEventMarketsByCommId(commentaryId, request, fastify);
+
+  return result;
+};
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -9850,5 +9862,6 @@ module.exports = {
   deleteEventResultService,
   isCountInPointCommentaryService,
   multiIsCountInPointCommentaryService,
-  getRunnerOfMarketService
+  getRunnerOfMarketService,
+  getEventMarketAndRunnersService,
 };
