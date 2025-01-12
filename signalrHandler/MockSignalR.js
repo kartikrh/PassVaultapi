@@ -865,6 +865,17 @@ const updateMarketRunnerDataOnSocket = async (message) => {
                 socket.client.emit("updateRunnerData", runnerValues);
             });
         }
+        runnerValues.forEach((market) => {
+            const roomName = `runnerRoom-${market.eventRefId}`;
+            const clientsInRoom = global.socketIo.sockets.adapter.rooms.get(roomName);
+
+            if (clientsInRoom?.size) {
+                global.socketIo.to(roomName).emit("marketRunners", {
+                    eventId: market.eventRefId,
+                    value: [market]
+                });
+            }
+        });
     } catch (error) {
         errorLogger(
             _fastify,

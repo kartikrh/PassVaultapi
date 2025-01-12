@@ -392,11 +392,22 @@ const ImportMarketWithRunnerService = async (request, fastify) => {
     if (request.body.runner.length > 0) {
       let runnders = request.body.runner;
       for (let runner of runnders) {
+        let commentaryData = global.tblCommentaries.find((item) => item.eventRefId == request.body.eventId);
+        if(commentaryData){
+          let team1Name = global.tblTeams.find((team) => 
+            (team.teamId === commentaryData.team1Id || team.teamId === commentaryData.team2Id) &&
+            team.teamName.toLowerCase().trim() === runner.runnerName.toLowerCase().trim()
+          ) 
+          if(team1Name){
+            runner.teamId = team1Name.teamId
+          }
+        }
         let setMarketRunnders;
         let obje = {
           marketID: setEventsMarket.eventMarketId,
           runnerName: runner.runnerName,
           selectionID: runner.selectionID,
+          teamId: runner.teamId || null,
         };
         setMarketRunnders = await createOrUpdateEventRunnerMarketManualQuery(
           obje,
