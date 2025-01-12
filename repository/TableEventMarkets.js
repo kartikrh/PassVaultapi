@@ -1735,7 +1735,7 @@ const createOrUpdateEventRunnerMarketManualQuery = async (
       // Record exists, perform update
       query = `
         UPDATE "tblMarketRunners"
-        SET "wrRunner" = $2, "wrSelectionId" = $3,"wrEventMarketId" = $4
+        SET "wrRunner" = $2, "wrSelectionId" = $3,"wrEventMarketId" = $4, "wrTeamId" = $5
         WHERE "wrRunnerId" = $1
         RETURNING "wrRunnerId" as "runnerId"
       `;
@@ -1744,6 +1744,7 @@ const createOrUpdateEventRunnerMarketManualQuery = async (
         data.runnerName,
         data.selectionID,
         data.marketID,
+        data.teamId,
       ];
     } else {
       // Record does not exist, perform insert
@@ -1751,11 +1752,12 @@ const createOrUpdateEventRunnerMarketManualQuery = async (
         INSERT INTO "tblMarketRunners"(
           "wrEventMarketId",
           "wrRunner",
-          "wrSelectionId"
-        ) VALUES ($1, $2, $3)
+          "wrSelectionId",
+          "wrTeamId"
+        ) VALUES ($1, $2, $3, $4)
         RETURNING "wrRunnerId" as "runnerId"
       `;
-      queryParams = [data.marketID, data.runnerName, data.selectionID];
+      queryParams = [data.marketID, data.runnerName, data.selectionID, data.teamId];
     }
 
     const result = await fastify.db.query(query, {
@@ -4017,6 +4019,7 @@ const getEventMarketsByCommId = async (commentaryId, request, fastify) => {
           tem."wrCloseTime" as "closeTime",
           tem."wrOpenTime" as "openTime",
           tem."wrSettledTime" as "settledTime",
+          tem."wrLastUpdate" as "lastUpdate",
           tem."wrRateSource" as "rateSource",
           tem."wrRateSourceRefID" as "rateSourceRefId",
           tem."wrMarketTypeId" as "marketTypeId",
@@ -4080,6 +4083,51 @@ const getEventMarketsByCommId = async (commentaryId, request, fastify) => {
   }
 }
 
+const socketMarketRunnerDataQuery = async (eventRefId, fastify) => {
+  try {
+    const query = 
+    `SELECT 
+          tem."wrID" as "eventMarketId",
+          tem."wrEventRefID" as "eventRefId",
+          COALESCE(
+              json_agg(
+                  json_build_object(
+                      'runnerId', tmr."wrRunnerId",
+                      'runner', tmr."wrRunner",
+                      'selectionId', tmr."wrSelectionId",
+                      'backPrice', tmr."wrBackPrice",
+                      'layPrice', tmr."wrLayPrice",
+                      'backSize', tmr."wrBackSize",
+                      'laySize', tmr."wrLaySize",
+                      'teamId', tmr."wrTeamId",
+                      'teamName', tt."wrTeamName"
+                  ) 
+              ) FILTER (WHERE tmr."wrRunnerId" IS NOT NULL), 
+              '[]'::json
+          ) as "runner"
+      FROM "tblEventMarkets" tem
+      LEFT JOIN "tblMarketRunners" tmr ON tmr."wrEventMarketId" = tem."wrID" AND tmr."wrIsDeleted" = false
+      LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = tmr."wrTeamId" AND tmr."wrIsDeleted" = false
+      WHERE tem."wrEventRefID" = $1 AND tem."wrIsDeleted" = false
+      GROUP BY tem."wrID"`;
+
+        return await fastify.db.query(query, {
+          type: fastify.db.QueryTypes.SELECT,
+          bind: [
+            eventRefId,
+          ],
+        });
+
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/getEventMarketsByCommId",
+      null
+    );
+    throw new Error(error.message);
+  }
+}
 
 module.exports = {
   getAllEventMarketsQuery,
@@ -4151,5 +4199,6 @@ module.exports = {
   pbfMarketQuery,
   getExtrenalMarketQuery,
   getEventMarketsByCommId,
+  socketMarketRunnerDataQuery,
 }
 
