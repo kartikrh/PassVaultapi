@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const { errorLogger } = require("./utilities/logger");
-const { getEventMarketByIdsQuery, insertTimeLogs, updateTimeLogs } = require("./repository/TableEventMarkets");
+const { getEventMarketByIdsQuery, insertTimeLogs, updateTimeLogs, socketMarketRunnerDataQuery } = require("./repository/TableEventMarkets");
 const { MarketActionType } = require("./utilities");
 const {createMarketOddsBallByBallBYIDFromSocketIo,createMarketOddsBallInSaveDetails,CheckAndCreateMarketOddsBallInSaveDetails} = require("./repository/TableMarketOddsBallByBall")
 const configConstants = require('./utilities/configConstants');
@@ -168,6 +168,51 @@ const connection = (socket , fastify) => {
       console.error("error:", error);
     }
   });
+  
+  socket.on("marketRunnerConnection", (eventIds) => {
+    try {
+      if (eventIds) {
+        eventIds.forEach(async (eventId) => {
+          const roomName = `runnerRoom-${eventId}`;
+          socket.join(roomName);
+          const runnerDetails = await socketMarketRunnerDataQuery(eventId, fastify);
+          if (runnerDetails && runnerDetails.length > 0) {          
+            socket.emit('marketRunners', {
+              eventId: eventId,
+              value: runnerDetails,
+            });
+          } else {
+            socket.emit('marketRunners', {
+              eventId: eventId,
+              value: null,
+            });
+          }
+        });
+      }
+    } catch (err) {
+      console.log("Error in marketRunnerConnection", err?.message || err);
+    }
+  });
+
+  socket.on("marketRunnerUpdate", (data) => {
+    try {
+      data.forEach((item) => {
+        const roomName = `runnerRoom-${item.eventRefId}`;
+        const clientsInRoom =
+          global.socketIo.sockets.adapter.rooms.get(roomName);
+
+        if (clientsInRoom?.size) {
+          global.socketIo.to(roomName).emit("marketRunners", {
+            eventId: item.eventRefId,
+            value: [item],
+          });
+        }
+      });
+    } catch (error) {
+      console.log("Error in updatedRunnersData:", error?.message || error);
+    }
+  });
+
   // socket.on("updatedEventMarket", async (data) => {
   //   try {
   //     let MarketArr = [];
