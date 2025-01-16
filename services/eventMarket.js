@@ -48,6 +48,8 @@ const {
   playerMarketQuery,
   boundaryMarketQuery,
   pbfMarketQuery,
+  getManualMarketDataQuery,
+  saveManualMarketQuery,
 } = require("../repository/TableEventMarkets");
 const { getRunnerByIdQuery, setResultInRunnerMarketQuery, getRunnerByMarketQuery } = require("../repository/TableMarketRunner");
 const configConstants = require("../utilities/configConstants");
@@ -805,7 +807,8 @@ const updateMarketRateService = async (request, fastify) => {
         commentary_id: commentary.commentaryId,
         status: request.body.eventMarket[0].status,
         match_type_id: commentary.matchTypeId,
-        is_open_market:isOpenMarket  
+        is_open_market:isOpenMarket ,
+        player_id : null
       },
       "/api/v1/updatemarketstatus",
       fastify,
@@ -2349,7 +2352,8 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
           commentary_id: commentary.commentaryId,
           status: request.body.eventMarket[0].status,
           match_type_id: commentary.matchTypeId,
-          is_open_market:isOpenMarket  
+          is_open_market:isOpenMarket,
+          player_id : null 
         },
         "/api/v1/updatemarketstatus",
         fastify,
@@ -2712,9 +2716,56 @@ const suspendMarketService = async (data,request, fastify) => {
     global.socketIo.to(commentaryId).emit("updateMarketData", result);
   }
   return true;
+}
+const getManualMarketDataService = async (request, fastify) => {
+  const { commentaryId } = request.body;
+  let com = global.tblCommentaries.find((item) => item.commentaryId === commentaryId);
+  if(!com){
+    throw new Error("Commentary with this id not Found");
+  }
+  let marCat = global.tblMarketTypeCategories.find(
+    (item) => item.categoryName.toLowerCase() === "manualodds"
+  );
+  let market = await getManualMarketDataQuery({
+    commentaryId: commentaryId,
+    marketTypeId : MarketTypeId.ManualOdds,
+    marketTypeCategoryId : marCat.marketTypeCategoryId
+  },request, fastify);
 
+  let comTeam = global.tblCommentaryTeams.filter(
+    (item) => item.commentaryId === commentaryId
+  ).reduce((acc, current) => {
+    if (!acc.some(item => item.teamId === current.teamId)) {
+      acc.push(current);
+    }
+    return acc;
+  }, []).map((item) => {
+    return {
+      teamId: item.teamId,
+      teamName: item.teamName,
+    };
+  }
+  );
 
-
+  let data = {
+    comDetails : {
+      commentaryId: com.commentaryId,
+      eventName: com.eventName,
+      eventDate: com.eventDate,
+      eventRefId: com.eventRefId
+    },
+    teams: comTeam,
+    market: market
+  }
+  return data;
+}
+const saveManualMarketDataService = async (request, fastify) => {
+  let com = global.tblCommentaries.find((item) => item.commentaryId === request.body.commentaryId);
+  if(!com){
+    throw new Error("Commentary with this id not Found");
+  }
+  await saveManualMarketQuery(request.body, request, fastify);
+  return "Market saved successfully";
 }
 module.exports = {
   getDetailsByCIdService,
@@ -2760,5 +2811,7 @@ module.exports = {
   updateEventMarketCloseSuspendTimeService,
   closeEventMarketsByIdsService,
   cancelEventMarketsByIdsService,
-  suspendMarketService
+  suspendMarketService,
+  getManualMarketDataService,
+  saveManualMarketDataService
 };
