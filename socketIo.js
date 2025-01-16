@@ -177,15 +177,9 @@ const connection = (socket , fastify) => {
           socket.join(roomName);
           const runnerDetails = await socketMarketRunnerDataQuery(eventId, fastify);
           if (runnerDetails && runnerDetails.length > 0) {          
-            socket.emit('marketRunners', {
-              eventId: eventId,
-              value: runnerDetails,
-            });
+            socket.emit('marketRunners', runnerDetails);
           } else {
-            socket.emit('marketRunners', {
-              eventId: eventId,
-              value: null,
-            });
+            socket.emit('marketRunners', []);
           }
         });
       }
@@ -197,15 +191,12 @@ const connection = (socket , fastify) => {
   socket.on("marketRunnerUpdate", (data) => {
     try {
       data.forEach((item) => {
-        const roomName = `runnerRoom-${item.eventRefId}`;
+        const roomName = `runnerRoom-${item.eventMarketId}`;
         const clientsInRoom =
           global.socketIo.sockets.adapter.rooms.get(roomName);
 
         if (clientsInRoom?.size) {
-          global.socketIo.to(roomName).emit("marketRunners", {
-            eventId: item.eventRefId,
-            value: [item],
-          });
+          global.socketIo.to(roomName).emit("marketRunners", [item]);
         }
       });
     } catch (error) {
