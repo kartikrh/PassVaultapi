@@ -2421,7 +2421,6 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
   // }));
   let data = await marketListByCIdService({ body: { commentaryId: commentary.commentaryId } }, fastify);
   // data.callPrediction = callPredictions;
-
  return data;
 };
 const getRunnerByMarketService = async (request, fastify) => {
