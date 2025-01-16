@@ -2423,7 +2423,6 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
   // data.callPrediction = callPredictions;
 
  return "Event Market updated successfully";
-
 };
 const getRunnerByMarketService = async (request, fastify) => {
   let data = await getRunnerByMarketQuery(request, fastify);
