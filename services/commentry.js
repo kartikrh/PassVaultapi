@@ -4123,7 +4123,7 @@ const saveShortCommentaryService = async (request, fastify) => {
 };
 
 const updateCommentaryStatusService = async (request, fastify) => {
-  const { commentaryId, displayStatus } = request.body;
+  const { commentaryId, displayStatus , commentaryPlayerId } = request.body;
 
   // Validate input
   if (!commentaryId || displayStatus === undefined) {
@@ -4150,7 +4150,8 @@ const updateCommentaryStatusService = async (request, fastify) => {
         commentary_id: commentaryId,
         status: EventMarketStatus.Suspend,
         match_type_id: global.tblCommentaries[index].matchTypeId,
-        is_open_market: false
+        is_open_market: false,
+        player_id : commentaryPlayerId || null
       },
       "/api/v1/updatemarketstatus",
       fastify,
@@ -4237,21 +4238,6 @@ const updateCommentaryStatusService = async (request, fastify) => {
     // });
   }
   commentaryDetails.callPredictions = callPredictions;
-  // Return the updated commentary detailss
-  // if (global.tblCommentaries[index].isPredictMarket) {
-  //   suspendMarketService({
-  //     commentaryId: commentaryId,
-  //   }, request, fastify)
-  //     .catch((err) => {
-  //       console.log("suspendMarketService console", err);
-  //       errorLogger(
-  //         fastify,
-  //         err.message,
-  //         "ERROR --> services/commentary.js/updateCommentaryStatusService - suspendMarketService",
-  //         request
-  //       );
-  //     });
-  // }
   return {
     name: "commentaryDetails",
     value: commentaryDetails,

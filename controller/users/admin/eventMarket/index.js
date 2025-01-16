@@ -1,4 +1,4 @@
-const { getDetailsByCIdService, getAllEventMarketsService, createEventMarketsService, deleteEventMarketsService, activeInactiveMarketsService, updateAllowMarketsService, getEventListByCompetitionIdsService, marketListResultFalseService, changeResultOfMarketService, changeMarketCancelService, changeMarketResultService, marketListByCIdService, saveEventMarketService, updateMarketRateService, changeMarketCloseService, suspendMarketByCIdService, getEventMarketByIdService, marketTemplateTypeService, commentaryTypeService, setDelayEventMarketService, getDSReportEventMarketService, getSLReportEventMarketService, getMarketDataByCIdService,UpdateResulOrApproveEventMarketService, getMarketTypeCategoryService,marketListcategoryNameByCIdService, setAllMarketCloseService, setCloseMarketCancelService, getAllEventMarketsAndRunnersService, cancelSettleMarketService,getDetailsByCIdV1Service, createEventMarketsServiceV1, updateMarketRateServiceV1, marketListByCIdServiceV1, getRunnerByMarketService, pendingMultiRunnerMarketsService, updateMarketResultService, getComByCompIdService, updateEventMarketCloseSuspendTimeService, closeEventMarketsByIdsService, cancelEventMarketsByIdsService } = require("../../../../services/eventMarket");
+const { getDetailsByCIdService, getAllEventMarketsService, createEventMarketsService, deleteEventMarketsService, activeInactiveMarketsService, updateAllowMarketsService, getEventListByCompetitionIdsService, marketListResultFalseService, changeResultOfMarketService, changeMarketCancelService, changeMarketResultService, marketListByCIdService, saveEventMarketService, updateMarketRateService, changeMarketCloseService, suspendMarketByCIdService, getEventMarketByIdService, marketTemplateTypeService, commentaryTypeService, setDelayEventMarketService, getDSReportEventMarketService, getSLReportEventMarketService, getMarketDataByCIdService,UpdateResulOrApproveEventMarketService, getMarketTypeCategoryService,marketListcategoryNameByCIdService, setAllMarketCloseService, setCloseMarketCancelService, getAllEventMarketsAndRunnersService, cancelSettleMarketService,getDetailsByCIdV1Service, createEventMarketsServiceV1, updateMarketRateServiceV1, marketListByCIdServiceV1, getRunnerByMarketService, pendingMultiRunnerMarketsService, updateMarketResultService, getComByCompIdService, updateEventMarketCloseSuspendTimeService, closeEventMarketsByIdsService, cancelEventMarketsByIdsService, getManualMarketDataService, saveManualMarketDataService } = require("../../../../services/eventMarket");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
 
@@ -392,6 +392,24 @@ const cancelMarketsByIds = async (request , reply , fastify)=>{
     reply.status(200).send(error(err.message , ERROR_CODES.SERVER_ERROR , 200))
   }
 }
+const getManualMarketData = async (request , reply , fastify)=>{
+  try {
+    const result = await getManualMarketDataService(request,fastify);
+    reply.status(200).send(success(result , 200))
+  } catch(err){
+    errorLogger(fastify , err.message , path + "/getManualMarketData" , request);
+    reply.status(200).send(error(err.message , ERROR_CODES.SERVER_ERROR , 200))
+  }
+}
+const saveManualMarketData = async (request , reply , fastify)=>{
+  try {
+    const result = await saveManualMarketDataService(request,fastify);
+    reply.status(200).send(success(result , 200))
+  } catch(err){
+    errorLogger(fastify , err.message , path + "/saveManualMarketData" , request);
+    reply.status(200).send(error(err.message , ERROR_CODES.SERVER_ERROR , 200))
+  }
+}
 
 module.exports = {
     getDetailsByCId,
@@ -434,5 +452,6 @@ module.exports = {
     getComByCompId,
     updateEventMarketCloseSuspendTime,
     closeMarketsByIds,
-    cancelMarketsByIds
+    cancelMarketsByIds,
+    getManualMarketData,saveManualMarketData
 };
