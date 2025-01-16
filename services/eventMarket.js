@@ -2075,8 +2075,6 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
   }, request, fastify);
   
   // return updatedData;
-  const playerMarket = [];
-  const boundaryPlayer = [];
   const updatedOvers = [];
   const updatePlayerLine = [];
   const fallOfWicket = [];
@@ -2098,22 +2096,11 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
     let category = global.tblMarketTypeCategories.find(
       (cat) => cat.marketTypeCategoryId === item.marketTypeCategoryId
     );
-    // if(category && category.categoryName.toLowerCase() == "player"){
-    //   playerMarket.push(item);
-    // }
-    
-    // if(category && category.categoryName.toLowerCase() == "player boundaries"){
-    //   boundaryPlayer.push(item);
-    // }
-    // if(category && category.categoryName.toLowerCase() == "player balls faced"){
-    //   pbfMarket.push(item);
-    // }
     if(item.marketTypeId == MarketTypeId.Fancy || item.marketTypeId == MarketTypeId.LineMarket){
       let is_onlyover = 0;
       let lineDiff = allMarkets.find(
         (e) => e.marketId === item.eventMarketId
       )?.lineDiff || 0;
-      // let predefinedValue;
       if(category && 
         category.categoryName.toLowerCase() !== "player" && 
         category.categoryName.toLowerCase() !== "wicket" && 
@@ -2125,13 +2112,6 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
         if(category.categoryName == "Only Over"){
           is_onlyover = 1;
         }
-
-        // let runOld = eventMarkets.find(
-        //   (e) => e.eventMarketId === item.eventMarketId
-        // ).runners;
-        
-        // lineDiff =  item.runners[0].line - runOld[0].line;
-        
         updatedOvers.push({
           over : item.over,
           line_diff: lineDiff != null ? parseFloat(lineDiff.toFixed(2)) : null,  // Ensure float or null if undefined
@@ -2146,20 +2126,6 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
           back_size : item.runners[0].backSize,
           rate_diff : item.rateDiff 
         })
-
-        // if(lineDiff != null){
-        //   if(lineDiff > 0){
-        //     predefinedValue = item.predefinedValue + lineDiff;
-        //   }
-        //   else {
-        //     predefinedValue = item.predefinedValue - Math.abs(lineDiff);
-        //   }
-        //   await updatePredefinedQuery({
-        //     eventMarketId : item.eventMarketId,
-        //     predefinedValue : predefinedValue
-        //   }, request, fastify);
-        //   global.tblEventMarketsV1[index].predefinedValue = predefinedValue;
-        // }  
       }
       if( category &&	
         category.categoryName.toLowerCase() == "player" || 
@@ -2187,11 +2153,6 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
         });
       }
       if(category && category.categoryName.toLowerCase() == "fall of wicket"){
-        // let runOld = eventMarkets.find(
-        //   (e) => e.eventMarketId === item.eventMarketId
-        // ).runners;
-        // let line_diff_wick;
-        // line_diff_wick =  item.runners[0].line - runOld[0].line;
         let line_diff_wick = allMarkets.find(
           (e) => e.marketId === item.eventMarketId
         )?.lineDiff || 0; 
@@ -2211,11 +2172,6 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
         });
       }
       if(category && category.categoryName.toLowerCase() == "partnership boundaries"){
-        // let runOld = eventMarkets.find(
-        //   (e) => e.eventMarketId === item.eventMarketId
-        // ).runners;
-        // let line_diff_wick;
-        // line_diff_wick =  item.runners[0].line - runOld[0].line;
         let line_diff_boun = allMarkets.find(
           (e) => e.marketId === item.eventMarketId
         )?.lineDiff || 0; 
@@ -2266,18 +2222,6 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
         fastify
       )
     }
-    // marketDataLogger(
-    //   {
-    //     eventMarketId: item.eventMarketId,
-    //     commentaryId: item.commentaryId,
-    //     dataTosave: typeof (item.data) === "string" ? JSON.parse(item.data) : item.data,
-    //     updateType: MarketUpdateType.marketUpdateRate,
-    //     isSendData: true
-    //   },
-    //   request,
-    //   fastify
-    // );
-   
   }
   const teamOnStrike = global.tblCommentaryTeams.find(
     (item) =>
@@ -2285,10 +2229,10 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
       item.currentInnings === commentary.currentInnings &&
       item.teamStatus === 1
   );
-  let _resFromPredictAPI;
-  let callPredictions = [];
+  // let _resFromPredictAPI;
+  // let callPredictions = [];
   if (teamOnStrike && request.body.action && (request.body.action.toUpperCase() === "SAVE_ALL")) {
-    _resFromPredictAPI = await callPredictorMarket(
+    callPredictorMarket(
       {
         commentary_id: commentary.commentaryId,
         match_type_id: commentary.matchTypeId,
@@ -2301,21 +2245,21 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
       fastify,
       request
     );
-    let callPrediction = {}
-    // Check for error_msg in the response
-    if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
-      callPrediction.predictioncallSuccess = false;
-      callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
-      callPrediction.endPoint = '/api/v1/updateline';
-    } else {
-      callPrediction.predictioncallSuccess = true;
-      callPrediction.predictionMessage = 'Prediction call successful';
-      callPrediction.endPoint = '/api/v1/updateline';
-    }
-    callPredictions.push(callPrediction);
+    // let callPrediction = {}
+    // // Check for error_msg in the response
+    // if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
+    //   callPrediction.predictioncallSuccess = false;
+    //   callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
+    //   callPrediction.endPoint = '/api/v1/updateline';
+    // } else {
+    //   callPrediction.predictioncallSuccess = true;
+    //   callPrediction.predictionMessage = 'Prediction call successful';
+    //   callPrediction.endPoint = '/api/v1/updateline';
+    // }
+    // callPredictions.push(callPrediction);
     
     if(updatePlayerLine.length > 0 || fallOfWicket.length > 0 || pbMarket.length > 0 || wlbMarket.length > 0){
-      _resFromPredictAPI = await callPredictorMarket(
+      callPredictorMarket(
         {
           commentary_id: commentary.commentaryId,
           match_type_id: commentary.matchTypeId,
@@ -2329,25 +2273,25 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
         fastify,
         request
       );
-      let callPrediction = {}
-      // Check for error_msg in the response
-      if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
-        callPrediction.predictioncallSuccess = false;
-        callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
-        callPrediction.endPoint = '/api/v1/updateplayerline';
-      } else {
-        callPrediction.predictioncallSuccess = true;
-        callPrediction.predictionMessage = 'Prediction call successful';
-        callPrediction.endPoint = '/api/v1/updateplayerline';
-      }
-      callPredictions.push(callPrediction);
+      // let callPrediction = {}
+      // // Check for error_msg in the response
+      // if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
+      //   callPrediction.predictioncallSuccess = false;
+      //   callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
+      //   callPrediction.endPoint = '/api/v1/updateplayerline';
+      // } else {
+      //   callPrediction.predictioncallSuccess = true;
+      //   callPrediction.predictionMessage = 'Prediction call successful';
+      //   callPrediction.endPoint = '/api/v1/updateplayerline';
+      // }
+      // callPredictions.push(callPrediction);
     }
   }
   if(commentary.isPredictMarket && request.body.action && (request.body.action.toUpperCase() === "SUSPEND" || request.body.action.toUpperCase() === "PUBLISH"))
     {
-      _resFromPredictAPI = null;
+      // _resFromPredictAPI = null;
       let isOpenMarket = (request.body.action.toUpperCase() === "SUSPEND" || request.body.action.toUpperCase() === "PUBLISH");
-      _resFromPredictAPI = await callPredictorMarket(
+      callPredictorMarket(
         {
           commentary_id: commentary.commentaryId,
           status: request.body.eventMarket[0].status,
@@ -2359,18 +2303,18 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
         fastify,
         request
       );
-      let callPrediction = {}
-      // Check for error_msg in the response
-      if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
-        callPrediction.predictioncallSuccess = false;
-        callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
-        callPrediction.endPoint = '/api/v1/updatemarketstatus';
-      } else {
-        callPrediction.predictioncallSuccess = true;
-        callPrediction.predictionMessage = 'Prediction call successful';
-        callPrediction.endPoint = '/api/v1/updatemarketstatus';
-      }
-      callPredictions.push(callPrediction);
+      // let callPrediction = {}
+      // // Check for error_msg in the response
+      // if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
+      //   callPrediction.predictioncallSuccess = false;
+      //   callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
+      //   callPrediction.endPoint = '/api/v1/updatemarketstatus';
+      // } else {
+      //   callPrediction.predictioncallSuccess = true;
+      //   callPrediction.predictionMessage = 'Prediction call successful';
+      //   callPrediction.endPoint = '/api/v1/updatemarketstatus';
+      // }
+      // callPredictions.push(callPrediction);
   }
   // if(playerMarket.length > 0){
   //   for (let p of playerMarket){
@@ -2475,11 +2419,10 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
   //   categoryName: item.categoryName,
   //   displayOrder: item.displayOrder
   // }));
-  let data = await marketListByCIdService({ body: { commentaryId: commentary.commentaryId } }, fastify);
-  data.callPrediction = callPredictions;
+  // let data = await marketListByCIdService({ body: { commentaryId: commentary.commentaryId } }, fastify);
+  // data.callPrediction = callPredictions;
 
- return data;
-
+ return "Event Market updated successfully";
 };
 const getRunnerByMarketService = async (request, fastify) => {
   let data = await getRunnerByMarketQuery(request, fastify);
