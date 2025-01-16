@@ -557,6 +557,7 @@ const marketListByCIdService = async (request, fastify) => {
   //   bowlerEconomy: player.bowlerEconomy,
   //   bowlerAverage: player.bowlerAverage,
   // }));
+  
   return {
     marketList,
     // teams,
