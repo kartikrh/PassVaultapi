@@ -4083,7 +4083,7 @@ const getEventMarketsByCommId = async (commentaryId, request, fastify) => {
   }
 }
 
-const socketMarketRunnerDataQuery = async (eventRefId, fastify) => {
+const socketMarketRunnerDataQuery = async (eventId, fastify) => {
   try {
     const query = 
     `SELECT 
@@ -4108,14 +4108,12 @@ const socketMarketRunnerDataQuery = async (eventRefId, fastify) => {
       FROM "tblEventMarkets" tem
       LEFT JOIN "tblMarketRunners" tmr ON tmr."wrEventMarketId" = tem."wrID" AND tmr."wrIsDeleted" = false
       LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = tmr."wrTeamId" AND tmr."wrIsDeleted" = false
-      WHERE tem."wrEventRefID" = $1 AND tem."wrRateSource" = 2 AND tem."wrIsDeleted" = false
+      WHERE tem."wrID" = $1 AND tem."wrIsDeleted" = false
       GROUP BY tem."wrID"`;
 
         return await fastify.db.query(query, {
           type: fastify.db.QueryTypes.SELECT,
-          bind: [
-            eventRefId,
-          ],
+          bind: [eventId],
         });
 
   } catch (error) {
