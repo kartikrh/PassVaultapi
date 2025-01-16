@@ -522,28 +522,28 @@ const marketListByCIdService = async (request, fastify) => {
   );
 
   // get the team and teamName by commentaryId
-  const teams = global.tblCommentaryTeams
-    .filter((item) => item.commentaryId === commentaryId)
-    .reduce((acc, current) => {
-      if (!acc.some(item => item.teamId === current.teamId)) {
-        acc.push(current);
-      }
-      return acc;
-    }, [])
-    .map((item) => {
-      return {
-        teamId: item.teamId,
-        teamName: item.teamName,
-      };
-    });
-  // 
-  let categories = global.tblMarketTypeCategories.filter(
-    (item) => item.marketTypeCategoryId > 0
-  ).map(item => ({
-    marketTypeCategoryId: item.marketTypeCategoryId,
-    categoryName: item.categoryName,
-    displayOrder: item.displayOrder
-  }));
+  // const teams = global.tblCommentaryTeams
+  //   .filter((item) => item.commentaryId === commentaryId)
+  //   .reduce((acc, current) => {
+  //     if (!acc.some(item => item.teamId === current.teamId)) {
+  //       acc.push(current);
+  //     }
+  //     return acc;
+  //   }, [])
+  //   .map((item) => {
+  //     return {
+  //       teamId: item.teamId,
+  //       teamName: item.teamName,
+  //     };
+  //   });
+  // // 
+  // let categories = global.tblMarketTypeCategories.filter(
+  //   (item) => item.marketTypeCategoryId > 0
+  // ).map(item => ({
+  //   marketTypeCategoryId: item.marketTypeCategoryId,
+  //   categoryName: item.categoryName,
+  //   displayOrder: item.displayOrder
+  // }));
 
   // let players = global.tblCommentaryPlayers
   // .filter((item) => item.commentaryId === commentaryId)
