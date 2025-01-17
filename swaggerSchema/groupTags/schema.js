@@ -4190,6 +4190,67 @@ const EventMarket = {
       },
     },
   },
+  getManualMarket: {
+    schema: {
+      tags: ["EventMarket"],
+      description: "get all Manual Market",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+        },
+        required: ["commentaryId"],
+      },
+    },
+  },
+  saveManualMarket:{
+    schema : {
+      tags : ["EventMarket"],
+      description : "save Manual Market",
+      security : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          commentaryId : {type : "integer"},
+          eventRefId : {type : "string"},
+          inningsId : {type : "integer"},
+          marketName : {type : "string"},
+          isActive : {type : "boolean"},
+          isAllow : {type : "boolean"},
+          marketTypeId : {type : "integer"},
+          marketTypeCategoryId : {type : "integer"},
+          delay : {type : "integer"},
+          lineRatio : {type : "number"},
+          rateSourceRefID : {type : "string"},
+          rateDiff : {type : "number"},
+          runners : {
+            type : "array",
+            properties : {
+              runner : {type : "string"},
+              selectionId : {type : "integer"},
+            },
+            required : []
+          }
+        },
+        required : [
+          "commentaryId",
+          "eventRefId",
+          "inningsId",
+          "marketName",
+          "isActive",
+          "isAllow",
+          "marketTypeId",
+          "marketTypeCategoryId",
+          "delay",
+          "lineRatio",
+          "rateSourceRefID",
+          "rateDiff",
+          "runners"
+        ]
+      }
+    }
+  },
   getComByComp:{
     schema : {
       tags : ["EventMarket"],

@@ -866,14 +866,11 @@ const updateMarketRunnerDataOnSocket = async (message) => {
             });
         }
         runnerValues.forEach((market) => {
-            const roomName = `runnerRoom-${market.eventRefId}`;
+            const roomName = `runnerRoom-${market.eventMarketId}`;
             const clientsInRoom = global.socketIo.sockets.adapter.rooms.get(roomName);
 
             if (clientsInRoom?.size) {
-                global.socketIo.to(roomName).emit("marketRunners", {
-                    eventId: market.eventRefId,
-                    value: [market]
-                });
+                global.socketIo.to(roomName).emit("marketRunners", [market]);
             }
         });
     } catch (error) {
