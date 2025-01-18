@@ -2103,13 +2103,10 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
         (e) => e.marketId === item.eventMarketId
       )?.lineDiff || 0;
       if(category && 
-        category.categoryName.toLowerCase() !== "player" && 
-        category.categoryName.toLowerCase() !== "wicket" && 
-        category.categoryName.toLowerCase() !== "player boundaries" &&
-        category.categoryName.toLowerCase() !== "player balls faced" &&
-        category.categoryName.toLowerCase() !== "fall of wicket" 
+        category.categoryName.toLowerCase() == "session" || 
+        category.categoryName.toLowerCase() == "only over" || 
+        category.categoryName.toLowerCase() == "over session" 
       ){
-
         if(category.categoryName == "Only Over"){
           is_onlyover = 1;
         }
