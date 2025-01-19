@@ -118,8 +118,12 @@ module.exports = async function (fastify, opts) {
       });
     });
     cron.schedule('0 0 * * *', async () => {
-      // Fetching data from db every 24 hrs once(at midnight)
-      await FetchingCommentariesDataFromCron(fastify);
+      try {
+        // Fetching data from db every 24 hrs once(at midnight)
+        await FetchingCommentariesDataFromCron(fastify);
+      } catch (error) {
+        console.error("Error during scheduled task:", error);
+      }
     });
 
     // .after(async () => {
