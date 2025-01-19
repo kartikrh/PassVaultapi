@@ -212,6 +212,112 @@ const predictorLogsByIdService = async (request, fastify) => {
   }
 };
 
+const commentaryDetailsByIdsssService = async (request, fastify) => {
+  const { isStopLoadCommerty = false, commentaryId } = request.body;
+
+  if (!commentaryId) {
+    throw new Error("Commentary ID is required");
+  }
+
+  // Fetch commentary details
+  const commentary = global.tblCommentaries.find((item) => item?.commentaryId === commentaryId);
+  if (!commentary) {
+    throw new Error("Commentary with this ID not Found");
+  }
+
+  // Fetch related data in parallel
+  const [eventType, competition, matchType, commentaryTeams, commentaryPlayers, commentaryOvers, commentaryBallByBall, commentaryWicket, commentaryPartnership, commentaryDisplayStatus, shotTypes] = await Promise.all([
+    global.tblEventTypes.find((eventType) => eventType.eventTypeId === commentary.eventTypeId),
+    global.tblCompetitions.find((competition) => competition.competitionId === commentary.competitionId),
+    global.tblMatchTypes.find((matchType) => matchType.matchTypeId === commentary.matchTypeId),
+    global.tblCommentaryTeams.filter((item) => item?.commentaryId === commentaryId).sort((a, b) => b.commentaryTeamId - a.commentaryTeamId),
+    global.tblCommentaryPlayers.filter((item) => item?.commentaryId === commentaryId).sort((a, b) => b.commentaryPlayerId - a.commentaryPlayerId),
+    global.tblOvers.filter((item) => item?.commentaryId === commentaryId).sort((a, b) => b.overId - a.overId),
+    global.tblCommentaryBallByBall.filter((item) => item?.commentaryId === commentaryId).sort((a, b) => b.commentaryBallByBallId - a.commentaryBallByBallById),
+    global.tblCommentaryWicket.filter((item) => item?.commentaryId === commentaryId).sort((a, b) => b.commentaryWicketId - a.commentaryWicketId),
+    global.tblCommentaryPartnership.filter((item) => item?.commentaryId === commentaryId).sort((a, b) => b.commentaryPartnershipId - a.commentaryPartnershipId),
+    global.tblDisplayStatus.filter((item) => item.displayStatusId !== 0),
+    global.tblShotType.filter((item) => item?.isActive === true).sort((a, b) => a.displayOrder - b.displayOrder),
+  ]);
+
+  // Build commentary details
+  const dataToReturn = {
+    eid: commentary.eventRefId || "",
+    ety: eventType?.eventType || "",
+    mtyp: commentary.matchType || "",
+    hmtyp: commentary.historyMatchType || "",
+    com: competition?.competition || "",
+    en: commentary.eventName || "",
+    ed: convertDate(commentary.eventDate, "DD/MM/YYYY") || "",
+    et: convertDate(commentary.eventDate, "hh:mm:ss") || "",
+    cci: commentary.currentInnings,
+  };
+
+  // Predict market logic
+  let callPrediction = {};
+  if (
+    !isStopLoadCommerty &&
+    commentary.isPredictMarket &&
+    (commentary.commentaryStatus == 2 || commentary.commentaryStatus == 3)
+  ) {
+    const teamOnStrike = commentaryTeams.find(
+      (item) =>
+        item.currentInnings === commentary.currentInnings && item.teamStatus === 1
+    );
+
+    if (teamOnStrike) {
+      const eventMarketLine = await getEventMarketRatioQuery(
+        { commentaryId, teamId: teamOnStrike.teamId },
+        request,
+        fastify
+      );
+
+      let key1 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTBALLFACED);
+      let key2 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTPLAYERBOUNDARIES);
+      let key3 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTPLAYERRUNS);
+
+      const predictionResponse = await callPredictorMarket(
+        {
+          commentary_id: commentaryId,
+          match_type_id: commentary.matchTypeId,
+          event_id: commentary.eventRefId,
+          line_ratio_data: eventMarketLine,
+          default_ball_faced: parseInt(key1?.value) || 0,
+          default_player_boundaries: parseInt(key2?.value) || 0,
+          default_player_runs: parseInt(key3?.value) || 0,
+        },
+        "/api/v1/loadcommentary",
+        fastify,
+        request
+      );
+
+      if (predictionResponse?.data?.error_msg) {
+        callPrediction = {
+          predictioncallSuccess: false,
+          predictionMessage: predictionResponse.data.error_msg,
+          endPoint: "/api/v1/loadcommentary",
+        };
+      }
+    }
+  }
+
+  // Assemble final response
+  const allDetails = {
+    commentaryDetails: { ...commentary, ...dataToReturn },
+    matchTypeDetails: matchType,
+    commentaryTeams,
+    commentaryPlayers,
+    commentaryOvers,
+    commentaryBallByBall,
+    commentaryWicket,
+    commentaryPartnership,
+    commentaryDisplayStatus,
+    callPrediction,
+    shotTypes,
+  };
+  return allDetails;
+};
+
 const commentaryDetailsByIdService = async (request, fastify) => {
   let isStopLoadCommerty = false;
   if (request.body.isStopLoadCommerty) {
@@ -9850,4 +9956,5 @@ module.exports = {
   multiIsCountInPointCommentaryService,
   getRunnerOfMarketService,
   getEventMarketAndRunnersService,
+  commentaryDetailsByIdsssService
 };
