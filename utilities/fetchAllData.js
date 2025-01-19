@@ -273,4 +273,41 @@ const fetchAllDataFromDb = async (fastify, reply) => {
   }
 };
 
-module.exports = fetchAllDataFromDb;
+const FetchingCommentariesDataFromCron = async (fastify, reply) => {
+  try {
+    const getAllCommentary = await getAllCommentaryQuery(fastify);
+    const getAllCommentaryPlayer = await getAllCommentaryPlayerQuery(fastify);
+    const getAllCommentaryTeams = await getAllCommentaryTeamsQuery(fastify);
+    const getAllCommentaryBallByBall = await getAllCommentaryBallByBallQuery(fastify);
+    const getAllOvers = await getAllOversQuery(fastify);
+    const getAllCommentaryWicket = await getAllCommentaryWicketQuery(fastify);
+    const getAllCommentaryPartnership = await getAllCommentaryPartnershipQuery(fastify);
+  
+    global.tblCommentaries = getAllCommentary;
+    global.tblCommentaryTeams = getAllCommentaryTeams;
+    global.tblCommentaryPlayers = getAllCommentaryPlayer;
+    global.tblCommentaryBallByBall = getAllCommentaryBallByBall;
+    global.tblOvers = getAllOvers;
+    global.tblCommentaryWicket = getAllCommentaryWicket;
+    global.tblCommentaryPartnership = getAllCommentaryPartnership;
+
+    console.log("Commentary data updated in via node-cron successfully");
+
+    if (reply) {
+      reply.status(200).send({
+        status: 200,
+        message: "Data fetched via cron-job successfully",
+      });
+    }
+  } catch (error) {
+    console.log("error in FetchingCommentariesDataFromCron", error.message,error);
+    if (reply) {
+      reply.status(200).send({
+        status: 200,
+        error: error.message,
+      });
+    }
+  }
+}
+
+module.exports = { fetchAllDataFromDb, FetchingCommentariesDataFromCron };
