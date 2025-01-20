@@ -63,7 +63,7 @@ const getAllCommentaryQuery = async (fastify) => {
 	  LEFT JOIN "tblCompetitions" co ON tc."wrCompetitionId" = co."wrCompetitionId"
     LEFT JOIN "tblUsers" tu ON tc."wrCreatedBy" = tu."WrUserId"
     WHERE (tc."wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days'
-    AND tc."wrCommentaryStatus" = 4)
+    AND tc."wrCommentaryStatus" = 4 AND tc."wrIsDelete" = false)
     OR tc."wrCommentaryStatus" != 4
     AND tc."wrIsDelete" = false;`,
     {
