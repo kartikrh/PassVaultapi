@@ -70,7 +70,6 @@ const {
   multiIsCountInPointCommentaryService,
   getRunnerOfMarketService,
   getEventMarketAndRunnersService,
-  commentaryDetailsByIdsssService,
 } = require("../../../../services/commentry");
 const { getEventSnapByComService, updateEventSnapByComService } = require("../../../../services/competitionEventSnap");
 const { getAllCommentariesDataService } = require("../../../../services/score");
@@ -113,15 +112,6 @@ const getCommentaryDetailsById = async (request, reply, fastify) => {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, path + "/getCommentaryById", request);
-    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
-  }
-};
-const getCommentaryDetailssById = async (request, reply, fastify) => {
-  try {
-    const result = await commentaryDetailsByIdsssService(request, fastify);
-    reply.status(200).send(success(result, 200));
-  } catch (err) {
-    errorLogger(fastify, err.message, path + "/getCommentaryDetailssById", request);
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
@@ -1038,5 +1028,4 @@ module.exports = {
   multiIsCountInPointCommentary,
   getRunnerOfMarket,
   getAllCommentaryEventMarkets,
-  getCommentaryDetailssById
 }
