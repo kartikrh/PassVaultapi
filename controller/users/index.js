@@ -35,7 +35,8 @@ const {
   verifyMobileOtpService
 } = require("../../services/user");
 const { errorLogger,updateWebRequestLogs } = require("../../utilities/logger");
-const fetchAllDataFromDb = require("../../utilities/fetchAllData");
+// const fetchAllDataFromDb = require("../../utilities/fetchAllData");
+const { fetchAllDataFromDb, panelLoadDataByEnum } = require("../../utilities/fetchAllData");
 const { ckImageUploadService, imgUploadService } = require("../../services/ckImage");
 
 let commonPath = "controller/users";
@@ -110,6 +111,17 @@ const loadDataInMemory = async (request, reply, fastify) => {
       throw new Error("You are not authorized to perform this action");
     }
     await fetchAllDataFromDb(fastify, reply);
+  } catch (err) {
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
+const loadPanelDataInGlobal = async (request, reply, fastify) => {
+  try {
+    if (!request.userTokenInfo.WrIsSuperAdmin) {
+      throw new Error("You are not authorized to perform this action");
+    }
+    await panelLoadDataByEnum(request, fastify, reply);
   } catch (err) {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
@@ -469,4 +481,5 @@ module.exports = {
   verifyEmailToken,
   verifyMobile,
   verifyMobileOtp,
+  loadPanelDataInGlobal,
 };

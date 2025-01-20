@@ -29,7 +29,8 @@ const {
   verifyEmail,
   verifyEmailToken,
   verifyMobile,
-  verifyMobileOtp
+  verifyMobileOtp,
+  loadPanelDataInGlobal,
   //loginRegistrationClient,
 } = require("../controller/users/index");
 const { Auth ,sendPushNotification,weblogs, Config} = require("../swaggerSchema/groupTags/schema");
@@ -76,6 +77,11 @@ module.exports = async function (fastify, opts) {
     schema: Auth.loaddata.schema,
     preHandler: [(request, reply) => authorize(request, reply, fastify)],
     handler: (request, reply) => loadDataInMemory(request, reply, fastify),
+  });
+  fastify.post("/loadPanleData", {
+    schema: Auth.loaddata.schema,
+    preHandler: [(request, reply) => authorize(request, reply, fastify)],
+    handler: (request, reply) => loadPanelDataInGlobal(request, reply, fastify),
   });
   fastify.post("/loadClientData", {
     schema: Auth.loaddata.schema,
