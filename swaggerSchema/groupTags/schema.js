@@ -77,6 +77,20 @@ const Auth = {
       security: [{ bearerAuth: [] }],
     },
   },
+  panelLoadData: {
+    schema: {
+      tags: ["Auth"],
+      description: "LoadEnumData",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          module: { type: "array", items: { type: "integer" }, minItems: 1 },
+        },
+        required: ["module"],
+      }
+    },
+  },
   validateUser: {
     schema: {
       tags: ["Auth"],
