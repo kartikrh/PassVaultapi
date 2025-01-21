@@ -50,6 +50,7 @@ const {
   pbfMarketQuery,
   getManualMarketDataQuery,
   saveManualMarketQuery,
+  getExtraMarketQuery,
 } = require("../repository/TableEventMarkets");
 const { getRunnerByIdQuery, setResultInRunnerMarketQuery, getRunnerByMarketQuery } = require("../repository/TableMarketRunner");
 const configConstants = require("../utilities/configConstants");
@@ -2672,6 +2673,12 @@ const getManualMarketDataService = async (request, fastify) => {
     marketTypeCategoryId : marCat.marketTypeCategoryId
   },request, fastify);
 
+  let market1 = await getExtraMarketQuery({
+    eventRefId: com.eventRefId,
+  },request, fastify);
+
+
+
   let comTeam = global.tblCommentaryTeams.filter(
     (item) => item.commentaryId === commentaryId
   ).reduce((acc, current) => {
@@ -2695,7 +2702,8 @@ const getManualMarketDataService = async (request, fastify) => {
       eventRefId: com.eventRefId
     },
     teams: comTeam,
-    market: market
+    market: market,
+    tpMarkets : market1
   }
   return data;
 }
