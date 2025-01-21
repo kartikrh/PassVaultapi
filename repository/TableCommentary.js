@@ -4323,6 +4323,88 @@ const isCountInPOintCommentaryChangeQuery = async (data, fastify, request) => {
   }
 };
 
+
+const getAllCommentaryHistoryQuery = async (fastify, request) => {
+  try {
+    return await fastify.db.query(
+      `SELECT 
+            tc."wrCommentaryId" as "commentaryId",
+            tc."wrMatchTypeId" as "matchTypeId",
+            mt."wrMatchType" AS "matchType",
+            tc."wrEventTypeId" as "eventTypeId",
+            tet."wrEventType" as "eventType",
+            tc."wrTeam1Id" as "team1Id",
+            tc."wrTeam2Id" as "team2Id",
+            tt1."wrTeamName" as "team1Name",
+            tt2."wrTeamName" as "team2Name",
+            tc."wrCompetitionId" as "competitionId",
+	          co."wrCompetition" as "competition",
+            tc."wrEventId" as "eventId",
+            tc."wrEventDate" as "eventDate",
+            tc."wrEventName" as "eventName",
+            tc."wrEventRefId" as "eventRefId",
+            tc."wrLocation" as "location",
+            tc."wrWeather" as "weather",
+            tc."wrPitch" as "pitch",
+            tc."wrHomeSideTeam" as "homeSideTeam",
+            tc."wrTossWonBy" as "tossWonBy",
+            tc."wrChoseTo" as "choseTo",
+            tc."wrWinnerId" as "winnerId",
+            tc."wrWinnerName" as "winnerName",
+            tc."wrIsClientShow" as "isClientShow",
+            tc."wrDisplayStatus" as "displayStatus",
+            tc."wrRmk" as "rmk",
+            tc."wrCommentaryUserId" as "commentaryUserId",
+            tc."wrCommentaryStatus" as "commentaryStatus",
+            tc."wrUpdateTime" as "updateTime",
+            tc."wrIsMatchDraw" as "isMatchDraw",
+            tc."wrTarget" as "target",
+            tc."wrMarketID" as "marketId",
+            tc."wrTpId" as "tpId",
+            tc."isSignalROn" as "isSignalROn",
+            tc."isMatchTypeUpdated" as "isMatchTypeUpdated",
+            tc."wrCurrentInnings" as "currentInnings",
+            tc."wrSystemPlayerCount" as "systemPlayerCount",
+            tc."wrIsPlayersShow" as "isPlayersShow",
+            tc."wrIsPredictMarket" as "isPredictMarket",
+            tc."wrIsActive"  as "isActive",
+            tc."wrDelay" as "delay",
+            tc."wrLineRatio" as "lineRatio",
+            tc."wrCommentaryResult" as "result",
+            tc."wrCommentaryCloseTime" as "commentaryCloseTime",
+            tc."wrIsTeamPredictionOn" as "isTeamPredictionOn",
+            tu."WrUserName" as "createdBy",
+            tc."wrHistoryMatchTypeId" as "historyMatchTypeId",
+            mt2."wrMatchType" AS "historyMatchType",
+            tc."wrIsCountInPoint" as "isCountInPoint",
+            tc."wrShotType" as "shotType",
+            tc."wrIsWheelShow" as "isWheelShow"
+      FROM "tblCommentaries" tc
+      LEFT JOIN "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
+      LEFT JOIN "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
+      LEFT JOIN "tblMatchTypes" mt ON tc."wrMatchTypeId" = mt."wrMatchTypeId"
+      LEFT JOIN "tblMatchTypes" mt2 ON tc."wrHistoryMatchTypeId" = mt2."wrMatchTypeId"
+      LEFT JOIN "tblEventTypes" tet ON tc."wrEventTypeId" = tet."wrEventTypeId"
+	    LEFT JOIN "tblCompetitions" co ON tc."wrCompetitionId" = co."wrCompetitionId"
+      LEFT JOIN "tblUsers" tu ON tc."wrCreatedBy" = tu."WrUserId"
+      WHERE tc."wrCommentaryCloseTime" < NOW() - INTERVAL '7 days'
+      AND tc."wrCommentaryStatus" = 4 
+      AND tc."wrIsDelete" = false`,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/isCountInPOintCommentaryChangeQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -4403,4 +4485,5 @@ module.exports = {
   cancelCommentaryQuery,
   getCommentariesResultQuery,
   isCountInPOintCommentaryChangeQuery,
+  getAllCommentaryHistoryQuery,
 };

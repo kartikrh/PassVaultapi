@@ -72,6 +72,7 @@ const {
   insertCommentaryPlayersQuery,
   cancelCommentaryQuery,
   isCountInPOintCommentaryChangeQuery,
+  getAllCommentaryHistoryQuery,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -9784,6 +9785,46 @@ const getEventMarketAndRunnersService = async (request, fastify) => {
 
   return result;
 };
+
+const commentaryHistoryService = async (request, fastify) => {
+  const { commentaryStatus, eventTypeId, competitionId, startDate, endDate } =
+    request.body;
+  let result = await getAllCommentaryHistoryQuery(fastify, request);
+  if (commentaryStatus === undefined) {
+    result = result.filter(
+      (item) => item.commentaryStatus !== 4
+    );
+  }
+  if (commentaryStatus && commentaryStatus != 0) {
+    result = result.filter(
+      (item) => item.commentaryStatus === commentaryStatus
+    );
+  }
+  if (commentaryStatus == 0) {
+    result;
+  }
+  // if eventTypeId is provided then filter commentary by eventTypeId
+  if (eventTypeId) {
+    result = result.filter((item) => item.eventTypeId === eventTypeId);
+  }
+
+  if (competitionId) {
+    result = result.filter((item) => item.competitionId === competitionId);
+  }
+  result.sort((a, b) => new Date(a.eventDate) - new Date(b.eventDate));
+
+  // add dateFilter if provided
+  if (startDate && endDate) {
+    result = result?.filter((item) => {
+      return (
+        new Date(item.eventDate) >= new Date(startDate) &&
+        new Date(item.eventDate) <= new Date(endDate)
+      );
+    }).sort((a, b) => new Date(b.eventDate) - new Date(a.eventDate));
+  }
+  return result;
+};
+
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -9860,4 +9901,5 @@ module.exports = {
   multiIsCountInPointCommentaryService,
   getRunnerOfMarketService,
   getEventMarketAndRunnersService,
+  commentaryHistoryService,
 };
