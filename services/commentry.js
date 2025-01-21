@@ -3486,6 +3486,15 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
       //   callPredictions.push(callPrediction);
       // }
     }
+    if(deleteCommentaryBallByBallId || deleteOverId){
+      const clientInRoom = global.socketIo.sockets.adapter.rooms.get(commentaryId);
+      if (clientInRoom?.size) {
+        global.socketIo.to(commentaryId).emit("undoCalled", {
+          commentaryId: commentaryId,
+          message : "Undo called for this commentary."
+        });
+      } 
+    }
     if (isEndInnings && isEndInnings == true) {
       //_resFromPredictAPI = null;
       //_resFromPredictAPI = await 
