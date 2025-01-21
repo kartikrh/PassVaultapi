@@ -2021,6 +2021,23 @@ const Commentary = {
       },
     },
   },
+  getAllCommentaryHistory: {
+    schema: {
+      tags: ["Commentary"],
+      description: "get all Commentary History",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryStatus: { type: "integer" },
+          eventTypeId: { type: "integer" },
+          competitionId: { type: "integer" },
+          startDate: { type: "string" },
+          endDate: { type: "string" },
+        },
+      },
+    },
+  },
   revertCommentary : {
     schema: {
       tags: ["Commentary"],
