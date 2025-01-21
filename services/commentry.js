@@ -9787,41 +9787,35 @@ const getEventMarketAndRunnersService = async (request, fastify) => {
 };
 
 const commentaryHistoryService = async (request, fastify) => {
-  const { commentaryStatus, eventTypeId, competitionId, startDate, endDate } =
-    request.body;
-  let result = await getAllCommentaryHistoryQuery(fastify, request);
+  const { commentaryStatus, eventTypeId, competitionId, startDate, endDate } = request.body;
+
+  let whereCondition = `tc."wrIsDelete" = FALSE`
   if (commentaryStatus === undefined) {
-    result = result.filter(
-      (item) => item.commentaryStatus !== 4
-    );
+    whereCondition += ` AND tc."wrCommentaryStatus" != 4`
   }
   if (commentaryStatus && commentaryStatus != 0) {
-    result = result.filter(
-      (item) => item.commentaryStatus === commentaryStatus
-    );
+    whereCondition += ` AND tc."wrCommentaryStatus" = ${commentaryStatus}`
   }
   if (commentaryStatus == 0) {
-    result;
+    whereCondition
   }
-  // if eventTypeId is provided then filter commentary by eventTypeId
   if (eventTypeId) {
-    result = result.filter((item) => item.eventTypeId === eventTypeId);
+    whereCondition += ` AND tc."wrEventTypeId" = ${eventTypeId}`
   }
 
   if (competitionId) {
-    result = result.filter((item) => item.competitionId === competitionId);
+    whereCondition += ` AND tc."wrCompetitionId" = ${competitionId}`
   }
-  result.sort((a, b) => new Date(a.eventDate) - new Date(b.eventDate));
-
-  // add dateFilter if provided
+  let orderByClause = ` ORDER BY tc."wrEventDate" ASC`;
+  
   if (startDate && endDate) {
-    result = result?.filter((item) => {
-      return (
-        new Date(item.eventDate) >= new Date(startDate) &&
-        new Date(item.eventDate) <= new Date(endDate)
-      );
-    }).sort((a, b) => new Date(b.eventDate) - new Date(a.eventDate));
+    whereCondition += ` AND tc."wrEventDate" BETWEEN '${startDate}' AND '${endDate}'`;
+    orderByClause = ` ORDER BY tc."wrEventDate" DESC`;
   }
+  whereCondition += orderByClause;
+
+  let result = await getAllCommentaryHistoryQuery(whereCondition, fastify, request);
+
   return result;
 };
 

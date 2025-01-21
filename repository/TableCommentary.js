@@ -4324,7 +4324,8 @@ const isCountInPOintCommentaryChangeQuery = async (data, fastify, request) => {
 };
 
 
-const getAllCommentaryHistoryQuery = async (fastify, request) => {
+const getAllCommentaryHistoryQuery = async (whereCondition, fastify, request) => {
+  console.log("whereCondtiion", whereCondition)
   try {
     return await fastify.db.query(
       `SELECT 
@@ -4387,9 +4388,7 @@ const getAllCommentaryHistoryQuery = async (fastify, request) => {
       LEFT JOIN "tblEventTypes" tet ON tc."wrEventTypeId" = tet."wrEventTypeId"
 	    LEFT JOIN "tblCompetitions" co ON tc."wrCompetitionId" = co."wrCompetitionId"
       LEFT JOIN "tblUsers" tu ON tc."wrCreatedBy" = tu."WrUserId"
-      WHERE tc."wrCommentaryCloseTime" < NOW() - INTERVAL '7 days'
-      AND tc."wrCommentaryStatus" = 4 
-      AND tc."wrIsDelete" = false`,
+      ${whereCondition ? `WHERE ${whereCondition}` : ""}`,
       {
         type: fastify.db.QueryTypes.SELECT,
       }

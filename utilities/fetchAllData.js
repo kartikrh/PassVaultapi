@@ -276,21 +276,20 @@ const fetchAllDataFromDb = async (fastify, reply) => {
 
 const FetchingCommentariesDataFromCron = async (fastify) => {
   try {
-    const getAllCommentary = await getAllCommentaryQuery(fastify);
-    const getAllCommentaryPlayer = await getAllCommentaryPlayerQuery(fastify);
-    const getAllCommentaryTeams = await getAllCommentaryTeamsQuery(fastify);
-    const getAllCommentaryBallByBall = await getAllCommentaryBallByBallQuery(fastify);
-    const getAllOvers = await getAllOversQuery(fastify);
-    const getAllCommentaryWicket = await getAllCommentaryWicketQuery(fastify);
-    const getAllCommentaryPartnership = await getAllCommentaryPartnershipQuery(fastify);
+    let last7Days = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const commentaryIds  = global.tblCommentaries.filter((item) => 
+    (item.commentaryCloseTime >= last7Days && item.commentaryStatus === 4) ||
+    item.commentaryStatus !== 4).map((elem) => { return elem.commentaryId });
+
   
-    global.tblCommentaries = getAllCommentary;
-    global.tblCommentaryTeams = getAllCommentaryTeams;
-    global.tblCommentaryPlayers = getAllCommentaryPlayer;
-    global.tblCommentaryBallByBall = getAllCommentaryBallByBall;
-    global.tblOvers = getAllOvers;
-    global.tblCommentaryWicket = getAllCommentaryWicket;
-    global.tblCommentaryPartnership = getAllCommentaryPartnership;
+    global.tblCommentaries = global.tblCommentaries.filter((item) => commentaryIds.includes(item.commentaryId));
+    global.tblCommentaryTeams = global.tblCommentaryTeams.filter((item) => commentaryIds.includes(item.commentaryId));
+    global.tblCommentaryPlayers = global.tblCommentaryPlayers.filter((item) => commentaryIds.includes(item.commentaryId));
+    global.tblCommentaryBallByBall = global.tblCommentaryBallByBall.filter((item) => commentaryIds.includes(item.commentaryId));
+    global.tblOvers = global.tblOvers.filter((item) => commentaryIds.includes(item.commentaryId));
+    global.tblCommentaryWicket = global.tblCommentaryWicket.filter((item) => commentaryIds.includes(item.commentaryId));
+    global.tblCommentaryPartnership = global.tblCommentaryPartnership.filter((item) => commentaryIds.includes(item.commentaryId));
+
 
     console.log("Commentary data updated in via node-cron successfully");
 
@@ -305,7 +304,21 @@ const panelLoadDataByEnum = async (request, fastify, reply) => {
     for (const mod of module) {
       switch (mod) {
         case ModuleTypes.Commentary: {
-          await FetchingCommentariesDataFromCron(fastify);
+          const getAllCommentary = await getAllCommentaryQuery(fastify);
+          const getAllCommentaryPlayer = await getAllCommentaryPlayerQuery(fastify);
+          const getAllCommentaryTeams = await getAllCommentaryTeamsQuery(fastify);
+          const getAllCommentaryBallByBall = await getAllCommentaryBallByBallQuery(fastify);
+          const getAllOvers = await getAllOversQuery(fastify);
+          const getAllCommentaryWicket = await getAllCommentaryWicketQuery(fastify);
+          const getAllCommentaryPartnership = await getAllCommentaryPartnershipQuery(fastify);
+        
+          global.tblCommentaries = getAllCommentary;
+          global.tblCommentaryTeams = getAllCommentaryTeams;
+          global.tblCommentaryPlayers = getAllCommentaryPlayer;
+          global.tblCommentaryBallByBall = getAllCommentaryBallByBall;
+          global.tblOvers = getAllOvers;
+          global.tblCommentaryWicket = getAllCommentaryWicket;
+          global.tblCommentaryPartnership = getAllCommentaryPartnership;
           break;
         }
         case ModuleTypes.Players: {
