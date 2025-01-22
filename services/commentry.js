@@ -257,6 +257,13 @@ const commentaryDetailsByIdService = async (request, fastify) => {
     .filter((item) => item?.commentaryId === request.body.commentaryId)
     .sort((a, b) => b.commentaryPlayerId - a.commentaryPlayerId);
 
+    for (const player of commentaryPlayers) {
+      const _player = global.tblPlayers.find((item) => item.playerId === player.playerId);
+      if (_player) {
+        player.playerimage = _player.image;
+      }
+    }
+
   const commentaryOvers = await global.tblOvers
     .filter((item) => item?.commentaryId === request.body.commentaryId)
     .sort((a, b) => b.overId - a.overId);
