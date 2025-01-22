@@ -2231,6 +2231,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
   // let _resFromPredictAPI;
   // let callPredictions = [];
   if (teamOnStrike && request.body.action && (request.body.action.toUpperCase() === "SAVE_ALL") && updatedOvers.length > 0) {
+    
     callPredictorMarket(
       {
         commentary_id: commentary.commentaryId,
