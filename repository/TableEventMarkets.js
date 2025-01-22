@@ -1673,8 +1673,9 @@ const createEventMarketMaunalQuery = async (data, request, fastify) => {
       "wrCommentaryId",
       "wrTeamID",
       "wrInningsID",
-      "wrMarketTypeId"
-  ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8,$9,$10,$11,$12)
+      "wrMarketTypeId",
+      "wrMarketTypeCategoryId"
+  ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8,$9,$10,$11,$12,$13)
         RETURNING "wrID" as "eventMarketId"
     `;
     const result = await fastify.db.query(query, {
@@ -1690,7 +1691,8 @@ const createEventMarketMaunalQuery = async (data, request, fastify) => {
         data.commentaryId,
         0,
         0,
-        marketTypeId
+        marketTypeId,
+        data.categoryType,
       ],
       type: fastify.db.QueryTypes.SELECT,
     });
