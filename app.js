@@ -403,6 +403,7 @@ module.exports = async function (fastify, opts) {
         "https://panel.deployed.live",
         "http://localhost:3001",
         "https://uatpanel.deployed.live",
+        "http://localhost:8080"
       ],
       credentials: true,
     },
