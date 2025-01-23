@@ -355,6 +355,7 @@ const ImportMarketWithRunnerService = async (request, fastify) => {
       req.marketID = request.body.marketID;
       req.marketType = request.body.marketType;
       req.marketTypeName = request.body.marketTypeName;
+      req.categoryType = request.body.categoryType;
       setEventsMarket = await createEventMarketMaunalQuery(
         req,
         request,

@@ -72,6 +72,7 @@ const {
   insertCommentaryPlayersQuery,
   cancelCommentaryQuery,
   isCountInPOintCommentaryChangeQuery,
+  getAllCommentaryHistoryQuery,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -212,11 +213,12 @@ const predictorLogsByIdService = async (request, fastify) => {
   }
 };
 
+
 const commentaryDetailsByIdService = async (request, fastify) => {
-  let isStopLoadCommerty = false;
-  if (request.body.isStopLoadCommerty) {
-    isStopLoadCommerty = request.body.isStopLoadCommerty;
-  }
+  // let isStopLoadCommerty = false;
+  // if (request.body.isStopLoadCommerty) {
+  //   isStopLoadCommerty = request.body.isStopLoadCommerty;
+  // }
   let commentary = await global.tblCommentaries.find(
     (item) => item?.commentaryId === request.body.commentaryId
   );
@@ -255,6 +257,13 @@ const commentaryDetailsByIdService = async (request, fastify) => {
     .filter((item) => item?.commentaryId === request.body.commentaryId)
     .sort((a, b) => b.commentaryPlayerId - a.commentaryPlayerId);
 
+    for (const player of commentaryPlayers) {
+      const _player = global.tblPlayers.find((item) => item.playerId === player.playerId);
+      if (_player) {
+        player.playerimage = _player.image;
+      }
+    }
+
   const commentaryOvers = await global.tblOvers
     .filter((item) => item?.commentaryId === request.body.commentaryId)
     .sort((a, b) => b.overId - a.overId);
@@ -278,60 +287,60 @@ const commentaryDetailsByIdService = async (request, fastify) => {
   const commentaryDisplayStatus = await global.tblDisplayStatus.filter(
     (item) => item.displayStatusId !== 0
   );
-  let _resFromPredictAPI;
-  let callPrediction = {};
-  if (
-    !isStopLoadCommerty &&
-    commentary.isPredictMarket == true &&
-    (commentary.commentaryStatus == 2 || commentary.commentaryStatus == 3)
-  ) {
-    // get the eventMarket from teamOnstrike
-    const teamOnStrike = global.tblCommentaryTeams.find(
-      (item) =>
-        item?.commentaryId === commentary.commentaryId &&
-        item.currentInnings === commentary.currentInnings &&
-        item.teamStatus === 1
-    );
-    // array of eventMarket id
-    let eventMarketLine = [];
-    if (teamOnStrike) {
-      eventMarketLine = await getEventMarketRatioQuery(
-        {
-          commentaryId: commentary.commentaryId,
-          teamId: teamOnStrike.teamId,
-        },
-        request,
-        fastify
-      );
-    }
-    // data: {
-    //   status_code: 500,
-    //   error_msg: 'the JSON object must be str, bytes or bytearray, not NoneType'
-    // }
-    let key1 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTBALLFACED);
-    let key2 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTPLAYERBOUNDARIES);
-    let key3 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTPLAYERRUNS);
-    _resFromPredictAPI = await callPredictorMarket(
-      {
-        commentary_id: commentary.commentaryId,
-        match_type_id: commentary.matchTypeId,
-        event_id: commentary.eventRefId,
-        line_ratio_data: eventMarketLine,
-        default_ball_faced: parseInt(key1?.value) || 0,
-        default_player_boundaries: parseInt(key2?.value) || 0,
-        default_player_runs: parseInt(key3?.value) || 0,
-      },
-      "/api/v1/loadcommentary",
-      fastify,
-      request
-    );
-    // Check for error_msg in the response
-    if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
-      callPrediction.predictioncallSuccess = false;
-      callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
-      callPrediction.endPoint = '/api/v1/loadcommentary';
-    }
-  }
+  // let _resFromPredictAPI;
+  // let callPrediction = {};
+  // if (
+  //   !isStopLoadCommerty &&
+  //   commentary.isPredictMarket == true &&
+  //   (commentary.commentaryStatus == 2 || commentary.commentaryStatus == 3)
+  // ) {
+  //   // get the eventMarket from teamOnstrike
+  //   const teamOnStrike = global.tblCommentaryTeams.find(
+  //     (item) =>
+  //       item?.commentaryId === commentary.commentaryId &&
+  //       item.currentInnings === commentary.currentInnings &&
+  //       item.teamStatus === 1
+  //   );
+  //   // array of eventMarket id
+  //   let eventMarketLine = [];
+  //   if (teamOnStrike) {
+  //     eventMarketLine = await getEventMarketRatioQuery(
+  //       {
+  //         commentaryId: commentary.commentaryId,
+  //         teamId: teamOnStrike.teamId,
+  //       },
+  //       request,
+  //       fastify
+  //     );
+  //   }
+  //   // data: {
+  //   //   status_code: 500,
+  //   //   error_msg: 'the JSON object must be str, bytes or bytearray, not NoneType'
+  //   // }
+  //   let key1 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTBALLFACED);
+  //   let key2 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTPLAYERBOUNDARIES);
+  //   let key3 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTPLAYERRUNS);
+  //   _resFromPredictAPI = await callPredictorMarket(
+  //     {
+  //       commentary_id: commentary.commentaryId,
+  //       match_type_id: commentary.matchTypeId,
+  //       event_id: commentary.eventRefId,
+  //       line_ratio_data: eventMarketLine,
+  //       default_ball_faced: parseInt(key1?.value) || 0,
+  //       default_player_boundaries: parseInt(key2?.value) || 0,
+  //       default_player_runs: parseInt(key3?.value) || 0,
+  //     },
+  //     "/api/v1/loadcommentary",
+  //     fastify,
+  //     request
+  //   );
+  //   // Check for error_msg in the response
+  //   if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
+  //     callPrediction.predictioncallSuccess = false;
+  //     callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
+  //     callPrediction.endPoint = '/api/v1/loadcommentary';
+  //   }
+  // }
 
   const shotTypes = await global.tblShotType
   .filter((item) => item?.isActive === true)
@@ -347,7 +356,7 @@ const commentaryDetailsByIdService = async (request, fastify) => {
     commentaryWicket,
     commentaryPartnership,
     commentaryDisplayStatus,
-    callPrediction,
+    // callPrediction,
     shotTypes
   };
   return allDetails;
@@ -3485,6 +3494,15 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
       //   callPredictions.push(callPrediction);
       // }
     }
+    if(deleteCommentaryBallByBallId || deleteOverId){
+      const clientInRoom = global.socketIo.sockets.adapter.rooms.get(commentaryId);
+      if (clientInRoom?.size) {
+        global.socketIo.to(commentaryId).emit("undoCalled", {
+          commentaryId: commentaryId,
+          message : "Undo called for this commentary."
+        });
+      } 
+    }
     if (isEndInnings && isEndInnings == true) {
       //_resFromPredictAPI = null;
       //_resFromPredictAPI = await 
@@ -6154,7 +6172,8 @@ const getMatchListByStatus = async (body, request, fastify) => {
       t1s: teamScore1 || "",
       t2s: teamScore2 || "",
       dis: item.displayStatus || "",
-      rmk: item.rmk || "",
+      rmk: item.rmk === null || item.rmk === undefined ? "" : item.rmk,
+      // rmk: item.rmk || "",
       te1crr: commentaryTeamsOne.crr || '0',
       te2crr: commentaryTeamsTwo.crr || '0',
       te1rrr: commentaryTeamsOne.rrr || '0',
@@ -9774,6 +9793,40 @@ const getEventMarketAndRunnersService = async (request, fastify) => {
 
   return result;
 };
+
+const commentaryHistoryService = async (request, fastify) => {
+  const { commentaryStatus, eventTypeId, competitionId, startDate, endDate } = request.body;
+
+  let whereCondition = `tc."wrIsDelete" = FALSE`
+  if (commentaryStatus === undefined) {
+    whereCondition += ` AND tc."wrCommentaryStatus" != 4`
+  }
+  if (commentaryStatus && commentaryStatus != 0) {
+    whereCondition += ` AND tc."wrCommentaryStatus" = ${commentaryStatus}`
+  }
+  if (commentaryStatus == 0) {
+    whereCondition
+  }
+  if (eventTypeId) {
+    whereCondition += ` AND tc."wrEventTypeId" = ${eventTypeId}`
+  }
+
+  if (competitionId) {
+    whereCondition += ` AND tc."wrCompetitionId" = ${competitionId}`
+  }
+  let orderByClause = ` ORDER BY tc."wrEventDate" ASC`;
+  
+  if (startDate && endDate) {
+    whereCondition += ` AND tc."wrEventDate" BETWEEN '${startDate}' AND '${endDate}'`;
+    orderByClause = ` ORDER BY tc."wrEventDate" DESC`;
+  }
+  whereCondition += orderByClause;
+
+  let result = await getAllCommentaryHistoryQuery(whereCondition, fastify, request);
+
+  return result;
+};
+
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -9850,4 +9903,5 @@ module.exports = {
   multiIsCountInPointCommentaryService,
   getRunnerOfMarketService,
   getEventMarketAndRunnersService,
+  commentaryHistoryService,
 };

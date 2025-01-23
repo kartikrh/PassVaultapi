@@ -50,6 +50,7 @@ const {
   pbfMarketQuery,
   getManualMarketDataQuery,
   saveManualMarketQuery,
+  getExtraMarketQuery,
 } = require("../repository/TableEventMarkets");
 const { getRunnerByIdQuery, setResultInRunnerMarketQuery, getRunnerByMarketQuery } = require("../repository/TableMarketRunner");
 const configConstants = require("../utilities/configConstants");
@@ -1382,7 +1383,7 @@ const handleMarketCloseService = async (data, request, fastify) => {
     );
     if (eventMarket !== -1) {
       global.tblEventMarkets[eventMarket].status = EventMarketStatus.Close;
-      global.tblEventMarkets[eventMarket].data = item.data;
+      // global.tblEventMarkets[eventMarket].data = item.data;
     }
     marketLogger(
       {
@@ -1425,7 +1426,7 @@ const handleMarketCloseService = async (data, request, fastify) => {
     );
     if (eventMarket !== -1) {
       global.tblEventMarkets[eventMarket].status = EventMarketStatus.Cancel;
-      global.tblEventMarkets[eventMarket].data = item.data;
+      // global.tblEventMarkets[eventMarket].data = item.data;
     }
     marketLogger(
       {
@@ -2229,7 +2230,8 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
   );
   // let _resFromPredictAPI;
   // let callPredictions = [];
-  if (teamOnStrike && request.body.action && (request.body.action.toUpperCase() === "SAVE_ALL")) {
+  if (teamOnStrike && request.body.action && (request.body.action.toUpperCase() === "SAVE_ALL") && updatedOvers.length > 0) {
+    
     callPredictorMarket(
       {
         commentary_id: commentary.commentaryId,
@@ -2672,6 +2674,12 @@ const getManualMarketDataService = async (request, fastify) => {
     marketTypeCategoryId : marCat.marketTypeCategoryId
   },request, fastify);
 
+  let market1 = await getExtraMarketQuery({
+    eventRefId: com.eventRefId,
+  },request, fastify);
+
+
+
   let comTeam = global.tblCommentaryTeams.filter(
     (item) => item.commentaryId === commentaryId
   ).reduce((acc, current) => {
@@ -2695,7 +2703,8 @@ const getManualMarketDataService = async (request, fastify) => {
       eventRefId: com.eventRefId
     },
     teams: comTeam,
-    market: market
+    market: market,
+    tpMarkets : market1
   }
   return data;
 }

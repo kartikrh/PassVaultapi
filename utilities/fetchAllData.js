@@ -1,3 +1,4 @@
+const { ModuleTypes } = require("../utilities/index");
 const { getAllActiveInactiveTabsQuery } = require("../repository/TableTabs");
 const { getAllBlocksQuery } = require("../repository/TableBlock");
 const { getAllMenuTypesQuery } = require("../repository/TableMenuTypes");
@@ -273,4 +274,242 @@ const fetchAllDataFromDb = async (fastify, reply) => {
   }
 };
 
-module.exports = fetchAllDataFromDb;
+const FetchingCommentariesDataFromCron = async (fastify) => {
+  try {
+    let last7Days = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const commentaryIds  = global.tblCommentaries.filter((item) => 
+    (item.commentaryCloseTime >= last7Days && item.commentaryStatus === 4) ||
+    item.commentaryStatus !== 4).map((elem) => { return elem.commentaryId });
+
+  
+    global.tblCommentaries = global.tblCommentaries.filter((item) => commentaryIds.includes(item.commentaryId));
+    global.tblCommentaryTeams = global.tblCommentaryTeams.filter((item) => commentaryIds.includes(item.commentaryId));
+    global.tblCommentaryPlayers = global.tblCommentaryPlayers.filter((item) => commentaryIds.includes(item.commentaryId));
+    global.tblCommentaryBallByBall = global.tblCommentaryBallByBall.filter((item) => commentaryIds.includes(item.commentaryId));
+    global.tblOvers = global.tblOvers.filter((item) => commentaryIds.includes(item.commentaryId));
+    global.tblCommentaryWicket = global.tblCommentaryWicket.filter((item) => commentaryIds.includes(item.commentaryId));
+    global.tblCommentaryPartnership = global.tblCommentaryPartnership.filter((item) => commentaryIds.includes(item.commentaryId));
+
+
+    console.log("Commentary data updated in via node-cron successfully");
+
+  } catch (error) {
+    console.log("error in FetchingCommentariesDataFromCron", error.message,error);
+  }
+}
+
+const panelLoadDataByEnum = async (request, fastify, reply) => {
+  try {
+    let {module} = request.body;
+    for (const mod of module) {
+      switch (mod) {
+        case ModuleTypes.Commentary: {
+          const getAllCommentary = await getAllCommentaryQuery(fastify);
+          const getAllCommentaryPlayer = await getAllCommentaryPlayerQuery(fastify);
+          const getAllCommentaryTeams = await getAllCommentaryTeamsQuery(fastify);
+          const getAllCommentaryBallByBall = await getAllCommentaryBallByBallQuery(fastify);
+          const getAllOvers = await getAllOversQuery(fastify);
+          const getAllCommentaryWicket = await getAllCommentaryWicketQuery(fastify);
+          const getAllCommentaryPartnership = await getAllCommentaryPartnershipQuery(fastify);
+        
+          global.tblCommentaries = getAllCommentary;
+          global.tblCommentaryTeams = getAllCommentaryTeams;
+          global.tblCommentaryPlayers = getAllCommentaryPlayer;
+          global.tblCommentaryBallByBall = getAllCommentaryBallByBall;
+          global.tblOvers = getAllOvers;
+          global.tblCommentaryWicket = getAllCommentaryWicket;
+          global.tblCommentaryPartnership = getAllCommentaryPartnership;
+          break;
+        }
+        case ModuleTypes.Players: {
+          const getAllPlayers = await getAllPlayersQuery(fastify);
+          global.tblPlayers = getAllPlayers;
+          break;
+        }
+        case ModuleTypes.Teams: {
+          const getAllTeams = await allTeamQuery(fastify);
+          global.tblTeams = getAllTeams;
+          break;
+        }
+        case ModuleTypes.PenaltyRuns: {
+          const getAllPaneltyRuns = await allPaneltyRunsQuery(fastify);
+          global.tblPaneltyRuns = getAllPaneltyRuns;
+          break;
+        }
+        case ModuleTypes.MatchTypes: {
+          const getAllMatchType = await getAllMatchTypeQuery(fastify);
+          global.tblMatchTypes = getAllMatchType;
+          break;
+        }
+        case ModuleTypes.MarketTemplate: {
+          const getAllMarketTemplate = await getAllMarketTemplateQuery(fastify);
+          global.tblMarketTemplate = getAllMarketTemplate;
+          break;
+        }
+        case ModuleTypes.DisplayStatus: {
+          const getAllDisplayStatus = await allDisplayStatusesQuery(fastify);
+          global.tblDisplayStatus = getAllDisplayStatus;
+          break;
+        }
+        case ModuleTypes.News: {
+          const getAllNews = await getAllNewsQuery(fastify);
+          global.tblNews = getAllNews;
+          break;
+        }
+        case ModuleTypes.Banners: {
+          const getAllBanners = await getAllBannerQuery(fastify);
+          global.tblBanner = getAllBanners;
+          break;
+        }
+        case ModuleTypes.Awards: {
+          const getAllAward = await getAllAwardQuery(fastify);
+          global.tblAwards = getAllAward;
+          break;
+        }
+        case ModuleTypes.MarketTypes: {
+          const getAllMarketType = await getAllMarketTypeQuery(fastify);
+          global.tblMarketTypes = getAllMarketType;
+          break;
+        }
+        case ModuleTypes.PhotoLibrary: {
+          const getAllPhotoLibrary = await getAllPhotoLibraryQuery(fastify);
+          const getAllLibraryImages = await getAllLibraryImagesQuery(fastify);
+
+          global.tblPhotoLibrary = getAllPhotoLibrary;
+          global.tblLibraryImages = getAllLibraryImages;
+          break;
+        }
+        case ModuleTypes.VideoLibrary: {
+          const getAllVideoLibrary = await getAllVideoLibraryQuery(fastify);
+          global.tblVideoLibrary = getAllVideoLibrary;
+          break;
+        }
+        case ModuleTypes.ShotTypes: {
+          const getAllShotTypes = await getAllShotTypesQuery(fastify);
+          global.tblShotType = getAllShotTypes;
+          break;
+        }
+        case ModuleTypes.EventTypes: {
+          const getAllEventTypes = await allEventTypesQuery(fastify);
+          global.tblEventTypes = getAllEventTypes;
+          break;
+        }
+        case ModuleTypes.Competition: {
+          const getAllCompetition = await getAllCompititionQuery(fastify);
+          global.tblCompetitions = getAllCompetition;
+          break;
+        }
+        case ModuleTypes.Events: {
+          const getAllEvents = await getAllEventsQuery(fastify);
+          global.tblEvents = getAllEvents;
+          break;
+        }
+        case ModuleTypes.Template: {
+          const getAllTemplate = await getAllTemplateQuery(fastify);
+          global.tblTemplate = getAllTemplate;
+          break;
+        }
+        case ModuleTypes.SendMailConfig: {
+          const getAllMailSettings = await allMailSettingsQuery(fastify);
+          global.tblMailSettings = getAllMailSettings;
+          break;
+        }
+        case ModuleTypes.Clients: {
+          const getAllClient = await getAllClientQuery(fastify);
+          global.tblClient = getAllClient;
+          break;
+        }
+        case ModuleTypes.PageFormat: {
+          const getAllPageFormats = await allPageFormateQuery(fastify);
+          global.tblPageFormats = getAllPageFormats;
+          break;
+        }
+        case ModuleTypes.MenuList: {
+          const getAllMenuTypes = await getAllMenuTypesQuery(fastify);
+          const getAllMenuItems = await allMenuItemsQuery(fastify);
+
+          global.tblMenuTypes = getAllMenuTypes;
+          global.tblMenuItems = getAllMenuItems;
+          break;
+        }
+        case ModuleTypes.Blocks: {
+          const getAllBlocks = await getAllBlocksQuery(fastify);
+          global.tblBlocks = getAllBlocks;
+          break;
+        }
+        case ModuleTypes.Pages: {
+          const getAllPages = await allPageQuery(fastify);
+          global.tblPages = getAllPages;
+          break;
+        }
+        case ModuleTypes.Tabs: {
+          const getAllTabs = await getAllActiveInactiveTabsQuery(fastify);
+          global.tblTabs = getAllTabs;
+          break;
+        }
+        case ModuleTypes.SocialMedia: {
+          const getAllSocialMediaData = await allSocialMediaQuery(fastify);
+          global.tblSocialMedia = getAllSocialMediaData;
+          break;
+        }
+        case ModuleTypes.Subscribers: {
+          const getAllsubScribesDomain = await getAllSubScribesDomainQuery(fastify);
+          const getAllsubScribesSubDomain = await getAllSubScribesSubDomainQuery(fastify);
+
+          global.tblSubScribesDomain = getAllsubScribesDomain;
+          global.tblSubScribesSubDomain = getAllsubScribesSubDomain;
+          break;
+        }
+        case ModuleTypes.Config: {
+          const getAllConfigs = await getAllCongigQuery(fastify);
+          global.tblConfigs = getAllConfigs;
+          break;
+        }
+        case ModuleTypes.Roles: {
+          const getAllRoles = await getAllRolesQuery(fastify);
+          global.tblRoles = getAllRoles;
+          break;
+        }
+        case ModuleTypes.Users: {
+          const getAllUsers = await getAllUsersQuery(fastify);
+          global.tblUsers = getAllUsers;
+          break;
+        }
+        case ModuleTypes.ClientScokets: {
+          const getAllClientSocket = await getAllClientSocketQuery(fastify);
+          global.tblClientSocket = getAllClientSocket;
+          break;
+        }
+        case ModuleTypes.API: {
+          const getAllAPIs = await getAllAPI(fastify);
+          global.tblAPIs = getAllAPIs;
+          break;
+        }
+        case ModuleTypes.APIEndpoints: {
+          const getAllAPIEndpoints = await getAllAPIEndPoint(fastify);
+          global.tblAPIEndpoints = getAllAPIEndpoints;
+          break;
+        }
+        default:
+          break;
+      }
+    }
+
+    if (reply) {
+      reply.status(200).send({
+        status: 200,
+        message: "PanelData loaded on Memory successfully",
+      });
+    }
+  } catch (error) {
+    console.log("error in panelLoadDataByEnum", error.message,error);
+    if (reply) {
+      reply.status(200).send({
+        status: 200,
+        error: error.message,
+      });
+    }
+  }
+}
+
+module.exports = { fetchAllDataFromDb, FetchingCommentariesDataFromCron, panelLoadDataByEnum };

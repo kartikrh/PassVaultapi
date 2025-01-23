@@ -6,7 +6,8 @@ const fsequelize = require("fastify-sequelize");
 const dbPg = require("./sequelize/config/config")();
 const swagger = require("@fastify/swagger");
 const swaggerUi = require("@fastify/swagger-ui");
-const featchData = require("./utilities/fetchAllData");
+const { fetchAllDataFromDb, FetchingCommentariesDataFromCron } = require("./utilities/fetchAllData");
+// const fetchAllData = require("./utilities/fetchAllData");
 const { Server } = require("socket.io"); // Import Socket.IO
 const { connection, socketMiddleware } = require("./socketIo");
 const { fastifyRateLimit } = require("@fastify/rate-limit");
@@ -35,6 +36,7 @@ const WebsocketConnection = require("./websocket");
 const webPush = require("web-push");
 const {webPushset} = require("./WebPushHandler/index.js");
 const { updateMarket } = require("./utilities/marketUpdate.js");
+const cron = require('node-cron');
 
 // Pass --options via CLI arguments in command to enable these options.
 module.exports.options = {};
@@ -101,7 +103,8 @@ module.exports = async function (fastify, opts) {
       models.forEach((model) => require(`./sequelize/tables/${model}`)(fastify.db));
       setImmediate(async () => {
         try {
-          await featchData(fastify);
+          // await featchData(fastify);
+          await fetchAllDataFromDb(fastify);
           await disConnectClientSocketQuery(fastify);
           await startSignalR(fastify);
           connectClients(fastify);
@@ -114,6 +117,15 @@ module.exports = async function (fastify, opts) {
         }
       });
     });
+    cron.schedule('0 0 * * *', async () => {
+      try {
+        // Fetching data from db every 24 hrs once(at midnight)
+        await FetchingCommentariesDataFromCron(fastify);
+      } catch (error) {
+        console.error("Error during scheduled task:", error);
+      }
+    });
+
     // .after(async () => {
     //   require("./sequelize/tables/userModel")(fastify.db);
     //   require("./sequelize/tables/userLoginInfoModel")(fastify.db);
@@ -391,6 +403,7 @@ module.exports = async function (fastify, opts) {
         "https://panel.deployed.live",
         "http://localhost:3001",
         "https://uatpanel.deployed.live",
+        "http://localhost:8080"
       ],
       credentials: true,
     },
