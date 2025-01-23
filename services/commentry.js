@@ -6407,7 +6407,6 @@ const getMatchDataByCId = async (data, request, fastify) => {
     ics: com.isClientShow
   };
   return comDetails;
-
 }
 //old Function Without Optimization
 // const getAllDetailsByEventIdService123 = async (request, fastify) => {
