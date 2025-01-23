@@ -6086,11 +6086,11 @@ const getMatchListByStatus = async (body, request, fastify) => {
       (team) => team.teamId === item.team2Id
     );
 
-    if (body.type == "scheduled") {
+    if (body.type == "scheduled" || body.type == "completed") {
       crr = 0;
       rrr = 0;
     } else {
-      if (commentaryTeamsOne.teamStatus == 1) {
+      if (commentaryTeamsOne?.teamStatus == 1) {
         crr = commentaryTeamsOne.crr;
         rrr = commentaryTeamsOne.rrr;
         batid = commentaryTeamsOne.teamId;
@@ -6102,7 +6102,6 @@ const getMatchListByStatus = async (body, request, fastify) => {
         ballid = commentaryTeamsOne.teamId;
       }
     }
-
     //Tossteam Name
     const TossTeamName = await global.tblCommentaryTeams.find(
       (team) =>
