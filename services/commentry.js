@@ -6102,7 +6102,6 @@ const getMatchListByStatus = async (body, request, fastify) => {
         ballid = commentaryTeamsOne.teamId;
       }
     }
-
     //Tossteam Name
     const TossTeamName = await global.tblCommentaryTeams.find(
       (team) =>
