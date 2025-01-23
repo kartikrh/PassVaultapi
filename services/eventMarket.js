@@ -2230,21 +2230,23 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
   );
   // let _resFromPredictAPI;
   // let callPredictions = [];
-  if (teamOnStrike && request.body.action && (request.body.action.toUpperCase() === "SAVE_ALL") && updatedOvers.length > 0) {
+  if (teamOnStrike && request.body.action && (request.body.action.toUpperCase() === "SAVE_ALL")) {
     
-    callPredictorMarket(
-      {
-        commentary_id: commentary.commentaryId,
-        match_type_id: commentary.matchTypeId,
-        strike_team_id: teamOnStrike.teamId,
-        current_score: teamOnStrike.teamScore || 0,
-        current_over: parseFloat(teamOnStrike.teamOver) || 0.0,
-        overs: updatedOvers,
-      },
-      "/api/v1/updateline",
-      fastify,
-      request
-    );
+    if(updatedOvers.length > 0){
+      callPredictorMarket(
+        {
+          commentary_id: commentary.commentaryId,
+          match_type_id: commentary.matchTypeId,
+          strike_team_id: teamOnStrike.teamId,
+          current_score: teamOnStrike.teamScore || 0,
+          current_over: parseFloat(teamOnStrike.teamOver) || 0.0,
+          overs: updatedOvers,
+        },
+        "/api/v1/updateline",
+        fastify,
+        request
+      );
+    }
     // let callPrediction = {}
     // // Check for error_msg in the response
     // if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
