@@ -412,6 +412,39 @@ const connection = (socket , fastify) => {
     const { commentaryId } = data;
     socket.join(commentaryId);
   });
+  // connect for scoring page
+  socket.on("conCommentary", (data) => {
+    const { commentaryId ,eventRefId } = data;
+    socket.join(`score-${commentaryId}`);
+  });
+  socket.on("betAllow", (data) => {
+    const { commentaryId, betAllow ,eventRefId } = data;
+    console.log("betAllow", betAllow);
+  });
+  socket.on("comUpdate", (data) => {
+    const {ballStatus , eventRefId , commentaryId } = data;
+    if(ballStatus.toLowerCase() === "ballstart"){
+      const clientInRoom = global.socketIo.sockets.adapter.rooms.get(commentaryId);
+      if(clientInRoom?.size){
+        global.socketIo.to(commentaryId).emit("updateBallStatus", {
+          commentaryId : commentaryId,
+          eventRefId : eventRefId,
+          ballStatus : "ballstart"
+        });
+      }
+    }
+    if(ballStatus.toLowerCase() === "scoring"){
+      //emit the other socket to update the ball status
+      const clientInRoom = global.socketIo.sockets.adapter.rooms.get(commentaryId);
+      if(clientInRoom?.size){
+        global.socketIo.to(commentaryId).emit("updateBallStatus", {
+          commentaryId : commentaryId,
+          eventRefId : eventRefId,
+          ballStatus : "scoring"
+        });
+      }
+    }
+  })
 
   socket.on("disconnect", () => {
   });
