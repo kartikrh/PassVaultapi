@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
 const { errorLogger } = require("./utilities/logger");
 const { getEventMarketByIdsQuery, insertTimeLogs, updateTimeLogs, socketMarketRunnerDataQuery } = require("./repository/TableEventMarkets");
-const { MarketActionType } = require("./utilities");
+const { MarketActionType, callTPAPI } = require("./utilities");
 const {createMarketOddsBallByBallBYIDFromSocketIo,createMarketOddsBallInSaveDetails,CheckAndCreateMarketOddsBallInSaveDetails} = require("./repository/TableMarketOddsBallByBall")
 const configConstants = require('./utilities/configConstants');
 
@@ -412,6 +412,50 @@ const connection = (socket , fastify) => {
     const { commentaryId } = data;
     socket.join(commentaryId);
   });
+  // connect for scoring page
+  socket.on("conCommentary", (data) => {
+    const { commentaryId ,eventRefId } = data;
+    socket.join(`score-${commentaryId}`);
+  });
+  socket.on("betAllow", async (data) => {
+    const { commentaryId, betAllow ,eventRefId } = data;
+    // console.log("betAllow", betAllow);
+    // await callTPAPI(data , fastify);
+    //emit the batallow 
+    const clientInRoom = global.socketIo.sockets.adapter.rooms.get(commentaryId);
+    if(clientInRoom?.size){
+      global.socketIo.to(data.commentaryId).emit("upBetAllow", {
+        commentaryId : commentaryId,
+        eventRefId : eventRefId,
+        betAllow : betAllow
+      });
+    }
+  });
+  
+  socket.on("comUpdate", (data) => {
+    const {ballStatus , eventRefId , commentaryId } = data;
+    if(ballStatus?.toLowerCase() === "ballstart"){
+      const clientInRoom = global.socketIo.sockets.adapter.rooms.get(commentaryId);
+      if(clientInRoom?.size){
+        global.socketIo.to(commentaryId).emit("updateBallStatus", {
+          commentaryId : commentaryId,
+          eventRefId : eventRefId,
+          ballStatus : "ballstart"
+        });
+      }
+    }
+    if(ballStatus?.toLowerCase() === "scoring"){
+      //emit the other socket to update the ball status
+      const clientInRoom = global.socketIo.sockets.adapter.rooms.get(commentaryId);
+      if(clientInRoom?.size){
+        global.socketIo.to(commentaryId).emit("updateBallStatus", {
+          commentaryId : commentaryId,
+          eventRefId : eventRefId,
+          ballStatus : "scoring"
+        });
+      }
+    }
+  })
 
   socket.on("disconnect", () => {
   });

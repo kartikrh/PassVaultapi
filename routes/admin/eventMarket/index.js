@@ -1,4 +1,4 @@
-const { getDetailsByCId, getAllEventMarket, createEventMarket, deleteEventMarket, activeInactiveMarket, updateAllowMarket, getEventListByCompetitionId, marketListResultFalse, changeResultOfMarket, marketListByCId, updateMarketRate, saveEventMarket ,changeMarketCancel, changeMarketResult, changeMarketClose, suspendMarketByCId, getEventMarketById, getMarketTemplateTypeList, getCommentaryTypeList, setDelayEventMarket, getDSReportEventMarket, getSLReportEventMarket, getMarketDataByCId,UpdateResulOrApproveEventMarket, getMarketTypeCategory,marketListcategoryNameByCId, setAllMarketClose, setCloseMarketCancel, cancelSettleMarket, getDetailsByCIdV1, createEventMarketV1, updateMarketRateV1, marketListByCIdV1, getRunnerByMarket, pendingMultiRunnerMarkets, updateMarketResult, getComByCompId, updateEventMarketCloseSuspendTime, closeMarketsByIds, cancelMarketsByIds, getManualMarketData, saveManualMarketData } = require("../../../controller/users/admin/eventMarket");
+const { getDetailsByCId, getAllEventMarket, createEventMarket, deleteEventMarket, activeInactiveMarket, updateAllowMarket, getEventListByCompetitionId, marketListResultFalse, changeResultOfMarket, marketListByCId, updateMarketRate, saveEventMarket ,changeMarketCancel, changeMarketResult, changeMarketClose, suspendMarketByCId, getEventMarketById, getMarketTemplateTypeList, getCommentaryTypeList, setDelayEventMarket, getDSReportEventMarket, getSLReportEventMarket, getMarketDataByCId,UpdateResulOrApproveEventMarket, getMarketTypeCategory,marketListcategoryNameByCId, setAllMarketClose, setCloseMarketCancel, cancelSettleMarket, getDetailsByCIdV1, createEventMarketV1, updateMarketRateV1, marketListByCIdV1, getRunnerByMarket, pendingMultiRunnerMarkets, updateMarketResult, getComByCompId, updateEventMarketCloseSuspendTime, closeMarketsByIds, cancelMarketsByIds, getManualMarketData, saveManualMarketData, upManualMarketData } = require("../../../controller/users/admin/eventMarket");
 const { EventMarket, Commentary } = require("../../../swaggerSchema/groupTags/schema");
 const {
     authorize,
@@ -338,17 +338,17 @@ module.exports = async (fastify, opts) => {
         ],
         handler : (request, reply) => setAllMarketClose(request, reply, fastify)
     })
-    fastify.post("/cancelCloseMarket",{
-        schema : EventMarket.changeStatus.schema,
-        preHandler: [
-            (request, reply) => authorize(request, reply, fastify),
-            (request, reply) => checkPermission(request, reply, fastify,{
-                tabName: "Event Markets",
-                mode: "edit"            
-            })
-        ],
-        handler : (request, reply) => setCloseMarketCancel(request, reply, fastify)
-    })
+    // fastify.post("/cancelCloseMarket",{
+    //     schema : EventMarket.changeStatus.schema,
+    //     preHandler: [
+    //         (request, reply) => authorize(request, reply, fastify),
+    //         (request, reply) => checkPermission(request, reply, fastify,{
+    //             tabName: "Event Markets",
+    //             mode: "edit"            
+    //         })
+    //     ],
+    //     handler : (request, reply) => setCloseMarketCancel(request, reply, fastify)
+    // })
     fastify.post("/cancelSettleMarket",{
         schema : EventMarket.changeStatus.schema,
         preHandler: [
@@ -510,6 +510,17 @@ module.exports = async (fastify, opts) => {
             })
         ],
         handler: (request, reply) => saveManualMarketData(request, reply, fastify)
+    })
+    fastify.post("/upManualMarket", {
+        schema: EventMarket.upManualMarket.schema,
+        preHandler: [
+            (request, reply) => authorize(request, reply, fastify),
+            (request, reply) => checkPermission(request, reply, fastify, {
+                tabName: "Event Markets",
+                mode: "edit"
+            })
+        ],
+        handler: (request, reply) => upManualMarketData(request, reply, fastify)
     })
 };
 

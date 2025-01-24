@@ -6086,11 +6086,11 @@ const getMatchListByStatus = async (body, request, fastify) => {
       (team) => team.teamId === item.team2Id
     );
 
-    if (body.type == "scheduled") {
+    if (body.type == "scheduled" || body.type == "completed") {
       crr = 0;
       rrr = 0;
     } else {
-      if (commentaryTeamsOne.teamStatus == 1) {
+      if (commentaryTeamsOne?.teamStatus == 1) {
         crr = commentaryTeamsOne.crr;
         rrr = commentaryTeamsOne.rrr;
         batid = commentaryTeamsOne.teamId;
@@ -6102,7 +6102,6 @@ const getMatchListByStatus = async (body, request, fastify) => {
         ballid = commentaryTeamsOne.teamId;
       }
     }
-
     //Tossteam Name
     const TossTeamName = await global.tblCommentaryTeams.find(
       (team) =>
@@ -6291,7 +6290,7 @@ const getMatchDataByCId = async (data, request, fastify) => {
       team.teamId === com.team2Id &&
       team.currentInnings === com.currentInnings
   );
-  let teamScore1, teamScore2;
+  let teamScore1, teamScore2 , t1bg, t1co, t2bg, t2co;
   if (commentaryTeamsOne) {
     const wicket1 =
       commentaryTeamsOne.teamWicket === null
@@ -6303,6 +6302,8 @@ const getMatchDataByCId = async (data, request, fastify) => {
         : commentaryTeamsOne.teamOver;
     teamScore1 = commentaryTeamsOne?.teamScore ?? '0';
     teamScore1 = teamScore1 + "/" + wicket1 + "(" + overs1 + ")";
+    t1bg = commentaryTeamsOne.backgroundColor || "";
+    t1co = commentaryTeamsOne.teamColor || "";
   }
 
   if (commentaryTeamsTwo) {
@@ -6318,6 +6319,8 @@ const getMatchDataByCId = async (data, request, fastify) => {
         : commentaryTeamsTwo.teamOver;
     teamScore2 = commentaryTeamsTwo?.teamScore ?? '0';
     teamScore2 = teamScore2 + "/" + wicket1 + "(" + overs1 + ")";
+    t2bg = commentaryTeamsTwo.backgroundColor || "";
+    t2co = commentaryTeamsTwo.teamColor || "";
   }
   const team1 = await global.tblTeams.find(
     (team) => team.teamId == com.team1Id
@@ -6394,9 +6397,15 @@ const getMatchDataByCId = async (data, request, fastify) => {
     ballid: ballid || null,
     t1id: com.team1Id || null,
     t2id: com.team2Id || null,
+    t1bg: t1bg || "",
+    t1co: t1co || "",
+    t2bg: t2bg || "",
+    t2co: t2co || "",
+    compId : competition?.competitionId || 0,
+    isPr: com.isPredictMarket,
+    ics: com.isClientShow
   };
   return comDetails;
-
 }
 //old Function Without Optimization
 // const getAllDetailsByEventIdService123 = async (request, fastify) => {
