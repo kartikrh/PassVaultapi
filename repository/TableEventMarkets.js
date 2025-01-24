@@ -662,6 +662,7 @@ const changeMarketCancelQuery = async (data, request, fastify) => {
           SET "wrStatus" =$1,
           "wrIsResult" = true,
           "wrResult" = null,
+          "wrSettledTime" = now()::timestamp,
           "wrData" = jsonb_set(
             jsonb_set("wrData"::jsonb, '{status}', '6'::jsonb, false),
             '{runner}', (
@@ -2361,6 +2362,7 @@ const cancelMarketQuery = async (request, fastify) => {
       set
         "wrStatus" = $1,
         "wrLastUpdate" = now()::timestamp,
+        "wrSettledTime" = now()::timestamp,
        "wrData" = jsonb_set(
           jsonb_set("wrData"::jsonb, '{status}', '6'::jsonb, false),
           '{runner}', (
@@ -3495,6 +3497,7 @@ const cancelEventMarketsQuery = async (eventMarketId, request, fastify) => {
       set
         "wrStatus" = $2,
         "wrLastUpdate" = now()::timestamp,
+        "wrSettledTime" = now()::timestamp,
        "wrData" = jsonb_set(
           jsonb_set("wrData"::jsonb, '{status}', '6'::jsonb, false),
           '{runner}', (

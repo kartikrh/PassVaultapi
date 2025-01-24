@@ -418,9 +418,18 @@ const connection = (socket , fastify) => {
     socket.join(`score-${commentaryId}`);
   });
   socket.on("betAllow", async (data) => {
-    // const { commentaryId, betAllow ,eventRefId } = data;
+    const { commentaryId, betAllow ,eventRefId } = data;
     // console.log("betAllow", betAllow);
     // await callTPAPI(data , fastify);
+    //emit the batallow 
+    const clientInRoom = global.socketIo.sockets.adapter.rooms.get(commentaryId);
+    if(clientInRoom?.size){
+      global.socketIo.to(data.commentaryId).emit("upBetAllow", {
+        commentaryId : commentaryId,
+        eventRefId : eventRefId,
+        betAllow : betAllow
+      });
+    }
   });
   
   socket.on("comUpdate", (data) => {
