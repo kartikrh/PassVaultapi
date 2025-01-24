@@ -662,6 +662,7 @@ const changeMarketCancelQuery = async (data, request, fastify) => {
           SET "wrStatus" =$1,
           "wrIsResult" = true,
           "wrResult" = null,
+          "wrSettledTime" = now()::timestamp,
           "wrData" = jsonb_set(
             jsonb_set("wrData"::jsonb, '{status}', '6'::jsonb, false),
             '{runner}', (
