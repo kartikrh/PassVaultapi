@@ -51,6 +51,7 @@ const {
   getManualMarketDataQuery,
   saveManualMarketQuery,
   getExtraMarketQuery,
+  upManualMarketQuery,
 } = require("../repository/TableEventMarkets");
 const { getRunnerByIdQuery, setResultInRunnerMarketQuery, getRunnerByMarketQuery } = require("../repository/TableMarketRunner");
 const configConstants = require("../utilities/configConstants");
@@ -2318,109 +2319,6 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
       // }
       // callPredictions.push(callPrediction);
   }
-  // if(playerMarket.length > 0){
-  //   for (let p of playerMarket){
-  //     let comPlayer = global.tblCommentaryPlayers.findIndex(
-  //       (item) => item.commentaryPlayerId === p.playerId
-  //     );
-  //     if (comPlayer === -1) {
-  //       errorLogger(
-  //         fastify,
-  //         "Player with this id not Found",
-  //         "ERROR --> services/eventMarket.js/updateMarketRateServiceV1",
-  //         request
-  //       );
-  //       continue;
-  //     }
-  //     let avg = (p.runners[0].line - global.tblCommentaryPlayers[comPlayer].batRun).toFixed(2);
-
-  //     await updatePredefinedQuery({
-  //       eventMarketId: p.eventMarketId,
-  //       predefinedValue: avg,
-  //     }, request, fastify)
-  //     // await updateAverageOfPlayerQuery({
-  //     //   commentaryPlayerId: p.playerId,
-  //     //   batsmanAverage: avg,
-  //     // }, request, fastify);	
-  //     // global.tblCommentaryPlayers[comPlayer].batsmanAverage = avg;
-  //   }
-  // }
-  // if(boundaryPlayer.length > 0){
-  //   for (let bp of boundaryPlayer){
-  //     let player = global.tblCommentaryPlayers.find(
-  //       (item) => item.commentaryPlayerId === bp.playerId
-  //     );
-  //     if (!player) {
-  //       errorLogger(
-  //         fastify,
-  //         "Player with this id not Found",
-  //         "ERROR --> services/eventMarket.js/updateMarketRateServiceV1",
-  //         request
-  //       );
-  //       continue;
-  //     }
-  //     let count = player.batFour + player.batSix;
-  //     let boun = (bp.runners[0].line - count).toFixed(2);
-  //     await updatePredefinedQuery({
-  //       eventMarketId: bp.eventMarketId,
-  //       predefinedValue: boun,
-  //     }, request, fastify)
-
-  //     // await updateBoundaryOfPlayerQuery({
-  //     //   commentaryPlayerId: bp.playerId,
-  //     //   boundary: boun,
-  //     // }, request, fastify);
-  //   }
-  // }
-  // if(pbfMarket.length > 0){
-  //   for (let pf of pbfMarket){
-  //     let player = global.tblCommentaryPlayers.find(
-  //       (item) => item.commentaryPlayerId === pf.playerId
-  //     );
-  //     if (!player) {
-  //       errorLogger(
-  //         fastify,
-  //         "Player with this id not Found",
-  //         "ERROR --> services/eventMarket.js/updateMarketRateServiceV1",
-  //         request
-  //       );
-  //       continue;
-  //     }
-  //     let count = player.batBall;
-  //     let pbf =(pf.runners[0].line - count).toFixed(2);
-  //     await updatePredefinedQuery({
-  //       eventMarketId: pf.eventMarketId,
-  //       predefinedValue: pbf,
-  //     }, request, fastify)
-      
-  //     // await updatePbfOfPlayerQuery({
-  //     //   commentaryPlayerId: pf.playerId,
-  //     //   ballsFaced: pbf,
-  //     // }, request, fastify);
-  //   }
-  // }
-  //   // get the team and teamName by commentaryId
-  //   const teams = global.tblCommentaryTeams
-  //   .filter((item) => item.commentaryId === eventMarket[0].commentaryId)
-  //   .reduce((acc, current) => {
-  //     if (!acc.some(item => item.teamId === current.teamId)) {
-  //       acc.push(current);
-  //     }
-  //     return acc;
-  //   }, [])
-  //   .map((item) => {
-  //     return {
-  //       teamId: item.teamId,
-  //       teamName: item.teamName,
-  //     };
-  //   });
-  // let categories = global.tblMarketTypeCategories.filter(
-  //   (item) => item.marketTypeCategoryId > 0
-  // ).map(item => ({
-  //   marketTypeCategoryId: item.marketTypeCategoryId,
-  //   categoryName: item.categoryName,
-  //   displayOrder: item.displayOrder
-  // }));
   let data = await marketListByCIdService({ body: { commentaryId: commentary.commentaryId } }, fastify);
   // data.callPrediction = callPredictions;
  return data;
@@ -2718,6 +2616,13 @@ const saveManualMarketDataService = async (request, fastify) => {
   await saveManualMarketQuery(request.body, request, fastify);
   return "Market saved successfully";
 }
+const upManualMarketDataService = async (request, fastify) => {
+
+  // for (let mar of request.body.market){
+  await upManualMarketQuery(request.body.eventMarket, request, fastify);
+  // }
+  return "Market updated successfully";
+}
 module.exports = {
   getDetailsByCIdService,
   getAllEventMarketsService,
@@ -2764,5 +2669,6 @@ module.exports = {
   cancelEventMarketsByIdsService,
   suspendMarketService,
   getManualMarketDataService,
-  saveManualMarketDataService
+  saveManualMarketDataService,
+  upManualMarketDataService
 };

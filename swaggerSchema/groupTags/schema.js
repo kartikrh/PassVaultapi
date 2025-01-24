@@ -4282,6 +4282,39 @@ const EventMarket = {
       }
     }
   },
+  upManualMarket:{
+    schema : {
+      tags : ["EventMarket"],
+      description : "update Manual Market",
+      security : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          eventMarkets : {
+            type : "array",
+            items : {
+              type : "object",
+              properties : {
+                eventMarketId : {type : "integer"},
+                runner : {
+                  type : "array",
+                  items : {
+                    type : "object",
+                    properties : {
+                      runnerId : {type : "integer"},
+                    },
+                    required : ["runner"]
+                  }
+                }
+              },
+              required : ["eventMarketId", "runner"]
+            }
+          }
+        },
+        required : ["eventMarket"]
+      }
+    }
+  },
   getComByComp:{
     schema : {
       tags : ["EventMarket"],

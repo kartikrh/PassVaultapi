@@ -4498,7 +4498,127 @@ const saveManualMarketQuery = async (data, request, fastify) => {
       bind: [dataToStore, mar[0].eventMarketId],
       type: fastify.db.QueryTypes.SELECT,
     });
+    return true;
 
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/saveManualMarketQuery",
+      request
+    );
+    throw new Error(error.message);
+    
+  }
+}
+const upManualMarketQuery = async (data, request, fastify) => {
+  try {
+  //   const mar = await fastify.db.query(
+  //     `
+  //       UPDATE "tblEventMarkets" SET
+  //         "wrStatus" = $1,
+  //         "wrIsActive" = $2,
+  //         "wrIsAllow" = $3,
+  //         "wrMargin" = $4,
+  //         "wrRateDiff" = $5,
+  //         "wrLastUpdate" = now()::timestamp,
+  //         "wrPredefinedValue" = $7
+  //       WHERE "wrID" = $6
+  //     `,
+  //     {
+  //       bind: [
+  //         data.status,
+  //         data.isActive,
+  //         data.isAllow,
+  //         data.margin,
+  //         data.rateDiff,
+  //         data.eventMarketId,
+  //         data.predefinedValue
+  //       ],
+  //       type: fastify.db.QueryTypes.SELECT,
+  //     }
+  //   )
+  //   for (let run of data.runners) {
+  //     await fastify.db.query(
+  //       `
+  //         UPDATE "tblMarketRunners" SET
+  //           "wrSelectionStatus" = $1,
+  //           "wrLine" = $2,
+  //           "wrOverRate" = $3,
+  //           "wrUnderRate" = $4,
+  //           "wrBackPrice" = $5,
+  //           "wrLayPrice" = $6,
+  //           "wrBackSize" = $7,
+  //           "wrLaySize" = $8
+  //         WHERE "wrRunnerId" = $9
+  //       `,
+  //       {
+  //         bind: [
+  //           data.status,
+  //           run.line,
+  //           run.overRate,
+  //           run.underRate,
+  //           run.backPrice,
+  //           run.layPrice,
+  //           run.backSize,
+  //           run.laySize,
+  //           run.runnerId
+  //         ],
+  //         type: fastify.db.QueryTypes.SELECT,
+  //       }
+  //     )
+  //   }
+  //   // create wrData
+  //  let dataToStore = await fastify.db.query(
+  //     `SELECT 
+  //         tem."wrID" as "marketId",
+  //         tem."wrEventRefID" as "eventId",
+  //         tem."wrMarketName" as "marketName",
+  //         tem."wrStatus" as "status",
+  //         tem."wrIsActive" as "isActive",
+  //         tem."wrIsAllow" as "isAllow",
+  //         json_agg(
+  //             json_build_object(
+  //                 'runnerId' , tmr."wrRunnerId",
+  //                 'runner', tmr."wrRunner",
+  //                 'status' , tmr."wrSelectionStatus",
+  //                 'line', tmr."wrLine",
+  //                 'overRate', tmr."wrOverRate",
+  //                 'underRate', tmr."wrUnderRate",
+  //                 'backPrice', tmr."wrBackPrice",
+  //                 'layPrice', tmr."wrLayPrice",
+  //                 'backSize', tmr."wrBackSize",
+  //                 'laySize', tmr."wrLaySize"
+  //             )
+  //         ) as "runner"
+  //     FROM "tblEventMarkets" tem
+  //     LEFT JOIN "tblMarketRunners" tmr ON tmr."wrEventMarketId" = tem."wrID"
+  //     WHERE tem."wrID" = $1 AND tem."wrIsDeleted" = false AND tmr."wrIsDeleted" = false
+  //     GROUP BY tem."wrID"`,
+  //     {
+  //       type: fastify.db.QueryTypes.SELECT,
+  //       bind: [data.eventMarketId],
+  //     }
+  //   )
+  //   dataToStore = dataToStore[0];
+  //   await fastify.db.query(
+  //     `UPDATE "tblEventMarkets" SET "wrData" = $1,"wrLastUpdate" = now()::timestamp WHERE "wrID" = $2`,
+  //     {
+  //       bind: [dataToStore, data.eventMarketId],
+  //       type: fastify.db.QueryTypes.SELECT,
+  //     }
+  //   );
+    await fastify.db.query(
+      `
+        CALL proc_manual_market_update($1)
+      `,
+      {
+        bind: [
+          JSON.stringify(data) ? JSON.stringify(data) : null
+        ],
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
     return true;
 
   } catch (error) {
@@ -4585,6 +4705,7 @@ module.exports = {
   socketMarketRunnerDataQuery,
   getManualMarketDataQuery,
   saveManualMarketQuery,
-  getExtraMarketQuery
+  getExtraMarketQuery,
+  upManualMarketQuery
 }
 
