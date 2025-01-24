@@ -4498,7 +4498,6 @@ const saveManualMarketQuery = async (data, request, fastify) => {
       bind: [dataToStore, mar[0].eventMarketId],
       type: fastify.db.QueryTypes.SELECT,
     });
-
     return true;
 
   } catch (error) {
