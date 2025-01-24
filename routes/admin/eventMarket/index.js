@@ -338,17 +338,17 @@ module.exports = async (fastify, opts) => {
         ],
         handler : (request, reply) => setAllMarketClose(request, reply, fastify)
     })
-    fastify.post("/cancelCloseMarket",{
-        schema : EventMarket.changeStatus.schema,
-        preHandler: [
-            (request, reply) => authorize(request, reply, fastify),
-            (request, reply) => checkPermission(request, reply, fastify,{
-                tabName: "Event Markets",
-                mode: "edit"            
-            })
-        ],
-        handler : (request, reply) => setCloseMarketCancel(request, reply, fastify)
-    })
+    // fastify.post("/cancelCloseMarket",{
+    //     schema : EventMarket.changeStatus.schema,
+    //     preHandler: [
+    //         (request, reply) => authorize(request, reply, fastify),
+    //         (request, reply) => checkPermission(request, reply, fastify,{
+    //             tabName: "Event Markets",
+    //             mode: "edit"            
+    //         })
+    //     ],
+    //     handler : (request, reply) => setCloseMarketCancel(request, reply, fastify)
+    // })
     fastify.post("/cancelSettleMarket",{
         schema : EventMarket.changeStatus.schema,
         preHandler: [
