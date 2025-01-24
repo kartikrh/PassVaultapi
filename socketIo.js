@@ -422,6 +422,7 @@ const connection = (socket , fastify) => {
     // console.log("betAllow", betAllow);
     // await callTPAPI(data , fastify);
   });
+  
   socket.on("comUpdate", (data) => {
     const {ballStatus , eventRefId , commentaryId } = data;
     if(ballStatus?.toLowerCase() === "ballstart"){
