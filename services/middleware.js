@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const { deviceInfo } = require("../utilities/index");
+const configConstants = require("../utilities/configConstants");
 
 const {
   createUserLoginInfo,
@@ -60,7 +61,33 @@ const permissionCheckService = async (request, fastify, data) => {
   return true;
 };
 
+async function XKeyConfigForExtrnal(request, fastify){
+  try {
+      // check header has x-key or not
+      const xKey = request.headers['x-key'];
+
+      if (!xKey) {
+          throw new Error('X-Key is missing in the header');
+      }
+      // COMMENTARYTIPSXKEY
+      // check if vendor with this key exists or not
+      const vendor = global.tblConfigs.find((item) => item.key === configConstants.COMMENTARYTIPSXKEY).value
+      if (!vendor) {
+          throw new Error('X-key not found');
+      }
+      // validating config key value and x-key in header
+      if (vendor !== xKey) {
+          throw new Error('Invalid X-key');
+      }
+      return true;
+  } catch (error) {
+      console.log("XKeyConfigForExtrnal Error:", error)
+      throw new Error(error.message);
+  }
+}
+
 module.exports = {
   authorization,
   permissionCheckService,
+  XKeyConfigForExtrnal,
 };

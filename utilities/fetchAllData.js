@@ -84,6 +84,7 @@ const {
 const { getAllPhotoLibraryQuery, getAllLibraryImagesQuery } = require("../repository/TablePhotoLibrary");
 const { getAllVideoLibraryQuery } = require("../repository/TableVideoLibrary");
 const { getAllShotTypesQuery } = require("../repository/TableShotType");
+const { getAllTipsQuery } = require("../repository/TableTips");
 
 const fetchAllDataFromDb = async (fastify, reply) => {
   try {
@@ -176,6 +177,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const getAllLibraryImages = await getAllLibraryImagesQuery(fastify);
     const getAllVideoLibrary = await getAllVideoLibraryQuery(fastify);
     const getAllShotTypes = await getAllShotTypesQuery(fastify);
+    const getAllTips = await getAllTipsQuery(fastify);
 
 
     global.tblTabs = getAllTabs;
@@ -248,6 +250,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblLibraryImages = getAllLibraryImages;
     global.tblVideoLibrary = getAllVideoLibrary;
     global.tblShotType = getAllShotTypes;
+    global.tblTips = getAllTips;
     // global.tblMarketRunnerV1 = getEventMarketRunnerV1;
     // global.responseLogs = responseLogs;
     // global.thirdPartyAPILogs = thirdPartyAPILogs;
