@@ -757,7 +757,19 @@ const setPlayerHistoryService = async (data,request, fastify) => {
         let sr1 = playerBattingHistory.ballsFacedCount != 0 ? 
         (playerBattingHistory.totalRuns + batRun) / (playerBattingHistory.ballsFacedCount + ballsFacedCount) * 100 
         : playerBattingHistory.strikeRate;
-        let batsmanAvg = playerBattingHistory.outCount === 0 ? playerBattingHistory.totalRuns : playerBattingHistory.totalRuns / playerBattingHistory.outCount;        
+        let playertotalRuns = 
+          (playerBattingHistory.totalRuns === undefined || playerBattingHistory.totalRuns === null || playerBattingHistory.totalRuns === 0) 
+          ? commBatHist.totalRuns 
+          : playerBattingHistory.totalRuns + commBatHist.totalRuns;
+      
+        let playerOutCount = 
+          (playerBattingHistory.outCount === undefined || playerBattingHistory.outCount === null || playerBattingHistory.outCount === 0) 
+            ? commBatHist.outCount 
+            : playerBattingHistory.outCount + commBatHist.outCount;
+      
+        let batsmanAvg = playerOutCount === 0 ? playertotalRuns : playertotalRuns / playerOutCount;
+
+        
         phis = {
           battingHistoryId: playerBattingHistory.battingHistoryId,
           matchTypeId: comdetail.historyMatchTypeId,

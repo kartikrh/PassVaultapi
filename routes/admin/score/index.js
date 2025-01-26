@@ -37,6 +37,7 @@ const { getMarketTypeAndCategoryByMarketType } = require("../../../controller/us
 const { getAllCompetition } = require("../../../controller/users/admin/competition");
 const { getAllVideoLibrary } = require("../../../controller/users/admin/videoLibrary/index");
 const { getAllPhotoLibrary, allLibraryImages } = require("../../../controller/users/admin/photoLibrary/index");
+const { getAllTipsClientAPI } = require("../../../controller/users/admin/tips/index");
 
 const {
   Score,
@@ -303,5 +304,8 @@ module.exports = async (fastify, opts) => {
         (request, reply) => authorize(request, reply, fastify)
         ],
     handler: (request, reply) => insertCommentaryConsoleFe(request, reply, fastify)
-  })
+  });
+  fastify.post("/tips", {
+    handler: (request, reply) => getAllTipsClientAPI(request, reply, fastify)
+  });
 };
