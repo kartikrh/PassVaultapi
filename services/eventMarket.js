@@ -985,6 +985,16 @@ const changeMarketCancelService = async (request, fastify) => {
         request
       );
     }
+    marketLogger(
+      {
+        eventMarketId,
+        actionType: MarketActionType.marketCancel,
+        commentaryId,
+        value: `eventMarketStatus:${EventMarketStatus.Cancel}`,
+      },
+      request,
+      fastify
+    );
     return "Market Cancel updated successfully";
   } else {
     throw new Error("Market is not currently closed, so it cannot be canceled");
@@ -1063,6 +1073,16 @@ const changeMarketResultService = async (request, fastify) => {
           request,
           fastify
         )
+        marketLogger(
+          {
+            eventMarketId,
+            actionType: MarketActionType.setResult,
+            commentaryId,
+            value: `eventMarketStatus:${EventMarketStatus.Settled},result:${result}`,
+          },
+          request,
+          fastify
+        );
       }
       return "Market result updated successfully";
     } else {
@@ -1114,6 +1134,16 @@ const changeMarketResultService = async (request, fastify) => {
         request,
         fastify
       )
+      marketLogger(
+        {
+          eventMarketId,
+          actionType: MarketActionType.setResult,
+          commentaryId,
+          value: `eventMarketStatus:${EventMarketStatus.Settled},result:${result}`,
+        },
+        request,
+        fastify
+      );
     }
     return "Market result updated successfully";
   }
@@ -1513,7 +1543,7 @@ const UpdateResulOrApproveEventMarketService = async (request, fastify) => {
       {
         eventMarketId,
         actionType: MarketActionType.setAndFinalizeResult,
-        value: isResult,
+        value: `isResult:${isResult},result:${result}`,
       },
       request,
       fastify
@@ -1531,8 +1561,8 @@ const UpdateResulOrApproveEventMarketService = async (request, fastify) => {
     marketLogger(
       {
         eventMarketId,
-        actionType: MarketActionType.setResult,
-        value: isResult,
+        actionType: MarketActionType.setResultAndIsResultFalse,
+        value: `isResult:${isResult},result:${result}`,
       },
       request,
       fastify
@@ -1711,6 +1741,16 @@ const cancelSettleMarketService = async (request, fastify) => {
   if (eventIndex !== -1) {
     global.tblEventMarkets[eventIndex].status = EventMarketStatus.Cancel;
   }
+  marketLogger(
+    {
+      eventMarketId,
+      actionType: MarketActionType.marketCancel,
+      value: `eventMarketStatus:${EventMarketStatus.Cancel}`,
+      commentaryId : checkMarketInDb[0].commentaryId
+    },
+    request,
+    fastify
+  );
   return "Market Cancel updated successfully";
 
 }
@@ -2422,7 +2462,7 @@ const updateMarketResultService = async (request, fastify) => {
       {
         eventMarketId,
         actionType: MarketActionType.setAndFinalizeResult,
-        value: isResult,
+        value: `isResult:${isResult},result:${result}`,
       },
       request,
       fastify
@@ -2440,8 +2480,8 @@ const updateMarketResultService = async (request, fastify) => {
     marketLogger(
       {
         eventMarketId,
-        actionType: MarketActionType.setResult,
-        value: isResult,
+        actionType: MarketActionType.setResultAndIsResultFalse,
+        value: `isResult:${isResult},result:${result}`,
       },
       request,
       fastify
@@ -2519,6 +2559,29 @@ const cancelEventMarketsByIdsService = async (request, fastify) => {
   }
 
   await cancelEventMarketsQuery(eventMarketId, request, fastify);
+  if(eventMarketId.length > 0){
+    for (let item of eventMarketId){
+     // add log
+      marketLogger(
+        {
+          eventMarketId: item,
+          actionType: MarketActionType.marketCancel,
+          value:`EventMarketStatus:${EventMarketStatus.Cancel}`,
+          commentaryId : null
+        },
+        request,
+        fastify
+      ).catch((err) => {
+        console.log("market data logger console", err);
+        errorLogger(
+          fastify,
+          err.message,
+          "ERROR --> services/commentary.js/cancelEventMarketsByIdsService",
+          request
+        );
+      });
+    }
+  }
 
   return "Market(s) canceled successfully";
 };
