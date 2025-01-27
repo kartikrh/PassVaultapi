@@ -5,6 +5,7 @@ const {
   upPlayerBallHistQuery,
   savePlayerBatHistQuery,
   savePlayerBallHistQuery,
+  getCommPlayerBowlHistQuery
 } = require("../repository/TableCommPlayerHistory");
 const { 
   getAllPlayerBowlingHistory, 
@@ -14,6 +15,8 @@ const {
   exportPlayerHistoryQuery,
   getBattingHistoryByPlayerIdQuery,
   getBowlingHistoryByPlayerIdQuery,
+  getBatterHistoryQuery,
+  getBowlerHistorydQuery,
  } = require("../repository/TablePlayerHistory");
 const { getLogByComIdQuery, createTeamPointLogQuery } = require("../repository/TableTeamPointLogs");
  const { exportExcelFile, importPlayersHistoryData } = require("../utilities/exportImportExcel");
@@ -222,14 +225,7 @@ const validatePlayerAndMatchType = async(payload, request) => {
 };
 // const setPlayerHistoryService = async (data,request, fastify) => {
 //   const {commentaryId} = data;
-//   // const bowlerBBI = await fastify.db.query(`
-//   //   SELECT * FROM get_player_bbi()`, {
-//   //   type: fastify.db.QueryTypes.SELECT,
-//   // });
-//   // const bowlerBBM = await fastify.db.query(`
-//   //   SELECT * FROM get_player_bbm()`, {
-//   //   type: fastify.db.QueryTypes.SELECT,
-//   // });
+
 //   for(let com of commentaryId){
 //     let res = await getLogByComIdQuery(
 //       {
@@ -244,10 +240,14 @@ const validatePlayerAndMatchType = async(payload, request) => {
 //     }
 //     let comdetail = global.tblCommentaries.find((item) => item.commentaryId === com);
 //     let matchType = global.tblMatchTypes.find((item) => item.matchTypeId === comdetail.historyMatchTypeId );
-//     const comPlayer = global.tblCommentaryPlayers.filter((item) => item.commentaryId === com)
+//     const comPlayer = global.tblCommentaryPlayers.filter((item) => item.commentaryId === com 
+//       && (item.batBall > 0 || item.bowlerTotalBall > 0))
 //     .filter((item, index, self) =>
 //       index === self.findIndex((t) => t.playerId === item.playerId)
 //     );
+//     if(comPlayer.length <= 0){
+//       continue;
+//     }
 //     let dataToUpdate = [];
 //     let playerArr = [];
 //     let playerArrball = [];
@@ -258,11 +258,25 @@ const validatePlayerAndMatchType = async(payload, request) => {
 //       ).map((item) => {
 //         return item.commentaryId
 //       });
+//       await fastify.db.query(`CALL proc_player_bowl_summary_calculation($1)`,
+//         {
+//           bind: [{playerId:p.playerId, matchTypeId: [comdetail.historyMatchTypeId]}], 
+//           type: fastify.db.QueryTypes.RAW,
+//         }
+//       );
+//       await fastify.db.query(`CALL proc_player_bat_summary_calculation($1)`,
+//         {
+//           bind: [{playerId:p.playerId, matchTypeId: [comdetail.historyMatchTypeId]}], 
+//           type: fastify.db.QueryTypes.RAW,
+//         }
+//       );
 //       const plyOutCount = global.tblCommentaryPlayers.filter((item) => item.playerId === p.playerId && matchTypeCommentaries.includes(item.commentaryId));
 //       const player = global.tblCommentaryPlayers.filter((item) => item.playerId === p.playerId && item.commentaryId === com );
 //       const comPlayerId = player.map((item) => item.commentaryPlayerId);
-//       const playerBattingHistory = global.tblPlayersBattingHistory.find((item) => item.playerId === p.playerId && item.matchTypeId === comdetail.historyMatchTypeId);
-//       const playeBallHis = global.tblPlayersBowlingHistory.find((item) => item.playerId === p.playerId && item.matchTypeId === comdetail.historyMatchTypeId);
+//       const playerBattingHistory = await getBatterHistoryQuery({playerId: p.playerId, matchTypeId: comdetail.historyMatchTypeId}, request, fastify);
+//       const playeBallHis = await getBowlerHistorydQuery({playerId: p.playerId, matchTypeId: comdetail.historyMatchTypeId}, request, fastify);
+//       // const playerBattingHistory = global.tblPlayersBattingHistory.find((item) => item.playerId === p.playerId && item.matchTypeId === comdetail.historyMatchTypeId);
+//       // const playeBallHis = global.tblPlayersBowlingHistory.find((item) => item.playerId === p.playerId && item.matchTypeId === comdetail.historyMatchTypeId);
 //       const overs = global.tblOvers.filter(item => item.commentaryId === com 
 //         && comPlayerId.includes(item.bowlerId));
 
@@ -291,12 +305,13 @@ const validatePlayerAndMatchType = async(payload, request) => {
 //             : `${wicketInnings2}/${ballRunInnings2}`;
 //         }
 
+//       let wicketsCount = overs.reduce((sum, item) => sum + item.totalWicket, 0);
 //       let phis = {};
 //       let cPlayer = {};
 //       let cPlayerBall = {};
 //       let pbHis = {};
 //       let inningCount = player.filter((item)=>item.isInPlayingEleven == true).length; 
-//       let ballsFacedCount = player.reduce((acc, item) => acc + item.playerBallFaced, 0);
+//       let ballsFacedCount = player.reduce((acc, item) => acc + item.batBall, 0);
 //       let batRun = player.reduce((acc, item) => acc + item.batRun, 0);
 //       let notOut = player.filter((item) => item.isBatterOut == false).length;
 //       let sr =  ballsFacedCount != 0 ? (batRun / ballsFacedCount) * 100 : 0;
@@ -312,11 +327,69 @@ const validatePlayerAndMatchType = async(payload, request) => {
 //       let bbm = wicket != 0 ? `${wicket}/${ballRun}` : 0;
 //       let eco = player[0].bowlerEconomy;
 //       let ballSr = player[0].batsmanStrikeRate;
-//       let wicket4 = overs.filter((item) => item.totalWicket == 4).length;
-//       let wicket5 = overs.filter((item) => item.totalWicket == 5).length;
-//       let wicket10 = overs.filter((item) => item.totalWicket >= 10).length;
+//       let wicket4 = wicketsCount == 4 ? 4 : 0;
+//       let wicket5 = wicketsCount == 5 ? 5 : 0;
+//       let wicket10 = wicketsCount >= 10 ? wicketsCount : 0;
+//       // let wicket4 = overs.filter((item) => item.totalWicket == 4).length;
+//       // let wicket5 = overs.filter((item) => item.totalWicket == 5).length;
+//       // let wicket10 = overs.filter((item) => item.totalWicket >= 10).length;
 //       let batOutCount = plyOutCount.filter((item) => item.wicketType !== null).length;
-//       let batAvg = batOutCount !== 0 ? batRun / batOutCount : batRun
+//       let batAvg = inningCount !== 0 ? batRun / inningCount : 0
+
+//       let commBatHist = {
+//         matchTypeId: comdetail.historyMatchTypeId,
+//         matchTypeName: matchType.matchType,
+//         playerId : p.playerId,
+//         commentaryId: com,
+//         commentaryPlayerId : player[0].commentaryPlayerId,
+//         matchCount : 1,
+//         inningsCount : inningCount,
+//         notOut : notOut,
+//         totalRuns : batRun,
+//         highestScore : notOut != 0 ? batRun + '*' : batRun,
+//         average : batAvg,
+//         ballsFacedCount : ballsFacedCount,
+//         strikeRate : sr,
+//         countOf100 : batRun >= 100 ? 1 : 0,
+//         countOf50 : batRun >= 50 ? 1 : 0,
+//         countOf4 : batFour,
+//         countOf6 : batSix,
+//         catchCount : catchCount,
+//         stumpCount : stumpCount,
+//         outCount: player[0].wicketType !== null ? 1 : 0,
+//         createdBy : request.userTokenInfo.WrUserId,
+//       };
+//       let totalOvers = 0;
+//       if (ballCount > 0) {
+//           totalOvers = Math.floor(ballCount / 6) + (ballCount % 6) / 6;
+//       }
+      
+//       let bowlerEconomy = 0;
+//       if (totalOvers > 0 && ballRun) {
+//           bowlerEconomy = ballRun / totalOvers;
+//       }
+//       let commBowlHist = {
+//         matchTypeId: comdetail.historyMatchTypeId,
+//         matchTypeName: matchType.matchType,
+//         playerId : p.playerId,
+//         commentaryId: com,
+//         commentaryPlayerId : player[0].commentaryPlayerId,
+//         matchCount : 1,
+//         inningsCount : inningCount,
+//         ballCount : ballCount,
+//         runsFromBowler : ballRun,
+//         wicketsCount : wicket,
+//         bowlerAverage : ballavg,
+//         bestBowlingInInnings : bbi,
+//         bestBowlingInMatch : bbm,
+//         economy : bowlerEconomy,
+//         bowlerStrikeRate : wicket === 0 ? 0 : ballCount / wicket,
+//         wickets4 : wicket4,
+//         wickets5  : wicket5,
+//         wickets10 : wicket10,
+//         catchCount : catchCount,
+//         createdBy : request.userTokenInfo.WrUserId,
+//       };
 //       if(!playerBattingHistory){
 //         phis = {
 //           battingHistoryId: 0,
@@ -327,7 +400,7 @@ const validatePlayerAndMatchType = async(payload, request) => {
 //           inningsCount : inningCount,
 //           notOut : notOut,
 //           totalRuns : batRun,
-//           highestScore : batRun,
+//           highestScore : notOut != 0 ? batRun + '*' : batRun,
 //           average : batAvg,
 //           ballsFacedCount : ballsFacedCount,
 //           strikeRate : sr,
@@ -339,14 +412,24 @@ const validatePlayerAndMatchType = async(payload, request) => {
 //           stumpCount : stumpCount,
 //           outCount: batOutCount,
 //         }
-
 //       }
 //       else {
-//         // console.log("1",playerBattingHistory);
 //         let sr1 = playerBattingHistory.ballsFacedCount != 0 ? 
 //         (playerBattingHistory.totalRuns + batRun) / (playerBattingHistory.ballsFacedCount + ballsFacedCount) * 100 
 //         : playerBattingHistory.strikeRate;
-//         let batsmanAvg = playeBallHis.wicketsCount === 0 ? 0 : playerBattingHistory.totalRuns / playerBattingHistory.outCount;        
+//         let playerTotalRuns = playerBattingHistory.totalRuns + batRun
+//         let totalInnings = playerBattingHistory.inningsCount + inningCount
+//         let batsmanAvg = playerTotalRuns === 0 ? 0 : playerTotalRuns / totalInnings;
+
+//         let playerScore = String(playerBattingHistory.highestScore);
+//         let commScore = String(commBatHist.highestScore);
+        
+//         let playerHighestScore = (playerScore.includes('*') && !commScore.includes('*')) 
+//             ? playerScore 
+//             : (commScore.includes('*') && !playerScore.includes('*')) 
+//                 ? commScore 
+//                 : (parseInt(playerScore.replace('*', ''), 10) > parseInt(commScore.replace('*', ''), 10) ? playerScore : commScore);
+        
 //         phis = {
 //           battingHistoryId: playerBattingHistory.battingHistoryId,
 //           matchTypeId: comdetail.historyMatchTypeId,
@@ -356,8 +439,8 @@ const validatePlayerAndMatchType = async(payload, request) => {
 //           inningsCount : playerBattingHistory.inningsCount + inningCount,
 //           notOut : playerBattingHistory.notOut + notOut,
 //           totalRuns : playerBattingHistory.totalRuns + batRun,
-//           highestScore : playerBattingHistory.highestScore <batRun ?batRun : playerBattingHistory.highestScore,
-//           // average : playerBattingHistory.average,
+//           // highestScore : playerBattingHistory.highestScore <batRun ?batRun : playerBattingHistory.highestScore,
+//           highestScore : playerHighestScore,
 //           average : batsmanAvg,
 //           ballsFacedCount : playerBattingHistory.ballsFacedCount + ballsFacedCount,
 //           strikeRate : sr1,
@@ -408,65 +491,96 @@ const validatePlayerAndMatchType = async(payload, request) => {
 //             bowlerEconomy = playeBallHis.runsFromBowler / totalOvers;
 //         }
 //         let bowlerStrikeRate = playeBallHis.wicketsCount === 0 ? 0 : playeBallHis.ballCount / playeBallHis.wicketsCount;
-//         // let BBI = bowlerBBI.find((item) => item.playerid === player[0].playerId)
-//         // let BBM = bowlerBBM.find((item) => item.playerid === player[0].playerId)
-//         const compareBBM = (playeBallHis, currentBBM) => {
-//           const parseBBI = (bbi) => {
-//             if (!bbi || bbi === "0/0" || bbi === "0" || bbi.startsWith("0/")) {
-//                 return 0;
+//         const bestInnings = await getCommPlayerBowlHistQuery(
+//           {playerId: p.playerId, matchTypeId: comdetail.historyMatchTypeId},
+//           request,
+//           fastify
+//         )
+//         function compareBBIandBBM(bbi1, bbm1, bbi2, bbm2) {
+//           function parseBowlingStats(stats) {
+//             if (typeof stats !== 'string' || !stats.includes('/')) {
+//               return { wickets: 0, runs: 0 };
 //             }
-            
-//             const [wickets, runs] = bbi.split('/').map(Number);
-            
+//             const [wickets, runs] = stats.split('/').map(Number);
 //             return { wickets, runs };
-//         };
-      
-//           const playerBBM = parseBBI(playeBallHis.bestBowlingInMatch);
-//           const currentParsedBBM = parseBBI(currentBBM);
-//           if (
-//               currentParsedBBM.wickets > playerBBM.wickets ||
-//               (currentParsedBBM.wickets === playerBBM.wickets && currentParsedBBM.runs < playerBBM.runs)
-//           ) {
-//               return currentBBM;
-//           } else if (
-//             playerBBM.wickets > currentParsedBBM.wickets ||
-//               (playerBBM.wickets === currentParsedBBM.wickets && playerBBM.runs < currentParsedBBM.runs)
-//           ) {
-//               return playeBallHis.bestBowlingInMatch;
 //           }
-//           return currentBBM;
-//       };
-      
-//       const updatedBBM = compareBBM(playeBallHis, bbm);
-
-//       const compareBBI = (playerBallHis, currentBBI) => {
-//         const parseBBI = (bbi) => {
-//           if (!bbi || bbi === "0/0" || bbi === "0" || bbi.startsWith("0/")) {
-//             return 0;
+        
+//           const { wickets: wickets1, runs: runs1 } = parseBowlingStats(bbi1);
+//           const { wickets: wickets2, runs: runs2 } = parseBowlingStats(bbi2);
+//           const { wickets: wickets1BBM, runs: runs1BBM } = parseBowlingStats(bbm1);
+//           const { wickets: wickets2BBM, runs: runs2BBM } = parseBowlingStats(bbm2);
+        
+//           function compareStats(wickets1, runs1, wickets2, runs2) {
+//             if (wickets1 > wickets2) return `${wickets1}/${runs1}`;
+//             if (wickets1 < wickets2) return `${wickets2}/${runs2}`;
+        
+//             return runs1 < runs2 ? `${wickets1}/${runs1}` : `${wickets2}/${runs2}`;
 //           }
-//           const [wickets, runs] = bbi.split('/').map(Number);
-//           return { wickets, runs };
-//         };
-      
-//         const playerBBI = parseBBI(playerBallHis.bestBowlingInInnings);
-//         const currentParsedBBI = parseBBI(currentBBI);
-      
-//         if (
-//           currentParsedBBI.wickets > playerBBI.wickets ||
-//           (currentParsedBBI.wickets === playerBBI.wickets && currentParsedBBI.runs < playerBBI.runs)
-//         ) {
-//           return currentBBI;
-//         } else if (
-//           playerBBI.wickets > currentParsedBBI.wickets ||
-//           (playerBBI.wickets === currentParsedBBI.wickets && playerBBI.runs < currentParsedBBI.runs)
-//         ) {
-//           return playerBallHis.bestBowlingInInnings;
+        
+//           const bestBBI = compareStats(wickets1, runs1, wickets2, runs2);
+//           const bestBBM = compareStats(wickets1BBM, runs1BBM, wickets2BBM, runs2BBM);
+        
+//           return { bestBBI, bestBBM };
 //         }
+//         const { bestBBI, bestBBM } = compareBBIandBBM(bestInnings.bbi, bestInnings.bbm, bbi, bbm);
+        
+//       //   const compareBBM = (playeBallHis, currentBBM) => {
+//       //     const parseBBI = (bbi) => {
+//       //       if (!bbi || bbi === "0/0" || bbi === "0" || bbi.startsWith("0/")) {
+//       //           return 0;
+//       //       }
+            
+//       //       const [wickets, runs] = bbi.split('/').map(Number);
+            
+//       //       return { wickets, runs };
+//       //   };
       
-//         return currentBBI;
-//       };
+//       //     const playerBBM = parseBBI(playeBallHis.bestBowlingInMatch);
+//       //     const currentParsedBBM = parseBBI(currentBBM);
+//       //     if (
+//       //         currentParsedBBM.wickets > playerBBM.wickets ||
+//       //         (currentParsedBBM.wickets === playerBBM.wickets && currentParsedBBM.runs < playerBBM.runs)
+//       //     ) {
+//       //         return currentBBM;
+//       //     } else if (
+//       //       playerBBM.wickets > currentParsedBBM.wickets ||
+//       //         (playerBBM.wickets === currentParsedBBM.wickets && playerBBM.runs < currentParsedBBM.runs)
+//       //     ) {
+//       //         return playeBallHis.bestBowlingInMatch;
+//       //     }
+//       //     return currentBBM;
+//       // };
       
-//       const updatedBBI = compareBBI(playeBallHis, bbi);
+//       // const updatedBBM = compareBBM(playeBallHis, bbm);
+
+//       // const compareBBI = (playerBallHis, currentBBI) => {
+//       //   const parseBBI = (bbi) => {
+//       //     if (!bbi || bbi === "0/0" || bbi === "0" || bbi.startsWith("0/")) {
+//       //       return 0;
+//       //     }
+//       //     const [wickets, runs] = bbi.split('/').map(Number);
+//       //     return { wickets, runs };
+//       //   };
+      
+//       //   const playerBBI = parseBBI(playerBallHis.bestBowlingInInnings);
+//       //   const currentParsedBBI = parseBBI(currentBBI);
+      
+//       //   if (
+//       //     currentParsedBBI.wickets > playerBBI.wickets ||
+//       //     (currentParsedBBI.wickets === playerBBI.wickets && currentParsedBBI.runs < playerBBI.runs)
+//       //   ) {
+//       //     return currentBBI;
+//       //   } else if (
+//       //     playerBBI.wickets > currentParsedBBI.wickets ||
+//       //     (playerBBI.wickets === currentParsedBBI.wickets && playerBBI.runs < currentParsedBBI.runs)
+//       //   ) {
+//       //     return playerBallHis.bestBowlingInInnings;
+//       //   }
+      
+//       //   return currentBBI;
+//       // };
+      
+//       // const updatedBBI = compareBBI(playeBallHis, bbi);
 //         pbHis = {
 //           bowlingHistoryId: playeBallHis.bowlingHistoryId,
 //           matchTypeId: comdetail.historyMatchTypeId,
@@ -477,16 +591,11 @@ const validatePlayerAndMatchType = async(payload, request) => {
 //           ballCount : playeBallHis.ballCount + ballCount,
 //           runsFromBowler : playeBallHis.runsFromBowler + ballRun,
 //           wicketsCount : playeBallHis.wicketsCount + wicket,
-//           // bowlerAverage : playeBallHis.bowlerAverage,
-//           // bestBowlingInInnings : playeBallHis.bestBowlingInInnings,
-//           // bestBowlingInMatch : playeBallHis.bestBowlingInMatch,
-//           // economy : playeBallHis.economy,
-//           // bowlerStrikeRate : playeBallHis.bowlerStrikeRate,
 //           bowlerAverage : bowlerAvg,
-//           // bestBowlingInInnings : BBI === undefined ? 0 : BBI.bbi,
-//           // bestBowlingInMatch : BBM === undefined ? 0 : BBM.bbm,
-//           bestBowlingInInnings: updatedBBI,
-//           bestBowlingInMatch: updatedBBM,
+//           // bestBowlingInInnings: updatedBBI,
+//           // bestBowlingInMatch: updatedBBM,
+//           bestBowlingInInnings: bestBBI,
+//           bestBowlingInMatch: bestBBM,
 //           economy : bowlerEconomy,
 //           bowlerStrikeRate : bowlerStrikeRate,
 //           wickets4 : playeBallHis.wickets4 + wicket4,
@@ -497,28 +606,15 @@ const validatePlayerAndMatchType = async(payload, request) => {
 //       }
 //       dataToUpdate.push(phis);
 //       playerBowlHist.push(pbHis);
-//       let batsmanOutCount = player.filter((item) => item.wicketType !== null).length;
 //       cPlayer = {
-//         commentaryId: com,
-//         ...phis,
-//         outCount: batsmanOutCount,
-//         average: batsmanOutCount !== 0 ? batRun / batsmanOutCount : batRun,
-//         playerId: player[0].playerId,
-//         commentaryPlayerId : player[0].commentaryPlayerId,
-//         createdBy : request.userTokenInfo.WrUserId
+//         ...commBatHist
 //       }
 //       cPlayerBall = {
-//         commentaryId: com,
-//         ...pbHis,
-//         playerId: player[0].playerId,
-//         commentaryPlayerId : player[0].commentaryPlayerId,
-//         createdBy : request.userTokenInfo.WrUserId
+//         ...commBowlHist
 //       }
 //       playerArr.push(cPlayer);
 //       playerArrball.push(cPlayerBall);
 //     }
-//     // console.log(playerArr);
-//     // console.log(dataToUpdate);
 //     let result = await fastify.db.query(`CALL upsert_player_batting_history($1, $2)`, {
 //       bind: [JSON.stringify(dataToUpdate), request.userTokenInfo.WrUserId],
 //       type: fastify.db.QueryTypes.SELECT,
@@ -562,7 +658,6 @@ const validatePlayerAndMatchType = async(payload, request) => {
 //     })
 
 //     await fastify.db.query(`CALL proc_set_complayerballhist($1)`, {
-//       // bind: [playerArr],
 //       bind: [playerArrball],
 //       type: fastify.db.QueryTypes.SELECT,
 //     });
@@ -598,13 +693,19 @@ const setPlayerHistoryService = async (data,request, fastify) => {
     }
     let comdetail = global.tblCommentaries.find((item) => item.commentaryId === com);
     let matchType = global.tblMatchTypes.find((item) => item.matchTypeId === comdetail.historyMatchTypeId );
-    const comPlayer = global.tblCommentaryPlayers.filter((item) => item.commentaryId === com)
+    const comPlayer = global.tblCommentaryPlayers.filter((item) => item.commentaryId === com 
+      && (item.batBall > 0 || item.bowlerTotalBall > 0))
     .filter((item, index, self) =>
       index === self.findIndex((t) => t.playerId === item.playerId)
     );
-    let dataToUpdate = [];
+    if(comPlayer.length <= 0){
+      continue;
+    }
+    let playerIds = [];
+    let matchTypeIds = []
     let playerArr = [];
     let playerArrball = [];
+    let dataToUpdate = [];
     let playerBowlHist = [];
     for (let p of comPlayer){
       const matchTypeCommentaries = global.tblCommentaries.filter((elem) => 
@@ -612,11 +713,14 @@ const setPlayerHistoryService = async (data,request, fastify) => {
       ).map((item) => {
         return item.commentaryId
       });
+
       const plyOutCount = global.tblCommentaryPlayers.filter((item) => item.playerId === p.playerId && matchTypeCommentaries.includes(item.commentaryId));
       const player = global.tblCommentaryPlayers.filter((item) => item.playerId === p.playerId && item.commentaryId === com );
       const comPlayerId = player.map((item) => item.commentaryPlayerId);
-      const playerBattingHistory = global.tblPlayersBattingHistory.find((item) => item.playerId === p.playerId && item.matchTypeId === comdetail.historyMatchTypeId);
-      const playeBallHis = global.tblPlayersBowlingHistory.find((item) => item.playerId === p.playerId && item.matchTypeId === comdetail.historyMatchTypeId);
+      const playerBattingHistory = await getBatterHistoryQuery({playerId: p.playerId, matchTypeId: comdetail.historyMatchTypeId}, request, fastify);
+      const playeBallHis = await getBowlerHistorydQuery({playerId: p.playerId, matchTypeId: comdetail.historyMatchTypeId}, request, fastify);
+      // const playerBattingHistory = global.tblPlayersBattingHistory.find((item) => item.playerId === p.playerId && item.matchTypeId === comdetail.historyMatchTypeId);
+      // const playeBallHis = global.tblPlayersBowlingHistory.find((item) => item.playerId === p.playerId && item.matchTypeId === comdetail.historyMatchTypeId);
       const overs = global.tblOvers.filter(item => item.commentaryId === com 
         && comPlayerId.includes(item.bowlerId));
 
@@ -674,7 +778,7 @@ const setPlayerHistoryService = async (data,request, fastify) => {
       // let wicket5 = overs.filter((item) => item.totalWicket == 5).length;
       // let wicket10 = overs.filter((item) => item.totalWicket >= 10).length;
       let batOutCount = plyOutCount.filter((item) => item.wicketType !== null).length;
-      let batAvg = batOutCount !== 0 ? batRun / batOutCount : batRun
+      let batAvg = inningCount !== 0 ? batRun / inningCount : 0
 
       let commBatHist = {
         matchTypeId: comdetail.historyMatchTypeId,
@@ -740,7 +844,7 @@ const setPlayerHistoryService = async (data,request, fastify) => {
           inningsCount : inningCount,
           notOut : notOut,
           totalRuns : batRun,
-          highestScore : batRun,
+          highestScore : notOut != 0 ? batRun + '*' : batRun,
           average : batAvg,
           ballsFacedCount : ballsFacedCount,
           strikeRate : sr,
@@ -753,33 +857,7 @@ const setPlayerHistoryService = async (data,request, fastify) => {
           outCount: batOutCount,
         }
       }
-      else {
-        let sr1 = playerBattingHistory.ballsFacedCount != 0 ? 
-        (playerBattingHistory.totalRuns + batRun) / (playerBattingHistory.ballsFacedCount + ballsFacedCount) * 100 
-        : playerBattingHistory.strikeRate;
-        let batsmanAvg = playerBattingHistory.outCount === 0 ? playerBattingHistory.totalRuns : playerBattingHistory.totalRuns / playerBattingHistory.outCount;        
-        phis = {
-          battingHistoryId: playerBattingHistory.battingHistoryId,
-          matchTypeId: comdetail.historyMatchTypeId,
-          playerId : p.playerId,
-          matchTypeName: matchType.matchType,
-          matchCount : playerBattingHistory.matchCount + 1,
-          inningsCount : playerBattingHistory.inningsCount + inningCount,
-          notOut : playerBattingHistory.notOut + notOut,
-          totalRuns : playerBattingHistory.totalRuns + batRun,
-          highestScore : playerBattingHistory.highestScore <batRun ?batRun : playerBattingHistory.highestScore,
-          average : batsmanAvg,
-          ballsFacedCount : playerBattingHistory.ballsFacedCount + ballsFacedCount,
-          strikeRate : sr1,
-          countOf100 : batRun >= 100 ?  playerBattingHistory.countOf100 + 1 : playerBattingHistory.countOf100,
-          countOf50 : batRun >= 50  ? playerBattingHistory.countOf50 + 1 : playerBattingHistory.countOf50,
-          countOf4 : playerBattingHistory.countOf4 + batFour,
-          countOf6 : playerBattingHistory.countOf6 + batSix,
-          catchCount : playerBattingHistory.catchCount + catchCount,
-          stumpCount : playerBattingHistory.stumpCount + stumpCount,
-          outCount: playerBattingHistory.outCount + batOutCount,
-        }
-      }
+
       if(!playeBallHis){
         pbHis = {
           bowlingHistoryId: 0,
@@ -802,157 +880,59 @@ const setPlayerHistoryService = async (data,request, fastify) => {
           catchCount : 0,
         }
       }
-      else {
-        let bowlerAvg = 0;
-        if (playeBallHis.wicketsCount > 0 && playeBallHis.runsFromBowler > 0) {
-            bowlerAvg = playeBallHis.runsFromBowler / playeBallHis.wicketsCount;
-        }
-        
-        let totalOvers = 0;
-        if (playeBallHis.ballCount > 0) {
-            totalOvers = Math.floor(playeBallHis.ballCount / 6) + (playeBallHis.ballCount % 6) / 6;
-        }
-        
-        let bowlerEconomy = 0;
-        if (totalOvers > 0 && playeBallHis.runsFromBowler) {
-            bowlerEconomy = playeBallHis.runsFromBowler / totalOvers;
-        }
-        let bowlerStrikeRate = playeBallHis.wicketsCount === 0 ? 0 : playeBallHis.ballCount / playeBallHis.wicketsCount;
-        const compareBBM = (playeBallHis, currentBBM) => {
-          const parseBBI = (bbi) => {
-            if (!bbi || bbi === "0/0" || bbi === "0" || bbi.startsWith("0/")) {
-                return 0;
-            }
-            
-            const [wickets, runs] = bbi.split('/').map(Number);
-            
-            return { wickets, runs };
-        };
-      
-          const playerBBM = parseBBI(playeBallHis.bestBowlingInMatch);
-          const currentParsedBBM = parseBBI(currentBBM);
-          if (
-              currentParsedBBM.wickets > playerBBM.wickets ||
-              (currentParsedBBM.wickets === playerBBM.wickets && currentParsedBBM.runs < playerBBM.runs)
-          ) {
-              return currentBBM;
-          } else if (
-            playerBBM.wickets > currentParsedBBM.wickets ||
-              (playerBBM.wickets === currentParsedBBM.wickets && playerBBM.runs < currentParsedBBM.runs)
-          ) {
-              return playeBallHis.bestBowlingInMatch;
-          }
-          return currentBBM;
-      };
-      
-      const updatedBBM = compareBBM(playeBallHis, bbm);
 
-      const compareBBI = (playerBallHis, currentBBI) => {
-        const parseBBI = (bbi) => {
-          if (!bbi || bbi === "0/0" || bbi === "0" || bbi.startsWith("0/")) {
-            return 0;
-          }
-          const [wickets, runs] = bbi.split('/').map(Number);
-          return { wickets, runs };
-        };
-      
-        const playerBBI = parseBBI(playerBallHis.bestBowlingInInnings);
-        const currentParsedBBI = parseBBI(currentBBI);
-      
-        if (
-          currentParsedBBI.wickets > playerBBI.wickets ||
-          (currentParsedBBI.wickets === playerBBI.wickets && currentParsedBBI.runs < playerBBI.runs)
-        ) {
-          return currentBBI;
-        } else if (
-          playerBBI.wickets > currentParsedBBI.wickets ||
-          (playerBBI.wickets === currentParsedBBI.wickets && playerBBI.runs < currentParsedBBI.runs)
-        ) {
-          return playerBallHis.bestBowlingInInnings;
-        }
-      
-        return currentBBI;
-      };
-      
-      const updatedBBI = compareBBI(playeBallHis, bbi);
-        pbHis = {
-          bowlingHistoryId: playeBallHis.bowlingHistoryId,
-          matchTypeId: comdetail.historyMatchTypeId,
-          playerId : p.playerId,
-          matchTypeName: matchType.matchType,
-          bowlerPlayedMatchCount : playeBallHis.bowlerPlayedMatchCount + 1,
-          bowlerPlayedInningsCount : playeBallHis.bowlerPlayedInningsCount + inningCount,
-          ballCount : playeBallHis.ballCount + ballCount,
-          runsFromBowler : playeBallHis.runsFromBowler + ballRun,
-          wicketsCount : playeBallHis.wicketsCount + wicket,
-          bowlerAverage : bowlerAvg,
-          bestBowlingInInnings: updatedBBI,
-          bestBowlingInMatch: updatedBBM,
-          economy : bowlerEconomy,
-          bowlerStrikeRate : bowlerStrikeRate,
-          wickets4 : playeBallHis.wickets4 + wicket4,
-          wickets5  : playeBallHis.wickets5 + wicket5,
-          wickets10 : playeBallHis.wickets10 + wicket10,
-          catchCount : playeBallHis.catchCount
-        }
-      }
-      dataToUpdate.push(phis);
-      playerBowlHist.push(pbHis);
       cPlayer = {
         ...commBatHist
       }
       cPlayerBall = {
         ...commBowlHist
       }
+      dataToUpdate.push(phis);
+      playerBowlHist.push(pbHis);
       playerArr.push(cPlayer);
       playerArrball.push(cPlayerBall);
+
+      playerIds.push(p.playerId);
+      matchTypeIds.push(comdetail.historyMatchTypeId);
     }
-    let result = await fastify.db.query(`CALL upsert_player_batting_history($1, $2)`, {
+    if(dataToUpdate.length >= 1) {
+      await fastify.db.query(`CALL upsert_player_batting_history($1, $2)`, {
       bind: [JSON.stringify(dataToUpdate), request.userTokenInfo.WrUserId],
       type: fastify.db.QueryTypes.SELECT,
     });
-    const updatedData = result[0] || [];
-    const HistoryIdData = updatedData._battinghistorydata;
-    HistoryIdData.forEach((playerData) => {
-      const battingHistoryId = playerData.battingHistoryId;
-      const index = global.tblPlayersBattingHistory.findIndex(
-        (item) => item.battingHistoryId === battingHistoryId
-      );
-      if (index !== -1) {
-        global.tblPlayersBattingHistory[index] = playerData;
-      } else {
-        global.tblPlayersBattingHistory.push(playerData);
-      }
-    })
+    }
 
+    if(playerBowlHist.length >= 1) {
+    await fastify.db.query(`CALL upsert_player_bowling_history($1, $2)`, {
+      bind: [JSON.stringify(playerBowlHist), request.userTokenInfo.WrUserId],
+      type: fastify.db.QueryTypes.SELECT,
+    });
+    }
+    
     await fastify.db.query(`CALL proc_set_comPlayerHist($1)`, {
       bind: [playerArr],
       type: fastify.db.QueryTypes.SELECT,
     });
 
 
-    let result1 = await fastify.db.query(`CALL upsert_player_bowling_history($1, $2)`, {
-      bind: [JSON.stringify(playerBowlHist), request.userTokenInfo.WrUserId],
-      type: fastify.db.QueryTypes.SELECT,
-    });
-    const updatedData1 = result1[0] || [];
-    const bowlingHistory = updatedData1._bowlinghistorydata;
-    bowlingHistory.forEach((playerData) => {
-      const bowlingHistoryId = playerData.bowlingHistoryId;
-      const index = global.tblPlayersBowlingHistory.findIndex(
-        (item) => item.bowlingHistoryId === bowlingHistoryId
-      );
-      if (index !== -1) {
-        global.tblPlayersBowlingHistory[index] = playerData;
-      } else {
-        global.tblPlayersBowlingHistory.push(playerData);
-      }
-    })
-
     await fastify.db.query(`CALL proc_set_complayerballhist($1)`, {
       bind: [playerArrball],
       type: fastify.db.QueryTypes.SELECT,
     });
+    playerIds.forEach(async (item) => {
+      await fastify.db.query(`CALL proc_player_bowl_summary_calculation($1)`,
+        {
+          bind: [{playerId:item, matchTypeId: matchTypeIds}], 
+          type: fastify.db.QueryTypes.RAW,
+        }
+      );
+      await fastify.db.query(`CALL proc_player_bat_summary_calculation($1)`,
+        {
+          bind: [{playerId:item, matchTypeId: matchTypeIds}], 
+          type: fastify.db.QueryTypes.RAW,
+        }
+      );
+    })
     await createTeamPointLogQuery(
       {
         commentaryId: com,
@@ -1003,7 +983,7 @@ const playerBattingHistSummarycalculationService = async (request, fastify) => {
     fastify
   );
   for (const item of result) {
-    item.average = item.outCount > 0 ? item.totalRuns / item.outCount : 0;
+    item.average = item.inningsCount > 0 ? item.totalRuns / item.inningsCount : 0;
     item.strikeRate =
       item.ballsFacedCount > 0
         ? (item.totalRuns / item.ballsFacedCount) * 100

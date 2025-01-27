@@ -2,6 +2,7 @@ const { ERROR_CODES, error, success } = require("../../utilities/index");
 const {
   authorization,
   permissionCheckService,
+  XKeyConfigForExtrnal,
 } = require("../../services/middleware");
 const jwt = require("jsonwebtoken");
 
@@ -21,7 +22,16 @@ const checkPermission = async (request, reply, fastify, data) => {
   }
 };
 
+const xKeyPermission = async (request, reply, fastify) => {
+  try {
+    await XKeyConfigForExtrnal(request, fastify);
+  } catch (err) {
+    reply.status(200).send(error(err.message, ERROR_CODES.INVALID_TOKEN, 200));
+  }
+};
+
 module.exports = {
   authorize,
   checkPermission,
+  xKeyPermission,
 };

@@ -2709,6 +2709,37 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
               request
             );
           });
+
+            const tipsData = global.tblTips.filter(
+              (item) => 
+                item.commentaryId === commentaryDetails.commentaryId || 
+                item.eventRefId === commentaryDetails.eventRefId
+            ).map((elem) => elem.id);
+            if (tipsData.length > 0) {
+              global.tblTips = global.tblTips.filter((item) => !tipsData.includes(item.id));
+              callClientAPI(
+                {
+                  serviceType: ServiceType.clientAPI,
+                  moduleType: APIEndpointModuleType.updateSeoModule,
+                  data: {
+                    module: "tips",
+                    type: "delete",
+                    data: {
+                      id: tipsData,
+                    },
+                  },
+                },
+                request,
+                fastify
+              ).catch((err) => {
+                errorLogger(
+                  fastify,
+                  err.message,
+                  "services/commentary.js/syncCommentaryStatsWithAPIAndSocket - callClientAPI",
+                  request
+                );
+              });
+          }
       }
       sendDataForSocketUpdate.dataToUpdate.push({
         module: "commentaryDetails",
@@ -8326,6 +8357,37 @@ const closeCommentaryService = async (request, fastify) => {
           winnerId: global.tblCommentaries[index].winnerId,
         })
       }
+
+      const tipsData = global.tblTips.filter(
+        (item) => 
+          item.commentaryId === global.tblCommentaries[index].competitionId || 
+          item.eventRefId === global.tblCommentaries[index].eventRefId
+      ).map((elem) => elem.id);
+      if (tipsData.length > 0) {
+        global.tblTips = global.tblTips.filter((item) => !tipsData.includes(item.id));
+        callClientAPI(
+          {
+            serviceType: ServiceType.clientAPI,
+            moduleType: APIEndpointModuleType.updateSeoModule,
+            data: {
+              module: "tips",
+              type: "delete",
+              data: {
+                id: tipsData,
+              },
+            },
+          },
+          request,
+          fastify
+        ).catch((err) => {
+          errorLogger(
+            fastify,
+            err.message,
+            "services/commentary.js/syncCommentaryStatsWithAPIAndSocket - callClientAPI",
+            request
+          );
+        });
+      }
     }
 
   }
@@ -9574,6 +9636,37 @@ const cancelCommentaryService = async (request, fastify) => {
           request
         );
       });
+       
+      const tipsData = global.tblTips.filter(
+        (item) => 
+          item.commentaryId === global.tblCommentaries[index].competitionId || 
+          item.eventRefId === global.tblCommentaries[index].eventRefId
+      ).map((elem) => elem.id);
+      if (tipsData.length > 0) {
+        global.tblTips = global.tblTips.filter((item) => !tipsData.includes(item.id));
+        callClientAPI(
+          {
+            serviceType: ServiceType.clientAPI,
+            moduleType: APIEndpointModuleType.updateSeoModule,
+            data: {
+              module: "tips",
+              type: "delete",
+              data: {
+                id: tipsData,
+              },
+            },
+          },
+          request,
+          fastify
+        ).catch((err) => {
+          errorLogger(
+            fastify,
+            err.message,
+            "services/commentary.js/syncCommentaryStatsWithAPIAndSocket - callClientAPI",
+            request
+          );
+        });
+      }
     }
   }
   return {

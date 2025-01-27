@@ -7822,6 +7822,86 @@ const ShotType = {
     },
   },
 };
+
+const Tips = {
+  getAll: {
+    schema: {
+      tags: ["Tips"],
+      description: "get all Tips data",
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+  save: {
+    schema: {
+      tags: ["Tips"],
+      security: [{ bearerAuth: [] }],
+      description: "save Tips data",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          commentaryId: { type: "integer" },
+          eventRefId: { type: "string" },
+          tipsRefId: { type: "string" },
+          tips: { type: "string" },
+          isActive: { type: "boolean" },
+          startDate: { type: "string" },
+          endDate: { type: "string" },
+        },
+        required: ["id"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["Tips"],
+      description: "delete Tips data",
+      body: {
+        type: "object",
+        properties: {
+          id: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["id"],
+      },
+    },
+  },
+  getById: {
+    schema: {
+      tags: ["Tips"],
+      description: "get Tips data by id",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+        },
+        required: ["id"],
+      },
+    },
+  },
+  activeInactive: {
+    schema: {
+      tags: ["Tips"],
+      description: "active inactive Tips data",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["id", "isActive"],
+      },
+    },
+  },
+};
 module.exports = {
   Auth,
   Tabs,
@@ -7883,4 +7963,5 @@ module.exports = {
   LibraryImages,
   VideoLibrary,
   ShotType,
+  Tips,
 };
