@@ -1813,16 +1813,16 @@ const createOrUpdateEventRunnerMarketManualQuery = async (
 };
 const closeEventMarketByCIdQuery = async (data, fastify) => {
   try {
-      const query2 = `
-      UPDATE "tblMarketRunners" SET
-        "wrSelectionStatus" = $1
-      WHERE "wrEventMarketId" = ANY($2)
-    `;
+    //   const query2 = `
+    //   UPDATE "tblMarketRunners" SET
+    //     "wrSelectionStatus" = $1
+    //   WHERE "wrEventMarketId" = ANY($2)
+    // `;
 
-    await fastify.db.query(query2, {
-      bind: [EventMarketStatus.Close, marketId.map((e) => e.marketId)],
-      type: fastify.db.QueryTypes.SELECT,
-    });
+    // await fastify.db.query(query2, {
+    //   bind: [EventMarketStatus.Close, marketId.map((e) => e.marketId)],
+    //   type: fastify.db.QueryTypes.SELECT,
+    // });
 
     const query = `
       UPDATE "tblEventMarkets" SET
@@ -1851,6 +1851,17 @@ const closeEventMarketByCIdQuery = async (data, fastify) => {
       ],
       type: fastify.db.QueryTypes.SELECT,
     });
+
+    const query2 = `
+    UPDATE "tblMarketRunners" SET
+      "wrSelectionStatus" = $1
+    WHERE "wrEventMarketId" = ANY($2)
+  `;
+
+  await fastify.db.query(query2, {
+    bind: [EventMarketStatus.Close, marketId.map((e) => e.marketId)],
+    type: fastify.db.QueryTypes.SELECT,
+  });
     // update status in runner
 
    
