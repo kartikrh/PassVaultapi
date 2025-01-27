@@ -378,6 +378,93 @@ const getBowlingHistoryByPlayerIdQuery = async (playerId, request, fastify) => {
   }
 };
 
+
+const getBatterHistoryQuery = async (data, request, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `SELECT 
+                "wrBattingHistoryId" as "battingHistoryId",
+                "wrMatchTypeId" as "matchTypeId",
+                "wrPlayerId" as "playerId",
+                "wrMatchTypeName" as "matchTypeName",
+                "wrMatchCount" as "matchCount",
+                "wrInningsCount" as "inningsCount",
+                "wrNotOut" as "notOut",
+                "wrTotalRuns" as "totalRuns",
+                "wrHighestScore" as "highestScore",
+                "wrAverage" as "average",
+                "wrBallsFacedCount" as "ballsFacedCount",
+                "wrStrikeRate" as "strikeRate",
+                "wr100Count" as "countOf100",
+                "wr50Count" as "countOf50",
+                "wr4Count" as "countOf4",
+                "wr6Count" as "countOf6",
+                "wrCatchCount" as "catchCount",
+                "wrStumpCount" as "stumpCount",
+                "wrCreatedBy" as "createdBy",
+                "wrCreatedAt" as "createdAt",
+                "wrOutCount" as "outCount"
+            FROM "tblPlayerBattingHistory"
+            WHERE "wrPlayerId" = $1 AND "wrMatchTypeId" = $2;`,
+      { 
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [data.playerId, data.matchTypeId],
+      }
+    );
+    return result[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TablePlayerHistory.js/getBatterHistoryQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const getBowlerHistorydQuery = async (data, request, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `SELECT 
+            "wrBowlingHistoryId" as "bowlingHistoryId",
+            "wrMatchTypeId" as "matchTypeId",
+            "wrPlayerId" as "playerId",
+            "wrMatchTypeName" as "matchTypeName",
+            "wrMatchCount" as "bowlerPlayedMatchCount",
+            "wrInningsCount" as "bowlerPlayedInningsCount",
+            "wrBallCount" as "ballCount",
+            "wrTotalRuns" as "runsFromBowler",
+            "wrWicketsCount" as "wicketsCount",
+            "wrAverage" as "bowlerAverage",
+            "wrBestBowlingInInnings" as "bestBowlingInInnings",
+            "wrBestBowlingInMatch" as "bestBowlingInMatch",
+            "wrEconomy" as "economy",
+            "wrStrikeRate" as "bowlerStrikeRate",
+            "wr4Wickets" as "wickets4",
+            "wr5Wickets" as "wickets5",
+            "wr10Wickets" as "wickets10",
+            "wrCreatedBy" as "createdBy",
+            "wrCreatedAt" as "createdAt"
+            FROM "tblPlayerBowlingHistory"
+            WHERE "wrPlayerId" = $1 AND "wrMatchTypeId" = $2;`,
+      { 
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [data.playerId, data.matchTypeId],
+      }
+    );
+    return result[0]
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TablePlayerHistory.js/getBowlerHistorydQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllPlayersBattingHistory,
   getAllPlayerBowlingHistory,
@@ -388,4 +475,6 @@ module.exports = {
   exportPlayerHistoryQuery,
   getBattingHistoryByPlayerIdQuery,
   getBowlingHistoryByPlayerIdQuery,
+  getBatterHistoryQuery,
+  getBowlerHistorydQuery,
 };

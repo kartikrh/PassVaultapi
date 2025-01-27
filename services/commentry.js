@@ -8358,7 +8358,6 @@ const closeCommentaryService = async (request, fastify) => {
         })
       }
 
-      console.log("tipsData");
       const tipsData = global.tblTips.filter(
         (item) => 
           item.commentaryId === global.tblCommentaries[index].competitionId || 

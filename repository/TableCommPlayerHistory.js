@@ -720,6 +720,37 @@ const getPlayeBallHistQuery = async (data , request , fastify)=>{
     throw new Error(err.message);
   }
 }
+
+const getCommPlayerBowlHistQuery = async (data, request, fastify) => {
+  try {
+    const query = `
+      SELECT 
+          COALESCE(MAX(CASE WHEN tcpbh."wrBestBowlingInInnings" IS NOT NULL THEN tcpbh."wrBestBowlingInInnings" ELSE '0' END), '0') AS BBI,
+          COALESCE(MAX(CASE WHEN tcpbh."wrBestBowlingInMatch" IS NOT NULL THEN tcpbh."wrBestBowlingInMatch" ELSE '0' END), '0') AS BBM
+      FROM "tblCommPlayerBowlHist" AS tcpbh
+      LEFT JOIN "tblCommentaries" AS tc 
+          ON tc."wrCommentaryId" = tcpbh."wrCommentaryId" 
+          AND tc."wrIsDelete" = false
+      WHERE tcpbh."wrPlayerId" = $1 
+          AND tcpbh."wrMatchTypeId" = $2;`;
+          
+    const result = await fastify.db.query(query, {
+      type: fastify.db.QueryTypes.SELECT,
+      bind: [data.playerId, data.matchTypeId],
+    });
+
+    return result[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommPlayerHistory.js/getCommPlayerBowlHistQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllCommentaryBattingHistory,
   getAllCommentaryBowlingHistory,
@@ -735,4 +766,5 @@ module.exports = {
   upPlayerBallHistQuery,
   savePlayerBatHistQuery,
   savePlayerBallHistQuery,
+  getCommPlayerBowlHistQuery,
 };
