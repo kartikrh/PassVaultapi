@@ -4160,6 +4160,7 @@ const socketMarketRunnerDataQuery = async (eventId, fastify) => {
     `SELECT 
           tem."wrID" as "eventMarketId",
           tem."wrEventRefID" as "eventRefId",
+          tem."wrStatus" as "status",
           COALESCE(
               json_agg(
                   json_build_object(
@@ -4537,6 +4538,27 @@ const saveManualMarketQuery = async (data, request, fastify) => {
       bind: [dataToStore, mar[0].eventMarketId],
       type: fastify.db.QueryTypes.SELECT,
     });
+
+    marketDataLogger(
+      {
+        eventMarketId: mar[0].eventMarketId,
+        commentaryId: data.commentaryId,
+        dataTosave: typeof (dataToStore) === "string" ? JSON.parse(dataToStore) : dataToStore,
+        updateType: MarketUpdateType.marketInitilization,
+        lineDiff: 0,
+        isSendData: true
+      },
+      request,
+      fastify
+    ).catch((err) => {
+      console.log("saveManualMarketQuery market data logger console:", err);
+      errorLogger(
+        fastify,
+        err.message,
+        "ERROR --> services/eventMarket.js/saveManualMarketQuery",
+        request
+      );
+    });
     return true;
 
   } catch (error) {
@@ -4647,24 +4669,55 @@ const upManualMarketQuery = async (data, request, fastify) => {
   //       type: fastify.db.QueryTypes.SELECT,
   //     }
   //   );
-    await fastify.db.query(
+    const result = await fastify.db.query(
       `
-        CALL proc_manual_market_update($1)
+        CALL proc_manual_market_update($1, $2)
       `,
       {
         bind: [
-          JSON.stringify(data) ? JSON.stringify(data) : null
+          JSON.stringify(data) ? JSON.stringify(data) : null,
+          null
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
     );
+    result[0].updated_row.forEach(async (item) => {
+      const result = await fastify.db.query(
+        `
+        SELECT "wrCommentaryId" AS "commentaryId"
+        FROM "tblEventMarkets"
+        WHERE "wrID" = ${item.marketId}`
+      );
+      
+
+      marketDataLogger(
+        {
+          eventMarketId: item.marketId,
+          commentaryId: result[0][0].commentaryId,
+          dataTosave: typeof item === "string" ? JSON.parse(item) : item,
+          updateType: MarketUpdateType.marketUpdateRate,
+          lineDiff: 0,
+          isSendData: true
+        },
+        request,
+        fastify
+      ).catch((err) => {
+        console.log("upManualMarketQuery market data logger console:", err);
+        errorLogger(
+          fastify,
+          err.message,
+          "ERROR --> services/eventMarket.js/upManualMarketQuery",
+          request
+        );
+      });
+    })
     return true;
 
   } catch (error) {
     errorLogger(
       fastify,
       error.message,
-      "DB ERROR --> repository/TableEventmarket.js/saveManualMarketQuery",
+      "DB ERROR --> repository/TableEventmarket.js/upManualMarketQuery",
       request
     );
     throw new Error(error.message);
