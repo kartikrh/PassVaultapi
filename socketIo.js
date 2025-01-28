@@ -422,9 +422,9 @@ const connection = (socket , fastify) => {
     // console.log("betAllow", betAllow);
     // await callTPAPI(data , fastify);
     //emit the batallow 
-    const clientInRoom = global.socketIo.sockets.adapter.rooms.get(commentaryId);
+    const clientInRoom = global.socketIo.sockets.adapter.rooms.get(`score-${commentaryId}`);
     if(clientInRoom?.size){
-      global.socketIo.to(data.commentaryId).emit("upBetAllow", {
+      global.socketIo.to(`score-${commentaryId}`).emit("upBetAllow", {
         commentaryId : commentaryId,
         eventRefId : eventRefId,
         betAllow : betAllow
@@ -435,9 +435,9 @@ const connection = (socket , fastify) => {
   socket.on("comUpdate", (data) => {
     const {ballStatus , eventRefId , commentaryId } = data;
     if(ballStatus?.toLowerCase() === "ballstart"){
-      const clientInRoom = global.socketIo.sockets.adapter.rooms.get(commentaryId);
+      const clientInRoom = global.socketIo.sockets.adapter.rooms.get(`score-${commentaryId}`);
       if(clientInRoom?.size){
-        global.socketIo.to(commentaryId).emit("updateBallStatus", {
+        global.socketIo.to(`score-${commentaryId}`).emit("updateBallStatus", {
           commentaryId : commentaryId,
           eventRefId : eventRefId,
           ballStatus : "ballstart"
@@ -446,9 +446,9 @@ const connection = (socket , fastify) => {
     }
     if(ballStatus?.toLowerCase() === "scoring"){
       //emit the other socket to update the ball status
-      const clientInRoom = global.socketIo.sockets.adapter.rooms.get(commentaryId);
+      const clientInRoom = global.socketIo.sockets.adapter.rooms.get(`score-${commentaryId}`);
       if(clientInRoom?.size){
-        global.socketIo.to(commentaryId).emit("updateBallStatus", {
+        global.socketIo.to(`score-${commentaryId}`).emit("updateBallStatus", {
           commentaryId : commentaryId,
           eventRefId : eventRefId,
           ballStatus : "scoring"

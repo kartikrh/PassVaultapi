@@ -3526,9 +3526,9 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
       // }
     }
     if(deleteCommentaryBallByBallId || deleteOverId){
-      const clientInRoom = global.socketIo.sockets.adapter.rooms.get(commentaryId);
+      const clientInRoom = global.socketIo.sockets.adapter.rooms.get(`score-${commentaryId}`);
       if (clientInRoom?.size) {
-        global.socketIo.to(commentaryId).emit("undoCalled", {
+        global.socketIo.to(`score-${commentaryId}`).emit("undoCalled", {
           commentaryId: commentaryId,
           message : "Undo called for this commentary."
         });
