@@ -1079,6 +1079,7 @@ const changeMarketResultService = async (request, fastify) => {
             actionType: MarketActionType.setResult,
             commentaryId,
             value: `eventMarketStatus:${EventMarketStatus.Settled},result:${result}`,
+            result : result
           },
           request,
           fastify
@@ -1140,6 +1141,7 @@ const changeMarketResultService = async (request, fastify) => {
           actionType: MarketActionType.setResult,
           commentaryId,
           value: `eventMarketStatus:${EventMarketStatus.Settled},result:${result}`,
+          result:result
         },
         request,
         fastify
@@ -1544,6 +1546,7 @@ const UpdateResulOrApproveEventMarketService = async (request, fastify) => {
         eventMarketId,
         actionType: MarketActionType.setAndFinalizeResult,
         value: `isResult:${isResult},result:${result}`,
+        result : result
       },
       request,
       fastify
@@ -1563,6 +1566,7 @@ const UpdateResulOrApproveEventMarketService = async (request, fastify) => {
         eventMarketId,
         actionType: MarketActionType.setResultAndIsResultFalse,
         value: `isResult:${isResult},result:${result}`,
+        result : result
       },
       request,
       fastify
@@ -2463,6 +2467,7 @@ const updateMarketResultService = async (request, fastify) => {
         eventMarketId,
         actionType: MarketActionType.setAndFinalizeResult,
         value: `isResult:${isResult},result:${result}`,
+        result :result
       },
       request,
       fastify
@@ -2482,6 +2487,7 @@ const updateMarketResultService = async (request, fastify) => {
         eventMarketId,
         actionType: MarketActionType.setResultAndIsResultFalse,
         value: `isResult:${isResult},result:${result}`,
+        result : result
       },
       request,
       fastify
