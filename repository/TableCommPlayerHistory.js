@@ -1,6 +1,9 @@
 const { errorLogger } = require("../utilities/logger");
 
 const getAllCommentaryBattingHistory = async (fastify, whereCondition = null) => {
+  if(whereCondition == null){
+    whereCondition = `tcpbh."wrIsDeleted" = false`
+  }
   try {
     return await fastify.db.query(
       `SELECT 
@@ -48,6 +51,9 @@ const getAllCommentaryBattingHistory = async (fastify, whereCondition = null) =>
 };
 
 const getAllCommentaryBowlingHistory = async (fastify, whereCondition = null) => {
+  if(whereCondition == null){
+    whereCondition = `tcpbh."wrIsDeleted" = false`
+  }
   try {
     return await fastify.db.query(
       `SELECT 
@@ -127,7 +133,7 @@ const getCommentaryPlayerBattingHistory = async (playerId, fastify) => {
 	          AND tcpbh."wrPlayerId" = $1
             LEFT JOIN "tblCommentaries" AS tc ON tc."wrCommentaryId" = tcpbh."wrCommentaryId" AND tc."wrIsDelete" = false
             LEFT JOIN "tblEvents" AS te ON te."wrEventId" = tc."wrEventId"
-            WHERE tmt."wrIsHistory" = true AND tmt."wrIsDeleted" = false;`,
+            WHERE tmt."wrIsHistory" = true AND tmt."wrIsDeleted" = false AND tcpbh."wrIsDeleted" = false;`,
       {
         type: fastify.db.QueryTypes.SELECT,
         bind: [playerId],
@@ -177,7 +183,7 @@ const getCommentaryPlayerBowlingHistory = async (playerId, fastify) => {
 	          AND tcpbh."wrPlayerId" = $1
             LEFT JOIN "tblCommentaries" AS tc ON tc."wrCommentaryId" = tcpbh."wrCommentaryId" AND tc."wrIsDelete" = false
             LEFT JOIN "tblEvents" AS te ON te."wrEventId" = tc."wrEventId"
-            WHERE tmt."wrIsHistory" = true AND tmt."wrIsDeleted" = false;`,
+            WHERE tmt."wrIsHistory" = true AND tmt."wrIsDeleted" = false and tcpbh."wrIsDeleted" = false;`,
       {
         type: fastify.db.QueryTypes.SELECT,
         bind: [playerId],
@@ -374,8 +380,9 @@ const getPlayerBatHistQuery = async (data, request , fastify) =>{
                 tc."wrEventName" as "eventName",
                 tc."wrEventDate" as "eventDate"
         FROM "tblCommPlayerBatHist" AS tcpbh
-        LEFT JOIN "tblCommentaries" AS tc ON tc."wrCommentaryId" = tcpbh."wrCommentaryId" AND tc."wrIsDelete" = false
-        WHERE tcpbh."wrPlayerId" = $1 AND tcpbh."wrMatchTypeId" = $2`;
+        LEFT JOIN "tblCommentaries" AS tc ON tc."wrCommentaryId" = tcpbh."wrCommentaryId"
+        WHERE tcpbh."wrPlayerId" = $1 AND tcpbh."wrMatchTypeId" = $2 
+        AND tcpbh."wrIsDeleted" = false AND tc."wrIsDelete" = false`;
     const result = await fastify.db.query(query, {
       type: fastify.db.QueryTypes.SELECT,
       bind : [data.playerId, data.matchTypeId]
@@ -701,8 +708,9 @@ const getPlayeBallHistQuery = async (data , request , fastify)=>{
             tc."wrEventName" as "eventName",
             tc."wrEventDate" as "eventDate"
             FROM "tblCommPlayerBowlHist" AS tcpbh
-            LEFT JOIN "tblCommentaries" AS tc ON tc."wrCommentaryId" = tcpbh."wrCommentaryId" AND tc."wrIsDelete" = false
-            WHERE tcpbh."wrMatchTypeId" = $2 AND tcpbh."wrPlayerId" = $1
+            LEFT JOIN "tblCommentaries" AS tc ON tc."wrCommentaryId" = tcpbh."wrCommentaryId"
+            WHERE tcpbh."wrMatchTypeId" = $2 AND tcpbh."wrPlayerId" = $1 
+            AND tcpbh."wrIsDeleted" = false AND tc."wrIsDelete" = false;
       `,
       {
         type : fastify.db.QueryTypes.SELECT,
@@ -732,7 +740,8 @@ const getCommPlayerBowlHistQuery = async (data, request, fastify) => {
           ON tc."wrCommentaryId" = tcpbh."wrCommentaryId" 
           AND tc."wrIsDelete" = false
       WHERE tcpbh."wrPlayerId" = $1 
-          AND tcpbh."wrMatchTypeId" = $2;`;
+          AND tcpbh."wrMatchTypeId" = $2
+          AND tcpbh."wrIsDeleted" = false;`;
           
     const result = await fastify.db.query(query, {
       type: fastify.db.QueryTypes.SELECT,
@@ -745,6 +754,44 @@ const getCommPlayerBowlHistQuery = async (data, request, fastify) => {
       fastify,
       err.message,
       "DB ERROR --> repository/TableCommPlayerHistory.js/getCommPlayerBowlHistQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const deleteCommentaryPlayerHistoryQuery = async (commentaryId, request, fastify) => {
+  try {
+    await fastify.db.query(
+      `UPDATE "tblCommPlayerBatHist"
+        SET 
+          "wrIsDeleted" = $1,
+          "wrDeletedBy" = $2,
+          "wrDeletedAt" = now()
+        WHERE "wrCommentaryId" = $3;`,
+      {
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [true, request.userTokenInfo.WrUserId, commentaryId],
+      }
+    );
+
+    await fastify.db.query(
+        `UPDATE "tblCommPlayerBowlHist"
+        SET 
+          "wrIsDeleted" = $1,
+          "wrDeletedBy" = $2,
+          "wrDeletedAt" = now()
+        WHERE "wrCommentaryId" = $3;`,
+      {
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [true, request.userTokenInfo.WrUserId, commentaryId],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableTournamentTeamPoints.js/deleteCommentaryPlayerHistoryQuery",
       request
     );
     throw new Error(err.message);
@@ -767,4 +814,5 @@ module.exports = {
   savePlayerBatHistQuery,
   savePlayerBallHistQuery,
   getCommPlayerBowlHistQuery,
+  deleteCommentaryPlayerHistoryQuery,
 };

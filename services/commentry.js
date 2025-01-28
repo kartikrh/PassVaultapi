@@ -100,6 +100,12 @@ const { setTeamPointService } = require("./tournamentTeamPoints");
 const { setPlayerHistoryService } = require("./playerHistory");
 const { now } = require("mongoose");
 const { netRunRateRe_calculationService } = require("../services/tournamentTeamPoints");
+const { deleteCommentaryPlayerHistoryQuery } = require("../repository/TableCommPlayerHistory");
+const { deleteEventSnapByCommentaryIdQuery } = require("../repository/TableCompetitionEventSnap");
+const {
+  calculationOfCommPlayerBatHistService,
+  calculationOfCommPlayerBowlHistService,
+} = require("../services/playerHistory");
 // const { handleSitemapUpdate } = require("../utilities/SEOIndexing")
 
 
@@ -1294,19 +1300,56 @@ const loadMultiCommentaryService = async (request, fastify) => {
 const deleteCommentaryService = async (request, fastify) => {
   const { commentaryId } = request.body;
   let eventIdArr = [];
-
+  let playerIds = [];
+  let matchTypeIds = [];
+  let netRunRateData = [];
   for (const commentary of commentaryId) {
     let eventId = global.tblCommentaries.find(
       (item) => item?.commentaryId === commentary
     );
+
+    let playerlist = global.tblCommentaryPlayers.filter((elem) => 
+      elem.commentaryId === eventId.commentaryId && elem.isInPlayingEleven == true
+    ).map((pl) => pl.playerId);
+    
+    playerIds = playerIds.concat(playerlist);
+    matchTypeIds.push(eventId.matchTypeId);
+
+    netRunRateData.push({competitionId: eventId.competitionId, teamId: [eventId.team1Id, eventId.team2Id]});
     eventIdArr.push(eventId.eventRefId);
     await deleteCommentryQuery(commentary, request, fastify);
     await updateEventMarketCloseQuery(commentaryId, request, fastify)
+    await deleteCommentaryPlayerHistoryQuery(commentary, request, fastify);
+    await deleteEventSnapByCommentaryIdQuery(commentary, request, fastify);
   }
 
   global.tblCommentaries = global.tblCommentaries.filter(
     (item) => !commentaryId.includes(item?.commentaryId)
   );
+
+  let status = 1
+  for (const runRate of netRunRateData) {
+    const request = {
+      body: {
+        competitionId: runRate.competitionId,
+        teamId: runRate.teamId,
+        status,
+      },
+    };
+  
+    await netRunRateRe_calculationService(request, fastify);
+  }
+
+  for (const p of playerIds) {
+    const request = {
+      body: {
+        playerId: p,
+        matchTypeId: matchTypeIds
+      }
+    }
+    await calculationOfCommPlayerBatHistService(request, fastify);
+    await calculationOfCommPlayerBowlHistService(request, fastify);
+  }
 
   callClientAPI({
     serviceType: ServiceType.clientAPI,
