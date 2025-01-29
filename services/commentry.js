@@ -3058,34 +3058,39 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
 
           let decimalOverCount = parseFloat(commentaryBallByBall.overCount);
           let _wkt = commentaryBallByBall.ballIsWicket;
-          let _bory = commentaryBallByBall.ballIsBoundry;
-          //_resFromPredictAPI = null;
-          //_resFromPredictAPI = await 
           callPredictorMarket(
             {
-              commentary_id: commentaryData.commentaryId,
-              match_type_id: commentaryData.matchTypeId,
-              ball: decimalOverCount,
-              run: commentaryBallByBall.ballRun,
-              total_score: strikeTeam.teamScore,
-              strike_team_id: strikeTeam.teamId,
-              wicket: _wkt === true ? 1 : 0,
-              total_wicket: strikeTeam.teamWicket,
-              ball_by_ball_id: updatedData.commentaryBallByBallDetails.commentaryBallByBallId
+              playerpredictscore :  {
+                commentary_id: commentaryData.commentaryId,
+                match_type_id: commentaryData.matchTypeId,
+                event_id: commentaryData.eventRefId,
+                current_team_id: strikeTeam.teamId,
+                total_score: strikeTeam.teamScore,
+                current_ball: decimalOverCount || 0,
+                player_details: _sendPrePlayers,
+                ball_by_ball_id: updatedData.commentaryBallByBallDetails.commentaryBallByBallId
                 ? parseInt(updatedData.commentaryBallByBallDetails.commentaryBallByBallId)
-                : null
+                : null,
+                partnership_details : sendPartnership
+              },
+              predictscore : {
+                commentary_id: commentaryData.commentaryId,
+                match_type_id: commentaryData.matchTypeId,
+                ball: decimalOverCount,
+                run: commentaryBallByBall.ballRun,
+                total_score: strikeTeam.teamScore,
+                strike_team_id: strikeTeam.teamId,
+                wicket: _wkt === true ? 1 : 0,
+                total_wicket: strikeTeam.teamWicket,
+                ball_by_ball_id: updatedData.commentaryBallByBallDetails.commentaryBallByBallId
+                  ? parseInt(updatedData.commentaryBallByBallDetails.commentaryBallByBallId)
+                  : null
+              }
             },
             "/api/v1/predictscore",
             fastify,
             request
-          ).catch((err) => {
-            errorLogger(
-              fastify,
-              err.message,
-              "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket/callpredaictorMarket",
-              request
-            );
-          });
+          )
           // let callPrediction = {};
           // if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
           //   callPrediction.predictioonAPI = "predictscore"
@@ -3519,55 +3524,45 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         item?.commentaryId === commentaryData.commentaryId &&
         item.teamStatus === 1
     );
-    if (
-      commentaryDetails && _sendPrePlayers.length > 0 &&
-      commentaryData.isPredictMarket == true &&
-      previousCommentaryStatus == 3 &&
-      updatedData.commentaryBallByBallDetails
-    ) {
-      let decimalOverCount;
-      try {
-        decimalOverCount = parseFloat(commentaryBallByBall.overCount);
-      }
-      catch (error) {
-        decimalOverCount = 0;
-      }
-      //_resFromPredictAPI = null;
-      //_resFromPredictAPI = await
-      callPredictorMarket(
-        {
-          commentary_id: commentaryData.commentaryId,
-          match_type_id: commentaryData.matchTypeId,
-          event_id: commentaryData.eventRefId,
-          current_team_id: strikeTeam.teamId,
-          total_score: strikeTeam.teamScore,
-          current_ball: decimalOverCount,
-          player_details: _sendPrePlayers,
-          ball_by_ball_id: updatedData.commentaryBallByBallDetails.commentaryBallByBallId
-          ? parseInt(updatedData.commentaryBallByBallDetails.commentaryBallByBallId)
-          : null,
-          partnership_details : sendPartnership
-        },
-        "/api/v1/playerpredictscore",
-        fastify,
-        request
-      ).catch((err) => {
-        errorLogger(
-          fastify,
-          err.message,
-          "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
-          request
-        );
-      });
-      // let callPrediction = {};
-      // if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
-      //   callPrediction.predictioonAPI = "playerpredictscore"
-      //   callPrediction.predictioncallSuccess = false;
-      //   callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
-      //   callPrediction.endPoint = '/api/v1/playerpredictscore';
-      //   callPredictions.push(callPrediction);
-      // }
-    }
+    // if (
+    //   commentaryDetails && _sendPrePlayers.length > 0 &&
+    //   commentaryData.isPredictMarket == true &&
+    //   previousCommentaryStatus == 3 &&
+    //   updatedData.commentaryBallByBallDetails
+    // ) {
+    //   let decimalOverCount;
+    //   try {
+    //     decimalOverCount = parseFloat(commentaryBallByBall.overCount);
+    //   }
+    //   catch (error) {
+    //     decimalOverCount = 0;
+    //   }
+    //   callPredictorMarket(
+    //     {
+    //       commentary_id: commentaryData.commentaryId,
+    //       match_type_id: commentaryData.matchTypeId,
+    //       event_id: commentaryData.eventRefId,
+    //       current_team_id: strikeTeam.teamId,
+    //       total_score: strikeTeam.teamScore,
+    //       current_ball: decimalOverCount,
+    //       player_details: _sendPrePlayers,
+    //       ball_by_ball_id: updatedData.commentaryBallByBallDetails.commentaryBallByBallId
+    //       ? parseInt(updatedData.commentaryBallByBallDetails.commentaryBallByBallId)
+    //       : null,
+    //       partnership_details : sendPartnership
+    //     },
+    //     "/api/v1/playerpredictscore",
+    //     fastify,
+    //     request
+    //   ).catch((err) => {
+    //     errorLogger(
+    //       fastify,
+    //       err.message,
+    //       "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
+    //       request
+    //     );
+    //   });
+    // }
     if(deleteCommentaryBallByBallId || deleteOverId){
       const clientInRoom = global.socketIo.sockets.adapter.rooms.get(`score-${commentaryId}`);
       if (clientInRoom?.size) {
