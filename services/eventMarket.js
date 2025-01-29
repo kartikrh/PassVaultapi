@@ -1226,6 +1226,16 @@ const changeMarketCloseService = async (request, fastify) => {
       }
     }
 
+    marketLogger(
+      {
+        eventMarketId,
+        actionType : MarketActionType.closeMarket,
+        commentaryId,
+        value: `eventMarketStatus:${EventMarketStatus.Close}`,
+      },
+      request,
+      fastify
+    )
     return {
       message: "Market close updated successfully",
       callPrediction: callPrediction,
@@ -1655,6 +1665,14 @@ const setAllMarketCloseService = async (request, fastify) => {
 
   // close market which is open
   await closeMarketQuery(request, fastify);
+  marketLogger(
+    {
+      actionType : MarketActionType.allMarketClose,
+      value : "/allMarketClose"
+    },
+    request,
+    fastify
+  )
 
   return "All Market closed successfully";
 
@@ -2546,7 +2564,18 @@ const updateEventMarketCloseSuspendTimeService = async (request, fastify) => {
 const closeEventMarketsByIdsService = async (request, fastify) => {
   let { eventMarketId } = request.body;
   await closeEventMarketsQuery(eventMarketId, request, fastify);
-
+  for (let e of eventMarketId){
+    marketLogger(
+      {
+        actionType : MarketActionType.closeMarket,
+        eventMarketId : e,
+        commentaryId : null,
+        value : `eventMarketStatus:${EventMarketStatus.Close},api:"/closeMarkets"`
+      },
+      request,
+      fastify
+    )
+  }
   return "Market(s) closed successfully";
 };
 
