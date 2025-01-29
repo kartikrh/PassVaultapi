@@ -1460,7 +1460,8 @@ const getStatusLogsByMarketQuery = async (request, fastify) => {
                     "wrValue" as "value",
                     "wrUserId" as "userId",
                     tu."WrUserName" as "userName",
-                    tmd."wrCreatedDate" as "createdDate"
+                    tmd."wrCreatedDate" as "createdDate",
+                    tmd."wrResult" as "result"
                 FROM "tblMarketLogs" tmd
                 LEFT JOIN "tblUsers" tu ON tmd."wrUserId" = tu."WrUserId"
                 LEFT JOIN "tblEventMarkets"  tem ON tmd."wrEventMarketId" = tem."wrID"
