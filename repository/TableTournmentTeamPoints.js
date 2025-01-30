@@ -256,7 +256,7 @@ const deletePointsByTeamIdQuery = async (teamId, request, fastify) => {
             "wrIsDeleted" = $1,
             "wrDeletedBy" = $2,
             "wrDeletedAt" = now()
-        where "wrId" = ANY ($3)`,
+        where "wrTeamId" = ANY ($3)`,
       {
         type: fastify.db.QueryTypes.UPDATE,
         bind: [true, request.userTokenInfo.WrUserId, teamId],
