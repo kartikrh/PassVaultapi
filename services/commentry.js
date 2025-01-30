@@ -2988,6 +2988,60 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         data: commentaryPlayers,
       });
     }
+    if (
+      updatedData.commentaryBallByBallDetails &&
+      commentaryData.isPredictMarket &&
+      updatedData.commentaryBallByBallDetails.ballType > 0
+    ) {
+      let strikeTeam = global.tblCommentaryTeams.find(
+        (item) =>
+          item?.commentaryId === commentaryBallByBall.commentaryId &&
+          item.teamStatus === 1
+      );
+
+      let decimalOverCount = parseFloat(commentaryBallByBall.overCount);
+      let _wkt = commentaryBallByBall.ballIsWicket;
+      let partnership = updatedData.commentaryPartnershipDetails;
+      let boundary = partnership.totalSix + partnership.totalFour;
+      sendPartnership.push({
+        partnership_no : partnership?.order || 0,
+        partnership_boundaries : boundary
+      })
+      await callPredictorMarket(
+        {
+          playerpredictscore :  {
+            commentary_id: commentaryData.commentaryId,
+            match_type_id: commentaryData.matchTypeId,
+            event_id: commentaryData.eventRefId,
+            current_team_id: strikeTeam.teamId,
+            total_score: strikeTeam.teamScore,
+            current_ball: decimalOverCount || 0,
+            player_details: _sendPrePlayers,
+            ball_by_ball_id: updatedData.commentaryBallByBallDetails.commentaryBallByBallId
+            ? parseInt(updatedData.commentaryBallByBallDetails.commentaryBallByBallId)
+            : null,
+            partnership_details : sendPartnership
+          },
+          predictscore : {
+            commentary_id: commentaryData.commentaryId,
+            match_type_id: commentaryData.matchTypeId,
+            ball: decimalOverCount,
+            run: commentaryBallByBall.ballRun,
+            total_score: strikeTeam.teamScore,
+            strike_team_id: strikeTeam.teamId,
+            wicket: _wkt === true ? 1 : 0,
+            total_wicket: strikeTeam.teamWicket,
+            ball_by_ball_id: updatedData.commentaryBallByBallDetails.commentaryBallByBallId
+              ? parseInt(updatedData.commentaryBallByBallDetails.commentaryBallByBallId)
+              : null
+          },
+          commentary_id : commentaryId
+        },
+        "/api/v1/predictscore",
+        fastify,
+        request
+      )
+    }
     if (commentaryOvers) {
       if (updatedData.overDetails) {
         global.tblOvers.push(updatedData.overDetails);
@@ -3046,60 +3100,52 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
             }
           }
         }
-        if (
-          commentaryData.isPredictMarket &&
-          updatedData.commentaryBallByBallDetails.ballType > 0
-        ) {
-          let strikeTeam = global.tblCommentaryTeams.find(
-            (item) =>
-              item?.commentaryId === commentaryBallByBall.commentaryId &&
-              item.teamStatus === 1
-          );
+        // if (
+        //   commentaryData.isPredictMarket &&
+        //   updatedData.commentaryBallByBallDetails.ballType > 0
+        // ) {
+        //   let strikeTeam = global.tblCommentaryTeams.find(
+        //     (item) =>
+        //       item?.commentaryId === commentaryBallByBall.commentaryId &&
+        //       item.teamStatus === 1
+        //   );
 
-          let decimalOverCount = parseFloat(commentaryBallByBall.overCount);
-          let _wkt = commentaryBallByBall.ballIsWicket;
-          callPredictorMarket(
-            {
-              playerpredictscore :  {
-                commentary_id: commentaryData.commentaryId,
-                match_type_id: commentaryData.matchTypeId,
-                event_id: commentaryData.eventRefId,
-                current_team_id: strikeTeam.teamId,
-                total_score: strikeTeam.teamScore,
-                current_ball: decimalOverCount || 0,
-                player_details: _sendPrePlayers,
-                ball_by_ball_id: updatedData.commentaryBallByBallDetails.commentaryBallByBallId
-                ? parseInt(updatedData.commentaryBallByBallDetails.commentaryBallByBallId)
-                : null,
-                partnership_details : sendPartnership
-              },
-              predictscore : {
-                commentary_id: commentaryData.commentaryId,
-                match_type_id: commentaryData.matchTypeId,
-                ball: decimalOverCount,
-                run: commentaryBallByBall.ballRun,
-                total_score: strikeTeam.teamScore,
-                strike_team_id: strikeTeam.teamId,
-                wicket: _wkt === true ? 1 : 0,
-                total_wicket: strikeTeam.teamWicket,
-                ball_by_ball_id: updatedData.commentaryBallByBallDetails.commentaryBallByBallId
-                  ? parseInt(updatedData.commentaryBallByBallDetails.commentaryBallByBallId)
-                  : null
-              }
-            },
-            "/api/v1/predictscore",
-            fastify,
-            request
-          )
-          // let callPrediction = {};
-          // if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
-          //   callPrediction.predictioonAPI = "predictscore"
-          //   callPrediction.predictioncallSuccess = false;
-          //   callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
-          //   callPrediction.endPoint = '/api/v1/predictscore';
-          //   callPredictions.push(callPrediction);
-          // }
-        }
+        //   let decimalOverCount = parseFloat(commentaryBallByBall.overCount);
+        //   let _wkt = commentaryBallByBall.ballIsWicket;
+        //   callPredictorMarket(
+        //     {
+        //       playerpredictscore :  {
+        //         commentary_id: commentaryData.commentaryId,
+        //         match_type_id: commentaryData.matchTypeId,
+        //         event_id: commentaryData.eventRefId,
+        //         current_team_id: strikeTeam.teamId,
+        //         total_score: strikeTeam.teamScore,
+        //         current_ball: decimalOverCount || 0,
+        //         player_details: _sendPrePlayers,
+        //         ball_by_ball_id: updatedData.commentaryBallByBallDetails.commentaryBallByBallId
+        //         ? parseInt(updatedData.commentaryBallByBallDetails.commentaryBallByBallId)
+        //         : null,
+        //         partnership_details : sendPartnership
+        //       },
+        //       predictscore : {
+        //         commentary_id: commentaryData.commentaryId,
+        //         match_type_id: commentaryData.matchTypeId,
+        //         ball: decimalOverCount,
+        //         run: commentaryBallByBall.ballRun,
+        //         total_score: strikeTeam.teamScore,
+        //         strike_team_id: strikeTeam.teamId,
+        //         wicket: _wkt === true ? 1 : 0,
+        //         total_wicket: strikeTeam.teamWicket,
+        //         ball_by_ball_id: updatedData.commentaryBallByBallDetails.commentaryBallByBallId
+        //           ? parseInt(updatedData.commentaryBallByBallDetails.commentaryBallByBallId)
+        //           : null
+        //       }
+        //     },
+        //     "/api/v1/predictscore",
+        //     fastify,
+        //     request
+        //   )
+        // }
       } else {
         // if(ballByBallIndex !== -1){
         //   global.tblCommentaryBallByBall[ballByBallIndex] = commentaryBallByBall;
@@ -3257,12 +3303,6 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
 
           }
         }
-
-        // sendDataForSocketUpdate.dataToUpdate.push({
-        //   module: "commentaryPartnership",
-        //   type: "update",
-        //   data: response.commentaryPartnershipDetails,
-        // });
         if (!deleteCommentaryBallByBallId) {
           if (partnershipIndex !== -1) {
             global.tblCommentaryPartnership[partnershipIndex] = updatedData.commentaryPartnershipDetails;
@@ -3282,11 +3322,11 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           });
         }
       }
-      let boundary = response.commentaryPartnershipDetails.totalSix + response.commentaryPartnershipDetails.totalFour;
-      sendPartnership.push({
-        partnership_no : response.commentaryPartnershipDetails.order,
-        partnership_boundaries : boundary
-      })
+      // let boundary = response.commentaryPartnershipDetails.totalSix + response.commentaryPartnershipDetails.totalFour;
+      // sendPartnership.push({
+      //   partnership_no : response.commentaryPartnershipDetails.order,
+      //   partnership_boundaries : boundary
+      // })
     }
     if (deleteCommentaryBallByBallId) {
       response.deleteCommentaryBallByBallId = true;
