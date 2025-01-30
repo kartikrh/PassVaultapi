@@ -285,7 +285,7 @@ const getCommentaryStatusQuery = async (
 };
 
 
-const deleteTipsByCommentaryIdQuery = async (commentaryId, fastify, request) => {
+const deleteTipsByCommentaryIdQuery = async (commentaryId, request, fastify) => {
   try {
     return await fastify.db.query(
       `UPDATE "tblTips" SET
