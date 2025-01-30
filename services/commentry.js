@@ -100,6 +100,12 @@ const { setTeamPointService } = require("./tournamentTeamPoints");
 const { setPlayerHistoryService } = require("./playerHistory");
 const { now } = require("mongoose");
 const { netRunRateRe_calculationService } = require("../services/tournamentTeamPoints");
+const { deleteCommentaryPlayerHistoryQuery } = require("../repository/TableCommPlayerHistory");
+const { deleteEventSnapByCommentaryIdQuery } = require("../repository/TableCompetitionEventSnap");
+const {
+  calculationOfCommPlayerBatHistService,
+  calculationOfCommPlayerBowlHistService,
+} = require("../services/playerHistory");
 // const { handleSitemapUpdate } = require("../utilities/SEOIndexing")
 
 
@@ -1294,19 +1300,56 @@ const loadMultiCommentaryService = async (request, fastify) => {
 const deleteCommentaryService = async (request, fastify) => {
   const { commentaryId } = request.body;
   let eventIdArr = [];
-
+  let playerIds = [];
+  let matchTypeIds = [];
+  let netRunRateData = [];
   for (const commentary of commentaryId) {
     let eventId = global.tblCommentaries.find(
       (item) => item?.commentaryId === commentary
     );
+
+    let playerlist = global.tblCommentaryPlayers.filter((elem) => 
+      elem.commentaryId === eventId.commentaryId && elem.isInPlayingEleven == true
+    ).map((pl) => pl.playerId);
+    
+    playerIds = playerIds.concat(playerlist);
+    matchTypeIds.push(eventId.matchTypeId);
+
+    netRunRateData.push({competitionId: eventId.competitionId, teamId: [eventId.team1Id, eventId.team2Id]});
     eventIdArr.push(eventId.eventRefId);
     await deleteCommentryQuery(commentary, request, fastify);
     await updateEventMarketCloseQuery(commentaryId, request, fastify)
+    await deleteCommentaryPlayerHistoryQuery(commentary, request, fastify);
+    await deleteEventSnapByCommentaryIdQuery(commentary, request, fastify);
   }
 
   global.tblCommentaries = global.tblCommentaries.filter(
     (item) => !commentaryId.includes(item?.commentaryId)
   );
+
+  let status = 1
+  for (const runRate of netRunRateData) {
+    const request = {
+      body: {
+        competitionId: runRate.competitionId,
+        teamId: runRate.teamId,
+        status,
+      },
+    };
+  
+    await netRunRateRe_calculationService(request, fastify);
+  }
+
+  for (const p of playerIds) {
+    const request = {
+      body: {
+        playerId: p,
+        matchTypeId: matchTypeIds
+      }
+    }
+    await calculationOfCommPlayerBatHistService(request, fastify);
+    await calculationOfCommPlayerBowlHistService(request, fastify);
+  }
 
   callClientAPI({
     serviceType: ServiceType.clientAPI,
@@ -3015,34 +3058,39 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
 
           let decimalOverCount = parseFloat(commentaryBallByBall.overCount);
           let _wkt = commentaryBallByBall.ballIsWicket;
-          let _bory = commentaryBallByBall.ballIsBoundry;
-          //_resFromPredictAPI = null;
-          //_resFromPredictAPI = await 
           callPredictorMarket(
             {
-              commentary_id: commentaryData.commentaryId,
-              match_type_id: commentaryData.matchTypeId,
-              ball: decimalOverCount,
-              run: commentaryBallByBall.ballRun,
-              total_score: strikeTeam.teamScore,
-              strike_team_id: strikeTeam.teamId,
-              wicket: _wkt === true ? 1 : 0,
-              total_wicket: strikeTeam.teamWicket,
-              ball_by_ball_id: updatedData.commentaryBallByBallDetails.commentaryBallByBallId
+              playerpredictscore :  {
+                commentary_id: commentaryData.commentaryId,
+                match_type_id: commentaryData.matchTypeId,
+                event_id: commentaryData.eventRefId,
+                current_team_id: strikeTeam.teamId,
+                total_score: strikeTeam.teamScore,
+                current_ball: decimalOverCount || 0,
+                player_details: _sendPrePlayers,
+                ball_by_ball_id: updatedData.commentaryBallByBallDetails.commentaryBallByBallId
                 ? parseInt(updatedData.commentaryBallByBallDetails.commentaryBallByBallId)
-                : null
+                : null,
+                partnership_details : sendPartnership
+              },
+              predictscore : {
+                commentary_id: commentaryData.commentaryId,
+                match_type_id: commentaryData.matchTypeId,
+                ball: decimalOverCount,
+                run: commentaryBallByBall.ballRun,
+                total_score: strikeTeam.teamScore,
+                strike_team_id: strikeTeam.teamId,
+                wicket: _wkt === true ? 1 : 0,
+                total_wicket: strikeTeam.teamWicket,
+                ball_by_ball_id: updatedData.commentaryBallByBallDetails.commentaryBallByBallId
+                  ? parseInt(updatedData.commentaryBallByBallDetails.commentaryBallByBallId)
+                  : null
+              }
             },
             "/api/v1/predictscore",
             fastify,
             request
-          ).catch((err) => {
-            errorLogger(
-              fastify,
-              err.message,
-              "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket/callpredaictorMarket",
-              request
-            );
-          });
+          )
           // let callPrediction = {};
           // if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
           //   callPrediction.predictioonAPI = "predictscore"
@@ -3476,55 +3524,45 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         item?.commentaryId === commentaryData.commentaryId &&
         item.teamStatus === 1
     );
-    if (
-      commentaryDetails && _sendPrePlayers.length > 0 &&
-      commentaryData.isPredictMarket == true &&
-      previousCommentaryStatus == 3 &&
-      updatedData.commentaryBallByBallDetails
-    ) {
-      let decimalOverCount;
-      try {
-        decimalOverCount = parseFloat(commentaryBallByBall.overCount);
-      }
-      catch (error) {
-        decimalOverCount = 0;
-      }
-      //_resFromPredictAPI = null;
-      //_resFromPredictAPI = await
-      callPredictorMarket(
-        {
-          commentary_id: commentaryData.commentaryId,
-          match_type_id: commentaryData.matchTypeId,
-          event_id: commentaryData.eventRefId,
-          current_team_id: strikeTeam.teamId,
-          total_score: strikeTeam.teamScore,
-          current_ball: decimalOverCount,
-          player_details: _sendPrePlayers,
-          ball_by_ball_id: updatedData.commentaryBallByBallDetails.commentaryBallByBallId
-          ? parseInt(updatedData.commentaryBallByBallDetails.commentaryBallByBallId)
-          : null,
-          partnership_details : sendPartnership
-        },
-        "/api/v1/playerpredictscore",
-        fastify,
-        request
-      ).catch((err) => {
-        errorLogger(
-          fastify,
-          err.message,
-          "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
-          request
-        );
-      });
-      // let callPrediction = {};
-      // if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
-      //   callPrediction.predictioonAPI = "playerpredictscore"
-      //   callPrediction.predictioncallSuccess = false;
-      //   callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
-      //   callPrediction.endPoint = '/api/v1/playerpredictscore';
-      //   callPredictions.push(callPrediction);
-      // }
-    }
+    // if (
+    //   commentaryDetails && _sendPrePlayers.length > 0 &&
+    //   commentaryData.isPredictMarket == true &&
+    //   previousCommentaryStatus == 3 &&
+    //   updatedData.commentaryBallByBallDetails
+    // ) {
+    //   let decimalOverCount;
+    //   try {
+    //     decimalOverCount = parseFloat(commentaryBallByBall.overCount);
+    //   }
+    //   catch (error) {
+    //     decimalOverCount = 0;
+    //   }
+    //   callPredictorMarket(
+    //     {
+    //       commentary_id: commentaryData.commentaryId,
+    //       match_type_id: commentaryData.matchTypeId,
+    //       event_id: commentaryData.eventRefId,
+    //       current_team_id: strikeTeam.teamId,
+    //       total_score: strikeTeam.teamScore,
+    //       current_ball: decimalOverCount,
+    //       player_details: _sendPrePlayers,
+    //       ball_by_ball_id: updatedData.commentaryBallByBallDetails.commentaryBallByBallId
+    //       ? parseInt(updatedData.commentaryBallByBallDetails.commentaryBallByBallId)
+    //       : null,
+    //       partnership_details : sendPartnership
+    //     },
+    //     "/api/v1/playerpredictscore",
+    //     fastify,
+    //     request
+    //   ).catch((err) => {
+    //     errorLogger(
+    //       fastify,
+    //       err.message,
+    //       "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
+    //       request
+    //     );
+    //   });
+    // }
     if(deleteCommentaryBallByBallId || deleteOverId){
       const clientInRoom = global.socketIo.sockets.adapter.rooms.get(`score-${commentaryId}`);
       if (clientInRoom?.size) {

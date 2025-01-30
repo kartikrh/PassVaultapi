@@ -210,10 +210,31 @@ const updateEventSnapQuery = async (data, request, fastify) =>{
     }
 }
 
+const deleteEventSnapByCommentaryIdQuery = async (commentaryId, request, fastify) =>{
+    try {
+        return await fastify.db.query(
+            `DELETE FROM "tblCompetitionEventSnap" WHERE "wrCommentaryId" = $1`,
+            {
+                type: fastify.db.QueryTypes.DELETE,
+                bind: [commentaryId]
+            }
+        );
+    } catch (error) {
+        errorLogger(
+            fastify,
+            error.message,
+            "DB Error --> repository/TableCompetitionEventSnap.js/deleteEventSnapByCommentaryIdQuery",
+            request
+        )
+        throw new Error(error)
+    }
+}
+
 module.exports = {
     getComEventSnapQuery,
     setEventSnapQuery,
     getEventSnapByComQuery,
     getEventSnapByCompetitionIdQuery,
     updateEventSnapQuery,
+    deleteEventSnapByCommentaryIdQuery,
 }

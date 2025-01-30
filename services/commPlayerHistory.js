@@ -10,7 +10,7 @@ const {
 } = require("../repository/TableCommPlayerHistory");
 
 const getAllCommentaryPlayerHistoryService = async (request, fastify) => {
-  const whereCondition = `"wrPlayerId" = ${request.body.playerId}`
+  const whereCondition = `tcpbh."wrIsDeleted" = false AND tcpbh."wrPlayerId" = ${request.body.playerId}`
 
   const battingHistory = await getAllCommentaryBattingHistory(fastify, whereCondition);
   const bowlingHistory = await getAllCommentaryBowlingHistory(fastify, whereCondition);
