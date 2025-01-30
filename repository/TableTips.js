@@ -284,6 +284,31 @@ const getCommentaryStatusQuery = async (
   }
 };
 
+
+const deleteTipsByCommentaryIdQuery = async (commentaryId, fastify, request) => {
+  try {
+    return await fastify.db.query(
+      `UPDATE "tblTips" SET
+          "wrIsDeleted" = $1,
+          "wrDeletedBy" = $2,
+          "wrDeletedAt" = now()
+      WHERE "wrCommentaryId" = $3;`,
+      {
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [true, request.userTokenInfo.WrUserId, commentaryId],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableTips.js/deleteTipsByCommentaryIdQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllTipsQuery,
   allCommentaryTipsQuery,
@@ -293,4 +318,5 @@ module.exports = {
   deleteTipsQuery,
   activeInactiveTipsQuery,
   getCommentaryStatusQuery,
+  deleteTipsByCommentaryIdQuery,
 };

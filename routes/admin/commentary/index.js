@@ -69,6 +69,7 @@ const {
   getRunnerOfMarket,
   getAllCommentaryEventMarkets,
   commentaryHistory,
+  deleteCommentaryHistory,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -939,5 +940,16 @@ module.exports = async (fastify, opts) => {
     ],
     handler: (request, reply) => getAllCommentaryEventMarkets(request, reply, fastify),
   })
-  
+  fastify.post("/deleteCommHist", {
+    schema: Commentary.delete.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "delete",
+        }),
+    ],
+    handler: (request, reply) => deleteCommentaryHistory(request, reply, fastify),
+  });
 };
