@@ -73,6 +73,8 @@ const {
   cancelCommentaryQuery,
   isCountInPOintCommentaryChangeQuery,
   getAllCommentaryHistoryQuery,
+  deleteCommentryHistoryQuery,
+  getCommPlayersByCommentaryIdQuery,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -102,6 +104,7 @@ const { now } = require("mongoose");
 const { netRunRateRe_calculationService } = require("../services/tournamentTeamPoints");
 const { deleteCommentaryPlayerHistoryQuery } = require("../repository/TableCommPlayerHistory");
 const { deleteEventSnapByCommentaryIdQuery } = require("../repository/TableCompetitionEventSnap");
+const { deleteTipsByCommentaryIdQuery } = require("../repository/TableTips");
 const {
   calculationOfCommPlayerBatHistService,
   calculationOfCommPlayerBowlHistService,
@@ -1321,9 +1324,14 @@ const deleteCommentaryService = async (request, fastify) => {
     await updateEventMarketCloseQuery(commentaryId, request, fastify)
     await deleteCommentaryPlayerHistoryQuery(commentary, request, fastify);
     await deleteEventSnapByCommentaryIdQuery(commentary, request, fastify);
+    await deleteTipsByCommentaryIdQuery(commentary, request, fastify);
   }
 
   global.tblCommentaries = global.tblCommentaries.filter(
+    (item) => !commentaryId.includes(item?.commentaryId)
+  );
+
+  global.tblTips = global.tblTips.filter(
     (item) => !commentaryId.includes(item?.commentaryId)
   );
 
@@ -3007,7 +3015,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         partnership_no : partnership?.order || 0,
         partnership_boundaries : boundary
       })
-      await callPredictorMarket(
+      callPredictorMarket(
         {
           playerpredictscore :  {
             commentary_id: commentaryData.commentaryId,
@@ -10007,6 +10015,110 @@ const commentaryHistoryService = async (request, fastify) => {
   return result;
 };
 
+const deleteCommentaryHistoryService = async (request, fastify) => {
+  const { commentaryId } = request.body;
+  let eventIdArr = [];
+  let playerIds = [];
+  let matchTypeIds = [];
+  let netRunRateData = [];
+  for (const commentary of commentaryId) {
+    let whereCondition = `tc."wrIsDelete" = FALSE AND tc."wrCommentaryId" = ${commentary}`;
+    let result = await getAllCommentaryHistoryQuery(whereCondition, fastify, request);
+    if(result.length == 0){
+      throw new Error(`Commentary with this ID not found`);
+    }
+    let eventId = result[0];
+
+    let playerlist = await getCommPlayersByCommentaryIdQuery(
+      commentary, request, fastify
+    );
+    playerlist = playerlist.map((pla) => pla.playerId);
+    
+    playerIds = playerIds.concat(playerlist);
+    matchTypeIds.push(eventId.matchTypeId);
+
+    netRunRateData.push({competitionId: eventId.competitionId, teamId: [eventId.team1Id, eventId.team2Id]});
+    eventIdArr.push(eventId.eventRefId);
+  }
+  await deleteCommentryHistoryQuery(commentaryId, request, fastify);
+
+  global.tblCommentaries = global.tblCommentaries.filter(
+    (item) => !commentaryId.includes(item?.commentaryId)
+  );
+
+  global.tblCommentaryPlayers = global.tblCommentaryPlayers.filter(
+    (item) => !commentaryId.includes(item?.commentaryId)
+  );
+
+  global.tblCommentaryAwards = global.tblCommentaryAwards.filter(
+    (item) => !commentaryId.includes(item?.commentaryId)
+  );
+
+  global.tblTips = global.tblTips.filter(
+    (item) => !commentaryId.includes(item?.commentaryId)
+  );
+
+  let status = 1
+  for (const runRate of netRunRateData) {
+    const request = {
+      body: {
+        competitionId: runRate.competitionId,
+        teamId: runRate.teamId,
+        status,
+      },
+    };
+  
+    await netRunRateRe_calculationService(request, fastify);
+  }
+
+  for (const p of playerIds) {
+    const request = {
+      body: {
+        playerId: p,
+        matchTypeId: matchTypeIds
+      }
+    }
+    await calculationOfCommPlayerBatHistService(request, fastify);
+    await calculationOfCommPlayerBowlHistService(request, fastify);
+  }
+  
+  callClientAPI({
+    serviceType: ServiceType.clientAPI,
+    moduleType: APIEndpointModuleType.commentaryUpdate,
+    data: {
+      type: "deleteEvent",
+      eventId: eventIdArr
+    }
+  }, request, fastify).catch((err) => {
+    console.log("call client api console", err);
+    errorLogger(
+      fastify,
+      err.message,
+      "ERROR --> services/commentary.js/deleteCommentaryHistoryService",
+      request
+    );
+  });
+
+  callDataProvider(
+    {
+      commentaryId: commentaryId,
+      serviceType: ServiceType.dataProviderAPI,
+      moduleType: APIEndpointModuleType.commentaryUpdate,
+      type: "delete"
+    },
+    fastify
+  ).catch((err) => {
+    console.log("call data provider console", err);
+    errorLogger(
+      fastify,
+      err.message,
+      "ERROR --> services/commentary.js/deleteCommentaryHistoryService",
+      request
+    );
+  });
+  return `Commentaries deleted successfully`;
+};
+
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -10084,4 +10196,5 @@ module.exports = {
   getRunnerOfMarketService,
   getEventMarketAndRunnersService,
   commentaryHistoryService,
+  deleteCommentaryHistoryService,
 };

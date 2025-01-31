@@ -4325,7 +4325,6 @@ const isCountInPOintCommentaryChangeQuery = async (data, fastify, request) => {
 
 
 const getAllCommentaryHistoryQuery = async (whereCondition, fastify, request) => {
-  console.log("whereCondtiion", whereCondition)
   try {
     return await fastify.db.query(
       `SELECT 
@@ -4398,6 +4397,54 @@ const getAllCommentaryHistoryQuery = async (whereCondition, fastify, request) =>
       fastify,
       err.message,
       "DB ERROR --> repository/TableCommentary/isCountInPOintCommentaryChangeQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const deleteCommentryHistoryQuery = async (commentaryId, request, fastify) => {
+  try {
+    return await fastify.db.query(`CALL proc_delete_commentary_data_and_related_data($1)`,
+      {
+        bind: [commentaryId], 
+        type: fastify.db.QueryTypes.RAW,
+      }
+      );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/deleteCommentryHistoryQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const getCommPlayersByCommentaryIdQuery = async (commentaryId, request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `select
+          tcp."wrCommentaryPlayerId" as "commentaryPlayerId",
+          tcp."wrCommentaryId" as "commentaryId",
+          tcp."wrTeamId" as "teamId",
+          tcp."wrPlayerId" as "playerId"
+      from "tblCommentaryPlayers" AS tcp
+      LEFT JOIN "tblPlayers" AS tp ON tcp."wrPlayerId" = tp."wrPlayerId"
+      WHERE tcp."wrIsDelete" = FALSE AND tcp."wrIsInPlayingEleven" = TRUE
+      AND "wrCommentaryId" = $1;
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [commentaryId]
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/getCommPlayersByCommentaryIdQuery",
       request
     );
     throw new Error(err.message);
@@ -4485,4 +4532,6 @@ module.exports = {
   getCommentariesResultQuery,
   isCountInPOintCommentaryChangeQuery,
   getAllCommentaryHistoryQuery,
+  deleteCommentryHistoryQuery,
+  getCommPlayersByCommentaryIdQuery,
 };

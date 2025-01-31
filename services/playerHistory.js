@@ -693,8 +693,13 @@ const setPlayerHistoryService = async (data,request, fastify) => {
     }
     let comdetail = global.tblCommentaries.find((item) => item.commentaryId === com);
     let matchType = global.tblMatchTypes.find((item) => item.matchTypeId === comdetail.historyMatchTypeId );
+    // const comPlayer = global.tblCommentaryPlayers.filter((item) => item.commentaryId === com 
+    //   && (item.batBall > 0 || item.bowlerTotalBall > 0))
+    // .filter((item, index, self) =>
+    //   index === self.findIndex((t) => t.playerId === item.playerId)
+    // );
     const comPlayer = global.tblCommentaryPlayers.filter((item) => item.commentaryId === com 
-      && (item.batBall > 0 || item.bowlerTotalBall > 0))
+    && item.isInPlayingEleven == true )
     .filter((item, index, self) =>
       index === self.findIndex((t) => t.playerId === item.playerId)
     );
@@ -715,12 +720,25 @@ const setPlayerHistoryService = async (data,request, fastify) => {
       });
 
       const plyOutCount = global.tblCommentaryPlayers.filter((item) => item.playerId === p.playerId && matchTypeCommentaries.includes(item.commentaryId));
-      const player = global.tblCommentaryPlayers.filter((item) => item.playerId === p.playerId && item.commentaryId === com );
-      const comPlayerId = player.map((item) => item.commentaryPlayerId);
+      // const player = global.tblCommentaryPlayers.filter((item) => 
+      //   item.playerId === p.playerId && 
+      //   item.commentaryId === com &&
+      //   ((item.batBall >= 0 && item.batBall !== null) || (item.bowlerTotalBall >= 0 && item.bowlerTotalBall !== null))
+      // );
+      const batPlayer = global.tblCommentaryPlayers.filter((item) => 
+        item.playerId === p.playerId && 
+        item.commentaryId === com &&
+        (item.batBall >= 0 && item.batBall !== null)
+      );
+      const bowlPlayer = global.tblCommentaryPlayers.filter((item) => 
+        item.playerId === p.playerId && 
+        item.commentaryId === com &&
+        (item.bowlerTotalBall >= 0 && item.bowlerTotalBall !== null)
+      );
+      // const comPlayerId = player.map((item) => item.commentaryPlayerId);
+      const comPlayerId = bowlPlayer.map((item) => item.commentaryPlayerId);
       const playerBattingHistory = await getBatterHistoryQuery({playerId: p.playerId, matchTypeId: comdetail.historyMatchTypeId}, request, fastify);
       const playeBallHis = await getBowlerHistorydQuery({playerId: p.playerId, matchTypeId: comdetail.historyMatchTypeId}, request, fastify);
-      // const playerBattingHistory = global.tblPlayersBattingHistory.find((item) => item.playerId === p.playerId && item.matchTypeId === comdetail.historyMatchTypeId);
-      // const playeBallHis = global.tblPlayersBowlingHistory.find((item) => item.playerId === p.playerId && item.matchTypeId === comdetail.historyMatchTypeId);
       const overs = global.tblOvers.filter(item => item.commentaryId === com 
         && comPlayerId.includes(item.bowlerId));
 
@@ -754,23 +772,25 @@ const setPlayerHistoryService = async (data,request, fastify) => {
       let cPlayer = {};
       let cPlayerBall = {};
       let pbHis = {};
-      let inningCount = player.filter((item)=>item.isInPlayingEleven == true).length; 
-      let ballsFacedCount = player.reduce((acc, item) => acc + item.batBall, 0);
-      let batRun = player.reduce((acc, item) => acc + item.batRun, 0);
-      let notOut = player.filter((item) => item.isBatterOut == false).length;
+      // let inningCount = player.filter((item)=>item.isInPlayingEleven == true).length; 
+      let batInningCount = batPlayer.filter((item)=>item.isInPlayingEleven == true).length; 
+      let bowInningCount = bowlPlayer.filter((item)=>item.isInPlayingEleven == true).length; 
+      let ballsFacedCount = batPlayer.reduce((acc, item) => acc + item.batBall, 0);
+      let batRun = batPlayer.reduce((acc, item) => acc + item.batRun, 0);
+      let notOut = batPlayer.filter((item) => item.isBatterOut == false).length;
       let sr =  ballsFacedCount != 0 ? (batRun / ballsFacedCount) * 100 : 0;
-      let batFour = player.reduce((acc, item) => acc + item.batFour, 0);
-      let batSix = player.reduce((acc, item) => acc + item.batSix, 0);
-      let catchCount = player.filter((item) => item.wicketType == 2).length;
-      let stumpCount = player.filter((item) => item.wicketType == 3).length;
+      let batFour = batPlayer.reduce((acc, item) => acc + item.batFour, 0);
+      let batSix = batPlayer.reduce((acc, item) => acc + item.batSix, 0);
+      let catchCount = batPlayer.filter((item) => item.wicketType == 2).length;
+      let stumpCount = batPlayer.filter((item) => item.wicketType == 3).length;
       let ballCount = overs.reduce((acc, item) => acc + item.ballCount, 0);
       let wicket = overs.reduce((acc, item) => acc + item.totalWicket, 0);
       let ballRun = overs.reduce((acc, item) => acc + item.totalRun, 0);
       let ballavg = wicket != 0 ? ballRun / wicket : 0;
       let bbi = BBIData;
       let bbm = wicket != 0 ? `${wicket}/${ballRun}` : 0;
-      let eco = player[0].bowlerEconomy;
-      let ballSr = player[0].batsmanStrikeRate;
+      let eco = bowlPlayer[0]?.bowlerEconomy;
+      let ballSr = bowlPlayer[0]?.batsmanStrikeRate;
       let wicket4 = wicketsCount == 4 ? 4 : 0;
       let wicket5 = wicketsCount == 5 ? 5 : 0;
       let wicket10 = wicketsCount >= 10 ? wicketsCount : 0;
@@ -778,16 +798,17 @@ const setPlayerHistoryService = async (data,request, fastify) => {
       // let wicket5 = overs.filter((item) => item.totalWicket == 5).length;
       // let wicket10 = overs.filter((item) => item.totalWicket >= 10).length;
       let batOutCount = plyOutCount.filter((item) => item.wicketType !== null).length;
-      let batAvg = inningCount !== 0 ? batRun / inningCount : 0
+      let batAvg = batInningCount !== 0 ? batRun / batInningCount : 0
+      // let batAvg = inningCount !== 0 ? batRun / inningCount : 0
 
       let commBatHist = {
         matchTypeId: comdetail.historyMatchTypeId,
         matchTypeName: matchType.matchType,
         playerId : p.playerId,
         commentaryId: com,
-        commentaryPlayerId : player[0].commentaryPlayerId,
+        commentaryPlayerId : batPlayer[0]?.commentaryPlayerId,
         matchCount : 1,
-        inningsCount : inningCount,
+        inningsCount : batInningCount,
         notOut : notOut,
         totalRuns : batRun,
         highestScore : notOut != 0 ? batRun + '*' : batRun,
@@ -800,7 +821,7 @@ const setPlayerHistoryService = async (data,request, fastify) => {
         countOf6 : batSix,
         catchCount : catchCount,
         stumpCount : stumpCount,
-        outCount: player[0].wicketType !== null ? 1 : 0,
+        outCount: batPlayer[0]?.wicketType !== null ? 1 : 0,
         createdBy : request.userTokenInfo.WrUserId,
       };
       let totalOvers = 0;
@@ -817,9 +838,9 @@ const setPlayerHistoryService = async (data,request, fastify) => {
         matchTypeName: matchType.matchType,
         playerId : p.playerId,
         commentaryId: com,
-        commentaryPlayerId : player[0].commentaryPlayerId,
+        commentaryPlayerId : bowlPlayer[0]?.commentaryPlayerId,
         matchCount : 1,
-        inningsCount : inningCount,
+        inningsCount : bowInningCount,
         ballCount : ballCount,
         runsFromBowler : ballRun,
         wicketsCount : wicket,
@@ -841,7 +862,7 @@ const setPlayerHistoryService = async (data,request, fastify) => {
           matchTypeName: matchType.matchType,
           playerId : p.playerId,
           matchCount : 1,
-          inningsCount : inningCount,
+          inningsCount : batInningCount,
           notOut : notOut,
           totalRuns : batRun,
           highestScore : notOut != 0 ? batRun + '*' : batRun,
@@ -865,7 +886,7 @@ const setPlayerHistoryService = async (data,request, fastify) => {
           matchTypeName: matchType.matchType,
           playerId : p.playerId,
           bowlerPlayedMatchCount : 1,
-          bowlerPlayedInningsCount : inningCount,
+          bowlerPlayedInningsCount : bowInningCount,
           ballCount : ballCount,
           runsFromBowler : ballRun,
           wicketsCount : wicket,
