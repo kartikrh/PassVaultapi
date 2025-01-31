@@ -3015,7 +3015,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         partnership_no : partnership?.order || 0,
         partnership_boundaries : boundary
       })
-      await callPredictorMarket(
+      callPredictorMarket(
         {
           playerpredictscore :  {
             commentary_id: commentaryData.commentaryId,
