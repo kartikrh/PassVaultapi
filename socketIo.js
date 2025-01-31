@@ -204,6 +204,19 @@ const connection = (socket , fastify) => {
     }
   });
 
+  socket.on("marketRunnerDisconnect", (eventIds)=>{
+    try {
+      if(eventIds.length > 0){
+        // remove this socket from runner room
+        for (let e of eventIds){
+          const roomName = `runnerRoom-${e}`;
+          socket.leave(roomName)
+        }
+      }
+    } catch (error) {
+      console.log("Error in marketRunnerDisconnect",error)
+    }
+  })
   // socket.on("updatedEventMarket", async (data) => {
   //   try {
   //     let MarketArr = [];
@@ -456,7 +469,15 @@ const connection = (socket , fastify) => {
       }
     }
   })
-
+  socket.on("disconnectCom", (data)=>{
+    try {
+      const {commentaryId} = data;
+      const roomName = `score-${commentaryId}`
+      socket.leave(roomName)
+    } catch (error) {
+      console.log("error in disconnectCom",error)
+    }
+  })
   socket.on("disconnect", () => {
   });
 };
