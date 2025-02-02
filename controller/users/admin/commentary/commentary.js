@@ -72,6 +72,7 @@ const {
   getEventMarketAndRunnersService,
   commentaryHistoryService,
   deleteCommentaryHistoryService,
+  getAllCompletedCommentaryService,
 } = require("../../../../services/commentry");
 const { getEventSnapByComService, updateEventSnapByComService } = require("../../../../services/competitionEventSnap");
 const { getAllCommentariesDataService } = require("../../../../services/score");
@@ -971,6 +972,15 @@ const deleteCommentaryHistory = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const getAllCompletedCommentary = async (request, reply, fastify) => {
+  try {
+    const result = await getAllCompletedCommentaryService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/getAllCompletedCommentary", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 module.exports = {
   getAllCommentaries,
   getCommentaryById,
@@ -1050,4 +1060,5 @@ module.exports = {
   getAllCommentaryEventMarkets,
   commentaryHistory,
   deleteCommentaryHistory,
+  getAllCompletedCommentary,
 }

@@ -14,7 +14,7 @@ let commonPath = "controller/users/admin/tournamentTeamPoints/index.js";
 
 const getAllTournamentTeamPoints = async (request, reply, fastify) => {
   try {
-    const result = await allTournamentTeamPointsService(request);
+    const result = await allTournamentTeamPointsService(request, fastify);
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/getAllTournamentTeamPoints", request);

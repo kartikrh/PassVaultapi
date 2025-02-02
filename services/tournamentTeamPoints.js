@@ -1,16 +1,19 @@
 const { createTeamPointLogQuery, getLogByComIdQuery } = require("../repository/TableTeamPointLogs");
 const { deletePlayerByTeamQuery } = require("../repository/TableTournamentsTeamPlayers");
 const {
+  getAllTournamentTeamPointsQuery,
   insertTournamentTeamPointsQuery,
   updateTournamentTeamPointsQuery,
   deleteTournamentTeamPointsQuery,
   activeInactiveTournamentTeamPointsQuery,
+  getTournamentPointsByTeamIdQuery,
   updateTeamPointsQuery
 } = require("../repository/TableTournmentTeamPoints");
 
-const allTournamentTeamPointsService = async (request) => {
+const allTournamentTeamPointsService = async (request, fastify) => {
   const { competitionId, teamId, groupId, isActive } = request.body;
-  const result = global.tblTournamentTeamPoint.filter((item) => {
+  let result = await getAllTournamentTeamPointsQuery(fastify);
+  result = result.filter((item) => {
     const competitionMatch = competitionId !== undefined ? item.competitionId === competitionId : true;
     const teamMatch = teamId !== undefined ? item.teamId === teamId : true;
     const groupMatch = groupId !== undefined ? item.groupId === groupId : true;
@@ -35,23 +38,23 @@ const createTblTournamentTeamPointsService = async (request, fastify) => {
     if(!validateTeamId){
       throw new Error('TeamId does not existed');
   }
-  // let groupIdValidation = request.body.groupId === undefined ? null : request.body.groupId
-  const existedValues = global.tblTournamentTeamPoint.find(
-    (item) => item.teamId == request.body.teamId && item.competitionId === request.body.competitionId
-    // && item.groupId === groupIdValidation
-  );
+  const existedValues = await getTournamentPointsByTeamIdQuery(
+    {competitionId: request.body.competitionId, teamId: request.body.teamId}, 
+    request,
+    fastify
+  );  
   if(existedValues){
     throw new Error("TeamId existed with this competitionId");
   }
     
   const saveData = await insertTournamentTeamPointsQuery(request.body, fastify, request);
-  global.tblTournamentTeamPoint.push(saveData);
 
   return saveData
 }
 
 const updateTblTournamentTeamPointsService = async (request, fastify) => {
-  const validateId = global.tblTournamentTeamPoint.find(
+  let validateId = await getAllTournamentTeamPointsQuery(fastify);
+  validateId = validateId.find(
     (elem) => elem.id === request.body.id
   );
   if (!validateId) {
@@ -88,12 +91,6 @@ const updateTblTournamentTeamPointsService = async (request, fastify) => {
 
   await updateTournamentTeamPointsQuery(updateData, fastify, request);
 
-  const index = global.tblTournamentTeamPoint.findIndex(
-    (ind) => ind.id === request.body.id
-  );
-  if (index !== -1) {
-    global.tblTournamentTeamPoint[index] = updateData;
-  }
 
   return updateData
 }
@@ -109,7 +106,6 @@ const saveTblTournamentTeamPointsService = async (request, fastify) => {
 const createTournamentTeamPointsService = async (newItems, fastify, request) => {
   const insertData = newItems.map(async (item) => {
     const saveData = await insertTournamentTeamPointsQuery(item, fastify, request);
-    global.tblTournamentTeamPoint.push(saveData);
   });
   await Promise.all(insertData);
   return `TournamentTeamPoints added successfully`;
@@ -117,7 +113,8 @@ const createTournamentTeamPointsService = async (newItems, fastify, request) => 
 
 const updateTournamentTeamPointsService = async (existingItems, fastify, request) => {    
   const editData = existingItems.map(async (item) => {
-    const validateId = global.tblTournamentTeamPoint.find(
+    let validateId = await getAllTournamentTeamPointsQuery(fastify);
+    validateId = validateId.find(
       (elem) => elem.id === item.id
     );
     if (!validateId) {
@@ -141,12 +138,6 @@ const updateTournamentTeamPointsService = async (existingItems, fastify, request
 
     await updateTournamentTeamPointsQuery(updateData, fastify, request);
 
-    const index = global.tblTournamentTeamPoint.findIndex(
-      (ind) => ind.id === updateData.id
-    );
-    if (index !== -1) {
-      global.tblTournamentTeamPoint[index] = updateData;
-    }
   });
 
   await Promise.all(editData);
@@ -176,9 +167,7 @@ const deleteTournamentTeamPointsService = async (request, fastify) => {
     teamId  : teamId,
     competitionId : competitionId
   }, request , fastify)
-  global.tblTournamentTeamPoint = global.tblTournamentTeamPoint.filter(
-    (item) => !id.includes(item.id)
-  );
+
   global.tblTournamentTeamPlayers = global.tblTournamentTeamPlayers.filter(
     (item) => !(teamId.includes(item.teamId) && item.competitionId === competitionId)
   );
@@ -191,17 +180,13 @@ const activeInactiveTournamentTeamPointsService = async (request, fastify) => {
   const { id, isActive } = request.body;
 
   await activeInactiveTournamentTeamPointsQuery({ id, isActive }, request, fastify);
-  const index = global.tblTournamentTeamPoint.findIndex((item) => item.id == id);
-  if(index != -1){
-    global.tblTournamentTeamPoint[index].isActive = isActive;
-  }
 
   return `TournamentTeamPoint isActive stage updated successfully`;
 };
 
 const setTeamPointService = async (data, request, fastify) => {
   for (let m of data) {
-    let dataToUpdate = [];
+    // let dataToUpdate = [];
     
     let res = await getLogByComIdQuery(
       {
@@ -215,80 +200,65 @@ const setTeamPointService = async (data, request, fastify) => {
     if (res.length > 0) {
       continue;
     }
-    let comp = global.tblCompetitions.find(
-      (c) => c.competitionId == m.competitionId
-    );
-    let tp1 = global.tblTournamentTeamPoint.findIndex(
-      (t) =>
-        t.competitionId == m.competitionId &&
-        t.teamId == m.team1Id &&
-        t.isActive == true
-    );
-    if (tp1 !== -1) {
-      let ttlPoint = global.tblTournamentTeamPoint[tp1].totalPoint;
-      if(m.winnerId != null && m.winnerId == m.team1Id){
-        ttlPoint = ttlPoint + comp.winPoint;
-      }
-      // else if(m.winnerId != null && m.winnerId != m.team1Id){
-      //   ttlPoint = ttlPoint + comp.lossPoint;
-      // }
-      const team1netRunRate = await setTeamNetRunRateService(m.team1Id, m.competitionId, fastify);
-      dataToUpdate.push({
-        ...global.tblTournamentTeamPoint[tp1],
-        totalMatches: global.tblTournamentTeamPoint[tp1].totalMatches + 1,
-        totalWin:
-          m.winnerId != null && m.winnerId == m.team1Id
-            ? global.tblTournamentTeamPoint[tp1].totalWin + 1
-            : global.tblTournamentTeamPoint[tp1].totalWin,
-        totalLose:
-          m.winnerId != null && m.winnerId != m.team1Id
-            ? global.tblTournamentTeamPoint[tp1].totalLose + 1
-            : global.tblTournamentTeamPoint[tp1].totalLose,
-        totalPoint : ttlPoint,
-        netRunRate: team1netRunRate.netRunRate,
-      });
-    }
-    let tp2 = global.tblTournamentTeamPoint.findIndex(
-      (t) =>
-        t.competitionId == m.competitionId &&
-        t.teamId == m.team2Id &&
-        t.isActive == true
-    );
-    if (tp2 !== -1) {
-      let ttlPoint = global.tblTournamentTeamPoint[tp2].totalPoint;
-      if(m.winnerId != null && m.winnerId == m.team2Id){
-        ttlPoint = ttlPoint + comp.winPoint;
-      }
-      // else if(m.winnerId != null && m.winnerId != m.team2Id){
-      //   ttlPoint = ttlPoint + comp.lossPoint;
-      // }
-      const team2NetRunRate = await setTeamNetRunRateService(m.team2Id, m.competitionId, fastify);
-      dataToUpdate.push({
-        ...global.tblTournamentTeamPoint[tp2],
-        totalMatches: global.tblTournamentTeamPoint[tp2].totalMatches + 1,
-        totalWin:
-          m.winnerId != null && m.winnerId == m.team2Id
-            ? global.tblTournamentTeamPoint[tp2].totalWin + 1
-            : global.tblTournamentTeamPoint[tp2].totalWin,
-        totalLose:
-          m.winnerId != null && m.winnerId != m.team2Id
-            ? global.tblTournamentTeamPoint[tp2].totalLose + 1
-            : global.tblTournamentTeamPoint[tp2].totalLose,
-        totalPoint : ttlPoint,
-        netRunRate: team2NetRunRate.netRunRate,
-      });
-    }
 
-    for (let d of dataToUpdate) {
-      await updateTeamPointsQuery(d, fastify, request);
-      const index = global.tblTournamentTeamPoint.findIndex(
-        (ind) => ind.id === d.id
-      );
-      if (index !== -1) {
-        global.tblTournamentTeamPoint[index] = d;
-      }
-    }
+    // Team1 points data updating
+    await setTeamNetRunRateService(m.team1Id, m.competitionId, fastify);
+    // Team2 points data updating
+    await setTeamNetRunRateService(m.team2Id, m.competitionId, fastify);
+
     await setTeamPointLogService([m], request, fastify , "teamPoint");
+  
+    // let comp = global.tblCompetitions.find(
+    //   (c) => c.competitionId == m.competitionId
+    // );
+    
+    // if (tp1) {
+    //   let ttlPoint = tp1.totalPoint;
+    //   if (m.winnerId != null && m.winnerId == m.team1Id) {
+    //     ttlPoint += comp.winPoint;
+    //   }
+    //   // else if(m.winnerId != null && m.winnerId != m.team1Id){
+    //   //   ttlPoint = ttlPoint + comp.lossPoint;
+    //   // }
+    //   const team1netRunRate = await setTeamNetRunRateService(m.team1Id, m.competitionId, fastify);
+    //   dataToUpdate.push({
+    //     ...tp1,
+    //     totalMatches: tp1.totalMatches + 1,
+    //     totalWin: m.winnerId != null && m.winnerId == m.team1Id ? tp1.totalWin + 1 : tp1.totalWin,
+    //     totalLose: m.winnerId != null && m.winnerId != m.team1Id ? tp1.totalLose + 1 : tp1.totalLose,
+    //     totalPoint: ttlPoint,
+    //     netRunRate: team1netRunRate.netRunRate,
+    //   });
+    // }
+
+    // let tp2Data = {
+    //   competitionId: m.competitionId,
+    //   teamId: m.team2Id
+    // };
+    // let tp2 = await getTournamentPointsByTeamIdQuery(tp2Data, request, fastify);
+    // if (tp2) {
+    //   let ttlPoint = tp2.totalPoint;
+    //   if (m.winnerId != null && m.winnerId == m.team2Id) {
+    //     ttlPoint += comp.winPoint;
+    //   }
+    //   // else if(m.winnerId != null && m.winnerId != m.team2Id){
+    //   //   ttlPoint = ttlPoint + comp.lossPoint;
+    //   // }
+    //   const team2NetRunRate = await setTeamNetRunRateService(m.team2Id, m.competitionId, fastify);
+    //   dataToUpdate.push({
+    //     ...tp2,
+    //     totalMatches: tp2.totalMatches + 1,
+    //     totalWin: m.winnerId != null && m.winnerId == m.team2Id ? tp2.totalWin + 1 : tp2.totalWin,
+    //     totalLose: m.winnerId != null && m.winnerId != m.team2Id ? tp2.totalLose + 1 : tp2.totalLose,
+    //     totalPoint: ttlPoint,
+    //     netRunRate: team2NetRunRate.netRunRate,
+    //   });
+    // }
+
+    // for (let d of dataToUpdate) {
+    //   await updateTeamPointsQuery(d, fastify, request);
+    // }
+    // await setTeamPointLogService([m], request, fastify , "teamPoint");
   }
   return `Team point updated successfully`;
 };
@@ -364,98 +334,11 @@ const netRunRateRe_calculationService = async (request, fastify) => {
     throw new Error(`IsPointTable set as Inactive`);
   }
   for (const tId of teamId) {
-    const teamNetRunRate = await setTeamNetRunRateService(
+    await setTeamNetRunRateService(
       tId,
       competitionId,
       fastify
     );
-    const index = global.tblTournamentTeamPoint.findIndex(
-      (item) => item.id === teamNetRunRate.id
-    );
-    if (index !== -1) {
-      global.tblTournamentTeamPoint[index] = teamNetRunRate;
-    }
-      
-    // let dataToUpdate;
-    // const validateCommentary = global.tblCommentaries.filter(
-    //   (elem) =>
-    //     elem.competitionId === competitionId &&
-    //     (elem.team1Id === tId || elem.team2Id === tId) &&
-    //     elem.commentaryStatus === 4 &&
-    //     elem.isActive === true &&
-    //     elem.isCountInPoint === true
-    // );
-
-    // if (validateCommentary.length === 0) {
-    //   const teamIndex = global.tblTournamentTeamPoint.findIndex(
-    //     (team) =>
-    //       team.competitionId === competitionId &&
-    //       team.teamId === tId &&
-    //       team.isActive === true
-    //   );
-
-    //   if (teamIndex !== -1) {
-    //     let data = {
-    //       ...global.tblTournamentTeamPoint[teamIndex],
-    //       totalMatches: 0,
-    //       totalWin: 0,
-    //       totalLose: 0,
-    //       totalPoint: 0,
-    //       netRunRate: 0,
-    //     };
-
-    //     await updateTeamPointsQuery(data, fastify, request);
-
-    //     global.tblTournamentTeamPoint[teamIndex] = data;
-    //   }
-    //   continue;
-    // }
-
-    // const tp = global.tblTournamentTeamPoint.findIndex(
-    //   (t) =>
-    //     t.competitionId === competitionId &&
-    //     t.teamId === tId &&
-    //     t.isActive === true
-    // );
-
-    // if (tp !== -1) {
-    //   const teamnetRunRate = await setTeamNetRunRateService(
-    //     tId,
-    //     competitionId,
-    //     fastify
-    //   );
-    //   let tMatches = validateCommentary.length;
-    //   let tWin = validateCommentary.filter((win) => win.winnerId != null && win.winnerId == tId).length;
-    //   let tLose = validateCommentary.filter((win) => win.winnerId != null && win.winnerId !== tId).length;
-
-
-    //   let tPoint = 0;
-    //   validateCommentary.forEach((match) => {
-    //     if (match.winnerId != null && match.winnerId === tId) {
-    //       tPoint += comp.winPoint;
-    //     } else if (match.winnerId != null && match.winnerId !== tId) {
-    //       tPoint += comp.lossPoint;
-    //     }
-    //   });
-
-    //   dataToUpdate = {
-    //     ...global.tblTournamentTeamPoint[tp],
-    //     totalMatches: tMatches,
-    //     totalWin: tWin,
-    //     totalLose: tLose,
-    //     totalPoint: tPoint,
-    //     netRunRate: teamnetRunRate,
-    //   };
-
-    //   await updateTeamPointsQuery(dataToUpdate, fastify, request);
-
-    //   const index = global.tblTournamentTeamPoint.findIndex(
-    //     (ind) => ind.id === dataToUpdate.id
-    //   );
-    //   if (index !== -1) {
-    //     global.tblTournamentTeamPoint[index] = dataToUpdate;
-    //   }
-    // }
   }
 
   return "Net run rate calculation successful";
