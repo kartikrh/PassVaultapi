@@ -22,6 +22,7 @@ const {
   getShortCommerty,
   getAllCommentariesData,
   insertCommentaryConsoleFe,
+  getAllCompletedCommentary,
 } = require("../../../controller/users/admin/commentary/commentary");
 const { getAllEventMarketsAndRunners } = require('../../../controller/users/admin/eventMarket');
 const { getAllMenuItems } = require("../../../controller/users/admin/menuItem");
@@ -136,6 +137,10 @@ module.exports = async (fastify, opts) => {
     //     }),
     // ]
     handler: (request, reply) => getCompleteMatchList(request, reply, fastify),
+  });
+  fastify.post("/completeMatches", {
+    schema: Score.getCIds.schema,
+    handler: (request, reply) => getAllCompletedCommentary(request, reply, fastify),
   });
   fastify.post("/getmenuItemList", {
     schema: Score.getmenuitemlist.schema,

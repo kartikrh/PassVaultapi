@@ -12,6 +12,12 @@ module.exports = () => {
       port: process.env.POSTGRES_PORT,
       dialect: process.env.POSTGRES_DIALECT,
       logging: false, 
+      pool: { 
+        max: 50,
+        min: 0,
+        acquire: 90000,
+        idle: 20000
+      }
     };
   }
   return posrgreSqlDatabase;
