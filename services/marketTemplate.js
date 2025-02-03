@@ -565,6 +565,12 @@ const allMarketTypesAndCategoriesService = async (request, fastify) => {
 
   return result;
 };
+const mtAndCategoriesService = async(request ,fastify)=>{
+  return {
+    marketTypes : global.tblMarketTypes,
+    categories :global.tblMarketTypeCategories
+  }
+}
 
 module.exports = {
   saveMarketTemplateService,
@@ -584,4 +590,5 @@ module.exports = {
   cloneMultiMarketTemplateService,
   defaultIsSendDataChangeService,
   allMarketTypesAndCategoriesService,
+  mtAndCategoriesService
 };
