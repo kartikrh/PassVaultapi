@@ -28,10 +28,12 @@ const getAllMarketTemplateQuery = async (fastify) => {
       "wrAfterWicketAutoSuspend" as "afterWicketAutoSuspend",
       "wrAfterWicketNotCreated" as "afterWicketNotCreated",
       tmt."wrCreatedBy" as "createdBy",
-      "wrIsActive" as "isActive",
+      tmt."wrIsActive" as "isActive",
       tmt."wrActionType" as "actionType",
       tmt."wrMarketTypeId" as "marketTypeId",
+      tmts."wrMarketTypeName" as "marketTypeName",
       tmt."wrMarketTypeCategoryId" as "marketTypeCategoryId",
+      tmtc."wrCategoryName" as "categoryName",
       tmt."wrMargin" as "margin",
       tmt."wrCreateRefId" as "createRefId",
       tmt."wrOpenRefId" as "openRefId",
@@ -52,6 +54,8 @@ const getAllMarketTemplateQuery = async (fastify) => {
       "wrRateDiff" as "rateDiff"
   FROM "tblMarketTemplates" tmt
   LEFT JOIN "tblMatchTypes" tm ON tmt."wrMatchTypeID" = "tm"."wrMatchTypeId"
+  LEFT JOIN "tblMarketTypes" tmts ON tmt."wrMarketTypeId" = tmts."wrId"
+  LEFT JOIN "tblMarketTypeCategories" tmtc ON tmt."wrMarketTypeCategoryId" =tmtc."wrId"
   WHERE tmt."wrIsDeleted" = false;
   `,
     {
