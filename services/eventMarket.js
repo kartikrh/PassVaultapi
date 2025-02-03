@@ -646,8 +646,10 @@ const marketListByCIdServiceV1 = async (request, fastify) => {
       };
     });
   // 
+  let configData = global.tblConfigs.find((item) => item.key.toLowerCase() == configConstants.IGNOREMARKETS.toLowerCase()).value || ""
+  let ignoreMarkets = configData ? configData.split(",").map(Number) : [];
   let categories = global.tblMarketTypeCategories.filter(
-    (item) => item.marketTypeCategoryId > 0
+    (item) => item.marketTypeCategoryId > 0 && !ignoreMarkets.includes(item.marketTypeCategoryId)
   ).map(item => ({
     marketTypeCategoryId: item.marketTypeCategoryId,
     categoryName: item.categoryName,
@@ -1800,6 +1802,7 @@ const getDetailsByCIdV1Service = async (request, fastify) => {
     (item) => item.matchTypeId === commentary.matchTypeId
   );
 
+  let configData = global.tblConfigs.find((item) => item.key.toLowerCase() == configConstants.IGNOREMARKETS.toLowerCase()).value || ""
   const totalInnings = matchType.noOfIningsPerSide;
 
   const teamAndPlayers = [];
@@ -1846,14 +1849,16 @@ const getDetailsByCIdV1Service = async (request, fastify) => {
   //     && item.isPerEvent === false
   //   );
   // }
-
+  let ignoreMarkets = configData ? configData.split(",").map(Number) : [];
   if(commentary.commentaryStatus == commentaryStatus.OPEN){
     marketTemplate = await getCommMatchTypeTemplatesQuery(commentaryId, null, request, fastify);
+    marketTemplate = marketTemplate.filter((item) => !ignoreMarkets.includes(item.marketTypeCategoryId));
     marketTemplate.sort((a, b) => a.templateName.localeCompare(b.templateName));
   }
   else {
     let whereCondition = `AND tmt."wrIsPerEvent" = FALSE`
     marketTemplate = await getCommMatchTypeTemplatesQuery(commentaryId, whereCondition, request, fastify);
+    marketTemplate = marketTemplate.filter((item) => !ignoreMarkets.includes(item.marketTypeCategoryId));
     marketTemplate.sort((a, b) => a.templateName.localeCompare(b.templateName));
   }
 
@@ -1885,9 +1890,11 @@ const getDetailsByCIdV1Service = async (request, fastify) => {
     );
     whereCondition += ` AND tem."wrTeamID" = ${battingTeam.teamId}`;
     eventMarket = await getAllEventMarketsQueryV1(fastify, whereCondition);
+    eventMarket = eventMarket.filter((item) => !ignoreMarkets.includes(item.marketTypeCategoryId));
     eventMarket.sort((a, b) => a.marketName.localeCompare(b.marketName));
   } else {
     eventMarket = await getAllEventMarketsQueryV1(fastify, whereCondition);
+    eventMarket = eventMarket.filter((item) => !ignoreMarkets.includes(item.marketTypeCategoryId));
     eventMarket.sort((a, b) => a.marketName.localeCompare(b.marketName));
   }
   //

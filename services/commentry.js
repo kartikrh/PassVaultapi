@@ -75,6 +75,7 @@ const {
   getAllCommentaryHistoryQuery,
   deleteCommentryHistoryQuery,
   getCommPlayersByCommentaryIdQuery,
+  getAllCompletedCommentaryQuery,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -110,6 +111,7 @@ const {
   calculationOfCommPlayerBowlHistService,
 } = require("../services/playerHistory");
 // const { handleSitemapUpdate } = require("../utilities/SEOIndexing")
+const { getAllTournamentTeamPointsQuery } = require("../repository/TableTournmentTeamPoints");
 
 
 const allCommentaryService = async (request, fastify) => {
@@ -7272,7 +7274,7 @@ const getInningDataByInningNumber = async (commentaryId, inningNumber) => {
   };
 };
 
-const getTeamListByEventTypeService = async (request) => {
+const getTeamListByEventTypeService = async (request, fastify) => {
   const { eventTypeId, competitionId } = request.body;
   // get encypted eventTypeId from global
   // if (eventTypeId === undefined) {
@@ -7298,7 +7300,8 @@ const getTeamListByEventTypeService = async (request) => {
   let compTeam = []
   if(competitionId && competitionId != 0){
     // teams = global.tblTeams.filter((item) => item.competitionId === competitionId);
-    const competitionResult = global.tblTournamentTeamPoint.filter(
+    let competitionResult = await getAllTournamentTeamPointsQuery(fastify);
+    competitionResult = competitionResult.filter(
       (item) => item.competitionId === competitionId
     );
     const competitionTeamIds = new Set(competitionResult.map(item => item.teamId));
@@ -10119,6 +10122,11 @@ const deleteCommentaryHistoryService = async (request, fastify) => {
   return `Commentaries deleted successfully`;
 };
 
+const getAllCompletedCommentaryService = async (request, fastify) => {
+  const result = await getAllCompletedCommentaryQuery(request, fastify);
+  return result;
+};
+
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -10197,4 +10205,5 @@ module.exports = {
   getEventMarketAndRunnersService,
   commentaryHistoryService,
   deleteCommentaryHistoryService,
+  getAllCompletedCommentaryService,
 };
