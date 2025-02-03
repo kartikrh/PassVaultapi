@@ -13,10 +13,11 @@ module.exports = () => {
       dialect: process.env.POSTGRES_DIALECT,
       logging: false, 
       pool: { 
-        max: 50,
+        max: 20,
         min: 0,
-        acquire: 90000,
-        idle: 20000
+        acquire: 60000,
+        idle: 30000,
+        evict: 10000,
       }
     };
   }
