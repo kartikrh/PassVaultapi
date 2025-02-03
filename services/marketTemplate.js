@@ -356,6 +356,7 @@ if (validateTemplateRunners && validateTemplateRunners.length > 0) {
         layPrice: elem.layPrice,
         backSize: elem.backSize,
         laySize: elem.laySize,
+        predefinedValue : elem.predefinedValue
       }
     };
 
