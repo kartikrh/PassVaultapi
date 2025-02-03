@@ -216,6 +216,7 @@ const updateMarketTemplateService = async (request, fastify) => {
     defaultIsSendData: request.body.hasOwnProperty("defaultIsSendData") ? request.body.defaultIsSendData : marketTemplate.defaultIsSendData,
     howManyOpenMarkets: request.body.howManyOpenMarkets !== undefined ? request.body.howManyOpenMarkets : marketTemplate.howManyOpenMarkets,
     rateDiff: request.body.rateDiff !== undefined ? request.body.rateDiff : marketTemplate.rateDiff,
+    notIncludedOver: request.body.notIncludedOver !== undefined ? request.body.notIncludedOver : marketTemplate.notIncludedOver,
   };
   const mt = global.tblMarketTypes.find((m)=> m.marketTypeId == body.marketTypeId)
   if(!mt){
