@@ -35,7 +35,9 @@ const saveTipsService = async (request, fastify) => {
     fastify,
     request
   );
-
+  if(!validateCommentaryId){
+    throw new Error(`Commmentary with this Id not found`);
+  }
   if (
     saveData.isActive &&
     validateCommentaryId &&
@@ -65,7 +67,7 @@ const saveTipsService = async (request, fastify) => {
     });
   }
 
-  return saveData;
+  return `Tips data successfully created`;
 };
 
 const editTipsService = async (request, fastify) => {
@@ -248,6 +250,9 @@ const createTipsOnExternalService = async (request, fastify) => {
     fastify,
     request
   );
+  if(!validateCommentaryId){
+    return `Tips data successfully created`;
+  }
   request.body.commentaryId = validateCommentaryId.commentaryId || null;
   const saveData = await insertTipsQuery(request.body, fastify, request);
 
@@ -279,7 +284,7 @@ const createTipsOnExternalService = async (request, fastify) => {
       );
     });
   }
-  return saveData;
+  return `Tips data successfully created`;
 };
 
 const activeInactiveTipsOnExternalService = async (request, fastify) => {
