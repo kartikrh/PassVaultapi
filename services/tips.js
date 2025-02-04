@@ -35,7 +35,9 @@ const saveTipsService = async (request, fastify) => {
     fastify,
     request
   );
-
+  if(!validateCommentaryId){
+    throw new Error(`Commmentary with this Id not found`);
+  }
   if (
     saveData.isActive &&
     validateCommentaryId &&
@@ -65,7 +67,7 @@ const saveTipsService = async (request, fastify) => {
     });
   }
 
-  return saveData;
+  return `Tips data successfully created`;
 };
 
 const editTipsService = async (request, fastify) => {
@@ -236,9 +238,7 @@ const createTipsOnExternalService = async (request, fastify) => {
   validateRefId = validateRefId.find(
     (item) => item.tipsRefId == request.body.tipsRefId
   );
-  if (validateRefId) {
-    throw new Error(`TipsRefId already existed`);
-  }
+
   let whereCondition = `"wrIsDelete" = FALSE`;
   if (request.body.eventRefId) {
     whereCondition += ` AND "wrEventRefId" = '${request.body.eventRefId}'`;
@@ -248,6 +248,9 @@ const createTipsOnExternalService = async (request, fastify) => {
     fastify,
     request
   );
+  if(!validateCommentaryId || validateRefId){    
+    return `Tips data successfully created`;
+  }
   request.body.commentaryId = validateCommentaryId.commentaryId || null;
   const saveData = await insertTipsQuery(request.body, fastify, request);
 
@@ -279,14 +282,14 @@ const createTipsOnExternalService = async (request, fastify) => {
       );
     });
   }
-  return saveData;
+  return `Tips data successfully created`;
 };
 
 const activeInactiveTipsOnExternalService = async (request, fastify) => {
   const { id, isActive } = request.body;
   let validateId = await commentaryTipsByIdQuery(id, fastify, request);
   if (!validateId) {
-    throw new Error(`Tips with this Id not found`);
+    return `Tips data updated successfully`;
   }
 
   const result = await activeInactiveTipsQuery(
