@@ -2389,12 +2389,13 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
       // callPredictions.push(callPrediction);
   }
   let data = await marketListByCIdService({ body: { commentaryId: commentary.commentaryId } }, fastify);
-  sendToSocket({
-    markets : data,
-    allMarkets : allMarkets
-  },request,fastify)
+  // sendToSocket({
+  //   markets : data,
+  //   allMarkets : allMarkets
+  // },request,fastify)
   // data.callPrediction = callPredictions;
  return data;
+ 
 };
 const sendToSocket = (data,request,fastify)=>{
   try {
