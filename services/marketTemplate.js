@@ -14,7 +14,7 @@ const { callPredictorMarket } = require("../utilities");
 const { createMarketTemplateRunnerQuery } = require("../repository/TableMarketTemplateRunner")
 
 const getAllMarketTemplateService = async (request) => {
-  const { isActive, matchTypeId } = request.body;
+  const { isActive, matchTypeId , marketTypeId , marketTypeCategoryId } = request.body;
   let result;
   if (isActive !== undefined) {
     result = global.tblMarketTemplate.filter(
@@ -25,6 +25,12 @@ const getAllMarketTemplateService = async (request) => {
   }
   if (matchTypeId) {
     result = result.filter((item) => item.matchTypeID === matchTypeId);
+  }
+  if(marketTypeId){
+    result = result.filter((item)=>item.marketTypeId == marketTypeId)
+  }
+  if(marketTypeCategoryId){
+    result = result.filter((item)=>item.marketTypeCategoryId == marketTypeCategoryId)
   }
   return result;
 };
@@ -42,12 +48,20 @@ const getMarketTemplateIdService = async (request) => {
 
 const createMarketTemplateService = async (request, fastify) => {
   // validate matchTypeID
-  const { matchTypeID } = request.body;
+  const { matchTypeID ,marketTypeId , marketTypeCategoryId} = request.body;
   const matchType = global.tblMatchTypes.find(
     (item) => item.matchTypeId === matchTypeID
   );
   if (!matchType) {
     throw new Error("MatchType with this id not found");
+  }
+  const mt = global.tblMarketTypes.find((m)=> m.marketTypeId == marketTypeId)
+  if(!mt){
+    throw new Error("MarketType with this id not found")
+  }
+  const mtc = global.tblMarketTypeCategories.find((mc)=> mc.marketTypeCategoryId == marketTypeCategoryId)
+  if(!mtc){
+    throw new Error("MarketType Category with this id not found")
   }
   const data = await insertMarketTemplateQuery(
     {
@@ -61,10 +75,14 @@ const createMarketTemplateService = async (request, fastify) => {
   global.tblMarketTemplate.push({
     ...data,
     matchType: matchType.matchType,
+    marketTypeName : mt.marketTypeName,
+    categoryName : mtc.categoryName
   });
   return {
     ...data,
     matchType: matchType.matchType,
+    marketTypeName : mt.marketTypeName,
+    categoryName : mtc.categoryName
   };
 };
 
@@ -198,7 +216,16 @@ const updateMarketTemplateService = async (request, fastify) => {
     defaultIsSendData: request.body.hasOwnProperty("defaultIsSendData") ? request.body.defaultIsSendData : marketTemplate.defaultIsSendData,
     howManyOpenMarkets: request.body.howManyOpenMarkets !== undefined ? request.body.howManyOpenMarkets : marketTemplate.howManyOpenMarkets,
     rateDiff: request.body.rateDiff !== undefined ? request.body.rateDiff : marketTemplate.rateDiff,
+    notIncludedOver: request.body.notIncludedOver !== undefined ? request.body.notIncludedOver : marketTemplate.notIncludedOver,
   };
+  const mt = global.tblMarketTypes.find((m)=> m.marketTypeId == body.marketTypeId)
+  if(!mt){
+    throw new Error("MarketType with this id not found")
+  }
+  const mtc = global.tblMarketTypeCategories.find((mc)=> mc.marketTypeCategoryId == body.marketTypeCategoryId)
+  if(!mtc){
+    throw new Error("MarketType Category with this id not found")
+  }
   // update marketTemplate
   await updateMarketTemplateQuery(body, fastify, request);
 
@@ -208,11 +235,15 @@ const updateMarketTemplateService = async (request, fastify) => {
   global.tblMarketTemplate[index] = {
     ...body,
     matchType: matchType.matchType,
+    marketTypeName : mt.marketTypeName,
+    categoryName : mtc.categoryName
   };
 
   return {
     ...body,
     matchType: matchType.matchType,
+    marketTypeName : mt.marketTypeName,
+    categoryName : mtc.categoryName
     //callPrediction,
   };
 };
@@ -336,6 +367,8 @@ const cloneMarketTemplateService = async (request, fastify) => {
   global.tblMarketTemplate.push({
     ...data,
     matchType: validateMatchType.matchType,
+    marketTypeName : marketTemplate.marketTypeName,
+    categoryName :marketTemplate.categoryName
   });
 
 const validateTemplateRunners = global.tblMarketTemplateRunners.filter(
@@ -368,6 +401,8 @@ if (validateTemplateRunners && validateTemplateRunners.length > 0) {
   return {
     ...data,
     matchType: validateMatchType.matchType,
+    marketTypeName : marketTemplate.marketTypeName,
+    categoryName :marketTemplate.categoryName
   };
 };
 
@@ -467,6 +502,8 @@ const cloneMultiMarketTemplateService  = async (request, fastify) => {
     global.tblMarketTemplate.push({
       ...data,
       matchType: validateMatchType.matchType,
+      marketTypeName : marketTemplate.marketTypeName,
+      categoryName :marketTemplate.categoryName
     });
 
   const validateTemplateRunners = global.tblMarketTemplateRunners.filter(
@@ -528,6 +565,12 @@ const allMarketTypesAndCategoriesService = async (request, fastify) => {
 
   return result;
 };
+const mtAndCategoriesService = async(request ,fastify)=>{
+  return {
+    marketTypes : global.tblMarketTypes,
+    categories :global.tblMarketTypeCategories
+  }
+}
 
 module.exports = {
   saveMarketTemplateService,
@@ -547,4 +590,5 @@ module.exports = {
   cloneMultiMarketTemplateService,
   defaultIsSendDataChangeService,
   allMarketTypesAndCategoriesService,
+  mtAndCategoriesService
 };

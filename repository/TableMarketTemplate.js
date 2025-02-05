@@ -28,10 +28,12 @@ const getAllMarketTemplateQuery = async (fastify) => {
       "wrAfterWicketAutoSuspend" as "afterWicketAutoSuspend",
       "wrAfterWicketNotCreated" as "afterWicketNotCreated",
       tmt."wrCreatedBy" as "createdBy",
-      "wrIsActive" as "isActive",
+      tmt."wrIsActive" as "isActive",
       tmt."wrActionType" as "actionType",
       tmt."wrMarketTypeId" as "marketTypeId",
+      tmts."wrMarketTypeName" as "marketTypeName",
       tmt."wrMarketTypeCategoryId" as "marketTypeCategoryId",
+      tmtc."wrCategoryName" as "categoryName",
       tmt."wrMargin" as "margin",
       tmt."wrCreateRefId" as "createRefId",
       tmt."wrOpenRefId" as "openRefId",
@@ -49,9 +51,12 @@ const getAllMarketTemplateQuery = async (fastify) => {
       "wrBeforeCloseMin" as "beforeCloseMin",
       "wrDefaultIsSendData" as "defaultIsSendData",
       "wrHowManyOpenMarkets" as "howManyOpenMarkets",
-      "wrRateDiff" as "rateDiff"
+      "wrRateDiff" as "rateDiff",
+      "wrNotIncludedOver" as "notIncludedOver"
   FROM "tblMarketTemplates" tmt
   LEFT JOIN "tblMatchTypes" tm ON tmt."wrMatchTypeID" = "tm"."wrMatchTypeId"
+  LEFT JOIN "tblMarketTypes" tmts ON tmt."wrMarketTypeId" = tmts."wrId"
+  LEFT JOIN "tblMarketTypeCategories" tmtc ON tmt."wrMarketTypeCategoryId" =tmtc."wrId"
   WHERE tmt."wrIsDeleted" = false;
   `,
     {
@@ -71,10 +76,10 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
               "wrMarketTypeId","wrMarketTypeCategoryId","wrMargin" , "wrCreateRefId" , "wrOpenRefId",
               "wrTemplateType", "wrDelay","wrIsDefaultBetAllowed","wrIsDefaultMarketActive", "wrIsPerEvent", "wrIsShowInAdvanceMarket",
               "wrLineType", "wrDefaultBackSize", "wrDefaultLaySize","wrBeforeSuspendMin","wrBeforeCloseMin", "wrDefaultIsSendData",
-              "wrHowManyOpenMarkets", "wrRateDiff"
+              "wrHowManyOpenMarkets", "wrRateDiff", "wrNotIncludedOver"
               ) values (
                 $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26, $27, $28, $29, $30, $31, $32,$33,$34,$35,$36,
-                $37, $38, $39 ,$40 ,$41, $42, $43, $44
+                $37, $38, $39 ,$40 ,$41, $42, $43, $44, $45
                 ) returning *
           )        
         select 
@@ -123,7 +128,8 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
         "wrBeforeCloseMin" as "beforeCloseMin",
         "wrDefaultIsSendData" as "defaultIsSendData",
         "wrHowManyOpenMarkets" as "howManyOpenMarkets",
-        "wrRateDiff" as "rateDiff"
+        "wrRateDiff" as "rateDiff",
+        "wrNotIncludedOver" as "notIncludedOver"
          from insert_data`,
       {
         type: fastify.db.QueryTypes.SELECT,
@@ -184,6 +190,7 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
           data.hasOwnProperty("defaultIsSendData") ? data.defaultIsSendData : false,
           data.howManyOpenMarkets === undefined ? 1 : data.howManyOpenMarkets,
           data.rateDiff === undefined ? 1 : data.rateDiff,
+          data.notIncludedOver === undefined ? null : data.notIncludedOver,
         ],
       }
     );
@@ -210,10 +217,10 @@ const insertMarketTemplateInCloneQuery = async (data, fastify, request) => {
               "wrMarketTypeId","wrMarketTypeCategoryId","wrMargin" , "wrCreateRefId" , "wrOpenRefId",
               "wrTemplateType", "wrDelay","wrIsDefaultBetAllowed","wrIsDefaultMarketActive", "wrIsPerEvent", "wrIsPredefineRunnerValue", "wrIsShowInAdvanceMarket",
               "wrLineType", "wrDefaultBackSize", "wrDefaultLaySize"
-               ,"wrBeforeSuspendMin","wrBeforeCloseMin", "wrDefaultIsSendData", "wrHowManyOpenMarkets", "wrRateDiff"
+               ,"wrBeforeSuspendMin","wrBeforeCloseMin", "wrDefaultIsSendData", "wrHowManyOpenMarkets", "wrRateDiff", "wrNotIncludedOver"
               ) values (
                 $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26, $27, $28, $29, $30, $31, $32,$33,$34,$35,$36,$37,
-                $38, $39, $40 ,$41 ,$42, $43, $44, $45
+                $38, $39, $40 ,$41 ,$42, $43, $44, $45, $46
                 ) returning *
           )        
         select 
@@ -262,7 +269,8 @@ const insertMarketTemplateInCloneQuery = async (data, fastify, request) => {
         "wrBeforeCloseMin" as "beforeCloseMin",
         "wrDefaultIsSendData" as "defaultIsSendData",
         "wrHowManyOpenMarkets" as "howManyOpenMarkets",
-        "wrRateDiff" as "rateDiff"
+        "wrRateDiff" as "rateDiff",
+        "wrNotIncludedOver" as "notIncludedOver"
          from insert_data`,
       {
         type: fastify.db.QueryTypes.SELECT,
@@ -322,6 +330,7 @@ const insertMarketTemplateInCloneQuery = async (data, fastify, request) => {
           data.hasOwnProperty("defaultIsSendData") ? data.defaultIsSendData : false,
           data.howManyOpenMarkets === undefined ? 1 : data.howManyOpenMarkets,
           data.rateDiff === undefined ? 1 : data.rateDiff,
+          data.notIncludedOver === undefined ? null : data.notIncludedOver,
         ],
       }
     );
@@ -464,7 +473,8 @@ const updateMarketTemplateQuery = async (data, fastify, request) => {
             "wrBeforeCloseMin" = $41,
             "wrDefaultIsSendData" = $42,
             "wrHowManyOpenMarkets" = $43,
-            "wrRateDiff" = $44
+            "wrRateDiff" = $44,
+            "wrNotIncludedOver" = $45
         WHERE "wrID" = $32
         `,
         {
@@ -512,7 +522,8 @@ const updateMarketTemplateQuery = async (data, fastify, request) => {
                 data.beforeCloseMin || null,
                 data.defaultIsSendData,
                 data.howManyOpenMarkets,
-                data.rateDiff
+                data.rateDiff,
+                data.notIncludedOver,
             ],
             type: fastify.db.QueryTypes.SELECT,
         }

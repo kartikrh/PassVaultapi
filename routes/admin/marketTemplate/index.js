@@ -1,5 +1,5 @@
 const { authorize, checkPermission } = require("../../../controller/middleware");
-const { saveMarketTemplate, getAllMarketTemplate, getMarketTemplateId, deleteMarketTemplate, getMatchTypeList, activeInactiveMarketTemplate, getByMatchTypeId, getMarketTypeList, getCategoryByMarketType, changePredefineRunner, cloneMarketTemplate, getMarketTypeAndCategoryByMarketType, updateIsPerEventStatus, isShowInAdvanceMarketStatusChange, cloneMultiMarketTemplate, defaultIsSendDataChange, allMarketTypesAndCategories } = require("../../../controller/users/admin/marketTemplate");
+const { saveMarketTemplate, getAllMarketTemplate, getMarketTemplateId, deleteMarketTemplate, getMatchTypeList, activeInactiveMarketTemplate, getByMatchTypeId, getMarketTypeList, getCategoryByMarketType, changePredefineRunner, cloneMarketTemplate, getMarketTypeAndCategoryByMarketType, updateIsPerEventStatus, isShowInAdvanceMarketStatusChange, cloneMultiMarketTemplate, defaultIsSendDataChange, allMarketTypesAndCategories, mtAndCategories } = require("../../../controller/users/admin/marketTemplate");
 const { MarketTemplate, Commentary } = require("../../../swaggerSchema/groupTags/schema");
 
 module.exports = async function (fastify, opts) {
@@ -214,6 +214,18 @@ module.exports = async function (fastify, opts) {
       // }),
     ],
     handler: (request, reply) => allMarketTypesAndCategories(request, reply, fastify),  
+  });
+
+  fastify.post("/mtAndCategories", {
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      // (request, reply) =>
+      //   checkPermission(request, reply, fastify, {
+      //     tabName: "Market Templates",
+      //     mode: "edit",
+      // }),
+    ],
+    handler: (request, reply) => mtAndCategories(request, reply, fastify),  
   });
 
 };

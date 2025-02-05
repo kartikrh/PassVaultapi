@@ -4584,11 +4584,6 @@ const getAllCompletedCommentaryQuery = async (request, fastify) => {
     throw new Error(err.message);
   }
 };
-`tc."wrCommentaryStatus" = 4 AND tc."wrIsDelete" = false
-AND co."wrIsDeleted" = false AND mt."wrIsDeleted" = false
-AND mt2."wrIsDeleted" = false AND tt1."wrIsDeleted" = false
-AND tt2."wrIsDeleted" = false AND tet."wrIsDeleted" = false
-AND tct1."wrIsDelete" = false AND tct2."wrIsDelete" = false AND tct3."wrIsDelete" = false`
 
 
 module.exports = {

@@ -2389,9 +2389,34 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
       // callPredictions.push(callPrediction);
   }
   let data = await marketListByCIdService({ body: { commentaryId: commentary.commentaryId } }, fastify);
+  // sendToSocket({
+  //   markets : data,
+  //   allMarkets : allMarkets
+  // },request,fastify)
   // data.callPrediction = callPredictions;
  return data;
+ 
 };
+const sendToSocket = (data,request,fastify)=>{
+  try {
+    const {markets , allMarkets} = data;
+    const am = new Set(allMarkets.map(m => m.eventMarketId));
+    const dataToSocket = markets.filter(d => am.has(d.eventMarketId));
+    const clientInRoom = global.socketIo.sockets.adapter.rooms.get(allMarkets[0].commentaryId);
+    if (clientInRoom?.size && dataToSocket.length >0) {
+      global.socketIo.to(allMarkets[0].commentaryId).emit("updateMarketData", dataToSocket);
+    }
+    return true;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "Error --> services/eventMarket.js/sendToSocket",
+      request
+    )
+    console.log(error)
+  }
+}
 const getRunnerByMarketService = async (request, fastify) => {
   let data = await getRunnerByMarketQuery(request, fastify);
   return data;

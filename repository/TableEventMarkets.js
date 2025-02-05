@@ -863,7 +863,8 @@ const changeMarketCloseQuery = async (data, request, fastify) => {
           ),
           false
            )::json,
-          "wrLastUpdate" = now()::timestamp
+          "wrLastUpdate" = now()::timestamp,
+          "wrIsSendData" = true
           WHERE "wrCommentaryId" = $2
           AND "wrID" = $3 AND "wrIsDeleted" = false
           AND "wrStatus" NOT IN ($4, $5, $6)
@@ -2349,7 +2350,8 @@ const closeMarketQuery = async (request, fastify) => {
           FROM jsonb_array_elements("wrData"::jsonb->'runner') AS runner(runner_elem)
         ),
         false
-      )::json
+      )::json,
+      "wrIsSendData" = true
       where "wrStatus" NOT IN ($2,$3,$4)
         `;
     await fastify.db.query(query2, {
@@ -3490,7 +3492,8 @@ const closeEventMarketsQuery = async (eventMarketId, request, fastify) => {
           FROM jsonb_array_elements("wrData"::jsonb->'runner') AS runner(runner_elem)
         ),
         false
-      )::json
+      )::json,
+      "wrIsSendData" = true
       where "wrID" = any($1) and "wrStatus" NOT IN ($3,$4,$5)
         `;
     await fastify.db.query(query2, {
