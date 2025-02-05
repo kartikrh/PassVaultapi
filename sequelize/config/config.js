@@ -12,12 +12,12 @@ module.exports = () => {
       port: process.env.POSTGRES_PORT,
       dialect: process.env.POSTGRES_DIALECT,
       logging: false, 
-      pool: { 
-        max: 20
-        // min: 0,
-        // acquire: 60000,
-        // idle: 10000,
-        // evict: 10000,
+      pool: {
+        max: 20,          // Maximum number of connections
+        min: 5,           // Minimum number of connections
+        acquire: 60000,   // Maximum time to get a connection (ms)
+        idle: 10000,      // Maximum time connection can be idle (ms)
+        evict: 5000       // Run cleanup every 1 second
       }
     };
   }
