@@ -2395,6 +2395,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
   // },request,fastify)
   // data.callPrediction = callPredictions;
  return data;
+ 
 };
 const sendToSocket = (data,request,fastify)=>{
   try {
