@@ -2467,6 +2467,7 @@ const sendToSocket = (data,request,fastify)=>{
     if (clientInRoom?.size && dataToSocket.length >0) {
       global.socketIo.to(allMarkets[0].commentaryId).emit("updateMarket", dataToSocket);
     }
+    
     return true;
   } catch (error) {
     errorLogger(
