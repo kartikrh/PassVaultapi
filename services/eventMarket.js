@@ -2450,10 +2450,10 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
       // callPredictions.push(callPrediction);
   }
   let data = await marketListByCIdService({ body: { commentaryId: commentary.commentaryId } }, fastify);
-  // sendToSocket({
-  //   markets : data,
-  //   allMarkets : allMarkets
-  // },request,fastify)
+  sendToSocket({
+    markets : data,
+    allMarkets : allMarkets
+  },request,fastify)
   // data.callPrediction = callPredictions;
  return data;
  
@@ -2465,7 +2465,7 @@ const sendToSocket = (data,request,fastify)=>{
     const dataToSocket = markets.filter(d => am.has(d.eventMarketId));
     const clientInRoom = global.socketIo.sockets.adapter.rooms.get(allMarkets[0].commentaryId);
     if (clientInRoom?.size && dataToSocket.length >0) {
-      global.socketIo.to(allMarkets[0].commentaryId).emit("updateMarketData", dataToSocket);
+      global.socketIo.to(allMarkets[0].commentaryId).emit("updateMarket", dataToSocket);
     }
     return true;
   } catch (error) {
