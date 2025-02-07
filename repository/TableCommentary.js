@@ -4586,7 +4586,6 @@ const getAllCompletedCommentaryQuery = async (request, fastify) => {
 };
 
 const getCommentariesDataByDifferentIdsQuery = async (whereCondition, request, fastify) => {
-  console.log("where condition", whereCondition);
   try {
     const result = await fastify.db.query(
       `SELECT 
