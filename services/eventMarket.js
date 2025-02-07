@@ -2462,7 +2462,7 @@ const sendToSocket = (data,request,fastify)=>{
   try {
     const {markets , allMarkets} = data;
     const am = new Set(allMarkets.map(m => m.eventMarketId));
-    const dataToSocket = markets.filter(d => am.has(d.eventMarketId));
+    const dataToSocket = markets?.filter(d => am.has(d.eventMarketId));
     const clientInRoom = global.socketIo.sockets.adapter.rooms.get(allMarkets[0].commentaryId);
     if (clientInRoom?.size && dataToSocket.length >0) {
       global.socketIo.to(allMarkets[0].commentaryId).emit("updateMarket", dataToSocket);
