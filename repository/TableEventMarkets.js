@@ -38,6 +38,10 @@ const getAllEventMarketsQuery = async (fastify, whereCondition = null) => {
         tem."wrDefaultBackSize" as "defaultBackSize",
         tem."wrDefaultLaySize" as "defaultLaySize",
         tem."wrAfterSuspendTime" as "afterSuspendTime",
+        tmt."wrMarketTypeName" as "marketTypeName", 
+        tem."wrMarketTypeId" as "marketTypeId",
+        tem."wrMarketTypeCategoryId" as "marketTypecategoryId",
+        tmtc."wrCategoryName" as "marketTypecategoryName",
         tem."wrIsDeleted" as "isDeleted",
         tmr."wrSelectionId" as "selectionId",
         tmr."wrRunner" as "runner",
@@ -48,6 +52,8 @@ const getAllEventMarketsQuery = async (fastify, whereCondition = null) => {
     LEFT JOIN "tblEventTypes" tet ON tet."wrEventTypeId" = tc."wrEventTypeId"
     LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = tem."wrTeamID"
     LEFT JOIN "tblMarketRunners" tmr ON tmr."wrEventMarketId" = tem."wrID"
+    LEFT JOIN "tblMarketTypes" tmt ON tmt."wrId" = tem."wrMarketTypeId"
+    LEFT JOIN "tblMarketTypeCategories" tmtc ON tmtc."wrId" = tem."wrMarketTypeCategoryId"
     ${whereCondition ? `WHERE ${whereCondition}` : ""}`,
     {
       type: fastify.db.QueryTypes.SELECT,
@@ -2508,6 +2514,8 @@ const getEventMarketsQuery = async (fastify, whereCondition = null) => {
           tem."wrLastUpdate" as "lastUpdate",
           tmt."wrMarketTypeName" as "marketTypeName", 
           tem."wrMarketTypeId" as "marketTypeId",
+          tem."wrMarketTypeCategoryId" as "marketTypecategoryId",
+          tmtc."wrCategoryName" as "marketTypecategoryName",
           tem."wrAfterSuspendTime" as "afterSuspendTime",
           tem."wrAfterCloseTime" as "afterCloseTime",
           tem."wrIsDeleted" as "isDeleted",
@@ -2519,6 +2527,7 @@ const getEventMarketsQuery = async (fastify, whereCondition = null) => {
       LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = tem."wrTeamID"
       LEFT JOIN "tblMarketTypes" tmt ON tmt."wrId" = tem."wrMarketTypeId"
       LEFT JOIN "tblMarketRunners" tmr ON tmr."wrRunnerId" = CAST(tem."wrResult" AS INTEGER)
+      LEFT JOIN "tblMarketTypeCategories" tmtc ON tmtc."wrId" = tem."wrMarketTypeCategoryId"
       ${whereCondition ? `WHERE ${whereCondition}` : ""}
       ORDER BY tem."wrID" DESC;
       `,
@@ -2987,6 +2996,10 @@ const getMarketWithRunnerQuery = async (fastify, whereCondition) => {
         "wrMargin" AS "margin",
         "wrStatus" AS "status",
         tem."wrDelay" AS "delay",
+        tem."wrMarketTypeId" as "marketTypeId",
+        tmt."wrMarketTypeName" as "marketTypeName", 
+        tem."wrMarketTypeCategoryId" as "marketTypecategoryId",
+        tmtc."wrCategoryName" as "marketTypecategoryName",
         tem."wrIsDeleted" as "isDeleted",
         "wrResult" as "result",
         "wrIsResult" as "isResult",
@@ -2997,6 +3010,8 @@ const getMarketWithRunnerQuery = async (fastify, whereCondition) => {
     LEFT JOIN "tblCompetitions" tcom ON tcom."wrCompetitionId" = tc."wrCompetitionId"
     LEFT JOIN "tblEventTypes" tet ON tet."wrEventTypeId" = tc."wrEventTypeId"
     LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = tem."wrTeamID"
+    LEFT JOIN "tblMarketTypes" tmt ON tmt."wrId" = tem."wrMarketTypeId"
+    LEFT JOIN "tblMarketTypeCategories" tmtc ON tmtc."wrId" = tem."wrMarketTypeCategoryId"
     LEFT JOIN "tblMarketRunners" tmr ON tmr."wrRunnerId" = tem."wrResult"
     LEFT JOIN LATERAL (
 						SELECT jsonb_agg(
@@ -3022,7 +3037,7 @@ const getMarketWithRunnerQuery = async (fastify, whereCondition) => {
 					) runner_data ON true
     ${whereCondition ? `WHERE ${whereCondition}` : ""}
     GROUP BY tem."wrID", tc."wrEventName", tc."wrEventDate", tcom."wrCompetition", tet."wrEventType",
-     tt."wrTeamName", runner_data."runners" , tmr."wrRunner"`,
+     tmt."wrMarketTypeName", tmtc."wrCategoryName", tt."wrTeamName", runner_data."runners" , tmr."wrRunner"`,
     {
       type: fastify.db.QueryTypes.SELECT,
     }
