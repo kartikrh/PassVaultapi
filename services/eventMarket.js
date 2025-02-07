@@ -2451,7 +2451,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
   }
   let data = await marketListByCIdService({ body: { commentaryId: commentary.commentaryId } }, fastify);
   sendToSocket({
-    markets : data,
+    markets : data.marketList,
     allMarkets : allMarkets
   },request,fastify)
   // data.callPrediction = callPredictions;
@@ -2461,13 +2461,13 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
 const sendToSocket = (data,request,fastify)=>{
   try {
     const {markets , allMarkets} = data;
-    const am = new Set(allMarkets.map(m => m.eventMarketId));
-    const dataToSocket = markets?.filter(d => am.has(d.eventMarketId));
+    const am = new Set(allMarkets.map(m => m.marketId));
+    const dataToSocket = markets?.filter(d => am.has(d.marketId));
     const clientInRoom = global.socketIo.sockets.adapter.rooms.get(allMarkets[0].commentaryId);
     if (clientInRoom?.size && dataToSocket.length >0) {
       global.socketIo.to(allMarkets[0].commentaryId).emit("updateMarket", dataToSocket);
     }
-    
+
     return true;
   } catch (error) {
     errorLogger(
