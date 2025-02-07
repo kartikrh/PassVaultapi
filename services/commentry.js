@@ -8893,7 +8893,7 @@ const loadcommentaryService = async (request, fastify) => {
           commentary_id: commentary.commentaryId,
           match_type_id: commentary.matchTypeId,
           event_id: commentary.eventRefId,
-          line_ratio_data: eventMarketLine,
+          // line_ratio_data: eventMarketLine,
           default_ball_faced: parseInt(key1?.value) || 0,
           default_player_boundaries: parseInt(key2?.value) || 0,
           default_player_runs: parseInt(key3?.value) || 0,

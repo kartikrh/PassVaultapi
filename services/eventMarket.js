@@ -1,4 +1,4 @@
-const { updateAverageOfPlayerQuery, updateBoundaryOfPlayerQuery, updatePbfOfPlayerQuery } = require("../repository/TableCommentary");
+const { updateAverageOfPlayerQuery, getCommentariesDataByDifferentIdsQuery, updateBoundaryOfPlayerQuery, updatePbfOfPlayerQuery } = require("../repository/TableCommentary");
 const {
   getAllEventMarketsQuery,
   deleteEventMarketQuery,
@@ -168,6 +168,8 @@ const getAllEventMarketsService = async (request, fastify) => {
     status,
     startDate,
     endDate,
+    marketTypeId,
+    categoryId,
     rateSourceRefId
   } = request.body;
   // let createWhereStatus = `tem."wrStatus" NOT IN (${EventMarketStatus.Close},${EventMarketStatus.Settled},${EventMarketStatus.Cancel}) AND tc."wrIsDelete" = false AND tcom."wrIsDeleted" = false`;
@@ -184,33 +186,51 @@ const getAllEventMarketsService = async (request, fastify) => {
     createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrRateSource" = ${rateSourceRefId}` : `tem."wrRateSource" = ${rateSourceRefId}`;
   }
   if(commentaryId){
-    createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrCommentaryId" = ${commentaryId}` : `tem."wrCommentaryId"" = ${commentaryId}`;
+    createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrCommentaryId" = ${commentaryId}` : `tem."wrCommentaryId" = ${commentaryId}`;
+  }
+
+  if(marketTypeId){
+    createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrMarketTypeId" = ${marketTypeId}` : `tem."wrMarketTypeId" = ${marketTypeId}`;
+  }
+
+  if(categoryId){
+    createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrMarketTypeCategoryId" = ${categoryId}` : `tem."wrMarketTypeCategoryId" = ${categoryId}`;
   }
  
   let eventMarket = await getEventMarketsQuery(fastify, createWhereStatus);
+  let whereCondition = `tc."wrIsDelete" = false AND co."wrIsDeleted" = false`
   if (eventTypeId) {
     // get the commentaryId from tblCommentaries
-    let commentaryId = global.tblCommentaries
-      .filter((item) => item.eventTypeId === eventTypeId)
-      .map((item) => item.commentaryId);
+    whereCondition += ` AND tc."wrEventTypeId" = ${eventTypeId}`
+    let commentaryId = await getCommentariesDataByDifferentIdsQuery(whereCondition, request, fastify);
+    commentaryId = commentaryId.map((item) => item.commentaryId);
+    // let commentaryId = global.tblCommentaries
+    //   .filter((item) => item.eventTypeId === eventTypeId)
+    //   .map((item) => item.commentaryId);
     eventMarket = eventMarket.filter((item) =>
       commentaryId.includes(item.commentaryId)
     );
   }
   if (competitionId) {
     // get the commentaryId from tblCommentaries
-    let commentaryId = global.tblCommentaries
-      .filter((item) => item.competitionId === competitionId)
-      .map((item) => item.commentaryId);
+    whereCondition += ` AND tc."wrCompetitionId" = ${competitionId}`
+    let commentaryId = await getCommentariesDataByDifferentIdsQuery(whereCondition, request, fastify);
+    commentaryId = commentaryId.map((item) => item.commentaryId);
+    // let commentaryId = global.tblCommentaries
+    //   .filter((item) => item.competitionId === competitionId)
+    //   .map((item) => item.commentaryId);
     eventMarket = eventMarket.filter((item) =>
       commentaryId.includes(item.commentaryId)
     );
   }
   if (eventId) {
     // get the commentaryId from tblCommentaries
-    let commentaryId = global.tblCommentaries
-      .filter((item) => item.eventId === eventId)
-      .map((item) => item.commentaryId);
+    whereCondition += ` AND tc."wrEventId" = ${eventId}`
+    let commentaryId = await getCommentariesDataByDifferentIdsQuery(whereCondition, request, fastify);
+    commentaryId = commentaryId.map((item) => item.commentaryId);    
+    // let commentaryId = global.tblCommentaries
+    //   .filter((item) => item.eventId === eventId)
+    //   .map((item) => item.commentaryId);
     eventMarket = eventMarket.filter((item) =>
       commentaryId.includes(item.commentaryId)
     );
@@ -401,6 +421,28 @@ const getEventListByCompetitionIdsService = async (request, fastify) => {
     }));
   return eventList;
 };
+
+const getCommentaryListByCompetitionIdService = async (request, fastify) => {
+  // validate competitionId
+  const { competitionId } = request.body;
+  let competition = global.tblCompetitions.find(
+    (item) => item.competitionId === competitionId
+  );
+  if (!competition) {
+    throw new Error("Competition with this id not Found");
+  }
+  // get the commentaryList by competitionId
+  let whereCondition = `tc."wrIsDelete" = false AND co."wrIsDeleted" = false AND tc."wrCompetitionId" = ${competitionId}`
+  let commentaries = await getCommentariesDataByDifferentIdsQuery(whereCondition, request, fastify);
+  
+  let commentaryList = commentaries.map((item) => ({
+      eventId: item.eventId,
+      eventName: item.eventName,
+      eventDate: item.eventDate,
+    }));
+  return commentaryList;
+};
+
 const marketListResultFalseService = async (request, fastify) => {
   const {
     isActive,
@@ -410,6 +452,8 @@ const marketListResultFalseService = async (request, fastify) => {
     status,
     startDate,
     endDate,
+    marketTypeId,
+    categoryId,
     rateSourceRefId
   } = request.body;
   
@@ -421,35 +465,52 @@ const marketListResultFalseService = async (request, fastify) => {
   // if(mt.length > 0){
     createWhereStatus += ` AND tem."wrMarketTypeId" IN (${MarketTypeId.LineMarket},${MarketTypeId.Fancy})`;
   // }
+
+  if(marketTypeId){
+    createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrMarketTypeId" = ${marketTypeId}` : `tem."wrMarketTypeId" = ${marketTypeId}`;
+  }
+
+  if(categoryId){
+    createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrMarketTypeCategoryId" = ${categoryId}` : `tem."wrMarketTypeCategoryId" = ${categoryId}`;
+  }
   let eventMarket = await getAllEventMarketsQuery(
     fastify,
     createWhereStatus
   );
 
-  
+  let whereCondition = `tc."wrIsDelete" = false AND co."wrIsDeleted" = false AND tc."wrCompetitionId" = ${competitionId}`
   if (eventTypeId) {
     // get the commentaryId from tblCommentaries
-    let commentaryId = global.tblCommentaries
-      .filter((item) => item.eventTypeId === eventTypeId)
-      .map((item) => item.commentaryId);
+    whereCondition += ` AND tc."wrEventTypeId" = ${eventTypeId}`
+    let commentaryId = await getCommentariesDataByDifferentIdsQuery(whereCondition, request, fastify);
+    commentaryId = commentaryId.map((item) => item.commentaryId);
+    // let commentaryId = global.tblCommentaries
+    //   .filter((item) => item.eventTypeId === eventTypeId)
+    //   .map((item) => item.commentaryId);
     eventMarket = eventMarket.filter((item) =>
       commentaryId.includes(item.commentaryId)
     );
   }
   if (competitionId) {
     // get the commentaryId from tblCommentaries
-    let commentaryId = global.tblCommentaries
-      .filter((item) => item.competitionId === competitionId)
-      .map((item) => item.commentaryId);
+    whereCondition += ` AND tc."wrCompetitionId" = ${competitionId}`
+    let commentaryId = await getCommentariesDataByDifferentIdsQuery(whereCondition, request, fastify);
+    commentaryId = commentaryId.map((item) => item.commentaryId);
+    // let commentaryId = global.tblCommentaries
+    //   .filter((item) => item.competitionId === competitionId)
+    //   .map((item) => item.commentaryId);
     eventMarket = eventMarket.filter((item) =>
       commentaryId.includes(item.commentaryId)
     );
   }
   if (eventId) {
     // get the commentaryId from tblCommentaries
-    let commentaryId = global.tblCommentaries
-      .filter((item) => item.eventId === eventId)
-      .map((item) => item.commentaryId);
+    whereCondition += ` AND tc."wrEventId" = ${eventId}`
+    let commentaryId = await getCommentariesDataByDifferentIdsQuery(whereCondition, request, fastify);
+    commentaryId = commentaryId.map((item) => item.commentaryId);   
+    // let commentaryId = global.tblCommentaries
+    //   .filter((item) => item.eventId === eventId)
+    //   .map((item) => item.commentaryId);
     eventMarket = eventMarket.filter((item) =>
       commentaryId.includes(item.commentaryId)
     );
@@ -2389,10 +2450,10 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
       // callPredictions.push(callPrediction);
   }
   let data = await marketListByCIdService({ body: { commentaryId: commentary.commentaryId } }, fastify);
-  // sendToSocket({
-  //   markets : data,
-  //   allMarkets : allMarkets
-  // },request,fastify)
+  sendToSocket({
+    markets : data,
+    allMarkets : allMarkets
+  },request,fastify)
   // data.callPrediction = callPredictions;
  return data;
  
@@ -2404,7 +2465,7 @@ const sendToSocket = (data,request,fastify)=>{
     const dataToSocket = markets.filter(d => am.has(d.eventMarketId));
     const clientInRoom = global.socketIo.sockets.adapter.rooms.get(allMarkets[0].commentaryId);
     if (clientInRoom?.size && dataToSocket.length >0) {
-      global.socketIo.to(allMarkets[0].commentaryId).emit("updateMarketData", dataToSocket);
+      global.socketIo.to(allMarkets[0].commentaryId).emit("updateMarket", dataToSocket);
     }
     return true;
   } catch (error) {
@@ -2430,6 +2491,8 @@ const pendingMultiRunnerMarketsService = async (request, fastify) => {
     status,
     startDate,
     endDate,
+    marketTypeId,
+    categoryId,
     rateSourceRefId
   } = request.body;
 
@@ -2448,35 +2511,51 @@ const pendingMultiRunnerMarketsService = async (request, fastify) => {
   // if(mt.length > 0){
   //   createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrMarketTypeId" NOT IN (${mt.join(",")})` : `tem."wrMarketTypeId" NOT IN (${mt.join(",")})`;
   // }
+  if(marketTypeId){
+    createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrMarketTypeId" = ${marketTypeId}` : `tem."wrMarketTypeId" = ${marketTypeId}`;
+  }
+
+  if(categoryId){
+    createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrMarketTypeCategoryId" = ${categoryId}` : `tem."wrMarketTypeCategoryId" = ${categoryId}`;
+  }
   let eventMarket = await getMarketWithRunnerQuery(
     fastify,
     createWhereStatus
   );
 
-  
+  let whereCondition = `tc."wrIsDelete" = false AND co."wrIsDeleted" = false`
   if (eventTypeId) {
     // get the commentaryId from tblCommentaries
-    let commentaryId = global.tblCommentaries
-      .filter((item) => item.eventTypeId === eventTypeId)
-      .map((item) => item.commentaryId);
+    whereCondition += ` AND tc."wrEventTypeId" = ${eventTypeId}`
+    let commentaryId = await getCommentariesDataByDifferentIdsQuery(whereCondition, request, fastify);
+    commentaryId = commentaryId.map((item) => item.commentaryId);
+    // let commentaryId = global.tblCommentaries
+    //   .filter((item) => item.eventTypeId === eventTypeId)
+    //   .map((item) => item.commentaryId);
     eventMarket = eventMarket.filter((item) =>
       commentaryId.includes(item.commentaryId)
     );
   }
   if (competitionId) {
     // get the commentaryId from tblCommentaries
-    let commentaryId = global.tblCommentaries
-      .filter((item) => item.competitionId === competitionId)
-      .map((item) => item.commentaryId);
+    whereCondition += ` AND tc."wrCompetitionId" = ${competitionId}`
+    let commentaryId = await getCommentariesDataByDifferentIdsQuery(whereCondition, request, fastify);
+    commentaryId = commentaryId.map((item) => item.commentaryId);
+    // let commentaryId = global.tblCommentaries
+    //   .filter((item) => item.competitionId === competitionId)
+    //   .map((item) => item.commentaryId);
     eventMarket = eventMarket.filter((item) =>
       commentaryId.includes(item.commentaryId)
     );
   }
   if (eventId) {
     // get the commentaryId from tblCommentaries
-    let commentaryId = global.tblCommentaries
-      .filter((item) => item.eventId === eventId)
-      .map((item) => item.commentaryId);
+    whereCondition += ` AND tc."wrEventId" = ${eventId}`
+    let commentaryId = await getCommentariesDataByDifferentIdsQuery(whereCondition, request, fastify);
+    commentaryId = commentaryId.map((item) => item.commentaryId);   
+    // let commentaryId = global.tblCommentaries
+    //   .filter((item) => item.eventId === eventId)
+    //   .map((item) => item.commentaryId);
     eventMarket = eventMarket.filter((item) =>
       commentaryId.includes(item.commentaryId)
     );
@@ -2800,5 +2879,6 @@ module.exports = {
   suspendMarketService,
   getManualMarketDataService,
   saveManualMarketDataService,
-  upManualMarketDataService
+  upManualMarketDataService,
+  getCommentaryListByCompetitionIdService,
 };
