@@ -169,7 +169,7 @@ const getAllEventMarketsService = async (request, fastify) => {
     startDate,
     endDate,
     marketTypeId,
-    categoryId,
+    marketTypeCategoryId,
     rateSourceRefId
   } = request.body;
   // let createWhereStatus = `tem."wrStatus" NOT IN (${EventMarketStatus.Close},${EventMarketStatus.Settled},${EventMarketStatus.Cancel}) AND tc."wrIsDelete" = false AND tcom."wrIsDeleted" = false`;
@@ -193,8 +193,8 @@ const getAllEventMarketsService = async (request, fastify) => {
     createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrMarketTypeId" = ${marketTypeId}` : `tem."wrMarketTypeId" = ${marketTypeId}`;
   }
 
-  if(categoryId){
-    createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrMarketTypeCategoryId" = ${categoryId}` : `tem."wrMarketTypeCategoryId" = ${categoryId}`;
+  if(marketTypeCategoryId){
+    createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrMarketTypeCategoryId" = ${marketTypeCategoryId}` : `tem."wrMarketTypeCategoryId" = ${marketTypeCategoryId}`;
   }
  
   let eventMarket = await getEventMarketsQuery(fastify, createWhereStatus);
@@ -453,7 +453,7 @@ const marketListResultFalseService = async (request, fastify) => {
     startDate,
     endDate,
     marketTypeId,
-    categoryId,
+    marketTypeCategoryId,
     rateSourceRefId
   } = request.body;
   
@@ -470,8 +470,8 @@ const marketListResultFalseService = async (request, fastify) => {
     createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrMarketTypeId" = ${marketTypeId}` : `tem."wrMarketTypeId" = ${marketTypeId}`;
   }
 
-  if(categoryId){
-    createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrMarketTypeCategoryId" = ${categoryId}` : `tem."wrMarketTypeCategoryId" = ${categoryId}`;
+  if(marketTypeCategoryId){
+    createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrMarketTypeCategoryId" = ${marketTypeCategoryId}` : `tem."wrMarketTypeCategoryId" = ${marketTypeCategoryId}`;
   }
   let eventMarket = await getAllEventMarketsQuery(
     fastify,
@@ -2493,7 +2493,7 @@ const pendingMultiRunnerMarketsService = async (request, fastify) => {
     startDate,
     endDate,
     marketTypeId,
-    categoryId,
+    marketTypeCategoryId,
     rateSourceRefId
   } = request.body;
 
@@ -2516,8 +2516,8 @@ const pendingMultiRunnerMarketsService = async (request, fastify) => {
     createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrMarketTypeId" = ${marketTypeId}` : `tem."wrMarketTypeId" = ${marketTypeId}`;
   }
 
-  if(categoryId){
-    createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrMarketTypeCategoryId" = ${categoryId}` : `tem."wrMarketTypeCategoryId" = ${categoryId}`;
+  if(marketTypeCategoryId){
+    createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrMarketTypeCategoryId" = ${marketTypeCategoryId}` : `tem."wrMarketTypeCategoryId" = ${marketTypeCategoryId}`;
   }
   let eventMarket = await getMarketWithRunnerQuery(
     fastify,
