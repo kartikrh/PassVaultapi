@@ -478,6 +478,14 @@ const connection = (socket , fastify) => {
       console.log("error in disconnectCom",error)
     }
   })
+  socket.on("updateMarketDisconnect", (commentaryId)=>{
+    try {
+      if (!commentaryId) return;
+      socket.leave(commentaryId);
+    } catch (error) {
+      console.log("error in updateMarketDisconnect",error)
+    }
+  });
   socket.on("disconnect", () => {
   });
 };
