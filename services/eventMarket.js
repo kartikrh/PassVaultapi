@@ -945,6 +945,7 @@ const saveEventMarketService = async (request, fastify) => {
     body = {
       ...request.body,
       status: global.tblEventMarkets[eventMarket].status,
+      createdBy: request?.userTokenInfo?.WrUserId || null
     };
   }
   let result = await upsertEventMarketSPQuery([body], request, fastify);
@@ -2032,6 +2033,7 @@ const createEventMarketsServiceV1 = async (request, fastify) => {
     // }
     if(item.marketTypeId == MarketTypeId.Fancy || item.marketTypeId == MarketTypeId.LineMarket){
       // singleRunnerMarket.push(item); 
+      item.createdBy = request?.userTokenInfo?.WrUserId || null
       if(item.eventMarketId == 0) {
         if(item?.beforeSuspendMin && item.beforeSuspendMin > 0){
           let minTominus = item.beforeSuspendMin;
@@ -2083,6 +2085,7 @@ const createEventMarketsServiceV1 = async (request, fastify) => {
             item.afterCloseTime = null;
           }
         }
+        item.createdBy = request?.userTokenInfo?.WrUserId || null
         multiRunnerMarket.push(item);
       }
       else {

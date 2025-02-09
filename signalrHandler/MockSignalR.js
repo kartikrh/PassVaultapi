@@ -176,24 +176,39 @@ function isSignalRStarted(fastify) {
 //reconnections SignalR is connection is NotConnected
 const reConnectScoreHub = async () => {
     try {
-        const isSON = global.tblConfigs.find((item) => item.key === configConstants.ISMARKETOODS_SIGNALRON).value;
-        const sRCount = global.tblConfigs.find((item) => item.key === configConstants.SIGNALRRECONNECTCOUNT).value;
-        if (isSON === 'true') {
-            if (connectionCount == sRCount) {
-                await stopSignalR();
-                return;
-            }
-            if (!global.isAdminStoppedSignalR) {
-                global.rateSourceRefIDSet = new Set();
-                if (connection && connection.state !== signalR.HubConnectionState.Connected) {
-                  await connection.start();
-                  await subScribeConnectMarketRate(_fastify);
-                  global.isSignalRStopped = false;
-                  console.log("SignalR Re-Connected.");
+        const isSON = global.tblConfigs.find((item) => item.key === configConstants.ISMARKETOODS_SIGNALRON)?.value;
+        const sRCount = global.tblConfigs.find((item) => item.key === configConstants.SIGNALRRECONNECTCOUNT)?.value;
+        if (isSON !== 'true' || global.isAdminStoppedSignalR === true) {
+            await stopSignalR(_fastify);
+            return;
+        }
+        if (isSON === 'true' && global.isAdminStoppedSignalR === false) {
+            let retryCount = 0;
+            const maxRetries = parseInt(sRCount, 10);
+
+            while (retryCount < maxRetries) {
+                if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
+                    try {
+                        await connection.start();
+                        await subScribeConnectMarketRate(_fastify);
+                        global.isSignalRStopped = false;
+    
+                        if (_SignalRURLs && _SignalRURLs.length > 0) {
+                            for (const thirdParty of _SignalRURLs) {
+                                thirdParty.isConnect = true;
+                                await updateConnectionStatus(thirdParty, _fastify);
+                            }
+                        }
+                        console.log("SignalR Re-Connected.");
+                        return;
+                    } catch (err) {
+                        retryCount++;
+                        await new Promise(resolve => setTimeout(resolve, Math.min(1000 * (2 ** retryCount), 30000)));
+                    }
+                } else {
+                    return;
                 }
             }
-        } else {
-            await stopSignalR();
         }
     } catch (err) {
         errorLogger(
@@ -203,7 +218,40 @@ const reConnectScoreHub = async () => {
             null
         );
     }
-}
+};
+
+// //reconnections SignalR is connection is NotConnected
+// const reConnectScoreHub = async () => {
+//     console.log("re-connect");
+//     try {
+//         const isSON = global.tblConfigs.find((item) => item.key === configConstants.ISMARKETOODS_SIGNALRON).value;
+//         const sRCount = global.tblConfigs.find((item) => item.key === configConstants.SIGNALRRECONNECTCOUNT).value;
+//         if (isSON === 'true') {
+//             if (connectionCount == sRCount) {
+//                 await stopSignalR();
+//                 return;
+//             }
+//             if (!global.isAdminStoppedSignalR) {
+//                 global.rateSourceRefIDSet = new Set();
+//                 if (connection && connection.state !== signalR.HubConnectionState.Connected) {
+//                   await connection.start();
+//                   await subScribeConnectMarketRate(_fastify);
+//                   global.isSignalRStopped = false;
+//                   console.log("SignalR Re-Connected.");
+//                 }
+//             }
+//         } else {
+//             await stopSignalR();
+//         }
+//     } catch (err) {
+//         errorLogger(
+//             _fastify,
+//             err,
+//             "Error SignalrR --> signalrHandler/reConnectScoreHub",
+//             null
+//         );
+//     }
+// }
 
 //for a Reate Update Queue to Update DB and Globale
 const processRateQueue = async () => {

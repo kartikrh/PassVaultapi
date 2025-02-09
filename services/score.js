@@ -251,6 +251,12 @@ const getMarketsByCommentaryIdService =async (request , fastify) => {
     const commentary = commentaryData.find((c) => {
         return c.eventRefId === request.body.eventId;
     });    
+    // if (!commentary && request.body.status === undefined) {
+    //     return null;
+    // }
+    // if (!commentary && request.body.status === 1) {
+    //     throw new Error("Commentary with this id not found");
+    // }
     if (!commentary) {
         throw new Error("Commentary with this id not found");
     }

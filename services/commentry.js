@@ -4826,6 +4826,12 @@ const commentaryDetailsByEventIdService = async (
     (item) => item.eventRefId === request.body.eventId
   );
 
+  // if (!result && request.body.status === undefined) {
+  //   return null;
+  // }
+  // if (!result && request.body.status === 1) {
+  //     throw new Error("Commentary with this id not found");
+  // }
   if (!result) {
     throw new Error("Commentary with this id not Found");
   }
