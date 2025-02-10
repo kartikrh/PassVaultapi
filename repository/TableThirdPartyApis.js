@@ -97,7 +97,7 @@ const updateThirdPartyApisQuery = async (data, fastify, request) => {
       fastify,
       err.message,
       "DB ERROR --> repository/TableThirdPartyApis.js/updateThirdPartyApisQuery",
-      request
+      request || null
     );
     throw new Error(err.message);
   }

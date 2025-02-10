@@ -264,6 +264,14 @@ const commentaryDetailsByIdService = async (request, fastify) => {
     .filter((item) => item?.commentaryId === request.body.commentaryId)
     .sort((a, b) => b.commentaryTeamId - a.commentaryTeamId);
 
+    for (const team of commentaryTeams) {
+      const _team = global.tblTeams.find((item) => item.teamId === team.teamId);
+      if (_team) {
+        team.jersey = _team.jersey;
+        team.image = _team.image;
+      }
+    }
+
   const commentaryPlayers = await global.tblCommentaryPlayers
     .filter((item) => item?.commentaryId === request.body.commentaryId)
     .sort((a, b) => b.commentaryPlayerId - a.commentaryPlayerId);
@@ -4818,6 +4826,12 @@ const commentaryDetailsByEventIdService = async (
     (item) => item.eventRefId === request.body.eventId
   );
 
+  // if (!result && request.body.status === undefined) {
+  //   return null;
+  // }
+  // if (!result && request.body.status === 1) {
+  //     throw new Error("Commentary with this id not found");
+  // }
   if (!result) {
     throw new Error("Commentary with this id not Found");
   }

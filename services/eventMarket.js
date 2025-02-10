@@ -169,7 +169,7 @@ const getAllEventMarketsService = async (request, fastify) => {
     startDate,
     endDate,
     marketTypeId,
-    categoryId,
+    marketTypeCategoryId,
     rateSourceRefId
   } = request.body;
   // let createWhereStatus = `tem."wrStatus" NOT IN (${EventMarketStatus.Close},${EventMarketStatus.Settled},${EventMarketStatus.Cancel}) AND tc."wrIsDelete" = false AND tcom."wrIsDeleted" = false`;
@@ -193,8 +193,8 @@ const getAllEventMarketsService = async (request, fastify) => {
     createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrMarketTypeId" = ${marketTypeId}` : `tem."wrMarketTypeId" = ${marketTypeId}`;
   }
 
-  if(categoryId){
-    createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrMarketTypeCategoryId" = ${categoryId}` : `tem."wrMarketTypeCategoryId" = ${categoryId}`;
+  if(marketTypeCategoryId){
+    createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrMarketTypeCategoryId" = ${marketTypeCategoryId}` : `tem."wrMarketTypeCategoryId" = ${marketTypeCategoryId}`;
   }
  
   let eventMarket = await getEventMarketsQuery(fastify, createWhereStatus);
@@ -453,7 +453,7 @@ const marketListResultFalseService = async (request, fastify) => {
     startDate,
     endDate,
     marketTypeId,
-    categoryId,
+    marketTypeCategoryId,
     rateSourceRefId
   } = request.body;
   
@@ -470,15 +470,15 @@ const marketListResultFalseService = async (request, fastify) => {
     createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrMarketTypeId" = ${marketTypeId}` : `tem."wrMarketTypeId" = ${marketTypeId}`;
   }
 
-  if(categoryId){
-    createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrMarketTypeCategoryId" = ${categoryId}` : `tem."wrMarketTypeCategoryId" = ${categoryId}`;
+  if(marketTypeCategoryId){
+    createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrMarketTypeCategoryId" = ${marketTypeCategoryId}` : `tem."wrMarketTypeCategoryId" = ${marketTypeCategoryId}`;
   }
   let eventMarket = await getAllEventMarketsQuery(
     fastify,
     createWhereStatus
   );
 
-  let whereCondition = `tc."wrIsDelete" = false AND co."wrIsDeleted" = false AND tc."wrCompetitionId" = ${competitionId}`
+  let whereCondition = `tc."wrIsDelete" = false AND co."wrIsDeleted" = false`
   if (eventTypeId) {
     // get the commentaryId from tblCommentaries
     whereCondition += ` AND tc."wrEventTypeId" = ${eventTypeId}`
@@ -704,6 +704,7 @@ const marketListByCIdServiceV1 = async (request, fastify) => {
       return {
         teamId: item.teamId,
         teamName: item.teamName,
+        teamStatus : item.teamStatus
       };
     });
   // 
@@ -945,6 +946,7 @@ const saveEventMarketService = async (request, fastify) => {
     body = {
       ...request.body,
       status: global.tblEventMarkets[eventMarket].status,
+      createdBy: request?.userTokenInfo?.WrUserId || null
     };
   }
   let result = await upsertEventMarketSPQuery([body], request, fastify);
@@ -1869,19 +1871,19 @@ const getDetailsByCIdV1Service = async (request, fastify) => {
   const teamAndPlayers = [];
   for (let i = 1; i <= totalInnings; i++) {
     let commentaryTeam;
-    if (commentary.commentaryStatus !== 1) {
       commentaryTeam = global.tblCommentaryTeams.filter(
         (item) =>
           item.commentaryId === commentaryId &&
-          item.currentInnings === i &&
-          item.teamStatus === 1
+          item.currentInnings === i 
+          // &&item.teamStatus === 1
       );
-    } else {
-      commentaryTeam = global.tblCommentaryTeams.filter(
-        (item) =>
-          item.commentaryId === commentaryId && item.currentInnings === i
-      );
-    }
+    // } 
+    // else {
+    //   commentaryTeam = global.tblCommentaryTeams.filter(
+    //     (item) =>
+    //       item.commentaryId === commentaryId && item.currentInnings === i
+    //   );
+    // }
     let teamObj = {};
     for (team of commentaryTeam) {
       commentaryPlayers = global.tblCommentaryPlayers.filter(
@@ -2032,6 +2034,7 @@ const createEventMarketsServiceV1 = async (request, fastify) => {
     // }
     if(item.marketTypeId == MarketTypeId.Fancy || item.marketTypeId == MarketTypeId.LineMarket){
       // singleRunnerMarket.push(item); 
+      item.createdBy = request?.userTokenInfo?.WrUserId || null
       if(item.eventMarketId == 0) {
         if(item?.beforeSuspendMin && item.beforeSuspendMin > 0){
           let minTominus = item.beforeSuspendMin;
@@ -2083,6 +2086,7 @@ const createEventMarketsServiceV1 = async (request, fastify) => {
             item.afterCloseTime = null;
           }
         }
+        item.createdBy = request?.userTokenInfo?.WrUserId || null
         multiRunnerMarket.push(item);
       }
       else {
@@ -2493,7 +2497,7 @@ const pendingMultiRunnerMarketsService = async (request, fastify) => {
     startDate,
     endDate,
     marketTypeId,
-    categoryId,
+    marketTypeCategoryId,
     rateSourceRefId
   } = request.body;
 
@@ -2516,8 +2520,8 @@ const pendingMultiRunnerMarketsService = async (request, fastify) => {
     createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrMarketTypeId" = ${marketTypeId}` : `tem."wrMarketTypeId" = ${marketTypeId}`;
   }
 
-  if(categoryId){
-    createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrMarketTypeCategoryId" = ${categoryId}` : `tem."wrMarketTypeCategoryId" = ${categoryId}`;
+  if(marketTypeCategoryId){
+    createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrMarketTypeCategoryId" = ${marketTypeCategoryId}` : `tem."wrMarketTypeCategoryId" = ${marketTypeCategoryId}`;
   }
   let eventMarket = await getMarketWithRunnerQuery(
     fastify,

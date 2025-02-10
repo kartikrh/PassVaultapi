@@ -40,11 +40,12 @@ const getAllEventMarketsQuery = async (fastify, whereCondition = null) => {
         tem."wrAfterSuspendTime" as "afterSuspendTime",
         tmt."wrMarketTypeName" as "marketTypeName", 
         tem."wrMarketTypeId" as "marketTypeId",
-        tem."wrMarketTypeCategoryId" as "marketTypecategoryId",
-        tmtc."wrCategoryName" as "marketTypecategoryName",
+        tem."wrMarketTypeCategoryId" as "marketTypeCategoryId",
+        tmtc."wrCategoryName" as "categoryName",
         tem."wrIsDeleted" as "isDeleted",
         tmr."wrSelectionId" as "selectionId",
         tmr."wrRunner" as "runner",
+        tem."wrCreatedBy" as "createdBy",
         tem."wrAfterCloseTime" as "afterCloseTime"
     FROM "tblEventMarkets" tem
     LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
@@ -124,6 +125,7 @@ const getAllEventMarketsQueryV1 = async (fastify, whereCondition = null) => {
         tem."wrAfterCloseTime" as "afterCloseTime",
         tem."wrRateDiff" as "rateDiff",
         tem."wrPredefinedValue" as "predefinedValue",
+        tem."wrCreatedBy" as "createdBy",
         tem."wrWicketNo" as "wicketNo",
         COALESCE(runner_data."runners", '[]') as "runners"
     FROM "tblEventMarkets" tem
@@ -235,6 +237,7 @@ const getEventMarketByIdsQuery = async (data, request, fastify) => {
             tem."wrRateSource" as "rateSource",
             tem."wrRateSourceRefID" as "rateSourceRefID",
             tem."wrAfterSuspendTime" as "afterSuspendTime",
+            tem."wrCreatedBy" as "createdBy",
             tem."wrAfterCloseTime" as "afterCloseTime"
         FROM "tblEventMarkets" tem
         LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
@@ -1685,8 +1688,9 @@ const createEventMarketMaunalQuery = async (data, request, fastify) => {
       "wrTeamID",
       "wrInningsID",
       "wrMarketTypeId",
-      "wrMarketTypeCategoryId"
-  ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8,$9,$10,$11,$12,$13)
+      "wrMarketTypeCategoryId",
+      "wrCreatedBy"
+  ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8,$9,$10,$11,$12,$13,$14)
         RETURNING "wrID" as "eventMarketId"
     `;
     const result = await fastify.db.query(query, {
@@ -1704,6 +1708,7 @@ const createEventMarketMaunalQuery = async (data, request, fastify) => {
         0,
         marketTypeId,
         data.categoryType,
+        request?.userTokenInfo?.WrUserId || null
       ],
       type: fastify.db.QueryTypes.SELECT,
     });
@@ -2514,10 +2519,11 @@ const getEventMarketsQuery = async (fastify, whereCondition = null) => {
           tem."wrLastUpdate" as "lastUpdate",
           tmt."wrMarketTypeName" as "marketTypeName", 
           tem."wrMarketTypeId" as "marketTypeId",
-          tem."wrMarketTypeCategoryId" as "marketTypecategoryId",
-          tmtc."wrCategoryName" as "marketTypecategoryName",
+          tem."wrMarketTypeCategoryId" as "marketTypeCategoryId",
+          tmtc."wrCategoryName" as "categoryName",
           tem."wrAfterSuspendTime" as "afterSuspendTime",
           tem."wrAfterCloseTime" as "afterCloseTime",
+          tem."wrCreatedBy" as "createdBy",
           tem."wrIsDeleted" as "isDeleted",
           tmr."wrRunner" as "resultRunner"
       FROM "tblEventMarkets" tem
@@ -2688,6 +2694,7 @@ const getEventMarketQueryV1 = async (fastify) => {
           tem."wrTemplateType" as "templateType",
           tem."wrDelay" as "delay",
           tem."wrLineRatio" as "lineRatio",
+          tem."wrCreatedBy" as "createdBy",
           tem."wrRateSource" as "rateSource",
           tem."wrRateSourceRefID" as "rateSourceRefID",
           json_agg(
@@ -2852,6 +2859,7 @@ const getEventMarketByIdsQueryV1 = async (data, request, fastify) => {
           tem."wrRateSourceRefID" as "rateSourceRefID",
           tem."wrLineType" as "lineType",
           tem."wrDefaultBackSize" as "defaultBackSize",
+          tem."wrCreatedBy" as "createdBy",
           tem."wrDefaultLaySize" as "defaultLaySize",
           json_agg(
                   json_build_object(
@@ -2998,11 +3006,12 @@ const getMarketWithRunnerQuery = async (fastify, whereCondition) => {
         tem."wrDelay" AS "delay",
         tem."wrMarketTypeId" as "marketTypeId",
         tmt."wrMarketTypeName" as "marketTypeName", 
-        tem."wrMarketTypeCategoryId" as "marketTypecategoryId",
-        tmtc."wrCategoryName" as "marketTypecategoryName",
+        tem."wrMarketTypeCategoryId" as "marketTypeCategoryId",
+        tmtc."wrCategoryName" as "categoryName",
         tem."wrIsDeleted" as "isDeleted",
         "wrResult" as "result",
         "wrIsResult" as "isResult",
+        tem."wrCreatedBy" as "createdBy",
         tmr."wrRunner" as "resultRunner",
         COALESCE(runner_data."runners", '[]') as "runners"
     FROM "tblEventMarkets" tem
@@ -3340,6 +3349,7 @@ const getEventMarketRunnersQuery = async (refID, fastify, request) => {
         tem."wrIsResult" as "isResult",
         tem."wrLineType" as "lineType",
         tem."wrDefaultBackSize" as "defaultBackSize",
+        tem."wrCreatedBy" as "createdBy",
         tem."wrDefaultLaySize" as "defaultLaySize"
       FROM "tblEventMarkets" tem
       LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
@@ -4278,6 +4288,7 @@ const getManualMarketDataQuery = async (data,request, fastify) => {
           tem."wrRateDiff" as "rateDiff",
           tem."wrPredefinedValue" as "predefinedValue",
           tem."wrWicketNo" as "wicketNo",
+          tem."wrCreatedBy" as "createdBy",
           COALESCE(runner_data."runners", '[]') as "runners"
       FROM "tblEventMarkets" tem
       LEFT JOIN "tblMarketRunners" tr ON tr."wrEventMarketId" = tem."wrID"
@@ -4383,6 +4394,7 @@ const getExtraMarketQuery = async (data,request, fastify) => {
           tem."wrAfterSuspendTime" as "afterSuspendTime",
           tem."wrAfterCloseTime" as "afterCloseTime",
           tem."wrRateDiff" as "rateDiff",
+          tem."wrCreatedBy" as "createdBy",
           tem."wrPredefinedValue" as "predefinedValue",
           tem."wrWicketNo" as "wicketNo",
           COALESCE(runner_data."runners", '[]') as "runners"

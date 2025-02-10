@@ -638,6 +638,9 @@ module.exports = async (fastify, opts) => {
 
   fastify.post("/loadcommentaryapi", {
     schema: Commentary.getById.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+    ],
     // preHandler: [
     //   (request, reply) => authorize(request, reply, fastify),
     //   (request, reply, done) =>
