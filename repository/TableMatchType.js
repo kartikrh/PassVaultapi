@@ -370,7 +370,8 @@ const updateSumOfRunPerBallQuery = async(matchTypeId, fastify, request) => {
       `
       SELECT SUM("wrRunPerBall")
       FROM "tblMatchTypePredictors"
-      WHERE "wrMatchTypeId" = $1;
+      WHERE "wrMatchTypeId" = $1
+      AND "wrIsDeleted" =false
       `,
       {
         bind: [matchTypeId],
