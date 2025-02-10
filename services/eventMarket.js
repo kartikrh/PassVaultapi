@@ -704,6 +704,7 @@ const marketListByCIdServiceV1 = async (request, fastify) => {
       return {
         teamId: item.teamId,
         teamName: item.teamName,
+        teamStatus : item.teamStatus
       };
     });
   // 
