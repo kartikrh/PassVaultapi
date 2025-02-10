@@ -478,7 +478,7 @@ const marketListResultFalseService = async (request, fastify) => {
     createWhereStatus
   );
 
-  let whereCondition = `tc."wrIsDelete" = false AND co."wrIsDeleted" = false AND tc."wrCompetitionId" = ${competitionId}`
+  let whereCondition = `tc."wrIsDelete" = false AND co."wrIsDeleted" = false`
   if (eventTypeId) {
     // get the commentaryId from tblCommentaries
     whereCondition += ` AND tc."wrEventTypeId" = ${eventTypeId}`
