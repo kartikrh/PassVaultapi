@@ -1871,19 +1871,19 @@ const getDetailsByCIdV1Service = async (request, fastify) => {
   const teamAndPlayers = [];
   for (let i = 1; i <= totalInnings; i++) {
     let commentaryTeam;
-    if (commentary.commentaryStatus !== 1) {
       commentaryTeam = global.tblCommentaryTeams.filter(
         (item) =>
           item.commentaryId === commentaryId &&
-          item.currentInnings === i &&
-          item.teamStatus === 1
+          item.currentInnings === i 
+          // &&item.teamStatus === 1
       );
-    } else {
-      commentaryTeam = global.tblCommentaryTeams.filter(
-        (item) =>
-          item.commentaryId === commentaryId && item.currentInnings === i
-      );
-    }
+    // } 
+    // else {
+    //   commentaryTeam = global.tblCommentaryTeams.filter(
+    //     (item) =>
+    //       item.commentaryId === commentaryId && item.currentInnings === i
+    //   );
+    // }
     let teamObj = {};
     for (team of commentaryTeam) {
       commentaryPlayers = global.tblCommentaryPlayers.filter(
