@@ -52,6 +52,7 @@ const {
   saveManualMarketQuery,
   getExtraMarketQuery,
   upManualMarketQuery,
+  getMarketByIdQuery,
 } = require("../repository/TableEventMarkets");
 const { getRunnerByIdQuery, setResultInRunnerMarketQuery, getRunnerByMarketQuery } = require("../repository/TableMarketRunner");
 const configConstants = require("../utilities/configConstants");
@@ -64,6 +65,7 @@ const {
   MarketUpdateType,
   commentaryStatus,
   MarketTypeId,
+  MarketTypeCategories,
 } = require("../utilities/index");
 const { marketLogger, marketDataLogger, errorLogger, eventMarketLogger, marektResultLogger } = require("../utilities/logger");
 const getDetailsByCIdService = async (request, fastify) => {
@@ -784,6 +786,8 @@ const updateMarketRateService = async (request, fastify) => {
           is_onlyover = 1;
         }
         updatedOvers.push({
+          market_id : item.marketId,
+          team_id : item.teamId,
           over: item.over,
           line_diff: diff != null ? parseFloat(diff.toFixed(2)) : null,  // Ensure float or null if undefined
           line_ratio: data.lineRatio,
@@ -2017,21 +2021,19 @@ const createEventMarketsServiceV1 = async (request, fastify) => {
   let multiRunnerMarket = [];
   let singleRunnerMarket = [];
   let marketNameNullMarket = [];
+  // check if matchtype is limited
+  const mt = global.tblMatchTypes.find((m)=>m.matchTypeId == commentary.matchTypeId)
+  
   for (let item of eventMarket){
-    // let mt = global.tblMarketTypes.find(
-    //   (e) => e.marketTypeId === item.marketTypeId
-    // );
-    // if(mt.marketTypeName.toLowerCase() === "fancy" || mt.marketTypeName.toLowerCase() === "linemarket"){
-    //   singleRunnerMarket.push(item); 
-    // }
-    // else {
-    //   if(item.marketName){
-    //     multiRunnerMarket.push(item);
-    //   }
-    //   else {
-    //     marketNameNullMarket.push(item);
-    //   }
-    // }
+    if(mt.isLimitedOvers){
+      if(item.eventMarketId == 0 && item.marketTypeId == MarketTypeId.Fancy && item.marketTypeCategoryId == MarketTypeCategories.SESSION ){
+        // get the teamMaxOver 
+        let comT = global.tblCommentaryTeams.find((c)=> c.commentaryId == commentary.commentaryId && c.teamId == item.teamId)
+        if(comT && comT.teamMaxOver == item.over){
+          item.isInningRun = true;
+        }
+      }
+    }
     if(item.marketTypeId == MarketTypeId.Fancy || item.marketTypeId == MarketTypeId.LineMarket){
       // singleRunnerMarket.push(item); 
       item.createdBy = request?.userTokenInfo?.WrUserId || null

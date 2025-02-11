@@ -628,6 +628,39 @@ const MarketTypeId = {
   "MeterPari" : 6,
   "Sportbook" : 7,
 }
+const MarketTypeCategories = {
+  "MARKET": 5,
+  "WINTOSS": 6,
+  "BOOKMAKERS": 7,
+  "MANUALODDS": 8,
+  "ADVFANCY": 9,
+  "OVERSESSION": 10,
+  "ONLYOVER": 11,
+  "PLAYER": 12,
+  "WICKET": 13,
+  "BOWLERSESSION": 14,
+  "PREMIUMODDS": 15,
+  "TIE": 16,
+  "LINEMARKET": 17,
+  "OVERUNDER": 18,
+  "PLAYERODDS": 20,
+  "BOUNDARYODDS": 21,
+  "OTHERODDS": 22,
+  "SESSION": 23,
+  "EXTRAODDS": 24,
+  "SPECIALODDS": 25,
+  "FANCYLDO": 26,
+  "ONLYOVERLDO": 27,
+  "LASTDIGITNUMBER": 28,
+  "PLAYERBOUNDARIES": 29,
+  "PLAYERBALLSFACED": 30,
+  "FALLOFWICKET": 31,
+  "PARTNERSHIPBOUNDARIES": 32,
+  "WICKETLOSTBALLS": 33,
+  "ODDEVEN": 35,
+  "TOTALEVENTRUN": 36
+}
+
 const ModuleTypes = {
   Commentary: 1,
   Players: 2,
@@ -662,6 +695,46 @@ const ModuleTypes = {
   ClientScokets: 31,
   API: 32,
   APIEndpoints: 33
+}
+const callTPAPI = async (data ,fastify) =>{
+  try {
+    // check if the third party api is enabled or not
+    let isCallThirdParty = global.tblConfigs.find((item) => item.key === configConstants.ISCALLTHIRDPARTY)?.value;
+    if(isCallThirdParty == undefined){
+      return true;
+    }
+    if(isCallThirdParty == "false"){
+      return true;
+    }
+    if(isCallThirdParty == "true"){
+      const thirdPartyAPI = global.tblConfigs.find((item) => item.key === configConstants.THIRDPARTYAPIENDPOINT)?.value;
+      if(thirdPartyAPI == undefined){
+        return true;
+      }
+      const header = global.tblConfigs.find((item) => item.key === configConstants.THIRDPARTYKEY)?.value;
+      if(header == undefined){
+        return true;
+      }
+      await axios.post(thirdPartyAPI, {
+        eventRefId : data.eventRefId,
+        betAllow : data.betAllow,
+      },{
+        headers: {
+          'Authorization': header
+        }
+      });
+      return true;
+    }
+    return true;
+  } catch (error) {
+    console.log("error from callTPAPI", error);
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> utilities/index/callTPAPI",
+      null
+    );
+  }
 }
 module.exports = {
   ERROR_CODES,
@@ -713,4 +786,6 @@ module.exports = {
   newsType,
   VideoLibraryType,
   ModuleTypes,
+  callTPAPI,
+  MarketTypeCategories
 };
