@@ -126,6 +126,7 @@ const getAllEventMarketsQueryV1 = async (fastify, whereCondition = null) => {
         tem."wrRateDiff" as "rateDiff",
         tem."wrPredefinedValue" as "predefinedValue",
         tem."wrCreatedBy" as "createdBy",
+        tem."wrIsInningRun" as "isInningRun",
         tem."wrWicketNo" as "wicketNo",
         COALESCE(runner_data."runners", '[]') as "runners"
     FROM "tblEventMarkets" tem
@@ -476,6 +477,7 @@ const getMarketListByCIdQuery = async (data, request, fastify) => {
             "wrIsSendData" as "isSendData",
             tem."wrLineRatio" as "lineRatio",
             tem."wrLineType" as "lineType", 
+            tem."wrIsInningRun" as "isInningRun",
             tem."wrPredefinedValue" as "predefinedValue",
            (
                 SELECT json_agg(
@@ -2945,6 +2947,7 @@ const getEventMarketByIdsQueryV1 = async (data, request, fastify) => {
           tem."wrLineType" as "lineType",
           tem."wrDefaultBackSize" as "defaultBackSize",
           tem."wrCreatedBy" as "createdBy",
+          tem."wrIsInningRun" as "isInningRun",
           tem."wrDefaultLaySize" as "defaultLaySize",
           json_agg(
                   json_build_object(
@@ -3020,6 +3023,7 @@ const getMarketListByCIdQueryV1 = async (data, request, fastify) => {
             tem."wrMarketTypeId" as "marketTypeId",
             tem."wrLineType" as "lineType", 
             tem."wrRateDiff" as "rateDiff",
+            tem."wrIsInningRun" as "isInningRun",
             tem."wrPredefinedValue" as "predefinedValue",
             null as "playerScore",
             (
@@ -3967,6 +3971,7 @@ const playerMarketQuery = async (data, request, fastify) => {
             tem."wrMarketTypeId" as "marketTypeId",
             tem."wrLineType" as "lineType", 
             tem."wrRateDiff" as "rateDiff",
+            tem."wrIsInningRun" as "isInningRun",
             tem."wrPredefinedValue" as "predefinedValue",
             tcp."wrBat_Run" as "playerScore",
             (
@@ -4055,6 +4060,7 @@ const boundaryMarketQuery = async (data, request, fastify) => {
             tem."wrMarketTypeId" as "marketTypeId",
             tem."wrLineType" as "lineType", 
             tem."wrRateDiff" as "rateDiff",
+            tem."wrIsInningRun" as "isInningRun",
             tem."wrPredefinedValue" as "predefinedValue",
             tcp."wrBat_FOUR" + tcp."wrBat_SIX" as "playerScore",
             (
@@ -4143,6 +4149,7 @@ const pbfMarketQuery = async (data, request, fastify) => {
             tem."wrMarketTypeId" as "marketTypeId",
             tem."wrLineType" as "lineType", 
             tem."wrRateDiff" as "rateDiff",
+            tem."wrIsInningRun" as "isInningRun",
             tem."wrPredefinedValue" as "predefinedValue",
             tcp."wrBat_Ball" as "playerScore",
             (
@@ -4840,6 +4847,131 @@ const upManualMarketQuery = async (data, request, fastify) => {
     
   }
 }
+const openMarketScoketConnectionDataQuery = async (commentaryId, fastify) => {
+  try {  
+    const query = `SELECT 
+        tem."wrID" AS "eventMarketId",
+        tem."wrCommentaryId" AS "commentaryId",
+        tem."wrEventRefID" AS "eventRefId",
+        tem."wrTeamID" AS "teamId",
+        tt."wrTeamName" AS "teamName",
+        tem."wrInningsID" AS "inningsId",
+        tem."wrMarketName" AS "marketName",
+        tem."wrMargin" AS "margin",
+        tem."wrStatus" AS "status",
+        tem."wrIsPredefineMarket" AS "isPredefineMarket",
+        tem."wrIsOver" AS "isOver",
+        tem."wrOver" AS "over",
+        tem."wrIsPlayer" AS "isPlayer",
+        tem."wrPlayerID" AS "playerId",
+        tem."wrIsAutoCancel" AS "isAutoCancel",
+        tem."wrAutoOpenType" AS "autoOpenType",
+        tem."wrAutoOpen" AS "autoOpen",
+        tem."wrAutoCloseType" AS "autoCloseType",
+        tem."wrBeforeAutoClose" AS "beforeAutoClose",
+        tem."wrAutoSuspendType" AS "autoSuspendType",
+        tem."wrBeforeAutoSuspend" AS "beforeAutoSuspend",
+        tem."wrIsBallStart" AS "isBallStart",
+        tem."wrIsAutoResultSet" AS "isAutoResultSet",
+        tem."wrAutoResultType" AS "autoResultType",
+        tem."wrAutoResultafterBall" AS "autoResultafterBall",
+        tem."wrAfterWicketAutoSuspend" AS "afterWicketAutoSuspend",
+        tem."wrAfterWicketNotCreated" AS "afterWicketNotCreated",
+        tem."wrIsActive" AS "isActive",
+        tem."wrIsAllow" AS "isAllow",
+        tem."wrOpenTime" AS "openTime",
+        tem."wrData" AS "data",
+        tem."wrLastUpdate" AS "lastUpdate",
+        tem."wrIsSendData" AS "isSendData",
+        tem."wrActionType" AS "actionType",
+        tem."wrMarketTemplateId" AS "marketTemplateId",
+        tem."wrMarketTypeId" AS "marketTypeId",
+        tem."wrMarketTypeCategoryId" AS "marketTypeCategoryId",
+        tem."wrCreateRefId" AS "createRefId",
+        tem."wrOpenRefId" AS "openRefId",
+        tem."wrCreateType" AS "createType",
+        tem."wrCreate" AS "create",
+        tem."wrTemplateType" AS "templateType",
+        tem."wrLineRatio" AS "lineRatio",
+        tem."wrOpenOdds" AS "openOdds",
+        tem."wrMinOdds" AS "minOdds",
+        tem."wrMaxOdds" AS "maxOdds",
+        tem."wrRateSource" AS "rateSource",
+        tem."wrPredefinedValue" AS "predefinedValue",
+        tem."wrAfterSuspendTime" AS "afterSuspendTime",
+        tem."wrAfterCloseTime" AS "afterCloseTime",
+        tem."wrLineType" AS "lineType",
+        tem."wrDefaultBackSize" AS "defaultBackSize",
+        tem."wrDefaultLaySize" AS "defaultLaySize",
+        tc."wrEventDate" AS "eventDate",
+        tc."wrEventName" AS "eventName",
+        tet."wrEventType" AS "eventTypeName",
+        tcom."wrCompetition" AS "competitionName",
+        tem."wrDefaultIsSendData" AS "defaultIsSendData",
+        tem."wrRateDiff" AS "rateDiff",
+        tem."wrCreatedBy" AS "createdBy",
+        tem."wrIsInningRun" AS "isInningRun",
+        COALESCE(runner_data."runners", '[]') AS "runners"
+    FROM "tblEventMarkets" tem
+    LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
+    LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = tem."wrTeamID"
+    LEFT JOIN "tblCompetitions" tcom ON tcom."wrCompetitionId" = tc."wrCompetitionId"
+    LEFT JOIN "tblEventTypes" tet ON tet."wrEventTypeId" = tc."wrEventTypeId"
+    LEFT JOIN LATERAL (
+        SELECT jsonb_agg(
+            jsonb_build_object(
+                'runnerId', tmr."wrRunnerId",
+                'runner', tmr."wrRunner",
+                'line', tmr."wrLine",
+                'overRate', tmr."wrOverRate",
+                'underRate', tmr."wrUnderRate",
+                'selectionId', tmr."wrSelectionId",
+                'selectionStatus', tmr."wrSelectionStatus",
+                'order', tmr."wrOrder",
+                'backPrice', tmr."wrBackPrice",
+                'layPrice', tmr."wrLayPrice",
+                'backSize', tmr."wrBackSize",
+                'laySize', tmr."wrLaySize",
+                'teamId', tmr."wrTeamId"
+            )
+        ) AS "runners"
+        FROM "tblMarketRunners" tmr
+        WHERE tmr."wrEventMarketId" = tem."wrID"
+    ) runner_data ON true
+    WHERE tem."wrCommentaryId" = $1
+    AND tem."wrIsInningRun" = true
+    AND tem."wrStatus" NOT IN ($2, $3, $4)
+    AND tem."wrRateSource" = 1 
+    AND tem."wrIsDeleted" = false
+    GROUP BY 
+        tem."wrID",
+        tt."wrTeamName", 
+        tc."wrEventDate",
+        tc."wrEventName",
+        tet."wrEventType",
+        tcom."wrCompetition",
+        runner_data."runners";
+    `;
+
+    return await fastify.db.query(query, {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [
+            commentaryId,
+            EventMarketStatus.Close,
+            EventMarketStatus.Settled,
+            EventMarketStatus.Cancel
+        ],
+    });
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/openMarketScoketConnectionDataQuery",
+      null
+    );
+    throw new Error(error.message);
+  }
+};
 module.exports = {
   getAllEventMarketsQuery,
   createManyEventMarketQuery,
@@ -4915,6 +5047,7 @@ module.exports = {
   saveManualMarketQuery,
   getExtraMarketQuery,
   upManualMarketQuery,
-  getMarketByIdQuery
+  getMarketByIdQuery,
+  openMarketScoketConnectionDataQuery,
 }
 

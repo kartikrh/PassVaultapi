@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const { errorLogger } = require("./utilities/logger");
-const { getEventMarketByIdsQuery, insertTimeLogs, updateTimeLogs, socketMarketRunnerDataQuery } = require("./repository/TableEventMarkets");
+const { getEventMarketByIdsQuery, insertTimeLogs, updateTimeLogs, socketMarketRunnerDataQuery, openMarketScoketConnectionDataQuery } = require("./repository/TableEventMarkets");
 const { MarketActionType, callTPAPI } = require("./utilities");
 const {createMarketOddsBallByBallBYIDFromSocketIo,createMarketOddsBallInSaveDetails,CheckAndCreateMarketOddsBallInSaveDetails} = require("./repository/TableMarketOddsBallByBall")
 const configConstants = require('./utilities/configConstants');
@@ -217,6 +217,35 @@ const connection = (socket , fastify) => {
       console.log("Error in marketRunnerDisconnect",error)
     }
   })
+
+  socket.on("isInningsConnection", async(commentaryId) => {
+    try {
+          const roomName = `market-${commentaryId}`;
+          socket.join(roomName);
+          const runnerDetails = await openMarketScoketConnectionDataQuery(commentaryId, fastify);
+          if (runnerDetails && runnerDetails.length > 0) {          
+            socket.emit("inningsRunData", runnerDetails);
+          } else {
+            socket.emit("inningsRunData", []);
+          }
+    } catch (err) {
+      console.log("Error in isInningsConnection", err?.message || err);
+    }
+  });
+
+  socket.on("inningRunUpdate", () => {
+    try {
+        const roomName = `market-${commentaryId}`;
+        const clientsInRoom =
+          global.socketIo.sockets.adapter.rooms.get(roomName);
+
+        if (clientsInRoom?.size) {
+          global.socketIo.to(roomName).emit("inningsRunData", commentaryId);
+        }
+    } catch (error) {
+      console.log("Error in inningRunUpdate:", error?.message || error);
+    }
+  });
   // socket.on("updatedEventMarket", async (data) => {
   //   try {
   //     let MarketArr = [];
