@@ -771,7 +771,8 @@ const changeMarketCancelQuery = async (data, request, fastify) => {
             ),
             false
           )::json,
-          "wrLastUpdate" = now()::timestamp
+          "wrLastUpdate" = now()::timestamp,
+          "wrIsInningRun" =false
           WHERE "wrCommentaryId" = $2
           AND "wrID" = $3
           AND "wrStatus"  = $4`;
