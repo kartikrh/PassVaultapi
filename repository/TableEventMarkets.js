@@ -585,7 +585,7 @@ const getMarketByIdQuery = async (data, request, fastify) => {
            
         FROM "tblEventMarkets" tem
         INNER JOIN "tblMarketTypeCategories" mtc ON tem."wrMarketTypeCategoryId" = mtc."wrId"
-        WHERE tem."wrID" in ($1)
+        WHERE tem."wrID" IN (Select unnest($1::int[]))
         AND tem."wrStatus" NOT IN ($2 ,$3,$4)
         AND tem."wrRateSource" = 1
         AND tem."wrIsDeleted" = false

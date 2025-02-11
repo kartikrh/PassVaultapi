@@ -2109,13 +2109,6 @@ const createEventMarketsServiceV1 = async (request, fastify) => {
     multiRunnerMarket : multiRunnerMarket.length > 0 ? multiRunnerMarket : null
   }, request, fastify);
 
-  const inningRunData = result.filter((item) => item.isInningRun === true);
-  const roomName = `market-${inningRunData[0].commentaryId}`;
-  const clientsInRoom = global.socketIo.sockets.adapter.rooms.get(roomName);
-  if (clientsInRoom?.size) {
-      global.socketIo.to(roomName).emit("inningsRunData", inningRunData);
-  }
-
   let ids = [];
   for (let item of result){
     let index = global.tblEventMarketsV1.findIndex(
@@ -2170,8 +2163,16 @@ const sendMarketToSocket = async(data,request,fastify)=>{
   try {
     const markets = await getMarketByIdQuery(data,request,fastify);
     const clientInRoom = global.socketIo.sockets.adapter.rooms.get(markets[0].commentaryId);
-    if (clientInRoom?.size && dataToSocket.length >0) {
+    if (clientInRoom?.size && markets.length >0) {
       global.socketIo.to(markets[0].commentaryId).emit("updateMarket", markets);
+    }
+
+    //emitting inningRun true data
+    const inningRunData = markets.filter((item) => item?.isInningRun === true);
+    const roomName = `market-${inningRunData[0]?.commentaryId}`;
+    const clientsInRoom = global.socketIo.sockets.adapter.rooms.get(roomName);
+    if (clientsInRoom?.size && inningRunData.length > 0) {
+        global.socketIo.to(roomName).emit("inningsRunData", inningRunData);
     }
     return true;
   } catch (error) {
@@ -2242,14 +2243,6 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
     singleRunnerMarket : signleRunMarket.length > 0 ? signleRunMarket : null,
     multiRunnerMarket : multiRunMarket.length > 0 ? multiRunMarket : null
   }, request, fastify);
-
-  let inningsRunData = updatedData.filter((item) => item.isInningRun === true);
-  const roomName = `market-${inningsRunData[0].commentaryId}`;
-  const clientsInRoom = global.socketIo.sockets.adapter.rooms.get(roomName);
-
-  if (clientsInRoom?.size) {
-      global.socketIo.to(roomName).emit("inningsRunData", inningsRunData);
-  }
 
   // return updatedData;
   const updatedOvers = [];
@@ -2514,6 +2507,14 @@ const sendToSocket = (data,request,fastify)=>{
       global.socketIo.to(allMarkets[0].commentaryId).emit("updateMarket", dataToSocket);
     }
 
+    // emitting inningRun true data
+    let inningsRunData = dataToSocket.filter((item) => item?.isInningRun === true);
+    const roomName = `market-${inningsRunData[0]?.commentaryId}`;
+    const clientsInRoom = global.socketIo.sockets.adapter.rooms.get(roomName);
+  
+    if (clientsInRoom?.size && inningsRunData.length > 0) {
+        global.socketIo.to(roomName).emit("inningsRunData", inningsRunData);
+    }
     return true;
   } catch (error) {
     errorLogger(

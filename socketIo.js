@@ -27,6 +27,12 @@ const connection = (socket , fastify) => {
       if (clientInRoom?.size) {
         global.socketIo.to(commentaryId).emit("updateMarketData", marketData);
       }
+      const inninRunData = marketData.filter((item) => item?.isInningRun === true);
+      const roomName = `market-${commentaryId}`;
+      const clientsInRoom = global.socketIo.sockets.adapter.rooms.get(roomName);
+      if (clientsInRoom?.size && inninRunData.length > 0) {
+        global.socketIo.to(commentaryId).emit("inningsRunData", inninRunData);
+      }
       const timeLogs = await insertTimeLogs(commentaryId, fastify)
 
       
@@ -222,30 +228,17 @@ const connection = (socket , fastify) => {
     try {
           const roomName = `market-${commentaryId}`;
           socket.join(roomName);
-          const runnerDetails = await openMarketScoketConnectionDataQuery(commentaryId, fastify);
-          if (runnerDetails && runnerDetails.length > 0) {          
-            socket.emit("inningsRunData", runnerDetails);
-          } else {
-            socket.emit("inningsRunData", []);
-          }
+          // const runnerDetails = await openMarketScoketConnectionDataQuery(commentaryId, fastify);
+          // if (runnerDetails && runnerDetails.length > 0) {          
+          //   socket.emit("inningsRunData", runnerDetails);
+          // } else {
+          //   socket.emit("inningsRunData", []);
+          // }
     } catch (err) {
       console.log("Error in isInningsConnection", err?.message || err);
     }
   });
 
-  socket.on("inningRunUpdate", () => {
-    try {
-        const roomName = `market-${commentaryId}`;
-        const clientsInRoom =
-          global.socketIo.sockets.adapter.rooms.get(roomName);
-
-        if (clientsInRoom?.size) {
-          global.socketIo.to(roomName).emit("inningsRunData", commentaryId);
-        }
-    } catch (error) {
-      console.log("Error in inningRunUpdate:", error?.message || error);
-    }
-  });
   // socket.on("updatedEventMarket", async (data) => {
   //   try {
   //     let MarketArr = [];
