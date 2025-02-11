@@ -2108,6 +2108,14 @@ const createEventMarketsServiceV1 = async (request, fastify) => {
     singleRunnerMarket : singleRunnerMarket.length > 0 ? singleRunnerMarket : null,
     multiRunnerMarket : multiRunnerMarket.length > 0 ? multiRunnerMarket : null
   }, request, fastify);
+
+  const inningRunData = result.filter((item) => item.isInningRun === true);
+  const roomName = `market-${inningRunData[0].commentaryId}`;
+  const clientsInRoom = global.socketIo.sockets.adapter.rooms.get(roomName);
+  if (clientsInRoom?.size) {
+      global.socketIo.to(roomName).emit("inningsRunData", inningRunData);
+  }
+
   for (let item of result){
     let index = global.tblEventMarketsV1.findIndex(
       (e) => e.eventMarketId === item.eventMarketId
@@ -2212,7 +2220,15 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
     singleRunnerMarket : signleRunMarket.length > 0 ? signleRunMarket : null,
     multiRunnerMarket : multiRunMarket.length > 0 ? multiRunMarket : null
   }, request, fastify);
-  
+
+  let inningsRunData = updatedData.filter((item) => item.isInningRun === true);
+  const roomName = `market-${inningsRunData[0].commentaryId}`;
+  const clientsInRoom = global.socketIo.sockets.adapter.rooms.get(roomName);
+
+  if (clientsInRoom?.size) {
+      global.socketIo.to(roomName).emit("inningsRunData", inningsRunData);
+  }
+
   // return updatedData;
   const updatedOvers = [];
   const updatePlayerLine = [];
