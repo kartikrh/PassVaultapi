@@ -2002,23 +2002,23 @@ const createEventMarketsServiceV1 = async (request, fastify) => {
     throw new Error("Commentary with this id not Found");
   }
   // check if toss done
-  if(commentary.commentaryStatus != commentaryStatus.OPEN && commentary.commentaryStatus != commentaryStatus.COMPLETED){
-    // check if in eventMarket batting team market not to create
-    let bowling = global.tblCommentaryTeams.find(
-      (item) =>
-        item.commentaryId === commentary.commentaryId &&
-        item.currentInnings === commentary.currentInnings &&
-        item.teamStatus !== 1 
-    );
-    if(bowling){
-      let market = eventMarket.find(
-        (item) => item.teamId === bowling.teamId
-      );
-      if(market){
-        throw new Error(`${bowling.teamName}'s market not created because this team is not on Strike`);
-      }
-    }
-  }
+  // if(commentary.commentaryStatus != commentaryStatus.OPEN && commentary.commentaryStatus != commentaryStatus.COMPLETED){
+  //   // check if in eventMarket batting team market not to create
+  //   let bowling = global.tblCommentaryTeams.find(
+  //     (item) =>
+  //       item.commentaryId === commentary.commentaryId &&
+  //       item.currentInnings === commentary.currentInnings &&
+  //       item.teamStatus !== 1 
+  //   );
+  //   if(bowling){
+  //     let market = eventMarket.find(
+  //       (item) => item.teamId === bowling.teamId
+  //     );
+  //     if(market){
+  //       throw new Error(`${bowling.teamName}'s market not created because this team is not on Strike`);
+  //     }
+  //   }
+  // }
   let multiRunnerMarket = [];
   let singleRunnerMarket = [];
   let marketNameNullMarket = [];
@@ -2275,7 +2275,8 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
       if(category && 
         category.categoryName.toLowerCase() == "session" || 
         category.categoryName.toLowerCase() == "only over" || 
-        category.categoryName.toLowerCase() == "over session" 
+        category.categoryName.toLowerCase() == "over session" ||
+        category.categoryName.toLowerCase() == "totaleventrun"
       ){
         if(category.categoryName == "Only Over"){
           is_onlyover = 1;
