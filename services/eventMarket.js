@@ -53,6 +53,7 @@ const {
   getExtraMarketQuery,
   upManualMarketQuery,
   getMarketByIdQuery,
+  upIsInningRunMarketQuery,
 } = require("../repository/TableEventMarkets");
 const { getRunnerByIdQuery, setResultInRunnerMarketQuery, getRunnerByMarketQuery } = require("../repository/TableMarketRunner");
 const configConstants = require("../utilities/configConstants");
@@ -2880,6 +2881,13 @@ const upManualMarketDataService = async (request, fastify) => {
   // }
   return "Market updated successfully";
 }
+const upIsInningRunApiService = async (request, fastify) => {
+
+  // for (let mar of request.body.market){
+  await upIsInningRunMarketQuery(request.body, request, fastify);
+  // }
+  return "Market updated successfully";
+}
 module.exports = {
   getDetailsByCIdService,
   getAllEventMarketsService,
@@ -2929,4 +2937,5 @@ module.exports = {
   saveManualMarketDataService,
   upManualMarketDataService,
   getCommentaryListByCompetitionIdService,
+  upIsInningRunApiService
 };

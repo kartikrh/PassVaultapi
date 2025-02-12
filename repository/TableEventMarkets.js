@@ -2613,7 +2613,8 @@ const getEventMarketsQuery = async (fastify, whereCondition = null) => {
           tem."wrAfterCloseTime" as "afterCloseTime",
           tem."wrCreatedBy" as "createdBy",
           tem."wrIsDeleted" as "isDeleted",
-          tmr."wrRunner" as "resultRunner"
+          tmr."wrRunner" as "resultRunner",
+          tem."wrIsInningRun" as "isInningRun"
       FROM "tblEventMarkets" tem
       LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
       LEFT JOIN "tblCompetitions" tcom ON tcom."wrCompetitionId" = tc."wrCompetitionId"
@@ -4973,6 +4974,37 @@ const openMarketScoketConnectionDataQuery = async (commentaryId, fastify) => {
     throw new Error(error.message);
   }
 };
+const upIsInningRunMarketQuery = async (data, request, fastify) => {
+  try {
+    await fastify.db.query(
+      `
+        UPDATE "tblEventMarkets" SET
+          "wrIsInningRun" = $1,
+          "wrLastUpdate" = now()
+        WHERE "wrID" = $2
+      `,
+    {
+      type: fastify.db.QueryTypes.SELECT,
+      bind: [
+        data.isInningRun,
+        data.eventMarketId
+      ]
+    })
+
+    return true;
+
+  } catch (error) {
+    console.log(error)
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/upIsInningRunMarketQuery",
+      request
+    );
+    throw new Error(error.message);
+    
+  }
+}
 module.exports = {
   getAllEventMarketsQuery,
   createManyEventMarketQuery,
@@ -5050,5 +5082,6 @@ module.exports = {
   upManualMarketQuery,
   getMarketByIdQuery,
   openMarketScoketConnectionDataQuery,
+  upIsInningRunMarketQuery
 }
 
