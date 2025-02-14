@@ -5026,8 +5026,7 @@ const getTargetQyery = async (data, request, fastify) => {
       ]
     })
 
-    return result[0] ? result[0].target : 0;
-
+    return result[0] ? result[0].target + 1: 0;
   } catch (error) {
     console.log(error)
     errorLogger(
