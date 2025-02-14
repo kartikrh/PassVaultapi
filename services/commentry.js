@@ -4286,60 +4286,8 @@ const updateCommentaryStatusService = async (request, fastify) => {
   if (index === -1) {
     throw new Error("Commentary with this id not found");
   }
-  let _resFromPredictAPI;
-  let callPredictions = [];
-  // call predictor endpoint
-  if (global.tblCommentaries[index].isPredictMarket) {
-    _resFromPredictAPI = await callPredictorMarket(
-      {
-        commentary_id: commentaryId,
-        status: EventMarketStatus.Suspend,
-        match_type_id: global.tblCommentaries[index].matchTypeId,
-        is_open_market: false,
-        player_id : commentaryPlayerId || null
-      },
-      "/api/v1/updatemarketstatus",
-      fastify,
-      request
-    );
-    let callPrediction = {};
-    if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
-      callPrediction.predictioncallSuccess = false;
-      callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
-      callPrediction.endPoint = '/api/v1/updatemarketstatus';
-      callPredictions.push(callPrediction);
-      callPrediction = {};
-    }
-    // _resFromPredictAPI = null;
-    // let getCategory = global.tblMarketTypeCategories.filter((item) =>
-    //   item.categoryName.toLowerCase() == 'player' || item.categoryName.toLowerCase() == 'wicket' || item.categoryName.toLowerCase() == 'player boundaries'
-    // ).map((c) => c.marketTypeCategoryId);
-    // // getmarket id's from tblEventMarkets
-    // let market = await getMarketsByCategoryQuery({
-    //   categoryId: getCategory,
-    //   commentaryId: commentaryId
-    // }, request, fastify);
-
-    // _resFromPredictAPI = await callPredictorMarket(
-    //   {
-    //     commentary_id: commentaryId,
-    //     status: EventMarketStatus.Suspend,
-    //     event_market_id: market.map((m) => m.eventMarketId),
-    //   },
-    //   "/api/v1/updateplayerstatus",
-    //   fastify,
-    //   request
-    // );
-
-    // if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
-    //   callPrediction.predictioncall2Success = false;
-    //   callPrediction.predictionCall2Message = _resFromPredictAPI.data.error_msg;
-    //   callPrediction.endPoint2 = '/api/v1/updateplayerstatus';
-    //   callPredictions.push(callPrediction);
-    //   callPrediction = {};
-    // }
-  }
-
+  // let _resFromPredictAPI;
+  // let callPredictions = [];
   // Prepare the commentary details for update
   const commentaryDetails = {
     commentaryId,
@@ -4354,6 +4302,30 @@ const updateCommentaryStatusService = async (request, fastify) => {
     ...global.tblCommentaries[index],
     ...commentaryDetails,
   };
+    // call predictor endpoint
+  if (global.tblCommentaries[index].isPredictMarket) {
+      callPredictorMarket(
+        {
+          commentary_id: commentaryId,
+          status: EventMarketStatus.Suspend,
+          match_type_id: global.tblCommentaries[index].matchTypeId,
+          is_open_market: false,
+          player_id : commentaryPlayerId || null
+        },
+        "/api/v1/updatemarketstatus",
+        fastify,
+        request
+      );
+      // let callPrediction = {};
+      // if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
+      //   callPrediction.predictioncallSuccess = false;
+      //   callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
+      //   callPrediction.endPoint = '/api/v1/updatemarketstatus';
+      //   callPredictions.push(callPrediction);
+      //   callPrediction = {};
+      // }
+  }
+  
 
   if (
     global?.clientSocketIo !== undefined &&
@@ -4377,12 +4349,8 @@ const updateCommentaryStatusService = async (request, fastify) => {
         request
       );
     });
-
-    // global.clientSocketIo.forEach((socket) => {
-    //   socket.client.emit("updateFullscore", sendDataForSocketUpdate);
-    // });
   }
-  commentaryDetails.callPredictions = callPredictions;
+  commentaryDetails.callPredictions = [];
   return {
     name: "commentaryDetails",
     value: commentaryDetails,
@@ -9315,7 +9283,11 @@ const saveComTemplatesService = async (request, fastify) => {
 
 }
 const revertCommentaryService = async (request, fastify) => {
-  const { commentaryId } = request.body;
+  const { commentaryId , password} = request.body;
+  let pass = global.tblConfigs.find((item) => item.key === configConstants.REVERTCOMPASS);
+  if(pass && pass.value != password){
+    throw new Error("Invalid Password.");
+  }
   const index = global.tblCommentaries.findIndex(
     (item) => item?.commentaryId === commentaryId
   );
@@ -9385,6 +9357,22 @@ const revertCommentaryService = async (request, fastify) => {
   global.tblCommentaryPartnership = global.tblCommentaryPartnership.filter((item) => item?.commentaryId !== commentaryId);
   // remove wicket for this commentary
   global.tblCommentaryWicket = global.tblCommentaryWicket.filter((item) => item?.commentaryId !== commentaryId);
+
+  commentaryLogger(
+    {
+      commentaryId: commentaryId,
+      requestBody: request.body,
+      response: {
+        message: "Commentary reverted successfully",
+      },
+      global: null,
+      extra: null,
+      apiName: "/revertCommentary",
+    },
+    request,
+    fastify
+  )
+
 
   return "Commentary reverted successfully";
 

@@ -54,6 +54,7 @@ const {
   upManualMarketQuery,
   getMarketByIdQuery,
   upIsInningRunMarketQuery,
+  getTargetQyery,
 } = require("../repository/TableEventMarkets");
 const { getRunnerByIdQuery, setResultInRunnerMarketQuery, getRunnerByMarketQuery } = require("../repository/TableMarketRunner");
 const configConstants = require("../utilities/configConstants");
@@ -687,6 +688,7 @@ const marketListByCIdServiceV1 = async (request, fastify) => {
     )
   ]);
 
+  const target = await getTargetQyery({commentaryId }, request, fastify);
 
 
   // const marketList = await getMarketListByCIdQueryV1(
@@ -738,6 +740,7 @@ const marketListByCIdServiceV1 = async (request, fastify) => {
     marketList : marketList.flat(),
     teams,
     categories,
+    target : target + 1
     //players,
   };
 };
