@@ -1929,6 +1929,7 @@ const closeEventMarketByCIdQuery = async (data, fastify) => {
       UPDATE "tblEventMarkets" SET
         "wrStatus" = $1,
         "wrCloseTime" = now()::timestamp,
+        "wrIsSendData" =true,
         "wrData" = jsonb_set(
           jsonb_set("wrData"::jsonb, '{status}', '4'::jsonb, false),
           '{runner}', (
@@ -5005,6 +5006,40 @@ const upIsInningRunMarketQuery = async (data, request, fastify) => {
     
   }
 }
+const getTargetQyery = async (data, request, fastify) => {
+  try {
+    let result = await fastify.db.query(
+      `
+        SELECT "wrResult" as "target"
+        FROM "tblEventMarkets"
+        WHERE "wrCommentaryId" = $1
+        AND "wrIsInningRun" = $2
+        AND "wrStatus" = $3
+        AND "wrIsDeleted" = false
+      `,
+    {
+      type: fastify.db.QueryTypes.SELECT,
+      bind: [
+        data.commentaryId,
+        true,
+        EventMarketStatus.Settled
+      ]
+    })
+
+    return result[0] ? result[0].target : 0;
+
+  } catch (error) {
+    console.log(error)
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/getTargetQyery",
+      request
+    );
+    throw new Error(error.message);
+    
+  }
+}
 module.exports = {
   getAllEventMarketsQuery,
   createManyEventMarketQuery,
@@ -5082,6 +5117,7 @@ module.exports = {
   upManualMarketQuery,
   getMarketByIdQuery,
   openMarketScoketConnectionDataQuery,
-  upIsInningRunMarketQuery
+  upIsInningRunMarketQuery,
+  getTargetQyery
 }
 
