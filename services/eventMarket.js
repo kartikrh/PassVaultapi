@@ -740,7 +740,7 @@ const marketListByCIdServiceV1 = async (request, fastify) => {
     marketList : marketList.flat(),
     teams,
     categories,
-    target : target + 1
+    target : target
     //players,
   };
 };
