@@ -490,6 +490,16 @@ const panelLoadDataByEnum = async (request, fastify, reply) => {
           global.tblAPIEndpoints = getAllAPIEndpoints;
           break;
         }
+        case ModuleTypes.ThirdPartyApis: {
+          const thirdPartyApis = await allThirdPartyApisQuery(fastify);
+          global.tblThirdPartyApis = thirdPartyApis;
+          break;
+        }
+        case ModuleTypes.Notifications: {
+          const getAllNotifications = await getAllNotificationQuery(fastify);
+          global.tblNotifications = getAllNotifications;
+          break;
+        }
         default:
           break;
       }
