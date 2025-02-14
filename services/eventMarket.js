@@ -534,6 +534,7 @@ const marketListResultFalseService = async (request, fastify) => {
   // if (isActive !== undefined) {
   //   eventMarket = eventMarket.filter((item) => item.isActive === isActive);
   // }
+  eventMarket.sort((a, b) => b.eventMarketId - a.eventMarketId);
 
   return eventMarket;
 };
@@ -2628,7 +2629,7 @@ const pendingMultiRunnerMarketsService = async (request, fastify) => {
   // if (isActive !== undefined) {
   //   eventMarket = eventMarket.filter((item) => item.isActive === isActive);
   // }
-
+  eventMarket.sort((a, b) => b.eventMarketId - a.eventMarketId);
   return eventMarket;
 };
 const updateMarketResultService = async (request, fastify) => {

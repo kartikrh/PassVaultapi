@@ -694,7 +694,9 @@ const ModuleTypes = {
   Users: 30,
   ClientScokets: 31,
   API: 32,
-  APIEndpoints: 33
+  APIEndpoints: 33,
+  ThirdPartyApis: 34,
+  Notifications: 35
 }
 const callTPAPI = async (data ,fastify) =>{
   try {
