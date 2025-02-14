@@ -78,7 +78,7 @@ module.exports = async function (fastify, opts) {
     preHandler: [(request, reply) => authorize(request, reply, fastify)],
     handler: (request, reply) => loadDataInMemory(request, reply, fastify),
   });
-  fastify.post("/loadPanleData", {
+  fastify.post("/loadPanelData", {
     schema: Auth.panelLoadData.schema,
     preHandler: [(request, reply) => authorize(request, reply, fastify)],
     handler: (request, reply) => loadPanelDataInGlobal(request, reply, fastify),
