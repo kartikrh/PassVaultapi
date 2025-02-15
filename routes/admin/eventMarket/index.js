@@ -1,4 +1,4 @@
-const { getDetailsByCId, getAllEventMarket, createEventMarket, deleteEventMarket, activeInactiveMarket, updateAllowMarket, getEventListByCompetitionId, marketListResultFalse, changeResultOfMarket, marketListByCId, updateMarketRate, saveEventMarket ,changeMarketCancel, changeMarketResult, changeMarketClose, suspendMarketByCId, getEventMarketById, getMarketTemplateTypeList, getCommentaryTypeList, setDelayEventMarket, getDSReportEventMarket, getSLReportEventMarket, getMarketDataByCId,UpdateResulOrApproveEventMarket, getMarketTypeCategory,marketListcategoryNameByCId, setAllMarketClose, setCloseMarketCancel, cancelSettleMarket, getDetailsByCIdV1, createEventMarketV1, updateMarketRateV1, marketListByCIdV1, getRunnerByMarket, pendingMultiRunnerMarkets, updateMarketResult, getComByCompId, updateEventMarketCloseSuspendTime, closeMarketsByIds, cancelMarketsByIds, getManualMarketData, saveManualMarketData, upManualMarketData, getCommentaryList } = require("../../../controller/users/admin/eventMarket");
+const { getDetailsByCId, getAllEventMarket, createEventMarket, deleteEventMarket, activeInactiveMarket, updateAllowMarket, getEventListByCompetitionId, marketListResultFalse, changeResultOfMarket, marketListByCId, updateMarketRate, saveEventMarket ,changeMarketCancel, changeMarketResult, changeMarketClose, suspendMarketByCId, getEventMarketById, getMarketTemplateTypeList, getCommentaryTypeList, setDelayEventMarket, getDSReportEventMarket, getSLReportEventMarket, getMarketDataByCId,UpdateResulOrApproveEventMarket, getMarketTypeCategory,marketListcategoryNameByCId, setAllMarketClose, setCloseMarketCancel, cancelSettleMarket, getDetailsByCIdV1, createEventMarketV1, updateMarketRateV1, marketListByCIdV1, getRunnerByMarket, pendingMultiRunnerMarkets, updateMarketResult, getComByCompId, updateEventMarketCloseSuspendTime, closeMarketsByIds, cancelMarketsByIds, getManualMarketData, saveManualMarketData, upManualMarketData, getCommentaryList, upIsInningRunApi } = require("../../../controller/users/admin/eventMarket");
 const { EventMarket, Commentary } = require("../../../swaggerSchema/groupTags/schema");
 const {
     authorize,
@@ -534,5 +534,17 @@ module.exports = async (fastify, opts) => {
         ],
         handler: (request, reply) => upManualMarketData(request, reply, fastify)
     })
+    fastify.post("/upIsInningRun", {
+        schema: EventMarket.upIsInningRun.schema,
+        preHandler: [
+          (request, reply) => authorize(request, reply, fastify),
+          (request, reply, done) =>
+            checkPermission(request, reply, fastify, {
+              tabName: "API",
+              mode: "edit",
+            }),
+        ],
+        handler: (request, reply) => upIsInningRunApi(request, reply, fastify),
+    });
 };
 

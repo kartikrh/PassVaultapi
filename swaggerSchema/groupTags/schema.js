@@ -4837,6 +4837,21 @@ const EventMarket = {
       },
     },
   },
+  upIsInningRun: {
+    schema: {
+      tags: [""],
+      description: "update isinningRun Api",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          eventMarketId: { type: "integer" },
+          isInningRun: { type: "boolean" },
+        },
+        required: ["eventMarketId", "isInningRun"],
+      },
+    },
+  },
 };
 const MarketTemplateRunner = {
   getAll: {
@@ -4911,7 +4926,7 @@ const MarketTemplateRunner = {
         required: ["marketTemplateRunnerId"],
       },
     },
-  },
+  }
 };
 const Vendor = {
   getAll: {
@@ -5576,7 +5591,7 @@ const Api = {
         required: ["apiId", "isActive"],
       },
     },
-  },
+  }
 };
 const Notification = {
   getAll :{
