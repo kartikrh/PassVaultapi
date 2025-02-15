@@ -368,7 +368,9 @@ const panelLoadDataByEnum = async (request, fastify, reply) => {
         }
         case ModuleTypes.MarketTypes: {
           const getAllMarketType = await getAllMarketTypeQuery(fastify);
+          const getAllMarketTypeCategories = await getAllMarketTypeCategoriesQuery(fastify);
           global.tblMarketTypes = getAllMarketType;
+          global.tblMarketTypeCategories = getAllMarketTypeCategories;
           break;
         }
         case ModuleTypes.PhotoLibrary: {
@@ -498,6 +500,13 @@ const panelLoadDataByEnum = async (request, fastify, reply) => {
         case ModuleTypes.Notifications: {
           const getAllNotifications = await getAllNotificationQuery(fastify);
           global.tblNotifications = getAllNotifications;
+          break;
+        }
+        case ModuleTypes.Vendors: {
+          const getAllVendors = await getAllVendorsQuery(fastify);
+          const getAllVendorIps = await getAllVendorIpsQuery(fastify);
+          global.tblVendors = getAllVendors;
+          global.tblVendorIp = getAllVendorIps;
           break;
         }
         default:
