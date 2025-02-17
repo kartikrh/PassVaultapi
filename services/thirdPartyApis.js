@@ -34,15 +34,15 @@ const createThirdPartyApisService = async (request, fastify) => {
     throw new Error("URL already exists");
   }
   const saveData = await insertThirdPartyApisQuery(request.body, fastify, request);
-  if (request.body.type === 1 && request.body.isDefault === true ||
-    request.body.type === 2 && request.body.isDefault === true) {  
-    await isDefaultFalseQuery(saveData, fastify, {...request.body})
-    global.tblThirdPartyApis.forEach((item) => {
-        if (item.id !== saveData.id && item.type === request.body.type) {
-            item.isDefault = false;
-        }
-    });
-}
+//   if (request.body.type === 1 && request.body.isDefault === true ||
+//     request.body.type === 2 && request.body.isDefault === true) {  
+//     await isDefaultFalseQuery(saveData, fastify, {...request.body})
+//     global.tblThirdPartyApis.forEach((item) => {
+//         if (item.id !== saveData.id && item.type === request.body.type) {
+//             item.isDefault = false;
+//         }
+//     });
+// }
   global.tblThirdPartyApis.push(saveData);
   return saveData;
 };
@@ -67,17 +67,18 @@ const updateThirdPartyApisService = async (request, fastify) => {
     isConnect: request.body.isConnect ?? checkId.isConnect,
     isDefault: request.body.isDefault ?? checkId.isDefault,
     id: request.body.id,
+    adminDisconnected: checkId.adminDisconnected ?? true,
 };
 
-  if (updateData.type === 1 && updateData.isDefault === true ||
-    updateData.type === 2 && updateData.isDefault === true) {
-    await isDefaultFalseQuery(updateData, fastify, {...request.body})
-    global.tblThirdPartyApis.forEach((item) => {
-        if (item.id !== updateData.id && item.type === updateData.type) {
-            item.isDefault = false;
-        }
-    });
-}
+//   if (updateData.type === 1 && updateData.isDefault === true ||
+//     updateData.type === 2 && updateData.isDefault === true) {
+//     await isDefaultFalseQuery(updateData, fastify, {...request.body})
+//     global.tblThirdPartyApis.forEach((item) => {
+//         if (item.id !== updateData.id && item.type === updateData.type) {
+//             item.isDefault = false;
+//         }
+//     });
+// }
 
   await updateThirdPartyApisQuery(updateData, fastify, request);
 
@@ -146,15 +147,15 @@ const changeIsDefaultStage = async (request, fastify) => {
     throw new Error("ID not found");
   }
   
-  if (result.type === 1 && body.isDefault === true || result.type === 2 && body.isDefault === true) {
-    body.type = result.type;
-    await isDefaultFalseQuery(body, fastify, request);
-      global.tblThirdPartyApis.forEach((item) => {
-          if (item.id !== body.id && item.type === body.type) {
-              item.isDefault = false;
-          }
-      });
-  }
+  // if (result.type === 1 && body.isDefault === true || result.type === 2 && body.isDefault === true) {
+  //   body.type = result.type;
+  //   await isDefaultFalseQuery(body, fastify, request);
+  //     global.tblThirdPartyApis.forEach((item) => {
+  //         if (item.id !== body.id && item.type === body.type) {
+  //             item.isDefault = false;
+  //         }
+  //     });
+  // }
 
   await isDefaultChangeQuery(body, fastify, request);
   const index = global.tblThirdPartyApis.findIndex(
