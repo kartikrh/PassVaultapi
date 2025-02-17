@@ -4384,6 +4384,7 @@ const getManualMarketDataQuery = async (data,request, fastify) => {
           tem."wrPredefinedValue" as "predefinedValue",
           tem."wrWicketNo" as "wicketNo",
           tem."wrCreatedBy" as "createdBy",
+          tem."wrXavRatio" as "xavRatio",
           COALESCE(runner_data."runners", '[]') as "runners"
       FROM "tblEventMarkets" tem
       LEFT JOIN "tblMarketRunners" tr ON tr."wrEventMarketId" = tem."wrID"
@@ -4492,6 +4493,7 @@ const getExtraMarketQuery = async (data,request, fastify) => {
           tem."wrCreatedBy" as "createdBy",
           tem."wrPredefinedValue" as "predefinedValue",
           tem."wrWicketNo" as "wicketNo",
+          tem."wrXavRatio" as "xavRatio",
           COALESCE(runner_data."runners", '[]') as "runners"
       FROM "tblEventMarkets" tem
       LEFT JOIN "tblMarketRunners" tr ON tr."wrEventMarketId" = tem."wrID"
