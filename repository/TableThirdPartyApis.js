@@ -10,6 +10,7 @@ const allThirdPartyApisQuery = async (fastify) => {
             "wrType" as "type",
             "wrIsActive" as "isActive",
             "wrIsConnect" as "isConnect",
+            "wrAdminDisconnected" as "adminDisconnected",
             "wrIsDefault" as "isDefault"
             FROM "tblThirdPartyApis"
             WHERE "wrIsDeleted" = false
@@ -77,7 +78,7 @@ const updateThirdPartyApisQuery = async (data, fastify, request) => {
     return await fastify.db.query(
       `Update "tblThirdPartyApis" set 
             "wrProviderName" = $1,"wrUrl" = $2,"wrType" = $3,"wrIsActive" = $4,
-            "wrIsConnect" = $5, "wrIsDefault" = $6
+            "wrIsConnect" = $5, "wrIsDefault" = $6, "wrAdminDisconnected" = $8
             where "wrId" = $7;`,
       {
         type: fastify.db.QueryTypes.UPDATE,
@@ -89,6 +90,7 @@ const updateThirdPartyApisQuery = async (data, fastify, request) => {
           data.isConnect || false,
           data.isDefault || false,
           data.id,
+          data.adminDisconnected,
         ],
       }
     );
