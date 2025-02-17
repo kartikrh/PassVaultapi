@@ -4384,6 +4384,7 @@ const getManualMarketDataQuery = async (data,request, fastify) => {
           tem."wrPredefinedValue" as "predefinedValue",
           tem."wrWicketNo" as "wicketNo",
           tem."wrCreatedBy" as "createdBy",
+          tem."wrXavRatio" as "xavRatio",
           COALESCE(runner_data."runners", '[]') as "runners"
       FROM "tblEventMarkets" tem
       LEFT JOIN "tblMarketRunners" tr ON tr."wrEventMarketId" = tem."wrID"
@@ -4492,6 +4493,7 @@ const getExtraMarketQuery = async (data,request, fastify) => {
           tem."wrCreatedBy" as "createdBy",
           tem."wrPredefinedValue" as "predefinedValue",
           tem."wrWicketNo" as "wicketNo",
+          tem."wrXavRatio" as "xavRatio",
           COALESCE(runner_data."runners", '[]') as "runners"
       FROM "tblEventMarkets" tem
       LEFT JOIN "tblMarketRunners" tr ON tr."wrEventMarketId" = tem."wrID"
@@ -4565,7 +4567,8 @@ const saveManualMarketQuery = async (data, request, fastify) => {
           "wrDefaultBackSize",
           "wrDefaultLaySize",
           "wrRateDiff",
-          "wrLastUpdate"
+          "wrLastUpdate",
+          "wrXavRatio"
       )
       VALUES (
           $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22 , now()::timestamp
@@ -4595,7 +4598,8 @@ const saveManualMarketQuery = async (data, request, fastify) => {
           data.rateSourceRefID,
           10000,
           10000,
-          data.rateDiff
+          data.rateDiff,
+          data.xavRatio || null
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
