@@ -59,7 +59,7 @@ const updateMarket = async (fastify) => {
                    const marketToSuspend = market?.filter((m) => m.afterSuspendTime && new Date(m.afterSuspendTime) <= currentTime);
                    const marketToClose = market?.filter((m) => m.afterCloseTime && new Date(m.afterCloseTime) <= currentTime);
                     if(marketToSuspend.length > 0){
-                          await fastify.db.query(
+                          const result = await fastify.db.query(
                             `
                              UPDATE "tblEventMarkets" SET
                               "wrStatus" = $1 ,
@@ -76,6 +76,11 @@ const updateMarket = async (fastify) => {
                                     false
                               )::json
                              WHERE "wrID" IN (${marketToSuspend.map((m) => m.eventMarketId).join(",")})
+                             RETURNING 
+                                "wrID" as "eventMarketId",
+                                "wrStatus" as "status",
+                                "wrLastUpdate" as "lastUpdate",
+                                "wrData" as "data"
                         
                             `,
                             {
@@ -92,9 +97,29 @@ const updateMarket = async (fastify) => {
                                 bind: [EventMarketStatus.Suspend]
                             }
                           )
+
+                          if(result.length > 0){
+                            result.forEach((updatedItem) => {
+                                let index = global.tblEventMarketsV2.findIndex(
+                                  (item) => item.eventMarketId === updatedItem.eventMarketId
+                                );
+                                if (index !== -1) {
+                                  global.tblEventMarketsV2[index] = {
+                                    ...global.tblEventMarketsV2[index],
+                                    ...updatedItem,
+                                  };
+                                }
+                              });
+                          }
+                          const suspendedMarketIds = new Set(marketToSuspend.map((m) => m.eventMarketId));
+                          global.tblMarketRunnerV2.forEach(elem => {
+                            if (suspendedMarketIds.has(elem.wrEventMarketId)) {
+                                elem.selectionStatus = EventMarketStatus.Suspend;
+                            }
+                          });
                     }
                     if(marketToClose.length > 0){
-                        await fastify.db.query(
+                        const eventMarketData = await fastify.db.query(
                             `
                              UPDATE "tblEventMarkets" SET
                               "wrStatus" = $1 ,
@@ -112,6 +137,13 @@ const updateMarket = async (fastify) => {
                                     false
                               )::json
                              WHERE "wrID" IN (${marketToClose.map((m) => m.eventMarketId).join(",")})
+                             RETURNING 
+                                "wrID" as "eventMarketId",
+                                "wrStatus" as "status",
+                                "wrAfterCloseTime" as "afterCloseTime",
+                                "wrCloseTime" as "closeTime",
+                                "wrLastUpdate" as "lastUpdate",
+                                "wrData" as "data"
                             `,
                             {
                                  type: fastify.db.QueryTypes.UPDATE,
@@ -127,6 +159,27 @@ const updateMarket = async (fastify) => {
                                 bind: [EventMarketStatus.Close]
                             }
                           )
+
+                          if(eventMarketData.length > 0){
+                            eventMarketData.forEach((updatedItem) => {
+                                let index = global.tblEventMarketsV2.findIndex(
+                                  (item) => item.eventMarketId === updatedItem.eventMarketId
+                                );
+                                if (index !== -1) {
+                                  global.tblEventMarketsV2[index] = {
+                                    ...global.tblEventMarketsV2[index],
+                                    ...updatedItem,
+                                  };
+                                }
+                              });
+                          }
+
+                          const suspendedMarketIds = new Set(marketToSuspend.map((m) => m.eventMarketId));
+                          global.tblMarketRunnerV2.forEach(elem => {
+                            if (suspendedMarketIds.has(elem.wrEventMarketId)) {
+                                elem.selectionStatus = EventMarketStatus.Close;
+                            }
+                          });
                     }
                     // remove updae market from market array
                     market = market.filter((m) => !marketToSuspend.map((m) => m.eventMarketId).includes(m.eventMarketId) && !marketToClose.map((m) => m.eventMarketId).includes(m.eventMarketId));

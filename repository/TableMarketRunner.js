@@ -1,5 +1,44 @@
 const { EventMarketStatus } = require("../utilities");
 const { errorLogger } = require("../utilities/logger")
+const { getAllEventMarketsV2Query } = require("./TableEventMarkets");
+
+const getAllMarketRunnersQuery = async (fastify, whereCondition = null) => {
+    return await fastify.db.query(
+      `SELECT
+          tmr."wrRunnerId" AS "runnerId",
+          tmr."wrEventMarketId" AS "eventMarketId",
+          tmr."wrRunner" AS "runner",
+          tmr."wrLine" AS "line",
+          tmr."wrOverRate" AS "overRate",
+          tmr."wrUnderRate" AS "underRate",
+          tmr."wrSelectionId" AS "selectionId",
+          tmr."wrSelectionStatus" AS "selectionStatus",
+          tmr."wrOrder" AS "order",
+          tmr."wrBackPrice" AS "backPrice",
+          tmr."wrBackSize" AS "backSize",
+          tmr."wrLayPrice" AS "layPrice",
+          tmr."wrLaySize" as "laySize",	
+          tmr."wrTeamId" as "teamId",
+          tmr."wrLastUpdate" as "lastUpdate"
+      FROM "tblMarketRunners" tmr
+      LEFT JOIN "tblEventMarkets" tem ON tmr."wrEventMarketId" = tem."wrID"
+      LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
+      WHERE tmr."wrIsDeleted" = false
+        AND tc."wrIsDelete" = false
+        AND (
+            tc."wrCommentaryStatus" != 4 
+            OR (tc."wrCommentaryStatus" = 4 AND tc."wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days')
+        )
+        AND tem."wrIsDeleted" = false 
+        AND (
+            tem."wrStatus" IN (1, 2, 3, 4)
+            OR (tem."wrStatus" = 5 AND tem."wrIsResult" = FALSE)
+        ) ${whereCondition ? ` AND ${whereCondition}` : ""}`,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+};
 
 const getRunnerByIdQuery = async(fastify, request , where = null)=>{
     try {
@@ -113,9 +152,11 @@ const setResultInRunnerMarketQuery = async(data, request,fastify)=>{
             bind: [data1[0], data.eventMarketId],
             type: fastify.db.QueryTypes.UPDATE
         });
+        let whereCondition = ` tem."wrID" = ${data.eventMarketId}`
+        const result = await getAllEventMarketsV2Query(fastify, whereCondition)
 
-
-    return true;
+        // return true;
+        return result[0];
     } catch (error) {
         console.log("error", error)
         errorLogger(
@@ -162,5 +203,6 @@ const getRunnerByMarketQuery = async(request,fastify)=>{
 module.exports = {
     getRunnerByIdQuery,
     setResultInRunnerMarketQuery,
-    getRunnerByMarketQuery
+    getRunnerByMarketQuery,
+    getAllMarketRunnersQuery,
 }
