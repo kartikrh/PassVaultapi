@@ -2991,7 +2991,6 @@ const pendingMultiRunnerMarketsService = async (request, fastify) => {
   if(marketTypeId){
     createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrMarketTypeId" = ${marketTypeId}` : `tem."wrMarketTypeId" = ${marketTypeId}`;
   }
-
   if(marketTypeCategoryId){
     createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrMarketTypeCategoryId" = ${marketTypeCategoryId}` : `tem."wrMarketTypeCategoryId" = ${marketTypeCategoryId}`;
   }
