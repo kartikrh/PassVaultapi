@@ -2982,7 +2982,7 @@ const pendingMultiRunnerMarketsService = async (request, fastify) => {
   if (rateSourceRefId && rateSourceRefId != 0) {
     createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrRateSource" = ${rateSourceRefId}` : `tem."wrRateSource" = ${rateSourceRefId}`;
   }
-  if(commentaryId && commetaryId != undefined){
+  if(commentaryId && commentaryId != undefined){
     createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrCommentaryId" = ${commentaryId}` : `tem."wrCommentaryId" = ${commentaryId}`;
   }
   // if(mt.length > 0){
@@ -2991,7 +2991,6 @@ const pendingMultiRunnerMarketsService = async (request, fastify) => {
   if(marketTypeId){
     createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrMarketTypeId" = ${marketTypeId}` : `tem."wrMarketTypeId" = ${marketTypeId}`;
   }
-
   if(marketTypeCategoryId){
     createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrMarketTypeCategoryId" = ${marketTypeCategoryId}` : `tem."wrMarketTypeCategoryId" = ${marketTypeCategoryId}`;
   }
