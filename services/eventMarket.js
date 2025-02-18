@@ -3390,12 +3390,6 @@ const globalEventMarketDataWithMarketIdsService = async (request, fastify) => {
   return eventMarketData;
 }
 
-const globalScoketDataService = async (request, fastify) => {
-  const socketData = global.socketData
-  const marketData = global.marketData
-  const marketArr = global.MarketArr
-  return {socketData, marketData, marketArr};
-}
 module.exports = {
   getDetailsByCIdService,
   getAllEventMarketsService,
@@ -3448,5 +3442,4 @@ module.exports = {
   upIsInningRunApiService,
   globalEventMarketDataWithCommIdService,
   globalEventMarketDataWithMarketIdsService,
-  globalScoketDataService
 };

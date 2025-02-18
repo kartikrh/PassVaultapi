@@ -7,9 +7,6 @@ const configConstants = require('./utilities/configConstants');
 const { getAllEventMarketsV2Query } = require("./repository/TableEventMarkets");
 const { getAllMarketRunnersQuery } = require("./repository/TableMarketRunner");
 
-global.socketData = []
-global.marketData = []
-global.MarketArr = []
 
 const connection = (socket , fastify) => {
   const { userId, allowMultipleLogin, wrToken } = socket;
@@ -27,10 +24,8 @@ const connection = (socket , fastify) => {
   }
   socket.on("updatedEventMarket", async (data) => {
     try {
-      global.socketData.push(data)
       const MarketArr = [];
       const { commentaryId, marketData } = data;
-      global.marketData.push(marketData)
       const clientInRoom = global.socketIo.sockets.adapter.rooms.get(commentaryId);
       if (clientInRoom?.size) {
         global.socketIo.to(commentaryId).emit("updateMarketData", marketData);
@@ -65,8 +60,9 @@ const connection = (socket , fastify) => {
       } catch {
         LDOMARKETSIDS = ["26", "27", "28", "6"];
       }
-      global.MarketArr.push(marketIdArr)
-      let whereCondition = ` tem."wrID" ANY(${marketIdArr})`;
+      const eventMarketIds = marketIdArr.flat().map(Number);
+      if (eventMarketIds.length > 0){
+      let whereCondition = ` tem."wrID" IN(${eventMarketIds})`;
       const eventMarketData = await getAllEventMarketsV2Query(fastify, whereCondition)
       if(eventMarketData.length > 0){
         eventMarketData.forEach((updatedItem) => {
@@ -79,7 +75,7 @@ const connection = (socket , fastify) => {
             };
         });
       }
-      let whereClause = ` tmr."wrEventMarketId" ANY(${marketIdArr})`;
+      let whereClause = ` tmr."wrEventMarketId" IN(${eventMarketIds})`;
       const runnerData = await getAllMarketRunnersQuery(fastify, whereClause);
       if(runnerData.length > 0){
         runnerData.forEach((runner) => {
@@ -92,7 +88,7 @@ const connection = (socket , fastify) => {
             };
         });
       }
-
+    }
       const marketToUpdate = await marketToUpdatePromise;
   
       marketToUpdate.forEach((data) => {
