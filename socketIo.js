@@ -7,6 +7,10 @@ const configConstants = require('./utilities/configConstants');
 const { getAllEventMarketsV2Query } = require("./repository/TableEventMarkets");
 const { getAllMarketRunnersQuery } = require("./repository/TableMarketRunner");
 
+global.socketData = []
+global.marketData = []
+global.MarketArr = []
+
 const connection = (socket , fastify) => {
   const { userId, allowMultipleLogin, wrToken } = socket;
   if (userId) {
@@ -23,8 +27,10 @@ const connection = (socket , fastify) => {
   }
   socket.on("updatedEventMarket", async (data) => {
     try {
+      global.socketData.push(data)
       const MarketArr = [];
       const { commentaryId, marketData } = data;
+      global.marketData.push(marketData)
       const clientInRoom = global.socketIo.sockets.adapter.rooms.get(commentaryId);
       if (clientInRoom?.size) {
         global.socketIo.to(commentaryId).emit("updateMarketData", marketData);
@@ -59,7 +65,7 @@ const connection = (socket , fastify) => {
       } catch {
         LDOMARKETSIDS = ["26", "27", "28", "6"];
       }
-
+      global.MarketArr.push(marketIdArr)
       let whereCondition = ` tem."wrID" ANY(${marketIdArr})`;
       const eventMarketData = await getAllEventMarketsV2Query(fastify, whereCondition)
       if(eventMarketData.length > 0){
