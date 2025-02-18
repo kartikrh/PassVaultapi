@@ -5210,6 +5210,119 @@ const getTargetQyery = async (data, request, fastify) => {
     
   }
 }
+const closeMarketByATQuery1 = async (data, request, fastify) => {
+  try {
+    const query = `
+            UPDATE "tblEventMarkets"
+            SET "wrStatus" = $1 , "wrCloseTime" = now()::timestamp , "wrIsSendData" = true,
+             "wrData" = jsonb_set(
+              jsonb_set("wrData"::jsonb, '{status}', '4'::jsonb, false),
+              '{runner}', (
+                SELECT jsonb_agg(
+                  jsonb_set(runner_elem, '{status}', '4'::jsonb, false)
+                )
+                FROM jsonb_array_elements("wrData"::jsonb->'runner') AS runner(runner_elem)
+              ),
+              false
+              )::json,
+              "wrLastUpdate" = now()::timestamp
+            WHERE "wrCommentaryId" = $2
+            AND "wrActionType" IN ($3,$4)
+            AND "wrStatus" NOT IN ($5,$6,$7)
+            AND "wrTeamID" = ANY($8)
+            AND "wrInningsID" = $9
+            RETURNING "wrID" as "eventMarketId",
+            "wrData" as "data"
+        `;
+
+    let result = await fastify.db.query(query, {
+      bind: [
+        EventMarketStatus.Close,
+        data.commentaryId,
+        data.closeAT,
+        data.cnAT,
+        EventMarketStatus.Close,
+        EventMarketStatus.Settled,
+        EventMarketStatus.Cancel,
+        data.teamId,
+        data.inningsId
+      ],
+      type: fastify.db.QueryTypes.SELECT,
+    });
+
+    // close the market runner for this market
+    const query2 = `UPDATE "tblMarketRunners" SET "wrSelectionStatus" = $1 WHERE "wrEventMarketId" = ANY($2)`;
+    await fastify.db.query(query2, {
+      bind: [EventMarketStatus.Close, result.map((e) => e.eventMarketId)],
+      type: fastify.db.QueryTypes.SELECT,
+    });
+    return result;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/closeMarketByATQuery1",
+      request
+    );
+    throw new Error(error.message);
+  }
+};
+const cancelMarketByATQuery1 = async (data, request, fastify) => {
+  try {
+    let query = `
+            UPDATE "tblEventMarkets"
+            SET "wrStatus" = $1,
+            "wrSettledTime" = now()::timestamp,
+            "wrData" = jsonb_set(
+              jsonb_set("wrData"::jsonb, '{status}', '6'::jsonb, false),
+              '{runner}', (
+                SELECT jsonb_agg(
+                  jsonb_set(runner_elem, '{status}', '6'::jsonb, false)
+                )
+                FROM jsonb_array_elements("wrData"::jsonb->'runner') AS runner(runner_elem)
+              ),
+              false
+              )::json,
+            "wrLastUpdate" = now()::timestamp,
+            "wrIsSendData" = true
+            WHERE
+             "wrCommentaryId" = $2
+            AND "wrActionType" = $3
+            AND "wrStatus" NOT IN ($4,$5)
+            AND "wrTeamID" = ANY($6)
+            AND "wrInningsID" = $7
+            RETURNING "wrID" as "eventMarketId",
+            "wrData" as "data"
+        `;
+    const result = await fastify.db.query(query, {
+      bind: [
+        EventMarketStatus.Cancel,
+        data.commentaryId,
+        data.actionType,
+        EventMarketStatus.Settled,
+        EventMarketStatus.Cancel,
+        data.teamId,
+        data.inningsId
+      ],
+      type: fastify.db.QueryTypes.SELECT,
+    });
+        // cancel the market runner for this market
+        const query2 = `UPDATE "tblMarketRunners" SET "wrSelectionStatus" = $1 WHERE "wrEventMarketId" = ANY($2)`;
+        await fastify.db.query(query2, {
+          bind: [EventMarketStatus.Cancel, result.map((e) => e.eventMarketId)],
+          type: fastify.db.QueryTypes.SELECT,
+        });
+    return result;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/cancelEventMarketByTeamIdQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+};
 module.exports = {
   getAllEventMarketsV2Query,
   getAllEventMarketsQuery,
@@ -5289,6 +5402,8 @@ module.exports = {
   getMarketByIdQuery,
   openMarketScoketConnectionDataQuery,
   upIsInningRunMarketQuery,
-  getTargetQyery
+  getTargetQyery,
+  cancelMarketByATQuery1,
+  closeMarketByATQuery1
 }
 

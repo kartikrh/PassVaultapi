@@ -76,6 +76,7 @@ const {
   deleteCommentryHistoryQuery,
   getCommPlayersByCommentaryIdQuery,
   getAllCompletedCommentaryQuery,
+  upOverDLSQuery,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -93,7 +94,7 @@ const {
   MarketTypeId
 } = require("../utilities");
 const { getAllPlayersByTeamIdQuery } = require("../repository/TableTeams");
-const { handleMarketCloseService, updateComInMarketService, suspendMarketService } = require("./eventMarket");
+const { handleMarketCloseService, updateComInMarketService, suspendMarketService, handleMarketByDLSService } = require("./eventMarket");
 const { createMarketOddsBallByBallBYID, deleteMarketOddsBallByBall, createMarketOddsBallInSaveDetails } = require("../repository/TableMarketOddsBallByBall");
 const { getEventMarketRatioQuery, closeEventMarketByCIdQuery, getMarketsByCategoryQuery, getEventMarketByIdsQuery, getMarketsByComIdQuery, updateEventMarketCloseQuery, getMarCountByComQuery, getExtrenalMarketQuery, getEventMarketsByCommId } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
@@ -9006,6 +9007,38 @@ const changeMaxOverDetailService = async (request, fastify) => {
   return "Commentary Updated successfully";
 };
 
+const upDLSDetailsService = async (request, fastify) => {
+  // validate commentary id
+  const {commentaryId , comTeams} = request.body;
+  const commentary = global.tblCommentaries.findIndex(
+    (item) => item?.commentaryId ===commentaryId
+  );
+  if (commentary == -1) {
+    throw new Error("Commentary with this id not Found");
+  }
+  for (let t of comTeams){
+    let index = global.tblCommentaryTeams.findIndex(
+      (item) => item.commentaryTeamId === t.commentaryTeamId
+    );
+    if (index == -1) {
+      throw new Error("Commentary Team with this id not Found");
+    }
+    await upOverDLSQuery({
+      commentaryTeamId : t.commentaryTeamId,
+      teamMaxOver : t.teamMaxOver,
+      teamTrialRuns : t.teamTrialRuns,
+    }, fastify, request);
+    global.tblCommentaryTeams[index].teamMaxOver = t.teamMaxOver;
+    global.tblCommentaryTeams[index].teamTrialRuns = t.teamTrialRuns;
+  }
+
+  await handleMarketByDLSService({
+    commentaryId: request.body.commentaryId,
+    inningsId: global.tblCommentaries[commentary].currentInnings,
+    teamId : comTeams.map((item) => item.teamId),
+  }, request,fastify);
+  return "Commentary Updated successfully";
+};
 const AddSuperOverCommentaryService = async (request, fastify) => {
   try {
     const { commentaryId, teamMaxOver, battingTeamId } = request.body;
@@ -10325,4 +10358,5 @@ module.exports = {
   commentaryHistoryService,
   deleteCommentaryHistoryService,
   getAllCompletedCommentaryService,
+  upDLSDetailsService
 };

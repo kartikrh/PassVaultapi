@@ -56,6 +56,8 @@ const {
   upIsInningRunMarketQuery,
   getTargetQyery,
   getAllEventMarketsV2Query,
+  closeMarketByATQuery1,
+  cancelMarketByATQuery1,
 } = require("../repository/TableEventMarkets");
 const { getRunnerByIdQuery, setResultInRunnerMarketQuery, getRunnerByMarketQuery } = require("../repository/TableMarketRunner");
 const configConstants = require("../utilities/configConstants");
@@ -1809,6 +1811,93 @@ const handleMarketCloseService = async (data, request, fastify) => {
 
   return "Market closed successfully";
 };
+const handleMarketByDLSService = async (data, request, fastify) => {
+  // check the eventMarket close log for this commentaryId
+  // const checkLog = await getMarketLogsByCIdQuery(
+  //   {
+  //     commentaryId: data.commentaryId,
+  //     actionType: MarketActionType.closeMarketOnDLSChange,
+  //   },
+  //   request,
+  //   fastify
+  // );
+  // if (checkLog[0].count > 0) {
+  //   return "Market already closed";
+  // }
+  const updateData = await closeMarketByATQuery1({
+    commentaryId : data.commentaryId,
+    closeAT : ActionTypeForMarketCancel.dlsCloseMarket,
+    cnAT : ActionTypeForMarketCancel.dlsCloseCancelMarket,
+    teamId : data.teamId,
+    inningsId : data.inningsId
+  }, request, fastify);
+  for (let item of updateData) {
+    let eventMarket = global.tblEventMarkets.findIndex(
+      (e) => e.eventMarketId === item.eventMarketId
+    );
+    if (eventMarket !== -1) {
+      global.tblEventMarkets[eventMarket].status = EventMarketStatus.Close;
+      global.tblEventMarkets[eventMarket].data = item.data;
+    }
+    marketLogger(
+      {
+        eventMarketId: item.eventMarketId,
+        actionType: MarketActionType.dlsMarketClose,
+        value: `eventMarketStatus : ${EventMarketStatus.Close}`,
+      },
+      request,
+      fastify
+    )
+  }
+  // cancel the market as per actionType
+  let cancelMarket = await cancelMarketByATQuery1(
+    {
+      commentaryId: data.commentaryId,
+      actionType: ActionTypeForMarketCancel.dlsCloseCancelMarket,
+      teamId : data.teamId,
+      inningsId : data.inningsId
+    },
+    request,
+    fastify
+  );
+  for (let item of cancelMarket) {
+    let eventMarket = global.tblEventMarkets.findIndex(
+      (e) => e.eventMarketId === item.eventMarketId
+    );
+    if (eventMarket !== -1) {
+      global.tblEventMarkets[eventMarket].status = EventMarketStatus.Cancel;
+      global.tblEventMarkets[eventMarket].data = item.data;
+    }
+    marketLogger(
+      {
+        eventMarketId: item.eventMarketId,
+        actionType: MarketActionType.dlsMarketCloseCancel,
+        value: `eventMarketStatus : ${EventMarketStatus.Cancel}`,
+      },
+      request,
+      fastify
+    ).catch((err) => {
+      console.log("market data logger console", err);
+      errorLogger(
+        fastify,
+        err.message,
+        "ERROR --> services/commentary.js/handleMarketCloseService",
+        request
+      );
+    });
+  }
+  marketLogger(
+    {
+      commentaryId: data.commentaryId,
+      actionType: MarketActionType.closeMarketOnDLSChange,
+      value: `eventMarketStatus : ${EventMarketStatus.Close}`,
+    },
+    request,
+    fastify
+  )
+
+  return "Market closed successfully";
+};
 const getDSReportEventMarketService = async (request, fastify) => {
   // get data logs for this eventMarketId'
   const result = await getDataLogsByMarketQuery(request, fastify);
@@ -3440,57 +3529,5 @@ module.exports = {
   upIsInningRunApiService,
   globalEventMarketDataWithCommIdService,
   globalEventMarketDataWithMarketIdsService,
+  handleMarketByDLSService
 };
-
-
-[
-  {
-    "eventMarketId": 1,
-    "status": 2,
-    "commentaryId": 52,
-    "runner": [
-      {
-        "eventMarketId": 1,
-        "runner": "teamA"
-      },
-      {
-        "eventMarketId": 1,
-        "runner": "teamB"
-      },
-    ]
-  },
-  {
-    "eventMarketId": 2,
-    "status": 2,
-    "commentaryId": 52,
-    "runner": [
-      {
-        "eventMarketId": 2,
-        "runner": "over 1"
-      },
-      {
-        "eventMarketId": 2,
-        "runner": "over 2"
-      },
-      {
-        "eventMarketId": 2,
-        "runner": "over 3"
-      },
-      {
-        "eventMarketId": 2,
-        "runner": "over 4"
-      },
-    ]
-  },
-  {
-    "eventMarketId": 5,
-    "status": 2,
-    "commentaryId": 52,
-    "runner": [
-      {
-        "eventMarketId": 5,
-        "runner": "player a"
-      }
-    ]
-  }
-]
