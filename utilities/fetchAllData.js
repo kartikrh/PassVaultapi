@@ -45,7 +45,7 @@ const {
   getAllMarketTypeCategoriesQuery,
   getAllMarketTypeQuery,
 } = require("../repository/TableMarketTemplate");
-const { getAllEventMarketsQuery, getEventMarketQueryV1 } = require("../repository/TableEventMarkets");
+const { getAllEventMarketsQuery, getEventMarketQueryV1, getAllEventMarketsV2Query } = require("../repository/TableEventMarkets");
 const {
   getAllMarketTemplateRunnerQuery,
 } = require("../repository/TableMarketTemplateRunner");
@@ -84,6 +84,7 @@ const { getAllPhotoLibraryQuery, getAllLibraryImagesQuery } = require("../reposi
 const { getAllVideoLibraryQuery } = require("../repository/TableVideoLibrary");
 const { getAllShotTypesQuery } = require("../repository/TableShotType");
 const { getAllTipsQuery } = require("../repository/TableTips");
+const { getAllMarketRunnersQuery } = require("../repository/TableMarketRunner");
 
 const fetchAllDataFromDb = async (fastify, reply) => {
   try {
@@ -176,6 +177,8 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const getAllVideoLibrary = await getAllVideoLibraryQuery(fastify);
     const getAllShotTypes = await getAllShotTypesQuery(fastify);
     const getAllTips = await getAllTipsQuery(fastify);
+    const getAllEventMarketsV2 = await getAllEventMarketsV2Query(fastify);
+    const getEventMarketRunnerV2 = await getAllMarketRunnersQuery(fastify);
 
 
     global.tblTabs = getAllTabs;
@@ -248,7 +251,8 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblVideoLibrary = getAllVideoLibrary;
     global.tblShotType = getAllShotTypes;
     global.tblTips = getAllTips;
-    // global.tblMarketRunnerV1 = getEventMarketRunnerV1;
+    global.tblEventMarketsV2 = getAllEventMarketsV2;
+    global.tblMarketRunnerV2 = getEventMarketRunnerV2;
     // global.responseLogs = responseLogs;
     // global.thirdPartyAPILogs = thirdPartyAPILogs;
     // global.predictorAPILogs = predictorAPILogs;
@@ -290,6 +294,9 @@ const FetchingCommentariesDataFromCron = async (fastify) => {
     global.tblCommentaryWicket = global.tblCommentaryWicket.filter((item) => commentaryIds.includes(item.commentaryId));
     global.tblCommentaryPartnership = global.tblCommentaryPartnership.filter((item) => commentaryIds.includes(item.commentaryId));
 
+    global.tblEventMarketsV2 = global.tblEventMarketsV2.filter((item) => commentaryIds.includes(item.commentaryId));
+    const marketIds = new Set(global.tblEventMarketsV2.map((elem) => elem.eventMarketId));
+    global.tblMarketRunnerV2 = global.tblMarketRunnerV2.filter((item) => marketIds.has(item.eventMarketId));
 
     console.log("Commentary data updated in via node-cron successfully");
 
