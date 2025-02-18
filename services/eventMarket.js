@@ -505,7 +505,8 @@ const marketListResultFalseService = async (request, fastify) => {
     endDate,
     marketTypeId,
     marketTypeCategoryId,
-    rateSourceRefId
+    rateSourceRefId,
+    commentaryId
   } = request.body;
   
   let createWhereStatus = `tem."wrIsResult" = false AND tem."wrResult" IS NOT NULL AND tem."wrStatus" = ${EventMarketStatus.Settled} AND tc."wrIsDelete" = false AND tcom."wrIsDeleted" = false`;
@@ -517,6 +518,9 @@ const marketListResultFalseService = async (request, fastify) => {
     createWhereStatus += ` AND tem."wrMarketTypeId" IN (${MarketTypeId.LineMarket},${MarketTypeId.Fancy})`;
   // }
 
+  if(commentaryId && commentaryId != undefined){
+    createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrCommentaryId" = ${commentaryId}` : `tem."wrCommentaryId" = ${commentaryId}`;
+  }
   if(marketTypeId){
     createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrMarketTypeId" = ${marketTypeId}` : `tem."wrMarketTypeId" = ${marketTypeId}`;
   }
@@ -2961,7 +2965,8 @@ const pendingMultiRunnerMarketsService = async (request, fastify) => {
     endDate,
     marketTypeId,
     marketTypeCategoryId,
-    rateSourceRefId
+    rateSourceRefId,
+    commentaryId
   } = request.body;
 
   // let mt = global.tblMarketTypes.filter(
@@ -2975,6 +2980,9 @@ const pendingMultiRunnerMarketsService = async (request, fastify) => {
   // }
   if (rateSourceRefId && rateSourceRefId != 0) {
     createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrRateSource" = ${rateSourceRefId}` : `tem."wrRateSource" = ${rateSourceRefId}`;
+  }
+  if(commentaryId && commetaryId != undefined){
+    createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrCommentaryId" = ${commentaryId}` : `tem."wrCommentaryId" = ${commentaryId}`;
   }
   // if(mt.length > 0){
   //   createWhereStatus = createWhereStatus ? createWhereStatus + ` AND tem."wrMarketTypeId" NOT IN (${mt.join(",")})` : `tem."wrMarketTypeId" NOT IN (${mt.join(",")})`;
