@@ -3389,6 +3389,13 @@ const globalEventMarketDataWithMarketIdsService = async (request, fastify) => {
   });
   return eventMarketData;
 }
+
+const globalScoketDataService = async (request, fastify) => {
+  const socketData = global.socketData
+  const marketData = global.marketData
+  const marketArr = global.MarketArr
+  return {socketData, marketData, marketArr};
+}
 module.exports = {
   getDetailsByCIdService,
   getAllEventMarketsService,
@@ -3441,57 +3448,5 @@ module.exports = {
   upIsInningRunApiService,
   globalEventMarketDataWithCommIdService,
   globalEventMarketDataWithMarketIdsService,
+  globalScoketDataService
 };
-
-
-[
-  {
-    "eventMarketId": 1,
-    "status": 2,
-    "commentaryId": 52,
-    "runner": [
-      {
-        "eventMarketId": 1,
-        "runner": "teamA"
-      },
-      {
-        "eventMarketId": 1,
-        "runner": "teamB"
-      },
-    ]
-  },
-  {
-    "eventMarketId": 2,
-    "status": 2,
-    "commentaryId": 52,
-    "runner": [
-      {
-        "eventMarketId": 2,
-        "runner": "over 1"
-      },
-      {
-        "eventMarketId": 2,
-        "runner": "over 2"
-      },
-      {
-        "eventMarketId": 2,
-        "runner": "over 3"
-      },
-      {
-        "eventMarketId": 2,
-        "runner": "over 4"
-      },
-    ]
-  },
-  {
-    "eventMarketId": 5,
-    "status": 2,
-    "commentaryId": 52,
-    "runner": [
-      {
-        "eventMarketId": 5,
-        "runner": "player a"
-      }
-    ]
-  }
-]
