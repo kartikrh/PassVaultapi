@@ -1694,7 +1694,8 @@ const handleMarketCloseService = async (data, request, fastify) => {
   },request,fastify)
 
   const updateData = [...closeMar1, ...closeMar2];
-  let whereCondition = ` tem."wrID" IN(${updateData})`
+  const eventMarketIds = updateData.map((r) => r.eventMarketId);
+  let whereCondition = ` tem."wrID" IN(${eventMarketIds})`
   const eventMarketData = await getAllEventMarketsV2Query(fastify, whereCondition)
   for (let event of eventMarketData) {
     let index = global.tblEventMarketsV2.findIndex(

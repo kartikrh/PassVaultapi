@@ -1040,7 +1040,8 @@ const createUpdateGlobalSignalRData = async (message, request) => {
                         _updateData.teamId = runnerData.teamId;
                     } else {
                         commentary = await global.tblCommentaries.find(
-                            (item) => item.commentaryId === _selectionidData.commentaryId
+                            // (item) => item.commentaryId === _selectionidData.commentaryId
+                            (item) => item.commentaryId === eventMarketData.commentaryId
                         );
                         if (commentary && commentary.isTeamPredictionOn) {
                             let teams;
@@ -1048,7 +1049,8 @@ const createUpdateGlobalSignalRData = async (message, request) => {
                                 (item) =>
                                 item.commentaryId === commentary.commentaryId &&
                                 item.currentInnings === commentary.currentInnings &&
-                                item.teamName === _selectionidData.runner
+                                // item.teamName === _selectionidData.runner
+                                item.teamName === runnerData.runner
                             );
 
                             if (teams) {
@@ -1225,8 +1227,11 @@ const updateMarketRunnerDataOnSocket = async (message) => {
         //     (item) => item.rateSourceRefID === data.mi
         // );
 
-        const _runnersData = global.tblEventMarketsV2.filter(
-            (item) => item.rateSourceRefID === data.mi
+        const eventMarket = global.tblEventMarketsV2.find(elem =>
+            elem.rateSourceRefID == data.mi
+        );
+        const _runnersData = global.tblMarketRunnerV2.filter(elem =>
+            elem.eventMarketId == eventMarket.eventMarketId
         );
 
         _runnersData.forEach((item) => {
