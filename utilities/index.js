@@ -231,7 +231,10 @@ const MarketActionType = {
   closeMarketOnTossWin : 5,
   setAndFinalizeResult:6,
   setResultAndIsResultFalse :7,
-  allMarketClose : 8
+  allMarketClose : 8,
+  dlsMarketClose : 9,
+  dlsMarketCloseCancel : 10,
+  closeMarketOnDLSChange : 11,
 }
 const callPredictorMarket = async (data , endpoint ,fastify ,request) =>{
   let requestStartTime = new Date();
@@ -374,6 +377,8 @@ const ActionTypeForMarketCancel ={
   winCloseCancel : 2,
   winMustClose : 3,
   winMustCloseCancel : 4,
+  dlsCloseMarket : 5,
+  dlsCloseCancelMarket : 6
 }
 const genrateKey = () => {
   // Define the format pattern

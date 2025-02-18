@@ -3461,7 +3461,35 @@ const updateMaxOverDetailQuery = async (data, fastify, request) => {
     throw new Error(error.message);
   }
 };
-
+const upOverDLSQuery = async (data, fastify, request) => {
+  try {
+     const result = await fastify.db.query(
+      `update "tblCommentaryTeams" SET
+        "wrTeamMaxOver" = $1,
+        "wrTeamTrialRuns" = $2
+      WHERE "wrCommentaryTeamId" = $3 AND "wrIsDelete" = false
+      `,
+      {
+        bind: [
+          data.teamMaxOver,
+          data.teamTrialRuns,
+          data.commentaryTeamId,
+        ],
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+    return result;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCommentary/upOverDLSQuery",
+      request
+    );
+    throw new Error(error.message);
+    
+  }
+}
 const updateSuperOverCommentaryQuery = async (data, fastify) => {
   try {
     return await fastify.db.query(
@@ -4758,4 +4786,5 @@ module.exports = {
   getAllCommentaryWicketDataQuery,
   getAllCommentaryPartnershipDataQuery,
   getCommentariesDataByDifferentIdsQuery,
+  upOverDLSQuery
 };
