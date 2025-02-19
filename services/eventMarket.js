@@ -2934,11 +2934,11 @@ const sendToSocket = (data,request,fastify)=>{
 
     // emitting inningRun true data
     let inningsRunData = dataToSocket.filter((item) => item?.isInningRun === true);
-    const roomName = `market-${inningsRunData[0]?.commentaryId}`;
+    const roomName = `mnMarket-${inningsRunData[0]?.commentaryId}`;
     const clientsInRoom = global.socketIo.sockets.adapter.rooms.get(roomName);
   
     if (clientsInRoom?.size && inningsRunData.length > 0) {
-        global.socketIo.to(roomName).emit("inningsRunData", inningsRunData);
+        global.socketIo.to(roomName).emit("upMnMarket", inningsRunData);
     }
     return true;
   } catch (error) {
