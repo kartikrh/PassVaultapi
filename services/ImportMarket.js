@@ -432,9 +432,14 @@ const ImportMarketWithRunnerService = async (request, fastify) => {
           request,
           fastify
         );
-        let whereCondition = ` tmr."wrRunnerId" = ${setMarketRunnders.runnerId}`
-        const runnersData = await getAllMarketRunnersQuery(fastify, whereCondition)
-        global.tblMarketRunnerV2.push(runnersData[0]);
+        let runnerIndex = global.tblMarketRunnerV2.findIndex(
+          (e) => e.runnerId === setMarketRunnders.runnerId
+        );
+        if(runnerIndex === -1){
+          let whereCondition = ` tmr."wrRunnerId" = ${setMarketRunnders.runnerId}`
+          const runnersData = await getAllMarketRunnersQuery(fastify, whereCondition)
+          global.tblMarketRunnerV2.push(runnersData[0]);
+        }
       }
     }
 
@@ -458,7 +463,7 @@ const ImportMarketWithRunnerService = async (request, fastify) => {
          }
 
         let runnerIndex = global.tblMarketRunnerV2.findIndex(
-          (e) => e.selectionId === element.selectionId
+          (e) => e.selectionId === element.selectionId && e.runnerId === element.runnerId
         );
         let runnerData = {
           runnerId: element.runnerId,
