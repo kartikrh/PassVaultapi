@@ -5415,6 +5415,43 @@ const getMnMarketByCId = async (data, fastify ,request = null) => {
     throw new Error(error.message);
   }
 };
+const getRsMarketQuery = async (data, request, fastify) => {
+  try {
+    let result = await fastify.db.query(
+      `
+        SELECT 
+          "wrID" as "eventMarketId",
+          "wrMarketName" as "marketName",
+          "wrResult" as "result",
+          "wrTeamID" as "teamId"
+        FROM "tblEventMarkets"
+        WHERE "wrCommentaryId" = $1
+        AND "wrIsInningRun" = $2
+        AND "wrStatus" = $3
+        AND "wrIsDeleted" = false
+      `,
+    {
+      type: fastify.db.QueryTypes.SELECT,
+      bind: [
+        data.commentaryId,
+        true,
+        EventMarketStatus.Settled
+      ]
+    })
+
+    return result[0];
+  } catch (error) {
+    console.log(error)
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/getTargetQyery",
+      request
+    );
+    throw new Error(error.message);
+    
+  }
+}
 module.exports = {
   getAllEventMarketsV2Query,
   getAllEventMarketsQuery,
@@ -5497,6 +5534,7 @@ module.exports = {
   getTargetQyery,
   cancelMarketByATQuery1,
   closeMarketByATQuery1,
-  getMnMarketByCId
+  getMnMarketByCId,
+  getRsMarketQuery
 }
 
