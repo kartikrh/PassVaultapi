@@ -1934,7 +1934,13 @@ const updateEventMarketMaunalQuery = async (data, request, fastify) => {
         UPDATE "tblEventMarkets"
         SET "wrEventRefID" = $1, "wrMarketName" = $2, "wrStatus" = $3, "wrIsActive" = $4, "wrIsAllow" = $5, "wrLastUpdate" = $6,"wrRateSource" = $7,"wrCommentaryId" = $9
         WHERE "wrRateSourceRefID" = $8
-        RETURNING "wrID" as "eventMarketId"
+        RETURNING "wrID" as "eventMarketId".
+          "wrMarketName" as "marketName",
+          "wrStatus" as "status",
+          "wrIsActive" as "isActive",
+          "wrLastUpdate" as "lastUpdate",
+          "wrRateSource" as "rateSource",
+          "wrCommentaryId" as "commentaryId"
     `;
     const result = await fastify.db.query(query, {
       bind: [
