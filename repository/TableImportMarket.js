@@ -453,6 +453,11 @@ const updateMarketRunnerTeambySelectionId = async (fastify, request) => {
           values: [teamId, runnerId],
         };
       } else {
+        let whereCondition = ` tmr."wrSelectionId" = ${selectionId}`
+        const runnerData = await getAllMarketRunnersQuery(fastify, whereCondition);
+        if(runnerData.length > 0){
+          global.tblMarketRunnerV2.push(runnerData[0])
+        }
         // If not found, store selectionId in notFoundSelectionIds array
         notFoundSelectionIds.push(selectionId);
         return null; // Return null or undefined for items not to be updated
@@ -483,11 +488,6 @@ const updateMarketRunnerTeambySelectionId = async (fastify, request) => {
        });
      });
 
-    let whereCondition = ` tmr."wrRunnerId" = ${runnerId}`
-    const runnerData = await getAllMarketRunnersQuery(fastify, whereCondition);
-    if(runnerData.length > 0){
-      global.tblMarketRunnerV2.push(runnerData[0])
-    }
 
     // Format response message
     let responseMessage = '';
@@ -501,6 +501,7 @@ const updateMarketRunnerTeambySelectionId = async (fastify, request) => {
     return responseMessage;
 
   } catch (err) {
+    console.log("set runner error..", err)
     errorLogger(
       fastify,
       err.message,
