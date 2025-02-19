@@ -431,9 +431,14 @@ const ImportMarketWithRunnerService = async (request, fastify) => {
           request,
           fastify
         );
-        let whereCondition = ` tmr"wrRunnerId" = ${setMarketRunnders.runnerId}`
-        const runnersData = await getAllMarketRunnersQuery(fastify, whereCondition)
-        global.tblMarketRunnerV2.push(...runnersData);
+        let runnerIndex = global.tblMarketRunnerV2.findIndex(
+          (e) => e.runnerId === setMarketRunnders.runnerId
+        );
+        if(runnerIndex === -1){
+          let whereCondition = ` tmr."wrRunnerId" = ${setMarketRunnders.runnerId}`
+          const runnersData = await getAllMarketRunnersQuery(fastify, whereCondition)
+          global.tblMarketRunnerV2.push(runnersData[0]);
+        }
       }
     }
 
@@ -455,14 +460,31 @@ const ImportMarketWithRunnerService = async (request, fastify) => {
            global.tblEventMarkets[index2] = element;
          }
 
-        let runnerIndex = global.tblMarketRunnerV2.findIndex(
-          (e) => e.selectionId === element.selectionId
+         let runnerIndex = global.tblMarketRunnerV2.findIndex(
+          (e) => e.selectionId === element.selectionId && e.runnerId === element.runnerId
         );
+        let runnerData = {
+          runnerId: element.runnerId,
+          eventMarketId: element.eventMarketId,
+          runner: element.runner,
+          line: element.line,
+          overRate: element.overRate,
+          underRate: element.underRate,
+          backPrice: element.backPrice,
+          layPrice: element.layPrice,
+          backSize: element.backSize,
+          laySize: element.laySize,
+          lastUpdate: element.runnerLastUpdate,
+          selectionId: element.selectionId,
+          selectionStatus: element.selectionStatus,
+          order: element.order,
+          teamId: element.teamId,
+        };
         if (runnerIndex === -1) {
-          global.tblMarketRunnerV2.push(element);
+          global.tblMarketRunnerV2.push(runnerData);
         }
         else {
-          global.tblMarketRunnerV2[runnerIndex] = element;
+          global.tblMarketRunnerV2[runnerIndex] = runnerData;
         }
       }
     }

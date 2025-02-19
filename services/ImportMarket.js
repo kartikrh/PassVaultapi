@@ -401,7 +401,7 @@ const ImportMarketWithRunnerService = async (request, fastify) => {
       if (index !== -1) {
         global.tblEventMarketsV2[index] = {
           ...global.tblEventMarketsV2[index],
-          ...req
+          ...setEventsMarket
         };
       }
     }

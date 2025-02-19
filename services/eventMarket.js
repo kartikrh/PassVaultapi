@@ -2508,9 +2508,9 @@ const createEventMarketsServiceV1 = async (request, fastify) => {
     index2 === -1
       ? global.tblEventMarketsV2.push(filteredItem)
       : (global.tblEventMarketsV2[index2] = filteredItem);
-      let index4 = global.tblEventMarketsV2.findIndex(
-        (market) => market.eventMarketId === item.eventMarketId
-      );
+      // let index4 = global.tblEventMarketsV2.findIndex(
+      //   (market) => market.eventMarketId === item.eventMarketId
+      // );
     for(let runner of runners){
       let runnerIndex = global.tblMarketRunnerV2.findIndex(
         (market) => market.runnerId === runner.runnerId
@@ -2518,9 +2518,9 @@ const createEventMarketsServiceV1 = async (request, fastify) => {
       runnerIndex === -1
         ? global.tblMarketRunnerV2.push({ ...runner, eventMarketId: item.eventMarketId, lastUpdate: new Date() })
         : (global.tblMarketRunnerV2[runnerIndex] = { ...runner, eventMarketId: item.eventMarketId, lastUpdate: new Date() });
-        let runnerIndex2 = global.tblMarketRunnerV2.findIndex(
-          (market) => market.runnerId === runner.runnerId
-        );
+        // let runnerIndex2 = global.tblMarketRunnerV2.findIndex(
+        //   (market) => market.runnerId === runner.runnerId
+        // );
     }  
     marketDataLogger(
       {
@@ -2673,9 +2673,9 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
     index2 === -1
       ? global.tblEventMarketsV2.push(filteredItem)
       : (global.tblEventMarketsV2[index2] = filteredItem);
-      let index4 = global.tblEventMarketsV2.findIndex(
-        (market) => market.eventMarketId === item.eventMarketId
-      );
+      // let index4 = global.tblEventMarketsV2.findIndex(
+      //   (market) => market.eventMarketId === item.eventMarketId
+      // );
     for(let runner of runners){
     let runnerIndex = global.tblMarketRunnerV2.findIndex(
       (market) => market.runnerId === runner.runnerId
@@ -2683,9 +2683,9 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
     runnerIndex === -1
       ? global.tblMarketRunnerV2.push({ ...runner, eventMarketId: item.eventMarketId, lastUpdate: new Date()})
       : (global.tblMarketRunnerV2[runnerIndex] = { ...runner, eventMarketId: item.eventMarketId, lastUpdate: new Date() });
-      let runnerIndex2 = global.tblMarketRunnerV2.findIndex(
-        (market) => market.runnerId === runner.runnerId
-      );
+      // let runnerIndex2 = global.tblMarketRunnerV2.findIndex(
+      //   (market) => market.runnerId === runner.runnerId
+      // );
     }  
     let category = global.tblMarketTypeCategories.find(
       (cat) => cat.marketTypeCategoryId === item.marketTypeCategoryId
