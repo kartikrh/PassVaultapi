@@ -3079,23 +3079,24 @@ const updateMarketResultService = async (request, fastify) => {
           (item) => !eventMarketId.includes(item.eventMarketId)
         );
       }
-      global.tblEventMarketsV2[index].isResult = isResult;
-      global.tblEventMarketsV2[index].result = result;
+      // global.tblEventMarketsV2[index].isResult = isResult;
+      // global.tblEventMarketsV2[index].result = result;
     }
     if(!isResult){
       global.tblEventMarketsV2[index].result = result;
+      global.tblEventMarketsV2[index].isResult = isResult;
     }
   }
 
-  if(index !== -1){
-    if(isResult){
-      global.tblEventMarketsV2[index].isResult = isResult;
-      global.tblEventMarketsV2[index].result = result;
-    }
-    if(!isResult){
-      global.tblEventMarketsV2[index].result = result;
-    }
-  }
+  // if(index !== -1){
+  //   if(isResult){
+  //     global.tblEventMarketsV2[index].isResult = isResult;
+  //     global.tblEventMarketsV2[index].result = result;
+  //   }
+  //   if(!isResult){
+  //     global.tblEventMarketsV2[index].result = result;
+  //   }
+  // }
   let runnerIndex1 = global.tblMarketRunnerV2.findIndex(
     (item) => item.runnerId === result
   );
@@ -3405,7 +3406,7 @@ const saveManualMarketDataService = async (request, fastify) => {
 
   let whereClause = ` tmr."wrEventMarketId" = ${eventMarket.eventMarketId}`
   const runnerData = await getAllMarketRunnersQuery(fastify, whereClause);
-  global.tblMarketRunnerV2.push(runnerData[0]);
+  global.tblMarketRunnerV2.push(...runnerData);
   return "Market saved successfully";
 }
 const upManualMarketDataService = async (request, fastify) => {

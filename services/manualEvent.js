@@ -433,7 +433,7 @@ const ImportMarketWithRunnerService = async (request, fastify) => {
         );
         let whereCondition = ` tmr"wrRunnerId" = ${setMarketRunnders.runnerId}`
         const runnersData = await getAllMarketRunnersQuery(fastify, whereCondition)
-        global.tblMarketRunnerV2.push(runnersData[0]);
+        global.tblMarketRunnerV2.push(...runnersData);
       }
     }
 
