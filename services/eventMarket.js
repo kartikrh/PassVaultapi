@@ -58,6 +58,7 @@ const {
   getAllEventMarketsV2Query,
   closeMarketByATQuery1,
   cancelMarketByATQuery1,
+  getRsMarketQuery,
 } = require("../repository/TableEventMarkets");
 const { getRunnerByIdQuery, setResultInRunnerMarketQuery, getRunnerByMarketQuery } = require("../repository/TableMarketRunner");
 const configConstants = require("../utilities/configConstants");
@@ -3366,6 +3367,7 @@ const getManualMarketDataService = async (request, fastify) => {
     eventRefId: com.eventRefId,
   },request, fastify);
 
+  const rsMarket = await getRsMarketQuery({commentaryId: commentaryId}, request, fastify)
 
 
   let comTeam = global.tblCommentaryTeams.filter(
@@ -3392,7 +3394,8 @@ const getManualMarketDataService = async (request, fastify) => {
     },
     teams: comTeam,
     market: market,
-    tpMarkets : market1
+    tpMarkets : market1,
+    rsMarket : rsMarket || null
   }
   return data;
 }
