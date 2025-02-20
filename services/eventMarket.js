@@ -484,14 +484,19 @@ const getCommentaryListByCompetitionIdService = async (request, fastify) => {
     throw new Error("Competition with this id not Found");
   }
   // get the commentaryList by competitionId
-  let whereCondition = `tc."wrIsDelete" = false AND co."wrIsDeleted" = false AND tc."wrCompetitionId" = ${competitionId}`
-  let commentaries = await getCommentariesDataByDifferentIdsQuery(whereCondition, request, fastify);
+  // let whereCondition = `tc."wrIsDelete" = false AND co."wrIsDeleted" = false AND tc."wrCompetitionId" = ${competitionId}`
+  // let commentaries = await getCommentariesDataByDifferentIdsQuery(whereCondition, request, fastify);
   
-  let commentaryList = commentaries.map((item) => ({
-      eventId: item.eventId,
-      eventName: item.eventName,
-      eventDate: item.eventDate,
-    }));
+  // let commentaryList = commentaries.map((item) => ({
+  //     eventId: item.eventId,
+  //     eventName: item.eventName,
+  //     eventDate: item.eventDate,
+  //   }));
+  let commentaryList = global.tblCommentaries.filter((item)=> item.competitionId === competitionId).map((item) => ({
+    commentaryId: item.commentaryId,
+    eventName: item.eventName,
+    eventDate: item.eventDate,
+  }));
   return commentaryList;
 };
 
