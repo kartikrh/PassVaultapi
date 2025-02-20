@@ -493,7 +493,7 @@ const getCommentaryListByCompetitionIdService = async (request, fastify) => {
   //     eventDate: item.eventDate,
   //   }));
   let commentaryList = global.tblCommentaries.filter((item)=> item.competitionId === competitionId).map((item) => ({
-    eventId: item.eventId,
+    commentaryId: item.commentaryId,
     eventName: item.eventName,
     eventDate: item.eventDate,
   }));
