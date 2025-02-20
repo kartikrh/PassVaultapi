@@ -4463,7 +4463,7 @@ const socketMarketRunnerDataQuery = async (eventId, fastify) => {
                   ) 
               ) FILTER (WHERE tmr."wrRunnerId" IS NOT NULL), 
               '[]'::json
-          ) as "runner"
+          ) as "runners"
       FROM "tblEventMarkets" tem
       LEFT JOIN "tblMarketRunners" tmr ON tmr."wrEventMarketId" = tem."wrID" AND tmr."wrIsDeleted" = false
       LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = tmr."wrTeamId" AND tmr."wrIsDeleted" = false
