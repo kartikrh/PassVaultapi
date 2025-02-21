@@ -42,14 +42,8 @@ const connection = (socket , fastify) => {
         global.socketIo.to(roomName).emit("upMnMarket", inninRunData);
       }
       const timeLogs = await insertTimeLogs(commentaryId, fastify)
-
-      
   
-      const marketIdArr = marketData.map((item) => {
-        const mark = JSON.parse(item);
-        MarketArr.push(mark);
-        return mark.marketId;
-      });
+   
   
       const marketToUpdatePromise = getEventMarketByIdsQuery(
         { eventMarketIds: marketIdArr },
