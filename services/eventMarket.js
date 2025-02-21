@@ -597,25 +597,37 @@ const marketListResultFalseService = async (request, fastify) => {
 };
 const changeResultOfMarketService = async (request, fastify) => {
   const { eventMarketId, isResult } = request.body;
-  let eventMarket = global.tblEventMarketsV2.findIndex(
-    (item) => item.eventMarketId === eventMarketId
+  let eventMarket = await getEventMarketByIdsQuery(
+    {
+      eventMarketIds: [eventMarketId],
+    },
+    request,
+    fastify
   );
-  if (eventMarket === -1) {
-    throw new Error("EventMarket with this id not Found");
+  if(eventMarket.length === 0){
+    throw new Error(
+      "EventMarketId not found"
+    );
   }
 
-  if (global.tblEventMarketsV2[eventMarket].isResult) {
+  if (eventMarket[0].isResult) {
     throw new Error("Result of this market is already set");
   }
   const result = await changeIsResultEventMarketQuery(request.body, request, fastify);
-  if (result.status === 5 && result.isResult === true){
-    global.tblEventMarketsV2.splice(eventMarket, 1);
-  } else {
-    global.tblEventMarketsV2[eventMarket] = {
-      ...global.tblEventMarketsV2[eventMarket],
-      ...result
-    };
+  let index = global.tblEventMarketsV2.findIndex(
+    (item) => item.eventMarketId === eventMarketId
+  );
+  if(index != -1){
+    if (result.status === EventMarketStatus.Settled && result.isResult === true){
+      global.tblEventMarketsV2.splice(eventMarket, 1);
+    } else {
+      global.tblEventMarketsV2[eventMarket] = {
+        ...global.tblEventMarketsV2[eventMarket],
+        ...result
+      };
+    }
   }
+  
   marketLogger(
     {
       eventMarketId,
@@ -1333,26 +1345,55 @@ const changeMarketResultService = async (request, fastify) => {
      if(!data){
       throw new Error("Runner with this id not Found");
     }
-    const result = await setResultInRunnerMarketQuery(request.body, request, fastify);
-    // update code properly
+    const result1 = await setResultInRunnerMarketQuery(request.body, request, fastify);
+    // remove this market from global 
     let index = global.tblEventMarketsV2.findIndex(
       (item) => item.eventMarketId === eventMarketId
     );
     if(index !== -1){
-      global.tblEventMarketsV2[index] = {
-        ...global.tblEventMarketsV2[index],
-        ...result
-      };
+      global.tblEventMarketsV2.splice(index, 1);
     }
-    let runnerIndex1 = global.tblMarketRunnerV2.findIndex(
-      (item) => item.runnerId === result
+    let runners = global.tblMarketRunnerV2.filter(
+      (item) => item.eventMarketId === eventMarketId
     );
-    global.tblMarketRunnerV2[runnerIndex1].selectionStatus = EventMarketStatus.WIN
-    let runnerIndex2 = global.tblMarketRunnerV2.findIndex(
-      (item) => item.runnerId !== result && item.eventMarketId === eventMarketId
-    );
-    
-    global.tblMarketRunnerV2[runnerIndex2].selectionStatus = EventMarketStatus.LOSE
+    for (let runner of runners){
+      let index = global.tblMarketRunnerV2.findIndex(
+        (item) => item.runnerId === runner.runnerId
+      );
+      if(index !== -1){
+        global.tblMarketRunnerV2.splice(index, 1);
+      }
+    }
+    // update code properly
+    // let index = global.tblEventMarketsV2.findIndex(
+    //   (item) => item.eventMarketId === eventMarketId
+    // );
+    // if(index !== -1){
+    //   global.tblEventMarketsV2[index] = {
+    //     ...global.tblEventMarketsV2[index],
+    //     ...result1
+    //   };
+    // }
+    // let runnerIndex1 = global.tblMarketRunnerV2.findIndex(
+    //   (item) => item.runnerId === result
+    // );
+    // if(runnerIndex1 != -1){
+    //   global.tblMarketRunnerV2[runnerIndex1].selectionStatus = EventMarketStatus.WIN
+    // }
+    // let otherRunner = global.tblMarketRunnerV2.filter(
+    //   (item) => item.runnerId !== result && item.eventMarketId === eventMarketId
+    // );
+    // if(otherRunner.length > 0){
+    //   for (let runner of otherRunner){
+    //     let index = global.tblMarketRunnerV2.findIndex(
+    //       (item) => item.runnerId === runner.runnerId
+    //     );
+    //     if(index !== -1){
+    //       global.tblMarketRunnerV2[index].selectionStatus = EventMarketStatus.LOSE
+    //     }
+    //   }
+    // }
+    // global.tblMarketRunnerV2[runnerIndex2].selectionStatus = EventMarketStatus.LOSE
 
     if(commentary.commentaryStatus === commentaryStatus.INPROGRESS || commentary.commentaryStatus === commentaryStatus.COMPLETED){
       const strikeTeam = global.tblCommentaryTeams.find(
