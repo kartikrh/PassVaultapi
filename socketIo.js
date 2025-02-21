@@ -34,7 +34,7 @@ const connection = (socket , fastify) => {
       const roomName = `mnMarket-${commentaryId}`;
       const clientsInRoom = global.socketIo.sockets.adapter.rooms.get(roomName);
       if (clientsInRoom?.size && inninRunData.length > 0) {
-        global.socketIo.to(commentaryId).emit("upMnMarket", inninRunData);
+        global.socketIo.to(roomName).emit("upMnMarket", inninRunData);
       }
       const timeLogs = await insertTimeLogs(commentaryId, fastify)
 
