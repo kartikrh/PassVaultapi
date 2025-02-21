@@ -1,5 +1,6 @@
 const { QueryTypes } = require("sequelize");
 const { errorLogger } = require("../utilities/logger");
+const { getAllMarketRunnersQuery } = require("../repository/TableMarketRunner");
 
 const insertEventTypeQuery = async (data, fastify, request) => {
   try {
@@ -440,6 +441,12 @@ const updateMarketRunnerTeambySelectionId = async (fastify, request) => {
       );
 
       if (selectionExists[0].count > 0) {
+        let index = global.tblMarketRunnerV2.findIndex((elem) => 
+          elem.runnerId === runnerId
+        );
+        if(index !== -1){
+          global.tblMarketRunnerV2[index].teamId = teamId
+        }
         // If exists, prepare update query
         return {
           query: `UPDATE "tblMarketRunners" SET "wrTeamId" = $1 WHERE "wrRunnerId" = $2`,
@@ -476,6 +483,7 @@ const updateMarketRunnerTeambySelectionId = async (fastify, request) => {
        });
      });
 
+
     // Format response message
     let responseMessage = '';
     if (notFoundSelectionIds.length > 0) {
@@ -488,6 +496,7 @@ const updateMarketRunnerTeambySelectionId = async (fastify, request) => {
     return responseMessage;
 
   } catch (err) {
+    console.log("set runner error..", err)
     errorLogger(
       fastify,
       err.message,

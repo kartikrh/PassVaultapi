@@ -12,7 +12,9 @@ const {
   updateEventMarketMaunalQuery,
   createOrUpdateEventRunnerMarketManualQuery,
   getEventMarketByIdsQuery,
+  getAllEventMarketsV2Query
 } = require("../repository/TableEventMarkets");
+const { getAllMarketRunnersQuery } = require("../repository/TableMarketRunner");
 const configConstants = require("../utilities/configConstants");
 
 const ImportMarketService = async (request, fastify) => {
@@ -331,7 +333,10 @@ const ImportMarketWithRunnerService = async (request, fastify) => {
 
     //EventMarket Add/Update
     let setEventsMarket;
-    const EventsMarketobj = global.tblEventMarkets.find(
+    // const EventsMarketobj = global.tblEventMarkets.find(
+    //   (item) => item.rateSourceRefID == request.body.marketID
+    // );
+    const EventsMarketobj = global.tblEventMarketsV2.find(
       (item) => item.rateSourceRefID == request.body.marketID
     );
     if (!EventsMarketobj) {
@@ -361,6 +366,9 @@ const ImportMarketWithRunnerService = async (request, fastify) => {
         request,
         fastify
       );
+      let whereCondition = ` tem."wrID" = ${setEventsMarket.eventMarketId}`
+      const eventMarketData = await getAllEventMarketsV2Query(fastify, whereCondition);
+      global.tblEventMarketsV2.push(eventMarketData[0]);
     } else {
       let req = {};
 
@@ -386,6 +394,15 @@ const ImportMarketWithRunnerService = async (request, fastify) => {
         request,
         fastify
       );
+      let index = global.tblEventMarketsV2.findIndex(
+        (elem) => elem.rateSourceRefID == request.body.marketID
+      );
+      if (index !== -1) {
+        global.tblEventMarketsV2[index] = {
+          ...global.tblEventMarketsV2[index],
+          ...setEventsMarket
+        };
+      }
     }
 
     //MarketRunnders Add/Update
@@ -414,6 +431,14 @@ const ImportMarketWithRunnerService = async (request, fastify) => {
           request,
           fastify
         );
+        let runnerIndex = global.tblMarketRunnerV2.findIndex(
+          (e) => e.runnerId === setMarketRunnders.runnerId
+        );
+        if(runnerIndex === -1){
+          let whereCondition = ` tmr."wrRunnerId" = ${setMarketRunnders.runnerId}`
+          const runnersData = await getAllMarketRunnersQuery(fastify, whereCondition)
+          global.tblMarketRunnerV2.push(runnersData[0]);
+        }
       }
     }
 
@@ -434,6 +459,33 @@ const ImportMarketWithRunnerService = async (request, fastify) => {
          } else {
            global.tblEventMarkets[index2] = element;
          }
+
+         let runnerIndex = global.tblMarketRunnerV2.findIndex(
+          (e) => e.selectionId === element.selectionId && e.runnerId === element.runnerId
+        );
+        let runnerData = {
+          runnerId: element.runnerId,
+          eventMarketId: element.eventMarketId,
+          runner: element.runner,
+          line: element.line,
+          overRate: element.overRate,
+          underRate: element.underRate,
+          backPrice: element.backPrice,
+          layPrice: element.layPrice,
+          backSize: element.backSize,
+          laySize: element.laySize,
+          lastUpdate: element.runnerLastUpdate,
+          selectionId: element.selectionId,
+          selectionStatus: element.selectionStatus,
+          order: element.order,
+          teamId: element.teamId,
+        };
+        if (runnerIndex === -1) {
+          global.tblMarketRunnerV2.push(runnerData);
+        }
+        else {
+          global.tblMarketRunnerV2[runnerIndex] = runnerData;
+        }
       }
     }
   } else {

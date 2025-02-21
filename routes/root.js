@@ -35,10 +35,11 @@ const {
 } = require("../controller/users/index");
 const { Auth ,sendPushNotification,weblogs, Config} = require("../swaggerSchema/groupTags/schema");
 const { authorize } = require("../controller/middleware/index");
-const { startSignalR, stopSignalR, isSignalRStarted  } = require('../signalrHandler/MockSignalR');
+const { startSignalR, stopSignalR, isSignalRStarted, stopCustomSignalR, isCustomSignalRStarted  } = require('../signalrHandler/MockSignalR');
 const { errorLogger } = require("../utilities/logger");
 const { getAllConfigData } = require("../controller/users/admin/Page/config");
 const { marketType } = require("../controller/users/admin/matchType");
+const { thirdPartyApiType } = require('../utilities/index');
 
 module.exports = async function (fastify, opts) {
   //! API DEFINITION
@@ -106,6 +107,11 @@ module.exports = async function (fastify, opts) {
           await stopSignalR(fastify);
           reply.send({ status: "SignalR stopped" });
         } else {
+          global.tblThirdPartyApis.forEach((item) => {
+            if (item.isActive === true && item.type === thirdPartyApiType.Socket && item.isDefault === true) {
+                item.adminDisconnected = false;
+            }
+          });
           await startSignalR(fastify);
           reply.send({ status: "SignalR started" });
         }
@@ -115,6 +121,28 @@ module.exports = async function (fastify, opts) {
 
     }
   });
+
+  fastify.post("/signalr/connection", {
+    handler: async (request, reply) => {
+      try {
+        if (isCustomSignalRStarted(request, fastify)) {
+          await stopCustomSignalR(request, fastify);
+          reply.send({ status: "SignalR stopped" });
+        } else {
+          let thirdParty = global.tblThirdPartyApis.find((item) => item.id === request.body.id);
+          if(thirdParty){
+            thirdParty.adminDisconnected = false;
+          }
+          await startSignalR(fastify);
+          reply.send({ status: "SignalR started" });
+        }
+      } catch (error) {
+        errorLogger(fastify, error.message, "signalr/connection" , request);
+        return error;
+      }
+    }
+  });
+
   fastify.post("/signalr/checkStatus", {
     handler: async (request, reply) => {
       try {

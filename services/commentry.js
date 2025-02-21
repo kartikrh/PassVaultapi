@@ -76,6 +76,7 @@ const {
   deleteCommentryHistoryQuery,
   getCommPlayersByCommentaryIdQuery,
   getAllCompletedCommentaryQuery,
+  upOverDLSQuery,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -93,7 +94,7 @@ const {
   MarketTypeId
 } = require("../utilities");
 const { getAllPlayersByTeamIdQuery } = require("../repository/TableTeams");
-const { handleMarketCloseService, updateComInMarketService, suspendMarketService } = require("./eventMarket");
+const { handleMarketCloseService, updateComInMarketService, suspendMarketService, handleMarketByDLSService } = require("./eventMarket");
 const { createMarketOddsBallByBallBYID, deleteMarketOddsBallByBall, createMarketOddsBallInSaveDetails } = require("../repository/TableMarketOddsBallByBall");
 const { getEventMarketRatioQuery, closeEventMarketByCIdQuery, getMarketsByCategoryQuery, getEventMarketByIdsQuery, getMarketsByComIdQuery, updateEventMarketCloseQuery, getMarCountByComQuery, getExtrenalMarketQuery, getEventMarketsByCommId } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
@@ -1332,10 +1333,42 @@ const deleteCommentaryService = async (request, fastify) => {
     eventIdArr.push(eventId.eventRefId);
     await deleteCommentryQuery(commentary, request, fastify);
     await updateEventMarketCloseQuery(commentaryId, request, fastify)
+    // if (result.length > 0) {
+    //   result.forEach((updatedItem) => {
+    //     let index = global.tblEventMarketsV2.findIndex(
+    //       (item) => item.eventMarketId === updatedItem.eventMarketId
+    //     );
+    //     if (index !== -1) {
+    //       global.tblEventMarketsV2[index] = {
+    //         ...global.tblEventMarketsV2[index],
+    //         ...updatedItem,
+    //       };
+    //     }
+    //     global.tblMarketRunnerV2.forEach((elem) => {
+    //       if (elem.eventMarketId === updatedItem.eventMarketId) {
+    //         elem.selectionStatus = EventMarketStatus.Close;
+    //       }
+    //     });
+    //   });
+    // }
+
+  
     await deleteCommentaryPlayerHistoryQuery(commentary, request, fastify);
     await deleteEventSnapByCommentaryIdQuery(commentary, request, fastify);
     await deleteTipsByCommentaryIdQuery(commentary, request, fastify);
   }
+
+  const marketIds = global.tblEventMarketsV2
+    .filter((item) => commentaryId.includes(item.commentaryId))
+    .map((item) => item.eventMarketId);
+
+  global.tblMarketRunnerV2 = global.tblMarketRunnerV2.filter(
+    (runner) => !marketIds.includes(runner.eventMarketId)
+  );
+
+  global.tblEventMarketsV2 = global.tblEventMarketsV2.filter(
+    (item) => !commentaryId.includes(item.commentaryId)
+  );
 
   global.tblCommentaries = global.tblCommentaries.filter(
     (item) => !commentaryId.includes(item?.commentaryId)
@@ -2244,12 +2277,32 @@ const testStoreProcedureService = async (request, fastify) => {
       commentaryData.isPredictMarket == true &&
       statusToUpdate == 4
     ) {
-      await closeEventMarketByCIdQuery(
+      const eventMarket = await closeEventMarketByCIdQuery(
         {
           commentaryId: commentaryDetails.commentaryId,
         },
         fastify
       );
+      if (eventMarket.length > 0) {
+        eventMarket.forEach((updatedItem) => {
+          let index = global.tblEventMarketsV2.findIndex(
+            (item) => item.eventMarketId === updatedItem.marketId
+          );
+          if (index !== -1) {
+            global.tblEventMarketsV2[index] = {
+              ...global.tblEventMarketsV2[index],
+              ...updatedItem,
+            };
+          }
+        });
+      }
+
+      global.tblMarketRunnerV2
+      .filter((elem) => eventMarket.some((e) => e.marketId === elem.eventMarketId))
+      .forEach((elem) => {
+        elem.selectionStatus = EventMarketStatus.Close;
+      });
+
       callPredictorMarket(
         {
           commentary_id: commentaryDetails.commentaryId,
@@ -3438,12 +3491,32 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
       commentaryData.isPredictMarket == true &&
       statusToUpdate == 4
     ) {
-      await closeEventMarketByCIdQuery(
+      const eventMarket = await closeEventMarketByCIdQuery(
         {
           commentaryId: commentaryDetails.commentaryId,
         },
         fastify
       );
+      if (eventMarket.length > 0) {
+        eventMarket.forEach((updatedItem) => {
+          let index = global.tblEventMarketsV2.findIndex(
+            (item) => item.eventMarketId === updatedItem.marketId
+          );
+          if (index !== -1) {
+            global.tblEventMarketsV2[index] = {
+              ...global.tblEventMarketsV2[index],
+              ...updatedItem,
+            };
+          }
+        });
+      }
+
+      global.tblMarketRunnerV2
+      .filter((elem) => eventMarket.some((e) => e.marketId === elem.eventMarketId))
+      .forEach((elem) => {
+        elem.selectionStatus = EventMarketStatus.Close;
+      });
+
       //_resFromPredictAPI = null;
       //_resFromPredictAPI = await
       callPredictorMarket(
@@ -3729,7 +3802,8 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
 const addinMarketBallbyballOdds = async (commentaryId, objball, fastify) => {
   let _resultArray;
   try {
-    const filteredCid = global.tblEventMarkets.filter((e) => e.commentaryId === commentaryId && e.rateSource === 2);
+    // const filteredCid = global.tblEventMarkets.filter((e) => e.commentaryId === commentaryId && e.rateSource === 2);
+    const filteredCid = global.tblEventMarketsV2.filter((e) => e.commentaryId === commentaryId && e.rateSource === 2);
 
     if (filteredCid.length > 0 && objball.ballType > 0) {
       // Iterate over tblEventMarkets to build the final structure
@@ -8351,7 +8425,27 @@ const closeCommentaryService = async (request, fastify) => {
     if (index !== -1) {
       global.tblCommentaries[index].commentaryStatus = 4;
 
-      await closeEventMarketByCIdQuery({ commentaryId }, fastify);
+      const eventMarket = await closeEventMarketByCIdQuery({ commentaryId }, fastify);
+      if (eventMarket.length > 0) {
+        eventMarket.forEach((updatedItem) => {
+          let index = global.tblEventMarketsV2.findIndex(
+            (item) => item.eventMarketId === updatedItem.marketId
+          );
+          if (index !== -1) {
+            global.tblEventMarketsV2[index] = {
+              ...global.tblEventMarketsV2[index],
+              ...updatedItem,
+            };
+          }
+        });
+      }
+
+      global.tblMarketRunnerV2
+      .filter((elem) => eventMarket.some((e) => e.marketId === elem.eventMarketId))
+      .forEach((elem) => {
+        elem.selectionStatus = EventMarketStatus.Close;
+      });
+
       _resFromPredictAPI = await callPredictorMarket(
         {
           commentary_id: commentaryId,
@@ -8517,6 +8611,7 @@ const deleteAllCommentaryService = async (request, fastify) => {
   global.tblCommentaryBallByBall = [];
   global.tblOvers = [];
   global.tblEventMarkets = [];
+  global.tblEventMarketsV2 = [];
   global.tblMarketRunners = [];
 
   return "All Commentary Deleted successfully";
@@ -8925,6 +9020,38 @@ const changeMaxOverDetailService = async (request, fastify) => {
   return "Commentary Updated successfully";
 };
 
+const upDLSDetailsService = async (request, fastify) => {
+  // validate commentary id
+  const {commentaryId , comTeams} = request.body;
+  const commentary = global.tblCommentaries.findIndex(
+    (item) => item?.commentaryId ===commentaryId
+  );
+  if (commentary == -1) {
+    throw new Error("Commentary with this id not Found");
+  }
+  for (let t of comTeams){
+    let index = global.tblCommentaryTeams.findIndex(
+      (item) => item.commentaryTeamId === t.commentaryTeamId
+    );
+    if (index == -1) {
+      throw new Error("Commentary Team with this id not Found");
+    }
+    await upOverDLSQuery({
+      commentaryTeamId : t.commentaryTeamId,
+      teamMaxOver : t.teamMaxOver,
+      teamTrialRuns : t.teamTrialRuns,
+    }, fastify, request);
+    global.tblCommentaryTeams[index].teamMaxOver = t.teamMaxOver;
+    global.tblCommentaryTeams[index].teamTrialRuns = t.teamTrialRuns;
+  }
+
+  await handleMarketByDLSService({
+    commentaryId: request.body.commentaryId,
+    inningsId: global.tblCommentaries[commentary].currentInnings,
+    teamId : comTeams.map((item) => item.teamId),
+  }, request,fastify);
+  return "Commentary Updated successfully";
+};
 const AddSuperOverCommentaryService = async (request, fastify) => {
   try {
     const { commentaryId, teamMaxOver, battingTeamId } = request.body;
@@ -9671,7 +9798,25 @@ const cancelCommentaryService = async (request, fastify) => {
       global.tblCommentaries[index].commentaryStatus = 4;
       global.tblCommentaries[index].result = "Abandoned";
 
-      await closeEventMarketByCIdQuery({ commentaryId }, fastify);
+      const eventMarket = await closeEventMarketByCIdQuery({ commentaryId }, fastify);
+      if (eventMarket.length > 0) {
+        eventMarket.forEach((updatedItem) => {
+          let index = global.tblEventMarketsV2.findIndex(
+            (item) => item.eventMarketId === updatedItem.marketId
+          );
+          if (index !== -1) {
+            global.tblEventMarketsV2[index] = {
+              ...global.tblEventMarketsV2[index],
+              ...updatedItem,
+            };
+          }
+        });
+      }
+      global.tblMarketRunnerV2
+      .filter((elem) => eventMarket.some((e) => e.marketId === elem.eventMarketId))
+      .forEach((elem) => {
+        elem.selectionStatus = EventMarketStatus.Close;
+      });
       _resFromPredictAPI = await callPredictorMarket(
         {
           commentary_id: commentaryId,
@@ -9778,7 +9923,25 @@ const deleteEventResultService = async (request, fastify) => {
     eventIdArr.push(eventId.eventRefId);
     netRunRateData.push({competitionId: eventId.competitionId, teamId: [eventId.team1Id, eventId.team2Id]});
     await deleteCommentryQuery(commentary, request, fastify);
-    await updateEventMarketCloseQuery(commentaryId, request, fastify);
+    const result = await updateEventMarketCloseQuery(commentaryId, request, fastify);
+    if (result.length > 0) {
+      result.forEach((updatedItem) => {
+        let index = global.tblEventMarketsV2.findIndex(
+          (item) => item.eventMarketId === updatedItem.eventMarketId
+        );
+        if (index !== -1) {
+          global.tblEventMarketsV2[index] = {
+            ...global.tblEventMarketsV2[index],
+            ...updatedItem,
+          };
+        }
+        global.tblMarketRunnerV2.forEach((elem) => {
+          if (elem.eventMarketId === updatedItem.eventMarketId) {
+            elem.selectionStatus = EventMarketStatus.Close;
+          }
+        });
+      });
+    }
   }
 
   global.tblCommentaries = global.tblCommentaries.filter(
@@ -10055,6 +10218,18 @@ const deleteCommentaryHistoryService = async (request, fastify) => {
     (item) => !commentaryId.includes(item?.commentaryId)
   );
 
+  const marketIds = global.tblEventMarketsV2
+  .filter((item) => commentaryId.includes(item.commentaryId))
+  .map((item) => item.eventMarketId);
+
+  global.tblMarketRunnerV2 = global.tblMarketRunnerV2.filter(
+    (runner) => !marketIds.includes(runner.eventMarketId)
+  );
+  
+  global.tblEventMarketsV2 = global.tblEventMarketsV2.filter(
+    (item) => !commentaryId.includes(item.commentaryId)
+  );
+
   global.tblCommentaryAwards = global.tblCommentaryAwards.filter(
     (item) => !commentaryId.includes(item?.commentaryId)
   );
@@ -10208,4 +10383,5 @@ module.exports = {
   commentaryHistoryService,
   deleteCommentaryHistoryService,
   getAllCompletedCommentaryService,
+  upDLSDetailsService
 };

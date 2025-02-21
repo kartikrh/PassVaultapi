@@ -3018,6 +3018,32 @@ const Commentary = {
       },
     },
   },
+  upDLSDetail : {
+    schema: {
+      tags: ["Commentary"],
+      description: "update DLS detail",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+          comTeams : {
+            type : "array",
+            items : {
+              type : "object",
+              properties : {
+                teamId : {type : "integer"},
+                commentaryTeamId : {type : "integer"},
+                teamMaxOver : {type : "integer"},
+                teamTrialRuns : {type : "integer"},
+              }
+            }
+          }
+        },
+        required: ["commentaryId", "comTeams"],
+      },
+    },
+  }
 };
 
 const Compitition = {

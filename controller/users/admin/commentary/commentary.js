@@ -73,6 +73,7 @@ const {
   commentaryHistoryService,
   deleteCommentaryHistoryService,
   getAllCompletedCommentaryService,
+  upDLSDetailsService,
 } = require("../../../../services/commentry");
 const { getEventSnapByComService, updateEventSnapByComService } = require("../../../../services/competitionEventSnap");
 const { getAllCommentariesDataService } = require("../../../../services/score");
@@ -724,6 +725,15 @@ const changeMaxOverDetail = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const upDLSDetails = async (request, reply, fastify) => {
+  try {
+    const result = await upDLSDetailsService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/upDLSDetails", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+}
 
 const getAllCommentariesData = async (request, reply, fastify) => {
   try {
@@ -1061,4 +1071,5 @@ module.exports = {
   commentaryHistory,
   deleteCommentaryHistory,
   getAllCompletedCommentary,
+  upDLSDetails
 }

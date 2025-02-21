@@ -70,6 +70,7 @@ const {
   getAllCommentaryEventMarkets,
   commentaryHistory,
   deleteCommentaryHistory,
+  upDLSDetails,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -663,6 +664,18 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request, reply) => changeMaxOverDetail(request, reply, fastify)
+  });
+  fastify.post("/upDLSDetail", {
+    schema: Commentary.upDLSDetail.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "edit",
+        }),
+    ],
+    handler: (request, reply) => upDLSDetails(request, reply, fastify)
   });
 
   fastify.post("/addSuperOver", {

@@ -1,3 +1,7 @@
+// OLD MOCKSIGNALR CODE (single connection(url) code)
+
+
+
 const signalR = require('@microsoft/signalr');
 const {EventMarketStatus, EventMarketRateSource,MarketUpdateType} = require('../utilities/index');
 const {marketDataLogger} = require("../utilities/logger");
@@ -29,7 +33,6 @@ global.rateSourceRefIDSet = new Set();
 global.isAdminStoppedSignalR = false;
 global.rateQueue = [];
 global.SignalRData = [];
-global.signalRConnections = [];
 
 //Method for Start Signa
 async function startSignalR(fastify) {
@@ -39,7 +42,7 @@ async function startSignalR(fastify) {
             if (fastify) {
                 _fastify = fastify;
             }
-            _SignalRURLs = global.tblThirdPartyApis.filter((item) => item.isActive === true && item.type === thirdPartyApiType.Socket && item.isDefault === true && item.adminDisconnected === false);
+            _SignalRURLs = global.tblThirdPartyApis.filter((item) => item.isActive === true && item.type === thirdPartyApiType.Socket && item.isDefault === true);
             _SignalRInterwal = global.tblConfigs.find((item) => item.key === configConstants.INTERVAL_MarketTHIRDPARTY)?.value || 10000;
             try {
                 _RateUpdate = global.tblConfigs.find((item) => item.key === configConstants.RATEUPDATEINTERWAL)?.value || 500;
@@ -49,39 +52,32 @@ async function startSignalR(fastify) {
 
             if (_SignalRURLs && _SignalRURLs.length > 0) {
                 for (const thirdParty of _SignalRURLs) {
-                    if (global.signalRConnections.some((conn) => conn.id === thirdParty.id)) {
-                        continue; // Skip if already connected
-                    }
                     const _SignalRURL = thirdParty.url;
                     if (_SignalRURL) {
                         connectionCount++;
-                        const newConnection = new signalR.HubConnectionBuilder()
+                        connection = new signalR.HubConnectionBuilder()
                             .withUrl(_SignalRURL)
                             .withAutomaticReconnect([0, 2000, 10000, 30000])
                             .build();
-                        await newConnection.start();
+                        await connection.start();
                         global.isSignalRStopped = false;
                         global.isAdminStoppedSignalR = false;
                         thirdParty.isConnect = true
-                        thirdParty.adminDisconnected = false;
                         console.log('SignalR Connected');
 
                         //? Attach handlers for 'close' and 'error' events
-                        newConnection.onclose(async (error) => {
-                            const updatedThirdParty = _SignalRURLs.find(item => item.id === thirdParty.id);
-                            if (updatedThirdParty && updatedThirdParty?.adminDisconnected === false) {
-                            global.isSignalRStopped = true;
-                            await reConnectScoreHub();
-                          }
+                        connection.onclose(async (error) => {
+                          global.isSignalRStopped = true;
+                          await reConnectScoreHub();
                         });
 
-                        newConnection.on("error", async (error) => {
+                        connection.on("error", async (error) => {
                           global.isSignalRStopped = true;
                           await reConnectScoreHub();
                         });
 
                         //? Here We Update To Globale Data For SignalR Values
-                        newConnection.on('Rate', async (message, request) => {
+                        connection.on('Rate', async (message, request) => {
                             try {
                                 if (message.mi) {
                                     await createUpdateGlobalSignalRData(message, request);
@@ -115,8 +111,6 @@ async function startSignalR(fastify) {
                         IntervalId = setInterval(async () => {
                           await processRateQueue();
                         }, _RateUpdate);
-
-                        global.signalRConnections.push({ id: thirdParty.id, connection: newConnection });
                     }
                 }
             }
@@ -133,290 +127,102 @@ async function startSignalR(fastify) {
     }
 }
 
-// //?Method For Stopped Connection
-// async function stopSignalR(fastify) {
-//     if (connection) {
-//         try {
-//             await connection.stop();
-//             console.log('SignalR Disconnected');
-//             if (updateMarketRateIntervalId) {
-//                 clearInterval(updateMarketRateIntervalId);
-//                 updateMarketRateIntervalId = null;
-//             }
-//             if (IntervalId) {
-//                 clearInterval(IntervalId);
-//                 IntervalId = null;
-//                 clearInterval(IntervalRunner);
-//                 IntervalRunner = null;
-//             }
-//             global.isAdminStoppedSignalR = true;
-//             global.rateSourceRefIDSet = new Set();
-//             global.isSignalRStopped = true;
-//             if (_SignalRURLs && _SignalRURLs.length > 0) {
-//                 for (const thirdParty of _SignalRURLs) {
-//                     thirdParty.isConnect = false
-//                     await updateConnectionStatus(thirdParty, fastify)
-//                 }
-//             }
-//         } catch (err) {
-//             errorLogger(
-//                 _fastify,
-//                 err,
-//                 "Error SignalrR --> signalrHandler/stopSignalR",
-//                 null
-//             );
-//         }
-//     }
-// }
-
 //?Method For Stopped Connection
 async function stopSignalR(fastify) {
-    try {
-        // Set adminDisconnected to true for all URLs to prevent unnecessary reconnections
-        // (If we update only 1 url value then reconnection will call for other urls)
-        if (_SignalRURLs && _SignalRURLs.length > 0) {
-            for (const thirdParty of _SignalRURLs) {
-                thirdParty.isConnect = false;
-                thirdParty.adminDisconnected = true;
-                await updateConnectionStatus(thirdParty, fastify);
-            }
-        }
-
-        for (const connectionData of global.signalRConnections) {
-            const { connection, id } = connectionData;
-
-            if (connection && connection.state === signalR.HubConnectionState.Connected) {
-                await connection.stop();
-            }
-        }
-
-        if (updateMarketRateIntervalId) {
-            clearInterval(updateMarketRateIntervalId);
-            updateMarketRateIntervalId = null;
-        }
-        if (IntervalId) {
-            clearInterval(IntervalId);
-            IntervalId = null;
-            clearInterval(IntervalRunner);
-            IntervalRunner = null;
-        }
-        global.isAdminStoppedSignalR = true;
-        global.rateSourceRefIDSet = new Set();
-        global.isSignalRStopped = true;
-        global.signalRConnections = [];
-        console.log('SignalR connections stopped successfully.');
-    } catch (err) {
-        errorLogger(
-            fastify,
-            err,
-            "Error SignalR --> signalrHandler/stopSignalR",
-            null
-        );
-    }
-}
-
-async function stopCustomSignalR(request, fastify) {
-    const { id } = request.body;
-    const connectionIndex = global.signalRConnections.findIndex((item) => item.id === id);
-
-    if (connectionIndex !== -1) {
-        const connectionData = global.signalRConnections[connectionIndex];
+    if (connection) {
         try {
-            if (connectionData?.connection) {
-                let thirdPartyIndex = _SignalRURLs.findIndex((item) => item.id === id);
-                if (thirdPartyIndex !== -1) {
-                    let thirdPartyData = _SignalRURLs[thirdPartyIndex];
-                    thirdPartyData.isConnect = false;
-                    thirdPartyData.adminDisconnected = true;
-                    _SignalRURLs[thirdPartyIndex] = thirdPartyData;
-                    await updateConnectionStatus(thirdPartyData, fastify);
+            await connection.stop();
+            console.log('SignalR Disconnected');
+            if (updateMarketRateIntervalId) {
+                clearInterval(updateMarketRateIntervalId);
+                updateMarketRateIntervalId = null;
+            }
+            if (IntervalId) {
+                clearInterval(IntervalId);
+                IntervalId = null;
+                clearInterval(IntervalRunner);
+                IntervalRunner = null;
+            }
+            global.isAdminStoppedSignalR = true;
+            global.rateSourceRefIDSet = new Set();
+            global.isSignalRStopped = true;
+            if (_SignalRURLs && _SignalRURLs.length > 0) {
+                for (const thirdParty of _SignalRURLs) {
+                    thirdParty.isConnect = false
+                    await updateConnectionStatus(thirdParty, fastify)
                 }
-
-                await connectionData.connection.stop();
-                global.signalRConnections.splice(connectionIndex, 1);
-
-                if (global.signalRConnections.length === 0) {
-                    global.isAdminStoppedSignalR = true;
-                    global.rateSourceRefIDSet.clear();
-                    global.isSignalRStopped = true;
-                }
-                global.rateSourceRefIDSet = new Set();
-                console.log(`SignalR Disconnected: ${id}`);
             }
         } catch (err) {
             errorLogger(
-                fastify,
+                _fastify,
                 err,
-                "Error SignalrR --> stopCustomSignalR",
-                request
+                "Error SignalrR --> signalrHandler/stopSignalR",
+                null
             );
         }
     }
 }
 
-
-function isCustomSignalRStarted(request, fastify) {
-    try {
-        const { id } = request.body;
-        return global.signalRConnections.some((item) => item.id === id && item.connection?.state === signalR.HubConnectionState.Connected);
-    } catch (err) {
-        errorLogger(
-            fastify,
-            err,
-            "Error SignalrR --> isCustomSignalRStarted",
-            request
-        );
-    }
-}
-
-// //?Get IF SignalR is connection is Connected
-// function isSignalRStarted(fastify) {
-//     try {
-//         return connection && connection.state === signalR.HubConnectionState.Connected;
-//     } catch (err) {
-//         errorLogger(
-//             _fastify,
-//             err,
-//             "Error SignalrR --> signalrHandler/isSignalRStarted",
-//             null
-//         );
-//     }
-// }
-
+//?Get IF SignalR is connection is Connected
 function isSignalRStarted(fastify) {
     try {
-        return global.signalRConnections.some(
-            (connectionData) => connectionData.connection && connectionData.connection.state === signalR.HubConnectionState.Connected
-        );
+        return connection && connection.state === signalR.HubConnectionState.Connected;
     } catch (err) {
         errorLogger(
-            fastify,
+            _fastify,
             err,
-            "Error SignalR --> signalrHandler/isSignalRStarted",
+            "Error SignalrR --> signalrHandler/isSignalRStarted",
             null
         );
-        return false;
     }
 }
-
-// //reconnections SignalR is connection is NotConnected
-// const reConnectScoreHub = async () => {
-//     console.log("Reconnecting...")
-//     try {
-//         const isSON = global.tblConfigs.find((item) => item.key === configConstants.ISMARKETOODS_SIGNALRON)?.value;
-//         const sRCount = global.tblConfigs.find((item) => item.key === configConstants.SIGNALRRECONNECTCOUNT)?.value;
-//         const signalRURLs = global.tblThirdPartyApis.filter((item) => item.isActive === true && item.type === thirdPartyApiType.Socket && item.isDefault === true && item.adminDisconnected === false);
-//         if (isSON !== 'true' || global.isAdminStoppedSignalR === true) {
-//             await stopSignalR(_fastify);
-//             return;
-//         }
-//         if (isSON === 'true' && global.isAdminStoppedSignalR === false) {
-//             let retryCount = 0;
-//             const maxRetries = parseInt(sRCount, 10);
-
-//             while (retryCount < maxRetries) {
-//                 global.rateSourceRefIDSet = new Set();
-//                 if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
-//                     try {
-//                         await connection.start();
-//                         await subScribeConnectMarketRate(_fastify);
-//                         global.isSignalRStopped = false;
-    
-//                         if (signalRURLs && signalRURLs.length > 0) {
-//                             for (const thirdParty of signalRURLs) {
-//                                 thirdParty.isConnect = true;
-//                                 thirdParty.adminDisconnected = false
-//                                 await updateConnectionStatus(thirdParty, _fastify);
-//                             }
-//                         }
-//                         console.log("SignalR Re-Connected.");
-//                         return;
-//                     } catch (err) {
-//                         retryCount++;
-//                         await new Promise(resolve => setTimeout(resolve, Math.min(1000 * (2 ** retryCount), 30000)));
-//                     }
-//                 } else {
-//                     return;
-//                 }
-//             }
-//         }
-//     } catch (err) {
-//         errorLogger(
-//             _fastify,
-//             err,
-//             "Error SignalrR --> signalrHandler/reConnectScoreHub",
-//             null
-//         );
-//     }
-// };
 
 //reconnections SignalR is connection is NotConnected
 const reConnectScoreHub = async () => {
     try {
-      const isSON = global.tblConfigs.find((item) => item.key === configConstants.ISMARKETOODS_SIGNALRON)?.value;
-      const sRCount = global.tblConfigs.find((item) => item.key === configConstants.SIGNALRRECONNECTCOUNT)?.value;
-      const signalRURLs = global.tblThirdPartyApis.filter(
-        (item) =>
-          item.isActive === true &&
-          item.type === thirdPartyApiType.Socket &&
-          item.isDefault === true &&
-          item.adminDisconnected === false
-      );
-  
-      if (isSON !== "true" || global.isAdminStoppedSignalR === true) {
-        await stopSignalR(_fastify);
-        return;
-      }
-  
-      if (isSON === "true" && global.isAdminStoppedSignalR === false) {
-        let retryCount = 0;
-        const maxRetries = parseInt(sRCount, 10);
-  
-        while (retryCount < maxRetries) {
-          let allConnected = true;
-          global.rateSourceRefIDSet = new Set();
-  
-          for (const connectionData of global.signalRConnections) {
-            const { connection, id } = connectionData;
-  
-            if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
-              try {
-                await connection.start();
-                await subScribeConnectMarketRate(_fastify);
-                global.isSignalRStopped = false;
-  
-                let thirdParty = signalRURLs.find((item) => item.id === id);
-                if (thirdParty) {
-                  thirdParty.isConnect = true;
-                  thirdParty.adminDisconnected = false;
-                  await updateConnectionStatus(thirdParty, _fastify);
-                }
-  
-                console.log("SignalR Re-Connected");
-              } catch (err) {
-                allConnected = false;
-              }
-            }
-          }
-  
-          if (allConnected) {
-            console.log("SignalR Re-Connected");
+        const isSON = global.tblConfigs.find((item) => item.key === configConstants.ISMARKETOODS_SIGNALRON)?.value;
+        const sRCount = global.tblConfigs.find((item) => item.key === configConstants.SIGNALRRECONNECTCOUNT)?.value;
+        if (isSON !== 'true' || global.isAdminStoppedSignalR === true) {
+            await stopSignalR(_fastify);
             return;
-          }
-  
-          retryCount++;
-          await new Promise((resolve) => setTimeout(resolve, Math.min(1000 * 2 ** retryCount, 30000)));
         }
-      }
+        if (isSON === 'true' && global.isAdminStoppedSignalR === false) {
+            let retryCount = 0;
+            const maxRetries = parseInt(sRCount, 10);
+
+            while (retryCount < maxRetries) {
+                if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
+                    try {
+                        await connection.start();
+                        await subScribeConnectMarketRate(_fastify);
+                        global.isSignalRStopped = false;
+    
+                        if (_SignalRURLs && _SignalRURLs.length > 0) {
+                            for (const thirdParty of _SignalRURLs) {
+                                thirdParty.isConnect = true;
+                                await updateConnectionStatus(thirdParty, _fastify);
+                            }
+                        }
+                        console.log("SignalR Re-Connected.");
+                        return;
+                    } catch (err) {
+                        retryCount++;
+                        await new Promise(resolve => setTimeout(resolve, Math.min(1000 * (2 ** retryCount), 30000)));
+                    }
+                } else {
+                    return;
+                }
+            }
+        }
     } catch (err) {
-      errorLogger(
-        _fastify,
-        err,
-        "Error SignalR --> signalrHandler/reConnectScoreHub",
-        null
-      );
+        errorLogger(
+            _fastify,
+            err,
+            "Error SignalrR --> signalrHandler/reConnectScoreHub",
+            null
+        );
     }
-  };
+};
 
 // //reconnections SignalR is connection is NotConnected
 // const reConnectScoreHub = async () => {
@@ -460,10 +266,7 @@ const processRateQueue = async () => {
         }
 
         const data = message;
-        // const EventsMarketobj = global.tblEventMarkets.find(
-        //     (item) => item.rateSourceRefID === data.mi
-        // );
-        const EventsMarketobj = global.tblEventMarketsV2.find(
+        const EventsMarketobj = global.tblEventMarkets.find(
             (item) => item.rateSourceRefID === data.mi
         );
         if (EventsMarketobj) {
@@ -493,11 +296,7 @@ const processRateQueue = async () => {
             for (const winPer of winPerList) {
                 try {
                     //console.log(`Selection ID: ${winPer.selectionid}, Min Lay Value: ${winPer.rate}, Win Percentage: ${winPer.winper}`);
-                    
-                    //  _selectionidData = global.tblEventMarkets.find(
-                    //     (e) => e.selectionId == winPer.selectionid
-                    // );
-                    const _selectionidData = global.tblEventMarketsV2.find(
+                    const _selectionidData = global.tblEventMarkets.find(
                         (e) => e.selectionId == winPer.selectionid
                     );
 
@@ -512,17 +311,6 @@ const processRateQueue = async () => {
                             eventMarketId: EventsMarketobj.eventMarketId
                         }, _fastify);
                         if (_isThreadDone) {
-                            _isThreadDone.forEach((updatedItem) => {
-                                let index = global.tblEventMarketsV2.findIndex(
-                                  (item) => item.eventMarketId === updatedItem.eventMarketId
-                                );
-                                if (index !== -1) {
-                                  global.tblEventMarketsV2[index] = {
-                                    ...global.tblEventMarketsV2[index],
-                                    ...updatedItem,
-                                  };
-                                }
-                            });
                             const dataOfmarkets = await getEventMarketByIdsQuery({
                                     eventMarketIds: [EventsMarketobj.eventMarketId],
                                 },
@@ -547,38 +335,6 @@ const processRateQueue = async () => {
                                 } else {
                                     let previousLine = global.tblEventMarkets[index].line;
                                     global.tblEventMarkets[index] = item;
-                                    marketDataLogger({
-                                            eventMarketId: item.eventMarketId,
-                                            commentaryId: item.commentaryId,
-                                            dataTosave: JSON.parse(item.data),
-                                            updateType: MarketUpdateType.marketInitilization,
-                                            lineDiff: item.line - (previousLine || 0),
-                                        },
-                                        null,
-                                        _fastify
-                                    );
-                                }
-                            }
-                            let whereCondition = ` tem."wrID" = ${EventsMarketobj.eventMarketId}`
-                            const eventMarketData = await getAllEventMarketsV2Query(fastify, whereCondition)
-                            for (let item of eventMarketData) {
-                                let index = global.tblEventMarketsV2.findIndex(
-                                    (e) => e.selectionId == item.selectionId
-                                );
-                                if (index === -1) {
-                                    global.tblEventMarketsV2.push(item);
-                                    marketDataLogger({
-                                            eventMarketId: item.eventMarketId,
-                                            commentaryId: item.commentaryId,
-                                            dataTosave: JSON.parse(item.data),
-                                            updateType: MarketUpdateType.marketInitilization,
-                                        },
-                                        null,
-                                        _fastify
-                                    );
-                                } else {
-                                    let previousLine = global.tblEventMarketsV2[index].line;
-                                    global.tblEventMarketsV2[index] = item;
                                     marketDataLogger({
                                             eventMarketId: item.eventMarketId,
                                             commentaryId: item.commentaryId,
@@ -638,64 +394,25 @@ const processRateQueue = async () => {
     }
 };
 
-// //check Update method for New MarketIDs To envoe that New IDs
-// const subScribeConnectMarketRate = async (_fastify) => {
-//     try {
-//         let _MarketsIds = global.tblEventMarkets.filter(
-//             (item) => item.rateSource === EventMarketRateSource.Manual && item.status != EventMarketStatus.NotOpen && item.status != EventMarketStatus.Close
-//         );
-
-//         let _newIDs = [];
-//         _MarketsIds.forEach((item) => {
-//             if (!global.rateSourceRefIDSet.has(item.rateSourceRefID)) {
-//                 global.rateSourceRefIDSet.add(item.rateSourceRefID);
-//                 _newIDs.push(item.rateSourceRefID);
-//             }
-//         });
-
-//         if (_newIDs.length > 0) {
-//             const newRateSourceRefIDs = _newIDs.join(',');
-//             if (connection || connection.state === signalR.HubConnectionState.Connected) {
-//                 await connection.invoke('ConnectMarketRate', newRateSourceRefIDs);
-//             }
-//         }
-//     } catch (error) {
-//         errorLogger(
-//             _fastify,
-//             error,
-//             "Error SignalrR --> signalrHandler/SubScribeConnectMarketRate",
-//             null
-//         );
-//     }
-// };
-
 //check Update method for New MarketIDs To envoe that New IDs
-const subScribeConnectMarketRate = async (_fastify) => {
+const  subScribeConnectMarketRate = async (_fastify) => {
     try {
-        for (const connData of global.signalRConnections) {
-            if (!connData.connection || connData.connection.state !== signalR.HubConnectionState.Connected) {
-                continue;
+        let _MarketsIds = global.tblEventMarkets.filter(
+            (item) => item.rateSource === EventMarketRateSource.Manual && item.status != EventMarketStatus.NotOpen && item.status != EventMarketStatus.Close
+        );
+
+        let _newIDs = [];
+        _MarketsIds.forEach((item) => {
+            if (!global.rateSourceRefIDSet.has(item.rateSourceRefID)) {
+                global.rateSourceRefIDSet.add(item.rateSourceRefID);
+                _newIDs.push(item.rateSourceRefID);
             }
+        });
 
-            // let _MarketsIds = global.tblEventMarkets.filter(
-            //     (item) => item.rateSource === EventMarketRateSource.Manual && item.status !== EventMarketStatus.NotOpen && item.status !== EventMarketStatus.Close
-            // );
-
-            let _MarketsIds = global.tblEventMarketsV2.filter(
-                (item) => item.rateSource === EventMarketRateSource.Manual && item.status !== EventMarketStatus.NotOpen && item.status !== EventMarketStatus.Close
-            );
-
-            let _newIDs = [];
-            _MarketsIds.forEach((item) => {
-                if (!global.rateSourceRefIDSet.has(item.rateSourceRefID)) {
-                    global.rateSourceRefIDSet.add(item.rateSourceRefID);
-                    _newIDs.push(item.rateSourceRefID);
-                }
-            });
-
-            if (_newIDs.length > 0) {
-                const newRateSourceRefIDs = _newIDs.join(',');
-                await connData.connection.invoke('ConnectMarketRate', newRateSourceRefIDs);
+        if (_newIDs.length > 0) {
+            const newRateSourceRefIDs = _newIDs.join(',');
+            if (connection || connection.state === signalR.HubConnectionState.Connected) {
+                await connection.invoke('ConnectMarketRate', newRateSourceRefIDs);
             }
         }
     } catch (error) {
@@ -713,16 +430,13 @@ const createUpdateGlobalSignalRData = async (message, request) => {
     try {
         const data = message;
         let commentary;
-        // const EventsMarketobj = global.tblEventMarkets.filter(
-        //     (item) => item.rateSourceRefID === data.mi
-        // );
-        const EventsMarketobj = global.tblEventMarketsV2.filter(
+        const EventsMarketobj = global.tblEventMarkets.filter(
             (item) => item.rateSourceRefID === data.mi
         );
         let isCalled = false;
         if (EventsMarketobj.length > 0 && data.rt !== null && data.ms !== EventMarketStatus.Open) {
             isCalled = true;
-            global.tblEventMarketsV2 = global.tblEventMarketsV2.map(item => {
+            global.tblEventMarkets = global.tblEventMarkets.map(item => {
                 if (item.rateSourceRefID === data.mi) {
                     // Update the status of the matched item
                     return {
@@ -736,16 +450,6 @@ const createUpdateGlobalSignalRData = async (message, request) => {
             _data.rateSourceRefID = parseInt(data.mi);
             _data.status = parseInt(data.ms);
             await updateMarketStatusFromSignalRQuery(_data, request, _fastify);
-            let index = global.tblEventMarketsV2.findIndex(
-                (item) => item.rateSourceRefID === _data.rateSourceRefID
-              );
-              if (index !== -1) {
-                  global.tblEventMarketsV2[index].status = _data.status
-                if(_data.status === EventMarketStatus.Cancel || 
-                    _data.status === EventMarketStatus.Settled && global.tblEventMarketsV2[index].isResult === true){
-                    global.tblEventMarketsV2.splice(index, 1);
-                }
-            }
             for (var i = 0; i < EventsMarketobj.length; i++) {
                 let _runner = {};
                 _runner = EventsMarketobj[i];
@@ -870,24 +574,6 @@ const createUpdateGlobalSignalRData = async (message, request) => {
                         }
 
                         await updateEventMarketRunnerMaunalQuery(eventRunnerData, _fastify);
-                        let index = global.tblEventMarketsV2.findIndex(
-                            (item) => item.rateSourceRefID === eventRunnerData.rateSourceRefID
-                          );
-                          if (index !== -1) {
-                              let eventMarket = global.tblEventMarketsV2[index].eventMarketId;
-                              if (eventMarket) {
-                                  let runnerIndex = global.tblMarketRunnerV2.findIndex(
-                                      (item) => item.eventMarketId === eventMarket 
-                                      && item.selectionId === eventRunnerData.selectionId
-                                  );
-                                  if(runnerIndex !== -1){
-                                      global.tblMarketRunnerV2[runnerIndex].backSize = eventRunnerData.backSize
-                                      global.tblMarketRunnerV2[runnerIndex].backPrice = eventRunnerData.backPrice,
-                                      global.tblMarketRunnerV2[runnerIndex].laySize = eventRunnerData.laySize,
-                                      global.tblMarketRunnerV2[runnerIndex].layPrice = eventRunnerData.layPrice
-                                  };
-                              }
-                            }
                     }
                 }
             }
@@ -897,16 +583,7 @@ const createUpdateGlobalSignalRData = async (message, request) => {
             _data.rateSourceRefID = parseInt(data.mi);
             _data.status = parseInt(data.ms);
             await updateMarketStatusFromSignalRQuery(_data, request, _fastify);
-            let index = global.tblEventMarketsV2.findIndex(
-                (item) => item.rateSourceRefID === _data.rateSourceRefID
-              );
-              if (index !== -1) {
-                  global.tblEventMarketsV2[index].status = _data.status
-                if(_data.status === EventMarketStatus.Cancel || 
-                    _data.status === EventMarketStatus.Settled && global.tblEventMarketsV2[index].isResult === true){
-                    global.tblEventMarketsV2.splice(index, 1);
-                }
-            }
+
             const groupedRates = {};
 
             data.rt.forEach(rate => {
@@ -974,14 +651,8 @@ const createUpdateGlobalSignalRData = async (message, request) => {
             if (_blrbsids && _blrbsids.length) {
                 for (const items of _blrbsids) {
                     let _time = items.timestamp;
-                    // const _selectionidData = global.tblEventMarkets.find(
-                    //     (e) => e.selectionId == items.selectionId
-                    // );
-                    const runnerData = global.tblMarketRunnerV2.find(
+                    const _selectionidData = global.tblEventMarkets.find(
                         (e) => e.selectionId == items.selectionId
-                    );
-                    const eventMarketData = global.tblEventMarketsV2.find(
-                        (e) => e.eventMarketId == runnerData.eventMarketId
                     );
 
                     let EventRunnerData = {
@@ -995,53 +666,26 @@ const createUpdateGlobalSignalRData = async (message, request) => {
                     }
 
                     await updateEventMarketRunnerMaunalQuery(EventRunnerData, _fastify);
-                    let index = global.tblEventMarketsV2.findIndex(
-                        (item) => item.rateSourceRefID === EventRunnerData.rateSourceRefID
-                      );
-                      if (index !== -1) {
-                          let eventMarket = global.tblEventMarketsV2[index].eventMarketId;
-                          if (eventMarket) {
-                              let runnerIndex = global.tblMarketRunnerV2.findIndex(
-                                  (item) => item.eventMarketId === eventMarket 
-                                  && item.selectionId === EventRunnerData.selectionId
-                              );
-                              if(runnerIndex !== -1){
-                                  global.tblMarketRunnerV2[runnerIndex].backSize = EventRunnerData.backSize
-                                  global.tblMarketRunnerV2[runnerIndex].backPrice = EventRunnerData.backPrice,
-                                  global.tblMarketRunnerV2[runnerIndex].laySize = EventRunnerData.laySize,
-                                  global.tblMarketRunnerV2[runnerIndex].layPrice = EventRunnerData.layPrice
-                              };
-                          }
-                        }
 
                     let _updateData = {};
-                    // if (_selectionidData && _selectionidData.commentaryId != 0) {
-                    if (eventMarketData && eventMarketData.commentaryId != 0) {
-                        _updateData.EventMarketId = eventMarketData.eventMarketId;
-                        // _updateData.RunnerId = _selectionidData.runnerId;
-                        _updateData.RunnerId = runnerData.runnerId;
-                        _updateData.MarketStatus = eventMarketData.status;
+                    if (_selectionidData && _selectionidData.commentaryId != 0) {
+                        _updateData.EventMarketId = _selectionidData.eventMarketId;
+                        _updateData.RunnerId = _selectionidData.runnerId;
+                        _updateData.MarketStatus = _selectionidData.status;
                         _updateData.BackPrice = items.backPrice;
                         _updateData.LayPrice = items.layPrice;
                         _updateData.BackSize = items.backSize;
                         _updateData.LaySize = items.laySize;
-                        // _updateData.MarketName = _selectionidData.marketName;
-                        _updateData.MarketName = eventMarketData.marketName;
-                        // _updateData.RunnerName = _selectionidData.runner;
-                        _updateData.RunnerName = runnerData.runner;
-                        // _updateData.commentaryId = _selectionidData.commentaryId;
-                        // _updateData.selectionId = _selectionidData.selectionId;
-                        _updateData.commentaryId = eventMarketData.commentaryId;
-                        _updateData.selectionId = eventMarketData.selectionId;
+                        _updateData.MarketName = _selectionidData.marketName;
+                        _updateData.RunnerName = _selectionidData.runner;
+                        _updateData.commentaryId = _selectionidData.commentaryId;
+                        _updateData.selectionId = _selectionidData.selectionId;
                     }
-                    // if (_selectionidData.teamId) {
-                    //     _updateData.teamId = _selectionidData.teamId;
-                    if (runnerData.teamId) {
-                        _updateData.teamId = runnerData.teamId;
+                    if (_selectionidData.teamId) {
+                        _updateData.teamId = _selectionidData.teamId;
                     } else {
                         commentary = await global.tblCommentaries.find(
-                            // (item) => item.commentaryId === _selectionidData.commentaryId
-                            (item) => item.commentaryId === eventMarketData.commentaryId
+                            (item) => item.commentaryId === _selectionidData.commentaryId
                         );
                         if (commentary && commentary.isTeamPredictionOn) {
                             let teams;
@@ -1049,8 +693,7 @@ const createUpdateGlobalSignalRData = async (message, request) => {
                                 (item) =>
                                 item.commentaryId === commentary.commentaryId &&
                                 item.currentInnings === commentary.currentInnings &&
-                                // item.teamName === _selectionidData.runner
-                                item.teamName === runnerData.runner
+                                item.teamName === _selectionidData.runner
                             );
 
                             if (teams) {
@@ -1103,8 +746,7 @@ const createUpdateGlobalSignalRData = async (message, request) => {
 
         if(!isCalled && data.rt === null && EventsMarketobj.length > 0 && data.ms !== EventMarketStatus.Open){
             try {
-                // global.tblEventMarkets = global.tblEventMarkets.map(item => {
-                global.tblEventMarketsV2 = global.tblEventMarketsV2.map(item => {
+                global.tblEventMarkets = global.tblEventMarkets.map(item => {
                     if (item.rateSourceRefID === data.mi) {
                         // Update the status of the matched item
                         return {
@@ -1118,16 +760,6 @@ const createUpdateGlobalSignalRData = async (message, request) => {
                 _data.rateSourceRefID = parseInt(data.mi);
                 _data.status = parseInt(data.ms);
                 await updateMarketStatusFromSignalRQuery(_data, request, _fastify);
-                let index = global.tblEventMarketsV2.findIndex(
-                    (item) => item.rateSourceRefID === _data.rateSourceRefID
-                  );
-                  if (index !== -1) {
-                      global.tblEventMarketsV2[index].status = _data.status
-                    if(_data.status === EventMarketStatus.Cancel || 
-                        _data.status === EventMarketStatus.Settled && global.tblEventMarketsV2[index].isResult === true){
-                        global.tblEventMarketsV2.splice(index, 1);
-                    }
-                }
                 for (var i = 0; i < EventsMarketobj.length; i++) {
                     let _runner = {};
                     _runner = EventsMarketobj[i];
@@ -1193,6 +825,9 @@ const updateConnectionStatus = async (data, fastify) => {
             (item) => item.id === data.id
         );
 
+        if (index !== -1) {
+            global.tblThirdPartyApis[index].isConnect = data.isConnect;
+        }
         const updateData = {
             providerName: data.providerName,
             url: data.url,
@@ -1201,11 +836,7 @@ const updateConnectionStatus = async (data, fastify) => {
             isDefault: data.isDefault,
             isConnect: data.isConnect,
             id: data.id,
-            adminDisconnected: data.adminDisconnected,
         };
-        if (index !== -1) {
-            global.tblThirdPartyApis[index] = updateData;
-          }
         await updateThirdPartyApisQuery(updateData, fastify);
     } catch (error) {
         errorLogger(
@@ -1223,23 +854,13 @@ const updateMarketRunnerDataOnSocket = async (message) => {
         const data = message;
         const marketDataMap = new Map();
 
-        // const _runnersData = global.tblEventMarkets.filter(
-        //     (item) => item.rateSourceRefID === data.mi
-        // );
-
-        const eventMarket = global.tblEventMarketsV2.find(elem =>
-            elem.rateSourceRefID == data.mi
-        );
-        const _runnersData = global.tblMarketRunnerV2.filter(elem =>
-            elem.eventMarketId == eventMarket.eventMarketId
+        const _runnersData = global.tblEventMarkets.filter(
+            (item) => item.rateSourceRefID === data.mi
         );
 
         _runnersData.forEach((item) => {
-            const eventMarket = global.tblEventMarketsV2.find(elem =>
-                elem.rateSourceRefID == data.mi
-            );
-            const runnerIndex = global.tblMarketRunnerV2.findIndex(elem =>
-                elem.selectionId == item.selectionId && elem.eventMarketId == eventMarket.eventMarketId
+            const runnerIndex = global.tblEventMarkets.findIndex(elem =>
+                elem.selectionId == item.selectionId && elem.rateSourceRefID == data.mi
             );
             let teamNameData = null;
 
@@ -1255,14 +876,14 @@ const updateMarketRunnerDataOnSocket = async (message) => {
             }
 
             const runner = {
-                runnerId: global.tblMarketRunnerV2[runnerIndex].runnerId,
-                runner: global.tblMarketRunnerV2[runnerIndex].runner,
-                selectionId: global.tblMarketRunnerV2[runnerIndex].selectionId,
-                backPrice: global.tblMarketRunnerV2[runnerIndex].backPrice,
-                backSize: global.tblMarketRunnerV2[runnerIndex].backSize,
-                layPrice: global.tblMarketRunnerV2[runnerIndex].layPrice,
-                laySize: global.tblMarketRunnerV2[runnerIndex].laySize,
-                teamId: global.tblMarketRunnerV2[runnerIndex].teamId,
+                runnerId: global.tblEventMarkets[runnerIndex].runnerId,
+                runner: global.tblEventMarkets[runnerIndex].runner,
+                selectionId: global.tblEventMarkets[runnerIndex].selectionId,
+                backPrice: global.tblEventMarkets[runnerIndex].backPrice,
+                backSize: global.tblEventMarkets[runnerIndex].backSize,
+                layPrice: global.tblEventMarkets[runnerIndex].layPrice,
+                laySize: global.tblEventMarkets[runnerIndex].laySize,
+                teamId: global.tblEventMarkets[runnerIndex].teamId,
                 teamName: teamNameData?.teamName || null,
             };
 
@@ -1318,7 +939,5 @@ const updateMarketRunnerDataOnSocket = async (message) => {
 module.exports = {
     startSignalR,
     stopSignalR,
-    isSignalRStarted,
-    stopCustomSignalR,
-    isCustomSignalRStarted,
+    isSignalRStarted
 };
