@@ -4763,8 +4763,8 @@ const saveManualMarketQuery = async (data, request, fastify) => {
           10000,
           10000,
           data.rateDiff,
-          data.margin || null,
-          data.favRatio || null
+          data.favRatio || null,
+          data.margin || null
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
