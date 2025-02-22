@@ -4731,10 +4731,11 @@ const saveManualMarketQuery = async (data, request, fastify) => {
           "wrDefaultLaySize",
           "wrRateDiff",
           "wrLastUpdate",
-          "wrFavRatio"
+          "wrFavRatio",
+          "wrMargin"
       )
       VALUES (
-          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22 , now()::timestamp,$23
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22 , now()::timestamp,$23, $24
       )
         RETURNING "wrID" as "eventMarketId";
       `,
@@ -4762,6 +4763,7 @@ const saveManualMarketQuery = async (data, request, fastify) => {
           10000,
           10000,
           data.rateDiff,
+          data.margin || null,
           data.favRatio || null
         ],
         type: fastify.db.QueryTypes.SELECT,
