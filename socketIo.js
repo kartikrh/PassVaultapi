@@ -30,21 +30,20 @@ const connection = (socket , fastify) => {
       if (clientInRoom?.size) {
         global.socketIo.to(commentaryId).emit("updateMarketData", marketData);
       }
-      const inninRunData = marketData.filter((item) => item?.isInningRun === true);
-      const roomName = `mnMarket-${commentaryId}`;
-      const clientsInRoom = global.socketIo.sockets.adapter.rooms.get(roomName);
-      if (clientsInRoom?.size && inninRunData.length > 0) {
-        global.socketIo.to(commentaryId).emit("upMnMarket", inninRunData);
-      }
-      const timeLogs = await insertTimeLogs(commentaryId, fastify)
-
-      
-  
       const marketIdArr = marketData.map((item) => {
         const mark = JSON.parse(item);
         MarketArr.push(mark);
         return mark.marketId;
       });
+      const inninRunData = MarketArr.filter((item) => item?.isInningRun === true);
+      const roomName = `mnMarket-${commentaryId}`;
+      const clientsInRoom = global.socketIo.sockets.adapter.rooms.get(roomName);
+      if (clientsInRoom?.size && inninRunData.length > 0) {
+        global.socketIo.to(roomName).emit("upMnMarket", inninRunData);
+      }
+      const timeLogs = await insertTimeLogs(commentaryId, fastify)
+  
+   
   
       const marketToUpdatePromise = getEventMarketByIdsQuery(
         { eventMarketIds: marketIdArr },
