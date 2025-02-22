@@ -2,7 +2,7 @@ const signalR = require('@microsoft/signalr');
 const {EventMarketStatus, EventMarketRateSource,MarketUpdateType} = require('../utilities/index');
 const {marketDataLogger} = require("../utilities/logger");
 const {updateEventMarketRunnerMaunalQuery,getEventMarketByIdsQuery,
-    UpdateEventMarketByCIdFromSocketQuery,updateMarketStatusFromSignalRQuery} = require('../repository/TableEventMarkets');
+    UpdateEventMarketByCIdFromSocketQuery,updateMarketStatusFromSignalRQuery, getAllEventMarketsV2Query} = require('../repository/TableEventMarkets');
 const {updateCommentaryTeamPredictionPrecentageQuery} = require('../repository/TableCommentary');
 const {errorLogger} = require("../utilities/logger");
 const {updateThirdPartyApisQuery} = require('../repository/TableThirdPartyApis');
@@ -497,32 +497,33 @@ const processRateQueue = async () => {
                     //  _selectionidData = global.tblEventMarkets.find(
                     //     (e) => e.selectionId == winPer.selectionid
                     // );
-                    const _selectionidData = global.tblEventMarketsV2.find(
+                    const _selectionidData = global.tblMarketRunnerV2.find(
                         (e) => e.selectionId == winPer.selectionid
                     );
 
                     if (_selectionidData) {
                         // console.log(`Runner Name : ${_selectionidData.runner} , Win Percentage: ${winPer.winper}`);
+                        let _eventMarketData = global.tblEventMarkets.find(
+                            (elem) => elem.eventMarketId == _selectionidData.eventMarketId
+                        );
                         let teams;
                         let commentary = global.tblCommentaries.find(
-                            (item) => item.commentaryId == _selectionidData.commentaryId
+                            (item) => item.commentaryId == _eventMarketData.commentaryId
                         );
 
                         let _isThreadDone = await UpdateEventMarketByCIdFromSocketQuery({
                             eventMarketId: EventsMarketobj.eventMarketId
                         }, _fastify);
                         if (_isThreadDone) {
-                            _isThreadDone.forEach((updatedItem) => {
-                                let index = global.tblEventMarketsV2.findIndex(
-                                  (item) => item.eventMarketId === updatedItem.eventMarketId
-                                );
-                                if (index !== -1) {
-                                  global.tblEventMarketsV2[index] = {
-                                    ...global.tblEventMarketsV2[index],
-                                    ...updatedItem,
-                                  };
-                                }
-                            });
+                            let index = global.tblEventMarketsV2.findIndex(
+                              (item) => item.eventMarketId === _isThreadDone.eventMarketId
+                            );
+                            if (index !== -1) {
+                              global.tblEventMarketsV2[index] = {
+                                ...global.tblEventMarketsV2[index],
+                                ..._isThreadDone,
+                              };
+                            }
                             const dataOfmarkets = await getEventMarketByIdsQuery({
                                     eventMarketIds: [EventsMarketobj.eventMarketId],
                                 },
@@ -560,36 +561,35 @@ const processRateQueue = async () => {
                                 }
                             }
                             let whereCondition = ` tem."wrID" = ${EventsMarketobj.eventMarketId}`
-                            const eventMarketData = await getAllEventMarketsV2Query(fastify, whereCondition)
-                            for (let item of eventMarketData) {
-                                let index = global.tblEventMarketsV2.findIndex(
-                                    (e) => e.selectionId == item.selectionId
+                            let eventMarkets = await getAllEventMarketsV2Query(_fastify, whereCondition);
+                            eventMarkets = eventMarkets[0];
+                            let eventIndex = global.tblEventMarketsV2.findIndex(
+                                (e) => e.eventMarketId == eventMarkets.eventMarketId
+                            );
+                            if (eventIndex === -1) {
+                                global.tblEventMarketsV2.push(eventMarkets);
+                                marketDataLogger({
+                                        eventMarketId: eventMarkets.eventMarketId,
+                                        commentaryId: eventMarkets.commentaryId,
+                                        dataTosave: JSON.parse(eventMarkets.data),
+                                        updateType: MarketUpdateType.marketInitilization,
+                                    },
+                                    null,
+                                    _fastify
                                 );
-                                if (index === -1) {
-                                    global.tblEventMarketsV2.push(item);
-                                    marketDataLogger({
-                                            eventMarketId: item.eventMarketId,
-                                            commentaryId: item.commentaryId,
-                                            dataTosave: JSON.parse(item.data),
-                                            updateType: MarketUpdateType.marketInitilization,
-                                        },
-                                        null,
-                                        _fastify
-                                    );
-                                } else {
-                                    let previousLine = global.tblEventMarketsV2[index].line;
-                                    global.tblEventMarketsV2[index] = item;
-                                    marketDataLogger({
-                                            eventMarketId: item.eventMarketId,
-                                            commentaryId: item.commentaryId,
-                                            dataTosave: JSON.parse(item.data),
-                                            updateType: MarketUpdateType.marketInitilization,
-                                            lineDiff: item.line - (previousLine || 0),
-                                        },
-                                        null,
-                                        _fastify
-                                    );
-                                }
+                            } else {
+                                let previousLine = global.tblEventMarketsV2[eventIndex].line;
+                                global.tblEventMarketsV2[eventIndex] = eventMarkets;
+                                marketDataLogger({
+                                        eventMarketId: eventMarkets.eventMarketId,
+                                        commentaryId: eventMarkets.commentaryId,
+                                        dataTosave: JSON.parse(eventMarkets.data),
+                                        updateType: MarketUpdateType.marketInitilization,
+                                        lineDiff: eventMarkets.line - (previousLine || 0),
+                                    },
+                                    null,
+                                    _fastify
+                                );
                             }
                         }
 
@@ -598,7 +598,7 @@ const processRateQueue = async () => {
                                 (item) =>
                                 item.commentaryId === commentary.commentaryId &&
                                 item.currentInnings === commentary.currentInnings &&
-                                item.teamId == _selectionidData.teamId
+                                item.teamId == _eventMarketData.teamId
                             );
 
                             if (!teams) {
@@ -615,7 +615,7 @@ const processRateQueue = async () => {
                                     commentaryTeamId: teams.commentaryTeamId,
                                     teamPredictionPercentage: winPer.winper,
                                     currentInnings: commentary.currentInnings,
-                                    commentaryId: _selectionidData.commentaryId
+                                    commentaryId: _eventMarketData.commentaryId
                                 };
 
                                 const index = global.tblCommentaryTeams.findIndex(
@@ -855,9 +855,9 @@ const createUpdateGlobalSignalRData = async (message, request) => {
                 });
                 if (_blrbsids && _blrbsids.length) {
                     for (const items of _blrbsids) {
-                        const _selectionidData = global.tblEventMarkets.find(
-                            (e) => e.selectionId == items.selectionId
-                        );
+                        // const _selectionidData = global.tblEventMarkets.find(
+                        //     (e) => e.selectionId == items.selectionId
+                        // );
 
                         let eventRunnerData = {
                             backSize: items.backSize,
@@ -870,24 +870,15 @@ const createUpdateGlobalSignalRData = async (message, request) => {
                         }
 
                         await updateEventMarketRunnerMaunalQuery(eventRunnerData, _fastify);
-                        let index = global.tblEventMarketsV2.findIndex(
-                            (item) => item.rateSourceRefID === eventRunnerData.rateSourceRefID
+                        let index = global.tblMarketRunnerV2.findIndex(
+                            (item) => item.selectionId === ratesData.selectionId
                           );
                           if (index !== -1) {
-                              let eventMarket = global.tblEventMarketsV2[index].eventMarketId;
-                              if (eventMarket) {
-                                  let runnerIndex = global.tblMarketRunnerV2.findIndex(
-                                      (item) => item.eventMarketId === eventMarket 
-                                      && item.selectionId === eventRunnerData.selectionId
-                                  );
-                                  if(runnerIndex !== -1){
-                                      global.tblMarketRunnerV2[runnerIndex].backSize = eventRunnerData.backSize
-                                      global.tblMarketRunnerV2[runnerIndex].backPrice = eventRunnerData.backPrice,
-                                      global.tblMarketRunnerV2[runnerIndex].laySize = eventRunnerData.laySize,
-                                      global.tblMarketRunnerV2[runnerIndex].layPrice = eventRunnerData.layPrice
-                                  };
-                              }
+                            global.tblMarketRunnerV2[index] = {
+                                ...global.tblMarketRunnerV2[index],
+                                ...ratesData
                             }
+                          }
                     }
                 }
             }
@@ -994,25 +985,16 @@ const createUpdateGlobalSignalRData = async (message, request) => {
                         timestamp: items.timestamp,
                     }
 
-                    await updateEventMarketRunnerMaunalQuery(EventRunnerData, _fastify);
-                    let index = global.tblEventMarketsV2.findIndex(
-                        (item) => item.rateSourceRefID === EventRunnerData.rateSourceRefID
+                    const ratesData = await updateEventMarketRunnerMaunalQuery(EventRunnerData, _fastify);
+                    let index = global.tblMarketRunnerV2.findIndex(
+                        (item) => item.selectionId === ratesData.selectionId
                       );
                       if (index !== -1) {
-                          let eventMarket = global.tblEventMarketsV2[index].eventMarketId;
-                          if (eventMarket) {
-                              let runnerIndex = global.tblMarketRunnerV2.findIndex(
-                                  (item) => item.eventMarketId === eventMarket 
-                                  && item.selectionId === EventRunnerData.selectionId
-                              );
-                              if(runnerIndex !== -1){
-                                  global.tblMarketRunnerV2[runnerIndex].backSize = EventRunnerData.backSize
-                                  global.tblMarketRunnerV2[runnerIndex].backPrice = EventRunnerData.backPrice,
-                                  global.tblMarketRunnerV2[runnerIndex].laySize = EventRunnerData.laySize,
-                                  global.tblMarketRunnerV2[runnerIndex].layPrice = EventRunnerData.layPrice
-                              };
-                          }
+                        global.tblMarketRunnerV2[index] = {
+                            ...global.tblMarketRunnerV2[index],
+                            ...ratesData
                         }
+                      }
 
                     let _updateData = {};
                     // if (_selectionidData && _selectionidData.commentaryId != 0) {
