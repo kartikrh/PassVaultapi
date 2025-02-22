@@ -869,7 +869,7 @@ const createUpdateGlobalSignalRData = async (message, request) => {
                             timestamp: items.timestamp,
                         }
 
-                        await updateEventMarketRunnerMaunalQuery(eventRunnerData, _fastify);
+                        const ratesData = await updateEventMarketRunnerMaunalQuery(eventRunnerData, _fastify);
                         let index = global.tblMarketRunnerV2.findIndex(
                             (item) => item.selectionId === ratesData.selectionId
                           );
