@@ -2188,7 +2188,11 @@ const updateEventMarketRunnerMaunalQuery = async (data, fastify) => {
               tmr."wrEventMarketId" as "eventMarketId",
               tmr."wrRunner" as "runner",
               tmr."wrTeamId" as "teamId",
-              tmr."wrSelectionId" as "eventSelectionId";
+              tmr."wrBackPrice" as "backPrice",
+              tmr."wrBackSize" as "backSize",
+              tmr."wrLayPrice" as "layPrice",
+              tmr."wrLaySize" as "laySize",
+              tmr."wrSelectionId" as "selectionId";
         `;
     const result = await fastify.db.query(query, {
       bind: [
@@ -2250,18 +2254,18 @@ const UpdateEventMarketByCIdFromSocketQuery = async (data, fastify) => {
     });
 
     const query2 = `UPDATE "tblEventMarkets" SET "wrData" = $1,"wrLastUpdate" = now()::timestamp WHERE "wrID" = $2
-        RETURNING "wrID" as "eventMarketId"
+        RETURNING "wrID" as "eventMarketId",
           "wrData" as "data",
           "wrLastUpdate" as "lastUpdate"
         `;
 
-    await fastify.db.query(query2, {
+    const result = await fastify.db.query(query2, {
       bind: [_data[0], data.eventMarketId],
       type: fastify.db.QueryTypes.SELECT,
     });
     // return true;
 
-    return query2
+    return result[0];
 
   } catch (err) {
     errorLogger(
@@ -4731,10 +4735,11 @@ const saveManualMarketQuery = async (data, request, fastify) => {
           "wrDefaultLaySize",
           "wrRateDiff",
           "wrLastUpdate",
-          "wrFavRatio"
+          "wrFavRatio",
+          "wrMargin"
       )
       VALUES (
-          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22 , now()::timestamp,$23
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22 , now()::timestamp,$23, $24
       )
         RETURNING "wrID" as "eventMarketId";
       `,
@@ -4762,7 +4767,8 @@ const saveManualMarketQuery = async (data, request, fastify) => {
           10000,
           10000,
           data.rateDiff,
-          data.favRatio || null
+          data.favRatio || null,
+          data.margin || null
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
