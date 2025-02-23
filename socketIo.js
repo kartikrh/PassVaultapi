@@ -64,28 +64,32 @@ const connection = (socket , fastify) => {
       let whereCondition = ` tem."wrID" IN(${eventMarketIds})`;
       const eventMarketData = await getAllEventMarketsV2Query(fastify, whereCondition)
       if(eventMarketData.length > 0){
-        eventMarketData.forEach((updatedItem) => {
+        for (const updatedItem of eventMarketData) {
           let index = global.tblEventMarketsV2.findIndex(
             (item) => item.eventMarketId === updatedItem.eventMarketId
           );
-            global.tblEventMarketsV2[index] = {
-              ...global.tblEventMarketsV2[index],
-              ...updatedItem,
-            };
-        });
+    
+          if (index !== -1) {
+            global.tblEventMarketsV2[index] = updatedItem;
+          } else {
+            global.tblEventMarketsV2.push(updatedItem);
+          }
+        }
       }
       let whereClause = ` tmr."wrEventMarketId" IN(${eventMarketIds})`;
       const runnerData = await getAllMarketRunnersQuery(fastify, whereClause);
       if(runnerData.length > 0){
-        runnerData.forEach((runner) => {
+        for (const runner of runnerData) {
           let index = global.tblMarketRunnerV2.findIndex(
             (item) => item.eventMarketId === runner.eventMarketId
           );
-            global.tblMarketRunnerV2[index] = {
-              ...global.tblMarketRunnerV2[index],
-              ...runner,
-            };
-        });
+    
+          if (index !== -1) {
+            global.tblMarketRunnerV2[index] = runner;
+          } else {
+            global.tblMarketRunnerV2.push(runner);
+          }
+        }
       }
     }
       const marketToUpdate = await marketToUpdatePromise;
