@@ -617,12 +617,12 @@ const changeResultOfMarketService = async (request, fastify) => {
   let index = global.tblEventMarketsV2.findIndex(
     (item) => item.eventMarketId === eventMarketId
   );
-  if(index != -1){
+  if(index !== -1){
     if (result.status === EventMarketStatus.Settled && result.isResult === true){
-      global.tblEventMarketsV2.splice(eventMarket, 1);
+      global.tblEventMarketsV2.splice(index, 1);
     } else {
-      global.tblEventMarketsV2[eventMarket] = {
-        ...global.tblEventMarketsV2[eventMarket],
+      global.tblEventMarketsV2[index] = {
+        ...global.tblEventMarketsV2[index],
         ...result
       };
     }
@@ -3466,22 +3466,25 @@ const upManualMarketDataService = async (request, fastify) => {
     let index = global.tblEventMarketsV2.findIndex(
       (elem) => elem.eventMarketId === item.marketId
     );
-    item.eventMarketId = item.marketId;
     if (index !== -1) {
       global.tblEventMarketsV2[index] = {
         ...global.tblEventMarketsV2[index],
-        ...item
+        status: item.status,
+        isAllow: item.isAllow,
+        isActive: item.isActive
       };
     }
-    let runnerIndex = global.tblMarketRunnerV2.findIndex(
-      (elem) => elem.eventMarketId === item.marketId
-    );
-
-    if (runnerIndex !== -1) {
-      global.tblMarketRunnerV2[index] = {
-        ...global.tblMarketRunnerV2[index],
-        ...item
-      };
+    for(let runner of item.runner){
+      let runnerIndex = global.tblMarketRunnerV2.findIndex(
+        (elem) => elem.runnerId === runner.runnerId
+      );
+  
+      if (runnerIndex !== -1) {
+        global.tblMarketRunnerV2[runnerIndex] = {
+          ...global.tblMarketRunnerV2[runnerIndex],
+          ...runner
+        };
+      }
     }
   }
   // }
