@@ -3806,14 +3806,17 @@ const addinMarketBallbyballOdds = async (commentaryId, objball, fastify) => {
     const filteredCid = global.tblEventMarketsV2.filter((e) => e.commentaryId === commentaryId && e.rateSource === 2);
 
     if (filteredCid.length > 0 && objball.ballType > 0) {
-      // Iterate over tblEventMarkets to build the final structure
-      const _dataForOds = filteredCid.reduce((acc, entry) => {
-        const mapKey = `${entry.eventMarketId}_${entry.selectionId}`;
-        // Check if the mapKey exists in SignalRData
+      const _dataForOds = {};
+      let data = []
+      for (let entry of filteredCid){
+        const _runners = global.tblMarketRunnerV2.filter((item) => 
+          item.eventMarketId === entry.eventMarketId
+        )
+        for(let runner of _runners){
+        const mapKey = `${entry.eventMarketId}_${runner.selectionId}`;
         if (global.SignalRData[mapKey]) {
           const matchedItem = global.SignalRData[mapKey];
 
-          // Create the runner data structure
           const runnerData = {
             teamId: matchedItem.teamId,
             RunnerId: matchedItem.RunnerId,
@@ -3823,28 +3826,33 @@ const addinMarketBallbyballOdds = async (commentaryId, objball, fastify) => {
             LaySize: matchedItem.LaySize,
             RunnerName: matchedItem.RunnerName,
             selectionId: matchedItem.selectionId,
-            timestamp: matchedItem.timestamp
+            timestamp: matchedItem.timestamp,
           };
-
-          // Check if EventMarketId already exists in acc
-          if (!acc[entry.eventMarketId]) {
-            // Initialize a new object for this EventMarketId
-            acc[entry.eventMarketId] = {
-              commentaryId: commentaryId,
-              commentaryBallByBallId: objball.commentaryBallByBallId,
-              eventMarketId: entry.eventMarketId,
-              marketStatus: entry.status,
-              marketName: entry.marketName,
-              data: [] // Initialize Data array
-            };
-          }
-          acc[entry.eventMarketId].data.push(runnerData);
+          data.push(runnerData)
         }
+      }
+      if (!_dataForOds[entry.eventMarketId]) {
+        _dataForOds[entry.eventMarketId] = {
+          commentaryId,
+          commentaryBallByBallId: objball.commentaryBallByBallId,
+          eventMarketId: entry.eventMarketId,
+          marketStatus: entry.status,
+          marketName: entry.marketName,
+          data: [],
+        };
+      }
+      let uniqueData = [];
+      let _marketRunners = new Map();
 
-        return acc;
-      }, {});
-
-      // Convert the result into an array if needed
+      for(let obj of data){
+        let key = JSON.stringify(obj);
+        if (!_marketRunners.has(key)) {
+          _marketRunners.set(key, true);
+          uniqueData.push(obj);
+        }
+      };
+      _dataForOds[entry.eventMarketId].data.push(...uniqueData);
+      };
       _resultArray = Object.values(_dataForOds);
 
       // Optionally stringify the Data array within each EventMarketId object
@@ -3880,6 +3888,89 @@ const addinMarketBallbyballOdds = async (commentaryId, objball, fastify) => {
     return null;
   }
 };
+
+
+// const addinMarketBallbyballOdds = async (commentaryId, objball, fastify) => {
+//   let _resultArray;
+//   try {
+//     // const filteredCid = global.tblEventMarkets.filter((e) => e.commentaryId === commentaryId && e.rateSource === 2);
+//     const filteredCid = global.tblEventMarketsV2.filter((e) => e.commentaryId === commentaryId && e.rateSource === 2);
+
+//     if (filteredCid.length > 0 && objball.ballType > 0) {
+//       // Iterate over tblEventMarkets to build the final structure
+//       const _dataForOds = filteredCid.reduce((acc, entry) => {
+//         const mapKey = `${entry.eventMarketId}_${entry.selectionId}`;
+//         // Check if the mapKey exists in SignalRData
+//         if (global.SignalRData[mapKey]) {
+//           const matchedItem = global.SignalRData[mapKey];
+
+//           // Create the runner data structure
+//           const runnerData = {
+//             teamId: matchedItem.teamId,
+//             RunnerId: matchedItem.RunnerId,
+//             BackPrice: matchedItem.BackPrice,
+//             LayPrice: matchedItem.LayPrice,
+//             BackSize: matchedItem.BackSize,
+//             LaySize: matchedItem.LaySize,
+//             RunnerName: matchedItem.RunnerName,
+//             selectionId: matchedItem.selectionId,
+//             timestamp: matchedItem.timestamp
+//           };
+
+//           // Check if EventMarketId already exists in acc
+//           if (!acc[entry.eventMarketId]) {
+//             // Initialize a new object for this EventMarketId
+//             acc[entry.eventMarketId] = {
+//               commentaryId: commentaryId,
+//               commentaryBallByBallId: objball.commentaryBallByBallId,
+//               eventMarketId: entry.eventMarketId,
+//               marketStatus: entry.status,
+//               marketName: entry.marketName,
+//               data: [] // Initialize Data array
+//             };
+//           }
+//           acc[entry.eventMarketId].data.push(runnerData);
+//         }
+
+//         return acc;
+//       }, {});
+
+//       // Convert the result into an array if needed
+//       _resultArray = Object.values(_dataForOds);
+
+//       // Optionally stringify the Data array within each EventMarketId object
+//       _resultArray.forEach(obj => {
+//         obj.data = JSON.stringify(obj.data);
+//       });
+//       let res;
+//       if (_resultArray.length > 0) {
+//         try {
+//           res = await createMarketOddsBallInSaveDetails(_resultArray[0], fastify, null);
+//           global.tblMarketOddsBallByBall.push(res);
+//         } catch (error) {
+//           errorLogger(
+//             fastify,
+//             error.message,
+//             "ERROR --> createMarketOddsBallInSaveDetails",
+//             null
+//           );
+//         }
+//         return res;
+//       }
+//       else {
+//         return null;
+//       }
+//     }
+//   } catch (error) {
+//     errorLogger(
+//       fastify,
+//       error.message,
+//       "ERROR --> services/commentary.js/addinMarketBallbyballOdds",
+//       request
+//     );
+//     return null;
+//   }
+// };
 const setShortCommenrty = (eventId) => {
   const commentary = global.tblCommentaries.find(
     (item) => item.eventRefId === eventId
