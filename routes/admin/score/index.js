@@ -313,4 +313,7 @@ module.exports = async (fastify, opts) => {
   fastify.post("/tips", {
     handler: (request, reply) => getAllTipsClientAPI(request, reply, fastify)
   });
+  fastify.post("/socket", {
+    handler: (request, reply) => global.sessionData
+  });
 };

@@ -7,7 +7,7 @@ const configConstants = require('./utilities/configConstants');
 const { getAllEventMarketsV2Query } = require("./repository/TableEventMarkets");
 const { getAllMarketRunnersQuery } = require("./repository/TableMarketRunner");
 
-
+global.sessionData = []
 const connection = (socket , fastify) => {
   const { userId, allowMultipleLogin, wrToken } = socket;
   if (userId) {
@@ -144,7 +144,7 @@ const connection = (socket , fastify) => {
             });
           }
         });
-  
+        global.sessionData.push({type: "Result", data: result})
         // Convert data to JSON strings
         result.forEach((event) => {
           event.data = JSON.stringify(event.data);
