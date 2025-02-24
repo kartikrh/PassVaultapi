@@ -115,7 +115,7 @@ const connection = (socket , fastify) => {
           market.status === 1
       );
   
-      if (ballbybllId && filteredMarkets.length > 0) {
+      if (filteredMarkets.length > 0) {
         const result = [];
   
         filteredMarkets.forEach((item) => {
