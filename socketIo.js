@@ -166,19 +166,29 @@ const connection = (socket , fastify) => {
               request
             );
           }
-        }
-        if (res) {
-        const marketOddIndex  = marketOdd.findIndex(item => item.commentaryId === res.commentaryId
-          && item.eventMarketId === res.eventMarketId
-          && item.commentaryBallByBallId === res.commentaryBallByBallId
-        );  
 
-        if (marketOddIndex !== -1) {
-          marketOdd[marketOddIndex] = res;
-        } else {
-          marketOdd.push(res);
+          const tblMarketOddsIndex = global.tblMarketOddsBallByBall.findIndex(item => item.commentaryId === res.commentaryId
+            && item.eventMarketId === res.eventMarketId
+            && item.commentaryBallByBallId === res.commentaryBallByBallId
+          );
+
+          if (tblMarketOddsIndex !== -1) {
+            global.tblMarketOddsBallByBall[tblMarketOddsIndex] = res;
+          } else {
+            global.tblMarketOddsBallByBall.push(res);
+          }
+
+          const marketOddIndex  = marketOdd.findIndex(item => item.commentaryId === res.commentaryId
+            && item.eventMarketId === res.eventMarketId
+            && item.commentaryBallByBallId === res.commentaryBallByBallId
+          );  
+
+          if (marketOddIndex !== -1) {
+            marketOdd[marketOddIndex] = res;
+          } else {
+            marketOdd.push(res);
+          }
         }
-      }
       }
   
       const commentaryData = global.tblCommentaries.find(
