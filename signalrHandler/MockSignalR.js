@@ -1014,7 +1014,7 @@ const createUpdateGlobalSignalRData = async (message, request) => {
                         // _updateData.commentaryId = _selectionidData.commentaryId;
                         // _updateData.selectionId = _selectionidData.selectionId;
                         _updateData.commentaryId = eventMarketData.commentaryId;
-                        _updateData.selectionId = eventMarketData.selectionId;
+                        _updateData.selectionId = runnerData.selectionId;
                     }
                     // if (_selectionidData.teamId) {
                     //     _updateData.teamId = _selectionidData.teamId;
