@@ -5424,17 +5424,67 @@ const getMnMarketByCId = async (data, fastify ,request = null) => {
 const getRsMarketQuery = async (data, request, fastify) => {
   try {
     let result = await fastify.db.query(
-      `
-        SELECT 
-          "wrID" as "eventMarketId",
-          "wrMarketName" as "marketName",
-          "wrResult" as "result",
-          "wrTeamID" as "teamId"
-        FROM "tblEventMarkets"
-        WHERE "wrCommentaryId" = $1
-        AND "wrIsInningRun" = $2
-        AND "wrStatus" = $3
-        AND "wrIsDeleted" = false
+      `WITH "MarketRunners_CTE" AS (
+            SELECT 
+                "wrEventMarketId" as "eventMarketId",
+                "wrRunnerId" as "runnerId",
+                "wrRunner" as "runnerName",
+                "wrLine" as "line",
+                "wrOverRate" as "overRate",
+                "wrUnderRate" as "underRate",
+                "wrSelectionId" as "selectionId",
+                "wrSelectionStatus" as "status",
+                "wrBackPrice" as "backPrice",
+                "wrLayPrice" as "layPrice",
+                "wrBackSize" as "backSize",
+                "wrLaySize" as "laySize"
+            FROM "tblMarketRunners"
+            WHERE "wrIsDeleted" = false
+            ORDER BY "wrRunnerId" ASC
+        )
+        SELECT
+            "wrID" AS "marketId",
+            tem."wrCommentaryId" AS "commentaryId",
+            tem."wrEventRefID" AS "eventId",
+            tem."wrTeamID" AS "teamId",
+            tem."wrMarketTypeCategoryId" AS "marketTypeCategoryId",
+            "wrMarketName" AS "marketName",
+            "wrMargin" AS "margin",
+            "wrStatus" AS "status",
+            "wrInningsID" as "inningsId",
+            "wrOver" as "over",
+            tem."wrIsActive" as "isActive", 
+            "wrIsAllow" as "isAllow",
+            "wrIsSendData" as "isSendData",
+            tem."wrLineRatio" as "lineRatio",
+            tem."wrMarketTypeId" as "marketTypeId",
+            tem."wrLineType" as "lineType", 
+            tem."wrRateDiff" as "rateDiff",
+            tem."wrIsInningRun" as "isInningRun",
+            tem."wrPredefinedValue" as "predefinedValue",
+            (
+                SELECT json_agg(
+                  json_build_object(
+                      'runnerId', "runnerId",
+                      'runnerName' , "runnerName",
+                      'line', "line",
+                      'overRate', "overRate",
+                      'underRate', "underRate",
+                      'status', "status",
+                      'backPrice', "backPrice",
+                      'layPrice', "layPrice",
+                      'backSize', "backSize",
+                      'laySize', "laySize"
+                  )
+              )
+              FROM "MarketRunners_CTE"
+              WHERE "MarketRunners_CTE"."eventMarketId" = tem."wrID"
+            ) as "runner"
+        FROM "tblEventMarkets" tem
+        WHERE tem."wrCommentaryId" = $1
+        AND tem."wrIsInningRun" = $2
+        AND tem."wrStatus" = $3
+        AND tem."wrIsDeleted" = false
       `,
     {
       type: fastify.db.QueryTypes.SELECT,
