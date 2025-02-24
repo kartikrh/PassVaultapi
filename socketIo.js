@@ -194,30 +194,30 @@ const connection = (socket , fastify) => {
       const commentaryData = global.tblCommentaries.find(
         (commentary) => commentary.commentaryId === commentaryId
       );
-      // const sendDataForSocketUpdate = {
-      //   commentaryId,
-      //   eventRefId: commentaryData.eventRefId,
-      //   dataToUpdate: [
-      //     {
-      //       module: "marketOddsBallByBall",
-      //       data: [],
-      //       type: "create",
-      //     },
-      //   ],
-      // };
-      let sendDataForSocketUpdate = {};
-      sendDataForSocketUpdate.commentaryId = commentaryId;
-      sendDataForSocketUpdate.eventRefId = commentaryData?.eventRefId;
-
-      if(marketOdd.length > 0) {
-        sendDataForSocketUpdate.dataToUpdate = [
+      const sendDataForSocketUpdate = {
+        commentaryId,
+        eventRefId: commentaryData.eventRefId,
+        dataToUpdate: [
           {
             module: "marketOddsBallByBall",
             data: marketOdd,
-            type : "create"
-          }
-        ];
-      }
+            type: "create",
+          },
+        ],
+      };
+      // let sendDataForSocketUpdate = {};
+      // sendDataForSocketUpdate.commentaryId = commentaryId;
+      // sendDataForSocketUpdate.eventRefId = commentaryData?.eventRefId;
+
+      // if(marketOdd.length > 0) {
+      //   sendDataForSocketUpdate.dataToUpdate = [
+      //     {
+      //       module: "marketOddsBallByBall",
+      //       data: marketOdd,
+      //       type : "create"
+      //     }
+      //   ];
+      // }
   
       global.clientSocketIo.forEach((socket) => {
         socket.client.emit("updateFullscore", sendDataForSocketUpdate);
