@@ -12,9 +12,9 @@ const {
   updateEventMarketMaunalQuery,
   createOrUpdateEventRunnerMarketManualQuery,
   getEventMarketByIdsQuery,
-  getAllEventMarketsV2Query
+  getAllEventMarketsV2ByIdQuery
 } = require("../repository/TableEventMarkets");
-const { getAllMarketRunnersQuery } = require("../repository/TableMarketRunner");
+const { getAllMarketRunnersV2ByIdQuery } = require("../repository/TableMarketRunner");
 const configConstants = require("../utilities/configConstants");
 
 const ImportMarketService = async (request, fastify) => {
@@ -378,9 +378,12 @@ const ImportMarketWithRunnerService = async (request, fastify) => {
         request,
         fastify
       );
-      let whereCondition = ` tem."wrID" = ${setEventsMarket.eventMarketId}`
-      const eventMarketData = await getAllEventMarketsV2Query(fastify, whereCondition);
-      global.tblEventMarketsV2.push(eventMarketData[0]);
+      
+      if(setEventsMarket?.eventMarketId){
+        let whereCondition = ` tem."wrID" = ${setEventsMarket.eventMarketId}`
+        const eventMarketData = await getAllEventMarketsV2ByIdQuery(fastify, whereCondition);
+        global.tblEventMarketsV2.push(eventMarketData[0]);
+      }
     } else {
       let req = {};
 
@@ -448,8 +451,8 @@ const ImportMarketWithRunnerService = async (request, fastify) => {
           (e) => e.runnerId == setMarketRunnders.runnerId
         );
         if(runnerIndex === -1){
-          let whereCondition = ` tmr."wrRunnerId" = ${setMarketRunnders.runnerId}`
-          const runnersData = await getAllMarketRunnersQuery(fastify, whereCondition)
+          let whereCondition = ` tmr."wrRunnerId" = ${setMarketRunnders.runnerId}`;
+          const runnersData = await getAllMarketRunnersV2ByIdQuery(fastify, whereCondition)
           global.tblMarketRunnerV2.push(runnersData[0]);
         }
        }
