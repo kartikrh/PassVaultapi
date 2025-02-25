@@ -543,7 +543,7 @@ const processRateQueue = async () => {
                         );
                         let teams;
                         let commentary = global.tblCommentaries.find(
-                            (item) => item.commentaryId == _eventMarketData.commentaryId
+                            (item) => item.commentaryId == _eventMarketData?.commentaryId
                         );
 
                         let _isThreadDone = await UpdateEventMarketByCIdFromSocketQuery({
@@ -633,7 +633,7 @@ const processRateQueue = async () => {
                                 (item) =>
                                 item.commentaryId === commentary.commentaryId &&
                                 item.currentInnings === commentary.currentInnings &&
-                                item.teamId == _eventMarketData.teamId
+                                item.teamId == _selectionidData?.teamId
                             );
 
                             if (!teams) {
@@ -650,7 +650,7 @@ const processRateQueue = async () => {
                                     commentaryTeamId: teams.commentaryTeamId,
                                     teamPredictionPercentage: winPer.winper,
                                     currentInnings: commentary.currentInnings,
-                                    commentaryId: _eventMarketData.commentaryId
+                                    commentaryId: _eventMarketData?.commentaryId
                                 };
 
                                 const index = global.tblCommentaryTeams.findIndex(
@@ -658,9 +658,8 @@ const processRateQueue = async () => {
                                     item.commentaryId === commentary.commentaryId &&
                                     item.commentaryTeamId === teams.commentaryTeamId
                                 );
-                                global.tblCommentaryTeams[index].teamPredictionPercentage = parseInt(_update.teamPredictionPercentage);
-
                                 await updateCommentaryTeamPredictionPrecentageQuery(_update, _fastify);
+                                global.tblCommentaryTeams[index].teamPredictionPercentage = parseInt(_update.teamPredictionPercentage);
                             }
                         }
                     }
@@ -787,6 +786,10 @@ const createUpdateGlobalSignalRData = async (message, request) => {
                 let _runner = {};
                 _runner = EventsMarketobj[i];
                 if (_runner.commentaryId != '0') {
+                    const runnerRate = global.tblMarketRunnerV2.filter((item) => 
+                        item.eventMarketId === _runner?.eventMarketId
+                    )
+                    for(const marketRunner of runnerRate) {
                     let commentary = global.tblCommentaries.find(
                         (item) => item.commentaryId == _runner.commentaryId
                     );
@@ -796,7 +799,7 @@ const createUpdateGlobalSignalRData = async (message, request) => {
                             (item) =>
                             item.commentaryId === commentary.commentaryId &&
                             item.currentInnings === commentary.currentInnings &&
-                            item.teamName == _runner.teamId
+                            item.teamName == marketRunner?.teamId
                         );
 
                         if (!teams) {
@@ -804,7 +807,7 @@ const createUpdateGlobalSignalRData = async (message, request) => {
                                 (item) =>
                                 item.commentaryId === commentary.commentaryId &&
                                 item.currentInnings === commentary.currentInnings &&
-                                item.teamName.toLowerCase() == _runner.runner.toLowerCase().trim()
+                                item.teamName.toLowerCase() == marketRunner?.runner.toLowerCase().trim()
                             );
                         }
                         if (teams && commentary.isTeamPredictionOn) {
@@ -820,11 +823,12 @@ const createUpdateGlobalSignalRData = async (message, request) => {
                                 item.commentaryId === commentary.commentaryId &&
                                 item.commentaryTeamId === teams.commentaryTeamId
                             );
-                            global.tblCommentaryTeams[index].teamPredictionPercentage = parseInt(_update.teamPredictionPercentage);
-
+                            
                             await updateCommentaryTeamPredictionPrecentageQuery(_update, _fastify);
+                            global.tblCommentaryTeams[index].teamPredictionPercentage = parseInt(_update.teamPredictionPercentage);
                         }
                     }
+                  }
                 }
                 const groupedRates = {};
 
@@ -1151,6 +1155,10 @@ const createUpdateGlobalSignalRData = async (message, request) => {
                     let _runner = {};
                     _runner = EventsMarketobj[i];
                     if (_runner.commentaryId != '0') {
+                        const runnerRate = global.tblMarketRunnerV2.filter((item) => 
+                            item.eventMarketId === _runner?.eventMarketId
+                        )
+                        for(const marketRunner of runnerRate) {
                         let commentary = global.tblCommentaries.find(
                             (item) => item.commentaryId == _runner.commentaryId
                         );
@@ -1160,7 +1168,7 @@ const createUpdateGlobalSignalRData = async (message, request) => {
                                 (item) =>
                                 item.commentaryId === commentary.commentaryId &&
                                 item.currentInnings === commentary.currentInnings &&
-                                item.teamName == _runner.teamId
+                                item.teamName == marketRunner?.teamId
                             );
     
                             if (!teams) {
@@ -1168,7 +1176,7 @@ const createUpdateGlobalSignalRData = async (message, request) => {
                                     (item) =>
                                     item.commentaryId === commentary.commentaryId &&
                                     item.currentInnings === commentary.currentInnings &&
-                                    item.teamName.toLowerCase() == _runner.runner.toLowerCase().trim()
+                                    item.teamName.toLowerCase() == marketRunner?.runner.toLowerCase().trim()
                                 );
                             }
                             if (teams && commentary.isTeamPredictionOn) {
@@ -1184,11 +1192,12 @@ const createUpdateGlobalSignalRData = async (message, request) => {
                                     item.commentaryId === commentary.commentaryId &&
                                     item.commentaryTeamId === teams.commentaryTeamId
                                 );
-                                global.tblCommentaryTeams[index].teamPredictionPercentage = parseInt(_update.teamPredictionPercentage);
-    
                                 await updateCommentaryTeamPredictionPrecentageQuery(_update, _fastify);
+
+                                global.tblCommentaryTeams[index].teamPredictionPercentage = parseInt(_update.teamPredictionPercentage);
                             }
                         }
+                      }
                     }
                 }
             } catch (error) {
@@ -1196,6 +1205,7 @@ const createUpdateGlobalSignalRData = async (message, request) => {
             }
         }
     } catch (error) {
+        console.log("wrrorororr", error)
         errorLogger(
             _fastify,
             error,
