@@ -2,7 +2,7 @@ const signalR = require('@microsoft/signalr');
 const {EventMarketStatus, EventMarketRateSource,MarketUpdateType} = require('../utilities/index');
 const {marketDataLogger} = require("../utilities/logger");
 const {updateEventMarketRunnerMaunalQuery,getEventMarketByIdsQuery,
-    UpdateEventMarketByCIdFromSocketQuery,updateMarketStatusFromSignalRQuery, getAllEventMarketsV2Query} = require('../repository/TableEventMarkets');
+    UpdateEventMarketByCIdFromSocketQuery,updateMarketStatusFromSignalRQuery, getAllEventMarketsV2ByIdQuery} = require('../repository/TableEventMarkets');
 const {updateCommentaryTeamPredictionPrecentageQuery} = require('../repository/TableCommentary');
 const {errorLogger} = require("../utilities/logger");
 const {updateThirdPartyApisQuery} = require('../repository/TableThirdPartyApis');
@@ -595,8 +595,8 @@ const processRateQueue = async () => {
                                     );
                                 }
                             }
-                            let whereCondition = ` tem."wrID" = ${EventsMarketobj.eventMarketId}`
-                            let eventMarkets = await getAllEventMarketsV2Query(_fastify, whereCondition);
+                            let whereCondition = ` tem."wrID" = ${EventsMarketobj?.eventMarketId}`
+                            let eventMarkets = await getAllEventMarketsV2ByIdQuery(_fastify, whereCondition);
                             eventMarkets = eventMarkets[0];
                             let eventIndex = global.tblEventMarketsV2.findIndex(
                                 (e) => e.eventMarketId == eventMarkets.eventMarketId

@@ -55,7 +55,7 @@ const {
   getMarketByIdQuery,
   upIsInningRunMarketQuery,
   getTargetQyery,
-  getAllEventMarketsV2Query,
+  getAllEventMarketsV2ByIdQuery,
   closeMarketByATQuery1,
   cancelMarketByATQuery1,
   getRsMarketQuery,
@@ -73,7 +73,7 @@ const {
   MarketTypeId,
   MarketTypeCategories,
 } = require("../utilities/index");
-const { getAllMarketRunnersQuery } = require("../repository/TableMarketRunner");
+const { getAllMarketRunnersV2ByIdQuery } = require("../repository/TableMarketRunner");
 const { marketLogger, marketDataLogger, errorLogger, eventMarketLogger, marektResultLogger } = require("../utilities/logger");
 const getDetailsByCIdService = async (request, fastify) => {
   const { commentaryId } = request.body;
@@ -295,29 +295,33 @@ const createEventMarketsService = async (request, fastify) => {
     }
   }
   const result = await upsertEventMarketSPQuery(eventMarket, request, fastify);
-  let whereCondition = ` tem."wrID" IN(${result.eventMarketIds})`
-  const eventMarketData = await getAllEventMarketsV2Query(fastify, whereCondition);
-  for (let event of eventMarketData){
-    let eventMarket = global.tblEventMarketsV2.findIndex((elem) => elem.eventMarketId === event.eventMarketId);
-    if(eventMarket === -1){
-      global.tblEventMarketsV2.push(event);
-    } else {
-      global.tblEventMarketsV2[index] = {
-        ...global.tblEventMarketsV2[index],
-        ...event
+
+  if(result?.eventMarketIds) {
+    let whereCondition = ` tem."wrID" IN(${result.eventMarketIds})`
+    const eventMarketData = await getAllEventMarketsV2ByIdQuery(fastify, whereCondition);
+    for (let event of eventMarketData){
+      let eventMarket = global.tblEventMarketsV2.findIndex((elem) => elem.eventMarketId === event.eventMarketId);
+      if(eventMarket === -1){
+        global.tblEventMarketsV2.push(event);
+      } else {
+        global.tblEventMarketsV2[index] = {
+          ...global.tblEventMarketsV2[index],
+          ...event
+        }
       }
     }
-  }
-  let whereClause = ` tmr."wrEventMarketId" IN(${result.eventMarketIds})`
-  const runnerData = await getAllMarketRunnersQuery(fastify, whereClause);
-  for (let runner of runnerData) {
-    let runnerIndex = global.tblMarketRunnerV2.findIndex((elem) => elem.eventMarketId === runner.eventMarketId);
-    if(runnerIndex !== -1){
-      global.tblMarketRunnerV2.push(runner)
-    } else {
-      global.tblMarketRunnerV2[runnerIndex] = {
-        ...global.tblMarketRunnerV2[runnerIndex],
-        ...runner
+
+    let whereClause = ` tmr."wrEventMarketId" IN(${result.eventMarketIds})`;
+    const runnerData = await getAllMarketRunnersV2ByIdQuery(fastify, whereClause);
+    for (let runner of runnerData) {
+      let runnerIndex = global.tblMarketRunnerV2.findIndex((elem) => elem.eventMarketId === runner.eventMarketId);
+      if(runnerIndex !== -1){
+        global.tblMarketRunnerV2.push(runner)
+      } else {
+        global.tblMarketRunnerV2[runnerIndex] = {
+          ...global.tblMarketRunnerV2[runnerIndex],
+          ...runner
+        }
       }
     }
   }
@@ -1748,9 +1752,9 @@ const handleMarketCloseService = async (data, request, fastify) => {
 
   const updateData = [...closeMar1, ...closeMar2];
   const eventMarketIds = updateData.map((r) => r.eventMarketId);
-  if(eventMarketIds.length > 0){
+  if(eventMarketIds?.length > 0){
     let whereCondition = ` tem."wrID" IN(${eventMarketIds})`
-    const eventMarketData = await getAllEventMarketsV2Query(fastify, whereCondition)
+    const eventMarketData = await getAllEventMarketsV2ByIdQuery(fastify, whereCondition)
     for (let event of eventMarketData) {
       let index = global.tblEventMarketsV2.findIndex(
         (item) => item.eventMarketId === event.eventMarketId
@@ -3368,17 +3372,20 @@ const suspendMarketService = async (data,request, fastify) => {
   const result = await suspendMarketQuery({
     eventMarketIds: market,
   }, request, fastify);
-  let whereCondition = ` tem."wrID" IN(${market})`
-  const eventMarketData = await getAllEventMarketsV2Query(fastify, whereCondition)
-  if (eventMarketData.length > 0) {
-    eventMarketData.forEach((updatedItem) => {
-      let index = global.tblEventMarketsV2.findIndex(
-        (item) => item.eventMarketId === updatedItem.eventMarketId
-      );
-      if (index !== -1) {
-        global.tblEventMarketsV2[index] = updatedItem
-      }
-    });
+
+  if(market?.length > 0){
+    let whereCondition = ` tem."wrID" IN(${market})`
+    const eventMarketData = await getAllEventMarketsV2ByIdQuery(fastify, whereCondition)
+    if (eventMarketData?.length > 0) {
+      for (const updatedItem of eventMarketData) {
+        let index = global.tblEventMarketsV2.findIndex(
+          (item) => item.eventMarketId === updatedItem.eventMarketId
+        );
+        if (index !== -1) {
+          global.tblEventMarketsV2[index] = updatedItem
+        }
+      };
+    }
   }
 
   global.tblMarketRunnerV2
@@ -3453,11 +3460,16 @@ const saveManualMarketDataService = async (request, fastify) => {
     throw new Error("Commentary with this id not Found");
   }
   const eventMarket = await saveManualMarketQuery(request.body, request, fastify);
-  global.tblEventMarketsV2.push(eventMarket);
+  if(eventMarket){
+    let whereCondition = ` tem."wrID" = ${eventMarket}`
+    const manualMarketData = await getAllEventMarketsV2ByIdQuery(fastify, whereCondition)
+    global.tblEventMarketsV2.push(manualMarketData[0]);
 
-  let whereClause = ` tmr."wrEventMarketId" = ${eventMarket.eventMarketId}`
-  const runnerData = await getAllMarketRunnersQuery(fastify, whereClause);
-  global.tblMarketRunnerV2.push(...runnerData);
+    let whereClause = ` tmr."wrEventMarketId" = ${eventMarket}`;
+    const runnerData = await getAllMarketRunnersV2ByIdQuery(fastify, whereClause);
+    global.tblMarketRunnerV2.push(...runnerData);
+  }
+
   return "Market saved successfully";
 }
 const upManualMarketDataService = async (request, fastify) => {
