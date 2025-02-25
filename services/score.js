@@ -264,7 +264,7 @@ const getMarketsByCommentaryIdService =async (request , fastify) => {
     if (!commentary.isPredictMarket) {
         return null;
     }
-    let LDOMARKETSIDS = global.tblConfigs.find(config => config.key === "LDOMARKET")?.value ?? "0";
+    let LDOMARKETSIDS = global.tblConfigs.find(config => config.key === configConstants.LDOMARKET)?.value ?? "0";
     let whereCondition = ` AND "wrMarketTypeCategoryId" NOT IN (${LDOMARKETSIDS})`;
     
     const getCommentaries = await getMarketsByCIdQuery(request, whereCondition, fastify);

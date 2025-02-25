@@ -496,7 +496,7 @@ const getCommentaryListByCompetitionIdService = async (request, fastify) => {
     commentaryId: item.commentaryId,
     eventName: item.eventName,
     eventDate: item.eventDate,
-  }));
+  })).sort((a, b) => b.eventDate - a.eventDate);
   return commentaryList;
 };
 
@@ -1748,14 +1748,16 @@ const handleMarketCloseService = async (data, request, fastify) => {
 
   const updateData = [...closeMar1, ...closeMar2];
   const eventMarketIds = updateData.map((r) => r.eventMarketId);
-  let whereCondition = ` tem."wrID" IN(${eventMarketIds})`
-  const eventMarketData = await getAllEventMarketsV2Query(fastify, whereCondition)
-  for (let event of eventMarketData) {
-    let index = global.tblEventMarketsV2.findIndex(
-      (item) => item.eventMarketId === event.eventMarketId
-    );
-    if(index !== -1){
-      global.tblEventMarketsV2[index] = event;
+  if(eventMarketIds.length > 0){
+    let whereCondition = ` tem."wrID" IN(${eventMarketIds})`
+    const eventMarketData = await getAllEventMarketsV2Query(fastify, whereCondition)
+    for (let event of eventMarketData) {
+      let index = global.tblEventMarketsV2.findIndex(
+        (item) => item.eventMarketId === event.eventMarketId
+      );
+      if(index !== -1){
+        global.tblEventMarketsV2[index] = event;
+      }
     }
   }
 
