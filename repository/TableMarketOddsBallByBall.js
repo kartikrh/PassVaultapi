@@ -546,7 +546,6 @@ const createMarketOddsBallByBallBulkInsert = async (dataArray, fastify) => {
   }
 };
 const createMarketOddsBallInSaveDetails = async (data, fastify, request = null) => {
-  global.sessionData.push({type: "createMarketOddsBallInSaveDetails", data: data})
   try {
     const insertData = [
       data.commentaryId,
@@ -603,7 +602,6 @@ const createMarketOddsBallInSaveDetails = async (data, fastify, request = null) 
         type: fastify.db.QueryTypes.SELECT,
       }
     );
-    global.sessionData.push({type: "createMarketOddsBallInSaveDetails 2222", data: result[0]})
     return result[0];
   } catch (err) {
     errorLogger(
@@ -618,7 +616,6 @@ const createMarketOddsBallInSaveDetails = async (data, fastify, request = null) 
 };
 
 const CheckAndCreateMarketOddsBallInSaveDetails = async (data, fastify, request = null) => {
-  global.sessionData.push({type: "CheckAndCreateMarketOddsBallInSaveDetails", data: data})
   try {
     const selectQuery = `
       SELECT "wrId"
@@ -711,7 +708,6 @@ const CheckAndCreateMarketOddsBallInSaveDetails = async (data, fastify, request 
         type: fastify.db.QueryTypes.SELECT,
       }
     );
-    global.sessionData.push({type: "CheckAndCreateMarketOddsBallInSaveDetails 2222", data: result[0]})
     return result[0]; // Return the full details
   } catch (err) {
     errorLogger(
