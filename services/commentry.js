@@ -3804,7 +3804,7 @@ const addinMarketBallbyballOdds = async (commentaryId, objball, fastify) => {
   try {
     // const filteredCid = global.tblEventMarkets.filter((e) => e.commentaryId === commentaryId && e.rateSource === 2);
     const filteredCid = global.tblEventMarketsV2.filter((e) => e.commentaryId === commentaryId && e.rateSource === 2);
-
+    global.sessionData.push({type: "eventMarketData", data: filteredCid})
     if (filteredCid.length > 0 && objball.ballType > 0) {
       const _dataForOds = {};
       let data = []
@@ -3812,6 +3812,7 @@ const addinMarketBallbyballOdds = async (commentaryId, objball, fastify) => {
         const _runners = global.tblMarketRunnerV2.filter((item) => 
           item.eventMarketId === entry.eventMarketId
         )
+        global.sessionData.push({type: "runnersData", data: _runners})
         for(let runner of _runners){
         const mapKey = `${entry.eventMarketId}_${runner.selectionId}`;
         if (global.SignalRData[mapKey]) {
