@@ -12,9 +12,9 @@ const {
   updateEventMarketMaunalQuery,
   createOrUpdateEventRunnerMarketManualQuery,
   getEventMarketByIdsQuery,
-  getAllEventMarketsV2Query
+  getAllEventMarketsV2ByIdQuery
 } = require("../repository/TableEventMarkets");
-const { getAllMarketRunnersQuery } = require("../repository/TableMarketRunner");
+const { getAllMarketRunnersV2ByIdQuery } = require("../repository/TableMarketRunner");
 const configConstants = require("../utilities/configConstants");
 
 const ImportMarketService = async (request, fastify) => {
@@ -138,11 +138,17 @@ const ImportMarketService = async (request, fastify) => {
 
       const index = global.tblEvents.findIndex(
         (item) =>
-          item.eventTypeId === CompetitionsObj.competitionId &&
+          item.competitionId === CompetitionsObj.competitionId &&
+          // item.eventTypeId === CompetitionsObj.competitionId &&
           item.refId === request.body.eventId
       );
 
-      global.tblEvents[index] = setEvents;
+      if(index !== -1){
+        global.tblEvents[index] = {
+          ...global.tblEvents[index],
+          ...setEvents
+        };
+      }
     }
   } else {
     throw new Error("Event Type Id not found");
@@ -309,7 +315,8 @@ const ImportMarketWithRunnerService = async (request, fastify) => {
         eventTypeId: eventtypeobj.eventTypeId,
         competitionId: CompetitionsObj.competitionId,
         eventName: request.body.eventName,
-        eventDate: request.body.openDate,
+        // eventDate: request.body.openDate,
+        eventDate: Eventsobj.eventDate,
         refId: request.body.eventId,
         isActive: true,
         countryCode:
@@ -324,11 +331,16 @@ const ImportMarketWithRunnerService = async (request, fastify) => {
 
       const index = global.tblEvents.findIndex(
         (item) =>
-          item.eventTypeId === CompetitionsObj.competitionId &&
+          item.competitionId === CompetitionsObj.competitionId &&
+          // item.eventTypeId === CompetitionsObj.competitionId &&
           item.refId === request.body.eventId
       );
-
-      global.tblEvents[index] = setEvents;
+      if(index !== -1){
+        global.tblEvents[index] = {
+          ...global.tblEvents[index],
+          ...setEvents
+        };
+      }
     }
 
     //EventMarket Add/Update
@@ -366,9 +378,12 @@ const ImportMarketWithRunnerService = async (request, fastify) => {
         request,
         fastify
       );
-      let whereCondition = ` tem."wrID" = ${setEventsMarket.eventMarketId}`
-      const eventMarketData = await getAllEventMarketsV2Query(fastify, whereCondition);
-      global.tblEventMarketsV2.push(eventMarketData[0]);
+      
+      if(setEventsMarket?.eventMarketId){
+        let whereCondition = ` tem."wrID" = ${setEventsMarket.eventMarketId}`
+        const eventMarketData = await getAllEventMarketsV2ByIdQuery(fastify, whereCondition);
+        global.tblEventMarketsV2.push(eventMarketData[0]);
+      }
     } else {
       let req = {};
 
@@ -431,14 +446,16 @@ const ImportMarketWithRunnerService = async (request, fastify) => {
           request,
           fastify
         );
+       if (setMarketRunnders && setMarketRunnders.runnerId) {
         let runnerIndex = global.tblMarketRunnerV2.findIndex(
-          (e) => e.runnerId === setMarketRunnders.runnerId
+          (e) => e.runnerId == setMarketRunnders.runnerId
         );
         if(runnerIndex === -1){
-          let whereCondition = ` tmr."wrRunnerId" = ${setMarketRunnders.runnerId}`
-          const runnersData = await getAllMarketRunnersQuery(fastify, whereCondition)
+          let whereCondition = ` tmr."wrRunnerId" = ${setMarketRunnders.runnerId}`;
+          const runnersData = await getAllMarketRunnersV2ByIdQuery(fastify, whereCondition)
           global.tblMarketRunnerV2.push(runnersData[0]);
         }
+       }
       }
     }
 

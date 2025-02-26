@@ -1,8 +1,8 @@
 const { EventMarketStatus } = require("../utilities");
 const { errorLogger } = require("../utilities/logger")
-const { getAllEventMarketsV2Query } = require("./TableEventMarkets");
+// const { getAllEventMarketsV2ByIdQuery } = require("./TableEventMarkets");
 
-const getAllMarketRunnersQuery = async (fastify, whereCondition = null) => {
+const getAllMarketRunnersQuery = async (fastify) => {
     return await fastify.db.query(
       `SELECT
           tmr."wrRunnerId" AS "runnerId",
@@ -33,7 +33,7 @@ const getAllMarketRunnersQuery = async (fastify, whereCondition = null) => {
         AND (
             tem."wrStatus" IN (1, 2, 3, 4)
             OR (tem."wrStatus" = 5 AND tem."wrIsResult" = FALSE)
-        ) ${whereCondition ? ` AND ${whereCondition}` : ""}`,
+        )`,
       {
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -147,13 +147,20 @@ const setResultInRunnerMarketQuery = async(data, request,fastify)=>{
             SET "wrData" = $1,
             "wrLastUpdate" = now()::timestamp
             WHERE "wrID" = $2
+            RETURNING
+                "wrStatus" as "status",
+                "wrResult" as "result",
+                "wrIsResult" as "isResult",
+                "wrSettledTime" as "settledTime",
+                "wrData" as "data",
+                "wrLastUpdate" as "lastUpdate"
         `;
-        await fastify.db.query(q5, {
+        const result = await fastify.db.query(q5, {
             bind: [data1[0], data.eventMarketId],
             type: fastify.db.QueryTypes.UPDATE
         });
-        let whereCondition = ` tem."wrID" = ${data.eventMarketId}`
-        const result = await getAllEventMarketsV2Query(fastify, whereCondition)
+        // let whereCondition = ` tem."wrID" = ${data.eventMarketId}`
+        // const result = await getAllEventMarketsV2ByIdQuery(fastify, whereCondition)
 
         // return true;
         return result[0];
@@ -200,9 +207,50 @@ const getRunnerByMarketQuery = async(request,fastify)=>{
         throw new Error(error.message)
     }
 }
+
+const getAllMarketRunnersV2ByIdQuery = async (fastify, whereCondition = null) => {
+    try {
+        return await fastify.db.query(
+            `SELECT
+                tmr."wrRunnerId" AS "runnerId",
+                tmr."wrEventMarketId" AS "eventMarketId",
+                tmr."wrRunner" AS "runner",
+                tmr."wrLine" AS "line",
+                tmr."wrOverRate" AS "overRate",
+                tmr."wrUnderRate" AS "underRate",
+                tmr."wrSelectionId" AS "selectionId",
+                tmr."wrSelectionStatus" AS "selectionStatus",
+                tmr."wrOrder" AS "order",
+                tmr."wrBackPrice" AS "backPrice",
+                tmr."wrBackSize" AS "backSize",
+                tmr."wrLayPrice" AS "layPrice",
+                tmr."wrLaySize" as "laySize",	
+                tmr."wrTeamId" as "teamId",
+                tmr."wrLastUpdate" as "lastUpdate"
+            FROM "tblMarketRunners" tmr
+            LEFT JOIN "tblEventMarkets" tem ON tmr."wrEventMarketId" = tem."wrID"
+            LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
+            ${whereCondition ? ` WHERE ${whereCondition}` : ""}`,
+            {
+              type: fastify.db.QueryTypes.SELECT,
+            }
+        );
+    } catch (error) {
+        errorLogger(
+            fastify,
+            error.message,
+            "DB Error --> repository/TableMarketRunner.js/getAllMarketRunnersV2ByIdQuery",
+            request
+        )
+        throw new Error(error.message)
+    }
+    
+};
+
 module.exports = {
     getRunnerByIdQuery,
     setResultInRunnerMarketQuery,
     getRunnerByMarketQuery,
     getAllMarketRunnersQuery,
+    getAllMarketRunnersV2ByIdQuery,
 }

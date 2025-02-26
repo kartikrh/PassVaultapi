@@ -4,8 +4,8 @@ const { getEventMarketByIdsQuery, insertTimeLogs, updateTimeLogs, socketMarketRu
 const { MarketActionType, callTPAPI } = require("./utilities");
 const {createMarketOddsBallByBallBYIDFromSocketIo,createMarketOddsBallInSaveDetails,CheckAndCreateMarketOddsBallInSaveDetails} = require("./repository/TableMarketOddsBallByBall")
 const configConstants = require('./utilities/configConstants');
-const { getAllEventMarketsV2Query } = require("./repository/TableEventMarkets");
-const { getAllMarketRunnersQuery } = require("./repository/TableMarketRunner");
+const { getAllEventMarketsV2ByIdQuery } = require("./repository/TableEventMarkets");
+const { getAllMarketRunnersV2ByIdQuery } = require("./repository/TableMarketRunner");
 
 global.sessionData = []
 const connection = (socket , fastify) => {
@@ -66,7 +66,7 @@ const connection = (socket , fastify) => {
       const eventMarketIds = marketIdArr.flat().map(Number);
       if (eventMarketIds?.length > 0){
       let whereCondition = ` tem."wrID" IN(${eventMarketIds})`;
-      const eventMarketData = await getAllEventMarketsV2Query(fastify, whereCondition)
+      const eventMarketData = await getAllEventMarketsV2ByIdQuery(fastify, whereCondition)
       if(eventMarketData.length > 0){
         for (const updatedItem of eventMarketData) {
           let index = global.tblEventMarketsV2.findIndex(
@@ -81,7 +81,7 @@ const connection = (socket , fastify) => {
         }
       }
       let whereClause = ` tmr."wrEventMarketId" IN(${eventMarketIds})`;
-      const runnerData = await getAllMarketRunnersQuery(fastify, whereClause);
+      const runnerData = await getAllMarketRunnersV2ByIdQuery(fastify, whereClause);
       if(runnerData?.length > 0){
         for (const runner of runnerData) {
           let index = global.tblMarketRunnerV2.findIndex(

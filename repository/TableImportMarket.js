@@ -1,6 +1,5 @@
 const { QueryTypes } = require("sequelize");
 const { errorLogger } = require("../utilities/logger");
-const { getAllMarketRunnersQuery } = require("../repository/TableMarketRunner");
 
 const insertEventTypeQuery = async (data, fastify, request) => {
   try {

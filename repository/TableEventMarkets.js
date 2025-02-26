@@ -4838,8 +4838,6 @@ const saveManualMarketQuery = async (data, request, fastify) => {
       type: fastify.db.QueryTypes.SELECT,
     });
 
-    let whereCondition = ` tem."wrID" = ${mar[0].eventMarketId}`
-    const manualMarketData = await getAllEventMarketsV2Query(fastify, whereCondition)
 
     marketDataLogger(
       {
@@ -4853,7 +4851,6 @@ const saveManualMarketQuery = async (data, request, fastify) => {
       request,
       fastify
     ).catch((err) => {
-      console.log("saveManualMarketQuery market data logger console:", err);
       errorLogger(
         fastify,
         err.message,
@@ -4862,7 +4859,7 @@ const saveManualMarketQuery = async (data, request, fastify) => {
       );
     });
     // return true;
-    return manualMarketData[0];
+    return mar[0].eventMarketId;
 
   } catch (error) {
     errorLogger(
@@ -5508,6 +5505,94 @@ const getRsMarketQuery = async (data, request, fastify) => {
     
   }
 }
+
+const getAllEventMarketsV2ByIdQuery = async (fastify, whereCondition = null) => { 
+  try {
+    return await fastify.db.query(
+      `SELECT
+          tem."wrID" AS "eventMarketId",
+          tem."wrCommentaryId" AS "commentaryId",
+          tem."wrEventRefID" AS "eventRefId",
+          tem."wrTeamID" AS "teamId",
+          tem."wrInningsID" AS "inningsId",
+          tem."wrMarketName" AS "marketName",
+          tem."wrMargin" AS "margin",
+          tem."wrStatus" AS "status",
+          tem."wrIsPredefineMarket" As "isPredefineMarket",
+          tem."wrIsOver" As "isOver",
+          tem."wrOver" As "over",
+          tem."wrIsPlayer" As "isPlayer",
+          tem."wrPlayerID" As "playerId",
+          tem."wrIsAutoCancel" As "isAutoCancel",
+          tem."wrAutoOpenType" As "autoOpenType",
+          tem."wrAutoOpen" As "autoOpen",
+          tem."wrAutoCloseType" As "autoCloseType",
+          tem."wrBeforeAutoClose" As "beforeAutoClose",
+          tem."wrAutoSuspendType" As "autoSuspendType",
+          tem."wrBeforeAutoSuspend" As "beforeAutoSuspend",
+          tem."wrIsBallStart" As "isBallStart",
+          tem."wrIsAutoResultSet" As "isAutoResultSet",
+          tem."wrAutoResultType" As "autoResultType",
+          tem."wrAutoResultafterBall" As "autoResultafterBall",
+          tem."wrAfterWicketAutoSuspend" As "afterWicketAutoSuspend",
+          tem."wrAfterWicketNotCreated" As "afterWicketNotCreated",
+          tem."wrIsActive" as "isActive",	
+          tem."wrIsAllow" as "isAllow",
+          tem."wrCloseTime" as "closeTime",
+          tem."wrOpenTime" as "openTime",
+          tem."wrSettledTime" as "settledTime",
+          tem."wrOpenTime" as "openTime",
+          tem."wrResult" as "result",
+          tem."wrIsResult" as "isResult",
+          tem."wrData" as "data",
+          tem."wrLastUpdate" as "lastUpdate",
+          tem."wrIsSendData" as "isSendData",
+          tem."wrActionType" as "actionType",
+          tem."wrMarketTemplateId" as "marketTemplateId",
+          tem."wrMarketTypeId" as "marketTypeId",
+          tem."wrMarketTypeCategoryId" as "marketTypeCategoryId",
+          tem."wrCreateRefId" as "createRefId",
+          tem."wrOpenRefId" as "openRefId",
+          tem."wrCreateType" as "createType",
+          tem."wrCreate" as "create",
+          tem."wrTemplateType" as "templateType",
+          tem."wrDelay" as "delay",
+          tem."wrLineRatio" as "lineRatio",
+          tem."wrOpenOdds" as "openOdds",
+          tem."wrMinOdds" as "minOdds",
+          tem."wrMaxOdds" as "maxOdds",
+          tem."wrRateSource" as "rateSource",
+          tem."wrRateSourceRefID" as "rateSourceRefID",
+          tem."wrPredefinedValue" as "predefinedValue",
+          tem."wrLineType" as "lineType",
+          tem."wrDefaultBackSize" as "defaultBackSize",
+          tem."wrDefaultLaySize" as "defaultLaySize",
+          tem."wrAfterSuspendTime" as "afterSuspendTime",
+          tem."wrAfterCloseTime" as "afterCloseTime",
+          tem."wrDefaultIsSendData" as "wrDefaultIsSendData",
+          tem."wrRateDiff" as "rateDiff",
+          tem."wrWicketNo" as "wicketNo",
+          tu."WrUserName" as "createdBy",
+          tem."wrIsInningRun" as "isInningRun",
+          tem."wrFavRatio" as "favRatio"
+      FROM "tblEventMarkets" tem
+      LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
+      LEFT JOIN "tblUsers" tu ON tem."wrCreatedBy" = tu."WrUserId"
+      ${whereCondition ? ` WHERE ${whereCondition}` : ""}`,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/getTargetQyery",
+      request
+    );
+    throw new Error(error.message);
+  }
+};
 module.exports = {
   getAllEventMarketsV2Query,
   getAllEventMarketsQuery,
@@ -5591,6 +5676,7 @@ module.exports = {
   cancelMarketByATQuery1,
   closeMarketByATQuery1,
   getMnMarketByCId,
-  getRsMarketQuery
+  getRsMarketQuery,
+  getAllEventMarketsV2ByIdQuery,
 }
 
