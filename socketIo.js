@@ -74,7 +74,13 @@ const connection = (socket , fastify) => {
           );
     
           if (index !== -1) {
-            global.tblEventMarketsV2[index] = updatedItem;
+            global.sessionData.push({type: "updatedItem data in socket", data: runner})
+            if(updatedItem.status === 6 || updatedItem.status === 5 && updatedItem.isResult === true){
+              global.tblEventMarketsV2.splice(index, 1);
+            } else {
+              global.tblEventMarketsV2[index] = updatedItem;
+            }
+            
           } else {
             global.tblEventMarketsV2.push(updatedItem);
           }
@@ -87,9 +93,18 @@ const connection = (socket , fastify) => {
           let index = global.tblMarketRunnerV2.findIndex(
             (item) => item.eventMarketId === runner.eventMarketId
           );
-    
+          let eventMarketData = global.tblEventMarketsV2.find((item) => 
+            item.eventMarketId === runner.eventMarketId
+          )
           if (index !== -1) {
-            global.tblMarketRunnerV2[index] = runner;
+            global.sessionData.push({type: "runner data in socket", data: runner})
+            if(runner.selectionStatus === 6 || runner.selectionStatus === 5 && 
+              eventMarketData.status === 5 && eventMarketData.isResult === true
+            ){
+              global.tblMarketRunnerV2.splice(index, 1);
+            } else {
+              global.tblMarketRunnerV2[index] = runner;
+            }
           } else {
             global.tblMarketRunnerV2.push(runner);
           }
@@ -198,7 +213,7 @@ const connection = (socket , fastify) => {
       );
       const sendDataForSocketUpdate = {
         commentaryId,
-        eventRefId: commentaryData.eventRefId,
+        eventRefId: commentaryData?.eventRefId,
         dataToUpdate: [
           {
             module: "marketOddsBallByBall",
