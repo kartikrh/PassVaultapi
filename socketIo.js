@@ -74,7 +74,7 @@ const connection = (socket , fastify) => {
           );
     
           if (index !== -1) {
-            global.sessionData.push({type: "updatedItem data in socket", data: runner})
+            global.sessionData.push({type: "updatedItem data in socket", data: updatedItem})
             if(updatedItem.status === 6 || updatedItem.status === 5 && updatedItem.isResult === true){
               global.tblEventMarketsV2.splice(index, 1);
             } else {
