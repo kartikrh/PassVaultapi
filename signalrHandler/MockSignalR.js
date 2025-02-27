@@ -1205,7 +1205,7 @@ const createUpdateGlobalSignalRData = async (message, request) => {
             }
         }
     } catch (error) {
-        console.log("wrrorororr", error)
+        global.sessionData.push({type: "signalrHandler/CreateUpdateSignalRData", data: error})
         errorLogger(
             _fastify,
             error,
@@ -1334,6 +1334,7 @@ const updateMarketRunnerDataOnSocket = async (message) => {
             }
         });
     } catch (error) {
+        global.sessionData.push({type: "signalrHandler/updateMarketRunnerDataOnSocket", data: error})
         errorLogger(
             _fastify,
             error,
