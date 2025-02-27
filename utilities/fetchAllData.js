@@ -177,8 +177,12 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const getAllVideoLibrary = await getAllVideoLibraryQuery(fastify);
     const getAllShotTypes = await getAllShotTypesQuery(fastify);
     const getAllTips = await getAllTipsQuery(fastify);
-    const getAllEventMarketsV2 = await getAllEventMarketsV2Query(fastify);
-    const getEventMarketRunnerV2 = await getAllMarketRunnersQuery(fastify);
+    const getAllEventMarketsV2 = await getAllEventMarketsV2Query(fastify, 
+      getAllCommentary.map((item) => item.commentaryId).join(", ")
+    );
+    const getEventMarketRunnerV2 = await getAllMarketRunnersQuery(fastify, 
+      getAllEventMarketsV2.map((item) => item.eventMarketId).join(", ")
+    );
 
 
     global.tblTabs = getAllTabs;

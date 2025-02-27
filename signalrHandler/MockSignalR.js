@@ -547,7 +547,7 @@ const processRateQueue = async () => {
                         );
 
                         let _isThreadDone = await UpdateEventMarketByCIdFromSocketQuery({
-                            eventMarketId: EventsMarketobj.eventMarketId
+                            eventMarketId: EventsMarketobj?.eventMarketId
                         }, _fastify);
                         if (_isThreadDone) {
                             let index = global.tblEventMarketsV2.findIndex(

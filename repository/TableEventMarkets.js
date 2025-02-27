@@ -6,7 +6,7 @@ const {
 const { errorLogger, marketDataLogger } = require("../utilities/logger");
 const { getPagination } = require("../utilities");
 
-const getAllEventMarketsV2Query = async (fastify, whereCondition = null) => { 
+const getAllEventMarketsV2Query = async (fastify, commentaryIds) => { 
   return await fastify.db.query(
     `SELECT
         tem."wrID" AS "eventMarketId",
@@ -71,24 +71,23 @@ const getAllEventMarketsV2Query = async (fastify, whereCondition = null) => {
         tem."wrDefaultIsSendData" as "wrDefaultIsSendData",
         tem."wrRateDiff" as "rateDiff",
         tem."wrWicketNo" as "wicketNo",
-        tu."WrUserName" as "createdBy",
         tem."wrIsInningRun" as "isInningRun",
         tem."wrFavRatio" as "favRatio"
     FROM "tblEventMarkets" tem
-    LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
-    LEFT JOIN "tblUsers" tu ON tem."wrCreatedBy" = tu."WrUserId"
-    WHERE tc."wrIsDelete" = false
-      AND (
-          tc."wrCommentaryStatus" != 4 
-          OR (tc."wrCommentaryStatus" = 4 AND tc."wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days')
-      )
-      AND tem."wrIsDeleted" = false 
-      AND (
-          tem."wrStatus" IN (1, 2, 3, 4)
-          OR (tem."wrStatus" = 5 AND tem."wrIsResult" = FALSE)
-      ) ${whereCondition ? ` AND ${whereCondition}` : ""}`,
+    WHERE tem."wrCommentaryId" IN(${commentaryIds}) AND tem."wrIsDeleted" = FALSE
+    AND (
+          tem."wrStatus" IN ($1, $2, $3, $4)
+          OR (tem."wrStatus" = $5 AND tem."wrIsResult" = FALSE)
+    )`,
     {
       type: fastify.db.QueryTypes.SELECT,
+      bind: [
+        EventMarketStatus.Open,
+        EventMarketStatus.Inactive,
+        EventMarketStatus.Suspend,
+        EventMarketStatus.Close,
+        EventMarketStatus.Settled,
+      ]
     }
   );
 };
@@ -5572,12 +5571,9 @@ const getAllEventMarketsV2ByIdQuery = async (fastify, whereCondition = null) => 
           tem."wrDefaultIsSendData" as "wrDefaultIsSendData",
           tem."wrRateDiff" as "rateDiff",
           tem."wrWicketNo" as "wicketNo",
-          tu."WrUserName" as "createdBy",
           tem."wrIsInningRun" as "isInningRun",
           tem."wrFavRatio" as "favRatio"
       FROM "tblEventMarkets" tem
-      LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
-      LEFT JOIN "tblUsers" tu ON tem."wrCreatedBy" = tu."WrUserId"
       ${whereCondition ? ` WHERE ${whereCondition}` : ""}`,
       {
         type: fastify.db.QueryTypes.SELECT,
