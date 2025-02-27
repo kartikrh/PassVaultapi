@@ -98,7 +98,8 @@ const connection = (socket , fastify) => {
     }
       const marketToUpdate = await marketToUpdatePromise;
       const marketOdd = [];
-      marketToUpdate.forEach((data) => {
+      // marketToUpdate.forEach((data) => {
+      for (const data of marketToUpdate) {
         const index = global.tblEventMarkets.findIndex(
           (market) => market.eventMarketId === data.eventMarketId
         );
@@ -107,7 +108,8 @@ const connection = (socket , fastify) => {
         } else {
           global.tblEventMarkets.push(data);
         }
-      });
+      };
+      // });
   
       const filteredMarkets = marketToUpdate.filter(
         (market) =>

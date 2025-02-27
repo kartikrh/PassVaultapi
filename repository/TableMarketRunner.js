@@ -2,7 +2,7 @@ const { EventMarketStatus } = require("../utilities");
 const { errorLogger } = require("../utilities/logger")
 // const { getAllEventMarketsV2ByIdQuery } = require("./TableEventMarkets");
 
-const getAllMarketRunnersQuery = async (fastify) => {
+const getAllMarketRunnersQuery = async (fastify, eventMarketIds) => {
     return await fastify.db.query(
       `SELECT
           tmr."wrRunnerId" AS "runnerId",
@@ -22,18 +22,8 @@ const getAllMarketRunnersQuery = async (fastify) => {
           tmr."wrLastUpdate" as "lastUpdate"
       FROM "tblMarketRunners" tmr
       LEFT JOIN "tblEventMarkets" tem ON tmr."wrEventMarketId" = tem."wrID"
-      LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
       WHERE tmr."wrIsDeleted" = false
-        AND tc."wrIsDelete" = false
-        AND (
-            tc."wrCommentaryStatus" != 4 
-            OR (tc."wrCommentaryStatus" = 4 AND tc."wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days')
-        )
-        AND tem."wrIsDeleted" = false 
-        AND (
-            tem."wrStatus" IN (1, 2, 3, 4)
-            OR (tem."wrStatus" = 5 AND tem."wrIsResult" = FALSE)
-        )`,
+        AND tmr."wrEventMarketId" IN (${eventMarketIds})`,
       {
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -229,7 +219,6 @@ const getAllMarketRunnersV2ByIdQuery = async (fastify, whereCondition = null) =>
                 tmr."wrLastUpdate" as "lastUpdate"
             FROM "tblMarketRunners" tmr
             LEFT JOIN "tblEventMarkets" tem ON tmr."wrEventMarketId" = tem."wrID"
-            LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
             ${whereCondition ? ` WHERE ${whereCondition}` : ""}`,
             {
               type: fastify.db.QueryTypes.SELECT,
