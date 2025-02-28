@@ -85,6 +85,7 @@ const { getAllVideoLibraryQuery } = require("../repository/TableVideoLibrary");
 const { getAllShotTypesQuery } = require("../repository/TableShotType");
 const { getAllTipsQuery } = require("../repository/TableTips");
 const { getAllMarketRunnersQuery } = require("../repository/TableMarketRunner");
+const configConstants = require("./configConstants");
 
 const fetchAllDataFromDb = async (fastify, reply) => {
   try {
