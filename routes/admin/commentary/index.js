@@ -968,4 +968,5 @@ module.exports = async (fastify, opts) => {
     ],
     handler: (request, reply) => deleteCommentaryHistory(request, reply, fastify),
   });
+  
 };
