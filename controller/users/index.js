@@ -38,6 +38,7 @@ const { errorLogger,updateWebRequestLogs } = require("../../utilities/logger");
 // const fetchAllDataFromDb = require("../../utilities/fetchAllData");
 const { fetchAllDataFromDb, panelLoadDataByEnum } = require("../../utilities/fetchAllData");
 const { ckImageUploadService, imgUploadService } = require("../../services/ckImage");
+const configConstants = require("../../utilities/configConstants");
 
 let commonPath = "controller/users";
 
@@ -120,6 +121,15 @@ const loadPanelDataInGlobal = async (request, reply, fastify) => {
   try {
     if (!request.userTokenInfo.WrIsSuperAdmin) {
       throw new Error("You are not authorized to perform this action");
+    }
+    // check the pass
+    const {password} = request.body;
+    let pass = global.tblConfigs.find((item) => item.key === configConstants.LOADDATAPASSWORD);
+    if (!pass) {
+      throw new Error("Password not found");
+    }
+    if (pass.value !== password) {
+      throw new Error("Invalid password");
     }
     await panelLoadDataByEnum(request, fastify, reply);
   } catch (err) {
