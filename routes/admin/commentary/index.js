@@ -139,7 +139,7 @@ module.exports = async (fastify, opts) => {
       (request, reply) =>
         checkPermission(request, reply, fastify, {
           tabName: "Commentary",
-          mode: "view",
+          mode: "edit",
         }),
     ],
     handler: (request, reply) => updateResultInCommentary(request, reply, fastify),
@@ -245,14 +245,14 @@ module.exports = async (fastify, opts) => {
   });
   fastify.post("/detailsById", {
     schema: Commentary.getByIdDetails.schema,
-    // preHandler: [
-    //   (request, reply) => authorize(request, reply, fastify),
-    //   (request, reply, done) =>
-    //     checkPermission(request, reply, fastify, {
-    //       tabName: "Commentary",
-    //       mode: "view",
-    //     }),
-    // ],
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "view",
+        }),
+    ],
     handler: (request, reply) =>
       getCommentaryDetailsById(request, reply, fastify),
   });
