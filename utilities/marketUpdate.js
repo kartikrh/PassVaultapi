@@ -99,7 +99,8 @@ const updateMarket = async (fastify) => {
                           )
 
                           if(result.length > 0){
-                            result.forEach((updatedItem) => {
+                            // result.forEach((updatedItem) => {
+                              for (const updatedItem of result) {
                                 let index = global.tblEventMarketsV2.findIndex(
                                   (item) => item.eventMarketId === updatedItem.eventMarketId
                                 );
@@ -109,14 +110,21 @@ const updateMarket = async (fastify) => {
                                     ...updatedItem,
                                   };
                                 }
-                              });
+                              };
+                              // });
                           }
                           const suspendedMarketIds = new Set(marketToSuspend.map((m) => m.eventMarketId));
-                          global.tblMarketRunnerV2.forEach(elem => {
-                            if (suspendedMarketIds.has(elem.wrEventMarketId)) {
-                                elem.selectionStatus = EventMarketStatus.Suspend;
+                          // global.tblMarketRunnerV2.forEach(elem => {
+                          //   if (suspendedMarketIds.has(elem.eventMarketId)) {
+                          //       elem.selectionStatus = EventMarketStatus.Suspend;
+                          //   }
+                          // });
+                          for (const elem of global.tblMarketRunnerV2) {
+                            if (suspendedMarketIds.has(elem.eventMarketId)) {
+                              elem.selectionStatus = EventMarketStatus.Suspend;
                             }
-                          });
+                          }
+                        
                     }
                     if(marketToClose.length > 0){
                         const eventMarketData = await fastify.db.query(
@@ -161,7 +169,8 @@ const updateMarket = async (fastify) => {
                           )
 
                           if(eventMarketData.length > 0){
-                            eventMarketData.forEach((updatedItem) => {
+                            // eventMarketData.forEach((updatedItem) => {
+                              for (const updatedItem of eventMarketData) {
                                 let index = global.tblEventMarketsV2.findIndex(
                                   (item) => item.eventMarketId === updatedItem.eventMarketId
                                 );
@@ -171,15 +180,21 @@ const updateMarket = async (fastify) => {
                                     ...updatedItem,
                                   };
                                 }
-                              });
+                              };
+                              // });
                           }
 
                           const suspendedMarketIds = new Set(marketToSuspend.map((m) => m.eventMarketId));
-                          global.tblMarketRunnerV2.forEach(elem => {
-                            if (suspendedMarketIds.has(elem.wrEventMarketId)) {
-                                elem.selectionStatus = EventMarketStatus.Close;
+                          // global.tblMarketRunnerV2.forEach(elem => {
+                          //   if (suspendedMarketIds.has(elem.eventMarketId)) {
+                          //       elem.selectionStatus = EventMarketStatus.Close;
+                          //   }
+                          // });
+                          for (const elem of global.tblMarketRunnerV2) {
+                            if (suspendedMarketIds.has(elem.eventMarketId)) {
+                              elem.selectionStatus = EventMarketStatus.Suspend;
                             }
-                          });
+                          }
                     }
                     // remove updae market from market array
                     market = market.filter((m) => !marketToSuspend.map((m) => m.eventMarketId).includes(m.eventMarketId) && !marketToClose.map((m) => m.eventMarketId).includes(m.eventMarketId));

@@ -2284,7 +2284,18 @@ const testStoreProcedureService = async (request, fastify) => {
         fastify
       );
       if (eventMarket.length > 0) {
-        eventMarket.forEach((updatedItem) => {
+        // eventMarket.forEach((updatedItem) => {
+        //   let index = global.tblEventMarketsV2.findIndex(
+        //     (item) => item.eventMarketId === updatedItem.marketId
+        //   );
+        //   if (index !== -1) {
+        //     global.tblEventMarketsV2[index] = {
+        //       ...global.tblEventMarketsV2[index],
+        //       ...updatedItem,
+        //     };
+        //   }
+        // });
+        for (const updatedItem of eventMarket) {
           let index = global.tblEventMarketsV2.findIndex(
             (item) => item.eventMarketId === updatedItem.marketId
           );
@@ -2294,7 +2305,7 @@ const testStoreProcedureService = async (request, fastify) => {
               ...updatedItem,
             };
           }
-        });
+        };
       }
 
       global.tblMarketRunnerV2
@@ -3498,7 +3509,8 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         fastify
       );
       if (eventMarket.length > 0) {
-        eventMarket.forEach((updatedItem) => {
+        // eventMarket.forEach((updatedItem) => {
+        for (const updatedItem of eventMarket) {
           let index = global.tblEventMarketsV2.findIndex(
             (item) => item.eventMarketId === updatedItem.marketId
           );
@@ -3508,7 +3520,8 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
               ...updatedItem,
             };
           }
-        });
+        };
+        // });
       }
 
       global.tblMarketRunnerV2
@@ -8519,7 +8532,8 @@ const closeCommentaryService = async (request, fastify) => {
 
       const eventMarket = await closeEventMarketByCIdQuery({ commentaryId }, fastify);
       if (eventMarket.length > 0) {
-        eventMarket.forEach((updatedItem) => {
+        // eventMarket.forEach((updatedItem) => {
+        for (const updatedItem of eventMarket) {
           let index = global.tblEventMarketsV2.findIndex(
             (item) => item.eventMarketId === updatedItem.marketId
           );
@@ -8529,7 +8543,8 @@ const closeCommentaryService = async (request, fastify) => {
               ...updatedItem,
             };
           }
-        });
+        };
+        // });
       }
 
       global.tblMarketRunnerV2
@@ -9892,7 +9907,8 @@ const cancelCommentaryService = async (request, fastify) => {
 
       const eventMarket = await closeEventMarketByCIdQuery({ commentaryId }, fastify);
       if (eventMarket.length > 0) {
-        eventMarket.forEach((updatedItem) => {
+        // eventMarket.forEach((updatedItem) => {
+        for (const updatedItem of eventMarket) {
           let index = global.tblEventMarketsV2.findIndex(
             (item) => item.eventMarketId === updatedItem.marketId
           );
@@ -9902,7 +9918,8 @@ const cancelCommentaryService = async (request, fastify) => {
               ...updatedItem,
             };
           }
-        });
+        };
+        // });
       }
       global.tblMarketRunnerV2
       .filter((elem) => eventMarket.some((e) => e.marketId === elem.eventMarketId))
@@ -10017,7 +10034,8 @@ const deleteEventResultService = async (request, fastify) => {
     await deleteCommentryQuery(commentary, request, fastify);
     const result = await updateEventMarketCloseQuery(commentaryId, request, fastify);
     if (result.length > 0) {
-      result.forEach((updatedItem) => {
+      // result.forEach((updatedItem) => {
+      for (const updatedItem of result) {
         let index = global.tblEventMarketsV2.findIndex(
           (item) => item.eventMarketId === updatedItem.eventMarketId
         );
@@ -10027,12 +10045,19 @@ const deleteEventResultService = async (request, fastify) => {
             ...updatedItem,
           };
         }
-        global.tblMarketRunnerV2.forEach((elem) => {
+        // global.tblMarketRunnerV2.forEach((elem) => {
+        //   if (elem.eventMarketId === updatedItem.eventMarketId) {
+        //     elem.selectionStatus = EventMarketStatus.Close;
+        //   }
+        // });
+        // global.tblMarketRunnerV2.forEach((elem) => {
+        for (const elem of global.tblMarketRunnerV2) {
           if (elem.eventMarketId === updatedItem.eventMarketId) {
             elem.selectionStatus = EventMarketStatus.Close;
           }
-        });
-      });
+        };
+      };
+      // });
     }
   }
 
