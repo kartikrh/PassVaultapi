@@ -123,14 +123,7 @@ const loadPanelDataInGlobal = async (request, reply, fastify) => {
       throw new Error("You are not authorized to perform this action");
     }
     // check the pass
-    const {password} = request.body;
-    let pass = global.tblConfigs.find((item) => item.key === configConstants.LOADDATAPASSWORD);
-    if (!pass) {
-      throw new Error("Password not found");
-    }
-    if (pass.value !== password) {
-      throw new Error("Invalid password");
-    }
+  
     await panelLoadDataByEnum(request, fastify, reply);
   } catch (err) {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
