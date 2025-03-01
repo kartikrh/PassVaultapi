@@ -3,7 +3,8 @@ const {
   configByIdService,
   saveConfigService,
   deleteConfigService,
-  allConfigDetails
+  allConfigDetails,
+  getInitConfigDetails
 } = require("../../../../services/config");
 
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
@@ -65,11 +66,20 @@ const getAllConfigData = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
-
+const getInitConfig = async (request, reply, fastify) => {
+  try {
+    const result = await getInitConfigDetails(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/getInitConfig", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 module.exports = {
   getAllCongig,
   getConfigById,
   saveConfig,
   deleteConfig,
-  getAllConfigData
+  getAllConfigData,
+  getInitConfig
 };
