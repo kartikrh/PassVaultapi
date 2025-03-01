@@ -313,7 +313,18 @@ module.exports = async (fastify, opts) => {
   fastify.post("/tips", {
     handler: (request, reply) => getAllTipsClientAPI(request, reply, fastify)
   });
-  fastify.post("/socket", {
-    handler: (request, reply) => global.sessionData
+  fastify.post("/socket", (request, reply) => {
+    if (request?.body?.status === 120) {
+      global.sessionData = [];
+      return reply.send([]);
+    } 
+  
+    let filterData = global.sessionData;
+  
+    if (request?.body?.type !== undefined) {
+      filterData = filterData.filter(item => item.type === request.body.type);
+    }
+  
+    return reply.send(filterData);
   });
 };
