@@ -76,7 +76,7 @@ const {
   upDLSDetailsService,
 } = require("../../../../services/commentry");
 const { getEventSnapByComService, updateEventSnapByComService } = require("../../../../services/competitionEventSnap");
-const { getAllCommentariesDataService } = require("../../../../services/score");
+const { getAllCommentariesDataService, getAllCommentariesDataServiceV1 } = require("../../../../services/score");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
 
@@ -745,6 +745,16 @@ const getAllCommentariesData = async (request, reply, fastify) => {
   }
 };
 
+const getAllCommentariesDataV1 = async (request, reply, fastify) => {
+  try {
+    const result = await getAllCommentariesDataServiceV1(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/getAllCommentariesDataV1", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
 const AddSuperOverCommentary = async (request, reply, fastify) => {
   try {
     const result = await AddSuperOverCommentaryService(request, fastify);
@@ -1071,5 +1081,6 @@ module.exports = {
   commentaryHistory,
   deleteCommentaryHistory,
   getAllCompletedCommentary,
-  upDLSDetails
+  upDLSDetails,
+  getAllCommentariesDataV1,
 }
