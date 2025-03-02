@@ -721,6 +721,46 @@ const CheckAndCreateMarketOddsBallInSaveDetails = async (data, fastify, request 
   }
 };
 
+const getAllMarketOddsBallByBallByCommentaryIdV1 = async (data, fastify) => {
+  try {
+    let query = `SELECT 
+          mobb."wrId" AS "moddsid",
+          mobb."wrCommentaryId" AS "cid",
+          mobb."wrCommentaryBallByBallId" AS "cbalbyid",
+          mobb."wrEventMarketId" AS "mid",
+          mobb."wrMarketStatus" AS "msta",
+          mobb."wrMarketName" AS "mn",
+          mobb."wrData" AS "date",
+          mobb."wrDateTime" AS "datetime",
+          em."wrRateSource" AS "ratesrc",
+          CASE 
+              WHEN em."wrMarketTypeId" IS NULL THEN'0'
+              WHEN em."wrMarketTypeId" = 0 THEN '0'
+              ELSE em."wrMarketTypeId"::TEXT
+          END AS "mtypid"
+      FROM "tblMarketOddsBallByBall" AS mobb
+      LEFT JOIN "tblEventMarkets" em ON mobb."wrEventMarketId" = em."wrID"
+      LEFT JOIN "tblMarketTypes" mty ON em."wrMarketTypeId" = mty."wrId"
+      WHERE mobb."wrIsDeleted" = false AND mobb."wrCommentaryId" = $1 AND em."wrIsDeleted" = false`;
+    
+    const result = await fastify.db.query(query,
+      {
+        bind: [data.commentaryId],
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+    return result;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "ERROR --> repository/TableMarketOddsBallByBall/getAllMarketOddsBallByBallByCommentaryIdV1",
+      null
+    );
+    throw new Error(error.message);
+  }
+}
+
 module.exports = {
   getAllMarketOddsBallByBall,
   createMarketOddsBallByBall,
@@ -733,5 +773,6 @@ module.exports = {
   createMarketOddsBallByBallBulkInsert,
   getAllMarketOddsBallByBallByCommentaryId,
   createMarketOddsBallInSaveDetails,
-  CheckAndCreateMarketOddsBallInSaveDetails
+  CheckAndCreateMarketOddsBallInSaveDetails,
+  getAllMarketOddsBallByBallByCommentaryIdV1,
 };

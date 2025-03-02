@@ -4693,6 +4693,346 @@ const getCommentariesDataByDifferentIdsQuery = async (whereCondition, request, f
   }
 };
 
+const getCommentariesDataQueryV1 = async (fastify) => {
+  return await fastify.db.query(
+    `select 
+        tc."wrCommentaryId" as "cid",
+        tc."wrMatchTypeId" as "mtypid",
+        mt."wrMatchType" AS "mtyp",
+        tc."wrEventTypeId" as "etypid",
+        tet."wrEventType" as "etyp",
+        tc."wrTeam1Id" as "t1id",
+        tc."wrTeam2Id" as "t2id",
+        tt1."wrTeamName" as "te1n",
+        tt2."wrTeamName" as "te2n",
+        tc."wrCompetitionId" as "compid",
+	      co."wrCompetition" as "comp",
+        tc."wrEventId" as "eid",
+        tc."wrEventDate" as "ed",
+        tc."wrEventName" as "en",
+        tc."wrEventRefId" as "erefid",
+        tc."wrLocation" as "loc",
+        tc."wrWeather" as "weather",
+        tc."wrPitch" as "pitch",
+        tc."wrHomeSideTeam" as "homsidte",
+        tc."wrTossWonBy" as "twonby",
+        tc."wrChoseTo" as "choseto",
+        tc."wrWinnerId" as "winid",
+        tc."wrWinnerName" as "winn",
+        tc."wrIsClientShow" as "icshow",
+        tc."wrDisplayStatus" as "ds",
+        tc."wrRmk" as "rmk",
+        tc."wrCommentaryUserId" as "cuserid",
+        tc."wrCommentaryStatus" as "cs",
+        tc."wrUpdateTime" as "ut",
+        tc."wrIsMatchDraw" as "imtdraw",
+        tc."wrTarget" as "trg",
+        tc."wrMarketID" as "mid",
+        tc."wrTpId" as "tpId",
+        tc."isSignalROn" as "isignon",
+        tc."isMatchTypeUpdated" as "imtypup",
+        tc."wrCurrentInnings" as "ci",
+        tc."wrSystemPlayerCount" as "syplcnt",
+        tc."wrIsPlayersShow" as "ips",
+        tc."wrIsPredictMarket" as "ipm",
+        tc."wrIsActive"  as "iact",
+        tc."wrDelay" as "dly",
+        tc."wrLineRatio" as "lr",
+        tc."wrCommentaryResult" as "cres",
+        tc."wrCommentaryCloseTime" as "cct",
+        tc."wrIsTeamPredictionOn" as "itpo",
+        tu."WrUserName" as "usern",
+        tc."wrHistoryMatchTypeId" as "hmtypid",
+        mt2."wrMatchType" AS "mtyp",
+        tc."wrIsCountInPoint" as "icntinpnt",
+        tc."wrShotType" as "styp",
+        tc."wrIsWheelShow" as "iws"
+    FROM "tblCommentaries" tc
+    LEFT JOIN "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
+    LEFT JOIN "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
+    LEFT JOIN "tblMatchTypes" mt ON tc."wrMatchTypeId" = mt."wrMatchTypeId"
+    LEFT JOIN "tblMatchTypes" mt2 ON tc."wrHistoryMatchTypeId" = mt2."wrMatchTypeId"
+    LEFT JOIN "tblEventTypes" tet ON tc."wrEventTypeId" = tet."wrEventTypeId"
+	  LEFT JOIN "tblCompetitions" co ON tc."wrCompetitionId" = co."wrCompetitionId"
+    LEFT JOIN "tblUsers" tu ON tc."wrCreatedBy" = tu."WrUserId"
+    WHERE "wrIsDelete" = false AND co."wrIsDeleted" = false`,
+    {
+      type: fastify.db.QueryTypes.SELECT,
+    }
+  );
+};
+
+const getAllCommentaryTeamsDataQueryV1 = async (whereCondition = null, fastify) => {
+  return await fastify.db.query(
+    `select 
+        "wrCommentaryTeamId" as "ctid",
+        "wrCommentaryId" as "cid",
+        "wrTeamId" as "tid",
+        "wrShortName" as "shn",
+        "wrTeamName" as "tn",
+        "wrTeamCaptain" as "tecap",	
+        "wrTeamKipper" as "tekip",
+        "wrTeamScore" as "tescore",
+        "wrTeamOver" as "teovr",
+        "wrTeamWicket" as "tewic",
+        "wrCrr" as "crr",
+        "wrRrr" as "rrr",
+        "wrTeamStatus" as "testa",
+        "wrTeamTrialRuns" as "tetriruns",
+        "wrTeamLeadRuns" as "teleadruns",
+        "wrTeamWideRuns" as "tewidruns",
+        "wrTeamByRuns" as "tebyruns",
+        "wrTeamLegByRuns" as "telegbyruns",
+        "wrTeamNoBallRuns" as "tenobalruns",
+        "wrTeamPenaltyRuns" as "tepenlruns",
+        "wrIsWin" as "isWin",
+        "wrTeamBattingOrder" as "tebatord",
+        tct."wrCurrentInnings" as "ci", 
+        tct."wrIsBattingComplete" as "isbatcomplt",
+        "wrCommentaryPlayerTeamCaptain" as "cpltecap",
+        "wrCommentaryPlayerTeamKipper" as "cpltekip",
+        "wrTeamColor" as "tecolor",
+        "wrBackgroundColor" as "bgcolor",
+        "wrTeamMaxOver" as "temaxovr",
+        "wrIsSuperOver" as "issuperovr",
+        "wrTeamPredictionPercentage" as "tepredictpercent"
+    from "tblCommentaryTeams" tct 
+    ${whereCondition ? `WHERE ${whereCondition}` : ""}`,
+    {
+      type: fastify.db.QueryTypes.SELECT,
+    }
+  );
+}
+
+const getAllCommentaryPlayerDataQueryV1 = async (whereCondition = null, fastify) => {
+  return await fastify.db.query(
+    `select
+        tcp."wrCommentaryPlayerId" as "cplid",
+        tcp."wrCommentaryId" as "cid",
+        tcp."wrTeamId" as "tid",
+        tcp."wrPlayerId" as "plid",
+        tcp."wrPlayerName" as "pln",
+        tcp."wrDisplayOrder" as "do",
+        tcp."wrBat_Status" as "bats",
+        tcp."wrBat_Run" as "batrun",
+        tcp."wrBat_Ball" as "batbal",
+        tcp."wrBat_DotBall" as "bdb",
+        tcp."wrBat_FOUR" as "batf",
+        tcp."wrBat_SIX" as "bats",
+        tcp."wrBat_SRR" as "batsrr",
+        tcp."wrBat_BattingOrder" as "bato",
+        tcp."wrBat_IsPlay" as "batiplay",
+        tcp."wrBat_OnStrike" as "batonstrik",
+        tcp."wrBat_WicketType" as "batwityp",
+        tcp."wrBat_BowlerID" as "batbowlid",
+        tcp."wrBat_FielderID1" as "batfielid1",
+        tcp."wrBat_FielderID2" as "batfielid2",
+        tcp."wrBowler_Over" as "bowlovr",
+        tcp."wrBowler_CurrentBall" as "bowlcurbal",
+        tcp."wrBowler_TotalBall" as "bowltotbal",
+        tcp."wrBowler_Run" as "bowlrun",
+        tcp."wrBowler_DotBall" as "bowldbal",
+        tcp."wrBowler_MaidenOver" as "bowlmaidovr",
+        tcp."wrBowler_FOUR" as "bowlf",
+        tcp."wrBowler_SIX" as "bowls",
+        tcp."wrBowler_WideBall" as "bowlwicbal",
+        tcp."wrBowler_NOBall" as "bowlnobal",
+        tcp."wrBowler_ByeBall" as "bowlbyebal",
+        tcp."wrBowler_LegByeBall" as "bowllegbybal",
+        tcp."wrBowler_WideBallRun" as "bowlwbalrun",
+        tcp."wrBowler_NOBallRun" as "bowlnobalrun",
+        tcp."wrBowler_ByeBallRun" as "bowlbyebalrun",
+        tcp."wrBowler_LegByeBallRun" as "bowllegbyebalrun",
+        tcp."wrBowler_TotalWicket" as "bowltotwi",
+        tcp."wrBowler_Economy" as "bowleco",
+        tcp."wrBowler_OnStrike" as "bowlonstrik",
+        tcp."wrBowler_PeneltyRun" as "bowlpenltyrun",
+        tcp."wrIsBatter_Out" as "ibatout",
+        tcp."wrIsBatter_Retir" as "ibatretir",
+        tcp."wrSwapName" as "swapn",
+        tcp."wrBatsmanAverage" as "batavg",
+        tcp."wrBatsmanStrikeRate" as "batstrik",
+        tcp."wrBowlerEconomy" as "bowleco",
+        tcp."wrBowlerAverage" as "bowlavg",
+        tcp."wrCurrentInnings" as "ci",
+        tcp."wrBatterOrder" as "batord",
+        tcp."wrBowlerOrder" as "bowlord",
+        tcp."wrBatsmanPreviousStrikeRate"::DOUBLE PRECISION as "batprevistrik",
+        tcp."wrBowlerPreviousEconomy"::DOUBLE PRECISION as "bowlprevieco",
+        tcp."wrIsInPlayingEleven" as "iiplay11",
+        tcp."wrBoundary" as "bundry",
+        tcp."wrPlayerBallFaced" as "playbalfaced",
+        tp."wrPlayerTypeId" as "pltypid",
+        tpt."wrPlayerType" as "pltyp"
+    from "tblCommentaryPlayers" AS tcp
+    LEFT JOIN "tblPlayers" AS tp ON tcp."wrPlayerId" = tp."wrPlayerId"
+    LEFT JOIN "tblPlayerTypes" AS tpt ON tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
+    ${whereCondition ? `WHERE ${whereCondition}` : ""}`,
+    {
+      type: fastify.db.QueryTypes.SELECT,
+    }
+  );
+}
+
+const getAllOversDataQueryV1 = async (whereCondition = null, fastify) => {
+  return await fastify.db.query(
+    `
+      select
+        "wrOverId" as "ovrid",
+        "wrCommentaryId" as "cid",
+        "wrTeamId" as "tid",	
+        "wrOver" as "ovr",
+        "wrBallCount" as "balcnt",
+        "wrBowlerId" as "bowlid",
+        "wrTotalRun" as "totrun",
+        "wrTotalFour" as "totf",
+        "wrTotalSix" as "tots",
+        "wrTotalWideBall" as "totwidbal",
+        "wrTotalWideRun" as "totwidrun",
+        "wrTotalNoball" as "totnobal",
+        "wrTotalNoBallRun" as "totnobalrun",
+        "wrTotalByesRun" as "totbyesrun",
+        "wrTotalLegByesRun" as "totlegbyesruns",
+        "wrTotalPanelty" as "totpanlty",
+        "wrTotalWicket" as "totwi",
+        "wrDotBall" as "dotbal",
+        "wrIsComplete" as "icomplt",
+        "wrPowerplay" as "pp",
+        "wrIsOverInPowerplay" as "ioinpp",
+        "wrPowerplayType" as "pptype",
+        "wrIsMaiden" as "imaiden",
+        "wrDate" as "dt",
+        "wrIsDelete" as "idlt",
+        "wrCurrentInnings" as "ci",
+        "wrTeamScore" as "tesco",
+        "wrIsPowerPlay" as "ipp",
+        "wrPowerPlayName" as "ppn"
+      from "tblOvers" 
+      ${whereCondition ? `WHERE ${whereCondition}` : ""}`,
+    {
+      type: fastify.db.QueryTypes.SELECT,
+    }
+  );
+}
+
+const getAllCommentaryBallByBallDataQueryV1 = async (whereCondition = null, fastify) => {
+  return await fastify.db.query(
+    `select
+        "wrCommentaryBallByBallId" as "cbalbyid",
+        "wrCommentaryId" as "cid",
+        "wrTeamId" as "tid",
+        "wrOverId" as "ovrid",
+        "wrOverCount" as "ovrcnt",
+        "wrCurrentOverBalls" as "curovrbal",
+        "wrBowler_ID" as "bowlid",
+        "wrBat_StrikeID" as "batstrikid",
+        "wrBat_NONStrikeID" as "batnonstrikid",
+        "wrBall_IsCount" as "balicnt",
+        "wrBall_Type" as "baltyp",
+        "wrBall_IsDot" as "balidot",
+        "wrBall_Run" as "balrun",
+        "wrBall_ExtraRun" as "balextrun",
+        "wrBall_isBoundry" as "balibound",
+        "wrBall_FOUR" as "balf",
+        "wrBall_SIX" as "bals",
+        "wrBall_IsWicket" as "baliwic",
+        "wrBall_WicketType" as "balwictyp",
+        "wrBall_PlayerID" as "balplid",
+        "wrBall_BowlerID" as "balbowlid",
+        "wrBall_FielderID1" as "balfieldid1",
+        "wrBall_FielderID2" as "balfieldid2",
+        "wrOver_isMaiden" as "ovrismaidn",
+        "wrNextBat_StrikeID" as "nxtbatstrikid",
+        "wrNextBat_NONStrikeID" as "nxtnonbatstrikid",
+        "wrIsDelete" as "isdlt",
+        "wrCurrentInnings" as "ci",
+        "wrCreatedDate" as "crtd",
+        "wrAutoStrikeBallCount" as "autstrikbalcnt",
+        "wrX2" as "x2",
+        "wrY2" as "y2",
+        "wrShortType" as "styp",
+        "wrCommentryRemark" as "crmk",
+        "wrCommentaryPartnershipId" as "cpartsid"
+    from "tblCommentaryBallByBalls"
+    ${whereCondition ? `WHERE ${whereCondition}` : ""}`,
+    {
+      type: fastify.db.QueryTypes.SELECT,
+    }
+    
+  );
+}
+
+const getAllCommentaryWicketDataQueryV1 = async (whereCondition = null, fastify) => {
+  return await fastify.db.query(
+    `
+    select 
+        "wrCommentaryWicketId" as "cwiid",
+        "wrCommentaryId" as "cid",
+        "wrBowlerId" as "bowlid",
+        "wrBowlerName" as "bowln",
+        "wrWicketType" as "wityp",
+        "wrBatterId" as "batid",
+        "wrBatterName" as "batn",
+        "wrFieldPlayerId" as "fieldplid",
+        "wrFieldPlayerName" as "fieldpln",
+        "wrOverId" as "ovrid",
+        "wrOverCount" as "ovrcnt",
+        "wrCommentaryBallByBallId" as "cbalbyid",
+        "wrTeamId" as "tid",
+        "wrTeamScore" as "tesco",
+        "wrPlayerRun" as "plrun",
+        "wrPlayerBalls" as "plbals",
+        "wrWicketCount" as "wiccnt",
+        "wrBallCount" as "balcnt",
+        "wrCurrentInnings" as "ci",
+        "wrCreatedDate" as "cratd"
+    from "tblCommentaryWickets" 
+    ${whereCondition ? `WHERE ${whereCondition}` : ""}`,
+    {
+      type: fastify.db.QueryTypes.SELECT,
+    }
+  );
+}
+
+const getAllCommentaryPartnershipDataQueryV1 = async (whereCondition = null, fastify) => {
+  return await fastify.db.query(
+    `
+      select 
+          "wrCommentaryPartnershipId" as "cpartsid",
+          "wrCommentaryId" as "cid",
+          "wrTeamId" as "tid",
+          "wrBatter1Id" as "bat1id",
+          "wrBatter1Name" as "bat1n",
+          "wrBatter2Id" as "bat2id",
+          "wrBatter2Name" as "bat2n",
+          "wrTotalRuns" as "totruns",
+          "wrTotalBalls" as "totbals",
+          "wrExtras" as "exts",
+          "wrCurrentInnings" as "ci",
+          "wrCommentaryBallByBallId" as "cbalbyid",
+          "wrBatter1Balls" as "bat1bals",
+          "wrBatter2Balls" as "bat2bals",
+          "wrBatter1Runs" as "bat1runs",
+          "wrBatter2Runs" as "bat2runs",
+          "wrCreatedDate" as "cratd",
+          "wrTotalFour" as "totf",
+          "wrTotalSix" as "tots",
+          "wrTotalExtra" as "totext",
+          "wrTotalWide" as "totwid",
+          "wrTotalNoBall" as "totnobal",
+          "wrOrder" as "ord",
+          "wrIsActive" as "iact",
+          "wrP1Ball" as "p1bal",
+          "wrP2Ball" as "p2bal",
+          "wrP1Run" as "p1run",
+          "wrP2Run" as "p2run"
+      from "tblCommentaryPartnerships"
+      ${whereCondition ? `WHERE ${whereCondition}` : ""}`,
+    {
+      type: fastify.db.QueryTypes.SELECT,
+    }
+  );
+}
 
 module.exports = {
   getAllCommentaryQuery,
@@ -4786,5 +5126,12 @@ module.exports = {
   getAllCommentaryWicketDataQuery,
   getAllCommentaryPartnershipDataQuery,
   getCommentariesDataByDifferentIdsQuery,
-  upOverDLSQuery
+  upOverDLSQuery,
+  getCommentariesDataQueryV1,
+  getAllCommentaryTeamsDataQueryV1,
+  getAllCommentaryPlayerDataQueryV1,
+  getAllOversDataQueryV1,
+  getAllCommentaryBallByBallDataQueryV1,
+  getAllCommentaryWicketDataQueryV1,
+  getAllCommentaryPartnershipDataQueryV1,
 };

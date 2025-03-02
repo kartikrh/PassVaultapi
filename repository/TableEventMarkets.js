@@ -5589,6 +5589,89 @@ const getAllEventMarketsV2ByIdQuery = async (fastify, whereCondition = null) => 
     throw new Error(error.message);
   }
 };
+
+const getMarketsByCIdV1Query = async (request, whereCondition, fastify) => {
+  try {
+    const query = `
+      WITH result_market_data AS (
+        SELECT 
+            "wrID" as "mid",
+            "wrCommentaryId" as "cid",
+            "wrEventRefID" as "erefid",
+            "wrTeamID" as "tid",
+            tt."wrTeamName" as "tn",
+            tt."wrTeamShortName" as "tsn",
+            tt."wrImage" as "img",
+            "wrInningsID" as "innid",
+            "wrMarketName" as "mn",
+            "wrMinOdds" as "minOds",
+            "wrMaxOdds" as "maxOds",
+            "wrStatus" as "st",
+            "wrOpenOdds" as "openOds",
+            "wrMarketTypeCategoryId" AS "mtcid",
+            "wrResult" as "res"
+        FROM "tblEventMarkets"
+        LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = "tblEventMarkets"."wrTeamID"
+        WHERE "wrEventRefID" = $1 ${whereCondition}
+        AND "wrStatus" = $2
+        AND "wrRateSource" <> 2
+        AND "tblEventMarkets"."wrIsDeleted" = false
+    ),
+    open_market_data AS (
+        SELECT
+            "wrID" as "mid",
+            "wrCommentaryId" as "cid",
+            "wrEventRefID" as "erefid",
+            "wrTeamID" as "tid",
+            tt."wrTeamName" as "tn",
+            tt."wrTeamShortName" as "tsn",
+            tt."wrImage" as "img",
+            "wrInningsID" as "innid",
+            "wrMarketName" as "mn",
+            "wrOpenOdds" as "openOds",
+            "wrStatus" as "st",
+            tmr."wrBackPrice" as "bp",
+            tmr."wrLayPrice" as "lp",
+            tmr."wrBackSize" as "bs",
+            "wrMarketTypeCategoryId" AS "mtcid",
+            tmr."wrLaySize" as "ls"
+        FROM "tblEventMarkets"
+        LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = "tblEventMarkets"."wrTeamID"
+        LEFT JOIN "tblMarketRunners" tmr ON tmr."wrEventMarketId" = "tblEventMarkets"."wrID"
+        WHERE "wrEventRefID" = $1 ${whereCondition}
+        AND "wrStatus" NOT IN ($2, $3, $4)
+        AND "wrRateSource" <> 2
+        AND "tblEventMarkets"."wrIsDeleted" = false
+    )
+    SELECT
+        jsonb_build_object(
+            'settledMarkets', (SELECT jsonb_agg(result_market_data) FROM result_market_data),
+            'openMarkets', (SELECT jsonb_agg(open_market_data) FROM open_market_data)
+        ) as result;
+    `;
+
+    const result = await fastify.db.query(query, {
+      type: fastify.db.QueryTypes.SELECT,
+      bind: [
+        request.body.eventId,
+        EventMarketStatus.Settled,
+        EventMarketStatus.Cancel,
+        EventMarketStatus.Close,
+      ],
+    });
+
+    return result[0].result;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/getMarketDataByCIdQueryV1",
+      request
+    );
+    throw new Error(error.message);
+  }
+};
+
 module.exports = {
   getAllEventMarketsV2Query,
   getAllEventMarketsQuery,
@@ -5674,5 +5757,6 @@ module.exports = {
   getMnMarketByCId,
   getRsMarketQuery,
   getAllEventMarketsV2ByIdQuery,
+  getMarketsByCIdV1Query,
 }
 
