@@ -330,7 +330,7 @@ const getAllCommentariesDataServiceV1 = async (request,fastify) => {
                 return c.cs != 4;
             }
         })
-        // getting commentary data from queries
+
         for (c of com) {
             let whereCondition = `"wrIsDelete" = false AND "wrCommentaryId" = ${c.cid}`
                 let teams = await getAllCommentaryTeamsDataQueryV1(whereCondition, fastify);
