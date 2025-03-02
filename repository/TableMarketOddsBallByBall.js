@@ -730,7 +730,7 @@ const getAllMarketOddsBallByBallByCommentaryIdV1 = async (data, fastify) => {
           mobb."wrEventMarketId" AS "mid",
           mobb."wrMarketStatus" AS "msta",
           mobb."wrMarketName" AS "mn",
-          mobb."wrData" AS "date",
+          mobb."wrData" AS "data",
           mobb."wrDateTime" AS "datetime",
           em."wrRateSource" AS "ratesrc",
           CASE 
