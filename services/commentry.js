@@ -93,7 +93,7 @@ const {
   callClientAPI,
   MarketTypeId
 } = require("../utilities");
-const { getAllPlayersByTeamIdQuery } = require("../repository/TableTeams");
+const { getAllPlayersByTeamIdQuery, getAllPlayersByTeamIdAndMatchTypeIdQuery } = require("../repository/TableTeams");
 const { handleMarketCloseService, updateComInMarketService, suspendMarketService, handleMarketByDLSService } = require("./eventMarket");
 const { createMarketOddsBallByBallBYID, deleteMarketOddsBallByBall, createMarketOddsBallInSaveDetails } = require("../repository/TableMarketOddsBallByBall");
 const { getEventMarketRatioQuery, closeEventMarketByCIdQuery, getMarketsByCategoryQuery, getEventMarketByIdsQuery, getMarketsByComIdQuery, updateEventMarketCloseQuery, getMarCountByComQuery, getExtrenalMarketQuery, getEventMarketsByCommId } = require("../repository/TableEventMarkets");
@@ -9897,7 +9897,7 @@ const getTeamAndPlayerListServiceV1 = async (request, fastify) => {
         teamName: team.teamName || teamMap[team.teamId]?.teamName,
         shortName: team.shortName || teamMap[team.teamId]?.shortName,
         commentaryTeamPlayers: {},
-        teamPlayers: await getAllPlayersByTeamIdQuery(
+        teamPlayers: await getAllPlayersByTeamIdAndMatchTypeIdQuery(
           { matchTypeId: commentaryDetails.matchTypeId, teamId: team.teamId },
           fastify,
           request

@@ -149,7 +149,7 @@ const deleteTeamQuery = async (teamId, fastify, request) => {
   }
 };
 
-const getAllPlayersByTeamIdQuery = async (data, fastify, request) => {
+const getAllPlayersByTeamIdQuery = async (teamId, fastify, request) => {
   try {
     return await fastify.db.query(
       `SELECT      
@@ -157,15 +157,12 @@ const getAllPlayersByTeamIdQuery = async (data, fastify, request) => {
       "wrPlayerName" as "playerName",
       "wrBatsmanAverage" as "batsmanAverage",
       "wrBatsmanStrikeRate" as "batsmanStrikeRate",
-      "wrIsKipper" as "isKipper",
-      COALESCE(pbh."wrBallsFacedCount", 0) as "ballsFacedCount",
-      COALESCE(pbh."wr4Count", 0) + COALESCE(pbh."wr6Count", 0) as "boundary"
+      "wrIsKipper" as "isKipper"     
       FROM "tblTeamPlayers" tp 
       left join "tblPlayers" pl on tp."wrRefPlayerId" = pl."wrPlayerId" AND pl."wrIsDeleted" = false
-      left join "tblPlayerBattingHistory" pbh on tp."wrRefPlayerId" = pbh."wrPlayerId" and pbh."wrMatchTypeId" = $2
       where tp."wrTeamId" = $1 and tp."wrIsDeleted" = false`,
       {
-        bind: [data.teamId, data.matchTypeId],
+        bind: [teamId],
         type: fastify.db.QueryTypes.SELECT,
       }
     );
@@ -233,6 +230,37 @@ const getAllCompetitionByTeamIdQuery = async (teamId, fastify, request) => {
   }
 };
 
+const getAllPlayersByTeamIdAndMatchTypeIdQuery = async (data, fastify, request) => {
+  try {
+    return await fastify.db.query(
+      `SELECT      
+      "wrRefPlayerId" as "playerId",
+      "wrPlayerName" as "playerName",
+      "wrBatsmanAverage" as "batsmanAverage",
+      "wrBatsmanStrikeRate" as "batsmanStrikeRate",
+      "wrIsKipper" as "isKipper",
+      COALESCE(pbh."wrBallsFacedCount", 0) as "ballsFacedCount",
+      COALESCE(pbh."wr4Count", 0) + COALESCE(pbh."wr6Count", 0) as "boundary"
+      FROM "tblTeamPlayers" tp 
+      left join "tblPlayers" pl on tp."wrRefPlayerId" = pl."wrPlayerId" AND pl."wrIsDeleted" = false
+      left join "tblPlayerBattingHistory" pbh on tp."wrRefPlayerId" = pbh."wrPlayerId" and pbh."wrMatchTypeId" = $2
+      where tp."wrTeamId" = $1 and tp."wrIsDeleted" = false`,
+      {
+        bind: [data.teamId, data.matchTypeId],
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableTeams/getAllPlayersByTeamIdQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   allTeamQuery,
   insertTeamQuery,
@@ -240,5 +268,6 @@ module.exports = {
   deleteTeamQuery,
   getAllPlayersByTeamIdQuery,
   getAllCompetitionByTeamIdQuery,
-  getAllPlayersByCompetitionIdTeamIdQuery
+  getAllPlayersByCompetitionIdTeamIdQuery,
+  getAllPlayersByTeamIdAndMatchTypeIdQuery,
 };
