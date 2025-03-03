@@ -9871,11 +9871,11 @@ const getTeamAndPlayerListServiceV1 = async (request, fastify) => {
               isInPlayingEleven: curr.isInPlayingEleven,
               boundary: curr.boundary == 0 || curr.boundary == null
                   ? playerAvg.length > 0
-                    ? (playerAvg[0].countOf4 + playerAvg[0].countOf6) / playerAvg[0].inningsCount || 0
+                    ? parseFloat(((playerAvg[0].countOf4 + playerAvg[0].countOf6) / playerAvg[0].inningsCount).toFixed(2)) || 0
                     : 0 : curr.boundary,
               playerBallFaced: curr.playerBallFaced === 0 || curr.playerBallFaced == null
                   ? playerAvg.length > 0
-                    ? playerAvg[0].ballsFacedCount / playerAvg[0].inningsCount || 0
+                    ? parseFloat((playerAvg[0].ballsFacedCount / playerAvg[0].inningsCount).toFixed(2)) || 0
                     : 0 : curr.playerBallFaced,
               currentInnings: curr.currentInnings,
               playerTypeId: curr.playerTypeId,
