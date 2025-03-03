@@ -29,7 +29,8 @@ async function signInUser(body, fastify) {
     `WITH user_data AS (
       SELECT
         "WrUserId", te."wrValue" as "WrEId", "WrPassword", "WrUserType", "WrRoleId", "WrUserName",
-        "WrIsSuperAdmin", "WrParentId", "WrAllowMultipleLogin", "WrSubAdminId" ,"WrUserIp"
+        "WrIsSuperAdmin", "WrParentId", "WrAllowMultipleLogin", "WrSubAdminId" ,"WrUserIp",
+        "wrEventTypeId","wrCompetitionId"
       FROM "tblUsers" left join "tblEncryptedData" te on "WrUserId" = te."wrKey" 
       WHERE "WrUserName" = $1 AND "WrPassword"=$2 AND "WrIsActive" = true AND "WrIsDelete" = false
     ),
@@ -166,7 +167,9 @@ const getAllUsersQuery = async (fastify) => {
     tu."WrIsActive" as "isActive",
     tu."WrAllowMultipleLogin" as "allowMultipleLogin",
     tu."WrMobile" as "mobile",
-    tu."WrUserType" as "userType"
+    tu."WrUserType" as "userType",
+    tu."wrEventTypeId" as "eventTypeId",
+    tu."wrCompetitionId" as "competitionId"
      from "tblUsers" tu left join "tblEncryptedData" te on tu."WrUserId" = te."wrKey"
      left join "tblEncryptedData" te1 on tu."WrParentId" = te1."wrKey" 
      left join "tblEncryptedData" te2 on tu."WrRoleId" = te2."wrKey"
@@ -185,10 +188,13 @@ const addUserQuery = async (request, fastify) => {
     const result = await fastify.db.query(
       `
       with insert_data as (
-        INSERT INTO "tblUsers" ("WrParentId" , "WrRoleId" , "WrUserName" , "WrPassword" , "WrName" , "WrMobile" , "WrIsActive" , "WrAllowMultipleLogin" , "WrIsSuperAdmin", "WrCreatedBy","WrCreatedDate" , "WrUserIp" , "WrUserType") VALUES (
+        INSERT INTO "tblUsers" ("WrParentId" , "WrRoleId" , "WrUserName" , "WrPassword" , "WrName" , "WrMobile" , "WrIsActive" ,
+         "WrAllowMultipleLogin" , "WrIsSuperAdmin", "WrCreatedBy","WrCreatedDate" , "WrUserIp" , "WrUserType",
+         "wrEventTypeId","wrCompetitionId") 
+        VALUES (
           (select "wrKey" from "tblEncryptedData" where "wrValue" = $1),
           (select "wrKey" from "tblEncryptedData" where "wrValue" = $2),
-          $3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING *
+          $3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15) RETURNING *
       )
 
       select 
@@ -203,7 +209,9 @@ const addUserQuery = async (request, fastify) => {
     tu."WrIsActive" as "isActive",
     tu."WrAllowMultipleLogin" as "allowMultipleLogin",
     tu."WrMobile" as "mobile",
-    tu."WrUserType" as "userType"
+    tu."WrUserType" as "userType",
+    tu."wrEventTypeId" as "eventTypeId",
+    tu."wrCompetitionId" as "competitionId"
      from "insert_data" tu left join "tblEncryptedData" te on tu."WrUserId" = te."wrKey"
      left join "tblEncryptedData" te1 on tu."WrParentId" = te1."wrKey" 
      left join "tblEncryptedData" te2 on tu."WrRoleId" = te2."wrKey"
@@ -226,6 +234,8 @@ const addUserQuery = async (request, fastify) => {
           new Date(),
           "0",
           request.body.userType || null,
+          request.body.eventTypeId || 0,
+          request.body.competitionId || 0
         ],
       }
     );
@@ -255,7 +265,9 @@ const updateUserQuery = async (body, fastify, request) => {
          "WrRoleId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $7), 
          "WrPassword" = $8,
          "WrModifyBy" = $10,
-          "WrModifyDate" = $11
+          "WrModifyDate" = $11,
+          "wrEventTypeId" = $12,
+          "wrCompetitionId" = $13
           WHERE "WrUserId" =( select "wrKey" from "tblEncryptedData" where "wrValue" = $9)`,
       {
         type: QueryTypes.UPDATE,
@@ -271,6 +283,8 @@ const updateUserQuery = async (body, fastify, request) => {
           body.userId,
           request.userTokenInfo.WrUserId,
           new Date(),
+          body.eventTypeId || 0,
+          body.competitionId || 0
         ],
       }
     );

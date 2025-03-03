@@ -1877,6 +1877,8 @@ const User = {
           isActive: { type: "boolean" },
           userType: { type: "integer" },
           allowMultipleLogin: { type: "boolean" },
+          evenTypeId : { type: "integer" },
+          competitionId : { type: "integer" },
         },
         required: ["userId"],
       },

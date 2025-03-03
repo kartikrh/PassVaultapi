@@ -33,13 +33,16 @@ const {
   loadPanelDataInGlobal,
   //loginRegistrationClient,
 } = require("../controller/users/index");
-const { Auth ,sendPushNotification,weblogs, Config} = require("../swaggerSchema/groupTags/schema");
+const { Auth ,sendPushNotification,weblogs, Config, EventType, Commentary} = require("../swaggerSchema/groupTags/schema");
 const { authorize } = require("../controller/middleware/index");
 const { startSignalR, stopSignalR, isSignalRStarted, stopCustomSignalR, isCustomSignalRStarted  } = require('../signalrHandler/MockSignalR');
 const { errorLogger } = require("../utilities/logger");
 const { getAllConfigData, getInitConfig } = require("../controller/users/admin/Page/config");
 const { marketType } = require("../controller/users/admin/matchType");
 const { thirdPartyApiType } = require('../utilities/index');
+const { getEventTypeList } = require("../controller/users/admin/eventTypes");
+const { getCompetitionListByeventTypeId } = require("../controller/users/admin/competition");
+// const { getCompetitionListByeventTypeId } = require("../../../controller/users/admin/competition");
 
 module.exports = async function (fastify, opts) {
   //! API DEFINITION
@@ -246,4 +249,28 @@ module.exports = async function (fastify, opts) {
     preHandler: [(request, reply) => authorize(request, reply, fastify)],
     handler: (request, reply) => marketType(request, reply, fastify),
   });
+  fastify.post("/eventTypeList", {
+    schema: EventType.getAll.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      // (request, reply) =>
+      //   checkPermission(request, reply, fastify, {
+      //     tabName: "Events",
+      //     mode: "view",
+      //   }),
+    ],
+    handler: (request, reply) => getEventTypeList(request, reply, fastify),
+  });
+  fastify.post("/competitionListByEventTypeId", {
+    schema: Commentary.competitionListByEventTypeId.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      // (request, reply) =>
+      //   checkPermission(request, reply, fastify, {
+      //     tabName: "Event Markets",
+      //     mode: "view",
+      //   }),
+    ],
+    handler: (request, reply) => getCompetitionListByeventTypeId(request, reply, fastify),
+});
 };

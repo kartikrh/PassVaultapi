@@ -106,6 +106,16 @@ module.exports = (sequelize) => {
         type: DataTypes.STRING(200),
         allowNull: true,
       },
+      wrEventTypeId : {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        defaultValue : 0
+      },
+      wrCompetitionId : {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        defaultValue : 0
+      },
     },
     {
       timestamps: false,

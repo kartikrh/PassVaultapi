@@ -113,8 +113,11 @@ async function signInUserServices(request, fastify) {
 
   //* token created
   const token = generateToken(tokenPayload);
-
-  return { token, userName: user.WrUserName };
+ 
+  return { token, userName: user.WrUserName , refData : {
+    eventTypeId : user.wrEventTypeId,
+    competitionId : user.wrCompetitionId
+  } };
 }
 
 async function signOutUserServices(request, fastify) {
@@ -305,6 +308,26 @@ const addUserService = async (request, fastify) => {
       throw new Error("Invalid Role");
     }
   }
+  if(request.body.eventTypeId && request.body.eventTypeId != 0){
+    const validateEvent = global.tblEventTypes.find(
+      (event) => event.eventTypeId === request.body.eventTypeId
+    );
+
+    if (!validateEvent) {
+      throw new Error("Invalid Event Type");
+    }
+
+  }
+  if(request.body.competitionId && request.body.competitionId != 0){
+    const validateCompetition = global.tblCompetitions.find(
+      (competition) => competition.competitionId === request.body.competitionId
+    );
+
+    if (!validateCompetition) {
+      throw new Error("Invalid Competition");
+    }
+
+  }
 
   request.body.password = encrypt(request.body.password);
 
@@ -345,6 +368,8 @@ const updateUserService = async (request, fastify) => {
     userType: request.body.userType || findUser.userType,
     roleId: findUser.roleId,
     password: findUser.password,
+    eventTypeId : request.body.eventTypeId || findUser.eventTypeId,
+    competitionId : request.body.competitionId || findUser.competitionId,
   };
 
   if (request.body.roleId) {
@@ -357,6 +382,22 @@ const updateUserService = async (request, fastify) => {
     } else {
       body.roleId = request.body.roleId;
       body.roleName = validateRole.roleName;
+    }
+  }
+  if(request.body.eventTypeId && request.body.eventTypeId != 0){
+    const validateEvent = global.tblEventTypes.find(
+      (event) => event.eventTypeId === request.body.eventTypeId
+    );
+    if (!validateEvent) {
+      throw new Error("Invalid Event Type");
+    }
+  }
+  if(request.body.competitionId && request.body.competitionId != 0){
+    const validateCompetition = global.tblCompetitions.find(
+      (competition) => competition.competitionId === request.body.competitionId
+    );
+    if (!validateCompetition) {
+      throw new Error("Invalid Competition");
     }
   }
 
