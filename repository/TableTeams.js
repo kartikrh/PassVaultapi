@@ -149,7 +149,7 @@ const deleteTeamQuery = async (teamId, fastify, request) => {
   }
 };
 
-const getAllPlayersByTeamIdQuery = async (teamId, fastify, request) => {
+const getAllPlayersByTeamIdQuery = async (data, fastify, request) => {
   try {
     return await fastify.db.query(
       `SELECT      
@@ -157,12 +157,15 @@ const getAllPlayersByTeamIdQuery = async (teamId, fastify, request) => {
       "wrPlayerName" as "playerName",
       "wrBatsmanAverage" as "batsmanAverage",
       "wrBatsmanStrikeRate" as "batsmanStrikeRate",
-      "wrIsKipper" as "isKipper"     
+      "wrIsKipper" as "isKipper",
+      COALESCE(pbh."wrBallsFacedCount", 0) as "ballsFacedCount",
+      COALESCE(pbh."wr4Count", 0) + COALESCE(pbh."wr6Count", 0) as "boundary"
       FROM "tblTeamPlayers" tp 
       left join "tblPlayers" pl on tp."wrRefPlayerId" = pl."wrPlayerId" AND pl."wrIsDeleted" = false
+      left join "tblPlayerBattingHistory" pbh on tp."wrRefPlayerId" = pbh."wrPlayerId" and pbh."wrMatchTypeId" = $2
       where tp."wrTeamId" = $1 and tp."wrIsDeleted" = false`,
       {
-        bind: [teamId],
+        bind: [data.teamId, data.matchTypeId],
         type: fastify.db.QueryTypes.SELECT,
       }
     );
