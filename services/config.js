@@ -159,7 +159,7 @@ const allConfigDetails = async (request) => {
   return result
 };
 const getInitConfigDetails = async (request,fastify) => {
-  const initKeys = [configConstants.DPAPIURL, configConstants.DPAPIXKEY , configConstants.DPSOCKETURL]
+  const initKeys = [configConstants.DPAPIURL, configConstants.DPAPIXKEY , configConstants.DPSOCKETURL,configConstants.SCORECARDFRAMEURL];
   let result = global.tblConfigs.filter(item => initKeys.includes(item.key));
   return result;
 }
