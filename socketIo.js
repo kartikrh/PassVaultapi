@@ -47,22 +47,6 @@ const connection = (socket , fastify) => {
       }
       const timeLogs = await insertTimeLogs(commentaryId, fastify)
   
-   
-  
-      const marketToUpdatePromise = getEventMarketByIdsQuery(
-        { eventMarketIds: marketIdArr },
-        null,
-        fastify
-      );
-  
-      let LDOMARKETSIDS;
-      try {
-        LDOMARKETSIDS = global.tblConfigs
-          .find((item) => item.key === configConstants.LDOMARKET)
-          .value.split(",");
-      } catch {
-        LDOMARKETSIDS = ["26", "27", "28", "6"];
-      }
       const eventMarketIds = marketIdArr.flat().map(Number);
       if (eventMarketIds?.length > 0){
       let whereCondition = ` tem."wrID" IN(${eventMarketIds})`;
@@ -111,9 +95,15 @@ const connection = (socket , fastify) => {
         }
       }
     }
+
+    const marketToUpdatePromise = getEventMarketByIdsQuery(
+      { eventMarketIds: marketIdArr },
+      null,
+      fastify
+    );
+
       const marketToUpdate = await marketToUpdatePromise;
       const marketOdd = [];
-      // marketToUpdate.forEach((data) => {
       for (const data of marketToUpdate) {
         const index = global.tblEventMarkets.findIndex(
           (market) => market.eventMarketId === data.eventMarketId
@@ -124,14 +114,22 @@ const connection = (socket , fastify) => {
           global.tblEventMarkets.push(data);
         }
       };
-      // });
+      global.sessionData.push({type: "marketToUpdate", data: marketToUpdate})
+      let LDOMARKETSIDS;
+      try {
+        LDOMARKETSIDS = global.tblConfigs
+          .find((item) => item.key === configConstants.LDOMARKET)
+          .value.split(",");
+      } catch {
+        LDOMARKETSIDS = ["26", "27", "28", "6"];
+      }
   
       const filteredMarkets = marketToUpdate.filter(
         (market) =>
           !LDOMARKETSIDS.includes(market.marketTypeCategoryId.toString()) &&
           market.status === 1
       );
-  
+      global.sessionData.push({type: "filteredMarkets", data: filteredMarkets})
       if (filteredMarkets.length > 0) {
         const result = [];
   
