@@ -178,11 +178,11 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const getAllVideoLibrary = await getAllVideoLibraryQuery(fastify);
     const getAllShotTypes = await getAllShotTypesQuery(fastify);
     const getAllTips = await getAllTipsQuery(fastify);
-    const commentaryIds = getAllCommentary.map((item) => item.commentaryId);
+    const allCommentaryIds = getAllCommentary.map((item) => item.commentaryId);
     let getAllEventMarketsV2 = [];
     let getEventMarketRunnerV2 = [];
-    if (commentaryIds.length > 0) {
-        getAllEventMarketsV2 = await getAllEventMarketsV2Query(fastify, commentaryIds.join(", "));
+    if (allCommentaryIds.length > 0) {
+        getAllEventMarketsV2 = await getAllEventMarketsV2Query(fastify, allCommentaryIds.join(", "));
         getEventMarketRunnerV2 = await getAllMarketRunnersQuery(fastify, 
           getAllEventMarketsV2.map((item) => item.eventMarketId).join(", ")
         );
@@ -274,6 +274,8 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     // global.errorLogs = errorLogs
 
     console.log("Okkkk - Data Synchronized successfully");
+    console.log("global.tblEventMarketsV2", global.tblEventMarketsV2);
+    console.log("global.tblMarketRunnerV2", global.tblMarketRunnerV2);
 
     if (reply) {
       reply.status(200).send({
