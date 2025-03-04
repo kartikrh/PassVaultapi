@@ -274,8 +274,6 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     // global.errorLogs = errorLogs
 
     console.log("Okkkk - Data Synchronized successfully");
-    console.log("global.tblEventMarketsV2", global.tblEventMarketsV2);
-    console.log("global.tblMarketRunnerV2", global.tblMarketRunnerV2);
 
     if (reply) {
       reply.status(200).send({
