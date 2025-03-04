@@ -9865,17 +9865,17 @@ const getTeamAndPlayerListServiceV1 = async (request, fastify) => {
               teamId: curr.teamId,
               playerId: curr.playerId,
               playerName: curr.playerName,
-              batsmanAverage: curr.batsmanAverage,
-              batsmanStrikeRate: curr.batsmanStrikeRate,
+              batsmanAverage: isNaN(Number(curr.batsmanAverage)) ? 0 : parseFloat(Number(curr.batsmanAverage).toFixed(1)),
+              batsmanStrikeRate: isNaN(Number(curr.batsmanStrikeRate)) ? 0 : parseFloat(Number(curr.batsmanStrikeRate).toFixed(1)),
               commentaryPlayerId: curr.commentaryPlayerId,
               isInPlayingEleven: curr.isInPlayingEleven,
               boundary: curr.boundary == 0 || curr.boundary == null
                   ? playerAvg.length > 0
-                    ? parseFloat(((playerAvg[0].countOf4 + playerAvg[0].countOf6) / playerAvg[0].inningsCount).toFixed(2)) || 0
+                    ? parseFloat(((playerAvg[0].countOf4 + playerAvg[0].countOf6) / playerAvg[0].inningsCount).toFixed(1)) || 0
                     : 0 : curr.boundary,
               playerBallFaced: curr.playerBallFaced === 0 || curr.playerBallFaced == null
                   ? playerAvg.length > 0
-                    ? parseFloat((playerAvg[0].ballsFacedCount / playerAvg[0].inningsCount).toFixed(2)) || 0
+                    ? parseFloat((playerAvg[0].ballsFacedCount / playerAvg[0].inningsCount).toFixed(1)) || 0
                     : 0 : curr.playerBallFaced,
               currentInnings: curr.currentInnings,
               playerTypeId: curr.playerTypeId,
