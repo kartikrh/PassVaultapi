@@ -183,9 +183,13 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     let getEventMarketRunnerV2 = [];
     if (allCommentaryIds.length > 0) {
         getAllEventMarketsV2 = await getAllEventMarketsV2Query(fastify, allCommentaryIds.join(", "));
-        getEventMarketRunnerV2 = await getAllMarketRunnersQuery(fastify, 
-          getAllEventMarketsV2.map((item) => item.eventMarketId).join(", ")
-        );
+        if (getAllEventMarketsV2.length > 0) {
+          const eventMarketIds = getAllEventMarketsV2.map((item) => item.eventMarketId);
+          
+          if (eventMarketIds.length > 0) {
+              getEventMarketRunnerV2 = await getAllMarketRunnersQuery(fastify, eventMarketIds.join(", "));
+          }
+        }
     }
     // const getAllEventMarketsV2 = await getAllEventMarketsV2Query(fastify, 
     //   getAllCommentary.map((item) => item.commentaryId).join(", ")
