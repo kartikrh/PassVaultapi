@@ -178,12 +178,21 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const getAllVideoLibrary = await getAllVideoLibraryQuery(fastify);
     const getAllShotTypes = await getAllShotTypesQuery(fastify);
     const getAllTips = await getAllTipsQuery(fastify);
-    const getAllEventMarketsV2 = await getAllEventMarketsV2Query(fastify, 
-      getAllCommentary.map((item) => item.commentaryId).join(", ")
-    );
-    const getEventMarketRunnerV2 = await getAllMarketRunnersQuery(fastify, 
-      getAllEventMarketsV2.map((item) => item.eventMarketId).join(", ")
-    );
+    const allCommentaryIds = getAllCommentary.map((item) => item.commentaryId);
+    let getAllEventMarketsV2 = [];
+    let getEventMarketRunnerV2 = [];
+    if (allCommentaryIds.length > 0) {
+        getAllEventMarketsV2 = await getAllEventMarketsV2Query(fastify, allCommentaryIds.join(", "));
+        getEventMarketRunnerV2 = await getAllMarketRunnersQuery(fastify, 
+          getAllEventMarketsV2.map((item) => item.eventMarketId).join(", ")
+        );
+    }
+    // const getAllEventMarketsV2 = await getAllEventMarketsV2Query(fastify, 
+    //   getAllCommentary.map((item) => item.commentaryId).join(", ")
+    // );
+    // const getEventMarketRunnerV2 = await getAllMarketRunnersQuery(fastify, 
+    //   getAllEventMarketsV2.map((item) => item.eventMarketId).join(", ")
+    // );
 
 
     global.tblTabs = getAllTabs;
