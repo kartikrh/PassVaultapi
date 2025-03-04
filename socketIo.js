@@ -46,6 +46,25 @@ const connection = (socket , fastify) => {
         global.socketIo.to(roomName).emit("upMnMarket", inninRunData);
       }
       const timeLogs = await insertTimeLogs(commentaryId, fastify)
+
+      const marketToUpdate = await getEventMarketByIdsQuery(
+        { eventMarketIds: marketIdArr },
+        null,
+        fastify
+      );
+  
+      // const marketToUpdate = await marketToUpdatePromise;
+      const marketOdd = [];
+      for (const data of marketToUpdate) {
+        const index = global.tblEventMarkets.findIndex(
+          (market) => market.eventMarketId === data.eventMarketId
+        );
+        if (index !== -1) {
+          global.tblEventMarkets[index] = data;
+        } else {
+          global.tblEventMarkets.push(data);
+        }
+      };
   
       const eventMarketIds = marketIdArr.flat().map(Number);
       if (eventMarketIds?.length > 0){
@@ -58,7 +77,6 @@ const connection = (socket , fastify) => {
           );
     
           if (index !== -1) {
-            global.sessionData.push({type: "updatedItem data in socket", data: updatedItem})
             if(updatedItem.status === 6 || updatedItem.status === 5 && updatedItem.isResult === true){
               global.tblEventMarketsV2.splice(index, 1);
             } else {
@@ -81,7 +99,6 @@ const connection = (socket , fastify) => {
             item.eventMarketId === runner.eventMarketId
           )
           if (index !== -1) {
-            global.sessionData.push({type: "runner data in socket", data: runner})
             if(runner.selectionStatus === 6 || runner.selectionStatus === 5 && 
               eventMarketData.status === 5 && eventMarketData.isResult === true
             ){
@@ -96,24 +113,6 @@ const connection = (socket , fastify) => {
       }
     }
 
-    const marketToUpdatePromise = getEventMarketByIdsQuery(
-      { eventMarketIds: marketIdArr },
-      null,
-      fastify
-    );
-
-      const marketToUpdate = await marketToUpdatePromise;
-      const marketOdd = [];
-      for (const data of marketToUpdate) {
-        const index = global.tblEventMarkets.findIndex(
-          (market) => market.eventMarketId === data.eventMarketId
-        );
-        if (index !== -1) {
-          global.tblEventMarkets[index] = data;
-        } else {
-          global.tblEventMarkets.push(data);
-        }
-      };
       global.sessionData.push({type: "marketToUpdate", data: marketToUpdate})
       let LDOMARKETSIDS;
       try {
@@ -130,7 +129,7 @@ const connection = (socket , fastify) => {
           market.status === 1
       );
       global.sessionData.push({type: "filteredMarkets", data: filteredMarkets})
-      if (filteredMarkets.length > 0) {
+      if (ballbybllId && filteredMarkets.length > 0) {
         const result = [];
   
         filteredMarkets.forEach((item) => {
