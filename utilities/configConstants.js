@@ -45,7 +45,7 @@ const configConstants = {
     LOADDATAPASSWORD : "LOADDATAPASSWORD",
     DPSOCKETURL : "DPSOCKETURL",
     DPAPIXKEY : "DPAPIXKEY",
-    DPAPIURL : "DPAPIURL"
-    
+    DPAPIURL : "DPAPIURL",
+    SCORECARDFRAMEURL : "SCORECARDFRAMEURL"
 }
 module.exports = configConstants;
