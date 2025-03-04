@@ -1,7 +1,7 @@
-const { getMarketsByCIdQuery,getMarketByGraphByRefIdQuery } = require("../repository/TableEventMarkets");
+const { getMarketsByCIdQuery,getMarketByGraphByRefIdQuery, getMarketsByCIdV1Query } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
 const { getNotificationLogByClientQuery, updateNotificationLogByClientQuery } = require("../repository/TableNotification");
-const { getAllMarketOddsBallByBallByCommentaryId } = require("../repository/TableMarketOddsBallByBall");
+const { getAllMarketOddsBallByBallByCommentaryId, getAllMarketOddsBallByBallByCommentaryIdV1 } = require("../repository/TableMarketOddsBallByBall");
 const {
     getCommentariesDataQuery,
     getAllCommentaryTeamsDataQuery,
@@ -10,6 +10,13 @@ const {
     getAllOversDataQuery,
     getAllCommentaryWicketDataQuery,
     getAllCommentaryPartnershipDataQuery,
+    getCommentariesDataQueryV1,
+    getAllCommentaryTeamsDataQueryV1,
+    getAllCommentaryPlayerDataQueryV1,
+    getAllOversDataQueryV1,
+    getAllCommentaryBallByBallDataQueryV1,
+    getAllCommentaryWicketDataQueryV1,
+    getAllCommentaryPartnershipDataQueryV1,
 } = require("../repository/TableCommentary");
 
 const getAllCommentariesDataService = async (request,fastify) => {
@@ -311,7 +318,145 @@ const getMarketByGraphByRefIdService =async (request , fastify) => {
 
     return getGraphsData;
 }
-module.exports = { getAllCommentariesDataService ,getMarketsByCommentaryIdService , getNotificationByClientService,
+
+const getAllCommentariesDataServiceV1 = async (request,fastify) => {
+    try {
+        let commentaries = {};
+        let commentaryData = await getCommentariesDataQueryV1(fastify);
+        let com = commentaryData.filter((c) => {
+            if (request.body.eventId) {
+                return c.erefid == request.body.eventId;
+            } else {
+                return c.cs != 4;
+            }
+        })
+
+        for (c of com) {
+            let whereCondition = `"wrIsDelete" = false AND "wrCommentaryId" = ${c.cid}`
+                let teams = await getAllCommentaryTeamsDataQueryV1(whereCondition, fastify);
+                try {
+                    teams?.forEach(async (team) => {
+                        const _teamsC1 = global.tblTeams.filter((item) => item.teamId === team.tid);
+                        if (_teamsC1.length > 0) {
+                            team.img = _teamsC1[0].image;
+                            team.jersy = _teamsC1[0].jersey;
+                        }
+                    });   
+                } catch (error) {
+                    
+                }
+                let condi = `tcp."wrIsDelete" = false AND tcp."wrCommentaryId" = ${c.cid}`
+                let players = await getAllCommentaryPlayerDataQueryV1(condi, fastify);
+                try {
+                    players?.forEach(async (player) => {
+                        if (player.bowlovr !== null && player.bowlovr !== undefined) {
+                            player.bowlovr = player.bowlovr.toString();
+                        }
+                        if (player.bowleco === "NaN") {
+                            player.bowleco = null;
+                        }
+                        const _player = global.tblPlayers.filter((item) => item.playerId === player.plid);
+                        if (_player.length > 0) {
+                            player.plimg = _player[0].image;
+                            player.pltyp = _player[0].playerType;
+                            player.iskip = _player[0].isKipper;
+                        }
+                    });   
+                } catch (error) {
+                    
+                }
+                let overs = await getAllOversDataQueryV1(whereCondition, fastify);
+
+                let whereCond = `"wrIsDeletedStatus" = false AND "wrCommentaryId" = ${c.cid}`
+
+                let ballByBall = await getAllCommentaryBallByBallDataQueryV1(whereCond, fastify);
+                ballByBall?.forEach(async (ball) => {
+                    if (ball.ovrcnt !== null && ball.ovrcnt !== undefined) {
+                        ball.ovrcnt = ball.ovrcnt.toString();
+                    }
+                });
+                
+                let wickets = await getAllCommentaryWicketDataQueryV1(whereCond, fastify);
+
+                let partnerships = await getAllCommentaryPartnershipDataQueryV1(whereCondition, fastify);
+                try {
+                    partnerships?.forEach(async (partnership) => {
+                        const _player1 = players.filter((item) => item.cplid === partnership.bat1id);
+            
+                        if (_player1.length > 0) {
+                            partnership.pl1img = _player1[0].plimg;
+                        }
+                        const _player2 = players.filter((item) => item.cplid === partnership.bat2id);
+                        if (_player2.length > 0) {
+                            partnership.pl2img = _player2[0].plimg;
+                        }
+                    });   
+                } catch (error) {
+                    
+                }
+                let marketOddsBallByBall = await getAllMarketOddsBallByBallByCommentaryIdV1({
+                    commentaryId: c.cid
+                },fastify) || [];
+
+                commentaries[c.erefid] = {
+                    commentaryId : c.cid,
+                    eventrefId : c.erefid,
+                    commentaryStatus : c.cs,
+                    commentaryDetails: c,
+                    commentaryTeams: teams,
+                    commentaryPlayers: players,
+                    commentaryOver: overs,
+                    commentaryBallByBall: ballByBall,
+                    commentaryWicket: wickets,
+                    commentaryPartnership: partnerships,
+                    marketOddsBallByBall : marketOddsBallByBall,
+                };
+        }
+    
+        return commentaries;
+    } catch (error) {
+        throw new Error(error);
+    }
+}
+
+const getMarketsByCommentaryIdServiceV1 =async (request , fastify) => {
+    // vlaidate commentry id
+    let commentaryData = await getCommentariesDataQuery(fastify);
+    const commentary = commentaryData.find((c) => {
+        return c.eventRefId === request.body.eventId;
+    });    
+    if (!commentary) {
+        throw new Error("Commentary with this id not found");
+    }
+    // check if isPredicted is true
+    if (!commentary.isPredictMarket) {
+        return null;
+    }
+    let LDOMARKETSIDS = global.tblConfigs.find(config => config.key === configConstants.LDOMARKET)?.value ?? "0";
+    let whereCondition = ` AND "wrMarketTypeCategoryId" NOT IN (${LDOMARKETSIDS})`;
+    
+    const getCommentaries = await getMarketsByCIdV1Query(request, whereCondition, fastify);
+    
+    const datProviderUrl = global.tblConfigs.find((c) => c.key == configConstants.DATAPROVIDERURL);
+    if(!datProviderUrl){
+        throw new Error("Data provider url not found");
+    }
+
+    if(!getCommentaries.settledMarkets && !getCommentaries.openMarkets){
+        return null;
+    }
+    return {
+        ...getCommentaries,
+        dataProviderUrl: datProviderUrl.value
+    };
+}
+
+module.exports = { 
+    getAllCommentariesDataService,
+    getMarketsByCommentaryIdService,
+    getNotificationByClientService,
     markReadNotificationService,
-    getMarketByGraphByRefIdService
+    getMarketByGraphByRefIdService,
+    getAllCommentariesDataServiceV1,
+    getMarketsByCommentaryIdServiceV1,
  };

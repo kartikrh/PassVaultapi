@@ -93,7 +93,7 @@ const {
   callClientAPI,
   MarketTypeId
 } = require("../utilities");
-const { getAllPlayersByTeamIdQuery } = require("../repository/TableTeams");
+const { getAllPlayersByTeamIdQuery, getAllPlayersByTeamIdAndMatchTypeIdQuery } = require("../repository/TableTeams");
 const { handleMarketCloseService, updateComInMarketService, suspendMarketService, handleMarketByDLSService } = require("./eventMarket");
 const { createMarketOddsBallByBallBYID, deleteMarketOddsBallByBall, createMarketOddsBallInSaveDetails } = require("../repository/TableMarketOddsBallByBall");
 const { getEventMarketRatioQuery, closeEventMarketByCIdQuery, getMarketsByCategoryQuery, getEventMarketByIdsQuery, getMarketsByComIdQuery, updateEventMarketCloseQuery, getMarCountByComQuery, getExtrenalMarketQuery, getEventMarketsByCommId } = require("../repository/TableEventMarkets");
@@ -113,6 +113,7 @@ const {
 } = require("../services/playerHistory");
 // const { handleSitemapUpdate } = require("../utilities/SEOIndexing")
 const { getAllTournamentTeamPointsQuery } = require("../repository/TableTournmentTeamPoints");
+const { getPlayersBattingHistoryByIdQuery } = require("../repository/TablePlayerHistory");
 
 
 const allCommentaryService = async (request, fastify) => {
@@ -9820,30 +9821,68 @@ const getTeamAndPlayerListServiceV1 = async (request, fastify) => {
 
   let teamMap = {};
   for (team of arrOfTeamId) {
-    let commentaryTeamPlayers = await global.tblCommentaryPlayers
-      .filter(
-        (item) =>
-          item?.commentaryId === request.body.commentaryId &&
-          item.teamId === team.teamId &&
-          item.currentInnings === team.currentInnings
-      )
-      .reduce((acc, curr) => {
-        acc.push({
-          teamId: curr.teamId,
-          playerId: curr.playerId,
-          playerName: curr.playerName,
-          batsmanAverage: curr.batsmanAverage,
-          batsmanStrikeRate: curr.batsmanStrikeRate,
-          commentaryPlayerId: curr.commentaryPlayerId,
-          isInPlayingEleven: curr.isInPlayingEleven,
-          boundary: curr.boundary,
-          playerBallFaced: curr.playerBallFaced,
-          currentInnings: curr.currentInnings,
-          playerTypeId: curr.playerTypeId,
-          playerType: curr.playerType,
-        });
-        return acc;
-      }, []);
+    // let commentaryTeamPlayers = await global.tblCommentaryPlayers
+    //   .filter(
+    //     (item) =>
+    //       item?.commentaryId === request.body.commentaryId &&
+    //       item.teamId === team.teamId &&
+    //       item.currentInnings === team.currentInnings
+    //   )
+    //   .reduce((acc, curr) => {
+    //     acc.push({
+    //       teamId: curr.teamId,
+    //       playerId: curr.playerId,
+    //       playerName: curr.playerName,
+    //       batsmanAverage: curr.batsmanAverage,
+    //       batsmanStrikeRate: curr.batsmanStrikeRate,
+    //       commentaryPlayerId: curr.commentaryPlayerId,
+    //       isInPlayingEleven: curr.isInPlayingEleven,
+    //       boundary: curr.boundary,
+    //       playerBallFaced: curr.playerBallFaced,
+    //       currentInnings: curr.currentInnings,
+    //       playerTypeId: curr.playerTypeId,
+    //       playerType: curr.playerType,
+    //     });
+    //     return acc;
+    //   }, []);
+
+      let commentaryTeamPlayers = await Promise.all(
+        global.tblCommentaryPlayers
+          .filter(
+            (item) =>
+              item?.commentaryId === request.body.commentaryId &&
+              item.teamId === team.teamId &&
+              item.currentInnings === team.currentInnings
+          )
+          .map(async (curr) => {
+            const playerAvg = await getPlayersBattingHistoryByIdQuery(
+              { playerId: curr.playerId, matchTypeId: commentaryDetails.matchTypeId },
+              fastify,
+              request
+            );
+      
+            return {
+              teamId: curr.teamId,
+              playerId: curr.playerId,
+              playerName: curr.playerName,
+              batsmanAverage: isNaN(Number(curr.batsmanAverage)) ? 0 : parseFloat(Number(curr.batsmanAverage).toFixed(1)),
+              batsmanStrikeRate: isNaN(Number(curr.batsmanStrikeRate)) ? 0 : parseFloat(Number(curr.batsmanStrikeRate).toFixed(1)),
+              commentaryPlayerId: curr.commentaryPlayerId,
+              isInPlayingEleven: curr.isInPlayingEleven,
+              boundary: curr.boundary == 0 || curr.boundary == null
+                  ? playerAvg.length > 0
+                    ? parseFloat(((playerAvg[0].countOf4 + playerAvg[0].countOf6) / playerAvg[0].inningsCount).toFixed(1)) || 0
+                    : 0 : curr.boundary,
+              playerBallFaced: curr.playerBallFaced === 0 || curr.playerBallFaced == null
+                  ? playerAvg.length > 0
+                    ? parseFloat((playerAvg[0].ballsFacedCount / playerAvg[0].inningsCount).toFixed(1)) || 0
+                    : 0 : curr.playerBallFaced,
+              currentInnings: curr.currentInnings,
+              playerTypeId: curr.playerTypeId,
+              playerType: curr.playerType,
+            };
+          })
+      );
     // remove the systemPlayers from commentaryTeamPlayers
     const systemPlayer = global.tblPlayers
       .filter((item) => item.isSystemPlayer === true)
@@ -9858,8 +9897,8 @@ const getTeamAndPlayerListServiceV1 = async (request, fastify) => {
         teamName: team.teamName || teamMap[team.teamId]?.teamName,
         shortName: team.shortName || teamMap[team.teamId]?.shortName,
         commentaryTeamPlayers: {},
-        teamPlayers: await getAllPlayersByTeamIdQuery(
-          team.teamId,
+        teamPlayers: await getAllPlayersByTeamIdAndMatchTypeIdQuery(
+          { matchTypeId: commentaryDetails.matchTypeId, teamId: team.teamId },
           fastify,
           request
         ),

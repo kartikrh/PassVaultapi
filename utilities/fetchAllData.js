@@ -85,6 +85,7 @@ const { getAllVideoLibraryQuery } = require("../repository/TableVideoLibrary");
 const { getAllShotTypesQuery } = require("../repository/TableShotType");
 const { getAllTipsQuery } = require("../repository/TableTips");
 const { getAllMarketRunnersQuery } = require("../repository/TableMarketRunner");
+const configConstants = require("./configConstants");
 
 const fetchAllDataFromDb = async (fastify, reply) => {
   try {
@@ -311,6 +312,14 @@ const FetchingCommentariesDataFromCron = async (fastify) => {
 
 const panelLoadDataByEnum = async (request, fastify, reply) => {
   try {
+    const {password} = request.body;
+    let pass = global.tblConfigs.find((item) => item.key === configConstants.LOADDATAPASSWORD);
+    if (!pass) {
+      throw new Error("Password not found");
+    }
+    if (pass.value !== password) {
+      throw new Error("Invalid password");
+    }
     let {module} = request.body;
     for (const mod of module) {
       switch (mod) {

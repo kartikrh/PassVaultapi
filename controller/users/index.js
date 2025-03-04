@@ -38,6 +38,7 @@ const { errorLogger,updateWebRequestLogs } = require("../../utilities/logger");
 // const fetchAllDataFromDb = require("../../utilities/fetchAllData");
 const { fetchAllDataFromDb, panelLoadDataByEnum } = require("../../utilities/fetchAllData");
 const { ckImageUploadService, imgUploadService } = require("../../services/ckImage");
+const configConstants = require("../../utilities/configConstants");
 
 let commonPath = "controller/users";
 
@@ -121,6 +122,8 @@ const loadPanelDataInGlobal = async (request, reply, fastify) => {
     if (!request.userTokenInfo.WrIsSuperAdmin) {
       throw new Error("You are not authorized to perform this action");
     }
+    // check the pass
+  
     await panelLoadDataByEnum(request, fastify, reply);
   } catch (err) {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));

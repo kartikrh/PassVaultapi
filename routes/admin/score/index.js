@@ -23,12 +23,13 @@ const {
   getAllCommentariesData,
   insertCommentaryConsoleFe,
   getAllCompletedCommentary,
+  getAllCommentariesDataV1,
 } = require("../../../controller/users/admin/commentary/commentary");
 const { getAllEventMarketsAndRunners } = require('../../../controller/users/admin/eventMarket');
 const { getAllMenuItems } = require("../../../controller/users/admin/menuItem");
 const { getMenuItemList, getAllMenuTypes } = require("../../../controller/users/admin/menuType");
 const { getAllNews, getNewsById } = require("../../../controller/users/admin/news");
-const { getMarketsByCommentaryId, getNotificationByClient, markReadNotification ,getMarketByGraphByRefId } = require("../../../controller/users/admin/score");
+const { getMarketsByCommentaryId, getNotificationByClient, markReadNotification ,getMarketByGraphByRefId, getMarketsByCommentaryIdV1 } = require("../../../controller/users/admin/score");
 const {
   saveSubScribeDomain,
 } = require("../../../controller/users/admin/subScribesDomain");
@@ -244,10 +245,18 @@ module.exports = async (fastify, opts) => {
     schema: Commentary.getLiveCommentaries.schema,
     handler: (request, reply) => getAllCommentariesData(request, reply, fastify),
   })
+  fastify.post("/getLiveCommentariesV1", {
+    schema: Commentary.getLiveCommentaries.schema,
+    handler: (request, reply) => getAllCommentariesDataV1(request, reply, fastify),
+  })
 
   fastify.post("/getMarketsByCId" , {
     schema: Score.getMarkets.schema,
     handler: (request, reply) => getMarketsByCommentaryId(request, reply, fastify)
+  })
+  fastify.post("/getMarketsByCIdV1" , {
+    schema: Score.getMarkets.schema,
+    handler: (request, reply) => getMarketsByCommentaryIdV1(request, reply, fastify)
   })
   fastify.post("/notificationByClient",{
     schema : Score.getNotificationByClient.schema,
@@ -313,7 +322,18 @@ module.exports = async (fastify, opts) => {
   fastify.post("/tips", {
     handler: (request, reply) => getAllTipsClientAPI(request, reply, fastify)
   });
-  fastify.post("/socket", {
-    handler: (request, reply) => global.sessionData
+  fastify.post("/socket", (request, reply) => {
+    if (request?.body?.status === 120) {
+      global.sessionData = [];
+      return reply.send([]);
+    } 
+  
+    let filterData = global.sessionData;
+  
+    if (request?.body?.type !== undefined) {
+      filterData = filterData.filter(item => item.type === request.body.type);
+    }
+  
+    return reply.send(filterData);
   });
 };

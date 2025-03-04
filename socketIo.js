@@ -337,6 +337,20 @@ const connection = (socket , fastify) => {
       console.log("Error in conMnMarket", err?.message || err);
     }
   });
+  socket.on("disConMnMarket", (commentaryId) => {
+    try {
+      const roomName = `mnMarket-${commentaryId}`;
+      socket.leave(roomName);
+    } catch (error) {
+      errorLogger(
+        fastify,
+        error.message,
+        "ERROR --> socketIo.js/disConMnMarket",
+        null
+      );
+    }
+  });
+
 
   socket.on("ping" , () =>{
     socket.emit("pong")
