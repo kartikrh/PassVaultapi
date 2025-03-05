@@ -165,6 +165,7 @@ const updateCompititionService = async (request, fastify) => {
     tiePoint: request.body.tiePoint === undefined ? validateId.tiePoint : parseInt(request.body.tiePoint, 10),
     cancelPoint: request.body.cancelPoint === undefined ? validateId.cancelPoint : parseInt(request.body.cancelPoint, 10),
     lossPoint: request.body.lossPoint === undefined ? validateId.lossPoint : parseInt(request.body.lossPoint, 10),
+    drsCount : request.body.drsCount === undefined ? validateId.drsCount : parseInt(request.body.drsCount),
   };
 
   if ("isActive" in request.body) {

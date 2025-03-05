@@ -2462,6 +2462,8 @@ const testStoreProcedureService = async (request, fastify) => {
 
 const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
   // check sp
+  // get req start time
+  const startTime = new Date();
   try {
     let {
       commentaryTeams,
@@ -3761,7 +3763,8 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
             (item) => item?.commentaryId === commentaryId
           ),
         },
-        apiName: "/saveDetails"
+        apiName: "/saveDetails",
+        reqStartTime : startTime
       },
       request,
       fastify
@@ -3795,7 +3798,8 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
             (item) => item?.commentaryId === request.body.commentaryId
           ),
         },
-        apiName: "/saveDetails"
+        apiName: "/saveDetails",
+        reqStartTime : startTime
       },
       request,
       fastify

@@ -84,9 +84,10 @@ const insertCompetitionQuery = async (request, fastify) => {
             select max("wrDisplayOrder") as "display_order" from "tblCompetitions" where "wrEventTypeId" = $2
         ),
         inser_data as (
-            insert into "tblCompetitions" ("wrCompetition" , "wrEventTypeId" , "wrRefID" , "wrImage" ,"wrIsActive" , "wrCreatedBy" , "wrCreatedDate","wrDisplayOrder" ) values ($1 ,
+            insert into "tblCompetitions" ("wrCompetition" , "wrEventTypeId" , "wrRefID" , "wrImage" ,"wrIsActive" , "wrCreatedBy" , "wrCreatedDate","wrDisplayOrder", "wrDrsCount" ) values ($1 ,
                 $2,
-                 $3,$4,$5,$6,now(),(select COALESCE("display_order" , 0) from "display") + 1
+                 $3,$4,$5,$6,now(),(select COALESCE("display_order" , 0) from "display") + 1,
+                  $7
                  ) returning *
         )
         select 
@@ -105,7 +106,8 @@ const insertCompetitionQuery = async (request, fastify) => {
         tc."wrWinPoint" as "winPoint",
         tc."wrTiePoint" as "tiePoint",
         tc."wrCancelPoint" as "cancelPoint",
-        tc."wrLossPoint" as "lossPoint"
+        tc."wrLossPoint" as "lossPoint",
+        tc."wrDrsCount" as "drsCount"
         from "inser_data" tc 
         inner join "tblEventTypes" tev on tc."wrEventTypeId" = tev."wrEventTypeId"
     `,
@@ -117,6 +119,7 @@ const insertCompetitionQuery = async (request, fastify) => {
           data.image || null,
           data.isActive || false,
           request.userTokenInfo.WrUserId,
+          data.drsCount !== undefined ? data.drsCount : 0,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
