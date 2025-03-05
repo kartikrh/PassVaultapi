@@ -4249,6 +4249,23 @@ const EventMarket = {
       },
     },
   },
+  upSendMarket : {
+    schema : {
+      tags : ["EventMarket"],
+      description : "update send market",
+      security : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          eventMarketId : {
+            type : "array",
+            items : {type : "integer"},
+          },
+        },
+        required : ["eventMarketId"]
+      }
+    }
+  },  
   getManualMarket: {
     schema: {
       tags: ["EventMarket"],

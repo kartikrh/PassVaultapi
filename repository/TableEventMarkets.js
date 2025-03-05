@@ -5671,7 +5671,39 @@ const getMarketsByCIdV1Query = async (request, whereCondition, fastify) => {
     throw new Error(error.message);
   }
 };
+const upSendMarketDataQuery = async (data, request, fastify) => {
+  try{
+    const result = await fastify.db.query(
+      `
+        UPDATE "tblEventMarkets" SET
+          "wrIsSendData" = $1
+        WHERE "wrID" = ANY($2)
+        RETURNING 
+            "wrID" AS "eventMarketId",
+            "wrIsSendData" AS "isSendData",
+            "wrLastUpdate" AS "lastUpdate",
+            "wrCommentaryId" AS "commentaryId"
+      `,
+      {
+        bind: [
+          data.isSendData,
+          data.eventMarketId
+        ],
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+    return result;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/upSendMarketDataQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
 
+}
 module.exports = {
   getAllEventMarketsV2Query,
   getAllEventMarketsQuery,
@@ -5758,5 +5790,6 @@ module.exports = {
   getRsMarketQuery,
   getAllEventMarketsV2ByIdQuery,
   getMarketsByCIdV1Query,
+  upSendMarketDataQuery
 }
 
