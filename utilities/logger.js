@@ -216,9 +216,10 @@ const commentaryLogger = async (data, request, fastify) => {
         "wrExtraData",
         "wrCreatedBy",
         "wrComment",
-        "wrApiName"
+        "wrApiName",
+        "wrReqStartTime"
       )
-      VALUES ($1, $2, $3, $4, $5, $6,$7, $8)
+      VALUES ($1, $2, $3, $4, $5, $6,$7, $8,$9)
     `;
     return await fastify.db.query(query, {
       type: fastify.db.QueryTypes.SELECT,
@@ -231,6 +232,7 @@ const commentaryLogger = async (data, request, fastify) => {
         request?.userTokenInfo?.WrUserId || null,
         comment || null,
         data.apiName || null,
+        data.reqStartTime || null
       ],  
     });
 
