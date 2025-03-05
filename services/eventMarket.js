@@ -1604,6 +1604,7 @@ const changeMarketCloseService = async (request, fastify) => {
     };
   }
 };
+
 const suspendMarketByCIdService = async (request, fastify) => {
   let { commentaryId } = request.body;
   // i have array of commentaryId i want to get the eventMarketId
