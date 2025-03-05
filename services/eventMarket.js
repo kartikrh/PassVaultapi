@@ -59,6 +59,7 @@ const {
   closeMarketByATQuery1,
   cancelMarketByATQuery1,
   getRsMarketQuery,
+  upSendMarketDataQuery,
 } = require("../repository/TableEventMarkets");
 const { getRunnerByIdQuery, setResultInRunnerMarketQuery, getRunnerByMarketQuery } = require("../repository/TableMarketRunner");
 const configConstants = require("../utilities/configConstants");
@@ -1043,6 +1044,36 @@ const updateMarketRateService = async (request, fastify) => {
   data.callPrediction = callPredictions;
   return data;
 };
+const upSendMarketDataService = async (request, fastify) => {
+  const {eventMarketId,isSendData} = request.body;
+  const result = await upSendMarketDataQuery({
+    eventMarketId,
+    isSendData
+  }, request, fastify);
+  for(let item of result){
+    let index = global.tblEventMarketsV2.findIndex(
+      (elem) => elem.eventMarketId === item.eventMarketId
+    );
+    if(index !== -1){
+      global.tblEventMarketsV2[index].isSendData = item.isSendData;
+      global.tblEventMarketsV2[index].lastUpdate = item.lastUpdate;
+    }
+    marketDataLogger(
+      {
+        eventMarketId: item.eventMarketId,
+        commentaryId: item.commentaryId,
+        dataTosave: null,
+        updateType: MarketUpdateType.isSendDataUpdate,
+        lineDiff: 0,
+        isSendData: isSendData
+      },
+      request,
+      fastify
+    )
+  }
+  return "Event Market updated successfully";
+
+}
 const saveEventMarketService = async (request, fastify) => {
   const { eventMarketId, commentaryId } = request.body;
   const commentary = global.tblCommentaries.find(
@@ -3646,5 +3677,6 @@ module.exports = {
   upIsInningRunApiService,
   globalEventMarketDataWithCommIdService,
   globalEventMarketDataWithMarketIdsService,
-  handleMarketByDLSService
+  handleMarketByDLSService,
+  upSendMarketDataService
 };

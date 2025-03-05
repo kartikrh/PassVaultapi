@@ -142,12 +142,12 @@ const marketDataLogger = async (data , request , fastify) => {
         bind: [
           eventMarketId,
           commentaryId,
-          JSON.stringify(dataTosave),
+          JSON.stringify(dataTosave) || null,
           updateType,
           new Date(),
           lineDiff || 0,
           request?.userTokenInfo?.WrUserId || 0,
-          isSendData || true
+          isSendData !== undefined ? isSendData : true
         ],
       }
     );
