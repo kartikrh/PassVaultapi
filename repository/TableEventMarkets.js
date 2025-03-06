@@ -5676,7 +5676,8 @@ const upSendMarketDataQuery = async (data, request, fastify) => {
     const result = await fastify.db.query(
       `
         UPDATE "tblEventMarkets" SET
-          "wrIsSendData" = $1
+          "wrIsSendData" = $1,
+          "wrLastUpdate" = now()::timestamp
         WHERE "wrID" = ANY($2)
         RETURNING 
             "wrID" AS "eventMarketId",
