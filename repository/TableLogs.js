@@ -203,7 +203,7 @@ const allCommentaryLogsQuery = async (body,request, fastify) => {
         const { commentaryId, startDate, endDate, page = 1, limit = 20 } = body;
         const {skip , take} = getPagination(page, limit);
         let where = commentaryId ? `WHERE logs."wrCommentaryId" = ${commentaryId}` :null;
-        where = startDate && endDate ? (where ? `${where} AND logs."wrCreatedDate" BETWEEN '${startDate}' AND '${endDate}'` : `WHERE logs."wrCreatedDate" BETWEEN '${startDate}' AND '${endDate}'`) : where;
+        where = startDate && endDate ? (where ? `${where} AND logs."wrReqStartTime" BETWEEN '${startDate}' AND '${endDate}'` : `WHERE logs."wrReqStartTime" BETWEEN '${startDate}' AND '${endDate}'`) : where;
         const query = `
             SELECT 
                 logs."wrId" as "id",
@@ -218,7 +218,8 @@ const allCommentaryLogsQuery = async (body,request, fastify) => {
                 com."wrEventName" as "eventName",
                 com."wrEventRefId" as "eventRefId",
                 com."wrEventDate" as "eventDate",
-                com."wrCommentaryStatus" as "commentaryStatus"
+                com."wrCommentaryStatus" as "commentaryStatus",
+                logs."wrReqStartTime" as "reqStartTime"
             FROM 
                 "tblCommentaryLogs" logs
             LEFT JOIN
