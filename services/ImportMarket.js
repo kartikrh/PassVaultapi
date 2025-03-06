@@ -93,7 +93,8 @@ const ImportMarketService = async (request, fastify) => {
         winPoint : CompetitionsObj.winPoint,
         tiePoint : CompetitionsObj.tiePoint,
         cancelPoint : CompetitionsObj.cancelPoint,
-        lossPoint : CompetitionsObj.lossPoint
+        lossPoint : CompetitionsObj.lossPoint,
+        drsCount : CompetitionsObj.drsCount
       };
       await updateCompititionQuery(setCompetitions, fastify, request);
 
@@ -281,7 +282,8 @@ const ImportMarketWithRunnerService = async (request, fastify) => {
         winPoint : CompetitionsObj.winPoint,
         tiePoint : CompetitionsObj.tiePoint,
         cancelPoint : CompetitionsObj.cancelPoint,
-        lossPoint : CompetitionsObj.lossPoint
+        lossPoint : CompetitionsObj.lossPoint,
+        drsCount : CompetitionsObj.drsCount
       };
       await updateCompititionQuery(setCompetitions, fastify, request);
 

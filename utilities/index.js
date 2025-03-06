@@ -371,6 +371,7 @@ const MarketUpdateType = {
   predictMarket : 2,
   marketViewer : 3,
   marketUpdateRate : 4,
+  isSendDataUpdate : 5,
 }
 const ActionTypeForMarketCancel ={
   winClose : 1,
