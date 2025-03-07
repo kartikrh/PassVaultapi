@@ -4376,6 +4376,7 @@ const updateTeamPlayerService = async (request, fastify) => {
   return "Player updated successfully";
 };
 const saveShortCommentaryService = async (request, fastify) => {
+  const startTime = new Date();
   try {
     // const { commentaryDetails, ...rest } = request.body;
     // let teamArr = [];
@@ -4431,7 +4432,8 @@ const saveShortCommentaryService = async (request, fastify) => {
             (item) => item?.commentaryId === request.body.commentaryDetails.commentaryId
           ),
         },
-        apiName: "/saveShortCommentary"
+        apiName: "/saveShortCommentary",
+        reqStartTime : startTime
       },
       request,
       fastify
@@ -4859,6 +4861,7 @@ const updateCommentaryPartnershipService = async (data, fastify, request) => {
 
 const deleteBallByBallCommentoriesService = async (request, fastify) => {
   const { commentaryBallByBallId } = request.body;
+  const startTime = new Date();
   const ball = global.tblCommentaryBallByBall.find(
     (item) => item.commentaryBallByBallId === commentaryBallByBallId
   );
@@ -4899,7 +4902,8 @@ const deleteBallByBallCommentoriesService = async (request, fastify) => {
             (item) => item?.commentaryId === ball.commentaryId
           ),
         },
-        apiName: "/deleteBallByBall"
+        apiName: "/deleteBallByBall",
+        reqStartTime : startTime
       },
       request,
       fastify
@@ -4932,7 +4936,8 @@ const deleteBallByBallCommentoriesService = async (request, fastify) => {
             (item) => item?.commentaryId === commentaryId
           ),
         },
-        apiName: "/deleteBallByBall"
+        apiName: "/deleteBallByBall",
+        reqStartTime : startTime
       },
       request,
       fastify
@@ -6209,6 +6214,7 @@ const getMatchTypeListByCommentaryService = async (request, fastify) => {
   return matchTypeList;
 };
 const changeBowlerOfCommentaryService = async (request, fastify) => {
+  const startTime = new Date();
   try {
     const { bowlerId, overId, commentaryId, currentInnings } = request.body;
     const commentary = global.tblCommentaries.find(
@@ -6259,7 +6265,8 @@ const changeBowlerOfCommentaryService = async (request, fastify) => {
             (item) => item?.commentaryId === commentaryId
           ),
         },
-        apiName: "/changeBowler"
+        apiName: "/changeBowler",
+        reqStartTime : startTime
       },
       request,
       fastify
@@ -6291,7 +6298,8 @@ const changeBowlerOfCommentaryService = async (request, fastify) => {
             (item) => item?.commentaryId === request.body.commentaryId
           ),
         },
-        apiName: "/changeBowler"
+        apiName: "/changeBowler",
+        reqStartTime : startTime
       },
       request,
       fastify
@@ -8345,6 +8353,7 @@ const getEventDetailsByCIdService = async (request, fastify) => {
 };
 const saveCommentaryDetailsAPIService = async (request, fastify) => {
   // validate commentary id
+  const startTime = new Date();
   try {
     const {
       commentaryDetails,
@@ -8441,7 +8450,8 @@ const saveCommentaryDetailsAPIService = async (request, fastify) => {
         },
         global: null,
         extra: null,
-        apiName: "/saveCommentaryDetails"
+        apiName: "/saveCommentaryDetails",
+        reqStartTime : startTime
       },
       request,
       fastify
@@ -8466,7 +8476,8 @@ const saveCommentaryDetailsAPIService = async (request, fastify) => {
         },
         global: null,
         extra: null,
-        apiName: "/saveCommentaryDetails"
+        apiName: "/saveCommentaryDetails",
+        reqStartTime : startTime
       },
       request,
       fastify
@@ -8894,6 +8905,7 @@ const getShortCommertyService = async (request, fastify) => {
   }
 };
 const deleteCommentaryDataService = async (request, fastify) => {
+  const startTime = new Date();
   try {
     const { deleteWickets, deleteOvers, deletePartnership, deleteBallByBall } =
       request.body;
@@ -8941,7 +8953,8 @@ const deleteCommentaryDataService = async (request, fastify) => {
             (item) => item?.commentaryId === request.body.commentaryId
           ),
         },
-        apiName: "/deleteComentaryDetails"
+        apiName: "/deleteComentaryDetails",
+        reqStartTime : startTime
       },
       request,
       fastify
@@ -8969,7 +8982,8 @@ const deleteCommentaryDataService = async (request, fastify) => {
         extra: global.tblCommentaryBallByBall.filter(
           (item) => item?.commentaryId === request.body.commentaryId
         ),
-        apiName: "/deleteComentaryDetails"
+        apiName: "/deleteComentaryDetails",
+        reqStartTime : startTime
       },
       request,
       fastify
@@ -9165,6 +9179,7 @@ const upDLSDetailsService = async (request, fastify) => {
   return "Commentary Updated successfully";
 };
 const AddSuperOverCommentaryService = async (request, fastify) => {
+  const startTime = new Date();
   try {
     const { commentaryId, teamMaxOver, battingTeamId } = request.body;
     const commentary = global.tblCommentaries.find(
@@ -9297,6 +9312,7 @@ const AddSuperOverCommentaryService = async (request, fastify) => {
           ),
         },
         apiName: "/AddSuperOver",
+        reqStartTime : startTime
       },
       request,
       fastify
@@ -9328,6 +9344,7 @@ const AddSuperOverCommentaryService = async (request, fastify) => {
           ),
         },
         apiName: "/AddSuperOver",
+        reqStartTime : startTime
       },
       request,
       fastify
@@ -9363,6 +9380,7 @@ const updateTeamPredictionService = async (request, fastify) => {
 };
 
 const updateLineRationService = async (request, fastify) => {
+  const startTime = new Date();
   const { commentaryId, lineRatio } = request.body;
   try {
     const index = global.tblCommentaries.findIndex(
@@ -9388,6 +9406,7 @@ const updateLineRationService = async (request, fastify) => {
         global: null,
         extra: null,
         apiName: "/updatLineRatio",
+        reqStartTime : startTime
       },
       request,
       fastify
@@ -9411,7 +9430,8 @@ const updateLineRationService = async (request, fastify) => {
         },
         global: null,
         extra: null,
-        apiName: "/updateLineRation"
+        apiName: "/updateLineRation",
+        reqStartTime : startTime
       },
       request,
       fastify
@@ -9522,6 +9542,7 @@ const saveComTemplatesService = async (request, fastify) => {
 
 }
 const revertCommentaryService = async (request, fastify) => {
+  const startTime = new Date();
   const { commentaryId , password} = request.body;
   let pass = global.tblConfigs.find((item) => item.key === configConstants.REVERTCOMPASS);
   if(pass && pass.value != password){
@@ -9607,6 +9628,7 @@ const revertCommentaryService = async (request, fastify) => {
       global: null,
       extra: null,
       apiName: "/revertCommentary",
+      reqStartTime : startTime
     },
     request,
     fastify
