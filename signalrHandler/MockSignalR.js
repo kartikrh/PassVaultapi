@@ -56,85 +56,135 @@ async function startSignalR(fastify) {
                     if (_SignalRURL) {
                         connectionCount++;
                         const newConnection = new signalR.HubConnectionBuilder()
-                            .withUrl(_SignalRURL)
-                            .withAutomaticReconnect([0, 2000, 10000, 30000])
-                            .build();
-                        await newConnection.start();
-                        global.isSignalRStopped = false;
-                        global.isAdminStoppedSignalR = false;
-                        thirdParty.isConnect = true
-                        thirdParty.adminDisconnected = false;
-                        console.log('SignalR Connected');
+                        .withUrl(_SignalRURL, {
+                            skipNegotiation: true,
+                            transport: signalR.HttpTransportType.WebSockets,
+                            webSocket: {
+                                timeoutInMilliseconds: 60000
+                            }
+                        })
+                        .withAutomaticReconnect([0, 1000, 2000, 5000, 10000, 15000, 30000])
+                        .configureLogging(signalR.LogLevel.Information)
+                        .build();
+                        
+                        try {
+                            await newConnection.start();
+                            global.isSignalRStopped = false;
+                            global.isAdminStoppedSignalR = false;
+                            thirdParty.isConnect = true;
+                            thirdParty.adminDisconnected = false;
+                            console.log('SignalR Connected');
 
-                        //? Attach handlers for 'close' and 'error' events
-                        newConnection.onclose(async (error) => {
-                            const updatedThirdParty = _SignalRURLs.find(item => item.id === thirdParty.id);
-                            if (updatedThirdParty && updatedThirdParty?.adminDisconnected === false) {
-                            global.isSignalRStopped = true;
-                            errorLogger(
-                                _fastify,
-                                error?.message || "signalR onClose newConnection",
-                                "MockSignalR onClose --> signalrHandler/startSignalR",
-                                null
-                            );
-                            await reConnectScoreHub();
-                          }
-                        });
-
-                        newConnection.on("error", async (error) => {
-                          global.isSignalRStopped = true;
-                          errorLogger(
-                            _fastify,
-                            error?.message || "SignalR connection error",
-                            "MockSignalR error --> signalrHandler/startSignalR",
-                            null
-                        );
-                          await reConnectScoreHub();
-                        });
-
-                        //? Here We Update To Globale Data For SignalR Values
-                        newConnection.on('Rate', async (message, request) => {
-                            try {
-                                if (message.mi) {
-                                    await createUpdateGlobalSignalRData(message, request);
-                                    // Find if the market ID already exists in the rateQueue
-                                    const existingIndex = global.rateQueue.findIndex((item) => item.mi === message.mi);
-                                    if (existingIndex !== -1) {
-                                        global.rateQueue[existingIndex] = message;
-                                    } else {
-                                        global.rateQueue.push(message);
+                            //? Attach handlers for 'close' and 'error' events
+                            newConnection.onclose(async (error) => {
+                                const updatedThirdParty = _SignalRURLs.find(item => item.id === thirdParty.id);
+                                if (updatedThirdParty && updatedThirdParty?.adminDisconnected === false) {
+                                    global.isSignalRStopped = true;
+                                    errorLogger(
+                                        _fastify,
+                                        error?.message || "signalR onClose newConnection",
+                                        "MockSignalR onClose --> signalrHandler/startSignalR",
+                                        null
+                                    );
+                                    
+                                    // Check if connection is in the Disconnected state
+                                    if (newConnection.state === signalR.HubConnectionState.Disconnected) {
+                                        await reConnectScoreHub();
                                     }
-                                    global.rateQueue = global.rateQueue.filter((item) => item.ms === 1);
                                 }
-                            } catch (error) {
+                            });
+
+                            newConnection.on("error", async (error) => {
+                                global.isSignalRStopped = true;
                                 errorLogger(
                                     _fastify,
-                                    error,
-                                    "Error SignalrR --> signalrHandler/startSignalR/ConnectionEvent_Rate",
+                                    error?.message || "SignalR connection error",
+                                    "MockSignalR error --> signalrHandler/startSignalR",
                                     null
                                 );
-                            }
-                        });
+                                await reConnectScoreHub();
+                            });
 
-                        //? Function And Intervals
-                        await updateConnectionStatus(thirdParty, _fastify);
-                        await subScribeConnectMarketRate(_fastify);
+                            // Handle connection state changes
+                            newConnection.onreconnecting((error) => {
+                                errorLogger(
+                                    _fastify,
+                                    `Connection reconnecting due to: ${error?.message || "Unknown error"}`,
+                                    "MockSignalR reconnecting --> signalrHandler/startSignalR",
+                                    null
+                                );
+                            });
 
-                        updateMarketRateIntervalId = setInterval(() => {
-                          subScribeConnectMarketRate(_fastify);
-                        }, _SignalRInterwal || 10000); // 10 seconds interval
+                            newConnection.onreconnected((connectionId) => {
+                                global.rateSourceRefIDSet = new Set();
+                                global.isSignalRStopped = false;
+                                thirdParty.isConnect = true;
+                                // Resubscribe after reconnection
+                                subScribeConnectMarketRate(_fastify);
+                                errorLogger(
+                                    _fastify,
+                                    `Connection reconnected`,
+                                    "MockSignalR reconnected --> signalrHandler/startSignalR",
+                                    null
+                                );
+                            });
 
-                        IntervalId = setInterval(async () => {
-                          await processRateQueue();
-                        }, _RateUpdate);
+                            //? Here We Update To Globale Data For SignalR Values
+                            newConnection.on('Rate', async (message, request) => {
+                                try {
+                                    if (message.mi) {
+                                        await createUpdateGlobalSignalRData(message, request);
+                                        // Find if the market ID already exists in the rateQueue
+                                        const existingIndex = global.rateQueue.findIndex((item) => item.mi === message.mi);
+                                        if (existingIndex !== -1) {
+                                            global.rateQueue[existingIndex] = message;
+                                        } else {
+                                            global.rateQueue.push(message);
+                                        }
+                                        global.rateQueue = global.rateQueue.filter((item) => item.ms === 1);
+                                    }
+                                } catch (error) {
+                                    errorLogger(
+                                        _fastify,
+                                        error,
+                                        "Error SignalrR --> signalrHandler/startSignalR/ConnectionEvent_Rate",
+                                        null
+                                    );
+                                }
+                            });
 
-                        global.signalRConnections.push({ id: thirdParty.id, connection: newConnection });
-                        errorLogger(
-                            _fastify,
-                            "SignalR connected succssfully",
-                            "MockSignalR --> signalrHandler/startSignalR",
-                            null
-                        );
+                            //? Function And Intervals
+                            await updateConnectionStatus(thirdParty, _fastify);
+                            await subScribeConnectMarketRate(_fastify);
+
+                            updateMarketRateIntervalId = setInterval(() => {
+                                subScribeConnectMarketRate(_fastify);
+                            }, _SignalRInterwal || 10000); // 10 seconds interval
+
+                            IntervalId = setInterval(async () => {
+                                await processRateQueue();
+                            }, _RateUpdate);
+
+                            global.signalRConnections.push({ id: thirdParty.id, connection: newConnection });
+                            errorLogger(
+                                _fastify,
+                                "SignalR connected successfully",
+                                "MockSignalR --> signalrHandler/startSignalR",
+                                null
+                            );
+                        } catch (startError) {
+                            errorLogger(
+                                _fastify,
+                                startError.message,
+                                "Error starting SignalR connection --> signalrHandler/startSignalR",
+                                null
+                            );
+                            // Add the connection to global array even if it failed to start
+                            // This will help with reconnection attempts
+                            global.signalRConnections.push({ id: thirdParty.id, connection: newConnection });
+                            global.isSignalRStopped = true;
+                            await reConnectScoreHub();
+                        }
                     }
                 }
             }
@@ -382,76 +432,122 @@ function isSignalRStarted(fastify) {
 //reconnections SignalR is connection is NotConnected
 const reConnectScoreHub = async () => {
     try {
-      const isSON = global.tblConfigs.find((item) => item.key === configConstants.ISMARKETOODS_SIGNALRON)?.value;
-      const sRCount = global.tblConfigs.find((item) => item.key === configConstants.SIGNALRRECONNECTCOUNT)?.value;
-      const signalRURLs = global.tblThirdPartyApis.filter(
-        (item) =>
-          item.isActive === true &&
-          item.type === thirdPartyApiType.Socket &&
-          item.isDefault === true &&
-          item.adminDisconnected === false
-      );
-  
-      if (isSON !== "true" || global.isAdminStoppedSignalR === true) {
-        await stopSignalR(_fastify);
-        return;
-      }
-  
-      if (isSON === "true" && global.isAdminStoppedSignalR === false) {
-        let retryCount = 0;
-        const maxRetries = parseInt(sRCount, 10);
-  
-        while (retryCount < maxRetries) {
-          let allConnected = true;
-  
-          for (const connectionData of global.signalRConnections) {
-            const { connection, id } = connectionData;
-  
-            if (connection || connection.state !== signalR.HubConnectionState.Connected) {
-              try {
-                await connection.start();
-                global.rateSourceRefIDSet = new Set();
-                await subScribeConnectMarketRate(_fastify);
-                global.isSignalRStopped = false;
-  
-                let thirdParty = signalRURLs.find((item) => item.id === id);
-                if (thirdParty) {
-                  thirdParty.isConnect = true;
-                  thirdParty.adminDisconnected = false;
-                  await updateConnectionStatus(thirdParty, _fastify);
-                }
-  
-                console.log("SignalR Re-Connected");
-              } catch (err) {
-                allConnected = false;
-              }
-            }
-          }
-  
-          if (allConnected) {
-            console.log("SignalR Re-Connected");
+        const isSON = global.tblConfigs.find((item) => item.key === configConstants.ISMARKETOODS_SIGNALRON)?.value;
+        const sRCount = global.tblConfigs.find((item) => item.key === configConstants.SIGNALRRECONNECTCOUNT)?.value || 100;
+        const signalRURLs = global.tblThirdPartyApis.filter(
+            (item) =>
+            item.isActive === true &&
+            item.type === thirdPartyApiType.Socket &&
+            item.isDefault === true &&
+            item.adminDisconnected === false
+        );
+
+        if (isSON !== "true" || global.isAdminStoppedSignalR === true) {
+            await stopSignalR(_fastify);
             return;
-          }
-  
-            errorLogger(
-              _fastify,
-              "SignalR Re-connected succssfully",
-              "MockSignalR --> signalrHandler/reConnectScoreHub",
-              null
-            );
-          retryCount++;
-          await new Promise((resolve) => setTimeout(resolve, Math.min(1000 * 2 ** retryCount, 30000)));
         }
-      }
+
+        errorLogger(
+            _fastify,
+            "SignalR Re-Connecting.....",
+            "Error SignalR --> signalrHandler/reConnectScoreHub-retrycount",
+            null
+        );
+
+        if (isSON === "true" && global.isAdminStoppedSignalR === false) {
+            let retryCount = 0;
+            const maxRetries = parseInt(sRCount, 10) || 100;
+
+            while (retryCount < maxRetries) {
+                let allConnected = true;
+                let anyConnectionRetried = false;
+
+                for (const connectionData of global.signalRConnections) {
+                    const { connection, id } = connectionData;
+
+                    if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
+                        try {
+                            // Check if connection is already trying to connect
+                            if (connection.state === signalR.HubConnectionState.Connecting || 
+                                connection.state === signalR.HubConnectionState.Reconnecting) {
+                                allConnected = false;
+                                continue;
+                            }
+
+                            // If connection is in the Disconnected state, try to start it
+                            if (connection.state === signalR.HubConnectionState.Disconnected) {
+                                console.log(`Starting re-connection...`);
+                                await connection.start();
+                                anyConnectionRetried = true;
+                                global.rateSourceRefIDSet = new Set();
+                                await subScribeConnectMarketRate(_fastify);
+                                global.isSignalRStopped = false;
+
+                                let thirdParty = signalRURLs.find((item) => item.id === id);
+                                if (thirdParty) {
+                                    thirdParty.isConnect = true;
+                                    thirdParty.adminDisconnected = false;
+                                    await updateConnectionStatus(thirdParty, _fastify);
+                                }
+                                console.log(`SignalR Re-Connected`);
+                                errorLogger(
+                                    _fastify,
+                                    `SignalR Re-Connected successfully`,
+                                    "Error SignalR --> signalrHandler/reConnectScoreHub-retrycount",
+                                    null
+                                );
+                            }
+                        } catch (err) {
+                            errorLogger(
+                                _fastify,
+                                `Error reconnecting SignalR connection : ${err.message}`,
+                                "Error SignalR --> signalrHandler/reConnectScoreHub-retrycount",
+                                null
+                            );
+                            allConnected = false;
+                        }
+                    }
+                }
+
+                if (allConnected) {
+                    console.log("All SignalR connections Re-connected.");
+                    errorLogger(
+                        _fastify,
+                        "All SignalR connections Re-connected successfully.",
+                        "MockSignalR --> signalrHandler/reConnectScoreHub",
+                        null
+                    );
+                    return;
+                }
+
+                // If no connections were retried in this iteration, we should wait
+                // before the next retry attempt
+                if (!anyConnectionRetried) {
+                    retryCount++;
+                    // Exponential backoff with a cap at 30 seconds
+                    const waitTime = Math.min(1000 * 2 ** retryCount, 30000);
+                    await new Promise((resolve) => setTimeout(resolve, waitTime));
+                }
+            }
+
+            if (retryCount >= maxRetries) {
+                errorLogger(
+                    _fastify,
+                    `Failed to reconnect SignalR after ${maxRetries} attempts.`,
+                    "Error SignalR --> signalrHandler/reConnectScoreHub",
+                    null
+                );
+            }
+        }
     } catch (err) {
-      errorLogger(
-        _fastify,
-        err,
-        "Error SignalR --> signalrHandler/reConnectScoreHub",
-        null
-      );
+        errorLogger(
+            _fastify,
+            err.message,
+            "Error SignalR --> signalrHandler/reConnectScoreHub",
+            null
+        );
     }
-  };
+};
 
 // //reconnections SignalR is connection is NotConnected
 // const reConnectScoreHub = async () => {
