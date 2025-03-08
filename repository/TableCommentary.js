@@ -272,6 +272,7 @@ const insertCommentaryQuery = async (request, fastify) => {
 };
 
 const insertCommentaryTeams = async (request, fastify) => {
+  
   try {
     const data = request.body;
     return await fastify.db.query(
