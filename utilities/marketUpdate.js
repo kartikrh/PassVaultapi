@@ -82,7 +82,6 @@ const updateMarket = async (fastify) => {
                                 "wrStatus" as "status",
                                 "wrLastUpdate" as "lastUpdate",
                                 "wrData" as "data"
-                        
                             `,
                             {
                                  type: fastify.db.QueryTypes.UPDATE,
