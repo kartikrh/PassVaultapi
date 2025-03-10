@@ -76,6 +76,7 @@ const updateMarket = async (fastify) => {
                                     false
                               )::json
                              WHERE "wrID" IN (${marketToSuspend.map((m) => m.eventMarketId).join(",")})
+                             AND "wrStatus" NOT IN ($2,$3,$4,$5) 
                              RETURNING 
                                 "wrID" as "eventMarketId",
                                 "wrStatus" as "status",
@@ -85,7 +86,12 @@ const updateMarket = async (fastify) => {
                             `,
                             {
                                  type: fastify.db.QueryTypes.UPDATE,
-                                 bind: [EventMarketStatus.Suspend]
+                                 bind: [EventMarketStatus.Suspend, 
+                                        EventMarketStatus.Cancel,
+                                        EventMarketStatus.Close,
+                                        EventMarketStatus.Settled,
+                                        EventMarketStatus.Suspend 
+                                 ]
                             }
                           );
                           await fastify.db.query(
@@ -145,6 +151,7 @@ const updateMarket = async (fastify) => {
                                     false
                               )::json
                              WHERE "wrID" IN (${marketToClose.map((m) => m.eventMarketId).join(",")})
+                             AND "wrStatus" NOT IN ($2,$3,$4)
                              RETURNING 
                                 "wrID" as "eventMarketId",
                                 "wrStatus" as "status",
@@ -155,7 +162,11 @@ const updateMarket = async (fastify) => {
                             `,
                             {
                                  type: fastify.db.QueryTypes.UPDATE,
-                                 bind: [EventMarketStatus.Close]
+                                 bind: [EventMarketStatus.Close,
+                                        EventMarketStatus.Cancel,
+                                        EventMarketStatus.Close,
+                                        EventMarketStatus.Settled
+                                 ]
                             }
                           );
                           await fastify.db.query(
