@@ -114,6 +114,7 @@ const {
 // const { handleSitemapUpdate } = require("../utilities/SEOIndexing")
 const { getAllTournamentTeamPointsQuery } = require("../repository/TableTournmentTeamPoints");
 const { getPlayersBattingHistoryByIdQuery } = require("../repository/TablePlayerHistory");
+const { mergeAndSaveImage } = require("../utilities/imageMerge");
 
 
 const allCommentaryService = async (request, fastify) => {
@@ -532,6 +533,7 @@ const createCommentaryService = async (request, fastify) => {
           }),
         ];
         for (let info of data) {
+          console.log("info", info)
           let playerData = await insertCommentaryPlayers(
             {
               ...info,
@@ -541,7 +543,18 @@ const createCommentaryService = async (request, fastify) => {
             fastify,
             request
           );
-
+          const teamData = global.tblTeams.find((item) => item.teamId == playerData[0].teamId);
+          const playerImgData = global.tblPlayers.find((elem) => elem.playerId == playerData[0].playerId)
+          if(playerImgData.image && teamData.jersey) {
+            mergeAndSaveImage({
+              playerImage: playerImgData.image,
+              jersey: teamData.jersey,
+              playerName: playerImgData.playerName,
+              teamName: teamData.teamName,
+              commentaryPlayerId: playerData[0].commentaryPlayerId,
+              teamPlayerId: null,
+            }, fastify);
+          }
           if (info.playerId === request.body.team1Captain) {
             commentaryPlayerId.team1Captain = playerData[0].commentaryPlayerId;
           }
@@ -588,6 +601,7 @@ const createCommentaryService = async (request, fastify) => {
         }),
       ];
       for (let info of data) {
+        console.log("else info", info)
         let playerData = await insertCommentaryPlayers(
           {
             ...info,
@@ -597,6 +611,18 @@ const createCommentaryService = async (request, fastify) => {
           fastify,
           request
         );
+        const teamData = global.tblTeams.find((item) => item.teamId == playerData[0].teamId);
+        const playerImgData = global.tblPlayers.find((elem) => elem.playerId == playerData[0].playerId)
+        if(playerImgData.image && teamData.jersey) {
+          mergeAndSaveImage({
+            playerImage: playerImgData.image,
+            jersey: teamData.jersey,
+            playerName: playerImgData.playerName,
+            teamName: teamData.teamName,
+            commentaryPlayerId: playerData[0].commentaryPlayerId,
+            teamPlayerId: null,
+          }, fastify);
+        }
         if (info.playerId === request.body.team1Captain) {
           commentaryPlayerId.team1Captain = playerData[0].commentaryPlayerId;
         }
@@ -874,6 +900,7 @@ const updateCommentaryService = async (request, fastify) => {
           }),
         ];
         for (let info of data) {
+          console.log("update infor", info)
           // await insertCommentaryPlayers(
           //   info,
           //   request.body.currentInnings,
@@ -886,6 +913,18 @@ const updateCommentaryService = async (request, fastify) => {
             fastify,
             request
           );
+          const teamData = global.tblTeams.find((item) => item.teamId == info.teamId);
+          const playerImgData = global.tblPlayers.find((elem) => elem.playerId == info.playerId)
+          if(playerImgData.image && teamData.jersey) {
+            mergeAndSaveImage({
+              playerImage: playerImgData.image,
+              jersey: teamData.jersey,
+              playerName: playerImgData.playerName,
+              teamName: teamData.teamName,
+              commentaryPlayerId: info.commentaryPlayerId,
+              teamPlayerId: null,
+            }, fastify);
+          }
         }
       }
     } else {
@@ -927,6 +966,7 @@ const updateCommentaryService = async (request, fastify) => {
         }),
       ];
       for (let info of data) {
+        console.log("else update info", info)
         // await insertCommentaryPlayers(info, currentinning, fastify, request);
         await upsertCommentaryPlayers(
           info,
@@ -934,6 +974,18 @@ const updateCommentaryService = async (request, fastify) => {
           fastify,
           request
         );
+        const teamData = global.tblTeams.find((item) => item.teamId == info.teamId);
+        const playerImgData = global.tblPlayers.find((elem) => elem.playerId == info.playerId)
+        if(playerImgData.image && teamData.jersey) {
+          mergeAndSaveImage({
+            playerImage: playerImgData.image,
+            jersey: teamData.jersey,
+            playerName: playerImgData.playerName,
+            teamName: teamData.teamName,
+            commentaryPlayerId: info.commentaryPlayerId,
+            teamPlayerId: null,
+          }, fastify);
+        }
       }
     }
   }
@@ -1087,6 +1139,7 @@ const cloneCommentaryService = async (request, fastify) => {
           }),
         ];
         for (let info of data) {
+          console.log("clone info", info)
           let playerData = await insertCommentaryPlayers(
             {
               ...info,
@@ -1096,6 +1149,18 @@ const cloneCommentaryService = async (request, fastify) => {
             fastify,
             request
           );
+          const teamData = global.tblTeams.find((item) => item.teamId == playerData[0].teamId);
+          const playerImgData = global.tblPlayers.find((elem) => elem.playerId == playerData[0].playerId)
+          if(playerImgData.image && teamData.jersey) {
+            mergeAndSaveImage({
+              playerImage: playerImgData.image,
+              jersey: teamData.jersey,
+              playerName: playerImgData.playerName,
+              teamName: teamData.teamName,
+              commentaryPlayerId: playerData[0].commentaryPlayerId,
+              teamPlayerId: null,
+            }, fastify);
+          }
           if (playerData[0].playerId === request.body.team1Captain) {
             commentaryPlayer.team1Captain = playerData[0].commentaryPlayerId;
           }
@@ -1148,6 +1213,18 @@ const cloneCommentaryService = async (request, fastify) => {
           fastify,
           request
         );
+        const teamData = global.tblTeams.find((item) => item.teamId == palyerData[0].teamId);
+        const playerImgData = global.tblPlayers.find((elem) => elem.playerId == palyerData[0].playerId)
+        if(playerImgData.image && teamData.jersey) {
+          mergeAndSaveImage({
+            playerImage: playerImgData.image,
+            jersey: teamData.jersey,
+            playerName: playerImgData.playerName,
+            teamName: teamData.teamName,
+            commentaryPlayerId: palyerData[0].commentaryPlayerId,
+            teamPlayerId: null,
+          }, fastify);
+        }
         if (palyerData[0].playerId === request.body.team1Captain) {
           commentaryPlayer.team1Captain = palyerData[0].commentaryPlayerId;
         }
@@ -5014,8 +5091,8 @@ const commentaryDetailsByEventIdService = async (
     lawkt: "",
     rer: "",
     reb: "",
-    crr: "",
-    rrr: "",
+    crr: 0,
+    rrr: 0,
     cin: "",
     tmd: "",
     dis: "",
@@ -5134,7 +5211,7 @@ const commentaryDetailsByEventIdService = async (
         : commentaryTeamsOne[0].teamOver;
     const teamScore1 = commentaryTeamsOne[0]?.teamScore ?? '0';
     t1s = teamScore1 + "/" + wicket1 + " (" + overs1 + ")";
-    tpp1 = commentaryTeamsOne[0]?.teamPredictionPercentage ?? '0';
+    tpp1 = parseInt(commentaryTeamsOne[0]?.teamPredictionPercentage) || 0;
   }
 
   if (commentaryTeamsTwo.length > 0) {
@@ -5153,7 +5230,7 @@ const commentaryDetailsByEventIdService = async (
         : commentaryTeamsTwo[0].teamOver;
     const teamScore2 = commentaryTeamsTwo[0]?.teamScore ?? '0';
     t2s = teamScore2 + "/" + wicket1 + " (" + overs1 + ")";
-    tpp2 = commentaryTeamsTwo[0]?.teamPredictionPercentage ?? '0';
+    tpp2 = parseInt(commentaryTeamsTwo[0]?.teamPredictionPercentage) || 0;
   }
   //teams Images are Ser
   const _teamsC1 = await global.tblTeams.filter(
@@ -5189,8 +5266,8 @@ const commentaryDetailsByEventIdService = async (
     resultArr.lawkt = "";
     resultArr.rer = "";
     resultArr.reb = "";
-    resultArr.crr = "";
-    resultArr.rrr = "";
+    resultArr.crr = 0;
+    resultArr.rrr = 0;
     resultArr.cin = "";
     resultArr.tmd = "";
     resultArr.dis = "";
@@ -5256,8 +5333,8 @@ const commentaryDetailsByEventIdService = async (
     resultArr.lawkt = "";
     resultArr.rer = "";
     resultArr.reb = "";
-    resultArr.crr = "";
-    resultArr.rrr = "";
+    resultArr.crr = 0;
+    resultArr.rrr = 0;
     resultArr.cin = "";
     resultArr.tmd = "";
     resultArr.dis = "";
@@ -5301,8 +5378,8 @@ const commentaryDetailsByEventIdService = async (
         0 + "/" + commentaryTeamsOne[0]?.teamWicket ??
         0;
       scov = commentaryTeamsOne[0]?.teamOver ?? '0';
-      crr = commentaryTeamsOne[0]?.crr ?? '0';
-      rrr = commentaryTeamsOne[0]?.rrr ?? '0';
+      crr = parseFloat(commentaryTeamsOne[0]?.crr) || 0;
+      rrr = parseFloat(commentaryTeamsOne[0]?.rrr) || 0;
     } else {
       batid = commentaryTeamsTwo[0].teamId;
       ballid = commentaryTeamsOne[0].teamId;
@@ -5312,8 +5389,8 @@ const commentaryDetailsByEventIdService = async (
         0 + "/" + commentaryTeamsTwo[0]?.teamWicket ??
         0;
       scov = commentaryTeamsTwo[0]?.teamOver ?? '0';
-      crr = commentaryTeamsTwo[0]?.crr ?? '0';
-      rrr = commentaryTeamsTwo[0]?.rrr ?? '0';
+      crr = parseFloat(commentaryTeamsTwo[0]?.crr) || 0;
+      rrr = parseFloat(commentaryTeamsTwo[0]?.rrr) || 0;
     }
 
     const commentaryWicket = await global.tblCommentaryWicket
@@ -5631,8 +5708,8 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     lawkt: "",
     rer: "",
     reb: "",
-    crr: "",
-    rrr: "",
+    crr: 0,
+    rrr: 0,
     cin: "",
     tmd: "",
     dis: "",
@@ -5753,7 +5830,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
         : commentaryTeamsOne[0].teamOver;
     const teamScore1 = commentaryTeamsOne[0]?.teamScore ?? '0';
     t1s = teamScore1 + "/" + wicket1 + "(" + overs1 + ")";
-    tpp1 = commentaryTeamsOne[0]?.teamPredictionPercentage ?? '0';
+    tpp1 = parseInt(commentaryTeamsOne[0]?.teamPredictionPercentage) || 0;
   }
 
   if (commentaryTeamsTwo.length > 0) {
@@ -5771,7 +5848,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
         : commentaryTeamsTwo[0].teamOver;
     const teamScore2 = commentaryTeamsTwo[0]?.teamScore ?? '0';
     t2s = teamScore2 + "/" + wicket1 + "(" + overs1 + ")";
-    tpp2 = commentaryTeamsTwo[0]?.teamPredictionPercentage ?? '0';
+    tpp2 = parseInt(commentaryTeamsTwo[0]?.teamPredictionPercentage) || 0;
   }
   //teams Images are Ser
   const _teamsC1 = await global.tblTeams.filter(
@@ -5807,8 +5884,8 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     resultArr.lawkt = "";
     resultArr.rer = "";
     resultArr.reb = "";
-    resultArr.crr = "";
-    resultArr.rrr = "";
+    resultArr.crr = 0;
+    resultArr.rrr = 0;
     resultArr.cin = "";
     resultArr.tmd = "";
     resultArr.dis = "";
@@ -5863,8 +5940,8 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     resultArr.lawkt = "";
     resultArr.rer = "";
     resultArr.reb = "";
-    resultArr.crr = "";
-    resultArr.rrr = "";
+    resultArr.crr = 0;
+    resultArr.rrr = 0;
     resultArr.cin = "";
     resultArr.tmd = "";
     resultArr.dis = "";
@@ -5907,8 +5984,8 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
         0 + "/" + commentaryTeamsOne[0]?.teamWicket ??
         0;
       scov = commentaryTeamsOne[0]?.teamOver ?? '0';
-      crr = commentaryTeamsOne[0]?.crr ?? '0';
-      rrr = commentaryTeamsOne[0]?.rrr ?? '0';
+      crr = parseFloat(commentaryTeamsOne[0]?.crr) || 0;
+      rrr = parseFloat(commentaryTeamsOne[0]?.rrr) || 0;
     } else {
       batid = commentaryTeamsTwo[0].teamId;
       ballid = commentaryTeamsOne[0].teamId;
@@ -5918,8 +5995,8 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
         0 + "/" + commentaryTeamsTwo[0]?.teamWicket ??
         0;
       scov = commentaryTeamsTwo[0]?.teamOver ?? '0';
-      crr = commentaryTeamsTwo[0]?.crr ?? '0';
-      rrr = commentaryTeamsTwo[0]?.rrr ?? '0';
+      crr = parseFloat(commentaryTeamsTwo[0]?.crr) || 0;
+      rrr = parseFloat(commentaryTeamsTwo[0]?.rrr) || 0;
     }
 
     const commentaryWicket = await global.tblCommentaryWicket
@@ -6384,13 +6461,13 @@ const getMatchListByStatus = async (body, request, fastify) => {
       rrr = 0;
     } else {
       if (commentaryTeamsOne?.teamStatus == 1) {
-        crr = commentaryTeamsOne.crr;
-        rrr = commentaryTeamsOne.rrr;
+        crr = parseFloat(commentaryTeamsOne.crr);
+        rrr = parseFloat(commentaryTeamsOne.rrr);
         batid = commentaryTeamsOne.teamId;
         ballid = commentaryTeamsTwo.teamId;
       } else {
-        crr = commentaryTeamsTwo.crr;
-        rrr = commentaryTeamsTwo.rrr;
+        crr = parseFloat(commentaryTeamsOne.crr);
+        rrr = parseFloat(commentaryTeamsOne.rrr);
         batid = commentaryTeamsTwo.teamId;
         ballid = commentaryTeamsOne.teamId;
       }
@@ -6466,12 +6543,12 @@ const getMatchListByStatus = async (body, request, fastify) => {
       dis: item.displayStatus || "",
       rmk: item.rmk === null || item.rmk === undefined ? "" : item.rmk,
       // rmk: item.rmk || "",
-      te1crr: commentaryTeamsOne.crr || '0',
-      te2crr: commentaryTeamsTwo.crr || '0',
-      te1rrr: commentaryTeamsOne.rrr || '0',
-      te2rrr: commentaryTeamsTwo.rrr || '0',
-      crr: crr || '0',
-      rrr: rrr || '0',
+      te1crr: parseFloat(commentaryTeamsOne.crr) || 0,
+      te2crr: parseFloat(commentaryTeamsTwo.crr) || 0,
+      te1rrr: parseFloat(commentaryTeamsOne.rrr) || 0,
+      te2rrr: parseFloat(commentaryTeamsTwo.rrr) || 0,
+      crr: crr || 0,
+      rrr: rrr || 0,
       cst: item.commentaryStatus,
       res: item.result || "",
       tsi: [],
@@ -6627,14 +6704,14 @@ const getMatchDataByCId = async (data, request, fastify) => {
   }
   else {
     if (commentaryTeamsOne.teamStatus == 1) {
-      crr = commentaryTeamsOne.crr;
-      rrr = commentaryTeamsTwo.rrr;
+      crr = parseFloat(commentaryTeamsOne.crr);
+      rrr = parseFloat(commentaryTeamsTwo.rrr);
       batid = commentaryTeamsOne.teamId;
       ballid = commentaryTeamsTwo.teamId;
     }
     else {
-      crr = commentaryTeamsTwo.crr;
-      rrr = commentaryTeamsTwo.rrr;
+      crr = parseFloat(commentaryTeamsTwo.crr);
+      rrr = parseFloat(commentaryTeamsTwo.rrr);
       batid = commentaryTeamsTwo.teamId;
       ballid = commentaryTeamsOne.teamId;
     }
@@ -6677,12 +6754,12 @@ const getMatchDataByCId = async (data, request, fastify) => {
     t2s: teamScore2 || "",
     dis: com.displayStatus || "",
     rmk: com.rmk || "",
-    te1crr: commentaryTeamsOne.crr || '0',
-    te2crr: commentaryTeamsTwo.crr || '0',
-    te1rrr: commentaryTeamsOne.rrr || '0',
-    te2rrr: commentaryTeamsTwo.rrr || '0',
-    crr: crr || '0',
-    rrr: rrr || '0',
+    te1crr: parseFloat(commentaryTeamsOne.crr) || 0,
+    te2crr: parseFloat(commentaryTeamsTwo.crr) || 0,
+    te1rrr: parseFloat(commentaryTeamsOne.rrr) || 0,
+    te2rrr: parseFloat(commentaryTeamsTwo.rrr) || 0,
+    crr: crr || 0,
+    rrr: rrr || 0,
     cst: com.commentaryStatus,
     res: com.result || "",
     type,
@@ -6998,15 +7075,15 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
 
     let crr, rrr, BattingTeamId, BowlingTeamId, batId, bowlId;
     if (commentaryTeamsOne.teamStatus == 1) {
-      crr = commentaryTeamsOne.crr;
-      rrr = commentaryTeamsOne.rrr;
+      crr = parseFloat(commentaryTeamsOne.crr);
+      rrr = parseFloat(commentaryTeamsOne.rrr);
       BattingTeamId = commentaryTeamsOne.commentaryTeamId;
       BowlingTeamId = commentaryTeamsTwo.commentaryTeamId;
       batId = commentaryTeamsOne.teamId;
       bowlId = commentaryTeamsTwo.teamId;
     } else {
-      crr = commentaryTeamsTwo.crr;
-      rrr = commentaryTeamsTwo.rrr;
+      crr = parseFloat(commentaryTeamsTwo.crr);
+      rrr = parseFloat(commentaryTeamsTwo.rrr);
       BattingTeamId = commentaryTeamsTwo.commentaryTeamId;
       BowlingTeamId = commentaryTeamsOne.commentaryTeamId;
       batId = commentaryTeamsTwo.teamId;
@@ -7034,12 +7111,12 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
       t2s: teamScore2 || "",
       dis: commentary.displayStatus || "",
       rmk: commentary.rmk || "",
-      te1crr: commentaryTeamsOne.crr || '0',
-      te2crr: commentaryTeamsTwo.crr || '0',
-      te1rrr: commentaryTeamsOne.rrr || '0',
-      te2rrr: commentaryTeamsTwo.rrr || '0',
-      crr: crr || '0',
-      rrr: rrr || '0',
+      te1crr: parseFloat(commentaryTeamsOne.crr) || 0,
+      te2crr: parseFloat(commentaryTeamsTwo.crr) || 0,
+      te1rrr: parseFloat(commentaryTeamsOne.rrr) || 0,
+      te2rrr: parseFloat(commentaryTeamsTwo.rrr) || 0,
+      crr: crr || 0,
+      rrr: rrr || 0,
       cst: commentary.commentaryStatus,
       bowi: BowlingTeamId,
       bati: BattingTeamId,
@@ -7559,11 +7636,11 @@ const getCommenrtySquadDetailsService = async (request, fastify) => {
 
   let crr, rrr;
   if (commentaryTeamsOne.teamStatus == 1) {
-    crr = commentaryTeamsOne.crr;
-    rrr = commentaryTeamsOne.rrr;
+    crr = parseFloat(commentaryTeamsOne.crr);
+    rrr = parseFloat(commentaryTeamsOne.rrr);
   } else {
-    crr = commentaryTeamsTwo.crr;
-    rrr = commentaryTeamsTwo.rrr;
+    crr = parseFloat(commentaryTeamsTwo.crr);
+    rrr = parseFloat(commentaryTeamsTwo.rrr);
   }
 
   let es = {
@@ -7824,11 +7901,11 @@ const getCommentaryTeamsListService = async (request, fastify) => {
 
   let crr, rrr;
   if (commentaryTeamsOne.teamStatus == 1) {
-    crr = commentaryTeamsOne.crr;
-    rrr = commentaryTeamsOne.rrr;
+    crr = parseFloat(commentaryTeamsOne.crr);
+    rrr = parseFloat(commentaryTeamsOne.rrr);
   } else {
-    crr = commentaryTeamsTwo.crr;
-    rrr = commentaryTeamsTwo.rrr;
+    crr = parseFloat(commentaryTeamsTwo.crr);
+    rrr = parseFloat(commentaryTeamsTwo.rrr);
   }
 
   let es = {
@@ -8027,13 +8104,13 @@ const getNodeEventbyEidService = async (request, fastify) => {
 
       let crr, rrr, BattingTeamId, BowlingTeamId;
       if (commentaryTeamsOne.teamStatus == 1) {
-        crr = commentaryTeamsOne.crr;
-        rrr = commentaryTeamsOne.rrr;
+        crr = parseFloat(commentaryTeamsOne.crr);
+        rrr = parseFloat(commentaryTeamsOne.rrr);
         BattingTeamId = commentaryTeamsOne.teamId;
         BowlingTeamId = commentaryTeamsTwo.teamId;
       } else {
-        crr = commentaryTeamsTwo.crr;
-        rrr = commentaryTeamsTwo.rrr;
+        crr = parseFloat(commentaryTeamsTwo.crr);
+        rrr = parseFloat(commentaryTeamsTwo.rrr);
         BattingTeamId = commentaryTeamsTwo.teamId;
         BowlingTeamId = commentaryTeamsOne.teamId;
       }

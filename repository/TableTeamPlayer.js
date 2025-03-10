@@ -104,8 +104,87 @@ const deleteTeamPlayerByPlayerIdQuery = async (playerId, fastify, request) => {
   }
 };
 
+const getTeamPlayerByPlayerIdQuery = async (refPlayerId, fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `SELECT 
+        "wrTeamPlayerId" as "teamPlayerId",
+        "wrTeamId" as "teamId",
+        "wrRefPlayerId" as "refPlayerId",
+        "wrJerseyPlayerImage" as "jerseyPlayerImage"
+      FROM "tblTeamPlayers"
+      WHERE "wrRefPlayerId" = $1 AND "wrIsDeleted" = FALSE`,
+      {
+        bind: [refPlayerId],
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+    return result;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableTeamPlayer/getTeamPlayerByPlayerIdQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const getTeamPlayerByTeamIdQuery = async (teamId, fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `SELECT 
+        "wrTeamPlayerId" as "teamPlayerId",
+        "wrTeamId" as "teamId",
+        "wrRefPlayerId" as "refPlayerId",
+        "wrJerseyPlayerImage" as "jerseyPlayerImage"
+      FROM "tblTeamPlayers"
+      WHERE "wrTeamId" = $1 AND "wrIsDeleted" = FALSE`,
+      {
+        bind: [teamId],
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+    return result;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableTeamPlayer/getTeamPlayerByTeamIdQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const updateTeamPlayerImageQuery = async (data, fastify) => {
+  try {
+    return await fastify.db.query(
+      `UPDATE "tblTeamPlayers" SET
+        "wrJerseyPlayerImage" = $2
+      WHERE "wrTeamPlayerId" = $1`,
+      {
+        bind: [data.teamPlayerId, data.jerseyPlayerImage],
+        type: fastify.db.QueryTypes.UPDATE,
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableTeamPlayer/updateTeamPlayerImageQuery",
+      null
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   insertTeamPlayerQuery,
   deleteTeamPlayerByTeamIdQuery,
   deleteTeamPlayerByPlayerIdQuery,
+  getTeamPlayerByPlayerIdQuery,
+  getTeamPlayerByTeamIdQuery,
+  updateTeamPlayerImageQuery,
 };
