@@ -9,6 +9,7 @@ const {
 const {
   insertTeamPlayerQuery,
   deleteTeamPlayerByPlayerIdQuery,
+  getTeamPlayerByPlayerIdQuery,
 } = require("../repository/TableTeamPlayer");
 const { getAllPlayersByTeamIdQuery, getAllPlayersByCompetitionIdTeamIdQuery } = require("../repository/TableTeams");
 const {
@@ -20,6 +21,7 @@ const { PROJECT_NAME } = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
 const { deleteTournamentPlayersByPlayerIdQuery } = require("../repository/TableTournamentsTeamPlayers");
 const { deleteAwardsByPlayerIdQuery } = require("../repository/TableCommentaryAward");
+const { mergeAndSaveImage } = require("../utilities/imageMerge");
 
 const allPlayerService = async (request,fastify) => {
   const { isActive, eventTypeId , teamId} = request.body;
@@ -190,7 +192,7 @@ const insertPlayerService = async (request, fastify) => {
           if (hashArray[i]) {
             const teamID = hashArray[i].replace(/[\[\]"]/g, "");
             if(teamID !== "") {
-             await insertTeamPlayerQuery(
+             const teamPlayerData = await insertTeamPlayerQuery(
               {
                 teamId: parseInt(teamID),
                 refPlayerId: result.playerId,
@@ -199,6 +201,17 @@ const insertPlayerService = async (request, fastify) => {
               fastify,
               request
             );
+            const teamData = global.tblTeams.find((item) => item.teamId == teamID);
+            if(request.body.image && teamData.jersey) {
+              mergeAndSaveImage({
+                playerImage: request.body.image,
+                jersey: teamData.jersey,
+                playerName: request.body.playerName,
+                teamName: teamData.teamName,
+                teamPlayerId: teamPlayerData.teamPlayerId,
+                commentaryPlayerId: null,
+              }, fastify);
+            }
             }
           }
         }
@@ -346,6 +359,14 @@ const updatePlayerService = async (request, fastify) => {
   global.tblPlayers[index] = body;
 
   if (request.body.teamId) {
+    const teamPlayersData = await getTeamPlayerByPlayerIdQuery(request.body.playerId, fastify, request);
+    for (const playerData of teamPlayersData) {
+      if (playerData && playerData?.jerseyPlayerImage) {
+        await removeImageFromServer({
+          path: playerData.jerseyPlayerImage,
+        });
+      }
+    }
     await deleteTeamPlayerByPlayerIdQuery(
       request.body.playerId,
       fastify,
@@ -362,7 +383,7 @@ const updatePlayerService = async (request, fastify) => {
           if (hashArray[i]) {
             const teamID = hashArray[i].replace(/[\[\]"]/g, "");
             if(teamID !== ""){
-              await insertTeamPlayerQuery(
+              const teamPlayerData = await insertTeamPlayerQuery(
                 {
                   teamId: parseInt(teamID),
                   refPlayerId: request.body.playerId,
@@ -371,6 +392,17 @@ const updatePlayerService = async (request, fastify) => {
                 fastify,
                 request
               );
+              const teamData = global.tblTeams.find((item) => item.teamId == teamID);
+              if(body.image && teamData.jersey) {
+                mergeAndSaveImage({
+                  playerImage: body.image,
+                  jersey: teamData.jersey,
+                  playerName: body.playerName,
+                  teamName: teamData.teamName,
+                  teamPlayerId: teamPlayerData.teamPlayerId,
+                  commentaryPlayerId: null,
+                }, fastify);
+              }
             }
           }
         }
@@ -418,6 +450,14 @@ const deletePlayerService = async (request, fastify) => {
   const { playerId } = request.body;
 
   for (const id of playerId) {
+  const teamPlayersData = await getTeamPlayerByPlayerIdQuery(id, fastify, request);
+    for (const playerData of teamPlayersData) {
+      if (playerData && playerData?.jerseyPlayerImage) {
+        await removeImageFromServer({
+          path: playerData.jerseyPlayerImage,
+        });
+      }
+    }
     await deleteTeamPlayerByPlayerIdQuery(id, fastify, request);
   }
   // delete images

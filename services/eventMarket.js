@@ -60,6 +60,8 @@ const {
   cancelMarketByATQuery1,
   getRsMarketQuery,
   upSendMarketDataQuery,
+  upSusTimeQuery,
+  upCloseTimeQuery,
 } = require("../repository/TableEventMarkets");
 const { getRunnerByIdQuery, setResultInRunnerMarketQuery, getRunnerByMarketQuery } = require("../repository/TableMarketRunner");
 const configConstants = require("../utilities/configConstants");
@@ -3626,6 +3628,32 @@ const globalEventMarketDataWithMarketIdsService = async (request, fastify) => {
   });
   return eventMarketData;
 }
+const upSusTimeDataService = async (request, fastify) => {
+  const markets = await upSusTimeQuery(request.body, request, fastify);
+  for (const item of markets) {
+    let index = global.tblEventMarketsV2.findIndex(
+      (elem) => elem.eventMarketId === item.eventMarketId
+    );
+    if(index !== -1){
+      global.tblEventMarketsV2[index].afterSuspendTime = item.afterSuspendTime;
+      global.tblEventMarketsV2[index].lastUpdate = item.lastUpdate;
+    }
+  }
+  return "Market updated successfully";
+}
+const upCloseTimeDataService = async (request, fastify) => {
+  const markets = await upCloseTimeQuery(request.body, request, fastify);
+  for (const item of markets) {
+    let index = global.tblEventMarketsV2.findIndex(
+      (elem) => elem.eventMarketId === item.eventMarketId
+    );
+    if(index !== -1){
+      global.tblEventMarketsV2[index].afterCloseTime = item.afterCloseTime;
+      global.tblEventMarketsV2[index].lastUpdate = item.lastUpdate;
+    }
+  }
+  return "Market updated successfully";
+}
 module.exports = {
   getDetailsByCIdService,
   getAllEventMarketsService,
@@ -3679,5 +3707,7 @@ module.exports = {
   globalEventMarketDataWithCommIdService,
   globalEventMarketDataWithMarketIdsService,
   handleMarketByDLSService,
-  upSendMarketDataService
+  upSendMarketDataService,
+  upSusTimeDataService,
+  upCloseTimeDataService
 };
