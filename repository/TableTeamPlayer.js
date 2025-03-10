@@ -16,6 +16,34 @@ const getAllTeamPlayersQuery = async (fastify) => {
   );
 };
 
+const getAllTeamPlayersByTeamIdAndPlayerIdQuery = async (data, fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `SELECT 
+        "wrTeamPlayerId" as "teamPlayerId",
+        "wrTeamId" as "teamId",
+        "wrRefPlayerId" as "refPlayerId",
+        "wrJerseyPlayerImage" as "jerseyPlayerImage"
+      FROM "tblTeamPlayers"
+      WHERE "wrRefPlayerId" = $1 AND "wrTeamId" = $2
+      AND "wrIsDeleted" = FALSE`,
+      {
+        bind: [data.playerId, data.teamId],
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+    return result[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableTeamPlayer/getAllTeamPlayersByTeamIdAndPlayerIdQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 const insertTeamPlayerQuery = async (data, fastify, request) => {
   try {
     const result = await fastify.db.query(
@@ -182,6 +210,7 @@ const updateTeamPlayerImageQuery = async (data, fastify) => {
 
 module.exports = {
   insertTeamPlayerQuery,
+  getAllTeamPlayersByTeamIdAndPlayerIdQuery,
   deleteTeamPlayerByTeamIdQuery,
   deleteTeamPlayerByPlayerIdQuery,
   getTeamPlayerByPlayerIdQuery,

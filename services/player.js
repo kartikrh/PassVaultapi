@@ -548,6 +548,34 @@ const updatePlayerStatsService = async (request, fastify) => {
   return UnsavePlayers;
 };
 
+const mergePlayerImageAndJerseyService = async (request, fastify) => {
+  for(const player of request.body.playerId){
+    const checkPlayerId = global.tblPlayers.find(
+      (item) => item.playerId === player
+    );
+    if (!checkPlayerId) {
+      continue;
+    }
+    const teamPlayersData = await getTeamPlayerByPlayerIdQuery(player, fastify, request);
+    if (teamPlayersData.length > 0) {
+      for (const playerData of teamPlayersData) {
+        const teamData = global.tblTeams.find((item) => item.teamId == playerData.teamId);
+        if(checkPlayerId?.image && teamData?.jersey) {
+          mergeAndSaveImage({
+            playerImage: checkPlayerId.image,
+            jersey: teamData.jersey,
+            playerName: checkPlayerId.playerName,
+            teamName: teamData.teamName,
+            teamPlayerId: playerData.teamPlayerId,
+            commentaryPlayerId: null,
+          }, fastify);
+        }
+      }
+    }
+  }
+  return "Player image(s) and Jersey image(s) merged successfully";
+};
+
 module.exports = {
   allPlayerService,
   playerByIdService,
@@ -558,5 +586,6 @@ module.exports = {
   allPlayerByTeamService,
   updatePlayerStatsService,
   updateIsSystemPlayerService,
-  allPlayerByCompetitionAndTeamService
+  allPlayerByCompetitionAndTeamService,
+  mergePlayerImageAndJerseyService,
 };
