@@ -168,7 +168,8 @@ const roleByIdQuery = async (data, parentRoleId, isSuperAdmin, fastify) => {
      COALESCE(tp."wrIsAdd",false) as "isAddPermission",
     COALESCE(tp."wrIsEdit",false) as "isEditPermission",
     COALESCE(tp."wrIsDelete",false) as "isDeletePermission",
-    COALESCE(tp."wrIsView",false) as "isViewPermission"
+    COALESCE(tp."wrIsView",false) as "isViewPermission",
+    tt."wrDisplayOrder" as "displayOrder"
     from "tblTabs" tt 
     left join (
       select * from "tblPermissions" where "wrRoleId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)

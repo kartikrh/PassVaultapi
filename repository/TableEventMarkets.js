@@ -5703,7 +5703,79 @@ const upSendMarketDataQuery = async (data, request, fastify) => {
     );
     throw new Error(error.message);
   }
-
+}
+const upSusTimeQuery = async (data, request, fastify) => {
+  try {
+    const q1 = `UPDATE "tblEventMarkets"
+    SET "wrAfterSuspendTime" = $1,
+    "wrLastUpdate" = now()::timestamp
+    WHERE "wrID" = ANY($2)
+    AND "wrStatus" NOT IN ($3, $4, $5,$6)
+    AND "wrIsDeleted" = false
+    RETURNING "wrID" as "eventMarketId",
+    "wrAfterSuspendTime" as "afterSuspendTime",
+    "wrLastUpdate" as "lastUpdate"
+    `;
+  
+    const result = await fastify.db.query(q1, {
+      bind: [
+        new Date(data.afterSuspendTime),
+        data.eventMarketId,
+        EventMarketStatus.Suspend,
+        EventMarketStatus.Close,
+        EventMarketStatus.Settled,
+        EventMarketStatus.Cancel
+      ],
+      type: fastify.db.QueryTypes.SELECT,
+    });
+    return result;
+  } catch (error) {
+    console.log(error)
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/upSusTimeQuery",
+      request
+    );
+    throw new Error(error.message);
+    
+  }
+}
+const upCloseTimeQuery = async (data, request, fastify) => {
+  try {
+    const q1 = `UPDATE "tblEventMarkets"
+    SET "wrAfterCloseTime" = $1,
+    "wrLastUpdate" = now()::timestamp
+    WHERE "wrID" = ANY($2)
+    AND "wrStatus" NOT IN ($3, $4, $5)
+    AND "wrAfterCloseTime" IS NULL
+    AND "wrIsDeleted" = false
+    RETURNING "wrID" as "eventMarketId",
+    "wrAfterCloseTime" as "afterCloseTime",
+    "wrLastUpdate" as "lastUpdate"
+  `;
+  
+    const result = await fastify.db.query(q1, {
+      bind: [
+        data.afterCloseTime,
+        data.eventMarketId,
+        EventMarketStatus.Close,
+        EventMarketStatus.Settled,
+        EventMarketStatus.Cancel
+      ],
+      type: fastify.db.QueryTypes.SELECT,
+    });
+    return result;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/upCloseTimeQuery",
+      request
+    );
+    throw new Error(error.message);
+    
+  }
 }
 module.exports = {
   getAllEventMarketsV2Query,
@@ -5791,6 +5863,8 @@ module.exports = {
   getRsMarketQuery,
   getAllEventMarketsV2ByIdQuery,
   getMarketsByCIdV1Query,
-  upSendMarketDataQuery
+  upSendMarketDataQuery,
+  upSusTimeQuery,
+  upCloseTimeQuery
 }
 

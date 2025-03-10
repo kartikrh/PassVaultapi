@@ -4249,6 +4249,42 @@ const EventMarket = {
       },
     },
   },
+  upSusTime : {
+    schema : {
+      tags : ["EventMarket"],
+      description : "update suspend time",
+      security : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          eventMarketId : {
+            type : "array",
+            items : {type : "integer"},
+          },
+          afterSuspendTime : {type : "string"}
+        },
+        required : ["eventMarketId", "afterSuspendTime"]
+      }
+    }
+  },
+  upCloseTime : {
+    schema : {
+      tags : ["EventMarket"],
+      description : "update close time",
+      security : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          eventMarketId : {
+            type : "array",
+            items : {type : "integer"},
+          },
+          afterCloseTime : {type : "string"}
+        },
+        required : ["eventMarketId", "afterCloseTime"]
+      }
+    }
+  },
   upSendMarket : {
     schema : {
       tags : ["EventMarket"],
