@@ -1046,8 +1046,8 @@ const getAllCommentaryTeamsQuery = async (fastify) => {
         tct."wrTeamScore" as "teamScore",
         tct."wrTeamOver" as "teamOver",
         tct."wrTeamWicket" as "teamWicket",
-        tct."wrCrr" as "crr",
-        tct."wrRrr" as "rrr",
+        COALESCE(CAST(tct."wrCrr" AS FLOAT), 0) AS "crr",
+        COALESCE(CAST(tct."wrRrr" AS FLOAT), 0) AS "rrr",
         tct."wrTeamStatus" as "teamStatus",
         tct."wrTeamTrialRuns" as "teamTrialRuns",
         tct."wrTeamLeadRuns" as "teamLeadRuns",
@@ -1098,8 +1098,8 @@ const getAllCommentaryTeamsDataQuery = async (whereCondition = null, fastify) =>
   "wrTeamScore" as "teamScore",
   "wrTeamOver" as "teamOver",
   "wrTeamWicket" as "teamWicket",
-  "wrCrr" as "crr",
-  "wrRrr" as "rrr",
+  COALESCE(CAST("wrCrr" AS FLOAT), 0) AS "crr",
+  COALESCE(CAST("wrRrr" AS FLOAT), 0) AS "rrr",
   "wrTeamStatus" as "teamStatus",
   "wrTeamTrialRuns" as "teamTrialRuns",
   "wrTeamLeadRuns" as "teamLeadRuns",
@@ -1213,7 +1213,8 @@ const getAllCommentaryPlayerQuery = async (fastify) => {
         tcp."wrBoundary" as "boundary",
         tcp."wrPlayerBallFaced" as "playerBallFaced",
         tp."wrPlayerTypeId" as "playerTypeId",
-        tpt."wrPlayerType" as "playerType"
+        tpt."wrPlayerType" as "playerType",
+        tcp."wrJerseyPlayerImage" as "jerseyPlayerImage"
     from "tblCommentaryPlayers" AS tcp
     LEFT JOIN "tblPlayers" AS tp ON tcp."wrPlayerId" = tp."wrPlayerId"
     LEFT JOIN "tblPlayerTypes" AS tpt ON tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
@@ -1294,7 +1295,8 @@ const getAllCommentaryPlayerDataQuery = async (whereCondition = null, fastify) =
         tcp."wrBoundary" as "boundary",
         tcp."wrPlayerBallFaced" as "playerBallFaced",
         tp."wrPlayerTypeId" as "playerTypeId",
-        tpt."wrPlayerType" as "playerType"
+        tpt."wrPlayerType" as "playerType",
+        tcp."wrJerseyPlayerImage" as "jerseyPlayerImage"
     from "tblCommentaryPlayers" AS tcp
     LEFT JOIN "tblPlayers" AS tp ON tcp."wrPlayerId" = tp."wrPlayerId"
     LEFT JOIN "tblPlayerTypes" AS tpt ON tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
@@ -4534,12 +4536,12 @@ const getAllCompletedCommentaryQuery = async (request, fastify) => {
           ) AS t2s,
           tc."wrDisplayStatus" AS "dis",
           COALESCE(tc."wrRmk", '') AS "rmk",
-          COALESCE(tct1."wrCrr", 0) AS "te1crr",
-          COALESCE(tct2."wrCrr", 0) AS "te2crr",
-          COALESCE(tct1."wrRrr", 0) AS "te1rrr",
-          COALESCE(tct2."wrRrr", 0) AS "te2rrr",
-          '0' AS crr,
-          '0' AS rrr,
+          COALESCE(CAST(tct1."wrCrr" AS FLOAT), 0) AS "te1crr",
+          COALESCE(CAST(tct2."wrCrr" AS FLOAT), 0) AS "te2crr",
+          COALESCE(CAST(tct1."wrRrr" AS FLOAT), 0) AS "te1rrr",
+          COALESCE(CAST(tct2."wrRrr" AS FLOAT), 0) AS "te2rrr",
+          0 AS crr,
+          0 AS rrr,
           tc."wrCommentaryStatus" AS "cst",
           COALESCE(tc."wrCommentaryResult", '') AS "res",
           CASE 
@@ -4604,6 +4606,7 @@ const getAllCompletedCommentaryQuery = async (request, fastify) => {
       }
     );
   } catch (err) {
+    console.log("error", err)
     errorLogger(
       fastify,
       err.message,
@@ -4776,8 +4779,8 @@ const getAllCommentaryTeamsDataQueryV1 = async (whereCondition = null, fastify) 
         "wrTeamScore" as "tescore",
         "wrTeamOver" as "teovr",
         "wrTeamWicket" as "tewic",
-        "wrCrr" as "crr",
-        "wrRrr" as "rrr",
+        COALESCE(CAST("wrCrr" AS FLOAT), 0) AS "crr",
+        COALESCE(CAST("wrRrr" AS FLOAT), 0) AS "rrr",
         "wrTeamStatus" as "testa",
         "wrTeamTrialRuns" as "tetriruns",
         "wrTeamLeadRuns" as "teleadruns",
@@ -4864,7 +4867,8 @@ const getAllCommentaryPlayerDataQueryV1 = async (whereCondition = null, fastify)
         tcp."wrBoundary" as "bundry",
         tcp."wrPlayerBallFaced" as "playbalfaced",
         tp."wrPlayerTypeId" as "pltypid",
-        tpt."wrPlayerType" as "pltyp"
+        tpt."wrPlayerType" as "pltyp",
+        tcp."wrJerseyPlayerImage" as "jryPlyImg"
     from "tblCommentaryPlayers" AS tcp
     LEFT JOIN "tblPlayers" AS tp ON tcp."wrPlayerId" = tp."wrPlayerId"
     LEFT JOIN "tblPlayerTypes" AS tpt ON tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
@@ -5035,6 +5039,29 @@ const getAllCommentaryPartnershipDataQueryV1 = async (whereCondition = null, fas
   );
 }
 
+const updateCommentaryPlayerJerseyImageQuery = async (data, fastify) => {
+  try {
+    return await fastify.db.query(
+      `UPDATE "tblCommentaryPlayers" SET
+        "wrJerseyPlayerImage" = $2
+      WHERE
+        "wrCommentaryPlayerId" = $1 AND "wrIsDelete" = FALSE`,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [data.commentaryPlayerId, data.jerseyPlayerImage],
+      }
+    );
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCommentary/upsertCommentaryPlayers",
+      null
+    );
+    throw new Error(error.message);
+  }
+};
+
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -5135,4 +5162,5 @@ module.exports = {
   getAllCommentaryBallByBallDataQueryV1,
   getAllCommentaryWicketDataQueryV1,
   getAllCommentaryPartnershipDataQueryV1,
+  updateCommentaryPlayerJerseyImageQuery,
 };

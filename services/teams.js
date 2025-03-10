@@ -2,6 +2,7 @@ const { deleteTeamCompetitionByTeamIdQuery, insertTeamCompetitionQuery } = requi
 const {
   insertTeamPlayerQuery,
   deleteTeamPlayerByTeamIdQuery,
+  getTeamPlayerByTeamIdQuery,
 } = require("../repository/TableTeamPlayer");
 const {
   insertTeamQuery,
@@ -19,6 +20,7 @@ const { PROJECT_NAME } = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
 const { deletePlayersByTeamIdQuery } = require("../repository/TableTournamentsTeamPlayers")
 const { deletePointsByTeamIdQuery } = require("../repository/TableTournmentTeamPoints")
+const { mergeAndSaveImage } = require("../utilities/imageMerge");
 const allTeamsService = async () => {
   return global.tblTeams;
 };
@@ -165,7 +167,7 @@ const createTeamService = async (request, fastify) => {
           if (hashArray[i]) {
             const playerID = hashArray[i].replace(/[\[\]"]/g, "");
             if (playerID !== "") {
-              await insertTeamPlayerQuery(
+              const teamPlayerData = await insertTeamPlayerQuery(
                 {
                   teamId: data.teamId,
                   refPlayerId: playerID,
@@ -174,6 +176,18 @@ const createTeamService = async (request, fastify) => {
                 fastify,
                 request
               );
+
+            const playerData = global.tblPlayers.find((item) => item.playerId == playerID);
+            if(request.body.jersey && playerData.image) {
+              mergeAndSaveImage({
+                jersey: request.body.jersey,
+                playerImage: playerData.image,
+                playerName: playerData.playerName,
+                teamName: request.body.teamName,
+                teamPlayerId: teamPlayerData.teamPlayerId,
+                commentaryPlayerId: null,
+              }, fastify);
+            }
             }
           }
         }
@@ -306,6 +320,14 @@ const updateTeamService = async (request, fastify) => {
   global.tblTeams[index] = body;
 
   if (request.body.playerId) {
+    const teamPlayersData = await getTeamPlayerByTeamIdQuery(body.teamId, fastify, request);
+      for (const teamData of teamPlayersData) {
+      if (teamData && teamData?.jerseyPlayerImage) {
+        await removeImageFromServer({
+          path: teamData.jerseyPlayerImage,
+        });
+      }
+    }
     await deleteTeamPlayerByTeamIdQuery(body.teamId, fastify, request);
 
     const hashString = request.body.playerId;
@@ -318,7 +340,7 @@ const updateTeamService = async (request, fastify) => {
         if (hashArray[i]) {
           const playerID = hashArray[i].replace(/[\[\]"]/g, "");
           if (playerID !== "") {
-            await insertTeamPlayerQuery(
+            const teamPlayerData = await insertTeamPlayerQuery(
               {
                 teamId: body.teamId,
                 refPlayerId: playerID,
@@ -327,6 +349,18 @@ const updateTeamService = async (request, fastify) => {
               fastify,
               request
             );
+
+            const playerData = global.tblPlayers.find((item) => item.playerId == playerID);
+            if(body.jersey && playerData.image) {
+              mergeAndSaveImage({
+                jersey: body.jersey,
+                playerImage: playerData.image,
+                playerName: playerData.playerName,
+                teamName: body.teamName,
+                teamPlayerId: teamPlayerData.teamPlayerId,
+                commentaryPlayerId: null,
+              }, fastify);
+            }
           }
         }
       }
@@ -397,6 +431,14 @@ const deleteTeamService = async (request, fastify) => {
   await deleteTeamQuery(teamId, fastify, request);
 
   for (const team of teamId) {
+    const teamPlayersData = await getTeamPlayerByTeamIdQuery(team, fastify, request);
+      for (const teamData of teamPlayersData) {
+      if (teamData && teamData?.jerseyPlayerImage) {
+        await removeImageFromServer({
+          path: teamData.jerseyPlayerImage,
+        });
+      }
+    }
     await deleteTeamPlayerByTeamIdQuery(team, fastify, request);
     // await deleteTeamCompetitionByTeamIdQuery(team, fastify, request);
   }
