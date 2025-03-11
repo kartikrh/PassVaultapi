@@ -664,7 +664,9 @@ const MarketTypeCategories = {
   "PARTNERSHIPBOUNDARIES": 32,
   "WICKETLOSTBALLS": 33,
   "ODDEVEN": 35,
-  "TOTALEVENTRUN": 36
+  "TOTALEVENTRUN": 36,
+  "TOPBOWLER": 37,
+  "TOPBATSMAN": 38,
 }
 
 const ModuleTypes = {
