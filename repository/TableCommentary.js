@@ -462,7 +462,7 @@ const upsertCommentaryPlayers = async (
   request
 ) => {
   try {
-    return await fastify.db.query(
+    const result = await fastify.db.query(
       `WITH upsert AS (
       UPDATE "tblCommentaryPlayers"
       SET
@@ -472,7 +472,7 @@ const upsertCommentaryPlayers = async (
         AND "wrTeamId" = $2
         AND "wrPlayerId" = $3
         AND "wrCurrentInnings" = $5
-      RETURNING *
+      RETURNING "wrCommentaryPlayerId"
     )
     INSERT INTO "tblCommentaryPlayers" ("wrCommentaryId", "wrTeamId", "wrPlayerId", "wrPlayerName", "wrDisplayOrder", "wrCurrentInnings",
     "wrBatsmanAverage", "wrBatsmanPreviousStrikeRate", "wrBowlerPreviousEconomy", "wrBowlerAverage")
@@ -487,7 +487,8 @@ const upsertCommentaryPlayers = async (
       (SELECT "wrBatsmanStrikeRate" FROM "tblPlayers" WHERE "wrPlayerId" = $3),
       (SELECT "wrBowlerEconomy" FROM "tblPlayers" WHERE "wrPlayerId" = $3),
       (SELECT "wrBowlerAverage" FROM "tblPlayers" WHERE "wrPlayerId" = $3)
-    WHERE NOT EXISTS (SELECT 1 FROM upsert);
+    WHERE NOT EXISTS (SELECT 1 FROM upsert)
+    RETURNING "wrCommentaryPlayerId";
     
     
     `,
@@ -502,6 +503,7 @@ const upsertCommentaryPlayers = async (
         ],
       }
     );
+    return result;
   } catch (error) {
     errorLogger(
       fastify,
@@ -5055,7 +5057,7 @@ const updateCommentaryPlayerJerseyImageQuery = async (data, fastify) => {
     errorLogger(
       fastify,
       error.message,
-      "DB ERROR --> repository/TableCommentary/upsertCommentaryPlayers",
+      "DB ERROR --> repository/TableCommentary/updateCommentaryPlayerJerseyImageQuery",
       null
     );
     throw new Error(error.message);
