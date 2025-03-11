@@ -278,9 +278,23 @@ const commentaryDetailsByIdService = async (request, fastify) => {
       }
     }
 
-  const commentaryPlayers = await global.tblCommentaryPlayers
-    .filter((item) => item?.commentaryId === request.body.commentaryId)
-    .sort((a, b) => b.commentaryPlayerId - a.commentaryPlayerId);
+  // const commentaryPlayers = await global.tblCommentaryPlayers
+  //   .filter((item) => item?.commentaryId === request.body.commentaryId)
+  //   .sort((a, b) => b.commentaryPlayerId - a.commentaryPlayerId);
+
+  const commentaryPlayers = await Promise.all(
+    global.tblCommentaryPlayers
+      .filter((item) => item?.commentaryId === request.body.commentaryId)
+      .map(async (elem) => {
+        let whereCondition = `tcp."wrIsDelete" = false AND tcp."wrCommentaryPlayerId" = ${elem.commentaryPlayerId}`;
+        const result = await getAllCommentaryPlayerDataQuery(whereCondition, fastify);
+        if (result.length > 0) {
+          elem.jerseyPlayerImage = result[0].jerseyPlayerImage;
+        }
+        return elem;
+      })
+  );
+  commentaryPlayers.sort((a, b) => b.commentaryPlayerId - a.commentaryPlayerId);
 
     for (const player of commentaryPlayers) {
       const _player = global.tblPlayers.find((item) => item.playerId === player.playerId);
@@ -311,27 +325,15 @@ const commentaryDetailsByIdService = async (request, fastify) => {
     const commentaryPartnership = await Promise.all(
       filteredPartnerships.map(async (elem) => {
         // Find player 1 details
-        const _player1 = commentaryPlayers.find((item) => item.commentaryPlayerId === elem.batter1Id);
-        let whereCondition = `tcp."wrIsDelete" = false AND tcp."wrCommentaryPlayerId" = ${elem.batter1Id}`;
-        const result1 = await getAllCommentaryPlayerDataQuery(whereCondition, fastify);
-    
+        const _player1 = commentaryPlayers.find((item) => item.commentaryPlayerId === elem.batter1Id);   
         if (_player1) {
           elem.player1image = _player1.playerimage;
+          elem.player1jerseyandimage = _player1.jerseyPlayerImage;
         }
-        if (result1.length > 0) {
-          elem.player1jerseyandimage = result1[0].jerseyPlayerImage;
-        }
-    
-        // Find player 2 details
         const _player2 = commentaryPlayers.find((item) => item.commentaryPlayerId === elem.batter2Id);
-        let condition = `tcp."wrIsDelete" = false AND tcp."wrCommentaryPlayerId" = ${elem.batter2Id}`;
-        const result2 = await getAllCommentaryPlayerDataQuery(condition, fastify);
-    
         if (_player2) {
           elem.player2image = _player2.playerimage;
-        }
-        if (result2.length > 0) {
-          elem.player2jerseyandimage = result2[0].jerseyPlayerImage;
+          elem.player2jerseyandimage = _player2.jerseyPlayerImage;
         }
     
         return elem;
