@@ -1837,6 +1837,88 @@ const MatchType = {
     },
   },
 };
+const MatchTypeBowlingPredictor = {
+  getAll: {
+    schema: {
+      tags: ["MatchType Bowling Predictor"],
+      security: [{ bearerAuth: [] }],
+      description: "get all MatchType Bowling Predictor",
+    },
+  },
+  getById: {
+    schema: {
+      tags: ["MatchType Bowling Predictor"],
+      security: [{ bearerAuth: [] }],
+      description: "get Match Type by id",
+      body: {
+        type: "object",
+        properties: {
+          matchTypeId: { type: "integer" },
+        },
+        required: ["matchTypeId"],
+      },
+    },
+  },
+  save: {
+    schema: {
+      tags: ["MatchType Bowling Predictor"],
+      security: [{ bearerAuth: [] }],
+      description: "save MatchType Bowling Predictor",
+      body: {
+        type: "object",
+        properties: {
+          matchTypeData : {
+            type : "array",
+            items : {
+              type : "object",
+              properties : {
+                matchTypeId: { type: "integer" },
+                bowlingTypeId: { type: "integer" },
+                possibility: { type: "number" },
+                id: { type: "integer" },
+              },
+              required: ["matchTypeId" , "bowlingTypeId" , "possibility", "id"],
+            },
+          },
+        },
+        required: ["matchTypeData"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      security: [{ bearerAuth: [] }],
+      tags: ["Match Type"],
+      description: "delete Match Type",
+      body: {
+        type: "object",
+        properties: {
+          matchTypeId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["matchTypeId"],
+      },
+    },
+  },
+  getByMatchType : {
+    schema: {
+      tags: ["MatchType Bowling Predictor"],
+      security: [{ bearerAuth: [] }],
+      description: "get Match Type by id",
+      body: {
+        type: "object",
+        properties: {
+          matchTypeId: { type: "integer" },
+        },
+        required: ["matchTypeId"],
+      },
+    },
+  },
+
+};
 
 const User = {
   getAll: {
@@ -8110,4 +8192,5 @@ module.exports = {
   VideoLibrary,
   ShotType,
   Tips,
+  MatchTypeBowlingPredictor
 };
