@@ -304,10 +304,44 @@ const commentaryDetailsByIdService = async (request, fastify) => {
   const commentaryWicket = await global.tblCommentaryWicket
     .filter((item) => item?.commentaryId === request.body.commentaryId)
     .sort((a, b) => b.commentaryWicketId - a.commentaryWicketId);
+    
+    const filteredPartnerships = global.tblCommentaryPartnership.filter(
+      (item) => item?.commentaryId === request.body.commentaryId
+    );
+    const commentaryPartnership = await Promise.all(
+      filteredPartnerships.map(async (elem) => {
+        // Find player 1 details
+        const _player1 = commentaryPlayers.find((item) => item.commentaryPlayerId === elem.batter1Id);
+        let whereCondition = `tcp."wrIsDelete" = false AND tcp."wrCommentaryPlayerId" = ${elem.batter1Id}`;
+        const result1 = await getAllCommentaryPlayerDataQuery(whereCondition, fastify);
+    
+        if (_player1) {
+          elem.player1image = _player1.playerimage;
+        }
+        if (result1.length > 0) {
+          elem.player1jerseyandimage = result1[0].jerseyPlayerImage;
+        }
+    
+        // Find player 2 details
+        const _player2 = commentaryPlayers.find((item) => item.commentaryPlayerId === elem.batter2Id);
+        let condition = `tcp."wrIsDelete" = false AND tcp."wrCommentaryPlayerId" = ${elem.batter2Id}`;
+        const result2 = await getAllCommentaryPlayerDataQuery(condition, fastify);
+    
+        if (_player2) {
+          elem.player2image = _player2.playerimage;
+        }
+        if (result2.length > 0) {
+          elem.player2jerseyandimage = result2[0].jerseyPlayerImage;
+        }
+    
+        return elem;
+      })
+    );
+    commentaryPartnership.sort((a, b) => b.commentaryPartnershipId - a.commentaryPartnershipId);
 
-  const commentaryPartnership = await global.tblCommentaryPartnership
-    .filter((item) => item?.commentaryId === request.body.commentaryId)
-    .sort((a, b) => b.commentaryPartnershipId - a.commentaryPartnershipId);
+  // const commentaryPartnership = await global.tblCommentaryPartnership
+  //   .filter((item) => item?.commentaryId === request.body.commentaryId)
+  //   .sort((a, b) => b.commentaryPartnershipId - a.commentaryPartnershipId);
 
   const commentaryDisplayStatus = await global.tblDisplayStatus.filter(
     (item) => item.displayStatusId !== 0
