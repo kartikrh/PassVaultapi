@@ -3081,7 +3081,21 @@ const Commentary = {
         required: ["commentaryId", "comTeams"],
       },
     },
-  }
+  },
+  MergeImage: {
+    schema: {
+      tags: ["Commentary"],
+      description: "Merge image on Commentary players",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+        },
+        required: ["commentaryId"],
+      },
+    },
+  },
 };
 
 const Compitition = {

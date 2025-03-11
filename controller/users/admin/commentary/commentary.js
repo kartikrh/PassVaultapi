@@ -74,6 +74,7 @@ const {
   deleteCommentaryHistoryService,
   getAllCompletedCommentaryService,
   upDLSDetailsService,
+  updateMergeImageOnCommentaryPlayersService,
 } = require("../../../../services/commentry");
 const { getEventSnapByComService, updateEventSnapByComService } = require("../../../../services/competitionEventSnap");
 const { getAllCommentariesDataService, getAllCommentariesDataServiceV1 } = require("../../../../services/score");
@@ -1001,6 +1002,15 @@ const getAllCompletedCommentary = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const updateMergeImageOnCommentaryPlayers = async (request, reply, fastify) => {
+  try {
+    const result = await updateMergeImageOnCommentaryPlayersService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/updateMergeImageOnCommentaryPlayers", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 module.exports = {
   getAllCommentaries,
   getCommentaryById,
@@ -1083,4 +1093,5 @@ module.exports = {
   getAllCompletedCommentary,
   upDLSDetails,
   getAllCommentariesDataV1,
+  updateMergeImageOnCommentaryPlayers,
 }

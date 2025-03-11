@@ -78,6 +78,7 @@ const {
   getAllCompletedCommentaryQuery,
   upOverDLSQuery,
   updateCommentaryPlayerJerseyImageQuery,
+  getAllCommentaryPlayerDataQuery,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -10645,6 +10646,32 @@ const getAllCompletedCommentaryService = async (request, fastify) => {
   return result;
 };
 
+
+const updateMergeImageOnCommentaryPlayersService = async (request, fastify) => {
+  if(request.body.commentaryId) {
+    let whereCondition = `tcp."wrIsDelete" = false AND tcp."wrCommentaryId" = ${request.body.commentaryId}`;
+    const result = await getAllCommentaryPlayerDataQuery(whereCondition, fastify);
+    if(result.length > 0){
+      for(const players of result){
+        const teamPlayers = await getAllTeamPlayersByTeamIdAndPlayerIdQuery(
+          { playerId: players.playerId, teamId: players.teamId },
+            fastify, request
+        )
+        if(teamPlayers && teamPlayers?.jerseyPlayerImage){
+          await updateCommentaryPlayerJerseyImageQuery(
+              { 
+                commentaryPlayerId: players.commentaryPlayerId, 
+                jerseyPlayerImage: teamPlayers?.jerseyPlayerImage 
+              },
+              fastify
+            );
+        }
+      }
+    }
+  }
+  return "Jersey and Player images updated successfully";
+};
+
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -10724,5 +10751,6 @@ module.exports = {
   commentaryHistoryService,
   deleteCommentaryHistoryService,
   getAllCompletedCommentaryService,
-  upDLSDetailsService
+  upDLSDetailsService,
+  updateMergeImageOnCommentaryPlayersService,
 };
