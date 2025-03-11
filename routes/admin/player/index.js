@@ -16,6 +16,7 @@ const {
   UpdatePlayerStats,
   updateIsSystemPlayer,
   getAllPlayerByCompetitionAndTeam,
+  mergePlayerImageAndJersey,
 } = require("../../../controller/users/admin/teamsAndPlayer/players");
 const {
   getTeamList,
@@ -140,5 +141,17 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request, reply) => UpdatePlayerStats(request, reply, fastify),
+  });
+  fastify.post("/mergeImage", {
+    schema: Player.mergeImage.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Players",
+          mode: "edit",
+        }),
+    ],
+    handler: (request, reply) => mergePlayerImageAndJersey(request, reply, fastify),
   });
 };
