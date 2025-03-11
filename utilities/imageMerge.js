@@ -18,7 +18,6 @@ const convertToPng = async (imageUrl) => {
     let imageBuffer = Buffer.from(response.data);
 
     if (!imageUrl.toLowerCase().endsWith(".png")) {
-      console.log("convert formate")
       imageBuffer = await sharp(imageBuffer)
         .toFormat("png", { quality: 100, compressionLevel: 0 })
         .toBuffer();
@@ -148,7 +147,7 @@ const mergeAndSaveImage = async (data, fastify) => {
       );
     }
   } catch (error) {
-    console.log("mergeimage main error", error)
+    console.log("mergeimage error", error)
     errorLogger(
       fastify,
       error.message,

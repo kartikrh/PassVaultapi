@@ -11,6 +11,7 @@ const {
   saveTeam,
   deleteTeam,
   getTeamPoint,
+  mergeTeamJerseyAndPlayerImage,
 } = require("../../../controller/users/admin/teamsAndPlayer/teams");
 const { Teams, EventType, Player } = require("../../../swaggerSchema/groupTags/schema");
 
@@ -113,5 +114,18 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request, reply) => getTeamPoint(request, reply, fastify),
+  })
+  
+  fastify.post("/mergeImage", {
+    schema: Teams.mergeImages.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Teams",
+          mode: "edit",
+        }),
+    ],
+    handler: (request, reply) => mergeTeamJerseyAndPlayerImage(request, reply, fastify),
   })
 };

@@ -1467,6 +1467,24 @@ const Teams = {
       },
     },
   },
+  mergeImages: {
+    schema: {
+      tags: ["Teams"],
+      security: [{ bearerAuth: [] }],
+      description: "Merge team jersey and player images",
+      body: {
+        type: "object",
+        properties: {
+          teamId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["teamId"],
+      },
+    },
+  },
 };
 
 const PaneltyRuns = {
@@ -1676,6 +1694,24 @@ const Player = {
           },
         },
         minItems: 1,
+      },
+    },
+  },
+  mergeImage: {
+    schema: {
+      tags: ["Player"],
+      security: [{ bearerAuth: [] }],
+      description: "Merge player image and jersey",
+      body: {
+        type: "object",
+        properties: {
+          playerId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["playerId"],
       },
     },
   },
@@ -3127,7 +3163,21 @@ const Commentary = {
         required: ["commentaryId", "comTeams"],
       },
     },
-  }
+  },
+  MergeImage: {
+    schema: {
+      tags: ["Commentary"],
+      description: "Merge image on Commentary players",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+        },
+        required: ["commentaryId"],
+      },
+    },
+  },
 };
 
 const Compitition = {
