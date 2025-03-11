@@ -84,10 +84,12 @@ const getAllCommentariesDataService = async (request,fastify) => {
             
                         if (_player1.length > 0) {
                             partnership.player1image = _player1[0].playerimage;
+                            partnership.player1jerseyandimage = _player1[0].jerseyPlayerImage;
                         }
                         const _player2 = players.filter((item) => item.commentaryPlayerId === partnership.batter2Id);
                         if (_player2.length > 0) {
                             partnership.player2image = _player2[0].playerimage;
+                            partnership.player2jerseyandimage = _player2[0].jerseyPlayerImage;
                         }
                     });   
                 } catch (error) {

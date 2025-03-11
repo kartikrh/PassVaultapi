@@ -3518,12 +3518,14 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
             const _player1 = commentaryPlayers.filter((item) => item.commentaryPlayerId === partnership.batter1Id);
             if (_player1.length > 0) {
               response.commentaryPartnershipDetails.player1image = _player1[0].playerimage;
+              response.commentaryPartnershipDetails.player1jerseyandimage = _player1[0].jerseyPlayerImage;
             }
 
             // Find player 2 image
             const _player2 = commentaryPlayers.filter((item) => item.commentaryPlayerId === partnership.batter2Id);
             if (_player2.length > 0) {
               response.commentaryPartnershipDetails.player2image = _player2[0].playerimage;
+              response.commentaryPartnershipDetails.player2jerseyandimage = _player2[0].jerseyPlayerImage;
             }
           } catch (error) {
 
@@ -3545,12 +3547,14 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
             const _player1 = commentaryPlayers.filter((item) => item.commentaryPlayerId === partnership.batter1Id);
             if (_player1.length > 0) {
               response.commentaryPartnershipDetails.player1image = _player1[0].playerimage;
+              response.commentaryPartnershipDetails.player1jerseyandimage = _player1[0].jerseyPlayerImage;
             }
 
             // Find player 2 image
             const _player2 = commentaryPlayers.filter((item) => item.commentaryPlayerId === partnership.batter2Id);
             if (_player2.length > 0) {
               response.commentaryPartnershipDetails.player2image = _player2[0].playerimage;
+              response.commentaryPartnershipDetails.player2jerseyandimage = _player2[0].jerseyPlayerImage;
             }
           } catch (error) {
 
