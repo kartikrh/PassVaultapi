@@ -3087,6 +3087,8 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
             item?.commentaryId === team.commentaryId &&
             item.commentaryTeamId === team.commentaryTeamId
         );
+        team.crr = parseFloat(team?.crr) || 0;
+        team.rrr = parseFloat(team?.rrr) || 0;
         global.tblCommentaryTeams[index] = team;
         response.commentaryTeams.push(global.tblCommentaryTeams[index]);
 
@@ -3105,7 +3107,12 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
       sendDataForSocketUpdate.dataToUpdate.push({
         module: "commentaryTeams",
         type: "update",
-        data: commentaryTeams,
+        // data: commentaryTeams,
+        data: commentaryTeams.map((team) => ({
+          ...team,
+          crr: parseFloat(team?.crr) || 0,
+          rrr: parseFloat(team?.rrr) || 0,
+        })),
       });
     }
     if (deleteCommentaryBallByBallId) {
