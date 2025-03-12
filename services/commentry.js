@@ -278,9 +278,23 @@ const commentaryDetailsByIdService = async (request, fastify) => {
       }
     }
 
-  const commentaryPlayers = await global.tblCommentaryPlayers
-    .filter((item) => item?.commentaryId === request.body.commentaryId)
-    .sort((a, b) => b.commentaryPlayerId - a.commentaryPlayerId);
+  // const commentaryPlayers = await global.tblCommentaryPlayers
+  //   .filter((item) => item?.commentaryId === request.body.commentaryId)
+  //   .sort((a, b) => b.commentaryPlayerId - a.commentaryPlayerId);
+
+  const commentaryPlayers = await Promise.all(
+    global.tblCommentaryPlayers
+      .filter((item) => item?.commentaryId === request.body.commentaryId)
+      .map(async (elem) => {
+        let whereCondition = `tcp."wrIsDelete" = false AND tcp."wrCommentaryPlayerId" = ${elem.commentaryPlayerId}`;
+        const result = await getAllCommentaryPlayerDataQuery(whereCondition, fastify);
+        if (result.length > 0) {
+          elem.jerseyPlayerImage = result[0].jerseyPlayerImage;
+        }
+        return elem;
+      })
+  );
+  commentaryPlayers.sort((a, b) => b.commentaryPlayerId - a.commentaryPlayerId);
 
     for (const player of commentaryPlayers) {
       const _player = global.tblPlayers.find((item) => item.playerId === player.playerId);
@@ -304,10 +318,32 @@ const commentaryDetailsByIdService = async (request, fastify) => {
   const commentaryWicket = await global.tblCommentaryWicket
     .filter((item) => item?.commentaryId === request.body.commentaryId)
     .sort((a, b) => b.commentaryWicketId - a.commentaryWicketId);
+    
+    const filteredPartnerships = global.tblCommentaryPartnership.filter(
+      (item) => item?.commentaryId === request.body.commentaryId
+    );
+    const commentaryPartnership = await Promise.all(
+      filteredPartnerships.map(async (elem) => {
+        // Find player 1 details
+        const _player1 = commentaryPlayers.find((item) => item.commentaryPlayerId === elem.batter1Id);   
+        if (_player1) {
+          elem.player1image = _player1.playerimage;
+          elem.player1jerseyandimage = _player1.jerseyPlayerImage;
+        }
+        const _player2 = commentaryPlayers.find((item) => item.commentaryPlayerId === elem.batter2Id);
+        if (_player2) {
+          elem.player2image = _player2.playerimage;
+          elem.player2jerseyandimage = _player2.jerseyPlayerImage;
+        }
+    
+        return elem;
+      })
+    );
+    commentaryPartnership.sort((a, b) => b.commentaryPartnershipId - a.commentaryPartnershipId);
 
-  const commentaryPartnership = await global.tblCommentaryPartnership
-    .filter((item) => item?.commentaryId === request.body.commentaryId)
-    .sort((a, b) => b.commentaryPartnershipId - a.commentaryPartnershipId);
+  // const commentaryPartnership = await global.tblCommentaryPartnership
+  //   .filter((item) => item?.commentaryId === request.body.commentaryId)
+  //   .sort((a, b) => b.commentaryPartnershipId - a.commentaryPartnershipId);
 
   const commentaryDisplayStatus = await global.tblDisplayStatus.filter(
     (item) => item.displayStatusId !== 0
@@ -3518,12 +3554,14 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
             const _player1 = commentaryPlayers.filter((item) => item.commentaryPlayerId === partnership.batter1Id);
             if (_player1.length > 0) {
               response.commentaryPartnershipDetails.player1image = _player1[0].playerimage;
+              response.commentaryPartnershipDetails.player1jerseyandimage = _player1[0].jerseyPlayerImage;
             }
 
             // Find player 2 image
             const _player2 = commentaryPlayers.filter((item) => item.commentaryPlayerId === partnership.batter2Id);
             if (_player2.length > 0) {
               response.commentaryPartnershipDetails.player2image = _player2[0].playerimage;
+              response.commentaryPartnershipDetails.player2jerseyandimage = _player2[0].jerseyPlayerImage;
             }
           } catch (error) {
 
@@ -3545,12 +3583,14 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
             const _player1 = commentaryPlayers.filter((item) => item.commentaryPlayerId === partnership.batter1Id);
             if (_player1.length > 0) {
               response.commentaryPartnershipDetails.player1image = _player1[0].playerimage;
+              response.commentaryPartnershipDetails.player1jerseyandimage = _player1[0].jerseyPlayerImage;
             }
 
             // Find player 2 image
             const _player2 = commentaryPlayers.filter((item) => item.commentaryPlayerId === partnership.batter2Id);
             if (_player2.length > 0) {
               response.commentaryPartnershipDetails.player2image = _player2[0].playerimage;
+              response.commentaryPartnershipDetails.player2jerseyandimage = _player2[0].jerseyPlayerImage;
             }
           } catch (error) {
 
