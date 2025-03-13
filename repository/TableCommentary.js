@@ -3917,8 +3917,8 @@ const insertCommentaryConsoleFeQuery = async (data, fastify, request) => {
       `,
       {
         bind: [
-          data.over,
-          data.ballCount,
+          data.over || null,
+          data.ballCount || null,
           data.currentState || null,
           data.temporaryState || null,
           data.commentaryId || null,
