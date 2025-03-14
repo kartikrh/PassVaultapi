@@ -2859,7 +2859,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
       } else {
         partnershipIndex = global.tblCommentaryPartnership.findIndex(
           (item) =>
-            item.commentaryPartnershipId ==
+            item?.commentaryPartnershipId ==
             commentaryPartnership.commentaryPartnershipId
         );
         if (partnershipIndex === -1) {
@@ -3123,7 +3123,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         (item) => item.commentaryBallByBallId !== deleteCommentaryBallByBallId
       );
       global.tblCommentaryPartnership = global.tblCommentaryPartnership.filter(
-        (item) => item.commentaryBallByBallId !== deleteCommentaryBallByBallId
+        (item) => item?.commentaryBallByBallId !== deleteCommentaryBallByBallId
       );
       try {
         _deleteBallID = {}
@@ -3150,7 +3150,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
       if (commentaryPartnership) {
         partnershipIndex = global.tblCommentaryPartnership.findIndex(
           (item) =>
-            item.commentaryPartnershipId ===
+            item?.commentaryPartnershipId ===
             commentaryPartnership.commentaryPartnershipId
         );
       }
