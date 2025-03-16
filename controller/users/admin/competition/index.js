@@ -34,6 +34,8 @@ const getCompetitionList = async (request, reply, fastify) => {
       return {
         competitionId: item.competitionId,
         competition: item.competition,
+        drsCount: item.drsCount,
+        matchTypeId: item.matchTypeId,
       };
     });
     reply.status(200).send(success(result, 200));
@@ -73,6 +75,8 @@ const getCompetitionListByeventTypeId = async (request, reply, fastify) => {
       return {
         competitionId: item.competitionId,
         competition: item.competition,
+        drsCount: item.drsCount,
+        matchTypeId: item.matchTypeId,
       };
     })
     reply.status(200).send(success(result, 200));

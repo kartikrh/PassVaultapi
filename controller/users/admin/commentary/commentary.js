@@ -80,6 +80,7 @@ const { getEventSnapByComService, updateEventSnapByComService } = require("../..
 const { getAllCommentariesDataService, getAllCommentariesDataServiceV1 } = require("../../../../services/score");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
+const { saveCommDrsLogService } = require("../../../../services/commentaryDRSLogs");
 
 let path = "controller/users/admin/commentary/commentary";
 
@@ -1011,6 +1012,16 @@ const updateMergeImageOnCommentaryPlayers = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const saveCommDrsLog = async (request, reply, fastify) => {
+  try {
+    const result = await saveCommDrsLogService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/saveCommDrsLog", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
 module.exports = {
   getAllCommentaries,
   getCommentaryById,
@@ -1094,4 +1105,5 @@ module.exports = {
   upDLSDetails,
   getAllCommentariesDataV1,
   updateMergeImageOnCommentaryPlayers,
+  saveCommDrsLog,
 }

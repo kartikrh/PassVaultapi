@@ -387,10 +387,12 @@ const getAllCommentariesDataServiceV1 = async (request,fastify) => {
             
                         if (_player1.length > 0) {
                             partnership.pl1img = _player1[0].plimg;
+                            partnership.pl1jryimg = _player1[0].jryPlyImg;
                         }
                         const _player2 = players.filter((item) => item.cplid === partnership.bat2id);
                         if (_player2.length > 0) {
                             partnership.pl2img = _player2[0].plimg;
+                            partnership.pl2jryimg = _player2[0].jryPlyImg;
                         }
                     });   
                 } catch (error) {
