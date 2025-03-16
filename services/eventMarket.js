@@ -1184,9 +1184,9 @@ const changeMarketCancelService = async (request, fastify) => {
   let commentary = global.tblCommentaries.find(
     (item) => item.commentaryId === commentaryId
   );
-  if(!commentary){
-    throw new Error("Commentary with this id not Found");
-  }
+  // if(!commentary){
+  //   throw new Error("Commentary with this id not Found");
+  // }
   // if (eventMarket === -1) {
   // throw new Error("EventMarket with this id not Found");
   let checkMarketInDb = await getEventMarketByIdsQuery(
@@ -1226,7 +1226,7 @@ const changeMarketCancelService = async (request, fastify) => {
       (item) => !eventMarketIds.includes(item.eventMarketId)
     );
     // global.tblEventMarkets[eventMarket].status = EventMarketStatus.Cancel;
-    if(commentary.commentaryStatus == commentaryStatus.INPROGRESS || commentary.commentaryStatus ==commentaryStatus.COMPLETED){
+    if(commentary?.commentaryStatus == commentaryStatus.INPROGRESS || commentary?.commentaryStatus ==commentaryStatus.COMPLETED){
       const strikeTeam = global.tblCommentaryTeams.find(
         (item) => item.commentaryId === commentaryId && item.teamStatus === 1
       );
@@ -1269,9 +1269,9 @@ const changeMarketResultService = async (request, fastify) => {
   // if (eventMarket === -1) {
   //   throw new Error("EventMarket with this id not Found");
   // }
-  if (!commentary) {
-    throw new Error("Commentary with this id not Found");
-  }
+  // if (!commentary) {
+  //   throw new Error("Commentary with this id not Found");
+  // }
   let eventMarket = await getEventMarketByIdsQuery(
     {
       eventMarketIds: [eventMarketId],
@@ -1326,7 +1326,7 @@ const changeMarketResultService = async (request, fastify) => {
         }
       }
       // global.tblEventMarkets[eventMarket].result = result;
-      if(commentary.commentaryStatus === commentaryStatus.INPROGRESS || commentary.commentaryStatus === commentaryStatus.COMPLETED){
+      if(commentary?.commentaryStatus === commentaryStatus.INPROGRESS || commentary?.commentaryStatus === commentaryStatus.COMPLETED){
         const strikeTeam = global.tblCommentaryTeams.find(
           (item) => item.commentaryId === commentaryId && item.teamStatus === 1
         );
@@ -1383,7 +1383,7 @@ const changeMarketResultService = async (request, fastify) => {
   }
   else {
     // check the runnerId in request
-    let data = await getRunnerByIdQuery(fastify, request , `"wrIsDeleted" = false AND "wrEventMarketId" = ${eventMarketId} AND "wrRunnerId" = ${result}`);
+    let data = await getRunnerByIdQuery(fastify, request , `"wrIsDeleted" = false AND "wrEventMarketId" = ${eventMarketId} ${result ? `AND "wrRunnerId" = ${Number(result)}` : ""}`);
      if(!data){
       throw new Error("Runner with this id not Found");
     }
@@ -1437,7 +1437,7 @@ const changeMarketResultService = async (request, fastify) => {
     // }
     // global.tblMarketRunnerV2[runnerIndex2].selectionStatus = EventMarketStatus.LOSE
 
-    if(commentary.commentaryStatus === commentaryStatus.INPROGRESS || commentary.commentaryStatus === commentaryStatus.COMPLETED){
+    if(commentary?.commentaryStatus === commentaryStatus.INPROGRESS || commentary?.commentaryStatus === commentaryStatus.COMPLETED){
       const strikeTeam = global.tblCommentaryTeams.find(
         (item) => item.commentaryId === commentaryId && item.teamStatus === 1
       );
@@ -1520,9 +1520,9 @@ const changeMarketCloseService = async (request, fastify) => {
   if (checkMarketInDb.length === 0) {
     throw new Error("EventMarketId not Found");
   }
-  if (!commentary) {
-    throw new Error("Commentary with this id not Found");
-  }
+  // if (!commentary) {
+  //   throw new Error("Commentary with this id not Found");
+  // }
   const currentStatus = checkMarketInDb[0].status;
   if (
     ![
@@ -3209,11 +3209,16 @@ const updateMarketResultService = async (request, fastify) => {
   let runnerIndex1 = global.tblMarketRunnerV2.findIndex(
     (item) => item.runnerId === result
   );
-  global.tblMarketRunnerV2[runnerIndex1].selectionStatus = EventMarketStatus.WIN
+  if(runnerIndex1 !== -1){
+    global.tblMarketRunnerV2[runnerIndex1].selectionStatus = EventMarketStatus.WIN
+  }
   let runnerIndex2 = global.tblMarketRunnerV2.findIndex(
     (item) => item.runnerId !== result && item.eventMarketId === eventMarketId
   );
-  global.tblMarketRunnerV2[runnerIndex2].selectionStatus = EventMarketStatus.LOSE
+  if(runnerIndex2 !== -1){
+    global.tblMarketRunnerV2[runnerIndex2].selectionStatus = EventMarketStatus.LOSE
+  }
+  
   if (isResult && result) {
     marketLogger(
       {
@@ -3654,6 +3659,67 @@ const upCloseTimeDataService = async (request, fastify) => {
   }
   return "Market updated successfully";
 }
+
+const changeMultiMarketsIsResultService = async (request, fastify) => {
+  const { eventMarketId, isResult } = request.body;
+  let eventMarket = await getEventMarketByIdsQuery(
+    {
+      eventMarketIds: eventMarketId,
+    },
+    request,
+    fastify
+  );
+  if(eventMarket.length === 0){
+    throw new Error(
+      "EventMarketId not found"
+    );
+  }
+  for(markets of eventMarket){
+    if (markets.isResult) {
+      continue;
+    }
+    const result = await changeIsResultEventMarketQuery(
+      {
+        isResult: isResult,
+        eventMarketId: markets.eventMarketId
+      },
+      request, fastify
+    );
+    let index = global.tblEventMarketsV2.findIndex(
+      (item) => item.eventMarketId === markets.eventMarketId
+    );
+    if(index !== -1) {
+      if (result.status === EventMarketStatus.Settled && result.isResult === true){
+        global.tblEventMarketsV2.splice(index, 1);
+      } else {
+        global.tblEventMarketsV2[index] = {
+          ...global.tblEventMarketsV2[index],
+          ...result
+        };
+      }
+    }
+    
+    marketLogger(
+      {
+        eventMarketId: markets.eventMarketId,
+        actionType: MarketActionType.isresultSet,
+        value: isResult,
+      },
+      request,
+      fastify
+    ).catch((err) => {
+      errorLogger(
+        fastify,
+        err.message,
+        "ERROR --> services/commentary.js/changeMultiMarketsIsResultService",
+        request
+      );
+    });
+  }
+
+  return "Event Market updated successfully";
+}
+
 module.exports = {
   getDetailsByCIdService,
   getAllEventMarketsService,
@@ -3709,5 +3775,6 @@ module.exports = {
   handleMarketByDLSService,
   upSendMarketDataService,
   upSusTimeDataService,
-  upCloseTimeDataService
+  upCloseTimeDataService,
+  changeMultiMarketsIsResultService,
 };

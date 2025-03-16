@@ -1202,6 +1202,7 @@ const cloneCommentaryService = async (request, fastify) => {
     team2Kipper: team2.teamKipper,
     team2Players: filterOutUniquePlayerId(team2Players),
     teamMaxOver: validateMatchTypeId.maxOversInFirstInings,
+    drsCount: team1.drsCount,
   };
 
   if (validateMatchTypeId) {

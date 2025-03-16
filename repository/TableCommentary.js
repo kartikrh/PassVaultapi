@@ -278,7 +278,7 @@ const insertCommentaryTeams = async (request, fastify) => {
     return await fastify.db.query(
       `
       insert into "tblCommentaryTeams" ("wrCommentaryId" , "wrTeamId","wrTeamCaptain","wrTeamKipper" , "wrShortName" , "wrTeamName","wrCurrentInnings","wrIsBattingComplete"
-      , "wrTeamColor" , "wrBackgroundColor" , "wrTeamMaxOver")
+      , "wrTeamColor" , "wrBackgroundColor" , "wrTeamMaxOver", "wrDrsCount")
        values (
         $1,
         $2,
@@ -290,7 +290,8 @@ const insertCommentaryTeams = async (request, fastify) => {
         false,
         (select "wrTeamColor" from "tblTeams" where "wrTeamId" = $2),
         (select "wrBackgroundColor" from "tblTeams" where "wrTeamId" = $2),
-        $9             
+        $9,
+        $10           
       )
       ,(
         $1,
@@ -303,7 +304,8 @@ const insertCommentaryTeams = async (request, fastify) => {
         false,
         (select "wrTeamColor" from "tblTeams" where "wrTeamId" = $5),
         (select "wrBackgroundColor" from "tblTeams" where "wrTeamId" = $5),
-        $9
+        $9,
+        $10
       )
     `,
       {
@@ -318,6 +320,7 @@ const insertCommentaryTeams = async (request, fastify) => {
           data.team2Kipper || null,
           data.currentInnings,
           data.teamMaxOver || null,
+          data.drsCount || 0,
         ],
       }
     );
@@ -800,7 +803,8 @@ const getCommentaryTeamsQuery = async (data, fastify, request) => {
       "wrTeamId" as "teamId",
       "wrTeamCaptain" as "teamCaptain",
       "wrTeamKipper" as "teamKipper",
-      "wrTeamMaxOver" as "teamMaxOver"
+      "wrTeamMaxOver" as "teamMaxOver",
+      "wrDrsCount" as "drsCount"
       from "tblCommentaryTeams"
       where "wrCommentaryId" = $1 and "wrTeamId" = $2 and "wrIsDelete" = false
       `,
@@ -1068,7 +1072,10 @@ const getAllCommentaryTeamsQuery = async (fastify) => {
         tct."wrBackgroundColor" as "backgroundColor",
         tct."wrTeamMaxOver" as "teamMaxOver",
         tct."wrIsSuperOver" as "isSuperOver",
-        tct."wrTeamPredictionPercentage" as "teamPredictionPercentage"
+        tct."wrTeamPredictionPercentage" as "teamPredictionPercentage",
+        tct."wrDrsCount" as "drsCount",
+        tct."wrNoOfAttempt" as "drsAttempt",
+        tct."wrNoOfFail" as "drsFail"
     FROM "tblCommentaryTeams" AS tct
     WHERE tct."wrCommentaryId" IN (
         SELECT "wrCommentaryId"
@@ -1120,7 +1127,10 @@ const getAllCommentaryTeamsDataQuery = async (whereCondition = null, fastify) =>
   "wrBackgroundColor" as "backgroundColor",
   "wrTeamMaxOver" as "teamMaxOver",
   "wrIsSuperOver" as "isSuperOver",
-  "wrTeamPredictionPercentage" as "teamPredictionPercentage"
+  "wrTeamPredictionPercentage" as "teamPredictionPercentage",
+  "wrDrsCount" as "drsCount",
+  "wrNoOfAttempt" as "drsAttempt",
+  "wrNoOfFail" as "drsFail"
   from "tblCommentaryTeams" tct 
   ${whereCondition ? `WHERE ${whereCondition}` : ""}
   `,
@@ -4801,7 +4811,10 @@ const getAllCommentaryTeamsDataQueryV1 = async (whereCondition = null, fastify) 
         "wrBackgroundColor" as "bgcolor",
         "wrTeamMaxOver" as "temaxovr",
         "wrIsSuperOver" as "issuperovr",
-        "wrTeamPredictionPercentage" as "tepredictpercent"
+        "wrTeamPredictionPercentage" as "tepredictpercent",
+        "wrDrsCount" as "drsCnt",
+        "wrNoOfAttempt" as "drsAtmpt",
+        "wrNoOfFail" as "drsFail"
     from "tblCommentaryTeams" tct 
     ${whereCondition ? `WHERE ${whereCondition}` : ""}`,
     {
@@ -5064,6 +5077,104 @@ const updateCommentaryPlayerJerseyImageQuery = async (data, fastify) => {
   }
 };
 
+const getCommentaryTeamsDRSQuery = async (data, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `SELECT
+        "wrCommentaryTeamId" as "commentaryTeamId",
+        "wrCommentaryId" as "commentaryId",
+        "wrTeamId" as "teamId",
+        "wrDrsCount" as "drsCount",
+        "wrNoOfAttempt" as "drsAttempt",
+        "wrNoOfFail" as "drsFail"
+      FROM "tblCommentaryTeams"
+      WHERE "wrCommentaryTeamId" = $1
+        AND "wrTeamId" = $2
+        AND "wrCommentaryId" = $3
+        AND "wrIsDelete" = FALSE`,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [data.commentaryTeamId, data.teamId, data.commentaryId],
+      }
+    );
+    return result[0];
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCommentary/getCommentaryTeamsDRSQuery",
+      null
+    );
+    throw new Error(error.message);
+  }
+};
+
+const updateCommentaryTeamDrsAttemptsAndFailQuery = async (data, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `UPDATE "tblCommentaryTeams" SET
+        "wrNoOfAttempt" = GREATEST(0, $1),
+        "wrNoOfFail" = GREATEST(0, $2)
+      WHERE
+        "wrCommentaryTeamId" = $3 
+        AND "wrTeamId" = $4
+        AND "wrCommentaryId" = $5
+        AND "wrIsDelete" = FALSE
+        RETURNING 
+            "wrCommentaryId" as "commentaryId",
+            "wrCommentaryTeamId" as "commentaryTeamId",
+            "wrDrsCount" as "drsCount",
+            "wrNoOfAttempt" as "drsAttempt",
+            "wrNoOfFail" as "drsFail";`,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [data.drsAttempt, data.drsFail, data.commentaryTeamId, data.teamId, data.commentaryId],
+      }
+    );
+    return result[0];
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCommentary/updateCommentaryTeamDrsAttemptsAndFailQuery",
+      null
+    );
+    throw new Error(error.message);
+  }
+};
+
+const updateCommentaryTeamDrsAttemptsQuery = async (data, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `UPDATE "tblCommentaryTeams" SET
+        "wrNoOfAttempt" = GREATEST(0, $1)
+      WHERE
+        "wrCommentaryTeamId" = $2
+        AND "wrTeamId" = $3
+        AND "wrCommentaryId" = $4
+        AND "wrIsDelete" = FALSE
+        RETURNING 
+            "wrCommentaryId" as "commentaryId",
+            "wrCommentaryTeamId" as "commentaryTeamId",
+            "wrDrsCount" as "drsCount",
+            "wrNoOfAttempt" as "drsAttempt";`,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [data.drsAttempt, data.commentaryTeamId, data.teamId, data.commentaryId],
+      }
+    );
+    return result[0];
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCommentary/updateCommentaryTeamDrsAttemptsQuery",
+      null
+    );
+    throw new Error(error.message);
+  }
+};
+
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -5165,4 +5276,7 @@ module.exports = {
   getAllCommentaryWicketDataQueryV1,
   getAllCommentaryPartnershipDataQueryV1,
   updateCommentaryPlayerJerseyImageQuery,
+  updateCommentaryTeamDrsAttemptsAndFailQuery,
+  updateCommentaryTeamDrsAttemptsQuery,
+  getCommentaryTeamsDRSQuery,
 };
