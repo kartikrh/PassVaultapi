@@ -1229,6 +1229,29 @@ async function signOutClient(body, fastify) {
   );
 }
 
+
+async function validateUser(body, request, fastify) {
+  try{
+    const data = await fastify.db.query(
+      `SELECT * FROM "tblUsers" WHERE "WrPassword" = $1 AND "WrUserId" = $2`,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [body.password, request.userTokenInfo.WrUserId],
+      }
+    );
+
+    return data[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableUser/validateUser",
+      request
+    );
+    throw new Error(err.message);
+  }
+}
+
 module.exports = {
   signInUser,
   signUpUser,
@@ -1256,4 +1279,5 @@ module.exports = {
   updateClientPassword,
   verifyEmail,
   verifyMobileOtp,
+  validateUser,
 };

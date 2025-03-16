@@ -78,6 +78,9 @@ const {
 } = require("../utilities/index");
 const { getAllMarketRunnersV2ByIdQuery } = require("../repository/TableMarketRunner");
 const { marketLogger, marketDataLogger, errorLogger, eventMarketLogger, marektResultLogger } = require("../utilities/logger");
+const { validateUser } = require("../repository/TableUser");
+const { encrypt } = require("../utilities/index");
+
 const getDetailsByCIdService = async (request, fastify) => {
   const { commentaryId } = request.body;
   const commentary = global.tblCommentaries.find(
@@ -3662,6 +3665,12 @@ const upCloseTimeDataService = async (request, fastify) => {
 
 const changeMultiMarketsIsResultService = async (request, fastify) => {
   const { eventMarketId, isResult } = request.body;
+  const encryptedPassword = encrypt(request.body.password);
+  const user = await validateUser({ password: encryptedPassword }, request, fastify);
+
+  if (!user) {
+    throw new Error("Incorrect password");
+  }
   let eventMarket = await getEventMarketByIdsQuery(
     {
       eventMarketIds: eventMarketId,
