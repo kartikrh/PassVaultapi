@@ -62,6 +62,7 @@ const {
   upSendMarketDataQuery,
   upSusTimeQuery,
   upCloseTimeQuery,
+  getCommentaryDetailsQuery,
 } = require("../repository/TableEventMarkets");
 const { getRunnerByIdQuery, setResultInRunnerMarketQuery, getRunnerByMarketQuery } = require("../repository/TableMarketRunner");
 const configConstants = require("../utilities/configConstants");
@@ -3663,6 +3664,72 @@ const upCloseTimeDataService = async (request, fastify) => {
   return "Market updated successfully";
 }
 
+const changeMultiMarketsSessionIsResultService = async (request, fastify) => {
+  const { eventMarketId, isResult } = request.body;
+  const encryptedPassword = encrypt(request.body.password);
+  const user = await validateUser({ password: encryptedPassword }, request, fastify);
+
+  if (!user) {
+    throw new Error("Incorrect password");
+  }
+  let eventMarket = await getEventMarketByIdsQuery(
+    {
+      eventMarketIds: eventMarketId,
+    },
+    request,
+    fastify
+  );
+  if(eventMarket.length === 0){
+    throw new Error(
+      "EventMarketId not found"
+    );
+  }
+  for(markets of eventMarket){
+    if (markets.isResult) {
+      continue;
+    }
+    const result = await changeIsResultEventMarketQuery(
+      {
+        isResult: isResult,
+        eventMarketId: markets.eventMarketId
+      },
+      request, fastify
+    );
+    let index = global.tblEventMarketsV2.findIndex(
+      (item) => item.eventMarketId === markets.eventMarketId
+    );
+    if(index !== -1) {
+      if (result.status === EventMarketStatus.Settled && result.isResult === true){
+        global.tblEventMarketsV2.splice(index, 1);
+      } else {
+        global.tblEventMarketsV2[index] = {
+          ...global.tblEventMarketsV2[index],
+          ...result
+        };
+      }
+    }
+    
+    marketLogger(
+      {
+        eventMarketId: markets.eventMarketId,
+        actionType: MarketActionType.isresultSet,
+        value: isResult,
+      },
+      request,
+      fastify
+    ).catch((err) => {
+      errorLogger(
+        fastify,
+        err.message,
+        "ERROR --> services/commentary.js/changeMultiMarketsSessionIsResultService",
+        request
+      );
+    });
+  }
+
+  return "Event Market updated successfully";
+}
+
 const changeMultiMarketsIsResultService = async (request, fastify) => {
   const { eventMarketId, isResult } = request.body;
   const encryptedPassword = encrypt(request.body.password);
@@ -3729,6 +3796,11 @@ const changeMultiMarketsIsResultService = async (request, fastify) => {
   return "Event Market updated successfully";
 }
 
+const getCommentaryDetailsService = async (request, fastify) => {
+  let commentaryDetails = await getCommentaryDetailsQuery(request, fastify);
+  return commentaryDetails;
+}
+
 module.exports = {
   getDetailsByCIdService,
   getAllEventMarketsService,
@@ -3786,4 +3858,6 @@ module.exports = {
   upSusTimeDataService,
   upCloseTimeDataService,
   changeMultiMarketsIsResultService,
+  changeMultiMarketsSessionIsResultService,
+  getCommentaryDetailsService,
 };
