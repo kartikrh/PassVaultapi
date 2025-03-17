@@ -5777,6 +5777,42 @@ const upCloseTimeQuery = async (data, request, fastify) => {
     
   }
 }
+
+const getCommentaryDetailsQuery = async (request, fastify) => {
+  try {
+    const query = 
+    `SELECT 
+          tc."wrCommentaryId" as "commentaryId",
+          tc."wrEventName" as "eventName",
+          tc."wrCompetitionId" as "competitionId",
+          tcomp."wrCompetition" as "competition",
+          tc."wrEventTypeId" as "eventTypeId",
+          te."wrEventType" as "eventType",
+          tc."wrEventDate" as "eventDate",
+          tc."wrEventRefId" as "eventRefId",
+          tc."wrCommentaryStatus" as "commentaryStatus"
+      FROM "tblCommentaries" tc
+      LEFT JOIN "tblEventTypes" te ON te."wrEventTypeId" = tc."wrEventTypeId"
+      LEFT JOIN "tblCompetitions" tcomp ON tcomp."wrCompetitionId" = tc."wrCompetitionId"
+      WHERE tc."wrIsDelete" = FALSE
+      `;
+
+      const result = await fastify.db.query(query, {
+        type: fastify.db.QueryTypes.SELECT,
+      });
+
+      return result;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/getCommentaryDetailsQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+}
+
 module.exports = {
   getAllEventMarketsV2Query,
   getAllEventMarketsQuery,
@@ -5865,6 +5901,7 @@ module.exports = {
   getMarketsByCIdV1Query,
   upSendMarketDataQuery,
   upSusTimeQuery,
-  upCloseTimeQuery
+  upCloseTimeQuery,
+  getCommentaryDetailsQuery,
 }
 

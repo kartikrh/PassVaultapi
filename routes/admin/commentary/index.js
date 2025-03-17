@@ -72,6 +72,7 @@ const {
   deleteCommentaryHistory,
   upDLSDetails,
   updateMergeImageOnCommentaryPlayers,
+  saveCommDrsLog,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -980,6 +981,18 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request, reply) => updateMergeImageOnCommentaryPlayers(request, reply, fastify),
+  });
+  fastify.post("/saveDrs", {
+    schema: Commentary.DRSLog.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: request.body.id === 0 ? "add" : "edit",
+        }),
+    ],
+    handler: (request, reply) => saveCommDrsLog(request, reply, fastify),
   });
   
 };

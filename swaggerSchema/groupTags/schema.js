@@ -3178,6 +3178,24 @@ const Commentary = {
       },
     },
   },
+  DRSLog: {
+    schema: {
+      tags: ["Commentary"],
+      description: "Create drs log data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          commentaryId: { type: "integer" },
+          commentaryTeamId: { type: "integer" },
+          teamId: { type: "integer" },
+          result: { type: "boolean" },
+        },
+        required: ["id", "commentaryId", "result"],
+      },
+    },
+  },
 };
 
 const Compitition = {
@@ -4706,6 +4724,25 @@ const EventMarket = {
           delay: { type: "integer" },
         },
         required: ["eventMarketId", "delay"],
+      },
+    },
+  },
+  setIsResult: {
+    schema: {
+      tags: ["EventMarket"],
+      description: "Set EventMarket result",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          eventMarketId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+          isResult: { type: "boolean" }
+        },
+        required: ["eventMarketId", "isResult"],
       },
     },
   },
