@@ -16,6 +16,7 @@ const {
 } = require("../repository/TableEventMarkets");
 const { getAllMarketRunnersV2ByIdQuery } = require("../repository/TableMarketRunner");
 const configConstants = require("../utilities/configConstants");
+const moment = require('moment-timezone');
 
 const ImportMarketService = async (request, fastify) => {
   if (request.userTokenInfo.WrUserId) {
@@ -111,6 +112,12 @@ const ImportMarketService = async (request, fastify) => {
         item.competitionId === CompetitionsObj.competitionId &&
         item.refId === request.body.eventId
     );
+
+    const istTimeString = request.body.openDate;
+    const istMoment = moment.tz(istTimeString, 'Asia/Kolkata');
+    const utcMoment = istMoment.utc();
+    const utcTimeString = utcMoment.toISOString();
+    request.body.openDate = utcTimeString;
     if (!Eventsobj) {
       request.body.competitionId = CompetitionsObj.competitionId;
       request.body.eventTypeId = eventtypeobj.eventTypeId;
