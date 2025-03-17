@@ -16,6 +16,7 @@ const getAllNewsQuery = async (fastify) => {
             "wrViewerCount" as "viewerCount",
             "wrCredit" as "credit",
             "wrSEO" as "SEO",
+            "wrType" as "type",
             "wrSEODescription" as "SEODescription"
         from "tblNews"
         where "wrIsDeleted" = false
