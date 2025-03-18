@@ -5278,6 +5278,7 @@ const commentaryDetailsByEventIdService = async (
     loc: result.location,
     t1id: result.team1Id,
     t2id: result.team2Id,
+    srtup: result.sortUpdate ?? "",
   };
   let eid;
   let til;
@@ -5814,7 +5815,7 @@ const commentaryDetailsByEventIdService = async (
   // });
 
   const allDetails = {
-    cm: { ...resultArr, ci: result.currentInnings, cctime: result.commentaryCloseTime, res: result.result, srtup: result?.sortUpdate ?? "" },
+    cm: { ...resultArr, ci: result.currentInnings, cctime: result.commentaryCloseTime, res: result.result },
     cbb,
     cbt,
     cbl,
