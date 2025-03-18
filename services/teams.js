@@ -113,7 +113,7 @@ const createTeamService = async (request, fastify) => {
 
   const validateTeamName = global.tblTeams.find(
     (item) =>
-      item.teamName.toLowerCase() === request.body.teamName.toLowerCase()
+      item.teamName.trim().toLowerCase() === request.body.teamName.trim().toLowerCase()
   );
 
   if (validateTeamName) {
@@ -148,7 +148,7 @@ const createTeamService = async (request, fastify) => {
     });
     request.body.jersey = path;
   }
-
+  request.body.teamName = request.body.teamName.trim();
   const data = await insertTeamQuery(
     { ...request.body, userId: request.userTokenInfo.WrUserId },
     fastify,
@@ -243,7 +243,7 @@ const updateTeamService = async (request, fastify) => {
     checkTeamId.teamColor = "#FFFFFF";
   }
   const body = {
-    teamName: request.body.teamName || checkTeamId.teamName,
+    teamName: request.body.teamName.trim() || checkTeamId.teamName,
     teamShortName: request.body.teamShortName || checkTeamId.teamShortName,
     image: checkTeamId.image,
     jersey: checkTeamId.jersey,
@@ -258,7 +258,7 @@ const updateTeamService = async (request, fastify) => {
 
   const validateTeamName = global.tblTeams.find(
     (item) =>
-      item.teamName.toLowerCase() === body.teamName.toLowerCase() &&
+      item.teamName.trim().toLowerCase() === body.teamName.trim().toLowerCase() &&
       item.teamId !== request.body.teamId
   );
 

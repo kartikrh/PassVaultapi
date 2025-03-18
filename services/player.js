@@ -152,13 +152,13 @@ const insertPlayerService = async (request, fastify) => {
 
   const validatePlayerName = global.tblPlayers.find(
     (item) =>
-      item.playerName.toLowerCase() === request.body.playerName.toLowerCase()
+      item.playerName.trim().toLowerCase() === request.body.playerName.trim().toLowerCase()
   );
 
   if (validatePlayerName) {
     throw new Error("Player Name already exist");
   }
-
+  request.body.playerName = request.body.playerName.trim();
   if (request.body.image && request.body.image.length) {
     // generate image name
     const imgName = generateImageName({ name: request.body.playerName });
@@ -247,7 +247,7 @@ const updatePlayerService = async (request, fastify) => {
 
   const validatePlayerName = global.tblPlayers.find(
     (item) =>
-      item.playerName.toLowerCase() === request.body.playerName.toLowerCase() &&
+      item.playerName.trim().toLowerCase() === request.body.playerName.trim().toLowerCase() &&
       item.playerId !== request.body.playerId
   );
 
@@ -257,7 +257,7 @@ const updatePlayerService = async (request, fastify) => {
 
   const body = {
     country: request.body.country || checkPlayerId.country,
-    playerName: request.body.playerName || checkPlayerId.playerName,
+    playerName: request.body.playerName.trim() || checkPlayerId.playerName,
     eventTypeId: checkPlayerId.eventTypeId,
     playerTypeId: checkPlayerId.playerTypeId,
     userId: request.userTokenInfo.WrUserId,

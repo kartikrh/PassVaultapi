@@ -4408,7 +4408,7 @@ const addTeamPlayerService = async (request, fastify) => {
     throw new Error("Invalid Current Innings count");
   }
 
-    await insertCommentaryPlayersQuery(
+    const playerData = await insertCommentaryPlayersQuery(
       {
         commentaryId,
         teamId,
@@ -4420,7 +4420,32 @@ const addTeamPlayerService = async (request, fastify) => {
       fastify,
       request
     );
-
+    const teamPlayerData = await getAllTeamPlayersByTeamIdAndPlayerIdQuery(
+      { playerId: playerId, teamId: teamId },
+      fastify, request
+    );
+    if(teamPlayerData && teamPlayerData?.jerseyPlayerImage){
+      await updateCommentaryPlayerJerseyImageQuery(
+          { 
+            commentaryPlayerId: playerData[0].commentaryPlayerId, 
+            jerseyPlayerImage: teamPlayerData?.jerseyPlayerImage 
+          },
+          fastify
+        );
+    } else {
+      const teamData = global.tblTeams.find((item) => item.teamId == teamId);
+      const playerImgData = global.tblPlayers.find((elem) => elem.playerId == playerId)
+      if(playerImgData.image && teamData.jersey) {
+        mergeAndSaveImage({
+          playerImage: playerImgData.image,
+          jersey: teamData.jersey,
+          playerName: playerImgData.playerName,
+          teamName: teamData.teamName,
+          commentaryPlayerId: playerData[0].commentaryPlayerId,
+          teamPlayerId: teamPlayerData?.teamPlayerId ?? null,
+        }, fastify);
+      }
+    }
   global.tblCommentaryPlayers = await getAllCommentaryPlayerQuery(fastify);
 
   return "Player added successfully";
