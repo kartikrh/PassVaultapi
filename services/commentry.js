@@ -5684,7 +5684,7 @@ const commentaryDetailsByEventIdService = async (
   resultArr.tpp1 = tpp1;
   resultArr.tpp2 = tpp2;
   resultArr.isPr = result.isPredictMarket === null ? false : result.isPredictMarket;
-  resultArr.srtUp = result?.sortUpdate ?? "";
+
   // remove out batsman
   const commentaryPlayers_batter = await global.tblCommentaryPlayers.filter(
     (item) =>
@@ -5814,7 +5814,7 @@ const commentaryDetailsByEventIdService = async (
   // });
 
   const allDetails = {
-    cm: { ...resultArr, ci: result.currentInnings, cctime: result.commentaryCloseTime, res: result.result },
+    cm: { ...resultArr, ci: result.currentInnings, cctime: result.commentaryCloseTime, res: result.result, srtup: result?.sortUpdate ?? "" },
     cbb,
     cbt,
     cbl,

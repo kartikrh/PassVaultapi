@@ -4509,7 +4509,7 @@ const getAllCompletedCommentaryQuery = async (request, fastify) => {
           tc."wrCompetitionId" AS "compId",
           tc."wrCurrentInnings" AS "ci",
           tc."wrEventName" AS "en",
-          tc."wrSortUpdate" AS "srtup",
+          COALESCE(tc."wrSortUpdate", '') AS "srtup"
           TO_CHAR(TIMEZONE('Asia/Kolkata', tc."wrEventDate"), 'DD/MM/YYYY') AS "ed",
           TO_CHAR(TIMEZONE('Asia/Kolkata', tc."wrEventDate"), 'HH12:MI:SS') AS "et",
           TO_CHAR(tc."wrEventDate" AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MSZ') AS "utc",
