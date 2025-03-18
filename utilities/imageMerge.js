@@ -113,7 +113,7 @@ const mergeAndSaveImage = async (data, fastify) => {
 
     const base64Data = base64Image.replace(/^data:image\/png;base64,/, "");
     const imageBuffer = Buffer.from(base64Data, "base64");
-    const imgName = generateImageName({ name: `${data.playerName.toLowerCase()}-${data.teamName.toLowerCase()}` });
+    const imgName = generateImageName({ name: `${data.playerName.trim().toLowerCase()}-${data.teamName.trim().toLowerCase()}` });
     const fileUploadURL = global.tblConfigs.find((item) => item.key === configConstants.FILE_UPLOAD_URL)?.value;
 
     const projectName = global.tblConfigs.find(
