@@ -125,7 +125,8 @@ const getCommentariesDataQuery = async (fastify) => {
     mt2."wrMatchType" AS "historyMatchType",
     tc."wrIsCountInPoint" as "isCountInPoint",
     "wrShotType" as "shotType",
-    "wrIsWheelShow" as "isWheelShow"
+    "wrIsWheelShow" as "isWheelShow",
+    "wrSortUpdate" as "sortUpdate"
     from "tblCommentaries" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -4508,6 +4509,7 @@ const getAllCompletedCommentaryQuery = async (request, fastify) => {
           tc."wrCompetitionId" AS "compId",
           tc."wrCurrentInnings" AS "ci",
           tc."wrEventName" AS "en",
+          tc."wrSortUpdate" AS "srtup",
           TO_CHAR(TIMEZONE('Asia/Kolkata', tc."wrEventDate"), 'DD/MM/YYYY') AS "ed",
           TO_CHAR(TIMEZONE('Asia/Kolkata', tc."wrEventDate"), 'HH12:MI:SS') AS "et",
           TO_CHAR(tc."wrEventDate" AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MSZ') AS "utc",
