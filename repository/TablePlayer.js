@@ -359,6 +359,44 @@ const updateIsSystemPlayerQuery = async (data, fastify, request) => {
     throw new Error(err.message);
   }
 }
+const getTeamPlayerQuery = async (data, fastify, request) => {
+  try {
+    const query = `    
+      SELECT 
+        ttm."wrTeamId" as "teamId",
+        ttm."wrRefPlayerId" as "playerId",
+        ttm."wrTeamPlayerId" as "teamPlayerId",
+                tt."WrTeamJersey" as "teamJersey",
+        tp."wrImage" as "playerImage",
+        tt."wrTeamName" as "teamName",
+        tp."wrPlayerName" as "playerName"
+      FROM
+        "tblTeamPlayers" ttm
+      LEFT JOIN
+        "tblPlayers" tp ON tp."wrPlayerId" = ttm."wrRefPlayerId"
+      LEFT JOIN
+        "tblTeams" tt ON tt."wrTeamId" = ttm."wrTeamId"
+      WHERE
+        ttm."wrJerseyPlayerImage" is null
+        AND ttm."wrIsDeleted" = false
+      ORDER BY ttm."wrTeamPlayerId" DESC 
+    `;
+
+    return await fastify.db.query(query, {
+      type: fastify.db.QueryTypes.SELECT,
+      bind: [],
+    });
+
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TablePlayer/getTeamPlayerQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+}
 module.exports = {
   getAllPlayersQuery,
   insertPlayerQuery,
@@ -368,5 +406,6 @@ module.exports = {
   getAllBowlingTypeQuery,
   getAllTeamsByPlayerIdQuery,
   updatePlayerStatsQuery,
-  updateIsSystemPlayerQuery
+  updateIsSystemPlayerQuery,
+  getTeamPlayerQuery
 };
