@@ -5,6 +5,7 @@ const {
   getAllTeamsByPlayerIdQuery,
   updatePlayerStatsQuery,
   updateIsSystemPlayerQuery,
+  getTeamPlayerQuery,
 } = require("../repository/TablePlayer");
 const {
   insertTeamPlayerQuery,
@@ -22,6 +23,7 @@ const { ImgModuleConfig } = require("../utilities/imageConstant");
 const { deleteTournamentPlayersByPlayerIdQuery } = require("../repository/TableTournamentsTeamPlayers");
 const { deleteAwardsByPlayerIdQuery } = require("../repository/TableCommentaryAward");
 const { mergeAndSaveImage } = require("../utilities/imageMerge");
+const configConstants = require("../utilities/configConstants");
 
 const allPlayerService = async (request,fastify) => {
   const { isActive, eventTypeId , teamId} = request.body;
@@ -575,6 +577,37 @@ const mergePlayerImageAndJerseyService = async (request, fastify) => {
   }
   return "Player image(s) and Jersey image(s) merged successfully";
 };
+const setTeamPlayerImgService = async (request, fastify) => {
+  const teamPlayersData = await getTeamPlayerQuery(request, fastify);
+  if(teamPlayersData.length == 0){
+    return "Player Jersey images already set";
+  }
+  // check if any player image or jersey image is null
+  let notImg = teamPlayersData.find((item) => !item.playerImage || !item.teamJersey);
+  let defaultImg,defaultJersey;
+  if(notImg){
+    // get default image from config
+    defaultImg = global.tblConfigs.find((item) => item.key.toLowerCase() == configConstants.DEFAULTPLAYERIMG.toLowerCase())?.value;
+    defaultJersey = global.tblConfigs.find((item) => item.key.toLowerCase() == configConstants.DEFAULTJERSEYIMG.toLowerCase())?.value;
+    if(!defaultImg || !defaultJersey){
+      throw new Error("Please set Default Player Image and Jersey Image in Config");
+    }
+  }
+  //merge the image where image is not set
+  for (let p of teamPlayersData) {
+    // merge image
+     await mergeAndSaveImage({
+      playerImage: p.playerImage ? p.playerImage : defaultImg,
+      jersey: p.teamJersey ? p.teamJersey : defaultJersey,
+      playerName: p.playerName,
+      teamName: p.teamName,
+      teamPlayerId: p.teamPlayerId,
+      commentaryPlayerId: null,
+    }, fastify);
+
+  }
+  return "Player image(s) and Jersey image(s) merged successfully";
+};
 
 module.exports = {
   allPlayerService,
@@ -588,4 +621,5 @@ module.exports = {
   updateIsSystemPlayerService,
   allPlayerByCompetitionAndTeamService,
   mergePlayerImageAndJerseyService,
+  setTeamPlayerImgService,
 };
