@@ -122,6 +122,7 @@ const updateNewsService = async (request, fastify) => {
     viewerCount: request.body.viewerCount,
     credit : request.body.credit || validateNewsId.credit,
     SEO : request.body.SEO || validateNewsId.SEO,
+    type : request.body.type || validateNewsId.type,
     SEODescription : request.body.SEODescription || validateNewsId.SEODescription
   };
   if (request.body.image && request.body.image.length) {
