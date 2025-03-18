@@ -53,7 +53,8 @@ const getAllCommentaryQuery = async (fastify) => {
     mt2."wrMatchType" AS "historyMatchType",
     tc."wrIsCountInPoint" as "isCountInPoint",
     "wrShotType" as "shotType",
-    "wrIsWheelShow" as "isWheelShow"
+    "wrIsWheelShow" as "isWheelShow",
+    "wrSortUpdate" as "sortUpdate"
     from "tblCommentaries" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
