@@ -4122,6 +4122,7 @@ const Score = {
     },
   },
 };
+
 const News = {
   getAll: {
     schema: {
