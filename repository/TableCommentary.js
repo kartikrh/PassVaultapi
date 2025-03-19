@@ -53,7 +53,8 @@ const getAllCommentaryQuery = async (fastify) => {
     mt2."wrMatchType" AS "historyMatchType",
     tc."wrIsCountInPoint" as "isCountInPoint",
     "wrShotType" as "shotType",
-    "wrIsWheelShow" as "isWheelShow"
+    "wrIsWheelShow" as "isWheelShow",
+    "wrSortUpdate" as "sortUpdate"
     from "tblCommentaries" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -124,7 +125,8 @@ const getCommentariesDataQuery = async (fastify) => {
     mt2."wrMatchType" AS "historyMatchType",
     tc."wrIsCountInPoint" as "isCountInPoint",
     "wrShotType" as "shotType",
-    "wrIsWheelShow" as "isWheelShow"
+    "wrIsWheelShow" as "isWheelShow",
+    "wrSortUpdate" as "sortUpdate"
     from "tblCommentaries" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -3901,20 +3903,25 @@ const insertCommentaryConsoleFeQuery = async (data, fastify, request) => {
     const result = await fastify.db.query(
       `with insert_data as (
         insert into "tblCommnetryConsoleFe" 
-        ("over",
+        (
+         "over",
          "ballCount",
          "currentState",
          "temporaryState",
          "commentaryId", 
          "teamScore", 
          "createby", 
-         "createdDate") 
+         "createdDate",
+         "wrBallHistoryData"
+        ) 
         values ($1, 
-        $2,
+         $2,
          $3, 
          $4,
-          $5,
-           $6, $7, $8) 
+         $5,
+         $6, 
+         $7, 
+         $8,$9) 
         returning *
       )
       select 
@@ -3935,6 +3942,7 @@ const insertCommentaryConsoleFeQuery = async (data, fastify, request) => {
           data.teamScore || null,
           data.createby,
           new Date(),
+          data.ballHistoryData || null
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -4507,6 +4515,7 @@ const getAllCompletedCommentaryQuery = async (request, fastify) => {
           tc."wrCompetitionId" AS "compId",
           tc."wrCurrentInnings" AS "ci",
           tc."wrEventName" AS "en",
+          COALESCE(tc."wrSortUpdate", '') AS "srtup",
           TO_CHAR(TIMEZONE('Asia/Kolkata', tc."wrEventDate"), 'DD/MM/YYYY') AS "ed",
           TO_CHAR(TIMEZONE('Asia/Kolkata', tc."wrEventDate"), 'HH12:MI:SS') AS "et",
           TO_CHAR(tc."wrEventDate" AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MSZ') AS "utc",

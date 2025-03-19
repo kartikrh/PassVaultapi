@@ -12,7 +12,7 @@ const { updateCommentaryPlayerJerseyImageQuery } = require("../repository/TableC
 const sharp = require("sharp");
 
 
-const convertToPng = async (imageUrl) => {
+const convertToPng = async (imageUrl,fastify) => {
   try {
     const response = await axios.get(imageUrl, { responseType: "arraybuffer" });
     let imageBuffer = Buffer.from(response.data);
@@ -63,8 +63,8 @@ const resizeImage = async (imageBuffer, width, height, fastify) => {
 
 const mergeAndSaveImage = async (data, fastify) => {
   try {
-    let playerBuffer = await convertToPng(data.playerImage);
-    let jerseyBuffer = await convertToPng(data.jersey);
+    let playerBuffer = await convertToPng(data.playerImage,fastify);
+    let jerseyBuffer =  await convertToPng(data.jersey,fastify);
 
     const backgroundImage = path.resolve("bgMergeImage", "bgMergeImage.png");
     const CANVAS_WIDTH = parseInt(
@@ -91,6 +91,9 @@ const mergeAndSaveImage = async (data, fastify) => {
         global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.JERSEYHEIGHT.toLowerCase())?.value,
         10
       );
+    if(!CANVAS_HEIGHT || !CANVAS_WIDTH || !PLAYER_HEIGHT || !PLAYER_WIDTH || !JERSEY_HEIGHT || !JERSEY_WIDTH){
+      throw new Error("Image size not found in config");
+    }
 
     const bgImage = await resizeImage(backgroundImage, CANVAS_WIDTH, CANVAS_HEIGHT, fastify);
     const playerImage = await resizeImage(playerBuffer, PLAYER_WIDTH, PLAYER_HEIGHT, fastify);
