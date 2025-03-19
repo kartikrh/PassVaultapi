@@ -3901,20 +3901,25 @@ const insertCommentaryConsoleFeQuery = async (data, fastify, request) => {
     const result = await fastify.db.query(
       `with insert_data as (
         insert into "tblCommnetryConsoleFe" 
-        ("over",
+        (
+         "over",
          "ballCount",
          "currentState",
          "temporaryState",
          "commentaryId", 
          "teamScore", 
          "createby", 
-         "createdDate") 
+         "createdDate",
+         "wrBallHistoryData"
+        ) 
         values ($1, 
-        $2,
+         $2,
          $3, 
          $4,
-          $5,
-           $6, $7, $8) 
+         $5,
+         $6, 
+         $7, 
+         $8,$9) 
         returning *
       )
       select 
@@ -3935,6 +3940,7 @@ const insertCommentaryConsoleFeQuery = async (data, fastify, request) => {
           data.teamScore || null,
           data.createby,
           new Date(),
+          data.ballHistoryData || null
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
