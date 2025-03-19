@@ -4112,7 +4112,7 @@ const Score = {
         properties: {
           commentaryId: { type: "integer" },
           over: { type: "integer" },
-          ballCount: { type: "integer" },
+          ballCount: { type: "string" },
           temporaryState: { type: "string" },
           currentState: { type: "string" },
           teamScore: { type: "string" },
