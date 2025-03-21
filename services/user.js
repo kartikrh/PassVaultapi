@@ -35,7 +35,10 @@ const {
   verifyMobileOtp,
   registerClientAppQuery,
   getIdByValue,
-  verifyMobileNoAppQuery
+  verifyMobileNoAppQuery,
+  updateClientProfileQuery,
+  changePasswordQuery,
+  clientDetailsByIdQuery,
 } = require("../repository/TableUser");
 const {
   deviceInfo,
@@ -1396,7 +1399,47 @@ const verifyMobileNoAppService = async (request, fastify) => {
     }
   }
 }
+const updateClientProfileService = async (request, fastify) => {
+  const validateId = global.tblClient.find(
+    (item) => item.clientId === request.body.clientId
+  );
+  if (!validateId) {
+    throw new Error(`Client ID does not exist`);
+  }
+  const results = await updateClientProfileQuery(request, fastify);
+  const index = global.tblClient.findIndex(
+    (item) => item.clientId === results?.clientId
+  );
+  if (index !== -1) {
+    global.tblClient[index] = {
+      ...global.tblClient[index],
+      ...results
+    };
+  }
+  return `Profile updated successfully`;
+}
 
+const changePasswordService = async (request, fastify) => {
+  let { clientId, oldPassword, newPassword } = request.body;
+  const validateId = await clientDetailsByIdQuery(clientId, request, fastify)
+  if (!validateId) {
+    throw new Error(`Client ID does not exist`);
+  }
+  if(validateId && validateId.password === null){
+    throw new Error(`Client not registerd manually`);
+  }
+  const decryptedPassword = decrypt(validateId.password);
+  if (decryptedPassword !== oldPassword) {
+    throw new Error("Old Password is incorrect");
+  }
+  const hashedPassword = encrypt(newPassword);
+
+  newPassword = hashedPassword;
+  await changePasswordQuery({ newPassword: newPassword, clientId: clientId },
+    request, fastify
+  );
+  return `password update successfully`;
+}
 module.exports = {
   signUpUserService,
   signInUserServices,
@@ -1431,5 +1474,7 @@ module.exports = {
   verifyMobileService,
   verifyMobileOtpService,
   registerClientAppService,
-  verifyMobileNoAppService
+  verifyMobileNoAppService,
+  updateClientProfileService,
+  changePasswordService,
 };
