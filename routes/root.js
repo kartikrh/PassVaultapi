@@ -33,6 +33,8 @@ const {
   loadPanelDataInGlobal,
   registerClientApp,
   verifyMobileNoApp,
+  updateClientProfile,
+  changePassword,
   //loginRegistrationClient,
 } = require("../controller/users/index");
 const { Auth ,sendPushNotification,weblogs, Config, EventType, Commentary} = require("../swaggerSchema/groupTags/schema");
@@ -278,5 +280,13 @@ module.exports = async function (fastify, opts) {
       //   }),
     ],
     handler: (request, reply) => getCompetitionListByeventTypeId(request, reply, fastify),
-});
+  });
+  fastify.post("/editClient", {
+    schema: Auth.editClientProfile.schema,
+    handler: (request, reply) => updateClientProfile(request, reply, fastify),
+  });
+  fastify.post("/changePass", {
+    schema: Auth.changePassword.schema,
+    handler: (request, reply) => changePassword(request, reply, fastify),
+  });
 };

@@ -1381,6 +1381,96 @@ const verifyMobileNoAppQuery = async (data, request, fastify) => {
     
   }
 }
+const clientDetailsByIdQuery = async (clientId, request, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `SELECT "wrClientID" as "clientId", 
+              "wrGoogleID" as "googleId", 
+              "wrFacebookId" as "facebookId",
+              "wrUserName" as "userName", 
+              "wrClientName" as "fullName",
+              "wrPassword" as "password",
+              "wrIsAllowMultiLogin" as "isAllowMultiLogin",
+              "wrRegistrationProcessStatus" as "registrationProcessStatus", 
+              "wrEmailID" as "emailId", 
+              "wrMobileNo" as "mobileNo",
+              "wrProvider" as "provider", 
+              "wrIsUserActive" as "isUserActive",
+              "wrIsActive" as "isActive",
+              "wrIsEmailVerified" AS "isEmailVerified",
+              "wrIsMobileVerified" AS "isMobileVerified"
+       FROM "tblClient" 
+       WHERE "wrClientID" = $1`,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [clientId],
+      }
+    )
+    return result[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableConfig/updateClientProfieQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const updateClientProfileQuery = async (request, fastify) => {
+  try {
+    const data = request.body;
+
+    const updateQuery = await fastify.db.query(
+      `UPDATE "tblClient" SET
+      "wrClientName" = $1
+      WHERE "wrClientID" = $2
+      RETURNING
+          "wrClientID" as "clientId", 
+          "wrUserName" as "userName", 
+          "wrClientName" as "fullName"
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [data.fullName, data.clientId],
+      }
+    )
+    return updateQuery[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableConfig/updateClientProfieQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+
+const changePasswordQuery = async (data, request, fastify) => {
+  try {
+    const updateQuery = await fastify.db.query(
+      `UPDATE "tblClient" SET
+      "wrPassword" = $1
+      WHERE "wrClientID" = $2`,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [data.newPassword, data.clientId],
+      }
+    )
+    return updateQuery[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableConfig/changePasswordQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
 module.exports = {
   signInUser,
   signUpUser,
@@ -1411,5 +1501,8 @@ module.exports = {
   validateUser,
   registerClientAppQuery,
   getIdByValue,
-  verifyMobileNoAppQuery
+  verifyMobileNoAppQuery,
+  clientDetailsByIdQuery,
+  updateClientProfileQuery,
+  changePasswordQuery,
 };
