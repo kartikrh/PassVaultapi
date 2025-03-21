@@ -1,6 +1,6 @@
 const { QueryTypes } = require("sequelize");
 const { errorLogger } = require("../utilities/logger");
-const { clientProvider, getIpAddress } = require("../utilities");
+const { clientProvider, getIpAddress, clientProcessStatus } = require("../utilities");
 
 //TODO: this is a test api
 async function signUpUser(request, fastify) {
@@ -1251,7 +1251,136 @@ async function validateUser(body, request, fastify) {
     throw new Error(err.message);
   }
 }
+const registerClientAppQuery = async (data,request,fastify) => {
+  try {
+    let q1 = `
+      WITH insert_data AS
+        (
+          INSERT INTO "tblClient" (
+          "wrClientName",
+          "wrUserName",
+          "wrPassword",
+          "wrIsAllowMultiLogin",
+          "wrCreatedDate",
+          "wrIsEmailVerified",
+          "wrIsMobileVerified",
+          "wrMobileNo",
+          "wrIpAddress",
+          "wrProvider",
+          "wrRegistrationProcessStatus",
+          "wrCountryCode"
+        )   
+        VALUES (
+          $1,$2,$3,$4,now(),$5,$6,$7,$8,$9,$10,$11
+        )
+        RETURNING *
+      )
+      SELECT 
+        et."wrValue" as "encryptClientId",
+        "wrClientID" as "clientId",
+        "wrClientName" as "fullName",
+        "wrUserName" as "userName",
+        "wrPassword" as "password",
+        "wrIsAllowMultiLogin" as "isAllowMultiLogin",
+        "wrCreatedDate" as "createdDate",
+        "wrCreatedBy" as "createdBy",
+        "wrModifyBy" as "modifyBy",
+        "wrModifyDate" as "modifyDate",
+        "wrModifyType" as "modifyType",
+        "wrIsDelete" as "isDelete",
+        "wrIsEmailVerified" as "isEmailVerified",
+        "wrEmailID" as "emailId",
+        "wrIsMobileVerified" as "isMobileVerified",
+        "wrMobileNo" as "mobileNo",
+        "wrIpAddress" as "ipAddress",
+        "wrGoogleID" as "googleId",
+        "wrIsActive" as "isActive",
+        "wrFacebookId" as "facebookId",
+        "wrProvider" as "provider",
+        "wrRegistrationProcessStatus" as "registrationProcessStatus",
+        "wrIsUserActive" as "isUserActive",
+        "wrDeletedBy" as "deletedBy",
+        "wrDeletedAt" as "deletedAt",
+        "wrCountryCode" as "countryCode"
+      FROM insert_data a
+      LEFT JOIN "tblEncryptedData" et on a."wrClientID"=et."wrKey"
+    `;
 
+    const rs = await fastify.db.query(q1, {
+      type: fastify.db.QueryTypes.INSERT,
+      bind: [
+        data.mobileNo,
+        data.mobileNo,
+        data.password,
+        false,
+        false,
+        false,
+        data.mobileNo,
+        data.ipAddress,
+        clientProvider.Manual,
+        clientProcessStatus.ADDUSERDETAIL,
+        data.countryCode
+      ],
+    });
+    return rs[0];
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableUser/registerClientAppQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+}
+const getIdByValue = async (data, request , fastify)=>{
+  try {
+    const res = await fastify.db.query(
+      `
+        SELECT "wrKey" as "clientId"
+        FROM "tblEncryptedData"
+        WHERE "wrValue" = $1
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [data.clientId],
+      }
+    );
+    return res[0];
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableUser/getIdByValue",
+      request
+    );
+    throw new Error(error.message);
+  }
+}
+const verifyMobileNoAppQuery = async (data, request, fastify) => {
+  try {
+    let q1 = `
+      UPDATE "tblClient"
+      SET "wrIsMobileVerified" = true,
+          "wrRegistrationProcessStatus" = $1
+      WHERE "wrClientID" = $2
+    `;
+    const rs = await fastify.db.query(q1, {
+      type: fastify.db.QueryTypes.SELECT,
+      bind: [clientProcessStatus.MOEMAILVERIFIED, data.clientId],
+    });
+    return rs[0];
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableUser/verifyMobileNoAppQuery",
+      request
+    );
+    throw new Error(error.message);
+    
+  }
+}
 module.exports = {
   signInUser,
   signUpUser,
@@ -1280,4 +1409,7 @@ module.exports = {
   verifyEmail,
   verifyMobileOtp,
   validateUser,
+  registerClientAppQuery,
+  getIdByValue,
+  verifyMobileNoAppQuery
 };

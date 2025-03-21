@@ -17,6 +17,21 @@ const Auth = {
       },
     },
   },
+  signupAppAPI :{
+    schema: {
+      tags: ["Auth"],
+      description: "signupAppAPI",
+      body: {
+        type: "object",
+        properties: {
+          mobileNo : {type: "string"},
+          countryCode : {type: "string"},
+          password : {type: "string"},
+        },
+        required: ["mobileNo","countryCode","password"],
+      }
+    }
+  },
   signIn: {
     schema: {
       tags: ["Auth"],
@@ -361,6 +376,21 @@ const Auth = {
       },
     },
   },
+  verifyMobileNo : {
+    schema: {
+      tags: ["Auth"],
+      description: "verifyMobileNo",
+      body: {
+        type: "object",
+        properties: {
+          mobileNo : {type: "string"},
+          countryCode : {type: "string"},
+          otp : {type: "string"},
+        },
+        required: ["mobileNo","countryCode","otp"],
+      }
+    }
+  }
 };
 
 const Tabs = {
