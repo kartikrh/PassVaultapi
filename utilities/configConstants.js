@@ -59,5 +59,6 @@ const configConstants = {
     JERSEYYPOSITION : "JERSEYYPOSITION",
     DEFAULTPLAYERIMG : "DEFAULTPLAYERIMG",
     DEFAULTJERSEYIMG : "DEFAULTJERSEYIMG",
+    CLIENTOTP : "CLIENTOTP"
 }
 module.exports = configConstants;

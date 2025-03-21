@@ -5,6 +5,8 @@ const {
 } = require("../repository/TableConfig");
 const { callClientAPI, ServiceType, APIEndpointModuleType } = require("../utilities");
 const configConstants = require("../utilities/configConstants");
+const { ImgModuleConfig } = require("../utilities/imageConstant");
+const { generateImageName, storeImageOnServer } = require("../utilities/Images");
 const { errorLogger } = require("../utilities/logger");
 
 const allCongifService = async (request,fastify) => {
@@ -30,6 +32,19 @@ const createConfigService = async (request, fastify) => {
   const checkKey = global.tblConfigs.find((item) => item.key.toLowerCase() === request.body.key.trim().toLowerCase());
   if (checkKey) {
     throw new Error("Config with this Key already exists");
+  }
+  if(request.body.image && request.body.image.length > 0){
+    const iName = generateImageName({name : request.body.key})
+    const projectName = global.tblConfigs.find(
+      (item) => item.key.toLowerCase() === configConstants.PROJECT_NAME.toLowerCase()
+    ).value;
+    const path = await storeImageOnServer({
+      image: request.body.image[0],
+      project: projectName,
+      name: iName,
+      ...ImgModuleConfig.Config,
+    });
+    request.body.value = path;
   }
   const data = await insertConfigQuery(
     {
@@ -78,6 +93,20 @@ const updateConfigService = async (request, fastify) => {
     isActive : request.body.hasOwnProperty('isActive') ? request.body.isActive : checkId.isActive,
     isForAdmin: request.body.hasOwnProperty('isForAdmin') ? request.body.isForAdmin : checkId.isForAdmin,
   };
+
+  if(request.body.image && request.body.image.length > 0){
+    const iName = generateImageName({name : request.body.key})
+    const projectName = global.tblConfigs.find(
+      (item) => item.key.toLowerCase() === configConstants.PROJECT_NAME.toLowerCase()
+    ).value;
+    const path = await storeImageOnServer({
+      image: request.body.image[0],
+      project: projectName,
+      name: iName,
+      ...ImgModuleConfig.Config,
+    });
+    data.value = path;
+  }
 
   // if ("isActive" in request.body) {
   //   data.isActive = request.body.isActive;

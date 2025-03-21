@@ -32,7 +32,10 @@ const {
   registerClientOtpValidation,
   updateClientPassword,
   verifyEmail,
-  verifyMobileOtp
+  verifyMobileOtp,
+  registerClientAppQuery,
+  getIdByValue,
+  verifyMobileNoAppQuery
 } = require("../repository/TableUser");
 const {
   deviceInfo,
@@ -43,6 +46,7 @@ const {
 const { generateToken } = require("../utilities/tokenization");
 const configConstants = require("../utilities/configConstants");
 const { errorLogger } = require("../utilities/logger");
+const { glob } = require("fs");
 
 async function signUpUserService({ body }, fastify) {
   const hashedPassword = encrypt(body.password);
@@ -1288,7 +1292,7 @@ async function sendNotificationMobileService({ body }, fastify) {
     const results = await sendMobileNotifications(title, message, url, image, icon);
     return results;
 
-  } catch (error) {
+  } catch (error) {  
     return null;
   }
 }
@@ -1317,6 +1321,79 @@ async function signOutClientService(request, fastify) {
 
   } catch (error) {
     return null;
+  }
+}
+const registerClientAppService = async (request, fastify) => {
+  let checkExist = global.tblClient.find((item) =>
+    item.mobileNo === request.body.mobileNo
+  );
+  if (checkExist) {
+    throw new Error ("Mobile number already exists");
+  }
+  let encryptedPassword = encrypt(request.body.password);
+  request.body.password = encryptedPassword;
+  // if not then register
+  const result = await registerClientAppQuery(request.body,request, fastify);
+  global.tblClient.push(result[0]);
+  // check if otpSend true for mobile
+  let isSendOtp = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP)?.value;
+  // if(isSendOtp === 'true'){
+  //   // logic for send third party otp
+
+  // }
+  return {
+      clientId : result[0].encryptClientId,
+      mobileNo : result[0].mobileNo,
+      countryCode : result[0].countryCode
+  }
+  
+}
+const verifyMobileNoAppService = async (request, fastify) => {
+  const {clientId , otp} = request.body;
+  const checkExist = await getIdByValue({
+    clientId : clientId,
+  },request,fastify)
+
+  if(!checkExist){
+    return "Invalid Client Id"
+  }
+  let id = checkExist.clientId;
+  // check if client exist
+  const index = global.tblClient.findIndex((item) => item.clientId === id);
+  if (index == -1) {
+    throw new Error("Client not found");
+  }
+  if(global.tblClient[index]?.isMobileVerified == true){
+    throw new Error("Mobile number already verified");
+  }
+  // is otp send true
+  const isSendOtp = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP)?.value;
+  if(isSendOtp === 'true'){
+    // call third party otp
+      await verifyMobileNoAppQuery({
+        clientId :id
+      },request,fastify);
+      global.tblClient[index].isMobileVerified = true;
+      global.tblClient[index].registrationProcessStatus = 2;
+      return "Mobile number verified successfully";
+
+  }
+  else {
+    const otpConfig = global.tblConfigs.find((item) => item.key === configConstants.CLIENTOTP)?.value;
+    if(!otpConfig){
+      throw new Error("OTP Config not found");
+    }
+    if(otpConfig === otp){
+      await verifyMobileNoAppQuery({
+        clientId :id
+      },request,fastify);
+      global.tblClient[index].isMobileVerified = true;
+      global.tblClient[index].registrationProcessStatus = 2;
+      return "Mobile number verified successfully";
+    }
+    else {
+      return "Invalid OTP"
+    }
   }
 }
 
@@ -1353,4 +1430,6 @@ module.exports = {
   verifyEmailTokenService,
   verifyMobileService,
   verifyMobileOtpService,
+  registerClientAppService,
+  verifyMobileNoAppService
 };
