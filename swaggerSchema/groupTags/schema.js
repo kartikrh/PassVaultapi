@@ -435,6 +435,20 @@ const Auth = {
       },
     },
   },
+  ResendOTP: {
+    schema: {
+      tags: ["Auth"],
+      description: "OTP Resend",
+      body: {
+        type: "object",
+        properties: {
+          mobileNo: { type: "string" },
+          countryCode: { type: "string" },
+        },
+        required: ["mobileNo"],
+      },
+    },
+  },
 };
 
 const Tabs = {
