@@ -7,7 +7,7 @@ const {ImgModuleConfig} = require("../utilities/imageConstant");
 const nodemailer = require('nodemailer');
 const {sendNotification,sendMobileNotifications} = require("../WebPushHandler/index");
 const { SENDEMAILTYPE } = require("../utilities/configConstants");
-const { typesOfServices } = require('../utilities/index');
+const { typesOfServices, clientProcessStatus } = require('../utilities/index');
 
 const {
   signUpUser,
@@ -32,7 +32,15 @@ const {
   registerClientOtpValidation,
   updateClientPassword,
   verifyEmail,
-  verifyMobileOtp
+  verifyMobileOtp,
+  registerClientAppQuery,
+  getIdByValue,
+  verifyMobileNoAppQuery,
+  getEncryptClinet,
+  signInClientAppQuery,
+  updateClientProfileQuery,
+  changePasswordQuery,
+  clientDetailsByIdQuery,
 } = require("../repository/TableUser");
 const {
   deviceInfo,
@@ -43,6 +51,7 @@ const {
 const { generateToken } = require("../utilities/tokenization");
 const configConstants = require("../utilities/configConstants");
 const { errorLogger } = require("../utilities/logger");
+const { glob } = require("fs");
 
 async function signUpUserService({ body }, fastify) {
   const hashedPassword = encrypt(body.password);
@@ -1288,7 +1297,7 @@ async function sendNotificationMobileService({ body }, fastify) {
     const results = await sendMobileNotifications(title, message, url, image, icon);
     return results;
 
-  } catch (error) {
+  } catch (error) {  
     return null;
   }
 }
@@ -1319,7 +1328,181 @@ async function signOutClientService(request, fastify) {
     return null;
   }
 }
+const registerClientAppService = async (request, fastify) => {
+  let checkExist = global.tblClient.find((item) =>
+    item.mobileNo === request.body.mobileNo
+  );
+  if (checkExist && (checkExist.isMobileVerified == true || checkExist.registrationProcessStatus == clientProcessStatus.MOEMAILVERIFIED)) {
+    throw new Error ("Mobile number already exists");
+  }
+  if(checkExist && (checkExist.isMobileVerified == false || checkExist.registrationProcessStatus == clientProcessStatus.ADDUSERDETAIL)){
+    // get encrypt client id
+    let clientId = checkExist.clientId;
+    let encrypt = await getEncryptClinet({clientId},request,fastify);
+    let isSendOtp = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP)?.value;
+    // if(isSendOtp === 'true'){
+    //   // logic for send third party otp
 
+    // }
+    return {
+        clientId : encrypt.clientId,
+        mobileNo : checkExist.mobileNo,
+        countryCode : checkExist.countryCode,
+    }
+  }
+  let encryptedPassword = encrypt(request.body.password);
+  request.body.password = encryptedPassword;
+  // if not then register
+  const result = await registerClientAppQuery(request.body,request, fastify);
+  global.tblClient.push(result[0]);
+  // check if otpSend true for mobile
+  let isSendOtp = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP)?.value;
+  // if(isSendOtp === 'true'){
+  //   // logic for send third party otp
+
+  // }
+  return {
+      clientId : result[0].encryptClientId,
+      mobileNo : result[0].mobileNo,
+      countryCode : result[0].countryCode,
+  }
+  
+}
+const verifyMobileNoAppService = async (request, fastify) => {
+  const {clientId , otp} = request.body;
+  const checkExist = await getIdByValue({
+    clientId : clientId,
+  },request,fastify)
+
+  if(!checkExist){
+    return "Invalid Client Id"
+  }
+  let id = checkExist.clientId;
+  // check if client exist
+  const index = global.tblClient.findIndex((item) => item.clientId === id);
+  if (index == -1) {
+    throw new Error("Client not found");
+  }
+  if(global.tblClient[index]?.isMobileVerified == true){
+    throw new Error("Mobile number already verified");
+  }
+  // is otp send true
+  const isSendOtp = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP)?.value;
+  if(isSendOtp === 'true'){
+    // call third party otp
+      await verifyMobileNoAppQuery({
+        clientId :id
+      },request,fastify);
+      global.tblClient[index].isMobileVerified = true;
+      global.tblClient[index].registrationProcessStatus = 2;
+      const token = generateToken({ clientId: id });
+      return {
+        token : token,
+        details: {
+          clientId: global.tblClient[index].clientId,
+          countryCode: global.tblClient[index].countryCode,
+          mobileNo: global.tblClient[index].mobileNo,
+        }
+      }
+  }
+  else {
+    const otpConfig = global.tblConfigs.find((item) => item.key === configConstants.CLIENTOTP)?.value;
+    if(!otpConfig){
+      throw new Error("OTP Config not found");
+    }
+    if(otpConfig === otp){
+      await verifyMobileNoAppQuery({
+        clientId :id
+      },request,fastify);
+      global.tblClient[index].isMobileVerified = true;
+      global.tblClient[index].registrationProcessStatus = 2;
+
+      const token = generateToken({ clientId: id });
+
+      return {
+        token : token,
+        details: {
+          clientId: global.tblClient[index].clientId,
+          countryCode: global.tblClient[index].countryCode,
+          mobileNo: global.tblClient[index].mobileNo,
+        }
+      };
+    }
+    else {
+      return "Invalid OTP"
+    }
+  }
+}
+const signinClientAppService = async (request, fastify) => {
+  const {mobileNo, password} = request.body;
+  const checkExist = global.tblClient.find((item) =>
+    item.mobileNo === mobileNo && item.countryCode === request.body.countryCode
+  );
+  if (!checkExist) {
+    throw new Error("User not found");
+  }
+  if(checkExist.isMobileVerified == false){
+    throw new Error("Mobile number not verified");
+  }
+  let encryptedPassword = encrypt(password);
+  let t1 = uuidv4()
+  const token = await signInClientAppQuery({
+    clientId : checkExist.clientId,
+    mobileNo : mobileNo,
+    password : encryptedPassword,
+    countryCode : request.body.countryCode,
+    token : t1
+  },request,fastify);
+  return {
+    token,
+    details: {
+      clientId: checkExist.clientId,
+      countryCode: checkExist.countryCode,
+      mobileNo: checkExist.mobileNo,
+    }
+  }
+}
+const updateClientProfileService = async (request, fastify) => {
+  const validateId = global.tblClient.find(
+    (item) => item.clientId === request.body.clientId
+  );
+  if (!validateId) {
+    throw new Error(`Client ID does not exist`);
+  }
+  const results = await updateClientProfileQuery(request, fastify);
+  const index = global.tblClient.findIndex(
+    (item) => item.clientId === results?.clientId
+  );
+  if (index !== -1) {
+    global.tblClient[index] = {
+      ...global.tblClient[index],
+      ...results
+    };
+  }
+  return `Profile updated successfully`;
+}
+
+const changePasswordService = async (request, fastify) => {
+  let { clientId, oldPassword, newPassword } = request.body;
+  const validateId = await clientDetailsByIdQuery(clientId, request, fastify)
+  if (!validateId) {
+    throw new Error(`Client ID does not exist`);
+  }
+  if(validateId && validateId.password === null){
+    throw new Error(`Client not registerd manually`);
+  }
+  const decryptedPassword = decrypt(validateId.password);
+  if (decryptedPassword !== oldPassword) {
+    throw new Error("Old Password is incorrect");
+  }
+  const hashedPassword = encrypt(newPassword);
+
+  newPassword = hashedPassword;
+  await changePasswordQuery({ newPassword: newPassword, clientId: clientId },
+    request, fastify
+  );
+  return `password update successfully`;
+}
 module.exports = {
   signUpUserService,
   signInUserServices,
@@ -1353,4 +1536,9 @@ module.exports = {
   verifyEmailTokenService,
   verifyMobileService,
   verifyMobileOtpService,
+  registerClientAppService,
+  verifyMobileNoAppService,
+  signinClientAppService,
+  updateClientProfileService,
+  changePasswordService,
 };

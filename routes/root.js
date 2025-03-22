@@ -31,6 +31,11 @@ const {
   verifyMobile,
   verifyMobileOtp,
   loadPanelDataInGlobal,
+  registerClientApp,
+  verifyMobileNoApp,
+  signinClientApp,
+  updateClientProfile,
+  changePassword,
   //loginRegistrationClient,
 } = require("../controller/users/index");
 const { Auth ,sendPushNotification,weblogs, Config, EventType, Commentary} = require("../swaggerSchema/groupTags/schema");
@@ -212,10 +217,19 @@ module.exports = async function (fastify, opts) {
     schema: Auth.clientregistration.schema,
     handler: (request, reply) => registrationClient(request, reply, fastify),
   });
-  fastify.post("/signupClientDetails", {
-    schema: Auth.signupClientDetails.schema,
-    handler: (request, reply) => registerDetails(request, reply, fastify),
+  fastify.post("/signupAppAPI", {
+    schema: Auth.signupAppAPI.schema,
+    handler: (request, reply) => registerClientApp(request, reply, fastify),
   });
+  fastify.post("/verifyMobileNo", {
+    schema: Auth.verifyMobileNo.schema,
+    handler: (request, reply) => verifyMobileNoApp(request, reply, fastify),
+  });
+  fastify.post("/signinClientApp", {
+    schema: Auth.signinClientApp.schema,
+    handler: (request, reply) => signinClientApp(request, reply, fastify),
+  });
+
   fastify.post("/signOutClient", {
     schema: Auth.signOut.schema,
     //preHandler: [(request, reply) => authorize(request, reply, fastify)],
@@ -272,5 +286,14 @@ module.exports = async function (fastify, opts) {
       //   }),
     ],
     handler: (request, reply) => getCompetitionListByeventTypeId(request, reply, fastify),
-});
+  });
+  fastify.post("/editClient", {
+    schema: Auth.editClientProfile.schema,
+    handler: (request, reply) => updateClientProfile(request, reply, fastify),
+  });
+  fastify.post("/changePass", {
+    schema: Auth.changePassword.schema,
+    handler: (request, reply) => changePassword(request, reply, fastify),
+  });
+  
 };

@@ -1,6 +1,7 @@
 const { QueryTypes } = require("sequelize");
 const { errorLogger } = require("../utilities/logger");
-const { clientProvider, getIpAddress } = require("../utilities");
+const { clientProvider, getIpAddress, clientProcessStatus, deviceInfo } = require("../utilities");
+const { generateToken } = require("../utilities/tokenization");
 
 //TODO: this is a test api
 async function signUpUser(request, fastify) {
@@ -905,7 +906,8 @@ async function loginClient(body, fastify) {
       // Handle Google login
       let data = await fastify.db.query(
         `SELECT "wrClientID" as "clientId", "wrGoogleID" as "googleId", "wrUserName" as "userName", "wrIsAllowMultiLogin" as "isAllowMultiLogin","wrEmailID" as "emailId" ,"wrMobileNo" as "mobileNo",
-        "wrRegistrationProcessStatus" as "registrationProcessStatus", "wrProvider" as "provider"
+        "wrRegistrationProcessStatus" as "registrationProcessStatus", "wrProvider" as "provider",
+        "wrCountryCode" as "countryCode"
          FROM "tblClient"
          WHERE "wrGoogleID" = $1 AND "wrIsDelete" = false;`,
         {
@@ -925,7 +927,8 @@ async function loginClient(body, fastify) {
             $1, true, now(), $2, true, true, false , $3 , $4, $5, $6, $7,$8
           ) RETURNING "wrClientID" as "clientId", "wrGoogleID" as "googleId", "wrUserName" as "userName", "wrIsAllowMultiLogin" as "isAllowMultiLogin",
            "wrEmailID" as "emailId","wrMobileNo" as "mobileNo" , "wrProvider" as "provider" ,
-            "wrRegistrationProcessStatus" as "registrationProcessStatus", "wrIsEmailVerified" as "isEmailVerified", "wrIsUserActive" as "isUserActive", "wrIsActive" as "isActive", "wrCreatedDate" as "createdDate", "wrIsMobileVerified" as "isMobileVerified", "wrIsDelete" as "isDelete", "wrClientName" as "fullName";`,
+            "wrRegistrationProcessStatus" as "registrationProcessStatus", "wrIsEmailVerified" as "isEmailVerified", "wrIsUserActive" as "isUserActive", "wrIsActive" as "isActive", "wrCreatedDate" as "createdDate", "wrIsMobileVerified" as "isMobileVerified", "wrIsDelete" as "isDelete", "wrClientName" as "fullName",
+            "wrCountryCode" as "countryCode";`,
           {
             type: QueryTypes.INSERT,
             bind: [googleID, email, userName, clientProvider.Google, 3, 1, fullName, ipAddress],
@@ -975,7 +978,11 @@ async function loginClient(body, fastify) {
           ) VALUES (
             $1, true, now(), $2, true ,false, $3 ,$4, $5, $6, $7 ,$8
           ) RETURNING "wrClientID" as "clientId", "wrFacebookId" as "facebookId", "wrUserName" as "userName", "wrIsAllowMultiLogin" as "isAllowMultiLogin","wrEmailID" as "emailId",
-           "wrMobileNo" as "mobileNo" , "wrProvider" as "provider", "wrRegistrationProcessStatus" as "registrationProcessStatus", "wrIsEmailVerified" as "isEmailVerified", "wrIsUserActive" as "isUserActive", "wrIsActive" as "isActive", "wrCreatedDate" as "createdDate", "wrIsMobileVerified" as "isMobileVerified", "wrIsDelete" as "isDelete", "wrClientName" as "fullName";`,
+           "wrMobileNo" as "mobileNo" , "wrProvider" as "provider", "wrRegistrationProcessStatus" as "registrationProcessStatus", "wrIsEmailVerified" as "isEmailVerified", "wrIsUserActive" as "isUserActive",
+            "wrIsActive" as "isActive",
+             "wrCreatedDate" as "createdDate",
+              "wrIsMobileVerified" as "isMobileVerified", "wrIsDelete" as "isDelete",
+               "wrClientName" as "fullName" , "wrCountryCode" as "countryCode";`,
           {
             type: fastify.db.QueryTypes.SELECT,
             bind: [facebookId, email, userName, clientProvider.Facebook, 3, 1, fullName, ipAddress],
@@ -991,7 +998,7 @@ async function loginClient(body, fastify) {
          "wrIsAllowMultiLogin" as "isAllowMultiLogin","wrEmailID" as "emailId",
          "wrMobileNo" as "mobileNo","wrClientName" as "fullName", "wrProvider" as "provider",
          "wrRegistrationProcessStatus" as "registrationProcessStatus",
-         "wrIsUserActive" as "isUserActive"
+         "wrIsUserActive" as "isUserActive", "wrCountryCode" as "countryCode"
          FROM "tblClient"
          WHERE "wrEmailID" = $1 AND "wrIsDelete" = false;`,
         {
@@ -1010,7 +1017,8 @@ async function loginClient(body, fastify) {
         `SELECT "wrClientID" as "clientId", "wrGoogleID" as "googleId", "wrUserName" as "userName",
          "wrIsAllowMultiLogin" as "isAllowMultiLogin","wrEmailID" as "emailId",
          "wrMobileNo" as "mobileNo","wrClientName" as "fullName", "wrProvider" as "provider",
-          "wrRegistrationProcessStatus" as "registrationProcessStatus"
+          "wrRegistrationProcessStatus" as "registrationProcessStatus",
+          "wrCountryCode" as "countryCode"
          FROM "tblClient"
          WHERE "wrEmailID" = $1 AND "wrPassword" = $2 AND "wrIsDelete" = false;`,
         {
@@ -1251,7 +1259,302 @@ async function validateUser(body, request, fastify) {
     throw new Error(err.message);
   }
 }
+const registerClientAppQuery = async (data,request,fastify) => {
+  try {
+    let q1 = `
+      WITH insert_data AS
+        (
+          INSERT INTO "tblClient" (
+          "wrClientName",
+          "wrUserName",
+          "wrPassword",
+          "wrIsAllowMultiLogin",
+          "wrCreatedDate",
+          "wrIsEmailVerified",
+          "wrIsMobileVerified",
+          "wrMobileNo",
+          "wrIpAddress",
+          "wrProvider",
+          "wrRegistrationProcessStatus",
+          "wrCountryCode",
+          "wrIsUserActive"
+        )   
+        VALUES (
+          $1,$2,$3,$4,now(),$5,$6,$7,$8,$9,$10,$11,1
+        )
+        RETURNING *
+      )
+      SELECT 
+        et."wrValue" as "encryptClientId",
+        "wrClientID" as "clientId",
+        "wrClientName" as "fullName",
+        "wrUserName" as "userName",
+        "wrPassword" as "password",
+        "wrIsAllowMultiLogin" as "isAllowMultiLogin",
+        "wrCreatedDate" as "createdDate",
+        "wrCreatedBy" as "createdBy",
+        "wrModifyBy" as "modifyBy",
+        "wrModifyDate" as "modifyDate",
+        "wrModifyType" as "modifyType",
+        "wrIsDelete" as "isDelete",
+        "wrIsEmailVerified" as "isEmailVerified",
+        "wrEmailID" as "emailId",
+        "wrIsMobileVerified" as "isMobileVerified",
+        "wrMobileNo" as "mobileNo",
+        "wrIpAddress" as "ipAddress",
+        "wrGoogleID" as "googleId",
+        "wrIsActive" as "isActive",
+        "wrFacebookId" as "facebookId",
+        "wrProvider" as "provider",
+        "wrRegistrationProcessStatus" as "registrationProcessStatus",
+        "wrIsUserActive" as "isUserActive",
+        "wrDeletedBy" as "deletedBy",
+        "wrDeletedAt" as "deletedAt",
+        "wrCountryCode" as "countryCode"
+      FROM insert_data a
+      LEFT JOIN "tblEncryptedData" et on a."wrClientID"=et."wrKey"
+    `;
 
+    const rs = await fastify.db.query(q1, {
+      type: fastify.db.QueryTypes.INSERT,
+      bind: [
+        data.mobileNo,
+        data.mobileNo,
+        data.password,
+        false,
+        false,
+        false,
+        data.mobileNo,
+        data.ipAddress,
+        clientProvider.Manual,
+        clientProcessStatus.ADDUSERDETAIL,
+        data.countryCode
+      ],
+    });
+    return rs[0];
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableUser/registerClientAppQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+}
+const getIdByValue = async (data, request , fastify)=>{
+  try {
+    const res = await fastify.db.query(
+      `
+        SELECT "wrKey" as "clientId"
+        FROM "tblEncryptedData"
+        WHERE "wrValue" = $1
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [data.clientId],
+      }
+    );
+    return res[0];
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableUser/getIdByValue",
+      request
+    );
+    throw new Error(error.message);
+  }
+}
+const verifyMobileNoAppQuery = async (data, request, fastify) => {
+  try {
+    let q1 = `
+      UPDATE "tblClient"
+      SET "wrIsMobileVerified" = true,
+          "wrRegistrationProcessStatus" = $1
+      WHERE "wrClientID" = $2
+    `;
+    const rs = await fastify.db.query(q1, {
+      type: fastify.db.QueryTypes.SELECT,
+      bind: [clientProcessStatus.MOEMAILVERIFIED, data.clientId],
+    });
+    return rs[0];
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableUser/verifyMobileNoAppQuery",
+      request
+    );
+    throw new Error(error.message);
+    
+  }
+}
+const getEncryptClinet = async (data, request , fastify)=>{
+  try {
+    const res = await fastify.db.query(
+      `
+        SELECT "wrValue" as "clientId"
+        FROM "tblEncryptedData"
+        WHERE "wrKey" = $1
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [data.clientId],
+      }
+    );
+    return res[0];
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableUser/getEncryptClinet",
+      request
+    );
+    throw new Error(error.message);
+  }
+}
+const signInClientAppQuery = async (data, request, fastify) => {
+  try{
+    // find if password is correct
+    let user = await fastify.db.query(
+      `SELECT * FROM "tblClient" 
+      WHERE "wrClientID" = $1 AND "wrPassword" = $2
+      AND "wrIsDelete" = false`,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [data.clientId, data.password],
+      }
+    );
+    if(user.length == 0){
+      throw new Error("Invalid password");
+    }
+    if(user[0].wrIsUserActive != 1){
+      throw new Error("User is not active");
+    }
+   
+    let tokenPayload = {
+      WrClientId: user[0].wrClientID,
+      WrUserName: user[0].wrUserName,
+      WrUserName: user[0].wrUserName,
+      WrIsSuperAdmin: user[0].wrIsSuperAdmin,
+      WrRoleId : 0,
+      WrUserType : 0,
+      WrAllowMultiLogin : false,
+      wrToken : data.token
+    }
+    const df = deviceInfo(request);
+    const ft = generateToken(tokenPayload);
+    // Insert login information
+    await fastify.db.query(
+      `INSERT INTO "tblUserLoginInfos" ("wrClientID", "wrInfo", "wrIsLogin", "wrToken", "wrCreatedDate")
+      VALUES ($1, $2, true, $3, now());`,
+      {
+        type: QueryTypes.INSERT,
+        bind: [user[0].wrClientID, df, data.token],
+      }
+    );
+    return ft;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableUser/signInClientAppQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+}
+const clientDetailsByIdQuery = async (clientId, request, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `SELECT "wrClientID" as "clientId", 
+              "wrGoogleID" as "googleId", 
+              "wrFacebookId" as "facebookId",
+              "wrUserName" as "userName", 
+              "wrClientName" as "fullName",
+              "wrPassword" as "password",
+              "wrIsAllowMultiLogin" as "isAllowMultiLogin",
+              "wrRegistrationProcessStatus" as "registrationProcessStatus", 
+              "wrEmailID" as "emailId", 
+              "wrMobileNo" as "mobileNo",
+              "wrProvider" as "provider", 
+              "wrIsUserActive" as "isUserActive",
+              "wrIsActive" as "isActive",
+              "wrIsEmailVerified" AS "isEmailVerified",
+              "wrIsMobileVerified" AS "isMobileVerified"
+       FROM "tblClient" 
+       WHERE "wrClientID" = $1`,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [clientId],
+      }
+    )
+    return result[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableConfig/updateClientProfieQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const updateClientProfileQuery = async (request, fastify) => {
+  try {
+    const data = request.body;
+
+    const updateQuery = await fastify.db.query(
+      `UPDATE "tblClient" SET
+      "wrClientName" = $1
+      WHERE "wrClientID" = $2
+      RETURNING
+          "wrClientID" as "clientId", 
+          "wrUserName" as "userName", 
+          "wrClientName" as "fullName"
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [data.fullName, data.clientId],
+      }
+    )
+    return updateQuery[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableConfig/updateClientProfieQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+
+const changePasswordQuery = async (data, request, fastify) => {
+  try {
+    const updateQuery = await fastify.db.query(
+      `UPDATE "tblClient" SET
+      "wrPassword" = $1
+      WHERE "wrClientID" = $2`,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [data.newPassword, data.clientId],
+      }
+    )
+    return updateQuery[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableConfig/changePasswordQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
 module.exports = {
   signInUser,
   signUpUser,
@@ -1280,4 +1583,12 @@ module.exports = {
   verifyEmail,
   verifyMobileOtp,
   validateUser,
+  registerClientAppQuery,
+  getIdByValue,
+  verifyMobileNoAppQuery,
+  getEncryptClinet,
+  signInClientAppQuery,
+  clientDetailsByIdQuery,
+  updateClientProfileQuery,
+  changePasswordQuery,
 };

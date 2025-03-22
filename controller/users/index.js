@@ -32,7 +32,12 @@ const {
   verifyEmailService,
   verifyEmailTokenService,
   verifyMobileService,
-  verifyMobileOtpService
+  verifyMobileOtpService,
+  registerClientAppService,
+  verifyMobileNoAppService,
+  signinClientAppService,
+  updateClientProfileService,
+  changePasswordService,
 } = require("../../services/user");
 const { errorLogger,updateWebRequestLogs } = require("../../utilities/logger");
 // const fetchAllDataFromDb = require("../../utilities/fetchAllData");
@@ -288,6 +293,33 @@ async function registrationClient(request, reply, fastify) {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 }
+const registerClientApp = async (request, reply, fastify) => {
+  try {
+    const result = await registerClientAppService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/registerClientApp", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const verifyMobileNoApp = async (request, reply, fastify) => {
+  try {
+    const result = await verifyMobileNoAppService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/verifyMobileNoApp", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const signinClientApp = async (request, reply, fastify) => {
+  try {
+    const result = await signinClientAppService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/signinClientApp", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 async function registerDetails(request, reply, fastify) {
   try {
     const result = await registerDetailsService(request, fastify);
@@ -446,6 +478,25 @@ async function AddUpdateWebLogs(request, reply, fastify) {
     reply.status(200).send(error(err.message, ERROR_CODES.AUTH_ERROR, 200));
   }
 }
+async function updateClientProfile(request, reply, fastify) {
+  try {
+    const result = await updateClientProfileService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/updateClientProfile", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+}
+
+async function changePassword(request, reply, fastify) {
+  try {
+    const result = await changePasswordService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/changePassword", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+}
 module.exports = {
   signUpUser,
   signInUser,
@@ -485,4 +536,9 @@ module.exports = {
   verifyMobile,
   verifyMobileOtp,
   loadPanelDataInGlobal,
+  registerClientApp,
+  verifyMobileNoApp,
+  signinClientApp,
+  updateClientProfile,
+  changePassword,
 };

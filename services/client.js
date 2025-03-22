@@ -72,6 +72,7 @@ const updateClientService = async (request, fastify) => {
     isUserActive: request.body.isUserActive,
     provider: request.body.provider || validateClientId.provider,
     isActive: request.body.isActive,
+    countryCode : request.body.countryCode || validateClientId.countryCode
   };
 
   await updateClientQuery(body, request, fastify);

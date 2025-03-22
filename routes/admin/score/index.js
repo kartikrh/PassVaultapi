@@ -40,6 +40,7 @@ const { getAllCompetition } = require("../../../controller/users/admin/competiti
 const { getAllVideoLibrary } = require("../../../controller/users/admin/videoLibrary/index");
 const { getAllPhotoLibrary, allLibraryImages } = require("../../../controller/users/admin/photoLibrary/index");
 const { getAllTipsClientAPI } = require("../../../controller/users/admin/tips/index");
+const { getAllCountryCode } = require("../../../controller/users/admin/countryCode");
 
 const {
   Score,
@@ -335,5 +336,8 @@ module.exports = async (fastify, opts) => {
     }
   
     return reply.send(filterData);
+  });
+  fastify.post("/countryCodes", {
+    handler: (request, reply) => getAllCountryCode(request, reply, fastify),
   });
 };

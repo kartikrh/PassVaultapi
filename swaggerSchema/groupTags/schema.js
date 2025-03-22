@@ -17,6 +17,36 @@ const Auth = {
       },
     },
   },
+  signupAppAPI :{
+    schema: {
+      tags: ["Auth"],
+      description: "signupAppAPI",
+      body: {
+        type: "object",
+        properties: {
+          mobileNo : {type: "string"},
+          countryCode : {type: "string"},
+          password : {type: "string"},
+        },
+        required: ["mobileNo","countryCode","password"],
+      }
+    }
+  }, 
+  signinClientApp : {
+    schema: {
+      tags: ["Auth"],
+      description: "signinClientApp",
+      body: {
+        type: "object",
+        properties: {
+          mobileNo : {type: "string"},
+          countryCode : {type: "string"},
+          password : {type: "string"},
+        },
+        required: ["mobileNo","countryCode","password"],
+      }
+    }
+  },
   signIn: {
     schema: {
       tags: ["Auth"],
@@ -358,6 +388,50 @@ const Auth = {
           mobileNo: { type: "string" },
         },
         required: ["clientId"],
+      },
+    },
+  },
+  verifyMobileNo : {
+    schema: {
+      tags: ["Auth"],
+      description: "verifyMobileNo",
+      body: {
+        type: "object",
+        properties: {
+          mobileNo : {type: "string"},
+          countryCode : {type: "string"},
+          otp : {type: "string"},
+        },
+        required: ["mobileNo","countryCode","otp"],
+      }
+    }
+  },
+  editClientProfile: {
+    schema: {
+      tags: ["Auth"],
+      description: "edit client profile",
+      body: {
+        type: "object",
+        properties: {
+          clientId : {type: "integer"},
+          fullName: { type: "string" },
+        },
+        required: ["clientId"],
+      },
+    },
+  },
+  changePassword: {
+    schema: {
+      tags: ["Auth"],
+      description: "change client password",
+      body: {
+        type: "object",
+        properties: {
+          clientId : {type: "integer"},
+          oldPassword: { type: "string" },
+          newPassword: { type: "string" },
+        },
+        required: ["clientId", "oldPassword", "newPassword"],
       },
     },
   },
@@ -8168,6 +8242,54 @@ const Tips = {
     },
   },
 };
+const CountryCode = {
+  save: {
+    schema: {
+      tags: ["CountryCode"],
+      security: [{ bearerAuth: [] }],
+      description: "save country code data",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          countryCode: { type: "string" },
+          countryName: { type: "string" },
+        },
+        required: ["id"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["CountryCode"],
+      description: "delete country code(s) data",
+      body: {
+        type: "object",
+        properties: {
+          id: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["id"],
+      },
+    },
+  },
+  getById: {
+    schema: {
+      tags: ["CountryCode"],
+      description: "get country code data by id",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+        },
+        required: ["id"],
+      },
+    },
+  },
+};
 module.exports = {
   Auth,
   Tabs,
@@ -8230,5 +8352,6 @@ module.exports = {
   VideoLibrary,
   ShotType,
   Tips,
-  MatchTypeBowlingPredictor
+  MatchTypeBowlingPredictor,
+  CountryCode,
 };

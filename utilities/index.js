@@ -747,6 +747,11 @@ const callTPAPI = async (data ,fastify) =>{
     );
   }
 }
+const clientProcessStatus = {
+  ADDUSERDETAIL : 1,
+  MOEMAILVERIFIED : 2,
+  PASSWORDSET : 3,
+}
 module.exports = {
   ERROR_CODES,
   error,
@@ -798,5 +803,6 @@ module.exports = {
   VideoLibraryType,
   ModuleTypes,
   callTPAPI,
-  MarketTypeCategories
+  MarketTypeCategories,
+  clientProcessStatus
 };
