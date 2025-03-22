@@ -790,14 +790,11 @@ const verifyOTP = async (data, request, fastify) => {
   try {
     let url = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.OTPVERIFY.toLowerCase())?.value;
     let otpAuthKey = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.OTPAUTHKEY.toLowerCase())?.value;
-    console.log("url11111", url)
     if(!url || !otpAuthKey) return 'OTP Verify URL not found';
     let cc = data.countryCode.replace("+", "");
     url = url.replace("{otp}", data.otp);
     url = url.replace("{mobile}", cc + data.mobileNo);
-    console.log("url", url)
     const result = await axios.get(url, { headers: { authkey: otpAuthKey }});
-    console.log("result.data.type", result.data)
     if(result.data.type == "success"){
       return true;
     }
@@ -805,17 +802,17 @@ const verifyOTP = async (data, request, fastify) => {
       errorLogger(
         fastify,
         result.data.message,
-        "DB ERROR --> utilities/index/sendOtpToMobile",
+        "DB ERROR --> utilities/index/verifyOTP",
         request
       );
       return false;
     }
   } catch (error) {
-    console.log("error from sendOtpToMobile", error);
+    console.log("error from verifyOTP", error);
     errorLogger(
       fastify,
       error.message,
-      "DB ERROR --> utilities/index/sendOtpToMobile",
+      "DB ERROR --> utilities/index/verifyOTP",
       request
     );
     throw new Error(error.message);
