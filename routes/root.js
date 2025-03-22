@@ -295,4 +295,5 @@ module.exports = async function (fastify, opts) {
     schema: Auth.changePassword.schema,
     handler: (request, reply) => changePassword(request, reply, fastify),
   });
+  
 };
