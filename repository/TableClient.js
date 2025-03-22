@@ -15,7 +15,8 @@ const getAllClientQuery = async (fastify) => {
               "wrIsUserActive" as "isUserActive",
               "wrIsActive" as "isActive",
               "wrIsEmailVerified" AS "isEmailVerified",
-              "wrIsMobileVerified" AS "isMobileVerified"
+              "wrIsMobileVerified" AS "isMobileVerified",
+              "wrCountryCode" as "countryCode"
         from "tblClient"
         where "wrIsDelete" = false
         `,
@@ -87,7 +88,8 @@ const insertClientQuery = async (data, request, fastify) => {
                     "wrRegistrationProcessStatus" as "registrationProcessStatus",
                     "wrIsUserActive" as "isUserActive",
                     "wrProvider" as "provider",
-                    "wrIsActive" as "isActive"
+                    "wrIsActive" as "isActive",
+                    "wrCountryCode" as "countryCode"
                 from "insert_data"
             `,
       {
