@@ -7,7 +7,7 @@ const {ImgModuleConfig} = require("../utilities/imageConstant");
 const nodemailer = require('nodemailer');
 const {sendNotification,sendMobileNotifications} = require("../WebPushHandler/index");
 const { SENDEMAILTYPE } = require("../utilities/configConstants");
-const { typesOfServices, clientProcessStatus } = require('../utilities/index');
+const { typesOfServices, clientProcessStatus, sendOtpToMobile } = require('../utilities/index');
 
 const {
   signUpUser,
@@ -1340,14 +1340,18 @@ const registerClientAppService = async (request, fastify) => {
     let clientId = checkExist.clientId;
     let encrypt = await getEncryptClinet({clientId},request,fastify);
     let isSendOtp = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP)?.value;
-    // if(isSendOtp === 'true'){
-    //   // logic for send third party otp
-
-    // }
+    if(isSendOtp === 'true'){
+      // logic for send third party otp
+      // get the sendOtp url
+      let send =await sendOtpToMobile(request.body ,request , fastify)
+      if(!send){
+        throw new Error("Error in sending OTP")
+      }
+    }
     return {
         clientId : encrypt.clientId,
         mobileNo : checkExist.mobileNo,
-        countryCode : checkExist.countryCode,
+        countryCode : request.body.countryCode,
     }
   }
   let encryptedPassword = encrypt(request.body.password);
@@ -1357,10 +1361,14 @@ const registerClientAppService = async (request, fastify) => {
   global.tblClient.push(result[0]);
   // check if otpSend true for mobile
   let isSendOtp = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP)?.value;
-  // if(isSendOtp === 'true'){
-  //   // logic for send third party otp
-
-  // }
+  if(isSendOtp === 'true'){
+    // logic for send third party otp
+    // get the sendOtp url
+    let send =await sendOtpToMobile(request.body ,request , fastify)
+    if(!send){
+      throw new Error("Error in sending OTP")
+    }
+  }
   return {
       clientId : result[0].encryptClientId,
       mobileNo : result[0].mobileNo,
@@ -1399,7 +1407,7 @@ const verifyMobileNoAppService = async (request, fastify) => {
       return {
         token : token,
         details: {
-          clientId: global.tblClient[index].clientId,
+          clientId:clientId,
           countryCode: global.tblClient[index].countryCode,
           mobileNo: global.tblClient[index].mobileNo,
         }
