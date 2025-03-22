@@ -1473,6 +1473,7 @@ const signinClientAppService = async (request, fastify) => {
     }
   }
 }
+
 const updateClientProfileService = async (request, fastify) => {
   const validateId = global.tblClient.find(
     (item) => item.clientId === request.body.clientId
