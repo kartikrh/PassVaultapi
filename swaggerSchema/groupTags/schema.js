@@ -8352,5 +8352,6 @@ module.exports = {
   VideoLibrary,
   ShotType,
   Tips,
-  MatchTypeBowlingPredictor
+  MatchTypeBowlingPredictor,
+  CountryCode,
 };
