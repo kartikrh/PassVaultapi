@@ -752,6 +752,72 @@ const clientProcessStatus = {
   MOEMAILVERIFIED : 2,
   PASSWORDSET : 3,
 }
+const sendOtpToMobile = async (data, request, fastify) => {
+  try {
+    let url = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.OTPURL.toLowerCase())?.value;
+    if(!url) return 'OTP URL not found';
+    // call this otp url to send otp to mobile
+    // replace {mobile} with the mobile number
+    //remove + from country code
+    let cc = data.countryCode.replace("+", "");
+    url = url.replace("{mobile}", cc + data.mobileNo);
+    const result = await axios.post(url);
+    console.log(result)
+    if(result.data.type == "success"){
+      return true;
+    }
+    else {
+      errorLogger(
+        fastify,
+        result.data.message,
+        "DB ERROR --> utilities/index/sendOtpToMobile",
+        request
+      );
+      return false;
+    }
+  } catch (error) {
+    console.log("error from sendOtpToMobile", error);
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> utilities/index/sendOtpToMobile",
+      request
+    );
+    throw new Error(error.message);
+  }
+}
+const verifyOTP = async (data, request, fastify) => {
+  try {
+    let url = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.OTPVERIFY.toLowerCase())?.value;
+    let otpAuthKey = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.OTPAUTHKEY.toLowerCase())?.value;
+    if(!url || !otpAuthKey) return 'OTP Verify URL not found';
+    let cc = data.countryCode.replace("+", "");
+    url = url.replace("{otp}", data.otp);
+    url = url.replace("{mobile}", cc + data.mobileNo);
+    const result = await axios.get(url, { headers: { authkey: otpAuthKey }});
+    if(result.data.type == "success"){
+      return true;
+    }
+    else {
+      errorLogger(
+        fastify,
+        result.data.message,
+        "DB ERROR --> utilities/index/verifyOTP",
+        request
+      );
+      return false;
+    }
+  } catch (error) {
+    console.log("error from verifyOTP", error);
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> utilities/index/verifyOTP",
+      request
+    );
+    throw new Error(error.message);
+  }
+}
 module.exports = {
   ERROR_CODES,
   error,
@@ -804,5 +870,7 @@ module.exports = {
   ModuleTypes,
   callTPAPI,
   MarketTypeCategories,
-  clientProcessStatus
+  clientProcessStatus,
+  sendOtpToMobile,
+  verifyOTP,
 };

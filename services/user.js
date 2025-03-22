@@ -7,7 +7,7 @@ const {ImgModuleConfig} = require("../utilities/imageConstant");
 const nodemailer = require('nodemailer');
 const {sendNotification,sendMobileNotifications} = require("../WebPushHandler/index");
 const { SENDEMAILTYPE } = require("../utilities/configConstants");
-const { typesOfServices, clientProcessStatus } = require('../utilities/index');
+const { typesOfServices, clientProcessStatus, sendOtpToMobile, verifyOTP } = require('../utilities/index');
 
 const {
   signUpUser,
@@ -1340,14 +1340,18 @@ const registerClientAppService = async (request, fastify) => {
     let clientId = checkExist.clientId;
     let encrypt = await getEncryptClinet({clientId},request,fastify);
     let isSendOtp = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP)?.value;
-    // if(isSendOtp === 'true'){
-    //   // logic for send third party otp
-
-    // }
+    if(isSendOtp === 'true'){
+      // logic for send third party otp
+      // get the sendOtp url
+      let send =await sendOtpToMobile(request.body ,request , fastify)
+      if(!send){
+        throw new Error("Error in sending OTP")
+      }
+    }
     return {
         clientId : encrypt.clientId,
         mobileNo : checkExist.mobileNo,
-        countryCode : checkExist.countryCode,
+        countryCode : request.body.countryCode,
     }
   }
   let encryptedPassword = encrypt(request.body.password);
@@ -1357,10 +1361,14 @@ const registerClientAppService = async (request, fastify) => {
   global.tblClient.push(result[0]);
   // check if otpSend true for mobile
   let isSendOtp = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP)?.value;
-  // if(isSendOtp === 'true'){
-  //   // logic for send third party otp
-
-  // }
+  if(isSendOtp === 'true'){
+    // logic for send third party otp
+    // get the sendOtp url
+    let send =await sendOtpToMobile(request.body ,request , fastify)
+    if(!send){
+      throw new Error("Error in sending OTP")
+    }
+  }
   return {
       clientId : result[0].encryptClientId,
       mobileNo : result[0].mobileNo,
@@ -1390,6 +1398,11 @@ const verifyMobileNoAppService = async (request, fastify) => {
   const isSendOtp = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP)?.value;
   if(isSendOtp === 'true'){
     // call third party otp
+    let otpVerify = await verifyOTP(request.body ,request , fastify)
+    if(!otpVerify){
+      throw new Error("OTP not verified");
+    }
+
       await verifyMobileNoAppQuery({
         clientId :id
       },request,fastify);
@@ -1399,7 +1412,7 @@ const verifyMobileNoAppService = async (request, fastify) => {
       return {
         token : token,
         details: {
-          clientId: global.tblClient[index].clientId,
+          clientId:clientId,
           countryCode: global.tblClient[index].countryCode,
           mobileNo: global.tblClient[index].mobileNo,
         }
@@ -1422,7 +1435,7 @@ const verifyMobileNoAppService = async (request, fastify) => {
       return {
         token : token,
         details: {
-          clientId: global.tblClient[index].clientId,
+          clientId: request.body.clientId,
           countryCode: global.tblClient[index].countryCode,
           mobileNo: global.tblClient[index].mobileNo,
         }
@@ -1444,6 +1457,8 @@ const signinClientAppService = async (request, fastify) => {
   if(checkExist.isMobileVerified == false){
     throw new Error("Mobile number not verified");
   }
+  // get encrypt in client
+
   let encryptedPassword = encrypt(password);
   let t1 = uuidv4()
   const token = await signInClientAppQuery({
@@ -1453,15 +1468,17 @@ const signinClientAppService = async (request, fastify) => {
     countryCode : request.body.countryCode,
     token : t1
   },request,fastify);
+  let key = await getEncryptClinet({clientId : checkExist.clientId}, request,fastify)
   return {
     token,
     details: {
-      clientId: checkExist.clientId,
+      clientId: key.clientId,
       countryCode: checkExist.countryCode,
       mobileNo: checkExist.mobileNo,
     }
   }
 }
+
 const updateClientProfileService = async (request, fastify) => {
   const validateId = global.tblClient.find(
     (item) => item.clientId === request.body.clientId
@@ -1503,6 +1520,23 @@ const changePasswordService = async (request, fastify) => {
   );
   return `password update successfully`;
 }
+const otpResendService = async (request, fastify) => {
+  const { mobileNo, countryCode } = request.body;
+  const findUser = global.tblClient.find(
+    (item) => item.mobileNo === mobileNo && item.countryCode === countryCode
+  );
+  if (!findUser) {
+    throw new Error("Invalid Mobile Number");
+  }
+  
+  const isSendOTP = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP).value;
+  
+  if (isSendOTP === "true") {
+    return `OTP sent successfully`;
+  } else {      
+    return `OTP sent successfully`;
+  }
+};
 module.exports = {
   signUpUserService,
   signInUserServices,
@@ -1541,4 +1575,5 @@ module.exports = {
   signinClientAppService,
   updateClientProfileService,
   changePasswordService,
+  otpResendService,
 };
