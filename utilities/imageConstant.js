@@ -118,6 +118,13 @@ const ImgModuleConfig = {
     height: 0,
     width: 0,
   },
+  Flag: {
+    type: "FLAG",
+    formate: ".jpg,.png,.jpeg,.avif,.webp",
+    size: 0,
+    height: 0,
+    width: 0,
+  },
 };
 
 module.exports = {

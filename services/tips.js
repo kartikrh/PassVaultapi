@@ -13,6 +13,7 @@ const {
   ServiceType,
   APIEndpointModuleType,
 } = require("../utilities");
+const { errorLogger } = require("../utilities/logger");
 
 const saveTipsService = async (request, fastify) => {
   let validateRefId = await allCommentaryTipsQuery(fastify, request);
