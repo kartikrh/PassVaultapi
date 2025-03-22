@@ -7,7 +7,7 @@ const {ImgModuleConfig} = require("../utilities/imageConstant");
 const nodemailer = require('nodemailer');
 const {sendNotification,sendMobileNotifications} = require("../WebPushHandler/index");
 const { SENDEMAILTYPE } = require("../utilities/configConstants");
-const { typesOfServices } = require('../utilities/index');
+const { typesOfServices, clientProcessStatus } = require('../utilities/index');
 
 const {
   signUpUser,
@@ -36,6 +36,8 @@ const {
   registerClientAppQuery,
   getIdByValue,
   verifyMobileNoAppQuery,
+  getEncryptClinet,
+  signInClientAppQuery,
   updateClientProfileQuery,
   changePasswordQuery,
   clientDetailsByIdQuery,
@@ -1330,8 +1332,23 @@ const registerClientAppService = async (request, fastify) => {
   let checkExist = global.tblClient.find((item) =>
     item.mobileNo === request.body.mobileNo
   );
-  if (checkExist) {
+  if (checkExist && (checkExist.isMobileVerified == true || checkExist.registrationProcessStatus == clientProcessStatus.MOEMAILVERIFIED)) {
     throw new Error ("Mobile number already exists");
+  }
+  if(checkExist && (checkExist.isMobileVerified == false || checkExist.registrationProcessStatus == clientProcessStatus.ADDUSERDETAIL)){
+    // get encrypt client id
+    let clientId = checkExist.clientId;
+    let encrypt = await getEncryptClinet({clientId},request,fastify);
+    let isSendOtp = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP)?.value;
+    // if(isSendOtp === 'true'){
+    //   // logic for send third party otp
+
+    // }
+    return {
+        clientId : encrypt.clientId,
+        mobileNo : checkExist.mobileNo,
+        countryCode : checkExist.countryCode,
+    }
   }
   let encryptedPassword = encrypt(request.body.password);
   request.body.password = encryptedPassword;
@@ -1347,7 +1364,7 @@ const registerClientAppService = async (request, fastify) => {
   return {
       clientId : result[0].encryptClientId,
       mobileNo : result[0].mobileNo,
-      countryCode : result[0].countryCode
+      countryCode : result[0].countryCode,
   }
   
 }
@@ -1378,8 +1395,15 @@ const verifyMobileNoAppService = async (request, fastify) => {
       },request,fastify);
       global.tblClient[index].isMobileVerified = true;
       global.tblClient[index].registrationProcessStatus = 2;
-      return "Mobile number verified successfully";
-
+      const token = generateToken({ clientId: id });
+      return {
+        token : token,
+        details: {
+          clientId: global.tblClient[index].clientId,
+          countryCode: global.tblClient[index].countryCode,
+          mobileNo: global.tblClient[index].mobileNo,
+        }
+      }
   }
   else {
     const otpConfig = global.tblConfigs.find((item) => item.key === configConstants.CLIENTOTP)?.value;
@@ -1392,10 +1416,49 @@ const verifyMobileNoAppService = async (request, fastify) => {
       },request,fastify);
       global.tblClient[index].isMobileVerified = true;
       global.tblClient[index].registrationProcessStatus = 2;
-      return "Mobile number verified successfully";
+
+      const token = generateToken({ clientId: id });
+
+      return {
+        token : token,
+        details: {
+          clientId: global.tblClient[index].clientId,
+          countryCode: global.tblClient[index].countryCode,
+          mobileNo: global.tblClient[index].mobileNo,
+        }
+      };
     }
     else {
       return "Invalid OTP"
+    }
+  }
+}
+const signinClientAppService = async (request, fastify) => {
+  const {mobileNo, password} = request.body;
+  const checkExist = global.tblClient.find((item) =>
+    item.mobileNo === mobileNo && item.countryCode === request.body.countryCode
+  );
+  if (!checkExist) {
+    throw new Error("User not found");
+  }
+  if(checkExist.isMobileVerified == false){
+    throw new Error("Mobile number not verified");
+  }
+  let encryptedPassword = encrypt(password);
+  let t1 = uuidv4()
+  const token = await signInClientAppQuery({
+    clientId : checkExist.clientId,
+    mobileNo : mobileNo,
+    password : encryptedPassword,
+    countryCode : request.body.countryCode,
+    token : t1
+  },request,fastify);
+  return {
+    token,
+    details: {
+      clientId: checkExist.clientId,
+      countryCode: checkExist.countryCode,
+      mobileNo: checkExist.mobileNo,
     }
   }
 }
@@ -1475,6 +1538,7 @@ module.exports = {
   verifyMobileOtpService,
   registerClientAppService,
   verifyMobileNoAppService,
+  signinClientAppService,
   updateClientProfileService,
   changePasswordService,
 };

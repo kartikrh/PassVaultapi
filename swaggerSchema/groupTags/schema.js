@@ -31,6 +31,21 @@ const Auth = {
         required: ["mobileNo","countryCode","password"],
       }
     }
+  }, 
+  signinClientApp : {
+    schema: {
+      tags: ["Auth"],
+      description: "signinClientApp",
+      body: {
+        type: "object",
+        properties: {
+          mobileNo : {type: "string"},
+          countryCode : {type: "string"},
+          password : {type: "string"},
+        },
+        required: ["mobileNo","countryCode","password"],
+      }
+    }
   },
   signIn: {
     schema: {
@@ -8337,6 +8352,5 @@ module.exports = {
   VideoLibrary,
   ShotType,
   Tips,
-  MatchTypeBowlingPredictor,
-  CountryCode,
+  MatchTypeBowlingPredictor
 };

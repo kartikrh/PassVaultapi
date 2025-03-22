@@ -35,6 +35,7 @@ const {
   verifyMobileOtpService,
   registerClientAppService,
   verifyMobileNoAppService,
+  signinClientAppService,
   updateClientProfileService,
   changePasswordService,
 } = require("../../services/user");
@@ -310,6 +311,15 @@ const verifyMobileNoApp = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const signinClientApp = async (request, reply, fastify) => {
+  try {
+    const result = await signinClientAppService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/signinClientApp", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 async function registerDetails(request, reply, fastify) {
   try {
     const result = await registerDetailsService(request, fastify);
@@ -528,6 +538,7 @@ module.exports = {
   loadPanelDataInGlobal,
   registerClientApp,
   verifyMobileNoApp,
+  signinClientApp,
   updateClientProfile,
   changePassword,
 };

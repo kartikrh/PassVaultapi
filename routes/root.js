@@ -33,6 +33,7 @@ const {
   loadPanelDataInGlobal,
   registerClientApp,
   verifyMobileNoApp,
+  signinClientApp,
   updateClientProfile,
   changePassword,
   //loginRegistrationClient,
@@ -224,6 +225,11 @@ module.exports = async function (fastify, opts) {
     schema: Auth.verifyMobileNo.schema,
     handler: (request, reply) => verifyMobileNoApp(request, reply, fastify),
   });
+  fastify.post("/signinClientApp", {
+    schema: Auth.signinClientApp.schema,
+    handler: (request, reply) => signinClientApp(request, reply, fastify),
+  });
+
   fastify.post("/signOutClient", {
     schema: Auth.signOut.schema,
     //preHandler: [(request, reply) => authorize(request, reply, fastify)],
