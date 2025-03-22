@@ -1430,7 +1430,7 @@ const verifyMobileNoAppService = async (request, fastify) => {
       return {
         token : token,
         details: {
-          clientId: global.tblClient[index].clientId,
+          clientId: request.body.clientId,
           countryCode: global.tblClient[index].countryCode,
           mobileNo: global.tblClient[index].mobileNo,
         }
@@ -1452,6 +1452,8 @@ const signinClientAppService = async (request, fastify) => {
   if(checkExist.isMobileVerified == false){
     throw new Error("Mobile number not verified");
   }
+  // get encrypt in client
+
   let encryptedPassword = encrypt(password);
   let t1 = uuidv4()
   const token = await signInClientAppQuery({
@@ -1461,10 +1463,11 @@ const signinClientAppService = async (request, fastify) => {
     countryCode : request.body.countryCode,
     token : t1
   },request,fastify);
+  let key = await getEncryptClinet({clientId : checkExist.clientId}, request,fastify)
   return {
     token,
     details: {
-      clientId: checkExist.clientId,
+      clientId: key.clientId,
       countryCode: checkExist.countryCode,
       mobileNo: checkExist.mobileNo,
     }
