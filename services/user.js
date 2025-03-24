@@ -7,7 +7,7 @@ const {ImgModuleConfig} = require("../utilities/imageConstant");
 const nodemailer = require('nodemailer');
 const {sendNotification,sendMobileNotifications} = require("../WebPushHandler/index");
 const { SENDEMAILTYPE } = require("../utilities/configConstants");
-const { typesOfServices, clientProcessStatus, sendOtpToMobile } = require('../utilities/index');
+const { typesOfServices, clientProcessStatus, sendOtpToMobile, verifyOTP } = require('../utilities/index');
 
 const {
   signUpUser,
@@ -1398,6 +1398,11 @@ const verifyMobileNoAppService = async (request, fastify) => {
   const isSendOtp = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP)?.value;
   if(isSendOtp === 'true'){
     // call third party otp
+    let otpVerify = await verifyOTP(request.body ,request , fastify)
+    if(!otpVerify){
+      throw new Error("OTP not verified");
+    }
+
       await verifyMobileNoAppQuery({
         clientId :id
       },request,fastify);
@@ -1515,6 +1520,23 @@ const changePasswordService = async (request, fastify) => {
   );
   return `password update successfully`;
 }
+const otpResendService = async (request, fastify) => {
+  const { mobileNo, countryCode } = request.body;
+  const findUser = global.tblClient.find(
+    (item) => item.mobileNo === mobileNo && item.countryCode === countryCode
+  );
+  if (!findUser) {
+    throw new Error("Invalid Mobile Number");
+  }
+  
+  const isSendOTP = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP).value;
+  
+  if (isSendOTP === "true") {
+    return `OTP sent successfully`;
+  } else {      
+    return `OTP sent successfully`;
+  }
+};
 module.exports = {
   signUpUserService,
   signInUserServices,
@@ -1553,4 +1575,5 @@ module.exports = {
   signinClientAppService,
   updateClientProfileService,
   changePasswordService,
+  otpResendService,
 };

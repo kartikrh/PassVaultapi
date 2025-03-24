@@ -36,6 +36,7 @@ const {
   signinClientApp,
   updateClientProfile,
   changePassword,
+  otpResend,
   //loginRegistrationClient,
 } = require("../controller/users/index");
 const { Auth ,sendPushNotification,weblogs, Config, EventType, Commentary} = require("../swaggerSchema/groupTags/schema");
@@ -294,6 +295,10 @@ module.exports = async function (fastify, opts) {
   fastify.post("/changePass", {
     schema: Auth.changePassword.schema,
     handler: (request, reply) => changePassword(request, reply, fastify),
+  });
+  fastify.post("/otpResend", {
+    schema: Auth.ResendOTP.schema,
+    handler: (request, reply) => otpResend(request, reply, fastify),
   });
   
 };
