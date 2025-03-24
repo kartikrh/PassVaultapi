@@ -195,6 +195,11 @@ module.exports = (sequelize) => {
         allowNull: true,
         defaultValue : true
       },
+      wrIsTest :{
+        type : DataTypes.BOOLEAN,
+        allowNull : false,
+        defaultValue : false
+      }
     },
     {
       timestamps: false,

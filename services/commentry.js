@@ -3244,8 +3244,10 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         const index = global.tblCommentaryPlayers.findIndex(
           (item) => item.commentaryPlayerId === player.commentaryPlayerId
         );
+        // get display name
+        let ds = global.tblPlayers.find((i)=> i.playerId == player.playerId)
         global.tblCommentaryPlayers[index] = player;
-        response.commentaryPlayers.push(global.tblCommentaryPlayers[index]);
+        response.commentaryPlayers.push({...global.tblCommentaryPlayers[index],displayName : ds.displayName});
       });
 
       let _plyers = commentaryPlayers.filter((_fil) => _fil.isPlay === true && _fil.onStrike !== null);
@@ -3285,7 +3287,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
       sendDataForSocketUpdate.dataToUpdate.push({
         module: "commentaryPlayers",
         type: "update",
-        data: commentaryPlayers,
+        data: response.commentaryPlayers,
       });
     }
     if (
@@ -4594,12 +4596,14 @@ const updateTeamPlayerService = async (request, fastify) => {
         item.playerId === +playerId &&
         item.currentInnings === currentInnings
     );
+    const ds = global.tblPlayers.find((i)=>i.playerId === +playerId)
     if (player) {
       player.batsmanStrikeRate = batsmanStrikeRate;
       player.batsmanAverage = batsmanAverage;
       player.isInPlayingEleven = isInPlayingEleven;
       player.boundary = boundary;
       player.playerBallFaced = playerBallFaced;
+      player.displayName = ds?.displayName;
     } else {
       throw new Error("Player not found for update");
     }
