@@ -4904,7 +4904,6 @@ const getAllCommentaryPlayerDataQueryV1 = async (whereCondition = null, fastify)
     }
   );
 }
-
 const getAllOversDataQueryV1 = async (whereCondition = null, fastify) => {
   return await fastify.db.query(
     `
