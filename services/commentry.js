@@ -3249,7 +3249,6 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         global.tblCommentaryPlayers[index] = player;
         response.commentaryPlayers.push({...global.tblCommentaryPlayers[index],displayName : ds.displayName});
       });
-
       let _plyers = commentaryPlayers.filter((_fil) => _fil.isPlay === true && _fil.onStrike !== null);
       _plyers.forEach((player) => {
         let _sendPrePlayer = {};
