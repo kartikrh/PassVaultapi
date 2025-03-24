@@ -20,7 +20,13 @@ const allTournamentTeamPointsService = async (request, fastify) => {
     const isActiveMatch = isActive !== undefined ? item.isActive === isActive : true;
 
     return competitionMatch && teamMatch && groupMatch && isActiveMatch;
-  }).sort((a, b) => b.totalWin - a.totalWin);
+  }).sort((a, b) => {
+    if (b.totalPoint !== a.totalPoint) {
+      return b.totalPoint - a.totalPoint;
+    }
+  
+    return b.netRunRate - a.netRunRate;
+  });
 
   return result;
 };

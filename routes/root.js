@@ -37,6 +37,9 @@ const {
   updateClientProfile,
   changePassword,
   otpResend,
+  forgotPassword,
+  verifyForgotPasswordOTP,
+  updatePasswordInForgot,
   //loginRegistrationClient,
 } = require("../controller/users/index");
 const { Auth ,sendPushNotification,weblogs, Config, EventType, Commentary} = require("../swaggerSchema/groupTags/schema");
@@ -300,5 +303,16 @@ module.exports = async function (fastify, opts) {
     schema: Auth.ResendOTP.schema,
     handler: (request, reply) => otpResend(request, reply, fastify),
   });
-  
+  fastify.post("/forgotPass", {
+    schema: Auth.ForgotPassword.schema,
+    handler: (request, reply) => forgotPassword(request, reply, fastify),
+  });
+  fastify.post("/forgotOtp", {
+    schema: Auth.VerifyForgotPassOTP.schema,
+    handler: (request, reply) => verifyForgotPasswordOTP(request, reply, fastify),
+  });
+  fastify.post("/updatePass", {
+    schema: Auth.UpdatePassword.schema,
+    handler: (request, reply) => updatePasswordInForgot(request, reply, fastify),
+  });
 };

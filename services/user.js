@@ -1537,6 +1537,102 @@ const otpResendService = async (request, fastify) => {
     return `OTP sent successfully`;
   }
 };
+const forgotPasswordService = async (request, fastify) => {
+  const checkExist = await getIdByValue({ clientId : request.body.clientId}, request, fastify)
+  if(!checkExist){
+    return "Invalid Client Id"
+  }
+  let id = checkExist.clientId;
+  const index = global.tblClient.findIndex((item) => item.clientId === id);
+  if (index == -1) {
+    throw new Error("Client not found");
+  }
+
+  if(!global.tblClient[index].mobileNo || !global.tblClient[index].countryCode){
+    throw new Error("Mobile number not found");
+  }
+
+  let mobileNo = global.tblClient[index].countryCode + global.tblClient[index].mobileNo;
+  let isSendOtp = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP)?.value;
+  if(isSendOtp === 'true'){
+    // mobileNo
+    // logic for send third party otp
+  }
+  return `OTP sent successfully`;
+};
+
+const verifyForgotPasswordOTPService = async (request, fastify) => {
+  const {clientId , otp} = request.body;
+  const checkExist = await getIdByValue({
+    clientId : clientId,
+  },request,fastify)
+
+  if(!checkExist){
+    return "Invalid Client Id"
+  }
+  let id = checkExist.clientId;
+  // check if client exist
+  const index = global.tblClient.findIndex((item) => item.clientId === id);
+  if (index == -1) {
+    throw new Error("Client not found");
+  }
+  // is otp send true
+  const isSendOtp = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP)?.value;
+  if(isSendOtp === 'true'){
+    // call third party otp
+    const token = generateToken({ clientId: id });
+    return {
+      token : token,
+      details: {
+        clientId:clientId,
+        countryCode: global.tblClient[index].countryCode,
+        mobileNo: global.tblClient[index].mobileNo,
+      }
+    }
+  } else {
+    const otpConfig = global.tblConfigs.find((item) => item.key === configConstants.FORGOTPASSWORDOTP)?.value;
+    if(!otpConfig){
+      throw new Error("OTP Config not found");
+    }
+    if(otpConfig === otp){
+      const token = generateToken({ clientId: id });
+
+      return {
+        token : token,
+        details: {
+          clientId: request.body.clientId,
+          countryCode: global.tblClient[index].countryCode,
+          mobileNo: global.tblClient[index].mobileNo,
+        }
+      };
+    } else {
+      return "Invalid OTP"
+    }
+  }
+}
+
+const updatePasswordInForgotPasswordService = async (request, fastify) => {
+  let { clientId, password } = request.body;
+  const checkExist = await getIdByValue({
+    clientId : clientId,
+  },request,fastify)
+
+  if(!checkExist){
+    return "Invalid Client Id"
+  }
+  let id = checkExist.clientId;
+  const index = global.tblClient.findIndex((item) => item.clientId === id);
+  if (index == -1) {
+    throw new Error("Client not found");
+  }
+  const hashedPassword = encrypt(password);
+
+  password = hashedPassword;
+  await changePasswordQuery({ newPassword: password, clientId: id },
+    request, fastify
+  );
+  return `password updated successfully`;
+}
 module.exports = {
   signUpUserService,
   signInUserServices,
@@ -1576,4 +1672,7 @@ module.exports = {
   updateClientProfileService,
   changePasswordService,
   otpResendService,
+  forgotPasswordService,
+  verifyForgotPasswordOTPService,
+  updatePasswordInForgotPasswordService,
 };
