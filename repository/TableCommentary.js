@@ -4893,7 +4893,8 @@ const getAllCommentaryPlayerDataQueryV1 = async (whereCondition = null, fastify)
         tcp."wrPlayerBallFaced" as "playbalfaced",
         tp."wrPlayerTypeId" as "pltypid",
         tpt."wrPlayerType" as "pltyp",
-        tcp."wrJerseyPlayerImage" as "jryPlyImg"
+        tcp."wrJerseyPlayerImage" as "jryPlyImg",
+        tp."wrDisplayName" as "dsName"
     from "tblCommentaryPlayers" AS tcp
     LEFT JOIN "tblPlayers" AS tp ON tcp."wrPlayerId" = tp."wrPlayerId"
     LEFT JOIN "tblPlayerTypes" AS tpt ON tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
