@@ -64,6 +64,7 @@ const configConstants = {
     LOGROCKETAPPID: "LOGROCKETAPPID",
     OTPURL :  "OTPURL",
     OTPAUTHKEY : "OTPAUTHKEY",
-    OTPVERIFY : "OTPVERIFY"
+    OTPVERIFY : "OTPVERIFY",
+    FORGOTPASSWORDOTP: "FORGOTPASSWORDOTP",
 }
 module.exports = configConstants;

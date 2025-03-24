@@ -449,6 +449,49 @@ const Auth = {
       },
     },
   },
+  ForgotPassword: {
+    schema: {
+      tags: ["Auth"],
+      description: "Forgot Password",
+      body: {
+        type: "object",
+        properties: {
+          clientId: { type: "string" },
+        },
+        required: ["clientId"],
+      },
+    },
+  },
+  VerifyForgotPassOTP: {
+    schema: {
+      tags: ["Auth"],
+      description: "Verify forgot password OTP",
+      body: {
+        type: "object",
+        properties: {
+          clientId: { type: "string" },
+          countryCode: { type: "string" },
+          mobileNo: { type: "string" },
+          otp: { type: "string" },
+        },
+        required: ["clientId", "countryCode", "mobileNo", "otp"],
+      },
+    },
+  },
+  UpdatePassword: {
+    schema: {
+      tags: ["Auth"],
+      description: "Update client password",
+      body: {
+        type: "object",
+        properties: {
+          clientId: { type: "string" },
+          password: { type: "string" },
+        },
+        required: ["clientId", "password"],
+      },
+    },
+  },
 };
 
 const Tabs = {
