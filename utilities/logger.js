@@ -316,9 +316,11 @@ const eventMarketLogger = async (data , request , fastify) => {
           "wrResponse",
           "wrError",
           "wrCreatedAt",
-          "wrCreatedBy"
+          "wrCreatedBy",
+          "wrRequestTime",
+          "wrResponseTime"
         )
-        VALUES ($1, $2, $3, $4, $5, $6)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
     `;
     await fastify.db.query(query, {
       type: fastify.db.QueryTypes.SELECT,
@@ -329,6 +331,8 @@ const eventMarketLogger = async (data , request , fastify) => {
         JSON.stringify(data.error) || null,
         new Date(),
         request?.userTokenInfo?.WrUserId || null,
+        data.requestTime || null,
+        data.responseTime || null
       ],
     });
     return true;
