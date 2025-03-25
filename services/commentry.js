@@ -6697,6 +6697,7 @@ const getMatchListByStatus = async (body, request, fastify) => {
       isPr: item.isPredictMarket,
       ics: item.isClientShow,
       srtup: item?.sortUpdate ?? "",
+      isTest: item?.isTest
       // mr: mr
       // bowT : item.bowlingTeam || null,
     };
