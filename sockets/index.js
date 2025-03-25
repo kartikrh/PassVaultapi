@@ -61,7 +61,9 @@ const connectClients = async (fastify) => {
         
         // update status in global.tblClientSocket
         let index = global.tblClientSocket.findIndex((c) => c.clientSocketId === urlConfig.clientSocketId);
+        if(index !== -1){
         global.tblClientSocket[index].status = clientSocketStatus.disconnected;
+        }
       });
       client.io.on("reconnect_attempt", (attemptNumber) => {
         console.log(`Reconnect attempt: ${attemptNumber}`);
@@ -71,7 +73,9 @@ const connectClients = async (fastify) => {
         },fastify);
 
         let index = global.tblClientSocket.findIndex((c) => c.clientSocketId === urlConfig.clientSocketId);
+        if(index !== -1){
         global.tblClientSocket[index].reconnectCount = attemptNumber;
+        }
       });
       // client.on("updatedEventMarket", async (data) => {
       //   try {

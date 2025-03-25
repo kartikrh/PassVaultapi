@@ -2272,6 +2272,21 @@ const Commentary = {
       },
     },
   },
+  changeIsTest: {
+    schema: {
+      tags: ["Commentary"],
+      description: "change IsTest Commentary",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+          isTest: { type: "boolean" },
+        },
+        required: ["commentaryId", "isTest"],
+      },
+    },
+  },
   getAllCommentaryHistory: {
     schema: {
       tags: ["Commentary"],

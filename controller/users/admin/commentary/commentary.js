@@ -75,6 +75,7 @@ const {
   getAllCompletedCommentaryService,
   upDLSDetailsService,
   updateMergeImageOnCommentaryPlayersService,
+  changeIsTestComService,
 } = require("../../../../services/commentry");
 const { getEventSnapByComService, updateEventSnapByComService } = require("../../../../services/competitionEventSnap");
 const { getAllCommentariesDataService, getAllCommentariesDataServiceV1 } = require("../../../../services/score");
@@ -329,7 +330,7 @@ const changeBowlerOfCommentary = async (request, reply, fastify) => {
 const getScheduleMatchList = async (request, reply, fastify) => {
   try {
     let commentaryData = global.tblCommentaries.filter(
-      (item) => item.commentaryStatus === 1
+      (item) => item.commentaryStatus === 1 && item.isActive == true && item.isTest == false
     );
     const body = {
       commentaryData,
@@ -346,7 +347,7 @@ const getScheduleMatchList = async (request, reply, fastify) => {
 const getCompleteMatchList = async (request, reply, fastify) => {
   try {
     let commentaryData = global.tblCommentaries.filter(
-      (item) => item.commentaryStatus == 4
+      (item) => item.commentaryStatus == 4 && item.isActive == true && item.isTest == false
     );
     const body = {
       commentaryData,
@@ -365,7 +366,8 @@ const getLiveMatchList = async (request, reply, fastify) => {
       (item) =>
         item.commentaryStatus !== 1 &&
         item.commentaryStatus !== 4 &&
-        item.isActive == true
+        item.isActive == true &&
+        item.isTest == false
     );
     const body = {
       commentaryData,
@@ -1021,7 +1023,20 @@ const saveCommDrsLog = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
-
+const changeIsTestCom = async (request, reply, fastify) => {
+  try {
+    const result = await changeIsTestComService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      path + "/changeIsTestCom",
+      request
+    );
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 module.exports = {
   getAllCommentaries,
   getCommentaryById,
@@ -1106,4 +1121,5 @@ module.exports = {
   getAllCommentariesDataV1,
   updateMergeImageOnCommentaryPlayers,
   saveCommDrsLog,
+  changeIsTestCom
 }
