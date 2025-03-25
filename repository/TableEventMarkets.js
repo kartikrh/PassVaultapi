@@ -72,6 +72,7 @@ const getAllEventMarketsV2Query = async (fastify, commentaryIds) => {
         tem."wrRateDiff" as "rateDiff",
         tem."wrWicketNo" as "wicketNo",
         tem."wrIsInningRun" as "isInningRun",
+        tem."wrCreatedBy" as "createdBy",
         tem."wrFavRatio" as "favRatio"
     FROM "tblEventMarkets" tem
     WHERE tem."wrCommentaryId" IN(${commentaryIds}) AND tem."wrIsDeleted" = FALSE

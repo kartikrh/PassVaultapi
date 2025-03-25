@@ -2703,6 +2703,9 @@ const sendMarketToSocket = async(data,request,fastify)=>{
   }
 }
 const updateMarketRateServiceV1 = async (request, fastify) => {
+  let requestTime = new Date();
+  let responseTime
+ try {
   // i got array of eventMarket i want to update this data
   let { eventMarket } = request.body;
   const commentary = global.tblCommentaries.find(
@@ -2712,13 +2715,28 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
     //here
     throw new Error("Commentary with this id not Found");
   }
-  let eventMarkets = await getEventMarketByIdsQueryV1(
-    {
-      eventMarketIds: eventMarket.map((item) => item.marketId),
-    },
-    request,
-    fastify
-  );
+  // let eventMarkets = await getEventMarketByIdsQueryV1(
+  //   {
+  //     eventMarketIds: eventMarket.map((item) => item.marketId),
+  //   },
+  //   request,
+  //   fastify
+  // );
+
+
+  const eventMarkets = global.tblEventMarketsV2
+  .filter((item) => eventMarket.some((market) => item.eventMarketId === market.marketId))
+  .map((item) => {
+    const commentary = global.tblCommentaries.find(c => c.commentaryId === item.commentaryId);
+    return {
+      ...item,
+      teamName: global.tblTeams.find(tm => tm.teamId === item.teamId)?.teamName || null,
+      eventName: commentary?.eventName || null,
+      eventDate: commentary?.eventDate || null,
+      runners: global.tblMarketRunnerV2.filter((elem) => elem.eventMarketId === item.eventMarketId),
+    };
+  });
+
   if(eventMarkets.length == 0){
     throw new Error("EventMarket with this id not Found");
   }
@@ -2785,7 +2803,10 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
     );
     index2 === -1
       ? global.tblEventMarketsV2.push(filteredItem)
-      : (global.tblEventMarketsV2[index2] = filteredItem);
+      : (global.tblEventMarketsV2[index2] = {
+        ...global.tblEventMarketsV2[index2],
+        ...filteredItem
+      });
       // let index4 = global.tblEventMarketsV2.findIndex(
       //   (market) => market.eventMarketId === item.eventMarketId
       // );
@@ -3032,8 +3053,36 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
     allMarkets : allMarkets
   },request,fastify)
   // data.callPrediction = callPredictions;
+  responseTime = new Date();
+  eventMarketLogger(
+    {
+      commentaryId: request.body.eventMarket[0].commentaryId,
+      requestBody : request.body,
+      response : data,
+      requestTime: requestTime,
+      responseTime: responseTime
+    },
+    request,
+    fastify
+  )
  return data;
- 
+ } catch (error) {
+  responseTime = new Date();
+  eventMarketLogger(
+    {
+      commentaryId: request.body.eventMarket[0].commentaryId,
+      requestBody : request.body,
+      error : {
+        message : error.message,
+      },
+      requestTime: requestTime,
+      responseTime: responseTime
+    },
+    request,
+    fastify
+  )
+  throw new Error(error.message);
+ }
 };
 const sendToSocket = (data,request,fastify)=>{
   try {
