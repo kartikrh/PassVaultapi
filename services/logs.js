@@ -93,6 +93,7 @@ const allResultLogsService = async(request, fastify) => {
 const getEMLogsService = async(request,fastify)=>{
     const {eventTypeId , competitionId,commentaryId} = request.body;
     let cId =[];
+    
     if(commentaryId  && commentaryId != 0){
         cId.push(commentaryId)
         const rs = await allEMLogsQuery({
