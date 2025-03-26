@@ -24,6 +24,7 @@ const {
 } = require("./utilities");
 const Sentry = require("@sentry/node");
 const { instrument } = require("@socket.io/admin-ui");
+const { nodeProfilingIntegration } = require("@sentry/profiling-node");
 const bcrypt = require("bcrypt");
 const Tracing = require("@sentry/tracing");
 const { connectClients, disconnectClients } = require("./sockets");
@@ -46,6 +47,12 @@ if (process.env.ENABLE_SENTRY === "TRUE") {
   Sentry.init({
     dsn: process.env.SENTRY_DSN,
     tracesSampleRate: 1.0,
+    integrations: [
+      // Add our Profiling integration
+      nodeProfilingIntegration(),
+    ],
+    profileSessionSampleRate: 1.0,
+    profileLifecycle: 'trace',
   });
 }
 process.on('uncaughtException', (error) => {
