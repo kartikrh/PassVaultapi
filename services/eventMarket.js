@@ -2772,7 +2772,6 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
     //   multiRunMarket.push(item);
     // }
   }
-
   const allMarkets = [...signleRunMarket, ...multiRunMarket];
   const updatedData = await updateEventMarketRateQueryV1({
     singleRunnerMarket : signleRunMarket.length > 0 ? signleRunMarket : null,
