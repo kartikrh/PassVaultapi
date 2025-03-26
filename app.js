@@ -383,7 +383,14 @@ module.exports = async function (fastify, opts) {
     return (req, callback) => {
       const corsOptions = {
         // This is NOT recommended for production as it enables reflection exploits
+        // origin: true,
         origin: true,
+        methods: ["GET", "POST", "OPTIONS"], // Allow necessary methods
+        preflightContinue: false, // Automatically handle preflight requests,
+        maxAge :300,
+        preflight: true,
+        optionsSuccessStatus: 204, // Ensures proper handling of preflight requests
+
       };
       //TODO: for production set to false
       if (/^localhost$/m.test(req.headers.origin)) {

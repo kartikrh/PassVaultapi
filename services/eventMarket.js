@@ -3593,6 +3593,9 @@ const saveManualMarketDataService = async (request, fastify) => {
   if(!com){
     throw new Error("Commentary with this id not Found");
   }
+  if(!request.body.eventRefId || request.body.eventRefId == "" ){
+    throw new Error("EventRefId is required.")
+  }
   const eventMarket = await saveManualMarketQuery(request.body, request, fastify);
   if(eventMarket){
     let whereCondition = ` tem."wrID" = ${eventMarket}`
