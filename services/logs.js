@@ -91,7 +91,26 @@ const allResultLogsService = async(request, fastify) => {
     return await allResultLogsQuery(request.body || {},request, fastify);
 };
 const getEMLogsService = async(request,fastify)=>{
-    const rs = await allEMLogsQuery(request.body || {} , request , fastify);
+    const {eventTypeId , competitionId,commentaryId} = request.body;
+    let cId =[];
+    if(commentaryId  && commentaryId != 0){
+        cId.push(commentaryId)
+        const rs = await allEMLogsQuery({
+            ...request.body,
+            cId
+        } || {} , request , fastify);
+        return rs;
+    }
+    if(eventTypeId && eventTypeId != 0){
+        let com = global.tblCommentaries.filter((c)=> c.eventTypeId == eventTypeId).map((e)=>e.commentaryId)
+        cId = com;
+    }
+    if(competitionId && competitionId !=0){
+        let com = global.tblCommentaries.filter((c)=> c.competitionId == competitionId).map((e)=>e.commentaryId)
+        cId = com;
+    }
+    
+    const rs = await allEMLogsQuery({...request.body,cId} || {} , request , fastify);
     return rs;
 }
 module.exports = {
