@@ -508,9 +508,9 @@ const allResultLogsQuery = async (data, request, fastify)=>{
 }
 const allEMLogsQuery = async (data, request, fastify)=>{
     try {
-        const { startDate, endDate, page = 1, limit = 20, commentaryId } = data;
+        const { startDate, endDate, page = 1, limit = 20, commentaryId ,cId} = data;
         let {skip , take} = getPagination(page, limit);
-        let where = commentaryId ? `logs."wrCommentaryId" = ${commentaryId}` : null;
+        let where = cId.length > 0  ? `logs."wrCommentaryId" IN (${cId})` : null;
         where = startDate && endDate ? (where ? `${where} AND logs."wrRequestTime" BETWEEN '${startDate}' AND '${endDate}'` : `logs."wrRequestTime" BETWEEN '${startDate}' AND '${endDate}'`) : where;
 
         const query = `
