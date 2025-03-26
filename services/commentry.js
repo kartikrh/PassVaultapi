@@ -79,6 +79,7 @@ const {
   upOverDLSQuery,
   updateCommentaryPlayerJerseyImageQuery,
   getAllCommentaryPlayerDataQuery,
+  changeIsTestComQuery,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -774,7 +775,7 @@ const createCommentaryService = async (request, fastify) => {
     );
   });
 
-  if (addCommentry.isActive) {
+  if (addCommentry.isActive && addCommentry.isTest == false) {
     let cData = await getMatchDataByCId({
       commentaryId: addCommentry.commentaryId,
     }, request, fastify);
@@ -1426,7 +1427,7 @@ const cloneCommentaryService = async (request, fastify) => {
   //     request
   //   );
   // }
-  if (newCommentary.isActive) {
+  if (newCommentary.isActive && newCommentary.isTest == false) {
     let cData = await getMatchDataByCId({
       commentaryId: newCommentary.commentaryId,
     }, request, fastify);
@@ -3891,45 +3892,6 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         item?.commentaryId === commentaryData.commentaryId &&
         item.teamStatus === 1
     );
-    // if (
-    //   commentaryDetails && _sendPrePlayers.length > 0 &&
-    //   commentaryData.isPredictMarket == true &&
-    //   previousCommentaryStatus == 3 &&
-    //   updatedData.commentaryBallByBallDetails
-    // ) {
-    //   let decimalOverCount;
-    //   try {
-    //     decimalOverCount = parseFloat(commentaryBallByBall.overCount);
-    //   }
-    //   catch (error) {
-    //     decimalOverCount = 0;
-    //   }
-    //   callPredictorMarket(
-    //     {
-    //       commentary_id: commentaryData.commentaryId,
-    //       match_type_id: commentaryData.matchTypeId,
-    //       event_id: commentaryData.eventRefId,
-    //       current_team_id: strikeTeam.teamId,
-    //       total_score: strikeTeam.teamScore,
-    //       current_ball: decimalOverCount,
-    //       player_details: _sendPrePlayers,
-    //       ball_by_ball_id: updatedData.commentaryBallByBallDetails.commentaryBallByBallId
-    //       ? parseInt(updatedData.commentaryBallByBallDetails.commentaryBallByBallId)
-    //       : null,
-    //       partnership_details : sendPartnership
-    //     },
-    //     "/api/v1/playerpredictscore",
-    //     fastify,
-    //     request
-    //   ).catch((err) => {
-    //     errorLogger(
-    //       fastify,
-    //       err.message,
-    //       "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
-    //       request
-    //     );
-    //   });
-    // }
     if(deleteCommentaryBallByBallId || deleteOverId){
       const clientInRoom = global.socketIo.sockets.adapter.rooms.get(`score-${commentaryId}`);
       if (clientInRoom?.size) {
@@ -6735,6 +6697,7 @@ const getMatchListByStatus = async (body, request, fastify) => {
       isPr: item.isPredictMarket,
       ics: item.isClientShow,
       srtup: item?.sortUpdate ?? "",
+      isTest: item?.isTest
       // mr: mr
       // bowT : item.bowlingTeam || null,
     };
@@ -8535,7 +8498,7 @@ const updateResultInCommentaryService = async (request, fastify) => {
 
   global.tblCommentaries[index].result = result;
 
-  if (global.tblCommentaries[index].isActive) {
+  if (global.tblCommentaries[index].isActive && global.tblCommentaries[index].isTest == false) {
     let cData = await getMatchDataByCId({
       commentaryId: commentaryId,
     }, request, fastify);
@@ -10765,7 +10728,44 @@ const updateMergeImageOnCommentaryPlayersService = async (request, fastify) => {
   }
   return "Jersey and Player images updated successfully";
 };
+const changeIsTestComService = async (request, fastify) => {
+  // validate commentary id
+  const commentary = global.tblCommentaries.findIndex(
+    (item) => item?.commentaryId === request.body.commentaryId
+  );
+  if (commentary == -1) {
+    throw new Error("Commentary with this id not Found");
+  }
+  await changeIsTestComQuery(request.body, fastify, request);
 
+  global.tblCommentaries[commentary].isTest = request.body.isTest;
+
+  let cData = await getMatchDataByCId({
+    commentaryId: request.body.commentaryId,
+  }, request, fastify);
+  callClientAPI(
+    {
+      serviceType: ServiceType.clientAPI,
+      moduleType: APIEndpointModuleType.commentaryUpdate,
+      data: {
+        ...cData,
+        isTest: request.body.isTest,
+        type: "isTestChange"
+      }
+    },
+    request,
+    fastify
+  ).catch((err) => {
+    console.log("call client api console", err);
+    errorLogger(
+      fastify,
+      err.message,
+      "ERROR --> services/commentary.js/changeIsTestComService",
+      request
+    );
+  });
+  return "Commentary Updated successfully";
+};
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -10847,4 +10847,5 @@ module.exports = {
   getAllCompletedCommentaryService,
   upDLSDetailsService,
   updateMergeImageOnCommentaryPlayersService,
+  changeIsTestComService
 };

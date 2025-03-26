@@ -1068,7 +1068,7 @@ const upSendMarketDataService = async (request, fastify) => {
       {
         eventMarketId: item.eventMarketId,
         commentaryId: item.commentaryId,
-        dataTosave: null,
+        dataTosave: item.data ? JSON.parse(item.data) : null,
         updateType: MarketUpdateType.isSendDataUpdate,
         lineDiff: 0,
         isSendData: isSendData
@@ -2704,7 +2704,7 @@ const sendMarketToSocket = async(data,request,fastify)=>{
 }
 const updateMarketRateServiceV1 = async (request, fastify) => {
   let requestTime = new Date();
-  let responseTime
+  let responseTime;
  try {
   // i got array of eventMarket i want to update this data
   let { eventMarket } = request.body;
@@ -2772,7 +2772,6 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
     //   multiRunMarket.push(item);
     // }
   }
-
   const allMarkets = [...signleRunMarket, ...multiRunMarket];
   const updatedData = await updateEventMarketRateQueryV1({
     singleRunnerMarket : signleRunMarket.length > 0 ? signleRunMarket : null,
@@ -3592,6 +3591,9 @@ const saveManualMarketDataService = async (request, fastify) => {
   let com = global.tblCommentaries.find((item) => item.commentaryId === request.body.commentaryId);
   if(!com){
     throw new Error("Commentary with this id not Found");
+  }
+  if(!request.body.eventRefId || request.body.eventRefId == "" ){
+    throw new Error("EventRefId is required.")
   }
   const eventMarket = await saveManualMarketQuery(request.body, request, fastify);
   if(eventMarket){

@@ -2272,6 +2272,21 @@ const Commentary = {
       },
     },
   },
+  changeIsTest: {
+    schema: {
+      tags: ["Commentary"],
+      description: "change IsTest Commentary",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+          isTest: { type: "boolean" },
+        },
+        required: ["commentaryId", "isTest"],
+      },
+    },
+  },
   getAllCommentaryHistory: {
     schema: {
       tags: ["Commentary"],
@@ -6559,6 +6574,24 @@ const Logs = {
           skip : {type : "integer"},
           limit : {type : "integer"},
           marketId : {type : "integer"},
+          startDate : {type : "string"},
+          endDate : {type : "string"}
+        },
+        required : ["page", "limit"]
+      }
+    }
+  },
+  emLogs : {
+    schema : {
+      tags : ["Logs"],
+      description : "event Market Logs",
+      security : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          skip : {type : "integer"},
+          limit : {type : "integer"},
+          commentaryId : {type : "integer"},
           startDate : {type : "string"},
           endDate : {type : "string"}
         },
