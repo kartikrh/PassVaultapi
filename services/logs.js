@@ -6,6 +6,7 @@ const {
     allErrorLogsQuery,
     allUndoLogsQuery,
     allResultLogsQuery,
+    allEMLogsQuery,
 } = require("../repository/TableLogs");
 
 const applyFiltersAndPagination = (logs, filters) => {
@@ -88,7 +89,11 @@ const allUndoLogs = async(request, fastify) => {
 
 const allResultLogsService = async(request, fastify) => {
     return await allResultLogsQuery(request.body || {},request, fastify);
-};  
+};
+const getEMLogsService = async(request,fastify)=>{
+    const rs = await allEMLogsQuery(request.body || {} , request , fastify);
+    return rs;
+}
 module.exports = {
     allResponseLogs,
     allThirdPartyApiLogs,
@@ -99,4 +104,5 @@ module.exports = {
     getComByEventId,
     allUndoLogs,
     allResultLogsService,
+    getEMLogsService
 };

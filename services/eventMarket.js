@@ -1068,7 +1068,7 @@ const upSendMarketDataService = async (request, fastify) => {
       {
         eventMarketId: item.eventMarketId,
         commentaryId: item.commentaryId,
-        dataTosave: null,
+        dataTosave: item.data ? JSON.parse(item.data) : null,
         updateType: MarketUpdateType.isSendDataUpdate,
         lineDiff: 0,
         isSendData: isSendData
@@ -2704,7 +2704,7 @@ const sendMarketToSocket = async(data,request,fastify)=>{
 }
 const updateMarketRateServiceV1 = async (request, fastify) => {
   let requestTime = new Date();
-  let responseTime
+  let responseTime;
  try {
   // i got array of eventMarket i want to update this data
   let { eventMarket } = request.body;
