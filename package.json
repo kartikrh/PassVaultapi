@@ -28,7 +28,6 @@
     "@fastify/swagger-ui": "^1.9.3",
     "@microsoft/signalr": "^8.0.0",
     "@sentry/node": "^7.106.1",
-    "@sentry/profiling-node": "^0.3.0",
     "@sentry/tracing": "^7.106.1",
     "@socket.io/admin-ui": "^0.5.1",
     "axios": "^1.6.7",
