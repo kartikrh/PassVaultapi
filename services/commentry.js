@@ -1534,10 +1534,12 @@ const deleteCommentaryService = async (request, fastify) => {
       elem.commentaryId === eventId.commentaryId && elem.isInPlayingEleven == true
     ).map((pl) => pl.playerId);
     
-    playerIds = playerIds.concat(playerlist);
     matchTypeIds.push(eventId.matchTypeId);
 
-    netRunRateData.push({competitionId: eventId.competitionId, teamId: [eventId.team1Id, eventId.team2Id]});
+    if(eventId && eventId.isTest == false){
+      playerIds = playerIds.concat(playerlist);
+      netRunRateData.push({competitionId: eventId.competitionId, teamId: [eventId.team1Id, eventId.team2Id]});
+    }
     eventIdArr.push(eventId.eventRefId);
     await deleteCommentryQuery(commentary, request, fastify);
     await updateEventMarketCloseQuery(commentaryId, request, fastify)
@@ -3000,7 +3002,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
             eventTypeId : commentaryData.eventTypeId,
           })
         }
-        if(com && com.isPointTable == true){
+        if(com && com.isPointTable == true && commentaryData?.isTest == false) {
           teamPoint.push({
             commentaryId: commentaryId,
             competitionId: commentaryData.competitionId,
@@ -3033,6 +3035,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
             );
           });
         }
+        if(commentaryData && commentaryData?.isTest == false) {
         setPlayerHistoryService({
           commentaryId :[commentaryId]
         }, request, fastify)
@@ -3046,7 +3049,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
               request
             );
           });
-
+        }
             const tipsData = global.tblTips.filter(
               (item) => 
                 item.commentaryId === commentaryDetails.commentaryId || 
@@ -3791,7 +3794,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
             );
           });
       }
-      if (competition.isPointTable == true) {
+      if (competition.isPointTable == true && commentaryDetails.isTest == false) {
         setTeamPointService([{
           commentaryId: commentaryDetails.commentaryId,
           competitionId: commentaryDetails.competitionId,
@@ -8849,7 +8852,7 @@ const closeCommentaryService = async (request, fastify) => {
           eventTypeId: global.tblCommentaries[index].eventTypeId,
         })
       }
-      if (comp.isPointTable == true) {
+      if (comp.isPointTable == true && global.tblCommentaries[index]?.isTest == false) {
         teamPoint.push({
           commentaryId: commentaryId,
           competitionId: global.tblCommentaries[index].competitionId,
@@ -8890,46 +8893,47 @@ const closeCommentaryService = async (request, fastify) => {
         });
       }
     }
-
-  }
-
-  if (setEventSnap.length > 0) {
-    setCompEventSnapSerice(setEventSnap, request, fastify)
-      .catch((err) => {
-        console.log("setCompEventSnapSerice console", err);
+    if (setEventSnap.length > 0) {
+      setCompEventSnapSerice(setEventSnap, request, fastify)
+        .catch((err) => {
+          console.log("setCompEventSnapSerice console", err);
+          errorLogger(
+            fastify,
+            err.message,
+            "ERROR --> services/commentary.js/closeCommentaryService - setCompEventSnapSerice",
+            request
+          );
+        });
+    }
+    if (teamPoint.length > 0) {
+      setTeamPointService(teamPoint, request, fastify)
+        .catch((err) => {
+          console.log("setTeamPointService console", err);
+          errorLogger(
+            fastify,
+            err.message,
+            "ERROR --> services/commentary.js/closeCommentaryService - setTeamPointService",
+            request
+          );
+        });
+    }
+    if(global.tblCommentaries[index] && global.tblCommentaries[index]?.isTest == false) {
+    setPlayerHistoryService({
+      commentaryId: request.body.commentaryId
+    }, request, fastify)
+      .catch
+      ((err) => {
+        console.log("setPlayerHistoryService console", err);
         errorLogger(
           fastify,
           err.message,
-          "ERROR --> services/commentary.js/closeCommentaryService - setCompEventSnapSerice",
+          "ERROR --> services/commentary.js/closeCommentaryService - setPlayerHistoryService",
           request
         );
       });
+    }
   }
-  if (teamPoint.length > 0) {
-    setTeamPointService(teamPoint, request, fastify)
-      .catch((err) => {
-        console.log("setTeamPointService console", err);
-        errorLogger(
-          fastify,
-          err.message,
-          "ERROR --> services/commentary.js/closeCommentaryService - setTeamPointService",
-          request
-        );
-      });
-  }
-  setPlayerHistoryService({
-    commentaryId: request.body.commentaryId
-  }, request, fastify)
-    .catch
-    ((err) => {
-      console.log("setPlayerHistoryService console", err);
-      errorLogger(
-        fastify,
-        err.message,
-        "ERROR --> services/commentary.js/closeCommentaryService - setPlayerHistoryService",
-        request
-      );
-    });
+
   //return `Commentary(s) closed successfully`;
   return {
     message: "Commentary(s) closed successfully",
@@ -10308,7 +10312,9 @@ const deleteEventResultService = async (request, fastify) => {
       (item) => item?.commentaryId === commentary
     );
     eventIdArr.push(eventId.eventRefId);
-    netRunRateData.push({competitionId: eventId.competitionId, teamId: [eventId.team1Id, eventId.team2Id]});
+    if(eventId && eventId?.isTest == false){
+      netRunRateData.push({competitionId: eventId.competitionId, teamId: [eventId.team1Id, eventId.team2Id]});
+    }
     await deleteCommentryQuery(commentary, request, fastify);
     const result = await updateEventMarketCloseQuery(commentaryId, request, fastify);
     if (result.length > 0) {
@@ -10407,7 +10413,7 @@ const isCountInPointCommentaryService = async (request, fastify) => {
     (item) => item?.commentaryId === request.body.commentaryId
   );
 
-  if(commentary.commentaryStatus === 4) {
+  if(commentary.commentaryStatus === 4 && commentary?.isTest == false) {
     const request = {
       body: {
         competitionId: commentary.competitionId,
@@ -10433,7 +10439,9 @@ const multiIsCountInPointCommentaryService = async (request, fastify) => {
     if(!commentaryData){
       continue;
     }
-    netRunRateData.push({competitionId: commentaryData.competitionId, teamId: [commentaryData.team1Id, commentaryData.team2Id]});
+    if(commentaryData && commentaryData?.isTest == false) {
+      netRunRateData.push({competitionId: commentaryData.competitionId, teamId: [commentaryData.team1Id, commentaryData.team2Id]});
+    }
     await isCountInPOintCommentaryChangeQuery({isCountInPoint: false, commentaryId: commentary}, fastify, request);
     const index = global.tblCommentaries.findIndex(
       (item) => item?.commentaryId === commentary
@@ -10597,10 +10605,12 @@ const deleteCommentaryHistoryService = async (request, fastify) => {
     );
     playerlist = playerlist.map((pla) => pla.playerId);
     
-    playerIds = playerIds.concat(playerlist);
     matchTypeIds.push(eventId.matchTypeId);
-
-    netRunRateData.push({competitionId: eventId.competitionId, teamId: [eventId.team1Id, eventId.team2Id]});
+    
+    if(eventId && eventId.isTest == false) {
+      playerIds = playerIds.concat(playerlist);
+      netRunRateData.push({competitionId: eventId.competitionId, teamId: [eventId.team1Id, eventId.team2Id]});
+    }
     eventIdArr.push(eventId.eventRefId);
   }
   await deleteCommentryHistoryQuery(commentaryId, request, fastify);

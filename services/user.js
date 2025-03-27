@@ -1415,6 +1415,7 @@ const verifyMobileNoAppService = async (request, fastify) => {
           clientId:clientId,
           countryCode: global.tblClient[index].countryCode,
           mobileNo: global.tblClient[index].mobileNo,
+          userName: global.tblClient[index]?.userName,
         }
       }
   }
@@ -1475,6 +1476,7 @@ const signinClientAppService = async (request, fastify) => {
       clientId: key.clientId,
       countryCode: checkExist.countryCode,
       mobileNo: checkExist.mobileNo,
+      userName: checkExist?.userName,
     }
   }
 }

@@ -37,7 +37,8 @@ const webPush = require("web-push");
 const {webPushset} = require("./WebPushHandler/index.js");
 const { updateMarket } = require("./utilities/marketUpdate.js");
 const cron = require('node-cron');
-
+const { nodeProfilingIntegration } = require('@sentry/profiling-node');
+// const { nodeProfilingIntegration } = require("@sentry/profiling-node");
 // Pass --options via CLI arguments in command to enable these options.
 module.exports.options = {};
 global.tblData = {};
@@ -46,6 +47,12 @@ if (process.env.ENABLE_SENTRY === "TRUE") {
   Sentry.init({
     dsn: process.env.SENTRY_DSN,
     tracesSampleRate: 1.0,
+    integrations : [
+      nodeProfilingIntegration(),
+      // ...Sentry.autoDiscoverNodePerformanceMonitoringIntegrations(),
+    ],
+    profileSessionSampleRate: 1.0,
+    profileLifecycle: 'trace',
   });
 }
 process.on('uncaughtException', (error) => {
@@ -267,12 +274,28 @@ module.exports = async function (fastify, opts) {
     }
 
     if (process.env.ENABLE_SENTRY === "TRUE") {
-      const transaction = Sentry.startTransaction({
-        name: `${request.method} ${request.url}`,
-        op: "http.server",
-        description: "HTTP request",
-      });
-      request.sentryTx = transaction;
+      // const transaction = Sentry.startTransaction({
+      //   name: `${request.method} ${request.url}`,
+      //   op: "http.server",
+      //   description: "HTTP request",
+      // });
+      Sentry.startSpan(
+        {
+          name: `${request.method} ${request.url}`,
+          op: "http.server",
+          description: "Incoming HTTP request",
+        },
+        (span) => {
+          request.sentrySpan = span;
+        }
+      );
+      // const span = Sentry.startSpan({
+      //   name: `${request.method} ${request.url}`,
+      //   op: "http.server",
+      //   description: "HTTP request",
+      // });
+ 
+      // request.sentrySpan = transaction;
     }
 
     // done();
@@ -319,12 +342,29 @@ module.exports = async function (fastify, opts) {
     }
 
     if (process.env.ENABLE_SENTRY === "TRUE") {
-      const transaction = Sentry.startTransaction({
-        name: `${request.method} ${request.url}`,
-        op: "http.server",
-        description: "HTTP request",
-      });
-      request.sentryTx = transaction;
+      // const transaction = Sentry.startTransaction({
+      //   name: `${request.method} ${request.url}`,
+      //   op: "http.server",
+      //   description: "HTTP request",
+      // });
+      // request.sentryTx = transaction;
+      Sentry.startSpan(
+        {
+          name: `${request.method} ${request.url}`,
+          op: "http.server",
+          description: "Incoming HTTP request",
+        },
+        (span) => {
+          request.sentrySpan = span;
+        }
+      );
+      // const span = Sentry.startSpan({
+      //   name: `${request.method} ${request.url}`,
+      //   op: "http.server",
+      //   description: "HTTP request",
+      // });
+
+      // request.sentrySpan = span;
     }
 
     done(null, newPayload);
