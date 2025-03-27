@@ -37,7 +37,7 @@ const webPush = require("web-push");
 const {webPushset} = require("./WebPushHandler/index.js");
 const { updateMarket } = require("./utilities/marketUpdate.js");
 const cron = require('node-cron');
-const { nodeProfilingIntegration } = require("@sentry/profiling-node");
+const { nodeProfilingIntegration } = require('@sentry/profiling-node');
 
 // const { nodeProfilingIntegration } = require("@sentry/profiling-node");
 // Pass --options via CLI arguments in command to enable these options.
@@ -49,13 +49,9 @@ if (process.env.ENABLE_SENTRY === "TRUE") {
     dsn: process.env.SENTRY_DSN,
     tracesSampleRate: 1.0,
     integrations : [
-      nodeProfilingIntegration()
+      nodeProfilingIntegration(),
+      ...Sentry.autoDiscoverNodePerformanceMonitoringIntegrations(),
     ],
-    // integrations: [
-
-    //   nodeProfilingIntegration(),
-    //   // ...Sentry.autoDiscoverNodePerformanceMonitoringIntegrations(),
-    // ],
     profileSessionSampleRate: 1.0,
     profileLifecycle: 'trace',
   });
