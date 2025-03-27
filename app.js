@@ -48,7 +48,6 @@ if (process.env.ENABLE_SENTRY === "TRUE") {
   Sentry.init({
     dsn: process.env.SENTRY_DSN,
     tracesSampleRate: 1.0,
-    
     // integrations: [
 
     //   nodeProfilingIntegration(),
