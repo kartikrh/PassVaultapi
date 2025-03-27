@@ -49,7 +49,7 @@ if (process.env.ENABLE_SENTRY === "TRUE") {
     dsn: process.env.SENTRY_DSN,
     tracesSampleRate: 1.0,
     integrations : [
-      nodeProfilingIntegration(),
+      // nodeProfilingIntegration(),
       ...Sentry.autoDiscoverNodePerformanceMonitoringIntegrations(),
     ],
     profileSessionSampleRate: 1.0,
