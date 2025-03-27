@@ -60,6 +60,7 @@ if (process.env.ENABLE_SENTRY === "TRUE") {
     profileLifecycle: 'trace',
   });
 }
+
 process.on('uncaughtException', (error) => {
   console.error('Uncaught Exception:', error);
 });
