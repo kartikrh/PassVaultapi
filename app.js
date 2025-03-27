@@ -52,7 +52,7 @@ if (process.env.ENABLE_SENTRY === "TRUE") {
       // Add our Profiling integration
       // new Sentry.Integrations.Http({tracing : true}),
       // new Sentry.Integrations.Postgres(),
-      nodeProfilingIntegration(),
+      // nodeProfilingIntegration(),
       // ...Sentry.autoDiscoverNodePerformanceMonitoringIntegrations(),
     ],
     profileSessionSampleRate: 1.0,
