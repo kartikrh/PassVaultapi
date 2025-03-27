@@ -48,15 +48,19 @@ if (process.env.ENABLE_SENTRY === "TRUE") {
   Sentry.init({
     dsn: process.env.SENTRY_DSN,
     tracesSampleRate: 1.0,
+    integrations : [
+      nodeProfilingIntegration()
+    ],
     // integrations: [
 
     //   nodeProfilingIntegration(),
     //   // ...Sentry.autoDiscoverNodePerformanceMonitoringIntegrations(),
     // ],
-    // profileSessionSampleRate: 1.0,
-    // profileLifecycle: 'trace',
+    profileSessionSampleRate: 1.0,
+    profileLifecycle: 'trace',
   });
 }
+
 process.on('uncaughtException', (error) => {
   console.error('Uncaught Exception:', error);
 });
