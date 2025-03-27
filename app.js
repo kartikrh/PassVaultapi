@@ -274,12 +274,28 @@ module.exports = async function (fastify, opts) {
     }
 
     if (process.env.ENABLE_SENTRY === "TRUE") {
-      const transaction = Sentry.startTransaction({
-        name: `${request.method} ${request.url}`,
-        op: "http.server",
-        description: "HTTP request",
-      });
-      request.sentryTx = transaction;
+      // const transaction = Sentry.startTransaction({
+      //   name: `${request.method} ${request.url}`,
+      //   op: "http.server",
+      //   description: "HTTP request",
+      // });
+      Sentry.startSpan(
+        {
+          name: `${request.method} ${request.url}`,
+          op: "http.server",
+          description: "Incoming HTTP request",
+        },
+        (span) => {
+          request.sentrySpan = span;
+        }
+      );
+      // const span = Sentry.startSpan({
+      //   name: `${request.method} ${request.url}`,
+      //   op: "http.server",
+      //   description: "HTTP request",
+      // });
+ 
+      // request.sentrySpan = transaction;
     }
 
     // done();
@@ -326,12 +342,29 @@ module.exports = async function (fastify, opts) {
     }
 
     if (process.env.ENABLE_SENTRY === "TRUE") {
-      const transaction = Sentry.startTransaction({
-        name: `${request.method} ${request.url}`,
-        op: "http.server",
-        description: "HTTP request",
-      });
-      request.sentryTx = transaction;
+      // const transaction = Sentry.startTransaction({
+      //   name: `${request.method} ${request.url}`,
+      //   op: "http.server",
+      //   description: "HTTP request",
+      // });
+      // request.sentryTx = transaction;
+      Sentry.startSpan(
+        {
+          name: `${request.method} ${request.url}`,
+          op: "http.server",
+          description: "Incoming HTTP request",
+        },
+        (span) => {
+          request.sentrySpan = span;
+        }
+      );
+      // const span = Sentry.startSpan({
+      //   name: `${request.method} ${request.url}`,
+      //   op: "http.server",
+      //   description: "HTTP request",
+      // });
+
+      // request.sentrySpan = span;
     }
 
     done(null, newPayload);
