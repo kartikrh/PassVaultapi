@@ -4435,7 +4435,8 @@ const getAllCommentaryHistoryQuery = async (whereCondition, fastify, request) =>
             mt2."wrMatchType" AS "historyMatchType",
             tc."wrIsCountInPoint" as "isCountInPoint",
             tc."wrShotType" as "shotType",
-            tc."wrIsWheelShow" as "isWheelShow"
+            tc."wrIsWheelShow" as "isWheelShow",
+            tc."wrIsTest" as "isTest"
       FROM "tblCommentaries" tc
       LEFT JOIN "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
       LEFT JOIN "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
