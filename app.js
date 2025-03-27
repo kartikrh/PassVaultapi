@@ -50,10 +50,10 @@ if (process.env.ENABLE_SENTRY === "TRUE") {
     tracesSampleRate: 1.0,
     integrations: [
       // Add our Profiling integration
-      new Sentry.Integrations.Http({tracing : true}),
-      new Sentry.Integrations.Postgres(),
+      // new Sentry.Integrations.Http({tracing : true}),
+      // new Sentry.Integrations.Postgres(),
       nodeProfilingIntegration(),
-      ...Sentry.autoDiscoverNodePerformanceMonitoringIntegrations(),
+      // ...Sentry.autoDiscoverNodePerformanceMonitoringIntegrations(),
     ],
     profileSessionSampleRate: 1.0,
     profileLifecycle: 'trace',
