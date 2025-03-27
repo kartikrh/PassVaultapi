@@ -916,6 +916,7 @@ const setPlayerHistoryService = async (data,request, fastify) => {
       playerIds.push(p.playerId);
       matchTypeIds.push(comdetail.historyMatchTypeId);
     }
+   if(comdetail && comdetail?.isTest == false) {
     if(dataToUpdate.length >= 1) {
       await fastify.db.query(`CALL upsert_player_batting_history($1, $2)`, {
       bind: [JSON.stringify(dataToUpdate), request.userTokenInfo.WrUserId],
@@ -954,6 +955,7 @@ const setPlayerHistoryService = async (data,request, fastify) => {
         }
       );
     })
+   }
     await createTeamPointLogQuery(
       {
         commentaryId: com,
