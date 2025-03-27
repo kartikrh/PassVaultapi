@@ -48,10 +48,9 @@ if (process.env.ENABLE_SENTRY === "TRUE") {
   Sentry.init({
     dsn: process.env.SENTRY_DSN,
     tracesSampleRate: 1.0,
+    
     integrations: [
-      // Add our Profiling integration
-      // new Sentry.Integrations.Http({tracing : true}),
-      // new Sentry.Integrations.Postgres(),
+
       nodeProfilingIntegration(),
       // ...Sentry.autoDiscoverNodePerformanceMonitoringIntegrations(),
     ],
