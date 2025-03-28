@@ -49,10 +49,13 @@ if (process.env.ENABLE_SENTRY === "TRUE") {
     tracesSampleRate: 1.0,
     integrations : [
       nodeProfilingIntegration(),
+      Sentry.postgresIntegration(),
+      Sentry.childProcessIntegration()
       // ...Sentry.autoDiscoverNodePerformanceMonitoringIntegrations(),
     ],
     profileSessionSampleRate: 1.0,
     profileLifecycle: 'trace',
+    includeLocalVariables: true,
   });
 }
 process.on('uncaughtException', (error) => {
