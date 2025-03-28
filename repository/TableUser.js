@@ -1277,10 +1277,11 @@ const registerClientAppQuery = async (data,request,fastify) => {
           "wrProvider",
           "wrRegistrationProcessStatus",
           "wrCountryCode",
-          "wrIsUserActive"
+          "wrIsUserActive",
+          "wrIsActive"
         )   
         VALUES (
-          $1,$2,$3,$4,now(),$5,$6,$7,$8,$9,$10,$11,1
+          $1,$2,$3,$4,now(),$5,$6,$7,$8,$9,$10,$11,0,$12
         )
         RETURNING *
       )
@@ -1328,7 +1329,8 @@ const registerClientAppQuery = async (data,request,fastify) => {
         data.ipAddress,
         clientProvider.Manual,
         clientProcessStatus.ADDUSERDETAIL,
-        data.countryCode
+        data.countryCode,
+        false
       ],
     });
     return rs[0];
@@ -1555,6 +1557,41 @@ const changePasswordQuery = async (data, request, fastify) => {
     throw new Error(err.message);
   }
 };
+const updateClientValidateKeysQuery = async (data, request, fastify) => {
+  try {
+    const result = await fastify.db.query(
+            `
+            update "tblClient" set
+            "wrIsUserActive" = $1,
+            "wrIsActive" = $2,
+            "wrRegistrationProcessStatus" = $3
+            where "wrClientID" = $4
+            RETURNING 
+              "wrClientID" as "clientId", 
+              "wrIsUserActive" as "isUserActive",
+              "wrRegistrationProcessStatus" as "registrationProcessStatus", 
+              "wrIsActive" as "isActive"
+            `,
+      {
+        bind: [
+            data.isUserActive,
+            data.isActive,
+            data.registrationProcessStatus,
+            data.clientId
+          ],
+      }
+    );
+    return result[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableClient/updateClientValidateKeysQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
 module.exports = {
   signInUser,
   signUpUser,
@@ -1591,4 +1628,5 @@ module.exports = {
   clientDetailsByIdQuery,
   updateClientProfileQuery,
   changePasswordQuery,
+  updateClientValidateKeysQuery,
 };

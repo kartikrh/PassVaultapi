@@ -65,6 +65,6 @@ const configConstants = {
     OTPURL :  "OTPURL",
     OTPAUTHKEY : "OTPAUTHKEY",
     OTPVERIFY : "OTPVERIFY",
-    FORGOTPASSWORDOTP: "FORGOTPASSWORDOTP",
+    FORGOTOTPURL :  "FORGOTOTPURL",
 }
 module.exports = configConstants;
