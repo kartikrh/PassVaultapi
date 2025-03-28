@@ -1655,11 +1655,22 @@ const updatePasswordInForgotPasswordService = async (request, fastify) => {
   await changePasswordQuery({ newPassword: password, clientId: id },
     request, fastify
   );
-  return {
-    clientId : clientId,
+  let t1 = uuidv4()
+  const token = await signInClientAppQuery({
+    clientId : global.tblClient[index].clientId,
     mobileNo : global.tblClient[index].mobileNo,
+    password : password,
     countryCode : global.tblClient[index].countryCode,
-    userName : global.tblClient[index].userName,
+    token : t1
+  },request,fastify);
+  return {
+    token : token,
+    details: {
+      clientId : clientId,
+      mobileNo : global.tblClient[index].mobileNo,
+      countryCode : global.tblClient[index].countryCode,
+      userName : global.tblClient[index].userName,
+    }
   }
 }
 module.exports = {
