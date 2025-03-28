@@ -262,26 +262,21 @@ module.exports = async function (fastify, opts) {
 
   fastify.addHook("onRequest", async (request, reply) => {
     // Record the request start time in nanoseconds
-    request.startTime = process.hrtime.bigint();
-    request.startTimeTimeStemp = new Date();
-    if (request.originalUrl.includes("/commentary/saveDetails") || request.originalUrl.includes("/commentary/saveCommentaryDetails")) {
-      // request.endTimeTimeStemp = new Date();
-      // new Promise((resolve, reject) => {
-      //   resolve(responseLogInDB(request, fastify));
-      // }).then ((res) => {
-      //   // console.log('res', res);
-      //   request.errId = res[0].errId;
-      // });
-      let result = await responseLogInDB(request, fastify);
-      request.errId = result[0]?.errId;
-    }
+    // request.startTime = process.hrtime.bigint();
+    // request.startTimeTimeStemp = new Date();
+    // if (request.originalUrl.includes("/commentary/saveDetails") || request.originalUrl.includes("/commentary/saveCommentaryDetails")) {
+    //   // request.endTimeTimeStemp = new Date();
+    //   // new Promise((resolve, reject) => {
+    //   //   resolve(responseLogInDB(request, fastify));
+    //   // }).then ((res) => {
+    //   //   // console.log('res', res);
+    //   //   request.errId = res[0].errId;
+    //   // });
+    //   let result = await responseLogInDB(request, fastify);
+    //   request.errId = result[0]?.errId;
+    // }
 
     if (process.env.ENABLE_SENTRY === "TRUE") {
-      // const transaction = Sentry.startTransaction({
-      //   name: `${request.method} ${request.url}`,
-      //   op: "http.server",
-      //   description: "HTTP request",
-      // });
       Sentry.startSpan(
         {
           name: `${request.method} ${request.url}`,
@@ -292,13 +287,6 @@ module.exports = async function (fastify, opts) {
           request.sentrySpan = span;
         }
       );
-      // const span = Sentry.startSpan({
-      //   name: `${request.method} ${request.url}`,
-      //   op: "http.server",
-      //   description: "HTTP request",
-      // });
- 
-      // request.sentrySpan = transaction;
     }
 
     // done();
@@ -375,16 +363,16 @@ module.exports = async function (fastify, opts) {
 
   fastify.addHook("onResponse", (request, reply, done) => {
     const logger = false;
-    const responseTimeInNanoseconds =
-      process.hrtime.bigint() - request.startTime;
-    const responseTimeInMilliseconds = Number(responseTimeInNanoseconds) / 1e6;
-    request.responseTime = responseTimeInMilliseconds;
+    // const responseTimeInNanoseconds =
+    //   process.hrtime.bigint() - request.startTime;
+    // const responseTimeInMilliseconds = Number(responseTimeInNanoseconds) / 1e6;
+    // request.responseTime = responseTimeInMilliseconds;
 
-    // if path include /commentary then do log in db
-    if (request.originalUrl.includes("/commentary/saveDetails")) {
-      request.endTimeTimeStemp = new Date();
-      responseLogInDB(request, fastify);
-    }
+    // // if path include /commentary then do log in db
+    // if (request.originalUrl.includes("/commentary/saveDetails")) {
+    //   request.endTimeTimeStemp = new Date();
+    //   responseLogInDB(request, fastify);
+    // }
 
     if (request.startTime && logger) {
       responseLogger(request);
