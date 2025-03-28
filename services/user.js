@@ -7,7 +7,7 @@ const {ImgModuleConfig} = require("../utilities/imageConstant");
 const nodemailer = require('nodemailer');
 const {sendNotification,sendMobileNotifications} = require("../WebPushHandler/index");
 const { SENDEMAILTYPE } = require("../utilities/configConstants");
-const { typesOfServices, clientProcessStatus, sendOtpToMobile, verifyOTP } = require('../utilities/index');
+const { typesOfServices, clientProcessStatus, sendOtpToMobile, verifyOTP, forgotPasswordOTP } = require('../utilities/index');
 
 const {
   signUpUser,
@@ -41,6 +41,7 @@ const {
   updateClientProfileQuery,
   changePasswordQuery,
   clientDetailsByIdQuery,
+  updateClientValidateKeysQuery,
 } = require("../repository/TableUser");
 const {
   deviceInfo,
@@ -1383,17 +1384,17 @@ const verifyMobileNoAppService = async (request, fastify) => {
   },request,fastify)
 
   if(!checkExist){
-    return "Invalid Client Id"
+    return "Invalid username and mobile number"
   }
   let id = checkExist.clientId;
   // check if client exist
   const index = global.tblClient.findIndex((item) => item.clientId === id);
   if (index == -1) {
-    throw new Error("Client not found");
+    throw new Error("Invalid username and mobile number");
   }
-  if(global.tblClient[index]?.isMobileVerified == true){
-    throw new Error("Mobile number already verified");
-  }
+  // if(global.tblClient[index]?.isMobileVerified == true){
+  //   throw new Error("Mobile number already verified");
+  // }
   // is otp send true
   const isSendOtp = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP)?.value;
   if(isSendOtp === 'true'){
@@ -1407,8 +1408,15 @@ const verifyMobileNoAppService = async (request, fastify) => {
         clientId :id
       },request,fastify);
       global.tblClient[index].isMobileVerified = true;
-      global.tblClient[index].registrationProcessStatus = 2;
+      // global.tblClient[index].registrationProcessStatus = 2;
       const token = generateToken({ clientId: id });
+      const result = await updateClientValidateKeysQuery({
+        clientId: id, isUserActive: 1, isActive: true, registrationProcessStatus: clientProcessStatus.PASSWORDSET
+      }, request, fastify)
+      global.tblClient[index] = {
+        ...global.tblClient[index],
+        ...result[0]
+      }
       return {
         token : token,
         details: {
@@ -1432,7 +1440,13 @@ const verifyMobileNoAppService = async (request, fastify) => {
       global.tblClient[index].registrationProcessStatus = 2;
 
       const token = generateToken({ clientId: id });
-
+      const result = await updateClientValidateKeysQuery({
+        clientId: id, isUserActive: 1, isActive: true, registrationProcessStatus: clientProcessStatus.PASSWORDSET
+      }, request, fastify)
+      global.tblClient[index] = {
+        ...global.tblClient[index],
+        ...result[0]
+      }
       return {
         token : token,
         details: {
@@ -1449,15 +1463,13 @@ const verifyMobileNoAppService = async (request, fastify) => {
 }
 const signinClientAppService = async (request, fastify) => {
   const {mobileNo, password} = request.body;
-  const checkExist = global.tblClient.find((item) =>
-    item.mobileNo === mobileNo && item.countryCode === request.body.countryCode
-  );
+  const checkExist = global.tblClient.find((item) => item.userName === mobileNo && item.isActive === true);
   if (!checkExist) {
-    throw new Error("User not found");
+    throw new Error("Username and password not matched");
   }
-  if(checkExist.isMobileVerified == false){
-    throw new Error("Mobile number not verified");
-  }
+  // if(checkExist.isMobileVerified == false){
+  //   throw new Error("Mobile number not verified");
+  // }
   // get encrypt in client
 
   let encryptedPassword = encrypt(password);
@@ -1540,27 +1552,27 @@ const otpResendService = async (request, fastify) => {
   }
 };
 const forgotPasswordService = async (request, fastify) => {
-  const checkExist = await getIdByValue({ clientId : request.body.clientId}, request, fastify)
-  if(!checkExist){
-    return "Invalid Client Id"
-  }
-  let id = checkExist.clientId;
-  const index = global.tblClient.findIndex((item) => item.clientId === id);
-  if (index == -1) {
-    throw new Error("Client not found");
+  const checkClient = global.tblClient.find((item) => 
+    item.countryCode == request.body.countryCode && item.mobileNo == request.body.mobileNo
+  );
+  if (!checkClient) {
+    throw new Error("Mobile Number not existed");
   }
 
-  if(!global.tblClient[index].mobileNo || !global.tblClient[index].countryCode){
-    throw new Error("Mobile number not found");
-  }
-
-  let mobileNo = global.tblClient[index].countryCode + global.tblClient[index].mobileNo;
   let isSendOtp = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP)?.value;
   if(isSendOtp === 'true'){
-    // mobileNo
-    // logic for send third party otp
+    let send = await forgotPasswordOTP(request.body, request, fastify)
+      if(!send){
+        throw new Error("Error in sending OTP")
+      }
   }
-  return `OTP sent successfully`;
+  let clientId = checkClient.clientId;
+  let encrypt = await getEncryptClinet({clientId},request,fastify);
+  return {
+    clientId : encrypt.clientId,
+    mobileNo : checkClient.mobileNo,
+    countryCode : checkClient.countryCode,
+  }
 };
 
 const verifyForgotPasswordOTPService = async (request, fastify) => {
@@ -1570,18 +1582,26 @@ const verifyForgotPasswordOTPService = async (request, fastify) => {
   },request,fastify)
 
   if(!checkExist){
-    return "Invalid Client Id"
+    return "Invalid username and mobile number"
   }
   let id = checkExist.clientId;
   // check if client exist
-  const index = global.tblClient.findIndex((item) => item.clientId === id);
+  const index = global.tblClient.findIndex((item) => 
+    item.clientId === id && item.mobileNo == request.body.mobileNo && item.countryCode == request.body.countryCode
+  );
   if (index == -1) {
-    throw new Error("Client not found");
+    throw new Error("Mobile number not existed");
   }
   // is otp send true
+  request.body.countryCode = global.tblClient[index].countryCode;
+  request.body.mobileNo = global.tblClient[index].mobileNo;
   const isSendOtp = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP)?.value;
   if(isSendOtp === 'true'){
     // call third party otp
+    let otpVerify = await verifyOTP(request.body ,request , fastify)
+    if(!otpVerify){
+      throw new Error("OTP not verified");
+    }
     const token = generateToken({ clientId: id });
     return {
       token : token,
@@ -1589,10 +1609,11 @@ const verifyForgotPasswordOTPService = async (request, fastify) => {
         clientId:clientId,
         countryCode: global.tblClient[index].countryCode,
         mobileNo: global.tblClient[index].mobileNo,
+        userName: global.tblClient[index].userName,
       }
     }
   } else {
-    const otpConfig = global.tblConfigs.find((item) => item.key === configConstants.FORGOTPASSWORDOTP)?.value;
+    const otpConfig = global.tblConfigs.find((item) => item.key === configConstants.CLIENTOTP)?.value;
     if(!otpConfig){
       throw new Error("OTP Config not found");
     }
@@ -1605,6 +1626,7 @@ const verifyForgotPasswordOTPService = async (request, fastify) => {
           clientId: request.body.clientId,
           countryCode: global.tblClient[index].countryCode,
           mobileNo: global.tblClient[index].mobileNo,
+          userName: global.tblClient[index].userName,
         }
       };
     } else {
@@ -1620,12 +1642,12 @@ const updatePasswordInForgotPasswordService = async (request, fastify) => {
   },request,fastify)
 
   if(!checkExist){
-    return "Invalid Client Id"
+    return "Invalid username"
   }
   let id = checkExist.clientId;
   const index = global.tblClient.findIndex((item) => item.clientId === id);
   if (index == -1) {
-    throw new Error("Client not found");
+    throw new Error("Invalid username");
   }
   const hashedPassword = encrypt(password);
 
@@ -1633,7 +1655,12 @@ const updatePasswordInForgotPasswordService = async (request, fastify) => {
   await changePasswordQuery({ newPassword: password, clientId: id },
     request, fastify
   );
-  return `password updated successfully`;
+  return {
+    clientId : clientId,
+    mobileNo : global.tblClient[index].mobileNo,
+    countryCode : global.tblClient[index].countryCode,
+    userName : global.tblClient[index].userName,
+  }
 }
 module.exports = {
   signUpUserService,
