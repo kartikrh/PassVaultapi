@@ -456,9 +456,10 @@ const Auth = {
       body: {
         type: "object",
         properties: {
-          clientId: { type: "string" },
+          mobileNo: { type: "string" },
+          countryCode: { type: "string" },
         },
-        required: ["clientId"],
+        required: ["mobileNo", "countryCode"],
       },
     },
   },
