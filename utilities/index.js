@@ -820,7 +820,7 @@ const verifyOTP = async (data, request, fastify) => {
 }
 const forgotPasswordOTP = async (data, request, fastify) => {
   try {
-    let url = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.FORGOTOTPURL.toLowerCase())?.value;
+    let url = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.OTPFORGOTURL.toLowerCase())?.value;
     if(!url) return 'OTP URL not found';
     let cc = data.countryCode.replace("+", "");
     url = url.replace("{mobile}", cc + data.mobileNo);
@@ -843,6 +843,36 @@ const forgotPasswordOTP = async (data, request, fastify) => {
       fastify,
       error.message,
       "DB ERROR --> utilities/index/forgotPasswordOTP",
+      request
+    );
+    throw new Error(error.message);
+  }
+}
+const resendOTP = async (data, request, fastify) => {
+  try {
+    let url = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.OTPRESEND.toLowerCase())?.value;
+    if(!url) return 'OTP URL not found';
+    let cc = data.countryCode.replace("+", "");
+    url = url.replace("{mobile}", cc + data.mobileNo);
+    const result = await axios.get(url, { headers: {} });
+    if(result.data.type == "success"){
+      return true;
+    }
+    else {
+      errorLogger(
+        fastify,
+        result.data.message,
+        "DB ERROR --> utilities/index/resendOTP",
+        request
+      );
+      return false;
+    }
+  } catch (error) {
+    console.log("error from resendOTP", error);
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> utilities/index/resendOTP",
       request
     );
     throw new Error(error.message);
@@ -904,4 +934,5 @@ module.exports = {
   sendOtpToMobile,
   verifyOTP,
   forgotPasswordOTP,
+  resendOTP,
 };

@@ -7,7 +7,7 @@ const {ImgModuleConfig} = require("../utilities/imageConstant");
 const nodemailer = require('nodemailer');
 const {sendNotification,sendMobileNotifications} = require("../WebPushHandler/index");
 const { SENDEMAILTYPE } = require("../utilities/configConstants");
-const { typesOfServices, clientProcessStatus, sendOtpToMobile, verifyOTP, forgotPasswordOTP } = require('../utilities/index');
+const { typesOfServices, clientProcessStatus, sendOtpToMobile, verifyOTP, forgotPasswordOTP, resendOTP } = require('../utilities/index');
 
 const {
   signUpUser,
@@ -1539,20 +1539,31 @@ const changePasswordService = async (request, fastify) => {
   return `password update successfully`;
 }
 const otpResendService = async (request, fastify) => {
-  const { mobileNo, countryCode } = request.body;
-  const findUser = global.tblClient.find(
-    (item) => item.mobileNo === mobileNo && item.countryCode === countryCode
-  );
-  if (!findUser) {
-    throw new Error("Invalid Mobile Number");
+  const { clientId, mobileNo, countryCode } = request.body;
+  const checkExist = await getIdByValue({ clientId : clientId }, request, fastify)
+  if(!checkExist){
+    return "Invalid username and mobile number"
   }
-  
-  const isSendOTP = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP).value;
-  
+  let id = checkExist.clientId;
+  const index = global.tblClient.findIndex((item) => item.clientId === id &&
+    item.mobileNo === mobileNo && item.countryCode === countryCode
+  );
+  if (index == -1) {
+    throw new Error("Invalid username and mobile number");
+  }
+
+  const isSendOTP = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP)?.value;
+  const otpExpired = parseInt(global.tblConfigs?.find((item) => item.key === configConstants.OTPEXPIRED)?.value, 10) || 0;
   if (isSendOTP === "true") {
-    return `OTP sent successfully`;
-  } else {      
-    return `OTP sent successfully`;
+    // otp service
+    let otpResend = await resendOTP(request.body, request, fastify);
+    if(!otpResend){
+      throw new Error("Unable to send OTP at the moment please try again later")
+    }
+  }
+  return {
+    message: "Retry sent successfully",
+    otpExpired
   }
 };
 const forgotPasswordService = async (request, fastify) => {
