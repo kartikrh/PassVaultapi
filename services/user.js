@@ -1349,10 +1349,12 @@ const registerClientAppService = async (request, fastify) => {
         throw new Error("Error in sending OTP")
       }
     }
+    const otpExpired = parseInt(global.tblConfigs?.find((item) => item.key === configConstants.OTPEXPIRED)?.value, 10) || 0;
     return {
         clientId : encrypt.clientId,
         mobileNo : checkExist.mobileNo,
         countryCode : request.body.countryCode,
+        otpExpired,
     }
   }
   let encryptedPassword = encrypt(request.body.password);
@@ -1370,10 +1372,12 @@ const registerClientAppService = async (request, fastify) => {
       throw new Error("Error in sending OTP")
     }
   }
+  const otpExpired = parseInt(global.tblConfigs?.find((item) => item.key === configConstants.OTPEXPIRED)?.value, 10) || 0;
   return {
       clientId : result[0].encryptClientId,
       mobileNo : result[0].mobileNo,
       countryCode : result[0].countryCode,
+      otpExpired,
   }
   
 }
@@ -1566,12 +1570,14 @@ const forgotPasswordService = async (request, fastify) => {
         throw new Error("Error in sending OTP")
       }
   }
+  const otpExpired = parseInt(global.tblConfigs?.find((item) => item.key === configConstants.OTPEXPIRED)?.value, 10) || 0;
   let clientId = checkClient.clientId;
   let encrypt = await getEncryptClinet({clientId},request,fastify);
   return {
     clientId : encrypt.clientId,
     mobileNo : checkClient.mobileNo,
     countryCode : checkClient.countryCode,
+    otpExpired,
   }
 };
 
