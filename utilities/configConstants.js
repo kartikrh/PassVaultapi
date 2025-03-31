@@ -66,5 +66,8 @@ const configConstants = {
     OTPAUTHKEY : "OTPAUTHKEY",
     OTPVERIFY : "OTPVERIFY",
     FORGOTOTPURL :  "FORGOTOTPURL",
+    OTPEXPIRED : "OTPEXPIRED",
+    OTPFORGOTURL :  "OTPFORGOTURL",
+    OTPRESEND : "OTPRESEND",
 }
 module.exports = configConstants;
