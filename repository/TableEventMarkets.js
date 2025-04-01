@@ -4874,146 +4874,63 @@ const saveManualMarketQuery = async (data, request, fastify) => {
 }
 const upManualMarketQuery = async (data, request, fastify) => {
   try {
-  //   const mar = await fastify.db.query(
-  //     `
-  //       UPDATE "tblEventMarkets" SET
-  //         "wrStatus" = $1,
-  //         "wrIsActive" = $2,
-  //         "wrIsAllow" = $3,
-  //         "wrMargin" = $4,
-  //         "wrRateDiff" = $5,
-  //         "wrLastUpdate" = now()::timestamp,
-  //         "wrPredefinedValue" = $7
-  //       WHERE "wrID" = $6
-  //     `,
-  //     {
-  //       bind: [
-  //         data.status,
-  //         data.isActive,
-  //         data.isAllow,
-  //         data.margin,
-  //         data.rateDiff,
-  //         data.eventMarketId,
-  //         data.predefinedValue
-  //       ],
-  //       type: fastify.db.QueryTypes.SELECT,
-  //     }
-  //   )
-  //   for (let run of data.runners) {
-  //     await fastify.db.query(
-  //       `
-  //         UPDATE "tblMarketRunners" SET
-  //           "wrSelectionStatus" = $1,
-  //           "wrLine" = $2,
-  //           "wrOverRate" = $3,
-  //           "wrUnderRate" = $4,
-  //           "wrBackPrice" = $5,
-  //           "wrLayPrice" = $6,
-  //           "wrBackSize" = $7,
-  //           "wrLaySize" = $8
-  //         WHERE "wrRunnerId" = $9
-  //       `,
-  //       {
-  //         bind: [
-  //           data.status,
-  //           run.line,
-  //           run.overRate,
-  //           run.underRate,
-  //           run.backPrice,
-  //           run.layPrice,
-  //           run.backSize,
-  //           run.laySize,
-  //           run.runnerId
-  //         ],
-  //         type: fastify.db.QueryTypes.SELECT,
-  //       }
-  //     )
-  //   }
-  //   // create wrData
-  //  let dataToStore = await fastify.db.query(
-  //     `SELECT 
-  //         tem."wrID" as "marketId",
-  //         tem."wrEventRefID" as "eventId",
-  //         tem."wrMarketName" as "marketName",
-  //         tem."wrStatus" as "status",
-  //         tem."wrIsActive" as "isActive",
-  //         tem."wrIsAllow" as "isAllow",
-  //         json_agg(
-  //             json_build_object(
-  //                 'runnerId' , tmr."wrRunnerId",
-  //                 'runner', tmr."wrRunner",
-  //                 'status' , tmr."wrSelectionStatus",
-  //                 'line', tmr."wrLine",
-  //                 'overRate', tmr."wrOverRate",
-  //                 'underRate', tmr."wrUnderRate",
-  //                 'backPrice', tmr."wrBackPrice",
-  //                 'layPrice', tmr."wrLayPrice",
-  //                 'backSize', tmr."wrBackSize",
-  //                 'laySize', tmr."wrLaySize"
-  //             )
-  //         ) as "runner"
-  //     FROM "tblEventMarkets" tem
-  //     LEFT JOIN "tblMarketRunners" tmr ON tmr."wrEventMarketId" = tem."wrID"
-  //     WHERE tem."wrID" = $1 AND tem."wrIsDeleted" = false AND tmr."wrIsDeleted" = false
-  //     GROUP BY tem."wrID"`,
-  //     {
-  //       type: fastify.db.QueryTypes.SELECT,
-  //       bind: [data.eventMarketId],
-  //     }
-  //   )
-  //   dataToStore = dataToStore[0];
-  //   await fastify.db.query(
-  //     `UPDATE "tblEventMarkets" SET "wrData" = $1,"wrLastUpdate" = now()::timestamp WHERE "wrID" = $2`,
-  //     {
-  //       bind: [dataToStore, data.eventMarketId],
-  //       type: fastify.db.QueryTypes.SELECT,
-  //     }
-  //   );
     const result = await fastify.db.query(
-      `
-        CALL proc_manual_market_update($1, $2)
-      `,
+      `CALL proc_manual_market_update($1, $2)`,
       {
-        bind: [
-          JSON.stringify(data) ? JSON.stringify(data) : null,
-          null
-        ],
+        bind: [JSON.stringify(data) || null, null],
         type: fastify.db.QueryTypes.SELECT,
       }
     );
-    result[0].updated_row.forEach(async (item) => {
-      const result = await fastify.db.query(
-        `
-        SELECT "wrCommentaryId" AS "commentaryId"
-        FROM "tblEventMarkets"
-        WHERE "wrID" = ${item.marketId}`
-      );
-      
 
-      marketDataLogger(
-        {
-          eventMarketId: item.marketId,
-          commentaryId: result[0][0].commentaryId,
-          dataTosave: typeof item === "string" ? JSON.parse(item) : item,
-          updateType: MarketUpdateType.marketUpdateRate,
-          lineDiff: 0,
-          isSendData: true
-        },
-        request,
-        fastify
-      ).catch((err) => {
-        console.log("upManualMarketQuery market data logger console:", err);
-        errorLogger(
-          fastify,
-          err.message,
-          "ERROR --> services/eventMarket.js/upManualMarketQuery",
-          request
-        );
-      });
-    })
-    // return true;
+    result[0].updated_row.forEach((item) => {
+      fastify.db
+        .query(
+          `
+          SELECT "wrCommentaryId" AS "commentaryId"
+          FROM "tblEventMarkets"
+          WHERE "wrID" = $1
+        `,
+          {
+            bind: [item.marketId],
+            type: fastify.db.QueryTypes.SELECT,
+          }
+        )
+        .then((dbResult) => {
+          if (dbResult.length > 0) {
+            marketDataLogger(
+              {
+                eventMarketId: item.marketId,
+                commentaryId: dbResult[0].commentaryId,
+                dataTosave: typeof item === "string" ? JSON.parse(item) : item,
+                updateType: MarketUpdateType.marketUpdateRate,
+                lineDiff: 0,
+                isSendData: true
+              },
+              request,
+              fastify
+            ).catch((err) => {
+              console.error("marketDataLogger error:", err);
+              errorLogger(
+                fastify,
+                err.message,
+                "ERROR --> services/eventMarket.js/upManualMarketQuery",
+                request
+              );
+            });
+          }
+        })
+        .catch((err) => {
+          console.error("DB Query error:", err);
+          errorLogger(
+            fastify,
+            err.message,
+            "DB ERROR --> repository/TableEventmarket.js/upManualMarketQuery",
+            request
+          );
+        });
+    });
+
     return result[0];
-
   } catch (error) {
     errorLogger(
       fastify,
@@ -5022,9 +4939,161 @@ const upManualMarketQuery = async (data, request, fastify) => {
       request
     );
     throw new Error(error.message);
-    
   }
-}
+};
+// const upManualMarketQuery = async (data, request, fastify) => {
+//   try {
+//   //   const mar = await fastify.db.query(
+//   //     `
+//   //       UPDATE "tblEventMarkets" SET
+//   //         "wrStatus" = $1,
+//   //         "wrIsActive" = $2,
+//   //         "wrIsAllow" = $3,
+//   //         "wrMargin" = $4,
+//   //         "wrRateDiff" = $5,
+//   //         "wrLastUpdate" = now()::timestamp,
+//   //         "wrPredefinedValue" = $7
+//   //       WHERE "wrID" = $6
+//   //     `,
+//   //     {
+//   //       bind: [
+//   //         data.status,
+//   //         data.isActive,
+//   //         data.isAllow,
+//   //         data.margin,
+//   //         data.rateDiff,
+//   //         data.eventMarketId,
+//   //         data.predefinedValue
+//   //       ],
+//   //       type: fastify.db.QueryTypes.SELECT,
+//   //     }
+//   //   )
+//   //   for (let run of data.runners) {
+//   //     await fastify.db.query(
+//   //       `
+//   //         UPDATE "tblMarketRunners" SET
+//   //           "wrSelectionStatus" = $1,
+//   //           "wrLine" = $2,
+//   //           "wrOverRate" = $3,
+//   //           "wrUnderRate" = $4,
+//   //           "wrBackPrice" = $5,
+//   //           "wrLayPrice" = $6,
+//   //           "wrBackSize" = $7,
+//   //           "wrLaySize" = $8
+//   //         WHERE "wrRunnerId" = $9
+//   //       `,
+//   //       {
+//   //         bind: [
+//   //           data.status,
+//   //           run.line,
+//   //           run.overRate,
+//   //           run.underRate,
+//   //           run.backPrice,
+//   //           run.layPrice,
+//   //           run.backSize,
+//   //           run.laySize,
+//   //           run.runnerId
+//   //         ],
+//   //         type: fastify.db.QueryTypes.SELECT,
+//   //       }
+//   //     )
+//   //   }
+//   //   // create wrData
+//   //  let dataToStore = await fastify.db.query(
+//   //     `SELECT 
+//   //         tem."wrID" as "marketId",
+//   //         tem."wrEventRefID" as "eventId",
+//   //         tem."wrMarketName" as "marketName",
+//   //         tem."wrStatus" as "status",
+//   //         tem."wrIsActive" as "isActive",
+//   //         tem."wrIsAllow" as "isAllow",
+//   //         json_agg(
+//   //             json_build_object(
+//   //                 'runnerId' , tmr."wrRunnerId",
+//   //                 'runner', tmr."wrRunner",
+//   //                 'status' , tmr."wrSelectionStatus",
+//   //                 'line', tmr."wrLine",
+//   //                 'overRate', tmr."wrOverRate",
+//   //                 'underRate', tmr."wrUnderRate",
+//   //                 'backPrice', tmr."wrBackPrice",
+//   //                 'layPrice', tmr."wrLayPrice",
+//   //                 'backSize', tmr."wrBackSize",
+//   //                 'laySize', tmr."wrLaySize"
+//   //             )
+//   //         ) as "runner"
+//   //     FROM "tblEventMarkets" tem
+//   //     LEFT JOIN "tblMarketRunners" tmr ON tmr."wrEventMarketId" = tem."wrID"
+//   //     WHERE tem."wrID" = $1 AND tem."wrIsDeleted" = false AND tmr."wrIsDeleted" = false
+//   //     GROUP BY tem."wrID"`,
+//   //     {
+//   //       type: fastify.db.QueryTypes.SELECT,
+//   //       bind: [data.eventMarketId],
+//   //     }
+//   //   )
+//   //   dataToStore = dataToStore[0];
+//   //   await fastify.db.query(
+//   //     `UPDATE "tblEventMarkets" SET "wrData" = $1,"wrLastUpdate" = now()::timestamp WHERE "wrID" = $2`,
+//   //     {
+//   //       bind: [dataToStore, data.eventMarketId],
+//   //       type: fastify.db.QueryTypes.SELECT,
+//   //     }
+//   //   );
+//     const result = await fastify.db.query(
+//       `
+//         CALL proc_manual_market_update($1, $2)
+//       `,
+//       {
+//         bind: [
+//           JSON.stringify(data) ? JSON.stringify(data) : null,
+//           null
+//         ],
+//         type: fastify.db.QueryTypes.SELECT,
+//       }
+//     );
+//     result[0].updated_row.forEach(async (item) => {
+//       const result = await fastify.db.query(
+//         `
+//         SELECT "wrCommentaryId" AS "commentaryId"
+//         FROM "tblEventMarkets"
+//         WHERE "wrID" = ${item.marketId}`
+//       );
+      
+
+//       marketDataLogger(
+//         {
+//           eventMarketId: item.marketId,
+//           commentaryId: result[0][0].commentaryId,
+//           dataTosave: typeof item === "string" ? JSON.parse(item) : item,
+//           updateType: MarketUpdateType.marketUpdateRate,
+//           lineDiff: 0,
+//           isSendData: true
+//         },
+//         request,
+//         fastify
+//       ).catch((err) => {
+//         console.log("upManualMarketQuery market data logger console:", err);
+//         errorLogger(
+//           fastify,
+//           err.message,
+//           "ERROR --> services/eventMarket.js/upManualMarketQuery",
+//           request
+//         );
+//       });
+//     })
+//     // return true;
+//     return result[0];
+
+//   } catch (error) {
+//     errorLogger(
+//       fastify,
+//       error.message,
+//       "DB ERROR --> repository/TableEventmarket.js/upManualMarketQuery",
+//       request
+//     );
+//     throw new Error(error.message);
+    
+//   }
+// }
 const openMarketScoketConnectionDataQuery = async (commentaryId, fastify) => {
   try {  
     const query = `SELECT 
