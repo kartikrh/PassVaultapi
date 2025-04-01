@@ -81,6 +81,7 @@ const { getAllMarketRunnersV2ByIdQuery } = require("../repository/TableMarketRun
 const { marketLogger, marketDataLogger, errorLogger, eventMarketLogger, marektResultLogger } = require("../utilities/logger");
 const { validateUser } = require("../repository/TableUser");
 const { encrypt } = require("../utilities/index");
+const { getPlayersBattingHistoryByIdQuery } = require("../repository/TablePlayerHistory");
 
 const getDetailsByCIdService = async (request, fastify) => {
   const { commentaryId } = request.body;
@@ -2367,6 +2368,7 @@ const getDetailsByCIdV1Service = async (request, fastify) => {
   const totalInnings = matchType.noOfIningsPerSide;
 
   const teamAndPlayers = [];
+  const playerStats = [];
   for (let i = 1; i <= totalInnings; i++) {
     let commentaryTeam;
       commentaryTeam = global.tblCommentaryTeams.filter(
@@ -2382,6 +2384,9 @@ const getDetailsByCIdV1Service = async (request, fastify) => {
     //       item.commentaryId === commentaryId && item.currentInnings === i
     //   );
     // }
+    const systemPlayer = global.tblPlayers
+      .filter((item) => item.isSystemPlayer === true)
+      .map((item) => item.playerId);
     let teamObj = {};
     for (team of commentaryTeam) {
       commentaryPlayers = global.tblCommentaryPlayers.filter(
@@ -2395,6 +2400,49 @@ const getDetailsByCIdV1Service = async (request, fastify) => {
         players: commentaryPlayers,
       };
       teamAndPlayers.push(teamObj);
+    // Player stats
+      for (const curr of global.tblCommentaryPlayers) {
+        if (curr.commentaryId === commentaryId && curr.teamId === team.teamId && curr.currentInnings === i) {
+          const playerAvg = await getPlayersBattingHistoryByIdQuery(
+            { playerId: curr.playerId, matchTypeId: commentary.matchTypeId },
+            fastify,
+            request
+          );
+  
+          let boundary =
+            curr.boundary == 0 || curr.boundary == null
+              ? playerAvg.length > 0
+                ? parseFloat(((playerAvg[0]?.countOf4 + playerAvg[0]?.countOf6) / playerAvg[0]?.inningsCount).toFixed(1)) || 0
+                : 0
+              : curr.boundary;
+  
+          let playerBallFaced =
+            curr.playerBallFaced === 0 || curr.playerBallFaced == null
+              ? playerAvg.length > 0
+                ? parseFloat((playerAvg[0]?.ballsFacedCount / playerAvg[0]?.inningsCount).toFixed(1)) || 0
+                : 0
+              : curr.playerBallFaced;
+  
+          const playerObj = {
+            teamId: curr.teamId,
+            playerId: curr.playerId,
+            playerName: curr.playerName,
+            batsmanAverage: isNaN(Number(curr.batsmanAverage)) ? 0 : parseFloat(Number(curr.batsmanAverage).toFixed(1)),
+            batsmanStrikeRate: isNaN(Number(curr.batsmanStrikeRate)) ? 0 : parseFloat(Number(curr.batsmanStrikeRate).toFixed(1)),
+            commentaryPlayerId: curr.commentaryPlayerId,
+            isInPlayingEleven: curr.isInPlayingEleven,
+            boundary,
+            playerBallFaced,
+            currentInnings: curr.currentInnings,
+            playerTypeId: curr.playerTypeId,
+            playerType: curr.playerType,
+          };
+  
+          if (!systemPlayer.includes(curr.playerId)) {
+            playerStats.push(playerObj);
+          }
+        }
+      }
     }
   }
 
@@ -2481,7 +2529,8 @@ const getDetailsByCIdV1Service = async (request, fastify) => {
     marketTemplate,
     eventMarket,
     categories,
-    marketTypes
+    marketTypes,
+    playerStats,
   };
 };
 const createEventMarketsServiceV1 = async (request, fastify) => {
@@ -3609,37 +3658,61 @@ const saveManualMarketDataService = async (request, fastify) => {
   return "Market saved successfully";
 }
 const upManualMarketDataService = async (request, fastify) => {
-
-  // for (let mar of request.body.market){
   const result = await upManualMarketQuery(request.body.eventMarket, request, fastify);
+
+  const marketMap = new Map(global.tblEventMarketsV2.map(m => [m.eventMarketId, m]));
+  const runnerMap = new Map(global.tblMarketRunnerV2.map(r => [r.runnerId, r]));
+
   for (const item of result.updated_row) {
-    let index = global.tblEventMarketsV2.findIndex(
-      (elem) => elem.eventMarketId === item.marketId
-    );
-    if (index !== -1) {
-      global.tblEventMarketsV2[index] = {
-        ...global.tblEventMarketsV2[index],
+    if (marketMap.has(item.marketId)) {
+      Object.assign(marketMap.get(item.marketId), {
         status: item.status,
         isAllow: item.isAllow,
         isActive: item.isActive
-      };
+      });
     }
-    for(let runner of item.runner){
-      let runnerIndex = global.tblMarketRunnerV2.findIndex(
-        (elem) => elem.runnerId === runner.runnerId
-      );
-  
-      if (runnerIndex !== -1) {
-        global.tblMarketRunnerV2[runnerIndex] = {
-          ...global.tblMarketRunnerV2[runnerIndex],
-          ...runner
-        };
+
+    for (let runner of item.runner) {
+      if (runnerMap.has(runner.runnerId)) {
+        Object.assign(runnerMap.get(runner.runnerId), runner);
       }
     }
   }
-  // }
+
   return "Market updated successfully";
-}
+};
+// const upManualMarketDataService = async (request, fastify) => {
+
+//   // for (let mar of request.body.market){
+//   const result = await upManualMarketQuery(request.body.eventMarket, request, fastify);
+//   for (const item of result.updated_row) {
+//     let index = global.tblEventMarketsV2.findIndex(
+//       (elem) => elem.eventMarketId === item.marketId
+//     );
+//     if (index !== -1) {
+//       global.tblEventMarketsV2[index] = {
+//         ...global.tblEventMarketsV2[index],
+//         status: item.status,
+//         isAllow: item.isAllow,
+//         isActive: item.isActive
+//       };
+//     }
+//     for(let runner of item.runner){
+//       let runnerIndex = global.tblMarketRunnerV2.findIndex(
+//         (elem) => elem.runnerId === runner.runnerId
+//       );
+  
+//       if (runnerIndex !== -1) {
+//         global.tblMarketRunnerV2[runnerIndex] = {
+//           ...global.tblMarketRunnerV2[runnerIndex],
+//           ...runner
+//         };
+//       }
+//     }
+//   }
+//   // }
+//   return "Market updated successfully";
+// }
 const upIsInningRunApiService = async (request, fastify) => {
 
   // for (let mar of request.body.market){

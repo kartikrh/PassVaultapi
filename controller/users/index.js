@@ -42,6 +42,7 @@ const {
   forgotPasswordService,
   verifyForgotPasswordOTPService,
   updatePasswordInForgotPasswordService,
+  clientDataByIdService,
 } = require("../../services/user");
 const { errorLogger,updateWebRequestLogs } = require("../../utilities/logger");
 // const fetchAllDataFromDb = require("../../utilities/fetchAllData");
@@ -536,6 +537,15 @@ const updatePasswordInForgot = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const clientDataById = async (request, reply, fastify) => {
+  try {
+    const result = await clientDataByIdService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/clientDataById", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 module.exports = {
   signUpUser,
   signInUser,
@@ -584,4 +594,5 @@ module.exports = {
   forgotPassword,
   verifyForgotPasswordOTP,
   updatePasswordInForgot,
+  clientDataById,
 };

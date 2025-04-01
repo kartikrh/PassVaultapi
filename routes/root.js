@@ -40,6 +40,7 @@ const {
   forgotPassword,
   verifyForgotPasswordOTP,
   updatePasswordInForgot,
+  clientDataById,
   //loginRegistrationClient,
 } = require("../controller/users/index");
 const { Auth ,sendPushNotification,weblogs, Config, EventType, Commentary} = require("../swaggerSchema/groupTags/schema");
@@ -314,5 +315,9 @@ module.exports = async function (fastify, opts) {
   fastify.post("/updatePass", {
     schema: Auth.UpdatePassword.schema,
     handler: (request, reply) => updatePasswordInForgot(request, reply, fastify),
+  });
+  fastify.post("/clientById", {
+    schema: Auth.clientById.schema,
+    handler: (request, reply) => clientDataById(request, reply, fastify),
   });
 };
