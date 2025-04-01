@@ -1721,7 +1721,11 @@ const clientDataByIdService = async (request, fastify) => {
   if (!clientData) {
     throw new Error("Invalid username");
   }
-  return clientData;
+  let encrypt = await getEncryptClinet({ clientId: clientData.clientId }, request, fastify);
+  return {
+    ...clientData,
+    clientId: encrypt.clientId
+  };
 }
 
 module.exports = {
