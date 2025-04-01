@@ -1504,22 +1504,22 @@ const clientDetailsByIdQuery = async (clientId, request, fastify) => {
   }
 };
 
-const updateClientProfileQuery = async (request, fastify) => {
+const updateClientProfileQuery = async (data, request, fastify) => {
   try {
-    const data = request.body;
-
     const updateQuery = await fastify.db.query(
       `UPDATE "tblClient" SET
-      "wrClientName" = $1
-      WHERE "wrClientID" = $2
+      "wrClientName" = $1,
+      "wrEmailID" = $2
+      WHERE "wrClientID" = $3
       RETURNING
           "wrClientID" as "clientId", 
           "wrUserName" as "userName", 
-          "wrClientName" as "fullName"
+          "wrClientName" as "fullName",
+          "wrEmailID" as "emailId"
       `,
       {
         type: fastify.db.QueryTypes.SELECT,
-        bind: [data.fullName, data.clientId],
+        bind: [data.fullName, data.email, data.clientId],
       }
     )
     return updateQuery[0];

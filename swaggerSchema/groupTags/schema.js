@@ -413,8 +413,9 @@ const Auth = {
       body: {
         type: "object",
         properties: {
-          clientId : {type: "integer"},
+          clientId : {type: "string"},
           fullName: { type: "string" },
+          email: { type: "string" },
         },
         required: ["clientId"],
       },
@@ -427,7 +428,7 @@ const Auth = {
       body: {
         type: "object",
         properties: {
-          clientId : {type: "integer"},
+          clientId : {type: "string"},
           oldPassword: { type: "string" },
           newPassword: { type: "string" },
         },
@@ -490,6 +491,19 @@ const Auth = {
           password: { type: "string" },
         },
         required: ["clientId", "password"],
+      },
+    },
+  },
+  clientById: {
+    schema: {
+      tags: ["Auth"],
+      description: "get client details",
+      body: {
+        type: "object",
+        properties: {
+          clientId: { type: "string" },
+        },
+        required: ["clientId"],
       },
     },
   },
