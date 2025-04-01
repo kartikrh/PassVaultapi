@@ -1498,13 +1498,25 @@ const signinClientAppService = async (request, fastify) => {
 }
 
 const updateClientProfileService = async (request, fastify) => {
-  const validateId = global.tblClient.find(
-    (item) => item.clientId === request.body.clientId
-  );
-  if (!validateId) {
-    throw new Error(`Client ID does not exist`);
+  const {clientId, fullName, email} = request.body;
+  const checkExist = await getIdByValue({ clientId: clientId }, request, fastify);
+
+  if(!checkExist){
+    return "Invalid username"
   }
-  const results = await updateClientProfileQuery(request, fastify);
+  let id = checkExist.clientId;
+  const validateClient = global.tblClient.find((item) => item.clientId === id);
+  if (!validateClient) {
+    throw new Error("Invalid username");
+  }
+
+  const updateData = {
+    clientId: id,
+    fullName: fullName !== undefined ? fullName : validateClient.fullName,
+    email: email !== undefined ? email : validateClient.emailId,
+  }
+
+  const results = await updateClientProfileQuery(updateData, request, fastify);
   const index = global.tblClient.findIndex(
     (item) => item.clientId === results?.clientId
   );
@@ -1519,7 +1531,13 @@ const updateClientProfileService = async (request, fastify) => {
 
 const changePasswordService = async (request, fastify) => {
   let { clientId, oldPassword, newPassword } = request.body;
-  const validateId = await clientDetailsByIdQuery(clientId, request, fastify)
+  const checkExist = await getIdByValue({ clientId: clientId }, request, fastify);
+
+  if(!checkExist){
+    return "Invalid username"
+  }
+  let id = checkExist.clientId;
+  const validateId = await clientDetailsByIdQuery(id, request, fastify)
   if (!validateId) {
     throw new Error(`Client ID does not exist`);
   }
@@ -1533,7 +1551,7 @@ const changePasswordService = async (request, fastify) => {
   const hashedPassword = encrypt(newPassword);
 
   newPassword = hashedPassword;
-  await changePasswordQuery({ newPassword: newPassword, clientId: clientId },
+  await changePasswordQuery({ newPassword: newPassword, clientId: id },
     request, fastify
   );
   return `password update successfully`;
@@ -1690,6 +1708,22 @@ const updatePasswordInForgotPasswordService = async (request, fastify) => {
     }
   }
 }
+
+const clientDataByIdService = async (request, fastify) => {
+  let { clientId } = request.body;
+  const checkExist = await getIdByValue({ clientId: clientId }, request, fastify);
+
+  if(!checkExist){
+    return "Invalid username"
+  }
+  let id = checkExist.clientId;
+  const clientData = global.tblClient.find((item) => item.clientId === id);
+  if (!clientData) {
+    throw new Error("Invalid username");
+  }
+  return clientData;
+}
+
 module.exports = {
   signUpUserService,
   signInUserServices,
@@ -1732,4 +1766,5 @@ module.exports = {
   forgotPasswordService,
   verifyForgotPasswordOTPService,
   updatePasswordInForgotPasswordService,
+  clientDataByIdService,
 };
