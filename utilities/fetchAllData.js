@@ -548,6 +548,11 @@ const panelLoadDataByEnum = async (request, fastify, reply) => {
           global.tblVendorIp = getAllVendorIps;
           break;
         }
+        case ModuleTypes.CountryCode: {
+          const cc =  await getAllCountryCodesQuery(fastify);
+          global.tblCountryCodes = cc;
+          break;
+        }
         default:
           break;
       }
