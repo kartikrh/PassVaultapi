@@ -31,13 +31,14 @@ const saveCountryCodeService = async (request, fastify) => {
     const projectName = global.tblConfigs.find(
       (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
     ).value;
-    const path = await storeImageOnServer({
+    const { fullPath, imagePath } = await storeImageOnServer({
       image: request.body.flag[0],
       project: projectName,
       name: imgName,
       ...ImgModuleConfig.Flag,
     });
-    request.body.flag = path;
+    request.body.flag = fullPath;
+    request.body.flagPath = imagePath;
   }
   const saveData = await insertCountryCodeQuery(request.body, fastify, request);
   global.tblCountryCodes.push(saveData);
@@ -65,13 +66,14 @@ const editCountryCodeService = async (request, fastify) => {
     const projectName = global.tblConfigs.find(
       (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
     ).value;
-    const result = await storeImageOnServer({
+    const { fullPath, imagePath } = await storeImageOnServer({
       image: request.body.flag[0],
       project: projectName,
       name: imgName,
       ...ImgModuleConfig.Flag,
     });
-    updateData.flag = result;
+    updateData.flag = fullPath;
+    updateData.flagPath = imagePath;
   }
 
   const modifiedData = await updateCountryCodeQuery(updateData, fastify, request);

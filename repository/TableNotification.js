@@ -16,7 +16,9 @@ const getAllNotificationQuery = (fastify) =>{
             "wrCreatedBy" as "createdBy",
             "wrModifyAt" as "modifyAt",
             "wrModifyBy" as "modifyBy",
-            "wrIsSend" as "isSend"
+            "wrIsSend" as "isSend",
+            "wrImagePath" as "imagePath",
+            "wrIconPath" as "iconPath"
         FROM "tblNotifications"
         WHERE "wrIsDeleted" = false
     `;
@@ -40,10 +42,12 @@ const insertNotificationQuery =async (data,request , fastify) =>{
             "wrImage",
             "wrIcon",
             "wrUrl",
-            "wrIsSend"
+            "wrIsSend",
+            "wrImagePath",
+            "wrIconPath"
         )
         VALUES(
-        $1 , $2 , $3 , $4 , $5 , $6 , $7 , $8 , $9 , $10
+        $1 , $2 , $3 , $4 , $5 , $6 , $7 , $8 , $9 , $10, $11, $12
         )
         RETURNING "wrId" as "notificationId",
         "wrTitle" as "title",
@@ -57,7 +61,9 @@ const insertNotificationQuery =async (data,request , fastify) =>{
         "wrImage" as "image",
         "wrIcon" as "icon",
         "wrUrl" as "url",
-        "wrIsSend" as "isSend"
+        "wrIsSend" as "isSend",
+        "wrImagePath" as "imagePath",
+        "wrIconPath" as "iconPath"
     `;
 
     const result =await fastify.db.query(query,{
@@ -71,7 +77,9 @@ const insertNotificationQuery =async (data,request , fastify) =>{
             data.image || null,
             data.icon || null,
             data.url || null,
-            data.isSend || false
+            data.isSend || false,
+            data.imagePath || null,
+            data.iconPath || null,
         ]
     });
 
@@ -100,7 +108,9 @@ const updateNotificationQuery =async (data,request , fastify) =>{
                 "wrImage" = $7,
                 "wrIcon" = $8,
                 "wrUrl" = $9,
-                "wrIsSend" = $10
+                "wrIsSend" = $10,
+                "wrImagePath" = $12,
+                "wrIconPath" = $13
             WHERE "wrId" = $11
             RETURNING "wrId" as "notificationId",
             "wrTitle" as "title",
@@ -114,7 +124,9 @@ const updateNotificationQuery =async (data,request , fastify) =>{
             "wrImage" as "image",
             "wrIcon" as "icon",
             "wrUrl" as "url",
-            "wrIsSend" as "isSend"
+            "wrIsSend" as "isSend",
+            "wrImagePath" as "imagePath",
+            "wrIconPath" as "iconPath",
         `;
 
         const result = await fastify.db.query(query,{
@@ -129,7 +141,9 @@ const updateNotificationQuery =async (data,request , fastify) =>{
                 data.icon || null,
                 data.url || null,
                 data.isSend,
-                data.notificationId
+                data.notificationId,
+                data.imagePath || null,
+                data.iconPath || null,
             ]
         });
         return result[0]
@@ -206,6 +220,8 @@ const getNotificationLogByClientQuery = async (data , request , fastify)=>{
                 tn."wrUrl" as "url",
                 tn."wrImage" as "image",
                 tn."wrIcon" as "icon",
+                tn."wrImagePath" as "imagePath",
+                tn."wrIconPath" as "iconPath",
                 CASE 
                     WHEN tnl."wrNotificationId" IS NOT NULL THEN true 
                     ELSE false 

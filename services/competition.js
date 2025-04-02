@@ -101,13 +101,14 @@ const createCompititionService = async (request, fastify) => {
     const projectName = global.tblConfigs.find(
       (item) => item.key?.toLowerCase() === PROJECT_NAME.toLowerCase() 
     ).value;
-    const path = await storeImageOnServer({
+    const { fullPath, imagePath } = await storeImageOnServer({
       image: request.body.image[0],
       name : imgName,
       project : projectName,
       ...ImgModuleConfig.Competitions,
     });
-    request.body.image = path;
+    request.body.image = fullPath;
+    request.body.imagePath = imagePath;
   }
 
   const result = await insertCompetitionQuery(request, fastify);
@@ -166,6 +167,7 @@ const updateCompititionService = async (request, fastify) => {
     cancelPoint: request.body.cancelPoint === undefined ? validateId.cancelPoint : parseInt(request.body.cancelPoint, 10),
     lossPoint: request.body.lossPoint === undefined ? validateId.lossPoint : parseInt(request.body.lossPoint, 10),
     drsCount : request.body.drsCount === undefined ? validateId.drsCount : parseInt(request.body.drsCount),
+    imagePath: validateId.imagePath,
   };
 
   if ("isActive" in request.body) {
@@ -201,14 +203,15 @@ const updateCompititionService = async (request, fastify) => {
     const projectName = global.tblConfigs.find(
       (item) => item.key?.toLowerCase() === PROJECT_NAME.toLowerCase() 
     ).value;
-    const path = await storeImageOnServer({
+    const { fullPath, imagePath } = await storeImageOnServer({
       image: request.body.image[0],
       name : imgName,
       project : projectName,
       ...ImgModuleConfig.Competitions,
     });
     
-    data.image = path;
+    data.image = fullPath;
+    data.imagePath = imagePath;
   }
 
   await updateCompititionQuery(data, fastify, request);

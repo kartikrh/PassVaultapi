@@ -130,23 +130,25 @@ const createTeamService = async (request, fastify) => {
       name: request.body.teamName,
     });
 
-    const path = await storeImageOnServer({
+    const { fullPath, imagePath } = await storeImageOnServer({
       image: request.body.image[0],
       project: projectName,
       name: imgName,
       ...ImgModuleConfig.Teams,
     });
-    request.body.image = path;
+    request.body.image = fullPath;
+    request.body.imagePath = imagePath
   }
 
   if (request.body.jersey && request.body.jersey.length) {
-    const path = await storeImageOnServer({
+    const { fullPath, imagePath } = await storeImageOnServer({
       image: request.body.jersey[0],
       project: projectName,
       name: `${imgName}-jersey`,
       ...ImgModuleConfig.Teams,
     });
-    request.body.jersey = path;
+    request.body.jersey = fullPath;
+    request.body.jerseyPath = imagePath
   }
   request.body.teamName = request.body.teamName.trim();
   const data = await insertTeamQuery(
@@ -254,6 +256,8 @@ const updateTeamService = async (request, fastify) => {
     eventType: _getEventType.eventType,
     teamColor: request.body.teamColor || checkTeamId.teamColor,
     backgroundColor: request.body.backgroundColor || checkTeamId.backgroundColor,
+    imagePath: checkTeamId.imagePath,
+    jerseyPath: checkTeamId.jerseyPath,
   };
 
   const validateTeamName = global.tblTeams.find(
@@ -285,13 +289,14 @@ const updateTeamService = async (request, fastify) => {
       name: request.body.teamName,
     });
 
-    const path = await storeImageOnServer({
+    const { fullPath, imagePath } = await storeImageOnServer({
       image: request.body.image[0],
       project: projectName,
       name: imgName,
       ...ImgModuleConfig.Teams,
     });
-    body.image = path;
+    body.image = fullPath;
+    body.imagePath = imagePath;
   }
 
   if (request.body.jersey && request.body.jersey.length) {
@@ -301,12 +306,14 @@ const updateTeamService = async (request, fastify) => {
       name: request.body.teamName,
     });
     
-    body.jersey = await storeImageOnServer({
+    const { fullPath, imagePath } = await storeImageOnServer({
       image: request.body.jersey[0],
       project: projectName,
       name: `${imgName}-jersey`,
       ...ImgModuleConfig.Teams,
     });
+    body.jersey = fullPath;
+    body.jerseyPath = imagePath;
   }
 
   await updateTeamQuery(body, fastify, request);

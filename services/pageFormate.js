@@ -48,18 +48,19 @@ const addPageFormatService = async (request, fastify) => {
     });
 
     const projectName = global.tblConfigs.find((item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()).value;
-    const path = await storeImageOnServer({
+    const { fullPath, imagePath } = await storeImageOnServer({
       image : image[0],
       project : projectName,
       name : imgName,
       ...ImgModuleConfig.PageFormates
     });
 
-    if(!path){
-      throw new Error("Error while storing image on server");
-    }
+    // if(!path){
+    //   throw new Error("Error while storing image on server");
+    // }
 
-    request.body.image = path;
+    request.body.image = fullPath;
+    request.body.imagePath = imagePath;
   }
   const data = await insertPageFormateQuery(
     { ...request.body, userId: request.userTokenInfo.WrUserId },
@@ -103,15 +104,15 @@ const updatePageFormatService = async (request, fastify) => {
   if (request.body.image && request.body.image.length > 0) {
     let imgName = generateImageName({name : request.body.pageFormatName});
     const projectName = global.tblConfigs.find((item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()).value;
-    const path = await storeImageOnServer({
+    const { fullPath, imagePath } = await storeImageOnServer({
       image : request.body.image[0],
       project : projectName,
       name : imgName,
       ...ImgModuleConfig.PageFormates
     });
 
-    console.log(path);
-    request.body.image = path;
+    request.body.image = fullPath;
+    request.body.imagePath = imagePath;
   }
 
   const body = {
@@ -123,7 +124,8 @@ const updatePageFormatService = async (request, fastify) => {
     userId: request.userTokenInfo.WrUserId,
     isActive : request.body.hasOwnProperty("isActive") 
     ? request.body.isActive 
-    : checkId.isActive
+    : checkId.isActive,
+    imagePath: request.body.imagePath || checkId.imagePath,
   };
 
   // if ("isActive" in request.body) {

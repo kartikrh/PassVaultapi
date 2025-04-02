@@ -14,7 +14,8 @@ const allClientVideoQuery = async (fastify) => {
             "wrCreatedAt" as "createdAt",
             "wrCreatedBy" as "createdBy",
             "wrModifiedBy" as "modifiedBy",
-            "wrModifiedAt" as "modifiedAt"
+            "wrModifiedAt" as "modifiedAt",
+            "wrImagePath" as "imagePath"
             FROM "tblClientVideos"
             WHERE "wrIsDeleted" = false;`,
             { type: fastify.db.QueryTypes.SELECT }
@@ -36,10 +37,10 @@ const insertClientVideoQuery = async (data, fastify, request) => {
             `WITH insert_data AS (
             INSERT INTO "tblClientVideos" (
             "wrTitle", "wrURL", "wrImage", "wrIsActive", "wrCredit",
-            "wrViewerCount", "wrCreatedAt", "wrCreatedBy"
+            "wrViewerCount", "wrCreatedAt", "wrCreatedBy", "wrImagePath"
             ) 
             VALUES (
-                $1, $2, $3, $4, $5, $6, now(), $7
+                $1, $2, $3, $4, $5, $6, now(), $7, $8
             ) 
             RETURNING *
             )        
@@ -54,7 +55,8 @@ const insertClientVideoQuery = async (data, fastify, request) => {
             "wrCreatedAt" as "createdAt",
             "wrCreatedBy" as "createdBy",
             "wrModifiedBy" as "modifiedBy",
-            "wrModifiedAt" as "modifiedAt"
+            "wrModifiedAt" as "modifiedAt",
+            "wrImagePath" as "imagePath"
             FROM insert_data;`,
             {
                 type: fastify.db.QueryTypes.SELECT,
@@ -65,7 +67,8 @@ const insertClientVideoQuery = async (data, fastify, request) => {
                     data.isActive || false,
                     data.credit,
                     data.viewerCount || 0,
-                    request.userTokenInfo.WrUserId
+                    request.userTokenInfo.WrUserId,
+                    data.imagePath || null,
                 ],
             }
         );
@@ -93,7 +96,8 @@ const updateClientVideoQuery = async (data, fastify, request) => {
             "wrCredit" = $5,
             "wrModifiedBy" = $6,
             "wrModifiedAt" = now(),
-            "wrViewerCount" = $7
+            "wrViewerCount" = $7,
+            "wrImagePath" = $9
             WHERE "wrId" = $8
             RETURNING 
             "wrId" as "id",
@@ -106,7 +110,8 @@ const updateClientVideoQuery = async (data, fastify, request) => {
             "wrCreatedAt" as "createdAt",
             "wrCreatedBy" as "createdBy",
             "wrModifiedBy" as "modifiedBy",
-            "wrModifiedAt" as "modifiedAt";`,
+            "wrModifiedAt" as "modifiedAt",
+            "wrImagePath" as "imagePath";`,
             {
                 type: fastify.db.QueryTypes.UPDATE,
                 bind: [
@@ -117,7 +122,8 @@ const updateClientVideoQuery = async (data, fastify, request) => {
                     data.credit,
                     request.userTokenInfo.WrUserId,
                     data.viewerCount,
-                    data.id
+                    data.id,
+                    data.imagePath
                 ],
             }
         );
