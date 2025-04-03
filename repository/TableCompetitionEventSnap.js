@@ -31,7 +31,7 @@ const getComEventSnapQuery = async (fastify) =>{
 const setEventSnapQuery = async (data,request,fastify) =>{
     try {
         const result = await fastify.db.query(
-            `CALL set_compEventSnap_proc($1,$2)`,
+            `CALL set_compEventSnap($1,$2)`,
             {
                 type : fastify.db.QueryTypes.SELECT,
                 bind : [
@@ -50,6 +50,28 @@ const setEventSnapQuery = async (data,request,fastify) =>{
        throw new Error(error)
     }
 }
+// const setEventSnapQuery = async (data,request,fastify) =>{
+//     try {
+//         const result = await fastify.db.query(
+//             `CALL set_compEventSnap_proc($1,$2)`,
+//             {
+//                 type : fastify.db.QueryTypes.SELECT,
+//                 bind : [
+//                     data , null
+//                 ]
+//             }
+//         )
+//         return result[0].compeventsnap_array;
+//     } catch (error) {
+//        errorLogger(
+//         fastify,
+//         error.message,
+//         "DB Error --> repository/TableCompetitionEventSnap.js/setEventSnapQuery",
+//         request
+//        ) 
+//        throw new Error(error)
+//     }
+// }
 const getEventSnapByComQuery = async (data,request,fastify) =>{
     try {
         const result = await fastify.db.query(
@@ -72,7 +94,7 @@ const getEventSnapByComQuery = async (data,request,fastify) =>{
                     tces."wrMostRunBowlerName" as "Most Runs Conceded by Bowler",
                     tces."wrMostBowlerRun" as "MostRun By Bowler",
                     tces."wrMostWicketBowlerName" as "Most Wicket By Bowler",
-                    "wrMostBowlerWicket" as "Most Wicket Bowler",
+                    tces."wrMostBowlerWicket" as "Most Wicket Bowler",
                     tces."wrTotalMatchDuckOut" as "Total Match Duck Out",
                     tces."wrExtra" as "Extra Run",
                     tces."wrTotalCatchOut" as "Total CatchOut",
@@ -82,7 +104,19 @@ const getEventSnapByComQuery = async (data,request,fastify) =>{
                     tces."wrTotal30" as "Total 30",
                     tces."wrHSOverRun" as "Highest Run in Over",
                     tces."wrTopRunBatsmanName" as "Top Run By Batsman",
-                    "wrTopBatsManRun" as "Top Run Batsman"
+                    tces."wrTopBatsManRun" as "Top Run Batsman",
+                    tces."wrHsPartnershipBalls" as "Highest Partnership Balls in Match",
+                    tces."wrMostBallsFacedByBatsman" as "Most balls faced by a batsman",
+                    tces."wrMostBoundaryGivenByBowler" as "Most Boundaries given by a Bowler",
+                    tces."wrDoubleDigitScorers" as "Total match double digit scorers",
+                    tces."wrFourHitters" as "Total match Four hitters",
+                    tces."wrSixHitters" as "Total match Six hitters",
+                    tces."wrWicketTakers" as "Total match Wicket takers",
+                    tces."wrFirstOvrRunsInMatch" as "Total 1st over run in match",
+                    tces."wrMost4sByBatsman" as "Most 4s by an individual batsman",
+                    tces."wrMost6sByBatsman" as "Most 6s by an individual batsman",
+                    tces."wrPlayersFacing25PlusBalls" as "Total players facing 25 plus balls",
+                    tces."wrBowlersGiving30PlusRuns" as "Total bowlers giving 30 plus runs"
                 FROM "tblCompetitionEventSnap" tces
                 WHERE tces."wrCommentaryId" = $1
                 
@@ -156,7 +190,19 @@ const getEventSnapByCompetitionIdQuery = async (competitionId, request, fastify)
                 tces."wrHSRunOverId" as "HSRunOverId",
                 tces."wrTopBatsManRun" as "topBatsmanRun",
                 tces."wrTopRunBatsManId" as "topRunBatsmanId",
-                tces."wrTopRunBatsmanName" as "topRunBatsmanName"
+                tces."wrTopRunBatsmanName" as "topRunBatsmanName",
+                tces."wrHsPartnershipBalls" as "hsPartnershipBalls",
+                tces."wrMostBallsFacedByBatsman" as "mostBallsFacedByBatsman",
+                tces."wrMostBoundaryGivenByBowler" as "mstBoundaryGivenByBowler",
+                tces."wrDoubleDigitScorers" as "doubleDigitScorers",
+                tces."wrFourHitters" as "fourHitters",
+                tces."wrSixHitters" as "sixHitters",
+                tces."wrWicketTakers" as "wicketTakers",
+                tces."wrFirstOvrRunsInMatch" as "firstOvrRunsInMatch",
+                tces."wrMost4sByBatsman" as "most4sByBatsman",
+                tces."wrMost6sByBatsman" as "most6sByBatsman",
+                tces."wrPlayersFacing25PlusBalls" as "playersFacing25PlusBalls",
+                tces."wrBowlersGiving30PlusRuns" as "bowlersGiving30PlusRuns"
             FROM "tblCompetitionEventSnap" tces
             LEFT JOIN "tblOvers" to1 on to1."wrOverId" = tces."wrHSRunOverId"
             WHERE tces."wrCompetitionId" = $1`,
