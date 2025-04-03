@@ -48,6 +48,7 @@ const {
   Commentary,
   Config,
 } = require("../../../swaggerSchema/groupTags/schema");
+const { getAllSocialMedia } = require("../../../controller/users/admin/socialMedia");
 
 module.exports = async (fastify, opts) => {
   fastify.post("/getscore", {
@@ -339,5 +340,8 @@ module.exports = async (fastify, opts) => {
   });
   fastify.post("/countryCodes", {
     handler: (request, reply) => getAllCountryCode(request, reply, fastify),
+  });
+  fastify.post("/socialMedia", {
+    handler: (request, reply) => getAllSocialMedia(request, reply, fastify),
   });
 };
