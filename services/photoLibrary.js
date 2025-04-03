@@ -116,13 +116,14 @@ const saveLibraryImageService = async (request, fastify, data) => {
       (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
     )?.value;
 
-    const path = await storeImageOnServer({
+    const { fullPath, imagePath } = await storeImageOnServer({
       image: data.body.image[0],
       project: projectName,
       name: imgName,
       ...ImgModuleConfig.LibraryImage,
     });
-    data.body.image = path;
+    data.body.image = fullPath;
+    data.body.imagePath = imagePath;
   }
   if (request.body.isDefault === true) {
     await isDefaultFalseQuery(request.body, fastify, request);
@@ -181,13 +182,14 @@ const editLibraryImageService = async (request, fastify, data) => {
     const projectName = global.tblConfigs.find(
       (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
     ).value;
-    const path = await storeImageOnServer({
+    const { fullPath, imagePath } = await storeImageOnServer({
       image: request.body.image[0],
       project: projectName,
       name: imgName,
       ...ImgModuleConfig.LibraryImage,
     });
-    request.body.image = path;
+    request.body.image = fullPath;
+    request.body.imagePath = imagePath;
   }
 
   const updateData = {
@@ -197,6 +199,7 @@ const editLibraryImageService = async (request, fastify, data) => {
     image: request.body.image ?? validateId.image,
     isDefault: request.body.isDefault ?? validateId.isDefault,
     id: parseInt(request.body.id, 10),
+    imagePath: request.body.imagePath ?? validateId.imagePath,
   };
   if (request.body.isDefault === true) {
     await isDefaultFalseQuery(request.body, fastify, request);

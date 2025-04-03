@@ -6,7 +6,8 @@ const getAllCountryCodesQuery = async (fastify) => {
           "wrId" as "id",
           "wrCountryCode" as "countryCode",
           "wrCountryName" as "countryName",
-          "wrFlag" as "flag"
+          "wrFlag" as "flag",
+          "wrFlagPath" as "flagPath"
       FROM "tblCountryCodes"
       WHERE "wrIsDeleted" = FALSE;`,
     { type: fastify.db.QueryTypes.SELECT }
@@ -19,10 +20,10 @@ const insertCountryCodeQuery = async (data, fastify, request) => {
     const result = await fastify.db.query(
       `WITH insert_data AS (
             INSERT INTO "tblCountryCodes" (
-            "wrCountryCode", "wrCountryName", "wrFlag"
+            "wrCountryCode", "wrCountryName", "wrFlag", "wrFlagPath"
             ) 
             VALUES (
-                $1, $2, $3
+                $1, $2, $3, $4
             ) 
             RETURNING *
             )        
@@ -30,7 +31,8 @@ const insertCountryCodeQuery = async (data, fastify, request) => {
                 "wrId" as "id",
                 "wrCountryCode" as "countryCode",
                 "wrCountryName" as "countryName",
-                "wrFlag" as "flag"
+                "wrFlag" as "flag",
+                "wrFlagPath" as "flagPath"
             FROM insert_data;`,
       {
         type: fastify.db.QueryTypes.SELECT,
@@ -38,6 +40,7 @@ const insertCountryCodeQuery = async (data, fastify, request) => {
           data.countryCode || null,
           data.countryName || null,
           data.flag || null,
+          data.flagPath || null,
         ],
       }
     );
@@ -59,13 +62,15 @@ const updateCountryCodeQuery = async (data, fastify, request) => {
       `UPDATE "tblCountryCodes" SET 
             "wrCountryCode" = $1,
             "wrCountryName" = $2,
-            "wrFlag" = $3
+            "wrFlag" = $3,
+            "wrFlagPath" = $5
             WHERE "wrId" = $4
             RETURNING 
                 "wrId" as "id",
                 "wrCountryCode" as "countryCode",
                 "wrCountryName" as "countryName",
-                "wrFlag" as "flag";`,
+                "wrFlag" as "flag",
+                "wrFlagPath" as "flagPath";`,
       {
         type: fastify.db.QueryTypes.UPDATE,
         bind: [
@@ -73,6 +78,7 @@ const updateCountryCodeQuery = async (data, fastify, request) => {
             data.countryName,
             data.flag,
             data.id,
+            data.flagPath,
         ],
       }
     );

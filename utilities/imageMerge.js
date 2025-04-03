@@ -133,19 +133,19 @@ const mergeAndSaveImage = async (data, fastify) => {
       mimetype: "image/png",
       limit: false,
     }
-    const imagePath = await storeImageOnServer({
+    const { fullPath, imagePath } = await storeImageOnServer({
       image: bodyImage,
       project: projectName,
       name: imgName,
       ...ImgModuleConfig.PlayerAndJersey,
     });
     if(data.teamPlayerId){
-      await updateTeamPlayerImageQuery({ teamPlayerId: data.teamPlayerId, jerseyPlayerImage: imagePath }, fastify);
+      await updateTeamPlayerImageQuery({ teamPlayerId: data.teamPlayerId, jerseyPlayerImage: fullPath, jerseyPlayerImagePath: imagePath }, fastify);
     }
 
     if(data.commentaryPlayerId){
       await updateCommentaryPlayerJerseyImageQuery(
-        { commentaryPlayerId: data.commentaryPlayerId, jerseyPlayerImage: imagePath },
+        { commentaryPlayerId: data.commentaryPlayerId, jerseyPlayerImage: fullPath, jerseyPlayerImage: imagePath },
         fastify
       );
     }

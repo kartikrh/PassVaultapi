@@ -32,14 +32,15 @@ const saveVideoLibraryService = async (request, fastify) => {
         (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
       )?.value;
 
-      const path = await storeFileOnServer({
+      const { fullPath, imagePath } = await storeFileOnServer({
         file: firstVideo,
         project: projectName,
         name: imgName,
         ...ImgModuleConfig.VideoLibrary,
       });
 
-      request.body.video = path;
+      request.body.video = fullPath;
+      request.body.videoPath = imagePath;
     }
   }
 
@@ -98,14 +99,15 @@ const editVideoLibraryService = async (request, fastify, data) => {
         (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
       )?.value;
 
-      const path = await storeFileOnServer({
+      const { fullPath, imagePath } = await storeFileOnServer({
         file: firstVideo,
         project: projectName,
         name: imgName,
         ...ImgModuleConfig.VideoLibrary,
       });
 
-      request.body.video = path;
+      request.body.video = fullPath;
+      request.body.videoPath = imagePath;
     }
   }
 
@@ -122,6 +124,7 @@ const editVideoLibraryService = async (request, fastify, data) => {
     type: request.body.type ?? validateId.type,
     commentaryId: request.body.commentaryId ?? validateId.commentaryId,
     id: parseInt(request.body.id, 10),
+    videoPath: request.body.videoPath ?? validateId.videoPath,
   };
   if(updateData.type === 2) {
     updateData.video = null

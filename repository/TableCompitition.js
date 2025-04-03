@@ -20,7 +20,8 @@ const getAllCompititionQuery = async (fastify) => {
     tc."wrTiePoint" as "tiePoint",
     tc."wrCancelPoint" as "cancelPoint",
     tc."wrLossPoint" as "lossPoint",
-    tc."wrDrsCount" as "drsCount"
+    tc."wrDrsCount" as "drsCount",
+    tc."wrImagePath" as "imagePath"
     from "tblCompetitions" tc 
     inner join "tblEventTypes" tev on tc."wrEventTypeId" = tev."wrEventTypeId"
     where tc."wrIsDeleted" = false and tev."wrIsDeleted" = false
@@ -68,11 +69,11 @@ const insertCompetitionQuery = async (request, fastify) => {
             insert into "tblCompetitions" (
             "wrCompetition" , "wrEventTypeId" , "wrRefID" , "wrImage" ,"wrIsActive" ,
              "wrCreatedBy" , "wrCreatedDate","wrDisplayOrder", "wrIsTrending", "wrIsEventSnap", "wrIsPointTable", "wrMatchTypeId",
-             "wrWinPoint", "wrTiePoint", "wrCancelPoint", "wrLossPoint","wrDrsCount" )
+             "wrWinPoint", "wrTiePoint", "wrCancelPoint", "wrLossPoint","wrDrsCount", "wrImagePath" )
             values ($1 ,
                  $2,
                  $3,$4,$5,$6,now(),(select COALESCE("display_order" , 0) from "display") + 1, $7, $8, $9, $10,
-                 $11, $12, $13, $14,$15
+                 $11, $12, $13, $14,$15, $16
                  ) returning *
         )
 
@@ -93,7 +94,8 @@ const insertCompetitionQuery = async (request, fastify) => {
         tc."wrTiePoint" as "tiePoint",
         tc."wrCancelPoint" as "cancelPoint",
         tc."wrLossPoint" as "lossPoint",
-        tc."wrDrsCount" as "drsCount"
+        tc."wrDrsCount" as "drsCount",
+        tc."wrImagePath" as "imagePath"
         from "inser_data" tc
         inner join "tblEventTypes" tev on tc."wrEventTypeId" = tev."wrEventTypeId"
     `,
@@ -114,6 +116,7 @@ const insertCompetitionQuery = async (request, fastify) => {
           data.cancelPoint === undefined ? null : data.cancelPoint,
           data.lossPoint === undefined ? null : data.lossPoint,
           data.drsCount === undefined ? 0 : data.drsCount,
+          data.imagePath || null,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -175,7 +178,8 @@ const updateCompititionQuery = async (data, fastify, request) => {
         "wrTiePoint" = $13,
         "wrCancelPoint" = $14,
         "wrLossPoint" = $15,
-        "wrDrsCount" = $16
+        "wrDrsCount" = $16,
+        "wrImagePath" = $17
         where "wrCompetitionId" = $10
         `,
       {
@@ -196,6 +200,7 @@ const updateCompititionQuery = async (data, fastify, request) => {
           data.cancelPoint,
           data.lossPoint,
           data.drsCount,
+          data.imagePath,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -237,7 +242,8 @@ const updateDisplayOrderQuery = async (data, fastify, request) => {
         u."wrWinPoint" as "winPoint",
         u."wrTiePoint" as "tiePoint",
         u."wrCancelPoint" as "cancelPoint",
-        u."wrLossPoint" as "lossPoint"
+        u."wrLossPoint" as "lossPoint",
+        u."wrImagePath" as "imagePath"
       FROM updated u
       INNER JOIN "tblEventTypes" et ON u."wrEventTypeId" = et."wrEventTypeId"
       `,

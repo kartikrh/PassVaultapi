@@ -23,7 +23,8 @@ const getAllTeamPlayersByTeamIdAndPlayerIdQuery = async (data, fastify, request)
         "wrTeamPlayerId" as "teamPlayerId",
         "wrTeamId" as "teamId",
         "wrRefPlayerId" as "refPlayerId",
-        "wrJerseyPlayerImage" as "jerseyPlayerImage"
+        "wrJerseyPlayerImage" as "jerseyPlayerImage",
+        "wrJerseyPlayerImagePath" as "jerseyPlayerImagePath"
       FROM "tblTeamPlayers"
       WHERE "wrRefPlayerId" = $1 AND "wrTeamId" = $2
       AND "wrIsDeleted" = FALSE`,
@@ -139,7 +140,8 @@ const getTeamPlayerByPlayerIdQuery = async (refPlayerId, fastify, request) => {
         "wrTeamPlayerId" as "teamPlayerId",
         "wrTeamId" as "teamId",
         "wrRefPlayerId" as "refPlayerId",
-        "wrJerseyPlayerImage" as "jerseyPlayerImage"
+        "wrJerseyPlayerImage" as "jerseyPlayerImage",
+        "wrJerseyPlayerImagePath" as "jerseyPlayerImagePath"
       FROM "tblTeamPlayers"
       WHERE "wrRefPlayerId" = $1 AND "wrIsDeleted" = FALSE`,
       {
@@ -166,7 +168,8 @@ const getTeamPlayerByTeamIdQuery = async (teamId, fastify, request) => {
         "wrTeamPlayerId" as "teamPlayerId",
         "wrTeamId" as "teamId",
         "wrRefPlayerId" as "refPlayerId",
-        "wrJerseyPlayerImage" as "jerseyPlayerImage"
+        "wrJerseyPlayerImage" as "jerseyPlayerImage",
+        "wrJerseyPlayerImagePath" as "jerseyPlayerImagePath"
       FROM "tblTeamPlayers"
       WHERE "wrTeamId" = $1 AND "wrIsDeleted" = FALSE`,
       {
@@ -190,10 +193,11 @@ const updateTeamPlayerImageQuery = async (data, fastify) => {
   try {
     return await fastify.db.query(
       `UPDATE "tblTeamPlayers" SET
-        "wrJerseyPlayerImage" = $2
+        "wrJerseyPlayerImage" = $2,
+        "wrJerseyPlayerImagePath" = $3
       WHERE "wrTeamPlayerId" = $1`,
       {
-        bind: [data.teamPlayerId, data.jerseyPlayerImage],
+        bind: [data.teamPlayerId, data.jerseyPlayerImage, data.jerseyPlayerImagePath],
         type: fastify.db.QueryTypes.UPDATE,
       }
     );

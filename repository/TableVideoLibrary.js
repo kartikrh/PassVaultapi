@@ -14,7 +14,8 @@ const getAllVideoLibraryQuery = async (fastify) => {
               "wrVideo" AS "video",
               "wrVideoURL" AS "videoURL",
               "wrType" AS "type",
-              "wrCommentaryId" AS "commentaryId"
+              "wrCommentaryId" AS "commentaryId",
+              "wrVideoPath" AS "videoPath"
           FROM "tblVideoLibrary"
           WHERE "wrIsDeleted" = FALSE;`,
     { type: fastify.db.QueryTypes.SELECT }
@@ -27,10 +28,10 @@ const insertVideoLibraryQuery = async (data, fastify, request) => {
       `WITH insert_data AS (
               INSERT INTO "tblVideoLibrary" (
               "wrTitle", "wrIsPermanent", "wrFrom", "wrTo", "wrTag",
-              "wrSEO", "wrDescription", "wrVideo", "wrVideoURL", "wrType", "wrCommentaryId"
+              "wrSEO", "wrDescription", "wrVideo", "wrVideoURL", "wrType", "wrCommentaryId", "wrVideoPath"
               ) 
               VALUES (
-                  $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11
+                  $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
               ) 
               RETURNING *
               )        
@@ -46,7 +47,8 @@ const insertVideoLibraryQuery = async (data, fastify, request) => {
                 "wrVideo" AS "video",
                 "wrVideoURL" AS "videoURL",
                 "wrType" AS "type",
-                "wrCommentaryId" AS "commentaryId"
+                "wrCommentaryId" AS "commentaryId",
+                "wrVideoPath" AS "videoPath"
               FROM insert_data;`,
       {
         type: fastify.db.QueryTypes.SELECT,
@@ -61,7 +63,8 @@ const insertVideoLibraryQuery = async (data, fastify, request) => {
           data.video || null,
           data.videoURL || null,
           data.type,
-          data.commentaryId || 0
+          data.commentaryId || 0,
+          data.videoPath || null
         ],
       }
     );
@@ -83,7 +86,7 @@ const updateVideoLibraryQuery = async (data, fastify, request) => {
     const result = await fastify.db.query(
       `Update "tblVideoLibrary" set 
               "wrTitle" = $1, "wrIsPermanent" = $2, "wrFrom" = $3, "wrTo" = $4, "wrTag" = $5,
-              "wrSEO" = $6, "wrDescription" = $7, "wrVideo" = $8, "wrVideoURL" = $9, "wrType" = $10, "wrCommentaryId" = $11
+              "wrSEO" = $6, "wrDescription" = $7, "wrVideo" = $8, "wrVideoURL" = $9, "wrType" = $10, "wrCommentaryId" = $11, "wrVideoPath" = $13
             where "wrId" = $12
             RETURNING 
                 "wrId" AS "id",
@@ -97,7 +100,8 @@ const updateVideoLibraryQuery = async (data, fastify, request) => {
                 "wrVideo" AS "video",
                 "wrVideoURL" AS "videoURL",
                 "wrType" AS "type",
-                "wrCommentaryId" AS "commentaryId"`,
+                "wrCommentaryId" AS "commentaryId",
+                "wrVideoPath" AS "videoPath"`,
       {
         type: fastify.db.QueryTypes.UPDATE,
         bind: [
@@ -113,6 +117,7 @@ const updateVideoLibraryQuery = async (data, fastify, request) => {
             data.type,
             data.commentaryId || 0,
             data.id,
+            data.videoPath,
         ],
       }
     );

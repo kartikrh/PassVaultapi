@@ -22,13 +22,14 @@ const {
         (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
       )?.value;
   
-      const path = await storeImageOnServer({
+      const { fullPath, imagePath } = await storeImageOnServer({
         image: data.body.image[0],
         project: projectName,
         name: imgName,
         ...ImgModuleConfig.SocialMedia,
       });
-      data.body.image = path;
+      data.body.image = fullPath;
+      data.body.imagePath = imagePath;
     }
   
     const saveData = await insertSocialMediaQuery(data.body, fastify, request);
@@ -52,13 +53,14 @@ const {
       const projectName = global.tblConfigs.find(
         (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
       ).value;
-      const path = await storeImageOnServer({
+      const { fullPath, imagePath } = await storeImageOnServer({
         image: request.body.image[0],
         project: projectName,
         name: imgName,
         ...ImgModuleConfig.SocialMedia,
       });
-      request.body.image = path;
+      request.body.image = fullPath;
+      request.body.imagePath = imagePath;
     }
   
     const updateData = {
@@ -67,6 +69,7 @@ const {
       image: request.body.image ?? validateId.image,
       isActive: Boolean(request.body.isActive) ?? validateId.isActive,
       id: parseInt(request.body.id, 10),
+      imagePath: request.body.imagePath ?? validateId.imagePath,
   };
   
     const modifiedData = await updateSocialMediaQuery(updateData, fastify, request);

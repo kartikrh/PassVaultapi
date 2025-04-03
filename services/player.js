@@ -167,13 +167,14 @@ const insertPlayerService = async (request, fastify) => {
     const projectName = global.tblConfigs.find(
       (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
     ).value;
-    const path = await storeImageOnServer({
+    const { fullPath, imagePath } = await storeImageOnServer({
       image: request.body.image[0],
       project: projectName,
       name: imgName,
       ...ImgModuleConfig.Players,
     });
-    request.body.image = path;
+    request.body.image = fullPath;
+    request.body.imagePath = imagePath
   }
 
   const result = await insertPlayerQuery(
@@ -281,6 +282,7 @@ const updatePlayerService = async (request, fastify) => {
     bowlingTypeId: checkPlayerId.bowlingTypeId,
     bowlingStyle: checkPlayerId.bowlingTypeId,
     isSystemPlayer: request.body.hasOwnProperty("isSystemPlayer") ? request.body.isSystemPlayer : checkPlayerId.isSystemPlayer,
+    imagePath : checkPlayerId.imagePath,
   };
 
   if ("isActive" in request.body) {
@@ -341,13 +343,14 @@ const updatePlayerService = async (request, fastify) => {
     const projectName = global.tblConfigs.find(
       (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
     ).value;
-    const result = await storeImageOnServer({
+    const { fullPath, imagePath } = await storeImageOnServer({
       image: request.body.image[0],
       project: projectName,
       name: imgName,
       ...ImgModuleConfig.Players,
     });
-    body.image = result;
+    body.image = fullPath;
+    body.imagePath = imagePath;
   }
 
   await updatePlayerQuery(body, fastify, request);
@@ -537,6 +540,7 @@ const updatePlayerStatsService = async (request, fastify) => {
           eventType: checkPlayerId.eventType,
           bowlingTypeId: checkPlayerId.bowlingTypeId,
           bowlingStyle: checkPlayerId.bowlingTypeId,
+          imagePath: checkPlayerId.imagePath
         };
         global.tblPlayers[index] = _p;
       }

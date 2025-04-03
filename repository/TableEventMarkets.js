@@ -5753,7 +5753,8 @@ const upSendMarketDataQuery = async (data, request, fastify) => {
             "wrID" AS "eventMarketId",
             "wrIsSendData" AS "isSendData",
             "wrLastUpdate" AS "lastUpdate",
-            "wrCommentaryId" AS "commentaryId"
+            "wrCommentaryId" AS "commentaryId",
+            "wrData" as "data"
       `,
       {
         bind: [

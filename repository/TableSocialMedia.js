@@ -12,7 +12,8 @@ const allSocialMediaQuery = async (fastify) => {
             "wrCreatedAt" as "createdAt",
             "wrCreatedBy" as "createdBy",
             "wrModifiedBy" as "modifiedBy",
-            "wrModifiedAt" as "modifiedAt"
+            "wrModifiedAt" as "modifiedAt",
+            "wrImagePath" as "imagePath"
             FROM "tblSocialMedias";`,
             { type: fastify.db.QueryTypes.SELECT }
         );
@@ -32,10 +33,10 @@ const insertSocialMediaQuery = async (data, fastify, request) => {
         const result = await fastify.db.query(
             `WITH insert_data AS (
             INSERT INTO "tblSocialMedias" (
-            "wrName", "wrLink", "wrImage", "wrIsActive", "wrCreatedAt", "wrCreatedBy"
+            "wrName", "wrLink", "wrImage", "wrIsActive", "wrCreatedAt", "wrCreatedBy", "wrImagePath"
             ) 
             VALUES (
-                $1, $2, $3, $4, now(), $5
+                $1, $2, $3, $4, now(), $5, $6
             ) 
             RETURNING *
             )        
@@ -48,7 +49,8 @@ const insertSocialMediaQuery = async (data, fastify, request) => {
             "wrCreatedAt" as "createdAt",
             "wrCreatedBy" as "createdBy",
             "wrModifiedBy" as "modifiedBy",
-            "wrModifiedAt" as "modifiedAt"
+            "wrModifiedAt" as "modifiedAt",
+            "wrImagePath" as "imagePath"
             FROM insert_data;`,
             {
                 type: fastify.db.QueryTypes.SELECT,
@@ -57,7 +59,8 @@ const insertSocialMediaQuery = async (data, fastify, request) => {
                     data.link,
                     data.image || "",
                     data.isActive || false,
-                    request.userTokenInfo.WrUserId
+                    request.userTokenInfo.WrUserId,
+                    data.imagePath || null,
                 ],
             }
         );
@@ -83,7 +86,8 @@ const updateSocialMediaQuery = async (data, fastify, request) => {
             "wrImage" = $3,
             "wrIsActive" = $4,
             "wrModifiedBy" = $5,
-            "wrModifiedAt" = now()
+            "wrModifiedAt" = now(),
+            "wrImagePath" = $7
             WHERE "wrId" = $6
             RETURNING 
             "wrId" as "id",
@@ -94,7 +98,8 @@ const updateSocialMediaQuery = async (data, fastify, request) => {
             "wrCreatedAt" as "createdAt",
             "wrCreatedBy" as "createdBy",
             "wrModifiedBy" as "modifiedBy",
-            "wrModifiedAt" as "modifiedAt";`,
+            "wrModifiedAt" as "modifiedAt",
+            "wrImagePath" as "imagePath";`,
             {
                 type: fastify.db.QueryTypes.UPDATE,
                 bind: [
@@ -103,7 +108,8 @@ const updateSocialMediaQuery = async (data, fastify, request) => {
                     data.image,
                     data.isActive || false,
                     request.userTokenInfo.WrUserId,
-                    data.id
+                    data.id,
+                    data.imagePath,
                 ],
             }
         );

@@ -48,13 +48,14 @@ const createNewsService = async (request, fastify) => {
     const projectName = global.tblConfigs.find(
       (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
     ).value;
-    const path = await storeImageOnServer({
+    const { fullPath, imagePath } = await storeImageOnServer({
       image: request.body.image[0],
       project: projectName,
       name: imgName,
       ...ImgModuleConfig.News,
     });
-    request.body.image = path;
+    request.body.image = fullPath;
+    request.body.imagePath = imagePath;
   }
   const data = await insertNewsQuery(
     {
@@ -123,7 +124,8 @@ const updateNewsService = async (request, fastify) => {
     credit : request.body.credit || validateNewsId.credit,
     SEO : request.body.SEO || validateNewsId.SEO,
     type : request.body.type || validateNewsId.type,
-    SEODescription : request.body.SEODescription || validateNewsId.SEODescription
+    SEODescription : request.body.SEODescription || validateNewsId.SEODescription,
+    imagePath : validateNewsId.imagePath
   };
   if (request.body.image && request.body.image.length) {
     const imgName = generateImageName({
@@ -132,13 +134,14 @@ const updateNewsService = async (request, fastify) => {
     const projectName = global.tblConfigs.find(
       (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
     ).value;
-    const path = await storeImageOnServer({
+    const { fullPath, imagePath } = await storeImageOnServer({
       image: request.body.image[0],
       project: projectName,
       name: imgName,
       ...ImgModuleConfig.News,
     });
-    body.image = path;
+    body.image = fullPath;
+    body.imagePath = imagePath;
   }
 
   await updateNewsQuery(body, request, fastify);

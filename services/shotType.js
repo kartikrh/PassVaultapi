@@ -29,13 +29,14 @@ const saveShotTypeService = async (request, fastify, data) => {
       (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
     )?.value;
 
-    const path = await storeImageOnServer({
+    const { fullPath, imagePath } = await storeImageOnServer({
       image: data.body.image[0],
       project: projectName,
       name: imgName,
       ...ImgModuleConfig.ShotType,
     });
-    data.body.image = path;
+    data.body.image = fullPath;
+    data.body.imagePath = imagePath;
   }
   const saveData = await insertShotTypeQuery(data.body, fastify, request);
   global.tblShotType.push(saveData);
@@ -66,13 +67,14 @@ const editShotTypeService = async (request, fastify, data) => {
     const projectName = global.tblConfigs.find(
       (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
     ).value;
-    const path = await storeImageOnServer({
+    const { fullPath, imagePath } = await storeImageOnServer({
       image: request.body.image[0],
       project: projectName,
       name: imgName,
       ...ImgModuleConfig.ShotType,
     });
-    request.body.image = path;
+    request.body.image = fullPath;
+    request.body.imagePath = imagePath;
   }
 
   const updateData = {
@@ -80,6 +82,7 @@ const editShotTypeService = async (request, fastify, data) => {
     image: request.body.image ?? validateId.image,
     isActive: request.body.isActive ?? validateId.isActive,
     id: parseInt(request.body.id, 10),
+    imagePath: request.body.imagePath ?? validateId.imagePath,
   };
 
   const modifiedData = await updateShotTypeQuery(updateData, fastify, request);

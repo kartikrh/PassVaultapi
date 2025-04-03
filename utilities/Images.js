@@ -74,7 +74,11 @@ const storeImageOnServer = async (args) => {
     if(!result.data.success){
       throw new Error(result.data.error.message);
     }
-    return result.data.result;
+    return {
+      fullPath: result.data.result.fullPath,
+      imagePath: result.data.result.imagePath,
+    };
+    // return result.data.result;
    } catch (error) {
       console.log("Error in storeImageOnServer", error);
       throw new Error(error.message);
@@ -122,7 +126,11 @@ const storeFileOnServer = async (args) => {
     if (!result.data.success) {
       throw new Error(result.data.error.message);
     }
-    return result.data.result;
+    // return result.data.result;
+    return {
+      fullPath: result.data.result.fullPath,
+      imagePath: result.data.result.imagePath,
+    };
   } catch (error) {
     console.error("Error in storeFileOnServer:", error);
     throw error;
