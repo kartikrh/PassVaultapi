@@ -13,7 +13,7 @@ module.exports = () => {
       dialect: process.env.POSTGRES_DIALECT,
       logging: false, 
       pool: {
-        max: 20,          // Maximum number of connections
+        max: 40,          // Maximum number of connections
         min: 5,           // Minimum number of connections
         acquire: 60000,   // Maximum time to get a connection (ms)
         idle: 10000,      // Maximum time connection can be idle (ms)
@@ -21,5 +21,6 @@ module.exports = () => {
       }
     };
   }
+  
   return posrgreSqlDatabase;
 };
