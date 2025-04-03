@@ -58,6 +58,7 @@ const editCountryCodeService = async (request, fastify) => {
     countryCode: request.body.countryCode ?? validateId.countryCode,
     countryName: request.body.countryName.trim() ?? validateId.countryName,
     flag: validateId.flag,
+    flagPath: validateId.flagPath,
     id: parseInt(request.body.id, 10),
   };
 
