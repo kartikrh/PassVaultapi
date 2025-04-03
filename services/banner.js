@@ -40,13 +40,14 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
         (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
       )?.value;
       
-      const path = await storeImageOnServer({
+      const { fullPath, imagePath } = await storeImageOnServer({
         image: request.body.image[0],
         project: projectName,
         name: imgName,
         ...ImgModuleConfig.Banner,
       });
-      request.body.image = path;
+      request.body.image = fullPath;
+      request.body.imagePath = imagePath;
     }
     const data = await insertBannerQuery(
       {
@@ -106,7 +107,8 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
       image: validateBannerId.image,
       userId: request.userTokenInfo.WrUserId,
       link: request.body.link,
-      viewerCount: request.body.viewerCount || validateBannerId.viewerCount
+      viewerCount: request.body.viewerCount || validateBannerId.viewerCount,
+      imagePath: validateBannerId.imagePath,
     };
     if (request.body.image && request.body.image.length) {
       const imgName = generateImageName({
@@ -115,13 +117,14 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
       const projectName = global.tblConfigs.find(
         (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
       ).value;
-      const path = await storeImageOnServer({
+      const { fullPath, imagePath } = await storeImageOnServer({
         image: request.body.image[0],
         project: projectName,
         name: imgName,
         ...ImgModuleConfig.Banner,
       });
-      body.image = path;
+      body.image = fullPath;
+      body.imagePath = imagePath;
     }
   
     await updateBannerQuery(body, request, fastify);

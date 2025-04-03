@@ -53,13 +53,14 @@ const createArticleService = async (request, fastify) => {
     const projectName = global.tblConfigs.find(
       (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
     ).value;
-    const path = await storeImageOnServer({
+    const { fullPath, imagePath } = await storeImageOnServer({
       image: request.body.image[0],
       project: projectName,
       name: imgName,
       ...ImgModuleConfig.Article,
     });
-    request.body.image = path;
+    request.body.image = fullPath;
+    request.body.imagePath = imagePath;
   }
   const data = await insertArticleQuery(
     {
@@ -103,6 +104,7 @@ const updateArticleService = async (request, fastify) => {
     credit: request.body.credit || validateid.credit,
     SEO: request.body.SEO || validateid.SEO,
     SEODescription: request.body.SEODescription || validateid.SEODescription,
+    imagePath: validateid.imagePath,
   };
 
   if (request.body.image && request.body.image.length) {
@@ -112,13 +114,14 @@ const updateArticleService = async (request, fastify) => {
     const projectName = global.tblConfigs.find(
       (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
     ).value;
-    const path = await storeImageOnServer({
+    const { fullPath, imagePath } = await storeImageOnServer({
       image: request.body.image[0],
       project: projectName,
       name: imgName,
       ...ImgModuleConfig.Article,
     });
-    body.image = path;
+    body.image = fullPath;
+    body.imagePath = imagePath;
   }
 
   const updatedData = await updateArticleQuery(body, request, fastify);

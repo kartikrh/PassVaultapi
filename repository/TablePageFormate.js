@@ -8,7 +8,8 @@ const allPageFormateQuery = async (fastify) => {
     "wrPageName" as "pageName",
     "wrImage" as "image",
     "wrDescription" as "description",
-    "wrIsActive" as "isActive"
+    "wrIsActive" as "isActive",
+    "wrImagePath" as "imagePath"
     from "tblPageFormats" tb inner join "tblEncryptedData" te on tb."wrPageFormatId" = te."wrKey"
     where tb."wrIsDeleted" = false`,
     {
@@ -21,8 +22,8 @@ const insertPageFormateQuery = async (body, fastify, request) => {
   try {
     const data = await fastify.db.query(
       `with insert_data as (
-                Insert into "tblPageFormats"("wrPageFormatName","wrPageName","wrImage","wrDescription","wrIsActive","wrCreatedDate","wrCreatedBy") 
-                select $1,$2,$3,$4,$5,now(),$6 returning *
+                Insert into "tblPageFormats"("wrPageFormatName","wrPageName","wrImage","wrDescription","wrIsActive","wrCreatedDate","wrCreatedBy", "wrImagePath") 
+                select $1,$2,$3,$4,$5,now(),$6, $7 returning *
             )
             select 
             "wrValue" as "pageFormatId",
@@ -30,7 +31,8 @@ const insertPageFormateQuery = async (body, fastify, request) => {
             "wrPageName" as "pageName",
             "wrImage" as "image",
             "wrDescription" as "description",
-            "wrIsActive" as "isActive"
+            "wrIsActive" as "isActive",
+            "wrImagePath" as "imagePath"
              from insert_data tb inner join "tblEncryptedData" te on tb."wrPageFormatId" = te."wrKey"`,
       {
         type: fastify.db.QueryTypes.SELECT,
@@ -41,6 +43,7 @@ const insertPageFormateQuery = async (body, fastify, request) => {
           body.description || null,
           body.isActive || false,
           body.userId,
+          body.imagePath || null,
         ],
       }
     );
@@ -61,7 +64,7 @@ const updatePageFormateQuery = async (body, fastify, request) => {
   try {
     const data = await fastify.db.query(
       `with update_data as (
-                Update "tblPageFormats" set "wrPageFormatName" = $1,"wrPageName" = $2,"wrImage" = $3,"wrDescription" = $4,"wrIsActive" = $5,"wrModifyDate" = now(),"wrModifyBy" = $6 where "wrPageFormatId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $7) returning *
+                Update "tblPageFormats" set "wrPageFormatName" = $1,"wrPageName" = $2,"wrImage" = $3,"wrDescription" = $4,"wrIsActive" = $5,"wrModifyDate" = now(),"wrModifyBy" = $6, "wrImagePath" = $7 where "wrPageFormatId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $7) returning *
             )
             select 
             "wrValue" as "pageFormatId",
@@ -69,7 +72,8 @@ const updatePageFormateQuery = async (body, fastify, request) => {
             "wrPageName" as "pageName",
             "wrImage" as "image",
             "wrDescription" as "description",
-            "wrIsActive" as "isActive"
+            "wrIsActive" as "isActive",
+            "wrImagePath" as "imagePath"
              from update_data tb inner join "tblEncryptedData" te on tb."wrPageFormatId" = te."wrKey"`,
       {
         type: fastify.db.QueryTypes.SELECT,
@@ -81,6 +85,7 @@ const updatePageFormateQuery = async (body, fastify, request) => {
           body.isActive,
           body.userId,
           body.pageFormatId,
+          body.imagePath,
         ],
       }
     );

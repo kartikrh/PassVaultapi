@@ -15,8 +15,8 @@ const ckImageUploadService = async (request) => {
             name: imgName,
             ...config
         });
-        request.body.image = imagePath;
-        return imagePath;
+        request.body.image = imagePath.fullPath;
+        return imagePath?.fullPath;
     }
 }
 const imgUploadService = async (request) =>{
@@ -32,7 +32,7 @@ const imgUploadService = async (request) =>{
             ...imgConfig
         });
         return {
-            path : imagePath,
+            path : imagePath?.fullPath,
         };
     }
 }

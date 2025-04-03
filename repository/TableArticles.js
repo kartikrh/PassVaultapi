@@ -19,7 +19,8 @@ const getAllArticlesQuery = async (fastify) => {
             "wrCreatedDate" as "createdDate",
             "wrCreatedBy" as "createdBy",
             "wrModifyDate" as "modifyDate",
-            "wrModifyBy" as "modifyBy"
+            "wrModifyBy" as "modifyBy",
+            "wrImagePath" as "imagePath"
         from "tblArticles"
         where "wrIsDeleted" = false
         `,
@@ -48,9 +49,10 @@ const insertArticleQuery = async (data, request, fastify) => {
                         "wrViewerCount",
                         "wrCredit",
                         "wrSEO",
-                        "wrSEODescription"
+                        "wrSEODescription",
+                        "wrImagePath"
                     )
-                values ($1, $2, $3, $4, $5, $6, $7, $8, now(), $9, $10, $11, $12, $13) returning *
+                values ($1, $2, $3, $4, $5, $6, $7, $8, now(), $9, $10, $11, $12, $13, $14) returning *
                 )
                 select 
                     "wrId" as "id",
@@ -69,7 +71,8 @@ const insertArticleQuery = async (data, request, fastify) => {
                     "wrCreatedDate" as "createdDate",
                     "wrCreatedBy" as "createdBy",
                     "wrModifyDate" as "modifyDate",
-                    "wrModifyBy" as "modifyBy"
+                    "wrModifyBy" as "modifyBy",
+                    "wrImagePath" as "imagePath"
                 from "insert_data"
             `,
       {
@@ -88,6 +91,7 @@ const insertArticleQuery = async (data, request, fastify) => {
           data.credit || null,
           data.SEO || null,
           data.SEODescription || null,
+          data.imagePath || null,
         ],
       }
     );
@@ -121,7 +125,8 @@ const updateArticleQuery = async (data, request, fastify) => {
             "wrViewerCount" = $11,
             "wrCredit" = $12,
             "wrSEO" = $13,
-            "wrSEODescription" = $14
+            "wrSEODescription" = $14,
+            "wrImagePath" = $15
           WHERE "wrId" = $9
           RETURNING
             "wrId" as "id",
@@ -140,7 +145,8 @@ const updateArticleQuery = async (data, request, fastify) => {
             "wrCreatedDate" as "createdDate",
             "wrCreatedBy" as "createdBy",
             "wrModifyDate" as "modifyDate",
-            "wrModifyBy" as "modifyBy"
+            "wrModifyBy" as "modifyBy",
+            "wrImagePath" as "imagePath"
         `,
       {
         bind: [
@@ -158,6 +164,7 @@ const updateArticleQuery = async (data, request, fastify) => {
           data.credit || null,
           data.SEO || null,
           data.SEODescription || null,
+          data.imagePath,
         ],
       }
     );

@@ -13,7 +13,8 @@ const getAllBannerQuery = async (fastify) => {
             "wrStartDate" as "startDate",
             "wrEndDate" as "endDate",
             "wrLink" as "link",
-            "wrViewerCount" as "viewerCount"
+            "wrViewerCount" as "viewerCount",
+            "wrImagePath" as "imagePath"
         from "tblBanner"
         where "wrIsDeleted" = false
         `,
@@ -38,9 +39,10 @@ const insertBannerQuery = async (data, request, fastify) => {
                         "wrCreatedBy",
                         "wrCreatedDate",
                         "wrLink",
-                        "wrViewerCount"
+                        "wrViewerCount",
+                        "wrImagePath"
                     )
-                values ($1, $2, $3, $4, $5, $6, $7, $8, now(), $9, $10) returning *
+                values ($1, $2, $3, $4, $5, $6, $7, $8, now(), $9, $10, $11) returning *
                 )
                 select 
                     "wrId" as "bannerId",
@@ -52,7 +54,8 @@ const insertBannerQuery = async (data, request, fastify) => {
                     "wrStartDate" as "startDate",
                     "wrEndDate" as "endDate",
                     "wrLink" as "link",
-                    "wrViewerCount" as "viewerCount"
+                    "wrViewerCount" as "viewerCount",
+                    "wrImagePath" as "imagePath"
                 from "insert_data"
             `,
       {
@@ -67,7 +70,8 @@ const insertBannerQuery = async (data, request, fastify) => {
           data.endDate ? new Date(data.endDate) : null,
           data.userId,
           data.link || null,
-          data.viewerCount || null
+          data.viewerCount || null,
+          data.imagePath || null
         ],
       }
     );
@@ -97,7 +101,8 @@ const updateBannerQuery = async (data, request, fastify) => {
                 "wrCreatedBy" = $8,
                 "wrCreatedDate" = now(),
                 "wrLink" = $10,
-                "wrViewerCount" = $11
+                "wrViewerCount" = $11,
+                "wrImagePath" = $12
                 where "wrId" = $9
             `,
       {
@@ -112,7 +117,8 @@ const updateBannerQuery = async (data, request, fastify) => {
           data.userId,
           data.bannerId,
           data.link || null,
-          data.viewerCount || null
+          data.viewerCount || null,
+          data.imagePath
         ],
       }
     );

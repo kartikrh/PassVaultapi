@@ -7,7 +7,8 @@ const getAllShotTypesQuery = async (fastify) => {
               "wrName" AS "name",
               "wrImage" AS "image",
               "wrIsActive" AS "isActive",
-              "wrDisplayOrder" AS "displayOrder"
+              "wrDisplayOrder" AS "displayOrder",
+              "wrImagePath" AS "imagePath"
             FROM "tblShotType"
           WHERE "wrIsDeleted" = FALSE;`,
     { type: fastify.db.QueryTypes.SELECT }
@@ -23,12 +24,13 @@ const insertShotTypeQuery = async (data, fastify, request) => {
             WHERE "wrIsDeleted" = false
           ),
           add_data AS (
-            INSERT INTO "tblShotType" ("wrName", "wrImage", "wrIsActive", "wrDisplayOrder")
+            INSERT INTO "tblShotType" ("wrName", "wrImage", "wrIsActive", "wrDisplayOrder", "wrImagePath")
             SELECT 
               $1, 
               $2, 
               $3, 
-              (SELECT count FROM count_parent) + 1
+              (SELECT count FROM count_parent) + 1,
+              $4
             RETURNING *
           )
           SELECT 
@@ -36,11 +38,12 @@ const insertShotTypeQuery = async (data, fastify, request) => {
               "wrName" AS "name",
               "wrImage" AS "image",
               "wrIsActive" AS "isActive",
-              "wrDisplayOrder" AS "displayOrder"
+              "wrDisplayOrder" AS "displayOrder",
+              "wrImagePath" AS "imagePath"
           FROM add_data;`,
       {
         type: fastify.db.QueryTypes.SELECT,
-        bind: [data.name, data.image || null, data.isActive || false],
+        bind: [data.name, data.image || null, data.isActive || false, data.imagePath || null],
       }
     );
     return result[0];
@@ -59,17 +62,18 @@ const updateShotTypeQuery = async (data, fastify, request) => {
   try {
     const result = await fastify.db.query(
       `Update "tblShotType" set 
-              "wrName" = $1,"wrImage" = $2,"wrIsActive" = $3
+              "wrName" = $1,"wrImage" = $2,"wrIsActive" = $3, "wrImagePath" = $5
               where "wrId" = $4
           RETURNING 
               "wrId" AS "id",
               "wrName" AS "name",
               "wrImage" AS "image",
               "wrIsActive" AS "isActive",
-              "wrDisplayOrder" AS "displayOrder";`,
+              "wrDisplayOrder" AS "displayOrder",
+              "wrImagePath" AS "imagePath";`,
       {
         type: fastify.db.QueryTypes.UPDATE,
-        bind: [data.name, data.image || null, data.isActive || false, data.id],
+        bind: [data.name, data.image || null, data.isActive || false, data.id, data.imagePath || null],
       }
     );
     return result[0];

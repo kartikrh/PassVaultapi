@@ -1233,7 +1233,8 @@ const getAllCommentaryPlayerQuery = async (fastify) => {
         tcp."wrPlayerBallFaced" as "playerBallFaced",
         tp."wrPlayerTypeId" as "playerTypeId",
         tpt."wrPlayerType" as "playerType",
-        tcp."wrJerseyPlayerImage" as "jerseyPlayerImage"
+        tcp."wrJerseyPlayerImage" as "jerseyPlayerImage",
+        tcp."wrJerseyPlayerImagePath" as "jerseyPlayerImagePath"
     from "tblCommentaryPlayers" AS tcp
     LEFT JOIN "tblPlayers" AS tp ON tcp."wrPlayerId" = tp."wrPlayerId"
     LEFT JOIN "tblPlayerTypes" AS tpt ON tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
@@ -1316,6 +1317,7 @@ const getAllCommentaryPlayerDataQuery = async (whereCondition = null, fastify) =
         tp."wrPlayerTypeId" as "playerTypeId",
         tpt."wrPlayerType" as "playerType",
         tcp."wrJerseyPlayerImage" as "jerseyPlayerImage",
+        tcp."wrJerseyPlayerImagePath" as "jerseyPlayerImage",
         tp."wrDisplayName" as "displayName"
     from "tblCommentaryPlayers" AS tcp
     LEFT JOIN "tblPlayers" AS tp ON tcp."wrPlayerId" = tp."wrPlayerId"
@@ -4902,6 +4904,7 @@ const getAllCommentaryPlayerDataQueryV1 = async (whereCondition = null, fastify)
         tp."wrPlayerTypeId" as "pltypid",
         tpt."wrPlayerType" as "pltyp",
         tcp."wrJerseyPlayerImage" as "jryPlyImg",
+        tcp."wrJerseyPlayerImagePath" as "jryPlyImgPath",
         tp."wrDisplayName" as "displayName"
     from "tblCommentaryPlayers" AS tcp
     LEFT JOIN "tblPlayers" AS tp ON tcp."wrPlayerId" = tp."wrPlayerId"
@@ -5076,12 +5079,13 @@ const updateCommentaryPlayerJerseyImageQuery = async (data, fastify) => {
   try {
     return await fastify.db.query(
       `UPDATE "tblCommentaryPlayers" SET
-        "wrJerseyPlayerImage" = $2
+        "wrJerseyPlayerImage" = $2,
+        "wrJerseyPlayerImagePath" = $3
       WHERE
         "wrCommentaryPlayerId" = $1 AND "wrIsDelete" = FALSE`,
       {
         type: fastify.db.QueryTypes.SELECT,
-        bind: [data.commentaryPlayerId, data.jerseyPlayerImage],
+        bind: [data.commentaryPlayerId, data.jerseyPlayerImage, data.jerseyPlayerImagePath],
       }
     );
   } catch (error) {

@@ -706,6 +706,7 @@ const ModuleTypes = {
   ThirdPartyApis: 34,
   Notifications: 35,
   Vendors: 36,
+  CountryCode :37
 }
 const callTPAPI = async (data ,fastify) =>{
   try {

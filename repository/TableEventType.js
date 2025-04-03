@@ -10,7 +10,8 @@ const allEventTypesQuery = async (fastify) => {
     "wrIsActive" as "isActive",
     "wrDisplayOrder" as "displayOrder",
     "wrRemark" as "remark",
-    "wrIsHighlight" as "isHighlight"
+    "wrIsHighlight" as "isHighlight",
+    "wrImagePath" as "imagePath"
      from "tblEventTypes"
      where "wrIsDeleted" = false
      order by "wrDisplayOrder" asc`,
@@ -24,8 +25,8 @@ const insertEventTypeQuery = async (data, fastify, request) => {
   try {
     const result = await fastify.db.query(
       `with insert_data as(
-            insert into "tblEventTypes" ("wrEventType","wrRefId","wrImage","wrIsActive","wrDisplayOrder","wrRemark","wrIsHighlight","wrCreatedDate","wrCreatedBy") values (
-              $1,$2,$3,$4,(select COALESCE(max("wrDisplayOrder") , 0) as result from "tblEventTypes") + 1,$5,$6,$7,$8) returning *
+            insert into "tblEventTypes" ("wrEventType","wrRefId","wrImage","wrIsActive","wrDisplayOrder","wrRemark","wrIsHighlight","wrCreatedDate","wrCreatedBy", "wrImagePath") values (
+              $1,$2,$3,$4,(select COALESCE(max("wrDisplayOrder") , 0) as result from "tblEventTypes") + 1,$5,$6,$7,$8, $9) returning *
         )        
         select 
         "wrEventTypeId" as "eventTypeId",
@@ -35,7 +36,8 @@ const insertEventTypeQuery = async (data, fastify, request) => {
         "wrIsActive" as "isActive",
         "wrDisplayOrder" as "displayOrder",
         "wrRemark" as "remark",
-        "wrIsHighlight" as "isHighlight"
+        "wrIsHighlight" as "isHighlight",
+        "wrImagePath" as "imagePath"
          from insert_data`,
       {
         type: fastify.db.QueryTypes.SELECT,
@@ -48,6 +50,7 @@ const insertEventTypeQuery = async (data, fastify, request) => {
           data.isHighlight || false,
           new Date(),
           data.userId,
+          data.imagePath || null,
         ],
       }
     );
@@ -66,7 +69,7 @@ const insertEventTypeQuery = async (data, fastify, request) => {
 const updateEventTypeQuery = async (data, fastify, request) => {
   try {
     return await fastify.db.query(
-      `Update "tblEventTypes" set "wrEventType" = $1,"wrRefId" = $2,"wrImage" = $3,"wrIsActive" = $4,"wrRemark" = $5,"wrIsHighlight" = $6,"wrModifyDate" = $7,"wrModifyBy" = $8 where "wrEventTypeId" = $9`,
+      `Update "tblEventTypes" set "wrEventType" = $1,"wrRefId" = $2,"wrImage" = $3,"wrIsActive" = $4,"wrRemark" = $5,"wrIsHighlight" = $6,"wrModifyDate" = $7,"wrModifyBy" = $8, "wrImagePath" = $10 where "wrEventTypeId" = $9`,
       {
         type: fastify.db.QueryTypes.UPDATE,
         bind: [
@@ -79,6 +82,7 @@ const updateEventTypeQuery = async (data, fastify, request) => {
           new Date(),
           data.userId,
           data.eventTypeId,
+          data.imagePath,
         ],
       }
     );

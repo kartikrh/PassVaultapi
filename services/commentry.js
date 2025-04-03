@@ -591,7 +591,8 @@ const createCommentaryService = async (request, fastify) => {
             await updateCommentaryPlayerJerseyImageQuery(
                 { 
                   commentaryPlayerId: playerData[0].commentaryPlayerId, 
-                  jerseyPlayerImage: teamPlayerData?.jerseyPlayerImage 
+                  jerseyPlayerImage: teamPlayerData?.jerseyPlayerImage,
+                  jerseyPlayerImagePath: teamPlayerData?.jerseyPlayerImagePath,
                 },
                 fastify
               );
@@ -672,7 +673,8 @@ const createCommentaryService = async (request, fastify) => {
           await updateCommentaryPlayerJerseyImageQuery(
               { 
                 commentaryPlayerId: playerData[0].commentaryPlayerId, 
-                jerseyPlayerImage: teamPlayerData?.jerseyPlayerImage 
+                jerseyPlayerImage: teamPlayerData?.jerseyPlayerImage,
+                jerseyPlayerImagePath: teamPlayerData?.jerseyPlayerImagePath, 
               },
               fastify
             );
@@ -989,7 +991,8 @@ const updateCommentaryService = async (request, fastify) => {
                 await updateCommentaryPlayerJerseyImageQuery(
                     { 
                       commentaryPlayerId: players.commentaryPlayerId, 
-                      jerseyPlayerImage: teamPlayerData?.jerseyPlayerImage 
+                      jerseyPlayerImage: teamPlayerData?.jerseyPlayerImage,
+                      jerseyPlayerImagePath: teamPlayerData?.jerseyPlayerImagePath,
                     },
                     fastify
                   );
@@ -1067,7 +1070,8 @@ const updateCommentaryService = async (request, fastify) => {
               await updateCommentaryPlayerJerseyImageQuery(
                   { 
                     commentaryPlayerId: info.commentaryPlayerId, 
-                    jerseyPlayerImage: teamPlayerData?.jerseyPlayerImage 
+                    jerseyPlayerImage: teamPlayerData?.jerseyPlayerImage,
+                    jerseyPlayerImagePath: teamPlayerData?.jerseyPlayerImagePath,
                   },
                   fastify
                 );
@@ -1258,7 +1262,8 @@ const cloneCommentaryService = async (request, fastify) => {
             await updateCommentaryPlayerJerseyImageQuery(
                 { 
                   commentaryPlayerId: playerData[0].commentaryPlayerId, 
-                  jerseyPlayerImage: teamPlayerData?.jerseyPlayerImage 
+                  jerseyPlayerImage: teamPlayerData?.jerseyPlayerImage,
+                  jerseyPlayerImagePath: teamPlayerData?.jerseyPlayerImagePath,
                 },
                 fastify
               );
@@ -1336,7 +1341,8 @@ const cloneCommentaryService = async (request, fastify) => {
           await updateCommentaryPlayerJerseyImageQuery(
               { 
                 commentaryPlayerId: palyerData[0].commentaryPlayerId, 
-                jerseyPlayerImage: teamPlayerData?.jerseyPlayerImage 
+                jerseyPlayerImage: teamPlayerData?.jerseyPlayerImage,
+                jerseyPlayerImagePath: teamPlayerData?.jerseyPlayerImagePath,
               },
               fastify
             );
@@ -4396,7 +4402,8 @@ const addTeamPlayerService = async (request, fastify) => {
       await updateCommentaryPlayerJerseyImageQuery(
           { 
             commentaryPlayerId: playerData[0].commentaryPlayerId, 
-            jerseyPlayerImage: teamPlayerData?.jerseyPlayerImage 
+            jerseyPlayerImage: teamPlayerData?.jerseyPlayerImage,
+            jerseyPlayerImagePath: teamPlayerData?.jerseyPlayerImagePath,
           },
           fastify
         );
@@ -10732,7 +10739,8 @@ const updateMergeImageOnCommentaryPlayersService = async (request, fastify) => {
           await updateCommentaryPlayerJerseyImageQuery(
               { 
                 commentaryPlayerId: players.commentaryPlayerId, 
-                jerseyPlayerImage: teamPlayers?.jerseyPlayerImage 
+                jerseyPlayerImage: teamPlayers?.jerseyPlayerImage,
+                jerseyPlayerImagePath: teamPlayers?.jerseyPlayerImagePath,
               },
               fastify
             );
