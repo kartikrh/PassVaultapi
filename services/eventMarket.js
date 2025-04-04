@@ -2881,7 +2881,8 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
         category.categoryName.toLowerCase() == "session" || 
         category.categoryName.toLowerCase() == "only over" || 
         category.categoryName.toLowerCase() == "over session" ||
-        category.categoryName.toLowerCase() == "totaleventrun"
+        category.categoryName.toLowerCase() == "totaleventrun" ||
+        category.categoryName.toLowerCase() == "midsession"
       ){
         if(category.categoryName == "Only Over"){
           is_onlyover = 1;
