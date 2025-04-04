@@ -2881,7 +2881,8 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
         category.categoryName.toLowerCase() == "session" || 
         category.categoryName.toLowerCase() == "only over" || 
         category.categoryName.toLowerCase() == "over session" ||
-        category.categoryName.toLowerCase() == "totaleventrun"
+        category.categoryName.toLowerCase() == "totaleventrun" ||
+        category.categoryName.toLowerCase() == "midsession"
       ){
         if(category.categoryName == "Only Over"){
           is_onlyover = 1;
@@ -2983,6 +2984,29 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
           back_size : item.runners[0].backSize,
           rate_diff : item.rateDiff,
           line_diff : line_diff_wick_ball.toFixed(2) || 0
+        })
+      }
+      if( category &&	category.categoryName.toLowerCase() == "MidSession") {
+        let line_diff = allMarkets.find(
+          (e) => e.marketId === item.eventMarketId
+        )?.lineDiff || 0;
+        lineDiff = line_diff;
+        
+        updatedOvers.push({
+          market_id : item.eventMarketId,
+          team_id : item.teamId,
+          over : item.over,
+          line_diff: lineDiff != null ? parseFloat(lineDiff.toFixed(2)) : null,
+          line_ratio : item.lineRatio,
+          is_onlyover : is_onlyover,
+          is_allow : item.isAllow,
+          is_active : item.isActive,
+          is_senddata : item.isSendData,
+          data : item.data,
+          market_type_category_id : parseInt(item.marketTypeCategoryId),
+          lay_size : item.runners[0].laySize,
+          back_size : item.runners[0].backSize,
+          rate_diff : item.rateDiff 
         })
       }
       marketDataLogger(
