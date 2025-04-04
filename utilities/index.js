@@ -667,6 +667,7 @@ const MarketTypeCategories = {
   "TOTALEVENTRUN": 36,
   "TOPBOWLER": 37,
   "TOPBATSMAN": 38,
+  "MIDSESSION": 39,
 }
 
 const ModuleTypes = {

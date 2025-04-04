@@ -657,6 +657,7 @@ const getMarketByIdQuery = async (data, request, fastify) => {
             tem."wrLineType" as "lineType", 
             tem."wrPredefinedValue" as "predefinedValue",
             tem."wrIsInningRun" as "isInningRun",
+            tem."wrRateDiff" as "rateDiff", 
            (
                 SELECT json_agg(
                   json_build_object(
