@@ -880,6 +880,13 @@ const resendOTP = async (data, request, fastify) => {
     throw new Error(error.message);
   }
 }
+
+const IntervalType = {
+  DAY:	1,
+  MONTHLY: 2,
+  YEARLY: 3
+}
+
 module.exports = {
   ERROR_CODES,
   error,
@@ -937,4 +944,5 @@ module.exports = {
   verifyOTP,
   forgotPasswordOTP,
   resendOTP,
+  IntervalType,
 };
