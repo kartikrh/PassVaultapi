@@ -281,7 +281,6 @@ const isDefaultFalseQuery = async (id, fastify, request) => {
         throw new Error(err.message);
     }
 };
-
 module.exports = {
     getAllPackagesQuery,
     insertPackagesQuery,
