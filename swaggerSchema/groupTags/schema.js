@@ -8517,6 +8517,84 @@ const Packages = {
     },
   },
 };
+const Whitelabel = {
+  getAll: {
+    schema: {
+      tags: ["Whitelabel"],
+      description: "get all Whitelabel data",
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+
+  save: {
+    schema: {
+      tags: ["Whitelabel"],
+      security: [{ bearerAuth: [] }],
+      description: "save Whitelabel data",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          domain: { type: "string" },
+          isActive: { type: "boolean" },
+        },
+        required: ["id", "domain"],
+      },
+    },
+  },
+
+  delete: {
+    schema: {
+      tags: ["Whitelabel"],
+      description: "delete Whitelabel data",
+      body: {
+        type: "object",
+        properties: {
+          id: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["id"],
+      },
+    },
+  },
+
+  getById: {
+    schema: {
+      tags: ["Whitelabel"],
+      description: "get Whitelabel data by id",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+        },
+        required: ["id"],
+      },
+    },
+  },
+
+  activeInactive: {
+    schema: {
+      tags: ["Whitelabel"],
+      description: "active inactive Whitelabel data",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["id", "isActive"],
+      },
+    },
+  },
+};
 module.exports = {
   Auth,
   Tabs,
@@ -8582,4 +8660,5 @@ module.exports = {
   MatchTypeBowlingPredictor,
   CountryCode,
   Packages,
+  Whitelabel,
 };

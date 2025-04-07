@@ -430,7 +430,7 @@ const createCommentaryService = async (request, fastify) => {
   const validateEventRefId = global.tblCommentaries.find(
     (item) => item.eventRefId === request.body.eventRefId?.trim()
   );
-  if (validateEventRefId) {
+  if (validateEventRefId && validateEventRefId.eventRefId !== null) {
     throw new Error("EventRefId should be unique");
   }
   if (request.body.eventTypeId) {
@@ -503,17 +503,29 @@ const createCommentaryService = async (request, fastify) => {
   }
 
   // check if captain and kipper is in player list
-  let allPlayers = [...request.body.team1Players, ...request.body.team2Players];
-  let captainsAndKippers = [
-    request.body.team1Captain,
-    request.body.team1Kipper,
-    request.body.team2Captain,
-    request.body.team2Kipper,
-  ];
-
-  let check = captainsAndKippers.filter((item) => !allPlayers.includes(item));
-  if (check.length > 0) {
-    throw new Error(`Captain and Kipper must be in the player list.`);
+  if(request.body.team1Players && request.body.team1Players.length > 0 &&
+    request.body.team2Players && request.body.team2Players.length > 0
+  ) {
+    let allPlayers = [...request.body.team1Players, ...request.body.team2Players];
+    let captainsAndKippers = [
+      request.body.team1Captain,
+      request.body.team1Kipper,
+      request.body.team2Captain,
+      request.body.team2Kipper,
+    ];
+  
+    let check = captainsAndKippers.filter((item) => !allPlayers.includes(item));
+    if (check.length > 0) {
+      throw new Error(`Captain and Kipper must be in the player list.`);
+    }
+  }
+  if (!request.body.eventRefId || !request.body.eventId) {
+    request.body.isPredictMarket = false;
+  }
+  if (!request.body.team1Players || request.body.team1Players.length == 0 ||
+    !request.body.team2Players || request.body.team2Players.length == 0
+  ) {
+    request.body.isClientShow = false;
   }
   const addCommentry = await insertCommentaryQuery(request, fastify);
   request.body.commentaryId = addCommentry.commentaryId;
@@ -555,6 +567,9 @@ const createCommentaryService = async (request, fastify) => {
       for (let i = 0; i < TotalInnning; i++) {
         request.body.currentInnings = i + 1;
         await insertCommentaryTeams(request, fastify);
+        if(request.body.team1Players && request.body.team1Players.length > 0 &&
+          request.body.team2Players && request.body.team2Players.length > 0
+        ) {
         const data = [
           ...request.body.team1Players.map((item, i) => {
             return {
@@ -632,11 +647,14 @@ const createCommentaryService = async (request, fastify) => {
           request
         );
       }
+      }
     } else {
       const currentinning = 1;
       request.body.currentInnings = currentinning;
       await insertCommentaryTeams(request, fastify);
-
+      if(request.body.team1Players && request.body.team1Players.length > 0 &&
+        request.body.team2Players && request.body.team2Players.length > 0
+      ) {
       const data = [
         ...request.body.team1Players.map((item, i) => {
           return {
@@ -711,6 +729,7 @@ const createCommentaryService = async (request, fastify) => {
         request
       );
     }
+  }
   }
 
   global.tblCommentaries.push(addCommentry);
@@ -832,7 +851,8 @@ const updateCommentaryService = async (request, fastify) => {
     request.body.isPredictMarket !== undefined &&
     request.body.isPredictMarket == true &&
     global.tblCommentaries[index].isPredictMarket !==
-    request.body.isPredictMarket
+    request.body.isPredictMarket &&
+    (global.tblCommentaries[index].eventRefId != null || global.tblCommentaries[index].eventId != null)
   ) {
     if (
       global.tblCommentaries[index].commentaryStatus !== 1 &&
@@ -850,7 +870,7 @@ const updateCommentaryService = async (request, fastify) => {
       item.eventRefId === request.body.eventRefId?.trim() &&
       item?.commentaryId !== request.body.commentaryId
   );
-  if (validateEventRefId) {
+  if (validateEventRefId && validateEventRefId.eventRefId !== null) {
     throw new Error("EventRefId should be unique");
   }
 
@@ -921,6 +941,15 @@ const updateCommentaryService = async (request, fastify) => {
   if (request.body.matchTypeId !== global.tblCommentaries[index].matchTypeId) {
     request.body.matchTypeId = global.tblCommentaries[index].matchTypeId;
   }
+
+  if (!request.body.eventRefId || !request.body.eventId) {
+    request.body.isPredictMarket = false;
+  }
+  if (!request.body.team1Players || request.body.team1Players.length == 0 ||
+    !request.body.team2Players || request.body.team2Players.length == 0
+  ) {
+    request.body.isClientShow = false;
+  }
   await updateCommentaryQuery(request, fastify);
   const validateMatchTypeId = global.tblMatchTypes.find(
     (item) => item.matchTypeId === request.body.matchTypeId
@@ -934,22 +963,24 @@ const updateCommentaryService = async (request, fastify) => {
       for (let i = 0; i < TotalInnning; i++) {
         request.body.currentInnings = i + 1;
         await updateCommentaryTeams(request, fastify, {
-          teamCaptain: request.body.team1Captain,
-          teamKipper: request.body.team1Kipper,
+          teamCaptain: request.body.team1Captain ? request.body.team1Captain : null,
+          teamKipper: request.body.team1Kipper ? request.body.team1Kipper : null,
           teamId: request.body.team1Id,
           commentaryId: request.body.commentaryId,
           currentInnings: request.body.currentInnings,
         });
         await updateCommentaryTeams(request, fastify, {
-          teamCaptain: request.body.team2Captain,
-          teamKipper: request.body.team2Kipper,
+          teamCaptain: request.body.team2Captain ? request.body.team2Captain : null,
+          teamKipper: request.body.team2Kipper ? request.body.team2Kipper : null,
           teamId: request.body.team2Id,
           commentaryId: request.body.commentaryId,
           currentInnings: request.body.currentInnings,
         });
 
         // await deleteCommentaryPlayers(request, fastify);
-
+        if(request.body.team1Players && request.body.team1Players.length > 0 &&
+          request.body.team2Players && request.body.team2Players.length > 0
+        ) {
         const data = [
           ...request.body.team1Players.map((item, i) => {
             return {
@@ -1014,26 +1045,29 @@ const updateCommentaryService = async (request, fastify) => {
           }
         }
       }
+      }
     } else {
       const currentinning = 1;
       request.body.currentInnings = currentinning;
       await updateCommentaryTeams(request, fastify, {
-        teamCaptain: request.body.team1Captain,
-        teamKipper: request.body.team1Kipper,
+        teamCaptain: request.body.team1Captain ? request.body.team1Captain : null,
+        teamKipper: request.body.team1Kipper ? request.body.team1Kipper : null,
         teamId: request.body.team1Id,
         commentaryId: request.body.commentaryId,
         currentInnings: request.body.currentInnings,
       });
       await updateCommentaryTeams(request, fastify, {
-        teamCaptain: request.body.team2Captain,
-        teamKipper: request.body.team2Kipper,
+        teamCaptain: request.body.team2Captain ? request.body.team2Captain : null,
+        teamKipper: request.body.team2Kipper ? request.body.team2Kipper : null,
         teamId: request.body.team2Id,
         commentaryId: request.body.commentaryId,
         currentInnings: request.body.currentInnings,
       });
 
       // await deleteCommentaryPlayers(request, fastify);
-
+      if(request.body.team1Players && request.body.team1Players.length > 0 &&
+        request.body.team2Players && request.body.team2Players.length > 0
+      ) {
       const data = [
         ...request.body.team1Players.map((item, i) => {
           return {
@@ -1093,6 +1127,7 @@ const updateCommentaryService = async (request, fastify) => {
         }
       }
     }
+    }
   }
 
   const updatedData = await getCommentaryByIdQuery(request, fastify);
@@ -1151,7 +1186,7 @@ const cloneCommentaryService = async (request, fastify) => {
   const validateEventRefId = global.tblCommentaries.find(
     (item) => item.eventRefId === request.body.eventRefId?.trim()
   );
-  if (validateEventRefId) {
+  if (validateEventRefId && validateEventRefId.eventRefId !== null) {
     throw new Error("EventRefId should be unique");
   }
 
@@ -1226,6 +1261,9 @@ const cloneCommentaryService = async (request, fastify) => {
         const currentInning = i + 1;
         request.body.currentInnings = currentInning;
         await insertCommentaryTeams(request, fastify);
+        if(request.body.team1Players && request.body.team1Players.length > 0 &&
+          request.body.team2Players && request.body.team2Players.length > 0
+        ) {
         const data = [
           ...request.body.team1Players.map((item, i) => {
             return {
@@ -1300,11 +1338,14 @@ const cloneCommentaryService = async (request, fastify) => {
           request
         );
       }
+      }
     } else {
       const currentInning = 1;
       request.body.currentInnings = currentInning;
       await insertCommentaryTeams(request, fastify);
-
+      if(request.body.team1Players && request.body.team1Players.length > 0 &&
+        request.body.team2Players && request.body.team2Players.length > 0
+      ) {
       const data = [
         ...request.body.team1Players.map((item, i) => {
           return {
@@ -1379,6 +1420,7 @@ const cloneCommentaryService = async (request, fastify) => {
         fastify,
         request
       );
+    }
     }
   }
   global.tblCommentaries.push(newCommentary);
@@ -8109,11 +8151,21 @@ const changeShowClientService = async (request, fastify) => {
   if (commentary == -1) {
     throw new Error("Commentary with this id not Found");
   }
-
+  const commentaryPlayers = global.tblCommentaryPlayers.filter(
+    item => item.commentaryId == request.body.commentaryId
+  )
   // update showClient
-  await updateShowClientQuery(request.body, request, fastify);
+  if (commentaryPlayers.length == 0) {
+    await updateShowClientQuery({
+      isClientShow: false, commentaryId: request.body.commentaryId
+    }, request, fastify);
+    global.tblCommentaries[commentary].isClientShow = false;
+  } else {
+    await updateShowClientQuery(request.body, request, fastify);
+    global.tblCommentaries[commentary].isClientShow = request.body.isClientShow;
+  }
 
-  global.tblCommentaries[commentary].isClientShow = request.body.isClientShow;
+ 
   if (global.tblCommentaries[commentary].isActive) {
     const cData = await getMatchDataByCId({
       commentaryId: request.body.commentaryId,
@@ -8436,7 +8488,8 @@ const updateisPredictMarketInCommentaryService = async (request, fastify) => {
 
   if (
     isPredictMarket == true &&
-    isPredictMarket !== global.tblCommentaries[index].isPredictMarket
+    isPredictMarket !== global.tblCommentaries[index].isPredictMarket &&
+    (global.tblCommentaries[index].eventRefId != null || global.tblCommentaries[index].eventId != null)
   ) {
     if (
       global.tblCommentaries[index].commentaryStatus != 1 &&
@@ -8448,7 +8501,15 @@ const updateisPredictMarketInCommentaryService = async (request, fastify) => {
     }
   }
 
-  await updateisPredictMarketInCommentaryQuery(request.body, fastify, request);
+  if (global.tblCommentaries[index].eventRefId == null || global.tblCommentaries[index].eventId == null) {
+    await updateisPredictMarketInCommentaryQuery({
+      isPredictMarket: false, commentaryId: request.body.commentaryId
+      },
+      fastify, request
+    );
+  } else {
+    await updateisPredictMarketInCommentaryQuery(request.body, fastify, request);
+  }
 
   const updatedData = await getCommentaryByIdQuery(request, fastify);
 
