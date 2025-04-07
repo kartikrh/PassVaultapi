@@ -10871,6 +10871,7 @@ const changeisEventStartService = async (request, fastify) => {
 
   return "IsEventStart Updated successfully";
 };
+
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
