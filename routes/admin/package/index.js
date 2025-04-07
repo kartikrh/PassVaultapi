@@ -47,7 +47,7 @@ module.exports = async (fastify, opts) => {
           ],
         handler: (request, reply) => isDefaultChange(request, reply, fastify),
     });
-    fastify.post("/displayOrder", {
+    fastify.post("/changeDisplayOrder", {
         schema: Packages.DisplayUpdate.schema,
         preHandler: [
             (request, reply) => authorize(request, reply, fastify),
