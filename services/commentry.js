@@ -80,6 +80,7 @@ const {
   updateCommentaryPlayerJerseyImageQuery,
   getAllCommentaryPlayerDataQuery,
   changeIsTestComQuery,
+  changeIsEventStartQuery,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -10849,6 +10850,27 @@ const changeIsTestComService = async (request, fastify) => {
   });
   return "Commentary Updated successfully";
 };
+const changeisEventStartService = async (request, fastify) => {
+  const { commentaryId, isEventStart } = request.body
+  // validate commentary id
+  const commentary = global.tblCommentaries.find(
+    (item) => item?.commentaryId === commentaryId
+  );
+  if (!commentary) {
+    throw new Error("Commentary with this id not Found");
+  }
+  if(commentary.isEventStart == false) {
+    await changeIsEventStartQuery({ isEventStart: isEventStart, commentaryId:commentaryId }, fastify, request);
+    const index = global.tblCommentaries.findIndex(
+      (item) => item?.commentaryId === commentaryId
+    );
+    if(index !== -1){
+      global.tblCommentaries[index].isEventStart = isEventStart;
+    }
+  }
+
+  return "IsEventStart Updated successfully";
+};
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -10930,5 +10952,6 @@ module.exports = {
   getAllCompletedCommentaryService,
   upDLSDetailsService,
   updateMergeImageOnCommentaryPlayersService,
-  changeIsTestComService
+  changeIsTestComService,
+  changeisEventStartService,
 };

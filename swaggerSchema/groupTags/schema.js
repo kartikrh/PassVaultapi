@@ -3359,6 +3359,21 @@ const Commentary = {
       },
     },
   },
+  changeIsEventStart: {
+    schema: {
+      tags: ["Commentary"],
+      description: "change isEventStart Commentary",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+          isEventStart: { type: "boolean" },
+        },
+        required: ["commentaryId", "isEventStart"],
+      },
+    },
+  },
 };
 
 const Compitition = {

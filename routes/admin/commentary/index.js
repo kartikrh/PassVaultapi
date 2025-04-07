@@ -74,6 +74,7 @@ const {
   updateMergeImageOnCommentaryPlayers,
   saveCommDrsLog,
   changeIsTestCom,
+  changeIsEventStart,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -1006,5 +1007,17 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request, reply) => changeIsTestCom(request, reply, fastify),
+  })
+  fastify.post("/isEventStart", {
+    schema : Commentary.changeIsEventStart.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "edit"
+        }),
+    ],
+    handler: (request, reply) => changeIsEventStart(request, reply, fastify),
   })
 };

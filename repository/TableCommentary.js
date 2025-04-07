@@ -55,7 +55,9 @@ const getAllCommentaryQuery = async (fastify) => {
     "wrShotType" as "shotType",
     "wrIsWheelShow" as "isWheelShow",
     "wrSortUpdate" as "sortUpdate",
-    tc."wrIsTest" as "isTest"
+    tc."wrIsTest" as "isTest",
+    tc."wrEventNo" as "eventNo",
+    tc."wrIsEventStart" as "isEventStart"
     from "tblCommentaries" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -127,7 +129,9 @@ const getCommentariesDataQuery = async (fastify) => {
     tc."wrIsCountInPoint" as "isCountInPoint",
     "wrShotType" as "shotType",
     "wrIsWheelShow" as "isWheelShow",
-    "wrSortUpdate" as "sortUpdate"
+    "wrSortUpdate" as "sortUpdate",
+    tc."wrEventNo" as "eventNo",
+    tc."wrIsEventStart" as "isEventStart"
     from "tblCommentaries" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -152,7 +156,7 @@ const insertCommentaryQuery = async (request, fastify) => {
       with insert_data as(
         insert into "tblCommentaries" ("wrEventTypeId","wrMatchTypeId","wrCompetitionId","wrEventId",
         "wrEventDate","wrEventName","wrEventRefId","wrTeam1Id","wrTeam2Id","wrLocation","wrWeather","wrPitch","wrDisplayStatus","wrTarget","wrMarketID","wrTpId","isSignalROn","isMatchTypeUpdated" , "wrCreatedBy" , "wrCreatedDate","wrCommentaryStatus","wrCurrentInnings", "wrSystemPlayerCount","wrIsPredictMarket",
-        "wrDelay", "wrIsActive", "wrIsClientShow","wrIsTeamPredictionOn", "wrHistoryMatchTypeId", "wrIsCountInPoint","wrIsTest") values (
+        "wrDelay", "wrIsActive", "wrIsClientShow","wrIsTeamPredictionOn", "wrHistoryMatchTypeId", "wrIsCountInPoint","wrIsTest", "wrEventNo") values (
           $1,
           $2,
           $3,
@@ -170,7 +174,8 @@ const insertCommentaryQuery = async (request, fastify) => {
           $25,
           $26,
           $27,
-          $28
+          $28,
+          $29
         ) returning *         
       )
 
@@ -222,7 +227,9 @@ const insertCommentaryQuery = async (request, fastify) => {
     tc."wrIsCountInPoint" as "isCountInPoint",
     "wrShotType" as "shotType",
     "wrIsWheelShow" as "isWheelShow",
-    "wrIsTest" as "isTest"
+    "wrIsTest" as "isTest",
+    tc."wrEventNo" as "eventNo",
+    tc."wrIsEventStart" as "isEventStart"
     from "insert_data" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"  
@@ -260,7 +267,8 @@ const insertCommentaryQuery = async (request, fastify) => {
           true,
           data.matchTypeId || null,
           data.isCountInPoint,
-          data.hasOwnProperty("isTest") ? data.isTest : false
+          data.hasOwnProperty("isTest") ? data.isTest : false,
+          data.eventNo || null,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -550,7 +558,8 @@ const updateCommentaryQuery = async (request, fastify) => {
       "wrDelay"=$18,
       "wrIsActive" = $19,
       "wrIsClientShow" = $20,
-      "wrIsCountInPoint" = $21
+      "wrIsCountInPoint" = $21,
+      "wrEventNo" = $22
       where "wrCommentaryId" = $16 
       `,
       {
@@ -576,6 +585,7 @@ const updateCommentaryQuery = async (request, fastify) => {
           data.isActive,
           data.isClientShow,
           data.isCountInPoint,
+          data.eventNo,
         ],
 
         type: fastify.db.QueryTypes.UPDATE,
@@ -774,7 +784,9 @@ const getCommentaryByIdQuery = async (request, fastify) => {
       tc."wrLineRatio" as "lineRatio",
       tc."wrShotType" as "shotType",
       tc."wrIsWheelShow" as "isWheelShow",
-      tc."wrIsCountInPoint" as "isCountInPoint"
+      tc."wrIsCountInPoint" as "isCountInPoint",
+      tc."wrEventNo" as "eventNo",
+      tc."wrIsEventStart" as "isEventStart"
       from "tblCommentaries" tc
       left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
       left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -4326,7 +4338,9 @@ const getCommentariesResultQuery = async (request, fastify) => {
       tct2."wrTeamScore" as "team2Score",
       tct2."wrTeamOver" as "team2Over",
       tct2."wrTeamWicket" as "team2Wicket",
-      tc."wrIsCountInPoint" as "isCountInPoint"
+      tc."wrIsCountInPoint" as "isCountInPoint",
+      tc."wrEventNo" as "eventNo",
+      tc."wrIsEventStart" as "isEventStart"
       FROM "tblCommentaries" tc
       LEFT JOIN "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
       LEFT JOIN "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -4438,7 +4452,9 @@ const getAllCommentaryHistoryQuery = async (whereCondition, fastify, request) =>
             tc."wrIsCountInPoint" as "isCountInPoint",
             tc."wrShotType" as "shotType",
             tc."wrIsWheelShow" as "isWheelShow",
-            tc."wrIsTest" as "isTest"
+            tc."wrIsTest" as "isTest",
+            tc."wrEventNo" as "eventNo",
+            tc."wrIsEventStart" as "isEventStart"
       FROM "tblCommentaries" tc
       LEFT JOIN "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
       LEFT JOIN "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -4702,7 +4718,9 @@ const getCommentariesDataByDifferentIdsQuery = async (whereCondition, request, f
           mt2."wrMatchType" AS "historyMatchType",
           tc."wrIsCountInPoint" as "isCountInPoint",
           tc."wrShotType" as "shotType",
-          tc."wrIsWheelShow" as "isWheelShow"
+          tc."wrIsWheelShow" as "isWheelShow",
+          tc."wrEventNo" as "eventNo",
+          tc."wrIsEventStart" as "isEventStart"
       FROM "tblCommentaries" tc
       LEFT JOIN "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
       LEFT JOIN "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -5218,6 +5236,28 @@ const changeIsTestComQuery = async (data, fastify, request) => {
     throw new Error(err.message);
   }
 };
+const changeIsEventStartQuery = async (data, fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `UPDATE "tblCommentaries" SET
+        "wrIsEventStart" = $1
+      WHERE "wrCommentaryId" = $2 and "wrIsDelete" = false
+      `,
+      {
+        bind: [data.isEventStart, data.commentaryId],
+      }
+    );
+    return result;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/changeIsEventStartQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -5322,5 +5362,6 @@ module.exports = {
   updateCommentaryTeamDrsAttemptsAndFailQuery,
   updateCommentaryTeamDrsAttemptsQuery,
   getCommentaryTeamsDRSQuery,
-  changeIsTestComQuery
+  changeIsTestComQuery,
+  changeIsEventStartQuery,
 };
