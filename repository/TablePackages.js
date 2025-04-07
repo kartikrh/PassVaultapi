@@ -79,7 +79,8 @@ const insertPackagesQuery = async (data, fastify, request) => {
                     data.currency,
                     data.intervalType,
                     data.intervalCount,
-                    data.razorPayPlanId,
+                    // data.razorPayPlanId,
+                    null,
                     data.isActive,
                     data.isDisplay,
                     data.trailDays,
@@ -111,14 +112,13 @@ const updatePackagesQuery = async (data, fastify, request) => {
                 "wrCurrency" = $4,
                 "wrIntervalType" = $5,
                 "wrIntervalCount" = $6,
-                "wrRazorPayPlanId" = $7,
-                "wrIsActive" = $8,
-                "wrIsDisplay" = $9,
-                "wrTrialDays" = $10,
-                "wrIsDefault" = $11,
-                "wrUpdatedBy" = $12,
+                "wrIsActive" = $7,
+                "wrIsDisplay" = $8,
+                "wrTrialDays" = $9,
+                "wrIsDefault" = $10,
+                "wrUpdatedBy" = $11,
                 "wrUpdatedAt" = now()
-            WHERE "wrId" = $13
+            WHERE "wrId" = $12
             RETURNING 
                 "wrId" as "id",
                 "wrName" as "name",
@@ -146,7 +146,6 @@ const updatePackagesQuery = async (data, fastify, request) => {
                     data.currency,
                     data.intervalType,
                     data.intervalCount,
-                    data.razorPayPlanId,
                     data.isActive,
                     data.isDisplay,
                     data.trailDays,

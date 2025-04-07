@@ -36,7 +36,7 @@ const editPackageService = async (request, fastify) => {
       currency: request.body.currency ?? validateId.currency,
       intervalType: request.body.intervalType ?? validateId.intervalType,
       intervalCount: request.body.intervalCount ?? validateId.intervalCount,
-      razorPayPlanId: request.body.razorPayPlanId ?? validateId.razorPayPlanId,
+      // razorPayPlanId: request.body.razorPayPlanId ?? validateId.razorPayPlanId,
       isActive: Boolean(request.body.isActive) ?? validateId.isActive,
       isDisplay: Boolean(request.body.isDisplay) ?? validateId.isDisplay,
       trailDays: request.body.trailDays ?? validateId.trailDays,
