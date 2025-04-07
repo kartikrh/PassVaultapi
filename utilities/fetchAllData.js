@@ -89,6 +89,7 @@ const configConstants = require("./configConstants");
 const { getAllMatchTypeBowlingPredictor } = require("../repository/TableMatchTypeBowlingPredictor");
 const { getAllCountryCodesQuery } = require("../repository/TableCountryCodes");
 const { getAllPackagesQuery } = require("../repository/TablePackages");
+const { getAllWhitelabelsQuery } = require("../repository/TableWhitelabel");
 
 const fetchAllDataFromDb = async (fastify, reply) => {
   try {
@@ -184,6 +185,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const getAllMatchTypeBowling = await getAllMatchTypeBowlingPredictor(fastify)
     const getAllCountryCodes = await getAllCountryCodesQuery(fastify);
     const getAllPackages = await getAllPackagesQuery(fastify);
+    const getAllWhitelabels = await getAllWhitelabelsQuery(fastify);
     const allCommentaryIds = getAllCommentary.map((item) => item.commentaryId);
     let getAllEventMarketsV2 = [];
     let getEventMarketRunnerV2 = [];
@@ -280,6 +282,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblMatchTypeBowlingTypePredictor = getAllMatchTypeBowling;
     global.tblCountryCodes = getAllCountryCodes;
     global.tblPackages = getAllPackages;
+    global.tblWhitelabels = getAllWhitelabels;
     // global.responseLogs = responseLogs;
     // global.thirdPartyAPILogs = thirdPartyAPILogs;
     // global.predictorAPILogs = predictorAPILogs;
