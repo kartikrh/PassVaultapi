@@ -5,6 +5,7 @@ const {
     activeInactivePackageQuery,
     isDefaultChangeQuery,
     updateDisplayOrderQuery,
+    isDisplayPackageQuery,
     isDefaultFalseQuery,
 } = require("../repository/TablePackages");
 
@@ -176,6 +177,25 @@ const updateDisplayOrderService = async (request, fastify) => {
     
     return `Display order updated successfully`;
 }
+
+const isDisplayPackageService = async (request, fastify) => {
+  const { id, isDisplay } = request.body;
+  const validateId = global.tblPackages.find(
+    (item) => item.id === id
+  );
+
+  if (!validateId) {
+    throw new Error("Package with this Id not found");
+  }
+  await isDisplayPackageQuery({ id, isDisplay }, request, fastify);
+  const index = global.tblPackages.findIndex((item) => item.id == id);
+  if(index != -1){
+    global.tblPackages[index].isDisplay = isDisplay;
+  }
+
+  return `Package data updated successfully`;
+};
+
 module.exports = {
     createPackageService,
     allPackageService,
@@ -184,5 +204,6 @@ module.exports = {
     activeInactivePackageService,
     isDefaultChangeService,
     updateDisplayOrderService,
+    isDisplayPackageService,
 };
   

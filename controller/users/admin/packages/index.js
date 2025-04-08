@@ -6,6 +6,7 @@ const {
     activeInactivePackageService,
     isDefaultChangeService,
     updateDisplayOrderService,
+    isDisplayPackageService,
 } = require("../../../../services/packages");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -82,6 +83,16 @@ const updateDisplayOrder = async (request, reply, fastify) => {
     }
 };
 
+const isDisplayPackage = async (request, reply, fastify) => {
+    try {
+        const result = await isDisplayPackageService(request, fastify);
+        reply.status(200).send(success(result, 200));
+    } catch (err) {
+        errorLogger(fastify, err.message, commonPath + "/isDisplayPackage", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+    }
+};
+
 module.exports = {
     allPackages,
     packageById,
@@ -90,4 +101,5 @@ module.exports = {
     activeInactivePackage,
     isDefaultChange,
     updateDisplayOrder,
+    isDisplayPackage,
 };

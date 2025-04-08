@@ -215,6 +215,29 @@ const activeInactivePackageQuery = async (data, request, fastify) => {
     }
 };
 
+const isDisplayPackageQuery = async (data, request, fastify) => {
+    try {
+      return await fastify.db.query(
+        `
+                  UPDATE "tblPackages" SET
+                    "wrIsDisplay" = $1
+                  WHERE "wrId" = $2
+              `,
+        {
+          bind: [data.isDisplay, data.id],
+        }
+      );
+    } catch (err) {
+      errorLogger(
+        fastify,
+        err.message,
+        "DB ERROR --> repository/TablePackages.js/isDisplayPackageQuery",
+        request
+      );
+      throw new Error(err.message);
+    }
+};
+
 const isDefaultChangeQuery = async (data, request, fastify) => {
     try {
       return await fastify.db.query(
@@ -286,6 +309,7 @@ module.exports = {
     updatePackagesQuery,
     deletePackageQuery,
     activeInactivePackageQuery,
+    isDisplayPackageQuery,
     isDefaultChangeQuery,
     updateDisplayOrderQuery,
     isDefaultFalseQuery,
