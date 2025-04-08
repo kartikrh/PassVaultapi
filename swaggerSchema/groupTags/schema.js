@@ -1,3 +1,5 @@
+const { isDefaultChange } = require("../../controller/users/admin/packages");
+
 //! for every new route add a schema name you wish to group the api's on swagger
 const Auth = {
   signUp: {
@@ -3354,6 +3356,21 @@ const Commentary = {
           result: { type: "boolean" },
         },
         required: ["id", "commentaryId", "result"],
+      },
+    },
+  },
+  changeIsEventStart: {
+    schema: {
+      tags: ["Commentary"],
+      description: "change isEventStart Commentary",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+          isEventStart: { type: "boolean" },
+        },
+        required: ["commentaryId", "isEventStart"],
       },
     },
   },
@@ -8395,6 +8412,204 @@ const CountryCode = {
     },
   },
 };
+const Packages = {
+  getAll: {
+    schema: {
+      tags: ["Package"],
+      description: "get all Package data",
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+
+  save: {
+    schema: {
+      tags: ["Package"],
+      security: [{ bearerAuth: [] }],
+      description: "save Package data",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          name: { type: "string" },
+          description: { type: "string" },
+          price: { type: "integer" },
+          currency: { type: "string" },
+          intervalType: { type: "integer" },
+          intervalCount: { type: "integer" },
+          razorPayPlanId: { type: "string" },
+          isActive: { type: "boolean" },
+          isDisplay: { type: "boolean" },
+          trailDays: { type: "integer" },
+          isDefault: { type: "boolean" },
+        },
+        required: ["id", "name"],
+      },
+    },
+  },
+
+  delete: {
+    schema: {
+      tags: ["Package"],
+      description: "delete Package data",
+      body: {
+        type: "object",
+        properties: {
+          id: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["id"],
+      },
+    },
+  },
+
+  getById: {
+    schema: {
+      tags: ["Package"],
+      description: "get Package data by id",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+        },
+        required: ["id"],
+      },
+    },
+  },
+
+  activeInactiveApi: {
+    schema: {
+      tags: ["Package"],
+      description: "active inactive Package data",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["id", "isActive"],
+      },
+    },
+  },
+
+  isDefaultChange: {
+    schema: {
+      tags: ["Package"],
+      description: "IsDefault change",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          isDefault: { type: "boolean" },
+        },
+        required: ["id", "isDefault"],
+      },
+    },
+  },
+
+  DisplayUpdate: {
+    schema: {
+      tags: ["Package"],
+      description: "Display update",
+      body: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "integer" },
+            displayOrder: { type: "integer" },
+          },
+        },
+        minItems: 1,
+      },
+    },
+  },
+};
+const Whitelabel = {
+  getAll: {
+    schema: {
+      tags: ["Whitelabel"],
+      description: "get all Whitelabel data",
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+
+  save: {
+    schema: {
+      tags: ["Whitelabel"],
+      security: [{ bearerAuth: [] }],
+      description: "save Whitelabel data",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          domain: { type: "string" },
+          isActive: { type: "boolean" },
+        },
+        required: ["id", "domain"],
+      },
+    },
+  },
+
+  delete: {
+    schema: {
+      tags: ["Whitelabel"],
+      description: "delete Whitelabel data",
+      body: {
+        type: "object",
+        properties: {
+          id: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["id"],
+      },
+    },
+  },
+
+  getById: {
+    schema: {
+      tags: ["Whitelabel"],
+      description: "get Whitelabel data by id",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+        },
+        required: ["id"],
+      },
+    },
+  },
+
+  activeInactive: {
+    schema: {
+      tags: ["Whitelabel"],
+      description: "active inactive Whitelabel data",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["id", "isActive"],
+      },
+    },
+  },
+};
 module.exports = {
   Auth,
   Tabs,
@@ -8459,4 +8674,6 @@ module.exports = {
   Tips,
   MatchTypeBowlingPredictor,
   CountryCode,
+  Packages,
+  Whitelabel,
 };

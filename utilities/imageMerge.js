@@ -145,7 +145,7 @@ const mergeAndSaveImage = async (data, fastify) => {
 
     if(data.commentaryPlayerId){
       await updateCommentaryPlayerJerseyImageQuery(
-        { commentaryPlayerId: data.commentaryPlayerId, jerseyPlayerImage: fullPath, jerseyPlayerImage: imagePath },
+        { commentaryPlayerId: data.commentaryPlayerId, jerseyPlayerImage: fullPath, jerseyPlayerImagePath: imagePath },
         fastify
       );
     }
