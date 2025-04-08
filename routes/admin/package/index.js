@@ -7,6 +7,7 @@ const {
     activeInactivePackage,
     isDefaultChange,
     updateDisplayOrder,
+    isDisplayPackage,
 } = require("../../../controller/users/admin/packages");
 const { Packages } = require("../../../swaggerSchema/groupTags/schema");
 
@@ -53,5 +54,12 @@ module.exports = async (fastify, opts) => {
             (request, reply) => authorize(request, reply, fastify),
           ],
         handler: (request, reply) => updateDisplayOrder(request, reply, fastify),
+    });
+    fastify.post("/isDisplay", {
+        schema: Packages.isDisplay.schema,
+        preHandler: [
+            (request, reply) => authorize(request, reply, fastify),
+          ],
+        handler: (request, reply) => isDisplayPackage(request, reply, fastify),
     });
 };

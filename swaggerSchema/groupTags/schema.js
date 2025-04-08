@@ -8499,6 +8499,21 @@ const Packages = {
     },
   },
 
+  isDisplay: {
+    schema: {
+      tags: ["Package"],
+      description: "isDispaly Package data",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          isDisplay: { type: "boolean" },
+        },
+        required: ["id", "isDisplay"],
+      },
+    },
+  },
+
   isDefaultChange: {
     schema: {
       tags: ["Package"],
@@ -8610,6 +8625,85 @@ const Whitelabel = {
     },
   },
 };
+const NotificationConfig = {
+  getAll: {
+    schema: {
+      tags: ["Notification config"],
+      description: "get all Notification config data",
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+
+  save: {
+    schema: {
+      tags: ["Notification config"],
+      security: [{ bearerAuth: [] }],
+      description: "save Notification config data",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          eventName: { type: "integer" },
+          content: { type: "string" },
+          isActive: { type: "boolean" },
+        },
+        required: ["id", "eventName", "content"],
+      },
+    },
+  },
+
+  delete: {
+    schema: {
+      tags: ["Notification config"],
+      description: "delete Notification config data",
+      body: {
+        type: "object",
+        properties: {
+          id: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["id"],
+      },
+    },
+  },
+
+  getById: {
+    schema: {
+      tags: ["Notification config"],
+      description: "get Notification config data by id",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+        },
+        required: ["id"],
+      },
+    },
+  },
+
+  activeInactive: {
+    schema: {
+      tags: ["Notification config"],
+      description: "active inactive Notification config data",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["id", "isActive"],
+      },
+    },
+  },
+};
 module.exports = {
   Auth,
   Tabs,
@@ -8676,4 +8770,5 @@ module.exports = {
   CountryCode,
   Packages,
   Whitelabel,
+  NotificationConfig,
 };
