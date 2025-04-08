@@ -131,7 +131,7 @@ const activeInactiveWhitelabelService = async (request, fastify) => {
   const validateId = global.tblWhitelabels.find((item) => item.id === id);
 
   if (!validateId) {
-    throw new Error("Package with this Id not found");
+    throw new Error("Whitelabel with this Id not found");
   }
   await activeInactiveWhitelabelQuery(
     {
@@ -146,7 +146,7 @@ const activeInactiveWhitelabelService = async (request, fastify) => {
     global.tblWhitelabels[index].isActive = isActive;
   }
 
-  return `Social media data updated successfully`;
+  return `Whitelabel data updated successfully`;
 };
 
 module.exports = {

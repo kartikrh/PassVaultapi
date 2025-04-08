@@ -102,7 +102,7 @@ const deletePackageService = async (request, fastify) => {
     (item) => !id.includes(item.id)
   );
 
-  return `Social media(s) data deleted successfully`;
+  return `Package(s) data deleted successfully`;
 };
   
 const activeInactivePackageService = async (request, fastify) => {
@@ -127,7 +127,7 @@ const activeInactivePackageService = async (request, fastify) => {
     global.tblPackages[index].isActive = isActive;
   }
 
-  return `Social media data updated successfully`;
+  return `Package data updated successfully`;
 };
   
 const isDefaultChangeService = async (request, fastify) => {
@@ -162,7 +162,7 @@ const isDefaultChangeService = async (request, fastify) => {
     });
   }
 
-  return `Social media data updated successfully`;
+  return `Package data updated successfully`;
 };
 
 const updateDisplayOrderService = async (request, fastify) => {
