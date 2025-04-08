@@ -12,7 +12,8 @@ const getAllWhitelabelsQuery = async (fastify) => {
                 "wrCreatedBy" as "createdBy",
                 "wrUpdatedBy" as "updatedBy",
                 "wrUpdatedAt" as "updatedAt"
-            FROM "tblWhitelabel";`,
+            FROM "tblWhitelabel"
+            WHERE "wrIsDeleted" = FALSE;`,
             { type: fastify.db.QueryTypes.SELECT }
         );
     } catch (err) {
