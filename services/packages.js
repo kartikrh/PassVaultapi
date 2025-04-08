@@ -5,6 +5,7 @@ const {
     activeInactivePackageQuery,
     isDefaultChangeQuery,
     updateDisplayOrderQuery,
+    isDisplayPackageQuery,
     isDefaultFalseQuery,
 } = require("../repository/TablePackages");
 
@@ -102,7 +103,7 @@ const deletePackageService = async (request, fastify) => {
     (item) => !id.includes(item.id)
   );
 
-  return `Social media(s) data deleted successfully`;
+  return `Package(s) data deleted successfully`;
 };
   
 const activeInactivePackageService = async (request, fastify) => {
@@ -127,7 +128,7 @@ const activeInactivePackageService = async (request, fastify) => {
     global.tblPackages[index].isActive = isActive;
   }
 
-  return `Social media data updated successfully`;
+  return `Package data updated successfully`;
 };
   
 const isDefaultChangeService = async (request, fastify) => {
@@ -162,7 +163,7 @@ const isDefaultChangeService = async (request, fastify) => {
     });
   }
 
-  return `Social media data updated successfully`;
+  return `Package data updated successfully`;
 };
 
 const updateDisplayOrderService = async (request, fastify) => {
@@ -176,6 +177,25 @@ const updateDisplayOrderService = async (request, fastify) => {
     
     return `Display order updated successfully`;
 }
+
+const isDisplayPackageService = async (request, fastify) => {
+  const { id, isDisplay } = request.body;
+  const validateId = global.tblPackages.find(
+    (item) => item.id === id
+  );
+
+  if (!validateId) {
+    throw new Error("Package with this Id not found");
+  }
+  await isDisplayPackageQuery({ id, isDisplay }, request, fastify);
+  const index = global.tblPackages.findIndex((item) => item.id == id);
+  if(index != -1){
+    global.tblPackages[index].isDisplay = isDisplay;
+  }
+
+  return `Package data updated successfully`;
+};
+
 module.exports = {
     createPackageService,
     allPackageService,
@@ -184,5 +204,6 @@ module.exports = {
     activeInactivePackageService,
     isDefaultChangeService,
     updateDisplayOrderService,
+    isDisplayPackageService,
 };
   
