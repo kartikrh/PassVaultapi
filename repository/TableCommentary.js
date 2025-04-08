@@ -559,7 +559,8 @@ const updateCommentaryQuery = async (request, fastify) => {
       "wrIsActive" = $19,
       "wrIsClientShow" = $20,
       "wrIsCountInPoint" = $21,
-      "wrEventNo" = $22
+      "wrEventNo" = $22,
+      "wrIsTest" = $23
       where "wrCommentaryId" = $16 
       `,
       {
@@ -586,6 +587,7 @@ const updateCommentaryQuery = async (request, fastify) => {
           data.isClientShow,
           data.isCountInPoint,
           data.eventNo,
+          data.isTest,
         ],
 
         type: fastify.db.QueryTypes.UPDATE,
@@ -786,6 +788,7 @@ const getCommentaryByIdQuery = async (request, fastify) => {
       tc."wrIsWheelShow" as "isWheelShow",
       tc."wrIsCountInPoint" as "isCountInPoint",
       tc."wrEventNo" as "eventNo",
+      tc."wrIsTest" as "isTest",
       tc."wrIsEventStart" as "isEventStart"
       from "tblCommentaries" tc
       left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
