@@ -21,7 +21,8 @@ const getAllPackagesQuery = async (fastify) => {
                 "wrCreatedBy" as "createdBy",
                 "wrUpdatedBy" as "updatedBy",
                 "wrUpdatedAt" as "updatedAt"
-            FROM "tblPackages";`,
+            FROM "tblPackages"
+            WHERE "wrIsDeleted" = FALSE;`,
             { type: fastify.db.QueryTypes.SELECT }
         );
     } catch (err) {
