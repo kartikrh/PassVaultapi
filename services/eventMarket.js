@@ -797,10 +797,21 @@ const marketListByCIdServiceV1 = async (request, fastify) => {
       return {
         teamId: item.teamId,
         teamName: item.teamName,
-        teamStatus : item.teamStatus
+        teamStatus : item.teamStatus,
+        shortName : item.shortName
       };
     });
   // 
+  const comPlayer = global.tblCommentaryPlayers.filter(
+    (item) => item.commentaryId === commentaryId
+  ).map((item) => {
+    return {
+      playerId: item.playerId,
+      comPlayerId: item.commentaryPlayerId,
+      playerName: item.playerName,
+    }
+  });
+
   let configData = global.tblConfigs.find((item) => item.key.toLowerCase() == configConstants.IGNOREMARKETS.toLowerCase()).value || ""
   let ignoreMarkets = configData ? configData.split(",").map(Number) : [];
   let categories = global.tblMarketTypeCategories.filter(
@@ -827,7 +838,8 @@ const marketListByCIdServiceV1 = async (request, fastify) => {
     marketList : marketList.flat(),
     teams,
     categories,
-    target : target
+    target : target,
+    comPlayer,
     //players,
   };
 };

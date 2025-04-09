@@ -1857,7 +1857,9 @@ const getAllCommentaryPartnershipQuery = async (fastify) => {
           tcps."wrP1Ball" as "p1Ball",
           tcps."wrP2Ball" as "p2Ball",
           tcps."wrP1Run" as "p1Run",
-          tcps."wrP2Run" as "p2Run"
+          tcps."wrP2Run" as "p2Run",
+          tcps."wrTeamScore" as "teamScore",
+          tcps."wrTeamWicket" as "teamWicket"
       from "tblCommentaryPartnerships" tcps
       WHERE tcps."wrCommentaryId" IN (
         SELECT "wrCommentaryId"
