@@ -199,6 +199,11 @@ module.exports = (sequelize) => {
         type : DataTypes.BOOLEAN,
         allowNull : false,
         defaultValue : false
+      },
+      wrDifficulty : {
+        type : DataTypes.INTEGER,
+        allowNull : true,
+        defaultValue : null
       }
     },
     {

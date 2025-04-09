@@ -572,6 +572,7 @@ const getMarketListByCIdQuery = async (data, request, fastify) => {
             tem."wrLineType" as "lineType", 
             tem."wrIsInningRun" as "isInningRun",
             tem."wrPredefinedValue" as "predefinedValue",
+            tem."wrPlayerID" as "playerId",
            (
                 SELECT json_agg(
                   json_build_object(
@@ -658,6 +659,7 @@ const getMarketByIdQuery = async (data, request, fastify) => {
             tem."wrPredefinedValue" as "predefinedValue",
             tem."wrIsInningRun" as "isInningRun",
             tem."wrRateDiff" as "rateDiff", 
+            tem."wrPlayerID" as "playerId",
            (
                 SELECT json_agg(
                   json_build_object(
@@ -3179,6 +3181,7 @@ const getMarketListByCIdQueryV1 = async (data, request, fastify) => {
             tem."wrRateDiff" as "rateDiff",
             tem."wrIsInningRun" as "isInningRun",
             tem."wrPredefinedValue" as "predefinedValue",
+            tem."wrPlayerID" as "playerId",
             null as "playerScore",
             (
                 SELECT json_agg(
@@ -4145,6 +4148,7 @@ const playerMarketQuery = async (data, request, fastify) => {
             tem."wrIsInningRun" as "isInningRun",
             tem."wrPredefinedValue" as "predefinedValue",
             tcp."wrBat_Run" as "playerScore",
+            tem."wrPlayerID" as "playerId",
             (
                 SELECT json_agg(
                   json_build_object(
@@ -4234,6 +4238,7 @@ const boundaryMarketQuery = async (data, request, fastify) => {
             tem."wrIsInningRun" as "isInningRun",
             tem."wrPredefinedValue" as "predefinedValue",
             tcp."wrBat_FOUR" + tcp."wrBat_SIX" as "playerScore",
+            tem."wrPlayerID" as "playerId",
             (
                 SELECT json_agg(
                   json_build_object(
@@ -4323,6 +4328,7 @@ const pbfMarketQuery = async (data, request, fastify) => {
             tem."wrIsInningRun" as "isInningRun",
             tem."wrPredefinedValue" as "predefinedValue",
             tcp."wrBat_Ball" as "playerScore",
+            tem."wrPlayerID" as "playerId",
             (
                 SELECT json_agg(
                   json_build_object(
