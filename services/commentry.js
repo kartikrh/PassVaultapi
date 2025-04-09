@@ -5625,8 +5625,8 @@ const commentaryDetailsByEventIdService = async (
       tossteam = commentaryTeamsOne[0].shortName;
       tossType =
         result.choseTo === 1
-          ? " won the toss and opt to bat"
-          : " won the toss and opt to bowl";
+          ? " opt to bat"
+          : " opt to bowl";
       if (commentaryTeamsOne[0].teamStatus == 1) {
         resultArr.batid = commentaryTeamsOne[0].teamId;
         resultArr.ballid = commentaryTeamsTwo[0].teamId;
@@ -5635,8 +5635,8 @@ const commentaryDetailsByEventIdService = async (
       tossteam = commentaryTeamsTwo[0].shortName;
       tossType =
         result.choseTo === 1
-          ? " won the toss and opt to bat"
-          : " won the toss and opt to bowl";
+          ? " opt to bat"
+          : " opt to bowl";
       if (commentaryTeamsTwo[0].teamStatus == 1) {
         resultArr.batid = commentaryTeamsTwo[0].teamId;
         resultArr.ballid = commentaryTeamsOne[0].teamId;
@@ -5690,14 +5690,14 @@ const commentaryDetailsByEventIdService = async (
       tossteam = commentaryTeamsOne[0].shortName;
       tossType =
         result.choseTo === 1
-          ? " won the toss and opt to bat"
-          : " won the toss and opt to bowl";
+          ? " opt to bat"
+          : " opt to bowl";
     } else {
       tossteam = commentaryTeamsTwo[0].shortName;
       tossType =
         result.choseTo === 1
-          ? " won the toss and opt to bat"
-          : " won the toss and opt to bowl";
+          ? " opt to bat"
+          : " opt to bowl";
     }
     toss = tossteam + tossType;
     //get Current Batting Team and
@@ -6245,14 +6245,14 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
       tossteam = commentaryTeamsOne[0].shortName;
       tossType =
         result.choseTo === 1
-          ? " won the toss and opt to bat"
-          : " won the toss and opt to bowl";
+          ? " opt to bat"
+          : " opt to bowl";
     } else {
       tossteam = commentaryTeamsTwo[0].shortName;
       tossType =
         result.choseTo === 1
-          ? " won the toss and opt to bat"
-          : " won the toss and opt to bowl";
+          ? " opt to bat"
+          : " opt to bowl";
     }
 
     toss = tossteam + tossType;
@@ -6301,14 +6301,14 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
       tossteam = commentaryTeamsOne[0].shortName;
       tossType =
         result.choseTo === 1
-          ? " won the toss and opt to bat"
-          : " won the toss and opt to bowl";
+          ? " opt to bat"
+          : " opt to bowl";
     } else {
       tossteam = commentaryTeamsTwo[0].shortName;
       tossType =
         result.choseTo === 1
-          ? " won the toss and opt to bat"
-          : " won the toss and opt to bowl";
+          ? " opt to bat"
+          : " opt to bowl";
     }
     toss = tossteam + tossType;
     //get Current Batting Team and
