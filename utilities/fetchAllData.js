@@ -1,4 +1,4 @@
-const { ModuleTypes } = require("../utilities/index");
+const { ModuleTypes, EventName } = require("../utilities/index");
 const { getAllActiveInactiveTabsQuery } = require("../repository/TableTabs");
 const { getAllBlocksQuery } = require("../repository/TableBlock");
 const { getAllMenuTypesQuery } = require("../repository/TableMenuTypes");
@@ -59,7 +59,7 @@ const { getAllActivityLogQuery } = require("../repository/TableActivityLog");
 const { getAllAPI } = require("../repository/TableAPI");
 const { getAllAPIEndPoint } = require("../repository/TableAPIEndPoint");
 const { getAllTeamCompetitionQuery } = require("../repository/TableTeamCompetition");
-const { getAllNotificationQuery } = require("../repository/TableNotification");
+const { getAllNotificationQuery, insertNotificationViaNotiConfigQuery } = require("../repository/TableNotification");
 const { getAllTemplateQuery } = require("../repository/TableTemplate");
 const { getAllOtpQuery } = require("../repository/TableOtp");
 const { getAllClientQuery } = require("../repository/TableClient");
@@ -90,6 +90,7 @@ const { getAllMatchTypeBowlingPredictor } = require("../repository/TableMatchTyp
 const { getAllCountryCodesQuery } = require("../repository/TableCountryCodes");
 const { getAllPackagesQuery } = require("../repository/TablePackages");
 const { getAllWhitelabelsQuery } = require("../repository/TableWhitelabel");
+const { getAllNotificationConfigsQuery, getNotificationConfigsByEventNameQuery } = require("../repository/TableNotificationConfig");
 
 const fetchAllDataFromDb = async (fastify, reply) => {
   try {
@@ -186,6 +187,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const getAllCountryCodes = await getAllCountryCodesQuery(fastify);
     const getAllPackages = await getAllPackagesQuery(fastify);
     const getAllWhitelabels = await getAllWhitelabelsQuery(fastify);
+    const getAllNotificationConfigs = await getAllNotificationConfigsQuery(fastify);
     const allCommentaryIds = getAllCommentary.map((item) => item.commentaryId);
     let getAllEventMarketsV2 = [];
     let getEventMarketRunnerV2 = [];
@@ -283,6 +285,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblCountryCodes = getAllCountryCodes;
     global.tblPackages = getAllPackages;
     global.tblWhitelabels = getAllWhitelabels;
+    global.tblNotificationConfig = getAllNotificationConfigs;
     // global.responseLogs = responseLogs;
     // global.thirdPartyAPILogs = thirdPartyAPILogs;
     // global.predictorAPILogs = predictorAPILogs;
@@ -334,6 +337,52 @@ const FetchingCommentariesDataFromCron = async (fastify) => {
     console.log("error in FetchingCommentariesDataFromCron", error.message,error);
   }
 }
+
+// global.processedUpcomingCommentaries = global.processedUpcomingCommentaries || new Set();
+
+// const upcomingCommentaries = async (fastify) => {
+//   try {
+//     const now = new Date();
+
+//     let allEvents = await getAllCommentaryQuery(fastify);
+
+//     const upcomingEvents = allEvents.filter((item) => {
+//       if (item.commentaryStatus !== 1) return false;
+
+//       const eventDate = new Date(item.eventDate);
+//       if (eventDate <= now) return false;
+
+//       const oneHourBeforeEvent = new Date(eventDate.getTime() - 60 * 60 * 1000);
+//       const diffInMinutes = Math.abs((now - oneHourBeforeEvent) / (1000 * 60));
+
+//       return diffInMinutes < 1 && !global.processedUpcomingCommentaries.has(item.commentaryId);
+//     });
+
+//     for (let item of upcomingEvents) {
+//       const data = await getNotificationConfigsByEventNameQuery(EventName.COMMINGSOON, fastify);
+//       if (!data) continue;
+
+//       data?.content = data?.content.replace("{}", item.eventNo);
+
+//       if (Array.isArray(global.clientSocketIo) && global.clientSocketIo.length > 0) {
+//         global.clientSocketIo.forEach((socket) => {
+//           socket.client.emit("notificationSend", data);
+//         });
+
+//         const notificationData = {
+//           title: item.eventNo ?? item.eventName,
+//           description: data.content,
+//           commentaryId: item.commentaryId,
+//         };
+
+//         await insertNotificationViaNotiConfigQuery(notificationData, null, fastify);
+//         global.processedUpcomingCommentaries.add(item.commentaryId);
+//       }
+//     }
+//   } catch (error) {
+//     console.error("Error in upcomingCommentaries:", error.message, error);
+//   }
+// };
 
 const panelLoadDataByEnum = async (request, fastify, reply) => {
   try {

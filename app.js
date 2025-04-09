@@ -135,6 +135,13 @@ module.exports = async function (fastify, opts) {
         console.error("Error during scheduled task:", error);
       }
     });
+    // cron.schedule('* * * * *', async () => {
+    //   try {
+    //     await upcomingCommentaries(fastify);
+    //   } catch (error) {
+    //     console.error("Error during scheduled task:", error);
+    //   }
+    // });
 
     // .after(async () => {
     //   require("./sequelize/tables/userModel")(fastify.db);
