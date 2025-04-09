@@ -8411,6 +8411,20 @@ const CountryCode = {
       },
     },
   },
+  activeInactiveApi: {
+    schema: {
+      tags: ["CountryCode"],
+      description: "active inactive CountryCode data",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["id", "isActive"],
+      },
+    },
+  },
 };
 const Packages = {
   getAll: {
