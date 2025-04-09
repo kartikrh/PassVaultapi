@@ -1160,6 +1160,31 @@ const updateCommentaryService = async (request, fastify) => {
     });
   }
 
+    let cData = await getMatchDataByCId({
+      commentaryId: updatedData.commentaryId,
+    }, request, fastify);
+
+    callClientAPI(
+      {
+        serviceType: ServiceType.clientAPI,
+        moduleType: APIEndpointModuleType.commentaryUpdate,
+        data: {
+          ...cData,
+          type: "update"
+        },
+      },
+      request,
+      fastify
+    ).catch((err) => {
+      console.log("call client api console", err);
+      errorLogger(
+        fastify,
+        err.message,
+        "ERROR --> services/commentary.js/updateCommentaryService",
+        request
+      );
+    });
+
   return updatedData;
 };
 
@@ -6756,7 +6781,8 @@ const getMatchListByStatus = async (body, request, fastify) => {
       isPr: item.isPredictMarket,
       ics: item.isClientShow,
       srtup: item?.sortUpdate ?? "",
-      isTest: item?.isTest
+      isTest: item?.isTest,
+      isActive: item?.isActive,
       // mr: mr
       // bowT : item.bowlingTeam || null,
     };
@@ -6968,7 +6994,9 @@ const getMatchDataByCId = async (data, request, fastify) => {
     t2co: t2co || "",
     compId : competition?.competitionId || 0,
     isPr: com.isPredictMarket,
-    ics: com.isClientShow
+    ics: com.isClientShow,
+    isTest: com.isTest,
+    isActive: com.isActive,
   };
   return comDetails;
 }
