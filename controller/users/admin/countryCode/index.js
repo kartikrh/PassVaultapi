@@ -3,6 +3,7 @@ const {
   countryCodeByIdService,
   createCountryCodeService,
   deleteCountryCodeService,
+  activeInactiveCountryCodeService,
 } = require("../../../../services/countryCode");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -48,10 +49,20 @@ const deleteCountryCodes = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const activeInactiveCountryCodes = async (request, reply, fastify) => {
+  try {
+    const result = await activeInactiveCountryCodeService(fastify, request);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/activeInactiveCountryCodes", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 
 module.exports = {
     getAllCountryCode,
     countryCodeById,
     saveCountryCode,
     deleteCountryCodes,
+    activeInactiveCountryCodes,
 };

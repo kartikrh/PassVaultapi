@@ -7,6 +7,7 @@ const {
   countryCodeById,
   saveCountryCode,
   deleteCountryCodes,
+  activeInactiveCountryCodes,
 } = require("../../../controller/users/admin/countryCode");
 const { CountryCode } = require("../../../swaggerSchema/groupTags/schema");
 
@@ -40,5 +41,13 @@ module.exports = async (fastify, opts) => {
       (request, reply) => authorize(request, reply, fastify),
     ],
     handler: (request, reply) => deleteCountryCodes(request, reply, fastify),
+  });
+
+  fastify.post("/activeInactive", {
+    schema: CountryCode.activeInactiveApi.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+    ],
+    handler: (request, reply) => activeInactiveCountryCodes(request, reply, fastify),
   });
 };
