@@ -60,7 +60,12 @@ const editCountryCodeService = async (request, fastify) => {
     countryName: request.body.countryName.trim() ?? validateId.countryName,
     flag: validateId.flag,
     flagPath: validateId.flagPath,
-    isActive: Boolean(request.body.isActive) ?? validateId.isActive,
+    // isActive: request.body.hasOwnProperty("isActive")
+    //     ? request.body.isActive
+    //     : validateId.isActive,
+    isActive: request.body.hasOwnProperty("isActive")
+    ? request.body.isActive === 'true' || request.body.isActive === true
+    : validateId.isActive,
     id: parseInt(request.body.id, 10),
   };
 
