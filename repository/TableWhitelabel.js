@@ -27,7 +27,6 @@ const getAllWhitelabelsQuery = async (fastify) => {
         throw new Error(err.message);
     }
 };
-
 const insertWhitelabelQuery = async (data, fastify, request) => {
     try {
         const result = await fastify.db.query(

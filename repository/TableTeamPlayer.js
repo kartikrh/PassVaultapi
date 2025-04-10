@@ -211,6 +211,37 @@ const updateTeamPlayerImageQuery = async (data, fastify) => {
     throw new Error(err.message);
   }
 };
+const getTeamListByPlayerIdQuery = async (refPlayerId, fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `SELECT 
+        ttp."wrTeamPlayerId" AS "teamPlayerId",
+        ttp."wrTeamId" AS "teamId",
+        tt."wrTeamName" AS "teamName",
+        ttp."wrRefPlayerId" AS "refPlayerId",
+        tp."wrPlayerName" AS "playerName",
+        ttp."wrJerseyPlayerImage" AS "jerseyPlayerImage",
+        ttp."wrJerseyPlayerImagePath" AS "jerseyPlayerImagePath"
+      FROM "tblTeamPlayers" AS ttp
+      LEFT JOIN "tblTeams" AS tt ON tt."wrTeamId" = ttp."wrTeamId"
+      LEFT JOIN "tblPlayers" AS tp ON tp."wrPlayerId" = ttp."wrRefPlayerId"
+      WHERE ttp."wrRefPlayerId" = $1 AND ttp."wrIsDeleted" = FALSE`,
+      {
+        bind: [refPlayerId],
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+    return result;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableTeamPlayer/getTeamListByPlayerIdQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
 
 module.exports = {
   insertTeamPlayerQuery,
@@ -220,4 +251,5 @@ module.exports = {
   getTeamPlayerByPlayerIdQuery,
   getTeamPlayerByTeamIdQuery,
   updateTeamPlayerImageQuery,
+  getTeamListByPlayerIdQuery,
 };
