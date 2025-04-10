@@ -11,7 +11,7 @@ const {
   allPlayerByCompetitionAndTeamService,
   mergePlayerImageAndJerseyService,
   setTeamPlayerImgService,
-  getTeamPlayerByPlayerIdService,
+  getTeamListPlayerIdService,
 } = require("../../../../services/player");
 const { errorLogger } = require("../../../../utilities/logger");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
@@ -165,7 +165,7 @@ const setTeamPlayerImg = async (request, reply, fastify) => {
 };
 const getTeamListByPlayerId = async (request, reply, fastify) => {
   try {
-    const result = await getTeamPlayerByPlayerIdService(request, fastify);
+    const result = await getTeamListPlayerIdService(request, fastify);
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/getTeamListByPlayerId", request);
