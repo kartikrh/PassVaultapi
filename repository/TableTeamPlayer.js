@@ -211,7 +211,6 @@ const updateTeamPlayerImageQuery = async (data, fastify) => {
     throw new Error(err.message);
   }
 };
-
 const getTeamListByPlayerIdQuery = async (refPlayerId, fastify, request) => {
   try {
     const result = await fastify.db.query(
