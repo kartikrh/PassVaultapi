@@ -49,6 +49,7 @@ const {
   Config,
 } = require("../../../swaggerSchema/groupTags/schema");
 const { getAllSocialMedia } = require("../../../controller/users/admin/socialMedia");
+const { getAllWhitelabels } = require("../../../controller/users/admin/whitelabel");
 
 module.exports = async (fastify, opts) => {
   fastify.post("/getscore", {
@@ -343,5 +344,8 @@ module.exports = async (fastify, opts) => {
   });
   fastify.post("/socialMedia", {
     handler: (request, reply) => getAllSocialMedia(request, reply, fastify),
+  });
+  fastify.post("/whiteLabel", {
+    handler: (request, reply) => getAllWhitelabels(request, reply, fastify),
   });
 };
