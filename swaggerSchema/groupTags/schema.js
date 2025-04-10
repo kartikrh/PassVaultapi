@@ -1863,6 +1863,20 @@ const Player = {
       },
     },
   },
+  getAllPlayerTeams: {
+    schema: {
+      tags: ["Player"],
+      security: [{ bearerAuth: [] }],
+      description: "get all Player Teams",
+      body: {
+        type: "object",
+        properties: {
+          playerId: { type: "integer" },
+        },
+        required: ["playerId"],
+      },
+    },
+  },
 };
 
 const MatchType = {

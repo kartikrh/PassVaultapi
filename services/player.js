@@ -11,6 +11,7 @@ const {
   insertTeamPlayerQuery,
   deleteTeamPlayerByPlayerIdQuery,
   getTeamPlayerByPlayerIdQuery,
+  getTeamListByPlayerIdQuery,
 } = require("../repository/TableTeamPlayer");
 const { getAllPlayersByTeamIdQuery, getAllPlayersByCompetitionIdTeamIdQuery } = require("../repository/TableTeams");
 const {
@@ -613,6 +614,12 @@ const setTeamPlayerImgService = async (request, fastify) => {
   return "Player image(s) and Jersey image(s) merged successfully";
 };
 
+const getTeamPlayerByTeamIdService = async (request, fastify) => {
+  const { playerId } = request.body;
+  const result = await getTeamListByPlayerIdQuery(playerId, fastify, request);
+  return result;
+};
+
 module.exports = {
   allPlayerService,
   playerByIdService,
@@ -626,4 +633,5 @@ module.exports = {
   allPlayerByCompetitionAndTeamService,
   mergePlayerImageAndJerseyService,
   setTeamPlayerImgService,
+  getTeamPlayerByTeamIdService,
 };
