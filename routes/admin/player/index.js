@@ -18,7 +18,7 @@ const {
   getAllPlayerByCompetitionAndTeam,
   mergePlayerImageAndJersey,
   setTeamPlayerImg,
-  getTeamPlayerByTeamId,
+  getTeamListByPlayerId,
 } = require("../../../controller/users/admin/teamsAndPlayer/players");
 const {
   getTeamList,
@@ -176,6 +176,6 @@ module.exports = async (fastify, opts) => {
         mode: "view",
       }),
     ],
-    handler: (request, reply) => getTeamPlayerByTeamId(request, reply, fastify),
+    handler: (request, reply) => getTeamListByPlayerId(request, reply, fastify),
   })
 };
