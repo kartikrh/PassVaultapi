@@ -124,6 +124,16 @@ module.exports = (sequelize) => {
         allowNull: true,
         defaultValue: 0
       },
+      wrTeamScore : {
+        type: DataTypes.DOUBLE,
+        allowNull: true,
+        defaultValue: null
+      },
+      wrTeamWicket : {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        defaultValue: null
+      },  
     },
     {
       timestamps: false,

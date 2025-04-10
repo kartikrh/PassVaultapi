@@ -886,6 +886,15 @@ const IntervalType = {
   MONTHLY: 2,
   YEARLY: 3
 }
+const EventName = {
+  COMMINGSOON: 1,
+  WINTOSS: 2,
+  EVENTSTART: 3,
+  INNINGCOMPLETED: 4,
+  BOUNDARY: 5,
+  WICKET: 6,
+  EVENTCOMPLETED: 7
+}
 
 module.exports = {
   ERROR_CODES,
@@ -945,4 +954,5 @@ module.exports = {
   forgotPasswordOTP,
   resendOTP,
   IntervalType,
+  EventName,
 };

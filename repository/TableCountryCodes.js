@@ -7,7 +7,8 @@ const getAllCountryCodesQuery = async (fastify) => {
           "wrCountryCode" as "countryCode",
           "wrCountryName" as "countryName",
           "wrFlag" as "flag",
-          "wrFlagPath" as "flagPath"
+          "wrFlagPath" as "flagPath",
+          "wrIsActive" as "isActive"
       FROM "tblCountryCodes"
       WHERE "wrIsDeleted" = FALSE;`,
     { type: fastify.db.QueryTypes.SELECT }
@@ -20,10 +21,10 @@ const insertCountryCodeQuery = async (data, fastify, request) => {
     const result = await fastify.db.query(
       `WITH insert_data AS (
             INSERT INTO "tblCountryCodes" (
-            "wrCountryCode", "wrCountryName", "wrFlag", "wrFlagPath"
+            "wrCountryCode", "wrCountryName", "wrFlag", "wrFlagPath", "wrIsActive"
             ) 
             VALUES (
-                $1, $2, $3, $4
+                $1, $2, $3, $4, $5
             ) 
             RETURNING *
             )        
@@ -32,7 +33,8 @@ const insertCountryCodeQuery = async (data, fastify, request) => {
                 "wrCountryCode" as "countryCode",
                 "wrCountryName" as "countryName",
                 "wrFlag" as "flag",
-                "wrFlagPath" as "flagPath"
+                "wrFlagPath" as "flagPath",
+                "wrIsActive" as "isActive"
             FROM insert_data;`,
       {
         type: fastify.db.QueryTypes.SELECT,
@@ -41,6 +43,7 @@ const insertCountryCodeQuery = async (data, fastify, request) => {
           data.countryName || null,
           data.flag || null,
           data.flagPath || null,
+          data.isActive || false
         ],
       }
     );
@@ -58,19 +61,22 @@ const insertCountryCodeQuery = async (data, fastify, request) => {
 
 const updateCountryCodeQuery = async (data, fastify, request) => {
   try {
+    console.log("dataaa", data)
     const result = await fastify.db.query(
       `UPDATE "tblCountryCodes" SET 
             "wrCountryCode" = $1,
             "wrCountryName" = $2,
             "wrFlag" = $3,
-            "wrFlagPath" = $5
+            "wrFlagPath" = $5,
+            "wrIsActive" = $6
             WHERE "wrId" = $4
             RETURNING 
                 "wrId" as "id",
                 "wrCountryCode" as "countryCode",
                 "wrCountryName" as "countryName",
                 "wrFlag" as "flag",
-                "wrFlagPath" as "flagPath";`,
+                "wrFlagPath" as "flagPath",
+                "wrIsActive" as "isActive";`,
       {
         type: fastify.db.QueryTypes.UPDATE,
         bind: [
@@ -79,6 +85,7 @@ const updateCountryCodeQuery = async (data, fastify, request) => {
             data.flag,
             data.id,
             data.flagPath,
+            data.isActive,
         ],
       }
     );
@@ -118,9 +125,29 @@ const deleteCountryCodeQuery = async (id, fastify, request) => {
   }
 };
 
+const activeInactiveCountryCodeQuery = async (data, request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `UPDATE "tblCountryCodes" SET "wrIsActive" = $1 WHERE "wrId" = $2`,
+      {
+        bind: [data.isActive, data.id],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCountryCode.js/activeInactiveCountryCodeQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
     getAllCountryCodesQuery,
     insertCountryCodeQuery,
     updateCountryCodeQuery,
     deleteCountryCodeQuery,
+    activeInactiveCountryCodeQuery,
 };

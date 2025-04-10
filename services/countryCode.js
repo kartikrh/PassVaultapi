@@ -2,6 +2,7 @@ const {
   insertCountryCodeQuery,
   updateCountryCodeQuery,
   deleteCountryCodeQuery,
+  activeInactiveCountryCodeQuery,
 } = require("../repository/TableCountryCodes");
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
@@ -59,6 +60,7 @@ const editCountryCodeService = async (request, fastify) => {
     countryName: request.body.countryName.trim() ?? validateId.countryName,
     flag: validateId.flag,
     flagPath: validateId.flagPath,
+    isActive: Boolean(request.body.isActive) ?? validateId.isActive,
     id: parseInt(request.body.id, 10),
   };
 
@@ -88,8 +90,18 @@ const editCountryCodeService = async (request, fastify) => {
 };
 
 const allCountryCodeService = async (fastify, request) => {
-  let result = global.tblCountryCodes;
-  return result;
+  const { isActive } = request.body || {};
+  if (isActive !== undefined) {
+    const result = global.tblCountryCodes.filter(
+      (item) => item.isActive === isActive
+    );
+    return result;
+  } else {
+    const result = global.tblCountryCodes.filter(
+      (item) => item.isActive === true
+    );
+    return result;
+  }
 };
 
 const countryCodeByIdService = async (fastify, request) => {
@@ -121,10 +133,29 @@ const deleteCountryCodeService = async (fastify, request) => {
   return `Country Code(s) data deleted successfully`;
 };
 
+const activeInactiveCountryCodeService = async (fastify, request) => {
+  const { id, isActive } = request.body;
+  const validateId = global.tblCountryCodes.find(
+    (item) => item.id === id
+  );
+
+  if (!validateId) {
+    throw new Error("Country Code with this Id not found");
+  }
+  await activeInactiveCountryCodeQuery({id, isActive }, request, fastify);
+  const index = global.tblCountryCodes.findIndex((item) => item.id == id);
+  if(index != -1){
+    global.tblCountryCodes[index].isActive = isActive;
+  }
+
+  return `Country Code data updated successfully`;
+};
+
 
 module.exports = {
   allCountryCodeService,
   countryCodeByIdService,
   createCountryCodeService,
   deleteCountryCodeService,
+  activeInactiveCountryCodeService,
 };

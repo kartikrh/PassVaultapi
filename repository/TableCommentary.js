@@ -1857,7 +1857,9 @@ const getAllCommentaryPartnershipQuery = async (fastify) => {
           tcps."wrP1Ball" as "p1Ball",
           tcps."wrP2Ball" as "p2Ball",
           tcps."wrP1Run" as "p1Run",
-          tcps."wrP2Run" as "p2Run"
+          tcps."wrP2Run" as "p2Run",
+          tcps."wrTeamScore" as "teamScore",
+          tcps."wrTeamWicket" as "teamWicket"
       from "tblCommentaryPartnerships" tcps
       WHERE tcps."wrCommentaryId" IN (
         SELECT "wrCommentaryId"
@@ -4631,7 +4633,9 @@ const getAllCompletedCommentaryQuery = async (request, fastify) => {
           tc."wrTeam1Id" AS "t1id",
           tc."wrTeam2Id" AS "t2id",
           tc."wrIsPredictMarket" AS "isPr",
-          tc."wrIsClientShow" AS "ics"
+          tc."wrIsClientShow" AS "ics",
+          tc."wrIsTest" AS "isTest",
+          tc."wrIsActive" AS "isActive"
       FROM "tblCommentaries" tc
       LEFT JOIN "tblTeams" tt1 ON tt1."wrTeamId" = tc."wrTeam1Id" AND tt1."wrIsDeleted" = false
       LEFT JOIN "tblTeams" tt2 ON tt2."wrTeamId" = tc."wrTeam2Id" AND tt2."wrIsDeleted" = false

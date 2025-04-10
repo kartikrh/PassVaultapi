@@ -324,6 +324,62 @@ const updateIsSendNotQuery = async (data,request,fastify) =>{
         throw new Error(err.message);
     }	
 }
+const insertNotificationViaNotiConfigQuery =async (data, request, fastify) =>{
+    try {
+         let query  = `
+         INSERT INTO "tblNotifications"(
+             "wrTitle",
+             "wrDescription",
+             "wrCommentaryId",
+             "wrSendType",
+             "wrCreatedBy",
+             "wrCreatedAt",
+             "wrIsSend"
+         )
+         VALUES(
+         $1, $2, $3, $4, $5, $6, $7
+         )
+         RETURNING 
+            "wrId" as "notificationId",
+            "wrTitle" as "title",
+            "wrDescription" as "description",
+            "wrSendType" as "sendType",
+            "wrCommentaryId" as "commentaryId",
+            "wrCreatedAt" as "createdAt",
+            "wrCreatedBy" as "createdBy",
+            "wrModifyAt" as "modifyAt",
+            "wrModifyBy" as "modifyBy",
+            "wrImage" as "image",
+            "wrIcon" as "icon",
+            "wrUrl" as "url",
+            "wrIsSend" as "isSend",
+            "wrImagePath" as "imagePath",
+            "wrIconPath" as "iconPath"
+     `;
+ 
+     const result = await fastify.db.query(query, {
+         bind : [
+             data.title,
+             data.description,
+             data.commentaryId,
+             data.sendType || 1,
+             null,
+             new Date(),
+             true
+         ]
+     });
+ 
+     return result[0];
+    } catch (error) {
+     errorLogger(
+         fastify,
+         error.message,
+         "repository/TableNotification/insertNotificationViaNotiConfigQuery",
+         request || null
+     )
+     throw new Error(error.message);
+    }
+}
 module.exports = {
     getAllNotificationQuery,
     updateNotificationQuery,
@@ -332,5 +388,6 @@ module.exports = {
     saveNotificationLogsQuery,
     getNotificationLogByClientQuery,
     updateNotificationLogByClientQuery,
-    updateIsSendNotQuery
+    updateIsSendNotQuery,
+    insertNotificationViaNotiConfigQuery,
 }
