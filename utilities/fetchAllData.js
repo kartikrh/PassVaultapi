@@ -608,6 +608,21 @@ const panelLoadDataByEnum = async (request, fastify, reply) => {
           global.tblCountryCodes = cc;
           break;
         }
+        case ModuleTypes.NotificationConfig: {
+          const notiConfig =  await getAllNotificationConfigsQuery(fastify);
+          global.tblNotificationConfig = notiConfig;
+          break;
+        }
+        case ModuleTypes.Packages: {
+          const packages =  await getAllPackagesQuery(fastify);
+          global.tblPackages = packages;
+          break;
+        }
+        case ModuleTypes.Whitelabel: {
+          const whitelabel =  await getAllWhitelabelsQuery(fastify);
+          global.tblWhitelabels = whitelabel;
+          break;
+        }
         default:
           break;
       }
