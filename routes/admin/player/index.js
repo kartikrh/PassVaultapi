@@ -18,6 +18,7 @@ const {
   getAllPlayerByCompetitionAndTeam,
   mergePlayerImageAndJersey,
   setTeamPlayerImg,
+  getTeamPlayerByTeamId,
 } = require("../../../controller/users/admin/teamsAndPlayer/players");
 const {
   getTeamList,
@@ -165,5 +166,16 @@ module.exports = async (fastify, opts) => {
       }),
     ],
     handler: (request, reply) => setTeamPlayerImg(request, reply, fastify),
+  })
+  fastify.post("/playerTeams", {
+    schema : Player.getAllPlayerTeams.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) => checkPermission(request, reply, fastify, {
+        tabName: "Players",
+        mode: "view",
+      }),
+    ],
+    handler: (request, reply) => getTeamPlayerByTeamId(request, reply, fastify),
   })
 };
