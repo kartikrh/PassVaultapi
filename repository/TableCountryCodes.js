@@ -61,7 +61,6 @@ const insertCountryCodeQuery = async (data, fastify, request) => {
 
 const updateCountryCodeQuery = async (data, fastify, request) => {
   try {
-    console.log("dataaa", data)
     const result = await fastify.db.query(
       `UPDATE "tblCountryCodes" SET 
             "wrCountryCode" = $1,
