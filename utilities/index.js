@@ -737,6 +737,7 @@ const callTPAPI = async (data ,fastify) =>{
       });
       return true;
     }
+    
     return true;
   } catch (error) {
     console.log("error from callTPAPI", error);
