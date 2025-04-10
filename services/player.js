@@ -614,7 +614,7 @@ const setTeamPlayerImgService = async (request, fastify) => {
   return "Player image(s) and Jersey image(s) merged successfully";
 };
 
-const getTeamPlayerByTeamIdService = async (request, fastify) => {
+const getTeamPlayerByPlayerIdService = async (request, fastify) => {
   const { playerId } = request.body;
   const result = await getTeamListByPlayerIdQuery(playerId, fastify, request);
   return result;
@@ -633,5 +633,5 @@ module.exports = {
   allPlayerByCompetitionAndTeamService,
   mergePlayerImageAndJerseyService,
   setTeamPlayerImgService,
-  getTeamPlayerByTeamIdService,
+  getTeamPlayerByPlayerIdService,
 };

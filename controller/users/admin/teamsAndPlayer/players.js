@@ -11,7 +11,7 @@ const {
   allPlayerByCompetitionAndTeamService,
   mergePlayerImageAndJerseyService,
   setTeamPlayerImgService,
-  getTeamPlayerByTeamIdService,
+  getTeamPlayerByPlayerIdService,
 } = require("../../../../services/player");
 const { errorLogger } = require("../../../../utilities/logger");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
@@ -163,12 +163,12 @@ const setTeamPlayerImg = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
-const getTeamPlayerByTeamId = async (request, reply, fastify) => {
+const getTeamListByPlayerId = async (request, reply, fastify) => {
   try {
-    const result = await getTeamPlayerByTeamIdService(request, fastify);
+    const result = await getTeamPlayerByPlayerIdService(request, fastify);
     reply.status(200).send(success(result, 200));
   } catch (err) {
-    errorLogger(fastify, err.message, commonPath + "/getTeamPlayerByTeamId", request);
+    errorLogger(fastify, err.message, commonPath + "/getTeamListByPlayerId", request);
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
@@ -187,5 +187,5 @@ module.exports = {
   getAllPlayerByCompetitionAndTeam,
   mergePlayerImageAndJersey,
   setTeamPlayerImg,
-  getTeamPlayerByTeamId,
+  getTeamListByPlayerId,
 };
