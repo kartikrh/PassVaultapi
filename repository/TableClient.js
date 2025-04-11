@@ -293,6 +293,61 @@ const deleteClientEncryptQuery = async (data, request, fastify) => {
     throw new Error(err.message); 
   }
 }
+const addClientDltReqQuery = async (data, request, fastify) => {
+  try {
+    // Check if the clientId is already in the table
+    const checkQuery = `
+      SELECT COUNT(*) as count FROM "tblClientDltReq" WHERE "wrClientId" = $1
+    `;
+    const checkResult = await fastify.db.query(checkQuery, {
+      bind: [data.clientId],
+      type: fastify.db.QueryTypes.SELECT,
+    });
+    if (checkResult[0].count > 0) {
+      return true;
+    }
+    const query = `
+      INSERT INTO "tblClientDltReq" (
+        "wrClientId",
+        "wrCreatedAt"
+      )
+      VALUES ($1, now())
+    `;
+    const result = await fastify.db.query(query, {
+      bind: [data.clientId],
+      type: fastify.db.QueryTypes.INSERT,
+    });
+    return result[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableClient/addClientDltReqQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+}
+const getIdByEncrypt = async (data, request, fastify) => {
+  try {
+    let query = `
+      SELECT "wrKey" as "clientId"
+       FROM "tblEncryptedData" WHERE "wrValue" = $1`;
+    const result = await fastify.db.query(query, {
+      bind: [data.clientId],
+      type: fastify.db.QueryTypes.SELECT,
+    });
+    return result[0];
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableClient/getIdByEncrypt",
+      request
+    );
+    throw new Error(error.message);
+  }
+}
 module.exports = {
   getAllClientQuery,
   insertClientQuery,
@@ -302,5 +357,7 @@ module.exports = {
   isUserActiveInactiveQuery,
   clientEmailVerifyQuery,
   clientMobileVerifyQuery,
-  deleteClientEncryptQuery
+  deleteClientEncryptQuery,
+  addClientDltReqQuery,
+  getIdByEncrypt
 };

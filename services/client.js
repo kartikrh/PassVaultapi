@@ -1,4 +1,4 @@
-const { deleteClientQuery, insertClientQuery, updateClientQuery, activeInactiveClientQuery, isUserActiveInactiveQuery, clientEmailVerifyQuery, clientMobileVerifyQuery, deleteClientEncryptQuery } = require("../repository/TableClient");
+const { deleteClientQuery, insertClientQuery, updateClientQuery, activeInactiveClientQuery, isUserActiveInactiveQuery, clientEmailVerifyQuery, clientMobileVerifyQuery, deleteClientEncryptQuery, addClientDltReqQuery, getIdByEncrypt } = require("../repository/TableClient");
 
 const getAllClientService = async (request, fastify) => {
   const { isActive, isUserActive } = request.body;
@@ -166,15 +166,25 @@ const emailAndMobileVerifyService = async (request, fastify) => {
   return `Please select 1 for email verification or 2 for mobile verification.`;
 };
 const deleteClientByEncryptService = async (request, fastify) => {
-  let data = await deleteClientEncryptQuery(request.body, request, fastify);
-  // console.log(data, "data")
-  const idsToRemove = data.map(d => d.clientId);
+  // validate the clientId
+  const id = await getIdByEncrypt(request.body,request,fastify);
+  
+  const validateClientId = global.tblClient.find((item) => item.clientId == id.clientId);
+  if (!validateClientId) {
+    throw new Error("Client with this Id not found");
+  }
+  await addClientDltReqQuery({
+    clientId : id.clientId,
+  }, request, fastify); 
+  return `Your request has been received. We will process it in next 7 working days.`;
+  // let data = await deleteClientEncryptQuery(request.body, request, fastify);
+  // // console.log(data, "data")
+  // const idsToRemove = data.map(d => d.clientId);
 
-  global.tblClient = global.tblClient.filter(
-    (item) => !idsToRemove.includes(item.clientId)
-  );
-  return `Client deleted successfully`;
-
+  // global.tblClient = global.tblClient.filter(
+  //   (item) => !idsToRemove.includes(item.clientId)
+  // );
+  // return `Client deleted successfully`;
 }
 module.exports = {
   getAllClientService,

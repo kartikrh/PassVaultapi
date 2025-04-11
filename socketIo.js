@@ -73,7 +73,7 @@ const connection = (socket , fastify) => {
       if(eventMarketData.length > 0){
         for (const updatedItem of eventMarketData) {
           let index = global.tblEventMarketsV2.findIndex(
-            (item) => item.eventMarketId === updatedItem.eventMarketId
+            (item) => item.eventMarketId == updatedItem.eventMarketId
           );
     
           if (index !== -1) {
