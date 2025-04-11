@@ -1,3 +1,4 @@
+const { errorLogger } = require("../utilities/logger");
 
 const getAllClientQuery = async (fastify) => {
   return await fastify.db.query(
@@ -38,7 +39,7 @@ const deleteClientQuery = async (data, request, fastify) => {
       `,
       {
         type: fastify.db.QueryTypes.UPDATE,
-        bind: [true, request.userTokenInfo.WrUserId, request.body.clientId],
+        bind: [true, request.userTokenInfo.WrUserId ? request.userTokenInfo.WrUserId : null, data.clientId],
       }
     );
   } catch (err) {
@@ -264,7 +265,34 @@ const clientMobileVerifyQuery = async (data, request, fastify) => {
     throw new Error(err.message);
   }
 };
+const deleteClientEncryptQuery = async (data, request, fastify) => {
+  try {
+    let query = `
+      UPDATE "tblClient" SET
+        "wrIsDelete" = $1,
+        "wrDeletedBy" = $2,
+        "wrDeletedAt" = now()
+      WHERE "wrClientID" IN 
+      (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = ANY($3))
+      AND "wrIsDelete" = false
+      RETURNING "wrClientID" as "clientId";
+    `;
+    const result = await fastify.db.query(query, {
+      bind: [true, request.userTokenInfo?.WrUserId ? request.userTokenInfo?.WrUserId : null, data.clientId],
+      type: fastify.db.QueryTypes.UPDATE,
+    });
+    return result[0];
 
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableClient/deleteClientEncryptQuery",
+      request
+    );
+    throw new Error(err.message); 
+  }
+}
 module.exports = {
   getAllClientQuery,
   insertClientQuery,
@@ -273,5 +301,6 @@ module.exports = {
   activeInactiveClientQuery,
   isUserActiveInactiveQuery,
   clientEmailVerifyQuery,
-  clientMobileVerifyQuery
+  clientMobileVerifyQuery,
+  deleteClientEncryptQuery
 };

@@ -715,7 +715,7 @@ const ModuleTypes = {
 const callTPAPI = async (data ,fastify) =>{
   try {
     // check if the third party api is enabled or not
-    let isCallThirdParty = global.tblConfigs.find((item) => item.key === configConstants.ISCALLTHIRDPARTY)?.value;
+    let isCallThirdParty = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.ISCALLEVENTALLOWORDERAPI.toLowerCase())?.value;
     if(isCallThirdParty == undefined){
       return true;
     }
@@ -723,24 +723,21 @@ const callTPAPI = async (data ,fastify) =>{
       return true;
     }
     if(isCallThirdParty == "true"){
-      const thirdPartyAPI = global.tblConfigs.find((item) => item.key === configConstants.THIRDPARTYAPIENDPOINT)?.value;
+      const thirdPartyAPI = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.EVENTALLOWORDERAPI.toLowerCase())?.value;
       if(thirdPartyAPI == undefined){
         return true;
       }
-      const header = global.tblConfigs.find((item) => item.key === configConstants.THIRDPARTYKEY)?.value;
-      if(header == undefined){
-        return true;
-      }
+      // const header = global.tblConfigs.find((item) => item.key === configConstants.THIRDPARTYKEY)?.value;
+      // if(header == undefined){
+      //   return true;
+      // }
       await axios.post(thirdPartyAPI, {
-        eventRefId : data.eventRefId,
-        betAllow : data.betAllow,
-      },{
-        headers: {
-          'Authorization': header
-        }
+        eventID : data.eventRefId,
+        isAllow : data.betAllow,
       });
       return true;
     }
+    
     return true;
   } catch (error) {
     console.log("error from callTPAPI", error);

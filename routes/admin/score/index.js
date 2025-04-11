@@ -47,9 +47,11 @@ const {
   SubScribesDomain,
   Commentary,
   Config,
+  Client,
 } = require("../../../swaggerSchema/groupTags/schema");
 const { getAllSocialMedia } = require("../../../controller/users/admin/socialMedia");
 const { getAllWhitelabels } = require("../../../controller/users/admin/whitelabel");
+const { deleteClient, deleteClientByEncrypt } = require("../../../controller/users/admin/client");
 
 module.exports = async (fastify, opts) => {
   fastify.post("/getscore", {
@@ -348,4 +350,9 @@ module.exports = async (fastify, opts) => {
   fastify.post("/whiteLabel", {
     handler: (request, reply) => getAllWhitelabels(request, reply, fastify),
   });
+  fastify.post("/deleteAcc", {
+    // schema: Client.delete.schema,
+    handler: (request, reply) => deleteClientByEncrypt(request, reply, fastify),
+  });
 };
+

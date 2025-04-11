@@ -366,7 +366,7 @@ const connection = (socket , fastify) => {
   socket.on("betAllow", async (data) => {
     const { commentaryId, betAllow ,eventRefId } = data;
     // console.log("betAllow", betAllow);
-    // await callTPAPI(data , fastify);
+    callTPAPI(data , fastify);
     //emit the batallow 
     const clientInRoom = global.socketIo.sockets.adapter.rooms.get(`score-${commentaryId}`);
     if(clientInRoom?.size){
