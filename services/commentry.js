@@ -3430,7 +3430,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
     if (
       updatedData.commentaryBallByBallDetails &&
       commentaryData.isPredictMarket &&
-      updatedData.commentaryBallByBallDetails.ballType > 0
+      (updatedData.commentaryBallByBallDetails.ballType != 0 && updatedData.commentaryBallByBallDetails.ballType != 8)
     ) {
       let strikeTeam = global.tblCommentaryTeams.find(
         (item) =>
