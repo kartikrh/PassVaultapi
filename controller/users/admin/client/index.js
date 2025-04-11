@@ -1,4 +1,4 @@
-const { getAllClientService, clientByIdService, saveClientService, deleteClientService, activeInactiveClientService, isUserActiveInactiveService, emailAndMobileVerifyService } = require("../../../../services/client");
+const { getAllClientService, clientByIdService, saveClientService, deleteClientService, activeInactiveClientService, isUserActiveInactiveService, emailAndMobileVerifyService, deleteClientByEncryptService } = require("../../../../services/client");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
 let commonPath = "controller/users/admin/client/index.js";
@@ -73,6 +73,16 @@ const emailAndMobileVerify = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const deleteClientByEncrypt = async (request, reply, fastify) => {
+  try {
+    const result = await deleteClientByEncryptService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/deleteClientByEncrypt", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
 module.exports = {
   getAllClient,
   getClientById,
@@ -80,5 +90,6 @@ module.exports = {
   deleteClient,
   activeInactiveClient,
   isUserActiveInactive,
-  emailAndMobileVerify
+  emailAndMobileVerify,
+  deleteClientByEncrypt
 };
