@@ -274,9 +274,9 @@ const deleteClientEncryptQuery = async (data, request, fastify) => {
         "wrDeletedAt" = now()
       WHERE "wrClientID" IN 
       (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = ANY($3))
+      AND "wrIsDelete" = false
       RETURNING "wrClientID" as "clientId";
     `;
-
     const result = await fastify.db.query(query, {
       bind: [true, request.userTokenInfo?.WrUserId ? request.userTokenInfo?.WrUserId : null, data.clientId],
       type: fastify.db.QueryTypes.UPDATE,
