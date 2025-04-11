@@ -32,7 +32,9 @@ const roleByDisplayTypeQuery = async (displayType, fastify) => {
 
 const valideRoleId = async (roleId, fastify) => {
   const data = await fastify.db.query(
-    `select * from "tblUsers" where "WrRoleId" in (select "wrRoleId" from "tblRoles" r inner join "tblEncryptedData" e  on r."wrRoleId" = e."wrKey" and e."wrValue" = $1)`,
+    `select * from "tblUsers" where 
+    "WrRoleId" in (select "wrRoleId" from "tblRoles" r inner join "tblEncryptedData" e  on r."wrRoleId" = e."wrKey" and e."wrValue" = $1)
+    AND "WrIsDelete" = false`,
     {
       type: fastify.db.QueryTypes.SELECT,
       bind: [roleId],
