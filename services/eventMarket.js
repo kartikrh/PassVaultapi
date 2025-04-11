@@ -3937,7 +3937,39 @@ const getCommentaryDetailsService = async (request, fastify) => {
   let commentaryDetails = await getCommentaryDetailsQuery(request, fastify);
   return commentaryDetails;
 }
+const loadMarketByComIdService = async (request, fastify) => {
+  // get the market by commentary which market not exis in tblEventMarketsV2 and tblMarketRunnerV2 and then push in global variable
+  const { commentaryId } = request.body;
+  let com = global.tblCommentaries.find((item) => item.commentaryId === commentaryId);
+  if(!com){
+    throw new Error("Commentary with this id not Found");
+  }
+  let mar = global.tblEventMarketsV2.filter((item) => item.commentaryId === commentaryId).map((item) => item.eventMarketId);  
+  let whereCondition = `
+    tem."wrCommentaryId" = ${commentaryId} AND 
+    tem."wrIsDeleted" = false AND
+    ${mar.length > 0 ? `tem."wrID" NOT IN (${mar.join(",")}) AND` : ""}
+    NOT (
+      tem."wrStatus" = ${EventMarketStatus.Cancel} OR 
+      (tem."wrStatus" = ${EventMarketStatus.Settled} AND tem."wrIsResult" = true)
+    )
+  `;
+  const eventMarketData = await getAllEventMarketsV2ByIdQuery(fastify, whereCondition)
+  // push this data in global variable
+  if(eventMarketData.length === 0){
+    return "Market Update successfully";
+  }
+  global.tblEventMarketsV2.push(...eventMarketData);
+  // get the runner
+  let where = ` tmr."wrEventMarketId" IN (${eventMarketData.map(item => item.eventMarketId).join(",")})`;	
+  console.log("where", where)
+  const runnerData = await getAllMarketRunnersV2ByIdQuery(fastify, where,request);
+  if(runnerData.length > 0){
+    global.tblMarketRunnerV2.push(...runnerData);
+  }
+  return "Market Update successfully";
 
+}
 module.exports = {
   getDetailsByCIdService,
   getAllEventMarketsService,
@@ -3997,4 +4029,5 @@ module.exports = {
   changeMultiMarketsIsResultService,
   changeMultiMarketsSessionIsResultService,
   getCommentaryDetailsService,
+  loadMarketByComIdService
 };
