@@ -198,7 +198,7 @@ const getRunnerByMarketQuery = async(request,fastify)=>{
     }
 }
 
-const getAllMarketRunnersV2ByIdQuery = async (fastify, whereCondition = null) => {
+const getAllMarketRunnersV2ByIdQuery = async (fastify, whereCondition = null,request = null) => {
     try {
         return await fastify.db.query(
             `SELECT
