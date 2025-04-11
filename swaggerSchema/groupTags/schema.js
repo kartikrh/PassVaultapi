@@ -5295,6 +5295,20 @@ const EventMarket = {
       },
     },
   },
+  loadMarketByCom :{
+    schema : {
+      tags : ["EventMarket"],
+      description : "load market by commentary",
+      security : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          commentaryId : {type : "integer"}
+        },
+        required : ["commentaryId"]
+      }
+    }
+  }
 };
 const MarketTemplateRunner = {
   getAll: {
