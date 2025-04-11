@@ -1,4 +1,4 @@
-const { deleteClientQuery, insertClientQuery, updateClientQuery, activeInactiveClientQuery, isUserActiveInactiveQuery, clientEmailVerifyQuery, clientMobileVerifyQuery } = require("../repository/TableClient");
+const { deleteClientQuery, insertClientQuery, updateClientQuery, activeInactiveClientQuery, isUserActiveInactiveQuery, clientEmailVerifyQuery, clientMobileVerifyQuery, deleteClientEncryptQuery } = require("../repository/TableClient");
 
 const getAllClientService = async (request, fastify) => {
   const { isActive, isUserActive } = request.body;
@@ -165,7 +165,17 @@ const emailAndMobileVerifyService = async (request, fastify) => {
   }
   return `Please select 1 for email verification or 2 for mobile verification.`;
 };
+const deleteClientByEncryptService = async (request, fastify) => {
+  let data = await deleteClientEncryptQuery(request.body, request, fastify);
+  // console.log(data, "data")
+  const idsToRemove = data.map(d => d.clientId);
 
+  global.tblClient = global.tblClient.filter(
+    (item) => !idsToRemove.includes(item.clientId)
+  );
+  return `Client deleted successfully`;
+
+}
 module.exports = {
   getAllClientService,
   clientByIdService,
@@ -173,5 +183,6 @@ module.exports = {
   deleteClientService,
   activeInactiveClientService,
   isUserActiveInactiveService,
-  emailAndMobileVerifyService
+  emailAndMobileVerifyService,
+  deleteClientByEncryptService
 };
