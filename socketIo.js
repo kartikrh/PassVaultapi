@@ -45,7 +45,7 @@ const connection = (socket , fastify) => {
       if (clientsInRoom?.size && inninRunData.length > 0) {
         global.socketIo.to(roomName).emit("upMnMarket", inninRunData);
       }
-      const timeLogs = await insertTimeLogs(commentaryId, fastify)
+      // const timeLogs = await insertTimeLogs(commentaryId, fastify)
 
       const marketToUpdate = await getEventMarketByIdsQuery(
         { eventMarketIds: marketIdArr },
@@ -236,7 +236,7 @@ const connection = (socket , fastify) => {
       global.clientSocketIo.forEach((socket) => {
         socket.client.emit("updateFullscore", sendDataForSocketUpdate);
       });
-      await updateTimeLogs(timeLogs.wrId, fastify);
+      // await updateTimeLogs(timeLogs.wrId, fastify);
       console.log("Event Market Updated successfully");
       return true;
     } catch (error) {
@@ -362,6 +362,7 @@ const connection = (socket , fastify) => {
   socket.on("conCommentary", (data) => {
     const { commentaryId ,eventRefId } = data;
     socket.join(`score-${commentaryId}`);
+
   });
   socket.on("betAllow", async (data) => {
     const { commentaryId, betAllow ,eventRefId } = data;
