@@ -8746,6 +8746,25 @@ const NotificationConfig = {
     },
   },
 };
+const CompetitionEvent = {
+  saveEvent : {
+    schema : {
+      tags: ["CompetitionEvent"],
+      description: "save CompetitionEvent data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionId : { type: "integer" },
+          eventDate : { type: "string" },
+          eventName : { type: "string" },
+          eventRefId : { type: "string" }
+        },
+        required: ["competitionId", "eventDate", "eventName"],
+      }
+    }
+  }
+}
 module.exports = {
   Auth,
   Tabs,
@@ -8813,4 +8832,5 @@ module.exports = {
   Packages,
   Whitelabel,
   NotificationConfig,
+  CompetitionEvent
 };

@@ -85,9 +85,23 @@ async function XKeyConfigForExtrnal(request, fastify){
       throw new Error(error.message);
   }
 }
+const XKeyVirtual = async (request, fastify) => {
+  try {
+    // const xKey = request.headers['x-key'];
 
+    // if (!xKey) {
+    //     throw new Error('X-Key is missing in the header');
+    // }
+    return true;
+
+  } catch (error) {
+    console.log("XKeyVirtual Error:", error)
+    throw new Error(error.message);
+  }
+}
 module.exports = {
   authorization,
   permissionCheckService,
   XKeyConfigForExtrnal,
+  XKeyVirtual
 };
