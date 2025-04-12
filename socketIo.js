@@ -362,6 +362,9 @@ const connection = (socket , fastify) => {
   socket.on("conCommentary", (data) => {
     const { commentaryId ,eventRefId } = data;
     socket.join(`score-${commentaryId}`);
+    socket.emit("commentaryJoined",{
+      commentaryId : commentaryId
+    })
 
   });
   socket.on("betAllow", async (data) => {
