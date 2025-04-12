@@ -895,6 +895,10 @@ const EventName = {
   WICKET: 6,
   EVENTCOMPLETED: 7
 }
+const generateEventId = () => {
+  const d = new Date();
+  return `${d.getDate().toString().padStart(2, '0')}${(d.getMonth()+1).toString().padStart(2, '0')}${d.getFullYear().toString().slice(-2)}${d.getHours().toString().padStart(2, '0')}${d.getMinutes().toString().padStart(2, '0')}`;
+};
 
 module.exports = {
   ERROR_CODES,
@@ -955,4 +959,5 @@ module.exports = {
   resendOTP,
   IntervalType,
   EventName,
+  generateEventId
 };
