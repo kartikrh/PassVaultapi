@@ -2761,7 +2761,8 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
       deleteCommentaryBallByBallId,
       deleteOverId,
       commentaryId,
-      isEndInnings
+      isEndInnings,
+      isCallPredict = false
     } = request.body;
 
     let commentaryIndex,
@@ -3317,7 +3318,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         )
         .sort((a, b) => b.commentaryBallByBallId - a.commentaryBallByBallId)[0];
       if (balltypeOfdeleteBall > 0 && previousBall) {
-        if (commentaryData.isPredictMarket) {
+        if (commentaryData.isPredictMarket && isCallPredict == true) {
           //_resFromPredictAPI = null;
           const decimalOverCount = parseFloat(previousBall.overCount);
           const _wkt = previousBall.ballIsWicket;
@@ -3430,7 +3431,8 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
     if (
       updatedData.commentaryBallByBallDetails &&
       commentaryData.isPredictMarket &&
-      (updatedData.commentaryBallByBallDetails.ballType != 0 && updatedData.commentaryBallByBallDetails.ballType != 8)
+      (updatedData.commentaryBallByBallDetails.ballType != 0 && updatedData.commentaryBallByBallDetails.ballType != 8) &&
+      isCallPredict == true
     ) {
       let strikeTeam = global.tblCommentaryTeams.find(
         (item) =>
@@ -3859,29 +3861,31 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
       });
       //_resFromPredictAPI = null;
       //_resFromPredictAPI = await
-      let key1 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTBALLFACED);
-      let key2 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTPLAYERBOUNDARIES);
-      let key3 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTPLAYERRUNS);
-      callPredictorMarket(
-        {
-          commentary_id: commentaryDetails.commentaryId,
-          match_type_id: commentaryDetails.matchTypeId,
-          event_id: commentaryDetails.eventRefId,
-          default_ball_faced: parseInt(key1?.value) || 0,
-          default_player_boundaries: parseInt(key2?.value) || 0,
-          default_player_runs: parseInt(key3?.value) || 0,
-        },
-        "/api/v1/loadcommentary",
-        fastify,
-        request
-      ).catch((err) => {
-        errorLogger(
+      if(isCallPredict == true) {
+        let key1 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTBALLFACED);
+        let key2 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTPLAYERBOUNDARIES);
+        let key3 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTPLAYERRUNS);
+        callPredictorMarket(
+          {
+            commentary_id: commentaryDetails.commentaryId,
+            match_type_id: commentaryDetails.matchTypeId,
+            event_id: commentaryDetails.eventRefId,
+            default_ball_faced: parseInt(key1?.value) || 0,
+            default_player_boundaries: parseInt(key2?.value) || 0,
+            default_player_runs: parseInt(key3?.value) || 0,
+          },
+          "/api/v1/loadcommentary",
           fastify,
-          err.message,
-          "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
           request
-        );
-      });
+        ).catch((err) => {
+          errorLogger(
+            fastify,
+            err.message,
+            "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
+            request
+          );
+        });
+      }
       setLineRatioInComService(
         {
           commentaryId: commentaryDetails.commentaryId,
@@ -3935,21 +3939,23 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
 
       //_resFromPredictAPI = null;
       //_resFromPredictAPI = await
-      callPredictorMarket(
-        {
-          commentary_id: commentaryDetails.commentaryId,
-        },
-        "/api/v1/endcommentary",
-        fastify,
-        request
-      ).catch((err) => {
-        errorLogger(
+      if(isCallPredict == true) {
+        callPredictorMarket(
+          {
+            commentary_id: commentaryDetails.commentaryId,
+          },
+          "/api/v1/endcommentary",
           fastify,
-          err.message,
-          "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
           request
-        );
-      });
+        ).catch((err) => {
+          errorLogger(
+            fastify,
+            err.message,
+            "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
+            request
+          );
+        });
+      }
       let competition = global.tblCompetitions.find(
         (item) => item.competitionId === commentaryDetails.competitionId
       );
@@ -4099,7 +4105,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         });
       } 
     }
-    if (isEndInnings && isEndInnings == true) {
+    if (isEndInnings && isEndInnings == true && isCallPredict == true) {
       //_resFromPredictAPI = null;
       //_resFromPredictAPI = await 
       callPredictorMarket(
