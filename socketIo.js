@@ -34,15 +34,14 @@ const connection = (socket , fastify) => {
         },
         fastify
       )
-      let ballbybllId;
-      global.sessionData.push({type: "before socket", data: marketData})
-      const marketIdArr = marketData.map((item) => {
-        const mark = JSON.parse(item);
       const clientInRoom = global.socketIo.sockets.adapter.rooms.get(commentaryId);
       if (clientInRoom?.size) {
         global.socketIo.to(commentaryId).emit("updateMarketData", marketData);
       }
-     
+      let ballbybllId;
+      global.sessionData.push({type: "before socket", data: marketData})
+      const marketIdArr = marketData.map((item) => {
+        const mark = JSON.parse(item);
         MarketArr.push(mark);
         ballbybllId = mark.ballByBallId;
         return mark.marketId;
