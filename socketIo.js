@@ -26,10 +26,6 @@ const connection = (socket , fastify) => {
     try {
       const MarketArr = [];
       const { commentaryId, marketData } = data;
-      const clientInRoom = global.socketIo.sockets.adapter.rooms.get(commentaryId);
-      if (clientInRoom?.size) {
-        global.socketIo.to(commentaryId).emit("updateMarketData", marketData);
-      }
       pythonSocketLogger(
         {
           ...data,
@@ -42,6 +38,11 @@ const connection = (socket , fastify) => {
       global.sessionData.push({type: "before socket", data: marketData})
       const marketIdArr = marketData.map((item) => {
         const mark = JSON.parse(item);
+      const clientInRoom = global.socketIo.sockets.adapter.rooms.get(commentaryId);
+      if (clientInRoom?.size) {
+        global.socketIo.to(commentaryId).emit("updateMarketData", marketData);
+      }
+     
         MarketArr.push(mark);
         ballbybllId = mark.ballByBallId;
         return mark.marketId;
