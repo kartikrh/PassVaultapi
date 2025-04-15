@@ -5890,6 +5890,93 @@ const getCommentaryDetailsQuery = async (request, fastify) => {
     throw new Error(error.message);
   }
 }
+const getMarketByComIdQuery = async (data,fastify) => {
+  try {
+    const { commentaryId } = data;
+
+    const query = `WITH "MarketRunners_CTE" AS (
+            SELECT 
+                "wrEventMarketId" as "eventMarketId",
+                "wrRunnerId" as "runnerId",
+                "wrRunner" as "runnerName",
+                "wrLine" as "line",
+                "wrOverRate" as "overRate",
+                "wrUnderRate" as "underRate",
+                "wrSelectionId" as "selectionId",
+                "wrSelectionStatus" as "status",
+                "wrBackPrice" as "backPrice",
+                "wrLayPrice" as "layPrice",
+                "wrBackSize" as "backSize",
+                "wrLaySize" as "laySize"
+            FROM "tblMarketRunners"
+            WHERE "wrIsDeleted" = false
+        )
+        SELECT
+            "wrID" AS "marketId",
+            tem."wrCommentaryId" AS "commentaryId",
+            tem."wrEventRefID" AS "eventId",
+            tem."wrTeamID" AS "teamId",
+            tem."wrMarketTypeCategoryId" AS "marketTypeCategoryId",
+            mtc."wrCategoryName" AS "categoryName",
+            "wrMarketName" AS "marketName",
+            "wrMargin" AS "margin",
+            "wrStatus" AS "status",
+            "wrInningsID" as "inningsId",
+            "wrOver" as "over",
+            tem."wrIsActive" as "isActive", 
+            "wrIsAllow" as "isAllow",
+            "wrIsSendData" as "isSendData",
+            tem."wrLineRatio" as "lineRatio",
+            tem."wrLineType" as "lineType", 
+            tem."wrPredefinedValue" as "predefinedValue",
+            tem."wrIsInningRun" as "isInningRun",
+            tem."wrRateDiff" as "rateDiff", 
+            tem."wrPlayerID" as "playerId",
+           (
+                SELECT json_agg(
+                  json_build_object(
+                      'runnerId', "runnerId",
+                      'runnerName', "runnerName",
+                      'line', "line",
+                      'overRate', "overRate",
+                      'underRate', "underRate",
+                      'status', "status",
+                      'backPrice', "backPrice",
+                      'layPrice', "layPrice",
+                      'backSize', "backSize",
+                      'laySize', "laySize"
+                  )
+              )
+              FROM "MarketRunners_CTE"
+              WHERE "MarketRunners_CTE"."eventMarketId" = tem."wrID"
+            ) as "runner"
+           
+        FROM "tblEventMarkets" tem
+        INNER JOIN "tblMarketTypeCategories" mtc ON tem."wrMarketTypeCategoryId" = mtc."wrId"
+        WHERE tem."wrCommentaryId" = $1
+        AND tem."wrStatus" NOT IN ($2 ,$3,$4)
+        AND tem."wrRateSource" = 1
+        AND tem."wrIsDeleted" = false
+        `;
+    return await fastify.db.query(query, {
+      type: fastify.db.QueryTypes.SELECT,
+      bind: [
+        commentaryId,
+        EventMarketStatus.Close,
+        EventMarketStatus.Settled,
+        EventMarketStatus.Cancel,
+      ],
+    });
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/getMarketByComIdQuery",
+      null
+    );
+    throw new Error(error.message);
+  }
+};
 
 module.exports = {
   getAllEventMarketsV2Query,
@@ -5981,5 +6068,6 @@ module.exports = {
   upSusTimeQuery,
   upCloseTimeQuery,
   getCommentaryDetailsQuery,
+  getMarketByComIdQuery
 }
 

@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const { errorLogger } = require("./utilities/logger");
-const { getEventMarketByIdsQuery, insertTimeLogs, updateTimeLogs, socketMarketRunnerDataQuery, openMarketScoketConnectionDataQuery, getMnMarketByCId } = require("./repository/TableEventMarkets");
+const { getEventMarketByIdsQuery, insertTimeLogs, updateTimeLogs, socketMarketRunnerDataQuery, openMarketScoketConnectionDataQuery, getMnMarketByCId, getMarketByComIdQuery } = require("./repository/TableEventMarkets");
 const { MarketActionType, callTPAPI } = require("./utilities");
 const {createMarketOddsBallByBallBYIDFromSocketIo,createMarketOddsBallInSaveDetails,CheckAndCreateMarketOddsBallInSaveDetails} = require("./repository/TableMarketOddsBallByBall")
 const configConstants = require('./utilities/configConstants');
@@ -354,9 +354,15 @@ const connection = (socket , fastify) => {
   })
   
 
-  socket.on("connectEventMarket", (data) => {
+  socket.on("connectEventMarket", async (data,fastify) => {
     const { commentaryId } = data;
     socket.join(commentaryId);
+    const markets = await getMarketByComIdQuery({commentaryId : commentaryId}, fastify);
+    const clientInRoom = global.socketIo.sockets.adapter.rooms.get(commentaryId);
+    if (clientInRoom?.size) {
+      global.socketIo.to(commentaryId).emit("updateMarket", markets);
+    }
+
   });
   // connect for scoring page
   socket.on("conCommentary", (data) => {
