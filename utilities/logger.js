@@ -375,6 +375,7 @@ const marektResultLogger = async (data, request, fastify) => {
 }
 const pythonSocketLogger = async (data, fastify) => {
   try {
+    let market = data.marketData?.map(JSON.parse);
     const query = `
       INSERT INTO "tblPythonSocketLogs"
       (
@@ -385,11 +386,12 @@ const pythonSocketLogger = async (data, fastify) => {
       )
       VALUES ($1, $2, $3 ,$4)
     `;
+    
     await fastify.db.query(query, {
       type: fastify.db.QueryTypes.SELECT,
       bind: [
         data.commentaryId || null,
-        JSON.stringify(data.marketData) || null,
+        JSON.stringify(market) || null,
         data.socketId || null,
         data.createdAt || new Date(),
       ],
