@@ -389,7 +389,7 @@ const pythonSocketLogger = async (data, fastify) => {
       type: fastify.db.QueryTypes.SELECT,
       bind: [
         data.commentaryId || null,
-        data.marketData || null,
+        JSON.stringify(data.marketData) || null,
         data.socketId || null,
         data.createdAt || new Date(),
       ],
