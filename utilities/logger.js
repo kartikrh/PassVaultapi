@@ -373,7 +373,39 @@ const marektResultLogger = async (data, request, fastify) => {
     )
   }
 }
+const pythonSocketLogger = async (data, fastify) => {
+  try {
+    const query = `
+      INSERT INTO "tblPythonSocketLogs"
+      (
+        "wrCommentaryId",
+        "wrMarketData",
+        "wrSocketId",
+        "wrCreatedAt"
+      )
+      VALUES ($1, $2, $3 ,$4)
+    `;
+    await fastify.db.query(query, {
+      type: fastify.db.QueryTypes.SELECT,
+      bind: [
+        data.commentaryId || null,
+        data.marketData || null,
+        data.socketId || null,
+        data.createdAt || new Date(),
+      ],
+    });
+    return true;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "Error in pythonSocketLogger -> utilities/logger.js",
+      null
+    )
+    console.log(error);
+  }
+}
 
 module.exports = { errorLogger, responseLogger ,responseLogInDB , marketLogger ,
   marketDataLogger,tblPredictorAPILogger,tblThirdPartyAPILogger,commentaryLogger,updateWebRequestLogs,
-  eventMarketLogger, marektResultLogger};
+  eventMarketLogger, marektResultLogger,pythonSocketLogger};
