@@ -3962,7 +3962,7 @@ const loadMarketByComIdService = async (request, fastify) => {
   global.tblEventMarketsV2.push(...eventMarketData);
   // get the runner
   let where = ` tmr."wrEventMarketId" IN (${eventMarketData.map(item => item.eventMarketId).join(",")})`;	
-  console.log("where", where)
+  // console.log("where", where)
   const runnerData = await getAllMarketRunnersV2ByIdQuery(fastify, where,request);
   if(runnerData.length > 0){
     global.tblMarketRunnerV2.push(...runnerData);
