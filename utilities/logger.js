@@ -386,6 +386,7 @@ const pythonSocketLogger = async (data, fastify) => {
       )
       VALUES ($1, $2, $3 ,$4)
     `;
+    
     await fastify.db.query(query, {
       type: fastify.db.QueryTypes.SELECT,
       bind: [
