@@ -353,8 +353,7 @@ const connection = (socket , fastify) => {
     socket.emit("pong")
   })
   
-
-  socket.on("connectEventMarket", async (data,fastify) => {
+  socket.on("connectEventMarket", async (data) => {
     const { commentaryId } = data;
     socket.join(commentaryId);
     const markets = await getMarketByComIdQuery({commentaryId : commentaryId}, fastify);
