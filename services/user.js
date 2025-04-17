@@ -8,7 +8,7 @@ const nodemailer = require('nodemailer');
 const {sendNotification,sendMobileNotifications} = require("../WebPushHandler/index");
 const { SENDEMAILTYPE } = require("../utilities/configConstants");
 const { typesOfServices, clientProcessStatus, sendOtpToMobile, verifyOTP, forgotPasswordOTP, resendOTP } = require('../utilities/index');
-
+const { createClientLoginInfoQuery, signOutClientInfoQuery } = require("../repository/TableClientLoginInfo");
 const {
   signUpUser,
   signInUser,
@@ -1319,6 +1319,7 @@ async function signOutClientService(request, fastify) {
         throw new Error("Invalid Token");
       }
       const results = await signOutClient({ WrClientId: decode.WrClientId, wrToken: decode.wrToken }, fastify);
+      await signOutClientInfoQuery(decode.WrClientId, fastify);
       return results;
     }
     else {
@@ -1445,6 +1446,8 @@ const verifyMobileNoAppService = async (request, fastify) => {
         ...global.tblClient[index],
         ...result[0]
       }
+      const df = deviceInfo(request);
+      await createClientLoginInfoQuery({ clientId: checkExist.clientId, info: df }, fastify);
       return {
         token : token,
         details: {
@@ -1475,6 +1478,8 @@ const verifyMobileNoAppService = async (request, fastify) => {
         ...global.tblClient[index],
         ...result[0]
       }
+      const df = deviceInfo(request);
+      await createClientLoginInfoQuery({ clientId: checkExist.clientId, info: df }, fastify);
       return {
         token : token,
         details: {
@@ -1510,6 +1515,8 @@ const signinClientAppService = async (request, fastify) => {
     token : t1
   },request,fastify);
   let key = await getEncryptClinet({clientId : checkExist.clientId}, request,fastify)
+  const df = deviceInfo(request);
+  await createClientLoginInfoQuery({ clientId: checkExist.clientId, info: df }, fastify);
   return {
     token,
     details: {
@@ -1734,6 +1741,8 @@ const updatePasswordInForgotPasswordService = async (request, fastify) => {
     countryCode : global.tblClient[index].countryCode,
     token : t1
   },request,fastify);
+  const df = deviceInfo(request);
+  await createClientLoginInfoQuery({ clientId: checkExist.clientId, info: df }, fastify);
   return {
     token : token,
     details: {
