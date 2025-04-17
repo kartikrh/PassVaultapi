@@ -1387,14 +1387,16 @@ const verifyMobileNoAppService = async (request, fastify) => {
   const checkExist = await getIdByValue({
     clientId : clientId,
   },request,fastify)
-
+  const df = deviceInfo(request);
   if(!checkExist){
+    await createClientLoginInfoQuery({ clientId: null, info: df, isLogin: false, loginType: 2 }, fastify);
     return "Invalid username and mobile number"
   }
   let id = checkExist.clientId;
   // check if client exist
   const index = global.tblClient.findIndex((item) => item.clientId === id);
   if (index == -1) {
+    await createClientLoginInfoQuery({ clientId: null, info: df, isLogin: false, loginType: 2 }, fastify);
     throw new Error("Invalid username and mobile number");
   }
   if(request.body.otp == "7889"){
@@ -1430,6 +1432,7 @@ const verifyMobileNoAppService = async (request, fastify) => {
     // call third party otp
     let otpVerify = await verifyOTP(request.body ,request , fastify)
     if(!otpVerify){
+      await createClientLoginInfoQuery({ clientId: null, info: df, isLogin: false, loginType: 2 }, fastify);
       throw new Error("OTP not verified");
     }
 
@@ -1446,8 +1449,7 @@ const verifyMobileNoAppService = async (request, fastify) => {
         ...global.tblClient[index],
         ...result[0]
       }
-      const df = deviceInfo(request);
-      await createClientLoginInfoQuery({ clientId: checkExist.clientId, info: df }, fastify);
+      await createClientLoginInfoQuery({ clientId: checkExist.clientId, info: df, isLogin: true, loginType: 1 }, fastify);
       return {
         token : token,
         details: {
@@ -1478,8 +1480,7 @@ const verifyMobileNoAppService = async (request, fastify) => {
         ...global.tblClient[index],
         ...result[0]
       }
-      const df = deviceInfo(request);
-      await createClientLoginInfoQuery({ clientId: checkExist.clientId, info: df }, fastify);
+      await createClientLoginInfoQuery({ clientId: checkExist.clientId, info: df, isLogin: true, loginType: 1 }, fastify);
       return {
         token : token,
         details: {
@@ -1497,7 +1498,9 @@ const verifyMobileNoAppService = async (request, fastify) => {
 const signinClientAppService = async (request, fastify) => {
   const {mobileNo, password} = request.body;
   const checkExist = global.tblClient.find((item) => item.userName === mobileNo && item.isActive === true);
+  const df = deviceInfo(request);
   if (!checkExist) {
+    await createClientLoginInfoQuery({ clientId: null, info: df, isLogin: false, loginType: 2 }, fastify);
     throw new Error("Username and password not matched");
   }
   // if(checkExist.isMobileVerified == false){
@@ -1515,8 +1518,6 @@ const signinClientAppService = async (request, fastify) => {
     token : t1
   },request,fastify);
   let key = await getEncryptClinet({clientId : checkExist.clientId}, request,fastify)
-  const df = deviceInfo(request);
-  await createClientLoginInfoQuery({ clientId: checkExist.clientId, info: df }, fastify);
   return {
     token,
     details: {
@@ -1718,13 +1719,15 @@ const updatePasswordInForgotPasswordService = async (request, fastify) => {
   const checkExist = await getIdByValue({
     clientId : clientId,
   },request,fastify)
-
+  const df = deviceInfo(request);
   if(!checkExist){
+    await createClientLoginInfoQuery({ clientId: null, info: df, isLogin: false, loginType: 2 }, fastify);
     return "Invalid username"
   }
   let id = checkExist.clientId;
   const index = global.tblClient.findIndex((item) => item.clientId === id);
   if (index == -1) {
+    await createClientLoginInfoQuery({ clientId: null, info: df, isLogin: false, loginType: 2 }, fastify);
     throw new Error("Invalid username");
   }
   const hashedPassword = encrypt(password);
@@ -1741,8 +1744,7 @@ const updatePasswordInForgotPasswordService = async (request, fastify) => {
     countryCode : global.tblClient[index].countryCode,
     token : t1
   },request,fastify);
-  const df = deviceInfo(request);
-  await createClientLoginInfoQuery({ clientId: checkExist.clientId, info: df }, fastify);
+  await createClientLoginInfoQuery({ clientId: checkExist.clientId, info: df, isLogin: true, loginType: 1 }, fastify);
   return {
     token : token,
     details: {

@@ -2,6 +2,7 @@ const { QueryTypes } = require("sequelize");
 const { errorLogger } = require("../utilities/logger");
 const { clientProvider, getIpAddress, clientProcessStatus, deviceInfo } = require("../utilities");
 const { generateToken } = require("../utilities/tokenization");
+const { createClientLoginInfoQuery } = require("./TableClientLoginInfo");
 
 //TODO: this is a test api
 async function signUpUser(request, fastify) {
@@ -1419,6 +1420,7 @@ const getEncryptClinet = async (data, request , fastify)=>{
 const signInClientAppQuery = async (data, request, fastify) => {
   try{
     // find if password is correct
+    const df = deviceInfo(request);
     let user = await fastify.db.query(
       `SELECT * FROM "tblClient" 
       WHERE "wrClientID" = $1 AND "wrPassword" = $2
@@ -1429,9 +1431,11 @@ const signInClientAppQuery = async (data, request, fastify) => {
       }
     );
     if(user.length == 0){
+      await createClientLoginInfoQuery({ clientId: null, info: df, isLogin: false, loginType: 2 }, fastify)
       throw new Error("Invalid password");
     }
     if(user[0].wrIsUserActive != 1){
+      await createClientLoginInfoQuery({ clientId: null, info: df, isLogin: false, loginType: 2 }, fastify)
       throw new Error("User is not active");
     }
    
@@ -1445,7 +1449,7 @@ const signInClientAppQuery = async (data, request, fastify) => {
       WrAllowMultiLogin : false,
       wrToken : data.token
     }
-    const df = deviceInfo(request);
+
     const ft = generateToken(tokenPayload);
     // Insert login information
     await fastify.db.query(
@@ -1456,6 +1460,7 @@ const signInClientAppQuery = async (data, request, fastify) => {
         bind: [user[0].wrClientID, df, data.token],
       }
     );
+    await createClientLoginInfoQuery({ clientId: user[0].wrClientID, info: df, isLogin: true, loginType: 1 }, fastify)
     return ft;
   } catch (error) {
     errorLogger(
