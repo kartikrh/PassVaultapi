@@ -64,6 +64,7 @@ const editWhitelabelService = async (request, fastify) => {
     imagePath: request.body.imagePath ?? validateId.imagePath,
     isActive: Boolean(request.body.isActive) ?? validateId.isActive,
     id: parseInt(request.body.id, 10),
+    isDemoClientEnableInIOS: request.body.isDemoClientEnableInIOS ?? validateId.isDemoClientEnableInIOS,
   };
 
   const modifiedData = await updateWhitelabelQuery(updateData, fastify, request);

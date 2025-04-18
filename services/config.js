@@ -193,11 +193,19 @@ const getInitConfigDetails = async (request,fastify) => {
   return result;
 }
 
+const getAllConfigService = async (request, fastify) => {
+  const validKeys = ['repetitioncallinterval', 'ismarketrepetitioncall'];
+  return global.tblConfigs.filter(item =>
+    validKeys.includes(item.key.toLowerCase())
+  );
+};
+
 module.exports = {
   allCongifService,
   configByIdService,
   saveConfigService,
   deleteConfigService,
   allConfigDetails,
-  getInitConfigDetails
+  getInitConfigDetails,
+  getAllConfigService,
 };
