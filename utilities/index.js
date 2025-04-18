@@ -268,7 +268,10 @@ const callPredictorMarket = async (data , endpoint ,fastify ,request) =>{
           requestBody : data,
           requestStartTime : requestStartTime,
           requestEndTime : new Date(),
-          response : error.message
+          response : {
+            error : error.message,
+            type : "error"
+          }
         },
         request,
         fastify
