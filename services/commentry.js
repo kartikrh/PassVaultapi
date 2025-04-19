@@ -3232,7 +3232,10 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         );
         team.crr = parseFloat(team?.crr) || 0;
         team.rrr = parseFloat(team?.rrr) || 0;
-        global.tblCommentaryTeams[index] = team;
+        global.tblCommentaryTeams[index] = {
+          ...team,
+          teamPredictionPercentage: global.tblCommentaryTeams[index].teamPredictionPercentage
+        };
         response.commentaryTeams.push(global.tblCommentaryTeams[index]);
 
       });
@@ -3251,7 +3254,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         module: "commentaryTeams",
         type: "update",
         // data: commentaryTeams,
-        data: commentaryTeams.map((team) => ({
+        data: response.commentaryTeams.map((team) => ({
           ...team,
           crr: parseFloat(team?.crr) || 0,
           rrr: parseFloat(team?.rrr) || 0,
@@ -5851,7 +5854,7 @@ const commentaryDetailsByEventIdService = async (
   resultArr.mtyp = result.matchType || "";
   resultArr.hmtyp = result.historyMatchType || "";
   resultArr.com = competition?.competition || "";
-  resultArr.eti = parseInt(eventType.refId) || "";
+  resultArr.eti = parseInt(eventType?.refId) || "";
   resultArr.tpp1 = tpp1;
   resultArr.tpp2 = tpp2;
   resultArr.isPr = result.isPredictMarket === null ? false : result.isPredictMarket;
