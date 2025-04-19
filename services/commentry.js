@@ -123,7 +123,7 @@ const { getPlayersBattingHistoryByIdQuery } = require("../repository/TablePlayer
 const { mergeAndSaveImage } = require("../utilities/imageMerge");
 const { getAllTeamPlayersByTeamIdAndPlayerIdQuery } = require("../repository/TableTeamPlayer");
 const { insertNotificationViaNotiConfigQuery } = require("../repository/TableNotification");
-
+const { generateMarketAndRunners } = require("../markets");
 
 const allCommentaryService = async (request, fastify) => {
   // return global.tblCommentaries;
@@ -9567,6 +9567,16 @@ const loadcommentaryService = async (request, fastify) => {
         callPrediction.endPoint = '/api/v1/loadcommentary';
       }
     }
+    // call the prediction module
+    // let prediction = global.tblConfigs.find((item) => item.key === configConstants.CALLPREDICTIONMODULE)?.value || "false";
+    // if (prediction == "true") {
+    //   generateMarketAndRunners({
+    //       commentary : commentary,
+    //       commentaryId : commentary.commentaryId,
+    //       matchTypeId : commentary.matchTypeId,
+    //   }, request, fastify)
+    // }
+
     return {
       message: "Request Send Successfully!!!",
       callPrediction: callPrediction,
