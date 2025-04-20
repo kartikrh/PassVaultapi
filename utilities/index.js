@@ -907,6 +907,10 @@ const ClientInfoLoginType = {
   SUCCESS: 1,
   FAILED: 2,
 }
+const CompetitionType = {
+  INTERNATIONAL: 1,
+  DOMESTIC: 2,
+}
 
 module.exports = {
   ERROR_CODES,
@@ -969,4 +973,5 @@ module.exports = {
   EventName,
   generateEventId,
   ClientInfoLoginType,
+  CompetitionType,
 };

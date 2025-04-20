@@ -15,20 +15,26 @@ const { APIEndpointModuleType, ServiceType, callClientAPI } = require("../utilit
 const { getCommentariesResultQuery } = require("../repository/TableCommentary")
 
 const allCompetitionService = async (request) => {
-  const { isActive, isTrending, eventTypeId } = request.body;
+  const { isActive, isTrending, eventTypeId, matchTypeId, isMen, type } = request.body;
 
   const filterObject = {
     isActive: isActive,
     isTrending: isTrending,
     eventTypeId: eventTypeId === 0 ? null : eventTypeId,
+    matchTypeId: matchTypeId === 0 ? null : matchTypeId,
+    isMen: isMen,
+    type: type === 0 ? null : type,
   };
   // Additional checks for "0" and undefined
   filterObject.eventTypeId =
     eventTypeId === 0 || eventTypeId === undefined
       ? null
       : filterObject.eventTypeId;
-
-  if (isActive === undefined || isTrending === undefined) {
+  filterObject.matchTypeId =
+    matchTypeId === 0 || matchTypeId === undefined
+      ? null
+      : filterObject.matchTypeId;
+  if (isActive === undefined || isTrending === undefined || isMen === undefined) {
     const result = global.tblCompetitions.filter(
       (item) => item.isActive === true
     );
@@ -41,7 +47,13 @@ const allCompetitionService = async (request) => {
         (filterObject.eventTypeId === null ||
           item.eventTypeId === filterObject.eventTypeId) &&
           (filterObject.isTrending === null ||
-            item.isTrending === filterObject.isTrending)
+            item.isTrending === filterObject.isTrending) &&
+            (filterObject.matchTypeId === null ||
+              item.matchTypeId === filterObject.matchTypeId) &&
+              (filterObject.isMen === null ||
+                item.isMen === filterObject.isMen) &&
+                (filterObject.type === null ||
+                  item.type === filterObject.type)
       );
     });
     return result;
@@ -168,6 +180,8 @@ const updateCompititionService = async (request, fastify) => {
     lossPoint: request.body.lossPoint === undefined ? validateId.lossPoint : parseInt(request.body.lossPoint, 10),
     drsCount : request.body.drsCount === undefined ? validateId.drsCount : parseInt(request.body.drsCount),
     imagePath: validateId.imagePath,
+    isMen: validateId.isMen,
+    type: request.body.type === undefined ? validateId.type : parseInt(request.body.type),
   };
 
   if ("isActive" in request.body) {
@@ -181,6 +195,9 @@ const updateCompititionService = async (request, fastify) => {
   }
   if("isPointTable" in request.body){
     data.isPointTable = request.body.isPointTable === 'true';
+  }
+  if("isMen" in request.body){
+    data.isMen = request.body.isMen === 'true';
   }
 
   if (request.body.eventTypeId) {
