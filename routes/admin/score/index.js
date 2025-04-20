@@ -47,6 +47,11 @@ const {
   deleteFavCompetition,
   updateDisplayOrder,
 } = require('../../../controller/users/admin/favCompetitions');
+const {
+  allFavCommentary,
+  saveFavCommentary,
+  deleteFavCommentary,
+} = require("../../../controller/users/admin/clientFavCommentary");
 
 const {
   Score,
@@ -54,7 +59,8 @@ const {
   Commentary,
   Config,
   Client,
-  FavCompetititons,
+  FavCompetitions,
+  FavCommentary,
 } = require("../../../swaggerSchema/groupTags/schema");
 const { getAllSocialMedia } = require("../../../controller/users/admin/socialMedia");
 const { getAllWhitelabels } = require("../../../controller/users/admin/whitelabel");
@@ -365,16 +371,27 @@ module.exports = async (fastify, opts) => {
     handler: (request, reply) => getAllFavCompetitions(request, reply, fastify),
   });
   fastify.post("/saveFavComp", {
-    schema: FavCompetititons.save.schema,
+    schema: FavCompetitions.save.schema,
     handler: (request, reply) => saveFavCompetition(request, reply, fastify),
   });
   fastify.post("/deleteFavComp", {
-    schema: FavCompetititons.delete.schema,
+    schema: FavCompetitions.delete.schema,
     handler: (request, reply) => deleteFavCompetition(request, reply, fastify),
   });
   fastify.post("/changeDisplayOrder", {
-    schema: FavCompetititons.updateDisplayOrder.schema,
+    schema: FavCompetitions.updateDisplayOrder.schema,
     handler: (request, reply) => updateDisplayOrder(request, reply, fastify),
+  });
+  fastify.post("/allFavComm", {
+    handler: (request, reply) => allFavCommentary(request, reply, fastify),
+  });
+  fastify.post("/saveFavComm", {
+    schema: FavCommentary.save.schema,
+    handler: (request, reply) => saveFavCommentary(request, reply, fastify),
+  });
+  fastify.post("/deleteFavComm", {
+    schema: FavCommentary.delete.schema,
+    handler: (request, reply) => deleteFavCommentary(request, reply, fastify),
   });
 };
 

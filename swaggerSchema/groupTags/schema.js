@@ -8813,12 +8813,12 @@ const VirtualEvent = {
     }
   },
 }
-const FavCompetititons = {
+const FavCompetitions = {
   save: {
     schema: {
-      tags: ["FavCompetititons"],
+      tags: ["FavCompetitions"],
       security: [{ bearerAuth: [] }],
-      description: "save FavCompetititons data",
+      description: "save FavCompetitions data",
       body: {
         type: "object",
         properties: {
@@ -8834,8 +8834,8 @@ const FavCompetititons = {
 
   delete: {
     schema: {
-      tags: ["FavCompetititons"],
-      description: "delete FavCompetititons data",
+      tags: ["FavCompetitions"],
+      description: "delete FavCompetitions data",
       body: {
         type: "object",
         properties: {
@@ -8852,7 +8852,7 @@ const FavCompetititons = {
 
   updateDisplayOrder: {
     schema: {
-      tags: ["FavCompetititons"],
+      tags: ["FavCompetitions"],
       description: "update display order",
       body: {
         type: "array",
@@ -8864,6 +8864,41 @@ const FavCompetititons = {
           },
         },
         minItems: 1,
+      },
+    },
+  },
+};
+const FavCommentary = {
+  save: {
+    schema: {
+      tags: ["FavCommentary"],
+      security: [{ bearerAuth: [] }],
+      description: "save FavCommentary data",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          clientId: { type: "string" },
+          commentaryId: { type: "integer" },
+        },
+        required: ["id", "clientId", "commentaryId"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["FavCommentary"],
+      description: "delete FavCommentary data",
+      body: {
+        type: "object",
+        properties: {
+          id: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["id"],
       },
     },
   },
@@ -8936,5 +8971,6 @@ module.exports = {
   Whitelabel,
   NotificationConfig,
   VirtualEvent,
-  FavCompetititons,
+  FavCompetitions,
+  FavCommentary,
 };

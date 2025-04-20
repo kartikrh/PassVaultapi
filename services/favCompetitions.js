@@ -10,7 +10,6 @@ const {
 const { getIdByValue, getEncryptClinet } = require("../repository/TableUser")
 
 const saveFavCompetitionsService = async (request, fastify) => {
-    console.log("save  0 request.body", request.body)
   const checkExist = await getIdByValue({ clientId: request.body.clientId }, request, fastify)
   if(!checkExist){
     return "Invalid ClientId"
@@ -41,7 +40,6 @@ const saveFavCompetitionsService = async (request, fastify) => {
 };
 
 const editFavCompetitionsService = async (request, fastify) => {
-    console.log("request.body", request.body)
   const checkExist = await getIdByValue({ clientId : request.body.clientId }, request, fastify)
   if(!checkExist){
     return "Invalid ClientId"
