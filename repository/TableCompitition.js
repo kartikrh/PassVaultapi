@@ -121,8 +121,8 @@ const insertCompetitionQuery = async (request, fastify) => {
           data.lossPoint === undefined ? null : data.lossPoint,
           data.drsCount === undefined ? 0 : data.drsCount,
           data.imagePath || null,
-          data.isMen || false,
-          data.type,
+          data.isMen || null,
+          data.type || null,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
