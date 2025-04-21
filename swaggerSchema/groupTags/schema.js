@@ -3621,6 +3621,21 @@ const Compitition = {
       },
     },
   },
+  isMenStatus: {
+    schema: {
+      tags: ["Compitition"],
+      description: "change isMen status",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionId: { type: "integer" },
+          isMen: { type: "boolean" },
+        },
+        required: ["competitionId", "isMen"],
+      },
+    },
+  },
 };
 
 const Event = {
