@@ -7,6 +7,7 @@ const {
   isTrendingChangeStatusQuery,
   isEventSnapCompetitionQuery,
   isPointTableCompetitionQuery,
+  isMenChangeStatusQuery,
 } = require("../repository/TableCompitition");
 const {storeImageOnServer, removeImageFromServer, generateImageName } = require("../utilities/Images");
 const { PROJECT_NAME } = require("../utilities/configConstants");
@@ -594,6 +595,32 @@ const getAllCompetitionListService = async (request, fastify) => {
   return result;
 }
 
+const isMenChangeStatusService = async (request, fastify) => {
+  const { competitionId, isMen } = request.body;
+
+  const validateId = global.tblCompetitions.find(
+    (item) => item.competitionId === competitionId
+  );
+
+  if (!validateId) {
+    throw new Error("Competition with this id not Found");
+  }
+
+  await isMenChangeStatusQuery(
+    {
+      competitionId,
+      isMen,
+    },
+    request,
+    fastify
+  );
+  const index = global.tblCompetitions.findIndex((item) => item.competitionId == competitionId);
+  if(index != -1){
+    global.tblCompetitions[index].isMen = isMen;
+  }
+  
+  return `Competition isMen status updated successfully`;
+};
 module.exports = {
   allCompetitionService,
   competitionByIdService,
@@ -607,4 +634,5 @@ module.exports = {
   getCompletedCommentaryResultService,
   getAllTeamListService,
   getAllCompetitionListService,
+  isMenChangeStatusService,
 };
