@@ -20,7 +20,7 @@ const getAllCommentaryQuery = async (fastify) => {
     "wrEventRefId" as "eventRefId",
     "wrLocation" as "location",
     "wrWeather" as "weather",
-    "wrPitch" as "pitch",
+    "wrPitchCracks" as "pitchCracks",
     "wrHomeSideTeam" as "homeSideTeam",
     "wrTossWonBy" as "tossWonBy",
     "wrChoseTo" as "choseTo",
@@ -57,7 +57,10 @@ const getAllCommentaryQuery = async (fastify) => {
     "wrSortUpdate" as "sortUpdate",
     tc."wrIsTest" as "isTest",
     tc."wrEventNo" as "eventNo",
-    tc."wrIsEventStart" as "isEventStart"
+    tc."wrIsEventStart" as "isEventStart",
+    tc."wrDifficulty" as "difficulty",
+    tc."wrPitchHardness" as "pitchHardness",
+    tc."wrPitchWareSpeed" as "pitchWareSpeed"
     from "tblCommentaries" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -95,7 +98,7 @@ const getCommentariesDataQuery = async (fastify) => {
     "wrEventRefId" as "eventRefId",
     "wrLocation" as "location",
     "wrWeather" as "weather",
-    "wrPitch" as "pitch",
+    "wrPitchCracks" as "pitchCracks",
     "wrHomeSideTeam" as "homeSideTeam",
     "wrTossWonBy" as "tossWonBy",
     "wrChoseTo" as "choseTo",
@@ -131,7 +134,10 @@ const getCommentariesDataQuery = async (fastify) => {
     "wrIsWheelShow" as "isWheelShow",
     "wrSortUpdate" as "sortUpdate",
     tc."wrEventNo" as "eventNo",
-    tc."wrIsEventStart" as "isEventStart"
+    tc."wrIsEventStart" as "isEventStart",
+    tc."wrDifficulty" as "difficulty",
+    tc."wrPitchHardness" as "pitchHardness",
+    tc."wrPitchWareSpeed" as "pitchWareSpeed"
     from "tblCommentaries" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -155,8 +161,9 @@ const insertCommentaryQuery = async (request, fastify) => {
       `
       with insert_data as(
         insert into "tblCommentaries" ("wrEventTypeId","wrMatchTypeId","wrCompetitionId","wrEventId",
-        "wrEventDate","wrEventName","wrEventRefId","wrTeam1Id","wrTeam2Id","wrLocation","wrWeather","wrPitch","wrDisplayStatus","wrTarget","wrMarketID","wrTpId","isSignalROn","isMatchTypeUpdated" , "wrCreatedBy" , "wrCreatedDate","wrCommentaryStatus","wrCurrentInnings", "wrSystemPlayerCount","wrIsPredictMarket",
-        "wrDelay", "wrIsActive", "wrIsClientShow","wrIsTeamPredictionOn", "wrHistoryMatchTypeId", "wrIsCountInPoint","wrIsTest", "wrEventNo") values (
+        "wrEventDate","wrEventName","wrEventRefId","wrTeam1Id","wrTeam2Id","wrLocation","wrWeather","wrPitchCracks","wrDisplayStatus","wrTarget","wrMarketID","wrTpId","isSignalROn","isMatchTypeUpdated" , "wrCreatedBy" , "wrCreatedDate","wrCommentaryStatus","wrCurrentInnings", "wrSystemPlayerCount","wrIsPredictMarket",
+        "wrDelay", "wrIsActive", "wrIsClientShow","wrIsTeamPredictionOn", "wrHistoryMatchTypeId", "wrIsCountInPoint","wrIsTest", "wrEventNo",
+        "wrDifficulty", "wrPitchHardness", "wrPitchWareSpeed") values (
           $1,
           $2,
           $3,
@@ -175,7 +182,10 @@ const insertCommentaryQuery = async (request, fastify) => {
           $26,
           $27,
           $28,
-          $29
+          $29,
+          $30,
+          $31,
+          $32
         ) returning *         
       )
 
@@ -196,7 +206,7 @@ const insertCommentaryQuery = async (request, fastify) => {
     "wrEventRefId" as "eventRefId",
     "wrLocation" as "location",
     "wrWeather" as "weather",
-    "wrPitch" as "pitch",
+    "wrPitchCracks" as "pitchCracks",
     tc."wrHomeSideTeam" as "homeSideTeam",
     tc."wrTossWonBy" as "tossWonBy",
     "wrChoseTo" as "choseTo",
@@ -229,7 +239,10 @@ const insertCommentaryQuery = async (request, fastify) => {
     "wrIsWheelShow" as "isWheelShow",
     "wrIsTest" as "isTest",
     tc."wrEventNo" as "eventNo",
-    tc."wrIsEventStart" as "isEventStart"
+    tc."wrIsEventStart" as "isEventStart",
+    tc."wrDifficulty" as "difficulty",
+    tc."wrPitchHardness" as "pitchHardness",
+    tc."wrPitchWareSpeed" as "pitchWareSpeed"
     from "insert_data" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"  
@@ -251,7 +264,7 @@ const insertCommentaryQuery = async (request, fastify) => {
           data.team2Id || null,
           data.location || null,
           data.weather || null,
-          data.pitch || null,
+          data.pitchCracks || null,
           "Toss Pending!!",
           null,
           data.marketId || null,
@@ -269,6 +282,9 @@ const insertCommentaryQuery = async (request, fastify) => {
           data.isCountInPoint,
           data.hasOwnProperty("isTest") ? data.isTest : false,
           data.eventNo || null,
+          data.difficulty || null,
+          data.pitchHardness || null,
+          data.pitchWareSpeed || null,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -549,7 +565,7 @@ const updateCommentaryQuery = async (request, fastify) => {
       "wrTeam2Id" = $9,
       "wrLocation" = $10,
       "wrWeather" = $11,
-      "wrPitch" = $12,
+      "wrPitchCracks" = $12,
       "wrTarget" = $13 ,
       "isSignalROn" = $14,
       "isMatchTypeUpdated" = $15,
@@ -560,7 +576,10 @@ const updateCommentaryQuery = async (request, fastify) => {
       "wrIsClientShow" = $20,
       "wrIsCountInPoint" = $21,
       "wrEventNo" = $22,
-      "wrIsTest" = $23
+      "wrIsTest" = $23,
+      "wrDifficulty" = $24, 
+      "wrPitchHardness" = $25,
+      "wrPitchWareSpeed" = $26
       where "wrCommentaryId" = $16 
       `,
       {
@@ -588,6 +607,9 @@ const updateCommentaryQuery = async (request, fastify) => {
           data.isCountInPoint,
           data.eventNo,
           data.isTest,
+          data.difficulty || null,
+          data.pitchHardness || null,
+          data.pitchWareSpeed || null,
         ],
 
         type: fastify.db.QueryTypes.UPDATE,
@@ -754,7 +776,7 @@ const getCommentaryByIdQuery = async (request, fastify) => {
       "wrEventRefId" as "eventRefId",
       "wrLocation" as "location",
       "wrWeather" as "weather",
-      "wrPitch" as "pitch",
+      "wrPitchCracks" as "pitchCracks",
       tc."wrHomeSideTeam" as "homeSideTeam",
       tc."wrTossWonBy" as "tossWonBy",
       "wrChoseTo" as "choseTo",
@@ -789,7 +811,10 @@ const getCommentaryByIdQuery = async (request, fastify) => {
       tc."wrIsCountInPoint" as "isCountInPoint",
       tc."wrEventNo" as "eventNo",
       tc."wrIsTest" as "isTest",
-      tc."wrIsEventStart" as "isEventStart"
+      tc."wrIsEventStart" as "isEventStart",
+      tc."wrDifficulty" as "difficulty",
+      tc."wrPitchHardness" as "pitchHardness",
+      tc."wrPitchWareSpeed" as "pitchWareSpeed"
       from "tblCommentaries" tc
       left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
       left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -4345,7 +4370,10 @@ const getCommentariesResultQuery = async (request, fastify) => {
       tct2."wrTeamWicket" as "team2Wicket",
       tc."wrIsCountInPoint" as "isCountInPoint",
       tc."wrEventNo" as "eventNo",
-      tc."wrIsEventStart" as "isEventStart"
+      tc."wrIsEventStart" as "isEventStart",
+      tc."wrDifficulty" as "difficulty",
+      tc."wrPitchHardness" as "pitchHardness",
+      tc."wrPitchWareSpeed" as "pitchWareSpeed"
       FROM "tblCommentaries" tc
       LEFT JOIN "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
       LEFT JOIN "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -4423,7 +4451,7 @@ const getAllCommentaryHistoryQuery = async (whereCondition, fastify, request) =>
             tc."wrEventRefId" as "eventRefId",
             tc."wrLocation" as "location",
             tc."wrWeather" as "weather",
-            tc."wrPitch" as "pitch",
+            tc."wrPitchCracks" as "pitchCracks",
             tc."wrHomeSideTeam" as "homeSideTeam",
             tc."wrTossWonBy" as "tossWonBy",
             tc."wrChoseTo" as "choseTo",
@@ -4459,7 +4487,10 @@ const getAllCommentaryHistoryQuery = async (whereCondition, fastify, request) =>
             tc."wrIsWheelShow" as "isWheelShow",
             tc."wrIsTest" as "isTest",
             tc."wrEventNo" as "eventNo",
-            tc."wrIsEventStart" as "isEventStart"
+            tc."wrIsEventStart" as "isEventStart",
+            tc."wrDifficulty" as "difficulty",
+            tc."wrPitchHardness" as "pitchHardness",
+            tc."wrPitchWareSpeed" as "pitchWareSpeed"
       FROM "tblCommentaries" tc
       LEFT JOIN "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
       LEFT JOIN "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -4692,7 +4723,7 @@ const getCommentariesDataByDifferentIdsQuery = async (whereCondition, request, f
           tc."wrEventRefId" as "eventRefId",
           tc."wrLocation" as "location",
           tc."wrWeather" as "weather",
-          tc."wrPitch" as "pitch",
+          tc."wrPitchCracks" as "pitchCracks",
           tc."wrHomeSideTeam" as "homeSideTeam",
           tc."wrTossWonBy" as "tossWonBy",
           tc."wrChoseTo" as "choseTo",
@@ -4727,7 +4758,10 @@ const getCommentariesDataByDifferentIdsQuery = async (whereCondition, request, f
           tc."wrShotType" as "shotType",
           tc."wrIsWheelShow" as "isWheelShow",
           tc."wrEventNo" as "eventNo",
-          tc."wrIsEventStart" as "isEventStart"
+          tc."wrIsEventStart" as "isEventStart",
+          tc."wrDifficulty" as "difficulty",
+          tc."wrPitchHardness" as "pitchHardness",
+          tc."wrPitchWareSpeed" as "pitchWareSpeed"
       FROM "tblCommentaries" tc
       LEFT JOIN "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
       LEFT JOIN "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -4773,7 +4807,7 @@ const getCommentariesDataQueryV1 = async (fastify) => {
         tc."wrEventRefId" as "erefid",
         tc."wrLocation" as "loc",
         tc."wrWeather" as "weather",
-        tc."wrPitch" as "pitch",
+        tc."wrPitchCracks" as "pitchCracks",
         tc."wrHomeSideTeam" as "homsidte",
         tc."wrTossWonBy" as "twonby",
         tc."wrChoseTo" as "choseto",
@@ -4806,7 +4840,10 @@ const getCommentariesDataQueryV1 = async (fastify) => {
         mt2."wrMatchType" AS "mtyp",
         tc."wrIsCountInPoint" as "icntinpnt",
         tc."wrShotType" as "styp",
-        tc."wrIsWheelShow" as "iws"
+        tc."wrIsWheelShow" as "iws",
+        tc."wrDifficulty" as "difficulty",
+        tc."wrPitchHardness" as "pitchHardness",
+        tc."wrPitchWareSpeed" as "pitchWareSpeed"
     FROM "tblCommentaries" tc
     LEFT JOIN "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     LEFT JOIN "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -5273,8 +5310,9 @@ const insertVirtualEventQuery = async (request, fastify) => {
       `
       with insert_data as(
         insert into "tblCommentaries" ("wrEventTypeId","wrMatchTypeId","wrCompetitionId","wrEventId",
-        "wrEventDate","wrEventName","wrEventRefId","wrTeam1Id","wrTeam2Id","wrLocation","wrWeather","wrPitch","wrDisplayStatus","wrTarget","wrMarketID","wrTpId","isSignalROn","isMatchTypeUpdated" , "wrCreatedBy" , "wrCreatedDate","wrCommentaryStatus","wrCurrentInnings", "wrSystemPlayerCount","wrIsPredictMarket",
-        "wrDelay", "wrIsActive", "wrIsClientShow","wrIsTeamPredictionOn", "wrHistoryMatchTypeId", "wrIsCountInPoint","wrIsTest", "wrEventNo") values (
+        "wrEventDate","wrEventName","wrEventRefId","wrTeam1Id","wrTeam2Id","wrLocation","wrWeather","wrPitchCracks","wrDisplayStatus","wrTarget","wrMarketID","wrTpId","isSignalROn","isMatchTypeUpdated" , "wrCreatedBy" , "wrCreatedDate","wrCommentaryStatus","wrCurrentInnings", "wrSystemPlayerCount","wrIsPredictMarket",
+        "wrDelay", "wrIsActive", "wrIsClientShow","wrIsTeamPredictionOn", "wrHistoryMatchTypeId", "wrIsCountInPoint","wrIsTest", "wrEventNo",
+        "wrDifficulty", "wrPitchHardness", "wrPitchWareSpeed") values (
           $1,
           $2,
           $3,
@@ -5293,7 +5331,10 @@ const insertVirtualEventQuery = async (request, fastify) => {
           $26,
           $27,
           $28,
-          $29
+          $29,
+          $30,
+          $31,
+          $32
         ) returning *         
       )
 
@@ -5314,7 +5355,7 @@ const insertVirtualEventQuery = async (request, fastify) => {
     "wrEventRefId" as "eventRefId",
     "wrLocation" as "location",
     "wrWeather" as "weather",
-    "wrPitch" as "pitch",
+    "wrPitchCracks" as "pitchCracks",
     tc."wrHomeSideTeam" as "homeSideTeam",
     tc."wrTossWonBy" as "tossWonBy",
     "wrChoseTo" as "choseTo",
@@ -5347,7 +5388,10 @@ const insertVirtualEventQuery = async (request, fastify) => {
     "wrIsWheelShow" as "isWheelShow",
     "wrIsTest" as "isTest",
     tc."wrEventNo" as "eventNo",
-    tc."wrIsEventStart" as "isEventStart"
+    tc."wrIsEventStart" as "isEventStart",
+    tc."wrDifficulty" as "difficulty",
+    tc."wrPitchHardness" as "pitchHardness",
+    tc."wrPitchWareSpeed" as "pitchWareSpeed"
     from "insert_data" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"  
@@ -5369,7 +5413,7 @@ const insertVirtualEventQuery = async (request, fastify) => {
           data.team2Id || null,
           data.location || null,
           data.weather || null,
-          data.pitch || null,
+          data.pitchCracks || null,
           "Toss Pending!!",
           null,
           data.marketId || null,
@@ -5388,6 +5432,9 @@ const insertVirtualEventQuery = async (request, fastify) => {
           data.isCountInPoint || false,
           data.hasOwnProperty("isTest") ? data.isTest : false,
           data.eventNo || null,
+          data.difficulty || null,
+          data.pitchHardness || null,
+          data.pitchWareSpeed || null,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -5781,6 +5828,17 @@ const virtualEventBallStartQuery = async (data, fastify, request) => {
     throw new Error(err.message);
   }
 };
+const getAllDifficulties = async (fastify) => {
+  return await fastify.db.query(
+    `SELECT 
+    "wrId" as "id",
+    "wrDifficulty" as "difficulty"
+    FROM "tblDifficulty";`,
+    {
+      type: fastify.db.QueryTypes.SELECT,
+    }
+  );
+};
 
 module.exports = {
   getAllCommentaryQuery,
@@ -5895,4 +5953,5 @@ module.exports = {
   virtualEventTeamUpdateQuery,
   virtualPlayersSelectQuery,
   virtualEventBallStartQuery,
+  getAllDifficulties,
 };

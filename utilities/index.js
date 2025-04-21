@@ -911,6 +911,27 @@ const CompetitionType = {
   INTERNATIONAL: 1,
   DOMESTIC: 2,
 }
+const Weather = {
+  RANDOM: 1,
+  WARM: 2,
+  MILD: 3,
+}
+const PitchCracks = {
+  NONE: 1,
+  LIGHT: 2,
+  HEAVY: 3,
+}
+const PitchWareSpeed = {
+  NORMAL: 1,
+  SLOW: 2,
+  FAST: 3,
+}
+const PitchHardness = {
+  SOFT: 1,
+  VERYSOFT: 2,
+  HARD: 3,
+  MEDIUM: 4,
+}
 
 module.exports = {
   ERROR_CODES,
@@ -974,4 +995,8 @@ module.exports = {
   generateEventId,
   ClientInfoLoginType,
   CompetitionType,
+  Weather,
+  PitchCracks,
+  PitchWareSpeed,
+  PitchHardness,
 };

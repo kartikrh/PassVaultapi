@@ -81,6 +81,7 @@ const {
   getAllCommentaryPlayerDataQuery,
   changeIsTestComQuery,
   changeIsEventStartQuery,
+  getAllDifficulties,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -11049,6 +11050,10 @@ const changeisEventStartService = async (request, fastify) => {
 
   return "IsEventStart Updated successfully";
 };
+const getAllDifficultyService = async (request, fastify) => {
+  const result = await getAllDifficulties(fastify);
+  return result;
+};
 
 module.exports = {
   allCommentaryService,
@@ -11133,4 +11138,5 @@ module.exports = {
   updateMergeImageOnCommentaryPlayersService,
   changeIsTestComService,
   changeisEventStartService,
+  getAllDifficultyService,
 };
