@@ -41,6 +41,17 @@ const { getAllVideoLibrary } = require("../../../controller/users/admin/videoLib
 const { getAllPhotoLibrary, allLibraryImages } = require("../../../controller/users/admin/photoLibrary/index");
 const { getAllTipsClientAPI } = require("../../../controller/users/admin/tips/index");
 const { getAllCountryCode } = require("../../../controller/users/admin/countryCode");
+const {
+  getAllFavCompetitions,
+  saveFavCompetition,
+  deleteFavCompetition,
+  updateDisplayOrder,
+} = require('../../../controller/users/admin/favCompetitions');
+const {
+  allFavCommentary,
+  saveFavCommentary,
+  deleteFavCommentary,
+} = require("../../../controller/users/admin/clientFavCommentary");
 
 const {
   Score,
@@ -48,6 +59,8 @@ const {
   Commentary,
   Config,
   Client,
+  FavCompetitions,
+  FavCommentary,
 } = require("../../../swaggerSchema/groupTags/schema");
 const { getAllSocialMedia } = require("../../../controller/users/admin/socialMedia");
 const { getAllWhitelabels } = require("../../../controller/users/admin/whitelabel");
@@ -353,6 +366,32 @@ module.exports = async (fastify, opts) => {
   fastify.post("/deleteAcc", {
     // schema: Client.delete.schema,
     handler: (request, reply) => deleteClientByEncrypt(request, reply, fastify),
+  });
+  fastify.post("/allFavComp", {
+    handler: (request, reply) => getAllFavCompetitions(request, reply, fastify),
+  });
+  fastify.post("/saveFavComp", {
+    schema: FavCompetitions.save.schema,
+    handler: (request, reply) => saveFavCompetition(request, reply, fastify),
+  });
+  fastify.post("/deleteFavComp", {
+    schema: FavCompetitions.delete.schema,
+    handler: (request, reply) => deleteFavCompetition(request, reply, fastify),
+  });
+  fastify.post("/changeDisplayOrder", {
+    schema: FavCompetitions.updateDisplayOrder.schema,
+    handler: (request, reply) => updateDisplayOrder(request, reply, fastify),
+  });
+  fastify.post("/allFavComm", {
+    handler: (request, reply) => allFavCommentary(request, reply, fastify),
+  });
+  fastify.post("/saveFavComm", {
+    schema: FavCommentary.save.schema,
+    handler: (request, reply) => saveFavCommentary(request, reply, fastify),
+  });
+  fastify.post("/deleteFavComm", {
+    schema: FavCommentary.delete.schema,
+    handler: (request, reply) => deleteFavCommentary(request, reply, fastify),
   });
 };
 

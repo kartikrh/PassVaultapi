@@ -12,7 +12,8 @@ const getAllWhitelabelsQuery = async (fastify) => {
                 "wrCreatedBy" as "createdBy",
                 "wrUpdatedBy" as "updatedBy",
                 "wrUpdatedAt" as "updatedAt",
-                "wrIsDemoClientLogin" as "isDemoClientLogin"
+                "wrIsDemoClientLogin" as "isDemoClientLogin",
+                "wrIsDemoClientEnableInIOS" as "isDemoClientEnableInIOS"
             FROM "tblWhitelabel"
             WHERE "wrIsDeleted" = FALSE;`,
             { type: fastify.db.QueryTypes.SELECT }
@@ -32,10 +33,10 @@ const insertWhitelabelQuery = async (data, fastify, request) => {
         const result = await fastify.db.query(
             `WITH insert_data AS (
             INSERT INTO "tblWhitelabel" (
-            "wrDomain", "wrImagepath", "wrIsActive", "wrCreatedAt", "wrCreatedBy"
+            "wrDomain", "wrImagepath", "wrIsActive", "wrCreatedAt", "wrCreatedBy", "wrIsDemoClientEnableInIOS"
             ) 
             VALUES (
-                $1, $2, $3, NOW(), $4
+                $1, $2, $3, NOW(), $4, $5
             )
             RETURNING *
             )
@@ -47,7 +48,9 @@ const insertWhitelabelQuery = async (data, fastify, request) => {
                 "wrCreatedAt" as "createdAt",
                 "wrCreatedBy" as "createdBy",
                 "wrUpdatedBy" as "updatedBy",
-                "wrUpdatedAt" as "updatedAt"
+                "wrUpdatedAt" as "updatedAt",
+                "wrIsDemoClientLogin" as "isDemoClientLogin",
+                "wrIsDemoClientEnableInIOS" as "isDemoClientEnableInIOS"
             FROM insert_data;`,
             {
                 type: fastify.db.QueryTypes.SELECT,
@@ -56,6 +59,7 @@ const insertWhitelabelQuery = async (data, fastify, request) => {
                     data.imagePath || null,
                     data.isActive,
                     request.userTokenInfo.WrUserId,
+                    data.isDemoClientEnableInIOS || false,
                 ],
             }
         );
@@ -80,7 +84,8 @@ const updateWhitelabelQuery = async (data, fastify, request) => {
                 "wrImagepath" = $2,
                 "wrIsActive" = $3,
                 "wrUpdatedBy" = $4,
-                "wrUpdatedAt" = NOW()
+                "wrUpdatedAt" = NOW(),
+                "wrIsDemoClientEnableInIOS" = $6
             WHERE "wrId" = $5
             RETURNING 
                 "wrId" as "id",
@@ -90,7 +95,9 @@ const updateWhitelabelQuery = async (data, fastify, request) => {
                 "wrCreatedAt" as "createdAt",
                 "wrCreatedBy" as "createdBy",
                 "wrUpdatedBy" as "updatedBy",
-                "wrUpdatedAt" as "updatedAt";`,
+                "wrUpdatedAt" as "updatedAt",
+                "wrIsDemoClientLogin" as "isDemoClientLogin",
+                "wrIsDemoClientEnableInIOS" as "isDemoClientEnableInIOS";`,
             {
                 type: fastify.db.QueryTypes.UPDATE,
                 bind: [
@@ -98,7 +105,8 @@ const updateWhitelabelQuery = async (data, fastify, request) => {
                     data.imagePath,
                     data.isActive,
                     request.userTokenInfo.WrUserId,
-                    data.id
+                    data.id,
+                    data.isDemoClientEnableInIOS || false,
                 ],
             }
         );

@@ -8746,11 +8746,11 @@ const NotificationConfig = {
     },
   },
 };
-const CompetitionEvent = {
+const VirtualEvent = {
   saveEvent : {
     schema : {
-      tags: ["CompetitionEvent"],
-      description: "save CompetitionEvent data",
+      tags: ["VirtualEvent"],
+      description: "save VirtualEvent data",
       security: [{ bearerAuth: [] }],
       body: {
         type: "object",
@@ -8763,8 +8763,146 @@ const CompetitionEvent = {
         required: ["competitionId", "eventDate", "eventName"],
       }
     }
-  }
+  },
+  createVirtualEvent : {
+    schema : {
+      tags: ["VirtualEvent"],
+      description: "create VirtualEvent data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionId : { type: "integer" },
+          eventDate : { type: "string" },
+          eventRefId : { type: "string" }
+        },
+        required: ["competitionId", "eventDate", "eventRefId"],
+      }
+    }
+  },
+  EventToss : {
+    schema : {
+      tags: ["VirtualEvent"],
+      description: "VirtualEvent Toss",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId : { type: "integer" },
+          tossWonTeam : { type: "integer" },
+          decision : { type: "integer" },
+        },
+        required: ["commentaryId", "tossWonTeam", "decision"],
+      }
+    }
+  },
+  BallStartEvent : {
+    schema : {
+      tags: ["CompetitionEvent"],
+      description: "Ball Start Event",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId : { type: "integer" },
+          displayStatus : { type: "string" },
+          commentaryPlayerId : { type: "integer" },
+        },
+        required: ["commentaryId", "displayStatus"],
+      }
+    }
+  },
 }
+const FavCompetitions = {
+  save: {
+    schema: {
+      tags: ["FavCompetitions"],
+      security: [{ bearerAuth: [] }],
+      description: "save FavCompetitions data",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          clientId: { type: "string" },
+          competitionId: { type: "integer" },
+          isDefault: { type: "boolean" },
+        },
+        required: ["id", "clientId", "competitionId"],
+      },
+    },
+  },
+
+  delete: {
+    schema: {
+      tags: ["FavCompetitions"],
+      description: "delete FavCompetitions data",
+      body: {
+        type: "object",
+        properties: {
+          id: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["id"],
+      },
+    },
+  },
+
+  updateDisplayOrder: {
+    schema: {
+      tags: ["FavCompetitions"],
+      description: "update display order",
+      body: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "integer" },
+            displayOrder: { type: "integer" },
+          },
+        },
+        minItems: 1,
+      },
+    },
+  },
+};
+const FavCommentary = {
+  save: {
+    schema: {
+      tags: ["FavCommentary"],
+      security: [{ bearerAuth: [] }],
+      description: "save FavCommentary data",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          clientId: { type: "string" },
+          commentaryId: { type: "integer" },
+        },
+        required: ["id", "clientId", "commentaryId"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["FavCommentary"],
+      description: "delete FavCommentary data",
+      body: {
+        type: "object",
+        properties: {
+          id: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["id"],
+      },
+    },
+  },
+};
 module.exports = {
   Auth,
   Tabs,
@@ -8832,5 +8970,7 @@ module.exports = {
   Packages,
   Whitelabel,
   NotificationConfig,
-  CompetitionEvent
+  VirtualEvent,
+  FavCompetitions,
+  FavCommentary,
 };

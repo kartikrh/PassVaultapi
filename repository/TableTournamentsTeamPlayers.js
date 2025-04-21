@@ -100,9 +100,17 @@ const getAllPlayersByTeamIdQuery = async (data, request, fastify) => {
   try {
     return await fastify.db.query(
       `SELECT 
-            tp."wrPlayerId" AS "playerId",
-            tp."wrPlayerName" AS "playerName",
-            ttp."wrTeamId" AS "teamId"
+          ttp."wrId" AS "id",
+          ttp."wrCompetitionId" AS "competitionId",
+          ttp."wrPlayerId" AS "playerId",
+          ttp."wrPlayerName" AS "playerName",
+          ttp."wrCreatedBy" AS  "createdBy",
+          ttp."wrCreatedAt" AS "createdAt",
+          tp."wrPlayerTypeId" AS "playerTypeId",
+          tpt."wrPlayerType" AS "playerType"
+          tp."wrPlayerId" AS "playerId",
+          tp."wrPlayerName" AS "playerName",
+          ttp."wrTeamId" AS "teamId"
         FROM "tblTeamPlayers" AS ttp
         LEFT JOIN "tblPlayers" AS tp 
             ON ttp."wrRefPlayerId" = tp."wrPlayerId" AND tp."wrIsDeleted" = false
@@ -205,6 +213,41 @@ const deletePlayersByTeamIdQuery = async (teamId, request, fastify) => {
   }
 };
 
+const getAllPlayersByTeamAndCompetitionIdQuery = async (data, request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `SELECT 
+          ttp."wrId" as "id",
+          ttp."wrCompetitionId" as "competitionId",
+          ttp."wrTeamId" as "teamId",
+          ttp."wrPlayerId" as "playerId",
+          ttp."wrPlayerName" as "playerName",
+          ttp."wrCreatedBy" as  "createdBy",
+          ttp."wrCreatedAt" as "createdAt",
+          tp."wrPlayerTypeId" as "playerTypeId",
+          tpt."wrPlayerType" as "playerType"
+      FROM "tblTournamentTeamPlayers" AS ttp
+      LEFT JOIN "tblPlayers" AS tp ON ttp."wrPlayerId" = tp."wrPlayerId"
+      LEFT JOIN "tblPlayerTypes" AS tpt ON tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
+      WHERE ttp."wrIsDeleted" = false
+      AND ttp."wrTeamId" = $1
+      AND ttp."wrCompetitionId" = $2`,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [data.teamId, data.competitionId],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableTournamentTeamPlayers/getAllPlayersByTeamAndCompetitionIdQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllTournamentTeamPlayersQuery,
   insertTournamentTeamPlayersQuery,
@@ -213,4 +256,5 @@ module.exports = {
   deletePlayerByTeamQuery,
   deleteTournamentPlayersByPlayerIdQuery,
   deletePlayersByTeamIdQuery,
+  getAllPlayersByTeamAndCompetitionIdQuery,
 };
