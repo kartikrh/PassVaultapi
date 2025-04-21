@@ -86,14 +86,14 @@ const processMarketAndRunners = (market, teamId, keyPrefix, processedMarketsObj 
             backSize: runner.backSize,
             laySize: runner.laySize,
             predefinedValue: runner.predefinedValue,
-            runnerId: runner.runnerId || "0"
+            runnerId: runner.runnerId || 0
         })) || [];
     }
     else if (market.marketTypeCategoryId === 26) {
         // Handle LDO and Lottery markets
         marketRunners = market.runners?.map(runner => ({
             ...runner,  // Spread the original runner properties
-            runnerId: runner.runnerId || "0",
+            runnerId: runner.runnerId || 0,
             // Make sure each property is explicitly copied
             marketTemplateRunnerId: runner.marketTemplateRunnerId,
             marketTemplateId: market.marketTemplateId,
@@ -178,7 +178,7 @@ const generateExtraMarketFromTemplate = (template, team, commentary) => {
         rateDiff: template?.rateDiff,
         runners: template.runners?.map(runner => ({
             ...runner,
-            runnerId: runner.runnerId || "0",
+            runnerId: runner.runnerId || 0,
             backSize: template?.isPredefineRunnerValue ? runner?.backSize : template?.defaultBackSize,
             laySize: template?.isPredefineRunnerValue ? runner?.laySize : template?.defaultLaySize,
         })) || []
@@ -258,10 +258,17 @@ const createMarketAndRunner = async (data, request, fastify) => {
          return true;
        }
        else {
-         if(template.marketTypeCategoryId == 35){
+         if(template.marketTypeCategoryId == 35 || template.marketTypeCategoryId == 28){
             let baseMar = generateMarketFromTemplate(template, teams, commentary);
             processLotteryMarkets(baseMar, teams, processedMarketsObj, matchType,commentary);
          }
+        //  else {
+        //     teams.forEach(team => {
+        //         // processMarketAndRunners(generateExtraMarketFromTemplate(template, team, commentary), team.teamId, team.teamId.toString(), processedMarketsObj);
+        //         let baseMar = generateExtraMarketFromTemplate(template, teams, commentary);
+        //         processMarketAndRunners(baseMar, team.teamId, team.teamId.toString(), processedMarketsObj, commentary);
+        //     });
+        // }
        }
     })
     // return mar;
@@ -307,103 +314,22 @@ const createMarketAndRunner = async (data, request, fastify) => {
             });
         }
     })
-
-    // existingMarkets.forEach(apiMarket => {
-    //     const key = getMarketKey(apiMarket);
-    //     if (!processedMarketsObj[key]) {
-    //         processedMarketsObj[key] = [];
+    // Sort the markets within each key to maintain order
+    // global.marketData[commentary.commentaryId].markets.sort((a, b) => {
+    //     if (a.over && b.over) {
+    //       return a.over - b.over;
     //     }
+    //     return 0;
+    // });   
 
-    //     const globalMar = global.marketData[commentary.commentaryId].markets;
-    //     const existingMarketIndex = globalMar.findIndex(m =>
-    //         m.teamId === apiMarket.teamId &&
-    //         m.marketTypeId === apiMarket.marketTypeId &&
-    //         m.marketTypeCategoryId === apiMarket.marketTypeCategoryId &&
-    //         m.marketName === apiMarket.marketName
-    //     );
-
-    //     if (existingMarketIndex !== -1) {
-    //         // Update the existing market with API data
-    //         const templateMarket = processedMarketsObj[key][existingMarketIndex];
-    //         const updatedMarket = {
-    //             ...templateMarket,
-    //             ...apiMarket,
-    //             isCreate: false,
-    //             runners: mergeRunners(
-    //                 templateMarket.runners,
-    //                 apiMarket.runners,
-    //                 apiMarket.marketName,
-    //                 apiMarket.predefinedValue // Pass market level predefinedValue
-    //             )
-    //         };
-    //         processedMarketsObj[key][existingMarketIndex] = updatedMarket;
-    //     } else {
-    //         // If the API market doesn't exist in our generated markets, add it
-    //         processedMarketsObj[key].push({
-    //             ...apiMarket,
-    //             isCreate: false,
-    //             runners: mergeRunners(
-    //                 [],
-    //                 apiMarket.runners,
-    //                 apiMarket.marketName,
-    //                 apiMarket.predefinedValue // Pass market level predefinedValue
-    //             )
-    //         });
-    //     }
-    // });
-
-        // Now update with existing markets from API
-    // existingMarkets.forEach(apiMarket => {
-    //         const key = getMarketKey(apiMarket);
-    //         if (!processedMarketsObj[key]) {
-    //             processedMarketsObj[key] = [];
-    //         }
-
-    //         const existingMarketIndex = processedMarketsObj[key].findIndex(m =>
-    //             m.teamId === apiMarket.teamId &&
-    //             m.marketTypeId === apiMarket.marketTypeId &&
-    //             m.marketTypeCategoryId === apiMarket.marketTypeCategoryId &&
-    //             m.marketName === apiMarket.marketName
-    //         );
-
-    //         if (existingMarketIndex !== -1) {
-    //             // Update the existing market with API data
-    //             const templateMarket = processedMarketsObj[key][existingMarketIndex];
-    //             const updatedMarket = {
-    //                 ...templateMarket,
-    //                 ...apiMarket,
-    //                 isCreate: false,
-    //                 runners: mergeRunners(
-    //                     templateMarket.runners,
-    //                     apiMarket.runners,
-    //                     apiMarket.marketName,
-    //                     apiMarket.predefinedValue // Pass market level predefinedValue
-    //                 )
-    //             };
-    //             processedMarketsObj[key][existingMarketIndex] = updatedMarket;
-    //         } else {
-    //             // If the API market doesn't exist in our generated markets, add it
-    //             processedMarketsObj[key].push({
-    //                 ...apiMarket,
-    //                 isCreate: false,
-    //                 runners: mergeRunners(
-    //                     [],
-    //                     apiMarket.runners,
-    //                     apiMarket.marketName,
-    //                     apiMarket.predefinedValue // Pass market level predefinedValue
-    //                 )
-    //             });
-    //         }
-    // });
-      // Sort the markets within each key to maintain order
-      global.marketData[commentary.commentaryId].markets.sort((a, b) => {
+    global.marketData[commentary.commentaryId].markets.sort((a, b) => {
         if (a.over && b.over) {
           return a.over - b.over;
         }
         return 0;
       });
       
-    return true;
+    return true; 
 }
 // Process templates first to ensure all markets are generated
 const fun1 = async ()=>{
