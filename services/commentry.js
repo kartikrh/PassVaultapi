@@ -9568,14 +9568,14 @@ const loadcommentaryService = async (request, fastify) => {
       }
     }
     // call the prediction module
-    // let prediction = global.tblConfigs.find((item) => item.key === configConstants.CALLPREDICTIONMODULE)?.value || "false";
-    // if (prediction == "true") {
-    //   generateMarketAndRunners({
-    //       commentary : commentary,
-    //       commentaryId : commentary.commentaryId,
-    //       matchTypeId : commentary.matchTypeId,
-    //   }, request, fastify)
-    // }
+    let prediction = global.tblConfigs.find((item) => item.key === configConstants.CALLPREDICTIONMODULE)?.value || "false";
+    if (prediction == "true") {
+      await generateMarketAndRunners({
+          commentary : commentary,
+          commentaryId : commentary.commentaryId,
+          matchTypeId : commentary.matchTypeId,
+      }, request, fastify)
+    }
 
     return {
       message: "Request Send Successfully!!!",
