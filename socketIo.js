@@ -245,7 +245,7 @@ const connection = (socket , fastify) => {
         socket.client.emit("updateFullscore", sendDataForSocketUpdate);
       });
       // await updateTimeLogs(timeLogs.wrId, fastify);
-      console.log("Event Market Updated successfully");
+      // console.log("Event Market Updated successfully");
       return true;
     } catch (error) {
       errorLogger(
