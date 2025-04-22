@@ -6862,6 +6862,7 @@ const getMatchListByStatus = async (body, request, fastify) => {
 
     let details = {
       rno: rno,
+      cid: item.commentaryId || 0,
       eid: item.eventRefId || "",
       ety: eventType?.eventType || "",
       mtyp: item.matchType || "",

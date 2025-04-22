@@ -12,7 +12,7 @@ const { getIdByValue, getEncryptClinet } = require("../repository/TableUser")
 const saveFavCompetitionsService = async (request, fastify) => {
   const checkExist = await getIdByValue({ clientId: request.body.clientId }, request, fastify)
   if(!checkExist){
-    return "Invalid ClientId"
+    throw new Error("Invalid ClientId");
   }
   request.body.clientId = checkExist.clientId;
   const index = global.tblClient.findIndex((item) => item.clientId === request.body.clientId);
@@ -42,7 +42,7 @@ const saveFavCompetitionsService = async (request, fastify) => {
 const editFavCompetitionsService = async (request, fastify) => {
   const checkExist = await getIdByValue({ clientId : request.body.clientId }, request, fastify)
   if(!checkExist){
-    return "Invalid ClientId"
+    throw new Error("Invalid ClientId");
   }
   request.body.clientId = checkExist.clientId;
   let whereCondition = `"wrId" = ${request.body.id}`
