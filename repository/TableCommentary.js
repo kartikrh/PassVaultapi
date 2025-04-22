@@ -4568,6 +4568,7 @@ const getAllCompletedCommentaryQuery = async (request, fastify) => {
     return await fastify.db.query(
       `SELECT 
           CAST(ROW_NUMBER() OVER () AS INT) AS rno,
+          tc."wrCommentaryId" AS "cid",
           tc."wrEventRefId" AS "eid",
           tet."wrEventType" AS "ety",
           mt."wrMatchType" AS "mtyp",
