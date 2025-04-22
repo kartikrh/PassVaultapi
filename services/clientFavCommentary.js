@@ -9,7 +9,7 @@ const { getIdByValue, getEncryptClinet } = require("../repository/TableUser");
 const saveFavCommentaryService = async (request, fastify) => {
   const checkExist = await getIdByValue({ clientId: request.body.clientId }, request, fastify);
   if (!checkExist) {
-    return "Invalid ClientId";
+    throw new Error("Invalid ClientId");
   }
   request.body.clientId = checkExist.clientId;
   const index = global.tblClient.findIndex(
