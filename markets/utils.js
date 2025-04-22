@@ -1,22 +1,47 @@
 const { errorLogger } = require("../utilities/logger");
-const { processLotteryMarkets } = require("./oddEven.js");
-// const { generateExtraMarketFromTemplate } = require("./oddEven");
+const { processLotteryMarkets, processMarketAndRunnersOfOE } = require("./oddEven.js");
+const { initializeBallToActionMap } = require("./ballToActionMapper");
+
+/**
+ * Updates market status in the database
+ * @param {number} commentaryId - The commentary ID
+ * @param {string} marketName - Market name
+ * @param {Object} marketValue - Market value/data
+ */
 function updateMarketToDB(commentaryId, marketName, marketValue) {
     console.log(`[DB] Update for ${marketName}:`, marketValue, `(commentary_id: ${commentaryId})`);
     // TODO: Replace with actual DB logic
 }
 
+/**
+ * Sends market data to the socket
+ * @param {string} eventId - Event ID
+ * @param {Object} payload - Payload to send
+ */
 function sendSocketData(eventId, payload) {
     console.log(`[SOCKET] Sending to event ${eventId}:`, payload);
     // TODO: Replace with actual socket.emit() logic
 }
 
-const processMarketAndRunners = (market, teamId, keyPrefix, processedMarketsObj , commentary) => {
+/**
+ * Process market and runners
+ * @param {Object} market - Market data
+ * @param {number} teamId - Team ID
+ * @param {string} keyPrefix - Key prefix
+ * @param {Object} processedMarketsObj - Processed markets object
+ * @param {Object} commentary - Commentary data
+ */
+const processMarketAndRunners = (market, teamId, keyPrefix, processedMarketsObj, commentary) => {
     const baseKey = `${keyPrefix}_##_${market.marketTypeId}_##_${market.marketTypeCategoryId}`;
 
     if (!processedMarketsObj[baseKey]) {
         processedMarketsObj[baseKey] = [];
     }
+
+    if (!global.marketData[commentary.commentaryId]) {
+        global.marketData[commentary.commentaryId] = { markets: [] };
+    }
+
     let marketArrObj = global.marketData[commentary.commentaryId].markets;
     // Special handling for marketTypeId=5 and marketTypeCategoryId=6
     let marketRunners = [];
@@ -134,7 +159,8 @@ const processMarketAndRunners = (market, teamId, keyPrefix, processedMarketsObj 
         }
     }
 
-    global.marketData[commentary.commentaryId].markets.push({
+    // Add calculated fields for market processing
+    const marketWithExtraFields = {
         ...market,
         teamId,
         eventMarketId: market.eventMarketId || 0,
@@ -150,11 +176,28 @@ const processMarketAndRunners = (market, teamId, keyPrefix, processedMarketsObj 
         commentaryId: market.commentaryId,
         eventRefId: market.eventRefId,
         isPredefineRunnerValue: market.isPredefineRunnerValue !== undefined ? market.isPredefineRunnerValue : true,
-        runners: marketRunners
-    });
+        runners: marketRunners,
+        // Add calculated fields needed for ball-to-action mapping
+        createBalls: market.createBalls || 0,
+        autoOpenBalls: market.autoOpenBalls || 0,
+        beforeAutoSuspendBalls: market.beforeAutoSuspendBalls || 0,
+        beforeAutoCloseBalls: market.beforeAutoCloseBalls || 0,
+        overBalls: market.overBalls || 0,
+        isAutoResultSet: market.isAutoResultSet !== undefined ? market.isAutoResultSet : true,
+        wrAutoResultafterBall: market.wrAutoResultafterBall || 0
+    };
+
+    global.marketData[commentary.commentaryId].markets.push(marketWithExtraFields);
 
     return global.marketData[commentary.commentaryId].markets;
 };
+
+/**
+ * Generate extra market from template
+ * @param {Object} template - Template data
+ * @param {Object} team - Team data
+ * @param {Object} commentary - Commentary data
+ */
 const generateExtraMarketFromTemplate = (template, team, commentary) => {
     return {
         eventMarketId: 0,
@@ -184,6 +227,13 @@ const generateExtraMarketFromTemplate = (template, team, commentary) => {
         })) || []
     };
 };
+
+/**
+ * Generate market from template
+ * @param {Object} template - Template data
+ * @param {Object} teams - Teams data
+ * @param {Object} commentary - Commentary data
+ */
 const generateMarketFromTemplate = (template, teams, commentary) => {
     // Default market name without any changes
     let marketName = template.templateName;
@@ -219,16 +269,34 @@ const generateMarketFromTemplate = (template, teams, commentary) => {
         rateDiff: template?.rateDiff,
         runners: template.runners?.map(runner => ({
             ...runner,
-            runnerId: runner.runnerId ||0,
+            runnerId: runner.runnerId || 0,
             backSize: template?.isPredefineRunnerValue ? runner?.backSize : template?.defaultBackSize,
             laySize: template?.isPredefineRunnerValue ? runner?.laySize : template?.defaultLaySize,
-        })) || []
+        })) || [],
+        // Add calculated fields for ball-to-action mapping
+        createBalls: template.createBalls || 0,
+        autoOpenBalls: template.autoOpenBalls || 0,
+        beforeAutoSuspendBalls: template.beforeAutoSuspendBalls || 0,
+        beforeAutoCloseBalls: template.beforeAutoCloseBalls || 0
     };
 };
+
+/**
+ * Get market key
+ * @param {Object} market - Market data
+ */
 const getMarketKey = (market) => {
     const prefix = market.teamId || 'oneTimeMarket';
     return `${prefix}_##_${market.marketTypeId}_##_${market.marketTypeCategoryId}`;
 };
+
+/**
+ * Merge runners
+ * @param {Array} templateRunners - Template runners
+ * @param {Array} apiRunners - API runners
+ * @param {string} marketName - Market name
+ * @param {*} marketPredefinedValue - Market predefined value
+ */
 const mergeRunners = (templateRunners, apiRunners, marketName, marketPredefinedValue) => {
     if (apiRunners.length > 0) {
         return apiRunners.map(apiRunner => ({
@@ -249,27 +317,34 @@ const mergeRunners = (templateRunners, apiRunners, marketName, marketPredefinedV
     }
     return templateRunners;
 };
+
+/**
+ * Create market and runner
+ * @param {Object} data - Market data
+ * @param {Object} request - Request object
+ * @param {Object} fastify - Fastify instance
+ */
 const createMarketAndRunner = async (data, request, fastify) => {
     const processedMarketsObj = {};
-    const {templates , teams , matchType , commentary ,existingMarkets} = data;
+    const { templates, teams, matchType, commentary, existingMarkets } = data;
     const commentaryId = commentary.commentaryId;
     templates.forEach((template) => {
-       if(template.isPerEvent){
-         return true;
-       }
-       else {
-         if(template.marketTypeCategoryId == 35 || template.marketTypeCategoryId == 28){
-            let baseMar = generateMarketFromTemplate(template, teams, commentary);
-            processLotteryMarkets(baseMar, teams, processedMarketsObj, matchType,commentary);
-         }
-        //  else {
-        //     teams.forEach(team => {
-        //         // processMarketAndRunners(generateExtraMarketFromTemplate(template, team, commentary), team.teamId, team.teamId.toString(), processedMarketsObj);
-        //         let baseMar = generateExtraMarketFromTemplate(template, teams, commentary);
-        //         processMarketAndRunners(baseMar, team.teamId, team.teamId.toString(), processedMarketsObj, commentary);
-        //     });
-        // }
-       }
+        if (template.isPerEvent) {
+            return true;
+        }
+        else {
+            if (template.marketTypeCategoryId == 35 || template.marketTypeCategoryId == 28) {
+                let baseMar = generateMarketFromTemplate(template, teams, commentary);
+                processLotteryMarkets(baseMar, teams, processedMarketsObj, matchType, commentary);
+            }
+            //  else {
+            //     teams.forEach(team => {
+            //         // processMarketAndRunners(generateExtraMarketFromTemplate(template, team, commentary), team.teamId, team.teamId.toString(), processedMarketsObj);
+            //         let baseMar = generateExtraMarketFromTemplate(template, teams, commentary);
+            //         processMarketAndRunners(baseMar, team.teamId, team.teamId.toString(), processedMarketsObj, commentary);
+            //     });
+            // }
+        }
     })
     // return mar;
     // Now update with existing markets from API
@@ -286,9 +361,9 @@ const createMarketAndRunner = async (data, request, fastify) => {
             m.marketTypeCategoryId === apiMarket.marketTypeCategoryId &&
             m.marketName === apiMarket.marketName
         );
-        if(index !== -1){
-           const existingMarket = globalEntry.markets[index];
-           const updatedMarket = {
+        if (index !== -1) {
+            const existingMarket = globalEntry.markets[index];
+            const updatedMarket = {
                 ...existingMarket,
                 ...apiMarket,
                 isCreate: false,
@@ -314,64 +389,28 @@ const createMarketAndRunner = async (data, request, fastify) => {
             });
         }
     })
-    // Sort the markets within each key to maintain order
-    // global.marketData[commentary.commentaryId].markets.sort((a, b) => {
-    //     if (a.over && b.over) {
-    //       return a.over - b.over;
-    //     }
-    //     return 0;
-    // });   
 
+    // Sort markets by over number where applicable
     global.marketData[commentary.commentaryId].markets.sort((a, b) => {
         if (a.over && b.over) {
-          return a.over - b.over;
+            return a.over - b.over;
         }
         return 0;
-      });
-      
-    return true; 
-}
-// Process templates first to ensure all markets are generated
-const fun1 = async ()=>{
-    templates.forEach(template => {
-        if (template.isPerEvent) {
-            if (template.marketTypeCategoryId === 37) {
-                processTopBowlerRunsMarkets(generateMarketFromTemplate(template, teams, commentary), teams, processedMarketsObj);
-            } else {
-                processMarketAndRunners(generateMarketFromTemplate(template, teams, commentary), null, 'oneTimeMarket', processedMarketsObj);
-            }
-        } else if (template.marketTypeCategoryId === 11 && template.isOver) {
-            processOnlyOverMarkets(generateMarketFromTemplate(template, teams, commentary), teams, matchType.maxOversInFirstInings, processedMarketsObj);
-        } else if (template.marketTypeCategoryId === 13) {
-            processWicketMarkets(generateMarketFromTemplate(template, teams, commentary), teams, matchType.noOfPlayer, processedMarketsObj);
-        } else if (template.marketTypeCategoryId === 12) {
-            processPlayerRunsMarkets(generateMarketFromTemplate(template, teams, commentary), teams, processedMarketsObj);
-        } else if (template.marketTypeCategoryId === 29) {
-            processPlayerBoundaryMarkets(generateMarketFromTemplate(template, teams, commentary), teams, processedMarketsObj);
-        } else if (template.marketTypeCategoryId === 26) {
-            processFancyLDOMarkets(generateMarketFromTemplate(template, teams, commentary), teams, matchType.maxOversInFirstInings, processedMarketsObj);
-        } else if (template.marketTypeCategoryId === 30) {
-            processPlayerBallMarkets(generateMarketFromTemplate(template, teams, commentary), teams, processedMarketsObj);
-        } else if (template.marketTypeCategoryId === 23 || template.marketTypeCategoryId === 26 || template.marketTypeCategoryId === 27) {
-            processMarkets(generateMarketFromTemplate(template, teams, commentary), teams, processedMarketsObj);
-        } else if (template.marketTypeCategoryId === 28 || template.marketTypeCategoryId === 35) {
-            processLotteryMarkets(generateMarketFromTemplate(template, teams, commentary), teams, processedMarketsObj, matchType);
-        } else if (template.marketTypeCategoryId === 31) {
-            processFallOfWicketMarkets(generateMarketFromTemplate(template, teams, commentary), teams, processedMarketsObj);
-        } else if (template.marketTypeCategoryId === 32) {
-            processPartnershipBoundariesMarkets(generateMarketFromTemplate(template, teams, commentary), teams, processedMarketsObj);
-        } else if (template.marketTypeCategoryId === 33) {
-            processWicketLostBallsMarkets(generateMarketFromTemplate(template, teams, commentary), teams, processedMarketsObj);
-        } else if (template.marketTypeCategoryId === 38) {
-            processTopBatsManRunsMarkets(generateMarketFromTemplate(template, teams, commentary), teams, processedMarketsObj);
-        } else if (template.marketTypeCategoryId === 39) {
-            processOnlyOverMarkets(generateMarketFromTemplate(template, teams, commentary), teams, matchType.maxOversInFirstInings, processedMarketsObj);
-        } else {
-            teams.forEach(team => {
-                processMarketAndRunners(generateExtraMarketFromTemplate(template, team, commentary), team.teamId, team.teamId.toString(), processedMarketsObj);
-            });
-        }
     });
+
+    // Initialize the ball-to-action map
+    initializeBallToActionMap(global.marketData[commentary.commentaryId].markets, commentaryId);
+
+    return true;
 }
 
-module.exports = { updateMarketToDB, sendSocketData ,createMarketAndRunner ,processMarketAndRunners ,generateMarketFromTemplate ,generateExtraMarketFromTemplate ,getMarketKey ,mergeRunners };
+module.exports = {
+    updateMarketToDB,
+    sendSocketData,
+    createMarketAndRunner,
+    processMarketAndRunners,
+    generateMarketFromTemplate,
+    generateExtraMarketFromTemplate,
+    getMarketKey,
+    mergeRunners
+};
