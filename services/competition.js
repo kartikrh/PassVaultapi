@@ -7,6 +7,7 @@ const {
   isTrendingChangeStatusQuery,
   isEventSnapCompetitionQuery,
   isPointTableCompetitionQuery,
+  isMenChangeStatusQuery,
 } = require("../repository/TableCompitition");
 const {storeImageOnServer, removeImageFromServer, generateImageName } = require("../utilities/Images");
 const { PROJECT_NAME } = require("../utilities/configConstants");
@@ -14,50 +15,72 @@ const {ImgModuleConfig} = require("../utilities/imageConstant");
 const { APIEndpointModuleType, ServiceType, callClientAPI } = require("../utilities");
 const { getCommentariesResultQuery } = require("../repository/TableCommentary")
 
+// const allCompetitionService = async (request) => {
+//   const { isActive, isTrending, eventTypeId, matchTypeId, isMen, type } = request.body;
+
+//   const filterObject = {
+//     isActive: isActive,
+//     isTrending: isTrending,
+//     eventTypeId: eventTypeId === 0 ? null : eventTypeId,
+//     matchTypeId: matchTypeId === 0 ? null : matchTypeId,
+//     isMen: isMen,
+//     type: type === 0 ? null : type,
+//   };
+//   // Additional checks for "0" and undefined
+//   filterObject.eventTypeId =
+//     eventTypeId === 0 || eventTypeId === undefined
+//       ? null
+//       : filterObject.eventTypeId;
+//   filterObject.matchTypeId =
+//     matchTypeId === 0 || matchTypeId === undefined
+//       ? null
+//       : filterObject.matchTypeId;
+//   if (isActive === undefined || isTrending === undefined || isMen === undefined) {
+//     const result = global.tblCompetitions.filter(
+//       (item) => item.isActive === true
+//     );
+//     return result;
+//   } else {
+//     const result = global.tblCompetitions.filter((item) => {
+//       return (
+//         (filterObject.isActive === null ||
+//           item.isActive === filterObject.isActive) &&
+//         (filterObject.eventTypeId === null ||
+//           item.eventTypeId === filterObject.eventTypeId) &&
+//           (filterObject.isTrending === null ||
+//             item.isTrending === filterObject.isTrending) &&
+//             (filterObject.matchTypeId === null ||
+//               item.matchTypeId === filterObject.matchTypeId) &&
+//               (filterObject.isMen === null ||
+//                 item.isMen === filterObject.isMen) &&
+//                 (filterObject.type === null ||
+//                   item.type === filterObject.type)
+//       );
+//     });
+//     return result;
+//   }
+// };
 const allCompetitionService = async (request) => {
   const { isActive, isTrending, eventTypeId, matchTypeId, isMen, type } = request.body;
 
-  const filterObject = {
-    isActive: isActive,
-    isTrending: isTrending,
-    eventTypeId: eventTypeId === 0 ? null : eventTypeId,
-    matchTypeId: matchTypeId === 0 ? null : matchTypeId,
-    isMen: isMen,
-    type: type === 0 ? null : type,
-  };
-  // Additional checks for "0" and undefined
-  filterObject.eventTypeId =
-    eventTypeId === 0 || eventTypeId === undefined
-      ? null
-      : filterObject.eventTypeId;
-  filterObject.matchTypeId =
-    matchTypeId === 0 || matchTypeId === undefined
-      ? null
-      : filterObject.matchTypeId;
-  if (isActive === undefined || isTrending === undefined || isMen === undefined) {
-    const result = global.tblCompetitions.filter(
-      (item) => item.isActive === true
-    );
-    return result;
-  } else {
-    const result = global.tblCompetitions.filter((item) => {
-      return (
-        (filterObject.isActive === null ||
-          item.isActive === filterObject.isActive) &&
-        (filterObject.eventTypeId === null ||
-          item.eventTypeId === filterObject.eventTypeId) &&
-          (filterObject.isTrending === null ||
-            item.isTrending === filterObject.isTrending) &&
-            (filterObject.matchTypeId === null ||
-              item.matchTypeId === filterObject.matchTypeId) &&
-              (filterObject.isMen === null ||
-                item.isMen === filterObject.isMen) &&
-                (filterObject.type === null ||
-                  item.type === filterObject.type)
-      );
-    });
-    return result;
+  const filterObject = {};
+
+  if (isActive !== undefined) filterObject.isActive = isActive;
+  if (isTrending !== undefined) filterObject.isTrending = isTrending;
+  if (eventTypeId !== undefined && eventTypeId !== 0) filterObject.eventTypeId = eventTypeId;
+  if (matchTypeId !== undefined && matchTypeId !== 0) filterObject.matchTypeId = matchTypeId;
+  if (isMen !== undefined) filterObject.isMen = isMen;
+  if (type !== undefined && type !== 0) filterObject.type = type;
+
+  if (isActive === undefined || isTrending === undefined) {
+    return global.tblCompetitions.filter((item) => item.isActive === true);
   }
+
+  const result = global.tblCompetitions.filter((item) => {
+    return Object.entries(filterObject).every(([key, value]) => item[key] === value);
+  });
+
+  return result;
 };
 
 const competitionByIdService = async (request) => {
@@ -572,6 +595,32 @@ const getAllCompetitionListService = async (request, fastify) => {
   return result;
 }
 
+const isMenChangeStatusService = async (request, fastify) => {
+  const { competitionId, isMen } = request.body;
+
+  const validateId = global.tblCompetitions.find(
+    (item) => item.competitionId === competitionId
+  );
+
+  if (!validateId) {
+    throw new Error("Competition with this id not Found");
+  }
+
+  await isMenChangeStatusQuery(
+    {
+      competitionId,
+      isMen,
+    },
+    request,
+    fastify
+  );
+  const index = global.tblCompetitions.findIndex((item) => item.competitionId == competitionId);
+  if(index != -1){
+    global.tblCompetitions[index].isMen = isMen;
+  }
+  
+  return `Competition isMen status updated successfully`;
+};
 module.exports = {
   allCompetitionService,
   competitionByIdService,
@@ -585,4 +634,5 @@ module.exports = {
   getCompletedCommentaryResultService,
   getAllTeamListService,
   getAllCompetitionListService,
+  isMenChangeStatusService,
 };

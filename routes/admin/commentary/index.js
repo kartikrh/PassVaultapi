@@ -75,6 +75,7 @@ const {
   saveCommDrsLog,
   changeIsTestCom,
   changeIsEventStart,
+  getAllDifficulties,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -1019,5 +1020,11 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request, reply) => changeIsEventStart(request, reply, fastify),
+  })
+  fastify.post("/allDifficulties", {
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+    ],
+    handler: (request, reply) => getAllDifficulties(request, reply, fastify),
   })
 };
