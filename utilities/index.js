@@ -932,7 +932,28 @@ const PitchHardness = {
   HARD: 3,
   MEDIUM: 4,
 }
-
+const PitchType = {
+  1 : "Dry",
+  2 : "Grassy/Dusty",
+  3 : "Grassy/Dry",
+  4 : "Grassy",
+  5 : "Dusty",
+  6 : "Standard"
+}
+const LawnStriping = {
+  1 : "Cross hatch",
+  2 : "Stripe",
+  3 : "Vertical",
+  4 : "None",
+  5 : "Diamond"
+}
+const PitchAge = {
+  1 : "Day 1",
+  2 : "Day 2", 
+  3 : "Day 3", 
+  4 : "Day 4", 
+  5 : "Day 5"
+}
 module.exports = {
   ERROR_CODES,
   error,
@@ -999,4 +1020,7 @@ module.exports = {
   PitchCracks,
   PitchWareSpeed,
   PitchHardness,
+  PitchType,
+  LawnStriping,
+  PitchAge,
 };
