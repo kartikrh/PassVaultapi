@@ -924,6 +924,7 @@ const PitchCracks = {
   LIGHT: 2,
   HEAVY: 3,
 }
+
 const PitchWareSpeed = {
   NORMAL: 1,
   SLOW: 2,
