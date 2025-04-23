@@ -45,7 +45,8 @@ const insertCountryCodeQuery = async (data, fastify, request) => {
           data.countryName || null,
           data.flag || null,
           data.flagPath || null,
-          data.isActive || false
+          data.isActive || false,
+          data.maxNumber || null,
         ],
       }
     );
