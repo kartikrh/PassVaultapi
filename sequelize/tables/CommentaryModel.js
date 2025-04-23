@@ -204,7 +204,22 @@ module.exports = (sequelize) => {
         type : DataTypes.INTEGER,
         allowNull : true,
         defaultValue : null
-      }
+      },
+      wrPitchType : {
+        type : DataTypes.INTEGER,
+        allowNull : true,
+        defaultValue : null
+      },
+      wrLawnStriping : {
+        type : DataTypes.INTEGER,
+        allowNull : true,
+        defaultValue : null
+      },
+      wrPitchAge : {
+        type : DataTypes.INTEGER,
+        allowNull : true,
+        defaultValue : null
+      },
     },
     {
       timestamps: false,
