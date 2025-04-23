@@ -614,7 +614,7 @@ const updateCommentaryQuery = async (request, fastify) => {
           data.team2Id || null,
           data.location || null,
           data.weather || null,
-          data.pitch || null,
+          data.pitchCracks || null,
           data.target || null,
           data.isSignalROn,
           data.isMatchTypeUpdated || false,
