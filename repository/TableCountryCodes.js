@@ -8,7 +8,8 @@ const getAllCountryCodesQuery = async (fastify) => {
           "wrCountryName" as "countryName",
           "wrFlag" as "flag",
           "wrFlagPath" as "flagPath",
-          "wrIsActive" as "isActive"
+          "wrIsActive" as "isActive",
+          "wrMaxNumber" as "maxNumber"
       FROM "tblCountryCodes"
       WHERE "wrIsDeleted" = FALSE;`,
     { type: fastify.db.QueryTypes.SELECT }
@@ -21,10 +22,10 @@ const insertCountryCodeQuery = async (data, fastify, request) => {
     const result = await fastify.db.query(
       `WITH insert_data AS (
             INSERT INTO "tblCountryCodes" (
-            "wrCountryCode", "wrCountryName", "wrFlag", "wrFlagPath", "wrIsActive"
+            "wrCountryCode", "wrCountryName", "wrFlag", "wrFlagPath", "wrIsActive", "wrMaxNumber"
             ) 
             VALUES (
-                $1, $2, $3, $4, $5
+                $1, $2, $3, $4, $5 ,$6
             ) 
             RETURNING *
             )        
@@ -34,7 +35,8 @@ const insertCountryCodeQuery = async (data, fastify, request) => {
                 "wrCountryName" as "countryName",
                 "wrFlag" as "flag",
                 "wrFlagPath" as "flagPath",
-                "wrIsActive" as "isActive"
+                "wrIsActive" as "isActive",
+                "wrMaxNumber" as "maxNumber"
             FROM insert_data;`,
       {
         type: fastify.db.QueryTypes.SELECT,
@@ -43,7 +45,8 @@ const insertCountryCodeQuery = async (data, fastify, request) => {
           data.countryName || null,
           data.flag || null,
           data.flagPath || null,
-          data.isActive || false
+          data.isActive || false,
+          data.maxNumber || null
         ],
       }
     );
@@ -67,7 +70,8 @@ const updateCountryCodeQuery = async (data, fastify, request) => {
             "wrCountryName" = $2,
             "wrFlag" = $3,
             "wrFlagPath" = $5,
-            "wrIsActive" = $6
+            "wrIsActive" = $6,
+            "wrMaxNumber" = $7
             WHERE "wrId" = $4
             RETURNING 
                 "wrId" as "id",
@@ -85,6 +89,7 @@ const updateCountryCodeQuery = async (data, fastify, request) => {
             data.id,
             data.flagPath,
             data.isActive,
+            data.maxNumber,
         ],
       }
     );
