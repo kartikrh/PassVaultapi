@@ -67,6 +67,7 @@ const editCountryCodeService = async (request, fastify) => {
     ? request.body.isActive === 'true' || request.body.isActive === true
     : validateId.isActive,
     id: parseInt(request.body.id, 10),
+    maxNumber : request.body.maxNumber ?? validateId.maxNumber,
   };
 
   if (request.body.flag && request.body.flag.length > 0) {
