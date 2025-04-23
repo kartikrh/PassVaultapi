@@ -913,8 +913,11 @@ const CompetitionType = {
 }
 const Weather = {
   RANDOM: 1,
-  WARM: 2,
-  MILD: 3,
+  COLD : 2,
+  WARM : 3,
+  HOT : 4,
+  MILD : 5, 
+  
 }
 const PitchCracks = {
   NONE: 1,
