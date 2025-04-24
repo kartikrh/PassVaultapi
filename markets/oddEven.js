@@ -69,17 +69,16 @@ function openCloseMarket(market, totalBalls, totalWicket) {
  * Process all odd-even markets for the current ball
  * @param {Object} data - The prediction score data
  */
-function processOddEvenMarkets(data) {
-    // Extract relevant data
-    const currentBall = data.predictscore.ball;
-    const run = data.predictscore.run;
-    const commentaryId = data.predictscore.commentary_id;
-    const currentScore = data.predictscore.total_score;
-    const commentaryTeam = data.predictscore.strike_team_id;
-    const matchTypeId = data.predictscore.match_type_id;
-    const isWicket = data.predictscore.wicket;
-    const totalWicket = data.predictscore.total_wicket;
-    const ballByBallId = data.predictscore.ball_by_ball_id;
+function processOddEvenMarkets(
+    currentBall,
+    run,
+    commentaryId,
+    currentScore,
+    strikeTeamId,
+    matchTypeId,
+    isWicket,
+    totalWicket,
+    ballByBallId) {
 
     // Convert to total balls
     const totalBalls = oversToBalls(parseFloat(currentBall), matchTypeId);

@@ -1,129 +1,136 @@
 // marketActions.js
-const { EventMarketStatus } = require('../utilities');
+const { errorLogger } = require('../utilities/logger');
 
 /**
  * Updates market status in the database
- * @param {Object} market - The market object to update
+ * @param {Object} market - The market to update
+ * @returns {Promise} - Promise that resolves when update is complete
  */
 function updateMarketStatusInDB(market) {
-    console.log(`[DB] Updating market ${market.eventMarketId} to status: ${market.status}`);
-    // DB update logic would be implemented here
-    // This is a placeholder for the actual DB update functionality
+    try {
+        console.log(`[DB] Updating market ${market.eventMarketId} status to ${market.status}`);
+
+        // This would be replaced with actual DB update code
+        // Example:
+        // return db.query(
+        //     'UPDATE tblEventMarkets SET "wrStatus" = $1, "wrResult" = $2, "wrSettledTime" = $3 WHERE "wrID" = $4',
+        //     [market.status, market.result, market.settledTime, market.eventMarketId]
+        // );
+
+        // For now, just log it
+        if (!market.eventMarketId || market.eventMarketId === "0") {
+            console.log('[DB] Market has no ID yet, cannot update in DB');
+        }
+
+        return Promise.resolve();
+    } catch (error) {
+        console.error('[DB] Error updating market in DB:', error);
+        return Promise.reject(error);
+    }
 }
 
 /**
- * Updates market status in the socket
- * @param {Object} market - The market object to update
+ * Updates market status via socket
+ * @param {Object} market - The market to update
  */
 function updateMarketStatusInSocket(market) {
-    console.log(`[SOCKET] Sending market ${market.eventMarketId} with status: ${market.status}`);
-    // Socket emit logic would be implemented here
-    // This is a placeholder for the actual socket.emit functionality
-}
+    try {
+        console.log(`[Socket] Sending market ${market.eventMarketId} status update: ${market.status}`);
 
-/**
- * Opens a market
- * @param {Object} market - The market to open
- */
-function openMarket(market) {
-    if (!market) return;
+        // Format market data for socket
+        const socketData = formatMarketForSocket(market);
 
-    // Set status to OPEN
-    market.status = EventMarketStatus.Open;
-    market.wrStatus = EventMarketStatus.Open;
+        // This would be replaced with actual socket emit code
+        // Example:
+        // io.to(`commentary_${market.commentaryId}`).emit('market_update', socketData);
 
-    // Update runners status if needed
-    if (market.runners && market.runners.length > 0) {
-        market.runners.forEach(runner => {
-            runner.wrSelectionStatus = EventMarketStatus.Open;
-        });
+        // For now, just log it
+        console.log('[Socket] Formatted data:', JSON.stringify(socketData).substring(0, 100) + '...');
+    } catch (error) {
+        console.error('[Socket] Error sending market update via socket:', error);
     }
-
-    // Call update methods
-    updateMarketStatusInDB(market);
-    updateMarketStatusInSocket(market);
-
-    console.log(`Market ${market.eventMarketId} opened`);
 }
 
 /**
- * Closes a market
- * @param {Object} market - The market to close
+ * Formats market data for socket transmission
+ * @param {Object} market - The market to format
+ * @returns {Object} - Formatted market data
  */
-function closeMarket(market) {
-    if (!market) return;
-
-    // Set status to CLOSED
-    market.status = EventMarketStatus.Close;
-    market.wrStatus = EventMarketStatus.Close;
-
-    // Update runners status if needed
-    if (market.runners && market.runners.length > 0) {
-        market.runners.forEach(runner => {
-            runner.wrSelectionStatus = EventMarketStatus.Close;
-        });
-    }
-
-    // Call update methods
-    updateMarketStatusInDB(market);
-    updateMarketStatusInSocket(market);
-
-    console.log(`Market ${market.eventMarketId} closed`);
-}
-
-/**
- * Settles a market
- * @param {Object} market - The market to settle
- * @param {number} totalScore - The current total score to determine result
- */
-function settleMarket(market, totalScore) {
-    if (!market) return;
-
-    // Set status to SETTLED
-    market.status = EventMarketStatus.Settled;
-    market.wrStatus = EventMarketStatus.Settled;
-
-    // For Odd/Even markets, determine the winner
-    if (market.marketTypeCategoryId === 28) {
-        const isEven = totalScore % 2 === 0;
-
-        // Set result based on the odd/even outcome
-        if (market.runners && market.runners.length > 0) {
-            market.runners.forEach(runner => {
-                // For EVEN runner
-                if (runner.runner.toLowerCase().includes("even")) {
-                    runner.wrSelectionStatus = isEven ? 7 : 8; // WIN : LOSE
-                    if (isEven) {
-                        market.wrResult = runner.runnerId;
-                        market.result = runner.runnerId;
-                    }
-                }
-                // For ODD runner
-                else if (runner.runner.toLowerCase().includes("odd")) {
-                    runner.wrSelectionStatus = isEven ? 8 : 7; // LOSE : WIN
-                    if (!isEven) {
-                        market.wrResult = runner.runnerId;
-                        market.result = runner.runnerId;
-                    }
-                }
-            });
+function formatMarketForSocket(market) {
+    // Create a sanitized copy of runners if available
+    const formattedRunners = market.runners ? market.runners.map(runner => ({
+        id: runner.runnerId,
+        name: runner.runner,
+        status: runner.selectionStatus,
+        price: {
+            back: runner.backPrice,
+            lay: runner.layPrice
+        },
+        size: {
+            back: runner.backSize,
+            lay: runner.laySize
         }
+    })) : [];
+
+    // Create the socket payload
+    return {
+        eventMarketId: market.eventMarketId,
+        marketName: market.marketName,
+        status: market.status,
+        result: market.result,
+        runners: formattedRunners,
+        updateTimestamp: new Date().toISOString(),
+        over: market.over,
+        marketTypeCategoryId: market.marketTypeCategoryId,
+        teamId: market.teamId,
+        commentaryId: market.commentaryId
+    };
+}
+
+/**
+ * Batch updates multiple markets at once
+ * @param {Array} markets - Array of markets to update
+ */
+function batchUpdateMarkets(markets) {
+    if (!markets || markets.length === 0) {
+        return;
     }
 
-    // Set settlement time
-    market.wrSettledTime = new Date().toISOString();
+    console.log(`[DB] Batch updating ${markets.length} markets`);
 
-    // Call update methods
+    // Update each market in DB and socket
+    markets.forEach(market => {
+        updateMarketStatusInDB(market);
+        updateMarketStatusInSocket(market);
+    });
+}
+
+/**
+ * Updates a specific field of a market
+ * @param {Object} market - The market to update
+ * @param {string} field - The field to update
+ * @param {any} value - The new value
+ */
+function updateMarketField(market, field, value) {
+    if (!market) {
+        console.error('[DB] Cannot update field, market is null');
+        return;
+    }
+
+    console.log(`[DB] Updating field ${field} on market ${market.eventMarketId || 'unsaved'}`);
+
+    // Update the field
+    market[field] = value;
+
+    // Update in DB and socket
     updateMarketStatusInDB(market);
     updateMarketStatusInSocket(market);
-
-    console.log(`Market ${market.eventMarketId} settled with result: ${market.result}`);
 }
 
 module.exports = {
-    openMarket,
-    closeMarket,
-    settleMarket,
     updateMarketStatusInDB,
-    updateMarketStatusInSocket
+    updateMarketStatusInSocket,
+    formatMarketForSocket,
+    batchUpdateMarkets,
+    updateMarketField
 };

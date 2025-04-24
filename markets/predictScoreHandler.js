@@ -1,11 +1,13 @@
 // predictScoreHandler.js
-const { getActionsForBall, findMarket } = require('./ballToActionMapper');
-const { openMarket, closeMarket, settleMarket } = require('./marketActions');
-const { processOddEven, processOddEvenMarkets } = require('./oddEven');
+const { getActionsForBall, findMarket, formatBallNumber } = require('./ballToActionMapper');
+const { updateMarketStatusInDB, updateMarketStatusInSocket } = require('./marketActions');
+const { processOddEvenMarkets } = require('./oddEven');
+const { EventMarketStatus } = require('../utilities');
+const { errorLogger } = require('../utilities/logger');
 
 /**
- * Process predict score market from payload
- * @param {Object} payload - The payload from the cricket match
+ * Processes the prediction score market based on incoming payload
+ * @param {Object} payload - The incoming payload
  * @returns {Object} - Processing result
  */
 function processPredictScoreMarket(payload) {
@@ -13,88 +15,258 @@ function processPredictScoreMarket(payload) {
         // Extract data from payload
         const predictscore = payload.predictscore || {};
         const playerpredictscore = payload.playerpredictscore || {};
-        const commentaryId = predictscore.commentary_id || playerpredictscore.commentary_id;
 
-        // Validate essential data
-        if (!commentaryId) {
-            console.error("Invalid payload: Missing commentary_id");
-            return { error: "Invalid payload structure" };
-        }
-
-        // Extract key information
-        const currentBall = predictscore.ball;
-        const score = predictscore.run;
-        const totalScore = predictscore.total_score;
-        const strikeTeamId = predictscore.strike_team_id;
-        const matchTypeId = predictscore.match_type_id;
-        const isWicket = predictscore.wicket;
-        const totalWicket = predictscore.total_wicket;
-        const ballByBallId = predictscore.ball_by_ball_id;
+        // Extract important values
+        const currentBall = predictscore.ball || playerpredictscore.current_ball;
+        const currentScore = predictscore.total_score || playerpredictscore.total_score;
+        const run = predictscore.run || 0;
+        const commentaryId = predictscore.commentary_id || payload.commentary_id || playerpredictscore.commentary_id;
+        const strikeTeamId = predictscore.strike_team_id || playerpredictscore.current_team_id;
+        const matchTypeId = predictscore.match_type_id || playerpredictscore.match_type_id;
+        const isWicket = predictscore.wicket || 0;
+        const totalWicket = predictscore.total_wicket || 0;
+        const ballByBallId = predictscore.ball_by_ball_id || playerpredictscore.ball_by_ball_id;
         const eventId = playerpredictscore.event_id;
 
-        // Process market actions based on current ball
-        processMarketActions(commentaryId, currentBall, totalScore);
+        console.log(`Processing ball ${currentBall}, score ${currentScore}, commentary ID ${commentaryId}`);
 
-        // Process odd-even markets (similar to Python's process_oddeven_markets)
-        processOddEvenMarkets(payload);
+        // Format the ball to ensure consistent representation
+        const formattedBall = formatBallNumber(currentBall);
 
-        // Return success
+        // Check if market data exists for this commentary
+        if (!global.marketData || !global.marketData[commentaryId]) {
+            console.error(`No market data found for commentary ID ${commentaryId}`);
+            return {
+                success: false,
+                error: `No market data found for commentary ID ${commentaryId}`
+            };
+        }
+
+        // Get actions mapped to this ball
+        const actions = getActionsForBall(commentaryId, formattedBall);
+
+        // Log whether actions were found
+        if (actions && actions.length > 0) {
+            console.log(`Found ${actions.length} actions for ball ${formattedBall}`);
+
+            // Process each action
+            actions.forEach(action => {
+                try {
+                    executeMarketAction(commentaryId, action);
+                } catch (actionError) {
+                    console.error(`Error executing action ${action.action} for market ${action.marketId}:`, actionError);
+                }
+            });
+        } else {
+            console.log(`No actions mapped for ball ${formattedBall}`);
+        }
+
+        // Process specific market types if needed
+        // For example, odd-even markets might need special handling regardless of ball mapping
+        processOddEvenMarkets(
+            currentBall,
+            run,
+            commentaryId,
+            currentScore,
+            strikeTeamId,
+            matchTypeId,
+            isWicket,
+            totalWicket,
+            ballByBallId
+        );
+
         return {
             success: true,
-            message: `Processed predict score for ball ${currentBall}`
+            message: `Processed predict score for ball ${formattedBall}`
         };
     } catch (error) {
         console.error("Error processing predict score market:", error);
         return {
-            error: `Failed to process predict score: ${error.message}`
+            error: error.message,
+            success: false
         };
     }
 }
 
 /**
- * Process market actions based on ball-to-action map
+ * Executes a specific market action
  * @param {number} commentaryId - The commentary ID
- * @param {string} currentBall - The current ball (e.g., "5.3")
- * @param {number} totalScore - The current total score
+ * @param {Object} action - The action to execute
  */
-function processMarketActions(commentaryId, currentBall, totalScore) {
-    // Get the actions for this ball
-    const actions = getActionsForBall(commentaryId, currentBall.toString());
+function executeMarketAction(commentaryId, action) {
+    const { marketId, action: actionType, over, marketTypeCategoryId } = action;
 
-    if (!actions || actions.length === 0) {
-        console.log(`No actions mapped for ball ${currentBall}`);
+    // Find the market
+    const market = findMarket(commentaryId, marketId, { over, marketTypeCategoryId });
+
+    if (!market) {
+        console.error(`Cannot execute ${actionType} on marketId ${marketId} with over ${over}: Market not found`);
         return;
     }
 
-    console.log(`Processing ${actions.length} actions for ball ${currentBall}`);
+    console.log(`Executing ${actionType} on market "${market.marketName}" (ID: ${market.eventMarketId || 'unsaved'})`);
 
-    // Process each action
-    actions.forEach(action => {
-        const { action: actionType, marketId } = action;
-        const market = findMarket(commentaryId, marketId);
+    switch (actionType) {
+        case 'open':
+            openMarket(market);
+            break;
 
-        if (!market) {
-            console.warn(`Market ${marketId} not found for action ${actionType}`);
-            return;
-        }
+        case 'close':
+            closeMarket(market);
+            break;
 
-        // Execute the appropriate action
-        switch (actionType) {
-            case "open":
-                openMarket(market);
-                break;
-            case "close":
-                closeMarket(market);
-                break;
-            case "settle":
-                settleMarket(market, totalScore);
-                break;
-            default:
-                console.warn(`Unknown action type: ${actionType}`);
-        }
-    });
+        case 'settle':
+            settleMarket(market);
+            break;
+
+        default:
+            console.error(`Unknown action type: ${actionType}`);
+    }
+}
+
+/**
+ * Opens a market
+ * @param {Object} market - The market to open
+ */
+function openMarket(market) {
+    // Skip if already open
+    if (market.status === EventMarketStatus.Open) {
+        console.log(`Market ${market.marketName} is already open`);
+        return;
+    }
+
+    // Update market status to OPEN
+    market.status = EventMarketStatus.Open;
+
+    // Update runners' statuses if needed
+    if (market.runners && market.runners.length > 0) {
+        market.runners.forEach(runner => {
+            runner.selectionStatus = EventMarketStatus.Open;
+        });
+    }
+
+    // Update in DB and send to socket
+    updateMarketStatusInDB(market);
+    updateMarketStatusInSocket(market);
+
+    console.log(`Opened market: ${market.marketName} (ID: ${market.eventMarketId || 'unsaved'})`);
+}
+
+/**
+ * Closes a market
+ * @param {Object} market - The market to close
+ */
+function closeMarket(market) {
+    // Skip if already closed or settled
+    if (market.status === EventMarketStatus.Close || market.status === EventMarketStatus.Settled) {
+        console.log(`Market ${market.marketName} is already closed or settled`);
+        return;
+    }
+
+    // Update market status to CLOSE
+    market.status = EventMarketStatus.Close;
+
+    // Update runners' statuses if needed
+    if (market.runners && market.runners.length > 0) {
+        market.runners.forEach(runner => {
+            runner.selectionStatus = EventMarketStatus.Close;
+        });
+    }
+
+    // Update in DB and send to socket
+    updateMarketStatusInDB(market);
+    updateMarketStatusInSocket(market);
+
+    console.log(`Closed market: ${market.marketName} (ID: ${market.eventMarketId || 'unsaved'})`);
+}
+
+/**
+ * Settles a market
+ * @param {Object} market - The market to settle
+ */
+function settleMarket(market) {
+    // Skip if already settled
+    if (market.status === EventMarketStatus.Settled) {
+        console.log(`Market ${market.marketName} is already settled`);
+        return;
+    }
+
+    // Different settlement logic based on market type
+    if (market.marketTypeCategoryId === 28 || market.marketTypeCategoryId === 35) {
+        // Odd-Even market settlement
+        settleOddEvenMarket(market);
+    } else {
+        // Default settlement - just set to settled
+        market.status = EventMarketStatus.Settled;
+        updateMarketStatusInDB(market);
+        updateMarketStatusInSocket(market);
+    }
+
+    console.log(`Settled market: ${market.marketName} (ID: ${market.eventMarketId || 'unsaved'})`);
+}
+
+/**
+ * Settles an Odd-Even market
+ * @param {Object} market - The market to settle
+ */
+function settleOddEvenMarket(market) {
+    // Calculate the result based on total runs in the over
+    const overRuns = calculateOverRuns(market.commentaryId, market.teamId, market.over);
+    const isEven = overRuns % 2 === 0;
+
+    console.log(`Settling odd-even market for over ${market.over}. Runs: ${overRuns}, Result: ${isEven ? 'Even' : 'Odd'}`);
+
+    // Set market as settled
+    market.status = EventMarketStatus.Settled;
+
+    // Find and set the winner
+    if (market.runners && market.runners.length > 0) {
+        market.runners.forEach(runner => {
+            const runnerName = runner.runner.toLowerCase();
+            const isEvenRunner = runnerName.includes('even');
+            const isOddRunner = runnerName.includes('odd');
+
+            if ((isEven && isEvenRunner) || (!isEven && isOddRunner)) {
+                // This runner wins
+                runner.selectionStatus = 7; // WIN
+                market.eventMarketResult = { winnerRunnerId: runner.runnerId };
+                market.result = runner.runnerId;
+                console.log(`Winner: ${runner.runner} (ID: ${runner.runnerId})`);
+            } else if ((isEven && isOddRunner) || (!isEven && isEvenRunner)) {
+                // This runner loses
+                runner.selectionStatus = 8; // LOSE
+            }
+        });
+    }
+
+    // Set settled time
+    market.settledTime = new Date().toISOString();
+
+    // Update in DB and send to socket
+    updateMarketStatusInDB(market);
+    updateMarketStatusInSocket(market);
+}
+
+/**
+ * Calculates total runs scored in an over
+ * @param {number} commentaryId - The commentary ID
+ * @param {number} teamId - The team ID
+ * @param {string|number} over - The over number
+ * @returns {number} - Total runs in the over
+ */
+function calculateOverRuns(commentaryId, teamId, over) {
+    // This would typically fetch the actual runs from ball-by-ball data
+    // In a real implementation, this would query a database or cache
+
+    // For now, generate a random number for demonstration
+    // In production, replace this with actual data lookup
+    return Math.floor(Math.random() * 20);
 }
 
 module.exports = {
-    processPredictScoreMarket
+    processPredictScoreMarket,
+    executeMarketAction,
+    openMarket,
+    closeMarket,
+    settleMarket
 };
