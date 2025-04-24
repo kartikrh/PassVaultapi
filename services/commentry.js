@@ -1559,7 +1559,7 @@ const loadMultiCommentaryService = async (request, fastify) => {
     if (
       originalCommentary.isPredictMarket == true &&
       (originalCommentary.commentaryStatus == 2 ||
-        originalCommentary.commentaryStatus == 3)
+        originalCommentary.commentaryStatus == 3 || originalCommentary.commentaryStatus == 5)
     ) {
       _resFromPredictAPI = null;
       let key1 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTBALLFACED);
@@ -4911,30 +4911,30 @@ const updateCommentaryStatusService = async (request, fastify) => {
     ...global.tblCommentaries[index],
     ...commentaryDetails,
   };
-  // call predictor endpoint
-  if (global.tblCommentaries[index].isPredictMarket) {
-    callPredictorMarket(
-      {
-        commentary_id: commentaryId,
-        status: EventMarketStatus.Suspend,
-        match_type_id: global.tblCommentaries[index].matchTypeId,
-        is_open_market: false,
-        player_id: commentaryPlayerId || null
-      },
-      "/api/v1/updatemarketstatus",
-      fastify,
-      request
-    );
-    // let callPrediction = {};
-    // if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
-    //   callPrediction.predictioncallSuccess = false;
-    //   callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
-    //   callPrediction.endPoint = '/api/v1/updatemarketstatus';
-    //   callPredictions.push(callPrediction);
-    //   callPrediction = {};
-    // }
-  }
-
+    // call predictor endpoint
+  // if (global.tblCommentaries[index].isPredictMarket) {
+  //     callPredictorMarket(
+  //       {
+  //         commentary_id: commentaryId,
+  //         status: EventMarketStatus.Suspend,
+  //         match_type_id: global.tblCommentaries[index].matchTypeId,
+  //         is_open_market: false,
+  //         player_id : commentaryPlayerId || null
+  //       },
+  //       "/api/v1/updatemarketstatus",
+  //       fastify,
+  //       request
+  //     );
+  //     // let callPrediction = {};
+  //     // if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
+  //     //   callPrediction.predictioncallSuccess = false;
+  //     //   callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
+  //     //   callPrediction.endPoint = '/api/v1/updatemarketstatus';
+  //     //   callPredictions.push(callPrediction);
+  //     //   callPrediction = {};
+  //     // }
+  // }
+  
 
   if (
     global?.clientSocketIo !== undefined &&
@@ -9522,7 +9522,7 @@ const loadcommentaryService = async (request, fastify) => {
     let callPrediction = {};
     if (
       commentary.isPredictMarket == true &&
-      (commentary.commentaryStatus == 2 || commentary.commentaryStatus == 3)
+      (commentary.commentaryStatus == 2 || commentary.commentaryStatus == 3 || commentary.commentaryStatus == 5)
     ) {
       // get the eventMarket from teamOnstrike
       const teamOnStrike = global.tblCommentaryTeams.find(
