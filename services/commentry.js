@@ -4911,30 +4911,30 @@ const updateCommentaryStatusService = async (request, fastify) => {
     ...global.tblCommentaries[index],
     ...commentaryDetails,
   };
-  // call predictor endpoint
-  if (global.tblCommentaries[index].isPredictMarket) {
-    callPredictorMarket(
-      {
-        commentary_id: commentaryId,
-        status: EventMarketStatus.Suspend,
-        match_type_id: global.tblCommentaries[index].matchTypeId,
-        is_open_market: false,
-        player_id: commentaryPlayerId || null
-      },
-      "/api/v1/updatemarketstatus",
-      fastify,
-      request
-    );
-    // let callPrediction = {};
-    // if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
-    //   callPrediction.predictioncallSuccess = false;
-    //   callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
-    //   callPrediction.endPoint = '/api/v1/updatemarketstatus';
-    //   callPredictions.push(callPrediction);
-    //   callPrediction = {};
-    // }
-  }
-
+    // call predictor endpoint
+  // if (global.tblCommentaries[index].isPredictMarket) {
+  //     callPredictorMarket(
+  //       {
+  //         commentary_id: commentaryId,
+  //         status: EventMarketStatus.Suspend,
+  //         match_type_id: global.tblCommentaries[index].matchTypeId,
+  //         is_open_market: false,
+  //         player_id : commentaryPlayerId || null
+  //       },
+  //       "/api/v1/updatemarketstatus",
+  //       fastify,
+  //       request
+  //     );
+  //     // let callPrediction = {};
+  //     // if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
+  //     //   callPrediction.predictioncallSuccess = false;
+  //     //   callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
+  //     //   callPrediction.endPoint = '/api/v1/updatemarketstatus';
+  //     //   callPredictions.push(callPrediction);
+  //     //   callPrediction = {};
+  //     // }
+  // }
+  
 
   if (
     global?.clientSocketIo !== undefined &&
