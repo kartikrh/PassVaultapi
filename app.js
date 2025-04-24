@@ -42,7 +42,7 @@ const { nodeProfilingIntegration } = require('@sentry/profiling-node');
 // Pass --options via CLI arguments in command to enable these options.
 module.exports.options = {};
 global.tblData = {};
-
+global.marketData = {};
 if (process.env.ENABLE_SENTRY === "TRUE") {
   Sentry.init({
     dsn: process.env.SENTRY_DSN,

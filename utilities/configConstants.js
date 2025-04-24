@@ -69,5 +69,6 @@ const configConstants = {
     OTPEXPIRED : "OTPEXPIRED",
     OTPFORGOTURL :  "OTPFORGOTURL",
     OTPRESEND : "OTPRESEND",
+    CALLPREDICTIONMODULE : "CALLPREDICTIONMODULE",
 }
 module.exports = configConstants;
