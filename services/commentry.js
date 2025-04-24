@@ -1559,7 +1559,7 @@ const loadMultiCommentaryService = async (request, fastify) => {
     if (
       originalCommentary.isPredictMarket == true &&
       (originalCommentary.commentaryStatus == 2 ||
-        originalCommentary.commentaryStatus == 3)
+        originalCommentary.commentaryStatus == 3 || originalCommentary.commentaryStatus == 5)
     ) {
       _resFromPredictAPI = null;
       let key1 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTBALLFACED);
@@ -9522,7 +9522,7 @@ const loadcommentaryService = async (request, fastify) => {
     let callPrediction = {};
     if (
       commentary.isPredictMarket == true &&
-      (commentary.commentaryStatus == 2 || commentary.commentaryStatus == 3)
+      (commentary.commentaryStatus == 2 || commentary.commentaryStatus == 3 || commentary.commentaryStatus == 5)
     ) {
       // get the eventMarket from teamOnstrike
       const teamOnStrike = global.tblCommentaryTeams.find(
