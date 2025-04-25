@@ -8,9 +8,10 @@ const { errorLogger } = require('../utilities/logger');
 /**
  * Processes the prediction score market based on incoming payload
  * @param {Object} payload - The incoming payload
+ * @param {Object} fastify - Fastify Object
  * @returns {Object} - Processing result
  */
-function processPredictScoreMarket(payload) {
+function processPredictScoreMarket(payload, fastify) {
     try {
         // Extract data from payload
         const predictscore = payload.predictscore || {};
@@ -52,7 +53,7 @@ function processPredictScoreMarket(payload) {
             // Process each action
             actions.forEach(action => {
                 try {
-                    executeMarketAction(commentaryId, action);
+                    executeMarketAction(commentaryId, action, fastify);
                 } catch (actionError) {
                     console.error(`Error executing action ${action.action} for market ${action.marketId}:`, actionError);
                 }
@@ -72,7 +73,7 @@ function processPredictScoreMarket(payload) {
             matchTypeId,
             isWicket,
             totalWicket,
-            ballByBallId
+            ballByBallId,
         );
 
         return {
@@ -93,7 +94,7 @@ function processPredictScoreMarket(payload) {
  * @param {number} commentaryId - The commentary ID
  * @param {Object} action - The action to execute
  */
-function executeMarketAction(commentaryId, action) {
+function executeMarketAction(commentaryId, action, fastify) {
     const { marketId, action: actionType, over, marketTypeCategoryId } = action;
 
     // Find the market
@@ -108,15 +109,15 @@ function executeMarketAction(commentaryId, action) {
 
     switch (actionType) {
         case 'open':
-            openMarket(market);
+            openMarket(market, fastify);
             break;
 
         case 'close':
-            closeMarket(market);
+            closeMarket(market, fastify);
             break;
 
         case 'settle':
-            settleMarket(market);
+            settleMarket(market, fastify);
             break;
 
         default:
@@ -127,8 +128,9 @@ function executeMarketAction(commentaryId, action) {
 /**
  * Opens a market
  * @param {Object} market - The market to open
+ * @param {Object} fastify - Fastify Object
  */
-function openMarket(market) {
+function openMarket(market, fastify) {
     // Skip if already open
     if (market.status === EventMarketStatus.Open) {
         console.log(`Market ${market.marketName} is already open`);
@@ -146,7 +148,7 @@ function openMarket(market) {
     }
 
     // Update in DB and send to socket
-    updateMarketStatusInDB(market);
+    updateMarketStatusInDB(market, fastify);
     updateMarketStatusInSocket(market);
 
     console.log(`Opened market: ${market.marketName} (ID: ${market.eventMarketId || 'unsaved'})`);
@@ -155,8 +157,9 @@ function openMarket(market) {
 /**
  * Closes a market
  * @param {Object} market - The market to close
+ * @param {Object} fastify - Fastify Object
  */
-function closeMarket(market) {
+function closeMarket(market, fastify) {
     // Skip if already closed or settled
     if (market.status === EventMarketStatus.Close || market.status === EventMarketStatus.Settled) {
         console.log(`Market ${market.marketName} is already closed or settled`);
@@ -174,7 +177,7 @@ function closeMarket(market) {
     }
 
     // Update in DB and send to socket
-    updateMarketStatusInDB(market);
+    updateMarketStatusInDB(market, fastify);
     updateMarketStatusInSocket(market);
 
     console.log(`Closed market: ${market.marketName} (ID: ${market.eventMarketId || 'unsaved'})`);
@@ -183,8 +186,9 @@ function closeMarket(market) {
 /**
  * Settles a market
  * @param {Object} market - The market to settle
+ * @param {Object} fastify - Fastify Object
  */
-function settleMarket(market) {
+function settleMarket(market, fastify) {
     // Skip if already settled
     if (market.status === EventMarketStatus.Settled) {
         console.log(`Market ${market.marketName} is already settled`);
@@ -194,11 +198,11 @@ function settleMarket(market) {
     // Different settlement logic based on market type
     if (market.marketTypeCategoryId === 28 || market.marketTypeCategoryId === 35) {
         // Odd-Even market settlement
-        settleOddEvenMarket(market);
+        settleOddEvenMarket(market, fastify);
     } else {
         // Default settlement - just set to settled
         market.status = EventMarketStatus.Settled;
-        updateMarketStatusInDB(market);
+        updateMarketStatusInDB(market, fastify);
         updateMarketStatusInSocket(market);
     }
 
@@ -208,8 +212,9 @@ function settleMarket(market) {
 /**
  * Settles an Odd-Even market
  * @param {Object} market - The market to settle
+ * @param {Object} fastify - Fastify Object
  */
-function settleOddEvenMarket(market) {
+function settleOddEvenMarket(market, fastify) {
     // Calculate the result based on total runs in the over
     const overRuns = calculateOverRuns(market.commentaryId, market.teamId, market.over);
     const isEven = overRuns % 2 === 0;
@@ -243,7 +248,7 @@ function settleOddEvenMarket(market) {
     market.settledTime = new Date().toISOString();
 
     // Update in DB and send to socket
-    updateMarketStatusInDB(market);
+    updateMarketStatusInDB(market, fastify);
     updateMarketStatusInSocket(market);
 }
 

@@ -3927,7 +3927,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           (item) => item.key === configConstants.CALLPREDICTIONMODULE
         )?.value || "false";
       if (isNodePrediction == "true")
-        processPredictScoreMarket(predictionPayload);
+        processPredictScoreMarket(predictionPayload, fastify)
       else
         callPredictorMarket(
           predictionPayload,
