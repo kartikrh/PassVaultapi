@@ -10455,57 +10455,45 @@ const loadcommentaryService = async (request, fastify) => {
           fastify
         );
       }
-      let key1 = global.tblConfigs.find(
-        (item) => item.key === configConstants.DEFAULTBALLFACED
-      );
-      let key2 = global.tblConfigs.find(
-        (item) => item.key === configConstants.DEFAULTPLAYERBOUNDARIES
-      );
-      let key3 = global.tblConfigs.find(
-        (item) => item.key === configConstants.DEFAULTPLAYERRUNS
-      );
-      _resFromPredictAPI = await callPredictorMarket(
-        {
-          commentary_id: commentary.commentaryId,
-          match_type_id: commentary.matchTypeId,
-          event_id: commentary.eventRefId,
-          // line_ratio_data: eventMarketLine,
-          default_ball_faced: parseInt(key1?.value) || 0,
-          default_player_boundaries: parseInt(key2?.value) || 0,
-          default_player_runs: parseInt(key3?.value) || 0,
-        },
-        "/api/v1/loadcommentary",
-        fastify,
-        request
-      );
-
-      if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
-        callPrediction.predictioncallSuccess = false;
-        callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
-        callPrediction.endPoint = "/api/v1/loadcommentary";
-      } else {
-        callPrediction.predictioncallSuccess = true;
-        callPrediction.predictionMessage = "Prediction call successful";
-        callPrediction.endPoint = "/api/v1/loadcommentary";
-      }
-    }
-    // call the prediction module
-    let prediction =
-      global.tblConfigs.find(
-        (item) => item.key === configConstants.CALLPREDICTIONMODULE
-      )?.value || "false";
-    if (prediction == "true") {
-      const data = await generateMarketAndRunners(
-        {
+      let key1 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTBALLFACED);
+      let key2 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTPLAYERBOUNDARIES);
+      let key3 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTPLAYERRUNS);
+      let prediction = global.tblConfigs.find((item) => item.key === configConstants.CALLPREDICTIONMODULE)?.value || "false";
+      if (prediction == "true") {
+        const data = await generateMarketAndRunners({
           commentary: commentary,
           commentaryId: commentary.commentaryId,
           matchTypeId: commentary.matchTypeId,
-        },
-        request,
-        fastify
-      );
-      console.log({ data });
+        }, request, fastify)
+        console.log({ data })
+      } else {
+        _resFromPredictAPI = await callPredictorMarket(
+          {
+            commentary_id: commentary.commentaryId,
+            match_type_id: commentary.matchTypeId,
+            event_id: commentary.eventRefId,
+            // line_ratio_data: eventMarketLine,
+            default_ball_faced: parseInt(key1?.value) || 0,
+            default_player_boundaries: parseInt(key2?.value) || 0,
+            default_player_runs: parseInt(key3?.value) || 0,
+          },
+          "/api/v1/loadcommentary",
+          fastify,
+          request
+        );
+
+        if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
+          callPrediction.predictioncallSuccess = false;
+          callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
+          callPrediction.endPoint = '/api/v1/loadcommentary';
+        } else {
+          callPrediction.predictioncallSuccess = true;
+          callPrediction.predictionMessage = 'Prediction call successful';
+          callPrediction.endPoint = '/api/v1/loadcommentary';
+        }
+      }
     }
+    // call the prediction module
     return {
       message: "Request Send Successfully!!!",
       callPrediction: callPrediction,
