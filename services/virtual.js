@@ -10,6 +10,15 @@ const {
   virtualPlayersSelectQuery,
   updateCommentaryPlayerJerseyImageQuery,
   virtualEventBallStartQuery,
+  createvirtualPartnershipQuery,
+  createVirtualOverQuery,
+  createVirtualBallByBallQuery,
+  virtualTeamRunsQuery,
+  virtualPlayerRunsQuery,
+  updateVirtualPartnershipQuery,
+  updateVirtualBallByBallQuery,
+  updateVirtualOverQuery,
+  createVirtualWicketQuery,
 } = require("../repository/TableCommentary");
 const { getTournamentTeamsByCompIdQuery } = require("../repository/TableTournmentTeamPoints");
 const { getAllPlayersByTeamAndCompetitionIdQuery } = require("../repository/TableTournamentsTeamPlayers");
@@ -317,6 +326,17 @@ const virtualEventTossService = async (request, fastify) => {
     }
   }
 
+  const partnersData = {
+    commentaryId,
+    teamId: battingTeamId,
+    batter1Id: batters[0].commentaryPlayerId,
+    batter2Id: batters[1].commentaryPlayerId,
+    batter1Name: batters[0].playerName,
+    batter2Name: batters[1].playerName,
+  }
+  const partnerships = await createvirtualPartnershipQuery(partnersData, fastify, request);
+  global.tblCommentaryPartnership.push(partnerships);
+
   const bowlers = global.tblCommentaryPlayers
     .filter(p => p.commentaryId === commentaryId && p.teamId === bowlingTeamId)
     .sort((a, b) => a.displayOrder - b.displayOrder);
@@ -347,6 +367,31 @@ const virtualEventTossService = async (request, fastify) => {
       };
     }
   }
+  const overData = {
+    commentaryId,
+    teamId: bowlingTeamId,
+    bowlerId: bowler.commentaryPlayerId,
+  }
+  const overs = await createVirtualOverQuery(overData, fastify, request);
+  global.tblOvers.push(overs);
+
+  const ballData = {
+    commentaryId,
+    teamId: bowlingTeamId,
+    bowlerId: bowler.commentaryPlayerId,
+    overId: overs.overId,
+    bowlerId: bowler.commentaryPlayerId,
+    batStrikeId: batters[0].commentaryPlayerId,
+    batNonStrikeId: batters[1].commentaryPlayerId,
+    ballIsCount: false,
+    ballType: 0,
+    overIsMaiden: false,
+    ballBowlerId: bowler.commentaryPlayerId,
+    ballPlayerId: batters[0].commentaryPlayerId,
+    commentaryPartnershipId: partnerships.commentaryPartnershipId,
+  }
+  const balls = await createVirtualBallByBallQuery(ballData, fastify, request);
+  global.tblCommentaryBallByBall.push(balls);
 
   return "Toss Done Successfully";
 };
@@ -430,29 +475,196 @@ const ballByBallVirtualEventService = async (request, fastify) => {
   if (!commentaryDetails) {
     throw new Error("Commentary with this id not found");
   }
-  
-  if(request.body.commentaryTeams) {
-    
-  }
+  let commentaryTeamData, commentaryPlayerData
+  const commentaryTeams = global.tblCommentaryTeams.find(item => 
+    item.commentaryId == commentaryId && item.teamId == request.body.teamId
+  )
+  let totalBalls = (commentaryTeams?.teamOver || 0) * 10;
+  totalBalls++;
+  let overs = Math.floor(totalBalls / 6);
+  let balls = totalBalls % 6
+  let teamOver = parseFloat(`${overs}.${balls}`);
 
-  if(request.body.commentaryPlayers) {
-
+  if(commentaryTeams) {
+    commentaryTeamData = {
+      teamScore: commentaryTeams?.teamScore + request.body.run,
+      teamOver: teamOver,
+      teamWicket: 0,
+      crr: 0,
+      rrr: 0,
+      teamTrialRuns: 0,
+      teamLeadRuns: 0,
+      teamWideRuns: 0,
+      teamByRuns: 0,
+      teamLegByRuns: 0,
+      teamNoBallRuns: 0,
+      teamPenaltyRuns: 0,
+      isWin: false,
+      commentaryId,
+      commentaryTeamId: request.body.commentaryTeamId
+    }
+    const teamsScoring = await virtualTeamRunsQuery(commentaryTeamData, fastify, request);
+    console.log("teamsScoring", teamsScoring);    
+    const index = global.tblCommentaryTeams.findIndex(
+      (item) => item?.commentaryId === commentaryId && item.teamId == request.body.teamId
+    );
+    if(index !== -1) {
+      global.tblCommentaryTeams[index] = {
+        ...global.tblCommentaryTeams[index],
+        ...teamsScoring,
+      };
+    }
   }
+  const commentaryPlayers = global.tblCommentaryPlayers.find(item => 
+    item.commentaryId == commentaryId && item.commentaryPlayerId == request.body.commentaryPlayerId
+  )
+
+  if(commentaryPlayers) {
+    const commentaryPlayerData = {
+      batRun,
+      batBall: request.boyd.batBall ? commentaryPlayers.batBall + 1 : commentaryPlayers.batBall,
+      batDotBall: request.body.batDotBall ? commentaryPlayers.batDotBall + 1 : commentaryPlayers.batDotBall,
+      batFour: request.body.batFour ? commentaryPlayers.batFour + 1 : commentaryPlayers.batFour,
+      batSix: request.body.batSix ? commentaryPlayers.batSix + 1 : commentaryPlayers.batSix,
+      batSrr: commentaryPlayers.batSrr || null,
+      bowlerRun: request.body.bowlerRun ? commentaryPlayers.bowlerRun + request.body.run : commentaryPlayers.bowlerRun,
+      bowlerOver: request.body.isBallCount == true ? commentaryPlayers.bowlerOver + 1 : commentaryPlayers.bowlerOver,
+      bowlerTotalBall: request.body.isBallCount == true ? commentaryPlayers.bowlerTotalBall + 1 : commentaryPlayers.bowlerTotalBall,
+      bowlerDotBall: request.body.isBallCount == true && request.body.batRun === 0 ? commentaryPlayers.bowlerDotBall + 1 : commentaryPlayers.bowlerDotBall,
+      bowlerMaidenOver: request.body.bowlerMaidenOver ? commentaryPlayers.bowlerMaidenOver + 1 : commentaryPlayers.bowlerMaidenOver,
+      bowlerFour: request.body.batFour ? commentaryPlayers.bowlerFour + 1 : commentaryPlayers.bowlerFour,
+      bowlerSix: request.body.batSix ? commentaryPlayers.bowlerSix + 1 : commentaryPlayers.bowlerSix,
+      bowlerWideBall: request.body.isBallCount == false && request.body.bowlerWideBall ? commentaryPlayers.bowlerWideBall + 1 : commentaryPlayers.bowlerWideBall,
+      bowlerNoBall: request.body.isBallCount == false && request.body.bowlerNoBall ? commentaryPlayers.bowlerNoBall + 1 : commentaryPlayers.bowlerNoBall,
+      bowlerByeBall: request.body.isBallCount == false && request.body.bowlerByeBall ? commentaryPlayers.bowlerByeBall + 1 : commentaryPlayers.bowlerByeBall,
+      bowlerLegByeBall: request.body.isBallCount == false && request.body.bowlerLegByeBall ? commentaryPlayers.bowlerLegByeBall + 1 : commentaryPlayers.bowlerLegByeBall,
+      bowlerTotalWicket: request.body.wicket ? commentaryPlayers.bowlerTotalWicket + 1 : commentaryPlayers.bowlerTotalWicket,
+      bowlerEconomy: commentaryPlayers.bowlerEconomy || null,
+      commentaryId: commentaryId,
+      commentaryPlayerId: request.body.commentaryPlayerId,
+    }
+    const batPlayer = await virtualPlayerRunsQuery(commentaryPlayerData, fastify, request);
+    const index = global.tblCommentaryPlayers.findIndex(
+      (item) => item?.commentaryId === commentaryId && item.commenaryPlayerId == request.body.commentaryPlayerId
+    );
+    if(index !== -1) {
+      global.tblCommentaryPlayers[index] = {
+        ...global.tblCommentaryPlayers[index],
+        ...batPlayer,
+      };
+    }
+  }
+  // const commentaryBowler = global.tblCommentaryPlayers.find(item => 
+  //   item.commentaryId == commentaryId && item.commentaryPlayerId == request.body.commentaryPlayerId
+  // )
+  // if(commentaryBowler) {
+  //   const commentaryPlayerData = {
+  //     batRun,
+  //     batBall: commentaryBowler.batBall + 1,
+  //     batDotBall: commentaryBowler.batDotBall + 1,
+  //     batFour: commentaryBowler.batFour + 1,
+  //     batSix: commentaryBowler.batSix + 1,
+  //     batSrr: commentaryBowler.batSrr || null,
+  //     bowlerRun: commentaryBowler.bowlerRun + request.body.run,
+  //     bowlerOver: commentaryBowler.bowlerOver + 1,
+  //     bowlerTotalBall: commentaryBowler.bowlerTotalBall + 1,
+  //     bowlerDotBall: commentaryBowler.bowlerDotBall + 1,
+  //     bowlerMaidenOver: commentaryBowler.bowlerMaidenOver + 1,
+  //     bowlerFour: commentaryBowler.bowlerFour + 1,
+  //     bowlerSix: commentaryBowler.bowlerSix + 1,
+  //     bowlerWideBall: commentaryBowler.bowlerWideBall + 1,
+  //     bowlerNoBall: commentaryBowler.bowlerByeBall + 1,
+  //     bowlerLegByeBall: commentaryBowler.bowlerLegByeBall + 1,
+  //     bowlerTotalWicket: commentaryBowler.bowlerTotalWicket + 1,
+  //     bowlerEconomy: commentaryBowler.bowlerEconomy || null,
+  //     commentaryId: commentaryId,
+  //     commentaryPlayerId: request.body.commentaryPlayerId,
+  //   }
+  //   const bowlPlayer = await virtualPlayerRunsQuery(commentaryPlayerData, fastify, request);
+  //   const index = global.tblCommentaryPlayers.findIndex(
+  //     (item) => item?.commentaryId === commentaryId && item.commentaryPlayerId == request.body.commentaryPlayerId
+  //   );
+  //   if(index !== -1) {
+  //     global.tblCommentaryPlayers[index] = {
+  //       ...global.tblCommentaryPlayers[index],
+  //       ...bowlPlayer,
+  //     };
+  //   }
+  // }
 
   if(request.body.commentaryWickets) {
-
+    const wicketData = await createVirtualWicketQuery(data, fastify, request);
+    global.tblCommentaryWicket.push(wicketData);
   }
 
   if(request.body.overs) {
-
+    if(request.body.overId == 0) {
+      const over = {
+        commentaryId,
+        teamId: request.body.teamId,
+        bowlerId: request.body.bowlerId,
+      }
+      const overData = await createVirtualOverQuery(over, fastify, request);
+      global.tblOvers.push(overData);
+    } else {
+      const overData = await updateVirtualOverQuery(data, fastify, request);
+      const index = global.tblOvers.findIndex(
+        (item) => item?.commentaryId === commentaryId && item.overId == request.body.overId
+      );
+      if(index !== -1) {
+        global.tblOvers[index] = {
+          ...global.tblOvers[index],
+          ...overData,
+        };
+      }
+    }
   }
 
   if(request.body.commentaryBallByBall) {
-
+    const ballData = {
+      commentaryId,
+      teamId: bowlingTeamId,
+      bowlerId: request.body.bowlerId,
+      overId: overs.overId,
+      batStrikeId: request.body.bowler1Id,
+      batNonStrikeId: request.body.bowler2Id,
+      ballIsCount: request.body.ballIsCount,
+      ballType: request.body.ballType,
+      overIsMaiden: false,
+      ballBowlerId: request.body.bowlerId,
+      ballPlayerId: request.body.batterId,
+      commentaryPartnershipId: partnerships.commentaryPartnershipId,
+    }
+    const balls = await createVirtualBallByBallQuery(ballData, fastify, request);
+    global.tblCommentaryBallByBall.push(balls);
+    // const commentaryBallByBall = await updateVirtualBallByBallQuery(data, fastify, request)
+    // const index = global.tblCommentaryBallByBall.findIndex(
+    //   (item) => item?.commentaryId === commentaryId && item.commentaryBallByBallId == request.body.commentaryBallByBallId
+    // );
+    // if(index !== -1) {
+    //   global.tblCommentaryBallByBall[index] = {
+    //     ...global.tblCommentaryBallByBall[index],
+    //     ...commentaryBallByBall,
+    //   };
+    // }
   }
 
   if(request.body.commentaryPartnerships) {
-
+    if(request.body.commentaryPartnershipId == 0) {
+      const partnershipData = await createvirtualPartnershipQuery(data, fastify, request);
+      global.tblCommentaryPartnership.push(partnershipData);
+    } else {
+      const partnershipData = await updateVirtualPartnershipQuery(data, fastify, request);
+      const index = global.tblCommentaryPartnership.findIndex(
+        (item) => item?.commentaryId === commentaryId && item.commentaryPartnershipId == request.body.commentaryPartnershipId
+      );
+      if(index !== -1) {
+        global.tblCommentaryPartnership[index] = {
+          ...global.tblCommentaryPartnership[index],
+          ...partnershipData,
+        };
+      }
+    }
   }
 };
 
@@ -461,4 +673,5 @@ module.exports = {
     createVirtualEventService,
     virtualEventTossService,
     updateVirtualEventStatusService,
+    ballByBallVirtualEventService,
 }
