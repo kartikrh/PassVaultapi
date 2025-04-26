@@ -1,6 +1,6 @@
 // predictScoreHandler.js
 const { getActionsForBall, findMarket, formatBallNumber } = require('./ballToActionMapper');
-const { updateMarketStatusInDB, updateMarketStatusInSocket, findExistingMarketId, updateGlobalMarketId } = require('./marketActions');
+const { updateMarketStatusInDB, updateMarketStatusInSocket } = require('./marketActions');
 const { processOddEvenMarkets } = require('./oddEven');
 const { EventMarketStatus } = require('../utilities');
 const { errorLogger } = require('../utilities/logger');
@@ -50,25 +50,12 @@ function processPredictScoreMarket(payload, fastify) {
         if (actions && actions.length > 0) {
             console.log(`Found ${actions.length} actions for ball ${formattedBall}`);
 
-            // Process each action
-            const processedMarkets = [];
-            actions.forEach(action => {
+            // Process each action - only create in DB when needed
+            for (const action of actions) {
                 try {
-                    const processedMarket = executeMarketAction(commentaryId, action, fastify);
-                    if (processedMarket) {
-                        processedMarkets.push(processedMarket);
-                    }
+                    executeMarketAction(commentaryId, action, fastify);
                 } catch (actionError) {
                     console.error(`Error executing action ${action.action} for market ${action.marketId}:`, actionError);
-                }
-            });
-
-            // Send batch update to socket if needed
-            if (processedMarkets.length > 0 && global.socketIo) {
-                const clientInRoom = global.socketIo.sockets.adapter.rooms.get(commentaryId);
-                if (clientInRoom?.size) {
-                    global.socketIo.to(commentaryId).emit("updateMarket", processedMarkets);
-                    console.log(`[Socket] Sent batch update for ${processedMarkets.length} markets`);
                 }
             }
         } else {
@@ -106,69 +93,53 @@ function processPredictScoreMarket(payload, fastify) {
  * Executes a specific market action
  * @param {number} commentaryId - The commentary ID
  * @param {Object} action - The action to execute
- * @param {Object} fastify - Fastify Object
- * @returns {Object|null} - The processed market or null if failed
+ * @param {Object} fastify - Fastify instance
  */
 function executeMarketAction(commentaryId, action, fastify) {
     const { marketId, action: actionType, over, marketTypeCategoryId } = action;
 
-    // Find the market
-    let market = findMarket(commentaryId, marketId, { over, marketTypeCategoryId });
+    // Find the market in global state
+    const market = findMarket(commentaryId, marketId, { over, marketTypeCategoryId });
 
     if (!market) {
-        console.error(`Cannot execute ${actionType} on marketId ${marketId} with over ${over}: Market not found`);
-        return null;
+        console.error(`Cannot execute ${actionType} on marketId ${marketId} with over ${over}: Market not found in global state`);
+        return;
     }
 
     console.log(`Executing ${actionType} on market "${market.marketName}" (ID: ${market.eventMarketId || 'unsaved'})`);
 
-    // If market ID is 0, check if it already exists in the database
-    if ((market.eventMarketId === 0 || market.eventMarketId === "0") && fastify) {
-        findExistingMarketId({ ...market, commentaryId }, fastify)
-            .then(existingId => {
-                if (existingId) {
-                    console.log(`Found existing market ID ${existingId} for market with over ${over}`);
-                    market.eventMarketId = existingId;
-                    updateGlobalMarketId({ ...market, commentaryId }, existingId);
-                }
-            })
-            .catch(error => {
-                console.error(`Error checking for existing market:`, error);
-            });
-    }
+    // Set commentary ID for DB operations
+    market.commentaryId = commentaryId;
 
-    let processedMarket = null;
+    // Execute the appropriate action
     switch (actionType) {
         case 'open':
-            processedMarket = openMarket(market, fastify);
+            openMarket(market, fastify);
             break;
 
         case 'close':
-            processedMarket = closeMarket(market, fastify);
+            closeMarket(market, fastify);
             break;
 
         case 'settle':
-            processedMarket = settleMarket(market, fastify);
+            settleMarket(market, fastify);
             break;
 
         default:
             console.error(`Unknown action type: ${actionType}`);
     }
-
-    return processedMarket;
 }
 
 /**
  * Opens a market
  * @param {Object} market - The market to open
  * @param {Object} fastify - Fastify Object
- * @returns {Object} - The processed market
  */
 function openMarket(market, fastify) {
     // Skip if already open
     if (market.status === EventMarketStatus.Open) {
         console.log(`Market ${market.marketName} is already open`);
-        return market;
+        return;
     }
 
     // Update market status to OPEN
@@ -181,25 +152,23 @@ function openMarket(market, fastify) {
         });
     }
 
-    // Update in DB and send to socket
-    updateMarketStatusInDB({ ...market, commentaryId: market.commentaryId }, fastify);
-    // Socket update is now handled in batch by the main process
+    // Update in DB - will insert if ID is 0 and market doesn't exist in DB
+    updateMarketStatusInDB(market, fastify);
+    // Socket update is handled by updateMarketStatusInDB
 
     console.log(`Opened market: ${market.marketName} (ID: ${market.eventMarketId || 'unsaved'})`);
-    return market;
 }
 
 /**
  * Closes a market
  * @param {Object} market - The market to close
  * @param {Object} fastify - Fastify Object
- * @returns {Object} - The processed market
  */
 function closeMarket(market, fastify) {
     // Skip if already closed or settled
     if (market.status === EventMarketStatus.Close || market.status === EventMarketStatus.Settled) {
         console.log(`Market ${market.marketName} is already closed or settled`);
-        return market;
+        return;
     }
 
     // Update market status to CLOSE
@@ -212,49 +181,46 @@ function closeMarket(market, fastify) {
         });
     }
 
-    // Update in DB and send to socket
-    updateMarketStatusInDB({ ...market, commentaryId: market.commentaryId }, fastify);
-    // Socket update is now handled in batch by the main process
+    // Update in DB - will insert if ID is 0 and market doesn't exist in DB
+    updateMarketStatusInDB(market, fastify);
+    // Socket update is handled by updateMarketStatusInDB
 
     console.log(`Closed market: ${market.marketName} (ID: ${market.eventMarketId || 'unsaved'})`);
-    return market;
 }
 
 /**
  * Settles a market
  * @param {Object} market - The market to settle
  * @param {Object} fastify - Fastify Object
- * @returns {Object} - The processed market
  */
 function settleMarket(market, fastify) {
     // Skip if already settled
     if (market.status === EventMarketStatus.Settled) {
         console.log(`Market ${market.marketName} is already settled`);
-        return market;
+        return;
     }
 
     // Different settlement logic based on market type
     if (market.marketTypeCategoryId === 28 || market.marketTypeCategoryId === 35) {
         // Odd-Even market settlement
-        return settleOddEvenMarket(market, fastify);
+        settleOddEvenMarket(market, fastify);
     } else {
         // Default settlement - just set to settled
         market.status = EventMarketStatus.Settled;
         market.settledTime = new Date().toISOString();
 
-        updateMarketStatusInDB({ ...market, commentaryId: market.commentaryId }, fastify);
-        // Socket update is now handled in batch by the main process
-
-        console.log(`Settled market: ${market.marketName} (ID: ${market.eventMarketId || 'unsaved'})`);
-        return market;
+        // Update in DB - will insert if ID is 0 and market doesn't exist in DB
+        updateMarketStatusInDB(market, fastify);
+        // Socket update is handled by updateMarketStatusInDB
     }
+
+    console.log(`Settled market: ${market.marketName} (ID: ${market.eventMarketId || 'unsaved'})`);
 }
 
 /**
  * Settles an Odd-Even market
  * @param {Object} market - The market to settle
  * @param {Object} fastify - Fastify Object
- * @returns {Object} - The processed market
  */
 function settleOddEvenMarket(market, fastify) {
     // Calculate the result based on total runs in the over
@@ -289,11 +255,9 @@ function settleOddEvenMarket(market, fastify) {
     // Set settled time
     market.settledTime = new Date().toISOString();
 
-    // Update in DB and send to socket
-    updateMarketStatusInDB({ ...market, commentaryId: market.commentaryId }, fastify);
-    // Socket update is now handled in batch by the main process
-
-    return market;
+    // Update in DB - will insert if ID is 0 and market doesn't exist in DB
+    updateMarketStatusInDB(market, fastify);
+    // Socket update is handled by updateMarketStatusInDB
 }
 
 /**
@@ -392,11 +356,13 @@ function calculateOverRuns(commentaryId, teamId, over) {
     }
 }
 
+// Make sure to export all the functions that are used elsewhere
 module.exports = {
     processPredictScoreMarket,
     executeMarketAction,
     openMarket,
     closeMarket,
     settleMarket,
+    settleOddEvenMarket,
     calculateOverRuns
 };

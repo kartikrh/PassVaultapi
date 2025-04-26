@@ -3,6 +3,7 @@ const { errorLogger } = require('../utilities/logger');
 
 /**
  * Updates market status in the database
+ * Only inserts if market doesn't exist yet (marketId = 0)
  * @param {Object} market - The market to update
  * @param {Object} fastify - Fastify instance
  * @returns {Promise<string|number>} - The market ID after update
@@ -10,193 +11,73 @@ const { errorLogger } = require('../utilities/logger');
 async function updateMarketStatusInDB(market, fastify) {
     try {
         const { commentaryId, ...marketValue } = market;
-        console.log(`[DB] Update for ${marketValue.marketName || 'market'}:`, `(ID: ${marketValue.eventMarketId || 0}, Status: ${marketValue.status})`);
+        console.log(`[DB] Processing market ${marketValue.marketName}:`, `(ID: ${marketValue.eventMarketId || 0}, Status: ${marketValue.status})`);
 
-        // Get market ID and other values
-        const marketId = marketValue.eventMarketId || marketValue.id || 0;
+        let marketId = marketValue.eventMarketId || marketValue.id || 0;
+        let newMarketId = marketId;
         const marketStatus = marketValue.status;
         const marketResult = marketValue.result || null;
         const settledTime = marketValue.settledTime || null;
 
-        let newMarketId = marketId;
-
-        // First check if the market already exists in DB even if ID is 0
+        // First check if market already exists in DB when ID is 0
         if (marketId === 0 || marketId === "0") {
             const existingId = await findExistingMarketId(market, fastify);
+
             if (existingId) {
                 console.log(`[DB] Found existing market with ID ${existingId} instead of creating new`);
                 newMarketId = existingId;
 
-                // Update the market's ID for subsequent operations
-                marketValue.eventMarketId = existingId;
-            }
-        }
+                // Update existing market's status
+                await updateExistingMarket({ ...market, eventMarketId: existingId }, fastify);
 
-        // If marketId is still 0, insert a new market
-        if (newMarketId === 0 || newMarketId === "0") {
-            const insertQuery = `
-                INSERT INTO "tblEventMarkets" (
-                    "wrCommentaryId", "wrEventRefID", "wrTeamID", "wrInningsID", 
-                    "wrMarketName", "wrStatus", "wrIsPredefineMarket", "wrTemplateType", 
-                    "wrIsOver", "wrOver", "wrIsPlayer", "wrIsAutoCancel", 
-                    "wrAutoOpenType", "wrAutoOpen", "wrAutoCloseType", "wrBeforeAutoClose", 
-                    "wrAutoSuspendType", "wrBeforeAutoSuspend", "wrIsBallStart", "wrIsAutoResultSet", 
-                    "wrAutoResultafterBall", "wrAfterWicketAutoSuspend", "wrAfterWicketNotCreated", 
-                    "wrIsActive", "wrMarketTemplateId", "wrMargin", "wrCreateType", 
-                    "wrMarketTypeCategoryId", "wrMarketTypeId", "wrRateSource", "wrPredefinedValue", 
-                    "wrDelay", "wrCreate", "wrCreateRefId", "wrOpenRefId", "wrActionType", 
-                    "wrAutoResultType", "wrIsSendData", "wrIsAllow", "wrLineType", 
-                    "wrDefaultBackSize", "wrDefaultLaySize", "wrDefaultIsSendData", "wrRateDiff"
-                ) VALUES (
-                    ${commentaryId}, '${marketValue.eventRefId || ""}', ${marketValue.teamId || 0}, ${marketValue.inningsId || 1},
-                    '${marketValue.marketName}', ${marketStatus}, ${marketValue.isPredefineMarket || false}, ${marketValue.templateType || 1},
-                    ${marketValue.isOver || false}, ${marketValue.over || 0}, ${marketValue.isPlayer || false}, ${marketValue.isAutoCancel || false},
-                    ${marketValue.autoOpenType || 0}, ${marketValue.autoOpen || 0}, ${marketValue.autoCloseType || 0}, ${marketValue.beforeAutoClose || 0},
-                    ${marketValue.autoSuspendType || 0}, ${marketValue.beforeAutoSuspend || 0}, ${marketValue.isBallStart || false}, ${marketValue.isAutoResultSet || false},
-                    ${marketValue.autoResultAfterBall || 0}, ${marketValue.afterWicketAutoSuspend || 0}, ${marketValue.afterWicketNotCreated || 0},
-                    ${marketValue.isActive || false}, ${marketValue.marketTemplateId || 0}, ${marketValue.margin || 0}, ${marketValue.createType || 1},
-                    ${marketValue.marketTypeCategoryId || 0}, ${marketValue.marketTypeId || 0}, ${marketValue.rateSource || 1}, ${marketValue.predefinedValue || 0},
-                    ${marketValue.delay || 0}, ${marketValue.create || 0}, ${marketValue.createRefId || 0}, ${marketValue.openRefId || 0}, ${marketValue.actionType || 0},
-                    ${marketValue.autoResultType || 0}, ${marketValue.isSendData || false}, ${marketValue.isAllow || false}, ${marketValue.lineType || 0},
-                    ${marketValue.defaultBackSize || 100}, ${marketValue.defaultLaySize || 100}, ${marketValue.defaultIsSendData || false}, ${marketValue.rateDiff || 0}
-                ) RETURNING "wrID"
-            `;
+                // Update global state with the correct ID
+                updateGlobalMarketId(market, existingId);
 
-            // Execute the insert query
-            const insertResult = await fastify.db.query(insertQuery, {
-                type: fastify.db.QueryTypes.INSERT
-            });
-
-            // Get the new market ID
-            newMarketId = insertResult[0][0].wrID;
-            console.log(`[DB] New market inserted with ID: ${newMarketId}`);
-
-            // Insert runners if available
-            if (marketValue.runners && marketValue.runners.length > 0) {
-                for (const runner of marketValue.runners) {
-                    const runnerInsertQuery = `
-                        INSERT INTO "tblMarketRunners" (
-                            "wrEventMarketId", "wrRunner", "wrLine", "wrOverRate", 
-                            "wrUnderRate", "wrBackPrice", "wrBackSize", "wrLayPrice", 
-                            "wrLaySize", "wrLastUpdate", "wrSelectionId", "wrSelectionStatus"
-                        ) VALUES (
-                            ${newMarketId}, '${runner.runner}', ${runner.line || 0}, ${runner.overRate || 0},
-                            ${runner.underRate || 0}, ${runner.backPrice || 0}, ${runner.backSize || 100}, ${runner.layPrice || 0},
-                            ${runner.laySize || 100}, NOW(), '${runner.selectionId || newMarketId + "01"}', ${marketStatus}
-                        ) RETURNING "wrRunnerId"
-                    `;
-
-                    const runnerResult = await fastify.db.query(runnerInsertQuery, {
-                        type: fastify.db.QueryTypes.INSERT
-                    });
-
-                    const newRunnerId = runnerResult[0][0].wrRunnerId;
-                    runner.runnerId = newRunnerId;
-                    console.log(`[DB] New runner inserted with ID: ${newRunnerId}`);
+                // Emit socket update
+                if (global.socketIo) {
+                    const clientInRoom = global.socketIo.sockets.adapter.rooms.get(commentaryId);
+                    if (clientInRoom?.size) {
+                        const updatedMarket = { ...market, eventMarketId: existingId };
+                        global.socketIo.to(commentaryId).emit("updateMarket", [updatedMarket]);
+                    }
                 }
+
+                return existingId;
             }
 
-            // Update the market data JSON if needed
-            if (marketValue.runners && marketValue.runners.length > 0) {
-                const marketData = {
-                    id: newMarketId,
-                    name: marketValue.marketName,
-                    status: marketStatus,
-                    runners: marketValue.runners.map(r => ({
-                        id: r.runnerId,
-                        name: r.runner,
-                        status: r.selectionStatus || marketStatus
-                    }))
-                };
+            // If ID is 0 and market doesn't exist in DB, insert it now
+            console.log(`[DB] Market doesn't exist in DB - inserting new`);
+            newMarketId = await insertMarketWithRunners(market, fastify);
 
-                const dataUpdateQuery = `
-                    UPDATE "tblEventMarkets"
-                    SET "wrData" = '${JSON.stringify(marketData)}'
-                    WHERE "wrID" = ${newMarketId}
-                `;
+            if (newMarketId !== 0) {
+                // Update global state with the new ID
+                updateGlobalMarketId(market, newMarketId);
 
-                await fastify.db.query(dataUpdateQuery, {
-                    type: fastify.db.QueryTypes.UPDATE
-                });
-            }
-        } else {
-            // Create update query for existing market
-            let updateQuery = `
-                UPDATE "tblEventMarkets" 
-                SET "wrStatus" = ${marketStatus}
-            `;
-
-            // Add result if available
-            if (marketResult !== null) {
-                updateQuery += `, "wrResult" = ${marketResult}`;
-            }
-
-            // Add settled time if available
-            if (settledTime !== null) {
-                updateQuery += `, "wrSettledTime" = '${settledTime}'`;
-            }
-
-            // Add predefined value if available
-            if (marketValue.predefinedValue !== undefined) {
-                updateQuery += `, "wrPredefinedValue" = ${marketValue.predefinedValue}`;
-            }
-
-            // Add data if available
-            if (marketValue.data) {
-                const jsonData = JSON.stringify(marketValue.data);
-                updateQuery += `, "wrData" = '${jsonData}'`;
-            }
-
-            // Add where condition
-            updateQuery += ` WHERE "wrID" = ${newMarketId}`;
-
-            // Execute the query
-            await fastify.db.query(updateQuery, {
-                type: fastify.db.QueryTypes.UPDATE
-            });
-
-            // Update runners if available
-            if (marketValue.runners && marketValue.runners.length > 0) {
-                for (const runner of marketValue.runners) {
-                    const runnerStatus = runner.selectionStatus || marketStatus;
-                    const runnerId = runner.runnerId || runner.id;
-
-                    if (runnerId) {
-                        const runnerUpdateQuery = `
-                            UPDATE "tblMarketRunners"
-                            SET "wrSelectionStatus" = ${runnerStatus}
-                            WHERE "wrRunnerId" = ${runnerId} AND "wrEventMarketId" = ${newMarketId}
-                        `;
-
-                        await fastify.db.query(runnerUpdateQuery, {
-                            type: fastify.db.QueryTypes.UPDATE
-                        });
+                // Emit socket update
+                if (global.socketIo) {
+                    const clientInRoom = global.socketIo.sockets.adapter.rooms.get(commentaryId);
+                    if (clientInRoom?.size) {
+                        const updatedMarket = { ...market, eventMarketId: newMarketId };
+                        global.socketIo.to(commentaryId).emit("updateMarket", [updatedMarket]);
                     }
                 }
             }
-        }
 
-        // Update the market in global market data and ball-to-action map
-        if (marketId !== newMarketId || marketId === 0 || marketId === "0") {
-            updateGlobalMarketId(market, newMarketId);
-        }
+            return newMarketId;
+        } else {
+            // Market already has an ID, just update its status
+            await updateExistingMarket(market, fastify);
 
-        // Update market status in global data regardless of ID change
-        updateGlobalMarketStatus(market, newMarketId, marketStatus, marketResult, settledTime);
-
-        // Emit socket updates
-        if (global.socketIo) {
-            const clientInRoom = global.socketIo.sockets.adapter.rooms.get(commentaryId);
-            if (clientInRoom?.size) {
-                // Format the market for socket emission
-                const socketData = formatMarketForSocket({ ...market, eventMarketId: newMarketId });
-                // Send the update
-                global.socketIo.to(commentaryId).emit("updateMarket", [socketData]);
+            // Emit socket update
+            if (global.socketIo) {
+                const clientInRoom = global.socketIo.sockets.adapter.rooms.get(commentaryId);
+                if (clientInRoom?.size) {
+                    global.socketIo.to(commentaryId).emit("updateMarket", [market]);
+                }
             }
-        }
 
-        console.log(`[DB] Market ${newMarketId} updated successfully`);
-        return newMarketId;
+            return marketId;
+        }
     } catch (error) {
         console.error(`[DB] Error updating market in DB:`, error);
         return market.eventMarketId || 0;
@@ -213,7 +94,7 @@ async function findExistingMarketId(market, fastify) {
     try {
         const { commentaryId, ...marketValue } = market;
 
-        // If not found by ID or ID is 0, try to find by other attributes
+        // Build a query to find market by attributes
         let query = `
             SELECT "wrID" FROM "tblEventMarkets"
             WHERE "wrCommentaryId" = ${commentaryId}
@@ -230,6 +111,7 @@ async function findExistingMarketId(market, fastify) {
                        AND "wrMarketTypeCategoryId" = ${marketValue.marketTypeCategoryId}`;
         }
 
+        // Execute the query
         const result = await fastify.db.query(query, {
             type: fastify.db.QueryTypes.SELECT
         });
@@ -242,6 +124,276 @@ async function findExistingMarketId(market, fastify) {
     } catch (error) {
         console.error(`Error finding existing market:`, error);
         return null;
+    }
+}
+
+/**
+ * Inserts a new market with appropriate runners into the database
+ * @param {Object} market - The market to insert
+ * @param {Object} fastify - Fastify instance
+ * @returns {Promise<string|number>} - The new market ID
+ */
+async function insertMarketWithRunners(market, fastify) {
+    try {
+        const { commentaryId, ...marketValue } = market;
+
+        // Build the insert query for the market
+        const insertQuery = `
+            INSERT INTO "tblEventMarkets" (
+                "wrCommentaryId", "wrEventRefID", "wrTeamID", "wrInningsID", 
+                "wrMarketName", "wrStatus", "wrIsPredefineMarket", "wrTemplateType", 
+                "wrIsOver", "wrOver", "wrIsPlayer", "wrIsAutoCancel", 
+                "wrAutoOpenType", "wrAutoOpen", "wrAutoCloseType", "wrBeforeAutoClose", 
+                "wrAutoSuspendType", "wrBeforeAutoSuspend", "wrIsBallStart", "wrIsAutoResultSet", 
+                "wrAutoResultafterBall", "wrAfterWicketAutoSuspend", "wrAfterWicketNotCreated", 
+                "wrIsActive", "wrMarketTemplateId", "wrMargin", "wrCreateType", 
+                "wrMarketTypeCategoryId", "wrMarketTypeId", "wrRateSource", "wrPredefinedValue", 
+                "wrDelay", "wrCreate", "wrCreateRefId", "wrOpenRefId", "wrActionType", 
+                "wrAutoResultType", "wrIsSendData", "wrIsAllow", "wrLineType", 
+                "wrDefaultBackSize", "wrDefaultLaySize", "wrDefaultIsSendData", "wrRateDiff"
+            ) VALUES (
+                ${commentaryId}, 
+                '${marketValue.eventRefId || ""}', 
+                ${marketValue.teamId || 0}, 
+                ${marketValue.inningsId || 1},
+                '${marketValue.marketName}', 
+                ${marketValue.status || 1}, 
+                ${marketValue.isPredefineMarket || false}, 
+                ${marketValue.templateType || 1},
+                ${marketValue.isOver || false}, 
+                ${marketValue.over || 0}, 
+                ${marketValue.isPlayer || false}, 
+                ${marketValue.isAutoCancel || false},
+                ${marketValue.autoOpenType || 0}, 
+                ${marketValue.autoOpen || 0}, 
+                ${marketValue.autoCloseType || 0}, 
+                ${marketValue.beforeAutoClose || 0},
+                ${marketValue.autoSuspendType || 0}, 
+                ${marketValue.beforeAutoSuspend || 0}, 
+                ${marketValue.isBallStart || false}, 
+                ${marketValue.isAutoResultSet || false},
+                ${marketValue.autoResultAfterBall || 0}, 
+                ${marketValue.afterWicketAutoSuspend || 0}, 
+                ${marketValue.afterWicketNotCreated || 0},
+                ${marketValue.isActive || false}, 
+                ${marketValue.marketTemplateId || 0}, 
+                ${marketValue.margin || 0}, 
+                ${marketValue.createType || 1},
+                ${marketValue.marketTypeCategoryId || 0}, 
+                ${marketValue.marketTypeId || 0}, 
+                ${marketValue.rateSource || 1}, 
+                ${marketValue.predefinedValue || 0},
+                ${marketValue.delay || 0}, 
+                ${marketValue.create || 0}, 
+                ${marketValue.createRefId || 0}, 
+                ${marketValue.openRefId || 0}, 
+                ${marketValue.actionType || 0},
+                ${marketValue.autoResultType || 0}, 
+                ${marketValue.isSendData || false}, 
+                ${marketValue.isAllow || false}, 
+                ${marketValue.lineType || 0},
+                ${marketValue.defaultBackSize || 100}, 
+                ${marketValue.defaultLaySize || 100}, 
+                ${marketValue.defaultIsSendData || false}, 
+                ${marketValue.rateDiff || 0}
+            ) RETURNING "wrID"
+        `;
+
+        // Execute the market insert query
+        const insertResult = await fastify.db.query(insertQuery, {
+            type: fastify.db.QueryTypes.INSERT
+        });
+
+        // Get the new market ID
+        const newMarketId = insertResult[0][0].wrID;
+        console.log(`[DB] New market inserted with ID: ${newMarketId}`);
+
+        // Create appropriate runners based on market type
+        let runners = [];
+
+        // For odd-even markets - only create Odd and Even runners
+        if (marketValue.marketTypeCategoryId === 28 || marketValue.marketTypeCategoryId === 35) {
+            runners = [
+                {
+                    runner: "Odd",
+                    line: 0,
+                    backPrice: marketValue.backPrice || 1.9,
+                    layPrice: marketValue.layPrice || 1.9,
+                    backSize: marketValue.backSize || 100,
+                    laySize: marketValue.laySize || 100,
+                    selectionStatus: marketValue.status || 1
+                },
+                {
+                    runner: "Even",
+                    line: 0,
+                    backPrice: marketValue.backPrice || 1.9,
+                    layPrice: marketValue.layPrice || 1.9,
+                    backSize: marketValue.backSize || 100,
+                    laySize: marketValue.laySize || 100,
+                    selectionStatus: marketValue.status || 1
+                }
+            ];
+        }
+        // For other markets, create at least one runner with the market name
+        else {
+            runners = [
+                {
+                    runner: marketValue.marketName,
+                    line: 0,
+                    backPrice: marketValue.backPrice || 0,
+                    layPrice: marketValue.layPrice || 0,
+                    backSize: marketValue.backSize || 100,
+                    laySize: marketValue.laySize || 100,
+                    selectionStatus: marketValue.status || 1
+                }
+            ];
+        }
+
+        // Insert runners
+        const createdRunners = [];
+        for (let i = 0; i < runners.length; i++) {
+            const runner = runners[i];
+            const runnerInsertQuery = `
+                INSERT INTO "tblMarketRunners" (
+                    "wrEventMarketId", "wrRunner", "wrLine", "wrOverRate", 
+                    "wrUnderRate", "wrBackPrice", "wrBackSize", "wrLayPrice", 
+                    "wrLaySize", "wrLastUpdate", "wrSelectionId", "wrSelectionStatus"
+                ) VALUES (
+                    ${newMarketId}, 
+                    '${runner.runner}', 
+                    ${runner.line || 0}, 
+                    ${runner.overRate || 0},
+                    ${runner.underRate || 0}, 
+                    ${runner.backPrice || 0}, 
+                    ${runner.backSize || 100}, 
+                    ${runner.layPrice || 0},
+                    ${runner.laySize || 100}, 
+                    NOW(), 
+                    '${newMarketId}${(i + 1).toString().padStart(2, '0')}', 
+                    ${runner.selectionStatus || marketValue.status || 1}
+                ) RETURNING "wrRunnerId"
+            `;
+
+            try {
+                const runnerResult = await fastify.db.query(runnerInsertQuery, {
+                    type: fastify.db.QueryTypes.INSERT
+                });
+
+                const runnerId = runnerResult[0][0].wrRunnerId;
+                console.log(`[DB] Runner "${runner.runner}" inserted with ID: ${runnerId}`);
+
+                createdRunners.push({
+                    ...runner,
+                    runnerId: runnerId
+                });
+            } catch (error) {
+                console.error(`[DB] Error inserting runner "${runner.runner}":`, error);
+            }
+        }
+
+        // Generate market data JSON
+        const marketData = {
+            id: newMarketId,
+            name: marketValue.marketName,
+            status: marketValue.status || 1,
+            runners: createdRunners.map(r => ({
+                id: r.runnerId,
+                name: r.runner,
+                status: r.selectionStatus || marketValue.status || 1,
+                price: {
+                    back: r.backPrice,
+                    lay: r.layPrice
+                },
+                size: {
+                    back: r.backSize,
+                    lay: r.laySize
+                }
+            }))
+        };
+
+        // Update market data in DB
+        const dataUpdateQuery = `
+            UPDATE "tblEventMarkets"
+            SET "wrData" = '${JSON.stringify(marketData)}'
+            WHERE "wrID" = ${newMarketId}
+        `;
+
+        await fastify.db.query(dataUpdateQuery, {
+            type: fastify.db.QueryTypes.UPDATE
+        });
+
+        // Add runners to the original market object for socket emissions
+        market.runners = createdRunners;
+
+        return newMarketId;
+    } catch (error) {
+        console.error(`[DB] Error inserting market with runners:`, error);
+        return 0;
+    }
+}
+
+/**
+ * Updates an existing market in the database (only status, result, settled time)
+ * @param {Object} market - The market to update
+ * @param {Object} fastify - Fastify instance
+ */
+async function updateExistingMarket(market, fastify) {
+    try {
+        const { commentaryId, ...marketValue } = market;
+        const marketId = marketValue.eventMarketId || marketValue.id || 0;
+
+        if (marketId === 0 || marketId === "0") {
+            console.error(`[DB] Cannot update market with ID 0`);
+            return;
+        }
+
+        // Build the update query - only update status, result, settled time
+        let updateQuery = `
+            UPDATE "tblEventMarkets" 
+            SET "wrStatus" = ${marketValue.status}
+        `;
+
+        // Add result if available
+        if (marketValue.result !== null && marketValue.result !== undefined) {
+            updateQuery += `, "wrResult" = ${marketValue.result}`;
+        }
+
+        // Add settled time if available
+        if (marketValue.settledTime) {
+            updateQuery += `, "wrSettledTime" = '${marketValue.settledTime}'`;
+        }
+
+        // Add where condition
+        updateQuery += ` WHERE "wrID" = ${marketId}`;
+
+        // Execute the query
+        await fastify.db.query(updateQuery, {
+            type: fastify.db.QueryTypes.UPDATE
+        });
+
+        // Update runners if available
+        if (marketValue.runners && marketValue.runners.length > 0) {
+            for (const runner of marketValue.runners) {
+                const runnerStatus = runner.selectionStatus || marketValue.status;
+                const runnerId = runner.runnerId || runner.id;
+
+                if (runnerId) {
+                    const runnerUpdateQuery = `
+                        UPDATE "tblMarketRunners"
+                        SET "wrSelectionStatus" = ${runnerStatus}
+                        WHERE "wrRunnerId" = ${runnerId} AND "wrEventMarketId" = ${marketId}
+                    `;
+
+                    await fastify.db.query(runnerUpdateQuery, {
+                        type: fastify.db.QueryTypes.UPDATE
+                    });
+                }
+            }
+        }
+
+        console.log(`[DB] Market ${marketId} updated successfully`);
+    } catch (error) {
+        console.error(`[DB] Error updating existing market:`, error);
     }
 }
 
@@ -280,56 +432,31 @@ function updateGlobalMarketId(market, newId) {
     if (marketIndex !== -1) {
         // Update the ID
         global.marketData[commentaryId].markets[marketIndex].eventMarketId = newId;
+
+        // Update runners if available
+        if (marketValue.runners && marketValue.runners.length > 0) {
+            global.marketData[commentaryId].markets[marketIndex].runners = marketValue.runners;
+        }
+
+        // Update status if available
+        if (marketValue.status !== undefined) {
+            global.marketData[commentaryId].markets[marketIndex].status = marketValue.status;
+        }
+
+        // Update result if available
+        if (marketValue.result !== undefined) {
+            global.marketData[commentaryId].markets[marketIndex].result = marketValue.result;
+        }
+
+        // Update settledTime if available
+        if (marketValue.settledTime) {
+            global.marketData[commentaryId].markets[marketIndex].settledTime = marketValue.settledTime;
+        }
+
         console.log(`[GLOBAL] Updated market ID in global state: ${newId}`);
 
         // Update ball-to-action map for this market
         updateBallToActionMapReferences(commentaryId, market, newId);
-    }
-}
-
-/**
- * Updates market status and other fields in global state
- * @param {Object} market - The market object
- * @param {string|number} marketId - The market ID
- * @param {number} status - The new status
- * @param {number|null} result - The result (winner ID)
- * @param {string|null} settledTime - The settled time
- */
-function updateGlobalMarketStatus(market, marketId, status, result, settledTime) {
-    const { commentaryId, ...marketValue } = market;
-
-    if (!global.marketData || !global.marketData[commentaryId]) {
-        return;
-    }
-
-    // Find the market in global state
-    const markets = global.marketData[commentaryId].markets;
-    const marketIndex = markets.findIndex(m =>
-        m.eventMarketId && m.eventMarketId.toString() === marketId.toString()
-    );
-
-    if (marketIndex !== -1) {
-        // Update status and related fields
-        global.marketData[commentaryId].markets[marketIndex].status = status;
-
-        if (result !== null) {
-            global.marketData[commentaryId].markets[marketIndex].result = result;
-        }
-
-        if (settledTime !== null) {
-            global.marketData[commentaryId].markets[marketIndex].settledTime = settledTime;
-        }
-
-        // Update runners if available
-        if (marketValue.runners && marketValue.runners.length > 0) {
-            global.marketData[commentaryId].markets[marketIndex].runners =
-                marketValue.runners.map(runner => ({
-                    ...runner,
-                    selectionStatus: runner.selectionStatus || status
-                }));
-        }
-
-        console.log(`[GLOBAL] Updated market status in global state: ${status}`);
     }
 }
 
@@ -340,7 +467,7 @@ function updateGlobalMarketStatus(market, marketId, status, result, settledTime)
  * @param {string|number} newId - New market ID
  */
 function updateBallToActionMapReferences(commentaryId, market, newId) {
-    const { marketTypeCategoryId, over, eventMarketId } = market;
+    const { marketTypeCategoryId, over, teamId, eventMarketId } = market;
 
     if (!global.marketData[commentaryId] || !global.marketData[commentaryId].ballToActionMap) {
         return;
@@ -434,56 +561,11 @@ function formatMarketForSocket(market) {
     };
 }
 
-/**
- * Batch updates multiple markets at once
- * @param {Array} markets - Array of markets to update
- * @param {Object} fastify - Fastify instance
- */
-function batchUpdateMarkets(markets, fastify) {
-    if (!markets || markets.length === 0) {
-        return;
-    }
-
-    console.log(`[DB] Batch updating ${markets.length} markets`);
-
-    // Update each market in DB and socket
-    markets.forEach(market => {
-        updateMarketStatusInDB(market, fastify);
-        updateMarketStatusInSocket(market);
-    });
-}
-
-/**
- * Updates a specific field of a market
- * @param {Object} market - The market to update
- * @param {string} field - The field to update
- * @param {any} value - The new value
- * @param {Object} fastify - Fastify instance
- */
-function updateMarketField(market, field, value, fastify) {
-    if (!market) {
-        console.error('[DB] Cannot update field, market is null');
-        return;
-    }
-
-    console.log(`[DB] Updating field ${field} on market ${market.eventMarketId || 'unsaved'}`);
-
-    // Update the field
-    market[field] = value;
-
-    // Update in DB and socket
-    updateMarketStatusInDB(market, fastify);
-    updateMarketStatusInSocket(market);
-}
-
 module.exports = {
     updateMarketStatusInDB,
     updateMarketStatusInSocket,
     formatMarketForSocket,
-    batchUpdateMarkets,
-    updateMarketField,
     findExistingMarketId,
     updateGlobalMarketId,
-    updateGlobalMarketStatus,
     updateBallToActionMapReferences
 };

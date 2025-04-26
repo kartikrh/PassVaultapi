@@ -31,7 +31,7 @@ const MARKET_HANDLERS = {
  * @param {Object} params - Parameters including market type and data
  * @returns {Object} - Result of market processing
  */
-async function marketGenRunner({ market, data }) {
+async function marketGenRunner({ market, data }, fastify) {
   // Find the appropriate handler for this market type
   const handler = MARKET_HANDLERS[market];
   if (!handler) return { error: `No handler for market: ${market}` };
@@ -45,8 +45,8 @@ async function marketGenRunner({ market, data }) {
   const eventId = data?.predictscore?.event_id;
 
   // Update status in DB and socket
-  updateMarketStatusInDB(result);
-  updateMarketStatusInSocket(result);
+  updateMarketStatusInDB(result, fastify);
+  // updateMarketStatusInSocket is now called inside updateMarketStatusInDB
 
   return result;
 }
@@ -224,7 +224,7 @@ const generateMarketAndRunners = async (data, request, fastify) => {
     // Store existing markets
     global.marketData[data.commentaryId].existingMarket = eventMarket;
 
-    // Create markets and runners
+    // Create markets in memory only using the original function
     let mar = await createMarketAndRunner(
       {
         templates: comTemplate,
@@ -241,6 +241,35 @@ const generateMarketAndRunners = async (data, request, fastify) => {
       fastify
     );
 
+    // Update markets in global state with existing market IDs if available
+    if (eventMarket && eventMarket.length > 0 && global.marketData[data.commentaryId].markets) {
+      console.log(`Updating ${eventMarket.length} existing markets with database IDs`);
+
+      // For each existing market in the database
+      eventMarket.forEach(existingMarket => {
+        // Try to find the corresponding market in global state
+        const marketIndex = global.marketData[data.commentaryId].markets.findIndex(m => {
+          // For odd-even markets, match by category, over and team
+          if ((m.marketTypeCategoryId === 28 || m.marketTypeCategoryId === 35) &&
+            (existingMarket.marketTypeCategoryId === 28 || existingMarket.marketTypeCategoryId === 35)) {
+            return m.over === existingMarket.over &&
+              m.teamId === existingMarket.teamId;
+          }
+
+          // For other markets, match by name and category
+          return m.marketName === existingMarket.marketName &&
+            m.marketTypeCategoryId === existingMarket.marketTypeCategoryId;
+        });
+
+        // If found, update the ID
+        if (marketIndex !== -1) {
+          console.log(`Found existing market in DB for ${existingMarket.marketName} with ID ${existingMarket.eventMarketId}`);
+          global.marketData[data.commentaryId].markets[marketIndex].eventMarketId = existingMarket.eventMarketId;
+          global.marketData[data.commentaryId].markets[marketIndex].runners = existingMarket.runners || [];
+        }
+      });
+    }
+
     // Initialize the ball-to-action map
     initializeBallToActionMap(global.marketData[data.commentaryId].markets, data.commentaryId);
 
@@ -254,10 +283,6 @@ const generateMarketAndRunners = async (data, request, fastify) => {
     // Log the raw structure for verification
     console.log(`Ball to Ball : ${Object.keys(global.marketData[data.commentaryId].ballToActionMap).join(',')}`);
 
-    // Log in more readable format - first 10 entries
-    // const sampleEntries = allMappedActions.slice(0, 10);
-    // console.log("Sample entries from ball-to-action map:");
-    // console.log(JSON.stringify(sampleEntries, null, 2));
     return mar;
   } catch (error) {
     errorLogger(
