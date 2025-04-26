@@ -1,6 +1,6 @@
 // predictScoreHandler.js
 const { getActionsForBall, findMarket, formatBallNumber } = require('./ballToActionMapper');
-const { updateMarketStatusInDB, updateMarketStatusInSocket } = require('./marketActions');
+const { updateMarketStatusInDB, updateMarketStatusInSocket, findExistingMarketId, updateGlobalMarketId } = require('./marketActions');
 const { processOddEvenMarkets } = require('./oddEven');
 const { EventMarketStatus } = require('../utilities');
 const { errorLogger } = require('../utilities/logger');
@@ -51,13 +51,26 @@ function processPredictScoreMarket(payload, fastify) {
             console.log(`Found ${actions.length} actions for ball ${formattedBall}`);
 
             // Process each action
+            const processedMarkets = [];
             actions.forEach(action => {
                 try {
-                    executeMarketAction(commentaryId, action, fastify);
+                    const processedMarket = executeMarketAction(commentaryId, action, fastify);
+                    if (processedMarket) {
+                        processedMarkets.push(processedMarket);
+                    }
                 } catch (actionError) {
                     console.error(`Error executing action ${action.action} for market ${action.marketId}:`, actionError);
                 }
             });
+
+            // Send batch update to socket if needed
+            if (processedMarkets.length > 0 && global.socketIo) {
+                const clientInRoom = global.socketIo.sockets.adapter.rooms.get(commentaryId);
+                if (clientInRoom?.size) {
+                    global.socketIo.to(commentaryId).emit("updateMarket", processedMarkets);
+                    console.log(`[Socket] Sent batch update for ${processedMarkets.length} markets`);
+                }
+            }
         } else {
             console.log(`No actions mapped for ball ${formattedBall}`);
         }
@@ -93,48 +106,69 @@ function processPredictScoreMarket(payload, fastify) {
  * Executes a specific market action
  * @param {number} commentaryId - The commentary ID
  * @param {Object} action - The action to execute
+ * @param {Object} fastify - Fastify Object
+ * @returns {Object|null} - The processed market or null if failed
  */
 function executeMarketAction(commentaryId, action, fastify) {
     const { marketId, action: actionType, over, marketTypeCategoryId } = action;
 
     // Find the market
-    const market = findMarket(commentaryId, marketId, { over, marketTypeCategoryId });
+    let market = findMarket(commentaryId, marketId, { over, marketTypeCategoryId });
 
     if (!market) {
         console.error(`Cannot execute ${actionType} on marketId ${marketId} with over ${over}: Market not found`);
-        return;
+        return null;
     }
 
     console.log(`Executing ${actionType} on market "${market.marketName}" (ID: ${market.eventMarketId || 'unsaved'})`);
 
+    // If market ID is 0, check if it already exists in the database
+    if ((market.eventMarketId === 0 || market.eventMarketId === "0") && fastify) {
+        findExistingMarketId({ ...market, commentaryId }, fastify)
+            .then(existingId => {
+                if (existingId) {
+                    console.log(`Found existing market ID ${existingId} for market with over ${over}`);
+                    market.eventMarketId = existingId;
+                    updateGlobalMarketId({ ...market, commentaryId }, existingId);
+                }
+            })
+            .catch(error => {
+                console.error(`Error checking for existing market:`, error);
+            });
+    }
+
+    let processedMarket = null;
     switch (actionType) {
         case 'open':
-            openMarket(market, fastify);
+            processedMarket = openMarket(market, fastify);
             break;
 
         case 'close':
-            closeMarket(market, fastify);
+            processedMarket = closeMarket(market, fastify);
             break;
 
         case 'settle':
-            settleMarket(market, fastify);
+            processedMarket = settleMarket(market, fastify);
             break;
 
         default:
             console.error(`Unknown action type: ${actionType}`);
     }
+
+    return processedMarket;
 }
 
 /**
  * Opens a market
  * @param {Object} market - The market to open
  * @param {Object} fastify - Fastify Object
+ * @returns {Object} - The processed market
  */
 function openMarket(market, fastify) {
     // Skip if already open
     if (market.status === EventMarketStatus.Open) {
         console.log(`Market ${market.marketName} is already open`);
-        return;
+        return market;
     }
 
     // Update market status to OPEN
@@ -148,22 +182,24 @@ function openMarket(market, fastify) {
     }
 
     // Update in DB and send to socket
-    updateMarketStatusInDB(market, fastify);
-    updateMarketStatusInSocket(market);
+    updateMarketStatusInDB({ ...market, commentaryId: market.commentaryId }, fastify);
+    // Socket update is now handled in batch by the main process
 
     console.log(`Opened market: ${market.marketName} (ID: ${market.eventMarketId || 'unsaved'})`);
+    return market;
 }
 
 /**
  * Closes a market
  * @param {Object} market - The market to close
  * @param {Object} fastify - Fastify Object
+ * @returns {Object} - The processed market
  */
 function closeMarket(market, fastify) {
     // Skip if already closed or settled
     if (market.status === EventMarketStatus.Close || market.status === EventMarketStatus.Settled) {
         console.log(`Market ${market.marketName} is already closed or settled`);
-        return;
+        return market;
     }
 
     // Update market status to CLOSE
@@ -177,42 +213,48 @@ function closeMarket(market, fastify) {
     }
 
     // Update in DB and send to socket
-    updateMarketStatusInDB(market, fastify);
-    updateMarketStatusInSocket(market);
+    updateMarketStatusInDB({ ...market, commentaryId: market.commentaryId }, fastify);
+    // Socket update is now handled in batch by the main process
 
     console.log(`Closed market: ${market.marketName} (ID: ${market.eventMarketId || 'unsaved'})`);
+    return market;
 }
 
 /**
  * Settles a market
  * @param {Object} market - The market to settle
  * @param {Object} fastify - Fastify Object
+ * @returns {Object} - The processed market
  */
 function settleMarket(market, fastify) {
     // Skip if already settled
     if (market.status === EventMarketStatus.Settled) {
         console.log(`Market ${market.marketName} is already settled`);
-        return;
+        return market;
     }
 
     // Different settlement logic based on market type
     if (market.marketTypeCategoryId === 28 || market.marketTypeCategoryId === 35) {
         // Odd-Even market settlement
-        settleOddEvenMarket(market, fastify);
+        return settleOddEvenMarket(market, fastify);
     } else {
         // Default settlement - just set to settled
         market.status = EventMarketStatus.Settled;
-        updateMarketStatusInDB(market, fastify);
-        updateMarketStatusInSocket(market);
-    }
+        market.settledTime = new Date().toISOString();
 
-    console.log(`Settled market: ${market.marketName} (ID: ${market.eventMarketId || 'unsaved'})`);
+        updateMarketStatusInDB({ ...market, commentaryId: market.commentaryId }, fastify);
+        // Socket update is now handled in batch by the main process
+
+        console.log(`Settled market: ${market.marketName} (ID: ${market.eventMarketId || 'unsaved'})`);
+        return market;
+    }
 }
 
 /**
  * Settles an Odd-Even market
  * @param {Object} market - The market to settle
  * @param {Object} fastify - Fastify Object
+ * @returns {Object} - The processed market
  */
 function settleOddEvenMarket(market, fastify) {
     // Calculate the result based on total runs in the over
@@ -248,10 +290,11 @@ function settleOddEvenMarket(market, fastify) {
     market.settledTime = new Date().toISOString();
 
     // Update in DB and send to socket
-    updateMarketStatusInDB(market, fastify);
-    updateMarketStatusInSocket(market);
-}
+    updateMarketStatusInDB({ ...market, commentaryId: market.commentaryId }, fastify);
+    // Socket update is now handled in batch by the main process
 
+    return market;
+}
 
 /**
  * Calculates total runs scored in an over
@@ -354,5 +397,6 @@ module.exports = {
     executeMarketAction,
     openMarket,
     closeMarket,
-    settleMarket
+    settleMarket,
+    calculateOverRuns
 };

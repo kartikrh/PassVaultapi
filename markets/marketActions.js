@@ -4,12 +4,14 @@ const { errorLogger } = require('../utilities/logger');
 /**
  * Updates market status in the database
  * @param {Object} market - The market to update
- * @returns {Promise} - Promise that resolves when update is complete
+ * @param {Object} fastify - Fastify instance
+ * @returns {Promise<string|number>} - The market ID after update
  */
 async function updateMarketStatusInDB(market, fastify) {
     try {
-        const { commentaryId, ...marketValue } = market
-        // console.log(`[DB] Update for ${marketName}:`, marketValue, `(commentary_id: ${commentaryId})`);
+        const { commentaryId, ...marketValue } = market;
+        console.log(`[DB] Update for ${marketValue.marketName || 'market'}:`, `(ID: ${marketValue.eventMarketId || 0}, Status: ${marketValue.status})`);
+
         // Get market ID and other values
         const marketId = marketValue.eventMarketId || marketValue.id || 0;
         const marketStatus = marketValue.status;
@@ -18,8 +20,20 @@ async function updateMarketStatusInDB(market, fastify) {
 
         let newMarketId = marketId;
 
-        // If marketId is 0, insert a new market
+        // First check if the market already exists in DB even if ID is 0
         if (marketId === 0 || marketId === "0") {
+            const existingId = await findExistingMarketId(market, fastify);
+            if (existingId) {
+                console.log(`[DB] Found existing market with ID ${existingId} instead of creating new`);
+                newMarketId = existingId;
+
+                // Update the market's ID for subsequent operations
+                marketValue.eventMarketId = existingId;
+            }
+        }
+
+        // If marketId is still 0, insert a new market
+        if (newMarketId === 0 || newMarketId === "0") {
             const insertQuery = `
                 INSERT INTO "tblEventMarkets" (
                     "wrCommentaryId", "wrEventRefID", "wrTeamID", "wrInningsID", 
@@ -134,7 +148,7 @@ async function updateMarketStatusInDB(market, fastify) {
             }
 
             // Add where condition
-            updateQuery += ` WHERE "wrID" = ${marketId}`;
+            updateQuery += ` WHERE "wrID" = ${newMarketId}`;
 
             // Execute the query
             await fastify.db.query(updateQuery, {
@@ -151,7 +165,7 @@ async function updateMarketStatusInDB(market, fastify) {
                         const runnerUpdateQuery = `
                             UPDATE "tblMarketRunners"
                             SET "wrSelectionStatus" = ${runnerStatus}
-                            WHERE "wrRunnerId" = ${runnerId} AND "wrEventMarketId" = ${marketId}
+                            WHERE "wrRunnerId" = ${runnerId} AND "wrEventMarketId" = ${newMarketId}
                         `;
 
                         await fastify.db.query(runnerUpdateQuery, {
@@ -162,40 +176,22 @@ async function updateMarketStatusInDB(market, fastify) {
             }
         }
 
-        // Update the market in global market data
-        if (global.marketData && global.marketData[commentaryId] && global.marketData[commentaryId].markets) {
-            const markets = global.marketData[commentaryId].markets;
-            const marketIndex = markets.findIndex(m =>
-                (m.eventMarketId && m.eventMarketId.toString() === marketId.toString()) ||
-                (m.over === marketValue.over && m.marketTypeCategoryId === marketValue.marketTypeCategoryId && m.teamId === marketValue.teamId)
-            );
+        // Update the market in global market data and ball-to-action map
+        if (marketId !== newMarketId || marketId === 0 || marketId === "0") {
+            updateGlobalMarketId(market, newMarketId);
+        }
 
-            if (marketIndex !== -1) {
-                // Update existing market
-                const updatedMarket = { ...markets[marketIndex] };
-                updatedMarket.eventMarketId = newMarketId;
-                updatedMarket.status = marketStatus;
+        // Update market status in global data regardless of ID change
+        updateGlobalMarketStatus(market, newMarketId, marketStatus, marketResult, settledTime);
 
-                if (marketResult !== null) {
-                    updatedMarket.result = marketResult;
-                }
-
-                if (settledTime !== null) {
-                    updatedMarket.settledTime = settledTime;
-                }
-
-                // Update runners if available
-                if (marketValue.runners && marketValue.runners.length > 0) {
-                    updatedMarket.runners = marketValue.runners.map(runner => {
-                        return {
-                            ...runner,
-                            selectionStatus: runner.selectionStatus || marketStatus
-                        };
-                    });
-                }
-
-                // Replace the market in the array
-                global.marketData[commentaryId].markets[marketIndex] = updatedMarket;
+        // Emit socket updates
+        if (global.socketIo) {
+            const clientInRoom = global.socketIo.sockets.adapter.rooms.get(commentaryId);
+            if (clientInRoom?.size) {
+                // Format the market for socket emission
+                const socketData = formatMarketForSocket({ ...market, eventMarketId: newMarketId });
+                // Send the update
+                global.socketIo.to(commentaryId).emit("updateMarket", [socketData]);
             }
         }
 
@@ -203,7 +199,175 @@ async function updateMarketStatusInDB(market, fastify) {
         return newMarketId;
     } catch (error) {
         console.error(`[DB] Error updating market in DB:`, error);
-        return marketValue.eventMarketId || 0;
+        return market.eventMarketId || 0;
+    }
+}
+
+/**
+ * Finds an existing market ID in the database by attributes
+ * @param {Object} market - The market to find
+ * @param {Object} fastify - Fastify instance
+ * @returns {Promise<string|number|null>} - The existing ID or null
+ */
+async function findExistingMarketId(market, fastify) {
+    try {
+        const { commentaryId, ...marketValue } = market;
+
+        // If not found by ID or ID is 0, try to find by other attributes
+        let query = `
+            SELECT "wrID" FROM "tblEventMarkets"
+            WHERE "wrCommentaryId" = ${commentaryId}
+        `;
+
+        // For odd-even markets, use over and teamId for unique identification
+        if (marketValue.marketTypeCategoryId === 28 || marketValue.marketTypeCategoryId === 35) {
+            query += ` AND "wrMarketTypeCategoryId" = ${marketValue.marketTypeCategoryId}
+                       AND "wrOver" = ${marketValue.over} 
+                       AND "wrTeamID" = ${marketValue.teamId}`;
+        } else {
+            // For other markets, match by name + category
+            query += ` AND "wrMarketName" = '${marketValue.marketName}'
+                       AND "wrMarketTypeCategoryId" = ${marketValue.marketTypeCategoryId}`;
+        }
+
+        const result = await fastify.db.query(query, {
+            type: fastify.db.QueryTypes.SELECT
+        });
+
+        if (result && result.length > 0) {
+            return result[0].wrID;
+        }
+
+        return null;
+    } catch (error) {
+        console.error(`Error finding existing market:`, error);
+        return null;
+    }
+}
+
+/**
+ * Updates a market ID in the global state
+ * @param {Object} market - The market object
+ * @param {string|number} newId - The new market ID
+ */
+function updateGlobalMarketId(market, newId) {
+    const { commentaryId, ...marketValue } = market;
+
+    if (!global.marketData || !global.marketData[commentaryId]) {
+        return;
+    }
+
+    // Find the market in global state
+    const markets = global.marketData[commentaryId].markets;
+    const marketIndex = markets.findIndex(m => {
+        // First try to match by ID if it's not 0
+        if (marketValue.eventMarketId && marketValue.eventMarketId !== 0 &&
+            m.eventMarketId && m.eventMarketId.toString() === marketValue.eventMarketId.toString()) {
+            return true;
+        }
+
+        // For odd-even markets, match by category, over and team
+        if ((m.marketTypeCategoryId === 28 || m.marketTypeCategoryId === 35) &&
+            marketValue.marketTypeCategoryId === m.marketTypeCategoryId) {
+            return m.over === marketValue.over && m.teamId === marketValue.teamId;
+        }
+
+        // For other markets, try to match by name and category
+        return m.marketName === marketValue.marketName &&
+            m.marketTypeCategoryId === marketValue.marketTypeCategoryId;
+    });
+
+    if (marketIndex !== -1) {
+        // Update the ID
+        global.marketData[commentaryId].markets[marketIndex].eventMarketId = newId;
+        console.log(`[GLOBAL] Updated market ID in global state: ${newId}`);
+
+        // Update ball-to-action map for this market
+        updateBallToActionMapReferences(commentaryId, market, newId);
+    }
+}
+
+/**
+ * Updates market status and other fields in global state
+ * @param {Object} market - The market object
+ * @param {string|number} marketId - The market ID
+ * @param {number} status - The new status
+ * @param {number|null} result - The result (winner ID)
+ * @param {string|null} settledTime - The settled time
+ */
+function updateGlobalMarketStatus(market, marketId, status, result, settledTime) {
+    const { commentaryId, ...marketValue } = market;
+
+    if (!global.marketData || !global.marketData[commentaryId]) {
+        return;
+    }
+
+    // Find the market in global state
+    const markets = global.marketData[commentaryId].markets;
+    const marketIndex = markets.findIndex(m =>
+        m.eventMarketId && m.eventMarketId.toString() === marketId.toString()
+    );
+
+    if (marketIndex !== -1) {
+        // Update status and related fields
+        global.marketData[commentaryId].markets[marketIndex].status = status;
+
+        if (result !== null) {
+            global.marketData[commentaryId].markets[marketIndex].result = result;
+        }
+
+        if (settledTime !== null) {
+            global.marketData[commentaryId].markets[marketIndex].settledTime = settledTime;
+        }
+
+        // Update runners if available
+        if (marketValue.runners && marketValue.runners.length > 0) {
+            global.marketData[commentaryId].markets[marketIndex].runners =
+                marketValue.runners.map(runner => ({
+                    ...runner,
+                    selectionStatus: runner.selectionStatus || status
+                }));
+        }
+
+        console.log(`[GLOBAL] Updated market status in global state: ${status}`);
+    }
+}
+
+/**
+ * Updates references to a market in the ball-to-action map
+ * @param {number} commentaryId - Commentary ID
+ * @param {Object} market - Market object
+ * @param {string|number} newId - New market ID
+ */
+function updateBallToActionMapReferences(commentaryId, market, newId) {
+    const { marketTypeCategoryId, over, eventMarketId } = market;
+
+    if (!global.marketData[commentaryId] || !global.marketData[commentaryId].ballToActionMap) {
+        return;
+    }
+
+    let updatedCount = 0;
+
+    // Check each ball's actions
+    for (const [ball, actions] of Object.entries(global.marketData[commentaryId].ballToActionMap)) {
+        actions.forEach((action, index) => {
+            // Match by existing ID if not 0
+            if (eventMarketId && eventMarketId !== 0 && action.marketId === eventMarketId.toString()) {
+                global.marketData[commentaryId].ballToActionMap[ball][index].marketId = newId.toString();
+                updatedCount++;
+            }
+            // Match by attributes for markets with ID 0
+            else if ((action.marketId === '0' || !action.marketId) &&
+                action.marketTypeCategoryId === marketTypeCategoryId &&
+                action.over === over) {
+                global.marketData[commentaryId].ballToActionMap[ball][index].marketId = newId.toString();
+                updatedCount++;
+            }
+        });
+    }
+
+    if (updatedCount > 0) {
+        console.log(`[GLOBAL] Updated ${updatedCount} references in ball-to-action map for market ID ${newId}`);
     }
 }
 
@@ -213,17 +377,22 @@ async function updateMarketStatusInDB(market, fastify) {
  */
 function updateMarketStatusInSocket(market) {
     try {
+        const { commentaryId } = market;
         console.log(`[Socket] Sending market ${market.eventMarketId} status update: ${market.status}`);
 
         // Format market data for socket
         const socketData = formatMarketForSocket(market);
 
-        // This would be replaced with actual socket emit code
-        // Example:
-        // io.to(`commentary_${market.commentaryId}`).emit('market_update', socketData);
-
-        // For now, just log it
-        console.log('[Socket] Formatted data:', JSON.stringify(socketData).substring(0, 100) + '...');
+        // Check if Socket.IO is initialized and emit the update
+        if (global.socketIo) {
+            const clientInRoom = global.socketIo.sockets.adapter.rooms.get(commentaryId);
+            if (clientInRoom?.size) {
+                global.socketIo.to(commentaryId).emit("updateMarket", [socketData]);
+                console.log(`[Socket] Sent update to ${clientInRoom.size} clients in room ${commentaryId}`);
+            }
+        } else {
+            console.log('[Socket] Socket.IO not initialized, skipping emission');
+        }
     } catch (error) {
         console.error('[Socket] Error sending market update via socket:', error);
     }
@@ -268,8 +437,9 @@ function formatMarketForSocket(market) {
 /**
  * Batch updates multiple markets at once
  * @param {Array} markets - Array of markets to update
+ * @param {Object} fastify - Fastify instance
  */
-function batchUpdateMarkets(markets) {
+function batchUpdateMarkets(markets, fastify) {
     if (!markets || markets.length === 0) {
         return;
     }
@@ -278,7 +448,7 @@ function batchUpdateMarkets(markets) {
 
     // Update each market in DB and socket
     markets.forEach(market => {
-        updateMarketStatusInDB(market);
+        updateMarketStatusInDB(market, fastify);
         updateMarketStatusInSocket(market);
     });
 }
@@ -288,8 +458,9 @@ function batchUpdateMarkets(markets) {
  * @param {Object} market - The market to update
  * @param {string} field - The field to update
  * @param {any} value - The new value
+ * @param {Object} fastify - Fastify instance
  */
-function updateMarketField(market, field, value) {
+function updateMarketField(market, field, value, fastify) {
     if (!market) {
         console.error('[DB] Cannot update field, market is null');
         return;
@@ -301,7 +472,7 @@ function updateMarketField(market, field, value) {
     market[field] = value;
 
     // Update in DB and socket
-    updateMarketStatusInDB(market);
+    updateMarketStatusInDB(market, fastify);
     updateMarketStatusInSocket(market);
 }
 
@@ -310,5 +481,9 @@ module.exports = {
     updateMarketStatusInSocket,
     formatMarketForSocket,
     batchUpdateMarkets,
-    updateMarketField
+    updateMarketField,
+    findExistingMarketId,
+    updateGlobalMarketId,
+    updateGlobalMarketStatus,
+    updateBallToActionMapReferences
 };

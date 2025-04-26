@@ -255,10 +255,9 @@ const generateMarketAndRunners = async (data, request, fastify) => {
     console.log(`Ball to Ball : ${Object.keys(global.marketData[data.commentaryId].ballToActionMap).join(',')}`);
 
     // Log in more readable format - first 10 entries
-    const sampleEntries = allMappedActions.slice(0, 10);
-    console.log("Sample entries from ball-to-action map:");
-    console.log(JSON.stringify(sampleEntries, null, 2));
-
+    // const sampleEntries = allMappedActions.slice(0, 10);
+    // console.log("Sample entries from ball-to-action map:");
+    // console.log(JSON.stringify(sampleEntries, null, 2));
     return mar;
   } catch (error) {
     errorLogger(
