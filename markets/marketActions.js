@@ -33,12 +33,17 @@ async function updateMarketStatusInDB(market, fastify) {
                 // Update global state with the correct ID
                 updateGlobalMarketId(market, existingId);
 
-                // Emit socket update
+                // Emit socket update AFTER database update is complete
                 if (global.socketIo) {
                     const clientInRoom = global.socketIo.sockets.adapter.rooms.get(commentaryId);
                     if (clientInRoom?.size) {
-                        const updatedMarket = { ...market, eventMarketId: existingId };
+                        // Get the updated market from global state to ensure it has runners
+                        const updatedMarket = global.marketData[commentaryId].markets.find(
+                            m => m.eventMarketId && m.eventMarketId.toString() === existingId.toString()
+                        ) || { ...market, eventMarketId: existingId };
+
                         global.socketIo.to(commentaryId).emit("updateMarket", [updatedMarket]);
+                        console.log(`[Socket] Sent update after DB update for market ${existingId}`);
                     }
                 }
 
@@ -53,12 +58,17 @@ async function updateMarketStatusInDB(market, fastify) {
                 // Update global state with the new ID
                 updateGlobalMarketId(market, newMarketId);
 
-                // Emit socket update
+                // Emit socket update AFTER database insert is complete
                 if (global.socketIo) {
                     const clientInRoom = global.socketIo.sockets.adapter.rooms.get(commentaryId);
                     if (clientInRoom?.size) {
-                        const updatedMarket = { ...market, eventMarketId: newMarketId };
+                        // Get the updated market from global state to ensure it has runners
+                        const updatedMarket = global.marketData[commentaryId].markets.find(
+                            m => m.eventMarketId && m.eventMarketId.toString() === newMarketId.toString()
+                        ) || { ...market, eventMarketId: newMarketId };
+
                         global.socketIo.to(commentaryId).emit("updateMarket", [updatedMarket]);
+                        console.log(`[Socket] Sent update after DB insert for market ${newMarketId}`);
                     }
                 }
             }
@@ -68,11 +78,17 @@ async function updateMarketStatusInDB(market, fastify) {
             // Market already has an ID, just update its status
             await updateExistingMarket(market, fastify);
 
-            // Emit socket update
+            // Emit socket update AFTER database update is complete
             if (global.socketIo) {
                 const clientInRoom = global.socketIo.sockets.adapter.rooms.get(commentaryId);
                 if (clientInRoom?.size) {
-                    global.socketIo.to(commentaryId).emit("updateMarket", [market]);
+                    // Get the updated market from global state to ensure it has runners
+                    const updatedMarket = global.marketData[commentaryId].markets.find(
+                        m => m.eventMarketId && m.eventMarketId.toString() === marketId.toString()
+                    ) || market;
+
+                    global.socketIo.to(commentaryId).emit("updateMarket", [updatedMarket]);
+                    console.log(`[Socket] Sent update after DB update for market ${marketId}`);
                 }
             }
 
@@ -507,8 +523,23 @@ function updateMarketStatusInSocket(market) {
         const { commentaryId } = market;
         console.log(`[Socket] Sending market ${market.eventMarketId} status update: ${market.status}`);
 
+        let marketToSend = market;
+
+        // Try to get the most up-to-date market from global state if available
+        if (global.marketData && global.marketData[commentaryId] && global.marketData[commentaryId].markets && market.eventMarketId) {
+            const globalMarket = global.marketData[commentaryId].markets.find(
+                m => m.eventMarketId && m.eventMarketId.toString() === market.eventMarketId.toString()
+            );
+
+            if (globalMarket) {
+                // Use the global state market to ensure it has all data including runners
+                marketToSend = globalMarket;
+                console.log(`[Socket] Using market data from global state for market ${market.eventMarketId}`);
+            }
+        }
+
         // Format market data for socket
-        const socketData = formatMarketForSocket(market);
+        const socketData = formatMarketForSocket(marketToSend);
 
         // Check if Socket.IO is initialized and emit the update
         if (global.socketIo) {
