@@ -435,7 +435,62 @@ const createMarketAndRunner = async (data, request, fastify) => {
     return true;
 }
 
+/**
+ * Formats market data for socket transmission in the required format
+ * @param {Object} market - The market to format
+ * @returns {string} - Formatted market data as JSON string
+ */
+function formatMarketForSocket(market) {
+    // Create a formatted object that matches your required format
+    const formattedObject = {
+        marketId: parseInt(market.eventMarketId) || 0,
+        commentaryId: parseInt(market.commentaryId) || 0,
+        marketTypeCategoryId: parseInt(market.marketTypeCategoryId) || 0,
+        ballByBallId: parseInt(market.ballByBallId) || 0,
+        eventId: parseInt(market.eventId) || parseInt(market.eventRefID) || 12093821321, // fallback ID if missing
+        marketName: market.marketName || "",
+        status: parseInt(market.status) || 0,
+        isActive: market.isActive !== undefined ? market.isActive : true,
+        isSendData: market.isSendData !== undefined ? market.isSendData : true,
+        isAllow: market.isAllow !== undefined ? market.isAllow : true,
+        teamId: parseInt(market.teamId) || 0,
+        margin: parseFloat(market.margin) || 3.0,
+        over: parseInt(market.over) || 0,
+        inningsId: parseInt(market.inningsId) || 1,
+        lineRatio: parseInt(market.lineRatio) || 1,
+        marketTypeId: parseInt(market.marketTypeId) || 5,
+        lineType: parseInt(market.lineType) || 1,
+        rateDiff: parseInt(market.rateDiff) || 1,
+        predefinedValue: parseFloat(market.predefinedValue) || 0.0,
+        playerScore: parseInt(market.playerScore) || 0,
+        isInningRun: market.isInningRun !== undefined ? market.isInningRun : false,
+        playerId: market.playerId || null,
+        wicketNo: market.wicketNo || null,
+        runner: []
+    };
+
+    // Add runners if available
+    if (market.runners && market.runners.length > 0) {
+        formattedObject.runner = market.runners.map(runner => ({
+            runnerId: parseInt(runner.runnerId) || 0,
+            status: parseInt(runner.selectionStatus || market.status) || 0,
+            runner: runner.runner || "",
+            line: parseFloat(runner.line) || 1.9,
+            overRate: parseFloat(runner.overRate) || 1.9,
+            underRate: parseFloat(runner.underRate) || 1.9,
+            backPrice: parseFloat(runner.backPrice) || 1.9,
+            layPrice: parseFloat(runner.layPrice) || 1.9,
+            backSize: parseFloat(runner.backSize) || 10000.0,
+            laySize: parseFloat(runner.laySize) || 10000.0
+        }));
+    }
+
+    // Return as JSON string
+    return JSON.stringify([formattedObject]);
+}
+
 module.exports = {
+    formatMarketForSocket,
     sendSocketData,
     createMarketAndRunner,
     processMarketAndRunners,

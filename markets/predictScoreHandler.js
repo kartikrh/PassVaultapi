@@ -106,6 +106,12 @@ function executeMarketAction(commentaryId, action, fastify) {
         return;
     }
 
+    // Check if this market is for the batting team
+    if (!isBattingTeam(commentaryId, market.teamId)) {
+        console.log(`Skipping action ${actionType} for non-batting team market: ${market.marketName}`);
+        return;
+    }
+
     console.log(`Executing ${actionType} on market "${market.marketName}" (ID: ${market.eventMarketId || 'unsaved'})`);
 
     // Set commentary ID for DB operations
@@ -130,6 +136,30 @@ function executeMarketAction(commentaryId, action, fastify) {
     }
 }
 
+/**
+ * Checks if the team is currently batting
+ * @param {number} commentaryId - Commentary ID
+ * @param {number} teamId - Team ID to check
+ * @returns {boolean} - True if team is batting
+ */
+function isBattingTeam(commentaryId, teamId) {
+    if (!global.tblCommentaryTeams) {
+        console.error("Global commentary teams data not available");
+        return true; // Default to true if data not available
+    }
+
+    const battingTeam = global.tblCommentaryTeams.find(
+        item => item.commentaryId === parseInt(commentaryId) &&
+            item.teamStatus === 1 // Assuming teamStatus 1 means batting
+    );
+
+    if (!battingTeam) {
+        console.log(`Could not find batting team for commentary ${commentaryId}`);
+        return true; // Default to true if batting team info not available
+    }
+
+    return parseInt(battingTeam.teamId) === parseInt(teamId);
+}
 /**
  * Opens a market
  * @param {Object} market - The market to open
@@ -223,17 +253,34 @@ function settleMarket(market, fastify) {
  * @param {Object} fastify - Fastify Object
  */
 function settleOddEvenMarket(market, fastify) {
-    // Calculate the result based on total runs in the over
-    const overRuns = calculateOverRuns(market.commentaryId, market.teamId, market.over);
-    const isEven = overRuns % 2 === 0;
+    try {
+        // Calculate the result based on total runs in the over
+        const overRuns = calculateOverRuns(market.commentaryId, market.teamId, market.over);
+        const isEven = overRuns % 2 === 0;
 
-    console.log(`Settling odd-even market for over ${market.over}. Runs: ${overRuns}, Result: ${isEven ? 'Even' : 'Odd'}`);
+        console.log(`Settling odd-even market for over ${market.over}. Runs: ${overRuns}, Result: ${isEven ? 'Even' : 'Odd'}`);
 
-    // Set market as settled
-    market.status = EventMarketStatus.Settled;
+        // Set market as settled
+        market.status = EventMarketStatus.Settled;
 
-    // Find and set the winner
-    if (market.runners && market.runners.length > 0) {
+        // Find and set the winner
+        if (!market.runners || market.runners.length < 2) {
+            console.error(`Cannot settle market ${market.eventMarketId || market.marketName}: runners not found or incomplete`);
+
+            // Try to fetch runners from DB if they're missing
+            fetchRunnersForMarket(market, fastify).then(updatedMarket => {
+                if (updatedMarket.runners && updatedMarket.runners.length >= 2) {
+                    // Retry settlement with fetched runners
+                    settleOddEvenMarket(updatedMarket, fastify);
+                }
+            }).catch(error => {
+                console.error(`Failed to fetch runners for market ${market.eventMarketId}:`, error);
+            });
+
+            return;
+        }
+
+        // Process each runner
         market.runners.forEach(runner => {
             const runnerName = runner.runner.toLowerCase();
             const isEvenRunner = runnerName.includes('even');
@@ -250,14 +297,82 @@ function settleOddEvenMarket(market, fastify) {
                 runner.selectionStatus = 8; // LOSE
             }
         });
+
+        // Set settled time
+        market.settledTime = new Date().toISOString();
+
+        // Update in DB - will insert if ID is 0 and market doesn't exist in DB
+        updateMarketStatusInDB(market, fastify);
+    } catch (error) {
+        console.error(`Error settling odd-even market ${market.marketName}:`, error);
+    }
+}
+
+/**
+ * Fetches runners for a market if they're missing
+ * @param {Object} market - The market
+ * @param {Object} fastify - Fastify instance
+ * @returns {Promise<Object>} - The market with runners
+ */
+async function fetchRunnersForMarket(market, fastify) {
+    if (market.runners && market.runners.length >= 2) {
+        return market; // Already has runners
     }
 
-    // Set settled time
-    market.settledTime = new Date().toISOString();
+    try {
+        const marketId = market.eventMarketId;
 
-    // Update in DB - will insert if ID is 0 and market doesn't exist in DB
-    updateMarketStatusInDB(market, fastify);
-    // Socket update is handled by updateMarketStatusInDB
+        if (!marketId || marketId === 0) {
+            throw new Error("Cannot fetch runners for market without ID");
+        }
+
+        // Fetch runners from database
+        const query = `
+            SELECT * FROM "tblMarketRunners"
+            WHERE "wrEventMarketId" = ${marketId}
+        `;
+
+        const result = await fastify.db.query(query, {
+            type: fastify.db.QueryTypes.SELECT
+        });
+
+        if (result && result.length > 0) {
+            // Map DB runners to expected format
+            const runners = result.map(r => ({
+                runnerId: r.wrRunnerId,
+                runner: r.wrRunner,
+                line: r.wrLine || 0,
+                backPrice: r.wrBackPrice || 1.9,
+                layPrice: r.wrLayPrice || 1.9,
+                backSize: r.wrBackSize || 10000,
+                laySize: r.wrLaySize || 10000,
+                selectionStatus: r.wrSelectionStatus
+            }));
+
+            // Update market with runners
+            market.runners = runners;
+
+            // Update global state
+            if (global.marketData && global.marketData[market.commentaryId] && global.marketData[market.commentaryId].markets) {
+                const marketIndex = global.marketData[market.commentaryId].markets.findIndex(
+                    m => m.eventMarketId && m.eventMarketId.toString() === marketId.toString()
+                );
+
+                if (marketIndex !== -1) {
+                    global.marketData[market.commentaryId].markets[marketIndex].runners = runners;
+                }
+            }
+
+            console.log(`Fetched ${runners.length} runners for market ${marketId}`);
+        } else {
+            console.error(`No runners found for market ${marketId}`);
+        }
+
+        return market;
+    } catch (error) {
+        console.error(`Error fetching runners:`, error);
+        return market;
+    }
 }
 
 /**

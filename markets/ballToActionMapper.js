@@ -103,11 +103,29 @@ function mapAction(commentaryId, ball, action, marketId, metadata = {}) {
 }
 
 /**
+ * Checks if the market belongs to the batting team
+ * @param {Object} market - Market object
+ * @param {number|string} battingTeamId - ID of the team currently batting
+ * @returns {boolean} - True if market belongs to batting team or is team-independent
+ */
+function isBattingTeamMarket(market, battingTeamId) {
+    // If no batting team is specified, assume all markets are valid
+    if (!battingTeamId) return true;
+
+    // If market has no team association, it's valid for both teams
+    if (!market.teamId) return true;
+
+    // Check if market belongs to the batting team
+    return market.teamId.toString() === battingTeamId.toString();
+}
+
+/**
  * Initializes ball to action map based on market templates
  * @param {Array} markets - Array of markets
  * @param {number} commentaryId - The commentary ID
+ * @param {number|string} battingTeamId - ID of the team currently batting
  */
-function initializeBallToActionMap(markets, commentaryId) {
+function initializeBallToActionMap(markets, commentaryId, battingTeamId) {
     // Ensure global market data structure exists
     if (!global.marketData) {
         global.marketData = {};
@@ -125,7 +143,17 @@ function initializeBallToActionMap(markets, commentaryId) {
     // Clear existing ball-to-action map for this commentary
     global.marketData[commentaryId].ballToActionMap = {};
 
-    markets.forEach(market => {
+    // Log the batting team for debugging
+    console.log(`[INIT] Initializing ball-to-action map for batting team ID: ${battingTeamId || 'not specified'}`);
+
+    // Filter markets for the batting team if specified
+    const validMarkets = battingTeamId
+        ? markets.filter(market => isBattingTeamMarket(market, battingTeamId))
+        : markets;
+
+    console.log(`[INIT] ${validMarkets.length} of ${markets.length} markets are valid for the batting team`);
+
+    validMarkets.forEach(market => {
         const marketId = market.eventMarketId ? market.eventMarketId.toString() : "0";
         const marketCategoryId = market.marketTypeCategoryId;
         const overValue = market.over ? market.over.toString() : null;
@@ -133,7 +161,8 @@ function initializeBallToActionMap(markets, commentaryId) {
         // Additional metadata for the market action
         const marketMetadata = {
             over: overValue,
-            marketTypeCategoryId: marketCategoryId
+            marketTypeCategoryId: marketCategoryId,
+            teamId: market.teamId
         };
 
         // Map when to open the market
@@ -170,9 +199,10 @@ function initializeBallToActionMap(markets, commentaryId) {
  * Looks up actions for a specific ball
  * @param {number} commentaryId - The commentary ID
  * @param {string} ball - Ball identifier (e.g. "5.3")
+ * @param {number|string} battingTeamId - Optional, ID of the team currently batting
  * @returns {Array} - List of actions to perform
  */
-function getActionsForBall(commentaryId, ball) {
+function getActionsForBall(commentaryId, ball, battingTeamId) {
     const formattedBall = formatBallNumber(ball);
 
     if (!global.marketData[commentaryId] ||
@@ -181,7 +211,19 @@ function getActionsForBall(commentaryId, ball) {
         return [];
     }
 
-    return global.marketData[commentaryId].ballToActionMap[formattedBall];
+    const actions = global.marketData[commentaryId].ballToActionMap[formattedBall];
+
+    // If a batting team is specified, filter actions to only include those for that team
+    if (battingTeamId) {
+        return actions.filter(action => {
+            // If action has no team ID, it applies to all teams
+            if (!action.teamId) return true;
+            // Otherwise, check if it matches the batting team
+            return action.teamId.toString() === battingTeamId.toString();
+        });
+    }
+
+    return actions;
 }
 
 /**
@@ -291,7 +333,8 @@ function logFullBallToActionMap(commentaryId) {
                 ball,
                 action: action.action,
                 marketId: action.marketId,
-                over: action.over
+                over: action.over,
+                teamId: action.teamId
             });
         });
     });
@@ -322,7 +365,8 @@ function getAllMappedActions(commentaryId) {
                 action: action.action,
                 marketId: action.marketId,
                 over: action.over,
-                marketTypeCategoryId: action.marketTypeCategoryId
+                marketTypeCategoryId: action.marketTypeCategoryId,
+                teamId: action.teamId
             });
         });
     });
@@ -340,5 +384,6 @@ module.exports = {
     logBallToActionMapSample,
     logFullBallToActionMap,
     getAllMappedActions,
-    countActionTypes
+    countActionTypes,
+    isBattingTeamMarket
 };

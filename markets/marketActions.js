@@ -1,5 +1,6 @@
 // marketActions.js
 const { errorLogger } = require('../utilities/logger');
+const { formatMarketForSocket } = require('./utils');
 
 /**
  * Updates market status in the database
@@ -41,8 +42,8 @@ async function updateMarketStatusInDB(market, fastify) {
                         const updatedMarket = global.marketData[commentaryId].markets.find(
                             m => m.eventMarketId && m.eventMarketId.toString() === existingId.toString()
                         ) || { ...market, eventMarketId: existingId };
-
-                        global.socketIo.to(commentaryId).emit("updateMarket", [updatedMarket]);
+                        global.socketIo.to(commentaryId).emit("updateMarketData", formatMarketForSocket(updatedMarket));
+                        // global.socketIo.to(commentaryId).emit("updateMarketData", [updatedMarket]);
                         console.log(`[Socket] Sent update after DB update for market ${existingId}`);
                     }
                 }
@@ -66,8 +67,8 @@ async function updateMarketStatusInDB(market, fastify) {
                         const updatedMarket = global.marketData[commentaryId].markets.find(
                             m => m.eventMarketId && m.eventMarketId.toString() === newMarketId.toString()
                         ) || { ...market, eventMarketId: newMarketId };
-
-                        global.socketIo.to(commentaryId).emit("updateMarket", [updatedMarket]);
+                        global.socketIo.to(commentaryId).emit("updateMarketData", formatMarketForSocket(updatedMarket));
+                        // global.socketIo.to(commentaryId).emit("updateMarketData", [updatedMarket]);
                         console.log(`[Socket] Sent update after DB insert for market ${newMarketId}`);
                     }
                 }
@@ -86,12 +87,11 @@ async function updateMarketStatusInDB(market, fastify) {
                     const updatedMarket = global.marketData[commentaryId].markets.find(
                         m => m.eventMarketId && m.eventMarketId.toString() === marketId.toString()
                     ) || market;
-
-                    global.socketIo.to(commentaryId).emit("updateMarket", [updatedMarket]);
+                    global.socketIo.to(commentaryId).emit("updateMarketData", formatMarketForSocket(updatedMarket));
+                    // global.socketIo.to(commentaryId).emit("updateMarketData", [updatedMarket]);
                     console.log(`[Socket] Sent update after DB update for market ${marketId}`);
                 }
             }
-
             return marketId;
         }
     } catch (error) {
@@ -545,7 +545,7 @@ function updateMarketStatusInSocket(market) {
         if (global.socketIo) {
             const clientInRoom = global.socketIo.sockets.adapter.rooms.get(commentaryId);
             if (clientInRoom?.size) {
-                global.socketIo.to(commentaryId).emit("updateMarket", [socketData]);
+                global.socketIo.to(commentaryId).emit("updateMarketData", formatMarketForSocket(socketData));
                 console.log(`[Socket] Sent update to ${clientInRoom.size} clients in room ${commentaryId}`);
             }
         } else {
@@ -556,46 +556,10 @@ function updateMarketStatusInSocket(market) {
     }
 }
 
-/**
- * Formats market data for socket transmission
- * @param {Object} market - The market to format
- * @returns {Object} - Formatted market data
- */
-function formatMarketForSocket(market) {
-    // Create a sanitized copy of runners if available
-    const formattedRunners = market.runners ? market.runners.map(runner => ({
-        id: runner.runnerId,
-        name: runner.runner,
-        status: runner.selectionStatus,
-        price: {
-            back: runner.backPrice,
-            lay: runner.layPrice
-        },
-        size: {
-            back: runner.backSize,
-            lay: runner.laySize
-        }
-    })) : [];
-
-    // Create the socket payload
-    return {
-        eventMarketId: market.eventMarketId,
-        marketName: market.marketName,
-        status: market.status,
-        result: market.result,
-        runners: formattedRunners,
-        updateTimestamp: new Date().toISOString(),
-        over: market.over,
-        marketTypeCategoryId: market.marketTypeCategoryId,
-        teamId: market.teamId,
-        commentaryId: market.commentaryId
-    };
-}
 
 module.exports = {
     updateMarketStatusInDB,
     updateMarketStatusInSocket,
-    formatMarketForSocket,
     findExistingMarketId,
     updateGlobalMarketId,
     updateBallToActionMapReferences
