@@ -486,7 +486,7 @@ function formatMarketForSocket(market) {
     }
 
     // Return as JSON string
-    return JSON.stringify([formattedObject]);
+    return JSON.stringify(formattedObject);
 }
 
 module.exports = {
