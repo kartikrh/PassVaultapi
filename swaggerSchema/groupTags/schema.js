@@ -8683,6 +8683,20 @@ const Whitelabel = {
       },
     },
   },
+  demoClientEnableInIOS: {
+    schema: {
+      tags: ["Whitelabel"],
+      description: "demoClientEnableInIOS status change Whitelabel data",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          isDemoClientEnableInIOS: { type: "boolean" },
+        },
+        required: ["id", "isDemoClientEnableInIOS"],
+      },
+    },
+  },
 };
 const NotificationConfig = {
   getAll: {

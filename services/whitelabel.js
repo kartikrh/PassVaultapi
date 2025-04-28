@@ -3,6 +3,7 @@ const {
   updateWhitelabelQuery,
   deleteWhitelabelQuery,
   activeInactiveWhitelabelQuery,
+  demoClientEnableInIOSWhitelabelQuery,
 } = require("../repository/TableWhitelabel");
 const {
   generateImageName,
@@ -15,23 +16,23 @@ const { callClientAPI, ServiceType, APIEndpointModuleType } = require("../utilit
 const { errorLogger } = require("../utilities/logger");
 
 const saveWhitelabelService = async (request, fastify) => {
-  if (request.body.imagePath && request.body.imagePath.length) {
-    const imgName = generateImageName({
-      name: request.body.domain,
-    });
+  // if (request.body.imagePath && request.body.imagePath.length) {
+  //   const imgName = generateImageName({
+  //     name: request.body.domain,
+  //   });
 
-    const projectName = global.tblConfigs.find(
-      (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
-    )?.value;
+  //   const projectName = global.tblConfigs.find(
+  //     (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
+  //   )?.value;
 
-    const { imagePath } = await storeImageOnServer({
-      image: request.body.imagePath[0],
-      project: projectName,
-      name: imgName,
-      ...ImgModuleConfig.Whitelable,
-    });
-    request.body.imagePath = imagePath;
-  }
+  //   const { imagePath } = await storeImageOnServer({
+  //     image: request.body.imagePath[0],
+  //     project: projectName,
+  //     name: imgName,
+  //     ...ImgModuleConfig.Whitelable,
+  //   });
+  //   request.body.imagePath = imagePath;
+  // }
   const saveData = await insertWhitelabelQuery(request.body, fastify, request);
   global.tblWhitelabels.push(saveData);
   if(saveData.isActive){
@@ -58,6 +59,8 @@ const saveWhitelabelService = async (request, fastify) => {
 };
 
 const editWhitelabelService = async (request, fastify) => {
+  console.log("request.body", request.body);
+  
   const validateId = global.tblWhitelabels.find(
     (item) => item.id == request.body.id
   );
@@ -65,21 +68,21 @@ const editWhitelabelService = async (request, fastify) => {
     throw new Error("Whitelabel data with this Id not found");
   }
 
-  if (request.body.imagePath && request.body.imagePath.length) {
-    const imgName = generateImageName({
-      name: request.body.domain,
-    });
-    const projectName = global.tblConfigs.find(
-      (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
-    ).value;
-    const { imagePath } = await storeImageOnServer({
-      image: request.body.imagePath[0],
-      project: projectName,
-      name: imgName,
-      ...ImgModuleConfig.Whitelable,
-    });
-    request.body.imagePath = imagePath;
-  }
+  // if (request.body.imagePath && request.body.imagePath.length) {
+  //   const imgName = generateImageName({
+  //     name: request.body.domain,
+  //   });
+  //   const projectName = global.tblConfigs.find(
+  //     (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
+  //   ).value;
+  //   const { imagePath } = await storeImageOnServer({
+  //     image: request.body.imagePath[0],
+  //     project: projectName,
+  //     name: imgName,
+  //     ...ImgModuleConfig.Whitelable,
+  //   });
+  //   request.body.imagePath = imagePath;
+  // }
 
   const updateData = {
     domain: request.body.domain ?? validateId.domain,
@@ -228,10 +231,51 @@ const activeInactiveWhitelabelService = async (request, fastify) => {
   return `Whitelabel data updated successfully`;
 };
 
+const demoClientEnableInIOSWhitelabelService = async (request, fastify) => {
+  const { id, isDemoClientEnableInIOS } = request.body;
+  const validateId = global.tblWhitelabels.find((item) => item.id === id);
+
+  if (!validateId) {
+    throw new Error("Whitelabel with this Id not found");
+  }
+  await demoClientEnableInIOSWhitelabelQuery(
+    {
+      id,
+      isDemoClientEnableInIOS,
+    },
+    request,
+    fastify
+  );
+  const index = global.tblWhitelabels.findIndex((item) => item.id == id);
+  if (index != -1) {
+    global.tblWhitelabels[index].isDemoClientEnableInIOS = isDemoClientEnableInIOS;
+  }
+  callClientAPI(
+    {
+      serviceType : ServiceType.clientAPI,
+      moduleType : APIEndpointModuleType.updateSeoModule,
+      data : {
+        module : 'whiteLable',
+        type : isDemoClientEnableInIOS ? "isDemoClientEnableInIOSTrue" : "isDemoClientEnableInIOSFalse",
+        data : global.tblWhitelabels[index]
+      }
+    }, request, fastify)
+  .catch((err) => {
+    errorLogger(
+      fastify,
+      err.message,
+      "services/whitelabel.js/demoClientEnableInIOSWhitelabelService - callClientAPI",
+      request
+    );
+  });
+  return `Whitelabel data updated successfully`;
+};
+
 module.exports = {
   createWhitelabelService,
   allWhitelabelsService,
   whitelabelByIdService,
   deleteWhitelabelService,
   activeInactiveWhitelabelService,
+  demoClientEnableInIOSWhitelabelService,
 };
