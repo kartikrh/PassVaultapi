@@ -343,7 +343,6 @@ const FetchingCommentariesDataFromCron = async (fastify) => {
 // const upcomingCommentaries = async (fastify) => {
 //   try {
 //     const now = new Date();
-
 //     let allEvents = await getAllCommentaryQuery(fastify);
 
 //     const upcomingEvents = allEvents.filter((item) => {
@@ -358,27 +357,27 @@ const FetchingCommentariesDataFromCron = async (fastify) => {
 //       return diffInMinutes < 1 && !global.processedUpcomingCommentaries.has(item.commentaryId);
 //     });
 
-//     for (let item of upcomingEvents) {
-//       const data = await getNotificationConfigsByEventNameQuery(EventName.COMMINGSOON, fastify);
-//       if (!data) continue;
+//       for (let item of upcomingEvents) {
+//         let data = await getNotificationConfigsByEventNameQuery(EventName.COMMINGSOON, fastify);
+//         if (!data) continue;
 
-//       data?.content = data?.content.replace("{}", item.eventNo);
+//         data.content = data.content.replace("{}", item.eventNo);
 
-//       if (Array.isArray(global.clientSocketIo) && global.clientSocketIo.length > 0) {
-//         global.clientSocketIo.forEach((socket) => {
-//           socket.client.emit("notificationSend", data);
-//         });
+//         if (Array.isArray(global.clientSocketIo) && global.clientSocketIo.length > 0) {
+//           global.clientSocketIo.forEach((socket) => {
+//             socket.client.emit("notificationSend", data);
+//           });
 
-//         const notificationData = {
-//           title: item.eventNo ?? item.eventName,
-//           description: data.content,
-//           commentaryId: item.commentaryId,
-//         };
+//           const notificationData = {
+//             title: item.eventNo ?? item.eventName,
+//             description: data.content,
+//             commentaryId: item.commentaryId,
+//           };
 
-//         await insertNotificationViaNotiConfigQuery(notificationData, null, fastify);
-//         global.processedUpcomingCommentaries.add(item.commentaryId);
+//           await insertNotificationViaNotiConfigQuery(notificationData, null, fastify);
+//           global.processedUpcomingCommentaries.add(item.commentaryId);
+//         }
 //       }
-//     }
 //   } catch (error) {
 //     console.error("Error in upcomingCommentaries:", error.message, error);
 //   }

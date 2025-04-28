@@ -402,12 +402,12 @@ const insertCommentaryPlayers = async (
           $4,
           $5,
           COALESCE(
-            (SELECT "wrAverage" FROM "tblPlayerBattingHistory" WHERE "wrPlayerId" = $3 AND "wrMatchTypeId" = $6),
+            (SELECT "wrAverage" FROM "tblPlayerBattingHistory" WHERE "wrPlayerId" = $3 AND "wrMatchTypeId" = $6 limit 1),
             (SELECT "wrBatsmanAverage" FROM "tblPlayers" WHERE "wrPlayerId" = $3)
           ),
           (select "wrBatsmanStrikeRate" from "tblPlayers" where "wrPlayerId" =$3),
           COALESCE(
-            (SELECT "wrEconomy" FROM "tblPlayerBowlingHistory" WHERE "wrPlayerId" = $3 AND "wrMatchTypeId" = $6),
+            (SELECT "wrEconomy" FROM "tblPlayerBowlingHistory" WHERE "wrPlayerId" = $3 AND "wrMatchTypeId" = $6 limit 1),
             (SELECT "wrBowlerEconomy" FROM "tblPlayers" WHERE "wrPlayerId" = $3)
           ),
           (select "wrBowlerAverage" from "tblPlayers" where "wrPlayerId" =$3)
@@ -2911,6 +2911,7 @@ const getCommentaryID_Socket = async (data, fastify, request) => {
       `SELECT
       "tblEncryptedData"."wrValue" AS "CommentaryId",
       "wrEventRefId" AS "EventID",
+      "wrCommentaryId" AS "commentaryId",
       "wrMarketID" AS "MarketID"
     FROM
       "tblCommentaries"
