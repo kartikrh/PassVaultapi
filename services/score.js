@@ -26,6 +26,8 @@ const getAllCommentariesDataService = async (request,fastify) => {
         let com = commentaryData.filter((c) => {
             if (request.body.eventId) {
                 return c.eventRefId == request.body.eventId;
+            } else if (request.body.commentaryId){
+                return c.commentaryId == request.body.commentaryId;
             } else {
                 return c.commentaryStatus != 4;
             }
@@ -328,6 +330,8 @@ const getAllCommentariesDataServiceV1 = async (request,fastify) => {
         let com = commentaryData.filter((c) => {
             if (request.body.eventId) {
                 return c.erefid == request.body.eventId;
+            } else if (request.body.commentaryId) {
+                return c.cid == request.body.commentaryId;
             } else {
                 return c.cs != 4;
             }
@@ -403,9 +407,9 @@ const getAllCommentariesDataServiceV1 = async (request,fastify) => {
                 },fastify) || [];
 
                 commentaries[c.erefid] = {
-                    commentaryId : c.cid,
-                    eventrefId : c.erefid,
-                    commentaryStatus : c.cs,
+                    cid : c.cid,
+                    erefid : c.erefid,
+                    cs : c.cs,
                     commentaryDetails: c,
                     commentaryTeams: teams,
                     commentaryPlayers: players,

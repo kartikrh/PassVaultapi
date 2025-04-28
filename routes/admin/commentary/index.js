@@ -76,6 +76,7 @@ const {
   changeIsTestCom,
   changeIsEventStart,
   getAllDifficulties,
+  commentaryStatus,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -286,7 +287,20 @@ module.exports = async (fastify, opts) => {
     ],
     handler: (request, reply) => addCommentary(request, reply, fastify),
   });
-  fastify.post("/updateCommentaryStatus", {
+  // fastify.post("/updateCommentaryStatus", {
+  //   schema: Commentary.updateCommentaryStatus.schema,
+  //   preHandler: [
+  //     (request, reply) => authorize(request, reply, fastify),
+  //     (request, reply, done) =>
+  //       checkPermission(request, reply, fastify, {
+  //         tabName: "Commentary",
+  //         mode: "edit",
+  //       }),
+  //   ],
+  //   handler: (request, reply) =>
+  //     updateCommentaryStatus(request, reply, fastify),
+  // });
+  fastify.post("/ballStart", {
     schema: Commentary.updateCommentaryStatus.schema,
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
@@ -298,6 +312,19 @@ module.exports = async (fastify, opts) => {
     ],
     handler: (request, reply) =>
       updateCommentaryStatus(request, reply, fastify),
+  });
+  fastify.post("/updateCommentaryStatus", {
+    schema: Commentary.updateCommentaryStatus.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "edit",
+        }),
+    ],
+    handler: (request, reply) =>
+      commentaryStatus(request, reply, fastify),
   });
 
   fastify.post("/clone", {
