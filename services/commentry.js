@@ -9422,9 +9422,9 @@ const updateDelayInCommentaryService = async (request, fastify) => {
 };
 
 const getShortCommertyService = async (request, fastify) => {
-  const { eventId } = request.body;
+  const { eventId, commentaryId } = request.body;
   const commentary = global.tblCommentaries.find(
-    (item) => item.eventRefId === eventId
+    (item) => item.eventRefId === eventId && item.commentaryId == commentaryId
   );
   if (commentary) {
     try {
@@ -9480,6 +9480,7 @@ const getShortCommertyService = async (request, fastify) => {
       }
       let es = {
         eti: parseInt(eventType.refId) || "",
+        cid: commentary.commentaryId || 0,
         eid: commentary.eventRefId || "",
         en: commentary.eventName || "",
         te1n: commentaryTeamsOne.teamName || "",
