@@ -2437,6 +2437,7 @@ const Commentary = {
         type: "object",
         properties: {
           eventId : { type: "string" },
+          commentaryId : { type: "integer" },
         },
       },
     },
@@ -4176,8 +4177,9 @@ const Score = {
         type: "object",
         properties: {
           eventId: { type: "string" },
+          commentaryId: { type: "integer" },
         },
-        required: ["eventId"],
+        // required: ["eventId"],
       },
     },
   },
