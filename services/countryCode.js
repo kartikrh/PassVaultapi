@@ -68,6 +68,7 @@ const editCountryCodeService = async (request, fastify) => {
     : validateId.isActive,
     id: parseInt(request.body.id, 10),
     maxNumber : request.body.maxNumber ?? validateId.maxNumber,
+    shortName : request.body.shortName ?? validateId.shortName
   };
   if (request.body.flag && request.body.flag.length > 0) {
     const imgName = generateImageName({ name: updateData.countryName });

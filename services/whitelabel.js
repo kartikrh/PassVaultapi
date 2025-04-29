@@ -4,6 +4,7 @@ const {
   deleteWhitelabelQuery,
   activeInactiveWhitelabelQuery,
   demoClientEnableInIOSWhitelabelQuery,
+  isDemoClientLoginQuery,
 } = require("../repository/TableWhitelabel");
 const {
   generateImageName,
@@ -90,6 +91,7 @@ const editWhitelabelService = async (request, fastify) => {
     isActive: Boolean(request.body.isActive) ?? validateId.isActive,
     id: parseInt(request.body.id, 10),
     isDemoClientEnableInIOS: request.body.isDemoClientEnableInIOS ?? validateId.isDemoClientEnableInIOS,
+    isDemoClientLogin: request.body.isDemoClientLogin ?? validateId.isDemoClientLogin,
   };
 
   const modifiedData = await updateWhitelabelQuery(updateData, fastify, request);
@@ -270,7 +272,45 @@ const demoClientEnableInIOSWhitelabelService = async (request, fastify) => {
   });
   return `Whitelabel data updated successfully`;
 };
+const isDemoClientLoginService = async (request, fastify) => {
+  const { id, isDemoClientLogin } = request.body;
+  const validateId = global.tblWhitelabels.find((item) => item.id === id);
 
+  if (!validateId) {
+    throw new Error("Whitelabel with this Id not found");
+  }
+  await isDemoClientLoginQuery(
+    {
+      id,
+      isDemoClientLogin,
+    },
+    request,
+    fastify
+  );
+  const index = global.tblWhitelabels.findIndex((item) => item.id == id);
+  if (index != -1) {
+    global.tblWhitelabels[index].isDemoClientLogin = isDemoClientLogin;
+  }
+  callClientAPI(
+    {
+      serviceType : ServiceType.clientAPI,
+      moduleType : APIEndpointModuleType.updateSeoModule,
+      data : {
+        module : 'whiteLable',
+        type : isDemoClientLogin ? "isDemoClientLoginTrue" : "isDemoClientLoginFalse",
+        data : global.tblWhitelabels[index]
+      }
+    }, request, fastify)
+  .catch((err) => {
+    errorLogger(
+      fastify,
+      err.message,
+      "services/whitelabel.js/demoClientEnableInIOSWhitelabelService - callClientAPI",
+      request
+    );
+  });
+  return `Whitelabel data updated successfully`;
+};
 module.exports = {
   createWhitelabelService,
   allWhitelabelsService,
@@ -278,4 +318,5 @@ module.exports = {
   deleteWhitelabelService,
   activeInactiveWhitelabelService,
   demoClientEnableInIOSWhitelabelService,
+  isDemoClientLoginService
 };
