@@ -8697,6 +8697,20 @@ const Whitelabel = {
       },
     },
   },
+  isDemoClientLogin: {
+    schema: {
+      tags: ["Whitelabel"],
+      description: "isDemoClientLogin status change Whitelabel data",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          isDemoClientLogin: { type: "boolean" },
+        },
+        required: ["id", "isDemoClientLogin"],
+      },
+    },
+  },
 };
 const NotificationConfig = {
   getAll: {
@@ -8843,7 +8857,23 @@ const VirtualEvent = {
       }
     }
   },
-}
+  ballByBall : {
+    schema : {
+      tags: ["CompetitionEvent"],
+      description: "Ball Start Event",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId : { type: "integer" },
+          run : { type: "integer" },
+          ballType : { type: "integer" },
+        },
+        required: ["commentaryId", "run", "ballType"],
+      }
+    }
+  },
+} 
 const FavCompetitions = {
   save: {
     schema: {
