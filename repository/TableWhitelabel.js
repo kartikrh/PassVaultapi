@@ -200,7 +200,7 @@ const isDemoClientLoginQuery = async (data, request, fastify) => {
       return await fastify.db.query(
         `
                   UPDATE "tblWhitelabel" SET
-                    "isDemoClientLogin" = $1
+                    "wrIsDemoClientLogin" = $1
                   WHERE "wrId" = $2
               `,
         {
