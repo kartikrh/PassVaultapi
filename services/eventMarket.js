@@ -3620,6 +3620,8 @@ const getManualMarketDataService = async (request, fastify) => {
   const rsMarket = await getRsMarketQuery({commentaryId: commentaryId}, request, fastify)
 
 
+  let team1Id = com.team1Id;
+  let team2Id = com.team2Id;
   let comTeam = global.tblCommentaryTeams.filter(
     (item) => item.commentaryId === commentaryId
   ).reduce((acc, current) => {
@@ -3630,11 +3632,20 @@ const getManualMarketDataService = async (request, fastify) => {
   }, []).map((item) => {
     return {
       teamId: item.teamId,
-      teamName: item.teamName,
+      teamName: item.teamName 
     };
   }
   );
 
+  // add teamNo 
+  comTeam.map((m)=> {
+    if(m.teamId == team1Id){
+      m.teamNo = 1;
+    }
+    if(m.teamId == team2Id) {
+      m.teamNo = 2
+    }
+  })
   let data = {
     comDetails : {
       commentaryId: com.commentaryId,

@@ -169,6 +169,28 @@ const activeInactiveWhitelabelQuery = async (data, request, fastify) => {
       throw new Error(err.message);
     }
 };
+const demoClientEnableInIOSWhitelabelQuery = async (data, request, fastify) => {
+    try {
+      return await fastify.db.query(
+        `
+                  UPDATE "tblWhitelabel" SET
+                    "wrIsDemoClientEnableInIOS" = $1
+                  WHERE "wrId" = $2
+              `,
+        {
+          bind: [data.isDemoClientEnableInIOS, data.id],
+        }
+      );
+    } catch (err) {
+      errorLogger(
+        fastify,
+        err.message,
+        "DB ERROR --> repository/TableWhitelabel.js/demoClientEnableInIOSWhitelabelQuery",
+        request
+      );
+      throw new Error(err.message);
+    }
+};
 
 module.exports = {
     getAllWhitelabelsQuery,
@@ -176,4 +198,5 @@ module.exports = {
     updateWhitelabelQuery,
     deleteWhitelabelQuery,
     activeInactiveWhitelabelQuery,
+    demoClientEnableInIOSWhitelabelQuery,
 };
