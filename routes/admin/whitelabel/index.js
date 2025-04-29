@@ -6,6 +6,7 @@ const {
     deleteWhitelabel,
     activeInactiveWhitelabel,
     demoClientEnableInIOSWhitelabel,
+    isDemoClientLogin,
 } = require("../../../controller/users/admin/whitelabel");
 const { Whitelabel } = require("../../../swaggerSchema/groupTags/schema");
 
@@ -43,5 +44,9 @@ module.exports = async (fastify, opts) => {
     fastify.post("/demoClientEnableInIOS", {
         schema: Whitelabel.demoClientEnableInIOS.schema,
         handler: (request, reply) => demoClientEnableInIOSWhitelabel(request, reply, fastify),
+    });
+    fastify.post("/demoClientLogin", {
+        schema: Whitelabel.isDemoClientLogin.schema,
+        handler: (request, reply) => isDemoClientLogin(request, reply, fastify),
     });
 };

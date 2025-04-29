@@ -33,10 +33,11 @@ const insertWhitelabelQuery = async (data, fastify, request) => {
         const result = await fastify.db.query(
             `WITH insert_data AS (
             INSERT INTO "tblWhitelabel" (
-            "wrDomain", "wrImagepath", "wrIsActive", "wrCreatedAt", "wrCreatedBy", "wrIsDemoClientEnableInIOS"
+            "wrDomain", "wrImagepath", "wrIsActive", "wrCreatedAt", "wrCreatedBy", "wrIsDemoClientEnableInIOS" , "wrIsDemoClientLogin"
             ) 
             VALUES (
-                $1, $2, $3, NOW(), $4, $5
+                $1, $2, $3, NOW(), $4, $5 ,$6
+
             )
             RETURNING *
             )
@@ -60,6 +61,7 @@ const insertWhitelabelQuery = async (data, fastify, request) => {
                     data.isActive,
                     request.userTokenInfo.WrUserId,
                     data.isDemoClientEnableInIOS || false,
+                    data.isDemoClientLogin || false
                 ],
             }
         );
@@ -85,7 +87,8 @@ const updateWhitelabelQuery = async (data, fastify, request) => {
                 "wrIsActive" = $3,
                 "wrUpdatedBy" = $4,
                 "wrUpdatedAt" = NOW(),
-                "wrIsDemoClientEnableInIOS" = $6
+                "wrIsDemoClientEnableInIOS" = $6,
+                "wrIsDemoClientLogin" =$7
             WHERE "wrId" = $5
             RETURNING 
                 "wrId" as "id",
@@ -107,6 +110,7 @@ const updateWhitelabelQuery = async (data, fastify, request) => {
                     request.userTokenInfo.WrUserId,
                     data.id,
                     data.isDemoClientEnableInIOS || false,
+                    data.isDemoClientLogin || false
                 ],
             }
         );
@@ -191,7 +195,28 @@ const demoClientEnableInIOSWhitelabelQuery = async (data, request, fastify) => {
       throw new Error(err.message);
     }
 };
-
+const isDemoClientLoginQuery = async (data, request, fastify) => {
+    try {
+      return await fastify.db.query(
+        `
+                  UPDATE "tblWhitelabel" SET
+                    "isDemoClientLogin" = $1
+                  WHERE "wrId" = $2
+              `,
+        {
+          bind: [data.isDemoClientLogin, data.id],
+        }
+      );
+    } catch (err) {
+      errorLogger(
+        fastify,
+        err.message,
+        "DB ERROR --> repository/TableWhitelabel.js/isDemoClientLoginQuery",
+        request
+      );
+      throw new Error(err.message);
+    }
+};
 module.exports = {
     getAllWhitelabelsQuery,
     insertWhitelabelQuery,
@@ -199,4 +224,5 @@ module.exports = {
     deleteWhitelabelQuery,
     activeInactiveWhitelabelQuery,
     demoClientEnableInIOSWhitelabelQuery,
+    isDemoClientLoginQuery
 };
