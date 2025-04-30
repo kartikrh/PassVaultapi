@@ -5033,6 +5033,29 @@ const updateCommentaryStatusService = async (request, fastify) => {
       //   callPrediction = {};
       // }
   }
+  if (
+    global?.clientSocketIo !== undefined &&
+    global?.clientSocketIo.length > 0
+  ) {
+    commentaryDetailsByEventIdService(
+      {
+        ...request,
+        body: {
+          eventId: global.tblCommentaries[index].eventRefId,
+        },
+      },
+      fastify,
+      "callFromSocket"
+    ).catch((err) => {
+      console.log("err in commentaryDetailsByEventIdService/updateCommentaryStatusService", err);
+      errorLogger(
+        fastify,
+        err.message,
+        "ERROR --> services/commentary.js/updateCommentaryStatusService",
+        request
+      );
+    });
+  }
   commentaryDetails.callPredictions = [];
   return {
     name: "commentaryDetails",
