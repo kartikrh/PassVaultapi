@@ -6029,7 +6029,6 @@ const commentaryDetailsByEventIdService = async (
           t2s: t2Score + "/" + t2Wicket + " (" + t2Over + ")",
           inning: i
         })
-
       }
     }
   }
