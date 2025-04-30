@@ -1,5 +1,6 @@
 // ballToActionMapper.js
 const { EventMarketStatus } = require('../utilities');
+const fs = require('fs');
 
 /**
  * Converts overs to balls
@@ -278,20 +279,28 @@ function logBallToActionMapSample(commentaryId) {
         return;
     }
 
-    // Log the first 3 balls (or fewer if less exist)
-    const sampleCount = Math.min(3, balls.length);
-    console.log(`Sample of ball-to-action map (showing ${sampleCount} of ${balls.length} balls):`);
+    // Prepare the data to be written to the file
+    const ballToActionData = [];
 
-    for (let i = 0; i < sampleCount; i++) {
-        const ball = balls[i];
-        const actions = map[ball];
-        console.log(`Ball ${ball}:`, JSON.stringify(actions, null, 2));
-    }
+    // Collect all balls and actions
+    Object.entries(map).forEach(([ball, actions]) => {
+        actions.forEach(action => {
+            ballToActionData.push({
+                ball,
+                action: action.action,
+                marketId: action.marketId,
+                over: action.over,
+                teamId: action.teamId
+            });
+        });
+    });
 
-    // Create a summary of action types by counting
-    const actionSummary = countActionTypes(map);
-    console.log("Action summary:", actionSummary);
+    // Write the data to ballToAction.json
+    fs.writeFileSync('ballToAction.json', JSON.stringify(ballToActionData, null, 2), 'utf8');
+
+    console.log("Ball-to-action map has been saved to 'ballToAction.json'");
 }
+
 
 /**
  * Counts the types of actions in the ball-to-action map
