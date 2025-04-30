@@ -7083,6 +7083,10 @@ const getMatchListByStatus = async (body, request, fastify) => {
       srtup: item?.sortUpdate ?? "",
       isTest: item?.isTest,
       isActive: item?.isActive,
+      nte1i : team1.imagePath || "",
+      nt1jr : team1.jerseyPath || "",
+      nte2i : team2.imagePath || "",
+      nt2jr : team2.jerseyPath || ""
       // mr: mr
       // bowT : item.bowlingTeam || null,
     };
@@ -7269,6 +7273,10 @@ const getMatchDataByCId = async (data, request, fastify) => {
     te2i: team2.image || "",
     t1jr: team1.jersey || "",
     t2jr: team2.jersey || "",
+    nte1i : team1.imagePath || "",
+    nt1jr : team1.jerseyPath || "",
+    nte2i : team2.imagePath || "",
+    nt2jr : team2.jerseyPath || "",
     loc: com.location || "",
     isrun: isRun,
     t1s: teamScore1 || "",
@@ -7297,6 +7305,7 @@ const getMatchDataByCId = async (data, request, fastify) => {
     ics: com.isClientShow,
     isTest: com.isTest,
     isActive: com.isActive,
+   
   };
   return comDetails;
 }
