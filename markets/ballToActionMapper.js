@@ -38,20 +38,7 @@ function ballsToOvers(balls, matchTypeId) {
 function formatBallNumber(ball) {
     if (ball === null || ball === undefined) return null;
 
-    // Handle negative values for match start
-    if (parseFloat(ball) < 0) {
-        return "0.0"; // Convert to first ball
-    }
-
-    // Convert to string
-    const ballStr = ball.toString().trim();
-
-    // If empty after trimming, return null
-    if (!ballStr) return null;
-
-    // If not a valid number, return null
-    if (isNaN(parseFloat(ballStr))) return null;
-
+    const ballStr = ball.toString();
     // If no decimal, add ".0" to the end
     if (!ballStr.includes('.')) {
         return `${ballStr}.0`;
@@ -73,12 +60,7 @@ function formatBallNumber(ball) {
  * @returns {string} - Ball identifier (e.g. "5.3")
  */
 function getBallFromOver(over, matchTypeId) {
-    if (over === null || over === undefined) return null;
-
-    // Handle negative values for match start (before ball 0.0)
-    if (parseFloat(over) < 0) {
-        return "0.0"; // Map to the first ball for match start
-    }
+    if (!over && over !== 0) return null;
 
     // Format ball number to ensure consistency
     return formatBallNumber(over);
@@ -172,49 +154,10 @@ function initializeBallToActionMap(markets, commentaryId, battingTeamId) {
 
     console.log(`[INIT] ${validMarkets.length} of ${markets.length} markets are valid for the batting team`);
 
-    // Count market types to ensure both odd-even and lottery markets are included
-    let marketTypeCounts = {};
-    validMarkets.forEach(market => {
-        const categoryId = market.marketTypeCategoryId;
-        if (!marketTypeCounts[categoryId]) {
-            marketTypeCounts[categoryId] = 0;
-        }
-        marketTypeCounts[categoryId]++;
-    });
-
-    console.log(`[INIT] Market type counts:`, marketTypeCounts);
-
-    // Check for specific market types of interest
-    if (marketTypeCounts[28]) {
-        console.log(`[INIT] Found ${marketTypeCounts[28]} odd-even markets (type 28)`);
-    } else {
-        console.log(`[INIT] WARNING: No odd-even markets (type 28) found`);
-    }
-
-    if (marketTypeCounts[35]) {
-        console.log(`[INIT] Found ${marketTypeCounts[35]} lottery markets (type 35)`);
-    } else {
-        console.log(`[INIT] WARNING: No lottery markets (type 35) found`);
-    }
-
-    // Process each valid market
     validMarkets.forEach(market => {
         const marketId = market.eventMarketId ? market.eventMarketId.toString() : "0";
         const marketCategoryId = market.marketTypeCategoryId;
         const overValue = market.over ? market.over.toString() : null;
-
-        // Log specific market details for debugging
-        if (marketCategoryId === 28 || marketCategoryId === 35) {
-            const marketType = marketCategoryId === 28 ? 'odd-even' : 'lottery';
-            console.log(`[INIT] Processing ${marketType} market for over ${overValue}:`);
-            console.log(`  - Market name: ${market.marketName}`);
-            console.log(`  - Market ID: ${marketId}`);
-            console.log(`  - Status: ${market.status}`);
-            console.log(`  - autoOpen: ${market.autoOpen}`);
-            console.log(`  - beforeAutoClose: ${market.beforeAutoClose}`);
-            console.log(`  - isAutoResultSet: ${market.isAutoResultSet}`);
-            console.log(`  - autoResultAfterBall: ${market.autoResultAfterBall}`);
-        }
 
         // Additional metadata for the market action
         const marketMetadata = {
@@ -224,56 +167,21 @@ function initializeBallToActionMap(markets, commentaryId, battingTeamId) {
         };
 
         // Map when to open the market
-        let openBall = getBallFromOver(market.autoOpen, market.matchTypeID || 2);
+        const openBall = getBallFromOver(market.autoOpen, market.matchTypeID || 2);
+        mapAction(commentaryId, openBall, "open", marketId, marketMetadata);
 
-        // For match start, ensure market open is mapped to ball 0.0
-        if (market.status === 2) { // If market is already OPEN
-            openBall = "0.0"; // Force to first ball for already open markets
-            console.log(`[INIT] Market ${market.marketName} is already OPEN, mapping open action to ball 0.0`);
-        }
-
-        if (openBall) {
-            mapAction(commentaryId, openBall, "open", marketId, marketMetadata);
-            console.log(`[INIT] Mapped 'open' action at ball ${openBall} for market ${market.marketName}`);
-        } else {
-            console.log(`[INIT] WARNING: Could not map 'open' action - invalid ball from autoOpen=${market.autoOpen}`);
-        }
-
-        // Map when to close the market - ensure the ball is properly formatted
+        // Map when to close the market
         const closeBall = getBallFromOver(market.beforeAutoClose, market.matchTypeID || 2);
+        mapAction(commentaryId, closeBall, "close", marketId, marketMetadata);
 
-        // Skip mapping close action if market is already closed
-        if (market.status === 4) { // Already CLOSED
-            console.log(`[INIT] Market ${market.marketName} is already CLOSED, not mapping close action`);
-        } else if (closeBall) {
-            mapAction(commentaryId, closeBall, "close", marketId, marketMetadata);
-            console.log(`[INIT] Mapped 'close' action at ball ${closeBall} for market ${market.marketName}`);
-        } else {
-            console.log(`[INIT] WARNING: Could not map 'close' action - invalid ball from beforeAutoClose=${market.beforeAutoClose}`);
-        }
-
-        // Map when to settle the market - for odd-even and lottery markets
+        // Map when to settle the market (for odd-even and similar markets)
         if ((marketCategoryId === 28 || marketCategoryId === 35) && market.isAutoResultSet) {
-            // Skip settle mapping if market is already settled
-            if (market.status === 5) { // Already SETTLED
-                console.log(`[INIT] Market ${market.marketName} is already SETTLED, not mapping settle action`);
-            } else {
-                // Calculate settlement ball based on the over and autoResultAfterBall
-                const autoResultAfterBall = parseFloat(market.autoResultAfterBall || 0);
-                const overNumber = parseFloat(market.over || 0);
-                const settleBallValue = overNumber + (autoResultAfterBall / 10);
-
-                const settleBall = getBallFromOver(settleBallValue, market.matchTypeID || 2);
-
-                if (settleBall) {
-                    mapAction(commentaryId, settleBall, "settle", marketId, marketMetadata);
-                    console.log(`[INIT] Mapped 'settle' action at ball ${settleBall} for market ${market.marketName}`);
-                } else {
-                    console.log(`[INIT] WARNING: Could not map 'settle' action - invalid ball from settle calculation=${settleBallValue}`);
-                }
-            }
-        } else if (marketCategoryId === 28 || marketCategoryId === 35) {
-            console.log(`[INIT] WARNING: Not mapping 'settle' action for ${marketCategoryId === 28 ? 'odd-even' : 'lottery'} market - isAutoResultSet=${market.isAutoResultSet}`);
+            // Calculate settlement ball based on the over and autoResultAfterBall
+            const settleBall = getBallFromOver(
+                parseFloat(market.over) + (parseFloat(market.autoResultAfterBall || 0) / 10),
+                market.matchTypeID || 2
+            );
+            mapAction(commentaryId, settleBall, "settle", marketId, marketMetadata);
         }
     });
 
@@ -283,38 +191,6 @@ function initializeBallToActionMap(markets, commentaryId, battingTeamId) {
     // Log the count of balls with actions
     const ballCount = Object.keys(global.marketData[commentaryId].ballToActionMap).length;
     console.log(`Total balls mapped: ${ballCount}`);
-
-    // Count actions by type
-    const actionCounts = {
-        open: 0,
-        close: 0,
-        settle: 0
-    };
-
-    // Count actions by market type
-    marketTypeCounts = {
-        28: { open: 0, close: 0, settle: 0 }, // odd-even
-        35: { open: 0, close: 0, settle: 0 }  // lottery
-    };
-
-    // Process all balls to get action counts
-    Object.values(global.marketData[commentaryId].ballToActionMap).forEach(actions => {
-        actions.forEach(action => {
-            // Count by action type
-            if (actionCounts[action.action] !== undefined) {
-                actionCounts[action.action]++;
-            }
-
-            // Count by market type
-            if (marketTypeCounts[action.marketTypeCategoryId] &&
-                marketTypeCounts[action.marketTypeCategoryId][action.action] !== undefined) {
-                marketTypeCounts[action.marketTypeCategoryId][action.action]++;
-            }
-        });
-    });
-
-    console.log(`[INIT] Action counts:`, actionCounts);
-    console.log(`[INIT] Market type action counts:`, marketTypeCounts);
 
     // Log sample of the map structure (first 3 entries)
     logBallToActionMapSample(commentaryId);

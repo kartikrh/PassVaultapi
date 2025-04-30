@@ -3,6 +3,7 @@ const { getActionsForBall, findMarket, formatBallNumber } = require('./ballToAct
 const { updateMarketStatusInDB, updateMarketStatusInSocket } = require('./marketActions');
 const { processOddEvenMarkets } = require('./oddEven');
 const { EventMarketStatus } = require('../utilities');
+const { errorLogger } = require('../utilities/logger');
 
 /**
  * Processes the prediction score market based on incoming payload
@@ -113,49 +114,25 @@ function executeMarketAction(commentaryId, action, fastify) {
 
     console.log(`Executing ${actionType} on market "${market.marketName}" (ID: ${market.eventMarketId || 'unsaved'})`);
 
-    // Add additional debugging for lottery markets
-    if (market.marketTypeCategoryId === 35) {
-        console.log(`[DEBUG] Lottery market status before ${actionType}: ${market.status}`);
-    }
-
     // Set commentary ID for DB operations
     market.commentaryId = commentaryId;
 
-    // Execute the appropriate action based on market type
-    if (market.marketTypeCategoryId === 35) { // Lottery market
-        switch (actionType) {
-            case 'open':
-                openLotteryMarket(market, fastify);
-                break;
+    // Execute the appropriate action
+    switch (actionType) {
+        case 'open':
+            openMarket(market, fastify);
+            break;
 
-            case 'close':
-                closeLotteryMarket(market, fastify);
-                break;
+        case 'close':
+            closeMarket(market, fastify);
+            break;
 
-            case 'settle':
-                settleLotteryMarket(market, fastify);
-                break;
+        case 'settle':
+            settleMarket(market, fastify);
+            break;
 
-            default:
-                console.error(`Unknown action type: ${actionType}`);
-        }
-    } else { // Standard market (odd-even, etc.)
-        switch (actionType) {
-            case 'open':
-                openMarket(market, fastify);
-                break;
-
-            case 'close':
-                closeMarket(market, fastify);
-                break;
-
-            case 'settle':
-                settleMarket(market, fastify);
-                break;
-
-            default:
-                console.error(`Unknown action type: ${actionType}`);
-        }
+        default:
+            console.error(`Unknown action type: ${actionType}`);
     }
 }
 
@@ -183,166 +160,6 @@ function isBattingTeam(commentaryId, teamId) {
 
     return parseInt(battingTeam.teamId) === parseInt(teamId);
 }
-/**
- * Opens a lottery market
- * @param {Object} market - The market to open
- * @param {Object} fastify - Fastify Object
- */
-function openLotteryMarket(market, fastify) {
-    // Log current status
-    console.log(`[LOTTERY] Opening lottery market ${market.marketName} (current status: ${market.status})`);
-
-    // Skip if already open
-    if (market.status === 2) {
-        console.log(`[LOTTERY] Market ${market.marketName} is already open`);
-        return;
-    }
-
-    // Update market status to OPEN (2)
-    market.status = 2;
-
-    // Update runners' statuses if needed
-    if (market.runners && market.runners.length > 0) {
-        market.runners.forEach(runner => {
-            runner.selectionStatus = 2; // OPEN
-        });
-    }
-
-    // Update in DB - will insert if ID is 0 and market doesn't exist in DB
-    console.log(`[LOTTERY] Updating lottery market in DB with status 2 (OPEN)`);
-    updateMarketStatusInDB(market, fastify);
-
-    console.log(`[LOTTERY] Opened lottery market: ${market.marketName} (ID: ${market.eventMarketId || 'unsaved'})`);
-}
-
-/**
- * Closes a lottery market
- * @param {Object} market - The market to close
- * @param {Object} fastify - Fastify Object
- */
-function closeLotteryMarket(market, fastify) {
-    // Log current status
-    console.log(`[LOTTERY] Closing lottery market ${market.marketName} (current status: ${market.status})`);
-
-    // Skip if already closed or settled
-    if (market.status === 4 || market.status === 5) {
-        console.log(`[LOTTERY] Market ${market.marketName} is already closed or settled (status: ${market.status})`);
-        return;
-    }
-
-    // Update market status to CLOSE (4)
-    market.status = 4;
-
-    // Update runners' statuses if needed
-    if (market.runners && market.runners.length > 0) {
-        market.runners.forEach(runner => {
-            runner.selectionStatus = 4; // CLOSE
-        });
-    }
-
-    // Update in DB - will insert if ID is 0 and market doesn't exist in DB
-    console.log(`[LOTTERY] Updating lottery market in DB with status 4 (CLOSE)`);
-    updateMarketStatusInDB(market, fastify);
-
-    console.log(`[LOTTERY] Closed lottery market: ${market.marketName} (ID: ${market.eventMarketId || 'unsaved'})`);
-}
-
-/**
- * Settles a lottery market
- * @param {Object} market - The market to settle
- * @param {Object} fastify - Fastify Object
- */
-function settleLotteryMarket(market, fastify) {
-    // Log current status
-    console.log(`[LOTTERY] Settling lottery market ${market.marketName} (current status: ${market.status})`);
-
-    // Skip if already settled
-    if (market.status === 5) {
-        console.log(`[LOTTERY] Market ${market.marketName} is already settled`);
-        return;
-    }
-
-    // First ensure market is closed
-    if (market.status !== 4) {
-        console.log(`[LOTTERY] Setting market status to CLOSE (4) before settling`);
-        market.status = 4;
-
-        // Update runners' statuses to CLOSE
-        if (market.runners && market.runners.length > 0) {
-            market.runners.forEach(runner => {
-                runner.selectionStatus = 4; // CLOSE
-            });
-        }
-
-        // Apply the CLOSE status first
-        updateMarketStatusInDB(market, fastify);
-    }
-
-    // Calculate the result for lottery market (last digit)
-    try {
-        // Get the last digit of the over runs
-        const overRuns = calculateOverRuns(market.commentaryId, market.teamId, market.over);
-        const lastDigit = overRuns % 10;
-
-        console.log(`[LOTTERY] Calculated last digit for over ${market.over}: ${lastDigit} (from total runs: ${overRuns})`);
-
-        // Find the winning runner based on the last digit
-        let winnerFound = false;
-
-        if (market.runners && market.runners.length > 0) {
-            market.runners.forEach(runner => {
-                // Parse the runner name to get the digit
-                const runnerDigit = parseInt(runner.runner.match(/\d+/)?.[0] || '-1');
-
-                if (runnerDigit === lastDigit) {
-                    // This runner wins
-                    runner.selectionStatus = 7; // WIN
-                    market.eventMarketResult = { winnerRunnerId: runner.runnerId };
-                    market.result = runner.runnerId;
-                    console.log(`[LOTTERY] Winner: ${runner.runner} (ID: ${runner.runnerId})`);
-                    winnerFound = true;
-                } else {
-                    // This runner loses
-                    runner.selectionStatus = 8; // LOSE
-                }
-            });
-        }
-
-        if (!winnerFound) {
-            console.log(`[LOTTERY] Warning: No winning runner found for last digit ${lastDigit}`);
-            // Set a default winner if needed
-            // This is a fallback in case we can't find a matching runner
-            if (market.runners && market.runners.length > 0) {
-                const defaultWinner = market.runners[0];
-                defaultWinner.selectionStatus = 7; // WIN
-                market.eventMarketResult = { winnerRunnerId: defaultWinner.runnerId };
-                market.result = defaultWinner.runnerId;
-                console.log(`[LOTTERY] Default winner: ${defaultWinner.runner} (ID: ${defaultWinner.runnerId})`);
-            }
-        }
-    } catch (error) {
-        console.error(`[LOTTERY] Error settling lottery market: ${error.message}`);
-        // Set a default winner in case of error
-        if (market.runners && market.runners.length > 0) {
-            const defaultWinner = market.runners[0];
-            defaultWinner.selectionStatus = 7; // WIN
-            market.eventMarketResult = { winnerRunnerId: defaultWinner.runnerId };
-            market.result = defaultWinner.runnerId;
-            console.log(`[LOTTERY] Error recovery - default winner: ${defaultWinner.runner}`);
-        }
-    }
-
-    // Now set to SETTLED
-    market.status = 5; // SETTLED
-    market.settledTime = new Date().toISOString();
-
-    // Update in DB
-    console.log(`[LOTTERY] Updating lottery market in DB with status 5 (SETTLED)`);
-    updateMarketStatusInDB(market, fastify);
-
-    console.log(`[LOTTERY] Settled lottery market: ${market.marketName} (ID: ${market.eventMarketId || 'unsaved'})`);
-}
-
 /**
  * Opens a market
  * @param {Object} market - The market to open
