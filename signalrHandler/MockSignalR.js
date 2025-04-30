@@ -1405,6 +1405,7 @@ const updateMarketRunnerDataOnSocket = async (message) => {
                 marketDataMap.set(item.eventMarketId, {
                     eventMarketId: item.eventMarketId,
                     eventRefId: eventMarket.eventRefId,
+                    commentaryId: eventMarket.commentaryId,
                     status: eventMarket.status,
                     runners: [runner]
                 });

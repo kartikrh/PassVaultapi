@@ -8850,10 +8850,10 @@ const VirtualEvent = {
         type: "object",
         properties: {
           commentaryId : { type: "integer" },
-          displayStatus : { type: "string" },
-          commentaryPlayerId : { type: "integer" },
+          // displayStatus : { type: "string" },
+          // commentaryPlayerId : { type: "integer" },
         },
-        required: ["commentaryId", "displayStatus"],
+        required: ["commentaryId"],
       }
     }
   },
