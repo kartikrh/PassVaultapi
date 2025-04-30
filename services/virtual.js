@@ -65,7 +65,7 @@ const createVirtualEventService = async (request, fastify) => {
   if(!checkComp){
     throw new Error("Competition with this Id not found");
   }
-
+  let comId
   const validateCommentary = global.tblCommentaries.find((item) => item.eventRefId == request.body.eventRefId);
   if(validateCommentary) {
     throw new Error("EventRefId should be unique");
@@ -104,7 +104,7 @@ const createVirtualEventService = async (request, fastify) => {
 
     const commentaryData = await insertVirtualEventQuery(request, fastify);
     global.tblCommentaries.push(commentaryData);
-    
+    comId = commentaryData.commentaryId
     const teamData = {
       commentaryId: commentaryData.commentaryId,
       team1Id: request.body.team1Id,
@@ -199,7 +199,9 @@ const createVirtualEventService = async (request, fastify) => {
     }
   }
   
-  return "Commentary Created Successfully";
+  const comData = await commentaryResponseSerivce(comId);
+  // return "Commentary Created Successfully";
+  return comData;
 }
 
 const virtualEventTossService = async (request, fastify) => {
@@ -393,14 +395,16 @@ const virtualEventTossService = async (request, fastify) => {
   const balls = await createVirtualBallByBallQuery(ballData, fastify, request);
   global.tblCommentaryBallByBall.push(balls);
 
-  return "Toss Done Successfully";
+  const comData = await commentaryResponseSerivce(commentaryId); 
+  // return "Toss Done Successfully";
+  return comData;
 };
 
 const updateVirtualEventStatusService = async (request, fastify) => {
-  const { commentaryId, displayStatus, commentaryPlayerId } = request.body;
-  if (!commentaryId || displayStatus === undefined) {
+  const { commentaryId, commentaryPlayerId } = request.body;
+  if (!commentaryId === undefined) {
     throw new Error(
-      "Invalid input: commentaryId and displayStatus are required"
+      "Invalid input: commentaryId is required"
     );
   }
   const index = global.tblCommentaries.findIndex(
@@ -410,6 +414,7 @@ const updateVirtualEventStatusService = async (request, fastify) => {
   if (index === -1) {
     throw new Error("Commentary with this id not found");
   }
+  let displayStatus = "Ball"
   const commentaryDetails = {
     commentaryId,
     displayStatus,
@@ -460,12 +465,38 @@ const updateVirtualEventStatusService = async (request, fastify) => {
   }
 
   commentaryDetails.callPredictions = [];
-  return {
-    name: "commentaryDetails",
-    value: commentaryDetails,
-  };
+  const comData = await commentaryResponseSerivce(commentaryId); 
+  // return {
+  //   name: "commentaryDetails",
+  //   value: commentaryDetails,
+  // };
+  return comData
 };
 
+const commentaryResponseSerivce = async (commentaryId) => {
+  // get commentary data
+  if(commentaryId === null || commentaryId === undefined) {
+    return null
+  }
+  let com = global.tblCommentaries.find((item) => item.commentaryId == commentaryId);
+  if(!com){
+    return null
+  }
+  const commentaryData = {
+    commentaryId: com.commentaryId,
+    eventName: com.eventName,
+    eventTypeName: com.eventTypeId != null ? global.tblEventType.find(item => item.eventTypeId === com.eventTypeId).eventType : null,
+    competitionName: com.competition,
+    eventRefId: com.eventRefId,
+    eventDate: com.eventDate,
+    commentaryStatus: com.commentaryStatus,
+    choseTo: com.choseTo != null ? com.choseTo === 1 ? "Batting" : "Bowling" : null,
+    tossWonBy: com.tossWonBy != null ? global.tblTeams.find(item => item.teamId === com.tossWonBy).teamName : null,
+    rmk: com.rmk,
+  }
+  
+  return commentaryData
+}
 
 const ballByBallVirtualEventService = async (request, fastify) => {
   const { commentaryId } = request.body;
