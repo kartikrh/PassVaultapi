@@ -81,7 +81,7 @@ const deleteNotificationConfigService = async (request, fastify) => {
 const activeInactiveNotificationConfigService = async (request, fastify) => {
   const { id, isActive } = request.body;
   const validateId = global.tblNotificationConfig.find((item) => item.id === id);
-
+// console.log("validateId", validateId)
   if (!validateId) {
     throw new Error("Notification config with this Id not found");
   }
