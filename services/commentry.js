@@ -2799,26 +2799,26 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           item.currentInnings === commentaryData.currentInnings
       );
 
-  //   let data = global.tblNotificationConfig.find((elem) =>
-  //     elem.isActive === true && elem.eventName === EventName.INNINGCOMPLETED
-  //   )
-  //   if(data && commentaryData.eventNo != null) {
-  //     data.content = data.content.replace("{}", commentaryData.eventNo);
-  //     if( 
-  //       global?.clientSocketIo !== undefined &&
-  //       global?.clientSocketIo.length > 0
-  //     ){
-  //       global.clientSocketIo.forEach((socket) => {
-  //         socket.client.emit("notificationSend", data);
-  //       });
-  //       let notificationData = {
-  //         title: commentaryData.eventNo || commentaryData.eventName,
-  //         description: data.content,
-  //         commentaryId: commentaryData.commentaryId,
-  //       }
-  //       await insertNotificationViaNotiConfigQuery(notificationData, request, fastify);
-  //     }
-  //   }
+    let data = global.tblNotificationConfig.find((elem) =>
+      elem.isActive === true && elem.eventName === EventName.INNINGCOMPLETED
+    )
+    if(data && commentaryData.isActive == true && commentaryData.eventName != null) {
+      data.content = data.content.replace("{}", commentaryData.eventName);
+      if( 
+        global?.clientSocketIo !== undefined &&
+        global?.clientSocketIo.length > 0
+      ){
+        global.clientSocketIo.forEach((socket) => {
+          socket.client.emit("notificationSend", data);
+        });
+        let notificationData = {
+          title: commentaryData.eventName,
+          description: data.content,
+          commentaryId: commentaryData.commentaryId,
+        }
+        await insertNotificationViaNotiConfigQuery(notificationData, request, fastify);
+      }
+    }
     }
     // get th strike team
     // validate CommentaryId
@@ -3015,28 +3015,28 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
     const teamPoint = [];
 
     if (commentaryDetails) {
-      // if(commentaryDetails.commentaryStatus == 2) {
-      //   let data = global.tblNotificationConfig.find((elem) =>
-      //     elem.isActive === true && elem.eventName === EventName.WINTOSS
-      //   )
-      //   if(data && commentaryDetails.eventNo != null) {
-      //     data.content = data.content.replace("{}", commentaryDetails.eventNo);
-      //     if( 
-      //       global?.clientSocketIo !== undefined &&
-      //       global?.clientSocketIo.length > 0
-      //     ){
-      //       global.clientSocketIo.forEach((socket) => {
-      //         socket.client.emit("notificationSend", data);
-      //       });
-      //       let notificationData = {
-      //         title: commentaryDetails.eventNo || commentaryDetails.eventName,
-      //         description: data.content,
-      //         commentaryId: commentaryDetails.commentaryId,
-      //       }
-      //       await insertNotificationViaNotiConfigQuery(notificationData, request, fastify);
-      //     }
-      //   }
-      // }
+      if(commentaryDetails.commentaryStatus == 2) {
+        let data = global.tblNotificationConfig.find((elem) =>
+          elem.isActive === true && elem.eventName === EventName.WINTOSS
+        )
+        if(data && commentaryDetails.isActive === true && commentaryDetails.eventName != null) {
+          data.content = data.content.replace("{}", commentaryDetails.eventName);
+          if( 
+            global?.clientSocketIo !== undefined &&
+            global?.clientSocketIo.length > 0
+          ){
+            global.clientSocketIo.forEach((socket) => {
+              socket.client.emit("notificationSend", data);
+            });
+            let notificationData = {
+              title: commentaryDetails.eventName,
+              description: data.content,
+              commentaryId: commentaryDetails.commentaryId,
+            }
+            await insertNotificationViaNotiConfigQuery(notificationData, request, fastify);
+          }
+        }
+      }
       global.tblCommentaries[commentaryIndex] = {
         ...global.tblCommentaries[commentaryIndex],
         displayStatus: commentaryDetails.displayStatus,
@@ -3120,26 +3120,26 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         });
       }
       if (previousCommentaryStatus != statusToUpdate && statusToUpdate == 4) {
-  //   let data = global.tblNotificationConfig.find((elem) =>
-  //     elem.isActive === true && elem.eventName === EventName.EVENTCOMPLETED
-  //   )
-  //   if(data && commentaryData.eventNo != null) {
-  //     data.content = data.content.replace("{}", commentaryData.eventNo);
-  //     if( 
-  //       global?.clientSocketIo !== undefined &&
-  //       global?.clientSocketIo.length > 0
-  //     ){
-  //       global.clientSocketIo.forEach((socket) => {
-  //         socket.client.emit("notificationSend", data);
-  //       });
-  //       let notificationData = {
-  //         title: commentaryData.eventNo || commentaryData.eventName,
-  //         description: data.content,
-  //         commentaryId: commentaryData.commentaryId,
-  //       }
-  //       await insertNotificationViaNotiConfigQuery(notificationData, request, fastify);
-  //     }
-  //   }
+    let data = global.tblNotificationConfig.find((elem) =>
+      elem.isActive === true && elem.eventName === EventName.EVENTCOMPLETED
+    )
+    if(data && commentaryData.isActive === true && commentaryData.eventName != null) {
+      data.content = data.content.replace("{}", commentaryData.eventName);
+      if( 
+        global?.clientSocketIo !== undefined &&
+        global?.clientSocketIo.length > 0
+      ){
+        global.clientSocketIo.forEach((socket) => {
+          socket.client.emit("notificationSend", data);
+        });
+        let notificationData = {
+          title: commentaryData.eventName,
+          description: data.content,
+          commentaryId: commentaryData.commentaryId,
+        }
+        await insertNotificationViaNotiConfigQuery(notificationData, request, fastify);
+      }
+    }
         let com = global.tblCompetitions.find((item) => item.competitionId === commentaryData.competitionId);
         if (com && com.isEventSnap == true) {
           setEventSnap.push({
@@ -3641,28 +3641,28 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         try {
           let _wkt = commentaryBallByBall.ballIsWicket;
           let _bory = commentaryBallByBall.ballIsBoundry;
-          // if(_bory == true) {
-            //   let data = global.tblNotificationConfig.find((elem) =>
-            //     elem.isActive === true && elem.eventName === EventName.BOUNDARY
-            //   )
-            //   if(data && commentaryData.eventNo != null) {
-            //     data.content = data.content.replace("{}", commentaryData.eventNo);
-            //     if( 
-            //       global?.clientSocketIo !== undefined &&
-            //       global?.clientSocketIo.length > 0
-            //     ){
-            //       global.clientSocketIo.forEach((socket) => {
-            //         socket.client.emit("notificationSend", data);
-            //       });
-            //       let notificationData = {
-            //         title: commentaryData.eventNo || commentaryData.eventName,
-            //         description: data.content,
-            //         commentaryId: commentaryData.commentaryId,
-            //       }
-            //       await insertNotificationViaNotiConfigQuery(notificationData, request, fastify);
-            //     }
-            //   }
-          // }
+          if(_bory == true) {
+              let data = global.tblNotificationConfig.find((elem) =>
+                elem.isActive === true && elem.eventName === EventName.BOUNDARY
+              )
+              if(data && commentaryData.isActive === true && commentaryData.eventName != null) {
+                data.content = data.content.replace("{}", commentaryData.eventName);
+                if( 
+                  global?.clientSocketIo !== undefined &&
+                  global?.clientSocketIo.length > 0
+                ){
+                  global.clientSocketIo.forEach((socket) => {
+                    socket.client.emit("notificationSend", data);
+                  });
+                  let notificationData = {
+                    title: commentaryData.eventName,
+                    description: data.content,
+                    commentaryId: commentaryData.commentaryId,
+                  }
+                  await insertNotificationViaNotiConfigQuery(notificationData, request, fastify);
+                }
+              }
+          }
           const isFDS = global.tblConfigs.find((item) => item.key === configConstants.ISFRAUDDET_DECTIONAPI).value;
           if (isFDS && isFDS == 'true') {
             if (_wkt || _bory) {
@@ -3733,26 +3733,26 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           });
         }
       }
-  //   let data = global.tblNotificationConfig.find((elem) =>
-  //     elem.isActive === true && elem.eventName === EventName.WICKET
-  //   )
-  //   if(data && commentaryData.eventNo != null) {
-  //     data.content = data.content.replace("{}", commentaryData.eventNo);
-  //     if( 
-  //       global?.clientSocketIo !== undefined &&
-  //       global?.clientSocketIo.length > 0
-  //     ){
-  //       global.clientSocketIo.forEach((socket) => {
-  //         socket.client.emit("notificationSend", data);
-  //       });
-  //       let notificationData = {
-  //         title: commentaryData.eventNo || commentaryData.eventName,
-  //         description: data.content,
-  //         commentaryId: commentaryData.commentaryId,
-  //       }
-  //       await insertNotificationViaNotiConfigQuery(notificationData, request, fastify);
-  //     }
-  //   }
+    let data = global.tblNotificationConfig.find((elem) =>
+      elem.isActive === true && elem.eventName === EventName.WICKET
+    )
+    if(data && commentaryData.isActive === true && commentaryData.eventName != null) {
+      data.content = data.content.replace("{}", commentaryData.eventName);
+      if( 
+        global?.clientSocketIo !== undefined &&
+        global?.clientSocketIo.length > 0
+      ){
+        global.clientSocketIo.forEach((socket) => {
+          socket.client.emit("notificationSend", data);
+        });
+        let notificationData = {
+          title: commentaryData.eventName,
+          description: data.content,
+          commentaryId: commentaryData.commentaryId,
+        }
+        await insertNotificationViaNotiConfigQuery(notificationData, request, fastify);
+      }
+    }
     }
     if (commentaryPartnership) {
       if (commentaryPartnership.commentaryPartnershipId == 0) {
@@ -3979,26 +3979,26 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
       let competition = global.tblCompetitions.find(
         (item) => item.competitionId === commentaryDetails.competitionId
       );
-  //   let data = global.tblNotificationConfig.find((elem) =>
-  //     elem.isActive === true && elem.eventName === EventName.EVENTCOMPLETED
-  //   )
-  //   if(data && commentaryData.eventNo != null) {
-  //     data.content = data.content.replace("{}", commentaryData.eventNo);
-  //     if( 
-  //       global?.clientSocketIo !== undefined &&
-  //       global?.clientSocketIo.length > 0
-  //     ){
-  //       global.clientSocketIo.forEach((socket) => {
-  //         socket.client.emit("notificationSend", data);
-  //       });
-  //       let notificationData = {
-  //         title: commentaryData.eventNo || commentaryData.eventName,
-  //         description: data.content,
-  //         commentaryId: commentaryData.commentaryId,
-  //       }
-  //       await insertNotificationViaNotiConfigQuery(notificationData, request, fastify);
-  //     }
-  //   }
+    let data = global.tblNotificationConfig.find((elem) =>
+      elem.isActive === true && elem.eventName === EventName.EVENTCOMPLETED
+    )
+    if(data && commentaryData.isActive === true && commentaryData.eventName != null) {
+      data.content = data.content.replace("{}", commentaryData.eventName);
+      if( 
+        global?.clientSocketIo !== undefined &&
+        global?.clientSocketIo.length > 0
+      ){
+        global.clientSocketIo.forEach((socket) => {
+          socket.client.emit("notificationSend", data);
+        });
+        let notificationData = {
+          title: commentaryData.eventName,
+          description: data.content,
+          commentaryId: commentaryData.commentaryId,
+        }
+        await insertNotificationViaNotiConfigQuery(notificationData, request, fastify);
+      }
+    }
       if (competition.isEventSnap == true) {
         setCompEventSnapSerice([{
           commentaryId: commentaryDetails.commentaryId,
@@ -5595,6 +5595,10 @@ const commentaryDetailsByEventIdService = async (
     t2im: "",
     t1jr: "",
     t2jr: "",
+    nt1im : "",
+    nt1jr: "",
+    nt2jr: "",
+    nt2im: "",
     par: "",
     lawkt: "",
     rer: "",
@@ -5634,6 +5638,10 @@ const commentaryDetailsByEventIdService = async (
   let t1im;
   let t1jr;
   let t2jr;
+  let nt1im;
+  let nt1jr;
+  let nt2jr;
+  let nt2im;
   let t2n;
   let t2nid = 0;
   let t2sn;
@@ -5747,12 +5755,15 @@ const commentaryDetailsByEventIdService = async (
   );
   t1im = _teamsC1[0].image;
   t1jr = _teamsC1[0].jersey;
+  nt1im = _teamsC1[0].imagePath;
+  nt1jr = _teamsC1[0].jerseyPath;
   const _teamsC2 = await global.tblTeams.filter(
     (item) => item.teamId === t2nid
   );
   t2im = _teamsC2[0].image;
   t2jr = _teamsC2[0].jersey;
-
+  nt2im = _teamsC2[0].imagePath;
+  nt2jr = _teamsC2[0].jerseyPath;
   if (getstatus == 1) {
     // Assign values to the resultArr object
     resultArr.cid = parseInt(result.commentaryId)
@@ -5768,6 +5779,10 @@ const commentaryDetailsByEventIdService = async (
     resultArr.t1im = t1im;
     resultArr.t1jr = t1jr;
     resultArr.t2jr = t2jr;
+    resultArr.nt1im = nt1im;
+    resultArr.nt1jr = nt1jr;
+    resultArr.nt2jr = nt2jr;
+    resultArr.nt2im = nt2im;
     resultArr.t2n = t2n;
     resultArr.t2sn = t2sn;
     resultArr.t2s = t2s;
@@ -5836,6 +5851,10 @@ const commentaryDetailsByEventIdService = async (
     resultArr.t1im = t1im;
     resultArr.t1jr = t1jr;
     resultArr.t2jr = t2jr;
+    resultArr.nt1im = nt1im;
+    resultArr.nt1jr = nt1jr;
+    resultArr.nt2jr = nt2jr;
+    resultArr.nt2im = nt2im;
     resultArr.t2n = t2n;
     resultArr.t2sn = t2sn;
     resultArr.t2s = t2s;
@@ -5951,6 +5970,10 @@ const commentaryDetailsByEventIdService = async (
     resultArr.t1im = t1im;
     resultArr.t1jr = t1jr;
     resultArr.t2jr = t2jr;
+    resultArr.nt1im = nt1im;
+    resultArr.nt1jr = nt1jr;
+    resultArr.nt2jr = nt2jr;
+    resultArr.nt2im = nt2im;
     resultArr.t2n = t2n;
     resultArr.t2sn = t2sn;
     resultArr.t2s = t2s;
@@ -6006,7 +6029,6 @@ const commentaryDetailsByEventIdService = async (
           t2s: t2Score + "/" + t2Wicket + " (" + t2Over + ")",
           inning: i
         })
-
       }
     }
   }
@@ -7083,6 +7105,10 @@ const getMatchListByStatus = async (body, request, fastify) => {
       srtup: item?.sortUpdate ?? "",
       isTest: item?.isTest,
       isActive: item?.isActive,
+      nte1i : team1.imagePath || "",
+      nt1jr : team1.jerseyPath || "",
+      nte2i : team2.imagePath || "",
+      nt2jr : team2.jerseyPath || ""
       // mr: mr
       // bowT : item.bowlingTeam || null,
     };
@@ -7269,6 +7295,10 @@ const getMatchDataByCId = async (data, request, fastify) => {
     te2i: team2.image || "",
     t1jr: team1.jersey || "",
     t2jr: team2.jersey || "",
+    nte1i : team1.imagePath || "",
+    nt1jr : team1.jerseyPath || "",
+    nte2i : team2.imagePath || "",
+    nt2jr : team2.jerseyPath || "",
     loc: com.location || "",
     isrun: isRun,
     t1s: teamScore1 || "",
@@ -7297,6 +7327,7 @@ const getMatchDataByCId = async (data, request, fastify) => {
     ics: com.isClientShow,
     isTest: com.isTest,
     isActive: com.isActive,
+   
   };
   return comDetails;
 }
@@ -11211,28 +11242,28 @@ const changeisEventStartService = async (request, fastify) => {
     if (index !== -1) {
       global.tblCommentaries[index].isEventStart = isEventStart;
     }
-    // if(isEventStart === true) {
-    //   let data = global.tblNotificationConfig.find((elem) =>
-    //     elem.isActive === true && elem.eventName === EventName.EVENTSTART
-    //   )
-    //   if(data && commentary.eventNo != null) {
-    //     data.content = data.content.replace("{}", commentary.eventNo);
-    //   if( 
-    //     global?.clientSocketIo !== undefined &&
-    //     global?.clientSocketIo.length > 0
-    //   ){
-    //     global.clientSocketIo.forEach((socket) => {
-    //       socket.client.emit("notificationSend", data);
-    //     });
-    //     let notificationData = {
-    //       title: commentary.eventNo || commentary.eventName,
-    //       description: data.content,
-    //       commentaryId: commentary.commentaryId,
-    //     }
-    //     await insertNotificationViaNotiConfigQuery(notificationData, request, fastify);
-    //   }
-    //   }
-    // }
+    if(isEventStart === true) {
+      let data = global.tblNotificationConfig.find((elem) =>
+        elem.isActive === true && elem.eventName === EventName.EVENTSTART
+      )
+      if(data && commentary.isActive === true && commentary.eventName != null) {
+        data.content = data.content.replace("{}", commentary.eventName);
+      if( 
+        global?.clientSocketIo !== undefined &&
+        global?.clientSocketIo.length > 0
+      ){
+        global.clientSocketIo.forEach((socket) => {
+          socket.client.emit("notificationSend", data);
+        });
+        let notificationData = {
+          title: commentary.eventName,
+          description: data.content,
+          commentaryId: commentary.commentaryId,
+        }
+        await insertNotificationViaNotiConfigQuery(notificationData, request, fastify);
+      }
+      }
+    }
   }
 
   return "IsEventStart Updated successfully";

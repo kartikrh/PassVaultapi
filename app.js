@@ -6,7 +6,7 @@ const fsequelize = require("fastify-sequelize");
 const dbPg = require("./sequelize/config/config")();
 const swagger = require("@fastify/swagger");
 const swaggerUi = require("@fastify/swagger-ui");
-const { fetchAllDataFromDb, FetchingCommentariesDataFromCron } = require("./utilities/fetchAllData");
+const { fetchAllDataFromDb, FetchingCommentariesDataFromCron, upcomingCommentaries } = require("./utilities/fetchAllData");
 // const fetchAllData = require("./utilities/fetchAllData");
 const { Server } = require("socket.io"); // Import Socket.IO
 const { connection, socketMiddleware } = require("./socketIo");
@@ -135,13 +135,13 @@ module.exports = async function (fastify, opts) {
         console.error("Error during scheduled task:", error);
       }
     });
-    // cron.schedule('* * * * *', async () => {
-    //   try {
-    //     await upcomingCommentaries(fastify);
-    //   } catch (error) {
-    //     console.error("Error during scheduled task:", error);
-    //   }
-    // });
+    cron.schedule('* * * * *', async () => {
+      try {
+        await upcomingCommentaries(fastify);
+      } catch (error) {
+        console.error("Error during scheduled task:", error);
+      }
+    });
 
     // .after(async () => {
     //   require("./sequelize/tables/userModel")(fastify.db);
