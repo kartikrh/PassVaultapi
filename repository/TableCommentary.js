@@ -4628,6 +4628,10 @@ const getAllCompletedCommentaryQuery = async (request, fastify) => {
           COALESCE(tt1."WrTeamJersey", '') AS "t1jr",
           COALESCE(tt2."WrTeamJersey", '') AS "t2jr",
           COALESCE(tc."wrLocation", '') AS "loc",
+          COALESCE(tt1."wrImagePath", '') AS "nte1i",
+          COALESCE(tt2."wrImagePath", '') AS "nte2i",
+          COALESCE(tt1."wrJerseyPath", '') AS "nt1jr",
+          COALESCE(tt2."wrJerseyPath", '') AS "nt2jr",
           false AS isrun,
           COALESCE(
             CASE 
