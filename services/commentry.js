@@ -5595,6 +5595,10 @@ const commentaryDetailsByEventIdService = async (
     t2im: "",
     t1jr: "",
     t2jr: "",
+    nt1im : "",
+    nt1jr: "",
+    nt2jr: "",
+    nt2im: "",
     par: "",
     lawkt: "",
     rer: "",
@@ -5634,6 +5638,10 @@ const commentaryDetailsByEventIdService = async (
   let t1im;
   let t1jr;
   let t2jr;
+  let nt1im;
+  let nt1jr;
+  let nt2jr;
+  let nt2im;
   let t2n;
   let t2nid = 0;
   let t2sn;
@@ -5747,12 +5755,15 @@ const commentaryDetailsByEventIdService = async (
   );
   t1im = _teamsC1[0].image;
   t1jr = _teamsC1[0].jersey;
+  nt1im = _teamsC1[0].imagePath;
+  nt1jr = _teamsC1[0].jerseyPath;
   const _teamsC2 = await global.tblTeams.filter(
     (item) => item.teamId === t2nid
   );
   t2im = _teamsC2[0].image;
   t2jr = _teamsC2[0].jersey;
-
+  nt2im = _teamsC2[0].imagePath;
+  nt2jr = _teamsC2[0].jerseyPath;
   if (getstatus == 1) {
     // Assign values to the resultArr object
     resultArr.cid = parseInt(result.commentaryId)
@@ -5768,6 +5779,10 @@ const commentaryDetailsByEventIdService = async (
     resultArr.t1im = t1im;
     resultArr.t1jr = t1jr;
     resultArr.t2jr = t2jr;
+    resultArr.nt1im = nt1im;
+    resultArr.nt1jr = nt1jr;
+    resultArr.nt2jr = nt2jr;
+    resultArr.nt2im = nt2im;
     resultArr.t2n = t2n;
     resultArr.t2sn = t2sn;
     resultArr.t2s = t2s;
@@ -5836,6 +5851,10 @@ const commentaryDetailsByEventIdService = async (
     resultArr.t1im = t1im;
     resultArr.t1jr = t1jr;
     resultArr.t2jr = t2jr;
+    resultArr.nt1im = nt1im;
+    resultArr.nt1jr = nt1jr;
+    resultArr.nt2jr = nt2jr;
+    resultArr.nt2im = nt2im;
     resultArr.t2n = t2n;
     resultArr.t2sn = t2sn;
     resultArr.t2s = t2s;
@@ -5951,6 +5970,10 @@ const commentaryDetailsByEventIdService = async (
     resultArr.t1im = t1im;
     resultArr.t1jr = t1jr;
     resultArr.t2jr = t2jr;
+    resultArr.nt1im = nt1im;
+    resultArr.nt1jr = nt1jr;
+    resultArr.nt2jr = nt2jr;
+    resultArr.nt2im = nt2im;
     resultArr.t2n = t2n;
     resultArr.t2sn = t2sn;
     resultArr.t2s = t2s;
@@ -6006,7 +6029,6 @@ const commentaryDetailsByEventIdService = async (
           t2s: t2Score + "/" + t2Wicket + " (" + t2Over + ")",
           inning: i
         })
-
       }
     }
   }
