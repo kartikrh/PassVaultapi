@@ -8,6 +8,8 @@ const {
   isEventSnapCompetitionQuery,
   isPointTableCompetitionQuery,
   isMenChangeStatusQuery,
+  getTemplateByCompetitionIdQuery,
+  saveCompMarketTemplateQuery,
 } = require("../repository/TableCompitition");
 const {storeImageOnServer, removeImageFromServer, generateImageName } = require("../utilities/Images");
 const { PROJECT_NAME } = require("../utilities/configConstants");
@@ -621,6 +623,26 @@ const isMenChangeStatusService = async (request, fastify) => {
   
   return `Competition isMen status updated successfully`;
 };
+const getTemplateByCompetitionIdService = async (request, fastify) => {
+  let comp = global.tblCompetitions.find(
+    (item) => item?.competitionId === request.body.competitionId
+  );
+  if (!comp) {
+    throw new Error("Competition with this id not Found");
+  }
+  const result = await getTemplateByCompetitionIdQuery({
+    competitionId: request.body.competitionId,
+    matchTypeId: comp.matchTypeId
+  }, request, fastify);
+  return result;
+}
+const saveCompTemplatesService = async (request, fastify) => {
+  const { saveTemplates, dltTemplate } = request.body;
+  await saveCompMarketTemplateQuery({ saveTemplates, dltTemplate }, request, fastify);
+  return "Competition Market Template(s) saved successfully";
+
+}
+
 module.exports = {
   allCompetitionService,
   competitionByIdService,
@@ -635,4 +657,6 @@ module.exports = {
   getAllTeamListService,
   getAllCompetitionListService,
   isMenChangeStatusService,
+  getTemplateByCompetitionIdService,
+  saveCompTemplatesService,
 };

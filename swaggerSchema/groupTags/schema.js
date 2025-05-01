@@ -3637,6 +3637,47 @@ const Compitition = {
       },
     },
   },
+  getTemplatesByCompId: {
+    schema: {
+      tags: ["Compitition"],
+      description: "get Compitition templates by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionId: { type: "integer" },
+        },
+        required: ["competitionId"],
+      },
+    },
+  },
+  saveCompTemplate: {
+    schema: {
+      tags: ["Compitition"],
+      description: "save Compitition Market Template",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          saveTemplates : {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                competitionId: { type: "integer" },
+                marketTemplateId: { type: "integer" },
+              },
+            },
+          },
+          dltTemplate: {
+            type: "array",
+            items: { type: "integer" },
+          }
+        },
+        required: ["saveTemplates", "dltTemplate"],
+      },
+    },
+  },
 };
 
 const Event = {
