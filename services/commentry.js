@@ -3252,7 +3252,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
 
       });
       try {
-        commentaryTeams.forEach(async (team) => {
+        response.commentaryTeams.forEach(async (team) => {
           const _teamsC1 = global.tblTeams.filter((item) => item.teamId === team.teamId);
           if (_teamsC1.length > 0) {
             team.image = _teamsC1[0].image;
