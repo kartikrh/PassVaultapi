@@ -3257,6 +3257,8 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           if (_teamsC1.length > 0) {
             team.image = _teamsC1[0].image;
             team.jersey = _teamsC1[0].jersey;
+             team.nimage = _teamsC1[0].imagePath;
+            team.njersey = _teamsC1[0].jerseyPath;
           }
         });
       } catch (error) {
