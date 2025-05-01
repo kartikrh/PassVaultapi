@@ -12,6 +12,8 @@ const {
   getAllTeamListService,
   getAllCompetitionListService,
   isMenChangeStatusService,
+  getTemplateByCompetitionIdService,
+  saveCompTemplatesService,
 } = require("../../../../services/competition");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -205,6 +207,24 @@ const isMenChangeStatus = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const getTemplateByCompetitionId = async (request, reply, fastify) => {
+  try {
+    const result = await getTemplateByCompetitionIdService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/getTemplateByCompetitionId", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const saveCompTemplates = async (request, reply, fastify) => {
+  try {
+    const result = await saveCompTemplatesService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/saveCompTemplates", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 module.exports = {
   getAllCompetition,
   getCompetitionById,
@@ -223,4 +243,6 @@ module.exports = {
   getTeamList,
   allCompetitionsList,
   isMenChangeStatus,
+  getTemplateByCompetitionId,
+  saveCompTemplates,
 };

@@ -367,7 +367,132 @@ const isMenChangeStatusQuery = async (data, request, fastify) => {
     throw new Error(err.message);
   }
 };
+const getTemplateByCompetitionIdQuery = async (data,request, fastify) => {
+  try {
+    let assignedMarketTemplates = await fastify.db.query(
+      `
+        SELECT  
+          tcm."wrId" as "id",
+          tcm."wrCompetitionId" as "competitionId",
+          tcm."wrMarketTemplateId" as "marketTemplateId",
+          tmt."wrTemplateName" as "templateName",
+          tmt1."wrId" as "marketTypeId",
+          tmc."wrId" as "marketTypeCategoryId",
+          "wrMarketTypeName" as "marketTypeName",
+          "wrCategoryName" as "categoryName"
+        FROM "tblCompMarketTemplate" tcm
+        LEFT JOIN "tblMarketTemplates" tmt ON tcm."wrMarketTemplateId" = tmt."wrID"
+        LEFT JOIN "tblMarketTypes" tmt1 ON tmt."wrMarketTypeId" = tmt1."wrId"
+        LEFT JOIN "tblMarketTypeCategories" tmc ON tmt."wrMarketTypeCategoryId" = tmc."wrId"
+        WHERE tcm."wrCompetitionId" = $1
+        AND tmt."wrIsDeleted" = false
+        AND tmt."wrIsActive" = true
+        ORDER BY tmc."wrDisplayOrder" ASC, tmt."wrTemplateName" ASC;
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [data.competitionId],
+      }
+    );
 
+    let unAssignedMarketTemplates = await fastify.db.query(
+      `
+        SELECT 
+          tmt."wrID" as "marketTemplateId",
+          tmt."wrTemplateName" as "templateName",
+          "wrMarketTypeName" as "marketTypeName",
+          "wrCategoryName" as "categoryName",
+          tmt1."wrId" as "marketTypeId",
+          tmc."wrId" as "marketTypeCategoryId"
+        FROM "tblMarketTemplates" tmt
+        LEFT JOIN "tblMarketTypes" tmt1 ON tmt."wrMarketTypeId" = tmt1."wrId"
+        LEFT JOIN "tblMarketTypeCategories" tmc ON tmt."wrMarketTypeCategoryId" = tmc."wrId"
+        WHERE tmt."wrIsDeleted" = false
+        AND tmt."wrMatchTypeID" = $1
+        AND tmt."wrIsActive" = true
+        AND tmt."wrID" NOT IN (
+          SELECT "wrMarketTemplateId" FROM "tblCompMarketTemplate" WHERE "wrCompetitionId"= $2
+        ) 
+        ORDER BY tmc."wrDisplayOrder" ASC, tmt."wrTemplateName" ASC;
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [data.matchTypeId, data.competitionId],
+      }
+    );
+
+    return {
+      assignedTemplates: assignedMarketTemplates,
+      unassignedTemplates: unAssignedMarketTemplates,
+    }
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCompitition/getTemplateByCompetitionIdQuery",
+      request
+    );
+    throw new Error(error.message);
+    
+  }
+}
+const saveCompMarketTemplateQuery = async (data, request, fastify) => {
+  try {
+    if(data.dltTemplate.length > 0) {
+      await fastify.db.query(
+        `
+          DELETE FROM "tblCompMarketTemplate" WHERE "wrId" = ANY($1)
+        `,
+        {
+          type: fastify.db.QueryTypes.SELECT,
+          bind : [data.dltTemplate]
+        }
+      );
+   }
+
+   if(data.saveTemplates.length > 0) {
+      const existingTemp = await fastify.db.query(
+        `
+          SELECT "wrMarketTemplateId" as "marketTemplateId" FROM "tblCompMarketTemplate" WHERE "wrCompetitionId" = $1
+        `,
+        {
+          type: fastify.db.QueryTypes.SELECT,
+          bind: [data.saveTemplates[0].competitionId],
+        }
+      );
+
+      let templateToSave = []
+      if (existingTemp.length > 0) {
+        templateToSave = data.saveTemplates.filter((item) => !existingTemp.map((temp) => temp.marketTemplateId).includes(item.marketTemplateId));
+      } 
+      else {
+        templateToSave = data.saveTemplates;
+      }
+      if(templateToSave.length > 0) {
+        	await fastify.db.query(
+        `
+          INSERT INTO "tblCompMarketTemplate" ("wrCompetitionId", "wrMarketTemplateId", "wrCreatedBy", "wrCreatedAt")
+          VALUES 
+          ${templateToSave.map((item) => `(${item.competitionId}, ${item.marketTemplateId}, ${request.userTokenInfo.WrUserId}, now())`).join(",")}
+        `,
+        {
+          type: fastify.db.QueryTypes.SELECT,
+        }
+      );
+     }
+    }
+
+    return true;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCompitition/saveCompMarketTemplateQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+}
 module.exports = {
   getAllCompititionQuery,
   insertCompetitionQuery,
@@ -378,4 +503,6 @@ module.exports = {
   isEventSnapCompetitionQuery,
   isPointTableCompetitionQuery,
   isMenChangeStatusQuery,
+  getTemplateByCompetitionIdQuery,
+  saveCompMarketTemplateQuery,
 };
