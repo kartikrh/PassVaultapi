@@ -82,6 +82,7 @@ const {
   changeIsTestComQuery,
   changeIsEventStartQuery,
   getAllDifficulties,
+  addCompTempQuery,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -735,7 +736,16 @@ const createCommentaryService = async (request, fastify) => {
       }
     }
   }
-
+  //store the template in db
+  // check the competition
+  let comp = global.tblCompetitions.find((i)=> i.competitionId== addCommentry.competitionId)
+  if(comp && comp.matchTypeId != null && comp.matchTypeId == addCommentry.matchTypeId){
+    await addCompTempQuery({
+      commentaryId : addCommentry.commentaryId,
+      matchTypeId : addCommentry.matchTypeId,
+      competitionId : addCommentry.competitionId
+    },request,fastify)
+  }
   global.tblCommentaries.push(addCommentry);
   global.tblCommentaryPlayers = await getAllCommentaryPlayerQuery(fastify);
   global.tblCommentaryTeams = await getAllCommentaryTeamsQuery(fastify);
@@ -1452,6 +1462,17 @@ const cloneCommentaryService = async (request, fastify) => {
       }
     }
   }
+
+  // check the competition
+  let comp = global.tblCompetitions.find((i)=> i.competitionId== newCommentary.competitionId)
+  if(comp && comp.matchTypeId != null && comp.matchTypeId == newCommentary.matchTypeId){
+    await addCompTempQuery({
+      commentaryId : newCommentary.commentaryId,
+      matchTypeId : newCommentary.matchTypeId,
+      competitionId : newCommentary.competitionId
+    },request,fastify)
+  }
+  
   global.tblCommentaries.push(newCommentary);
   global.tblCommentaryPlayers = await getAllCommentaryPlayerQuery(fastify);
   global.tblCommentaryTeams = await getAllCommentaryTeamsQuery(fastify);
