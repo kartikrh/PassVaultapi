@@ -6656,6 +6656,48 @@ const createVirtualWicketQuery = async (data, fastify, request) => {
     throw new Error(err.message);
   }
 };
+const addCompTempQuery = async (data,request,fastify)=>{
+  try {
+    let dtToInsert = await fastify.db.query(
+      `
+        SELECT 
+          "wrMarketTemplateId" as "marketTemplateId"
+        FROM "tblCompMarketTemplate"
+        WHERE "wrCompetitionId" =$1
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind : [
+          data.competitionId
+        ]
+      }
+    )
+    if(dtToInsert.length== 0) return true; 
+    let values = [];
+    dtToInsert.forEach((item) => {
+        values.push(`(${data.commentaryId},${item.marketTemplateId},${request.userTokenInfo.WrUserId},now())`)
+    })
+    values = values.join(",");
+      const query = `
+        INSERT INTO "tblCommMatchTypeTemplate" ("wrCommentaryId", "wrMarketTemplateId", "wrCreatedBy", "wrCreatedAt")
+        VALUES
+      ${values}
+    `;
+    const result = await fastify.db.query(query,{
+      type : fastify.db.QueryTypes.SELECT
+    })
+    return result;
+    
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/createVirtualWicketQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+}
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -6779,4 +6821,5 @@ module.exports = {
   updateVirtualBallByBallQuery,
   updateVirtualOverQuery,
   createVirtualWicketQuery,
+  addCompTempQuery
 };
