@@ -91,6 +91,7 @@ const { getAllCountryCodesQuery } = require("../repository/TableCountryCodes");
 const { getAllPackagesQuery } = require("../repository/TablePackages");
 const { getAllWhitelabelsQuery } = require("../repository/TableWhitelabel");
 const { getAllNotificationConfigsQuery, getNotificationConfigsByEventNameQuery } = require("../repository/TableNotificationConfig");
+const { notiConfigContentReplaceService } = require("../services/commentry");
 
 const fetchAllDataFromDb = async (fastify, reply) => {
   try {
@@ -343,40 +344,44 @@ global.processedUpcomingCommentaries = global.processedUpcomingCommentaries || n
 const upcomingCommentaries = async (fastify) => {
   try {
     const now = new Date();
+    now.setSeconds(0, 0);
     let allEvents = await getAllCommentaryQuery(fastify);
 
     const upcomingEvents = allEvents.filter((item) => {
-      if (item.commentaryStatus !== 1 && item.isActive === false) return false;
+      if (item.commentaryStatus !== 1 || item.isActive === false) return false;
 
       const eventDate = new Date(item.eventDate);
-      if (eventDate <= now) return false;
-
+      eventDate.setSeconds(0, 0);
       const oneHourBeforeEvent = new Date(eventDate.getTime() - 60 * 60 * 1000);
-      const diffInMinutes = Math.abs((now - oneHourBeforeEvent) / (1000 * 60));
 
-      return diffInMinutes < 1 && !global.processedUpcomingCommentaries.has(item.commentaryId);
+      return (
+        oneHourBeforeEvent.getTime() === now.getTime() &&
+        !global.processedUpcomingCommentaries.has(item.commentaryId)
+      );
     });
 
-      for (let item of upcomingEvents) {
-        let data = await getNotificationConfigsByEventNameQuery(EventName.COMMINGSOON, fastify);
-        if (!data && item.isActive === false && item.eventName === null) continue;
+    for (let item of upcomingEvents) {
+      await notiConfigContentReplaceService(EventName.COMMINGSOON, item.commentaryId, null, fastify);
+      global.processedUpcomingCommentaries.add(item.commentaryId);
+        // let data = await getNotificationConfigsByEventNameQuery(EventName.COMMINGSOON, fastify);
+        // if (!data && item.isActive === false && item.eventName === null) continue;
 
-        data.content = data.content.replace("{}", item.eventName);
+        // data.content = data.content.replace("{}", item.eventName);
 
-        if (Array.isArray(global.clientSocketIo) && global.clientSocketIo.length > 0) {
-          global.clientSocketIo.forEach((socket) => {
-            socket.client.emit("notificationSend", data);
-          });
+        // if (Array.isArray(global.clientSocketIo) && global.clientSocketIo.length > 0) {
+        //   global.clientSocketIo.forEach((socket) => {
+        //     socket.client.emit("notificationSend", data);
+        //   });
 
-          const notificationData = {
-            title: item.eventName,
-            description: data.content,
-            commentaryId: item.commentaryId,
-          };
+        //   const notificationData = {
+        //     title: item.eventName,
+        //     description: data.content,
+        //     commentaryId: item.commentaryId,
+        //   };
 
-          await insertNotificationViaNotiConfigQuery(notificationData, null, fastify);
-          global.processedUpcomingCommentaries.add(item.commentaryId);
-        }
+        //   await insertNotificationViaNotiConfigQuery(notificationData, null, fastify);
+        //   global.processedUpcomingCommentaries.add(item.commentaryId);
+        // }
       }
   } catch (error) {
     console.error("Error in upcomingCommentaries:", error.message, error);
