@@ -195,6 +195,20 @@ const wicketType = {
   9: "Hit Ball Twice",
   10: "Obstruct the Fielding"
 }
+const BALL_TYPE = {
+  OVER_COMPLETE: 0,
+  REGULAR: 1,
+  WIDE: 2,
+  BYE: 3,
+  LEG_BYE: 4,
+  NO_BALL: 5,
+  NO_BALL_BYE: 6,
+  NO_BALL_LEG_BYE: 7,
+  PANELTY_RUN: 8,
+  RETIRED_HURT: 9,
+  BOWLER_RETIRED_HURT: 10,
+};
+
 const decryptEncryptionId = async (encryptionKey , fastify) =>{
  try {
   const data = await fastify.db.query(`SELECT "wrKey" from "tblEncryptedData" where "wrValue" = $1`,
@@ -951,6 +965,7 @@ const LawnStriping = {
   4 : "None",
   5 : "Diamond"
 }
+
 const PitchAge = {
   1 : "Day 1",
   2 : "Day 2", 
@@ -1027,4 +1042,5 @@ module.exports = {
   PitchType,
   LawnStriping,
   PitchAge,
+  BALL_TYPE
 };
