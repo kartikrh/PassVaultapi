@@ -344,22 +344,25 @@ global.processedUpcomingCommentaries = global.processedUpcomingCommentaries || n
 const upcomingCommentaries = async (fastify) => {
   try {
     const now = new Date();
+    now.setSeconds(0, 0);
     let allEvents = await getAllCommentaryQuery(fastify);
 
     const upcomingEvents = allEvents.filter((item) => {
-      if (item.commentaryStatus !== 1 && item.isActive === false) return false;
+      if (item.commentaryStatus !== 1 || item.isActive === false) return false;
 
       const eventDate = new Date(item.eventDate);
-      if (eventDate <= now) return false;
-
+      eventDate.setSeconds(0, 0);
       const oneHourBeforeEvent = new Date(eventDate.getTime() - 60 * 60 * 1000);
-      const diffInMinutes = Math.abs((now - oneHourBeforeEvent) / (1000 * 60));
 
-      return diffInMinutes < 1 && !global.processedUpcomingCommentaries.has(item.commentaryId);
+      return (
+        oneHourBeforeEvent.getTime() === now.getTime() &&
+        !global.processedUpcomingCommentaries.has(item.commentaryId)
+      );
     });
 
-      for (let item of upcomingEvents) {
-        await notiConfigContentReplaceService(EventName.COMMINGSOON, item.commentaryId, null, fastify);
+    for (let item of upcomingEvents) {
+      await notiConfigContentReplaceService(EventName.COMMINGSOON, item.commentaryId, null, fastify);
+      global.processedUpcomingCommentaries.add(item.commentaryId);
         // let data = await getNotificationConfigsByEventNameQuery(EventName.COMMINGSOON, fastify);
         // if (!data && item.isActive === false && item.eventName === null) continue;
 
