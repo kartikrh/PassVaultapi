@@ -208,7 +208,6 @@ const BALL_TYPE = {
   RETIRED_HURT: 9,
   BOWLER_RETIRED_HURT: 10,
 };
-
 const decryptEncryptionId = async (encryptionKey , fastify) =>{
  try {
   const data = await fastify.db.query(`SELECT "wrKey" from "tblEncryptedData" where "wrValue" = $1`,
