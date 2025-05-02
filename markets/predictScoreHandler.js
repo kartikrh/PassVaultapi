@@ -75,7 +75,7 @@ function processPredictScoreMarket(payload, fastify) {
             totalWicket,
             ballByBallId,
         );
-
+        // synchronizeMarketIds(commentaryId);
         return {
             success: true,
             message: `Processed predict score for ball ${formattedBall}`
@@ -166,11 +166,11 @@ function isBattingTeam(commentaryId, teamId) {
  * @param {Object} fastify - Fastify Object
  */
 function openMarket(market, fastify) {
-    // Skip if already open
-    if (market.status === EventMarketStatus.Open) {
-        console.log(`Market ${market.marketName} is already open`);
-        return;
-    }
+    // // Skip if already open
+    // if (market.status === EventMarketStatus.Open) {
+    //     console.log(`Market ${market.marketName} is already open`);
+    //     return;
+    // }
 
     // Update market status to OPEN
     market.status = EventMarketStatus.Open;
@@ -195,11 +195,11 @@ function openMarket(market, fastify) {
  * @param {Object} fastify - Fastify Object
  */
 function closeMarket(market, fastify) {
-    // Skip if already closed or settled
-    if (market.status === EventMarketStatus.Close || market.status === EventMarketStatus.Settled) {
-        console.log(`Market ${market.marketName} is already closed or settled`);
-        return;
-    }
+    // // Skip if already closed or settled
+    // if (market.status === EventMarketStatus.Close || market.status === EventMarketStatus.Settled) {
+    //     console.log(`Market ${market.marketName} is already closed or settled`);
+    //     return;
+    // }
 
     // Update market status to CLOSE
     market.status = EventMarketStatus.Close;
@@ -224,11 +224,11 @@ function closeMarket(market, fastify) {
  * @param {Object} fastify - Fastify Object
  */
 function settleMarket(market, fastify) {
-    // Skip if already settled
-    if (market.status === EventMarketStatus.Settled) {
-        console.log(`Market ${market.marketName} is already settled`);
-        return;
-    }
+    // // Skip if already settled
+    // if (market.status === EventMarketStatus.Settled) {
+    //     console.log(`Market ${market.marketName} is already settled`);
+    //     return;
+    // }
 
     // Different settlement logic based on market type
     if (market.marketTypeCategoryId === 28 || market.marketTypeCategoryId === 35) {

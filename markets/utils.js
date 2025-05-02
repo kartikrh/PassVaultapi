@@ -359,78 +359,124 @@ const createMarketAndRunner = async (data, request, fastify) => {
     const processedMarketsObj = {};
     const { templates, teams, matchType, commentary, existingMarkets } = data;
     const commentaryId = commentary.commentaryId;
+
     templates.forEach((template) => {
         if (template.isPerEvent) {
             return true;
         }
         else {
-            if (template.marketTypeCategoryId == 35 || template.marketTypeCategoryId == 28) {
+            if (template.marketTypeCategoryId == 28 || template.marketTypeCategoryId == 35) {
                 let baseMar = generateMarketFromTemplate(template, teams, commentary);
                 processLotteryMarkets(baseMar, teams, processedMarketsObj, matchType, commentary);
+                console.log(`Processed ${template.marketTypeCategoryId === 35 ? 'Odd-Even' : 'Lottery'} markets from template`);
             }
-            //  else {
-            //     teams.forEach(team => {
-            //         // processMarketAndRunners(generateExtraMarketFromTemplate(template, team, commentary), team.teamId, team.teamId.toString(), processedMarketsObj);
-            //         let baseMar = generateExtraMarketFromTemplate(template, teams, commentary);
-            //         processMarketAndRunners(baseMar, team.teamId, team.teamId.toString(), processedMarketsObj, commentary);
-            //     });
-            // }
         }
-    })
-    // return mar;
-    // Now update with existing markets from API
+    });
+
+    // Update with existing markets from API
     const globalEntry = global.marketData[commentaryId];
+
     // Safety check just in case
     if (!globalEntry) {
         global.marketData[commentaryId] = { existingMarket: [], markets: [] };
     }
+
     globalEntry.existingMarket = existingMarkets;
+
     existingMarkets.forEach(apiMarket => {
-        const index = globalEntry.markets.findIndex(m =>
-            m.teamId === apiMarket.teamId &&
-            m.marketTypeId === apiMarket.marketTypeId &&
-            m.marketTypeCategoryId === apiMarket.marketTypeCategoryId &&
-            m.marketName === apiMarket.marketName
-        );
-        if (index !== -1) {
-            const existingMarket = globalEntry.markets[index];
-            const updatedMarket = {
-                ...existingMarket,
-                ...apiMarket,
-                isCreate: false,
-                runners: mergeRunners(
-                    existingMarket.runners,
-                    apiMarket.runners,
-                    apiMarket.marketName,
-                    apiMarket.predefinedValue // Pass market level predefinedValue
-                )
-            };
-            globalEntry.markets[index] = updatedMarket;
+        // For odd-even and lottery markets, use specific matching
+        if (apiMarket.marketTypeCategoryId === 35 || apiMarket.marketTypeCategoryId === 28) {
+            const index = globalEntry.markets.findIndex(m =>
+                m.marketTypeCategoryId === apiMarket.marketTypeCategoryId &&
+                m.over.toString() === apiMarket.over.toString() &&
+                m.teamId === apiMarket.teamId
+            );
+
+            if (index !== -1) {
+                const existingMarket = globalEntry.markets[index];
+                const updatedMarket = {
+                    ...existingMarket,
+                    ...apiMarket,
+                    isCreate: false,
+                    runners: mergeRunners(
+                        existingMarket.runners,
+                        apiMarket.runners,
+                        apiMarket.marketName,
+                        apiMarket.predefinedValue
+                    )
+                };
+
+                globalEntry.markets[index] = updatedMarket;
+                console.log(`Updated existing ${apiMarket.marketTypeCategoryId === 35 ? 'Odd-Even' : 'Lottery'} market in global state for over ${apiMarket.over}`);
+            }
+            else {
+                globalEntry.markets.push({
+                    ...apiMarket,
+                    isCreate: false,
+                    runners: mergeRunners(
+                        [],
+                        apiMarket.runners,
+                        apiMarket.marketName,
+                        apiMarket.predefinedValue
+                    )
+                });
+                console.log(`Added new ${apiMarket.marketTypeCategoryId === 35 ? 'Odd-Even' : 'Lottery'} market to global state for over ${apiMarket.over}`);
+            }
+        } else {
+            // For other markets
+            const index = globalEntry.markets.findIndex(m =>
+                m.teamId === apiMarket.teamId &&
+                m.marketTypeId === apiMarket.marketTypeId &&
+                m.marketTypeCategoryId === apiMarket.marketTypeCategoryId &&
+                m.marketName === apiMarket.marketName
+            );
+
+            if (index !== -1) {
+                const existingMarket = globalEntry.markets[index];
+                const updatedMarket = {
+                    ...existingMarket,
+                    ...apiMarket,
+                    isCreate: false,
+                    runners: mergeRunners(
+                        existingMarket.runners,
+                        apiMarket.runners,
+                        apiMarket.marketName,
+                        apiMarket.predefinedValue
+                    )
+                };
+
+                globalEntry.markets[index] = updatedMarket;
+            }
+            else {
+                globalEntry.markets.push({
+                    ...apiMarket,
+                    isCreate: false,
+                    runners: mergeRunners(
+                        [],
+                        apiMarket.runners,
+                        apiMarket.marketName,
+                        apiMarket.predefinedValue
+                    )
+                });
+            }
         }
-        else {
-            globalEntry.markets.push({
-                ...apiMarket,
-                isCreate: false,
-                runners: mergeRunners(
-                    [],
-                    apiMarket.runners,
-                    apiMarket.marketName,
-                    apiMarket.predefinedValue // Pass market level predefinedValue
-                )
-            });
-        }
-    })
+    });
 
     // Sort markets by over number where applicable
     global.marketData[commentary.commentaryId].markets.sort((a, b) => {
         if (a.over && b.over) {
-            return a.over - b.over;
+            return parseInt(a.over) - parseInt(b.over);
         }
         return 0;
     });
 
     // Initialize the ball-to-action map
     initializeBallToActionMap(global.marketData[commentary.commentaryId].markets, commentaryId);
+
+    // Log market status after initialization
+    console.log(`[INIT] Market initialization complete. Total markets: ${global.marketData[commentary.commentaryId].markets.length}`);
+    console.log(`[INIT] Odd-Even markets: ${global.marketData[commentary.commentaryId].markets.filter(m => m.marketTypeCategoryId === 35).length}`);
+    console.log(`[INIT] Lottery markets: ${global.marketData[commentary.commentaryId].markets.filter(m => m.marketTypeCategoryId === 28).length}`);
 
     return true;
 }
@@ -489,6 +535,43 @@ function formatMarketForSocket(market) {
     return JSON.stringify(formattedObject);
 }
 
+// /**
+//  * Synchronizes market IDs across all data structures
+//  * @param {number} commentaryId - Commentary ID
+//  */
+// function synchronizeMarketIds(commentaryId) {
+//     if (!global.marketData || !global.marketData[commentaryId]) {
+//         console.log(`[SYNC] No global data for commentary ID ${commentaryId}`);
+//         return;
+//     }
+
+//     const markets = global.marketData[commentaryId].markets;
+//     console.log(`[SYNC] Synchronizing ${markets.length} markets for commentary ID ${commentaryId}`);
+
+//     markets.forEach(market => {
+//         if (market.eventMarketId && market.eventMarketId !== 0) {
+//             // Ensure the ID is consistent in the data property
+//             if (market.data) {
+//                 try {
+//                     let dataObj = typeof market.data === 'string' ? JSON.parse(market.data) : market.data;
+//                     if (dataObj.marketId !== market.eventMarketId) {
+//                         dataObj.marketId = market.eventMarketId;
+//                         market.data = JSON.stringify(dataObj);
+//                         console.log(`[SYNC] Updated market ID in data property for ${market.marketName}: ${market.eventMarketId}`);
+//                     }
+//                 } catch (error) {
+//                     console.error(`[SYNC] Error updating market ID in data JSON: ${error.message}`);
+//                 }
+//             }
+
+//             // Update references in the ball-to-action map
+//             updateBallToActionMapReferences(commentaryId, market, market.eventMarketId);
+//         }
+//     });
+
+//     console.log(`[SYNC] Market ID synchronization complete for commentary ID ${commentaryId}`);
+// }
+
 module.exports = {
     formatMarketForSocket,
     sendSocketData,
@@ -497,5 +580,6 @@ module.exports = {
     generateMarketFromTemplate,
     generateExtraMarketFromTemplate,
     getMarketKey,
-    mergeRunners
+    mergeRunners,
+    // synchronizeMarketIds
 };

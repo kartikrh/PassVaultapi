@@ -290,7 +290,8 @@ function logBallToActionMapSample(commentaryId) {
                 action: action.action,
                 marketId: action.marketId,
                 over: action.over,
-                teamId: action.teamId
+                teamId: action.teamId,
+                ...action
             });
         });
     });
