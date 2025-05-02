@@ -91,6 +91,7 @@ const { getAllCountryCodesQuery } = require("../repository/TableCountryCodes");
 const { getAllPackagesQuery } = require("../repository/TablePackages");
 const { getAllWhitelabelsQuery } = require("../repository/TableWhitelabel");
 const { getAllNotificationConfigsQuery, getNotificationConfigsByEventNameQuery } = require("../repository/TableNotificationConfig");
+const { notiConfigContentReplaceService } = require("../services/commentry");
 
 const fetchAllDataFromDb = async (fastify, reply) => {
   try {
@@ -358,25 +359,26 @@ const upcomingCommentaries = async (fastify) => {
     });
 
       for (let item of upcomingEvents) {
-        let data = await getNotificationConfigsByEventNameQuery(EventName.COMMINGSOON, fastify);
-        if (!data && item.isActive === false && item.eventName === null) continue;
+        await notiConfigContentReplaceService(EventName.COMMINGSOON, item.commentaryId, null, fastify);
+        // let data = await getNotificationConfigsByEventNameQuery(EventName.COMMINGSOON, fastify);
+        // if (!data && item.isActive === false && item.eventName === null) continue;
 
-        data.content = data.content.replace("{}", item.eventName);
+        // data.content = data.content.replace("{}", item.eventName);
 
-        if (Array.isArray(global.clientSocketIo) && global.clientSocketIo.length > 0) {
-          global.clientSocketIo.forEach((socket) => {
-            socket.client.emit("notificationSend", data);
-          });
+        // if (Array.isArray(global.clientSocketIo) && global.clientSocketIo.length > 0) {
+        //   global.clientSocketIo.forEach((socket) => {
+        //     socket.client.emit("notificationSend", data);
+        //   });
 
-          const notificationData = {
-            title: item.eventName,
-            description: data.content,
-            commentaryId: item.commentaryId,
-          };
+        //   const notificationData = {
+        //     title: item.eventName,
+        //     description: data.content,
+        //     commentaryId: item.commentaryId,
+        //   };
 
-          await insertNotificationViaNotiConfigQuery(notificationData, null, fastify);
-          global.processedUpcomingCommentaries.add(item.commentaryId);
-        }
+        //   await insertNotificationViaNotiConfigQuery(notificationData, null, fastify);
+        //   global.processedUpcomingCommentaries.add(item.commentaryId);
+        // }
       }
   } catch (error) {
     console.error("Error in upcomingCommentaries:", error.message, error);
