@@ -96,30 +96,23 @@ function processPredictScoreMarket(payload, fastify) {
  * @param {Object} fastify - Fastify instance
  */
 function executeMarketAction(commentaryId, action, fastify) {
-    const { marketId, action: actionType, over, marketTypeCategoryId, teamId } = action;
+    const { marketId, action: actionType, over, marketTypeCategoryId } = action;
 
-    console.log(`[EXEC] Executing ${actionType} for ${marketTypeCategoryId === 35 ? 'Odd-Even' : marketTypeCategoryId === 28 ? 'Lottery' : 'Other'} market: ID=${marketId}, over=${over}, teamId=${teamId}`);
-
-    // Find the market in global state with precise matching
-    const market = findMarket(commentaryId, marketId, {
-        over,
-        marketTypeCategoryId,
-        teamId
-    });
+    // Find the market in global state
+    const market = findMarket(commentaryId, marketId, { over, marketTypeCategoryId });
 
     if (!market) {
-        console.error(`[EXEC] Cannot execute ${actionType} - Market not found in global state. ID=${marketId}, over=${over}, type=${marketTypeCategoryId}, teamId=${teamId}`);
+        console.error(`Cannot execute ${actionType} on marketId ${marketId} with over ${over}: Market not found in global state`);
         return;
     }
 
     // Check if this market is for the batting team
     if (!isBattingTeam(commentaryId, market.teamId)) {
-        console.log(`[EXEC] Skipping action ${actionType} for non-batting team market: ${market.marketName} (teamId: ${market.teamId})`);
+        console.log(`Skipping action ${actionType} for non-batting team market: ${market.marketName}`);
         return;
     }
 
-    // Log detailed information about the market we're acting on
-    console.log(`[EXEC] Executing ${actionType} on market: Name="${market.marketName}", ID=${market.eventMarketId || 'unsaved'}, type=${market.marketTypeCategoryId}, over=${market.over}, runners=${market.runners?.length || 0}`);
+    console.log(`Executing ${actionType} on market "${market.marketName}" (ID: ${market.eventMarketId || 'unsaved'})`);
 
     // Set commentary ID for DB operations
     market.commentaryId = commentaryId;
@@ -139,7 +132,7 @@ function executeMarketAction(commentaryId, action, fastify) {
             break;
 
         default:
-            console.error(`[EXEC] Unknown action type: ${actionType}`);
+            console.error(`Unknown action type: ${actionType}`);
     }
 }
 
@@ -202,34 +195,27 @@ function openMarket(market, fastify) {
  * @param {Object} fastify - Fastify Object
  */
 function closeMarket(market, fastify) {
-    console.log(`[CLOSE] Attempting to close market: ID=${market.eventMarketId}, Name="${market.marketName}", Type=${market.marketTypeCategoryId}, Status=${market.status}`);
-
-    // Skip if already closed or settled
-    if (market.status === EventMarketStatus.Close || market.status === EventMarketStatus.Settled) {
-        console.log(`[CLOSE] Market ${market.marketName} (ID: ${market.eventMarketId}) is already closed or settled (status: ${market.status})`);
-        return;
-    }
+    // // Skip if already closed or settled
+    // if (market.status === EventMarketStatus.Close || market.status === EventMarketStatus.Settled) {
+    //     console.log(`Market ${market.marketName} is already closed or settled`);
+    //     return;
+    // }
 
     // Update market status to CLOSE
     market.status = EventMarketStatus.Close;
-    console.log(`[CLOSE] Setting status to CLOSE (${EventMarketStatus.Close}) for market ${market.marketName} (ID: ${market.eventMarketId})`);
 
     // Update runners' statuses if needed
     if (market.runners && market.runners.length > 0) {
-        console.log(`[CLOSE] Updating ${market.runners.length} runners to CLOSE status`);
         market.runners.forEach(runner => {
             runner.selectionStatus = EventMarketStatus.Close;
         });
-    } else {
-        console.warn(`[CLOSE] No runners found for market ${market.marketName} (ID: ${market.eventMarketId})`);
     }
 
     // Update in DB - will insert if ID is 0 and market doesn't exist in DB
-    console.log(`[CLOSE] Calling updateMarketStatusInDB for market ${market.marketName} (ID: ${market.eventMarketId})`);
     updateMarketStatusInDB(market, fastify);
     // Socket update is handled by updateMarketStatusInDB
 
-    console.log(`[CLOSE] Closed market: ${market.marketName} (ID: ${market.eventMarketId || 'unsaved'})`);
+    console.log(`Closed market: ${market.marketName} (ID: ${market.eventMarketId || 'unsaved'})`);
 }
 
 /**
