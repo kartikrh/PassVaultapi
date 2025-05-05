@@ -772,7 +772,9 @@ const clientProcessStatus = {
 }
 const sendOtpToMobile = async (data, request, fastify) => {
   try {
-    let url = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.OTPURL.toLowerCase())?.value;
+    const reqDomain = data.domain?.toLowerCase() || request.hostname.toLowerCase();
+    let url = global.tblWhitelabels.find((item) => item.domain.toLowerCase() === reqDomain)?.mobileOTPSendUrl;
+    // let url = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.OTPURL.toLowerCase())?.value;
     if(!url) return 'OTP URL not found';
     // call this otp url to send otp to mobile
     // replace {mobile} with the mobile number
@@ -806,13 +808,19 @@ const sendOtpToMobile = async (data, request, fastify) => {
 }
 const verifyOTP = async (data, request, fastify) => {
   try {
-    let url = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.OTPVERIFY.toLowerCase())?.value;
-    let otpAuthKey = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.OTPAUTHKEY.toLowerCase())?.value;
-    if(!url || !otpAuthKey) return 'OTP Verify URL not found';
+    const reqDomain = data.domain?.toLowerCase() || request.hostname.toLowerCase();
+    let config = global.tblWhitelabels.find((item) => item.domain.toLowerCase() === reqDomain);
+    // let url = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.OTPVERIFY.toLowerCase())?.value;
+    // let otpAuthKey = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.OTPAUTHKEY.toLowerCase())?.value;
+    if(!config || !config.mobileOTPVerify || !config.mobileOTPAuthKey) return 'OTP Verify URL not found';
     let cc = data.countryCode.replace("+", "");
-    url = url.replace("{otp}", data.otp);
-    url = url.replace("{mobile}", cc + data.mobileNo);
-    const result = await axios.get(url, { headers: { authkey: otpAuthKey }});
+    const mobileNumber = cc + data.mobileNo;
+    // url = url.replace("{otp}", data.otp);
+    // url = url.replace("{mobile}", cc + data.mobileNo);
+    let otpUrl = config.mobileOTPVerify
+      .replace("{otp}", encodeURIComponent(data.otp))
+      .replace("{mobile}", encodeURIComponent(mobileNumber));
+    const result = await axios.get(otpUrl, { headers: { authkey: config.mobileOTPAuthKey }});
     if(result.data.type == "success"){
       return true;
     }
@@ -838,7 +846,9 @@ const verifyOTP = async (data, request, fastify) => {
 }
 const forgotPasswordOTP = async (data, request, fastify) => {
   try {
-    let url = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.OTPFORGOTURL.toLowerCase())?.value;
+    const reqDomain = data.domain?.toLowerCase() || request.hostname.toLowerCase();
+    let url = global.tblWhitelabels.find((item) => item.domain.toLowerCase() === reqDomain)?.mobileOTPForgotUrl;
+    // let url = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.OTPFORGOTURL.toLowerCase())?.value;
     if(!url) return 'OTP URL not found';
     let cc = data.countryCode.replace("+", "");
     url = url.replace("{mobile}", cc + data.mobileNo);
@@ -868,7 +878,9 @@ const forgotPasswordOTP = async (data, request, fastify) => {
 }
 const resendOTP = async (data, request, fastify) => {
   try {
-    let url = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.OTPRESEND.toLowerCase())?.value;
+    const reqDomain = data.domain?.toLowerCase() || request.hostname.toLowerCase();
+    let url = global.tblWhitelabels.find((item) => item.domain.toLowerCase() === reqDomain)?.mobileOTPResendUrl;
+    // let url = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.OTPRESEND.toLowerCase())?.value;
     if(!url) return 'OTP URL not found';
     let cc = data.countryCode.replace("+", "");
     url = url.replace("{mobile}", cc + data.mobileNo);

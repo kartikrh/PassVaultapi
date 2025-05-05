@@ -657,8 +657,9 @@ async function registrationClientService(request, fastify) {
   }
 }
 
-async function registerDetailsService({ body }, fastify) {
+async function registerDetailsService(request, fastify) {
   try {
+    const body = request.body
     let response;
     response = await registerClientDetails(body, fastify);
 
@@ -667,21 +668,26 @@ async function registerDetailsService({ body }, fastify) {
     // }
     let isMobileVerify = false;
     let isEmailVerify = false;
-    let isOtpSend = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP);
-    if (isOtpSend) {
-      isOtpSend = isOtpSend.value;
+    let isOtpSend
+    let isEmailOtpSend
+    const reqDomain = request.body.domain?.toLowerCase() || request.hostname.toLowerCase();
+    // let isOtpSend = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP);
+    let otpData = global.tblWhitelabels.find((item) => item.domain.toLowerCase() === reqDomain);
+    if (otpData) {
+      isOtpSend = otpData?.isSendMobileOTP;
+      isEmailOtpSend = otpData?.isSendMailOTP;
     }
     else {
       throw new Error("Config not found");
     }
 
-    let isEmailOtpSend = global.tblConfigs.find((item) => item.key === configConstants.ISSENDEMAILOTP);
-    if (isEmailOtpSend) {
-      isEmailOtpSend = isEmailOtpSend.value;
-    }
-    else {
-      throw new Error("Config not found");
-    }
+    // let isEmailOtpSend = global.tblConfigs.find((item) => item.key === configConstants.ISSENDEMAILOTP);
+    // if (isEmailOtpSend) {
+    //   isEmailOtpSend = isEmailOtpSend.value;
+    // }
+    // else {
+    //   throw new Error("Config not found");
+    // }
     // if(response.clientId){
 
     const payload = { clientId: response.clientId };
@@ -689,7 +695,8 @@ async function registerDetailsService({ body }, fastify) {
 
     global.tblClient.push({ ...response, isActive: true, isUserActive: 0 });
 
-    if (response.mobileNo && isOtpSend === "true") {
+    if (response.mobileNo && isOtpSend === true) {
+    // if (response.mobileNo && isOtpSend === "true") {
       // const generateOTP = () => {
       //   return Math.floor(100000 + Math.random() * 900000).toString();
       // };
@@ -698,9 +705,10 @@ async function registerDetailsService({ body }, fastify) {
       const result = await insertOtpQuery({ ...body, otp, clientId: response.clientId }, fastify);
       global.tblOtp.push(result[0]);
 
-    } else if(response.emailId && isEmailOtpSend === "true"){
+    } else if(response.emailId && isEmailOtpSend === true){
+    // } else if(response.emailId && isEmailOtpSend === "true"){
       isEmailVerify = true;
-      const otp = await sendOtpEmail(response.emailId);
+      const otp = await sendOtpEmail(response.emailId, request);
       const result = await insertOtpQuery({...body, otp, clientId: response.clientId }, fastify);
       global.tblOtp.push(result[0]);
     } else {
@@ -730,15 +738,18 @@ async function registerDetailsService({ body }, fastify) {
   }
 };
 
-async function sendOtpEmail(emailId) {
+async function sendOtpEmail(emailId, request) {
   try {
     const otp = Math.floor(1000 + Math.random() * 9000);
 
-    let mailType = global.tblConfigs.find(
-      (item) => item.key.toLowerCase() === SENDEMAILTYPE.toLowerCase()
-    );
+    // let mailType = global.tblConfigs.find(
+    //   (item) => item.key.toLowerCase() === SENDEMAILTYPE.toLowerCase()
+    // );
+    const reqDomain = request.body.domain?.toLowerCase() || request.hostname.toLowerCase();
+    let mailType = global.tblWhitelabels.find((item) => item.domain.toLowerCase() === reqDomain);
     if (mailType) {
-      mailType = parseInt(mailType.value);
+      // mailType = parseInt(mailType.value);
+      mailType = mailType.sendMailType;
     }
     else {
       throw new Error("Config not found");
@@ -793,12 +804,13 @@ async function sendOtpEmail(emailId) {
   }
 }
 
-async function resendOtpService({ body }, fastify) {
+async function resendOtpService(request, fastify) {
   try {
-    const { email } = body;
+    const body = request.body;
+    // const { email } = body;
 
     const findUser = global.tblClient.find(
-      (item) => item.emailId === email
+      (item) => item.emailId === body.email
     );
 
     if (!findUser) {
@@ -807,19 +819,22 @@ async function resendOtpService({ body }, fastify) {
     const clientId = findUser.clientId;
     const mobileNo = findUser.mobileNo;
     const emailId = findUser.emailId;
+    const reqDomain = body.domain?.toLowerCase() || request.hostname.toLowerCase();
+    const isOtpSend = global.tblWhitelabels.find((item) => item.domain.toLowerCase() === reqDomain);
+    // const isOtpSend = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP).value;
+    // const isEmailOtpSend = global.tblConfigs.find((item) => item.key === configConstants.ISSENDEMAILOTP).value;
     
-    const isOtpSend = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP).value;
-    const isEmailOtpSend = global.tblConfigs.find((item) => item.key === configConstants.ISSENDEMAILOTP).value;
-    
-    if (mobileNo && isOtpSend === "true") {
+    // if (mobileNo && isOtpSend === "true") {
+    if (mobileNo && isOtpSend?.isSendMobileOTP === true) {
       // const generateOTP = () => {
       //   return Math.floor(100000 + Math.random() * 900000).toString();
       // };
       const otp = 1234
       const result = await insertOtpQuery({ ...body, otp, clientId: clientId }, fastify);
       global.tblOtp.push(result[0]);
-    } else if(emailId && isEmailOtpSend === "true") {
-      const otp = await sendOtpEmail(emailId);
+    // } else if(emailId && isEmailOtpSend === "true") {
+    } else if(emailId && isOtpSend?.isSendMailOTP === true) {
+      const otp = await sendOtpEmail(emailId, request);
       const result = await insertOtpQuery({...body, otp, clientId: clientId}, fastify);
       global.tblOtp.push(result[0]);
     } else {
@@ -838,7 +853,7 @@ async function resendOtpService({ body }, fastify) {
   }
 };
 
-async function verifyLinkEmail(user) {
+async function verifyLinkEmail(user, request) {
   try {
   const secretKey = process.env.SECRET_KEY_TOKEN;
 
@@ -852,12 +867,14 @@ async function verifyLinkEmail(user) {
   const scoreClientUrl = global.tblConfigs.find((item) => item.key === configConstants.SCORECLIENTAPIENDPOINT).value;
 
   const verificationUrl = `${scoreClientUrl}/verify-email?token=${emailToken}`;
-
-    let mailType = global.tblConfigs.find(
-      (item) => item.key.toLowerCase() === SENDEMAILTYPE.toLowerCase()
-    );
+  const reqDomain = request.body.domain?.toLowerCase() || request.hostname.toLowerCase();
+    // let mailType = global.tblConfigs.find(
+    //   (item) => item.key.toLowerCase() === SENDEMAILTYPE.toLowerCase()
+    // );
+    let mailType = global.tblWhitelabels.find((item) => item.domain.toLowerCase() === reqDomain);
     if (mailType) {
-      mailType = parseInt(mailType.value);
+      mailType = mailType.sendMailType;
+      // mailType = parseInt(mailType.value);
     }
     else {
       throw new Error("Config not found");
@@ -907,12 +924,12 @@ async function verifyLinkEmail(user) {
   }
 }
 
-async function verifyMobileService({ body }, fastify) {
+async function verifyMobileService(request, fastify) {
   try {
-    const { email } = body;
+    const body = request.body;
 
     const findUser = global.tblClient.find(
-      (item) => item.emailId === email
+      (item) => item.emailId === body.email
     );
 
     if(!findUser) {
@@ -920,16 +937,18 @@ async function verifyMobileService({ body }, fastify) {
     }
     const clientId = findUser.clientId;
     const mobileNo = findUser.mobileNo;
-    
-    let isOtpSend = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP);
+    const reqDomain = body.domain?.toLowerCase() || request.hostname.toLowerCase();
+    // let isOtpSend = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP);
+    let isOtpSend = global.tblWhitelabels.find((item) => item.domain.toLowerCase() === reqDomain);
     if (isOtpSend) {
-      isOtpSend = isOtpSend.value;
+      isOtpSend = isOtpSend.isSendMobileOTP;
     }
     else {
       throw new Error("Config not found");
     }
 
-      if(mobileNo && isOtpSend === "true") {
+      // if(mobileNo && isOtpSend === "true") {
+      if(mobileNo && isOtpSend === true) {
         // const generateOTP = () => {
         //   return Math.floor(100000 + Math.random() * 900000).toString();
         // };
@@ -996,12 +1015,12 @@ async function verifyMobileOtpService({ body }, fastify) {
   }
 }
 
-async function verifyEmailService({ body }, fastify) {
+async function verifyEmailService(request, fastify) {
   try {
-    const { email } = body;
-
+    // const { email } = body;
+    const body = request.body
     const findUser = global.tblClient.find(
-      (item) => item.emailId === email
+      (item) => item.emailId === body.email
     );
 
     if(!findUser) {
@@ -1010,7 +1029,7 @@ async function verifyEmailService({ body }, fastify) {
     const emailId = findUser.emailId;
     
       if(emailId) {
-        await verifyLinkEmail(findUser);
+        await verifyLinkEmail(findUser, request);
       } else {
         return "Invalid Credentials"
       }
@@ -1203,47 +1222,53 @@ async function updateClientPasswordService({ body }, fastify) {
   }
 }
 
-async function forgetPasswordService({ body }, fastify) {
+async function forgetPasswordService(request, fastify) {
   try {
-    const { email } = body;
+    const body = request.body;
     const findUser = global.tblClient.find(
-      (item) => item.emailId === email
+      (item) => item.emailId === body.email
     );
 
     if (!findUser) {
       throw new Error("Invalid User");
     }
+    const reqDomain = body.domain?.toLowerCase() || request.hostname.toLowerCase();
     let isMobileVerify = false;
     let isEmailVerify = false;
-
-    let isOtpSend = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP);
-    if (isOtpSend) {
-      isOtpSend = isOtpSend.value;
+    let isOtpSend
+    let isEmailOtpSend
+    let otpData = global.tblWhitelabels.find((item) => item.domain.toLowerCase() === reqDomain);
+    // let isOtpSend = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP);
+    if (otpData) {
+      isOtpSend = otpData.isSendMobileOTP;
+      isEmailOtpSend = otpData.isSendMailOTP;
     }
     else {
       throw new Error("Config not found");
     }
 
-    let isEmailOtpSend = global.tblConfigs.find((item) => item.key === configConstants.ISSENDEMAILOTP);
-    if (isEmailOtpSend) {
-      isEmailOtpSend = isEmailOtpSend.value;
-    }
-    else {
-      throw new Error("Config not found");
-    }
+    // let isEmailOtpSend = global.tblConfigs.find((item) => item.key === configConstants.ISSENDEMAILOTP);
+    // if (isEmailOtpSend) {
+    //   isEmailOtpSend = isEmailOtpSend.value;
+    // }
+    // else {
+    //   throw new Error("Config not found");
+    // }
 
     const mobileNo = findUser.mobileNo;
     const clientId = findUser.clientId;
     const emailId = findUser.emailId;
 
-    if (mobileNo && isOtpSend === "true") {
+    // if (mobileNo && isOtpSend === "true") {
+    if (mobileNo && isOtpSend === true) {
       isMobileVerify = true;
       const otp = 1234
       const result = await insertOtpQuery({ ...body, otp, clientId: clientId }, fastify);
       global.tblOtp.push(result[0]);
-    } else if(emailId && isEmailOtpSend === "true") {
+    // } else if(emailId && isEmailOtpSend === "true") {
+    } else if(emailId && isEmailOtpSend === true) {
       isEmailVerify = true;
-      const otp = await sendOtpEmail(emailId);
+      const otp = await sendOtpEmail(emailId, request);
       const result = await insertOtpQuery({...body, otp, clientId: clientId}, fastify);
       global.tblOtp.push(result[0]);
     } else {
@@ -1337,25 +1362,33 @@ const registerClientAppService = async (request, fastify) => {
   if (checkExist && (checkExist.isMobileVerified == true || checkExist.registrationProcessStatus == clientProcessStatus.MOEMAILVERIFIED)) {
     throw new Error ("Mobile number already exists");
   }
+  const reqDomain = request.body.domain?.toLowerCase() || request.hostname.toLowerCase();
   if(checkExist && (checkExist.isMobileVerified == false || checkExist.registrationProcessStatus == clientProcessStatus.ADDUSERDETAIL)){
     // get encrypt client id
     let clientId = checkExist.clientId;
     let encrypt = await getEncryptClinet({clientId},request,fastify);
-    let isSendOtp = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP)?.value;
-    if(isSendOtp === 'true'){
+    let isSendOtp = global.tblWhitelabels.find((item) => item.domain.toLowerCase() === reqDomain);
+    // let isSendOtp = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP)?.value;
+    // if(isSendOtp === 'true'){
+    if(isSendOtp?.isSendMobileOTP === true) {
+      if(isSendOtp?.sendMobileOTPType === 1) {
+        let send = await sendOtpToMobile(request.body, request, fastify)
+        if(!send) {
+          throw new Error("Error in sending OTP")
+        }
+      } else {
+        // let semlessOTP = isSendOtp.mobileSemlessOTPKey
+        throw new Error(`OTP type is ${isSendOtp?.sendMobileOTPType}`);
+      }
       // logic for send third party otp
       // get the sendOtp url
-      let send =await sendOtpToMobile(request.body ,request , fastify)
-      if(!send){
-        throw new Error("Error in sending OTP")
-      }
     }
-    const otpExpired = parseInt(global.tblConfigs?.find((item) => item.key === configConstants.OTPEXPIRED)?.value, 10) || 0;
+    // const otpExpired = parseInt(global.tblConfigs?.find((item) => item.key === configConstants.OTPEXPIRED)?.value, 10) || 0;
     return {
         clientId : encrypt.clientId,
         mobileNo : checkExist.mobileNo,
         countryCode : request.body.countryCode,
-        otpExpired,
+        otpExpired: isSendOtp?.mobileOTPExpired || 0,
     }
   }
   let encryptedPassword = encrypt(request.body.password);
@@ -1364,16 +1397,24 @@ const registerClientAppService = async (request, fastify) => {
   const result = await registerClientAppQuery(request.body,request, fastify);
   global.tblClient.push(result[0]);
   // check if otpSend true for mobile
-  let isSendOtp = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP)?.value;
-  if(isSendOtp === 'true'){
+  let isSendOtp = global.tblWhitelabels.find((item) => item.domain.toLowerCase() === reqDomain);
+  // let isSendOtp = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP)?.value;
+  if(isSendOtp?.isSendMobileOTP === true) {
+  // if(isSendOtp === 'true'){
     // logic for send third party otp
     // get the sendOtp url
-    let send =await sendOtpToMobile(request.body ,request , fastify)
-    if(!send){
-      throw new Error("Error in sending OTP")
+    if(isSendOtp?.sendMobileOTPType === 1) {
+      let send =await sendOtpToMobile(request.body ,request , fastify)
+      if(!send){
+        throw new Error("Error in sending OTP")
+      }
+    } else {
+      // let semlessOTP = isSendOtp.mobileSemlessOTPKey
+      throw new Error(`OTP type is ${isSendOtp?.sendMobileOTPType}`);
     }
   }
-  const otpExpired = parseInt(global.tblConfigs?.find((item) => item.key === configConstants.OTPEXPIRED)?.value, 10) || 0;
+  const otpExpired = global.tblWhitelabels?.find((item) => item.domain.toLowerCase() === reqDomain)?.mobileOTPExpired || 0;
+  // const otpExpired = parseInt(global.tblConfigs?.find((item) => item.key === configConstants.OTPEXPIRED)?.value, 10) || 0;
   return {
       clientId : result[0].encryptClientId,
       mobileNo : result[0].mobileNo,
@@ -1383,7 +1424,7 @@ const registerClientAppService = async (request, fastify) => {
   
 }
 const verifyMobileNoAppService = async (request, fastify) => {
-  const {clientId , otp} = request.body;
+  const {clientId, otp, domain} = request.body;
   const checkExist = await getIdByValue({
     clientId : clientId,
   },request,fastify)
@@ -1399,6 +1440,7 @@ const verifyMobileNoAppService = async (request, fastify) => {
     await createClientLoginInfoQuery({ clientId: null, info: df, isLogin: false, loginType: 2 }, fastify);
     throw new Error("Invalid username and mobile number");
   }
+  const reqDomain = domain?.toLowerCase() || request.hostname.toLowerCase();
   if(request.body.otp == "7889"){
     await verifyMobileNoAppQuery({
       clientId :id
@@ -1427,15 +1469,20 @@ const verifyMobileNoAppService = async (request, fastify) => {
   //   throw new Error("Mobile number already verified");
   // }
   // is otp send true
-  const isSendOtp = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP)?.value;
-  if(isSendOtp === 'true'){
+  const isSendOtp = global.tblWhitelabels.find((item) => item.domain.toLowerCase() === reqDomain);
+  // const isSendOtp = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP)?.value;
+  // if(isSendOtp === 'true'){
+  if(isSendOtp?.isSendMobileOTP === true) {
     // call third party otp
-    let otpVerify = await verifyOTP(request.body ,request , fastify)
-    if(!otpVerify){
-      await createClientLoginInfoQuery({ clientId: null, info: df, isLogin: false, loginType: 2 }, fastify);
-      throw new Error("OTP not verified");
+    if(isSendOtp?.sendMobileOTPType === 1) {
+      let otpVerify = await verifyOTP(request.body ,request , fastify)
+      if(!otpVerify){
+        await createClientLoginInfoQuery({ clientId: null, info: df, isLogin: false, loginType: 2 }, fastify);
+        throw new Error("OTP not verified");
+      }
+    } else {
+      throw new Error(`OTP type is ${isSendOtp?.sendMobileOTPType}`);
     }
-
       await verifyMobileNoAppQuery({
         clientId :id
       },request,fastify);
@@ -1461,7 +1508,8 @@ const verifyMobileNoAppService = async (request, fastify) => {
       }
   }
   else {
-    const otpConfig = global.tblConfigs.find((item) => item.key === configConstants.CLIENTOTP)?.value;
+    // const otpConfig = global.tblConfigs.find((item) => item.key === configConstants.CLIENTOTP)?.value;
+    const otpConfig = global.tblWhitelabels.find((item) => item.domain.toLowerCase() === reqDomain)?.clientOTP;    
     if(!otpConfig){
       throw new Error("OTP Config not found");
     }
@@ -1589,7 +1637,7 @@ const changePasswordService = async (request, fastify) => {
   return `password update successfully`;
 }
 const otpResendService = async (request, fastify) => {
-  const { clientId, mobileNo, countryCode } = request.body;
+  const { clientId, mobileNo, countryCode, domain } = request.body;
   const checkExist = await getIdByValue({ clientId : clientId }, request, fastify)
   if(!checkExist){
     return "Invalid username and mobile number"
@@ -1601,19 +1649,25 @@ const otpResendService = async (request, fastify) => {
   if (index == -1) {
     throw new Error("Invalid username and mobile number");
   }
+  const reqDomain = domain?.toLowerCase() || request.hostname.toLowerCase();
+  const isSendOTP = global.tblWhitelabels.find((item) => item.domain.toLowerCase() === reqDomain);
 
-  const isSendOTP = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP)?.value;
-  const otpExpired = parseInt(global.tblConfigs?.find((item) => item.key === configConstants.OTPEXPIRED)?.value, 10) || 0;
-  if (isSendOTP === "true") {
+  // const isSendOTP = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP)?.value;
+  // const otpExpired = parseInt(global.tblConfigs?.find((item) => item.key === configConstants.OTPEXPIRED)?.value, 10) || 0;
+  if (isSendOTP?.isSendMobileOTP === true) {
     // otp service
-    let otpResend = await resendOTP(request.body, request, fastify);
-    if(!otpResend){
-      throw new Error("Unable to send OTP at the moment please try again later")
+    if(isSendOTP?.sendMobileOTPType === 1) {
+      let otpResend = await resendOTP(request.body, request, fastify);
+      if(!otpResend){
+        throw new Error("Unable to send OTP at the moment please try again later")
+      }
+    } else {
+      throw new Error(`OTP type is ${isSendOTP?.sendMobileOTPType}`);
     }
   }
   return {
     message: "Retry sent successfully",
-    otpExpired
+    otpExpired: isSendOTP?.mobileOTPExpired || 0
   }
 };
 const forgotPasswordService = async (request, fastify) => {
@@ -1623,22 +1677,29 @@ const forgotPasswordService = async (request, fastify) => {
   if (!checkClient) {
     throw new Error("Mobile Number not existed");
   }
-
-  let isSendOtp = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP)?.value;
-  if(isSendOtp === 'true'){
-    let send = await forgotPasswordOTP(request.body, request, fastify)
+  const reqDomain = request.body.domain?.toLowerCase() || request.hostname.toLowerCase();
+  let isSendOtp = global.tblWhitelabels.find((item) => item.domain.toLowerCase() === reqDomain);  
+  // let isSendOtp = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP)?.value;
+  if(isSendOtp?.isSendMobileOTP === true) {
+  // if(isSendOtp === 'true') {
+    if(isSendOtp?.sendMobileOTPType === 1) {
+      let send = await forgotPasswordOTP(request.body, request, fastify)
       if(!send){
         throw new Error("Error in sending OTP")
       }
+    } else {
+      throw new Error(`OTP type is ${isSendOtp?.sendMobileOTPType}`);
+    }
+    
   }
-  const otpExpired = parseInt(global.tblConfigs?.find((item) => item.key === configConstants.OTPEXPIRED)?.value, 10) || 0;
+  // const otpExpired = parseInt(global.tblConfigs?.find((item) => item.key === configConstants.OTPEXPIRED)?.value, 10) || 0;
   let clientId = checkClient.clientId;
   let encrypt = await getEncryptClinet({clientId},request,fastify);
   return {
     clientId : encrypt.clientId,
     mobileNo : checkClient.mobileNo,
     countryCode : checkClient.countryCode,
-    otpExpired,
+    otpExpired: isSendOtp?.mobileOTPExpired || 0,
   }
 };
 
@@ -1659,6 +1720,7 @@ const verifyForgotPasswordOTPService = async (request, fastify) => {
   if (index == -1) {
     throw new Error("Mobile number not existed");
   }
+  const reqDomain = request.body.domain?.toLowerCase() || request.hostname.toLowerCase();
   // is otp send true
   request.body.countryCode = global.tblClient[index].countryCode;
   request.body.mobileNo = global.tblClient[index].mobileNo;
@@ -1674,25 +1736,33 @@ const verifyForgotPasswordOTPService = async (request, fastify) => {
       }
     }
   }
-  const isSendOtp = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP)?.value;
-  if(isSendOtp === 'true'){
-    // call third party otp
-    let otpVerify = await verifyOTP(request.body ,request , fastify)
-    if(!otpVerify){
-      throw new Error("OTP not verified");
-    }
-    const token = generateToken({ clientId: id });
-    return {
-      token : token,
-      details: {
-        clientId:clientId,
-        countryCode: global.tblClient[index].countryCode,
-        mobileNo: global.tblClient[index].mobileNo,
-        userName: global.tblClient[index].userName,
+  const isSendOtp = global.tblWhitelabels.find((item) => item.domain.toLowerCase() === reqDomain);
+  // const isSendOtp = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP)?.value;
+  // if(isSendOtp === 'true'){
+  if(isSendOtp?.isSendMobileOTP === true) {
+    if(isSendOtp?.sendMobileOTPType === 1) {
+      // call third party otp
+      let otpVerify = await verifyOTP(request.body ,request , fastify)
+      if(!otpVerify){
+        throw new Error("OTP not verified");
       }
+      const token = generateToken({ clientId: id });
+      return {
+        token : token,
+        details: {
+          clientId:clientId,
+          countryCode: global.tblClient[index].countryCode,
+          mobileNo: global.tblClient[index].mobileNo,
+          userName: global.tblClient[index].userName,
+        }
+      }
+    } else {
+      // let semlessOTP = isSendOtp.mobileSemlessOTPKey
+      throw new Error(`OTP type is ${isSendOtp?.sendMobileOTPType}`);
     }
   } else {
-    const otpConfig = global.tblConfigs.find((item) => item.key === configConstants.CLIENTOTP)?.value;
+    const otpConfig = global.tblWhitelabels.find((item) => item.domain.toLowerCase() === reqDomain)?.mobileOTPSendUrl;
+    // const otpConfig = global.tblConfigs.find((item) => item.key === configConstants.CLIENTOTP)?.value;
     if(!otpConfig){
       throw new Error("OTP Config not found");
     }
