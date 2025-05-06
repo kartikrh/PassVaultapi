@@ -772,8 +772,7 @@ const clientProcessStatus = {
 }
 const sendOtpToMobile = async (data, request, fastify) => {
   try {
-    const reqDomain = data.domain?.toLowerCase() || request.hostname.toLowerCase();
-    let url = global.tblWhitelabels.find((item) => item.domain.toLowerCase() === reqDomain)?.mobileOTPSendUrl;
+    let url = global.tblWhitelabels.find((item) => item.id === data.id)?.mobileOTPSendUrl;
     // let url = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.OTPURL.toLowerCase())?.value;
     if(!url) return 'OTP URL not found';
     // call this otp url to send otp to mobile
@@ -808,8 +807,7 @@ const sendOtpToMobile = async (data, request, fastify) => {
 }
 const verifyOTP = async (data, request, fastify) => {
   try {
-    const reqDomain = data.domain?.toLowerCase() || request.hostname.toLowerCase();
-    let config = global.tblWhitelabels.find((item) => item.domain.toLowerCase() === reqDomain);
+    let config = global.tblWhitelabels.find((item) => item.id === data.id);
     // let url = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.OTPVERIFY.toLowerCase())?.value;
     // let otpAuthKey = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.OTPAUTHKEY.toLowerCase())?.value;
     if(!config || !config.mobileOTPVerify || !config.mobileOTPAuthKey) return 'OTP Verify URL not found';
@@ -846,8 +844,7 @@ const verifyOTP = async (data, request, fastify) => {
 }
 const forgotPasswordOTP = async (data, request, fastify) => {
   try {
-    const reqDomain = data.domain?.toLowerCase() || request.hostname.toLowerCase();
-    let url = global.tblWhitelabels.find((item) => item.domain.toLowerCase() === reqDomain)?.mobileOTPForgotUrl;
+    let url = global.tblWhitelabels.find((item) => item.id === data.id)?.mobileOTPForgotUrl;
     // let url = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.OTPFORGOTURL.toLowerCase())?.value;
     if(!url) return 'OTP URL not found';
     let cc = data.countryCode.replace("+", "");
@@ -878,8 +875,7 @@ const forgotPasswordOTP = async (data, request, fastify) => {
 }
 const resendOTP = async (data, request, fastify) => {
   try {
-    const reqDomain = data.domain?.toLowerCase() || request.hostname.toLowerCase();
-    let url = global.tblWhitelabels.find((item) => item.domain.toLowerCase() === reqDomain)?.mobileOTPResendUrl;
+    let url = global.tblWhitelabels.find((item) => item.id === data.id)?.mobileOTPResendUrl;
     // let url = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.OTPRESEND.toLowerCase())?.value;
     if(!url) return 'OTP URL not found';
     let cc = data.countryCode.replace("+", "");

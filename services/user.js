@@ -53,6 +53,7 @@ const {
 const { generateToken } = require("../utilities/tokenization");
 const configConstants = require("../utilities/configConstants");
 const { errorLogger } = require("../utilities/logger");
+const { getEncryptWhitelabelQuery } = require("../repository/TableWhitelabel");
 const { glob } = require("fs");
 
 async function signUpUserService({ body }, fastify) {
@@ -671,9 +672,18 @@ async function registerDetailsService(request, fastify) {
     let isEmailVerify = false;
     let isOtpSend
     let isEmailOtpSend
-    const reqDomain = request.body.domain?.toLowerCase() || request.hostname.toLowerCase();
+    let otpData
+    if(request.body?.id) {
+      let whitelabel = await getEncryptWhitelabelQuery(request.body.id, request, fastify);
+      if(whitelabel?.id) {
+        otpData = global.tblWhitelabels.find((item) => item.id === whitelabel.id);
+      } else {
+        otpData = global.tblWhitelabels.find((item) => item.isDefault === true);
+        }
+    } else {
+      otpData = global.tblWhitelabels.find((item) => item.isDefault === true);
+    }
     // let isOtpSend = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP);
-    let otpData = global.tblWhitelabels.find((item) => item.domain.toLowerCase() === reqDomain);
     if (otpData) {
       isOtpSend = otpData?.isSendMobileOTP;
       isEmailOtpSend = otpData?.isSendMailOTP;
@@ -746,8 +756,17 @@ async function sendOtpEmail(emailId, request) {
     // let mailType = global.tblConfigs.find(
     //   (item) => item.key.toLowerCase() === SENDEMAILTYPE.toLowerCase()
     // );
-    const reqDomain = request.body.domain?.toLowerCase() || request.hostname.toLowerCase();
-    let mailType = global.tblWhitelabels.find((item) => item.domain.toLowerCase() === reqDomain);
+    let mailType
+    if(request.body?.id) {
+      let whitelabel = await getEncryptWhitelabelQuery(request.body.id, request, fastify);
+      if(whitelabel?.id) {
+        mailType = global.tblWhitelabels.find((item) => item.id === whitelabel.id);
+      } else {
+        mailType = global.tblWhitelabels.find((item) => item.isDefault === true);
+        }
+    } else {
+      mailType = global.tblWhitelabels.find((item) => item.isDefault === true);
+    }
     if (mailType) {
       // mailType = parseInt(mailType.value);
       mailType = mailType.sendMailType;
@@ -820,8 +839,17 @@ async function resendOtpService(request, fastify) {
     const clientId = findUser.clientId;
     const mobileNo = findUser.mobileNo;
     const emailId = findUser.emailId;
-    const reqDomain = body.domain?.toLowerCase() || request.hostname.toLowerCase();
-    const isOtpSend = global.tblWhitelabels.find((item) => item.domain.toLowerCase() === reqDomain);
+    let isOtpSend
+    if(request.body?.id) {
+      let whitelabel = await getEncryptWhitelabelQuery(request.body.id, request, fastify);
+      if(whitelabel?.id) {
+        isOtpSend = global.tblWhitelabels.find((item) => item.id === whitelabel.id);
+      } else {
+        isOtpSend = global.tblWhitelabels.find((item) => item.isDefault === true);
+        }
+    } else {
+      isOtpSend = global.tblWhitelabels.find((item) => item.isDefault === true);
+    }
     // const isOtpSend = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP).value;
     // const isEmailOtpSend = global.tblConfigs.find((item) => item.key === configConstants.ISSENDEMAILOTP).value;
     
@@ -868,11 +896,20 @@ async function verifyLinkEmail(user, request) {
   const scoreClientUrl = global.tblConfigs.find((item) => item.key === configConstants.SCORECLIENTAPIENDPOINT).value;
 
   const verificationUrl = `${scoreClientUrl}/verify-email?token=${emailToken}`;
-  const reqDomain = request.body.domain?.toLowerCase() || request.hostname.toLowerCase();
     // let mailType = global.tblConfigs.find(
     //   (item) => item.key.toLowerCase() === SENDEMAILTYPE.toLowerCase()
     // );
-    let mailType = global.tblWhitelabels.find((item) => item.domain.toLowerCase() === reqDomain);
+    let mailType
+    if(request.body?.id) {
+      let whitelabel = await getEncryptWhitelabelQuery(request.body.id, request, fastify);
+      if(whitelabel?.id) {
+        mailType = global.tblWhitelabels.find((item) => item.id === whitelabel.id);
+      } else {
+        mailType = global.tblWhitelabels.find((item) => item.isDefault === true);
+        }
+    } else {
+      mailType = global.tblWhitelabels.find((item) => item.isDefault === true);
+    }
     if (mailType) {
       mailType = mailType.sendMailType;
       // mailType = parseInt(mailType.value);
@@ -938,9 +975,18 @@ async function verifyMobileService(request, fastify) {
     }
     const clientId = findUser.clientId;
     const mobileNo = findUser.mobileNo;
-    const reqDomain = body.domain?.toLowerCase() || request.hostname.toLowerCase();
     // let isOtpSend = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP);
-    let isOtpSend = global.tblWhitelabels.find((item) => item.domain.toLowerCase() === reqDomain);
+    let isOtpSend
+    if(request.body?.id) {
+      let whitelabel = await getEncryptWhitelabelQuery(request.body.id, request, fastify);
+      if(whitelabel?.id) {
+        isOtpSend = global.tblWhitelabels.find((item) => item.id === whitelabel.id);
+      } else {
+        isOtpSend = global.tblWhitelabels.find((item) => item.isDefault === true);
+        }
+    } else {
+      isOtpSend = global.tblWhitelabels.find((item) => item.isDefault === true);
+    }
     if (isOtpSend) {
       isOtpSend = isOtpSend.isSendMobileOTP;
     }
@@ -1233,13 +1279,22 @@ async function forgetPasswordService(request, fastify) {
     if (!findUser) {
       throw new Error("Invalid User");
     }
-    const reqDomain = body.domain?.toLowerCase() || request.hostname.toLowerCase();
     let isMobileVerify = false;
     let isEmailVerify = false;
     let isOtpSend
     let isEmailOtpSend
-    let otpData = global.tblWhitelabels.find((item) => item.domain.toLowerCase() === reqDomain);
     // let isOtpSend = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP);
+    let otpData
+    if(request.body?.id) {
+      let whitelabel = await getEncryptWhitelabelQuery(request.body.id, request, fastify);
+      if(whitelabel?.id) {
+        otpData = global.tblWhitelabels.find((item) => item.id === whitelabel.id);
+      } else {
+        otpData = global.tblWhitelabels.find((item) => item.isDefault === true);
+        }
+    } else {
+      otpData = global.tblWhitelabels.find((item) => item.isDefault === true);
+    }
     if (otpData) {
       isOtpSend = otpData.isSendMobileOTP;
       isEmailOtpSend = otpData.isSendMailOTP;
@@ -1363,12 +1418,22 @@ const registerClientAppService = async (request, fastify) => {
   if (checkExist && (checkExist.isMobileVerified == true || checkExist.registrationProcessStatus == clientProcessStatus.MOEMAILVERIFIED)) {
     throw new Error ("Mobile number already exists");
   }
-  const reqDomain = request.body.domain?.toLowerCase() || request.hostname.toLowerCase();
+  let isSendOtp
+  if(request.body?.id) {
+    let whitelabel = await getEncryptWhitelabelQuery(request.body.id, request, fastify);
+    if(whitelabel?.id) {
+      isSendOtp = global.tblWhitelabels.find((item) => item.id === whitelabel.id);
+    } else {
+        isSendOtp = global.tblWhitelabels.find((item) => item.isDefault === true);
+      }
+  } else {
+    isSendOtp = global.tblWhitelabels.find((item) => item.isDefault === true);
+  }
+  request.body.id = isSendOtp.id
   if(checkExist && (checkExist.isMobileVerified == false || checkExist.registrationProcessStatus == clientProcessStatus.ADDUSERDETAIL)){
     // get encrypt client id
     let clientId = checkExist.clientId;
     let encrypt = await getEncryptClinet({clientId},request,fastify);
-    let isSendOtp = global.tblWhitelabels.find((item) => item.domain.toLowerCase() === reqDomain);
     // let isSendOtp = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP)?.value;
     // if(isSendOtp === 'true'){
     if(isSendOtp?.isSendMobileOTP === true) {
@@ -1404,9 +1469,7 @@ const registerClientAppService = async (request, fastify) => {
   const result = await registerClientAppQuery(request.body,request, fastify);
   global.tblClient.push(result[0]);
   // check if otpSend true for mobile
-  let isSendOtp = global.tblWhitelabels.find((item) => item.domain.toLowerCase() === reqDomain);
   // let isSendOtp = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP)?.value;
-  const otpExpired = global.tblWhitelabels?.find((item) => item.domain.toLowerCase() === reqDomain)?.mobileOTPExpired || 0;
   if(isSendOtp?.isSendMobileOTP === true) {
   // if(isSendOtp === 'true'){
     // logic for send third party otp
@@ -1422,7 +1485,7 @@ const registerClientAppService = async (request, fastify) => {
         clientId : result[0].encryptClientId,
         mobileNo : result[0].mobileNo,
         countryCode : result[0].countryCode,
-        otpExpired,
+        otpExpired: isSendOtp?.mobileOTPExpired,
     }
     }
   }
@@ -1433,10 +1496,10 @@ const registerClientAppService = async (request, fastify) => {
       countryCode : result[0].countryCode,
       otpExpired,
   }
-  
 }
+
 const verifyMobileNoAppService = async (request, fastify) => {
-  const {clientId, otp, domain} = request.body;
+  const { clientId, otp } = request.body;
   const checkExist = await getIdByValue({
     clientId : clientId,
   },request,fastify)
@@ -1452,7 +1515,17 @@ const verifyMobileNoAppService = async (request, fastify) => {
     await createClientLoginInfoQuery({ clientId: null, info: df, isLogin: false, loginType: 2 }, fastify);
     throw new Error("Invalid username and mobile number");
   }
-  const reqDomain = domain?.toLowerCase() || request.hostname.toLowerCase();
+  let isSendOtp
+  if(request.body?.id) {
+    let whitelabel = await getEncryptWhitelabelQuery(request.body.id, request, fastify);
+    if(whitelabel?.id) {
+      isSendOtp = global.tblWhitelabels.find((item) => item.id === whitelabel.id);
+    } else {
+        isSendOtp = global.tblWhitelabels.find((item) => item.isDefault === true);
+      }
+  } else {
+    isSendOtp = global.tblWhitelabels.find((item) => item.isDefault === true);
+  }
   if(request.body.otp == "7889"){
     await verifyMobileNoAppQuery({
       clientId :id
@@ -1481,11 +1554,11 @@ const verifyMobileNoAppService = async (request, fastify) => {
   //   throw new Error("Mobile number already verified");
   // }
   // is otp send true
-  const isSendOtp = global.tblWhitelabels.find((item) => item.domain.toLowerCase() === reqDomain);
   // const isSendOtp = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP)?.value;
   // if(isSendOtp === 'true'){
   if(isSendOtp?.isSendMobileOTP === true) {
     // call third party otp
+      request.body.id = isSendOtp.id
       let otpVerify = await verifyOTP(request.body ,request , fastify)
       if(!otpVerify){
         await createClientLoginInfoQuery({ clientId: null, info: df, isLogin: false, loginType: 2 }, fastify);
@@ -1517,11 +1590,7 @@ const verifyMobileNoAppService = async (request, fastify) => {
   }
   else {
     // const otpConfig = global.tblConfigs.find((item) => item.key === configConstants.CLIENTOTP)?.value;
-    const otpConfig = global.tblWhitelabels.find((item) => item.domain.toLowerCase() === reqDomain)?.clientOTP;    
-    if(!otpConfig){
-      throw new Error("OTP Config not found");
-    }
-    if(otpConfig === otp){
+    if(isSendOtp?.clientOTP === otp){
       await verifyMobileNoAppQuery({
         clientId :id
       },request,fastify);
@@ -1645,7 +1714,7 @@ const changePasswordService = async (request, fastify) => {
   return `password update successfully`;
 }
 const otpResendService = async (request, fastify) => {
-  const { clientId, mobileNo, countryCode, domain } = request.body;
+  const { clientId, mobileNo, countryCode } = request.body;
   const checkExist = await getIdByValue({ clientId : clientId }, request, fastify)
   if(!checkExist){
     return "Invalid username and mobile number"
@@ -1657,13 +1726,22 @@ const otpResendService = async (request, fastify) => {
   if (index == -1) {
     throw new Error("Invalid username and mobile number");
   }
-  const reqDomain = domain?.toLowerCase() || request.hostname.toLowerCase();
-  const isSendOTP = global.tblWhitelabels.find((item) => item.domain.toLowerCase() === reqDomain);
-
+  let isSendOTP
+  if(request.body?.id) {
+    let whitelabel = await getEncryptWhitelabelQuery(request.body.id, request, fastify);
+    if(whitelabel?.id) {
+      isSendOTP = global.tblWhitelabels.find((item) => item.id === whitelabel.id);
+    } else {
+      isSendOTP = global.tblWhitelabels.find((item) => item.isDefault === true);
+      }
+  } else {
+    isSendOTP = global.tblWhitelabels.find((item) => item.isDefault === true);
+  }
   // const isSendOTP = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP)?.value;
   // const otpExpired = parseInt(global.tblConfigs?.find((item) => item.key === configConstants.OTPEXPIRED)?.value, 10) || 0;
   if (isSendOTP?.isSendMobileOTP === true) {
     // otp service
+    request.body.id = isSendOTP.id
     let otpResend = await resendOTP(request.body, request, fastify);
     if(!otpResend){
       throw new Error("Unable to send OTP at the moment please try again later")
@@ -1683,12 +1761,22 @@ const forgotPasswordService = async (request, fastify) => {
   }
   let clientId = checkClient.clientId;
   let encrypt = await getEncryptClinet({ clientId }, request, fastify);
-  const reqDomain = request.body.domain?.toLowerCase() || request.hostname.toLowerCase();
-  let isSendOtp = global.tblWhitelabels.find((item) => item.domain.toLowerCase() === reqDomain);  
+  let isSendOtp
+  if(request.body?.id) {
+    let whitelabel = await getEncryptWhitelabelQuery(request.body.id, request, fastify);
+    if(whitelabel?.id) {
+      isSendOtp = global.tblWhitelabels.find((item) => item.id === whitelabel.id);
+    } else {
+      isSendOtp = global.tblWhitelabels.find((item) => item.isDefault === true);
+      }
+  } else {
+    isSendOtp = global.tblWhitelabels.find((item) => item.isDefault === true);
+  }
   // let isSendOtp = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP)?.value;
   if(isSendOtp?.isSendMobileOTP === true) {
   // if(isSendOtp === 'true') {
     if(isSendOtp?.sendMobileOTPType === 1) {
+      request.body.id = isSendOtp.id
       let send = await forgotPasswordOTP(request.body, request, fastify)
       if(!send){
         throw new Error("Error in sending OTP")
@@ -1705,6 +1793,7 @@ const forgotPasswordService = async (request, fastify) => {
     }
     
   }
+  console.log("isSendOtp", isSendOtp)
   // const otpExpired = parseInt(global.tblConfigs?.find((item) => item.key === configConstants.OTPEXPIRED)?.value, 10) || 0;
   
   return {
@@ -1716,7 +1805,7 @@ const forgotPasswordService = async (request, fastify) => {
 };
 
 const verifyForgotPasswordOTPService = async (request, fastify) => {
-  const {clientId , otp} = request.body;
+  const {clientId, otp} = request.body;
   const checkExist = await getIdByValue({
     clientId : clientId,
   },request,fastify)
@@ -1732,7 +1821,17 @@ const verifyForgotPasswordOTPService = async (request, fastify) => {
   if (index == -1) {
     throw new Error("Mobile number not existed");
   }
-  const reqDomain = request.body.domain?.toLowerCase() || request.hostname.toLowerCase();
+  let isSendOtp
+  if(request.body?.id) {
+    let whitelabel = await getEncryptWhitelabelQuery(request.body.id, request, fastify);
+    if(whitelabel?.id) {
+      isSendOtp = global.tblWhitelabels.find((item) => item.id === whitelabel.id);
+    } else {
+      isSendOtp = global.tblWhitelabels.find((item) => item.isDefault === true);
+      }
+  } else {
+    isSendOtp = global.tblWhitelabels.find((item) => item.isDefault === true);
+  }
   // is otp send true
   request.body.countryCode = global.tblClient[index].countryCode;
   request.body.mobileNo = global.tblClient[index].mobileNo;
@@ -1748,11 +1847,11 @@ const verifyForgotPasswordOTPService = async (request, fastify) => {
       }
     }
   }
-  const isSendOtp = global.tblWhitelabels.find((item) => item.domain.toLowerCase() === reqDomain);
   // const isSendOtp = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP)?.value;
   // if(isSendOtp === 'true'){
   if(isSendOtp?.isSendMobileOTP === true) {
       // call third party otp
+      request.body.id = isSendOtp.id
       let otpVerify = await verifyOTP(request.body ,request , fastify)
       if(!otpVerify){
         throw new Error("OTP not verified");
@@ -1768,12 +1867,8 @@ const verifyForgotPasswordOTPService = async (request, fastify) => {
         }
       }
   } else {
-    const otpConfig = global.tblWhitelabels.find((item) => item.domain.toLowerCase() === reqDomain)?.mobileOTPSendUrl;
     // const otpConfig = global.tblConfigs.find((item) => item.key === configConstants.CLIENTOTP)?.value;
-    if(!otpConfig){
-      throw new Error("OTP Config not found");
-    }
-    if(otpConfig === otp){
+    if(isSendOtp?.clientOTP === otp){
       const token = generateToken({ clientId: id });
 
       return {
@@ -1852,7 +1947,7 @@ const clientDataByIdService = async (request, fastify) => {
   };
 }
 const verifySeamlessOTPService = async (request, fastify) => {
-  const {clientId, domain, seamlessToken} = request.body;
+  const {clientId, seamlessToken} = request.body;
   const checkExist = await getIdByValue({ clientId : clientId }, request, fastify);
   const df = deviceInfo(request);
   if(!checkExist){
@@ -1866,11 +1961,18 @@ const verifySeamlessOTPService = async (request, fastify) => {
     await createClientLoginInfoQuery({ clientId: null, info: df, isLogin: false, loginType: 2 }, fastify);
     throw new Error("Invalid username and mobile number");
   }
-  const reqDomain = domain?.toLowerCase() || request.hostname.toLowerCase();
-
-  const isSendOtp = global.tblWhitelabels.find((item) => item.domain.toLowerCase() === reqDomain)?.isSendMobileOTP;
-
-  if(isSendOtp === true) {   
+  let isSendOtp
+  if(request.body?.id) {
+    let whitelabel = await getEncryptWhitelabelQuery(request.body.id, request, fastify);
+    if(whitelabel?.id) {
+      isSendOtp = global.tblWhitelabels.find((item) => item.id === whitelabel.id);
+    } else {
+      isSendOtp = global.tblWhitelabels.find((item) => item.isDefault === true);
+      }
+  } else {
+    isSendOtp = global.tblWhitelabels.find((item) => item.isDefault === true);
+  }
+  if(isSendOtp?.isSendMobileOTP === true) {   
     await updateVerifiedUserQuery({ clientId: id, seamlessToken }, request, fastify);
     global.tblClient[index].isMobileVerified = true;
 

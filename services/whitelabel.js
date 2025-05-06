@@ -5,6 +5,7 @@ const {
   activeInactiveWhitelabelQuery,
   demoClientEnableInIOSWhitelabelQuery,
   isDemoClientLoginQuery,
+  getAllEncryptWhitelabelsQuery,
 } = require("../repository/TableWhitelabel");
 const {
   generateImageName,
@@ -331,6 +332,15 @@ const isDemoClientLoginService = async (request, fastify) => {
   });
   return `Whitelabel data updated successfully`;
 };
+
+const clientApiWhitelabelsService = async (request, fastify) => {
+  const { isActive } = request.body || {};
+  let activeValue = isActive !== undefined ? isActive : true
+  
+  let whereCondition = `tw."wrIsDeleted" = false AND tw."wrIsActive" = ${activeValue}`
+  const result = await getAllEncryptWhitelabelsQuery(fastify, whereCondition);
+  return result;
+};
 module.exports = {
   createWhitelabelService,
   allWhitelabelsService,
@@ -338,5 +348,6 @@ module.exports = {
   deleteWhitelabelService,
   activeInactiveWhitelabelService,
   demoClientEnableInIOSWhitelabelService,
-  isDemoClientLoginService
+  isDemoClientLoginService,
+  clientApiWhitelabelsService,
 };
