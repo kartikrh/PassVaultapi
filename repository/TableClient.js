@@ -330,6 +330,7 @@ const addClientDltReqQuery = async (data, request, fastify) => {
   }
 }
 const getIdByEncrypt = async (data, request, fastify) => {
+  // console.log("data", data)
   try {
     let query = `
       SELECT "wrKey" as "clientId"
