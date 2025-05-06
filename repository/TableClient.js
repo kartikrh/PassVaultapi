@@ -17,7 +17,8 @@ const getAllClientQuery = async (fastify) => {
               "wrIsActive" as "isActive",
               "wrIsEmailVerified" AS "isEmailVerified",
               "wrIsMobileVerified" AS "isMobileVerified",
-              "wrCountryCode" as "countryCode"
+              "wrCountryCode" as "countryCode",
+              "wrSeamlessToken" as "seamlessToken"
         from "tblClient"
         where "wrIsDelete" = false
         `,

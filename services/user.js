@@ -42,6 +42,7 @@ const {
   changePasswordQuery,
   clientDetailsByIdQuery,
   updateClientValidateKeysQuery,
+  updateVerifiedUserQuery,
 } = require("../repository/TableUser");
 const {
   deviceInfo,
@@ -1376,9 +1377,15 @@ const registerClientAppService = async (request, fastify) => {
         if(!send) {
           throw new Error("Error in sending OTP")
         }
-      } else {
-        // let semlessOTP = isSendOtp.mobileSemlessOTPKey
-        throw new Error(`OTP type is ${isSendOtp?.sendMobileOTPType}`);
+      } 
+      if(isSendOtp?.sendMobileOTPType === 2) {
+        // Success reponse when the mobile otp type is 2
+        return {
+          clientId : encrypt.clientId,
+          mobileNo : checkExist.mobileNo,
+          countryCode : request.body.countryCode,
+          otpExpired: isSendOtp?.mobileOTPExpired || 0,
+        }
       }
       // logic for send third party otp
       // get the sendOtp url
@@ -1399,6 +1406,7 @@ const registerClientAppService = async (request, fastify) => {
   // check if otpSend true for mobile
   let isSendOtp = global.tblWhitelabels.find((item) => item.domain.toLowerCase() === reqDomain);
   // let isSendOtp = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP)?.value;
+  const otpExpired = global.tblWhitelabels?.find((item) => item.domain.toLowerCase() === reqDomain)?.mobileOTPExpired || 0;
   if(isSendOtp?.isSendMobileOTP === true) {
   // if(isSendOtp === 'true'){
     // logic for send third party otp
@@ -1408,12 +1416,16 @@ const registerClientAppService = async (request, fastify) => {
       if(!send){
         throw new Error("Error in sending OTP")
       }
-    } else {
-      // let semlessOTP = isSendOtp.mobileSemlessOTPKey
-      throw new Error(`OTP type is ${isSendOtp?.sendMobileOTPType}`);
+    } 
+    if(isSendOtp?.sendMobileOTPType === 2) {
+      return {
+        clientId : result[0].encryptClientId,
+        mobileNo : result[0].mobileNo,
+        countryCode : result[0].countryCode,
+        otpExpired,
+    }
     }
   }
-  const otpExpired = global.tblWhitelabels?.find((item) => item.domain.toLowerCase() === reqDomain)?.mobileOTPExpired || 0;
   // const otpExpired = parseInt(global.tblConfigs?.find((item) => item.key === configConstants.OTPEXPIRED)?.value, 10) || 0;
   return {
       clientId : result[0].encryptClientId,
@@ -1474,15 +1486,11 @@ const verifyMobileNoAppService = async (request, fastify) => {
   // if(isSendOtp === 'true'){
   if(isSendOtp?.isSendMobileOTP === true) {
     // call third party otp
-    if(isSendOtp?.sendMobileOTPType === 1) {
       let otpVerify = await verifyOTP(request.body ,request , fastify)
       if(!otpVerify){
         await createClientLoginInfoQuery({ clientId: null, info: df, isLogin: false, loginType: 2 }, fastify);
         throw new Error("OTP not verified");
       }
-    } else {
-      throw new Error(`OTP type is ${isSendOtp?.sendMobileOTPType}`);
-    }
       await verifyMobileNoAppQuery({
         clientId :id
       },request,fastify);
@@ -1656,13 +1664,9 @@ const otpResendService = async (request, fastify) => {
   // const otpExpired = parseInt(global.tblConfigs?.find((item) => item.key === configConstants.OTPEXPIRED)?.value, 10) || 0;
   if (isSendOTP?.isSendMobileOTP === true) {
     // otp service
-    if(isSendOTP?.sendMobileOTPType === 1) {
-      let otpResend = await resendOTP(request.body, request, fastify);
-      if(!otpResend){
-        throw new Error("Unable to send OTP at the moment please try again later")
-      }
-    } else {
-      throw new Error(`OTP type is ${isSendOTP?.sendMobileOTPType}`);
+    let otpResend = await resendOTP(request.body, request, fastify);
+    if(!otpResend){
+      throw new Error("Unable to send OTP at the moment please try again later")
     }
   }
   return {
@@ -1677,6 +1681,8 @@ const forgotPasswordService = async (request, fastify) => {
   if (!checkClient) {
     throw new Error("Mobile Number not existed");
   }
+  let clientId = checkClient.clientId;
+  let encrypt = await getEncryptClinet({ clientId }, request, fastify);
   const reqDomain = request.body.domain?.toLowerCase() || request.hostname.toLowerCase();
   let isSendOtp = global.tblWhitelabels.find((item) => item.domain.toLowerCase() === reqDomain);  
   // let isSendOtp = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP)?.value;
@@ -1687,14 +1693,20 @@ const forgotPasswordService = async (request, fastify) => {
       if(!send){
         throw new Error("Error in sending OTP")
       }
-    } else {
-      throw new Error(`OTP type is ${isSendOtp?.sendMobileOTPType}`);
+    }
+    if(isSendOtp?.sendMobileOTPType === 2) {
+      // Success reponse when the mobile otp type is 2
+      return {
+        clientId : encrypt.clientId,
+        mobileNo : checkClient.mobileNo,
+        countryCode : checkClient.countryCode,
+        otpExpired: isSendOtp?.mobileOTPExpired || 0,
+      }
     }
     
   }
   // const otpExpired = parseInt(global.tblConfigs?.find((item) => item.key === configConstants.OTPEXPIRED)?.value, 10) || 0;
-  let clientId = checkClient.clientId;
-  let encrypt = await getEncryptClinet({clientId},request,fastify);
+  
   return {
     clientId : encrypt.clientId,
     mobileNo : checkClient.mobileNo,
@@ -1740,7 +1752,6 @@ const verifyForgotPasswordOTPService = async (request, fastify) => {
   // const isSendOtp = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP)?.value;
   // if(isSendOtp === 'true'){
   if(isSendOtp?.isSendMobileOTP === true) {
-    if(isSendOtp?.sendMobileOTPType === 1) {
       // call third party otp
       let otpVerify = await verifyOTP(request.body ,request , fastify)
       if(!otpVerify){
@@ -1756,10 +1767,6 @@ const verifyForgotPasswordOTPService = async (request, fastify) => {
           userName: global.tblClient[index].userName,
         }
       }
-    } else {
-      // let semlessOTP = isSendOtp.mobileSemlessOTPKey
-      throw new Error(`OTP type is ${isSendOtp?.sendMobileOTPType}`);
-    }
   } else {
     const otpConfig = global.tblWhitelabels.find((item) => item.domain.toLowerCase() === reqDomain)?.mobileOTPSendUrl;
     // const otpConfig = global.tblConfigs.find((item) => item.key === configConstants.CLIENTOTP)?.value;
@@ -1844,7 +1851,53 @@ const clientDataByIdService = async (request, fastify) => {
     clientId: encrypt.clientId
   };
 }
+const verifySeamlessOTPService = async (request, fastify) => {
+  const {clientId, domain, seamlessToken} = request.body;
+  const checkExist = await getIdByValue({ clientId : clientId }, request, fastify);
+  const df = deviceInfo(request);
+  if(!checkExist){
+    await createClientLoginInfoQuery({ clientId: null, info: df, isLogin: false, loginType: 2 }, fastify);
+    return "Invalid username and mobile number"
+  }
+  let id = checkExist.clientId;
+  // check if client exist
+  const index = global.tblClient.findIndex((item) => item.clientId === id);
+  if (index == -1) {
+    await createClientLoginInfoQuery({ clientId: null, info: df, isLogin: false, loginType: 2 }, fastify);
+    throw new Error("Invalid username and mobile number");
+  }
+  const reqDomain = domain?.toLowerCase() || request.hostname.toLowerCase();
 
+  const isSendOtp = global.tblWhitelabels.find((item) => item.domain.toLowerCase() === reqDomain)?.isSendMobileOTP;
+
+  if(isSendOtp === true) {   
+    await updateVerifiedUserQuery({ clientId: id, seamlessToken }, request, fastify);
+    global.tblClient[index].isMobileVerified = true;
+
+    const token = generateToken({ clientId: id });
+    const result = await updateClientValidateKeysQuery({
+      clientId: id, isUserActive: 1, isActive: true, registrationProcessStatus: clientProcessStatus.PASSWORDSET
+    }, request, fastify);
+
+    global.tblClient[index] = {
+      ...global.tblClient[index],
+      ...result[0]
+    }
+    await createClientLoginInfoQuery({ clientId: checkExist.clientId, info: df, isLogin: true, loginType: 1 }, fastify);
+    return {
+      token : token,
+      details: {
+        clientId:clientId,
+        countryCode: global.tblClient[index].countryCode,
+        mobileNo: global.tblClient[index].mobileNo,
+        userName: global.tblClient[index]?.userName,
+      }
+    }
+  }
+  else {
+    return "Client Not Verified"
+  }
+}
 module.exports = {
   signUpUserService,
   signInUserServices,
@@ -1888,4 +1941,5 @@ module.exports = {
   verifyForgotPasswordOTPService,
   updatePasswordInForgotPasswordService,
   clientDataByIdService,
+  verifySeamlessOTPService,
 };
