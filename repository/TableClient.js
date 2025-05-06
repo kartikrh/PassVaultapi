@@ -28,7 +28,7 @@ const getAllClientQuery = async (fastify) => {
   );
 };
 
-const deleteClientQuery = async (data, request, fastify) => {
+const deleteClientQuery = async (clientId, request, fastify) => {
   try {
     return await fastify.db.query(
       `
@@ -40,7 +40,7 @@ const deleteClientQuery = async (data, request, fastify) => {
       `,
       {
         type: fastify.db.QueryTypes.UPDATE,
-        bind: [true, request.userTokenInfo.WrUserId ? request.userTokenInfo.WrUserId : null, data.clientId],
+        bind: [true, request.userTokenInfo.WrUserId ? request.userTokenInfo.WrUserId : null, clientId],
       }
     );
   } catch (err) {

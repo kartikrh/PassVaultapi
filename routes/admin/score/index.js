@@ -63,7 +63,7 @@ const {
   FavCommentary,
 } = require("../../../swaggerSchema/groupTags/schema");
 const { getAllSocialMedia } = require("../../../controller/users/admin/socialMedia");
-const { getAllWhitelabels } = require("../../../controller/users/admin/whitelabel");
+const { clientApiWhitelabels } = require("../../../controller/users/admin/whitelabel");
 const { deleteClient, deleteClientByEncrypt } = require("../../../controller/users/admin/client");
 
 module.exports = async (fastify, opts) => {
@@ -361,7 +361,7 @@ module.exports = async (fastify, opts) => {
     handler: (request, reply) => getAllSocialMedia(request, reply, fastify),
   });
   fastify.post("/whiteLabel", {
-    handler: (request, reply) => getAllWhitelabels(request, reply, fastify),
+    handler: (request, reply) => clientApiWhitelabels(request, reply, fastify),
   });
   fastify.post("/deleteAcc", {
     // schema: Client.delete.schema,
