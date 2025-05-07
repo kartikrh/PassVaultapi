@@ -124,7 +124,7 @@ const createCompititionService = async (request, fastify) => {
 
   if (request.body.matchTypeId !== undefined) {
     const validate = global.tblMatchTypes.find(
-      (item) => item.matchTypeId === request.body.matchTypeId
+      (item) => item.matchTypeId == request.body.matchTypeId
     );
     if (!validate) {
       throw new Error('MatchTypeId does not exist');

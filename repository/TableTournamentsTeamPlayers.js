@@ -107,7 +107,7 @@ const getAllPlayersByTeamIdQuery = async (data, request, fastify) => {
           ttp."wrCreatedBy" AS  "createdBy",
           ttp."wrCreatedAt" AS "createdAt",
           tp."wrPlayerTypeId" AS "playerTypeId",
-          tpt."wrPlayerType" AS "playerType"
+          tpt."wrPlayerType" AS "playerType",
           tp."wrPlayerId" AS "playerId",
           tp."wrPlayerName" AS "playerName",
           ttp."wrTeamId" AS "teamId"
