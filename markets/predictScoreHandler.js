@@ -4,7 +4,8 @@ const { updateMarketStatusInDB, updateMarketStatusInSocket } = require('./market
 const { processOddEvenMarkets } = require('./oddEven');
 const { EventMarketStatus } = require('../utilities');
 const { errorLogger } = require('../utilities/logger');
-const { formatBallNumber, normalizeBallToActionMap } = require('./utils');
+const { formatBallNumber, normalizeBallToActionMap, synchronizeMarketStatus } = require('./utils');
+const { fetchRunnersForMarket } = require('./helper');
 
 /**
  * Processes the prediction score market based on incoming payload
@@ -50,22 +51,22 @@ function processPredictScoreMarket(payload, fastify) {
         // Get the current over from the ball (integer part)
         const currentOver = Math.floor(parseFloat(formattedBall));
 
-        // For balls like x.6 (end of over), check if we need to close the previous over's markets
-        if (formattedBall.endsWith('.6')) {
-            // Calculate the over that should be closed (current over - 3, or minimum 4)
-            // The -3 is based on your business logic patterns
-            const overToClose = Math.max(4, currentOver - 3);
+        // // For balls like x.6 (end of over), check if we need to close the previous over's markets
+        // if (formattedBall.endsWith('.6')) {
+        //     // Calculate the over that should be closed (current over - 3, or minimum 4)
+        //     // The -3 is based on your business logic patterns
+        //     const overToClose = Math.max(4, currentOver - 3);
 
-            // Only try to close if the over makes sense
-            if (overToClose > 0 && overToClose < currentOver) {
-                console.log(`[AUTO] Checking if over ${overToClose} markets need to be closed at ball ${formattedBall}`);
-                const closedCount = closeMarketsForOver(commentaryId, overToClose, strikeTeamId, fastify);
+        //     // Only try to close if the over makes sense
+        //     if (overToClose > 0 && overToClose < currentOver) {
+        //         console.log(`[AUTO] Checking if over ${overToClose} markets need to be closed at ball ${formattedBall}`);
+        //         const closedCount = closeMarketsForOver(commentaryId, overToClose, strikeTeamId, fastify);
 
-                if (closedCount > 0) {
-                    console.log(`[AUTO] Closed ${closedCount} markets for over ${overToClose}, team ${strikeTeamId} at ball ${formattedBall}`);
-                }
-            }
-        }
+        //         if (closedCount > 0) {
+        //             console.log(`[AUTO] Closed ${closedCount} markets for over ${overToClose}, team ${strikeTeamId} at ball ${formattedBall}`);
+        //         }
+        //     }
+        // }
 
         // Get actions mapped to this ball, filtered by batting team
         const actions = getActionsForBall(commentaryId, formattedBall, strikeTeamId);
@@ -148,6 +149,9 @@ function executeMarketAction(commentaryId, action, fastify) {
 
     console.log(`Executing ${actionType} on market "${market.marketName}" (ID: ${market.eventMarketId || 'unsaved'}, Category: ${marketTypeCategoryId}, Over: ${over})`);
 
+    // Ensure we're using the synchronized status before the action
+    synchronizeMarketStatus(commentaryId, market.eventMarketId, marketTypeCategoryId, over, market.status);
+
     // Set commentary ID for DB operations
     market.commentaryId = commentaryId;
 
@@ -219,7 +223,13 @@ function openMarket(market, fastify) {
 
     // Update market status to OPEN
     market.status = EventMarketStatus.Open;
-
+    synchronizeMarketStatus(
+        market.commentaryId,
+        market.eventMarketId,
+        market.marketTypeCategoryId,
+        market.over,
+        EventMarketStatus.Open
+    );
     // Update runners' statuses if needed
     if (market.runners && market.runners.length > 0) {
         market.runners.forEach(runner => {
@@ -240,27 +250,36 @@ function openMarket(market, fastify) {
  * @param {Object} fastify - Fastify Object
  */
 function closeMarket(market, fastify) {
-    // // Skip if already closed or settled
-    // if (market.status === EventMarketStatus.Close || market.status === EventMarketStatus.Settled) {
-    //     console.log(`Market ${market.marketName} is already closed or settled`);
-    //     return;
-    // }
+    // Make a deep copy to avoid reference issues
+    const marketCopy = JSON.parse(JSON.stringify(market));
 
-    // Update market status to CLOSE
+    console.log(`[CLOSE] Closing market "${market.marketName}" (ID: ${market.eventMarketId || 'unsaved'}, Current Status: ${market.status})`);
+
+    // Update market status to CLOSE (4)
+    marketCopy.status = EventMarketStatus.Close;
     market.status = EventMarketStatus.Close;
 
     // Update runners' statuses if needed
-    if (market.runners && market.runners.length > 0) {
-        market.runners.forEach(runner => {
+    if (marketCopy.runners && marketCopy.runners.length > 0) {
+        marketCopy.runners.forEach(runner => {
             runner.selectionStatus = EventMarketStatus.Close;
         });
     }
 
-    // Update in DB - will insert if ID is 0 and market doesn't exist in DB
-    updateMarketStatusInDB(market, fastify);
-    // Socket update is handled by updateMarketStatusInDB
+    // Synchronize the status in global state
+    synchronizeMarketStatus(
+        marketCopy.commentaryId,
+        marketCopy.eventMarketId,
+        marketCopy.marketTypeCategoryId,
+        marketCopy.over,
+        EventMarketStatus.Close
+    );
 
-    console.log(`Closed market: ${market.marketName} (ID: ${market.eventMarketId || 'unsaved'})`);
+    // Update in DB - will insert if ID is 0 and market doesn't exist in DB
+    // Important: Pass the copied market to ensure status is consistent
+    updateMarketStatusInDB(marketCopy, fastify);
+
+    console.log(`[CLOSE] Closed market: ${marketCopy.marketName} (ID: ${marketCopy.eventMarketId || 'unsaved'}, New Status: ${marketCopy.status})`);
 }
 
 /**
@@ -275,6 +294,14 @@ function settleMarket(market, fastify) {
     //     return;
     // }
 
+    market.status = EventMarketStatus.Settled;
+    synchronizeMarketStatus(
+        market.commentaryId,
+        market.eventMarketId,
+        market.marketTypeCategoryId,
+        market.over,
+        EventMarketStatus.Open
+    );
     // Different settlement logic based on market type
     if (market.marketTypeCategoryId === 28 || market.marketTypeCategoryId === 35) {
         // Odd-Even market settlement
@@ -313,10 +340,11 @@ function settleOddEvenMarket(market, fastify) {
             console.error(`Cannot settle market ${market.eventMarketId || market.marketName}: runners not found or incomplete`);
 
             // Try to fetch runners from DB if they're missing
-            fetchRunnersForMarket(market, fastify).then(updatedMarket => {
-                if (updatedMarket.runners && updatedMarket.runners.length >= 2) {
+            fetchRunnersForMarket(market.eventMarketId, fastify).then(runnersFromDB => {
+                if (runnersFromDB && runnersFromDB.length >= 2) {
                     // Retry settlement with fetched runners
-                    settleOddEvenMarket(updatedMarket, fastify);
+                    market.runners = runnersFromDB;
+                    settleOddEvenMarket(market, fastify);
                 }
             }).catch(error => {
                 console.error(`Failed to fetch runners for market ${market.eventMarketId}:`, error);
@@ -350,73 +378,6 @@ function settleOddEvenMarket(market, fastify) {
         updateMarketStatusInDB(market, fastify);
     } catch (error) {
         console.error(`Error settling odd-even market ${market.marketName}:`, error);
-    }
-}
-
-/**
- * Fetches runners for a market if they're missing
- * @param {Object} market - The market
- * @param {Object} fastify - Fastify instance
- * @returns {Promise<Object>} - The market with runners
- */
-async function fetchRunnersForMarket(market, fastify) {
-    if (market.runners && market.runners.length >= 2) {
-        return market; // Already has runners
-    }
-
-    try {
-        const marketId = market.eventMarketId;
-
-        if (!marketId || marketId === 0) {
-            throw new Error("Cannot fetch runners for market without ID");
-        }
-
-        // Fetch runners from database
-        const query = `
-            SELECT * FROM "tblMarketRunners"
-            WHERE "wrEventMarketId" = ${marketId}
-        `;
-
-        const result = await fastify.db.query(query, {
-            type: fastify.db.QueryTypes.SELECT
-        });
-
-        if (result && result.length > 0) {
-            // Map DB runners to expected format
-            const runners = result.map(r => ({
-                runnerId: r.wrRunnerId,
-                runner: r.wrRunner,
-                line: r.wrLine || 0,
-                backPrice: r.wrBackPrice || 1.9,
-                layPrice: r.wrLayPrice || 1.9,
-                backSize: r.wrBackSize || 10000,
-                laySize: r.wrLaySize || 10000,
-                selectionStatus: r.wrSelectionStatus
-            }));
-
-            // Update market with runners
-            market.runners = runners;
-
-            // Update global state
-            if (global.marketData && global.marketData[market.commentaryId] && global.marketData[market.commentaryId].markets) {
-                const marketIndex = global.marketData[market.commentaryId].markets.findIndex(
-                    m => m.eventMarketId && m.eventMarketId.toString() === marketId.toString()
-                );
-
-                if (marketIndex !== -1) {
-                    global.marketData[market.commentaryId].markets[marketIndex].runners = runners;
-                }
-            }
-
-            console.log(`Fetched ${runners.length} runners for market ${marketId}`);
-        } else {
-            console.error(`No runners found for market ${marketId}`);
-        }
-
-        return market;
-    } catch (error) {
-        console.error(`Error fetching runners:`, error);
-        return market;
     }
 }
 
@@ -524,5 +485,5 @@ module.exports = {
     closeMarket,
     settleMarket,
     settleOddEvenMarket,
-    calculateOverRuns
+    calculateOverRuns,
 };

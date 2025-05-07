@@ -1,6 +1,7 @@
 // marketActions.js
 const { errorLogger } = require('../utilities/logger');
-const { formatMarketForSocket } = require('./utils');
+const { fetchRunnersForMarket } = require('./helper');
+const { formatMarketForSocket, synchronizeMarketStatus } = require('./utils');
 
 
 /**
@@ -11,7 +12,9 @@ const { formatMarketForSocket } = require('./utils');
  */
 async function updateMarketStatusInDB(market, fastify) {
     try {
-        const { commentaryId, ...marketValue } = market;
+        // Create a deep copy of the market object to avoid reference issues
+        const marketCopy = JSON.parse(JSON.stringify(market));
+        const { commentaryId, ...marketValue } = marketCopy;
 
         // Add detailed logging
         console.log(`[DB] Processing market: Category=${marketValue.marketTypeCategoryId}, Over=${marketValue.over}, Name=${marketValue.marketName}, ID=${marketValue.eventMarketId || 0}, Status=${marketValue.status}`);
@@ -22,7 +25,7 @@ async function updateMarketStatusInDB(market, fastify) {
         // First check if market already exists in DB when ID is 0
         if (marketId === 0 || marketId === "0") {
             // Use category ID and over to find existing market
-            const existingId = await findExistingMarketId(market, fastify);
+            const existingId = await findExistingMarketId(marketCopy, fastify);
 
             if (existingId) {
                 console.log(`[DB] Found existing market with ID ${existingId} for category ${marketValue.marketTypeCategoryId}, over ${marketValue.over}`);
@@ -30,27 +33,59 @@ async function updateMarketStatusInDB(market, fastify) {
 
                 // Update existing market's status using all identifiers for precise targeting
                 await updateExistingMarket({
-                    ...market,
+                    ...marketCopy,
                     eventMarketId: existingId
                 }, fastify);
 
-                // Update global state with the correct ID
-                updateGlobalMarketId(market, existingId);
+                // Update global state with the correct ID and status
+                updateGlobalMarketId(marketCopy, existingId);
+
+                // Explicitly update the status in global state to ensure consistency
+                synchronizeMarketStatus(
+                    commentaryId,
+                    existingId,
+                    marketValue.marketTypeCategoryId,
+                    marketValue.over,
+                    marketValue.status
+                );
 
                 // Emit socket update AFTER database update is complete
                 if (global.socketIo) {
                     const clientInRoom = global.socketIo.sockets.adapter.rooms.get(commentaryId);
                     if (clientInRoom?.size) {
                         // Get the updated market from global state that matches BOTH ID and category
-                        const updatedMarket = global.marketData[commentaryId].markets.find(
+                        let updatedMarket = global.marketData[commentaryId].markets.find(
                             m => m.eventMarketId &&
                                 m.eventMarketId.toString() === existingId.toString() &&
                                 m.marketTypeCategoryId === marketValue.marketTypeCategoryId &&
                                 m.over && m.over.toString() === marketValue.over.toString()
-                        ) || { ...market, eventMarketId: existingId };
+                        ) || { ...marketCopy, eventMarketId: existingId };
 
+                        // Ensure runners have IDs before sending to socket
+                        if (updatedMarket.runners) {
+                            const needsRunnerIds = updatedMarket.runners.some(r => !r.runnerId || r.runnerId === 0);
+
+                            if (needsRunnerIds) {
+                                // Fetch runners from DB if needed
+                                try {
+                                    const runnersFromDB = await fetchRunnersForMarket(existingId, fastify);
+                                    if (runnersFromDB && runnersFromDB.length > 0) {
+                                        updatedMarket.runners = runnersFromDB;
+
+                                        // Also update in global state
+                                        if (marketIndex !== -1) {
+                                            global.marketData[commentaryId].markets[marketIndex].runners = runnersFromDB;
+                                        }
+                                    }
+                                } catch (error) {
+                                    console.error(`[DB] Error fetching runners for market ${existingId}:`, error);
+                                }
+                            }
+                        }
+
+                        console.log(`[Socket] About to send market update with status ${updatedMarket.status}`);
                         global.socketIo.to(commentaryId).emit("updateMarketData", formatMarketForSocket(updatedMarket));
-                        console.log(`[Socket] Sent update for category ${marketValue.marketTypeCategoryId}, over ${marketValue.over}, market ${existingId}`);
+                        console.log(`[Socket] Sent update for category ${marketValue.marketTypeCategoryId}, over ${marketValue.over}, market ${existingId}, status ${updatedMarket.status}`);
                     }
                 }
                 return existingId;
@@ -62,22 +97,52 @@ async function updateMarketStatusInDB(market, fastify) {
 
             if (newMarketId !== 0) {
                 // Update global state with the new ID
-                updateGlobalMarketId(market, newMarketId);
+                updateGlobalMarketId(marketCopy, newMarketId);
+
+                // Ensure status is updated to the intended value in global state
+                synchronizeMarketStatus(
+                    commentaryId,
+                    newMarketId,
+                    marketValue.marketTypeCategoryId,
+                    marketValue.over,
+                    marketValue.status
+                );
 
                 // Emit socket update AFTER database insert is complete
                 if (global.socketIo) {
                     const clientInRoom = global.socketIo.sockets.adapter.rooms.get(commentaryId);
                     if (clientInRoom?.size) {
-                        // Get the updated market from global state that matches BOTH ID and category
-                        const updatedMarket = global.marketData[commentaryId].markets.find(
+                        // Get the updated market with runners
+                        let updatedMarket = global.marketData[commentaryId].markets.find(
                             m => m.eventMarketId &&
                                 m.eventMarketId.toString() === newMarketId.toString() &&
-                                m.marketTypeCategoryId === marketValue.marketTypeCategoryId &&
-                                m.over && m.over.toString() === marketValue.over.toString()
-                        ) || { ...market, eventMarketId: newMarketId };
+                                m.marketTypeCategoryId === marketValue.marketTypeCategoryId
+                        );
 
+                        if (!updatedMarket) {
+                            updatedMarket = { ...marketCopy, eventMarketId: newMarketId };
+                        }
+
+                        // Wait for runners to have IDs
+                        if (updatedMarket.runners) {
+                            const needsRunnerIds = updatedMarket.runners.some(r => !r.runnerId || r.runnerId === 0);
+
+                            if (needsRunnerIds) {
+                                // Fetch the newly inserted runners
+                                try {
+                                    const runnersFromDB = await fetchRunnersForMarket(newMarketId, fastify);
+                                    if (runnersFromDB && runnersFromDB.length > 0) {
+                                        updatedMarket.runners = runnersFromDB;
+                                    }
+                                } catch (error) {
+                                    console.error(`[DB] Error fetching runners for new market ${newMarketId}:`, error);
+                                }
+                            }
+                        }
+
+                        console.log(`[Socket] About to send new market with status ${updatedMarket.status}`);
                         global.socketIo.to(commentaryId).emit("updateMarketData", formatMarketForSocket(updatedMarket));
-                        console.log(`[Socket] Sent update for new market: category ${marketValue.marketTypeCategoryId}, over ${marketValue.over}, ID ${newMarketId}`);
+                        console.log(`[Socket] Sent update for new market: category ${marketValue.marketTypeCategoryId}, over ${marketValue.over}, ID ${newMarketId}, status ${updatedMarket.status}`);
                     }
                 }
             }
@@ -85,22 +150,53 @@ async function updateMarketStatusInDB(market, fastify) {
         } else {
             // Market already has an ID, just update its status - use full identifier combo
             console.log(`[DB] Updating existing market: ID=${marketId}, Category=${marketValue.marketTypeCategoryId}, Over=${marketValue.over}`);
-            await updateExistingMarket(market, fastify);
+            await updateExistingMarket(marketCopy, fastify);
+
+            // Explicitly update the status in global state to ensure consistency
+            synchronizeMarketStatus(
+                commentaryId,
+                marketId,
+                marketValue.marketTypeCategoryId,
+                marketValue.over,
+                marketValue.status
+            );
 
             // Emit socket update AFTER database update is complete
             if (global.socketIo) {
                 const clientInRoom = global.socketIo.sockets.adapter.rooms.get(commentaryId);
                 if (clientInRoom?.size) {
                     // Get the updated market from global state with precise matching
-                    const updatedMarket = global.marketData[commentaryId].markets.find(
+                    let updatedMarket = global.marketData[commentaryId].markets.find(
                         m => m.eventMarketId &&
                             m.eventMarketId.toString() === marketId.toString() &&
                             m.marketTypeCategoryId === marketValue.marketTypeCategoryId &&
                             m.over && m.over.toString() === marketValue.over.toString()
-                    ) || market;
+                    );
 
+                    if (!updatedMarket) {
+                        updatedMarket = marketCopy;
+                    }
+
+                    // Ensure runners have IDs
+                    if (updatedMarket.runners) {
+                        const needsRunnerIds = updatedMarket.runners.some(r => !r.runnerId || r.runnerId === 0);
+
+                        if (needsRunnerIds) {
+                            // Fetch runners from DB if needed
+                            try {
+                                const runnersFromDB = await fetchRunnersForMarket(marketId, fastify);
+                                if (runnersFromDB && runnersFromDB.length > 0) {
+                                    updatedMarket.runners = runnersFromDB;
+                                }
+                            } catch (error) {
+                                console.error(`[DB] Error fetching runners for market ${marketId}:`, error);
+                            }
+                        }
+                    }
+
+                    console.log(`[Socket] About to send update with status ${updatedMarket.status}`);
                     global.socketIo.to(commentaryId).emit("updateMarketData", formatMarketForSocket(updatedMarket));
-                    console.log(`[Socket] Sent update for market: ID=${marketId}, Category=${marketValue.marketTypeCategoryId}, Over=${marketValue.over}`);
+                    console.log(`[Socket] Sent update for market: ID=${marketId}, Category=${marketValue.marketTypeCategoryId}, Over=${marketValue.over}, Status=${updatedMarket.status}`);
                 }
             }
             return marketId;

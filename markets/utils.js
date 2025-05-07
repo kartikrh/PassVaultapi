@@ -745,42 +745,39 @@ function formatMarketForSocket(market) {
     return JSON.stringify(formattedObject);
 }
 
-// /**
-//  * Synchronizes market IDs across all data structures
-//  * @param {number} commentaryId - Commentary ID
-//  */
-// function synchronizeMarketIds(commentaryId) {
-//     if (!global.marketData || !global.marketData[commentaryId]) {
-//         console.log(`[SYNC] No global data for commentary ID ${commentaryId}`);
-//         return;
-//     }
+/**
+ * Ensures market status consistency across all references
+ * @param {number} commentaryId - Commentary ID
+ * @param {number|string} marketId - Market ID
+ * @param {number} marketTypeCategoryId - Market category ID
+ * @param {number|string} status - The status to set
+ */
+function synchronizeMarketStatus(commentaryId, marketId, marketTypeCategoryId, over, status) {
+    if (!global.marketData || !global.marketData[commentaryId] || !global.marketData[commentaryId].markets) {
+        console.log(`[SYNC] No global data for commentary ID ${commentaryId}`);
+        return false;
+    }
 
-//     const markets = global.marketData[commentaryId].markets;
-//     console.log(`[SYNC] Synchronizing ${markets.length} markets for commentary ID ${commentaryId}`);
+    // Find the market in global state
+    const marketIndex = global.marketData[commentaryId].markets.findIndex(
+        m => m.eventMarketId &&
+            m.eventMarketId.toString() === marketId.toString() &&
+            m.marketTypeCategoryId === marketTypeCategoryId &&
+            m.over && m.over.toString() === over.toString()
+    );
 
-//     markets.forEach(market => {
-//         if (market.eventMarketId && market.eventMarketId !== 0) {
-//             // Ensure the ID is consistent in the data property
-//             if (market.data) {
-//                 try {
-//                     let dataObj = typeof market.data === 'string' ? JSON.parse(market.data) : market.data;
-//                     if (dataObj.marketId !== market.eventMarketId) {
-//                         dataObj.marketId = market.eventMarketId;
-//                         market.data = JSON.stringify(dataObj);
-//                         console.log(`[SYNC] Updated market ID in data property for ${market.marketName}: ${market.eventMarketId}`);
-//                     }
-//                 } catch (error) {
-//                     console.error(`[SYNC] Error updating market ID in data JSON: ${error.message}`);
-//                 }
-//             }
+    if (marketIndex !== -1) {
+        // Update the status
+        const oldStatus = global.marketData[commentaryId].markets[marketIndex].status;
+        global.marketData[commentaryId].markets[marketIndex].status = status;
 
-//             // Update references in the ball-to-action map
-//             updateBallToActionMapReferences(commentaryId, market, market.eventMarketId);
-//         }
-//     });
+        console.log(`[SYNC] Synchronized market ${marketId} (category ${marketTypeCategoryId}) status: ${oldStatus} -> ${status}`);
+        return true;
+    }
 
-//     console.log(`[SYNC] Market ID synchronization complete for commentary ID ${commentaryId}`);
-// }
+    console.log(`[SYNC] Market ${marketId} (category ${marketTypeCategoryId}) not found in global state`);
+    return false;
+}
 function normalizeBallToActionMap(commentaryId) {
     if (!global.marketData || !global.marketData[commentaryId] || !global.marketData[commentaryId].ballToActionMap) {
         return;
@@ -868,5 +865,6 @@ module.exports = {
     mergeRunners,
     initializeBallToActionMap,
     formatBallNumber,
-    validateBallToActionMap
+    validateBallToActionMap,
+    synchronizeMarketStatus
 };

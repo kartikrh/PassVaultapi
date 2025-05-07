@@ -89,18 +89,20 @@ function processOddEvenMarkets(
         return;
     }
 
-    // Find odd-even markets
+    // Find odd-even AND lottery markets
     const allMarkets = global.marketData[commentaryId].markets;
     const oddEvenMarkets = allMarkets.filter(
-        market => market.marketTypeCategoryId === 28
+        market => market.marketTypeCategoryId === 28 || market.marketTypeCategoryId === 35
     );
 
     if (!oddEvenMarkets || oddEvenMarkets.length === 0) {
-        console.log(`No odd-even markets found for commentary ID: ${commentaryId}`);
+        console.log(`No odd-even or lottery markets found for commentary ID: ${commentaryId}`);
         return;
     }
 
-    // Process each odd-even market
+    console.log(`Processing ${oddEvenMarkets.length} markets: ${oddEvenMarkets.filter(m => m.marketTypeCategoryId === 28).length} lottery and ${oddEvenMarkets.filter(m => m.marketTypeCategoryId === 35).length} odd-even`);
+
+    // Process each odd-even and lottery market
     const runnerData = [];
     const eventData = [];
     const marketDatalog = [];
@@ -113,6 +115,8 @@ function processOddEvenMarkets(
             continue;
         }
 
+        console.log(`Processing market ${market.marketName} (ID: ${market.eventMarketId}, Category: ${market.marketTypeCategoryId}, Status: ${market.status})`);
+
         // Check if market needs status update
         let selectionStatus = EventMarketStatus.NotCreated;
         let isUpdate = false;
@@ -121,6 +125,7 @@ function processOddEvenMarkets(
         // Reset from suspend if needed
         if (market.status === EventMarketStatus.Suspend) {
             market.status = EventMarketStatus.Open;
+            console.log(`Resetting market ${market.marketName} from Suspend to Open`);
         }
 
         // Check for market status changes
@@ -133,9 +138,14 @@ function processOddEvenMarkets(
             updatedMarket.wrPredefinedValue -= wicketDeduction;
         }
 
+        // Deep clone the market to prevent reference issues
+        const marketClone = JSON.parse(JSON.stringify(updatedMarket));
+
         // Update the market
-        Object.assign(market, updatedMarket);
+        market.status = marketClone.status;
         isUpdate = statusChanged;
+
+        console.log(`After status check: Market ${market.marketName} (Category: ${market.marketTypeCategoryId}) status: ${market.status}, isUpdate: ${isUpdate}`);
 
         // Process auto-settlement if needed
         if (market.isOver &&
@@ -152,9 +162,11 @@ function processOddEvenMarkets(
             if (isUpdate) {
                 if (market.status === EventMarketStatus.Close) {
                     selectionStatus = EventMarketStatus.Close;
+                    console.log(`Setting selectionStatus to Close for market ${market.marketName}`);
                 } else if (market.status === EventMarketStatus.Open) {
                     selectionStatus = EventMarketStatus.Open;
                     isSendData = market.wrDefaultIsSendData;
+                    console.log(`Setting selectionStatus to Open for market ${market.marketName}`);
                 }
 
                 // Check if it's time to settle
@@ -180,9 +192,10 @@ function processOddEvenMarkets(
                     selectionStatus = EventMarketStatus.Settled;
                     market.status = EventMarketStatus.Settled;
                     market.wrSettledTime = new Date().toISOString();
+                    console.log(`Settling market ${market.marketName} with status ${market.status}`);
                 }
 
-                // Update data for socket/DB
+                // Update data for socket/DB - ensure these properties are set
                 market.wrIsSendData = isSendData;
 
                 // Prepare data for updates (simplified for this implementation)
@@ -191,13 +204,15 @@ function processOddEvenMarkets(
                     wrEventMarketId: market.eventMarketId,
                     wrData: JSON.stringify(market),
                     wrUpdateType: 1,
-                    wrIsSendData: isSendData
+                    wrIsSendData: isSendData,
+                    category: market.marketTypeCategoryId // Added for debugging
                 });
 
                 socketData.push({
                     market: market.eventMarketId,
                     status: market.status,
-                    runners: market.runners
+                    runners: market.runners,
+                    category: market.marketTypeCategoryId // Added for debugging
                 });
             }
         } else if (market.status === EventMarketStatus.Close &&
@@ -210,9 +225,11 @@ function processOddEvenMarkets(
     }
 
     // Send updates if needed
-    if (marketDatalog.length > 0 && socketData.length > 0) {
-        // In real implementation, would batch send to DB and socket
-        console.log(`[ODD-EVEN] Updated ${marketDatalog.length} markets`);
+    if (marketDatalog.length > 0) {
+        console.log(`[ODD-EVEN] Updating ${marketDatalog.length} markets:`);
+        marketDatalog.forEach(entry => {
+            console.log(`- Market ID: ${entry.wrEventMarketId}, Category: ${entry.category}`);
+        });
     }
 
     return {
