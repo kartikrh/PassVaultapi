@@ -119,7 +119,7 @@ const getAllPlayersByTeamIdQuery = async (data, request, fastify) => {
         {
               type: fastify.db.QueryTypes.SELECT,
               bind: [data.teamId, data.competitionId],
-            }
+        }
     )
     // return await fastify.db.query(
     //   `SELECT 
