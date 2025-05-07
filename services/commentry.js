@@ -3882,11 +3882,12 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
       let decimalOverCount = parseFloat(commentaryBallByBall.overCount);
       let _wkt = commentaryBallByBall.ballIsWicket;
       let partnership = updatedData.commentaryPartnershipDetails;
-      let boundary = partnership.totalSix + partnership.totalFour;
-      sendPartnership.push({
-        partnership_no: partnership?.order || 0,
-        partnership_boundaries: boundary,
-      });
+      let boundary = partnership?.totalSix || 0 + partnership?.totalFour || 0;
+      if (partnership)
+        sendPartnership.push({
+          partnership_no: partnership?.order || 0,
+          partnership_boundaries: boundary
+        })
       const predictionPayload = {
         playerpredictscore: {
           commentary_id: commentaryData.commentaryId,
