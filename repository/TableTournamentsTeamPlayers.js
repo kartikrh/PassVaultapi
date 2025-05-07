@@ -100,14 +100,10 @@ const getAllPlayersByTeamIdQuery = async (data, request, fastify) => {
   try {
     return await fastify.db.query(
       `SELECT 
-          ttp."wrId" AS "id",
-          ttp."wrCompetitionId" AS "competitionId",
-          ttp."wrPlayerId" AS "playerId",
-          ttp."wrPlayerName" AS "playerName",
-          ttp."wrCreatedBy" AS  "createdBy",
-          ttp."wrCreatedAt" AS "createdAt",
-          tp."wrPlayerTypeId" AS "playerTypeId",
-          tpt."wrPlayerType" AS "playerType",
+          tttp."wrId" AS "id",
+          tttp."wrCompetitionId" AS "competitionId",
+          tttp."wrCreatedBy" AS  "createdBy",
+          tttp."wrCreatedAt" AS "createdAt",
           tp."wrPlayerId" AS "playerId",
           tp."wrPlayerName" AS "playerName",
           ttp."wrTeamId" AS "teamId"
@@ -117,14 +113,41 @@ const getAllPlayersByTeamIdQuery = async (data, request, fastify) => {
         LEFT JOIN "tblTournamentTeamPlayers" AS tttp
             ON tttp."wrPlayerId" = tp."wrPlayerId" 
             AND tttp."wrTeamId" = ttp."wrTeamId"
-            AND tttp."wrCompetitionId" = $2
-        WHERE ttp."wrTeamId" = $1 AND ttp."wrIsDeleted" = false
-        AND tttp."wrPlayerId" IS NULL;`,
-      {
-        type: fastify.db.QueryTypes.SELECT,
-        bind: [data.teamId, data.competitionId],
-      }
-    );
+            AND tttp."wrCompetitionId" = $1
+        WHERE ttp."wrTeamId" = $2 AND ttp."wrIsDeleted" = false
+        AND tttp."wrPlayerId" IS NULL`,
+        {
+              type: fastify.db.QueryTypes.SELECT,
+              bind: [data.teamId, data.competitionId],
+            }
+    )
+    // return await fastify.db.query(
+    //   `SELECT 
+    //       ttp."wrId" AS "id",
+    //       ttp."wrCompetitionId" AS "competitionId",
+    //       ttp."wrPlayerId" AS "playerId",
+    //       ttp."wrPlayerName" AS "playerName",
+    //       ttp."wrCreatedBy" AS  "createdBy",
+    //       ttp."wrCreatedAt" AS "createdAt",
+    //       tp."wrPlayerTypeId" AS "playerTypeId",
+    //       tpt."wrPlayerType" AS "playerType",
+    //       tp."wrPlayerId" AS "playerId",
+    //       tp."wrPlayerName" AS "playerName",
+    //       ttp."wrTeamId" AS "teamId"
+    //     FROM "tblTeamPlayers" AS ttp
+    //     LEFT JOIN "tblPlayers" AS tp 
+    //         ON ttp."wrRefPlayerId" = tp."wrPlayerId" AND tp."wrIsDeleted" = false
+    //     LEFT JOIN "tblTournamentTeamPlayers" AS tttp
+    //         ON tttp."wrPlayerId" = tp."wrPlayerId" 
+    //         AND tttp."wrTeamId" = ttp."wrTeamId"
+    //         AND tttp."wrCompetitionId" = $2
+    //     WHERE ttp."wrTeamId" = $1 AND ttp."wrIsDeleted" = false
+    //     AND tttp."wrPlayerId" IS NULL;`,
+    //   {
+    //     type: fastify.db.QueryTypes.SELECT,
+    //     bind: [data.teamId, data.competitionId],
+    //   }
+    // );
   } catch (err) {
     errorLogger(
       fastify,
