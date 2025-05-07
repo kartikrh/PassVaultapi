@@ -436,25 +436,28 @@ function updateBallToActionMapReferences(commentaryId, market, newId) {
             if (eventMarketId && eventMarketId !== 0 && action.marketId === eventMarketId.toString()) {
                 global.marketData[commentaryId].ballToActionMap[ball][i].marketId = newId.toString();
                 updatedCount++;
+                console.log(`[GLOBAL] Updated ID reference for ball ${ball}, action ${action.action}: ${eventMarketId} -> ${newId}`);
             }
-            // Match by attributes for markets with ID 0 - especially for odd-even and lottery markets
+            // Match by attributes for markets with ID 0
             else if ((action.marketId === '0' || !action.marketId) &&
                 action.marketTypeCategoryId === marketTypeCategoryId &&
                 action.over && over && action.over.toString() === over.toString() &&
                 (!teamId || !action.teamId || action.teamId.toString() === teamId.toString())) {
+
                 global.marketData[commentaryId].ballToActionMap[ball][i].marketId = newId.toString();
                 updatedCount++;
-                console.log(`[GLOBAL] Updated action reference for ball ${ball}: ${action.action} -> marketId ${newId}`);
+                console.log(`[GLOBAL] Updated action reference for ball ${ball}, category ${marketTypeCategoryId}: ${action.action} -> marketId ${newId}`);
             }
         }
     }
 
     if (updatedCount > 0) {
-        console.log(`[GLOBAL] Updated ${updatedCount} references in ball-to-action map for market ID ${newId}`);
+        console.log(`[GLOBAL] Updated ${updatedCount} references in ball-to-action map for market ID ${newId} (category ${marketTypeCategoryId}, over ${over})`);
     } else {
-        console.log(`[GLOBAL] No references found in ball-to-action map for market with over ${over} and team ${teamId}`);
+        console.log(`[GLOBAL] No references found in ball-to-action map for market with over ${over}, category ${marketTypeCategoryId} and team ${teamId}`);
     }
 }
+
 
 function updateGlobalMarketId(market, newId) {
     const { commentaryId, ...marketValue } = market;
@@ -468,16 +471,15 @@ function updateGlobalMarketId(market, newId) {
     const markets = global.marketData[commentaryId].markets;
     let foundMarket = false;
 
-    // For lottery and odd-even markets, we need to be very specific in matching
+    // For lottery and odd-even markets, use specific matching logic
     if (marketValue.marketTypeCategoryId === 35 || marketValue.marketTypeCategoryId === 28) {
         const marketIndex = markets.findIndex(m =>
             m.marketTypeCategoryId === marketValue.marketTypeCategoryId &&
-            m.over.toString() === marketValue.over.toString() &&
-            m.teamId.toString() === marketValue.teamId.toString()
+            m.over && m.over.toString() === marketValue.over.toString() &&
+            (!m.teamId || !marketValue.teamId || m.teamId.toString() === marketValue.teamId.toString())
         );
 
         if (marketIndex !== -1) {
-            // Update the ID
             global.marketData[commentaryId].markets[marketIndex].eventMarketId = newId;
             console.log(`[GLOBAL] Updated ${marketValue.marketTypeCategoryId === 35 ? 'Odd-Even' : 'Lottery'} market ID in global state: ${marketValue.marketName} (over ${marketValue.over}) -> ${newId}`);
 
@@ -496,25 +498,24 @@ function updateGlobalMarketId(market, newId) {
 
             // Update runners if available
             if (marketValue.runners && marketValue.runners.length > 0) {
-                // For these specific market types, only update runners if they match the expected format
-                if ((marketValue.marketTypeCategoryId === 35 && marketValue.runners.length === 2) ||
-                    (marketValue.marketTypeCategoryId === 28 && marketValue.runners.length > 2)) {
-                    global.marketData[commentaryId].markets[marketIndex].runners = marketValue.runners;
-                } else {
-                    console.warn(`[GLOBAL] Not updating runners for market ${newId} - runner count mismatch: ${marketValue.runners.length}`);
-                }
+                global.marketData[commentaryId].markets[marketIndex].runners = marketValue.runners;
             }
 
             foundMarket = true;
 
             // Update ball-to-action map for this market
-            updateBallToActionMapReferences(commentaryId, market, newId);
+            updateBallToActionMapReferences(commentaryId, {
+                ...marketValue,
+                marketTypeCategoryId: marketValue.marketTypeCategoryId
+            }, newId);
         }
     } else {
-        // For other market types, try to match by name and category
+        // For other market types
         const marketIndex = markets.findIndex(m =>
-            m.marketName === marketValue.marketName &&
-            m.marketTypeCategoryId === marketValue.marketTypeCategoryId
+            (m.eventMarketId && marketValue.eventMarketId &&
+                m.eventMarketId.toString() === marketValue.eventMarketId.toString()) ||
+            (m.marketName === marketValue.marketName &&
+                m.marketTypeCategoryId === marketValue.marketTypeCategoryId)
         );
 
         if (marketIndex !== -1) {
@@ -543,7 +544,7 @@ function updateGlobalMarketId(market, newId) {
             foundMarket = true;
 
             // Update ball-to-action map for this market
-            updateBallToActionMapReferences(commentaryId, market, newId);
+            updateBallToActionMapReferences(commentaryId, marketValue, newId);
         }
     }
 

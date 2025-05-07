@@ -1,9 +1,10 @@
 // predictScoreHandler.js
-const { getActionsForBall, findMarket, formatBallNumber } = require('./ballToActionMapper');
+const { getActionsForBall, findMarket, closeMarketsForOver } = require('./ballToActionMapper');
 const { updateMarketStatusInDB, updateMarketStatusInSocket } = require('./marketActions');
 const { processOddEvenMarkets } = require('./oddEven');
 const { EventMarketStatus } = require('../utilities');
 const { errorLogger } = require('../utilities/logger');
+const { formatBallNumber, normalizeBallToActionMap } = require('./utils');
 
 /**
  * Processes the prediction score market based on incoming payload
@@ -29,7 +30,10 @@ function processPredictScoreMarket(payload, fastify) {
         const ballByBallId = predictscore.ball_by_ball_id || playerpredictscore.ball_by_ball_id;
         const eventId = playerpredictscore.event_id;
 
-        console.log(`Processing ball ${currentBall}, score ${currentScore}, commentary ID ${commentaryId}`);
+        console.log(`Processing ball ${currentBall}, score ${currentScore}, commentary ID ${commentaryId}, batting team ID ${strikeTeamId}`);
+
+        // Normalize ball-to-action map to ensure consistent ball keys
+        normalizeBallToActionMap(commentaryId);
 
         // Format the ball to ensure consistent representation
         const formattedBall = formatBallNumber(currentBall);
@@ -43,12 +47,32 @@ function processPredictScoreMarket(payload, fastify) {
             };
         }
 
-        // Get actions mapped to this ball
-        const actions = getActionsForBall(commentaryId, formattedBall);
+        // Get the current over from the ball (integer part)
+        const currentOver = Math.floor(parseFloat(formattedBall));
+
+        // For balls like x.6 (end of over), check if we need to close the previous over's markets
+        if (formattedBall.endsWith('.6')) {
+            // Calculate the over that should be closed (current over - 3, or minimum 4)
+            // The -3 is based on your business logic patterns
+            const overToClose = Math.max(4, currentOver - 3);
+
+            // Only try to close if the over makes sense
+            if (overToClose > 0 && overToClose < currentOver) {
+                console.log(`[AUTO] Checking if over ${overToClose} markets need to be closed at ball ${formattedBall}`);
+                const closedCount = closeMarketsForOver(commentaryId, overToClose, strikeTeamId, fastify);
+
+                if (closedCount > 0) {
+                    console.log(`[AUTO] Closed ${closedCount} markets for over ${overToClose}, team ${strikeTeamId} at ball ${formattedBall}`);
+                }
+            }
+        }
+
+        // Get actions mapped to this ball, filtered by batting team
+        const actions = getActionsForBall(commentaryId, formattedBall, strikeTeamId);
 
         // Log whether actions were found
         if (actions && actions.length > 0) {
-            console.log(`Found ${actions.length} actions for ball ${formattedBall}`);
+            console.log(`Found ${actions.length} actions for ball ${formattedBall} and team ${strikeTeamId}`);
 
             // Process each action - only create in DB when needed
             for (const action of actions) {
@@ -59,7 +83,13 @@ function processPredictScoreMarket(payload, fastify) {
                 }
             }
         } else {
-            console.log(`No actions mapped for ball ${formattedBall}`);
+            console.log(`No actions mapped for ball ${formattedBall} and team ${strikeTeamId}`);
+
+            // If no actions found but it's a key ball (like end of over), check other overs
+            if (formattedBall.endsWith('.6')) {
+                // Check if any markets should be manually closed for any over
+                checkAndCloseMarketsForAllOvers(commentaryId, strikeTeamId, fastify);
+            }
         }
 
         // Process specific market types if needed
@@ -75,7 +105,7 @@ function processPredictScoreMarket(payload, fastify) {
             totalWicket,
             ballByBallId,
         );
-        // synchronizeMarketIds(commentaryId);
+
         return {
             success: true,
             message: `Processed predict score for ball ${formattedBall}`
@@ -96,23 +126,27 @@ function processPredictScoreMarket(payload, fastify) {
  * @param {Object} fastify - Fastify instance
  */
 function executeMarketAction(commentaryId, action, fastify) {
-    const { marketId, action: actionType, over, marketTypeCategoryId } = action;
+    const { marketId, action: actionType, over, marketTypeCategoryId, teamId } = action;
 
-    // Find the market in global state
-    const market = findMarket(commentaryId, marketId, { over, marketTypeCategoryId });
+    // Find the market in global state with additional metadata
+    const market = findMarket(commentaryId, marketId, {
+        over,
+        marketTypeCategoryId,
+        teamId
+    });
 
     if (!market) {
-        console.error(`Cannot execute ${actionType} on marketId ${marketId} with over ${over}: Market not found in global state`);
+        console.error(`Cannot execute ${actionType} on marketId ${marketId} with over ${over} and category ${marketTypeCategoryId}: Market not found in global state`);
         return;
     }
 
     // Check if this market is for the batting team
-    if (!isBattingTeam(commentaryId, market.teamId)) {
-        console.log(`Skipping action ${actionType} for non-batting team market: ${market.marketName}`);
+    if (teamId && !isBattingTeam(commentaryId, market.teamId)) {
+        console.log(`Skipping action ${actionType} for non-batting team market: ${market.marketName} (Team ID: ${market.teamId})`);
         return;
     }
 
-    console.log(`Executing ${actionType} on market "${market.marketName}" (ID: ${market.eventMarketId || 'unsaved'})`);
+    console.log(`Executing ${actionType} on market "${market.marketName}" (ID: ${market.eventMarketId || 'unsaved'}, Category: ${marketTypeCategoryId}, Over: ${over})`);
 
     // Set commentary ID for DB operations
     market.commentaryId = commentaryId;
@@ -148,6 +182,9 @@ function isBattingTeam(commentaryId, teamId) {
         return true; // Default to true if data not available
     }
 
+    // Convert IDs to strings for comparison
+    const teamIdStr = teamId ? teamId.toString() : null;
+
     const battingTeam = global.tblCommentaryTeams.find(
         item => item.commentaryId === parseInt(commentaryId) &&
             item.teamStatus === 1 // Assuming teamStatus 1 means batting
@@ -158,8 +195,16 @@ function isBattingTeam(commentaryId, teamId) {
         return true; // Default to true if batting team info not available
     }
 
-    return parseInt(battingTeam.teamId) === parseInt(teamId);
+    const battingTeamIdStr = battingTeam.teamId ? battingTeam.teamId.toString() : null;
+    const isMatching = !teamIdStr || !battingTeamIdStr || teamIdStr === battingTeamIdStr;
+
+    if (!isMatching) {
+        console.log(`Team ID ${teamIdStr} does not match batting team ID ${battingTeamIdStr}`);
+    }
+
+    return isMatching;
 }
+
 /**
  * Opens a market
  * @param {Object} market - The market to open

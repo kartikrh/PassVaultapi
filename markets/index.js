@@ -6,17 +6,16 @@ const { getPlayersBattingHistoryByIdQuery } = require('../repository/TablePlayer
 const { commentaryStatus, EventMarketStatus } = require('../utilities');
 const configConstants = require('../utilities/configConstants');
 const { errorLogger } = require('../utilities/logger');
-const { processOddEven, processOddEvenMarkets, processLotteryMarkets, processMarketAndRunnersOfOE } = require('./oddEven');
+const { processOddEven, processOddEvenMarkets } = require('./oddEven');
 const { updateMarketStatusInDB, updateMarketStatusInSocket } = require('./marketActions');
 const { processPredictScoreMarket } = require('./predictScoreHandler');
 const {
-  initializeBallToActionMap,
   getActionsForBall,
   findMarket,
   logFullBallToActionMap,
   getAllMappedActions
 } = require('./ballToActionMapper');
-const { createMarketAndRunner } = require('./utils');
+const { createMarketAndRunner, initializeBallToActionMap, normalizeBallToActionMap } = require('./utils');
 
 /**
  * Market handlers for different market types
@@ -273,6 +272,9 @@ const generateMarketAndRunners = async (data, request, fastify) => {
     // Initialize the ball-to-action map
     initializeBallToActionMap(global.marketData[data.commentaryId].markets, data.commentaryId);
 
+    // Normalize the ball keys to ensure consistency
+    normalizeBallToActionMap(commentaryId);
+
     // Log the total number of markets and entries in ball-to-action map
     console.log(`Generated ${global.marketData[data.commentaryId].markets.length} markets for commentary ${data.commentaryId}`);
 
@@ -304,9 +306,6 @@ module.exports = {
   processPredictScoreMarket,
   processOddEven,
   processOddEvenMarkets,
-  processLotteryMarkets,
-  processMarketAndRunnersOfOE,
-  initializeBallToActionMap,
   getActionsForBall,
   findMarket,
   updateMarketStatusInDB,

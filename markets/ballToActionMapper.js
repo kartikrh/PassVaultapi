@@ -1,6 +1,6 @@
 // ballToActionMapper.js
-const { EventMarketStatus } = require('../utilities');
-const fs = require('fs');
+const { updateMarketStatusInDB } = require('./marketActions');
+const { formatBallNumber } = require('./utils');
 
 /**
  * Converts overs to balls
@@ -31,79 +31,6 @@ function ballsToOvers(balls, matchTypeId) {
 }
 
 /**
- * Formats ball number to ensure consistent representation
- * @param {number|string} ball - Ball number
- * @returns {string} - Formatted ball number
- */
-function formatBallNumber(ball) {
-    if (ball === null || ball === undefined) return null;
-
-    const ballStr = ball.toString();
-    // If no decimal, add ".0" to the end
-    if (!ballStr.includes('.')) {
-        return `${ballStr}.0`;
-    }
-
-    // For decimal numbers, ensure we have at least one digit after decimal
-    const parts = ballStr.split('.');
-    if (parts[1].length === 0) {
-        return `${parts[0]}.0`;
-    }
-
-    return ballStr;
-}
-
-/**
- * Gets ball number from over
- * @param {number} over - The over in decimal form (e.g. 5.3)
- * @param {number} matchTypeId - The match type ID
- * @returns {string} - Ball identifier (e.g. "5.3")
- */
-function getBallFromOver(over, matchTypeId) {
-    if (!over && over !== 0) return null;
-
-    // Format ball number to ensure consistency
-    return formatBallNumber(over);
-}
-
-/**
- * Maps an action to a specific ball
- * @param {number} commentaryId - The commentary ID
- * @param {string} ball - Ball identifier (e.g. "5.3")
- * @param {string} action - Action to perform (open, close, settle)
- * @param {string} marketId - Market ID to act on
- * @param {Object} metadata - Additional market metadata
- */
-function mapAction(commentaryId, ball, action, marketId, metadata = {}) {
-    if (!ball) return;
-
-    const ballActionMap = global.marketData[commentaryId].ballToActionMap;
-
-    if (!ballActionMap[ball]) {
-        ballActionMap[ball] = [];
-    }
-
-    // Create action object with metadata
-    const actionObj = {
-        action,
-        marketId,
-        ...metadata
-    };
-
-    // Check for duplicates before adding
-    const isDuplicate = ballActionMap[ball].some(item =>
-        item.action === action &&
-        item.marketId === marketId &&
-        item.over === metadata.over &&
-        item.marketTypeCategoryId === metadata.marketTypeCategoryId
-    );
-
-    if (!isDuplicate) {
-        ballActionMap[ball].push(actionObj);
-    }
-}
-
-/**
  * Checks if the market belongs to the batting team
  * @param {Object} market - Market object
  * @param {number|string} battingTeamId - ID of the team currently batting
@@ -118,82 +45,6 @@ function isBattingTeamMarket(market, battingTeamId) {
 
     // Check if market belongs to the batting team
     return market.teamId.toString() === battingTeamId.toString();
-}
-
-/**
- * Initializes ball to action map based on market templates
- * @param {Array} markets - Array of markets
- * @param {number} commentaryId - The commentary ID
- * @param {number|string} battingTeamId - ID of the team currently batting
- */
-function initializeBallToActionMap(markets, commentaryId, battingTeamId) {
-    // Ensure global market data structure exists
-    if (!global.marketData) {
-        global.marketData = {};
-    }
-
-    if (!global.marketData[commentaryId]) {
-        global.marketData[commentaryId] = {
-            markets: [],
-            ballToActionMap: {}
-        };
-    } else if (!global.marketData[commentaryId].ballToActionMap) {
-        global.marketData[commentaryId].ballToActionMap = {};
-    }
-
-    // Clear existing ball-to-action map for this commentary
-    global.marketData[commentaryId].ballToActionMap = {};
-
-    // Log the batting team for debugging
-    console.log(`[INIT] Initializing ball-to-action map for batting team ID: ${battingTeamId || 'not specified'}`);
-
-    // Filter markets for the batting team if specified
-    const validMarkets = battingTeamId
-        ? markets.filter(market => isBattingTeamMarket(market, battingTeamId))
-        : markets;
-
-    console.log(`[INIT] ${validMarkets.length} of ${markets.length} markets are valid for the batting team`);
-
-    validMarkets.forEach(market => {
-        const marketId = market.eventMarketId ? market.eventMarketId.toString() : "0";
-        const marketCategoryId = market.marketTypeCategoryId;
-        const overValue = market.over ? market.over.toString() : null;
-
-        // Additional metadata for the market action
-        const marketMetadata = {
-            over: overValue,
-            marketTypeCategoryId: marketCategoryId,
-            teamId: market.teamId
-        };
-
-        // Map when to open the market
-        const openBall = getBallFromOver(market.autoOpen, market.matchTypeID || 2);
-        mapAction(commentaryId, openBall, "open", marketId, marketMetadata);
-
-        // Map when to close the market
-        const closeBall = getBallFromOver(market.beforeAutoClose, market.matchTypeID || 2);
-        mapAction(commentaryId, closeBall, "close", marketId, marketMetadata);
-
-        // Map when to settle the market (for odd-even and similar markets)
-        if ((marketCategoryId === 28 || marketCategoryId === 35) && market.isAutoResultSet) {
-            // Calculate settlement ball based on the over and autoResultAfterBall
-            const settleBall = getBallFromOver(
-                parseFloat(market.over) + (parseFloat(market.autoResultAfterBall || 0) / 10),
-                market.matchTypeID || 2
-            );
-            mapAction(commentaryId, settleBall, "settle", marketId, marketMetadata);
-        }
-    });
-
-    // Properly log the ball-to-action map structure
-    console.log(`[INIT] Ball-to-action map initialized for commentary ID: ${commentaryId}`);
-
-    // Log the count of balls with actions
-    const ballCount = Object.keys(global.marketData[commentaryId].ballToActionMap).length;
-    console.log(`Total balls mapped: ${ballCount}`);
-
-    // Log sample of the map structure (first 3 entries)
-    logBallToActionMapSample(commentaryId);
 }
 
 /**
@@ -214,14 +65,25 @@ function getActionsForBall(commentaryId, ball, battingTeamId) {
 
     const actions = global.marketData[commentaryId].ballToActionMap[formattedBall];
 
+    console.log(`Found ${actions.length} actions for ball ${formattedBall} before team filtering`);
+
     // If a batting team is specified, filter actions to only include those for that team
     if (battingTeamId) {
-        return actions.filter(action => {
+        const filteredActions = actions.filter(action => {
             // If action has no team ID, it applies to all teams
-            if (!action.teamId) return true;
+            if (!action.teamId) {
+                return true;
+            }
             // Otherwise, check if it matches the batting team
-            return action.teamId.toString() === battingTeamId.toString();
+            const matches = action.teamId.toString() === battingTeamId.toString();
+            if (!matches) {
+                console.log(`Filtering out action ${action.action} for market with over ${action.over}, category ${action.marketTypeCategoryId}, team ${action.teamId} (not matching batting team ${battingTeamId})`);
+            }
+            return matches;
         });
+
+        console.log(`After team filtering: ${filteredActions.length} of ${actions.length} actions apply to team ${battingTeamId}`);
+        return filteredActions;
     }
 
     return actions;
@@ -236,6 +98,7 @@ function getActionsForBall(commentaryId, ball, battingTeamId) {
  */
 function findMarket(commentaryId, marketId, metadata = {}) {
     if (!global.marketData || !global.marketData[commentaryId]) {
+        console.log(`No market data found for commentary ID ${commentaryId}`);
         return null;
     }
 
@@ -244,62 +107,46 @@ function findMarket(commentaryId, marketId, metadata = {}) {
     // If marketId is valid (not 0), search by ID first
     if (marketId && marketId !== "0") {
         const marketById = markets.find(m =>
-            m.eventMarketId && m.eventMarketId.toString() === marketId
+            m.eventMarketId && m.eventMarketId.toString() === marketId.toString()
         );
 
         if (marketById) {
+            console.log(`Found market by ID ${marketId}: ${marketById.marketName} (category: ${marketById.marketTypeCategoryId}, over: ${marketById.over})`);
             return marketById;
         }
     }
 
-    // If market not found by ID or ID is 0, and we have over and market category,
-    // search by those parameters (for odd-even markets)
-    if (metadata.over &&
-        (metadata.marketTypeCategoryId === 28 || metadata.marketTypeCategoryId === 35)) {
+    // If market not found by ID or ID is 0, search by metadata parameters
+    if (metadata.over !== undefined && metadata.marketTypeCategoryId !== undefined) {
+        // Check for both odd-even (35) and lottery (28) markets by over, category ID and team
+        if (metadata.marketTypeCategoryId === 35 || metadata.marketTypeCategoryId === 28) {
+            const marketByAttributes = markets.find(m =>
+                m.marketTypeCategoryId === metadata.marketTypeCategoryId &&
+                m.over && m.over.toString() === metadata.over.toString() &&
+                (!metadata.teamId || !m.teamId || m.teamId.toString() === metadata.teamId.toString())
+            );
 
-        return markets.find(m =>
-            m.marketTypeCategoryId === metadata.marketTypeCategoryId &&
-            m.over && m.over.toString() === metadata.over
-        );
+            if (marketByAttributes) {
+                console.log(`Found ${metadata.marketTypeCategoryId === 35 ? 'Odd-Even' : 'Lottery'} market by attributes: ${marketByAttributes.marketName} (ID: ${marketByAttributes.eventMarketId || 'unsaved'})`);
+                return marketByAttributes;
+            }
+        } else {
+            // For other market types, search by more generic criteria
+            const marketByAttributes = markets.find(m =>
+                m.marketTypeCategoryId === metadata.marketTypeCategoryId &&
+                m.over && m.over.toString() === metadata.over.toString() &&
+                (!metadata.teamId || !m.teamId || m.teamId.toString() === metadata.teamId.toString())
+            );
+
+            if (marketByAttributes) {
+                console.log(`Found market by attributes: ${marketByAttributes.marketName} (ID: ${marketByAttributes.eventMarketId || 'unsaved'})`);
+                return marketByAttributes;
+            }
+        }
     }
 
+    console.log(`No matching market found for marketId ${marketId}, category ${metadata.marketTypeCategoryId}, over ${metadata.over}, team ${metadata.teamId}`);
     return null;
-}
-
-/**
- * Logs a sample of the ball-to-action map for debugging
- * @param {number} commentaryId - The commentary ID
- */
-function logBallToActionMapSample(commentaryId) {
-    const map = global.marketData[commentaryId].ballToActionMap;
-    const balls = Object.keys(map);
-
-    if (balls.length === 0) {
-        console.log("Ball-to-action map is empty");
-        return;
-    }
-
-    // Prepare the data to be written to the file
-    const ballToActionData = [];
-
-    // Collect all balls and actions
-    Object.entries(map).forEach(([ball, actions]) => {
-        actions.forEach(action => {
-            ballToActionData.push({
-                ball,
-                action: action.action,
-                marketId: action.marketId,
-                over: action.over,
-                teamId: action.teamId,
-                ...action
-            });
-        });
-    });
-
-    // Write the data to ballToAction.json
-    fs.writeFileSync(`ballToAction-${commentaryId}.json`, JSON.stringify(ballToActionData, null, 2), 'utf8');
-
-    console.log("Ball-to-action map has been saved to 'ballToAction.json'");
 }
 
 
@@ -384,16 +231,62 @@ function getAllMappedActions(commentaryId) {
     return allActions;
 }
 
+/**
+ * Manually closes all markets for a specific over and team
+ * @param {number} commentaryId - Commentary ID
+ * @param {string|number} over - Over number to close
+ * @param {string|number} teamId - Team ID
+ * @param {Object} fastify - Fastify instance
+ * @returns {number} - Number of markets closed
+ */
+function closeMarketsForOver(commentaryId, over, teamId, fastify) {
+    console.log(`[MANUAL] Attempting to close all markets for over ${over}, team ${teamId}`);
+
+    if (!global.marketData || !global.marketData[commentaryId]) {
+        console.error(`[MANUAL] No market data found for commentary ID ${commentaryId}`);
+        return 0;
+    }
+
+    // Find markets for this over and team
+    const markets = global.marketData[commentaryId].markets.filter(m =>
+        m.over && m.over.toString() === over.toString() &&
+        m.teamId && m.teamId.toString() === teamId.toString() &&
+        (m.status !== 4 && m.status !== 5) // Not already closed or settled
+    );
+
+    console.log(`[MANUAL] Found ${markets.length} active markets for over ${over}, team ${teamId}`);
+
+    // Close each market
+    let closedCount = 0;
+    markets.forEach(market => {
+        console.log(`[MANUAL] Closing market "${market.marketName}" (ID: ${market.eventMarketId || 'unsaved'}, Category: ${market.marketTypeCategoryId})`);
+
+        // Set status to closed
+        market.status = 4; // CLOSE status
+        market.commentaryId = commentaryId;
+
+        // Update runners if available
+        if (market.runners && market.runners.length > 0) {
+            market.runners.forEach(runner => {
+                runner.selectionStatus = 4;
+            });
+        }
+
+        // Update in DB
+        updateMarketStatusInDB(market, fastify);
+        closedCount++;
+    });
+
+    return closedCount;
+}
 module.exports = {
-    initializeBallToActionMap,
     getActionsForBall,
     findMarket,
     oversToBalls,
     ballsToOvers,
-    formatBallNumber,
-    logBallToActionMapSample,
     logFullBallToActionMap,
     getAllMappedActions,
     countActionTypes,
-    isBattingTeamMarket
+    isBattingTeamMarket,
+    closeMarketsForOver
 };
