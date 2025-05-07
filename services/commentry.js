@@ -4391,35 +4391,33 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
       //_resFromPredictAPI = null;
       //_resFromPredictAPI = await
       if (isCallPredict == true) {
-        let key1 = global.tblConfigs.find(
-          (item) => item.key === configConstants.DEFAULTBALLFACED
-        );
-        let key2 = global.tblConfigs.find(
-          (item) => item.key === configConstants.DEFAULTPLAYERBOUNDARIES
-        );
-        let key3 = global.tblConfigs.find(
-          (item) => item.key === configConstants.DEFAULTPLAYERRUNS
-        );
-        callPredictorMarket(
-          {
-            commentary_id: commentaryDetails.commentaryId,
-            match_type_id: commentaryDetails.matchTypeId,
-            event_id: commentaryDetails.eventRefId,
-            default_ball_faced: parseInt(key1?.value) || 0,
-            default_player_boundaries: parseInt(key2?.value) || 0,
-            default_player_runs: parseInt(key3?.value) || 0,
-          },
-          "/api/v1/loadcommentary",
-          fastify,
-          request
-        ).catch((err) => {
-          errorLogger(
+        let isNodePrediction = global.tblConfigs.find((item) => item.key === configConstants.CALLPREDICTIONMODULE)?.value || "false";
+        if (isNodePrediction !== "true") {
+          let key1 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTBALLFACED);
+          let key2 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTPLAYERBOUNDARIES);
+          let key3 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTPLAYERRUNS);
+          callPredictorMarket(
+            {
+              commentary_id: commentaryDetails.commentaryId,
+              match_type_id: commentaryDetails.matchTypeId,
+              event_id: commentaryDetails.eventRefId,
+              default_ball_faced: parseInt(key1?.value) || 0,
+              default_player_boundaries: parseInt(key2?.value) || 0,
+              default_player_runs: parseInt(key3?.value) || 0,
+            },
+            "/api/v1/loadcommentary",
             fastify,
-            err.message,
-            "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
             request
-          );
-        });
+          ).catch((err) => {
+            errorLogger(
+              fastify,
+              err.message,
+              "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
+              request
+            );
+          });
+        }
+
       }
       setLineRatioInComService(
         {
@@ -5568,7 +5566,7 @@ const updateCommentaryStatusService = async (request, fastify) => {
         status: EventMarketStatus.Suspend,
         match_type_id: global.tblCommentaries[index].matchTypeId,
         is_open_market: false,
-        player_id: commentaryPlayerId || null,
+        player_id: commentaryPlayerId || null
       },
       "/api/v1/updatemarketstatus",
       fastify,
@@ -10458,8 +10456,8 @@ const loadcommentaryService = async (request, fastify) => {
       let key1 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTBALLFACED);
       let key2 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTPLAYERBOUNDARIES);
       let key3 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTPLAYERRUNS);
-      let prediction = global.tblConfigs.find((item) => item.key === configConstants.CALLPREDICTIONMODULE)?.value || "false";
-      if (prediction == "true") {
+      let isNodePrediction = global.tblConfigs.find((item) => item.key === configConstants.CALLPREDICTIONMODULE)?.value || "false";
+      if (isNodePrediction == "true") {
         const data = await generateMarketAndRunners({
           commentary: commentary,
           commentaryId: commentary.commentaryId,
