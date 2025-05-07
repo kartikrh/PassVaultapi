@@ -807,6 +807,55 @@ function normalizeBallToActionMap(commentaryId) {
 
     console.log(`[NORMALIZE] Ball-to-action map normalized for commentary ${commentaryId}`);
 }
+
+/**
+ * Validates the ball-to-action map for duplicate market IDs across different categories
+ * @param {number} commentaryId - Commentary ID
+ */
+function validateBallToActionMap(commentaryId) {
+    if (!global.marketData[commentaryId] || !global.marketData[commentaryId].ballToActionMap) {
+        return;
+    }
+
+    const issues = [];
+
+    // Check each ball
+    for (const [ball, actions] of Object.entries(global.marketData[commentaryId].ballToActionMap)) {
+        // Check for duplicate market IDs with different categories
+        const seenMarkets = {};
+
+        actions.forEach(action => {
+            if (action.marketId && action.marketId !== '0') {
+                const key = action.marketId;
+
+                if (seenMarkets[key]) {
+                    // If this market ID was already seen with a different category, it's an issue
+                    if (seenMarkets[key] !== action.marketTypeCategoryId) {
+                        issues.push({
+                            ball,
+                            marketId: action.marketId,
+                            categories: [seenMarkets[key], action.marketTypeCategoryId]
+                        });
+                    }
+                } else {
+                    seenMarkets[key] = action.marketTypeCategoryId;
+                }
+            }
+        });
+    }
+
+    if (issues.length > 0) {
+        console.log(`[VALIDATE] ⚠️ Found ${issues.length} issues with duplicate market IDs across different categories:`);
+        issues.forEach(issue => {
+            console.log(`[VALIDATE] Ball ${issue.ball}: Market ID ${issue.marketId} used for categories ${issue.categories.join(' and ')}`);
+        });
+    } else {
+        console.log(`[VALIDATE] Ball-to-action map validated successfully, no duplicate market IDs found across categories`);
+    }
+
+    return issues.length === 0;
+}
+
 module.exports = {
     normalizeBallToActionMap,
     formatMarketForSocket,
@@ -818,5 +867,6 @@ module.exports = {
     getMarketKey,
     mergeRunners,
     initializeBallToActionMap,
-    formatBallNumber
+    formatBallNumber,
+    validateBallToActionMap
 };

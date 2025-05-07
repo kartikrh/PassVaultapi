@@ -67,6 +67,20 @@ function getActionsForBall(commentaryId, ball, battingTeamId) {
 
     console.log(`Found ${actions.length} actions for ball ${formattedBall} before team filtering`);
 
+    const marketIds = {};
+    actions.forEach(action => {
+        const key = `${action.marketId}`;
+        if (marketIds[key]) {
+            // If this market ID was already seen with a different category, log a warning
+            if (marketIds[key] !== action.marketTypeCategoryId) {
+                console.log(`[WARNING] Same market ID (${action.marketId}) used for different categories: ${marketIds[key]} and ${action.marketTypeCategoryId} at ball ${formattedBall}`);
+            }
+        } else {
+            marketIds[key] = action.marketTypeCategoryId;
+        }
+    });
+
+
     // If a batting team is specified, filter actions to only include those for that team
     if (battingTeamId) {
         const filteredActions = actions.filter(action => {
@@ -96,56 +110,54 @@ function getActionsForBall(commentaryId, ball, battingTeamId) {
  * @param {Object} metadata - Additional market metadata for fallback search
  * @returns {Object|null} - Market object or null if not found
  */
+/**
+ * Find market by ID and category for specific market categories
+ * @param {number} commentaryId - The commentary ID
+ * @param {string} marketId - Market ID
+ * @param {Object} metadata - Additional market metadata
+ * @returns {Object|null} - Market object or null if not found
+ */
 function findMarket(commentaryId, marketId, metadata = {}) {
     if (!global.marketData || !global.marketData[commentaryId]) {
-        console.log(`No market data found for commentary ID ${commentaryId}`);
         return null;
     }
 
     const markets = global.marketData[commentaryId].markets;
 
-    // If marketId is valid (not 0), search by ID first
+    // If marketId is valid (not 0), search by ID AND category to ensure uniqueness
     if (marketId && marketId !== "0") {
-        const marketById = markets.find(m =>
-            m.eventMarketId && m.eventMarketId.toString() === marketId.toString()
-        );
-
-        if (marketById) {
-            console.log(`Found market by ID ${marketId}: ${marketById.marketName} (category: ${marketById.marketTypeCategoryId}, over: ${marketById.over})`);
-            return marketById;
-        }
-    }
-
-    // If market not found by ID or ID is 0, search by metadata parameters
-    if (metadata.over !== undefined && metadata.marketTypeCategoryId !== undefined) {
-        // Check for both odd-even (35) and lottery (28) markets by over, category ID and team
-        if (metadata.marketTypeCategoryId === 35 || metadata.marketTypeCategoryId === 28) {
-            const marketByAttributes = markets.find(m =>
-                m.marketTypeCategoryId === metadata.marketTypeCategoryId &&
-                m.over && m.over.toString() === metadata.over.toString() &&
-                (!metadata.teamId || !m.teamId || m.teamId.toString() === metadata.teamId.toString())
+        // Look for market with matching ID AND category if category is provided
+        if (metadata.marketTypeCategoryId) {
+            const marketByIdAndCategory = markets.find(m =>
+                m.eventMarketId &&
+                m.eventMarketId.toString() === marketId.toString() &&
+                m.marketTypeCategoryId === metadata.marketTypeCategoryId
             );
 
-            if (marketByAttributes) {
-                console.log(`Found ${metadata.marketTypeCategoryId === 35 ? 'Odd-Even' : 'Lottery'} market by attributes: ${marketByAttributes.marketName} (ID: ${marketByAttributes.eventMarketId || 'unsaved'})`);
-                return marketByAttributes;
+            if (marketByIdAndCategory) {
+                return marketByIdAndCategory;
             }
         } else {
-            // For other market types, search by more generic criteria
-            const marketByAttributes = markets.find(m =>
-                m.marketTypeCategoryId === metadata.marketTypeCategoryId &&
-                m.over && m.over.toString() === metadata.over.toString() &&
-                (!metadata.teamId || !m.teamId || m.teamId.toString() === metadata.teamId.toString())
+            // If no category specified, just match by ID (existing behavior)
+            const marketById = markets.find(m =>
+                m.eventMarketId && m.eventMarketId.toString() === marketId
             );
 
-            if (marketByAttributes) {
-                console.log(`Found market by attributes: ${marketByAttributes.marketName} (ID: ${marketByAttributes.eventMarketId || 'unsaved'})`);
-                return marketByAttributes;
+            if (marketById) {
+                return marketById;
             }
         }
     }
 
-    console.log(`No matching market found for marketId ${marketId}, category ${metadata.marketTypeCategoryId}, over ${metadata.over}, team ${metadata.teamId}`);
+    // If market not found by ID+category or ID is 0, search by over + category + team
+    if (metadata.over && metadata.marketTypeCategoryId) {
+        return markets.find(m =>
+            m.marketTypeCategoryId === metadata.marketTypeCategoryId &&
+            m.over && m.over.toString() === metadata.over.toString() &&
+            (!metadata.teamId || m.teamId.toString() === metadata.teamId.toString())
+        );
+    }
+
     return null;
 }
 

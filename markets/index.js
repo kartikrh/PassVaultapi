@@ -15,7 +15,7 @@ const {
   logFullBallToActionMap,
   getAllMappedActions
 } = require('./ballToActionMapper');
-const { createMarketAndRunner, initializeBallToActionMap, normalizeBallToActionMap } = require('./utils');
+const { createMarketAndRunner, initializeBallToActionMap, normalizeBallToActionMap, validateBallToActionMap } = require('./utils');
 
 /**
  * Market handlers for different market types
@@ -274,7 +274,7 @@ const generateMarketAndRunners = async (data, request, fastify) => {
 
     // Normalize the ball keys to ensure consistency
     normalizeBallToActionMap(commentaryId);
-
+    validateBallToActionMap(commentaryId)
     // Log the total number of markets and entries in ball-to-action map
     console.log(`Generated ${global.marketData[data.commentaryId].markets.length} markets for commentary ${data.commentaryId}`);
 
