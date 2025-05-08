@@ -17,7 +17,8 @@ const getAllClientQuery = async (fastify) => {
               "wrIsActive" as "isActive",
               "wrIsEmailVerified" AS "isEmailVerified",
               "wrIsMobileVerified" AS "isMobileVerified",
-              "wrCountryCode" as "countryCode"
+              "wrCountryCode" as "countryCode",
+              "wrSeamlessToken" as "seamlessToken"
         from "tblClient"
         where "wrIsDelete" = false
         `,
@@ -27,7 +28,7 @@ const getAllClientQuery = async (fastify) => {
   );
 };
 
-const deleteClientQuery = async (data, request, fastify) => {
+const deleteClientQuery = async (clientId, request, fastify) => {
   try {
     return await fastify.db.query(
       `
@@ -39,7 +40,7 @@ const deleteClientQuery = async (data, request, fastify) => {
       `,
       {
         type: fastify.db.QueryTypes.UPDATE,
-        bind: [true, request.userTokenInfo.WrUserId ? request.userTokenInfo.WrUserId : null, data.clientId],
+        bind: [true, request.userTokenInfo.WrUserId ? request.userTokenInfo.WrUserId : null, clientId],
       }
     );
   } catch (err) {
@@ -329,6 +330,7 @@ const addClientDltReqQuery = async (data, request, fastify) => {
   }
 }
 const getIdByEncrypt = async (data, request, fastify) => {
+  // console.log("data", data)
   try {
     let query = `
       SELECT "wrKey" as "clientId"

@@ -1489,7 +1489,8 @@ const clientDetailsByIdQuery = async (clientId, request, fastify) => {
               "wrIsUserActive" as "isUserActive",
               "wrIsActive" as "isActive",
               "wrIsEmailVerified" AS "isEmailVerified",
-              "wrIsMobileVerified" AS "isMobileVerified"
+              "wrIsMobileVerified" AS "isMobileVerified",
+              "wrSeamlessToken" as "seamlessToken"
        FROM "tblClient" 
        WHERE "wrClientID" = $1`,
       {
@@ -1597,6 +1598,31 @@ const updateClientValidateKeysQuery = async (data, request, fastify) => {
     throw new Error(err.message);
   }
 };
+const updateVerifiedUserQuery = async (data, request, fastify) => {
+  try {
+    let q1 = `
+      UPDATE "tblClient"
+      SET "wrIsMobileVerified" = true,
+          "wrRegistrationProcessStatus" = $1,
+          "wrSeamlessToken" = $3
+      WHERE "wrClientID" = $2
+    `;
+    const rs = await fastify.db.query(q1, {
+      type: fastify.db.QueryTypes.SELECT,
+      bind: [clientProcessStatus.MOEMAILVERIFIED, data.clientId, data.seamlessToken || null],
+    });
+    return rs[0];
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableUser/updateVerifiedUserQuery",
+      request
+    );
+    throw new Error(error.message);
+    
+  }
+}
 module.exports = {
   signInUser,
   signUpUser,
@@ -1634,4 +1660,5 @@ module.exports = {
   updateClientProfileQuery,
   changePasswordQuery,
   updateClientValidateKeysQuery,
+  updateVerifiedUserQuery,
 };

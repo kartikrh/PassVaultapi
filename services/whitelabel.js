@@ -5,6 +5,7 @@ const {
   activeInactiveWhitelabelQuery,
   demoClientEnableInIOSWhitelabelQuery,
   isDemoClientLoginQuery,
+  getAllEncryptWhitelabelsQuery,
 } = require("../repository/TableWhitelabel");
 const {
   generateImageName,
@@ -59,9 +60,7 @@ const saveWhitelabelService = async (request, fastify) => {
   return saveData;
 };
 
-const editWhitelabelService = async (request, fastify) => {
-  console.log("request.body", request.body);
-  
+const editWhitelabelService = async (request, fastify) => { 
   const validateId = global.tblWhitelabels.find(
     (item) => item.id == request.body.id
   );
@@ -92,6 +91,28 @@ const editWhitelabelService = async (request, fastify) => {
     id: parseInt(request.body.id, 10),
     isDemoClientEnableInIOS: request.body.isDemoClientEnableInIOS ?? validateId.isDemoClientEnableInIOS,
     isDemoClientLogin: request.body.isDemoClientLogin ?? validateId.isDemoClientLogin,
+    isRecatchEnable: request.body.isRecatchEnable ?? validateId.isRecatchEnable,
+    recatchKey: request.body.recatchKey ?? validateId.recatchKey,
+    isGoogleLogin: request.body.isGoogleLogin ?? validateId.isGoogleLogin,
+    googleKey: request.body.googleKey ?? validateId.googleKey,
+    isFacebookLogin: request.body.isFacebookLogin ?? validateId.isFacebookLogin,
+    facebookKey: request.body.facebookKey ?? validateId.facebookKey,
+    mobileGoogleFirebaseKey: request.body.mobileGoogleFirebaseKey ?? validateId.mobileGoogleFirebaseKey,
+    mobileGoogleFirebaseUrl: request.body.mobileGoogleFirebaseUrl ?? validateId.mobileGoogleFirebaseUrl,
+    isSendMobileOTP: request.body.isSendMobileOTP ?? validateId.isSendMobileOTP,
+    sendMobileOTPType: request.body.sendMobileOTPType ?? validateId.sendMobileOTPType,
+    sendMobileOTPMaxSendLimit: request.body.sendMobileOTPMaxSendLimit ?? validateId.sendMobileOTPMaxSendLimit,
+    mobileOTPAuthKey: request.body.mobileOTPAuthKey ?? validateId.mobileOTPAuthKey,
+    mobileOTPExpired: request.body.mobileOTPExpired ?? validateId.mobileOTPExpired,
+    mobileOTPSendUrl: request.body.mobileOTPSendUrl ?? validateId.mobileOTPSendUrl,
+    mobileOTPResendUrl: request.body.mobileOTPResendUrl ?? validateId.mobileOTPResendUrl,
+    mobileOTPForgotUrl: request.body.mobileOTPForgotUrl ?? validateId.mobileOTPForgotUrl,
+    mobileSemlessOTPKey: request.body.mobileSemlessOTPKey ?? validateId.mobileSemlessOTPKey,
+    isSendMailOTP: request.body.isSendMailOTP ?? validateId.isSendMailOTP,
+    sendMailType: request.body.sendMailType ?? validateId.sendMailType,
+    sendMailMaxSendLimit: request.body.sendMailMaxSendLimit ?? validateId.sendMailMaxSendLimit,
+    mobileOTPVerify: request.body.mobileOTPVerify ?? validateId.mobileOTPVerify,
+    clientOTP: request.body.clientOTP ?? validateId.clientOTP,
   };
 
   const modifiedData = await updateWhitelabelQuery(updateData, fastify, request);
@@ -258,7 +279,7 @@ const demoClientEnableInIOSWhitelabelService = async (request, fastify) => {
       moduleType : APIEndpointModuleType.updateSeoModule,
       data : {
         module : 'whiteLable',
-        type : isDemoClientEnableInIOS ? "isDemoClientEnableInIOSTrue" : "isDemoClientEnableInIOSFalse",
+        type : "isDemoClientEnableInIOS",
         data : global.tblWhitelabels[index]
       }
     }, request, fastify)
@@ -297,7 +318,7 @@ const isDemoClientLoginService = async (request, fastify) => {
       moduleType : APIEndpointModuleType.updateSeoModule,
       data : {
         module : 'whiteLable',
-        type : isDemoClientLogin ? "isDemoClientLoginTrue" : "isDemoClientLoginFalse",
+        type : "isDemoClientLogin",
         data : global.tblWhitelabels[index]
       }
     }, request, fastify)
@@ -311,6 +332,15 @@ const isDemoClientLoginService = async (request, fastify) => {
   });
   return `Whitelabel data updated successfully`;
 };
+
+const clientApiWhitelabelsService = async (request, fastify) => {
+  const { isActive } = request.body || {};
+  let activeValue = isActive !== undefined ? isActive : true
+  
+  let whereCondition = `tw."wrIsDeleted" = false AND tw."wrIsActive" = ${activeValue}`
+  const result = await getAllEncryptWhitelabelsQuery(fastify, whereCondition);
+  return result;
+};
 module.exports = {
   createWhitelabelService,
   allWhitelabelsService,
@@ -318,5 +348,6 @@ module.exports = {
   deleteWhitelabelService,
   activeInactiveWhitelabelService,
   demoClientEnableInIOSWhitelabelService,
-  isDemoClientLoginService
+  isDemoClientLoginService,
+  clientApiWhitelabelsService,
 };

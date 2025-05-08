@@ -195,6 +195,19 @@ const wicketType = {
   9: "Hit Ball Twice",
   10: "Obstruct the Fielding"
 }
+const BALL_TYPE = {
+  OVER_COMPLETE: 0,
+  REGULAR: 1,
+  WIDE: 2,
+  BYE: 3,
+  LEG_BYE: 4,
+  NO_BALL: 5,
+  NO_BALL_BYE: 6,
+  NO_BALL_LEG_BYE: 7,
+  PANELTY_RUN: 8,
+  RETIRED_HURT: 9,
+  BOWLER_RETIRED_HURT: 10,
+};
 const decryptEncryptionId = async (encryptionKey , fastify) =>{
  try {
   const data = await fastify.db.query(`SELECT "wrKey" from "tblEncryptedData" where "wrValue" = $1`,
@@ -759,7 +772,8 @@ const clientProcessStatus = {
 }
 const sendOtpToMobile = async (data, request, fastify) => {
   try {
-    let url = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.OTPURL.toLowerCase())?.value;
+    let url = global.tblWhitelabels.find((item) => item.id === data.id)?.mobileOTPSendUrl;
+    // let url = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.OTPURL.toLowerCase())?.value;
     if(!url) return 'OTP URL not found';
     // call this otp url to send otp to mobile
     // replace {mobile} with the mobile number
@@ -793,13 +807,18 @@ const sendOtpToMobile = async (data, request, fastify) => {
 }
 const verifyOTP = async (data, request, fastify) => {
   try {
-    let url = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.OTPVERIFY.toLowerCase())?.value;
-    let otpAuthKey = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.OTPAUTHKEY.toLowerCase())?.value;
-    if(!url || !otpAuthKey) return 'OTP Verify URL not found';
+    let config = global.tblWhitelabels.find((item) => item.id === data.id);
+    // let url = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.OTPVERIFY.toLowerCase())?.value;
+    // let otpAuthKey = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.OTPAUTHKEY.toLowerCase())?.value;
+    if(!config || !config.mobileOTPVerify || !config.mobileOTPAuthKey) return 'OTP Verify URL not found';
     let cc = data.countryCode.replace("+", "");
-    url = url.replace("{otp}", data.otp);
-    url = url.replace("{mobile}", cc + data.mobileNo);
-    const result = await axios.get(url, { headers: { authkey: otpAuthKey }});
+    const mobileNumber = cc + data.mobileNo;
+    // url = url.replace("{otp}", data.otp);
+    // url = url.replace("{mobile}", cc + data.mobileNo);
+    let otpUrl = config.mobileOTPVerify
+      .replace("{otp}", encodeURIComponent(data.otp))
+      .replace("{mobile}", encodeURIComponent(mobileNumber));
+    const result = await axios.get(otpUrl, { headers: { authkey: config.mobileOTPAuthKey }});
     if(result.data.type == "success"){
       return true;
     }
@@ -825,7 +844,8 @@ const verifyOTP = async (data, request, fastify) => {
 }
 const forgotPasswordOTP = async (data, request, fastify) => {
   try {
-    let url = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.OTPFORGOTURL.toLowerCase())?.value;
+    let url = global.tblWhitelabels.find((item) => item.id === data.id)?.mobileOTPForgotUrl;
+    // let url = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.OTPFORGOTURL.toLowerCase())?.value;
     if(!url) return 'OTP URL not found';
     let cc = data.countryCode.replace("+", "");
     url = url.replace("{mobile}", cc + data.mobileNo);
@@ -855,7 +875,8 @@ const forgotPasswordOTP = async (data, request, fastify) => {
 }
 const resendOTP = async (data, request, fastify) => {
   try {
-    let url = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.OTPRESEND.toLowerCase())?.value;
+    let url = global.tblWhitelabels.find((item) => item.id === data.id)?.mobileOTPResendUrl;
+    // let url = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.OTPRESEND.toLowerCase())?.value;
     if(!url) return 'OTP URL not found';
     let cc = data.countryCode.replace("+", "");
     url = url.replace("{mobile}", cc + data.mobileNo);
@@ -951,6 +972,7 @@ const LawnStriping = {
   4 : "None",
   5 : "Diamond"
 }
+
 const PitchAge = {
   1 : "Day 1",
   2 : "Day 2", 
@@ -1027,4 +1049,5 @@ module.exports = {
   PitchType,
   LawnStriping,
   PitchAge,
+  BALL_TYPE
 };
