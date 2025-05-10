@@ -87,6 +87,10 @@ const generateMarketAndRunners = async (data, request, fastify) => {
       }, request, fastify);
     }
 
+    // Extract assigned category IDs from templates
+    const assignedCategoryIds = comTemplate.map(template => template.marketTypeCategoryId);
+    console.log(`Assigned category IDs for commentary ${commentaryId}: ${assignedCategoryIds.join(', ')}`);
+
     // Initialize global market data structure
     global.marketData[data.commentaryId] = {
       template: comTemplate,
@@ -220,7 +224,62 @@ const generateMarketAndRunners = async (data, request, fastify) => {
       eventMarket = await getExistingEventMarketsQueryV1(fastify, whereCondition);
     }
 
-    // Store existing markets
+    // If templates are assigned, check for non-template markets to suspend
+    if (assignedCategoryIds.length > 0) {
+      // Filter existing markets that are NOT in assigned categories
+      const marketsToSuspend = eventMarket.filter(market =>
+        !assignedCategoryIds.includes(market.marketTypeCategoryId) &&
+        market.status === EventMarketStatus.Open
+      );
+
+      // Suspend non-template markets
+      for (const market of marketsToSuspend) {
+        console.log(`Suspending non-template market: ${market.marketName} (Category: ${market.marketTypeCategoryId})`);
+
+        market.status = EventMarketStatus.Suspend;
+        market.commentaryId = commentaryId;
+
+        // Update in DB
+        await updateMarketStatusInDB(market, fastify);
+      }
+
+      if (marketsToSuspend.length > 0) {
+        console.log(`Suspended ${marketsToSuspend.length} non-template markets`);
+      }
+
+      // Filter eventMarket to only include template categories
+      eventMarket = eventMarket.filter(market =>
+        assignedCategoryIds.includes(market.marketTypeCategoryId)
+      );
+    } else {
+      // No templates assigned - suspend all open markets
+      console.log(`No templates assigned for commentary ${commentaryId}. Suspending all open markets.`);
+
+      for (const market of eventMarket) {
+        if (market.status === EventMarketStatus.Open) {
+          console.log(`Suspending market: ${market.marketName} (Category: ${market.marketTypeCategoryId})`);
+
+          market.status = EventMarketStatus.Suspend;
+          market.commentaryId = commentaryId;
+
+          // Update in DB
+          await updateMarketStatusInDB(market, fastify);
+        }
+      }
+
+      // Clear the markets array as no templates are assigned
+      eventMarket = [];
+
+      // Return early with empty market data
+      global.marketData[data.commentaryId].existingMarket = [];
+      global.marketData[data.commentaryId].markets = [];
+      global.marketData[data.commentaryId].ballToActionMap = {};
+
+      console.log(`Created empty market structure for commentary ${data.commentaryId} (no templates)`);
+      return { success: true, message: "No templates assigned - all markets suspended" };
+    }
+
+    // Store existing markets (only template categories)
     global.marketData[data.commentaryId].existingMarket = eventMarket;
 
     // Create markets in memory only using the original function
@@ -269,12 +328,16 @@ const generateMarketAndRunners = async (data, request, fastify) => {
       });
     }
 
-    // Initialize the ball-to-action map
-    initializeBallToActionMap(global.marketData[data.commentaryId].markets, data.commentaryId);
+    // Get current ball from data if available
+    const currentBall = data.currentBall || data.ball || null;
+
+    // Initialize the ball-to-action map with current ball
+    initializeBallToActionMap(global.marketData[data.commentaryId].markets, data.commentaryId, null, currentBall);
 
     // Normalize the ball keys to ensure consistency
     normalizeBallToActionMap(commentaryId);
-    validateBallToActionMap(commentaryId)
+    validateBallToActionMap(commentaryId);
+
     // Log the total number of markets and entries in ball-to-action map
     console.log(`Generated ${global.marketData[data.commentaryId].markets.length} markets for commentary ${data.commentaryId}`);
 

@@ -119,8 +119,9 @@ function mapAction(commentaryId, ball, action, marketId, metadata = {}) {
  * @param {Array} markets - Array of markets
  * @param {number} commentaryId - The commentary ID
  * @param {number|string} battingTeamId - ID of the team currently batting
+ * @param {string} currentBall - Current ball number (optional)
  */
-function initializeBallToActionMap(markets, commentaryId, battingTeamId) {
+function initializeBallToActionMap(markets, commentaryId, battingTeamId, currentBall = null) {
     // Ensure global market data structure exists
     if (!global.marketData) {
         global.marketData = {};
@@ -153,6 +154,20 @@ function initializeBallToActionMap(markets, commentaryId, battingTeamId) {
         }
     }
 
+    // Calculate the minimum ball to consider (if currentBall is provided)
+    let minBallToConsider = null;
+    if (currentBall) {
+        // Format the current ball
+        const formattedCurrentBall = formatBallNumber(currentBall);
+        const parts = formattedCurrentBall.split('.');
+        const currentOver = parseInt(parts[0]);
+
+        // Start from the beginning of the current over
+        minBallToConsider = `${currentOver}.0`;
+
+        console.log(`[INIT] Current ball: ${formattedCurrentBall}, will only initialize actions from ${minBallToConsider} onwards`);
+    }
+
     console.log(`[INIT] Initializing ball-to-action map for ${markets.length} markets, commentary ID: ${commentaryId}`);
     console.log(`[INIT] Current batting team ID: ${battingTeamId || 'not specified'}`);
 
@@ -161,9 +176,25 @@ function initializeBallToActionMap(markets, commentaryId, battingTeamId) {
         ? markets.filter(m => !m.teamId || m.teamId.toString() === battingTeamId.toString())
         : markets;
 
-    console.log(`[INIT] Processing ${validMarkets.length} markets for ball-to-action mapping (filtered by team)`);
+    // If we have a minimum ball to consider, further filter markets
+    let marketsToProcess = validMarkets;
+    if (minBallToConsider) {
+        marketsToProcess = validMarkets.filter(market => {
+            // Check if the market's actions would occur after minBallToConsider
+            const openBall = getBallFromOver(market.autoOpen, market.matchTypeID || 2);
+            const closeBall = getBallFromOver(market.beforeAutoClose, market.matchTypeID || 2);
 
-    validMarkets.forEach(market => {
+            // Include market if any of its actions occur at or after minBallToConsider
+            return (openBall && compareBalls(openBall, minBallToConsider) >= 0) ||
+                (closeBall && compareBalls(closeBall, minBallToConsider) >= 0);
+        });
+
+        console.log(`[INIT] Filtered markets from ${validMarkets.length} to ${marketsToProcess.length} based on current ball`);
+    }
+
+    console.log(`[INIT] Processing ${marketsToProcess.length} markets for ball-to-action mapping`);
+
+    marketsToProcess.forEach(market => {
         const marketId = market.eventMarketId ? market.eventMarketId.toString() : "0";
         const marketCategoryId = market.marketTypeCategoryId;
         const overValue = market.over ? market.over.toString() : null;
@@ -178,14 +209,14 @@ function initializeBallToActionMap(markets, commentaryId, battingTeamId) {
 
         // Map when to open the market
         const openBall = getBallFromOver(market.autoOpen, market.matchTypeID || 2);
-        if (openBall) {
+        if (openBall && (!minBallToConsider || compareBalls(openBall, minBallToConsider) >= 0)) {
             mapAction(commentaryId, openBall, "open", marketId, marketMetadata);
             console.log(`[INIT] Mapped open action at ball ${openBall} for market "${market.marketName}" (team: ${teamId}, category: ${marketCategoryId})`);
         }
 
         // Map when to close the market
         const closeBall = getBallFromOver(market.beforeAutoClose, market.matchTypeID || 2);
-        if (closeBall) {
+        if (closeBall && (!minBallToConsider || compareBalls(closeBall, minBallToConsider) >= 0)) {
             mapAction(commentaryId, closeBall, "close", marketId, marketMetadata);
             console.log(`[INIT] Mapped close action at ball ${closeBall} for market "${market.marketName}" (team: ${teamId}, category: ${marketCategoryId})`);
         }
@@ -198,7 +229,7 @@ function initializeBallToActionMap(markets, commentaryId, battingTeamId) {
                 market.matchTypeID || 2
             );
 
-            if (settleBall) {
+            if (settleBall && (!minBallToConsider || compareBalls(settleBall, minBallToConsider) >= 0)) {
                 mapAction(commentaryId, settleBall, "settle", marketId, marketMetadata);
                 console.log(`[INIT] Mapped settle action at ball ${settleBall} for market "${market.marketName}" (team: ${teamId}, category: ${marketCategoryId})`);
             }
@@ -208,6 +239,24 @@ function initializeBallToActionMap(markets, commentaryId, battingTeamId) {
     // Log the count of balls with actions
     const ballCount = Object.keys(global.marketData[commentaryId].ballToActionMap).length;
     console.log(`[INIT] Total balls mapped: ${ballCount}`);
+}
+
+// Add helper function to compare balls
+function compareBalls(ball1, ball2) {
+    const parts1 = ball1.split('.');
+    const parts2 = ball2.split('.');
+
+    const over1 = parseInt(parts1[0]);
+    const over2 = parseInt(parts2[0]);
+
+    if (over1 !== over2) {
+        return over1 - over2;
+    }
+
+    const ball1InOver = parseInt(parts1[1]);
+    const ball2InOver = parseInt(parts2[1]);
+
+    return ball1InOver - ball2InOver;
 }
 
 /**
