@@ -908,7 +908,7 @@ async function loginClient(body, fastify) {
       let data = await fastify.db.query(
         `SELECT "wrClientID" as "clientId", "wrGoogleID" as "googleId", "wrUserName" as "userName", "wrIsAllowMultiLogin" as "isAllowMultiLogin","wrEmailID" as "emailId" ,"wrMobileNo" as "mobileNo",
         "wrRegistrationProcessStatus" as "registrationProcessStatus", "wrProvider" as "provider",
-        "wrCountryCode" as "countryCode"
+        "wrCountryCode" as "countryCode", "wrCreatedDate" as "createdDate"
          FROM "tblClient"
          WHERE "wrGoogleID" = $1 AND "wrIsDelete" = false;`,
         {
@@ -929,7 +929,7 @@ async function loginClient(body, fastify) {
           ) RETURNING "wrClientID" as "clientId", "wrGoogleID" as "googleId", "wrUserName" as "userName", "wrIsAllowMultiLogin" as "isAllowMultiLogin",
            "wrEmailID" as "emailId","wrMobileNo" as "mobileNo" , "wrProvider" as "provider" ,
             "wrRegistrationProcessStatus" as "registrationProcessStatus", "wrIsEmailVerified" as "isEmailVerified", "wrIsUserActive" as "isUserActive", "wrIsActive" as "isActive", "wrCreatedDate" as "createdDate", "wrIsMobileVerified" as "isMobileVerified", "wrIsDelete" as "isDelete", "wrClientName" as "fullName",
-            "wrCountryCode" as "countryCode";`,
+            "wrCountryCode" as "countryCode" , "wrCreatedDate" as "createdDate";`,
           {
             type: QueryTypes.INSERT,
             bind: [googleID, email, userName, clientProvider.Google, 3, 1, fullName, ipAddress],
@@ -983,7 +983,7 @@ async function loginClient(body, fastify) {
             "wrIsActive" as "isActive",
              "wrCreatedDate" as "createdDate",
               "wrIsMobileVerified" as "isMobileVerified", "wrIsDelete" as "isDelete",
-               "wrClientName" as "fullName" , "wrCountryCode" as "countryCode";`,
+               "wrClientName" as "fullName" , "wrCountryCode" as "countryCode" , "wrCreatedDate" as "createdDate";`,
           {
             type: fastify.db.QueryTypes.SELECT,
             bind: [facebookId, email, userName, clientProvider.Facebook, 3, 1, fullName, ipAddress],
@@ -999,7 +999,8 @@ async function loginClient(body, fastify) {
          "wrIsAllowMultiLogin" as "isAllowMultiLogin","wrEmailID" as "emailId",
          "wrMobileNo" as "mobileNo","wrClientName" as "fullName", "wrProvider" as "provider",
          "wrRegistrationProcessStatus" as "registrationProcessStatus",
-         "wrIsUserActive" as "isUserActive", "wrCountryCode" as "countryCode"
+         "wrIsUserActive" as "isUserActive", "wrCountryCode" as "countryCode",
+          "wrCreatedDate" as "createdDate"
          FROM "tblClient"
          WHERE "wrEmailID" = $1 AND "wrIsDelete" = false;`,
         {
@@ -1019,7 +1020,7 @@ async function loginClient(body, fastify) {
          "wrIsAllowMultiLogin" as "isAllowMultiLogin","wrEmailID" as "emailId",
          "wrMobileNo" as "mobileNo","wrClientName" as "fullName", "wrProvider" as "provider",
           "wrRegistrationProcessStatus" as "registrationProcessStatus",
-          "wrCountryCode" as "countryCode"
+          "wrCountryCode" as "countryCode", "wrCreatedDate" as "createdDate"
          FROM "tblClient"
          WHERE "wrEmailID" = $1 AND "wrPassword" = $2 AND "wrIsDelete" = false;`,
         {
@@ -1312,7 +1313,8 @@ const registerClientAppQuery = async (data,request,fastify) => {
         "wrIsUserActive" as "isUserActive",
         "wrDeletedBy" as "deletedBy",
         "wrDeletedAt" as "deletedAt",
-        "wrCountryCode" as "countryCode"
+        "wrCountryCode" as "countryCode",
+         "wrCreatedDate" as "createdDate"
       FROM insert_data a
       LEFT JOIN "tblEncryptedData" et on a."wrClientID"=et."wrKey"
     `;

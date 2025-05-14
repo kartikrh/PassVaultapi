@@ -3,12 +3,18 @@ const { deleteClientQuery, insertClientQuery, updateClientQuery, activeInactiveC
 const getAllClientService = async (request, fastify) => {
   const { isActive, isUserActive } = request.body;
   if (isActive == undefined) {
-    return global.tblClient;
+    return global.tblClient.sort((a, b) => {
+      return new Date(b.createdDate) - new Date(a.createdDate);
+    })
   }
   if(isUserActive !== undefined && isActive !== undefined){
-    return global.tblClient.filter((item)=> item.isUserActive == isUserActive && item.isActive === isActive)
+    return global.tblClient.filter((item)=> item.isUserActive == isUserActive && item.isActive === isActive).sort((a, b) => {
+      return new Date(b.createdDate) - new Date(a.createdDate);
+    })
   }
-  return global.tblClient.filter((item) => item.isActive === isActive);
+  return global.tblClient.filter((item) => item.isActive === isActive).sort((a, b) => {
+      return new Date(b.createdDate) - new Date(a.createdDate);
+  })
 };
 
 const clientByIdService = async (request, fastify) => {
@@ -72,7 +78,8 @@ const updateClientService = async (request, fastify) => {
     isUserActive: request.body.isUserActive,
     provider: request.body.provider || validateClientId.provider,
     isActive: request.body.isActive,
-    countryCode : request.body.countryCode || validateClientId.countryCode
+    countryCode : request.body.countryCode || validateClientId.countryCode,
+    createdDate : validateClientId.createdDate,
   };
 
   await updateClientQuery(body, request, fastify);
