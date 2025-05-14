@@ -632,6 +632,7 @@ const commentaryStatus = {
   TOSSDONE : 2,
   INPROGRESS : 3,
   COMPLETED : 4,
+  INNINGCHANGE : 5
 }
 const LineType = {
   BackLay:	1,
