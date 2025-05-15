@@ -438,6 +438,56 @@ const getEncryptWhitelabelQuery = async (id, request, fastify)=>{
       throw new Error(error.message);
     }
 }
+const isDefaultUpQuery = async (data, request, fastify) => {
+    try {
+      if (data.isDefault) {
+        await fastify.db.query(
+          `
+                  UPDATE "tblWhitelabel" SET
+                    "wrIsDefault" = FALSE
+                  WHERE "wrIsDefault" = TRUE
+                  AND "wrId" != $1
+                  AND "wrIsDeleted" = FALSE
+              `,
+          {
+            type: fastify.db.QueryTypes.UPDATE,
+            bind: [data.id],
+          }
+        );
+        await fastify.db.query(
+          `
+                  UPDATE "tblWhitelabel" SET
+                    "wrIsDefault" = TRUE
+                  WHERE "wrId" = $1
+              `,
+          {
+            type: fastify.db.QueryTypes.UPDATE,
+            bind: [data.id],
+          }
+        );
+        return true;
+      }
+
+      return await fastify.db.query(
+        `
+                  UPDATE "tblWhitelabel" SET
+                    "wrIsDefault" = $1
+                  WHERE "wrId" = $2
+              `,
+        {
+          bind: [data.isDefault ,data.id],
+        }
+      );
+    } catch (err) {
+      errorLogger(
+        fastify,
+        err.message,
+        "DB ERROR --> repository/TableWhitelabel.js/isDefaultUpQuery",
+        request
+      );
+      throw new Error(err.message);
+    }
+};
 module.exports = {
     getAllWhitelabelsQuery,
     insertWhitelabelQuery,
@@ -448,4 +498,5 @@ module.exports = {
     isDemoClientLoginQuery,
     getAllEncryptWhitelabelsQuery,
     getEncryptWhitelabelQuery,
+    isDefaultUpQuery
 };

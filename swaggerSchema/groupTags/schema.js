@@ -8724,6 +8724,20 @@ const Whitelabel = {
       },
     },
   },
+  upIsDefault: {
+    schema: {
+      tags: ["Whitelabel"],
+      description: "upIsDefault Whitelabel data",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          isDefault: { type: "boolean" },
+        },
+        required: ["id", "isDefault"],
+      },
+    },
+  },
   demoClientEnableInIOS: {
     schema: {
       tags: ["Whitelabel"],
