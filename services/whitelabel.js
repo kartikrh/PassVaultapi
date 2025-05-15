@@ -6,6 +6,7 @@ const {
   demoClientEnableInIOSWhitelabelQuery,
   isDemoClientLoginQuery,
   getAllEncryptWhitelabelsQuery,
+  isDefaultUpQuery,
 } = require("../repository/TableWhitelabel");
 const {
   generateImageName,
@@ -253,6 +254,88 @@ const activeInactiveWhitelabelService = async (request, fastify) => {
   });
   return `Whitelabel data updated successfully`;
 };
+const upIsDefaultAPIService = async (request, fastify) => {
+  const { id, isDefault } = request.body;
+  const validateId = global.tblWhitelabels.find((item) => item.id === id);
+
+  
+  if (!validateId) {
+    throw new Error("Whitelabel with this Id not found");
+  }
+  if(!isDefault){
+    // check if any other whitelabel is default
+    const defaultWhitelabel = global.tblWhitelabels.find((item) => item.isDefault === true && item.id != id);
+    if(!defaultWhitelabel){
+      throw new Error("No whitelabel is default, Please select any whitelabel as default");
+    }
+  }
+  if(isDefault){
+    await isDefaultUpQuery(
+      {
+        id,
+        isDefault,
+      },
+      request,
+      fastify
+    );
+    const index = global.tblWhitelabels.findIndex((item) => item.id == id);
+    if (index != -1) {
+      global.tblWhitelabels[index].isDefault = isDefault;
+    }
+    callClientAPI(
+      {
+        serviceType : ServiceType.clientAPI,
+        moduleType : APIEndpointModuleType.updateSeoModule,
+        data : {
+          module : 'whiteLable',
+          type : isDefault ? "isDefault" : "isNotDefault",  
+          data : [id]
+        }
+      }, request, fastify)
+    // other set to false
+    let otherIndex = global.tblWhitelabels.filter((item) => item.id != id && item.isDefault == true);
+    if(otherIndex.length > 0){
+      otherIndex.forEach((item) => {
+        item.isDefault = false;
+      })
+      callClientAPI(
+        {
+          serviceType : ServiceType.clientAPI,
+          moduleType : APIEndpointModuleType.updateSeoModule,
+          data : {
+            module : 'whiteLable',
+            type : "isNotDefault",
+            data : otherIndex.map((item) => item.id)
+          }
+        }, request, fastify)
+      }
+  } 
+  else {
+    await isDefaultUpQuery(
+      {
+        id,
+        isDefault,
+      },
+      request,
+      fastify
+    );
+    const index = global.tblWhitelabels.findIndex((item) => item.id == id);
+    if (index != -1) {
+      global.tblWhitelabels[index].isDefault = isDefault;
+    }
+    callClientAPI(
+      {
+        serviceType : ServiceType.clientAPI,
+        moduleType : APIEndpointModuleType.updateSeoModule,
+        data : {
+          module : 'whiteLable',
+          type : "isNotDefault",
+          data : [id]
+        }
+      }, request, fastify)
+  }
+  return `Whitelabel data updated successfully`;
+};
 
 const demoClientEnableInIOSWhitelabelService = async (request, fastify) => {
   const { id, isDemoClientEnableInIOS } = request.body;
@@ -350,4 +433,5 @@ module.exports = {
   demoClientEnableInIOSWhitelabelService,
   isDemoClientLoginService,
   clientApiWhitelabelsService,
+  upIsDefaultAPIService
 };
