@@ -3053,6 +3053,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         currentInnings: commentaryDetails.currentInnings,
         sortUpdate: commentaryDetails.sortUpdate,
         rmk: commentaryDetails.rmk,
+        winRmk: commentaryDetails.winRmk,
       };
       response.commentaryDetails = {
         ...global.tblCommentaries[commentaryIndex],
@@ -3071,6 +3072,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         isPredict: commentaryDetails.isPredictMarket,
         sortUpdate: commentaryDetails.sortUpdate,
         rmk: commentaryDetails.rmk,
+        winRmk: commentaryDetails.winRmk,
       };
       if(commentaryDetails.commentaryStatus == 2) {
         await notiConfigContentReplaceService(EventName.WINTOSS, commentaryDetails.commentaryId, request, fastify);
@@ -5652,6 +5654,7 @@ const commentaryDetailsByEventIdService = async (
     isc: "",
     sts: "",
     rmk: "",
+    winRmk: "",
     win: "",
     cst: "",
     ics: result.isClientShow,
@@ -5700,6 +5703,7 @@ const commentaryDetailsByEventIdService = async (
   let isc;
   let sts;
   let rmk;
+  let winRmk;
   let win;
   let getstatus = 0;
   let tossteam;
@@ -5840,6 +5844,7 @@ const commentaryDetailsByEventIdService = async (
     resultArr.isc = "";
     resultArr.sts = result.commentaryStatus.toString();
     resultArr.rmk = "Toss Not Done Yet";
+    resultArr.winRmk = "";
     resultArr.win = "";
     resultArr.cst = result.commentaryStatus;
     resultArr.ics = result.isClientShow;
@@ -5912,6 +5917,7 @@ const commentaryDetailsByEventIdService = async (
     resultArr.isc = "";
     resultArr.sts = result.commentaryStatus.toString();
     resultArr.rmk = toss;
+    resultArr.winRmk = "";
     resultArr.win = "";
     resultArr.cst = result.commentaryStatus;
     resultArr.ics = result.isClientShow;
@@ -6031,6 +6037,7 @@ const commentaryDetailsByEventIdService = async (
     resultArr.isc = "";
     resultArr.sts = result.commentaryStatus.toString();
     resultArr.rmk = result.rmk;
+    resultArr.winRmk = result.winRmk || "";
     resultArr.win = result.result || "";
     resultArr.cst = result.commentaryStatus;
     resultArr.ics = result.isClientShow;
@@ -6296,6 +6303,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     isc: "",
     sts: "",
     rmk: "",
+    winRmk: "",
     win: "",
     cst: "",
     ics: result.isClientShow,
@@ -6336,6 +6344,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
   let isc;
   let sts;
   let rmk;
+  let winRmk;
   let win;
   let getstatus = 0;
   let tossteam;
@@ -6472,6 +6481,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     resultArr.isc = "";
     resultArr.sts = result.commentaryStatus.toString();
     resultArr.rmk = "Toss Not Done Yet";
+    resultArr.winRmk = "";
     resultArr.win = "";
     resultArr.cst = result.commentaryStatus;
     resultArr.ics = result.isClientShow;
@@ -6528,6 +6538,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     resultArr.isc = "";
     resultArr.sts = result.commentaryStatus.toString();
     resultArr.rmk = toss;
+    resultArr.winRmk = "";
     resultArr.win = "";
     resultArr.cst = result.commentaryStatus;
     resultArr.ics = result.isClientShow;
@@ -6641,6 +6652,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     resultArr.isc = "";
     resultArr.sts = result.commentaryStatus.toString();
     resultArr.rmk = result.rmk;
+    resultArr.winRmk = result.winRmk || "";
     resultArr.win = "";
     resultArr.cst = result.commentaryStatus;
     resultArr.ics = result.isClientShow;
@@ -7123,6 +7135,7 @@ const getMatchListByStatus = async (body, request, fastify) => {
       t2s: teamScore2 || "",
       dis: item.displayStatus || "",
       rmk: item.rmk === null || item.rmk === undefined ? "" : item.rmk,
+      winRmk: item.winRmk === null || item.winRmk === undefined ? "" : item.winRmk,
       // rmk: item.rmk || "",
       te1crr: parseFloat(commentaryTeamsOne.crr) || 0,
       te2crr: parseFloat(commentaryTeamsTwo.crr) || 0,
@@ -7346,6 +7359,7 @@ const getMatchDataByCId = async (data, request, fastify) => {
     t2s: teamScore2 || "",
     dis: com.displayStatus || "",
     rmk: com.rmk || "",
+    winRmk: com.winRmk || "",
     te1crr: parseFloat(commentaryTeamsOne.crr) || 0,
     te2crr: parseFloat(commentaryTeamsTwo.crr) || 0,
     te1rrr: parseFloat(commentaryTeamsOne.rrr) || 0,
@@ -7707,6 +7721,7 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
       t2s: teamScore2 || "",
       dis: commentary.displayStatus || "",
       rmk: commentary.rmk || "",
+      winRmk: commentary.winRmk || "",
       te1crr: parseFloat(commentaryTeamsOne.crr) || 0,
       te2crr: parseFloat(commentaryTeamsTwo.crr) || 0,
       te1rrr: parseFloat(commentaryTeamsOne.rrr) || 0,
@@ -10278,6 +10293,7 @@ const revertCommentaryService = async (request, fastify) => {
     global.tblCommentaries[index].tossWonBy = null;
     global.tblCommentaries[index].choseTo = null;
     global.tblCommentaries[index].rmk = false;
+    global.tblCommentaries[index].winRmk = null;
     global.tblCommentaries[index].updateTime = new Date();
     global.tblCommentaries[index].tpId = null;
     global.tblCommentaries[index].commentaryResult = null;
@@ -11341,6 +11357,7 @@ const notiConfigContentReplaceService = async (eventName, commentaryId, request,
       battingteam: battingTeam ?? "",
       bowlingteam: bowlingTeam ?? "",
       rmk: commentary.rmk ?? "",
+      winRmk: commentary.winRmk ?? "",
       boundarytype: boundaryType ?? "",
     };
 
