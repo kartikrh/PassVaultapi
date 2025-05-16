@@ -3301,7 +3301,7 @@ const updateisPredictMarketInCommentaryQuery = async (
 const updateResultInCommentaryQuery = async (data, fastify, request) => {
   try {
     return await fastify.db.query(
-      `UPDATE "tblCommentaries" SET "wrCommentaryResult" = $1 WHERE
+      `UPDATE "tblCommentaries" SET "wrCommentaryResult" = $1, "wrWinRmk" = $1 WHERE
       "wrCommentaryId" = $2 AND "wrIsDelete" = false`,
       {
         type: fastify.db.QueryTypes.UPDATE,
