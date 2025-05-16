@@ -4,6 +4,8 @@ const {
   virtualEventTossService,
   updateVirtualEventStatusService,
   ballByBallVirtualEventService,
+  virtualMatchStartService,
+  ballByBallChangeService,
 } = require("../../../../services/virtual");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -36,6 +38,16 @@ const virtualEventToss = async (request, reply, fastify) => {
       reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
     }
 };
+const ballByBallChange = async (request, reply, fastify) => {
+  try {
+    const result = await ballByBallChangeService(request,fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    console.log(err)
+    errorLogger(fastify, err.message, commonPath + "/ballByBallChange", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 const updateVirtualEventStatus = async (request, reply, fastify) => {
     try {
       const result = await updateVirtualEventStatusService(request,fastify);
@@ -60,4 +72,5 @@ module.exports = {
     virtualEventToss,
     updateVirtualEventStatus,
     ballByBallVirtualEvent,
+    ballByBallChange
 };

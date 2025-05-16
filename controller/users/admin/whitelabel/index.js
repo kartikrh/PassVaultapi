@@ -7,6 +7,7 @@ const {
     demoClientEnableInIOSWhitelabelService,
     isDemoClientLoginService,
     clientApiWhitelabelsService,
+    upIsDefaultAPIService,
 } = require("../../../../services/whitelabel");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -61,6 +62,15 @@ const activeInactiveWhitelabel = async (request, reply, fastify) => {
         reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
     }
 };
+const upIsDefaultAPI = async (request, reply, fastify) => {
+    try {
+        const result = await upIsDefaultAPIService(request, fastify);
+        reply.status(200).send(success(result, 200));
+    } catch (err) {
+        errorLogger(fastify, err.message, commonPath + "/upIsDefaultAPI", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+    }
+};
 const demoClientEnableInIOSWhitelabel = async (request, reply, fastify) => {
     try {
         const result = await demoClientEnableInIOSWhitelabelService(request, fastify);
@@ -97,4 +107,5 @@ module.exports = {
     demoClientEnableInIOSWhitelabel,
     isDemoClientLogin,
     clientApiWhitelabels,
+    upIsDefaultAPI
 };

@@ -5,6 +5,7 @@ const {
   virtualEventToss,
   updateVirtualEventStatus,
   ballByBallVirtualEvent,
+  ballByBallChange,
 } = require("../../../controller/users/admin/virtual");
 const { VirtualEvent } = require("../../../swaggerSchema/groupTags/schema");
 
@@ -29,6 +30,8 @@ module.exports = async (fastify, opts) => {
     handler: (request, reply) => updateVirtualEventStatus(request, reply, fastify),
   });
   fastify.post("/ballByBall", {
-    handler: (request, reply) => ballByBallVirtualEvent(request, reply, fastify),
+    schema: VirtualEvent.ballByBall.schema,
+    // handler: (request, reply) => ballByBallVirtualEvent(request, reply, fastify),
+    handler: (request, reply) => ballByBallChange(request, reply, fastify),
   });
 };

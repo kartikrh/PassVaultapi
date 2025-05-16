@@ -632,6 +632,7 @@ const commentaryStatus = {
   TOSSDONE : 2,
   INPROGRESS : 3,
   COMPLETED : 4,
+  INNINGCHANGE : 5
 }
 const LineType = {
   BackLay:	1,
@@ -980,6 +981,52 @@ const PitchAge = {
   4 : "Day 4", 
   5 : "Day 5"
 }
+const playerSwitchObj = {
+  SWITCH_BOWLER : "SWITCH_BOWLER",
+  CHANGE_BOWLER : "CHANGE_BOWLER",
+  BATTER_SWITCH : "BATTER_SWITCH"
+}
+const wicketTypeObj = {
+  BOLD : 1,
+  BOLD_LABEL : "Bowled",
+  CATCH : 2,
+  CATCH_LABEL : "Catch",
+  STUMP : 3,
+  STUMP_LABEL : "Stump",
+  HIT_WICKET : 4,
+  HIT_WICKET_LABEL : "Hit Wicket",
+  LBW : 5,
+  LBW_LABEL : "LBW",
+  RUN_OUT : 6,
+  RUN_OUT_LABEL : "Run Out",
+  RETIRED_OUT : 7,
+  RETIRED_OUT_LABEL : "Retired Out",
+  TIMED_OUT : 8,
+  TIMED_OUT_LABEL : "Timed Out",
+  HIT_BALL_TWICE : 9,
+  HIT_BALL_TWICE_LABEL : "Hit B. Twice",
+  OBSTRACT_THE_FIELDING : 10,
+  OBSTRACT_THE_FIELDING_LABEL : "Obst. Field"
+}
+const inningSwitch = {
+   EXTRAS : "EXTRAS",
+   OVER : "OVER",
+   OVER_ENDED : "OVER_ENDED",
+   WICKET : "WICKET",
+   RUN : "RUN",
+   ALL : "ALL"
+}
+const playerType = {
+  CURRENT_BOWLER : "CURRENT_BOWLER",
+  BATTING_TEAM : "BATTING_TEAM",
+  BOWLING_TEAM : "BOWLING_TEAM",
+  ON_STRIKE :"ON_STRIKE",
+  NON_STRIKE : "NON_STRIKE"
+}
+const teamStatus = {
+  BAT_TEAM_STATUS : 1,
+  BOWL_TEAM_STATUS :2
+}
 module.exports = {
   ERROR_CODES,
   error,
@@ -1049,5 +1096,10 @@ module.exports = {
   PitchType,
   LawnStriping,
   PitchAge,
-  BALL_TYPE
+  BALL_TYPE,
+  playerSwitchObj,
+  wicketTypeObj,
+  inningSwitch,
+  playerType,
+  teamStatus
 };

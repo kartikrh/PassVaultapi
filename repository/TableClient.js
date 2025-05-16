@@ -18,7 +18,8 @@ const getAllClientQuery = async (fastify) => {
               "wrIsEmailVerified" AS "isEmailVerified",
               "wrIsMobileVerified" AS "isMobileVerified",
               "wrCountryCode" as "countryCode",
-              "wrSeamlessToken" as "seamlessToken"
+              "wrSeamlessToken" as "seamlessToken",
+              "wrCreatedDate" as "createdDate"
         from "tblClient"
         where "wrIsDelete" = false
         `,
@@ -91,7 +92,8 @@ const insertClientQuery = async (data, request, fastify) => {
                     "wrIsUserActive" as "isUserActive",
                     "wrProvider" as "provider",
                     "wrIsActive" as "isActive",
-                    "wrCountryCode" as "countryCode"
+                    "wrCountryCode" as "countryCode",
+                    "wrCreatedDate" as "createdDate"
                 from "insert_data"
             `,
       {
