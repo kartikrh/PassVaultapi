@@ -1493,6 +1493,8 @@ const getAllCommentaryBallByBallQuery = async (fastify) => {
         tcbb."wrOver_isMaiden" as "overIsMaiden",
         tcbb."wrNextBat_StrikeID" as "nextBatStrikeId",
         tcbb."wrNextBat_NONStrikeID" as "nextBatNonStrikeId",
+        tcbb."wrTeamScore" as "teamScore",
+        tcbb."wrTeamWicket" as "teamWicket",
         tcbb."wrIsDelete" as "isDelete",
         tcbb."wrCurrentInnings" as "currentInnings",
         tcbb."wrCreatedDate" as "createdDate",
