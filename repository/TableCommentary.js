@@ -29,6 +29,7 @@ const getAllCommentaryQuery = async (fastify) => {
     "wrIsClientShow" as "isClientShow",
     "wrDisplayStatus" as "displayStatus",
     "wrRmk" as "rmk",
+    "wrWinRmk" as "winRmk",
     "wrCommentaryUserId" as "commentaryUserId",
     "wrCommentaryStatus" as "commentaryStatus",
     "wrUpdateTime" as "updateTime",
@@ -110,6 +111,7 @@ const getCommentariesDataQuery = async (fastify) => {
     "wrIsClientShow" as "isClientShow",
     "wrDisplayStatus" as "displayStatus",
     "wrRmk" as "rmk",
+    "wrWinRmk" as "winRmk",
     "wrCommentaryUserId" as "commentaryUserId",
     "wrCommentaryStatus" as "commentaryStatus",
     "wrUpdateTime" as "updateTime",
@@ -225,6 +227,7 @@ const insertCommentaryQuery = async (request, fastify) => {
     "wrIsClientShow" as "isClientShow",
     "wrDisplayStatus" as "displayStatus",
     "wrRmk" as "rmk",
+    "wrWinRmk" as "winRmk",
     "wrCommentaryUserId" as "commentaryUserId",
     "wrCommentaryStatus" as "commentaryStatus",
     "wrUpdateTime" as "updateTime",
@@ -807,6 +810,7 @@ const getCommentaryByIdQuery = async (request, fastify) => {
       "wrIsClientShow" as "isClientShow",
       "wrDisplayStatus" as "displayStatus",
       "wrRmk" as "rmk",
+      "wrWinRmk" as "winRmk",
       "wrCommentaryUserId" as "commentaryUserId",
     "wrCommentaryStatus" as "commentaryStatus",
       "wrUpdateTime" as "updateTime",
@@ -3297,7 +3301,7 @@ const updateisPredictMarketInCommentaryQuery = async (
 const updateResultInCommentaryQuery = async (data, fastify, request) => {
   try {
     return await fastify.db.query(
-      `UPDATE "tblCommentaries" SET "wrCommentaryResult" = $1 WHERE
+      `UPDATE "tblCommentaries" SET "wrCommentaryResult" = $1, "wrWinRmk" = $1 WHERE
       "wrCommentaryId" = $2 AND "wrIsDelete" = false`,
       {
         type: fastify.db.QueryTypes.UPDATE,
@@ -4489,6 +4493,7 @@ const getAllCommentaryHistoryQuery = async (whereCondition, fastify, request) =>
             tc."wrIsClientShow" as "isClientShow",
             tc."wrDisplayStatus" as "displayStatus",
             tc."wrRmk" as "rmk",
+            tc."wrWinRmk" as "winRmk",
             tc."wrCommentaryUserId" as "commentaryUserId",
             tc."wrCommentaryStatus" as "commentaryStatus",
             tc."wrUpdateTime" as "updateTime",
@@ -4655,6 +4660,7 @@ const getAllCompletedCommentaryQuery = async (request, fastify) => {
           ) AS t2s,
           tc."wrDisplayStatus" AS "dis",
           COALESCE(tc."wrRmk", '') AS "rmk",
+          COALESCE(tc."wrWinRmk", '') AS "winRmk",
           COALESCE(CAST(tct1."wrCrr" AS FLOAT), 0) AS "te1crr",
           COALESCE(CAST(tct2."wrCrr" AS FLOAT), 0) AS "te2crr",
           COALESCE(CAST(tct1."wrRrr" AS FLOAT), 0) AS "te1rrr",
@@ -4769,6 +4775,7 @@ const getCommentariesDataByDifferentIdsQuery = async (whereCondition, request, f
           tc."wrIsClientShow" as "isClientShow",
           tc."wrDisplayStatus" as "displayStatus",
           tc."wrRmk" as "rmk",
+          tc."wrWinRmk" as "winRmk",
           tc."wrCommentaryUserId" as "commentaryUserId",
           tc."wrCommentaryStatus" as "commentaryStatus",
           tc."wrUpdateTime" as "updateTime",
@@ -4856,6 +4863,7 @@ const getCommentariesDataQueryV1 = async (fastify) => {
         tc."wrIsClientShow" as "icshow",
         tc."wrDisplayStatus" as "ds",
         tc."wrRmk" as "rmk",
+        tc."wrWinRmk" as "winRmk",
         tc."wrCommentaryUserId" as "cuserid",
         tc."wrCommentaryStatus" as "cs",
         tc."wrUpdateTime" as "ut",
