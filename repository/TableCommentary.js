@@ -1551,6 +1551,8 @@ const getAllCommentaryBallByBallDataQuery = async (whereCondition = null, fastif
     "wrOver_isMaiden" as "overIsMaiden",
     "wrNextBat_StrikeID" as "nextBatStrikeId",
     "wrNextBat_NONStrikeID" as "nextBatNonStrikeId",
+    "wrTeamScore" as "teamScore",
+    "wrTeamWicket" as "teamWicket",
     "wrIsDelete" as "isDelete",
     "wrCurrentInnings" as "currentInnings",
     "wrCreatedDate" as "createdDate",
