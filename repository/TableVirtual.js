@@ -122,7 +122,9 @@ const virtualBallByBallQuery = async (data, request, fastify) => {
             "wrAutoStrikeBallCount",
             "wrCommentaryPartnershipId",
             "wrTeamScore",
-            "wrTeamWicket"
+            "wrTeamWicket",
+            "wrCardKey",
+            "wrCardType"
         )
         VALUES (
             $1, $2, $3, $4, $5,
@@ -131,7 +133,7 @@ const virtualBallByBallQuery = async (data, request, fastify) => {
             $16, $17, $18, $19, $20,
             $21, $22, $23, $24, $25,
             $26, $27, $28, $29, $30,
-            $31
+            $31 ,$32 ,$33
         )
         RETURNING
             "wrCommentaryBallByBallId" AS "commentaryBallByBallId",
@@ -165,7 +167,10 @@ const virtualBallByBallQuery = async (data, request, fastify) => {
             "wrAutoStrikeBallCount" AS "autoStrikeBallCount",
             "wrCommentaryPartnershipId" AS "commentaryPartnershipId",
             "wrTeamScore" AS "teamScore",
-            "wrTeamWicket" AS "teamWicket";`;
+            "wrTeamWicket" AS "teamWicket",
+            "wrCardKey" AS "cardKey",
+            "wrCardType" AS "cardType"
+            ;`;
 
     const result = await fastify.db.query(query, {
         bind : [
@@ -200,6 +205,8 @@ const virtualBallByBallQuery = async (data, request, fastify) => {
             data.commentaryPartnershipId ?? null,
             data.teamScore ?? null,
             data.teamWicket ?? null,
+            data.cardKey ?? null,
+            data.cardType ?? null,
           ],
         type: fastify.db.QueryTypes.SELECT,
     });
@@ -357,9 +364,43 @@ const comStatusUpdateQuery = async (data, request, fastify) => {
     throw new Error(err.message);
   }
 };
+const saveComCardQuery = async (data, request, fastify) => {
+  try {
+    let values = data.cards.map((item) => {
+      return `(${data.commentaryId}, '${item.key}', '${item.value}', ${item.count})`;
+    }).join(", ");
+    // console.log("values", values);
+    const result = await fastify.db.query(
+      `
+        INSERT INTO "tblCommentaryCards"
+        (
+          "wrCommentaryId",
+          "wrKey",
+          "wrValue",
+          "wrCount"
+        )
+        VALUES ${values}
+      `,
+      {
+        type: fastify.db.QueryTypes.UPDATE,
+      }
+    );
+    return result[0];
+  } catch (err) {
+    console.log(err);
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableVirtual.js/saveComCardQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
 module.exports = {
   virtualOverQuery,
   virtualBallByBallQuery,
   virtualPartnershipQuery,
-  comStatusUpdateQuery
+  comStatusUpdateQuery,
+  saveComCardQuery
 };
