@@ -6,6 +6,7 @@ const {
   ballByBallVirtualEventService,
   virtualMatchStartService,
   ballByBallChangeService,
+  suffleCardAPIService,
 } = require("../../../../services/virtual");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");

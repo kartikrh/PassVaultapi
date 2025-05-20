@@ -6,6 +6,7 @@ const {
   updateVirtualEventStatus,
   ballByBallVirtualEvent,
   ballByBallChange,
+  suffleCardAPI,
 } = require("../../../controller/users/admin/virtual");
 const { VirtualEvent } = require("../../../swaggerSchema/groupTags/schema");
 

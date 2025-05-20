@@ -2456,15 +2456,15 @@ const suffleCardAPIService = async (request, fastify) => {
   }
   let endPoint = "";
   // call predct api
-  await callPredictorMarket(
-    {
-      commentaryId,
-      currentInnings: commentaryDetails.currentInnings,
-    },
-    endPoint,
-    fastify,
-    request
-  );
+  // await callPredictorMarket(
+  //   {
+  //     commentaryId,
+  //     currentInnings: commentaryDetails.currentInnings,
+  //   },
+  //   endPoint,
+  //   fastify,
+  //   request
+  // );
 
   return true;
 };
