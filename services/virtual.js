@@ -2465,7 +2465,6 @@ const suffleCardAPIService = async (request, fastify) => {
   //   fastify,
   //   request
   // );
-
   return true;
 };
 module.exports = {
