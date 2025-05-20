@@ -8875,9 +8875,23 @@ const VirtualEvent = {
         properties: {
           competitionId : { type: "integer" },
           eventDate : { type: "string" },
-          eventRefId : { type: "string" }
+          eventRefId : { type: "string" },
+          cards : {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                key : { type: "string" },
+                value : { type: "string" },
+                count : { type: "string" },
+              },
+              required: ["key", "value", "count"],              
+            },
+            minItems: 1
+
+          }
         },
-        required: ["competitionId", "eventDate", "eventRefId"],
+        required: ["competitionId", "eventDate", "eventRefId", "cards"],
       }
     }
   },
