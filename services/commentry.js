@@ -7136,6 +7136,8 @@ const getMatchListByStatus = async (body, request, fastify) => {
       dis: item.displayStatus || "",
       rmk: item.rmk === null || item.rmk === undefined ? "" : item.rmk,
       winRmk: item.winRmk === null || item.winRmk === undefined ? "" : item.winRmk,
+      winNm: item.winnerName === null || item.winnerName === undefined ? "" : item.winnerName,
+      winId: item.winnerId === null || item.winnerId === undefined ? "" : item.winnerId,
       // rmk: item.rmk || "",
       te1crr: parseFloat(commentaryTeamsOne.crr) || 0,
       te2crr: parseFloat(commentaryTeamsTwo.crr) || 0,
