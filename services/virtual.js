@@ -141,6 +141,20 @@ const createVirtualEventService = async (request, fastify) => {
   if (validateCommentary) {
     throw new Error("EventRefId should be unique");
   }
+  let matchType;
+  // check Match Type
+  if(!checkComp.matchTypeId){
+    throw new Error("Match Type not found");
+  }
+  else {
+    matchType = global.tblMatchTypes.find(
+      (item) => item.matchTypeId == checkComp.matchTypeId
+    );
+    if (!matchType) {
+      throw new Error("Match Type details not found");
+    }
+
+  }
 
   const tournamentTeams = await getTournamentTeamsByCompIdQuery(
     request.body.competitionId,
@@ -190,14 +204,19 @@ const createVirtualEventService = async (request, fastify) => {
     if (team1Players.length < 2 && team2Players.length < 2) {
       throw new Error("No players found for teams");
     }
+    let dataToInsert = {
+      ...request.body,  
+      ...checkComp
+    }
 
-    const commentaryData = await insertVirtualEventQuery(request, fastify);
+    const commentaryData = await insertVirtualEventQuery(dataToInsert,request, fastify);
     global.tblCommentaries.push(commentaryData);
     comId = commentaryData.commentaryId;
     const teamData = {
       commentaryId: commentaryData.commentaryId,
       team1Id: request.body.team1Id,
       team2Id: request.body.team2Id,
+      teamMaxOver : matchType.maxOversInFirstInings 
     };
     const teamsData = await insertVirtualCommentaryTeams(
       teamData,
@@ -313,7 +332,8 @@ const createVirtualEventService = async (request, fastify) => {
     }
   }
   // save virtual card data
-  await saveComCardQuery(
+  if(request.body.cards.length > 0){
+    await saveComCardQuery(
     {
       commentaryId: comId,
       cards: request.body.cards,
@@ -321,6 +341,7 @@ const createVirtualEventService = async (request, fastify) => {
     request,
     fastify
   );
+  }
   const comData = await commentaryResponseSerivce(comId);
   // return "Commentary Created Successfully";
   return comData;
@@ -333,7 +354,13 @@ const virtualEventTossService = async (request, fastify) => {
     (item) => item.commentaryId == commentaryId
   );
   if (!commentary) {
-    throw new Error("Commentary with this ID not found");
+    throw new Error("Event with this ID not found");
+  }
+  if(commentary.commentaryStatus == commentaryStatus.COMPLETED){
+    throw new Error("Event is already completed");
+  }
+  if (commentary.commentaryStatus != commentaryStatus.OPEN) {
+    throw new Error("Toss already done");
   }
 
   let tossWonBy, shortName;
@@ -1004,6 +1031,19 @@ const ballByBallChangeService = async (request, fastify) => {
   const isBoundary = false;
   // const { commentaryId, run, ballType, isWicket = false } = request.body;
   const { commentaryId, cardType, cardKey, cardValue } = request.body;
+  const commentaryDetails = global.tblCommentaries.find(
+    (item) => item?.commentaryId === commentaryId
+  );
+  if (!commentaryDetails) {
+    throw new Error("Event with this id not found");
+  }
+  if (commentaryDetails.commentaryStatus == commentaryStatus.OPEN) {
+    throw new Error("Toss is not done yet");
+  }
+  if (commentaryDetails.commentaryStatus == commentaryStatus.COMPLETED) {
+    throw new Error("Event is already completed");
+  }
+  
   let run = 0,
     isWicket = false,
     ballType = BALL_TYPE.REGULAR;
@@ -1021,12 +1061,7 @@ const ballByBallChangeService = async (request, fastify) => {
     ballType = BALL_TYPE.WIDE;
   }
 
-  const commentaryDetails = global.tblCommentaries.find(
-    (item) => item?.commentaryId === commentaryId
-  );
-  if (!commentaryDetails) {
-    throw new Error("Commentary with this id not found");
-  }
+  
   if (commentaryDetails.commentaryStatus == commentaryStatus.COMPLETED) {
     let getRes = await comResponseService(request, fastify);
     return {
@@ -1176,11 +1211,11 @@ const ballByBallChangeService = async (request, fastify) => {
     if (checkMatch.inningChange) {
       let getRes = await comResponseService(request, fastify);
       return {
-        ...getRes,
         isMatchComplete: checkMatch.matchComplete,
         inningChange: checkMatch.inningChange,
         isOverComplete: true,
         isWicket: false,
+        ...getRes
       };
     }
     if (checkMatch.matchComplete) {
@@ -1210,7 +1245,7 @@ const ballByBallChangeService = async (request, fastify) => {
       isOverComplete: true,
       isWicket: false,
       isMatchComplete: false,
-      ...getRes,
+      ...getRes
     };
   }
   const mc = await checkInningsSwitch(
@@ -1241,7 +1276,7 @@ const ballByBallChangeService = async (request, fastify) => {
     isMatchComplete: false,
     isOverComplete: false,
     isWicket: false,
-    ...getRes,
+    ...getRes
   };
 };
 const updateRunPayload = async (data, request) => {
@@ -1522,7 +1557,7 @@ const checkInningsSwitch = async (data, request, fastify) => {
         Math.ceil(+overdetails.over || 0) + 1 >= batTeam?.teamMaxOver;
       wicketLimit = batTeam?.teamWicket > maxNoOfWicket - 2;
       isRunTargetAchieved =
-        isLastInnigs && target !== 0 && batTeam?.teamScore >= target;
+        isLastInnigs && target !== 0 && batTeam?.teamScore > target;
 
       conditionsToCheck.push(overLimit, wicketLimit, isRunTargetAchieved);
       break;
@@ -1539,7 +1574,7 @@ const checkInningsSwitch = async (data, request, fastify) => {
       break;
     case "RUN":
       isRunTargetAchieved =
-        isLastInnigs && target !== 0 && batTeam?.teamScore >= target;
+        isLastInnigs && target !== 0 && batTeam?.teamScore > target;
       conditionsToCheck.push(isRunTargetAchieved);
       // conditionsToCheck.push(true)
 

@@ -5360,9 +5360,9 @@ const changeIsEventStartQuery = async (data, fastify, request) => {
   }
 };
 
-const insertVirtualEventQuery = async (request, fastify) => {
+const insertVirtualEventQuery = async (data ,request, fastify) => {
   try {
-    const data = request.body;
+    // const data = request.body;
     const result = await fastify.db.query(
       `
       with insert_data as(
