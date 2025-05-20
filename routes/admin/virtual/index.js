@@ -18,26 +18,27 @@ module.exports = async (fastify, opts) => {
     ],
     handler: (request, reply) => saveEvent(request, reply, fastify),
   });
-  fastify.post("/save", {
+  fastify.post("/createEvent", {
     schema: VirtualEvent.createVirtualEvent.schema,
     handler: (request, reply) => createVirtualEvent(request, reply, fastify),
   });
-  fastify.post("/toss", {
+  fastify.post("/eventToss", {
     schema: VirtualEvent.EventToss.schema,
     handler: (request, reply) => virtualEventToss(request, reply, fastify),
   });
-  fastify.post("/ballStart", {
+  fastify.post("/eventBallStart", {
     schema: VirtualEvent.BallStartEvent.schema,
     handler: (request, reply) => updateVirtualEventStatus(request, reply, fastify),
   });
-  fastify.post("/ballByBall", {
+  fastify.post("/eventScoring", {
     schema: VirtualEvent.ballByBall.schema,
     // handler: (request, reply) => ballByBallVirtualEvent(request, reply, fastify),
     handler: (request, reply) => ballByBallChange(request, reply, fastify),
   });
-  fastify.post("/suffleCard", {
+  fastify.post("/eventSuffle", {
     schema: VirtualEvent.suffleCard.schema,
     // handler: (request, reply) => ballByBallVirtualEvent(request, reply, fastify),
     handler: (request, reply) => suffleCardAPI(request, reply, fastify),
   });
+  
 };
