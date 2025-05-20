@@ -40,4 +40,5 @@ module.exports = async (fastify, opts) => {
     // handler: (request, reply) => ballByBallVirtualEvent(request, reply, fastify),
     handler: (request, reply) => suffleCardAPI(request, reply, fastify),
   });
+  
 };
