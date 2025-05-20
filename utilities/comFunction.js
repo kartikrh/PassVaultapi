@@ -59,6 +59,8 @@ const generateBall = (data) => {
     commentaryPartnershipId: updatePartnership.commentaryPartnershipId || 0,
     teamScore: updateBattingTeam?.teamScore || 0,
     teamWicket: updateBattingTeam?.teamWicket || 0,
+    cardType: updateBall.cardType ? updateBall.cardType : null,
+    cardKey : updateBall?.cardKey ? updateBall.cardKey : null,
   };
 };
 const generatePartnership = (data) => {

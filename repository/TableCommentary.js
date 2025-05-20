@@ -1503,7 +1503,9 @@ const getAllCommentaryBallByBallQuery = async (fastify) => {
         tcbb."wrY2" as "y2",
         tcbb."wrShortType" as "shortType",
         tcbb."wrCommentryRemark" as "commentryRemark",
-        tcbb."wrCommentaryPartnershipId" as "commentaryPartnershipId"
+        tcbb."wrCommentaryPartnershipId" as "commentaryPartnershipId",
+        tcbb."wrCardKey" as "cardKey",
+        tcbb."wrCardType" as "cardType"
     from "tblCommentaryBallByBalls" tcbb
     WHERE tcbb."wrCommentaryId" IN (
         SELECT "wrCommentaryId"
@@ -5529,7 +5531,7 @@ const virtualEventTossQuery = async (data, request, fastify) => {
           data.tossWonBy,
           data.choseTo,
           data.displayStatus,
-          2,
+          data.commentaryStatus,
           data.rmk,
           data.commentaryId,
         ],

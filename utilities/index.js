@@ -1027,6 +1027,17 @@ const teamStatus = {
   BAT_TEAM_STATUS : 1,
   BOWL_TEAM_STATUS :2
 }
+const Cards = {
+  "A" : 1,
+  "2" : 2,
+  "3" : 3,
+  "4" : 4,
+  "5" : 5,
+  "6" : 6,
+  "10" : 0,
+  "J" :"WIDE",
+  "K" : "WICKET"
+}
 module.exports = {
   ERROR_CODES,
   error,
@@ -1101,5 +1112,6 @@ module.exports = {
   wicketTypeObj,
   inningSwitch,
   playerType,
-  teamStatus
+  teamStatus,
+  Cards
 };

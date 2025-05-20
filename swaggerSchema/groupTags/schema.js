@@ -3461,6 +3461,7 @@ const Compitition = {
           refId: { type: "string" },
           isActive: { type: "boolean" },
           isTrending : { type: "boolean" },
+          matchTypeId : {type : "integer"}
         },
         required: ["competitionId"],
       },
@@ -8898,7 +8899,7 @@ const VirtualEvent = {
   },
   BallStartEvent : {
     schema : {
-      tags: ["CompetitionEvent"],
+      tags: ["VirtualEvent"],
       description: "Ball Start Event",
       security: [{ bearerAuth: [] }],
       body: {
@@ -8914,20 +8915,37 @@ const VirtualEvent = {
   },
   ballByBall : {
     schema : {
-      tags: ["CompetitionEvent"],
+      tags: ["VirtualEvent"],
       description: "Ball Start Event",
       security: [{ bearerAuth: [] }],
       body: {
         type: "object",
         properties: {
           commentaryId : { type: "integer" },
-          run : { type: "integer" },
-          ballType : { type: "integer" },
+          cardType : { type: "string" },
+          cardValue : { type: "string" },
+          cardKey : { type: "string" },
+          // run : { type: "integer" },
+          // ballType : { type: "integer" },
         },
-        required: ["commentaryId", "run", "ballType"],
+        required: ["commentaryId", "cardType", "cardValue", "cardKey"],
       }
     }
   },
+  suffleCard : {
+    schema : {
+      tags: ["VirtualEvent"],
+      description: "Ball Start Event",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId : { type: "integer" },
+        },
+        required: ["commentaryId"],
+      }
+    }
+  }
 } 
 const FavCompetitions = {
   save: {
