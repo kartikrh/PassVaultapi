@@ -1503,7 +1503,9 @@ const getAllCommentaryBallByBallQuery = async (fastify) => {
         tcbb."wrY2" as "y2",
         tcbb."wrShortType" as "shortType",
         tcbb."wrCommentryRemark" as "commentryRemark",
-        tcbb."wrCommentaryPartnershipId" as "commentaryPartnershipId"
+        tcbb."wrCommentaryPartnershipId" as "commentaryPartnershipId",
+        tcbb."wrCardKey" as "cardKey",
+        tcbb."wrCardType" as "cardType"
     from "tblCommentaryBallByBalls" tcbb
     WHERE tcbb."wrCommentaryId" IN (
         SELECT "wrCommentaryId"
@@ -4713,6 +4715,8 @@ const getAllCompletedCommentaryQuery = async (request, fastify) => {
           tc."wrIsPredictMarket" AS "isPr",
           tc."wrIsClientShow" AS "ics",
           tc."wrIsTest" AS "isTest",
+          tc."wrWinnerId" AS "winId",
+          tc."wrWinnerName" AS "winNm",
           tc."wrIsActive" AS "isActive"
       FROM "tblCommentaries" tc
       LEFT JOIN "tblTeams" tt1 ON tt1."wrTeamId" = tc."wrTeam1Id" AND tt1."wrIsDeleted" = false
@@ -5358,9 +5362,9 @@ const changeIsEventStartQuery = async (data, fastify, request) => {
   }
 };
 
-const insertVirtualEventQuery = async (request, fastify) => {
+const insertVirtualEventQuery = async (data ,request, fastify) => {
   try {
-    const data = request.body;
+    // const data = request.body;
     const result = await fastify.db.query(
       `
       with insert_data as(
@@ -5529,7 +5533,7 @@ const virtualEventTossQuery = async (data, request, fastify) => {
           data.tossWonBy,
           data.choseTo,
           data.displayStatus,
-          2,
+          data.commentaryStatus,
           data.rmk,
           data.commentaryId,
         ],
