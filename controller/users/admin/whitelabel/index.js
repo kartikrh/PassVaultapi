@@ -13,6 +13,7 @@ const {
     getCommentaryService,
     getCompetitionService,
     unhideEventsService,
+    getHideEventService,
 } = require("../../../../services/whitelabel");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -148,6 +149,15 @@ const clientApiWhitelabels = async (request, reply, fastify) => {
         reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
     }
 };
+const getHideEvent = async (request, reply, fastify) => {
+    try {
+        const result = await getHideEventService(request, fastify);
+        reply.status(200).send(success(result, 200));
+    } catch (err) {
+        errorLogger(fastify, err.message, commonPath + "/getHideEvent", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+    }
+};
 module.exports = {
     getAllWhitelabels,
     whitelabelById,
@@ -162,5 +172,6 @@ module.exports = {
     getEventTypes,
     getCompetition,
     getCommentary,
-    unhideEvents
+    unhideEvents,
+    getHideEvent
 };
