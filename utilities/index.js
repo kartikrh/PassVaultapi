@@ -1038,6 +1038,11 @@ const Cards = {
   "J" :"WIDE",
   "K" : "WICKET"
 }
+const HideEventType = {
+  eventType : 1,
+  competition : 2,
+  commentary : 3,
+}
 module.exports = {
   ERROR_CODES,
   error,
@@ -1113,5 +1118,6 @@ module.exports = {
   inningSwitch,
   playerType,
   teamStatus,
-  Cards
+  Cards,
+  HideEventType
 };

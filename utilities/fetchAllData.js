@@ -92,6 +92,7 @@ const { getAllPackagesQuery } = require("../repository/TablePackages");
 const { getAllWhitelabelsQuery } = require("../repository/TableWhitelabel");
 const { getAllNotificationConfigsQuery, getNotificationConfigsByEventNameQuery } = require("../repository/TableNotificationConfig");
 const { notiConfigContentReplaceService } = require("../services/commentry");
+const { getAllHideEventsQuery } = require("../repository/TableHideEvents");
 
 const fetchAllDataFromDb = async (fastify, reply) => {
   try {
@@ -209,6 +210,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     //   getAllEventMarketsV2.map((item) => item.eventMarketId).join(", ")
     // );
 
+    const getHideEvents = await getAllHideEventsQuery(fastify);
 
     global.tblTabs = getAllTabs;
     global.tblRoles = getAllRoles;
@@ -287,6 +289,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblPackages = getAllPackages;
     global.tblWhitelabels = getAllWhitelabels;
     global.tblNotificationConfig = getAllNotificationConfigs;
+    global.tblHideEvents = getHideEvents;
     // global.responseLogs = responseLogs;
     // global.thirdPartyAPILogs = thirdPartyAPILogs;
     // global.predictorAPILogs = predictorAPILogs;
