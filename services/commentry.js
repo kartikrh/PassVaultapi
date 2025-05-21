@@ -5656,7 +5656,7 @@ const commentaryDetailsByEventIdService = async (
     rmk: "",
     winRmk: "",
     winNm: "",
-    winId: "",
+    winId: 0,
     win: "",
     cst: "",
     ics: result.isClientShow,
@@ -5850,7 +5850,7 @@ const commentaryDetailsByEventIdService = async (
     resultArr.rmk = "Toss Not Done Yet";
     resultArr.winRmk = "";
     resultArr.winNm = "";
-    resultArr.winId = "";
+    resultArr.winId = 0;
     resultArr.win = "";
     resultArr.cst = result.commentaryStatus;
     resultArr.ics = result.isClientShow;
@@ -5925,7 +5925,7 @@ const commentaryDetailsByEventIdService = async (
     resultArr.rmk = toss;
     resultArr.winRmk = "";
     resultArr.winNm = "";
-    resultArr.winId = "";
+    resultArr.winId = 0;
     resultArr.win = "";
     resultArr.cst = result.commentaryStatus;
     resultArr.ics = result.isClientShow;
@@ -6047,7 +6047,7 @@ const commentaryDetailsByEventIdService = async (
     resultArr.rmk = result.rmk;
     resultArr.winRmk = result.winRmk || "";
     resultArr.winNm = result?.winnerName || "";
-    resultArr.winId = result?.winnerId || "";
+    resultArr.winId = result?.winnerId || 0;
     resultArr.win = result.result || "";
     resultArr.cst = result.commentaryStatus;
     resultArr.ics = result.isClientShow;
@@ -6315,7 +6315,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     rmk: "",
     winRmk: "",
     winNm: "",
-    winId: "",
+    winId: 0,
     win: "",
     cst: "",
     ics: result.isClientShow,
@@ -6497,7 +6497,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     resultArr.rmk = "Toss Not Done Yet";
     resultArr.winRmk = "";
     resultArr.winNm = "";
-    resultArr.winId = "";
+    resultArr.winId = 0;
     resultArr.win = "";
     resultArr.cst = result.commentaryStatus;
     resultArr.ics = result.isClientShow;
@@ -6556,7 +6556,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     resultArr.rmk = toss;
     resultArr.winRmk = "";
     resultArr.winNm = "";
-    resultArr.winId = "";
+    resultArr.winId = 0;
     resultArr.win = "";
     resultArr.cst = result.commentaryStatus;
     resultArr.ics = result.isClientShow;
@@ -6672,7 +6672,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     resultArr.rmk = result.rmk;
     resultArr.winRmk = result.winRmk || "";
     resultArr.winNm = result?.winnerName || "";
-    resultArr.winId = result?.winnerId || "";
+    resultArr.winId = result?.winnerId || 0;
     resultArr.win = "";
     resultArr.cst = result.commentaryStatus;
     resultArr.ics = result.isClientShow;
@@ -7157,7 +7157,7 @@ const getMatchListByStatus = async (body, request, fastify) => {
       rmk: item.rmk === null || item.rmk === undefined ? "" : item.rmk,
       winRmk: item.winRmk === null || item.winRmk === undefined ? "" : item.winRmk,
       winNm: item.winnerName === null || item.winnerName === undefined ? "" : item.winnerName,
-      winId: item.winnerId === null || item.winnerId === undefined ? "" : item.winnerId,
+      winId: item.winnerId === null || item.winnerId === undefined ? 0 : item.winnerId,
       // rmk: item.rmk || "",
       te1crr: parseFloat(commentaryTeamsOne.crr) || 0,
       te2crr: parseFloat(commentaryTeamsTwo.crr) || 0,
@@ -7383,7 +7383,7 @@ const getMatchDataByCId = async (data, request, fastify) => {
     rmk: com.rmk || "",
     winRmk: com.winRmk || "",
     winNm: com?.winnerName || "",
-    winId: com?.winnerId || "",
+    winId: com?.winnerId || 0,
     te1crr: parseFloat(commentaryTeamsOne.crr) || 0,
     te2crr: parseFloat(commentaryTeamsTwo.crr) || 0,
     te1rrr: parseFloat(commentaryTeamsOne.rrr) || 0,
@@ -7747,7 +7747,7 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
       rmk: commentary.rmk || "",
       winRmk: commentary.winRmk || "",
       winNm: commentary?.winnerName || "",
-      winId: commentary?.winnerId || "",
+      winId: commentary?.winnerId || 0,
       te1crr: parseFloat(commentaryTeamsOne.crr) || 0,
       te2crr: parseFloat(commentaryTeamsTwo.crr) || 0,
       te1rrr: parseFloat(commentaryTeamsOne.rrr) || 0,
@@ -11385,7 +11385,7 @@ const notiConfigContentReplaceService = async (eventName, commentaryId, request,
       rmk: commentary.rmk ?? "",
       winRmk: commentary.winRmk ?? "",
       winNm: commentary?.winnerName ?? "",
-      winId: commentary?.winnerId ?? "",
+      winId: commentary?.winnerId ?? 0,
       boundarytype: boundaryType ?? "",
     };
 
