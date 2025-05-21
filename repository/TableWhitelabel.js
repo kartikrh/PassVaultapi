@@ -4,7 +4,8 @@ const getAllWhitelabelsQuery = async (fastify) => {
     try {
         return await fastify.db.query(
             `SELECT 
-                "wrId" as "id",
+                tw."wrId" as "id",
+                "wrValue" as "whitelabelId",
                 "wrDomain" as "domain",
                 "wrImagepath" as "imagePath",
                 "wrIsActive" as "isActive",
@@ -37,7 +38,8 @@ const getAllWhitelabelsQuery = async (fastify) => {
                 "wrSendMail_MaxSendlimit" as "sendMailMaxSendLimit",
                 "wrClientOTP" as "clientOTP",
                 "wrIsDefault" as "isDefault"
-            FROM "tblWhitelabel"
+            FROM "tblWhitelabel" tw
+            LEFT JOIN "tblEncryptedData" ed ON tw."wrId" = ed."wrKey"
             WHERE "wrIsDeleted" = FALSE;`,
             { type: fastify.db.QueryTypes.SELECT }
         );
@@ -70,7 +72,8 @@ const insertWhitelabelQuery = async (data, fastify, request) => {
             RETURNING *
             )
             SELECT 
-                "wrId" as "id",
+                insert_data."wrId" as "id",
+                "wrValue" as "whitelabelId",
                 "wrDomain" as "domain",
                 "wrImagepath" as "imagePath",
                 "wrIsActive" as "isActive",
@@ -103,7 +106,9 @@ const insertWhitelabelQuery = async (data, fastify, request) => {
                 "wrSendMail_MaxSendlimit" as "sendMailMaxSendLimit",
                 "wrClientOTP" as "clientOTP",
                 "wrIsDefault" as "isDefault"
-            FROM insert_data;`,
+            FROM insert_data
+            LEFT JOIN "tblEncryptedData" ed ON insert_data."wrId" = ed."wrKey"
+            `,
             {
                 type: fastify.db.QueryTypes.SELECT,
                 bind: [
@@ -365,6 +370,7 @@ const getAllEncryptWhitelabelsQuery = async (fastify, whereCondition = null) => 
         return await fastify.db.query(
             `SELECT 
                 ed."wrValue" as "whitelabelId",
+                tw."wrId" as "id",
                 "wrDomain" as "domain",
                 "wrImagepath" as "imagePath",
                 "wrIsActive" as "isActive",

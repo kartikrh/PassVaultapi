@@ -7184,7 +7184,8 @@ const getMatchListByStatus = async (body, request, fastify) => {
       nte1i : team1.imagePath || "",
       nt1jr : team1.jerseyPath || "",
       nte2i : team2.imagePath || "",
-      nt2jr : team2.jerseyPath || ""
+      nt2jr : team2.jerseyPath || "",
+      etyId : eventType?.eventTypeId,
       // mr: mr
       // bowT : item.bowlingTeam || null,
     };
@@ -7406,7 +7407,7 @@ const getMatchDataByCId = async (data, request, fastify) => {
     ics: com.isClientShow,
     isTest: com.isTest,
     isActive: com.isActive,
-   
+    etyId : eventType?.eventTypeId,
   };
   return comDetails;
 }

@@ -90,7 +90,7 @@ const editWhitelabelService = async (request, fastify) => {
     domain: request.body.domain ?? validateId.domain,
     imagePath: request.body.imagePath ?? validateId.imagePath,
     isActive: Boolean(request.body.isActive) ?? validateId.isActive,
-    id: parseInt(request.body.id, 10),
+    id: request.body.id ?? validateId.id,
     isDemoClientEnableInIOS: request.body.isDemoClientEnableInIOS ?? validateId.isDemoClientEnableInIOS,
     isDemoClientLogin: request.body.isDemoClientLogin ?? validateId.isDemoClientLogin,
     isRecatchEnable: request.body.isRecatchEnable ?? validateId.isRecatchEnable,
@@ -115,6 +115,8 @@ const editWhitelabelService = async (request, fastify) => {
     sendMailMaxSendLimit: request.body.sendMailMaxSendLimit ?? validateId.sendMailMaxSendLimit,
     mobileOTPVerify: request.body.mobileOTPVerify ?? validateId.mobileOTPVerify,
     clientOTP: request.body.clientOTP ?? validateId.clientOTP,
+    whitelabelId : request.body.whitelabelId ?? validateId.whitelabelId,
+    isDefault: request.body.isDefault ?? validateId.isDefault,
   };
 
   const modifiedData = await updateWhitelabelQuery(updateData, fastify, request);
@@ -134,7 +136,7 @@ const editWhitelabelService = async (request, fastify) => {
        data : {
          module : 'whiteLable',
          type : "update",
-         data : modifiedData[0]
+         data : updateData
        }
      }, request, fastify)
    .catch((err) => {
@@ -572,6 +574,9 @@ const getCommentaryService = async (request, fastify) => {
 
   return commentariesWithHide;
 }
+const getHideEventService = async (request, fastify) => {
+  return global.tblHideEvents;
+}
 module.exports = {
   createWhitelabelService,
   allWhitelabelsService,
@@ -586,5 +591,6 @@ module.exports = {
   getEventTypesService,
   getCompetitionService,
   getCommentaryService,
-  unhideEventsService
+  unhideEventsService,
+  getHideEventService
 };

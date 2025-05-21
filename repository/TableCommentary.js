@@ -4717,7 +4717,8 @@ const getAllCompletedCommentaryQuery = async (request, fastify) => {
           tc."wrIsTest" AS "isTest",
           tc."wrWinnerId" AS "winId",
           tc."wrWinnerName" AS "winNm",
-          tc."wrIsActive" AS "isActive"
+          tc."wrIsActive" AS "isActive",
+          tet."wrEventTypeId" AS "etyId"
       FROM "tblCommentaries" tc
       LEFT JOIN "tblTeams" tt1 ON tt1."wrTeamId" = tc."wrTeam1Id" AND tt1."wrIsDeleted" = false
       LEFT JOIN "tblTeams" tt2 ON tt2."wrTeamId" = tc."wrTeam2Id" AND tt2."wrIsDeleted" = false
