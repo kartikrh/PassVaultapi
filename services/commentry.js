@@ -7184,7 +7184,8 @@ const getMatchListByStatus = async (body, request, fastify) => {
       nte1i : team1.imagePath || "",
       nt1jr : team1.jerseyPath || "",
       nte2i : team2.imagePath || "",
-      nt2jr : team2.jerseyPath || ""
+      nt2jr : team2.jerseyPath || "",
+      etyId : eventType?.eventTypeId,
       // mr: mr
       // bowT : item.bowlingTeam || null,
     };
@@ -7406,7 +7407,7 @@ const getMatchDataByCId = async (data, request, fastify) => {
     ics: com.isClientShow,
     isTest: com.isTest,
     isActive: com.isActive,
-   
+    etyId : eventType?.eventTypeId,
   };
   return comDetails;
 }
@@ -11374,6 +11375,7 @@ const notiConfigContentReplaceService = async (eventName, commentaryId, request,
   );
   let battingTeam = global.tblCommentaryTeams.find(item => item.commentaryId === commentaryId && item.teamStatus === 1)?.teamName
   let bowlingTeam = global.tblCommentaryTeams.find(item => item.commentaryId === commentaryId && item.teamStatus === 2)?.teamName
+  let tossWonBy = global.tblCommentaryTeams.find(item => item.commentaryId === commentaryId && item?.teamId == commentary?.tossWonBy)?.teamName
 
   const content = data.content.replace(/\{(.*?)\}/g, (_, key) => {
     const normalizedKey = key.toLowerCase();
@@ -11383,10 +11385,19 @@ const notiConfigContentReplaceService = async (eventName, commentaryId, request,
       battingteam: battingTeam ?? "",
       bowlingteam: bowlingTeam ?? "",
       rmk: commentary.rmk ?? "",
-      winRmk: commentary.winRmk ?? "",
-      winNm: commentary?.winnerName ?? "",
-      winId: commentary?.winnerId ?? 0,
+      winnerrmk: commentary.winRmk ?? "",
+      winnername: commentary?.winnerName ?? "",
+      winnerid: commentary?.winnerId ?? 0,
       boundarytype: boundaryType ?? "",
+      team1name: commentary?.team1Name ?? "",
+      team2name: commentary?.team2Name ?? "",
+      matchtype: commentary?.matchType ?? "",
+      competition: commentary?.competition ?? "",
+      result: commentary?.result ?? "",
+      eventtype: commentary?.eventType ?? "",
+      displaystatus: commentary?.displayStatus ?? "",
+      eventno: commentary?.eventNo ?? "",
+      tosswonby: tossWonBy,
     };
 
     return valueMap[normalizedKey] || `{${key}}`;

@@ -63,7 +63,7 @@ const {
   FavCommentary,
 } = require("../../../swaggerSchema/groupTags/schema");
 const { getAllSocialMedia } = require("../../../controller/users/admin/socialMedia");
-const { clientApiWhitelabels } = require("../../../controller/users/admin/whitelabel");
+const { clientApiWhitelabels, getHideEvent } = require("../../../controller/users/admin/whitelabel");
 const { deleteClient, deleteClientByEncrypt } = require("../../../controller/users/admin/client");
 
 module.exports = async (fastify, opts) => {
@@ -392,6 +392,10 @@ module.exports = async (fastify, opts) => {
   fastify.post("/deleteFavComm", {
     schema: FavCommentary.delete.schema,
     handler: (request, reply) => deleteFavCommentary(request, reply, fastify),
+  });
+   fastify.post("/hideEvent", {
+    // schema: FavCommentary.delete.schema,
+    handler: (request, reply) => getHideEvent(request, reply, fastify),
   });
 };
 

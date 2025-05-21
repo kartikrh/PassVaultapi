@@ -8,6 +8,12 @@ const {
     isDemoClientLoginService,
     clientApiWhitelabelsService,
     upIsDefaultAPIService,
+    hideEventsService,
+    getEventTypesService,
+    getCommentaryService,
+    getCompetitionService,
+    unhideEventsService,
+    getHideEventService,
 } = require("../../../../services/whitelabel");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -71,6 +77,51 @@ const upIsDefaultAPI = async (request, reply, fastify) => {
         reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
     }
 };
+const hideEvents = async (request, reply, fastify) => {
+    try {
+        const result = await hideEventsService(request, fastify);
+        reply.status(200).send(success(result, 200));
+    } catch (err) {
+        errorLogger(fastify, err.message, commonPath + "/hideEvents", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+    }
+};
+const unhideEvents = async (request, reply, fastify) => {
+    try {
+        const result = await unhideEventsService(request, fastify);
+        reply.status(200).send(success(result, 200));
+    } catch (err) {
+        errorLogger(fastify, err.message, commonPath + "/unhideEvents", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+    }
+};
+const getEventTypes = async (request, reply, fastify) => {
+    try {
+        const result = await getEventTypesService(request, fastify);
+        reply.status(200).send(success(result, 200));
+    } catch (err) {
+        errorLogger(fastify, err.message, commonPath + "/getEventTypes", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+    }
+};
+const getCommentary = async (request, reply, fastify) => {
+    try {
+        const result = await getCommentaryService(request, fastify);
+        reply.status(200).send(success(result, 200));
+    } catch (err) {
+        errorLogger(fastify, err.message, commonPath + "/getCommentary", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+    }
+};
+const getCompetition = async (request, reply, fastify) => {
+    try {
+        const result = await getCompetitionService(request, fastify);
+        reply.status(200).send(success(result, 200));
+    } catch (err) {
+        errorLogger(fastify, err.message, commonPath + "/getCompetition", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+    }
+};
 const demoClientEnableInIOSWhitelabel = async (request, reply, fastify) => {
     try {
         const result = await demoClientEnableInIOSWhitelabelService(request, fastify);
@@ -98,6 +149,15 @@ const clientApiWhitelabels = async (request, reply, fastify) => {
         reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
     }
 };
+const getHideEvent = async (request, reply, fastify) => {
+    try {
+        const result = await getHideEventService(request, fastify);
+        reply.status(200).send(success(result, 200));
+    } catch (err) {
+        errorLogger(fastify, err.message, commonPath + "/getHideEvent", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+    }
+};
 module.exports = {
     getAllWhitelabels,
     whitelabelById,
@@ -107,5 +167,11 @@ module.exports = {
     demoClientEnableInIOSWhitelabel,
     isDemoClientLogin,
     clientApiWhitelabels,
-    upIsDefaultAPI
+    upIsDefaultAPI,
+    hideEvents,
+    getEventTypes,
+    getCompetition,
+    getCommentary,
+    unhideEvents,
+    getHideEvent
 };

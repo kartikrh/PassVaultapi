@@ -8767,6 +8767,76 @@ const Whitelabel = {
       },
     },
   },
+  hideEvent : {
+    schema: {
+      tags: ["Whitelabel"],
+      description: "hideEvent data",
+      body: {
+        type: "object",
+        properties: {
+          type : { type: "integer" },
+          refId: { type: "integer" },
+          id: { type: "integer" },
+        },
+        required: ["type", "refId", "id"],
+      }
+    }
+  },
+  unHideEvent : {
+    schema: {
+      tags: ["Whitelabel"],
+      description: "hideEvent data",
+      body: {
+        type: "object",
+        properties: {
+          hideEventId: { type: "integer" },
+        },
+        required: ["hideEventId"],
+      }
+    }
+  },
+  getEventTypes : {
+    schema: {
+      tags: ["Whitelabel"],
+      description: "get EventType",
+      body: {
+        type: "object",
+        properties: {
+          id : { type: "integer" },
+        },
+        required: ["id"],
+      }
+    }
+  },
+  getCompetition : {
+    schema: {
+      tags: ["Whitelabel"],
+      description: "get EventType",
+      body: {
+        type: "object",
+        properties: {
+          id : { type: "integer" },
+          eventTypeId : { type: "integer" },
+        },
+        required: ["id", "eventTypeId"],
+      }
+    }
+  },
+  getCommentary : {
+    schema: {
+      tags: ["Whitelabel"],
+      description: "get getCommentary",
+      body: {
+        type: "object",
+        properties: {
+          id : { type: "integer" },
+          eventTypeId : { type: "integer" },
+          competitionId : { type: "integer" },
+        },
+        required: ["id", "eventTypeId" ,"competitionId"],
+      }
+    }
+  }
 };
 const NotificationConfig = {
   getAll: {
