@@ -15,8 +15,9 @@ const {
 } = require("../utilities/Images");
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
-const { callClientAPI, ServiceType, APIEndpointModuleType } = require("../utilities");
+const { callClientAPI, ServiceType, APIEndpointModuleType, HideEventType, commentaryStatus } = require("../utilities");
 const { errorLogger } = require("../utilities/logger");
+const { hideEventsQuery, unHideEventQuery } = require("../repository/TableHideEvents");
 
 const saveWhitelabelService = async (request, fastify) => {
   // if (request.body.imagePath && request.body.imagePath.length) {
@@ -424,6 +425,153 @@ const clientApiWhitelabelsService = async (request, fastify) => {
   const result = await getAllEncryptWhitelabelsQuery(fastify, whereCondition);
   return result;
 };
+const hideEventsService = async (request, fastify) => {
+  const {id ,type ,refId} = request.body;
+  const wl = global.tblWhitelabels.find((item) => item.id === id);
+  if (!wl) {
+    throw new Error("Whitelabel with this Id not found");
+  }
+  // hide this event for this whitelabel
+  if(type == HideEventType.eventType){
+    // eventType check
+    const ev = global.tblEventTypes.find((item) => item.eventTypeId == refId && item.isActive == true);
+    if (!ev) {
+      throw new Error("EventType with this Id not found");
+    }
+    const hideEvent = global.tblHideEvents.find((item) => item.whitelabelId == id && item.refId == refId);
+    if(hideEvent){
+      throw new Error("This event is already hidden for this whitelabel");
+    }
+  }
+  if(type == HideEventType.competition){
+    // eventCategoryType check
+    const comp = global.tblCompetitions.find((item) => item.competitionId == refId && item.isActive == true);
+    if (!comp) {
+      throw new Error("Competition with this Id not found");
+    }
+    const hideEvent = global.tblHideEvents.find((item) => item.whitelabelId === id && item.refId === refId);
+    if(hideEvent){
+      throw new Error("This event is already hidden for this whitelabel");
+    }
+  }
+  if(type == HideEventType.commentary){
+    // eventCategoryType check
+    const comm = global.tblCommentaries.find((item) => item.commentaryId == refId && item.commentaryStatus != commentaryStatus.COMPLETED && item.isActive == true);
+    if (!comm) {
+      throw new Error("Commentary with this Id not found");
+    }
+    const hideEvent = global.tblHideEvents.find((item) => item.whitelabelId === id && item.refId === refId);
+    if(hideEvent){
+      throw new Error("This event is already hidden for this whitelabel");
+    }
+  }
+  const hideEvent = await hideEventsQuery({
+    whitelabelId : id,
+    type : type,
+    refId : refId
+  }, request, fastify);
+  global.tblHideEvents.push(hideEvent);
+
+  return "Event hidden successfully";
+}
+const unhideEventsService = async (request, fastify) => {
+  const {hideEventId } = request.body;
+  // hidden event check
+  const he = global.tblHideEvents.findIndex((item) => item.id == hideEventId);
+  if (he == -1) {
+    throw new Error("hidden event with this Id not found");
+  }
+  let result = await unHideEventQuery(request.body, request, fastify);
+  if (result) {
+    global.tblHideEvents.splice(he, 1);
+  }
+
+  return "Event unhidden successfully";
+}
+const getEventTypesService = async (request, fastify) => {
+  // get all event types if hidden then isHide true else false
+  const { id } = request.body;
+  const wl = global.tblWhitelabels.find((item) => item.id == id);
+  if (!wl) {
+    throw new Error("Whitelabel with this Id not found");
+  }
+  const eventTypes = global.tblEventTypes.filter(item => item.isActive === true);
+  const hideEvents = global.tblHideEvents.filter(item => item.whitelabelId == id && item.type == HideEventType.eventType);
+
+ // Step 3: Map refId to hideEvent object for quick lookup
+  const hideEventMap = new Map(hideEvents.map(item => [item.refId, item]));
+
+  // Step 4: Merge event types with isHide and hideEventId if present
+  const eventTypesWithHide = eventTypes.map(item => {
+    const matchedHide = hideEventMap.get(item.eventTypeId);
+    return {
+      ...item,
+      isHide: !!matchedHide,
+      hideEventId: matchedHide?.id || null
+    };
+  });
+
+  return eventTypesWithHide;
+}
+const getCompetitionService = async (request, fastify) => {
+  // get all event types if hidden then isHide true else false
+  const { id,eventTypeId } = request.body;
+  const wl = global.tblWhitelabels.find((item) => item.id == id);
+  if (!wl) {
+    throw new Error("Whitelabel with this Id not found");
+  }
+  const eventType = global.tblEventTypes.find(item => item.eventTypeId == eventTypeId && item.isActive === true);
+  if (!eventType) {
+    throw new Error("EventType with this Id not found");
+  }
+  const competitions = global.tblCompetitions.filter(item => item.isActive === true && item.eventTypeId == eventTypeId);  
+  const hideEvents = global.tblHideEvents.filter(item => item.whitelabelId == id && item.type == HideEventType.competition);
+ 
+  // Step 3: Map refId to hideEvent object for quick lookup
+  const hideEventMap = new Map(hideEvents.map(item => [item.refId, item]));
+  // Step 4: Merge event types with isHide and hideEventId if present
+  const competitionsWithHide = competitions.map(item => {
+    const matchedHide = hideEventMap.get(item.competitionId);
+    return {
+      ...item,
+      isHide: !!matchedHide,
+      hideEventId: matchedHide?.id || null
+    };
+  });
+  return competitionsWithHide;
+
+}
+const getCommentaryService = async (request, fastify) => {
+  // get all event types if hidden then isHide true else false
+  const { id ,competitionId} = request.body;
+  const wl = global.tblWhitelabels.find((item) => item.id == id);
+  if (!wl) {
+    throw new Error("Whitelabel with this Id not found");
+  }
+  const competition = global.tblCompetitions.find(item => item.competitionId == competitionId && item.isActive === true);
+  if (!competition) {
+    throw new Error("Competition with this Id not found");
+  }
+  const commentaries = global.tblCommentaries.filter(
+    item => 
+    item.isActive === true &&
+    item.competitionId == competitionId &&
+    item.commentaryStatus != commentaryStatus.COMPLETED);
+  const hideEvents = global.tblHideEvents.filter(item => item.whitelabelId == id && item.type == HideEventType.commentary);
+  // Create a Set or Map for fast lookup
+  const hideEventMap = new Map(hideEvents.map(item => [item.refId, item]));
+  // Step 4: Merge event types with isHide and hideEventId if present
+  const commentariesWithHide = commentaries.map(item => {
+    const matchedHide = hideEventMap.get(item.commentaryId);
+    return {
+      ...item,
+      isHide: !!matchedHide,
+      hideEventId: matchedHide?.id || null
+    };
+  });
+
+  return commentariesWithHide;
+}
 module.exports = {
   createWhitelabelService,
   allWhitelabelsService,
@@ -433,5 +581,10 @@ module.exports = {
   demoClientEnableInIOSWhitelabelService,
   isDemoClientLoginService,
   clientApiWhitelabelsService,
-  upIsDefaultAPIService
+  upIsDefaultAPIService,
+  hideEventsService,
+  getEventTypesService,
+  getCompetitionService,
+  getCommentaryService,
+  unhideEventsService
 };
