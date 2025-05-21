@@ -11375,6 +11375,7 @@ const notiConfigContentReplaceService = async (eventName, commentaryId, request,
   );
   let battingTeam = global.tblCommentaryTeams.find(item => item.commentaryId === commentaryId && item.teamStatus === 1)?.teamName
   let bowlingTeam = global.tblCommentaryTeams.find(item => item.commentaryId === commentaryId && item.teamStatus === 2)?.teamName
+  let tossWonBy = global.tblCommentaryTeams.find(item => item.commentaryId === commentaryId && item?.commentaryTeamId === commentary?.tossWonBy)?.teamName
 
   const content = data.content.replace(/\{(.*?)\}/g, (_, key) => {
     const normalizedKey = key.toLowerCase();
@@ -11384,10 +11385,18 @@ const notiConfigContentReplaceService = async (eventName, commentaryId, request,
       battingteam: battingTeam ?? "",
       bowlingteam: bowlingTeam ?? "",
       rmk: commentary.rmk ?? "",
-      winRmk: commentary.winRmk ?? "",
-      winNm: commentary?.winnerName ?? "",
-      winId: commentary?.winnerId ?? 0,
+      winnerrmk: commentary.winRmk ?? "",
+      winnername: commentary?.winnerName ?? "",
+      winnerid: commentary?.winnerId ?? 0,
       boundarytype: boundaryType ?? "",
+      team1name: commentary?.team1Name ?? "",
+      team2name: commentary?.team2Name ?? "",
+      matchtype: commentary?.matchType ?? "",
+      competition: commentary?.competition ?? "",
+      result: commentary?.result ?? "",
+      displaystatus: commentary?.displayStatus ?? "",
+      eventno: commentary?.eventNo ?? "",
+      tosswonby: tossWonBy,
     };
 
     return valueMap[normalizedKey] || `{${key}}`;
