@@ -23,7 +23,8 @@ const getAllCompititionQuery = async (fastify) => {
     tc."wrDrsCount" as "drsCount",
     tc."wrImagePath" as "imagePath",
     tc."wrIsMen" as "isMen",
-    tc."wrType" as "type"
+    tc."wrType" as "type",
+    tc."wrIsVirtual" as "isVirtual"
     from "tblCompetitions" tc 
     inner join "tblEventTypes" tev on tc."wrEventTypeId" = tev."wrEventTypeId"
     where tc."wrIsDeleted" = false and tev."wrIsDeleted" = false
@@ -71,11 +72,11 @@ const insertCompetitionQuery = async (request, fastify) => {
             insert into "tblCompetitions" (
             "wrCompetition" , "wrEventTypeId" , "wrRefID" , "wrImage" ,"wrIsActive" ,
              "wrCreatedBy" , "wrCreatedDate","wrDisplayOrder", "wrIsTrending", "wrIsEventSnap", "wrIsPointTable", "wrMatchTypeId",
-             "wrWinPoint", "wrTiePoint", "wrCancelPoint", "wrLossPoint","wrDrsCount", "wrImagePath", "wrIsMen", "wrType")
+             "wrWinPoint", "wrTiePoint", "wrCancelPoint", "wrLossPoint","wrDrsCount", "wrImagePath", "wrIsMen", "wrType", "wrIsVirtual")
             values ($1 ,
                  $2,
                  $3,$4,$5,$6,now(),(select COALESCE("display_order" , 0) from "display") + 1, $7, $8, $9, $10,
-                 $11, $12, $13, $14,$15, $16, $17, $18
+                 $11, $12, $13, $14,$15, $16, $17, $18, $19
                  ) returning *
         )
 
@@ -99,7 +100,8 @@ const insertCompetitionQuery = async (request, fastify) => {
         tc."wrDrsCount" as "drsCount",
         tc."wrImagePath" as "imagePath",
         tc."wrIsMen" as "isMen",
-        tc."wrType" as "type"
+        tc."wrType" as "type",
+        tc."wrIsVirtual" as "isVirtual"
         from "inser_data" tc
         inner join "tblEventTypes" tev on tc."wrEventTypeId" = tev."wrEventTypeId"
     `,
@@ -123,6 +125,7 @@ const insertCompetitionQuery = async (request, fastify) => {
           data.imagePath || null,
           data.isMen || null,
           data.type || null,
+          data.isVirtual || false,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -187,7 +190,8 @@ const updateCompititionQuery = async (data, fastify, request) => {
         "wrDrsCount" = $16,
         "wrImagePath" = $17,
         "wrIsMen" = $18,
-        "wrType" = $19
+        "wrType" = $19,
+        "wrIsVirtual" = $20
         where "wrCompetitionId" = $10
         `,
       {
@@ -211,6 +215,7 @@ const updateCompititionQuery = async (data, fastify, request) => {
           data.imagePath,
           data.isMen,
           data.type,
+          data.isVirtual,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -255,7 +260,8 @@ const updateDisplayOrderQuery = async (data, fastify, request) => {
         u."wrLossPoint" as "lossPoint",
         u."wrImagePath" as "imagePath",
         u."wrIsMen" as "isMen",
-        u."wrType" as "type"
+        u."wrType" as "type",
+        u."wrIsVirtual" as "isVirtual"
       FROM updated u
       INNER JOIN "tblEventTypes" et ON u."wrEventTypeId" = et."wrEventTypeId"
       `,
@@ -493,6 +499,29 @@ const saveCompMarketTemplateQuery = async (data, request, fastify) => {
     throw new Error(error.message);
   }
 }
+const isVirtualCompetitionQuery = async (data, request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `
+                update "tblCompetitions" set
+                "wrIsVirtual" = $1
+                where "wrCompetitionId" = $2
+            `,
+      {
+        bind: [data.isVirtual, data.competitionId],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCompitition.js/isVirtualCompetitionQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllCompititionQuery,
   insertCompetitionQuery,
@@ -505,4 +534,5 @@ module.exports = {
   isMenChangeStatusQuery,
   getTemplateByCompetitionIdQuery,
   saveCompMarketTemplateQuery,
+  isVirtualCompetitionQuery,
 };
