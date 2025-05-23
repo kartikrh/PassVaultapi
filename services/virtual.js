@@ -1185,16 +1185,18 @@ const ballByBallChangeService = async (request, fastify) => {
       prevBall: prevBall,
       matchType,
     },
-    request
-  );
-  // save data in db
-  const ballByBall = await saveComVirtual(
-    {
-      ...request,
-      body: result,
-    },
+    request,
     fastify
   );
+  const {ballByBall} = result;
+  // save data in db
+  // const ballByBall = await saveComVirtual(
+  //   {
+  //     ...request,
+  //     body: result,
+  //   },
+  //   fastify
+  // );
   // return res;
   let overComplete = null;
   if (result.isOverComplete) {
@@ -1222,7 +1224,7 @@ const ballByBallChangeService = async (request, fastify) => {
       let getRes = await comResponseService(request, fastify);
       return {
         isMatchComplete: true,
-        isOverComplete: false,
+        isOverComplete: true,
         isWicket: false,
         inningChange: false,
         ...getRes,
@@ -1269,6 +1271,7 @@ const ballByBallChangeService = async (request, fastify) => {
       ...getRes,
     };
   }
+  // 
 
   let getRes = await comResponseService(request, fastify);
   return {
@@ -1279,7 +1282,7 @@ const ballByBallChangeService = async (request, fastify) => {
     ...getRes
   };
 };
-const updateRunPayload = async (data, request) => {
+const updateRunPayload = async (data, request,fastify) => {
   // generate db update payload using data
   let isChangeStrike = false;
   let updateBall = {};
@@ -1507,10 +1510,65 @@ const updateRunPayload = async (data, request) => {
     commentaryDetails: ncom,
     commentaryId: commentaryDetails.commentaryId,
   };
+  const ballByBall1 = await saveComVirtual(
+    {
+      ...request,
+      body: {
+        ...objToSave,
+        isOverComplete,
+      },
+    },
+    fastify
+  );
+  // check if isautochange striker is true
+  if(matchType.isAutoChangeStriker && updateBall.autoStrikeBallCount >= matchType.autoChangeStrikerAfterBall){
+    // get the striker and non striker
+    const striker = global.tblCommentaryPlayers.find(
+      (item) =>
+        item.commentaryId == commentaryId &&
+        item.isPlay == true &&
+        item.onStrike == true &&
+        item.currentInnings == commentaryDetails.currentInnings &&
+        item.teamId == battingTeam.teamId
+    );
+    const nonStriker = global.tblCommentaryPlayers.find(
+      (item) =>
+        item.commentaryId == commentaryId &&
+        item.isPlay == true &&
+        item.onStrike == false &&
+        item.currentInnings == commentaryDetails.currentInnings &&
+        item.teamId == battingTeam.teamId
+    );
+    // change the striker to non striker and non striker to striker
+    let strikePlayer = {
+      ...striker,
+      onStrike: false,
+    }
+    let nonStrikePlayer = {
+      ...nonStriker,
+      onStrike: true,
+    }
+    let obj = {
+      commentaryId,
+      commentaryPlayers : [strikePlayer, nonStrikePlayer],
+    }
+    // update the player data
+     await saveComVirtual(
+      {
+        ...request,
+        body: {
+          ...obj,
+        },
+      },
+      fastify
+    );
+
+  }
 
   return {
     ...objToSave,
     isOverComplete,
+    ballByBall : ballByBall1,
     // over : updateOver
   };
 };
