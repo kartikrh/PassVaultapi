@@ -2243,26 +2243,59 @@ const handleWicketService = async (data, request, fastify) => {
 };
 const comResponseService = async (request, fastify) => {
   let { commentaryId } = request.body;
-  const commentaryDetails = global.tblCommentaries.find(
+  let commentaryDetails = global.tblCommentaries.find(
     (item) => item?.commentaryId === commentaryId
-  );
+  )
   if (!commentaryDetails) {
     throw new Error("Commentary with this id not found");
+  }
+  commentaryDetails = {
+    commentaryId: commentaryDetails.commentaryId,
+    eventDate : commentaryDetails.eventDate,
+    eventName : commentaryDetails.eventName,
+    eventRefId : commentaryDetails.eventRefId,
+    commentaryStatus : commentaryDetails.commentaryStatus,
+    currentInnings : commentaryDetails.currentInnings,
+    isActive : commentaryDetails.isActive,
+    delay : commentaryDetails.delay,
   }
   // get teams
   const teams = global.tblCommentaryTeams.filter(
     (item) =>
       item?.commentaryId === commentaryId &&
       item.currentInnings == commentaryDetails.currentInnings
-  );
+  ).map((item) => {
+    return {
+      commentaryTeamId: item.commentaryTeamId,
+      teamId: item.teamId,
+      teamName: item.teamName,
+      teamShortName: item.teamShortName,
+      teamScore: item.teamScore,
+      teamWicket: item.teamWicket,
+      teamOver: item.teamOver,
+      teamWicket: item.teamWicket,
+      teamStatus: item.teamStatus,
+      currentInnings: item.currentInnings,
+      isBattingComplete: item.isBattingComplete,
+      teamMaxOver: item.teamMaxOver,
+    };
+  })
   // get latest over
-  const over = global.tblOvers
+  let over = global.tblOvers
     .filter(
       (item) =>
         item?.commentaryId === commentaryId &&
         item.currentInnings == commentaryDetails.currentInnings
     )
-    .sort((a, b) => b.overId - a.overId)[0];
+    .sort((a, b) => b.overId - a.overId)[0]
+  over = {
+    overId: over.overId,
+    over : over.over,
+    teamId: over.teamId,
+    ballCount: over.ballCount,
+    teamScore: over.teamScore,
+    isComplete: over.isComplete,
+  }
 
   return {
     teams,
