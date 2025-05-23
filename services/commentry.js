@@ -11667,10 +11667,10 @@ const saveComVirtual = async (request, fastify) => {
     updatedData = updatedData[0];
     const response = {};
 
-    // const sendDataForSocketUpdate = {};
-    // sendDataForSocketUpdate.commentaryId = commentaryId;
-    // sendDataForSocketUpdate.eventRefId = commentaryData.eventRefId;
-    // sendDataForSocketUpdate.dataToUpdate = [];
+    const sendDataForSocketUpdate = {};
+    sendDataForSocketUpdate.commentaryId = commentaryId;
+    sendDataForSocketUpdate.eventRefId = commentaryData.eventRefId;
+    sendDataForSocketUpdate.dataToUpdate = [];
     // const setEventSnap = [];
     // const teamPoint = [];
 
@@ -11850,11 +11850,11 @@ const saveComVirtual = async (request, fastify) => {
       //     });
       //   }
       // }
-      // sendDataForSocketUpdate.dataToUpdate.push({
-      //   module: "commentaryDetails",
-      //   type: "update",
-      //   data: response.commentaryDetails,
-      // });
+      sendDataForSocketUpdate.dataToUpdate.push({
+        module: "commentaryDetails",
+        type: "update",
+        data: response.commentaryDetails,
+      });
     }
     if (commentaryTeams) {
       response.commentaryTeams = [];
@@ -11886,16 +11886,16 @@ const saveComVirtual = async (request, fastify) => {
       } catch (error) {
 
       }
-      // sendDataForSocketUpdate.dataToUpdate.push({
-      //   module: "commentaryTeams",
-      //   type: "update",
-      //   // data: commentaryTeams,
-      //   data: response.commentaryTeams.map((team) => ({
-      //     ...team,
-      //     crr: parseFloat(team?.crr) || 0,
-      //     rrr: parseFloat(team?.rrr) || 0,
-      //   })),
-      // });
+      sendDataForSocketUpdate.dataToUpdate.push({
+        module: "commentaryTeams",
+        type: "update",
+        // data: commentaryTeams,
+        data: response.commentaryTeams.map((team) => ({
+          ...team,
+          crr: parseFloat(team?.crr) || 0,
+          rrr: parseFloat(team?.rrr) || 0,
+        })),
+      });
     }
     if (deleteCommentaryBallByBallId) {
       global.tblCommentaryBallByBall = global.tblCommentaryBallByBall.filter(
@@ -12042,30 +12042,30 @@ const saveComVirtual = async (request, fastify) => {
       //   _sendPrePlayers.push(_sendPrePlayer);
       // });
 
-      // try {
-      //   commentaryPlayers.forEach(async (player) => {
-      //     if (player.bowlerOver !== null && player.bowlerOver !== undefined) {
-      //       player.bowlerOver = player.bowlerOver.toString();
-      //     }
-      //     if (player.bowlerEconomy === "NaN") {
-      //       player.bowlerEconomy = null;
-      //     }
-      //     const _player = global.tblPlayers.filter((item) => item.playerId === player.playerId);
-      //     if (_player.length > 0) {
-      //       player.playerimage = _player[0].image;
-      //       player.playerType = _player[0].playerType;
-      //       player.isKipper = _player[0].isKipper;
-      //     }
-      //   });
-      // } catch (error) {
+      try {
+        commentaryPlayers.forEach(async (player) => {
+          if (player.bowlerOver !== null && player.bowlerOver !== undefined) {
+            player.bowlerOver = player.bowlerOver.toString();
+          }
+          if (player.bowlerEconomy === "NaN") {
+            player.bowlerEconomy = null;
+          }
+          const _player = global.tblPlayers.filter((item) => item.playerId === player.playerId);
+          if (_player.length > 0) {
+            player.playerimage = _player[0].image;
+            player.playerType = _player[0].playerType;
+            player.isKipper = _player[0].isKipper;
+          }
+        });
+      } catch (error) {
 
-      // }
+      }
 
-      // sendDataForSocketUpdate.dataToUpdate.push({
-      //   module: "commentaryPlayers",
-      //   type: "update",
-      //   data: response.commentaryPlayers,
-      // });
+      sendDataForSocketUpdate.dataToUpdate.push({
+        module: "commentaryPlayers",
+        type: "update",
+        data: response.commentaryPlayers,
+      });
     }
     // if (
     //   updatedData.commentaryBallByBallDetails &&
@@ -12131,11 +12131,11 @@ const saveComVirtual = async (request, fastify) => {
       if (updatedData.overDetails) {
         global.tblOvers.push(updatedData.overDetails);
         response.overdetails = updatedData.overDetails;
-        // sendDataForSocketUpdate.dataToUpdate.push({
-        //   module: "commentaryOvers",
-        //   type: "create",
-        //   data: response.overdetails,
-        // });
+        sendDataForSocketUpdate.dataToUpdate.push({
+          module: "commentaryOvers",
+          type: "create",
+          data: response.overdetails,
+        });
       } else {
         if (!deleteOverId) {
           if (overIndex !== -1) {
@@ -12148,11 +12148,11 @@ const saveComVirtual = async (request, fastify) => {
           }
         }
         response.overdetails = commentaryOvers;
-        // sendDataForSocketUpdate.dataToUpdate.push({
-        //   module: "commentaryOvers",
-        //   type: "update",
-        //   data: response.overdetails,
-        // });
+        sendDataForSocketUpdate.dataToUpdate.push({
+          module: "commentaryOvers",
+          type: "update",
+          data: response.overdetails,
+        });
       }
     }
     if (commentaryBallByBall) {
@@ -12163,11 +12163,11 @@ const saveComVirtual = async (request, fastify) => {
         response.commentaryBallByBallDetails =
           updatedData.commentaryBallByBallDetails;
 
-        // sendDataForSocketUpdate.dataToUpdate.push({
-        //   module: "commentaryBallByBall",
-        //   type: "create",
-        //   data: { ...response.commentaryBallByBallDetails, overCount: response.commentaryBallByBallDetails.overCount !== null ? response.commentaryBallByBallDetails.overCount.toString() : null },
-        // });
+        sendDataForSocketUpdate.dataToUpdate.push({
+          module: "commentaryBallByBall",
+          type: "create",
+          data: { ...response.commentaryBallByBallDetails, overCount: response.commentaryBallByBallDetails.overCount !== null ? response.commentaryBallByBallDetails.overCount.toString() : null },
+        });
 
         // if (updatedData.commentaryBallByBallDetails.ballType > 0) {
         //   if (!global.isSignalRStopped) {
@@ -12201,11 +12201,11 @@ const saveComVirtual = async (request, fastify) => {
           }
         }
         response.commentaryBallByBallDetails = commentaryBallByBall;
-        // sendDataForSocketUpdate.dataToUpdate.push({
-        //   module: "commentaryBallByBall",
-        //   type: "update",
-        //   data: { ...response.commentaryBallByBallDetails, overCount: response.commentaryBallByBallDetails.overCount !== null ? response.commentaryBallByBallDetails.overCount.toString() : null },
-        // });
+        sendDataForSocketUpdate.dataToUpdate.push({
+          module: "commentaryBallByBall",
+          type: "update",
+          data: { ...response.commentaryBallByBallDetails, overCount: response.commentaryBallByBallDetails.overCount !== null ? response.commentaryBallByBallDetails.overCount.toString() : null },
+        });
       }
       // call Third Party API
       // if (response.commentaryBallByBallDetails.ballType > 0) {
@@ -12282,19 +12282,19 @@ const saveComVirtual = async (request, fastify) => {
       if (commentaryWicket.commentaryWicketId == 0) {
         global.tblCommentaryWicket.push(updatedData.commentaryWicketDetails);
         response.commentaryWicketDetails = updatedData.commentaryWicketDetails;
-        // sendDataForSocketUpdate.dataToUpdate.push({
-        //   module: "commentaryWicket",
-        //   type: "create",
-        //   data: response.commentaryWicketDetails,
-        // });
+        sendDataForSocketUpdate.dataToUpdate.push({
+          module: "commentaryWicket",
+          type: "create",
+          data: response.commentaryWicketDetails,
+        });
       } else {
-        // global.tblCommentaryWicket[wicketIndex] = commentaryWicket;
-        // response.commentaryWicketDetails = commentaryWicket;
-        // sendDataForSocketUpdate.dataToUpdate.push({
-        //   module: "commentaryWicket",
-        //   type: "update",
-        //   data: response.commentaryWicketDetails,
-        // });
+        global.tblCommentaryWicket[wicketIndex] = commentaryWicket;
+        response.commentaryWicketDetails = commentaryWicket;
+        sendDataForSocketUpdate.dataToUpdate.push({
+          module: "commentaryWicket",
+          type: "update",
+          data: response.commentaryWicketDetails,
+        });
         if (!deleteCommentaryBallByBallId) {
           if (wicketIndex !== -1) {
             global.tblCommentaryWicket[wicketIndex] = updatedData.commentaryWicketDetails;
@@ -12306,13 +12306,13 @@ const saveComVirtual = async (request, fastify) => {
           }
         }
         response.commentaryWicketDetails = updatedData.commentaryWicketDetails;
-        // if (deleteCommentaryBallByBallId != commentaryWicket.commentaryBallByBallId) {
-        //   sendDataForSocketUpdate.dataToUpdate.push({
-        //     module: "commentaryWicket",
-        //     type: "update",
-        //     data: response.commentaryWicketDetails,
-        //   });
-        // }
+        if (deleteCommentaryBallByBallId != commentaryWicket.commentaryBallByBallId) {
+          sendDataForSocketUpdate.dataToUpdate.push({
+            module: "commentaryWicket",
+            type: "update",
+            data: response.commentaryWicketDetails,
+          });
+        }
       }
       // await notiConfigContentReplaceService(EventName.WICKET, commentaryData.commentaryId, request, fastify)
     }
@@ -12343,11 +12343,11 @@ const saveComVirtual = async (request, fastify) => {
 
           }
         }
-        // sendDataForSocketUpdate.dataToUpdate.push({
-        //   module: "commentaryPartnership",
-        //   type: "create",
-        //   data: response.commentaryPartnershipDetails,
-        // });
+        sendDataForSocketUpdate.dataToUpdate.push({
+          module: "commentaryPartnership",
+          type: "create",
+          data: response.commentaryPartnershipDetails,
+        });
       } else {
         global.tblCommentaryPartnership[partnershipIndex] = updatedData.commentaryPartnershipDetails;
         response.commentaryPartnershipDetails = updatedData.commentaryPartnershipDetails;
@@ -12383,13 +12383,13 @@ const saveComVirtual = async (request, fastify) => {
           }
         }
         response.commentaryPartnershipDetails = updatedData.commentaryPartnershipDetails;
-        // if (deleteCommentaryBallByBallId != commentaryPartnership.commentaryBallByBallId) {
-        //   sendDataForSocketUpdate.dataToUpdate.push({
-        //     module: "commentaryPartnership",
-        //     type: "update",
-        //     data: response.commentaryPartnershipDetails,
-        //   });
-        // }
+        if (deleteCommentaryBallByBallId != commentaryPartnership.commentaryBallByBallId) {
+          sendDataForSocketUpdate.dataToUpdate.push({
+            module: "commentaryPartnership",
+            type: "update",
+            data: response.commentaryPartnershipDetails,
+          });
+        }
       }
       // let boundary = response.commentaryPartnershipDetails.totalSix + response.commentaryPartnershipDetails.totalFour;
       // sendPartnership.push({
@@ -12580,33 +12580,33 @@ const saveComVirtual = async (request, fastify) => {
     // }
 
     // call the getscore and emit the event data
-    // if (
-    //   global?.clientSocketIo !== undefined &&
-    //   global?.clientSocketIo.length > 0
-    // ) {
-    //   commentaryDetailsByEventIdService(
-    //     {
-    //       ...request,
-    //       body: {
-    //         eventId: commentaryData.eventRefId,
-    //       },
-    //     },
-    //     fastify,
-    //     "callFromSocket"
-    //   ).catch((err) => {
-    //     console.log("err in commentaryDetailsByEventIdService", err);
-    //     errorLogger(
-    //       fastify,
-    //       err.message,
-    //       "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
-    //       request
-    //     );
+    if (
+      global?.clientSocketIo !== undefined &&
+      global?.clientSocketIo.length > 0
+    ) {
+      commentaryDetailsByEventIdService(
+        {
+          ...request,
+          body: {
+            eventId: commentaryData.eventRefId,
+          },
+        },
+        fastify,
+        "callFromSocket"
+      ).catch((err) => {
+        console.log("err in commentaryDetailsByEventIdService", err);
+        errorLogger(
+          fastify,
+          err.message,
+          "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
+          request
+        );
 
-    //   })
-    //   global.clientSocketIo.forEach((socket) => {
-    //     socket.client.emit("updateFullscore", sendDataForSocketUpdate);
-    //   });
-    // }
+      })
+      global.clientSocketIo.forEach((socket) => {
+        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+      });
+    }
 
     // if (global.wss) {
     //   let res = {};
