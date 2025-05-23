@@ -110,7 +110,8 @@ const insertCompetitionQuery = async (request, fastify) => {
         tc."wrDrsCount" as "drsCount", 
         tc."wrImagePath" as "imagePath",
         tc."wrIsMen" as "isMen",
-        tc."wrType" as "type"
+        tc."wrType" as "type",
+        tc."wrIsVirtual" as "isVirtual"
         from "inser_data" tc 
         inner join "tblEventTypes" tev on tc."wrEventTypeId" = tev."wrEventTypeId"
     `,

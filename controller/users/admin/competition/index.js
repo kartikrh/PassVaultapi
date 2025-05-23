@@ -14,6 +14,7 @@ const {
   isMenChangeStatusService,
   getTemplateByCompetitionIdService,
   saveCompTemplatesService,
+  isVirtualCompetitionService,
 } = require("../../../../services/competition");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -225,6 +226,15 @@ const saveCompTemplates = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const isVirtualCompetition = async (request, reply, fastify) => {
+  try {
+    const result = await isVirtualCompetitionService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/isVirtualCompetition", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 module.exports = {
   getAllCompetition,
   getCompetitionById,
@@ -245,4 +255,5 @@ module.exports = {
   isMenChangeStatus,
   getTemplateByCompetitionId,
   saveCompTemplates,
+  isVirtualCompetition,
 };
