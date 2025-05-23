@@ -304,7 +304,10 @@ module.exports = async function (fastify, opts) {
     const originalUrl = request.originalUrl; // get original url
     const urlDestructor = originalUrl.split("/"); // split original url
     const urlLastParameter = [...urlDestructor].pop().split(".");
-    const urlExceptions = ["/documentation/json", "/documentation"];
+    const urlExceptions = ["/documentation/json", "/documentation", "/admin/virtual/createEvent",
+      "/admin/virtual/eventToss", "/admin/virtual/eventBallStart", "/admin/virtual/eventScoring",
+      "/admin/virtual/eventSuffle"
+    ];
 
     if (
       urlLastParameter.length === 1 &&
