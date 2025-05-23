@@ -785,7 +785,7 @@ const commentaryResponseSerivce = async (commentaryId) => {
       com.tossWonBy != null
         ? global.tblTeams.find((item) => item.teamId === com.tossWonBy).teamName
         : null,
-    rmk: com.rmk,
+    remark: com.rmk,
   };
 
   return commentaryData;
