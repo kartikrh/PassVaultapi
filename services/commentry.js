@@ -149,7 +149,7 @@ const allCommentaryService = async (request, fastify) => {
     result = result.filter((item) => item.eventTypeId === eventTypeId);
   }
 
-  if (isVirtual !== undefined && isVirtual !== null) {
+  if (isVirtual === true || isVirtual === false) {
     result = result.filter((item) => item.isVirtual === isVirtual);
   }
 

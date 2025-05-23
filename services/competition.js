@@ -74,7 +74,7 @@ const allCompetitionService = async (request) => {
   if (matchTypeId !== undefined && matchTypeId !== 0) filterObject.matchTypeId = matchTypeId;
   if (isMen !== undefined) filterObject.isMen = isMen;
   if (type !== undefined && type !== 0) filterObject.type = type;
-  if (isVirtual !== undefined && isVirtual !== null) filterObject.isVirtual = isVirtual;
+  if (typeof isVirtual === 'boolean') filterObject.isVirtual = isVirtual;
 
   if (isActive === undefined || isTrending === undefined) {
     return global.tblCompetitions.filter((item) => item.isActive === true);
