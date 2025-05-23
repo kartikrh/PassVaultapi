@@ -1394,7 +1394,7 @@ const updateRunPayload = async (data, request,fastify) => {
     updateOver["totalRun"] = (over.totalRun || 0) + runToUpdate;
     updateBall["ballIsCount"] = false;
     updateBall["ballRun"] = 0;
-    updateBall["ballExt raRun"] = runToUpdate;
+    updateBall["ballExtraRun"] = runToUpdate;
     updateBall["ballType"] = BALL_TYPE.WIDE;
     updatePartnership["totalRuns"] = partnership.totalRuns + runToUpdate;
     updatePartnership["extras"] = partnership.extras + runToUpdate;

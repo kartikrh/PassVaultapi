@@ -1055,8 +1055,8 @@ const Cards = {
   "5" : 5,
   "6" : 6,
   "10" : 0,
-  "J" :"WIDE",
-  "K" : "WICKET"
+  "J" : -1,
+  "K" : -2
 }
 const HideEventType = {
   eventType : 1,
