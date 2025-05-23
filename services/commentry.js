@@ -128,7 +128,7 @@ const { generateMarketAndRunners, processPredictScoreMarket } = require("../mark
 
 const allCommentaryService = async (request, fastify) => {
   // return global.tblCommentaries;
-  const { commentaryStatus, eventTypeId, competitionId, startDate, endDate } =
+  const { commentaryStatus, eventTypeId, competitionId, isVirtual, startDate, endDate } =
     request.body;
   let result;
   if (commentaryStatus === undefined) {
@@ -147,6 +147,10 @@ const allCommentaryService = async (request, fastify) => {
   // if eventTypeId is provided then filter commentary by eventTypeId
   if (eventTypeId) {
     result = result.filter((item) => item.eventTypeId === eventTypeId);
+  }
+
+  if (isVirtual !== undefined && isVirtual !== null) {
+    result = result.filter((item) => item.isVirtual === isVirtual);
   }
 
   if (competitionId) {
@@ -531,6 +535,10 @@ const createCommentaryService = async (request, fastify) => {
     !request.body.team2Players || request.body.team2Players.length == 0
   ) {
     request.body.isClientShow = false;
+  }
+  if(request.body.competitionId) {
+    const compVirtual = global.tblCompetitions.find(item => item.competitionId == request.body.competitionId);
+    request.body.isVirtual = compVirtual.isVirtual;
   }
   const addCommentry = await insertCommentaryQuery(request, fastify);
   request.body.commentaryId = addCommentry.commentaryId;
