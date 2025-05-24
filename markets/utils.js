@@ -45,7 +45,7 @@ function logBallToActionMapSample(commentaryId) {
     });
 
     // Write the data to ballToAction.json
-    fs.writeFileSync(`ballToAction-${commentaryId}.json`, JSON.stringify(ballToActionData, null, 2), 'utf8');
+    fs.writeFileSync(`ballToJson/ballToAction-${commentaryId}.json`, JSON.stringify(ballToActionData, null, 2), 'utf8');
 
     console.log("Ball-to-action map has been saved to 'ballToAction.json'");
 }
@@ -915,5 +915,6 @@ module.exports = {
     initializeBallToActionMap,
     formatBallNumber,
     validateBallToActionMap,
-    synchronizeMarketStatus
+    synchronizeMarketStatus,
+    logBallToActionMapSample
 };

@@ -15,7 +15,7 @@ const {
   logFullBallToActionMap,
   getAllMappedActions
 } = require('./ballToActionMapper');
-const { createMarketAndRunner, initializeBallToActionMap, normalizeBallToActionMap, validateBallToActionMap } = require('./utils');
+const { createMarketAndRunner, initializeBallToActionMap, normalizeBallToActionMap, validateBallToActionMap, logBallToActionMapSample } = require('./utils');
 
 /**
  * Market handlers for different market types
@@ -307,11 +307,12 @@ const generateMarketAndRunners = async (data, request, fastify) => {
       eventMarket.forEach(existingMarket => {
         // Try to find the corresponding market in global state
         const marketIndex = global.marketData[data.commentaryId].markets.findIndex(m => {
-          // For odd-even markets, match by category, over and team
+          // For odd-even and lottery markets, match by category, over and team
           if ((m.marketTypeCategoryId === 28 || m.marketTypeCategoryId === 35) &&
             (existingMarket.marketTypeCategoryId === 28 || existingMarket.marketTypeCategoryId === 35)) {
             return m.over === existingMarket.over &&
-              m.teamId === existingMarket.teamId;
+              m.teamId === existingMarket.teamId &&
+              m.marketTypeCategoryId === existingMarket.marketTypeCategoryId; // ADD THIS LINE
           }
 
           // For other markets, match by name and category
@@ -340,7 +341,7 @@ const generateMarketAndRunners = async (data, request, fastify) => {
 
     // Log the total number of markets and entries in ball-to-action map
     console.log(`Generated ${global.marketData[data.commentaryId].markets.length} markets for commentary ${data.commentaryId}`);
-
+    logBallToActionMapSample(data.commentaryId)
     // Log all ball-to-action entries for debugging
     const allMappedActions = getAllMappedActions(data.commentaryId);
     console.log(`Ball-to-action map has ${allMappedActions.length} total actions across ${Object.keys(global.marketData[data.commentaryId].ballToActionMap).length} balls`);
