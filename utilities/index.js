@@ -748,6 +748,7 @@ const ModuleTypes = {
   NotificationConfig: 38,
   Packages: 39,
   Whitelabel: 40,
+  Venue: 41,
 }
 const callTPAPI = async (data ,fastify) =>{
   try {
