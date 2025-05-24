@@ -3679,6 +3679,21 @@ const Compitition = {
       },
     },
   },
+  isVirtual: {
+    schema: {
+      tags: ["Compitition"],
+      description: "change virtual status",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionId: { type: "integer" },
+          isVirtual: { type: "boolean" },
+        },
+        required: ["competitionId", "isVirtual"],
+      },
+    },
+  },
 };
 
 const Event = {

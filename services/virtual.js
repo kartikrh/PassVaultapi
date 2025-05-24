@@ -785,7 +785,7 @@ const commentaryResponseSerivce = async (commentaryId) => {
       com.tossWonBy != null
         ? global.tblTeams.find((item) => item.teamId === com.tossWonBy).teamName
         : null,
-    rmk: com.rmk,
+    remark: com.rmk,
   };
 
   return commentaryData;
@@ -1185,16 +1185,18 @@ const ballByBallChangeService = async (request, fastify) => {
       prevBall: prevBall,
       matchType,
     },
-    request
-  );
-  // save data in db
-  const ballByBall = await saveComVirtual(
-    {
-      ...request,
-      body: result,
-    },
+    request,
     fastify
   );
+  const {ballByBall} = result;
+  // save data in db
+  // const ballByBall = await saveComVirtual(
+  //   {
+  //     ...request,
+  //     body: result,
+  //   },
+  //   fastify
+  // );
   // return res;
   let overComplete = null;
   if (result.isOverComplete) {
@@ -1222,7 +1224,7 @@ const ballByBallChangeService = async (request, fastify) => {
       let getRes = await comResponseService(request, fastify);
       return {
         isMatchComplete: true,
-        isOverComplete: false,
+        isOverComplete: true,
         isWicket: false,
         inningChange: false,
         ...getRes,
@@ -1269,6 +1271,7 @@ const ballByBallChangeService = async (request, fastify) => {
       ...getRes,
     };
   }
+  // 
 
   let getRes = await comResponseService(request, fastify);
   return {
@@ -1279,7 +1282,7 @@ const ballByBallChangeService = async (request, fastify) => {
     ...getRes
   };
 };
-const updateRunPayload = async (data, request) => {
+const updateRunPayload = async (data, request,fastify) => {
   // generate db update payload using data
   let isChangeStrike = false;
   let updateBall = {};
@@ -1391,7 +1394,7 @@ const updateRunPayload = async (data, request) => {
     updateOver["totalRun"] = (over.totalRun || 0) + runToUpdate;
     updateBall["ballIsCount"] = false;
     updateBall["ballRun"] = 0;
-    updateBall["ballExt raRun"] = runToUpdate;
+    updateBall["ballExtraRun"] = runToUpdate;
     updateBall["ballType"] = BALL_TYPE.WIDE;
     updatePartnership["totalRuns"] = partnership.totalRuns + runToUpdate;
     updatePartnership["extras"] = partnership.extras + runToUpdate;
@@ -1507,10 +1510,65 @@ const updateRunPayload = async (data, request) => {
     commentaryDetails: ncom,
     commentaryId: commentaryDetails.commentaryId,
   };
+  const ballByBall1 = await saveComVirtual(
+    {
+      ...request,
+      body: {
+        ...objToSave,
+        isOverComplete,
+      },
+    },
+    fastify
+  );
+  // check if isautochange striker is true
+  if(matchType.isAutoChangeStriker && updateBall.autoStrikeBallCount >= matchType.autoChangeStrikerAfterBall){
+    // get the striker and non striker
+    const striker = global.tblCommentaryPlayers.find(
+      (item) =>
+        item.commentaryId == commentaryId &&
+        item.isPlay == true &&
+        item.onStrike == true &&
+        item.currentInnings == commentaryDetails.currentInnings &&
+        item.teamId == battingTeam.teamId
+    );
+    const nonStriker = global.tblCommentaryPlayers.find(
+      (item) =>
+        item.commentaryId == commentaryId &&
+        item.isPlay == true &&
+        item.onStrike == false &&
+        item.currentInnings == commentaryDetails.currentInnings &&
+        item.teamId == battingTeam.teamId
+    );
+    // change the striker to non striker and non striker to striker
+    let strikePlayer = {
+      ...striker,
+      onStrike: false,
+    }
+    let nonStrikePlayer = {
+      ...nonStriker,
+      onStrike: true,
+    }
+    let obj = {
+      commentaryId,
+      commentaryPlayers : [strikePlayer, nonStrikePlayer],
+    }
+    // update the player data
+     await saveComVirtual(
+      {
+        ...request,
+        body: {
+          ...obj,
+        },
+      },
+      fastify
+    );
+
+  }
 
   return {
     ...objToSave,
     isOverComplete,
+    ballByBall : ballByBall1,
     // over : updateOver
   };
 };
@@ -2185,26 +2243,59 @@ const handleWicketService = async (data, request, fastify) => {
 };
 const comResponseService = async (request, fastify) => {
   let { commentaryId } = request.body;
-  const commentaryDetails = global.tblCommentaries.find(
+  let commentaryDetails = global.tblCommentaries.find(
     (item) => item?.commentaryId === commentaryId
-  );
+  )
   if (!commentaryDetails) {
     throw new Error("Commentary with this id not found");
+  }
+  commentaryDetails = {
+    commentaryId: commentaryDetails.commentaryId,
+    eventDate : commentaryDetails.eventDate,
+    eventName : commentaryDetails.eventName,
+    eventRefId : commentaryDetails.eventRefId,
+    commentaryStatus : commentaryDetails.commentaryStatus,
+    currentInnings : commentaryDetails.currentInnings,
+    isActive : commentaryDetails.isActive,
+    delay : commentaryDetails.delay,
   }
   // get teams
   const teams = global.tblCommentaryTeams.filter(
     (item) =>
       item?.commentaryId === commentaryId &&
       item.currentInnings == commentaryDetails.currentInnings
-  );
+  ).map((item) => {
+    return {
+      commentaryTeamId: item.commentaryTeamId,
+      teamId: item.teamId,
+      teamName: item.teamName,
+      teamShortName: item.teamShortName,
+      teamScore: item.teamScore,
+      teamWicket: item.teamWicket,
+      teamOver: item.teamOver,
+      teamWicket: item.teamWicket,
+      teamStatus: item.teamStatus,
+      currentInnings: item.currentInnings,
+      isBattingComplete: item.isBattingComplete,
+      teamMaxOver: item.teamMaxOver,
+    };
+  })
   // get latest over
-  const over = global.tblOvers
+  let over = global.tblOvers
     .filter(
       (item) =>
         item?.commentaryId === commentaryId &&
         item.currentInnings == commentaryDetails.currentInnings
     )
-    .sort((a, b) => b.overId - a.overId)[0];
+    .sort((a, b) => b.overId - a.overId)[0]
+  over = {
+    overId: over.overId,
+    over : over.over,
+    teamId: over.teamId,
+    ballCount: over.ballCount,
+    teamScore: over.teamScore,
+    isComplete: over.isComplete,
+  }
 
   return {
     teams,

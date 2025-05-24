@@ -10,6 +10,7 @@ const {
   isMenChangeStatusQuery,
   getTemplateByCompetitionIdQuery,
   saveCompMarketTemplateQuery,
+  isVirtualCompetitionQuery,
 } = require("../repository/TableCompitition");
 const {storeImageOnServer, removeImageFromServer, generateImageName } = require("../utilities/Images");
 const { PROJECT_NAME } = require("../utilities/configConstants");
@@ -63,7 +64,7 @@ const { getCommentariesResultQuery } = require("../repository/TableCommentary")
 //   }
 // };
 const allCompetitionService = async (request) => {
-  const { isActive, isTrending, eventTypeId, matchTypeId, isMen, type } = request.body;
+  const { isActive, isTrending, eventTypeId, matchTypeId, isMen, type, isVirtual } = request.body;
 
   const filterObject = {};
 
@@ -73,6 +74,7 @@ const allCompetitionService = async (request) => {
   if (matchTypeId !== undefined && matchTypeId !== 0) filterObject.matchTypeId = matchTypeId;
   if (isMen !== undefined) filterObject.isMen = isMen;
   if (type !== undefined && type !== 0) filterObject.type = type;
+  if (typeof isVirtual === 'boolean') filterObject.isVirtual = isVirtual;
 
   if (isActive === undefined || isTrending === undefined) {
     return global.tblCompetitions.filter((item) => item.isActive === true);
@@ -207,6 +209,7 @@ const updateCompititionService = async (request, fastify) => {
     imagePath: validateId.imagePath,
     isMen: validateId.isMen,
     type: request.body.type === undefined ? validateId.type : parseInt(request.body.type),
+    isVirtual: validateId.isVirtual,
   };
 
   if ("isActive" in request.body) {
@@ -223,6 +226,9 @@ const updateCompititionService = async (request, fastify) => {
   }
   if("isMen" in request.body){
     data.isMen = request.body.isMen === 'true';
+  }
+  if("isVirtual" in request.body){
+    data.isVirtual = request.body.isVirtual === 'true';
   }
 
   if (request.body.eventTypeId) {
@@ -643,6 +649,32 @@ const saveCompTemplatesService = async (request, fastify) => {
 
 }
 
+const isVirtualCompetitionService = async (request, fastify) => {
+  const { isVirtual, competitionId } = request.body;
+
+  const validateId = global.tblCompetitions.find(
+    (item) => item.competitionId === competitionId
+  );
+
+  if (!validateId) {
+    throw new Error("Competition with this id not Found");
+  }
+
+  await isVirtualCompetitionQuery(
+    {
+      isVirtual,
+      competitionId
+    },
+    request,
+    fastify
+  );
+  const index = global.tblCompetitions.findIndex((item) => item.competitionId == competitionId);
+  if(index != -1){
+    global.tblCompetitions[index].isVirtual = isVirtual;
+  }
+  
+  return `Competition isVirtual status updated successfully`;
+};
 module.exports = {
   allCompetitionService,
   competitionByIdService,
@@ -659,4 +691,5 @@ module.exports = {
   isMenChangeStatusService,
   getTemplateByCompetitionIdService,
   saveCompTemplatesService,
+  isVirtualCompetitionService,
 };

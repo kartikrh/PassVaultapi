@@ -24,6 +24,18 @@ const error = (message, errorCode, status) => {
     },
   };
 };
+const virtualError = (message, errorCode, status) => {
+  return {
+    success: false,
+    status: status,
+    // error: {
+    //   code: errorCode,
+    //   message: message || "Internal Server Error",
+    // },
+    message: message || "Internal Server Error",
+    data: null
+  };
+};
 
 // Function to generate a success response object
 const success = (result, status) => {
@@ -31,6 +43,14 @@ const success = (result, status) => {
     success: true,
     status: status,
     result: result,
+  };
+};
+const virtualSuccess = (result, status) => {
+  return {
+    success: true,
+    status: status,
+    data: result,
+    message : "Success",
   };
 };
 
@@ -1035,8 +1055,8 @@ const Cards = {
   "5" : 5,
   "6" : 6,
   "10" : 0,
-  "J" :"WIDE",
-  "K" : "WICKET"
+  "J" : -1,
+  "K" : -2
 }
 const HideEventType = {
   eventType : 1,
@@ -1119,5 +1139,7 @@ module.exports = {
   playerType,
   teamStatus,
   Cards,
-  HideEventType
+  HideEventType,
+  virtualSuccess,
+  virtualError
 };
