@@ -93,6 +93,7 @@ const { getAllWhitelabelsQuery } = require("../repository/TableWhitelabel");
 const { getAllNotificationConfigsQuery, getNotificationConfigsByEventNameQuery } = require("../repository/TableNotificationConfig");
 const { notiConfigContentReplaceService } = require("../services/commentry");
 const { getAllHideEventsQuery } = require("../repository/TableHideEvents");
+const { getAllVenuesQuery } = require("../repository/TableVenue");
 
 const fetchAllDataFromDb = async (fastify, reply) => {
   try {
@@ -211,6 +212,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     // );
 
     const getHideEvents = await getAllHideEventsQuery(fastify);
+    const getAllVenues = await getAllVenuesQuery(fastify);
 
     global.tblTabs = getAllTabs;
     global.tblRoles = getAllRoles;
@@ -290,6 +292,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblWhitelabels = getAllWhitelabels;
     global.tblNotificationConfig = getAllNotificationConfigs;
     global.tblHideEvents = getHideEvents;
+    global.tblVenues = getAllVenues;
     // global.responseLogs = responseLogs;
     // global.thirdPartyAPILogs = thirdPartyAPILogs;
     // global.predictorAPILogs = predictorAPILogs;
@@ -628,6 +631,11 @@ const panelLoadDataByEnum = async (request, fastify, reply) => {
         case ModuleTypes.Whitelabel: {
           const whitelabel =  await getAllWhitelabelsQuery(fastify);
           global.tblWhitelabels = whitelabel;
+          break;
+        }
+        case ModuleTypes.Venue: {
+          const venues =  await getAllVenuesQuery(fastify);
+          global.tblVenues = venues;
           break;
         }
         default:

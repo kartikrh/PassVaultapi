@@ -10,7 +10,8 @@ const getAllCountryCodesQuery = async (fastify) => {
           "wrFlagPath" as "flagPath",
           "wrIsActive" as "isActive",
           "wrMaxNumber" as "maxNumber",
-          "wrShortName" as "shortName"
+          "wrShortName" as "shortName",
+          "wrTimezone" as "timezone"
       FROM "tblCountryCodes"
       WHERE "wrIsDeleted" = FALSE;`,
     { type: fastify.db.QueryTypes.SELECT }
@@ -23,10 +24,10 @@ const insertCountryCodeQuery = async (data, fastify, request) => {
     const result = await fastify.db.query(
       `WITH insert_data AS (
             INSERT INTO "tblCountryCodes" (
-            "wrCountryCode", "wrCountryName", "wrFlag", "wrFlagPath", "wrIsActive", "wrMaxNumber", "wrShortName"
+            "wrCountryCode", "wrCountryName", "wrFlag", "wrFlagPath", "wrIsActive", "wrMaxNumber", "wrShortName", "wrTimezone"
             ) 
             VALUES (
-                $1, $2, $3, $4, $5 ,$6 ,$7
+                $1, $2, $3, $4, $5 ,$6 ,$7, $8
             ) 
             RETURNING *
             )        
@@ -38,7 +39,8 @@ const insertCountryCodeQuery = async (data, fastify, request) => {
                 "wrFlagPath" as "flagPath",
                 "wrIsActive" as "isActive",
                 "wrMaxNumber" as "maxNumber",
-                "wrShortName" as "shortName"
+                "wrShortName" as "shortName",
+                "wrTimezone" as "timezone"
             FROM insert_data;`,
       {
         type: fastify.db.QueryTypes.SELECT,
@@ -49,7 +51,8 @@ const insertCountryCodeQuery = async (data, fastify, request) => {
           data.flagPath || null,
           data.isActive || false,
           data.maxNumber || null,
-          data.shortName || null
+          data.shortName || null,
+          data.timezone || null,
         ],
       }
     );
@@ -75,7 +78,8 @@ const updateCountryCodeQuery = async (data, fastify, request) => {
             "wrFlagPath" = $5,
             "wrIsActive" = $6,
             "wrMaxNumber" = $7,
-            "wrShortName" = $8
+            "wrShortName" = $8,
+            "wrTimezone" = $9
             WHERE "wrId" = $4
             RETURNING 
                 "wrId" as "id",
@@ -85,7 +89,8 @@ const updateCountryCodeQuery = async (data, fastify, request) => {
                 "wrFlagPath" as "flagPath",
                 "wrIsActive" as "isActive",
                  "wrMaxNumber" as "maxNumber",
-                "wrShortName" as "shortName";`,
+                "wrShortName" as "shortName",
+                "wrTimezone" as "timezone";`,
       {
         type: fastify.db.QueryTypes.UPDATE,
         bind: [
@@ -96,7 +101,8 @@ const updateCountryCodeQuery = async (data, fastify, request) => {
             data.flagPath,
             data.isActive,
             data.maxNumber,
-            data.shortName || null
+            data.shortName || null,
+            data.timezone,
         ],
       }
     );
