@@ -9022,7 +9022,7 @@ const VirtualEvent = {
         properties: {
           commentaryId : { type: "integer" },
           cardType : { type: "string" },
-          cardValue : { type: "string" },
+          cardValue : { type: "integer" },
           cardKey : { type: "string" },
           // run : { type: "integer" },
           // ballType : { type: "integer" },

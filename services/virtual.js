@@ -1027,7 +1027,7 @@ const ballByBallVirtualEventService = async (request, fastify) => {
   }
 };
 const ballByBallChangeService = async (request, fastify) => {
-  const ball = 1;
+  let ball = 1;
   const isBoundary = false;
   // const { commentaryId, run, ballType, isWicket = false } = request.body;
   const { commentaryId, cardType, cardKey, cardValue } = request.body;
@@ -1059,6 +1059,7 @@ const ballByBallChangeService = async (request, fastify) => {
     isWicket = false;
     run = 0;
     ballType = BALL_TYPE.WIDE;
+    ball = 0; // wide ball does not count as a ball
   }
 
   
@@ -1316,71 +1317,72 @@ const updateRunPayload = async (data, request,fastify) => {
         ? (parseFloat(currentBowler.bowlerOver || 0) + 0.1).toFixed(1)
         : (currentBowler.bowlerOver + 0.1).toFixed(1)
       : currentBowler.bowlerOver;
-  updateBall["ballIsCount"] = ball > 0 ? true : false;
-  updateBall["ballType"] = BALL_TYPE.REGULAR;
-  updateBall["ballRun"] = run;
-  updateBall["batStrikeId"] = onStrikePlayer.commentaryPlayerId;
-  updateBall["batNonStrikeId"] = nonStrikePlayer.commentaryPlayerId;
-  updateBall["teamId"] = battingTeam.teamId;
-  updateBall["overId"] = over.overId;
-  updateBall["cardType"] = request.body.cardType;
-  updateBall["cardKey"] = request.body.cardKey;
-  updateBall["nextBatStrikeId"] = onStrikePlayer.commentaryPlayerId;
-  updateBall["nextBatNonStrikeId"] = nonStrikePlayer.commentaryPlayerId;
-  if (matchType.isAutoChangeStriker && ball > 0) {
-    updateBall.autoStrikeBallCount = prevBall.autoStrikeBallCount + 1;
-  }
-  // update batter
-  updateBatter["batRun"] = onStrikePlayer.batRun + run;
-  updateBatter["batBall"] = onStrikePlayer.batBall + ball;
-  // update bowler
-  updateBowler["bowlerRun"] = currentBowler.bowlerRun + run;
-  updateBowler["bowlerTotalBall"] = currentBowler.bowlerTotalBall + ball;
-  updateBowler["bowlerOver"] = updateBowlOver;
-  // update partnership
-  updatePartnership["totalRuns"] = partnership.totalRuns + run;
-  updatePartnership["totalBalls"] = partnership.totalBalls + ball;
-  updatePartnership["batter1Runs"] =
-    // check if the same batter is on strike or not
-    partnership.batter1Id == onStrikePlayer.commentaryPlayerId
-      ? partnership.batter1Runs + run
-      : partnership.batter1Runs;
-  updatePartnership["batter2Runs"] =
-    // check if the same batter is on strike or not
-    partnership.batter2Id == onStrikePlayer.commentaryPlayerId
-      ? partnership.batter2Runs + run
-      : partnership.batter2Runs;
-  updatePartnership["batter1Balls"] =
-    // check if the same batter is on strike or not
-    partnership.batter1Id == onStrikePlayer.commentaryPlayerId
-      ? partnership.batter1Balls + ball
-      : partnership.batter1Balls;
-  updatePartnership["batter2Balls"] =
-    // check if the same batter is on strike or not
-    partnership.batter2Id == onStrikePlayer.commentaryPlayerId
-      ? partnership.batter2Balls + ball
-      : partnership.batter2Balls;
-  // update over
-  updateOver["ballCount"] = over.ballCount + ball;
-  updateOver["totalRun"] = over.totalRun + run;
-  // update batting team
-  updateBattingTeam["teamScore"] = battingTeam.teamScore + run;
-  updateBattingTeam["teamWicket"] = battingTeam.teamWicket + 0;
-  updateBattingTeam["teamOver"] =
-    ball > 0
-      ? (parseFloat(battingTeam.teamOver || 0) + 0.1).toFixed(1)
-      : battingTeam.teamOver;
-  updateOver["teamScore"] = `${updateBattingTeam?.teamScore || 0}/${
-    battingTeam?.teamWicket || 0
-  }`;
-  // update ballByBall
-  updateBall["overCount"] = updateBattingTeam.teamOver;
-  updateBall["currentOverBalls"] = updateOver.ballCount;
-  updateBall["bowlerId"] = currentBowler.commentaryPlayerId;
+  // updateBall["ballIsCount"] = ball > 0 ? true : false;
+  // updateBall["ballType"] = BALL_TYPE.REGULAR;
+  // updateBall["ballRun"] = run;
+  // updateBall["batStrikeId"] = onStrikePlayer.commentaryPlayerId;
+  // updateBall["batNonStrikeId"] = nonStrikePlayer.commentaryPlayerId;
+  // updateBall["teamId"] = battingTeam.teamId;
+  // updateBall["overId"] = over.overId;
+  // updateBall["cardType"] = request.body.cardType;
+  // updateBall["cardKey"] = request.body.cardKey;
+  // updateBall["nextBatStrikeId"] = onStrikePlayer.commentaryPlayerId;
+  // updateBall["nextBatNonStrikeId"] = nonStrikePlayer.commentaryPlayerId;
+  // if (matchType.isAutoChangeStriker && ball > 0) {
+  //   updateBall.autoStrikeBallCount = prevBall.autoStrikeBallCount + 1;
+  // }
+  // // update batter
+  // updateBatter["batRun"] = onStrikePlayer.batRun + run;
+  // updateBatter["batBall"] = onStrikePlayer.batBall + ball;
+  // // update bowler
+  // updateBowler["bowlerRun"] = currentBowler.bowlerRun + run;
+  // updateBowler["bowlerTotalBall"] = currentBowler.bowlerTotalBall + ball;
+  // updateBowler["bowlerOver"] = updateBowlOver;
+  // // update partnership
+  // updatePartnership["totalRuns"] = partnership.totalRuns + run;
+  // updatePartnership["totalBalls"] = partnership.totalBalls + ball;
+  // updatePartnership["batter1Runs"] =
+  //   // check if the same batter is on strike or not
+  //   partnership.batter1Id == onStrikePlayer.commentaryPlayerId
+  //     ? partnership.batter1Runs + run
+  //     : partnership.batter1Runs;
+  // updatePartnership["batter2Runs"] =
+  //   // check if the same batter is on strike or not
+  //   partnership.batter2Id == onStrikePlayer.commentaryPlayerId
+  //     ? partnership.batter2Runs + run
+  //     : partnership.batter2Runs;
+  // updatePartnership["batter1Balls"] =
+  //   // check if the same batter is on strike or not
+  //   partnership.batter1Id == onStrikePlayer.commentaryPlayerId
+  //     ? partnership.batter1Balls + ball
+  //     : partnership.batter1Balls;
+  // updatePartnership["batter2Balls"] =
+  //   // check if the same batter is on strike or not
+  //   partnership.batter2Id == onStrikePlayer.commentaryPlayerId
+  //     ? partnership.batter2Balls + ball
+  //     : partnership.batter2Balls;
+  // // update over
+  // updateOver["ballCount"] = over.ballCount + ball;
+  // updateOver["totalRun"] = over.totalRun + run;
+  // // update batting team
+  // updateBattingTeam["teamScore"] = battingTeam.teamScore + run;
+  // updateBattingTeam["teamWicket"] = battingTeam.teamWicket + 0;
+  // updateBattingTeam["teamOver"] =
+  //   ball > 0
+  //     ? (parseFloat(battingTeam.teamOver || 0) + 0.1).toFixed(1)
+  //     : battingTeam.teamOver;
+  // updateOver["teamScore"] = `${updateBattingTeam?.teamScore || 0}/${
+  //   battingTeam?.teamWicket || 0
+  // }`;
+  // // update ballByBall
+  // updateBall["overCount"] = updateBattingTeam.teamOver;
+  // updateBall["currentOverBalls"] = updateOver.ballCount;
+  // updateBall["bowlerId"] = currentBowler.commentaryPlayerId;
 
   if (ballType === BALL_TYPE.WIDE) {
     // const valueOfWideBall = +matchType.valueOfWideBall || 0;
     const runToUpdate = +matchType.valueOfWideBall || 0;
+    updateBowler["bowlerOver"] = currentBowler.bowlerOver || 0;
     updateBowler["bowlerWideBall"] = (currentBowler.bowlerWideBall || 0) + 1;
     updateBowler["bowlerWideBallRun"] =
       (currentBowler.bowlerWideBallRun || 0) + runToUpdate;
@@ -1396,8 +1398,80 @@ const updateRunPayload = async (data, request,fastify) => {
     updateBall["ballRun"] = 0;
     updateBall["ballExtraRun"] = runToUpdate;
     updateBall["ballType"] = BALL_TYPE.WIDE;
+    updateBall["nextBatStrikeId"] = onStrikePlayer.commentaryPlayerId;
+    updateBall["nextBatNonStrikeId"] = nonStrikePlayer.commentaryPlayerId;
+    // updateBall.autoStrikeBallCount = over.ballCount + 1;
     updatePartnership["totalRuns"] = partnership.totalRuns + runToUpdate;
     updatePartnership["extras"] = partnership.extras + runToUpdate;
+    // updateBattingTeam["teamOver"] = battingTeam.teamOver;
+    updateBall["overCount"] = (parseFloat(battingTeam.teamOver || 0) + 0.1).toFixed(1)
+    updateBall["currentOverBalls"] = over.ballCount + 1;
+    updateBall["cardType"] = request.body.cardType;
+    updateBall["cardKey"] = request.body.cardKey;
+  }
+  else {
+    updateBall["ballIsCount"] = ball > 0 ? true : false;
+    updateBall["ballType"] = BALL_TYPE.REGULAR;
+    updateBall["ballRun"] = run;
+    updateBall["batStrikeId"] = onStrikePlayer.commentaryPlayerId;
+    updateBall["batNonStrikeId"] = nonStrikePlayer.commentaryPlayerId;
+    updateBall["teamId"] = battingTeam.teamId;
+    updateBall["overId"] = over.overId;
+    updateBall["cardType"] = request.body.cardType;
+    updateBall["cardKey"] = request.body.cardKey;
+    updateBall["nextBatStrikeId"] = onStrikePlayer.commentaryPlayerId;
+    updateBall["nextBatNonStrikeId"] = nonStrikePlayer.commentaryPlayerId;
+    if (matchType.isAutoChangeStriker && ball > 0) {
+      updateBall.autoStrikeBallCount = over.ballCount + 1;
+    }
+    // update batter
+    updateBatter["batRun"] = onStrikePlayer.batRun + run;
+    updateBatter["batBall"] = onStrikePlayer.batBall + ball;
+    // update bowler
+    updateBowler["bowlerRun"] = currentBowler.bowlerRun + run;
+    updateBowler["bowlerTotalBall"] = currentBowler.bowlerTotalBall + ball;
+    updateBowler["bowlerOver"] = updateBowlOver;
+    // update partnership
+    updatePartnership["totalRuns"] = partnership.totalRuns + run;
+    updatePartnership["totalBalls"] = partnership.totalBalls + ball;
+    updatePartnership["batter1Runs"] =
+      // check if the same batter is on strike or not
+      partnership.batter1Id == onStrikePlayer.commentaryPlayerId
+        ? partnership.batter1Runs + run
+        : partnership.batter1Runs;
+    updatePartnership["batter2Runs"] =
+      // check if the same batter is on strike or not
+      partnership.batter2Id == onStrikePlayer.commentaryPlayerId
+        ? partnership.batter2Runs + run
+        : partnership.batter2Runs;
+    updatePartnership["batter1Balls"] =
+      // check if the same batter is on strike or not
+      partnership.batter1Id == onStrikePlayer.commentaryPlayerId
+        ? partnership.batter1Balls + ball
+        : partnership.batter1Balls;
+    updatePartnership["batter2Balls"] =
+      // check if the same batter is on strike or not
+      partnership.batter2Id == onStrikePlayer.commentaryPlayerId
+        ? partnership.batter2Balls + ball
+        : partnership.batter2Balls;
+    // update over
+    updateOver["ballCount"] = over.ballCount + ball;
+    updateOver["totalRun"] = over.totalRun + run;
+    // update batting team
+    updateBattingTeam["teamScore"] = battingTeam.teamScore + run;
+    updateBattingTeam["teamWicket"] = battingTeam.teamWicket + 0;
+    updateBattingTeam["teamOver"] =
+      ball > 0
+        ? (parseFloat(battingTeam.teamOver || 0) + 0.1).toFixed(1)
+        : battingTeam.teamOver;
+    updateOver["teamScore"] = `${updateBattingTeam?.teamScore || 0}/${
+      battingTeam?.teamWicket || 0
+    }`;
+    // update ballByBall
+    updateBall["overCount"] = updateBattingTeam.teamOver;
+    updateBall["currentOverBalls"] = updateOver.ballCount;
+    updateBall["bowlerId"] = currentBowler.commentaryPlayerId;
+
   }
   // changes according to run and ball type
   if (run === 0) {
@@ -1437,10 +1511,6 @@ const updateRunPayload = async (data, request,fastify) => {
   let newOver = {};
   let isOverComplete =
     updateOver.ballCount >= (matchType?.ballsPerOver || 6) ? true : false;
-
-  // if(isOverComplete){
-
-  // }
   updateBatter = {
     ...onStrikePlayer,
     ...updateBatter,

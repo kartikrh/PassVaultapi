@@ -18,8 +18,10 @@ const generateBall = (data) => {
     commentaryId: commentaryDetails.commentaryId,
     teamId: updateBattingTeam.teamId,
     overId: updateOver.overId,
-    overCount: updateBattingTeam.teamOver || 0,
-    currentOverBalls: updateOver.ballCount || 0,
+    // overCount: updateBattingTeam.teamOver || 0,
+    overCount : updateBall.overCount ? updateBall.overCount : updateBattingTeam.teamOver || 0,
+    // currentOverBalls: updateOver.ballCount || 0,
+    currentOverBalls: updateBall?.currentOverBalls  || updateOver.ballCount || 0,
     bowlerId:
         updateBall?.bowlerId ||
         updateBowler?.commentaryPlayerId ||
