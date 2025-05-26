@@ -9031,7 +9031,10 @@ const updateResultInCommentaryService = async (request, fastify) => {
 
   await updateResultInCommentaryQuery(request.body, fastify, request);
 
-  global.tblCommentaries[index].result = result;
+  global.tblCommentaries[index] = {
+    ...global.tblCommentaries[index],
+    ...request.body
+  };
 
   if (global.tblCommentaries[index].isActive && global.tblCommentaries[index].isTest == false) {
     let cData = await getMatchDataByCId({
