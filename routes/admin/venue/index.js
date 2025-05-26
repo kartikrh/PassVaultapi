@@ -5,6 +5,7 @@ const {
     saveVenue,
     deleteVenue,
     activeInactiveVenue,
+    allCountryCode,
 } = require("../../../controller/users/admin/venue");
 const { Venue } = require("../../../swaggerSchema/groupTags/schema");
 
@@ -38,5 +39,8 @@ module.exports = async (fastify, opts) => {
     fastify.post("/activeInactive", {
         schema: Venue.activeInactive.schema,
         handler: (request, reply) => activeInactiveVenue(request, reply, fastify),
+    });
+    fastify.post("/countryCodes", {
+        handler: (request, reply) => allCountryCode(request, reply, fastify),
     });
 };
