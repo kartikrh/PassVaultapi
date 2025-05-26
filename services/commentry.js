@@ -8957,7 +8957,11 @@ const updateisPredictMarketInCommentaryService = async (request, fastify) => {
     }
   }
 
-  if (global.tblCommentaries[index].eventRefId == null || global.tblCommentaries[index].eventId == null) {
+  if ( 
+    global.tblCommentaries[index].isVirtual === false &&
+    (global.tblCommentaries[index].eventRefId == null ||
+    global.tblCommentaries[index].eventId == null)
+  ) {
     await updateisPredictMarketInCommentaryQuery({
       isPredictMarket: false, commentaryId: request.body.commentaryId
     },
