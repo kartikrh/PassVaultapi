@@ -537,6 +537,7 @@ const callClientAPI = async (data,request, fastify) =>{
 const ServiceType = {
   clientAPI : 1,
   dataProviderAPI : 2,
+  entitySport : 3,
 }
 const APIEndpointModuleType = {
   commentaryUpdate : 1,
@@ -546,6 +547,7 @@ const APIEndpointModuleType = {
   updateBanner: 5,
   updateSeoModule : 6,
   updateMenuList : 7,
+  updateConfig: 8,
 }
 const NotificationSendType = {
   all : 1,
@@ -1064,6 +1066,40 @@ const HideEventType = {
   competition : 2,
   commentary : 3,
 }
+const callEntitySportAPI = async (data, request, fastify) =>{
+  try {
+    let competitionServices = global.tblAPIs.filter((item) => item.type == data.serviceType && item.isActive == true);
+    if(competitionServices.length == 0){
+      return true;
+    }
+    for (ser of competitionServices){
+      let endPoint = global.tblAPIEndpoints.find((item)=> item.serviceType == ser.type && item.moduleType == data.moduleType &&
+        item.isActive == true)
+        console.log("endPoint", endPoint);
+      if(endPoint){
+        let url = `${ser.api}${endPoint.endPoint}`;
+        let dataTosend = data.data;
+        const result = await axios.post(url, {
+          ...dataTosend
+        });
+        return result;
+      }
+      else {
+        console.log("Endpoint not found for service type : ", ser.type, " and module type : ", data.moduleType);
+        return;
+      }
+    }
+    return true;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> utilities/index/callEntitySportAPI",
+      request
+    );
+    // throw new Error(error.message);
+  }
+}
 module.exports = {
   ERROR_CODES,
   error,
@@ -1142,5 +1178,6 @@ module.exports = {
   Cards,
   HideEventType,
   virtualSuccess,
-  virtualError
+  virtualError,
+  callEntitySportAPI,
 };

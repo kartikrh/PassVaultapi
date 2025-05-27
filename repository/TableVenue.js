@@ -4,19 +4,21 @@ const getAllVenuesQuery = async (fastify) => {
     try {
         return await fastify.db.query(
             `SELECT 
-                "wrId" as "id",
-                "wrCountryId" as "countryId",
-                "wrCity" as "city",
-                "wrName" as "name",
-                "wrTpId" as "tpId",
-                "wrIsActive" as "isActive",
-                "wrCapacity" as "capacity",
-                "wrCreatedBy" as "createdBy",
-                "wrCreatedAt" as "createdAt",
-                "wrUpdatedBy" as "updatedBy",
-                "wrUpdatedAt" as "updatedAt"
-            FROM "tblVenues"
-            WHERE "wrIsDeleted" = FALSE;`,
+                tv."wrId" as "id",
+                tv."wrCountryId" as "countryId",
+                tcc."wrCountryName" as "countryName",
+                tv."wrCity" as "city",
+                tv."wrName" as "name",
+                tv."wrTpId" as "tpId",
+                tv."wrIsActive" as "isActive",
+                tv."wrCapacity" as "capacity",
+                tv."wrCreatedBy" as "createdBy",
+                tv."wrCreatedAt" as "createdAt",
+                tv."wrUpdatedBy" as "updatedBy",
+                tv."wrUpdatedAt" as "updatedAt"
+            FROM "tblVenues" as tv
+            LEFT JOIN "tblCountryCodes" tcc ON tcc."wrId" = tv."wrCountryId"
+            WHERE tv."wrIsDeleted" = FALSE;`,
             { type: fastify.db.QueryTypes.SELECT }
         );
     } catch (err) {
@@ -43,19 +45,20 @@ const insertVenueQuery = async (data, fastify, request) => {
             RETURNING *
             )
             SELECT 
-                "wrId" as "id",
-                "wrCountryId" as "countryId",
-                "wrCity" as "city",
-                "wrName" as "name",
-                "wrTpId" as "tpId",
-                "wrIsActive" as "isActive",
-                "wrCapacity" as "capacity",
-                "wrCreatedBy" as "createdBy",
-                "wrCreatedAt" as "createdAt",
-                "wrUpdatedBy" as "updatedBy",
-                "wrUpdatedAt" as "updatedAt"
-            FROM insert_data
-            `,
+                tv."wrId" as "id",
+                tv."wrCountryId" as "countryId",
+                tcc."wrCountryName" as "countryName",
+                tv."wrCity" as "city",
+                tv."wrName" as "name",
+                tv."wrTpId" as "tpId",
+                tv."wrIsActive" as "isActive",
+                tv."wrCapacity" as "capacity",
+                tv."wrCreatedBy" as "createdBy",
+                tv."wrCreatedAt" as "createdAt",
+                tv."wrUpdatedBy" as "updatedBy",
+                tv."wrUpdatedAt" as "updatedAt"
+            FROM insert_data as tv
+            LEFT JOIN "tblCountryCodes" tcc ON tcc."wrId" = tv."wrCountryId"`,
             {
                 type: fastify.db.QueryTypes.SELECT,
                 bind: [
@@ -85,7 +88,8 @@ const insertVenueQuery = async (data, fastify, request) => {
 const updateVenueQuery = async (data, fastify, request) => {
     try {
         const result = await fastify.db.query(
-            `UPDATE "tblVenues" SET 
+            `WITH updated_data AS (
+            UPDATE "tblVenues" SET 
                 "wrCountryId" = $1,
                 "wrCity" = $2,
                 "wrName" = $3,
@@ -95,18 +99,23 @@ const updateVenueQuery = async (data, fastify, request) => {
                 "wrUpdatedBy" = $7,
                 "wrUpdatedAt" = NOW()
             WHERE "wrId" = $8
-            RETURNING 
-                "wrId" as "id",
-                "wrCountryId" as "countryId",
-                "wrCity" as "city",
-                "wrName" as "name",
-                "wrTpId" as "tpId",
-                "wrIsActive" as "isActive",
-                "wrCapacity" as "capacity",
-                "wrCreatedBy" as "createdBy",
-                "wrCreatedAt" as "createdAt",
-                "wrUpdatedBy" as "updatedBy",
-                "wrUpdatedAt" as "updatedAt";`,
+            RETURNING *
+        )
+            SELECT 
+                tv."wrId" as "id",
+                tv."wrCountryId" as "countryId",
+                tcc."wrCountryName" as "countryName",
+                tv."wrCity" as "city",
+                tv."wrName" as "name",
+                tv."wrTpId" as "tpId",
+                tv."wrIsActive" as "isActive",
+                tv."wrCapacity" as "capacity",
+                tv."wrCreatedBy" as "createdBy",
+                tv."wrCreatedAt" as "createdAt",
+                tv."wrUpdatedBy" as "updatedBy",
+                tv."wrUpdatedAt" as "updatedAt"
+            FROM updated_data tv
+            LEFT JOIN "tblCountryCodes" tcc ON tcc."wrId" = tv."wrCountryId";`,
             {
                 type: fastify.db.QueryTypes.UPDATE,
                 bind: [
