@@ -56,18 +56,16 @@ const editVenueService = async (request, fastify) => {
 };
 
 const allVenuesService = async (request) => {
-  const { isActive } = request.body || {};
-  if (isActive !== undefined) {
-    const result = global.tblVenues.filter(
-      (item) => item.isActive === isActive
-    );
-    return result;
-  } else {
-    const result = global.tblVenues.filter(
-      (item) => item.isActive === true
-    );
-    return result;
+  const { isActive, countryId } = request.body || {};
+  let result = global.tblVenues.filter((item) =>
+    isActive !== undefined ? item.isActive === isActive : item.isActive === true
+  );
+
+  if (countryId) {
+    result = result.filter((item) => item.countryId === countryId);
   }
+
+  return result;
 };
 
 const venueByIdService = async (request) => {
