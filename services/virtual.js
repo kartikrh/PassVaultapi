@@ -569,7 +569,7 @@ const virtualEventTossService = async (request, fastify) => {
   const commentaryOvers = {
     overId: 0,
     commentaryId: commentary?.commentaryId,
-    teamId: battingTeamId,
+    teamId: bowlingTeamId,
     over: 0,
     ballCount: 0,
     bowlerId: bowler?.commentaryPlayerId,
@@ -1156,11 +1156,31 @@ const ballByBallChangeService = async (request, fastify) => {
 
     // set res
     let getRes = await comResponseService(request, fastify);
-    return {
-      ...result,
-      inningChange: false,
-      ...getRes,
-    };
+    if(result.comOver !== null){
+      let over = {
+        overId: result.comOver.overId,
+        over: result.comOver.over,
+        teamId: result.comOver.teamId,
+        ballCount: result.comOver.ballCount,
+        teamScore: result.comOver.teamScore,
+        isComplete: result.comOver.isComplete,
+      }
+      delete result.comOver;
+      return {
+        ...result,
+        inningChange: false,
+        ...getRes,
+        over
+      }
+    }
+    else {
+      delete result.comOver;
+      return {
+        ...result,
+        inningChange: false,
+        ...getRes,
+      };
+    } 
   }
 
   let result = await updateRunPayload(
@@ -1399,6 +1419,9 @@ const updateRunPayload = async (data, request,fastify) => {
       (battingTeam.teamWideRuns || 0) + runToUpdate;
     updateBattingTeam["teamScore"] =
       (battingTeam.teamScore || 0) + runToUpdate;
+    updateOver["teamScore"] = `${updateBattingTeam?.teamScore || 0}/${
+      battingTeam?.teamWicket || 0
+    }`;
     updateOver["totalWideBall"] = (over.totalWideBall || 0) + 1;
     updateOver["totalWideRun"] = (over.totalWideRun || 0) + runToUpdate;
     updateOver["totalRun"] = (over.totalRun || 0) + runToUpdate;
@@ -1896,7 +1919,7 @@ const generateOverService = async (data, request, fastify) => {
           })
         : "",
     },
-    commentaryOver: updatedOver,
+    commentaryOvers: updatedOver,
     commentaryPlayers: [updateBowler],
     commentaryTeams: [updateTeam],
   };
@@ -2148,7 +2171,7 @@ const handleWicketService = async (data, request, fastify) => {
     totalWicket: (currentOver.totalWicket || 0) + 1,
     ballCount: (currentOver.ballCount || 0) + ball,
     dotBall: (currentOver.bowlerDotBall || 0) + ball,
-    teamScore: `${upBatTeam.teamScore || 0}/${upBatTeam.teamWicket || 0} `,
+    teamScore: `${upBatTeam.teamScore || 0}/${upBatTeam.teamWicket || 0}`,
   };
   let upBatter = {
     ...onStrikePlayer,
@@ -2303,6 +2326,7 @@ const handleWicketService = async (data, request, fastify) => {
     upOver.ballCount >= (matchType?.ballsPerOver || 6) ? true : false;
 
   let overComplete = null;
+  let comOver = null;
   if (isOverComplete) {
     overComplete = await generateOverService(
       {
@@ -2315,6 +2339,8 @@ const handleWicketService = async (data, request, fastify) => {
       request,
       fastify
     );
+    comOver = overComplete.completedOver;
+    
   }
 
   return {
@@ -2322,6 +2348,7 @@ const handleWicketService = async (data, request, fastify) => {
     isWicket: true,
     isOverComplete,
     isMatchComplete: mc.matchComplete,
+    comOver : comOver,
   };
 };
 const comResponseService = async (request, fastify) => {
