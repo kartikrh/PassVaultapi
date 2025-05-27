@@ -1242,13 +1242,21 @@ const ballByBallChangeService = async (request, fastify) => {
       fastify
     );
     let getRes = await comResponseService(request, fastify);
-
+    let over = overComplete.completedOver;
     return {
       inningChange: false,
       isOverComplete: true,
       isWicket: false,
       isMatchComplete: false,
-      ...getRes
+      ...getRes,
+      over : {
+        overId: over.overId,
+        over : over.over,
+        teamId: over.teamId,
+        ballCount: over.ballCount,
+        teamScore: over.teamScore,
+        isComplete: over.isComplete,
+      },
     };
   }
   const mc = await checkInningsSwitch(
@@ -1899,6 +1907,10 @@ const generateOverService = async (data, request, fastify) => {
     },
     fastify
   );
+  let completedOver = global.tblOvers.find(
+    (item) =>
+      item.overId == overdetails.overId
+  );
   // db update call here
   let { player } = await changePlayer({
     plytyp: playerType.CURRENT_BOWLER,
@@ -2004,6 +2016,7 @@ const generateOverService = async (data, request, fastify) => {
     res1,
     res2,
     res3,
+    completedOver,
   };
 };
 const onPlayerChangeService = (data) => {
