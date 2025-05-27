@@ -9022,7 +9022,7 @@ const VirtualEvent = {
         properties: {
           commentaryId : { type: "integer" },
           cardType : { type: "string" },
-          cardValue : { type: "string" },
+          cardValue : { type: "integer" },
           cardKey : { type: "string" },
           // run : { type: "integer" },
           // ballType : { type: "integer" },
@@ -9136,6 +9136,84 @@ const FavCommentary = {
     },
   },
 };
+const Venue = {
+  getAll: {
+    schema: {
+      tags: ["Venue"],
+      description: "get all venue data",
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+
+  save: {
+    schema: {
+      tags: ["Venue"],
+      security: [{ bearerAuth: [] }],
+      description: "save venue data",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          countryId: { type: "integer" },
+          name: { type: "string" },
+        },
+        required: ["id", "countryId", "name"],
+      },
+    },
+  },
+
+  delete: {
+    schema: {
+      tags: ["Venue"],
+      description: "delete venue data",
+      body: {
+        type: "object",
+        properties: {
+          id: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["id"],
+      },
+    },
+  },
+
+  getById: {
+    schema: {
+      tags: ["Venue"],
+      description: "get venue data by id",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+        },
+        required: ["id"],
+      },
+    },
+  },
+
+  activeInactive: {
+    schema: {
+      tags: ["Venue"],
+      description: "active inactive venue data",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["id", "isActive"],
+      },
+    },
+  },
+};
 module.exports = {
   Auth,
   Tabs,
@@ -9206,4 +9284,5 @@ module.exports = {
   VirtualEvent,
   FavCompetitions,
   FavCommentary,
+  Venue,
 };
