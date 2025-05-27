@@ -473,7 +473,24 @@ const hideEventsService = async (request, fastify) => {
     refId : refId
   }, request, fastify);
   global.tblHideEvents.push(hideEvent);
-
+  callClientAPI(
+    {
+       serviceType : ServiceType.clientAPI,
+       moduleType : APIEndpointModuleType.updateSeoModule,
+       data : {
+         module : 'hideEvent',
+         type : "hide",
+         data : hideEvent
+       }
+    }, request, fastify)
+    .catch((err) => {
+     errorLogger(
+       fastify,
+       err.message,
+       "services/whitelabel.js/hideEventsService - callClientAPI",
+       request
+     );
+  });
   return "Event hidden successfully";
 }
 const unhideEventsService = async (request, fastify) => {
@@ -487,7 +504,25 @@ const unhideEventsService = async (request, fastify) => {
   if (result) {
     global.tblHideEvents.splice(he, 1);
   }
-
+  callClientAPI({
+    serviceType : ServiceType.clientAPI,
+    moduleType : APIEndpointModuleType.updateSeoModule,
+    data : {
+      module : 'hideEvent',
+      type : "unhide",
+      data : {
+        id : hideEventId
+      }
+    }
+  }, request, fastify)
+  .catch((err) => {
+    errorLogger(
+      fastify,
+      err.message,
+      "services/whitelabel.js/unhideEventsService - callClientAPI",
+      request
+    );
+  });
   return "Event unhidden successfully";
 }
 const getEventTypesService = async (request, fastify) => {
