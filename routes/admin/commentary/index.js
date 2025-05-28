@@ -77,6 +77,8 @@ const {
   changeIsEventStart,
   getAllDifficulties,
   commentaryStatus,
+  commentaryStart,
+  commentaryToss,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -1054,4 +1056,29 @@ module.exports = async (fastify, opts) => {
     ],
     handler: (request, reply) => getAllDifficulties(request, reply, fastify),
   })
+  fastify.post("/comStart",{
+    schema : Commentary.comStart.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "edit"
+        }),
+    ],
+    handler: (request , reply) => commentaryStart(request,reply,fastify)
+  })
+  fastify.post("/comToss",{
+    schema : Commentary.comToss.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "edit"
+        }),
+    ],
+    handler: (request , reply) => commentaryToss(request,reply,fastify)
+  })
+
 };
