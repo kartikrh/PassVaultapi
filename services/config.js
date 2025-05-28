@@ -3,7 +3,7 @@ const {
   updateConfigQuery,
   deleteConfigQuery,
 } = require("../repository/TableConfig");
-const { callClientAPI, ServiceType, APIEndpointModuleType } = require("../utilities");
+const { callClientAPI, ServiceType, APIEndpointModuleType, callEntitySportAPI } = require("../utilities");
 const configConstants = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
 const { generateImageName, storeImageOnServer } = require("../utilities/Images");
@@ -66,6 +66,26 @@ const createConfigService = async (request, fastify) => {
         fastify,
         err.message,
         "API ERROR --> services/config/createConfigService",
+        request
+      )
+    });
+    callEntitySportAPI(
+      {
+        serviceType: ServiceType.entitySport,
+        moduleType: APIEndpointModuleType.updateConfig,
+        data: {
+          module : "config",
+          type : "add",
+          data : data
+        }
+      },
+      request,
+      fastify
+    ).catch((err) => {
+      errorLogger(
+        fastify,
+        err.message,
+        "API ERROR --> services/config/createConfigService - callEntitySportAPI",
         request
       )
     });
@@ -136,6 +156,28 @@ const updateConfigService = async (request, fastify) => {
         request
       )
     });
+
+    callEntitySportAPI(
+      {
+        serviceType: ServiceType.entitySport,
+        moduleType: APIEndpointModuleType.updateConfig,
+        data: {
+          module : "config",
+          type : "update",
+          data : data
+        }
+      },
+      request,
+      fastify
+    ).catch((err) => {
+      errorLogger(
+        fastify,
+        err.message,
+        "API ERROR --> services/config/createConfigService - callEntitySportAPI",
+        request
+      )
+    });
+
   return data;
 };
 
@@ -175,6 +217,26 @@ const deleteConfigService = async (request, fastify) => {
       request
     )
   });
+  callEntitySportAPI(
+      {
+        serviceType: ServiceType.entitySport,
+        moduleType: APIEndpointModuleType.updateConfig,
+        data: {
+          module : "config",
+          type : "delete",
+          data : configId
+        }
+      },
+      request,
+      fastify
+    ).catch((err) => {
+      errorLogger(
+        fastify,
+        err.message,
+        "API ERROR --> services/config/createConfigService - callEntitySportAPI",
+        request
+      )
+    });
 
   return `Config(s) deleted successfully`;
 };
