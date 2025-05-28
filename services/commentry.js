@@ -13662,7 +13662,7 @@ const commentaryStartService = async (request, fastify) => {
       const _player1 = commentaryPlayers.find(
         (item) => item.commentaryPlayerId === partnership.batter1Id
       );
-      if (_player1.length > 0) {
+      if (_player1) {
         partnership.player1image = _player1.playerimage;
         partnership.player1jerseyandimage = _player1.jerseyPlayerImage;
       }
@@ -13670,9 +13670,9 @@ const commentaryStartService = async (request, fastify) => {
       const _player2 = commentaryPlayers.find(
         (item) => item.commentaryPlayerId === partnership.batter2Id
       );
-      if (_player2.length > 0) {
-        partnership.player2image = _player2[0].playerimage;
-        partnership.player2jerseyandimage = _player2[0].jerseyPlayerImage;
+      if (_player2) {
+        partnership.player2image = _player2.playerimage;
+        partnership.player2jerseyandimage = _player2.jerseyPlayerImage;
       }
       sendToSocket.dataToUpdate.push({
         module: "commentaryPartnership",
