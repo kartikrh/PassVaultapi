@@ -79,6 +79,8 @@ const {
   changeisEventStartService,
   getAllDifficultyService,
   commentaryStatusService,
+  commentaryStartService,
+  commentaryTossService,
 } = require("../../../../services/commentry");
 const { getEventSnapByComService, updateEventSnapByComService } = require("../../../../services/competitionEventSnap");
 const { getAllCommentariesDataService, getAllCommentariesDataServiceV1 } = require("../../../../services/score");
@@ -187,7 +189,11 @@ const deleteCommentary = async (request, reply, fastify) => {
 };
 const saveCommentaryDetails = async (request, reply, fastify) => {
   try {
+    // return true;
     //const result = await testStoreProcedureService(request, fastify);
+    if(request.body.commentaryId == 5068){
+      return true;
+    }
     const result = await syncCommentaryStatsWithAPIAndSocket(request, fastify);
     // const result = await saveCommentaryDetailsService(request, fastify);
     //console.timeEnd("saveCommentaryDetails");
@@ -1067,6 +1073,24 @@ const commentaryStatus = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const commentaryStart = async (request, reply, fastify) => {
+  try {
+    const result = await commentaryStartService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/commentaryStart", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const commentaryToss = async (request, reply, fastify) => {
+  try {
+    const result = await commentaryTossService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/commentaryToss", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 module.exports = {
   getAllCommentaries,
   getCommentaryById,
@@ -1155,4 +1179,6 @@ module.exports = {
   changeIsEventStart,
   getAllDifficulties,
   commentaryStatus,
+  commentaryStart,
+  commentaryToss
 }
