@@ -25,7 +25,7 @@ const getAllCompititionQuery = async (fastify) => {
     tc."wrIsMen" as "isMen",
     tc."wrType" as "type",
     tc."wrIsVirtual" as "isVirtual",
-    tc."wrStatus" as "status",
+    tc."wrStatus" as "commStatus",
     tc."wrStartDate" as "startDate",
     tc."wrEndDate" as "endDate"
     from "tblCompetitions" tc 
@@ -105,7 +105,7 @@ const insertCompetitionQuery = async (request, fastify) => {
         tc."wrIsMen" as "isMen",
         tc."wrType" as "type",
         tc."wrIsVirtual" as "isVirtual",
-        tc."wrStatus" as "status",
+        tc."wrStatus" as "commStatus",
         tc."wrStartDate" as "startDate",
         tc."wrEndDate" as "endDate"
         from "inser_data" tc
@@ -132,7 +132,7 @@ const insertCompetitionQuery = async (request, fastify) => {
           data.isMen || null,
           data.type || null,
           data.isVirtual || false,
-          data.status,
+          data.commStatus,
           data.startDate,
           data.endDate,
         ],
@@ -228,7 +228,7 @@ const updateCompititionQuery = async (data, fastify, request) => {
           data.isMen,
           data.type,
           data.isVirtual,
-          data.status,
+          data.commStatus,
           data.startDate,
           data.endDate,
         ],
@@ -277,7 +277,7 @@ const updateDisplayOrderQuery = async (data, fastify, request) => {
         u."wrIsMen" as "isMen",
         u."wrType" as "type",
         u."wrIsVirtual" as "isVirtual",
-        u."wrStatus" as "status",
+        u."wrStatus" as "commStatus",
         u."wrStartDate" as "startDate",
         u."wrEndDate" as "endDate"
       FROM updated u

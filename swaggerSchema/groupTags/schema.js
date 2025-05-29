@@ -3510,7 +3510,7 @@ const Compitition = {
           isActive: { type: "boolean" },
           isTrending : { type: "boolean" },
           matchTypeId : {type : "integer"},
-          status: { type: "integer" },
+          commStatus: { type: "integer" },
           startDate: { type: "string" },
           endDate: { type: "string" },
         },
