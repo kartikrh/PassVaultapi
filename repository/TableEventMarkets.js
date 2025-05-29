@@ -1906,7 +1906,8 @@ const getMarketsByCIdQuery = async (request, whereCondition, fastify) => {
             "wrStatus" as "status",
             "wrOpenOdds" as "openOdds",
             "wrMarketTypeCategoryId" AS "marketTypeCategoryId",
-            "wrResult" as "result"
+            "wrResult" as "result",
+            "tblEventMarkets"."wrIsActive" as "isActive"
         FROM "tblEventMarkets"
         LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = "tblEventMarkets"."wrTeamID"
         WHERE "wrEventRefID" = $1 ${whereCondition}
@@ -1932,7 +1933,8 @@ const getMarketsByCIdQuery = async (request, whereCondition, fastify) => {
             tmr."wrLayPrice" as "layPrice",
             tmr."wrBackSize" as "backSize",
             "wrMarketTypeCategoryId" AS "marketTypeCategoryId",
-            tmr."wrLaySize" as "laySize"
+            tmr."wrLaySize" as "laySize",
+            "tblEventMarkets"."wrIsActive" as "isActive"
         FROM "tblEventMarkets"
         LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = "tblEventMarkets"."wrTeamID"
         LEFT JOIN "tblMarketRunners" tmr ON tmr."wrEventMarketId" = "tblEventMarkets"."wrID"
