@@ -64,7 +64,7 @@ const { getCommentariesResultQuery } = require("../repository/TableCommentary")
 //   }
 // };
 const allCompetitionService = async (request) => {
-  const { isActive, isTrending, eventTypeId, matchTypeId, isMen, type, isVirtual } = request.body;
+  const { isActive, isTrending, eventTypeId, matchTypeId, isMen, type, isVirtual, status, startDate, endDate } = request.body;
 
   const filterObject = {};
 
@@ -75,6 +75,9 @@ const allCompetitionService = async (request) => {
   if (isMen !== undefined) filterObject.isMen = isMen;
   if (type !== undefined && type !== 0) filterObject.type = type;
   if (typeof isVirtual === 'boolean') filterObject.isVirtual = isVirtual;
+  if (status !== undefined && status !== 0) filterObject.status = status;
+  if (startDate !== undefined && startDate !== 0) filterObject.startDate = startDate;
+  if (endDate !== undefined && endDate !== 0) filterObject.endDate = endDate;
 
   if (isActive === undefined || isTrending === undefined) {
     return global.tblCompetitions.filter((item) => item.isActive === true);
@@ -210,6 +213,9 @@ const updateCompititionService = async (request, fastify) => {
     isMen: validateId.isMen,
     type: request.body.type === undefined ? validateId.type : parseInt(request.body.type),
     isVirtual: validateId.isVirtual,
+    status: request.body.status || validateId.status,
+    startDate: request.body.startDate || validateId.startDate,
+    endDate: request.body.endDate || validateId.endDate,
   };
 
   if ("isActive" in request.body) {
