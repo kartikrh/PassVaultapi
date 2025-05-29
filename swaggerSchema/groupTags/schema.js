@@ -3509,7 +3509,10 @@ const Compitition = {
           refId: { type: "string" },
           isActive: { type: "boolean" },
           isTrending : { type: "boolean" },
-          matchTypeId : {type : "integer"}
+          matchTypeId : {type : "integer"},
+          status: { type: "integer" },
+          startDate: { type: "string" },
+          endDate: { type: "string" },
         },
         required: ["competitionId"],
       },
