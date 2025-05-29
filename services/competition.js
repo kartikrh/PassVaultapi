@@ -210,6 +210,9 @@ const updateCompititionService = async (request, fastify) => {
     isMen: validateId.isMen,
     type: request.body.type === undefined ? validateId.type : parseInt(request.body.type),
     isVirtual: validateId.isVirtual,
+    commStatus: request.body.commStatus || validateId.commStatus,
+    startDate: request.body.startDate || validateId.startDate,
+    endDate: request.body.endDate || validateId.endDate,
   };
 
   if ("isActive" in request.body) {

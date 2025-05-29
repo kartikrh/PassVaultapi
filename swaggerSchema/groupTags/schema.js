@@ -3389,6 +3389,54 @@ const Commentary = {
       },
     },
   },
+  comStart: {
+    schema: {
+      tags: ["Commentary"],
+      description: "Commentary start details",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId : {type : "integer"},
+          commentaryPlayers: { type: "array", items: { type: "object" } },
+          commentaryDetails: { type: "object" },
+          // commentaryTeams: { type: "array", items: { type: "object" } },
+          commentaryOvers: { type : "object" },
+          commentaryBallByBall: { type: "object" },
+          // commentaryWickets: { type: "array", items: { type: "object" } },
+          commentaryPartnership: {   type: "object" },
+          isCallPredict : {type : "boolean"}
+        },
+        required: [
+          "commentaryId" ,"commentaryDetails", "commentaryPlayers","commentaryOvers","commentaryBallByBall", "commentaryPartnership", "isCallPredict"
+        ],
+      },
+    },
+  },
+  comToss: {
+    schema: {
+      tags: ["Commentary"],
+      description: "Commentary start details",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId : {type : "integer"},
+          // commentaryPlayers: { type: "array", items: { type: "object" } },
+          commentaryDetails: { type: "object" },
+          commentaryTeams: { type: "array", items: { type: "object" } },
+          // commentaryOvers: { type : "object" },
+          // commentaryBallByBall: { type: "object" },
+          // // commentaryWickets: { type: "array", items: { type: "object" } },
+          // commentaryPartnership: {   type: "object" },
+          isCallPredict : {type : "boolean"}
+        },
+        required: [
+          "commentaryId" , "commentaryDetails", "commentaryTeams", "isCallPredict"
+        ],
+      },
+    },
+  },
 };
 
 const Compitition = {
@@ -3461,7 +3509,10 @@ const Compitition = {
           refId: { type: "string" },
           isActive: { type: "boolean" },
           isTrending : { type: "boolean" },
-          matchTypeId : {type : "integer"}
+          matchTypeId : {type : "integer"},
+          commStatus: { type: "integer" },
+          startDate: { type: "string" },
+          endDate: { type: "string" },
         },
         required: ["competitionId"],
       },

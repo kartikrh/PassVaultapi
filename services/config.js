@@ -72,7 +72,7 @@ const createConfigService = async (request, fastify) => {
     callEntitySportAPI(
       {
         serviceType: ServiceType.entitySport,
-        moduleType: APIEndpointModuleType.updateConfig,
+        moduleType: APIEndpointModuleType.configUpdate,
         data: {
           module : "config",
           type : "add",
@@ -160,7 +160,7 @@ const updateConfigService = async (request, fastify) => {
     callEntitySportAPI(
       {
         serviceType: ServiceType.entitySport,
-        moduleType: APIEndpointModuleType.updateConfig,
+        moduleType: APIEndpointModuleType.configUpdate,
         data: {
           module : "config",
           type : "update",
@@ -220,7 +220,7 @@ const deleteConfigService = async (request, fastify) => {
   callEntitySportAPI(
       {
         serviceType: ServiceType.entitySport,
-        moduleType: APIEndpointModuleType.updateConfig,
+        moduleType: APIEndpointModuleType.configUpdate,
         data: {
           module : "config",
           type : "delete",

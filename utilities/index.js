@@ -547,7 +547,7 @@ const APIEndpointModuleType = {
   updateBanner: 5,
   updateSeoModule : 6,
   updateMenuList : 7,
-  updateConfig: 8,
+  configUpdate: 8,
 }
 const NotificationSendType = {
   all : 1,
@@ -1075,7 +1075,6 @@ const callEntitySportAPI = async (data, request, fastify) =>{
     for (ser of competitionServices){
       let endPoint = global.tblAPIEndpoints.find((item)=> item.serviceType == ser.type && item.moduleType == data.moduleType &&
         item.isActive == true)
-        console.log("endPoint", endPoint);
       if(endPoint){
         let url = `${ser.api}${endPoint.endPoint}`;
         let dataTosend = data.data;
