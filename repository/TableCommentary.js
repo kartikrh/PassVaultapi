@@ -30,6 +30,7 @@ const getAllCommentaryQuery = async (fastify) => {
     "wrDisplayStatus" as "displayStatus",
     "wrRmk" as "rmk",
     "wrWinRmk" as "winRmk",
+    "wrCardType" as "cardType",
     "wrTossRmk" as "tossRmk",
     "wrCommentaryUserId" as "commentaryUserId",
     "wrCommentaryStatus" as "commentaryStatus",
@@ -114,6 +115,7 @@ const getCommentariesDataQuery = async (fastify) => {
     "wrDisplayStatus" as "displayStatus",
     "wrRmk" as "rmk",
     "wrWinRmk" as "winRmk",
+    "wrCardType" as "cardType",
     "wrTossRmk" as "tossRmk",
     "wrCommentaryUserId" as "commentaryUserId",
     "wrCommentaryStatus" as "commentaryStatus",
@@ -233,6 +235,7 @@ const insertCommentaryQuery = async (request, fastify) => {
     "wrDisplayStatus" as "displayStatus",
     "wrRmk" as "rmk",
     "wrWinRmk" as "winRmk",
+    "wrCardType" as "cardType",
     "wrTossRmk" as "tossRmk",
     "wrCommentaryUserId" as "commentaryUserId",
     "wrCommentaryStatus" as "commentaryStatus",
@@ -820,6 +823,7 @@ const getCommentaryByIdQuery = async (request, fastify) => {
       "wrRmk" as "rmk",
       "wrWinRmk" as "winRmk",
       "wrTossRmk" as "tossRmk",
+      "wrCardType" as "cardType",
       "wrCommentaryUserId" as "commentaryUserId",
     "wrCommentaryStatus" as "commentaryStatus",
       "wrUpdateTime" as "updateTime",
@@ -4522,6 +4526,7 @@ const getAllCommentaryHistoryQuery = async (whereCondition, fastify, request) =>
             tc."wrRmk" as "rmk",
             tc."wrWinRmk" as "winRmk",
             tc."wrTossRmk" as "tossRmk",
+            tc."wrCardType" as "cardType",
             tc."wrCommentaryUserId" as "commentaryUserId",
             tc."wrCommentaryStatus" as "commentaryStatus",
             tc."wrUpdateTime" as "updateTime",
@@ -4691,6 +4696,7 @@ const getAllCompletedCommentaryQuery = async (request, fastify) => {
           COALESCE(tc."wrRmk", '') AS "rmk",
           COALESCE(tc."wrWinRmk", '') AS "winRmk",
           COALESCE(tc."wrTossRmk", '') AS "tossRmk",
+          COALESCE(tc."wrCardType", '') AS "cardType",
           COALESCE(CAST(tct1."wrCrr" AS FLOAT), 0) AS "te1crr",
           COALESCE(CAST(tct2."wrCrr" AS FLOAT), 0) AS "te2crr",
           COALESCE(CAST(tct1."wrRrr" AS FLOAT), 0) AS "te1rrr",
@@ -4811,6 +4817,7 @@ const getCommentariesDataByDifferentIdsQuery = async (whereCondition, request, f
           tc."wrRmk" as "rmk",
           tc."wrWinRmk" as "winRmk",
           tc."wrTossRmk" as "tossRmk",
+          tc."wrCardType" as "cardType",
           tc."wrCommentaryUserId" as "commentaryUserId",
           tc."wrCommentaryStatus" as "commentaryStatus",
           tc."wrUpdateTime" as "updateTime",
@@ -4901,6 +4908,7 @@ const getCommentariesDataQueryV1 = async (fastify) => {
         tc."wrRmk" as "rmk",
         tc."wrWinRmk" as "winRmk",
         tc."wrTossRmk" as "tossRmk",
+        tc."wrCardType" as "cardType",
         tc."wrCommentaryUserId" as "cuserid",
         tc."wrCommentaryStatus" as "cs",
         tc."wrUpdateTime" as "ut",
@@ -5401,7 +5409,7 @@ const insertVirtualEventQuery = async (data, request, fastify) => {
         insert into "tblCommentaries" ("wrEventTypeId","wrMatchTypeId","wrCompetitionId","wrEventId",
         "wrEventDate","wrEventName","wrEventRefId","wrTeam1Id","wrTeam2Id","wrLocation","wrWeather","wrPitchCracks","wrDisplayStatus","wrTarget","wrMarketID","wrTpId","isSignalROn","isMatchTypeUpdated" , "wrCreatedBy" , "wrCreatedDate","wrCommentaryStatus","wrCurrentInnings", "wrSystemPlayerCount","wrIsPredictMarket",
         "wrDelay", "wrIsActive", "wrIsClientShow","wrIsTeamPredictionOn", "wrHistoryMatchTypeId", "wrIsCountInPoint","wrIsTest", "wrEventNo",
-        "wrDifficulty", "wrPitchHardness", "wrPitchWareSpeed", "wrIsVirtual") values (
+        "wrDifficulty", "wrPitchHardness", "wrPitchWareSpeed", "wrIsVirtual", "wrCardType") values (
           $1,
           $2,
           $3,
@@ -5424,7 +5432,8 @@ const insertVirtualEventQuery = async (data, request, fastify) => {
           $30,
           $31,
           $32,
-          $33
+          $33,
+          $34
         ) returning *         
       )
 
@@ -5482,7 +5491,8 @@ const insertVirtualEventQuery = async (data, request, fastify) => {
     tc."wrDifficulty" as "difficulty",
     tc."wrPitchHardness" as "pitchHardness",
     tc."wrPitchWareSpeed" as "pitchWareSpeed",
-    tc."wrIsVirtual" as "isVirtual"
+    tc."wrIsVirtual" as "isVirtual",
+    tc."wrCardType" as "cardType"
     from "insert_data" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"  
@@ -5527,6 +5537,7 @@ const insertVirtualEventQuery = async (data, request, fastify) => {
           data.pitchHardness || null,
           data.pitchWareSpeed || null,
           data.isVirtual || false,
+          data.cardType || null
         ],
         type: fastify.db.QueryTypes.SELECT,
       }

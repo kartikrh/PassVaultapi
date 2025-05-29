@@ -9020,8 +9020,10 @@ const VirtualEvent = {
                 key : { type: "string" },
                 value : { type: "string" },
                 count : { type: "string" },
+                cardType: {type : "integer"},
+
               },
-              required: ["key", "value", "count"],              
+              required: ["key", "value", "count", "cardType"],              
             },
             minItems: 1
 

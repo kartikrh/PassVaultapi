@@ -1099,6 +1099,13 @@ const callEntitySportAPI = async (data, request, fastify) =>{
     // throw new Error(error.message);
   }
 }
+const comCardType = {
+  "Heart" : 1,
+  "Diamond" :2,
+  "Clubs" : 3,
+  "Spades" : 4
+}
+
 module.exports = {
   ERROR_CODES,
   error,
@@ -1179,4 +1186,5 @@ module.exports = {
   virtualSuccess,
   virtualError,
   callEntitySportAPI,
+  comCardType
 };

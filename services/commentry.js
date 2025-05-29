@@ -6077,6 +6077,7 @@ const commentaryDetailsByEventIdService = async (
     sts: "",
     rmk: "",
     winRmk: "",
+    cardType : null,
     tossRmk: "",
     winNm: "",
     winId: 0,
@@ -6129,6 +6130,7 @@ const commentaryDetailsByEventIdService = async (
   let sts;
   let rmk;
   let winRmk;
+  let cardType;
   let tossRmk;
   let winNm;
   let winId;
@@ -6273,6 +6275,7 @@ const commentaryDetailsByEventIdService = async (
     resultArr.sts = result.commentaryStatus.toString();
     resultArr.rmk = "Toss Not Done Yet";
     resultArr.winRmk = "";
+    resultArr.cardType = result.cardType;
     resultArr.tossRmk = "";
     resultArr.winNm = "";
     resultArr.winId = 0;
@@ -6343,6 +6346,7 @@ const commentaryDetailsByEventIdService = async (
     resultArr.sts = result.commentaryStatus.toString();
     resultArr.rmk = toss;
     resultArr.winRmk = "";
+    resultArr.cardType = result.cardType;
     resultArr.tossRmk = "";
     resultArr.winNm = "";
     resultArr.winId = 0;
@@ -6460,6 +6464,7 @@ const commentaryDetailsByEventIdService = async (
     resultArr.sts = result.commentaryStatus.toString();
     resultArr.rmk = result.rmk;
     resultArr.winRmk = result.winRmk || "";
+    resultArr.cardType = result.cardType;
     resultArr.tossRmk = result.tossRmk || "";
     resultArr.winNm = result?.winnerName || "";
     resultArr.winId = result?.winnerId || 0;
@@ -6735,6 +6740,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     sts: "",
     rmk: "",
     winRmk: "",
+    cardType : result.cardType,
     tossRmk: "",
     winNm: "",
     winId: 0,
@@ -6779,6 +6785,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
   let sts;
   let rmk;
   let winRmk;
+  let cardType = result.cardType;
   let tossRmk;
   let winNm;
   let winId;
@@ -6919,6 +6926,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     resultArr.sts = result.commentaryStatus.toString();
     resultArr.rmk = "Toss Not Done Yet";
     resultArr.winRmk = "";
+    resultArr.cardType = result.cardType;
     resultArr.tossRmk = "";
     resultArr.winNm = "";
     resultArr.winId = 0;
@@ -6973,6 +6981,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     resultArr.sts = result.commentaryStatus.toString();
     resultArr.rmk = toss;
     resultArr.winRmk = "";
+    resultArr.cardType = result.cardType;
     resultArr.winNm = "";
     resultArr.winId = 0;
     resultArr.win = "";
@@ -7083,6 +7092,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     resultArr.sts = result.commentaryStatus.toString();
     resultArr.rmk = result.rmk;
     resultArr.winRmk = result.winRmk || "";
+    resultArr.cardType = result.cardType;
     resultArr.tossRmk = result.tossRmk || "";
     resultArr.winNm = result?.winnerName || "";
     resultArr.winId = result?.winnerId || 0;
@@ -7573,6 +7583,8 @@ const getMatchListByStatus = async (body, request, fastify) => {
       rmk: item.rmk === null || item.rmk === undefined ? "" : item.rmk,
       winRmk:
         item.winRmk === null || item.winRmk === undefined ? "" : item.winRmk,
+      cardType :
+        item.cardType === null || item.cardType === undefined ? "" : item.cardType,
       tossRmk:
         item.tossRmk === null || item.tossRmk === undefined ? "" : item.tossRmk,
       winNm:
@@ -7787,6 +7799,7 @@ const getMatchDataByCId = async (data, request, fastify) => {
     dis: com.displayStatus || "",
     rmk: com.rmk || "",
     winRmk: com.winRmk || "",
+    cardType : com.cardType,
     tossRmk: com.tossRmk || "",
     winNm: com?.winnerName || "",
     winId: com?.winnerId || 0,
@@ -8153,6 +8166,7 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
       dis: commentary.displayStatus || "",
       rmk: commentary.rmk || "",
       winRmk: commentary.winRmk || "",
+      cardType : commentary.cardType,
       tossRmk: commentary.tossRmk || "",
       winNm: commentary?.winnerName || "",
       winId: commentary?.winnerId || 0,
@@ -13329,20 +13343,20 @@ const saveComVirtual = async (request, fastify) => {
       });
     }
 
-    // if (global.wss) {
-    //   let res = {};
-    //   res.eventname = "ShortScore";
-    //   res.connectionID = "";
-    //   let _ShortCommentry = setShortCommenrty(commentaryData.eventRefId);
-    //   _ShortCommentry = JSON.stringify(_ShortCommentry);
-    //   res.data = _ShortCommentry;
-    //   // Iterate over all connected clients and send the update
-    //   global.wss.clients.forEach(function each(client) {
-    //     if (client.readyState === WebSocket.OPEN) {
-    //       client.send(JSON.stringify(res));
-    //     }
-    //   });
-    // }
+    if (global.wss) {
+      let res = {};
+      res.eventname = "ShortScore";
+      res.connectionID = "";
+      let _ShortCommentry = setShortCommenrty(commentaryData.eventRefId);
+      _ShortCommentry = JSON.stringify(_ShortCommentry);
+      res.data = _ShortCommentry;
+      // Iterate over all connected clients and send the update
+      global.wss.clients.forEach(function each(client) {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify(res));
+        }
+      });
+    }
 
     // let strikeTeam;
     // strikeTeam = global.tblCommentaryTeams.find(
