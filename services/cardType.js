@@ -48,7 +48,15 @@ const saveCardTypeService = async (request, fastify) => {
   }
   const saveData = await insertCardTypeQuery(request.body, fastify, request);
   global.tblCardType.push(saveData);
-
+  if (request.body.isActive === true) {
+    request.body.id = saveData.id
+    await isActiveFalseQuery(request.body, fastify, request);
+    global.tblCardType.forEach((item) => {
+      if (item.id !== saveData.id && item.enum === saveData.enum) {
+        item.isActive = false;
+      }
+    });
+  }
   return saveData;
 };
 
@@ -144,22 +152,19 @@ const deleteCardTypeService = async (fastify, request) => {
 };
 
 const activeInactiveCardTypeService = async (fastify, request) => {
-  
+  const { id, isActive } = request.body;
   const result = global.tblCardType.find(
     (item) => item.id === request.body.id
   );
-
   if (!result) {
     throw new Error("Card Type with this Id not found");
   }
 
   if (request.body.isActive === true) {
+    request.body.enum = result.enum
     await isActiveFalseQuery(request.body, fastify, request);
     global.tblCardType.forEach((item) => {
-      if (
-        item.id !== request.body.id &&
-        item.enum === result.enum 
-      ) {
+      if (item.id !== id && item.enum === result.enum) {
         item.isActive = false;
       }
     });
