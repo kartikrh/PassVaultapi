@@ -1,4 +1,4 @@
-const { insertCardTypeQuery, updateCardTypeQuery, deleteCardTypeQuery, activeInactiveCardTypeQuery } = require("../repository/TableCardType");
+const { insertCardTypeQuery, updateCardTypeQuery, deleteCardTypeQuery, activeInactiveCardTypeQuery, isActiveFalseQuery } = require("../repository/TableCardType");
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
 const {
@@ -144,13 +144,25 @@ const deleteCardTypeService = async (fastify, request) => {
 };
 
 const activeInactiveCardTypeService = async (fastify, request) => {
-  const { id, isActive } = request.body;
-  const validateId = global.tblCardType.find(
-    (item) => item.id === id
+  
+  const result = global.tblCardType.find(
+    (item) => item.id === request.body.id
   );
 
-  if (!validateId) {
+  if (!result) {
     throw new Error("Card Type with this Id not found");
+  }
+
+  if (request.body.isActive === true) {
+    await isActiveFalseQuery(request.body, fastify, request);
+    global.tblCardType.forEach((item) => {
+      if (
+        item.id !== request.body.id &&
+        item.enum === result.enum 
+      ) {
+        item.isActive = false;
+      }
+    });
   }
   await activeInactiveCardTypeQuery({id, isActive }, request, fastify);
   const index = global.tblCardType.findIndex((item) => item.id == id);
