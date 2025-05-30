@@ -6671,7 +6671,6 @@ const commentaryDetailsByEventIdService = async (
       ci: result.currentInnings,
       cctime: result.commentaryCloseTime,
       res: result.result,
-      isvirtual : result.isVirtual
     },
     cbb,
     cbt,
