@@ -142,10 +142,31 @@ const activeInactiveCardTypeQuery = async (data, request, fastify) => {
   }
 };
 
+const isActiveFalseQuery = async (data, fastify, request) => {
+  try {
+      return await fastify.db.query(
+          `UPDATE "tblCardType" SET "wrIsActive" = $1 WHERE "wrId" != $2 AND "wrEnum" = $3 AND "wrIsDeleted" = false`,
+          {
+              type: fastify.db.QueryTypes.UPDATE,
+              bind: [false, data.id, data.enum],
+          }
+      );
+  } catch (err) {
+      errorLogger(
+          fastify,
+          err.message,
+          "DB ERROR --> repository/TableCardType.js/isActiveFalseQuery",
+          request
+      );
+      throw new Error(err.message);
+  }
+};
+
 module.exports = {
     getAllCardTypeQuery,
     insertCardTypeQuery,
     updateCardTypeQuery,
     deleteCardTypeQuery,
     activeInactiveCardTypeQuery,
+    isActiveFalseQuery,
 };

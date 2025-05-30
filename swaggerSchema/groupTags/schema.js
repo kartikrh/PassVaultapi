@@ -8591,7 +8591,6 @@ const CardType = {
           id: { type: "integer" },
           enum: { type: "integer" },
           isActive: { type: "boolean" },
-          isDeleted: { type: "boolean" },
         },
         required: ["id"],
       },
