@@ -42,7 +42,7 @@ const insertCardTypeQuery = async (data, fastify, request) => {
           data.image || null,
           data.imagePath || null,
           data.isActive || false,
-          data.userId,
+          request.userTokenInfo.WrUserId,
         ],
       }
     );
@@ -82,7 +82,7 @@ const updateCardTypeQuery = async (data, fastify, request) => {
             data.image,
             data.imagePath,
             data.isActive,
-            data.userId,
+            request.userTokenInfo.WrUserId,
             data.id,
         ],
       }
