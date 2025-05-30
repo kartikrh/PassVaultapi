@@ -6094,6 +6094,7 @@ const commentaryDetailsByEventIdService = async (
     t1id: result.team1Id,
     t2id: result.team2Id,
     srtup: result.sortUpdate ?? "",
+    isvirt: result.isVirtual,
   };
   let eid;
   let til;
@@ -6637,6 +6638,7 @@ const commentaryDetailsByEventIdService = async (
     isb: ball.ballIsBoundry,
     isdel: ball.isDelete,
     cd: ball.createdDate,
+    shrty: ball.shortType,
   }));
 
   // const marketRunnerData = await global.tblEventMarkets.filter((item) => item?.commentaryId == cid && item.rateSource === 2)
