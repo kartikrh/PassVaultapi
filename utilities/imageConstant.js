@@ -125,6 +125,13 @@ const ImgModuleConfig = {
     height: 0,
     width: 0,
   },
+  CardType: {
+    type: "CardType",
+    formate: ".jpg,.png,.jpeg,.avif,.webp",
+    size: 0,
+    height: 0,
+    width: 0,
+  },
   Whitelable: {
     type: "Whitelable",
     formate: ".jpg,.png,.jpeg,.avif,.webp",

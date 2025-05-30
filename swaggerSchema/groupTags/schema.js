@@ -8579,6 +8579,69 @@ const CountryCode = {
     },
   },
 };
+const CardType = {
+  save: {
+    schema: {
+      tags: ["CardType"],
+      security: [{ bearerAuth: [] }],
+      description: "save card type data",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          enum: { type: "integer" },
+          isActive: { type: "boolean" },
+          isDeleted: { type: "boolean" },
+        },
+        required: ["id"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["CardType"],
+      description: "delete card type(s) data",
+      body: {
+        type: "object",
+        properties: {
+          id: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["id"],
+      },
+    },
+  },
+  getById: {
+    schema: {
+      tags: ["CardType"],
+      description: "get card type data by id",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+        },
+        required: ["id"],
+      },
+    },
+  },
+  activeInactiveApi: {
+    schema: {
+      tags: ["CardType"],
+      description: "active inactive CardType data",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["id", "isActive"],
+      },
+    },
+  },
+};
 const Packages = {
   getAll: {
     schema: {
@@ -9330,6 +9393,7 @@ module.exports = {
   Tips,
   MatchTypeBowlingPredictor,
   CountryCode,
+  CardType,
   Packages,
   Whitelabel,
   NotificationConfig,
