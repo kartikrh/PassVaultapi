@@ -164,6 +164,16 @@ const {
   generateMarketAndRunners,
   processPredictScoreMarket,
 } = require("../markets");
+const { 
+  insertWeatherQuery,
+  updateWeatherQuery,
+  deleteWeatherWithCommentaryIdQuery,
+} = require("../repository/TableWeather")
+const {
+  insertPitchConditionQuery,
+  updatePitchConditionQuery,
+  deletePitchConditionWithCommIdQuery,
+} = require("../repository/TablePitchCondition")
 
 const allCommentaryService = async (request, fastify) => {
   // return global.tblCommentaries;
@@ -610,6 +620,15 @@ const createCommentaryService = async (request, fastify) => {
   }
   const addCommentry = await insertCommentaryQuery(request, fastify);
   request.body.commentaryId = addCommentry.commentaryId;
+  if(request.body.weatherCondition) {
+    const weather = await insertWeatherQuery(request.body, fastify, request);
+    global.tblWeather.push(weather);
+  }
+  
+  if(request.body.pitchCondition) {
+    const pitch = await insertPitchConditionQuery(request.body, fastify, request);
+    global.tblPitchConditions.push(pitch);
+  }
 
   const validateMatchTypeId = global.tblMatchTypes.find(
     (item) => item.matchTypeId === request.body.matchTypeId
@@ -1318,6 +1337,48 @@ const updateCommentaryService = async (request, fastify) => {
   const updatedData = await getCommentaryByIdQuery(request, fastify);
 
   global.tblCommentaries[index] = updatedData;
+
+  const validateWeather = global.tblWeather.find(item => item?.commentaryId === request.body.commentaryId);
+  if(validateWeather) {
+    const weatherData = {
+      weatherCondition: request.body.weatherCondition ?? validateWeather.weatherCondition ,
+      description: request.body.description ?? validateWeather.description,
+      temp: request.body.temp ?? validateWeather.temp,
+      humidity: request.body.humidity ?? validateWeather.humidity,
+      visibility: request.body.visibility ??  validateWeather.visibility,
+      windSpeed: request.body.windSpeed ??  validateWeather.windSpeed,
+      clouds: request.body.clouds ?? validateWeather.clouds,
+      commentaryId: request.body.commentaryId ?? validateWeather.commentaryId,
+      id: validateWeather.id,
+    }
+    const weather = await updateWeatherQuery(weatherData, fastify, request);
+    const index = global.tblWeather.findIndex(item => item?.commentaryId === request.body.commentaryId);
+    if(index !== -1){
+      global.tblWeather[index] = weather[0]
+    } else {
+      global.tblWeather.push(weather[0]);
+    }
+  }
+  
+  const validatePitch = global.tblPitchConditions.find(item => item?.commentaryId === request.body.commentaryId);
+  if(validatePitch) {
+    const data = {
+      pitchCondition: request.body.pitchCondition ?? validatePitch.pitchCondition,
+      battingCondition: request.body.battingCondition ?? validatePitch.battingCondition,
+      paceBowlingCondition: request.body.paceBowlingCondition ?? validatePitch.paceBowlingCondition,
+      spineBowlingConniton: request.body.spineBowlingConniton ?? validatePitch.spineBowlingConniton,
+      commentaryId: request.body.commentaryId ?? validatePitch.commentaryId,
+      id: validatePitch.id,
+    }
+    const pitch = await updatePitchConditionQuery(data, fastify, request);
+    const index = global.tblPitchConditions.findIndex(item => item?.commentaryId === request.body.commentaryId);
+    if(index !== -1){
+      global.tblPitchConditions[index] = pitch[0]
+    } else {
+      global.tblPitchConditions.push(pitch[0]);
+    }
+  }
+
   global.tblCommentaryPlayers = await getAllCommentaryPlayerQuery(fastify);
   global.tblCommentaryTeams = await getAllCommentaryTeamsQuery(fastify);
 
@@ -1692,6 +1753,26 @@ const cloneCommentaryService = async (request, fastify) => {
   }
 
   global.tblCommentaries.push(newCommentary);
+  const validateWeather = global.tblWeather.find(item => item.commentaryId === commentaryId);
+  if(validateWeather) {
+    const weatherData = {
+      ...validateWeather,
+      commentaryId: newCommentary.commentaryId
+    }
+    const weather = await insertWeatherQuery(weatherData, fastify, request);
+    global.tblWeather.push(weather);
+  }
+  
+  const validatePitch = global.tblPitchConditions.find(item => item.commentaryId === commentaryId);
+  if(validatePitch) {
+    const data = {
+      ...validatePitch,
+      commentaryId: newCommentary.commentaryId
+    }
+    const pitch = await insertPitchConditionQuery(data, fastify, request);
+    global.tblPitchConditions.push(pitch);
+  }
+
   global.tblCommentaryPlayers = await getAllCommentaryPlayerQuery(fastify);
   global.tblCommentaryTeams = await getAllCommentaryTeamsQuery(fastify);
 
@@ -1923,6 +2004,17 @@ const deleteCommentaryService = async (request, fastify) => {
   );
 
   global.tblTips = global.tblTips.filter(
+    (item) => !commentaryId.includes(item?.commentaryId)
+  );
+
+  await deleteWeatherWithCommentaryIdQuery(commentaryId, fastify, request);
+  await deletePitchConditionWithCommIdQuery(commentaryId, fastify, request);
+
+  global.tblWeather = global.tblWeather.filter(
+    (item) => !commentaryId.includes(item?.commentaryId)
+  );
+
+  global.tblPitchConditions = global.tblPitchConditions.filter(
     (item) => !commentaryId.includes(item?.commentaryId)
   );
 
