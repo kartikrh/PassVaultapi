@@ -284,6 +284,7 @@ const updatePlayerService = async (request, fastify) => {
     bowlingStyle: checkPlayerId.bowlingTypeId,
     isSystemPlayer: request.body.hasOwnProperty("isSystemPlayer") ? request.body.isSystemPlayer : checkPlayerId.isSystemPlayer,
     imagePath : checkPlayerId.imagePath,
+    tpId: request.body.tpId || checkPlayerId.tpId,
   };
 
   if ("isActive" in request.body) {
@@ -541,7 +542,8 @@ const updatePlayerStatsService = async (request, fastify) => {
           eventType: checkPlayerId.eventType,
           bowlingTypeId: checkPlayerId.bowlingTypeId,
           bowlingStyle: checkPlayerId.bowlingTypeId,
-          imagePath: checkPlayerId.imagePath
+          imagePath: checkPlayerId.imagePath,
+          tpId: checkPlayerId.tpId,
         };
         global.tblPlayers[index] = _p;
       }

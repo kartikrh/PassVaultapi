@@ -95,6 +95,8 @@ const { notiConfigContentReplaceService } = require("../services/commentry");
 const { getAllHideEventsQuery } = require("../repository/TableHideEvents");
 const { getAllVenuesQuery } = require("../repository/TableVenue");
 const { getAllCardTypeQuery } = require("../repository/TableCardType");
+const { getAllWeathersQuery } = require("../repository/TableWeather")
+const { getAllPitchConditionsQuery } = require("../repository/TablePitchCondition")
 
 const fetchAllDataFromDb = async (fastify, reply) => {
   try {
@@ -215,6 +217,8 @@ const fetchAllDataFromDb = async (fastify, reply) => {
 
     const getHideEvents = await getAllHideEventsQuery(fastify);
     const getAllVenues = await getAllVenuesQuery(fastify);
+    const getAllWeatherData = await getAllWeathersQuery(fastify);
+    const getAllPitchConditions = await getAllPitchConditionsQuery(fastify);
 
     global.tblTabs = getAllTabs;
     global.tblRoles = getAllRoles;
@@ -296,6 +300,8 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblNotificationConfig = getAllNotificationConfigs;
     global.tblHideEvents = getHideEvents;
     global.tblVenues = getAllVenues;
+    global.tblWeather = getAllWeatherData;
+    global.tblPitchConditions = getAllPitchConditions;
     // global.responseLogs = responseLogs;
     // global.thirdPartyAPILogs = thirdPartyAPILogs;
     // global.predictorAPILogs = predictorAPILogs;
