@@ -14740,7 +14740,7 @@ const commentaryScoreService = async (request, fastify) => {
       });
 
       global.clientSocketIo.forEach((socket) => {
-        socket.client.emit("updateFullscore", sendToSocket);
+        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
       });
     }
     if (global.wss) {
