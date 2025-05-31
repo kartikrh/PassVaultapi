@@ -6245,6 +6245,7 @@ const commentaryDetailsByEventIdService = async (
   let t2co;
   let utc;
   let tpp1, tpp2;
+  let cardKey;
   // Basic elements are set
   cid = result.commentaryId;
   eid = result.eventRefId.toString();
@@ -6731,8 +6732,15 @@ const commentaryDetailsByEventIdService = async (
     isdel: ball.isDelete,
     cd: ball.createdDate,
     shrty: ball.shortType,
+    cardKey: ball.cardKey,
+    cardType: ball.cardType,
   }));
-
+  if (cbb.length > 0) {
+    const latestCBB = cbb[cbb.length - 1];
+    resultArr.cardKey = latestCBB.cardKey;
+  } else {
+    resultArr.cardKey = null;
+  }
   // const marketRunnerData = await global.tblEventMarkets.filter((item) => item?.commentaryId == cid && item.rateSource === 2)
 
   // const mr = marketRunnerData.map((runner) => {
