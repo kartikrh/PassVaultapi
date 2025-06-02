@@ -133,6 +133,15 @@ const createCompititionService = async (request, fastify) => {
     }
   }
 
+  if (request.body.tpId !== undefined || request.body.tpId !== null) {
+    const validate = global.tblCompetitions.find(
+      (item) => item.tpId === request.body?.tpId && item.tpId !== null
+    );
+    if (validate) {
+      throw new Error('TpId already exist');
+    }
+  }
+
   if (request.body.image && request.body.image.length) {
     let imgName = generateImageName({
       name: `${request.body.competition}-${validateEventTypeId.eventType}`,
@@ -188,6 +197,15 @@ const updateCompititionService = async (request, fastify) => {
   if (!validateId) {
     throw new Error("Competition with this id not Found");
   }
+  if (request.body.tpId !== undefined || request.body.tpId !== null) {
+    const validate = global.tblCompetitions.find(
+      (item) => item.tpId === request.body?.tpId && item.competitionId !== competitionId &&
+      item.tpId !== null
+    );
+    if (validate) {
+      throw new Error('TpId already exist');
+    }
+  }
   const data = {
     competitionId: request.body.competitionId,
     competition: request.body.competition || validateId.competition,
@@ -213,6 +231,7 @@ const updateCompititionService = async (request, fastify) => {
     commStatus: request.body.commStatus || validateId.commStatus,
     startDate: request.body.startDate || validateId.startDate,
     endDate: request.body.endDate || validateId.endDate,
+    tpId: request.body.tpId || validateId.tpId,
   };
 
   if ("isActive" in request.body) {
