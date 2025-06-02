@@ -9,8 +9,14 @@ const {
 const { createMatchTypePredictorQuery } = require("../repository/TableMatchTypePredictor");
 const { MarketTypeId } = require("../utilities");
 
-const allMatchTypesService = async () => {
-  return global.tblMatchTypes;
+const allMatchTypesService = async (request) => {
+  if(request?.body?.entityEnum) {
+    const result = global.tblMatchTypes.filter(item => item.entityEnum === request?.body?.entityEnum);
+    return result || []
+  } else {
+    return global.tblMatchTypes;
+  }
+  // return global.tblMatchTypes;
 };
 
 const matchTypeByIdService = async (request) => {
@@ -30,7 +36,14 @@ const createMatchTypeService = async (request, fastify) => {
   if (validateMatchType) {
     throw new Error("MatchType already exist");
   }
-
+  if (request.body?.entityEnum) {
+    const validate = global.tblMatchTypes.find(item => 
+      item.entityEnum === request.body.entityEnum
+    );
+    if(validate) {
+      throw new Error("This entity enum already exist");
+    }
+  }
   const data = await insertMatchTypeQuery(
     { ...request.body, userId: request.userTokenInfo.WrUserId },
     fastify,
@@ -62,6 +75,7 @@ const cloneMatchTypeService = async (request, fastify) => {
   const data = await insertMatchTypeQuery(
     {
       ...checkId,
+      entityEnum: request.body?.entityEnum ?? null,
       matchType: request.body.matchType,
       userId: request.userTokenInfo.WrUserId,
     },
@@ -122,7 +136,15 @@ const updateMatchTypeService = async (request, fastify) => {
       throw new Error("MatchType already exist");
     }
   }
-
+  if (request.body?.entityEnum) {
+    const validate = global.tblMatchTypes.find(item => 
+      item.entityEnum === request.body.entityEnum && 
+      item.matchTypeId !== request.body.matchTypeId
+    );
+    if(validate) {
+      throw new Error("This entity enum already exist");
+    }
+  }
   const data = await updateMatchTypeQuery(
     {
       ...request.body,

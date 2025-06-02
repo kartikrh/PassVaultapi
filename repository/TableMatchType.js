@@ -40,7 +40,8 @@ const getAllMatchTypeQuery = async (fastify) => {
         "wrIsAutoChangeStriker" as "isAutoChangeStriker",
         "wrAutoChangeStrikerAfterBall" as "autoChangeStrikerAfterBall",
         "wrSumOfRunPerBall" as "sumOfRunPerBall",
-        "wrIsHistory" as "isHistory"
+        "wrIsHistory" as "isHistory",
+        "wrEntityEnum" as "entityEnum"
         from "tblMatchTypes"
         where "wrIsDeleted" = false`,
     {
@@ -93,11 +94,12 @@ const insertMatchTypeQuery = async (data, fastify, request) => {
         "wrIsAutoChangeStriker",
         "wrAutoChangeStrikerAfterBall",
         "wrSumOfRunPerBall",
-        "wrIsHistory"
+        "wrIsHistory",
+        "wrEntityEnum"
       ) values ( 
         $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,
         $16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,
-        $29,$30,$31,$32,$33,$34,$35,$36 ,$37, $38, $39
+        $29,$30,$31,$32,$33,$34,$35,$36 ,$37, $38, $39, $40
       ) returning *
     )
 
@@ -139,7 +141,8 @@ const insertMatchTypeQuery = async (data, fastify, request) => {
         "wrIsAutoChangeStriker" as "isAutoChangeStriker",
         "wrAutoChangeStrikerAfterBall" as "autoChangeStrikerAfterBall",
         "wrSumOfRunPerBall" as "sumOfRunPerBall",
-        "wrIsHistory" as "isHistory"
+        "wrIsHistory" as "isHistory",
+        "wrEntityEnum" as "entityEnum"
         from "insert_data"
     `,
       {
@@ -182,7 +185,8 @@ const insertMatchTypeQuery = async (data, fastify, request) => {
           data.isAutoChangeStriker === undefined ? false : data.isAutoChangeStriker,
           data.autoChangeStrikerAfterBall,
           data.sumOfRunPerBall || 0,
-          data.isHistory === undefined ? true : data.isHistory
+          data.isHistory === undefined ? true : data.isHistory,
+          data.entityEnum || null,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -288,6 +292,7 @@ const updateMatchTypeQuery = async (data, fastify, request) => {
       isAutoChangeStriker: "wrIsAutoChangeStriker",
       autoChangeStrikerAfterBall: "wrAutoChangeStrikerAfterBall",
       isHistory: "wrIsHistory",
+      entityEnum: "wrEntityEnum",
     };
 
     const updateColumns = [];
@@ -344,7 +349,8 @@ const updateMatchTypeQuery = async (data, fastify, request) => {
     "wrIsAutoChangeStriker" as "isAutoChangeStriker",
     "wrAutoChangeStrikerAfterBall" as "autoChangeStrikerAfterBall",
     "wrSumOfRunPerBall" as "sumOfRunPerBall",
-    "wrIsHistory" as "isHistory"
+    "wrIsHistory" as "isHistory",
+    "wrEntityEnum" as "entityEnum"
     `,
       {
         bind: updateValues,
