@@ -14,7 +14,7 @@ let commonPath = "controller/users/admin/matchType/index.js";
 
 const getAllMatchTypes = async (request, reply, fastify) => {
   try {
-    const result = await allMatchTypesService();
+    const result = await allMatchTypesService(request);
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(
