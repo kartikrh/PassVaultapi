@@ -220,6 +220,11 @@ module.exports = (sequelize) => {
         allowNull : true,
         defaultValue : null
       },
+      wrCardType : {
+        type : DataTypes.INTEGER,
+        allowNull : true,
+        defaultValue : null
+      }
     },
     {
       timestamps: false,

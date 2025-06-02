@@ -52,6 +52,7 @@ const {
   saveFavCommentary,
   deleteFavCommentary,
 } = require("../../../controller/users/admin/clientFavCommentary");
+const { getAllCardType } = require("../../../controller/users/admin/cardType/index")
 
 const {
   Score,
@@ -396,6 +397,9 @@ module.exports = async (fastify, opts) => {
    fastify.post("/hideEvent", {
     // schema: FavCommentary.delete.schema,
     handler: (request, reply) => getHideEvent(request, reply, fastify),
+  });
+   fastify.post("/allCardTypes", {
+    handler: (request, reply) => getAllCardType(request, reply, fastify),
   });
 };
 

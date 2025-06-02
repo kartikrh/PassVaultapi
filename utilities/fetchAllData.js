@@ -94,6 +94,9 @@ const { getAllNotificationConfigsQuery, getNotificationConfigsByEventNameQuery }
 const { notiConfigContentReplaceService } = require("../services/commentry");
 const { getAllHideEventsQuery } = require("../repository/TableHideEvents");
 const { getAllVenuesQuery } = require("../repository/TableVenue");
+const { getAllCardTypeQuery } = require("../repository/TableCardType");
+const { getAllWeathersQuery } = require("../repository/TableWeather")
+const { getAllPitchConditionsQuery } = require("../repository/TablePitchCondition")
 
 const fetchAllDataFromDb = async (fastify, reply) => {
   try {
@@ -188,6 +191,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const getAllTips = await getAllTipsQuery(fastify);
     const getAllMatchTypeBowling = await getAllMatchTypeBowlingPredictor(fastify)
     const getAllCountryCodes = await getAllCountryCodesQuery(fastify);
+    const getAllCardType = await getAllCardTypeQuery(fastify);
     const getAllPackages = await getAllPackagesQuery(fastify);
     const getAllWhitelabels = await getAllWhitelabelsQuery(fastify);
     const getAllNotificationConfigs = await getAllNotificationConfigsQuery(fastify);
@@ -213,6 +217,8 @@ const fetchAllDataFromDb = async (fastify, reply) => {
 
     const getHideEvents = await getAllHideEventsQuery(fastify);
     const getAllVenues = await getAllVenuesQuery(fastify);
+    const getAllWeatherData = await getAllWeathersQuery(fastify);
+    const getAllPitchConditions = await getAllPitchConditionsQuery(fastify);
 
     global.tblTabs = getAllTabs;
     global.tblRoles = getAllRoles;
@@ -288,11 +294,14 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblMarketRunnerV2 = getEventMarketRunnerV2;
     global.tblMatchTypeBowlingTypePredictor = getAllMatchTypeBowling;
     global.tblCountryCodes = getAllCountryCodes;
+    global.tblCardType = getAllCardType;
     global.tblPackages = getAllPackages;
     global.tblWhitelabels = getAllWhitelabels;
     global.tblNotificationConfig = getAllNotificationConfigs;
     global.tblHideEvents = getHideEvents;
     global.tblVenues = getAllVenues;
+    global.tblWeather = getAllWeatherData;
+    global.tblPitchConditions = getAllPitchConditions;
     // global.responseLogs = responseLogs;
     // global.thirdPartyAPILogs = thirdPartyAPILogs;
     // global.predictorAPILogs = predictorAPILogs;
@@ -616,6 +625,11 @@ const panelLoadDataByEnum = async (request, fastify, reply) => {
         case ModuleTypes.CountryCode: {
           const cc =  await getAllCountryCodesQuery(fastify);
           global.tblCountryCodes = cc;
+          break;
+        }
+        case ModuleTypes.CardTpe: {
+          const cardType =  await getAllCardTypeQuery(fastify);
+          global.tblCardTpe = cardType;
           break;
         }
         case ModuleTypes.NotificationConfig: {

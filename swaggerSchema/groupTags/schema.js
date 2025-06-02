@@ -3437,6 +3437,54 @@ const Commentary = {
       },
     },
   },
+  comScore : {
+    schema : {
+      tags :["Commentary"],
+       description: "Commentary start details",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId : {type : "integer"},
+          commentaryPlayers: { type: "array", items: { type: "object" } },
+          commentaryDetails: { type: "object" },
+          commentaryTeams: { type: "array", items: { type: "object" } },
+          commentaryOvers: { type : "object" },
+          commentaryBallByBall: { type: "object" },
+          // commentaryWickets: { type: "array", items: { type: "object" } },
+          commentaryPartnership: {   type: "object" },
+          isCallPredict : {type : "boolean"}
+        },
+        required: [
+          "commentaryId" ,"commentaryDetails", "commentaryPlayers","commentaryOvers","commentaryBallByBall", "commentaryPartnership", "isCallPredict", "commentaryTeams"
+        ],
+      },
+    }
+  },
+  comOverStart : {
+    schema : {
+      tags :["Commentary"],
+       description: "Commentary start details",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId : {type : "integer"},
+          commentaryPlayers: { type: "array", items: { type: "object" } },
+          commentaryDetails: { type: "object" },
+          commentaryTeams: { type: "array", items: { type: "object" } },
+          commentaryOvers: { type : "object" },
+          commentaryBallByBall: { type: "object" },
+          // commentaryWickets: { type: "array", items: { type: "object" } },
+          // commentaryPartnership: {   type: "object" },
+          isCallPredict : {type : "boolean"}
+        },
+        required: [
+          "commentaryId" ,"commentaryDetails", "commentaryPlayers","commentaryOvers","commentaryBallByBall", "isCallPredict"
+        ],
+      },
+    }
+  }
 };
 
 const Compitition = {
@@ -8579,6 +8627,68 @@ const CountryCode = {
     },
   },
 };
+const CardType = {
+  save: {
+    schema: {
+      tags: ["CardType"],
+      security: [{ bearerAuth: [] }],
+      description: "save card type data",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          enum: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["id"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["CardType"],
+      description: "delete card type(s) data",
+      body: {
+        type: "object",
+        properties: {
+          id: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["id"],
+      },
+    },
+  },
+  getById: {
+    schema: {
+      tags: ["CardType"],
+      description: "get card type data by id",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+        },
+        required: ["id"],
+      },
+    },
+  },
+  activeInactiveApi: {
+    schema: {
+      tags: ["CardType"],
+      description: "active inactive CardType data",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["id", "isActive"],
+      },
+    },
+  },
+};
 const Packages = {
   getAll: {
     schema: {
@@ -9012,6 +9122,7 @@ const VirtualEvent = {
           competitionId : { type: "integer" },
           eventDate : { type: "string" },
           eventRefId : { type: "string" },
+          cardType: {type : "integer"},
           cards : {
             type: "array",
             items: {
@@ -9027,7 +9138,7 @@ const VirtualEvent = {
 
           }
         },
-        required: ["competitionId", "eventDate", "eventRefId", "cards"],
+        required: ["competitionId", "eventDate", "eventRefId", "cards", "cardType"],
       }
     }
   },
@@ -9329,6 +9440,7 @@ module.exports = {
   Tips,
   MatchTypeBowlingPredictor,
   CountryCode,
+  CardType,
   Packages,
   Whitelabel,
   NotificationConfig,
