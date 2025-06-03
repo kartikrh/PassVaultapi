@@ -133,7 +133,7 @@ const createCompititionService = async (request, fastify) => {
     }
   }
 
-  if (request.body.tpId != undefined || request.body.tpId != null) {
+  if (request.body.tpId !== undefined || request.body.tpId !== null) {
     const validate = global.tblCompetitions.find(
       (item) => item.tpId == request.body?.tpId && item.tpId !== null
     );
