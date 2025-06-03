@@ -302,7 +302,7 @@ const updatePlayerService = async (request, fastify) => {
     bowlingStyle: checkPlayerId.bowlingTypeId,
     isSystemPlayer: request.body.hasOwnProperty("isSystemPlayer") ? request.body.isSystemPlayer : checkPlayerId.isSystemPlayer,
     imagePath : checkPlayerId.imagePath,
-    tpId: 'tpId' in request.body ? request.body.tpId : validateId.tpId,
+    tpId: 'tpId' in request.body ? request.body.tpId : checkPlayerId.tpId,
   };
 
   if ("isActive" in request.body) {

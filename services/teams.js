@@ -120,13 +120,14 @@ const createTeamService = async (request, fastify) => {
     throw new Error("TeamName already exist");
   }
 
-  const validateTpId = global.tblTeams.find(
-    (item) =>
-      item.tpId === request.body?.tpId && item.tpId !== null
-  );
+  if (request.body?.tpId != null) {
+    const validateTpId = global.tblTeams.some(
+      (item) => item.tpId == request.body?.tpId
+    );
 
-  if (validateTpId) {
-    throw new Error("TpId already exist");
+    if (validateTpId) {
+      throw new Error("TpId already exists");
+    }
   }
 
   let imgName, projectName;
@@ -248,7 +249,7 @@ const updateTeamService = async (request, fastify) => {
   if(checkTeamId) {
     const validateTpId = global.tblTeams.find(
       (item) =>
-        item.tpId === request.body?.tpId && item.teamId !== request.body.teamId &&
+        item.tpId == request.body?.tpId && item.teamId != request.body.teamId &&
         item.tpId !== null
     );
   
