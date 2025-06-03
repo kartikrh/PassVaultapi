@@ -120,9 +120,11 @@ const createTeamService = async (request, fastify) => {
     throw new Error("TeamName already exist");
   }
 
+  console.log("request", request.body.tpid)
+  console.log("request", typeof(request.body.tpid))
   if (request.body?.tpId != null) {
     const validateTpId = global.tblTeams.some(
-      (item) => item.tpId === request.body?.tpId
+      (item) => item.tpId == request.body?.tpId
     );
 
     if (validateTpId) {
@@ -249,7 +251,7 @@ const updateTeamService = async (request, fastify) => {
   if(checkTeamId) {
     const validateTpId = global.tblTeams.find(
       (item) =>
-        item.tpId === request.body?.tpId && item.teamId !== request.body.teamId &&
+        item.tpId == request.body?.tpId && item.teamId != request.body.teamId &&
         item.tpId !== null
     );
   
