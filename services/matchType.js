@@ -72,6 +72,15 @@ const cloneMatchTypeService = async (request, fastify) => {
     throw new Error("MatchType already exist");
   }
 
+  if (request.body?.entityEnum) {
+    const validateTpId = global.tblMatchTypes.find(item =>
+      item.entityEnum === request.body?.entityEnum
+    );
+    if (validateTpId) {
+      throw new Error("Entity enum already existed");
+    }
+  }
+
   const data = await insertMatchTypeQuery(
     {
       ...checkId,
