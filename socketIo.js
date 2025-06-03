@@ -396,26 +396,19 @@ const connection = (socket , fastify) => {
   });
   
   socket.on("comUpdate", (data) => {
-    const {ballStatus , eventRefId , commentaryId } = data;
+    const {ballStatus , eventRefId , commentaryId
+     } = data;
     if(ballStatus?.toLowerCase() === "ballstart"){
       const clientInRoom = global.socketIo.sockets.adapter.rooms.get(`score-${commentaryId}`);
       if(clientInRoom?.size){
-        global.socketIo.to(`score-${commentaryId}`).emit("updateBallStatus", {
-          commentaryId : commentaryId,
-          eventRefId : eventRefId,
-          ballStatus : "ballstart"
-        });
+        global.socketIo.to(`score-${commentaryId}`).emit("updateBallStatus", data);
       }
     }
     if(ballStatus?.toLowerCase() === "scoring"){
       //emit the other socket to update the ball status
       const clientInRoom = global.socketIo.sockets.adapter.rooms.get(`score-${commentaryId}`);
       if(clientInRoom?.size){
-        global.socketIo.to(`score-${commentaryId}`).emit("updateBallStatus", {
-          commentaryId : commentaryId,
-          eventRefId : eventRefId,
-          ballStatus : "scoring"
-        });
+        global.socketIo.to(`score-${commentaryId}`).emit("updateBallStatus", data);
       }
     }
   })

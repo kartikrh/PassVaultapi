@@ -3470,9 +3470,6 @@ const Commentary = {
         type: "object",
         properties: {
           commentaryId : {type : "integer"},
-          commentaryPlayers: { type: "array", items: { type: "object" } },
-          commentaryDetails: { type: "object" },
-          commentaryTeams: { type: "array", items: { type: "object" } },
           commentaryOvers: { type : "object" },
           commentaryBallByBall: { type: "object" },
           // commentaryWickets: { type: "array", items: { type: "object" } },
@@ -3480,7 +3477,7 @@ const Commentary = {
           isCallPredict : {type : "boolean"}
         },
         required: [
-          "commentaryId" ,"commentaryDetails", "commentaryPlayers","commentaryOvers","commentaryBallByBall", "isCallPredict"
+          "commentaryId" ,"commentaryOvers","commentaryBallByBall", "isCallPredict"
         ],
       },
     }

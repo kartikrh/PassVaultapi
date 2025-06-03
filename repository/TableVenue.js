@@ -62,7 +62,7 @@ const insertVenueQuery = async (data, fastify, request) => {
             {
                 type: fastify.db.QueryTypes.SELECT,
                 bind: [
-                    data.countryId,
+                    data.countryId || null,
                     data.city || null,
                     data.name || null,
                     data.tpId || null,
