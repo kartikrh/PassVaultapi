@@ -396,14 +396,20 @@ const connection = (socket , fastify) => {
   });
   
   socket.on("comUpdate", (data) => {
-    const {ballStatus , eventRefId , commentaryId } = data;
+    const {ballStatus , eventRefId , commentaryId , score = null, wicket = null,
+      teamId = null, over = null
+     } = data;
     if(ballStatus?.toLowerCase() === "ballstart"){
       const clientInRoom = global.socketIo.sockets.adapter.rooms.get(`score-${commentaryId}`);
       if(clientInRoom?.size){
         global.socketIo.to(`score-${commentaryId}`).emit("updateBallStatus", {
           commentaryId : commentaryId,
           eventRefId : eventRefId,
-          ballStatus : "ballstart"
+          ballStatus : "ballstart",
+          score : score,
+          teamId: teamId,
+          over : over,
+          wicket : wicket
         });
       }
     }
@@ -414,7 +420,11 @@ const connection = (socket , fastify) => {
         global.socketIo.to(`score-${commentaryId}`).emit("updateBallStatus", {
           commentaryId : commentaryId,
           eventRefId : eventRefId,
-          ballStatus : "scoring"
+          ballStatus : "scoring",
+          score : score,
+          teamId: teamId,
+          over : over,
+          wicket : wicket
         });
       }
     }
