@@ -1105,7 +1105,28 @@ const comCardType = {
   "Clubs" : 3,
   "Spades" : 4
 }
-
+const EntityEnums = {
+    ODI: 1,
+    TEST: 2,
+    T20I: 3,
+    LimitedOverDomesticMatch: 4,
+    FirstClass: 5,
+    T20: 6, //Domestic
+    WomenODI: 7,
+    WomenT20: 8,
+    YouthODI: 9,
+    YouthT20: 10,
+    Other: 11,
+    OtherListA: 12,
+    Other1stClass: 13,
+    OtherT20: 14,
+    YouthTest: 15,
+    WomanTest: 16,
+    T10: 17,
+    T100: 18,
+    WomenT100: 19,
+    TB10: 20
+}
 module.exports = {
   ERROR_CODES,
   error,
@@ -1186,5 +1207,6 @@ module.exports = {
   virtualSuccess,
   virtualError,
   callEntitySportAPI,
-  comCardType
+  comCardType,
+  EntityEnums,
 };

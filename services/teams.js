@@ -120,6 +120,15 @@ const createTeamService = async (request, fastify) => {
     throw new Error("TeamName already exist");
   }
 
+  const validateTpId = global.tblTeams.find(
+    (item) =>
+      item.tpId === request.body?.tpId && item.tpId !== null
+  );
+
+  if (validateTpId) {
+    throw new Error("TpId already exist");
+  }
+
   let imgName, projectName;
   projectName = global.tblConfigs.find(
     (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
@@ -236,6 +245,17 @@ const updateTeamService = async (request, fastify) => {
   if (!checkTeamId) {
     throw new Error("TeamId is not valid");
   }
+  if(checkTeamId) {
+    const validateTpId = global.tblTeams.find(
+      (item) =>
+        item.tpId === request.body?.tpId && item.teamId !== request.body.teamId &&
+        item.tpId !== null
+    );
+  
+    if (validateTpId) {
+      throw new Error("TpId already exist");
+    }
+  }
 
   const _getEventType = global.tblEventTypes.find(
     (item) => item.eventTypeId === request.body.eventTypeId
@@ -258,7 +278,7 @@ const updateTeamService = async (request, fastify) => {
     backgroundColor: request.body.backgroundColor || checkTeamId.backgroundColor,
     imagePath: checkTeamId.imagePath,
     jerseyPath: checkTeamId.jerseyPath,
-    tpId: request.body.tpId || checkTeamId.tpId,
+    tpId: 'tpId' in request.body ? request.body.tpId : validateId.tpId,
   };
 
   const validateTeamName = global.tblTeams.find(
