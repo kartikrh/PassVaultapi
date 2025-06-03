@@ -135,7 +135,7 @@ const createCompititionService = async (request, fastify) => {
 
   if (request.body.tpId !== undefined || request.body.tpId !== null) {
     const validate = global.tblCompetitions.find(
-      (item) => item.tpId === request.body?.tpId && item.tpId !== null
+      (item) => item.tpId == request.body?.tpId && item.tpId !== null
     );
     if (validate) {
       throw new Error('TpId already exist');
