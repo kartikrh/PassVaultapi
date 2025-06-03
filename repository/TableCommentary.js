@@ -4745,7 +4745,7 @@ const getAllCompletedCommentaryQuery = async (request, fastify) => {
           COALESCE(tc."wrRmk", '') AS "rmk",
           COALESCE(tc."wrWinRmk", '') AS "winRmk",
           COALESCE(tc."wrTossRmk", '') AS "tossRmk",
-          COALESCE(tc."wrCardType", '') AS "cardType",
+          COALESCE(tc."wrCardType", 0) AS "cardType",
           COALESCE(CAST(tct1."wrCrr" AS FLOAT), 0) AS "te1crr",
           COALESCE(CAST(tct2."wrCrr" AS FLOAT), 0) AS "te2crr",
           COALESCE(CAST(tct1."wrRrr" AS FLOAT), 0) AS "te1rrr",

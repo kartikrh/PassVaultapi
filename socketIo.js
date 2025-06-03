@@ -396,36 +396,19 @@ const connection = (socket , fastify) => {
   });
   
   socket.on("comUpdate", (data) => {
-    const {ballStatus , eventRefId , commentaryId , score = null, wicket = null,
-      teamId = null, over = null
+    const {ballStatus , eventRefId , commentaryId
      } = data;
     if(ballStatus?.toLowerCase() === "ballstart"){
       const clientInRoom = global.socketIo.sockets.adapter.rooms.get(`score-${commentaryId}`);
       if(clientInRoom?.size){
-        global.socketIo.to(`score-${commentaryId}`).emit("updateBallStatus", {
-          commentaryId : commentaryId,
-          eventRefId : eventRefId,
-          ballStatus : "ballstart",
-          score : score,
-          teamId: teamId,
-          over : over,
-          wicket : wicket
-        });
+        global.socketIo.to(`score-${commentaryId}`).emit("updateBallStatus", data);
       }
     }
     if(ballStatus?.toLowerCase() === "scoring"){
       //emit the other socket to update the ball status
       const clientInRoom = global.socketIo.sockets.adapter.rooms.get(`score-${commentaryId}`);
       if(clientInRoom?.size){
-        global.socketIo.to(`score-${commentaryId}`).emit("updateBallStatus", {
-          commentaryId : commentaryId,
-          eventRefId : eventRefId,
-          ballStatus : "scoring",
-          score : score,
-          teamId: teamId,
-          over : over,
-          wicket : wicket
-        });
+        global.socketIo.to(`score-${commentaryId}`).emit("updateBallStatus", data);
       }
     }
   })
