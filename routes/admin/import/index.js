@@ -1,11 +1,11 @@
 const { authorize } = require("../../../controller/middleware");
 const {
-    importMatch
+    importMatch,
 } = require("../../../controller/users/admin/importMatch");
 
 
 module.exports = async function (fastify, opts) {
-    fastify.post("/save", {
+    fastify.post("/commentary", {
         preHandler: [(request, reply) => authorize(request, reply, fastify)],
         handler: (request, reply) => importMatch(request, reply, fastify)
     });
