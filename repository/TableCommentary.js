@@ -68,6 +68,7 @@ const getAllCommentaryQuery = async (fastify) => {
     tc."wrLawnStriping" as "lawnStriping",
     tc."wrPitchAge" as "pitchAge",
     tc."wrIsVirtual" as "isVirtual",
+    tc."wrTestDayCount" as "testDayCount",
     tc."wrOnfieldUmpires" as "onfieldUmpires",
     tc."wrThirdUmpire" as "thirdUmpire",
     tc."wrMatchReferee" as "matchReferee",
@@ -156,6 +157,7 @@ const getCommentariesDataQuery = async (fastify) => {
     tc."wrLawnStriping" as "lawnStriping",
     tc."wrPitchAge" as "pitchAge",
     tc."wrIsVirtual" as "isVirtual",
+    tc."wrTestDayCount" as "testDayCount",
     tc."wrOnfieldUmpires" as "onfieldUmpires",
     tc."wrThirdUmpire" as "thirdUmpire",
     tc."wrMatchReferee" as "matchReferee",
@@ -186,7 +188,7 @@ const insertCommentaryQuery = async (request, fastify) => {
         "wrEventDate","wrEventName","wrEventRefId","wrTeam1Id","wrTeam2Id","wrLocation","wrWeather","wrPitchCracks","wrDisplayStatus","wrTarget","wrMarketID","wrTpId","isSignalROn","isMatchTypeUpdated" , "wrCreatedBy" , "wrCreatedDate","wrCommentaryStatus","wrCurrentInnings", "wrSystemPlayerCount","wrIsPredictMarket",
         "wrDelay", "wrIsActive", "wrIsClientShow","wrIsTeamPredictionOn", "wrHistoryMatchTypeId", "wrIsCountInPoint","wrIsTest", "wrEventNo",
         "wrDifficulty", "wrPitchHardness", "wrPitchWareSpeed", "wrPitchType", "wrLawnStriping", "wrPitchAge", "wrIsVirtual",
-        "wrOnfieldUmpires", "wrThirdUmpire", "wrMatchReferee", "wrSession"
+        "wrOnfieldUmpires", "wrThirdUmpire", "wrMatchReferee", "wrSession", "wrTestDayCount"
         ) values (
           $1,
           $2,
@@ -217,7 +219,8 @@ const insertCommentaryQuery = async (request, fastify) => {
           $37,
           $38,
           $39,
-          $40
+          $40,
+          $41
         ) returning *         
       )
 
@@ -285,7 +288,8 @@ const insertCommentaryQuery = async (request, fastify) => {
     tc."wrOnfieldUmpires" as "onfieldUmpires",
     tc."wrThirdUmpire" as "thirdUmpire",
     tc."wrMatchReferee" as "matchReferee",
-    tc."wrSession" as "session"
+    tc."wrSession" as "session",
+    tc."wrTestDayCount" as "testDayCount"
     from "insert_data" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"  
@@ -336,6 +340,7 @@ const insertCommentaryQuery = async (request, fastify) => {
           data.thirdUmpire || null,
           data.matchReferee || null,
           data.session || null,
+          data.testDayCount || null,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -887,6 +892,7 @@ const getCommentaryByIdQuery = async (request, fastify) => {
       tc."wrLawnStriping" as "lawnStriping",
       tc."wrPitchAge" as "pitchAge",
       tc."wrIsVirtual" as "isVirtual",
+      tc."wrTestDayCount" as "testDayCount",
       tc."wrOnfieldUmpires" as "onfieldUmpires",
       tc."wrThirdUmpire" as "thirdUmpire",
       tc."wrMatchReferee" as "matchReferee",
@@ -4471,6 +4477,7 @@ const getCommentariesResultQuery = async (request, fastify) => {
       tc."wrLawnStriping" as "lawnStriping",
       tc."wrPitchAge" as "pitchAge",
       tc."wrIsVirtual" as "isVirtual",
+      tc."wrTestDayCount" as "testDayCount",
       tc."wrOnfieldUmpires" as "onfieldUmpires",
       tc."wrThirdUmpire" as "thirdUmpire",
       tc."wrMatchReferee" as "matchReferee",
@@ -4599,6 +4606,7 @@ const getAllCommentaryHistoryQuery = async (whereCondition, fastify, request) =>
             tc."wrLawnStriping" as "lawnStriping",
             tc."wrPitchAge" as "pitchAge",
             tc."wrIsVirtual" as "isVirtual",
+            tc."wrTestDayCount" as "testDayCount",
             tc."wrOnfieldUmpires" as "onfieldUmpires",
             tc."wrThirdUmpire" as "thirdUmpire",
             tc."wrMatchReferee" as "matchReferee",
@@ -4791,6 +4799,7 @@ const getAllCompletedCommentaryQuery = async (request, fastify) => {
           tc."wrIsActive" AS "isActive",
           tet."wrEventTypeId" AS "etyId",
           tc."wrIsVirtual" as "isVirtual",
+          tc."wrTestDayCount" as "testDayCount",
           tc."wrOnfieldUmpires" as "onfieldUmpires",
           tc."wrThirdUmpire" as "thirdUmpire",
           tc."wrMatchReferee" as "matchReferee",
@@ -4897,6 +4906,7 @@ const getCommentariesDataByDifferentIdsQuery = async (whereCondition, request, f
           tc."wrLawnStriping" as "lawnStriping",
           tc."wrPitchAge" as "pitchAge",
           tc."wrIsVirtual" as "isVirtual",
+          tc."wrTestDayCount" as "testDayCount",
           tc."wrOnfieldUmpires" as "onfieldUmpires",
           tc."wrThirdUmpire" as "thirdUmpire",
           tc."wrMatchReferee" as "matchReferee",
@@ -4990,6 +5000,7 @@ const getCommentariesDataQueryV1 = async (fastify) => {
         tc."wrLawnStriping" as "lawnStriping",
         tc."wrPitchAge" as "pitchAge",
         tc."wrIsVirtual" as "isVirtual",
+        tc."wrTestDayCount" as "testDayCount",
         tc."wrOnfieldUmpires" as "onfieldUmpires",
         tc."wrThirdUmpire" as "thirdUmpire",
         tc."wrMatchReferee" as "matchReferee",
@@ -6811,6 +6822,191 @@ const addCompTempQuery = async (data,request,fastify)=>{
     throw new Error(err.message);
   }
 }
+const insertCommentaryWithImportQuery = async (data, request, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `
+      with insert_data as(
+        insert into "tblCommentaries" ("wrEventTypeId","wrMatchTypeId","wrCompetitionId","wrEventId",
+        "wrEventDate","wrEventName","wrEventRefId","wrTeam1Id","wrTeam2Id","wrLocation","wrWeather","wrPitchCracks","wrDisplayStatus","wrTarget","wrMarketID","wrTpId","isSignalROn","isMatchTypeUpdated" , "wrCreatedBy" , "wrCreatedDate", "wrCurrentInnings", "wrSystemPlayerCount","wrIsPredictMarket",
+        "wrDelay", "wrIsActive", "wrIsClientShow","wrIsTeamPredictionOn", "wrHistoryMatchTypeId", "wrIsCountInPoint","wrIsTest", "wrEventNo",
+        "wrDifficulty", "wrPitchHardness", "wrPitchWareSpeed", "wrPitchType", "wrLawnStriping", "wrPitchAge", "wrIsVirtual",
+        "wrOnfieldUmpires", "wrThirdUmpire", "wrMatchReferee", "wrSession", "wrTestDayCount", "wrTossWonBy",
+        "wrChoseTo", "wrCommentaryStatus"
+        ) values (
+          $1,
+          $2,
+          $3,
+          $4,
+          $5,$6,$7,
+          $8,
+          $9,
+          $10,$11,$12,$13,$14,$15,$16,$17,$18,$19,now(),
+          1,
+          $20,
+          $21,
+          $22,
+          $23,
+          $24,
+          $25,
+          $26,
+          $27,
+          $28,
+          $29,
+          $30,
+          $31,
+          $32,
+          $33,
+          $34,
+          $35,
+          $36,
+          $37,
+          $38,
+          $39,
+          $40,
+          $41,
+          $42,
+          $43,
+          $44
+        ) returning *         
+      )
+
+      select 
+    "wrCommentaryId" as "commentaryId",
+    tc."wrMatchTypeId" as "matchTypeId",
+    mt."wrMatchType" AS "matchType",
+    tc."wrEventTypeId" as "eventTypeId",
+    tc."wrTeam1Id" as "team1Id",
+    tc."wrTeam2Id" as "team2Id",
+    tt1."wrTeamName" as "team1Name",
+    tt2."wrTeamName" as "team2Name",
+    tc."wrCompetitionId" as "competitionId",
+    co."wrCompetition" as "competition",
+    tc."wrEventId" as "eventId",
+    "wrEventDate" as "eventDate",
+    "wrEventName" as "eventName",
+    "wrEventRefId" as "eventRefId",
+    "wrLocation" as "location",
+    "wrWeather" as "weather",
+    "wrPitchCracks" as "pitchCracks",
+    tc."wrHomeSideTeam" as "homeSideTeam",
+    tc."wrTossWonBy" as "tossWonBy",
+    "wrChoseTo" as "choseTo",
+    tc."wrWinnerId" as "winnerId",
+    "wrWinnerName" as "winnerName",
+    "wrIsClientShow" as "isClientShow",
+    "wrDisplayStatus" as "displayStatus",
+    "wrRmk" as "rmk",
+    "wrWinRmk" as "winRmk",
+    "wrCardType" as "cardType",
+    "wrTossRmk" as "tossRmk",
+    "wrCommentaryUserId" as "commentaryUserId",
+    "wrCommentaryStatus" as "commentaryStatus",
+    "wrUpdateTime" as "updateTime",
+    "wrIsMatchDraw" as "isMatchDraw",
+    "wrTarget" as "target",
+    "wrMarketID" as "marketId",
+    tc."wrTpId" as "tpId",
+    "isSignalROn" as "isSignalROn",
+    "isMatchTypeUpdated" as "isMatchTypeUpdated",
+    "wrCurrentInnings" as "currentInnings",
+    "wrSystemPlayerCount" as "systemPlayerCount",
+    "wrIsPlayersShow" as "isPlayersShow",
+    "wrIsPredictMarket" as "isPredictMarket",
+    tc."wrIsActive"  as "isActive",
+    tc."wrIsTeamPredictionOn" as "isTeamPredictionOn",
+    tu."WrUserName" as "createdBy",
+    "wrLineRatio" as "lineRatio",
+    "wrDelay" as "delay",
+    tc."wrHistoryMatchTypeId" as "historyMatchTypeId",
+    tc."wrIsCountInPoint" as "isCountInPoint",
+    "wrShotType" as "shotType",
+    "wrIsWheelShow" as "isWheelShow",
+    "wrIsTest" as "isTest",
+    tc."wrEventNo" as "eventNo",
+    tc."wrIsEventStart" as "isEventStart",
+    tc."wrDifficulty" as "difficulty",
+    tc."wrPitchHardness" as "pitchHardness",
+    tc."wrPitchWareSpeed" as "pitchWareSpeed",
+    tc."wrPitchType" as "pitchType",
+    tc."wrLawnStriping" as "lawnStriping",
+    tc."wrPitchAge" as "pitchAge",
+    tc."wrIsVirtual" as "isVirtual",
+    tc."wrOnfieldUmpires" as "onfieldUmpires",
+    tc."wrThirdUmpire" as "thirdUmpire",
+    tc."wrMatchReferee" as "matchReferee",
+    tc."wrSession" as "session",
+    tc."wrTestDayCount" as "testDayCount"
+    from "insert_data" tc
+    left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
+    left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"  
+    LEFT JOIN "tblMatchTypes" mt ON tc."wrMatchTypeId" = mt."wrMatchTypeId"
+    LEFT JOIN "tblCompetitions" co ON tc."wrCompetitionId" = co."wrCompetitionId"
+    LEFT JOIN "tblUsers" tu ON tc."wrCreatedBy" = tu."WrUserId"
+      `,
+      {
+        
+        bind: [
+          data.eventTypeId || null,
+          data.matchTypeId || null,
+          data.competitionId || null,
+          data.eventId || null,
+          data.eventDate ? new Date(data.eventDate) : null,
+          data.eventName || null,
+          data.eventRefId ? data.eventRefId.trim() : null,
+          data.team1Id || null,
+          data.team2Id || null,
+          data.location || null,
+          data.weather || null,
+          data.pitchCracks || null,
+          data.displayStatus || null,
+          null,
+          data.marketId || null,
+          data.tpId || null,
+          data.isSignalROn || false,
+          data.isMatchTypeUpdated || false,
+          request.userTokenInfo.WrUserId,
+          data.systemPlayerCount || null,
+          data.isPredictMarket || false,
+          data.delay || 0,
+          data.isActive,
+          data.isClientShow,
+          true,
+          data.matchTypeId || null,
+          data.isCountInPoint,
+          data.hasOwnProperty("isTest") ? data.isTest : false,
+          data.eventNo || null,
+          data.difficulty || null,
+          data.pitchHardness || null,
+          data.pitchWareSpeed || null,
+          data.pitchType || null,
+          data.lawnStriping || null,
+          data.pitchAge || null,
+          data.isVirtual || false,
+          data.onfieldUmpires || null,
+          data.thirdUmpire || null,
+          data.matchReferee || null,
+          data.session || null,
+          data.testDayCount || null,
+          data.tossWonBy || null,
+          data.choseTo || null,
+          data.commentaryStatus || 1,
+        ],
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+
+    return result[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/insertCommentaryWithImportQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -6934,5 +7130,6 @@ module.exports = {
   updateVirtualBallByBallQuery,
   updateVirtualOverQuery,
   createVirtualWicketQuery,
-  addCompTempQuery
+  addCompTempQuery,
+  insertCommentaryWithImportQuery,
 };

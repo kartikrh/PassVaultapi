@@ -161,6 +161,14 @@ const insertPlayerService = async (request, fastify) => {
   if (validatePlayerName) {
     throw new Error("Player Name already exist");
   }
+  const validateTpId = global.tblPlayers.find(
+    (item) =>
+      item.tpId === request.body?.tpId && item.tpId !== null
+  );
+
+  if (validateTpId) {
+    throw new Error("TpId already exist");
+  }
   request.body.playerName = request.body.playerName.trim();
   if (request.body.image && request.body.image.length) {
     // generate image name
@@ -258,7 +266,17 @@ const updatePlayerService = async (request, fastify) => {
   if (validatePlayerName) {
     throw new Error("Player Name already exist");
   }
-
+  if(checkPlayerId) {
+    const validateTpId = global.tblPlayers.find(
+      (item) =>
+        item.tpId === request.body?.tpId && item.playerId !== request.body.playerId &&
+        item.tpId !== null
+    );
+  
+    if (validateTpId) {
+      throw new Error("TpId already exist");
+    }
+  }
   const body = {
     country: request.body.country || checkPlayerId.country,
     playerName: request.body.playerName.trim() || checkPlayerId.playerName,
@@ -284,7 +302,7 @@ const updatePlayerService = async (request, fastify) => {
     bowlingStyle: checkPlayerId.bowlingTypeId,
     isSystemPlayer: request.body.hasOwnProperty("isSystemPlayer") ? request.body.isSystemPlayer : checkPlayerId.isSystemPlayer,
     imagePath : checkPlayerId.imagePath,
-    tpId: request.body.tpId || checkPlayerId.tpId,
+    tpId: 'tpId' in request.body ? request.body.tpId : validateId.tpId,
   };
 
   if ("isActive" in request.body) {
