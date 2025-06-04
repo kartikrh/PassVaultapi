@@ -7576,8 +7576,8 @@ const getMatchListByStatus = async (body, request, fastify) => {
     }
 
     if (commentaryTeamsTwo) {
-      t2sn = commentaryTeamsTwo.shortName;
-      t2n = commentaryTeamsTwo.teamName;
+      t2sn = commentaryTeamsTwo?.shortName;
+      t2n = commentaryTeamsTwo?.teamName;
       const wicket1 =
         commentaryTeamsTwo.teamWicket === null
           ? 0
@@ -7670,8 +7670,8 @@ const getMatchListByStatus = async (body, request, fastify) => {
       utc: item.eventDate,
       twonby: TossTeamName?.teamName || null,
       choseto: toss || null,
-      te1n: commentaryTeamsOne.teamName || "",
-      te2n: commentaryTeamsTwo.teamName || "",
+      te1n: commentaryTeamsOne?.teamName || "",
+      te2n: commentaryTeamsTwo?.teamName || "",
       s1n: commentaryTeamsOne.shortName || "",
       s2n: commentaryTeamsTwo.shortName || "",
       te1i: team1.image || "",
