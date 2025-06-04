@@ -798,7 +798,9 @@ const marketListByCIdServiceV1 = async (request, fastify) => {
         teamId: item.teamId,
         teamName: item.teamName,
         teamStatus : item.teamStatus,
-        shortName : item.shortName
+        shortName : item.shortName,
+        teamMaxOver : item.teamMaxOver,
+        teamOver :item.teamOver
       };
     });
   // 
@@ -809,6 +811,8 @@ const marketListByCIdServiceV1 = async (request, fastify) => {
       playerId: item.playerId,
       comPlayerId: item.commentaryPlayerId,
       playerName: item.playerName,
+      batBall : item.batBall,
+      batRun: item.batRun
     }
   });
 
