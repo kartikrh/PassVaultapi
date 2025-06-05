@@ -6187,6 +6187,11 @@ const commentaryDetailsByEventIdService = async (
     t2id: result.team2Id,
     srtup: result.sortUpdate ?? "",
     isvirt: result.isVirtual,
+    newBallTime: result?.newBallTime,
+    ballDelay: result?.ballDelay,
+    overDelay: result?.overDelay,
+    inningDelay: result?.inningDelay,
+    tossDelay: result?.tossDelay,
   };
   let eid;
   let til;
@@ -6385,6 +6390,11 @@ const commentaryDetailsByEventIdService = async (
     resultArr.batid = null;
     resultArr.ballid = null;
     resultArr.tsi = [];
+    resultArr.newBallTime = result?.newBallTime;
+    resultArr.ballDelay = result?.ballDelay;
+    resultArr.overDelay = result?.overDelay;
+    resultArr.inningDelay = result?.inningDelay;
+    resultArr.tossDelay = result?.tossDelay;
   }
   if (getstatus == 2) {
     const _tosswonby = result.tossWonBy;
@@ -6454,6 +6464,11 @@ const commentaryDetailsByEventIdService = async (
     resultArr.t2bg = t2bg;
     resultArr.utc = utc;
     resultArr.tsi = [];
+    resultArr.newBallTime = result?.newBallTime;
+    resultArr.ballDelay = result?.ballDelay;
+    resultArr.overDelay = result?.overDelay;
+    resultArr.inningDelay = result?.inningDelay;
+    resultArr.tossDelay = result?.tossDelay;
   }
   if (getstatus >= 3) {
     const _tosswonby = result.tossWonBy;
@@ -6574,6 +6589,11 @@ const commentaryDetailsByEventIdService = async (
     resultArr.batid = batid;
     resultArr.ballid = ballid;
     resultArr.tsi = [];
+    resultArr.newBallTime = result?.newBallTime;
+    resultArr.ballDelay = result?.ballDelay;
+    resultArr.overDelay = result?.overDelay;
+    resultArr.inningDelay = result?.inningDelay;
+    resultArr.tossDelay = result?.tossDelay;
 
     // get team score
     if (currentInning > 1) {
@@ -6772,11 +6792,6 @@ const commentaryDetailsByEventIdService = async (
       cctime: result.commentaryCloseTime,
       res: result.result,
       isvirtual: result.isVirtual,
-      newBallTime: result?.newBallTime,
-      ballDelay: result?.ballDelay,
-      overDelay: result?.overDelay,
-      inningDelay: result?.inningDelay,
-      tossDelay: result?.tossDelay,
     },
     cbb,
     cbt,
@@ -15039,7 +15054,7 @@ const commentaryOverStartService = async (request, fastify) => {
         }
       });
     }
-    
+
     commentaryLogger(
       {
         commentaryId: commentaryId,
