@@ -6,6 +6,8 @@ const {
     generateImageName,
     removeImageFromServer,
 } = require("../utilities/Images");
+const { callClientAPI, ServiceType, APIEndpointModuleType } = require("../utilities");
+const { errorLogger } = require("../utilities/logger");
 
  const SuitEnum = {
     1: 'hearts',
@@ -56,6 +58,25 @@ const saveCardTypeService = async (request, fastify) => {
         item.isActive = false;
       }
     });
+
+    callClientAPI(
+       {
+          serviceType : ServiceType.clientAPI,
+          moduleType : APIEndpointModuleType.updateSeoModule,
+          data : {
+            module : 'cardType',
+            type : "add",
+            data : saveData
+          }
+       }, request, fastify)
+      .catch((err) => {
+        errorLogger(
+          fastify,
+          err.message,
+          "services/cardType.js/saveCardTypeService - callClientAPI",
+          request
+        );
+      });
   }
   return saveData;
 };
@@ -103,6 +124,24 @@ const editCardTypeService = async (request, fastify) => {
   if (index !== -1) {
     global.tblCardType[index] = updateData;
   }
+  callClientAPI(
+       {
+          serviceType : ServiceType.clientAPI,
+          moduleType : APIEndpointModuleType.updateSeoModule,
+          data : {
+            module : 'cardType',
+            type : "update",
+            data : modifiedData[0]
+          }
+       }, request, fastify)
+      .catch((err) => {
+        errorLogger(
+          fastify,
+          err.message,
+          "services/cardType.js/editCardTypeService - callClientAPI",
+          request
+        );
+      });
 
   return modifiedData[0];
 };
@@ -147,6 +186,26 @@ const deleteCardTypeService = async (fastify, request) => {
     }
   }
   global.tblCardType = global.tblCardType.filter((item) => !id.includes(item.id));
+  callClientAPI(
+       {
+          serviceType : ServiceType.clientAPI,
+          moduleType : APIEndpointModuleType.updateSeoModule,
+          data : {
+            module : 'cardType',
+            type : "delete",
+            data : {
+              id : id
+            }
+          }
+       }, request, fastify)
+      .catch((err) => {
+        errorLogger(
+          fastify,
+          err.message,
+          "services/cardType.js/deleteCardTypeService - callClientAPI",
+          request
+        );
+      });
 
   return `Card Type(s) data deleted successfully`;
 };
@@ -175,6 +234,24 @@ const activeInactiveCardTypeService = async (fastify, request) => {
     global.tblCardType[index].isActive = isActive;
   }
 
+  callClientAPI(
+       {
+          serviceType : ServiceType.clientAPI,
+          moduleType : APIEndpointModuleType.updateSeoModule,
+          data : {
+            module : 'cardType',
+            type : isActive ? "active" : "inactive",
+            data : global.tblCardType[index]
+          }
+       }, request, fastify)
+      .catch((err) => {
+        errorLogger(
+          fastify,
+          err.message,
+          "services/cardType.js/activeInactiveCardTypeService - callClientAPI",
+          request
+        );
+      });
   return `Card Type data updated successfully`;
 };
 
