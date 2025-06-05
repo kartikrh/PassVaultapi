@@ -6773,6 +6773,10 @@ const commentaryDetailsByEventIdService = async (
       res: result.result,
       isvirtual: result.isVirtual,
       newBallTime: result?.newBallTime,
+      ballDelay: result?.ballDelay,
+      overDelay: result?.overDelay,
+      inningDelay: result?.inningDelay,
+      tossDelay: result?.tossDelay,
     },
     cbb,
     cbt,
@@ -7044,6 +7048,10 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     resultArr.t2bg = t2bg;
     resultArr.utc = utc;
     resultArr.newBallTime = result.newBallTime;
+    resultArr.ballDelay = result.ballDelay;
+    resultArr.overDelay = result.overDelay;
+    resultArr.inningDelay = result.inningDelay;
+    resultArr.tossDelay = result.tossDelay;
   }
   if (getstatus == 2) {
     const _tosswonby = result.tossWonBy;
@@ -7098,6 +7106,11 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     resultArr.t2co = t2co;
     resultArr.t2bg = t2bg;
     resultArr.utc = utc;
+    resultArr.newBallTime = result.newBallTime;
+    resultArr.ballDelay = result.ballDelay;
+    resultArr.overDelay = result.overDelay;
+    resultArr.inningDelay = result.inningDelay;
+    resultArr.tossDelay = result.tossDelay;
   }
   if (getstatus >= 3) {
     const _tosswonby = result.tossWonBy;
@@ -7210,6 +7223,11 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     resultArr.t2co = t2co;
     resultArr.t2bg = t2bg;
     resultArr.utc = utc;
+    resultArr.newBallTime = result.newBallTime;
+    resultArr.ballDelay = result.ballDelay;
+    resultArr.overDelay = result.overDelay;
+    resultArr.inningDelay = result.inningDelay;
+    resultArr.tossDelay = result.tossDelay;
   }
 
   let eventType = await global.tblEventTypes.find(
@@ -7731,6 +7749,10 @@ const getMatchListByStatus = async (body, request, fastify) => {
       nt2jr: team2.jerseyPath || "",
       etyId: eventType?.eventTypeId,
       newBallTime: item.newBallTime,
+      ballDelay: item.ballDelay,
+      overDelay: item.overDelay,
+      inningDelay: item.inningDelay,
+      tossDelay: item.tossDelay,
       // mr: mr
       // bowT : item.bowlingTeam || null,
     };
