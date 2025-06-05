@@ -6772,6 +6772,7 @@ const commentaryDetailsByEventIdService = async (
       cctime: result.commentaryCloseTime,
       res: result.result,
       isvirtual: result.isVirtual,
+      newBallTime: result?.newBallTime,
     },
     cbb,
     cbt,
@@ -7728,6 +7729,7 @@ const getMatchListByStatus = async (body, request, fastify) => {
       nte2i: team2.imagePath || "",
       nt2jr: team2.jerseyPath || "",
       etyId: eventType?.eventTypeId,
+      newBallTime: item.newBallTime,
       // mr: mr
       // bowT : item.bowlingTeam || null,
     };
