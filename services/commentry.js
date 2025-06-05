@@ -7763,11 +7763,11 @@ const getMatchListByStatus = async (body, request, fastify) => {
       nte2i: team2.imagePath || "",
       nt2jr: team2.jerseyPath || "",
       etyId: eventType?.eventTypeId,
-      newBallTime: item.newBallTime,
-      ballDelay: item.ballDelay,
-      overDelay: item.overDelay,
-      inningDelay: item.inningDelay,
-      tossDelay: item.tossDelay,
+      newBallTime: item?.newBallTime || "",
+      ballDelay: item?.ballDelay || 0,
+      overDelay: item?.overDelay || 0,
+      inningDelay: item?.inningDelay || 0,
+      tossDelay: item?.tossDelay || 0,
       // mr: mr
       // bowT : item.bowlingTeam || null,
     };
