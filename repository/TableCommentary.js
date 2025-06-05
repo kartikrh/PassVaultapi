@@ -375,7 +375,7 @@ const insertCommentaryTeams = async (request, fastify) => {
     return await fastify.db.query(
       `
       insert into "tblCommentaryTeams" ("wrCommentaryId" , "wrTeamId","wrTeamCaptain","wrTeamKipper" , "wrShortName" , "wrTeamName","wrCurrentInnings","wrIsBattingComplete"
-      , "wrTeamColor" , "wrBackgroundColor" , "wrTeamMaxOver", "wrDrsCount")
+      , "wrTeamColor" , "wrBackgroundColor" , "wrTeamMaxOver", "wrDrsCount", "wrSubInning")
        values (
         $1,
         $2,
@@ -388,7 +388,8 @@ const insertCommentaryTeams = async (request, fastify) => {
         (select "wrTeamColor" from "tblTeams" where "wrTeamId" = $2),
         (select "wrBackgroundColor" from "tblTeams" where "wrTeamId" = $2),
         $9,
-        $10           
+        $10,
+        $11
       )
       ,(
         $1,
@@ -402,7 +403,8 @@ const insertCommentaryTeams = async (request, fastify) => {
         (select "wrTeamColor" from "tblTeams" where "wrTeamId" = $5),
         (select "wrBackgroundColor" from "tblTeams" where "wrTeamId" = $5),
         $9,
-        $10
+        $10,
+        $11
       )
     `,
       {
@@ -418,6 +420,7 @@ const insertCommentaryTeams = async (request, fastify) => {
           data.currentInnings,
           data.teamMaxOver || null,
           data.drsCount || 0,
+          data.subInning || null,
         ],
       }
     );
@@ -948,7 +951,8 @@ const getCommentaryTeamsQuery = async (data, fastify, request) => {
       "wrTeamCaptain" as "teamCaptain",
       "wrTeamKipper" as "teamKipper",
       "wrTeamMaxOver" as "teamMaxOver",
-      "wrDrsCount" as "drsCount"
+      "wrDrsCount" as "drsCount",
+      "wrSubInning" as "subInning"
       from "tblCommentaryTeams"
       where "wrCommentaryId" = $1 and "wrTeamId" = $2 and "wrIsDelete" = false
       `,
@@ -1219,7 +1223,8 @@ const getAllCommentaryTeamsQuery = async (fastify) => {
         tct."wrTeamPredictionPercentage" as "teamPredictionPercentage",
         tct."wrDrsCount" as "drsCount",
         tct."wrNoOfAttempt" as "drsAttempt",
-        tct."wrNoOfFail" as "drsFail"
+        tct."wrNoOfFail" as "drsFail",
+        tct."wrSubInning" as "subInning"
     FROM "tblCommentaryTeams" AS tct
     WHERE tct."wrCommentaryId" IN (
         SELECT "wrCommentaryId"
@@ -1274,7 +1279,8 @@ const getAllCommentaryTeamsDataQuery = async (whereCondition = null, fastify) =>
   "wrTeamPredictionPercentage" as "teamPredictionPercentage",
   "wrDrsCount" as "drsCount",
   "wrNoOfAttempt" as "drsAttempt",
-  "wrNoOfFail" as "drsFail"
+  "wrNoOfFail" as "drsFail",
+  "wrSubInning" as "subInning"
   from "tblCommentaryTeams" tct 
   ${whereCondition ? `WHERE ${whereCondition}` : ""}
   `,
@@ -5097,7 +5103,8 @@ const getAllCommentaryTeamsDataQueryV1 = async (whereCondition = null, fastify) 
         "wrTeamPredictionPercentage" as "tepredictpercent",
         "wrDrsCount" as "drsCnt",
         "wrNoOfAttempt" as "drsAtmpt",
-        "wrNoOfFail" as "drsFail"
+        "wrNoOfFail" as "drsFail",
+        "wrSubInning" as "subInning"
     from "tblCommentaryTeams" tct 
     ${whereCondition ? `WHERE ${whereCondition}` : ""}`,
     {
