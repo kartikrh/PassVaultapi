@@ -15039,6 +15039,7 @@ const commentaryOverStartService = async (request, fastify) => {
         }
       });
     }
+    
     commentaryLogger(
       {
         commentaryId: commentaryId,
