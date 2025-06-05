@@ -7043,6 +7043,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     resultArr.t2co = t2co;
     resultArr.t2bg = t2bg;
     resultArr.utc = utc;
+    resultArr.newBallTime = result.newBallTime;
   }
   if (getstatus == 2) {
     const _tosswonby = result.tossWonBy;
