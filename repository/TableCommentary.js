@@ -72,7 +72,8 @@ const getAllCommentaryQuery = async (fastify) => {
     tc."wrOnfieldUmpires" as "onfieldUmpires",
     tc."wrThirdUmpire" as "thirdUmpire",
     tc."wrMatchReferee" as "matchReferee",
-    tc."wrSession" as "session"
+    tc."wrSession" as "session",
+    tc."wrNewBallTime" as "newBallTime"
     from "tblCommentaries" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -161,7 +162,8 @@ const getCommentariesDataQuery = async (fastify) => {
     tc."wrOnfieldUmpires" as "onfieldUmpires",
     tc."wrThirdUmpire" as "thirdUmpire",
     tc."wrMatchReferee" as "matchReferee",
-    tc."wrSession" as "session"
+    tc."wrSession" as "session",
+    tc."wrNewBallTime" as "newBallTime"
     from "tblCommentaries" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -896,7 +898,8 @@ const getCommentaryByIdQuery = async (request, fastify) => {
       tc."wrOnfieldUmpires" as "onfieldUmpires",
       tc."wrThirdUmpire" as "thirdUmpire",
       tc."wrMatchReferee" as "matchReferee",
-      tc."wrSession" as "session"
+      tc."wrSession" as "session",
+      tc."wrNewBallTime" as "newBallTime"
       from "tblCommentaries" tc
       left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
       left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -4481,7 +4484,8 @@ const getCommentariesResultQuery = async (request, fastify) => {
       tc."wrOnfieldUmpires" as "onfieldUmpires",
       tc."wrThirdUmpire" as "thirdUmpire",
       tc."wrMatchReferee" as "matchReferee",
-      tc."wrSession" as "session"
+      tc."wrSession" as "session",
+      tc."wrNewBallTime" as "newBallTime"
       FROM "tblCommentaries" tc
       LEFT JOIN "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
       LEFT JOIN "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -4610,7 +4614,8 @@ const getAllCommentaryHistoryQuery = async (whereCondition, fastify, request) =>
             tc."wrOnfieldUmpires" as "onfieldUmpires",
             tc."wrThirdUmpire" as "thirdUmpire",
             tc."wrMatchReferee" as "matchReferee",
-            tc."wrSession" as "session"
+            tc."wrSession" as "session",
+            tc."wrNewBallTime" as "newBallTime"
       FROM "tblCommentaries" tc
       LEFT JOIN "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
       LEFT JOIN "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -4803,7 +4808,8 @@ const getAllCompletedCommentaryQuery = async (request, fastify) => {
           tc."wrOnfieldUmpires" as "onfieldUmpires",
           tc."wrThirdUmpire" as "thirdUmpire",
           tc."wrMatchReferee" as "matchReferee",
-          tc."wrSession" as "session"
+          tc."wrSession" as "session",
+          tc."wrNewBallTime" as "newBallTime"
       FROM "tblCommentaries" tc
       LEFT JOIN "tblTeams" tt1 ON tt1."wrTeamId" = tc."wrTeam1Id" AND tt1."wrIsDeleted" = false
       LEFT JOIN "tblTeams" tt2 ON tt2."wrTeamId" = tc."wrTeam2Id" AND tt2."wrIsDeleted" = false
@@ -4910,7 +4916,8 @@ const getCommentariesDataByDifferentIdsQuery = async (whereCondition, request, f
           tc."wrOnfieldUmpires" as "onfieldUmpires",
           tc."wrThirdUmpire" as "thirdUmpire",
           tc."wrMatchReferee" as "matchReferee",
-          tc."wrSession" as "session"
+          tc."wrSession" as "session",
+          tc."wrNewBallTime" as "newBallTime"
       FROM "tblCommentaries" tc
       LEFT JOIN "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
       LEFT JOIN "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -5004,7 +5011,8 @@ const getCommentariesDataQueryV1 = async (fastify) => {
         tc."wrOnfieldUmpires" as "onfieldUmpires",
         tc."wrThirdUmpire" as "thirdUmpire",
         tc."wrMatchReferee" as "matchReferee",
-        tc."wrSession" as "session"
+        tc."wrSession" as "session",
+        tc."wrNewBallTime" as "newBallTime"
     FROM "tblCommentaries" tc
     LEFT JOIN "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     LEFT JOIN "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
