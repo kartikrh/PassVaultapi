@@ -73,7 +73,6 @@ const getAllCommentaryQuery = async (fastify) => {
     tc."wrThirdUmpire" as "thirdUmpire",
     tc."wrMatchReferee" as "matchReferee",
     tc."wrSession" as "session",
-    tc."wrNewBallTime" as "newBallTime",
     tc."wrBallDelay" as "ballDelay",
     tc."wrOverDelay" as "overDelay",
     tc."wrInningDelay" as "inningDelay",
@@ -167,7 +166,6 @@ const getCommentariesDataQuery = async (fastify) => {
     tc."wrThirdUmpire" as "thirdUmpire",
     tc."wrMatchReferee" as "matchReferee",
     tc."wrSession" as "session",
-    tc."wrNewBallTime" as "newBallTime",
     tc."wrBallDelay" as "ballDelay",
     tc."wrOverDelay" as "overDelay",
     tc."wrInningDelay" as "inningDelay",
@@ -910,7 +908,6 @@ const getCommentaryByIdQuery = async (request, fastify) => {
       tc."wrThirdUmpire" as "thirdUmpire",
       tc."wrMatchReferee" as "matchReferee",
       tc."wrSession" as "session",
-      tc."wrNewBallTime" as "newBallTime",
       tc."wrBallDelay" as "ballDelay",
       tc."wrOverDelay" as "overDelay",
       tc."wrInningDelay" as "inningDelay",
@@ -4503,7 +4500,6 @@ const getCommentariesResultQuery = async (request, fastify) => {
       tc."wrThirdUmpire" as "thirdUmpire",
       tc."wrMatchReferee" as "matchReferee",
       tc."wrSession" as "session",
-      tc."wrNewBallTime" as "newBallTime",
       tc."wrBallDelay" as "ballDelay",
       tc."wrOverDelay" as "overDelay",
       tc."wrInningDelay" as "inningDelay",
@@ -4637,7 +4633,6 @@ const getAllCommentaryHistoryQuery = async (whereCondition, fastify, request) =>
             tc."wrThirdUmpire" as "thirdUmpire",
             tc."wrMatchReferee" as "matchReferee",
             tc."wrSession" as "session",
-            tc."wrNewBallTime" as "newBallTime",
             tc."wrBallDelay" as "ballDelay",
             tc."wrOverDelay" as "overDelay",
             tc."wrInningDelay" as "inningDelay",
@@ -4835,7 +4830,6 @@ const getAllCompletedCommentaryQuery = async (request, fastify) => {
           tc."wrThirdUmpire" as "thirdUmpire",
           tc."wrMatchReferee" as "matchReferee",
           tc."wrSession" as "session",
-          tc."wrNewBallTime" as "newBallTime",
           tc."wrBallDelay" as "ballDelay",
           tc."wrOverDelay" as "overDelay",
           tc."wrInningDelay" as "inningDelay",
@@ -4947,7 +4941,6 @@ const getCommentariesDataByDifferentIdsQuery = async (whereCondition, request, f
           tc."wrThirdUmpire" as "thirdUmpire",
           tc."wrMatchReferee" as "matchReferee",
           tc."wrSession" as "session",
-          tc."wrNewBallTime" as "newBallTime",
           tc."wrBallDelay" as "ballDelay",
           tc."wrOverDelay" as "overDelay",
           tc."wrInningDelay" as "inningDelay",
@@ -5046,7 +5039,6 @@ const getCommentariesDataQueryV1 = async (fastify) => {
         tc."wrThirdUmpire" as "thirdUmpire",
         tc."wrMatchReferee" as "matchReferee",
         tc."wrSession" as "session",
-        tc."wrNewBallTime" as "newBallTime",
         tc."wrBallDelay" as "ballDelay",
         tc."wrOverDelay" as "overDelay",
         tc."wrInningDelay" as "inningDelay",
@@ -5520,7 +5512,9 @@ const insertVirtualEventQuery = async (data, request, fastify) => {
         insert into "tblCommentaries" ("wrEventTypeId","wrMatchTypeId","wrCompetitionId","wrEventId",
         "wrEventDate","wrEventName","wrEventRefId","wrTeam1Id","wrTeam2Id","wrLocation","wrWeather","wrPitchCracks","wrDisplayStatus","wrTarget","wrMarketID","wrTpId","isSignalROn","isMatchTypeUpdated" , "wrCreatedBy" , "wrCreatedDate","wrCommentaryStatus","wrCurrentInnings", "wrSystemPlayerCount","wrIsPredictMarket",
         "wrDelay", "wrIsActive", "wrIsClientShow","wrIsTeamPredictionOn", "wrHistoryMatchTypeId", "wrIsCountInPoint","wrIsTest", "wrEventNo",
-        "wrDifficulty", "wrPitchHardness", "wrPitchWareSpeed", "wrIsVirtual", "wrCardType") values (
+        "wrDifficulty", "wrPitchHardness", "wrPitchWareSpeed", "wrIsVirtual", "wrCardType",
+        "wrBallDelay", "wrOverDelay", "wrInningDelay", "wrTossDelay"
+        ) values (
           $1,
           $2,
           $3,
@@ -5544,7 +5538,11 @@ const insertVirtualEventQuery = async (data, request, fastify) => {
           $31,
           $32,
           $33,
-          $34
+          $34,
+          $35,
+          $36,
+          $37,
+          $38
         ) returning *         
       )
 
@@ -5603,7 +5601,11 @@ const insertVirtualEventQuery = async (data, request, fastify) => {
     tc."wrPitchHardness" as "pitchHardness",
     tc."wrPitchWareSpeed" as "pitchWareSpeed",
     tc."wrIsVirtual" as "isVirtual",
-    tc."wrCardType" as "cardType"
+    tc."wrCardType" as "cardType",
+    tc."wrBallDelay" as "ballDelay",
+    tc."wrOverDelay" as "overDelay",
+    tc."wrInningDelay" as "inningDelay",
+    tc."wrTossDelay" as "tossDelay"
     from "insert_data" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"  
@@ -5648,7 +5650,11 @@ const insertVirtualEventQuery = async (data, request, fastify) => {
           data.pitchHardness || null,
           data.pitchWareSpeed || null,
           data.isVirtual || false,
-          data.cardType || null
+          data.cardType || null,
+          data.ballDelay || null,
+          data.overDelay || null,
+          data.inningDelay || null,
+          data.tossDelay || null,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -5714,7 +5720,7 @@ const insertVirtualCommentaryTeams = async (data, request, fastify) => {
       INSERT INTO "tblCommentaryTeams" (
         "wrCommentaryId", "wrTeamId", "wrTeamCaptain", "wrTeamKipper", 
         "wrShortName", "wrTeamName", "wrCurrentInnings", "wrIsBattingComplete",
-        "wrTeamColor", "wrBackgroundColor", "wrTeamMaxOver", "wrDrsCount"
+        "wrTeamColor", "wrBackgroundColor", "wrTeamMaxOver", "wrDrsCount", "wrSubInning"
       )
       VALUES 
         (
@@ -5724,7 +5730,7 @@ const insertVirtualCommentaryTeams = async (data, request, fastify) => {
           $8, false,
           (SELECT "wrTeamColor" FROM "tblTeams" WHERE "wrTeamId" = $2),
           (SELECT "wrBackgroundColor" FROM "tblTeams" WHERE "wrTeamId" = $2),
-          $9, $10
+          $9, $10, $11
         ),
         (
           $1, $5, $6, $7,
@@ -5733,7 +5739,7 @@ const insertVirtualCommentaryTeams = async (data, request, fastify) => {
           $8, false,
           (SELECT "wrTeamColor" FROM "tblTeams" WHERE "wrTeamId" = $5),
           (SELECT "wrBackgroundColor" FROM "tblTeams" WHERE "wrTeamId" = $5),
-          $9, $10
+          $9, $10, $11
         )
       RETURNING 
         "wrCommentaryTeamId" as "commentaryTeamId",
@@ -5769,7 +5775,8 @@ const insertVirtualCommentaryTeams = async (data, request, fastify) => {
         "wrTeamPredictionPercentage" as "teamPredictionPercentage",
         "wrDrsCount" as "drsCount",
         "wrNoOfAttempt" as "drsAttempt",
-        "wrNoOfFail" as "drsFail"
+        "wrNoOfFail" as "drsFail",
+        "wrSubInning" as "subInning"
       `,
       {
         type: fastify.db.QueryTypes.INSERT,
@@ -5784,6 +5791,7 @@ const insertVirtualCommentaryTeams = async (data, request, fastify) => {
           1,
           data.teamMaxOver || null,
           data.drsCount || 0,
+          data.subInning || null,
         ],
       }
     );

@@ -216,7 +216,8 @@ const createVirtualEventService = async (request, fastify) => {
       commentaryId: commentaryData.commentaryId,
       team1Id: request.body.team1Id,
       team2Id: request.body.team2Id,
-      teamMaxOver : matchType.maxOversInFirstInings 
+      teamMaxOver : matchType.maxOversInFirstInings,
+      subInning: request.body?.subInning ?? null
     };
     const teamsData = await insertVirtualCommentaryTeams(
       teamData,

@@ -1,10 +1,11 @@
 const {
     insertCommentaryWithImportQuery
 } = require("../repository/TableCommentary");
-const { insertVenueQuery } = require("../repository/TableVenue");
+const { insertVenueQuery, updateVenueQuery } = require("../repository/TableVenue");
 const { insertTeamQuery, updateTeamQuery } = require("../repository/TableTeams");
 const { insertWeatherQuery } = require("../repository/TableWeather");
 const { insertPitchConditionQuery } = require("../repository/TablePitchCondition");
+const { insertCompetitionWithImportQuery, updateCompititionQuery } = require("../repository/TableCompitition")
 const { default: axios } = require("axios");
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
@@ -17,7 +18,7 @@ const processTeam = async (teamData, fastify, request) => {
     const existingTpId = global.tblTeams.find(item =>
         item.tpId === teamData.team_id
     );
-    if(existingTpId) return existingTpId.teamId;
+    if (existingTpId) return existingTpId.teamId;
 
     const existingTeam = global.tblTeams.find(item =>
         item.teamName.toLowerCase().trim() === teamData.name.toLowerCase().trim()
@@ -125,9 +126,9 @@ const importMatchService = async (request, fastify) => {
     } = request.body;
 
     // status 2 means completed
-    // if (status === 2) {
-    //     throw new Error("This commentary already completed");
-    // }
+    if (status === 2) {
+        throw new Error("This commentary already completed");
+    }
 
     const matchId = match_id;
 
@@ -180,26 +181,40 @@ const importMatchService = async (request, fastify) => {
         global.tblCommentaries.push(saveCommentary);
 
         // save venue data
-        const venueExists = global.tblVenues.find(item =>
-            item.name.toLowerCase().trim() === venue?.location?.toLowerCase().trim() ||
+        const validateTpId = global.tblVenues.find(item =>
             item.tpId === venue?.venue_id
         );
-
-        if (!venueExists && venue) {
-            const country = global.tblCountryCodes.find(item =>
-                item.countryName.toLowerCase().trim() === venue?.country.toLowerCase().trim()
+        if (!validateTpId) {
+            const validateName = global.tblVenues.find(item =>
+                item.name === venue?.name
             );
+            if (validateName) {
+                const updateData = {
+                    ...validateName,
+                    tpId: venue?.venue_id
+                };
+                const updateVenue = await updateVenueQuery(updateData, fastify, request);
 
-            const venueData = {
-                name: venue?.name,
-                tpId: venue?.venue_id,
-                isActive: true,
-                city: venue?.location,
-                countryId: country?.id,
-            };
+                const index = global.tblVenues.findIndex(item => item.id === validateName.id);
+                if (index !== -1) {
+                    global.tblVenues[index] = updateVenue[0];
+                }
+            } else {
+                const country = global.tblCountryCodes.find(item =>
+                    item.countryName.toLowerCase().trim() === venue?.country.toLowerCase().trim()
+                );
 
-            const saveVenue = await insertVenueQuery(venueData, fastify, request);
-            global.tblVenues.push(saveVenue);
+                const saveData = {
+                    countryId: country?.id,
+                    city: venue?.location,
+                    name: venue?.name,
+                    tpId: venue?.venue_id,
+                    isActive: true,
+                    capacity: venue?.capacity,
+                };
+                const saveVenue = await insertVenueQuery(saveData, fastify, request);
+                global.tblVenues.push(saveVenue);
+            }
         }
 
         // save weather data
@@ -228,6 +243,103 @@ const importMatchService = async (request, fastify) => {
     return "Commentary imported successfully";
 };
 
+const importCompetitionService = async (request, fastify) => {
+    const { cid, title, datestart, dateend, status, venue_list, category } = request.body;
+
+    const existingByTpId = global.tblCompetitions.find(item => item.tpId === cid);
+
+    if (!existingByTpId) {
+        const existingByName = global.tblCompetitions.find(item =>
+            item.competition.trim().toLowerCase() === title.trim().toLowerCase()
+        );
+
+        if (existingByName) {
+            const data = {
+                ...existingByName,
+                tpId: cid,
+            };
+            await updateCompititionQuery(data, fastify, request);
+            const index = global.tblCompetitions.findIndex(item =>
+                item.competitionId === existingByName.competitionId
+            );
+
+            if (index !== -1) {
+                global.tblCompetitions[index].tpId = cid;
+            }
+        } else {
+            const data = {
+                competition: title,
+                eventTypeId: 1,
+                refId: null,
+                image: null,
+                isActive: true,
+                isTrending: false,
+                isEventSnap: true,
+                isPointTable: true,
+                matchTypeId: null,
+                imagePath: null,
+                isMen: category?.toLowerCase().trim() == "women" ? false : true,
+                type: 1,
+                isVirtual: true,
+                commStatus: status === "fixture" ? 1 : status === "live" ? 2 : 3,
+                startDate: datestart,
+                endDate: dateend,
+                tpId: cid,
+            };
+
+            const saveData = await insertCompetitionWithImportQuery(data, request, fastify);
+            global.tblCompetitions.push(saveData);
+        }
+    }
+
+    // save venues
+    for (const venue of venue_list) {
+        const existingVenueByTpId = global.tblVenues.find(item =>
+            item.tpId === venue?.venue_id
+        );
+
+        if (existingVenueByTpId) {
+            continue;
+        }
+
+        const existingVenueByName = global.tblVenues.find(item =>
+            item.name.trim().toLowerCase() === venue?.name.trim().toLowerCase()
+        );
+
+        if (existingVenueByName) {
+            const updateData = {
+                ...existingVenueByName,
+                tpId: venue?.venue_id
+            };
+
+            const updatedVenue = await updateVenueQuery(updateData, fastify, request);
+            const index = global.tblVenues.findIndex(item => item.id === existingVenueByName.id);
+            if (index !== -1) {
+                global.tblVenues[index] = updatedVenue[0];
+            }
+            continue;
+        }
+
+        const country = global.tblCountryCodes.find(item =>
+            item.countryName.trim().toLowerCase() === venue?.country.trim().toLowerCase()
+        );
+        const saveData = {
+            countryId: country?.id || null,
+            city: venue?.city,
+            name: venue?.name,
+            tpId: venue?.venue_id,
+            isActive: true,
+            capacity: venue?.capacity,
+        };
+
+        const saveVenue = await insertVenueQuery(saveData, fastify, request);
+        global.tblVenues.push(saveVenue);
+    }
+
+    return "Competition imported successfully";
+}
+
 module.exports = {
-    importMatchService
+    importMatchService,
+    importCompetitionService,
 };

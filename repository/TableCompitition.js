@@ -547,7 +547,101 @@ const isVirtualCompetitionQuery = async (data, request, fastify) => {
     throw new Error(err.message);
   }
 };
+const insertCompetitionWithImportQuery = async (data, request, fastify) => {
+  try {
+    console.log("data", data)
+    const result = await fastify.db.query(
+      `
+        with display as (
+            select max("wrDisplayOrder") as "display_order" from "tblCompetitions" where "wrEventTypeId" =  (
+               $2
+            )
+        ),
+        inser_data as (
+            
+            insert into "tblCompetitions" (
+            "wrCompetition" , "wrEventTypeId" , "wrRefID" , "wrImage" ,"wrIsActive" ,
+             "wrCreatedBy" , "wrCreatedDate","wrDisplayOrder", "wrIsTrending", "wrIsEventSnap", "wrIsPointTable", "wrMatchTypeId",
+             "wrWinPoint", "wrTiePoint", "wrCancelPoint", "wrLossPoint","wrDrsCount", "wrImagePath", "wrIsMen", "wrType", "wrIsVirtual", "wrStatus", "wrStartDate", "wrEndDate",
+             "wrTpId"
+            )
+            values ($1 ,
+                 $2,
+                 $3,$4,$5,$6,now(),(select COALESCE("display_order" , 0) from "display") + 1, $7, $8, $9, $10,
+                 $11, $12, $13, $14,$15, $16, $17, $18, $19, $20, $21, $22, $23
+                 ) returning *
+        )
 
+        select 
+        "wrCompetitionId" as "competitionId",
+        "wrCompetition" as "competition",
+        tc."wrEventTypeId" as "eventTypeId",
+        "wrEventType" as "eventType",
+        tc."wrRefID" as "refId",
+        tc."wrImage" as "image",
+        tc."wrIsActive" as "isActive",
+        tc."wrDisplayOrder" as "displayOrder",
+        tc."wrIsTrending" as "isTrending",
+        tc."wrIsEventSnap" as "isEventSnap",
+        tc."wrIsPointTable" as "isPointTable",
+        tc."wrMatchTypeId" as "matchTypeId",
+        tc."wrWinPoint" as "winPoint",
+        tc."wrTiePoint" as "tiePoint",
+        tc."wrCancelPoint" as "cancelPoint",
+        tc."wrLossPoint" as "lossPoint",
+        tc."wrDrsCount" as "drsCount",
+        tc."wrImagePath" as "imagePath",
+        tc."wrIsMen" as "isMen",
+        tc."wrType" as "type",
+        tc."wrIsVirtual" as "isVirtual",
+        tc."wrStatus" as "commStatus",
+        tc."wrStartDate" as "startDate",
+        tc."wrEndDate" as "endDate",
+        tc."wrTpId" as "tpId"
+        from "inser_data" tc
+        inner join "tblEventTypes" tev on tc."wrEventTypeId" = tev."wrEventTypeId"
+    `,
+      {
+        bind: [
+          data.competition,
+          data.eventTypeId,
+          data.refId,
+          data.image || null,
+          data.isActive || false,
+          request.userTokenInfo.WrUserId,
+          data.isTrending || false,
+          data.isEventSnap || false,
+          data.isPointTable || false,
+          data.matchTypeId || null,
+          data.winPoint === undefined ? null : data.winPoint,
+          data.tiePoint === undefined ? null : data.tiePoint,
+          data.cancelPoint === undefined ? null : data.cancelPoint,
+          data.lossPoint === undefined ? null : data.lossPoint,
+          data.drsCount === undefined ? 0 : data.drsCount,
+          data.imagePath || null,
+          data.isMen === undefined ? null : data.isMen,
+          data.type || null,
+          data.isVirtual || false,
+          data.commStatus,
+          data.startDate,
+          data.endDate,
+          data.tpId || null,
+        ],
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+
+    return result[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCompitition/insertCompetitionQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
 module.exports = {
   getAllCompititionQuery,
   insertCompetitionQuery,
@@ -561,4 +655,5 @@ module.exports = {
   getTemplateByCompetitionIdQuery,
   saveCompMarketTemplateQuery,
   isVirtualCompetitionQuery,
+  insertCompetitionWithImportQuery,
 };
