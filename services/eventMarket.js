@@ -3079,6 +3079,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
         fastify,
         request
       );
+      
       // let callPrediction = {}
       // // Check for error_msg in the response
       // if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
