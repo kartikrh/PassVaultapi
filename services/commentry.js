@@ -6188,7 +6188,6 @@ const commentaryDetailsByEventIdService = async (
     t2id: result.team2Id,
     srtup: result.sortUpdate ?? "",
     isvirt: result.isVirtual,
-    newBallTime: result?.newBallTime,
     ballDelay: result?.ballDelay,
     overDelay: result?.overDelay,
     inningDelay: result?.inningDelay,
@@ -6391,7 +6390,6 @@ const commentaryDetailsByEventIdService = async (
     resultArr.batid = null;
     resultArr.ballid = null;
     resultArr.tsi = [];
-    resultArr.newBallTime = result?.newBallTime;
     resultArr.ballDelay = result?.ballDelay;
     resultArr.overDelay = result?.overDelay;
     resultArr.inningDelay = result?.inningDelay;
@@ -6465,7 +6463,6 @@ const commentaryDetailsByEventIdService = async (
     resultArr.t2bg = t2bg;
     resultArr.utc = utc;
     resultArr.tsi = [];
-    resultArr.newBallTime = result?.newBallTime;
     resultArr.ballDelay = result?.ballDelay;
     resultArr.overDelay = result?.overDelay;
     resultArr.inningDelay = result?.inningDelay;
@@ -6590,7 +6587,6 @@ const commentaryDetailsByEventIdService = async (
     resultArr.batid = batid;
     resultArr.ballid = ballid;
     resultArr.tsi = [];
-    resultArr.newBallTime = result?.newBallTime;
     resultArr.ballDelay = result?.ballDelay;
     resultArr.overDelay = result?.overDelay;
     resultArr.inningDelay = result?.inningDelay;
@@ -7063,7 +7059,6 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     resultArr.t2co = t2co;
     resultArr.t2bg = t2bg;
     resultArr.utc = utc;
-    resultArr.newBallTime = result.newBallTime;
     resultArr.ballDelay = result.ballDelay;
     resultArr.overDelay = result.overDelay;
     resultArr.inningDelay = result.inningDelay;
@@ -7122,7 +7117,6 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     resultArr.t2co = t2co;
     resultArr.t2bg = t2bg;
     resultArr.utc = utc;
-    resultArr.newBallTime = result.newBallTime;
     resultArr.ballDelay = result.ballDelay;
     resultArr.overDelay = result.overDelay;
     resultArr.inningDelay = result.inningDelay;
@@ -7239,7 +7233,6 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     resultArr.t2co = t2co;
     resultArr.t2bg = t2bg;
     resultArr.utc = utc;
-    resultArr.newBallTime = result.newBallTime;
     resultArr.ballDelay = result.ballDelay;
     resultArr.overDelay = result.overDelay;
     resultArr.inningDelay = result.inningDelay;
@@ -7764,7 +7757,6 @@ const getMatchListByStatus = async (body, request, fastify) => {
       nte2i: team2.imagePath || "",
       nt2jr: team2.jerseyPath || "",
       etyId: eventType?.eventTypeId,
-      newBallTime: item?.newBallTime || "",
       ballDelay: item?.ballDelay || 0,
       overDelay: item?.overDelay || 0,
       inningDelay: item?.inningDelay || 0,
