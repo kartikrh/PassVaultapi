@@ -2917,7 +2917,9 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
           market_type_category_id : parseInt(item.marketTypeCategoryId),
           lay_size : item.runners[0].laySize,
           back_size : item.runners[0].backSize,
-          rate_diff : item.rateDiff 
+          rate_diff : item.rateDiff,
+          line : item.line ?? null,
+          predefinedLine : item.predefinedValue ?? null
         })
       }
       if( category &&	
@@ -2942,7 +2944,9 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
           lay_size : item.runners[0].laySize,
           back_size : item.runners[0].backSize,
           rate_diff : item.rateDiff,
-          line_diff : line_diff.toFixed(2) || 0
+          line_diff : line_diff.toFixed(2) || 0,
+          line : item.line?? null,
+          predefinedLine : item.predefinedValue?? null
         });
       }
       if(category && category.categoryName.toLowerCase() == "fall of wicket"){
@@ -2961,7 +2965,9 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
           lay_size : item.runners[0].laySize,
           back_size : item.runners[0].backSize,
           rate_diff : item.rateDiff,
-          line_diff : line_diff_wick.toFixed(2) || 0
+          line_diff : line_diff_wick.toFixed(2) || 0,
+          line : item.line?? null,
+          predefinedLine : item.predefinedValue?? null
         });
       }
       if(category && category.categoryName.toLowerCase() == "partnership boundaries"){
@@ -2980,7 +2986,9 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
           lay_size : item.runners[0].laySize,
           back_size : item.runners[0].backSize,
           rate_diff : item.rateDiff,
-          line_diff : line_diff_boun.toFixed(2) || 0
+          line_diff : line_diff_boun.toFixed(2) || 0,
+          line : item.line?? null,
+          predefinedLine : item.predefinedValue?? null
         });
       }
       if(category && category.categoryName.toLowerCase() == "wicket lost balls"){
@@ -2999,7 +3007,9 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
           lay_size : item.runners[0].laySize,
           back_size : item.runners[0].backSize,
           rate_diff : item.rateDiff,
-          line_diff : line_diff_wick_ball.toFixed(2) || 0
+          line_diff : line_diff_wick_ball.toFixed(2) || 0,
+          line : item.line?? null,
+          predefinedLine : item.predefinedValue?? null
         })
       }
       marketDataLogger(
