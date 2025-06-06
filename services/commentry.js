@@ -14819,10 +14819,7 @@ const commentaryScoreService = async (request, fastify) => {
       request,
       fastify
     );
-    return {
-      response,
-      sendDataForSocketUpdate
-    }
+    return response
   } catch (error) {
     console.log("wrrr", error);
     commentaryLogger(
@@ -15077,11 +15074,303 @@ const commentaryOverStartService = async (request, fastify) => {
       request,
       fastify
     )
-    return {
-      response,
-      sendDataForSocketUpdate
-    };
+    return response
   } catch (error) {
+    commentaryLogger(
+      {
+        commentaryId: request.body.commentaryId,
+        requestBody: request.body,
+        response: {
+          error: error.message,
+        },
+        global: {
+          partnership: global.tblCommentaryPartnership.filter(
+            (item) => item?.commentaryId === request.body.commentaryId
+          ),
+        },
+        extra: {
+          ballByBall: global.tblCommentaryBallByBall.filter(
+            (item) => item?.commentaryId === request.body.commentaryId
+          ),
+        },
+        apiName: apiName,
+        reqStartTime: startTime,
+      },
+      request,
+      fastify
+    );
+    throw new Error(error.message);
+  }
+};
+const commentarySwapPlayerService = async (request, fastify) => {
+  const startTime = new Date();
+  const apiName = "/comSwapPlayer";
+  try {
+    let {
+      commentaryId,
+      commentaryPlayers,
+      commentaryPartnership,
+      commentaryDetails,
+      isCallPredict = false,
+    } = request.body;
+    let comI,
+      partnershipIndex,
+      commentaryIndex;
+
+    let commentaryData = global.tblCommentaries.find(
+      (item) => item?.commentaryId === commentaryId
+    );
+    if (!commentaryData) {
+      throw new Error("Commentary with this id not Found");
+    } else {
+      comI = global.tblCommentaries.findIndex(
+        (item) => item.commentaryId == commentaryId
+      );
+    }
+    // validate commentaryPlayers
+    if (commentaryPlayers) {
+      commentaryPlayers = commentaryPlayers.filter(
+        (player) =>
+          player.commentaryPlayerId != null ||
+          player.commentaryPlayerId != undefined
+      );
+      commentaryPlayers.forEach((player) => {
+        if (player.commentaryPlayerId) {
+          const index = global.tblCommentaryPlayers.findIndex(
+            (item) => item.commentaryPlayerId === player.commentaryPlayerId
+          );
+          if (index === -1) {
+            throw new Error("Commentary Player with this id not Found");
+          }
+        }
+      });
+    }
+     //validate partnership
+    if (commentaryPartnership) {
+      if (commentaryPartnership.commentaryPartnershipId == 0) {
+        partnershipIndex = global.tblCommentaries.findIndex(
+          (item) => item?.commentaryId === commentaryPartnership.commentaryId
+        );
+        if (partnershipIndex === -1) {
+          throw new Error("Commentary with this id not Found in Partnership");
+        }
+      } else {
+        partnershipIndex = global.tblCommentaryPartnership.findIndex(
+          (item) =>
+            item?.commentaryPartnershipId ==
+            commentaryPartnership.commentaryPartnershipId
+        );
+        if (partnershipIndex === -1) {
+          throw new Error("Partnership with this id not Found");
+        }
+      }
+    }
+    let updatedData = await fastify.db.query(
+      `CALL proc_swap_player(
+      $1, $2, $3, $4, $5
+    )`,
+      {
+        bind: [
+          commentaryPlayers ? JSON.stringify(commentaryPlayers) : null,
+          commentaryPartnership ? JSON.stringify(commentaryPartnership) : null,
+          commentaryDetails ? JSON.stringify(commentaryDetails) : null,
+          commentaryId,
+          null
+        ],
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+    // if got object then push in global obj else update the global
+    updatedData = updatedData[0];
+    const response = {};
+    const sendDataForSocketUpdate = {};
+    sendDataForSocketUpdate.commentaryId = commentaryId;
+    sendDataForSocketUpdate.eventRefId = commentaryData.eventRefId;
+    sendDataForSocketUpdate.dataToUpdate = [];
+
+    
+    if (commentaryDetails) {
+      global.tblCommentaries[comI] = {
+        ...global.tblCommentaries[comI],
+        displayStatus: commentaryDetails.displayStatus,
+        updateTime: new Date(),
+        rmk : commentaryDetails.rmk
+      };
+      response.commentaryDetails = {
+        ...global.tblCommentaries[comI],
+        displayStatus: commentaryDetails.displayStatus,
+        updateTime: new Date(),
+        rmk: commentaryDetails.rmk
+      };
+      sendDataForSocketUpdate.dataToUpdate.push({
+        module: "commentaryDetails",
+        type: "update",
+        data: response.commentaryDetails,
+      });
+    }
+    if (commentaryPlayers) {
+      response.commentaryPlayers = [];
+      commentaryPlayers.forEach((player) => {
+        const index = global.tblCommentaryPlayers.findIndex(
+          (item) => item.commentaryPlayerId === player.commentaryPlayerId
+        );
+        // get display name
+        let ds = global.tblPlayers.find((i) => i.playerId == player.playerId);
+        global.tblCommentaryPlayers[index] = player;
+        response.commentaryPlayers.push({
+          ...global.tblCommentaryPlayers[index],
+          displayName: ds.displayName,
+        });
+      });
+      sendDataForSocketUpdate.dataToUpdate.push({
+        module: "commentaryPlayers",
+        type: "update",
+        data: response.commentaryPlayers,
+      });
+    }
+    if (commentaryPartnership) {
+      if (commentaryPartnership.commentaryPartnershipId == 0) {
+        global.tblCommentaryPartnership.push(
+          updatedData.commentaryPartnershipDetails
+        );
+        response.commentaryPartnershipDetails =
+          updatedData.commentaryPartnershipDetails;
+        if (response.commentaryPartnershipDetails) {
+          try {
+            const partnership = response.commentaryPartnershipDetails;
+            // Find player 1 image
+            const _player1 = commentaryPlayers.filter(
+              (item) => item.commentaryPlayerId === partnership.batter1Id
+            );
+            if (_player1.length > 0) {
+              response.commentaryPartnershipDetails.player1image =
+                _player1[0].playerimage;
+              response.commentaryPartnershipDetails.player1jerseyandimage =
+                _player1[0].jerseyPlayerImage;
+            }
+
+            // Find player 2 image
+            const _player2 = commentaryPlayers.filter(
+              (item) => item.commentaryPlayerId === partnership.batter2Id
+            );
+            if (_player2.length > 0) {
+              response.commentaryPartnershipDetails.player2image =
+                _player2[0].playerimage;
+              response.commentaryPartnershipDetails.player2jerseyandimage =
+                _player2[0].jerseyPlayerImage;
+            }
+          } catch (error) {}
+        }
+        sendDataForSocketUpdate.dataToUpdate.push({
+          module: "commentaryPartnership",
+          type: "create",
+          data: response.commentaryPartnershipDetails,
+        });
+      } else {
+        global.tblCommentaryPartnership[partnershipIndex] =
+          updatedData.commentaryPartnershipDetails;
+        response.commentaryPartnershipDetails =
+          updatedData.commentaryPartnershipDetails;
+
+        if (response.commentaryPartnershipDetails) {
+          try {
+            const partnership = response.commentaryPartnershipDetails;
+            // Find player 1 image
+            const _player1 = commentaryPlayers.filter(
+              (item) => item.commentaryPlayerId === partnership.batter1Id
+            );
+            if (_player1.length > 0) {
+              response.commentaryPartnershipDetails.player1image =
+                _player1[0].playerimage;
+              response.commentaryPartnershipDetails.player1jerseyandimage =
+                _player1[0].jerseyPlayerImage;
+            }
+
+            // Find player 2 image
+            const _player2 = commentaryPlayers.filter(
+              (item) => item.commentaryPlayerId === partnership.batter2Id
+            );
+            if (_player2.length > 0) {
+              response.commentaryPartnershipDetails.player2image =
+                _player2[0].playerimage;
+              response.commentaryPartnershipDetails.player2jerseyandimage =
+                _player2[0].jerseyPlayerImage;
+            }
+          } catch (error) {}
+        }
+        sendDataForSocketUpdate.dataToUpdate.push({
+            module: "commentaryPartnership",
+            type: "update",
+            data: response.commentaryPartnershipDetails,
+        });
+  
+      }
+    }
+    if (
+      global?.clientSocketIo !== undefined &&
+      global?.clientSocketIo.length > 0
+    ) {
+      commentaryDetailsByEventIdService(
+        {
+          ...request,
+          body: {
+            eventId: commentaryData.eventRefId,
+          },
+        },
+        fastify,
+        "callFromSocket"
+      ).catch((err) => {
+        console.log("err in commentaryDetailsByEventIdService", err);
+        errorLogger(
+          fastify,
+          err.message,
+          "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
+          request
+        );
+      });
+      global.clientSocketIo.forEach((socket) => {
+        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+      });
+    }
+
+    if (global.wss) {
+      let res = {};
+      res.eventname = "ShortScore";
+      res.connectionID = "";
+      let _ShortCommentry = setShortCommenrty(commentaryData.eventRefId);
+      _ShortCommentry = JSON.stringify(_ShortCommentry);
+      res.data = _ShortCommentry;
+      // Iterate over all connected clients and send the update
+      global.wss.clients.forEach(function each(client) {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify(res));
+        }
+      });
+    }
+    commentaryLogger(
+      {
+        commentaryId: commentaryId,
+        requestBody: request.body,
+        response: response,
+        global: {
+          partnership: global.tblCommentaryPartnership.filter(
+            (item) => item?.commentaryId === commentaryId
+          ),
+        },
+        extra: {
+          ballByBall: global.tblCommentaryBallByBall.filter(
+            (item) => item?.commentaryId === commentaryId
+          ),
+        },
+        apiName:apiName,
+        reqStartTime: startTime,
+      },
+      request,
+      fastify
+    )
+    return response;
+     
+  }catch (error) {
     commentaryLogger(
       {
         commentaryId: request.body.commentaryId,
@@ -15198,5 +15487,6 @@ module.exports = {
   commentaryStartService,
   commentaryTossService,
   commentaryScoreService,
-  commentaryOverStartService
+  commentaryOverStartService,
+  commentarySwapPlayerService,
 };

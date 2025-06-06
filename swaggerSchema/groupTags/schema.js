@@ -3481,6 +3481,26 @@ const Commentary = {
         ],
       },
     }
+  },
+  comSwapPlayer : {
+    schema : {
+      tags : ["Commentary"],
+      description : "Commentary Swap Player",
+      secaurity : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          commentaryId : {type : "integer"},
+          isCallPredict : {type : "boolean"},
+          commentaryDetails : {type : "object"},
+          commentaryPlayers : {type : "array"},
+          commentaryPartnership : {type : "object"}
+        }
+      },
+      required : [
+        "commentaryId" ,"commentaryDetails", "commentaryPartnership", "isCallPredict", "commentaryPlayers"
+      ]
+    }
   }
 };
 
