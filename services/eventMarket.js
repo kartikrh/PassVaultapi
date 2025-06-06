@@ -2918,7 +2918,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
           lay_size : item.runners[0].laySize,
           back_size : item.runners[0].backSize,
           rate_diff : item.rateDiff,
-          line : item.line ?? null,
+          line : item.runners[0].line ?? null,
           predefinedLine : item.predefinedValue ?? null
         })
       }
@@ -2945,7 +2945,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
           back_size : item.runners[0].backSize,
           rate_diff : item.rateDiff,
           line_diff : line_diff.toFixed(2) || 0,
-          line : item.line?? null,
+          line : item.runners[0].line?? null,
           predefinedLine : item.predefinedValue?? null
         });
       }
@@ -2966,7 +2966,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
           back_size : item.runners[0].backSize,
           rate_diff : item.rateDiff,
           line_diff : line_diff_wick.toFixed(2) || 0,
-          line : item.line?? null,
+          line : item.runners[0].line?? null,
           predefinedLine : item.predefinedValue?? null
         });
       }
@@ -2987,7 +2987,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
           back_size : item.runners[0].backSize,
           rate_diff : item.rateDiff,
           line_diff : line_diff_boun.toFixed(2) || 0,
-          line : item.line?? null,
+          line : item.runners[0].line?? null,
           predefinedLine : item.predefinedValue?? null
         });
       }
@@ -3008,7 +3008,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
           back_size : item.runners[0].backSize,
           rate_diff : item.rateDiff,
           line_diff : line_diff_wick_ball.toFixed(2) || 0,
-          line : item.line?? null,
+          line : item.runners[0].line?? null,
           predefinedLine : item.predefinedValue?? null
         })
       }
