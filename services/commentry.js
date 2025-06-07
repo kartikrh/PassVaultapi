@@ -1200,7 +1200,7 @@ const updateCommentaryService = async (request, fastify) => {
                 if (teamPlayerData && teamPlayerData?.jerseyPlayerImage) {
                   await updateCommentaryPlayerJerseyImageQuery(
                     {
-                      commentaryPlayerId: players.commentaryPlayerId,
+                      commentaryPlayerId: players?.commentaryPlayerId,
                       jerseyPlayerImage: teamPlayerData?.jerseyPlayerImage,
                       jerseyPlayerImagePath:
                         teamPlayerData?.jerseyPlayerImagePath,
@@ -1299,7 +1299,7 @@ const updateCommentaryService = async (request, fastify) => {
               if (teamPlayerData && teamPlayerData?.jerseyPlayerImage) {
                 await updateCommentaryPlayerJerseyImageQuery(
                   {
-                    commentaryPlayerId: info.commentaryPlayerId,
+                    commentaryPlayerId: players?.commentaryPlayerId,
                     jerseyPlayerImage: teamPlayerData?.jerseyPlayerImage,
                     jerseyPlayerImagePath:
                       teamPlayerData?.jerseyPlayerImagePath,
