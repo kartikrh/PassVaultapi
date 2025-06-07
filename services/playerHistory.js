@@ -714,7 +714,7 @@ const setPlayerHistoryService = async (data,request, fastify) => {
     let playerBowlHist = [];
     for (let p of comPlayer){
       const matchTypeCommentaries = global.tblCommentaries.filter((elem) => 
-        elem.historyMatchTypeId === matchType.matchTypeId
+        elem.historyMatchTypeId === matchType?.matchTypeId
       ).map((item) => {
         return item.commentaryId
       });
