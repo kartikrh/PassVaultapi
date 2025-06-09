@@ -272,6 +272,74 @@ const getAllPlayersByTeamAndCompetitionIdQuery = async (data, request, fastify) 
   }
 };
 
+const getPlayerByIdsQuery = async (data, request, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `SELECT 
+          ttp."wrId" as "id",
+          ttp."wrCompetitionId" as "competitionId",
+          ttp."wrTeamId" as "teamId",
+          ttp."wrPlayerId" as "playerId",
+          ttp."wrPlayerName" as "playerName",
+          ttp."wrCreatedBy" as  "createdBy",
+          ttp."wrCreatedAt" as "createdAt",
+          tp."wrPlayerTypeId" as "playerTypeId",
+          tpt."wrPlayerType" as "playerType"
+      FROM "tblTournamentTeamPlayers" AS ttp
+      LEFT JOIN "tblPlayers" AS tp ON ttp."wrPlayerId" = tp."wrPlayerId"
+      LEFT JOIN "tblPlayerTypes" AS tpt ON tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
+      WHERE ttp."wrIsDeleted" = false
+      AND ttp."wrTeamId" = $1
+      AND ttp."wrCompetitionId" = $2
+      AND ttp."wrPlayerId" = $3`,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [data.teamId, data.competitionId, data.playerId],
+      }
+    );
+    return result[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableTournamentTeamPlayers/getPlayerByIdsQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const insertEntityImportLogsQuery = async (message, request, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `
+                      insert into "tblEntityImportLogs" (
+                          "wrMessage",
+                          "wrCreatedBy",
+                          "wrCreatedAT"
+                      )
+                  values ($1, $2, now())
+              `,
+      {
+        type: fastify.db.QueryTypes.INSERT,
+        bind: [
+          message,
+          request.userTokenInfo.WrUserId
+        ],
+      }
+    );
+    return result[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableTournamentTeamPlayers/insertTournamentTeamPlayersQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllTournamentTeamPlayersQuery,
   insertTournamentTeamPlayersQuery,
@@ -281,4 +349,6 @@ module.exports = {
   deleteTournamentPlayersByPlayerIdQuery,
   deletePlayersByTeamIdQuery,
   getAllPlayersByTeamAndCompetitionIdQuery,
+  getPlayerByIdsQuery,
+  insertEntityImportLogsQuery,
 };

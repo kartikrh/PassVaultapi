@@ -10,7 +10,12 @@ const { insertTeamQuery, updateTeamQuery } = require("../repository/TableTeams")
 const { insertPlayerQuery, updatePlayerQuery } = require("../repository/TablePlayer");
 const { insertTeamPlayerQuery, getTeamPlayerByTeamIdQuery } = require("../repository/TableTeamPlayer");
 const { insertTeamCompetitionQuery } = require("../repository/TableTeamCompetition");
-const { importPlayerAndTeamOnEntityAPI, importTeamsOnEntityAPI } = require("../utilities/entity");
+const {
+    importCommentaryOnEntityAPI,
+    importPlayerAndTeamOnEntityAPI,
+    importTeamsOnEntityAPI,
+    importCompetitonOnEntityAPI,
+} = require("../utilities/entity");
 const { insertWeatherQuery } = require("../repository/TableWeather");
 const { insertPitchConditionQuery } = require("../repository/TablePitchCondition");
 const { insertCompetitionWithImportQuery, updateCompititionQuery } = require("../repository/TableCompitition")
@@ -21,78 +26,124 @@ const {
     generateImageName,
     storeImageOnServer,
 } = require("../utilities/Images");
+const { insertTournamentTeamPointsQuery, getTournamentPointsByTeamIdQuery } = require("../repository/TableTournmentTeamPoints");
+const { insertTournamentTeamPlayersQuery, getPlayerByIdsQuery, insertEntityImportLogsQuery } = require("../repository/TableTournamentsTeamPlayers");
 
 const processTeam = async (teamData, fastify, request) => {
-    const existingTpId = global.tblTeams.find(item =>
-        item.tpId === teamData.team_id
-    );
-    if (existingTpId) return existingTpId.teamId;
-
-    const existingTeam = global.tblTeams.find(item =>
-        item.teamName.toLowerCase().trim() === teamData.name.toLowerCase().trim()
-    );
-    if (existingTeam) {
-        const updateData = {
-            ...existingTeam,
-            tpId: teamData.team_id,
-            userId: request.userTokenInfo.WrUserId,
-        }
-        await updateTeamQuery(updateData, fastify, request);
-
-        const index = global.tblTeams.findIndex(item => item.teamId === updateData.teamId);
-        if (index !== -1) {
-            global.tblTeams[index].tpId = teamData.team_id;
-        }
-        return existingTeam.teamId;
-    }
-
-
-    let teamImg, teamImgPath;
-
     try {
-        const imageResponse = await axios.get(teamData.logo_url, {
-            responseType: "arraybuffer",
-        });
-        const imgName = generateImageName({ name: teamData.name });
-        const projectName = global.tblConfigs.find(
-            item => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
-        )?.value;
+        let team_id
+        const existingTpId = global.tblTeams.find(item =>
+            item.tpId === teamData.team_id
+        );
+        if (existingTpId) {
+            team_id = existingTpId.teamId
+        } else {
 
-        const imageBuffer = Buffer.from(imageResponse.data, "binary");
+            const existingTeam = global.tblTeams.find(item =>
+                item.teamName.toLowerCase().trim() === teamData.name.toLowerCase().trim()
+            );
+            if (existingTeam) {
+                const updateData = {
+                    ...existingTeam,
+                    tpId: teamData.team_id,
+                    userId: request.userTokenInfo.WrUserId,
+                }
+                await updateTeamQuery(updateData, fastify, request);
 
-        const imageFile = {
-            data: imageBuffer,
-            filename: `${imgName}.png`,
-            encoding: "7bit",
-            mimetype: imageResponse.headers["content-type"] || "image/png",
-            limit: false,
-        };
+                const index = global.tblTeams.findIndex(item => item.teamId === updateData.teamId);
+                if (index !== -1) {
+                    global.tblTeams[index].tpId = teamData.team_id;
+                }
+                team_id = updateData?.teamId;
+            }
 
-        const { fullPath, imagePath } = await storeImageOnServer({
-            image: imageFile,
-            project: projectName,
-            name: imgName,
-            ...ImgModuleConfig.Teams,
-        });
 
-        teamImg = fullPath;
-        teamImgPath = imagePath;
+            let teamImg, teamImgPath;
+
+            try {
+                const imageResponse = await axios.get(teamData.logo_url, {
+                    responseType: "arraybuffer",
+                });
+                const imgName = generateImageName({ name: teamData.name });
+                const projectName = global.tblConfigs.find(
+                    item => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
+                )?.value;
+
+                const imageBuffer = Buffer.from(imageResponse.data, "binary");
+
+                const imageFile = {
+                    data: imageBuffer,
+                    filename: `${imgName}.png`,
+                    encoding: "7bit",
+                    mimetype: imageResponse.headers["content-type"] || "image/png",
+                    limit: false,
+                };
+
+                const { fullPath, imagePath } = await storeImageOnServer({
+                    image: imageFile,
+                    project: projectName,
+                    name: imgName,
+                    ...ImgModuleConfig.Teams,
+                });
+
+                teamImg = fullPath;
+                teamImgPath = imagePath;
+            } catch (error) {
+                console.error(`Image download/save failed for team: ${teamData.name}`, error);
+            }
+
+            const teamPayload = {
+                teamName: teamData.name,
+                eventTypeId: 1,
+                tpId: teamData.team_id,
+                teamShortName: teamData.short_name,
+                image: teamImg,
+                imagePath: teamImgPath,
+                userId: request.userTokenInfo.WrUserId,
+            };
+            const savedTeam = await insertTeamQuery(teamPayload, fastify, request);
+            global.tblTeams.push(savedTeam);
+            team_id = savedTeam?.teamId;
+        }
+
+
+        const competition = global.tblCompetitions.find(c => c.tpId === request.body.cid);
+        if (competition) {
+            const exists = global.tblTeamCompetition.find(
+                item => item.teamId === team_id && item.refCompetitionId === competition.competitionId
+            );
+            if (!exists) {
+                const res = await insertTeamCompetitionQuery(
+                    {
+                        teamId: team_id,
+                        refCompetitionId: competition.competitionId,
+                        userId: request.userTokenInfo.WrUserId,
+                    },
+                    fastify,
+                    request
+                );
+                global.tblTeamCompetition.push(res);
+            }
+
+            const tournamentTeams = await getTournamentPointsByTeamIdQuery({
+                competitionId: competition?.competitionId,
+                teamId: team_id
+            }, request, fastify);
+
+            if (!tournamentTeams) {
+                const tourData = {
+                    teamId: team_id,
+                    competitionId: competition?.competitionId,
+                    isActive: true
+                }
+                insertTournamentTeamPointsQuery(tourData, fastify, request);
+            }
+        }
+        return team_id;
     } catch (error) {
-        console.error(`Image download/save failed for team: ${teamData.name}`, error);
+        console.log("error processTeam", error.message);
+        insertEntityImportLogsQuery(error.message || "error in processTeam", request, fastify)
     }
-
-    const teamPayload = {
-        teamName: teamData.name,
-        eventTypeId: 1,
-        tpId: teamData.team_id,
-        teamShortName: teamData.short_name,
-        image: teamImg,
-        imagePath: teamImgPath,
-        userId: request.userTokenInfo.WrUserId,
-    };
-    const savedTeam = await insertTeamQuery(teamPayload, fastify, request);
-    global.tblTeams.push(savedTeam);
-    return savedTeam.teamId;
 };
 
 const parseUmpires = (umpiresString) => {
@@ -128,17 +179,23 @@ const parseUmpires = (umpiresString) => {
 };
 
 const importMatchService = async (request, fastify) => {
+    const { mid } = request.body;
+
+    const matchInfo = await importCommentaryOnEntityAPI(mid, request, fastify);
+    if (!matchInfo) {
+        throw new Error("Response error from entity sport API");
+    }
     const {
         status, match_id, competition, format, teama, teamb, umpires, referee, subtitle,
         verified, date_start, toss, day, session, venue, title, weather, pitch
-    } = request.body;
-
+    } = matchInfo;
     // // status 2 means completed
     // if (status === 2) {
     //     throw new Error("This commentary already completed");
     // }
 
     const matchId = match_id;
+    request.body.cid = competition?.cid
 
     const existingCommentary = global.tblCommentaries.find(item => item.tpId === matchId);
 
@@ -245,6 +302,11 @@ const importMatchService = async (request, fastify) => {
             global.tblPitchConditions.push(savePitch);
         }
 
+
+        const teamIds = [team1Id, team2Id];
+        for (const team_id of teamIds) {
+            importPlayerByMIdService(team_id, request, fastify)
+        }
         let team1Players = await getTeamPlayerByTeamIdQuery(team1Id, fastify, request);
         let team2Players = await getTeamPlayerByTeamIdQuery(team2Id, fastify, request);
 
@@ -297,7 +359,7 @@ const importMatchService = async (request, fastify) => {
                         };
                     }
 
-                    await insertCommentaryTeamsOnImportQuery(commTeam, request, fastify);
+                    insertCommentaryTeamsOnImportQuery(commTeam, request, fastify);
                     if (
                         team1Players &&
                         team1Players.length > 0 &&
@@ -323,7 +385,7 @@ const importMatchService = async (request, fastify) => {
                             }),
                         ];
                         for (let info of data) {
-                            await insertCommentaryPlayers(
+                            insertCommentaryPlayers(
                                 {
                                     ...info,
                                     matchTypeId: matchTypeId,
@@ -368,7 +430,7 @@ const importMatchService = async (request, fastify) => {
                     };
                 }
 
-                await insertCommentaryTeamsOnImportQuery(commTeamData, request, fastify);
+                insertCommentaryTeamsOnImportQuery(commTeamData, request, fastify);
                 if (
                     team1Players &&
                     team1Players.length > 0 &&
@@ -394,7 +456,7 @@ const importMatchService = async (request, fastify) => {
                         }),
                     ];
                     for (let info of data) {
-                        await insertCommentaryPlayers(
+                        insertCommentaryPlayers(
                             {
                                 ...info,
                                 matchTypeId: matchTypeId,
@@ -410,20 +472,25 @@ const importMatchService = async (request, fastify) => {
         global.tblCommentaryPlayers = await getAllCommentaryPlayerQuery(fastify);
         global.tblCommentaryTeams = await getAllCommentaryTeamsQuery(fastify);
     } else {
+        insertEntityImportLogsQuery("Commentary already successfully", request, fastify)
         return "Commentary already imported"
     }
-
+    insertEntityImportLogsQuery("Commentary imported successfully", request, fastify)
     return "Commentary imported successfully";
 };
 
 const importCompetitionService = async (request, fastify) => {
-    const { cid, title, datestart, dateend, status, venue_list, category } = request.body;
+    const { cid } = request.body;
 
+    const compOverViewData = await importCompetitonOnEntityAPI(cid, request, fastify);
+    if (!compOverViewData) {
+        throw new Error("Response error from entity sport API");
+    }
     const existingByTpId = global.tblCompetitions.find(item => item.tpId === cid);
 
     if (!existingByTpId) {
         const existingByName = global.tblCompetitions.find(item =>
-            item.competition.trim().toLowerCase() === title.trim().toLowerCase()
+            item.competition.trim().toLowerCase() === compOverViewData?.title.trim().toLowerCase()
         );
 
         if (existingByName) {
@@ -431,7 +498,7 @@ const importCompetitionService = async (request, fastify) => {
                 ...existingByName,
                 tpId: cid,
             };
-            await updateCompititionQuery(data, fastify, request);
+            updateCompititionQuery(data, fastify, request);
             const index = global.tblCompetitions.findIndex(item =>
                 item.competitionId === existingByName.competitionId
             );
@@ -441,7 +508,7 @@ const importCompetitionService = async (request, fastify) => {
             }
         } else {
             const data = {
-                competition: title,
+                competition: compOverViewData?.title,
                 eventTypeId: 1,
                 refId: null,
                 image: null,
@@ -451,12 +518,12 @@ const importCompetitionService = async (request, fastify) => {
                 isPointTable: true,
                 matchTypeId: null,
                 imagePath: null,
-                isMen: category?.toLowerCase().trim() == "women" ? false : true,
+                isMen: compOverViewData?.category?.toLowerCase().trim() == "women" ? false : true,
                 type: 1,
                 isVirtual: true,
-                commStatus: status === "fixture" ? 1 : status === "live" ? 2 : 3,
-                startDate: datestart,
-                endDate: dateend,
+                commStatus: compOverViewData?.status === "fixture" ? 1 : compOverViewData?.status === "live" ? 2 : 3,
+                startDate: compOverViewData?.datestart,
+                endDate: compOverViewData?.dateend,
                 tpId: cid,
             };
 
@@ -464,9 +531,10 @@ const importCompetitionService = async (request, fastify) => {
             global.tblCompetitions.push(saveData);
         }
     }
+    importPlayersAndTeamsService(request, fastify);
 
     // save venues
-    for (const venue of venue_list) {
+    for (const venue of compOverViewData?.venue_list) {
         const existingVenueByTpId = global.tblVenues.find(item =>
             item.tpId === venue?.venue_id
         );
@@ -485,10 +553,10 @@ const importCompetitionService = async (request, fastify) => {
                 tpId: venue?.venue_id
             };
 
-            const updatedVenue = await updateVenueQuery(updateData, fastify, request);
+            updateVenueQuery(updateData, fastify, request);
             const index = global.tblVenues.findIndex(item => item.id === existingVenueByName.id);
             if (index !== -1) {
-                global.tblVenues[index] = updatedVenue[0];
+                global.tblVenues[index].tpId = venue?.venue_id;
             }
             continue;
         }
@@ -508,202 +576,294 @@ const importCompetitionService = async (request, fastify) => {
         const saveVenue = await insertVenueQuery(saveData, fastify, request);
         global.tblVenues.push(saveVenue);
     }
-
+    insertEntityImportLogsQuery("Competition imported successfully", request, fastify)
     return "Competition imported successfully";
 }
 
+
+const importPlayersAndTeamsService = async (request, fastify) => {
+    try {
+        const { cid } = request.body;
+        const teamSquad = await importPlayerAndTeamOnEntityAPI(cid, request, fastify);
+
+        if (!teamSquad || !teamSquad.squads) {
+            throw new Error("Response error from entity sport API");
+        }
+        for (const squad of teamSquad?.squads) {
+            // teams save and update
+            const team_id = await insertAndUpdateTeamService(squad.team, request, fastify);
+            //Players saving and update
+            for (const player of squad.players) {
+                insertAndUpdatePlayerService(player, team_id, request, fastify);
+            }
+        }
+    } catch (error) {
+        console.log("error importPlayersAndTeamsService", error.message);
+        insertEntityImportLogsQuery(error.message || "error in importPlayersAndTeamsService", request, fastify)
+    }
+};
+
 const insertAndUpdateTeamService = async (team, request, fastify) => {
-    let playerTeamId
-    const validateTpId = global.tblTeams.find(item =>
-        item.tpId === team.tid
-    );
-    if (validateTpId) {
-        playerTeamId = validateTpId.teamId
-    } else {
-        const existingByName = global.tblTeams.find(item =>
-            item.teamName?.trim().toLowerCase() === team.title?.trim().toLowerCase()
+    try {
+        let playerTeamId
+        const validateTpId = global.tblTeams.find(item =>
+            item.tpId === team.tid
         );
-
-        if (existingByName) {
-            const updateData = {
-                ...existingByName,
-                tpId: team.tid,
-                userId: request.userTokenInfo.WrUserId,
-                country: team.country,
-            };
-            playerTeamId = updateData.teamId
-            updateTeamQuery(updateData, fastify, request);
-            const index = global.tblTeams.findIndex(t => t.teamId === updateData.teamId);
-            if (index !== -1) global.tblTeams[index].tpId = team.tid;
-            playerTeamId = updateData.teamId;
+        if (validateTpId) {
+            playerTeamId = validateTpId.teamId
         } else {
-            let teamImg, teamImgPath;
-            if (team.logo_url) {
-                try {
-                    const imageResponse = await axios.get(team.logo_url, {
-                        responseType: "arraybuffer",
-                    });
+            const existingByName = global.tblTeams.find(item =>
+                item.teamName?.trim().toLowerCase() === team.title?.trim().toLowerCase()
+            );
 
-                    const imgName = generateImageName({ name: team.title });
+            if (existingByName) {
+                const updateData = {
+                    ...existingByName,
+                    tpId: team.tid,
+                    userId: request.userTokenInfo.WrUserId,
+                    country: team.country,
+                };
+                playerTeamId = updateData.teamId
+                updateTeamQuery(updateData, fastify, request);
+                const index = global.tblTeams.findIndex(t => t.teamId === updateData.teamId);
+                if (index !== -1) global.tblTeams[index].tpId = team.tid;
+                playerTeamId = updateData.teamId;
+            } else {
+                let teamImg, teamImgPath;
+                if (team.logo_url) {
+                    try {
+                        const imageResponse = await axios.get(team.logo_url, {
+                            responseType: "arraybuffer",
+                        });
 
-                    const projectName = global.tblConfigs.find(
-                        item => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
-                    )?.value;
+                        const imgName = generateImageName({ name: team.title });
 
-                    const imageBuffer = Buffer.from(imageResponse.data, "binary");
+                        const projectName = global.tblConfigs.find(
+                            item => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
+                        )?.value;
 
-                    const imageFile = {
-                        data: imageBuffer,
-                        filename: `${imgName}.png`,
-                        encoding: "7bit",
-                        mimetype: imageResponse.headers["content-type"] || "image/png",
-                        limit: false,
-                    };
+                        const imageBuffer = Buffer.from(imageResponse.data, "binary");
 
-                    const { fullPath, imagePath } = await storeImageOnServer({
-                        image: imageFile,
-                        project: projectName,
-                        name: imgName,
-                        ...ImgModuleConfig.Teams,
-                    });
+                        const imageFile = {
+                            data: imageBuffer,
+                            filename: `${imgName}.png`,
+                            encoding: "7bit",
+                            mimetype: imageResponse.headers["content-type"] || "image/png",
+                            limit: false,
+                        };
 
-                    teamImg = fullPath;
-                    teamImgPath = imagePath;
-                } catch (error) {
-                    console.error(`Image download/save failed for team: ${team.title}`, error.message);
+                        const { fullPath, imagePath } = await storeImageOnServer({
+                            image: imageFile,
+                            project: projectName,
+                            name: imgName,
+                            ...ImgModuleConfig.Teams,
+                        });
+
+                        teamImg = fullPath;
+                        teamImgPath = imagePath;
+                    } catch (error) {
+                        console.error(`Image download/save failed for team: ${team.title}`, error.message);
+                    }
                 }
+
+                const teamPayload = {
+                    teamName: team.title,
+                    eventTypeId: 1,
+                    tpId: team.tid,
+                    teamShortName: team.abbr,
+                    image: teamImg,
+                    imagePath: teamImgPath,
+                    userId: request.userTokenInfo.WrUserId,
+                    country: team?.country,
+                };
+
+                const savedTeam = await insertTeamQuery(teamPayload, fastify, request);
+                global.tblTeams.push(savedTeam);
+                playerTeamId = savedTeam.teamId
+            }
+        }
+
+        const competition = global.tblCompetitions.find(c => c.tpId === request.body.cid);
+        if (competition) {
+            const exists = global.tblTeamCompetition.find(
+                item => item.teamId === playerTeamId && item.refCompetitionId === competition.competitionId
+            );
+            if (!exists) {
+                const res = await insertTeamCompetitionQuery(
+                    {
+                        teamId: playerTeamId,
+                        refCompetitionId: competition.competitionId,
+                        userId: request.userTokenInfo.WrUserId,
+                    },
+                    fastify,
+                    request
+                );
+                global.tblTeamCompetition.push(res);
             }
 
-            const teamPayload = {
-                teamName: team.title,
-                eventTypeId: 1,
-                tpId: team.tid,
-                teamShortName: team.abbr,
-                image: teamImg,
-                imagePath: teamImgPath,
-                userId: request.userTokenInfo.WrUserId,
-                country: team?.country,
-            };
+            const tournamentTeams = await getTournamentPointsByTeamIdQuery({
+                competitionId: competition?.competitionId,
+                teamId: playerTeamId
+            }, request, fastify);
 
-            const savedTeam = await insertTeamQuery(teamPayload, fastify, request);
-            global.tblTeams.push(savedTeam);
-            playerTeamId = savedTeam.teamId
-        }
-    }
-
-    const competition = global.tblCompetitions.find(c => c.tpId === request.body.cid);
-    if (competition) {
-        const exists = global.tblTeamCompetition.find(
-            item => item.teamId === playerTeamId && item.refCompetitionId === competition.competitionId
-        );
-        if (!exists) {
-            const res = await insertTeamCompetitionQuery(
-                {
+            if (!tournamentTeams) {
+                const tourData = {
                     teamId: playerTeamId,
-                    refCompetitionId: competition.competitionId,
-                    userId: request.userTokenInfo.WrUserId,
-                },
-                fastify,
-                request
-            );
-            global.tblTeamCompetition.push(res);
+                    competitionId: competition?.competitionId,
+                    isActive: true
+                }
+                insertTournamentTeamPointsQuery(tourData, fastify, request);
+            }
         }
+
+        return playerTeamId
+    } catch (error) {
+        console.log("error insertAndUpdateTeamService", error.message);
+        insertEntityImportLogsQuery(error.message || "error in insertAndUpdateTeamService", request, fastify)
     }
-    return playerTeamId
 }
 
 const insertAndUpdatePlayerService = async (player, team_id, request, fastify) => {
-    let playerId
-    const validatetpId = global.tblPlayers.find(item =>
-        item.tpId === player?.pid
-    );
-    if (validatetpId) {
-        playerId = validatetpId.playerId
-    } else {
-        const existingByName = global.tblPlayers.find(p =>
-            p.playerName?.trim().toLowerCase() === player.title?.trim().toLowerCase()
+    try {
+        let playerId, playerName
+        const validatetpId = global.tblPlayers.find(item =>
+            item.tpId === player?.pid
         );
-
-        if (existingByName) {
-            const updateData = {
-                ...existingByName,
-                tpId: player.pid,
-                userId: request.userTokenInfo.WrUserId,
-            };
-            updatePlayerQuery(updateData, fastify, request);
-            const index = global.tblPlayers.findIndex(p => p.playerId === updateData.playerId);
-            if (index !== -1) global.tblPlayers[index].tpId = player.pid;
-            playerId = updateData.playerId
-
+        if (validatetpId) {
+            playerId = validatetpId.playerId
+            playerName = validatetpId.playerName
         } else {
-            let playerImg, playerImgPath;
-            if (player.logo_url) {
-                try {
-                    const imageResponse = await axios.get(player.logo_url, { responseType: "arraybuffer" });
-                    const imgName = generateImageName({ name: player.title });
-                    const projectName = global.tblConfigs.find(c => c.key.toLowerCase() === PROJECT_NAME.toLowerCase())?.value;
+            const existingByName = global.tblPlayers.find(p =>
+                p.playerName?.trim().toLowerCase() === player.title?.trim().toLowerCase()
+            );
 
-                    const imageFile = {
-                        data: Buffer.from(imageResponse.data, "binary"),
-                        filename: `${imgName}.png`,
-                        encoding: "7bit",
-                        mimetype: imageResponse.headers["content-type"] || "image/png",
-                        limit: false,
-                    };
+            if (existingByName) {
+                const updateData = {
+                    ...existingByName,
+                    tpId: player.pid,
+                    userId: request.userTokenInfo.WrUserId,
+                };
+                updatePlayerQuery(updateData, fastify, request);
+                const index = global.tblPlayers.findIndex(p => p.playerId === updateData.playerId);
+                if (index !== -1) global.tblPlayers[index].tpId = player.pid;
+                playerId = updateData.playerId
+                playerName = updateData?.playerName
 
-                    const { fullPath, imagePath } = await storeImageOnServer({
-                        image: imageFile,
-                        project: projectName,
-                        name: imgName,
-                        ...ImgModuleConfig.Players,
-                    });
+            } else {
+                let playerImg, playerImgPath;
+                if (player.logo_url) {
+                    try {
+                        const imageResponse = await axios.get(player.logo_url, { responseType: "arraybuffer" });
+                        const imgName = generateImageName({ name: player.title });
+                        const projectName = global.tblConfigs.find(c => c.key.toLowerCase() === PROJECT_NAME.toLowerCase())?.value;
 
-                    playerImg = fullPath;
-                    playerImgPath = imagePath;
-                } catch (err) {
-                    console.error(`Player image error [${player.title}]:`, err.message);
+                        const imageFile = {
+                            data: Buffer.from(imageResponse.data, "binary"),
+                            filename: `${imgName}.png`,
+                            encoding: "7bit",
+                            mimetype: imageResponse.headers["content-type"] || "image/png",
+                            limit: false,
+                        };
+
+                        const { fullPath, imagePath } = await storeImageOnServer({
+                            image: imageFile,
+                            project: projectName,
+                            name: imgName,
+                            ...ImgModuleConfig.Players,
+                        });
+
+                        playerImg = fullPath;
+                        playerImgPath = imagePath;
+                    } catch (err) {
+                        console.error(`Player image error [${player.title}]:`, err.message);
+                    }
                 }
+
+                const playerType = player.playing_role === "bat"
+                    ? 1 : player.playing_role === "bowl"
+                        ? 2 : player.playing_role === "wk"
+                            ? 3 : 4;
+
+                const playerPayload = {
+                    playerName: player.title,
+                    country: player.nationality,
+                    displayName: player.short_name,
+                    playerTypeId: playerType,
+                    tpId: player.pid,
+                    isKipper: playerType === 3,
+                    isActive: true,
+                    userId: request.userTokenInfo.WrUserId,
+                    image: playerImg,
+                    imagePath: playerImgPath,
+                    eventTypeId: 1,
+                    isLeftHandedBatting: player.batting_style?.toLowerCase().includes("left") || false,
+                };
+
+                const savedPlayer = await insertPlayerQuery(playerPayload, fastify, request);
+                global.tblPlayers.push(savedPlayer);
+                playerId = savedPlayer.playerId
+                playerName = savedPlayer?.playerName
+            }
+        }
+        if (team_id != null && team_id != undefined) {
+            const teamPlayersData = await getTeamPlayerByTeamIdQuery(team_id, fastify, request);
+            const isAlreadyLinked = teamPlayersData.some(t => t.refPlayerId === playerId);
+
+            if (!isAlreadyLinked) {
+                await insertTeamPlayerQuery({
+                    teamId: team_id,
+                    refPlayerId: playerId,
+                    userId: request.userTokenInfo.WrUserId,
+                }, fastify, request);
             }
 
-            const playerType = player.playing_role === "bat"
-                ? 1 : player.playing_role === "bowl"
-                    ? 2 : player.playing_role === "wk"
-                        ? 3 : 4;
-
-            const playerPayload = {
-                playerName: player.title,
-                country: player.nationality,
-                displayName: player.short_name,
-                playerTypeId: playerType,
-                tpId: player.pid,
-                isKipper: playerType === 3,
-                isActive: true,
-                userId: request.userTokenInfo.WrUserId,
-                image: playerImg,
-                imagePath: playerImgPath,
-                eventTypeId: 1,
-                isLeftHandedBatting: player.batting_style?.toLowerCase().includes("left") || false,
-            };
-
-            const savedPlayer = await insertPlayerQuery(playerPayload, fastify, request);
-            global.tblPlayers.push(savedPlayer);
-            playerId = savedPlayer.playerId
+            const competition = global.tblCompetitions.find(c => c.tpId === request.body.cid);
+            if (competition) {
+                const tourplayerData = await getPlayerByIdsQuery({
+                    teamId: team_id, competitionId: competition?.competitionId,
+                    playerId: playerId
+                }, request, fastify);
+                if (!tourplayerData) {
+                    const insertData = {
+                        competitionId: competition?.competitionId,
+                        teamId: team_id,
+                        playerId: playerId,
+                        playerName: playerName,
+                        userId: request.userTokenInfo.WrUserId,
+                    };
+                    const saveData = await insertTournamentTeamPlayersQuery(insertData, request, fastify);
+                    global.tblTournamentTeamPlayers.push(saveData[0]);
+                }
+            }
         }
+    } catch (error) {
+        console.log("error insertAndUpdatePlayerService", error.message);
+        insertEntityImportLogsQuery(error.message || "error in insertAndUpdatePlayerService", request, fastify)
     }
-    if (team_id != null && team_id != undefined) {
-        const teamPlayersData = await getTeamPlayerByTeamIdQuery(team_id, fastify, request);
-        const isAlreadyLinked = teamPlayersData.some(t => t.refPlayerId === playerId);
-
-        if (!isAlreadyLinked) {
-            await insertTeamPlayerQuery({
-                teamId: team_id,
-                refPlayerId: playerId,
-                userId: request.userTokenInfo.WrUserId,
-            }, fastify, request);
-        }
-    }
-
 }
+
+const importPlayerByMIdService = async (team_id, request, fastify) => {
+    try {
+        const { cid } = request.body;
+        const teamSquad = await importPlayerAndTeamOnEntityAPI(cid, request, fastify);
+
+        if (!teamSquad || !teamSquad.squads) {
+            throw new Error("Response error from entity sport API");
+        }
+        for (const squad of teamSquad?.squads) {
+            const teamData = global.tblTeams.find(item => item.teamId == team_id);
+            if (teamData && teamData.tpId == squad.team?.tid) {
+                const teamId = teamData.teamId
+                for (const player of squad.players) {
+                    insertAndUpdatePlayerService(player, teamId, request, fastify);
+                }
+            }
+        }
+    } catch (error) {
+        console.log("error importPlayerByMIdService", error.message);
+        insertEntityImportLogsQuery(error.message || "error in importPlayerByMIdService", request, fastify)
+    }
+};
 
 const importPlayerService = async (request, fastify) => {
     const { cid } = request.body;
