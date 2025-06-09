@@ -36,14 +36,14 @@ const createMatchTypeService = async (request, fastify) => {
   if (validateMatchType) {
     throw new Error("MatchType already exist");
   }
-  // if (request.body?.entityEnum) {
-  //   const validate = global.tblMatchTypes.find(item => 
-  //     item.entityEnum === request.body.entityEnum
-  //   );
-  //   if(validate) {
-  //     throw new Error("This entity enum already exist");
-  //   }
-  // }
+  if (request.body?.entityEnum) {
+    const validate = global.tblMatchTypes.find(item => 
+      item.entityEnum == request.body.entityEnum
+    );
+    if(validate) {
+      throw new Error("This entity enum already exist");
+    }
+  }
   const data = await insertMatchTypeQuery(
     { ...request.body, userId: request.userTokenInfo.WrUserId },
     fastify,
@@ -72,14 +72,14 @@ const cloneMatchTypeService = async (request, fastify) => {
     throw new Error("MatchType already exist");
   }
 
-  // if (request.body?.entityEnum) {
-  //   const validateTpId = global.tblMatchTypes.find(item =>
-  //     item.entityEnum === request.body?.entityEnum
-  //   );
-  //   if (validateTpId) {
-  //     throw new Error("Entity enum already existed");
-  //   }
-  // }
+  if (request.body?.entityEnum) {
+    const validateTpId = global.tblMatchTypes.find(item =>
+      item.entityEnum == request.body?.entityEnum
+    );
+    if (validateTpId) {
+      throw new Error("Entity enum already existed");
+    }
+  }
 
   const data = await insertMatchTypeQuery(
     {
@@ -145,15 +145,15 @@ const updateMatchTypeService = async (request, fastify) => {
       throw new Error("MatchType already exist");
     }
   }
-  // if (request.body?.entityEnum) {
-  //   const validate = global.tblMatchTypes.find(item => 
-  //     item.entityEnum === request.body.entityEnum && 
-  //     item.matchTypeId !== request.body.matchTypeId
-  //   );
-  //   if(validate) {
-  //     throw new Error("This entity enum already exist");
-  //   }
-  // }
+  if (request.body?.entityEnum) {
+    const validate = global.tblMatchTypes.find(item => 
+      item.entityEnum == request.body.entityEnum && 
+      item.matchTypeId != request.body.matchTypeId
+    );
+    if(validate) {
+      throw new Error("This entity enum already exist");
+    }
+  }
   const data = await updateMatchTypeQuery(
     {
       ...request.body,
