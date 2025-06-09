@@ -14848,9 +14848,10 @@ const commentaryOverStartService = async (request, fastify) => {
       commentaryId,
       commentaryBallByBall,
       commentaryOvers,
+      commentaryPlayers,
       isCallPredict = false,
     } = request.body;
-    let comI,
+    let comI, 
       overIndex,
       ballByBallIndex;
 
@@ -14863,6 +14864,24 @@ const commentaryOverStartService = async (request, fastify) => {
       comI = global.tblCommentaries.findIndex(
         (item) => item.commentaryId == commentaryId
       );
+    }
+        // validate commentaryPlayers
+    if (commentaryPlayers) {
+      commentaryPlayers = commentaryPlayers.filter(
+        (player) =>
+          player.commentaryPlayerId != null ||
+          player.commentaryPlayerId != undefined
+      );
+      commentaryPlayers.forEach((player) => {
+        if (player.commentaryPlayerId) {
+          const index = global.tblCommentaryPlayers.findIndex(
+            (item) => item.commentaryPlayerId === player.commentaryPlayerId
+          );
+          if (index === -1) {
+            throw new Error("Commentary Player with this id not Found");
+          }
+        }
+      });
     }
     //validate over
     if (commentaryOvers) {
@@ -14925,13 +14944,14 @@ const commentaryOverStartService = async (request, fastify) => {
     }
     let updatedData = await fastify.db.query(
       `CALL proc_generate_over(
-        $1 , $2 , $3 ,$4 ,$5
+        $1 , $2 , $3 ,$4 ,$5,$6
       )`,
       {
         bind: [
           commentaryOvers ? JSON.stringify(commentaryOvers) : null,
           commentaryBallByBall ? JSON.stringify(commentaryBallByBall) : null,
           commentaryId,
+          commentaryPlayers ? JSON.stringify(commentaryPlayers) : null,
           null,
           null
         ],
@@ -14999,6 +15019,61 @@ const commentaryOverStartService = async (request, fastify) => {
           },
         })
       }
+    }
+    if (commentaryPlayers) {
+      response.commentaryPlayers = [];
+      commentaryPlayers.forEach((player) => {
+        const index = global.tblCommentaryPlayers.findIndex(
+          (item) => item.commentaryPlayerId === player.commentaryPlayerId
+        );
+        // get display name
+        let ds = global.tblPlayers.find((i) => i.playerId == player.playerId);
+        global.tblCommentaryPlayers[index] = {
+          ...global.tblCommentaryPlayers[index],
+          isPlay : player.isPlay,
+          onStrike : player.onStrike,
+          batterOrder : player.batterOrder,
+          bowlerOrder : player.bowlerOrder,
+          bowlerOver : player.bowlerOver
+        };
+        response.commentaryPlayers.push({
+          ...global.tblCommentaryPlayers[index],
+          displayName: ds.displayName,
+           isPlay : player.isPlay,
+          onStrike : player.onStrike,
+          batterOrder : player.batterOrder,
+          bowlerOrder : player.bowlerOrder,
+          bowlerOver : player.bowlerOver
+        });
+      });
+      let _plyers = commentaryPlayers.filter(
+        (_fil) => _fil.isPlay === true && _fil.onStrike !== null
+      );
+
+      try {
+        commentaryPlayers.forEach(async (player) => {
+          if (player.bowlerOver !== null && player.bowlerOver !== undefined) {
+            player.bowlerOver = player.bowlerOver.toString();
+          }
+          if (player.bowlerEconomy === "NaN") {
+            player.bowlerEconomy = null;
+          }
+          const _player = global.tblPlayers.filter(
+            (item) => item.playerId === player.playerId
+          );
+          if (_player.length > 0) {
+            player.playerimage = _player[0].image;
+            player.playerType = _player[0].playerType;
+            player.isKipper = _player[0].isKipper;
+          }
+        });
+      } catch (error) {}
+
+      sendDataForSocketUpdate.dataToUpdate.push({
+        module: "commentaryPlayers",
+        type: "update",
+        data: response.commentaryPlayers,
+      });
     }
 
     // call the getscore and emit the event data
