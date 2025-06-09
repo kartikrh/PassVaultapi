@@ -10,7 +10,7 @@ const importPlayerAndTeamOnEntityAPI = async (data, request, fastify) => {
         if (!authToken) {
             throw new Error("Auth token not found in config");
         }
-        let url = `${baseUrl}/admin/list/compSquadssss`;
+        let url = `${baseUrl}/admin/list/compSquads`;
         const result = await axios.post(url, { cid: data }, {
             headers: {
                 Authorization: `Bearer ${authToken}`,
