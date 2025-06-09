@@ -1634,7 +1634,9 @@ const getAllCommentaryBallByBallDataQuery = async (whereCondition = null, fastif
     "wrY2" as "y2",
     "wrShortType" as "shortType",
     "wrCommentryRemark" as "commentryRemark",
-    "wrCommentaryPartnershipId" as "commentaryPartnershipId"
+    "wrCommentaryPartnershipId" as "commentaryPartnershipId",
+    "wrCardKey" as "cardKey",
+    "wrCardType" as "cardType"
     from "tblCommentaryBallByBalls"
     ${whereCondition ? `WHERE ${whereCondition}` : ""}
     `,
@@ -2041,7 +2043,9 @@ const getAllCommentaryPartnershipDataQuery = async (whereCondition = null, fasti
       "wrP1Ball" as "p1Ball",
       "wrP2Ball" as "p2Ball",
       "wrP1Run" as "p1Run",
-      "wrP2Run" as "p2Run"
+      "wrP2Run" as "p2Run",
+      "wrTeamScore" as "teamScore",
+      "wrTeamWicket" as "teamWicket"
       from "tblCommentaryPartnerships"
       ${whereCondition ? `WHERE ${whereCondition}` : ""}
       `,
@@ -7062,6 +7066,71 @@ const insertCommentaryWithImportQuery = async (data, request, fastify) => {
     throw new Error(err.message);
   }
 };
+const insertCommentaryTeamsOnImportQuery = async (data, request, fastify) => {
+  
+  try {
+    return await fastify.db.query(
+      `
+      insert into "tblCommentaryTeams" ("wrCommentaryId" , "wrTeamId","wrTeamCaptain","wrTeamKipper" , "wrShortName" , "wrTeamName","wrCurrentInnings","wrIsBattingComplete"
+      , "wrTeamColor" , "wrBackgroundColor" , "wrTeamMaxOver", "wrDrsCount", "wrSubInning")
+       values (
+        $1,
+        $2,
+        $3,
+        $4,
+        (select "wrTeamShortName" from "tblTeams" where "wrTeamId" = $2),
+        (select "wrTeamName" from "tblTeams" where "wrTeamId" = $2),
+        $8,
+        false,
+        (select "wrTeamColor" from "tblTeams" where "wrTeamId" = $2),
+        (select "wrBackgroundColor" from "tblTeams" where "wrTeamId" = $2),
+        $9,
+        $10,
+        $11
+      )
+      ,(
+        $1,
+        $5,
+        $6,
+        $7,
+        (select "wrTeamShortName" from "tblTeams" where "wrTeamId" = $5),
+        (select "wrTeamName" from "tblTeams" where "wrTeamId" = $5),
+        $8,
+        false,
+        (select "wrTeamColor" from "tblTeams" where "wrTeamId" = $5),
+        (select "wrBackgroundColor" from "tblTeams" where "wrTeamId" = $5),
+        $9,
+        $10,
+        $11
+      )
+    `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [
+          data.commentaryId,
+          data.team1Id,
+          data.team1Captain || null,
+          data.team1Kipper || null,
+          data.team2Id,
+          data.team2Captain || null,
+          data.team2Kipper || null,
+          data.currentInnings,
+          data.teamMaxOver || null,
+          data.drsCount || 0,
+          data.subInning || null,
+        ],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/insertCommentaryTeamsOnImportQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -7187,4 +7256,5 @@ module.exports = {
   createVirtualWicketQuery,
   addCompTempQuery,
   insertCommentaryWithImportQuery,
+  insertCommentaryTeamsOnImportQuery,
 };

@@ -139,7 +139,8 @@ const insertSubScribeDomainQuery = async (request,fastify) =>{
                 "wrSubScribesDomainId" as "subScribesDomainId",
                 "wrSiteName" as "siteName",
                 "wrSiteDomain" as "siteDomain",
-                "wrIsApproved" as "isApproved"
+                "wrIsApproved" as "isApproved",
+                "wrCreatedDate" as "createdDate"
             FROM insert_data
             `,
             {
