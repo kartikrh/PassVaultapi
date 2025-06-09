@@ -1,27 +1,67 @@
 const { deleteClientQuery, insertClientQuery, updateClientQuery, activeInactiveClientQuery, isUserActiveInactiveQuery, clientEmailVerifyQuery, clientMobileVerifyQuery, deleteClientEncryptQuery, addClientDltReqQuery, getIdByEncrypt } = require("../repository/TableClient");
+const { encrypt, decrypt } = require("../utilities/index");
 
 const getAllClientService = async (request, fastify) => {
   const { isActive, isUserActive } = request.body;
   if (isActive == undefined) {
-    return global.tblClient.sort((a, b) => {
+    // return global.tblClient.sort((a, b) => {
+    //   return new Date(b.createdDate) - new Date(a.createdDate);
+    // })
+    return global.tblClient.map(item => {
+      const decryptPassword = item?.password ? decrypt(item.password) : null;
+      return {
+        ...item,
+        decryptPassword,
+      };
+    }).sort((a, b) => {
       return new Date(b.createdDate) - new Date(a.createdDate);
     })
   }
   if(isUserActive !== undefined && isActive !== undefined){
-    return global.tblClient.filter((item)=> item.isUserActive == isUserActive && item.isActive === isActive).sort((a, b) => {
+    // return global.tblClient.filter((item)=> item.isUserActive == isUserActive && item.isActive === isActive).sort((a, b) => {
+    //   return new Date(b.createdDate) - new Date(a.createdDate);
+    // })
+    return global.tblClient.filter((item)=> item.isUserActive == isUserActive && item.isActive === isActive)
+    .map(item => {
+      const decryptPassword = item?.password ? decrypt(item.password) : null;
+      return {
+        ...item,
+        decryptPassword,
+      };
+    }).sort((a, b) => {
       return new Date(b.createdDate) - new Date(a.createdDate);
     })
   }
-  return global.tblClient.filter((item) => item.isActive === isActive).sort((a, b) => {
+  // return global.tblClient.filter((item) => item.isActive === isActive).sort((a, b) => {
+  //     return new Date(b.createdDate) - new Date(a.createdDate);
+  // })
+  return global.tblClient.filter((item) => item.isActive === isActive)
+    .map(item => {
+      const decryptPassword = item?.password ? decrypt(item.password) : null;
+      return {
+        ...item,
+        decryptPassword,
+      };
+    }).sort((a, b) => {
       return new Date(b.createdDate) - new Date(a.createdDate);
   })
 };
 
 const clientByIdService = async (request, fastify) => {
   const { clientId } = request.body;
-  return (
-    global.tblClient.find((item) => item.clientId === clientId) || null
-  );
+  let result = global.tblClient.find(item => item.clientId === clientId) || null;
+
+  if (result) {
+    result = {
+      ...result,
+      decryptPassword: result?.password ? decrypt(result.password) : null,
+    };
+  }
+
+  return result;
+  // return (
+  //   global.tblClient.find((item) => item.clientId === clientId) || null
+  // );
 };
 
 const deleteClientService = async (request, fastify) => {
@@ -44,6 +84,9 @@ const saveClientService = async (request, fastify) => {
 };
 
 const createClientService = async (request, fastify) => {
+  if(request.body?.password) {
+    request.body.password = encrypt(request.body?.password)
+  }
   const data = await insertClientQuery(
     {
       ...request.body,
@@ -64,6 +107,9 @@ const updateClientService = async (request, fastify) => {
   if (!validateClientId) {
     throw new Error("Client with this Id not found");
   }
+  if(request.body?.password) {
+    request.body.password = encrypt(request.body?.password)
+  }
   const body = {
     clientId: request.body.clientId,
     fullName: request.body.fullName || validateClientId.fullName,
@@ -80,6 +126,7 @@ const updateClientService = async (request, fastify) => {
     isActive: request.body.isActive,
     countryCode : request.body.countryCode || validateClientId.countryCode,
     createdDate : validateClientId.createdDate,
+    password : request.body?.password || validateClientId?.password,
   };
 
   await updateClientQuery(body, request, fastify);
