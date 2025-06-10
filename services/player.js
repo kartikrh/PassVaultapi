@@ -163,7 +163,7 @@ const insertPlayerService = async (request, fastify) => {
   }
   const validateTpId = global.tblPlayers.find(
     (item) =>
-      item.tpId === request.body?.tpId && item.tpId !== null
+      item.tpId == request.body?.tpId && item.tpId != null
   );
 
   if (validateTpId) {
@@ -269,8 +269,8 @@ const updatePlayerService = async (request, fastify) => {
   if(checkPlayerId) {
     const validateTpId = global.tblPlayers.find(
       (item) =>
-        item.tpId === request.body?.tpId && item.playerId !== request.body.playerId &&
-        item.tpId !== null
+        item.tpId == request.body?.tpId && item.playerId != request.body.playerId &&
+        item.tpId != null
     );
   
     if (validateTpId) {

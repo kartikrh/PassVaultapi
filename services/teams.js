@@ -113,7 +113,7 @@ const createTeamService = async (request, fastify) => {
 
   const validateTeamName = global.tblTeams.find(
     (item) =>
-      item.teamName.trim().toLowerCase() === request.body.teamName.trim().toLowerCase()
+      item.teamName.trim().toLowerCase() == request.body.teamName.trim().toLowerCase()
   );
 
   if (validateTeamName) {
@@ -285,7 +285,7 @@ const updateTeamService = async (request, fastify) => {
   const validateTeamName = global.tblTeams.find(
     (item) =>
       item.teamName.trim().toLowerCase() === body.teamName.trim().toLowerCase() &&
-      item.teamId !== request.body.teamId
+      item.teamId != request.body.teamId
   );
 
   if (validateTeamName) {
@@ -294,7 +294,7 @@ const updateTeamService = async (request, fastify) => {
 
   if (request.body.eventTypeId) {
     const validateEventId = global.tblEventTypes.find(
-      (item) => item.eventTypeId === request.body.eventTypeId
+      (item) => item.eventTypeId == request.body.eventTypeId
     );
     if (!validateEventId) {
       throw new Error("EventId is not valid");
@@ -343,7 +343,7 @@ const updateTeamService = async (request, fastify) => {
   delete body.userId;
 
   const index = global.tblTeams.findIndex(
-    (item) => item.teamId === request.body.teamId
+    (item) => item.teamId == request.body.teamId
   );
 
   global.tblTeams[index] = body;

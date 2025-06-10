@@ -31,6 +31,13 @@ const {
   getAllDisplayStatusQuery,
   getAllCommentaryWicketQuery,
   getAllCommentaryPartnershipQuery,
+  getCommentaryByIdQuery,
+  getAllCommentaryTeamsDataQuery,
+  getAllCommentaryPlayerDataQuery,
+  getAllCommentaryWicketDataQuery,
+  getAllOversDataQuery,
+  getAllCommentaryPartnershipDataQuery,
+  getAllCommentaryBallByBallDataQuery,
 } = require("../repository/TableCommentary");
 const { getAllNewsQuery } = require("../repository/TableNews");
 const {
@@ -413,7 +420,7 @@ const panelLoadDataByEnum = async (request, fastify, reply) => {
     if (pass.value !== password) {
       throw new Error("Invalid password");
     }
-    let {module} = request.body;
+    let {module, commentaryId} = request.body;
     for (const mod of module) {
       switch (mod) {
         case ModuleTypes.Commentary: {
@@ -650,6 +657,55 @@ const panelLoadDataByEnum = async (request, fastify, reply) => {
         case ModuleTypes.Venue: {
           const venues =  await getAllVenuesQuery(fastify);
           global.tblVenues = venues;
+          break;
+        }
+        case ModuleTypes.CommentaryById: {
+          if(commentaryId) {
+            let whereCondition = `"wrCommentaryId" = ${commentaryId}`
+
+            const getCommentary = await getCommentaryByIdQuery(request, fastify);
+            const getCommentaryTeams = await getAllCommentaryTeamsDataQuery(whereCondition, fastify);
+            const getCommentaryPlayers = await getAllCommentaryPlayerDataQuery(whereCondition, fastify);
+            const getCommentaryBallByBalls = await getAllCommentaryBallByBallDataQuery(whereCondition, fastify);
+            const getOvers = await getAllOversDataQuery(whereCondition, fastify);
+            const getCommentaryWickets = await getAllCommentaryWicketDataQuery(whereCondition, fastify);
+            const getCommentaryPartnerships = await getAllCommentaryPartnershipDataQuery(whereCondition, fastify);
+
+            const commentaryIndex = global.tblCommentaries.findIndex(item => item.commentaryId == commentaryId);
+            if (commentaryIndex !== -1) {
+              global.tblCommentaries[commentaryIndex] = getCommentary;
+            }
+            const filterByCommentaryId = item => item.commentaryId !== commentaryId;
+            global.tblCommentaryTeams = [
+              ...global.tblCommentaryTeams.filter(filterByCommentaryId),
+              ...getCommentaryTeams
+            ];
+
+            global.tblCommentaryPlayers = [
+              ...global.tblCommentaryPlayers.filter(filterByCommentaryId),
+              ...getCommentaryPlayers
+            ];
+
+            global.tblCommentaryBallByBall = [
+              ...global.tblCommentaryBallByBall.filter(filterByCommentaryId),
+              ...getCommentaryBallByBalls
+            ];
+
+            global.tblOvers = [
+              ...global.tblOvers.filter(filterByCommentaryId),
+              ...getOvers
+            ];
+
+            global.tblCommentaryWicket = [
+              ...global.tblCommentaryWicket.filter(filterByCommentaryId),
+              ...getCommentaryWickets
+            ];
+
+            global.tblCommentaryPartnership = [
+              ...global.tblCommentaryPartnership.filter(filterByCommentaryId),
+              ...getCommentaryPartnerships
+            ];
+          }
           break;
         }
         default:

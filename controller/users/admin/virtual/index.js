@@ -44,7 +44,7 @@ const ballByBallChange = async (request, reply, fastify) => {
     const result = await ballByBallChangeService(request,fastify);
     reply.status(200).send(virtualSuccess(result, 200));;
   } catch (err) {
-    console.log(err)
+    // console.log(err)
     errorLogger(fastify, err.message, commonPath + "/ballByBallChange", request);
     reply.status(200).send(virtualError(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }

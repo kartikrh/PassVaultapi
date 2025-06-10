@@ -216,7 +216,8 @@ const createVirtualEventService = async (request, fastify) => {
       commentaryId: commentaryData.commentaryId,
       team1Id: request.body.team1Id,
       team2Id: request.body.team2Id,
-      teamMaxOver : matchType.maxOversInFirstInings 
+      teamMaxOver : matchType.maxOversInFirstInings,
+      subInning: request.body?.subInning ?? null
     };
     const teamsData = await insertVirtualCommentaryTeams(
       teamData,
@@ -1168,7 +1169,6 @@ const ballByBallChangeService = async (request, fastify) => {
       delete result.comOver;
       return {
         ...result,
-        inningChange: false,
         ...getRes,
         over
       }
@@ -1728,7 +1728,7 @@ const checkInningsSwitch = async (data, request, fastify) => {
       // conditionsToCheck.push(true)
       break;
     case "WICKET":
-      wicketLimit = batTeam?.teamWicket > maxNoOfWicket - 2;
+      wicketLimit = batTeam?.teamWicket >= maxNoOfWicket;
       conditionsToCheck.push(wicketLimit);
       break;
     case "RUN":
@@ -1783,6 +1783,15 @@ const checkInningsSwitch = async (data, request, fastify) => {
         .sort(
           (a, b) => b.commentaryPartnershipId - a.commentaryPartnershipId
         )[0];
+      // check last over
+      const over = global.tblOvers
+      .filter(
+        (item) =>
+          item?.commentaryId === commentaryId &&
+          item.currentInnings == commentaryDetails.currentInnings
+      )
+      .sort((a, b) => b.overId - a.overId)[0];
+        
       // inning change code
       result = await onInningChangeService(
         {
@@ -1803,6 +1812,7 @@ const checkInningsSwitch = async (data, request, fastify) => {
       return {
         matchComplete: matchComplete,
         inningChange: true,
+        comOver : over
       };
     }
     res = await saveComVirtual(
@@ -2274,6 +2284,15 @@ const handleWicketService = async (data, request, fastify) => {
       isWicket: true,
       // result : res
     };
+  }
+  if(mc.inningChange){
+    return {
+      isMatchComplete: mc.matchComplete,
+      isOverComplete: false,
+      isWicket: true,
+      inningChange : mc.inningChange,
+      comOver : mc.comOver ?? null
+    }
   }
   // player selection
   const { player } = await changePlayer({

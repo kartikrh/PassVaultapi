@@ -71,9 +71,14 @@ const insertSubScribeDomain = async (request, fastify) => {
           ...subDomainData
         );
     }
-    const data = await getDomainByIdQuery(domainData.subScribesDomainId, fastify);
-    global.tblSubScribesDomain.push(data);
-    return data;
+    domainData.subDomains = global.tblSubScribesSubDomain.filter(
+      (d) => d.subScribesDomainId === domainData.subScribesDomainId
+    );
+    domainData.subDomainCount = domainData.subDomains.length;
+    global.tblSubScribesDomain.push(domainData);
+    // const data = await getDomainByIdQuery(domainData.subScribesDomainId, fastify);
+    // return data;
+    return domainData;
   }
   // check if domain exist but any subDomains is new
   if(request.body.subDomains && request.body.subDomains.length > 0){
@@ -94,13 +99,22 @@ const insertSubScribeDomain = async (request, fastify) => {
       global.tblSubScribesSubDomain.push(...subDomain);    
     }
   }
-  const data = await getDomainByIdQuery(domainData.subScribesDomainId, fastify);
+  // const data = await getDomainByIdQuery(domainData.subScribesDomainId, fastify);
   // update domain
+  // const index = global.tblSubScribesDomain.findIndex(
+  //   (d) => d.subScribesDomainId === domainData.subScribesDomainId
+  // );
+  // global.tblSubScribesDomain[index] = data;
+  // return data;
+  domainData.subDomains = global.tblSubScribesSubDomain.filter(
+    (d) => d.subScribesDomainId === domainData.subScribesDomainId
+  );
+  domainData.subDomainCount = domainData.subDomains.length;
   const index = global.tblSubScribesDomain.findIndex(
     (d) => d.subScribesDomainId === domainData.subScribesDomainId
   );
-  global.tblSubScribesDomain[index] = data;
-  return data;
+  global.tblSubScribesDomain[index] = domainData;
+  return domainData;
 }
 const approveDomainService = async (request, fastify) => {
   // validate domain

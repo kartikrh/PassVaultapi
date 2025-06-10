@@ -751,6 +751,7 @@ const ModuleTypes = {
   Packages: 39,
   Whitelabel: 40,
   Venue: 41,
+  CommentaryById: 42
 }
 const callTPAPI = async (data ,fastify) =>{
   try {

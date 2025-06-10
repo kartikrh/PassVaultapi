@@ -38,7 +38,7 @@ const createMatchTypeService = async (request, fastify) => {
   }
   if (request.body?.entityEnum) {
     const validate = global.tblMatchTypes.find(item => 
-      item.entityEnum === request.body.entityEnum
+      item.entityEnum == request.body.entityEnum
     );
     if(validate) {
       throw new Error("This entity enum already exist");
@@ -74,7 +74,7 @@ const cloneMatchTypeService = async (request, fastify) => {
 
   if (request.body?.entityEnum) {
     const validateTpId = global.tblMatchTypes.find(item =>
-      item.entityEnum === request.body?.entityEnum
+      item.entityEnum == request.body?.entityEnum
     );
     if (validateTpId) {
       throw new Error("Entity enum already existed");
@@ -147,8 +147,8 @@ const updateMatchTypeService = async (request, fastify) => {
   }
   if (request.body?.entityEnum) {
     const validate = global.tblMatchTypes.find(item => 
-      item.entityEnum === request.body.entityEnum && 
-      item.matchTypeId !== request.body.matchTypeId
+      item.entityEnum == request.body.entityEnum && 
+      item.matchTypeId != request.body.matchTypeId
     );
     if(validate) {
       throw new Error("This entity enum already exist");

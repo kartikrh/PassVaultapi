@@ -19,7 +19,8 @@ const getAllClientQuery = async (fastify) => {
               "wrIsMobileVerified" AS "isMobileVerified",
               "wrCountryCode" as "countryCode",
               "wrSeamlessToken" as "seamlessToken",
-              "wrCreatedDate" as "createdDate"
+              "wrCreatedDate" as "createdDate",
+              "wrPassword" as "password"
         from "tblClient"
         where "wrIsDelete" = false
         `,
@@ -74,9 +75,10 @@ const insertClientQuery = async (data, request, fastify) => {
                         "wrProvider",
                         "wrIsActive",
                         "wrCreatedBy",
-                        "wrCreatedDate"
+                        "wrCreatedDate",
+                        "wrPassword"
                     )
-                values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, now()) returning *
+                values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, now(), $14) returning *
                 )
                 select 
                     "wrClientID" as "clientId",
@@ -93,7 +95,8 @@ const insertClientQuery = async (data, request, fastify) => {
                     "wrProvider" as "provider",
                     "wrIsActive" as "isActive",
                     "wrCountryCode" as "countryCode",
-                    "wrCreatedDate" as "createdDate"
+                    "wrCreatedDate" as "createdDate",
+                    "wrPassword" as "password"
                 from "insert_data"
             `,
       {
@@ -112,6 +115,7 @@ const insertClientQuery = async (data, request, fastify) => {
           data.provider,
           data.isActive || false,
           request.userTokenInfo.WrUserId,
+          data.password || null
         ],
       }
     );
@@ -144,7 +148,8 @@ const updateClientQuery = async (data, request, fastify) => {
                 "wrProvider" = $11,
                 "wrIsActive" = $12,
                 "wrModifyBy" = $13,
-                "wrModifyDate" = now()
+                "wrModifyDate" = now(),
+                "wrPassword" = $15
                 where "wrClientID" = $14
             `,
       {
@@ -162,7 +167,8 @@ const updateClientQuery = async (data, request, fastify) => {
           data.provider,
           data.isActive || false,
           request.userTokenInfo.WrUserId,
-          data.clientId
+          data.clientId,
+          data.password
         ],
       }
     );

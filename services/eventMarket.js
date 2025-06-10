@@ -798,7 +798,9 @@ const marketListByCIdServiceV1 = async (request, fastify) => {
         teamId: item.teamId,
         teamName: item.teamName,
         teamStatus : item.teamStatus,
-        shortName : item.shortName
+        shortName : item.shortName,
+        teamMaxOver : item.teamMaxOver,
+        teamOver :item.teamOver
       };
     });
   // 
@@ -809,6 +811,8 @@ const marketListByCIdServiceV1 = async (request, fastify) => {
       playerId: item.playerId,
       comPlayerId: item.commentaryPlayerId,
       playerName: item.playerName,
+      batBall : item.batBall,
+      batRun: item.batRun
     }
   });
 
@@ -2913,7 +2917,9 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
           market_type_category_id : parseInt(item.marketTypeCategoryId),
           lay_size : item.runners[0].laySize,
           back_size : item.runners[0].backSize,
-          rate_diff : item.rateDiff 
+          rate_diff : item.rateDiff,
+          line : item.runners[0].line ?? null,
+          predefinedLine : item.predefinedValue ?? null
         })
       }
       if( category &&	
@@ -2938,7 +2944,9 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
           lay_size : item.runners[0].laySize,
           back_size : item.runners[0].backSize,
           rate_diff : item.rateDiff,
-          line_diff : line_diff.toFixed(2) || 0
+          line_diff : line_diff.toFixed(2) || 0,
+          line : item.runners[0].line?? null,
+          predefinedLine : item.predefinedValue?? null
         });
       }
       if(category && category.categoryName.toLowerCase() == "fall of wicket"){
@@ -2957,7 +2965,9 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
           lay_size : item.runners[0].laySize,
           back_size : item.runners[0].backSize,
           rate_diff : item.rateDiff,
-          line_diff : line_diff_wick.toFixed(2) || 0
+          line_diff : line_diff_wick.toFixed(2) || 0,
+          line : item.runners[0].line?? null,
+          predefinedLine : item.predefinedValue?? null
         });
       }
       if(category && category.categoryName.toLowerCase() == "partnership boundaries"){
@@ -2976,7 +2986,9 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
           lay_size : item.runners[0].laySize,
           back_size : item.runners[0].backSize,
           rate_diff : item.rateDiff,
-          line_diff : line_diff_boun.toFixed(2) || 0
+          line_diff : line_diff_boun.toFixed(2) || 0,
+          line : item.runners[0].line?? null,
+          predefinedLine : item.predefinedValue?? null
         });
       }
       if(category && category.categoryName.toLowerCase() == "wicket lost balls"){
@@ -2995,7 +3007,9 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
           lay_size : item.runners[0].laySize,
           back_size : item.runners[0].backSize,
           rate_diff : item.rateDiff,
-          line_diff : line_diff_wick_ball.toFixed(2) || 0
+          line_diff : line_diff_wick_ball.toFixed(2) || 0,
+          line : item.runners[0].line?? null,
+          predefinedLine : item.predefinedValue?? null
         })
       }
       marketDataLogger(
@@ -3065,6 +3079,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
         fastify,
         request
       );
+      
       // let callPrediction = {}
       // // Check for error_msg in the response
       // if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
