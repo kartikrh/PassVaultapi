@@ -340,8 +340,8 @@ const commentaryDetailsByIdService = async (request, fastify) => {
   for (const team of commentaryTeams) {
     const _team = global.tblTeams.find((item) => item.teamId === team.teamId);
     if (_team) {
-      team.jersey = _team.jersey;
-      team.image = _team.image;
+      team.jersey = _team?.jersey;
+      team.image = _team?.image;
     }
   }
 
@@ -371,7 +371,7 @@ const commentaryDetailsByIdService = async (request, fastify) => {
       (item) => item.playerId === player.playerId
     );
     if (_player) {
-      player.playerimage = _player.image;
+      player.playerimage = _player?.image;
     }
   }
 
@@ -402,14 +402,14 @@ const commentaryDetailsByIdService = async (request, fastify) => {
       );
       if (_player1) {
         elem.player1image = _player1.playerimage;
-        elem.player1jerseyandimage = _player1.jerseyPlayerImage;
+        elem.player1jerseyandimage = _player1?.jerseyPlayerImage;
       }
       const _player2 = commentaryPlayers.find(
         (item) => item.commentaryPlayerId === elem.batter2Id
       );
       if (_player2) {
         elem.player2image = _player2.playerimage;
-        elem.player2jerseyandimage = _player2.jerseyPlayerImage;
+        elem.player2jerseyandimage = _player2?.jerseyPlayerImage;
       }
 
       return elem;
@@ -726,11 +726,11 @@ const createCommentaryService = async (request, fastify) => {
               const playerImgData = global.tblPlayers.find(
                 (elem) => elem.playerId == playerData[0].playerId
               );
-              if (playerImgData.image && teamData.jersey) {
+              if (playerImgData?.image && teamData?.jersey) {
                 mergeAndSaveImage(
                   {
-                    playerImage: playerImgData.image,
-                    jersey: teamData.jersey,
+                    playerImage: playerImgData?.image,
+                    jersey: teamData?.jersey,
                     playerName: playerImgData.playerName,
                     teamName: teamData.teamName,
                     commentaryPlayerId: playerData[0].commentaryPlayerId,
@@ -828,11 +828,11 @@ const createCommentaryService = async (request, fastify) => {
             const playerImgData = global.tblPlayers.find(
               (elem) => elem.playerId == playerData[0].playerId
             );
-            if (playerImgData.image && teamData.jersey) {
+            if (playerImgData?.image && teamData?.jersey) {
               mergeAndSaveImage(
                 {
-                  playerImage: playerImgData.image,
-                  jersey: teamData.jersey,
+                  playerImage: playerImgData?.image,
+                  jersey: teamData?.jersey,
                   playerName: playerImgData.playerName,
                   teamName: teamData.teamName,
                   commentaryPlayerId: playerData[0].commentaryPlayerId,
@@ -1214,11 +1214,11 @@ const updateCommentaryService = async (request, fastify) => {
                   const playerImgData = global.tblPlayers.find(
                     (elem) => elem.playerId == info.playerId
                   );
-                  if (playerImgData.image && teamData.jersey) {
+                  if (playerImgData?.image && teamData?.jersey) {
                     mergeAndSaveImage(
                       {
-                        playerImage: playerImgData.image,
-                        jersey: teamData.jersey,
+                        playerImage: playerImgData?.image,
+                        jersey: teamData?.jersey,
                         playerName: playerImgData.playerName,
                         teamName: teamData.teamName,
                         commentaryPlayerId: players.commentaryPlayerId,
@@ -1313,11 +1313,11 @@ const updateCommentaryService = async (request, fastify) => {
                 const playerImgData = global.tblPlayers.find(
                   (elem) => elem.playerId == info.playerId
                 );
-                if (playerImgData.image && teamData.jersey) {
+                if (playerImgData?.image && teamData?.jersey) {
                   mergeAndSaveImage(
                     {
-                      playerImage: playerImgData.image,
-                      jersey: teamData.jersey,
+                      playerImage: playerImgData?.image,
+                      jersey: teamData?.jersey,
                       playerName: playerImgData.playerName,
                       teamName: teamData.teamName,
                       commentaryPlayerId: players.commentaryPlayerId,
@@ -1596,11 +1596,11 @@ const cloneCommentaryService = async (request, fastify) => {
               const playerImgData = global.tblPlayers.find(
                 (elem) => elem.playerId == playerData[0].playerId
               );
-              if (playerImgData.image && teamData.jersey) {
+              if (playerImgData?.image && teamData?.jersey) {
                 mergeAndSaveImage(
                   {
-                    playerImage: playerImgData.image,
-                    jersey: teamData.jersey,
+                    playerImage: playerImgData?.image,
+                    jersey: teamData?.jersey,
                     playerName: playerImgData.playerName,
                     teamName: teamData.teamName,
                     commentaryPlayerId: playerData[0].commentaryPlayerId,
@@ -1696,11 +1696,11 @@ const cloneCommentaryService = async (request, fastify) => {
             const playerImgData = global.tblPlayers.find(
               (elem) => elem.playerId == palyerData[0].playerId
             );
-            if (playerImgData.image && teamData.jersey) {
+            if (playerImgData?.image && teamData?.jersey) {
               mergeAndSaveImage(
                 {
-                  playerImage: playerImgData.image,
-                  jersey: teamData.jersey,
+                  playerImage: playerImgData?.image,
+                  jersey: teamData?.jersey,
                   playerName: playerImgData.playerName,
                   teamName: teamData.teamName,
                   commentaryPlayerId: palyerData[0].commentaryPlayerId,
@@ -5170,11 +5170,11 @@ const addTeamPlayerService = async (request, fastify) => {
     const playerImgData = global.tblPlayers.find(
       (elem) => elem.playerId == playerId
     );
-    if (playerImgData.image && teamData.jersey) {
+    if (playerImgData?.image && teamData?.jersey) {
       mergeAndSaveImage(
         {
-          playerImage: playerImgData.image,
-          jersey: teamData.jersey,
+          playerImage: playerImgData?.image,
+          jersey: teamData?.jersey,
           playerName: playerImgData.playerName,
           teamName: teamData.teamName,
           commentaryPlayerId: playerData[0].commentaryPlayerId,
@@ -7280,7 +7280,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     return {
       pid: player.playerId,
       batn: player.playerName,
-      bati: playerData.image,
+      bati: playerData?.image,
       trun: player.batRun || "0",
       tball: player.batBall || "0",
       t4: player.batFour || "0",
@@ -7299,7 +7299,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     return {
       pid: bowler.playerId,
       pn: bowler.playerName,
-      bli: playerData.image,
+      bli: playerData?.image,
       tov: bowler.bowlerOver || "0",
       cob: bowler.bowlerCurrentBall || "0",
       trun: bowler.bowlerRun || "0",
@@ -7703,10 +7703,10 @@ const getMatchListByStatus = async (body, request, fastify) => {
       te2n: commentaryTeamsTwo?.teamName || "",
       s1n: commentaryTeamsOne.shortName || "",
       s2n: commentaryTeamsTwo.shortName || "",
-      te1i: team1.image || "",
-      te2i: team2.image || "",
-      t1jr: team1.jersey || "",
-      t2jr: team2.jersey || "",
+      te1i: team1?.image || "",
+      te2i: team2?.image || "",
+      t1jr: team1?.jersey || "",
+      t2jr: team2?.jersey || "",
       loc: item.location || "",
       isrun: isRun,
       t1s: teamScore1 || "",
@@ -7752,10 +7752,10 @@ const getMatchListByStatus = async (body, request, fastify) => {
       srtup: item?.sortUpdate ?? "",
       isTest: item?.isTest,
       isActive: item?.isActive,
-      nte1i: team1.imagePath || "",
-      nt1jr: team1.jerseyPath || "",
-      nte2i: team2.imagePath || "",
-      nt2jr: team2.jerseyPath || "",
+      nte1i: team1?.imagePath || "",
+      nt1jr: team1?.jerseyPath || "",
+      nte2i: team2?.imagePath || "",
+      nt2jr: team2?.jerseyPath || "",
       etyId: eventType?.eventTypeId,
       ballDelay: item?.ballDelay || 0,
       overDelay: item?.overDelay || 0,
@@ -7922,14 +7922,14 @@ const getMatchDataByCId = async (data, request, fastify) => {
     te2n: commentaryTeamsTwo.teamName || "",
     s1n: commentaryTeamsOne.shortName || "",
     s2n: commentaryTeamsTwo.shortName || "",
-    te1i: team1.image || "",
-    te2i: team2.image || "",
-    t1jr: team1.jersey || "",
-    t2jr: team2.jersey || "",
-    nte1i: team1.imagePath || "",
-    nt1jr: team1.jerseyPath || "",
-    nte2i: team2.imagePath || "",
-    nt2jr: team2.jerseyPath || "",
+    te1i: team1?.image || "",
+    te2i: team2?.image || "",
+    t1jr: team1?.jersey || "",
+    t2jr: team2?.jersey || "",
+    nte1i: team1?.imagePath || "",
+    nt1jr: team1?.jerseyPath || "",
+    nte2i: team2?.imagePath || "",
+    nt2jr: team2?.jerseyPath || "",
     loc: com.location || "",
     isrun: isRun,
     t1s: teamScore1 || "",
@@ -8229,8 +8229,8 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
         tn2: commentaryTeamsTwo.teamName,
         tsn1: commentaryTeamsOne.shortName,
         tsn2: commentaryTeamsTwo.shortName,
-        tim1: team1.image,
-        tim2: team2.image,
+        tim1: team1?.image,
+        tim2: team2?.image,
         cci: commentary.currentInnings,
       },
     };
@@ -8294,10 +8294,10 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
       te2n: commentaryTeamsTwo.teamName || "",
       s1n: commentaryTeamsOne.shortName || "",
       s2n: commentaryTeamsTwo.shortName || "",
-      te1i: team1.image || "",
-      te2i: team2.image || "",
-      t1jr: team1.jersey || "",
-      t2jr: team2.jersey || "",
+      te1i: team1?.image || "",
+      te2i: team2?.image || "",
+      t1jr: team1?.jersey || "",
+      t2jr: team2?.jersey || "",
       loc: commentary.location || "",
       t1s: teamScore1 || "",
       t2s: teamScore2 || "",
@@ -8333,12 +8333,12 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
       .map((item) => {
         let tJer, timg;
         if (item.teamId === team1.teamId) {
-          tJer = team1.jersey;
-          timg = team1.image;
+          tJer = team1?.jersey;
+          timg = team1?.image;
         }
         if (item.teamId === team2.teamId) {
-          tJer = team2.jersey;
-          timg = team2.image;
+          tJer = team2?.jersey;
+          timg = team2?.image;
         }
         return {
           cid: item?.commentaryId,
@@ -8428,11 +8428,11 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
         if (player1Info) {
           partnershipList.push({
             pl1n: batter1Name,
-            pl1i: player1Info.image,
+            pl1i: player1Info?.image,
             runs: totalRuns,
             ball: totalBalls,
             pl2n: batter2Name,
-            pl2i: player2Info.image,
+            pl2i: player2Info?.image,
             tid: partnership.teamId,
             cci: partnership.currentInnings,
           });
@@ -8854,9 +8854,9 @@ const getCommenrtySquadDetailsService = async (request, fastify) => {
     te2n: commentaryTeamsTwo.teamName || "",
     s1n: commentaryTeamsOne.shortName || "",
     s2n: commentaryTeamsTwo.shortName || "",
-    te1i: team1.image || "",
-    te2i: team2.image || "",
-    t1jr: team1.jersey || "",
+    te1i: team1?.image || "",
+    te2i: team2?.image || "",
+    t1jr: team1?.jersey || "",
     t2jr: team2.jersey || "",
     // loc: commentary.location || "",
     // t1s: teamScore1 || "",
@@ -8959,10 +8959,10 @@ const getPartnershipListService = async (request, fastify) => {
     te2n: commentaryTeamsTwo.teamName || "",
     s1n: commentaryTeamsOne.shortName || "",
     s2n: commentaryTeamsTwo.shortName || "",
-    te1i: team1.image || "",
-    te2i: team2.image || "",
-    t1jr: team1.jersey || "",
-    t2jr: team2.jersey || "",
+    te1i: team1?.image || "",
+    te2i: team2?.image || "",
+    t1jr: team1?.jersey || "",
+    t2jr: team2?.jersey || "",
     // loc: commentary.location || "",
     // t1s: teamScore1 || "",
     // t2s: teamScore2 || "",
@@ -9026,11 +9026,11 @@ const getPartnershipListService = async (request, fastify) => {
     if (player1Info) {
       partnershipList.push({
         pl1n: batter1Name,
-        pl1i: player1Info.image,
+        pl1i: player1Info?.image,
         runs: totalRuns,
         ball: totalBalls,
         pl2n: batter2Name,
-        pl2i: player2Info.image,
+        pl2i: player2Info?.image,
       });
     }
   });
@@ -9119,10 +9119,10 @@ const getCommentaryTeamsListService = async (request, fastify) => {
     te2n: commentaryTeamsTwo.teamName || "",
     s1n: commentaryTeamsOne.shortName || "",
     s2n: commentaryTeamsTwo.shortName || "",
-    te1i: team1.image || "",
-    te2i: team2.image || "",
-    t1jr: team1.jersey || "",
-    t2jr: team2.jersey || "",
+    te1i: team1?.image || "",
+    te2i: team2?.image || "",
+    t1jr: team1?.jersey || "",
+    t2jr: team2?.jersey || "",
     // loc: commentary.location || "",
     // t1s: teamScore1 || "",
     // t2s: teamScore2 || "",
@@ -9283,8 +9283,8 @@ const getNodeEventbyEidService = async (request, fastify) => {
           tn2: commentaryTeamsTwo.teamName,
           tsn1: commentaryTeamsOne.shortName,
           tsn2: commentaryTeamsTwo.shortName,
-          tim1: team1.image,
-          tim2: team2.image,
+          tim1: team1?.image,
+          tim2: team2?.image,
           cci: commentary.currentInnings,
         },
       };
@@ -13816,7 +13816,7 @@ const commentaryStartService = async (request, fastify) => {
       );
       if (_player1) {
         partnership.player1image = _player1.playerimage;
-        partnership.player1jerseyandimage = _player1.jerseyPlayerImage;
+        partnership.player1jerseyandimage = _player1?.jerseyPlayerImage;
       }
       // Find player 2 image
       const _player2 = commentaryPlayers.find(
@@ -13824,7 +13824,7 @@ const commentaryStartService = async (request, fastify) => {
       );
       if (_player2) {
         partnership.player2image = _player2.playerimage;
-        partnership.player2jerseyandimage = _player2.jerseyPlayerImage;
+        partnership.player2jerseyandimage = _player2?.jerseyPlayerImage;
       }
       sendToSocket.dataToUpdate.push({
         module: "commentaryPartnership",
@@ -14691,7 +14691,7 @@ const commentaryScoreService = async (request, fastify) => {
           response.commentaryPartnershipDetails.player1image =
             _player1.playerimage;
           response.commentaryPartnershipDetails.player1jerseyandimage =
-            _player1.jerseyPlayerImage;
+            _player1?.jerseyPlayerImage;
         }
         const _player2 = commentaryPlayers.find(
           (item) => item.commentaryPlayerId === partnership.batter2Id
@@ -14700,7 +14700,7 @@ const commentaryScoreService = async (request, fastify) => {
           response.commentaryPartnershipDetails.player2image =
             _player2.playerimage;
           response.commentaryPartnershipDetails.player2jerseyandimage =
-            _player2.jerseyPlayerImage;
+            _player2?.jerseyPlayerImage;
         }
         sendDataForSocketUpdate.dataToUpdate.push({
           module: "commentaryPartnership",
@@ -14730,7 +14730,7 @@ const commentaryScoreService = async (request, fastify) => {
           response.commentaryPartnershipDetails.player1image =
             _player1.playerimage;
           response.commentaryPartnershipDetails.player1jerseyandimage =
-            _player1.jerseyPlayerImage;
+            _player1?.jerseyPlayerImage;
         }
         const _player2 = commentaryPlayers.find(
           (item) => item.commentaryPlayerId === commentaryPartnership.batter2Id
@@ -14739,7 +14739,7 @@ const commentaryScoreService = async (request, fastify) => {
           response.commentaryPartnershipDetails.player2image =
             _player2.playerimage;
           response.commentaryPartnershipDetails.player2jerseyandimage =
-            _player2.jerseyPlayerImage;
+            _player2?.jerseyPlayerImage;
         }
         sendDataForSocketUpdate.dataToUpdate.push({
           module: "commentaryPartnership",
