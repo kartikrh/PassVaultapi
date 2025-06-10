@@ -815,6 +815,20 @@ const marketListByCIdServiceV1 = async (request, fastify) => {
       batRun: item.batRun
     }
   });
+  // get comPartnership
+  let partnership =   global.tblCommentaryPartnership.find((item)=> item.commentaryId == commentaryId && item.isActive == true && item.currentInnings == commentary.currentInnings);
+  if(partnership){
+    partnership =  {
+      commentaryPartnershipId : partnership.commentaryPartnershipId,
+      teamId : partnership.teamId,
+      totalBalls : partnership.totalBalls,
+      totalRuns : partnership.totalRuns,
+      batter1Id : partnership.batter1Id,
+      batter2Id :partnership.batter2Id,
+      isActive : partnership.isActive,
+      order : partnership.order
+    }
+  }
 
   let configData = global.tblConfigs.find((item) => item.key.toLowerCase() == configConstants.IGNOREMARKETS.toLowerCase()).value || ""
   let ignoreMarkets = configData ? configData.split(",").map(Number) : [];
