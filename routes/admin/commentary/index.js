@@ -82,6 +82,7 @@ const {
   commentaryScore,
   commentaryOverStart,
   commentarySwapPlayer,
+  commentaryInningChange,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -1118,5 +1119,17 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request , reply) => commentarySwapPlayer(request,reply,fastify)
+  })
+  fastify.post("/comInningChange",{
+    schema : Commentary.comInningChange.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "edit"
+        }),
+    ],
+    handler: (request , reply) => commentaryInningChange(request,reply,fastify)
   })
 };
