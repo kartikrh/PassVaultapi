@@ -3501,6 +3501,29 @@ const Commentary = {
         "commentaryId" ,"commentaryDetails", "commentaryPartnership", "isCallPredict", "commentaryPlayers"
       ]
     }
+  },
+  comInningChange:{
+    schema : {
+      tags :["Commentary"],
+       description: "Commentary start details",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId : {type : "integer"},
+          commentaryDetails : {type : "object"},
+          commentaryPartnership : {type : "object"},
+          commentaryPlayers :   { type: "array", items: { type: "object" } },
+          commentaryTeams :   { type: "array", items: { type: "object" } },
+          isCallPredict : {type : "boolean"},
+          isEndInnings : {type : "boolean"}
+        },
+        required: [
+          "commentaryId" ,"commentaryDetails","commentaryPartnership", "isCallPredict",
+          "isEndInnings","commentaryPlayers","commentaryTeams"
+        ],
+      },
+    }
   }
 };
 

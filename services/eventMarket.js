@@ -858,6 +858,7 @@ const marketListByCIdServiceV1 = async (request, fastify) => {
     categories,
     target : target,
     comPlayer,
+    partnership : partnership ?? null
     //players,
   };
 };
