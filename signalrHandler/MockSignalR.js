@@ -672,6 +672,7 @@ const processRateQueue = async () => {
                                             commentaryId: item.commentaryId,
                                             dataTosave: JSON.parse(item.data),
                                             updateType: MarketUpdateType.marketInitilization,
+                                            predefinedValue : item.predefinedValue ?? null
                                         },
                                         null,
                                         _fastify
@@ -685,6 +686,8 @@ const processRateQueue = async () => {
                                             dataTosave: JSON.parse(item.data),
                                             updateType: MarketUpdateType.marketInitilization,
                                             lineDiff: item.line - (previousLine || 0),
+                                            predefinedValue : item.predefinedValue ?? null
+
                                         },
                                         null,
                                         _fastify
@@ -704,6 +707,8 @@ const processRateQueue = async () => {
                                         commentaryId: eventMarkets.commentaryId,
                                         dataTosave: JSON.parse(eventMarkets.data),
                                         updateType: MarketUpdateType.marketInitilization,
+                                        predefinedValue : item.predefinedValue ?? null
+
                                     },
                                     null,
                                     _fastify
@@ -717,6 +722,7 @@ const processRateQueue = async () => {
                                         dataTosave: JSON.parse(eventMarkets.data),
                                         updateType: MarketUpdateType.marketInitilization,
                                         lineDiff: eventMarkets.line - (previousLine || 0),
+                                        predefinedValue : item.predefinedValue ?? null
                                     },
                                     null,
                                     _fastify

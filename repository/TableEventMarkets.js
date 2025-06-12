@@ -4968,7 +4968,8 @@ const saveManualMarketQuery = async (data, request, fastify) => {
         dataTosave: typeof (dataToStore) === "string" ? JSON.parse(dataToStore) : dataToStore,
         updateType: MarketUpdateType.marketInitilization,
         lineDiff: 0,
-        isSendData: true
+        isSendData: true,
+        predefinedValue : mar[0].predefinedValue ?? null
       },
       request,
       fastify
@@ -5026,7 +5027,8 @@ const upManualMarketQuery = async (data, request, fastify) => {
                 dataTosave: typeof item === "string" ? JSON.parse(item) : item,
                 updateType: MarketUpdateType.marketUpdateRate,
                 lineDiff: 0,
-                isSendData: true
+                isSendData: true,
+                predefinedValue : item.predefinedValue ?? null
               },
               request,
               fastify
