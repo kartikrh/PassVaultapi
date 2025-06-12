@@ -3882,11 +3882,12 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
       let decimalOverCount = parseFloat(commentaryBallByBall.overCount);
       let _wkt = commentaryBallByBall.ballIsWicket;
       let partnership = updatedData.commentaryPartnershipDetails;
-      let boundary = partnership.totalSix + partnership.totalFour;
-      sendPartnership.push({
-        partnership_no: partnership?.order || 0,
-        partnership_boundaries: boundary,
-      });
+      let boundary = partnership?.totalSix || 0 + partnership?.totalFour || 0;
+      if (partnership)
+        sendPartnership.push({
+          partnership_no: partnership?.order || 0,
+          partnership_boundaries: boundary
+        })
       const predictionPayload = {
         playerpredictscore: {
           commentary_id: commentaryData.commentaryId,
@@ -3927,7 +3928,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           (item) => item.key === configConstants.CALLPREDICTIONMODULE
         )?.value || "false";
       if (isNodePrediction == "true")
-        processPredictScoreMarket(predictionPayload);
+        processPredictScoreMarket(predictionPayload, fastify)
       else
         callPredictorMarket(
           predictionPayload,
@@ -4391,35 +4392,33 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
       //_resFromPredictAPI = null;
       //_resFromPredictAPI = await
       if (isCallPredict == true) {
-        let key1 = global.tblConfigs.find(
-          (item) => item.key === configConstants.DEFAULTBALLFACED
-        );
-        let key2 = global.tblConfigs.find(
-          (item) => item.key === configConstants.DEFAULTPLAYERBOUNDARIES
-        );
-        let key3 = global.tblConfigs.find(
-          (item) => item.key === configConstants.DEFAULTPLAYERRUNS
-        );
-        callPredictorMarket(
-          {
-            commentary_id: commentaryDetails.commentaryId,
-            match_type_id: commentaryDetails.matchTypeId,
-            event_id: commentaryDetails.eventRefId,
-            default_ball_faced: parseInt(key1?.value) || 0,
-            default_player_boundaries: parseInt(key2?.value) || 0,
-            default_player_runs: parseInt(key3?.value) || 0,
-          },
-          "/api/v1/loadcommentary",
-          fastify,
-          request
-        ).catch((err) => {
-          errorLogger(
+        let isNodePrediction = global.tblConfigs.find((item) => item.key === configConstants.CALLPREDICTIONMODULE)?.value || "false";
+        if (isNodePrediction !== "true") {
+          let key1 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTBALLFACED);
+          let key2 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTPLAYERBOUNDARIES);
+          let key3 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTPLAYERRUNS);
+          callPredictorMarket(
+            {
+              commentary_id: commentaryDetails.commentaryId,
+              match_type_id: commentaryDetails.matchTypeId,
+              event_id: commentaryDetails.eventRefId,
+              default_ball_faced: parseInt(key1?.value) || 0,
+              default_player_boundaries: parseInt(key2?.value) || 0,
+              default_player_runs: parseInt(key3?.value) || 0,
+            },
+            "/api/v1/loadcommentary",
             fastify,
-            err.message,
-            "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
             request
-          );
-        });
+          ).catch((err) => {
+            errorLogger(
+              fastify,
+              err.message,
+              "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
+              request
+            );
+          });
+        }
+
       }
       setLineRatioInComService(
         {
@@ -5568,7 +5567,7 @@ const updateCommentaryStatusService = async (request, fastify) => {
         status: EventMarketStatus.Suspend,
         match_type_id: global.tblCommentaries[index].matchTypeId,
         is_open_market: false,
-        player_id: commentaryPlayerId || null,
+        player_id: commentaryPlayerId || null
       },
       "/api/v1/updatemarketstatus",
       fastify,
@@ -10455,57 +10454,45 @@ const loadcommentaryService = async (request, fastify) => {
           fastify
         );
       }
-      let key1 = global.tblConfigs.find(
-        (item) => item.key === configConstants.DEFAULTBALLFACED
-      );
-      let key2 = global.tblConfigs.find(
-        (item) => item.key === configConstants.DEFAULTPLAYERBOUNDARIES
-      );
-      let key3 = global.tblConfigs.find(
-        (item) => item.key === configConstants.DEFAULTPLAYERRUNS
-      );
-      _resFromPredictAPI = await callPredictorMarket(
-        {
-          commentary_id: commentary.commentaryId,
-          match_type_id: commentary.matchTypeId,
-          event_id: commentary.eventRefId,
-          // line_ratio_data: eventMarketLine,
-          default_ball_faced: parseInt(key1?.value) || 0,
-          default_player_boundaries: parseInt(key2?.value) || 0,
-          default_player_runs: parseInt(key3?.value) || 0,
-        },
-        "/api/v1/loadcommentary",
-        fastify,
-        request
-      );
-
-      if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
-        callPrediction.predictioncallSuccess = false;
-        callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
-        callPrediction.endPoint = "/api/v1/loadcommentary";
-      } else {
-        callPrediction.predictioncallSuccess = true;
-        callPrediction.predictionMessage = "Prediction call successful";
-        callPrediction.endPoint = "/api/v1/loadcommentary";
-      }
-    }
-    // call the prediction module
-    let prediction =
-      global.tblConfigs.find(
-        (item) => item.key === configConstants.CALLPREDICTIONMODULE
-      )?.value || "false";
-    if (prediction == "true") {
-      const data = await generateMarketAndRunners(
-        {
+      let key1 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTBALLFACED);
+      let key2 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTPLAYERBOUNDARIES);
+      let key3 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTPLAYERRUNS);
+      let isNodePrediction = global.tblConfigs.find((item) => item.key === configConstants.CALLPREDICTIONMODULE)?.value || "false";
+      if (isNodePrediction == "true") {
+        const data = await generateMarketAndRunners({
           commentary: commentary,
           commentaryId: commentary.commentaryId,
           matchTypeId: commentary.matchTypeId,
-        },
-        request,
-        fastify
-      );
-      console.log({ data });
+        }, request, fastify)
+        console.log({ data })
+      } else {
+        _resFromPredictAPI = await callPredictorMarket(
+          {
+            commentary_id: commentary.commentaryId,
+            match_type_id: commentary.matchTypeId,
+            event_id: commentary.eventRefId,
+            // line_ratio_data: eventMarketLine,
+            default_ball_faced: parseInt(key1?.value) || 0,
+            default_player_boundaries: parseInt(key2?.value) || 0,
+            default_player_runs: parseInt(key3?.value) || 0,
+          },
+          "/api/v1/loadcommentary",
+          fastify,
+          request
+        );
+
+        if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
+          callPrediction.predictioncallSuccess = false;
+          callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
+          callPrediction.endPoint = '/api/v1/loadcommentary';
+        } else {
+          callPrediction.predictioncallSuccess = true;
+          callPrediction.predictionMessage = 'Prediction call successful';
+          callPrediction.endPoint = '/api/v1/loadcommentary';
+        }
+      }
     }
+    // call the prediction module
     return {
       message: "Request Send Successfully!!!",
       callPrediction: callPrediction,

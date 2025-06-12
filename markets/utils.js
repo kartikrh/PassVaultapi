@@ -1,16 +1,262 @@
-const { errorLogger } = require("../utilities/logger");
-const { processLotteryMarkets, processMarketAndRunnersOfOE } = require("./oddEven.js");
-const { initializeBallToActionMap } = require("./ballToActionMapper");
+const { processLotteryMarkets } = require("./lottery");
+const fs = require('fs');
 
 /**
- * Updates market status in the database
- * @param {number} commentaryId - The commentary ID
- * @param {string} marketName - Market name
- * @param {Object} marketValue - Market value/data
+ * Gets ball number from over
+ * @param {number} over - The over in decimal form (e.g. 5.3)
+ * @param {number} matchTypeId - The match type ID
+ * @returns {string} - Ball identifier (e.g. "5.3")
  */
-function updateMarketToDB(commentaryId, marketName, marketValue) {
-    console.log(`[DB] Update for ${marketName}:`, marketValue, `(commentary_id: ${commentaryId})`);
-    // TODO: Replace with actual DB logic
+function getBallFromOver(over, matchTypeId) {
+    if (!over && over !== 0) return null;
+
+    // Format ball number to ensure consistency
+    return formatBallNumber(over);
+}
+
+/**
+ * Logs a sample of the ball-to-action map for debugging
+ * @param {number} commentaryId - The commentary ID
+ */
+function logBallToActionMapSample(commentaryId) {
+    const map = global.marketData[commentaryId].ballToActionMap;
+    const balls = Object.keys(map);
+
+    if (balls.length === 0) {
+        console.log("Ball-to-action map is empty");
+        return;
+    }
+
+    // Prepare the data to be written to the file
+    const ballToActionData = [];
+
+    // Collect all balls and actions
+    Object.entries(map).forEach(([ball, actions]) => {
+        actions.forEach(action => {
+            ballToActionData.push({
+                ball,
+                action: action.action,
+                marketId: action.marketId,
+                over: action.over,
+                teamId: action.teamId,
+                ...action
+            });
+        });
+    });
+
+    // Write the data to ballToAction.json
+    fs.writeFileSync(`ballToJson/ballToAction-${commentaryId}.json`, JSON.stringify(ballToActionData, null, 2), 'utf8');
+
+    console.log("Ball-to-action map has been saved to 'ballToAction.json'");
+}
+
+/**
+ * Formats ball number to ensure consistent representation
+ * @param {number|string} ball - Ball number
+ * @returns {string} - Formatted ball number
+ */
+function formatBallNumber(ball) {
+    if (ball === null || ball === undefined) return null;
+
+    // Convert to string and split by decimal
+    const ballStr = ball.toString();
+    const parts = ballStr.split('.');
+
+    // If no decimal, add ".0"
+    if (parts.length === 1) {
+        return `${parts[0]}.0`;
+    }
+
+    // Always use single digit after decimal (without trailing zeros)
+    const firstDigitAfterDecimal = parts[1].charAt(0);
+    return `${parts[0]}.${firstDigitAfterDecimal}`;
+}
+
+/**
+ * Maps an action to a specific ball
+ * @param {number} commentaryId - The commentary ID
+ * @param {string} ball - Ball identifier (e.g. "5.3")
+ * @param {string} action - Action to perform (open, close, settle)
+ * @param {string} marketId - Market ID to act on
+ * @param {Object} metadata - Additional market metadata
+ */
+function mapAction(commentaryId, ball, action, marketId, metadata = {}) {
+    if (!ball) return;
+
+    // Standardize the ball format
+    const formattedBall = formatBallNumber(ball);
+
+    const ballActionMap = global.marketData[commentaryId].ballToActionMap;
+
+    if (!ballActionMap[formattedBall]) {
+        ballActionMap[formattedBall] = [];
+    }
+
+    // Create action object with metadata
+    const actionObj = {
+        action,
+        marketId,
+        ...metadata
+    };
+
+    // Check for duplicates before adding
+    const isDuplicate = ballActionMap[formattedBall].some(item =>
+        item.action === action &&
+        item.marketId === marketId &&
+        item.over === metadata.over &&
+        item.marketTypeCategoryId === metadata.marketTypeCategoryId &&
+        (item.teamId === metadata.teamId ||
+            (!item.teamId && !metadata.teamId))
+    );
+
+    if (!isDuplicate) {
+        ballActionMap[formattedBall].push(actionObj);
+    }
+}
+
+/**
+ * Initializes ball to action map based on market templates
+ * @param {Array} markets - Array of markets
+ * @param {number} commentaryId - The commentary ID
+ * @param {number|string} battingTeamId - ID of the team currently batting
+ * @param {string} currentBall - Current ball number (optional)
+ */
+function initializeBallToActionMap(markets, commentaryId, battingTeamId, currentBall = null) {
+    // Ensure global market data structure exists
+    if (!global.marketData) {
+        global.marketData = {};
+    }
+
+    if (!global.marketData[commentaryId]) {
+        global.marketData[commentaryId] = {
+            markets: [],
+            ballToActionMap: {}
+        };
+    } else if (!global.marketData[commentaryId].ballToActionMap) {
+        global.marketData[commentaryId].ballToActionMap = {};
+    }
+
+    // Clear existing ball-to-action map for this commentary
+    global.marketData[commentaryId].ballToActionMap = {};
+
+    // Get current batting team if not provided
+    if (!battingTeamId) {
+        const battingTeam = global.tblCommentaryTeams?.find(
+            item => item.commentaryId === parseInt(commentaryId) &&
+                item.teamStatus === 1 // Batting team has status 1
+        );
+
+        if (battingTeam) {
+            battingTeamId = battingTeam.teamId;
+            console.log(`[INIT] Found current batting team ID: ${battingTeamId}`);
+        } else {
+            console.log(`[INIT] Could not determine batting team, initializing all markets`);
+        }
+    }
+
+    // Calculate the minimum ball to consider (if currentBall is provided)
+    let minBallToConsider = null;
+    if (currentBall) {
+        // Format the current ball
+        const formattedCurrentBall = formatBallNumber(currentBall);
+        const parts = formattedCurrentBall.split('.');
+        const currentOver = parseInt(parts[0]);
+
+        // Start from the beginning of the current over
+        minBallToConsider = `${currentOver}.0`;
+
+        console.log(`[INIT] Current ball: ${formattedCurrentBall}, will only initialize actions from ${minBallToConsider} onwards`);
+    }
+
+    console.log(`[INIT] Initializing ball-to-action map for ${markets.length} markets, commentary ID: ${commentaryId}`);
+    console.log(`[INIT] Current batting team ID: ${battingTeamId || 'not specified'}`);
+
+    // Filter for markets that belong to the batting team or don't have team association
+    const validMarkets = battingTeamId
+        ? markets.filter(m => !m.teamId || m.teamId.toString() === battingTeamId.toString())
+        : markets;
+
+    // If we have a minimum ball to consider, further filter markets
+    let marketsToProcess = validMarkets;
+    if (minBallToConsider) {
+        marketsToProcess = validMarkets.filter(market => {
+            // Check if the market's actions would occur after minBallToConsider
+            const openBall = getBallFromOver(market.autoOpen, market.matchTypeID || 2);
+            const closeBall = getBallFromOver(market.beforeAutoClose, market.matchTypeID || 2);
+
+            // Include market if any of its actions occur at or after minBallToConsider
+            return (openBall && compareBalls(openBall, minBallToConsider) >= 0) ||
+                (closeBall && compareBalls(closeBall, minBallToConsider) >= 0);
+        });
+
+        console.log(`[INIT] Filtered markets from ${validMarkets.length} to ${marketsToProcess.length} based on current ball`);
+    }
+
+    console.log(`[INIT] Processing ${marketsToProcess.length} markets for ball-to-action mapping`);
+
+    marketsToProcess.forEach(market => {
+        const marketId = market.eventMarketId ? market.eventMarketId.toString() : "0";
+        const marketCategoryId = market.marketTypeCategoryId;
+        const overValue = market.over ? market.over.toString() : null;
+        const teamId = market.teamId;
+
+        // Additional metadata for the market action
+        const marketMetadata = {
+            over: overValue,
+            marketTypeCategoryId: marketCategoryId,
+            teamId: teamId
+        };
+
+        // Map when to open the market
+        const openBall = getBallFromOver(market.autoOpen, market.matchTypeID || 2);
+        if (openBall && (!minBallToConsider || compareBalls(openBall, minBallToConsider) >= 0)) {
+            mapAction(commentaryId, openBall, "open", marketId, marketMetadata);
+            console.log(`[INIT] Mapped open action at ball ${openBall} for market "${market.marketName}" (team: ${teamId}, category: ${marketCategoryId})`);
+        }
+
+        // Map when to close the market
+        const closeBall = getBallFromOver(market.beforeAutoClose, market.matchTypeID || 2);
+        if (closeBall && (!minBallToConsider || compareBalls(closeBall, minBallToConsider) >= 0)) {
+            mapAction(commentaryId, closeBall, "close", marketId, marketMetadata);
+            console.log(`[INIT] Mapped close action at ball ${closeBall} for market "${market.marketName}" (team: ${teamId}, category: ${marketCategoryId})`);
+        }
+
+        // Map when to settle the market (for odd-even and lottery markets)
+        if ((marketCategoryId === 28 || marketCategoryId === 35) && market.isAutoResultSet) {
+            // Calculate settlement ball based on the over and autoResultAfterBall
+            const settleBall = getBallFromOver(
+                parseFloat(market.over) + (parseFloat(market.autoResultAfterBall || 0) / 10),
+                market.matchTypeID || 2
+            );
+
+            if (settleBall && (!minBallToConsider || compareBalls(settleBall, minBallToConsider) >= 0)) {
+                mapAction(commentaryId, settleBall, "settle", marketId, marketMetadata);
+                console.log(`[INIT] Mapped settle action at ball ${settleBall} for market "${market.marketName}" (team: ${teamId}, category: ${marketCategoryId})`);
+            }
+        }
+    });
+
+    // Log the count of balls with actions
+    const ballCount = Object.keys(global.marketData[commentaryId].ballToActionMap).length;
+    console.log(`[INIT] Total balls mapped: ${ballCount}`);
+}
+
+// Add helper function to compare balls
+function compareBalls(ball1, ball2) {
+    const parts1 = ball1.split('.');
+    const parts2 = ball2.split('.');
+
+    const over1 = parseInt(parts1[0]);
+    const over2 = parseInt(parts2[0]);
+
+    if (over1 !== over2) {
+        return over1 - over2;
+    }
+
+    const ball1InOver = parseInt(parts1[1]);
+    const ball2InOver = parseInt(parts2[1]);
+
+    return ball1InOver - ball2InOver;
 }
 
 /**
@@ -19,9 +265,50 @@ function updateMarketToDB(commentaryId, marketName, marketValue) {
  * @param {Object} payload - Payload to send
  */
 function sendSocketData(eventId, payload) {
-    console.log(`[SOCKET] Sending to event ${eventId}:`, payload);
-    // TODO: Replace with actual socket.emit() logic
+    try {
+        console.log(`[SOCKET] Sending to event ${eventId}:`, payload);
+
+        // Format the payload for socket emission
+        const socketPayload = {
+            event: 'market_update',
+            data: {
+                eventId: eventId,
+                marketId: payload.eventMarketId || payload.id,
+                marketName: payload.marketName,
+                status: payload.status,
+                timestamp: new Date().toISOString(),
+                runners: payload.runners || []
+            }
+        };
+
+        // If we have result data for settled markets
+        if (payload.status === 5 && payload.result) {
+            socketPayload.data.result = payload.result;
+            socketPayload.data.settledTime = payload.settledTime || new Date().toISOString();
+        }
+
+        // Socket emission using global IO (assuming it's set up)
+        if (global.io) {
+            // Emit to a room specific to this event
+            global.io.to(`event_${eventId}`).emit('market_update', socketPayload);
+
+            // Also emit to a room specific to this commentary
+            if (payload.commentaryId) {
+                global.io.to(`commentary_${payload.commentaryId}`).emit('market_update', socketPayload);
+            }
+
+            console.log(`[SOCKET] Data sent successfully to event ${eventId}`);
+            return true;
+        } else {
+            console.error('[SOCKET] Socket IO not initialized');
+            return false;
+        }
+    } catch (error) {
+        console.error('[SOCKET] Error sending data via socket:', error);
+        return false;
+    }
 }
+
 
 /**
  * Process market and runners
@@ -328,72 +615,113 @@ const createMarketAndRunner = async (data, request, fastify) => {
     const processedMarketsObj = {};
     const { templates, teams, matchType, commentary, existingMarkets } = data;
     const commentaryId = commentary.commentaryId;
+
     templates.forEach((template) => {
         if (template.isPerEvent) {
             return true;
         }
         else {
-            if (template.marketTypeCategoryId == 35 || template.marketTypeCategoryId == 28) {
+            if (template.marketTypeCategoryId == 28 || template.marketTypeCategoryId == 35) {
                 let baseMar = generateMarketFromTemplate(template, teams, commentary);
                 processLotteryMarkets(baseMar, teams, processedMarketsObj, matchType, commentary);
+                console.log(`Processed ${template.marketTypeCategoryId === 35 ? 'Odd-Even' : 'Lottery'} markets from template`);
             }
-            //  else {
-            //     teams.forEach(team => {
-            //         // processMarketAndRunners(generateExtraMarketFromTemplate(template, team, commentary), team.teamId, team.teamId.toString(), processedMarketsObj);
-            //         let baseMar = generateExtraMarketFromTemplate(template, teams, commentary);
-            //         processMarketAndRunners(baseMar, team.teamId, team.teamId.toString(), processedMarketsObj, commentary);
-            //     });
-            // }
         }
-    })
-    // return mar;
-    // Now update with existing markets from API
+    });
+
+    // Update with existing markets from API
     const globalEntry = global.marketData[commentaryId];
+
     // Safety check just in case
     if (!globalEntry) {
         global.marketData[commentaryId] = { existingMarket: [], markets: [] };
     }
+
     globalEntry.existingMarket = existingMarkets;
+
     existingMarkets.forEach(apiMarket => {
-        const index = globalEntry.markets.findIndex(m =>
-            m.teamId === apiMarket.teamId &&
-            m.marketTypeId === apiMarket.marketTypeId &&
-            m.marketTypeCategoryId === apiMarket.marketTypeCategoryId &&
-            m.marketName === apiMarket.marketName
-        );
-        if (index !== -1) {
-            const existingMarket = globalEntry.markets[index];
-            const updatedMarket = {
-                ...existingMarket,
-                ...apiMarket,
-                isCreate: false,
-                runners: mergeRunners(
-                    existingMarket.runners,
-                    apiMarket.runners,
-                    apiMarket.marketName,
-                    apiMarket.predefinedValue // Pass market level predefinedValue
-                )
-            };
-            globalEntry.markets[index] = updatedMarket;
+        // For odd-even and lottery markets, use specific matching
+        if (apiMarket.marketTypeCategoryId === 35 || apiMarket.marketTypeCategoryId === 28) {
+            const index = globalEntry.markets.findIndex(m =>
+                m.marketTypeCategoryId === apiMarket.marketTypeCategoryId &&
+                m.over.toString() === apiMarket.over.toString() &&
+                m.teamId === apiMarket.teamId
+            );
+
+            if (index !== -1) {
+                const existingMarket = globalEntry.markets[index];
+                const updatedMarket = {
+                    ...existingMarket,
+                    ...apiMarket,
+                    isCreate: false,
+                    runners: mergeRunners(
+                        existingMarket.runners,
+                        apiMarket.runners,
+                        apiMarket.marketName,
+                        apiMarket.predefinedValue
+                    )
+                };
+
+                globalEntry.markets[index] = updatedMarket;
+                console.log(`Updated existing ${apiMarket.marketTypeCategoryId === 35 ? 'Odd-Even' : 'Lottery'} market in global state for over ${apiMarket.over}`);
+            }
+            else {
+                globalEntry.markets.push({
+                    ...apiMarket,
+                    isCreate: false,
+                    runners: mergeRunners(
+                        [],
+                        apiMarket.runners,
+                        apiMarket.marketName,
+                        apiMarket.predefinedValue
+                    )
+                });
+                console.log(`Added new ${apiMarket.marketTypeCategoryId === 35 ? 'Odd-Even' : 'Lottery'} market to global state for over ${apiMarket.over}`);
+            }
+        } else {
+            // For other markets
+            const index = globalEntry.markets.findIndex(m =>
+                m.teamId === apiMarket.teamId &&
+                m.marketTypeId === apiMarket.marketTypeId &&
+                m.marketTypeCategoryId === apiMarket.marketTypeCategoryId &&
+                m.marketName === apiMarket.marketName
+            );
+
+            if (index !== -1) {
+                const existingMarket = globalEntry.markets[index];
+                const updatedMarket = {
+                    ...existingMarket,
+                    ...apiMarket,
+                    isCreate: false,
+                    runners: mergeRunners(
+                        existingMarket.runners,
+                        apiMarket.runners,
+                        apiMarket.marketName,
+                        apiMarket.predefinedValue
+                    )
+                };
+
+                globalEntry.markets[index] = updatedMarket;
+            }
+            else {
+                globalEntry.markets.push({
+                    ...apiMarket,
+                    isCreate: false,
+                    runners: mergeRunners(
+                        [],
+                        apiMarket.runners,
+                        apiMarket.marketName,
+                        apiMarket.predefinedValue
+                    )
+                });
+            }
         }
-        else {
-            globalEntry.markets.push({
-                ...apiMarket,
-                isCreate: false,
-                runners: mergeRunners(
-                    [],
-                    apiMarket.runners,
-                    apiMarket.marketName,
-                    apiMarket.predefinedValue // Pass market level predefinedValue
-                )
-            });
-        }
-    })
+    });
 
     // Sort markets by over number where applicable
     global.marketData[commentary.commentaryId].markets.sort((a, b) => {
         if (a.over && b.over) {
-            return a.over - b.over;
+            return parseInt(a.over) - parseInt(b.over);
         }
         return 0;
     });
@@ -401,16 +729,192 @@ const createMarketAndRunner = async (data, request, fastify) => {
     // Initialize the ball-to-action map
     initializeBallToActionMap(global.marketData[commentary.commentaryId].markets, commentaryId);
 
+    // Log market status after initialization
+    console.log(`[INIT] Market initialization complete. Total markets: ${global.marketData[commentary.commentaryId].markets.length}`);
+    console.log(`[INIT] Odd-Even markets: ${global.marketData[commentary.commentaryId].markets.filter(m => m.marketTypeCategoryId === 35).length}`);
+    console.log(`[INIT] Lottery markets: ${global.marketData[commentary.commentaryId].markets.filter(m => m.marketTypeCategoryId === 28).length}`);
+
     return true;
 }
 
+/**
+ * Formats market data for socket transmission in the required format
+ * @param {Object} market - The market to format
+ * @returns {string} - Formatted market data as JSON string
+ */
+function formatMarketForSocket(market) {
+    // Create a formatted object that matches your required format
+    const formattedObject = {
+        marketId: parseInt(market.eventMarketId) || 0,
+        commentaryId: parseInt(market.commentaryId) || 0,
+        marketTypeCategoryId: parseInt(market.marketTypeCategoryId) || 0,
+        ballByBallId: parseInt(market.ballByBallId) || 0,
+        eventId: parseInt(market.eventId) || parseInt(market.eventRefID) || 12093821321, // fallback ID if missing
+        marketName: market.marketName || "",
+        status: parseInt(market.status) || 0,
+        isActive: market.isActive !== undefined ? market.isActive : true,
+        isSendData: market.isSendData !== undefined ? market.isSendData : true,
+        isAllow: market.isAllow !== undefined ? market.isAllow : true,
+        teamId: parseInt(market.teamId) || 0,
+        margin: parseFloat(market.margin) || 3.0,
+        over: parseInt(market.over) || 0,
+        inningsId: parseInt(market.inningsId) || 1,
+        lineRatio: parseInt(market.lineRatio) || 1,
+        marketTypeId: parseInt(market.marketTypeId) || 5,
+        lineType: parseInt(market.lineType) || 1,
+        rateDiff: parseInt(market.rateDiff) || 1,
+        predefinedValue: parseFloat(market.predefinedValue) || 0.0,
+        playerScore: parseInt(market.playerScore) || 0,
+        isInningRun: market.isInningRun !== undefined ? market.isInningRun : false,
+        playerId: market.playerId || null,
+        wicketNo: market.wicketNo || null,
+        runner: []
+    };
+
+    // Add runners if available
+    if (market.runners && market.runners.length > 0) {
+        formattedObject.runner = market.runners.map(runner => ({
+            runnerId: parseInt(runner.runnerId) || 0,
+            status: parseInt(runner.selectionStatus || market.status) || 0,
+            runner: runner.runner || "",
+            line: parseFloat(runner.line) || 1.9,
+            overRate: parseFloat(runner.overRate) || 1.9,
+            underRate: parseFloat(runner.underRate) || 1.9,
+            backPrice: parseFloat(runner.backPrice) || 1.9,
+            layPrice: parseFloat(runner.layPrice) || 1.9,
+            backSize: parseFloat(runner.backSize) || 10000.0,
+            laySize: parseFloat(runner.laySize) || 10000.0
+        }));
+    }
+
+    // Log for debugging
+    console.log(`[SOCKET] Formatted market ${market.marketName} (ID: ${market.eventMarketId}, Status: ${market.status}) with ${formattedObject.runner.length} runners`);
+
+    // Return as JSON string
+    return JSON.stringify(formattedObject);
+}
+
+/**
+ * Ensures market status consistency across all references
+ * @param {number} commentaryId - Commentary ID
+ * @param {number|string} marketId - Market ID
+ * @param {number} marketTypeCategoryId - Market category ID
+ * @param {number|string} status - The status to set
+ */
+function synchronizeMarketStatus(commentaryId, marketId, marketTypeCategoryId, over, status) {
+    if (!global.marketData || !global.marketData[commentaryId] || !global.marketData[commentaryId].markets) {
+        console.log(`[SYNC] No global data for commentary ID ${commentaryId}`);
+        return false;
+    }
+
+    // Find the market in global state
+    const marketIndex = global.marketData[commentaryId].markets.findIndex(
+        m => m.eventMarketId &&
+            m.eventMarketId.toString() === marketId.toString() &&
+            m.marketTypeCategoryId === marketTypeCategoryId &&
+            m.over && m.over.toString() === over.toString()
+    );
+
+    if (marketIndex !== -1) {
+        // Update the status
+        const oldStatus = global.marketData[commentaryId].markets[marketIndex].status;
+        global.marketData[commentaryId].markets[marketIndex].status = status;
+
+        console.log(`[SYNC] Synchronized market ${marketId} (category ${marketTypeCategoryId}) status: ${oldStatus} -> ${status}`);
+        return true;
+    }
+
+    console.log(`[SYNC] Market ${marketId} (category ${marketTypeCategoryId}) not found in global state`);
+    return false;
+}
+function normalizeBallToActionMap(commentaryId) {
+    if (!global.marketData || !global.marketData[commentaryId] || !global.marketData[commentaryId].ballToActionMap) {
+        return;
+    }
+
+    const map = global.marketData[commentaryId].ballToActionMap;
+    const newMap = {};
+
+    // Process each ball key
+    Object.keys(map).forEach(ballKey => {
+        const standardizedKey = formatBallNumber(ballKey);
+
+        // If this standardized key doesn't exist in the new map yet, create it
+        if (!newMap[standardizedKey]) {
+            newMap[standardizedKey] = [];
+        }
+
+        // Add all actions from the original key to the standardized key
+        newMap[standardizedKey].push(...map[ballKey]);
+    });
+
+    // Replace the original map with the normalized one
+    global.marketData[commentaryId].ballToActionMap = newMap;
+
+    console.log(`[NORMALIZE] Ball-to-action map normalized for commentary ${commentaryId}`);
+}
+
+/**
+ * Validates the ball-to-action map for duplicate market IDs across different categories
+ * @param {number} commentaryId - Commentary ID
+ */
+function validateBallToActionMap(commentaryId) {
+    if (!global.marketData[commentaryId] || !global.marketData[commentaryId].ballToActionMap) {
+        return;
+    }
+
+    const issues = [];
+
+    // Check each ball
+    for (const [ball, actions] of Object.entries(global.marketData[commentaryId].ballToActionMap)) {
+        // Check for duplicate market IDs with different categories
+        const seenMarkets = {};
+
+        actions.forEach(action => {
+            if (action.marketId && action.marketId !== '0') {
+                const key = action.marketId;
+
+                if (seenMarkets[key]) {
+                    // If this market ID was already seen with a different category, it's an issue
+                    if (seenMarkets[key] !== action.marketTypeCategoryId) {
+                        issues.push({
+                            ball,
+                            marketId: action.marketId,
+                            categories: [seenMarkets[key], action.marketTypeCategoryId]
+                        });
+                    }
+                } else {
+                    seenMarkets[key] = action.marketTypeCategoryId;
+                }
+            }
+        });
+    }
+
+    if (issues.length > 0) {
+        console.log(`[VALIDATE] ⚠️ Found ${issues.length} issues with duplicate market IDs across different categories:`);
+        issues.forEach(issue => {
+            console.log(`[VALIDATE] Ball ${issue.ball}: Market ID ${issue.marketId} used for categories ${issue.categories.join(' and ')}`);
+        });
+    } else {
+        console.log(`[VALIDATE] Ball-to-action map validated successfully, no duplicate market IDs found across categories`);
+    }
+
+    return issues.length === 0;
+}
+
 module.exports = {
-    updateMarketToDB,
+    normalizeBallToActionMap,
+    formatMarketForSocket,
     sendSocketData,
     createMarketAndRunner,
     processMarketAndRunners,
     generateMarketFromTemplate,
     generateExtraMarketFromTemplate,
     getMarketKey,
-    mergeRunners
+    mergeRunners,
+    initializeBallToActionMap,
+    formatBallNumber,
+    validateBallToActionMap,
+    synchronizeMarketStatus,
+    logBallToActionMapSample
 };

@@ -89,18 +89,20 @@ function processOddEvenMarkets(
         return;
     }
 
-    // Find odd-even markets
+    // Find odd-even AND lottery markets
     const allMarkets = global.marketData[commentaryId].markets;
     const oddEvenMarkets = allMarkets.filter(
-        market => market.marketTypeCategoryId === 28
+        market => market.marketTypeCategoryId === 28 || market.marketTypeCategoryId === 35
     );
 
     if (!oddEvenMarkets || oddEvenMarkets.length === 0) {
-        console.log(`No odd-even markets found for commentary ID: ${commentaryId}`);
+        console.log(`No odd-even or lottery markets found for commentary ID: ${commentaryId}`);
         return;
     }
 
-    // Process each odd-even market
+    console.log(`Processing ${oddEvenMarkets.length} markets: ${oddEvenMarkets.filter(m => m.marketTypeCategoryId === 28).length} lottery and ${oddEvenMarkets.filter(m => m.marketTypeCategoryId === 35).length} odd-even`);
+
+    // Process each odd-even and lottery market
     const runnerData = [];
     const eventData = [];
     const marketDatalog = [];
@@ -113,6 +115,8 @@ function processOddEvenMarkets(
             continue;
         }
 
+        console.log(`Processing market ${market.marketName} (ID: ${market.eventMarketId}, Category: ${market.marketTypeCategoryId}, Status: ${market.status})`);
+
         // Check if market needs status update
         let selectionStatus = EventMarketStatus.NotCreated;
         let isUpdate = false;
@@ -121,6 +125,7 @@ function processOddEvenMarkets(
         // Reset from suspend if needed
         if (market.status === EventMarketStatus.Suspend) {
             market.status = EventMarketStatus.Open;
+            console.log(`Resetting market ${market.marketName} from Suspend to Open`);
         }
 
         // Check for market status changes
@@ -133,9 +138,14 @@ function processOddEvenMarkets(
             updatedMarket.wrPredefinedValue -= wicketDeduction;
         }
 
+        // Deep clone the market to prevent reference issues
+        const marketClone = JSON.parse(JSON.stringify(updatedMarket));
+
         // Update the market
-        Object.assign(market, updatedMarket);
+        market.status = marketClone.status;
         isUpdate = statusChanged;
+
+        console.log(`After status check: Market ${market.marketName} (Category: ${market.marketTypeCategoryId}) status: ${market.status}, isUpdate: ${isUpdate}`);
 
         // Process auto-settlement if needed
         if (market.isOver &&
@@ -152,9 +162,11 @@ function processOddEvenMarkets(
             if (isUpdate) {
                 if (market.status === EventMarketStatus.Close) {
                     selectionStatus = EventMarketStatus.Close;
+                    console.log(`Setting selectionStatus to Close for market ${market.marketName}`);
                 } else if (market.status === EventMarketStatus.Open) {
                     selectionStatus = EventMarketStatus.Open;
                     isSendData = market.wrDefaultIsSendData;
+                    console.log(`Setting selectionStatus to Open for market ${market.marketName}`);
                 }
 
                 // Check if it's time to settle
@@ -180,9 +192,10 @@ function processOddEvenMarkets(
                     selectionStatus = EventMarketStatus.Settled;
                     market.status = EventMarketStatus.Settled;
                     market.wrSettledTime = new Date().toISOString();
+                    console.log(`Settling market ${market.marketName} with status ${market.status}`);
                 }
 
-                // Update data for socket/DB
+                // Update data for socket/DB - ensure these properties are set
                 market.wrIsSendData = isSendData;
 
                 // Prepare data for updates (simplified for this implementation)
@@ -191,13 +204,15 @@ function processOddEvenMarkets(
                     wrEventMarketId: market.eventMarketId,
                     wrData: JSON.stringify(market),
                     wrUpdateType: 1,
-                    wrIsSendData: isSendData
+                    wrIsSendData: isSendData,
+                    category: market.marketTypeCategoryId // Added for debugging
                 });
 
                 socketData.push({
                     market: market.eventMarketId,
                     status: market.status,
-                    runners: market.runners
+                    runners: market.runners,
+                    category: market.marketTypeCategoryId // Added for debugging
                 });
             }
         } else if (market.status === EventMarketStatus.Close &&
@@ -210,9 +225,11 @@ function processOddEvenMarkets(
     }
 
     // Send updates if needed
-    if (marketDatalog.length > 0 && socketData.length > 0) {
-        // In real implementation, would batch send to DB and socket
-        console.log(`[ODD-EVEN] Updated ${marketDatalog.length} markets`);
+    if (marketDatalog.length > 0) {
+        console.log(`[ODD-EVEN] Updating ${marketDatalog.length} markets:`);
+        marketDatalog.forEach(entry => {
+            console.log(`- Market ID: ${entry.wrEventMarketId}, Category: ${entry.category}`);
+        });
     }
 
     return {
@@ -221,190 +238,7 @@ function processOddEvenMarkets(
     };
 }
 
-/**
- * Process lottery markets from template
- * @param {Object} market - The market template
- * @param {Array} teams - The teams array
- * @param {Object} processedMarketsObj - Object to store processed markets
- * @param {Object} matchType - Match type information
- * @param {Object} commentary - Commentary information
- */
-function processLotteryMarkets(market, teams, processedMarketsObj, matchType, commentary) {
-    const ballsToOvers = (value, matchTypeId) => {
-        const LD_OVER_BALLS = { "2": 6 };
-        const ballsPerOver = LD_OVER_BALLS[`${matchTypeId}`];
-        if (parseInt(value) === 0) return 0.0;
-        const over = ((value - ballsPerOver) / ballsPerOver) + ballsPerOver / 10;
-        return parseFloat(over.toFixed(2));
-    };
 
-    const maxOvers = market.maxOvers || matchType?.maxOversInFirstInings || 5;
-    const startOver = parseInt(market.over) || 2;
-    const diff = startOver;
-    const autoclose = parseFloat(market.beforeAutoClose) || 6;
-    const autosuspend = parseFloat(market.beforeAutoSuspend) || 6;
-    const autocreate = parseFloat(market.create) || 6;
-    const autoopen = parseFloat(market.autoOpen) || 6;
-    const howManyOpenMarkets = parseInt(market.howManyOpenMarkets) || 1;
-    const notincludedover = market.notIncludedOver ?
-        market.notIncludedOver.split(',').map(x => parseInt(x)) : [];
-    const matchTypeId = market.matchTypeID || 2;
-
-    teams.forEach(team => {
-        let nextopen = 0.0;
-        let nextcreate = 0.0;
-        let noOfMarketsCreated = 0;
-        let nextaddmarket = 0;
-
-        for (let currentOver = startOver; currentOver <= maxOvers; currentOver++) {
-            if (notincludedover.includes(currentOver)) continue;
-
-            // Calculate updated values based on current over
-            const updatedValues = {
-                beforeAutoClose: ballsToOvers((currentOver * 6 - autoclose), matchTypeId),
-                beforeAutoSuspend: ballsToOvers((currentOver * 6 - autosuspend), matchTypeId)
-            };
-
-            // Determine create and autoOpen values based on howManyOpenMarkets
-            if (howManyOpenMarkets === 1) {
-                updatedValues.create = ballsToOvers(((currentOver - diff) * 6 + autocreate - 6), matchTypeId);
-                updatedValues.autoOpen = ballsToOvers(((currentOver - diff) * 6 + autoopen - 6), matchTypeId);
-            } else {
-                updatedValues.create = nextcreate;
-                updatedValues.autoOpen = nextopen;
-                noOfMarketsCreated++;
-
-                if (noOfMarketsCreated === howManyOpenMarkets) {
-                    noOfMarketsCreated--;
-                    nextcreate = Math.floor(nextaddmarket) + (autocreate / 10);
-                    nextopen = Math.floor(nextaddmarket) + (autoopen / 10);
-                    nextaddmarket++;
-                }
-            }
-
-            // Create market for current over
-            const marketName = market.templateName.replace("{x}", currentOver) + " - " + team.shortName;
-            const specialMarket = {
-                ...market,
-                over: currentOver.toString(),
-                marketName,
-                teamId: team.teamId,
-                beforeAutoClose: updatedValues.beforeAutoClose.toString(),
-                beforeAutoSuspend: updatedValues.beforeAutoSuspend.toString(),
-                create: updatedValues.create.toString(),
-                autoOpen: updatedValues.autoOpen.toString(),
-                runners: market.runners?.map(runner => ({
-                    marketTemplateRunnerId: runner.marketTemplateRunnerId,
-                    marketTemplateId: market.marketTemplateId,
-                    runner: runner.runner,
-                    line: runner.line,
-                    overRate: runner.overRate,
-                    underRate: runner.underRate,
-                    lastUpdate: new Date().toISOString(),
-                    selectionId: runner.selectionId,
-                    order: runner.order,
-                    backPrice: runner.backPrice,
-                    layPrice: runner.layPrice,
-                    backSize: market.isPredefineRunnerValue ? runner.backSize : market.defaultBackSize,
-                    laySize: market.isPredefineRunnerValue ? runner.laySize : market.defaultLaySize,
-                    predefinedValue: runner.predefinedValue,
-                    runnerId: runner.runnerId || 0
-                })) || []
-            };
-
-            processMarketAndRunnersOfOE(specialMarket, team.teamId, team.teamId.toString(), processedMarketsObj, commentary);
-        }
-    });
-}
-
-/**
- * Process market and runners for odd-even markets
- * @param {Object} market - The market template
- * @param {number} teamId - Team ID
- * @param {string} keyPrefix - Key prefix for processed markets
- * @param {Object} processedMarketsObj - Object to store processed markets
- * @param {Object} commentary - Commentary information
- */
-function processMarketAndRunnersOfOE(market, teamId, keyPrefix, processedMarketsObj, commentary) {
-    const baseKey = `${keyPrefix}_##_${market.marketTypeId}_##_${market.marketTypeCategoryId}`;
-
-    if (!processedMarketsObj[baseKey]) {
-        processedMarketsObj[baseKey] = [];
-    }
-
-    // If marketData for this commentary doesn't exist, create it
-    if (!global.marketData[commentary.commentaryId]) {
-        global.marketData[commentary.commentaryId] = { markets: [] };
-    }
-
-    let marketArrObj = global.marketData[commentary.commentaryId].markets;
-
-    // Handle runners based on market type
-    let marketRunners = [];
-
-    if (market.marketTypeCategoryId === 28) {
-        // Odd/Even market
-        marketRunners = market.runners?.map(runner => ({
-            marketTemplateRunnerId: runner.marketTemplateRunnerId,
-            marketTemplateId: runner.marketTemplateId,
-            runner: runner.runner,
-            line: runner.line,
-            overRate: runner.overRate,
-            underRate: runner.underRate,
-            lastUpdate: new Date().toISOString(),
-            selectionId: runner.selectionId,
-            order: runner.order,
-            backPrice: runner.backPrice,
-            layPrice: runner.layPrice,
-            backSize: runner.backSize,
-            laySize: runner.laySize,
-            predefinedValue: runner.predefinedValue,
-            runnerId: runner.runnerId || 0
-        })) || [];
-    } else if (market.marketTypeCategoryId === 26) {
-        // LDO market
-        marketRunners = market.runners?.map(runner => ({
-            ...runner,
-            runnerId: runner.runnerId || "0",
-            marketTemplateRunnerId: runner.marketTemplateRunnerId,
-            marketTemplateId: market.marketTemplateId,
-            runner: runner.runner,
-            line: runner.line,
-            overRate: runner.overRate,
-            underRate: runner.underRate,
-            lastUpdate: new Date().toISOString(),
-            selectionId: runner.selectionId,
-            order: runner.order,
-            backPrice: runner.backPrice,
-            layPrice: runner.layPrice,
-            backSize: market?.isPredefineRunnerValue ? runner?.backSize : market?.defaultBackSize,
-            laySize: market?.isPredefineRunnerValue ? runner?.laySize : market?.defaultLaySize,
-            predefinedValue: runner.predefinedValue
-        })) || [];
-    }
-
-    // Add market to global object
-    global.marketData[commentary.commentaryId].markets.push({
-        ...market,
-        teamId,
-        eventMarketId: market.eventMarketId || 0,
-        isCreate: market.isCreate !== undefined ? market.isCreate : true,
-        status: market.status || 1,
-        margin: parseFloat(market.margin) || 3,
-        data: market.data || "",
-        playerId: market.playerId || null,
-        isActive: market.isActive !== undefined ? market.isActive : true,
-        isAllow: market.isAllow !== undefined ? market.isAllow : false,
-        inningsId: market.inningsId || 1,
-        index: market.index || 0,
-        commentaryId: market.commentaryId,
-        eventRefId: market.eventRefId,
-        isPredefineRunnerValue: market.isPredefineRunnerValue !== undefined ? market.isPredefineRunnerValue : true,
-        runners: marketRunners
-    });
-
-    return global.marketData[commentary.commentaryId].markets;
-}
 
 // Helper function to convert overs to balls
 function oversToBalls(overs, matchTypeId) {
@@ -417,7 +251,5 @@ function oversToBalls(overs, matchTypeId) {
 module.exports = {
     processOddEven,
     processOddEvenMarkets,
-    processLotteryMarkets,
-    processMarketAndRunnersOfOE,
     openCloseMarket
 };
