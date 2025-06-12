@@ -2721,7 +2721,8 @@ const createEventMarketsServiceV1 = async (request, fastify) => {
         commentaryId: item.commentaryId,
         dataTosave: typeof (item.data) === "string" ? JSON.parse(item.data) : item.data,
         updateType: MarketUpdateType.marketInitilization,
-        isSendData: true
+        isSendData: true,
+        predefinedValue : item.predefinedValue ?? null
       },
       request,
       fastify
@@ -2830,6 +2831,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
       (e) => e.eventMarketId === parseInt(item.marketId)
     );
     if (
+      market &&
       market.status === EventMarketStatus.Close ||
       market.status === EventMarketStatus.Settled ||
       market.status === EventMarketStatus.Cancel
@@ -3034,7 +3036,9 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
           dataTosave: typeof (item.data) === "string" ? JSON.parse(item.data) : item.data,
           updateType: MarketUpdateType.marketUpdateRate,
           lineDiff: lineDiff || 0,
-          isSendData: true
+          isSendData: true,
+          predefinedValue : item.predefinedValue ?? null
+
         },
         request,
         fastify

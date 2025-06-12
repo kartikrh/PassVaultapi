@@ -328,6 +328,7 @@ const processRateQueue = async () => {
                                             commentaryId: item.commentaryId,
                                             dataTosave: JSON.parse(item.data),
                                             updateType: MarketUpdateType.marketInitilization,
+                                            predefinedValue : item.predefinedValue ?? null
                                         },
                                         null,
                                         _fastify
@@ -341,6 +342,7 @@ const processRateQueue = async () => {
                                             dataTosave: JSON.parse(item.data),
                                             updateType: MarketUpdateType.marketInitilization,
                                             lineDiff: item.line - (previousLine || 0),
+                                            predefinedValue : item.predefinedValue ?? null
                                         },
                                         null,
                                         _fastify
