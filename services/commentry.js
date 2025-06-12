@@ -15668,6 +15668,7 @@ const commentaryInningChangeService = async (request , fastify)=>{
         global.tblCommentaryTeams[index] = {
           ...team,
           ...global.tblCommentaryTeams[index],
+          ...team,
           teamPredictionPercentage:
             global.tblCommentaryTeams[index].teamPredictionPercentage,
         };
