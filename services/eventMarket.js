@@ -786,7 +786,7 @@ const marketListByCIdServiceV1 = async (request, fastify) => {
 
   // get the team and teamName by commentaryId
   const teams = global.tblCommentaryTeams
-    .filter((item) => item.commentaryId === commentaryId)
+    .filter((item) => item?.commentaryId === commentaryId)
     .reduce((acc, current) => {
       if (!acc.some(item => item.teamId === current.teamId)) {
         acc.push(current);
@@ -805,7 +805,7 @@ const marketListByCIdServiceV1 = async (request, fastify) => {
     });
   // 
   const comPlayer = global.tblCommentaryPlayers.filter(
-    (item) => item.commentaryId === commentaryId
+    (item) => item?.commentaryId === commentaryId
   ).map((item) => {
     return {
       playerId: item.playerId,
@@ -816,7 +816,7 @@ const marketListByCIdServiceV1 = async (request, fastify) => {
     }
   });
   // get comPartnership
-  let partnership =   global.tblCommentaryPartnership.find((item)=> item.commentaryId == commentaryId && item.isActive == true && item.currentInnings == commentary.currentInnings);
+  let partnership =   global.tblCommentaryPartnership.find((item)=> item?.commentaryId == commentaryId && item?.isActive == true && item?.currentInnings == commentary.currentInnings);
   if(partnership){
     partnership =  {
       commentaryPartnershipId : partnership.commentaryPartnershipId,
