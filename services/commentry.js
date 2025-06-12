@@ -15666,7 +15666,6 @@ const commentaryInningChangeService = async (request , fastify)=>{
         team.crr = parseFloat(team?.crr) || 0;
         team.rrr = parseFloat(team?.rrr) || 0;
         global.tblCommentaryTeams[index] = {
-          ...team,
           ...global.tblCommentaryTeams[index],
           ...team,
           teamPredictionPercentage:
