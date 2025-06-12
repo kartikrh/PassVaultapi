@@ -1723,7 +1723,8 @@ const getDataLogsByMarketQuery = async (request, fastify) => {
                 tmd."wrCreatedBy" AS "createdBy",
                 tu."WrUserName" AS "userName",
                 tmd."wrLineDiff" AS "lineDiff",
-                tmd."wrIsSendData" AS "isSendData"
+                tmd."wrIsSendData" AS "isSendData",
+                tmd."wrPredefinedValue" as "predefinedValue"
             FROM "tblMarketDataLogs" tmd
             INNER JOIN "tblEventMarkets" tem ON tmd."wrEventMarketId" = tem."wrID" AND tem."wrIsDeleted" = false
             LEFT JOIN "tblUsers" tu ON tmd."wrCreatedBy" = tu."WrUserId"
