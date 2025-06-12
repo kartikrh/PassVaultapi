@@ -15955,10 +15955,7 @@ const commentaryInningChangeService = async (request , fastify)=>{
       request,
       fastify
     )
-    return {
-      response,
-      sendDataForSocketUpdate
-    };
+    return response;
   } catch (error) {
     commentaryLogger(
       {
