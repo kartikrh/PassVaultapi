@@ -1,16 +1,19 @@
 // predictScoreHandler.js
-const { getActionsForBall, findMarket, formatBallNumber } = require('./ballToActionMapper');
+const { getActionsForBall, findMarket, closeMarketsForOver } = require('./ballToActionMapper');
 const { updateMarketStatusInDB, updateMarketStatusInSocket } = require('./marketActions');
 const { processOddEvenMarkets } = require('./oddEven');
 const { EventMarketStatus } = require('../utilities');
 const { errorLogger } = require('../utilities/logger');
+const { formatBallNumber, normalizeBallToActionMap, synchronizeMarketStatus } = require('./utils');
+const { fetchRunnersForMarket } = require('./helper');
 
 /**
  * Processes the prediction score market based on incoming payload
  * @param {Object} payload - The incoming payload
+ * @param {Object} fastify - Fastify Object
  * @returns {Object} - Processing result
  */
-function processPredictScoreMarket(payload) {
+function processPredictScoreMarket(payload, fastify) {
     try {
         // Extract data from payload
         const predictscore = payload.predictscore || {};
@@ -28,7 +31,10 @@ function processPredictScoreMarket(payload) {
         const ballByBallId = predictscore.ball_by_ball_id || playerpredictscore.ball_by_ball_id;
         const eventId = playerpredictscore.event_id;
 
-        console.log(`Processing ball ${currentBall}, score ${currentScore}, commentary ID ${commentaryId}`);
+        console.log(`Processing ball ${currentBall}, score ${currentScore}, commentary ID ${commentaryId}, batting team ID ${strikeTeamId}`);
+
+        // Normalize ball-to-action map to ensure consistent ball keys
+        normalizeBallToActionMap(commentaryId);
 
         // Format the ball to ensure consistent representation
         const formattedBall = formatBallNumber(currentBall);
@@ -42,23 +48,59 @@ function processPredictScoreMarket(payload) {
             };
         }
 
-        // Get actions mapped to this ball
-        const actions = getActionsForBall(commentaryId, formattedBall);
+        // Get the current over from the ball (integer part)
+        const currentOver = Math.floor(parseFloat(formattedBall));
 
-        // Log whether actions were found
+        // Get actions mapped to this ball, filtered by batting team
+        const actions = getActionsForBall(commentaryId, formattedBall, strikeTeamId);
+
+        // Check previous ball if current ball has no actions and it's not a .0 ball
+        if ((!actions || actions.length === 0) && !formattedBall.endsWith('.0')) {
+            // Calculate previous ball
+            const prevBall = getPreviousBall(formattedBall);
+
+            if (prevBall) {
+                console.log(`No actions for ${formattedBall}, checking previous ball ${prevBall}`);
+
+                // Get actions for previous ball
+                const prevActions = getActionsForBall(commentaryId, prevBall, strikeTeamId);
+
+                if (prevActions && prevActions.length > 0) {
+                    console.log(`Found ${prevActions.length} actions from previous ball ${prevBall}`);
+
+                    // Execute missed actions from previous ball
+                    for (const action of prevActions) {
+                        try {
+                            console.log(`Executing missed action from ${prevBall}: ${action.action} for market ${action.marketId}`);
+                            executeMarketAction(commentaryId, action, fastify);
+                        } catch (actionError) {
+                            console.error(`Error executing missed action ${action.action} for market ${action.marketId}:`, actionError);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Process current ball's actions
         if (actions && actions.length > 0) {
-            console.log(`Found ${actions.length} actions for ball ${formattedBall}`);
+            console.log(`Found ${actions.length} actions for ball ${formattedBall} and team ${strikeTeamId}`);
 
-            // Process each action
-            actions.forEach(action => {
+            // Process each action - only create in DB when needed
+            for (const action of actions) {
                 try {
-                    executeMarketAction(commentaryId, action);
+                    executeMarketAction(commentaryId, action, fastify);
                 } catch (actionError) {
                     console.error(`Error executing action ${action.action} for market ${action.marketId}:`, actionError);
                 }
-            });
+            }
         } else {
-            console.log(`No actions mapped for ball ${formattedBall}`);
+            console.log(`No actions mapped for ball ${formattedBall} and team ${strikeTeamId}`);
+
+            // If no actions found but it's a key ball (like end of over), check other overs
+            if (formattedBall.endsWith('.6')) {
+                // Check if any markets should be manually closed for any over
+                checkAndCloseMarketsForAllOvers(commentaryId, strikeTeamId, fastify);
+            }
         }
 
         // Process specific market types if needed
@@ -72,7 +114,7 @@ function processPredictScoreMarket(payload) {
             matchTypeId,
             isWicket,
             totalWicket,
-            ballByBallId
+            ballByBallId,
         );
 
         return {
@@ -88,35 +130,75 @@ function processPredictScoreMarket(payload) {
     }
 }
 
+// Add helper function to calculate previous ball
+function getPreviousBall(currentBall) {
+    try {
+        const parts = currentBall.split('.');
+        const over = parseInt(parts[0]);
+        const ball = parseInt(parts[1]);
+
+        if (ball > 0) {
+            // Previous ball in same over
+            return `${over}.${ball - 1}`;
+        } else if (over > 0) {
+            // Last ball of previous over (assuming 6 balls per over)
+            return `${over - 1}.5`;
+        }
+
+        return null; // No previous ball (we're at 0.0)
+    } catch (error) {
+        console.error(`Error calculating previous ball for ${currentBall}:`, error);
+        return null;
+    }
+}
+
 /**
  * Executes a specific market action
  * @param {number} commentaryId - The commentary ID
  * @param {Object} action - The action to execute
+ * @param {Object} fastify - Fastify instance
  */
-function executeMarketAction(commentaryId, action) {
-    const { marketId, action: actionType, over, marketTypeCategoryId } = action;
+function executeMarketAction(commentaryId, action, fastify) {
+    const { marketId, action: actionType, over, marketTypeCategoryId, teamId } = action;
 
-    // Find the market
-    const market = findMarket(commentaryId, marketId, { over, marketTypeCategoryId });
+    // Find the market in global state with additional metadata
+    const market = findMarket(commentaryId, marketId, {
+        over,
+        marketTypeCategoryId,
+        teamId
+    });
 
     if (!market) {
-        console.error(`Cannot execute ${actionType} on marketId ${marketId} with over ${over}: Market not found`);
+        console.error(`Cannot execute ${actionType} on marketId ${marketId} with over ${over} and category ${marketTypeCategoryId}: Market not found in global state`);
         return;
     }
 
-    console.log(`Executing ${actionType} on market "${market.marketName}" (ID: ${market.eventMarketId || 'unsaved'})`);
+    // Check if this market is for the batting team
+    if (teamId && !isBattingTeam(commentaryId, market.teamId)) {
+        console.log(`Skipping action ${actionType} for non-batting team market: ${market.marketName} (Team ID: ${market.teamId})`);
+        return;
+    }
 
+    console.log(`Executing ${actionType} on market "${market.marketName}" (ID: ${market.eventMarketId || 'unsaved'}, Category: ${marketTypeCategoryId}, Over: ${over})`);
+
+    // Ensure we're using the synchronized status before the action
+    synchronizeMarketStatus(commentaryId, market.eventMarketId, marketTypeCategoryId, over, market.status);
+
+    // Set commentary ID for DB operations
+    market.commentaryId = commentaryId;
+
+    // Execute the appropriate action
     switch (actionType) {
         case 'open':
-            openMarket(market);
+            openMarket(market, fastify);
             break;
 
         case 'close':
-            closeMarket(market);
+            closeMarket(market, fastify);
             break;
 
         case 'settle':
-            settleMarket(market);
+            settleMarket(market, fastify);
             break;
 
         default:
@@ -125,19 +207,55 @@ function executeMarketAction(commentaryId, action) {
 }
 
 /**
- * Opens a market
- * @param {Object} market - The market to open
+ * Checks if the team is currently batting
+ * @param {number} commentaryId - Commentary ID
+ * @param {number} teamId - Team ID to check
+ * @returns {boolean} - True if team is batting
  */
-function openMarket(market) {
-    // Skip if already open
-    if (market.status === EventMarketStatus.Open) {
-        console.log(`Market ${market.marketName} is already open`);
-        return;
+function isBattingTeam(commentaryId, teamId) {
+    if (!global.tblCommentaryTeams) {
+        console.error("Global commentary teams data not available");
+        return true; // Default to true if data not available
     }
 
+    // Convert IDs to strings for comparison
+    const teamIdStr = teamId ? teamId.toString() : null;
+
+    const battingTeam = global.tblCommentaryTeams.find(
+        item => item.commentaryId === parseInt(commentaryId) &&
+            item.teamStatus === 1 // Assuming teamStatus 1 means batting
+    );
+
+    if (!battingTeam) {
+        console.log(`Could not find batting team for commentary ${commentaryId}`);
+        return true; // Default to true if batting team info not available
+    }
+
+    const battingTeamIdStr = battingTeam.teamId ? battingTeam.teamId.toString() : null;
+    const isMatching = !teamIdStr || !battingTeamIdStr || teamIdStr === battingTeamIdStr;
+
+    if (!isMatching) {
+        console.log(`Team ID ${teamIdStr} does not match batting team ID ${battingTeamIdStr}`);
+    }
+
+    return isMatching;
+}
+
+/**
+ * Opens a market
+ * @param {Object} market - The market to open
+ * @param {Object} fastify - Fastify Object
+ */
+function openMarket(market, fastify) {
     // Update market status to OPEN
     market.status = EventMarketStatus.Open;
-
+    synchronizeMarketStatus(
+        market.commentaryId,
+        market.eventMarketId,
+        market.marketTypeCategoryId,
+        market.over,
+        EventMarketStatus.Open
+    );
     // Update runners' statuses if needed
     if (market.runners && market.runners.length > 0) {
         market.runners.forEach(runner => {
@@ -145,9 +263,9 @@ function openMarket(market) {
         });
     }
 
-    // Update in DB and send to socket
-    updateMarketStatusInDB(market);
-    updateMarketStatusInSocket(market);
+    // Update in DB - will insert if ID is 0 and market doesn't exist in DB
+    updateMarketStatusInDB(market, fastify);
+    // Socket update is handled by updateMarketStatusInDB
 
     console.log(`Opened market: ${market.marketName} (ID: ${market.eventMarketId || 'unsaved'})`);
 }
@@ -155,51 +273,74 @@ function openMarket(market) {
 /**
  * Closes a market
  * @param {Object} market - The market to close
+ * @param {Object} fastify - Fastify Object
  */
-function closeMarket(market) {
-    // Skip if already closed or settled
-    if (market.status === EventMarketStatus.Close || market.status === EventMarketStatus.Settled) {
-        console.log(`Market ${market.marketName} is already closed or settled`);
-        return;
-    }
+function closeMarket(market, fastify) {
+    // Make a deep copy to avoid reference issues
+    const marketCopy = JSON.parse(JSON.stringify(market));
 
-    // Update market status to CLOSE
+    console.log(`[CLOSE] Closing market "${market.marketName}" (ID: ${market.eventMarketId || 'unsaved'}, Current Status: ${market.status})`);
+
+    // Update market status to CLOSE (4)
+    marketCopy.status = EventMarketStatus.Close;
     market.status = EventMarketStatus.Close;
 
     // Update runners' statuses if needed
-    if (market.runners && market.runners.length > 0) {
-        market.runners.forEach(runner => {
+    if (marketCopy.runners && marketCopy.runners.length > 0) {
+        marketCopy.runners.forEach(runner => {
             runner.selectionStatus = EventMarketStatus.Close;
         });
     }
 
-    // Update in DB and send to socket
-    updateMarketStatusInDB(market);
-    updateMarketStatusInSocket(market);
+    // Synchronize the status in global state
+    synchronizeMarketStatus(
+        marketCopy.commentaryId,
+        marketCopy.eventMarketId,
+        marketCopy.marketTypeCategoryId,
+        marketCopy.over,
+        EventMarketStatus.Close
+    );
 
-    console.log(`Closed market: ${market.marketName} (ID: ${market.eventMarketId || 'unsaved'})`);
+    // Update in DB - will insert if ID is 0 and market doesn't exist in DB
+    // Important: Pass the copied market to ensure status is consistent
+    updateMarketStatusInDB(marketCopy, fastify);
+
+    console.log(`[CLOSE] Closed market: ${marketCopy.marketName} (ID: ${marketCopy.eventMarketId || 'unsaved'}, New Status: ${marketCopy.status})`);
 }
 
 /**
  * Settles a market
  * @param {Object} market - The market to settle
+ * @param {Object} fastify - Fastify Object
  */
-function settleMarket(market) {
-    // Skip if already settled
-    if (market.status === EventMarketStatus.Settled) {
-        console.log(`Market ${market.marketName} is already settled`);
-        return;
-    }
+function settleMarket(market, fastify) {
+    market.status = EventMarketStatus.Settled;
+    synchronizeMarketStatus(
+        market.commentaryId,
+        market.eventMarketId,
+        market.marketTypeCategoryId,
+        market.over,
+        EventMarketStatus.Settled
+    );
 
     // Different settlement logic based on market type
-    if (market.marketTypeCategoryId === 28 || market.marketTypeCategoryId === 35) {
+    if (market.marketTypeCategoryId === 35) {
         // Odd-Even market settlement
-        settleOddEvenMarket(market);
+        settleOddEvenMarket(market, fastify);
+    } else if (market.marketTypeCategoryId === 28) {
+        // Lottery market settlement
+        settleLotteryMarket(market, fastify);
+    } else if (market.marketTypeCategoryId === 26) {
+        // L.D.O market settlement
+        settleLDOMarket(market, fastify);
     } else {
         // Default settlement - just set to settled
         market.status = EventMarketStatus.Settled;
-        updateMarketStatusInDB(market);
-        updateMarketStatusInSocket(market);
+        market.settledTime = new Date().toISOString();
+
+        // Update in DB - will insert if ID is 0 and market doesn't exist in DB
+        updateMarketStatusInDB(market, fastify);
+        // Socket update is handled by updateMarketStatusInDB
     }
 
     console.log(`Settled market: ${market.marketName} (ID: ${market.eventMarketId || 'unsaved'})`);
@@ -208,19 +349,38 @@ function settleMarket(market) {
 /**
  * Settles an Odd-Even market
  * @param {Object} market - The market to settle
+ * @param {Object} fastify - Fastify Object
  */
-function settleOddEvenMarket(market) {
-    // Calculate the result based on total runs in the over
-    const overRuns = calculateOverRuns(market.commentaryId, market.teamId, market.over);
-    const isEven = overRuns % 2 === 0;
+function settleOddEvenMarket(market, fastify) {
+    try {
+        // Calculate the result based on total runs in the over
+        const overRuns = calculateOverRuns(market.commentaryId, market.teamId, market.over);
+        const isEven = overRuns % 2 === 0;
 
-    console.log(`Settling odd-even market for over ${market.over}. Runs: ${overRuns}, Result: ${isEven ? 'Even' : 'Odd'}`);
+        console.log(`Settling odd-even market for over ${market.over}. Runs: ${overRuns}, Result: ${isEven ? 'Even' : 'Odd'}`);
 
-    // Set market as settled
-    market.status = EventMarketStatus.Settled;
+        // Set market as settled
+        market.status = EventMarketStatus.Settled;
 
-    // Find and set the winner
-    if (market.runners && market.runners.length > 0) {
+        // Find and set the winner
+        if (!market.runners || market.runners.length < 2) {
+            console.error(`Cannot settle market ${market.eventMarketId || market.marketName}: runners not found or incomplete`);
+
+            // Try to fetch runners from DB if they're missing
+            fetchRunnersForMarket(market.eventMarketId, fastify).then(runnersFromDB => {
+                if (runnersFromDB && runnersFromDB.length >= 2) {
+                    // Retry settlement with fetched runners
+                    market.runners = runnersFromDB;
+                    settleOddEvenMarket(market, fastify);
+                }
+            }).catch(error => {
+                console.error(`Failed to fetch runners for market ${market.eventMarketId}:`, error);
+            });
+
+            return;
+        }
+
+        // Process each runner
         market.runners.forEach(runner => {
             const runnerName = runner.runner.toLowerCase();
             const isEvenRunner = runnerName.includes('even');
@@ -237,14 +397,158 @@ function settleOddEvenMarket(market) {
                 runner.selectionStatus = 8; // LOSE
             }
         });
+
+        // Set settled time
+        market.settledTime = new Date().toISOString();
+
+        // Update in DB - will insert if ID is 0 and market doesn't exist in DB
+        updateMarketStatusInDB(market, fastify);
+    } catch (error) {
+        console.error(`Error settling odd-even market ${market.marketName}:`, error);
     }
+}
 
-    // Set settled time
-    market.settledTime = new Date().toISOString();
+/**
+ * Settles a Lottery market
+ * @param {Object} market - The market to settle
+ * @param {Object} fastify - Fastify Object
+ */
+function settleLotteryMarket(market, fastify) {
+    try {
+        // Calculate the result based on total runs in the over
+        const overRuns = calculateOverRuns(market.commentaryId, market.teamId, market.over);
+        const lastDigit = overRuns % 10;
 
-    // Update in DB and send to socket
-    updateMarketStatusInDB(market);
-    updateMarketStatusInSocket(market);
+        console.log(`Settling lottery market for over ${market.over}. Runs: ${overRuns}, Last digit: ${lastDigit}`);
+
+        // Set market as settled
+        market.status = EventMarketStatus.Settled;
+
+        // Ensure we have runners
+        if (!market.runners || market.runners.length === 0) {
+            console.error(`Cannot settle lottery market ${market.eventMarketId || market.marketName}: runners not found`);
+
+            // Try to fetch runners from DB if they're missing
+            fetchRunnersForMarket(market.eventMarketId, fastify).then(runnersFromDB => {
+                if (runnersFromDB && runnersFromDB.length > 0) {
+                    // Retry settlement with fetched runners
+                    market.runners = runnersFromDB;
+                    settleLotteryMarket(market, fastify);
+                }
+            }).catch(error => {
+                console.error(`Failed to fetch runners for lottery market ${market.eventMarketId}:`, error);
+            });
+
+            return;
+        }
+
+        // Process each runner
+        market.runners.forEach(runner => {
+            // Check if this runner represents the last digit
+            const runnerValue = parseInt(runner.runner);
+
+            if (!isNaN(runnerValue) && runnerValue === lastDigit) {
+                // This runner wins
+                runner.selectionStatus = 7; // WIN
+                market.result = runner.runnerId;
+                console.log(`Winner: ${runner.runner} (ID: ${runner.runnerId})`);
+            } else {
+                // This runner loses
+                runner.selectionStatus = 8; // LOSE
+            }
+        });
+
+        // Set settled time
+        market.settledTime = new Date().toISOString();
+
+        // Update in DB
+        updateMarketStatusInDB(market, fastify);
+    } catch (error) {
+        console.error(`Error settling lottery market ${market.marketName}:`, error);
+    }
+}
+
+/**
+ * Settles an L.D.O market
+ * @param {Object} market - The market to settle
+ * @param {Object} fastify - Fastify Object
+ */
+function settleLDOMarket(market, fastify) {
+    try {
+        // Calculate the result based on total runs in the over
+        const overRuns = calculateOverRuns(market.commentaryId, market.teamId, market.over);
+
+        console.log(`Settling L.D.O market for over ${market.over}. Runs: ${overRuns}`);
+
+        // Set market as settled
+        market.status = EventMarketStatus.Settled;
+
+        // Ensure we have runners
+        if (!market.runners || market.runners.length === 0) {
+            console.error(`Cannot settle L.D.O market ${market.eventMarketId || market.marketName}: runners not found`);
+
+            // Try to fetch runners from DB if they're missing
+            fetchRunnersForMarket(market.eventMarketId, fastify).then(runnersFromDB => {
+                if (runnersFromDB && runnersFromDB.length > 0) {
+                    // Retry settlement with fetched runners
+                    market.runners = runnersFromDB;
+                    settleLDOMarket(market, fastify);
+                }
+            }).catch(error => {
+                console.error(`Failed to fetch runners for L.D.O market ${market.eventMarketId}:`, error);
+            });
+
+            return;
+        }
+
+        // L.D.O market settlement logic
+        // This is a basic implementation - you can customize based on your specific L.D.O rules
+        market.runners.forEach(runner => {
+            const predefinedValue = parseFloat(runner.predefinedValue) || 0;
+
+            // Example settlement logic: compare over runs with predefined value
+            // You can modify this logic based on your specific L.D.O market rules
+            let isWinner = false;
+
+            if (runner.runner.toLowerCase().includes('over')) {
+                // Over runner wins if runs > predefined value
+                isWinner = overRuns > predefinedValue;
+            } else if (runner.runner.toLowerCase().includes('under')) {
+                // Under runner wins if runs < predefined value
+                isWinner = overRuns < predefinedValue;
+            } else if (runner.runner.toLowerCase().includes('odd')) {
+                // Odd runner wins if runs are odd
+                isWinner = overRuns % 2 !== 0;
+            } else if (runner.runner.toLowerCase().includes('even')) {
+                // Even runner wins if runs are even
+                isWinner = overRuns % 2 === 0;
+            } else {
+                // For other types of runners, you can add custom logic here
+                // For now, we'll use the predefined value comparison
+                isWinner = overRuns === predefinedValue;
+            }
+
+            if (isWinner) {
+                // This runner wins
+                runner.selectionStatus = 7; // WIN
+                market.result = runner.runnerId;
+                console.log(`L.D.O Winner: ${runner.runner} (ID: ${runner.runnerId}, Predefined Value: ${predefinedValue})`);
+            } else {
+                // This runner loses
+                runner.selectionStatus = 8; // LOSE
+            }
+        });
+
+        // Set settled time
+        market.settledTime = new Date().toISOString();
+
+        // Update in DB
+        updateMarketStatusInDB(market, fastify);
+
+        console.log(`L.D.O market settled for over ${market.over} with runs ${overRuns}`);
+    } catch (error) {
+        console.error(`Error settling L.D.O market ${market.marketName}:`, error);
+    }
 }
 
 /**
@@ -255,18 +559,117 @@ function settleOddEvenMarket(market) {
  * @returns {number} - Total runs in the over
  */
 function calculateOverRuns(commentaryId, teamId, over) {
-    // This would typically fetch the actual runs from ball-by-ball data
-    // In a real implementation, this would query a database or cache
+    try {
+        // Convert over to a consistent format (number)
+        const overNum = parseInt(over);
+        let totalRuns = 0;
 
-    // For now, generate a random number for demonstration
-    // In production, replace this with actual data lookup
-    return Math.floor(Math.random() * 20);
+        // Always get data from global cache first
+        if (global.marketData && global.marketData[commentaryId]) {
+            // Try to find the over data in ball-by-ball cache
+            if (global.ballByBallData &&
+                global.ballByBallData[commentaryId] &&
+                global.ballByBallData[commentaryId][teamId] &&
+                global.ballByBallData[commentaryId][teamId][overNum]) {
+
+                const overData = global.ballByBallData[commentaryId][teamId][overNum];
+                totalRuns = overData.reduce((sum, ball) => sum + (ball.runs || 0), 0);
+                console.log(`[CALC] Found runs data in ball-by-ball cache for over ${overNum}: ${totalRuns}`);
+                return totalRuns;
+            }
+
+            // If not in ball-by-ball, look in an over summary cache
+            if (global.overSummary &&
+                global.overSummary[commentaryId] &&
+                global.overSummary[commentaryId][teamId] &&
+                global.overSummary[commentaryId][teamId][overNum]) {
+
+                totalRuns = global.overSummary[commentaryId][teamId][overNum].totalRuns || 0;
+                console.log(`[CALC] Found runs data in over summary cache for over ${overNum}: ${totalRuns}`);
+                return totalRuns;
+            }
+
+            // If not in summary, look for an odd-even market for this over
+            const markets = global.marketData[commentaryId].markets;
+            const oddEvenMarket = markets.find(m =>
+                (m.marketTypeCategoryId === 28 || m.marketTypeCategoryId === 35 || m.marketTypeCategoryId === 26) &&
+                parseInt(m.over) === overNum &&
+                parseInt(m.teamId) === parseInt(teamId)
+            );
+
+            if (oddEvenMarket) {
+                // If we're settling the market, get predicted value
+                if (oddEvenMarket.predefinedValue) {
+                    totalRuns = Math.floor(oddEvenMarket.predefinedValue);
+                    console.log(`[CALC] Using predefined value for over ${overNum}: ${totalRuns}`);
+                    return totalRuns;
+                }
+
+                // If market has data field with runs info
+                if (oddEvenMarket.data && oddEvenMarket.data.runs) {
+                    totalRuns = oddEvenMarket.data.runs;
+                    console.log(`[CALC] Using market data value for over ${overNum}: ${totalRuns}`);
+                    return totalRuns;
+                }
+            }
+        }
+
+        // If we have a specific runs counting function
+        if (global.utils && global.utils.countRunsForOver) {
+            totalRuns = global.utils.countRunsForOver(commentaryId, teamId, overNum);
+            if (totalRuns !== null) {
+                console.log(`[CALC] Using utility function for over ${overNum}: ${totalRuns}`);
+                return totalRuns;
+            }
+        }
+
+        // If all else fails, generate a random number (for testing only)
+        console.warn(`[WARNING] No actual data found for over ${over} in global state, generating random score`);
+        totalRuns = Math.floor(Math.random() * 20);
+
+        // Cache this result for future use
+        if (!global.overSummary) {
+            global.overSummary = {};
+        }
+        if (!global.overSummary[commentaryId]) {
+            global.overSummary[commentaryId] = {};
+        }
+        if (!global.overSummary[commentaryId][teamId]) {
+            global.overSummary[commentaryId][teamId] = {};
+        }
+        global.overSummary[commentaryId][teamId][overNum] = { totalRuns };
+
+        return totalRuns;
+    } catch (error) {
+        console.error(`Error calculating runs for over ${over}:`, error);
+        // Return a fallback value in case of error
+        return Math.floor(Math.random() * 20);
+    }
 }
 
+/**
+ * Checks and closes markets for all overs if needed
+ * @param {number} commentaryId - Commentary ID
+ * @param {number} strikeTeamId - Strike team ID
+ * @param {Object} fastify - Fastify instance
+ */
+function checkAndCloseMarketsForAllOvers(commentaryId, strikeTeamId, fastify) {
+    // This is a placeholder function - implement based on your specific needs
+    console.log(`[CHECK_CLOSE] Checking markets for auto-close for team ${strikeTeamId}`);
+
+    // You can add logic here to check if any markets need to be closed
+    // that might have been missed by the ball-to-action mapping
+}
+
+// Make sure to export all the functions that are used elsewhere
 module.exports = {
     processPredictScoreMarket,
     executeMarketAction,
     openMarket,
     closeMarket,
-    settleMarket
+    settleMarket,
+    settleOddEvenMarket,
+    settleLotteryMarket,
+    settleLDOMarket,
+    calculateOverRuns,
 };

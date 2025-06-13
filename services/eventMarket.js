@@ -786,7 +786,7 @@ const marketListByCIdServiceV1 = async (request, fastify) => {
 
   // get the team and teamName by commentaryId
   const teams = global.tblCommentaryTeams
-    .filter((item) => item.commentaryId === commentaryId)
+    .filter((item) => item?.commentaryId === commentaryId)
     .reduce((acc, current) => {
       if (!acc.some(item => item.teamId === current.teamId)) {
         acc.push(current);
@@ -805,7 +805,7 @@ const marketListByCIdServiceV1 = async (request, fastify) => {
     });
   // 
   const comPlayer = global.tblCommentaryPlayers.filter(
-    (item) => item.commentaryId === commentaryId
+    (item) => item?.commentaryId === commentaryId
   ).map((item) => {
     return {
       playerId: item.playerId,
@@ -816,7 +816,7 @@ const marketListByCIdServiceV1 = async (request, fastify) => {
     }
   });
   // get comPartnership
-  let partnership =   global.tblCommentaryPartnership.find((item)=> item.commentaryId == commentaryId && item.isActive == true && item.currentInnings == commentary.currentInnings);
+  let partnership =   global.tblCommentaryPartnership.find((item)=> item?.commentaryId == commentaryId && item?.isActive == true && item?.currentInnings == commentary.currentInnings);
   if(partnership){
     partnership =  {
       commentaryPartnershipId : partnership.commentaryPartnershipId,
@@ -858,6 +858,7 @@ const marketListByCIdServiceV1 = async (request, fastify) => {
     categories,
     target : target,
     comPlayer,
+    partnership : partnership ?? null
     //players,
   };
 };
@@ -2720,7 +2721,8 @@ const createEventMarketsServiceV1 = async (request, fastify) => {
         commentaryId: item.commentaryId,
         dataTosave: typeof (item.data) === "string" ? JSON.parse(item.data) : item.data,
         updateType: MarketUpdateType.marketInitilization,
-        isSendData: true
+        isSendData: true,
+        predefinedValue : item.predefinedValue ?? null
       },
       request,
       fastify
@@ -2829,6 +2831,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
       (e) => e.eventMarketId === parseInt(item.marketId)
     );
     if (
+      market &&
       market.status === EventMarketStatus.Close ||
       market.status === EventMarketStatus.Settled ||
       market.status === EventMarketStatus.Cancel
@@ -3033,7 +3036,9 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
           dataTosave: typeof (item.data) === "string" ? JSON.parse(item.data) : item.data,
           updateType: MarketUpdateType.marketUpdateRate,
           lineDiff: lineDiff || 0,
-          isSendData: true
+          isSendData: true,
+          predefinedValue : item.predefinedValue ?? null
+
         },
         request,
         fastify

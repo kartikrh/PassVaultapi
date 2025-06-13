@@ -1723,7 +1723,8 @@ const getDataLogsByMarketQuery = async (request, fastify) => {
                 tmd."wrCreatedBy" AS "createdBy",
                 tu."WrUserName" AS "userName",
                 tmd."wrLineDiff" AS "lineDiff",
-                tmd."wrIsSendData" AS "isSendData"
+                tmd."wrIsSendData" AS "isSendData",
+                tmd."wrPredefinedValue" as "predefinedValue"
             FROM "tblMarketDataLogs" tmd
             INNER JOIN "tblEventMarkets" tem ON tmd."wrEventMarketId" = tem."wrID" AND tem."wrIsDeleted" = false
             LEFT JOIN "tblUsers" tu ON tmd."wrCreatedBy" = tu."WrUserId"
@@ -4968,7 +4969,8 @@ const saveManualMarketQuery = async (data, request, fastify) => {
         dataTosave: typeof (dataToStore) === "string" ? JSON.parse(dataToStore) : dataToStore,
         updateType: MarketUpdateType.marketInitilization,
         lineDiff: 0,
-        isSendData: true
+        isSendData: true,
+        predefinedValue : mar[0].predefinedValue ?? null
       },
       request,
       fastify
@@ -5026,7 +5028,8 @@ const upManualMarketQuery = async (data, request, fastify) => {
                 dataTosave: typeof item === "string" ? JSON.parse(item) : item,
                 updateType: MarketUpdateType.marketUpdateRate,
                 lineDiff: 0,
-                isSendData: true
+                isSendData: true,
+                predefinedValue : item.predefinedValue ?? null
               },
               request,
               fastify

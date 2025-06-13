@@ -6,23 +6,23 @@ const { getPlayersBattingHistoryByIdQuery } = require('../repository/TablePlayer
 const { commentaryStatus, EventMarketStatus } = require('../utilities');
 const configConstants = require('../utilities/configConstants');
 const { errorLogger } = require('../utilities/logger');
-const { processOddEven, processOddEvenMarkets, processLotteryMarkets, processMarketAndRunnersOfOE } = require('./oddEven');
+const { processOddEven, processOddEvenMarkets, processLDO } = require('./oddEven');
 const { updateMarketStatusInDB, updateMarketStatusInSocket } = require('./marketActions');
 const { processPredictScoreMarket } = require('./predictScoreHandler');
 const {
-  initializeBallToActionMap,
   getActionsForBall,
   findMarket,
   logFullBallToActionMap,
   getAllMappedActions
 } = require('./ballToActionMapper');
-const { createMarketAndRunner } = require('./utils');
+const { createMarketAndRunner, initializeBallToActionMap, normalizeBallToActionMap, validateBallToActionMap, logBallToActionMapSample } = require('./utils');
 
 /**
  * Market handlers for different market types
  */
 const MARKET_HANDLERS = {
   'odd-even': processOddEven,
+  'ldo': processLDO,
   // Add more market handlers here as needed
 };
 
@@ -31,7 +31,7 @@ const MARKET_HANDLERS = {
  * @param {Object} params - Parameters including market type and data
  * @returns {Object} - Result of market processing
  */
-async function marketGenRunner({ market, data }) {
+async function marketGenRunner({ market, data }, fastify) {
   // Find the appropriate handler for this market type
   const handler = MARKET_HANDLERS[market];
   if (!handler) return { error: `No handler for market: ${market}` };
@@ -45,8 +45,8 @@ async function marketGenRunner({ market, data }) {
   const eventId = data?.predictscore?.event_id;
 
   // Update status in DB and socket
-  updateMarketStatusInDB(result);
-  updateMarketStatusInSocket(result);
+  updateMarketStatusInDB(result, fastify);
+  // updateMarketStatusInSocket is now called inside updateMarketStatusInDB
 
   return result;
 }
@@ -87,6 +87,10 @@ const generateMarketAndRunners = async (data, request, fastify) => {
         where: whereCondition
       }, request, fastify);
     }
+
+    // Extract assigned category IDs from templates
+    const assignedCategoryIds = comTemplate.map(template => template.marketTypeCategoryId);
+    console.log(`Assigned category IDs for commentary ${commentaryId}: ${assignedCategoryIds.join(', ')}`);
 
     // Initialize global market data structure
     global.marketData[data.commentaryId] = {
@@ -221,10 +225,65 @@ const generateMarketAndRunners = async (data, request, fastify) => {
       eventMarket = await getExistingEventMarketsQueryV1(fastify, whereCondition);
     }
 
-    // Store existing markets
+    // If templates are assigned, check for non-template markets to suspend
+    if (assignedCategoryIds.length > 0) {
+      // Filter existing markets that are NOT in assigned categories
+      const marketsToSuspend = eventMarket.filter(market =>
+        !assignedCategoryIds.includes(market.marketTypeCategoryId) &&
+        market.status === EventMarketStatus.Open
+      );
+
+      // Suspend non-template markets
+      for (const market of marketsToSuspend) {
+        console.log(`Suspending non-template market: ${market.marketName} (Category: ${market.marketTypeCategoryId})`);
+
+        market.status = EventMarketStatus.Suspend;
+        market.commentaryId = commentaryId;
+
+        // Update in DB
+        await updateMarketStatusInDB(market, fastify);
+      }
+
+      if (marketsToSuspend.length > 0) {
+        console.log(`Suspended ${marketsToSuspend.length} non-template markets`);
+      }
+
+      // Filter eventMarket to only include template categories
+      eventMarket = eventMarket.filter(market =>
+        assignedCategoryIds.includes(market.marketTypeCategoryId)
+      );
+    } else {
+      // No templates assigned - suspend all open markets
+      console.log(`No templates assigned for commentary ${commentaryId}. Suspending all open markets.`);
+
+      for (const market of eventMarket) {
+        if (market.status === EventMarketStatus.Open) {
+          console.log(`Suspending market: ${market.marketName} (Category: ${market.marketTypeCategoryId})`);
+
+          market.status = EventMarketStatus.Suspend;
+          market.commentaryId = commentaryId;
+
+          // Update in DB
+          await updateMarketStatusInDB(market, fastify);
+        }
+      }
+
+      // Clear the markets array as no templates are assigned
+      eventMarket = [];
+
+      // Return early with empty market data
+      global.marketData[data.commentaryId].existingMarket = [];
+      global.marketData[data.commentaryId].markets = [];
+      global.marketData[data.commentaryId].ballToActionMap = {};
+
+      console.log(`Created empty market structure for commentary ${data.commentaryId} (no templates)`);
+      return { success: true, message: "No templates assigned - all markets suspended" };
+    }
+
+    // Store existing markets (only template categories)
     global.marketData[data.commentaryId].existingMarket = eventMarket;
 
-    // Create markets and runners
+    // Create markets in memory only using the original function
     let mar = await createMarketAndRunner(
       {
         templates: comTemplate,
@@ -241,11 +300,49 @@ const generateMarketAndRunners = async (data, request, fastify) => {
       fastify
     );
 
-    // Initialize the ball-to-action map
-    initializeBallToActionMap(global.marketData[data.commentaryId].markets, data.commentaryId);
+    // Update markets in global state with existing market IDs if available
+    if (eventMarket && eventMarket.length > 0 && global.marketData[data.commentaryId].markets) {
+      console.log(`Updating ${eventMarket.length} existing markets with database IDs`);
+
+      // For each existing market in the database
+      eventMarket.forEach(existingMarket => {
+        // Try to find the corresponding market in global state
+        const marketIndex = global.marketData[data.commentaryId].markets.findIndex(m => {
+          // For odd-even, lottery, and L.D.O markets, match by category, over and team
+          if ((m.marketTypeCategoryId === 28 || m.marketTypeCategoryId === 35 || m.marketTypeCategoryId === 26) &&
+            (existingMarket.marketTypeCategoryId === 28 || existingMarket.marketTypeCategoryId === 35 || existingMarket.marketTypeCategoryId === 26)) {
+            return m.over === existingMarket.over &&
+              m.teamId === existingMarket.teamId &&
+              m.marketTypeCategoryId === existingMarket.marketTypeCategoryId;
+          }
+
+          // For other markets, match by name and category
+          return m.marketName === existingMarket.marketName &&
+            m.marketTypeCategoryId === existingMarket.marketTypeCategoryId;
+        });
+
+        // If found, update the ID
+        if (marketIndex !== -1) {
+          console.log(`Found existing market in DB for ${existingMarket.marketName} with ID ${existingMarket.eventMarketId}`);
+          global.marketData[data.commentaryId].markets[marketIndex].eventMarketId = existingMarket.eventMarketId;
+          global.marketData[data.commentaryId].markets[marketIndex].runners = existingMarket.runners || [];
+        }
+      });
+    }
+
+    // Get current ball from data if available
+    const currentBall = data.currentBall || data.ball || null;
+
+    // Initialize the ball-to-action map with current ball
+    initializeBallToActionMap(global.marketData[data.commentaryId].markets, data.commentaryId, null, currentBall);
+
+    // Normalize the ball keys to ensure consistency
+    normalizeBallToActionMap(commentaryId);
+    validateBallToActionMap(commentaryId);
 
     // Log the total number of markets and entries in ball-to-action map
     console.log(`Generated ${global.marketData[data.commentaryId].markets.length} markets for commentary ${data.commentaryId}`);
+    logBallToActionMapSample(data.commentaryId)
 
     // Log all ball-to-action entries for debugging
     const allMappedActions = getAllMappedActions(data.commentaryId);
@@ -254,10 +351,15 @@ const generateMarketAndRunners = async (data, request, fastify) => {
     // Log the raw structure for verification
     console.log(`Ball to Ball : ${Object.keys(global.marketData[data.commentaryId].ballToActionMap).join(',')}`);
 
-    // Log in more readable format - first 10 entries
-    const sampleEntries = allMappedActions.slice(0, 10);
-    console.log("Sample entries from ball-to-action map:");
-    console.log(JSON.stringify(sampleEntries, null, 2));
+    // Log market breakdown by type
+    const marketBreakdown = {
+      oddEven: global.marketData[data.commentaryId].markets.filter(m => m.marketTypeCategoryId === 35).length,
+      lottery: global.marketData[data.commentaryId].markets.filter(m => m.marketTypeCategoryId === 28).length,
+      ldo: global.marketData[data.commentaryId].markets.filter(m => m.marketTypeCategoryId === 26).length,
+      other: global.marketData[data.commentaryId].markets.filter(m => ![35, 28, 26].includes(m.marketTypeCategoryId)).length
+    };
+
+    console.log(`Market breakdown - Odd-Even: ${marketBreakdown.oddEven}, Lottery: ${marketBreakdown.lottery}, L.D.O: ${marketBreakdown.ldo}, Other: ${marketBreakdown.other}`);
 
     return mar;
   } catch (error) {
@@ -280,9 +382,7 @@ module.exports = {
   processPredictScoreMarket,
   processOddEven,
   processOddEvenMarkets,
-  processLotteryMarkets,
-  processMarketAndRunnersOfOE,
-  initializeBallToActionMap,
+  processLDO,
   getActionsForBall,
   findMarket,
   updateMarketStatusInDB,

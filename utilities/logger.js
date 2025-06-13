@@ -131,12 +131,13 @@ const marketDataLogger = async (data , request , fastify) => {
       dataTosave,
       updateType,
       lineDiff,
-      isSendData
+      isSendData,
+      predefinedValue = null
     } = data;
 
     return await fastify.db.query(
       `INSERT INTO "tblMarketDataLogs" ("wrEventMarketId", "wrCommentaryId", "wrData", "wrUpdateType", "wrCreatedDate",
-      "wrLineDiff", "wrCreatedBy", "wrIsSendData") VALUES ($1, $2, $3, $4, $5 ,$6, $7 , $8)`,
+      "wrLineDiff", "wrCreatedBy", "wrIsSendData", "wrPredefinedValue") VALUES ($1, $2, $3, $4, $5 ,$6, $7 , $8 ,$9)`,
       {
         type: fastify.db.QueryTypes.SELECT,
         bind: [
@@ -147,7 +148,8 @@ const marketDataLogger = async (data , request , fastify) => {
           new Date(),
           lineDiff || 0,
           request?.userTokenInfo?.WrUserId || 0,
-          isSendData !== undefined ? isSendData : true
+          isSendData !== undefined ? isSendData : true,
+          predefinedValue ?? null
         ],
       }
     );

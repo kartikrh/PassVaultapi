@@ -84,6 +84,9 @@ const {
   commentaryScoreService,
   commentaryOverStartService,
   commentarySwapPlayerService,
+  commentaryInningChangeService,
+  getPitchAndSessionService,
+  updatePitchAndSessionService,
 } = require("../../../../services/commentry");
 const { getEventSnapByComService, updateEventSnapByComService } = require("../../../../services/competitionEventSnap");
 const { getAllCommentariesDataService, getAllCommentariesDataServiceV1 } = require("../../../../services/score");
@@ -1121,6 +1124,33 @@ const commentarySwapPlayer = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const commentaryInningChange = async (request, reply, fastify) => {
+  try {
+    const result = await commentaryInningChangeService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/commentaryInningChange", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const getPitchAndSession = async (request, reply, fastify) => {
+  try {
+    const result = await getPitchAndSessionService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/getPitchAndSession", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const updatePitchAndSession = async (request, reply, fastify) => {
+  try {
+    const result = await updatePitchAndSessionService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/updatePitchAndSession", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 
 module.exports = {
   getAllCommentaries,
@@ -1215,4 +1245,7 @@ module.exports = {
   commentaryScore,
   commentaryOverStart,
   commentarySwapPlayer,
+  commentaryInningChange,
+  getPitchAndSession,
+  updatePitchAndSession,
 }

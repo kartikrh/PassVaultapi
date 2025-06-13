@@ -7131,6 +7131,34 @@ const insertCommentaryTeamsOnImportQuery = async (data, request, fastify) => {
     throw new Error(err.message);
   }
 };
+const updatePitchageAndSessionQuery = async (data, fastify, request) => {
+  try {
+    return await fastify.db.query(
+      `
+      UPDATE "tblCommentaries" SET
+        "wrPitchAge" = $1,
+        "wrSession" = $2
+      WHERE "wrCommentaryId" = $3
+      AND "wrIsDelete" = false`,
+      {
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [
+          data.pitchAge,
+          data.session,
+          data.commentaryId,
+        ],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/updatePitchageAndSessionQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -7257,4 +7285,5 @@ module.exports = {
   addCompTempQuery,
   insertCommentaryWithImportQuery,
   insertCommentaryTeamsOnImportQuery,
+  updatePitchageAndSessionQuery,
 };
