@@ -1,4 +1,3 @@
-
 function processMarketAndRunnersOfOE(market, teamId, keyPrefix, processedMarketsObj, commentary) {
     const baseKey = `${keyPrefix}_##_${market.marketTypeId}_##_${market.marketTypeCategoryId}_##_${market.over}`;
 
@@ -108,6 +107,27 @@ function processMarketAndRunnersOfOE(market, teamId, keyPrefix, processedMarkets
         if (marketRunners.length < 9) {
             console.warn(`Lottery market for over ${market.over} has only ${marketRunners.length} runners`);
         }
+    } else if (market.marketTypeCategoryId === 26) {
+        // L.D.O market - process runners with predefined values
+        marketRunners = market.runners?.map(runner => ({
+            marketTemplateRunnerId: runner.marketTemplateRunnerId,
+            marketTemplateId: market.marketTemplateId,
+            runner: runner.runner,
+            line: runner.line,
+            overRate: runner.overRate,
+            underRate: runner.underRate,
+            lastUpdate: new Date().toISOString(),
+            selectionId: runner.selectionId,
+            order: runner.order,
+            backPrice: runner.backPrice,
+            layPrice: runner.layPrice,
+            backSize: market.isPredefineRunnerValue ? runner.backSize : market.defaultBackSize,
+            laySize: market.isPredefineRunnerValue ? runner.laySize : market.defaultLaySize,
+            predefinedValue: runner.predefinedValue,
+            runnerId: runner.runnerId || 0
+        })) || [];
+
+        console.log(`L.D.O market for over ${market.over} has ${marketRunners.length} runners`);
     }
 
     // Add market to global object with a properly structured object
@@ -140,7 +160,13 @@ function processMarketAndRunnersOfOE(market, teamId, keyPrefix, processedMarkets
     };
 
     global.marketData[commentary.commentaryId].markets.push(marketObj);
-    console.log(`Added ${market.marketTypeCategoryId === 35 ? 'Odd-Even' : 'Lottery'} market for over ${market.over} with ${marketRunners.length} runners`);
+
+    let marketTypeName = 'Other';
+    if (market.marketTypeCategoryId === 35) marketTypeName = 'Odd-Even';
+    else if (market.marketTypeCategoryId === 28) marketTypeName = 'Lottery';
+    else if (market.marketTypeCategoryId === 26) marketTypeName = 'L.D.O';
+
+    console.log(`Added ${marketTypeName} market for over ${market.over} with ${marketRunners.length} runners`);
 
     return global.marketData[commentary.commentaryId].markets;
 }
@@ -260,6 +286,108 @@ function processLotteryMarkets(market, teams, processedMarketsObj, matchType, co
     });
 }
 
+/**
+ * Process L.D.O markets (marketTypeCategoryId: 26)
+ * @param {Object} market - Market template
+ * @param {Array} teams - Array of teams
+ * @param {Object} processedMarketsObj - Processed markets object
+ * @param {Object} matchType - Match type information
+ * @param {Object} commentary - Commentary data
+ */
+function processLDOMarkets(market, teams, processedMarketsObj, matchType, commentary) {
+    const ballsToOvers = (value, matchTypeId) => {
+        const LD_OVER_BALLS = { "2": 6 };
+        const ballsPerOver = LD_OVER_BALLS[`${matchTypeId}`];
+        if (parseInt(value) === 0) return 0.0;
+        const over = ((value - ballsPerOver) / ballsPerOver) + ballsPerOver / 10;
+        return parseFloat(over.toFixed(2));
+    };
+
+    const maxOvers = market.maxOvers || matchType?.maxOversInFirstInings || 20;
+    const startOver = parseInt(market.over) || 2;
+    const diff = startOver;
+    const autoclose = parseFloat(market.beforeAutoClose) || 6;
+    const autosuspend = parseFloat(market.beforeAutoSuspend) || 6;
+    const autocreate = parseFloat(market.create) || 6;
+    const autoopen = parseFloat(market.autoOpen) || 6;
+    const howManyOpenMarkets = parseInt(market.howManyOpenMarkets) || 1;
+    const notincludedover = market.notIncludedOver ?
+        market.notIncludedOver.split(',').map(x => parseInt(x)) : [];
+    const matchTypeId = market.matchTypeID || 2;
+
+    console.log(`Processing L.D.O markets for ${teams.length} teams with howManyOpenMarkets: ${howManyOpenMarkets}`);
+
+    teams.forEach(team => {
+        let nextopen = 0.0;
+        let nextcreate = 0.0;
+        let noOfMarketsCreated = 0;
+        let nextaddmarket = 0;
+
+        for (let currentOver = startOver; currentOver <= maxOvers; currentOver++) {
+            if (notincludedover.includes(currentOver)) continue;
+
+            // Calculate updated values based on current over
+            const updatedValues = {
+                beforeAutoClose: ballsToOvers((currentOver * 6 - autoclose), matchTypeId),
+                beforeAutoSuspend: ballsToOvers((currentOver * 6 - autosuspend), matchTypeId)
+            };
+
+            // Determine create and autoOpen values based on howManyOpenMarkets
+            if (howManyOpenMarkets === 1) {
+                updatedValues.create = ballsToOvers(((currentOver - diff) * 6 + autocreate - 6), matchTypeId);
+                updatedValues.autoOpen = ballsToOvers(((currentOver - diff) * 6 + autoopen - 6), matchTypeId);
+            } else {
+                updatedValues.create = nextcreate;
+                updatedValues.autoOpen = nextopen;
+                noOfMarketsCreated++;
+
+                if (noOfMarketsCreated === howManyOpenMarkets) {
+                    noOfMarketsCreated--;
+                    nextcreate = Math.floor(nextaddmarket) + (autocreate / 10);
+                    nextopen = Math.floor(nextaddmarket) + (autoopen / 10);
+                    nextaddmarket++;
+                }
+            }
+
+            // Create market for current over
+            const marketName = market.templateName.replace("{x}", currentOver) + " - " + team.shortName;
+            const specialMarket = {
+                ...market,
+                over: currentOver.toString(),
+                marketName,
+                teamId: team.teamId,
+                beforeAutoClose: updatedValues.beforeAutoClose.toString(),
+                beforeAutoSuspend: updatedValues.beforeAutoSuspend.toString(),
+                create: updatedValues.create.toString(),
+                autoOpen: updatedValues.autoOpen.toString(),
+                // Keep the original market category ID (26 for L.D.O)
+                marketTypeCategoryId: market.marketTypeCategoryId,
+                // Map all runners from template
+                runners: market.runners?.map(runner => ({
+                    marketTemplateRunnerId: runner.marketTemplateRunnerId,
+                    marketTemplateId: market.marketTemplateId,
+                    runner: runner.runner,
+                    line: runner.line,
+                    overRate: runner.overRate,
+                    underRate: runner.underRate,
+                    lastUpdate: new Date().toISOString(),
+                    selectionId: runner.selectionId,
+                    order: runner.order,
+                    backPrice: runner.backPrice,
+                    layPrice: runner.layPrice,
+                    backSize: market.isPredefineRunnerValue ? runner.backSize : market.defaultBackSize,
+                    laySize: market.isPredefineRunnerValue ? runner.laySize : market.defaultLaySize,
+                    predefinedValue: runner.predefinedValue,
+                    runnerId: runner.runnerId || 0
+                })) || []
+            };
+
+            processMarketAndRunnersOfOE(specialMarket, team.teamId, team.teamId.toString(), processedMarketsObj, commentary);
+        }
+    });
+}
+
 module.exports = {
     processLotteryMarkets,
+    processLDOMarkets,
 };

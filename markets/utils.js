@@ -1,4 +1,4 @@
-const { processLotteryMarkets } = require("./lottery");
+const { processLotteryMarkets, processLDOMarkets } = require("./lottery");
 const fs = require('fs');
 
 /**
@@ -221,8 +221,8 @@ function initializeBallToActionMap(markets, commentaryId, battingTeamId, current
             console.log(`[INIT] Mapped close action at ball ${closeBall} for market "${market.marketName}" (team: ${teamId}, category: ${marketCategoryId})`);
         }
 
-        // Map when to settle the market (for odd-even and lottery markets)
-        if ((marketCategoryId === 28 || marketCategoryId === 35) && market.isAutoResultSet) {
+        // Map when to settle the market (for odd-even, lottery, and L.D.O markets)
+        if ((marketCategoryId === 28 || marketCategoryId === 35 || marketCategoryId === 26) && market.isAutoResultSet) {
             // Calculate settlement ball based on the over and autoResultAfterBall
             const settleBall = getBallFromOver(
                 parseFloat(market.over) + (parseFloat(market.autoResultAfterBall || 0) / 10),
@@ -402,7 +402,7 @@ const processMarketAndRunners = (market, teamId, keyPrefix, processedMarketsObj,
         })) || [];
     }
     else if (market.marketTypeCategoryId === 26) {
-        // Handle LDO and Lottery markets
+        // Handle L.D.O markets - similar to lottery but with specific handling
         marketRunners = market.runners?.map(runner => ({
             ...runner,  // Spread the original runner properties
             runnerId: runner.runnerId || 0,
@@ -452,7 +452,7 @@ const processMarketAndRunners = (market, teamId, keyPrefix, processedMarketsObj,
         teamId,
         eventMarketId: market.eventMarketId || 0,
         isCreate: market.isCreate !== undefined ? market.isCreate : true,
-        status: market.status || 1,
+        status: parseInt(market.status) || 1,
         margin: parseFloat(market.margin) || 3,
         data: market.data || "",
         playerId: market.playerId || null,
@@ -626,6 +626,12 @@ const createMarketAndRunner = async (data, request, fastify) => {
                 processLotteryMarkets(baseMar, teams, processedMarketsObj, matchType, commentary);
                 console.log(`Processed ${template.marketTypeCategoryId === 35 ? 'Odd-Even' : 'Lottery'} markets from template`);
             }
+            else if (template.marketTypeCategoryId == 26) {
+                // Process L.D.O markets
+                let baseMar = generateMarketFromTemplate(template, teams, commentary);
+                processLDOMarkets(baseMar, teams, processedMarketsObj, matchType, commentary);
+                console.log(`Processed L.D.O markets from template`);
+            }
         }
     });
 
@@ -640,8 +646,8 @@ const createMarketAndRunner = async (data, request, fastify) => {
     globalEntry.existingMarket = existingMarkets;
 
     existingMarkets.forEach(apiMarket => {
-        // For odd-even and lottery markets, use specific matching
-        if (apiMarket.marketTypeCategoryId === 35 || apiMarket.marketTypeCategoryId === 28) {
+        // For odd-even, lottery, and L.D.O markets, use specific matching
+        if (apiMarket.marketTypeCategoryId === 35 || apiMarket.marketTypeCategoryId === 28 || apiMarket.marketTypeCategoryId === 26) {
             const index = globalEntry.markets.findIndex(m =>
                 m.marketTypeCategoryId === apiMarket.marketTypeCategoryId &&
                 m.over.toString() === apiMarket.over.toString() &&
@@ -663,7 +669,13 @@ const createMarketAndRunner = async (data, request, fastify) => {
                 };
 
                 globalEntry.markets[index] = updatedMarket;
-                console.log(`Updated existing ${apiMarket.marketTypeCategoryId === 35 ? 'Odd-Even' : 'Lottery'} market in global state for over ${apiMarket.over}`);
+
+                let marketTypeName = 'Other';
+                if (apiMarket.marketTypeCategoryId === 35) marketTypeName = 'Odd-Even';
+                else if (apiMarket.marketTypeCategoryId === 28) marketTypeName = 'Lottery';
+                else if (apiMarket.marketTypeCategoryId === 26) marketTypeName = 'L.D.O';
+
+                console.log(`Updated existing ${marketTypeName} market in global state for over ${apiMarket.over}`);
             }
             else {
                 globalEntry.markets.push({
@@ -676,7 +688,13 @@ const createMarketAndRunner = async (data, request, fastify) => {
                         apiMarket.predefinedValue
                     )
                 });
-                console.log(`Added new ${apiMarket.marketTypeCategoryId === 35 ? 'Odd-Even' : 'Lottery'} market to global state for over ${apiMarket.over}`);
+
+                let marketTypeName = 'Other';
+                if (apiMarket.marketTypeCategoryId === 35) marketTypeName = 'Odd-Even';
+                else if (apiMarket.marketTypeCategoryId === 28) marketTypeName = 'Lottery';
+                else if (apiMarket.marketTypeCategoryId === 26) marketTypeName = 'L.D.O';
+
+                console.log(`Added new ${marketTypeName} market to global state for over ${apiMarket.over}`);
             }
         } else {
             // For other markets
@@ -733,6 +751,7 @@ const createMarketAndRunner = async (data, request, fastify) => {
     console.log(`[INIT] Market initialization complete. Total markets: ${global.marketData[commentary.commentaryId].markets.length}`);
     console.log(`[INIT] Odd-Even markets: ${global.marketData[commentary.commentaryId].markets.filter(m => m.marketTypeCategoryId === 35).length}`);
     console.log(`[INIT] Lottery markets: ${global.marketData[commentary.commentaryId].markets.filter(m => m.marketTypeCategoryId === 28).length}`);
+    console.log(`[INIT] L.D.O markets: ${global.marketData[commentary.commentaryId].markets.filter(m => m.marketTypeCategoryId === 26).length}`);
 
     return true;
 }
@@ -827,6 +846,7 @@ function synchronizeMarketStatus(commentaryId, marketId, marketTypeCategoryId, o
     console.log(`[SYNC] Market ${marketId} (category ${marketTypeCategoryId}) not found in global state`);
     return false;
 }
+
 function normalizeBallToActionMap(commentaryId) {
     if (!global.marketData || !global.marketData[commentaryId] || !global.marketData[commentaryId].ballToActionMap) {
         return;
@@ -908,7 +928,7 @@ module.exports = {
     sendSocketData,
     createMarketAndRunner,
     processMarketAndRunners,
-    generateMarketFromTemplate,
+    generateMarketFromTemplate, 
     generateExtraMarketFromTemplate,
     getMarketKey,
     mergeRunners,

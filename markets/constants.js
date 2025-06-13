@@ -18,15 +18,15 @@ const MARKET_STATUS = {
 
 // Market category IDs
 const MARKET_CATEGORY = {
-    FANCYLDO: 26,
+    FANCYLDO: 26,        // L.D.O (Last Digit Over) markets
     LASTDIGITNUMBER: 27,
-    ODDEVEN: 28,
+    ODDEVEN: 28,         // Lottery markets
     TOTALBOUNDARY: 29,
     PLAYERBALL: 30,
     FALLOFWICKET: 31,
     PARTNERSHIPBOUND: 32,
     WICKET_LOST_BALLS: 33,
-    LOTTERY: 35,
+    LOTTERY: 35,         // Odd/Even markets
     TOPBOWLER: 37,
     TOPBAT: 38,
     INNINGS: 39,
@@ -80,6 +80,23 @@ const ODD_EVEN_RUNNERS = {
     },
 };
 
+// L.D.O market runner types (examples - customize based on your needs)
+const LDO_RUNNER_TYPES = {
+    OVER: "over",
+    UNDER: "under",
+    ODD: "odd",
+    EVEN: "even",
+    CUSTOM: "custom"
+};
+
+// Market processing priorities (for ball-to-action mapping)
+const MARKET_PROCESSING_PRIORITY = {
+    26: 1, // L.D.O markets - highest priority
+    35: 2, // Odd-Even markets
+    28: 3, // Lottery markets
+    DEFAULT: 99
+};
+
 module.exports = {
     MARKET_STATUS,
     MARKET_CATEGORY,
@@ -87,5 +104,7 @@ module.exports = {
     MARKET_TYPE,
     BALLS_PER_OVER,
     RUNNER_STATUS,
-    ODD_EVEN_RUNNERS
+    ODD_EVEN_RUNNERS,
+    LDO_RUNNER_TYPES,
+    MARKET_PROCESSING_PRIORITY
 };
