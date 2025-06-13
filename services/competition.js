@@ -11,6 +11,8 @@ const {
   getTemplateByCompetitionIdQuery,
   saveCompMarketTemplateQuery,
   isVirtualCompetitionQuery,
+  deleteCompMarketTemplateQuery,
+  getAssignedTemplateByCompetitionIdQuery,
 } = require("../repository/TableCompitition");
 const {storeImageOnServer, removeImageFromServer, generateImageName } = require("../utilities/Images");
 const { PROJECT_NAME } = require("../utilities/configConstants");
@@ -204,6 +206,15 @@ const updateCompititionService = async (request, fastify) => {
     );
     if (validate) {
       throw new Error('TpId already exist');
+    }
+  }
+  if (request.body.matchTypeId !== undefined &&
+    request.body.matchTypeId !== null &&
+    validateId.matchTypeId != request.body.matchTypeId) {
+    const templates = await getAssignedTemplateByCompetitionIdQuery(competitionId, request, fastify);
+    if (templates.length > 0) {
+      const templateIds = templates.map(item => { return item.id });
+      await deleteCompMarketTemplateQuery(templateIds, request, fastify);
     }
   }
   const data = {
