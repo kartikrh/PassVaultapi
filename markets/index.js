@@ -6,7 +6,7 @@ const { getPlayersBattingHistoryByIdQuery } = require('../repository/TablePlayer
 const { commentaryStatus, EventMarketStatus } = require('../utilities');
 const configConstants = require('../utilities/configConstants');
 const { errorLogger } = require('../utilities/logger');
-const { processOddEven, processOddEvenMarkets } = require('./oddEven');
+const { processOddEven, processOddEvenMarkets, processLDO } = require('./oddEven');
 const { updateMarketStatusInDB, updateMarketStatusInSocket } = require('./marketActions');
 const { processPredictScoreMarket } = require('./predictScoreHandler');
 const {
@@ -22,6 +22,7 @@ const { createMarketAndRunner, initializeBallToActionMap, normalizeBallToActionM
  */
 const MARKET_HANDLERS = {
   'odd-even': processOddEven,
+  'ldo': processLDO,
   // Add more market handlers here as needed
 };
 
@@ -307,12 +308,12 @@ const generateMarketAndRunners = async (data, request, fastify) => {
       eventMarket.forEach(existingMarket => {
         // Try to find the corresponding market in global state
         const marketIndex = global.marketData[data.commentaryId].markets.findIndex(m => {
-          // For odd-even and lottery markets, match by category, over and team
-          if ((m.marketTypeCategoryId === 28 || m.marketTypeCategoryId === 35) &&
-            (existingMarket.marketTypeCategoryId === 28 || existingMarket.marketTypeCategoryId === 35)) {
+          // For odd-even, lottery, and L.D.O markets, match by category, over and team
+          if ((m.marketTypeCategoryId === 28 || m.marketTypeCategoryId === 35 || m.marketTypeCategoryId === 26) &&
+            (existingMarket.marketTypeCategoryId === 28 || existingMarket.marketTypeCategoryId === 35 || existingMarket.marketTypeCategoryId === 26)) {
             return m.over === existingMarket.over &&
               m.teamId === existingMarket.teamId &&
-              m.marketTypeCategoryId === existingMarket.marketTypeCategoryId; // ADD THIS LINE
+              m.marketTypeCategoryId === existingMarket.marketTypeCategoryId;
           }
 
           // For other markets, match by name and category
@@ -342,12 +343,23 @@ const generateMarketAndRunners = async (data, request, fastify) => {
     // Log the total number of markets and entries in ball-to-action map
     console.log(`Generated ${global.marketData[data.commentaryId].markets.length} markets for commentary ${data.commentaryId}`);
     logBallToActionMapSample(data.commentaryId)
+
     // Log all ball-to-action entries for debugging
     const allMappedActions = getAllMappedActions(data.commentaryId);
     console.log(`Ball-to-action map has ${allMappedActions.length} total actions across ${Object.keys(global.marketData[data.commentaryId].ballToActionMap).length} balls`);
 
     // Log the raw structure for verification
     console.log(`Ball to Ball : ${Object.keys(global.marketData[data.commentaryId].ballToActionMap).join(',')}`);
+
+    // Log market breakdown by type
+    const marketBreakdown = {
+      oddEven: global.marketData[data.commentaryId].markets.filter(m => m.marketTypeCategoryId === 35).length,
+      lottery: global.marketData[data.commentaryId].markets.filter(m => m.marketTypeCategoryId === 28).length,
+      ldo: global.marketData[data.commentaryId].markets.filter(m => m.marketTypeCategoryId === 26).length,
+      other: global.marketData[data.commentaryId].markets.filter(m => ![35, 28, 26].includes(m.marketTypeCategoryId)).length
+    };
+
+    console.log(`Market breakdown - Odd-Even: ${marketBreakdown.oddEven}, Lottery: ${marketBreakdown.lottery}, L.D.O: ${marketBreakdown.ldo}, Other: ${marketBreakdown.other}`);
 
     return mar;
   } catch (error) {
@@ -370,6 +382,7 @@ module.exports = {
   processPredictScoreMarket,
   processOddEven,
   processOddEvenMarkets,
+  processLDO,
   getActionsForBall,
   findMarket,
   updateMarketStatusInDB,
