@@ -642,6 +642,57 @@ const insertCompetitionWithImportQuery = async (data, request, fastify) => {
     throw new Error(err.message);
   }
 };
+const deleteCompMarketTemplateQuery = async (templateIds, request, fastify) => {
+  try {
+    await fastify.db.query(
+      `
+        DELETE FROM "tblCompMarketTemplate" WHERE "wrId" = ANY($1)
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind : [templateIds]
+      }
+    );
+
+    return true;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCompitition/deleteCompMarketTemplateQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+}
+const getAssignedTemplateByCompetitionIdQuery = async (competitionId, request, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `
+        SELECT  
+          "wrId" as "id",
+          "wrCompetitionId" as "competitionId",
+          "wrMarketTemplateId" as "marketTemplateId"
+        FROM "tblCompMarketTemplate"
+        WHERE "wrCompetitionId" = $1;`,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [competitionId],
+      }
+    );
+
+    return result
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCompitition/getAssignedTemplateByCompetitionIdQuery",
+      request
+    );
+    throw new Error(error.message);
+    
+  }
+}
 module.exports = {
   getAllCompititionQuery,
   insertCompetitionQuery,
@@ -656,4 +707,6 @@ module.exports = {
   saveCompMarketTemplateQuery,
   isVirtualCompetitionQuery,
   insertCompetitionWithImportQuery,
+  deleteCompMarketTemplateQuery,
+  getAssignedTemplateByCompetitionIdQuery,
 };
