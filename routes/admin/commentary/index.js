@@ -83,6 +83,8 @@ const {
   commentaryOverStart,
   commentarySwapPlayer,
   commentaryInningChange,
+  getPitchAndSession,
+  updatePitchAndSession,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -1131,5 +1133,29 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request , reply) => commentaryInningChange(request,reply,fastify)
+  })
+  fastify.post("/pitchAndSession",{
+    schema : Commentary.GetPitchageAndSession.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "view"
+        }),
+    ],
+    handler: (request , reply) => getPitchAndSession(request,reply,fastify)
+  })
+  fastify.post("/updatePitchAndSession",{
+    schema : Commentary.UpdatePitchageAndSession.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "edit"
+        }),
+    ],
+    handler: (request , reply) => updatePitchAndSession(request,reply,fastify)
   })
 };

@@ -83,6 +83,7 @@ const {
   changeIsEventStartQuery,
   getAllDifficulties,
   addCompTempQuery,
+  updatePitchageAndSessionQuery,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -15970,6 +15971,45 @@ const commentaryInningChangeService = async (request , fastify)=>{
     throw new Error(error.message)
   }
 }
+const getPitchAndSessionService = async (request, fastify) => {
+  const { commentaryId } = request.body;
+
+  const result = global.tblCommentaries.find(item => 
+    item.commentaryId === commentaryId
+  );
+  if(!result) {
+    throw new Error("Commentary with this id not found");
+  }
+  return {
+    pitchAge: result.pitchAge,
+    session: result.session
+  };
+};
+
+const updatePitchAndSessionService = async (request, fastify) => {
+  const { commentaryId, pitchAge, session } = request.body;
+  const result = global.tblCommentaries.find(item => 
+    item.commentaryId === commentaryId
+  );
+  if(!result) {
+    throw new Error("Commentary with this id not found");
+  }
+  const data = {
+      pitchAge: pitchAge ?? result.pitchAge,
+      session: session ?? result.session,
+      commentaryId: commentaryId,
+  };
+  await updatePitchageAndSessionQuery(data, fastify, request);
+  const index = global.tblCommentaries.findIndex(elem => elem.commentaryId === commentaryId);
+  if(index !== -1) {
+    global.tblCommentaries[index] = {
+      ...result,
+      pitchAge: data.pitchAge,
+      session: data.session,
+    };
+  }
+  return "Commentary updated successfully";
+};
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -16062,5 +16102,7 @@ module.exports = {
   commentaryScoreService,
   commentaryOverStartService,
   commentarySwapPlayerService,
-  commentaryInningChangeService
+  commentaryInningChangeService,
+  getPitchAndSessionService,
+  updatePitchAndSessionService,
 };
