@@ -3524,7 +3524,37 @@ const Commentary = {
         ],
       },
     }
-  }
+  },
+  GetPitchageAndSession:{
+    schema : {
+      tags :["Commentary"],
+       description: "get Commentary pitchage and session",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId : {type : "integer"},
+        },
+        required: [ "commentaryId" ],
+      },
+    }
+  },
+  UpdatePitchageAndSession:{
+    schema : {
+      tags :["Commentary"],
+       description: "update Commentary pitchage and session",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId : {type : "integer"},
+          pitchAge : {type : "integer"},
+          session : {type : "string"},
+        },
+        required: [ "commentaryId" ],
+      },
+    }
+  },
 };
 
 const Compitition = {
