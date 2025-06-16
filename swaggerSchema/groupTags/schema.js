@@ -3569,13 +3569,13 @@ const Commentary = {
           commentaryTeams: { type: "array", items: { type: "object" } },
           commentaryOvers: { type : "object" },
           commentaryBallByBall: { type: "object" },
-          commentaryWickets: { type: "array", items: { type: "object" } },
+          commentaryWicket:  { type: "object" },
           commentaryPartnership: {   type: "object" },
           isCallPredict : {type : "boolean"}
         },
         required: [
           "commentaryId" ,"commentaryDetails", "commentaryPlayers","commentaryOvers","commentaryBallByBall", "commentaryPartnership", "isCallPredict", "commentaryTeams",
-          "commentaryWickets"
+          "commentaryWicket"
         ],
       },
     }
