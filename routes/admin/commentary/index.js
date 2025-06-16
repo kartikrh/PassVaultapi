@@ -85,6 +85,7 @@ const {
   commentaryInningChange,
   getPitchAndSession,
   updatePitchAndSession,
+  commentaryWicket,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -1148,7 +1149,7 @@ module.exports = async (fastify, opts) => {
   })
   fastify.post("/updatePitchAndSession",{
     schema : Commentary.UpdatePitchageAndSession.schema,
-    preHandler: [
+     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
         checkPermission(request, reply, fastify, {
@@ -1157,5 +1158,17 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request , reply) => updatePitchAndSession(request,reply,fastify)
+  })
+  fastify.post("/comWicket",{
+    schema : Commentary.comWicket.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "edit"
+        }),
+    ],
+    handler: (request , reply) => commentaryWicket(request,reply,fastify)
   })
 };
