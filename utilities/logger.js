@@ -1,11 +1,11 @@
 const ResponseLog = require("../database/schema/responseLogger");
 const { ISCOMMENTARYLOGGER } = require("./configConstants");
 
-const errorLogger = async (fastify, errMessage, errStack, request) => {
+const errorLogger = async (fastify, errMessage, errStack, request , data = null) => {
   try {
     
     return await fastify.db.query(
-      `INSERT INTO "tblErrorLogs" ("wrErrMessage", "wrErrStack", "wrDomain","wrUserId","wrUserIp", "wrCreatedDate" ,"wrApi", "wrRequestBody") VALUES ($1, $2, $3, $4, $5, $6 ,$7,$8)`,
+      `INSERT INTO "tblErrorLogs" ("wrErrMessage", "wrErrStack", "wrDomain","wrUserId","wrUserIp", "wrCreatedDate" ,"wrApi", "wrRequestBody", "wrData") VALUES ($1, $2, $3, $4, $5, $6 ,$7,$8 ,$9)`,
       {
         type: fastify.db.QueryTypes.INSERT,
         bind: [
@@ -17,6 +17,7 @@ const errorLogger = async (fastify, errMessage, errStack, request) => {
           new Date(),
           request?.originalUrl || null,
           request?.body || null,
+          data ?? null
         ],
       }
     );
