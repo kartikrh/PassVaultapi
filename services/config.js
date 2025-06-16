@@ -254,7 +254,6 @@ const getInitConfigDetails = async (request,fastify) => {
   let result = global.tblConfigs.filter(item => initKeys.includes(item.key));
   return result;
 }
-
 const getAllConfigService = async (request, fastify) => {
   const validKeys = ['repetitioncallinterval', 'ismarketrepetitioncall'];
   return global.tblConfigs.filter(item =>
