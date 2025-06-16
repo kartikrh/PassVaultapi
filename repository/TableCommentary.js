@@ -5940,7 +5940,8 @@ const virtualEventTeamUpdateQuery = async (data, request, fastify) => {
         "wrTeamCaptain" = $3,
         "wrTeamKipper" = $4,
         "wrCommentaryPlayerTeamCaptain" = $5,
-        "wrCommentaryPlayerTeamKipper" = $6
+        "wrCommentaryPlayerTeamKipper" = $6,
+        "wrSubInning" = $9
       WHERE "wrCommentaryId" = $7
       AND "wrTeamId" = $8
       AND "wrIsDelete" = false
@@ -5953,7 +5954,8 @@ const virtualEventTeamUpdateQuery = async (data, request, fastify) => {
         "wrCommentaryPlayerTeamCaptain" as "commentaryPlayerTeamCaptain",
         "wrCommentaryPlayerTeamKipper" as "commentaryPlayerTeamKipper",
         "wrTeamStatus" as "teamStatus",
-        "wrTeamBattingOrder" as "teamBattingOrder"`,
+        "wrTeamBattingOrder" as "teamBattingOrder",
+        "wrSubInning" as "subInning"`,
       {
         bind: [
           data.teamStatus || null,
@@ -5964,6 +5966,7 @@ const virtualEventTeamUpdateQuery = async (data, request, fastify) => {
           data.commentaryPlayerTeamKipper,
           data.commentaryId,
           data.teamId,
+          data.subInning ?? null
         ],
         type: fastify.db.QueryTypes.UPDATE,
       }

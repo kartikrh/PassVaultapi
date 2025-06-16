@@ -87,6 +87,7 @@ const {
   commentaryInningChangeService,
   getPitchAndSessionService,
   updatePitchAndSessionService,
+  commentaryWicketService,
 } = require("../../../../services/commentry");
 const { getEventSnapByComService, updateEventSnapByComService } = require("../../../../services/competitionEventSnap");
 const { getAllCommentariesDataService, getAllCommentariesDataServiceV1 } = require("../../../../services/score");
@@ -1150,6 +1151,15 @@ const updatePitchAndSession = async (request, reply, fastify) => {
     errorLogger(fastify, err.message, path + "/updatePitchAndSession", request);
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
+}
+const commentaryWicket = async (request, reply, fastify) => {
+  try {
+    const result = await commentaryWicketService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/commentaryWicket", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
 };
 
 module.exports = {
@@ -1248,4 +1258,5 @@ module.exports = {
   commentaryInningChange,
   getPitchAndSession,
   updatePitchAndSession,
+  commentaryWicket
 }
