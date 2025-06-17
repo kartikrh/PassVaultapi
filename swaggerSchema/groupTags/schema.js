@@ -3594,8 +3594,27 @@ const Commentary = {
         ],
       },
     }
+  },
+  comSetPlayer : {
+    schema : {
+      tags :["Commentary"],
+      description: "Commentary Player details",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId : {type : "integer"},
+          commentaryPlayers: { type: "array", items: { type: "object" } },
+          commentaryBallByBall: { type: "object" },
+          commentaryPartnership: {   type: "object" },
+          isCallPredict : {type : "boolean"}
+        },
+        required: [
+          "commentaryId", "commentaryPlayers", "commentaryBallByBall", "commentaryPartnership", "isCallPredict"
+        ],
+      },
+    }
   }
-
   
 };
 
