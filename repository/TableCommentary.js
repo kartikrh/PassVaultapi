@@ -773,14 +773,13 @@ const deleteCommentaryPlayerById = async (data, request, fastify) => {
     // delete commentary player by id
     return await fastify.db.query(
       `UPDATE "tblCommentaryPlayers" SET
-        "wrIsDelete" = $4,
-        "wrDeletedAt" = now()
-      where "wrPlayerId" = $1
-      AND "wrCommentaryId" = $2
-      AND "wrTeamId" = $3`,
+        "wrIsDelete" = $1,
+        "wrDeletedAt" = now(),
+        "wrDeletedBy" = $3
+      where "wrCommentaryPlayerId" = $2`,
       {
         type: fastify.db.QueryTypes.DELETE,
-        bind: [data.playerId, data.commentaryId, data.teamId, true],
+        bind: [true, data.commentaryPlayerId , request.userTokenInfo.WrUserId ?? null],
       }
     );
   } catch (err) {

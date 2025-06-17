@@ -2963,7 +2963,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
           rate_diff : item.rateDiff,
           line_diff : line_diff.toFixed(2) || 0,
           line : item.runners[0].line?? null,
-          predefinedLine : item.predefinedValue?? null
+          predefinedLine : item.predefinedValue ?? null
         });
       }
       if(category && category.categoryName.toLowerCase() == "fall of wicket"){
@@ -3029,6 +3029,15 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
           predefinedLine : item.predefinedValue?? null
         })
       }
+      if(item.predefinedValue == null || item.predefinedValue == 0){
+        errorLogger(
+          fastify,
+          `Predefined Value is null ${item.eventMarketId}`,
+          "ERROR --> services/commentary.js/updateMarketRateServiceV1",
+          request,
+          item
+        )
+      }
       marketDataLogger(
         {
           eventMarketId: item.eventMarketId,
@@ -3037,8 +3046,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
           updateType: MarketUpdateType.marketUpdateRate,
           lineDiff: lineDiff || 0,
           isSendData: true,
-          predefinedValue : item.predefinedValue ?? null
-
+          predefinedValue : item.predefinedValue ?? null,  
         },
         request,
         fastify

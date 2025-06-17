@@ -2853,6 +2853,21 @@ const Commentary = {
       },
     },
   },
+  deleteTeamPlayer: {
+    schema: {
+      tags: ["Commentary"],
+      description: "delete team players",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+          commentaryPlayerId: { type: "integer" },
+        },
+        required: ["commentaryId", "commentaryPlayerId"],
+      },
+    },
+  },
   updateTeamPlayer: {
     schema: {
       tags: ["Commentary"],
@@ -3569,13 +3584,13 @@ const Commentary = {
           commentaryTeams: { type: "array", items: { type: "object" } },
           commentaryOvers: { type : "object" },
           commentaryBallByBall: { type: "object" },
-          commentaryWickets: { type: "array", items: { type: "object" } },
+          commentaryWicket:  { type: "object" },
           commentaryPartnership: {   type: "object" },
           isCallPredict : {type : "boolean"}
         },
         required: [
           "commentaryId" ,"commentaryDetails", "commentaryPlayers","commentaryOvers","commentaryBallByBall", "commentaryPartnership", "isCallPredict", "commentaryTeams",
-          "commentaryWickets"
+          "commentaryWicket"
         ],
       },
     }
