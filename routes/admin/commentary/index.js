@@ -530,7 +530,15 @@ module.exports = async (fastify, opts) => {
     handler: (request, reply) => addTeamPlayer(request, reply, fastify),
   });
   fastify.post("/deleteTeamPlayer", {
-    schema: Commentary.addTeamPlayers.schema,
+    schema: Commentary.deleteTeamPlayer.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "edit",
+        }),
+    ],
     handler: (request, reply) => deleteTeamPlayer(request, reply, fastify),
   });
   fastify.post("/loadTeamPlayer", {
