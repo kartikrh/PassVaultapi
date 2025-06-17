@@ -6,6 +6,7 @@ const {
   deletePermissionQuery,
   roleByIdQuery,
   permissionByRoleIdQuery,
+  permissionByRoleQuery,
 } = require("../repository/TableRoles");
 
 const allRolesService = async (request) => {
@@ -151,6 +152,41 @@ const roleByTabService = async (request, fastify, tabName = undefined) => {
   }
 };
 
+
+const commentaryRoleService = async (request, fastify, tabName) => {
+  if (request.userTokenInfo.WrIsSuperAdmin) {
+    return {
+      isAddPermission: true,
+      isEditPermission: true,
+      isDeletePermission: true,
+      isViewPermission: true,
+    };
+  }
+  const tabNames = [tabName, request.body?.tabName || "Commentary List"];
+  const permissionData = await permissionByRoleQuery(
+    {
+      roleId: request.userTokenInfo.WrRoleId || null,
+      displayType: request.userTokenInfo.WrUserType || null,
+      tabName: tabNames,
+    },
+    fastify
+  );
+  let combinedPermissions = {
+    isAddPermission: false,
+    isEditPermission: false,
+    isDeletePermission: false,
+    isViewPermission: false,
+  };
+
+  for (const permission of permissionData) {
+    combinedPermissions.isAddPermission ||= permission.isAddPermission;
+    combinedPermissions.isEditPermission ||= permission.isEditPermission;
+    combinedPermissions.isDeletePermission ||= permission.isDeletePermission;
+    combinedPermissions.isViewPermission ||= permission.isViewPermission;
+  }
+  return combinedPermissions;
+};
+
 module.exports = {
   allRolesService,
   deleteRoleService,
@@ -158,4 +194,5 @@ module.exports = {
   roleCreateService,
   roleByIdService,
   roleByTabService,
+  commentaryRoleService,
 };

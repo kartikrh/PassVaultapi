@@ -661,14 +661,17 @@ const panelLoadDataByEnum = async (request, fastify, reply) => {
         }
         case ModuleTypes.CommentaryById: {
           if(commentaryId) {
-            let whereCondition = `"wrCommentaryId" = ${commentaryId}`
+            let whereCondition = `"wrCommentaryId" = ${commentaryId} AND "wrIsDelete" = FALSE`
+            let teamCondition = `tct."wrCommentaryId" = ${commentaryId} AND tct."wrIsDelete" = FALSE`
+            let playerCondition = `tcp."wrCommentaryId" = ${commentaryId} AND tcp."wrIsDelete" = FALSE`
+            let whereCond = `"wrCommentaryId" = ${commentaryId} AND "wrIsDeletedStatus" = FALSE`
 
             const getCommentary = await getCommentaryByIdQuery(request, fastify);
-            const getCommentaryTeams = await getAllCommentaryTeamsDataQuery(whereCondition, fastify);
-            const getCommentaryPlayers = await getAllCommentaryPlayerDataQuery(whereCondition, fastify);
-            const getCommentaryBallByBalls = await getAllCommentaryBallByBallDataQuery(whereCondition, fastify);
+            const getCommentaryTeams = await getAllCommentaryTeamsDataQuery(teamCondition, fastify);
+            const getCommentaryPlayers = await getAllCommentaryPlayerDataQuery(playerCondition, fastify);
+            const getCommentaryBallByBalls = await getAllCommentaryBallByBallDataQuery(whereCond, fastify);
             const getOvers = await getAllOversDataQuery(whereCondition, fastify);
-            const getCommentaryWickets = await getAllCommentaryWicketDataQuery(whereCondition, fastify);
+            const getCommentaryWickets = await getAllCommentaryWicketDataQuery(whereCond, fastify);
             const getCommentaryPartnerships = await getAllCommentaryPartnershipDataQuery(whereCondition, fastify);
 
             const commentaryIndex = global.tblCommentaries.findIndex(item => item.commentaryId == commentaryId);
