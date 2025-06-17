@@ -5139,6 +5139,15 @@ const addTeamPlayerService = async (request, fastify) => {
     throw new Error("Invalid Current Innings count");
   }
 
+  const validatePlayer = global.tblCommentaryPlayers.filter(
+    (item) => item?.commentaryId === commentaryId && item.teamId === teamId &&
+    item.playerId == playerId && item.currentInnings == currentInnings
+  );
+  if(validatePlayer.length > 0) {
+    throw new Error("Player already added in this commentary");
+  }
+
+
   const playerData = await insertCommentaryPlayersQuery(
     {
       commentaryId,
@@ -12162,7 +12171,7 @@ const notiConfigContentReplaceService = async (
   commentaryId,
   request,
   fastify,
-  boundaryType
+  cId
 ) => {
   let data = global.tblNotificationConfig.find(
     (elem) => elem.isActive === true && elem.eventName === eventName
@@ -12173,32 +12182,38 @@ const notiConfigContentReplaceService = async (
   }
 
   const commentary = global.tblCommentaries.find(
-    (item) => item?.commentaryId === commentaryId
+      (item) => item?.commentaryId === commentaryId
   );
-  let battingTeam = global.tblCommentaryTeams.find(
-    (item) => item.commentaryId === commentaryId && item.teamStatus === 1
-  )?.teamName;
-  let bowlingTeam = global.tblCommentaryTeams.find(
-    (item) => item.commentaryId === commentaryId && item.teamStatus === 2
-  )?.teamName;
-  let tossWonBy = global.tblCommentaryTeams.find(
-    (item) =>
-      item.commentaryId === commentaryId &&
-      item?.teamId == commentary?.tossWonBy
-  )?.teamName;
+  const commentaryTeams = global.tblCommentaryTeams.filter(item => item.commentaryId === commentaryId);
 
-  const content = data.content.replace(/\{(.*?)\}/g, (_, key) => {
+  const battingTeam = commentaryTeams.find(item => item.teamStatus === 1);
+  const bowlingTeam = commentaryTeams.find(item => item.teamStatus === 2);
+  const tossWonBy = commentaryTeams.find(item => item.teamId == commentary?.tossWonBy)?.teamName;
+  const teamData = commentaryTeams.find(item => item.teamBattingOrder === 2);
+
+  const playerName = global.tblCommentaryWicket.find(item => item.commentaryId === commentaryId &&
+      item.commentaryWicketId == cId
+  );
+
+    const content = data.content.replace(/\{(.*?)\}/g, (_, key) => {
     const normalizedKey = key.toLowerCase();
     const valueMap = {
       eventname: commentary.eventName ?? "",
+      eventtype: commentary.eventType ?? "",
       eventdate: commentary.eventDate ?? "",
-      battingteam: battingTeam ?? "",
-      bowlingteam: bowlingTeam ?? "",
+      location: commentary.location ?? "",
+      battingteam: battingTeam?.teamName ?? "",
+      bowlername: playerName?.bowlerName ?? "",
+      batsmanname: playerName?.batterName ?? "",
+      batsmanrun: (playerName?.playerRun != null) ? playerName?.playerRun : "",
+      wickettype: wicketType[playerName?.wicketType] ?? "",
+      bowlingteam: bowlingTeam?.teamName ?? "",
+      trilscore: battingTeam?.teamScore ?? "",
       rmk: commentary.rmk ?? "",
-      winnerrmk: commentary.winRmk ?? "",
+      wonremark: commentary.winRmk ?? "",
       winnername: commentary?.winnerName ?? "",
       winnerid: commentary?.winnerId ?? 0,
-      boundarytype: boundaryType ?? "",
+      boundarytype: cId ?? "",
       team1name: commentary?.team1Name ?? "",
       team2name: commentary?.team2Name ?? "",
       matchtype: commentary?.matchType ?? "",
@@ -12210,7 +12225,7 @@ const notiConfigContentReplaceService = async (
       tosswonby: tossWonBy,
     };
 
-    return valueMap[normalizedKey] || `{${key}}`;
+    return valueMap[normalizedKey] ?? "";
   });
 
   if (data && commentary.isActive === true) {
@@ -16569,7 +16584,8 @@ const commentaryWicketService = async (request, fastify) => {
         EventName.WICKET,
         commentaryData.commentaryId,
         request,
-        fastify
+        fastify,
+        response.commentaryWicketDetails?.commentaryWicketId,
       );
     }
     if (commentaryPartnership) {
