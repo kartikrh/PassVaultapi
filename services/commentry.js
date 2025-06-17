@@ -5218,34 +5218,42 @@ const addTeamPlayerService = async (request, fastify) => {
 // }
 const deleteTeamPlayerService = async (request, fastify) => {
   // validate commentaryId
-  const { teamId, commentaryId, playerId } = request.body;
+  const {  commentaryId, commentaryPlayerId } = request.body;
   let commentary = global.tblCommentaries.find(
     (item) => item?.commentaryId === commentaryId
   );
   if (!commentary) {
     throw new Error("Commentary with this id not Found");
   }
+  // commentaryPlayerId validation
+  if(commentaryPlayerId){
+    let index = global.tblCommentaryPlayers.findIndex(
+      (item) => item?.commentaryPlayerId === commentaryPlayerId
+    )
+    if(index === -1){
+      throw new Error("Commentary Player with this id not Found");
+    }
+  }
   // validate teamId
-  let commentaryTeamIndex = global.tblCommentaryTeams.find(
-    (item) => item?.commentaryId === commentaryId && item.teamId === teamId
-  );
-  if (commentaryTeamIndex === -1) {
-    throw new Error("Team with this id not Found");
-  }
-  // validate playerId
-  let commentaryPlayerIndex = global.tblCommentaryPlayers.findIndex(
-    (item) => item.playerId === playerId
-  );
-  if (commentaryPlayerIndex === -1) {
-    throw new Error("Commentary Player with this id not Found");
-  }
+  // let commentaryTeamIndex = global.tblCommentaryTeams.find(
+  //   (item) => item?.commentaryId === commentaryId && item.teamId === teamId
+  // );
+  // if (commentaryTeamIndex === -1) {
+  //   throw new Error("Team with this id not Found");
+  // }
+  // // validate playerId
+  // let commentaryPlayerIndex = global.tblCommentaryPlayers.findIndex(
+  //   (item) => item.playerId === playerId
+  // );
+  // if (commentaryPlayerIndex === -1) {
+  //   throw new Error("Commentary Player with this id not Found");
+  // }
 
   // delete the player from commentaryPlayer
   await deleteCommentaryPlayerById(
     {
       commentaryId,
-      teamId,
-      playerId,
+      commentaryPlayerId : commentaryPlayerId,
     },
     request,
     fastify
@@ -5255,8 +5263,7 @@ const deleteTeamPlayerService = async (request, fastify) => {
     (item) =>
       !(
         item?.commentaryId === commentaryId &&
-        item.teamId === teamId &&
-        item.playerId === playerId
+        item?.commentaryPlayerId === commentaryPlayerId
       )
   );
 
