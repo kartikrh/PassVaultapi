@@ -3883,7 +3883,9 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
       let decimalOverCount = parseFloat(commentaryBallByBall.overCount);
       let _wkt = commentaryBallByBall.ballIsWicket;
       let partnership = updatedData.commentaryPartnershipDetails;
-      let boundary = partnership?.totalSix || 0 + partnership?.totalFour || 0;
+      // console.log("partnership", partnership.totalSix || 0, partnership.totalFour || 0);
+      let boundary = (partnership?.totalSix || 0) + (partnership?.totalFour || 0);
+      // console.log("boundary", boundary);
       if (partnership)
         sendPartnership.push({
           partnership_no: partnership?.order || 0,
@@ -11302,17 +11304,17 @@ const getTeamAndPlayerListServiceV1 = async (request, fastify) => {
     .filter((item) => item?.commentaryId === request.body.commentaryId)
     .reduce((acc, curr) => {
       const teamData = {
-        teamId: curr.teamId,
-        teamName: curr.teamName,
-        shortName: curr.shortName,
-        currentInnings: curr.currentInnings,
+        teamId: curr?.teamId,
+        teamName: curr?.teamName,
+        shortName: curr?.shortName,
+        currentInnings: curr?.currentInnings,
       };
       arrOfTeamId.push(teamData);
       acc.push({
-        teamId: curr.teamId,
-        teamName: curr.teamName,
-        shortName: curr.shortName,
-        currentInnings: curr.currentInnings,
+        teamId: curr?.teamId,
+        teamName: curr?.teamName,
+        shortName: curr?.shortName,
+        currentInnings: curr?.currentInnings,
       });
       return acc;
     }, []);
@@ -11415,7 +11417,7 @@ const getTeamAndPlayerListServiceV1 = async (request, fastify) => {
     if (!teamMap[team.teamId]) {
       teamMap[team.teamId] = {
         teamId: team.teamId,
-        teamName: team.teamName || teamMap[team.teamId]?.teamName,
+        teamName: team?.teamName || teamMap[team.teamId]?.teamName,
         shortName: team.shortName || teamMap[team.teamId]?.shortName,
         commentaryTeamPlayers: {},
         teamPlayers: await getAllPlayersByTeamIdAndMatchTypeIdQuery(
