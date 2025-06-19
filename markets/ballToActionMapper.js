@@ -1,6 +1,8 @@
 // ballToActionMapper.js
 const { updateMarketStatusInDB } = require('./marketActions');
 const { formatBallNumber } = require('./utils');
+const fs = require('fs');
+const path = require('path');
 
 /**
  * Converts overs to balls
@@ -104,13 +106,6 @@ function getActionsForBall(commentaryId, ball, battingTeamId) {
 }
 
 /**
- * Finds market by ID or by over value for specific market categories
- * @param {number} commentaryId - The commentary ID
- * @param {string} marketId - Market ID
- * @param {Object} metadata - Additional market metadata for fallback search
- * @returns {Object|null} - Market object or null if not found
- */
-/**
  * Find market by ID and category for specific market categories
  * @param {number} commentaryId - The commentary ID
  * @param {string} marketId - Market ID
@@ -189,13 +184,14 @@ function countActionTypes(map) {
 
 /**
  * Helper function to log the complete ball-to-action map
+ * and save it to a separate file.
  * @param {number} commentaryId - The commentary ID
  */
 function logFullBallToActionMap(commentaryId) {
     const map = global.marketData[commentaryId].ballToActionMap;
     const formattedActions = [];
 
-    // Convert to a flat array format that's easier to review
+    // Convert to a flat array format
     Object.entries(map).forEach(([ball, actions]) => {
         actions.forEach(action => {
             formattedActions.push({
@@ -203,13 +199,27 @@ function logFullBallToActionMap(commentaryId) {
                 action: action.action,
                 marketId: action.marketId,
                 over: action.over,
-                teamId: action.teamId
+                teamId: action.teamId,
             });
         });
     });
 
     console.log("Ball-to-action map (full):");
     console.log(JSON.stringify(formattedActions, null, 2));
+
+    // Define output directory and file path
+    const dir = path.join(__dirname, 'ballToAction');
+    const filePath = path.join(dir, `${commentaryId}_action.js`);
+
+    // Ensure the directory exists
+    if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+    }
+
+    // Write the JSON data to the file as a JS export
+    const fileContent = `module.exports = ${JSON.stringify(formattedActions, null, 2)};\n`;
+
+    fs.writeFileSync(filePath, fileContent, 'utf8');
 
     return formattedActions;
 }
