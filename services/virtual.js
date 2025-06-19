@@ -429,6 +429,13 @@ const virtualEventTossService = async (request, fastify) => {
       ? 2
       : 1;
 
+    let subInning;
+    if(teamStatus == 1){
+      subInning = 1
+    }
+    else {
+      subInning = 2
+    }
     const teamPlayer = global.tblCommentaryTeams.find(
       (item) => item.commentaryId == commentaryId && item.teamId == team
     );
@@ -444,6 +451,7 @@ const virtualEventTossService = async (request, fastify) => {
       teamId: team,
       teamOver: 0,
       teamWicket: 0,
+      subInning
     };
 
     const teamData = await virtualEventTeamUpdateQuery(
@@ -834,7 +842,7 @@ const ballByBallVirtualEventService = async (request, fastify) => {
       fastify,
       request
     );
-    console.log("teamsScoring", teamsScoring);
+    // console.log("teamsScoring", teamsScoring);
     const index = global.tblCommentaryTeams.findIndex(
       (item) =>
         item?.commentaryId === commentaryId &&
@@ -1029,7 +1037,7 @@ const ballByBallVirtualEventService = async (request, fastify) => {
 };
 const ballByBallChangeService = async (request, fastify) => {
   let ball = 1;
-  const isBoundary = false;
+  let isBoundary = false;
   // const { commentaryId, run, ballType, isWicket = false } = request.body;
   const { commentaryId, cardType, cardKey, cardValue } = request.body;
   const commentaryDetails = global.tblCommentaries.find(
@@ -1050,6 +1058,12 @@ const ballByBallChangeService = async (request, fastify) => {
     ballType = BALL_TYPE.REGULAR;
   if (cardValue != Cards.J && cardValue != Cards.K) {
     run = parseInt(cardValue);
+    if(cardValue == Cards[4] || cardValue == Cards[6]) {
+      isBoundary = true;
+    }
+    else {
+      isBoundary = false;
+    }
     isWicket = false;
   }
   if (cardValue == Cards.K) {
@@ -2407,6 +2421,7 @@ const comResponseService = async (request, fastify) => {
       currentInnings: item.currentInnings,
       isBattingComplete: item.isBattingComplete,
       teamMaxOver: item.teamMaxOver,
+      subInning : item.subInning
     };
   })
   // get latest over
@@ -2444,13 +2459,14 @@ const onInningChangeService = async (data, request, fastify) => {
   const leadRuns = Math.max(runDifference * -1, 0);
   const trialRuns = Math.max(runDifference, 0);
   let teamUpdates = [
-    { ...batTeam, isBattingComplete: true, teamStatus: 2 },
+    { ...batTeam, isBattingComplete: true, teamStatus: 2 , subInning : 2 },
     {
       ...bowlTeam,
       isBattingComplete: false,
       teamStatus: 1,
       teamLeadRuns: leadRuns,
       teamTrialRuns: trialRuns,
+      subInning : 1
     },
   ];
   let commentaryUpdates = {
