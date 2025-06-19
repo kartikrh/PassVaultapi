@@ -2206,54 +2206,6 @@ const closeEventMarketByCIdQuery = async (data, fastify) => {
     bind: [EventMarketStatus.Close, marketId.map((e) => e.marketId)],
     type: fastify.db.QueryTypes.SELECT,
   });
-    // update status in runner
-
-   
-    // for (let mar of marketId) {
-    //   const query = `
-    //         SELECT 
-    //         tem."wrID" as "marketId",
-    //         tem."wrEventRefID" as "eventId",
-    //         tem."wrMarketName" as "marketName",
-    //         tem."wrStatus" as "status",
-    //         tem."wrIsActive" as "isActive",
-    //         tem."wrIsAllow" as "isAllow",
-    //         json_agg(
-    //             json_build_object(
-    //                 'runnerId', tmr."wrRunnerId",
-    //                 'runner', tmr."wrRunner",
-    //                 'status', tmr."wrSelectionStatus",
-    //                 'line', tmr."wrLine",
-    //                 'overRate', tmr."wrOverRate",
-    //                 'underRate', tmr."wrUnderRate",
-    //                 'backPrice', tmr."wrBackPrice",
-    //                 'layPrice', tmr."wrLayPrice",
-    //                 'backSize', tmr."wrBackSize",
-    //                 'laySize', tmr."wrLaySize"
-    //             )
-    //         ) as "runner"
-    //     FROM "tblEventMarkets" tem
-    //     LEFT JOIN "tblMarketRunners" tmr ON tmr."wrEventMarketId" = tem."wrID"
-    //     WHERE tem."wrID" = $1 AND tmr."wrIsDeleted" = false
-    //     GROUP BY tem."wrID"
-    //   `;
-
-    //   let data = await fastify.db.query(query, {
-    //     bind: [mar.marketId],
-    //     type: fastify.db.QueryTypes.SELECT,
-    //   });
-
-    //   const query4 = `UPDATE "tblEventMarkets" SET "wrData" = $1,"wrLastUpdate" = now()::timestamp WHERE "wrID" = $2
-    //     RETURNING "wrData" as "data"`;
-
-    //   await fastify.db.query(query4, {
-    //     bind: [data[0], mar.marketId],
-    //     type: fastify.db.QueryTypes.SELECT,
-    //   });
-    // }
-
-
-    // return true;
     return marketId;
 
   } catch (err) {
@@ -6096,7 +6048,67 @@ const getMarketByComIdQuery = async (data,fastify) => {
     throw new Error(error.message);
   }
 };
+const cancelMarketVirtualQuery = async (data,request, fastify) => {
+    try {
+      const { eventMarketId , commentaryId} = data;
+  
 
+    let query2 = `
+      UPDATE "tblEventMarkets"
+      set
+        "wrStatus" = $2,
+        "wrLastUpdate" = now()::timestamp,
+        "wrSettledTime" = now()::timestamp,
+       "wrData" = jsonb_set(
+          jsonb_set("wrData"::jsonb, '{status}', '6'::jsonb, false),
+          '{runner}', (
+            SELECT jsonb_agg(
+              jsonb_set(runner_elem, '{status}', '6'::jsonb, false)
+            )
+            FROM jsonb_array_elements("wrData"::jsonb->'runner') AS runner(runner_elem)
+          ),
+          false
+        )::json,
+        "wrIsResult" = true,
+        "wrResult" = null
+      where
+      ("wrID" = any($1) and "wrStatus" = $3)
+       OR
+      ("wrCommentaryId" = $4 AND "wrStatus" = $5)
+      RETURNING 
+            "wrID" AS "eventMarketId"
+    `;
+    const result = await fastify.db.query(query2, {
+      bind: [eventMarketId, EventMarketStatus.Cancel, EventMarketStatus.Close, commentaryId, EventMarketStatus.Close],
+      type: fastify.db.QueryTypes.SELECT,
+    });
+
+    // console.log("result", result);
+    let ids = result.map((e) => e.eventMarketId);
+
+    let query1 = `
+      UPDATE "tblMarketRunners"
+      set
+      "wrSelectionStatus" = $2
+      where 
+      "wrEventMarketId" = any($1) and "wrSelectionStatus" = $3
+    `;
+    await fastify.db.query(query1, {
+      bind: [ids, EventMarketStatus.Cancel, EventMarketStatus.Close],
+      type: fastify.db.QueryTypes.SELECT,
+    });
+    // return true;
+    return ids;
+} catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/cancelMarketVirtualQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+}
 module.exports = {
   getAllEventMarketsV2Query,
   getAllEventMarketsQuery,
@@ -6188,6 +6200,7 @@ module.exports = {
   upCloseTimeQuery,
   getCommentaryDetailsQuery,
   getMarketByComIdQuery,
-  getExistingEventMarketsQueryV1
+  getExistingEventMarketsQueryV1,
+  cancelMarketVirtualQuery
 }
 

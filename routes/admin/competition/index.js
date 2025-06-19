@@ -21,6 +21,7 @@ const {
   getTemplateByCompetitionId,
   saveCompTemplates,
   isVirtualCompetition,
+  upCompStatus,
 } = require("../../../controller/users/admin/competition");
 const { getEventTypeList } = require("../../../controller/users/admin/eventTypes");
 const { Compitition } = require("../../../swaggerSchema/groupTags/schema");
@@ -271,5 +272,17 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request, reply) => isVirtualCompetition(request, reply, fastify),
+  });
+  fastify.post("/upStatus", {
+    schema: Compitition.upStatus.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "competition",
+          mode: "edit",
+        }),
+    ],
+    handler: (request, reply) => upCompStatus(request, reply, fastify),
   });
 };

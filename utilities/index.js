@@ -268,6 +268,7 @@ const MarketActionType = {
   dlsMarketClose : 9,
   dlsMarketCloseCancel : 10,
   closeMarketOnDLSChange : 11,
+  virtualMarketCancel : 12,
 }
 const callPredictorMarket = async (data , endpoint ,fastify ,request) =>{
   let requestStartTime = new Date();
@@ -654,7 +655,8 @@ const commentaryStatus = {
   TOSSDONE : 2,
   INPROGRESS : 3,
   COMPLETED : 4,
-  INNINGCHANGE : 5
+  INNINGCHANGE : 5,
+  CANCELLED : 10
 }
 const LineType = {
   BackLay:	1,
@@ -1128,6 +1130,34 @@ const EntityEnums = {
     WomenT100: 19,
     TB10: 20
 }
+const compStatus = {
+  "upcoming" : 1,
+  "started" : 2,
+  "completed" : 3,
+  "stopped" : 4,
+}
+const callCardCricket = async (data ,request , fastify) =>{
+  try {
+    // console.log("callCardCricket", data);
+    // return true;
+    let cardUrl = global.tblConfigs.find((item) => item.key === configConstants.CARDCRICKETURL)?.value;
+    if(!cardUrl) return 'Card Cricket URL not found';
+    // call this card cricket url to send data
+    const result = await axios.post(cardUrl, {
+      ...data
+    });
+    return true;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> utilities/index/callCardCricket",
+      request
+    )
+    // throw new Error(error.message);
+  }
+
+}
 module.exports = {
   ERROR_CODES,
   error,
@@ -1210,4 +1240,6 @@ module.exports = {
   callEntitySportAPI,
   comCardType,
   EntityEnums,
+  compStatus,
+  callCardCricket
 };

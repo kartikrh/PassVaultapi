@@ -3924,6 +3924,21 @@ const Compitition = {
       },
     },
   },
+  upStatus : {
+    schema: {
+      tags: ["Compitition"],
+      description: "update Compitition status",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionId: { type: "integer" },
+          commStatus: { type: "integer" }, // e.g., "active", "inactive"
+        },
+        required: ["competitionId", "commStatus"],
+      },
+    },
+  }
 };
 
 const Event = {
@@ -9328,6 +9343,20 @@ const VirtualEvent = {
     schema : {
       tags: ["VirtualEvent"],
       description: "Ball Start Event",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId : { type: "integer" },
+        },
+        required: ["commentaryId"],
+      }
+    }
+  },
+  cancelEvent : {
+    schema : {
+      tags: ["VirtualEvent"],
+      description: "Cancel Event",
       security: [{ bearerAuth: [] }],
       body: {
         type: "object",

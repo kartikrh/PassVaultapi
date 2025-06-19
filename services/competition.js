@@ -13,11 +13,12 @@ const {
   isVirtualCompetitionQuery,
   deleteCompMarketTemplateQuery,
   getAssignedTemplateByCompetitionIdQuery,
+  upStatusQuery,
 } = require("../repository/TableCompitition");
 const {storeImageOnServer, removeImageFromServer, generateImageName } = require("../utilities/Images");
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const {ImgModuleConfig} = require("../utilities/imageConstant");
-const { APIEndpointModuleType, ServiceType, callClientAPI } = require("../utilities");
+const { APIEndpointModuleType, ServiceType, callClientAPI, compStatus, callCardCricket } = require("../utilities");
 const { getCommentariesResultQuery } = require("../repository/TableCommentary")
 
 // const allCompetitionService = async (request) => {
@@ -708,6 +709,49 @@ const isVirtualCompetitionService = async (request, fastify) => {
   
   return `Competition isVirtual status updated successfully`;
 };
+
+const upCompStatusService = async (request, fastify) => {
+  const { commStatus, competitionId } = request.body;
+
+  const validateId = global.tblCompetitions.find(
+    (item) => item.competitionId === competitionId
+  );
+
+  if (!validateId) {
+    throw new Error("Competition with this id not Found");
+  }
+
+  await upStatusQuery(
+    {
+      commStatus,
+      competitionId
+    },
+    request,
+    fastify
+  );
+  const index = global.tblCompetitions.findIndex((item) => item.competitionId == competitionId);
+  if(index != -1){
+    global.tblCompetitions[index].commStatus = commStatus;
+  }
+  // call cardCricket
+  if(validateId.isVirtual == true && (
+    commStatus == compStatus.started || commStatus == compStatus.stopped
+  )
+  ){
+    let isStart = commStatus == compStatus.started ? true : false;
+    callCardCricket(
+      {
+        refId : validateId.refId,
+        isstart : isStart,
+      },
+      request,
+      fastify
+    )
+  }
+
+  
+  return `Competition status updated successfully`;
+};
 module.exports = {
   allCompetitionService,
   competitionByIdService,
@@ -725,4 +769,5 @@ module.exports = {
   getTemplateByCompetitionIdService,
   saveCompTemplatesService,
   isVirtualCompetitionService,
+  upCompStatusService
 };
