@@ -306,7 +306,7 @@ module.exports = async function (fastify, opts) {
     const urlLastParameter = [...urlDestructor].pop().split(".");
     const urlExceptions = ["/documentation/json", "/documentation", "/admin/virtual/createEvent",
       "/admin/virtual/eventToss", "/admin/virtual/eventBallStart", "/admin/virtual/eventScoring",
-      "/admin/virtual/eventSuffle"
+      "/admin/virtual/eventSuffle", "/admin/virtual/cancelEvent"
     ];
 
     if (
