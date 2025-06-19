@@ -1901,6 +1901,7 @@ const loadMultiCommentaryService = async (request, fastify) => {
       let key3 = global.tblConfigs.find(
         (item) => item.key === configConstants.DEFAULTPLAYERRUNS
       );
+      let isVirtual = originalCommentary.isVirtual ? originalCommentary.isVirtual : false;
       _resFromPredictAPI = await callPredictorMarket(
         {
           commentary_id: originalCommentary.commentaryId,
@@ -1912,7 +1913,8 @@ const loadMultiCommentaryService = async (request, fastify) => {
         },
         "/api/v1/loadcommentary",
         fastify,
-        request
+        request,
+        isVirtual
       );
       let callPrediction = {};
       // Check for error_msg in the response
@@ -3150,6 +3152,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
     let _resFromPredictAPI;
     let callPredictions = [];
     let sendPartnership = [];
+    let isVirtual;
     if (commentaryId) {
       commentaryData = global.tblCommentaries.find(
         (item) => item?.commentaryId === commentaryId
@@ -3157,6 +3160,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
       if (!commentaryData) {
         throw new Error("Commentary with this id not Found");
       }
+      isVirtual = commentaryData.isVirtual ?? false;
     }
 
     let previousCommentaryStatus, statusToUpdate, balltypeOfdeleteBall;
@@ -3752,6 +3756,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           //_resFromPredictAPI = null;
           const decimalOverCount = parseFloat(previousBall.overCount);
           const _wkt = previousBall.ballIsWicket;
+          // let isVirtual = commentaryData.isVirtual ?? false;
           //_resFromPredictAPI = await
           callPredictorMarket(
             {
@@ -3769,7 +3774,8 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
             },
             "/api/v1/undoscore",
             fastify,
-            request
+            request,
+            isVirtual
           ).catch((err) => {
             errorLogger(
               fastify,
@@ -3931,14 +3937,20 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           (item) => item.key === configConstants.CALLPREDICTIONMODULE
         )?.value || "false";
       if (isNodePrediction == "true")
+      {
         processPredictScoreMarket(predictionPayload, fastify)
-      else
+      }
+      else{
+        //  let isVirtual = commentaryData.isVirtual || false;
         callPredictorMarket(
           predictionPayload,
           "/api/v1/predictscore",
           fastify,
-          request
+          request,
+          isVirtual
         );
+      }
+      
     }
     if (commentaryOvers) {
       if (updatedData.overDetails) {
@@ -4400,6 +4412,8 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           let key1 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTBALLFACED);
           let key2 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTPLAYERBOUNDARIES);
           let key3 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTPLAYERRUNS);
+          let isVirtual = commentaryData.isVirtual || false;
+          //_resFromPredictAPI = await
           callPredictorMarket(
             {
               commentary_id: commentaryDetails.commentaryId,
@@ -4411,7 +4425,8 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
             },
             "/api/v1/loadcommentary",
             fastify,
-            request
+            request,
+            isVirtual
           ).catch((err) => {
             errorLogger(
               fastify,
@@ -4485,7 +4500,8 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           },
           "/api/v1/endcommentary",
           fastify,
-          request
+          request,
+          isVirtual
         ).catch((err) => {
           errorLogger(
             fastify,
@@ -4677,7 +4693,8 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         },
         "/api/v1/endinnings",
         fastify,
-        request
+        request,
+        isVirtual
       ).catch((err) => {
         errorLogger(
           fastify,
@@ -5579,6 +5596,7 @@ const updateCommentaryStatusService = async (request, fastify) => {
     ...global.tblCommentaries[index],
     ...commentaryDetails,
   };
+  let isVirtual = global.tblCommentaries[index].isVirtual ?? false;
   if (global.tblCommentaries[index].isPredictMarket) {
     callPredictorMarket(
       {
@@ -5590,7 +5608,8 @@ const updateCommentaryStatusService = async (request, fastify) => {
       },
       "/api/v1/updatemarketstatus",
       fastify,
-      request
+      request,
+      isVirtual
     );
     // let callPrediction = {};
     // if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
@@ -9922,14 +9941,16 @@ const closeCommentaryService = async (request, fastify) => {
         .forEach((elem) => {
           elem.selectionStatus = EventMarketStatus.Close;
         });
-
+      
+      let isVirtual = global.tblCommentaries[index].isVirtual ?? false;
       _resFromPredictAPI = await callPredictorMarket(
         {
           commentary_id: commentaryId,
         },
         "/api/v1/endcommentary",
         fastify,
-        request
+        request,
+        isVirtual
       );
       let callPrediction = {};
       if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
@@ -10170,6 +10191,7 @@ const updateDelayInCommentaryService = async (request, fastify) => {
     let key3 = global.tblConfigs.find(
       (item) => item.key === configConstants.DEFAULTPLAYERRUNS
     );
+    let isVirtual = updatedData.isVirtual ?? false;
     _resFromPredictAPI = await callPredictorMarket(
       {
         commentary_id: commentaryId,
@@ -10181,7 +10203,8 @@ const updateDelayInCommentaryService = async (request, fastify) => {
       },
       "/api/v1/loadcommentary",
       fastify,
-      request
+      request,
+      isVirtual
     );
     if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
       callPrediction.predictioncallSuccess = false;
@@ -10410,6 +10433,7 @@ const updateEventRefIdInCommentaryService = async (request, fastify) => {
     let key3 = global.tblConfigs.find(
       (item) => item.key === configConstants.DEFAULTPLAYERRUNS
     );
+    let isVirtual = updatedData.isVirtual ?? false;
     _resFromPredictAPI = await callPredictorMarket(
       {
         commentary_id: commentaryId,
@@ -10421,7 +10445,8 @@ const updateEventRefIdInCommentaryService = async (request, fastify) => {
       },
       "/api/v1/loadcommentary",
       fastify,
-      request
+      request,
+      isVirtual
     );
     if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
       callPrediction.predictioncallSuccess = false;
@@ -10446,6 +10471,7 @@ const loadcommentaryService = async (request, fastify) => {
     if (!commentary) {
       throw new Error("Commentary with this id not Found");
     }
+    let isVirtual = commentary.isVirtual ?? false;
     let _resFromPredictAPI;
     let callPrediction = {};
     if (
@@ -10497,7 +10523,8 @@ const loadcommentaryService = async (request, fastify) => {
           },
           "/api/v1/loadcommentary",
           fastify,
-          request
+          request,
+          isVirtual
         );
 
         if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
@@ -11493,13 +11520,15 @@ const cancelCommentaryService = async (request, fastify) => {
         .forEach((elem) => {
           elem.selectionStatus = EventMarketStatus.Close;
         });
+      let isVirtual = global.tblCommentaries[index].isVirtual || false;
       _resFromPredictAPI = await callPredictorMarket(
         {
           commentary_id: commentaryId,
         },
         "/api/v1/endcommentary",
         fastify,
-        request
+        request,
+        isVirtual
       );
       let callPrediction = {};
       if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
@@ -12290,6 +12319,7 @@ const saveComVirtual = async (request, fastify) => {
     let _resFromPredictAPI;
     let callPredictions = [];
     let sendPartnership = [];
+    let isVirtual;
     if (commentaryId) {
       commentaryData = global.tblCommentaries.find(
         (item) => item?.commentaryId === commentaryId
@@ -12297,6 +12327,7 @@ const saveComVirtual = async (request, fastify) => {
       if (!commentaryData) {
         throw new Error("Commentary with this id not Found");
       }
+      isVirtual = commentaryData.isVirtual || false;
     }
 
     let previousCommentaryStatus, statusToUpdate, balltypeOfdeleteBall;
@@ -12814,7 +12845,8 @@ const saveComVirtual = async (request, fastify) => {
             },
             "/api/v1/undoscore",
             fastify,
-            request
+            request,
+            isVirtual
           ).catch((err) => {
             errorLogger(
               fastify,
@@ -12906,66 +12938,66 @@ const saveComVirtual = async (request, fastify) => {
         data: response.commentaryPlayers,
       });
     }
-    // if (
-    //   updatedData.commentaryBallByBallDetails &&
-    //   commentaryData.isPredictMarket &&
-    //   (updatedData.commentaryBallByBallDetails.ballType != 0 && updatedData.commentaryBallByBallDetails.ballType != 8) &&
-    //   isCallPredict == true
-    // ) {
-    //   let strikeTeam = global.tblCommentaryTeams.find(
-    //     (item) =>
-    //       item?.commentaryId === commentaryBallByBall.commentaryId &&
-    //       item.teamStatus === 1
-    //   );
+    if (
+      updatedData.commentaryBallByBallDetails &&
+      commentaryData.isPredictMarket &&
+      (updatedData.commentaryBallByBallDetails.ballType != 0 && updatedData.commentaryBallByBallDetails.ballType != 8)
+    ) {
+      let strikeTeam = global.tblCommentaryTeams.find(
+        (item) =>
+          item?.commentaryId === commentaryBallByBall.commentaryId &&
+          item.teamStatus === 1
+      );
 
-    //   let decimalOverCount = parseFloat(commentaryBallByBall.overCount);
-    //   let _wkt = commentaryBallByBall.ballIsWicket;
-    //   let partnership = updatedData.commentaryPartnershipDetails;
-    //   let boundary = partnership.totalSix + partnership.totalFour;
-    //   sendPartnership.push({
-    //     partnership_no: partnership?.order || 0,
-    //     partnership_boundaries: boundary
-    //   })
-    //   const predictionPayload = {
-    //     playerpredictscore: {
-    //       commentary_id: commentaryData.commentaryId,
-    //       match_type_id: commentaryData.matchTypeId,
-    //       event_id: commentaryData.eventRefId,
-    //       current_team_id: strikeTeam.teamId,
-    //       total_score: strikeTeam.teamScore,
-    //       current_ball: decimalOverCount || 0,
-    //       player_details: _sendPrePlayers,
-    //       ball_by_ball_id: updatedData.commentaryBallByBallDetails.commentaryBallByBallId
-    //         ? parseInt(updatedData.commentaryBallByBallDetails.commentaryBallByBallId)
-    //         : null,
-    //       partnership_details: sendPartnership
-    //     },
-    //     predictscore: {
-    //       commentary_id: commentaryData.commentaryId,
-    //       match_type_id: commentaryData.matchTypeId,
-    //       ball: decimalOverCount,
-    //       run: commentaryBallByBall.ballRun,
-    //       total_score: strikeTeam.teamScore,
-    //       strike_team_id: strikeTeam.teamId,
-    //       wicket: _wkt === true ? 1 : 0,
-    //       total_wicket: strikeTeam.teamWicket,
-    //       ball_by_ball_id: updatedData.commentaryBallByBallDetails.commentaryBallByBallId
-    //         ? parseInt(updatedData.commentaryBallByBallDetails.commentaryBallByBallId)
-    //         : null
-    //     },
-    //     commentary_id: commentaryId
-    //   }
-    //   let isNodePrediction = global.tblConfigs.find((item) => item.key === configConstants.CALLPREDICTIONMODULE)?.value || "false";
-    //   if (isNodePrediction == "true")
-    //     processPredictScoreMarket(predictionPayload)
-    //   else
-    //     callPredictorMarket(
-    //       predictionPayload,
-    //       "/api/v1/predictscore",
-    //       fastify,
-    //       request
-    //     )
-    // }
+      let decimalOverCount = parseFloat(commentaryBallByBall.overCount);
+      let _wkt = commentaryBallByBall.ballIsWicket;
+      let partnership = updatedData.commentaryPartnershipDetails;
+      let boundary = partnership.totalSix + partnership.totalFour;
+      sendPartnership.push({
+        partnership_no: partnership?.order || 0,
+        partnership_boundaries: boundary
+      })
+      const predictionPayload = {
+        playerpredictscore: {
+          commentary_id: commentaryData.commentaryId,
+          match_type_id: commentaryData.matchTypeId,
+          event_id: commentaryData.eventRefId,
+          current_team_id: strikeTeam.teamId,
+          total_score: strikeTeam.teamScore,
+          current_ball: decimalOverCount || 0,
+          player_details: _sendPrePlayers,
+          ball_by_ball_id: updatedData.commentaryBallByBallDetails.commentaryBallByBallId
+            ? parseInt(updatedData.commentaryBallByBallDetails.commentaryBallByBallId)
+            : null,
+          partnership_details: sendPartnership
+        },
+        predictscore: {
+          commentary_id: commentaryData.commentaryId,
+          match_type_id: commentaryData.matchTypeId,
+          ball: decimalOverCount,
+          run: commentaryBallByBall.ballRun,
+          total_score: strikeTeam.teamScore,
+          strike_team_id: strikeTeam.teamId,
+          wicket: _wkt === true ? 1 : 0,
+          total_wicket: strikeTeam.teamWicket,
+          ball_by_ball_id: updatedData.commentaryBallByBallDetails.commentaryBallByBallId
+            ? parseInt(updatedData.commentaryBallByBallDetails.commentaryBallByBallId)
+            : null
+        },
+        commentary_id: commentaryId
+      }
+      let isNodePrediction = global.tblConfigs.find((item) => item.key === configConstants.CALLPREDICTIONMODULE)?.value || "false";
+      if (isNodePrediction == "true")
+        processPredictScoreMarket(predictionPayload)
+      else
+        callPredictorMarket(
+          predictionPayload,
+          "/api/v1/predictscore",
+          fastify,
+          request,
+          isVirtual
+        )
+    }
     if (commentaryOvers) {
       if (updatedData.overDetails) {
         global.tblOvers.push(updatedData.overDetails);
@@ -13372,98 +13404,98 @@ const saveComVirtual = async (request, fastify) => {
     //   });
     // }
 
-    // if (
-    //   commentaryDetails &&
-    //   commentaryData.isPredictMarket == true &&
-    //   statusToUpdate == 4
-    // ) {
-    //   const eventMarket = await closeEventMarketByCIdQuery(
-    //     {
-    //       commentaryId: commentaryDetails.commentaryId,
-    //     },
-    //     fastify
-    //   );
-    //   if (eventMarket.length > 0) {
-    //     // eventMarket.forEach((updatedItem) => {
-    //     for (const updatedItem of eventMarket) {
-    //       let index = global.tblEventMarketsV2.findIndex(
-    //         (item) => item.eventMarketId === updatedItem.marketId
-    //       );
-    //       if (index !== -1) {
-    //         global.tblEventMarketsV2[index] = {
-    //           ...global.tblEventMarketsV2[index],
-    //           ...updatedItem,
-    //         };
-    //       }
-    //     };
-    //     // });
-    //   }
+    if (
+      commentaryData.isPredictMarket == true &&
+      statusToUpdate == 4
+    ) {
+      // const eventMarket = await closeEventMarketByCIdQuery(
+      //   {
+      //     commentaryId: commentaryDetails.commentaryId,
+      //   },
+      //   fastify
+      // );
+      // if (eventMarket.length > 0) {
+      //   // eventMarket.forEach((updatedItem) => {
+      //   for (const updatedItem of eventMarket) {
+      //     let index = global.tblEventMarketsV2.findIndex(
+      //       (item) => item.eventMarketId === updatedItem.marketId
+      //     );
+      //     if (index !== -1) {
+      //       global.tblEventMarketsV2[index] = {
+      //         ...global.tblEventMarketsV2[index],
+      //         ...updatedItem,
+      //       };
+      //     }
+      //   };
+      //   // });
+      // }
 
-    //   global.tblMarketRunnerV2
-    //     .filter((elem) => eventMarket.some((e) => e.marketId === elem.eventMarketId))
-    //     .forEach((elem) => {
-    //       elem.selectionStatus = EventMarketStatus.Close;
-    //     });
+      // global.tblMarketRunnerV2
+      //   .filter((elem) => eventMarket.some((e) => e.marketId === elem.eventMarketId))
+      //   .forEach((elem) => {
+      //     elem.selectionStatus = EventMarketStatus.Close;
+      //   });
 
-    //   //_resFromPredictAPI = null;
-    //   //_resFromPredictAPI = await
-    //   if (isCallPredict == true) {
-    //     callPredictorMarket(
-    //       {
-    //         commentary_id: commentaryDetails.commentaryId,
-    //       },
-    //       "/api/v1/endcommentary",
-    //       fastify,
-    //       request
-    //     ).catch((err) => {
-    //       errorLogger(
-    //         fastify,
-    //         err.message,
-    //         "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
-    //         request
-    //       );
-    //     });
-    //   }
-    //   let competition = global.tblCompetitions.find(
-    //     (item) => item.competitionId === commentaryDetails.competitionId
-    //   );
-    //   // await notiConfigContentReplaceService(EventName.EVENTCOMPLETED, commentaryData.commentaryId, request, fastify);
-    //   if (competition.isEventSnap == true) {
-    //     setCompEventSnapSerice([{
-    //       commentaryId: commentaryDetails.commentaryId,
-    //       eventRefId: commentaryDetails.eventRefId,
-    //       competitionId: commentaryDetails.competitionId,
-    //       eventTypeId: commentaryDetails.eventTypeId,
-    //     }], request, fastify)
-    //       .catch((err) => {
-    //         console.log("setCompEventSnapSerice console", err);
-    //         errorLogger(
-    //           fastify,
-    //           err.message,
-    //           "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket - setCompEventSnapSerice",
-    //           request
-    //         );
-    //       });
-    //   }
-    //   if (competition.isPointTable == true && commentaryDetails.isTest == false) {
-    //     setTeamPointService([{
-    //       commentaryId: commentaryDetails.commentaryId,
-    //       competitionId: commentaryDetails.competitionId,
-    //       team1Id: commentaryDetails.team1Id,
-    //       team2Id: commentaryDetails.team2Id,
-    //       winnerId: commentaryDetails.winnerId,
-    //     }], request, fastify)
-    //       .catch((err) => {
-    //         console.log("setTeamPointService console", err);
-    //         errorLogger(
-    //           fastify,
-    //           err.message,
-    //           "ERROR --> services/commentary.js/setTeamPointServicsyncCommentaryStatsWithAPIAndSocket - setTeamPointService",
-    //           request
-    //         );
-    //       })
-    //   }
-    // }
+      //_resFromPredictAPI = null;
+      //_resFromPredictAPI = await
+      // if (isCallPredict == true) {
+        callPredictorMarket(
+          {
+            commentary_id: commentaryDetails.commentaryId,
+          },
+          "/api/v1/endcommentary",
+          fastify,
+          request.
+          isVirtual
+        ).catch((err) => {
+          errorLogger(
+            fastify,
+            err.message,
+            "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
+            request
+          );
+        });
+      // }
+      // let competition = global.tblCompetitions.find(
+      //   (item) => item.competitionId === commentaryDetails.competitionId
+      // );
+      // // await notiConfigContentReplaceService(EventName.EVENTCOMPLETED, commentaryData.commentaryId, request, fastify);
+      // if (competition.isEventSnap == true) {
+      //   setCompEventSnapSerice([{
+      //     commentaryId: commentaryDetails.commentaryId,
+      //     eventRefId: commentaryDetails.eventRefId,
+      //     competitionId: commentaryDetails.competitionId,
+      //     eventTypeId: commentaryDetails.eventTypeId,
+      //   }], request, fastify)
+      //     .catch((err) => {
+      //       console.log("setCompEventSnapSerice console", err);
+      //       errorLogger(
+      //         fastify,
+      //         err.message,
+      //         "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket - setCompEventSnapSerice",
+      //         request
+      //       );
+      //     });
+      // }
+      // if (competition.isPointTable == true && commentaryDetails.isTest == false) {
+      //   setTeamPointService([{
+      //     commentaryId: commentaryDetails.commentaryId,
+      //     competitionId: commentaryDetails.competitionId,
+      //     team1Id: commentaryDetails.team1Id,
+      //     team2Id: commentaryDetails.team2Id,
+      //     winnerId: commentaryDetails.winnerId,
+      //   }], request, fastify)
+      //     .catch((err) => {
+      //       console.log("setTeamPointService console", err);
+      //       errorLogger(
+      //         fastify,
+      //         err.message,
+      //         "ERROR --> services/commentary.js/setTeamPointServicsyncCommentaryStatsWithAPIAndSocket - setTeamPointService",
+      //         request
+      //       );
+      //     })
+      // }
+    }
 
     // call the getscore and emit the event data
     if (
@@ -13948,7 +13980,7 @@ const commentaryTossService = async (request, fastify) => {
     } = request.body;
     let comI;
     let previousCommentaryStatus, statusToUpdate;
-
+    let isVirtual;
     let commentaryData = global.tblCommentaries.find(
       (item) => item?.commentaryId === commentaryId
     );
@@ -13960,6 +13992,7 @@ const commentaryTossService = async (request, fastify) => {
       comI = global.tblCommentaries.findIndex(
         (item) => item.commentaryId == commentaryId
       );
+      isVirtual = commentaryData?.isVirtual;
     }
     if (commentaryTeams) {
       for (let t of commentaryTeams) {
@@ -14119,7 +14152,8 @@ const commentaryTossService = async (request, fastify) => {
           },
           "/api/v1/loadcommentary",
           fastify,
-          request
+          request,
+          isVirtual
         ).catch((err) => {
           errorLogger(
             fastify,
@@ -14260,6 +14294,7 @@ const commentaryScoreService = async (request, fastify) => {
     let previousCommentaryStatus, statusToUpdate;
     let sendPartnership = [];
     let _sendPrePlayers = [];
+    let isVirtual;
     let commentaryData = global.tblCommentaries.find(
       (item) => item?.commentaryId === commentaryId
     );
@@ -14271,6 +14306,7 @@ const commentaryScoreService = async (request, fastify) => {
       comI = global.tblCommentaries.findIndex(
         (item) => item.commentaryId == commentaryId
       );
+      isVirtual = commentaryData?.isVirtual;
     }
     if (commentaryPlayers) {
       commentaryPlayers = commentaryPlayers.filter(
@@ -14543,7 +14579,8 @@ const commentaryScoreService = async (request, fastify) => {
           predictionPayload,
           "/api/v1/predictscore",
           fastify,
-          request
+          request,
+          isVirtual
         );
     }
     // check over
@@ -15494,7 +15531,7 @@ const commentaryInningChangeService = async (request , fastify)=>{
       partnershipIndex,
       commentaryData;
         let _sendPrePlayers = [];
-
+    let isVirtual;
     if (commentaryId) {
       commentaryData = global.tblCommentaries.find(
         (item) => item?.commentaryId === commentaryId
@@ -15502,6 +15539,7 @@ const commentaryInningChangeService = async (request , fastify)=>{
       if (!commentaryData) {
         throw new Error("Commentary with this id not Found");
       }
+      isVirtual = commentaryData.isVirtual;
     }
     let previousCommentaryStatus, statusToUpdate;
     let strikeTeamForEndInnings;
@@ -15936,7 +15974,8 @@ const commentaryInningChangeService = async (request , fastify)=>{
         },
         "/api/v1/endinnings",
         fastify,
-        request
+        request,
+        isVirtual
       ).catch((err) => {
         errorLogger(
           fastify,
@@ -16057,6 +16096,7 @@ const commentaryWicketService = async (request, fastify) => {
     let _sendPrePlayers = [];
     let commentaryData;
     let sendPartnership = [];
+    let isVirtual;
     if (commentaryId) {
       commentaryData = global.tblCommentaries.find(
         (item) => item?.commentaryId === commentaryId
@@ -16064,6 +16104,7 @@ const commentaryWicketService = async (request, fastify) => {
       if (!commentaryData) {
         throw new Error("Commentary with this id not Found");
       }
+      isVirtual = commentaryData.isVirtual || false;
     }
     if (commentaryDetails) {
       commentaryIndex = global.tblCommentaries.findIndex(
@@ -16424,7 +16465,8 @@ const commentaryWicketService = async (request, fastify) => {
           predictionPayload,
           "/api/v1/predictscore",
           fastify,
-          request
+          request,
+          isVirtual
         );
     }
     if (commentaryOvers) {

@@ -270,11 +270,24 @@ const MarketActionType = {
   closeMarketOnDLSChange : 11,
   virtualMarketCancel : 12,
 }
-const callPredictorMarket = async (data , endpoint ,fastify ,request) =>{
+const callPredictorMarket = async (data , endpoint ,fastify ,request, isVirtual = false) =>{
   let requestStartTime = new Date();
   let loggerConfig = global.tblConfigs.find((item) => item.key === configConstants.ISPREDICTORLOGGER).value;
   try {
-    const predictorURL = global.tblConfigs.find((item) => item.key === configConstants.MARKET_PREDICTOR).value;
+    let predictorURL = global.tblConfigs.find((item) => item.key === configConstants.MARKET_PREDICTOR)?.value;
+    if(isVirtual == true){
+      // If commentary is virtual, use the virtual predictor URL
+      predictorURL = global.tblConfigs.find((item) => item.key === configConstants.VIRTUALMARKETPREDICTOR)?.value;
+    }
+    if(!predictorURL){
+      errorLogger(
+        fastify,
+        "Predictor URL not found",
+        "DB ERROR --> utilities/index/callPredictorMarket",
+        request
+      )
+      return true
+    }
     const url = `${predictorURL}${endpoint}`;
     const result = await axios.post(url, {
       ...data
