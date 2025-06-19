@@ -250,7 +250,8 @@ const allConfigDetails = async (request) => {
   return result
 };
 const getInitConfigDetails = async (request,fastify) => {
-  const initKeys = [configConstants.DPAPIURL, configConstants.DPAPIXKEY , configConstants.DPSOCKETURL, configConstants.SCORECARDFRAMEURL, configConstants.ENABLELOGROCKET, configConstants.LOGROCKETAPPID , configConstants.ISAPPLYPLAYERSTRIKELOGIC];
+  const initKeys = [configConstants.DPAPIURL, configConstants.DPAPIXKEY , configConstants.DPSOCKETURL, configConstants.SCORECARDFRAMEURL, configConstants.ENABLELOGROCKET, configConstants.LOGROCKETAPPID ,
+     configConstants.ISAPPLYPLAYERSTRIKELOGIC , configConstants.ISAPPLYPARTNERSHIPLOGIC];
   let result = global.tblConfigs.filter(item => initKeys.includes(item.key));
   return result;
 }
