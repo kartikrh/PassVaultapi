@@ -2730,17 +2730,19 @@ const suffleCardAPIService = async (request, fastify) => {
   if (!commentaryDetails) {
     throw new Error("Commentary with this id not found");
   }
-  let endPoint = "";
+  let endPoint = '/api/v1/shufflecards';
+  let isVirtual = commentaryDetails.isVirtual || false;
   // call predct api
-  // await callPredictorMarket(
-  //   {
-  //     commentaryId,
-  //     currentInnings: commentaryDetails.currentInnings,
-  //   },
-  //   endPoint,
-  //   fastify,
-  //   request
-  // );
+  await callPredictorMarket(
+    {
+      commentaryId,
+      currentInnings: commentaryDetails.currentInnings,
+    },
+    endPoint,
+    fastify,
+    request,
+    isVirtual
+  );
   return true;
 };
 const cancelEventAPIService = async (request, fastify) => {
