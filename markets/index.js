@@ -15,13 +15,7 @@ const {
   logFullBallToActionMap,
   getAllMappedActions
 } = require('./ballToActionMapper');
-const { createMarketAndRunner, initializeBallToActionMap, normalizeBallToActionMap, validateBallToActionMap, logBallToActionMapSample, mergeRunners, updateGlobalMarketId } = require('./utils');
-// const { initializePlayerMarketSystem, processPlayerMarketsIntegration } = require('./playerMarketIntegration');
-const {
-  initializePlayerMarketSystem,
-  processPlayerMarketsIntegration,
-  cleanupPlayerMarkets
-} = require('./playerMarketIntegration');
+const { createMarketAndRunner, initializeBallToActionMap, normalizeBallToActionMap, validateBallToActionMap, logBallToActionMapSample } = require('./utils');
 
 /**
  * Market handlers for different market types
@@ -331,10 +325,7 @@ const generateMarketAndRunners = async (data, request, fastify) => {
         if (marketIndex !== -1) {
           console.log(`Found existing market in DB for ${existingMarket.marketName} with ID ${existingMarket.eventMarketId}`);
           global.marketData[data.commentaryId].markets[marketIndex].eventMarketId = existingMarket.eventMarketId;
-          global.marketData[data.commentaryId].markets[marketIndex].isCreate = false;
-
-          // Update ball-to-action map references with new ID
-          updateGlobalMarketId(global.marketData[data.commentaryId].markets[marketIndex], existingMarket.eventMarketId);
+          global.marketData[data.commentaryId].markets[marketIndex].runners = existingMarket.runners || [];
         }
       });
     }
@@ -348,38 +339,6 @@ const generateMarketAndRunners = async (data, request, fastify) => {
     // Normalize the ball keys to ensure consistency
     normalizeBallToActionMap(commentaryId);
     validateBallToActionMap(commentaryId);
-
-    // =====================================================
-    // PLAYER MARKET INTEGRATION - ADD THIS SECTION HERE
-    // =====================================================
-
-    console.log('[MAIN] Starting player market integration...');
-
-    // Process player markets
-    const playerMarketResult = await processPlayerMarketsIntegration({
-      commentaryId: commentaryId,
-      commentary: commentary,
-      teams: teamAndPlayers,
-      teamAndPlayers: teamAndPlayers, // Alternative naming
-      templates: comTemplate,
-      currentBall: commentary.currentBall || currentBall || 0,
-      currentScore: commentary.currentScore || 0,
-      teamId: commentary.teamId,
-      matchTypeId: commentary.matchTypeId || data.matchTypeId,
-      eventRefId: commentary.eventRefId,
-      ballByBallId: commentary.ballByBallId,
-      playerStats: playerStats // Pass calculated player stats
-    }, fastify);
-
-    if (playerMarketResult.success) {
-      console.log(`[MAIN] Player markets processed successfully - ${playerMarketResult.playersProcessed} players processed`);
-    } else {
-      console.error('[MAIN] Player market processing failed:', playerMarketResult.error);
-    }
-
-    // =====================================================
-    // END PLAYER MARKET INTEGRATION
-    // =====================================================
 
     // Log the total number of markets and entries in ball-to-action map
     console.log(`Generated ${global.marketData[data.commentaryId].markets.length} markets for commentary ${data.commentaryId}`);
@@ -397,11 +356,10 @@ const generateMarketAndRunners = async (data, request, fastify) => {
       oddEven: global.marketData[data.commentaryId].markets.filter(m => m.marketTypeCategoryId === 35).length,
       lottery: global.marketData[data.commentaryId].markets.filter(m => m.marketTypeCategoryId === 28).length,
       ldo: global.marketData[data.commentaryId].markets.filter(m => m.marketTypeCategoryId === 26).length,
-      player: global.marketData[data.commentaryId].markets.filter(m => m.isPlayer).length, // Add player market count
-      other: global.marketData[data.commentaryId].markets.filter(m => ![35, 28, 26].includes(m.marketTypeCategoryId) && !m.isPlayer).length
+      other: global.marketData[data.commentaryId].markets.filter(m => ![35, 28, 26].includes(m.marketTypeCategoryId)).length
     };
 
-    console.log(`Market breakdown - Odd-Even: ${marketBreakdown.oddEven}, Lottery: ${marketBreakdown.lottery}, L.D.O: ${marketBreakdown.ldo}, Player: ${marketBreakdown.player}, Other: ${marketBreakdown.other}`);
+    console.log(`Market breakdown - Odd-Even: ${marketBreakdown.oddEven}, Lottery: ${marketBreakdown.lottery}, L.D.O: ${marketBreakdown.ldo}, Other: ${marketBreakdown.other}`);
 
     return mar;
   } catch (error) {

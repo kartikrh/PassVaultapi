@@ -89,21 +89,15 @@ const LDO_RUNNER_TYPES = {
     CUSTOM: "custom"
 };
 
-// // Market processing priorities (for ball-to-action mapping)
-// const MARKET_PROCESSING_PRIORITY = {
-//     26: 1, // L.D.O markets - highest priority
-//     35: 2, // Odd-Even markets
-//     28: 3, // Lottery markets
-//     DEFAULT: 99
-// };
-const OIGINAL_MARKET_CATEGORY = {
-    TOTALBOUNDARY: 29,     // Player boundaries  
-    PLAYERRUNS: 12,        // Player runs and balls faced
-    FALLOFWICKET: 31,
-    PLAYERBALL: 30,        // Player runs and balls faced
-}
+// Market processing priorities (for ball-to-action mapping)
+const MARKET_PROCESSING_PRIORITY = {
+    26: 1, // L.D.O markets - highest priority
+    35: 2, // Odd-Even markets
+    28: 3, // Lottery markets
+    DEFAULT: 99
+};
+
 module.exports = {
-    OIGINAL_MARKET_CATEGORY,
     MARKET_STATUS,
     MARKET_CATEGORY,
     CREATION_TYPE,
@@ -112,4 +106,5 @@ module.exports = {
     RUNNER_STATUS,
     ODD_EVEN_RUNNERS,
     LDO_RUNNER_TYPES,
+    MARKET_PROCESSING_PRIORITY
 };
