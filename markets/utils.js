@@ -970,7 +970,7 @@ function calculateOverRunsTillEnd(commentaryId, teamId, over) {
         console.log(`[CALC_CUMULATIVE] Found ${commentaryOvers.length} overs for commentary ${commentaryId}`);
 
         // Filter by teamId
-        const teamOvers = commentaryOvers.filter(item => item.teamId === teamId);
+        const teamOvers = commentaryOvers.filter(item => item.teamId !== teamId);
         console.log(`[CALC_CUMULATIVE] Found ${teamOvers.length} overs for team ${teamId}`);
 
         // Calculate cumulative runs from over 1 to overNum
