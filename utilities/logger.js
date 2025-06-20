@@ -113,7 +113,7 @@ const marketLogger = async (data , request , fastify) => {
           eventMarketId || null,
           actionType,
           value,
-          request.userTokenInfo.WrUserId,
+          request.userTokenInfo?.WrUserId ?? null,
           new Date(),
           commentaryId || null,
           result || null

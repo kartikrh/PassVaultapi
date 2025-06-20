@@ -12,6 +12,8 @@ const {
   wicketType,
   wicketTypeObj,
   Cards,
+  MarketActionType,
+  EventMarketStatus,
 } = require("../utilities");
 const { cloneCommentaryService, saveComVirtual } = require("./commentry");
 const {
@@ -32,6 +34,7 @@ const {
   updateVirtualBallByBallQuery,
   updateVirtualOverQuery,
   createVirtualWicketQuery,
+  cancelComQuery,
 } = require("../repository/TableCommentary");
 const {
   getTournamentTeamsByCompIdQuery,
@@ -44,7 +47,7 @@ const {
 } = require("../repository/TableTeamPlayer");
 const { mergeAndSaveImage } = require("../utilities/imageMerge");
 const { commentaryDetailsByEventIdService } = require("./commentry");
-const { errorLogger } = require("../utilities/logger");
+const { errorLogger, marketLogger } = require("../utilities/logger");
 const {
   virtualOverQuery,
   virtualBallByBallQuery,
@@ -63,6 +66,7 @@ const {
   generateWicket,
 } = require("../utilities/comFunction");
 const { default: fastify } = require("fastify");
+const { cancelEventMarketsQuery, closeEventMarketByCIdQuery, cancelMarketVirtualQuery } = require("../repository/TableEventMarkets");
 // const ballbyball ={
 //   commentaryBallByBallId: 0,
 //   commentaryId: commentary?.commentaryId,
@@ -143,17 +147,15 @@ const createVirtualEventService = async (request, fastify) => {
   }
   let matchType;
   // check Match Type
-  if(!checkComp.matchTypeId){
+  if (!checkComp.matchTypeId) {
     throw new Error("Match Type not found");
-  }
-  else {
+  } else {
     matchType = global.tblMatchTypes.find(
       (item) => item.matchTypeId == checkComp.matchTypeId
     );
     if (!matchType) {
       throw new Error("Match Type details not found");
     }
-
   }
 
   const tournamentTeams = await getTournamentTeamsByCompIdQuery(
@@ -205,19 +207,23 @@ const createVirtualEventService = async (request, fastify) => {
       throw new Error("No players found for teams");
     }
     let dataToInsert = {
-      ...request.body,  
-      ...checkComp
-    }
+      ...request.body,
+      ...checkComp,
+    };
 
-    const commentaryData = await insertVirtualEventQuery(dataToInsert,request, fastify);
+    const commentaryData = await insertVirtualEventQuery(
+      dataToInsert,
+      request,
+      fastify
+    );
     global.tblCommentaries.push(commentaryData);
     comId = commentaryData.commentaryId;
     const teamData = {
       commentaryId: commentaryData.commentaryId,
       team1Id: request.body.team1Id,
       team2Id: request.body.team2Id,
-      teamMaxOver : matchType.maxOversInFirstInings,
-      subInning: request.body?.subInning ?? null
+      teamMaxOver: matchType.maxOversInFirstInings,
+      subInning: request.body?.subInning ?? null,
     };
     const teamsData = await insertVirtualCommentaryTeams(
       teamData,
@@ -333,15 +339,15 @@ const createVirtualEventService = async (request, fastify) => {
     }
   }
   // save virtual card data
-  if(request.body.cards.length > 0){
+  if (request.body.cards.length > 0) {
     await saveComCardQuery(
-    {
-      commentaryId: comId,
-      cards: request.body.cards,
-    },
-    request,
-    fastify
-  );
+      {
+        commentaryId: comId,
+        cards: request.body.cards,
+      },
+      request,
+      fastify
+    );
   }
   const comData = await commentaryResponseSerivce(comId);
   // return "Commentary Created Successfully";
@@ -357,7 +363,7 @@ const virtualEventTossService = async (request, fastify) => {
   if (!commentary) {
     throw new Error("Event with this ID not found");
   }
-  if(commentary.commentaryStatus == commentaryStatus.COMPLETED){
+  if (commentary.commentaryStatus == commentaryStatus.COMPLETED) {
     throw new Error("Event is already completed");
   }
   if (commentary.commentaryStatus != commentaryStatus.OPEN) {
@@ -429,6 +435,12 @@ const virtualEventTossService = async (request, fastify) => {
       ? 2
       : 1;
 
+    let subInning;
+    if (teamStatus == 1) {
+      subInning = 1;
+    } else {
+      subInning = 2;
+    }
     const teamPlayer = global.tblCommentaryTeams.find(
       (item) => item.commentaryId == commentaryId && item.teamId == team
     );
@@ -444,6 +456,7 @@ const virtualEventTossService = async (request, fastify) => {
       teamId: team,
       teamOver: 0,
       teamWicket: 0,
+      subInning,
     };
 
     const teamData = await virtualEventTeamUpdateQuery(
@@ -694,6 +707,7 @@ const updateVirtualEventStatusService = async (request, fastify) => {
   if (index === -1) {
     throw new Error("Commentary with this id not found");
   }
+  let isVirtual = global.tblCommentaries[index]?.isVirtual || false;
   let displayStatus = "Ball";
   const commentaryDetails = {
     commentaryId,
@@ -716,7 +730,8 @@ const updateVirtualEventStatusService = async (request, fastify) => {
       },
       "/api/v1/updatemarketstatus",
       fastify,
-      request
+      request,
+      isVirtual
     );
   }
 
@@ -834,7 +849,7 @@ const ballByBallVirtualEventService = async (request, fastify) => {
       fastify,
       request
     );
-    console.log("teamsScoring", teamsScoring);
+    // console.log("teamsScoring", teamsScoring);
     const index = global.tblCommentaryTeams.findIndex(
       (item) =>
         item?.commentaryId === commentaryId &&
@@ -1029,7 +1044,7 @@ const ballByBallVirtualEventService = async (request, fastify) => {
 };
 const ballByBallChangeService = async (request, fastify) => {
   let ball = 1;
-  const isBoundary = false;
+  let isBoundary = false;
   // const { commentaryId, run, ballType, isWicket = false } = request.body;
   const { commentaryId, cardType, cardKey, cardValue } = request.body;
   const commentaryDetails = global.tblCommentaries.find(
@@ -1044,12 +1059,17 @@ const ballByBallChangeService = async (request, fastify) => {
   if (commentaryDetails.commentaryStatus == commentaryStatus.COMPLETED) {
     throw new Error("Event is already completed");
   }
-  
+
   let run = 0,
     isWicket = false,
     ballType = BALL_TYPE.REGULAR;
   if (cardValue != Cards.J && cardValue != Cards.K) {
     run = parseInt(cardValue);
+    if (cardValue == Cards[4] || cardValue == Cards[6]) {
+      isBoundary = true;
+    } else {
+      isBoundary = false;
+    }
     isWicket = false;
   }
   if (cardValue == Cards.K) {
@@ -1063,7 +1083,6 @@ const ballByBallChangeService = async (request, fastify) => {
     ball = 0; // wide ball does not count as a ball
   }
 
-  
   if (commentaryDetails.commentaryStatus == commentaryStatus.COMPLETED) {
     let getRes = await comResponseService(request, fastify);
     return {
@@ -1149,7 +1168,7 @@ const ballByBallChangeService = async (request, fastify) => {
         prevBall,
         partnership,
         matchType,
-        ballType
+        ballType,
       },
       request,
       fastify
@@ -1157,7 +1176,7 @@ const ballByBallChangeService = async (request, fastify) => {
 
     // set res
     let getRes = await comResponseService(request, fastify);
-    if(result.comOver !== null){
+    if (result.comOver !== null) {
       let over = {
         overId: result.comOver.overId,
         over: result.comOver.over,
@@ -1165,22 +1184,21 @@ const ballByBallChangeService = async (request, fastify) => {
         ballCount: result.comOver.ballCount,
         teamScore: result.comOver.teamScore,
         isComplete: result.comOver.isComplete,
-      }
+      };
       delete result.comOver;
       return {
         ...result,
         ...getRes,
-        over
-      }
-    }
-    else {
+        over,
+      };
+    } else {
       delete result.comOver;
       return {
         ...result,
         inningChange: false,
         ...getRes,
       };
-    } 
+    }
   }
 
   let result = await updateRunPayload(
@@ -1209,7 +1227,7 @@ const ballByBallChangeService = async (request, fastify) => {
     request,
     fastify
   );
-  const {ballByBall} = result;
+  const { ballByBall } = result;
   // save data in db
   // const ballByBall = await saveComVirtual(
   //   {
@@ -1238,7 +1256,7 @@ const ballByBallChangeService = async (request, fastify) => {
         inningChange: checkMatch.inningChange,
         isOverComplete: true,
         isWicket: false,
-        ...getRes
+        ...getRes,
       };
     }
     if (checkMatch.matchComplete) {
@@ -1269,9 +1287,9 @@ const ballByBallChangeService = async (request, fastify) => {
       isWicket: false,
       isMatchComplete: false,
       ...getRes,
-      over : {
+      over: {
         overId: over.overId,
-        over : over.over,
+        over: over.over,
         teamId: over.teamId,
         ballCount: over.ballCount,
         teamScore: over.teamScore,
@@ -1300,7 +1318,7 @@ const ballByBallChangeService = async (request, fastify) => {
       ...getRes,
     };
   }
-  // 
+  //
 
   let getRes = await comResponseService(request, fastify);
   return {
@@ -1308,10 +1326,10 @@ const ballByBallChangeService = async (request, fastify) => {
     isMatchComplete: false,
     isOverComplete: false,
     isWicket: false,
-    ...getRes
+    ...getRes,
   };
 };
-const updateRunPayload = async (data, request,fastify) => {
+const updateRunPayload = async (data, request, fastify) => {
   // generate db update payload using data
   let isChangeStrike = false;
   let updateBall = {};
@@ -1417,8 +1435,7 @@ const updateRunPayload = async (data, request,fastify) => {
     updateBowler["bowlerRun"] = (currentBowler.bowlerRun || 0) + runToUpdate;
     updateBattingTeam["teamWideRuns"] =
       (battingTeam.teamWideRuns || 0) + runToUpdate;
-    updateBattingTeam["teamScore"] =
-      (battingTeam.teamScore || 0) + runToUpdate;
+    updateBattingTeam["teamScore"] = (battingTeam.teamScore || 0) + runToUpdate;
     updateOver["teamScore"] = `${updateBattingTeam?.teamScore || 0}/${
       battingTeam?.teamWicket || 0
     }`;
@@ -1435,12 +1452,13 @@ const updateRunPayload = async (data, request,fastify) => {
     updatePartnership["totalRuns"] = partnership.totalRuns + runToUpdate;
     updatePartnership["extras"] = partnership.extras + runToUpdate;
     // updateBattingTeam["teamOver"] = battingTeam.teamOver;
-    updateBall["overCount"] = (parseFloat(battingTeam.teamOver || 0) + 0.1).toFixed(1)
+    updateBall["overCount"] = (
+      parseFloat(battingTeam.teamOver || 0) + 0.1
+    ).toFixed(1);
     updateBall["currentOverBalls"] = over.ballCount + 1;
     updateBall["cardType"] = request.body.cardType;
     updateBall["cardKey"] = request.body.cardKey;
-  }
-  else {
+  } else {
     updateBall["ballIsCount"] = ball > 0 ? true : false;
     updateBall["ballType"] = BALL_TYPE.REGULAR;
     updateBall["ballRun"] = run;
@@ -1502,7 +1520,6 @@ const updateRunPayload = async (data, request,fastify) => {
     updateBall["overCount"] = updateBattingTeam.teamOver;
     updateBall["currentOverBalls"] = updateOver.ballCount;
     updateBall["bowlerId"] = currentBowler.commentaryPlayerId;
-
   }
   // changes according to run and ball type
   if (run === 0) {
@@ -1622,7 +1639,10 @@ const updateRunPayload = async (data, request,fastify) => {
     fastify
   );
   // check if isautochange striker is true
-  if(matchType.isAutoChangeStriker && updateBall.autoStrikeBallCount >= matchType.autoChangeStrikerAfterBall){
+  if (
+    matchType.isAutoChangeStriker &&
+    updateBall.autoStrikeBallCount >= matchType.autoChangeStrikerAfterBall
+  ) {
     // get the striker and non striker
     const striker = global.tblCommentaryPlayers.find(
       (item) =>
@@ -1644,17 +1664,17 @@ const updateRunPayload = async (data, request,fastify) => {
     let strikePlayer = {
       ...striker,
       onStrike: false,
-    }
+    };
     let nonStrikePlayer = {
       ...nonStriker,
       onStrike: true,
-    }
+    };
     let obj = {
       commentaryId,
-      commentaryPlayers : [strikePlayer, nonStrikePlayer],
-    }
+      commentaryPlayers: [strikePlayer, nonStrikePlayer],
+    };
     // update the player data
-     await saveComVirtual(
+    await saveComVirtual(
       {
         ...request,
         body: {
@@ -1663,13 +1683,12 @@ const updateRunPayload = async (data, request,fastify) => {
       },
       fastify
     );
-
   }
 
   return {
     ...objToSave,
     isOverComplete,
-    ballByBall : ballByBall1,
+    ballByBall: ballByBall1,
     // over : updateOver
   };
 };
@@ -1785,13 +1804,13 @@ const checkInningsSwitch = async (data, request, fastify) => {
         )[0];
       // check last over
       const over = global.tblOvers
-      .filter(
-        (item) =>
-          item?.commentaryId === commentaryId &&
-          item.currentInnings == commentaryDetails.currentInnings
-      )
-      .sort((a, b) => b.overId - a.overId)[0];
-        
+        .filter(
+          (item) =>
+            item?.commentaryId === commentaryId &&
+            item.currentInnings == commentaryDetails.currentInnings
+        )
+        .sort((a, b) => b.overId - a.overId)[0];
+
       // inning change code
       result = await onInningChangeService(
         {
@@ -1812,7 +1831,7 @@ const checkInningsSwitch = async (data, request, fastify) => {
       return {
         matchComplete: matchComplete,
         inningChange: true,
-        comOver : over
+        comOver: over,
       };
     }
     res = await saveComVirtual(
@@ -1941,8 +1960,7 @@ const generateOverService = async (data, request, fastify) => {
     fastify
   );
   let completedOver = global.tblOvers.find(
-    (item) =>
-      item.overId == overdetails.overId
+    (item) => item.overId == overdetails.overId
   );
   // db update call here
   let { player } = await changePlayer({
@@ -2285,14 +2303,14 @@ const handleWicketService = async (data, request, fastify) => {
       // result : res
     };
   }
-  if(mc.inningChange){
+  if (mc.inningChange) {
     return {
       isMatchComplete: mc.matchComplete,
       isOverComplete: false,
       isWicket: true,
-      inningChange : mc.inningChange,
-      comOver : mc.comOver ?? null
-    }
+      inningChange: mc.inningChange,
+      comOver: mc.comOver ?? null,
+    };
   }
   // player selection
   const { player } = await changePlayer({
@@ -2359,7 +2377,6 @@ const handleWicketService = async (data, request, fastify) => {
       fastify
     );
     comOver = overComplete.completedOver;
-    
   }
 
   return {
@@ -2367,48 +2384,51 @@ const handleWicketService = async (data, request, fastify) => {
     isWicket: true,
     isOverComplete,
     isMatchComplete: mc.matchComplete,
-    comOver : comOver,
+    comOver: comOver,
   };
 };
 const comResponseService = async (request, fastify) => {
   let { commentaryId } = request.body;
   let commentaryDetails = global.tblCommentaries.find(
     (item) => item?.commentaryId === commentaryId
-  )
+  );
   if (!commentaryDetails) {
     throw new Error("Commentary with this id not found");
   }
   commentaryDetails = {
     commentaryId: commentaryDetails.commentaryId,
-    eventDate : commentaryDetails.eventDate,
-    eventName : commentaryDetails.eventName,
-    eventRefId : commentaryDetails.eventRefId,
-    commentaryStatus : commentaryDetails.commentaryStatus,
-    currentInnings : commentaryDetails.currentInnings,
-    isActive : commentaryDetails.isActive,
-    delay : commentaryDetails.delay,
-  }
+    eventDate: commentaryDetails.eventDate,
+    eventName: commentaryDetails.eventName,
+    eventRefId: commentaryDetails.eventRefId,
+    commentaryStatus: commentaryDetails.commentaryStatus,
+    currentInnings: commentaryDetails.currentInnings,
+    isActive: commentaryDetails.isActive,
+    delay: commentaryDetails.delay,
+  };
   // get teams
-  const teams = global.tblCommentaryTeams.filter(
-    (item) =>
-      item?.commentaryId === commentaryId &&
-      item.currentInnings == commentaryDetails.currentInnings
-  ).map((item) => {
-    return {
-      commentaryTeamId: item.commentaryTeamId,
-      teamId: item.teamId,
-      teamName: item.teamName,
-      teamShortName: item.teamShortName,
-      teamScore: item.teamScore,
-      teamWicket: item.teamWicket,
-      teamOver: item.teamOver,
-      teamWicket: item.teamWicket,
-      teamStatus: item.teamStatus,
-      currentInnings: item.currentInnings,
-      isBattingComplete: item.isBattingComplete,
-      teamMaxOver: item.teamMaxOver,
-    };
-  })
+  const teams = global.tblCommentaryTeams
+    .filter(
+      (item) =>
+        item?.commentaryId === commentaryId &&
+        item.currentInnings == commentaryDetails.currentInnings
+    )
+    .map((item) => {
+      return {
+        commentaryTeamId: item.commentaryTeamId,
+        teamId: item.teamId,
+        teamName: item.teamName,
+        teamShortName: item.teamShortName,
+        teamScore: item.teamScore,
+        teamWicket: item.teamWicket,
+        teamOver: item.teamOver,
+        teamWicket: item.teamWicket,
+        teamStatus: item.teamStatus,
+        currentInnings: item.currentInnings,
+        isBattingComplete: item.isBattingComplete,
+        teamMaxOver: item.teamMaxOver,
+        subInning: item.subInning,
+      };
+    });
   // get latest over
   let over = global.tblOvers
     .filter(
@@ -2416,15 +2436,15 @@ const comResponseService = async (request, fastify) => {
         item?.commentaryId === commentaryId &&
         item.currentInnings == commentaryDetails.currentInnings
     )
-    .sort((a, b) => b.overId - a.overId)[0]
+    .sort((a, b) => b.overId - a.overId)[0];
   over = {
     overId: over.overId,
-    over : over.over,
+    over: over.over,
     teamId: over.teamId,
     ballCount: over.ballCount,
     teamScore: over.teamScore,
     isComplete: over.isComplete,
-  }
+  };
 
   return {
     teams,
@@ -2444,13 +2464,14 @@ const onInningChangeService = async (data, request, fastify) => {
   const leadRuns = Math.max(runDifference * -1, 0);
   const trialRuns = Math.max(runDifference, 0);
   let teamUpdates = [
-    { ...batTeam, isBattingComplete: true, teamStatus: 2 },
+    { ...batTeam, isBattingComplete: true, teamStatus: 2, subInning: 2 },
     {
       ...bowlTeam,
       isBattingComplete: false,
       teamStatus: 1,
       teamLeadRuns: leadRuns,
       teamTrialRuns: trialRuns,
+      subInning: 1,
     },
   ];
   let commentaryUpdates = {
@@ -2709,18 +2730,85 @@ const suffleCardAPIService = async (request, fastify) => {
   if (!commentaryDetails) {
     throw new Error("Commentary with this id not found");
   }
-  let endPoint = "";
+  let endPoint = '/api/v1/shufflecards';
+  let isVirtual = commentaryDetails.isVirtual || false;
   // call predct api
-  // await callPredictorMarket(
-  //   {
-  //     commentaryId,
-  //     currentInnings: commentaryDetails.currentInnings,
-  //   },
-  //   endPoint,
-  //   fastify,
-  //   request
-  // );
+  await callPredictorMarket(
+    {
+      commentaryId,
+      currentInnings: commentaryDetails.currentInnings,
+    },
+    endPoint,
+    fastify,
+    request,
+    isVirtual
+  );
   return true;
+};
+const cancelEventAPIService = async (request, fastify) => {
+  const { commentaryId } = request.body;
+  const index = global.tblCommentaries.findIndex(
+    (item) => item?.commentaryId === commentaryId
+  );
+  if (index === -1) {
+    throw new Error("Commentary with this id not found");
+  }
+  // update market status
+  const eventMarket = await closeEventMarketByCIdQuery(
+    { commentaryId },
+    fastify
+  );
+  if (eventMarket.length > 0) {
+    for (const updatedItem of eventMarket) {
+      let index = global.tblEventMarketsV2.findIndex(
+        (item) => item.eventMarketId === updatedItem.marketId
+      );
+      if (index !== -1) {
+        global.tblEventMarketsV2[index] = {
+          ...global.tblEventMarketsV2[index],
+          ...updatedItem,
+        };
+      }
+    }
+  }
+  global.tblMarketRunnerV2
+    .filter((elem) =>
+      eventMarket.some((e) => e.marketId === elem.eventMarketId)
+    )
+    .forEach((elem) => {
+      elem.selectionStatus = EventMarketStatus.Close;
+    });
+  // cancel the close market
+  let eventMarketId = eventMarket.map((item) => item.marketId);
+  eventMarketId = await cancelMarketVirtualQuery({eventMarketId, commentaryId}, request, fastify);
+
+  global.tblEventMarketsV2 = global.tblEventMarketsV2.filter(
+    (item) => !eventMarketId.includes(item.eventMarketId)
+  );
+
+  global.tblMarketRunnerV2 = global.tblMarketRunnerV2.filter(
+    (item) => !eventMarketId.includes(item.eventMarketId)
+  );
+  
+  if(eventMarketId.length > 0){
+    for (let item of eventMarketId){
+     // add log
+      marketLogger(
+        {
+          eventMarketId: item,
+          actionType: MarketActionType.virtualMarketCancel,
+          value:`EventMarketStatus:${EventMarketStatus.Cancel}`,
+          commentaryId : commentaryId
+        },
+        request,
+        fastify
+      )
+    }
+  }
+
+  await cancelComQuery({ commentaryId, status : commentaryStatus.CANCELLED }, fastify, request);
+  global.tblCommentaries[index].commentaryStatus = commentaryStatus.CANCELLED;
+  return "Event cancelled successfully";
 };
 module.exports = {
   saveEventervice,
@@ -2733,4 +2821,5 @@ module.exports = {
   handleWicketService,
   onInningChangeService,
   suffleCardAPIService,
+  cancelEventAPIService,
 };

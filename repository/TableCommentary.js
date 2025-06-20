@@ -4462,6 +4462,31 @@ const cancelCommentaryQuery = async (data, fastify, request) => {
     throw new Error(err.message);
   }
 };
+const cancelComQuery = async (data, fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `update "tblCommentaries" set
+        "wrCommentaryStatus" = $1,
+        "wrCancelTime" = now()
+        where "wrCommentaryId" = $2 AND "wrIsDelete" = false
+      `,
+      {
+        bind: [data.status,  data.commentaryId],
+      }
+    );
+
+    return result;
+  } catch (err) {
+    console.log(err);
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/cancelComQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
 
 const getCommentariesResultQuery = async (request, fastify) => {
   try {
@@ -7288,4 +7313,5 @@ module.exports = {
   insertCommentaryWithImportQuery,
   insertCommentaryTeamsOnImportQuery,
   updatePitchageAndSessionQuery,
+  cancelComQuery
 };

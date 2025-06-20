@@ -693,6 +693,28 @@ const getAssignedTemplateByCompetitionIdQuery = async (competitionId, request, f
     
   }
 }
+const upStatusQuery = async (data, request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `
+                update "tblCompetitions" set
+                "wrStatus" = $1
+                where "wrCompetitionId" = $2
+            `,
+      {
+        bind: [data.commStatus, data.competitionId],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCompitition.js/upStatusQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
 module.exports = {
   getAllCompititionQuery,
   insertCompetitionQuery,
@@ -709,4 +731,5 @@ module.exports = {
   insertCompetitionWithImportQuery,
   deleteCompMarketTemplateQuery,
   getAssignedTemplateByCompetitionIdQuery,
+  upStatusQuery
 };

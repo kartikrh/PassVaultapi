@@ -873,6 +873,7 @@ const updateMarketRateService = async (request, fastify) => {
     //here
     throw new Error("Commentary with this id not Found");
   }
+  let isVirtual = commentary.isVirtual || false;
   let updatedOvers = [];
   let playerMarket = [];
   for (let item of eventMarket) {
@@ -1008,7 +1009,8 @@ const updateMarketRateService = async (request, fastify) => {
       },
       "/api/v1/updateline",
       fastify,
-      request
+      request,
+      isVirtual
     );
     let callPrediction = {}
     // Check for error_msg in the response
@@ -1037,7 +1039,8 @@ const updateMarketRateService = async (request, fastify) => {
       },
       "/api/v1/updatemarketstatus",
       fastify,
-      request
+      request,
+      isVirtual
     );
     let callPrediction = {}
     // Check for error_msg in the response
@@ -1220,6 +1223,7 @@ const changeMarketCancelService = async (request, fastify) => {
   let commentary = global.tblCommentaries.find(
     (item) => item.commentaryId === commentaryId
   );
+  let isVirtual = commentary?.isVirtual || false;
   // if(!commentary){
   //   throw new Error("Commentary with this id not Found");
   // }
@@ -1276,7 +1280,8 @@ const changeMarketCancelService = async (request, fastify) => {
         },
         "/api/v1/marketmanualclose",
         fastify,
-        request
+        request,
+        isVirtual
       );
     }
     marketLogger(
@@ -1302,6 +1307,7 @@ const changeMarketResultService = async (request, fastify) => {
   let commentary = global.tblCommentaries.find(
     (item) => item.commentaryId === commentaryId
   );
+  let isVirtual = commentary?.isVirtual || false;
   // if (eventMarket === -1) {
   //   throw new Error("EventMarket with this id not Found");
   // }
@@ -1388,7 +1394,8 @@ const changeMarketResultService = async (request, fastify) => {
           },
           "/api/v1/marketmanualsettle",
           fastify,
-          request
+          request,
+          isVirtual
         );
         marektResultLogger(
           {
@@ -1499,7 +1506,8 @@ const changeMarketResultService = async (request, fastify) => {
         },
         "/api/v1/marketmanualsettle",
         fastify,
-        request
+        request,
+        isVirtual
       );
       marektResultLogger(
         {
@@ -1532,6 +1540,7 @@ const changeMarketCloseService = async (request, fastify) => {
   let commentary = global.tblCommentaries.find(
     (item) => item.commentaryId === commentaryId
   );
+  let isVirtual = commentary?.isVirtual || false;
   let checkMarketInDb;
   // if (eventMarket === -1) {
   // throw new Error("EventMarket with this id not Found");
@@ -1608,7 +1617,8 @@ const changeMarketCloseService = async (request, fastify) => {
         },
         "/api/v1/marketmanualclose",
         fastify,
-        request
+        request,
+        isVirtual
       );
       if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
         callPrediction.predictioncallSuccess = false;
@@ -1647,6 +1657,10 @@ const suspendMarketByCIdService = async (request, fastify) => {
   let { commentaryId } = request.body;
   // i have array of commentaryId i want to get the eventMarketId
   // array of commentaryId not one value
+  let cData = global.tblCommentaries.find(
+    (item) => item.commentaryId === commentaryId
+  )
+  let  = cData?.isVirtual || false;
   let eventMarkets = global.tblEventMarkets.filter((item) =>
     commentaryId.includes(item.commentaryId)
   );
@@ -1695,7 +1709,8 @@ const suspendMarketByCIdService = async (request, fastify) => {
     commentaryArr,
     "/api/v1/suspendallmarkets",
     fastify,
-    request
+    request,
+    isVirtual
   );
   if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
     callPrediction.predictioncallSuccess = false;
@@ -2796,6 +2811,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
     //here
     throw new Error("Commentary with this id not Found");
   }
+  let isVirtual = commentary.isVirtual || false;
   // let eventMarkets = await getEventMarketByIdsQueryV1(
   //   {
   //     eventMarketIds: eventMarket.map((item) => item.marketId),
@@ -3075,7 +3091,8 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
         },
         "/api/v1/updateline",
         fastify,
-        request
+        request,
+        isVirtual
       );
     }
     // let callPrediction = {}
@@ -3104,7 +3121,8 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
         },
         "/api/v1/updateplayerline",
         fastify,
-        request
+        request,
+        isVirtual
       );
       
       // let callPrediction = {}
@@ -3135,7 +3153,8 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
         },
         "/api/v1/updatemarketstatus",
         fastify,
-        request
+        request,
+        isVirtual
       );
       // let callPrediction = {}
       // // Check for error_msg in the response
@@ -4021,7 +4040,6 @@ const loadMarketByComIdService = async (request, fastify) => {
     global.tblMarketRunnerV2.push(...runnerData);
   }
   return "Market Update successfully";
-
 }
 module.exports = {
   getDetailsByCIdService,
