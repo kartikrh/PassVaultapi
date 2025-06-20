@@ -3269,7 +3269,7 @@ const getMarketListByCIdQueryV1 = async (data, request, fastify) => {
         FROM "tblEventMarkets" tem
         WHERE tem."wrCommentaryId" = $1
         AND tem."wrStatus" NOT IN ($2 ,$3,$4)
-        AND tem."wrMarketTypeCategoryId" != ANY($5)
+        AND tem."wrMarketTypeCategoryId" != ALL($5::int[])
         AND tem."wrRateSource" = 1 AND tem."wrIsDeleted" = false
         `;
     return await fastify.db.query(query, {
