@@ -727,7 +727,11 @@ const getMarketListByCIdQuery = async (data, request, fastify) => {
 const getMarketByIdQuery = async (data, request, fastify) => {
   try {
     const { eventMarketId } = data;
-
+    let whereCondition = '';
+    if(data.ignoreCategory && data.ignoreCategory.length > 0) {
+      const ignoreCategory = data.ignoreCategory.map(item => `'${item}'`).join(',');
+      whereCondition = `tem."wrMarketTypeCategoryId" NOT IN (${ignoreCategory})`;
+    }
     const query = `WITH "MarketRunners_CTE" AS (
             SELECT 
                 "wrEventMarketId" as "eventMarketId",
@@ -792,6 +796,7 @@ const getMarketByIdQuery = async (data, request, fastify) => {
         AND tem."wrStatus" NOT IN ($2 ,$3,$4)
         AND tem."wrRateSource" = 1
         AND tem."wrIsDeleted" = false
+        ${whereCondition ? `AND ${whereCondition}` : ""}
         `;
     return await fastify.db.query(query, {
       type: fastify.db.QueryTypes.SELECT,
@@ -5960,7 +5965,10 @@ const getCommentaryDetailsQuery = async (request, fastify) => {
 const getMarketByComIdQuery = async (data,fastify) => {
   try {
     const { commentaryId } = data;
-
+    let where = '';
+    if(data.ignoreMarkets && data.ignoreMarkets.length > 0) {
+      where = `AND tem."wrMarketTypeCategoryId" NOT IN (${data.ignoreMarkets.join(',')})`;
+    }
     const query = `WITH "MarketRunners_CTE" AS (
             SELECT 
                 "wrEventMarketId" as "eventMarketId",
@@ -6025,6 +6033,7 @@ const getMarketByComIdQuery = async (data,fastify) => {
         AND tem."wrStatus" NOT IN ($2 ,$3,$4)
         AND tem."wrRateSource" = 1
         AND tem."wrIsDeleted" = false
+        ${where ? where : ''}
         `;
     return await fastify.db.query(query, {
       type: fastify.db.QueryTypes.SELECT,

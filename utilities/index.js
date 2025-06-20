@@ -270,15 +270,16 @@ const MarketActionType = {
   closeMarketOnDLSChange : 11,
   virtualMarketCancel : 12,
 }
-const callPredictorMarket = async (data , endpoint ,fastify ,request, isVirtual = false) =>{
+const callPredictorMarket = async (data , endpoint ,fastify ,request, pythonURI = null) =>{
   let requestStartTime = new Date();
   let loggerConfig = global.tblConfigs.find((item) => item.key === configConstants.ISPREDICTORLOGGER).value;
   try {
-    let predictorURL = global.tblConfigs.find((item) => item.key === configConstants.MARKET_PREDICTOR)?.value;
-    if(isVirtual == true){
-      // If commentary is virtual, use the virtual predictor URL
-      predictorURL = global.tblConfigs.find((item) => item.key === configConstants.VIRTUALMARKETPREDICTOR)?.value;
-    }
+    // let predictorURL = global.tblConfigs.find((item) => item.key === configConstants.MARKET_PREDICTOR)?.value;
+    // if(isVirtual == true){
+    //   // If commentary is virtual, use the virtual predictor URL
+    //   predictorURL = global.tblConfigs.find((item) => item.key === configConstants.VIRTUALMARKETPREDICTOR)?.value;
+    // }
+    let predictorURL = pythonURI;
     if(!predictorURL){
       errorLogger(
         fastify,
