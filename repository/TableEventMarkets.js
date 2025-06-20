@@ -3269,7 +3269,7 @@ const getMarketListByCIdQueryV1 = async (data, request, fastify) => {
         FROM "tblEventMarkets" tem
         WHERE tem."wrCommentaryId" = $1
         AND tem."wrStatus" NOT IN ($2 ,$3,$4)
-        AND tem."wrMarketTypeCategoryId" NOT IN ($5,$6,$7,$8)
+        AND tem."wrMarketTypeCategoryId" != ANY($5)
         AND tem."wrRateSource" = 1 AND tem."wrIsDeleted" = false
         `;
     return await fastify.db.query(query, {
@@ -3279,10 +3279,7 @@ const getMarketListByCIdQueryV1 = async (data, request, fastify) => {
         EventMarketStatus.Close,
         EventMarketStatus.Settled,
         EventMarketStatus.Cancel,
-        data.playerCategory,
-        data.boundaryCategory,
-        data.pbfCategory,
-        data.wicket
+        data.ignoreCategory
       ],
     });
   } catch (error) {

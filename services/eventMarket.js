@@ -732,7 +732,12 @@ const marketListByCIdServiceV1 = async (request, fastify) => {
   // let playerMarket = [];
   // let boundaryMarket = [];
   // let pbfMarket = [];
-  // let otherMarket = [];
+  // let otherMarket = [];`
+  let ignoreCategory = global.tblConfigs.find(
+    (item) => item.key.toLowerCase() === configConstants.IGNOREMARKETINOPEN.toLowerCase()
+  );
+  ignoreCategory = ignoreCategory ? ignoreCategory.value.split(",").map(Number) : [];
+
 
   let catP = global.tblMarketTypeCategories.find(
     (item) => item.categoryName.toLowerCase() === "player"
@@ -746,6 +751,7 @@ const marketListByCIdServiceV1 = async (request, fastify) => {
   let catW = global.tblMarketTypeCategories.find(
     (item) => item.categoryName.toLowerCase() === "wicket"
   );
+  ignoreCategory.push(catP?.marketTypeCategoryId, catB?.marketTypeCategoryId, catPB?.marketTypeCategoryId, catW?.marketTypeCategoryId);
 
   const marketList = await Promise.all([
     playerMarketQuery(
@@ -765,10 +771,7 @@ const marketListByCIdServiceV1 = async (request, fastify) => {
     ),
     getMarketListByCIdQueryV1(
       { commentaryId : commentaryId, 
-        playerCategory : catP.marketTypeCategoryId,
-        boundaryCategory : catB.marketTypeCategoryId,
-        pbfCategory : catPB.marketTypeCategoryId,
-        wicket :catW.marketTypeCategoryId
+        ignoreCategory: ignoreCategory,
       },
       request,
       fastify
