@@ -876,7 +876,7 @@ const updateMarketRateService = async (request, fastify) => {
     //here
     throw new Error("Commentary with this id not Found");
   }
-  let isVirtual = commentary.isVirtual || false;
+  let pythonURI = commentary.pythonURI || null;
   let updatedOvers = [];
   let playerMarket = [];
   for (let item of eventMarket) {
@@ -1013,7 +1013,7 @@ const updateMarketRateService = async (request, fastify) => {
       "/api/v1/updateline",
       fastify,
       request,
-      isVirtual
+      pythonURI
     );
     let callPrediction = {}
     // Check for error_msg in the response
@@ -1043,7 +1043,7 @@ const updateMarketRateService = async (request, fastify) => {
       "/api/v1/updatemarketstatus",
       fastify,
       request,
-      isVirtual
+      pythonURI
     );
     let callPrediction = {}
     // Check for error_msg in the response
@@ -1226,7 +1226,7 @@ const changeMarketCancelService = async (request, fastify) => {
   let commentary = global.tblCommentaries.find(
     (item) => item.commentaryId === commentaryId
   );
-  let isVirtual = commentary?.isVirtual || false;
+  let pythonURI = commentary?.pythonURI || null;
   // if(!commentary){
   //   throw new Error("Commentary with this id not Found");
   // }
@@ -1284,7 +1284,7 @@ const changeMarketCancelService = async (request, fastify) => {
         "/api/v1/marketmanualclose",
         fastify,
         request,
-        isVirtual
+        pythonURI
       );
     }
     marketLogger(
@@ -1310,7 +1310,7 @@ const changeMarketResultService = async (request, fastify) => {
   let commentary = global.tblCommentaries.find(
     (item) => item.commentaryId === commentaryId
   );
-  let isVirtual = commentary?.isVirtual || false;
+  let pythonURI = commentary?.pythonURI || null;
   // if (eventMarket === -1) {
   //   throw new Error("EventMarket with this id not Found");
   // }
@@ -1398,7 +1398,7 @@ const changeMarketResultService = async (request, fastify) => {
           "/api/v1/marketmanualsettle",
           fastify,
           request,
-          isVirtual
+          pythonURI
         );
         marektResultLogger(
           {
@@ -1510,7 +1510,7 @@ const changeMarketResultService = async (request, fastify) => {
         "/api/v1/marketmanualsettle",
         fastify,
         request,
-        isVirtual
+        pythonURI
       );
       marektResultLogger(
         {
@@ -1543,7 +1543,7 @@ const changeMarketCloseService = async (request, fastify) => {
   let commentary = global.tblCommentaries.find(
     (item) => item.commentaryId === commentaryId
   );
-  let isVirtual = commentary?.isVirtual || false;
+  let pythonURI = commentary?.pythonURI || null;
   let checkMarketInDb;
   // if (eventMarket === -1) {
   // throw new Error("EventMarket with this id not Found");
@@ -1621,7 +1621,7 @@ const changeMarketCloseService = async (request, fastify) => {
         "/api/v1/marketmanualclose",
         fastify,
         request,
-        isVirtual
+        pythonURI
       );
       if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
         callPrediction.predictioncallSuccess = false;
@@ -1663,7 +1663,7 @@ const suspendMarketByCIdService = async (request, fastify) => {
   let cData = global.tblCommentaries.find(
     (item) => item.commentaryId === commentaryId
   )
-  let  = cData?.isVirtual || false;
+  let pythonURI= cData?.pythonURI || null;
   let eventMarkets = global.tblEventMarkets.filter((item) =>
     commentaryId.includes(item.commentaryId)
   );
@@ -1713,7 +1713,7 @@ const suspendMarketByCIdService = async (request, fastify) => {
     "/api/v1/suspendallmarkets",
     fastify,
     request,
-    isVirtual
+    pythonURI
   );
   if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
     callPrediction.predictioncallSuccess = false;
@@ -2777,7 +2777,15 @@ const createEventMarketsServiceV1 = async (request, fastify) => {
 };
 const sendMarketToSocket = async(data,request,fastify)=>{
   try {
-    const markets = await getMarketByIdQuery(data,request,fastify);
+    let ignoreCategory = global.tblConfigs.find(
+    (item) => item.key.toLowerCase() === configConstants.IGNOREMARKETINOPEN.toLowerCase()
+    );
+    ignoreCategory = ignoreCategory ? ignoreCategory.value.split(",").map(Number) : [];
+
+    const markets = await getMarketByIdQuery({
+      ...data,
+      ignoreCategory
+    },request,fastify);
     const clientInRoom = global.socketIo.sockets.adapter.rooms.get(markets[0].commentaryId);
     if (clientInRoom?.size && markets.length >0) {
       global.socketIo.to(markets[0].commentaryId).emit("updateMarket", markets);
@@ -2814,7 +2822,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
     //here
     throw new Error("Commentary with this id not Found");
   }
-  let isVirtual = commentary.isVirtual || false;
+  let pythonURI = commentary.pythonURI || null;
   // let eventMarkets = await getEventMarketByIdsQueryV1(
   //   {
   //     eventMarketIds: eventMarket.map((item) => item.marketId),
@@ -3095,7 +3103,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
         "/api/v1/updateline",
         fastify,
         request,
-        isVirtual
+        pythonURI
       );
     }
     // let callPrediction = {}
@@ -3125,7 +3133,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
         "/api/v1/updateplayerline",
         fastify,
         request,
-        isVirtual
+        pythonURI
       );
       
       // let callPrediction = {}
@@ -3157,7 +3165,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
         "/api/v1/updatemarketstatus",
         fastify,
         request,
-        isVirtual
+        pythonURI
       );
       // let callPrediction = {}
       // // Check for error_msg in the response
@@ -3213,7 +3221,15 @@ const sendToSocket = (data,request,fastify)=>{
   try {
     const {markets , allMarkets} = data;
     const am = new Set(allMarkets.map(m => m.marketId));
-    const dataToSocket = markets?.filter(d => am.has(d.marketId));
+    let dataToSocket = markets?.filter(d => am.has(d.marketId));
+    // remove the marketTpecategory 8 data
+    let ignoreMarket = global.tblConfigs.find(
+      (item) => item.key.toLowerCase() === configConstants.IGNOREMARKETINOPEN.toLowerCase()
+    );
+    ignoreMarket = ignoreMarket ? ignoreMarket.value.split(",").map(Number) : [];
+    if(ignoreMarket.length > 0) {
+      dataToSocket = dataToSocket.filter((item) => !ignoreMarket.includes(item.marketTypeCategoryId));
+    }
     const clientInRoom = global.socketIo.sockets.adapter.rooms.get(allMarkets[0].commentaryId);
     if (clientInRoom?.size && dataToSocket.length >0) {
       global.socketIo.to(allMarkets[0].commentaryId).emit("updateMarket", dataToSocket);
