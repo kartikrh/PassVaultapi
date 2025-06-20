@@ -22,6 +22,7 @@ const {
   saveCompTemplates,
   isVirtualCompetition,
   upCompStatus,
+  allPythonAPIs,
 } = require("../../../controller/users/admin/competition");
 const { getEventTypeList } = require("../../../controller/users/admin/eventTypes");
 const { Compitition } = require("../../../swaggerSchema/groupTags/schema");
@@ -284,5 +285,16 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request, reply) => upCompStatus(request, reply, fastify),
+  });
+  fastify.post("/pythonAPIs", {
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "competition",
+          mode: "view",
+        }),
+    ],
+    handler: (request, reply) => allPythonAPIs(request, reply, fastify),
   });
 };
