@@ -947,7 +947,7 @@ function validateBallToActionMap(commentaryId) {
 
 
 /**
- * Calculates total runs scored till the end of an over (cumulative)
+ * Calculates total runs scored till the end of an over (cumulative) using global.tblOvers
  * @param {number} commentaryId - The commentary ID
  * @param {number} teamId - The team ID
  * @param {string|number} over - The over number
@@ -958,69 +958,45 @@ function calculateOverRunsTillEnd(commentaryId, teamId, over) {
         const overNum = parseInt(over);
         let totalRuns = 0;
 
-        // Try to get data from global cache first
-        if (global.ballByBallData &&
-            global.ballByBallData[commentaryId] &&
-            global.ballByBallData[commentaryId][teamId]) {
+        console.log(`[CALC_CUMULATIVE] Starting calculation for commentary ${commentaryId}, team ${teamId}, till over ${overNum}`);
 
-            // Sum runs from over 1 to the specified over
-            for (let i = 1; i <= overNum; i++) {
-                if (global.ballByBallData[commentaryId][teamId][i]) {
-                    const overData = global.ballByBallData[commentaryId][teamId][i];
-                    const overRuns = overData.reduce((sum, ball) => sum + (ball.runs || 0), 0);
-                    totalRuns += overRuns;
-                }
-            }
+        if (!global.tblOvers || !Array.isArray(global.tblOvers)) {
+            console.error(`[CALC_CUMULATIVE] global.tblOvers not found or not an array`);
+            return 0;
+        }
 
-            if (totalRuns > 0) {
-                console.log(`[CALC_TILL_END] Found cumulative runs data in ball-by-ball cache till over ${overNum}: ${totalRuns}`);
-                return totalRuns;
+        // Filter by commentaryId first
+        const commentaryOvers = global.tblOvers.filter(item => item.commentaryId === commentaryId);
+        console.log(`[CALC_CUMULATIVE] Found ${commentaryOvers.length} overs for commentary ${commentaryId}`);
+
+        // Filter by teamId
+        const teamOvers = commentaryOvers.filter(item => item.teamId === teamId);
+        console.log(`[CALC_CUMULATIVE] Found ${teamOvers.length} overs for team ${teamId}`);
+
+        // Calculate cumulative runs from over 1 to overNum
+        // Note: item.over starts from 0, so for over 3 we check item.over === 2
+        for (let i = 1; i <= overNum; i++) {
+            const overData = teamOvers.find(item => item.over === (i - 1)); // over 1 = item.over 0, over 2 = item.over 1, etc.
+
+            if (overData && overData.totalRun !== undefined) {
+                totalRuns += overData.totalRun;
+                console.log(`[CALC_CUMULATIVE] Over ${i} (item.over ${i - 1}): ${overData.totalRun} runs`);
+            } else {
+                console.log(`[CALC_CUMULATIVE] No data found for over ${i} (item.over ${i - 1})`);
             }
         }
 
-        // Try over summary cache
-        if (global.overSummary &&
-            global.overSummary[commentaryId] &&
-            global.overSummary[commentaryId][teamId]) {
-
-            for (let i = 1; i <= overNum; i++) {
-                if (global.overSummary[commentaryId][teamId][i]) {
-                    totalRuns += global.overSummary[commentaryId][teamId][i].totalRuns || 0;
-                }
-            }
-
-            if (totalRuns > 0) {
-                console.log(`[CALC_TILL_END] Found cumulative runs data in over summary cache till over ${overNum}: ${totalRuns}`);
-                return totalRuns;
-            }
-        }
-
-        // Try to get from global score data if available
-        if (global.teamScores &&
-            global.teamScores[commentaryId] &&
-            global.teamScores[commentaryId][teamId] &&
-            global.teamScores[commentaryId][teamId].runsAtOver &&
-            global.teamScores[commentaryId][teamId].runsAtOver[overNum]) {
-
-            totalRuns = global.teamScores[commentaryId][teamId].runsAtOver[overNum];
-            console.log(`[CALC_TILL_END] Found cumulative runs from team scores till over ${overNum}: ${totalRuns}`);
-            return totalRuns;
-        }
-
-        // Fallback: generate a realistic score for testing
-        console.warn(`[WARNING] No actual cumulative data found for over ${over}, generating estimated score`);
-        // Generate realistic cumulative score (6-8 runs per over on average)
-        totalRuns = Math.floor(overNum * (6 + Math.random() * 3));
-
+        console.log(`[CALC_CUMULATIVE] Total cumulative runs till over ${overNum}: ${totalRuns}`);
         return totalRuns;
+
     } catch (error) {
-        console.error(`Error calculating cumulative runs till over ${over}:`, error);
-        return Math.floor(parseInt(over) * 7); // Fallback average
+        console.error(`[CALC_CUMULATIVE] Error calculating cumulative runs till over ${over}:`, error);
+        return 0;
     }
 }
 
 /**
- * Calculates runs scored in a specific over only
+ * Calculates runs scored in a specific over only using global.tblOvers
  * @param {number} commentaryId - The commentary ID
  * @param {number} teamId - The team ID
  * @param {string|number} over - The over number
@@ -1029,67 +1005,37 @@ function calculateOverRunsTillEnd(commentaryId, teamId, over) {
 function calculateRunsInSpecificOver(commentaryId, teamId, over) {
     try {
         const overNum = parseInt(over);
-        let overRuns = 0;
 
-        // Try to get data from global cache first
-        if (global.ballByBallData &&
-            global.ballByBallData[commentaryId] &&
-            global.ballByBallData[commentaryId][teamId] &&
-            global.ballByBallData[commentaryId][teamId][overNum]) {
+        console.log(`[CALC_SPECIFIC] Starting calculation for commentary ${commentaryId}, team ${teamId}, over ${overNum}`);
 
-            const overData = global.ballByBallData[commentaryId][teamId][overNum];
-            overRuns = overData.reduce((sum, ball) => sum + (ball.runs || 0), 0);
-            console.log(`[CALC_SPECIFIC] Found runs data in ball-by-ball cache for over ${overNum}: ${overRuns}`);
-            return overRuns;
+        if (!global.tblOvers || !Array.isArray(global.tblOvers)) {
+            console.error(`[CALC_SPECIFIC] global.tblOvers not found or not an array`);
+            return 0;
         }
 
-        // Try over summary cache
-        if (global.overSummary &&
-            global.overSummary[commentaryId] &&
-            global.overSummary[commentaryId][teamId] &&
-            global.overSummary[commentaryId][teamId][overNum]) {
+        // Filter by commentaryId first
+        const commentaryOvers = global.tblOvers.filter(item => item.commentaryId === commentaryId);
+        console.log(`[CALC_SPECIFIC] Found ${commentaryOvers.length} overs for commentary ${commentaryId}`);
 
-            overRuns = global.overSummary[commentaryId][teamId][overNum].totalRuns || 0;
-            console.log(`[CALC_SPECIFIC] Found runs data in over summary cache for over ${overNum}: ${overRuns}`);
-            return overRuns;
+        // Filter by teamId
+        const teamOvers = commentaryOvers.filter(item => item.teamId === teamId);
+        console.log(`[CALC_SPECIFIC] Found ${teamOvers.length} overs for team ${teamId}`);
+
+        // Find the specific over data
+        // Note: item.over starts from 0, so for over 3 we check item.over === 2
+        const overData = teamOvers.find(item => item.over === (overNum - 1));
+
+        if (overData && overData.totalRun !== undefined) {
+            console.log(`[CALC_SPECIFIC] Found runs for over ${overNum} (item.over ${overNum - 1}): ${overData.totalRun}`);
+            return overData.totalRun;
+        } else {
+            console.log(`[CALC_SPECIFIC] No data found for over ${overNum} (item.over ${overNum - 1})`);
+            return 0;
         }
 
-        // Try to calculate from cumulative data
-        if (global.teamScores &&
-            global.teamScores[commentaryId] &&
-            global.teamScores[commentaryId][teamId] &&
-            global.teamScores[commentaryId][teamId].runsAtOver) {
-
-            const currentOverRuns = global.teamScores[commentaryId][teamId].runsAtOver[overNum] || 0;
-            const previousOverRuns = global.teamScores[commentaryId][teamId].runsAtOver[overNum - 1] || 0;
-            overRuns = currentOverRuns - previousOverRuns;
-
-            if (overRuns >= 0) {
-                console.log(`[CALC_SPECIFIC] Calculated runs from cumulative data for over ${overNum}: ${overRuns}`);
-                return overRuns;
-            }
-        }
-
-        // Fallback: generate a realistic score for a single over
-        console.warn(`[WARNING] No actual data found for specific over ${over}, generating estimated score`);
-        overRuns = Math.floor(Math.random() * 15); // 0-14 runs in an over is realistic
-
-        // Cache this result for future use
-        if (!global.overSummary) {
-            global.overSummary = {};
-        }
-        if (!global.overSummary[commentaryId]) {
-            global.overSummary[commentaryId] = {};
-        }
-        if (!global.overSummary[commentaryId][teamId]) {
-            global.overSummary[commentaryId][teamId] = {};
-        }
-        global.overSummary[commentaryId][teamId][overNum] = { totalRuns: overRuns };
-
-        return overRuns;
     } catch (error) {
-        console.error(`Error calculating runs for specific over ${over}:`, error);
-        return Math.floor(Math.random() * 10); // Fallback
+        console.error(`[CALC_SPECIFIC] Error calculating runs for specific over ${over}:`, error);
+        return 0;
     }
 }
 

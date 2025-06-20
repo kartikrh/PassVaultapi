@@ -347,24 +347,32 @@ function settleMarket(market, fastify) {
 }
 
 /**
- * Settles an Odd-Even market
+ * Settles an Odd-Even market (uses CUMULATIVE runs from over 1 to nth over)
  * @param {Object} market - The market to settle
  * @param {Object} fastify - Fastify Object
  */
 function settleOddEvenMarket(market, fastify) {
     try {
-        // Calculate the result based on total runs till the end of the over
-        const overRuns = calculateOverRunsTillEnd(market.commentaryId, market.teamId, market.over);
-        const isEven = overRuns % 2 === 0;
+        console.log(`################# SETTLING ODD-EVEN MARKET #################`);
+        console.log(`$$$$$$$$$ Over value: ${market.over} $$$$$$$$$`);
+        console.log(`$$$$$$$$$ Team ID: ${market.teamId} $$$$$$$$$`);
+        console.log(`$$$$$$$$$ Commentary ID: ${market.commentaryId} $$$$$$$$$`);
 
-        console.log(`Settling odd-even market for over ${market.over}. Total runs till over end: ${overRuns}, Result: ${isEven ? 'Even' : 'Odd'}`);
+        // Calculate CUMULATIVE runs from over 1 to nth over
+        const cumulativeRuns = calculateOverRunsTillEnd(market.commentaryId, market.teamId, market.over);
+        const isEven = cumulativeRuns % 2 === 0;
+
+        console.log(`################# Get CUMULATIVE runs from over 1 to ${market.over}: ${cumulativeRuns} #################`);
+        console.log(`$$$$$$$$$ Is Even: ${isEven} $$$$$$$$$`);
+        console.log(`$$$$$$$$$ Result should be: ${isEven ? '2 (Even)' : '1 (Odd)'} $$$$$$$$$`);
 
         // Set market as settled
         market.status = EventMarketStatus.Settled;
+        market.isResult = true; // Set isResult flag as true
 
         // Find and set the winner
         if (!market.runners || market.runners.length < 2) {
-            console.error(`Cannot settle market ${market.eventMarketId || market.marketName}: runners not found or incomplete`);
+            console.error(`################# ERROR: Cannot settle market ${market.eventMarketId || market.marketName}: runners not found or incomplete #################`);
 
             // Try to fetch runners from DB if they're missing
             fetchRunnersForMarket(market.eventMarketId, fastify).then(runnersFromDB => {
@@ -380,7 +388,14 @@ function settleOddEvenMarket(market, fastify) {
             return;
         }
 
+        console.log(`################# Available runners: #################`);
+        market.runners.forEach((runner, index) => {
+            console.log(`Runner ${index + 1}: "${runner.runner}" (ID: ${runner.runnerId})`);
+        });
+
         let winnerRunnerId = null;
+        // Set result based on odd/even: 1 for odd, 2 for even
+        market.result = isEven ? 2 : 1;
 
         // Process each runner
         market.runners.forEach(runner => {
@@ -392,16 +407,19 @@ function settleOddEvenMarket(market, fastify) {
                 // This runner wins
                 runner.selectionStatus = 7; // WIN
                 winnerRunnerId = runner.runnerId;
-                console.log(`Winner: ${runner.runner} (ID: ${runner.runnerId})`);
+                console.log(`################# Winner: ${runner.runner} (ID: ${runner.runnerId}) #################`);
             } else if ((isEven && isOddRunner) || (!isEven && isEvenRunner)) {
                 // This runner loses
                 runner.selectionStatus = 8; // LOSE
+                console.log(`$$$$$$$$$ Loser: ${runner.runner} (ID: ${runner.runnerId}) $$$$$$$$$`);
             }
         });
 
-        // Set the result to the winner runner ID
-        market.result = winnerRunnerId;
+        // Set the winner runner ID in eventMarketResult
         market.eventMarketResult = { winnerRunnerId: winnerRunnerId };
+
+        console.log(`################# Final Result Set: ${market.result} (${isEven ? 'Even' : 'Odd'}) #################`);
+        console.log(`################# Winner Runner ID: ${winnerRunnerId} #################`);
 
         // Set settled time
         market.settledTime = new Date().toISOString();
@@ -409,29 +427,37 @@ function settleOddEvenMarket(market, fastify) {
         // Update in DB - will insert if ID is 0 and market doesn't exist in DB
         updateMarketStatusInDB(market, fastify);
     } catch (error) {
-        console.error(`Error settling odd-even market ${market.marketName}:`, error);
+        console.error(`################# ERROR settling odd-even market ${market.marketName}: ${error} #################`);
     }
 }
 
 /**
- * Settles a Lottery market
+ * Settles a Lottery market (uses CUMULATIVE runs from over 1 to nth over)
  * @param {Object} market - The market to settle
  * @param {Object} fastify - Fastify Object
  */
 function settleLotteryMarket(market, fastify) {
     try {
-        // Calculate the result based on total runs till the end of the over
-        const overRuns = calculateOverRunsTillEnd(market.commentaryId, market.teamId, market.over);
-        const lastDigit = overRuns % 10;
+        console.log(`################# SETTLING LOTTERY MARKET #################`);
+        console.log(`$$$$$$$$$ Over value: ${market.over} $$$$$$$$$`);
+        console.log(`$$$$$$$$$ Team ID: ${market.teamId} $$$$$$$$$`);
+        console.log(`$$$$$$$$$ Commentary ID: ${market.commentaryId} $$$$$$$$$`);
 
-        console.log(`Settling lottery market for over ${market.over}. Total runs till over end: ${overRuns}, Last digit: ${lastDigit}`);
+        // Calculate CUMULATIVE runs from over 1 to nth over
+        const cumulativeRuns = calculateOverRunsTillEnd(market.commentaryId, market.teamId, market.over);
+        const lastDigit = cumulativeRuns % 10;
+
+        console.log(`################# Get CUMULATIVE runs from over 1 to ${market.over}: ${cumulativeRuns} #################`);
+        console.log(`$$$$$$$$$ Last digit: ${lastDigit} $$$$$$$$$`);
+        console.log(`$$$$$$$$$ Result should be: ${lastDigit} $$$$$$$$$`);
 
         // Set market as settled
         market.status = EventMarketStatus.Settled;
+        market.isResult = true; // Set isResult flag as true
 
         // Ensure we have runners
         if (!market.runners || market.runners.length === 0) {
-            console.error(`Cannot settle lottery market ${market.eventMarketId || market.marketName}: runners not found`);
+            console.error(`################# ERROR: Cannot settle lottery market ${market.eventMarketId || market.marketName}: runners not found #################`);
 
             // Try to fetch runners from DB if they're missing
             fetchRunnersForMarket(market.eventMarketId, fastify).then(runnersFromDB => {
@@ -447,7 +473,14 @@ function settleLotteryMarket(market, fastify) {
             return;
         }
 
+        console.log(`################# Available runners: #################`);
+        market.runners.forEach((runner, index) => {
+            console.log(`Runner ${index + 1}: "${runner.runner}" (ID: ${runner.runnerId})`);
+        });
+
         let winnerRunnerId = null;
+        // Set result to the last digit
+        market.result = lastDigit;
 
         // Process each runner
         market.runners.forEach(runner => {
@@ -458,16 +491,19 @@ function settleLotteryMarket(market, fastify) {
                 // This runner wins
                 runner.selectionStatus = 7; // WIN
                 winnerRunnerId = runner.runnerId;
-                console.log(`Winner: ${runner.runner} (ID: ${runner.runnerId})`);
+                console.log(`################# Winner: ${runner.runner} (ID: ${runner.runnerId}) #################`);
             } else {
                 // This runner loses
                 runner.selectionStatus = 8; // LOSE
+                console.log(`$$$$$$$$$ Loser: ${runner.runner} (ID: ${runner.runnerId}) $$$$$$$$$`);
             }
         });
 
-        // Set the result to the winner runner ID
-        market.result = winnerRunnerId;
+        // Set the winner runner ID in eventMarketResult
         market.eventMarketResult = { winnerRunnerId: winnerRunnerId };
+
+        console.log(`################# Final Result Set: ${market.result} (Last Digit: ${lastDigit}) #################`);
+        console.log(`################# Winner Runner ID: ${winnerRunnerId} #################`);
 
         // Set settled time
         market.settledTime = new Date().toISOString();
@@ -475,28 +511,37 @@ function settleLotteryMarket(market, fastify) {
         // Update in DB
         updateMarketStatusInDB(market, fastify);
     } catch (error) {
-        console.error(`Error settling lottery market ${market.marketName}:`, error);
+        console.error(`################# ERROR settling lottery market ${market.marketName}: ${error} #################`);
     }
 }
 
 /**
- * Settles an L.D.O market
+ * Settles an L.D.O market (uses runs in THAT SPECIFIC OVER ONLY)
  * @param {Object} market - The market to settle
  * @param {Object} fastify - Fastify Object
  */
 function settleLDOMarket(market, fastify) {
     try {
-        // Calculate runs scored in the specific over only (not cumulative)
-        const overRuns = calculateRunsInSpecificOver(market.commentaryId, market.teamId, market.over);
+        console.log(`################# SETTLING L.D.O MARKET #################`);
+        console.log(`$$$$$$$$$ Over value: ${market.over} $$$$$$$$$`);
+        console.log(`$$$$$$$$$ Team ID: ${market.teamId} $$$$$$$$$`);
+        console.log(`$$$$$$$$$ Commentary ID: ${market.commentaryId} $$$$$$$$$`);
 
-        console.log(`Settling L.D.O market for over ${market.over}. Runs in this over: ${overRuns}`);
+        // Calculate runs scored in THAT SPECIFIC OVER ONLY (not cumulative)
+        const overRuns = calculateRunsInSpecificOver(market.commentaryId, market.teamId, market.over);
+        const isEven = overRuns % 2 === 0;
+
+        console.log(`################# Get runs from SPECIFIC over ${market.over} only: ${overRuns} #################`);
+        console.log(`$$$$$$$$$ Is Even: ${isEven} $$$$$$$$$`);
+        console.log(`$$$$$$$$$ For L.D.O odd/even result should be: ${isEven ? '2 (Even)' : '1 (Odd)'} $$$$$$$$$`);
 
         // Set market as settled
         market.status = EventMarketStatus.Settled;
+        market.isResult = true; // Set isResult flag as true
 
         // Ensure we have runners
         if (!market.runners || market.runners.length === 0) {
-            console.error(`Cannot settle L.D.O market ${market.eventMarketId || market.marketName}: runners not found`);
+            console.error(`################# ERROR: Cannot settle L.D.O market ${market.eventMarketId || market.marketName}: runners not found #################`);
 
             // Try to fetch runners from DB if they're missing
             fetchRunnersForMarket(market.eventMarketId, fastify).then(runnersFromDB => {
@@ -512,45 +557,71 @@ function settleLDOMarket(market, fastify) {
             return;
         }
 
+        console.log(`################# Available runners: #################`);
+        market.runners.forEach((runner, index) => {
+            console.log(`Runner ${index + 1}: "${runner.runner}" (ID: ${runner.runnerId}, Predefined: ${runner.predefinedValue})`);
+        });
+
         let winnerRunnerId = null;
+        let hasOddEvenRunners = false;
+
+        // Check if this is an odd/even L.D.O market
+        const hasOddRunner = market.runners.some(r => r.runner.toLowerCase().includes('odd'));
+        const hasEvenRunner = market.runners.some(r => r.runner.toLowerCase().includes('even'));
+        hasOddEvenRunners = hasOddRunner || hasEvenRunner;
+
+        console.log(`$$$$$$$$$ Has Odd Runner: ${hasOddRunner}, Has Even Runner: ${hasEvenRunner} $$$$$$$$$`);
 
         // L.D.O market settlement logic
         market.runners.forEach(runner => {
             const predefinedValue = parseFloat(runner.predefinedValue) || 0;
-
             let isWinner = false;
 
             if (runner.runner.toLowerCase().includes('over')) {
-                // Over runner wins if runs > predefined value
                 isWinner = overRuns > predefinedValue;
+                console.log(`$$$$$$$$$ Over check: ${overRuns} > ${predefinedValue} = ${isWinner} $$$$$$$$$`);
             } else if (runner.runner.toLowerCase().includes('under')) {
-                // Under runner wins if runs < predefined value
                 isWinner = overRuns < predefinedValue;
+                console.log(`$$$$$$$$$ Under check: ${overRuns} < ${predefinedValue} = ${isWinner} $$$$$$$$$`);
             } else if (runner.runner.toLowerCase().includes('odd')) {
-                // Odd runner wins if runs are odd
                 isWinner = overRuns % 2 !== 0;
+                console.log(`$$$$$$$$$ Odd check: ${overRuns} % 2 !== 0 = ${isWinner} $$$$$$$$$`);
             } else if (runner.runner.toLowerCase().includes('even')) {
-                // Even runner wins if runs are even
                 isWinner = overRuns % 2 === 0;
+                console.log(`$$$$$$$$$ Even check: ${overRuns} % 2 === 0 = ${isWinner} $$$$$$$$$`);
             } else {
-                // For other types of runners, use exact match
+                // For other types, use exact match
                 isWinner = overRuns === predefinedValue;
+                console.log(`$$$$$$$$$ Exact match check: ${overRuns} === ${predefinedValue} = ${isWinner} $$$$$$$$$`);
             }
 
             if (isWinner) {
                 // This runner wins
                 runner.selectionStatus = 7; // WIN
                 winnerRunnerId = runner.runnerId;
-                console.log(`L.D.O Winner: ${runner.runner} (ID: ${runner.runnerId}, Predefined Value: ${predefinedValue})`);
+                console.log(`################# Winner: ${runner.runner} (ID: ${runner.runnerId}, Predefined: ${predefinedValue}) #################`);
             } else {
                 // This runner loses
                 runner.selectionStatus = 8; // LOSE
+                console.log(`$$$$$$$$$ Loser: ${runner.runner} (ID: ${runner.runnerId}, Predefined: ${predefinedValue}) $$$$$$$$$`);
             }
         });
 
-        // Set the result to the winner runner ID
-        market.result = winnerRunnerId;
+        // Set result - for odd/even L.D.O markets, use 1 for odd, 2 for even
+        if (hasOddEvenRunners) {
+            market.result = isEven ? 2 : 1;
+            console.log(`$$$$$$$$$ L.D.O Odd/Even Result: ${market.result} (${isEven ? 'Even' : 'Odd'}) $$$$$$$$$`);
+        } else {
+            // For other types of L.D.O markets, set the winner runner ID as result
+            market.result = winnerRunnerId || 0;
+            console.log(`$$$$$$$$$ L.D.O Other Type Result: ${market.result} $$$$$$$$$`);
+        }
+
+        // Set the winner runner ID in eventMarketResult
         market.eventMarketResult = { winnerRunnerId: winnerRunnerId };
+
+        console.log(`################# Final Result Set: ${market.result} #################`);
+        console.log(`################# Winner Runner ID: ${winnerRunnerId} #################`);
 
         // Set settled time
         market.settledTime = new Date().toISOString();
@@ -558,9 +629,9 @@ function settleLDOMarket(market, fastify) {
         // Update in DB
         updateMarketStatusInDB(market, fastify);
 
-        console.log(`L.D.O market settled for over ${market.over} with runs ${overRuns}, winner ID: ${winnerRunnerId}`);
+        console.log(`################# L.D.O market settled for over ${market.over} with runs ${overRuns}, result: ${market.result} #################`);
     } catch (error) {
-        console.error(`Error settling L.D.O market ${market.marketName}:`, error);
+        console.error(`################# ERROR settling L.D.O market ${market.marketName}: ${error} #################`);
     }
 }
 
