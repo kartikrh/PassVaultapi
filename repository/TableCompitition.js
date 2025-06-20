@@ -29,9 +29,11 @@ const getAllCompititionQuery = async (fastify) => {
     tc."wrStartDate" as "startDate",
     tc."wrEndDate" as "endDate",
     tc."wrTpId" as "tpId",
-    tc."wrPythonId" as "pythonId"
+    tc."wrPythonId" as "pythonId",
+    tpa."wrDeveloperName" as "developerName"
     from "tblCompetitions" tc 
     inner join "tblEventTypes" tev on tc."wrEventTypeId" = tev."wrEventTypeId"
+    LEFT JOIN "tblPythonAPI" tpa on tc."wrPythonId" = tpa."wrId"
     where tc."wrIsDeleted" = false and tev."wrIsDeleted" = false
     `,
     {
@@ -113,9 +115,11 @@ const insertCompetitionQuery = async (request, fastify) => {
         tc."wrStartDate" as "startDate",
         tc."wrEndDate" as "endDate",
         tc."wrTpId" as "tpId",
-        tc."wrPythonId" as "pythonId"
+        tc."wrPythonId" as "pythonId",
+        tpa."wrDeveloperName" as "developerName"
         from "inser_data" tc
         inner join "tblEventTypes" tev on tc."wrEventTypeId" = tev."wrEventTypeId"
+        LEFT JOIN "tblPythonAPI" tpa on tc."wrPythonId" = tpa."wrId"
     `,
       {
         bind: [
@@ -293,9 +297,11 @@ const updateDisplayOrderQuery = async (data, fastify, request) => {
         u."wrStartDate" as "startDate",
         u."wrEndDate" as "endDate",
         u."wrTpId" as "tpId",
-        u."wrPythonId" as "pythonId"
+        u."wrPythonId" as "pythonId",
+        tpa."wrDeveloperName" as "developerName"
       FROM updated u
       INNER JOIN "tblEventTypes" et ON u."wrEventTypeId" = et."wrEventTypeId"
+      LEFT JOIN "tblPythonAPI" tpa on u."wrPythonId" = tpa."wrId"
       `,
       {
         bind: [data.competitionId, data.displayOrder],
@@ -603,9 +609,11 @@ const insertCompetitionWithImportQuery = async (data, request, fastify) => {
         tc."wrStartDate" as "startDate",
         tc."wrEndDate" as "endDate",
         tc."wrTpId" as "tpId",
-        tc."wrPythonId" as "pythonId"
+        tc."wrPythonId" as "pythonId",
+        tpa."wrDeveloperName" as "developerName"
         from "inser_data" tc
         inner join "tblEventTypes" tev on tc."wrEventTypeId" = tev."wrEventTypeId"
+        LEFT JOIN "tblPythonAPI" tpa on tc."wrPythonId" = tpa."wrId"
     `,
       {
         bind: [

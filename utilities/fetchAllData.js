@@ -714,6 +714,11 @@ const panelLoadDataByEnum = async (request, fastify, reply) => {
           }
           break;
         }
+        case ModuleTypes.PythonAPI: {
+          const pythonData =  await getAllPythonAPIsQuery(fastify);
+          global.tblPythonAPI = pythonData;
+          break;
+        }
         default:
           break;
       }
