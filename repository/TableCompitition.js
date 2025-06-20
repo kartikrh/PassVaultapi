@@ -28,7 +28,8 @@ const getAllCompititionQuery = async (fastify) => {
     tc."wrStatus" as "commStatus",
     tc."wrStartDate" as "startDate",
     tc."wrEndDate" as "endDate",
-    tc."wrTpId" as "tpId"
+    tc."wrTpId" as "tpId",
+    tc."wrPythonId" as "pythonId"
     from "tblCompetitions" tc 
     inner join "tblEventTypes" tev on tc."wrEventTypeId" = tev."wrEventTypeId"
     where tc."wrIsDeleted" = false and tev."wrIsDeleted" = false
@@ -77,12 +78,12 @@ const insertCompetitionQuery = async (request, fastify) => {
             "wrCompetition" , "wrEventTypeId" , "wrRefID" , "wrImage" ,"wrIsActive" ,
              "wrCreatedBy" , "wrCreatedDate","wrDisplayOrder", "wrIsTrending", "wrIsEventSnap", "wrIsPointTable", "wrMatchTypeId",
              "wrWinPoint", "wrTiePoint", "wrCancelPoint", "wrLossPoint","wrDrsCount", "wrImagePath", "wrIsMen", "wrType", "wrIsVirtual", "wrStatus", "wrStartDate", "wrEndDate",
-             "wrTpId"
+             "wrTpId", "wrPythonId"
             )
             values ($1 ,
                  $2,
                  $3,$4,$5,$6,now(),(select COALESCE("display_order" , 0) from "display") + 1, $7, $8, $9, $10,
-                 $11, $12, $13, $14,$15, $16, $17, $18, $19, $20, $21, $22, $23
+                 $11, $12, $13, $14,$15, $16, $17, $18, $19, $20, $21, $22, $23, $24
                  ) returning *
         )
 
@@ -111,7 +112,8 @@ const insertCompetitionQuery = async (request, fastify) => {
         tc."wrStatus" as "commStatus",
         tc."wrStartDate" as "startDate",
         tc."wrEndDate" as "endDate",
-        tc."wrTpId" as "tpId"
+        tc."wrTpId" as "tpId",
+        tc."wrPythonId" as "pythonId"
         from "inser_data" tc
         inner join "tblEventTypes" tev on tc."wrEventTypeId" = tev."wrEventTypeId"
     `,
@@ -140,6 +142,7 @@ const insertCompetitionQuery = async (request, fastify) => {
           data.startDate,
           data.endDate,
           data.tpId || null,
+          data.pythonId || null,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -209,7 +212,8 @@ const updateCompititionQuery = async (data, fastify, request) => {
         "wrStatus" = $21,
         "wrStartDate" = $22,
         "wrEndDate" = $23,
-        "wrTpId" = $24
+        "wrTpId" = $24,
+        "wrPythonId" = $25
         where "wrCompetitionId" = $10
         `,
       {
@@ -238,6 +242,7 @@ const updateCompititionQuery = async (data, fastify, request) => {
           data.startDate,
           data.endDate,
           data.tpId,
+          data.pythonId,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -287,7 +292,8 @@ const updateDisplayOrderQuery = async (data, fastify, request) => {
         u."wrStatus" as "commStatus",
         u."wrStartDate" as "startDate",
         u."wrEndDate" as "endDate",
-        u."wrTpId" as "tpId"
+        u."wrTpId" as "tpId",
+        u."wrPythonId" as "pythonId"
       FROM updated u
       INNER JOIN "tblEventTypes" et ON u."wrEventTypeId" = et."wrEventTypeId"
       `,
@@ -549,7 +555,6 @@ const isVirtualCompetitionQuery = async (data, request, fastify) => {
 };
 const insertCompetitionWithImportQuery = async (data, request, fastify) => {
   try {
-    console.log("data", data)
     const result = await fastify.db.query(
       `
         with display as (
@@ -563,12 +568,12 @@ const insertCompetitionWithImportQuery = async (data, request, fastify) => {
             "wrCompetition" , "wrEventTypeId" , "wrRefID" , "wrImage" ,"wrIsActive" ,
              "wrCreatedBy" , "wrCreatedDate","wrDisplayOrder", "wrIsTrending", "wrIsEventSnap", "wrIsPointTable", "wrMatchTypeId",
              "wrWinPoint", "wrTiePoint", "wrCancelPoint", "wrLossPoint","wrDrsCount", "wrImagePath", "wrIsMen", "wrType", "wrIsVirtual", "wrStatus", "wrStartDate", "wrEndDate",
-             "wrTpId"
+             "wrTpId", "wrPythonId"
             )
             values ($1 ,
                  $2,
                  $3,$4,$5,$6,now(),(select COALESCE("display_order" , 0) from "display") + 1, $7, $8, $9, $10,
-                 $11, $12, $13, $14,$15, $16, $17, $18, $19, $20, $21, $22, $23
+                 $11, $12, $13, $14,$15, $16, $17, $18, $19, $20, $21, $22, $23, $24
                  ) returning *
         )
 
@@ -597,7 +602,8 @@ const insertCompetitionWithImportQuery = async (data, request, fastify) => {
         tc."wrStatus" as "commStatus",
         tc."wrStartDate" as "startDate",
         tc."wrEndDate" as "endDate",
-        tc."wrTpId" as "tpId"
+        tc."wrTpId" as "tpId",
+        tc."wrPythonId" as "pythonId"
         from "inser_data" tc
         inner join "tblEventTypes" tev on tc."wrEventTypeId" = tev."wrEventTypeId"
     `,
@@ -626,6 +632,7 @@ const insertCompetitionWithImportQuery = async (data, request, fastify) => {
           data.startDate,
           data.endDate,
           data.tpId || null,
+          data.pythonId || null,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }

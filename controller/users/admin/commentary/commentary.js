@@ -95,6 +95,7 @@ const { getAllCommentariesDataService, getAllCommentariesDataServiceV1 } = requi
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
 const { saveCommDrsLogService } = require("../../../../services/commentaryDRSLogs");
+const { allPythonAPIsService } = require("../../../../services/pythonAPI")
 
 let path = "controller/users/admin/commentary/commentary";
 
@@ -1171,6 +1172,17 @@ const commentarySetPlayer = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const allPythonAPIs = async (request, reply, fastify) => {
+  try {
+    request.body = request.body || {};
+    request.body.isActive = true;
+    const result = await allPythonAPIsService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/allPythonAPIs", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 module.exports = {
   getAllCommentaries,
   getCommentaryById,
@@ -1268,5 +1280,6 @@ module.exports = {
   getPitchAndSession,
   updatePitchAndSession,
   commentaryWicket,
-  commentarySetPlayer
+  commentarySetPlayer,
+  allPythonAPIs,
 }

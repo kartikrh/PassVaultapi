@@ -20,6 +20,7 @@ const {
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
 const { getEventSnapByCompetitionIdService, updateEventSnapService } = require("../../../../services/competitionEventSnap");
+const { allPythonAPIsService } = require("../../../../services/pythonAPI")
 
 let path = "controller/users/admin/competition/index";
 
@@ -246,6 +247,17 @@ const upCompStatus = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const allPythonAPIs = async (request, reply, fastify) => {
+  try {
+    request.body = request.body || {};
+    request.body.isActive = true;
+    const result = await allPythonAPIsService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/allPythonAPIs", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 module.exports = {
   getAllCompetition,
   getCompetitionById,
@@ -267,5 +279,6 @@ module.exports = {
   getTemplateByCompetitionId,
   saveCompTemplates,
   isVirtualCompetition,
-  upCompStatus
+  upCompStatus,
+  allPythonAPIs,
 };
