@@ -42,6 +42,13 @@ const editPythonAPIService = async (request, fastify) => {
         updatedAt: request.body.updatedAt ?? validateId.updatedAt,
         id: parseInt(request.body.id, 10),
     };
+    if (request.body.isDefault === false) {
+        const isCurrentlyDefault = validateId.isDefault === true;
+        const defaultCount = global.tblPythonAPI.filter(item => item.isDefault).length;
+        if (isCurrentlyDefault && defaultCount === 1) {
+            return `At least one Python API must be default, Cannot set that to false.`;
+        }
+    }
     if (request.body.isDefault === true) {
         await isDefaultFalseQuery(request.body, fastify, request);
         global.tblPythonAPI.forEach((item) => {
@@ -93,6 +100,13 @@ const createPythonAPIService = async (request, fastify) => {
 
 const deletePythonAPIService = async (request, fastify) => {
     const { id } = request.body;
+    const defaultEntry = global.tblPythonAPI.find(
+        (item) => id.includes(item.id) && item.isDefault === true
+    );
+
+    if (defaultEntry) {
+        return `Cannot delete default true Python API.`;
+    }
     await deletePythonAPIQuery(id, fastify, request);
     global.tblPythonAPI = global.tblPythonAPI.filter(
         (item) => !id.includes(item.id)
@@ -102,19 +116,26 @@ const deletePythonAPIService = async (request, fastify) => {
 };
 
 const updateIsDefultService = async (request, fastify) => {
+    const { id, isDefault } = request.body;
     const result = global.tblPythonAPI.find(
-        (item) => item.id === request.body.id
+        (item) => item.id === id
     );
 
     if (!result) {
         throw new Error("Python API with this Id not found");
     }
-
-    if (request.body.isDefault === true) {
+    if (isDefault === false) {
+        const isCurrentlyDefault = result.isDefault === true;
+        const defaultCount = global.tblPythonAPI.filter(item => item.isDefault).length;
+        if (isCurrentlyDefault && defaultCount === 1) {
+            return `At least one Python API must be default, Cannot set that to false.`;
+        }
+    }
+    if (isDefault === true) {
         await isDefaultFalseQuery(request.body, fastify, request);
         global.tblPythonAPI.forEach((item) => {
             if (
-                item.id !== request.body.id
+                item.id !== id
             ) {
                 item.isDefault = false;
             }
@@ -122,11 +143,11 @@ const updateIsDefultService = async (request, fastify) => {
     }
     await isDefaultChangeQuery(request.body, fastify, request);
     const index = global.tblPythonAPI.findIndex(
-        (item) => item.id === request.body.id
+        (item) => item.id === id
     );
 
     if (index !== -1) {
-        global.tblPythonAPI[index].isDefault = request.body.isDefault;
+        global.tblPythonAPI[index].isDefault = isDefault;
     }
 
     return `IsDefault updated successfully`;
