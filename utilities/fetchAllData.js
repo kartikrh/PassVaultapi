@@ -104,6 +104,7 @@ const { getAllVenuesQuery } = require("../repository/TableVenue");
 const { getAllCardTypeQuery } = require("../repository/TableCardType");
 const { getAllWeathersQuery } = require("../repository/TableWeather")
 const { getAllPitchConditionsQuery } = require("../repository/TablePitchCondition")
+const { getAllPythonAPIsQuery } = require("../repository/TablePythonAPI");
 
 const fetchAllDataFromDb = async (fastify, reply) => {
   try {
@@ -226,6 +227,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const getAllVenues = await getAllVenuesQuery(fastify);
     const getAllWeatherData = await getAllWeathersQuery(fastify);
     const getAllPitchConditions = await getAllPitchConditionsQuery(fastify);
+    const getAllPythonAPIs = await getAllPythonAPIsQuery(fastify);
 
     global.tblTabs = getAllTabs;
     global.tblRoles = getAllRoles;
@@ -309,6 +311,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblVenues = getAllVenues;
     global.tblWeather = getAllWeatherData;
     global.tblPitchConditions = getAllPitchConditions;
+    global.tblPythonAPI = getAllPythonAPIs;
     // global.responseLogs = responseLogs;
     // global.thirdPartyAPILogs = thirdPartyAPILogs;
     // global.predictorAPILogs = predictorAPILogs;

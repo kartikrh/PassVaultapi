@@ -9536,6 +9536,100 @@ const Venue = {
     },
   },
 };
+const PythonAPI = {
+  getAll: {
+    schema: {
+      tags: ["PythonAPI"],
+      description: "get all Python APIs data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {},
+        required: [],
+      },
+    },
+  },
+  byId: {
+    schema: {
+      tags: ["PythonAPI"],
+      description: "get python api by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+        },
+        required: ["id"],
+      },
+    },
+  },
+  savePythonAPI: {
+    schema: {
+      tags: ["PythonAPI"],
+      description: "save Python API data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          developerName: { type: "string" },
+          URI: { type: "string" },
+          isActive: { type: "string" },
+          isDefault: { type: "boolean" },
+        },
+        required: ["id", "developerName", "URI"],
+      },
+    },
+  },
+  deletePythonAPI: {
+    schema: {
+      tags: ["PythonAPI"],
+      description: "delete Python API data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["id"],
+      },
+    },
+  },
+  updateIsDefault: {
+    schema: {
+      tags: ["PythonAPI"],
+      description: "update Default",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          isDefault: { type: "boolean" },
+        },
+        required: ["id", "isDefault"],
+      },
+    },
+  },
+  ActiveInactive: {
+    schema: {
+      tags: ["PythonAPI"],
+      description: "active inactive Python API",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["id", "isActive"],
+      },
+    },
+  },
+};
 module.exports = {
   Auth,
   Tabs,
@@ -9608,4 +9702,5 @@ module.exports = {
   FavCompetitions,
   FavCommentary,
   Venue,
+  PythonAPI,
 };
