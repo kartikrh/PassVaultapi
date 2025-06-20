@@ -707,7 +707,7 @@ const updateVirtualEventStatusService = async (request, fastify) => {
   if (index === -1) {
     throw new Error("Commentary with this id not found");
   }
-  let isVirtual = global.tblCommentaries[index]?.isVirtual || false;
+  let pythonURI = global.tblCommentaries[index]?.pythonURI || null;
   let displayStatus = "Ball";
   const commentaryDetails = {
     commentaryId,
@@ -731,7 +731,7 @@ const updateVirtualEventStatusService = async (request, fastify) => {
       "/api/v1/updatemarketstatus",
       fastify,
       request,
-      isVirtual
+      pythonURI
     );
   }
 
@@ -2731,7 +2731,7 @@ const suffleCardAPIService = async (request, fastify) => {
     throw new Error("Commentary with this id not found");
   }
   let endPoint = '/api/v1/shufflecards';
-  let isVirtual = commentaryDetails.isVirtual || false;
+  let pythonURI = commentaryDetails.pythonURI || null;
   // call predct api
   await callPredictorMarket(
     {
@@ -2741,7 +2741,7 @@ const suffleCardAPIService = async (request, fastify) => {
     endPoint,
     fastify,
     request,
-    isVirtual
+    pythonURI
   );
   return true;
 };
