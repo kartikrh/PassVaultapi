@@ -395,7 +395,6 @@ function settleOddEvenMarket(market, fastify) {
 
         let winnerRunnerId = null;
         // Set result based on odd/even: 1 for odd, 2 for even
-        market.result = winnerRunnerId;
         // market.result = isEven ? 2 : 1;
 
         // Process each runner
@@ -415,7 +414,7 @@ function settleOddEvenMarket(market, fastify) {
                 console.log(`$$$$$$$$$ Loser: ${runner.runner} (ID: ${runner.runnerId}) $$$$$$$$$`);
             }
         });
-
+        market.result = winnerRunnerId;
         // Set the winner runner ID in eventMarketResult
         market.eventMarketResult = { winnerRunnerId: winnerRunnerId };
 
@@ -482,7 +481,6 @@ function settleLotteryMarket(market, fastify) {
         let winnerRunnerId = null;
         // Set result to the last digit
         // market.result = lastDigit;
-        market.result = winnerRunnerId;
 
         // Process each runner
         market.runners.forEach(runner => {
@@ -500,7 +498,7 @@ function settleLotteryMarket(market, fastify) {
                 console.log(`$$$$$$$$$ Loser: ${runner.runner} (ID: ${runner.runnerId}) $$$$$$$$$`);
             }
         });
-
+        market.result = winnerRunnerId;
         // Set the winner runner ID in eventMarketResult
         market.eventMarketResult = { winnerRunnerId: winnerRunnerId };
 
