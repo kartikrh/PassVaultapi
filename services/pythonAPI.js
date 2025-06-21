@@ -8,11 +8,14 @@ const {
 } = require("../repository/TablePythonAPI");
 
 const savePythonAPIService = async (request, fastify) => {
-    if (request.body.isDefault === true) {
+    if (request.body.isDefault == true) {
+        if (request.body?.isActive == false) {
+            return `For Default record IsActive must be true`;
+        }
         await isDefaultFalseQuery(request.body, fastify, request);
         global.tblPythonAPI.forEach((item) => {
             if (
-                item.id !== request.body.id
+                item.id != request.body.id
             ) {
                 item.isDefault = false;
             }
@@ -30,6 +33,9 @@ const editPythonAPIService = async (request, fastify) => {
     if (!validateId) {
         throw new Error("Python api data with this Id not found");
     }
+    if (request.body?.isActive == false && validateId?.isDefault == true) {
+        return `Default record cannot be deactivated`;
+    }
 
     const updateData = {
         developerName: request.body.developerName ?? validateId.developerName,
@@ -42,8 +48,8 @@ const editPythonAPIService = async (request, fastify) => {
         updatedAt: request.body.updatedAt ?? validateId.updatedAt,
         id: parseInt(request.body.id, 10),
     };
-    if (request.body.isDefault === false) {
-        const isCurrentlyDefault = validateId.isDefault === true;
+    if (request.body.isDefault == false) {
+        const isCurrentlyDefault = validateId.isDefault ===true;
         const defaultCount = global.tblPythonAPI.filter(item => item.isDefault).length;
         if (isCurrentlyDefault && defaultCount === 1) {
             return `At least one Python API must be default, Cannot set that to false.`;
@@ -158,6 +164,9 @@ const activeInactivePythonAPIService = async (request, fastify) => {
   const validateId = global.tblPythonAPI.find((item) => item.id === id);
   if (!validateId) {
     throw new Error("Python api with this Id not found");
+  }
+  if (isActive == false && validateId?.isDefault == true) {
+    return `Default record cannot be deactivated`;
   }
   await activeInactivePythonAPIQuery(
     {
