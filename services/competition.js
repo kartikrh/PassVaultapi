@@ -173,7 +173,7 @@ const createCompititionService = async (request, fastify) => {
     let isStop = result.commStatus == compStatus.stopped ? true : false;
     callCardCricket(
       {
-        refId : result.competitionId,
+        refId : result.competitionId.toString(),
         isStop : isStop,
       },
       request,
@@ -323,7 +323,7 @@ const updateCompititionService = async (request, fastify) => {
     let isStop = data.commStatus == compStatus.stopped ? true : false;
     callCardCricket(
       {
-        refId : data.competitionId,
+        refId : data.competitionId.toString(),
         isStop : isStop,
       },
       request,
@@ -774,7 +774,7 @@ const upCompStatusService = async (request, fastify) => {
     let isStop = commStatus == compStatus.stopped ? true : false;
     callCardCricket(
       {
-        refId : validateId.competitionId,
+        refId : validateId.competitionId.toString(),
         isStop : isStop,
       },
       request,
