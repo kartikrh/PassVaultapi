@@ -226,6 +226,14 @@ const allCommentaryService = async (request, fastify) => {
       })
       .sort((a, b) => new Date(b.eventDate) - new Date(a.eventDate));
   }
+  result = result.map(item => {
+    const pythonAPI = global.tblPythonAPI.find(elem => elem.id == item.pythonId);
+    item.developerName = pythonAPI?.developerName ?? null;
+    return {
+      ...item,
+      developerName: pythonAPI?.developerName ?? null
+    };
+  });
   return result;
 };
 
