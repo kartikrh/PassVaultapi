@@ -9574,7 +9574,7 @@ const PythonAPI = {
           id: { type: "integer" },
           developerName: { type: "string" },
           URI: { type: "string" },
-          isActive: { type: "string" },
+          isActive: { type: "boolean" },
           isDefault: { type: "boolean" },
         },
         required: ["id", "developerName", "URI"],
