@@ -10,7 +10,7 @@ const {
 const savePythonAPIService = async (request, fastify) => {
     if (request.body.isDefault == true) {
         if (request.body?.isActive == false) {
-            return `For Default record IsActive must be true`;
+            throw new Error(`For Default record IsActive must be true`);
         }
         await isDefaultFalseQuery(request.body, fastify, request);
         global.tblPythonAPI.forEach((item) => {
@@ -34,7 +34,7 @@ const editPythonAPIService = async (request, fastify) => {
         throw new Error("Python api data with this Id not found");
     }
     if (request.body?.isActive == false && validateId?.isDefault == true) {
-        return `Default record cannot be deactivated`;
+        throw new Error(`Default record cannot be deactivated`);
     }
 
     const updateData = {
@@ -52,7 +52,7 @@ const editPythonAPIService = async (request, fastify) => {
         const isCurrentlyDefault = validateId.isDefault ===true;
         const defaultCount = global.tblPythonAPI.filter(item => item.isDefault).length;
         if (isCurrentlyDefault && defaultCount === 1) {
-            return `At least one Python API must be default, Cannot set that to false.`;
+            throw new Error(`At least one Python API must be default, Cannot set that to false.`);
         }
     }
     if (request.body.isDefault === true) {
@@ -111,7 +111,7 @@ const deletePythonAPIService = async (request, fastify) => {
     );
 
     if (defaultEntry) {
-        return `Cannot delete default true Python API.`;
+        throw new Error(`Cannot delete default true Python API.`);
     }
     await deletePythonAPIQuery(id, fastify, request);
     global.tblPythonAPI = global.tblPythonAPI.filter(
@@ -134,7 +134,7 @@ const updateIsDefultService = async (request, fastify) => {
         const isCurrentlyDefault = result.isDefault === true;
         const defaultCount = global.tblPythonAPI.filter(item => item.isDefault).length;
         if (isCurrentlyDefault && defaultCount === 1) {
-            return `At least one Python API must be default, Cannot set that to false.`;
+            throw new Error(`One Python API must be default, Cannot set that to false.`);
         }
     }
     if (isDefault === true) {
@@ -166,7 +166,7 @@ const activeInactivePythonAPIService = async (request, fastify) => {
     throw new Error("Python api with this Id not found");
   }
   if (isActive == false && validateId?.isDefault == true) {
-    return `Default record cannot be deactivated`;
+    throw new Error(`Default record cannot be deactivated`);
   }
   await activeInactivePythonAPIQuery(
     {
