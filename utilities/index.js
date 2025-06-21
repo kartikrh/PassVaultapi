@@ -767,7 +767,8 @@ const ModuleTypes = {
   Packages: 39,
   Whitelabel: 40,
   Venue: 41,
-  CommentaryById: 42
+  CommentaryById: 42,
+  PythonAPI: 43,
 }
 const callTPAPI = async (data ,fastify) =>{
   try {
@@ -1172,6 +1173,24 @@ const callCardCricket = async (data ,request , fastify) =>{
   }
 
 }
+const GlobalModuleType = {
+  Commentary: 1,
+  CommenaryTeams: 2,
+  CommentaryPlayers: 3,
+  Players: 4,
+  Teams: 5,
+  TeamCompetiton: 6,
+  MatchTypes: 7,
+  Competition: 8,
+  CountryCode: 9,
+  Venue: 10,
+  Weather: 11,
+  PitchConditon: 12,
+}
+const StoreTypes = {
+  Insert: 1,
+  Update: 2
+}
 module.exports = {
   ERROR_CODES,
   error,
@@ -1255,5 +1274,7 @@ module.exports = {
   comCardType,
   EntityEnums,
   compStatus,
-  callCardCricket
+  callCardCricket,
+  GlobalModuleType,
+  StoreTypes,
 };
