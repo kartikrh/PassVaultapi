@@ -84,6 +84,7 @@ const {
   getAllDifficulties,
   addCompTempQuery,
   updatePitchageAndSessionQuery,
+  updatePythonAPIOnCommentaryQuery,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -17221,6 +17222,23 @@ const commentarySetPlayerService = async (request, fastify) => {
     throw new Error(error.message);
   }
 }
+const updatePythonAPIOnCommentaryService = async (request, fastify) => {
+  const { commentaryId, pythonId, pythonURI } = request.body;
+  const commentary = global.tblCommentaries.find(item => item.commentaryId == commentaryId);
+  if(!commentary) {
+    throw new Error(`Commentary with this Id not found`);
+  }
+  await updatePythonAPIOnCommentaryQuery(request, fastify);
+  const index = global.tblCommentaries.findIndex(item => item.commentaryId == commentaryId);
+  if(index != -1){
+    global.tblCommentaries[index] = {
+      ...global.tblCommentaries[index],
+      pythonId,
+      pythonURI
+    }
+  }
+  return `Python URI updated successfully`
+}
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -17317,5 +17335,6 @@ module.exports = {
   getPitchAndSessionService,
   updatePitchAndSessionService,
   commentaryWicketService,
-  commentarySetPlayerService
+  commentarySetPlayerService,
+  updatePythonAPIOnCommentaryService,
 };

@@ -3614,8 +3614,23 @@ const Commentary = {
         ],
       },
     }
-  }
-  
+  },
+  UpdatePythonAPI : {
+    schema : {
+      tags :["Commentary"],
+      description: "Commentary Player details",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId : {type : "integer"},
+          pythonId: {type: "integer"},
+          pythonURI : {type : "string"}
+        },
+        required: [ "commentaryId", "pythonId", "pythonURI"],
+      },
+    }
+  }  
 };
 
 const Compitition = {

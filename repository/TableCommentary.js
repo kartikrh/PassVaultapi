@@ -7224,6 +7224,30 @@ const updatePitchageAndSessionQuery = async (data, fastify, request) => {
     throw new Error(err.message);
   }
 };
+const updatePythonAPIOnCommentaryQuery = async (request, fastify) => {
+  try {
+    const { pythonId, pythonURI, commentaryId } = request.body;
+    return await fastify.db.query(
+      `UPDATE "tblCommentaries" SET
+        "wrPythonId" = $1,
+        "wrPythonURI" = $2
+      WHERE "wrCommentaryId" = $3
+      AND "wrIsDelete" = false`,
+      {
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [pythonId, pythonURI, commentaryId],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/updatePythonAPIOnCommentaryQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -7351,5 +7375,6 @@ module.exports = {
   insertCommentaryWithImportQuery,
   insertCommentaryTeamsOnImportQuery,
   updatePitchageAndSessionQuery,
-  cancelComQuery
+  cancelComQuery,
+  updatePythonAPIOnCommentaryQuery,
 };
