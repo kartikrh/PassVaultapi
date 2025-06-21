@@ -1018,7 +1018,7 @@ function calculateRunsInSpecificOver(commentaryId, teamId, over) {
         console.log(`[CALC_SPECIFIC] Found ${commentaryOvers.length} overs for commentary ${commentaryId}`);
 
         // Filter by teamId
-        const teamOvers = commentaryOvers.filter(item => item.teamId === teamId);
+        const teamOvers = commentaryOvers.filter(item => item.teamId !== teamId);
         console.log(`[CALC_SPECIFIC] Found ${teamOvers.length} overs for team ${teamId}`);
 
         // Find the specific over data
