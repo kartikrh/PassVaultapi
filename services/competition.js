@@ -173,7 +173,7 @@ const createCompititionService = async (request, fastify) => {
     let isStart = result.commStatus == compStatus.started ? true : false;
     callCardCricket(
       {
-        refId : result.refId,
+        refId : result.competitionId,
         isstart : isStart,
       },
       request,
@@ -323,7 +323,7 @@ const updateCompititionService = async (request, fastify) => {
     let isStart = data.commStatus == compStatus.started ? true : false;
     callCardCricket(
       {
-        refId : data.refId,
+        refId : data.competitionId,
         isstart : isStart,
       },
       request,
@@ -774,7 +774,7 @@ const upCompStatusService = async (request, fastify) => {
     let isStart = commStatus == compStatus.started ? true : false;
     callCardCricket(
       {
-        refId : validateId.refId,
+        refId : validateId.competitionId,
         isstart : isStart,
       },
       request,
