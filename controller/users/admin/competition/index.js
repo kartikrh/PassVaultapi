@@ -78,7 +78,7 @@ const getCompetitionListByeventTypeId = async (request, reply, fastify) => {
   try {
     let result = await competitionByeventTypeIdService(request);
     result = result.map((item) => {
-      const pythonURI = global.tblPythonAPI.find(elem => elem.pythonId == item?.pythonId)
+      const pythonURI = global.tblPythonAPI.find(elem => elem.id == item?.pythonId)
       return {
         competitionId: item.competitionId,
         competition: item.competition,
@@ -86,7 +86,7 @@ const getCompetitionListByeventTypeId = async (request, reply, fastify) => {
         matchTypeId: item.matchTypeId,
         isVirtual: item.isVirtual,
         pythonId: item.pythonId,
-        pythonURI: pythonURI.URI ?? null
+        pythonURI: pythonURI?.URI ?? null
       };
     })
     reply.status(200).send(success(result, 200));
