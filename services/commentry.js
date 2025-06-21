@@ -3896,7 +3896,9 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
       if (partnership)
         sendPartnership.push({
           partnership_no: partnership?.order || 0,
-          partnership_boundaries: boundary
+          partnership_boundaries: boundary,
+          total_balls : partnership?.totalBalls || 0,
+          total_runs: partnership?.totalRuns || 0,
         })
       const predictionPayload = {
         playerpredictscore: {
