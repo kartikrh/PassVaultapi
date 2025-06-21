@@ -89,6 +89,7 @@ const {
   commentaryWicket,
   commentarySetPlayer,
   allPythonAPIs,
+  updatePythonAPI,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -1204,5 +1205,17 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request , reply) => allPythonAPIs(request,reply,fastify)
+  })
+  fastify.post("/updatePythonAPI", {
+    schema : Commentary.UpdatePythonAPI.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "edit"
+        }),
+    ],
+    handler: (request , reply) => updatePythonAPI(request, reply, fastify)
   })
 };
