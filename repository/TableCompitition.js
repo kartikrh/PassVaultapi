@@ -730,6 +730,57 @@ const upStatusQuery = async (data, request, fastify) => {
     throw new Error(err.message);
   }
 };
+const getAllCompetitionByIdsQuery = async (whereCondition = undefined, fastify) => {
+  try {
+      const result = await fastify.db.query(
+      `SELECT 
+          tc."wrCompetitionId" as "competitionId",
+          tc."wrCompetition" as "competition",
+          tc."wrEventTypeId" as "eventTypeId",
+          "wrEventType" as "eventType",
+          tc."wrRefID" as "refId",
+          tc."wrImage" as "image",
+          tc."wrIsActive" as "isActive",
+          tc."wrDisplayOrder" as "displayOrder",
+          tc."wrIsTrending" as "isTrending",
+          tc."wrIsEventSnap" as "isEventSnap",
+          tc."wrIsPointTable" as "isPointTable",
+          tc."wrMatchTypeId" as "matchTypeId",
+          tc."wrWinPoint" as "winPoint",
+          tc."wrTiePoint" as "tiePoint",
+          tc."wrCancelPoint" as "cancelPoint",
+          tc."wrLossPoint" as "lossPoint",
+          tc."wrDrsCount" as "drsCount",
+          tc."wrImagePath" as "imagePath",
+          tc."wrIsMen" as "isMen",
+          tc."wrType" as "type",
+          tc."wrIsVirtual" as "isVirtual",
+          tc."wrStatus" as "commStatus",
+          tc."wrStartDate" as "startDate",
+          tc."wrEndDate" as "endDate",
+          tc."wrTpId" as "tpId",
+          tc."wrPythonId" as "pythonId",
+          tpa."wrDeveloperName" as "developerName"
+      FROM "tblCompetitions" tc 
+      INNER JOIN "tblEventTypes" tev on tc."wrEventTypeId" = tev."wrEventTypeId"
+      LEFT JOIN "tblPythonAPI" tpa on tc."wrPythonId" = tpa."wrId"
+      ${whereCondition ? `WHERE ${whereCondition}` : 'WHERE tc."wrIsDeleted" = false and tev."wrIsDeleted" = false'}`,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    ); 
+    return result[0]; 
+  } catch (err) {
+    console.log("comprtitoes error", err)
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCompitition.js/getAllCompetitionByIdsQuery",
+      null
+    );
+    throw new Error(err.message);
+  }
+}
 module.exports = {
   getAllCompititionQuery,
   insertCompetitionQuery,
@@ -746,5 +797,6 @@ module.exports = {
   insertCompetitionWithImportQuery,
   deleteCompMarketTemplateQuery,
   getAssignedTemplateByCompetitionIdQuery,
-  upStatusQuery
+  upStatusQuery,
+  getAllCompetitionByIdsQuery,
 };
