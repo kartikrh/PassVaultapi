@@ -405,6 +405,53 @@ const getTeamPlayerQuery = async (data, fastify, request) => {
     throw new Error(err.message);
   }
 }
+const getAllPlayersByIdsQuery = async (whereCondition = undefined, fastify) => {
+   try {
+    const result = await fastify.db.query(
+      `SELECT 
+          tp."wrPlayerId" AS "playerId",
+          tp."wrEventTypeId" AS "eventTypeId",
+          tp."wrPlayerTypeId" AS "playerTypeId",
+          tp."wrBowlingStyle" AS "bowlingTypeId",
+          tet."wrEventType" AS "eventType",
+          tbt."wrBowlingType" AS "bowlingStyle",
+          tpt."wrPlayerType" AS "playerType",
+          tp."wrCountry" AS "country",
+          tp."wrPlayerName" AS "playerName",
+          tp."wrImage" AS "image",
+          tp."wrIsActive" AS "isActive",
+          tp."wrIsKipper" AS "isKipper",
+          tp."wrIsLeftHandedBatting" AS "isLeftHandedBatting",
+          tp."wrIsLeftArmFielding" AS "isLeftArmFielding",
+          tp."wrBatsmanAverage" AS "batsmanAverage",
+          tp."wrBatsmanStrikeRate" AS "batsmanStrikeRate",
+          tp."wrBowlerAverage" AS "bowlerAverage",
+          tp."wrBowlerEconomy" AS "bowlerEconomy",
+          tp."wrDisplayName" AS "displayName",
+          tp."wrIsSystemPlayer" AS "isSystemPlayer",
+          tp."wrImagePath" AS "imagePath",
+          tp."wrTpId" AS "tpId"
+      FROM "tblPlayers" tp
+      LEFT JOIN "tblEventTypes" tet ON tp."wrEventTypeId" = tet."wrEventTypeId"
+      LEFT JOIN "tblPlayerTypes" tpt ON tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
+      LEFT JOIN "tblBowlingTypes" tbt ON tp."wrBowlingStyle" = tbt."wrBowlingTypeId"
+      ${whereCondition ? `WHERE ${whereCondition}` : 'WHERE tp."wrIsDeleted" = false'};`,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+    return result[0];
+   } catch (err) {
+    console.log("players error", err)
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TablePlayer/getAllPlayersByIdsQuery",
+      null
+    );
+    throw new Error(err.message);
+   }
+}
 module.exports = {
   getAllPlayersQuery,
   insertPlayerQuery,
@@ -415,5 +462,6 @@ module.exports = {
   getAllTeamsByPlayerIdQuery,
   updatePlayerStatsQuery,
   updateIsSystemPlayerQuery,
-  getTeamPlayerQuery
+  getTeamPlayerQuery,
+  getAllPlayersByIdsQuery,
 };

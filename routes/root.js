@@ -42,6 +42,7 @@ const {
   updatePasswordInForgot,
   clientDataById,
   verifySeamlessOTP,
+  loadEnityData,
   //loginRegistrationClient,
 } = require("../controller/users/index");
 const { Auth ,sendPushNotification,weblogs, Config, EventType, Commentary} = require("../swaggerSchema/groupTags/schema");
@@ -327,5 +328,8 @@ module.exports = async function (fastify, opts) {
   });
   fastify.post("/otplessVerify", {
     handler: (request, reply) => verifySeamlessOTP(request, reply, fastify),
+  });
+  fastify.post("/loadEntity", {
+    handler: (request, reply) => loadEnityData(request, fastify, reply),
   });
 };
