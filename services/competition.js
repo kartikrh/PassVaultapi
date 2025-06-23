@@ -108,6 +108,7 @@ const competitionByeventTypeIdService = async (request) => {
 };
 
 const createCompititionService = async (request, fastify) => {
+  console.log("request.body", request.body)
   const findExists = global.tblCompetitions.find(
     (item) =>
       item.eventTypeId === request.body.eventTypeId &&
@@ -137,13 +138,16 @@ const createCompititionService = async (request, fastify) => {
     }
   }
 
-  if (request.body.tpId !== undefined || request.body.tpId !== null) {
+  if (request.body.tpId !== undefined && request.body.tpId !== null && request.body.tpId.trim() != "") {
     const validate = global.tblCompetitions.find(
       (item) => item.tpId == request.body?.tpId && item.tpId !== null
     );
     if (validate) {
       throw new Error('TpId already exist');
     }
+  }
+  if(request.body.tpId.trim() == "") {
+    request.body.tpId = null
   }
 
   if (request.body.image && request.body.image.length) {
@@ -216,7 +220,7 @@ console.log("udate req.body",request.body);
   if (!validateId) {
     throw new Error("Competition with this id not Found");
   }
-  if (request.body.tpId !== undefined || request.body.tpId !== null) {
+  if (request.body.tpId !== undefined && request.body.tpId !== null && request.body.tpId.trim() != "") {
     const validate = global.tblCompetitions.find(
       (item) => item.tpId == request.body?.tpId && item.competitionId != competitionId &&
       item.tpId !== null
@@ -259,7 +263,7 @@ console.log("udate req.body",request.body);
     commStatus: request.body.commStatus || validateId.commStatus,
     startDate: request.body.startDate || validateId.startDate,
     endDate: request.body.endDate || validateId.endDate,
-    tpId: request.body.tpId === undefined ? validateId.tpId : parseInt(request.body.tpId),
+    tpId: request.body.tpId === undefined ? validateId.tpId : request.body.tpId.trim() == "" ? null : parseInt(request.body.tpId),
     pythonId: request.body.pythonId === undefined ? validateId.pythonId : parseInt(request.body.pythonId),
   };
   const developerName = global.tblPythonAPI.find(item => item.id === data?.pythonId);
