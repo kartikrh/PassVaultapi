@@ -10531,7 +10531,7 @@ const loadcommentaryService = async (request, fastify) => {
         }, request, fastify)
         console.log({ data })
       } else {
-        _resFromPredictAPI = await callPredictorMarket(
+        callPredictorMarket(
           {
             commentary_id: commentary.commentaryId,
             match_type_id: commentary.matchTypeId,
@@ -10547,15 +10547,15 @@ const loadcommentaryService = async (request, fastify) => {
           pythonURI
         );
 
-        if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
-          callPrediction.predictioncallSuccess = false;
-          callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
-          callPrediction.endPoint = '/api/v1/loadcommentary';
-        } else {
-          callPrediction.predictioncallSuccess = true;
-          callPrediction.predictionMessage = 'Prediction call successful';
-          callPrediction.endPoint = '/api/v1/loadcommentary';
-        }
+        // if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
+        //   callPrediction.predictioncallSuccess = false;
+        //   callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
+        //   callPrediction.endPoint = '/api/v1/loadcommentary';
+        // } else {
+        //   callPrediction.predictioncallSuccess = true;
+        //   callPrediction.predictionMessage = 'Prediction call successful';
+        //   callPrediction.endPoint = '/api/v1/loadcommentary';
+        // }
       }
     }
     // call the prediction module
