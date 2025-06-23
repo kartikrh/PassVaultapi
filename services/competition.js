@@ -212,7 +212,7 @@ const updateCompititionService = async (request, fastify) => {
   const validateId = global.tblCompetitions.find(
     (item) => item.competitionId === competitionId
   );
-
+console.log("udate req.body",request.body);
   if (!validateId) {
     throw new Error("Competition with this id not Found");
   }
