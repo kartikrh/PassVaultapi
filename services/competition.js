@@ -259,7 +259,7 @@ const updateCompititionService = async (request, fastify) => {
     commStatus: request.body.commStatus || validateId.commStatus,
     startDate: request.body.startDate || validateId.startDate,
     endDate: request.body.endDate || validateId.endDate,
-    tpId: parseInt(request.body.tpId) || validateId.tpId,
+    tpId: request.body.tpId === undefined ? validateId.tpId : parseInt(request.body.tpId),
     pythonId: request.body.pythonId === undefined ? validateId.pythonId : parseInt(request.body.pythonId),
   };
   const developerName = global.tblPythonAPI.find(item => item.id === data?.pythonId);
@@ -313,7 +313,7 @@ const updateCompititionService = async (request, fastify) => {
     data.image = fullPath;
     data.imagePath = imagePath;
   }
-console.log("dataaa", data)
+
   await updateCompititionQuery(data, fastify, request);
 
   if(validateId.commStatus != data.commStatus &&

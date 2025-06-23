@@ -190,7 +190,6 @@ const deleteCompetitionQuery = async (request, fastify) => {
 
 const updateCompititionQuery = async (data, fastify, request) => {
   try {
-    console.log("updateCompititionQuery", data)
     return await fastify.db.query(
       `
       update "tblCompetitions" set
