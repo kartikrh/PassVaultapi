@@ -217,6 +217,10 @@ const updateMarketTemplateService = async (request, fastify) => {
     howManyOpenMarkets: request.body.howManyOpenMarkets !== undefined ? request.body.howManyOpenMarkets : marketTemplate.howManyOpenMarkets,
     rateDiff: request.body.rateDiff !== undefined ? request.body.rateDiff : marketTemplate.rateDiff,
     notIncludedOver: request.body.notIncludedOver !== undefined ? request.body.notIncludedOver : marketTemplate.notIncludedOver,
+    autoSuspendAfterChase: request.body.autoSuspendAfterChase !== undefined ? 
+      request.body.autoSuspendAfterChase : marketTemplate.autoSuspendAfterChase,
+    autoNotCreateAfterChase: request.body.autoNotCreateAfterChase !== undefined ? 
+      request.body.autoNotCreateAfterChase : marketTemplate.autoNotCreateAfterChase,
   };
   const mt = global.tblMarketTypes.find((m)=> m.marketTypeId == body.marketTypeId)
   if(!mt){

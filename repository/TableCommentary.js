@@ -78,7 +78,8 @@ const getAllCommentaryQuery = async (fastify) => {
     tc."wrInningDelay" as "inningDelay",
     tc."wrTossDelay" as "tossDelay",
     tc."wrPythonId" as "pythonId",
-    tc."wrPythonURI" as "pythonURI"
+    tc."wrPythonURI" as "pythonURI",
+    tc."wrCancelTime" as "cancelTime"
     from "tblCommentaries" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -87,14 +88,23 @@ const getAllCommentaryQuery = async (fastify) => {
     LEFT JOIN "tblEventTypes" tet ON tc."wrEventTypeId" = tet."wrEventTypeId"
 	  LEFT JOIN "tblCompetitions" co ON tc."wrCompetitionId" = co."wrCompetitionId"
     LEFT JOIN "tblUsers" tu ON tc."wrCreatedBy" = tu."WrUserId"
-    WHERE (tc."wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days'
-    AND tc."wrCommentaryStatus" = 4 AND tc."wrIsDelete" = false)
-    OR tc."wrCommentaryStatus" != 4
-    AND tc."wrIsDelete" = false;`,
+    WHERE tc."wrIsDelete" = FALSE
+    AND (
+      tc."wrCommentaryStatus" != 4
+      OR (tc."wrCommentaryStatus" = 4 AND tc."wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days')
+    )
+    AND (
+      tc."wrCancelTime" IS NULL
+      OR tc."wrCancelTime" >= NOW() - INTERVAL '7 days'
+    );`,
     {
       type: fastify.db.QueryTypes.SELECT,
     }
   );
+  // WHERE (tc."wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days'
+  //   AND tc."wrCommentaryStatus" = 4 AND tc."wrIsDelete" = false)
+  //   OR tc."wrCommentaryStatus" != 4
+  //   AND tc."wrIsDelete" = false;
 };
 const getCommentariesDataQuery = async (fastify) => {
   return await fastify.db.query(
@@ -173,7 +183,8 @@ const getCommentariesDataQuery = async (fastify) => {
     tc."wrInningDelay" as "inningDelay",
     tc."wrTossDelay" as "tossDelay",
     tc."wrPythonId" as "pythonId",
-    tc."wrPythonURI" as "pythonURI"
+    tc."wrPythonURI" as "pythonURI",
+    tc."wrCancelTime" as "cancelTime"
     from "tblCommentaries" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -305,7 +316,8 @@ const insertCommentaryQuery = async (request, fastify) => {
     tc."wrSession" as "session",
     tc."wrTestDayCount" as "testDayCount",
     tc."wrPythonId" as "pythonId",
-    tc."wrPythonURI" as "pythonURI"
+    tc."wrPythonURI" as "pythonURI",
+    tc."wrCancelTime" as "cancelTime"
     from "insert_data" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"  
@@ -926,7 +938,8 @@ const getCommentaryByIdQuery = async (request, fastify) => {
       tc."wrInningDelay" as "inningDelay",
       tc."wrTossDelay" as "tossDelay",
       tc."wrPythonId" as "pythonId",
-      tc."wrPythonURI" as "pythonURI"
+      tc."wrPythonURI" as "pythonURI",
+      tc."wrCancelTime" as "cancelTime"
       from "tblCommentaries" tc
       left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
       left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -1240,18 +1253,27 @@ const getAllCommentaryTeamsQuery = async (fastify) => {
     FROM "tblCommentaryTeams" AS tct
     WHERE tct."wrCommentaryId" IN (
         SELECT "wrCommentaryId"
-        FROM "tblCommentaries"
+        FROM "tblCommentaries" AS tc
         WHERE 
-            (
-                "wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days'
-                AND "wrCommentaryStatus" = 4 AND "wrIsDelete" = FALSE
-            )
-            OR "wrCommentaryStatus" != 4 AND "wrIsDelete" = FALSE
+            tc."wrIsDelete" = FALSE
+        AND (
+          tc."wrCommentaryStatus" != 4
+          OR (tc."wrCommentaryStatus" = 4 AND tc."wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days')
+        )
+        AND (
+          tc."wrCancelTime" IS NULL
+          OR tc."wrCancelTime" >= NOW() - INTERVAL '7 days'
+        )
     )
     AND tct."wrIsDelete" = false;`,
     {
       type: fastify.db.QueryTypes.SELECT,
     }
+    // WHERE (
+    //             "wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days'
+    //             AND "wrCommentaryStatus" = 4 AND "wrIsDelete" = FALSE
+    //         )
+    //         OR "wrCommentaryStatus" != 4 AND "wrIsDelete" = FALSE
   );
 };
 
@@ -1395,20 +1417,33 @@ const getAllCommentaryPlayerQuery = async (fastify) => {
     LEFT JOIN "tblPlayerTypes" AS tpt ON tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
     WHERE tcp."wrCommentaryId" IN (
         SELECT "wrCommentaryId"
-        FROM "tblCommentaries"
+        FROM "tblCommentaries" AS tc
         WHERE 
-            (
-                "wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days'
-                AND "wrCommentaryStatus" = 4 AND "wrIsDelete" = FALSE
-            )
-            OR "wrCommentaryStatus" != 4 AND "wrIsDelete" = FALSE
-    )
-    AND tcp."wrIsDelete" = false;
+            tc."wrIsDelete" = FALSE
+        AND (
+          tc."wrCommentaryStatus" != 4
+          OR (tc."wrCommentaryStatus" = 4 AND tc."wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days')
+        )
+        AND (
+          tc."wrCancelTime" IS NULL
+          OR tc."wrCancelTime" >= NOW() - INTERVAL '7 days'
+        )
+      )
+        AND tcp."wrIsDelete" = FALSE
     `,
     {
       type: fastify.db.QueryTypes.SELECT,
     }
   );
+
+    //     WHERE 
+    //         (
+    //             "wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days'
+    //             AND "wrCommentaryStatus" = 4 AND "wrIsDelete" = FALSE
+    //         )
+    //         OR "wrCommentaryStatus" != 4 AND "wrIsDelete" = FALSE
+    // )
+    // AND tcp."wrIsDelete" = false;
 };
 
 const getAllCommentaryPlayerDataQuery = async (whereCondition = null, fastify) => {
@@ -1595,19 +1630,29 @@ const getAllCommentaryBallByBallQuery = async (fastify) => {
     from "tblCommentaryBallByBalls" tcbb
     WHERE tcbb."wrCommentaryId" IN (
         SELECT "wrCommentaryId"
-        FROM "tblCommentaries"
+        FROM "tblCommentaries" AS tc
         WHERE 
-            (
-                "wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days'
-                AND "wrCommentaryStatus" = 4 AND "wrIsDelete" = FALSE
-            )
-            OR "wrCommentaryStatus" != 4 AND "wrIsDelete" = FALSE
+            tc."wrIsDelete" = FALSE
+        AND (
+          tc."wrCommentaryStatus" != 4
+          OR (tc."wrCommentaryStatus" = 4 AND tc."wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days')
+        )
+        AND (
+          tc."wrCancelTime" IS NULL
+          OR tc."wrCancelTime" >= NOW() - INTERVAL '7 days'
+        )
     )
     AND tcbb."wrIsDeletedStatus" = false;`,
     {
       type: fastify.db.QueryTypes.SELECT,
     }
   );
+  // WHERE 
+  //           (
+  //               "wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days'
+  //               AND "wrCommentaryStatus" = 4 AND "wrIsDelete" = FALSE
+  //           )
+  //           OR "wrCommentaryStatus" != 4 AND "wrIsDelete" = FALSE
 };
 
 const getAllCommentaryBallByBallDataQuery = async (whereCondition = null, fastify) => {
@@ -1748,13 +1793,17 @@ const getAllOversQuery = async (fastify) => {
       from "tblOvers" as o
       WHERE o."wrCommentaryId" IN (
         SELECT "wrCommentaryId"
-        FROM "tblCommentaries"
+        FROM "tblCommentaries" AS tc
         WHERE 
-            (
-                "wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days'
-                AND "wrCommentaryStatus" = 4 AND "wrIsDelete" = FALSE
-            )
-            OR "wrCommentaryStatus" != 4 AND "wrIsDelete" = FALSE
+            tc."wrIsDelete" = FALSE
+        AND (
+          tc."wrCommentaryStatus" != 4
+          OR (tc."wrCommentaryStatus" = 4 AND tc."wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days')
+        )
+        AND (
+          tc."wrCancelTime" IS NULL
+          OR tc."wrCancelTime" >= NOW() - INTERVAL '7 days'
+        )
       )
       AND o."wrIsDelete" = false;
       `,
@@ -1762,6 +1811,12 @@ const getAllOversQuery = async (fastify) => {
       type: fastify.db.QueryTypes.SELECT,
     }
   );
+  // WHERE 
+  //           (
+  //               "wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days'
+  //               AND "wrCommentaryStatus" = 4 AND "wrIsDelete" = FALSE
+  //           )
+  //           OR "wrCommentaryStatus" != 4 AND "wrIsDelete" = FALSE
 };
 
 const getAllOversDataQuery = async (whereCondition = null, fastify) => {
@@ -1888,13 +1943,17 @@ const getAllCommentaryWicketQuery = async (fastify) => {
     from "tblCommentaryWickets" tcw
     WHERE tcw."wrCommentaryId" IN (
         SELECT "wrCommentaryId"
-        FROM "tblCommentaries"
+        FROM "tblCommentaries" AS tc
         WHERE 
-            (
-                "wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days'
-                AND "wrCommentaryStatus" = 4 AND "wrIsDelete" = FALSE
-            )
-            OR "wrCommentaryStatus" != 4 AND "wrIsDelete" = FALSE
+            tc."wrIsDelete" = FALSE
+        AND (
+          tc."wrCommentaryStatus" != 4
+          OR (tc."wrCommentaryStatus" = 4 AND tc."wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days')
+        )
+        AND (
+          tc."wrCancelTime" IS NULL
+          OR tc."wrCancelTime" >= NOW() - INTERVAL '7 days'
+        )
     )
     AND tcw."wrIsDeletedStatus" = false;
     `,
@@ -1902,6 +1961,12 @@ const getAllCommentaryWicketQuery = async (fastify) => {
       type: fastify.db.QueryTypes.SELECT,
     }
   );
+  // WHERE 
+  //           (
+  //               "wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days'
+  //               AND "wrCommentaryStatus" = 4 AND "wrIsDelete" = FALSE
+  //           )
+  //           OR "wrCommentaryStatus" != 4 AND "wrIsDelete" = FALSE
 };
 
 const getAllCommentaryWicketDataQuery = async (whereCondition = null, fastify) => {
@@ -2011,13 +2076,17 @@ const getAllCommentaryPartnershipQuery = async (fastify) => {
       from "tblCommentaryPartnerships" tcps
       WHERE tcps."wrCommentaryId" IN (
         SELECT "wrCommentaryId"
-        FROM "tblCommentaries"
+        FROM "tblCommentaries" AS tc
         WHERE 
-            (
-                "wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days'
-                AND "wrCommentaryStatus" = 4 AND "wrIsDelete" = FALSE
-            )
-            OR "wrCommentaryStatus" != 4 AND "wrIsDelete" = FALSE
+            tc."wrIsDelete" = FALSE
+        AND (
+          tc."wrCommentaryStatus" != 4
+          OR (tc."wrCommentaryStatus" = 4 AND tc."wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days')
+        )
+        AND (
+          tc."wrCancelTime" IS NULL
+          OR tc."wrCancelTime" >= NOW() - INTERVAL '7 days'
+        )
       )
       AND tcps."wrIsDelete" = false;
       `,
@@ -2025,6 +2094,13 @@ const getAllCommentaryPartnershipQuery = async (fastify) => {
       type: fastify.db.QueryTypes.SELECT,
     }
   );
+
+        // WHERE 
+        //     (
+        //         "wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days'
+        //         AND "wrCommentaryStatus" = 4 AND "wrIsDelete" = FALSE
+        //     )
+        //     OR "wrCommentaryStatus" != 4 AND "wrIsDelete" = FALSE
 };
 
 const getAllCommentaryPartnershipDataQuery = async (whereCondition = null, fastify) => {
@@ -4549,7 +4625,8 @@ const getCommentariesResultQuery = async (request, fastify) => {
       tc."wrInningDelay" as "inningDelay",
       tc."wrTossDelay" as "tossDelay",
       tc."wrPythonId" as "pythonId",
-      tc."wrPythonURI" as "pythonURI"
+      tc."wrPythonURI" as "pythonURI",
+      tc."wrCancelTime" as "cancelTime"
       FROM "tblCommentaries" tc
       LEFT JOIN "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
       LEFT JOIN "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -4564,7 +4641,11 @@ const getCommentariesResultQuery = async (request, fastify) => {
       WHERE tc."wrIsDelete" = false 
       AND tc."wrIsActive" = true
       AND tc."wrIsCountInPoint" = true
-      AND tc."wrCommentaryStatus" = 4`,
+      AND tc."wrCommentaryStatus" = 4
+      AND (
+        tc."wrCancelTime" IS NULL
+        OR tc."wrCancelTime" >= NOW() - INTERVAL '7 days'
+      );`,
       {
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -4684,7 +4765,8 @@ const getAllCommentaryHistoryQuery = async (whereCondition, fastify, request) =>
             tc."wrInningDelay" as "inningDelay",
             tc."wrTossDelay" as "tossDelay",
             tc."wrPythonId" as "pythonId",
-            tc."wrPythonURI" as "pythonURI"
+            tc."wrPythonURI" as "pythonURI",
+            tc."wrCancelTime" as "cancelTime"
       FROM "tblCommentaries" tc
       LEFT JOIN "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
       LEFT JOIN "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -4883,7 +4965,8 @@ const getAllCompletedCommentaryQuery = async (request, fastify) => {
           tc."wrInningDelay" as "inningDelay",
           tc."wrTossDelay" as "tossDelay",
           tc."wrPythonId" as "pythonId",
-          tc."wrPythonURI" as "pythonURI"
+          tc."wrPythonURI" as "pythonURI",
+          tc."wrCancelTime" as "cancelTime"
       FROM "tblCommentaries" tc
       LEFT JOIN "tblTeams" tt1 ON tt1."wrTeamId" = tc."wrTeam1Id" AND tt1."wrIsDeleted" = false
       LEFT JOIN "tblTeams" tt2 ON tt2."wrTeamId" = tc."wrTeam2Id" AND tt2."wrIsDeleted" = false
@@ -4902,7 +4985,11 @@ const getAllCompletedCommentaryQuery = async (request, fastify) => {
           AND tct3."wrTeamId" = tc."wrTossWonBy" 
           AND tct3."wrCurrentInnings" = tc."wrCurrentInnings" AND tct3."wrIsDelete" = false
       WHERE tc."wrCommentaryStatus" = 4 AND tc."wrIsDelete" = false
-      AND tc."wrIsActive" = true AND tc."wrIsTest" = false;`,
+      AND tc."wrIsActive" = true AND tc."wrIsTest" = false;
+      AND (
+        tc."wrCancelTime" IS NULL
+        OR tc."wrCancelTime" >= NOW() - INTERVAL '7 days'
+      );`,
       {
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -4996,7 +5083,8 @@ const getCommentariesDataByDifferentIdsQuery = async (whereCondition, request, f
           tc."wrInningDelay" as "inningDelay",
           tc."wrTossDelay" as "tossDelay",
           tc."wrPythonId" as "pythonId",
-          tc."wrPythonURI" as "pythonURI"
+          tc."wrPythonURI" as "pythonURI",
+          tc."wrCancelTime" as "cancelTime"
       FROM "tblCommentaries" tc
       LEFT JOIN "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
       LEFT JOIN "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -5096,7 +5184,8 @@ const getCommentariesDataQueryV1 = async (fastify) => {
         tc."wrInningDelay" as "inningDelay",
         tc."wrTossDelay" as "tossDelay",
         tc."wrPythonId" as "pythonId",
-        tc."wrPythonURI" as "pythonURI"
+        tc."wrPythonURI" as "pythonURI",
+        tc."wrCancelTime" as "cancelTime"
     FROM "tblCommentaries" tc
     LEFT JOIN "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     LEFT JOIN "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -7058,7 +7147,8 @@ const insertCommentaryWithImportQuery = async (data, request, fastify) => {
     tc."wrSession" as "session",
     tc."wrTestDayCount" as "testDayCount",
     tc."wrPythonId" as "pythonId",
-    tc."wrPythonURI" as "pythonURI"
+    tc."wrPythonURI" as "pythonURI",
+    tc."wrCancelTime" as "cancelTime"
     from "insert_data" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"  

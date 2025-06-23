@@ -277,7 +277,8 @@ async function insertMarketWithRunners(market, fastify) {
                 "wrMarketTypeCategoryId", "wrMarketTypeId", "wrRateSource", "wrPredefinedValue", 
                 "wrDelay", "wrCreate", "wrCreateRefId", "wrOpenRefId", "wrActionType", 
                 "wrAutoResultType", "wrIsSendData", "wrIsAllow", "wrLineType", 
-                "wrDefaultBackSize", "wrDefaultLaySize", "wrDefaultIsSendData", "wrRateDiff"
+                "wrDefaultBackSize", "wrDefaultLaySize", "wrDefaultIsSendData", "wrRateDiff",
+                "wrAutoSuspendAfterChase", "wrAutoNotCreateAfterChase"
             ) VALUES (
                 ${commentaryId}, 
                 '${marketValue.eventRefId || ""}', 
@@ -322,7 +323,9 @@ async function insertMarketWithRunners(market, fastify) {
                 ${marketValue.defaultBackSize || 100}, 
                 ${marketValue.defaultLaySize || 100}, 
                 ${marketValue.defaultIsSendData || false}, 
-                ${marketValue.rateDiff || 0}
+                ${marketValue.rateDiff || 0},
+                ${marketValue.autoSuspendAfterChase || null},
+                ${marketValue.autoNotCreateAfterChase || null},
             ) RETURNING "wrID"
         `;
 
