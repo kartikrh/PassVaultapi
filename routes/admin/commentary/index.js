@@ -537,7 +537,7 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        checkPermission(request, reply, fastify, {
+        commentaryPermissionCheck(request, reply, fastify, {
           tabName: "Commentary",
           mode: "edit",
         }),
@@ -1188,7 +1188,7 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        checkPermission(request, reply, fastify, {
+        commentaryPermissionCheck(request, reply, fastify, {
           tabName: "Commentary",
           mode: "edit"
         }),
@@ -1199,7 +1199,7 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        checkPermission(request, reply, fastify, {
+        commentaryPermissionCheck(request, reply, fastify, {
           tabName: "Commentary",
           mode: "view"
         }),
@@ -1211,7 +1211,7 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        checkPermission(request, reply, fastify, {
+        commentaryPermissionCheck(request, reply, fastify, {
           tabName: "Commentary",
           mode: "edit"
         }),
