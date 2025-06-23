@@ -28,9 +28,12 @@ const getAllCompititionQuery = async (fastify) => {
     tc."wrStatus" as "commStatus",
     tc."wrStartDate" as "startDate",
     tc."wrEndDate" as "endDate",
-    tc."wrTpId" as "tpId"
+    tc."wrTpId" as "tpId",
+    tc."wrPythonId" as "pythonId",
+    tpa."wrDeveloperName" as "developerName"
     from "tblCompetitions" tc 
     inner join "tblEventTypes" tev on tc."wrEventTypeId" = tev."wrEventTypeId"
+    LEFT JOIN "tblPythonAPI" tpa on tc."wrPythonId" = tpa."wrId"
     where tc."wrIsDeleted" = false and tev."wrIsDeleted" = false
     `,
     {
@@ -77,12 +80,12 @@ const insertCompetitionQuery = async (request, fastify) => {
             "wrCompetition" , "wrEventTypeId" , "wrRefID" , "wrImage" ,"wrIsActive" ,
              "wrCreatedBy" , "wrCreatedDate","wrDisplayOrder", "wrIsTrending", "wrIsEventSnap", "wrIsPointTable", "wrMatchTypeId",
              "wrWinPoint", "wrTiePoint", "wrCancelPoint", "wrLossPoint","wrDrsCount", "wrImagePath", "wrIsMen", "wrType", "wrIsVirtual", "wrStatus", "wrStartDate", "wrEndDate",
-             "wrTpId"
+             "wrTpId", "wrPythonId"
             )
             values ($1 ,
                  $2,
                  $3,$4,$5,$6,now(),(select COALESCE("display_order" , 0) from "display") + 1, $7, $8, $9, $10,
-                 $11, $12, $13, $14,$15, $16, $17, $18, $19, $20, $21, $22, $23
+                 $11, $12, $13, $14,$15, $16, $17, $18, $19, $20, $21, $22, $23, $24
                  ) returning *
         )
 
@@ -111,9 +114,12 @@ const insertCompetitionQuery = async (request, fastify) => {
         tc."wrStatus" as "commStatus",
         tc."wrStartDate" as "startDate",
         tc."wrEndDate" as "endDate",
-        tc."wrTpId" as "tpId"
+        tc."wrTpId" as "tpId",
+        tc."wrPythonId" as "pythonId",
+        tpa."wrDeveloperName" as "developerName"
         from "inser_data" tc
         inner join "tblEventTypes" tev on tc."wrEventTypeId" = tev."wrEventTypeId"
+        LEFT JOIN "tblPythonAPI" tpa on tc."wrPythonId" = tpa."wrId"
     `,
       {
         bind: [
@@ -140,6 +146,7 @@ const insertCompetitionQuery = async (request, fastify) => {
           data.startDate,
           data.endDate,
           data.tpId || null,
+          data.pythonId || null,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -209,7 +216,8 @@ const updateCompititionQuery = async (data, fastify, request) => {
         "wrStatus" = $21,
         "wrStartDate" = $22,
         "wrEndDate" = $23,
-        "wrTpId" = $24
+        "wrTpId" = $24,
+        "wrPythonId" = $25
         where "wrCompetitionId" = $10
         `,
       {
@@ -238,6 +246,7 @@ const updateCompititionQuery = async (data, fastify, request) => {
           data.startDate,
           data.endDate,
           data.tpId,
+          data.pythonId,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -287,9 +296,12 @@ const updateDisplayOrderQuery = async (data, fastify, request) => {
         u."wrStatus" as "commStatus",
         u."wrStartDate" as "startDate",
         u."wrEndDate" as "endDate",
-        u."wrTpId" as "tpId"
+        u."wrTpId" as "tpId",
+        u."wrPythonId" as "pythonId",
+        tpa."wrDeveloperName" as "developerName"
       FROM updated u
       INNER JOIN "tblEventTypes" et ON u."wrEventTypeId" = et."wrEventTypeId"
+      LEFT JOIN "tblPythonAPI" tpa on u."wrPythonId" = tpa."wrId"
       `,
       {
         bind: [data.competitionId, data.displayOrder],
@@ -549,7 +561,6 @@ const isVirtualCompetitionQuery = async (data, request, fastify) => {
 };
 const insertCompetitionWithImportQuery = async (data, request, fastify) => {
   try {
-    console.log("data", data)
     const result = await fastify.db.query(
       `
         with display as (
@@ -563,12 +574,12 @@ const insertCompetitionWithImportQuery = async (data, request, fastify) => {
             "wrCompetition" , "wrEventTypeId" , "wrRefID" , "wrImage" ,"wrIsActive" ,
              "wrCreatedBy" , "wrCreatedDate","wrDisplayOrder", "wrIsTrending", "wrIsEventSnap", "wrIsPointTable", "wrMatchTypeId",
              "wrWinPoint", "wrTiePoint", "wrCancelPoint", "wrLossPoint","wrDrsCount", "wrImagePath", "wrIsMen", "wrType", "wrIsVirtual", "wrStatus", "wrStartDate", "wrEndDate",
-             "wrTpId"
+             "wrTpId", "wrPythonId"
             )
             values ($1 ,
                  $2,
                  $3,$4,$5,$6,now(),(select COALESCE("display_order" , 0) from "display") + 1, $7, $8, $9, $10,
-                 $11, $12, $13, $14,$15, $16, $17, $18, $19, $20, $21, $22, $23
+                 $11, $12, $13, $14,$15, $16, $17, $18, $19, $20, $21, $22, $23, $24
                  ) returning *
         )
 
@@ -597,9 +608,12 @@ const insertCompetitionWithImportQuery = async (data, request, fastify) => {
         tc."wrStatus" as "commStatus",
         tc."wrStartDate" as "startDate",
         tc."wrEndDate" as "endDate",
-        tc."wrTpId" as "tpId"
+        tc."wrTpId" as "tpId",
+        tc."wrPythonId" as "pythonId",
+        tpa."wrDeveloperName" as "developerName"
         from "inser_data" tc
         inner join "tblEventTypes" tev on tc."wrEventTypeId" = tev."wrEventTypeId"
+        LEFT JOIN "tblPythonAPI" tpa on tc."wrPythonId" = tpa."wrId"
     `,
       {
         bind: [
@@ -626,6 +640,7 @@ const insertCompetitionWithImportQuery = async (data, request, fastify) => {
           data.startDate,
           data.endDate,
           data.tpId || null,
+          data.pythonId || null,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -715,6 +730,57 @@ const upStatusQuery = async (data, request, fastify) => {
     throw new Error(err.message);
   }
 };
+const getAllCompetitionByIdsQuery = async (whereCondition = undefined, fastify) => {
+  try {
+      const result = await fastify.db.query(
+      `SELECT 
+          tc."wrCompetitionId" as "competitionId",
+          tc."wrCompetition" as "competition",
+          tc."wrEventTypeId" as "eventTypeId",
+          "wrEventType" as "eventType",
+          tc."wrRefID" as "refId",
+          tc."wrImage" as "image",
+          tc."wrIsActive" as "isActive",
+          tc."wrDisplayOrder" as "displayOrder",
+          tc."wrIsTrending" as "isTrending",
+          tc."wrIsEventSnap" as "isEventSnap",
+          tc."wrIsPointTable" as "isPointTable",
+          tc."wrMatchTypeId" as "matchTypeId",
+          tc."wrWinPoint" as "winPoint",
+          tc."wrTiePoint" as "tiePoint",
+          tc."wrCancelPoint" as "cancelPoint",
+          tc."wrLossPoint" as "lossPoint",
+          tc."wrDrsCount" as "drsCount",
+          tc."wrImagePath" as "imagePath",
+          tc."wrIsMen" as "isMen",
+          tc."wrType" as "type",
+          tc."wrIsVirtual" as "isVirtual",
+          tc."wrStatus" as "commStatus",
+          tc."wrStartDate" as "startDate",
+          tc."wrEndDate" as "endDate",
+          tc."wrTpId" as "tpId",
+          tc."wrPythonId" as "pythonId",
+          tpa."wrDeveloperName" as "developerName"
+      FROM "tblCompetitions" tc 
+      INNER JOIN "tblEventTypes" tev on tc."wrEventTypeId" = tev."wrEventTypeId"
+      LEFT JOIN "tblPythonAPI" tpa on tc."wrPythonId" = tpa."wrId"
+      ${whereCondition ? `WHERE ${whereCondition}` : 'WHERE tc."wrIsDeleted" = false and tev."wrIsDeleted" = false'}`,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    ); 
+    return result[0]; 
+  } catch (err) {
+    console.log("comprtitoes error", err)
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCompitition.js/getAllCompetitionByIdsQuery",
+      null
+    );
+    throw new Error(err.message);
+  }
+}
 module.exports = {
   getAllCompititionQuery,
   insertCompetitionQuery,
@@ -731,5 +797,6 @@ module.exports = {
   insertCompetitionWithImportQuery,
   deleteCompMarketTemplateQuery,
   getAssignedTemplateByCompetitionIdQuery,
-  upStatusQuery
+  upStatusQuery,
+  getAllCompetitionByIdsQuery,
 };

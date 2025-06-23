@@ -363,8 +363,13 @@ const connection = (socket , fastify) => {
   
   socket.on("connectEventMarket", async (data) => {
     const { commentaryId } = data;
+    // ignore the marketTypeCategoryId
+     let ignoreCategory = global.tblConfigs.find(
+    (item) => item.key.toLowerCase() === configConstants.IGNOREMARKETINOPEN.toLowerCase()
+    );
+    ignoreCategory = ignoreCategory ? ignoreCategory.value.split(",").map(Number) : [];
     socket.join(commentaryId);
-    const markets = await getMarketByComIdQuery({commentaryId : commentaryId}, fastify);
+    const markets = await getMarketByComIdQuery({commentaryId : commentaryId, ignoreMarkets : ignoreCategory}, fastify);
     const clientInRoom = global.socketIo.sockets.adapter.rooms.get(commentaryId);
     if (clientInRoom?.size) {
       global.socketIo.to(commentaryId).emit("updateMarket", markets);

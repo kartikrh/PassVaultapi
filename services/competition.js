@@ -67,7 +67,7 @@ const { getCommentariesResultQuery } = require("../repository/TableCommentary")
 //   }
 // };
 const allCompetitionService = async (request) => {
-  const { isActive, isTrending, eventTypeId, matchTypeId, isMen, type, isVirtual } = request.body;
+  const { isActive, isTrending, eventTypeId, matchTypeId, isMen, type, isVirtual, pythonId } = request.body;
 
   const filterObject = {};
 
@@ -78,6 +78,7 @@ const allCompetitionService = async (request) => {
   if (isMen !== undefined) filterObject.isMen = isMen;
   if (type !== undefined && type !== 0) filterObject.type = type;
   if (typeof isVirtual === 'boolean') filterObject.isVirtual = isVirtual;
+  if (pythonId !== undefined && pythonId !== 0) filterObject.pythonId = pythonId;
 
   if (isActive === undefined || isTrending === undefined) {
     return global.tblCompetitions.filter((item) => item.isActive === true);
@@ -164,6 +165,21 @@ const createCompititionService = async (request, fastify) => {
 
   const result = await insertCompetitionQuery(request, fastify);
 
+
+   if(result.isVirtual == true && (
+    result.commStatus == compStatus.started || result.commStatus == compStatus.stopped
+  )
+  ){
+    let isStop = result.commStatus == compStatus.stopped ? true : false;
+    callCardCricket(
+      {
+        refId : result.competitionId.toString(),
+        isStop : isStop,
+      },
+      request,
+      fastify
+    )
+  }
   global.tblCompetitions.push(result);
 
   if(result.isActive && result.isTrending){
@@ -244,6 +260,8 @@ const updateCompititionService = async (request, fastify) => {
     startDate: request.body.startDate || validateId.startDate,
     endDate: request.body.endDate || validateId.endDate,
     tpId: request.body.tpId || validateId.tpId,
+    pythonId: request.body.pythonId === undefined ? validateId.pythonId : parseInt(request.body.pythonId),
+    developerName: validateId.developerName,
   };
 
   if ("isActive" in request.body) {
@@ -297,6 +315,21 @@ const updateCompititionService = async (request, fastify) => {
   }
 
   await updateCompititionQuery(data, fastify, request);
+
+  if(validateId.commStatus != data.commStatus &&
+    (data.commStatus == compStatus.started || data.commStatus == compStatus.stopped) &&
+    data.isVirtual == true
+  ){
+    let isStop = data.commStatus == compStatus.stopped ? true : false;
+    callCardCricket(
+      {
+        refId : data.competitionId.toString(),
+        isStop : isStop,
+      },
+      request,
+      fastify
+    )
+  }
 
   const index = global.tblCompetitions.findIndex(
     (item) => item.competitionId === competitionId
@@ -738,11 +771,11 @@ const upCompStatusService = async (request, fastify) => {
     commStatus == compStatus.started || commStatus == compStatus.stopped
   )
   ){
-    let isStart = commStatus == compStatus.started ? true : false;
+    let isStop = commStatus == compStatus.stopped ? true : false;
     callCardCricket(
       {
-        refId : validateId.refId,
-        isstart : isStart,
+        refId : validateId.competitionId.toString(),
+        isStop : isStop,
       },
       request,
       fastify

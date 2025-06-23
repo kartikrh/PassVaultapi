@@ -270,15 +270,16 @@ const MarketActionType = {
   closeMarketOnDLSChange : 11,
   virtualMarketCancel : 12,
 }
-const callPredictorMarket = async (data , endpoint ,fastify ,request, isVirtual = false) =>{
+const callPredictorMarket = async (data , endpoint ,fastify ,request, pythonURI = null) =>{
   let requestStartTime = new Date();
   let loggerConfig = global.tblConfigs.find((item) => item.key === configConstants.ISPREDICTORLOGGER).value;
   try {
-    let predictorURL = global.tblConfigs.find((item) => item.key === configConstants.MARKET_PREDICTOR)?.value;
-    if(isVirtual == true){
-      // If commentary is virtual, use the virtual predictor URL
-      predictorURL = global.tblConfigs.find((item) => item.key === configConstants.VIRTUALMARKETPREDICTOR)?.value;
-    }
+    // let predictorURL = global.tblConfigs.find((item) => item.key === configConstants.MARKET_PREDICTOR)?.value;
+    // if(isVirtual == true){
+    //   // If commentary is virtual, use the virtual predictor URL
+    //   predictorURL = global.tblConfigs.find((item) => item.key === configConstants.VIRTUALMARKETPREDICTOR)?.value;
+    // }
+    let predictorURL = pythonURI;
     if(!predictorURL){
       errorLogger(
         fastify,
@@ -766,7 +767,8 @@ const ModuleTypes = {
   Packages: 39,
   Whitelabel: 40,
   Venue: 41,
-  CommentaryById: 42
+  CommentaryById: 42,
+  PythonAPI: 43,
 }
 const callTPAPI = async (data ,fastify) =>{
   try {
@@ -1171,6 +1173,24 @@ const callCardCricket = async (data ,request , fastify) =>{
   }
 
 }
+const GlobalModuleType = {
+  Commentary: 1,
+  CommenaryTeams: 2,
+  CommentaryPlayers: 3,
+  Players: 4,
+  Teams: 5,
+  TeamCompetiton: 6,
+  MatchTypes: 7,
+  Competition: 8,
+  CountryCode: 9,
+  Venue: 10,
+  Weather: 11,
+  PitchConditon: 12,
+}
+const StoreTypes = {
+  Insert: 1,
+  Update: 2
+}
 module.exports = {
   ERROR_CODES,
   error,
@@ -1254,5 +1274,7 @@ module.exports = {
   comCardType,
   EntityEnums,
   compStatus,
-  callCardCricket
+  callCardCricket,
+  GlobalModuleType,
+  StoreTypes,
 };
