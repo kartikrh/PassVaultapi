@@ -8,6 +8,7 @@ const {
   ballByBallChangeService,
   suffleCardAPIService,
   cancelEventAPIService,
+  undoAPIService,
 } = require("../../../../services/virtual");
 const { ERROR_CODES, error, success, virtualError, virtualSuccess } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -86,6 +87,16 @@ const cancelEventAPI = async (request, reply, fastify) => {
       reply.status(200).send(virtualError(err.message, ERROR_CODES.SERVER_ERROR, 200));
     }
 };
+const undoAPI = async (request, reply, fastify) => {
+    try {
+      const result = await undoAPIService(request,fastify);
+      reply.status(200).send(virtualSuccess(result, 200));;
+    } catch (err) {
+      console.log("error", err)
+      errorLogger(fastify, err.message, commonPath + "/cancelEventAPI", request);
+      reply.status(200).send(virtualError(err.message, ERROR_CODES.SERVER_ERROR, 200));
+    }
+};
 module.exports = {
     saveEvent,
     createVirtualEvent,
@@ -94,5 +105,6 @@ module.exports = {
     ballByBallVirtualEvent,
     ballByBallChange,
     suffleCardAPI,
-    cancelEventAPI
+    cancelEventAPI,
+    undoAPI,
 };
