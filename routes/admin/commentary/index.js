@@ -90,6 +90,7 @@ const {
   commentarySetPlayer,
   allPythonAPIs,
   updatePythonAPI,
+  undoAPI,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -1217,5 +1218,17 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request , reply) => updatePythonAPI(request, reply, fastify)
+  })
+  fastify.post("/undo", {
+    schema : Commentary.UndoAPI.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        commentaryPermissionCheck(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "edit"
+        }),
+    ],
+    handler: (request , reply) => undoAPI(request, reply, fastify)
   })
 };
