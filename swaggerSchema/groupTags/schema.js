@@ -3630,7 +3630,26 @@ const Commentary = {
         required: [ "commentaryId", "pythonId", "pythonURI"],
       },
     }
-  }  
+  },
+  UndoAPI: {
+    schema: {
+      tags: ["Commentary"],
+      description: "undo Commentary details",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+          commentaryDetails: { type: "object" },
+          commentaryPartnership: { type: "object" },
+          commentaryTeams: { type: "array", items: { type: "object" } },
+          commentaryPlayers: { type: "array", items: { type: "object" } },
+          commentaryOvers: { type: "object" },
+        },
+        required: ["commentaryId"],
+      },
+    },
+  },
 };
 
 const Compitition = {

@@ -90,6 +90,7 @@ const {
   commentaryWicketService,
   commentarySetPlayerService,
   updatePythonAPIOnCommentaryService,
+  undoAPIService,
 } = require("../../../../services/commentry");
 const { getEventSnapByComService, updateEventSnapByComService } = require("../../../../services/competitionEventSnap");
 const { getAllCommentariesDataService, getAllCommentariesDataServiceV1 } = require("../../../../services/score");
@@ -1189,8 +1190,16 @@ const updatePythonAPI = async (request, reply, fastify) => {
     const result = await updatePythonAPIOnCommentaryService(request, fastify);
     reply.status(200).send(success(result, 200));
   } catch (err) {
-    console.log("errorororrr", err)
     errorLogger(fastify, err.message, path + "/updatePythonAPI", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const undoAPI = async (request, reply, fastify) => {
+  try {
+    const result = await undoAPIService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/undoAPI", request);
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
@@ -1294,4 +1303,5 @@ module.exports = {
   commentarySetPlayer,
   allPythonAPIs,
   updatePythonAPI,
+  undoAPI,
 }
