@@ -168,7 +168,8 @@ const insertCommentaryDRSLogsQuery = async (data, fastify, request) => {
                 "wrCommentaryTeamId" as "commentaryTeamId",
                 "wrTeamId" as "teamId",
                 "wrOrder" as "order",
-                "wrResult" as "result"`,
+                "wrResult" as "result",
+                "wrIsCount" as "isCount";`,
             {
                 type: fastify.db.QueryTypes.INSERT,
                 bind: [
@@ -176,8 +177,8 @@ const insertCommentaryDRSLogsQuery = async (data, fastify, request) => {
                     data.commentaryTeamId,
                     data.teamId,
                     data.result,
-                    request.userTokenInfo?.WrUserId || null,
-                    data.isCount || true,
+                    request.userTokenInfo.WrUserId,
+                    data.isCount ?? false
                 ],
             }
         );
