@@ -52,7 +52,9 @@ const getAllMarketTemplateQuery = async (fastify) => {
       "wrDefaultIsSendData" as "defaultIsSendData",
       "wrHowManyOpenMarkets" as "howManyOpenMarkets",
       "wrRateDiff" as "rateDiff",
-      "wrNotIncludedOver" as "notIncludedOver"
+      "wrNotIncludedOver" as "notIncludedOver",
+      tmt."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
+      tmt."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase"
   FROM "tblMarketTemplates" tmt
   LEFT JOIN "tblMatchTypes" tm ON tmt."wrMatchTypeID" = "tm"."wrMatchTypeId"
   LEFT JOIN "tblMarketTypes" tmts ON tmt."wrMarketTypeId" = tmts."wrId"
@@ -76,10 +78,10 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
               "wrMarketTypeId","wrMarketTypeCategoryId","wrMargin" , "wrCreateRefId" , "wrOpenRefId",
               "wrTemplateType", "wrDelay","wrIsDefaultBetAllowed","wrIsDefaultMarketActive", "wrIsPerEvent", "wrIsShowInAdvanceMarket",
               "wrLineType", "wrDefaultBackSize", "wrDefaultLaySize","wrBeforeSuspendMin","wrBeforeCloseMin", "wrDefaultIsSendData",
-              "wrHowManyOpenMarkets", "wrRateDiff", "wrNotIncludedOver"
+              "wrHowManyOpenMarkets", "wrRateDiff", "wrNotIncludedOver", "wrAutoSuspendAfterChase", "wrAutoNotCreateAfterChase"
               ) values (
                 $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26, $27, $28, $29, $30, $31, $32,$33,$34,$35,$36,
-                $37, $38, $39 ,$40 ,$41, $42, $43, $44, $45
+                $37, $38, $39 ,$40 ,$41, $42, $43, $44, $45, $46, $47
                 ) returning *
           )        
         select 
@@ -129,7 +131,9 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
         "wrDefaultIsSendData" as "defaultIsSendData",
         "wrHowManyOpenMarkets" as "howManyOpenMarkets",
         "wrRateDiff" as "rateDiff",
-        "wrNotIncludedOver" as "notIncludedOver"
+        "wrNotIncludedOver" as "notIncludedOver",
+        "wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
+        "wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase"
          from insert_data`,
       {
         type: fastify.db.QueryTypes.SELECT,
@@ -191,6 +195,8 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
           data.howManyOpenMarkets === undefined ? 1 : data.howManyOpenMarkets,
           data.rateDiff === undefined ? 1 : data.rateDiff,
           data.notIncludedOver === undefined ? null : data.notIncludedOver,
+          data.autoSuspendAfterChase === undefined ? null : data.autoSuspendAfterChase,
+          data.autoNotCreateAfterChase === undefined ? null : data.autoNotCreateAfterChase,
         ],
       }
     );
@@ -217,10 +223,11 @@ const insertMarketTemplateInCloneQuery = async (data, fastify, request) => {
               "wrMarketTypeId","wrMarketTypeCategoryId","wrMargin" , "wrCreateRefId" , "wrOpenRefId",
               "wrTemplateType", "wrDelay","wrIsDefaultBetAllowed","wrIsDefaultMarketActive", "wrIsPerEvent", "wrIsPredefineRunnerValue", "wrIsShowInAdvanceMarket",
               "wrLineType", "wrDefaultBackSize", "wrDefaultLaySize"
-               ,"wrBeforeSuspendMin","wrBeforeCloseMin", "wrDefaultIsSendData", "wrHowManyOpenMarkets", "wrRateDiff", "wrNotIncludedOver"
+               ,"wrBeforeSuspendMin","wrBeforeCloseMin", "wrDefaultIsSendData", "wrHowManyOpenMarkets", "wrRateDiff", "wrNotIncludedOver",
+               "wrAutoSuspendAfterChase", "wrAutoNotCreateAfterChase"
               ) values (
                 $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26, $27, $28, $29, $30, $31, $32,$33,$34,$35,$36,$37,
-                $38, $39, $40 ,$41 ,$42, $43, $44, $45, $46
+                $38, $39, $40 ,$41 ,$42, $43, $44, $45, $46, $47, $48
                 ) returning *
           )        
         select 
@@ -270,7 +277,9 @@ const insertMarketTemplateInCloneQuery = async (data, fastify, request) => {
         "wrDefaultIsSendData" as "defaultIsSendData",
         "wrHowManyOpenMarkets" as "howManyOpenMarkets",
         "wrRateDiff" as "rateDiff",
-        "wrNotIncludedOver" as "notIncludedOver"
+        "wrNotIncludedOver" as "notIncludedOver",
+        "wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
+        "wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase"
          from insert_data`,
       {
         type: fastify.db.QueryTypes.SELECT,
@@ -331,6 +340,8 @@ const insertMarketTemplateInCloneQuery = async (data, fastify, request) => {
           data.howManyOpenMarkets === undefined ? 1 : data.howManyOpenMarkets,
           data.rateDiff === undefined ? 1 : data.rateDiff,
           data.notIncludedOver === undefined ? null : data.notIncludedOver,
+          data.autoSuspendAfterChase === undefined ? null : data.autoSuspendAfterChase,
+          data.autoNotCreateAfterChase === undefined ? null : data.autoNotCreateAfterChase
         ],
       }
     );
@@ -474,7 +485,9 @@ const updateMarketTemplateQuery = async (data, fastify, request) => {
             "wrDefaultIsSendData" = $42,
             "wrHowManyOpenMarkets" = $43,
             "wrRateDiff" = $44,
-            "wrNotIncludedOver" = $45
+            "wrNotIncludedOver" = $45,
+            "wrAutoSuspendAfterChase" = $46,
+            "wrAutoNotCreateAfterChase" = $47
         WHERE "wrID" = $32
         `,
         {
@@ -524,6 +537,8 @@ const updateMarketTemplateQuery = async (data, fastify, request) => {
                 data.howManyOpenMarkets,
                 data.rateDiff,
                 data.notIncludedOver,
+                data.autoSuspendAfterChase,
+                data.autoNotCreateAfterChase,
             ],
             type: fastify.db.QueryTypes.SELECT,
         }
@@ -768,7 +783,9 @@ const getCommMatchTypeTemplatesQuery = async (commentaryId, whereCondition = nul
             tmt."wrBeforeCloseMin" AS "beforeCloseMin",
             tmt."wrDefaultIsSendData" AS "defaultIsSendData",
             tmt."wrHowManyOpenMarkets" as "howManyOpenMarkets",
-            tmt."wrRateDiff" AS "rateDiff"
+            tmt."wrRateDiff" AS "rateDiff",
+            tmt."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
+            tmt."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase"
           FROM "tblCommMatchTypeTemplate" AS cmtt
           LEFT JOIN "tblMarketTemplates" AS tmt ON tmt."wrID" = cmtt."wrMarketTemplateId"
           LEFT JOIN "tblMatchTypes" AS tm ON tmt."wrMatchTypeID" = tm."wrMatchTypeId"

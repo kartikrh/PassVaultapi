@@ -73,7 +73,9 @@ const getAllEventMarketsV2Query = async (fastify, commentaryIds) => {
         tem."wrWicketNo" as "wicketNo",
         tem."wrIsInningRun" as "isInningRun",
         tem."wrCreatedBy" as "createdBy",
-        tem."wrFavRatio" as "favRatio"
+        tem."wrFavRatio" as "favRatio",
+        tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
+        tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase"
     FROM "tblEventMarkets" tem
     WHERE tem."wrCommentaryId" IN(${commentaryIds}) AND tem."wrIsDeleted" = FALSE
     AND (
@@ -133,7 +135,9 @@ const getAllEventMarketsQuery = async (fastify, whereCondition = null) => {
         tmr."wrSelectionId" as "selectionId",
         tmr."wrRunner" as "runner",
         tem."wrCreatedBy" as "createdBy",
-        tem."wrAfterCloseTime" as "afterCloseTime"
+        tem."wrAfterCloseTime" as "afterCloseTime",
+        tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
+        tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase"
     FROM "tblEventMarkets" tem
     LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
     LEFT JOIN "tblCompetitions" tcom ON tcom."wrCompetitionId" = tc."wrCompetitionId"
@@ -184,7 +188,7 @@ const getAllEventMarketsQueryV1 = async (fastify, whereCondition = null) => {
         "wrAfterWicketNotCreated" as "afterWicketNotCreated",
         tem."wrIsActive" as "isActive",	
         "wrIsAllow" as "isAllow",
-        "wrCloseTime" as "closeTime",
+        tem."wrCloseTime" as "closeTime",
         "wrOpenTime" as "openTime",
         "wrSettledTime" as "settledTime",
         "wrResult" as "result",
@@ -215,6 +219,8 @@ const getAllEventMarketsQueryV1 = async (fastify, whereCondition = null) => {
         tem."wrCreatedBy" as "createdBy",
         tem."wrIsInningRun" as "isInningRun",
         tem."wrWicketNo" as "wicketNo",
+        tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
+        tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
         COALESCE(runner_data."runners", '[]') as "runners"
     FROM "tblEventMarkets" tem
     LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
@@ -288,7 +294,7 @@ const getExistingEventMarketsQueryV1 = async (fastify, whereCondition = null) =>
         "wrAfterWicketNotCreated" as "afterWicketNotCreated",
         tem."wrIsActive" as "isActive",	
         "wrIsAllow" as "isAllow",
-        "wrCloseTime" as "closeTime",
+        tem."wrCloseTime" as "closeTime",
         "wrOpenTime" as "openTime",
         "wrSettledTime" as "settledTime",
         "wrResult" as "result",
@@ -319,6 +325,8 @@ const getExistingEventMarketsQueryV1 = async (fastify, whereCondition = null) =>
         tem."wrCreatedBy" as "createdBy",
         tem."wrIsInningRun" as "isInningRun",
         tem."wrWicketNo" as "wicketNo",
+        tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
+        tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase"
         COALESCE(runner_data."runners", '[]') as "runners"
     FROM "tblEventMarkets" tem
     LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
@@ -394,7 +402,7 @@ const getEventMarketByIdsQuery = async (data, request, fastify) => {
             "wrAfterWicketNotCreated" as "afterWicketNotCreated",
             tem."wrIsActive" as "isActive",	
             "wrIsAllow" as "isAllow",
-            "wrCloseTime" as "closeTime",
+            tem."wrCloseTime" as "closeTime",
             "wrOpenTime" as "openTime",
             "wrSettledTime" as "settledTime",
             "wrResult" as "result",
@@ -431,7 +439,9 @@ const getEventMarketByIdsQuery = async (data, request, fastify) => {
             tem."wrRateSourceRefID" as "rateSourceRefID",
             tem."wrAfterSuspendTime" as "afterSuspendTime",
             tem."wrCreatedBy" as "createdBy",
-            tem."wrAfterCloseTime" as "afterCloseTime"
+            tem."wrAfterCloseTime" as "afterCloseTime",
+            tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
+            tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase"
         FROM "tblEventMarkets" tem
         LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
         LEFT JOIN "tblCompetitions" tcom ON tcom."wrCompetitionId" = tc."wrCompetitionId"
@@ -489,7 +499,9 @@ const createManyEventMarketQuery = async (data, request, fastify) => {
                 ${item.actionType},
                 ${item.isSendData},
                 ${item.marketTemplateId},
-                ${item.delay}
+                ${item.delay},
+                ${item?.autoSuspendAfterChase ?? null},
+                ${item?.autoNotCreateAfterChase ?? null}
             )`;
       })
       .join(",");
@@ -528,7 +540,9 @@ const createManyEventMarketQuery = async (data, request, fastify) => {
             "wrActionType",
             "wrIsSendData",
             "wrMarketTemplateId",
-            "wrDelay"
+            "wrDelay",
+            "wrAutoSuspendAfterChase",
+            "wrAutoNotCreateAfterChase"
         ) VALUES ${values} 
         RETURNING "wrID" as "eventMarketId"`;
     return await fastify.db.query(query, {
@@ -678,6 +692,8 @@ const getMarketListByCIdQuery = async (data, request, fastify) => {
             tem."wrIsInningRun" as "isInningRun",
             tem."wrPredefinedValue" as "predefinedValue",
             tem."wrWicketNo" as "wicketNo",
+            tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
+            tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
             tem."wrPlayerID" as "playerId",
            (
                 SELECT json_agg(
@@ -770,6 +786,8 @@ const getMarketByIdQuery = async (data, request, fastify) => {
             tem."wrWicketNo" as "wicketNo",
             tem."wrIsInningRun" as "isInningRun",
             tem."wrRateDiff" as "rateDiff", 
+            tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
+            tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
             tem."wrPlayerID" as "playerId",
            (
                 SELECT json_agg(
@@ -901,6 +919,8 @@ const updateEventMarketRateQuery = async (data, request, fastify) => {
                 tem."wrStatus" as "status",
                 tem."wrIsActive" as "isActive",
                 tem."wrIsAllow" as "isAllow",
+                tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
+                tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
                 json_agg(
                     json_build_object(
                         'runnerId' , tmr."wrRunnerId",
@@ -1350,6 +1370,8 @@ const closeEventMarketByTeamIdQuery = async (data, request, fastify) => {
               tem."wrStatus" as "status",
               tem."wrIsActive" as "isActive",
               tem."wrIsAllow" as "isAllow",
+              tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
+              tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
               json_agg(
                   json_build_object(
                       'runnerId', tmr."wrRunnerId",
@@ -1518,6 +1540,8 @@ const cancelEventMarketByTeamIdQuery = async (data, request, fastify) => {
           tem."wrStatus" as "status",
           tem."wrIsActive" as "isActive",
           tem."wrIsAllow" as "isAllow",
+          tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
+          tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
           json_agg(
               json_build_object(
                   'runnerId', tmr."wrRunnerId",
@@ -1913,7 +1937,9 @@ const getMarketsByCIdQuery = async (request, whereCondition, fastify) => {
             "wrOpenOdds" as "openOdds",
             "wrMarketTypeCategoryId" AS "marketTypeCategoryId",
             "wrResult" as "result",
-            "tblEventMarkets"."wrIsActive" as "isActive"
+            "tblEventMarkets"."wrIsActive" as "isActive",
+            "tblEventMarkets"."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
+            "tblEventMarkets"."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase"
         FROM "tblEventMarkets"
         LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = "tblEventMarkets"."wrTeamID"
         WHERE "wrEventRefID" = $1 ${whereCondition}
@@ -1940,7 +1966,9 @@ const getMarketsByCIdQuery = async (request, whereCondition, fastify) => {
             tmr."wrBackSize" as "backSize",
             "wrMarketTypeCategoryId" AS "marketTypeCategoryId",
             tmr."wrLaySize" as "laySize",
-            "tblEventMarkets"."wrIsActive" as "isActive"
+            "tblEventMarkets"."wrIsActive" as "isActive",
+            "tblEventMarkets"."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
+            "tblEventMarkets"."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase"
         FROM "tblEventMarkets"
         LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = "tblEventMarkets"."wrTeamID"
         LEFT JOIN "tblMarketRunners" tmr ON tmr."wrEventMarketId" = "tblEventMarkets"."wrID"
@@ -2482,6 +2510,8 @@ EventMarkets_CTE AS (
         tem."wrIsAllow" AS "isAllow",
         tem."wrIsSendData" AS "isSendData",
         tem."wrLineRatio" AS "lineRatio",
+        tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
+        tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
         (
             SELECT array_agg(row_to_json(MarketRunners_CTE))
             FROM MarketRunners_CTE
@@ -2819,7 +2849,7 @@ const getEventMarketsQuery = async (fastify, whereCondition = null) => {
           tem."wrIsActive" as "isActive",
           tem."wrDelay" as "delay",
           "wrIsAllow" as "isAllow",
-          "wrCloseTime" as "closeTime",
+          tem."wrCloseTime" as "closeTime",
           "wrOpenTime" as "openTime",
           "wrSettledTime" as "settledTime",
           "wrResult" as "result",
@@ -2834,7 +2864,9 @@ const getEventMarketsQuery = async (fastify, whereCondition = null) => {
           tem."wrCreatedBy" as "createdBy",
           tem."wrIsDeleted" as "isDeleted",
           tmr."wrRunner" as "resultRunner",
-          tem."wrIsInningRun" as "isInningRun"
+          tem."wrIsInningRun" as "isInningRun",
+          tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
+          tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase"
       FROM "tblEventMarkets" tem
       LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
       LEFT JOIN "tblCompetitions" tcom ON tcom."wrCompetitionId" = tc."wrCompetitionId"
@@ -2987,7 +3019,7 @@ const getEventMarketQueryV1 = async (fastify) => {
           "wrAfterWicketNotCreated" as "afterWicketNotCreated",
           tem."wrIsActive" as "isActive",	
           "wrIsAllow" as "isAllow",
-          "wrCloseTime" as "closeTime",
+          tem."wrCloseTime" as "closeTime",
           "wrOpenTime" as "openTime",
           "wrSettledTime" as "settledTime",
           "wrResult" as "result",
@@ -3009,6 +3041,8 @@ const getEventMarketQueryV1 = async (fastify) => {
           tem."wrCreatedBy" as "createdBy",
           tem."wrRateSource" as "rateSource",
           tem."wrRateSourceRefID" as "rateSourceRefID",
+          tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
+          tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
           json_agg(
                   json_build_object(
                       'runnerId', tmr."wrRunnerId",
@@ -3148,7 +3182,7 @@ const getEventMarketByIdsQueryV1 = async (data, request, fastify) => {
           "wrAfterWicketNotCreated" as "afterWicketNotCreated",
           tem."wrIsActive" as "isActive",	
           "wrIsAllow" as "isAllow",
-          "wrCloseTime" as "closeTime",
+          tem."wrCloseTime" as "closeTime",
           "wrOpenTime" as "openTime",
           "wrSettledTime" as "settledTime",
           "wrResult" as "result",
@@ -3174,6 +3208,8 @@ const getEventMarketByIdsQueryV1 = async (data, request, fastify) => {
           tem."wrCreatedBy" as "createdBy",
           tem."wrIsInningRun" as "isInningRun",
           tem."wrDefaultLaySize" as "defaultLaySize",
+          tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
+          tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
           json_agg(
                   json_build_object(
                       'runnerId', tmr."wrRunnerId",
@@ -3252,6 +3288,8 @@ const getMarketListByCIdQueryV1 = async (data, request, fastify) => {
             tem."wrPredefinedValue" as "predefinedValue",
             tem."wrWicketNo" as "wicketNo",
             tem."wrPlayerID" as "playerId",
+            tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
+            tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
             null as "playerScore",
             (
                 SELECT json_agg(
@@ -3326,6 +3364,8 @@ const getMarketWithRunnerQuery = async (fastify, whereCondition) => {
         "wrIsResult" as "isResult",
         tem."wrCreatedBy" as "createdBy",
         tmr."wrRunner" as "resultRunner",
+        tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
+        tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
         COALESCE(runner_data."runners", '[]') as "runners"
     FROM "tblEventMarkets" tem
     LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
@@ -3405,6 +3445,8 @@ const closeMarketByATQuery = async (data, request, fastify) => {
               tem."wrStatus" as "status",
               tem."wrIsActive" as "isActive",
               tem."wrIsAllow" as "isAllow",
+              tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
+              tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
               json_agg(
                   json_build_object(
                       'runnerId', tmr."wrRunnerId",
@@ -3515,6 +3557,8 @@ const cancelMarketByATQuery = async (data, request, fastify) => {
           tem."wrStatus" as "status",
           tem."wrIsActive" as "isActive",
           tem."wrIsAllow" as "isAllow",
+          tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
+          tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
           json_agg(
               json_build_object(
                   'runnerId', tmr."wrRunnerId",
@@ -3622,7 +3666,7 @@ const getEventMarketRunnersQuery = async (refID, fastify, request) => {
         "wrAfterWicketNotCreated" as "afterWicketNotCreated",
         tem."wrIsActive" as "isActive",        
         "wrIsAllow" as "isAllow",
-        "wrCloseTime" as "closeTime",
+        tem."wrCloseTime" as "closeTime",
         "wrOpenTime" as "openTime",
         "wrSettledTime" as "settledTime",
         "wrResult" as "result",
@@ -3664,6 +3708,8 @@ const getEventMarketRunnersQuery = async (refID, fastify, request) => {
         tem."wrDefaultBackSize" as "defaultBackSize",
         tem."wrCreatedBy" as "createdBy",
         tem."wrDefaultLaySize" as "defaultLaySize"
+        tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
+        tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase"
       FROM "tblEventMarkets" tem
       LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
       LEFT JOIN "tblCompetitions" tcom ON tcom."wrCompetitionId" = tc."wrCompetitionId"
@@ -4041,6 +4087,8 @@ const suspendMarketQuery = async (data, request, fastify) => {
             tem."wrMarketTypeId" as "marketTypeId",
             tem."wrLineType" as "lineType", 
             tem."wrRateDiff" as "rateDiff",
+            tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
+            tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
             (
                 SELECT json_agg(
                   json_build_object(
@@ -4217,6 +4265,8 @@ const playerMarketQuery = async (data, request, fastify) => {
             tem."wrWicketNo" as "wicketNo",
             tcp."wrBat_Run" as "playerScore",
             tem."wrPlayerID" as "playerId",
+            tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
+            tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
             (
                 SELECT json_agg(
                   json_build_object(
@@ -4308,6 +4358,8 @@ const boundaryMarketQuery = async (data, request, fastify) => {
             tem."wrWicketNo" as "wicketNo",
             tcp."wrBat_FOUR" + tcp."wrBat_SIX" as "playerScore",
             tem."wrPlayerID" as "playerId",
+            tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
+            tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
             (
                 SELECT json_agg(
                   json_build_object(
@@ -4399,6 +4451,8 @@ const pbfMarketQuery = async (data, request, fastify) => {
             tem."wrWicketNo" as "wicketNo",
             tcp."wrBat_Ball" as "playerScore",
             tem."wrPlayerID" as "playerId",
+            tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
+            tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
             (
                 SELECT json_agg(
                   json_build_object(
@@ -4464,6 +4518,8 @@ const getEventMarketsByCommId = async (commentaryId, request, fastify) => {
           tem."wrMarketTypeId" as "marketTypeId",
           tmt."wrMarketTypeName" as "marketTypeName",
           tem."wrMarketTypeCategoryId" as "marketTypeCategoryId",
+          tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
+          tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
           tmtc."wrCategoryName" as "categoryName",
           COALESCE(
               json_agg(
@@ -4598,7 +4654,7 @@ const getManualMarketDataQuery = async (data,request, fastify) => {
           "wrAfterWicketNotCreated" as "afterWicketNotCreated",
           tem."wrIsActive" as "isActive",	
           "wrIsAllow" as "isAllow",
-          "wrCloseTime" as "closeTime",
+          tem."wrCloseTime" as "closeTime",
           "wrOpenTime" as "openTime",
           "wrSettledTime" as "settledTime",
           "wrResult" as "result",
@@ -4629,6 +4685,8 @@ const getManualMarketDataQuery = async (data,request, fastify) => {
           tem."wrWicketNo" as "wicketNo",
           tem."wrCreatedBy" as "createdBy",
           tem."wrFavRatio" as "favRatio",
+          tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
+          tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
           COALESCE(runner_data."runners", '[]') as "runners"
       FROM "tblEventMarkets" tem
       LEFT JOIN "tblMarketRunners" tr ON tr."wrEventMarketId" = tem."wrID"
@@ -4707,7 +4765,7 @@ const getExtraMarketQuery = async (data,request, fastify) => {
           "wrAfterWicketNotCreated" as "afterWicketNotCreated",
           tem."wrIsActive" as "isActive",	
           "wrIsAllow" as "isAllow",
-          "wrCloseTime" as "closeTime",
+          tem."wrCloseTime" as "closeTime",
           "wrOpenTime" as "openTime",
           "wrSettledTime" as "settledTime",
           "wrResult" as "result",
@@ -4738,6 +4796,8 @@ const getExtraMarketQuery = async (data,request, fastify) => {
           tem."wrPredefinedValue" as "predefinedValue",
           tem."wrWicketNo" as "wicketNo",
           tem."wrFavRatio" as "favRatio",
+          tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
+          tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
           COALESCE(runner_data."runners", '[]') as "runners"
       FROM "tblEventMarkets" tem
       LEFT JOIN "tblMarketRunners" tr ON tr."wrEventMarketId" = tem."wrID"
@@ -4813,10 +4873,13 @@ const saveManualMarketQuery = async (data, request, fastify) => {
           "wrRateDiff",
           "wrLastUpdate",
           "wrFavRatio",
-          "wrMargin"
+          "wrMargin",
+          "wrAutoSuspendAfterChase",
+          "wrAutoNotCreateAfterChase"
       )
       VALUES (
-          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22 , now()::timestamp,$23, $24
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22 , now()::timestamp,$23, $24,
+          $25. $26
       )
         RETURNING "wrID" as "eventMarketId";
       `,
@@ -4845,7 +4908,9 @@ const saveManualMarketQuery = async (data, request, fastify) => {
           10000,
           data.rateDiff,
           data.favRatio || null,
-          data.margin || null
+          data.margin || null,
+          data.autoSuspendAfterChase || null,
+          data.autoNotCreateAfterChase || null
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -4883,6 +4948,8 @@ const saveManualMarketQuery = async (data, request, fastify) => {
           tem."wrStatus" as "status",
           tem."wrIsActive" as "isActive",
           tem."wrIsAllow" as "isAllow",
+          tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
+          tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
           json_agg(
               json_build_object(
                   'runnerId' , tmr."wrRunnerId",
@@ -5237,6 +5304,8 @@ const openMarketScoketConnectionDataQuery = async (commentaryId, fastify) => {
         tem."wrRateDiff" AS "rateDiff",
         tem."wrCreatedBy" AS "createdBy",
         tem."wrIsInningRun" AS "isInningRun",
+        tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
+        tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
         COALESCE(runner_data."runners", '[]') AS "runners"
     FROM "tblEventMarkets" tem
     LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
@@ -5522,6 +5591,8 @@ const getMnMarketByCId = async (data, fastify ,request = null) => {
             tem."wrRateDiff" as "rateDiff",
             tem."wrIsInningRun" as "isInningRun",
             tem."wrPredefinedValue" as "predefinedValue",
+            tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
+            tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
             (
                 SELECT json_agg(
                   json_build_object(
@@ -5607,6 +5678,8 @@ const getRsMarketQuery = async (data, request, fastify) => {
             tem."wrRateDiff" as "rateDiff",
             tem."wrIsInningRun" as "isInningRun",
             tem."wrPredefinedValue" as "predefinedValue",
+            tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
+            tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
             (
                 SELECT json_agg(
                   json_build_object(
@@ -5721,7 +5794,9 @@ const getAllEventMarketsV2ByIdQuery = async (fastify, whereCondition = null) => 
           tem."wrRateDiff" as "rateDiff",
           tem."wrWicketNo" as "wicketNo",
           tem."wrIsInningRun" as "isInningRun",
-          tem."wrFavRatio" as "favRatio"
+          tem."wrFavRatio" as "favRatio",
+          tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
+          tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase"
       FROM "tblEventMarkets" tem
       ${whereCondition ? ` WHERE ${whereCondition}` : ""}`,
       {
@@ -6008,6 +6083,8 @@ const getMarketByComIdQuery = async (data,fastify) => {
             tem."wrIsInningRun" as "isInningRun",
             tem."wrRateDiff" as "rateDiff", 
             tem."wrPlayerID" as "playerId",
+            tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
+            tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
            (
                 SELECT json_agg(
                   json_build_object(

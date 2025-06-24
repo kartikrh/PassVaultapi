@@ -8,6 +8,7 @@ const {
   ballByBallChange,
   suffleCardAPI,
   cancelEventAPI,
+  undoAPI,
 } = require("../../../controller/users/admin/virtual");
 const { VirtualEvent } = require("../../../swaggerSchema/groupTags/schema");
 
@@ -45,6 +46,10 @@ module.exports = async (fastify, opts) => {
     schema: VirtualEvent.cancelEvent.schema,
     // handler: (request, reply) => ballByBallVirtualEvent(request, reply, fastify),
     handler: (request, reply) => cancelEventAPI(request, reply, fastify),
+  });
+   fastify.post("/undo", {
+    // schema: VirtualEvent.cancelEvent.schema,
+    handler: (request, reply) => undoAPI(request, reply, fastify),
   });
   
 };
