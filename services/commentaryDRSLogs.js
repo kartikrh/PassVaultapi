@@ -12,15 +12,21 @@ const {
 
 const createCommDrsLogService = async(request, fastify) => {
     const body = request.body
+    let isCount = body.isCount || false;
     const commentaryTeamData = await getCommentaryTeamsDRSQuery(body, fastify);
     if( commentaryTeamData && 
-        commentaryTeamData.drsCount > commentaryTeamData.drsFail
+        commentaryTeamData.drsCount > 0
     ) {
         await insertCommentaryDRSLogsQuery(body, fastify, request);
         if(request.body.result !== undefined){
             if(request.body.result === true){
+                let drsCount = commentaryTeamData.drsCount;
+                if(isCount == true){
+                    drsCount = (commentaryTeamData.drsCount || 0) - 1;
+                }
                 const attemptData = await updateCommentaryTeamDrsAttemptsQuery({
                     drsAttempt: commentaryTeamData.drsAttempt + 1,
+                    drsCount: drsCount,
                     commentaryTeamId: body.commentaryTeamId,
                     teamId: body.teamId,
                     commentaryId: body.commentaryId
@@ -35,9 +41,14 @@ const createCommDrsLogService = async(request, fastify) => {
                     }
                 }
             } else {
+                let drsCount = commentaryTeamData.drsCount;
+                if(isCount == true){
+                    drsCount = (commentaryTeamData.drsCount || 0) - 1;
+                }
                 const drsData = await updateCommentaryTeamDrsAttemptsAndFailQuery({
-                    drsAttempt: commentaryTeamData.drsAttempt - 1,
+                    drsAttempt: commentaryTeamData.drsAttempt + 1,
                     drsFail: commentaryTeamData.drsFail + 1,
+                    drsCount: drsCount,
                     commentaryTeamId: body.commentaryTeamId,
                     teamId: body.teamId,
                     commentaryId: body.commentaryId

@@ -106,6 +106,14 @@ const setShortCommenrty = (eventId) => {
       item.teamId === commentary.team2Id &&
       item.currentInnings === commentary.currentInnings
   );
+   // get batting and bowling team
+  let battingTeam = global.tblCommentaryTeams.find(
+    (item) =>
+      item?.commentaryId === commentary.commentaryId &&
+      item.teamStatus === 1 &&
+      item.currentInnings === commentary.currentInnings
+  );
+  let teamScore = battingTeam?.teamScore || 0 + "/" + battingTeam?.teamWicket || 0 + "(" + battingTeam?.teamOver || 0.0 + ")";
 
   let teamScore1, teamScore2, t1sn, t1n, t2sn, t2n;
   if (commentaryTeamsOne) {
@@ -146,6 +154,8 @@ const setShortCommenrty = (eventId) => {
     t2set: null,
     t1p: null,
     t2p: null,
+    currBatting : battingTeam?.teamName || null,
+    currBattingTeamScore: teamScore || null
   };
   return es;
 };
