@@ -324,8 +324,8 @@ async function insertMarketWithRunners(market, fastify) {
                 ${marketValue.defaultLaySize || 100}, 
                 ${marketValue.defaultIsSendData || false}, 
                 ${marketValue.rateDiff || 0},
-                ${marketValue.autoSuspendAfterChase || null},
-                ${marketValue.autoNotCreateAfterChase || null},
+                ${marketValue?.autoSuspendAfterChase || null},
+                ${marketValue?.autoNotCreateAfterChase || null}
             ) RETURNING "wrID"
         `;
 

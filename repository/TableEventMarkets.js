@@ -500,8 +500,8 @@ const createManyEventMarketQuery = async (data, request, fastify) => {
                 ${item.isSendData},
                 ${item.marketTemplateId},
                 ${item.delay},
-                ${item.autoSuspendAfterChase ?? null},
-                ${item.autoNotCreateAfterChase ?? null},
+                ${item?.autoSuspendAfterChase ?? null},
+                ${item?.autoNotCreateAfterChase ?? null}
             )`;
       })
       .join(",");
