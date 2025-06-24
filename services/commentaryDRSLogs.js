@@ -13,6 +13,14 @@ const {
 const createCommDrsLogService = async(request, fastify) => {
     const body = request.body
     let isCount = body.isCount || false;
+    if(body.commentaryId){
+        let cData = global.tblCommentary.find(
+            (item) => item.commentaryId == body.commentaryId
+        );
+        if(!cData){
+            throw new Error("Commentary not found");
+        }
+    }
     const commentaryTeamData = await getCommentaryTeamsDRSQuery(body, fastify);
     if( commentaryTeamData && 
         commentaryTeamData.drsCount > 0
