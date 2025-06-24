@@ -4999,6 +4999,7 @@ const setShortCommenrty = (eventId) => {
       item.teamStatus === 1 &&
       item.currentInnings === commentary.currentInnings
   );
+  let teamScore = (battingTeam?.teamScore || 0) + "/" + (battingTeam?.teamWicket || 0 ) + "(" + (battingTeam?.teamOver || 0.0) + ")";
   let teamScore1, teamScore2, t1sn, t1n, t2sn, t2n;
   if (commentaryTeamsOne) {
     t1sn = commentaryTeamsTwo.shortName;
@@ -5039,7 +5040,7 @@ const setShortCommenrty = (eventId) => {
     t1p: null,
     t2p: null,
     currBatting : battingTeam?.teamName || "",
-    currBattingTeamScore: battingTeam?.teamScore || "",
+    currBattingTeamScore: teamScore || "",
   };
   return es;
 };
