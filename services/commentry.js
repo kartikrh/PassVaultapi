@@ -3894,7 +3894,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           item?.commentaryId === commentaryBallByBall.commentaryId &&
           item.teamStatus === 1
       );
-
+      let target = commentaryData.target ?? null; 
       let decimalOverCount = parseFloat(commentaryBallByBall.overCount);
       let _wkt = commentaryBallByBall.ballIsWicket;
       let partnership = updatedData.commentaryPartnershipDetails;
@@ -3942,6 +3942,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
             : null,
         },
         commentary_id: commentaryId,
+        target: target
       };
       let isNodePrediction =
         global.tblConfigs.find(
