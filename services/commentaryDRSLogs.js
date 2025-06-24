@@ -2,6 +2,7 @@ const {
     commentaryDRSLogByIdQuery,
     insertCommentaryDRSLogsQuery,
     updateCommentaryDRSLogsQuery,
+    commentaryDRSLogByCommQuery,
 } = require("../repository/TableCommentaryDRSLogs");
 const {
     updateCommentaryTeamDrsAttemptsAndFailQuery,
@@ -70,6 +71,7 @@ const updateCommDrsLogService = async(request, fastify) => {
         teamId: request.body.teamId ?? drsData.teamId,
         result: Boolean(request.body.result) ?? drsData.result,
         id: parseInt(request.body.id, 10),
+        isCount: request.body.isCount ?? drsData.isCount,
     };
     const commentaryTeamData = await getCommentaryTeamsDRSQuery(updateData, fastify);
     if(commentaryTeamData && request.body.result !== undefined){
@@ -124,6 +126,27 @@ const saveCommDrsLogService = async(request, fastify) => {
     }
 }
 
+const getCommDRSLogByIdService = async(request, fastify) => {
+    const drsData = await commentaryDRSLogByIdQuery(request.body.id, request, fastify);
+    // if(!drsData){
+    //     throw new Error("DRS log with this Id not found");
+    // }
+    return drsData || null
+}
+
+const getCommDRSLogByCommIdService = async(request, fastify) => {
+    const { commentaryId, commentaryTeamId } = request.body;
+    let whereCondition = `logs."wrCommentaryId" = ${commentaryId}`
+
+    if(commentaryTeamId) {
+        whereCondition += ` AND logs."wrCommentaryTeamId" = ${commentaryTeamId}`
+    }
+    const drsData = await commentaryDRSLogByCommQuery(whereCondition, request, fastify);
+    return drsData || []
+}
+
 module.exports = {
     saveCommDrsLogService,
+    getCommDRSLogByIdService,
+    getCommDRSLogByCommIdService,
 }

@@ -96,7 +96,7 @@ const { getEventSnapByComService, updateEventSnapByComService } = require("../..
 const { getAllCommentariesDataService, getAllCommentariesDataServiceV1 } = require("../../../../services/score");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
-const { saveCommDrsLogService } = require("../../../../services/commentaryDRSLogs");
+const { saveCommDrsLogService, getCommDRSLogByIdService, getCommDRSLogByCommIdService } = require("../../../../services/commentaryDRSLogs");
 const { allPythonAPIsService } = require("../../../../services/pythonAPI")
 
 let path = "controller/users/admin/commentary/commentary";
@@ -1203,6 +1203,24 @@ const undoAPI = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const getCommDRSLogById = async (request, reply, fastify) => {
+  try {
+    const result = await getCommDRSLogByIdService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/getCommDRSLogById", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const getCommDRSLogByCommId = async (request, reply, fastify) => {
+  try {
+    const result = await getCommDRSLogByCommIdService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/getCommDRSLogByCommId", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 module.exports = {
   getAllCommentaries,
   getCommentaryById,
@@ -1304,4 +1322,6 @@ module.exports = {
   allPythonAPIs,
   updatePythonAPI,
   undoAPI,
+  getCommDRSLogById,
+  getCommDRSLogByCommId,
 }
