@@ -2810,6 +2810,159 @@ const cancelEventAPIService = async (request, fastify) => {
   global.tblCommentaries[index].commentaryStatus = commentaryStatus.CANCELLED;
   return "Event cancelled successfully";
 };
+const undoAPIService = async (request, fastify) => {
+    const { 
+      commentaryId,
+      isCallPredict,
+      commentaryOvers,
+      commentaryTeams,
+      deleteCommentaryBallByBallId,
+      commentaryPlayers,
+      commentaryPartnership,
+      commentaryDetails,
+    } = request.body;
+    const commentaryData = global.tblCommentaries.find(
+        (item) => item?.commentaryId === commentaryId
+    );
+    if (!commentaryData) {
+        throw new Error("Commentary with this id not found");
+    }
+
+    let updatedData = await fastify.db.query(
+      `CALL proc_undo_commentary(
+        $1, $2, $3, $4, $5, $6, $7, $8,
+        $9, $10, $11, $12, $13
+      )`,
+      {
+        bind: [
+          commentaryId,
+          deleteCommentaryBallByBallId,
+          commentaryDetails ? JSON.stringify(commentaryDetails) : null,
+          commentaryOvers ? JSON.stringify(commentaryOvers) : null,
+          commentaryPartnership ? JSON.stringify(commentaryPartnership) : null,
+          commentaryPlayers ? JSON.stringify(commentaryPlayers) : null,
+          commentaryTeams ? JSON.stringify(commentaryTeams) : null,
+          request.userTokenInfo?.WrUserId ?? null,
+          null, // commentaryTeamsData
+          null, // overDetails
+          null, // commentaryPartnershipData
+          null, // commentaryData
+          null  // commentaryPlayersData
+        ],
+        type: fastify.db.QueryTypes.SELECT
+      }
+    );
+
+    updatedData = updatedData[0];
+
+    const commIndex = global.tblCommentaries.findIndex(item => item.commentaryId == commentaryId);
+    if (commIndex !== -1 && updatedData?.commentarydata) {
+      global.tblCommentaries[commIndex] = {
+        ...global.tblCommentaries[commIndex],
+        ...updatedData.commentarydata
+      };
+    }
+    for (const team of updatedData?.commentaryteamsdata || []) {
+      const comTeamIndex = global.tblCommentaryTeams.findIndex(item =>
+        item.commentaryId == commentaryId && item.commentaryTeamId == team?.commentaryTeamId
+      );
+      if (comTeamIndex !== -1) {
+        global.tblCommentaryTeams[comTeamIndex] = {
+          ...global.tblCommentaryTeams[comTeamIndex],
+          ...team
+        };
+      }
+    }
+    for (const player of updatedData?.commentaryplayersdata || []) {
+      const comPlayerIndex = global.tblCommentaryPlayers.findIndex(item =>
+        item.commentaryId == commentaryId && item.commentaryPlayerId == player?.commentaryPlayerId
+      );
+      if (comPlayerIndex !== -1) {
+        global.tblCommentaryPlayers[comPlayerIndex] = {
+          ...global.tblCommentaryPlayers[comPlayerIndex],
+          ...player
+        };
+      }
+    }
+
+    const partnIndex = global.tblCommentaryPartnership.findIndex(item => 
+      item.commentaryId == commentaryId && item.commentaryPartnershipId == updatedData?.commentarypartnershipdata?.commentaryPartnershipId
+    );
+    if (partnIndex !== -1 && updatedData?.commentarypartnershipdata) {
+      global.tblCommentaryPartnership[partnIndex] = {
+        ...global.tblCommentaryPartnership[partnIndex],
+        ...updatedData.commentarypartnershipdata
+      };
+    }
+
+    // if (updatedData?.overdetails?.overId) {
+      const overIndex = global.tblOvers.findIndex(item =>
+        item.commentaryId == commentaryId && item.overId == updatedData.overdetails.overId
+      );
+      if (overIndex !== -1) {
+        global.tblOvers[overIndex] = {
+          ...global.tblOvers[overIndex],
+          ...updatedData.overdetails
+        };
+      }
+    // }
+
+    const ballByBallIndex = global.tblCommentaryBallByBall.findIndex(
+      item => item.commentaryBallByBall === deleteCommentaryBallByBallId
+    );
+    if (ballByBallIndex !== -1) {
+      global.tblCommentaryBallByBall.splice(ballByBallIndex, 1);
+    }
+
+    let strikeTeam = global.tblCommentaryTeams.find(
+        (item) =>
+          item?.commentaryId === commentaryId &&
+          item.teamStatus === 1
+    );
+
+    const previousBall = global.tblCommentaryBallByBall
+      .filter(
+        (item) =>
+          item?.commentaryId === commentaryId &&
+          item.ballType > 0 &&
+          item.currentInnings === commentaryDetails.currentInnings &&
+          item.teamId === strikeTeam.teamId
+    )
+    const decimalOverCount = parseFloat(previousBall.overCount);
+    const _wkt = previousBall.ballIsWicket;
+
+    if (commentaryData.isPredictMarket && isCallPredict == true) {
+    let pythonURI = commentaryData.pythonURI || null;
+    callPredictorMarket(
+        {
+            commentary_id: commentaryId,
+            match_type_id: commentaryData.matchTypeId,
+            ball: decimalOverCount,
+            run: previousBall.ballRun,
+            total_score: strikeTeam.teamScore,
+            strike_team_id: strikeTeam?.teamId,
+            wicket: _wkt === true ? 1 : 0,
+            total_wicket: strikeTeam.teamWicket,
+            ball_by_ball_id: deleteCommentaryBallByBallId
+                ? parseInt(deleteCommentaryBallByBallId)
+                : null,
+        },
+        "/api/v1/undoscore",
+        fastify,
+        request,
+        pythonURI
+    ).catch((err) => {
+        errorLogger(
+            fastify,
+            err.message,
+            "ERROR --> services/virtual.js/undoAPIService",
+            request
+        );
+    });
+  }
+
+  return `Undo completed successfully`
+}
 module.exports = {
   saveEventervice,
   createVirtualEventService,
@@ -2822,4 +2975,5 @@ module.exports = {
   onInningChangeService,
   suffleCardAPIService,
   cancelEventAPIService,
+  undoAPIService,
 };
