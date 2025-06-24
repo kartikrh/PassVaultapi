@@ -3650,6 +3650,35 @@ const Commentary = {
       },
     },
   },
+  drsById: {
+    schema: {
+      tags: ["Commentary"],
+      description: "get commentary DRS data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+        },
+        required: ["id"],
+      },
+    },
+  },
+  drsByCommentaryId: {
+    schema: {
+      tags: ["Commentary"],
+      description: "get commentary DRS data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+          commentaryTeamId: { type: "integer" },
+        },
+        required: ["commentaryId"],
+      },
+    },
+  },
 };
 
 const Compitition = {
@@ -7011,7 +7040,25 @@ const Logs = {
         required : ["page", "limit"]
       }
     }
-  }
+  },
+  DRSLogs : {
+    schema : {
+      tags : ["Logs"],
+      description : "event Market Logs",
+      security : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          skip : {type : "integer"},
+          limit : {type : "integer"},
+          commentaryId : {type : "integer"},
+          startDate : {type : "string"},
+          endDate : {type : "string"}
+        },
+        required : ["page", "limit"]
+      }
+    }
+  },
 }
 const ThirdPartyApis = {
   getAll: {
