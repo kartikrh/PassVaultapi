@@ -14,7 +14,7 @@ const createCommDrsLogService = async(request, fastify) => {
     const body = request.body
     let isCount = body.isCount || false;
     if(body.commentaryId){
-        let cData = global.tblCommentary.find(
+        let cData = global.tblCommentaries.find(
             (item) => item.commentaryId == body.commentaryId
         );
         if(!cData){
