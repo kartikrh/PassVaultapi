@@ -91,6 +91,8 @@ const {
   allPythonAPIs,
   updatePythonAPI,
   undoAPI,
+  getCommDRSLogById,
+  getCommDRSLogByCommId,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -1230,5 +1232,29 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request , reply) => undoAPI(request, reply, fastify)
+  })
+  fastify.post("/drsById", {
+    schema : Commentary.drsById.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        commentaryPermissionCheck(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "view"
+        }),
+    ],
+    handler: (request , reply) => getCommDRSLogById(request, reply, fastify)
+  })
+  fastify.post("/drsByCommId", {
+    schema : Commentary.drsByCommentaryId.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        commentaryPermissionCheck(request, reply, fastify, {
+          tabName: "Commentary",
+          mode: "view"
+        }),
+    ],
+    handler: (request , reply) => getCommDRSLogByCommId(request, reply, fastify)
   })
 };

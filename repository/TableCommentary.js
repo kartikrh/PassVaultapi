@@ -5541,7 +5541,8 @@ const updateCommentaryTeamDrsAttemptsAndFailQuery = async (data, fastify) => {
     const result = await fastify.db.query(
       `UPDATE "tblCommentaryTeams" SET
         "wrNoOfAttempt" = GREATEST(0, $1),
-        "wrNoOfFail" = GREATEST(0, $2)
+        "wrNoOfFail" = GREATEST(0, $2),
+        "wrDrsCount" = $6
       WHERE
         "wrCommentaryTeamId" = $3 
         AND "wrTeamId" = $4
@@ -5555,7 +5556,8 @@ const updateCommentaryTeamDrsAttemptsAndFailQuery = async (data, fastify) => {
             "wrNoOfFail" as "drsFail";`,
       {
         type: fastify.db.QueryTypes.SELECT,
-        bind: [data.drsAttempt, data.drsFail, data.commentaryTeamId, data.teamId, data.commentaryId],
+        bind: [data.drsAttempt, data.drsFail, data.commentaryTeamId, data.teamId,
+           data.commentaryId , data.drsCount],
       }
     );
     return result[0];
@@ -5574,7 +5576,8 @@ const updateCommentaryTeamDrsAttemptsQuery = async (data, fastify) => {
   try {
     const result = await fastify.db.query(
       `UPDATE "tblCommentaryTeams" SET
-        "wrNoOfAttempt" = GREATEST(0, $1)
+        "wrNoOfAttempt" = GREATEST(0, $1),
+        "wrDrsCount" = $5
       WHERE
         "wrCommentaryTeamId" = $2
         AND "wrTeamId" = $3
@@ -5587,7 +5590,7 @@ const updateCommentaryTeamDrsAttemptsQuery = async (data, fastify) => {
             "wrNoOfAttempt" as "drsAttempt";`,
       {
         type: fastify.db.QueryTypes.SELECT,
-        bind: [data.drsAttempt, data.commentaryTeamId, data.teamId, data.commentaryId],
+        bind: [data.drsAttempt, data.commentaryTeamId, data.teamId, data.commentaryId , data.drsCount],
       }
     );
     return result[0];

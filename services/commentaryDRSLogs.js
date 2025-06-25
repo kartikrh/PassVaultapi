@@ -2,6 +2,7 @@ const {
     commentaryDRSLogByIdQuery,
     insertCommentaryDRSLogsQuery,
     updateCommentaryDRSLogsQuery,
+    commentaryDRSLogByCommQuery,
 } = require("../repository/TableCommentaryDRSLogs");
 const {
     updateCommentaryTeamDrsAttemptsAndFailQuery,
@@ -11,15 +12,29 @@ const {
 
 const createCommDrsLogService = async(request, fastify) => {
     const body = request.body
+    let isCount = body.isCount || false;
+    if(body.commentaryId){
+        let cData = global.tblCommentary.find(
+            (item) => item.commentaryId == body.commentaryId
+        );
+        if(!cData){
+            throw new Error("Commentary not found");
+        }
+    }
     const commentaryTeamData = await getCommentaryTeamsDRSQuery(body, fastify);
     if( commentaryTeamData && 
-        commentaryTeamData.drsCount > commentaryTeamData.drsFail
+        commentaryTeamData.drsCount > 0
     ) {
         await insertCommentaryDRSLogsQuery(body, fastify, request);
         if(request.body.result !== undefined){
             if(request.body.result === true){
+                let drsCount = commentaryTeamData.drsCount;
+                if(isCount == true){
+                    drsCount = (commentaryTeamData.drsCount || 0) - 1;
+                }
                 const attemptData = await updateCommentaryTeamDrsAttemptsQuery({
                     drsAttempt: commentaryTeamData.drsAttempt + 1,
+                    drsCount: drsCount,
                     commentaryTeamId: body.commentaryTeamId,
                     teamId: body.teamId,
                     commentaryId: body.commentaryId
@@ -34,9 +49,14 @@ const createCommDrsLogService = async(request, fastify) => {
                     }
                 }
             } else {
+                let drsCount = commentaryTeamData.drsCount;
+                if(isCount == true){
+                    drsCount = (commentaryTeamData.drsCount || 0) - 1;
+                }
                 const drsData = await updateCommentaryTeamDrsAttemptsAndFailQuery({
-                    drsAttempt: commentaryTeamData.drsAttempt - 1,
+                    drsAttempt: commentaryTeamData.drsAttempt + 1,
                     drsFail: commentaryTeamData.drsFail + 1,
+                    drsCount: drsCount,
                     commentaryTeamId: body.commentaryTeamId,
                     teamId: body.teamId,
                     commentaryId: body.commentaryId
@@ -70,6 +90,7 @@ const updateCommDrsLogService = async(request, fastify) => {
         teamId: request.body.teamId ?? drsData.teamId,
         result: Boolean(request.body.result) ?? drsData.result,
         id: parseInt(request.body.id, 10),
+        isCount: request.body.isCount ?? drsData.isCount,
     };
     const commentaryTeamData = await getCommentaryTeamsDRSQuery(updateData, fastify);
     if(commentaryTeamData && request.body.result !== undefined){
@@ -124,6 +145,27 @@ const saveCommDrsLogService = async(request, fastify) => {
     }
 }
 
+const getCommDRSLogByIdService = async(request, fastify) => {
+    const drsData = await commentaryDRSLogByIdQuery(request.body.id, request, fastify);
+    // if(!drsData){
+    //     throw new Error("DRS log with this Id not found");
+    // }
+    return drsData || null
+}
+
+const getCommDRSLogByCommIdService = async(request, fastify) => {
+    const { commentaryId, commentaryTeamId } = request.body;
+    let whereCondition = `logs."wrCommentaryId" = ${commentaryId}`
+
+    if(commentaryTeamId) {
+        whereCondition += ` AND logs."wrCommentaryTeamId" = ${commentaryTeamId}`
+    }
+    const drsData = await commentaryDRSLogByCommQuery(whereCondition, request, fastify);
+    return drsData || []
+}
+
 module.exports = {
     saveCommDrsLogService,
+    getCommDRSLogByIdService,
+    getCommDRSLogByCommIdService,
 }

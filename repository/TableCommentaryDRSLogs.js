@@ -3,7 +3,7 @@ const { errorLogger } = require("../utilities/logger");
 
 const allCommentaryDRSLogsQuery = async (body, request, fastify) => {
     try {
-        const { page = 1, limit = 20, commentaryId , startDate , endDate } = body;
+        const { page = 1, limit = 20, commentaryId, startDate, endDate } = body;
         const {skip , take} = getPagination(page, limit);
         let where = null;
         where = commentaryId ? `logs."wrCommentaryId" = ${commentaryId}` : where;
@@ -21,7 +21,8 @@ const allCommentaryDRSLogsQuery = async (body, request, fastify) => {
                 tu1."WrUserName" as "createdBy",
                 logs."wrCreatedAt" as "createdAt",
                 tu2."WrUserName" as "updatedBy",
-                logs."wrUpdatedAt" as "updatedAt"
+                logs."wrUpdatedAt" as "updatedAt",
+                logs."wrIsCount" as "isCount"
             FROM "tblCommentaryDRSLogs" logs
             LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = logs."wrTeamId"
             LEFT JOIN "tblUsers" tu1 ON logs."wrCreatedBy" = tu1."WrUserId"
@@ -33,15 +34,12 @@ const allCommentaryDRSLogsQuery = async (body, request, fastify) => {
 
         const data = await fastify.db.query(query, {
             type: fastify.db.QueryTypes.SELECT,
-            bind : [
-                take,
-                skip
-            ]
+            bind : [take, skip]
         });
 
         const totalRecordsQuery = `
             SELECT COUNT(*) as "count"
-            FROM "tblComScoringLogs" logs
+            FROM "tblCommentaryDRSLogs" logs
             ${where ? `WHERE ${where}` : ''}
         `;
 
@@ -83,7 +81,8 @@ const commentaryDRSLogByIdQuery = async (id, request, fastify) => {
                 tu1."WrUserName" as "createdBy",
                 logs."wrCreatedAt" as "createdAt",
                 tu2."WrUserName" as "updatedBy",
-                logs."wrUpdatedAt" as "updatedAt"
+                logs."wrUpdatedAt" as "updatedAt",
+                logs."wrIsCount" as "isCount"
             FROM "tblCommentaryDRSLogs" logs
             LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = logs."wrTeamId"
             LEFT JOIN "tblUsers" tu1 ON logs."wrCreatedBy" = tu1."WrUserId"
@@ -107,6 +106,45 @@ const commentaryDRSLogByIdQuery = async (id, request, fastify) => {
     }
 };
 
+
+const commentaryDRSLogByCommQuery = async (whereCondition = undefined, request, fastify) => {
+    try {
+        const data = await fastify.db.query(
+            `SELECT 
+                logs."wrId" as "id",
+                logs."wrCommentaryId" as "commentaryId",
+                logs."wrCommentaryTeamId" as "commentaryTeamId",
+                logs."wrTeamId" as "teamId",
+                tt."wrTeamName" as "teamName",
+                logs."wrOrder" as "order",
+                logs."wrResult" as "result",
+                tu1."WrUserName" as "createdBy",
+                logs."wrCreatedAt" as "createdAt",
+                tu2."WrUserName" as "updatedBy",
+                logs."wrUpdatedAt" as "updatedAt",
+                logs."wrIsCount" as "isCount"
+            FROM "tblCommentaryDRSLogs" logs
+            LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = logs."wrTeamId"
+            LEFT JOIN "tblUsers" tu1 ON logs."wrCreatedBy" = tu1."WrUserId"
+            LEFT JOIN "tblUsers" tu2 ON logs."wrUpdatedBy" = tu2."WrUserId"
+            ${whereCondition ? `WHERE ${whereCondition}` : ""}`,
+            {
+                type: fastify.db.QueryTypes.SELECT,
+            }
+        );
+
+        return data;
+    } catch (err) {
+        errorLogger(
+            fastify,
+            err.message,
+            "DB ERROR --> repository/TableCommentaryDRSLogs.js/commentaryDRSLogByCommQuery",
+            request
+        );
+        throw new Error(err.message);
+    }
+};
+
 const insertCommentaryDRSLogsQuery = async (data, fastify, request) => {
     try {
         const result = await fastify.db.query(
@@ -119,10 +157,10 @@ const insertCommentaryDRSLogsQuery = async (data, fastify, request) => {
             )
             INSERT INTO "tblCommentaryDRSLogs" (
                 "wrCommentaryId", "wrCommentaryTeamId", "wrTeamId", "wrOrder", "wrResult",
-                "wrCreatedBy", "wrCreatedAt"
+                "wrCreatedBy", "wrCreatedAt", "wrIsCount"
             ) 
             SELECT 
-                $1, $2, $3, max_order + 1, $4, $5, NOW()
+                $1, $2, $3, max_order + 1, $4, $5, NOW(), $6
             FROM max_order
             RETURNING 
                 "wrId" as "id",
@@ -130,7 +168,8 @@ const insertCommentaryDRSLogsQuery = async (data, fastify, request) => {
                 "wrCommentaryTeamId" as "commentaryTeamId",
                 "wrTeamId" as "teamId",
                 "wrOrder" as "order",
-                "wrResult" as "result"`,
+                "wrResult" as "result",
+                "wrIsCount" as "isCount";`,
             {
                 type: fastify.db.QueryTypes.INSERT,
                 bind: [
@@ -139,6 +178,7 @@ const insertCommentaryDRSLogsQuery = async (data, fastify, request) => {
                     data.teamId,
                     data.result,
                     request.userTokenInfo.WrUserId,
+                    data.isCount ?? false
                 ],
             }
         );
@@ -164,7 +204,8 @@ const updateCommentaryDRSLogsQuery = async (data, fastify, request) => {
                 "wrTeamId" = $3,
                 "wrResult" = $4,
                 "wrUpdatedBy" = $5,
-                "wrUpdatedAt" = NOW()
+                "wrUpdatedAt" = NOW(),
+                "wrIsCount" = &7
             WHERE "wrId" = $6
             RETURNING 
                 "wrId" as "id",
@@ -172,7 +213,8 @@ const updateCommentaryDRSLogsQuery = async (data, fastify, request) => {
                 "wrCommentaryTeamId" as "commentaryTeamId",
                 "wrTeamId" as "teamId",
                 "wrOrder" as "order",
-                "wrResult" as "result";`,
+                "wrResult" as "result",
+                "wrIsCount" as "isCount";`,
             {
                 type: fastify.db.QueryTypes.SELECT,
                 bind: [
@@ -182,6 +224,7 @@ const updateCommentaryDRSLogsQuery = async (data, fastify, request) => {
                     data.result,
                     request.userTokenInfo.WrUserId,
                     data.id,
+                    data.isCount == undefined ? null : data.isCount
                 ],
             }
         );
@@ -202,4 +245,5 @@ module.exports = {
     commentaryDRSLogByIdQuery,
     insertCommentaryDRSLogsQuery,
     updateCommentaryDRSLogsQuery,
+    commentaryDRSLogByCommQuery,
 };
