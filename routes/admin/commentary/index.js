@@ -1,7 +1,7 @@
 const {
   authorize,
   checkPermission,
-  commentaryPermissionCheck,
+  multiTabPermissionCheck,
 } = require("../../../controller/middleware");
 const {
   getAllCommentaries,
@@ -93,6 +93,9 @@ const {
   undoAPI,
   getCommDRSLogById,
   getCommDRSLogByCommId,
+  dltDrs,
+  takeDrsData,
+  upDrsData,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -123,8 +126,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary" , "Commentary List" ],
           mode: "view",
         }),
     ],
@@ -135,8 +138,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "view",
         }),
     ],
@@ -147,8 +150,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "view",
         }),
     ],
@@ -159,8 +162,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "edit",
         }),
     ],
@@ -171,8 +174,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "view",
         }),
     ],
@@ -183,8 +186,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "view",
         }),
     ],
@@ -195,8 +198,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "view",
         }),
     ],
@@ -208,8 +211,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "view",
         }),
     ],
@@ -221,8 +224,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "view",
         }),
     ],
@@ -234,8 +237,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "view",
         }),
     ],
@@ -246,8 +249,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "view",
         }),
     ],
@@ -258,8 +261,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "view",
         }),
     ],
@@ -270,8 +273,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "view",
         }),
     ],
@@ -283,8 +286,8 @@ module.exports = async (fastify, opts) => {
     // preHandler: [
     //   (request, reply) => authorize(request, reply, fastify),
     //   (request, reply, done) =>
-    //     commentaryPermissionCheck(request, reply, fastify, {
-    //       tabName: "Commentary",
+    //     multiTabPermissionCheck(request, reply, fastify, {
+    //       tabName:[ "Commentary", "Commentary List" ],
     //       mode: "view",
     //     }),
     // ],
@@ -296,8 +299,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: request.body.commentaryId === 0 ? "add" : "edit",
         }),
     ],
@@ -308,8 +311,8 @@ module.exports = async (fastify, opts) => {
   //   preHandler: [
   //     (request, reply) => authorize(request, reply, fastify),
   //     (request, reply, done) =>
-  //       commentaryPermissionCheck(request, reply, fastify, {
-  //         tabName: "Commentary",
+  //       multiTabPermissionCheck(request, reply, fastify, {
+  //         tabName:[ "Commentary", "Commentary List" ],
   //         mode: "edit",
   //       }),
   //   ],
@@ -321,8 +324,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "edit",
         }),
     ],
@@ -334,8 +337,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "edit",
         }),
     ],
@@ -348,8 +351,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "add",
         }),
     ],
@@ -360,8 +363,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "add",
         }),
     ],
@@ -372,8 +375,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "delete",
         }),
     ],
@@ -384,8 +387,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "edit",
         }),
     ],
@@ -408,8 +411,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "view",
         }),
     ],
@@ -421,8 +424,8 @@ module.exports = async (fastify, opts) => {
     // preHandler: [
     //   (request, reply) => authorize(request, reply, fastify),
     //   (request, reply, done) =>
-    //     commentaryPermissionCheck(request, reply, fastify, {
-    //       tabName: "Commentary",
+    //     multiTabPermissionCheck(request, reply, fastify, {
+    //       tabName:[ "Commentary", "Commentary List" ],
     //       mode: "view",
     //     }),
     // ],
@@ -435,8 +438,8 @@ module.exports = async (fastify, opts) => {
     // preHandler: [
     //   (request, reply) => authorize(request, reply, fastify),
     //   (request, reply, done) =>
-    //     commentaryPermissionCheck(request, reply, fastify, {
-    //       tabName: "Commentary",
+    //     multiTabPermissionCheck(request, reply, fastify, {
+    //       tabName:[ "Commentary", "Commentary List" ],
     //       mode: "view",
     //     }),
     // ],
@@ -449,8 +452,8 @@ module.exports = async (fastify, opts) => {
     // preHandler: [
     //   (request, reply) => authorize(request, reply, fastify),
     //   (request, reply, done) =>
-    //     commentaryPermissionCheck(request, reply, fastify, {
-    //       tabName: "Commentary",
+    //     multiTabPermissionCheck(request, reply, fastify, {
+    //       tabName:[ "Commentary", "Commentary List" ],
     //       mode: "view",
     //     }),
     // ],
@@ -463,8 +466,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "view",
         }),
     ],
@@ -476,8 +479,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "view",
         }),
     ],
@@ -489,8 +492,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "view",
         }),
     ],
@@ -502,8 +505,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "edit",
         }),
     ],
@@ -515,8 +518,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "edit",
         }),
     ],
@@ -540,8 +543,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "edit",
         }),
     ],
@@ -561,8 +564,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "add",
         }),
     ],
@@ -573,8 +576,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "view",
         }),
     ],
@@ -586,8 +589,8 @@ module.exports = async (fastify, opts) => {
     // preHandler: [
     //   (request, reply) => authorize(request, reply, fastify),
     //   (request, reply, done) =>
-    //     commentaryPermissionCheck(request, reply, fastify, {
-    //       tabName: "Commentary",
+    //     multiTabPermissionCheck(request, reply, fastify, {
+    //       tabName:[ "Commentary", "Commentary List" ],
     //       mode: "view",
     //     }),
     // ],
@@ -598,8 +601,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "edit",
         }),
     ],
@@ -611,8 +614,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "edit",
         }),
     ],
@@ -624,8 +627,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "edit",
         }),
     ],
@@ -636,8 +639,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "edit",
         }),
     ],
@@ -647,8 +650,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "delete",
         }),
     ],
@@ -659,8 +662,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "view",
         }),
     ],
@@ -672,8 +675,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "delete",
         }),
     ],
@@ -684,8 +687,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "view",
         }),
     ],
@@ -701,8 +704,8 @@ module.exports = async (fastify, opts) => {
     // preHandler: [
     //   (request, reply) => authorize(request, reply, fastify),
     //   (request, reply, done) =>
-    //     commentaryPermissionCheck(request, reply, fastify, {
-    //       tabName: "Commentary",
+    //     multiTabPermissionCheck(request, reply, fastify, {
+    //       tabName:[ "Commentary", "Commentary List" ],
     //       mode: "view",
     //     }),
     // ],
@@ -714,8 +717,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "edit",
         }),
     ],
@@ -726,8 +729,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "edit",
         }),
     ],
@@ -739,8 +742,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: request.body.commentaryId === 0 ? "add" : "edit",
         }),
     ],
@@ -751,8 +754,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: request.body.commentaryId === 0 ? "add" : "edit",
         }),
     ],
@@ -763,8 +766,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "edit",
         }),
     ],
@@ -779,8 +782,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "edit",
         }),
     ],
@@ -791,8 +794,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "edit"
         })
     ],
@@ -803,8 +806,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "edit"
         })
     ],
@@ -815,8 +818,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "view"
         })
     ],
@@ -827,8 +830,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "view"
         })
     ],
@@ -839,8 +842,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "edit",
         }),
     ],
@@ -851,8 +854,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "edit",
         }),
     ],
@@ -863,8 +866,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "view",
         }),
     ],
@@ -875,8 +878,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "edit",
         }),
     ],
@@ -887,8 +890,8 @@ module.exports = async (fastify, opts) => {
     preHandler : [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "view"
         })
     ],
@@ -899,8 +902,8 @@ module.exports = async (fastify, opts) => {
     preHandler : [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "view"
         })
     ],
@@ -913,8 +916,8 @@ module.exports = async (fastify, opts) => {
     preHandler : [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "edit"
         })
     ],
@@ -925,8 +928,8 @@ module.exports = async (fastify, opts) => {
     preHandler : [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "edit"
         })
     ],
@@ -937,8 +940,8 @@ module.exports = async (fastify, opts) => {
     preHandler : [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "edit"
         })
     ],
@@ -954,8 +957,8 @@ module.exports = async (fastify, opts) => {
     preHandler : [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "delete"
         })
     ],
@@ -967,8 +970,8 @@ module.exports = async (fastify, opts) => {
     preHandler : [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "edit"
         })
     ],
@@ -980,8 +983,8 @@ module.exports = async (fastify, opts) => {
     preHandler : [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "edit"
         })
     ],
@@ -992,8 +995,8 @@ module.exports = async (fastify, opts) => {
     preHandler : [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "view"
         })
     ],
@@ -1005,8 +1008,8 @@ module.exports = async (fastify, opts) => {
     preHandler : [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "view"
         })
     ],
@@ -1017,8 +1020,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "delete",
         }),
     ],
@@ -1029,8 +1032,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "edit",
         }),
     ],
@@ -1041,8 +1044,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: request.body.id === 0 ? "add" : "edit",
         }),
     ],
@@ -1053,8 +1056,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "edit"
         }),
     ],
@@ -1065,8 +1068,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "edit"
         }),
     ],
@@ -1083,8 +1086,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "edit"
         }),
     ],
@@ -1095,8 +1098,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "edit"
         }),
     ],
@@ -1107,8 +1110,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "edit"
         }),
     ],
@@ -1119,8 +1122,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "edit"
         }),
     ],
@@ -1131,8 +1134,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "edit"
         }),
     ],
@@ -1143,8 +1146,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "edit"
         }),
     ],
@@ -1155,8 +1158,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "view"
         }),
     ],
@@ -1167,8 +1170,8 @@ module.exports = async (fastify, opts) => {
      preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "edit"
         }),
     ],
@@ -1179,8 +1182,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "edit"
         }),
     ],
@@ -1191,8 +1194,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "edit"
         }),
     ],
@@ -1202,8 +1205,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "view"
         }),
     ],
@@ -1214,8 +1217,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "edit"
         }),
     ],
@@ -1226,8 +1229,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "edit"
         }),
     ],
@@ -1238,8 +1241,8 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "view"
         }),
     ],
@@ -1250,11 +1253,47 @@ module.exports = async (fastify, opts) => {
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply, done) =>
-        commentaryPermissionCheck(request, reply, fastify, {
-          tabName: "Commentary",
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
           mode: "view"
         }),
     ],
     handler: (request , reply) => getCommDRSLogByCommId(request, reply, fastify)
+  })
+  fastify.post("/dltDrs", {
+    schema : Commentary.dltDrs.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
+          mode: "delete"
+        }),
+    ],
+    handler: (request , reply) => dltDrs(request, reply, fastify)
+  })
+  fastify.post("/takeDrs", {
+    schema : Commentary.takeDrs.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
+          mode: "add"
+        }),
+    ],
+    handler: (request , reply) => takeDrsData(request, reply, fastify)
+  })
+  fastify.post("/upDrs", {
+    schema : Commentary.upDrs.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
+          mode: "add"
+        }),
+    ],
+    handler: (request , reply) => upDrsData(request, reply, fastify)
   })
 };

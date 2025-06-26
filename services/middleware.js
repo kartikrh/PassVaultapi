@@ -6,7 +6,7 @@ const {
   createUserLoginInfo,
   checkValidQuery,
 } = require("../repository/TableUser");
-const { roleByTabService, commentaryRoleService } = require("./roles");
+const { roleByTabService, multiRoleService } = require("./roles");
 
 async function authorization(request, fastify) {
   const wrInfo = deviceInfo(request);
@@ -61,8 +61,8 @@ const permissionCheckService = async (request, fastify, data) => {
   return true;
 };
 
-const commentaryPermissionCheckService = async (request, fastify, data) => {
-  const permission = await commentaryRoleService(request, fastify, data.tabName);
+const multiTabPermissionCheckService = async (request, fastify, data) => {
+  const permission = await multiRoleService(request, fastify, data.tabName);
 
   if (data.mode === "view" && !permission.isViewPermission) {
     throw new Error("You don't have permission to view");
@@ -120,5 +120,5 @@ module.exports = {
   permissionCheckService,
   XKeyConfigForExtrnal,
   XKeyVirtual,
-  commentaryPermissionCheckService,
+  multiTabPermissionCheckService,
 };

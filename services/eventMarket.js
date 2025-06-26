@@ -63,6 +63,7 @@ const {
   upSusTimeQuery,
   upCloseTimeQuery,
   getCommentaryDetailsQuery,
+  getManualMarketByIdQuery,
 } = require("../repository/TableEventMarkets");
 const { getRunnerByIdQuery, setResultInRunnerMarketQuery, getRunnerByMarketQuery } = require("../repository/TableMarketRunner");
 const configConstants = require("../utilities/configConstants");
@@ -3681,7 +3682,7 @@ const suspendMarketService = async (data,request, fastify) => {
   return true;
 }
 const getManualMarketDataService = async (request, fastify) => {
-  const { commentaryId } = request.body;
+  const { commentaryId  , eventMarketId = null} = request.body;
   let com = global.tblCommentaries.find((item) => item.commentaryId === commentaryId);
   if(!com){
     throw new Error("Commentary with this id not Found");
@@ -3689,12 +3690,20 @@ const getManualMarketDataService = async (request, fastify) => {
   let marCat = global.tblMarketTypeCategories.find(
     (item) => item.categoryName.toLowerCase() === "manualodds"
   );
-  let market = await getManualMarketDataQuery({
-    commentaryId: commentaryId,
-    marketTypeId : MarketTypeId.ManualOdds,
-    marketTypeCategoryId : marCat.marketTypeCategoryId
-  },request, fastify);
-
+  let market;
+  if(eventMarketId){
+      market = await getManualMarketDataQuery({
+        commentaryId: commentaryId,
+        marketTypeId : MarketTypeId.ManualOdds,
+        marketTypeCategoryId : marCat.marketTypeCategoryId
+      },request, fastify);
+  }
+  else {
+    market = await getManualMarketByIdQuery({
+      eventMarketId: eventMarketId,
+    },request, fastify);
+  }
+  
   let market1 = await getExtraMarketQuery({
     eventRefId: com.eventRefId,
   },request, fastify);
