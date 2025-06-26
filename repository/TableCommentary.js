@@ -1319,7 +1319,7 @@ const getAllCommentaryTeamsDataQuery = async (whereCondition = null, fastify) =>
   ${whereCondition ? `WHERE ${whereCondition}` : ""}
   `,
     {
-      type: fastify.db.QueryTypes.SELECT,
+      type: fastify.db.QueryTypes.SELECT, 
     }
   );
 
@@ -5516,12 +5516,10 @@ const getCommentaryTeamsDRSQuery = async (data, fastify) => {
         "wrNoOfFail" as "drsFail"
       FROM "tblCommentaryTeams"
       WHERE "wrCommentaryTeamId" = $1
-        AND "wrTeamId" = $2
-        AND "wrCommentaryId" = $3
         AND "wrIsDelete" = FALSE`,
       {
         type: fastify.db.QueryTypes.SELECT,
-        bind: [data.commentaryTeamId, data.teamId, data.commentaryId],
+        bind: [data.commentaryTeamId],
       }
     );
     return result[0];
@@ -7341,6 +7339,42 @@ const updatePythonAPIOnCommentaryQuery = async (request, fastify) => {
     throw new Error(err.message);
   }
 };
+const updateDrsQuery = async (data, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `UPDATE "tblCommentaryTeams" SET
+        "wrNoOfAttempt" = GREATEST(0, $1),
+        "wrDrsCount" = $2,
+        "wrNoOfFail" = $3
+      WHERE
+        "wrCommentaryTeamId" =$4
+        RETURNING 
+            "wrCommentaryId" as "commentaryId",
+            "wrCommentaryTeamId" as "commentaryTeamId",
+            "wrDrsCount" as "drsCount",
+            "wrNoOfAttempt" as "drsAttempt",
+            "wrNoOfFail" as "drsFail";`,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [
+          data.drsAttempt,
+          data.drsCount,
+          data.drsFail,
+          data.commentaryTeamId
+        ],
+      }
+    );
+    return result[0];
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCommentary/updateCommentaryTeamDrsAttemptsQuery",
+      null
+    );
+    throw new Error(error.message);
+  }
+};
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -7470,4 +7504,5 @@ module.exports = {
   updatePitchageAndSessionQuery,
   cancelComQuery,
   updatePythonAPIOnCommentaryQuery,
+  updateDrsQuery
 };

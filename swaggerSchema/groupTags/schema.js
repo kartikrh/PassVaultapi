@@ -3679,6 +3679,53 @@ const Commentary = {
       },
     },
   },
+  dltDrs: {
+    schema: {
+      tags: ["Commentary"],
+      description: "delete commentary DRS data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id : {type : "array"}
+        },
+        required: ["id"],
+      },
+    },
+  },
+  takeDrs: {
+    schema: {
+      tags: ["Commentary"],
+      description: "take commentary DRS data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id : {type : "integer"},
+          commentaryId : {type : "integer"},
+          commentaryTeamId : {type : "integer"},
+          teamId : {type : "integer"}
+        },
+        required: ["id" , "commentaryId" , "commentaryTeamId", "teamId"],
+      },
+    },
+  },
+  upDrs: {
+    schema: {
+      tags: ["Commentary"],
+      description: "update commentary DRS data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id : {type : "integer"},
+          result : {type : "boolean"},
+          isCount : {type : "boolean"}
+        },
+        required: ["id" , "isCount", "result"],
+      },
+    },
+  },
 };
 
 const Compitition = {
@@ -5036,6 +5083,7 @@ const EventMarket = {
         type: "object",
         properties: {
           commentaryId: { type: "integer" },
+          eventMarketId : { type: "integer" },
         },
         required: ["commentaryId"],
       },

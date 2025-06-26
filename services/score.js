@@ -18,6 +18,7 @@ const {
     getAllCommentaryWicketDataQueryV1,
     getAllCommentaryPartnershipDataQueryV1,
 } = require("../repository/TableCommentary");
+const { dltDeviceQuery, saveDeviceQuery } = require("../repository/TableDevice");
 
 const getAllCommentariesDataService = async (request,fastify) => {
     try {
@@ -460,7 +461,41 @@ const getMarketsByCommentaryIdServiceV1 =async (request , fastify) => {
         dataProviderUrl: datProviderUrl.value
     };
 }
-
+const saveDeviceDataService = async (request, fastify) => {
+    const devices = global.tblDevices || [];
+    // go accroding to device type and then userId at the time only one data will be saved with one device type and userId or devictype and tempCId if not logged in
+    const { deviceType, userId, tempCId } = request.body;
+    let deviceData = devices.filter((d) => d.deviceType === deviceType && (d.userId === userId || d.tempCId === tempCId));
+    if(deviceData.length > 0){
+        // delete the old device data
+        let ids = deviceData.map((d) => d.id);
+        await dltDeviceQuery(
+            ids,
+            fastify,
+            request
+        );
+        global.tblDevices = global.tblDevices.filter((d) => !ids.includes(d.deviceId));
+        // save the new device data
+        let dData = await saveDeviceQuery(
+            request.body,
+            fastify,
+            request
+        );
+        global.tblDevices.push(dData);
+        return dData;
+    }
+    else {
+        // save the new device data
+        let dData = await saveDeviceQuery(
+            request.body,
+            fastify,
+            request
+        );
+        global.tblDevices.push(dData);
+        return dData;
+    }
+    return true;
+}
 module.exports = { 
     getAllCommentariesDataService,
     getMarketsByCommentaryIdService,
@@ -469,4 +504,5 @@ module.exports = {
     getMarketByGraphByRefIdService,
     getAllCommentariesDataServiceV1,
     getMarketsByCommentaryIdServiceV1,
+    saveDeviceDataService
  };

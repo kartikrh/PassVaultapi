@@ -154,7 +154,7 @@ const roleByTabService = async (request, fastify, tabName = undefined) => {
 };
 
 
-const commentaryRoleService = async (request, fastify, tabName) => {
+const multiRoleService = async (request, fastify, tabName) => {
   if (request.userTokenInfo.WrIsSuperAdmin) {
     return {
       isAddPermission: true,
@@ -163,7 +163,11 @@ const commentaryRoleService = async (request, fastify, tabName) => {
       isViewPermission: true,
     };
   }
-  const tabNames = [tabName, request.body?.tabName || "Commentary List"];
+  // if tabName is string, convert it to an array
+  if (typeof tabName === "string") {
+    tabName = [tabName];
+  }
+  const tabNames = tabName;
   const permissionData = await permissionByRoleQuery(
     {
       roleId: request.userTokenInfo.WrRoleId || null,
@@ -172,6 +176,7 @@ const commentaryRoleService = async (request, fastify, tabName) => {
     },
     fastify
   );
+  // console.log("permissionData", permissionData);
   let combinedPermissions = {
     isAddPermission: false,
     isEditPermission: false,
@@ -195,5 +200,5 @@ module.exports = {
   roleCreateService,
   roleByIdService,
   roleByTabService,
-  commentaryRoleService,
+  multiRoleService,
 };
