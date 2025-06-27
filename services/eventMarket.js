@@ -4071,6 +4071,12 @@ const loadMarketByComIdService = async (request, fastify) => {
   }
   return "Market Update successfully";
 }
+const getEventMarketAndRunnersByIdService = async (request, fastify) => {
+  const { eventMarketId } = request.body;
+  const market = await getManualMarketByIdQuery({ eventMarketId }, request, fastify);
+
+  return market?.[0] ?? null;
+}
 module.exports = {
   getDetailsByCIdService,
   getAllEventMarketsService,
@@ -4130,5 +4136,6 @@ module.exports = {
   changeMultiMarketsIsResultService,
   changeMultiMarketsSessionIsResultService,
   getCommentaryDetailsService,
-  loadMarketByComIdService
+  loadMarketByComIdService,
+  getEventMarketAndRunnersByIdService,
 };

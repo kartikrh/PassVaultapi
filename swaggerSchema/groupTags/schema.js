@@ -5738,6 +5738,20 @@ const EventMarket = {
         required : ["commentaryId"]
       }
     }
+  },
+  MarketInfo :{
+    schema : {
+      tags : ["EventMarket"],
+      description : "get market info by eventMarket Id",
+      security : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          eventMarketId : {type : "integer"}
+        },
+        required : ["eventMarketId"]
+      }
+    }
   }
 };
 const MarketTemplateRunner = {
