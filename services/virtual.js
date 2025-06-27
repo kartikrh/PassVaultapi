@@ -67,6 +67,7 @@ const {
 } = require("../utilities/comFunction");
 const { default: fastify } = require("fastify");
 const { cancelEventMarketsQuery, closeEventMarketByCIdQuery, cancelMarketVirtualQuery } = require("../repository/TableEventMarkets");
+const { ISPREDICATIONONCRICKETCARD } = require("../utilities/configConstants");
 // const ballbyball ={
 //   commentaryBallByBallId: 0,
 //   commentaryId: commentary?.commentaryId,
@@ -206,9 +207,16 @@ const createVirtualEventService = async (request, fastify) => {
     if (team1Players.length < 2 && team2Players.length < 2) {
       throw new Error("No players found for teams");
     }
+
+    const isPrediction = global.tblConfigs.find(item => 
+      item.key.toLowerCase().trim() === ISPREDICATIONONCRICKETCARD.trim().toLowerCase()
+    )?.value;
+    const isPredictMarket = isPrediction === "true";
+
     let dataToInsert = {
       ...request.body,
       ...checkComp,
+      isPredictMarket
     };
 
     const commentaryData = await insertVirtualEventQuery(
