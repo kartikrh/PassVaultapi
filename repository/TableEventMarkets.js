@@ -5038,7 +5038,7 @@ const saveManualMarketQuery = async (data, request, fastify) => {
         )
         VALUES
         ${
-          data.runners
+          data.runner
             .map(
               (item) =>
                 `(${mar[0].eventMarketId}, '${item.name}', ${item.selectionId}, ${EventMarketStatus.Inactive}, ${item.teamId || 'NULL'})`

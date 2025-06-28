@@ -5109,7 +5109,7 @@ const EventMarket = {
           lineRatio : {type : "number"},
           rateSourceRefID : {type : "string"},
           rateDiff : {type : "number"},
-          runners : {
+          runner : {
             type : "array",
             properties : {
               runner : {type : "string"},
@@ -5131,7 +5131,7 @@ const EventMarket = {
           "lineRatio",
           "rateSourceRefID",
           "rateDiff",
-          "runners"
+          "runner"
         ]
       }
     }
