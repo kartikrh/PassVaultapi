@@ -52,6 +52,7 @@ const {
   saveManualMarketQuery,
   getExtraMarketQuery,
   upManualMarketQuery,
+  updateManualMarketQuery,
   getMarketByIdQuery,
   upIsInningRunMarketQuery,
   getTargetQyery,
@@ -3782,7 +3783,7 @@ const createManualMarketDataService = async (request, fastify) => {
 
 const updateManualMarketDataService = async (request, fastify) => {
   const eventMarket = [request.body]
-  const result = await upManualMarketQuery(eventMarket, request, fastify);
+  const result = await updateManualMarketQuery(eventMarket, request, fastify);
 
   const marketMap = new Map(global.tblEventMarketsV2.map(m => [m.eventMarketId, m]));
   const runnerMap = new Map(global.tblMarketRunnerV2.map(r => [r.runnerId, r]));
