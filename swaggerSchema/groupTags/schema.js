@@ -5747,10 +5747,9 @@ const EventMarket = {
       body : {
         type : "object",
         properties : {
-          eventMarketId : {type : "integer"},
-          commentaryId: {type: "integer"}
+          eventMarketId : {type : "integer"}
         },
-        required : ["eventMarketId", "commentaryId"]
+        required : ["eventMarketId"]
       }
     }
   }
