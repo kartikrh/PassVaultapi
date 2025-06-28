@@ -16,7 +16,8 @@ const getAllTournamentTeamPointsQuery = async (fastify) => {
         "wrTotalPoint" as "totalPoint",
         "wrNetRunRate" as "netRunRate",
         "wrIsActive" as "isActive",
-        "wrCreatedAt" as "createdAt"
+        "wrCreatedAt" as "createdAt",
+        "wrTpId" as "tpId"
         from "tblTournamentTeamPoint"
         where "wrIsDeleted" = false
         `,
@@ -43,7 +44,8 @@ const insertTournamentTeamPointsQuery = async (data, fastify, request) => {
             "wrTotalPoint",
             "wrNetRunRate",
             "wrIsActive",
-            "wrCreatedAt"
+            "wrCreatedAt",
+            "wrTpId"
           ) values (
               $1,
               $2,
@@ -56,7 +58,8 @@ const insertTournamentTeamPointsQuery = async (data, fastify, request) => {
               $9,
               $10,
               $11,
-              now()
+              now(),
+              $12
           ) returning *
       )
       select 
@@ -72,7 +75,8 @@ const insertTournamentTeamPointsQuery = async (data, fastify, request) => {
         "wrTotalPoint" as "totalPoint",
         "wrNetRunRate" as "netRunRate",
         "wrIsActive" as "isActive",
-        "wrCreatedAt" as "createdAt"
+        "wrCreatedAt" as "createdAt",
+        "wrTpId" as "tpId"
       from "insert_data"
       `,
       {
@@ -89,6 +93,7 @@ const insertTournamentTeamPointsQuery = async (data, fastify, request) => {
           data.totalPoint === undefined ? 0 : data.totalPoint,
           data.netRunRate === undefined ? 0 : data.netRunRate,
           data.isActive === undefined ? false : data.isActive,
+          data.tpId === undefined ? null : data.tpId,
         ],
       }
     );
@@ -120,7 +125,8 @@ const updateTournamentTeamPointsQuery = async (data, fastify, request) => {
           "wrNoResult" = $8,
           "wrTotalPoint" = $9,
           "wrNetRunRate" = $10,
-          "wrIsActive" = $11
+          "wrIsActive" = $11,
+          "wrTpId" = $13
        WHERE "wrId" = $12`,
       {
         type: fastify.db.QueryTypes.UPDATE,
@@ -137,6 +143,7 @@ const updateTournamentTeamPointsQuery = async (data, fastify, request) => {
           data.netRunRate,
           data.isActive,
           data.id,
+          data.tpId,
         ],
       }
     );
@@ -223,7 +230,8 @@ const updateTeamPointsQuery = async (data, fastify, request) => {
         "wrTotalPoint" as "totalPoint",
         "wrNetRunRate" as "netRunRate",
         "wrIsActive" as "isActive",
-        "wrCreatedAt" as "createdAt"
+        "wrCreatedAt" as "createdAt",
+        "wrTpId" as "tpId"
     `,
       {
         type: fastify.db.QueryTypes.SELECT,
@@ -290,7 +298,8 @@ const getTournamentPointsByTeamIdQuery = async (data, request, fastify) => {
            "wrTotalPoint" as "totalPoint",
            "wrNetRunRate" as "netRunRate",
            "wrIsActive" as "isActive",
-           "wrCreatedAt" as "createdAt"
+           "wrCreatedAt" as "createdAt",
+           "wrTpId" as "tpId"
           from "tblTournamentTeamPoint"
           where "wrIsDeleted" = false
           and "wrCompetitionId" = $1
@@ -331,7 +340,8 @@ const getTournamentTeamsByCompIdQuery = async (competitionId, request, fastify) 
            "wrTotalPoint" as "totalPoint",
            "wrNetRunRate" as "netRunRate",
            "wrIsActive" as "isActive",
-           "wrCreatedAt" as "createdAt"
+           "wrCreatedAt" as "createdAt",
+           "wrTpId" as "tpId"
           from "tblTournamentTeamPoint"
           where "wrIsDeleted" = false
           and "wrCompetitionId" = $1

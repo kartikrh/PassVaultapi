@@ -190,7 +190,7 @@ const allCommentaryService = async (request, fastify) => {
   let result;
   if (commentaryStatus === undefined) {
     result = global.tblCommentaries.filter(
-      (item) => item.commentaryStatus !== 4
+      (item) => item.commentaryStatus !== 4 && item.commentaryStatus !== 10
     );
   }
   if (commentaryStatus && commentaryStatus != 0) {
@@ -547,9 +547,9 @@ const createCommentaryService = async (request, fastify) => {
   ) {
     throw new Error("Team1 and Team2 can't be same");
   }
-
+  let validateTeam1Id, validateTeam2Id
   if (request.body.team1Id) {
-    const validateTeam1Id = global.tblTeams.find(
+    validateTeam1Id = global.tblTeams.find(
       (item) => item.teamId === request.body.team1Id
     );
 
@@ -559,7 +559,7 @@ const createCommentaryService = async (request, fastify) => {
   }
 
   if (request.body.team2Id) {
-    const validateTeam2Id = global.tblTeams.find(
+    validateTeam2Id = global.tblTeams.find(
       (item) => item.teamId === request.body.team2Id
     );
 
@@ -667,7 +667,8 @@ const createCommentaryService = async (request, fastify) => {
       request.body.team2Players.push(...team2Players);
     }
   }
-
+  request.body.team1TpId = validateTeam1Id?.tpId ?? null
+  request.body.team2TpId = validateTeam2Id?.tpId ?? null
   if (validateMatchTypeId) {
     if (
       validateMatchTypeId?.noOfIningsPerSide &&
@@ -685,18 +686,22 @@ const createCommentaryService = async (request, fastify) => {
         ) {
           const data = [
             ...request.body.team1Players.map((item, i) => {
+              const playerTpId = global.tblPlayers.find(elem => elem.playerId === item);
               return {
                 commentaryId: addCommentry.commentaryId,
                 teamId: request.body.team1Id,
                 playerId: item,
+                tpId: playerTpId?.tpId ?? null,
                 displayOrder: i + 1,
               };
             }),
             ...request.body.team2Players.map((item, i) => {
+              const plaTpId = global.tblPlayers.find(elem => elem.playerd === item);
               return {
                 commentaryId: addCommentry.commentaryId,
                 teamId: request.body.team2Id,
                 playerId: item,
+                tpId: plaTpId?.tpId ?? null,
                 displayOrder: i + 1,
               };
             }),
@@ -787,18 +792,22 @@ const createCommentaryService = async (request, fastify) => {
       ) {
         const data = [
           ...request.body.team1Players.map((item, i) => {
+            const playerTpId = global.tblPlayers.find(elem => elem.playerId === item);
             return {
               commentaryId: addCommentry.commentaryId,
               teamId: request.body.team1Id,
               playerId: item,
+              tpId: playerTpId?.tpId ?? null,
               displayOrder: i + 1,
             };
           }),
           ...request.body.team2Players.map((item, i) => {
+            const plaTpId = global.tblPlayers.find(elem => elem.playerId === item);
             return {
               commentaryId: addCommentry.commentaryId,
               teamId: request.body.team2Id,
               playerId: item,
+              tpId: plaTpId?.tpId ?? null,
               displayOrder: i + 1,
             };
           }),
@@ -1170,18 +1179,22 @@ const updateCommentaryService = async (request, fastify) => {
         ) {
           const data = [
             ...request.body.team1Players.map((item, i) => {
+              const playerTpId = global.tblPlayers.find(elem => elem.playerId === item);
               return {
                 commentaryId: request.body.commentaryId,
                 teamId: request.body.team1Id,
                 playerId: item,
+                tpId: playerTpId?.tpId ?? null,
                 displayOrder: i + 1,
               };
             }),
             ...request.body.team2Players.map((item, i) => {
+              const plaTpId = global.tblPlayers.find(elem => elem.playerId === item);
               return {
                 commentaryId: request.body.commentaryId,
                 teamId: request.body.team2Id,
                 playerId: item,
+                tpId: plaTpId?.tpId ?? null,
                 displayOrder: i + 1,
               };
             }),
@@ -1274,18 +1287,22 @@ const updateCommentaryService = async (request, fastify) => {
       ) {
         const data = [
           ...request.body.team1Players.map((item, i) => {
+            const playerTpId = global.tblPlayers.find(elem => elem.playerId === item);
             return {
               commentaryId: request.body.commentaryId,
               teamId: request.body.team1Id,
               playerId: item,
+              tpId: playerTpId?.tpId ?? null,
               displayOrder: i + 1,
             };
           }),
           ...request.body.team2Players.map((item, i) => {
+            const playTpId = global.tblPlayers.find(elem => elem.playerId === item);
             return {
               commentaryId: request.body.commentaryId,
               teamId: request.body.team2Id,
               playerId: item,
+              tpId: playTpId?.tpId,
               displayOrder: i + 1,
             };
           }),
@@ -1530,6 +1547,8 @@ const cloneCommentaryService = async (request, fastify) => {
     teamMaxOver: validateMatchTypeId.maxOversInFirstInings,
     drsCount: team1.drsCount,
     subInning: team1.subInning,
+    team1TpId: team1?.tpId ?? null,
+    team2TpId: team2?.tpId ?? null,
   };
 
   if (validateMatchTypeId) {
@@ -1555,18 +1574,22 @@ const cloneCommentaryService = async (request, fastify) => {
         ) {
           const data = [
             ...request.body.team1Players.map((item, i) => {
+              const playerTpId = global.tblPlayers.find(elem => elem.playerId === item);
               return {
                 commentaryId: newCommentary.commentaryId,
                 teamId: request.body.team1Id,
                 playerId: item,
+                tpId: playerTpId?.tpId ?? null,
                 displayOrder: i + 1,
               };
             }),
             ...request.body.team2Players.map((item, i) => {
+              const playTpId = global.tblPlayers.find(elem => elem.playerId === item);
               return {
                 commentaryId: newCommentary.commentaryId,
                 teamId: request.body.team2Id,
                 playerId: item,
+                tpId: playTpId?.tpId ?? null,
                 displayOrder: i + 1,
               };
             }),
@@ -1655,18 +1678,22 @@ const cloneCommentaryService = async (request, fastify) => {
       ) {
         const data = [
           ...request.body.team1Players.map((item, i) => {
+            const playerTpId = global.tblPlayers.find(elem => elem.playerId === item);
             return {
               commentaryId: newCommentary.commentaryId,
               teamId: request.body.team1Id,
               playerId: item,
+              tpId: playerTpId?.tpId ?? null,
               displayOrder: i + 1,
             };
           }),
           ...request.body.team2Players.map((item, i) => {
+            const playTpId = global.tblPlayers.find(elem => elem.playerId === item);
             return {
               commentaryId: newCommentary.commentaryId,
               teamId: request.body.team2Id,
               playerId: item,
+              tpId: playTpId?.tpId ?? null,
               displayOrder: i + 1,
             };
           }),
@@ -3751,6 +3778,9 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
       const strikeTeam = global.tblCommentaryTeams.find(
         (item) => item?.commentaryId === commentaryId && item.teamStatus === 1
       );
+      const nonStrikeTeam = global.tblCommentaryTeams.find(
+        (item) => item?.commentaryId === commentaryId && item.teamStatus === 2
+      );
       const previousBall = global.tblCommentaryBallByBall
         .filter(
           (item) =>
@@ -3780,6 +3810,8 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
               ball_by_ball_id: deleteCommentaryBallByBallId
                 ? parseInt(deleteCommentaryBallByBallId)
                 : null,
+              ballType: previousBall?.ballType ?? null,
+              target: nonStrikeTeam?.teamScore + 1 ?? null
             },
             "/api/v1/undoscore",
             fastify,
@@ -3894,6 +3926,11 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           item?.commentaryId === commentaryBallByBall.commentaryId &&
           item.teamStatus === 1
       );
+      let nonStrikeTeam = global.tblCommentaryTeams.find(
+        (item) =>
+          item?.commentaryId === commentaryBallByBall.commentaryId &&
+          item.teamStatus === 2
+      );
       let target = commentaryData.target ?? null; 
       let decimalOverCount = parseFloat(commentaryBallByBall.overCount);
       let _wkt = commentaryBallByBall.ballIsWicket;
@@ -3940,6 +3977,8 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
                 updatedData.commentaryBallByBallDetails.commentaryBallByBallId
               )
             : null,
+          ballType: commentaryBallByBall?.ballType ?? null,
+          target: nonStrikeTeam?.teamScore + 1 ?? null,
         },
         commentary_id: commentaryId,
         target: target
@@ -12970,6 +13009,11 @@ const saveComVirtual = async (request, fastify) => {
           item?.commentaryId === commentaryBallByBall.commentaryId &&
           item.teamStatus === 1
       );
+      let nonStrikeTeam = global.tblCommentaryTeams.find(
+        (item) =>
+          item?.commentaryId === commentaryBallByBall.commentaryId &&
+          item.teamStatus === 2
+      );
 
       let decimalOverCount = parseFloat(commentaryBallByBall.overCount);
       let _wkt = commentaryBallByBall.ballIsWicket;
@@ -12979,6 +13023,8 @@ const saveComVirtual = async (request, fastify) => {
         partnership_no: partnership?.order || 0,
         partnership_boundaries: boundary
       })
+      console.log("commentaryBallByBall 222",commentaryBallByBall)
+      console.log("strikeTeam 222",nonStrikeTeam)
       const predictionPayload = {
         playerpredictscore: {
           commentary_id: commentaryData.commentaryId,
@@ -13004,7 +13050,9 @@ const saveComVirtual = async (request, fastify) => {
           total_wicket: strikeTeam.teamWicket,
           ball_by_ball_id: updatedData.commentaryBallByBallDetails.commentaryBallByBallId
             ? parseInt(updatedData.commentaryBallByBallDetails.commentaryBallByBallId)
-            : null
+            : null,
+          ballType: commentaryBallByBall?.ballType ?? null,
+          target: nonStrikeTeam?.teamScore + 1 ?? null,
         },
         commentary_id: commentaryId
       }
@@ -14547,6 +14595,11 @@ const commentaryScoreService = async (request, fastify) => {
           item?.commentaryId === commentaryBallByBall.commentaryId &&
           item.teamStatus === 1
       );
+      let nonStrikeTeam = global.tblCommentaryTeams.find(
+        (item) =>
+          item?.commentaryId === commentaryBallByBall.commentaryId &&
+          item.teamStatus === 2
+      );
       let decimalOverCount = parseFloat(commentaryBallByBall.overCount);
       let _wkt = commentaryBallByBall.ballIsWicket;
       let partnership = commentaryPartnership;
@@ -14555,6 +14608,8 @@ const commentaryScoreService = async (request, fastify) => {
         partnership_no: global.tblCommentaryPartnership[partnershipIndex]?.order || 0,
         partnership_boundaries: boundary,
       });
+      console.log("commentaryBallByBall 3333",commentaryBallByBall)
+      console.log("strikeTeam 3333",nonStrikeTeam)
       const predictionPayload = {
         playerpredictscore: {
           commentary_id: commentaryData.commentaryId,
@@ -14587,6 +14642,8 @@ const commentaryScoreService = async (request, fastify) => {
                 updatedData.commentaryBallByBallDetails.commentaryBallByBallId
               )
             : null,
+          ballType: commentaryBallByBall?.ballType ?? null,
+          target: nonStrikeTeam?.teamScore + 1 ?? null,
         },
         commentary_id: commentaryId,
       };
@@ -16431,6 +16488,11 @@ const commentaryWicketService = async (request, fastify) => {
           item?.commentaryId === commentaryBallByBall.commentaryId &&
           item.teamStatus === 1
       );
+      let nonStrikeTeam = global.tblCommentaryTeams.find(
+        (item) =>
+          item?.commentaryId === commentaryBallByBall.commentaryId &&
+          item.teamStatus === 2
+      );
 
       let decimalOverCount = parseFloat(commentaryBallByBall.overCount);
       let _wkt = commentaryBallByBall.ballIsWicket;
@@ -16441,6 +16503,8 @@ const commentaryWicketService = async (request, fastify) => {
           partnership_no: partnership?.order || 0,
           partnership_boundaries: boundary
         })
+        console.log("commentaryBallByBall 4444",commentaryBallByBall)
+      console.log("strikeTeam 4444",nonStrikeTeam)
       const predictionPayload = {
         playerpredictscore: {
           commentary_id: commentaryData.commentaryId,
@@ -16473,6 +16537,8 @@ const commentaryWicketService = async (request, fastify) => {
                 updatedData.commentaryBallByBallDetails.commentaryBallByBallId
               )
             : null,
+          ballType: commentaryBallByBall?.ballType ?? null,
+          target: nonStrikeTeam?.teamScore + 1 ?? null,
         },
         commentary_id: commentaryId,
       };
