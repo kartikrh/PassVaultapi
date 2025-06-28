@@ -3752,6 +3752,13 @@ const getManualMarketDataService = async (request, fastify) => {
   return data;
 }
 const saveManualMarketDataService = async (request, fastify) => {
+  if (request.body.eventMarketId === 0) {
+    return await createManualMarketDataService(request, fastify);
+  } else {
+    return await updateManualMarketDataService(request, fastify);
+    }
+}
+const createManualMarketDataService = async (request, fastify) => {
   let com = global.tblCommentaries.find((item) => item.commentaryId === request.body.commentaryId);
   if(!com){
     throw new Error("Commentary with this id not Found");
@@ -3772,6 +3779,32 @@ const saveManualMarketDataService = async (request, fastify) => {
 
   return "Market saved successfully";
 }
+
+const updateManualMarketDataService = async (request, fastify) => {
+  const eventMarket = [request.body]
+  const result = await upManualMarketQuery(eventMarket, request, fastify);
+
+  const marketMap = new Map(global.tblEventMarketsV2.map(m => [m.eventMarketId, m]));
+  const runnerMap = new Map(global.tblMarketRunnerV2.map(r => [r.runnerId, r]));
+
+  for (const item of result.updated_row) {
+    if (marketMap.has(item.marketId)) {
+      Object.assign(marketMap.get(item.marketId), {
+        status: item.status,
+        isAllow: item.isAllow,
+        isActive: item.isActive
+      });
+    }
+
+    for (let runner of item.runner) {
+      if (runnerMap.has(runner.runnerId)) {
+        Object.assign(runnerMap.get(runner.runnerId), runner);
+      }
+    }
+  }
+
+  return "Market updated successfully";
+};
 const upManualMarketDataService = async (request, fastify) => {
   const result = await upManualMarketQuery(request.body.eventMarket, request, fastify);
 
