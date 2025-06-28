@@ -43,12 +43,14 @@ const addTournamentTeamPlayersService = async (request, fastify) => {
 
 
   const insertPromises = teamPlayers?.map(async (item) => {
+    const playerTpId = global.tblPlayers.find(elem => elem.playerId === item.playerId);
     const insertData = {
       competitionId: item.competitionId,
       teamId: item.teamId,
       playerId: item.playerId,
       playerName: item.playerName,
       userId: request.userTokenInfo.WrUserId,
+      tpId: playerTpId?.tpId ?? null
     };
 
     const existingPlayers = global.tblTournamentTeamPlayers.filter(

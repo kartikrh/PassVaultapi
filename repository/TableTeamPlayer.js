@@ -6,7 +6,8 @@ const getAllTeamPlayersQuery = async (fastify) => {
         te."wrValue" as "teamPlayerId",
         te2."wrValue" as "teamId",
         te3."wrValue" as "refPlayerId",
-        "wrPlayerOrder" as "playerOrder"
+        "wrPlayerOrder" as "playerOrder",
+        tp."wrTpId" as "tpId"
          from "tblTeamPlayers" tp left join "tblEncryptedData" te on tp."wrTeamPlayerId" = te."wrKey"
          left join "tblEncryptedData" te2 on tp."wrTeamId" = te2."wrKey"
          left join "tblEncryptedData" te3 on tp."wrRefPlayerId" = te3."wrKey"`,
@@ -24,7 +25,8 @@ const getAllTeamPlayersByTeamIdAndPlayerIdQuery = async (data, fastify, request)
         "wrTeamId" as "teamId",
         "wrRefPlayerId" as "refPlayerId",
         "wrJerseyPlayerImage" as "jerseyPlayerImage",
-        "wrJerseyPlayerImagePath" as "jerseyPlayerImagePath"
+        "wrJerseyPlayerImagePath" as "jerseyPlayerImagePath",
+        "wrTpId" as "tpId"
       FROM "tblTeamPlayers"
       WHERE "wrRefPlayerId" = $1 AND "wrTeamId" = $2
       AND "wrIsDeleted" = FALSE`,
@@ -52,8 +54,8 @@ const insertTeamPlayerQuery = async (data, fastify, request) => {
       select COALESCE(max("wrPlayerOrder"),0) as "playerOrder" from "tblTeamPlayers" where "wrTeamId" =$1
     ),
     insert_team_player as (
-      insert into "tblTeamPlayers" ("wrTeamId", "wrRefPlayerId", "wrPlayerOrder","wrCreatedDate", "wrCreatedBy")
-      values ($1,$2, (  select "playerOrder" from display_order) + 1, $3, $4)
+      insert into "tblTeamPlayers" ("wrTeamId", "wrRefPlayerId", "wrPlayerOrder","wrCreatedDate", "wrCreatedBy", "wrTpId")
+      values ($1,$2, (  select "playerOrder" from display_order) + 1, $3, $4, $5)
       returning *
     )
 
@@ -61,12 +63,13 @@ const insertTeamPlayerQuery = async (data, fastify, request) => {
         "wrTeamPlayerId" as "teamPlayerId",
         "wrTeamId" as "teamId",
         "wrRefPlayerId" as "refPlayerId",
-        "wrPlayerOrder" as "playerOrder"
+        "wrPlayerOrder" as "playerOrder",
+        "wrTpId" as "tpId"
          from "insert_team_player"
 
     `,
       {
-        bind: [data.teamId, data.refPlayerId, new Date(), data.userId],
+        bind: [data.teamId, data.refPlayerId, new Date(), data.userId, data.tpId || null],
         type: fastify.db.QueryTypes.SELECT,
       }
     );
@@ -141,7 +144,8 @@ const getTeamPlayerByPlayerIdQuery = async (refPlayerId, fastify, request) => {
         "wrTeamId" as "teamId",
         "wrRefPlayerId" as "refPlayerId",
         "wrJerseyPlayerImage" as "jerseyPlayerImage",
-        "wrJerseyPlayerImagePath" as "jerseyPlayerImagePath"
+        "wrJerseyPlayerImagePath" as "jerseyPlayerImagePath",
+        "wrTpId" as "tpId"
       FROM "tblTeamPlayers"
       WHERE "wrRefPlayerId" = $1 AND "wrIsDeleted" = FALSE`,
       {
@@ -169,7 +173,8 @@ const getTeamPlayerByTeamIdQuery = async (teamId, fastify, request) => {
         "wrTeamId" as "teamId",
         "wrRefPlayerId" as "refPlayerId",
         "wrJerseyPlayerImage" as "jerseyPlayerImage",
-        "wrJerseyPlayerImagePath" as "jerseyPlayerImagePath"
+        "wrJerseyPlayerImagePath" as "jerseyPlayerImagePath",
+        "wrTpId" as "tpId"
       FROM "tblTeamPlayers"
       WHERE "wrTeamId" = $1 AND "wrIsDeleted" = FALSE`,
       {
@@ -221,7 +226,8 @@ const getTeamListByPlayerIdQuery = async (refPlayerId, fastify, request) => {
         ttp."wrRefPlayerId" AS "refPlayerId",
         tp."wrPlayerName" AS "playerName",
         ttp."wrJerseyPlayerImage" AS "jerseyPlayerImage",
-        ttp."wrJerseyPlayerImagePath" AS "jerseyPlayerImagePath"
+        ttp."wrJerseyPlayerImagePath" AS "jerseyPlayerImagePath",
+        ttp."wrTpId" as "tpId"
       FROM "tblTeamPlayers" AS ttp
       LEFT JOIN "tblTeams" AS tt ON tt."wrTeamId" = ttp."wrTeamId"
       LEFT JOIN "tblPlayers" AS tp ON tp."wrPlayerId" = ttp."wrRefPlayerId"

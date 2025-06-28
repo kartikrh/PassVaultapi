@@ -226,12 +226,20 @@ const createVirtualEventService = async (request, fastify) => {
     );
     global.tblCommentaries.push(commentaryData);
     comId = commentaryData.commentaryId;
+    const team1TpId = global.tblTeams.find(
+      (item) => item.teamId == request.body.team1Id
+    );
+    const team2TpId = global.tblTeams.find(
+      (item) => item.teamId == request.body.team2Id
+    );
     const teamData = {
       commentaryId: commentaryData.commentaryId,
       team1Id: request.body.team1Id,
       team2Id: request.body.team2Id,
       teamMaxOver: matchType.maxOversInFirstInings,
       subInning: request.body?.subInning ?? null,
+      team1TpId: team1TpId?.tpId ?? null,
+      team2TpId: team2TpId?.tpId ?? null,
     };
     const teamsData = await insertVirtualCommentaryTeams(
       teamData,
@@ -245,18 +253,22 @@ const createVirtualEventService = async (request, fastify) => {
     if (team1Players.length >= 2 && team2Players.length >= 2) {
       const data = [
         ...team1Players.map((item, i) => {
+          const playerTpId = global.tblPlayers.find(elem => elem.playerId == item.playerId);
           return {
             commentaryId: commentaryData.commentaryId,
             teamId: request.body.team1Id,
             playerId: item.playerId,
+            tpId: playerTpId?.tpId ?? null,
             displayOrder: i + 1,
           };
         }),
         ...team2Players.map((item, i) => {
+          const playTpId = global.tblPlayers.find(elem => elem.playerId == item.playerId);
           return {
             commentaryId: commentaryData.commentaryId,
             teamId: request.body.team2Id,
             playerId: item.playerId,
+            tpId: playTpId?.tpId ?? null,
             displayOrder: i + 1,
           };
         }),

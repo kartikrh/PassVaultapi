@@ -179,10 +179,12 @@ const createTeamService = async (request, fastify) => {
           if (hashArray[i]) {
             const playerID = hashArray[i].replace(/[\[\]"]/g, "");
             if (playerID !== "") {
+              const playerTpId = global.tblPlayers.find(elem => elem.playerId == playerID);
               const teamPlayerData = await insertTeamPlayerQuery(
                 {
                   teamId: data.teamId,
                   refPlayerId: playerID,
+                  tpId: playerTpId?.tpId ?? null,
                   userId: request.userTokenInfo.WrUserId,
                 },
                 fastify,
@@ -369,10 +371,12 @@ const updateTeamService = async (request, fastify) => {
         if (hashArray[i]) {
           const playerID = hashArray[i].replace(/[\[\]"]/g, "");
           if (playerID !== "") {
+            const playerTpId = global.tblPlayers.find(elem => elem.playerId == playerID);
             const teamPlayerData = await insertTeamPlayerQuery(
               {
                 teamId: body.teamId,
                 refPlayerId: playerID,
+                tpId: playerTpId?.tpId ?? null,
                 userId: request.userTokenInfo.WrUserId,
               },
               fastify,

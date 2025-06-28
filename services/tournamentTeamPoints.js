@@ -52,6 +52,7 @@ const createTblTournamentTeamPointsService = async (request, fastify) => {
   if(existedValues){
     throw new Error("TeamId existed with this competitionId");
   }
+  request.body.tpId = validateTeamId?.tpId ?? null;
     
   const saveData = await insertTournamentTeamPointsQuery(request.body, fastify, request);
 
@@ -93,6 +94,7 @@ const updateTblTournamentTeamPointsService = async (request, fastify) => {
     netRunRate: request.body.netRunRate === undefined ? validateId.netRunRate : request.body.netRunRate,
     isActive: request.body.isActive === undefined ? validateId.isActive : request.body.isActive,
     id: request.body.id,
+    tpId: request.body.tpId === undefined ? validateId.tpId : request.body.tpId,
   };
 
   await updateTournamentTeamPointsQuery(updateData, fastify, request);
@@ -140,6 +142,7 @@ const updateTournamentTeamPointsService = async (existingItems, fastify, request
       netRunRate: item.netRunRate || validateId.netRunRate,
       isActive: item.isActive || validateId.isActive,
       id: item.id,
+      tpId: item.tpId || validateId.tpId,
     };
 
     await updateTournamentTeamPointsQuery(updateData, fastify, request);
