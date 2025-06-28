@@ -4072,10 +4072,21 @@ const loadMarketByComIdService = async (request, fastify) => {
   return "Market Update successfully";
 }
 const getEventMarketAndRunnersByIdService = async (request, fastify) => {
-  const { eventMarketId } = request.body;
+  const { commentaryId, eventMarketId } = request.body;
+  const com = global.tblCommentaries.find(item => item.commentaryId == commentaryId);
+  if(!com) {
+    throw new Error(`Commentary not found with this Id`);
+  }
   const market = await getManualMarketByIdQuery({ eventMarketId }, request, fastify);
-
-  return market?.[0] ?? null;
+  const result = {
+    commentaryId: com.commentaryId,
+    eventName: com.eventName,
+    eventDate: com.eventDate,
+    eventRefId: com.eventRefId,
+    market: market?.[0] ?? null,
+  }
+      
+  return result;
 }
 module.exports = {
   getDetailsByCIdService,
