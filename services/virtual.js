@@ -1365,104 +1365,104 @@ const ballByBallChangeService = async (request, fastify) => {
   //
 
   let getRes = await comResponseService(request, fastify);
-  let _sendPrePlayers = [];
-  let sendPartnership = [];
-  if (commentaryDetails.isPredictMarket) {
-    const commentaryBallByBallDetails = ballByBall?.commentaryBallByBallDetails
-    let _plyers = global.tblCommentaryPlayers.filter(
-      (_fil) => _fil.commentaryId === commentaryId && _fil.isPlay === true && _fil.onStrike !== null
-    );
-    _plyers.forEach((player) => {
-      let _sendPrePlayer = {};
-      _sendPrePlayer.player_id = player.commentaryPlayerId;
-      _sendPrePlayer.player_name = player.playerName;
-      _sendPrePlayer.team_id = player.teamId;
-      _sendPrePlayer.batRun = player.batRun || "0";
-      _sendPrePlayer.isWicket = player.isBatterOut === false ? 0 : 1;
-      _sendPrePlayer.current_boundaries =
-        (isNaN(parseInt(player.batFour ?? 0, 10))
-          ? 0
-          : parseInt(player.batFour ?? 0, 10)) +
-        (isNaN(parseInt(player.batSix ?? 0, 10))
-          ? 0
-          : parseInt(player.batSix ?? 0, 10));
-      _sendPrePlayer.balls_faced = player.batBall || 0;
-      _sendPrePlayers.push(_sendPrePlayer);
-    });
-    let decimalOverCount = parseFloat(commentaryBallByBallDetails.overCount);
-    let _wkt = commentaryBallByBallDetails.ballIsWicket;
-    let strikeTeam = global.tblCommentaryTeams.find(
-      (item) =>
-        item?.commentaryId === commentaryBallByBallDetails.commentaryId &&
-        item.teamStatus === 1
-    );
+  // let _sendPrePlayers = [];
+  // let sendPartnership = [];
+  // if (commentaryDetails.isPredictMarket) {
+  //   const commentaryBallByBallDetails = ballByBall?.commentaryBallByBallDetails
+  //   let _plyers = global.tblCommentaryPlayers.filter(
+  //     (_fil) => _fil.commentaryId === commentaryId && _fil.isPlay === true && _fil.onStrike !== null
+  //   );
+  //   _plyers.forEach((player) => {
+  //     let _sendPrePlayer = {};
+  //     _sendPrePlayer.player_id = player.commentaryPlayerId;
+  //     _sendPrePlayer.player_name = player.playerName;
+  //     _sendPrePlayer.team_id = player.teamId;
+  //     _sendPrePlayer.batRun = player.batRun || "0";
+  //     _sendPrePlayer.isWicket = player.isBatterOut === false ? 0 : 1;
+  //     _sendPrePlayer.current_boundaries =
+  //       (isNaN(parseInt(player.batFour ?? 0, 10))
+  //         ? 0
+  //         : parseInt(player.batFour ?? 0, 10)) +
+  //       (isNaN(parseInt(player.batSix ?? 0, 10))
+  //         ? 0
+  //         : parseInt(player.batSix ?? 0, 10));
+  //     _sendPrePlayer.balls_faced = player.batBall || 0;
+  //     _sendPrePlayers.push(_sendPrePlayer);
+  //   });
+  //   let decimalOverCount = parseFloat(commentaryBallByBallDetails.overCount);
+  //   let _wkt = commentaryBallByBallDetails.ballIsWicket;
+  //   let strikeTeam = global.tblCommentaryTeams.find(
+  //     (item) =>
+  //       item?.commentaryId === commentaryBallByBallDetails.commentaryId &&
+  //       item.teamStatus === 1
+  //   );
   
-    let target = commentaryDetails.target ?? null; 
-    let partnerships = ballByBall.commentaryPartnershipDetails;
-    let boundary = (partnerships?.totalSix || 0) + (partnerships?.totalFour || 0);
-    if (partnerships) {
-      sendPartnership.push({
-          partnership_no: partnerships?.order || 0,
-          partnership_boundaries: boundary,
-          total_balls : partnerships?.totalBalls || 0,
-          total_runs: partnerships?.totalRuns || 0,
-      });
-    }
-    const pythonURI = commentaryDetails?.pythonURI ?? null
-    const predictionPayload = {
-      playerpredictscore: {
-        commentary_id: commentaryDetails.commentaryId,
-        match_type_id: commentaryDetails.matchTypeId,
-        event_id: commentaryDetails.eventRefId,
-        current_team_id: strikeTeam.teamId,
-        total_score: strikeTeam.teamScore,
-        current_ball: decimalOverCount || 0,
-        player_details: _sendPrePlayers,
-        ball_by_ball_id: commentaryBallByBallDetails
-          .commentaryBallByBallId
-          ? parseInt(
-              commentaryBallByBallDetails.commentaryBallByBallId
-            )
-          : null,
-        partnership_details: sendPartnership,
-      },
-      predictscore: {
-        commentary_id: commentaryDetails.commentaryId,
-        match_type_id: commentaryDetails.matchTypeId,
-        ball: decimalOverCount,
-        run: commentaryBallByBallDetails.ballRun,
-        total_score: strikeTeam.teamScore,
-        strike_team_id: strikeTeam.teamId,
-        wicket: _wkt === true ? 1 : 0,
-        total_wicket: strikeTeam.teamWicket,
-        ball_by_ball_id: commentaryBallByBallDetails.commentaryBallByBallId
-          ? parseInt(
-              commentaryBallByBallDetails.commentaryBallByBallId
-            )
-          : null,
-        ballType: commentaryBallByBallDetails?.ballType ?? null,
-        target: target ?? null,
-      },
-      commentary_id: commentaryId,
-      target: target
-    };
-    let isNodePrediction =
-      global.tblConfigs.find(
-        (item) => item.key === CALLPREDICTIONMODULE
-      )?.value || "false";
-    if (isNodePrediction == "true")
-    {
-      processPredictScoreMarket(predictionPayload, fastify)
-    } else {
-      callPredictorMarket(
-        predictionPayload,
-        "/api/v1/predictscore",
-        fastify,
-        request,
-        pythonURI
-      );
-    }
-  }
+  //   let target = commentaryDetails.target ?? null; 
+  //   let partnerships = ballByBall.commentaryPartnershipDetails;
+  //   let boundary = (partnerships?.totalSix || 0) + (partnerships?.totalFour || 0);
+  //   if (partnerships) {
+  //     sendPartnership.push({
+  //         partnership_no: partnerships?.order || 0,
+  //         partnership_boundaries: boundary,
+  //         total_balls : partnerships?.totalBalls || 0,
+  //         total_runs: partnerships?.totalRuns || 0,
+  //     });
+  //   }
+  //   const pythonURI = commentaryDetails?.pythonURI ?? null
+  //   const predictionPayload = {
+  //     playerpredictscore: {
+  //       commentary_id: commentaryDetails.commentaryId,
+  //       match_type_id: commentaryDetails.matchTypeId,
+  //       event_id: commentaryDetails.eventRefId,
+  //       current_team_id: strikeTeam.teamId,
+  //       total_score: strikeTeam.teamScore,
+  //       current_ball: decimalOverCount || 0,
+  //       player_details: _sendPrePlayers,
+  //       ball_by_ball_id: commentaryBallByBallDetails
+  //         .commentaryBallByBallId
+  //         ? parseInt(
+  //             commentaryBallByBallDetails.commentaryBallByBallId
+  //           )
+  //         : null,
+  //       partnership_details: sendPartnership,
+  //     },
+  //     predictscore: {
+  //       commentary_id: commentaryDetails.commentaryId,
+  //       match_type_id: commentaryDetails.matchTypeId,
+  //       ball: decimalOverCount,
+  //       run: commentaryBallByBallDetails.ballRun,
+  //       total_score: strikeTeam.teamScore,
+  //       strike_team_id: strikeTeam.teamId,
+  //       wicket: _wkt === true ? 1 : 0,
+  //       total_wicket: strikeTeam.teamWicket,
+  //       ball_by_ball_id: commentaryBallByBallDetails.commentaryBallByBallId
+  //         ? parseInt(
+  //             commentaryBallByBallDetails.commentaryBallByBallId
+  //           )
+  //         : null,
+  //       ballType: commentaryBallByBallDetails?.ballType ?? null,
+  //       target: target ?? null,
+  //     },
+  //     commentary_id: commentaryId,
+  //     target: target
+  //   };
+  //   let isNodePrediction =
+  //     global.tblConfigs.find(
+  //       (item) => item.key === CALLPREDICTIONMODULE
+  //     )?.value || "false";
+  //   if (isNodePrediction == "true")
+  //   {
+  //     processPredictScoreMarket(predictionPayload, fastify)
+  //   } else {
+  //     callPredictorMarket(
+  //       predictionPayload,
+  //       "/api/v1/predictscore",
+  //       fastify,
+  //       request,
+  //       pythonURI
+  //     );
+  //   }
+  // }
   return {
     inningChange: false,
     isMatchComplete: false,
