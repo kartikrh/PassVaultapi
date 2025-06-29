@@ -3811,7 +3811,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
                 ? parseInt(deleteCommentaryBallByBallId)
                 : null,
               ballType: previousBall?.ballType ?? null,
-              target: nonStrikeTeam?.teamScore + 1 ?? null
+              target: nonStrikeTeam?.teamScore != null ? parseInt(nonStrikeTeam.teamScore, 10) + 1  : null,
             },
             "/api/v1/undoscore",
             fastify,
@@ -3978,7 +3978,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
               )
             : null,
           ballType: commentaryBallByBall?.ballType ?? null,
-          target: nonStrikeTeam?.teamScore + 1 ?? null,
+          target: nonStrikeTeam?.teamScore != null ? parseInt(nonStrikeTeam.teamScore, 10) + 1  : null,
         },
         commentary_id: commentaryId,
         target: target
@@ -13023,8 +13023,7 @@ const saveComVirtual = async (request, fastify) => {
         partnership_no: partnership?.order || 0,
         partnership_boundaries: boundary
       })
-      console.log("commentaryBallByBall 222",commentaryBallByBall)
-      console.log("strikeTeam 222",nonStrikeTeam)
+
       const predictionPayload = {
         playerpredictscore: {
           commentary_id: commentaryData.commentaryId,
@@ -13052,7 +13051,7 @@ const saveComVirtual = async (request, fastify) => {
             ? parseInt(updatedData.commentaryBallByBallDetails.commentaryBallByBallId)
             : null,
           ballType: commentaryBallByBall?.ballType ?? null,
-          target: nonStrikeTeam?.teamScore + 1 ?? null,
+          target: nonStrikeTeam?.teamScore != null ? parseInt(nonStrikeTeam.teamScore, 10) + 1  : null,
         },
         commentary_id: commentaryId
       }
@@ -14608,8 +14607,7 @@ const commentaryScoreService = async (request, fastify) => {
         partnership_no: global.tblCommentaryPartnership[partnershipIndex]?.order || 0,
         partnership_boundaries: boundary,
       });
-      console.log("commentaryBallByBall 3333",commentaryBallByBall)
-      console.log("strikeTeam 3333",nonStrikeTeam)
+
       const predictionPayload = {
         playerpredictscore: {
           commentary_id: commentaryData.commentaryId,
@@ -14643,7 +14641,7 @@ const commentaryScoreService = async (request, fastify) => {
               )
             : null,
           ballType: commentaryBallByBall?.ballType ?? null,
-          target: nonStrikeTeam?.teamScore + 1 ?? null,
+          target: nonStrikeTeam?.teamScore != null ? parseInt(nonStrikeTeam.teamScore, 10) + 1  : null,
         },
         commentary_id: commentaryId,
       };
@@ -16503,8 +16501,7 @@ const commentaryWicketService = async (request, fastify) => {
           partnership_no: partnership?.order || 0,
           partnership_boundaries: boundary
         })
-        console.log("commentaryBallByBall 4444",commentaryBallByBall)
-      console.log("strikeTeam 4444",nonStrikeTeam)
+
       const predictionPayload = {
         playerpredictscore: {
           commentary_id: commentaryData.commentaryId,
@@ -16538,7 +16535,7 @@ const commentaryWicketService = async (request, fastify) => {
               )
             : null,
           ballType: commentaryBallByBall?.ballType ?? null,
-          target: nonStrikeTeam?.teamScore + 1 ?? null,
+          target: nonStrikeTeam?.teamScore != null ? parseInt(nonStrikeTeam.teamScore, 10) + 1  : null,
         },
         commentary_id: commentaryId,
       };
