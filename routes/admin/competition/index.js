@@ -158,7 +158,7 @@ module.exports = async (fastify, opts) => {
       (request, reply) =>
         checkPermission(request, reply, fastify, {
           tabName: "competition",
-          mode: "edit",
+          mode: "view",
         }),
     ],
     handler: (request, reply) => getAllMatchTypes(request, reply, fastify),
