@@ -88,6 +88,11 @@ const generateMarketAndRunners = async (data, request, fastify) => {
       }, request, fastify);
     }
 
+    // ADD THIS FILTERING LOGIC HERE - Filter templates where isPython is false
+    comTemplate = comTemplate.filter(template => template.isPython === false);
+
+    console.log(`Filtered templates (isPython === false): ${comTemplate.length} templates`);
+
     // Extract assigned category IDs from templates
     const assignedCategoryIds = comTemplate.map(template => template.marketTypeCategoryId);
     console.log(`Assigned category IDs for commentary ${commentaryId}: ${assignedCategoryIds.join(', ')}`);
