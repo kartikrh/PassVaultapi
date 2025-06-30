@@ -25,6 +25,7 @@ const { deleteTournamentPlayersByPlayerIdQuery } = require("../repository/TableT
 const { deleteAwardsByPlayerIdQuery } = require("../repository/TableCommentaryAward");
 const { mergeAndSaveImage } = require("../utilities/imageMerge");
 const configConstants = require("../utilities/configConstants");
+const { trimTextData } = require("../utilities/index");
 
 const allPlayerService = async (request,fastify) => {
   const { isActive, eventTypeId , teamId} = request.body;
@@ -153,6 +154,14 @@ const insertPlayerService = async (request, fastify) => {
     }
   }
 
+  const trimData = await trimTextData({
+    playerName: request.body.playerName,
+    displayName: request.body.displayName,
+  }, request, fastify);
+  if(trimData) {
+    Object.assign(request.body, trimData);
+  }
+
   const validatePlayerName = global.tblPlayers.find(
     (item) =>
       item.playerName.trim().toLowerCase() === request.body.playerName.trim().toLowerCase()
@@ -169,7 +178,7 @@ const insertPlayerService = async (request, fastify) => {
   if (validateTpId) {
     throw new Error("TpId already exist");
   }
-  request.body.playerName = request.body.playerName.trim();
+  // request.body.playerName = request.body.playerName.trim();
   if (request.body.image && request.body.image.length) {
     // generate image name
     const imgName = generateImageName({ name: request.body.playerName });
@@ -257,7 +266,13 @@ const updatePlayerService = async (request, fastify) => {
   if (!checkPlayerId) {
     throw new Error("Player with this id not Found");
   }
-
+  const trimData = await trimTextData({
+    playerName: request.body?.playerName,
+    displayName: request.body?.displayName,
+  }, request, fastify);
+  if(trimData) {
+    Object.assign(request.body, trimData);
+  }
   const validatePlayerName = global.tblPlayers.find(
     (item) =>
       item.playerName.trim().toLowerCase() === request.body.playerName.trim().toLowerCase() &&

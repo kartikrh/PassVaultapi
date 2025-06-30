@@ -21,6 +21,7 @@ const { ImgModuleConfig } = require("../utilities/imageConstant");
 const { deletePlayersByTeamIdQuery } = require("../repository/TableTournamentsTeamPlayers")
 const { deletePointsByTeamIdQuery } = require("../repository/TableTournmentTeamPoints")
 const { mergeAndSaveImage } = require("../utilities/imageMerge");
+const { trimTextData } = require("../utilities/index");
 const allTeamsService = async () => {
   return global.tblTeams;
 };
@@ -110,11 +111,22 @@ const createTeamService = async (request, fastify) => {
       throw new Error("EventId is not valid");
     }
   }
-
+  const trimData = await trimTextData({
+    teamName: request.body?.teamName,
+    teamShortName: request.body?.teamShortName,
+  }, request, fastify);
+  if(trimData) {
+    Object.assign(request.body, trimData);
+  }
+  console.log("request.body", request.body)
   const validateTeamName = global.tblTeams.find(
     (item) =>
-      item.teamName.trim().toLowerCase() == request.body.teamName.trim().toLowerCase()
+      item.teamName.toLowerCase() == request.body.teamName.toLowerCase()
   );
+  // const validateTeamName = global.tblTeams.find(
+  //   (item) =>
+  //     item.teamName.trim().toLowerCase() == request.body.teamName.trim().toLowerCase()
+  // );
 
   if (validateTeamName) {
     throw new Error("TeamName already exist");
@@ -258,6 +270,14 @@ const updateTeamService = async (request, fastify) => {
     if (validateTpId) {
       throw new Error("TpId already exist");
     }
+  }
+
+  const trimData = await trimTextData({
+    teamName: request.body?.teamName,
+    teamShortName: request.body?.teamShortName,
+  }, request, fastify);
+  if(trimData) {
+    Object.assign(request.body, trimData);
   }
 
   const _getEventType = global.tblEventTypes.find(

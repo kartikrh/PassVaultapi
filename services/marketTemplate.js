@@ -8,13 +8,14 @@ const {
   insertMarketTemplateInCloneQuery,
   isShowInAdvanceMarketChangeStatusQuery,
   defaultIsSendDataChangeQuery,
+  updateIsPythonChangeQuery,
   allMarketTypesAndCategoriesQuery
 } = require("../repository/TableMarketTemplate");
 const { callPredictorMarket } = require("../utilities");
 const { createMarketTemplateRunnerQuery } = require("../repository/TableMarketTemplateRunner")
 
 const getAllMarketTemplateService = async (request) => {
-  const { isActive, matchTypeId , marketTypeId , marketTypeCategoryId } = request.body;
+  const { isActive, matchTypeId , marketTypeId , marketTypeCategoryId, isPython } = request.body;
   let result;
   if (isActive !== undefined) {
     result = global.tblMarketTemplate.filter(
@@ -31,6 +32,9 @@ const getAllMarketTemplateService = async (request) => {
   }
   if(marketTypeCategoryId){
     result = result.filter((item)=>item.marketTypeCategoryId == marketTypeCategoryId)
+  }
+  if(isPython){
+    result = result.filter((item)=>item.isPython == isPython)
   }
   return result;
 };
@@ -221,6 +225,7 @@ const updateMarketTemplateService = async (request, fastify) => {
       request.body.autoSuspendAfterChase : marketTemplate.autoSuspendAfterChase,
     autoNotCreateAfterChase: request.body.autoNotCreateAfterChase !== undefined ? 
       request.body.autoNotCreateAfterChase : marketTemplate.autoNotCreateAfterChase,
+    isPython: request.body.isPython !== undefined ? Boolean(request.body.isPython) : marketTemplate.isPython,
   };
   const mt = global.tblMarketTypes.find((m)=> m.marketTypeId == body.marketTypeId)
   if(!mt){
@@ -576,6 +581,22 @@ const mtAndCategoriesService = async(request ,fastify)=>{
   }
 }
 
+const isPythonChangeService = async (request, fastify) => {
+  const { marketTemplateId, isPython } = request.body;
+  const index = global.tblMarketTemplate.findIndex(
+    (item) => item.marketTemplateId === marketTemplateId
+  );
+
+  if (index === -1) {
+    throw new Error("MarketTemplate with this id not found");
+  }
+
+  await updateIsPythonChangeQuery({ marketTemplateId, isPython}, request, fastify);
+  global.tblMarketTemplate[index].isPython = request.body.isPython;
+
+  return `MarketTemplate updated successfully`;
+};
+
 module.exports = {
   saveMarketTemplateService,
   getAllMarketTemplateService,
@@ -594,5 +615,6 @@ module.exports = {
   cloneMultiMarketTemplateService,
   defaultIsSendDataChangeService,
   allMarketTypesAndCategoriesService,
-  mtAndCategoriesService
+  mtAndCategoriesService,
+  isPythonChangeService,
 };
