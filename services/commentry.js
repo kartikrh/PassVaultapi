@@ -10530,6 +10530,9 @@ const loadcommentaryService = async (request, fastify) => {
           commentary: commentary,
           commentaryId: commentary.commentaryId,
           matchTypeId: commentary.matchTypeId,
+          default_ball_faced: parseInt(key1?.value) || 0,
+          default_player_boundaries: parseInt(key2?.value) || 0,
+          default_player_runs: parseInt(key3?.value) || 0,
         }, request, fastify)
         console.log({ data })
       } else {
@@ -12988,6 +12991,7 @@ const saveComVirtual = async (request, fastify) => {
           total_score: strikeTeam.teamScore,
           current_ball: decimalOverCount || 0,
           player_details: _sendPrePlayers,
+          ball_by_ball_details: updatedData.commentaryBallByBallDetails,
           ball_by_ball_id: updatedData.commentaryBallByBallDetails.commentaryBallByBallId
             ? parseInt(updatedData.commentaryBallByBallDetails.commentaryBallByBallId)
             : null,
