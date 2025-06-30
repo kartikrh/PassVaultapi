@@ -11,7 +11,8 @@ const getAllTournamentTeamPlayersQuery = async (fastify) => {
           ttp."wrCreatedBy" as  "createdBy",
           ttp."wrCreatedAt" as "createdAt",
           tp."wrPlayerTypeId" as "playerTypeId",
-          tpt."wrPlayerType" as "playerType"
+          tpt."wrPlayerType" as "playerType",
+          ttp."wrTpId" as "tpId"
       FROM "tblTournamentTeamPlayers" AS ttp
       LEFT JOIN "tblPlayers" AS tp ON ttp."wrPlayerId" = tp."wrPlayerId"
       LEFT JOIN "tblPlayerTypes" AS tpt ON tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
@@ -33,9 +34,10 @@ const insertTournamentTeamPlayersQuery = async (data, request, fastify) => {
                           "wrPlayerId",
                           "wrPlayerName",
                           "wrCreatedBy",
-                          "wrCreatedAt"
+                          "wrCreatedAt",
+                          "wrTpId"
                       )
-                  values ($1, $2, $3, $4, $5, now()) returning *
+                  values ($1, $2, $3, $4, $5, now(), $6) returning *
                   )
                   select 
                           "wrId" as "id",
@@ -44,7 +46,8 @@ const insertTournamentTeamPlayersQuery = async (data, request, fastify) => {
                           "wrPlayerId" as "playerId",
                           "wrPlayerName" as "playerName",
                           "wrCreatedBy" as  "createdBy",
-                          "wrCreatedAt" as "createdAt"
+                          "wrCreatedAt" as "createdAt",
+                          "wrTpId" as "tpId"
                   from "insert_data"
               `,
       {
@@ -55,6 +58,7 @@ const insertTournamentTeamPlayersQuery = async (data, request, fastify) => {
           data.playerId,
           data.playerName,
           data.userId,
+          data.tpId || null
         ],
       }
     );
@@ -106,7 +110,8 @@ const getAllPlayersByTeamIdQuery = async (data, request, fastify) => {
           tttp."wrPlayerName" AS "playerName",
           tp."wrPlayerId" AS "playerId",
           tp."wrPlayerName" AS "playerName",
-          ttp."wrTeamId" AS "teamId"
+          ttp."wrTeamId" AS "teamId",
+          ttp."wrTpId" as "tpId"
         FROM "tblTeamPlayers" AS ttp
         LEFT JOIN "tblPlayers" AS tp 
             ON ttp."wrRefPlayerId" = tp."wrPlayerId" AND tp."wrIsDeleted" = false
@@ -249,7 +254,8 @@ const getAllPlayersByTeamAndCompetitionIdQuery = async (data, request, fastify) 
           ttp."wrCreatedBy" as  "createdBy",
           ttp."wrCreatedAt" as "createdAt",
           tp."wrPlayerTypeId" as "playerTypeId",
-          tpt."wrPlayerType" as "playerType"
+          tpt."wrPlayerType" as "playerType",
+          ttp."wrTpId" as "tpId"
       FROM "tblTournamentTeamPlayers" AS ttp
       LEFT JOIN "tblPlayers" AS tp ON ttp."wrPlayerId" = tp."wrPlayerId"
       LEFT JOIN "tblPlayerTypes" AS tpt ON tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
@@ -284,7 +290,8 @@ const getPlayerByIdsQuery = async (data, request, fastify) => {
           ttp."wrCreatedBy" as  "createdBy",
           ttp."wrCreatedAt" as "createdAt",
           tp."wrPlayerTypeId" as "playerTypeId",
-          tpt."wrPlayerType" as "playerType"
+          tpt."wrPlayerType" as "playerType",
+          ttp."wrTpId" as "tpId"
       FROM "tblTournamentTeamPlayers" AS ttp
       LEFT JOIN "tblPlayers" AS tp ON ttp."wrPlayerId" = tp."wrPlayerId"
       LEFT JOIN "tblPlayerTypes" AS tpt ON tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"

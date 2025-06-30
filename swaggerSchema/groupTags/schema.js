@@ -4513,6 +4513,21 @@ const MarketTemplate = {
       },
     },
   },
+  isPythonChange: {
+    schema: {
+      tags: ["Market Template"],
+      description: "update isPython on Market Template",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          marketTemplateId: { type: "integer" },
+          isPython: { type: "boolean" },
+        },
+        required: ["marketTemplateId", "isPython"],
+      },
+    },
+  },
   isShowInAdvanceMarket: {
     schema: {
       tags: ["Market Template"],
@@ -5109,7 +5124,7 @@ const EventMarket = {
           lineRatio : {type : "number"},
           rateSourceRefID : {type : "string"},
           rateDiff : {type : "number"},
-          runners : {
+          runner : {
             type : "array",
             properties : {
               runner : {type : "string"},
@@ -5131,7 +5146,7 @@ const EventMarket = {
           "lineRatio",
           "rateSourceRefID",
           "rateDiff",
-          "runners"
+          "runner"
         ]
       }
     }
@@ -5736,6 +5751,20 @@ const EventMarket = {
           commentaryId : {type : "integer"}
         },
         required : ["commentaryId"]
+      }
+    }
+  },
+  MarketInfo :{
+    schema : {
+      tags : ["EventMarket"],
+      description : "get market info by eventMarket Id",
+      security : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          eventMarketId : {type : "integer"}
+        },
+        required : ["eventMarketId"]
       }
     }
   }
@@ -9759,6 +9788,48 @@ const PythonAPI = {
     },
   },
 };
+const Listing =  {
+  EventTypeList: {
+    schema: {
+      tags: ["Listing"],
+      description: "EventType list",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+  TeamList: {
+    schema: {
+      tags: ["Listing"],
+      security: [{ bearerAuth: [] }],
+      description: "get all teams list",
+      body: {
+        type: "object",
+        properties: {
+          eventTypeId: { type: "integer" },
+        },
+      },
+    },
+  },
+  PlayerList: {
+    schema: {
+      tags: ["Listing"],
+      security: [{ bearerAuth: [] }],
+      description: "get all Players",
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+          eventTypeId: { type: "integer" },
+        },
+      },
+    },
+  },
+}
 module.exports = {
   Auth,
   Tabs,
@@ -9832,4 +9903,5 @@ module.exports = {
   FavCommentary,
   Venue,
   PythonAPI,
+  Listing,
 };

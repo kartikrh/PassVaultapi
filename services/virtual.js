@@ -66,7 +66,9 @@ const {
   generateWicket,
 } = require("../utilities/comFunction");
 const { default: fastify } = require("fastify");
+const { processPredictScoreMarket } = require("../markets/index")
 const { cancelEventMarketsQuery, closeEventMarketByCIdQuery, cancelMarketVirtualQuery } = require("../repository/TableEventMarkets");
+const { ISPREDICATIONONCRICKETCARD, DEFAULTBALLFACED, DEFAULTPLAYERRUNS, DEFAULTPLAYERBOUNDARIES, CALLPREDICTIONMODULE } = require("../utilities/configConstants");
 // const ballbyball ={
 //   commentaryBallByBallId: 0,
 //   commentaryId: commentary?.commentaryId,
@@ -206,9 +208,17 @@ const createVirtualEventService = async (request, fastify) => {
     if (team1Players.length < 2 && team2Players.length < 2) {
       throw new Error("No players found for teams");
     }
+
+    const isPrediction = global.tblConfigs.find(item => 
+      item.key.toLowerCase().trim() === ISPREDICATIONONCRICKETCARD.trim().toLowerCase()
+    )?.value;
+    const isPredictMarket = isPrediction === "true";
+    const pythonAPI = global.tblPythonAPI.find(elem => elem.isActive == true && elem.isDefault == true);
     let dataToInsert = {
       ...request.body,
       ...checkComp,
+      isPredictMarket,
+      pythonURI: pythonAPI?.URI ?? null
     };
 
     const commentaryData = await insertVirtualEventQuery(
@@ -218,12 +228,20 @@ const createVirtualEventService = async (request, fastify) => {
     );
     global.tblCommentaries.push(commentaryData);
     comId = commentaryData.commentaryId;
+    const team1TpId = global.tblTeams.find(
+      (item) => item.teamId == request.body.team1Id
+    );
+    const team2TpId = global.tblTeams.find(
+      (item) => item.teamId == request.body.team2Id
+    );
     const teamData = {
       commentaryId: commentaryData.commentaryId,
       team1Id: request.body.team1Id,
       team2Id: request.body.team2Id,
       teamMaxOver: matchType.maxOversInFirstInings,
       subInning: request.body?.subInning ?? null,
+      team1TpId: team1TpId?.tpId ?? null,
+      team2TpId: team2TpId?.tpId ?? null,
     };
     const teamsData = await insertVirtualCommentaryTeams(
       teamData,
@@ -237,18 +255,22 @@ const createVirtualEventService = async (request, fastify) => {
     if (team1Players.length >= 2 && team2Players.length >= 2) {
       const data = [
         ...team1Players.map((item, i) => {
+          const playerTpId = global.tblPlayers.find(elem => elem.playerId == item.playerId);
           return {
             commentaryId: commentaryData.commentaryId,
             teamId: request.body.team1Id,
             playerId: item.playerId,
+            tpId: playerTpId?.tpId ?? null,
             displayOrder: i + 1,
           };
         }),
         ...team2Players.map((item, i) => {
+          const playTpId = global.tblPlayers.find(elem => elem.playerId == item.playerId);
           return {
             commentaryId: commentaryData.commentaryId,
             teamId: request.body.team2Id,
             playerId: item.playerId,
+            tpId: playTpId?.tpId ?? null,
             displayOrder: i + 1,
           };
         }),
@@ -692,6 +714,28 @@ const virtualEventTossService = async (request, fastify) => {
   global.tblCommentaries[index].commentaryStatus = commentaryStatus.INPROGRESS;
   const comData = await commentaryResponseSerivce(commentaryId);
   // return "Toss Done Successfully";
+  const pythonURI = commentary.pythonURI ?? null;
+
+  let key1 = global.tblConfigs.find((item) => item.key === DEFAULTBALLFACED);
+  let key2 = global.tblConfigs.find((item) => item.key === DEFAULTPLAYERBOUNDARIES);
+  let key3 = global.tblConfigs.find((item) => item.key === DEFAULTPLAYERRUNS);
+
+  if (commentary?.isPredictMarket) {
+    callPredictorMarket(
+      {
+        commentary_id: commentary.commentaryId,
+        match_type_id: commentary.matchTypeId,
+        event_id: commentary.eventRefId,
+        default_ball_faced: parseInt(key1?.value) || 0,
+        default_player_boundaries: parseInt(key2?.value) || 0,
+        default_player_runs: parseInt(key3?.value) || 0,
+      },
+      "/api/v1/loadcommentary",
+      fastify,
+      request,
+      pythonURI
+    );
+  }
   return comData;
 };
 
@@ -1321,6 +1365,104 @@ const ballByBallChangeService = async (request, fastify) => {
   //
 
   let getRes = await comResponseService(request, fastify);
+  // let _sendPrePlayers = [];
+  // let sendPartnership = [];
+  // if (commentaryDetails.isPredictMarket) {
+  //   const commentaryBallByBallDetails = ballByBall?.commentaryBallByBallDetails
+  //   let _plyers = global.tblCommentaryPlayers.filter(
+  //     (_fil) => _fil.commentaryId === commentaryId && _fil.isPlay === true && _fil.onStrike !== null
+  //   );
+  //   _plyers.forEach((player) => {
+  //     let _sendPrePlayer = {};
+  //     _sendPrePlayer.player_id = player.commentaryPlayerId;
+  //     _sendPrePlayer.player_name = player.playerName;
+  //     _sendPrePlayer.team_id = player.teamId;
+  //     _sendPrePlayer.batRun = player.batRun || "0";
+  //     _sendPrePlayer.isWicket = player.isBatterOut === false ? 0 : 1;
+  //     _sendPrePlayer.current_boundaries =
+  //       (isNaN(parseInt(player.batFour ?? 0, 10))
+  //         ? 0
+  //         : parseInt(player.batFour ?? 0, 10)) +
+  //       (isNaN(parseInt(player.batSix ?? 0, 10))
+  //         ? 0
+  //         : parseInt(player.batSix ?? 0, 10));
+  //     _sendPrePlayer.balls_faced = player.batBall || 0;
+  //     _sendPrePlayers.push(_sendPrePlayer);
+  //   });
+  //   let decimalOverCount = parseFloat(commentaryBallByBallDetails.overCount);
+  //   let _wkt = commentaryBallByBallDetails.ballIsWicket;
+  //   let strikeTeam = global.tblCommentaryTeams.find(
+  //     (item) =>
+  //       item?.commentaryId === commentaryBallByBallDetails.commentaryId &&
+  //       item.teamStatus === 1
+  //   );
+  
+  //   let target = commentaryDetails.target ?? null; 
+  //   let partnerships = ballByBall.commentaryPartnershipDetails;
+  //   let boundary = (partnerships?.totalSix || 0) + (partnerships?.totalFour || 0);
+  //   if (partnerships) {
+  //     sendPartnership.push({
+  //         partnership_no: partnerships?.order || 0,
+  //         partnership_boundaries: boundary,
+  //         total_balls : partnerships?.totalBalls || 0,
+  //         total_runs: partnerships?.totalRuns || 0,
+  //     });
+  //   }
+  //   const pythonURI = commentaryDetails?.pythonURI ?? null
+  //   const predictionPayload = {
+  //     playerpredictscore: {
+  //       commentary_id: commentaryDetails.commentaryId,
+  //       match_type_id: commentaryDetails.matchTypeId,
+  //       event_id: commentaryDetails.eventRefId,
+  //       current_team_id: strikeTeam.teamId,
+  //       total_score: strikeTeam.teamScore,
+  //       current_ball: decimalOverCount || 0,
+  //       player_details: _sendPrePlayers,
+  //       ball_by_ball_id: commentaryBallByBallDetails
+  //         .commentaryBallByBallId
+  //         ? parseInt(
+  //             commentaryBallByBallDetails.commentaryBallByBallId
+  //           )
+  //         : null,
+  //       partnership_details: sendPartnership,
+  //     },
+  //     predictscore: {
+  //       commentary_id: commentaryDetails.commentaryId,
+  //       match_type_id: commentaryDetails.matchTypeId,
+  //       ball: decimalOverCount,
+  //       run: commentaryBallByBallDetails.ballRun,
+  //       total_score: strikeTeam.teamScore,
+  //       strike_team_id: strikeTeam.teamId,
+  //       wicket: _wkt === true ? 1 : 0,
+  //       total_wicket: strikeTeam.teamWicket,
+  //       ball_by_ball_id: commentaryBallByBallDetails.commentaryBallByBallId
+  //         ? parseInt(
+  //             commentaryBallByBallDetails.commentaryBallByBallId
+  //           )
+  //         : null,
+  //       ballType: commentaryBallByBallDetails?.ballType ?? null,
+  //       target: target ?? null,
+  //     },
+  //     commentary_id: commentaryId,
+  //     target: target
+  //   };
+  //   let isNodePrediction =
+  //     global.tblConfigs.find(
+  //       (item) => item.key === CALLPREDICTIONMODULE
+  //     )?.value || "false";
+  //   if (isNodePrediction == "true")
+  //   {
+  //     processPredictScoreMarket(predictionPayload, fastify)
+  //   } else {
+  //     callPredictorMarket(
+  //       predictionPayload,
+  //       "/api/v1/predictscore",
+  //       fastify,
+  //       request,
+  //       pythonURI
+  //     );
+  //   }
+  // }
   return {
     inningChange: false,
     isMatchComplete: false,

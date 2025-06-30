@@ -5038,7 +5038,7 @@ const saveManualMarketQuery = async (data, request, fastify) => {
         )
         VALUES
         ${
-          data.runners
+          data.runner
             .map(
               (item) =>
                 `(${mar[0].eventMarketId}, '${item.name}', ${item.selectionId}, ${EventMarketStatus.Inactive}, ${item.teamId || 'NULL'})`
@@ -5128,6 +5128,76 @@ const saveManualMarketQuery = async (data, request, fastify) => {
     
   }
 }
+const updateManualMarketQuery = async (data, request, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `CALL proc_manual_market_upsert($1, $2)`,
+      {
+        bind: [JSON.stringify(data) || null, null],
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+
+    result[0].updated_row.forEach((item) => {
+      fastify.db
+        .query(
+          `
+          SELECT "wrCommentaryId" AS "commentaryId"
+          FROM "tblEventMarkets"
+          WHERE "wrID" = $1
+        `,
+          {
+            bind: [item.marketId],
+            type: fastify.db.QueryTypes.SELECT,
+          }
+        )
+        .then((dbResult) => {
+          if (dbResult.length > 0) {
+            marketDataLogger(
+              {
+                eventMarketId: item.marketId,
+                commentaryId: dbResult[0].commentaryId,
+                dataTosave: typeof item === "string" ? JSON.parse(item) : item,
+                updateType: MarketUpdateType.marketUpdateRate,
+                lineDiff: 0,
+                isSendData: true,
+                predefinedValue : item.predefinedValue ?? null
+              },
+              request,
+              fastify
+            ).catch((err) => {
+              console.error("marketDataLogger error:", err);
+              errorLogger(
+                fastify,
+                err.message,
+                "ERROR --> services/eventMarket.js/upManualMarketQuery",
+                request
+              );
+            });
+          }
+        })
+        .catch((err) => {
+          console.error("DB Query error:", err);
+          errorLogger(
+            fastify,
+            err.message,
+            "DB ERROR --> repository/TableEventmarket.js/upManualMarketQuery",
+            request
+          );
+        });
+    });
+
+    return result[0];
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/upManualMarketQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+};
 const upManualMarketQuery = async (data, request, fastify) => {
   try {
     const result = await fastify.db.query(
@@ -6396,6 +6466,7 @@ module.exports = {
   getMarketByComIdQuery,
   getExistingEventMarketsQueryV1,
   cancelMarketVirtualQuery,
-  getManualMarketByIdQuery
+  getManualMarketByIdQuery,
+  updateManualMarketQuery,
 }
 

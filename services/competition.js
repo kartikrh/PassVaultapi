@@ -129,7 +129,9 @@ const createCompititionService = async (request, fastify) => {
     throw new Error("EventType with this id not Found");
   }
 
-  if (request.body.matchTypeId !== undefined) {
+  if (request.body.matchTypeId !== undefined 
+    && request.body.matchTypeId != 0 
+    && request.body.matchTypeId != null) {
     const validate = global.tblMatchTypes.find(
       (item) => item.matchTypeId == request.body.matchTypeId
     );
@@ -231,7 +233,8 @@ console.log("udate req.body",request.body);
   }
   if (request.body.matchTypeId !== undefined &&
     request.body.matchTypeId !== null &&
-    validateId.matchTypeId != request.body.matchTypeId) {
+    validateId.matchTypeId != request.body.matchTypeId &&
+  request.body.matchTypeId !== 0) {
     const templates = await getAssignedTemplateByCompetitionIdQuery(competitionId, request, fastify);
     if (templates.length > 0) {
       const templateIds = templates.map(item => { return item.id });
