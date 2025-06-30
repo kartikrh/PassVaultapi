@@ -4513,6 +4513,21 @@ const MarketTemplate = {
       },
     },
   },
+  isPythonChange: {
+    schema: {
+      tags: ["Market Template"],
+      description: "update isPython on Market Template",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          marketTemplateId: { type: "integer" },
+          isPython: { type: "boolean" },
+        },
+        required: ["marketTemplateId", "isPython"],
+      },
+    },
+  },
   isShowInAdvanceMarket: {
     schema: {
       tags: ["Market Template"],
