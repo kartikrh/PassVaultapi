@@ -533,6 +533,7 @@ const cloneMultiMarketTemplateService  = async (request, fastify) => {
           layPrice: elem.layPrice,
           backSize: elem.backSize,
           laySize: elem.laySize,
+          predefinedValue : elem.predefinedValue,
         }
       };
 
