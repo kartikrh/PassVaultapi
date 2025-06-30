@@ -1236,6 +1236,18 @@ module.exports = async (fastify, opts) => {
     ],
     handler: (request , reply) => undoAPI(request, reply, fastify)
   })
+  fastify.post("/undoAPI", {
+    schema : Commentary.UndoAPI.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
+          mode: "edit"
+        }),
+    ],
+    handler: (request , reply) => undoAPI(request, reply, fastify)
+  })
   fastify.post("/drsById", {
     schema : Commentary.drsById.schema,
     preHandler: [
