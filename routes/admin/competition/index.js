@@ -163,7 +163,6 @@ module.exports = async (fastify, opts) => {
     ],
     handler: (request, reply) => getAllMatchTypes(request, reply, fastify),
   });
-
   fastify.post("/getEventSnap", {
     schema: Compitition.getEventSnapByCompetitionId.schema,
     preHandler: [
