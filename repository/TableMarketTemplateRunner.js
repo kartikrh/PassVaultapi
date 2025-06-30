@@ -84,7 +84,7 @@ const createMarketTemplateRunnerQuery = async (request, fastify) => {
                     request.body.layPrice || 0,
                     request.body.backSize || 0,
                     request.body.laySize || 0,
-                    request.body.predefinedValue,
+                    request.body.predefinedValue || 0,
 
                 ],
                 type: fastify.db.QueryTypes.SELECT,
@@ -147,7 +147,7 @@ const updateMarketTemplateRunnerQuery   = async (request, fastify) => {
                     request.body.layPrice || 0,
                     request.body.backSize || 0,
                     request.body.laySize || 0,
-                    request.body.predefinedValue,
+                    request.body.predefinedValue || 0,
                 ],
                 type: fastify.db.QueryTypes.SELECT,
             }

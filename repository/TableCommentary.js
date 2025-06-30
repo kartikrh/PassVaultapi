@@ -5007,7 +5007,7 @@ const getAllCompletedCommentaryQuery = async (request, fastify) => {
           AND tct3."wrTeamId" = tc."wrTossWonBy" 
           AND tct3."wrCurrentInnings" = tc."wrCurrentInnings" AND tct3."wrIsDelete" = false
       WHERE tc."wrCommentaryStatus" = 4 AND tc."wrIsDelete" = false
-      AND tc."wrIsActive" = true AND tc."wrIsTest" = false;
+      AND tc."wrIsActive" = true AND tc."wrIsTest" = false
       AND (
         tc."wrCancelTime" IS NULL
         OR tc."wrCancelTime" >= NOW() - INTERVAL '7 days'
