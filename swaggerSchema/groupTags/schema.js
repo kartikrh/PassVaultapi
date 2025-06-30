@@ -9788,6 +9788,48 @@ const PythonAPI = {
     },
   },
 };
+const Listing =  {
+  EventTypeList: {
+    schema: {
+      tags: ["Listing"],
+      description: "EventType list",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+  TeamList: {
+    schema: {
+      tags: ["Listing"],
+      security: [{ bearerAuth: [] }],
+      description: "get all teams list",
+      body: {
+        type: "object",
+        properties: {
+          eventTypeId: { type: "integer" },
+        },
+      },
+    },
+  },
+  PlayerList: {
+    schema: {
+      tags: ["Listing"],
+      security: [{ bearerAuth: [] }],
+      description: "get all Players",
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+          eventTypeId: { type: "integer" },
+        },
+      },
+    },
+  },
+}
 module.exports = {
   Auth,
   Tabs,
@@ -9861,4 +9903,5 @@ module.exports = {
   FavCommentary,
   Venue,
   PythonAPI,
+  Listing,
 };

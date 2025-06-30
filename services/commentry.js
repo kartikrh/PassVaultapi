@@ -696,7 +696,7 @@ const createCommentaryService = async (request, fastify) => {
               };
             }),
             ...request.body.team2Players.map((item, i) => {
-              const plaTpId = global.tblPlayers.find(elem => elem.playerd === item);
+              const plaTpId = global.tblPlayers.find(elem => elem.playerId === item);
               return {
                 commentaryId: addCommentry.commentaryId,
                 teamId: request.body.team2Id,
