@@ -9789,7 +9789,7 @@ const PythonAPI = {
   },
 };
 const Listing =  {
-  EventTypeList: {
+  eventTypeList: {
     schema: {
       tags: ["Listing"],
       description: "EventType list",
@@ -9802,7 +9802,7 @@ const Listing =  {
       },
     },
   },
-  TeamList: {
+  teamList: {
     schema: {
       tags: ["Listing"],
       security: [{ bearerAuth: [] }],
@@ -9815,7 +9815,7 @@ const Listing =  {
       },
     },
   },
-  PlayerList: {
+  playerList: {
     schema: {
       tags: ["Listing"],
       security: [{ bearerAuth: [] }],
@@ -9826,6 +9826,69 @@ const Listing =  {
           isActive: { type: "boolean" },
           eventTypeId: { type: "integer" },
         },
+      },
+    },
+  },
+  getAllMatchTypes: {
+    schema: {
+      tags: ["Listing"],
+      security: [{ bearerAuth: [] }],
+      description: "get all Match Types",
+    },
+  },
+  markeTypeList: {
+    schema: {
+      tags: ["Listing"],
+      description: "get all market types",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+  getCategoryByMarketType: {
+    schema: {
+      tags: ["Listing"],
+      description: "get all category by market type",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          marketTypeId: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["marketTypeId"],
+      },
+    },
+  },
+  competitionList: {
+    schema: {
+      tags: ["Listing"],
+      description: "get all Compititions",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+          eventTypeId: { type: "integer" },
+        },
+      },
+    },
+  },
+  eventListByCompetitionId: {
+    schema: {
+      tags: ["Commentary"],
+      description: "get Event by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionId: { type: "integer" },
+        },
+        required: ["competitionId"],
       },
     },
   },

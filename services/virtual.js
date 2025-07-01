@@ -35,6 +35,7 @@ const {
   updateVirtualOverQuery,
   createVirtualWicketQuery,
   cancelComQuery,
+  addCompTempQuery,
 } = require("../repository/TableCommentary");
 const {
   getTournamentTeamsByCompIdQuery,
@@ -357,6 +358,22 @@ const createVirtualEventService = async (request, fastify) => {
             ...teamData[0],
           };
         }
+      }
+    }
+    if (commentaryData?.isPredictMarket) {
+      let comp = global.tblCompetitions.find(
+        (elem) => elem.competitionId == commentaryData.competitionId
+      );
+      if (comp && comp.matchTypeId != null && comp.matchTypeId == commentaryData.matchTypeId) {
+        await addCompTempQuery(
+          {
+            commentaryId: commentaryData.commentaryId,
+            matchTypeId: commentaryData.matchTypeId,
+            competitionId: commentaryData.competitionId,
+          },
+          request,
+          fastify
+        );
       }
     }
   }

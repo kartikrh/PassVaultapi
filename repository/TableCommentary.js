@@ -7038,7 +7038,7 @@ const addCompTempQuery = async (data,request,fastify)=>{
     if(dtToInsert.length== 0) return true; 
     let values = [];
     dtToInsert.forEach((item) => {
-        values.push(`(${data.commentaryId},${item.marketTemplateId},${request.userTokenInfo.WrUserId},now())`)
+        values.push(`(${data.commentaryId},${item.marketTemplateId},${request.userTokenInfo?.WrUserId || null},now())`)
     })
     values = values.join(",");
       const query = `
