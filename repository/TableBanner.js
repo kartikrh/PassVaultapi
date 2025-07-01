@@ -25,6 +25,7 @@ const getAllBannerQuery = async (fastify) => {
 };
 const insertBannerQuery = async (data, request, fastify) => {
   try {
+    console.log("dasta", data)
     const result = await fastify.db.query(
       `
                 with insert_data as (
@@ -63,7 +64,8 @@ const insertBannerQuery = async (data, request, fastify) => {
         bind: [
           data.title || null,
           data.bannerType,
-          data.image,
+          data.image == undefined || data.image == '' || data.image == "null" || data.image == null ?
+            null : data.image,
           data.isActive || false,
           data.isPermanent || false,
           data.startDate ? new Date(data.startDate) : null,
