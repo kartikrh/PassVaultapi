@@ -133,11 +133,21 @@ const insertCompetitionQuery = async (request, fastify) => {
           data.isEventSnap || false,
           data.isPointTable || false,
           data.matchTypeId || null,
-          data.winPoint === undefined ? null : data.winPoint,
-          data.tiePoint === undefined ? null : data.tiePoint,
-          data.cancelPoint === undefined ? null : data.cancelPoint,
-          data.lossPoint === undefined ? null : data.lossPoint,
-          data.drsCount === undefined ? 0 : data.drsCount,
+          data.winPoint === undefined || data.winPoint === null || data.winPoint === "" || 
+            data.winPoint === "null" ? null : parseInt(data.winPoint, 10),
+          data.tiePoint === undefined || data.tiePoint === null || data.tiePoint === "" || 
+            data.tiePoint === "null" ? null : parseInt(data.tiePoint, 10),
+          data.cancelPoint === undefined || data.cancelPoint === null || data.cancelPoint === "" || 
+            data.cancelPoint === "null" ? null : parseInt(data.cancelPoint, 10),
+          data.lossPoint === undefined || data.lossPoint === null || data.lossPoint === "" || 
+            data.lossPoint === "null" ? null : parseInt(data.lossPoint, 10),
+          data.drsCount === undefined || data.drsCount === null || data.drsCount === "" || 
+            data.drsCount === "null" ? 0 : parseInt(data.drsCount, 10),
+          // data.winPoint === undefined ? null : parseInt(data.winPoint, 10),
+          // data.tiePoint === undefined ? null : parseInt(data.tiePoint, 10),
+          // data.cancelPoint === undefined ? null : parseInt(data.cancelPoint, 10),
+          // data.lossPoint === undefined ? null : parseInt(data.lossPoint, 10),
+          // data.drsCount === undefined || 'null' ? 0 : parseInt(data.drsCount, 10),
           data.imagePath || null,
           data.isMen || null,
           data.type || null,
