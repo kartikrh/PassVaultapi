@@ -6309,7 +6309,7 @@ const Banner = {
           startDate: { type: "string" },
           endDate: { type: "string" },
           link: { type: "string" },
-          viewerCount: { type: "integer" },
+          // viewerCount: { type: "integer" },
         },
         required: ["bannerId"],
       },
