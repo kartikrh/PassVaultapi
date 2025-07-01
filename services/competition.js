@@ -71,7 +71,7 @@ const allCompetitionService = async (request) => {
 
   const filterObject = {};
 
-  if (isActive !== undefined) filterObject.isActive = isActive;
+  filterObject.isActive = isActive !== undefined ? isActive : true;
   if (isTrending !== undefined) filterObject.isTrending = isTrending;
   if (eventTypeId !== undefined && eventTypeId !== 0) filterObject.eventTypeId = eventTypeId;
   if (matchTypeId !== undefined && matchTypeId !== 0) filterObject.matchTypeId = matchTypeId;
@@ -80,9 +80,9 @@ const allCompetitionService = async (request) => {
   if (typeof isVirtual === 'boolean') filterObject.isVirtual = isVirtual;
   if (pythonId !== undefined && pythonId !== 0) filterObject.pythonId = pythonId;
 
-  if (isActive === undefined || isTrending === undefined) {
-    return global.tblCompetitions.filter((item) => item.isActive === true);
-  }
+  // if (isActive === undefined || isTrending === undefined) {
+  //   return global.tblCompetitions.filter((item) => item.isActive === true);
+  // }
 
   const result = global.tblCompetitions.filter((item) => {
     return Object.entries(filterObject).every(([key, value]) => item[key] === value);
@@ -108,7 +108,6 @@ const competitionByeventTypeIdService = async (request) => {
 };
 
 const createCompititionService = async (request, fastify) => {
-  console.log("request.body", request.body)
   const findExists = global.tblCompetitions.find(
     (item) =>
       item.eventTypeId === request.body.eventTypeId &&
@@ -218,7 +217,7 @@ const updateCompititionService = async (request, fastify) => {
   const validateId = global.tblCompetitions.find(
     (item) => item.competitionId === competitionId
   );
-console.log("udate req.body",request.body);
+
   if (!validateId) {
     throw new Error("Competition with this id not Found");
   }
