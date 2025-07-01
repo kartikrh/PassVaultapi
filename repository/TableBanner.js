@@ -25,7 +25,6 @@ const getAllBannerQuery = async (fastify) => {
 };
 const insertBannerQuery = async (data, request, fastify) => {
   try {
-    console.log("dasta", data)
     const result = await fastify.db.query(
       `
                 with insert_data as (
