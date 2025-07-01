@@ -107,10 +107,11 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
       image: validateBannerId.image,
       userId: request.userTokenInfo.WrUserId,
       link: request.body.link,
-      viewerCount: request.body.viewerCount || validateBannerId.viewerCount,
+      viewerCount: request.body.viewerCount === undefined || request.body.viewerCount === null || request.body.viewerCount === "" ||
+        request.body.viewerCount === "null" ? validateBannerId.viewerCount : parseInt(request.body.viewerCount, 10),
       imagePath: validateBannerId.imagePath,
     };
-    if (request.body.image && request.body.image.length) {
+    if (request.body.image && request.body.image.length && request.body.image != "null" && request.body.image != "") {
       const imgName = generateImageName({
         name: request.body.title,
       });
