@@ -31,7 +31,7 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
   };
   const createBannerService = async (request, fastify) => {
     // if image is uploaded then upload it to server
-    if (request.body.image && request.body.image.length) {
+    if (request.body.image && request.body.image.length && request.body.image != "null" && request.body.image != "") {
       const imgName = generateImageName({
         name: request.body.title,
       });
