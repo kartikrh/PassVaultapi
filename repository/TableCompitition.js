@@ -132,7 +132,9 @@ const insertCompetitionQuery = async (request, fastify) => {
           data.isTrending || false,
           data.isEventSnap || false,
           data.isPointTable || false,
-          data.matchTypeId || null,
+          // data.matchTypeId || null,
+          data.matchTypeId === undefined || data.matchTypeId === null || data.matchTypeId === "" || 
+            data.matchTypeId === "null" ? 0 : parseInt(data.matchTypeId, 10),
           data.winPoint === undefined || data.winPoint === null || data.winPoint === "" || 
             data.winPoint === "null" ? null : parseInt(data.winPoint, 10),
           data.tiePoint === undefined || data.tiePoint === null || data.tiePoint === "" || 
@@ -152,11 +154,17 @@ const insertCompetitionQuery = async (request, fastify) => {
           data.isMen || null,
           data.type || null,
           data.isVirtual || false,
-          data.commStatus || 0,
+          // data.commStatus || 0,
+          data.commStatus === undefined || data.commStatus === null || data.commStatus === "" || 
+            data.commStatus === "null" ? 0 : parseInt(data.commStatus, 10),
           data.startDate || null,
           data.endDate || null,
-          data.tpId || null,
-          data.pythonId || null,
+          // data.tpId || null,
+          data.tpId === undefined || data.tpId === null || data.tpId === "" || 
+            data.tpId === "null" ? 0 : parseInt(data.tpId, 10),
+          // data.pythonId || null,
+          data.pythonId === undefined || data.pythonId === null || data.pythonId === "" || 
+            data.pythonId === "null" ? 0 : parseInt(data.pythonId, 10),
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
