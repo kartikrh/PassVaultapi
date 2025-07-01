@@ -512,6 +512,7 @@ const getCommentaryListByCompetitionIdService = async (request, fastify) => {
     commentaryId: item.commentaryId,
     eventName: item.eventName,
     eventDate: item.eventDate,
+    eventRefId: item.eventRefId,
   })).sort((a, b) => b.eventDate - a.eventDate);
   return commentaryList;
 };

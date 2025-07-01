@@ -15,6 +15,12 @@ const {
     getCompetitionList,
     getAllDifficulties,
     getEventListcompetitionId,
+    getRoleList,
+    getAllUsersWithCurrent,
+    getBlockList,
+    getTabs,
+    getCommentaryList,
+    getEventList,
 } = require("../../../controller/users/admin/list/index");
 const { Listing } = require("../../../swaggerSchema/groupTags/schema");
 
@@ -87,5 +93,35 @@ module.exports = async (fastify, opts) => {
         schema: Listing.eventListByCompetitionId.schema,
         preHandler: [(request, reply) => authorize(request, reply, fastify)],
         handler: (request, reply) => getEventListcompetitionId(request, reply, fastify),
+    });
+    fastify.post("/roleList", {
+        schema: Listing.roleList.schema,
+        preHandler: [(request, reply) => authorize(request, reply, fastify)],
+        handler: (request, reply) => getRoleList(request, reply, fastify),
+    });
+    fastify.post("/allWithCurrent", {
+        schema: Listing.getAllWithCurrent.schema,
+        preHandler: [(request, reply) => authorize(request, reply, fastify)],
+        handler: (request, reply) => getAllUsersWithCurrent(request, reply, fastify),
+    });
+    fastify.post("/blockList", {
+        schema: Listing.blockList.schema,
+        preHandler: [(request, reply) => authorize(request, reply, fastify)],
+        handler: (request, reply) => getBlockList(request, reply, fastify),
+    });
+    fastify.post("/allTabs", {
+        schema: Listing.getAllTabs.schema,
+        preHandler: [(request, reply) => authorize(request, reply, fastify)],
+        handler: (request, reply) => getTabs(request, reply, fastify),
+    });
+    fastify.post("/commListByCompetitionId", {
+        schema: Listing.eventByCompetitionId.schema,
+        preHandler: [(request, reply) => authorize(request, reply, fastify)],
+        handler: (request, reply) => getCommentaryList(request, reply, fastify),
+    });
+    fastify.post("/commentaryList",{
+        schema : Listing.getAllCommentaries.schema,
+        preHandler : [(request,reply) => authorize(request,reply,fastify)],
+        handler : (request,reply) => getEventList(request,reply,fastify)
     });
 }
