@@ -16,6 +16,12 @@ const { allPythonAPIsService } = require("../../../../services/pythonAPI");
 const { allCompetitionService } = require("../../../../services/competition");
 const { getAllDifficultyService } = require("../../../../services/commentry");
 const { eventBycompetitionIdService } = require("../../../../services/event");
+const { allRolesService } = require("../../../../services/roles");
+const { getAllUsersWithCurrentService } = require("../../../../services/user");
+const { allBlocksService } = require("../../../../services/blocks");
+const { getTabsService } = require("../../../../services/admin");
+const { getCommentaryListByCompetitionIdService } = require("../../../../services/eventMarket");
+const { getEventListService } = require("../../../../services/notification");
 
 const { errorLogger } = require("../../../../utilities/logger");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
@@ -51,6 +57,7 @@ const getTeamList = async (request, reply, fastify) => {
         reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
     }
 };
+
 const getAllPlayerType = async (request, reply, fastify) => {
     try {
         const result = await allPlayerTypeService();
@@ -60,6 +67,7 @@ const getAllPlayerType = async (request, reply, fastify) => {
         reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
     }
 };
+
 const getAllBowlingType = async (request, reply, fastify) => {
     try {
         const result = await allBowlingTypeService();
@@ -69,6 +77,7 @@ const getAllBowlingType = async (request, reply, fastify) => {
         reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
     }
 };
+
 const getAllPlayerList = async (request, reply, fastify) => {
     try {
         let result = await allPlayerService(request);
@@ -84,6 +93,7 @@ const getAllPlayerList = async (request, reply, fastify) => {
         reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
     }
 };
+
 const getMatchTypeList = async (request, reply, fastify) => {
   try {
     const result = await getMatchTypeListService(request, fastify);
@@ -93,6 +103,7 @@ const getMatchTypeList = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+
 const getMarketTypeList = async (request, reply, fastify) => {
   try {
     const result = await getMarketTypeListService(request ,fastify);
@@ -102,6 +113,7 @@ const getMarketTypeList = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+
 const marketType = async (request, reply, fastify) => {
   try {
     const result = await marketTypeService(request, fastify);
@@ -111,6 +123,7 @@ const marketType = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+
 const mtAndCategories = async (request, reply, fastify) => {
   try {
     const result = await mtAndCategoriesService(request ,fastify);
@@ -120,6 +133,7 @@ const mtAndCategories = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+
 const getCategoryByMarketType = async (request, reply, fastify) => {
   try {
     const result = await getCategoryByMarketTypeService(request ,fastify);
@@ -129,6 +143,7 @@ const getCategoryByMarketType = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+
 const getAllMatchTypes = async (request, reply, fastify) => {
   try {
     const result = await allMatchTypesService(request);
@@ -138,6 +153,7 @@ const getAllMatchTypes = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+
 const allPythonAPIs = async (request, reply, fastify) => {
   try {
     request.body = request.body || {};
@@ -145,10 +161,11 @@ const allPythonAPIs = async (request, reply, fastify) => {
     const result = await allPythonAPIsService(request, fastify);
     reply.status(200).send(success(result, 200));
   } catch (err) {
-    errorLogger(fastify, err.message, path + "/allPythonAPIs", request);
+    errorLogger(fastify, err.message, commonPath + "/allPythonAPIs", request);
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+
 const getCompetitionList = async (request, reply, fastify) => {
   try {
     let result = await allCompetitionService(request);
@@ -166,28 +183,101 @@ const getCompetitionList = async (request, reply, fastify) => {
     });
     reply.status(200).send(success(result, 200));
   } catch (err) {
-    errorLogger(fastify, err.message, path + "/getCompetitionList", request);
+    errorLogger(fastify, err.message, commonPath + "/getCompetitionList", request);
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+
 const getAllDifficulties = async (request, reply, fastify) => {
   try {
     const result = await getAllDifficultyService(request, fastify);
     reply.status(200).send(success(result, 200));
   } catch (err) {
-    errorLogger(fastify, err.message, path + "/getAllDifficulties", request);
+    errorLogger(fastify, err.message, commonPath + "/getAllDifficulties", request);
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+
 const getEventListcompetitionId = async (request, reply, fastify) => {
   try {
     let result = await eventBycompetitionIdService(request);
     reply.status(200).send(success(result, 200));
   } catch (err) {
-    errorLogger(fastify, err.message, path + "/getEventListcompetitionId", request);
+    errorLogger(fastify, err.message, commonPath + "/getEventListcompetitionId", request);
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+
+const getRoleList = async (request, reply, fastify) => {
+  try {
+    let result = await allRolesService(request);
+    result = result.map((item) => {
+      return {
+        roleId: item.roleId,
+        roleName: item.roleName,
+      };
+    });
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/getRoleList", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
+const getAllUsersWithCurrent = async (request, reply, fastify) => {
+  try {
+    const result = await getAllUsersWithCurrentService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger( fastify, err.message, commonPath + "/getAllUsersWithCurrent", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
+const getBlockList = async (request, reply, fastify) => {
+  try {
+    let result = await allBlocksService(request, fastify);
+    result = result.map((item) => ({
+      blockId: item.blockId,
+      blockName: item.blockName,
+    }));
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/getBlockList", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
+const getTabs = async (request, reply, fastify) => {
+  try {
+    const result = await getTabsService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/getTabs", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
+const getCommentaryList = async (request, reply, fastify) => {
+  try {
+    const result = await getCommentaryListByCompetitionIdService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/getCommentaryList", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
+const getEventList = async (request , reply , fastify)=>{
+    try {
+        const result = await getEventListService(request);
+        reply.status(200).send(success(result, 200));
+    } catch (err) {
+        errorLogger(fastify, err.message, commonPath + "/getEventList", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+    }
+}
+
 module.exports = {
     getEventTypeList,
     getTeamList,
@@ -204,4 +294,10 @@ module.exports = {
     getCompetitionList,
     getAllDifficulties,
     getEventListcompetitionId,
+    getRoleList,
+    getAllUsersWithCurrent,
+    getBlockList,
+    getTabs,
+    getCommentaryList,
+    getEventList,
 }

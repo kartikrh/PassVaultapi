@@ -9880,8 +9880,8 @@ const Listing =  {
   },
   eventListByCompetitionId: {
     schema: {
-      tags: ["Commentary"],
-      description: "get Event by id",
+      tags: ["Listing"],
+      description: "get Events by CompetitionId",
       security: [{ bearerAuth: [] }],
       body: {
         type: "object",
@@ -9891,6 +9891,61 @@ const Listing =  {
         required: ["competitionId"],
       },
     },
+  },
+  roleList: {
+    schema: {
+      tags: ["Listing"],
+      description: "get roles list",
+      security: [{ bearerAuth: [] }],
+    },
+  },
+  getAllWithCurrent: {
+    schema: {
+      tags: ["Listing"],
+      description: "get all User including current user",
+      security: [{ bearerAuth: [] }],
+    },
+  },
+  blockList: {
+    schema: {
+      tags: ["Listing"],
+      security: [{ bearerAuth: [] }],
+      description: "get all block types",
+      body: {
+        type: "object",
+        properties: {
+          isShowContent: { type: "boolean" },
+        },
+      },
+    },
+  },
+  getAllTabs: {
+    schema: {
+      tags: ["Listing"],
+      description: "get all tabs",
+      security: [{ bearerAuth: [] }],
+    },
+  },
+  eventByCompetitionId: {
+    schema: {
+      tags: ["Listing"],
+      description: "get Event list by competitionId",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionId: { type: "integer" },
+        },
+        required: ["competitionId"],
+      },
+    },
+  },
+  getAllCommentaries :{
+    schema : {
+      tags : ["Listing"],
+      description : "get all Commentaries",
+      secaurity : [{bearerAuth : []}]
+    }
   },
 }
 module.exports = {
