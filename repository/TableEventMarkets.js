@@ -594,7 +594,10 @@ const deleteEventMarketQuery = async (data, request, fastify) => {
 };
 const changeIsActiveEventMarketQuery = async (data, request, fastify) => {
   try {
-    const query = `UPDATE "tblEventMarkets" SET "wrIsActive" = $1 WHERE "wrID" = $2`;
+    const query = `UPDATE "tblEventMarkets" SET 
+      "wrIsActive" = $1,
+      "wrData" = jsonb_set("wrData"::jsonb, '{isActive}', '${data.isActive}'::jsonb)::json
+    WHERE "wrID" = $2`;
     return await fastify.db.query(query, {
       bind: [data.isActive, data.eventMarketId],
       type: fastify.db.QueryTypes.SELECT,
@@ -611,9 +614,14 @@ const changeIsActiveEventMarketQuery = async (data, request, fastify) => {
 };
 const changeIsAllowEventMarketQuery = async (data, request, fastify) => {
   try {
-    const query = `UPDATE "tblEventMarkets" SET "wrIsAllow" = $1 WHERE "wrID" = $2`;
-    return await fastify.db.query(query, {
-      bind: [data.isAllow, data.eventMarketId],
+    const query = `UPDATE "tblEventMarkets" SET "wrIsAllow" = $1,
+       "wrData" = jsonb_set("wrData"::jsonb, '{isAllow}', '${data.isAllow}'::jsonb)::json
+        WHERE "wrID" = $2`;
+    await fastify.db.query(query, {
+      bind: [
+        data.isAllow, 
+        data.eventMarketId
+      ],
       type: fastify.db.QueryTypes.SELECT,
     });
   } catch (error) {

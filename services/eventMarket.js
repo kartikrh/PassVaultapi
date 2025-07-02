@@ -3693,7 +3693,7 @@ const getManualMarketDataService = async (request, fastify) => {
     (item) => item.categoryName.toLowerCase() === "manualodds"
   );
   let market;
-  if(eventMarketId){
+  if(eventMarketId == null){
       market = await getManualMarketDataQuery({
         commentaryId: commentaryId,
         marketTypeId : MarketTypeId.ManualOdds,
@@ -3744,7 +3744,9 @@ const getManualMarketDataService = async (request, fastify) => {
       commentaryId: com.commentaryId,
       eventName: com.eventName,
       eventDate: com.eventDate,
-      eventRefId: com.eventRefId
+      eventRefId: com.eventRefId,
+      competitionId : com.competitionId,
+      eventTypeId : com.eventTypeId
     },
     teams: comTeam,
     market: market,
