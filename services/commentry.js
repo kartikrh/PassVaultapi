@@ -13611,7 +13611,28 @@ const saveComVirtual = async (request, fastify) => {
         }
       });
     }
-
+    if (
+        previousCommentaryStatus != statusToUpdate &&
+        commentaryData?.isPredictMarket == true
+    ) {
+      callDataProvider(
+        {
+          commentaryId: commentaryData?.commentaryId,
+          serviceType: ServiceType.dataProviderAPI,
+          moduleType: APIEndpointModuleType.commentaryUpdate,
+          type: statusToUpdate == 4 ? "close" : "update",
+        },
+        fastify
+      ).catch((err) => {
+        console.log("call Data Provider console", err);
+        errorLogger(
+          fastify,
+          err.message,
+          "ERROR --> services/commentary.js/saveComVirtual",
+          request
+        );
+      });
+    }
     // let strikeTeam;
     // strikeTeam = global.tblCommentaryTeams.find(
     //   (item) =>
