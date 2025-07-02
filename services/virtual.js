@@ -14,6 +14,9 @@ const {
   Cards,
   MarketActionType,
   EventMarketStatus,
+  ServiceType,
+  APIEndpointModuleType,
+  callDataProvider,
 } = require("../utilities");
 const { cloneCommentaryService, saveComVirtual } = require("./commentry");
 const {
@@ -375,6 +378,24 @@ const createVirtualEventService = async (request, fastify) => {
           fastify
         );
       }
+
+      callDataProvider(
+          {
+            commentaryId: commentaryData.commentaryId,
+            serviceType: ServiceType.dataProviderAPI,
+            moduleType: APIEndpointModuleType.commentaryUpdate,
+            type: "create",
+          },
+          fastify
+        ).catch((err) => {
+          console.log("call data provider console", err);
+          errorLogger(
+            fastify,
+            err.message,
+            "ERROR --> services/virtual.js/createVirtualEventService",
+            request
+          );
+        });
     }
   }
   // save virtual card data
@@ -2869,6 +2890,28 @@ const cancelEventAPIService = async (request, fastify) => {
 
   await cancelComQuery({ commentaryId, status : commentaryStatus.CANCELLED }, fastify, request);
   global.tblCommentaries[index].commentaryStatus = commentaryStatus.CANCELLED;
+
+  // if (
+  //    global.tblCommentaries[index]?.isPredictMarket == true
+  //  ) {
+  //    callDataProvider(
+  //      {
+  //        commentaryId: commentaryId,
+  //        serviceType: ServiceType.dataProviderAPI,
+  //        moduleType: APIEndpointModuleType.commentaryUpdate,
+  //        type: "close"
+  //      },
+  //      fastify
+  //    ).catch((err) => {
+  //      console.log("call Data Provider console", err);
+  //      errorLogger(
+  //        fastify,
+  //        err.message,
+  //        "ERROR --> services/virtual.js/cancelEventAPISerivce",
+  //        request
+  //      );
+  //    });
+  //  }
   return "Event cancelled successfully";
 };
 module.exports = {
