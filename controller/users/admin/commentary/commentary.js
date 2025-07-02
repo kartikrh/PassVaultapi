@@ -91,6 +91,8 @@ const {
   commentarySetPlayerService,
   updatePythonAPIOnCommentaryService,
   undoAPIService2,
+  changeStrikerPlyService,
+  changePlayerService,
 } = require("../../../../services/commentry");
 const { getEventSnapByComService, updateEventSnapByComService } = require("../../../../services/competitionEventSnap");
 const { getAllCommentariesDataService, getAllCommentariesDataServiceV1 } = require("../../../../services/score");
@@ -1248,6 +1250,24 @@ const upDrsData = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const changeStrikerPly = async (request, reply, fastify) => {
+  try {
+    const result = await changeStrikerPlyService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/changeStrikerPly", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const changePlayer = async (request, reply, fastify) => {
+  try {
+    const result = await changePlayerService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/changePlayer", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 module.exports = {
   getAllCommentaries,
   getCommentaryById,
@@ -1353,5 +1373,7 @@ module.exports = {
   getCommDRSLogByCommId,
   dltDrs,
   takeDrsData,
-  upDrsData
+  upDrsData,
+  changeStrikerPly,
+  changePlayer
 }

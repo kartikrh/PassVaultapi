@@ -3726,6 +3726,39 @@ const Commentary = {
       },
     },
   },
+  changeStriker: {
+    schema: {
+      tags: ["Commentary"],
+      description: "update commentary data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId :{type : "integer"},
+          commentaryDetails : {type : "object"},
+          commentaryPlayers : {type : "array"},
+        },
+        required: ["commentaryId" , "commentaryDetails", "commentaryPlayers"],
+      },
+    },
+  },
+  changePly: {
+    schema: {
+      tags: ["Commentary"],
+      description: "update commentary data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId :{type : "integer"},
+          commentaryDetails : {type : "object"},
+          commentaryPlayers : {type : "array"},
+          commentaryPartnership : {type : "object"}
+        },
+        required: ["commentaryId" , "commentaryDetails", "commentaryPlayers", "commentaryPartnership"],
+      },
+    },
+  },
 };
 
 const Compitition = {
