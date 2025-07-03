@@ -90,13 +90,15 @@ const {
   commentaryWicketService,
   commentarySetPlayerService,
   updatePythonAPIOnCommentaryService,
-  undoAPIService,
+  undoAPIService2,
+  changeStrikerPlyService,
+  changePlayerService,
 } = require("../../../../services/commentry");
 const { getEventSnapByComService, updateEventSnapByComService } = require("../../../../services/competitionEventSnap");
 const { getAllCommentariesDataService, getAllCommentariesDataServiceV1 } = require("../../../../services/score");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
-const { saveCommDrsLogService, getCommDRSLogByIdService, getCommDRSLogByCommIdService } = require("../../../../services/commentaryDRSLogs");
+const { saveCommDrsLogService, getCommDRSLogByIdService, getCommDRSLogByCommIdService, dltDrsService, takeDrsDataService, upDrsDataService } = require("../../../../services/commentaryDRSLogs");
 const { allPythonAPIsService } = require("../../../../services/pythonAPI")
 
 let path = "controller/users/admin/commentary/commentary";
@@ -1196,7 +1198,7 @@ const updatePythonAPI = async (request, reply, fastify) => {
 };
 const undoAPI = async (request, reply, fastify) => {
   try {
-    const result = await undoAPIService(request, fastify);
+    const result = await undoAPIService2(request, fastify);
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, path + "/undoAPI", request);
@@ -1218,6 +1220,51 @@ const getCommDRSLogByCommId = async (request, reply, fastify) => {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, path + "/getCommDRSLogByCommId", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const dltDrs = async (request, reply, fastify) => {
+  try {
+    const result = await dltDrsService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/dltDrs", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const takeDrsData = async (request, reply, fastify) => {
+  try {
+    const result = await takeDrsDataService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/takeDrsData", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const upDrsData = async (request, reply, fastify) => {
+  try {
+    const result = await upDrsDataService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/upDrsData", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const changeStrikerPly = async (request, reply, fastify) => {
+  try {
+    const result = await changeStrikerPlyService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/changeStrikerPly", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const changePlayer = async (request, reply, fastify) => {
+  try {
+    const result = await changePlayerService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/changePlayer", request);
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
@@ -1324,4 +1371,9 @@ module.exports = {
   undoAPI,
   getCommDRSLogById,
   getCommDRSLogByCommId,
+  dltDrs,
+  takeDrsData,
+  upDrsData,
+  changeStrikerPly,
+  changePlayer
 }

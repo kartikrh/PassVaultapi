@@ -222,7 +222,8 @@ const getAllCompetitionByTeamIdQuery = async (teamId, fastify, request) => {
     return await fastify.db.query(
       `SELECT      
       "wrRefCompetitionId" as "competitionId",
-      "wrCompetition" as "competition"
+      "wrCompetition" as "competition",
+      tp."wrTpId" as "tpId"
       FROM "tblTeamCompetition" tp 
       left join "tblCompetitions" pl on tp."wrRefCompetitionId" = pl."wrCompetitionId"
       where tp."wrTeamId" = $1 and tp."wrIsDeleted" = false and pl."wrIsDeleted" = false`,

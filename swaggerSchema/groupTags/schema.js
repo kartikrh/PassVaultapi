@@ -3679,6 +3679,86 @@ const Commentary = {
       },
     },
   },
+  dltDrs: {
+    schema: {
+      tags: ["Commentary"],
+      description: "delete commentary DRS data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id : {type : "array"}
+        },
+        required: ["id"],
+      },
+    },
+  },
+  takeDrs: {
+    schema: {
+      tags: ["Commentary"],
+      description: "take commentary DRS data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id : {type : "integer"},
+          commentaryId : {type : "integer"},
+          commentaryTeamId : {type : "integer"},
+          teamId : {type : "integer"}
+        },
+        required: ["id" , "commentaryId" , "commentaryTeamId", "teamId"],
+      },
+    },
+  },
+  upDrs: {
+    schema: {
+      tags: ["Commentary"],
+      description: "update commentary DRS data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id : {type : "integer"},
+          result : {type : "boolean"},
+          isCount : {type : "boolean"}
+        },
+        required: ["id" , "isCount", "result"],
+      },
+    },
+  },
+  changeStriker: {
+    schema: {
+      tags: ["Commentary"],
+      description: "update commentary data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId :{type : "integer"},
+          commentaryDetails : {type : "object"},
+          commentaryPlayers : {type : "array"},
+        },
+        required: ["commentaryId" , "commentaryDetails", "commentaryPlayers"],
+      },
+    },
+  },
+  changePly: {
+    schema: {
+      tags: ["Commentary"],
+      description: "update commentary data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId :{type : "integer"},
+          commentaryDetails : {type : "object"},
+          commentaryPlayers : {type : "array"},
+          commentaryPartnership : {type : "object"}
+        },
+        required: ["commentaryId" , "commentaryDetails", "commentaryPlayers", "commentaryPartnership"],
+      },
+    },
+  },
 };
 
 const Compitition = {
@@ -4466,6 +4546,21 @@ const MarketTemplate = {
       },
     },
   },
+  isPythonChange: {
+    schema: {
+      tags: ["Market Template"],
+      description: "update isPython on Market Template",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          marketTemplateId: { type: "integer" },
+          isPython: { type: "boolean" },
+        },
+        required: ["marketTemplateId", "isPython"],
+      },
+    },
+  },
   isShowInAdvanceMarket: {
     schema: {
       tags: ["Market Template"],
@@ -5036,6 +5131,7 @@ const EventMarket = {
         type: "object",
         properties: {
           commentaryId: { type: "integer" },
+          eventMarketId : { type: "integer" },
         },
         required: ["commentaryId"],
       },
@@ -5061,7 +5157,7 @@ const EventMarket = {
           lineRatio : {type : "number"},
           rateSourceRefID : {type : "string"},
           rateDiff : {type : "number"},
-          runners : {
+          runner : {
             type : "array",
             properties : {
               runner : {type : "string"},
@@ -5083,7 +5179,7 @@ const EventMarket = {
           "lineRatio",
           "rateSourceRefID",
           "rateDiff",
-          "runners"
+          "runner"
         ]
       }
     }
@@ -5690,6 +5786,20 @@ const EventMarket = {
         required : ["commentaryId"]
       }
     }
+  },
+  MarketInfo :{
+    schema : {
+      tags : ["EventMarket"],
+      description : "get market info by eventMarket Id",
+      security : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          eventMarketId : {type : "integer"}
+        },
+        required : ["eventMarketId"]
+      }
+    }
   }
 };
 const MarketTemplateRunner = {
@@ -6232,7 +6342,7 @@ const Banner = {
           startDate: { type: "string" },
           endDate: { type: "string" },
           link: { type: "string" },
-          viewerCount: { type: "integer" },
+          // viewerCount: { type: "integer" },
         },
         required: ["bannerId"],
       },
@@ -9711,6 +9821,166 @@ const PythonAPI = {
     },
   },
 };
+const Listing =  {
+  eventTypeList: {
+    schema: {
+      tags: ["Listing"],
+      description: "EventType list",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+  teamList: {
+    schema: {
+      tags: ["Listing"],
+      security: [{ bearerAuth: [] }],
+      description: "get all teams list",
+      body: {
+        type: "object",
+        properties: {
+          eventTypeId: { type: "integer" },
+        },
+      },
+    },
+  },
+  playerList: {
+    schema: {
+      tags: ["Listing"],
+      security: [{ bearerAuth: [] }],
+      description: "get all Players",
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+          eventTypeId: { type: "integer" },
+        },
+      },
+    },
+  },
+  getAllMatchTypes: {
+    schema: {
+      tags: ["Listing"],
+      security: [{ bearerAuth: [] }],
+      description: "get all Match Types",
+    },
+  },
+  markeTypeList: {
+    schema: {
+      tags: ["Listing"],
+      description: "get all market types",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+  getCategoryByMarketType: {
+    schema: {
+      tags: ["Listing"],
+      description: "get all category by market type",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          marketTypeId: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["marketTypeId"],
+      },
+    },
+  },
+  competitionList: {
+    schema: {
+      tags: ["Listing"],
+      description: "get all Compititions",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+          eventTypeId: { type: "integer" },
+        },
+      },
+    },
+  },
+  eventListByCompetitionId: {
+    schema: {
+      tags: ["Listing"],
+      description: "get Events by CompetitionId",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionId: { type: "integer" },
+        },
+        required: ["competitionId"],
+      },
+    },
+  },
+  roleList: {
+    schema: {
+      tags: ["Listing"],
+      description: "get roles list",
+      security: [{ bearerAuth: [] }],
+    },
+  },
+  getAllWithCurrent: {
+    schema: {
+      tags: ["Listing"],
+      description: "get all User including current user",
+      security: [{ bearerAuth: [] }],
+    },
+  },
+  blockList: {
+    schema: {
+      tags: ["Listing"],
+      security: [{ bearerAuth: [] }],
+      description: "get all block types",
+      body: {
+        type: "object",
+        properties: {
+          isShowContent: { type: "boolean" },
+        },
+      },
+    },
+  },
+  getAllTabs: {
+    schema: {
+      tags: ["Listing"],
+      description: "get all tabs",
+      security: [{ bearerAuth: [] }],
+    },
+  },
+  eventByCompetitionId: {
+    schema: {
+      tags: ["Listing"],
+      description: "get Event list by competitionId",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionId: { type: "integer" },
+        },
+        required: ["competitionId"],
+      },
+    },
+  },
+  getAllCommentaries :{
+    schema : {
+      tags : ["Listing"],
+      description : "get all Commentaries",
+      secaurity : [{bearerAuth : []}]
+    }
+  },
+}
 module.exports = {
   Auth,
   Tabs,
@@ -9784,4 +10054,5 @@ module.exports = {
   FavCommentary,
   Venue,
   PythonAPI,
+  Listing,
 };

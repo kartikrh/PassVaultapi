@@ -176,9 +176,9 @@ const insertCommentaryDRSLogsQuery = async (data, fastify, request) => {
                     data.commentaryId,
                     data.commentaryTeamId,
                     data.teamId,
-                    data.result,
+                    data.result ?? null,
                     request.userTokenInfo.WrUserId,
-                    data.isCount ?? false
+                    data.isCount ?? null
                 ],
             }
         );
@@ -239,11 +239,83 @@ const updateCommentaryDRSLogsQuery = async (data, fastify, request) => {
         throw new Error(err.message);
     }
 };
-
+const getDrsByIdQuery = async (data,request,fastify)=>{
+    try {
+        const result = await fastify.db.query(
+            `SELECT 
+                "wrId" as "id",
+                "wrCommentaryId" as "commentaryId",
+                "wrCommentaryTeamId" as "commentaryTeamId",
+                "wrOrder" as "order",
+                "wrResult" as "result",
+                "wrCreatedAt" as "createdAt",
+                "wrUpdatedAt" as "updatedAt",
+                "wrIsCount" as "isCount"
+            FROM "tblCommentaryDRSLogs"
+            WHERE "wrId" = ANY($1)
+                `,
+            {
+                type: fastify.db.QueryTypes.SELECT,
+                bind : [data.id]
+            }
+        );
+        return result;
+    } catch (err) {
+        errorLogger(
+            fastify,
+            err.message,
+            "DB ERROR --> repository/TableCommentaryDRSLogs.js/getDrsByIdQuery",
+            request
+        );
+        throw new Error(err.message);
+    }
+}
+const upDrsLogQuery = async(data,request , fastify)=>{
+    return await fastify.db.query(`
+            UPDATE "tblCommentaryDRSLogs"
+            SET
+                "wrResult" =$1,
+                "wrIsCount" = $2
+            WHERE "wrId" =$3
+        
+        `,
+        {
+            bind : [
+                data.result,
+                data.isCount,
+                data.id
+            ]
+        }
+    )
+}
+const dltDrsQuery = async (data, request , fastify) =>{
+    try {
+       return await fastify.db.query(`
+            DELETE FROM "tblCommentaryDRSLogs"
+            WHERE "wrId" = ANY($1)
+        `
+        ,{
+            type: fastify.db.QueryTypes.SELECT,
+            bind : [data.id]
+        }
+       )
+    } catch (error) {
+         errorLogger(
+            fastify,
+            err.message,
+            "DB ERROR --> repository/TableCommentaryDRSLogs.js/dltDrsQuery",
+            request
+        );
+        throw new Error(err.message);
+    }
+}
 module.exports = {
     allCommentaryDRSLogsQuery,
     commentaryDRSLogByIdQuery,
     insertCommentaryDRSLogsQuery,
     updateCommentaryDRSLogsQuery,
     commentaryDRSLogByCommQuery,
+    getDrsByIdQuery,
+    upDrsLogQuery,
+    dltDrsQuery
 };

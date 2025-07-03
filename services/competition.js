@@ -71,7 +71,7 @@ const allCompetitionService = async (request) => {
 
   const filterObject = {};
 
-  if (isActive !== undefined) filterObject.isActive = isActive;
+  filterObject.isActive = isActive !== undefined ? isActive : true;
   if (isTrending !== undefined) filterObject.isTrending = isTrending;
   if (eventTypeId !== undefined && eventTypeId !== 0) filterObject.eventTypeId = eventTypeId;
   if (matchTypeId !== undefined && matchTypeId !== 0) filterObject.matchTypeId = matchTypeId;
@@ -80,9 +80,9 @@ const allCompetitionService = async (request) => {
   if (typeof isVirtual === 'boolean') filterObject.isVirtual = isVirtual;
   if (pythonId !== undefined && pythonId !== 0) filterObject.pythonId = pythonId;
 
-  if (isActive === undefined || isTrending === undefined) {
-    return global.tblCompetitions.filter((item) => item.isActive === true);
-  }
+  // if (isActive === undefined || isTrending === undefined) {
+  //   return global.tblCompetitions.filter((item) => item.isActive === true);
+  // }
 
   const result = global.tblCompetitions.filter((item) => {
     return Object.entries(filterObject).every(([key, value]) => item[key] === value);
@@ -108,7 +108,6 @@ const competitionByeventTypeIdService = async (request) => {
 };
 
 const createCompititionService = async (request, fastify) => {
-  console.log("request.body", request.body)
   const findExists = global.tblCompetitions.find(
     (item) =>
       item.eventTypeId === request.body.eventTypeId &&
@@ -129,7 +128,9 @@ const createCompititionService = async (request, fastify) => {
     throw new Error("EventType with this id not Found");
   }
 
-  if (request.body.matchTypeId !== undefined) {
+  if (request.body.matchTypeId !== undefined 
+    && request.body.matchTypeId != 0 
+    && request.body.matchTypeId != null) {
     const validate = global.tblMatchTypes.find(
       (item) => item.matchTypeId == request.body.matchTypeId
     );
@@ -138,7 +139,7 @@ const createCompititionService = async (request, fastify) => {
     }
   }
 
-  if (request.body.tpId !== undefined && request.body.tpId !== null && request.body.tpId.trim() != "") {
+  if (request.body?.tpId !== undefined && request.body?.tpId !== null && request.body?.tpId != "" && request.body?.tpId != "null") {
     const validate = global.tblCompetitions.find(
       (item) => item.tpId == request.body?.tpId && item.tpId !== null
     );
@@ -146,9 +147,9 @@ const createCompititionService = async (request, fastify) => {
       throw new Error('TpId already exist');
     }
   }
-  if(request.body.tpId.trim() == "") {
-    request.body.tpId = null
-  }
+  // if(request.body?.tpId == "") {
+  //   request.body.tpId = null
+  // }
 
   if (request.body.image && request.body.image.length) {
     let imgName = generateImageName({
@@ -216,11 +217,11 @@ const updateCompititionService = async (request, fastify) => {
   const validateId = global.tblCompetitions.find(
     (item) => item.competitionId === competitionId
   );
-console.log("udate req.body",request.body);
+
   if (!validateId) {
     throw new Error("Competition with this id not Found");
   }
-  if (request.body.tpId !== undefined && request.body.tpId !== null && request.body.tpId.trim() != "") {
+  if (request.body?.tpId !== undefined && request.body?.tpId !== null && request.body?.tpId != "" && request.body?.tpId != "null") {
     const validate = global.tblCompetitions.find(
       (item) => item.tpId == request.body?.tpId && item.competitionId != competitionId &&
       item.tpId !== null
@@ -231,7 +232,8 @@ console.log("udate req.body",request.body);
   }
   if (request.body.matchTypeId !== undefined &&
     request.body.matchTypeId !== null &&
-    validateId.matchTypeId != request.body.matchTypeId) {
+    validateId.matchTypeId != request.body.matchTypeId &&
+  request.body.matchTypeId !== 0) {
     const templates = await getAssignedTemplateByCompetitionIdQuery(competitionId, request, fastify);
     if (templates.length > 0) {
       const templateIds = templates.map(item => { return item.id });
@@ -251,11 +253,21 @@ console.log("udate req.body",request.body);
     isEventSnap: validateId.isEventSnap,
     isPointTable: validateId.isPointTable,
     matchTypeId: request.body.matchTypeId === undefined ? validateId.matchTypeId : parseInt(request.body.matchTypeId, 10),
-    winPoint: request.body.winPoint === undefined ? validateId.winPoint : parseInt(request.body.winPoint, 10),
-    tiePoint: request.body.tiePoint === undefined ? validateId.tiePoint : parseInt(request.body.tiePoint, 10),
-    cancelPoint: request.body.cancelPoint === undefined ? validateId.cancelPoint : parseInt(request.body.cancelPoint, 10),
-    lossPoint: request.body.lossPoint === undefined ? validateId.lossPoint : parseInt(request.body.lossPoint, 10),
-    drsCount : request.body.drsCount === undefined ? validateId.drsCount : parseInt(request.body.drsCount),
+    // winPoint: request.body.winPoint === undefined ? validateId.winPoint : parseInt(request.body.winPoint, 10),
+    // tiePoint: request.body.tiePoint === undefined ? validateId.tiePoint : parseInt(request.body.tiePoint, 10),
+    // cancelPoint: request.body.cancelPoint === undefined ? validateId.cancelPoint : parseInt(request.body.cancelPoint, 10),
+    // lossPoint: request.body.lossPoint === undefined ? validateId.lossPoint : parseInt(request.body.lossPoint, 10),
+    // drsCount : request.body.drsCount === undefined ? validateId.drsCount : parseInt(request.body.drsCount),
+    winPoint: request.body.winPoint === undefined || request.body.winPoint === null || request.body.winPoint === "" ||
+      request.body.winPoint === "null" ? validateId.winPoint : parseInt(request.body.winPoint, 10),
+    tiePoint: request.body.tiePoint === undefined || request.body.tiePoint === null || request.body.tiePoint === "" || 
+      request.body.tiePoint === "null" ? validateId.tiePoint : parseInt(request.body.tiePoint, 10),
+    cancelPoint: request.body.cancelPoint === undefined || request.body.cancelPoint === null || request.body.cancelPoint === "" || 
+      request.body.cancelPoint === "null" ? validateId.cancelPoint : parseInt(request.body.cancelPoint, 10),
+    lossPoint: request.body.lossPoint === undefined || request.body.lossPoint === null || request.body.lossPoint === "" || 
+      request.body.lossPoint === "null" ? validateId.lossPoint : parseInt(request.body.lossPoint, 10),
+    drsCount : request.body.drsCount === undefined || request.body.drsCount === null || request.body.drsCount === "" || 
+      request.body.drsCount === "null" ? validateId.drsCount : parseInt(request.body.drsCount),
     imagePath: validateId.imagePath,
     isMen: validateId.isMen,
     type: request.body.type === undefined ? validateId.type : parseInt(request.body.type),
@@ -263,7 +275,7 @@ console.log("udate req.body",request.body);
     commStatus: request.body.commStatus || validateId.commStatus,
     startDate: request.body.startDate || validateId.startDate,
     endDate: request.body.endDate || validateId.endDate,
-    tpId: request.body.tpId === undefined ? validateId.tpId : request.body.tpId.trim() == "" ? null : parseInt(request.body.tpId),
+    tpId: request.body?.tpId === undefined ? validateId.tpId : request.body?.tpId == "" ? null : parseInt(request.body?.tpId),
     pythonId: request.body.pythonId === undefined ? validateId.pythonId : parseInt(request.body.pythonId),
   };
   const developerName = global.tblPythonAPI.find(item => item.id === data?.pythonId);

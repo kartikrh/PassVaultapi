@@ -377,7 +377,8 @@ const getTeamPlayerQuery = async (data, fastify, request) => {
                 tt."WrTeamJersey" as "teamJersey",
         tp."wrImage" as "playerImage",
         tt."wrTeamName" as "teamName",
-        tp."wrPlayerName" as "playerName"
+        tp."wrPlayerName" as "playerName",
+        ttm."wrTpId" as "tpId"
       FROM
         "tblTeamPlayers" ttm
       LEFT JOIN

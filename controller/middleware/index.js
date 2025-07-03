@@ -4,7 +4,7 @@ const {
   permissionCheckService,
   XKeyConfigForExtrnal,
   XKeyVirtual,
-  commentaryPermissionCheckService,
+  multiTabPermissionCheckService,
 } = require("../../services/middleware");
 const jwt = require("jsonwebtoken");
 
@@ -24,9 +24,9 @@ const checkPermission = async (request, reply, fastify, data) => {
   }
 };
 
-const commentaryPermissionCheck = async (request, reply, fastify, data) => {
+const multiTabPermissionCheck = async (request, reply, fastify, data) => {
   try {
-    await commentaryPermissionCheckService(request, fastify, data);
+    await multiTabPermissionCheckService(request, fastify, data);
   } catch (err) {
     reply.status(200).send(error(err.message, ERROR_CODES.INVALID_TOKEN, 200));
   }
@@ -46,11 +46,10 @@ const xKeyPermissionVirtual = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.INVALID_TOKEN, 200));
   }
 }
-
 module.exports = {
   authorize,
   checkPermission,
   xKeyPermission,
   xKeyPermissionVirtual,
-  commentaryPermissionCheck,
+  multiTabPermissionCheck,
 };

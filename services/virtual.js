@@ -14,6 +14,9 @@ const {
   Cards,
   MarketActionType,
   EventMarketStatus,
+  ServiceType,
+  APIEndpointModuleType,
+  callDataProvider,
 } = require("../utilities");
 const { cloneCommentaryService, saveComVirtual } = require("./commentry");
 const {
@@ -35,6 +38,7 @@ const {
   updateVirtualOverQuery,
   createVirtualWicketQuery,
   cancelComQuery,
+  addCompTempQuery,
 } = require("../repository/TableCommentary");
 const {
   getTournamentTeamsByCompIdQuery,
@@ -66,7 +70,9 @@ const {
   generateWicket,
 } = require("../utilities/comFunction");
 const { default: fastify } = require("fastify");
+const { processPredictScoreMarket } = require("../markets/index")
 const { cancelEventMarketsQuery, closeEventMarketByCIdQuery, cancelMarketVirtualQuery } = require("../repository/TableEventMarkets");
+const { ISPREDICATIONONCRICKETCARD, DEFAULTBALLFACED, DEFAULTPLAYERRUNS, DEFAULTPLAYERBOUNDARIES, CALLPREDICTIONMODULE } = require("../utilities/configConstants");
 // const ballbyball ={
 //   commentaryBallByBallId: 0,
 //   commentaryId: commentary?.commentaryId,
@@ -206,9 +212,17 @@ const createVirtualEventService = async (request, fastify) => {
     if (team1Players.length < 2 && team2Players.length < 2) {
       throw new Error("No players found for teams");
     }
+
+    const isPrediction = global.tblConfigs.find(item => 
+      item.key.toLowerCase().trim() === ISPREDICATIONONCRICKETCARD.trim().toLowerCase()
+    )?.value;
+    const isPredictMarket = isPrediction === "true";
+    const pythonAPI = global.tblPythonAPI.find(elem => elem.isActive == true && elem.isDefault == true);
     let dataToInsert = {
       ...request.body,
       ...checkComp,
+      isPredictMarket,
+      pythonURI: pythonAPI?.URI ?? null
     };
 
     const commentaryData = await insertVirtualEventQuery(
@@ -218,12 +232,20 @@ const createVirtualEventService = async (request, fastify) => {
     );
     global.tblCommentaries.push(commentaryData);
     comId = commentaryData.commentaryId;
+    const team1TpId = global.tblTeams.find(
+      (item) => item.teamId == request.body.team1Id
+    );
+    const team2TpId = global.tblTeams.find(
+      (item) => item.teamId == request.body.team2Id
+    );
     const teamData = {
       commentaryId: commentaryData.commentaryId,
       team1Id: request.body.team1Id,
       team2Id: request.body.team2Id,
       teamMaxOver: matchType.maxOversInFirstInings,
       subInning: request.body?.subInning ?? null,
+      team1TpId: team1TpId?.tpId ?? null,
+      team2TpId: team2TpId?.tpId ?? null,
     };
     const teamsData = await insertVirtualCommentaryTeams(
       teamData,
@@ -237,18 +259,22 @@ const createVirtualEventService = async (request, fastify) => {
     if (team1Players.length >= 2 && team2Players.length >= 2) {
       const data = [
         ...team1Players.map((item, i) => {
+          const playerTpId = global.tblPlayers.find(elem => elem.playerId == item.playerId);
           return {
             commentaryId: commentaryData.commentaryId,
             teamId: request.body.team1Id,
             playerId: item.playerId,
+            tpId: playerTpId?.tpId ?? null,
             displayOrder: i + 1,
           };
         }),
         ...team2Players.map((item, i) => {
+          const playTpId = global.tblPlayers.find(elem => elem.playerId == item.playerId);
           return {
             commentaryId: commentaryData.commentaryId,
             teamId: request.body.team2Id,
             playerId: item.playerId,
+            tpId: playTpId?.tpId ?? null,
             displayOrder: i + 1,
           };
         }),
@@ -336,6 +362,40 @@ const createVirtualEventService = async (request, fastify) => {
           };
         }
       }
+    }
+    if (commentaryData?.isPredictMarket) {
+      let comp = global.tblCompetitions.find(
+        (elem) => elem.competitionId == commentaryData.competitionId
+      );
+      if (comp && comp.matchTypeId != null && comp.matchTypeId == commentaryData.matchTypeId) {
+        await addCompTempQuery(
+          {
+            commentaryId: commentaryData.commentaryId,
+            matchTypeId: commentaryData.matchTypeId,
+            competitionId: commentaryData.competitionId,
+          },
+          request,
+          fastify
+        );
+      }
+
+      callDataProvider(
+          {
+            commentaryId: commentaryData.commentaryId,
+            serviceType: ServiceType.dataProviderAPI,
+            moduleType: APIEndpointModuleType.commentaryUpdate,
+            type: "create",
+          },
+          fastify
+        ).catch((err) => {
+          console.log("call data provider console", err);
+          errorLogger(
+            fastify,
+            err.message,
+            "ERROR --> services/virtual.js/createVirtualEventService",
+            request
+          );
+        });
     }
   }
   // save virtual card data
@@ -692,6 +752,28 @@ const virtualEventTossService = async (request, fastify) => {
   global.tblCommentaries[index].commentaryStatus = commentaryStatus.INPROGRESS;
   const comData = await commentaryResponseSerivce(commentaryId);
   // return "Toss Done Successfully";
+  const pythonURI = commentary.pythonURI ?? null;
+
+  let key1 = global.tblConfigs.find((item) => item.key === DEFAULTBALLFACED);
+  let key2 = global.tblConfigs.find((item) => item.key === DEFAULTPLAYERBOUNDARIES);
+  let key3 = global.tblConfigs.find((item) => item.key === DEFAULTPLAYERRUNS);
+
+  if (commentary?.isPredictMarket) {
+    callPredictorMarket(
+      {
+        commentary_id: commentary.commentaryId,
+        match_type_id: commentary.matchTypeId,
+        event_id: commentary.eventRefId,
+        default_ball_faced: parseInt(key1?.value) || 0,
+        default_player_boundaries: parseInt(key2?.value) || 0,
+        default_player_runs: parseInt(key3?.value) || 0,
+      },
+      "/api/v1/loadcommentary",
+      fastify,
+      request,
+      pythonURI
+    );
+  }
   return comData;
 };
 
@@ -1752,7 +1834,7 @@ const checkInningsSwitch = async (data, request, fastify) => {
       break;
     case "RUN":
       isRunTargetAchieved =
-        isLastInnigs && target !== 0 && batTeam?.teamScore > target;
+        isLastInnigs && target !== 0 && batTeam?.teamScore >= target;
       conditionsToCheck.push(isRunTargetAchieved);
       // conditionsToCheck.push(true)
 
@@ -2808,6 +2890,28 @@ const cancelEventAPIService = async (request, fastify) => {
 
   await cancelComQuery({ commentaryId, status : commentaryStatus.CANCELLED }, fastify, request);
   global.tblCommentaries[index].commentaryStatus = commentaryStatus.CANCELLED;
+
+  // if (
+  //    global.tblCommentaries[index]?.isPredictMarket == true
+  //  ) {
+  //    callDataProvider(
+  //      {
+  //        commentaryId: commentaryId,
+  //        serviceType: ServiceType.dataProviderAPI,
+  //        moduleType: APIEndpointModuleType.commentaryUpdate,
+  //        type: "close"
+  //      },
+  //      fastify
+  //    ).catch((err) => {
+  //      console.log("call Data Provider console", err);
+  //      errorLogger(
+  //        fastify,
+  //        err.message,
+  //        "ERROR --> services/virtual.js/cancelEventAPISerivce",
+  //        request
+  //      );
+  //    });
+  //  }
   return "Event cancelled successfully";
 };
 module.exports = {

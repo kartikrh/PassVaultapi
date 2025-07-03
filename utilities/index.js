@@ -1191,6 +1191,25 @@ const StoreTypes = {
   Insert: 1,
   Update: 2
 }
+const trimTextData = async (data, request, fastify) => {
+  try {
+    if (!data || typeof data !== "object" || Array.isArray(data)) {
+      return;
+    }
+    const trimmedData = {};
+    for (const [key, value] of Object.entries(data)) {
+      trimmedData[key] = typeof value === "string" ? value.trim() : value;
+    }
+    return trimmedData
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> utilities/index.js/trimTextData",
+      request
+    )
+  }
+}
 module.exports = {
   ERROR_CODES,
   error,
@@ -1277,4 +1296,5 @@ module.exports = {
   callCardCricket,
   GlobalModuleType,
   StoreTypes,
+  trimTextData,
 };

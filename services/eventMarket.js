@@ -52,6 +52,7 @@ const {
   saveManualMarketQuery,
   getExtraMarketQuery,
   upManualMarketQuery,
+  updateManualMarketQuery,
   getMarketByIdQuery,
   upIsInningRunMarketQuery,
   getTargetQyery,
@@ -63,6 +64,7 @@ const {
   upSusTimeQuery,
   upCloseTimeQuery,
   getCommentaryDetailsQuery,
+  getManualMarketByIdQuery,
 } = require("../repository/TableEventMarkets");
 const { getRunnerByIdQuery, setResultInRunnerMarketQuery, getRunnerByMarketQuery } = require("../repository/TableMarketRunner");
 const configConstants = require("../utilities/configConstants");
@@ -190,8 +192,10 @@ const getAllEventMarketsService = async (request, fastify) => {
     rateSourceRefId
   } = request.body;
   // let createWhereStatus = `tem."wrStatus" NOT IN (${EventMarketStatus.Close},${EventMarketStatus.Settled},${EventMarketStatus.Cancel}) AND tc."wrIsDelete" = false AND tcom."wrIsDeleted" = false`;
-  let createWhereStatus = `tem."wrStatus" NOT IN (${EventMarketStatus.Settled},${EventMarketStatus.Cancel}) AND tc."wrIsDelete" = false`;
-
+  let createWhereStatus = `tem."wrStatus" NOT IN (${EventMarketStatus.Settled},${EventMarketStatus.Cancel}) AND tc."wrIsDelete" = false
+  AND tem."wrIsDeleted" = false`;
+   
+  
   if (status !== undefined && status != -1) {
     createWhereStatus = `tc."wrIsDelete" = false AND tem."wrStatus" = ${status}`;
   }
@@ -508,6 +512,7 @@ const getCommentaryListByCompetitionIdService = async (request, fastify) => {
     commentaryId: item.commentaryId,
     eventName: item.eventName,
     eventDate: item.eventDate,
+    eventRefId: item.eventRefId,
   })).sort((a, b) => b.eventDate - a.eventDate);
   return commentaryList;
 };
@@ -3679,7 +3684,7 @@ const suspendMarketService = async (data,request, fastify) => {
   return true;
 }
 const getManualMarketDataService = async (request, fastify) => {
-  const { commentaryId } = request.body;
+  const { commentaryId  , eventMarketId = null} = request.body;
   let com = global.tblCommentaries.find((item) => item.commentaryId === commentaryId);
   if(!com){
     throw new Error("Commentary with this id not Found");
@@ -3687,12 +3692,20 @@ const getManualMarketDataService = async (request, fastify) => {
   let marCat = global.tblMarketTypeCategories.find(
     (item) => item.categoryName.toLowerCase() === "manualodds"
   );
-  let market = await getManualMarketDataQuery({
-    commentaryId: commentaryId,
-    marketTypeId : MarketTypeId.ManualOdds,
-    marketTypeCategoryId : marCat.marketTypeCategoryId
-  },request, fastify);
-
+  let market;
+  if(eventMarketId == null){
+      market = await getManualMarketDataQuery({
+        commentaryId: commentaryId,
+        marketTypeId : MarketTypeId.ManualOdds,
+        marketTypeCategoryId : marCat.marketTypeCategoryId
+      },request, fastify);
+  }
+  else {
+    market = await getManualMarketByIdQuery({
+      eventMarketId: eventMarketId,
+    },request, fastify);
+  }
+  
   let market1 = await getExtraMarketQuery({
     eventRefId: com.eventRefId,
   },request, fastify);
@@ -3731,7 +3744,9 @@ const getManualMarketDataService = async (request, fastify) => {
       commentaryId: com.commentaryId,
       eventName: com.eventName,
       eventDate: com.eventDate,
-      eventRefId: com.eventRefId
+      eventRefId: com.eventRefId,
+      competitionId : com.competitionId,
+      eventTypeId : com.eventTypeId
     },
     teams: comTeam,
     market: market,
@@ -3741,6 +3756,13 @@ const getManualMarketDataService = async (request, fastify) => {
   return data;
 }
 const saveManualMarketDataService = async (request, fastify) => {
+  if (request.body.eventMarketId === 0) {
+    return await createManualMarketDataService(request, fastify);
+  } else {
+    return await updateManualMarketDataService(request, fastify);
+    }
+}
+const createManualMarketDataService = async (request, fastify) => {
   let com = global.tblCommentaries.find((item) => item.commentaryId === request.body.commentaryId);
   if(!com){
     throw new Error("Commentary with this id not Found");
@@ -3761,6 +3783,32 @@ const saveManualMarketDataService = async (request, fastify) => {
 
   return "Market saved successfully";
 }
+
+const updateManualMarketDataService = async (request, fastify) => {
+  const eventMarket = [request.body]
+  const result = await updateManualMarketQuery(eventMarket, request, fastify);
+
+  const marketMap = new Map(global.tblEventMarketsV2.map(m => [m.eventMarketId, m]));
+  const runnerMap = new Map(global.tblMarketRunnerV2.map(r => [r.runnerId, r]));
+
+  for (const item of result.updated_row) {
+    if (marketMap.has(item.marketId)) {
+      Object.assign(marketMap.get(item.marketId), {
+        status: item.status,
+        isAllow: item.isAllow,
+        isActive: item.isActive
+      });
+    }
+
+    for (let runner of item.runner) {
+      if (runnerMap.has(runner.runnerId)) {
+        Object.assign(runnerMap.get(runner.runnerId), runner);
+      }
+    }
+  }
+
+  return "Market updated successfully";
+};
 const upManualMarketDataService = async (request, fastify) => {
   const result = await upManualMarketQuery(request.body.eventMarket, request, fastify);
 
@@ -4060,6 +4108,23 @@ const loadMarketByComIdService = async (request, fastify) => {
   }
   return "Market Update successfully";
 }
+const getEventMarketAndRunnersByIdService = async (request, fastify) => {
+  const { eventMarketId } = request.body;
+  const market = await getManualMarketByIdQuery({ eventMarketId }, request, fastify);
+  const com = global.tblCommentaries.find(item => item.commentaryId == market?.[0].commentaryId);
+  if(!com) {
+    throw new Error(`Commentary not found with this Id`);
+  }
+  const result = {
+    commentaryId: com.commentaryId,
+    eventName: com.eventName,
+    eventDate: com.eventDate,
+    eventRefId: com.eventRefId,
+    market: market?.[0] ?? null,
+  }
+      
+  return result;
+}
 module.exports = {
   getDetailsByCIdService,
   getAllEventMarketsService,
@@ -4119,5 +4184,6 @@ module.exports = {
   changeMultiMarketsIsResultService,
   changeMultiMarketsSessionIsResultService,
   getCommentaryDetailsService,
-  loadMarketByComIdService
+  loadMarketByComIdService,
+  getEventMarketAndRunnersByIdService,
 };

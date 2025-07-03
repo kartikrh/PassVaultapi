@@ -33,6 +33,19 @@ function processPredictScoreMarket(payload, fastify) {
 
         console.log(`Processing ball ${currentBall}, score ${currentScore}, commentary ID ${commentaryId}, batting team ID ${strikeTeamId}`);
 
+        console.log(`[PREDICT_SCORE] Starting dynamic player market processing...`);
+        try {
+            const playerModuleResult = processDynamicPlayerMarkets(payload, fastify);
+            if (playerModuleResult.success) {
+                console.log(`[PREDICT_SCORE] Player module processed successfully: ${playerModuleResult.message}`);
+            } else {
+                console.log(`[PREDICT_SCORE] Player module processing skipped or failed: ${playerModuleResult.error}`);
+            }
+        } catch (playerError) {
+            console.error(`[PREDICT_SCORE] Error in player module processing:`, playerError);
+            // Continue with other processing even if player module fails
+        }
+
         // Normalize ball-to-action map to ensure consistent ball keys
         normalizeBallToActionMap(commentaryId);
 
