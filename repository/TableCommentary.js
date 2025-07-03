@@ -552,7 +552,7 @@ const insertCommentaryPlayersQuery = async (
             (SELECT "wrBowlerEconomy" FROM "tblPlayers" WHERE "wrPlayerId" = $3)
           ),
           (select "wrBowlerAverage" from "tblPlayers" where "wrPlayerId" =$3),
-          $6
+          $7
         )
         RETURNING *   
       ) 
