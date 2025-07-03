@@ -7169,6 +7169,23 @@ const Logs = {
       }
     }
   },
+  autoImportData : {
+    schema : {
+      tags : ["Logs"],
+      description : "AutoImportData Logs",
+      security : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          skip : {type : "integer"},
+          limit : {type : "integer"},
+          startDate : {type : "string"},
+          endDate : {type : "string"}
+        },
+        required : ["page", "limit"]
+      }
+    }
+  },
 }
 const ThirdPartyApis = {
   getAll: {
@@ -9981,6 +9998,31 @@ const Listing =  {
     }
   },
 }
+const AutoImportData = {
+  getAll :{
+    schema : {
+      tags : ["AutoImportData"],
+      description : "get all Data",
+      secaurity : [{bearerAuth : []}]
+    }
+  },
+  save: {
+    schema: {
+      tags: ["AutoImportData"],
+      description: "save AutoImportData",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          refId: { type: "integer" },
+          refType: { type: "integer" },
+          sourceId: { type: "integer" },
+        },
+        required: ["refId", "refType", "sourceId"],
+      },
+    },
+  },
+}
 module.exports = {
   Auth,
   Tabs,
@@ -10055,4 +10097,5 @@ module.exports = {
   Venue,
   PythonAPI,
   Listing,
+  AutoImportData,
 };
