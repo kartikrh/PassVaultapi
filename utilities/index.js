@@ -1293,7 +1293,11 @@ const matchStatusEntity = {
   3 : "Live",
   4 : "Abandoned/canceled/No Result"
 }
-
+const entityCompetition = {
+  1 : "fixture",
+  2 : "result",
+  3 : "live"
+}
 module.exports = {
   ERROR_CODES,
   error,
@@ -1383,5 +1387,6 @@ module.exports = {
   trimTextData,
   matchTypesEntity,
   callVirtualPredictorMarket,
-  matchStatusEntity
+  matchStatusEntity,
+  entityCompetition
 };
