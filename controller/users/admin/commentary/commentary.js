@@ -93,6 +93,7 @@ const {
   undoAPIService2,
   changeStrikerPlyService,
   changePlayerService,
+  changeOverService,
 } = require("../../../../services/commentry");
 const { getEventSnapByComService, updateEventSnapByComService } = require("../../../../services/competitionEventSnap");
 const { getAllCommentariesDataService, getAllCommentariesDataServiceV1 } = require("../../../../services/score");
@@ -1268,6 +1269,15 @@ const changePlayer = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const changeOver = async (request, reply, fastify) => {
+  try {
+    const result = await changeOverService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/changeOver", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 module.exports = {
   getAllCommentaries,
   getCommentaryById,
@@ -1375,5 +1385,6 @@ module.exports = {
   takeDrsData,
   upDrsData,
   changeStrikerPly,
-  changePlayer
+  changePlayer,
+  changeOver,
 }

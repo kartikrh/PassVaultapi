@@ -3759,6 +3759,25 @@ const Commentary = {
       },
     },
   },
+  changeOver: {
+    schema: {
+      tags: ["Commentary"],
+      description: "update commentary data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId :{type : "integer"},
+          commentaryDetails : {type : "object"},
+          commentaryOvers : {type : "object"},
+          commentaryPlayers : {type : "array"},
+          isCallPredict : {type : "boolean"},
+          commentaryTeams : {type : "array"}
+        },
+        required: ["commentaryId" , "commentaryDetails", "commentaryPlayers", "commentaryOvers", "commentaryTeams"],
+      },
+    },
+  },
 };
 
 const Compitition = {

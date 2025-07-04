@@ -67,7 +67,7 @@ const getAllMarketTemplateQuery = async (fastify) => {
     }
   );
 };
-
+const emptyToNull = (v) => v === undefined || v === null || v === "" ? null : v;
 const insertMarketTemplateQuery = async (data, fastify, request) => {
   try {
     console.log("dataaa", data)
@@ -141,7 +141,8 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
       {
         type: fastify.db.QueryTypes.SELECT,
         bind: [
-          data.templateName || null,
+          // data.templateName || null,
+          emptyToNull(data.templateName),
           data.matchTypeID || null,
           data.hasOwnProperty("isPredefineMarket")
             ? data.isPredefineMarket
@@ -149,9 +150,11 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
           // data.hasOwnProperty("isPreMatchOnly") ? data.isPreMatchOnly : null,
           // data.hasOwnProperty("isPreMatchMarket") ? data.isPreMatchMarket : null,
           data.hasOwnProperty("isOver") ? data.isOver : null,
-          data.over || null,
+          // data.over || null,
+          emptyToNull(data.over),
           data.hasOwnProperty("isPlayer") ? data.isPlayer : null,
-          data.playerName || null,
+          // data.playerName || null,
+          emptyToNull(data.playerName),
           data.hasOwnProperty("isAutoCancel") ? data.isAutoCancel : null,
           data.hasOwnProperty("createType") ? data.createType : null,
           data.hasOwnProperty("create") ? data.create : null,
@@ -181,10 +184,13 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
           data.marketTypeId,
           data.marketTypeCategoryId,
           data.margin,
-          data.createRefId || null,
-          data.openRefId || null,
+          // data.createRefId || null,
+          emptyToNull(data.createRefId),
+          // data.openRefId || null,
+          emptyToNull(data.openRefId),
           data.templateType || null,
-          data.delay || 0,
+          // data.delay || 0,
+          emptyToNull(data.delay),
           data.isDefaultBetAllowed,
           data.isDefaultMarketActive,
           data.isPerEvent || false,
@@ -192,8 +198,10 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
           data.lineType || 1, // 1 => backlay, 2 => lay
           data.defaultBackSize || 100,
           data.defaultLaySize || 100,
-          data.beforeSuspendMin === undefined ? null : parseInt(data.beforeSuspendMin),
-          data.beforeCloseMin === undefined ? null : parseInt(data.beforeCloseMin),
+          // data.beforeSuspendMin === undefined ? null : parseInt(data.beforeSuspendMin),
+          // data.beforeCloseMin === undefined ? null : parseInt(data.beforeCloseMin),
+          emptyToNull(data.beforeSuspendMin),
+          emptyToNull(data.beforeCloseMin),
           data.hasOwnProperty("defaultIsSendData") ? data.defaultIsSendData : false,
           data.howManyOpenMarkets === undefined ? 1 : data.howManyOpenMarkets,
           data.rateDiff === undefined ? 1 : data.rateDiff,
