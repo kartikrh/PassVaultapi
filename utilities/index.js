@@ -1210,6 +1210,29 @@ const trimTextData = async (data, request, fastify) => {
     )
   }
 }
+const matchTypesEntity = {
+  "ODI": 1,
+  "TEST": 2,
+  "T20I": 3,
+  "List A": 4,
+  "First Class": 5,
+  "T20": 6,
+  "Women ODI": 7,
+  "Women T20": 8,
+  "Youth ODI": 9,
+  "Youth T20": 10,
+  "Other": 11,
+  "Other List A": 12,
+  "Other 1st Class": 13,
+  "Other T20": 14,
+  "Youth Test": 15,
+  "Woman Test": 16,
+  "T10": 17,
+  "T100": 18,
+  "Women T100": 19,
+  "TB-10": 20 // 👈 tb-10
+};
+
 module.exports = {
   ERROR_CODES,
   error,
@@ -1297,4 +1320,5 @@ module.exports = {
   GlobalModuleType,
   StoreTypes,
   trimTextData,
+  matchTypesEntity
 };

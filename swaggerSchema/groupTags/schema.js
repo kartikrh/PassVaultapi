@@ -10016,6 +10016,13 @@ const Listing =  {
       secaurity : [{bearerAuth : []}]
     }
   },
+   matchStatus :{
+    schema : {
+      tags : ["Listing"],
+      description : "get all Match Type",
+      secaurity : [{bearerAuth : []}]
+    }
+  },
 }
 const AutoImportData = {
   getAll :{
