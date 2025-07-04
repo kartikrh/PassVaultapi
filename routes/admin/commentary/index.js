@@ -98,6 +98,7 @@ const {
   upDrsData,
   changeStrikerPly,
   changePlayer,
+  changeOver,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -1333,5 +1334,17 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request , reply) => changePlayer(request, reply, fastify)
+  })
+  fastify.post("/changeOver", {
+    schema : Commentary.changeOver.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
+          mode: "edit"
+        }),
+    ],
+    handler: (request , reply) => changeOver(request, reply, fastify)
   })
 };
