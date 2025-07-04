@@ -25,7 +25,7 @@ const { getEventListService } = require("../../../../services/notification");
 
 const { errorLogger } = require("../../../../utilities/logger");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
-const { matchStatusDataService, matchTypeDataService } = require("../../../../services/list");
+const { matchStatusDataService, matchTypeDataService, compStatusDataService } = require("../../../../services/list");
 
 let commonPath = "controller/users/admin/list/index.js";
 
@@ -296,6 +296,15 @@ const matchTypeData = async (request , reply , fastify)=>{
         reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
     }
 }
+const compStatusData = async (request , reply , fastify)=>{
+    try {
+        const result = await compStatusDataService(request);
+        reply.status(200).send(success(result, 200));
+    } catch (err) {
+        errorLogger(fastify, err.message, commonPath + "/compStatusData", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+    }
+}
 
 module.exports = {
     getEventTypeList,
@@ -320,5 +329,6 @@ module.exports = {
     getCommentaryList,
     getEventList,
     matchStatusData,
-    matchTypeData
+    matchTypeData,
+    compStatusData
 }
