@@ -1287,6 +1287,12 @@ const matchTypesEntity = {
   "Women T100": 19,
   "TB-10": 20
 };
+const matchStatusEntity = {
+  1 : "Scheduled",
+  2 : "Completed",
+  3 : "Live",
+  4 : "Abandoned/canceled/No Result"
+}
 
 module.exports = {
   ERROR_CODES,
@@ -1376,5 +1382,6 @@ module.exports = {
   StoreTypes,
   trimTextData,
   matchTypesEntity,
-  callVirtualPredictorMarket
+  callVirtualPredictorMarket,
+  matchStatusEntity
 };

@@ -3672,14 +3672,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
             },
             request,
             fastify
-          ).catch((err) => {
-            errorLogger(
-              fastify,
-              err.message,
-              "services/commentary.js/syncCommentaryStatsWithAPIAndSocket - callClientAPI",
-              request
-            );
-          });
+          )
         }
       }
       sendDataForSocketUpdate.dataToUpdate.push({
