@@ -1210,6 +1210,61 @@ const trimTextData = async (data, request, fastify) => {
     )
   }
 }
+const callVirtualPredictorMarket = async (data , endpoint ,fastify ,request, pythonURI = null) =>{
+  let requestStartTime = new Date();
+  let loggerConfig = global.tblConfigs.find((item) => item.key === configConstants.ISPREDICTORLOGGER).value;
+  try {
+    let predictorURL = pythonURI;
+    if(!predictorURL){
+      errorLogger(
+        fastify,
+        "Predictor URL not found",
+        "DB ERROR --> utilities/index/callPredictorMarket",
+        request
+      )
+      throw new Error("Predictor URL not found")
+    }
+    const url = `${predictorURL}${endpoint}`;
+    const result = await axios.post(url, {
+      ...data
+    });
+
+    if (loggerConfig == "true"){
+      tblPredictorAPILogger(
+        {
+          endPoint : endpoint,
+          requestBody : data,
+          requestStartTime : requestStartTime,
+          requestEndTime : new Date(),
+          response : result.data
+        },
+        request,
+        fastify
+      );
+    }
+    return result;
+  } catch (error) {
+    if(loggerConfig == "true"){
+      tblPredictorAPILogger(
+        {
+          endPoint : endpoint,
+          requestBody : data,
+          requestStartTime : requestStartTime,
+          requestEndTime : new Date(),
+          response : {
+            error : error.message,
+            type : "error"
+          }
+        },
+        request,
+        fastify
+      );
+      throw new Error(error.message);
+    }
+    // throw new Error(error.message);
+  }
+
+}
 const matchTypesEntity = {
   "ODI": 1,
   "TEST": 2,
@@ -1320,5 +1375,6 @@ module.exports = {
   GlobalModuleType,
   StoreTypes,
   trimTextData,
-  matchTypesEntity
+  matchTypesEntity,
+  callVirtualPredictorMarket
 };

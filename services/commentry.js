@@ -10572,7 +10572,7 @@ const loadcommentaryService = async (request, fastify) => {
         default_player_boundaries: parseInt(key2?.value) || 0,
         default_player_runs: parseInt(key3?.value) || 0,
       }, request, fastify)
-      console.log({ data })
+      // console.log({ data })
       // } else {
       callPredictorMarket(
         {
