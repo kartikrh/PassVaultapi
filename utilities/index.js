@@ -1298,7 +1298,6 @@ const entityCompetition = {
   2 : "result",
   3 : "live"
 }
-
 module.exports = {
   ERROR_CODES,
   error,
