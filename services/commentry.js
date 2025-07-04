@@ -13027,8 +13027,8 @@ const saveComVirtual = async (request, fastify) => {
           current_team_id: strikeTeam.teamId,
           total_score: strikeTeam.teamScore,
           current_ball: decimalOverCount || 0,
-          player_details: _sendPrePlayers,
-          ball_by_ball_details: updatedData.commentaryBallByBallDetails,
+          // player_details: _sendPrePlayers,
+          // ball_by_ball_details: updatedData.commentaryBallByBallDetails,
           ball_by_ball_id: updatedData.commentaryBallByBallDetails.commentaryBallByBallId
             ? parseInt(updatedData.commentaryBallByBallDetails.commentaryBallByBallId)
             : null,
@@ -13049,7 +13049,12 @@ const saveComVirtual = async (request, fastify) => {
           ballType: commentaryBallByBall?.ballType ?? null,
           target: nonStrikeTeam?.teamScore != null ? parseInt(nonStrikeTeam.teamScore, 10) + 1 : null,
         },
-        commentary_id: commentaryId
+        commentary_id: commentaryId,
+        ball_by_ball_details :{
+          cardKey : updatedData.commentaryBallByBallDetails?.cardKey,
+          cardType : updatedData.commentaryBallByBallDetails?.cardType,
+          currentInnings : updatedData.commentaryBallByBallDetails?.currentInnings
+        }
       }
       // let isNodePrediction = global.tblConfigs.find((item) => item.key === configConstants.CALLPREDICTIONMODULE)?.value || "false";
       // if (isNodePrediction == "true")
