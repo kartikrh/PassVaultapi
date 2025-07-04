@@ -12,6 +12,8 @@ const getAllAutoImportDataQuery = async (request, fastify) => {
                 "wrIsImportStart" as "isImportStart",
                 "wrImportStartTime" as "importStartTime",
                 "wrImportEndTime" as "importEndTime",
+                "wrEventTypeId" as "eventTypeId",
+                "wrCompetitionId" as "competitionId",
                 "wrCreatedBy" as "createdBy",
                 "wrCreateDate" as "createdDate"
             FROM "tblAutoImportData";`,
@@ -40,6 +42,8 @@ const getAutoImportDataByIdQuery = async (whereCondition = undefined, request, f
                 "wrIsImportStart" as "isImportStart",
                 "wrImportStartTime" as "importStartTime",
                 "wrImportEndTime" as "importEndTime",
+                "wrEventTypeId" as "eventTypeId",
+                "wrCompetitionId" as "competitionId",
                 "wrCreatedBy" as "createdBy",
                 "wrCreateDate" as "createdDate"
             FROM "tblAutoImportData"
@@ -63,10 +67,10 @@ const insertAutoImportDataQuery = async (data, fastify, request) => {
             `WITH insert_data AS (
             INSERT INTO "tblAutoImportData" (
             "wrRefId", "wrRefType", "wrSourceId", "wrIsImported", "wrIsImportStart", "wrImportStartTime",
-            "wrImportEndTime", "wrCreatedBy", "wrCreateDate"
+            "wrImportEndTime", "wrEventTypeId", "wrCompetitionId", "wrCreatedBy", "wrCreateDate"
             ) 
             VALUES (
-                $1, $2, $3, $4, $5, $6, $7, $8, NOW()
+                $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW()
             )
             RETURNING *
             )
@@ -79,6 +83,8 @@ const insertAutoImportDataQuery = async (data, fastify, request) => {
                 "wrIsImportStart" as "isImportStart",
                 "wrImportStartTime" as "importStartTime",
                 "wrImportEndTime" as "importEndTime",
+                "wrEventTypeId" as "eventTypeId",
+                "wrCompetitionId" as "competitionId",
                 "wrCreatedBy" as "createdBy",
                 "wrCreateDate" as "createdDate"
             FROM insert_data;`,
@@ -92,6 +98,8 @@ const insertAutoImportDataQuery = async (data, fastify, request) => {
                     false,
                     null,
                     null,
+                    data.eventTypeId ?? null,
+                    data.competitionId ?? null,
                     request.userTokenInfo?.WrUserId || null,
                 ],
             }
@@ -119,7 +127,9 @@ const updateAutoImportDataQuery = async (data, fastify, request) => {
                 "wrIsImported" = $4,
                 "wrIsImportStart" = $5,
                 "wrImportStartTime" = $6,
-                "wrImportEndTime" = $7
+                "wrImportEndTime" = $7,
+                "wrEventTypeId" = $9,
+                "wrCompetitionId" = $10
             WHERE "wrId" = $8
             RETURNING *
         )
@@ -132,6 +142,8 @@ const updateAutoImportDataQuery = async (data, fastify, request) => {
                 "wrIsImportStart" as "isImportStart",
                 "wrImportStartTime" as "importStartTime",
                 "wrImportEndTime" as "importEndTime",
+                "wrEventTypeId" as "eventTypeId",
+                "wrCompetitionId" as "competitionId",
                 "wrCreatedBy" as "createdBy",
                 "wrCreateDate" as "createdDate"
             FROM updated_data;`,
@@ -146,6 +158,8 @@ const updateAutoImportDataQuery = async (data, fastify, request) => {
                     data.importStartTime,
                     data.importEndTime,
                     data.id,
+                    data.eventTypeId,
+                    data.competitionId,
                 ],
             }
         );
