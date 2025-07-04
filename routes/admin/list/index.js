@@ -22,6 +22,7 @@ const {
     getCommentaryList,
     getEventList,
     matchStatusData,
+    matchTypeData,
 } = require("../../../controller/users/admin/list/index");
 const { Listing } = require("../../../swaggerSchema/groupTags/schema");
 
@@ -125,7 +126,12 @@ module.exports = async (fastify, opts) => {
         preHandler : [(request,reply) => authorize(request,reply,fastify)],
         handler : (request,reply) => getEventList(request,reply,fastify)
     });
-    fastify.post("/matchStatus",{
+    fastify.post("/matchType",{
+        schema : Listing.matchStatus.schema,
+        preHandler : [(request,reply) => authorize(request,reply,fastify)],
+        handler : (request,reply) => matchTypeData(request,reply,fastify)
+    });
+     fastify.post("/matchStatus",{
         schema : Listing.matchStatus.schema,
         preHandler : [(request,reply) => authorize(request,reply,fastify)],
         handler : (request,reply) => matchStatusData(request,reply,fastify)
