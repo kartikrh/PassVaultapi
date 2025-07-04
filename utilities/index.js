@@ -1230,7 +1230,7 @@ const matchTypesEntity = {
   "T10": 17,
   "T100": 18,
   "Women T100": 19,
-  "TB-10": 20 // 👈 tb-10
+  "TB-10": 20
 };
 
 module.exports = {
