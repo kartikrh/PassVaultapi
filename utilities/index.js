@@ -1288,10 +1288,10 @@ const matchTypesEntity = {
   "TB-10": 20
 };
 const matchStatusEntity = {
-  1 : "Scheduled",
-  2 : "Completed",
-  3 : "Live",
-  4 : "Abandoned/canceled/No Result"
+  "Scheduled" : 1,
+  "Completed" :2,
+  "Live" :3,
+  "Abandoned, canceled, no result" :4
 }
 const entityCompetition = {
   1 : "fixture",
