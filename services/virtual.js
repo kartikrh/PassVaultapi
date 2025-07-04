@@ -19,7 +19,6 @@ const {
   callDataProvider,
   callVirtualPredictorMarket,
 } = require("../utilities");
-
 const { cloneCommentaryService, saveComVirtual } = require("./commentry");
 const {
   insertVirtualEventQuery,
