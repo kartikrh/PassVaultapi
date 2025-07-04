@@ -10,17 +10,7 @@ const getAllAutoImportDataService = async (request, fastify) => {
 }
 
 const insertAutoImportDataService = async (request, fastify) => {
-    const { refId, refType, sourceId, eventTypeId, competitionId } = request.body;
-
-    if(eventTypeId) {
-        const validateEventType = global.tblEventTypes.find(item => item.eventTypeId === eventTypeId);
-        if(!validateEventType) throw new Error(`EventTypeId not found`)
-    }
-
-    if(competitionId) {
-        const validateCompetition = global.tblCompetitions.find(item => item.competitionId === competitionId);
-        if(!validateCompetition) throw new Error(`CompetitionId not found`)
-    }
+    const { refId, refType, sourceId } = request.body;
 
     const whereCondition = `"wrRefId" = ${refId} AND "wrRefType" = ${refType} AND "wrSourceId" = ${sourceId}`;
     const validateCompImportData = await getAutoImportDataByIdQuery(whereCondition, request, fastify);
