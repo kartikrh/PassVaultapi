@@ -13,7 +13,7 @@ const saveVenueService = async (request, fastify) => {
   if (validateName) {
     throw new Error("Venue with this name already exist");
   }
-  if(request.body.tpId !== undefined || request.body.tpId !== null) {
+  if(request.body.tpId !== undefined && request.body.tpId !== null) {
     const validateTpId = global.tblVenues.find(
       (item) => item.tpId === request.body.tpId
     );
