@@ -2111,8 +2111,11 @@ const UpdateResulOrApproveEventMarketService = async (request, fastify) => {
         global.tblEventMarketsV2.splice(index, 1);
 
         global.tblMarketRunnerV2 = global.tblMarketRunnerV2.filter(
-          (item) => !eventMarketId.includes(item.eventMarketId)
+          (item) => item.eventMarketId !== eventMarketId
         );
+        // global.tblMarketRunnerV2 = global.tblMarketRunnerV2.filter(
+        //   (item) => !eventMarketId.includes(item.eventMarketId)
+        // );
       }
       global.tblEventMarketsV2[index].isResult = isResult;
       global.tblEventMarketsV2[index].result = result;
