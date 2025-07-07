@@ -219,12 +219,22 @@ const createVirtualEventService = async (request, fastify) => {
       item.key.toLowerCase().trim() === ISPREDICATIONONCRICKETCARD.trim().toLowerCase()
     )?.value;
     const isPredictMarket = isPrediction === "true";
-    const pythonAPI = global.tblPythonAPI.find(elem => elem.isActive == true && elem.isDefault == true);
+    let pythonId, pythonURI
+    if(checkComp?.pythonId) {
+      pythonId = checkComp.pythonId
+      const pythonAPI = global.tblPythonAPI.find(elem => elem.id === pythonId);
+      pythonURI = pythonAPI?.URI;
+    } else {
+      let pythonAPI = global.tblPythonAPI.find(elem => elem.isActive === true && elem.isDefault === true);
+      pythonId = pythonAPI?.id;
+      pythonURI = pythonAPI?.URI;
+    }
     let dataToInsert = {
       ...request.body,
       ...checkComp,
       isPredictMarket,
-      pythonURI: pythonAPI?.URI ?? null
+      pythonId,
+      pythonURI
     };
 
     const commentaryData = await insertVirtualEventQuery(

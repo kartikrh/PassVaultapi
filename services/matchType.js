@@ -7,7 +7,7 @@ const {
   isHistoryChangeInMatchTypeQuery,
 } = require("../repository/TableMatchType");
 const { createMatchTypePredictorQuery } = require("../repository/TableMatchTypePredictor");
-const { MarketTypeId } = require("../utilities");
+const { MarketTypeId, trimTextData } = require("../utilities");
 
 const allMatchTypesService = async (request) => {
   if(request?.body?.entityEnum) {
@@ -28,6 +28,14 @@ const matchTypeByIdService = async (request) => {
 };
 
 const createMatchTypeService = async (request, fastify) => {
+  const trimData = await trimTextData({
+    matchType: request.body?.matchType
+  }, request, fastify);
+  
+  if(trimData) {
+    Object.assign(request.body, trimData);
+  }
+
   const validateMatchType = global.tblMatchTypes.find(
     (item) =>
       item.matchType.toLowerCase() === request.body.matchType.toLowerCase()
@@ -63,6 +71,14 @@ const cloneMatchTypeService = async (request, fastify) => {
     throw new Error("MatchType with this id not Found");
   }
 
+  const trimData = await trimTextData({
+    matchType: request.body?.matchType
+  }, request, fastify);
+  
+  if(trimData) {
+    Object.assign(request.body, trimData);
+  }
+  
   const validateMatchType = global.tblMatchTypes.find(
     (item) =>
       item.matchType.toLowerCase() === request.body.matchType.toLowerCase()
@@ -132,6 +148,14 @@ const updateMatchTypeService = async (request, fastify) => {
 
   if (!checkId) {
     throw new Error("MatchType with this id not Found");
+  }
+
+  const trimData = await trimTextData({
+    matchType: request.body?.matchType
+  }, request, fastify);
+  
+  if(trimData) {
+    Object.assign(request.body, trimData);
   }
 
   if (request.body.matchTypeName) {
