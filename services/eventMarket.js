@@ -2864,9 +2864,9 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
     );
     if (
       market &&
-      market.status === EventMarketStatus.Close ||
+     (market.status === EventMarketStatus.Close ||
       market.status === EventMarketStatus.Settled ||
-      market.status === EventMarketStatus.Cancel
+      market.status === EventMarketStatus.Cancel)
     ) {
       continue;
     }
@@ -3162,7 +3162,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
       callPredictorMarket(
         {
           commentary_id: commentary.commentaryId,
-          status: request.body.eventMarket[0].status,
+          status: request.body.eventMarket[0]?.status,
           match_type_id: commentary.matchTypeId,
           is_open_market:isOpenMarket,
           player_id : null 
@@ -3172,18 +3172,6 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
         request,
         pythonURI
       );
-      // let callPrediction = {}
-      // // Check for error_msg in the response
-      // if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
-      //   callPrediction.predictioncallSuccess = false;
-      //   callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
-      //   callPrediction.endPoint = '/api/v1/updatemarketstatus';
-      // } else {
-      //   callPrediction.predictioncallSuccess = true;
-      //   callPrediction.predictionMessage = 'Prediction call successful';
-      //   callPrediction.endPoint = '/api/v1/updatemarketstatus';
-      // }
-      // callPredictions.push(callPrediction);
   }
   let data = await marketListByCIdService({ body: { commentaryId: commentary.commentaryId } }, fastify);
   sendToSocket({
@@ -3199,7 +3187,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
       response : data,
       requestTime: requestTime,
       responseTime: responseTime
-    },
+    },  
     request,
     fastify
   )
