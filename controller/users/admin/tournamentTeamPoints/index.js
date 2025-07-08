@@ -6,6 +6,7 @@ const {
   saveTblTournamentTeamPointsService,
   teamsListService,
   netRunRateRe_calculationService,
+  getAllTournamentTeamPointsService,
 } = require("../../../../services/tournamentTeamPoints");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -72,6 +73,16 @@ const netRunRateRecalculation = async (request, reply, fastify) => {
   }
 };
 
+const getTournamentTeamPoints = async (request, reply, fastify) => {
+  try {
+    const result = await getAllTournamentTeamPointsService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/getAllTournamentTeamPoints", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
 module.exports = {
   getAllTournamentTeamPoints,
   saveTournamentTeamPoints,
@@ -79,4 +90,5 @@ module.exports = {
   activeInactiveTournamentTeamPoints,
   teamsList,
   netRunRateRecalculation,
+  getTournamentTeamPoints,
 };
