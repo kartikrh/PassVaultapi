@@ -53,6 +53,7 @@ const {
   deleteFavCommentary,
 } = require("../../../controller/users/admin/clientFavCommentary");
 const { getAllCardType } = require("../../../controller/users/admin/cardType/index")
+const { getTournamentTeamPoints } = require("../../../controller/users/admin/tournamentTeamPoints/index");
 
 const {
   Score,
@@ -403,6 +404,9 @@ module.exports = async (fastify, opts) => {
   });
    fastify.post("/saveDeviceData", {
     handler: (request, reply) => saveDeviceData(request, reply, fastify),
+  });
+   fastify.post("/tournamentTeamPoints", {
+    handler: (request, reply) => getTournamentTeamPoints(request, reply, fastify),
   });
 };
 
