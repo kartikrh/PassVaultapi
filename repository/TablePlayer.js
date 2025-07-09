@@ -73,6 +73,59 @@ FROM
   //   }
   // );
 };
+const getPlyByIdQuery = async (data ,request ,fastify) => {
+  try {
+    return await fastify.db.query(
+        `SELECT 
+        "wrPlayerId" AS "playerId",
+        tp."wrEventTypeId" AS "eventTypeId",
+        tp."wrPlayerTypeId" AS "playerTypeId",
+        tp."wrBowlingStyle" AS "bowlingTypeId",
+        tet."wrEventType" AS "eventType",
+        tbt."wrBowlingType" AS "bowlingStyle",
+        tpt."wrPlayerType" AS "playerType",
+        tp."wrCountry" AS "country",
+        tp."wrPlayerName" AS "playerName",
+        tp."wrImage" AS "image",
+        tp."wrIsActive" AS "isActive",
+        tp."wrIsKipper" AS "isKipper",
+        tp."wrIsLeftHandedBatting" AS "isLeftHandedBatting",
+        tp."wrIsLeftArmFielding" AS "isLeftArmFielding",
+        tp."wrBatsmanAverage" AS "batsmanAverage",
+        tp."wrBatsmanStrikeRate" AS "batsmanStrikeRate",
+        tp."wrBowlerAverage" AS "bowlerAverage",
+        tp."wrBowlerEconomy" AS "bowlerEconomy",
+        tp."wrDisplayName" AS "displayName",
+        tp."wrIsSystemPlayer" AS "isSystemPlayer",
+        tp."wrImagePath" AS "imagePath",
+        tp."wrTpId" AS "tpId"
+    FROM 
+        "tblPlayers" tp
+        LEFT JOIN "tblEventTypes" tet ON tp."wrEventTypeId" = tet."wrEventTypeId"
+        LEFT JOIN "tblPlayerTypes" tpt ON tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
+        LEFT JOIN "tblBowlingTypes" tbt ON tp."wrBowlingStyle" = tbt."wrBowlingTypeId"
+        WHERE tp."wrIsDeleted" = false
+        AND tp."wrPlayerId" = ANY($1)
+
+     `,
+    {
+      type: fastify.db.QueryTypes.SELECT,
+      bind : [
+        data.playerId
+      ]
+    }
+  );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TablePlayer/getPlyByIdQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+  
+};
 
 const insertPlayerQuery = async (data, fastify, request) => {
   try {
@@ -465,4 +518,5 @@ module.exports = {
   updateIsSystemPlayerQuery,
   getTeamPlayerQuery,
   getAllPlayersByIdsQuery,
+  getPlyByIdQuery
 };

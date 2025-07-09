@@ -42,7 +42,45 @@ const allTeamQuery = async (fastify) => {
   //   }
   // );
 };
-
+const getTeamsByIds = async (data,request,fastify) => {
+  try {
+      return await fastify.db.query(
+    `SELECT 
+    "wrTeamId" as "teamId",
+    tt."wrEventTypeId" as "eventTypeId",
+    "wrTeamName" as "teamName",
+    "wrTeamShortName" as "teamShortName",
+    "WrTeamJersey" as "jersey",
+    tt."wrImage" as "image",
+    "wrCountry" as "country",
+    et."wrEventType" AS "eventType",
+    tt."wrTeamColor" AS "teamColor",
+    tt."wrBackgroundColor" AS "backgroundColor",
+    tt."wrImagePath" AS "imagePath",
+    tt."wrJerseyPath" AS "jerseyPath",
+    tt."wrTpId" AS "tpId"
+     FROM "tblTeams" tt
+      LEFT JOIN "tblEventTypes" et ON tt."wrEventTypeId" = et."wrEventTypeId"
+      WHERE 
+      tt."wrTeamId" = ANY($1)
+      tt."wrIsDeleted" = false`,
+    {
+      type: fastify.db.QueryTypes.SELECT,
+      bind : [
+        data.teamId
+      ]
+    }
+  );
+  } catch (error) {
+     errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableTeams/getTeamsByIds",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
 const insertTeamQuery = async (data, fastify, request) => {
   try {
     const result = await fastify.db.query(
@@ -319,4 +357,5 @@ module.exports = {
   getAllPlayersByCompetitionIdTeamIdQuery,
   getAllPlayersByTeamIdAndMatchTypeIdQuery,
   getAllTeamsByIdsQuery,
+  getTeamsByIds
 };
