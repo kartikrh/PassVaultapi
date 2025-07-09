@@ -10050,6 +10050,22 @@ const AutoImportData = {
     },
   },
 }
+const EntitySport = {
+  Teams : {
+    schema : {
+      tags: ["EntitySport"],
+      description: "save Teams",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          teamId: { type: "array" },
+        },
+        required: ["teamId"],
+      },
+    }
+  }
+}
 module.exports = {
   Auth,
   Tabs,
@@ -10125,4 +10141,5 @@ module.exports = {
   PythonAPI,
   Listing,
   AutoImportData,
+  EntitySport
 };

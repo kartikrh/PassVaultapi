@@ -4563,27 +4563,6 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         request,
         fastify
       );
-
-      // let data = global.tblNotificationConfig.find((elem) =>
-      //   elem.isActive === true && elem.eventName === EventName.EVENTCOMPLETED
-      // )
-      // if(data && commentaryData.isActive === true && commentaryData.eventName != null) {
-      //   data.content = data.content.replace("{}", commentaryData.eventName);
-      //   if(
-      //     global?.clientSocketIo !== undefined &&
-      //     global?.clientSocketIo.length > 0
-      //   ){
-      //     global.clientSocketIo.forEach((socket) => {
-      //       socket.client.emit("notificationSend", data);
-      //     });
-      //     let notificationData = {
-      //       title: commentaryData.eventName,
-      //       description: data.content,
-      //       commentaryId: commentaryData.commentaryId,
-      //     }
-      //     await insertNotificationViaNotiConfigQuery(notificationData, request, fastify);
-      //   }
-      // }
       if (competition.isEventSnap == true) {
         setCompEventSnapSerice(
           [
@@ -12361,7 +12340,7 @@ const saveComVirtual = async (request, fastify) => {
       deleteCommentaryBallByBallId,
       deleteOverId,
       commentaryId,
-      isEndInnings,
+      isEndInnings = false,
       isCallPredict = false,
     } = request.body;
 
@@ -13631,12 +13610,12 @@ const saveComVirtual = async (request, fastify) => {
         );
       });
     }
-    // let strikeTeam;
-    // strikeTeam = global.tblCommentaryTeams.find(
-    //   (item) =>
-    //     item?.commentaryId === commentaryData.commentaryId &&
-    //     item.teamStatus === 1
-    // );
+    let strikeTeam;
+    strikeTeam = global.tblCommentaryTeams.find(
+      (item) =>
+        item?.commentaryId === commentaryData.commentaryId &&
+        item.teamStatus === 1
+    );
     // if (deleteCommentaryBallByBallId || deleteOverId) {
     //   const clientInRoom = global.socketIo.sockets.adapter.rooms.get(`score-${commentaryId}`);
     //   if (clientInRoom?.size) {
@@ -13646,27 +13625,27 @@ const saveComVirtual = async (request, fastify) => {
     //     });
     //   }
     // }
-    // if (isEndInnings && isEndInnings == true && isCallPredict == true) {
-    //   //_resFromPredictAPI = null;
-    //   //_resFromPredictAPI = await
-    //   callPredictorMarket(
-    //     {
-    //       commentary_id: commentaryData.commentaryId,
-    //       match_type_id: commentaryData.matchTypeId,
-    //       strike_team_id: strikeTeamForEndInnings.teamId,
-    //     },
-    //     "/api/v1/endinnings",
-    //     fastify,
-    //     request
-    //   ).catch((err) => {
-    //     errorLogger(
-    //       fastify,
-    //       err.message,
-    //       "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
-    //       request
-    //     );
-    //   });
-    // }
+    if (isEndInnings && isEndInnings == true && isCallPredict == true) {
+      //_resFromPredictAPI = null;
+      //_resFromPredictAPI = await
+      callPredictorMarket(
+        {
+          commentary_id: commentaryData.commentaryId,
+          match_type_id: commentaryData.matchTypeId,
+          strike_team_id: strikeTeamForEndInnings.teamId,
+        },
+        "/api/v1/endinnings",
+        fastify,
+        request
+      ).catch((err) => {
+        errorLogger(
+          fastify,
+          err.message,
+          "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
+          request
+        );
+      });
+    }
     commentaryLogger(
       {
         commentaryId: commentaryId,
