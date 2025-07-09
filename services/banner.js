@@ -31,7 +31,7 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
   };
   const createBannerService = async (request, fastify) => {
     // if image is uploaded then upload it to server
-    if (request.body.image && request.body.image.length && request.body.image != "null" && request.body.image != "") {
+    if (request.body.image && request.body.image.length) {
       const imgName = generateImageName({
         name: request.body.title,
       });
@@ -107,11 +107,10 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
       image: validateBannerId.image,
       userId: request.userTokenInfo.WrUserId,
       link: request.body.link,
-      viewerCount: request.body.viewerCount === undefined || request.body.viewerCount === null || request.body.viewerCount === "" ||
-        request.body.viewerCount === "null" ? validateBannerId.viewerCount : parseInt(request.body.viewerCount, 10),
+      viewerCount: validateBannerId.viewerCount,
       imagePath: validateBannerId.imagePath,
     };
-    if (request.body.image && request.body.image.length && request.body.image != "null" && request.body.image != "") {
+    if (request.body.image && request.body.image.length) {
       const imgName = generateImageName({
         name: request.body.title,
       });
