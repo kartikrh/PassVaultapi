@@ -403,8 +403,7 @@ const getClientTournamentTeamPointsQuery = async (request, fastify) => {
         LEFT JOIN "tblTeams" tp ON tp."wrTeamId" = ttp."wrTeamId"
         WHERE ttp."wrIsDeleted" = false
         AND tc."wrIsDeleted" = false
-        AND tc."wrIsActive" = true
-        AND tc."wrIsTrending" = true`,
+        AND tc."wrIsActive" = true`,
       {
         type: fastify.db.QueryTypes.SELECT,
       }

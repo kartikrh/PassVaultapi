@@ -58,10 +58,7 @@ const createTblTournamentTeamPointsService = async (request, fastify) => {
   request.body.tpId = validateTeamId?.tpId ?? null;
     
   const saveData = await insertTournamentTeamPointsQuery(request.body, fastify, request);
-  const competitionData = global.tblCompetitions.find(
-    item => item.competitionId === request.body.competitionId
-  );
-  if (competitionData && competitionData.isActive == true && competitionData.isTrending === true) {
+  if (validateCompetitionId && validateCompetitionId.isActive == true) {
     const res = await responseChangeService(saveData?.teamId, saveData?.competitionId);
   
     callClientAPI(
@@ -126,10 +123,7 @@ const updateTblTournamentTeamPointsService = async (request, fastify) => {
 
   await updateTournamentTeamPointsQuery(updateData, fastify, request);
 
-  const competitionData = global.tblCompetitions.find(
-    item => item.competitionId === updateData.competitionId
-  );
-  if (competitionData && competitionData.isActive == true && competitionData.isTrending === true) {
+  if (validateCompetitionId && validateCompetitionId.isActive == true) {
     const res = await responseChangeService(updateData?.teamId, updateData?.competitionId);
     callClientAPI(
      {
@@ -163,12 +157,22 @@ const saveTblTournamentTeamPointsService = async (request, fastify) => {
 
 const createTournamentTeamPointsService = async (newItems, fastify, request) => {
   const insertData = newItems.map(async (item) => {
+    const competitionData = global.tblCompetitions.find(
+      item => item.competitionId === item.competitionId
+    );
+    if(!competitionData){
+      throw new Error('CompetitionId does not existed');
+    }
+
+    const validateTeamId = global.tblTeams.find(
+      (elem) => elem.teamId === item.teamId
+    );
+    if(!validateTeamId){
+      throw new Error('TeamId does not existed');
+    }
     const saveData = await insertTournamentTeamPointsQuery(item, fastify, request);
 
-    const competitionData = global.tblCompetitions.find(
-      item => item.competitionId === request.body.competitionId
-    );
-    if (competitionData && competitionData.isActive == true && competitionData.isTrending === true) {
+    if (competitionData && competitionData.isActive == true) {
       const res = await responseChangeService(saveData?.teamId, saveData?.competitionId);
       callClientAPI(
        {
@@ -203,6 +207,19 @@ const updateTournamentTeamPointsService = async (existingItems, fastify, request
     if (!validateId) {
       throw new Error("TournamentTeamPoints Id not Found");
     }
+    const competitionData = global.tblCompetitions.find(
+      item => item.competitionId === item.competitionId
+    );
+    if(!competitionData){
+      throw new Error('CompetitionId does not existed');
+    }
+
+    const validateTeamId = global.tblTeams.find(
+      (elem) => elem.teamId === item.teamId
+    );
+    if(!validateTeamId){
+      throw new Error('TeamId does not existed');
+    }
 
     const updateData = {
       groupId: item.groupId || validateId.groupId,
@@ -222,10 +239,7 @@ const updateTournamentTeamPointsService = async (existingItems, fastify, request
 
     await updateTournamentTeamPointsQuery(updateData, fastify, request);
 
-    const competitionData = global.tblCompetitions.find(
-      item => item.competitionId === updateData.competitionId
-    );
-    if (competitionData && competitionData.isActive == true && competitionData.isTrending === true) {
+    if (competitionData && competitionData.isActive == true) {
       const res = await responseChangeService(updateData?.teamId, updateData?.competitionId);
       callClientAPI(
        {
@@ -314,7 +328,7 @@ const activeInactiveTournamentTeamPointsService = async (request, fastify) => {
   const competitionData = global.tblCompetitions.find(
     item => item.competitionId === result[0].competitionId
   );
-  if (competitionData && competitionData.isActive == true && competitionData.isTrending === true) {
+  if (competitionData && competitionData.isActive == true) {
     const res = await responseChangeService(result[0]?.teamId, result[0]?.competitionId);
   
     callClientAPI(
@@ -479,7 +493,7 @@ const setTeamNetRunRateService = async (teamId, competitionId, fastify) => {
   const competitionData = global.tblCompetitions.find(
     item => item.competitionId === updatedData.competitionId
   );
-  if (competitionData && competitionData.isActive == true && competitionData.isTrending === true) {
+  if (competitionData && competitionData.isActive == true) {
     const res = await responseChangeService(updatedData?.teamId, updatedData?.competitionId);
     callClientAPI(
      {
