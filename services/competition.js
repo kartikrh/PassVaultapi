@@ -139,7 +139,7 @@ const createCompititionService = async (request, fastify) => {
     }
   }
 
-  if (request.body?.tpId !== undefined && request.body?.tpId !== null && request.body?.tpId != "" && request.body?.tpId != "null") {
+  if (request.body?.tpId !== undefined) {
     const validate = global.tblCompetitions.find(
       (item) => item.tpId == request.body?.tpId && item.tpId !== null
     );
@@ -221,7 +221,7 @@ const updateCompititionService = async (request, fastify) => {
   if (!validateId) {
     throw new Error("Competition with this id not Found");
   }
-  if (request.body?.tpId !== undefined && request.body?.tpId !== null && request.body?.tpId != "" && request.body?.tpId != "null") {
+  if (request.body?.tpId !== undefined && request.body?.tpId !== null) {
     const validate = global.tblCompetitions.find(
       (item) => item.tpId == request.body?.tpId && item.competitionId != competitionId &&
       item.tpId !== null
@@ -252,31 +252,21 @@ const updateCompititionService = async (request, fastify) => {
     isTrending: validateId.isTrending,
     isEventSnap: validateId.isEventSnap,
     isPointTable: validateId.isPointTable,
-    matchTypeId: request.body.matchTypeId === undefined ? validateId.matchTypeId : parseInt(request.body.matchTypeId, 10),
-    // winPoint: request.body.winPoint === undefined ? validateId.winPoint : parseInt(request.body.winPoint, 10),
-    // tiePoint: request.body.tiePoint === undefined ? validateId.tiePoint : parseInt(request.body.tiePoint, 10),
-    // cancelPoint: request.body.cancelPoint === undefined ? validateId.cancelPoint : parseInt(request.body.cancelPoint, 10),
-    // lossPoint: request.body.lossPoint === undefined ? validateId.lossPoint : parseInt(request.body.lossPoint, 10),
-    // drsCount : request.body.drsCount === undefined ? validateId.drsCount : parseInt(request.body.drsCount),
-    winPoint: request.body.winPoint === undefined || request.body.winPoint === null || request.body.winPoint === "" ||
-      request.body.winPoint === "null" ? validateId.winPoint : parseInt(request.body.winPoint, 10),
-    tiePoint: request.body.tiePoint === undefined || request.body.tiePoint === null || request.body.tiePoint === "" || 
-      request.body.tiePoint === "null" ? validateId.tiePoint : parseInt(request.body.tiePoint, 10),
-    cancelPoint: request.body.cancelPoint === undefined || request.body.cancelPoint === null || request.body.cancelPoint === "" || 
-      request.body.cancelPoint === "null" ? validateId.cancelPoint : parseInt(request.body.cancelPoint, 10),
-    lossPoint: request.body.lossPoint === undefined || request.body.lossPoint === null || request.body.lossPoint === "" || 
-      request.body.lossPoint === "null" ? validateId.lossPoint : parseInt(request.body.lossPoint, 10),
-    drsCount : request.body.drsCount === undefined || request.body.drsCount === null || request.body.drsCount === "" || 
-      request.body.drsCount === "null" ? validateId.drsCount : parseInt(request.body.drsCount),
+    matchTypeId: request.body.matchTypeId || validateId.matchTypeId,
+    winPoint: request.body.winPoint || validateId.winPoint,
+    tiePoint: request.body.tiePoint || validateId.tiePoint,
+    cancelPoint: request.body.cancelPoint || validateId.cancelPoint,
+    lossPoint: request.body.lossPoint || validateId.lossPoint,
+    drsCount : request.body.drsCount || validateId.drsCount,
     imagePath: validateId.imagePath,
     isMen: validateId.isMen,
-    type: request.body.type === undefined ? validateId.type : parseInt(request.body.type),
+    type: request.body.type || validateId.type,
     isVirtual: validateId.isVirtual,
     commStatus: request.body.commStatus || validateId.commStatus,
     startDate: request.body.startDate || validateId.startDate,
     endDate: request.body.endDate || validateId.endDate,
-    tpId: request.body?.tpId === undefined ? validateId.tpId : request.body?.tpId == "" ? null : parseInt(request.body?.tpId),
-    pythonId: request.body.pythonId === undefined ? validateId.pythonId : parseInt(request.body.pythonId),
+    tpId: request.body.tpId || validateId.tpId,
+    pythonId: request.body.pythonId || validateId.pythonId,
   };
   const developerName = global.tblPythonAPI.find(item => item.id === data?.pythonId);
   data.developerName = developerName?.developerName ?? null

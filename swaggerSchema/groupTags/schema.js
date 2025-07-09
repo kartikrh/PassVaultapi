@@ -3854,6 +3854,14 @@ const Compitition = {
           commStatus: { type: "integer" },
           startDate: { type: "string" },
           endDate: { type: "string" },
+          tpId: { type: "integer" },
+          type: { type: "integer" },
+          pythonId: { type: "integer" },
+          winPoint: { type: "integer" },
+          tiePoint: { type: "integer" },
+          cancelPoint: { type: "integer" },
+          lossPoint: { type: "integer" },
+          drsCount: { type: "integer" },
         },
         required: ["competitionId"],
       },
@@ -10023,6 +10031,13 @@ const Listing =  {
       description : "get all Match Type",
       secaurity : [{bearerAuth : []}]
     }
+  },
+  getAllCounntryCodes: {
+    schema: {
+      tags: ["Listing"],
+      description: "get all country list",
+      security: [{ bearerAuth: [] }],
+    },
   },
 }
 const AutoImportData = {

@@ -132,39 +132,21 @@ const insertCompetitionQuery = async (request, fastify) => {
           data.isTrending || false,
           data.isEventSnap || false,
           data.isPointTable || false,
-          // data.matchTypeId || null,
-          data.matchTypeId === undefined || data.matchTypeId === null || data.matchTypeId === "" || 
-            data.matchTypeId === "null" ? 0 : parseInt(data.matchTypeId, 10),
-          data.winPoint === undefined || data.winPoint === null || data.winPoint === "" || 
-            data.winPoint === "null" ? null : parseInt(data.winPoint, 10),
-          data.tiePoint === undefined || data.tiePoint === null || data.tiePoint === "" || 
-            data.tiePoint === "null" ? null : parseInt(data.tiePoint, 10),
-          data.cancelPoint === undefined || data.cancelPoint === null || data.cancelPoint === "" || 
-            data.cancelPoint === "null" ? null : parseInt(data.cancelPoint, 10),
-          data.lossPoint === undefined || data.lossPoint === null || data.lossPoint === "" || 
-            data.lossPoint === "null" ? null : parseInt(data.lossPoint, 10),
-          data.drsCount === undefined || data.drsCount === null || data.drsCount === "" || 
-            data.drsCount === "null" ? 0 : parseInt(data.drsCount, 10),
-          // data.winPoint === undefined ? null : parseInt(data.winPoint, 10),
-          // data.tiePoint === undefined ? null : parseInt(data.tiePoint, 10),
-          // data.cancelPoint === undefined ? null : parseInt(data.cancelPoint, 10),
-          // data.lossPoint === undefined ? null : parseInt(data.lossPoint, 10),
-          // data.drsCount === undefined || 'null' ? 0 : parseInt(data.drsCount, 10),
+          data.matchTypeId || null,
+          data.winPoint || null,
+          data.tiePoint || null,
+          data.cancelPoint || null,
+          data.lossPoint || null,
+          data.drsCount || null,
           data.imagePath || null,
           data.isMen || null,
           data.type || null,
           data.isVirtual || false,
-          // data.commStatus || 0,
-          data.commStatus === undefined || data.commStatus === null || data.commStatus === "" || 
-            data.commStatus === "null" ? 0 : parseInt(data.commStatus, 10),
+          data.commStatus || null,
           data.startDate || null,
           data.endDate || null,
-          // data.tpId || null,
-          data.tpId === undefined || data.tpId === null || data.tpId === "" || 
-            data.tpId === "null" ? 0 : parseInt(data.tpId, 10),
-          // data.pythonId || null,
-          data.pythonId === undefined || data.pythonId === null || data.pythonId === "" || 
-            data.pythonId === "null" ? 0 : parseInt(data.pythonId, 10),
+          data.tpId || null,
+          data.pythonId || null,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }

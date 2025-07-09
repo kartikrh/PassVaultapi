@@ -11479,8 +11479,10 @@ const getTeamAndPlayerListServiceV1 = async (request, fastify) => {
     if (!teamMap[team.teamId]) {
       teamMap[team.teamId] = {
         teamId: team.teamId,
-        teamName: team?.teamName || teamMap[team.teamId]?.teamName,
-        shortName: team.shortName || teamMap[team.teamId]?.shortName,
+        // teamName: team?.teamName || teamMap[team.teamId]?.teamName,
+        // shortName: team.shortName || teamMap[team.teamId]?.shortName,
+        teamName: team?.teamName || null,
+        shortName: team.shortName || null,
         commentaryTeamPlayers: {},
         teamPlayers: await getAllPlayersByTeamIdAndMatchTypeIdQuery(
           { matchTypeId: commentaryDetails.matchTypeId, teamId: team.teamId },
