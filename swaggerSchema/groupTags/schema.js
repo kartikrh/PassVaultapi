@@ -1583,6 +1583,8 @@ const Teams = {
           teamShortName: { type: "string" },
           country: { type: "string" },
           eventTypeId: { type: "integer" },
+          tpId: { type: "integer" },
+          countryId: { type: "integer" },
           teamColor: { type: "string" },
           playerId: {
             type: "array",
@@ -1794,6 +1796,8 @@ const Player = {
           bowlerAverage: { type: "number" },
           bowlerEconomy: { type: "number" },
           displayName: { type: "string" },
+          tpId: { type: "integer" },
+          countryId: { type: "integer" },
           teamId: {
             type: "array",
             items: { type: "string" },
@@ -9718,6 +9722,7 @@ const Venue = {
         properties: {
           id: { type: "integer" },
           countryId: { type: "integer" },
+          tpId: { type: "integer" },
           name: { type: "string" },
         },
         required: ["id", "countryId", "name"],
