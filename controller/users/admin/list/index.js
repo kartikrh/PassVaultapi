@@ -311,7 +311,7 @@ const allCountryCodes = async (request, reply, fastify)=>{
         const countryData = await allCountryCodeService(fastify, request);
         const result = countryData.map(item => {
           return {
-            id: item.id,
+            countryId: item.id,
             countryName: item.countryName,
           }
         })

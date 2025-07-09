@@ -11477,26 +11477,46 @@ const getTeamAndPlayerListServiceV1 = async (request, fastify) => {
     );
 
     if (!teamMap[team.teamId]) {
-      teamMap[team.teamId] = {
-        teamId: team.teamId,
-        // teamName: team?.teamName || teamMap[team.teamId]?.teamName,
-        // shortName: team.shortName || teamMap[team.teamId]?.shortName,
-        teamName: team?.teamName || null,
-        shortName: team.shortName || null,
-        commentaryTeamPlayers: {},
-        teamPlayers: await getAllPlayersByTeamIdAndMatchTypeIdQuery(
-          { matchTypeId: commentaryDetails.matchTypeId, teamId: team.teamId },
-          fastify,
-          request
-        ),
-      };
-    }
-
-    // Update teamName and shortName if already initialized
+      const players = await getAllPlayersByTeamIdAndMatchTypeIdQuery(
+      { matchTypeId: commentaryDetails.matchTypeId, teamId: team.teamId },
+      fastify,
+      request
+    );
+    teamMap[team.teamId] = {
+      teamId: team.teamId,
+      teamName: team?.teamName || null,
+      shortName: team?.shortName || null,
+      commentaryTeamPlayers: {},
+      teamPlayers: players,
+    };
+  } else {
     teamMap[team.teamId].teamName =
       team.teamName || teamMap[team.teamId].teamName;
     teamMap[team.teamId].shortName =
       team.shortName || teamMap[team.teamId].shortName;
+  }
+
+    // if (!teamMap[team.teamId]) {
+    //   teamMap[team.teamId] = {
+    //     teamId: team.teamId,
+    //     // teamName: team?.teamName || teamMap[team.teamId]?.teamName,
+    //     // shortName: team.shortName || teamMap[team.teamId]?.shortName,
+    //     teamName: team?.teamName || null,
+    //     shortName: team.shortName || null,
+    //     commentaryTeamPlayers: {},
+    //     teamPlayers: await getAllPlayersByTeamIdAndMatchTypeIdQuery(
+    //       { matchTypeId: commentaryDetails.matchTypeId, teamId: team.teamId },
+    //       fastify,
+    //       request
+    //     ),
+    //   };
+    // }
+
+    // // Update teamName and shortName if already initialized
+    // teamMap[team.teamId].teamName =
+    //   team.teamName || teamMap[team.teamId].teamName;
+    // teamMap[team.teamId].shortName =
+    //   team.shortName || teamMap[team.teamId].shortName;
 
     // Add players under respective innings
     const inningsKey = `currentInnings${team.currentInnings}`;

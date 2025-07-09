@@ -318,8 +318,12 @@ const updatePlayerService = async (request, fastify) => {
     bowlingStyle: checkPlayerId.bowlingTypeId,
     isSystemPlayer: request.body.hasOwnProperty("isSystemPlayer") ? request.body.isSystemPlayer : checkPlayerId.isSystemPlayer,
     imagePath : checkPlayerId.imagePath,
-    tpId: 'tpId' in request.body ? request.body.tpId : checkPlayerId.tpId,
+    tpId: request.body.tpId || checkPlayerId.tpId,
+    countryId: request.body.countryId || checkPlayerId.countryId,
   };
+
+  const countryData = global.tblCountryCodes.find(item => item.id === body.countryId)
+  body.countryName = countryData?.countryName || null
 
   if ("isActive" in request.body) {
     body.isActive = request.body.isActive;
@@ -557,6 +561,8 @@ const updatePlayerStatsService = async (request, fastify) => {
         const index = global.tblPlayers.findIndex(
           (item) => item.playerId === request.body[i].playerId
         );
+        const countryData = global.tblCountryCodes.find(item => item.id === checkPlayerId.countryId);
+        let countryName = countryData?.countryName || null;
         const _p = {
           country: checkPlayerId.country,
           playerName: checkPlayerId.playerName,
@@ -580,6 +586,8 @@ const updatePlayerStatsService = async (request, fastify) => {
           bowlingStyle: checkPlayerId.bowlingTypeId,
           imagePath: checkPlayerId.imagePath,
           tpId: checkPlayerId.tpId,
+          countryId: checkPlayerId.countryId,
+          countryName: countryName,
         };
         global.tblPlayers[index] = _p;
       }
