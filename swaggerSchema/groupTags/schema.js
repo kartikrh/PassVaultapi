@@ -3863,7 +3863,7 @@ const Compitition = {
           lossPoint: { type: "integer" },
           drsCount: { type: "integer" },
         },
-        required: ["competitionId", "eventTypeId", "competition", "refId", "type"],
+        required: ["competitionId"],
       },
     },
   },
@@ -10031,6 +10031,13 @@ const Listing =  {
       description : "get all Match Type",
       secaurity : [{bearerAuth : []}]
     }
+  },
+  getAllCounntryCodes: {
+    schema: {
+      tags: ["Listing"],
+      description: "get all country list",
+      security: [{ bearerAuth: [] }],
+    },
   },
 }
 const AutoImportData = {
