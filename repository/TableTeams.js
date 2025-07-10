@@ -16,11 +16,9 @@ const allTeamQuery = async (fastify) => {
     tt."wrImagePath" AS "imagePath",
     tt."wrJerseyPath" AS "jerseyPath",
     tt."wrTpId" AS "tpId",
-    tt."wrCountryId" AS "countryId",
-    tcc."wrCountryName" AS "countryName"
+    tt."wrCountryId" AS "countryId"
      FROM "tblTeams" tt
       LEFT JOIN "tblEventTypes" et ON tt."wrEventTypeId" = et."wrEventTypeId"
-      LEFT JOIN "tblCountryCodes" tcc ON tcc."wrId" = tt."wrCountryId"
       WHERE tt."wrIsDeleted" = false`,
     {
       type: fastify.db.QueryTypes.SELECT,
@@ -62,11 +60,9 @@ const getTeamsByIds = async (data,request,fastify) => {
     tt."wrImagePath" AS "imagePath",
     tt."wrJerseyPath" AS "jerseyPath",
     tt."wrTpId" AS "tpId",
-    tt."wrCountryId" AS "countryId",
-    tcc."wrCountryName" AS "countryName"
+    tt."wrCountryId" AS "countryId"
      FROM "tblTeams" tt
       LEFT JOIN "tblEventTypes" et ON tt."wrEventTypeId" = et."wrEventTypeId"
-      LEFT JOIN "tblCountryCodes" tcc ON tcc."wrId" = tt."wrCountryId"
       WHERE 
       tt."wrTeamId" = ANY($1)
       tt."wrIsDeleted" = false`,
@@ -109,11 +105,9 @@ const insertTeamQuery = async (data, fastify, request) => {
     tt."wrImagePath" AS "imagePath",
     tt."wrJerseyPath" AS "jerseyPath",
     tt."wrTpId" AS "tpId",
-    tt."wrCountryId" AS "countryId",
-    tcc."wrCountryName" AS "countryName"
+    tt."wrCountryId" AS "countryId"
      FROM "insert_data" tt 
       INNER JOIN "tblEventTypes" evt ON tt."wrEventTypeId" = evt."wrEventTypeId" 
-      LEFT JOIN "tblCountryCodes" tcc ON tcc."wrId" = tt."wrCountryId"
     `,
       {
         bind: [
@@ -339,11 +333,9 @@ const getAllTeamsByIdsQuery = async (whereCondition = undefined, fastify) => {
           tt."wrImagePath" AS "imagePath",
           tt."wrJerseyPath" AS "jerseyPath",
           tt."wrTpId" AS "tpId",
-          tt."wrCountryId" AS "countryId",
-          tcc."wrCountryName" AS "countryName"
+          tt."wrCountryId" AS "countryId"
       FROM "tblTeams" tt
       LEFT JOIN "tblEventTypes" et ON tt."wrEventTypeId" = et."wrEventTypeId"
-      LEFT JOIN "tblCountryCodes" tcc ON tcc."wrId" = tt."wrCountryId"
       ${whereCondition ? `WHERE ${whereCondition}` : 'WHERE tt."wrIsDeleted" = false'}`,
       {
         type: fastify.db.QueryTypes.SELECT,

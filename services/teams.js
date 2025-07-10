@@ -44,7 +44,15 @@ const allteamByEventTypeIdService = async (request, fastify) => {
     );
   }
 
-  return result;
+  const updatedTeams = result.map((item) => {
+    const country = global.tblCountryCodes.find(elem => elem.id === item.countryId);
+    return {
+      ...item,
+      countryName: country?.countryName ?? null
+    };
+  });
+
+  return updatedTeams;
 
 
 
@@ -306,8 +314,6 @@ const updateTeamService = async (request, fastify) => {
     countryId: request.body.countryId || checkTeamId.countryId,
   };
 
-  const countryData = global.tblCountryCodes.find(item => item.id === body.countryId)
-  body.countryName = countryData?.countryName || null
   const validateTeamName = global.tblTeams.find(
     (item) =>
       item.teamName.trim().toLowerCase() === body.teamName.trim().toLowerCase() &&
