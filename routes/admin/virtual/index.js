@@ -49,7 +49,6 @@ module.exports = async (fastify, opts) => {
   });  
   fastify.get("/serverTime", {
     schema: VirtualEvent.cancelEvent.schema,
-    // handler: (request, reply) => ballByBallVirtualEvent(request, reply, fastify),
     handler: (request, reply) => serverTimeAPI(request, reply, fastify),
   }); 
   
