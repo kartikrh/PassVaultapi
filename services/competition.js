@@ -19,7 +19,7 @@ const {storeImageOnServer, removeImageFromServer, generateImageName } = require(
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const {ImgModuleConfig} = require("../utilities/imageConstant");
 const { APIEndpointModuleType, ServiceType, callClientAPI, compStatus, callCardCricket } = require("../utilities");
-const { getCommentariesResultQuery } = require("../repository/TableCommentary")
+const { getCommentariesResultQuery, getAllCommByCompIdQuery } = require("../repository/TableCommentary")
 
 // const allCompetitionService = async (request) => {
 //   const { isActive, isTrending, eventTypeId, matchTypeId, isMen, type } = request.body;
@@ -395,6 +395,10 @@ const deleteCompetitionService = async (request, fastify) => {
         path: validateId.image,
       });
     }
+    const commentaryExists = await getAllCommByCompIdQuery(id, request, fastify);
+    if (commentaryExists) {
+      throw new Error(`'${validateId?.competition}' competition has commentary and cannot be deleted at the moment`);
+    }
   }
 
   await deleteCompetitionQuery(request, fastify);
@@ -402,9 +406,9 @@ const deleteCompetitionService = async (request, fastify) => {
   global.tblCompetitions = global.tblCompetitions.filter(
     (item) => !competitionId.includes(item.competitionId)
   );
-  global.tblCommentaries = global.tblCommentaries.filter(
-    (item) => !competitionId.includes(item.competitionId)
-  );
+  // global.tblCommentaries = global.tblCommentaries.filter(
+  //   (item) => !competitionId.includes(item.competitionId)
+  // );
 
   callClientAPI(
     {

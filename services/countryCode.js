@@ -11,6 +11,7 @@ const {
     generateImageName,
     removeImageFromServer,
 } = require("../utilities/Images");
+const { importCountriesListAPI } = require("../utilities/importCountriesList");
 
 const saveCountryCodeService = async (request, fastify) => {
   let validateCode = global.tblCountryCodes.find(
@@ -70,6 +71,7 @@ const editCountryCodeService = async (request, fastify) => {
     maxNumber : request.body.maxNumber ?? validateId.maxNumber,
     shortName : request.body.shortName ?? validateId.shortName,
     timezone : request.body.timezone ?? validateId.timezone,
+    timezoneFormat : request.body.timezoneFormat ?? validateId.timezoneFormat,
   };
   if (request.body.flag && request.body.flag.length > 0) {
     const imgName = generateImageName({ name: updateData.countryName });
@@ -183,6 +185,34 @@ const activeInactiveCountryCodeService = async (fastify, request) => {
   return `Country Code data updated successfully`;
 };
 
+const importCountriesListService = async (fastify, request) => {
+  const data = await importCountriesListAPI(request, fastify);
+  if(data.length == 0) {
+    throw new Error(`No countries were imported. Please check the source or try again later`)
+  }
+  for (const item of data) {
+    const itemCode = item?.shortName?.toLowerCase().trim();
+    if (!itemCode) continue;
+
+    const index = global.tblCountryCodes.findIndex(elem =>
+      elem?.shortName?.toLowerCase().trim() === itemCode
+    );
+    if (index == -1) {
+      const saveData = await insertCountryCodeQuery(item, fastify, request);
+      global.tblCountryCodes.push(saveData);
+    } else {
+      const updateData = {
+        ...global.tblCountryCodes[index],
+        ...item
+      };
+      const modifiedData = await updateCountryCodeQuery(updateData, fastify, request);
+      global.tblCountryCodes[index] = modifiedData[0];
+    }
+  }
+
+  return "Country data added successfully";
+};
+
 
 module.exports = {
   allCountryCodeService,
@@ -190,4 +220,5 @@ module.exports = {
   createCountryCodeService,
   deleteCountryCodeService,
   activeInactiveCountryCodeService,
+  importCountriesListService,
 };
