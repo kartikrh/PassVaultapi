@@ -306,7 +306,7 @@ module.exports = async function (fastify, opts) {
     const urlLastParameter = [...urlDestructor].pop().split(".");
     const urlExceptions = ["/documentation/json", "/documentation", "/admin/virtual/createEvent",
       "/admin/virtual/eventToss", "/admin/virtual/eventBallStart", "/admin/virtual/eventScoring",
-      "/admin/virtual/eventSuffle", "/admin/virtual/cancelEvent"
+      "/admin/virtual/eventSuffle", "/admin/virtual/cancelEvent","/admin/virtual/serverTime"
     ];
 
     if (
@@ -515,7 +515,7 @@ module.exports = async function (fastify, opts) {
   });
 
   fastify.setErrorHandler(function (err, request, reply) {
-    console.error("err",err);
+    // console.error("err",err);
     if (process.env.ENABLE_SENTRY === "TRUE") {
       Sentry.captureException(err);
     }
