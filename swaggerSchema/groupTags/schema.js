@@ -9606,6 +9606,13 @@ const VirtualEvent = {
         required: ["commentaryId"],
       }
     }
+  },
+    cancelEvent : {
+    schema : {
+      tags: ["VirtualEvent"],
+      description: "Server Time",
+      security: [{ bearerAuth: [] }]
+    }
   }
 } 
 const FavCompetitions = {

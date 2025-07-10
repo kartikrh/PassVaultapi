@@ -2975,7 +2975,9 @@ const loadVirtualCom = async (request, fastify) => {
 
   return true;
 };
-
+const  serverTimeAPIService = async (request ,fastify)=>{
+  return { Remote_IP : "0.0.0.1" }
+}
 module.exports = {
   saveEventervice,
   createVirtualEventService,
@@ -2988,6 +2990,6 @@ module.exports = {
   onInningChangeService,
   suffleCardAPIService,
   cancelEventAPIService,
-  loadVirtualCom
-  
+  loadVirtualCom,
+  serverTimeAPIService
 };
