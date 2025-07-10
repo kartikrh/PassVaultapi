@@ -25,12 +25,10 @@ const getAllPlayersQuery = async (fastify) => {
     tp."wrIsSystemPlayer" AS "isSystemPlayer",
     tp."wrImagePath" AS "imagePath",
     tp."wrTpId" AS "tpId",
-    tp."wrCountryId" AS "countryId",
-    tcc."wrCountryName" AS "countryName"
+    tp."wrCountryId" AS "countryId"
 FROM 
     "tblPlayers" tp
     LEFT JOIN "tblEventTypes" tet ON tp."wrEventTypeId" = tet."wrEventTypeId"
-    left join "tblCountryCodes" tcc on tcc."wrId" = tp."wrCountryId"
     LEFT JOIN "tblPlayerTypes" tpt ON tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
     LEFT JOIN "tblBowlingTypes" tbt ON tp."wrBowlingStyle" = tbt."wrBowlingTypeId"
     WHERE tp."wrIsDeleted" = false;
@@ -102,12 +100,10 @@ const getPlyByIdQuery = async (data ,request ,fastify) => {
         tp."wrIsSystemPlayer" AS "isSystemPlayer",
         tp."wrImagePath" AS "imagePath",
         tp."wrTpId" AS "tpId",
-        tp."wrCountryId" AS "countryId",
-        tcc."wrCountryName" AS "countryName"
+        tp."wrCountryId" AS "countryId"
     FROM 
         "tblPlayers" tp
         LEFT JOIN "tblEventTypes" tet ON tp."wrEventTypeId" = tet."wrEventTypeId"
-        left join "tblCountryCodes" tcc on tcc."wrId" = tp."wrCountryId"
         LEFT JOIN "tblPlayerTypes" tpt ON tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
         LEFT JOIN "tblBowlingTypes" tbt ON tp."wrBowlingStyle" = tbt."wrBowlingTypeId"
         WHERE tp."wrIsDeleted" = false
@@ -165,11 +161,9 @@ const insertPlayerQuery = async (data, fastify, request) => {
         "wrIsSystemPlayer" as "isSystemPlayer",
         tp."wrImagePath" AS "imagePath",
         tp."wrTpId" AS "tpId",
-        tp."wrCountryId" AS "countryId",
-        tcc."wrCountryName" AS "countryName"
+        tp."wrCountryId" AS "countryId"
      from "insert_data" tp 
      left join "tblEventTypes" tet on tp."wrEventTypeId" = tet."wrEventTypeId"
-     left join "tblCountryCodes" tcc on tcc."wrId" = tp."wrCountryId"
      left join "tblPlayerTypes" tpt on tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
       left join "tblBowlingTypes" tbt on tp."wrBowlingStyle" = tbt."wrBowlingTypeId"
 
@@ -497,11 +491,9 @@ const getAllPlayersByIdsQuery = async (whereCondition = undefined, fastify) => {
           tp."wrIsSystemPlayer" AS "isSystemPlayer",
           tp."wrImagePath" AS "imagePath",
           tp."wrTpId" AS "tpId",
-          tp."wrCountryId" AS "countryId",
-          tcc."wrCountryName" AS "countryName"
+          tp."wrCountryId" AS "countryId"
       FROM "tblPlayers" tp
       LEFT JOIN "tblEventTypes" tet ON tp."wrEventTypeId" = tet."wrEventTypeId"
-      left join "tblCountryCodes" tcc on tcc."wrId" = tp."wrCountryId"
       LEFT JOIN "tblPlayerTypes" tpt ON tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
       LEFT JOIN "tblBowlingTypes" tbt ON tp."wrBowlingStyle" = tbt."wrBowlingTypeId"
       ${whereCondition ? `WHERE ${whereCondition}` : 'WHERE tp."wrIsDeleted" = false'};`,
