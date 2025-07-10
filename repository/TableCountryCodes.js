@@ -11,6 +11,7 @@ const getAllCountryCodesQuery = async (fastify) => {
           "wrIsActive" as "isActive",
           "wrMaxNumber" as "maxNumber",
           "wrShortName" as "shortName",
+          "wrTimezoneFormat" as "timezoneFormat",
           "wrTimezone" as "timezone"
       FROM "tblCountryCodes"
       WHERE "wrIsDeleted" = FALSE;`,
@@ -24,10 +25,11 @@ const insertCountryCodeQuery = async (data, fastify, request) => {
     const result = await fastify.db.query(
       `WITH insert_data AS (
             INSERT INTO "tblCountryCodes" (
-            "wrCountryCode", "wrCountryName", "wrFlag", "wrFlagPath", "wrIsActive", "wrMaxNumber", "wrShortName", "wrTimezone"
+            "wrCountryCode", "wrCountryName", "wrFlag", "wrFlagPath", "wrIsActive", "wrMaxNumber",
+            "wrShortName", "wrTimezone", "wrTimezoneFormat"
             ) 
             VALUES (
-                $1, $2, $3, $4, $5 ,$6 ,$7, $8
+                $1, $2, $3, $4, $5 ,$6 ,$7, $8, $9
             ) 
             RETURNING *
             )        
@@ -40,6 +42,7 @@ const insertCountryCodeQuery = async (data, fastify, request) => {
                 "wrIsActive" as "isActive",
                 "wrMaxNumber" as "maxNumber",
                 "wrShortName" as "shortName",
+                "wrTimezoneFormat" as "timezoneFormat",
                 "wrTimezone" as "timezone"
             FROM insert_data;`,
       {
@@ -53,6 +56,7 @@ const insertCountryCodeQuery = async (data, fastify, request) => {
           data.maxNumber || null,
           data.shortName || null,
           data.timezone || null,
+          data.timezoneFormat || null,
         ],
       }
     );
@@ -79,7 +83,8 @@ const updateCountryCodeQuery = async (data, fastify, request) => {
             "wrIsActive" = $6,
             "wrMaxNumber" = $7,
             "wrShortName" = $8,
-            "wrTimezone" = $9
+            "wrTimezone" = $9,
+            "wrTimezoneFormat" = $10
             WHERE "wrId" = $4
             RETURNING 
                 "wrId" as "id",
@@ -90,7 +95,8 @@ const updateCountryCodeQuery = async (data, fastify, request) => {
                 "wrIsActive" as "isActive",
                  "wrMaxNumber" as "maxNumber",
                 "wrShortName" as "shortName",
-                "wrTimezone" as "timezone";`,
+                "wrTimezone" as "timezone",
+                "wrTimezoneFormat" as "timezoneFormat";`,
       {
         type: fastify.db.QueryTypes.UPDATE,
         bind: [
@@ -103,6 +109,7 @@ const updateCountryCodeQuery = async (data, fastify, request) => {
             data.maxNumber,
             data.shortName || null,
             data.timezone,
+            data.timezoneFormat,
         ],
       }
     );

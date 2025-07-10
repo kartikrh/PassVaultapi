@@ -7409,6 +7409,28 @@ const updateDrsQuery = async (data, fastify) => {
     throw new Error(error.message);
   }
 };
+const getAllCommByCompIdQuery = async (competitionId, request, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `SELECT * FROM "tblCommentaries"
+       WHERE "wrIsDelete" = FALSE
+       AND "wrCompetitionId" = $1`,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [competitionId]
+      }
+    );
+    return result.length > 0;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCommentary/getAllCommByCompIdQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+};
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -7538,5 +7560,6 @@ module.exports = {
   updatePitchageAndSessionQuery,
   cancelComQuery,
   updatePythonAPIOnCommentaryQuery,
-  updateDrsQuery
+  updateDrsQuery,
+  getAllCommByCompIdQuery,
 };
