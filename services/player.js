@@ -50,11 +50,20 @@ const allPlayerService = async (request,fastify) => {
     let players = await getAllPlayersByTeamIdQuery(teamId, fastify, request);
     players = players.map((item) => item.playerId);
     _player = _player.filter((item) => players.includes(item.playerId));
-    return _player;
+    // return _player;
   }
-  else {
-    return _player;
-  }
+  // else {
+  //   return _player;
+  // }
+  const updatedPlayers = _player.map((item) => {
+    const country = global.tblCountryCodes.find(elem => elem.id === item.countryId);
+    return {
+      ...item,
+      countryName: country?.countryName ?? null
+    };
+  });
+
+  return updatedPlayers;
 };
 
 const allPlayerTypeService = async () => {
@@ -318,7 +327,8 @@ const updatePlayerService = async (request, fastify) => {
     bowlingStyle: checkPlayerId.bowlingTypeId,
     isSystemPlayer: request.body.hasOwnProperty("isSystemPlayer") ? request.body.isSystemPlayer : checkPlayerId.isSystemPlayer,
     imagePath : checkPlayerId.imagePath,
-    tpId: 'tpId' in request.body ? request.body.tpId : checkPlayerId.tpId,
+    tpId: request.body.tpId || checkPlayerId.tpId,
+    countryId: request.body.countryId || checkPlayerId.countryId,
   };
 
   if ("isActive" in request.body) {
@@ -557,6 +567,7 @@ const updatePlayerStatsService = async (request, fastify) => {
         const index = global.tblPlayers.findIndex(
           (item) => item.playerId === request.body[i].playerId
         );
+
         const _p = {
           country: checkPlayerId.country,
           playerName: checkPlayerId.playerName,
@@ -580,6 +591,7 @@ const updatePlayerStatsService = async (request, fastify) => {
           bowlingStyle: checkPlayerId.bowlingTypeId,
           imagePath: checkPlayerId.imagePath,
           tpId: checkPlayerId.tpId,
+          countryId: checkPlayerId.countryId,
         };
         global.tblPlayers[index] = _p;
       }

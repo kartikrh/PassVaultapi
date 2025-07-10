@@ -67,10 +67,9 @@ const getAllMarketTemplateQuery = async (fastify) => {
     }
   );
 };
-
+// const emptyToNull = (v) => v === undefined || v === null || v === "" ? null : v;
 const insertMarketTemplateQuery = async (data, fastify, request) => {
   try {
-    console.log("dataaa", data)
     const result = await fastify.db.query(
       `with insert_data as(
               insert into "tblMarketTemplates" ("wrTemplateName","wrMatchTypeID","wrIsPredefineMarket","wrIsOver","wrOver","wrIsPlayer",
@@ -194,6 +193,8 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
           data.defaultLaySize || 100,
           data.beforeSuspendMin === undefined ? null : parseInt(data.beforeSuspendMin),
           data.beforeCloseMin === undefined ? null : parseInt(data.beforeCloseMin),
+          // emptyToNull(data.beforeSuspendMin),
+          // emptyToNull(data.beforeCloseMin),
           data.hasOwnProperty("defaultIsSendData") ? data.defaultIsSendData : false,
           data.howManyOpenMarkets === undefined ? 1 : data.howManyOpenMarkets,
           data.rateDiff === undefined ? 1 : data.rateDiff,
@@ -818,7 +819,6 @@ const getCommMatchTypeTemplatesQuery = async (commentaryId, whereCondition = nul
 }
 const updateIsPythonChangeQuery = async (data, request, fastify) => {
   try {
-    console.log("dataaa", data);
     return await fastify.db.query(
       `UPDATE "tblMarketTemplates" SET "wrIsPython" = $1 WHERE "wrID" = $2`,
       {

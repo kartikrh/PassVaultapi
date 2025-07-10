@@ -15,7 +15,8 @@ const allTeamQuery = async (fastify) => {
     tt."wrBackgroundColor" AS "backgroundColor",
     tt."wrImagePath" AS "imagePath",
     tt."wrJerseyPath" AS "jerseyPath",
-    tt."wrTpId" AS "tpId"
+    tt."wrTpId" AS "tpId",
+    tt."wrCountryId" AS "countryId"
      FROM "tblTeams" tt
       LEFT JOIN "tblEventTypes" et ON tt."wrEventTypeId" = et."wrEventTypeId"
       WHERE tt."wrIsDeleted" = false`,
@@ -42,13 +43,52 @@ const allTeamQuery = async (fastify) => {
   //   }
   // );
 };
-
+const getTeamsByIds = async (data,request,fastify) => {
+  try {
+      return await fastify.db.query(
+    `SELECT 
+    "wrTeamId" as "teamId",
+    tt."wrEventTypeId" as "eventTypeId",
+    "wrTeamName" as "teamName",
+    "wrTeamShortName" as "teamShortName",
+    "WrTeamJersey" as "jersey",
+    tt."wrImage" as "image",
+    "wrCountry" as "country",
+    et."wrEventType" AS "eventType",
+    tt."wrTeamColor" AS "teamColor",
+    tt."wrBackgroundColor" AS "backgroundColor",
+    tt."wrImagePath" AS "imagePath",
+    tt."wrJerseyPath" AS "jerseyPath",
+    tt."wrTpId" AS "tpId",
+    tt."wrCountryId" AS "countryId"
+     FROM "tblTeams" tt
+      LEFT JOIN "tblEventTypes" et ON tt."wrEventTypeId" = et."wrEventTypeId"
+      WHERE 
+      tt."wrTeamId" = ANY($1)
+      tt."wrIsDeleted" = false`,
+    {
+      type: fastify.db.QueryTypes.SELECT,
+      bind : [
+        data.teamId
+      ]
+    }
+  );
+  } catch (error) {
+     errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableTeams/getTeamsByIds",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
 const insertTeamQuery = async (data, fastify, request) => {
   try {
     const result = await fastify.db.query(
       `with insert_data as(
-      INSERT INTO "tblTeams" ("wrTeamName","wrTeamShortName", "wrImage", "wrCountry", "wrEventTypeId", "wrCreatedBy", "wrCreatedDate" , "WrTeamJersey","wrTeamColor", "wrBackgroundColor", "wrImagePath", "wrJerseyPath", "wrTpId")
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+      INSERT INTO "tblTeams" ("wrTeamName","wrTeamShortName", "wrImage", "wrCountry", "wrEventTypeId", "wrCreatedBy", "wrCreatedDate" , "WrTeamJersey","wrTeamColor", "wrBackgroundColor", "wrImagePath", "wrJerseyPath", "wrTpId", "wrCountryId")
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
       RETURNING *    
     )
     SELECT 
@@ -64,7 +104,8 @@ const insertTeamQuery = async (data, fastify, request) => {
     "wrBackgroundColor" AS "backgroundColor",
     tt."wrImagePath" AS "imagePath",
     tt."wrJerseyPath" AS "jerseyPath",
-    tt."wrTpId" AS "tpId"
+    tt."wrTpId" AS "tpId",
+    tt."wrCountryId" AS "countryId"
      FROM "insert_data" tt 
       INNER JOIN "tblEventTypes" evt ON tt."wrEventTypeId" = evt."wrEventTypeId" 
     `,
@@ -83,6 +124,7 @@ const insertTeamQuery = async (data, fastify, request) => {
           data.imagePath || null,
           data.jerseyPath || null,
           data.tpId || null,
+          data.countryId || null,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -104,7 +146,7 @@ const updateTeamQuery = async (data, fastify, request) => {
   try {
     return await fastify.db.query(
       `UPDATE "tblTeams" SET "wrTeamName" = $1, "wrTeamShortName" = $2,"wrImage" = $3, "wrCountry" = $4, "wrEventTypeId" = $5, "wrModifyBy" = $6, 
-      "wrModifyDate" = $7,"WrTeamJersey"=$8, "wrTeamColor" = $10, "wrBackgroundColor" = $11, "wrImagePath" = $12, "wrJerseyPath" = $13, "wrTpId" = $14
+      "wrModifyDate" = $7,"WrTeamJersey"=$8, "wrTeamColor" = $10, "wrBackgroundColor" = $11, "wrImagePath" = $12, "wrJerseyPath" = $13, "wrTpId" = $14, "wrCountryId" = $15
         WHERE "wrTeamId" = $9`,
       {
         bind: [
@@ -122,6 +164,7 @@ const updateTeamQuery = async (data, fastify, request) => {
           data.imagePath,
           data.jerseyPath,
           data.tpId,
+          data.countryId,
         ],
         type: fastify.db.QueryTypes.UPDATE,
       }
@@ -289,7 +332,8 @@ const getAllTeamsByIdsQuery = async (whereCondition = undefined, fastify) => {
           tt."wrBackgroundColor" AS "backgroundColor",
           tt."wrImagePath" AS "imagePath",
           tt."wrJerseyPath" AS "jerseyPath",
-          tt."wrTpId" AS "tpId"
+          tt."wrTpId" AS "tpId",
+          tt."wrCountryId" AS "countryId"
       FROM "tblTeams" tt
       LEFT JOIN "tblEventTypes" et ON tt."wrEventTypeId" = et."wrEventTypeId"
       ${whereCondition ? `WHERE ${whereCondition}` : 'WHERE tt."wrIsDeleted" = false'}`,
@@ -319,4 +363,5 @@ module.exports = {
   getAllPlayersByCompetitionIdTeamIdQuery,
   getAllPlayersByTeamIdAndMatchTypeIdQuery,
   getAllTeamsByIdsQuery,
+  getTeamsByIds
 };

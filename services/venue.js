@@ -13,7 +13,7 @@ const saveVenueService = async (request, fastify) => {
   if (validateName) {
     throw new Error("Venue with this name already exist");
   }
-  if(request.body.tpId !== undefined || request.body.tpId !== null) {
+  if(request.body.tpId !== undefined && request.body.tpId !== null) {
     const validateTpId = global.tblVenues.find(
       (item) => item.tpId === request.body.tpId
     );
@@ -55,7 +55,7 @@ const editVenueService = async (request, fastify) => {
     countryId: request.body.countryId ?? validateId.countryId,
     city: request.body.city ?? validateId.city,
     name: request.body.name ?? validateId.name,
-    tpId: 'tpId' in request.body ? request.body.tpId : validateId.tpId,
+    tpId: request.body.tpId || validateId.tpId,
     isActive: Boolean(request.body.isActive) ?? validateId.isActive,
     capacity: request.body.capacity ?? validateId.capacity,
     id: request.body.id ?? validateId.id,

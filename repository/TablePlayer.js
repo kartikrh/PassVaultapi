@@ -24,7 +24,8 @@ const getAllPlayersQuery = async (fastify) => {
     tp."wrDisplayName" AS "displayName",
     tp."wrIsSystemPlayer" AS "isSystemPlayer",
     tp."wrImagePath" AS "imagePath",
-    tp."wrTpId" AS "tpId"
+    tp."wrTpId" AS "tpId",
+    tp."wrCountryId" AS "countryId"
 FROM 
     "tblPlayers" tp
     LEFT JOIN "tblEventTypes" tet ON tp."wrEventTypeId" = tet."wrEventTypeId"
@@ -73,13 +74,67 @@ FROM
   //   }
   // );
 };
+const getPlyByIdQuery = async (data ,request ,fastify) => {
+  try {
+    return await fastify.db.query(
+        `SELECT 
+        "wrPlayerId" AS "playerId",
+        tp."wrEventTypeId" AS "eventTypeId",
+        tp."wrPlayerTypeId" AS "playerTypeId",
+        tp."wrBowlingStyle" AS "bowlingTypeId",
+        tet."wrEventType" AS "eventType",
+        tbt."wrBowlingType" AS "bowlingStyle",
+        tpt."wrPlayerType" AS "playerType",
+        tp."wrCountry" AS "country",
+        tp."wrPlayerName" AS "playerName",
+        tp."wrImage" AS "image",
+        tp."wrIsActive" AS "isActive",
+        tp."wrIsKipper" AS "isKipper",
+        tp."wrIsLeftHandedBatting" AS "isLeftHandedBatting",
+        tp."wrIsLeftArmFielding" AS "isLeftArmFielding",
+        tp."wrBatsmanAverage" AS "batsmanAverage",
+        tp."wrBatsmanStrikeRate" AS "batsmanStrikeRate",
+        tp."wrBowlerAverage" AS "bowlerAverage",
+        tp."wrBowlerEconomy" AS "bowlerEconomy",
+        tp."wrDisplayName" AS "displayName",
+        tp."wrIsSystemPlayer" AS "isSystemPlayer",
+        tp."wrImagePath" AS "imagePath",
+        tp."wrTpId" AS "tpId",
+        tp."wrCountryId" AS "countryId"
+    FROM 
+        "tblPlayers" tp
+        LEFT JOIN "tblEventTypes" tet ON tp."wrEventTypeId" = tet."wrEventTypeId"
+        LEFT JOIN "tblPlayerTypes" tpt ON tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
+        LEFT JOIN "tblBowlingTypes" tbt ON tp."wrBowlingStyle" = tbt."wrBowlingTypeId"
+        WHERE tp."wrIsDeleted" = false
+        AND tp."wrPlayerId" = ANY($1)
+
+     `,
+    {
+      type: fastify.db.QueryTypes.SELECT,
+      bind : [
+        data.playerId
+      ]
+    }
+  );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TablePlayer/getPlyByIdQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+  
+};
 
 const insertPlayerQuery = async (data, fastify, request) => {
   try {
     const result = await fastify.db.query(
       `with insert_data as (
-      insert into "tblPlayers" ("wrPlayerName","wrCountry","wrImage","wrBowlingStyle","wrIsActive","wrIsKipper","wrIsLeftHandedBatting","wrIsLeftArmFielding","wrBatsmanAverage","wrBatsmanStrikeRate","wrBowlerAverage","wrBowlerEconomy","wrDisplayName" ,"wrEventTypeId","wrPlayerTypeId" ,"wrCreatedDate","wrCreatedBy","wrIsSystemPlayer", "wrImagePath", "wrTpId")
-      values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17, $18, $19, $20)
+      insert into "tblPlayers" ("wrPlayerName","wrCountry","wrImage","wrBowlingStyle","wrIsActive","wrIsKipper","wrIsLeftHandedBatting","wrIsLeftArmFielding","wrBatsmanAverage","wrBatsmanStrikeRate","wrBowlerAverage","wrBowlerEconomy","wrDisplayName" ,"wrEventTypeId","wrPlayerTypeId" ,"wrCreatedDate","wrCreatedBy","wrIsSystemPlayer", "wrImagePath", "wrTpId", "wrCountryId")
+      values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17, $18, $19, $20, $21)
       returning *
     )
 
@@ -105,7 +160,8 @@ const insertPlayerQuery = async (data, fastify, request) => {
         "wrDisplayName"   as "displayName",
         "wrIsSystemPlayer" as "isSystemPlayer",
         tp."wrImagePath" AS "imagePath",
-        tp."wrTpId" AS "tpId"
+        tp."wrTpId" AS "tpId",
+        tp."wrCountryId" AS "countryId"
      from "insert_data" tp 
      left join "tblEventTypes" tet on tp."wrEventTypeId" = tet."wrEventTypeId"
      left join "tblPlayerTypes" tpt on tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
@@ -135,6 +191,7 @@ const insertPlayerQuery = async (data, fastify, request) => {
           data.isSystemPlayer || false,
           data.imagePath || null,
           data.tpId || null,
+          data.countryId || null,
         ],
       }
     );
@@ -155,7 +212,8 @@ const updatePlayerQuery = async (data, fastify, request) => {
   try {
     return await fastify.db.query(
       `update "tblPlayers" set "wrPlayerName" = $1,"wrCountry" = $2,"wrImage" = $3,"wrBowlingStyle" = 
-      $4,"wrIsActive" = $5,"wrIsKipper" = $6,"wrIsLeftHandedBatting" = $7,"wrIsLeftArmFielding" = $8,"wrBatsmanAverage" = $9,"wrBatsmanStrikeRate" = $10,"wrBowlerAverage" = $11,"wrBowlerEconomy" = $12,"wrDisplayName" = $13,"wrEventTypeId" = $14,"wrPlayerTypeId" =$15,"wrModifyDate" = $16,"wrModifyBy" = $17,"wrIsSystemPlayer" = $18, "wrImagePath" = $20, "wrTpId" = $21 where "wrPlayerId" = $19 `,
+      $4,"wrIsActive" = $5,"wrIsKipper" = $6,"wrIsLeftHandedBatting" = $7,"wrIsLeftArmFielding" = $8,"wrBatsmanAverage" = $9,"wrBatsmanStrikeRate" = $10,"wrBowlerAverage" = $11,"wrBowlerEconomy" = $12,"wrDisplayName" = $13,"wrEventTypeId" = $14,"wrPlayerTypeId" =$15,"wrModifyDate" = $16,"wrModifyBy" = $17,"wrIsSystemPlayer" = $18, "wrImagePath" = $20, "wrTpId" = $21, "wrCountryId" = $22
+      where "wrPlayerId" = $19`,
       {
         type: fastify.db.QueryTypes.UPDATE,
         bind: [
@@ -180,6 +238,7 @@ const updatePlayerQuery = async (data, fastify, request) => {
           data.playerId,
           data.imagePath,
           data.tpId,
+          data.countryId,
         ],
       }
     );
@@ -431,7 +490,8 @@ const getAllPlayersByIdsQuery = async (whereCondition = undefined, fastify) => {
           tp."wrDisplayName" AS "displayName",
           tp."wrIsSystemPlayer" AS "isSystemPlayer",
           tp."wrImagePath" AS "imagePath",
-          tp."wrTpId" AS "tpId"
+          tp."wrTpId" AS "tpId",
+          tp."wrCountryId" AS "countryId"
       FROM "tblPlayers" tp
       LEFT JOIN "tblEventTypes" tet ON tp."wrEventTypeId" = tet."wrEventTypeId"
       LEFT JOIN "tblPlayerTypes" tpt ON tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
@@ -443,7 +503,6 @@ const getAllPlayersByIdsQuery = async (whereCondition = undefined, fastify) => {
     );
     return result[0];
    } catch (err) {
-    console.log("players error", err)
     errorLogger(
       fastify,
       err.message,
@@ -465,4 +524,5 @@ module.exports = {
   updateIsSystemPlayerQuery,
   getTeamPlayerQuery,
   getAllPlayersByIdsQuery,
+  getPlyByIdQuery
 };

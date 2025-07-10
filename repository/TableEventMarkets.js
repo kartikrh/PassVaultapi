@@ -326,7 +326,7 @@ const getExistingEventMarketsQueryV1 = async (fastify, whereCondition = null) =>
         tem."wrIsInningRun" as "isInningRun",
         tem."wrWicketNo" as "wicketNo",
         tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
-        tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase"
+        tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
         COALESCE(runner_data."runners", '[]') as "runners"
     FROM "tblEventMarkets" tem
     LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tem."wrCommentaryId"
@@ -376,7 +376,7 @@ const getEventMarketByIdsQuery = async (data, request, fastify) => {
             tc."wrEventDate" AS "eventDate",
             tcom."wrCompetition" AS "competitionName",
             tet."wrEventType" AS "eventTypeName",
-            "wrTeamID" AS "teamId",
+            tem."wrTeamID" AS "teamId",
             tt."wrTeamName" AS "teamName",
             "wrInningsID" AS "inningsId",
             "wrMarketName" AS "marketName",
@@ -432,7 +432,6 @@ const getEventMarketByIdsQuery = async (data, request, fastify) => {
             tr."wrSelectionId" as "selectionId",
             tr."wrSelectionStatus" as "selectionStatus",
             tr."wrOrder" as "order",
-            tr."wrTeamId" as "teamId",
             tem."wrDelay" as "delay",
             tem."wrLineRatio" as "lineRatio",
             tem."wrRateSource" as "rateSource",

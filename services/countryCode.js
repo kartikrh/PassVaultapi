@@ -124,8 +124,33 @@ const createCountryCodeService = async (request, fastify) => {
   }
 };
 
+// const deleteCountryCodeService = async (fastify, request) => {
+//   const { id } = request.body;
+//   await deleteCountryCodeQuery(id, fastify, request);
+//   for (const codeId of id) {
+//     const countryCodes = global.tblCountryCodes.find((item) => item.id === codeId);
+//     if (countryCodes && countryCodes?.flag) {
+//       await removeImageFromServer({
+//         path: countryCodes.flag,
+//       });
+//     }
+//   }
+//   global.tblCountryCodes = global.tblCountryCodes.filter((item) => !id.includes(item.id));
+
+//   return `Country Code(s) data deleted successfully`;
+// };
 const deleteCountryCodeService = async (fastify, request) => {
   const { id } = request.body;
+  for (const cc of id) {
+    const playerData = global.tblPlayers.find(item => item.countryId === cc);
+    const teamData = global.tblTeams.find(item => item.countryId === cc);
+
+    const country = global.tblCountryCodes.find(item => item.id === cc);
+    if (playerData || teamData) {
+      const name = country?.countryName || `Country code`;
+      throw new Error(`${name} already used in another modules can't be delete`)
+    }
+  }
   await deleteCountryCodeQuery(id, fastify, request);
   for (const codeId of id) {
     const countryCodes = global.tblCountryCodes.find((item) => item.id === codeId);

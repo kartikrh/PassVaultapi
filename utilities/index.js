@@ -1210,6 +1210,94 @@ const trimTextData = async (data, request, fastify) => {
     )
   }
 }
+const callVirtualPredictorMarket = async (data , endpoint ,fastify ,request, pythonURI = null) =>{
+  let requestStartTime = new Date();
+  let loggerConfig = global.tblConfigs.find((item) => item.key === configConstants.ISPREDICTORLOGGER).value;
+  try {
+    let predictorURL = pythonURI;
+    if(!predictorURL){
+      errorLogger(
+        fastify,
+        "Predictor URL not found",
+        "DB ERROR --> utilities/index/callPredictorMarket",
+        request
+      )
+      throw new Error("Predictor URL not found")
+    }
+    const url = `${predictorURL}${endpoint}`;
+    const result = await axios.post(url, {
+      ...data
+    });
+
+    if (loggerConfig == "true"){
+      tblPredictorAPILogger(
+        {
+          endPoint : endpoint,
+          requestBody : data,
+          requestStartTime : requestStartTime,
+          requestEndTime : new Date(),
+          response : result.data
+        },
+        request,
+        fastify
+      );
+    }
+    return result;
+  } catch (error) {
+    if(loggerConfig == "true"){
+      tblPredictorAPILogger(
+        {
+          endPoint : endpoint,
+          requestBody : data,
+          requestStartTime : requestStartTime,
+          requestEndTime : new Date(),
+          response : {
+            error : error.message,
+            type : "error"
+          }
+        },
+        request,
+        fastify
+      );
+      throw new Error(error.message);
+    }
+    // throw new Error(error.message);
+  }
+
+}
+const matchTypesEntity = {
+  "ODI": 1,
+  "TEST": 2,
+  "T20I": 3,
+  "List A": 4,
+  "First Class": 5,
+  "T20": 6,
+  "Women ODI": 7,
+  "Women T20": 8,
+  "Youth ODI": 9,
+  "Youth T20": 10,
+  "Other": 11,
+  "Other List A": 12,
+  "Other 1st Class": 13,
+  "Other T20": 14,
+  "Youth Test": 15,
+  "Woman Test": 16,
+  "T10": 17,
+  "T100": 18,
+  "Women T100": 19,
+  "TB-10": 20
+};
+const matchStatusEntity = {
+  "Scheduled" : 1,
+  "Completed" :2,
+  "Live" :3,
+  "Abandoned, canceled, no result" :4
+}
+const entityCompetition = {
+  1 : "fixture",
+  2 : "result",
+  3 : "live"
+}
 module.exports = {
   ERROR_CODES,
   error,
@@ -1297,4 +1385,8 @@ module.exports = {
   GlobalModuleType,
   StoreTypes,
   trimTextData,
+  matchTypesEntity,
+  callVirtualPredictorMarket,
+  matchStatusEntity,
+  entityCompetition
 };

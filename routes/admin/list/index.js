@@ -21,6 +21,10 @@ const {
     getTabs,
     getCommentaryList,
     getEventList,
+    matchStatusData,
+    matchTypeData,
+    compStatusData,
+    allCountryCodes,
 } = require("../../../controller/users/admin/list/index");
 const { Listing } = require("../../../swaggerSchema/groupTags/schema");
 
@@ -123,5 +127,25 @@ module.exports = async (fastify, opts) => {
         schema : Listing.getAllCommentaries.schema,
         preHandler : [(request,reply) => authorize(request,reply,fastify)],
         handler : (request,reply) => getEventList(request,reply,fastify)
+    });
+    fastify.post("/matchType",{
+        schema : Listing.matchStatus.schema,
+        preHandler : [(request,reply) => authorize(request,reply,fastify)],
+        handler : (request,reply) => matchTypeData(request,reply,fastify)
+    });
+    fastify.post("/matchStatus",{
+        schema : Listing.matchStatus.schema,
+        preHandler : [(request,reply) => authorize(request,reply,fastify)],
+        handler : (request,reply) => matchStatusData(request,reply,fastify)
+    });
+    fastify.post("/compStatus",{
+        schema : Listing.matchStatus.schema,
+        preHandler : [(request,reply) => authorize(request,reply,fastify)],
+        handler : (request,reply) => compStatusData(request,reply,fastify)
+    });
+    fastify.post("/countryList",{
+        schema : Listing.getAllCounntryCodes.schema,
+        preHandler : [(request, reply) => authorize(request, reply, fastify)],
+        handler : (request, reply) => allCountryCodes(request, reply, fastify)
     });
 }

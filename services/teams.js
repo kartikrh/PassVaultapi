@@ -44,7 +44,15 @@ const allteamByEventTypeIdService = async (request, fastify) => {
     );
   }
 
-  return result;
+  const updatedTeams = result.map((item) => {
+    const country = global.tblCountryCodes.find(elem => elem.id === item.countryId);
+    return {
+      ...item,
+      countryName: country?.countryName ?? null
+    };
+  });
+
+  return updatedTeams;
 
 
 
@@ -115,10 +123,11 @@ const createTeamService = async (request, fastify) => {
     teamName: request.body?.teamName,
     teamShortName: request.body?.teamShortName,
   }, request, fastify);
+
   if(trimData) {
     Object.assign(request.body, trimData);
   }
-  console.log("request.body", request.body)
+
   const validateTeamName = global.tblTeams.find(
     (item) =>
       item.teamName.toLowerCase() == request.body.teamName.toLowerCase()
@@ -301,7 +310,8 @@ const updateTeamService = async (request, fastify) => {
     backgroundColor: request.body.backgroundColor || checkTeamId.backgroundColor,
     imagePath: checkTeamId.imagePath,
     jerseyPath: checkTeamId.jerseyPath,
-    tpId: 'tpId' in request.body ? request.body.tpId : checkTeamId.tpId,
+    tpId: request.body.tpId || checkTeamId.tpId,
+    countryId: request.body.countryId || checkTeamId.countryId,
   };
 
   const validateTeamName = global.tblTeams.find(

@@ -243,7 +243,7 @@ const getTemplateRunnerQuery = async (data,request, fastify) => {
                 tmt."wrHowManyOpenMarkets" AS "howManyOpenMarkets",
                 tmt."wrRateDiff" AS "rateDiff",
                 tmt."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
-                tmt."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase"
+                tmt."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
                 COALESCE(runner_data.runners, '[]') AS "runners"
             FROM "tblCommMatchTypeTemplate" AS cmtt
             LEFT JOIN "tblMarketTemplates" AS tmt ON tmt."wrID" = cmtt."wrMarketTemplateId"

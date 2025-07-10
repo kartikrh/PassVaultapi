@@ -1583,6 +1583,8 @@ const Teams = {
           teamShortName: { type: "string" },
           country: { type: "string" },
           eventTypeId: { type: "integer" },
+          tpId: { type: "integer" },
+          countryId: { type: "integer" },
           teamColor: { type: "string" },
           playerId: {
             type: "array",
@@ -1794,6 +1796,8 @@ const Player = {
           bowlerAverage: { type: "number" },
           bowlerEconomy: { type: "number" },
           displayName: { type: "string" },
+          tpId: { type: "integer" },
+          countryId: { type: "integer" },
           teamId: {
             type: "array",
             items: { type: "string" },
@@ -3759,6 +3763,25 @@ const Commentary = {
       },
     },
   },
+  changeOver: {
+    schema: {
+      tags: ["Commentary"],
+      description: "update commentary data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId :{type : "integer"},
+          commentaryDetails : {type : "object"},
+          commentaryOvers : {type : "object"},
+          commentaryPlayers : {type : "array"},
+          isCallPredict : {type : "boolean"},
+          commentaryTeams : {type : "array"}
+        },
+        required: ["commentaryId" , "commentaryDetails", "commentaryPlayers", "commentaryOvers", "commentaryTeams"],
+      },
+    },
+  },
 };
 
 const Compitition = {
@@ -3835,6 +3858,14 @@ const Compitition = {
           commStatus: { type: "integer" },
           startDate: { type: "string" },
           endDate: { type: "string" },
+          tpId: { type: "integer" },
+          type: { type: "integer" },
+          pythonId: { type: "integer" },
+          winPoint: { type: "integer" },
+          tiePoint: { type: "integer" },
+          cancelPoint: { type: "integer" },
+          lossPoint: { type: "integer" },
+          drsCount: { type: "integer" },
         },
         required: ["competitionId"],
       },
@@ -4456,8 +4487,9 @@ const MarketTemplate = {
           lineType: { type: "integer" },
           defaultBackSize: { type: "integer" },
           defaultLaySize: { type: "integer" },
-          beforeSuspendMin: { type: "string" },
-          beforeCloseMin: { type: "string" },
+          beforeSuspendMin: { type: "integer" },
+          beforeCloseMin: { type: "integer" },
+          delay: { type: "integer" },
         },
         required: [
           "marketTemplateId",
@@ -9574,6 +9606,13 @@ const VirtualEvent = {
         required: ["commentaryId"],
       }
     }
+  },
+    cancelEvent : {
+    schema : {
+      tags: ["VirtualEvent"],
+      description: "Server Time",
+      security: [{ bearerAuth: [] }]
+    }
   }
 } 
 const FavCompetitions = {
@@ -9690,6 +9729,7 @@ const Venue = {
         properties: {
           id: { type: "integer" },
           countryId: { type: "integer" },
+          tpId: { type: "integer" },
           name: { type: "string" },
         },
         required: ["id", "countryId", "name"],
@@ -9997,6 +10037,20 @@ const Listing =  {
       secaurity : [{bearerAuth : []}]
     }
   },
+   matchStatus :{
+    schema : {
+      tags : ["Listing"],
+      description : "get all Match Type",
+      secaurity : [{bearerAuth : []}]
+    }
+  },
+  getAllCounntryCodes: {
+    schema: {
+      tags: ["Listing"],
+      description: "get all country list",
+      security: [{ bearerAuth: [] }],
+    },
+  },
 }
 const AutoImportData = {
   getAll :{
@@ -10022,6 +10076,22 @@ const AutoImportData = {
       },
     },
   },
+}
+const EntitySport = {
+  Teams : {
+    schema : {
+      tags: ["EntitySport"],
+      description: "save Teams",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          teamId: { type: "array" },
+        },
+        required: ["teamId"],
+      },
+    }
+  }
 }
 module.exports = {
   Auth,
@@ -10098,4 +10168,5 @@ module.exports = {
   PythonAPI,
   Listing,
   AutoImportData,
+  EntitySport
 };
