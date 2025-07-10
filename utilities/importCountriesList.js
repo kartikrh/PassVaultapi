@@ -94,7 +94,7 @@ const importCountriesListAPI = async (request, fastify) => {
           isActive: true,
           flag,
           flagPath,
-          timezoneFormat: currentDateTime,
+          timezoneFormat: utcOffset,
         };
       } catch (error) {
         console.warn(`Failed processing ${country.code}: ${error.message}`);
