@@ -3782,6 +3782,22 @@ const Commentary = {
       },
     },
   },
+  updateEventTypeIdAndCompId: {
+    schema: {
+      tags: ["Commentary"],
+      description: "update commentary data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId :{type : "integer"},
+          competitionId :{type : "integer"},
+          eventTypeId :{type : "integer"}
+        },
+        required: ["commentaryId", "competitionId", "eventTypeId"],
+      },
+    },
+  },
 };
 
 const Compitition = {

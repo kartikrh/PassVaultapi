@@ -21,11 +21,11 @@ const importCountriesListAPI = async (request, fastify) => {
       try {
         const regionCode = country.code;
 
-        // const itemCode = country.code?.toLowerCase().trim();
-        // const alreadyExists = global.tblCountryCodes.find(elem =>
-        //   elem?.shortName?.toLowerCase().trim() === itemCode
-        // );
-        // if (alreadyExists) return null;
+        const itemCode = country.code?.toLowerCase().trim();
+        const alreadyExists = global.tblCountryCodes.find(elem =>
+          elem?.shortName?.toLowerCase().trim() === itemCode
+        );
+        if (alreadyExists) return null;
 
         let maxLength = null;
         try {
