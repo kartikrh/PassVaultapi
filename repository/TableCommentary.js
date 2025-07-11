@@ -1523,7 +1523,7 @@ const getAllCommentaryPlayerDataQuery = async (whereCondition = null, fastify) =
         tp."wrPlayerTypeId" as "playerTypeId",
         tpt."wrPlayerType" as "playerType",
         tcp."wrJerseyPlayerImage" as "jerseyPlayerImage",
-        tcp."wrJerseyPlayerImagePath" as "jerseyPlayerImage",
+        tcp."wrJerseyPlayerImagePath" as "jerseyPlayerImagePath",
         tp."wrDisplayName" as "displayName",
         tcp."wrTpId" as "tpId"
     from "tblCommentaryPlayers" AS tcp
