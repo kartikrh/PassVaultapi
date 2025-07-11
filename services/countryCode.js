@@ -186,31 +186,30 @@ const activeInactiveCountryCodeService = async (fastify, request) => {
 };
 
 const importCountriesListService = async (fastify, request) => {
-  const data = await importCountriesListAPI(request, fastify);
-  if(data.length == 0) {
-    throw new Error(`No countries were imported. Please check the source or try again later`)
-  }
-  for (const item of data) {
-    const itemCode = item?.shortName?.toLowerCase().trim();
-    if (!itemCode) continue;
 
-    const index = global.tblCountryCodes.findIndex(elem =>
-      elem?.shortName?.toLowerCase().trim() === itemCode
-    );
-    if (index == -1) {
-      const saveData = await insertCountryCodeQuery(item, fastify, request);
-      global.tblCountryCodes.push(saveData);
-    } else {
-      const updateData = {
-        ...global.tblCountryCodes[index],
-        ...item
-      };
-      const modifiedData = await updateCountryCodeQuery(updateData, fastify, request);
-      global.tblCountryCodes[index] = modifiedData[0];
+  importCountriesListAPI(request, fastify)
+    .then(async (data) => {
+      if (!data || data.length === 0) {
+        console.log(`No countries were imported`);
+        return;
+      }
+    for (const item of data) {
+      const itemCode = item?.shortName?.toLowerCase().trim();
+      if (!itemCode) continue;
+  
+      const index = global.tblCountryCodes.findIndex(elem =>
+        elem?.shortName?.toLowerCase().trim() === itemCode
+      );
+      if (index == -1) {
+        const saveData = await insertCountryCodeQuery(item, fastify, request);
+        global.tblCountryCodes.push(saveData);
+      }
     }
-  }
+  }).catch(err => {
+      console.log("Error during country import:", err.message);
+  });
 
-  return "Country data added successfully";
+  return "Country Import is running in background";
 };
 
 

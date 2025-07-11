@@ -85,6 +85,7 @@ const {
   addCompTempQuery,
   updatePitchageAndSessionQuery,
   updatePythonAPIOnCommentaryQuery,
+  updateEventTypeAndCompIdQuery,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -20619,6 +20620,50 @@ const changeOverService = async (request, fastify) => {
         throw new Error(error.message);
     }
 };
+const updateEventTypeAndCompIdService = async (request, fastify) => {
+  const { commentaryId, competitionId, eventTypeId } = request.body;
+
+  const validate = global.tblCommentaries.findIndex(
+    (item) => item.commentaryId === commentaryId
+  );
+
+  if (validate === -1) {
+    throw new Error("Commentary with this id not found");
+  }
+
+  const eventType = global.tblEventTypes.find(
+    (item) => item.eventTypeId === eventTypeId
+  );
+  if (!eventType) {
+    throw new Error("EventType with this id not found");
+  }
+
+  const competition = global.tblCompetitions.find(
+    (item) => item.competitionId === competitionId
+  );
+  if (!competition) {
+    throw new Error("Competition with this id not found");
+  }
+
+  const existingData = global.tblCommentaries[validate];
+
+  const updateData = {
+    commentaryId,
+    competitionId: competitionId || existingData?.competitionId,
+    eventTypeId: eventTypeId || existingData?.eventTypeId,
+  };
+
+  await updateEventTypeAndCompIdQuery(updateData, request, fastify);
+
+  global.tblCommentaries[validate] = {
+    ...existingData,
+    ...updateData,
+    competition: competition?.competition,
+    eventType: eventType?.eventType,
+  };
+
+  return "Commentary updated successfully";
+};
 
 module.exports = {
   allCommentaryService,
@@ -20723,4 +20768,5 @@ module.exports = {
   changeStrikerPlyService,
   changePlayerService,
   changeOverService,
+  updateEventTypeAndCompIdService,
 };

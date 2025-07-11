@@ -7431,6 +7431,35 @@ const getAllCommByCompIdQuery = async (competitionId, request, fastify) => {
     throw new Error(error.message);
   }
 };
+
+const updateEventTypeAndCompIdQuery = async (data, request, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `UPDATE "tblCommentaries" SET
+        "wrEventTypeId" = $1,
+        "wrCompetitionId" = $2
+       WHERE "wrCommentaryId" = $3
+       AND "wrIsDelete" = FALSE
+       RETURNING
+        "wrEventTypeId" as "eventTypeId",
+        "wrCompetitionId" as "competitionId"
+       `,
+      {
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [data.eventTypeId, data.competitionId, data.commentaryId]
+      }
+    );
+    return result?.[0]?.[0] || null;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCommentary/updateEventTypeAndCompIdQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+};
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -7562,4 +7591,5 @@ module.exports = {
   updatePythonAPIOnCommentaryQuery,
   updateDrsQuery,
   getAllCommByCompIdQuery,
+  updateEventTypeAndCompIdQuery,
 };
