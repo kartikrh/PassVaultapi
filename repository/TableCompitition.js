@@ -246,7 +246,7 @@ const updateCompititionQuery = async (data, fastify, request) => {
           data.isMen,
           data.type,
           data.isVirtual,
-          data.commStatus,
+          data.commStatus || null,
           data.startDate,
           data.endDate,
           data.tpId === undefined ? null : data.tpId,
