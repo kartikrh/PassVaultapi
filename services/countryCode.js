@@ -14,12 +14,12 @@ const {
 const { importCountriesListAPI } = require("../utilities/importCountriesList");
 
 const saveCountryCodeService = async (request, fastify) => {
-  let validateCode = global.tblCountryCodes.find(
-    (item) => item.countryCode === request.body.countryCode
-  );
-  if (validateCode) {
-    throw new Error(`Country Code already existed`);
-  }
+  // let validateCode = global.tblCountryCodes.find(
+  //   (item) => item.countryCode === request.body.countryCode
+  // );
+  // if (validateCode) {
+  //   throw new Error(`Country Code already existed`);
+  // }
   let validateName = global.tblCountryCodes.find(
     (item) =>
       item.countryName.trim().toLowerCase() ===
