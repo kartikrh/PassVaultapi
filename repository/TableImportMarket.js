@@ -112,6 +112,7 @@ const insertCompetitionQuery = async (request, fastify) => {
         tc."wrIsMen" as "isMen",
         tc."wrType" as "type",
         tc."wrIsVirtual" as "isVirtual",
+        tc."wrCountryId" as "countryId",
         tc."wrPythonId" as "pythonId"
         from "inser_data" tc 
         inner join "tblEventTypes" tev on tc."wrEventTypeId" = tev."wrEventTypeId"
