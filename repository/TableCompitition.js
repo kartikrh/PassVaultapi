@@ -30,6 +30,7 @@ const getAllCompititionQuery = async (fastify) => {
     tc."wrEndDate" as "endDate",
     tc."wrTpId" as "tpId",
     tc."wrPythonId" as "pythonId",
+    tc."wrCountryId" as "countryId",
     tpa."wrDeveloperName" as "developerName"
     from "tblCompetitions" tc 
     inner join "tblEventTypes" tev on tc."wrEventTypeId" = tev."wrEventTypeId"
@@ -80,12 +81,12 @@ const insertCompetitionQuery = async (request, fastify) => {
             "wrCompetition" , "wrEventTypeId" , "wrRefID" , "wrImage" ,"wrIsActive" ,
              "wrCreatedBy" , "wrCreatedDate","wrDisplayOrder", "wrIsTrending", "wrIsEventSnap", "wrIsPointTable", "wrMatchTypeId",
              "wrWinPoint", "wrTiePoint", "wrCancelPoint", "wrLossPoint","wrDrsCount", "wrImagePath", "wrIsMen", "wrType", "wrIsVirtual", "wrStatus", "wrStartDate", "wrEndDate",
-             "wrTpId", "wrPythonId"
+             "wrTpId", "wrPythonId", "wrCountryId"
             )
             values ($1 ,
                  $2,
                  $3,$4,$5,$6,now(),(select COALESCE("display_order" , 0) from "display") + 1, $7, $8, $9, $10,
-                 $11, $12, $13, $14,$15, $16, $17, $18, $19, $20, $21, $22, $23, $24
+                 $11, $12, $13, $14,$15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25
                  ) returning *
         )
 
@@ -115,6 +116,7 @@ const insertCompetitionQuery = async (request, fastify) => {
         tc."wrStartDate" as "startDate",
         tc."wrEndDate" as "endDate",
         tc."wrTpId" as "tpId",
+        tc."wrCountryId" as "countryId",
         tc."wrPythonId" as "pythonId",
         tpa."wrDeveloperName" as "developerName"
         from "inser_data" tc
@@ -147,6 +149,7 @@ const insertCompetitionQuery = async (request, fastify) => {
           data.endDate || null,
           data.tpId || null,
           data.pythonId || null,
+          data.countryId || null,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -217,7 +220,8 @@ const updateCompititionQuery = async (data, fastify, request) => {
         "wrStartDate" = $22,
         "wrEndDate" = $23,
         "wrTpId" = $24,
-        "wrPythonId" = $25
+        "wrPythonId" = $25,
+        "wrCountryId" = $26
         where "wrCompetitionId" = $10
         `,
       {
@@ -242,11 +246,12 @@ const updateCompititionQuery = async (data, fastify, request) => {
           data.isMen,
           data.type,
           data.isVirtual,
-          data.commStatus,
+          data.commStatus || null,
           data.startDate,
           data.endDate,
           data.tpId === undefined ? null : data.tpId,
           data.pythonId,
+          data.countryId,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -297,6 +302,7 @@ const updateDisplayOrderQuery = async (data, fastify, request) => {
         u."wrStartDate" as "startDate",
         u."wrEndDate" as "endDate",
         u."wrTpId" as "tpId",
+        u."wrCountryId" as "countryId",
         u."wrPythonId" as "pythonId",
         tpa."wrDeveloperName" as "developerName"
       FROM updated u
@@ -574,12 +580,12 @@ const insertCompetitionWithImportQuery = async (data, request, fastify) => {
             "wrCompetition" , "wrEventTypeId" , "wrRefID" , "wrImage" ,"wrIsActive" ,
              "wrCreatedBy" , "wrCreatedDate","wrDisplayOrder", "wrIsTrending", "wrIsEventSnap", "wrIsPointTable", "wrMatchTypeId",
              "wrWinPoint", "wrTiePoint", "wrCancelPoint", "wrLossPoint","wrDrsCount", "wrImagePath", "wrIsMen", "wrType", "wrIsVirtual", "wrStatus", "wrStartDate", "wrEndDate",
-             "wrTpId", "wrPythonId"
+             "wrTpId", "wrPythonId", "wrCountryId"
             )
             values ($1 ,
                  $2,
                  $3,$4,$5,$6,now(),(select COALESCE("display_order" , 0) from "display") + 1, $7, $8, $9, $10,
-                 $11, $12, $13, $14,$15, $16, $17, $18, $19, $20, $21, $22, $23, $24
+                 $11, $12, $13, $14,$15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25
                  ) returning *
         )
 
@@ -609,6 +615,7 @@ const insertCompetitionWithImportQuery = async (data, request, fastify) => {
         tc."wrStartDate" as "startDate",
         tc."wrEndDate" as "endDate",
         tc."wrTpId" as "tpId",
+        tc."wrCountryId" as "countryId",
         tc."wrPythonId" as "pythonId",
         tpa."wrDeveloperName" as "developerName"
         from "inser_data" tc
@@ -641,6 +648,7 @@ const insertCompetitionWithImportQuery = async (data, request, fastify) => {
           data.endDate,
           data.tpId || null,
           data.pythonId || null,
+          data.countryId || null,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -759,6 +767,7 @@ const getAllCompetitionByIdsQuery = async (whereCondition = undefined, fastify) 
           tc."wrStartDate" as "startDate",
           tc."wrEndDate" as "endDate",
           tc."wrTpId" as "tpId",
+          tc."wrCountryId" as "countryId",
           tc."wrPythonId" as "pythonId",
           tpa."wrDeveloperName" as "developerName"
       FROM "tblCompetitions" tc 

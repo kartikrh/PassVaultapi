@@ -14,12 +14,12 @@ const {
 const { importCountriesListAPI } = require("../utilities/importCountriesList");
 
 const saveCountryCodeService = async (request, fastify) => {
-  let validateCode = global.tblCountryCodes.find(
-    (item) => item.countryCode === request.body.countryCode
-  );
-  if (validateCode) {
-    throw new Error(`Country Code already existed`);
-  }
+  // let validateCode = global.tblCountryCodes.find(
+  //   (item) => item.countryCode === request.body.countryCode
+  // );
+  // if (validateCode) {
+  //   throw new Error(`Country Code already existed`);
+  // }
   let validateName = global.tblCountryCodes.find(
     (item) =>
       item.countryName.trim().toLowerCase() ===
@@ -71,7 +71,6 @@ const editCountryCodeService = async (request, fastify) => {
     maxNumber : request.body.maxNumber ?? validateId.maxNumber,
     shortName : request.body.shortName ?? validateId.shortName,
     timezone : request.body.timezone ?? validateId.timezone,
-    timezoneFormat : request.body.timezoneFormat ?? validateId.timezoneFormat,
   };
   if (request.body.flag && request.body.flag.length > 0) {
     const imgName = generateImageName({ name: updateData.countryName });
@@ -203,13 +202,20 @@ const importCountriesListService = async (fastify, request) => {
       if (index == -1) {
         const saveData = await insertCountryCodeQuery(item, fastify, request);
         global.tblCountryCodes.push(saveData);
+      } else {
+        const updateData = {
+          ...global.tblCountryCodes[index],
+          ...item
+        };
+        const modifiedData = await updateCountryCodeQuery(updateData, fastify, request);
+        global.tblCountryCodes[index] = modifiedData[0];
       }
     }
   }).catch(err => {
       console.log("Error during country import:", err.message);
   });
 
-  return "Country Import is running in background";
+  return "Country Import process is running on background";
 };
 
 
