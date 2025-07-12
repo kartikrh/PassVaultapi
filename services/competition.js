@@ -19,7 +19,7 @@ const {storeImageOnServer, removeImageFromServer, generateImageName } = require(
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const {ImgModuleConfig} = require("../utilities/imageConstant");
 const { APIEndpointModuleType, ServiceType, callClientAPI, compStatus, callCardCricket } = require("../utilities");
-const { getCommentariesResultQuery } = require("../repository/TableCommentary")
+const { getCommentariesResultQuery, getAllCommByCompIdQuery } = require("../repository/TableCommentary")
 
 // const allCompetitionService = async (request) => {
 //   const { isActive, isTrending, eventTypeId, matchTypeId, isMen, type } = request.body;
@@ -67,7 +67,7 @@ const { getCommentariesResultQuery } = require("../repository/TableCommentary")
 //   }
 // };
 const allCompetitionService = async (request) => {
-  const { isActive, isTrending, eventTypeId, matchTypeId, isMen, type, isVirtual, pythonId } = request.body;
+  const { isActive, isTrending, eventTypeId, matchTypeId, isMen, type, isVirtual, pythonId, countryId } = request.body;
 
   const filterObject = {};
 
@@ -79,6 +79,7 @@ const allCompetitionService = async (request) => {
   if (type !== undefined && type !== 0) filterObject.type = type;
   if (typeof isVirtual === 'boolean') filterObject.isVirtual = isVirtual;
   if (pythonId !== undefined && pythonId !== 0) filterObject.pythonId = pythonId;
+  if (countryId !== undefined && countryId !== 0) filterObject.countryId = countryId;
 
   // if (isActive === undefined || isTrending === undefined) {
   //   return global.tblCompetitions.filter((item) => item.isActive === true);
@@ -126,6 +127,15 @@ const createCompititionService = async (request, fastify) => {
 
   if (!validateEventTypeId) {
     throw new Error("EventType with this id not Found");
+  }
+
+  if (request.body.countryId) {
+    const validateCountry = global.tblCountryCodes.find(
+      (item) => item.id === request.body.countryId
+    );
+    if (!validateCountry) {
+      throw new Error("Country with this id not Found");
+    }
   }
 
   if (request.body.matchTypeId !== undefined 
@@ -221,6 +231,14 @@ const updateCompititionService = async (request, fastify) => {
   if (!validateId) {
     throw new Error("Competition with this id not Found");
   }
+  if (request.body.countryId) {
+    const validateCountry = global.tblCountryCodes.find(
+      (item) => item.id === request.body.countryId
+    );
+    if (!validateCountry) {
+      throw new Error("Country with this id not Found");
+    }
+  }
   if (request.body?.tpId !== undefined && request.body?.tpId !== null) {
     const validate = global.tblCompetitions.find(
       (item) => item.tpId == request.body?.tpId && item.competitionId != competitionId &&
@@ -267,6 +285,7 @@ const updateCompititionService = async (request, fastify) => {
     endDate: request.body.endDate || validateId.endDate,
     tpId: request.body.tpId || validateId.tpId,
     pythonId: request.body.pythonId || validateId.pythonId,
+    countryId: request.body.countryId || validateId.countryId,
   };
   const developerName = global.tblPythonAPI.find(item => item.id === data?.pythonId);
   data.developerName = developerName?.developerName ?? null
@@ -395,6 +414,10 @@ const deleteCompetitionService = async (request, fastify) => {
         path: validateId.image,
       });
     }
+    const commentaryExists = await getAllCommByCompIdQuery(id, request, fastify);
+    if (commentaryExists) {
+      throw new Error(`'${validateId?.competition}' competition has commentary and cannot be deleted at the moment`);
+    }
   }
 
   await deleteCompetitionQuery(request, fastify);
@@ -402,9 +425,9 @@ const deleteCompetitionService = async (request, fastify) => {
   global.tblCompetitions = global.tblCompetitions.filter(
     (item) => !competitionId.includes(item.competitionId)
   );
-  global.tblCommentaries = global.tblCommentaries.filter(
-    (item) => !competitionId.includes(item.competitionId)
-  );
+  // global.tblCommentaries = global.tblCommentaries.filter(
+  //   (item) => !competitionId.includes(item.competitionId)
+  // );
 
   callClientAPI(
     {

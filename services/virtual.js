@@ -73,7 +73,7 @@ const {
 const { default: fastify } = require("fastify");
 const { processPredictScoreMarket } = require("../markets/index")
 const { cancelEventMarketsQuery, closeEventMarketByCIdQuery, cancelMarketVirtualQuery } = require("../repository/TableEventMarkets");
-const { ISPREDICATIONONCRICKETCARD, DEFAULTBALLFACED, DEFAULTPLAYERRUNS, DEFAULTPLAYERBOUNDARIES, CALLPREDICTIONMODULE } = require("../utilities/configConstants");
+const { ISPREDICATIONONCRICKETCARD, DEFAULTBALLFACED, DEFAULTPLAYERRUNS, DEFAULTPLAYERBOUNDARIES } = require("../utilities/configConstants");
 const configConstants = require("../utilities/configConstants");
 // const ballbyball ={
 //   commentaryBallByBallId: 0,
@@ -215,12 +215,12 @@ const createVirtualEventService = async (request, fastify) => {
       throw new Error("No players found for teams");
     }
 
-    const isPrediction = global.tblConfigs.find(item => 
+    const isPrediction = global.tblConfigs.find(item =>
       item.key.toLowerCase().trim() === ISPREDICATIONONCRICKETCARD.trim().toLowerCase()
     )?.value;
     const isPredictMarket = isPrediction === "true";
     let pythonId, pythonURI
-    if(checkComp?.pythonId) {
+    if (checkComp?.pythonId) {
       pythonId = checkComp.pythonId
       const pythonAPI = global.tblPythonAPI.find(elem => elem.id === pythonId);
       pythonURI = pythonAPI?.URI;
@@ -392,22 +392,22 @@ const createVirtualEventService = async (request, fastify) => {
       }
 
       callDataProvider(
-          {
-            commentaryId: commentaryData.commentaryId,
-            serviceType: ServiceType.dataProviderAPI,
-            moduleType: APIEndpointModuleType.commentaryUpdate,
-            type: "create",
-          },
-          fastify
-        ).catch((err) => {
-          console.log("call data provider console", err);
-          errorLogger(
-            fastify,
-            err.message,
-            "ERROR --> services/virtual.js/createVirtualEventService",
-            request
-          );
-        });
+        {
+          commentaryId: commentaryData.commentaryId,
+          serviceType: ServiceType.dataProviderAPI,
+          moduleType: APIEndpointModuleType.commentaryUpdate,
+          type: "create",
+        },
+        fastify
+      ).catch((err) => {
+        console.log("call data provider console", err);
+        errorLogger(
+          fastify,
+          err.message,
+          "ERROR --> services/virtual.js/createVirtualEventService",
+          request
+        );
+      });
     }
   }
   // save virtual card data
@@ -497,15 +497,15 @@ const virtualEventTossService = async (request, fastify) => {
         ? 1
         : 2
       : choseTo === 1
-      ? 2
-      : 1;
+        ? 2
+        : 1;
     const teamBattingOrder = isTossWinner
       ? choseTo === 1
         ? 1
         : 2
       : choseTo === 1
-      ? 2
-      : 1;
+        ? 2
+        : 1;
 
     let subInning;
     if (teamStatus == 1) {
@@ -553,15 +553,15 @@ const virtualEventTossService = async (request, fastify) => {
     choseTo === 1
       ? tossWonBy
       : tossWonBy === commentary.team1Id
-      ? commentary.team2Id
-      : commentary.team1Id;
+        ? commentary.team2Id
+        : commentary.team1Id;
 
   const bowlingTeamId =
     choseTo === 2
       ? tossWonBy
       : tossWonBy === commentary.team1Id
-      ? commentary.team2Id
-      : commentary.team1Id;
+        ? commentary.team2Id
+        : commentary.team1Id;
 
   let onStrikePlayerId = null;
   let nonStrikerPlayerId = null;
@@ -882,8 +882,8 @@ const commentaryResponseSerivce = async (commentaryId) => {
     eventTypeName:
       com.eventTypeId != null
         ? global.tblEventTypes.find(
-            (item) => item.eventTypeId === com.eventTypeId
-          ).eventType
+          (item) => item.eventTypeId === com.eventTypeId
+        ).eventType
         : null,
     competitionName: com.competition,
     eventRefId: com.eventRefId,
@@ -1269,14 +1269,14 @@ const ballByBallChangeService = async (request, fastify) => {
     );
 
     // set res
-    if(result.comOver != null){
+    if (result.comOver != null) {
       let getRes = await comResponseService(request, fastify, true);
-       return {
+      return {
         ...result,
         ...getRes
       };
     }
-    else{
+    else {
       let getRes = await comResponseService(request, fastify);
       return {
         ...result,
@@ -1358,8 +1358,8 @@ const ballByBallChangeService = async (request, fastify) => {
       fastify
     );
     if (checkMatch.inningChange) {
-      loadVirtualCom(request,fastify)
-      let getRes = await comResponseService(request, fastify ,true);
+      loadVirtualCom(request, fastify)
+      let getRes = await comResponseService(request, fastify, true);
       return {
         isMatchComplete: checkMatch.matchComplete,
         inningChange: checkMatch.inningChange,
@@ -1483,9 +1483,8 @@ const updateRunPayload = async (data, request, fastify) => {
     updateBattingTeam["teamWideRuns"] =
       (battingTeam.teamWideRuns || 0) + runToUpdate;
     updateBattingTeam["teamScore"] = (battingTeam.teamScore || 0) + runToUpdate;
-    updateOver["teamScore"] = `${updateBattingTeam?.teamScore || 0}/${
-      battingTeam?.teamWicket || 0
-    }`;
+    updateOver["teamScore"] = `${updateBattingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0
+      }`;
     updateOver["totalWideBall"] = (over.totalWideBall || 0) + 1;
     updateOver["totalWideRun"] = (over.totalWideRun || 0) + runToUpdate;
     updateOver["totalRun"] = (over.totalRun || 0) + runToUpdate;
@@ -1560,9 +1559,8 @@ const updateRunPayload = async (data, request, fastify) => {
       ball > 0
         ? (parseFloat(battingTeam.teamOver || 0) + 0.1).toFixed(1)
         : battingTeam.teamOver;
-    updateOver["teamScore"] = `${updateBattingTeam?.teamScore || 0}/${
-      battingTeam?.teamWicket || 0
-    }`;
+    updateOver["teamScore"] = `${updateBattingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0
+      }`;
     // update ballByBall
     updateBall["overCount"] = updateBattingTeam.teamOver;
     updateBall["currentOverBalls"] = updateOver.ballCount;
@@ -1990,9 +1988,9 @@ const generateOverService = async (data, request, fastify) => {
       displayStatus: inningSwitch.OVER,
       rmk: remainingBallsShow
         ? generateRemainingRuns({
-            team: battingTeam,
-            ballsPerOver: matchType.ballsPerOver,
-          })
+          team: battingTeam,
+          ballsPerOver: matchType.ballsPerOver,
+        })
         : "",
     },
     commentaryOvers: updatedOver,
@@ -2095,9 +2093,9 @@ const generateOverService = async (data, request, fastify) => {
       displayStatus: generateDisplayStatus({ currentBall: generatedBall }),
       rmk: remainingBallsShow
         ? generateRemainingRuns({
-            team: battingTeam,
-            ballsPerOver: matchType.ballsPerOver,
-          })
+          team: battingTeam,
+          ballsPerOver: matchType.ballsPerOver,
+        })
         : "",
     },
     commentaryBallByBall: generatedBall,
@@ -2135,9 +2133,9 @@ const checkWinner = async (data) => {
     winMsg = isMatchTie
       ? `Match tied  between ${batTeam.teamName} and ${bowlTeam.teamName}`
       : fetchWinnerMessage({
-          ...data,
-          isBatTeamWon,
-        });
+        ...data,
+        isBatTeamWon,
+      });
   }
   // db update
   let updateBatTeam = {
@@ -2304,9 +2302,9 @@ const handleWicketService = async (data, request, fastify) => {
     }),
     rmk: remainingBallsShow
       ? generateRemainingRuns({
-          team: upBatTeam,
-          ballsPerOver: matchType.ballsPerOver,
-        })
+        team: upBatTeam,
+        ballsPerOver: matchType.ballsPerOver,
+      })
       : "",
   };
 
@@ -2431,7 +2429,7 @@ const handleWicketService = async (data, request, fastify) => {
     isWicket: true,
     isOverComplete,
     isMatchComplete: mc.matchComplete,
-    inningChange : false,
+    inningChange: false,
     comOver: comOver,
   };
 };
@@ -2478,19 +2476,19 @@ const comResponseService = async (request, fastify, completeOver = false) => {
       };
     });
   let over;
-  if(completeOver){
+  if (completeOver) {
     // also ballCount
-    let overCount = global.tblCommentaryBallByBall.filter((a)=> 
-        a?.commentaryId === commentaryId &&
-        a.currentInnings == commentaryDetails.currentInnings
-      ).sort((a,b)=> b.commentaryBallByBallId - a.commentaryBallByBallId)[1]?.overCount;
+    let overCount = global.tblCommentaryBallByBall.filter((a) =>
+      a?.commentaryId === commentaryId &&
+      a.currentInnings == commentaryDetails.currentInnings
+    ).sort((a, b) => b.commentaryBallByBallId - a.commentaryBallByBallId)[1]?.overCount;
     over = global.tblOvers
-    .filter(
-      (item) =>
-        item?.commentaryId === commentaryId &&
-        item.currentInnings == commentaryDetails.currentInnings
-    )
-    .sort((a, b) => b.overId - a.overId)[1];
+      .filter(
+        (item) =>
+          item?.commentaryId === commentaryId &&
+          item.currentInnings == commentaryDetails.currentInnings
+      )
+      .sort((a, b) => b.overId - a.overId)[1];
     over = {
       overId: over.overId,
       over: over.over,
@@ -2503,17 +2501,17 @@ const comResponseService = async (request, fastify, completeOver = false) => {
   }
   // get latest over
   else {
-    let overCount = global.tblCommentaryBallByBall.filter((a)=> 
-        a?.commentaryId === commentaryId &&
-        a.currentInnings == commentaryDetails.currentInnings
-      ).sort((a,b)=> b.commentaryBallByBallId - a.commentaryBallByBallId)[0]?.overCount;
-      over = global.tblOvers
-    .filter(
-      (item) =>
-        item?.commentaryId === commentaryId &&
-        item.currentInnings == commentaryDetails.currentInnings
-    )
-    .sort((a, b) => b.overId - a.overId)[0];
+    let overCount = global.tblCommentaryBallByBall.filter((a) =>
+      a?.commentaryId === commentaryId &&
+      a.currentInnings == commentaryDetails.currentInnings
+    ).sort((a, b) => b.commentaryBallByBallId - a.commentaryBallByBallId)[0]?.overCount;
+    over = global.tblOvers
+      .filter(
+        (item) =>
+          item?.commentaryId === commentaryId &&
+          item.currentInnings == commentaryDetails.currentInnings
+      )
+      .sort((a, b) => b.overId - a.overId)[0];
     over = {
       overId: over.overId,
       over: over.over,
@@ -2859,7 +2857,7 @@ const cancelEventAPIService = async (request, fastify) => {
     });
   // cancel the close market
   let eventMarketId = eventMarket.map((item) => item.marketId);
-  eventMarketId = await cancelMarketVirtualQuery({eventMarketId, commentaryId}, request, fastify);
+  eventMarketId = await cancelMarketVirtualQuery({ eventMarketId, commentaryId }, request, fastify);
 
   global.tblEventMarketsV2 = global.tblEventMarketsV2.filter(
     (item) => !eventMarketId.includes(item.eventMarketId)
@@ -2868,16 +2866,16 @@ const cancelEventAPIService = async (request, fastify) => {
   global.tblMarketRunnerV2 = global.tblMarketRunnerV2.filter(
     (item) => !eventMarketId.includes(item.eventMarketId)
   );
-  
-  if(eventMarketId.length > 0){
-    for (let item of eventMarketId){
-     // add log
+
+  if (eventMarketId.length > 0) {
+    for (let item of eventMarketId) {
+      // add log
       marketLogger(
         {
           eventMarketId: item,
           actionType: MarketActionType.virtualMarketCancel,
-          value:`EventMarketStatus:${EventMarketStatus.Cancel}`,
-          commentaryId : commentaryId
+          value: `EventMarketStatus:${EventMarketStatus.Cancel}`,
+          commentaryId: commentaryId
         },
         request,
         fastify
@@ -2885,7 +2883,7 @@ const cancelEventAPIService = async (request, fastify) => {
     }
   }
 
-  await cancelComQuery({ commentaryId, status : commentaryStatus.CANCELLED }, fastify, request);
+  await cancelComQuery({ commentaryId, status: commentaryStatus.CANCELLED }, fastify, request);
   global.tblCommentaries[index].commentaryStatus = commentaryStatus.CANCELLED;
 
   // if (
@@ -2962,7 +2960,7 @@ const loadVirtualCom = async (request, fastify) => {
         request
       );
       if (attempt >= maxAttempts) {
-         errorLogger(
+        errorLogger(
           fastify,
           `Attempt ${attempt} failed: ${error.message}`,
           "Service Error -> services/virtual/loadVirtualCom",
@@ -2975,8 +2973,8 @@ const loadVirtualCom = async (request, fastify) => {
 
   return true;
 };
-const  serverTimeAPIService = async (request ,fastify)=>{
-  return { Remote_IP : "0.0.0.1" }
+const serverTimeAPIService = async (request, fastify) => {
+  return { Remote_IP: "0.0.0.1" }
 }
 module.exports = {
   saveEventervice,

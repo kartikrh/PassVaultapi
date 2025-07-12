@@ -8,6 +8,7 @@ const {
   saveCountryCode,
   deleteCountryCodes,
   activeInactiveCountryCodes,
+  importCountries,
 } = require("../../../controller/users/admin/countryCode");
 const { CountryCode } = require("../../../swaggerSchema/groupTags/schema");
 
@@ -49,5 +50,9 @@ module.exports = async (fastify, opts) => {
       (request, reply) => authorize(request, reply, fastify),
     ],
     handler: (request, reply) => activeInactiveCountryCodes(request, reply, fastify),
+  });
+  fastify.post("/import", {
+    preHandler: [(request, reply) => authorize(request, reply, fastify)],
+    handler: (request, reply) => importCountries(request, reply, fastify),
   });
 };

@@ -24,7 +24,8 @@ const insertCountryCodeQuery = async (data, fastify, request) => {
     const result = await fastify.db.query(
       `WITH insert_data AS (
             INSERT INTO "tblCountryCodes" (
-            "wrCountryCode", "wrCountryName", "wrFlag", "wrFlagPath", "wrIsActive", "wrMaxNumber", "wrShortName", "wrTimezone"
+            "wrCountryCode", "wrCountryName", "wrFlag", "wrFlagPath", "wrIsActive", "wrMaxNumber",
+            "wrShortName", "wrTimezone"
             ) 
             VALUES (
                 $1, $2, $3, $4, $5 ,$6 ,$7, $8

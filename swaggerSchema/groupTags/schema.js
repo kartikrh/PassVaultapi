@@ -3782,6 +3782,22 @@ const Commentary = {
       },
     },
   },
+  updateEventTypeIdAndCompId: {
+    schema: {
+      tags: ["Commentary"],
+      description: "update commentary data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId :{type : "integer"},
+          competitionId :{type : "integer"},
+          eventTypeId :{type : "integer"}
+        },
+        required: ["commentaryId", "competitionId", "eventTypeId"],
+      },
+    },
+  },
 };
 
 const Compitition = {
@@ -3866,6 +3882,7 @@ const Compitition = {
           cancelPoint: { type: "integer" },
           lossPoint: { type: "integer" },
           drsCount: { type: "integer" },
+          countryId: { type: "integer" },
         },
         required: ["competitionId"],
       },
@@ -8963,6 +8980,8 @@ const CountryCode = {
           id: { type: "integer" },
           countryCode: { type: "string" },
           countryName: { type: "string" },
+          shortName: { type: "string" },
+          timezone: { type: "string" },
         },
         required: ["id"],
       },

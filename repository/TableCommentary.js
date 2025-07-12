@@ -1523,7 +1523,7 @@ const getAllCommentaryPlayerDataQuery = async (whereCondition = null, fastify) =
         tp."wrPlayerTypeId" as "playerTypeId",
         tpt."wrPlayerType" as "playerType",
         tcp."wrJerseyPlayerImage" as "jerseyPlayerImage",
-        tcp."wrJerseyPlayerImagePath" as "jerseyPlayerImage",
+        tcp."wrJerseyPlayerImagePath" as "jerseyPlayerImagePath",
         tp."wrDisplayName" as "displayName",
         tcp."wrTpId" as "tpId"
     from "tblCommentaryPlayers" AS tcp
@@ -7409,6 +7409,57 @@ const updateDrsQuery = async (data, fastify) => {
     throw new Error(error.message);
   }
 };
+const getAllCommByCompIdQuery = async (competitionId, request, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `SELECT * FROM "tblCommentaries"
+       WHERE "wrIsDelete" = FALSE
+       AND "wrCompetitionId" = $1`,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [competitionId]
+      }
+    );
+    return result.length > 0;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCommentary/getAllCommByCompIdQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+};
+
+const updateEventTypeAndCompIdQuery = async (data, request, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `UPDATE "tblCommentaries" SET
+        "wrEventTypeId" = $1,
+        "wrCompetitionId" = $2
+       WHERE "wrCommentaryId" = $3
+       AND "wrIsDelete" = FALSE
+       RETURNING
+        "wrEventTypeId" as "eventTypeId",
+        "wrCompetitionId" as "competitionId"
+       `,
+      {
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [data.eventTypeId, data.competitionId, data.commentaryId]
+      }
+    );
+    return result?.[0]?.[0] || null;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCommentary/updateEventTypeAndCompIdQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+};
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -7538,5 +7589,7 @@ module.exports = {
   updatePitchageAndSessionQuery,
   cancelComQuery,
   updatePythonAPIOnCommentaryQuery,
-  updateDrsQuery
+  updateDrsQuery,
+  getAllCommByCompIdQuery,
+  updateEventTypeAndCompIdQuery,
 };
