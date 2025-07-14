@@ -196,16 +196,20 @@ const getTeamPlayerByTeamIdQuery = async (teamId, fastify, request) => {
 
 const updateTeamPlayerImageQuery = async (data, fastify) => {
   try {
-    return await fastify.db.query(
+    const result = await fastify.db.query(
       `UPDATE "tblTeamPlayers" SET
         "wrJerseyPlayerImage" = $2,
         "wrJerseyPlayerImagePath" = $3
-      WHERE "wrTeamPlayerId" = $1`,
+      WHERE "wrTeamPlayerId" = $1
+      RETURNING
+        "wrTeamId" AS "teamId",
+        "wrRefPlayerId" AS "refPlayerId"`,
       {
         bind: [data.teamPlayerId, data.jerseyPlayerImage, data.jerseyPlayerImagePath],
         type: fastify.db.QueryTypes.UPDATE,
       }
     );
+    return result[0]
   } catch (err) {
     errorLogger(
       fastify,
