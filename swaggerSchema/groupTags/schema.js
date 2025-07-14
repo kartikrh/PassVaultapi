@@ -10070,6 +10070,19 @@ const Listing =  {
       security: [{ bearerAuth: [] }],
     },
   },
+  getAllVenues: {
+    schema: {
+      tags: ["Listing"],
+      description: "get all country list",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          countryId: { type: "integer" },
+        },
+      },
+    },
+  },
 }
 const AutoImportData = {
   getAll :{

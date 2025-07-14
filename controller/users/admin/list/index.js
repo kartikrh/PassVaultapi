@@ -27,6 +27,7 @@ const { errorLogger } = require("../../../../utilities/logger");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { matchStatusDataService, matchTypeDataService, compStatusDataService } = require("../../../../services/list");
 const { allCountryCodeService } = require("../../../../services/countryCode");
+const { allVenuesService } = require("../../../../services/venue");
 
 let commonPath = "controller/users/admin/list/index.js";
 
@@ -321,6 +322,22 @@ const allCountryCodes = async (request, reply, fastify)=>{
         reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
     }
 }
+const allVenueList = async (request, reply, fastify)=>{
+    try {
+        const venueData = await allVenuesService(request);
+        const result = venueData.map(item => {
+          return {
+            venueId: item.id,
+            name: item.name,
+            city: item.city,
+          }
+        })
+        reply.status(200).send(success(result, 200));
+    } catch (err) {
+        errorLogger(fastify, err.message, commonPath + "/allVenueList", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+    }
+}
 
 module.exports = {
     getEventTypeList,
@@ -348,4 +365,5 @@ module.exports = {
     matchTypeData,
     compStatusData,
     allCountryCodes,
+    allVenueList,
 }
