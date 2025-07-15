@@ -113,7 +113,7 @@ const getPlyByIdQuery = async (data ,request ,fastify) => {
     {
       type: fastify.db.QueryTypes.SELECT,
       bind : [
-        data.playerId
+        data.playerIds
       ]
     }
   );
@@ -124,7 +124,8 @@ const getPlyByIdQuery = async (data ,request ,fastify) => {
       "DB ERROR --> repository/TablePlayer/getPlyByIdQuery",
       request
     );
-    throw new Error(err.message);
+    return true;
+    // throw new Error(err.message);
   }
   
 };

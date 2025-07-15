@@ -69,7 +69,7 @@ const getTeamsByIds = async (data,request,fastify) => {
     {
       type: fastify.db.QueryTypes.SELECT,
       bind : [
-        data.teamId
+        data.teamIds
       ]
     }
   );
@@ -80,7 +80,8 @@ const getTeamsByIds = async (data,request,fastify) => {
       "DB ERROR --> repository/TableTeams/getTeamsByIds",
       request
     );
-    throw new Error(err.message);
+    return true;
+    // throw new Error(err.message);
   }
 };
 const insertTeamQuery = async (data, fastify, request) => {
