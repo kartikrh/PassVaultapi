@@ -10118,9 +10118,39 @@ const EntitySport = {
       body: {
         type: "object",
         properties: {
-          teamId: { type: "array" },
+          teamIds: { type: "array" },
         },
-        required: ["teamId"],
+        required: ["teamIds"],
+      },
+    }
+  },
+  SavePlayer : {
+    schema : {
+      tags: ["EntitySport"],
+      description: "save player",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          playerIds: { type: "array" },
+        },
+        required: ["playerIds"],
+      },
+    }
+  },
+  SaveCompetition : {
+    schema : {
+      tags: ["EntitySport"],
+      description: "save competitions",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionIds: { type: "array" },
+          tournamentTeamPoint : {type : "array"},
+          tournamentTeamPlayers : {type : "array"}
+        },
+        required: ["competitionIds"],
       },
     }
   }
