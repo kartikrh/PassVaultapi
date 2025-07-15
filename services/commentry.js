@@ -414,6 +414,7 @@ const commentaryDetailsByIdService = async (request, fastify) => {
       if (_player1) {
         elem.player1image = _player1.playerimage;
         elem.player1jerseyandimage = _player1?.jerseyPlayerImage;
+        elem.player1jerseyandimagepath = _player1?.jerseyPlayerImagePath;
       }
       const _player2 = commentaryPlayers.find(
         (item) => item.commentaryPlayerId === elem.batter2Id
@@ -421,6 +422,7 @@ const commentaryDetailsByIdService = async (request, fastify) => {
       if (_player2) {
         elem.player2image = _player2.playerimage;
         elem.player2jerseyandimage = _player2?.jerseyPlayerImage;
+        elem.player2jerseyandimagepath = _player2?.jerseyPlayerImagePath;
       }
 
       return elem;
@@ -4317,6 +4319,8 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
                 _player1[0].playerimage;
               response.commentaryPartnershipDetails.player1jerseyandimage =
                 _player1[0].jerseyPlayerImage;
+              response.commentaryPartnershipDetails.player1jerseyandimagepath =
+                _player1[0].jerseyPlayerImagePath;
             }
 
             // Find player 2 image
@@ -4328,6 +4332,8 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
                 _player2[0].playerimage;
               response.commentaryPartnershipDetails.player2jerseyandimage =
                 _player2[0].jerseyPlayerImage;
+              response.commentaryPartnershipDetails.player2jerseyandimagepath =
+                _player2[0].jerseyPlayerImagePath;
             }
           } catch (error) { }
         }
@@ -4354,6 +4360,8 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
                 _player1[0].playerimage;
               response.commentaryPartnershipDetails.player1jerseyandimage =
                 _player1[0].jerseyPlayerImage;
+              response.commentaryPartnershipDetails.player1jerseyandimagepath =
+                _player1[0].jerseyPlayerImagePath;
             }
 
             // Find player 2 image
@@ -4365,6 +4373,8 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
                 _player2[0].playerimage;
               response.commentaryPartnershipDetails.player2jerseyandimage =
                 _player2[0].jerseyPlayerImage;
+              response.commentaryPartnershipDetails.player2jerseyandimagepath =
+                _player2[0].jerseyPlayerImagePath;
             }
           } catch (error) { }
         }
@@ -6749,6 +6759,7 @@ const commentaryDetailsByEventIdService = async (
       str: parseFloat(player.batsmanStrikeRate) || "0",
       isp: playerData?.isSystemPlayer,
       jrsyplyimg: player?.jerseyPlayerImage || "",
+      jrsyplyimgpath: player?.jerseyPlayerImagePath || "",
       batsn: playerData?.displayName || "",
     };
   });
@@ -6782,6 +6793,7 @@ const commentaryDetailsByEventIdService = async (
         0,
       isp: playerData?.isSystemPlayer,
       jrsyplyimg: bowler?.jerseyPlayerImage || "",
+      jrsyplyimgpath: bowler?.jerseyPlayerImagePath || "",
       psn: playerData?.displayName || "",
     };
   });
@@ -13429,6 +13441,8 @@ const saveComVirtual = async (request, fastify) => {
                 _player1[0].playerimage;
               response.commentaryPartnershipDetails.player1jerseyandimage =
                 _player1[0].jerseyPlayerImage;
+              response.commentaryPartnershipDetails.player1jerseyandimagepath =
+                _player1[0].jerseyPlayerImagePath;
             }
 
             // Find player 2 image
@@ -13440,6 +13454,8 @@ const saveComVirtual = async (request, fastify) => {
                 _player2[0].playerimage;
               response.commentaryPartnershipDetails.player2jerseyandimage =
                 _player2[0].jerseyPlayerImage;
+              response.commentaryPartnershipDetails.player2jerseyandimagepath =
+                _player2[0].jerseyPlayerImagePath;
             }
           } catch (error) { }
         }
@@ -13466,6 +13482,8 @@ const saveComVirtual = async (request, fastify) => {
                 _player1[0].playerimage;
               response.commentaryPartnershipDetails.player1jerseyandimage =
                 _player1[0].jerseyPlayerImage;
+              response.commentaryPartnershipDetails.player1jerseyandimagepath =
+                _player1[0].jerseyPlayerImagePath;
             }
 
             // Find player 2 image
@@ -13477,6 +13495,8 @@ const saveComVirtual = async (request, fastify) => {
                 _player2[0].playerimage;
               response.commentaryPartnershipDetails.player2jerseyandimage =
                 _player2[0].jerseyPlayerImage;
+              response.commentaryPartnershipDetails.player2jerseyandimagepath =
+                _player2[0].jerseyPlayerImagePath;
             }
           } catch (error) { }
         }
@@ -14082,6 +14102,7 @@ const commentaryStartService = async (request, fastify) => {
       if (_player1) {
         partnership.player1image = _player1.playerimage;
         partnership.player1jerseyandimage = _player1?.jerseyPlayerImage;
+        partnership.player1jerseyandimagepath = _player1?.jerseyPlayerImagePath;
       }
       // Find player 2 image
       const _player2 = commentaryPlayers.find(
@@ -14090,6 +14111,7 @@ const commentaryStartService = async (request, fastify) => {
       if (_player2) {
         partnership.player2image = _player2.playerimage;
         partnership.player2jerseyandimage = _player2?.jerseyPlayerImage;
+        partnership.player2jerseyandimagepath = _player2?.jerseyPlayerImagePath;
       }
       sendToSocket.dataToUpdate.push({
         module: "commentaryPartnership",
@@ -14970,6 +14992,8 @@ const commentaryScoreService = async (request, fastify) => {
             _player1.playerimage;
           response.commentaryPartnershipDetails.player1jerseyandimage =
             _player1?.jerseyPlayerImage;
+          response.commentaryPartnershipDetails.player1jerseyandimagepath =
+            _player1?.jerseyPlayerImagePath;
         }
         const _player2 = commentaryPlayers.find(
           (item) => item.commentaryPlayerId === partnership.batter2Id
@@ -14979,6 +15003,8 @@ const commentaryScoreService = async (request, fastify) => {
             _player2.playerimage;
           response.commentaryPartnershipDetails.player2jerseyandimage =
             _player2?.jerseyPlayerImage;
+          response.commentaryPartnershipDetails.player2jerseyandimagepath =
+            _player2?.jerseyPlayerImagePath;
         }
         sendDataForSocketUpdate.dataToUpdate.push({
           module: "commentaryPartnership",
@@ -15009,6 +15035,8 @@ const commentaryScoreService = async (request, fastify) => {
             _player1.playerimage;
           response.commentaryPartnershipDetails.player1jerseyandimage =
             _player1?.jerseyPlayerImage;
+          response.commentaryPartnershipDetails.player1jerseyandimagepath =
+            _player1?.jerseyPlayerImagePath;
         }
         const _player2 = commentaryPlayers.find(
           (item) => item.commentaryPlayerId === commentaryPartnership.batter2Id
@@ -15018,6 +15046,8 @@ const commentaryScoreService = async (request, fastify) => {
             _player2.playerimage;
           response.commentaryPartnershipDetails.player2jerseyandimage =
             _player2?.jerseyPlayerImage;
+          response.commentaryPartnershipDetails.player2jerseyandimagepath =
+            _player2?.jerseyPlayerImagePath;
         }
         sendDataForSocketUpdate.dataToUpdate.push({
           module: "commentaryPartnership",
@@ -15592,6 +15622,8 @@ const commentarySwapPlayerService = async (request, fastify) => {
                 _player1[0].playerimage;
               response.commentaryPartnershipDetails.player1jerseyandimage =
                 _player1[0].jerseyPlayerImage;
+              response.commentaryPartnershipDetails.player1jerseyandimagepath =
+                _player1[0].jerseyPlayerImagePath;
             }
 
             // Find player 2 image
@@ -15603,6 +15635,8 @@ const commentarySwapPlayerService = async (request, fastify) => {
                 _player2[0].playerimage;
               response.commentaryPartnershipDetails.player2jerseyandimage =
                 _player2[0].jerseyPlayerImage;
+              response.commentaryPartnershipDetails.player2jerseyandimagepath =
+                _player2[0].jerseyPlayerImagePath;
             }
           } catch (error) { }
         }
@@ -15629,6 +15663,8 @@ const commentarySwapPlayerService = async (request, fastify) => {
                 _player1[0].playerimage;
               response.commentaryPartnershipDetails.player1jerseyandimage =
                 _player1[0].jerseyPlayerImage;
+              response.commentaryPartnershipDetails.player1jerseyandimagepath =
+                _player1[0].jerseyPlayerImagePath;
             }
 
             // Find player 2 image
@@ -15640,6 +15676,8 @@ const commentarySwapPlayerService = async (request, fastify) => {
                 _player2[0].playerimage;
               response.commentaryPartnershipDetails.player2jerseyandimage =
                 _player2[0].jerseyPlayerImage;
+              response.commentaryPartnershipDetails.player2jerseyandimagepath =
+                _player2[0].jerseyPlayerImagePath;
             }
           } catch (error) { }
         }
@@ -16059,6 +16097,8 @@ const commentaryInningChangeService = async (request, fastify) => {
                 _player1[0].playerimage;
               response.commentaryPartnershipDetails.player1jerseyandimage =
                 _player1[0].jerseyPlayerImage;
+              response.commentaryPartnershipDetails.player1jerseyandimagepath =
+                _player1[0].jerseyPlayerImagePath;
             }
 
             // Find player 2 image
@@ -16070,6 +16110,8 @@ const commentaryInningChangeService = async (request, fastify) => {
                 _player2[0].playerimage;
               response.commentaryPartnershipDetails.player2jerseyandimage =
                 _player2[0].jerseyPlayerImage;
+              response.commentaryPartnershipDetails.player2jerseyandimagepath =
+                _player2[0].jerseyPlayerImagePath;
             }
           } catch (error) { }
         }
@@ -16099,6 +16141,8 @@ const commentaryInningChangeService = async (request, fastify) => {
                 _player1[0].playerimage;
               response.commentaryPartnershipDetails.player1jerseyandimage =
                 _player1[0].jerseyPlayerImage;
+              response.commentaryPartnershipDetails.player1jerseyandimagepath =
+                _player1[0].jerseyPlayerImagePath;
             }
 
             // Find player 2 image
@@ -16110,6 +16154,8 @@ const commentaryInningChangeService = async (request, fastify) => {
                 _player2[0].playerimage;
               response.commentaryPartnershipDetails.player2jerseyandimage =
                 _player2[0].jerseyPlayerImage;
+              response.commentaryPartnershipDetails.player2jerseyandimagepath =
+                _player2[0].jerseyPlayerImagePath;
             }
           } catch (error) { }
           sendDataForSocketUpdate.dataToUpdate.push({
@@ -16895,6 +16941,8 @@ const commentaryWicketService = async (request, fastify) => {
                 _player1[0].playerimage;
               response.commentaryPartnershipDetails.player1jerseyandimage =
                 _player1[0].jerseyPlayerImage;
+              response.commentaryPartnershipDetails.player1jerseyandimagepath =
+                _player1[0].jerseyPlayerImagePath;
             }
 
             // Find player 2 image
@@ -16906,6 +16954,8 @@ const commentaryWicketService = async (request, fastify) => {
                 _player2[0].playerimage;
               response.commentaryPartnershipDetails.player2jerseyandimage =
                 _player2[0].jerseyPlayerImage;
+              response.commentaryPartnershipDetails.player2jerseyandimagepath =
+                _player2[0].jerseyPlayerImagePath;
             }
           } catch (error) { }
         }
@@ -16932,6 +16982,8 @@ const commentaryWicketService = async (request, fastify) => {
                 _player1[0].playerimage;
               response.commentaryPartnershipDetails.player1jerseyandimage =
                 _player1[0].jerseyPlayerImage;
+              response.commentaryPartnershipDetails.player1jerseyandimagepath =
+                _player1[0].jerseyPlayerImagePath;
             }
 
             // Find player 2 image
@@ -16943,6 +16995,8 @@ const commentaryWicketService = async (request, fastify) => {
                 _player2[0].playerimage;
               response.commentaryPartnershipDetails.player2jerseyandimage =
                 _player2[0].jerseyPlayerImage;
+              response.commentaryPartnershipDetails.player2jerseyandimagepath =
+                _player2[0].jerseyPlayerImagePath;
             }
           } catch (error) { }
         }
@@ -17297,6 +17351,8 @@ const commentarySetPlayerService = async (request, fastify) => {
                 _player1[0].playerimage;
               response.commentaryPartnershipDetails.player1jerseyandimage =
                 _player1[0].jerseyPlayerImage;
+              response.commentaryPartnershipDetails.player1jerseyandimagepath =
+                _player1[0].jerseyPlayerImagePath;
             }
 
             // Find player 2 image
@@ -17308,6 +17364,8 @@ const commentarySetPlayerService = async (request, fastify) => {
                 _player2[0].playerimage;
               response.commentaryPartnershipDetails.player2jerseyandimage =
                 _player2[0].jerseyPlayerImage;
+              response.commentaryPartnershipDetails.player2jerseyandimagepath =
+                _player2[0].jerseyPlayerImagePath;
             }
           } catch (error) { }
         }
@@ -17334,6 +17392,8 @@ const commentarySetPlayerService = async (request, fastify) => {
                 _player1[0].playerimage;
               response.commentaryPartnershipDetails.player1jerseyandimage =
                 _player1[0].jerseyPlayerImage;
+              response.commentaryPartnershipDetails.player1jerseyandimagepath =
+                _player1[0].jerseyPlayerImagePath;
             }
 
             // Find player 2 image
@@ -17345,6 +17405,8 @@ const commentarySetPlayerService = async (request, fastify) => {
                 _player2[0].playerimage;
               response.commentaryPartnershipDetails.player2jerseyandimage =
                 _player2[0].jerseyPlayerImage;
+              response.commentaryPartnershipDetails.player2jerseyandimagepath =
+                _player2[0].jerseyPlayerImagePath;
             }
           } catch (error) { }
         }
@@ -17686,6 +17748,8 @@ const undoAPIService = async (request, fastify) => {
           _player1.playerimage;
         response.commentaryPartnershipDetails.player1jerseyandimage =
           _player1?.jerseyPlayerImage;
+        response.commentaryPartnershipDetails.player1jerseyandimagepath =
+          _player1?.jerseyPlayerImagePath;
       }
       const _player2 = commentaryPlayers.find(
         (item) => item.commentaryPlayerId === commentaryPartnership.batter2Id
@@ -17695,6 +17759,8 @@ const undoAPIService = async (request, fastify) => {
           _player2.playerimage;
         response.commentaryPartnershipDetails.player2jerseyandimage =
           _player2?.jerseyPlayerImage;
+        response.commentaryPartnershipDetails.player2jerseyandimagepath =
+          _player2?.jerseyPlayerImagePath;
       }
       sendDataForSocketUpdate.dataToUpdate.push({
         module: "commentaryPartnership",
@@ -18719,6 +18785,8 @@ const undoAPIService2 = async (request, fastify) => {
                 _player1[0].playerimage;
               response.commentaryPartnershipDetails.player1jerseyandimage =
                 _player1[0].jerseyPlayerImage;
+              response.commentaryPartnershipDetails.player1jerseyandimagepath =
+                _player1[0].jerseyPlayerImagePath;
             }
 
             // Find player 2 image
@@ -18730,6 +18798,8 @@ const undoAPIService2 = async (request, fastify) => {
                 _player2[0].playerimage;
               response.commentaryPartnershipDetails.player2jerseyandimage =
                 _player2[0].jerseyPlayerImage;
+              response.commentaryPartnershipDetails.player2jerseyandimagepath =
+                _player2[0].jerseyPlayerImagePath;
             }
           } catch (error) { }
         }
@@ -18756,6 +18826,8 @@ const undoAPIService2 = async (request, fastify) => {
                 _player1[0].playerimage;
               response.commentaryPartnershipDetails.player1jerseyandimage =
                 _player1[0].jerseyPlayerImage;
+              response.commentaryPartnershipDetails.player1jerseyandimagepath =
+                _player1[0].jerseyPlayerImagePath;
             }
 
             // Find player 2 image
@@ -18767,6 +18839,8 @@ const undoAPIService2 = async (request, fastify) => {
                 _player2[0].playerimage;
               response.commentaryPartnershipDetails.player2jerseyandimage =
                 _player2[0].jerseyPlayerImage;
+              response.commentaryPartnershipDetails.player2jerseyandimagepath =
+                _player2[0].jerseyPlayerImagePath;
             }
           } catch (error) { }
         }
@@ -20246,6 +20320,8 @@ const changePlayerService = async (request, fastify) => {
                 _player1[0].playerimage;
               response.commentaryPartnershipDetails.player1jerseyandimage =
                 _player1[0].jerseyPlayerImage;
+              response.commentaryPartnershipDetails.player1jerseyandimagepath =
+                _player1[0].jerseyPlayerImagePath;
             }
 
             // Find player 2 image
@@ -20257,6 +20333,8 @@ const changePlayerService = async (request, fastify) => {
                 _player2[0].playerimage;
               response.commentaryPartnershipDetails.player2jerseyandimage =
                 _player2[0].jerseyPlayerImage;
+              response.commentaryPartnershipDetails.player2jerseyandimagepath =
+                _player2[0].jerseyPlayerImagePath;
             }
           } catch (error) { }
         }
@@ -20283,6 +20361,8 @@ const changePlayerService = async (request, fastify) => {
                 _player1[0].playerimage;
               response.commentaryPartnershipDetails.player1jerseyandimage =
                 _player1[0].jerseyPlayerImage;
+              response.commentaryPartnershipDetails.player1jerseyandimagepath =
+                _player1[0].jerseyPlayerImagePath;
             }
 
             // Find player 2 image
@@ -20294,6 +20374,8 @@ const changePlayerService = async (request, fastify) => {
                 _player2[0].playerimage;
               response.commentaryPartnershipDetails.player2jerseyandimage =
                 _player2[0].jerseyPlayerImage;
+              response.commentaryPartnershipDetails.player2jerseyandimagepath =
+                _player2[0].jerseyPlayerImagePath;
             }
           } catch (error) { }
         }
