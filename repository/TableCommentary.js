@@ -1973,6 +1973,8 @@ const getAllCommentaryWicketQuery = async (fastify) => {
         tcw."wrWicketCount" as "wicketCount",
         tcw."wrBallCount" as "ballCount",
         tcw."wrCurrentInnings" as "currentInnings",
+        tcw."wrFieldPlayer2Id" as "fieldPlayer2Id",
+        tcw."wrFieldPlayer2Name" as "fieldPlayer2Name",
         tcw."wrCreatedDate" as "createdDate"
     from "tblCommentaryWickets" tcw
     WHERE tcw."wrCommentaryId" IN (
@@ -2026,6 +2028,8 @@ const getAllCommentaryWicketDataQuery = async (whereCondition = null, fastify) =
     "wrWicketCount" as "wicketCount",
     "wrBallCount" as "ballCount",
     "wrCurrentInnings" as "currentInnings",
+    "wrFieldPlayer2Id" as "fieldPlayer2Id",
+    "wrFieldPlayer2Name" as "fieldPlayer2Name",
     "wrCreatedDate" as "createdDate"
     from "tblCommentaryWickets" 
     ${whereCondition ? `WHERE ${whereCondition}` : ""}
@@ -2950,7 +2954,9 @@ const createCommentaryWicketQuery = async (data, fastify, request) => {
           "wrIsDelete",
           "wrWicketCount",
           "wrBallCount",
-          "wrCurrentInnings" 
+          "wrCurrentInnings",
+          "wrFieldPlayer2Id",
+          "wrFieldPlayer2Name"
         ) values (
           $1,
           $2,
@@ -2970,7 +2976,9 @@ const createCommentaryWicketQuery = async (data, fastify, request) => {
           $16,
           $17,
           $18,
-          $19      
+          $19,
+          $20,
+          $21
         )
         returning *
       )
@@ -2993,6 +3001,8 @@ const createCommentaryWicketQuery = async (data, fastify, request) => {
     "wrPlayerBalls" as "playerBalls",
     "wrWicketCount" as "wicketCount",
     "wrBallCount" as "ballCount",
+    "wrFieldPlayer2Id" as "fieldPlayer2Id",
+    "wrFieldPlayer2Name" as "fieldPlayer2Name",
     "wrCurrentInnings" as "currentInnings"
     from "insert_data"
       `,
@@ -3017,6 +3027,8 @@ const createCommentaryWicketQuery = async (data, fastify, request) => {
           data.wicketCount,
           data.ballCount,
           data.currentInnings,
+          data.fieldPlayer2Id || null,
+          data.fieldPlayer2Name || null,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -3055,7 +3067,9 @@ const updateCommentaryWicketQuery = async (data, fastify, request) => {
       "wrPlayerBalls" = $14,
       "wrIsDelete" = $15,
       "wrWicketCount" = $16,
-      "wrBallCount" = $17
+      "wrBallCount" = $17,
+      "wrFieldPlayer2Id" = $20,
+      "wrFieldPlayer2Name" = $21
       where "wrCommentaryWicketId" = $18
       AND "wrCurrentInnings" = $19
       `,
@@ -3080,6 +3094,8 @@ const updateCommentaryWicketQuery = async (data, fastify, request) => {
           data.ballCount,
           data.commentaryWicketId,
           data.currentInnings,
+          data.fieldPlayer2Id,
+          data.fieldPlayer2Name,
         ],
         type: fastify.db.QueryTypes.UPDATE,
       }
@@ -5482,6 +5498,8 @@ const getAllCommentaryWicketDataQueryV1 = async (whereCondition = null, fastify)
         "wrWicketCount" as "wiccnt",
         "wrBallCount" as "balcnt",
         "wrCurrentInnings" as "ci",
+        "wrFieldPlayer2Id" as "fieldPlayer2Id",
+        "wrFieldPlayer2Name" as "fieldPlayer2Name",
         "wrCreatedDate" as "cratd"
     from "tblCommentaryWickets" 
     ${whereCondition ? `WHERE ${whereCondition}` : ""}`,
@@ -7017,6 +7035,8 @@ const createVirtualWicketQuery = async (data, fastify, request) => {
     "wrPlayerBalls" as "playerBalls",
     "wrWicketCount" as "wicketCount",
     "wrBallCount" as "ballCount",
+    "wrFieldPlayer2Id" as "fieldPlayer2Id",
+    "wrFieldPlayer2Name" as "fieldPlayer2Name",
     "wrCurrentInnings" as "currentInnings"
     from "insert_data"
       `,
