@@ -6749,6 +6749,7 @@ const commentaryDetailsByEventIdService = async (
       str: parseFloat(player.batsmanStrikeRate) || "0",
       isp: playerData?.isSystemPlayer,
       jrsyplyimg: player?.jerseyPlayerImage || "",
+      jrsyplyimgpath: player?.jerseyPlayerImagePath || "",
       batsn: playerData?.displayName || "",
     };
   });
@@ -6782,6 +6783,7 @@ const commentaryDetailsByEventIdService = async (
         0,
       isp: playerData?.isSystemPlayer,
       jrsyplyimg: bowler?.jerseyPlayerImage || "",
+      jrsyplyimgpath: bowler?.jerseyPlayerImagePath || "",
       psn: playerData?.displayName || "",
     };
   });
