@@ -86,7 +86,8 @@ const getCompetitionListByeventTypeId = async (request, reply, fastify) => {
         matchTypeId: item.matchTypeId,
         isVirtual: item.isVirtual,
         pythonId: item.pythonId,
-        pythonURI: pythonURI?.URI ?? null
+        pythonURI: pythonURI?.URI ?? null,
+        countryId: item.countryId
       };
     })
     reply.status(200).send(success(result, 200));
