@@ -303,7 +303,7 @@ const updatePlayerService = async (request, fastify) => {
     }
   }
   const body = {
-    country: request.body.country || checkPlayerId.country,
+    // country: request.body.country || checkPlayerId.country,
     playerName: request.body.playerName.trim() || checkPlayerId.playerName,
     eventTypeId: checkPlayerId.eventTypeId,
     playerTypeId: checkPlayerId.playerTypeId,
@@ -569,7 +569,7 @@ const updatePlayerStatsService = async (request, fastify) => {
         );
 
         const _p = {
-          country: checkPlayerId.country,
+          // country: checkPlayerId.country,
           playerName: checkPlayerId.playerName,
           eventTypeId: checkPlayerId.eventTypeId,
           playerTypeId: checkPlayerId.playerTypeId,
@@ -592,6 +592,7 @@ const updatePlayerStatsService = async (request, fastify) => {
           imagePath: checkPlayerId.imagePath,
           tpId: checkPlayerId.tpId,
           countryId: checkPlayerId.countryId,
+          isSystemPlayer: checkPlayerId.isSystemPlayer,
         };
         global.tblPlayers[index] = _p;
       }

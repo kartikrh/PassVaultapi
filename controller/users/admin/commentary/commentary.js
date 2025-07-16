@@ -95,6 +95,8 @@ const {
   changePlayerService,
   changeOverService,
   updateEventTypeAndCompIdService,
+  getCommWicketByIdService,
+  updateCommWicketService,
 } = require("../../../../services/commentry");
 const { getEventSnapByComService, updateEventSnapByComService } = require("../../../../services/competitionEventSnap");
 const { getAllCommentariesDataService, getAllCommentariesDataServiceV1 } = require("../../../../services/score");
@@ -1288,6 +1290,24 @@ const updateEventTypeAndCompId = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const getCommWicketById = async (request, reply, fastify) => {
+  try {
+    const result = await getCommWicketByIdService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/getCommWicketById", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const updateCommWicket = async (request, reply, fastify) => {
+  try {
+    const result = await updateCommWicketService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/updateCommWicket", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 module.exports = {
   getAllCommentaries,
   getCommentaryById,
@@ -1398,4 +1418,6 @@ module.exports = {
   changePlayer,
   changeOver,
   updateEventTypeAndCompId,
+  getCommWicketById,
+  updateCommWicket,
 }

@@ -301,7 +301,7 @@ const updateTeamService = async (request, fastify) => {
     teamShortName: request.body.teamShortName || checkTeamId.teamShortName,
     image: checkTeamId.image,
     jersey: checkTeamId.jersey,
-    country: request.body.country || checkTeamId.country,
+    // country: request.body.country || checkTeamId.country,
     eventTypeId: request.body.eventTypeId || checkTeamId.eventTypeId,
     userId: request.userTokenInfo.WrUserId,
     teamId: request.body.teamId,

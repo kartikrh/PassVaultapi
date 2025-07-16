@@ -13,6 +13,9 @@ const saveVenueService = async (request, fastify) => {
   if (validateName) {
     throw new Error("Venue with this name already exist");
   }
+  if(request.body.tpId === 0) {
+    request.body.tpId = null
+  }
   if(request.body.tpId !== undefined && request.body.tpId !== null) {
     const validateTpId = global.tblVenues.find(
       (item) => item.tpId === request.body.tpId
@@ -32,6 +35,9 @@ const editVenueService = async (request, fastify) => {
   );
   if (!validateId) {
     throw new Error("Venue data with this Id not found");
+  }
+  if(request.body.tpId === 0) {
+    request.body.tpId = null
   }
   if(validateId && request.body.id !== null && request.body.id !== undefined) {
     const validateTpId = global.tblVenues.find(
