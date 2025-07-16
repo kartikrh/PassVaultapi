@@ -6,7 +6,6 @@ const {
 } = require("../repository/TableVenue");
 
 const saveVenueService = async (request, fastify) => {
-  console.log("save", request.body)
   const validateName = global.tblVenues.find(
     (item) => item.name.toLowerCase() === request.body.name.toLowerCase()
   );
@@ -17,9 +16,7 @@ const saveVenueService = async (request, fastify) => {
   if(request.body.tpId === 0) {
     request.body.tpId = null
   }
-  console.log("type", typeof(request.body.tpId))
   if(request.body.tpId !== undefined && request.body.tpId !== null) {
-    console.log("if condition")
     const validateTpId = global.tblVenues.find(
       (item) => item.tpId === request.body.tpId
     );
