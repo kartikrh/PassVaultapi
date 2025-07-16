@@ -6,6 +6,7 @@ const {
 } = require("../repository/TableVenue");
 
 const saveVenueService = async (request, fastify) => {
+  console.log("save", request.body)
   const validateName = global.tblVenues.find(
     (item) => item.name.toLowerCase() === request.body.name.toLowerCase()
   );
@@ -13,7 +14,12 @@ const saveVenueService = async (request, fastify) => {
   if (validateName) {
     throw new Error("Venue with this name already exist");
   }
+  if(request.body.tpId === 0) {
+    request.body.tpId = null
+  }
+  console.log("type", typeof(request.body.tpId))
   if(request.body.tpId !== undefined && request.body.tpId !== null) {
+    console.log("if condition")
     const validateTpId = global.tblVenues.find(
       (item) => item.tpId === request.body.tpId
     );
@@ -32,6 +38,9 @@ const editVenueService = async (request, fastify) => {
   );
   if (!validateId) {
     throw new Error("Venue data with this Id not found");
+  }
+  if(request.body.tpId === 0) {
+    request.body.tpId = null
   }
   if(validateId && request.body.id !== null && request.body.id !== undefined) {
     const validateTpId = global.tblVenues.find(
