@@ -20875,6 +20875,37 @@ const updateEventTypeAndCompIdService = async (request, fastify) => {
   return "Commentary updated successfully";
 };
 
+const getCommWicketByIdService = async (request, fastify) => {
+  const { commentaryWicketId } = request.body;
+
+  const wicketData = global.tblCommentaryWicket.find(
+    item => item.commentaryWicketId == commentaryWicketId
+  );
+  if (!wicketData) {
+    throw new Error("Commentary wicket with this id not found");
+  }
+
+  return wicketData
+}
+
+const updateCommWicketService = async (request, fastify) => {
+  const index = global.tblCommentaryWicket.findIndex(
+    item => item.commentaryWicketId == request.body?.commentaryWicketId
+  );
+  if (index === -1) {
+    throw new Error("Commentary wicket with this id not found");
+  }
+
+  await updateCommentaryWicketQuery(request.body, fastify, request);
+
+  global.tblCommentaryWicket[index] = {
+    ...global.tblCommentaryWicket[index],
+    ...request.body
+  }
+
+  return `Commentary wicket data updated successfully`
+}
+
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -20979,4 +21010,6 @@ module.exports = {
   changePlayerService,
   changeOverService,
   updateEventTypeAndCompIdService,
+  getCommWicketByIdService,
+  updateCommWicketService,
 };

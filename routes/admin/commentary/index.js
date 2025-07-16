@@ -100,6 +100,8 @@ const {
   changePlayer,
   changeOver,
   updateEventTypeAndCompId,
+  getCommWicketById,
+  updateCommWicket,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -1360,4 +1362,28 @@ module.exports = async (fastify, opts) => {
     ],
     handler: (request , reply) => updateEventTypeAndCompId(request, reply, fastify)
   })
+  fastify.post("/commWicketById", {
+    schema : Commentary.commWicketById.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
+          mode: "view"
+        }),
+    ],
+    handler: (request , reply) => getCommWicketById(request, reply, fastify)
+  });
+  fastify.post("/updateCommWicket", {
+    schema : Commentary.updateCommWicket.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
+          mode: "edit"
+        }),
+    ],
+    handler: (request , reply) => updateCommWicket(request, reply, fastify)
+  });
 };
