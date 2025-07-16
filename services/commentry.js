@@ -12470,7 +12470,7 @@ const notiConfigContentReplaceService = async (
       global?.clientSocketIo.length > 0
     ) {
       global.clientSocketIo.forEach((socket) => {
-        socket.client.emit("notificationSend", { ...data, content });
+        socket.client.emit("notificationSend", { ...data, content ,eventId : commentary.eventRefId ?? null});
       });
       let notificationData = {
         title: commentary.eventName,
