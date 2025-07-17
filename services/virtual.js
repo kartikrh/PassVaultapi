@@ -791,7 +791,7 @@ const virtualEventTossService = async (request, fastify) => {
 
 const updateVirtualEventStatusService = async (request, fastify) => {
   const { commentaryId, commentaryPlayerId } = request.body;
-  if (!commentaryId === undefined) {
+  if (commentaryId === undefined) {
     throw new Error("Invalid input: commentaryId is required");
   }
   const index = global.tblCommentaries.findIndex(

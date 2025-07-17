@@ -1659,6 +1659,8 @@ const getAllCommentaryBallByBallQuery = async (fastify) => {
         tcbb."wrShortType" as "shortType",
         tcbb."wrCommentryRemark" as "commentryRemark",
         tcbb."wrCommentaryPartnershipId" as "commentaryPartnershipId",
+        tcbb."wrDevOver" as "devOver",
+        tcbb."wrDevCurrentOverBall" as "devCurrentOverBall",
         tcbb."wrCardKey" as "cardKey",
         tcbb."wrCardType" as "cardType"
     from "tblCommentaryBallByBalls" tcbb
@@ -1724,6 +1726,8 @@ const getAllCommentaryBallByBallDataQuery = async (whereCondition = null, fastif
     "wrCurrentInnings" as "currentInnings",
     "wrCreatedDate" as "createdDate",
     "wrAutoStrikeBallCount" as "autoStrikeBallCount",
+    "wrDevOver" as "devOver",
+    "wrDevCurrentOverBall" as "devCurrentOverBall",
     "wrX2" as "x2",
     "wrY2" as "y2",
     "wrShortType" as "shortType",
@@ -3381,6 +3385,8 @@ const getCommentaryBallByBallQuery = async (request, fastify) => {
         "wrBall_FielderID2" AS "ballFielderId2",
         "wrOver_isMaiden" AS "overIsMaiden",
         "wrNextBat_StrikeID" AS "nextBatStrikeId",
+        "wrDevOver" as "devOver",
+        "wrDevCurrentOverBall" as "devCurrentOverBall",
         "wrNextBat_NONStrikeID" AS "nextBatNonStrikeId",
         "wrIsDelete" AS "isDelete",
         "wrCurrentInnings" AS "currentInnings",
@@ -4487,6 +4493,8 @@ const getCommentaryBallByBallByIdsQuery = async (commentaryBallByBallId, request
       "wrIsDelete" as "isDelete",
       "wrCurrentInnings" as "currentInnings",
       "wrCreatedDate" as "createdDate",
+      "wrDevOver" as "devOver",
+      "wrDevCurrentOverBall" as "devCurrentOverBall",
       "wrAutoStrikeBallCount" as "autoStrikeBallCount"
       from "tblCommentaryBallByBalls"
       WHERE "wrCommentaryBallByBallId" = ANY($1) AND "wrIsDeletedStatus" = false
@@ -5465,6 +5473,8 @@ const getAllCommentaryBallByBallDataQueryV1 = async (whereCondition = null, fast
         "wrY2" as "y2",
         "wrShortType" as "styp",
         "wrCommentryRemark" as "crmk",
+        "wrDevOver" as "devOver",
+        "wrDevCurrentOverBall" as "devCurrentOverBall",
         "wrCommentaryPartnershipId" as "cpartsid"
     from "tblCommentaryBallByBalls"
     ${whereCondition ? `WHERE ${whereCondition}` : ""}`,
@@ -6520,6 +6530,8 @@ const createVirtualBallByBallQuery = async (data, fastify, request) => {
         "wrCurrentInnings" AS "currentInnings",
         "wrCreatedDate" AS "createdDate",
         "wrAutoStrikeBallCount" AS "autoStrikeBallCount",
+        "wrDevOver" as "devOver",
+        "wrDevCurrentOverBall" as "devCurrentOverBall",
         "wrX2" AS "x2",
         "wrY2" AS "y2",
         "wrShortType" AS "shortType",
@@ -6857,6 +6869,8 @@ const updateVirtualBallByBallQuery = async (data, fastify, request) => {
         "wrBall_FielderID1" AS 	"ballFielderId1",
         "wrBall_FielderID2" AS 	"ballFielderId2",
         "wrOver_isMaiden" AS 	"overIsMaiden",
+        "wrDevOver" as "devOver",
+        "wrDevCurrentOverBall" as "devCurrentOverBall",
         "wrNextBat_StrikeID" 	AS 	"nextBatStrikeId",
         "wrNextBat_NONStrikeID" 	AS 	"nextBatNonStrikeId"
       `,

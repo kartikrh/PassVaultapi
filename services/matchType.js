@@ -108,6 +108,8 @@ const cloneMatchTypeService = async (request, fastify) => {
     request
   );
   
+  global.tblMatchTypes.push(data);
+
   // clone the matchType predictor 
   const predictorData = global.tblMatchTypePredictor.filter(
     (item) => item.matchTypeId === request.body.matchTypeId
@@ -134,7 +136,6 @@ const cloneMatchTypeService = async (request, fastify) => {
      const sumOfRPB = await updateSumOfRunPerBallQuery(data.matchTypeId, fastify, request);
      data.sumOfRunPerBall = sumOfRPB
   }
-  global.tblMatchTypes.push(data);
 
   global.tblMatchTypePredictor.push(...predictor);
 
