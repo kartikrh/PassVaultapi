@@ -12,7 +12,7 @@ const getAllAutoImportDataService = async (request, fastify) => {
 const insertAutoImportDataService = async (request, fastify) => {
     const { refId, refType, sourceId } = request.body;
 
-    const whereCondition = `"wrRefId" = ${refId} AND "wrRefType" = ${refType} AND "wrSourceId" = ${sourceId}`;
+    const whereCondition = `"wrRefId" = ${refId} AND "wrRefType" = ${refType} AND "wrSourceId" = ${sourceId} AND "wrIsImported" = true`;
     const validateCompImportData = await getAutoImportDataByIdQuery(whereCondition, request, fastify);
     if (!validateCompImportData) {
         await insertAutoImportDataQuery(request.body, fastify, request);
