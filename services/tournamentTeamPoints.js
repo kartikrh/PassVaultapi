@@ -9,6 +9,7 @@ const {
   getTournamentPointsByTeamIdQuery,
   updateTeamPointsQuery,
   getClientTournamentTeamPointsQuery,
+  getTournamentTeamsByCompIdQuery,
 } = require("../repository/TableTournmentTeamPoints");
 const { callClientAPI, ServiceType, APIEndpointModuleType } = require("../utilities");
 const { errorLogger } = require("../utilities/logger")
@@ -437,9 +438,10 @@ const setTeamPointService = async (data, request, fastify) => {
 const teamsListService = async (request, fastify) => {
   let result = global.tblTeams;
   if(request.body.competitionId != undefined && request.body.competitionId != 0) {
-    const competitionResult = global.tblTeamCompetition.filter(
-      (item) => item.refCompetitionId === request.body.competitionId
-    );
+    // const competitionResult = global.tblTeamCompetition.filter(
+    //   (item) => item.refCompetitionId === request.body.competitionId
+    // );
+    const competitionResult = await getTournamentTeamsByCompIdQuery(request.body.competitionId, request, fastify);
     const competitionTeamIds = new Set(competitionResult.map(item => item.teamId));
     result = result.filter(
       (item) => competitionTeamIds.has(item.teamId)
