@@ -709,6 +709,8 @@ const virtualEventTossService = async (request, fastify) => {
     ballPlayerId: 0,
     ballBowlerId: 0,
     ballFielderId1: 0,
+    devOver: null,
+    devCurrentOverBall: null,
     ballFielderId2: 0,
     overIsMaiden: false,
     nextBatStrikeId: onStrikePlayerId,
