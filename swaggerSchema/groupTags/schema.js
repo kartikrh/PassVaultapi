@@ -10184,10 +10184,26 @@ const EntitySport = {
       },
     }
   },
-  SaveCommentary : {
+  SaveCompetition : {
     schema : {
       tags: ["EntitySport"],
       description: "save competitions",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionIds: { type: "array" },
+          tournamentTeamPoint : {type : "array"},
+          tournamentTeamPlayers : {type : "array"}
+        },
+        required: ["competitionIds"],
+      },
+    }
+  },
+  SaveCommentary : {
+    schema : {
+      tags: ["EntitySport"],
+      description: "save commentary",
       security: [{ bearerAuth: [] }],
       body: {
         type: "object",
