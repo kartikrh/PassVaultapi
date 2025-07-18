@@ -10199,6 +10199,21 @@ const EntitySport = {
         required: ["competitionIds"],
       },
     }
+  },
+  
+  SaveCommentary : {
+    schema : {
+      tags: ["EntitySport"],
+      description: "save commentary",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryIds : { type: "array" },
+        },
+        required: ["commentaryIds"],
+      },
+    }
   }
 }
 module.exports = {

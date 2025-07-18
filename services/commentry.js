@@ -3509,8 +3509,9 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         // }
       }
       if (
-        previousCommentaryStatus != statusToUpdate &&
-        commentaryData?.isPredictMarket == true
+        previousCommentaryStatus != statusToUpdate 
+        // &&
+        // commentaryData?.isPredictMarket == true
       ) {
         callDataProvider(
           {
