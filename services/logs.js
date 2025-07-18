@@ -106,11 +106,20 @@ const getEMLogsService = async(request,fastify)=>{
     }
     if(eventTypeId && eventTypeId != 0){
         let com = global.tblCommentaries.filter((c)=> c.eventTypeId == eventTypeId).map((e)=>e.commentaryId)
-        cId = com;
+        if (com.length > 0) {
+            cId = com;
+        } else {
+            cId = [0]
+        }
     }
     if(competitionId && competitionId !=0){
         let com = global.tblCommentaries.filter((c)=> c.competitionId == competitionId).map((e)=>e.commentaryId)
-        cId = com;
+        // cId = com;
+        if (com.length > 0) {
+            cId = com;
+        } else {
+            cId = [0]
+        }
     }
     
     const rs = await allEMLogsQuery({...request.body,cId} || {} , request , fastify);

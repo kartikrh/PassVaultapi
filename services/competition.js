@@ -409,14 +409,15 @@ const deleteCompetitionService = async (request, fastify) => {
       throw new Error(`Competition with id ${id} not found`);
     }
 
+    const commentaryExists = await getAllCommByCompIdQuery(id, request, fastify);
+    if (commentaryExists) {
+      throw new Error(`'${validateId?.competition}' competition has commentary and cannot be deleted at the moment`);
+    }
+
     if (validateId?.image) {
       await removeImageFromServer({
         path: validateId.image,
       });
-    }
-    const commentaryExists = await getAllCommByCompIdQuery(id, request, fastify);
-    if (commentaryExists) {
-      throw new Error(`'${validateId?.competition}' competition has commentary and cannot be deleted at the moment`);
     }
   }
 
