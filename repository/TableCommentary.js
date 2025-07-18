@@ -7630,7 +7630,7 @@ const getComEntityQuery = async (data,request,fastify) => {
       LEFT JOIN "tblCompetitions" co ON tc."wrCompetitionId" = co."wrCompetitionId"
       LEFT JOIN "tblUsers" tu ON tc."wrCreatedBy" = tu."WrUserId"
       WHERE tc."wrIsDelete" = FALSE
-      AND tc."wrCommentaryId" =ANY($1)
+      AND tc."wrCommentaryId" = ANY($1)
       AND (
         tc."wrCommentaryStatus" != 4
         OR (tc."wrCommentaryStatus" = 4 AND tc."wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days')
@@ -7641,7 +7641,7 @@ const getComEntityQuery = async (data,request,fastify) => {
       );`,
       {
         type: fastify.db.QueryTypes.SELECT,
-        data : [
+        bind : [
           commentaryIds
         ]
       }
