@@ -37,7 +37,6 @@ const saveCompetitions = async (request ,reply ,fastify)=>{
         errorLogger(fastify, err.message, path + "/saveCompetitions", request);
         reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
     }
-    
 }
 const saveCommentaries = async (request ,reply ,fastify)=>{
     try {
@@ -47,6 +46,7 @@ const saveCommentaries = async (request ,reply ,fastify)=>{
         errorLogger(fastify, err.message, path + "/saveCommentaries", request);
         reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
     }
+
 }
 module.exports = {
     saveTeams,
