@@ -10184,7 +10184,7 @@ const EntitySport = {
       },
     }
   },
-  SaveCompetition : {
+  SaveCommentary : {
     schema : {
       tags: ["EntitySport"],
       description: "save competitions",
@@ -10192,11 +10192,9 @@ const EntitySport = {
       body: {
         type: "object",
         properties: {
-          competitionIds: { type: "array" },
-          tournamentTeamPoint : {type : "array"},
-          tournamentTeamPlayers : {type : "array"}
+          commentaryIds : { type: "array" },
         },
-        required: ["competitionIds"],
+        required: ["commentaryIds"],
       },
     }
   }

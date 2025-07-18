@@ -20,7 +20,7 @@ module.exports = async (fastify, opts) => {
     handler: (request, reply) => saveCompetitions(request, reply, fastify),
   });
    fastify.post("/saveCommentary", {
-    schema: EntitySport.SaveCompetition.schema,
+    schema: EntitySport.SaveCommentary.schema,
     handler: (request, reply) => saveCommentaries(request, reply, fastify),
   });
 };
