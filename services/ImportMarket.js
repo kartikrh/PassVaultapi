@@ -72,9 +72,8 @@ const ImportMarketService = async (request, fastify) => {
     let CompetitionsObj = global.tblCompetitions.find(
       (item) =>
         item.eventTypeId === setEventtype.eventTypeId &&
-        item.refId != null &&
-        (item.refId == request.body.competitionRefId ||
-        item.competitionId == request.body.competitionId)
+        (item.refId == request.body.competitionId ||
+        item.competitionId == request.body.compId)
     );
     if (!CompetitionsObj) {
       request.body.eventTypeId = setEventtype.eventTypeId;
