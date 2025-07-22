@@ -89,7 +89,15 @@ const allCompetitionService = async (request) => {
     return Object.entries(filterObject).every(([key, value]) => item[key] === value);
   });
 
-  return result;
+  const compData = result.map(item => {
+    const eventType = global.tblEventTypes.find(elem => elem.eventTypeId == item.eventTypeId)?.eventType || null;
+    return {
+      ...item,
+      eventType
+    }
+  });
+
+  return compData;
 };
 
 const competitionByIdService = async (request) => {
@@ -285,7 +293,7 @@ const updateCompititionService = async (request, fastify) => {
     endDate: request.body.endDate || validateId.endDate,
     tpId: request.body.tpId || validateId.tpId,
     pythonId: request.body.pythonId || validateId.pythonId,
-    countryId: request.body.countryId || validateId.countryId,
+    countryId: request.body.countryId === undefined ? validateId.countryId : request.body.countryId,
   };
   const developerName = global.tblPythonAPI.find(item => item.id === data?.pythonId);
   data.developerName = developerName?.developerName ?? null
