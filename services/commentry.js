@@ -687,8 +687,6 @@ const createCommentaryService = async (request, fastify) => {
           request.body.team2Players &&
           request.body.team2Players.length > 0
         ) {
-          console.log("request.body.team1Players", request.body.team1Players)
-          console.log("request.body.team2Players", request.body.team2Players)
           const data = [
             ...request.body.team1Players.map((item, i) => {
               const playerTpId = global.tblPlayers.find(elem => elem.playerId === item);
@@ -817,8 +815,6 @@ const createCommentaryService = async (request, fastify) => {
             };
           }),
         ];
-        console.log("request.body.team1Players", request.body.team1Players)
-          console.log("request.body.team2Players", request.body.team2Players)
         for (let info of data) {
           let playerData = await insertCommentaryPlayers(
             {

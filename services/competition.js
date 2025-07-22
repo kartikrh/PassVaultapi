@@ -20,6 +20,8 @@ const { PROJECT_NAME } = require("../utilities/configConstants");
 const {ImgModuleConfig} = require("../utilities/imageConstant");
 const { APIEndpointModuleType, ServiceType, callClientAPI, compStatus, callCardCricket } = require("../utilities");
 const { getCommentariesResultQuery, getAllCommByCompIdQuery } = require("../repository/TableCommentary")
+const { deleteTournamentTeamPlayersByCompIdQuery } = require("../repository/TableTournamentsTeamPlayers");
+const { deleteTournamentTeamPointsByCompIdQuery } = require("../repository/TableTournmentTeamPoints");
 
 // const allCompetitionService = async (request) => {
 //   const { isActive, isTrending, eventTypeId, matchTypeId, isMen, type } = request.body;
@@ -434,6 +436,13 @@ const deleteCompetitionService = async (request, fastify) => {
   global.tblCompetitions = global.tblCompetitions.filter(
     (item) => !competitionId.includes(item.competitionId)
   );
+
+  await deleteTournamentTeamPointsByCompIdQuery(competitionId, fastify, request);
+  await deleteTournamentTeamPlayersByCompIdQuery(competitionId, request, fastify);
+  
+  global.tblTournamentTeamPlayers = global.tblTournamentTeamPlayers.filter(item => 
+    !competitionId.includes(item.competitionId)
+  )
   // global.tblCommentaries = global.tblCommentaries.filter(
   //   (item) => !competitionId.includes(item.competitionId)
   // );

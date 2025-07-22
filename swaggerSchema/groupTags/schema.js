@@ -1962,6 +1962,7 @@ const MatchType = {
           valueOfFrontFootNoBall: { type: "integer" },
           isAutoChangeStriker: { type: "boolean" },
           autoChangeStrikerAfterBall: { type: "integer" },
+          entityEnum: { type: "integer" },
         },
         required: ["matchTypeId"],
       },
@@ -2592,7 +2593,7 @@ const Commentary = {
         type: "object",
         properties: {
           commentaryId: { type: "integer" },
-          eventRefId: { type: "string" },
+          eventRefId: { type: ["string", "null"] },
         },
         required: ["commentaryId", "eventRefId"],
       },

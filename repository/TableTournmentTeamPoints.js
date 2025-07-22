@@ -418,6 +418,30 @@ const getClientTournamentTeamPointsQuery = async (request, fastify) => {
     throw new Error(err.message);
   }
 };
+
+const deleteTournamentTeamPointsByCompIdQuery = async (competitionIds, fastify, request) => {
+  try {
+    return await fastify.db.query(
+      `
+        DELETE FROM "tblTournamentTeamPoint"
+        WHERE "wrCompetitionId" = ANY($1)
+      `,
+    {
+      type: fastify.db.QueryTypes.DELETE,
+      bind: [competitionIds],
+    }
+  );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableTournamentTeamPoints.js/deleteTournamentTeamPointsByCompIdQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllTournamentTeamPointsQuery,
   insertTournamentTeamPointsQuery,
@@ -429,4 +453,5 @@ module.exports = {
   getTournamentPointsByTeamIdQuery,
   getTournamentTeamsByCompIdQuery,
   getClientTournamentTeamPointsQuery,
+  deleteTournamentTeamPointsByCompIdQuery,
 };
