@@ -687,6 +687,8 @@ const createCommentaryService = async (request, fastify) => {
           request.body.team2Players &&
           request.body.team2Players.length > 0
         ) {
+          console.log("request.body.team1Players", request.body.team1Players)
+          console.log("request.body.team2Players", request.body.team2Players)
           const data = [
             ...request.body.team1Players.map((item, i) => {
               const playerTpId = global.tblPlayers.find(elem => elem.playerId === item);
@@ -815,6 +817,8 @@ const createCommentaryService = async (request, fastify) => {
             };
           }),
         ];
+        console.log("request.body.team1Players", request.body.team1Players)
+          console.log("request.body.team2Players", request.body.team2Players)
         for (let info of data) {
           let playerData = await insertCommentaryPlayers(
             {
@@ -10454,12 +10458,21 @@ const updateEventRefIdInCommentaryService = async (request, fastify) => {
     throw new Error("Commentary with this id not Found");
   }
   // check if the eventRefId is already assigned to another commentary
-  const commentary = global.tblCommentaries.find(
-    (item) => item.eventRefId === eventRefId.trim()
-  );
-  if (commentary) {
-    throw new Error("EventRefId should be unique");
+  if(eventRefId) {
+    const commentary = global.tblCommentaries.find(
+      (item) => item.eventRefId === eventRefId.trim() &&
+      item.commentaryId !== commentaryId
+    );
+    if (commentary) {
+      throw new Error("EventRefId should be unique");
+    }
   }
+  // const commentary = global.tblCommentaries.find(
+  //   (item) => item.eventRefId === eventRefId.trim()
+  // );
+  // if (commentary) {
+  //   throw new Error("EventRefId should be unique");
+  // }
 
   await updateEventRefIdInCommentaryQuery(request.body, fastify, request);
 
