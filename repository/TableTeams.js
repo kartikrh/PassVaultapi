@@ -62,7 +62,7 @@ const getTeamsByIds = async (data,request,fastify) => {
      FROM "tblTeams" tt
       LEFT JOIN "tblEventTypes" et ON tt."wrEventTypeId" = et."wrEventTypeId"
       WHERE 
-      tt."wrTeamId" = ANY($1)
+      tt."wrTeamId" = ANY($1) AND
       tt."wrIsDeleted" = false`,
     {
       type: fastify.db.QueryTypes.SELECT,
@@ -74,7 +74,7 @@ const getTeamsByIds = async (data,request,fastify) => {
   } catch (error) {
      errorLogger(
       fastify,
-      err.message,
+      error.message,
       "DB ERROR --> repository/TableTeams/getTeamsByIds",
       request
     );
