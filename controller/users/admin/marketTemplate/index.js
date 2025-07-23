@@ -29,7 +29,6 @@ const saveMarketTemplate = async (request, reply, fastify) => {
     const result = await saveMarketTemplateService(request, fastify);
     reply.status(200).send(success(result, 200));
   } catch (err) {
-    console.log("errorrrr", err)
     errorLogger(fastify, err.message, commonPath + "/saveMarketTemplate", request);
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
