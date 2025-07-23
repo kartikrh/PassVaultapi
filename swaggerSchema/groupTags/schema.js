@@ -4515,6 +4515,7 @@ const MarketTemplate = {
         properties: {
           marketTemplateId: { type: "integer" },
           templateName: { type: "string" },
+          devTemplateName: { type: "string" },
           matchTypeID: { type: "integer" },
           isPredefineMarket: { type: "boolean" },
           isPreMatchOnly: { type: "boolean" },
@@ -4562,6 +4563,7 @@ const MarketTemplate = {
           "marketTypeId",
           "marketTypeCategoryId",
           "margin",
+          "devTemplateName",
         ],
       },
     },

@@ -242,6 +242,7 @@ const getTemplateRunnerQuery = async (data,request, fastify) => {
                 tmt."wrDefaultIsSendData" AS "defaultIsSendData",
                 tmt."wrHowManyOpenMarkets" AS "howManyOpenMarkets",
                 tmt."wrRateDiff" AS "rateDiff",
+                tmt."wrDevTemplateName" as "devTemplateName",
                 tmt."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
                 tmt."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
                 COALESCE(runner_data.runners, '[]') AS "runners"
