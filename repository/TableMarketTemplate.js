@@ -53,6 +53,7 @@ const getAllMarketTemplateQuery = async (fastify) => {
       "wrHowManyOpenMarkets" as "howManyOpenMarkets",
       "wrRateDiff" as "rateDiff",
       "wrNotIncludedOver" as "notIncludedOver",
+      tmt."wrDevTemplateName" as "devTemplateName",
       tmt."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
       tmt."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
       tmt."wrIsPython" as "isPython"
@@ -79,10 +80,11 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
               "wrMarketTypeId","wrMarketTypeCategoryId","wrMargin" , "wrCreateRefId" , "wrOpenRefId",
               "wrTemplateType", "wrDelay","wrIsDefaultBetAllowed","wrIsDefaultMarketActive", "wrIsPerEvent", "wrIsShowInAdvanceMarket",
               "wrLineType", "wrDefaultBackSize", "wrDefaultLaySize","wrBeforeSuspendMin","wrBeforeCloseMin", "wrDefaultIsSendData",
-              "wrHowManyOpenMarkets", "wrRateDiff", "wrNotIncludedOver", "wrAutoSuspendAfterChase", "wrAutoNotCreateAfterChase", "wrIsPython"
+              "wrHowManyOpenMarkets", "wrRateDiff", "wrNotIncludedOver", "wrAutoSuspendAfterChase", "wrAutoNotCreateAfterChase", "wrIsPython",
+              "wrDevTemplateName"
               ) values (
                 $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26, $27, $28, $29, $30, $31, $32,$33,$34,$35,$36,
-                $37, $38, $39 ,$40 ,$41, $42, $43, $44, $45, $46, $47, $48
+                $37, $38, $39 ,$40 ,$41, $42, $43, $44, $45, $46, $47, $48, $49
                 ) returning *
           )        
         select 
@@ -133,6 +135,7 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
         "wrHowManyOpenMarkets" as "howManyOpenMarkets",
         "wrRateDiff" as "rateDiff",
         "wrNotIncludedOver" as "notIncludedOver",
+        "wrDevTemplateName" as "devTemplateName",
         "wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
         "wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
         "wrIsPython" as "isPython"
@@ -202,6 +205,7 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
           data.autoSuspendAfterChase === undefined ? null : data.autoSuspendAfterChase,
           data.autoNotCreateAfterChase === undefined ? null : data.autoNotCreateAfterChase,
           data.isPython === undefined ? true : data.isPython,
+          data.devTemplateName === undefined ? null : data.devTemplateName,
         ],
       }
     );
@@ -229,10 +233,10 @@ const insertMarketTemplateInCloneQuery = async (data, fastify, request) => {
               "wrTemplateType", "wrDelay","wrIsDefaultBetAllowed","wrIsDefaultMarketActive", "wrIsPerEvent", "wrIsPredefineRunnerValue", "wrIsShowInAdvanceMarket",
               "wrLineType", "wrDefaultBackSize", "wrDefaultLaySize"
                ,"wrBeforeSuspendMin","wrBeforeCloseMin", "wrDefaultIsSendData", "wrHowManyOpenMarkets", "wrRateDiff", "wrNotIncludedOver",
-               "wrAutoSuspendAfterChase", "wrAutoNotCreateAfterChase", "wrIsPython"
+               "wrAutoSuspendAfterChase", "wrAutoNotCreateAfterChase", "wrIsPython", "wrDevTemplateName"
               ) values (
                 $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26, $27, $28, $29, $30, $31, $32,$33,$34,$35,$36,$37,
-                $38, $39, $40 ,$41 ,$42, $43, $44, $45, $46, $47, $48, $49
+                $38, $39, $40 ,$41 ,$42, $43, $44, $45, $46, $47, $48, $49, $50
                 ) returning *
           )        
         select 
@@ -283,6 +287,7 @@ const insertMarketTemplateInCloneQuery = async (data, fastify, request) => {
         "wrHowManyOpenMarkets" as "howManyOpenMarkets",
         "wrRateDiff" as "rateDiff",
         "wrNotIncludedOver" as "notIncludedOver",
+        "wrDevTemplateName" as "devTemplateName",
         "wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
         "wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
         "wrIsPython" as "isPython"
@@ -349,6 +354,7 @@ const insertMarketTemplateInCloneQuery = async (data, fastify, request) => {
           data.autoSuspendAfterChase === undefined ? null : data.autoSuspendAfterChase,
           data.autoNotCreateAfterChase === undefined ? null : data.autoNotCreateAfterChase,
           data.isPython === undefined ? true : data.isPython,
+          data.devTemplateName === undefined ? null : data.devTemplateName,
         ],
       }
     );
@@ -495,7 +501,8 @@ const updateMarketTemplateQuery = async (data, fastify, request) => {
             "wrNotIncludedOver" = $45,
             "wrAutoSuspendAfterChase" = $46,
             "wrAutoNotCreateAfterChase" = $47,
-            "wrIsPython" = $48
+            "wrIsPython" = $48,
+            "wrDevTemplateName" = $49
         WHERE "wrID" = $32
         `,
         {
@@ -548,6 +555,7 @@ const updateMarketTemplateQuery = async (data, fastify, request) => {
                 data.autoSuspendAfterChase,
                 data.autoNotCreateAfterChase,
                 data.isPython,
+                data.devTemplateName,
             ],
             type: fastify.db.QueryTypes.SELECT,
         }
@@ -793,6 +801,7 @@ const getCommMatchTypeTemplatesQuery = async (commentaryId, whereCondition = nul
             tmt."wrDefaultIsSendData" AS "defaultIsSendData",
             tmt."wrHowManyOpenMarkets" as "howManyOpenMarkets",
             tmt."wrRateDiff" AS "rateDiff",
+            tmt."wrDevTemplateName" as "devTemplateName",
             tmt."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
             tmt."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase"
           FROM "tblCommMatchTypeTemplate" AS cmtt
