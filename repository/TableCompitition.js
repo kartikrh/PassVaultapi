@@ -821,6 +821,7 @@ const getCompetitionByIdsQuery = async (data , request , fastify)=>{
         tc."wrStartDate" as "startDate",
         tc."wrEndDate" as "endDate",
         tc."wrTpId" as "tpId",
+        tc."wrCountryId" as "countryId",
         tc."wrPythonId" as "pythonId",
         tpa."wrDeveloperName" as "developerName"
         from "tblCompetitions" tc 
