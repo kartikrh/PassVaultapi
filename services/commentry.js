@@ -191,11 +191,28 @@ const allCommentaryService = async (request, fastify) => {
   let result;
   if (commentaryStatus === undefined) {
     // result = global.tblCommentaries.filter(
-    //   (item) => item.commentaryStatus !== 4 && item.commentaryStatus !== 10
+    //   (item) => item.commentaryStatus !== 4 || item.commentaryStatus !== 10
     // );
     result = global.tblCommentaries.filter(
       (item) => item.commentaryStatus === 1 || item.commentaryStatus === 3
     );
+    if (startDate && endDate) {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    result = result.filter((item) => {
+        const eventDate = new Date(item.eventDate);
+
+        if (item.commentaryStatus === 1) {
+          // only between start & end (inclusive)
+          return eventDate >= start && eventDate <= end;
+        }
+        if (item.commentaryStatus === 3) {
+          // strictly before start
+          return eventDate < end;
+        }
+        return false;
+      }).sort((a, b) => new Date(b.eventDate) - new Date(a.eventDate));
+    }
     return result
   }
   if (commentaryStatus && commentaryStatus != 0) {
