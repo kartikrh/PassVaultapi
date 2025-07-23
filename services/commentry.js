@@ -190,9 +190,13 @@ const allCommentaryService = async (request, fastify) => {
   } = request.body;
   let result;
   if (commentaryStatus === undefined) {
+    // result = global.tblCommentaries.filter(
+    //   (item) => item.commentaryStatus !== 4 && item.commentaryStatus !== 10
+    // );
     result = global.tblCommentaries.filter(
-      (item) => item.commentaryStatus !== 4 && item.commentaryStatus !== 10
+      (item) => item.commentaryStatus === 3
     );
+    return result
   }
   if (commentaryStatus && commentaryStatus != 0) {
     result = global.tblCommentaries.filter(
