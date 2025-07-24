@@ -14,6 +14,7 @@ const {
   deleteCompMarketTemplateQuery,
   getAssignedTemplateByCompetitionIdQuery,
   upStatusQuery,
+  getMatchTypeTemplateByCompetitionIdQuery,
 } = require("../repository/TableCompitition");
 const {storeImageOnServer, removeImageFromServer, generateImageName } = require("../utilities/Images");
 const { PROJECT_NAME } = require("../utilities/configConstants");
@@ -756,6 +757,27 @@ const getTemplateByCompetitionIdService = async (request, fastify) => {
   }, request, fastify);
   return result;
 }
+const getMatchTypeTemplateByCompetitionIdService = async (request, fastify) => {
+  let comp = global.tblCompetitions.find(
+    (item) => item?.competitionId === request.body.competitionId
+  );
+  if (!comp) {
+    throw new Error("Competition with this id not Found");
+  }
+  let validateMatchType = global.tblMatchTypes.find(
+    (item) => item?.matchTypeId === comp?.matchTypeId
+  );
+  if (!validateMatchType) {
+    throw new Error("Competitions matchTypeId not found");
+  }
+  
+  const result = await getMatchTypeTemplateByCompetitionIdQuery({
+    competitionId: request.body.competitionId,
+    matchTypeId: comp.matchTypeId
+  }, request, fastify);
+
+  return result;
+}
 const saveCompTemplatesService = async (request, fastify) => {
   const { saveTemplates, dltTemplate } = request.body;
   await saveCompMarketTemplateQuery({ saveTemplates, dltTemplate }, request, fastify);
@@ -849,5 +871,6 @@ module.exports = {
   getTemplateByCompetitionIdService,
   saveCompTemplatesService,
   isVirtualCompetitionService,
-  upCompStatusService
+  upCompStatusService,
+  getMatchTypeTemplateByCompetitionIdService,
 };

@@ -16,6 +16,7 @@ const {
   saveCompTemplatesService,
   isVirtualCompetitionService,
   upCompStatusService,
+  getMatchTypeTemplateByCompetitionIdService,
 } = require("../../../../services/competition");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -224,6 +225,15 @@ const getTemplateByCompetitionId = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const getMatchTypeTemplateByCompetitionId = async (request, reply, fastify) => {
+  try {
+    const result = await getMatchTypeTemplateByCompetitionIdService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/getMatchTypeTemplateByCompetitionId", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 const saveCompTemplates = async (request, reply, fastify) => {
   try {
     const result = await saveCompTemplatesService(request, fastify);
@@ -285,4 +295,5 @@ module.exports = {
   isVirtualCompetition,
   upCompStatus,
   allPythonAPIs,
+  getMatchTypeTemplateByCompetitionId,
 };
