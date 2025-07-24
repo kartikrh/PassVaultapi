@@ -738,6 +738,7 @@ const multiCloneMarketTemplateService  = async (request, fastify) => {
       }
       matchType = validateMatchType?.matchType
     }
+    
     let data = await insertMarketTemplateInCloneQuery(
       {
         ...marketTemplate,
