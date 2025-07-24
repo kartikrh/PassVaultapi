@@ -4420,8 +4420,9 @@ const MarketTemplate = {
         properties: {
           marketTemplateId: { type: "integer" },
           matchTypeID: { type: "integer" },
+          devTemplateName: { type: "string" }
         },
-        required: ["marketTemplateId", "matchTypeID"],
+        required: ["marketTemplateId", "matchTypeID", "devTemplateName"],
       },
     },
   },
@@ -4442,6 +4443,31 @@ const MarketTemplate = {
                 matchTypeID: { type: "integer" },
               },
               required: ["marketTemplateId", "matchTypeID"],
+            }
+          }
+        },
+        required: ["marketTemplates"],
+      },
+    },
+  },
+  cloneMultipletemplates: {
+    schema: {
+      tags: ["Market Template"],
+      security: [{ bearerAuth: [] }],
+      description: "clone market template",
+      body: {
+        type: "object",
+        properties: {
+          marketTemplates: {
+            type : "array",
+            items: {
+              type: "object",
+              properties: {
+                marketTemplateId: { type: "integer" },
+                matchTypeID: { type: "integer" },
+                devTemplateName: { type: "string" },
+              },
+              required: ["marketTemplateId", "matchTypeID", "devTemplateName"],
             }
           }
         },
@@ -4555,6 +4581,7 @@ const MarketTemplate = {
           beforeSuspendMin: { type: "integer" },
           beforeCloseMin: { type: "integer" },
           delay: { type: "integer" },
+          matchTypeIds: { type: "array" },
         },
         required: [
           "marketTemplateId",
