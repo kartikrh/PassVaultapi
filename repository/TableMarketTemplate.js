@@ -296,7 +296,7 @@ const insertMarketTemplateInCloneQuery = async (data, fastify, request) => {
         type: fastify.db.QueryTypes.SELECT,
         bind: [
           data.templateName || null,
-          data.matchTypeID || null,
+          data.matchTypeID == undefined ? null : data.matchTypeID,
           data.hasOwnProperty("isPredefineMarket")
             ? data.isPredefineMarket
             : null,
