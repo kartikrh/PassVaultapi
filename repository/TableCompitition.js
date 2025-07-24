@@ -821,6 +821,7 @@ const getCompetitionByIdsQuery = async (data , request , fastify)=>{
         tc."wrStartDate" as "startDate",
         tc."wrEndDate" as "endDate",
         tc."wrTpId" as "tpId",
+        tc."wrCountryId" as "countryId",
         tc."wrPythonId" as "pythonId",
         tpa."wrDeveloperName" as "developerName"
         from "tblCompetitions" tc 
@@ -847,6 +848,79 @@ const getCompetitionByIdsQuery = async (data , request , fastify)=>{
     // throw new Error(err.message);
   }
 }
+const getMatchTypeTemplateByCompetitionIdQuery = async (data,request, fastify) => {
+  try {
+    let assignedMarketTemplates = await fastify.db.query(
+      `
+        SELECT  
+          tcm."wrId" as "id",
+          tcm."wrMarketTemplateId" as "marketTemplateId",
+          tcm."wrCompetitionId" as "competitionId",
+          tmt."wrDevTemplateName" as "devTemplateName",
+          tmt."wrTemplateName" as "templateName",
+          tmt1."wrId" as "marketTypeId",
+          tmt1."wrMarketTypeName" as "marketTypeName",
+          tmc."wrId" as "marketTypeCategoryId",
+          tmc."wrCategoryName" as "categoryName"
+        FROM "tblCompMarketTemplate" tcm
+        LEFT JOIN "tblMarketTemplates" tmt ON tcm."wrMarketTemplateId" = tmt."wrID"
+        LEFT JOIN "tblMarketTypes" tmt1 ON tmt."wrMarketTypeId" = tmt1."wrId"
+        LEFT JOIN "tblMarketTypeCategories" tmc ON tmt."wrMarketTypeCategoryId" = tmc."wrId"
+        WHERE tcm."wrCompetitionId" = $1
+        AND tmt."wrIsDeleted" = false
+        AND tmt."wrIsActive" = true
+        ORDER BY tmc."wrDisplayOrder" ASC, tmt."wrTemplateName" ASC;
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [data.competitionId],
+      }
+    );
+
+    let unAssignedMarketTemplates = await fastify.db.query(
+      `
+        SELECT 
+          tmtt."wrMarketTemplateId" as "marketTemplateId",
+          tmt."wrDevTemplateName" as "devTemplateName",
+          tmt."wrTemplateName" as "templateName",
+          tmt1."wrId" as "marketTypeId",
+          tmt1."wrMarketTypeName" as "marketTypeName",
+          tmc."wrId" as "marketTypeCategoryId",
+          tmc."wrCategoryName" as "categoryName"
+        FROM "tblMatchTypeTemplates" tmtt
+        LEFT JOIN "tblMarketTemplates" tmt ON tmt."wrID" = tmtt."wrMarketTemplateId"
+        LEFT JOIN "tblMarketTypes" tmt1 ON tmt."wrMarketTypeId" = tmt1."wrId"
+        LEFT JOIN "tblMarketTypeCategories" tmc ON tmt."wrMarketTypeCategoryId" = tmc."wrId"
+        WHERE tmt."wrIsDeleted" = false
+        AND tmtt."wrMatchTypeId" = $1
+        AND tmt."wrIsActive" = true
+        AND tmtt."wrMarketTemplateId" NOT IN (
+          SELECT "wrMarketTemplateId" FROM "tblCompMarketTemplate" WHERE "wrCompetitionId"= $2
+        ) 
+        ORDER BY tmc."wrDisplayOrder" ASC, tmt."wrDevTemplateName" ASC;
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [data.matchTypeId, data.competitionId],
+      }
+    );
+
+    return {
+      assignedTemplates: assignedMarketTemplates,
+      unassignedTemplates: unAssignedMarketTemplates,
+    }
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCompitition/getTemplateByCompetitionIdQuery",
+      request
+    );
+    throw new Error(error.message);
+    
+  }
+}
+
 module.exports = {
   getAllCompititionQuery,
   insertCompetitionQuery,
@@ -865,5 +939,6 @@ module.exports = {
   getAssignedTemplateByCompetitionIdQuery,
   upStatusQuery,
   getAllCompetitionByIdsQuery,
-  getCompetitionByIdsQuery
+  getCompetitionByIdsQuery,
+  getMatchTypeTemplateByCompetitionIdQuery,
 };

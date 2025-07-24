@@ -187,11 +187,15 @@ const allCommentaryService = async (request, fastify) => {
     isVirtual,
     startDate,
     endDate,
+    pythonId,
   } = request.body;
   let result;
   if (commentaryStatus === undefined) {
+    // result = global.tblCommentaries.filter(
+    //   (item) => item.commentaryStatus !== 4 || item.commentaryStatus !== 10
+    // );
     result = global.tblCommentaries.filter(
-      (item) => item.commentaryStatus !== 4 && item.commentaryStatus !== 10
+      (item) => item.commentaryStatus === 1 || item.commentaryStatus === 3
     );
   }
   if (commentaryStatus && commentaryStatus != 0) {
@@ -214,18 +218,34 @@ const allCommentaryService = async (request, fastify) => {
   if (competitionId) {
     result = result.filter((item) => item.competitionId === competitionId);
   }
-  result.sort((a, b) => new Date(a.eventDate) - new Date(b.eventDate));
 
-  // add dateFilter if provided
+  if (pythonId) {
+    result = result.filter((item) => item.pythonId === pythonId);
+  }
+
   if (startDate && endDate) {
-    result = result
-      ?.filter((item) => {
-        return (
-          new Date(item.eventDate) >= new Date(startDate) &&
-          new Date(item.eventDate) <= new Date(endDate)
-        );
-      })
-      .sort((a, b) => new Date(b.eventDate) - new Date(a.eventDate));
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    if (commentaryStatus === undefined) {
+      result = result.filter((item) => {
+        const eventDate = new Date(item.eventDate);
+
+        if (item.commentaryStatus === 1) {
+          return eventDate >= start && eventDate <= end;
+        }
+        if (item.commentaryStatus === 3) {
+          return eventDate <= end;
+        }
+
+        return false;
+      });
+    } else {
+      result = result.filter((item) => {
+        const eventDate = new Date(item.eventDate);
+        return eventDate >= start && eventDate <= end;
+      });
+    }
   }
   result = result.map(item => {
     const pythonAPI = global.tblPythonAPI.find(elem => elem.id == item.pythonId);
@@ -235,6 +255,7 @@ const allCommentaryService = async (request, fastify) => {
       developerName: pythonAPI?.developerName ?? null
     };
   });
+  result.sort((a, b) => new Date(a.eventDate) - new Date(b.eventDate));
   return result;
 };
 
