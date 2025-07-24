@@ -48,10 +48,22 @@ const getMarketTemplateIdService = async (request) => {
   const result = global.tblMarketTemplate.find(
     (item) => item.marketTemplateId === marketTemplateId
   );
+  if (!result) return null;
+  const matchTypeTemplates = global.tblMatchTypeTemplates.filter(elem => 
+    elem.marketTemplateId == marketTemplateId
+  ).map(el => {
+    return {
+      id: el.id,
+      matchTypeId: el.matchTypeId,
+      matchType: el.matchType,
+    }
+  });
+
   if (result && result.rateDiff === 0) {
     result.rateDiff = result.rateDiff.toString();
   }
-  return result || null;
+  result.matchTypeIds = matchTypeTemplates || [];
+  return result;
 };
 
 const createMarketTemplateService = async (request, fastify) => {

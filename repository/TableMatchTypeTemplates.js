@@ -4,12 +4,16 @@ const getAllMatchTypeTemplatesQuery = async (fastify) => {
     try {
         return await fastify.db.query(
             `SELECT 
-                "wrId" as "id",
-                "wrMarketTemplateId" as "marketTemplateId",
-                "wrMatchTypeId" as "matchTypeId",
-                "wrCreatedBy" as "createdBy",
-                "wrCreatedAt" as "createdAt"
-            FROM "tblMatchTypeTemplates"`,
+                tmtt."wrId" as "id",
+                tmtt."wrMarketTemplateId" as "marketTemplateId",
+                tmt."wrDevTemplateName" as "devTemplateName",
+                tmtt."wrMatchTypeId" as "matchTypeId",
+                tm."wrMatchType" as "matchType",
+                tmtt."wrCreatedBy" as "createdBy",
+                tmtt."wrCreatedAt" as "createdAt"
+            FROM "tblMatchTypeTemplates" tmtt
+            LEFT JOIN "tblMarketTemplates" tmt ON tmt."wrID" = tmtt."wrMarketTemplateId"
+            LEFT JOIN "tblMatchTypes" tm ON tm."wrMatchTypeId" = tmtt."wrMatchTypeId"`,
             { type: fastify.db.QueryTypes.SELECT }
         );
     } catch (err) {
@@ -36,12 +40,16 @@ const insertMatchTypeTemplatesQuery = async (data, fastify, request) => {
             RETURNING *
             )
             SELECT 
-                "wrId" as "id",
-                "wrMarketTemplateId" as "marketTemplateId",
-                "wrMatchTypeId" as "matchTypeId",
-                "wrCreatedBy" as "createdBy",
-                "wrCreatedAt" as "createdAt"
-            FROM insert_data;`,
+                tmtt."wrId" as "id",
+                tmtt."wrMarketTemplateId" as "marketTemplateId",
+                tmt."wrDevTemplateName" as "devTemplateName",
+                tmtt."wrMatchTypeId" as "matchTypeId",
+                tm."wrMatchType" as "matchType",
+                tmtt."wrCreatedBy" as "createdBy",
+                tmtt."wrCreatedAt" as "createdAt"
+            FROM insert_data tmtt
+            LEFT JOIN "tblMarketTemplates" tmt ON tmt."wrID" = tmtt."wrMarketTemplateId"
+            LEFT JOIN "tblMatchTypes" tm ON tm."wrMatchTypeId" = tmtt."wrMatchTypeId";`,
             {
                 type: fastify.db.QueryTypes.SELECT,
                 bind: [
