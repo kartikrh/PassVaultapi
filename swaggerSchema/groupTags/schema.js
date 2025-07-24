@@ -4585,7 +4585,6 @@ const MarketTemplate = {
         },
         required: [
           "marketTemplateId",
-          "matchTypeID",
           "playerName",
           "marketTypeId",
           "marketTypeCategoryId",
