@@ -15,7 +15,8 @@ const { callPredictorMarket } = require("../utilities");
 const { createMarketTemplateRunnerQuery } = require("../repository/TableMarketTemplateRunner")
 const { 
   insertMatchTypeTemplatesQuery,
-  deleteMatchTypeTempByMarketTemplateIdQuery
+  deleteMatchTypeTempByMarketTemplateIdQuery,
+  deleteTemplatesByMatchTypeIdQuery,
 } = require("../repository/TableMatchTypeTemplates");
 
 const getAllMarketTemplateService = async (request) => {
@@ -303,23 +304,52 @@ const updateMarketTemplateService = async (request, fastify) => {
   await updateMarketTemplateQuery(body, fastify, request);
 
   if (matchTypeIds?.length > 0) {
+    const existingMatchTypeIds = global.tblMatchTypeTemplates
+      .filter(item => item.marketTemplateId === marketTemplateId)
+      .map(item => item.matchTypeId);
+
+    const existingMatchTypeSet = new Set(existingMatchTypeIds);
+    const newMatchTypeSet = new Set(matchTypeIds);
     for (const elem of matchTypeIds) {
-      const validateMatchType = global.tblMatchTypes.find(item => 
-        item.matchTypeId === elem
-      )
-      if(!validateMatchType) continue;
-      const mttData = {
-        marketTemplateId: body.marketTemplateId,
-        matchTypeId: validateMatchType.matchTypeId
-      }
-      const matchTypeTemplate = global.tblMatchTypeTemplates.find(item => 
-        item.marketTemplateId == mttData.marketTemplateId &&
-        item.matchTypeId == mttData.matchTypeId
-      );
-      if(!matchTypeTemplate) {
+      // const validateMatchType = global.tblMatchTypes.find(item => 
+      //   item.matchTypeId === elem
+      // )
+      // if(!validateMatchType) continue;
+      // const mttData = {
+      //   marketTemplateId: body.marketTemplateId,
+      //   matchTypeId: validateMatchType.matchTypeId
+      // }
+      // const matchTypeTemplate = global.tblMatchTypeTemplates.find(item => 
+      //   item.marketTemplateId == mttData.marketTemplateId &&
+      //   item.matchTypeId == mttData.matchTypeId
+      // );
+      // if(!matchTypeTemplate) {
+      //   const saveData = await insertMatchTypeTemplatesQuery(mttData, fastify, request);
+      //   global.tblMatchTypeTemplates.push(saveData);
+      // }
+      if (!existingMatchTypeSet.has(elem)) {
+        const validateMatchType = global.tblMatchTypes.find(item => 
+          item.matchTypeId === elem
+        );
+        if (!validateMatchType) continue;
+
+        const mttData = {
+          marketTemplateId,
+          matchTypeId: validateMatchType.matchTypeId
+        };
         const saveData = await insertMatchTypeTemplatesQuery(mttData, fastify, request);
         global.tblMatchTypeTemplates.push(saveData);
       }
+    }
+    const matchTypeIdsToDelete = existingMatchTypeIds.filter(
+      id => !newMatchTypeSet.has(id)
+    );
+    if (matchTypeIdsToDelete.length > 0) {
+      await deleteTemplatesByMatchTypeIdQuery(matchTypeIdsToDelete, fastify, request);
+
+      global.tblMatchTypeTemplates = global.tblMatchTypeTemplates.filter(
+        item => !matchTypeIdsToDelete.includes(item.matchTypeId)
+      );
     }
   }
 
