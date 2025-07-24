@@ -92,7 +92,7 @@ const saveCommentariesService = async (request , fastify) =>{
             }
         }
         for (let ct of comp.comTeams){
-            let index = global.tblCommentaryTeams.findIndex((tp)=> tp.id == ct.id);
+            let index = global.tblCommentaryTeams.findIndex((tp)=> tp.commentaryTeamId == ct.commentaryTeamId);
             if(index == -1){
                 global.tblCommentaryTeams.push(ct)
             }
@@ -101,7 +101,7 @@ const saveCommentariesService = async (request , fastify) =>{
             }
         }
         for (let cp of comp.comPlayers){
-            let index = global.tblCommentaryPlayers.findIndex((tp)=> tp.id == cp.id);
+            let index = global.tblCommentaryPlayers.findIndex((tp)=> tp.commentaryPlayerId == cp.commentaryPlayerId);
             if(index == -1){
                 global.tblCommentaryPlayers.push(cp)
             }
