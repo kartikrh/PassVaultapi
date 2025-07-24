@@ -427,7 +427,7 @@ const changePredefineRunnerService = async (request, fastify) => {
 
 const cloneMarketTemplateService = async (request, fastify) => {
   // validate marketTemplateId
-  const { marketTemplateId, matchTypeID, templateName } = request.body;
+  const { marketTemplateId, matchTypeID, templateName, devTemplateName } = request.body;
   const marketTemplate = global.tblMarketTemplate.find(
     (item) => item.marketTemplateId === marketTemplateId
   );
@@ -435,13 +435,13 @@ const cloneMarketTemplateService = async (request, fastify) => {
     throw new Error("MarketTemplate not found");
   }
 
-  // const validate = global.tblMarketTemplate.find(item => 
-  //   item.devTemplateName !== null &&
-  //   item.devTemplateName.toLowerCase().trim() == request.body.devTemplateName.toLowerCase().trim()
-  // );
-  // if (validate) {
-  //   throw new Error(`DevTemplateName already existed`);
-  // }
+  const validate = global.tblMarketTemplate.find(item => 
+    item.devTemplateName !== null &&
+    item.devTemplateName.toLowerCase().trim() == devTemplateName.toLowerCase().trim()
+  );
+  if (validate) {
+    throw new Error(`DevTemplateName already existed`);
+  }
 
   const validateMatchType = global.tblMatchTypes.find(
     (item) => item.matchTypeId === matchTypeID
@@ -466,6 +466,29 @@ const cloneMarketTemplateService = async (request, fastify) => {
     marketTypeName : marketTemplate.marketTypeName,
     categoryName :marketTemplate.categoryName
   });
+  const matchTypeIds = global.tblMatchTypeTemplates.filter(item => 
+    item.marketTemplateId === marketTemplateId
+  )
+  if (matchTypeIds?.length > 0) {
+    for (const elem of matchTypeIds) {
+      const validateMatchType = global.tblMatchTypes.find(item => 
+        item.matchTypeId === elem.matchTypeId
+      )
+      if(!validateMatchType) continue;
+      const mttData = {
+        marketTemplateId: data?.marketTemplateId,
+        matchTypeId: validateMatchType?.matchTypeId
+      }
+      const matchTypeTemplate = global.tblMatchTypeTemplates.find(item => 
+        item.marketTemplateId == mttData.marketTemplateId &&
+        item.matchTypeId == mttData.matchTypeId
+      );
+      if(!matchTypeTemplate) {
+        const saveData = await insertMatchTypeTemplatesQuery(mttData, fastify, request);
+        global.tblMatchTypeTemplates.push(saveData);
+      }
+    }
+  }
 
 const validateTemplateRunners = global.tblMarketTemplateRunners.filter(
   (item) => item.marketTemplateId === marketTemplateId
@@ -580,14 +603,6 @@ const cloneMultiMarketTemplateService  = async (request, fastify) => {
       throw new Error("MarketTemplate not found");
     }
 
-    // const validate = global.tblMarketTemplate.find(item => 
-    //   item.devTemplateName !== null &&
-    //   item.devTemplateName.toLowerCase().trim() == mar.devTemplateName.toLowerCase().trim()
-    // );
-    // if (validate) {
-    //   throw new Error(`DevTemplateName already existed`);
-    // }
-
     const validateMatchType = global.tblMatchTypes.find(
       (item) => item.matchTypeId === matchTypeID
     );
@@ -694,6 +709,102 @@ const isPythonChangeService = async (request, fastify) => {
   return `MarketTemplate updated successfully`;
 };
 
+const multiCloneMarketTemplateService  = async (request, fastify) => {
+  const {marketTemplates} = request.body;
+  for (let mar of marketTemplates) {
+    const { marketTemplateId, matchTypeID, devTemplateName } = mar;
+    const marketTemplate = global.tblMarketTemplate.find(
+      (item) => item.marketTemplateId === marketTemplateId
+    );
+    if (!marketTemplate) {
+      throw new Error("MarketTemplate not found");
+    }
+
+    const validate = global.tblMarketTemplate.find(item => 
+      item.devTemplateName !== null &&
+      item.devTemplateName.toLowerCase().trim() == devTemplateName.toLowerCase().trim()
+    );
+    if (validate) {
+      throw new Error(`DevTemplateName already existed`);
+    }
+
+    const validateMatchType = global.tblMatchTypes.find(
+      (item) => item.matchTypeId === matchTypeID
+    );
+    if (!validateMatchType) {
+      throw new Error("MatchType with this id not found");
+    }
+    let data = await insertMarketTemplateInCloneQuery(
+      {
+        ...marketTemplate,
+        devTemplateName,
+        matchTypeID: matchTypeID,
+        createdBy: request.userTokenInfo.WrUserId,
+      },
+      fastify,
+      request
+    );
+    global.tblMarketTemplate.push({
+      ...data,
+      matchType: validateMatchType.matchType,
+      marketTypeName : marketTemplate.marketTypeName,
+      categoryName :marketTemplate.categoryName
+    });
+
+    const matchTypeIds = global.tblMatchTypeTemplates.filter(item => 
+      item.marketTemplateId === marketTemplateId
+    )
+    if (matchTypeIds?.length > 0) {
+      for (const elem of matchTypeIds) {
+        const validateMatchType = global.tblMatchTypes.find(item => 
+          item.matchTypeId === elem.matchTypeId
+        )
+        if(!validateMatchType) continue;
+        const mttData = {
+          marketTemplateId: data?.marketTemplateId,
+          matchTypeId: validateMatchType?.matchTypeId
+        }
+        const matchTypeTemplate = global.tblMatchTypeTemplates.find(item => 
+          item.marketTemplateId == mttData.marketTemplateId &&
+          item.matchTypeId == mttData.matchTypeId
+        );
+        if(!matchTypeTemplate) {
+          const saveData = await insertMatchTypeTemplatesQuery(mttData, fastify, request);
+          global.tblMatchTypeTemplates.push(saveData);
+        }
+      }
+    }
+
+    const validateTemplateRunners = global.tblMarketTemplateRunners.filter(
+      (item) => item.marketTemplateId === marketTemplateId
+    ).sort((a, b) => a.marketTemplateRunnerId - b.marketTemplateRunnerId);
+
+    if (validateTemplateRunners && validateTemplateRunners.length > 0) {
+      for (const elem of validateTemplateRunners) {
+
+        const request = {
+          body: {
+            marketTemplateId: data.marketTemplateId,
+            runner: elem.runner,
+            line: elem.line,
+            overRate: elem.overRate,
+            underRate: elem.underRate,
+            backPrice: elem.backPrice,
+            layPrice: elem.layPrice,
+            backSize: elem.backSize,
+            laySize: elem.laySize,
+            predefinedValue : elem.predefinedValue,
+          }
+        };
+
+        const result = await createMarketTemplateRunnerQuery(request, fastify);
+        global.tblMarketTemplateRunners.push(result);
+      }
+    }
+  }
+  return "Market Template(s) cloned successfully";
+};
+
 module.exports = {
   saveMarketTemplateService,
   getAllMarketTemplateService,
@@ -714,4 +825,5 @@ module.exports = {
   allMarketTypesAndCategoriesService,
   mtAndCategoriesService,
   isPythonChangeService,
+  multiCloneMarketTemplateService,
 };
