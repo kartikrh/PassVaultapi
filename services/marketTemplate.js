@@ -16,7 +16,7 @@ const { createMarketTemplateRunnerQuery } = require("../repository/TableMarketTe
 const { 
   insertMatchTypeTemplatesQuery,
   deleteMatchTypeTempByMarketTemplateIdQuery,
-  deleteTemplatesByMatchTypeIdQuery,
+  deleteTemplatesByMatchTypeIdAndTempIdQuery,
 } = require("../repository/TableMatchTypeTemplates");
 
 const getAllMarketTemplateService = async (request) => {
@@ -345,10 +345,16 @@ const updateMarketTemplateService = async (request, fastify) => {
       id => !newMatchTypeSet.has(id)
     );
     if (matchTypeIdsToDelete.length > 0) {
-      await deleteTemplatesByMatchTypeIdQuery(matchTypeIdsToDelete, fastify, request);
+      await deleteTemplatesByMatchTypeIdAndTempIdQuery(
+        { matchTypeId: matchTypeIdsToDelete, marketTemplateId: marketTemplateId}, 
+        fastify, 
+        request
+      );
 
       global.tblMatchTypeTemplates = global.tblMatchTypeTemplates.filter(
-        item => !matchTypeIdsToDelete.includes(item.matchTypeId)
+        item =>
+          item.marketTemplateId !== marketTemplateId ||
+          !matchTypeIdsToDelete.includes(item.matchTypeId)
       );
     }
   } else {
