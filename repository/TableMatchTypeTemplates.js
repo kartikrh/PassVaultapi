@@ -115,6 +115,28 @@ const deleteTemplatesByMatchTypeIdQuery = async (matchTypeId, fastify, request) 
     }
 };
 
+const deleteTemplatesByMatchTypeIdAndTempIdQuery = async (data, fastify, request) => {
+    try {
+        return await fastify.db.query(
+            `DELETE FROM "tblMatchTypeTemplates" 
+            WHERE "wrMatchTypeId" = ANY ($1)
+            AND "wrMarketTemplateId" = $2`,
+            {
+                type: fastify.db.QueryTypes.UPDATE,
+                bind: [data.matchTypeId, data.marketTemplateId],
+            }
+        );
+    } catch (err) {
+        errorLogger(
+            fastify,
+            err.message,
+            "DB ERROR --> repository/TableMatchTypeTemplates.js/deleteTemplatesByMatchTypeIdAndTempIdQuery",
+            request
+        );
+        throw new Error(err.message);
+    }
+};
+
 
 const deleteMatchTypeTempByMarketTemplateIdQuery = async (marketTemplateId, fastify, request) => {
     try {
@@ -143,4 +165,5 @@ module.exports = {
     deleteMatchTypeTemplatesQuery,
     deleteTemplatesByMatchTypeIdQuery,
     deleteMatchTypeTempByMarketTemplateIdQuery,
+    deleteTemplatesByMatchTypeIdAndTempIdQuery,
 };
