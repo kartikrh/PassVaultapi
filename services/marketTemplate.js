@@ -351,6 +351,11 @@ const updateMarketTemplateService = async (request, fastify) => {
         item => !matchTypeIdsToDelete.includes(item.matchTypeId)
       );
     }
+  } else {
+    await deleteMatchTypeTempByMarketTemplateIdQuery([marketTemplateId], fastify, request);
+    global.tblMatchTypeTemplates = global.tblMatchTypeTemplates.filter(
+      (item) => ![marketTemplateId].includes(item.marketTemplateId)
+    );
   }
 
   const index = global.tblMarketTemplate.findIndex(
