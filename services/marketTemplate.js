@@ -713,6 +713,7 @@ const multiCloneMarketTemplateService  = async (request, fastify) => {
   const {marketTemplates} = request.body;
   for (let mar of marketTemplates) {
     const { marketTemplateId, matchTypeID, devTemplateName } = mar;
+    let matchType = null;
     const marketTemplate = global.tblMarketTemplate.find(
       (item) => item.marketTemplateId === marketTemplateId
     );
@@ -728,17 +729,20 @@ const multiCloneMarketTemplateService  = async (request, fastify) => {
       throw new Error(`DevTemplateName already existed`);
     }
 
-    const validateMatchType = global.tblMatchTypes.find(
-      (item) => item.matchTypeId === matchTypeID
-    );
-    if (!validateMatchType) {
-      throw new Error("MatchType with this id not found");
+    if (matchTypeID) {
+      const validateMatchType = global.tblMatchTypes.find(
+        (item) => item.matchTypeId === matchTypeID
+      );
+      if (!validateMatchType) {
+        throw new Error("MatchType with this id not found");
+      }
+      matchType = validateMatchType?.matchType
     }
     let data = await insertMarketTemplateInCloneQuery(
       {
         ...marketTemplate,
         devTemplateName,
-        matchTypeID: matchTypeID,
+        matchTypeID: matchTypeID || null,
         createdBy: request.userTokenInfo.WrUserId,
       },
       fastify,
@@ -746,7 +750,7 @@ const multiCloneMarketTemplateService  = async (request, fastify) => {
     );
     global.tblMarketTemplate.push({
       ...data,
-      matchType: validateMatchType.matchType,
+      matchType: matchType || null,
       marketTypeName : marketTemplate.marketTypeName,
       categoryName :marketTemplate.categoryName
     });

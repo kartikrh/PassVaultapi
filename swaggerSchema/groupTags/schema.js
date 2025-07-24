@@ -4467,7 +4467,7 @@ const MarketTemplate = {
                 matchTypeID: { type: "integer" },
                 devTemplateName: { type: "string" },
               },
-              required: ["marketTemplateId", "matchTypeID", "devTemplateName"],
+              required: ["marketTemplateId", "devTemplateName"],
             }
           }
         },
