@@ -507,6 +507,26 @@ const getAllPlayersByIdsQuery = async (whereCondition = undefined, fastify) => {
     throw new Error(err.message);
    }
 }
+const activeInactivePlayerQuery = async (data, request, fastify) => {
+    try {
+      return await fastify.db.query(
+        `UPDATE "tblPlayers" SET
+            "wrIsActive" = $1
+          WHERE "wrPlayerId" = $2`,
+        {
+          bind: [data.isActive, data.playerId],
+        }
+      );
+    } catch (err) {
+      errorLogger(
+        fastify,
+        err.message,
+        "DB ERROR --> repository/TablePlayer.js/activeInactivePlayerQuery",
+        request
+      );
+      throw new Error(err.message);
+    }
+};
 module.exports = {
   getAllPlayersQuery,
   insertPlayerQuery,
@@ -519,5 +539,6 @@ module.exports = {
   updateIsSystemPlayerQuery,
   getTeamPlayerQuery,
   getAllPlayersByIdsQuery,
-  getPlyByIdQuery
+  getPlyByIdQuery,
+  activeInactivePlayerQuery,
 };

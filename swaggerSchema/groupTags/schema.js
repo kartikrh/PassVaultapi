@@ -1879,6 +1879,20 @@ const Player = {
       },
     },
   },
+  activeInactive: {
+    schema: {
+      tags: ["Player"],
+      description: "active inactive player data",
+      body: {
+        type: "object",
+        properties: {
+          playerId: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["playerId", "isActive"],
+      },
+    },
+  },
 };
 
 const MatchType = {

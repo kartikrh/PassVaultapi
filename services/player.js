@@ -6,6 +6,7 @@ const {
   updatePlayerStatsQuery,
   updateIsSystemPlayerQuery,
   getTeamPlayerQuery,
+  activeInactivePlayerQuery,
 } = require("../repository/TablePlayer");
 const {
   insertTeamPlayerQuery,
@@ -671,6 +672,20 @@ const getTeamListPlayerIdService = async (request, fastify) => {
   return result;
 };
 
+const activeInactivePlayerService = async (request, fastify) => {
+  const { playerId, isActive } = request.body;
+  const index = global.tblPlayers.findIndex(
+    (item) => item.playerId === playerId
+  );
+  if (index === -1) {
+    throw new Error("Player with this id not Found");
+  }
+  await activeInactivePlayerQuery({playerId, isActive}, request, fastify);
+  global.tblPlayers[index].isActive = isActive;
+
+  return `Player data updated successfully`;
+};
+
 module.exports = {
   allPlayerService,
   playerByIdService,
@@ -685,4 +700,5 @@ module.exports = {
   mergePlayerImageAndJerseyService,
   setTeamPlayerImgService,
   getTeamListPlayerIdService,
+  activeInactivePlayerService,
 };
