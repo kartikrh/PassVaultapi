@@ -41,6 +41,7 @@ const getAllMarketTemplateService = async (request) => {
   if(isPython){
     result = result.filter((item)=>item.isPython == isPython)
   }
+  result = result.map(({ matchTypeID, matchType, ...res }) => res);
   return result;
 };
 
