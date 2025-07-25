@@ -897,7 +897,7 @@ const getMatchTypeTemplateByCompetitionIdQuery = async (data,request, fastify) =
         AND tmtt."wrMarketTemplateId" NOT IN (
           SELECT "wrMarketTemplateId" FROM "tblCompMarketTemplate" WHERE "wrCompetitionId"= $2
         ) 
-        ORDER BY tmc."wrDisplayOrder" ASC, tmt."wrDevTemplateName" ASC;
+        ORDER BY tmc."wrDisplayOrder" ASC, tmt."wrTemplateName" ASC;
       `,
       {
         type: fastify.db.QueryTypes.SELECT,

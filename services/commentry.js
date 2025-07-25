@@ -86,6 +86,7 @@ const {
   updatePitchageAndSessionQuery,
   updatePythonAPIOnCommentaryQuery,
   updateEventTypeAndCompIdQuery,
+  getMatchTypeTemplateByComIdQuery,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -11076,7 +11077,15 @@ const getTemplateByComIdService = async (request, fastify) => {
   if (!com) {
     throw new Error("Commentary with this id not Found");
   }
-  const result = await getTemplateByComIdQuery(
+  // const result = await getTemplateByComIdQuery(
+  //   {
+  //     commentaryId: request.body.commentaryId,
+  //     matchTypeId: com.historyMatchTypeId,
+  //   },
+  //   request,
+  //   fastify
+  // );
+  const result = await getMatchTypeTemplateByComIdQuery(
     {
       commentaryId: request.body.commentaryId,
       matchTypeId: com.historyMatchTypeId,

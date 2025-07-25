@@ -28,6 +28,7 @@ const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { matchStatusDataService, matchTypeDataService, compStatusDataService } = require("../../../../services/list");
 const { allCountryCodeService } = require("../../../../services/countryCode");
 const { allVenuesService } = require("../../../../services/venue");
+const { getAllMarketTemplateService } = require("../../../../services/marketTemplate");
 
 let commonPath = "controller/users/admin/list/index.js";
 
@@ -339,6 +340,22 @@ const allVenueList = async (request, reply, fastify)=>{
         reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
     }
 }
+const allMarketTemplateList = async (request, reply, fastify)=>{
+    try {
+        const templateData = await getAllMarketTemplateService(request);
+        const result = templateData.map(item => {
+          return {
+            marketTemplateId: item.marketTemplateId,
+            devTemplateName: item.devTemplateName,
+            templateName: item.templateName,
+          }
+        })
+        reply.status(200).send(success(result, 200));
+    } catch (err) {
+        errorLogger(fastify, err.message, commonPath + "/allMarketTemplateList", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+    }
+}
 
 module.exports = {
     getEventTypeList,
@@ -367,4 +384,5 @@ module.exports = {
     compStatusData,
     allCountryCodes,
     allVenueList,
+    allMarketTemplateList,
 }
