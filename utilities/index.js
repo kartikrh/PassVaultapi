@@ -1198,7 +1198,7 @@ const trimTextData = async (data, request, fastify) => {
     }
     const trimmedData = {};
     for (const [key, value] of Object.entries(data)) {
-      trimmedData[key] = typeof value === "string" ? value.trim() : value;
+      trimmedData[key] = typeof value === "string" ? value.trim().replace(/\s+/g, ' ') : value;
     }
     return trimmedData
   } catch (error) {
