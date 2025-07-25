@@ -315,7 +315,19 @@ const updateMatchTypeService = async (request, fastify) => {
   const tempData = global.tblMatchTypeTemplates.filter(
     (item) => item.matchTypeId === request.body.matchTypeId
   );
-  // check if templateIds are provided is already exist
+   // save the matchTemplate if templateIds are provided
+  if(request.body?.templateIds && request.body.templateIds.length == 0) {
+    // delete the templates if no templateIds are provided
+    await deleteTemplatesByMatchTypeIdQuery([request.body.matchTypeId]
+    , fastify, request);
+    // remove from global variable
+    global.tblMatchTypeTemplates = global.tblMatchTypeTemplates.filter(
+      (item) => item.matchTypeId !== request.body.matchTypeId
+    );
+    return { ...data, matchTypeId: request.body.matchTypeId };
+  }
+  // check 
+  // if templateIds are provided is already exist
   if(request.body?.templateIds && request.body.templateIds.length > 0) {
     // new templateIds
     const newTemplateIds = request.body.templateIds.filter(
