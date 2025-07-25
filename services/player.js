@@ -328,7 +328,10 @@ const updatePlayerService = async (request, fastify) => {
     bowlingStyle: checkPlayerId.bowlingTypeId,
     isSystemPlayer: request.body.hasOwnProperty("isSystemPlayer") ? request.body.isSystemPlayer : checkPlayerId.isSystemPlayer,
     imagePath : checkPlayerId.imagePath,
-    tpId: request.body.tpId || checkPlayerId.tpId,
+    // tpId: request.body.tpId || checkPlayerId.tpId,
+    tpId: request.body.tpId === undefined ? checkPlayerId.tpId
+      : [0, '', 'null'].includes(request.body.tpId) ? null
+      : request.body.tpId,
     countryId: request.body.countryId || checkPlayerId.countryId,
   };
 

@@ -702,7 +702,8 @@ const updateCommentaryQuery = async (request, fastify) => {
       "wrPythonId" = $34,
       "wrPythonURI" = $35,
       "wrCountryId" = $36,
-      "wrVenueId" = $37
+      "wrVenueId" = $37,
+      "wrTpId" = $38
       where "wrCommentaryId" = $16 
       `,
       {
@@ -744,6 +745,7 @@ const updateCommentaryQuery = async (request, fastify) => {
           data.pythonURI || null,
           data.countryId || null,
           data.venueId || null,
+          data.tpId || null,
         ],
 
         type: fastify.db.QueryTypes.UPDATE,

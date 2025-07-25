@@ -310,7 +310,10 @@ const updateTeamService = async (request, fastify) => {
     backgroundColor: request.body.backgroundColor || checkTeamId.backgroundColor,
     imagePath: checkTeamId.imagePath,
     jerseyPath: checkTeamId.jerseyPath,
-    tpId: request.body.tpId || checkTeamId.tpId,
+    // tpId: request.body.tpId || checkTeamId.tpId,
+    tpId: request.body.tpId === undefined ? checkTeamId.tpId
+      : [0, '', 'null'].includes(request.body.tpId) ? null
+      : request.body.tpId,
     countryId: request.body.countryId || checkTeamId.countryId,
   };
 
