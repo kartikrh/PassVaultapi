@@ -1977,6 +1977,7 @@ const MatchType = {
           isAutoChangeStriker: { type: "boolean" },
           autoChangeStrikerAfterBall: { type: "integer" },
           entityEnum: { type: "integer" },
+          templateIds : {type : "array", items : { type : "integer" }},
         },
         required: ["matchTypeId"],
       },
