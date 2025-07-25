@@ -294,7 +294,10 @@ const updateCompititionService = async (request, fastify) => {
     commStatus: request.body.commStatus || validateId.commStatus,
     startDate: request.body.startDate || validateId.startDate,
     endDate: request.body.endDate || validateId.endDate,
-    tpId: request.body.tpId || validateId.tpId,
+    // tpId: request.body.tpId || validateId.tpId,
+    tpId: request.body.tpId === undefined ? validateId.tpId
+      : [0, '', 'null'].includes(request.body.tpId) ? null
+      : request.body.tpId,
     pythonId: request.body.pythonId || validateId.pythonId,
     countryId: request.body.countryId === undefined ? validateId.countryId : request.body.countryId,
   };
