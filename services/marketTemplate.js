@@ -53,10 +53,11 @@ const getMarketTemplateIdService = async (request) => {
   const matchTypeTemplates = global.tblMatchTypeTemplates.filter(elem => 
     elem.marketTemplateId == marketTemplateId
   ).map(el => {
+    const matchType = global.tblMatchTypes.find(item => item.matchTypeId === el.matchTypeId)?.matchType || null;
     return {
       id: el.id,
       matchTypeId: el.matchTypeId,
-      matchType: el.matchType,
+      matchType,
     }
   });
 

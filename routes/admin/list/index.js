@@ -26,6 +26,7 @@ const {
     compStatusData,
     allCountryCodes,
     allVenueList,
+    allMarketTemplateList,
 } = require("../../../controller/users/admin/list/index");
 const { Listing } = require("../../../swaggerSchema/groupTags/schema");
 
@@ -153,5 +154,10 @@ module.exports = async (fastify, opts) => {
         schema : Listing.getAllVenues.schema,
         preHandler : [(request, reply) => authorize(request, reply, fastify)],
         handler : (request, reply) => allVenueList(request, reply, fastify)
+    });
+    fastify.post("/marketTemplateList",{
+        schema : Listing.getAllMarketTemplateList.schema,
+        preHandler : [(request, reply) => authorize(request, reply, fastify)],
+        handler : (request, reply) => allMarketTemplateList(request, reply, fastify)
     });
 }
