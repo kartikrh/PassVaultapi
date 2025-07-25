@@ -7,14 +7,61 @@ const {
   isHistoryChangeInMatchTypeQuery,
 } = require("../repository/TableMatchType");
 const { createMatchTypePredictorQuery } = require("../repository/TableMatchTypePredictor");
+const { saveTemplateQuery, dltTemplateQuery, deleteTemplatesByMatchTypeIdQuery } = require("../repository/TableMatchTypeTemplates");
 const { MarketTypeId, trimTextData } = require("../utilities");
 
 const allMatchTypesService = async (request) => {
   if(request?.body?.entityEnum) {
-    const result = global.tblMatchTypes.filter(item => item.entityEnum === request?.body?.entityEnum);
+    let result = global.tblMatchTypes.filter(item => item.entityEnum === request?.body?.entityEnum);
+    if(result.length > 0) {
+      // get the templates for the match types
+      for (let item of result) {
+        let tempIds = global.tblMatchTypeTemplates.filter(
+          (temp) => temp.matchTypeId === item.matchTypeId
+        ).map((temp) => temp.marketTemplateId);
+        if(tempIds.length > 0) {
+          item.templateIds = tempIds.map((id) => {
+            const template = global.tblMarketTemplate.find(
+              (temp) => temp.marketTemplateId === id
+            );
+            return {
+              marketTemplateId: id,
+              templateName: template.templateName || null,
+              devTemplateName : template.devTemplateName || null,
+            }
+          });
+        }
+        else {
+          item.templateIds = [];
+        }
+      }
+    }
     return result || []
   } else {
-    return global.tblMatchTypes;
+    // return global.tblMatchTypes;
+    let result = global.tblMatchTypes;
+    // get the templates for the match types
+    for (let item of result) {
+      let tempIds = global.tblMatchTypeTemplates.filter(
+        (temp) => temp.matchTypeId === item.matchTypeId
+      ).map((temp) => temp.marketTemplateId);
+      if(tempIds.length > 0) {
+        item.templateIds = tempIds.map((id) => {
+          const template = global.tblMarketTemplate.find(
+            (temp) => temp.marketTemplateId === id
+          );
+          return {
+            marketTemplateId: id,
+            templateName: template.templateName || null,
+            devTemplateName : template.devTemplateName || null,
+          }
+        });
+      }
+      else {
+        item.templateIds = [];
+      }
+    }
+    return result || []
   }
   // return global.tblMatchTypes;
 };
@@ -24,6 +71,26 @@ const matchTypeByIdService = async (request) => {
   const result = global.tblMatchTypes.find(
     (item) => item.matchTypeId === matchTypeId
   );
+  // get the templates for the match type
+  if (result) {
+    let tempIds = global.tblMatchTypeTemplates.filter(
+      (temp) => temp.matchTypeId === result.matchTypeId
+    ).map((temp) => temp.marketTemplateId);
+    if(tempIds.length > 0) {
+      result.templateIds = tempIds.map((id) => {
+        const template = global.tblMarketTemplate.find(
+          (temp) => temp.marketTemplateId === id
+        );
+        return {
+          marketTemplateId: id,
+          templateName: template.templateName || null,
+          devTemplateName : template.devTemplateName || null,
+        }
+      });
+    } else {
+      result.templateIds = [];
+    }
+  }
   return result || null;
 };
 
@@ -59,6 +126,20 @@ const createMatchTypeService = async (request, fastify) => {
   );
 
   global.tblMatchTypes.push(data);
+  // save the matchTemplate if templateIds are provided
+  if(request.body?.templateIds && request.body.templateIds.length > 0) {
+    let tempData = await saveTemplateQuery(
+      {
+        templateIds: request.body.templateIds,
+        matchTypeId: data.matchTypeId,
+        userId: request.userTokenInfo.WrUserId,
+      },
+      fastify,
+      request
+    );
+    // store in global variable
+    global.tblMatchTypeTemplates.push(...tempData);
+  }
   return data;
 };
 
@@ -110,6 +191,31 @@ const cloneMatchTypeService = async (request, fastify) => {
   
   global.tblMatchTypes.push(data);
 
+
+
+    // get tempData from global variable
+  const tempData = global.tblMatchTypeTemplates.filter(
+    (item) => item.matchTypeId === request.body.matchTypeId
+  );
+  if(tempData.length > 0) {
+    const clonedTempData = tempData.map((item) => ({
+      ...item,
+      matchTypeId: data.matchTypeId,
+    }));
+
+    // save the cloned templates
+    const savedTempData = await saveTemplateQuery(
+      {
+        templateIds: clonedTempData.map(item => item.marketTemplateId),
+        matchTypeId: data.matchTypeId,
+      },
+      fastify,
+      request
+    );
+
+    global.tblMatchTypeTemplates.push(...savedTempData);
+  }
+  
   // clone the matchType predictor 
   const predictorData = global.tblMatchTypePredictor.filter(
     (item) => item.matchTypeId === request.body.matchTypeId
@@ -138,6 +244,8 @@ const cloneMatchTypeService = async (request, fastify) => {
   }
 
   global.tblMatchTypePredictor.push(...predictor);
+
+
 
   return data;
 };
@@ -203,6 +311,46 @@ const updateMatchTypeService = async (request, fastify) => {
      const sumOfRPB = await updateSumOfRunPerBallQuery(request.body.matchTypeId, fastify, request);
      global.tblMatchTypes[index].sumOfRunPerBall = sumOfRPB
   }
+  // get the templates from global variable
+  const tempData = global.tblMatchTypeTemplates.filter(
+    (item) => item.matchTypeId === request.body.matchTypeId
+  );
+  // check if templateIds are provided is already exist
+  if(request.body?.templateIds && request.body.templateIds.length > 0) {
+    // new templateIds
+    const newTemplateIds = request.body.templateIds.filter(
+      (id) => !tempData.some((item) => item.marketTemplateId === id)
+    );
+    // not in global which need to be delete
+    const deleteTemplateIds = tempData.filter(
+      (item) => !request.body.templateIds.includes(item.marketTemplateId)
+    )
+
+    // save the new templates
+    if(newTemplateIds.length > 0) {
+      const savedTempData = await saveTemplateQuery(
+        {
+          templateIds: newTemplateIds,
+          matchTypeId: request.body.matchTypeId,
+          userId: request.userTokenInfo.WrUserId,
+        },
+        fastify,
+        request
+      );
+      global.tblMatchTypeTemplates.push(...savedTempData);
+    }
+    // delete the templates which are not in request body
+    if(deleteTemplateIds.length > 0) {
+      // delete from database
+      await dltTemplateQuery({
+        ids : deleteTemplateIds.map((i)=> i.id)
+      },fastify,request) 
+      let ids = deleteTemplateIds.map((item) => item.id);
+      global.tblMatchTypeTemplates = global.tblMatchTypeTemplates.filter(
+        (item) => !ids.includes(item.id)
+      );
+    }
+  }
 
   return { ...data, matchTypeId: request.body.matchTypeId };
 };
@@ -240,6 +388,10 @@ const deleteMatchTypeService = async (request, fastify) => {
 
   await deleteMatchTypePredictorQuery(matchTypeId, fastify, request);
   await deleteMatchTypeQuery(matchTypeId, fastify, request);
+  await deleteTemplatesByMatchTypeIdQuery(matchTypeId, fastify, request);
+  global.tblMatchTypeTemplates = global.tblMatchTypeTemplates.filter(
+    (item) => !matchTypeId.includes(item.matchTypeId)
+  );
 
   global.tblMatchTypes = global.tblMatchTypes.filter(
     (item) => !matchTypeId.includes(item.matchTypeId)
