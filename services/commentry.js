@@ -192,12 +192,12 @@ const allCommentaryService = async (request, fastify) => {
   } = request.body;
   let result;
   if (commentaryStatus === undefined) {
-    // result = global.tblCommentaries.filter(
-    //   (item) => item.commentaryStatus !== 4 || item.commentaryStatus !== 10
-    // );
     result = global.tblCommentaries.filter(
-      (item) => item.commentaryStatus === 1 || item.commentaryStatus === 3
+      (item) => ![4, 10].includes(item.commentaryStatus)
     );
+    // result = global.tblCommentaries.filter(
+    //   (item) => item.commentaryStatus === 1 || item.commentaryStatus === 3
+    // );
   }
   if (commentaryStatus && commentaryStatus != 0) {
     result = global.tblCommentaries.filter(
@@ -232,14 +232,14 @@ const allCommentaryService = async (request, fastify) => {
       result = result.filter((item) => {
         const eventDate = new Date(item.eventDate);
 
-        if (item.commentaryStatus === 1) {
-          return eventDate >= start && eventDate <= end;
-        }
+        // if (item.commentaryStatus === 1) {
+        //   return eventDate >= start && eventDate <= end;
+        // }
         if (item.commentaryStatus === 3) {
           return eventDate <= end;
         }
 
-        return false;
+        return eventDate >= start && eventDate <= end;
       });
     } else {
       result = result.filter((item) => {
