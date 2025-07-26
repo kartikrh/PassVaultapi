@@ -81,19 +81,24 @@ const allMatchTypesService = async (request) => {
     result = result.filter(item => item.entityEnum === entityEnum);
   }
 
-  for (const item of result) {
-    const tempIds = global.tblMatchTypeTemplates
-      .filter(temp => temp.matchTypeId === item.matchTypeId)
-      .map(temp => temp.marketTemplateId);
-
-    item.templateIds = tempIds.map(id => {
-      const template = global.tblMarketTemplate.find(temp => temp.marketTemplateId === id) || {};
-      return {
-        marketTemplateId: id,
-        templateName: template.templateName || null,
-        devTemplateName: template.devTemplateName || null,
-      };
-    });
+  for (let item of result) {
+    let tempIds = global.tblMatchTypeTemplates.filter(
+      (temp) => temp.matchTypeId === item.matchTypeId
+    ).map((temp) => temp.marketTemplateId);
+    if(tempIds.length > 0) {
+      item.templateIds = tempIds.map((id) => {
+        const template = global.tblMarketTemplate.find(
+          (temp) => temp.marketTemplateId === id
+        );
+        return {
+          marketTemplateId: id,
+          templateName: template?.templateName || null,
+          devTemplateName : template?.devTemplateName || null,
+        }
+      });
+    } else {
+      item.templateIds = [];
+    }
   }
 
   return result || []
@@ -116,8 +121,8 @@ const matchTypeByIdService = async (request) => {
         );
         return {
           marketTemplateId: id,
-          templateName: template.templateName || null,
-          devTemplateName : template.devTemplateName || null,
+          templateName: template?.templateName || null,
+          devTemplateName : template?.devTemplateName || null,
         }
       });
     } else {
