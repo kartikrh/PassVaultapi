@@ -702,7 +702,8 @@ const updateCommentaryQuery = async (request, fastify) => {
       "wrPythonId" = $34,
       "wrPythonURI" = $35,
       "wrCountryId" = $36,
-      "wrVenueId" = $37
+      "wrVenueId" = $37,
+      "wrTpId" = $38
       where "wrCommentaryId" = $16 
       `,
       {
@@ -744,6 +745,7 @@ const updateCommentaryQuery = async (request, fastify) => {
           data.pythonURI || null,
           data.countryId || null,
           data.venueId || null,
+          data.tpId || null,
         ],
 
         type: fastify.db.QueryTypes.UPDATE,
@@ -7815,6 +7817,76 @@ const updateCommPlayersImagePathQuery = async (data, fastify) => {
     throw new Error(error.message);
   }
 };
+const getMatchTypeTemplateByComIdQuery = async (data,request, fastify) => {
+  try {
+    let r1 = await fastify.db.query(
+      `
+        SELECT  
+          tcm."wrId" as "id",
+          "wrCommentaryId" as "commentaryId",
+          "wrMarketTemplateId" as "marketTemplateId",
+          tmt."wrTemplateName" as "templateName",
+          tmt1."wrId" as "marketTypeId",
+          tmc."wrId" as "marketTypeCategoryId",
+          "wrMarketTypeName" as "marketTypeName",
+          "wrCategoryName" as "categoryName"
+        FROM "tblCommMatchTypeTemplate" tcm
+        LEFT JOIN "tblMarketTemplates" tmt ON tcm."wrMarketTemplateId" = tmt."wrID"
+        LEFT JOIN "tblMarketTypes" tmt1 ON tmt."wrMarketTypeId" = tmt1."wrId"
+        LEFT JOIN "tblMarketTypeCategories" tmc ON tmt."wrMarketTypeCategoryId" = tmc."wrId"
+        WHERE tcm."wrCommentaryId" = $1
+        AND tmt."wrIsDeleted" = false
+        AND tmt."wrIsActive" = true
+        ORDER BY tmc."wrDisplayOrder" ASC, tmt."wrTemplateName" ASC;
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [data.commentaryId],
+      }
+    );
+
+    let r2 = await fastify.db.query(
+      `
+        SELECT 
+          tmtt."wrMarketTemplateId" as "marketTemplateId",
+          tmt."wrDevTemplateName" as "devTemplateName",
+          tmt."wrTemplateName" as "templateName",
+          tmt1."wrId" as "marketTypeId",
+          tmt1."wrMarketTypeName" as "marketTypeName",
+          tmc."wrId" as "marketTypeCategoryId",
+          tmc."wrCategoryName" as "categoryName"
+        FROM "tblMatchTypeTemplates" tmtt
+        LEFT JOIN "tblMarketTemplates" tmt ON tmt."wrID" = tmtt."wrMarketTemplateId"
+        LEFT JOIN "tblMarketTypes" tmt1 ON tmt."wrMarketTypeId" = tmt1."wrId"
+        LEFT JOIN "tblMarketTypeCategories" tmc ON tmt."wrMarketTypeCategoryId" = tmc."wrId"
+        WHERE tmt."wrIsDeleted" = false
+        AND tmtt."wrMatchTypeId" = $1
+        AND tmt."wrIsActive" = true
+        AND tmtt."wrMarketTemplateId" NOT IN (
+          SELECT "wrMarketTemplateId" FROM "tblCommMatchTypeTemplate" WHERE "wrCommentaryId"= $2
+        ) 
+        ORDER BY tmc."wrDisplayOrder" ASC, tmt."wrTemplateName" ASC;
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [data.matchTypeId, data.commentaryId],
+      }
+    );
+    return {
+      assignedTemplates: r1,
+      unassignedTemplates: r2,
+    }
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCommentary/getMatchTypeTemplateByComIdQuery",
+      request
+    );
+    throw new Error(error.message);
+    
+  }
+}
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -7948,5 +8020,6 @@ module.exports = {
   getAllCommByCompIdQuery,
   updateEventTypeAndCompIdQuery,
   updateCommPlayersImagePathQuery,
-  getComEntityQuery
+  getComEntityQuery,
+  getMatchTypeTemplateByComIdQuery,
 };

@@ -1977,6 +1977,7 @@ const MatchType = {
           isAutoChangeStriker: { type: "boolean" },
           autoChangeStrikerAfterBall: { type: "integer" },
           entityEnum: { type: "integer" },
+          templateIds : {type : "array", items : { type : "integer" }},
         },
         required: ["matchTypeId"],
       },
@@ -10162,12 +10163,25 @@ const Listing =  {
   getAllVenues: {
     schema: {
       tags: ["Listing"],
-      description: "get all country list",
+      description: "get all venues list",
       security: [{ bearerAuth: [] }],
       body: {
         type: "object",
         properties: {
           countryId: { type: "integer" },
+        },
+      },
+    },
+  },
+  getAllMarketTemplateList: {
+    schema: {
+      tags: ["Listing"],
+      description: "get all marketTemplates list",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
         },
       },
     },

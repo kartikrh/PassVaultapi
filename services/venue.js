@@ -61,7 +61,7 @@ const editVenueService = async (request, fastify) => {
     countryId: request.body.countryId ?? validateId.countryId,
     city: request.body.city ?? validateId.city,
     name: request.body.name ?? validateId.name,
-    tpId: request.body.tpId || validateId.tpId,
+    tpId: request.body.tpId === undefined ? validateId.tpId : request.body.tpId,
     isActive: Boolean(request.body.isActive) ?? validateId.isActive,
     capacity: request.body.capacity ?? validateId.capacity,
     id: request.body.id ?? validateId.id,
