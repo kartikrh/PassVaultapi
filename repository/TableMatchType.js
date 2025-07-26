@@ -41,6 +41,7 @@ const getAllMatchTypeQuery = async (fastify) => {
         "wrAutoChangeStrikerAfterBall" as "autoChangeStrikerAfterBall",
         "wrSumOfRunPerBall" as "sumOfRunPerBall",
         "wrIsHistory" as "isHistory",
+        "wrIsActive" as "isActive",
         "wrEntityEnum" as "entityEnum"
         from "tblMatchTypes"
         where "wrIsDeleted" = false`,
@@ -95,11 +96,12 @@ const insertMatchTypeQuery = async (data, fastify, request) => {
         "wrAutoChangeStrikerAfterBall",
         "wrSumOfRunPerBall",
         "wrIsHistory",
-        "wrEntityEnum"
+        "wrEntityEnum",
+        "wrIsActive"
       ) values ( 
         $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,
         $16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,
-        $29,$30,$31,$32,$33,$34,$35,$36 ,$37, $38, $39, $40
+        $29,$30,$31,$32,$33,$34,$35,$36 ,$37, $38, $39, $40, $41
       ) returning *
     )
 
@@ -142,6 +144,7 @@ const insertMatchTypeQuery = async (data, fastify, request) => {
         "wrAutoChangeStrikerAfterBall" as "autoChangeStrikerAfterBall",
         "wrSumOfRunPerBall" as "sumOfRunPerBall",
         "wrIsHistory" as "isHistory",
+        "wrIsActive" as "isActive",
         "wrEntityEnum" as "entityEnum"
         from "insert_data"
     `,
@@ -187,6 +190,7 @@ const insertMatchTypeQuery = async (data, fastify, request) => {
           data.sumOfRunPerBall || 0,
           data.isHistory === undefined ? true : data.isHistory,
           data.entityEnum || null,
+          data.isActive === undefined ? true : data.isActive,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -293,6 +297,7 @@ const updateMatchTypeQuery = async (data, fastify, request) => {
       autoChangeStrikerAfterBall: "wrAutoChangeStrikerAfterBall",
       isHistory: "wrIsHistory",
       entityEnum: "wrEntityEnum",
+      isActive: "wrIsActive",
     };
 
     const updateColumns = [];
@@ -350,6 +355,7 @@ const updateMatchTypeQuery = async (data, fastify, request) => {
     "wrAutoChangeStrikerAfterBall" as "autoChangeStrikerAfterBall",
     "wrSumOfRunPerBall" as "sumOfRunPerBall",
     "wrIsHistory" as "isHistory",
+    "wrIsActive" as "isActive",
     "wrEntityEnum" as "entityEnum"
     `,
       {
@@ -427,6 +433,29 @@ const isHistoryChangeInMatchTypeQuery = async (data, request, fastify) => {
   }
 };
 
+const activeInactiveMatchTypeQuery = async (data, request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `
+        UPDATE "tblMatchTypes" SET
+          "wrIsActive" = $1
+        WHERE "wrMatchTypeId" = $2
+      `,
+      {
+        bind: [data.isActive, data.matchTypeId],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableMatchType.js/activeInactiveMatchTypeQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllMatchTypeQuery,
   insertMatchTypeQuery,
@@ -435,4 +464,5 @@ module.exports = {
   deleteMatchTypePredictorQuery,
   updateSumOfRunPerBallQuery,
   isHistoryChangeInMatchTypeQuery,
+  activeInactiveMatchTypeQuery,
 };

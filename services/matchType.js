@@ -5,65 +5,98 @@ const {
   deleteMatchTypePredictorQuery,
   updateSumOfRunPerBallQuery,
   isHistoryChangeInMatchTypeQuery,
+  activeInactiveMatchTypeQuery,
 } = require("../repository/TableMatchType");
 const { createMatchTypePredictorQuery } = require("../repository/TableMatchTypePredictor");
 const { saveTemplateQuery, dltTemplateQuery, deleteTemplatesByMatchTypeIdQuery } = require("../repository/TableMatchTypeTemplates");
 const { MarketTypeId, trimTextData } = require("../utilities");
 
+// const allMatchTypesService = async (request) => {
+//   if(request?.body?.entityEnum) {
+//     let result = global.tblMatchTypes.filter(item => item.entityEnum === request?.body?.entityEnum);
+//     if(result.length > 0) {
+//       // get the templates for the match types
+//       for (let item of result) {
+//         let tempIds = global.tblMatchTypeTemplates.filter(
+//           (temp) => temp.matchTypeId === item.matchTypeId
+//         ).map((temp) => temp.marketTemplateId);
+//         if(tempIds.length > 0) {
+//           item.templateIds = tempIds.map((id) => {
+//             const template = global.tblMarketTemplate.find(
+//               (temp) => temp.marketTemplateId === id
+//             );
+//             return {
+//               marketTemplateId: id,
+//               templateName: template.templateName || null,
+//               devTemplateName : template.devTemplateName || null,
+//             }
+//           });
+//         }
+//         else {
+//           item.templateIds = [];
+//         }
+//       }
+//     }
+//     return result || []
+//   } else {
+//     // return global.tblMatchTypes;
+//     let result = global.tblMatchTypes;
+//     // get the templates for the match types
+//     for (let item of result) {
+//       let tempIds = global.tblMatchTypeTemplates.filter(
+//         (temp) => temp.matchTypeId === item.matchTypeId
+//       ).map((temp) => temp.marketTemplateId);
+//       if(tempIds.length > 0) {
+//         item.templateIds = tempIds.map((id) => {
+//           const template = global.tblMarketTemplate.find(
+//             (temp) => temp.marketTemplateId === id
+//           );
+//           return {
+//             marketTemplateId: id,
+//             templateName: template.templateName || null,
+//             devTemplateName : template.devTemplateName || null,
+//           }
+//         });
+//       }
+//       else {
+//         item.templateIds = [];
+//       }
+//     }
+//     return result || []
+//   }
+//   // return global.tblMatchTypes;
+// };
+
 const allMatchTypesService = async (request) => {
-  if(request?.body?.entityEnum) {
-    let result = global.tblMatchTypes.filter(item => item.entityEnum === request?.body?.entityEnum);
-    if(result.length > 0) {
-      // get the templates for the match types
-      for (let item of result) {
-        let tempIds = global.tblMatchTypeTemplates.filter(
-          (temp) => temp.matchTypeId === item.matchTypeId
-        ).map((temp) => temp.marketTemplateId);
-        if(tempIds.length > 0) {
-          item.templateIds = tempIds.map((id) => {
-            const template = global.tblMarketTemplate.find(
-              (temp) => temp.marketTemplateId === id
-            );
-            return {
-              marketTemplateId: id,
-              templateName: template.templateName || null,
-              devTemplateName : template.devTemplateName || null,
-            }
-          });
-        }
-        else {
-          item.templateIds = [];
-        }
-      }
-    }
-    return result || []
+  const { isActive, entityEnum } = request?.body || {};
+  let result = global.tblMatchTypes;
+
+  if (isActive !== undefined) {
+    result = result.filter(item => item.isActive === isActive);
   } else {
-    // return global.tblMatchTypes;
-    let result = global.tblMatchTypes;
-    // get the templates for the match types
-    for (let item of result) {
-      let tempIds = global.tblMatchTypeTemplates.filter(
-        (temp) => temp.matchTypeId === item.matchTypeId
-      ).map((temp) => temp.marketTemplateId);
-      if(tempIds.length > 0) {
-        item.templateIds = tempIds.map((id) => {
-          const template = global.tblMarketTemplate.find(
-            (temp) => temp.marketTemplateId === id
-          );
-          return {
-            marketTemplateId: id,
-            templateName: template.templateName || null,
-            devTemplateName : template.devTemplateName || null,
-          }
-        });
-      }
-      else {
-        item.templateIds = [];
-      }
-    }
-    return result || []
+    result = result.filter(item => item.isActive === true);
   }
-  // return global.tblMatchTypes;
+
+  if (entityEnum) {
+    result = result.filter(item => item.entityEnum === entityEnum);
+  }
+
+  for (const item of result) {
+    const tempIds = global.tblMatchTypeTemplates
+      .filter(temp => temp.matchTypeId === item.matchTypeId)
+      .map(temp => temp.marketTemplateId);
+
+    item.templateIds = tempIds.map(id => {
+      const template = global.tblMarketTemplate.find(temp => temp.marketTemplateId === id) || {};
+      return {
+        marketTemplateId: id,
+        templateName: template.templateName || null,
+        devTemplateName: template.devTemplateName || null,
+      };
+    });
+  }
+
+  return result || []
 };
 
 const matchTypeByIdService = async (request) => {
@@ -437,6 +470,32 @@ const isHistoryChangeInMatchTypeService = async (request, fastify) => {
 const marketTypeService = async (request, fastify) => {
   return MarketTypeId;
 }
+
+const activeInactiveMatchTypeService = async (request, fastify) => {
+  const { matchTypeId, isActive } = request.body;
+  const validateId = global.tblMatchTypes.find(
+    (item) => item.matchTypeId === matchTypeId
+  );
+
+  if (!validateId) {
+    throw new Error("MatchType with this Id not found");
+  }
+  await activeInactiveMatchTypeQuery(
+    {
+      matchTypeId,
+      isActive,
+    },
+    request,
+    fastify
+  );
+  const index = global.tblMatchTypes.findIndex((item) => item.matchTypeId == matchTypeId);
+  if(index != -1){
+    global.tblMatchTypes[index].isActive = isActive;
+  }
+
+  return `MatchType data updated successfully`;
+};
+
 module.exports = {
   allMatchTypesService,
   matchTypeByIdService,
@@ -444,5 +503,6 @@ module.exports = {
   deleteMatchTypeService,
   cloneMatchTypeService,
   isHistoryChangeInMatchTypeService,
-  marketTypeService
+  marketTypeService,
+  activeInactiveMatchTypeService,
 };
