@@ -1977,6 +1977,7 @@ const MatchType = {
           isAutoChangeStriker: { type: "boolean" },
           autoChangeStrikerAfterBall: { type: "integer" },
           entityEnum: { type: "integer" },
+          isActive: { type: "boolean" },
           templateIds : {type : "array", items : { type : "integer" }},
         },
         required: ["matchTypeId"],
@@ -2013,6 +2014,20 @@ const MatchType = {
           isHistory: { type: "boolean" },
         },
         required: ["matchTypeId", "isHistory"],
+      },
+    },
+  },
+  activeInactive: {
+    schema: {
+      tags: ["Match Type"],
+      description: "active inactive match type data",
+      body: {
+        type: "object",
+        properties: {
+          matchTypeId: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["matchTypeId", "isActive"],
       },
     },
   },
