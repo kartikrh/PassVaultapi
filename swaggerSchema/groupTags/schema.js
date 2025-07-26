@@ -9087,6 +9087,9 @@ const CountryCode = {
           countryName: { type: "string" },
           shortName: { type: "string" },
           timezone: { type: "string" },
+          isActive: { type: "boolean" },
+          isClientShow: { type: "boolean" },
+          isDefault: { type: "boolean" },
         },
         required: ["id"],
       },
@@ -9133,6 +9136,34 @@ const CountryCode = {
           isActive: { type: "boolean" },
         },
         required: ["id", "isActive"],
+      },
+    },
+  },
+  isClientShowChange: {
+    schema: {
+      tags: ["CountryCode"],
+      description: "update client show CountryCode data",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          isClientShow: { type: "boolean" },
+        },
+        required: ["id", "isClientShow"],
+      },
+    },
+  },
+  isDefaultChange: {
+    schema: {
+      tags: ["CountryCode"],
+      description: "update isDefault CountryCode data",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          isDefault: { type: "boolean" },
+        },
+        required: ["id", "isDefault"],
       },
     },
   },
