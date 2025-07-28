@@ -3,6 +3,9 @@ const {
   updateCountryCodeQuery,
   deleteCountryCodeQuery,
   activeInactiveCountryCodeQuery,
+  isClientShowCountryCodeQuery,
+  isDefaultCountryCodeQuery,
+  isDefaultFalseCountryCodeQuery,
 } = require("../repository/TableCountryCodes");
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
@@ -42,6 +45,14 @@ const saveCountryCodeService = async (request, fastify) => {
     request.body.flag = fullPath;
     request.body.flagPath = imagePath;
   }
+  if (request.body?.isDefault) {
+    await isDefaultFalseCountryCodeQuery(request.body, fastify, request);
+    for (const item of global.tblCountryCodes) {
+      if (item.id !== request.body.id) {
+        item.isDefault = false;
+      }
+    };
+  }
   const saveData = await insertCountryCodeQuery(request.body, fastify, request);
   global.tblCountryCodes.push(saveData);
 
@@ -71,6 +82,8 @@ const editCountryCodeService = async (request, fastify) => {
     maxNumber : request.body.maxNumber ?? validateId.maxNumber,
     shortName : request.body.shortName ?? validateId.shortName,
     timezone : request.body.timezone ?? validateId.timezone,
+    isClientShow : request.body.isClientShow ?? validateId.isClientShow,
+    isDefault : request.body.isDefault ?? validateId.isDefault,
   };
   if (request.body.flag && request.body.flag.length > 0) {
     const imgName = generateImageName({ name: updateData.countryName });
@@ -85,6 +98,15 @@ const editCountryCodeService = async (request, fastify) => {
     });
     updateData.flag = fullPath;
     updateData.flagPath = imagePath;
+  }
+
+  if (request.body?.isDefault) {
+    await isDefaultFalseCountryCodeQuery(request.body, fastify, request);
+    for (const item of global.tblCountryCodes) {
+      if (item.id !== request.body.id) {
+        item.isDefault = false;
+      }
+    };
   }
 
   const modifiedData = await updateCountryCodeQuery(updateData, fastify, request);
@@ -102,12 +124,12 @@ const allCountryCodeService = async (fastify, request) => {
   if (isActive !== undefined) {
     const result = global.tblCountryCodes.filter(
       (item) => item.isActive === isActive
-    );
+    ).sort((a, b) => a.id - b.id);
     return result;
   } else {
     const result = global.tblCountryCodes.filter(
       (item) => item.isActive === true
-    );
+    ).sort((a, b) => a.id - b.id);
     return result;
   }
 };
@@ -219,6 +241,53 @@ const importCountriesListService = async (fastify, request) => {
 };
 
 
+const isClientShowCountryCodeService = async (fastify, request) => {
+  const { id, isClientShow } = request.body;
+  const validateId = global.tblCountryCodes.find(
+    (item) => item.id === id
+  );
+
+  if (!validateId) {
+    throw new Error("Country Code with this Id not found");
+  }
+  await isClientShowCountryCodeQuery({id, isClientShow }, request, fastify);
+  const index = global.tblCountryCodes.findIndex((item) => item.id == id);
+  if(index != -1){
+    global.tblCountryCodes[index].isClientShow = isClientShow;
+  }
+
+  return `Country Code data updated successfully`;
+};
+
+
+const isDefaultCountryCodeService = async (fastify, request) => {
+  const { id, isDefault } = request.body;
+  const validateId = global.tblCountryCodes.find(
+    (item) => item.id === id
+  );
+
+  if (!validateId) {
+    throw new Error("Country Code with this Id not found");
+  }
+
+  if (isDefault) {
+    await isDefaultFalseCountryCodeQuery(request.body, fastify, request);
+    for (const item of global.tblCountryCodes) {
+      if (item.id !== request.body.id) {
+        item.isDefault = false;
+      }
+    };
+  }
+
+  await isDefaultCountryCodeQuery({id, isDefault }, request, fastify);
+  const index = global.tblCountryCodes.findIndex((item) => item.id == id);
+  if(index != -1){
+    global.tblCountryCodes[index].isDefault = isDefault;
+  }
+
+  return `Country Code data updated successfully`;
+};
+
 module.exports = {
   allCountryCodeService,
   countryCodeByIdService,
@@ -226,4 +295,6 @@ module.exports = {
   deleteCountryCodeService,
   activeInactiveCountryCodeService,
   importCountriesListService,
+  isClientShowCountryCodeService,
+  isDefaultCountryCodeService,
 };

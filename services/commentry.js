@@ -6238,7 +6238,7 @@ const commentaryDetailsByEventIdService = async (
   }
   const currentInning = result.currentInnings;
   const resultArr = {
-    cid: 0,
+    cid: result.commentaryId,
     eid: "",
     til: "",
     toss: "",
@@ -6893,6 +6893,7 @@ const commentaryDetailsByEventIdService = async (
       cctime: result.commentaryCloseTime,
       res: result.result,
       isvirtual: result.isVirtual,
+      cid : result.commentaryId,
     },
     cbb,
     cbt,
@@ -7789,7 +7790,7 @@ const getMatchListByStatus = async (body, request, fastify) => {
 
     let details = {
       rno: rno,
-      cid: item.commentaryId || 0,
+      cid: item.commentaryId,
       eid: item.eventRefId || "",
       ety: eventType?.eventType || "",
       mtyp: item.matchType || "",
@@ -9622,8 +9623,7 @@ const updateisPredictMarketInCommentaryService = async (request, fastify) => {
 
   if (
     global.tblCommentaries[index].isVirtual === false &&
-    (global.tblCommentaries[index].eventRefId == null ||
-      global.tblCommentaries[index].eventId == null)
+    (global.tblCommentaries[index].eventRefId == null)
   ) {
     await updateisPredictMarketInCommentaryQuery(
       {
@@ -11116,16 +11116,16 @@ const revertCommentaryService = async (request, fastify) => {
     throw new Error("Commentary with this id not Found");
   }
 
-  let checkMar = await getMarCountByComQuery(
-    { commentaryId },
-    request,
-    fastify
-  );
-  if (checkMar.marketCount > 0) {
-    throw new Error(
-      "Cannot revert the commentary as markets are already created"
-    );
-  }
+  // let checkMar = await getMarCountByComQuery(
+  //   { commentaryId },
+  //   request,
+  //   fastify
+  // );
+  // if (checkMar.marketCount > 0) {
+  //   throw new Error(
+  //     "Cannot revert the commentary as markets are already created"
+  //   );
+  // }
 
   let res = await revertCommentaryQuery(request.body, fastify, request);
   // console.log("revertCommentaryQuery", r);
