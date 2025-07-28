@@ -621,11 +621,15 @@ const getCompByEventTypeService = async (request, fastify) => {
   if(!findEventType){
     return [];
   }
-  let response = global.tblCompetitions.filter((item) => item.eventTypeId === findEventType.eventTypeId).map((item) => {
+  let response = global.tblCompetitions.filter((item) => 
+    item.eventTypeId === findEventType.eventTypeId &&
+    item.isActive === true  
+  ).map((item) => {
     return {
       competitionId: item.competitionId,
       competition: item.competition,
-      competitionRefId : item.refId
+      competitionRefId : item.refId,
+      isActive: item.isActive,
     }
   });
 
