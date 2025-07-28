@@ -122,7 +122,11 @@ const ImportMarketService = async (request, fastify) => {
         item.competitionId === CompetitionsObj.competitionId &&
         item.refId === request.body.eventId
     );
+
     if (!Eventsobj) {
+      if(request.body.openDate == undefined || request.body.openDate == null){
+        throw new Error("Open Date is required for event creation");
+      }
       request.body.competitionId = CompetitionsObj.competitionId;
       request.body.eventTypeId = eventtypeobj.eventTypeId;
       request.body.isActive = true;
