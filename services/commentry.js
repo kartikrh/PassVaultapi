@@ -3201,6 +3201,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
       commentaryId,
       isEndInnings,
       isCallPredict = false,
+      isTeamStatusUpdate = false,
     } = request.body;
 
     let commentaryIndex,
@@ -3260,6 +3261,17 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
       //     await insertNotificationViaNotiConfigQuery(notificationData, request, fastify);
       //   }
       // }
+    }
+
+    if (!isTeamStatusUpdate && commentaryTeams && commentaryTeams.length > 0) {
+      commentaryTeams = commentaryTeams.map(elem => {
+        const teamData = global?.tblCommentaryTeams?.find(item =>
+          item.commentaryTeamId === elem.commentaryTeamId
+        );
+        return teamData
+          ? { ...elem, teamStatus: teamData.teamStatus }
+          : elem;
+      });
     }
     // get th strike team
     // validate CommentaryId
