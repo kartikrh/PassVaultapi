@@ -1298,6 +1298,10 @@ const entityCompetition = {
   2 : "result",
   3 : "live"
 }
+const ScoringTypes = {
+  Panel: 1, // Manual
+  Entity: 2
+}
 module.exports = {
   ERROR_CODES,
   error,
@@ -1388,5 +1392,6 @@ module.exports = {
   matchTypesEntity,
   callVirtualPredictorMarket,
   matchStatusEntity,
-  entityCompetition
+  entityCompetition,
+  ScoringTypes,
 };
