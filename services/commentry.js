@@ -87,6 +87,7 @@ const {
   updatePythonAPIOnCommentaryQuery,
   updateEventTypeAndCompIdQuery,
   getMatchTypeTemplateByComIdQuery,
+  scoringTypeCommentaryQuery,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -20958,6 +20959,23 @@ const updateCommWicketService = async (request, fastify) => {
   return `Commentary wicket data updated successfully`
 }
 
+const scoringTypeCommentaryService = async (request, fastify) => {
+  const { commentaryId, scoringType } = request.body;
+
+  const commentary = global.tblCommentaries.findIndex(
+    (item) => item?.commentaryId === commentaryId
+  );
+  if (commentary == -1) {
+    throw new Error("Commentary with this id not Found");
+  }
+
+  await scoringTypeCommentaryQuery({ commentaryId, scoringType }, fastify, request);
+
+  global.tblCommentaries[commentary].scoringType = scoringType;
+
+  return "Commentary scoring type updated successfully";
+};
+
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -21064,4 +21082,5 @@ module.exports = {
   updateEventTypeAndCompIdService,
   getCommWicketByIdService,
   updateCommWicketService,
+  scoringTypeCommentaryService,
 };

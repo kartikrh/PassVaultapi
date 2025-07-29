@@ -3875,6 +3875,21 @@ const Commentary = {
       },
     },
   },
+  changeScoringType: {
+    schema: {
+      tags: ["Commentary"],
+      description: "update commentary scoringType data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer"},
+          scoringType: { type: "integer"},
+        },
+        required: ["commentaryId", "scoringType"],
+      },
+    },
+  },
 };
 
 const Compitition = {

@@ -102,6 +102,7 @@ const {
   updateEventTypeAndCompId,
   getCommWicketById,
   updateCommWicket,
+  scoringTypeCommentary,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -1385,5 +1386,17 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request , reply) => updateCommWicket(request, reply, fastify)
+  });
+  fastify.post("/scoringType", {
+    schema : Commentary.changeScoringType.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
+          mode: "edit"
+        }),
+    ],
+    handler: (request , reply) => scoringTypeCommentary(request, reply, fastify)
   });
 };
