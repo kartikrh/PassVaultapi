@@ -80,7 +80,6 @@ const allMatchTypesService = async (request) => {
   if (entityEnum) {
     result = result.filter(item => item.entityEnum === entityEnum);
   }
-
   // for (let item of result) {
   //   let tempIds = global.tblMatchTypeTemplates.filter(
   //     (temp) => temp.matchTypeId === item.matchTypeId
