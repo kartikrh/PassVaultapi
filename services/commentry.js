@@ -6236,8 +6236,9 @@ const commentaryDetailsByEventIdService = async (
 ) => {
   const result = await global.tblCommentaries.find(
     (item) =>
-      item.eventRefId === request.body.eventId ||
-      item.commentaryId === request.body.commentaryId
+      item.commentaryId === request.body.commentaryId ||
+      item.eventRefId === request.body.eventId 
+
   );
 
   // if (!result && request.body.status === undefined) {
