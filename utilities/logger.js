@@ -1,11 +1,11 @@
 const ResponseLog = require("../database/schema/responseLogger");
 const { ISCOMMENTARYLOGGER } = require("./configConstants");
 
-const errorLogger = async (fastify, errMessage, errStack, request) => {
+const errorLogger = async (fastify, errMessage, errStack, request , data = null) => {
   try {
     
     return await fastify.db.query(
-      `INSERT INTO "tblErrorLogs" ("wrErrMessage", "wrErrStack", "wrDomain","wrUserId","wrUserIp", "wrCreatedDate" ,"wrApi", "wrRequestBody") VALUES ($1, $2, $3, $4, $5, $6 ,$7,$8)`,
+      `INSERT INTO "tblErrorLogs" ("wrErrMessage", "wrErrStack", "wrDomain","wrUserId","wrUserIp", "wrCreatedDate" ,"wrApi", "wrRequestBody", "wrData") VALUES ($1, $2, $3, $4, $5, $6 ,$7,$8 ,$9)`,
       {
         type: fastify.db.QueryTypes.INSERT,
         bind: [
@@ -17,6 +17,7 @@ const errorLogger = async (fastify, errMessage, errStack, request) => {
           new Date(),
           request?.originalUrl || null,
           request?.body || null,
+          data ?? null
         ],
       }
     );
@@ -112,7 +113,7 @@ const marketLogger = async (data , request , fastify) => {
           eventMarketId || null,
           actionType,
           value,
-          request.userTokenInfo.WrUserId,
+          request.userTokenInfo?.WrUserId ?? null,
           new Date(),
           commentaryId || null,
           result || null
@@ -131,12 +132,13 @@ const marketDataLogger = async (data , request , fastify) => {
       dataTosave,
       updateType,
       lineDiff,
-      isSendData
+      isSendData,
+      predefinedValue = null
     } = data;
 
     return await fastify.db.query(
       `INSERT INTO "tblMarketDataLogs" ("wrEventMarketId", "wrCommentaryId", "wrData", "wrUpdateType", "wrCreatedDate",
-      "wrLineDiff", "wrCreatedBy", "wrIsSendData") VALUES ($1, $2, $3, $4, $5 ,$6, $7 , $8)`,
+      "wrLineDiff", "wrCreatedBy", "wrIsSendData", "wrPredefinedValue") VALUES ($1, $2, $3, $4, $5 ,$6, $7 , $8 ,$9)`,
       {
         type: fastify.db.QueryTypes.SELECT,
         bind: [
@@ -147,7 +149,8 @@ const marketDataLogger = async (data , request , fastify) => {
           new Date(),
           lineDiff || 0,
           request?.userTokenInfo?.WrUserId || 0,
-          isSendData !== undefined ? isSendData : true
+          isSendData !== undefined ? isSendData : true,
+          predefinedValue ?? null
         ],
       }
     );
@@ -373,7 +376,41 @@ const marektResultLogger = async (data, request, fastify) => {
     )
   }
 }
+const pythonSocketLogger = async (data, fastify) => {
+  try {
+    let market = data.marketData?.map(JSON.parse);
+    const query = `
+      INSERT INTO "tblPythonSocketLogs"
+      (
+        "wrCommentaryId",
+        "wrMarketData",
+        "wrSocketId",
+        "wrCreatedAt"
+      )
+      VALUES ($1, $2, $3 ,$4)
+    `;
+    
+    await fastify.db.query(query, {
+      type: fastify.db.QueryTypes.SELECT,
+      bind: [
+        data.commentaryId || null,
+        JSON.stringify(market) || null,
+        data.socketId || null,
+        data.createdAt || new Date(),
+      ],
+    });
+    return true;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "Error in pythonSocketLogger -> utilities/logger.js",
+      null
+    )
+    console.log(error);
+  }
+}
 
 module.exports = { errorLogger, responseLogger ,responseLogInDB , marketLogger ,
   marketDataLogger,tblPredictorAPILogger,tblThirdPartyAPILogger,commentaryLogger,updateWebRequestLogs,
-  eventMarketLogger, marektResultLogger};
+  eventMarketLogger, marektResultLogger,pythonSocketLogger};

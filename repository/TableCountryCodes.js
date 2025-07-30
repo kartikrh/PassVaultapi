@@ -6,7 +6,14 @@ const getAllCountryCodesQuery = async (fastify) => {
           "wrId" as "id",
           "wrCountryCode" as "countryCode",
           "wrCountryName" as "countryName",
-          "wrFlag" as "flag"
+          "wrFlag" as "flag",
+          "wrFlagPath" as "flagPath",
+          "wrIsActive" as "isActive",
+          "wrMaxNumber" as "maxNumber",
+          "wrShortName" as "shortName",
+          "wrIsClientShow" as "isClientShow",
+          "wrIsDefault" as "isDefault",
+          "wrTimezone" as "timezone"
       FROM "tblCountryCodes"
       WHERE "wrIsDeleted" = FALSE;`,
     { type: fastify.db.QueryTypes.SELECT }
@@ -19,10 +26,11 @@ const insertCountryCodeQuery = async (data, fastify, request) => {
     const result = await fastify.db.query(
       `WITH insert_data AS (
             INSERT INTO "tblCountryCodes" (
-            "wrCountryCode", "wrCountryName", "wrFlag"
+            "wrCountryCode", "wrCountryName", "wrFlag", "wrFlagPath", "wrIsActive", "wrMaxNumber",
+            "wrShortName", "wrTimezone", "wrIsClientShow", "wrIsDefault"
             ) 
             VALUES (
-                $1, $2, $3
+                $1, $2, $3, $4, $5 ,$6 ,$7, $8, $9, $10
             ) 
             RETURNING *
             )        
@@ -30,7 +38,14 @@ const insertCountryCodeQuery = async (data, fastify, request) => {
                 "wrId" as "id",
                 "wrCountryCode" as "countryCode",
                 "wrCountryName" as "countryName",
-                "wrFlag" as "flag"
+                "wrFlag" as "flag",
+                "wrFlagPath" as "flagPath",
+                "wrIsActive" as "isActive",
+                "wrMaxNumber" as "maxNumber",
+                "wrShortName" as "shortName",
+                "wrIsClientShow" as "isClientShow",
+                "wrIsDefault" as "isDefault",
+                "wrTimezone" as "timezone"
             FROM insert_data;`,
       {
         type: fastify.db.QueryTypes.SELECT,
@@ -38,6 +53,13 @@ const insertCountryCodeQuery = async (data, fastify, request) => {
           data.countryCode || null,
           data.countryName || null,
           data.flag || null,
+          data.flagPath || null,
+          data.isActive || false,
+          data.maxNumber || null,
+          data.shortName || null,
+          data.timezone || null,
+          data.isClientShow === undefined ? null : data.isClientShow,
+          data.isDefault === undefined ? false : data.isDefault,
         ],
       }
     );
@@ -59,13 +81,27 @@ const updateCountryCodeQuery = async (data, fastify, request) => {
       `UPDATE "tblCountryCodes" SET 
             "wrCountryCode" = $1,
             "wrCountryName" = $2,
-            "wrFlag" = $3
+            "wrFlag" = $3,
+            "wrFlagPath" = $5,
+            "wrIsActive" = $6,
+            "wrMaxNumber" = $7,
+            "wrShortName" = $8,
+            "wrTimezone" = $9,
+            "wrIsClientShow" = $10,
+            "wrIsDefault" = $11
             WHERE "wrId" = $4
             RETURNING 
                 "wrId" as "id",
                 "wrCountryCode" as "countryCode",
                 "wrCountryName" as "countryName",
-                "wrFlag" as "flag";`,
+                "wrFlag" as "flag",
+                "wrFlagPath" as "flagPath",
+                "wrIsActive" as "isActive",
+                 "wrMaxNumber" as "maxNumber",
+                "wrShortName" as "shortName",
+                "wrIsClientShow" as "isClientShow",
+                "wrIsDefault" as "isDefault",
+                "wrTimezone" as "timezone";`,
       {
         type: fastify.db.QueryTypes.UPDATE,
         bind: [
@@ -73,6 +109,13 @@ const updateCountryCodeQuery = async (data, fastify, request) => {
             data.countryName,
             data.flag,
             data.id,
+            data.flagPath,
+            data.isActive,
+            data.maxNumber,
+            data.shortName || null,
+            data.timezone,
+            data.isClientShow,
+            data.isDefault,
         ],
       }
     );
@@ -112,9 +155,91 @@ const deleteCountryCodeQuery = async (id, fastify, request) => {
   }
 };
 
+const activeInactiveCountryCodeQuery = async (data, request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `UPDATE "tblCountryCodes" SET "wrIsActive" = $1 WHERE "wrId" = $2`,
+      {
+        bind: [data.isActive, data.id],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCountryCode.js/activeInactiveCountryCodeQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const isClientShowCountryCodeQuery = async (data, request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `UPDATE "tblCountryCodes" SET "wrIsClientShow" = $1 WHERE "wrId" = $2`,
+      {
+        bind: [data.isClientShow, data.id],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCountryCode.js/isClientShowCountryCodeQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const isDefaultCountryCodeQuery = async (data, request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `UPDATE "tblCountryCodes" SET "wrIsDefault" = $1 WHERE "wrId" = $2`,
+      {
+        bind: [data.isDefault, data.id],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCountryCode.js/isDefaultCountryCodeQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const isDefaultFalseCountryCodeQuery = async (data, fastify, request) => {
+  try {
+      return await fastify.db.query(
+          `UPDATE "tblCountryCodes" SET "wrIsDefault" = $1 
+          WHERE "wrId" != $2 AND "wrIsDeleted" = false`,
+          {
+              type: fastify.db.QueryTypes.UPDATE,
+              bind: [false, data.id],
+          }
+      );
+  } catch (err) {
+      errorLogger(
+          fastify,
+          err.message,
+          "DB ERROR --> repository/TableCountryCode.js/isDefaultFalseCountryCodeQuery",
+          request
+      );
+      throw new Error(err.message);
+  }
+};
+
 module.exports = {
     getAllCountryCodesQuery,
     insertCountryCodeQuery,
     updateCountryCodeQuery,
     deleteCountryCodeQuery,
+    activeInactiveCountryCodeQuery,
+    isClientShowCountryCodeQuery,
+    isDefaultCountryCodeQuery,
+    isDefaultFalseCountryCodeQuery,
 };

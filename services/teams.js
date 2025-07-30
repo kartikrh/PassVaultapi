@@ -21,6 +21,7 @@ const { ImgModuleConfig } = require("../utilities/imageConstant");
 const { deletePlayersByTeamIdQuery } = require("../repository/TableTournamentsTeamPlayers")
 const { deletePointsByTeamIdQuery } = require("../repository/TableTournmentTeamPoints")
 const { mergeAndSaveImage } = require("../utilities/imageMerge");
+const { trimTextData } = require("../utilities/index");
 const allTeamsService = async () => {
   return global.tblTeams;
 };
@@ -43,7 +44,15 @@ const allteamByEventTypeIdService = async (request, fastify) => {
     );
   }
 
-  return result;
+  const updatedTeams = result.map((item) => {
+    const country = global.tblCountryCodes.find(elem => elem.id === item.countryId);
+    return {
+      ...item,
+      countryName: country?.countryName ?? null
+    };
+  });
+
+  return updatedTeams;
 
 
 
@@ -110,14 +119,36 @@ const createTeamService = async (request, fastify) => {
       throw new Error("EventId is not valid");
     }
   }
+  const trimData = await trimTextData({
+    teamName: request.body?.teamName,
+    teamShortName: request.body?.teamShortName,
+  }, request, fastify);
+
+  if(trimData) {
+    Object.assign(request.body, trimData);
+  }
 
   const validateTeamName = global.tblTeams.find(
     (item) =>
-      item.teamName.trim().toLowerCase() === request.body.teamName.trim().toLowerCase()
+      item.teamName.toLowerCase() == request.body.teamName.toLowerCase()
   );
+  // const validateTeamName = global.tblTeams.find(
+  //   (item) =>
+  //     item.teamName.trim().toLowerCase() == request.body.teamName.trim().toLowerCase()
+  // );
 
   if (validateTeamName) {
     throw new Error("TeamName already exist");
+  }
+
+  if (request.body?.tpId != null) {
+    const validateTpId = global.tblTeams.some(
+      (item) => item.tpId == request.body?.tpId
+    );
+
+    if (validateTpId) {
+      throw new Error("TpId already exists");
+    }
   }
 
   let imgName, projectName;
@@ -130,23 +161,25 @@ const createTeamService = async (request, fastify) => {
       name: request.body.teamName,
     });
 
-    const path = await storeImageOnServer({
+    const { fullPath, imagePath } = await storeImageOnServer({
       image: request.body.image[0],
       project: projectName,
       name: imgName,
       ...ImgModuleConfig.Teams,
     });
-    request.body.image = path;
+    request.body.image = fullPath;
+    request.body.imagePath = imagePath
   }
 
   if (request.body.jersey && request.body.jersey.length) {
-    const path = await storeImageOnServer({
+    const { fullPath, imagePath } = await storeImageOnServer({
       image: request.body.jersey[0],
       project: projectName,
       name: `${imgName}-jersey`,
       ...ImgModuleConfig.Teams,
     });
-    request.body.jersey = path;
+    request.body.jersey = fullPath;
+    request.body.jerseyPath = imagePath
   }
   request.body.teamName = request.body.teamName.trim();
   const data = await insertTeamQuery(
@@ -167,10 +200,12 @@ const createTeamService = async (request, fastify) => {
           if (hashArray[i]) {
             const playerID = hashArray[i].replace(/[\[\]"]/g, "");
             if (playerID !== "") {
+              const playerTpId = global.tblPlayers.find(elem => elem.playerId == playerID);
               const teamPlayerData = await insertTeamPlayerQuery(
                 {
                   teamId: data.teamId,
                   refPlayerId: playerID,
+                  tpId: playerTpId?.tpId ?? null,
                   userId: request.userTokenInfo.WrUserId,
                 },
                 fastify,
@@ -234,6 +269,25 @@ const updateTeamService = async (request, fastify) => {
   if (!checkTeamId) {
     throw new Error("TeamId is not valid");
   }
+  if(checkTeamId) {
+    const validateTpId = global.tblTeams.find(
+      (item) =>
+        item.tpId == request.body?.tpId && item.teamId != request.body.teamId &&
+        item.tpId !== null
+    );
+  
+    if (validateTpId) {
+      throw new Error("TpId already exist");
+    }
+  }
+
+  const trimData = await trimTextData({
+    teamName: request.body?.teamName,
+    teamShortName: request.body?.teamShortName,
+  }, request, fastify);
+  if(trimData) {
+    Object.assign(request.body, trimData);
+  }
 
   const _getEventType = global.tblEventTypes.find(
     (item) => item.eventTypeId === request.body.eventTypeId
@@ -247,19 +301,26 @@ const updateTeamService = async (request, fastify) => {
     teamShortName: request.body.teamShortName || checkTeamId.teamShortName,
     image: checkTeamId.image,
     jersey: checkTeamId.jersey,
-    country: request.body.country || checkTeamId.country,
+    // country: request.body.country || checkTeamId.country,
     eventTypeId: request.body.eventTypeId || checkTeamId.eventTypeId,
     userId: request.userTokenInfo.WrUserId,
     teamId: request.body.teamId,
     eventType: _getEventType.eventType,
     teamColor: request.body.teamColor || checkTeamId.teamColor,
     backgroundColor: request.body.backgroundColor || checkTeamId.backgroundColor,
+    imagePath: checkTeamId.imagePath,
+    jerseyPath: checkTeamId.jerseyPath,
+    // tpId: request.body.tpId || checkTeamId.tpId,
+    tpId: request.body.tpId === undefined ? checkTeamId.tpId
+      : [0, '', 'null'].includes(request.body.tpId) ? null
+      : request.body.tpId,
+    countryId: request.body.countryId || checkTeamId.countryId,
   };
 
   const validateTeamName = global.tblTeams.find(
     (item) =>
       item.teamName.trim().toLowerCase() === body.teamName.trim().toLowerCase() &&
-      item.teamId !== request.body.teamId
+      item.teamId != request.body.teamId
   );
 
   if (validateTeamName) {
@@ -268,7 +329,7 @@ const updateTeamService = async (request, fastify) => {
 
   if (request.body.eventTypeId) {
     const validateEventId = global.tblEventTypes.find(
-      (item) => item.eventTypeId === request.body.eventTypeId
+      (item) => item.eventTypeId == request.body.eventTypeId
     );
     if (!validateEventId) {
       throw new Error("EventId is not valid");
@@ -285,13 +346,14 @@ const updateTeamService = async (request, fastify) => {
       name: request.body.teamName,
     });
 
-    const path = await storeImageOnServer({
+    const { fullPath, imagePath } = await storeImageOnServer({
       image: request.body.image[0],
       project: projectName,
       name: imgName,
       ...ImgModuleConfig.Teams,
     });
-    body.image = path;
+    body.image = fullPath;
+    body.imagePath = imagePath;
   }
 
   if (request.body.jersey && request.body.jersey.length) {
@@ -301,12 +363,14 @@ const updateTeamService = async (request, fastify) => {
       name: request.body.teamName,
     });
     
-    body.jersey = await storeImageOnServer({
+    const { fullPath, imagePath } = await storeImageOnServer({
       image: request.body.jersey[0],
       project: projectName,
       name: `${imgName}-jersey`,
       ...ImgModuleConfig.Teams,
     });
+    body.jersey = fullPath;
+    body.jerseyPath = imagePath;
   }
 
   await updateTeamQuery(body, fastify, request);
@@ -314,7 +378,7 @@ const updateTeamService = async (request, fastify) => {
   delete body.userId;
 
   const index = global.tblTeams.findIndex(
-    (item) => item.teamId === request.body.teamId
+    (item) => item.teamId == request.body.teamId
   );
 
   global.tblTeams[index] = body;
@@ -340,10 +404,12 @@ const updateTeamService = async (request, fastify) => {
         if (hashArray[i]) {
           const playerID = hashArray[i].replace(/[\[\]"]/g, "");
           if (playerID !== "") {
+            const playerTpId = global.tblPlayers.find(elem => elem.playerId == playerID);
             const teamPlayerData = await insertTeamPlayerQuery(
               {
                 teamId: body.teamId,
                 refPlayerId: playerID,
+                tpId: playerTpId?.tpId ?? null,
                 userId: request.userTokenInfo.WrUserId,
               },
               fastify,

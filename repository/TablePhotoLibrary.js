@@ -58,7 +58,8 @@ const getAllLibraryImagesQuery = async (fastify) => {
               "wrTitle" AS "title",
               "wrImage" AS "image",
               "wrDisplayOrder" AS "displayOrder",
-              "wrIsDefault" AS "isDefault"
+              "wrIsDefault" AS "isDefault",
+              "wrImagePath" AS "imagePath"
             FROM "tblLibraryImages"
           WHERE "wrIsDeleted" = FALSE
           ORDER BY "wrDisplayOrder" ASC
@@ -161,13 +162,14 @@ const insertLibraryImageQuery = async (data, fastify, request) => {
             WHERE "wrPhotoLibraryId" = $1 AND "wrIsDeleted" = false
           ),
           add_data AS (
-            INSERT INTO "tblLibraryImages" ("wrPhotoLibraryId", "wrTitle", "wrImage", "wrDisplayOrder", "wrIsDefault")
+            INSERT INTO "tblLibraryImages" ("wrPhotoLibraryId", "wrTitle", "wrImage", "wrDisplayOrder", "wrIsDefault", "wrImagePath")
             SELECT 
               $1, 
               $2, 
               $3, 
               (SELECT count FROM count_parent) + 1, 
-              $4
+              $4,
+              $5
             RETURNING *
           )
           SELECT 
@@ -176,7 +178,8 @@ const insertLibraryImageQuery = async (data, fastify, request) => {
             "wrTitle" AS "title",
             "wrImage" AS "image",
             "wrDisplayOrder" AS "displayOrder",
-            "wrIsDefault" AS "isDefault"
+            "wrIsDefault" AS "isDefault",
+            "wrImagePath" AS "imagePath"
           FROM add_data;`,
         {
           type: fastify.db.QueryTypes.SELECT,
@@ -185,6 +188,7 @@ const insertLibraryImageQuery = async (data, fastify, request) => {
             data.title,
             data.image || null,
             data.isDefault || false,
+            data.imagePath || null,
           ],
         }
       );
@@ -204,7 +208,7 @@ const updateLibraryImageQuery = async (data, fastify, request) => {
   try {
     const result = await fastify.db.query(
       `Update "tblLibraryImages" set 
-              "wrPhotoLibraryId" = $1,"wrTitle" = $2,"wrImage" = $3, "wrIsDefault" = $4
+              "wrPhotoLibraryId" = $1,"wrTitle" = $2,"wrImage" = $3, "wrIsDefault" = $4, "wrImagePath" = $6
               where "wrId" = $5
           RETURNING 
             "wrId" AS "id",
@@ -212,7 +216,8 @@ const updateLibraryImageQuery = async (data, fastify, request) => {
             "wrTitle" AS "title",
             "wrImage" AS "image",
             "wrDisplayOrder" AS "displayOrder",
-            "wrIsDefault" AS "isDefault";`,
+            "wrIsDefault" AS "isDefault",
+            "wrImagePath" AS "imagePath";`,
       {
         type: fastify.db.QueryTypes.UPDATE,
         bind: [
@@ -221,6 +226,7 @@ const updateLibraryImageQuery = async (data, fastify, request) => {
           data.image || null,
           data.isDefault || false,
           data.id,
+          data.imagePath || null,
         ],
       }
     );

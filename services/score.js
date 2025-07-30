@@ -18,6 +18,7 @@ const {
     getAllCommentaryWicketDataQueryV1,
     getAllCommentaryPartnershipDataQueryV1,
 } = require("../repository/TableCommentary");
+const { dltDeviceQuery, saveDeviceQuery } = require("../repository/TableDevice");
 
 const getAllCommentariesDataService = async (request,fastify) => {
     try {
@@ -26,6 +27,8 @@ const getAllCommentariesDataService = async (request,fastify) => {
         let com = commentaryData.filter((c) => {
             if (request.body.eventId) {
                 return c.eventRefId == request.body.eventId;
+            } else if (request.body.commentaryId){
+                return c.commentaryId == request.body.commentaryId;
             } else {
                 return c.commentaryStatus != 4;
             }
@@ -39,6 +42,8 @@ const getAllCommentariesDataService = async (request,fastify) => {
                         if (_teamsC1.length > 0) {
                             team.image = _teamsC1[0].image;
                             team.jersey = _teamsC1[0].jersey;
+                            team.nimage = _teamsC1[0].imagePath;
+                            team.njersey =  _teamsC1[0].jerseyPath;
                         }
                     });   
                 } catch (error) {
@@ -85,11 +90,13 @@ const getAllCommentariesDataService = async (request,fastify) => {
                         if (_player1.length > 0) {
                             partnership.player1image = _player1[0].playerimage;
                             partnership.player1jerseyandimage = _player1[0].jerseyPlayerImage;
+                            partnership.player1jerseyandimagepath = _player1[0].jerseyPlayerImagePath;
                         }
                         const _player2 = players.filter((item) => item.commentaryPlayerId === partnership.batter2Id);
                         if (_player2.length > 0) {
                             partnership.player2image = _player2[0].playerimage;
                             partnership.player2jerseyandimage = _player2[0].jerseyPlayerImage;
+                            partnership.player2jerseyandimagepath = _player2[0].jerseyPlayerImagePath;
                         }
                     });   
                 } catch (error) {
@@ -328,6 +335,8 @@ const getAllCommentariesDataServiceV1 = async (request,fastify) => {
         let com = commentaryData.filter((c) => {
             if (request.body.eventId) {
                 return c.erefid == request.body.eventId;
+            } else if (request.body.commentaryId) {
+                return c.cid == request.body.commentaryId;
             } else {
                 return c.cs != 4;
             }
@@ -403,9 +412,9 @@ const getAllCommentariesDataServiceV1 = async (request,fastify) => {
                 },fastify) || [];
 
                 commentaries[c.erefid] = {
-                    commentaryId : c.cid,
-                    eventrefId : c.erefid,
-                    commentaryStatus : c.cs,
+                    cid : c.cid,
+                    erefid : c.erefid,
+                    cs : c.cs,
                     commentaryDetails: c,
                     commentaryTeams: teams,
                     commentaryPlayers: players,
@@ -454,7 +463,41 @@ const getMarketsByCommentaryIdServiceV1 =async (request , fastify) => {
         dataProviderUrl: datProviderUrl.value
     };
 }
-
+const saveDeviceDataService = async (request, fastify) => {
+    const devices = global.tblDevices || [];
+    // go accroding to device type and then userId at the time only one data will be saved with one device type and userId or devictype and tempCId if not logged in
+    const { deviceType, userId, tempCId } = request.body;
+    let deviceData = devices.filter((d) => d.deviceType === deviceType && (d.userId === userId || d.tempCId === tempCId));
+    if(deviceData.length > 0){
+        // delete the old device data
+        let ids = deviceData.map((d) => d.id);
+        await dltDeviceQuery(
+            ids,
+            fastify,
+            request
+        );
+        global.tblDevices = global.tblDevices.filter((d) => !ids.includes(d.deviceId));
+        // save the new device data
+        let dData = await saveDeviceQuery(
+            request.body,
+            fastify,
+            request
+        );
+        global.tblDevices.push(dData);
+        return dData;
+    }
+    else {
+        // save the new device data
+        let dData = await saveDeviceQuery(
+            request.body,
+            fastify,
+            request
+        );
+        global.tblDevices.push(dData);
+        return dData;
+    }
+    return true;
+}
 module.exports = { 
     getAllCommentariesDataService,
     getMarketsByCommentaryIdService,
@@ -463,4 +506,5 @@ module.exports = {
     getMarketByGraphByRefIdService,
     getAllCommentariesDataServiceV1,
     getMarketsByCommentaryIdServiceV1,
+    saveDeviceDataService
  };

@@ -20,7 +20,7 @@ const getAllCommentaryQuery = async (fastify) => {
     "wrEventRefId" as "eventRefId",
     "wrLocation" as "location",
     "wrWeather" as "weather",
-    "wrPitch" as "pitch",
+    "wrPitchCracks" as "pitchCracks",
     "wrHomeSideTeam" as "homeSideTeam",
     "wrTossWonBy" as "tossWonBy",
     "wrChoseTo" as "choseTo",
@@ -29,13 +29,16 @@ const getAllCommentaryQuery = async (fastify) => {
     "wrIsClientShow" as "isClientShow",
     "wrDisplayStatus" as "displayStatus",
     "wrRmk" as "rmk",
+    "wrWinRmk" as "winRmk",
+    "wrCardType" as "cardType",
+    "wrTossRmk" as "tossRmk",
     "wrCommentaryUserId" as "commentaryUserId",
     "wrCommentaryStatus" as "commentaryStatus",
     "wrUpdateTime" as "updateTime",
     "wrIsMatchDraw" as "isMatchDraw",
     "wrTarget" as "target",
     "wrMarketID" as "marketId",
-    "wrTpId" as "tpId",
+    tc."wrTpId" as "tpId",
     "isSignalROn" as "isSignalROn",
     "isMatchTypeUpdated" as "isMatchTypeUpdated",
     "wrCurrentInnings" as "currentInnings",
@@ -55,7 +58,30 @@ const getAllCommentaryQuery = async (fastify) => {
     "wrShotType" as "shotType",
     "wrIsWheelShow" as "isWheelShow",
     "wrSortUpdate" as "sortUpdate",
-    tc."wrIsTest" as "isTest"
+    tc."wrIsTest" as "isTest",
+    tc."wrEventNo" as "eventNo",
+    tc."wrIsEventStart" as "isEventStart",
+    tc."wrDifficulty" as "difficulty",
+    tc."wrPitchHardness" as "pitchHardness",
+    tc."wrPitchWareSpeed" as "pitchWareSpeed",
+    tc."wrPitchType" as "pitchType",
+    tc."wrLawnStriping" as "lawnStriping",
+    tc."wrPitchAge" as "pitchAge",
+    tc."wrIsVirtual" as "isVirtual",
+    tc."wrTestDayCount" as "testDayCount",
+    tc."wrOnfieldUmpires" as "onfieldUmpires",
+    tc."wrThirdUmpire" as "thirdUmpire",
+    tc."wrMatchReferee" as "matchReferee",
+    tc."wrSession" as "session",
+    tc."wrBallDelay" as "ballDelay",
+    tc."wrOverDelay" as "overDelay",
+    tc."wrInningDelay" as "inningDelay",
+    tc."wrCountryId" as "countryId",
+    tc."wrVenueId" as "venueId",
+    tc."wrTossDelay" as "tossDelay",
+    tc."wrPythonId" as "pythonId",
+    tc."wrPythonURI" as "pythonURI",
+    tc."wrCancelTime" as "cancelTime"
     from "tblCommentaries" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -64,14 +90,23 @@ const getAllCommentaryQuery = async (fastify) => {
     LEFT JOIN "tblEventTypes" tet ON tc."wrEventTypeId" = tet."wrEventTypeId"
 	  LEFT JOIN "tblCompetitions" co ON tc."wrCompetitionId" = co."wrCompetitionId"
     LEFT JOIN "tblUsers" tu ON tc."wrCreatedBy" = tu."WrUserId"
-    WHERE (tc."wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days'
-    AND tc."wrCommentaryStatus" = 4 AND tc."wrIsDelete" = false)
-    OR tc."wrCommentaryStatus" != 4
-    AND tc."wrIsDelete" = false;`,
+    WHERE tc."wrIsDelete" = FALSE
+    AND (
+      tc."wrCommentaryStatus" != 4
+      OR (tc."wrCommentaryStatus" = 4 AND tc."wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days')
+    )
+    AND (
+      tc."wrCancelTime" IS NULL
+      OR tc."wrCancelTime" >= NOW() - INTERVAL '7 days'
+    );`,
     {
       type: fastify.db.QueryTypes.SELECT,
     }
   );
+  // WHERE (tc."wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days'
+  //   AND tc."wrCommentaryStatus" = 4 AND tc."wrIsDelete" = false)
+  //   OR tc."wrCommentaryStatus" != 4
+  //   AND tc."wrIsDelete" = false;
 };
 const getCommentariesDataQuery = async (fastify) => {
   return await fastify.db.query(
@@ -93,7 +128,7 @@ const getCommentariesDataQuery = async (fastify) => {
     "wrEventRefId" as "eventRefId",
     "wrLocation" as "location",
     "wrWeather" as "weather",
-    "wrPitch" as "pitch",
+    "wrPitchCracks" as "pitchCracks",
     "wrHomeSideTeam" as "homeSideTeam",
     "wrTossWonBy" as "tossWonBy",
     "wrChoseTo" as "choseTo",
@@ -102,13 +137,16 @@ const getCommentariesDataQuery = async (fastify) => {
     "wrIsClientShow" as "isClientShow",
     "wrDisplayStatus" as "displayStatus",
     "wrRmk" as "rmk",
+    "wrWinRmk" as "winRmk",
+    "wrCardType" as "cardType",
+    "wrTossRmk" as "tossRmk",
     "wrCommentaryUserId" as "commentaryUserId",
     "wrCommentaryStatus" as "commentaryStatus",
     "wrUpdateTime" as "updateTime",
     "wrIsMatchDraw" as "isMatchDraw",
     "wrTarget" as "target",
     "wrMarketID" as "marketId",
-    "wrTpId" as "tpId",
+    tc."wrTpId" as "tpId",
     "isSignalROn" as "isSignalROn",
     "isMatchTypeUpdated" as "isMatchTypeUpdated",
     "wrCurrentInnings" as "currentInnings",
@@ -127,7 +165,30 @@ const getCommentariesDataQuery = async (fastify) => {
     tc."wrIsCountInPoint" as "isCountInPoint",
     "wrShotType" as "shotType",
     "wrIsWheelShow" as "isWheelShow",
-    "wrSortUpdate" as "sortUpdate"
+    "wrSortUpdate" as "sortUpdate",
+    tc."wrEventNo" as "eventNo",
+    tc."wrIsEventStart" as "isEventStart",
+    tc."wrDifficulty" as "difficulty",
+    tc."wrPitchHardness" as "pitchHardness",
+    tc."wrPitchWareSpeed" as "pitchWareSpeed",
+     tc."wrPitchType" as "pitchType",
+    tc."wrLawnStriping" as "lawnStriping",
+    tc."wrPitchAge" as "pitchAge",
+    tc."wrIsVirtual" as "isVirtual",
+    tc."wrTestDayCount" as "testDayCount",
+    tc."wrOnfieldUmpires" as "onfieldUmpires",
+    tc."wrThirdUmpire" as "thirdUmpire",
+    tc."wrMatchReferee" as "matchReferee",
+    tc."wrSession" as "session",
+    tc."wrBallDelay" as "ballDelay",
+    tc."wrOverDelay" as "overDelay",
+    tc."wrInningDelay" as "inningDelay",
+    tc."wrTossDelay" as "tossDelay",
+    tc."wrCountryId" as "countryId",
+    tc."wrVenueId" as "venueId",
+    tc."wrPythonId" as "pythonId",
+    tc."wrPythonURI" as "pythonURI",
+    tc."wrCancelTime" as "cancelTime"
     from "tblCommentaries" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -151,8 +212,12 @@ const insertCommentaryQuery = async (request, fastify) => {
       `
       with insert_data as(
         insert into "tblCommentaries" ("wrEventTypeId","wrMatchTypeId","wrCompetitionId","wrEventId",
-        "wrEventDate","wrEventName","wrEventRefId","wrTeam1Id","wrTeam2Id","wrLocation","wrWeather","wrPitch","wrDisplayStatus","wrTarget","wrMarketID","wrTpId","isSignalROn","isMatchTypeUpdated" , "wrCreatedBy" , "wrCreatedDate","wrCommentaryStatus","wrCurrentInnings", "wrSystemPlayerCount","wrIsPredictMarket",
-        "wrDelay", "wrIsActive", "wrIsClientShow","wrIsTeamPredictionOn", "wrHistoryMatchTypeId", "wrIsCountInPoint","wrIsTest") values (
+        "wrEventDate","wrEventName","wrEventRefId","wrTeam1Id","wrTeam2Id","wrLocation","wrWeather","wrPitchCracks","wrDisplayStatus","wrTarget","wrMarketID","wrTpId","isSignalROn","isMatchTypeUpdated" , "wrCreatedBy" , "wrCreatedDate","wrCommentaryStatus","wrCurrentInnings", "wrSystemPlayerCount","wrIsPredictMarket",
+        "wrDelay", "wrIsActive", "wrIsClientShow","wrIsTeamPredictionOn", "wrHistoryMatchTypeId", "wrIsCountInPoint","wrIsTest", "wrEventNo",
+        "wrDifficulty", "wrPitchHardness", "wrPitchWareSpeed", "wrPitchType", "wrLawnStriping", "wrPitchAge", "wrIsVirtual",
+        "wrOnfieldUmpires", "wrThirdUmpire", "wrMatchReferee", "wrSession", "wrTestDayCount", "wrPythonId", "wrPythonURI",
+        "wrCountryId", "wrVenueId"
+        ) values (
           $1,
           $2,
           $3,
@@ -170,7 +235,24 @@ const insertCommentaryQuery = async (request, fastify) => {
           $25,
           $26,
           $27,
-          $28
+          $28,
+          $29,
+          $30,
+          $31,
+          $32,
+          $33,
+          $34,
+          $35,
+          $36,
+          $37,
+          $38,
+          $39,
+          $40,
+          $41,
+          $42,
+          $43,
+          $44,
+          $45
         ) returning *         
       )
 
@@ -191,7 +273,7 @@ const insertCommentaryQuery = async (request, fastify) => {
     "wrEventRefId" as "eventRefId",
     "wrLocation" as "location",
     "wrWeather" as "weather",
-    "wrPitch" as "pitch",
+    "wrPitchCracks" as "pitchCracks",
     tc."wrHomeSideTeam" as "homeSideTeam",
     tc."wrTossWonBy" as "tossWonBy",
     "wrChoseTo" as "choseTo",
@@ -200,13 +282,16 @@ const insertCommentaryQuery = async (request, fastify) => {
     "wrIsClientShow" as "isClientShow",
     "wrDisplayStatus" as "displayStatus",
     "wrRmk" as "rmk",
+    "wrWinRmk" as "winRmk",
+    "wrCardType" as "cardType",
+    "wrTossRmk" as "tossRmk",
     "wrCommentaryUserId" as "commentaryUserId",
     "wrCommentaryStatus" as "commentaryStatus",
     "wrUpdateTime" as "updateTime",
     "wrIsMatchDraw" as "isMatchDraw",
     "wrTarget" as "target",
     "wrMarketID" as "marketId",
-    "wrTpId" as "tpId",
+    tc."wrTpId" as "tpId",
     "isSignalROn" as "isSignalROn",
     "isMatchTypeUpdated" as "isMatchTypeUpdated",
     "wrCurrentInnings" as "currentInnings",
@@ -222,7 +307,26 @@ const insertCommentaryQuery = async (request, fastify) => {
     tc."wrIsCountInPoint" as "isCountInPoint",
     "wrShotType" as "shotType",
     "wrIsWheelShow" as "isWheelShow",
-    "wrIsTest" as "isTest"
+    "wrIsTest" as "isTest",
+    tc."wrEventNo" as "eventNo",
+    tc."wrIsEventStart" as "isEventStart",
+    tc."wrDifficulty" as "difficulty",
+    tc."wrPitchHardness" as "pitchHardness",
+    tc."wrPitchWareSpeed" as "pitchWareSpeed",
+    tc."wrPitchType" as "pitchType",
+    tc."wrLawnStriping" as "lawnStriping",
+    tc."wrPitchAge" as "pitchAge",
+    tc."wrIsVirtual" as "isVirtual",
+    tc."wrOnfieldUmpires" as "onfieldUmpires",
+    tc."wrThirdUmpire" as "thirdUmpire",
+    tc."wrMatchReferee" as "matchReferee",
+    tc."wrSession" as "session",
+    tc."wrTestDayCount" as "testDayCount",
+    tc."wrCountryId" as "countryId",
+    tc."wrVenueId" as "venueId",
+    tc."wrPythonId" as "pythonId",
+    tc."wrPythonURI" as "pythonURI",
+    tc."wrCancelTime" as "cancelTime"
     from "insert_data" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"  
@@ -239,12 +343,12 @@ const insertCommentaryQuery = async (request, fastify) => {
           data.eventId || null,
           data.eventDate ? new Date(data.eventDate) : null,
           data.eventName || null,
-          data.eventRefId.trim() || null,
+          data.eventRefId ? data.eventRefId.trim() : null,
           data.team1Id || null,
           data.team2Id || null,
           data.location || null,
           data.weather || null,
-          data.pitch || null,
+          data.pitchCracks || null,
           "Toss Pending!!",
           null,
           data.marketId || null,
@@ -260,7 +364,24 @@ const insertCommentaryQuery = async (request, fastify) => {
           true,
           data.matchTypeId || null,
           data.isCountInPoint,
-          data.hasOwnProperty("isTest") ? data.isTest : false
+          data.hasOwnProperty("isTest") ? data.isTest : false,
+          data.eventNo || null,
+          data.difficulty || null,
+          data.pitchHardness || null,
+          data.pitchWareSpeed || null,
+          data.pitchType || null,
+          data.lawnStriping || null,
+          data.pitchAge || null,
+          data.isVirtual || false,
+          data.onfieldUmpires || null,
+          data.thirdUmpire || null,
+          data.matchReferee || null,
+          data.session || null,
+          data.testDayCount || null,
+          data.pythonId || null,
+          data.pythonURI || null,
+          data.countryId || null,
+          data.venueId || null,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -285,7 +406,7 @@ const insertCommentaryTeams = async (request, fastify) => {
     return await fastify.db.query(
       `
       insert into "tblCommentaryTeams" ("wrCommentaryId" , "wrTeamId","wrTeamCaptain","wrTeamKipper" , "wrShortName" , "wrTeamName","wrCurrentInnings","wrIsBattingComplete"
-      , "wrTeamColor" , "wrBackgroundColor" , "wrTeamMaxOver", "wrDrsCount")
+      , "wrTeamColor" , "wrBackgroundColor" , "wrTeamMaxOver", "wrDrsCount", "wrSubInning", "wrTpId")
        values (
         $1,
         $2,
@@ -298,7 +419,9 @@ const insertCommentaryTeams = async (request, fastify) => {
         (select "wrTeamColor" from "tblTeams" where "wrTeamId" = $2),
         (select "wrBackgroundColor" from "tblTeams" where "wrTeamId" = $2),
         $9,
-        $10           
+        $10,
+        $11,
+        $12
       )
       ,(
         $1,
@@ -312,7 +435,9 @@ const insertCommentaryTeams = async (request, fastify) => {
         (select "wrTeamColor" from "tblTeams" where "wrTeamId" = $5),
         (select "wrBackgroundColor" from "tblTeams" where "wrTeamId" = $5),
         $9,
-        $10
+        $10,
+        $11,
+        $13
       )
     `,
       {
@@ -328,6 +453,9 @@ const insertCommentaryTeams = async (request, fastify) => {
           data.currentInnings,
           data.teamMaxOver || null,
           data.drsCount || 0,
+          data.subInning || null,
+          data.team1TpId || null,
+          data.team2TpId || null,
         ],
       }
     );
@@ -353,7 +481,7 @@ const insertCommentaryPlayers = async (
       `
       WITH insert_data AS (
         insert into "tblCommentaryPlayers" ("wrCommentaryId" , "wrTeamId" , "wrPlayerId","wrPlayerName", "wrDisplayOrder","wrCurrentInnings",
-        "wrBatsmanAverage", "wrBatsmanPreviousStrikeRate", "wrBowlerPreviousEconomy", "wrBowlerAverage")
+        "wrBatsmanAverage", "wrBatsmanPreviousStrikeRate", "wrBowlerPreviousEconomy", "wrBowlerAverage", "wrTpId")
         values (
           $1,
           $2,
@@ -362,15 +490,16 @@ const insertCommentaryPlayers = async (
           $4,
           $5,
           COALESCE(
-            (SELECT "wrAverage" FROM "tblPlayerBattingHistory" WHERE "wrPlayerId" = $3 AND "wrMatchTypeId" = $6),
+            (SELECT "wrAverage" FROM "tblPlayerBattingHistory" WHERE "wrPlayerId" = $3 AND "wrMatchTypeId" = $6 limit 1),
             (SELECT "wrBatsmanAverage" FROM "tblPlayers" WHERE "wrPlayerId" = $3)
           ),
           (select "wrBatsmanStrikeRate" from "tblPlayers" where "wrPlayerId" =$3),
           COALESCE(
-            (SELECT "wrEconomy" FROM "tblPlayerBowlingHistory" WHERE "wrPlayerId" = $3 AND "wrMatchTypeId" = $6),
+            (SELECT "wrEconomy" FROM "tblPlayerBowlingHistory" WHERE "wrPlayerId" = $3 AND "wrMatchTypeId" = $6 limit 1),
             (SELECT "wrBowlerEconomy" FROM "tblPlayers" WHERE "wrPlayerId" = $3)
           ),
-          (select "wrBowlerAverage" from "tblPlayers" where "wrPlayerId" =$3)
+          (select "wrBowlerAverage" from "tblPlayers" where "wrPlayerId" =$3),
+          $7
         )
         RETURNING *   
       ) 
@@ -378,7 +507,8 @@ const insertCommentaryPlayers = async (
       "wrPlayerId" as "playerId", 
       "wrTeamId" as "teamId",
       "wrCommentaryId" as "commentaryId",
-      "wrCommentaryPlayerId" as "commentaryPlayerId"
+      "wrCommentaryPlayerId" as "commentaryPlayerId",
+      "wrTpId" as "tpId"
       FROM "insert_data"
     `,
       {
@@ -390,6 +520,7 @@ const insertCommentaryPlayers = async (
           data.displayOrder,
           currentinning,
           data.matchTypeId,
+          data.tpId || null,
         ],
       }
     );
@@ -414,7 +545,7 @@ const insertCommentaryPlayersQuery = async (
       `
       WITH insert_data AS (
         insert into "tblCommentaryPlayers" ("wrCommentaryId" , "wrTeamId" , "wrPlayerId","wrPlayerName", "wrDisplayOrder","wrCurrentInnings",
-        "wrBatsmanAverage", "wrBatsmanPreviousStrikeRate", "wrBowlerPreviousEconomy", "wrBowlerAverage")
+        "wrBatsmanAverage", "wrBatsmanPreviousStrikeRate", "wrBowlerPreviousEconomy", "wrBowlerAverage", "wrTpId")
         values (
           $1,
           $2,
@@ -431,7 +562,8 @@ const insertCommentaryPlayersQuery = async (
             (SELECT "wrEconomy" FROM "tblPlayerBowlingHistory" WHERE "wrPlayerId" = $3 AND "wrMatchTypeId" = $6),
             (SELECT "wrBowlerEconomy" FROM "tblPlayers" WHERE "wrPlayerId" = $3)
           ),
-          (select "wrBowlerAverage" from "tblPlayers" where "wrPlayerId" =$3)
+          (select "wrBowlerAverage" from "tblPlayers" where "wrPlayerId" =$3),
+          $7
         )
         RETURNING *   
       ) 
@@ -439,7 +571,8 @@ const insertCommentaryPlayersQuery = async (
       "wrPlayerId" as "playerId", 
       "wrTeamId" as "teamId",
       "wrCommentaryId" as "commentaryId",
-      "wrCommentaryPlayerId" as "commentaryPlayerId"
+      "wrCommentaryPlayerId" as "commentaryPlayerId",
+      "wrTpId" as "tpId"
       FROM "insert_data"
     `,
       {
@@ -451,6 +584,7 @@ const insertCommentaryPlayersQuery = async (
           data.displayOrder,
           data.currentInnings,
           data.matchTypeId,
+          data.tpId || null,
         ],
       }
     );
@@ -485,7 +619,7 @@ const upsertCommentaryPlayers = async (
       RETURNING "wrCommentaryPlayerId" AS "commentaryPlayerId"
     )
     INSERT INTO "tblCommentaryPlayers" ("wrCommentaryId", "wrTeamId", "wrPlayerId", "wrPlayerName", "wrDisplayOrder", "wrCurrentInnings",
-    "wrBatsmanAverage", "wrBatsmanPreviousStrikeRate", "wrBowlerPreviousEconomy", "wrBowlerAverage")
+    "wrBatsmanAverage", "wrBatsmanPreviousStrikeRate", "wrBowlerPreviousEconomy", "wrBowlerAverage", "wrTpId")
     SELECT
       $1,
       $2,
@@ -496,7 +630,8 @@ const upsertCommentaryPlayers = async (
       (SELECT "wrBatsmanAverage" FROM "tblPlayers" WHERE "wrPlayerId" = $3),
       (SELECT "wrBatsmanStrikeRate" FROM "tblPlayers" WHERE "wrPlayerId" = $3),
       (SELECT "wrBowlerEconomy" FROM "tblPlayers" WHERE "wrPlayerId" = $3),
-      (SELECT "wrBowlerAverage" FROM "tblPlayers" WHERE "wrPlayerId" = $3)
+      (SELECT "wrBowlerAverage" FROM "tblPlayers" WHERE "wrPlayerId" = $3),
+      $6
     WHERE NOT EXISTS (SELECT 1 FROM upsert)
     RETURNING "wrCommentaryPlayerId" AS "commentaryPlayerId";
     
@@ -510,6 +645,7 @@ const upsertCommentaryPlayers = async (
           data.playerId,
           data.displayOrder,
           currentinning,
+          data.tpId || null,
         ],
       }
     );
@@ -541,7 +677,7 @@ const updateCommentaryQuery = async (request, fastify) => {
       "wrTeam2Id" = $9,
       "wrLocation" = $10,
       "wrWeather" = $11,
-      "wrPitch" = $12,
+      "wrPitchCracks" = $12,
       "wrTarget" = $13 ,
       "isSignalROn" = $14,
       "isMatchTypeUpdated" = $15,
@@ -550,7 +686,24 @@ const updateCommentaryQuery = async (request, fastify) => {
       "wrDelay"=$18,
       "wrIsActive" = $19,
       "wrIsClientShow" = $20,
-      "wrIsCountInPoint" = $21
+      "wrIsCountInPoint" = $21,
+      "wrEventNo" = $22,
+      "wrIsTest" = $23,
+      "wrDifficulty" = $24, 
+      "wrPitchHardness" = $25,
+      "wrPitchWareSpeed" = $26,
+      "wrPitchType" = $27,
+      "wrLawnStriping" = $28,
+      "wrPitchAge" = $29,
+      "wrOnfieldUmpires" = $30,
+      "wrThirdUmpire" = $31, 
+      "wrMatchReferee" = $32, 
+      "wrSession" = $33,
+      "wrPythonId" = $34,
+      "wrPythonURI" = $35,
+      "wrCountryId" = $36,
+      "wrVenueId" = $37,
+      "wrTpId" = $38
       where "wrCommentaryId" = $16 
       `,
       {
@@ -561,12 +714,12 @@ const updateCommentaryQuery = async (request, fastify) => {
           data.eventId || null,
           data.eventDate ? new Date(data.eventDate) : null,
           data.eventName || null,
-          data.eventRefId.trim() || null,
+          data.eventRefId ? data.eventRefId.trim() : null,
           data.team1Id || null,
           data.team2Id || null,
           data.location || null,
           data.weather || null,
-          data.pitch || null,
+          data.pitchCracks || null,
           data.target || null,
           data.isSignalROn,
           data.isMatchTypeUpdated || false,
@@ -576,6 +729,23 @@ const updateCommentaryQuery = async (request, fastify) => {
           data.isActive,
           data.isClientShow,
           data.isCountInPoint,
+          data.eventNo,
+          data.isTest,
+          data.difficulty || null,
+          data.pitchHardness || null,
+          data.pitchWareSpeed || null,
+          data.pitchType || null,
+          data.lawnStriping || null,
+          data.pitchAge || null,
+          data.onfieldUmpires || null,
+          data.thirdUmpire || null,
+          data.matchReferee || null,
+          data.session || null,
+          data.pythonId || null,
+          data.pythonURI || null,
+          data.countryId || null,
+          data.venueId || null,
+          data.tpId || null,
         ],
 
         type: fastify.db.QueryTypes.UPDATE,
@@ -658,14 +828,13 @@ const deleteCommentaryPlayerById = async (data, request, fastify) => {
     // delete commentary player by id
     return await fastify.db.query(
       `UPDATE "tblCommentaryPlayers" SET
-        "wrIsDelete" = $4,
-        "wrDeletedAt" = now()
-      where "wrPlayerId" = $1
-      AND "wrCommentaryId" = $2
-      AND "wrTeamId" = $3`,
+        "wrIsDelete" = $1,
+        "wrDeletedAt" = now(),
+        "wrDeletedBy" = $3
+      where "wrCommentaryPlayerId" = $2`,
       {
         type: fastify.db.QueryTypes.DELETE,
-        bind: [data.playerId, data.commentaryId, data.teamId, true],
+        bind: [true, data.commentaryPlayerId , request.userTokenInfo.WrUserId ?? null],
       }
     );
   } catch (err) {
@@ -742,7 +911,7 @@ const getCommentaryByIdQuery = async (request, fastify) => {
       "wrEventRefId" as "eventRefId",
       "wrLocation" as "location",
       "wrWeather" as "weather",
-      "wrPitch" as "pitch",
+      "wrPitchCracks" as "pitchCracks",
       tc."wrHomeSideTeam" as "homeSideTeam",
       tc."wrTossWonBy" as "tossWonBy",
       "wrChoseTo" as "choseTo",
@@ -751,13 +920,16 @@ const getCommentaryByIdQuery = async (request, fastify) => {
       "wrIsClientShow" as "isClientShow",
       "wrDisplayStatus" as "displayStatus",
       "wrRmk" as "rmk",
+      "wrWinRmk" as "winRmk",
+      "wrTossRmk" as "tossRmk",
+      "wrCardType" as "cardType",
       "wrCommentaryUserId" as "commentaryUserId",
     "wrCommentaryStatus" as "commentaryStatus",
       "wrUpdateTime" as "updateTime",
       "wrIsMatchDraw" as "isMatchDraw",
       "wrTarget" as "target",
       "wrMarketID" as "marketId",
-      "wrTpId" as "tpId",
+      tc."wrTpId" as "tpId",
       "isSignalROn" as "isSignalROn",
       "isMatchTypeUpdated" as "isMatchTypeUpdated",
       "wrCurrentInnings" as "currentInnings",
@@ -774,7 +946,31 @@ const getCommentaryByIdQuery = async (request, fastify) => {
       tc."wrLineRatio" as "lineRatio",
       tc."wrShotType" as "shotType",
       tc."wrIsWheelShow" as "isWheelShow",
-      tc."wrIsCountInPoint" as "isCountInPoint"
+      tc."wrIsCountInPoint" as "isCountInPoint",
+      tc."wrEventNo" as "eventNo",
+      tc."wrIsTest" as "isTest",
+      tc."wrIsEventStart" as "isEventStart",
+      tc."wrDifficulty" as "difficulty",
+      tc."wrPitchHardness" as "pitchHardness",
+      tc."wrPitchWareSpeed" as "pitchWareSpeed",
+      tc."wrPitchType" as "pitchType",
+      tc."wrLawnStriping" as "lawnStriping",
+      tc."wrPitchAge" as "pitchAge",
+      tc."wrIsVirtual" as "isVirtual",
+      tc."wrTestDayCount" as "testDayCount",
+      tc."wrOnfieldUmpires" as "onfieldUmpires",
+      tc."wrThirdUmpire" as "thirdUmpire",
+      tc."wrMatchReferee" as "matchReferee",
+      tc."wrSession" as "session",
+      tc."wrBallDelay" as "ballDelay",
+      tc."wrOverDelay" as "overDelay",
+      tc."wrInningDelay" as "inningDelay",
+      tc."wrTossDelay" as "tossDelay",
+      tc."wrPythonId" as "pythonId",
+      tc."wrCountryId" as "countryId",
+      tc."wrVenueId" as "venueId",
+      tc."wrPythonURI" as "pythonURI",
+      tc."wrCancelTime" as "cancelTime"
       from "tblCommentaries" tc
       left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
       left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -811,7 +1007,9 @@ const getCommentaryTeamsQuery = async (data, fastify, request) => {
       "wrTeamCaptain" as "teamCaptain",
       "wrTeamKipper" as "teamKipper",
       "wrTeamMaxOver" as "teamMaxOver",
-      "wrDrsCount" as "drsCount"
+      "wrDrsCount" as "drsCount",
+      "wrSubInning" as "subInning",
+      "wrTpId" as "tpId"
       from "tblCommentaryTeams"
       where "wrCommentaryId" = $1 and "wrTeamId" = $2 and "wrIsDelete" = false
       `,
@@ -1082,22 +1280,33 @@ const getAllCommentaryTeamsQuery = async (fastify) => {
         tct."wrTeamPredictionPercentage" as "teamPredictionPercentage",
         tct."wrDrsCount" as "drsCount",
         tct."wrNoOfAttempt" as "drsAttempt",
-        tct."wrNoOfFail" as "drsFail"
+        tct."wrNoOfFail" as "drsFail",
+        tct."wrSubInning" as "subInning",
+        tct."wrTpId" as "tpId"
     FROM "tblCommentaryTeams" AS tct
     WHERE tct."wrCommentaryId" IN (
         SELECT "wrCommentaryId"
-        FROM "tblCommentaries"
+        FROM "tblCommentaries" AS tc
         WHERE 
-            (
-                "wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days'
-                AND "wrCommentaryStatus" = 4 AND "wrIsDelete" = FALSE
-            )
-            OR "wrCommentaryStatus" != 4 AND "wrIsDelete" = FALSE
+            tc."wrIsDelete" = FALSE
+        AND (
+          tc."wrCommentaryStatus" != 4
+          OR (tc."wrCommentaryStatus" = 4 AND tc."wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days')
+        )
+        AND (
+          tc."wrCancelTime" IS NULL
+          OR tc."wrCancelTime" >= NOW() - INTERVAL '7 days'
+        )
     )
     AND tct."wrIsDelete" = false;`,
     {
       type: fastify.db.QueryTypes.SELECT,
     }
+    // WHERE (
+    //             "wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days'
+    //             AND "wrCommentaryStatus" = 4 AND "wrIsDelete" = FALSE
+    //         )
+    //         OR "wrCommentaryStatus" != 4 AND "wrIsDelete" = FALSE
   );
 };
 
@@ -1137,12 +1346,14 @@ const getAllCommentaryTeamsDataQuery = async (whereCondition = null, fastify) =>
   "wrTeamPredictionPercentage" as "teamPredictionPercentage",
   "wrDrsCount" as "drsCount",
   "wrNoOfAttempt" as "drsAttempt",
-  "wrNoOfFail" as "drsFail"
+  "wrNoOfFail" as "drsFail",
+  "wrSubInning" as "subInning",
+  "wrTpId" as "tpId"
   from "tblCommentaryTeams" tct 
   ${whereCondition ? `WHERE ${whereCondition}` : ""}
   `,
     {
-      type: fastify.db.QueryTypes.SELECT,
+      type: fastify.db.QueryTypes.SELECT, 
     }
   );
 
@@ -1233,26 +1444,41 @@ const getAllCommentaryPlayerQuery = async (fastify) => {
         tcp."wrPlayerBallFaced" as "playerBallFaced",
         tp."wrPlayerTypeId" as "playerTypeId",
         tpt."wrPlayerType" as "playerType",
-        tcp."wrJerseyPlayerImage" as "jerseyPlayerImage"
+        tcp."wrJerseyPlayerImage" as "jerseyPlayerImage",
+        tcp."wrJerseyPlayerImagePath" as "jerseyPlayerImagePath",
+        tcp."wrTpId" as "tpId"
     from "tblCommentaryPlayers" AS tcp
     LEFT JOIN "tblPlayers" AS tp ON tcp."wrPlayerId" = tp."wrPlayerId"
     LEFT JOIN "tblPlayerTypes" AS tpt ON tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
     WHERE tcp."wrCommentaryId" IN (
         SELECT "wrCommentaryId"
-        FROM "tblCommentaries"
+        FROM "tblCommentaries" AS tc
         WHERE 
-            (
-                "wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days'
-                AND "wrCommentaryStatus" = 4 AND "wrIsDelete" = FALSE
-            )
-            OR "wrCommentaryStatus" != 4 AND "wrIsDelete" = FALSE
-    )
-    AND tcp."wrIsDelete" = false;
+            tc."wrIsDelete" = FALSE
+        AND (
+          tc."wrCommentaryStatus" != 4
+          OR (tc."wrCommentaryStatus" = 4 AND tc."wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days')
+        )
+        AND (
+          tc."wrCancelTime" IS NULL
+          OR tc."wrCancelTime" >= NOW() - INTERVAL '7 days'
+        )
+      )
+        AND tcp."wrIsDelete" = FALSE
     `,
     {
       type: fastify.db.QueryTypes.SELECT,
     }
   );
+
+    //     WHERE 
+    //         (
+    //             "wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days'
+    //             AND "wrCommentaryStatus" = 4 AND "wrIsDelete" = FALSE
+    //         )
+    //         OR "wrCommentaryStatus" != 4 AND "wrIsDelete" = FALSE
+    // )
+    // AND tcp."wrIsDelete" = false;
 };
 
 const getAllCommentaryPlayerDataQuery = async (whereCondition = null, fastify) => {
@@ -1316,7 +1542,9 @@ const getAllCommentaryPlayerDataQuery = async (whereCondition = null, fastify) =
         tp."wrPlayerTypeId" as "playerTypeId",
         tpt."wrPlayerType" as "playerType",
         tcp."wrJerseyPlayerImage" as "jerseyPlayerImage",
-        tp."wrDisplayName" as "displayName"
+        tcp."wrJerseyPlayerImagePath" as "jerseyPlayerImagePath",
+        tp."wrDisplayName" as "displayName",
+        tcp."wrTpId" as "tpId"
     from "tblCommentaryPlayers" AS tcp
     LEFT JOIN "tblPlayers" AS tp ON tcp."wrPlayerId" = tp."wrPlayerId"
     LEFT JOIN "tblPlayerTypes" AS tpt ON tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
@@ -1422,6 +1650,8 @@ const getAllCommentaryBallByBallQuery = async (fastify) => {
         tcbb."wrOver_isMaiden" as "overIsMaiden",
         tcbb."wrNextBat_StrikeID" as "nextBatStrikeId",
         tcbb."wrNextBat_NONStrikeID" as "nextBatNonStrikeId",
+        tcbb."wrTeamScore" as "teamScore",
+        tcbb."wrTeamWicket" as "teamWicket",
         tcbb."wrIsDelete" as "isDelete",
         tcbb."wrCurrentInnings" as "currentInnings",
         tcbb."wrCreatedDate" as "createdDate",
@@ -1430,23 +1660,37 @@ const getAllCommentaryBallByBallQuery = async (fastify) => {
         tcbb."wrY2" as "y2",
         tcbb."wrShortType" as "shortType",
         tcbb."wrCommentryRemark" as "commentryRemark",
-        tcbb."wrCommentaryPartnershipId" as "commentaryPartnershipId"
+        tcbb."wrCommentaryPartnershipId" as "commentaryPartnershipId",
+        tcbb."wrDevOver" as "devOver",
+        tcbb."wrDevCurrentOverBall" as "devCurrentOverBall",
+        tcbb."wrCardKey" as "cardKey",
+        tcbb."wrCardType" as "cardType"
     from "tblCommentaryBallByBalls" tcbb
     WHERE tcbb."wrCommentaryId" IN (
         SELECT "wrCommentaryId"
-        FROM "tblCommentaries"
+        FROM "tblCommentaries" AS tc
         WHERE 
-            (
-                "wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days'
-                AND "wrCommentaryStatus" = 4 AND "wrIsDelete" = FALSE
-            )
-            OR "wrCommentaryStatus" != 4 AND "wrIsDelete" = FALSE
+            tc."wrIsDelete" = FALSE
+        AND (
+          tc."wrCommentaryStatus" != 4
+          OR (tc."wrCommentaryStatus" = 4 AND tc."wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days')
+        )
+        AND (
+          tc."wrCancelTime" IS NULL
+          OR tc."wrCancelTime" >= NOW() - INTERVAL '7 days'
+        )
     )
     AND tcbb."wrIsDeletedStatus" = false;`,
     {
       type: fastify.db.QueryTypes.SELECT,
     }
   );
+  // WHERE 
+  //           (
+  //               "wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days'
+  //               AND "wrCommentaryStatus" = 4 AND "wrIsDelete" = FALSE
+  //           )
+  //           OR "wrCommentaryStatus" != 4 AND "wrIsDelete" = FALSE
 };
 
 const getAllCommentaryBallByBallDataQuery = async (whereCondition = null, fastify) => {
@@ -1478,15 +1722,21 @@ const getAllCommentaryBallByBallDataQuery = async (whereCondition = null, fastif
     "wrOver_isMaiden" as "overIsMaiden",
     "wrNextBat_StrikeID" as "nextBatStrikeId",
     "wrNextBat_NONStrikeID" as "nextBatNonStrikeId",
+    "wrTeamScore" as "teamScore",
+    "wrTeamWicket" as "teamWicket",
     "wrIsDelete" as "isDelete",
     "wrCurrentInnings" as "currentInnings",
     "wrCreatedDate" as "createdDate",
     "wrAutoStrikeBallCount" as "autoStrikeBallCount",
+    "wrDevOver" as "devOver",
+    "wrDevCurrentOverBall" as "devCurrentOverBall",
     "wrX2" as "x2",
     "wrY2" as "y2",
     "wrShortType" as "shortType",
     "wrCommentryRemark" as "commentryRemark",
-    "wrCommentaryPartnershipId" as "commentaryPartnershipId"
+    "wrCommentaryPartnershipId" as "commentaryPartnershipId",
+    "wrCardKey" as "cardKey",
+    "wrCardType" as "cardType"
     from "tblCommentaryBallByBalls"
     ${whereCondition ? `WHERE ${whereCondition}` : ""}
     `,
@@ -1583,13 +1833,17 @@ const getAllOversQuery = async (fastify) => {
       from "tblOvers" as o
       WHERE o."wrCommentaryId" IN (
         SELECT "wrCommentaryId"
-        FROM "tblCommentaries"
+        FROM "tblCommentaries" AS tc
         WHERE 
-            (
-                "wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days'
-                AND "wrCommentaryStatus" = 4 AND "wrIsDelete" = FALSE
-            )
-            OR "wrCommentaryStatus" != 4 AND "wrIsDelete" = FALSE
+            tc."wrIsDelete" = FALSE
+        AND (
+          tc."wrCommentaryStatus" != 4
+          OR (tc."wrCommentaryStatus" = 4 AND tc."wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days')
+        )
+        AND (
+          tc."wrCancelTime" IS NULL
+          OR tc."wrCancelTime" >= NOW() - INTERVAL '7 days'
+        )
       )
       AND o."wrIsDelete" = false;
       `,
@@ -1597,6 +1851,12 @@ const getAllOversQuery = async (fastify) => {
       type: fastify.db.QueryTypes.SELECT,
     }
   );
+  // WHERE 
+  //           (
+  //               "wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days'
+  //               AND "wrCommentaryStatus" = 4 AND "wrIsDelete" = FALSE
+  //           )
+  //           OR "wrCommentaryStatus" != 4 AND "wrIsDelete" = FALSE
 };
 
 const getAllOversDataQuery = async (whereCondition = null, fastify) => {
@@ -1719,17 +1979,23 @@ const getAllCommentaryWicketQuery = async (fastify) => {
         tcw."wrWicketCount" as "wicketCount",
         tcw."wrBallCount" as "ballCount",
         tcw."wrCurrentInnings" as "currentInnings",
+        tcw."wrFieldPlayer2Id" as "fieldPlayer2Id",
+        tcw."wrFieldPlayer2Name" as "fieldPlayer2Name",
         tcw."wrCreatedDate" as "createdDate"
     from "tblCommentaryWickets" tcw
     WHERE tcw."wrCommentaryId" IN (
         SELECT "wrCommentaryId"
-        FROM "tblCommentaries"
+        FROM "tblCommentaries" AS tc
         WHERE 
-            (
-                "wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days'
-                AND "wrCommentaryStatus" = 4 AND "wrIsDelete" = FALSE
-            )
-            OR "wrCommentaryStatus" != 4 AND "wrIsDelete" = FALSE
+            tc."wrIsDelete" = FALSE
+        AND (
+          tc."wrCommentaryStatus" != 4
+          OR (tc."wrCommentaryStatus" = 4 AND tc."wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days')
+        )
+        AND (
+          tc."wrCancelTime" IS NULL
+          OR tc."wrCancelTime" >= NOW() - INTERVAL '7 days'
+        )
     )
     AND tcw."wrIsDeletedStatus" = false;
     `,
@@ -1737,6 +2003,12 @@ const getAllCommentaryWicketQuery = async (fastify) => {
       type: fastify.db.QueryTypes.SELECT,
     }
   );
+  // WHERE 
+  //           (
+  //               "wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days'
+  //               AND "wrCommentaryStatus" = 4 AND "wrIsDelete" = FALSE
+  //           )
+  //           OR "wrCommentaryStatus" != 4 AND "wrIsDelete" = FALSE
 };
 
 const getAllCommentaryWicketDataQuery = async (whereCondition = null, fastify) => {
@@ -1762,6 +2034,8 @@ const getAllCommentaryWicketDataQuery = async (whereCondition = null, fastify) =
     "wrWicketCount" as "wicketCount",
     "wrBallCount" as "ballCount",
     "wrCurrentInnings" as "currentInnings",
+    "wrFieldPlayer2Id" as "fieldPlayer2Id",
+    "wrFieldPlayer2Name" as "fieldPlayer2Name",
     "wrCreatedDate" as "createdDate"
     from "tblCommentaryWickets" 
     ${whereCondition ? `WHERE ${whereCondition}` : ""}
@@ -1840,17 +2114,23 @@ const getAllCommentaryPartnershipQuery = async (fastify) => {
           tcps."wrP1Ball" as "p1Ball",
           tcps."wrP2Ball" as "p2Ball",
           tcps."wrP1Run" as "p1Run",
-          tcps."wrP2Run" as "p2Run"
+          tcps."wrP2Run" as "p2Run",
+          tcps."wrTeamScore" as "teamScore",
+          tcps."wrTeamWicket" as "teamWicket"
       from "tblCommentaryPartnerships" tcps
       WHERE tcps."wrCommentaryId" IN (
         SELECT "wrCommentaryId"
-        FROM "tblCommentaries"
+        FROM "tblCommentaries" AS tc
         WHERE 
-            (
-                "wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days'
-                AND "wrCommentaryStatus" = 4 AND "wrIsDelete" = FALSE
-            )
-            OR "wrCommentaryStatus" != 4 AND "wrIsDelete" = FALSE
+            tc."wrIsDelete" = FALSE
+        AND (
+          tc."wrCommentaryStatus" != 4
+          OR (tc."wrCommentaryStatus" = 4 AND tc."wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days')
+        )
+        AND (
+          tc."wrCancelTime" IS NULL
+          OR tc."wrCancelTime" >= NOW() - INTERVAL '7 days'
+        )
       )
       AND tcps."wrIsDelete" = false;
       `,
@@ -1858,6 +2138,13 @@ const getAllCommentaryPartnershipQuery = async (fastify) => {
       type: fastify.db.QueryTypes.SELECT,
     }
   );
+
+        // WHERE 
+        //     (
+        //         "wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days'
+        //         AND "wrCommentaryStatus" = 4 AND "wrIsDelete" = FALSE
+        //     )
+        //     OR "wrCommentaryStatus" != 4 AND "wrIsDelete" = FALSE
 };
 
 const getAllCommentaryPartnershipDataQuery = async (whereCondition = null, fastify) => {
@@ -1891,7 +2178,9 @@ const getAllCommentaryPartnershipDataQuery = async (whereCondition = null, fasti
       "wrP1Ball" as "p1Ball",
       "wrP2Ball" as "p2Ball",
       "wrP1Run" as "p1Run",
-      "wrP2Run" as "p2Run"
+      "wrP2Run" as "p2Run",
+      "wrTeamScore" as "teamScore",
+      "wrTeamWicket" as "teamWicket"
       from "tblCommentaryPartnerships"
       ${whereCondition ? `WHERE ${whereCondition}` : ""}
       `,
@@ -2385,7 +2674,8 @@ const updateCommentaryPlayersQuery = async (data, fastify, request) => {
       "wrBowlerEconomy" = $43,
       "wrBowlerAverage" = $44,
       "wrBatterOrder" = $45,
-      "wrBowlerOrder" = $46
+      "wrBowlerOrder" = $46,
+      "wrTpId" = $49
       where "wrCommentaryPlayerId" = $47
       AND "wrCurrentInnings" = $48
       `,
@@ -2439,6 +2729,7 @@ const updateCommentaryPlayersQuery = async (data, fastify, request) => {
           data.bowlerOrder,
           data.commentaryPlayerId,
           data.currentInnings,
+          data.tpId,
         ],
         type: fastify.db.QueryTypes.UPDATE,
       }
@@ -2669,7 +2960,9 @@ const createCommentaryWicketQuery = async (data, fastify, request) => {
           "wrIsDelete",
           "wrWicketCount",
           "wrBallCount",
-          "wrCurrentInnings" 
+          "wrCurrentInnings",
+          "wrFieldPlayer2Id",
+          "wrFieldPlayer2Name"
         ) values (
           $1,
           $2,
@@ -2689,7 +2982,9 @@ const createCommentaryWicketQuery = async (data, fastify, request) => {
           $16,
           $17,
           $18,
-          $19      
+          $19,
+          $20,
+          $21
         )
         returning *
       )
@@ -2712,6 +3007,8 @@ const createCommentaryWicketQuery = async (data, fastify, request) => {
     "wrPlayerBalls" as "playerBalls",
     "wrWicketCount" as "wicketCount",
     "wrBallCount" as "ballCount",
+    "wrFieldPlayer2Id" as "fieldPlayer2Id",
+    "wrFieldPlayer2Name" as "fieldPlayer2Name",
     "wrCurrentInnings" as "currentInnings"
     from "insert_data"
       `,
@@ -2736,6 +3033,8 @@ const createCommentaryWicketQuery = async (data, fastify, request) => {
           data.wicketCount,
           data.ballCount,
           data.currentInnings,
+          data.fieldPlayer2Id || null,
+          data.fieldPlayer2Name || null,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -2774,7 +3073,9 @@ const updateCommentaryWicketQuery = async (data, fastify, request) => {
       "wrPlayerBalls" = $14,
       "wrIsDelete" = $15,
       "wrWicketCount" = $16,
-      "wrBallCount" = $17
+      "wrBallCount" = $17,
+      "wrFieldPlayer2Id" = $20,
+      "wrFieldPlayer2Name" = $21
       where "wrCommentaryWicketId" = $18
       AND "wrCurrentInnings" = $19
       `,
@@ -2799,6 +3100,8 @@ const updateCommentaryWicketQuery = async (data, fastify, request) => {
           data.ballCount,
           data.commentaryWicketId,
           data.currentInnings,
+          data.fieldPlayer2Id,
+          data.fieldPlayer2Name,
         ],
         type: fastify.db.QueryTypes.UPDATE,
       }
@@ -2842,6 +3145,7 @@ const getCommentaryID_Socket = async (data, fastify, request) => {
       `SELECT
       "tblEncryptedData"."wrValue" AS "CommentaryId",
       "wrEventRefId" AS "EventID",
+      "wrCommentaryId" AS "commentaryId",
       "wrMarketID" AS "MarketID"
     FROM
       "tblCommentaries"
@@ -3083,6 +3387,8 @@ const getCommentaryBallByBallQuery = async (request, fastify) => {
         "wrBall_FielderID2" AS "ballFielderId2",
         "wrOver_isMaiden" AS "overIsMaiden",
         "wrNextBat_StrikeID" AS "nextBatStrikeId",
+        "wrDevOver" as "devOver",
+        "wrDevCurrentOverBall" as "devCurrentOverBall",
         "wrNextBat_NONStrikeID" AS "nextBatNonStrikeId",
         "wrIsDelete" AS "isDelete",
         "wrCurrentInnings" AS "currentInnings",
@@ -3227,11 +3533,21 @@ const updateisPredictMarketInCommentaryQuery = async (
 const updateResultInCommentaryQuery = async (data, fastify, request) => {
   try {
     return await fastify.db.query(
-      `UPDATE "tblCommentaries" SET "wrCommentaryResult" = $1 WHERE
-      "wrCommentaryId" = $2 AND "wrIsDelete" = false`,
+      `UPDATE "tblCommentaries" SET 
+      "wrCommentaryResult" = $1, 
+      "wrWinRmk" = $2,
+      "wrWinnerId" = $3,
+      "wrWinnerName" = $4
+      WHERE "wrCommentaryId" = $5 AND "wrIsDelete" = false`,
       {
         type: fastify.db.QueryTypes.UPDATE,
-        bind: [data.result, data.commentaryId],
+        bind: [
+          data.result,
+          data.winRmk,
+          data.winnerId || null,
+          data.winnerName || null,
+          data.commentaryId
+        ],
       }
     );
   } catch (err) {
@@ -3546,7 +3862,7 @@ const insertCommentarySuperOverTeams = async (request, fastify) => {
     return await fastify.db.query(
       `
       insert into "tblCommentaryTeams" ("wrCommentaryId" , "wrTeamId","wrTeamCaptain","wrTeamKipper" , "wrShortName" , "wrTeamName","wrCurrentInnings","wrIsBattingComplete"
-      , "wrTeamColor" , "wrBackgroundColor" , "wrTeamMaxOver", "wrIsSuperOver")
+      , "wrTeamColor" , "wrBackgroundColor" , "wrTeamMaxOver", "wrIsSuperOver", "wrTpId")
        values (
         $1,
         $2,
@@ -3559,7 +3875,8 @@ const insertCommentarySuperOverTeams = async (request, fastify) => {
         (select "wrTeamColor" from "tblTeams" where "wrTeamId" = $2),
         (select "wrBackgroundColor" from "tblTeams" where "wrTeamId" = $2),
         $9,
-        $10             
+        $10,
+        $11        
       )
       ,(
         $1,
@@ -3573,7 +3890,8 @@ const insertCommentarySuperOverTeams = async (request, fastify) => {
         (select "wrTeamColor" from "tblTeams" where "wrTeamId" = $5),
         (select "wrBackgroundColor" from "tblTeams" where "wrTeamId" = $5),
         $9,
-        $10 
+        $10,
+        $11
       )
     `,
       {
@@ -3588,7 +3906,8 @@ const insertCommentarySuperOverTeams = async (request, fastify) => {
           request.body.data.team2Kipper || null,
           request.body.data.currentInnings,
           request.body.data.teamMaxOver || null,
-          true
+          true,
+          request.body.data.tpId || null,
         ],
       }
     );
@@ -4176,6 +4495,8 @@ const getCommentaryBallByBallByIdsQuery = async (commentaryBallByBallId, request
       "wrIsDelete" as "isDelete",
       "wrCurrentInnings" as "currentInnings",
       "wrCreatedDate" as "createdDate",
+      "wrDevOver" as "devOver",
+      "wrDevCurrentOverBall" as "devCurrentOverBall",
       "wrAutoStrikeBallCount" as "autoStrikeBallCount"
       from "tblCommentaryBallByBalls"
       WHERE "wrCommentaryBallByBallId" = ANY($1) AND "wrIsDeletedStatus" = false
@@ -4298,6 +4619,31 @@ const cancelCommentaryQuery = async (data, fastify, request) => {
     throw new Error(err.message);
   }
 };
+const cancelComQuery = async (data, fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `update "tblCommentaries" set
+        "wrCommentaryStatus" = $1,
+        "wrCancelTime" = now()
+        where "wrCommentaryId" = $2 AND "wrIsDelete" = false
+      `,
+      {
+        bind: [data.status,  data.commentaryId],
+      }
+    );
+
+    return result;
+  } catch (err) {
+    console.log(err);
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/cancelComQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
 
 const getCommentariesResultQuery = async (request, fastify) => {
   try {
@@ -4324,7 +4670,30 @@ const getCommentariesResultQuery = async (request, fastify) => {
       tct2."wrTeamScore" as "team2Score",
       tct2."wrTeamOver" as "team2Over",
       tct2."wrTeamWicket" as "team2Wicket",
-      tc."wrIsCountInPoint" as "isCountInPoint"
+      tc."wrIsCountInPoint" as "isCountInPoint",
+      tc."wrEventNo" as "eventNo",
+      tc."wrIsEventStart" as "isEventStart",
+      tc."wrDifficulty" as "difficulty",
+      tc."wrPitchHardness" as "pitchHardness",
+      tc."wrPitchWareSpeed" as "pitchWareSpeed",
+      tc."wrPitchType" as "pitchType",
+      tc."wrLawnStriping" as "lawnStriping",
+      tc."wrPitchAge" as "pitchAge",
+      tc."wrIsVirtual" as "isVirtual",
+      tc."wrTestDayCount" as "testDayCount",
+      tc."wrOnfieldUmpires" as "onfieldUmpires",
+      tc."wrThirdUmpire" as "thirdUmpire",
+      tc."wrMatchReferee" as "matchReferee",
+      tc."wrSession" as "session",
+      tc."wrBallDelay" as "ballDelay",
+      tc."wrOverDelay" as "overDelay",
+      tc."wrInningDelay" as "inningDelay",
+      tc."wrTossDelay" as "tossDelay",
+      tc."wrPythonId" as "pythonId",
+      tc."wrCountryId" as "countryId",
+      tc."wrVenueId" as "venueId",
+      tc."wrPythonURI" as "pythonURI",
+      tc."wrCancelTime" as "cancelTime"
       FROM "tblCommentaries" tc
       LEFT JOIN "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
       LEFT JOIN "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -4339,7 +4708,11 @@ const getCommentariesResultQuery = async (request, fastify) => {
       WHERE tc."wrIsDelete" = false 
       AND tc."wrIsActive" = true
       AND tc."wrIsCountInPoint" = true
-      AND tc."wrCommentaryStatus" = 4`,
+      AND tc."wrCommentaryStatus" = 4
+      AND (
+        tc."wrCancelTime" IS NULL
+        OR tc."wrCancelTime" >= NOW() - INTERVAL '7 days'
+      );`,
       {
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -4402,7 +4775,7 @@ const getAllCommentaryHistoryQuery = async (whereCondition, fastify, request) =>
             tc."wrEventRefId" as "eventRefId",
             tc."wrLocation" as "location",
             tc."wrWeather" as "weather",
-            tc."wrPitch" as "pitch",
+            tc."wrPitchCracks" as "pitchCracks",
             tc."wrHomeSideTeam" as "homeSideTeam",
             tc."wrTossWonBy" as "tossWonBy",
             tc."wrChoseTo" as "choseTo",
@@ -4411,6 +4784,9 @@ const getAllCommentaryHistoryQuery = async (whereCondition, fastify, request) =>
             tc."wrIsClientShow" as "isClientShow",
             tc."wrDisplayStatus" as "displayStatus",
             tc."wrRmk" as "rmk",
+            tc."wrWinRmk" as "winRmk",
+            tc."wrTossRmk" as "tossRmk",
+            tc."wrCardType" as "cardType",
             tc."wrCommentaryUserId" as "commentaryUserId",
             tc."wrCommentaryStatus" as "commentaryStatus",
             tc."wrUpdateTime" as "updateTime",
@@ -4435,7 +4811,31 @@ const getAllCommentaryHistoryQuery = async (whereCondition, fastify, request) =>
             mt2."wrMatchType" AS "historyMatchType",
             tc."wrIsCountInPoint" as "isCountInPoint",
             tc."wrShotType" as "shotType",
-            tc."wrIsWheelShow" as "isWheelShow"
+            tc."wrIsWheelShow" as "isWheelShow",
+            tc."wrIsTest" as "isTest",
+            tc."wrEventNo" as "eventNo",
+            tc."wrIsEventStart" as "isEventStart",
+            tc."wrDifficulty" as "difficulty",
+            tc."wrPitchHardness" as "pitchHardness",
+            tc."wrPitchWareSpeed" as "pitchWareSpeed",
+            tc."wrPitchType" as "pitchType",
+            tc."wrLawnStriping" as "lawnStriping",
+            tc."wrPitchAge" as "pitchAge",
+            tc."wrIsVirtual" as "isVirtual",
+            tc."wrTestDayCount" as "testDayCount",
+            tc."wrOnfieldUmpires" as "onfieldUmpires",
+            tc."wrThirdUmpire" as "thirdUmpire",
+            tc."wrMatchReferee" as "matchReferee",
+            tc."wrSession" as "session",
+            tc."wrBallDelay" as "ballDelay",
+            tc."wrOverDelay" as "overDelay",
+            tc."wrInningDelay" as "inningDelay",
+            tc."wrTossDelay" as "tossDelay",
+            tc."wrPythonId" as "pythonId",
+            tc."wrCountryId" as "countryId",
+            tc."wrVenueId" as "venueId",
+            tc."wrPythonURI" as "pythonURI",
+            tc."wrCancelTime" as "cancelTime"
       FROM "tblCommentaries" tc
       LEFT JOIN "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
       LEFT JOIN "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -4513,6 +4913,7 @@ const getAllCompletedCommentaryQuery = async (request, fastify) => {
     return await fastify.db.query(
       `SELECT 
           CAST(ROW_NUMBER() OVER () AS INT) AS rno,
+          tc."wrCommentaryId" AS "cid",
           tc."wrEventRefId" AS "eid",
           tet."wrEventType" AS "ety",
           mt."wrMatchType" AS "mtyp",
@@ -4540,6 +4941,10 @@ const getAllCompletedCommentaryQuery = async (request, fastify) => {
           COALESCE(tt1."WrTeamJersey", '') AS "t1jr",
           COALESCE(tt2."WrTeamJersey", '') AS "t2jr",
           COALESCE(tc."wrLocation", '') AS "loc",
+          COALESCE(tt1."wrImagePath", '') AS "nte1i",
+          COALESCE(tt2."wrImagePath", '') AS "nte2i",
+          COALESCE(tt1."wrJerseyPath", '') AS "nt1jr",
+          COALESCE(tt2."wrJerseyPath", '') AS "nt2jr",
           false AS isrun,
           COALESCE(
             CASE 
@@ -4563,6 +4968,9 @@ const getAllCompletedCommentaryQuery = async (request, fastify) => {
           ) AS t2s,
           tc."wrDisplayStatus" AS "dis",
           COALESCE(tc."wrRmk", '') AS "rmk",
+          COALESCE(tc."wrWinRmk", '') AS "winRmk",
+          COALESCE(tc."wrTossRmk", '') AS "tossRmk",
+          COALESCE(tc."wrCardType", 0) AS "cardType",
           COALESCE(CAST(tct1."wrCrr" AS FLOAT), 0) AS "te1crr",
           COALESCE(CAST(tct2."wrCrr" AS FLOAT), 0) AS "te2crr",
           COALESCE(CAST(tct1."wrRrr" AS FLOAT), 0) AS "te1rrr",
@@ -4609,7 +5017,27 @@ const getAllCompletedCommentaryQuery = async (request, fastify) => {
           tc."wrTeam1Id" AS "t1id",
           tc."wrTeam2Id" AS "t2id",
           tc."wrIsPredictMarket" AS "isPr",
-          tc."wrIsClientShow" AS "ics"
+          tc."wrIsClientShow" AS "ics",
+          tc."wrIsTest" AS "isTest",
+          tc."wrWinnerId" AS "winId",
+          tc."wrWinnerName" AS "winNm",
+          tc."wrIsActive" AS "isActive",
+          tet."wrEventTypeId" AS "etyId",
+          tc."wrIsVirtual" as "isVirtual",
+          tc."wrTestDayCount" as "testDayCount",
+          tc."wrOnfieldUmpires" as "onfieldUmpires",
+          tc."wrThirdUmpire" as "thirdUmpire",
+          tc."wrMatchReferee" as "matchReferee",
+          tc."wrSession" as "session",
+          tc."wrBallDelay" as "ballDelay",
+          tc."wrOverDelay" as "overDelay",
+          tc."wrInningDelay" as "inningDelay",
+          tc."wrTossDelay" as "tossDelay",
+          tc."wrCountryId" as "countryId",
+          tc."wrVenueId" as "venueId",
+          tc."wrPythonId" as "pythonId",
+          tc."wrPythonURI" as "pythonURI",
+          tc."wrCancelTime" as "cancelTime"
       FROM "tblCommentaries" tc
       LEFT JOIN "tblTeams" tt1 ON tt1."wrTeamId" = tc."wrTeam1Id" AND tt1."wrIsDeleted" = false
       LEFT JOIN "tblTeams" tt2 ON tt2."wrTeamId" = tc."wrTeam2Id" AND tt2."wrIsDeleted" = false
@@ -4628,7 +5056,11 @@ const getAllCompletedCommentaryQuery = async (request, fastify) => {
           AND tct3."wrTeamId" = tc."wrTossWonBy" 
           AND tct3."wrCurrentInnings" = tc."wrCurrentInnings" AND tct3."wrIsDelete" = false
       WHERE tc."wrCommentaryStatus" = 4 AND tc."wrIsDelete" = false
-      AND tc."wrIsActive" = false AND tc."wrIsTest" = false;`,
+      AND tc."wrIsActive" = true AND tc."wrIsTest" = false
+      AND (
+        tc."wrCancelTime" IS NULL
+        OR tc."wrCancelTime" >= NOW() - INTERVAL '7 days'
+      );`,
       {
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -4666,7 +5098,7 @@ const getCommentariesDataByDifferentIdsQuery = async (whereCondition, request, f
           tc."wrEventRefId" as "eventRefId",
           tc."wrLocation" as "location",
           tc."wrWeather" as "weather",
-          tc."wrPitch" as "pitch",
+          tc."wrPitchCracks" as "pitchCracks",
           tc."wrHomeSideTeam" as "homeSideTeam",
           tc."wrTossWonBy" as "tossWonBy",
           tc."wrChoseTo" as "choseTo",
@@ -4675,6 +5107,9 @@ const getCommentariesDataByDifferentIdsQuery = async (whereCondition, request, f
           tc."wrIsClientShow" as "isClientShow",
           tc."wrDisplayStatus" as "displayStatus",
           tc."wrRmk" as "rmk",
+          tc."wrWinRmk" as "winRmk",
+          tc."wrTossRmk" as "tossRmk",
+          tc."wrCardType" as "cardType",
           tc."wrCommentaryUserId" as "commentaryUserId",
           tc."wrCommentaryStatus" as "commentaryStatus",
           tc."wrUpdateTime" as "updateTime",
@@ -4699,7 +5134,30 @@ const getCommentariesDataByDifferentIdsQuery = async (whereCondition, request, f
           mt2."wrMatchType" AS "historyMatchType",
           tc."wrIsCountInPoint" as "isCountInPoint",
           tc."wrShotType" as "shotType",
-          tc."wrIsWheelShow" as "isWheelShow"
+          tc."wrIsWheelShow" as "isWheelShow",
+          tc."wrEventNo" as "eventNo",
+          tc."wrIsEventStart" as "isEventStart",
+          tc."wrDifficulty" as "difficulty",
+          tc."wrPitchHardness" as "pitchHardness",
+          tc."wrPitchWareSpeed" as "pitchWareSpeed",
+          tc."wrPitchType" as "pitchType",
+          tc."wrLawnStriping" as "lawnStriping",
+          tc."wrPitchAge" as "pitchAge",
+          tc."wrIsVirtual" as "isVirtual",
+          tc."wrTestDayCount" as "testDayCount",
+          tc."wrOnfieldUmpires" as "onfieldUmpires",
+          tc."wrThirdUmpire" as "thirdUmpire",
+          tc."wrMatchReferee" as "matchReferee",
+          tc."wrSession" as "session",
+          tc."wrBallDelay" as "ballDelay",
+          tc."wrOverDelay" as "overDelay",
+          tc."wrInningDelay" as "inningDelay",
+          tc."wrTossDelay" as "tossDelay",
+          tc."wrCountryId" as "countryId",
+          tc."wrVenueId" as "venueId",
+          tc."wrPythonId" as "pythonId",
+          tc."wrPythonURI" as "pythonURI",
+          tc."wrCancelTime" as "cancelTime"
       FROM "tblCommentaries" tc
       LEFT JOIN "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
       LEFT JOIN "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -4745,7 +5203,7 @@ const getCommentariesDataQueryV1 = async (fastify) => {
         tc."wrEventRefId" as "erefid",
         tc."wrLocation" as "loc",
         tc."wrWeather" as "weather",
-        tc."wrPitch" as "pitch",
+        tc."wrPitchCracks" as "pitchCracks",
         tc."wrHomeSideTeam" as "homsidte",
         tc."wrTossWonBy" as "twonby",
         tc."wrChoseTo" as "choseto",
@@ -4754,6 +5212,9 @@ const getCommentariesDataQueryV1 = async (fastify) => {
         tc."wrIsClientShow" as "icshow",
         tc."wrDisplayStatus" as "ds",
         tc."wrRmk" as "rmk",
+        tc."wrWinRmk" as "winRmk",
+        tc."wrTossRmk" as "tossRmk",
+        tc."wrCardType" as "cardType",
         tc."wrCommentaryUserId" as "cuserid",
         tc."wrCommentaryStatus" as "cs",
         tc."wrUpdateTime" as "ut",
@@ -4778,7 +5239,28 @@ const getCommentariesDataQueryV1 = async (fastify) => {
         mt2."wrMatchType" AS "mtyp",
         tc."wrIsCountInPoint" as "icntinpnt",
         tc."wrShotType" as "styp",
-        tc."wrIsWheelShow" as "iws"
+        tc."wrIsWheelShow" as "iws",
+        tc."wrDifficulty" as "difficulty",
+        tc."wrPitchHardness" as "pitchHardness",
+        tc."wrPitchWareSpeed" as "pitchWareSpeed",
+        tc."wrPitchType" as "pitchType",
+        tc."wrLawnStriping" as "lawnStriping",
+        tc."wrPitchAge" as "pitchAge",
+        tc."wrIsVirtual" as "isVirtual",
+        tc."wrTestDayCount" as "testDayCount",
+        tc."wrOnfieldUmpires" as "onfieldUmpires",
+        tc."wrThirdUmpire" as "thirdUmpire",
+        tc."wrMatchReferee" as "matchReferee",
+        tc."wrSession" as "session",
+        tc."wrBallDelay" as "ballDelay",
+        tc."wrOverDelay" as "overDelay",
+        tc."wrInningDelay" as "inningDelay",
+        tc."wrTossDelay" as "tossDelay",
+        tc."wrCountryId" as "countryId",
+        tc."wrVenueId" as "venueId",
+        tc."wrPythonId" as "pythonId",
+        tc."wrPythonURI" as "pythonURI",
+        tc."wrCancelTime" as "cancelTime"
     FROM "tblCommentaries" tc
     LEFT JOIN "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     LEFT JOIN "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -4831,7 +5313,9 @@ const getAllCommentaryTeamsDataQueryV1 = async (whereCondition = null, fastify) 
         "wrTeamPredictionPercentage" as "tepredictpercent",
         "wrDrsCount" as "drsCnt",
         "wrNoOfAttempt" as "drsAtmpt",
-        "wrNoOfFail" as "drsFail"
+        "wrNoOfFail" as "drsFail",
+        "wrSubInning" as "subInning",
+        "wrTpId" as "tpId"
     from "tblCommentaryTeams" tct 
     ${whereCondition ? `WHERE ${whereCondition}` : ""}`,
     {
@@ -4901,7 +5385,9 @@ const getAllCommentaryPlayerDataQueryV1 = async (whereCondition = null, fastify)
         tp."wrPlayerTypeId" as "pltypid",
         tpt."wrPlayerType" as "pltyp",
         tcp."wrJerseyPlayerImage" as "jryPlyImg",
-        tp."wrDisplayName" as "displayName"
+        tcp."wrJerseyPlayerImagePath" as "jryPlyImgPath",
+        tp."wrDisplayName" as "displayName",
+        tcp."wrTpId" as "tpId"
     from "tblCommentaryPlayers" AS tcp
     LEFT JOIN "tblPlayers" AS tp ON tcp."wrPlayerId" = tp."wrPlayerId"
     LEFT JOIN "tblPlayerTypes" AS tpt ON tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
@@ -4989,6 +5475,8 @@ const getAllCommentaryBallByBallDataQueryV1 = async (whereCondition = null, fast
         "wrY2" as "y2",
         "wrShortType" as "styp",
         "wrCommentryRemark" as "crmk",
+        "wrDevOver" as "devOver",
+        "wrDevCurrentOverBall" as "devCurrentOverBall",
         "wrCommentaryPartnershipId" as "cpartsid"
     from "tblCommentaryBallByBalls"
     ${whereCondition ? `WHERE ${whereCondition}` : ""}`,
@@ -5022,6 +5510,8 @@ const getAllCommentaryWicketDataQueryV1 = async (whereCondition = null, fastify)
         "wrWicketCount" as "wiccnt",
         "wrBallCount" as "balcnt",
         "wrCurrentInnings" as "ci",
+        "wrFieldPlayer2Id" as "fieldPlayer2Id",
+        "wrFieldPlayer2Name" as "fieldPlayer2Name",
         "wrCreatedDate" as "cratd"
     from "tblCommentaryWickets" 
     ${whereCondition ? `WHERE ${whereCondition}` : ""}`,
@@ -5073,16 +5563,21 @@ const getAllCommentaryPartnershipDataQueryV1 = async (whereCondition = null, fas
 
 const updateCommentaryPlayerJerseyImageQuery = async (data, fastify) => {
   try {
-    return await fastify.db.query(
+    const result = await fastify.db.query(
       `UPDATE "tblCommentaryPlayers" SET
-        "wrJerseyPlayerImage" = $2
+        "wrJerseyPlayerImage" = $2,
+        "wrJerseyPlayerImagePath" = $3
       WHERE
-        "wrCommentaryPlayerId" = $1 AND "wrIsDelete" = FALSE`,
+        "wrCommentaryPlayerId" = $1 AND "wrIsDelete" = FALSE
+        RETURNING
+        "wrTeamId" AS "teamId",
+        "wrPlayerId" AS "playerId"`,
       {
-        type: fastify.db.QueryTypes.SELECT,
-        bind: [data.commentaryPlayerId, data.jerseyPlayerImage],
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [data.commentaryPlayerId, data.jerseyPlayerImage, data.jerseyPlayerImagePath],
       }
     );
+    return result[0]
   } catch (error) {
     errorLogger(
       fastify,
@@ -5106,12 +5601,10 @@ const getCommentaryTeamsDRSQuery = async (data, fastify) => {
         "wrNoOfFail" as "drsFail"
       FROM "tblCommentaryTeams"
       WHERE "wrCommentaryTeamId" = $1
-        AND "wrTeamId" = $2
-        AND "wrCommentaryId" = $3
         AND "wrIsDelete" = FALSE`,
       {
         type: fastify.db.QueryTypes.SELECT,
-        bind: [data.commentaryTeamId, data.teamId, data.commentaryId],
+        bind: [data.commentaryTeamId],
       }
     );
     return result[0];
@@ -5131,7 +5624,8 @@ const updateCommentaryTeamDrsAttemptsAndFailQuery = async (data, fastify) => {
     const result = await fastify.db.query(
       `UPDATE "tblCommentaryTeams" SET
         "wrNoOfAttempt" = GREATEST(0, $1),
-        "wrNoOfFail" = GREATEST(0, $2)
+        "wrNoOfFail" = GREATEST(0, $2),
+        "wrDrsCount" = $6
       WHERE
         "wrCommentaryTeamId" = $3 
         AND "wrTeamId" = $4
@@ -5145,7 +5639,8 @@ const updateCommentaryTeamDrsAttemptsAndFailQuery = async (data, fastify) => {
             "wrNoOfFail" as "drsFail";`,
       {
         type: fastify.db.QueryTypes.SELECT,
-        bind: [data.drsAttempt, data.drsFail, data.commentaryTeamId, data.teamId, data.commentaryId],
+        bind: [data.drsAttempt, data.drsFail, data.commentaryTeamId, data.teamId,
+           data.commentaryId , data.drsCount],
       }
     );
     return result[0];
@@ -5164,7 +5659,8 @@ const updateCommentaryTeamDrsAttemptsQuery = async (data, fastify) => {
   try {
     const result = await fastify.db.query(
       `UPDATE "tblCommentaryTeams" SET
-        "wrNoOfAttempt" = GREATEST(0, $1)
+        "wrNoOfAttempt" = GREATEST(0, $1),
+        "wrDrsCount" = $5
       WHERE
         "wrCommentaryTeamId" = $2
         AND "wrTeamId" = $3
@@ -5177,7 +5673,7 @@ const updateCommentaryTeamDrsAttemptsQuery = async (data, fastify) => {
             "wrNoOfAttempt" as "drsAttempt";`,
       {
         type: fastify.db.QueryTypes.SELECT,
-        bind: [data.drsAttempt, data.commentaryTeamId, data.teamId, data.commentaryId],
+        bind: [data.drsAttempt, data.commentaryTeamId, data.teamId, data.commentaryId , data.drsCount],
       }
     );
     return result[0];
@@ -5213,6 +5709,2184 @@ const changeIsTestComQuery = async (data, fastify, request) => {
     throw new Error(err.message);
   }
 };
+const changeIsEventStartQuery = async (data, fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `UPDATE "tblCommentaries" SET
+        "wrIsEventStart" = $1
+      WHERE "wrCommentaryId" = $2 and "wrIsDelete" = false
+      `,
+      {
+        bind: [data.isEventStart, data.commentaryId],
+      }
+    );
+    return result;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/changeIsEventStartQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const insertVirtualEventQuery = async (data, request, fastify) => {
+  try {
+    // const data = request.body;
+    const result = await fastify.db.query(
+      `
+      with insert_data as(
+        insert into "tblCommentaries" ("wrEventTypeId","wrMatchTypeId","wrCompetitionId","wrEventId",
+        "wrEventDate","wrEventName","wrEventRefId","wrTeam1Id","wrTeam2Id","wrLocation","wrWeather","wrPitchCracks","wrDisplayStatus","wrTarget","wrMarketID","wrTpId","isSignalROn","isMatchTypeUpdated" , "wrCreatedBy" , "wrCreatedDate","wrCommentaryStatus","wrCurrentInnings", "wrSystemPlayerCount","wrIsPredictMarket",
+        "wrDelay", "wrIsActive", "wrIsClientShow","wrIsTeamPredictionOn", "wrHistoryMatchTypeId", "wrIsCountInPoint","wrIsTest", "wrEventNo",
+        "wrDifficulty", "wrPitchHardness", "wrPitchWareSpeed", "wrIsVirtual", "wrCardType",
+        "wrBallDelay", "wrOverDelay", "wrInningDelay", "wrTossDelay", "wrPythonId", "wrPythonURI",
+        "wrCountryId", "wrVenueId"
+        ) values (
+          $1,
+          $2,
+          $3,
+          $4,
+          $5,$6,$7,
+          $8,
+          $9,
+          $10,$11,$12,$13,$14,$15,$16,$17,$18,$19,now(),1,
+          1,
+          $20,
+          $21,
+          $22,
+          $23,
+          $24,
+          $25,
+          $26,
+          $27,
+          $28,
+          $29,
+          $30,
+          $31,
+          $32,
+          $33,
+          $34,
+          $35,
+          $36,
+          $37,
+          $38,
+          $39,
+          $40,
+          $41,
+          $42
+        ) returning *         
+      )
+
+      select 
+    "wrCommentaryId" as "commentaryId",
+    tc."wrMatchTypeId" as "matchTypeId",
+    mt."wrMatchType" AS "matchType",
+    tc."wrEventTypeId" as "eventTypeId",
+    tc."wrTeam1Id" as "team1Id",
+    tc."wrTeam2Id" as "team2Id",
+    tt1."wrTeamName" as "team1Name",
+    tt2."wrTeamName" as "team2Name",
+    tc."wrCompetitionId" as "competitionId",
+    co."wrCompetition" as "competition",
+    tc."wrEventId" as "eventId",
+    "wrEventDate" as "eventDate",
+    "wrEventName" as "eventName",
+    "wrEventRefId" as "eventRefId",
+    "wrLocation" as "location",
+    "wrWeather" as "weather",
+    "wrPitchCracks" as "pitchCracks",
+    tc."wrHomeSideTeam" as "homeSideTeam",
+    tc."wrTossWonBy" as "tossWonBy",
+    "wrChoseTo" as "choseTo",
+    tc."wrWinnerId" as "winnerId",
+    "wrWinnerName" as "winnerName",
+    "wrIsClientShow" as "isClientShow",
+    "wrDisplayStatus" as "displayStatus",
+    "wrRmk" as "rmk",
+    "wrCommentaryUserId" as "commentaryUserId",
+    "wrCommentaryStatus" as "commentaryStatus",
+    "wrUpdateTime" as "updateTime",
+    "wrIsMatchDraw" as "isMatchDraw",
+    "wrTarget" as "target",
+    "wrMarketID" as "marketId",
+    tc."wrTpId" as "tpId",
+    "isSignalROn" as "isSignalROn",
+    "isMatchTypeUpdated" as "isMatchTypeUpdated",
+    "wrCurrentInnings" as "currentInnings",
+    "wrSystemPlayerCount" as "systemPlayerCount",
+    "wrIsPlayersShow" as "isPlayersShow",
+    "wrIsPredictMarket" as "isPredictMarket",
+    tc."wrIsActive"  as "isActive",
+    tc."wrIsTeamPredictionOn" as "isTeamPredictionOn",
+    tu."WrUserName" as "createdBy",
+    "wrLineRatio" as "lineRatio",
+    "wrDelay" as "delay",
+    tc."wrHistoryMatchTypeId" as "historyMatchTypeId",
+    tc."wrIsCountInPoint" as "isCountInPoint",
+    "wrShotType" as "shotType",
+    "wrIsWheelShow" as "isWheelShow",
+    "wrIsTest" as "isTest",
+    tc."wrEventNo" as "eventNo",
+    tc."wrIsEventStart" as "isEventStart",
+    tc."wrDifficulty" as "difficulty",
+    tc."wrPitchHardness" as "pitchHardness",
+    tc."wrPitchWareSpeed" as "pitchWareSpeed",
+    tc."wrIsVirtual" as "isVirtual",
+    tc."wrCardType" as "cardType",
+    tc."wrBallDelay" as "ballDelay",
+    tc."wrOverDelay" as "overDelay",
+    tc."wrInningDelay" as "inningDelay",
+    tc."wrCountryId" as "countryId",
+    tc."wrVenueId" as "venueId",
+    tc."wrTossDelay" as "tossDelay",
+    tc."wrPythonId" as "pythonId",
+    tc."wrPythonURI" as "pythonURI"
+    from "insert_data" tc
+    left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
+    left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"  
+    LEFT JOIN "tblMatchTypes" mt ON tc."wrMatchTypeId" = mt."wrMatchTypeId"
+    LEFT JOIN "tblCompetitions" co ON tc."wrCompetitionId" = co."wrCompetitionId"
+    LEFT JOIN "tblUsers" tu ON tc."wrCreatedBy" = tu."WrUserId"
+      `,
+      {
+        
+        bind: [
+          data.eventTypeId || null,
+          data.matchTypeId || null,
+          data.competitionId || null,
+          data.eventId || null,
+          data.eventDate ? new Date(data.eventDate) : null,
+          data.eventName || null,
+          data.eventRefId ? data.eventRefId.trim() : null,
+          data.team1Id || null,
+          data.team2Id || null,
+          data.location || null,
+          data.weather || null,
+          data.pitchCracks || null,
+          "Toss Pending!!",
+          null,
+          data.marketId || null,
+          data.tpId || null,
+          data.isSignalROn || false,
+          data.isMatchTypeUpdated || false,
+          // request.userTokenInfo.WrUserId,
+          null,
+          data.systemPlayerCount || null,
+          data.isPredictMarket || false,
+          data.delay || 0,
+          data.isActive || false,
+          data.isClientShow || false,
+          true,
+          data.matchTypeId || null,
+          data.isCountInPoint || false,
+          data.hasOwnProperty("isTest") ? data.isTest : false,
+          data.eventNo || null,
+          data.difficulty || null,
+          data.pitchHardness || null,
+          data.pitchWareSpeed || null,
+          data.isVirtual || false,
+          data.cardType || null,
+          data.ballDelay || null,
+          data.overDelay || null,
+          data.inningDelay || null,
+          data.tossDelay || null,
+          data.pythonId || null,
+          data.pythonURI || null,
+          data.countryId || null,
+          data.venueId || null,
+        ],
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+
+    return result[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary.js/insertVirtualEventQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const virtualEventTossQuery = async (data, request, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `UPDATE "tblCommentaries" SET 
+        "wrTossWonBy" = $1,
+        "wrChoseTo" = $2,
+        "wrDisplayStatus" = $3,
+        "wrCommentaryStatus" = $4,
+        "wrRmk" = $5
+      WHERE "wrCommentaryId" = $6 AND "wrIsDelete" = false
+      RETURNING
+        "wrCommentaryId" as "commentaryId",
+        "wrTossWonBy" as "tossWonBy",
+        "wrChoseTo" as "choseTo",
+        "wrDisplayStatus" as "displayStatus",
+        "wrRmk" as "rmk",
+        "wrCommentaryStatus" as "commentaryStatus"`,
+      {
+        bind: [
+          data.tossWonBy,
+          data.choseTo,
+          data.displayStatus,
+          data.commentaryStatus,
+          data.rmk,
+          data.commentaryId,
+        ],
+        type: fastify.db.QueryTypes.UPDATE,
+      }
+    );
+    return result[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary.js/virtualEventTossQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const insertVirtualCommentaryTeams = async (data, request, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `
+      INSERT INTO "tblCommentaryTeams" (
+        "wrCommentaryId", "wrTeamId", "wrTeamCaptain", "wrTeamKipper", 
+        "wrShortName", "wrTeamName", "wrCurrentInnings", "wrIsBattingComplete",
+        "wrTeamColor", "wrBackgroundColor", "wrTeamMaxOver", "wrDrsCount", "wrSubInning", "wrTpId"
+      )
+      VALUES 
+        (
+          $1, $2, $3, $4,
+          (SELECT "wrTeamShortName" FROM "tblTeams" WHERE "wrTeamId" = $2),
+          (SELECT "wrTeamName" FROM "tblTeams" WHERE "wrTeamId" = $2),
+          $8, false,
+          (SELECT "wrTeamColor" FROM "tblTeams" WHERE "wrTeamId" = $2),
+          (SELECT "wrBackgroundColor" FROM "tblTeams" WHERE "wrTeamId" = $2),
+          $9, $10, $11, $12
+        ),
+        (
+          $1, $5, $6, $7,
+          (SELECT "wrTeamShortName" FROM "tblTeams" WHERE "wrTeamId" = $5),
+          (SELECT "wrTeamName" FROM "tblTeams" WHERE "wrTeamId" = $5),
+          $8, false,
+          (SELECT "wrTeamColor" FROM "tblTeams" WHERE "wrTeamId" = $5),
+          (SELECT "wrBackgroundColor" FROM "tblTeams" WHERE "wrTeamId" = $5),
+          $9, $10, $11, $13
+        )
+      RETURNING 
+        "wrCommentaryTeamId" as "commentaryTeamId",
+        "wrCommentaryId" as "commentaryId",
+        "wrTeamId" as "teamId",
+        "wrShortName" as "shortName",
+        "wrTeamName" as "teamName",
+        "wrTeamCaptain" as "teamCaptain",
+        "wrTeamKipper" as "teamKipper",
+        "wrTeamScore" as "teamScore",
+        "wrTeamOver" as "teamOver",
+        "wrTeamWicket" as "teamWicket",
+        COALESCE(CAST("wrCrr" AS FLOAT), 0) AS "crr",
+        COALESCE(CAST("wrRrr" AS FLOAT), 0) AS "rrr",
+        "wrTeamStatus" as "teamStatus",
+        "wrTeamTrialRuns" as "teamTrialRuns",
+        "wrTeamLeadRuns" as "teamLeadRuns",
+        "wrTeamWideRuns" as "teamWideRuns",
+        "wrTeamByRuns" as "teamByRuns",
+        "wrTeamLegByRuns" as "teamLegByRuns",
+        "wrTeamNoBallRuns" as "teamNoBallRuns",
+        "wrTeamPenaltyRuns" as "teamPenaltyRuns",
+        "wrIsWin" as "isWin",
+        "wrTeamBattingOrder" as "teamBattingOrder",
+        "wrCurrentInnings" as "currentInnings",
+        "wrIsBattingComplete" as "isBattingComplete",
+        "wrCommentaryPlayerTeamCaptain" as "commentaryPlayerTeamCaptain",
+        "wrCommentaryPlayerTeamKipper" as "commentaryPlayerTeamKipper",
+        "wrTeamColor" as "teamColor",
+        "wrBackgroundColor" as "backgroundColor",
+        "wrTeamMaxOver" as "teamMaxOver",
+        "wrIsSuperOver" as "isSuperOver",
+        "wrTeamPredictionPercentage" as "teamPredictionPercentage",
+        "wrDrsCount" as "drsCount",
+        "wrNoOfAttempt" as "drsAttempt",
+        "wrNoOfFail" as "drsFail",
+        "wrSubInning" as "subInning",
+        "wrTpId" as "tpId"
+      `,
+      {
+        type: fastify.db.QueryTypes.INSERT,
+        bind: [
+          data.commentaryId,
+          data.team1Id,
+          data.team1Captain || null,
+          data.team1Kipper || null,
+          data.team2Id,
+          data.team2Captain || null,
+          data.team2Kipper || null, 
+          1,
+          data.teamMaxOver || null,
+          data.drsCount || 0,
+          data.subInning || null,
+          data.team1TpId || null,
+          data.team2TpId || null,
+        ],
+      }
+    );
+
+    return result[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary.js/insertVirtualCommentaryTeams",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const insertVirtualCommentaryPlayers = async (data, fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `
+      WITH insert_data AS (
+        INSERT INTO "tblCommentaryPlayers" (
+          "wrCommentaryId", "wrTeamId", "wrPlayerId", "wrPlayerName",
+          "wrDisplayOrder", "wrCurrentInnings",
+          "wrBatsmanAverage", "wrBatsmanPreviousStrikeRate",
+          "wrBowlerPreviousEconomy", "wrBowlerAverage", "wrTpId"
+        )
+        VALUES (
+          $1,
+          $2,
+          $3,
+          (SELECT "wrPlayerName" FROM "tblPlayers" WHERE "wrPlayerId" = $3),
+          $4,
+          $5,
+          COALESCE(
+            (SELECT "wrAverage" FROM "tblPlayerBattingHistory" WHERE "wrPlayerId" = $3 AND "wrMatchTypeId" = $6),
+            (SELECT "wrBatsmanAverage" FROM "tblPlayers" WHERE "wrPlayerId" = $3)
+          ),
+          (SELECT "wrBatsmanStrikeRate" FROM "tblPlayers" WHERE "wrPlayerId" = $3),
+          COALESCE(
+            (SELECT "wrEconomy" FROM "tblPlayerBowlingHistory" WHERE "wrPlayerId" = $3 AND "wrMatchTypeId" = $6),
+            (SELECT "wrBowlerEconomy" FROM "tblPlayers" WHERE "wrPlayerId" = $3)
+          ),
+          (SELECT "wrBowlerAverage" FROM "tblPlayers" WHERE "wrPlayerId" = $3),
+          $7
+        )
+        RETURNING *
+      )
+      SELECT
+        cpl."wrCommentaryPlayerId" AS "commentaryPlayerId",
+        cpl."wrCommentaryId" AS "commentaryId",
+        cpl."wrTeamId" AS "teamId",
+        cpl."wrPlayerId" AS "playerId",
+        cpl."wrPlayerName" AS "playerName",
+        cpl."wrDisplayOrder" AS "displayOrder",
+        cpl."wrBat_Status" AS "batStatus",
+        cpl."wrBat_Run" AS "batRun",
+        cpl."wrBat_Ball" AS "batBall",
+        cpl."wrBat_DotBall" AS "batDotBall",
+        cpl."wrBat_FOUR" AS "batFour",
+        cpl."wrBat_SIX" AS "batSix",
+        cpl."wrBat_SRR" AS "batSrr",
+        cpl."wrBat_BattingOrder" AS "battingOrder",
+        cpl."wrBat_IsPlay" AS "isPlay",
+        cpl."wrBat_OnStrike" AS "onStrike",
+        cpl."wrBat_WicketType" AS "wicketType",
+        cpl."wrBat_BowlerID" AS "bowlerId",
+        cpl."wrBat_FielderID1" AS "fielderId1",
+        cpl."wrBat_FielderID2" AS "fielderId2",
+        cpl."wrBowler_Over" AS "bowlerOver",
+        cpl."wrBowler_CurrentBall" AS "bowlerCurrentBall",
+        cpl."wrBowler_TotalBall" AS "bowlerTotalBall",
+        cpl."wrBowler_Run" AS "bowlerRun",
+        cpl."wrBowler_DotBall" AS "bowlerDotBall",
+        cpl."wrBowler_MaidenOver" AS "bowlerMaidenOver",
+        cpl."wrBowler_FOUR" AS "bowlerFour",
+        cpl."wrBowler_SIX" AS "bowlerSix",
+        cpl."wrBowler_WideBall" AS "bowlerWideBall",
+        cpl."wrBowler_NOBall" AS "bowlerNoBall",
+        cpl."wrBowler_ByeBall" AS "bowlerByeBall",
+        cpl."wrBowler_LegByeBall" AS "bowlerLegByeBall",
+        cpl."wrBowler_WideBallRun" AS "bowlerWideBallRun",
+        cpl."wrBowler_NOBallRun" AS "bowlerNoBallRun",
+        cpl."wrBowler_ByeBallRun" AS "bowlerByeBallRun",
+        cpl."wrBowler_LegByeBallRun" AS "bowlerLegByeBallRun",
+        cpl."wrBowler_TotalWicket" AS "bowlerTotalWicket",
+        cpl."wrBowler_Economy" AS "bowlerEconomy",
+        cpl."wrBowler_OnStrike" AS "bowlerOnStrike",
+        cpl."wrBowler_PeneltyRun" AS "bowlerPeneltyRun",
+        cpl."wrIsBatter_Out" AS "isBatterOut",
+        cpl."wrIsBatter_Retir" AS "isBatterRetir",
+        cpl."wrSwapName" AS "swapName",
+        cpl."wrBatsmanAverage" AS "batsmanAverage",
+        cpl."wrBatsmanStrikeRate" AS "batsmanStrikeRate",
+        cpl."wrBowlerEconomy" AS "bowlerEconomy",
+        cpl."wrBowlerAverage" AS "bowlerAverage",
+        cpl."wrCurrentInnings" AS "currentInnings",
+        cpl."wrBatterOrder" AS "batterOrder",
+        cpl."wrBowlerOrder" AS "bowlerOrder",
+        cpl."wrBatsmanPreviousStrikeRate"::DOUBLE PRECISION AS "batsmanPreviousStrikeRate",
+        cpl."wrBowlerPreviousEconomy"::DOUBLE PRECISION AS "bowlerPreviousEconomy",
+        cpl."wrIsInPlayingEleven" AS "isInPlayingEleven",
+        cpl."wrBoundary" AS "boundary",
+        cpl."wrPlayerBallFaced" AS "playerBallFaced",
+        tp."wrPlayerTypeId" as "playerTypeId",
+        cpl."wrJerseyPlayerImage" AS "jerseyPlayerImage",
+        tpt."wrPlayerType" AS "playerType",
+        cpl."wrJerseyPlayerImagePath" AS "jerseyPlayerImagePath",
+        cpl."wrTpId" AS "tpId"
+      FROM insert_data cpl
+      LEFT JOIN "tblPlayers" AS tp ON cpl."wrPlayerId" = tp."wrPlayerId"
+      LEFT JOIN "tblPlayerTypes" AS tpt ON tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [
+          data.commentaryId,
+          data.teamId,
+          data.playerId,
+          data.displayOrder,
+          1,
+          data.matchTypeId || null,
+          data.tpId || null,
+        ],
+      }
+    );
+    return result[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary.js/insertVirtualCommentaryPlayers",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const virtualEventTeamUpdateQuery = async (data, request, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `UPDATE "tblCommentaryTeams" SET 
+        "wrTeamStatus" = $1,
+        "wrTeamBattingOrder" = $2,
+        "wrTeamCaptain" = $3,
+        "wrTeamKipper" = $4,
+        "wrCommentaryPlayerTeamCaptain" = $5,
+        "wrCommentaryPlayerTeamKipper" = $6,
+        "wrSubInning" = $9
+      WHERE "wrCommentaryId" = $7
+      AND "wrTeamId" = $8
+      AND "wrIsDelete" = false
+      RETURNING
+        "wrCommentaryTeamId" as "commentaryTeamId",
+        "wrCommentaryId" as "commentaryId",
+        "wrTeamId" as "teamId",
+        "wrTeamCaptain" as "teamCaptain",
+        "wrTeamKipper" as "teamKipper",
+        "wrCommentaryPlayerTeamCaptain" as "commentaryPlayerTeamCaptain",
+        "wrCommentaryPlayerTeamKipper" as "commentaryPlayerTeamKipper",
+        "wrTeamStatus" as "teamStatus",
+        "wrTeamBattingOrder" as "teamBattingOrder",
+        "wrSubInning" as "subInning"`,
+      {
+        bind: [
+          data.teamStatus || null,
+          data.teamBattingOrder || null,
+          data.teamCaptain,
+          data.teamKipper,
+          data.commentaryPlayerTeamCaptain,
+          data.commentaryPlayerTeamKipper,
+          data.commentaryId,
+          data.teamId,
+          data.subInning ?? null
+        ],
+        type: fastify.db.QueryTypes.UPDATE,
+      }
+    );
+    return result[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary.js/virtualEventTeamUpdateQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const virtualPlayersSelectQuery = async (data, request, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `UPDATE "tblCommentaryPlayers" SET 
+        "wrBat_IsPlay" = $1,
+        "wrBat_OnStrike" = $2,
+        "wrBowler_Over" = $3,
+        "wrIsBatter_Out" = $4,
+        "wrBatterOrder" = $5,
+        "wrBowlerOrder" = $6
+      WHERE "wrCommentaryPlayerId" = $7
+      AND "wrCommentaryId" = $8
+      AND "wrTeamId" = $9
+      AND "wrIsDelete" = false
+      RETURNING
+        "wrCommentaryPlayerId" as "commentaryPlayerId",
+        "wrCommentaryId" as "commentaryId",
+        "wrBat_IsPlay" as "isPlay",
+        "wrBat_OnStrike" as "onStrike",
+        "wrBowler_Over" as "bowlerOver",
+        "wrIsBatter_Out" as "isBatterOut",
+        "wrBatterOrder" as "batterOrder",
+        "wrBowlerOrder" as "bowlerOrder"`,
+      {
+        bind: [
+          data.isPlay,
+          data.onStrike,
+          data.bowlerOver,
+          data.isBatterOut,
+          data.batterOrder,
+          data.bowlerOrder,
+          data.commentaryPlayerId,
+          data.commentaryId,
+          data.teamId,
+        ],
+        type: fastify.db.QueryTypes.UPDATE,
+      }
+    );
+    return result[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary.js/virtualPlayersSelectQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const virtualEventBallStartQuery = async (data, fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `update "tblCommentaries" set
+        "wrDisplayStatus" = $1,
+        "wrModifyDate" = now(),
+        "wrUpdateTime" = now()
+        where "wrCommentaryId" = $2 and "wrIsDelete" = false
+      `,
+      {
+        bind: [data.displayStatus, data.commentaryId],
+      }
+    );
+    return result;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary.js/virtualEventBallStartQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+const getAllDifficulties = async (fastify) => {
+  return await fastify.db.query(
+    `SELECT 
+    "wrId" as "id",
+    "wrDifficulty" as "difficulty"
+    FROM "tblDifficulty";`,
+    {
+      type: fastify.db.QueryTypes.SELECT,
+    }
+  );
+};
+const createvirtualPartnershipQuery = async (data, fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `
+      with insert_partnership as (
+        insert into "tblCommentaryPartnerships" ("wrCommentaryId", "wrTeamId", "wrBatter1Id", "wrBatter2Id", 
+        "wrBatter1Name", "wrBatter2Name", "wrCurrentInnings", "wrOrder", "wrIsActive", "wrCreatedDate"
+        ) values (
+          $1,
+          $2,
+          $3,
+          $4,
+          $5,
+          $6,
+          $7,
+          $8,
+          $9,
+          now()
+        ) 
+        returning *
+      )
+      select 
+          "wrCommentaryPartnershipId" as "commentaryPartnershipId",
+          "wrCommentaryId" as "commentaryId",
+          "wrTeamId" as "teamId",
+          "wrBatter1Id" as "batter1Id",
+          "wrBatter1Name" as "batter1Name",
+          "wrBatter2Id" as "batter2Id",
+          "wrBatter2Name" as "batter2Name",
+          "wrTotalRuns" as "totalRuns",
+          "wrTotalBalls" as "totalBalls",
+          "wrExtras" as "extras",
+          "wrCurrentInnings" as "currentInnings",
+          "wrCommentaryBallByBallId" as "commentaryBallByBallId",
+          "wrBatter1Balls" as "batter1Balls",
+          "wrBatter2Balls" as "batter2Balls",
+          "wrBatter1Runs" as "batter1Runs",
+          "wrBatter2Runs" as "batter2Runs",
+          "wrCreatedDate" as "createdDate",
+          "wrTotalFour" as "totalFour",
+          "wrTotalSix" as "totalSix",
+          "wrTotalExtra" as "totalExtra",
+          "wrTotalWide" as "totalWide",
+          "wrTotalNoBall" as "totalNoBall",
+          "wrOrder" as "order",
+          "wrIsActive" as "isActive",
+          "wrP1Ball" as "p1Ball",
+          "wrP2Ball" as "p2Ball",
+          "wrP1Run" as "p1Run",
+          "wrP2Run" as "p2Run",
+          "wrTeamScore" as "teamScore",
+          "wrTeamWicket" as "teamWicket"
+    from "insert_partnership"
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [
+          data.commentaryId,
+          data.teamId,
+          data.batter1Id,
+          data.batter2Id,
+          data.batter1Name,
+          data.batter2Name,
+          1,
+          1,
+          true,
+        ],
+      }
+    );
+
+    return result[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/createvirtualPartnershipQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const createVirtualOverQuery = async (data, fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `
+      with insert_over as (
+      insert into "tblOvers" ("wrCommentaryId", "wrTeamId", "wrOver", "wrBowlerId", "wrBallCount", 
+      "wrDate", "wrCurrentInnings", "wrIsComplete"
+      ) values (
+        $1,
+        $2,
+        $3,
+        $4, 
+        $5,
+        now(),
+        $6,
+        false
+        )
+        returning * 
+      )
+      select
+        "wrOverId" as "overId",
+        "wrCommentaryId" as "commentaryId",
+        "wrTeamId" as "teamId",
+        "wrOver" as "over",
+        "wrBallCount" as "ballCount",
+        "wrBowlerId" as "bowlerId",
+        "wrTotalRun" as "totalRun",
+        "wrTotalFour" as "totalFour",
+        "wrTotalSix" as "totalSix",
+        "wrTotalWideBall" as "totalWideBall",
+        "wrTotalWideRun" as "totalWideRun",
+        "wrTotalNoball" as "totalNoball",
+        "wrTotalNoBallRun" as "totalNoBallRun",
+        "wrTotalByesRun" as "totalByesRun",
+        "wrTotalLegByesRun" as "totalLegByesRun",
+        "wrTotalPanelty" as "totalPanelty",
+        "wrTotalWicket" as "totalWicket",
+        "wrDotBall" as "dotBall",
+        "wrIsComplete" as "isComplete",
+        "wrPowerplay" as "powerplay",
+        "wrIsOverInPowerplay" as "isOverInPowerplay",
+        "wrPowerplayType" as "powerplayType",
+        "wrIsMaiden" as "isMaiden",
+        "wrDate" as "date",
+        "wrIsDelete" as "isDelete",
+        "wrCurrentInnings" as "currentInnings"
+      from "insert_over"
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [
+          data.commentaryId,
+          data.teamId,
+          data.over || 0,
+          data.bowlerId,
+          data.ballCount || 0,
+          1,
+        ],
+      }
+    );
+
+    return result[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/createVirtualOverQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const createVirtualBallByBallQuery = async (data, fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `
+      WITH insert_data AS (
+        INSERT INTO "tblCommentaryBallByBalls" (
+          "wrCommentaryId",
+          "wrTeamId",
+          "wrOverId",
+          "wrOverCount",
+          "wrCurrentOverBalls",
+          "wrBowler_ID",
+          "wrBat_StrikeID",
+          "wrBat_NONStrikeID",
+          "wrBall_IsCount",
+          "wrBall_Type",
+          "wrOver_isMaiden",
+          "wrNextBat_StrikeID",
+          "wrNextBat_NONStrikeID",
+          "wrCurrentInnings",
+          "wrBall_BowlerID",
+          "wrBall_PlayerID",
+          "wrCommentaryPartnershipId",
+          "wrCreatedDate",
+          "wrBall_FielderID1",
+          "wrBall_FielderID2"
+        ) VALUES (
+          $1, $2, $3, $4, $5,
+          $6, $7, $8, $9, $10,
+          $11, $12, $13, $14, $15,
+          $16, $17, NOW(), $18, $19
+        )
+        RETURNING *
+      )
+      SELECT 
+        "wrCommentaryBallByBallId" AS "commentaryBallByBallId",
+        "wrCommentaryId" AS "commentaryId",
+        "wrTeamId" AS "teamId",
+        "wrOverId" AS "overId",
+        "wrOverCount" AS "overCount",
+        "wrCurrentOverBalls" AS "currentOverBalls",
+        "wrBowler_ID" AS "bowlerId",
+        "wrBat_StrikeID" AS "batStrikeId",
+        "wrBat_NONStrikeID" AS "batNonStrikeId",
+        "wrBall_IsCount" AS "ballIsCount",
+        "wrBall_Type" AS "ballType",
+        "wrBall_IsDot" AS "ballIsDot",
+        "wrBall_Run" AS "ballRun",
+        "wrBall_ExtraRun" AS "ballExtraRun",
+        "wrBall_isBoundry" AS "ballIsBoundry",
+        "wrBall_FOUR" AS "ballFour",
+        "wrBall_SIX" AS "ballSix",
+        "wrBall_IsWicket" AS "ballIsWicket",
+        "wrBall_WicketType" AS "ballWicketType",
+        "wrBall_PlayerID" AS "ballPlayerId",
+        "wrBall_BowlerID" AS "ballBowlerId",
+        "wrBall_FielderID1" AS "ballFielderId1",
+        "wrBall_FielderID2" AS "ballFielderId2",
+        "wrOver_isMaiden" AS "overIsMaiden",
+        "wrNextBat_StrikeID" AS "nextBatStrikeId",
+        "wrNextBat_NONStrikeID" AS "nextBatNonStrikeId",
+        "wrIsDelete" AS "isDelete",
+        "wrCurrentInnings" AS "currentInnings",
+        "wrCreatedDate" AS "createdDate",
+        "wrAutoStrikeBallCount" AS "autoStrikeBallCount",
+        "wrDevOver" as "devOver",
+        "wrDevCurrentOverBall" as "devCurrentOverBall",
+        "wrX2" AS "x2",
+        "wrY2" AS "y2",
+        "wrShortType" AS "shortType",
+        "wrCommentryRemark" AS "commentryRemark",
+        "wrCommentaryPartnershipId" AS "commentaryPartnershipId"
+      FROM insert_data
+      `,
+      {
+        bind: [
+          data.commentaryId,
+          data.teamId,
+          data.overId,
+          data.overCount || 0,
+          data.currentOverBalls || 0,
+          data.bowlerId,
+          data.batStrikeId,
+          data.batNonStrikeId,
+          data.ballIsCount,
+          data.ballType,
+          data.overIsMaiden,
+          data.nextBatStrikeId || null,
+          data.nextBatNonStrikeId || null,
+          1,
+          data.ballBowlerId,
+          data.ballPlayerId,
+          data.commentaryPartnershipId,
+          0,
+          0 
+        ],
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+
+    return result[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary.js/createVirtualBallByBallQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+
+const virtualTeamRunsQuery = async (data, fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `UPDATE "tblCommentaryTeams" SET
+        "wrTeamScore" = $1,
+        "wrTeamOver" = $2,
+        "wrTeamWicket" = $3,
+        "wrCrr" = $4,
+        "wrRrr" = $5,
+        "wrTeamTrialRuns" = $6,
+        "wrTeamLeadRuns" = $7,
+        "wrTeamWideRuns" = $8,
+        "wrTeamByRuns" = $9,
+        "wrTeamLegByRuns" = $10,
+        "wrTeamNoBallRuns" = $11,
+        "wrTeamPenaltyRuns" = $12,
+        "wrIsWin" = $13
+      WHERE
+        "wrCommentaryId" = $14 AND
+        "wrCommentaryTeamId" = $15 AND
+        "wrIsDelete" = false
+      RETURNING
+        "wrCommentaryTeamId" as "commentaryTeamId",
+        "wrCommentaryId" as "commentaryId",
+        "wrTeamId" as "teamId",
+        "wrTeamScore" as "teamScore",
+        "wrTeamOver" as "teamOver",
+        "wrTeamWicket" as "teamWicket",
+        "wrCrr" as "crr",
+        "wrRrr" as "rrr",
+        "wrTeamTrialRuns" as "teamTrialRuns",
+        "wrTeamLeadRuns" as "teamLeadRuns",
+        "wrTeamWideRuns" as "teamWideRuns",
+        "wrTeamByRuns" as "teamByRuns",
+        "wrTeamLegByRuns" as "teamLegByRuns",
+        "wrTeamNoBallRuns" as "teamNoBallRuns",
+        "wrTeamPenaltyRuns" as "teamPenaltyRuns",
+        "wrIsWin" as "isWin"`,
+      {
+        bind: [
+          data.teamScore,
+          data.teamOver,
+          data.teamWicket || null,
+          data.crr || null,
+          data.rrr || null,
+          data.teamTrialRuns || null,
+          data.teamLeadRuns || null,
+          data.teamWideRuns || null,
+          data.teamByRuns || null,
+          data.teamLegByRuns || null,
+          data.teamNoBallRuns || null,
+          data.teamPenaltyRuns || null,
+          data.isWin || false,
+          data.commentaryId,
+          data.commentaryTeamId,
+        ],
+      }
+    );
+    return result[0];
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCommentary/virtualTeamRunsQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+}
+const virtualPlayerRunsQuery = async (data, fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `UPDATE "tblCommentaryPlayers" SET
+        "wrBat_Run" = $1,
+        "wrBat_Ball" = $2,
+        "wrBat_DotBall" = $3,
+        "wrBat_FOUR" = $4,
+        "wrBat_SIX" = $5,
+        "wrBat_SRR" = $6,
+        "wrBowler_Run" = $7,
+        "wrBowler_Over" = $8,
+        "wrBowler_TotalBall" = $9,
+        "wrBowler_DotBall" = $10,
+        "wrBowler_MaidenOver" = $11,
+        "wrBowler_FOUR" = $12,
+        "wrBowler_SIX" = $13,
+        "wrBowler_WideBall" = $14,
+        "wrBowler_NOBall" = $15,
+        "wrBowler_ByeBall" = $16,
+        "wrBowler_LegByeBall" = $17,
+        "wrBowler_TotalWicket" = $18,
+        "wrBowler_Economy" = $19
+      WHERE
+        "wrCommentaryId" = $20 AND
+        "wrCommentaryPlayerId" = $21 AND
+        "wrIsDelete" = false
+      RETURNING
+        "wrCommentaryPlayerId" as "commentaryPlayerId",
+        "wrCommentaryId" as "commentaryId",
+        "wrTeamId" as "teamId",
+        "wrPlayerId" as "playerId",
+        "wrBat_Run" as "batRun",
+        "wrBat_Ball" as "batBall",
+        "wrBat_DotBall" as "batDotBall",
+        "wrBat_FOUR" as "batFour",
+        "wrBat_SIX" as "batSix",
+        "wrBat_SRR" as "batSrr",
+        "wrBowler_Run" as "bowlerRun",
+        "wrBowler_Over" as "bowlerOver",
+        "wrBowler_TotalBall" as "bowlerTotalBall",
+        "wrBowler_DotBall" as "bowlerDotBall",
+        "wrBowler_MaidenOver" as "bowlerMaidenOver",
+        "wrBowler_FOUR" as "bowlerFour",
+        "wrBowler_SIX" as "bowlerSix",
+        "wrBowler_WideBall" as "bowlerWideBall",
+        "wrBowler_NOBall" as "bowlerNoBall",
+        "wrBowler_ByeBall" as "bowlerByeBall",
+        "wrBowler_LegByeBall" as "bowlerLegByeBall",
+        "wrBowler_TotalWicket" as "bowlerTotalWicket",
+        "wrBowler_Economy" as "bowlerEconomy",
+        "wrTpId" as "tpId"
+        `,
+      {
+        bind: [
+          data.batRun,
+          data.batBall,
+          data.batDotBall,
+          data.batFour,
+          data.batSix,
+          data.batSrr || null,
+          data.bowlerRun,
+          data.bowlerOver,
+          data.bowlerTotalBall,
+          data.bowlerDotBall,
+          data.bowlerMaidenOver,
+          data.bowlerFour,
+          data.bowlerSix,
+          data.bowlerWideBall || null,
+          data.bowlerNoBall || null,
+          data.bowlerByeBall || null,
+          data.bowlerLegByeBall || null,
+          data.bowlerTotalWicket || null,
+          data.bowlerEconomy || null,
+          data.commentaryId,
+          data.commentaryPlayerId,
+        ],
+      }
+    );
+    return result[0]
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCommentary/virtualPlayerRunsQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+}
+const updateVirtualPartnershipQuery = async (data, fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `
+      UPDATE "tblCommentaryPartnerships" SET
+        "wrTotalRuns" = $1,
+        "wrTotalBalls" = $2,
+        "wrExtras" = $3,
+        "wrCommentaryBallByBallId" = $4,
+        "wrBatter1Balls" = $5,
+        "wrBatter2Balls" = $6,
+        "wrBatter1Runs" = $7,
+        "wrBatter2Runs" = $8,
+        "wrTotalFour" = $9,
+        "wrTotalSix" = $10,
+        "wrTotalExtra" = $11,
+        "wrTotalWide" = $12,
+        "wrTotalNoBall" = $13,
+        "wrTeamScore" = $14,
+        "wrTeamWicket" = $15
+      WHERE "wrCommentaryPartnershipId" = $16
+      AND "wrCommentaryId" = $17
+      AND "wrIsDelete" = false
+      RETURNING
+          "wrCommentaryPartnershipId" as "commentaryPartnershipId",
+          "wrCommentaryId" as "commentaryId",
+          "wrTotalRuns" as "totalRuns",
+          "wrTotalBalls" as "totalBalls",
+          "wrExtras" as "extras",
+          "wrCommentaryBallByBallId" as "commentaryBallByBallId",
+          "wrBatter1Balls" as "batter1Balls",
+          "wrBatter2Balls" as "batter2Balls",
+          "wrBatter1Runs" as "batter1Runs",
+          "wrBatter2Runs" as "batter2Runs",
+          "wrTotalFour" as "totalFour",
+          "wrTotalSix" as "totalSix",
+          "wrTotalExtra" as "totalExtra",
+          "wrTotalWide" as "totalWide",
+          "wrTotalNoBall" as "totalNoBall",
+          "wrTeamScore" as "teamScore",
+          "wrTeamWicket" as "teamWicket"
+      `,
+      {
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [
+          data.totalRuns,
+          data.totalBalls,
+          data.extras,
+          data.commentaryBallByBallId,
+          data.batter1Balls,
+          data.batter2Balls,
+          data.batter1Runs,
+          data.batter2Runs,
+          data.totalFour,
+          data.totalSix,
+          data.totalExtra,
+          data.totalWide,
+          data.totalNoBall,
+          data.teamScore,
+          data.teamWicket,
+          data.commentaryPartnershipId,
+          data.commentaryId,
+        ],
+      }
+    );
+    return result[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/updateVirtualPartnershipQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+const updateVirtualBallByBallQuery = async (data, fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `
+      UPDATE "tblCommentaryBallByBalls" SET
+      "wrOverId" = $1,
+      "wrOverCount" = $2,
+      "wrCurrentOverBalls" = $3,
+      "wrBowler_ID" = $4,
+      "wrBat_StrikeID" = $5,
+      "wrBat_NONStrikeID" = $6,
+      "wrBall_IsCount" = $7,
+      "wrBall_Type" = $8,
+      "wrBall_IsDot" = $9,
+      "wrBall_Run" = $10,
+      "wrBall_ExtraRun" = $11,
+      "wrBall_isBoundry" = $12,
+      "wrBall_FOUR" = $13,
+      "wrBall_SIX" = $14,
+      "wrBall_IsWicket" = $15,
+      "wrBall_WicketType" = $16,
+      "wrBall_PlayerID" = $17,
+      "wrBall_BowlerID" = $18,
+      "wrBall_FielderID1" = $19,
+      "wrBall_FielderID2" = $20,
+      "wrOver_isMaiden" = $21,
+      "wrNextBat_StrikeID" =$23,
+      "wrNextBat_NONStrikeID" = $22,
+      "wrIsDelete" = $23
+      WHERE "wrCommentaryBallByBallId" = $24
+      AND "wrCommentaryId" = $25 AND "wrIsDeletedStatus" = false
+      RETURNING
+        "wrCommentaryBallByBallId" AS "commentaryBallByBallId",
+        "wrCommentaryId" AS "commentaryId",
+        "wrTeamId" AS "teamId",
+        "wrOverId" AS "overId",
+        "wrOverCount" AS "overCount",
+        "wrCurrentOverBalls" AS "currentOverBalls",
+        "wrBowler_ID" AS "bowlerId",
+        "wrBat_StrikeID" AS "batStrikeId",
+        "wrBat_NONStrikeID" AS "batNonStrikeId",
+        "wrBall_IsCount" AS "ballIsCount",
+        "wrBall_Type" AS "ballType",
+        "wrBall_IsDot" AS "ballIsDot",
+        "wrBall_Run" AS "ballRun",
+        "wrBall_ExtraRun" AS "ballExtraRun",
+        "wrBall_isBoundry" AS "ballIsBoundry",
+        "wrBall_FOUR" AS "ballFour",
+        "wrBall_SIX" AS "ballSix",
+        "wrBall_IsWicket" AS "ballIsWicket",
+        "wrBall_WicketType" AS "ballWicketType",
+        "wrBall_PlayerID" AS "ballPlayerId",
+        "wrBall_BowlerID" AS "ballBowlerId",
+        "wrBall_FielderID1" AS 	"ballFielderId1",
+        "wrBall_FielderID2" AS 	"ballFielderId2",
+        "wrOver_isMaiden" AS 	"overIsMaiden",
+        "wrDevOver" as "devOver",
+        "wrDevCurrentOverBall" as "devCurrentOverBall",
+        "wrNextBat_StrikeID" 	AS 	"nextBatStrikeId",
+        "wrNextBat_NONStrikeID" 	AS 	"nextBatNonStrikeId"
+      `,
+      {
+        bind: [
+          data.overId,
+          data.overCount,
+          data.currentOverBalls,
+          data.bowlerId,
+          data.batStrikeId,
+          data.batNonStrikeId,
+          data.ballIsCount,
+          data.ballType,
+          data.ballIsDot,
+          data.ballRun,
+          data.ballExtraRun,
+          data.ballIsBoundry,
+          data.ballFour,
+          data.ballSix,
+          data.ballIsWicket,
+          data.ballWicketType,
+          data.ballPlayerId,
+          data.ballBowlerId,
+          data.ballFielderId1,
+          data.ballFielderId2,
+          data.overIsMaiden,
+          data.nextBatStrikeId,
+          data.nextBatNonStrikeId,
+          data.isDelete || false,
+          data.commentaryBallByBallId,
+          data.commentaryId,
+        ],
+        type: fastify.db.QueryTypes.UPDATE,
+      }
+    );
+    return result[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/updateVirtualBallByBallQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+const updateVirtualOverQuery = async (data, fastify, request) => {
+  try {
+    return await fastify.db.query(
+      `
+      UPDATE "tblOvers" SET
+        "wrBallCount" = $1,
+        "wrTotalRun" = $2,
+        "wrTotalFour" = $3,
+        "wrTotalSix" = $4,
+        "wrTotalWideBall" = $5,
+        "wrTotalWideRun" = $6,  
+        "wrTotalNoball" = $7,
+        "wrTotalNoBallRun" = $8,
+        "wrTotalByesRun" = $9,
+        "wrTotalLegByesRun" = $10,
+        "wrTotalPanelty" = $11,
+        "wrTotalWicket" = $12,
+        "wrDotBall" = $13,
+        "wrIsComplete" = $14,
+        "wrIsOverInPowerplay" = $15,
+        "wrPowerplayType" = $16,
+        "wrIsMaiden" = $17,
+        "wrDate" = now(),
+        "wrBowlerId" = $18,
+        "wrOver" = $19
+      WHERE "wrOverId" = $20
+      AND "wrCommentaryId" = $21
+      `,
+      {
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [
+          data.ballCount,
+          data.totalRun,
+          data.totalFour,
+          data.totalSix,
+          data.totalWideBall,
+          data.totalWideRun,
+          data.totalNoball,
+          data.totalNoBallRun,
+          data.totalByesRun,
+          data.totalLegByesRun,
+          data.totalPanelty,
+          data.totalWicket,
+          data.dotBall,
+          data.isComplete,
+          data.isOverInPowerplay,
+          data.powerplayType,
+          data.isMaiden,
+          data.bowlerId,
+          data.over,
+          data.overId,
+          data.commentaryId,
+        ],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/updateVirtualOverQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+const createVirtualWicketQuery = async (data, fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `
+      with insert_data as (
+        insert into "tblCommentaryWickets" (
+          "wrCommentaryId",
+          "wrBowlerId",
+          "wrBowlerName",
+          "wrWicketType",
+          "wrBatterId",
+          "wrBatterName",
+          "wrFieldPlayerId",
+          "wrFieldPlayerName",
+          "wrOverId",
+          "wrOverCount",
+          "wrCommentaryBallByBallId",
+          "wrTeamId",
+          "wrTeamScore",
+          "wrPlayerRun",
+          "wrPlayerBalls",
+          "wrIsDelete",
+          "wrWicketCount",
+          "wrBallCount",
+          "wrCurrentInnings" 
+        ) values (
+          $1,
+          $2,
+          $3,
+          $4,
+          $5,
+          $6,
+          $7,
+          $8,
+          $9,
+          $10,
+          $11,
+          $12,
+          $13,
+          $14,
+          $15,
+          $16,
+          $17,
+          $18,
+          $19      
+        )
+        returning *
+      )
+    select 
+    "wrCommentaryWicketId" as "commentaryWicketId",
+    "wrCommentaryId" as "commentaryId",
+    "wrBowlerId" as "bowlerId",
+    "wrBowlerName" as "bowlerName",
+    "wrWicketType" as "wicketType",
+    "wrBatterId" as "batterId",
+    "wrBatterName" as "batterName",
+    "wrFieldPlayerId" as "fieldPlayerId",
+    "wrFieldPlayerName" as "fieldPlayerName",
+    "wrOverId" as "overId",
+    "wrOverCount" as "overCount",
+    "wrCommentaryBallByBallId" as "commentaryBallByBallId",
+    "wrTeamId" as "teamId",
+    "wrTeamScore" as "teamScore",
+    "wrPlayerRun" as "playerRun",
+    "wrPlayerBalls" as "playerBalls",
+    "wrWicketCount" as "wicketCount",
+    "wrBallCount" as "ballCount",
+    "wrFieldPlayer2Id" as "fieldPlayer2Id",
+    "wrFieldPlayer2Name" as "fieldPlayer2Name",
+    "wrCurrentInnings" as "currentInnings"
+    from "insert_data"
+      `,
+      {
+        bind: [
+          data.commentaryId,
+          data.bowlerId,
+          data.bowlerName,
+          data.wicketType,
+          data.batterId,
+          data.batterName,
+          data.fieldPlayerId,
+          data.fieldPlayerName,
+          data.overId,
+          data.overCount,
+          data.commentaryBallByBallId,
+          data.teamId,
+          data.teamScore,
+          data.playerRun,
+          data.playerBalls,
+          data.isDelete || false,
+          data.wicketCount,
+          data.ballCount,
+          1,
+        ],
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+
+    return result[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/createVirtualWicketQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+const addCompTempQuery = async (data,request,fastify)=>{
+  try {
+    let dtToInsert = await fastify.db.query(
+      `
+        SELECT 
+          "wrMarketTemplateId" as "marketTemplateId"
+        FROM "tblCompMarketTemplate"
+        WHERE "wrCompetitionId" =$1
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind : [
+          data.competitionId
+        ]
+      }
+    )
+    if(dtToInsert.length== 0) return true; 
+    let values = [];
+    dtToInsert.forEach((item) => {
+        values.push(`(${data.commentaryId},${item.marketTemplateId},${request.userTokenInfo?.WrUserId || null},now())`)
+    })
+    values = values.join(",");
+      const query = `
+        INSERT INTO "tblCommMatchTypeTemplate" ("wrCommentaryId", "wrMarketTemplateId", "wrCreatedBy", "wrCreatedAt")
+        VALUES
+      ${values}
+    `;
+    const result = await fastify.db.query(query,{
+      type : fastify.db.QueryTypes.SELECT
+    })
+    return result;
+    
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/createVirtualWicketQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+}
+const insertCommentaryWithImportQuery = async (data, request, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `
+      with insert_data as(
+        insert into "tblCommentaries" ("wrEventTypeId","wrMatchTypeId","wrCompetitionId","wrEventId",
+        "wrEventDate","wrEventName","wrEventRefId","wrTeam1Id","wrTeam2Id","wrLocation","wrWeather","wrPitchCracks","wrDisplayStatus","wrTarget","wrMarketID","wrTpId","isSignalROn","isMatchTypeUpdated" , "wrCreatedBy" , "wrCreatedDate", "wrCurrentInnings", "wrSystemPlayerCount","wrIsPredictMarket",
+        "wrDelay", "wrIsActive", "wrIsClientShow","wrIsTeamPredictionOn", "wrHistoryMatchTypeId", "wrIsCountInPoint","wrIsTest", "wrEventNo",
+        "wrDifficulty", "wrPitchHardness", "wrPitchWareSpeed", "wrPitchType", "wrLawnStriping", "wrPitchAge", "wrIsVirtual",
+        "wrOnfieldUmpires", "wrThirdUmpire", "wrMatchReferee", "wrSession", "wrTestDayCount", "wrTossWonBy",
+        "wrChoseTo", "wrCommentaryStatus", "wrPythonId", "wrPythonURI", "wrCountryId", "wrVenueId"
+        ) values (
+          $1,
+          $2,
+          $3,
+          $4,
+          $5,$6,$7,
+          $8,
+          $9,
+          $10,$11,$12,$13,$14,$15,$16,$17,$18,$19,now(),
+          1,
+          $20,
+          $21,
+          $22,
+          $23,
+          $24,
+          $25,
+          $26,
+          $27,
+          $28,
+          $29,
+          $30,
+          $31,
+          $32,
+          $33,
+          $34,
+          $35,
+          $36,
+          $37,
+          $38,
+          $39,
+          $40,
+          $41,
+          $42,
+          $43,
+          $44,
+          $45,
+          $46,
+          $47,
+          $48
+        ) returning *         
+      )
+
+      select 
+    "wrCommentaryId" as "commentaryId",
+    tc."wrMatchTypeId" as "matchTypeId",
+    mt."wrMatchType" AS "matchType",
+    tc."wrEventTypeId" as "eventTypeId",
+    tc."wrTeam1Id" as "team1Id",
+    tc."wrTeam2Id" as "team2Id",
+    tt1."wrTeamName" as "team1Name",
+    tt2."wrTeamName" as "team2Name",
+    tc."wrCompetitionId" as "competitionId",
+    co."wrCompetition" as "competition",
+    tc."wrEventId" as "eventId",
+    "wrEventDate" as "eventDate",
+    "wrEventName" as "eventName",
+    "wrEventRefId" as "eventRefId",
+    "wrLocation" as "location",
+    "wrWeather" as "weather",
+    "wrPitchCracks" as "pitchCracks",
+    tc."wrHomeSideTeam" as "homeSideTeam",
+    tc."wrTossWonBy" as "tossWonBy",
+    "wrChoseTo" as "choseTo",
+    tc."wrWinnerId" as "winnerId",
+    "wrWinnerName" as "winnerName",
+    "wrIsClientShow" as "isClientShow",
+    "wrDisplayStatus" as "displayStatus",
+    "wrRmk" as "rmk",
+    "wrWinRmk" as "winRmk",
+    "wrCardType" as "cardType",
+    "wrTossRmk" as "tossRmk",
+    "wrCommentaryUserId" as "commentaryUserId",
+    "wrCommentaryStatus" as "commentaryStatus",
+    "wrUpdateTime" as "updateTime",
+    "wrIsMatchDraw" as "isMatchDraw",
+    "wrTarget" as "target",
+    "wrMarketID" as "marketId",
+    tc."wrTpId" as "tpId",
+    "isSignalROn" as "isSignalROn",
+    "isMatchTypeUpdated" as "isMatchTypeUpdated",
+    "wrCurrentInnings" as "currentInnings",
+    "wrSystemPlayerCount" as "systemPlayerCount",
+    "wrIsPlayersShow" as "isPlayersShow",
+    "wrIsPredictMarket" as "isPredictMarket",
+    tc."wrIsActive"  as "isActive",
+    tc."wrIsTeamPredictionOn" as "isTeamPredictionOn",
+    tu."WrUserName" as "createdBy",
+    "wrLineRatio" as "lineRatio",
+    "wrDelay" as "delay",
+    tc."wrHistoryMatchTypeId" as "historyMatchTypeId",
+    tc."wrIsCountInPoint" as "isCountInPoint",
+    "wrShotType" as "shotType",
+    "wrIsWheelShow" as "isWheelShow",
+    "wrIsTest" as "isTest",
+    tc."wrEventNo" as "eventNo",
+    tc."wrIsEventStart" as "isEventStart",
+    tc."wrDifficulty" as "difficulty",
+    tc."wrPitchHardness" as "pitchHardness",
+    tc."wrPitchWareSpeed" as "pitchWareSpeed",
+    tc."wrPitchType" as "pitchType",
+    tc."wrLawnStriping" as "lawnStriping",
+    tc."wrPitchAge" as "pitchAge",
+    tc."wrIsVirtual" as "isVirtual",
+    tc."wrOnfieldUmpires" as "onfieldUmpires",
+    tc."wrThirdUmpire" as "thirdUmpire",
+    tc."wrMatchReferee" as "matchReferee",
+    tc."wrSession" as "session",
+    tc."wrTestDayCount" as "testDayCount",
+    tc."wrPythonId" as "pythonId",
+    tc."wrPythonURI" as "pythonURI",
+    tc."wrCountryId" as "countryId",
+    tc."wrVenueId" as "venueId",
+    tc."wrCancelTime" as "cancelTime"
+    from "insert_data" tc
+    left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
+    left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"  
+    LEFT JOIN "tblMatchTypes" mt ON tc."wrMatchTypeId" = mt."wrMatchTypeId"
+    LEFT JOIN "tblCompetitions" co ON tc."wrCompetitionId" = co."wrCompetitionId"
+    LEFT JOIN "tblUsers" tu ON tc."wrCreatedBy" = tu."WrUserId"
+      `,
+      {
+        
+        bind: [
+          data.eventTypeId || null,
+          data.matchTypeId || null,
+          data.competitionId || null,
+          data.eventId || null,
+          data.eventDate ? new Date(data.eventDate) : null,
+          data.eventName || null,
+          data.eventRefId ? data.eventRefId.trim() : null,
+          data.team1Id || null,
+          data.team2Id || null,
+          data.location || null,
+          data.weather || null,
+          data.pitchCracks || null,
+          data.displayStatus || null,
+          null,
+          data.marketId || null,
+          data.tpId || null,
+          data.isSignalROn || false,
+          data.isMatchTypeUpdated || false,
+          request.userTokenInfo.WrUserId,
+          data.systemPlayerCount || null,
+          data.isPredictMarket || false,
+          data.delay || 0,
+          data.isActive,
+          data.isClientShow,
+          true,
+          data.matchTypeId || null,
+          data.isCountInPoint,
+          data.hasOwnProperty("isTest") ? data.isTest : false,
+          data.eventNo || null,
+          data.difficulty || null,
+          data.pitchHardness || null,
+          data.pitchWareSpeed || null,
+          data.pitchType || null,
+          data.lawnStriping || null,
+          data.pitchAge || null,
+          data.isVirtual || false,
+          data.onfieldUmpires || null,
+          data.thirdUmpire || null,
+          data.matchReferee || null,
+          data.session || null,
+          data.testDayCount || null,
+          data.tossWonBy || null,
+          data.choseTo || null,
+          data.commentaryStatus || 1,
+          data.pythonId || null,
+          data.pythonURI || null,
+          data.countryId || null,
+          data.venueId || null,
+        ],
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+
+    return result[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/insertCommentaryWithImportQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+const insertCommentaryTeamsOnImportQuery = async (data, request, fastify) => {
+  
+  try {
+    return await fastify.db.query(
+      `
+      insert into "tblCommentaryTeams" ("wrCommentaryId" , "wrTeamId","wrTeamCaptain","wrTeamKipper" , "wrShortName" , "wrTeamName","wrCurrentInnings","wrIsBattingComplete"
+      , "wrTeamColor" , "wrBackgroundColor" , "wrTeamMaxOver", "wrDrsCount", "wrSubInning", "wrTpId")
+       values (
+        $1,
+        $2,
+        $3,
+        $4,
+        (select "wrTeamShortName" from "tblTeams" where "wrTeamId" = $2),
+        (select "wrTeamName" from "tblTeams" where "wrTeamId" = $2),
+        $8,
+        false,
+        (select "wrTeamColor" from "tblTeams" where "wrTeamId" = $2),
+        (select "wrBackgroundColor" from "tblTeams" where "wrTeamId" = $2),
+        $9,
+        $10,
+        $11,
+        $12
+      )
+      ,(
+        $1,
+        $5,
+        $6,
+        $7,
+        (select "wrTeamShortName" from "tblTeams" where "wrTeamId" = $5),
+        (select "wrTeamName" from "tblTeams" where "wrTeamId" = $5),
+        $8,
+        false,
+        (select "wrTeamColor" from "tblTeams" where "wrTeamId" = $5),
+        (select "wrBackgroundColor" from "tblTeams" where "wrTeamId" = $5),
+        $9,
+        $10,
+        $11,
+        $12
+      )
+    `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [
+          data.commentaryId,
+          data.team1Id,
+          data.team1Captain || null,
+          data.team1Kipper || null,
+          data.team2Id,
+          data.team2Captain || null,
+          data.team2Kipper || null,
+          data.currentInnings,
+          data.teamMaxOver || null,
+          data.drsCount || 0,
+          data.subInning || null,
+          data.tpId || null,
+        ],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/insertCommentaryTeamsOnImportQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+const updatePitchageAndSessionQuery = async (data, fastify, request) => {
+  try {
+    return await fastify.db.query(
+      `
+      UPDATE "tblCommentaries" SET
+        "wrPitchAge" = $1,
+        "wrSession" = $2
+      WHERE "wrCommentaryId" = $3
+      AND "wrIsDelete" = false`,
+      {
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [
+          data.pitchAge,
+          data.session,
+          data.commentaryId,
+        ],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/updatePitchageAndSessionQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+const updatePythonAPIOnCommentaryQuery = async (request, fastify) => {
+  try {
+    const { pythonId, pythonURI, commentaryId } = request.body;
+    return await fastify.db.query(
+      `UPDATE "tblCommentaries" SET
+        "wrPythonId" = $1,
+        "wrPythonURI" = $2
+      WHERE "wrCommentaryId" = $3
+      AND "wrIsDelete" = false`,
+      {
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [pythonId, pythonURI, commentaryId],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/updatePythonAPIOnCommentaryQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+const updateDrsQuery = async (data, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `UPDATE "tblCommentaryTeams" SET
+        "wrNoOfAttempt" = GREATEST(0, $1),
+        "wrDrsCount" = $2,
+        "wrNoOfFail" = $3
+      WHERE
+        "wrCommentaryTeamId" =$4
+        RETURNING 
+            "wrCommentaryId" as "commentaryId",
+            "wrCommentaryTeamId" as "commentaryTeamId",
+            "wrDrsCount" as "drsCount",
+            "wrNoOfAttempt" as "drsAttempt",
+            "wrNoOfFail" as "drsFail";`,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [
+          data.drsAttempt,
+          data.drsCount,
+          data.drsFail,
+          data.commentaryTeamId
+        ],
+      }
+    );
+    return result[0];
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCommentary/updateCommentaryTeamDrsAttemptsQuery",
+      null
+    );
+    throw new Error(error.message);
+  }
+};
+const getAllCommByCompIdQuery = async (competitionId, request, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `SELECT * FROM "tblCommentaries"
+       WHERE "wrIsDelete" = FALSE
+       AND "wrCompetitionId" = $1`,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [competitionId]
+      }
+    );
+    return result.length > 0;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCommentary/getAllCommByCompIdQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+};
+
+const updateEventTypeAndCompIdQuery = async (data, request, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `UPDATE "tblCommentaries" SET
+        "wrEventTypeId" = $1,
+        "wrCompetitionId" = $2
+       WHERE "wrCommentaryId" = $3
+       AND "wrIsDelete" = FALSE
+       RETURNING
+        "wrEventTypeId" as "eventTypeId",
+        "wrCompetitionId" as "competitionId"
+       `,
+      {
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [data.eventTypeId, data.competitionId, data.commentaryId]
+      }
+    );
+    return result?.[0]?.[0] || null;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCommentary/updateEventTypeAndCompIdQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+};
+
+const getComEntityQuery = async (data,request,fastify) => {
+  try {
+    const {commentaryIds} = data;
+    let com = await fastify.db.query(
+    `select 
+      "wrCommentaryId" as "commentaryId",
+      tc."wrMatchTypeId" as "matchTypeId",
+      mt."wrMatchType" AS "matchType",
+      tc."wrEventTypeId" as "eventTypeId",
+      tet."wrEventType" as "eventType",
+      tc."wrTeam1Id" as "team1Id",
+      tc."wrTeam2Id" as "team2Id",
+      tt1."wrTeamName" as "team1Name",
+      tt2."wrTeamName" as "team2Name",
+      tc."wrCompetitionId" as "competitionId",
+      co."wrCompetition" as "competition",
+      tc."wrEventId" as "eventId",
+      "wrEventDate" as "eventDate",
+      "wrEventName" as "eventName",
+      "wrEventRefId" as "eventRefId",
+      "wrLocation" as "location",
+      "wrWeather" as "weather",
+      "wrPitchCracks" as "pitchCracks",
+      "wrHomeSideTeam" as "homeSideTeam",
+      "wrTossWonBy" as "tossWonBy",
+      "wrChoseTo" as "choseTo",
+      "wrWinnerId" as "winnerId",
+      "wrWinnerName" as "winnerName",
+      "wrIsClientShow" as "isClientShow",
+      "wrDisplayStatus" as "displayStatus",
+      "wrRmk" as "rmk",
+      "wrWinRmk" as "winRmk",
+      "wrCardType" as "cardType",
+      "wrTossRmk" as "tossRmk",
+      "wrCommentaryUserId" as "commentaryUserId",
+      "wrCommentaryStatus" as "commentaryStatus",
+      "wrUpdateTime" as "updateTime",
+      "wrIsMatchDraw" as "isMatchDraw",
+      "wrTarget" as "target",
+      "wrMarketID" as "marketId",
+      tc."wrTpId" as "tpId",
+      "isSignalROn" as "isSignalROn",
+      "isMatchTypeUpdated" as "isMatchTypeUpdated",
+      "wrCurrentInnings" as "currentInnings",
+      "wrSystemPlayerCount" as "systemPlayerCount",
+      "wrIsPlayersShow" as "isPlayersShow",
+      "wrIsPredictMarket" as "isPredictMarket",
+      tc."wrIsActive"  as "isActive",
+      "wrDelay" as "delay",
+      "wrLineRatio" as "lineRatio",
+      tc."wrCommentaryResult" as "result",
+      tc."wrCommentaryCloseTime" as "commentaryCloseTime",
+      tc."wrIsTeamPredictionOn" as "isTeamPredictionOn",
+      tu."WrUserName" as "createdBy",
+      tc."wrHistoryMatchTypeId" as "historyMatchTypeId",
+      mt2."wrMatchType" AS "historyMatchType",
+      tc."wrIsCountInPoint" as "isCountInPoint",
+      "wrShotType" as "shotType",
+      "wrIsWheelShow" as "isWheelShow",
+      "wrSortUpdate" as "sortUpdate",
+      tc."wrIsTest" as "isTest",
+      tc."wrEventNo" as "eventNo",
+      tc."wrIsEventStart" as "isEventStart",
+      tc."wrDifficulty" as "difficulty",
+      tc."wrPitchHardness" as "pitchHardness",
+      tc."wrPitchWareSpeed" as "pitchWareSpeed",
+      tc."wrPitchType" as "pitchType",
+      tc."wrLawnStriping" as "lawnStriping",
+      tc."wrPitchAge" as "pitchAge",
+      tc."wrIsVirtual" as "isVirtual",
+      tc."wrTestDayCount" as "testDayCount",
+      tc."wrOnfieldUmpires" as "onfieldUmpires",
+      tc."wrThirdUmpire" as "thirdUmpire",
+      tc."wrMatchReferee" as "matchReferee",
+      tc."wrSession" as "session",
+      tc."wrBallDelay" as "ballDelay",
+      tc."wrOverDelay" as "overDelay",
+      tc."wrInningDelay" as "inningDelay",
+      tc."wrTossDelay" as "tossDelay",
+      tc."wrPythonId" as "pythonId",
+      tc."wrPythonURI" as "pythonURI",
+      tc."wrCancelTime" as "cancelTime"
+      from "tblCommentaries" tc
+      left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
+      left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
+      LEFT JOIN "tblMatchTypes" mt ON tc."wrMatchTypeId" = mt."wrMatchTypeId"
+      LEFT JOIN "tblMatchTypes" mt2 ON tc."wrHistoryMatchTypeId" = mt2."wrMatchTypeId"
+      LEFT JOIN "tblEventTypes" tet ON tc."wrEventTypeId" = tet."wrEventTypeId"
+      LEFT JOIN "tblCompetitions" co ON tc."wrCompetitionId" = co."wrCompetitionId"
+      LEFT JOIN "tblUsers" tu ON tc."wrCreatedBy" = tu."WrUserId"
+      WHERE tc."wrIsDelete" = FALSE
+      AND tc."wrCommentaryId" = ANY($1)
+      AND (
+        tc."wrCommentaryStatus" != 4
+        OR (tc."wrCommentaryStatus" = 4 AND tc."wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days')
+      )
+      AND (
+        tc."wrCancelTime" IS NULL
+        OR tc."wrCancelTime" >= NOW() - INTERVAL '7 days'
+      );`,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind : [
+          commentaryIds
+        ]
+      }
+    );
+    let comId = com.map((item) => item.commentaryId);
+    if (comId.length === 0) {
+      return {
+        com : [],
+        comTeams : [],
+        comPlayers : []
+      }
+    }
+    let comTeams = await fastify.db.query(
+    `select 
+        tct."wrCommentaryTeamId" as "commentaryTeamId",
+        tct."wrCommentaryId" as "commentaryId",
+        tct."wrTeamId" as "teamId",
+        tct."wrShortName" as "shortName",
+        tct."wrTeamName" as "teamName",
+        tct."wrTeamCaptain" as "teamCaptain",	
+        tct."wrTeamKipper" as "teamKipper",
+        tct."wrTeamScore" as "teamScore",
+        tct."wrTeamOver" as "teamOver",
+        tct."wrTeamWicket" as "teamWicket",
+        COALESCE(CAST(tct."wrCrr" AS FLOAT), 0) AS "crr",
+        COALESCE(CAST(tct."wrRrr" AS FLOAT), 0) AS "rrr",
+        tct."wrTeamStatus" as "teamStatus",
+        tct."wrTeamTrialRuns" as "teamTrialRuns",
+        tct."wrTeamLeadRuns" as "teamLeadRuns",
+        tct."wrTeamWideRuns" as "teamWideRuns",
+        tct."wrTeamByRuns" as "teamByRuns",
+        tct."wrTeamLegByRuns" as "teamLegByRuns",
+        tct."wrTeamNoBallRuns" as "teamNoBallRuns",
+        tct."wrTeamPenaltyRuns" as "teamPenaltyRuns",
+        tct."wrIsWin" as "isWin",
+        tct."wrTeamBattingOrder" as "teamBattingOrder",
+        tct."wrCurrentInnings" as "currentInnings", 
+        tct."wrIsBattingComplete" as "isBattingComplete",
+        tct."wrCommentaryPlayerTeamCaptain" as "commentaryPlayerTeamCaptain",
+        tct."wrCommentaryPlayerTeamKipper" as "commentaryPlayerTeamKipper",
+        tct."wrTeamColor" as "teamColor",
+        tct."wrBackgroundColor" as "backgroundColor",
+        tct."wrTeamMaxOver" as "teamMaxOver",
+        tct."wrIsSuperOver" as "isSuperOver",
+        tct."wrTeamPredictionPercentage" as "teamPredictionPercentage",
+        tct."wrDrsCount" as "drsCount",
+        tct."wrNoOfAttempt" as "drsAttempt",
+        tct."wrNoOfFail" as "drsFail",
+        tct."wrSubInning" as "subInning",
+        tct."wrTpId" as "tpId"
+    FROM "tblCommentaryTeams" AS tct
+    WHERE tct."wrCommentaryId" =ANY($1)
+    AND tct."wrIsDelete" = FALSE;`,
+    {
+      type: fastify.db.QueryTypes.SELECT,
+      bind : [
+        comId
+      ]
+    })
+    let comPlayers = await await fastify.db.query(
+    `select
+        tcp."wrCommentaryPlayerId" as "commentaryPlayerId",
+        tcp."wrCommentaryId" as "commentaryId",
+        tcp."wrTeamId" as "teamId",
+        tcp."wrPlayerId" as "playerId",
+        tcp."wrPlayerName" as "playerName",
+        tcp."wrDisplayOrder" as "displayOrder",
+        tcp."wrBat_Status" as "batStatus",
+        tcp."wrBat_Run" as "batRun",
+        tcp."wrBat_Ball" as "batBall",
+        tcp."wrBat_DotBall" as "batDotBall",
+        tcp."wrBat_FOUR" as "batFour",
+        tcp."wrBat_SIX" as "batSix",
+        tcp."wrBat_SRR" as "batSrr",
+        tcp."wrBat_BattingOrder" as "battingOrder",
+        tcp."wrBat_IsPlay" as "isPlay",
+        tcp."wrBat_OnStrike" as "onStrike",
+        tcp."wrBat_WicketType" as "wicketType",
+        tcp."wrBat_BowlerID" as "bowlerId",
+        tcp."wrBat_FielderID1" as "fielderId1",
+        tcp."wrBat_FielderID2" as "fielderId2",
+        tcp."wrBowler_Over" as "bowlerOver",
+        tcp."wrBowler_CurrentBall" as "bowlerCurrentBall",
+        tcp."wrBowler_TotalBall" as "bowlerTotalBall",
+        tcp."wrBowler_Run" as "bowlerRun",
+        tcp."wrBowler_DotBall" as "bowlerDotBall",
+        tcp."wrBowler_MaidenOver" as "bowlerMaidenOver",
+        tcp."wrBowler_FOUR" as "bowlerFour",
+        tcp."wrBowler_SIX" as "bowlerSix",
+        tcp."wrBowler_WideBall" as "bowlerWideBall",
+        tcp."wrBowler_NOBall" as "bowlerNoBall",
+        tcp."wrBowler_ByeBall" as "bowlerByeBall",
+        tcp."wrBowler_LegByeBall" as "bowlerLegByeBall",
+        tcp."wrBowler_WideBallRun" as "bowlerWideBallRun",
+        tcp."wrBowler_NOBallRun" as "bowlerNoBallRun",
+        tcp."wrBowler_ByeBallRun" as "bowlerByeBallRun",
+        tcp."wrBowler_LegByeBallRun" as "bowlerLegByeBallRun",
+        tcp."wrBowler_TotalWicket" as "bowlerTotalWicket",
+        tcp."wrBowler_Economy" as "bowlerEconomy",
+        tcp."wrBowler_OnStrike" as "bowlerOnStrike",
+        tcp."wrBowler_PeneltyRun" as "bowlerPeneltyRun",
+        tcp."wrIsBatter_Out" as "isBatterOut",
+        tcp."wrIsBatter_Retir" as "isBatterRetir",
+        tcp."wrSwapName" as "swapName",
+        tcp."wrBatsmanAverage" as "batsmanAverage",
+        tcp."wrBatsmanStrikeRate" as "batsmanStrikeRate",
+        tcp."wrBowlerEconomy" as "bowlerEconomy",
+        tcp."wrBowlerAverage" as "bowlerAverage",
+        tcp."wrCurrentInnings" as "currentInnings",
+        tcp."wrBatterOrder" as "batterOrder",
+        tcp."wrBowlerOrder" as "bowlerOrder",
+        tcp."wrBatsmanPreviousStrikeRate"::DOUBLE PRECISION as "batsmanPreviousStrikeRate",
+        tcp."wrBowlerPreviousEconomy"::DOUBLE PRECISION as "bowlerPreviousEconomy",
+        tcp."wrIsInPlayingEleven" as "isInPlayingEleven",
+        tcp."wrBoundary" as "boundary",
+        tcp."wrPlayerBallFaced" as "playerBallFaced",
+        tp."wrPlayerTypeId" as "playerTypeId",
+        tpt."wrPlayerType" as "playerType",
+        tcp."wrJerseyPlayerImage" as "jerseyPlayerImage",
+        tcp."wrJerseyPlayerImagePath" as "jerseyPlayerImagePath",
+        tcp."wrTpId" as "tpId"
+    from "tblCommentaryPlayers" AS tcp
+    LEFT JOIN "tblPlayers" AS tp ON tcp."wrPlayerId" = tp."wrPlayerId"
+    LEFT JOIN "tblPlayerTypes" AS tpt ON tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
+    WHERE tcp."wrCommentaryId" =ANY($1)
+        AND tcp."wrIsDelete" = FALSE
+    `,
+    {
+      type: fastify.db.QueryTypes.SELECT,
+      bind : [
+        comId
+      ]
+    }
+    );
+
+    return {
+      com,
+      comTeams, 
+      comPlayers
+    }
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCommentary/getComEntityQuery",
+      request
+    );
+    return true;
+  }
+};
+const updateCommPlayersImagePathQuery = async (data, fastify) => {
+  try {
+    return await fastify.db.query(
+      `UPDATE "tblCommentaryPlayers" SET
+        "wrJerseyPlayerImage" = $3,
+        "wrJerseyPlayerImagePath" = $4
+      WHERE
+        "wrPlayerId" = $1 AND "wrTeamId" = $2 AND "wrIsDelete" = FALSE`,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [data.playerId, data.teamId, data.jerseyPlayerImage, data.jerseyPlayerImagePath],
+      }
+    );
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCommentary/updateCommPlayersImagePathQuery",
+      null
+    );
+    throw new Error(error.message);
+  }
+};
+const getMatchTypeTemplateByComIdQuery = async (data,request, fastify) => {
+  try {
+    let r1 = await fastify.db.query(
+      `
+        SELECT  
+          tcm."wrId" as "id",
+          "wrCommentaryId" as "commentaryId",
+          "wrMarketTemplateId" as "marketTemplateId",
+          tmt."wrTemplateName" as "templateName",
+          tmt1."wrId" as "marketTypeId",
+          tmc."wrId" as "marketTypeCategoryId",
+          "wrMarketTypeName" as "marketTypeName",
+          "wrCategoryName" as "categoryName"
+        FROM "tblCommMatchTypeTemplate" tcm
+        LEFT JOIN "tblMarketTemplates" tmt ON tcm."wrMarketTemplateId" = tmt."wrID"
+        LEFT JOIN "tblMarketTypes" tmt1 ON tmt."wrMarketTypeId" = tmt1."wrId"
+        LEFT JOIN "tblMarketTypeCategories" tmc ON tmt."wrMarketTypeCategoryId" = tmc."wrId"
+        WHERE tcm."wrCommentaryId" = $1
+        AND tmt."wrIsDeleted" = false
+        AND tmt."wrIsActive" = true
+        ORDER BY tmc."wrDisplayOrder" ASC, tmt."wrTemplateName" ASC;
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [data.commentaryId],
+      }
+    );
+
+    let r2 = await fastify.db.query(
+      `
+        SELECT 
+          tmtt."wrMarketTemplateId" as "marketTemplateId",
+          tmt."wrDevTemplateName" as "devTemplateName",
+          tmt."wrTemplateName" as "templateName",
+          tmt1."wrId" as "marketTypeId",
+          tmt1."wrMarketTypeName" as "marketTypeName",
+          tmc."wrId" as "marketTypeCategoryId",
+          tmc."wrCategoryName" as "categoryName"
+        FROM "tblMatchTypeTemplates" tmtt
+        LEFT JOIN "tblMarketTemplates" tmt ON tmt."wrID" = tmtt."wrMarketTemplateId"
+        LEFT JOIN "tblMarketTypes" tmt1 ON tmt."wrMarketTypeId" = tmt1."wrId"
+        LEFT JOIN "tblMarketTypeCategories" tmc ON tmt."wrMarketTypeCategoryId" = tmc."wrId"
+        WHERE tmt."wrIsDeleted" = false
+        AND tmtt."wrMatchTypeId" = $1
+        AND tmt."wrIsActive" = true
+        AND tmtt."wrMarketTemplateId" NOT IN (
+          SELECT "wrMarketTemplateId" FROM "tblCommMatchTypeTemplate" WHERE "wrCommentaryId"= $2
+        ) 
+        ORDER BY tmc."wrDisplayOrder" ASC, tmt."wrTemplateName" ASC;
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [data.matchTypeId, data.commentaryId],
+      }
+    );
+    return {
+      assignedTemplates: r1,
+      unassignedTemplates: r2,
+    }
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCommentary/getMatchTypeTemplateByComIdQuery",
+      request
+    );
+    throw new Error(error.message);
+    
+  }
+}
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -5317,5 +7991,35 @@ module.exports = {
   updateCommentaryTeamDrsAttemptsAndFailQuery,
   updateCommentaryTeamDrsAttemptsQuery,
   getCommentaryTeamsDRSQuery,
-  changeIsTestComQuery
+  changeIsTestComQuery,
+  changeIsEventStartQuery,
+  insertVirtualEventQuery,
+  virtualEventTossQuery,
+  insertVirtualCommentaryTeams,
+  insertVirtualCommentaryPlayers,
+  virtualEventTeamUpdateQuery,
+  virtualPlayersSelectQuery,
+  virtualEventBallStartQuery,
+  getAllDifficulties,
+  createvirtualPartnershipQuery,
+  createVirtualOverQuery,
+  createVirtualBallByBallQuery,
+  virtualTeamRunsQuery,
+  virtualPlayerRunsQuery,
+  updateVirtualPartnershipQuery,
+  updateVirtualBallByBallQuery,
+  updateVirtualOverQuery,
+  createVirtualWicketQuery,
+  addCompTempQuery,
+  insertCommentaryWithImportQuery,
+  insertCommentaryTeamsOnImportQuery,
+  updatePitchageAndSessionQuery,
+  cancelComQuery,
+  updatePythonAPIOnCommentaryQuery,
+  updateDrsQuery,
+  getAllCommByCompIdQuery,
+  updateEventTypeAndCompIdQuery,
+  updateCommPlayersImagePathQuery,
+  getComEntityQuery,
+  getMatchTypeTemplateByComIdQuery,
 };

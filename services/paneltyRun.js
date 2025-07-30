@@ -3,6 +3,7 @@ const {
   updatePaneltyRunQuery,
   deletePaneltyRunQuery,
 } = require("../repository/TablePaneltyRun");
+const { trimTextData } = require("../utilities/index");
 
 const allPaneltyRunsService = async (request) => {
   const { isActive } = request.body;
@@ -28,6 +29,12 @@ const paneltyRunByIdService = async (request) => {
 };
 
 const insertPaneltyRunService = async (request, fastify) => {
+  const trimData = await trimTextData({
+    desc: request.body?.desc
+  }, request, fastify);
+  if(trimData) {
+    Object.assign(request.body, trimData);
+  }
   const result = await insertPaneltyRunQuery(
     { ...request.body, userId: request.userTokenInfo.WrUserId },
     fastify,
@@ -45,6 +52,14 @@ const updatePaneltyRunService = async (request, fastify) => {
 
   if (!checkId) {
     throw new Error("Panelty Run with this id not Found");
+  }
+
+  const trimData = await trimTextData({
+    desc: request.body?.desc
+  }, request, fastify);
+  
+  if(trimData) {
+    Object.assign(request.body, trimData);
   }
 
   const body = {

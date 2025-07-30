@@ -3,7 +3,7 @@ const {
   updateConfigQuery,
   deleteConfigQuery,
 } = require("../repository/TableConfig");
-const { callClientAPI, ServiceType, APIEndpointModuleType } = require("../utilities");
+const { callClientAPI, ServiceType, APIEndpointModuleType, callEntitySportAPI } = require("../utilities");
 const configConstants = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
 const { generateImageName, storeImageOnServer } = require("../utilities/Images");
@@ -66,6 +66,26 @@ const createConfigService = async (request, fastify) => {
         fastify,
         err.message,
         "API ERROR --> services/config/createConfigService",
+        request
+      )
+    });
+    callEntitySportAPI(
+      {
+        serviceType: ServiceType.entitySport,
+        moduleType: APIEndpointModuleType.configUpdate,
+        data: {
+          module : "config",
+          type : "add",
+          data : data
+        }
+      },
+      request,
+      fastify
+    ).catch((err) => {
+      errorLogger(
+        fastify,
+        err.message,
+        "API ERROR --> services/config/createConfigService - callEntitySportAPI",
         request
       )
     });
@@ -136,6 +156,28 @@ const updateConfigService = async (request, fastify) => {
         request
       )
     });
+
+    callEntitySportAPI(
+      {
+        serviceType: ServiceType.entitySport,
+        moduleType: APIEndpointModuleType.configUpdate,
+        data: {
+          module : "config",
+          type : "update",
+          data : data
+        }
+      },
+      request,
+      fastify
+    ).catch((err) => {
+      errorLogger(
+        fastify,
+        err.message,
+        "API ERROR --> services/config/createConfigService - callEntitySportAPI",
+        request
+      )
+    });
+
   return data;
 };
 
@@ -175,6 +217,26 @@ const deleteConfigService = async (request, fastify) => {
       request
     )
   });
+  callEntitySportAPI(
+      {
+        serviceType: ServiceType.entitySport,
+        moduleType: APIEndpointModuleType.configUpdate,
+        data: {
+          module : "config",
+          type : "delete",
+          data : configId
+        }
+      },
+      request,
+      fastify
+    ).catch((err) => {
+      errorLogger(
+        fastify,
+        err.message,
+        "API ERROR --> services/config/createConfigService - callEntitySportAPI",
+        request
+      )
+    });
 
   return `Config(s) deleted successfully`;
 };
@@ -188,10 +250,17 @@ const allConfigDetails = async (request) => {
   return result
 };
 const getInitConfigDetails = async (request,fastify) => {
-  const initKeys = [configConstants.DPAPIURL, configConstants.DPAPIXKEY , configConstants.DPSOCKETURL, configConstants.SCORECARDFRAMEURL, configConstants.ENABLELOGROCKET, configConstants.LOGROCKETAPPID];
+  const initKeys = [configConstants.DPAPIURL, configConstants.DPAPIXKEY , configConstants.DPSOCKETURL, configConstants.SCORECARDFRAMEURL, configConstants.ENABLELOGROCKET, configConstants.LOGROCKETAPPID ,
+     configConstants.ISAPPLYPLAYERSTRIKELOGIC , configConstants.ISAPPLYPARTNERSHIPLOGIC, configConstants.ENTITYSPORTURL];
   let result = global.tblConfigs.filter(item => initKeys.includes(item.key));
   return result;
 }
+const getAllConfigService = async (request, fastify) => {
+  const validKeys = ['repetitioncallinterval', 'ismarketrepetitioncall'];
+  return global.tblConfigs.filter(item =>
+    validKeys.includes(item.key.toLowerCase())
+  );
+};
 
 module.exports = {
   allCongifService,
@@ -199,5 +268,6 @@ module.exports = {
   saveConfigService,
   deleteConfigService,
   allConfigDetails,
-  getInitConfigDetails
+  getInitConfigDetails,
+  getAllConfigService,
 };

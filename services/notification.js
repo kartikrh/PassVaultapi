@@ -62,22 +62,24 @@ const createNotificationService = async(request,fastify)=>{
     let imgUrl , iconUrl;
 
     if(image && image.length){ 
-        imgUrl = await storeImageOnServer({
+        const { fullPath, imagePath } = await storeImageOnServer({
             image : image[0],
             project : projectName,
             name : `${name}-${new Date().getTime()}`,
             ...ImgModuleConfig.Notification
         })
-        request.body.image = imgUrl;
+        request.body.image = fullPath;
+        request.body.imagePath = imagePath;
     }
     if(request.body.icon && request.body.icon.length){
-        iconUrl = await storeImageOnServer({
+        const { fullPath, imagePath } = await storeImageOnServer({
             image : icon[0],
             project : projectName,
             name : `${name}-icon-${new Date().getTime()}`,
             ...ImgModuleConfig.Notification
         })
-        request.body.icon = iconUrl;
+        request.body.icon = fullPath;
+        request.body.iconPath = imagePath;
     }
 
     let data = await insertNotificationQuery({
@@ -126,13 +128,14 @@ const updateNotificationService =  async (request,fastify)=>{
                 path : global.tblNotifications[index].image
             })
         }
-        let path = await storeImageOnServer({
+        const { fullPath, imagePath } = await storeImageOnServer({
             image : image[0],
             project : projectName,
             name : `${imgName}-${new Date().getTime()}`,
             ...ImgModuleConfig.Notification
         })
-        request.body.image = path
+        request.body.image = fullPath
+        request.body.imagePath = imagePath
     }
     if(icon && icon.length){
         if(global.tblNotifications[index].icon){
@@ -140,13 +143,14 @@ const updateNotificationService =  async (request,fastify)=>{
                 path : global.tblNotifications[index].icon
             })
         }
-        let path = await storeImageOnServer({
+        const { fullPath, imagePath } = await storeImageOnServer({
             image : icon[0],
            project : projectName,
            name : `${imgName}-icon-${new Date().getTime()}`,
            ...ImgModuleConfig.Notification
         })
-        request.body.icon = path
+        request.body.icon = fullPath
+        request.body.iconPath = imagePath
     }
     
     let data = await updateNotificationQuery({

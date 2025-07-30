@@ -6,7 +6,7 @@ const {
   createUserLoginInfo,
   checkValidQuery,
 } = require("../repository/TableUser");
-const { roleByTabService } = require("./roles");
+const { roleByTabService, multiRoleService } = require("./roles");
 
 async function authorization(request, fastify) {
   const wrInfo = deviceInfo(request);
@@ -61,6 +61,22 @@ const permissionCheckService = async (request, fastify, data) => {
   return true;
 };
 
+const multiTabPermissionCheckService = async (request, fastify, data) => {
+  const permission = await multiRoleService(request, fastify, data.tabName);
+
+  if (data.mode === "view" && !permission.isViewPermission) {
+    throw new Error("You don't have permission to view");
+  } else if (data.mode === "add" && !permission.isAddPermission) {
+    throw new Error("You don't have permission to add");
+  } else if (data.mode === "edit" && !permission.isEditPermission) {
+    throw new Error("You don't have permission to edit");
+  } else if (data.mode === "delete" && !permission.isDeletePermission) {
+    throw new Error("You don't have permission to delete");
+  }
+
+  return true;
+};
+
 async function XKeyConfigForExtrnal(request, fastify){
   try {
       // check header has x-key or not
@@ -85,9 +101,24 @@ async function XKeyConfigForExtrnal(request, fastify){
       throw new Error(error.message);
   }
 }
+const XKeyVirtual = async (request, fastify) => {
+  try {
+    // const xKey = request.headers['x-key'];
 
+    // if (!xKey) {
+    //     throw new Error('X-Key is missing in the header');
+    // }
+    return true;
+
+  } catch (error) {
+    console.log("XKeyVirtual Error:", error)
+    throw new Error(error.message);
+  }
+}
 module.exports = {
   authorization,
   permissionCheckService,
   XKeyConfigForExtrnal,
+  XKeyVirtual,
+  multiTabPermissionCheckService,
 };

@@ -1,4 +1,4 @@
-const { getMarketsByCommentaryIdService, getNotificationByClientService, markReadNotificationService,getMarketByGraphByRefIdService, getMarketsByCommentaryIdServiceV1 } = require("../../../../services/score");
+const { getMarketsByCommentaryIdService, getNotificationByClientService, markReadNotificationService,getMarketByGraphByRefIdService, getMarketsByCommentaryIdServiceV1, saveDeviceDataService } = require("../../../../services/score");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
 
@@ -50,10 +50,20 @@ const getMarketsByCommentaryIdV1 = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const saveDeviceData = async (request, reply, fastify) => {
+  try {
+    const result = await saveDeviceDataService(request , fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/saveDeviceData", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 module.exports = {
     getMarketsByCommentaryId,
     getNotificationByClient,
     markReadNotification,
     getMarketByGraphByRefId,
     getMarketsByCommentaryIdV1,
+    saveDeviceData
 }

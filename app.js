@@ -6,7 +6,7 @@ const fsequelize = require("fastify-sequelize");
 const dbPg = require("./sequelize/config/config")();
 const swagger = require("@fastify/swagger");
 const swaggerUi = require("@fastify/swagger-ui");
-const { fetchAllDataFromDb, FetchingCommentariesDataFromCron } = require("./utilities/fetchAllData");
+const { fetchAllDataFromDb, FetchingCommentariesDataFromCron, upcomingCommentaries } = require("./utilities/fetchAllData");
 // const fetchAllData = require("./utilities/fetchAllData");
 const { Server } = require("socket.io"); // Import Socket.IO
 const { connection, socketMiddleware } = require("./socketIo");
@@ -38,21 +38,25 @@ const webPush = require("web-push");
 const {webPushset} = require("./WebPushHandler/index.js");
 const { updateMarket } = require("./utilities/marketUpdate.js");
 const cron = require('node-cron');
-
+const { nodeProfilingIntegration } = require('@sentry/profiling-node');
+// const { nodeProfilingIntegration } = require("@sentry/profiling-node");
 // Pass --options via CLI arguments in command to enable these options.
 module.exports.options = {};
 global.tblData = {};
-
+global.marketData = {};
 if (process.env.ENABLE_SENTRY === "TRUE") {
   Sentry.init({
     dsn: process.env.SENTRY_DSN,
-    tracesSampleRate: 1.0,
-    integrations: [
-      // Add our Profiling integration
+    tracesSampleRate: 0.1,
+    integrations : [
       nodeProfilingIntegration(),
+      Sentry.postgresIntegration(),
+      Sentry.childProcessIntegration()
+      // ...Sentry.autoDiscoverNodePerformanceMonitoringIntegrations(),
     ],
     profileSessionSampleRate: 1.0,
     profileLifecycle: 'trace',
+    includeLocalVariables: true,
   });
 }
 process.on('uncaughtException', (error) => {
@@ -104,7 +108,7 @@ module.exports = async function (fastify, opts) {
         "newsModel", "subScribesDomainModel", "subScribesSubDomainModel", "matchTypePredictorModel", 
         "marketTemplateModel", "eventMarketsModel", "marketRunnerModel", "marketTemplateRunnerModel", 
         "vendorsModel", "vendorIpModel", "clientSocketModel", "activityLogModel", "mailSettingsModel", 
-        "thirdPartyApisModel", "commentaryScoringLogsModel", "clientVideoModel", "awardModel", "commentaryAwardModel",
+        "thirdPartyApisModel", "commentaryScoringLogsModel", "clientVideoModel", "awardModel", "commentaryAwardModel","cardTypeModel",
       ];
       
       models.forEach((model) => require(`./sequelize/tables/${model}`)(fastify.db));
@@ -128,6 +132,13 @@ module.exports = async function (fastify, opts) {
       try {
         // Fetching data from db every 24 hrs once(at midnight)
         await FetchingCommentariesDataFromCron(fastify);
+      } catch (error) {
+        console.error("Error during scheduled task:", error);
+      }
+    });
+    cron.schedule('* * * * *', async () => {
+      try {
+        await upcomingCommentaries(fastify);
       } catch (error) {
         console.error("Error during scheduled task:", error);
       }
@@ -259,27 +270,31 @@ module.exports = async function (fastify, opts) {
 
   fastify.addHook("onRequest", async (request, reply) => {
     // Record the request start time in nanoseconds
-    request.startTime = process.hrtime.bigint();
-    request.startTimeTimeStemp = new Date();
-    if (request.originalUrl.includes("/commentary/saveDetails") || request.originalUrl.includes("/commentary/saveCommentaryDetails")) {
-      // request.endTimeTimeStemp = new Date();
-      // new Promise((resolve, reject) => {
-      //   resolve(responseLogInDB(request, fastify));
-      // }).then ((res) => {
-      //   // console.log('res', res);
-      //   request.errId = res[0].errId;
-      // });
-      let result = await responseLogInDB(request, fastify);
-      request.errId = result[0]?.errId;
-    }
+    // request.startTime = process.hrtime.bigint();
+    // request.startTimeTimeStemp = new Date();
+    // if (request.originalUrl.includes("/commentary/saveDetails") || request.originalUrl.includes("/commentary/saveCommentaryDetails")) {
+    //   // request.endTimeTimeStemp = new Date();
+    //   // new Promise((resolve, reject) => {
+    //   //   resolve(responseLogInDB(request, fastify));
+    //   // }).then ((res) => {
+    //   //   // console.log('res', res);
+    //   //   request.errId = res[0].errId;
+    //   // });
+    //   let result = await responseLogInDB(request, fastify);
+    //   request.errId = result[0]?.errId;
+    // }
 
     if (process.env.ENABLE_SENTRY === "TRUE") {
-      const transaction = Sentry.startTransaction({
-        name: `${request.method} ${request.url}`,
-        op: "http.server",
-        description: "HTTP request",
-      });
-      request.sentryTx = transaction;
+      Sentry.startSpan(
+        {
+          name: `${request.method} ${request.url}`,
+          op: "http.server",
+          description: "Incoming HTTP request",
+        },
+        (span) => {
+          request.sentrySpan = span;
+        }
+      );
     }
 
     // done();
@@ -290,7 +305,10 @@ module.exports = async function (fastify, opts) {
     const originalUrl = request.originalUrl; // get original url
     const urlDestructor = originalUrl.split("/"); // split original url
     const urlLastParameter = [...urlDestructor].pop().split(".");
-    const urlExceptions = ["/documentation/json", "/documentation"];
+    const urlExceptions = ["/documentation/json", "/documentation", "/admin/virtual/createEvent",
+      "/admin/virtual/eventToss", "/admin/virtual/eventBallStart", "/admin/virtual/eventScoring",
+      "/admin/virtual/eventSuffle", "/admin/virtual/cancelEvent","/admin/virtual/serverTime"
+    ];
 
     if (
       urlLastParameter.length === 1 &&
@@ -326,12 +344,29 @@ module.exports = async function (fastify, opts) {
     }
 
     if (process.env.ENABLE_SENTRY === "TRUE") {
-      const transaction = Sentry.startTransaction({
-        name: `${request.method} ${request.url}`,
-        op: "http.server",
-        description: "HTTP request",
-      });
-      request.sentryTx = transaction;
+      // const transaction = Sentry.startTransaction({
+      //   name: `${request.method} ${request.url}`,
+      //   op: "http.server",
+      //   description: "HTTP request",
+      // });
+      // request.sentryTx = transaction;
+      Sentry.startSpan(
+        {
+          name: `${request.method} ${request.url}`,
+          op: "http.server",
+          description: "Incoming HTTP request",
+        },
+        (span) => {
+          request.sentrySpan = span;
+        }
+      );
+      // const span = Sentry.startSpan({
+      //   name: `${request.method} ${request.url}`,
+      //   op: "http.server",
+      //   description: "HTTP request",
+      // });
+
+      // request.sentrySpan = span;
     }
 
     done(null, newPayload);
@@ -339,16 +374,16 @@ module.exports = async function (fastify, opts) {
 
   fastify.addHook("onResponse", (request, reply, done) => {
     const logger = false;
-    const responseTimeInNanoseconds =
-      process.hrtime.bigint() - request.startTime;
-    const responseTimeInMilliseconds = Number(responseTimeInNanoseconds) / 1e6;
-    request.responseTime = responseTimeInMilliseconds;
+    // const responseTimeInNanoseconds =
+    //   process.hrtime.bigint() - request.startTime;
+    // const responseTimeInMilliseconds = Number(responseTimeInNanoseconds) / 1e6;
+    // request.responseTime = responseTimeInMilliseconds;
 
-    // if path include /commentary then do log in db
-    if (request.originalUrl.includes("/commentary/saveDetails")) {
-      request.endTimeTimeStemp = new Date();
-      responseLogInDB(request, fastify);
-    }
+    // // if path include /commentary then do log in db
+    // if (request.originalUrl.includes("/commentary/saveDetails")) {
+    //   request.endTimeTimeStemp = new Date();
+    //   responseLogInDB(request, fastify);
+    // }
 
     if (request.startTime && logger) {
       responseLogger(request);
@@ -481,7 +516,7 @@ module.exports = async function (fastify, opts) {
   });
 
   fastify.setErrorHandler(function (err, request, reply) {
-    console.error("err",err);
+    // console.error("err",err);
     if (process.env.ENABLE_SENTRY === "TRUE") {
       Sentry.captureException(err);
     }

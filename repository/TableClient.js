@@ -1,3 +1,4 @@
+const { errorLogger } = require("../utilities/logger");
 
 const getAllClientQuery = async (fastify) => {
   return await fastify.db.query(
@@ -16,7 +17,10 @@ const getAllClientQuery = async (fastify) => {
               "wrIsActive" as "isActive",
               "wrIsEmailVerified" AS "isEmailVerified",
               "wrIsMobileVerified" AS "isMobileVerified",
-              "wrCountryCode" as "countryCode"
+              "wrCountryCode" as "countryCode",
+              "wrSeamlessToken" as "seamlessToken",
+              "wrCreatedDate" as "createdDate",
+              "wrPassword" as "password"
         from "tblClient"
         where "wrIsDelete" = false
         `,
@@ -26,7 +30,7 @@ const getAllClientQuery = async (fastify) => {
   );
 };
 
-const deleteClientQuery = async (data, request, fastify) => {
+const deleteClientQuery = async (clientId, request, fastify) => {
   try {
     return await fastify.db.query(
       `
@@ -38,7 +42,7 @@ const deleteClientQuery = async (data, request, fastify) => {
       `,
       {
         type: fastify.db.QueryTypes.UPDATE,
-        bind: [true, request.userTokenInfo.WrUserId, request.body.clientId],
+        bind: [true, request.userTokenInfo.WrUserId ? request.userTokenInfo.WrUserId : null, clientId],
       }
     );
   } catch (err) {
@@ -71,9 +75,10 @@ const insertClientQuery = async (data, request, fastify) => {
                         "wrProvider",
                         "wrIsActive",
                         "wrCreatedBy",
-                        "wrCreatedDate"
+                        "wrCreatedDate",
+                        "wrPassword"
                     )
-                values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, now()) returning *
+                values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, now(), $14) returning *
                 )
                 select 
                     "wrClientID" as "clientId",
@@ -89,7 +94,9 @@ const insertClientQuery = async (data, request, fastify) => {
                     "wrIsUserActive" as "isUserActive",
                     "wrProvider" as "provider",
                     "wrIsActive" as "isActive",
-                    "wrCountryCode" as "countryCode"
+                    "wrCountryCode" as "countryCode",
+                    "wrCreatedDate" as "createdDate",
+                    "wrPassword" as "password"
                 from "insert_data"
             `,
       {
@@ -108,6 +115,7 @@ const insertClientQuery = async (data, request, fastify) => {
           data.provider,
           data.isActive || false,
           request.userTokenInfo.WrUserId,
+          data.password || null
         ],
       }
     );
@@ -140,7 +148,8 @@ const updateClientQuery = async (data, request, fastify) => {
                 "wrProvider" = $11,
                 "wrIsActive" = $12,
                 "wrModifyBy" = $13,
-                "wrModifyDate" = now()
+                "wrModifyDate" = now(),
+                "wrPassword" = $15
                 where "wrClientID" = $14
             `,
       {
@@ -158,7 +167,8 @@ const updateClientQuery = async (data, request, fastify) => {
           data.provider,
           data.isActive || false,
           request.userTokenInfo.WrUserId,
-          data.clientId
+          data.clientId,
+          data.password
         ],
       }
     );
@@ -264,7 +274,90 @@ const clientMobileVerifyQuery = async (data, request, fastify) => {
     throw new Error(err.message);
   }
 };
+const deleteClientEncryptQuery = async (data, request, fastify) => {
+  try {
+    let query = `
+      UPDATE "tblClient" SET
+        "wrIsDelete" = $1,
+        "wrDeletedBy" = $2,
+        "wrDeletedAt" = now()
+      WHERE "wrClientID" IN 
+      (SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = ANY($3))
+      AND "wrIsDelete" = false
+      RETURNING "wrClientID" as "clientId";
+    `;
+    const result = await fastify.db.query(query, {
+      bind: [true, request.userTokenInfo?.WrUserId ? request.userTokenInfo?.WrUserId : null, data.clientId],
+      type: fastify.db.QueryTypes.UPDATE,
+    });
+    return result[0];
 
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableClient/deleteClientEncryptQuery",
+      request
+    );
+    throw new Error(err.message); 
+  }
+}
+const addClientDltReqQuery = async (data, request, fastify) => {
+  try {
+    // Check if the clientId is already in the table
+    const checkQuery = `
+      SELECT COUNT(*) as count FROM "tblClientDltReq" WHERE "wrClientId" = $1
+    `;
+    const checkResult = await fastify.db.query(checkQuery, {
+      bind: [data.clientId],
+      type: fastify.db.QueryTypes.SELECT,
+    });
+    if (checkResult[0].count > 0) {
+      return true;
+    }
+    const query = `
+      INSERT INTO "tblClientDltReq" (
+        "wrClientId",
+        "wrCreatedAt"
+      )
+      VALUES ($1, now())
+    `;
+    const result = await fastify.db.query(query, {
+      bind: [data.clientId],
+      type: fastify.db.QueryTypes.INSERT,
+    });
+    return result[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableClient/addClientDltReqQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+}
+const getIdByEncrypt = async (data, request, fastify) => {
+  // console.log("data", data)
+  try {
+    let query = `
+      SELECT "wrKey" as "clientId"
+       FROM "tblEncryptedData" WHERE "wrValue" = $1`;
+    const result = await fastify.db.query(query, {
+      bind: [data.clientId],
+      type: fastify.db.QueryTypes.SELECT,
+    });
+    return result[0];
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableClient/getIdByEncrypt",
+      request
+    );
+    throw new Error(error.message);
+  }
+}
 module.exports = {
   getAllClientQuery,
   insertClientQuery,
@@ -273,5 +366,8 @@ module.exports = {
   activeInactiveClientQuery,
   isUserActiveInactiveQuery,
   clientEmailVerifyQuery,
-  clientMobileVerifyQuery
+  clientMobileVerifyQuery,
+  deleteClientEncryptQuery,
+  addClientDltReqQuery,
+  getIdByEncrypt
 };

@@ -6,7 +6,8 @@ const getAllTeamCompetitionQuery = async (fastify) => {
         tp."wrTeamCompetitionId" as "teamCompetitionId",
         tp."wrTeamId" as "teamId",
         tp."wrRefCompetitionId" as "refCompetitionId",
-        "wrCompetitionOrder" as "competitionOrder"
+        "wrCompetitionOrder" as "competitionOrder",
+        tp."wrTpId" as "tpId"
          from "tblTeamCompetition" tp left join "tblEncryptedData" te on tp."wrTeamCompetitionId" = te."wrKey"
          left join "tblEncryptedData" te2 on tp."wrTeamId" = te2."wrKey"
          left join "tblEncryptedData" te3 on tp."wrRefCompetitionId" = te3."wrKey"
@@ -24,8 +25,8 @@ const insertTeamCompetitionQuery = async (data, fastify, request) => {
       select COALESCE(max("wrCompetitionOrder"),0) as "competitionOrder" from "tblTeamCompetition" where "wrTeamId" =$1
     ),
     insert_team_competition as (
-      insert into "tblTeamCompetition" ("wrTeamId", "wrRefCompetitionId", "wrCompetitionOrder","wrCreatedDate", "wrCreatedBy")
-      values ($1,$2, (  select "competitionOrder" from display_order) + 1, $3, $4)
+      insert into "tblTeamCompetition" ("wrTeamId", "wrRefCompetitionId", "wrCompetitionOrder","wrCreatedDate", "wrCreatedBy", "wrTpId")
+      values ($1,$2, (  select "competitionOrder" from display_order) + 1, $3, $4, $5)
       returning *
     )
 
@@ -33,12 +34,13 @@ const insertTeamCompetitionQuery = async (data, fastify, request) => {
         "wrTeamCompetitionId" as "teamCompetitionId",
         "wrTeamId" as "teamId",
         "wrRefCompetitionId" as "refCompetitionId",
-        "wrCompetitionOrder" as "competitionOrder"
+        "wrCompetitionOrder" as "competitionOrder",
+        "wrTpId" as "tpId"
          from "insert_team_competition"
 
     `,
       {
-        bind: [data.teamId, data.refCompetitionId, new Date(), data.userId],
+        bind: [data.teamId, data.refCompetitionId, new Date(), data.userId, data.tpId || null],
         type: fastify.db.QueryTypes.SELECT,
       }
     );

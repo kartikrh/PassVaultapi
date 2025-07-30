@@ -8,7 +8,7 @@ const { ImgModuleConfig } = require("./imageConstant");
 const { errorLogger } = require("./logger");
 const axios = require("axios");
 const { updateTeamPlayerImageQuery } = require("../repository/TableTeamPlayer");
-const { updateCommentaryPlayerJerseyImageQuery } = require("../repository/TableCommentary");
+const { updateCommentaryPlayerJerseyImageQuery, updateCommPlayersImagePathQuery } = require("../repository/TableCommentary");
 const sharp = require("sharp");
 
 
@@ -133,21 +133,29 @@ const mergeAndSaveImage = async (data, fastify) => {
       mimetype: "image/png",
       limit: false,
     }
-    const imagePath = await storeImageOnServer({
+    const { fullPath, imagePath } = await storeImageOnServer({
       image: bodyImage,
       project: projectName,
       name: imgName,
       ...ImgModuleConfig.PlayerAndJersey,
     });
     if(data.teamPlayerId){
-      await updateTeamPlayerImageQuery({ teamPlayerId: data.teamPlayerId, jerseyPlayerImage: imagePath }, fastify);
+      const updateData = await updateTeamPlayerImageQuery({ teamPlayerId: data.teamPlayerId, jerseyPlayerImage: fullPath, jerseyPlayerImagePath: imagePath }, fastify);
+      if (updateData && updateData.length > 0) {
+        const { refPlayerId, teamId } = updateData[0];
+        await updateCommPlayerImagePath(refPlayerId, teamId, fullPath, imagePath, fastify);
+      }
     }
 
     if(data.commentaryPlayerId){
-      await updateCommentaryPlayerJerseyImageQuery(
-        { commentaryPlayerId: data.commentaryPlayerId, jerseyPlayerImage: imagePath },
+      const updateData = await updateCommentaryPlayerJerseyImageQuery(
+        { commentaryPlayerId: data.commentaryPlayerId, jerseyPlayerImage: fullPath, jerseyPlayerImagePath: imagePath },
         fastify
       );
+      if (updateData && updateData.length > 0) {
+        const { playerId, teamId } = updateData[0];
+        await updateCommPlayerImagePath(playerId, teamId, fullPath, imagePath, fastify);
+      }
     }
   } catch (error) {
     console.log("mergeimage error", error)
@@ -157,6 +165,40 @@ const mergeAndSaveImage = async (data, fastify) => {
       "ERROR --> utilities/imageMerge.js/mergeAndSaveImage",
       null
     );
+  }
+};
+
+const updateCommPlayerImagePath = async (playerId, teamId, fullPath, imagePath, fastify) => {
+  if (!playerId || !teamId || !fullPath || !imagePath) {
+    return;
+  }
+
+  await updateCommPlayersImagePathQuery(
+    {
+      playerId,
+      teamId,
+      jerseyPlayerImage: fullPath,
+      jerseyPlayerImagePath: imagePath,
+    },
+    fastify
+  );
+
+  const commPlayerData = global.tblCommentaryPlayers.filter(
+    (item) => item.playerId === playerId && item.teamId === teamId
+  );
+
+  for (const commPlayer of commPlayerData) {
+    const index = global.tblCommentaryPlayers.findIndex(
+      (item) => item.commentaryPlayerId === commPlayer.commentaryPlayerId
+    );
+
+    if (index !== -1) {
+      global.tblCommentaryPlayers[index] = {
+        ...global.tblCommentaryPlayers[index],
+        jerseyPlayerImage: fullPath,
+        jerseyPlayerImagePath: imagePath,
+      };
+    }
   }
 };
 

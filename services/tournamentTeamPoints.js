@@ -7,8 +7,12 @@ const {
   deleteTournamentTeamPointsQuery,
   activeInactiveTournamentTeamPointsQuery,
   getTournamentPointsByTeamIdQuery,
-  updateTeamPointsQuery
+  updateTeamPointsQuery,
+  getClientTournamentTeamPointsQuery,
+  getTournamentTeamsByCompIdQuery,
 } = require("../repository/TableTournmentTeamPoints");
+const { callClientAPI, ServiceType, APIEndpointModuleType } = require("../utilities");
+const { errorLogger } = require("../utilities/logger")
 
 const allTournamentTeamPointsService = async (request, fastify) => {
   const { competitionId, teamId, groupId, isActive } = request.body;
@@ -52,9 +56,31 @@ const createTblTournamentTeamPointsService = async (request, fastify) => {
   if(existedValues){
     throw new Error("TeamId existed with this competitionId");
   }
+  request.body.tpId = validateTeamId?.tpId ?? null;
     
   const saveData = await insertTournamentTeamPointsQuery(request.body, fastify, request);
-
+  if (validateCompetitionId && validateCompetitionId.isActive == true) {
+    const res = await responseChangeService(saveData?.teamId, saveData?.competitionId);
+  
+    callClientAPI(
+     {
+        serviceType: ServiceType.clientAPI,
+        moduleType: APIEndpointModuleType.updateSeoModule,
+        data: {
+          module: 'tournamentTeamPoints',
+          type: "add",
+          data: { ...saveData, ...res}
+        }
+     }, request, fastify)
+    .catch((err) => {
+      errorLogger(
+        fastify,
+        err.message,
+        "services/tournamentTeamPoints.js/createTblTournamentTeamPointsService - callClientAPI",
+        request
+      );
+    });
+  }
   return saveData
 }
 
@@ -93,11 +119,32 @@ const updateTblTournamentTeamPointsService = async (request, fastify) => {
     netRunRate: request.body.netRunRate === undefined ? validateId.netRunRate : request.body.netRunRate,
     isActive: request.body.isActive === undefined ? validateId.isActive : request.body.isActive,
     id: request.body.id,
+    tpId: request.body.tpId === undefined ? validateId.tpId : request.body.tpId,
   };
 
   await updateTournamentTeamPointsQuery(updateData, fastify, request);
 
-
+  if (validateCompetitionId && validateCompetitionId.isActive == true) {
+    const res = await responseChangeService(updateData?.teamId, updateData?.competitionId);
+    callClientAPI(
+     {
+        serviceType: ServiceType.clientAPI,
+        moduleType: APIEndpointModuleType.updateSeoModule,
+        data: {
+          module: 'tournamentTeamPoints',
+          type: "update",
+          data: { ...updateData, ...res }
+        }
+     }, request, fastify)
+    .catch((err) => {
+      errorLogger(
+        fastify,
+        err.message,
+        "services/tournamentTeamPoints.js/updateTblTournamentTeamPointsService - callClientAPI",
+        request
+      );
+    });
+  }
   return updateData
 }
 
@@ -111,7 +158,42 @@ const saveTblTournamentTeamPointsService = async (request, fastify) => {
 
 const createTournamentTeamPointsService = async (newItems, fastify, request) => {
   const insertData = newItems.map(async (item) => {
+    const competitionData = global.tblCompetitions.find(
+      item => item.competitionId === item.competitionId
+    );
+    if(!competitionData){
+      throw new Error('CompetitionId does not existed');
+    }
+
+    const validateTeamId = global.tblTeams.find(
+      (elem) => elem.teamId === item.teamId
+    );
+    if(!validateTeamId){
+      throw new Error('TeamId does not existed');
+    }
     const saveData = await insertTournamentTeamPointsQuery(item, fastify, request);
+
+    if (competitionData && competitionData.isActive == true) {
+      const res = await responseChangeService(saveData?.teamId, saveData?.competitionId);
+      callClientAPI(
+       {
+          serviceType: ServiceType.clientAPI,
+          moduleType: APIEndpointModuleType.updateSeoModule,
+          data: {
+            module: 'tournamentTeamPoints',
+            type: "add",
+            data: { ...saveData, ...res }
+          }
+       }, request, fastify)
+      .catch((err) => {
+        errorLogger(
+          fastify,
+          err.message,
+          "services/tournamentTeamPoints.js/createTournamentTeamPointsService - callClientAPI",
+          request
+        );
+      });
+    }
   });
   await Promise.all(insertData);
   return `TournamentTeamPoints added successfully`;
@@ -125,6 +207,19 @@ const updateTournamentTeamPointsService = async (existingItems, fastify, request
     );
     if (!validateId) {
       throw new Error("TournamentTeamPoints Id not Found");
+    }
+    const competitionData = global.tblCompetitions.find(
+      item => item.competitionId === item.competitionId
+    );
+    if(!competitionData){
+      throw new Error('CompetitionId does not existed');
+    }
+
+    const validateTeamId = global.tblTeams.find(
+      (elem) => elem.teamId === item.teamId
+    );
+    if(!validateTeamId){
+      throw new Error('TeamId does not existed');
     }
 
     const updateData = {
@@ -140,9 +235,32 @@ const updateTournamentTeamPointsService = async (existingItems, fastify, request
       netRunRate: item.netRunRate || validateId.netRunRate,
       isActive: item.isActive || validateId.isActive,
       id: item.id,
+      tpId: item.tpId || validateId.tpId,
     };
 
     await updateTournamentTeamPointsQuery(updateData, fastify, request);
+
+    if (competitionData && competitionData.isActive == true) {
+      const res = await responseChangeService(updateData?.teamId, updateData?.competitionId);
+      callClientAPI(
+       {
+          serviceType: ServiceType.clientAPI,
+          moduleType: APIEndpointModuleType.updateSeoModule,
+          data: {
+            module: 'tournamentTeamPoints',
+            type: "update",
+            data: { ...updateData, ...res }
+          }
+       }, request, fastify)
+      .catch((err) => {
+        errorLogger(
+          fastify,
+          err.message,
+          "services/tournamentTeamPoints.js/updateTournamentTeamPointsService - callClientAPI",
+          request
+        );
+      });
+    }
 
   });
 
@@ -174,6 +292,28 @@ const deleteTournamentTeamPointsService = async (request, fastify) => {
     competitionId : competitionId
   }, request , fastify)
 
+  callClientAPI(
+   {
+      serviceType: ServiceType.clientAPI,
+      moduleType: APIEndpointModuleType.updateSeoModule,
+      data: {
+        module: 'tournamentTeamPoints',
+        type: "delete",
+        data: {
+          id: id
+        }
+      }
+   },
+   request, fastify)
+  .catch((err) => {
+    errorLogger(
+      fastify,
+      err.message,
+      "services/tournamentTeamPoints.js/deleteTournamentTeamPointsService - callClientAPI",
+      request
+    );
+  });
+
   global.tblTournamentTeamPlayers = global.tblTournamentTeamPlayers.filter(
     (item) => !(teamId.includes(item.teamId) && item.competitionId === competitionId)
   );
@@ -185,7 +325,33 @@ const deleteTournamentTeamPointsService = async (request, fastify) => {
 const activeInactiveTournamentTeamPointsService = async (request, fastify) => {
   const { id, isActive } = request.body;
 
-  await activeInactiveTournamentTeamPointsQuery({ id, isActive }, request, fastify);
+  const result = await activeInactiveTournamentTeamPointsQuery({ id, isActive }, request, fastify);
+  const competitionData = global.tblCompetitions.find(
+    item => item.competitionId === result[0].competitionId
+  );
+  if (competitionData && competitionData.isActive == true) {
+    const res = await responseChangeService(result[0]?.teamId, result[0]?.competitionId);
+  
+    callClientAPI(
+     {
+        serviceType: ServiceType.clientAPI,
+        moduleType: APIEndpointModuleType.updateSeoModule,
+        data: {
+          module: 'tournamentTeamPoints',
+          type: "update",
+          data: { ...result[0], ...res }
+        }
+     },
+     request, fastify)
+    .catch((err) => {
+      errorLogger(
+        fastify,
+        err.message,
+        "services/tournamentTeamPoints.js/activeInactiveTournamentTeamPointsService - callClientAPI",
+        request
+      );
+    });
+  }
 
   return `TournamentTeamPoint isActive stage updated successfully`;
 };
@@ -272,9 +438,10 @@ const setTeamPointService = async (data, request, fastify) => {
 const teamsListService = async (request, fastify) => {
   let result = global.tblTeams;
   if(request.body.competitionId != undefined && request.body.competitionId != 0) {
-    const competitionResult = global.tblTeamCompetition.filter(
-      (item) => item.refCompetitionId === request.body.competitionId
-    );
+    // const competitionResult = global.tblTeamCompetition.filter(
+    //   (item) => item.refCompetitionId === request.body.competitionId
+    // );
+    const competitionResult = await getTournamentTeamsByCompIdQuery(request.body.competitionId, request, fastify);
     const competitionTeamIds = new Set(competitionResult.map(item => item.teamId));
     result = result.filter(
       (item) => competitionTeamIds.has(item.teamId)
@@ -324,7 +491,32 @@ const setTeamNetRunRateService = async (teamId, competitionId, fastify) => {
       type: fastify.db.QueryTypes.RAW,
     }
   )
-  return result[0]?.[0].updated_row;
+  const updatedData = result[0]?.[0].updated_row
+  const competitionData = global.tblCompetitions.find(
+    item => item.competitionId === updatedData.competitionId
+  );
+  if (competitionData && competitionData.isActive == true) {
+    const res = await responseChangeService(updatedData?.teamId, updatedData?.competitionId);
+    callClientAPI(
+     {
+        serviceType: ServiceType.clientAPI,
+        moduleType: APIEndpointModuleType.updateSeoModule,
+        data: {
+          module: 'tournamentTeamPoints',
+          type: "update",
+          data: { ...updatedData, ...res }
+        }
+     }, null, fastify)
+    .catch((err) => {
+      errorLogger(
+        fastify,
+        err.message,
+        "services/tournamentTeamPoints.js/setTeamNetRunRateService - callClientAPI",
+        null
+      );
+    });
+  }
+  return updatedData;
 };
 
 const netRunRateRe_calculationService = async (request, fastify) => {
@@ -350,6 +542,20 @@ const netRunRateRe_calculationService = async (request, fastify) => {
   return "Net run rate calculation successful";
 };
 
+const responseChangeService = async (teamId, compeitionId) => {
+  const competition = global.tblCompetitions.find(item => item.competitionId === compeitionId);
+  const team = global.tblTeams.find(item => item.teamId === teamId);
+  return {
+    teamName: team?.teamName ?? null,
+    competition: competition?.competition ?? null
+  }
+}
+
+const getAllTournamentTeamPointsService = async (request, fastify) => {
+  let result = await getClientTournamentTeamPointsQuery(request, fastify);
+  return result;
+};
+
 module.exports = {
   allTournamentTeamPointsService,
   saveTournamentTeamPointsService,
@@ -359,4 +565,5 @@ module.exports = {
   saveTblTournamentTeamPointsService,
   teamsListService,
   netRunRateRe_calculationService,
+  getAllTournamentTeamPointsService,
 };

@@ -24,6 +24,18 @@ const error = (message, errorCode, status) => {
     },
   };
 };
+const virtualError = (message, errorCode, status) => {
+  return {
+    success: false,
+    status: status,
+    // error: {
+    //   code: errorCode,
+    //   message: message || "Internal Server Error",
+    // },
+    message: message || "Internal Server Error",
+    data: null
+  };
+};
 
 // Function to generate a success response object
 const success = (result, status) => {
@@ -31,6 +43,14 @@ const success = (result, status) => {
     success: true,
     status: status,
     result: result,
+  };
+};
+const virtualSuccess = (result, status) => {
+  return {
+    success: true,
+    status: status,
+    data: result,
+    message : "Success",
   };
 };
 
@@ -195,6 +215,19 @@ const wicketType = {
   9: "Hit Ball Twice",
   10: "Obstruct the Fielding"
 }
+const BALL_TYPE = {
+  OVER_COMPLETE: 0,
+  REGULAR: 1,
+  WIDE: 2,
+  BYE: 3,
+  LEG_BYE: 4,
+  NO_BALL: 5,
+  NO_BALL_BYE: 6,
+  NO_BALL_LEG_BYE: 7,
+  PANELTY_RUN: 8,
+  RETIRED_HURT: 9,
+  BOWLER_RETIRED_HURT: 10,
+};
 const decryptEncryptionId = async (encryptionKey , fastify) =>{
  try {
   const data = await fastify.db.query(`SELECT "wrKey" from "tblEncryptedData" where "wrValue" = $1`,
@@ -235,12 +268,27 @@ const MarketActionType = {
   dlsMarketClose : 9,
   dlsMarketCloseCancel : 10,
   closeMarketOnDLSChange : 11,
+  virtualMarketCancel : 12,
 }
-const callPredictorMarket = async (data , endpoint ,fastify ,request) =>{
+const callPredictorMarket = async (data , endpoint ,fastify ,request, pythonURI = null) =>{
   let requestStartTime = new Date();
   let loggerConfig = global.tblConfigs.find((item) => item.key === configConstants.ISPREDICTORLOGGER).value;
   try {
-    const predictorURL = global.tblConfigs.find((item) => item.key === configConstants.MARKET_PREDICTOR).value;
+    // let predictorURL = global.tblConfigs.find((item) => item.key === configConstants.MARKET_PREDICTOR)?.value;
+    // if(isVirtual == true){
+    //   // If commentary is virtual, use the virtual predictor URL
+    //   predictorURL = global.tblConfigs.find((item) => item.key === configConstants.VIRTUALMARKETPREDICTOR)?.value;
+    // }
+    let predictorURL = pythonURI;
+    if(!predictorURL){
+      errorLogger(
+        fastify,
+        "Predictor URL not found",
+        "DB ERROR --> utilities/index/callPredictorMarket",
+        request
+      )
+      return true
+    }
     const url = `${predictorURL}${endpoint}`;
     const result = await axios.post(url, {
       ...data
@@ -268,7 +316,10 @@ const callPredictorMarket = async (data , endpoint ,fastify ,request) =>{
           requestBody : data,
           requestStartTime : requestStartTime,
           requestEndTime : new Date(),
-          response : error.message
+          response : {
+            error : error.message,
+            type : "error"
+          }
         },
         request,
         fastify
@@ -501,6 +552,7 @@ const callClientAPI = async (data,request, fastify) =>{
 const ServiceType = {
   clientAPI : 1,
   dataProviderAPI : 2,
+  entitySport : 3,
 }
 const APIEndpointModuleType = {
   commentaryUpdate : 1,
@@ -510,6 +562,7 @@ const APIEndpointModuleType = {
   updateBanner: 5,
   updateSeoModule : 6,
   updateMenuList : 7,
+  configUpdate: 8,
 }
 const NotificationSendType = {
   all : 1,
@@ -616,6 +669,8 @@ const commentaryStatus = {
   TOSSDONE : 2,
   INPROGRESS : 3,
   COMPLETED : 4,
+  INNINGCHANGE : 5,
+  CANCELLED : 10
 }
 const LineType = {
   BackLay:	1,
@@ -667,6 +722,7 @@ const MarketTypeCategories = {
   "TOTALEVENTRUN": 36,
   "TOPBOWLER": 37,
   "TOPBATSMAN": 38,
+  "MIDSESSION": 39,
 }
 
 const ModuleTypes = {
@@ -706,11 +762,18 @@ const ModuleTypes = {
   ThirdPartyApis: 34,
   Notifications: 35,
   Vendors: 36,
+  CountryCode: 37,
+  NotificationConfig: 38,
+  Packages: 39,
+  Whitelabel: 40,
+  Venue: 41,
+  CommentaryById: 42,
+  PythonAPI: 43,
 }
 const callTPAPI = async (data ,fastify) =>{
   try {
     // check if the third party api is enabled or not
-    let isCallThirdParty = global.tblConfigs.find((item) => item.key === configConstants.ISCALLTHIRDPARTY)?.value;
+    let isCallThirdParty = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.ISCALLEVENTALLOWORDERAPI.toLowerCase())?.value;
     if(isCallThirdParty == undefined){
       return true;
     }
@@ -718,24 +781,21 @@ const callTPAPI = async (data ,fastify) =>{
       return true;
     }
     if(isCallThirdParty == "true"){
-      const thirdPartyAPI = global.tblConfigs.find((item) => item.key === configConstants.THIRDPARTYAPIENDPOINT)?.value;
+      const thirdPartyAPI = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.EVENTALLOWORDERAPI.toLowerCase())?.value;
       if(thirdPartyAPI == undefined){
         return true;
       }
-      const header = global.tblConfigs.find((item) => item.key === configConstants.THIRDPARTYKEY)?.value;
-      if(header == undefined){
-        return true;
-      }
+      // const header = global.tblConfigs.find((item) => item.key === configConstants.THIRDPARTYKEY)?.value;
+      // if(header == undefined){
+      //   return true;
+      // }
       await axios.post(thirdPartyAPI, {
-        eventRefId : data.eventRefId,
-        betAllow : data.betAllow,
-      },{
-        headers: {
-          'Authorization': header
-        }
+        eventID : data.eventRefId,
+        isAllow : data.betAllow,
       });
       return true;
     }
+    
     return true;
   } catch (error) {
     console.log("error from callTPAPI", error);
@@ -754,7 +814,8 @@ const clientProcessStatus = {
 }
 const sendOtpToMobile = async (data, request, fastify) => {
   try {
-    let url = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.OTPURL.toLowerCase())?.value;
+    let url = global.tblWhitelabels.find((item) => item.id === data.id)?.mobileOTPSendUrl;
+    // let url = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.OTPURL.toLowerCase())?.value;
     if(!url) return 'OTP URL not found';
     // call this otp url to send otp to mobile
     // replace {mobile} with the mobile number
@@ -788,13 +849,18 @@ const sendOtpToMobile = async (data, request, fastify) => {
 }
 const verifyOTP = async (data, request, fastify) => {
   try {
-    let url = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.OTPVERIFY.toLowerCase())?.value;
-    let otpAuthKey = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.OTPAUTHKEY.toLowerCase())?.value;
-    if(!url || !otpAuthKey) return 'OTP Verify URL not found';
+    let config = global.tblWhitelabels.find((item) => item.id === data.id);
+    // let url = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.OTPVERIFY.toLowerCase())?.value;
+    // let otpAuthKey = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.OTPAUTHKEY.toLowerCase())?.value;
+    if(!config || !config.mobileOTPVerify || !config.mobileOTPAuthKey) return 'OTP Verify URL not found';
     let cc = data.countryCode.replace("+", "");
-    url = url.replace("{otp}", data.otp);
-    url = url.replace("{mobile}", cc + data.mobileNo);
-    const result = await axios.get(url, { headers: { authkey: otpAuthKey }});
+    const mobileNumber = cc + data.mobileNo;
+    // url = url.replace("{otp}", data.otp);
+    // url = url.replace("{mobile}", cc + data.mobileNo);
+    let otpUrl = config.mobileOTPVerify
+      .replace("{otp}", encodeURIComponent(data.otp))
+      .replace("{mobile}", encodeURIComponent(mobileNumber));
+    const result = await axios.get(otpUrl, { headers: { authkey: config.mobileOTPAuthKey }});
     if(result.data.type == "success"){
       return true;
     }
@@ -817,6 +883,420 @@ const verifyOTP = async (data, request, fastify) => {
     );
     throw new Error(error.message);
   }
+}
+const forgotPasswordOTP = async (data, request, fastify) => {
+  try {
+    let url = global.tblWhitelabels.find((item) => item.id === data.id)?.mobileOTPForgotUrl;
+    // let url = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.OTPFORGOTURL.toLowerCase())?.value;
+    if(!url) return 'OTP URL not found';
+    let cc = data.countryCode.replace("+", "");
+    url = url.replace("{mobile}", cc + data.mobileNo);
+    const result = await axios.post(url);
+    if(result.data.type == "success"){
+      return true;
+    }
+    else {
+      errorLogger(
+        fastify,
+        result.data.message,
+        "DB ERROR --> utilities/index/forgotPasswordOTP",
+        request
+      );
+      return false;
+    }
+  } catch (error) {
+    console.log("error from forgotPasswordOTP", error);
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> utilities/index/forgotPasswordOTP",
+      request
+    );
+    throw new Error(error.message);
+  }
+}
+const resendOTP = async (data, request, fastify) => {
+  try {
+    let url = global.tblWhitelabels.find((item) => item.id === data.id)?.mobileOTPResendUrl;
+    // let url = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.OTPRESEND.toLowerCase())?.value;
+    if(!url) return 'OTP URL not found';
+    let cc = data.countryCode.replace("+", "");
+    url = url.replace("{mobile}", cc + data.mobileNo);
+    const result = await axios.get(url, { headers: {} });
+    if(result.data.type == "success"){
+      return true;
+    }
+    else {
+      errorLogger(
+        fastify,
+        result.data.message,
+        "DB ERROR --> utilities/index/resendOTP",
+        request
+      );
+      return false;
+    }
+  } catch (error) {
+    console.log("error from resendOTP", error);
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> utilities/index/resendOTP",
+      request
+    );
+    throw new Error(error.message);
+  }
+}
+
+const IntervalType = {
+  DAY:	1,
+  MONTHLY: 2,
+  YEARLY: 3
+}
+const EventName = {
+  COMMINGSOON: 1,
+  WINTOSS: 2,
+  EVENTSTART: 3,
+  INNINGCOMPLETED: 4,
+  BOUNDARY: 5,
+  WICKET: 6,
+  EVENTCOMPLETED: 7
+}
+const generateEventId = () => {
+  const d = new Date();
+  return `${d.getDate().toString().padStart(2, '0')}${(d.getMonth()+1).toString().padStart(2, '0')}${d.getFullYear().toString().slice(-2)}${d.getHours().toString().padStart(2, '0')}${d.getMinutes().toString().padStart(2, '0')}`;
+};
+
+const ClientInfoLoginType = {
+  SUCCESS: 1,
+  FAILED: 2,
+}
+const CompetitionType = {
+  INTERNATIONAL: 1,
+  DOMESTIC: 2,
+}
+const Weather = {
+  RANDOM: 1,
+  COLD : 2,
+  WARM : 3,
+  HOT : 4,
+  MILD : 5, 
+  
+}
+const PitchCracks = {
+  NONE: 1,
+  LIGHT: 2,
+  HEAVY: 3,
+}
+
+const PitchWareSpeed = {
+  NORMAL: 1,
+  SLOW: 2,
+  FAST: 3,
+}
+const PitchHardness = {
+  SOFT: 1,
+  VERYSOFT: 2,
+  HARD: 3,
+  MEDIUM: 4,
+}
+const PitchType = {
+  1 : "Dry",
+  2 : "Grassy/Dusty",
+  3 : "Grassy/Dry",
+  4 : "Grassy",
+  5 : "Dusty",
+  6 : "Standard"
+}
+const LawnStriping = {
+  1 : "Cross hatch",
+  2 : "Stripe",
+  3 : "Vertical",
+  4 : "None",
+  5 : "Diamond"
+}
+
+const PitchAge = {
+  1 : "Day 1",
+  2 : "Day 2", 
+  3 : "Day 3", 
+  4 : "Day 4", 
+  5 : "Day 5"
+}
+const playerSwitchObj = {
+  SWITCH_BOWLER : "SWITCH_BOWLER",
+  CHANGE_BOWLER : "CHANGE_BOWLER",
+  BATTER_SWITCH : "BATTER_SWITCH"
+}
+const wicketTypeObj = {
+  BOLD : 1,
+  BOLD_LABEL : "Bowled",
+  CATCH : 2,
+  CATCH_LABEL : "Catch",
+  STUMP : 3,
+  STUMP_LABEL : "Stump",
+  HIT_WICKET : 4,
+  HIT_WICKET_LABEL : "Hit Wicket",
+  LBW : 5,
+  LBW_LABEL : "LBW",
+  RUN_OUT : 6,
+  RUN_OUT_LABEL : "Run Out",
+  RETIRED_OUT : 7,
+  RETIRED_OUT_LABEL : "Retired Out",
+  TIMED_OUT : 8,
+  TIMED_OUT_LABEL : "Timed Out",
+  HIT_BALL_TWICE : 9,
+  HIT_BALL_TWICE_LABEL : "Hit B. Twice",
+  OBSTRACT_THE_FIELDING : 10,
+  OBSTRACT_THE_FIELDING_LABEL : "Obst. Field"
+}
+const inningSwitch = {
+   EXTRAS : "EXTRAS",
+   OVER : "OVER",
+   OVER_ENDED : "OVER_ENDED",
+   WICKET : "WICKET",
+   RUN : "RUN",
+   ALL : "ALL"
+}
+const playerType = {
+  CURRENT_BOWLER : "CURRENT_BOWLER",
+  BATTING_TEAM : "BATTING_TEAM",
+  BOWLING_TEAM : "BOWLING_TEAM",
+  ON_STRIKE :"ON_STRIKE",
+  NON_STRIKE : "NON_STRIKE"
+}
+const teamStatus = {
+  BAT_TEAM_STATUS : 1,
+  BOWL_TEAM_STATUS :2
+}
+const Cards = {
+  "A" : 1,
+  "2" : 2,
+  "3" : 3,
+  "4" : 4,
+  "5" : 5,
+  "6" : 6,
+  "10" : 0,
+  "J" : -1,
+  "K" : -2
+}
+const HideEventType = {
+  eventType : 1,
+  competition : 2,
+  commentary : 3,
+}
+const callEntitySportAPI = async (data, request, fastify) =>{
+  try {
+    let competitionServices = global.tblAPIs.filter((item) => item.type == data.serviceType && item.isActive == true);
+    if(competitionServices.length == 0){
+      return true;
+    }
+    for (ser of competitionServices){
+      let endPoint = global.tblAPIEndpoints.find((item)=> item.serviceType == ser.type && item.moduleType == data.moduleType &&
+        item.isActive == true)
+      if(endPoint){
+        let url = `${ser.api}${endPoint.endPoint}`;
+        let dataTosend = data.data;
+        const result = await axios.post(url, {
+          ...dataTosend
+        });
+        return result;
+      }
+      else {
+        console.log("Endpoint not found for service type : ", ser.type, " and module type : ", data.moduleType);
+        return;
+      }
+    }
+    return true;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> utilities/index/callEntitySportAPI",
+      request
+    );
+    // throw new Error(error.message);
+  }
+}
+const comCardType = {
+  "Heart" : 1,
+  "Diamond" :2,
+  "Clubs" : 3,
+  "Spades" : 4
+}
+const EntityEnums = {
+    ODI: 1,
+    TEST: 2,
+    T20I: 3,
+    LimitedOverDomesticMatch: 4,
+    FirstClass: 5,
+    T20: 6, //Domestic
+    WomenODI: 7,
+    WomenT20: 8,
+    YouthODI: 9,
+    YouthT20: 10,
+    Other: 11,
+    OtherListA: 12,
+    Other1stClass: 13,
+    OtherT20: 14,
+    YouthTest: 15,
+    WomanTest: 16,
+    T10: 17,
+    T100: 18,
+    WomenT100: 19,
+    TB10: 20
+}
+const compStatus = {
+  "upcoming" : 1,
+  "started" : 2,
+  "completed" : 3,
+  "stopped" : 4,
+}
+const callCardCricket = async (data ,request , fastify) =>{
+  try {
+    // console.log("callCardCricket", data);
+    // return true;
+    let cardUrl = global.tblConfigs.find((item) => item.key === configConstants.CARDCRICKETURL)?.value;
+    if(!cardUrl) return 'Card Cricket URL not found';
+    // call this card cricket url to send data
+    const result = await axios.post(cardUrl, {
+      ...data
+    });
+    return true;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> utilities/index/callCardCricket",
+      request
+    )
+    // throw new Error(error.message);
+  }
+
+}
+const GlobalModuleType = {
+  Commentary: 1,
+  CommenaryTeams: 2,
+  CommentaryPlayers: 3,
+  Players: 4,
+  Teams: 5,
+  TeamCompetiton: 6,
+  MatchTypes: 7,
+  Competition: 8,
+  CountryCode: 9,
+  Venue: 10,
+  Weather: 11,
+  PitchConditon: 12,
+}
+const StoreTypes = {
+  Insert: 1,
+  Update: 2
+}
+const trimTextData = async (data, request, fastify) => {
+  try {
+    if (!data || typeof data !== "object" || Array.isArray(data)) {
+      return;
+    }
+    const trimmedData = {};
+    for (const [key, value] of Object.entries(data)) {
+      trimmedData[key] = typeof value === "string" ? value.trim().replace(/\s+/g, ' ') : value;
+    }
+    return trimmedData
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> utilities/index.js/trimTextData",
+      request
+    )
+  }
+}
+const callVirtualPredictorMarket = async (data , endpoint ,fastify ,request, pythonURI = null) =>{
+  let requestStartTime = new Date();
+  let loggerConfig = global.tblConfigs.find((item) => item.key === configConstants.ISPREDICTORLOGGER).value;
+  try {
+    let predictorURL = pythonURI;
+    if(!predictorURL){
+      errorLogger(
+        fastify,
+        "Predictor URL not found",
+        "DB ERROR --> utilities/index/callPredictorMarket",
+        request
+      )
+      throw new Error("Predictor URL not found")
+    }
+    const url = `${predictorURL}${endpoint}`;
+    const result = await axios.post(url, {
+      ...data
+    });
+
+    if (loggerConfig == "true"){
+      tblPredictorAPILogger(
+        {
+          endPoint : endpoint,
+          requestBody : data,
+          requestStartTime : requestStartTime,
+          requestEndTime : new Date(),
+          response : result.data
+        },
+        request,
+        fastify
+      );
+    }
+    return result;
+  } catch (error) {
+    if(loggerConfig == "true"){
+      tblPredictorAPILogger(
+        {
+          endPoint : endpoint,
+          requestBody : data,
+          requestStartTime : requestStartTime,
+          requestEndTime : new Date(),
+          response : {
+            error : error.message,
+            type : "error"
+          }
+        },
+        request,
+        fastify
+      );
+      throw new Error(error.message);
+    }
+    // throw new Error(error.message);
+  }
+
+}
+const matchTypesEntity = {
+  "ODI": 1,
+  "TEST": 2,
+  "T20I": 3,
+  "List A": 4,
+  "First Class": 5,
+  "T20": 6,
+  "Women ODI": 7,
+  "Women T20": 8,
+  "Youth ODI": 9,
+  "Youth T20": 10,
+  "Other": 11,
+  "Other List A": 12,
+  "Other 1st Class": 13,
+  "Other T20": 14,
+  "Youth Test": 15,
+  "Woman Test": 16,
+  "T10": 17,
+  "T100": 18,
+  "Women T100": 19,
+  "TB-10": 20
+};
+const matchStatusEntity = {
+  "Scheduled" : 1,
+  "Completed" :2,
+  "Live" :3,
+  "Abandoned, canceled, no result" :4
+}
+const entityCompetition = {
+  1 : "fixture",
+  2 : "result",
+  3 : "live"
 }
 module.exports = {
   ERROR_CODES,
@@ -873,4 +1353,40 @@ module.exports = {
   clientProcessStatus,
   sendOtpToMobile,
   verifyOTP,
+  forgotPasswordOTP,
+  resendOTP,
+  IntervalType,
+  EventName,
+  generateEventId,
+  ClientInfoLoginType,
+  CompetitionType,
+  Weather,
+  PitchCracks,
+  PitchWareSpeed,
+  PitchHardness,
+  PitchType,
+  LawnStriping,
+  PitchAge,
+  BALL_TYPE,
+  playerSwitchObj,
+  wicketTypeObj,
+  inningSwitch,
+  playerType,
+  teamStatus,
+  Cards,
+  HideEventType,
+  virtualSuccess,
+  virtualError,
+  callEntitySportAPI,
+  comCardType,
+  EntityEnums,
+  compStatus,
+  callCardCricket,
+  GlobalModuleType,
+  StoreTypes,
+  trimTextData,
+  matchTypesEntity,
+  callVirtualPredictorMarket,
+  matchStatusEntity,
+  entityCompetition
 };

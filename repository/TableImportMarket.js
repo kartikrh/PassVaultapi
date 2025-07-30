@@ -84,10 +84,10 @@ const insertCompetitionQuery = async (request, fastify) => {
             select max("wrDisplayOrder") as "display_order" from "tblCompetitions" where "wrEventTypeId" = $2
         ),
         inser_data as (
-            insert into "tblCompetitions" ("wrCompetition" , "wrEventTypeId" , "wrRefID" , "wrImage" ,"wrIsActive" , "wrCreatedBy" , "wrCreatedDate","wrDisplayOrder", "wrDrsCount" ) values ($1 ,
+            insert into "tblCompetitions" ("wrCompetition" , "wrEventTypeId" , "wrRefID" , "wrImage" ,"wrIsActive" , "wrCreatedBy" , "wrCreatedDate","wrDisplayOrder", "wrDrsCount", "wrPythonId" ) values ($1 ,
                 $2,
                  $3,$4,$5,$6,now(),(select COALESCE("display_order" , 0) from "display") + 1,
-                  $7
+                  $7, $8
                  ) returning *
         )
         select 
@@ -107,7 +107,17 @@ const insertCompetitionQuery = async (request, fastify) => {
         tc."wrTiePoint" as "tiePoint",
         tc."wrCancelPoint" as "cancelPoint",
         tc."wrLossPoint" as "lossPoint",
-        tc."wrDrsCount" as "drsCount"
+        tc."wrDrsCount" as "drsCount", 
+        tc."wrImagePath" as "imagePath",
+        tc."wrStatus" as "commStatus",
+        tc."wrStartDate" as "startDate",
+        tc."wrEndDate" as "endDate",
+        tc."wrTpId" as "tpId",
+        tc."wrIsMen" as "isMen",
+        tc."wrType" as "type",
+        tc."wrIsVirtual" as "isVirtual",
+        tc."wrCountryId" as "countryId",
+        tc."wrPythonId" as "pythonId"
         from "inser_data" tc 
         inner join "tblEventTypes" tev on tc."wrEventTypeId" = tev."wrEventTypeId"
     `,
@@ -120,6 +130,7 @@ const insertCompetitionQuery = async (request, fastify) => {
           data.isActive || false,
           request.userTokenInfo.WrUserId,
           data.drsCount !== undefined ? data.drsCount : 0,
+          data.pythonId !== undefined ? data.pythonId : null,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }

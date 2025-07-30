@@ -6,11 +6,13 @@ const {
   updatePlayerStatsQuery,
   updateIsSystemPlayerQuery,
   getTeamPlayerQuery,
+  activeInactivePlayerQuery,
 } = require("../repository/TablePlayer");
 const {
   insertTeamPlayerQuery,
   deleteTeamPlayerByPlayerIdQuery,
   getTeamPlayerByPlayerIdQuery,
+  getTeamListByPlayerIdQuery,
 } = require("../repository/TableTeamPlayer");
 const { getAllPlayersByTeamIdQuery, getAllPlayersByCompetitionIdTeamIdQuery } = require("../repository/TableTeams");
 const {
@@ -24,6 +26,7 @@ const { deleteTournamentPlayersByPlayerIdQuery } = require("../repository/TableT
 const { deleteAwardsByPlayerIdQuery } = require("../repository/TableCommentaryAward");
 const { mergeAndSaveImage } = require("../utilities/imageMerge");
 const configConstants = require("../utilities/configConstants");
+const { trimTextData } = require("../utilities/index");
 
 const allPlayerService = async (request,fastify) => {
   const { isActive, eventTypeId , teamId} = request.body;
@@ -48,11 +51,20 @@ const allPlayerService = async (request,fastify) => {
     let players = await getAllPlayersByTeamIdQuery(teamId, fastify, request);
     players = players.map((item) => item.playerId);
     _player = _player.filter((item) => players.includes(item.playerId));
-    return _player;
+    // return _player;
   }
-  else {
-    return _player;
-  }
+  // else {
+  //   return _player;
+  // }
+  const updatedPlayers = _player.map((item) => {
+    const country = global.tblCountryCodes.find(elem => elem.id === item.countryId);
+    return {
+      ...item,
+      countryName: country?.countryName ?? null
+    };
+  });
+
+  return updatedPlayers;
 };
 
 const allPlayerTypeService = async () => {
@@ -152,6 +164,14 @@ const insertPlayerService = async (request, fastify) => {
     }
   }
 
+  const trimData = await trimTextData({
+    playerName: request.body.playerName,
+    displayName: request.body.displayName,
+  }, request, fastify);
+  if(trimData) {
+    Object.assign(request.body, trimData);
+  }
+
   const validatePlayerName = global.tblPlayers.find(
     (item) =>
       item.playerName.trim().toLowerCase() === request.body.playerName.trim().toLowerCase()
@@ -160,20 +180,29 @@ const insertPlayerService = async (request, fastify) => {
   if (validatePlayerName) {
     throw new Error("Player Name already exist");
   }
-  request.body.playerName = request.body.playerName.trim();
+  const validateTpId = global.tblPlayers.find(
+    (item) =>
+      item.tpId == request.body?.tpId && item.tpId != null
+  );
+
+  if (validateTpId) {
+    throw new Error("TpId already exist");
+  }
+  // request.body.playerName = request.body.playerName.trim();
   if (request.body.image && request.body.image.length) {
     // generate image name
     const imgName = generateImageName({ name: request.body.playerName });
     const projectName = global.tblConfigs.find(
       (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
     ).value;
-    const path = await storeImageOnServer({
+    const { fullPath, imagePath } = await storeImageOnServer({
       image: request.body.image[0],
       project: projectName,
       name: imgName,
       ...ImgModuleConfig.Players,
     });
-    request.body.image = path;
+    request.body.image = fullPath;
+    request.body.imagePath = imagePath
   }
 
   const result = await insertPlayerQuery(
@@ -198,6 +227,7 @@ const insertPlayerService = async (request, fastify) => {
               {
                 teamId: parseInt(teamID),
                 refPlayerId: result.playerId,
+                tpId: result?.tpId ?? null,
                 userId: request.userTokenInfo.WrUserId,
               },
               fastify,
@@ -246,7 +276,13 @@ const updatePlayerService = async (request, fastify) => {
   if (!checkPlayerId) {
     throw new Error("Player with this id not Found");
   }
-
+  const trimData = await trimTextData({
+    playerName: request.body?.playerName,
+    displayName: request.body?.displayName,
+  }, request, fastify);
+  if(trimData) {
+    Object.assign(request.body, trimData);
+  }
   const validatePlayerName = global.tblPlayers.find(
     (item) =>
       item.playerName.trim().toLowerCase() === request.body.playerName.trim().toLowerCase() &&
@@ -256,9 +292,19 @@ const updatePlayerService = async (request, fastify) => {
   if (validatePlayerName) {
     throw new Error("Player Name already exist");
   }
-
+  if(checkPlayerId) {
+    const validateTpId = global.tblPlayers.find(
+      (item) =>
+        item.tpId == request.body?.tpId && item.playerId != request.body.playerId &&
+        item.tpId != null
+    );
+  
+    if (validateTpId) {
+      throw new Error("TpId already exist");
+    }
+  }
   const body = {
-    country: request.body.country || checkPlayerId.country,
+    // country: request.body.country || checkPlayerId.country,
     playerName: request.body.playerName.trim() || checkPlayerId.playerName,
     eventTypeId: checkPlayerId.eventTypeId,
     playerTypeId: checkPlayerId.playerTypeId,
@@ -281,6 +327,12 @@ const updatePlayerService = async (request, fastify) => {
     bowlingTypeId: checkPlayerId.bowlingTypeId,
     bowlingStyle: checkPlayerId.bowlingTypeId,
     isSystemPlayer: request.body.hasOwnProperty("isSystemPlayer") ? request.body.isSystemPlayer : checkPlayerId.isSystemPlayer,
+    imagePath : checkPlayerId.imagePath,
+    // tpId: request.body.tpId || checkPlayerId.tpId,
+    tpId: request.body.tpId === undefined ? checkPlayerId.tpId
+      : [0, '', 'null'].includes(request.body.tpId) ? null
+      : request.body.tpId,
+    countryId: request.body.countryId || checkPlayerId.countryId,
   };
 
   if ("isActive" in request.body) {
@@ -341,13 +393,14 @@ const updatePlayerService = async (request, fastify) => {
     const projectName = global.tblConfigs.find(
       (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
     ).value;
-    const result = await storeImageOnServer({
+    const { fullPath, imagePath } = await storeImageOnServer({
       image: request.body.image[0],
       project: projectName,
       name: imgName,
       ...ImgModuleConfig.Players,
     });
-    body.image = result;
+    body.image = fullPath;
+    body.imagePath = imagePath;
   }
 
   await updatePlayerQuery(body, fastify, request);
@@ -385,11 +438,13 @@ const updatePlayerService = async (request, fastify) => {
           if (hashArray[i]) {
             const teamID = hashArray[i].replace(/[\[\]"]/g, "");
             if(teamID !== ""){
+              const playerTpId = global.tblPlayers.find(elem => elem.playerId == request.body.playerId);
               const teamPlayerData = await insertTeamPlayerQuery(
                 {
                   teamId: parseInt(teamID),
                   refPlayerId: request.body.playerId,
                   userId: request.userTokenInfo.WrUserId,
+                  tpId: playerTpId?.tpId ?? null
                 },
                 fastify,
                 request
@@ -516,8 +571,9 @@ const updatePlayerStatsService = async (request, fastify) => {
         const index = global.tblPlayers.findIndex(
           (item) => item.playerId === request.body[i].playerId
         );
+
         const _p = {
-          country: checkPlayerId.country,
+          // country: checkPlayerId.country,
           playerName: checkPlayerId.playerName,
           eventTypeId: checkPlayerId.eventTypeId,
           playerTypeId: checkPlayerId.playerTypeId,
@@ -537,6 +593,10 @@ const updatePlayerStatsService = async (request, fastify) => {
           eventType: checkPlayerId.eventType,
           bowlingTypeId: checkPlayerId.bowlingTypeId,
           bowlingStyle: checkPlayerId.bowlingTypeId,
+          imagePath: checkPlayerId.imagePath,
+          tpId: checkPlayerId.tpId,
+          countryId: checkPlayerId.countryId,
+          isSystemPlayer: checkPlayerId.isSystemPlayer,
         };
         global.tblPlayers[index] = _p;
       }
@@ -609,6 +669,26 @@ const setTeamPlayerImgService = async (request, fastify) => {
   return "Player image(s) and Jersey image(s) merged successfully";
 };
 
+const getTeamListPlayerIdService = async (request, fastify) => {
+  const { playerId } = request.body;
+  const result = await getTeamListByPlayerIdQuery(playerId, fastify, request);
+  return result;
+};
+
+const activeInactivePlayerService = async (request, fastify) => {
+  const { playerId, isActive } = request.body;
+  const index = global.tblPlayers.findIndex(
+    (item) => item.playerId === playerId
+  );
+  if (index === -1) {
+    throw new Error("Player with this id not Found");
+  }
+  await activeInactivePlayerQuery({playerId, isActive}, request, fastify);
+  global.tblPlayers[index].isActive = isActive;
+
+  return `Player data updated successfully`;
+};
+
 module.exports = {
   allPlayerService,
   playerByIdService,
@@ -622,4 +702,6 @@ module.exports = {
   allPlayerByCompetitionAndTeamService,
   mergePlayerImageAndJerseyService,
   setTeamPlayerImgService,
+  getTeamListPlayerIdService,
+  activeInactivePlayerService,
 };

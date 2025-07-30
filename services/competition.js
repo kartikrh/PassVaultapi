@@ -7,45 +7,100 @@ const {
   isTrendingChangeStatusQuery,
   isEventSnapCompetitionQuery,
   isPointTableCompetitionQuery,
+  isMenChangeStatusQuery,
+  getTemplateByCompetitionIdQuery,
+  saveCompMarketTemplateQuery,
+  isVirtualCompetitionQuery,
+  deleteCompMarketTemplateQuery,
+  getAssignedTemplateByCompetitionIdQuery,
+  upStatusQuery,
+  getMatchTypeTemplateByCompetitionIdQuery,
 } = require("../repository/TableCompitition");
 const {storeImageOnServer, removeImageFromServer, generateImageName } = require("../utilities/Images");
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const {ImgModuleConfig} = require("../utilities/imageConstant");
-const { APIEndpointModuleType, ServiceType, callClientAPI } = require("../utilities");
-const { getCommentariesResultQuery } = require("../repository/TableCommentary")
+const { APIEndpointModuleType, ServiceType, callClientAPI, compStatus, callCardCricket } = require("../utilities");
+const { getCommentariesResultQuery, getAllCommByCompIdQuery } = require("../repository/TableCommentary")
+const { deleteTournamentTeamPlayersByCompIdQuery } = require("../repository/TableTournamentsTeamPlayers");
+const { deleteTournamentTeamPointsByCompIdQuery } = require("../repository/TableTournmentTeamPoints");
 
+// const allCompetitionService = async (request) => {
+//   const { isActive, isTrending, eventTypeId, matchTypeId, isMen, type } = request.body;
+
+//   const filterObject = {
+//     isActive: isActive,
+//     isTrending: isTrending,
+//     eventTypeId: eventTypeId === 0 ? null : eventTypeId,
+//     matchTypeId: matchTypeId === 0 ? null : matchTypeId,
+//     isMen: isMen,
+//     type: type === 0 ? null : type,
+//   };
+//   // Additional checks for "0" and undefined
+//   filterObject.eventTypeId =
+//     eventTypeId === 0 || eventTypeId === undefined
+//       ? null
+//       : filterObject.eventTypeId;
+//   filterObject.matchTypeId =
+//     matchTypeId === 0 || matchTypeId === undefined
+//       ? null
+//       : filterObject.matchTypeId;
+//   if (isActive === undefined || isTrending === undefined || isMen === undefined) {
+//     const result = global.tblCompetitions.filter(
+//       (item) => item.isActive === true
+//     );
+//     return result;
+//   } else {
+//     const result = global.tblCompetitions.filter((item) => {
+//       return (
+//         (filterObject.isActive === null ||
+//           item.isActive === filterObject.isActive) &&
+//         (filterObject.eventTypeId === null ||
+//           item.eventTypeId === filterObject.eventTypeId) &&
+//           (filterObject.isTrending === null ||
+//             item.isTrending === filterObject.isTrending) &&
+//             (filterObject.matchTypeId === null ||
+//               item.matchTypeId === filterObject.matchTypeId) &&
+//               (filterObject.isMen === null ||
+//                 item.isMen === filterObject.isMen) &&
+//                 (filterObject.type === null ||
+//                   item.type === filterObject.type)
+//       );
+//     });
+//     return result;
+//   }
+// };
 const allCompetitionService = async (request) => {
-  const { isActive, isTrending, eventTypeId } = request.body;
+  const { isActive, isTrending, eventTypeId, matchTypeId, isMen, type, isVirtual, pythonId, countryId } = request.body;
 
-  const filterObject = {
-    isActive: isActive,
-    isTrending: isTrending,
-    eventTypeId: eventTypeId === 0 ? null : eventTypeId,
-  };
-  // Additional checks for "0" and undefined
-  filterObject.eventTypeId =
-    eventTypeId === 0 || eventTypeId === undefined
-      ? null
-      : filterObject.eventTypeId;
+  const filterObject = {};
 
-  if (isActive === undefined || isTrending === undefined) {
-    const result = global.tblCompetitions.filter(
-      (item) => item.isActive === true
-    );
-    return result;
-  } else {
-    const result = global.tblCompetitions.filter((item) => {
-      return (
-        (filterObject.isActive === null ||
-          item.isActive === filterObject.isActive) &&
-        (filterObject.eventTypeId === null ||
-          item.eventTypeId === filterObject.eventTypeId) &&
-          (filterObject.isTrending === null ||
-            item.isTrending === filterObject.isTrending)
-      );
-    });
-    return result;
-  }
+  filterObject.isActive = isActive !== undefined ? isActive : true;
+  if (isTrending !== undefined) filterObject.isTrending = isTrending;
+  if (eventTypeId !== undefined && eventTypeId !== 0) filterObject.eventTypeId = eventTypeId;
+  if (matchTypeId !== undefined && matchTypeId !== 0) filterObject.matchTypeId = matchTypeId;
+  if (isMen !== undefined) filterObject.isMen = isMen;
+  if (type !== undefined && type !== 0) filterObject.type = type;
+  if (typeof isVirtual === 'boolean') filterObject.isVirtual = isVirtual;
+  if (pythonId !== undefined && pythonId !== 0) filterObject.pythonId = pythonId;
+  if (countryId !== undefined && countryId !== 0) filterObject.countryId = countryId;
+
+  // if (isActive === undefined || isTrending === undefined) {
+  //   return global.tblCompetitions.filter((item) => item.isActive === true);
+  // }
+
+  const result = global.tblCompetitions.filter((item) => {
+    return Object.entries(filterObject).every(([key, value]) => item[key] === value);
+  });
+
+  const compData = result.map(item => {
+    const eventType = global.tblEventTypes.find(elem => elem.eventTypeId == item.eventTypeId)?.eventType || null;
+    return {
+      ...item,
+      eventType
+    }
+  });
+
+  return compData;
 };
 
 const competitionByIdService = async (request) => {
@@ -85,14 +140,37 @@ const createCompititionService = async (request, fastify) => {
     throw new Error("EventType with this id not Found");
   }
 
-  if (request.body.matchTypeId !== undefined) {
+  if (request.body.countryId) {
+    const validateCountry = global.tblCountryCodes.find(
+      (item) => item.id === request.body.countryId
+    );
+    if (!validateCountry) {
+      throw new Error("Country with this id not Found");
+    }
+  }
+
+  if (request.body.matchTypeId !== undefined 
+    && request.body.matchTypeId != 0 
+    && request.body.matchTypeId != null) {
     const validate = global.tblMatchTypes.find(
-      (item) => item.matchTypeId === request.body.matchTypeId
+      (item) => item.matchTypeId == request.body.matchTypeId
     );
     if (!validate) {
       throw new Error('MatchTypeId does not exist');
     }
   }
+
+  if (request.body?.tpId !== undefined) {
+    const validate = global.tblCompetitions.find(
+      (item) => item.tpId == request.body?.tpId && item.tpId !== null
+    );
+    if (validate) {
+      throw new Error('TpId already exist');
+    }
+  }
+  // if(request.body?.tpId == "") {
+  //   request.body.tpId = null
+  // }
 
   if (request.body.image && request.body.image.length) {
     let imgName = generateImageName({
@@ -101,17 +179,33 @@ const createCompititionService = async (request, fastify) => {
     const projectName = global.tblConfigs.find(
       (item) => item.key?.toLowerCase() === PROJECT_NAME.toLowerCase() 
     ).value;
-    const path = await storeImageOnServer({
+    const { fullPath, imagePath } = await storeImageOnServer({
       image: request.body.image[0],
       name : imgName,
       project : projectName,
       ...ImgModuleConfig.Competitions,
     });
-    request.body.image = path;
+    request.body.image = fullPath;
+    request.body.imagePath = imagePath;
   }
 
   const result = await insertCompetitionQuery(request, fastify);
 
+
+   if(result.isVirtual == true && (
+    result.commStatus == compStatus.started || result.commStatus == compStatus.stopped
+  )
+  ){
+    let isStop = result.commStatus == compStatus.stopped ? true : false;
+    callCardCricket(
+      {
+        refId : result.competitionId.toString(),
+        isStop : isStop,
+      },
+      request,
+      fastify
+    )
+  }
   global.tblCompetitions.push(result);
 
   if(result.isActive && result.isTrending){
@@ -148,6 +242,33 @@ const updateCompititionService = async (request, fastify) => {
   if (!validateId) {
     throw new Error("Competition with this id not Found");
   }
+  if (request.body.countryId) {
+    const validateCountry = global.tblCountryCodes.find(
+      (item) => item.id === request.body.countryId
+    );
+    if (!validateCountry) {
+      throw new Error("Country with this id not Found");
+    }
+  }
+  if (request.body?.tpId !== undefined && request.body?.tpId !== null) {
+    const validate = global.tblCompetitions.find(
+      (item) => item.tpId == request.body?.tpId && item.competitionId != competitionId &&
+      item.tpId !== null
+    );
+    if (validate) {
+      throw new Error('TpId already exist');
+    }
+  }
+  if (request.body.matchTypeId !== undefined &&
+    request.body.matchTypeId !== null &&
+    validateId.matchTypeId != request.body.matchTypeId &&
+  request.body.matchTypeId !== 0) {
+    const templates = await getAssignedTemplateByCompetitionIdQuery(competitionId, request, fastify);
+    if (templates.length > 0) {
+      const templateIds = templates.map(item => { return item.id });
+      await deleteCompMarketTemplateQuery(templateIds, request, fastify);
+    }
+  }
   const data = {
     competitionId: request.body.competitionId,
     competition: request.body.competition || validateId.competition,
@@ -160,14 +281,28 @@ const updateCompititionService = async (request, fastify) => {
     isTrending: validateId.isTrending,
     isEventSnap: validateId.isEventSnap,
     isPointTable: validateId.isPointTable,
-    matchTypeId: request.body.matchTypeId === undefined ? validateId.matchTypeId : parseInt(request.body.matchTypeId, 10),
-    winPoint: request.body.winPoint === undefined ? validateId.winPoint : parseInt(request.body.winPoint, 10),
-    tiePoint: request.body.tiePoint === undefined ? validateId.tiePoint : parseInt(request.body.tiePoint, 10),
-    cancelPoint: request.body.cancelPoint === undefined ? validateId.cancelPoint : parseInt(request.body.cancelPoint, 10),
-    lossPoint: request.body.lossPoint === undefined ? validateId.lossPoint : parseInt(request.body.lossPoint, 10),
-    drsCount : request.body.drsCount === undefined ? validateId.drsCount : parseInt(request.body.drsCount),
+    matchTypeId: request.body.matchTypeId || validateId.matchTypeId,
+    winPoint: request.body.winPoint || validateId.winPoint,
+    tiePoint: request.body.tiePoint || validateId.tiePoint,
+    cancelPoint: request.body.cancelPoint || validateId.cancelPoint,
+    lossPoint: request.body.lossPoint || validateId.lossPoint,
+    drsCount : request.body.drsCount || validateId.drsCount,
+    imagePath: validateId.imagePath,
+    isMen: validateId.isMen,
+    type: request.body.type || validateId.type,
+    isVirtual: validateId.isVirtual,
+    commStatus: request.body.commStatus || validateId.commStatus,
+    startDate: request.body.startDate || validateId.startDate,
+    endDate: request.body.endDate || validateId.endDate,
+    // tpId: request.body.tpId || validateId.tpId,
+    tpId: request.body.tpId === undefined ? validateId.tpId
+      : [0, '', 'null'].includes(request.body.tpId) ? null
+      : request.body.tpId,
+    pythonId: request.body.pythonId || validateId.pythonId,
+    countryId: request.body.countryId === undefined ? validateId.countryId : request.body.countryId,
   };
-
+  const developerName = global.tblPythonAPI.find(item => item.id === data?.pythonId);
+  data.developerName = developerName?.developerName ?? null
   if ("isActive" in request.body) {
     data.isActive = request.body.isActive;
   }
@@ -179,6 +314,12 @@ const updateCompititionService = async (request, fastify) => {
   }
   if("isPointTable" in request.body){
     data.isPointTable = request.body.isPointTable === 'true';
+  }
+  if("isMen" in request.body){
+    data.isMen = request.body.isMen === 'true';
+  }
+  if("isVirtual" in request.body){
+    data.isVirtual = request.body.isVirtual === 'true';
   }
 
   if (request.body.eventTypeId) {
@@ -201,17 +342,33 @@ const updateCompititionService = async (request, fastify) => {
     const projectName = global.tblConfigs.find(
       (item) => item.key?.toLowerCase() === PROJECT_NAME.toLowerCase() 
     ).value;
-    const path = await storeImageOnServer({
+    const { fullPath, imagePath } = await storeImageOnServer({
       image: request.body.image[0],
       name : imgName,
       project : projectName,
       ...ImgModuleConfig.Competitions,
     });
     
-    data.image = path;
+    data.image = fullPath;
+    data.imagePath = imagePath;
   }
 
   await updateCompititionQuery(data, fastify, request);
+
+  if(validateId.commStatus != data.commStatus &&
+    (data.commStatus == compStatus.started || data.commStatus == compStatus.stopped) &&
+    data.isVirtual == true
+  ){
+    let isStop = data.commStatus == compStatus.stopped ? true : false;
+    callCardCricket(
+      {
+        refId : data.competitionId.toString(),
+        isStop : isStop,
+      },
+      request,
+      fastify
+    )
+  }
 
   const index = global.tblCompetitions.findIndex(
     (item) => item.competitionId === competitionId
@@ -266,6 +423,11 @@ const deleteCompetitionService = async (request, fastify) => {
       throw new Error(`Competition with id ${id} not found`);
     }
 
+    const commentaryExists = await getAllCommByCompIdQuery(id, request, fastify);
+    if (commentaryExists) {
+      throw new Error(`'${validateId?.competition}' competition has commentary and cannot be deleted at the moment`);
+    }
+
     if (validateId?.image) {
       await removeImageFromServer({
         path: validateId.image,
@@ -278,9 +440,16 @@ const deleteCompetitionService = async (request, fastify) => {
   global.tblCompetitions = global.tblCompetitions.filter(
     (item) => !competitionId.includes(item.competitionId)
   );
-  global.tblCommentaries = global.tblCommentaries.filter(
-    (item) => !competitionId.includes(item.competitionId)
-  );
+
+  await deleteTournamentTeamPointsByCompIdQuery(competitionId, fastify, request);
+  await deleteTournamentTeamPlayersByCompIdQuery(competitionId, request, fastify);
+  
+  global.tblTournamentTeamPlayers = global.tblTournamentTeamPlayers.filter(item => 
+    !competitionId.includes(item.competitionId)
+  )
+  // global.tblCommentaries = global.tblCommentaries.filter(
+  //   (item) => !competitionId.includes(item.competitionId)
+  // );
 
   callClientAPI(
     {
@@ -552,6 +721,142 @@ const getAllCompetitionListService = async (request, fastify) => {
   return result;
 }
 
+const isMenChangeStatusService = async (request, fastify) => {
+  const { competitionId, isMen } = request.body;
+
+  const validateId = global.tblCompetitions.find(
+    (item) => item.competitionId === competitionId
+  );
+
+  if (!validateId) {
+    throw new Error("Competition with this id not Found");
+  }
+
+  await isMenChangeStatusQuery(
+    {
+      competitionId,
+      isMen,
+    },
+    request,
+    fastify
+  );
+  const index = global.tblCompetitions.findIndex((item) => item.competitionId == competitionId);
+  if(index != -1){
+    global.tblCompetitions[index].isMen = isMen;
+  }
+  
+  return `Competition isMen status updated successfully`;
+};
+const getTemplateByCompetitionIdService = async (request, fastify) => {
+  let comp = global.tblCompetitions.find(
+    (item) => item?.competitionId === request.body.competitionId
+  );
+  if (!comp) {
+    throw new Error("Competition with this id not Found");
+  }
+  const result = await getTemplateByCompetitionIdQuery({
+    competitionId: request.body.competitionId,
+    matchTypeId: comp.matchTypeId
+  }, request, fastify);
+  return result;
+}
+const getMatchTypeTemplateByCompetitionIdService = async (request, fastify) => {
+  let comp = global.tblCompetitions.find(
+    (item) => item?.competitionId === request.body.competitionId
+  );
+  if (!comp) {
+    throw new Error("Competition with this id not Found");
+  }
+  let validateMatchType = global.tblMatchTypes.find(
+    (item) => item?.matchTypeId === comp?.matchTypeId
+  );
+  if (!validateMatchType) {
+    throw new Error("Competitions matchTypeId not found");
+  }
+  
+  const result = await getMatchTypeTemplateByCompetitionIdQuery({
+    competitionId: request.body.competitionId,
+    matchTypeId: comp.matchTypeId
+  }, request, fastify);
+
+  return result;
+}
+const saveCompTemplatesService = async (request, fastify) => {
+  const { saveTemplates, dltTemplate } = request.body;
+  await saveCompMarketTemplateQuery({ saveTemplates, dltTemplate }, request, fastify);
+  return "Competition Market Template(s) saved successfully";
+
+}
+
+const isVirtualCompetitionService = async (request, fastify) => {
+  const { isVirtual, competitionId } = request.body;
+
+  const validateId = global.tblCompetitions.find(
+    (item) => item.competitionId === competitionId
+  );
+
+  if (!validateId) {
+    throw new Error("Competition with this id not Found");
+  }
+
+  await isVirtualCompetitionQuery(
+    {
+      isVirtual,
+      competitionId
+    },
+    request,
+    fastify
+  );
+  const index = global.tblCompetitions.findIndex((item) => item.competitionId == competitionId);
+  if(index != -1){
+    global.tblCompetitions[index].isVirtual = isVirtual;
+  }
+  
+  return `Competition isVirtual status updated successfully`;
+};
+
+const upCompStatusService = async (request, fastify) => {
+  const { commStatus, competitionId } = request.body;
+
+  const validateId = global.tblCompetitions.find(
+    (item) => item.competitionId === competitionId
+  );
+
+  if (!validateId) {
+    throw new Error("Competition with this id not Found");
+  }
+
+  await upStatusQuery(
+    {
+      commStatus,
+      competitionId
+    },
+    request,
+    fastify
+  );
+  const index = global.tblCompetitions.findIndex((item) => item.competitionId == competitionId);
+  if(index != -1){
+    global.tblCompetitions[index].commStatus = commStatus;
+  }
+  // call cardCricket
+  if(validateId.isVirtual == true && (
+    commStatus == compStatus.started || commStatus == compStatus.stopped
+  )
+  ){
+    let isStop = commStatus == compStatus.stopped ? true : false;
+    callCardCricket(
+      {
+        refId : validateId.competitionId.toString(),
+        isStop : isStop,
+      },
+      request,
+      fastify
+    )
+  }
+
+  
+  return `Competition status updated successfully`;
+};
 module.exports = {
   allCompetitionService,
   competitionByIdService,
@@ -565,4 +870,10 @@ module.exports = {
   getCompletedCommentaryResultService,
   getAllTeamListService,
   getAllCompetitionListService,
+  isMenChangeStatusService,
+  getTemplateByCompetitionIdService,
+  saveCompTemplatesService,
+  isVirtualCompetitionService,
+  upCompStatusService,
+  getMatchTypeTemplateByCompetitionIdService,
 };

@@ -119,7 +119,21 @@ const ImgModuleConfig = {
     width: 0,
   },
   Flag: {
-    type: "FLAG",
+    type: "Flag",
+    formate: ".jpg,.png,.jpeg,.avif,.webp",
+    size: 0,
+    height: 0,
+    width: 0,
+  },
+  CardType: {
+    type: "CardType",
+    formate: ".jpg,.png,.jpeg,.avif,.webp",
+    size: 0,
+    height: 0,
+    width: 0,
+  },
+  Whitelable: {
+    type: "Whitelable",
     formate: ".jpg,.png,.jpeg,.avif,.webp",
     size: 0,
     height: 0,

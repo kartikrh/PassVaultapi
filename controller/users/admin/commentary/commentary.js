@@ -76,12 +76,34 @@ const {
   upDLSDetailsService,
   updateMergeImageOnCommentaryPlayersService,
   changeIsTestComService,
+  changeisEventStartService,
+  getAllDifficultyService,
+  commentaryStatusService,
+  commentaryStartService,
+  commentaryTossService,
+  commentaryScoreService,
+  commentaryOverStartService,
+  commentarySwapPlayerService,
+  commentaryInningChangeService,
+  getPitchAndSessionService,
+  updatePitchAndSessionService,
+  commentaryWicketService,
+  commentarySetPlayerService,
+  updatePythonAPIOnCommentaryService,
+  undoAPIService2,
+  changeStrikerPlyService,
+  changePlayerService,
+  changeOverService,
+  updateEventTypeAndCompIdService,
+  getCommWicketByIdService,
+  updateCommWicketService,
 } = require("../../../../services/commentry");
 const { getEventSnapByComService, updateEventSnapByComService } = require("../../../../services/competitionEventSnap");
 const { getAllCommentariesDataService, getAllCommentariesDataServiceV1 } = require("../../../../services/score");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
-const { saveCommDrsLogService } = require("../../../../services/commentaryDRSLogs");
+const { saveCommDrsLogService, getCommDRSLogByIdService, getCommDRSLogByCommIdService, dltDrsService, takeDrsDataService, upDrsDataService } = require("../../../../services/commentaryDRSLogs");
+const { allPythonAPIsService } = require("../../../../services/pythonAPI")
 
 let path = "controller/users/admin/commentary/commentary";
 
@@ -184,7 +206,11 @@ const deleteCommentary = async (request, reply, fastify) => {
 };
 const saveCommentaryDetails = async (request, reply, fastify) => {
   try {
+    // return true;
     //const result = await testStoreProcedureService(request, fastify);
+    if(request.body.commentaryId == 5068){
+      return true;
+    }
     const result = await syncCommentaryStatsWithAPIAndSocket(request, fastify);
     // const result = await saveCommentaryDetailsService(request, fastify);
     //console.timeEnd("saveCommentaryDetails");
@@ -1037,6 +1063,251 @@ const changeIsTestCom = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const changeIsEventStart = async (request, reply, fastify) => {
+  try {
+    const result = await changeisEventStartService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/changeIsEventStart", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const getAllDifficulties = async (request, reply, fastify) => {
+  try {
+    const result = await getAllDifficultyService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/getAllDifficulties", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const commentaryStatus = async (request, reply, fastify) => {
+  try {
+    const result = await commentaryStatusService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/commentaryStatus", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const commentaryStart = async (request, reply, fastify) => {
+  try {
+    const result = await commentaryStartService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/commentaryStart", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const commentaryToss = async (request, reply, fastify) => {
+  try {
+    const result = await commentaryTossService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/commentaryToss", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const commentaryScore = async (request, reply, fastify) => {
+  try {
+    const result = await commentaryScoreService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/commentaryScore", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const commentaryOverStart = async (request, reply, fastify) => {
+  try {
+    const result = await commentaryOverStartService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/commentaryOverStart", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const commentarySwapPlayer = async (request, reply, fastify) => {
+  try {
+    const result = await commentarySwapPlayerService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/commentarySwapPlayer", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const commentaryInningChange = async (request, reply, fastify) => {
+  try {
+    const result = await commentaryInningChangeService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/commentaryInningChange", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const getPitchAndSession = async (request, reply, fastify) => {
+  try {
+    const result = await getPitchAndSessionService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/getPitchAndSession", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const updatePitchAndSession = async (request, reply, fastify) => {
+  try {
+    const result = await updatePitchAndSessionService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/updatePitchAndSession", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+}
+const commentaryWicket = async (request, reply, fastify) => {
+  try {
+    const result = await commentaryWicketService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/commentaryWicket", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const commentarySetPlayer = async (request, reply, fastify) => {
+  try {
+    const result = await commentarySetPlayerService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/commentarySetPlayer", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const allPythonAPIs = async (request, reply, fastify) => {
+  try {
+    request.body = request.body || {};
+    request.body.isActive = true;
+    const result = await allPythonAPIsService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/allPythonAPIs", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const updatePythonAPI = async (request, reply, fastify) => {
+  try {
+    const result = await updatePythonAPIOnCommentaryService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/updatePythonAPI", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const undoAPI = async (request, reply, fastify) => {
+  try {
+    const result = await undoAPIService2(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/undoAPI", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const getCommDRSLogById = async (request, reply, fastify) => {
+  try {
+    const result = await getCommDRSLogByIdService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/getCommDRSLogById", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const getCommDRSLogByCommId = async (request, reply, fastify) => {
+  try {
+    const result = await getCommDRSLogByCommIdService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/getCommDRSLogByCommId", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const dltDrs = async (request, reply, fastify) => {
+  try {
+    const result = await dltDrsService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/dltDrs", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const takeDrsData = async (request, reply, fastify) => {
+  try {
+    const result = await takeDrsDataService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/takeDrsData", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const upDrsData = async (request, reply, fastify) => {
+  try {
+    const result = await upDrsDataService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/upDrsData", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const changeStrikerPly = async (request, reply, fastify) => {
+  try {
+    const result = await changeStrikerPlyService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/changeStrikerPly", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const changePlayer = async (request, reply, fastify) => {
+  try {
+    const result = await changePlayerService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/changePlayer", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const changeOver = async (request, reply, fastify) => {
+  try {
+    const result = await changeOverService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/changeOver", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const updateEventTypeAndCompId = async (request, reply, fastify) => {
+  try {
+    const result = await updateEventTypeAndCompIdService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/updateEventTypeAndCompId", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const getCommWicketById = async (request, reply, fastify) => {
+  try {
+    const result = await getCommWicketByIdService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/getCommWicketById", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const updateCommWicket = async (request, reply, fastify) => {
+  try {
+    const result = await updateCommWicketService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/updateCommWicket", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 module.exports = {
   getAllCommentaries,
   getCommentaryById,
@@ -1121,5 +1392,32 @@ module.exports = {
   getAllCommentariesDataV1,
   updateMergeImageOnCommentaryPlayers,
   saveCommDrsLog,
-  changeIsTestCom
+  changeIsTestCom,
+  changeIsEventStart,
+  getAllDifficulties,
+  commentaryStatus,
+  commentaryStart,
+  commentaryToss,
+  commentaryScore,
+  commentaryOverStart,
+  commentarySwapPlayer,
+  commentaryInningChange,
+  getPitchAndSession,
+  updatePitchAndSession,
+  commentaryWicket,
+  commentarySetPlayer,
+  allPythonAPIs,
+  updatePythonAPI,
+  undoAPI,
+  getCommDRSLogById,
+  getCommDRSLogByCommId,
+  dltDrs,
+  takeDrsData,
+  upDrsData,
+  changeStrikerPly,
+  changePlayer,
+  changeOver,
+  updateEventTypeAndCompId,
+  getCommWicketById,
+  updateCommWicket,
 }

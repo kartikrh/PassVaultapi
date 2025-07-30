@@ -42,10 +42,12 @@ const {
   forgotPasswordService,
   verifyForgotPasswordOTPService,
   updatePasswordInForgotPasswordService,
+  clientDataByIdService,
+  verifySeamlessOTPService,
 } = require("../../services/user");
 const { errorLogger,updateWebRequestLogs } = require("../../utilities/logger");
 // const fetchAllDataFromDb = require("../../utilities/fetchAllData");
-const { fetchAllDataFromDb, panelLoadDataByEnum } = require("../../utilities/fetchAllData");
+const { fetchAllDataFromDb, panelLoadDataByEnum, loadEnityDataOnGlobal } = require("../../utilities/fetchAllData");
 const { ckImageUploadService, imgUploadService } = require("../../services/ckImage");
 const configConstants = require("../../utilities/configConstants");
 
@@ -536,6 +538,33 @@ const updatePasswordInForgot = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const clientDataById = async (request, reply, fastify) => {
+  try {
+    const result = await clientDataByIdService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/clientDataById", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const verifySeamlessOTP = async (request, reply, fastify) => {
+  try {
+    const result = await verifySeamlessOTPService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/verifySeamlessOTP", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const loadEnityData = async (request, fastify, reply) => {
+  try {
+    const result = await loadEnityDataOnGlobal(request, fastify, reply);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/loadEnityData", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 module.exports = {
   signUpUser,
   signInUser,
@@ -584,4 +613,7 @@ module.exports = {
   forgotPassword,
   verifyForgotPasswordOTP,
   updatePasswordInForgot,
+  clientDataById,
+  verifySeamlessOTP,
+  loadEnityData,
 };

@@ -1,6 +1,6 @@
 const { getallCommentaryScoringLogs, createCommentaryScoringLogs } = require("../../../controller/users/admin/commentaryScoringLogs/index");
 const { CommentaryScoringLogs } = require("../../../swaggerSchema/groupTags/schema");
-const { authorize, checkPermission } = require("../../../controller/middleware");
+const { authorize, checkPermission, multiTabPermissionCheck } = require("../../../controller/middleware");
 
 module.exports = async (fastify, opts) => {
     fastify.post("/all", {
@@ -8,8 +8,8 @@ module.exports = async (fastify, opts) => {
         preHandler: [
             (request, reply) => authorize(request, reply, fastify),
             (request, reply, done) =>
-              checkPermission(request, reply, fastify, {
-                tabName: "Commentary",
+              multiTabPermissionCheck(request, reply, fastify, {
+                tabName: ["Commentary" , "Commentary List"],
                 mode: "view",
               }),
           ],
@@ -21,8 +21,8 @@ module.exports = async (fastify, opts) => {
         preHandler: [
             (request, reply) => authorize(request, reply, fastify),
             (request, reply, done) =>
-              checkPermission(request, reply, fastify, {
-                tabName: "Commentary",
+              multiTabPermissionCheck(request, reply, fastify, {
+                tabName:[ "Commentary" , "Commentary List"],
                 mode: "add",
               }),
           ],

@@ -1,0 +1,177 @@
+const {
+    allWhitelabelsService,
+    whitelabelByIdService,
+    createWhitelabelService,
+    deleteWhitelabelService,
+    activeInactiveWhitelabelService,
+    demoClientEnableInIOSWhitelabelService,
+    isDemoClientLoginService,
+    clientApiWhitelabelsService,
+    upIsDefaultAPIService,
+    hideEventsService,
+    getEventTypesService,
+    getCommentaryService,
+    getCompetitionService,
+    unhideEventsService,
+    getHideEventService,
+} = require("../../../../services/whitelabel");
+const { ERROR_CODES, error, success } = require("../../../../utilities/index");
+const { errorLogger } = require("../../../../utilities/logger");
+
+let commonPath = "controller/users/admin/whitelabel/index.js";
+
+const getAllWhitelabels = async (request, reply, fastify) => {
+    try {
+        const result = await allWhitelabelsService(request, fastify);
+        reply.status(200).send(success(result, 200));
+    } catch (err) {
+        errorLogger(fastify, err.message, commonPath + "/getAllWhitelabels", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+    }
+};
+
+const whitelabelById = async (request, reply, fastify) => {
+    try {
+        const result = await whitelabelByIdService(request, fastify);
+        reply.status(200).send(success(result, 200));
+    } catch (err) {
+        errorLogger(fastify, err.message, commonPath + "/whitelabelById", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+    }
+};
+
+const saveWhitelabel = async (request, reply, fastify) => {
+    try {
+        const result = await createWhitelabelService(request, fastify);
+        reply.status(200).send(success(result, 200));
+    } catch (err) {
+        errorLogger(fastify, err.message, commonPath + "/saveWhitelabel", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+    }
+};
+
+const deleteWhitelabel = async (request, reply, fastify) => {
+    try {
+        const result = await deleteWhitelabelService(request, fastify);
+        reply.status(200).send(success(result, 200));
+    } catch (err) {
+        errorLogger(fastify, err.message, commonPath + "/deleteWhitelabel", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+    }
+};
+const activeInactiveWhitelabel = async (request, reply, fastify) => {
+    try {
+        const result = await activeInactiveWhitelabelService(request, fastify);
+        reply.status(200).send(success(result, 200));
+    } catch (err) {
+        errorLogger(fastify, err.message, commonPath + "/activeInactiveWhitelabel", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+    }
+};
+const upIsDefaultAPI = async (request, reply, fastify) => {
+    try {
+        const result = await upIsDefaultAPIService(request, fastify);
+        reply.status(200).send(success(result, 200));
+    } catch (err) {
+        errorLogger(fastify, err.message, commonPath + "/upIsDefaultAPI", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+    }
+};
+const hideEvents = async (request, reply, fastify) => {
+    try {
+        const result = await hideEventsService(request, fastify);
+        reply.status(200).send(success(result, 200));
+    } catch (err) {
+        errorLogger(fastify, err.message, commonPath + "/hideEvents", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+    }
+};
+const unhideEvents = async (request, reply, fastify) => {
+    try {
+        const result = await unhideEventsService(request, fastify);
+        reply.status(200).send(success(result, 200));
+    } catch (err) {
+        errorLogger(fastify, err.message, commonPath + "/unhideEvents", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+    }
+};
+const getEventTypes = async (request, reply, fastify) => {
+    try {
+        const result = await getEventTypesService(request, fastify);
+        reply.status(200).send(success(result, 200));
+    } catch (err) {
+        errorLogger(fastify, err.message, commonPath + "/getEventTypes", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+    }
+};
+const getCommentary = async (request, reply, fastify) => {
+    try {
+        const result = await getCommentaryService(request, fastify);
+        reply.status(200).send(success(result, 200));
+    } catch (err) {
+        errorLogger(fastify, err.message, commonPath + "/getCommentary", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+    }
+};
+const getCompetition = async (request, reply, fastify) => {
+    try {
+        const result = await getCompetitionService(request, fastify);
+        reply.status(200).send(success(result, 200));
+    } catch (err) {
+        errorLogger(fastify, err.message, commonPath + "/getCompetition", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+    }
+};
+const demoClientEnableInIOSWhitelabel = async (request, reply, fastify) => {
+    try {
+        const result = await demoClientEnableInIOSWhitelabelService(request, fastify);
+        reply.status(200).send(success(result, 200));
+    } catch (err) {
+        errorLogger(fastify, err.message, commonPath + "/demoClientEnableInIOSWhitelabel", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+    }
+};
+const isDemoClientLogin = async (request, reply, fastify) => {
+    try {
+        const result = await isDemoClientLoginService(request, fastify);
+        reply.status(200).send(success(result, 200));
+    } catch (err) {
+        errorLogger(fastify, err.message, commonPath + "/isDemoClientLogin", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+    }
+};
+const clientApiWhitelabels = async (request, reply, fastify) => {
+    try {
+        const result = await clientApiWhitelabelsService(request, fastify);
+        reply.status(200).send(success(result, 200));
+    } catch (err) {
+        errorLogger(fastify, err.message, commonPath + "/clientApiWhitelabels", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+    }
+};
+const getHideEvent = async (request, reply, fastify) => {
+    try {
+        const result = await getHideEventService(request, fastify);
+        reply.status(200).send(success(result, 200));
+    } catch (err) {
+        errorLogger(fastify, err.message, commonPath + "/getHideEvent", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+    }
+};
+module.exports = {
+    getAllWhitelabels,
+    whitelabelById,
+    saveWhitelabel,
+    deleteWhitelabel,
+    activeInactiveWhitelabel,
+    demoClientEnableInIOSWhitelabel,
+    isDemoClientLogin,
+    clientApiWhitelabels,
+    upIsDefaultAPI,
+    hideEvents,
+    getEventTypes,
+    getCompetition,
+    getCommentary,
+    unhideEvents,
+    getHideEvent
+};

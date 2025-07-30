@@ -17,6 +17,13 @@ const {
   getCommentaryResult,
   getTeamList,
   allCompetitionsList,
+  isMenChangeStatus,
+  getTemplateByCompetitionId,
+  saveCompTemplates,
+  isVirtualCompetition,
+  upCompStatus,
+  allPythonAPIs,
+  getMatchTypeTemplateByCompetitionId,
 } = require("../../../controller/users/admin/competition");
 const { getEventTypeList } = require("../../../controller/users/admin/eventTypes");
 const { Compitition } = require("../../../swaggerSchema/groupTags/schema");
@@ -152,12 +159,11 @@ module.exports = async (fastify, opts) => {
       (request, reply) =>
         checkPermission(request, reply, fastify, {
           tabName: "competition",
-          mode: "edit",
+          mode: "view",
         }),
     ],
     handler: (request, reply) => getAllMatchTypes(request, reply, fastify),
   });
-
   fastify.post("/getEventSnap", {
     schema: Compitition.getEventSnapByCompetitionId.schema,
     preHandler: [
@@ -219,5 +225,88 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request, reply) => allCompetitionsList(request, reply, fastify),
+  });
+  fastify.post("/isMen", {
+    schema: Compitition.isMenStatus.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "competition",
+          mode: "edit",
+        }),
+    ],
+    handler: (request, reply) => isMenChangeStatus(request, reply, fastify),
+  });
+  fastify.post("/getTemplateByComp", {
+    schema: Compitition.getTemplatesByCompId.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "competition",
+          mode: "view",
+        }),
+    ],
+    handler: (request, reply) => getTemplateByCompetitionId(request, reply, fastify),
+  });
+  fastify.post("/getMatchTypeTempByComp", {
+    schema: Compitition.getTemplatesByCompId.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "competition",
+          mode: "view",
+        }),
+    ],
+    handler: (request, reply) => getMatchTypeTemplateByCompetitionId(request, reply, fastify),
+  });
+  fastify.post("/saveCompTemplate", {
+    schema: Compitition.saveCompTemplate.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "competition",
+          mode: "edit",
+        }),
+    ],
+    handler: (request, reply) => saveCompTemplates(request, reply, fastify),
+  });
+  fastify.post("/isVirtual", {
+    schema: Compitition.isVirtual.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "competition",
+          mode: "edit",
+        }),
+    ],
+    handler: (request, reply) => isVirtualCompetition(request, reply, fastify),
+  });
+  fastify.post("/upStatus", {
+    schema: Compitition.upStatus.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "competition",
+          mode: "edit",
+        }),
+    ],
+    handler: (request, reply) => upCompStatus(request, reply, fastify),
+  });
+  fastify.post("/pythonAPIs", {
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "competition",
+          mode: "view",
+        }),
+    ],
+    handler: (request, reply) => allPythonAPIs(request, reply, fastify),
   });
 };

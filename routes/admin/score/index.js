@@ -29,7 +29,7 @@ const { getAllEventMarketsAndRunners } = require('../../../controller/users/admi
 const { getAllMenuItems } = require("../../../controller/users/admin/menuItem");
 const { getMenuItemList, getAllMenuTypes } = require("../../../controller/users/admin/menuType");
 const { getAllNews, getNewsById } = require("../../../controller/users/admin/news");
-const { getMarketsByCommentaryId, getNotificationByClient, markReadNotification ,getMarketByGraphByRefId, getMarketsByCommentaryIdV1 } = require("../../../controller/users/admin/score");
+const { getMarketsByCommentaryId, getNotificationByClient, markReadNotification ,getMarketByGraphByRefId, getMarketsByCommentaryIdV1, saveDeviceData } = require("../../../controller/users/admin/score");
 const {
   saveSubScribeDomain,
 } = require("../../../controller/users/admin/subScribesDomain");
@@ -41,13 +41,32 @@ const { getAllVideoLibrary } = require("../../../controller/users/admin/videoLib
 const { getAllPhotoLibrary, allLibraryImages } = require("../../../controller/users/admin/photoLibrary/index");
 const { getAllTipsClientAPI } = require("../../../controller/users/admin/tips/index");
 const { getAllCountryCode } = require("../../../controller/users/admin/countryCode");
+const {
+  getAllFavCompetitions,
+  saveFavCompetition,
+  deleteFavCompetition,
+  updateDisplayOrder,
+} = require('../../../controller/users/admin/favCompetitions');
+const {
+  allFavCommentary,
+  saveFavCommentary,
+  deleteFavCommentary,
+} = require("../../../controller/users/admin/clientFavCommentary");
+const { getAllCardType } = require("../../../controller/users/admin/cardType/index")
+const { getTournamentTeamPoints } = require("../../../controller/users/admin/tournamentTeamPoints/index");
 
 const {
   Score,
   SubScribesDomain,
   Commentary,
   Config,
+  Client,
+  FavCompetitions,
+  FavCommentary,
 } = require("../../../swaggerSchema/groupTags/schema");
+const { getAllSocialMedia } = require("../../../controller/users/admin/socialMedia");
+const { clientApiWhitelabels, getHideEvent } = require("../../../controller/users/admin/whitelabel");
+const { deleteClient, deleteClientByEncrypt } = require("../../../controller/users/admin/client");
 
 module.exports = async (fastify, opts) => {
   fastify.post("/getscore", {
@@ -340,4 +359,54 @@ module.exports = async (fastify, opts) => {
   fastify.post("/countryCodes", {
     handler: (request, reply) => getAllCountryCode(request, reply, fastify),
   });
+  fastify.post("/socialMedia", {
+    handler: (request, reply) => getAllSocialMedia(request, reply, fastify),
+  });
+  fastify.post("/whiteLabel", {
+    handler: (request, reply) => clientApiWhitelabels(request, reply, fastify),
+  });
+  fastify.post("/deleteAcc", {
+    // schema: Client.delete.schema,
+    handler: (request, reply) => deleteClientByEncrypt(request, reply, fastify),
+  });
+  fastify.post("/allFavComp", {
+    handler: (request, reply) => getAllFavCompetitions(request, reply, fastify),
+  });
+  fastify.post("/saveFavComp", {
+    schema: FavCompetitions.save.schema,
+    handler: (request, reply) => saveFavCompetition(request, reply, fastify),
+  });
+  fastify.post("/deleteFavComp", {
+    schema: FavCompetitions.delete.schema,
+    handler: (request, reply) => deleteFavCompetition(request, reply, fastify),
+  });
+  fastify.post("/changeDisplayOrder", {
+    schema: FavCompetitions.updateDisplayOrder.schema,
+    handler: (request, reply) => updateDisplayOrder(request, reply, fastify),
+  });
+  fastify.post("/allFavComm", {
+    handler: (request, reply) => allFavCommentary(request, reply, fastify),
+  });
+  fastify.post("/saveFavComm", {
+    schema: FavCommentary.save.schema,
+    handler: (request, reply) => saveFavCommentary(request, reply, fastify),
+  });
+  fastify.post("/deleteFavComm", {
+    schema: FavCommentary.delete.schema,
+    handler: (request, reply) => deleteFavCommentary(request, reply, fastify),
+  });
+   fastify.post("/hideEvent", {
+    // schema: FavCommentary.delete.schema,
+    handler: (request, reply) => getHideEvent(request, reply, fastify),
+  });
+   fastify.post("/allCardTypes", {
+    handler: (request, reply) => getAllCardType(request, reply, fastify),
+  });
+   fastify.post("/saveDeviceData", {
+    handler: (request, reply) => saveDeviceData(request, reply, fastify),
+  });
+   fastify.post("/tournamentTeamPoints", {
+    handler: (request, reply) => getTournamentTeamPoints(request, reply, fastify),
+  });
 };
+

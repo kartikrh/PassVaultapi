@@ -199,6 +199,31 @@ module.exports = (sequelize) => {
         type : DataTypes.BOOLEAN,
         allowNull : false,
         defaultValue : false
+      },
+      wrDifficulty : {
+        type : DataTypes.INTEGER,
+        allowNull : true,
+        defaultValue : null
+      },
+      wrPitchType : {
+        type : DataTypes.INTEGER,
+        allowNull : true,
+        defaultValue : null
+      },
+      wrLawnStriping : {
+        type : DataTypes.INTEGER,
+        allowNull : true,
+        defaultValue : null
+      },
+      wrPitchAge : {
+        type : DataTypes.INTEGER,
+        allowNull : true,
+        defaultValue : null
+      },
+      wrCardType : {
+        type : DataTypes.INTEGER,
+        allowNull : true,
+        defaultValue : null
       }
     },
     {

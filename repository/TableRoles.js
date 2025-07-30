@@ -32,7 +32,9 @@ const roleByDisplayTypeQuery = async (displayType, fastify) => {
 
 const valideRoleId = async (roleId, fastify) => {
   const data = await fastify.db.query(
-    `select * from "tblUsers" where "WrRoleId" in (select "wrRoleId" from "tblRoles" r inner join "tblEncryptedData" e  on r."wrRoleId" = e."wrKey" and e."wrValue" = $1)`,
+    `select * from "tblUsers" where 
+    "WrRoleId" in (select "wrRoleId" from "tblRoles" r inner join "tblEncryptedData" e  on r."wrRoleId" = e."wrKey" and e."wrValue" = $1)
+    AND "WrIsDelete" = false`,
     {
       type: fastify.db.QueryTypes.SELECT,
       bind: [roleId],
@@ -234,6 +236,27 @@ const permissionByRoleIdQuery = async (data, fastify) => {
   );
 };
 
+const permissionByRoleQuery = async (data, fastify) => {
+  return await fastify.db.query(
+    `select   
+     COALESCE(tp."wrIsAdd",false) as "isAddPermission",
+    COALESCE(tp."wrIsEdit",false) as "isEditPermission",
+    COALESCE(tp."wrIsDelete",false) as "isDeletePermission",
+    COALESCE(tp."wrIsView",false) as "isViewPermission"
+    from "tblTabs" tt 
+    left join (
+      select * from "tblPermissions" where "wrRoleId" = $1
+    ) as tp on tt."wrTabId" = tp."wrTabId"
+    left join "tblEncryptedData" te on te."wrKey" = tt."wrTabId"
+    where tt."wrDisplayType" = $2 and tt."wrTabName" = ANY($3) and tt."wrIsDeleted" = false
+    `,
+    {
+      type: fastify.db.QueryTypes.SELECT,
+      bind: [data.roleId, data.displayType, data.tabName],
+    }
+  );
+};
+
 module.exports = {
   getAllRolesQuery,
   valideRoleId,
@@ -244,4 +267,5 @@ module.exports = {
   deletePermissionQuery,
   roleByIdQuery,
   permissionByRoleIdQuery,
+  permissionByRoleQuery,
 };

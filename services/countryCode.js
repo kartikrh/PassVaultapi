@@ -2,6 +2,10 @@ const {
   insertCountryCodeQuery,
   updateCountryCodeQuery,
   deleteCountryCodeQuery,
+  activeInactiveCountryCodeQuery,
+  isClientShowCountryCodeQuery,
+  isDefaultCountryCodeQuery,
+  isDefaultFalseCountryCodeQuery,
 } = require("../repository/TableCountryCodes");
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
@@ -10,14 +14,15 @@ const {
     generateImageName,
     removeImageFromServer,
 } = require("../utilities/Images");
+const { importCountriesListAPI } = require("../utilities/importCountriesList");
 
 const saveCountryCodeService = async (request, fastify) => {
-  let validateCode = global.tblCountryCodes.find(
-    (item) => item.countryCode === request.body.countryCode
-  );
-  if (validateCode) {
-    throw new Error(`Country Code already existed`);
-  }
+  // let validateCode = global.tblCountryCodes.find(
+  //   (item) => item.countryCode === request.body.countryCode
+  // );
+  // if (validateCode) {
+  //   throw new Error(`Country Code already existed`);
+  // }
   let validateName = global.tblCountryCodes.find(
     (item) =>
       item.countryName.trim().toLowerCase() ===
@@ -31,13 +36,22 @@ const saveCountryCodeService = async (request, fastify) => {
     const projectName = global.tblConfigs.find(
       (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
     ).value;
-    const path = await storeImageOnServer({
+    const { fullPath, imagePath } = await storeImageOnServer({
       image: request.body.flag[0],
       project: projectName,
       name: imgName,
       ...ImgModuleConfig.Flag,
     });
-    request.body.flag = path;
+    request.body.flag = fullPath;
+    request.body.flagPath = imagePath;
+  }
+  if (request.body?.isDefault) {
+    await isDefaultFalseCountryCodeQuery(request.body, fastify, request);
+    for (const item of global.tblCountryCodes) {
+      if (item.id !== request.body.id) {
+        item.isDefault = false;
+      }
+    };
   }
   const saveData = await insertCountryCodeQuery(request.body, fastify, request);
   global.tblCountryCodes.push(saveData);
@@ -57,21 +71,42 @@ const editCountryCodeService = async (request, fastify) => {
     countryCode: request.body.countryCode ?? validateId.countryCode,
     countryName: request.body.countryName.trim() ?? validateId.countryName,
     flag: validateId.flag,
+    flagPath: validateId.flagPath,
+    // isActive: request.body.hasOwnProperty("isActive")
+    //     ? request.body.isActive
+    //     : validateId.isActive,
+    isActive: request.body.hasOwnProperty("isActive")
+    ? request.body.isActive === 'true' || request.body.isActive === true
+    : validateId.isActive,
     id: parseInt(request.body.id, 10),
+    maxNumber : request.body.maxNumber ?? validateId.maxNumber,
+    shortName : request.body.shortName ?? validateId.shortName,
+    timezone : request.body.timezone ?? validateId.timezone,
+    isClientShow : request.body.isClientShow ?? validateId.isClientShow,
+    isDefault : request.body.isDefault ?? validateId.isDefault,
   };
-
   if (request.body.flag && request.body.flag.length > 0) {
     const imgName = generateImageName({ name: updateData.countryName });
     const projectName = global.tblConfigs.find(
       (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
     ).value;
-    const result = await storeImageOnServer({
+    const { fullPath, imagePath } = await storeImageOnServer({
       image: request.body.flag[0],
       project: projectName,
       name: imgName,
       ...ImgModuleConfig.Flag,
     });
-    updateData.flag = result;
+    updateData.flag = fullPath;
+    updateData.flagPath = imagePath;
+  }
+
+  if (request.body?.isDefault) {
+    await isDefaultFalseCountryCodeQuery(request.body, fastify, request);
+    for (const item of global.tblCountryCodes) {
+      if (item.id !== request.body.id) {
+        item.isDefault = false;
+      }
+    };
   }
 
   const modifiedData = await updateCountryCodeQuery(updateData, fastify, request);
@@ -85,8 +120,18 @@ const editCountryCodeService = async (request, fastify) => {
 };
 
 const allCountryCodeService = async (fastify, request) => {
-  let result = global.tblCountryCodes;
-  return result;
+  const { isActive } = request.body || {};
+  if (isActive !== undefined) {
+    const result = global.tblCountryCodes.filter(
+      (item) => item.isActive === isActive
+    ).sort((a, b) => a.id - b.id);
+    return result;
+  } else {
+    const result = global.tblCountryCodes.filter(
+      (item) => item.isActive === true
+    ).sort((a, b) => a.id - b.id);
+    return result;
+  }
 };
 
 const countryCodeByIdService = async (fastify, request) => {
@@ -102,8 +147,33 @@ const createCountryCodeService = async (request, fastify) => {
   }
 };
 
+// const deleteCountryCodeService = async (fastify, request) => {
+//   const { id } = request.body;
+//   await deleteCountryCodeQuery(id, fastify, request);
+//   for (const codeId of id) {
+//     const countryCodes = global.tblCountryCodes.find((item) => item.id === codeId);
+//     if (countryCodes && countryCodes?.flag) {
+//       await removeImageFromServer({
+//         path: countryCodes.flag,
+//       });
+//     }
+//   }
+//   global.tblCountryCodes = global.tblCountryCodes.filter((item) => !id.includes(item.id));
+
+//   return `Country Code(s) data deleted successfully`;
+// };
 const deleteCountryCodeService = async (fastify, request) => {
   const { id } = request.body;
+  for (const cc of id) {
+    const playerData = global.tblPlayers.find(item => item.countryId === cc);
+    const teamData = global.tblTeams.find(item => item.countryId === cc);
+
+    const country = global.tblCountryCodes.find(item => item.id === cc);
+    if (playerData || teamData) {
+      const name = country?.countryName || `Country code`;
+      throw new Error(`${name} already used in another modules can't be delete`)
+    }
+  }
   await deleteCountryCodeQuery(id, fastify, request);
   for (const codeId of id) {
     const countryCodes = global.tblCountryCodes.find((item) => item.id === codeId);
@@ -118,10 +188,113 @@ const deleteCountryCodeService = async (fastify, request) => {
   return `Country Code(s) data deleted successfully`;
 };
 
+const activeInactiveCountryCodeService = async (fastify, request) => {
+  const { id, isActive } = request.body;
+  const validateId = global.tblCountryCodes.find(
+    (item) => item.id === id
+  );
+
+  if (!validateId) {
+    throw new Error("Country Code with this Id not found");
+  }
+  await activeInactiveCountryCodeQuery({id, isActive }, request, fastify);
+  const index = global.tblCountryCodes.findIndex((item) => item.id == id);
+  if(index != -1){
+    global.tblCountryCodes[index].isActive = isActive;
+  }
+
+  return `Country Code data updated successfully`;
+};
+
+const importCountriesListService = async (fastify, request) => {
+
+  importCountriesListAPI(request, fastify)
+    .then(async (data) => {
+      if (!data || data.length === 0) {
+        console.log(`No countries were imported`);
+        return;
+      }
+    for (const item of data) {
+      const itemCode = item?.shortName?.toLowerCase().trim();
+      if (!itemCode) continue;
+  
+      const index = global.tblCountryCodes.findIndex(elem =>
+        elem?.shortName?.toLowerCase().trim() === itemCode
+      );
+      if (index == -1) {
+        const saveData = await insertCountryCodeQuery(item, fastify, request);
+        global.tblCountryCodes.push(saveData);
+      } else {
+        const updateData = {
+          ...global.tblCountryCodes[index],
+          ...item
+        };
+        const modifiedData = await updateCountryCodeQuery(updateData, fastify, request);
+        global.tblCountryCodes[index] = modifiedData[0];
+      }
+    }
+  }).catch(err => {
+      console.log("Error during country import:", err.message);
+  });
+
+  return "Country Import process is running on background";
+};
+
+
+const isClientShowCountryCodeService = async (fastify, request) => {
+  const { id, isClientShow } = request.body;
+  const validateId = global.tblCountryCodes.find(
+    (item) => item.id === id
+  );
+
+  if (!validateId) {
+    throw new Error("Country Code with this Id not found");
+  }
+  await isClientShowCountryCodeQuery({id, isClientShow }, request, fastify);
+  const index = global.tblCountryCodes.findIndex((item) => item.id == id);
+  if(index != -1){
+    global.tblCountryCodes[index].isClientShow = isClientShow;
+  }
+
+  return `Country Code data updated successfully`;
+};
+
+
+const isDefaultCountryCodeService = async (fastify, request) => {
+  const { id, isDefault } = request.body;
+  const validateId = global.tblCountryCodes.find(
+    (item) => item.id === id
+  );
+
+  if (!validateId) {
+    throw new Error("Country Code with this Id not found");
+  }
+
+  if (isDefault) {
+    await isDefaultFalseCountryCodeQuery(request.body, fastify, request);
+    for (const item of global.tblCountryCodes) {
+      if (item.id !== request.body.id) {
+        item.isDefault = false;
+      }
+    };
+  }
+
+  await isDefaultCountryCodeQuery({id, isDefault }, request, fastify);
+  const index = global.tblCountryCodes.findIndex((item) => item.id == id);
+  if(index != -1){
+    global.tblCountryCodes[index].isDefault = isDefault;
+  }
+
+  return `Country Code data updated successfully`;
+};
 
 module.exports = {
   allCountryCodeService,
   countryCodeByIdService,
   createCountryCodeService,
   deleteCountryCodeService,
+  activeInactiveCountryCodeService,
+  importCountriesListService,
+  isClientShowCountryCodeService,
+  isDefaultCountryCodeService,
 };

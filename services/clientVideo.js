@@ -22,13 +22,14 @@ const saveClientVideo = async (request, fastify, data) => {
       (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
     )?.value;
 
-    const path = await storeImageOnServer({
+    const { fullPath, imagePath } = await storeImageOnServer({
       image: data.body.image[0],
       project: projectName,
       name: imgName,
       ...ImgModuleConfig.ClientVideo,
     });
-    data.body.image = path;
+    data.body.image = fullPath;
+    data.body.imagePath = imagePath;
   }
 
   const saveData = await insertClientVideoQuery(data.body, fastify, request);
@@ -51,13 +52,14 @@ const editClientVideo = async (request, fastify, data) => {
     const projectName = global.tblConfigs.find(
       (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
     ).value;
-    const path = await storeImageOnServer({
+    const { fullPath, imagePath } = await storeImageOnServer({
       image: request.body.image[0],
       project: projectName,
       name: imgName,
       ...ImgModuleConfig.ClientVideo,
     });
-    request.body.image = path;
+    request.body.image = fullPath;
+    request.body.imagePath = imagePath;
   }
 
   const updateData = {
@@ -68,6 +70,7 @@ const editClientVideo = async (request, fastify, data) => {
     credit: request.body.credit ?? validateId.credit,
     viewerCount: parseInt(request.body.viewerCount, 10) ?? validateId.viewerCount,
     id: parseInt(request.body.id, 10),
+    imagePath: request.body.imagePath ?? validateId.imagePath,
 };
 
   const modifiedData = await updateClientVideoQuery(updateData, fastify, request);

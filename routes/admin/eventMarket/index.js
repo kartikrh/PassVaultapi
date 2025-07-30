@@ -1,8 +1,9 @@
-const { getDetailsByCId, getAllEventMarket, createEventMarket, deleteEventMarket, activeInactiveMarket, updateAllowMarket, getEventListByCompetitionId, marketListResultFalse, changeResultOfMarket, marketListByCId, updateMarketRate, saveEventMarket ,changeMarketCancel, changeMarketResult, changeMarketClose, suspendMarketByCId, getEventMarketById, getMarketTemplateTypeList, getCommentaryTypeList, setDelayEventMarket, getDSReportEventMarket, getSLReportEventMarket, getMarketDataByCId,UpdateResulOrApproveEventMarket, getMarketTypeCategory,marketListcategoryNameByCId, setAllMarketClose, setCloseMarketCancel, cancelSettleMarket, getDetailsByCIdV1, createEventMarketV1, updateMarketRateV1, marketListByCIdV1, getRunnerByMarket, pendingMultiRunnerMarkets, updateMarketResult, getComByCompId, updateEventMarketCloseSuspendTime, closeMarketsByIds, cancelMarketsByIds, getManualMarketData, saveManualMarketData, upManualMarketData, getCommentaryList, upIsInningRunApi, globalEventMarketDataWithCommId, globalEventMarketDataWithMarketIds, upSendMarketData, upSusTimeData, upCloseTimeData, changeMultiMarketsSessionIsResult, changeMultiMarketsIsResult, getCommentaryDetails } = require("../../../controller/users/admin/eventMarket");
+const { getDetailsByCId, getAllEventMarket, createEventMarket, deleteEventMarket, activeInactiveMarket, updateAllowMarket, getEventListByCompetitionId, marketListResultFalse, changeResultOfMarket, marketListByCId, updateMarketRate, saveEventMarket ,changeMarketCancel, changeMarketResult, changeMarketClose, suspendMarketByCId, getEventMarketById, getMarketTemplateTypeList, getCommentaryTypeList, setDelayEventMarket, getDSReportEventMarket, getSLReportEventMarket, getMarketDataByCId,UpdateResulOrApproveEventMarket, getMarketTypeCategory,marketListcategoryNameByCId, setAllMarketClose, setCloseMarketCancel, cancelSettleMarket, getDetailsByCIdV1, createEventMarketV1, updateMarketRateV1, marketListByCIdV1, getRunnerByMarket, pendingMultiRunnerMarkets, updateMarketResult, getComByCompId, updateEventMarketCloseSuspendTime, closeMarketsByIds, cancelMarketsByIds, getManualMarketData, saveManualMarketData, upManualMarketData, getCommentaryList, upIsInningRunApi, globalEventMarketDataWithCommId, globalEventMarketDataWithMarketIds, upSendMarketData, upSusTimeData, upCloseTimeData, changeMultiMarketsSessionIsResult, changeMultiMarketsIsResult, getCommentaryDetails, loadMarketByComId, getEventMarketAndRunnersById } = require("../../../controller/users/admin/eventMarket");
 const { EventMarket, Commentary } = require("../../../swaggerSchema/groupTags/schema");
 const {
     authorize,
     checkPermission,
+    multiTabPermissionCheck,
   } = require("../../../controller/middleware");
 const { getEventTypeList } = require("../../../controller/users/admin/eventTypes");
 const { getCompetitionListByeventTypeId } = require("../../../controller/users/admin/competition");
@@ -11,7 +12,7 @@ module.exports = async (fastify, opts) => {
         schema: EventMarket.getAll.schema,
         preHandler: [
             (request, reply) => authorize(request, reply, fastify),
-            (request, reply) => checkPermission(request, reply, fastify, {
+            (request, reply) => multiTabPermissionCheck(request, reply, fastify, {
                 tabName: "Event Markets",
                 mode: "view"
             })
@@ -22,7 +23,7 @@ module.exports = async (fastify, opts) => {
         schema: EventMarket.byId.schema,
         preHandler: [
             (request, reply) => authorize(request, reply, fastify),
-            (request, reply) => checkPermission(request, reply, fastify, {
+            (request, reply) => multiTabPermissionCheck(request, reply, fastify, {
                 tabName: "Event Markets",
                 mode: "view"
             })
@@ -100,7 +101,7 @@ module.exports = async (fastify, opts) => {
         schema: EventMarket.activeInactiveMarket.schema,
         preHandler: [
             (request, reply) => authorize(request, reply, fastify),
-            (request, reply) => checkPermission(request, reply, fastify, {
+            (request, reply) => multiTabPermissionCheck(request, reply, fastify, {
                 tabName: "Event Markets",
                 mode: "delete"
             })
@@ -111,7 +112,7 @@ module.exports = async (fastify, opts) => {
         schema: EventMarket.updateAllowMarket.schema,
         preHandler: [
             (request, reply) => authorize(request, reply, fastify),
-            (request, reply) => checkPermission(request, reply, fastify, {
+            (request, reply) => multiTabPermissionCheck(request, reply, fastify, {
                 tabName: "Event Markets",
                 mode: "delete"
             })
@@ -123,7 +124,7 @@ module.exports = async (fastify, opts) => {
         preHandler: [
           (request, reply) => authorize(request, reply, fastify),
           (request, reply) =>
-            checkPermission(request, reply, fastify, {
+            multiTabPermissionCheck(request, reply, fastify, {
               tabName: "Event Markets",
               mode: "view",
             }),
@@ -135,7 +136,7 @@ module.exports = async (fastify, opts) => {
         preHandler: [
           (request, reply) => authorize(request, reply, fastify),
           (request, reply) =>
-            checkPermission(request, reply, fastify, {
+            multiTabPermissionCheck(request, reply, fastify, {
               tabName: "Event Markets",
               mode: "view",
             }),
@@ -147,7 +148,7 @@ module.exports = async (fastify, opts) => {
         preHandler: [
           (request, reply) => authorize(request, reply, fastify),
           (request, reply) =>
-            checkPermission(request, reply, fastify, {
+            multiTabPermissionCheck(request, reply, fastify, {
               tabName: "Event Markets",
               mode: "view",
             }),
@@ -159,7 +160,7 @@ module.exports = async (fastify, opts) => {
         preHandler: [
           (request, reply) => authorize(request, reply, fastify),
           (request, reply) =>
-            checkPermission(request, reply, fastify, {
+            multiTabPermissionCheck(request, reply, fastify, {
               tabName: "Event Markets",
               mode: "view",
             }),
@@ -171,7 +172,7 @@ module.exports = async (fastify, opts) => {
         preHandler: [
           (request, reply) => authorize(request, reply, fastify),
           (request, reply) =>
-            checkPermission(request, reply, fastify, {
+            multiTabPermissionCheck(request, reply, fastify, {
               tabName: "Event Markets",
               mode: "view",
             }),
@@ -183,7 +184,7 @@ module.exports = async (fastify, opts) => {
         preHandler: [
           (request, reply) => authorize(request, reply, fastify),
           (request, reply) =>
-            checkPermission(request, reply, fastify, {
+            multiTabPermissionCheck(request, reply, fastify, {
               tabName: "Event Markets",
               mode: "view",
             }),
@@ -195,7 +196,7 @@ module.exports = async (fastify, opts) => {
         preHandler: [
           (request, reply) => authorize(request, reply, fastify),
           (request, reply) =>
-            checkPermission(request, reply, fastify, {
+            multiTabPermissionCheck(request, reply, fastify, {
               tabName: "Event Markets",
               mode: "edit",
             }),
@@ -207,7 +208,7 @@ module.exports = async (fastify, opts) => {
         preHandler: [
           (request, reply) => authorize(request, reply, fastify),
           (request, reply) =>
-            checkPermission(request, reply, fastify, {
+            multiTabPermissionCheck(request, reply, fastify, {
               tabName: "Event Markets",
               mode: "edit",
             }),
@@ -230,7 +231,7 @@ module.exports = async (fastify, opts) => {
         preHandler: [
           (request, reply) => authorize(request, reply, fastify),
           (request, reply) =>
-            checkPermission(request, reply, fastify, {
+            multiTabPermissionCheck(request, reply, fastify, {
               tabName: "Event Markets",
               mode: "edit",
             }),
@@ -252,7 +253,7 @@ module.exports = async (fastify, opts) => {
         schema: EventMarket.commentaryTypeList.schema,
         preHandler: [
             (request, reply) => authorize(request, reply, fastify),
-            (request, reply) => checkPermission(request, reply, fastify, {
+            (request, reply) => multiTabPermissionCheck(request, reply, fastify, {
                 tabName: "Event Markets",
                 mode: "view"
             })
@@ -263,7 +264,7 @@ module.exports = async (fastify, opts) => {
         schema: EventMarket.marketTemplateTypeList.schema,
         preHandler: [
             (request, reply) => authorize(request, reply, fastify),
-            (request, reply) => checkPermission(request, reply, fastify, {
+            (request, reply) => multiTabPermissionCheck(request, reply, fastify, {
                 tabName: "Event Markets",
                 mode: "view"
             })
@@ -285,7 +286,7 @@ module.exports = async (fastify, opts) => {
         schema: EventMarket.getDSReport.schema,
         preHandler: [
             (request, reply) => authorize(request, reply, fastify),
-            (request, reply) => checkPermission(request, reply, fastify, {
+            (request, reply) => multiTabPermissionCheck(request, reply, fastify, {
                 tabName: "Event Markets",
                 mode: "view"
             })
@@ -296,7 +297,7 @@ module.exports = async (fastify, opts) => {
         schema: EventMarket.getDSReport.schema,
         preHandler: [
             (request, reply) => authorize(request, reply, fastify),
-            (request, reply) => checkPermission(request, reply, fastify, {
+            (request, reply) => multiTabPermissionCheck(request, reply, fastify, {
                 tabName: "Event Markets",
                 mode: "view"
             })
@@ -319,7 +320,7 @@ module.exports = async (fastify, opts) => {
         preHandler: [
           (request, reply) => authorize(request, reply, fastify),
           (request, reply) =>
-            checkPermission(request, reply, fastify, {
+            multiTabPermissionCheck(request, reply, fastify, {
               tabName: "Event Markets",
               mode: "view",
             }),
@@ -387,7 +388,7 @@ module.exports = async (fastify, opts) => {
         schema: EventMarket.getDetailsByCIdV1.schema,
         preHandler: [
             (request, reply) => authorize(request, reply, fastify),
-            (request, reply) => checkPermission(request, reply, fastify, {
+            (request, reply) => multiTabPermissionCheck(request, reply, fastify, {
                 tabName: "Event Markets",
                 mode: "view"
             })
@@ -421,7 +422,7 @@ module.exports = async (fastify, opts) => {
         schema: EventMarket.marketListByCId.schema,
         preHandler: [
             (request, reply) => authorize(request, reply, fastify),
-            (request, reply) => checkPermission(request, reply, fastify, {
+            (request, reply) => multiTabPermissionCheck(request, reply, fastify, {
                 tabName: "Event Markets",
                 mode: "view"
             })
@@ -432,7 +433,7 @@ module.exports = async (fastify, opts) => {
         schema: EventMarket.getRunnerByMarket.schema,
         preHandler: [
             (request, reply) => authorize(request, reply, fastify),
-            (request, reply) => checkPermission(request, reply, fastify, {
+            (request, reply) => multiTabPermissionCheck(request, reply, fastify, {
                 tabName: "Event Markets",
                 mode: "view"
             })
@@ -444,7 +445,7 @@ module.exports = async (fastify, opts) => {
         preHandler: [
           (request, reply) => authorize(request, reply, fastify),
           (request, reply) =>
-            checkPermission(request, reply, fastify, {
+            multiTabPermissionCheck(request, reply, fastify, {
               tabName: "Event Markets",
               mode: "view",
             }),
@@ -516,7 +517,7 @@ module.exports = async (fastify, opts) => {
         schema: EventMarket.getManualMarket.schema,
         preHandler: [
             (request, reply) => authorize(request, reply, fastify),
-            (request, reply) => checkPermission(request, reply, fastify, {
+            (request, reply) => multiTabPermissionCheck(request, reply, fastify, {
                 tabName: "Event Markets",
                 mode: "view"
             })
@@ -527,7 +528,7 @@ module.exports = async (fastify, opts) => {
         schema: EventMarket.saveManualMarket.schema,
         preHandler: [
             (request, reply) => authorize(request, reply, fastify),
-            (request, reply) => checkPermission(request, reply, fastify, {
+            (request, reply) => multiTabPermissionCheck(request, reply, fastify, {
                 tabName: "Event Markets",
                 mode: request.body.eventMarketId == 0 ? "add" : "edit"
             })
@@ -538,7 +539,7 @@ module.exports = async (fastify, opts) => {
         schema: EventMarket.upManualMarket.schema,
         preHandler: [
             (request, reply) => authorize(request, reply, fastify),
-            (request, reply) => checkPermission(request, reply, fastify, {
+            (request, reply) => multiTabPermissionCheck(request, reply, fastify, {
                 tabName: "Event Markets",
                 mode: "edit"
             })
@@ -622,5 +623,27 @@ module.exports = async (fastify, opts) => {
         ],
         handler: (request, reply) => getCommentaryDetails(request, reply, fastify),
     });
+    fastify.post("/loadMarketByCom", {
+        schema : EventMarket.loadMarketByCom.schema,
+        preHandler: [
+            (request, reply) => authorize(request, reply, fastify),
+            (request, reply) => checkPermission(request, reply, fastify,{
+                tabName: "Event Markets",
+                mode: "view"            
+            })
+        ],
+        handler : (request, reply) => loadMarketByComId(request, reply, fastify)
+    })
+    fastify.post("/marketInfo", {
+        schema : EventMarket.MarketInfo.schema,
+        preHandler: [
+            (request, reply) => authorize(request, reply, fastify),
+            (request, reply) => checkPermission(request, reply, fastify,{
+                tabName: "Event Markets",
+                mode: "view"            
+            })
+        ],
+        handler : (request, reply) => getEventMarketAndRunnersById(request, reply, fastify)
+    })
 };
 

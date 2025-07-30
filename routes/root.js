@@ -40,6 +40,9 @@ const {
   forgotPassword,
   verifyForgotPasswordOTP,
   updatePasswordInForgot,
+  clientDataById,
+  verifySeamlessOTP,
+  loadEnityData,
   //loginRegistrationClient,
 } = require("../controller/users/index");
 const { Auth ,sendPushNotification,weblogs, Config, EventType, Commentary} = require("../swaggerSchema/groupTags/schema");
@@ -51,6 +54,7 @@ const { marketType } = require("../controller/users/admin/matchType");
 const { thirdPartyApiType } = require('../utilities/index');
 const { getEventTypeList } = require("../controller/users/admin/eventTypes");
 const { getCompetitionListByeventTypeId } = require("../controller/users/admin/competition");
+const { getAllConfig } = require("../controller/users/admin/Page/config")
 // const { getCompetitionListByeventTypeId } = require("../../../controller/users/admin/competition");
 
 module.exports = async function (fastify, opts) {
@@ -314,5 +318,18 @@ module.exports = async function (fastify, opts) {
   fastify.post("/updatePass", {
     schema: Auth.UpdatePassword.schema,
     handler: (request, reply) => updatePasswordInForgot(request, reply, fastify),
+  });
+  fastify.post("/clientById", {
+    schema: Auth.clientById.schema,
+    handler: (request, reply) => clientDataById(request, reply, fastify),
+  });
+  fastify.post("/configs", {
+    handler: (request, reply) => getAllConfig(request, reply, fastify),
+  });
+  fastify.post("/otplessVerify", {
+    handler: (request, reply) => verifySeamlessOTP(request, reply, fastify),
+  });
+  fastify.post("/loadEntity", {
+    handler: (request, reply) => loadEnityData(request, fastify, reply),
   });
 };

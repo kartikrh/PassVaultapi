@@ -11,6 +11,8 @@ const {
   allPlayerByCompetitionAndTeamService,
   mergePlayerImageAndJerseyService,
   setTeamPlayerImgService,
+  getTeamListPlayerIdService,
+  activeInactivePlayerService,
 } = require("../../../../services/player");
 const { errorLogger } = require("../../../../utilities/logger");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
@@ -162,6 +164,24 @@ const setTeamPlayerImg = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const getTeamListByPlayerId = async (request, reply, fastify) => {
+  try {
+    const result = await getTeamListPlayerIdService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/getTeamListByPlayerId", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const activeInactivePlayer = async (request, reply, fastify) => {
+  try {
+    const result = await activeInactivePlayerService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/activeInactivePlayer", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 
 module.exports = {
   getAllPlayers,
@@ -176,5 +196,7 @@ module.exports = {
   updateIsSystemPlayer,
   getAllPlayerByCompetitionAndTeam,
   mergePlayerImageAndJersey,
-  setTeamPlayerImg
+  setTeamPlayerImg,
+  getTeamListByPlayerId,
+  activeInactivePlayer,
 };

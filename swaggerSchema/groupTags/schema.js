@@ -1,3 +1,5 @@
+const { isDefaultChange } = require("../../controller/users/admin/packages");
+
 //! for every new route add a schema name you wish to group the api's on swagger
 const Auth = {
   signUp: {
@@ -413,8 +415,9 @@ const Auth = {
       body: {
         type: "object",
         properties: {
-          clientId : {type: "integer"},
+          clientId : {type: "string"},
           fullName: { type: "string" },
+          email: { type: "string" },
         },
         required: ["clientId"],
       },
@@ -427,7 +430,7 @@ const Auth = {
       body: {
         type: "object",
         properties: {
-          clientId : {type: "integer"},
+          clientId : {type: "string"},
           oldPassword: { type: "string" },
           newPassword: { type: "string" },
         },
@@ -456,9 +459,10 @@ const Auth = {
       body: {
         type: "object",
         properties: {
-          clientId: { type: "string" },
+          mobileNo: { type: "string" },
+          countryCode: { type: "string" },
         },
-        required: ["clientId"],
+        required: ["mobileNo", "countryCode"],
       },
     },
   },
@@ -489,6 +493,19 @@ const Auth = {
           password: { type: "string" },
         },
         required: ["clientId", "password"],
+      },
+    },
+  },
+  clientById: {
+    schema: {
+      tags: ["Auth"],
+      description: "get client details",
+      body: {
+        type: "object",
+        properties: {
+          clientId: { type: "string" },
+        },
+        required: ["clientId"],
       },
     },
   },
@@ -1564,8 +1581,9 @@ const Teams = {
           teamId: { type: "integer" },
           teamName: { type: "string" },
           teamShortName: { type: "string" },
-          country: { type: "string" },
           eventTypeId: { type: "integer" },
+          tpId: { type: "integer" },
+          countryId: { type: "integer" },
           teamColor: { type: "string" },
           playerId: {
             type: "array",
@@ -1764,7 +1782,6 @@ const Player = {
         properties: {
           playerId: { type: "integer" },
           eventTypeId: { type: "integer" },
-          country: { type: "string" },
           playerTypeId: { type: "integer" },
           playerName: { type: "string" },
           bowlingTypeId: { type: "integer" },
@@ -1777,6 +1794,8 @@ const Player = {
           bowlerAverage: { type: "number" },
           bowlerEconomy: { type: "number" },
           displayName: { type: "string" },
+          tpId: { type: "integer" },
+          countryId: { type: "integer" },
           teamId: {
             type: "array",
             items: { type: "string" },
@@ -1843,6 +1862,34 @@ const Player = {
           },
         },
         required: ["playerId"],
+      },
+    },
+  },
+  getAllPlayerTeams: {
+    schema: {
+      tags: ["Player"],
+      security: [{ bearerAuth: [] }],
+      description: "get all Player Teams",
+      body: {
+        type: "object",
+        properties: {
+          playerId: { type: "integer" },
+        },
+        required: ["playerId"],
+      },
+    },
+  },
+  activeInactive: {
+    schema: {
+      tags: ["Player"],
+      description: "active inactive player data",
+      body: {
+        type: "object",
+        properties: {
+          playerId: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["playerId", "isActive"],
       },
     },
   },
@@ -1929,6 +1976,9 @@ const MatchType = {
           valueOfFrontFootNoBall: { type: "integer" },
           isAutoChangeStriker: { type: "boolean" },
           autoChangeStrikerAfterBall: { type: "integer" },
+          entityEnum: { type: "integer" },
+          isActive: { type: "boolean" },
+          templateIds : {type : "array", items : { type : "integer" }},
         },
         required: ["matchTypeId"],
       },
@@ -1964,6 +2014,20 @@ const MatchType = {
           isHistory: { type: "boolean" },
         },
         required: ["matchTypeId", "isHistory"],
+      },
+    },
+  },
+  activeInactive: {
+    schema: {
+      tags: ["Match Type"],
+      description: "active inactive match type data",
+      body: {
+        type: "object",
+        properties: {
+          matchTypeId: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["matchTypeId", "isActive"],
       },
     },
   },
@@ -2406,6 +2470,7 @@ const Commentary = {
         type: "object",
         properties: {
           eventId : { type: "string" },
+          commentaryId : { type: "integer" },
         },
       },
     },
@@ -2558,7 +2623,7 @@ const Commentary = {
         type: "object",
         properties: {
           commentaryId: { type: "integer" },
-          eventRefId: { type: "string" },
+          eventRefId: { type: ["string", "null"] },
         },
         required: ["commentaryId", "eventRefId"],
       },
@@ -2818,6 +2883,21 @@ const Commentary = {
           playerId: { type: "integer" },
         },
         required: ["commentaryId", "teamId", "playerId"],
+      },
+    },
+  },
+  deleteTeamPlayer: {
+    schema: {
+      tags: ["Commentary"],
+      description: "delete team players",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+          commentaryPlayerId: { type: "integer" },
+        },
+        required: ["commentaryId", "commentaryPlayerId"],
       },
     },
   },
@@ -3342,6 +3422,459 @@ const Commentary = {
       },
     },
   },
+  changeIsEventStart: {
+    schema: {
+      tags: ["Commentary"],
+      description: "change isEventStart Commentary",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+          isEventStart: { type: "boolean" },
+        },
+        required: ["commentaryId", "isEventStart"],
+      },
+    },
+  },
+  comStart: {
+    schema: {
+      tags: ["Commentary"],
+      description: "Commentary start details",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId : {type : "integer"},
+          commentaryPlayers: { type: "array", items: { type: "object" } },
+          commentaryDetails: { type: "object" },
+          // commentaryTeams: { type: "array", items: { type: "object" } },
+          commentaryOvers: { type : "object" },
+          commentaryBallByBall: { type: "object" },
+          // commentaryWickets: { type: "array", items: { type: "object" } },
+          commentaryPartnership: {   type: "object" },
+          isCallPredict : {type : "boolean"}
+        },
+        required: [
+          "commentaryId" ,"commentaryDetails", "commentaryPlayers","commentaryOvers","commentaryBallByBall", "commentaryPartnership", "isCallPredict"
+        ],
+      },
+    },
+  },
+  comToss: {
+    schema: {
+      tags: ["Commentary"],
+      description: "Commentary start details",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId : {type : "integer"},
+          // commentaryPlayers: { type: "array", items: { type: "object" } },
+          commentaryDetails: { type: "object" },
+          commentaryTeams: { type: "array", items: { type: "object" } },
+          // commentaryOvers: { type : "object" },
+          // commentaryBallByBall: { type: "object" },
+          // // commentaryWickets: { type: "array", items: { type: "object" } },
+          // commentaryPartnership: {   type: "object" },
+          isCallPredict : {type : "boolean"}
+        },
+        required: [
+          "commentaryId" , "commentaryDetails", "commentaryTeams", "isCallPredict"
+        ],
+      },
+    },
+  },
+  comScore : {
+    schema : {
+      tags :["Commentary"],
+       description: "Commentary start details",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId : {type : "integer"},
+          commentaryPlayers: { type: "array", items: { type: "object" } },
+          commentaryDetails: { type: "object" },
+          commentaryTeams: { type: "array", items: { type: "object" } },
+          commentaryOvers: { type : "object" },
+          commentaryBallByBall: { type: "object" },
+          // commentaryWickets: { type: "array", items: { type: "object" } },
+          commentaryPartnership: {   type: "object" },
+          isCallPredict : {type : "boolean"}
+        },
+        required: [
+          "commentaryId" ,"commentaryDetails", "commentaryPlayers","commentaryOvers","commentaryBallByBall", "commentaryPartnership", "isCallPredict", "commentaryTeams"
+        ],
+      },
+    }
+  },
+  comOverStart : {
+    schema : {
+      tags :["Commentary"],
+       description: "Commentary start details",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId : {type : "integer"},
+          commentaryOvers: { type : "object" },
+          commentaryBallByBall: { type: "object" },
+          // commentaryWickets: { type: "array", items: { type: "object" } },
+          // commentaryPartnership: {   type: "object" },
+          isCallPredict : {type : "boolean"}
+        },
+        required: [
+          "commentaryId" ,"commentaryOvers","commentaryBallByBall", "isCallPredict"
+        ],
+      },
+    }
+  },
+  comSwapPlayer : {
+    schema : {
+      tags : ["Commentary"],
+      description : "Commentary Swap Player",
+      secaurity : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          commentaryId : {type : "integer"},
+          isCallPredict : {type : "boolean"},
+          commentaryDetails : {type : "object"},
+          commentaryPlayers : {type : "array"},
+          commentaryPartnership : {type : "object"}
+        }
+      },
+      required : [
+        "commentaryId" ,"commentaryDetails", "commentaryPartnership", "isCallPredict", "commentaryPlayers"
+      ]
+    }
+  },
+  comInningChange:{
+    schema : {
+      tags :["Commentary"],
+       description: "Commentary start details",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId : {type : "integer"},
+          commentaryDetails : {type : "object"},
+          commentaryPartnership : {type : "object"},
+          commentaryPlayers :   { type: "array", items: { type: "object" } },
+          commentaryTeams :   { type: "array", items: { type: "object" } },
+          isCallPredict : {type : "boolean"},
+          isEndInnings : {type : "boolean"}
+        },
+        required: [
+          "commentaryId" ,"commentaryDetails","commentaryPartnership", "isCallPredict",
+          "isEndInnings","commentaryPlayers","commentaryTeams"
+        ],
+      },
+    }
+  },
+  UpdatePitchageAndSession:{
+    schema : {
+      tags :["Commentary"],
+       description: "update Commentary pitchage and session",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId : {type : "integer"},
+          pitchAge : {type : "integer"},
+          session : {type : "string"},
+        },
+        required: [ "commentaryId" ],
+      },
+    }
+  },
+  GetPitchageAndSession:{
+    schema : {
+      tags :["Commentary"],
+       description: "get Commentary pitchage and session",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId : {type : "integer"},
+        },
+        required: [ "commentaryId" ],
+      },
+    }
+  },
+  comWicket : {
+    schema : {
+      tags :["Commentary"],
+      description: "Commentary Wicket details",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId : {type : "integer"},
+          commentaryPlayers: { type: "array", items: { type: "object" } },
+          commentaryDetails: { type: "object" },
+          commentaryTeams: { type: "array", items: { type: "object" } },
+          commentaryOvers: { type : "object" },
+          commentaryBallByBall: { type: "object" },
+          commentaryWicket:  { type: "object" },
+          commentaryPartnership: {   type: "object" },
+          isCallPredict : {type : "boolean"}
+        },
+        required: [
+          "commentaryId" ,"commentaryDetails", "commentaryPlayers","commentaryOvers","commentaryBallByBall", "commentaryPartnership", "isCallPredict", "commentaryTeams",
+          "commentaryWicket"
+        ],
+      },
+    }
+  },
+  comSetPlayer : {
+    schema : {
+      tags :["Commentary"],
+      description: "Commentary Player details",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId : {type : "integer"},
+          commentaryPlayers: { type: "array", items: { type: "object" } },
+          commentaryBallByBall: { type: "object" },
+          commentaryPartnership: {   type: "object" },
+          isCallPredict : {type : "boolean"}
+        },
+        required: [
+          "commentaryId", "commentaryPlayers", "commentaryBallByBall", "commentaryPartnership", "isCallPredict"
+        ],
+      },
+    }
+  },
+  UpdatePythonAPI : {
+    schema : {
+      tags :["Commentary"],
+      description: "Commentary Player details",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId : {type : "integer"},
+          pythonId: {type: "integer"},
+          pythonURI : {type : "string"}
+        },
+        required: [ "commentaryId", "pythonId", "pythonURI"],
+      },
+    }
+  },
+  UndoAPI: {
+    schema: {
+      tags: ["Commentary"],
+      description: "undo Commentary details",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+          commentaryDetails: { type: "object" },
+          commentaryPartnership: { type: "object" },
+          commentaryTeams: { type: "array", items: { type: "object" } },
+          commentaryPlayers: { type: "array", items: { type: "object" } },
+          commentaryOvers: { type: "object" },
+        },
+        required: ["commentaryId"],
+      },
+    },
+  },
+  drsById: {
+    schema: {
+      tags: ["Commentary"],
+      description: "get commentary DRS data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+        },
+        required: ["id"],
+      },
+    },
+  },
+  drsByCommentaryId: {
+    schema: {
+      tags: ["Commentary"],
+      description: "get commentary DRS data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+          commentaryTeamId: { type: "integer" },
+        },
+        required: ["commentaryId"],
+      },
+    },
+  },
+  dltDrs: {
+    schema: {
+      tags: ["Commentary"],
+      description: "delete commentary DRS data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id : {type : "array"}
+        },
+        required: ["id"],
+      },
+    },
+  },
+  takeDrs: {
+    schema: {
+      tags: ["Commentary"],
+      description: "take commentary DRS data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id : {type : "integer"},
+          commentaryId : {type : "integer"},
+          commentaryTeamId : {type : "integer"},
+          teamId : {type : "integer"}
+        },
+        required: ["id" , "commentaryId" , "commentaryTeamId", "teamId"],
+      },
+    },
+  },
+  upDrs: {
+    schema: {
+      tags: ["Commentary"],
+      description: "update commentary DRS data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id : {type : "integer"},
+          result : {type : "boolean"},
+          isCount : {type : "boolean"}
+        },
+        required: ["id" , "isCount", "result"],
+      },
+    },
+  },
+  changeStriker: {
+    schema: {
+      tags: ["Commentary"],
+      description: "update commentary data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId :{type : "integer"},
+          commentaryDetails : {type : "object"},
+          commentaryPlayers : {type : "array"},
+        },
+        required: ["commentaryId" , "commentaryDetails", "commentaryPlayers"],
+      },
+    },
+  },
+  changePly: {
+    schema: {
+      tags: ["Commentary"],
+      description: "update commentary data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId :{type : "integer"},
+          commentaryDetails : {type : "object"},
+          commentaryPlayers : {type : "array"},
+          commentaryPartnership : {type : "object"}
+        },
+        required: ["commentaryId" , "commentaryDetails", "commentaryPlayers", "commentaryPartnership"],
+      },
+    },
+  },
+  changeOver: {
+    schema: {
+      tags: ["Commentary"],
+      description: "update commentary data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId :{type : "integer"},
+          commentaryDetails : {type : "object"},
+          commentaryOvers : {type : "object"},
+          commentaryPlayers : {type : "array"},
+          isCallPredict : {type : "boolean"},
+          commentaryTeams : {type : "array"}
+        },
+        required: ["commentaryId" , "commentaryDetails", "commentaryPlayers", "commentaryOvers", "commentaryTeams"],
+      },
+    },
+  },
+  updateEventTypeIdAndCompId: {
+    schema: {
+      tags: ["Commentary"],
+      description: "update commentary data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId :{type : "integer"},
+          competitionId :{type : "integer"},
+          eventTypeId :{type : "integer"}
+        },
+        required: ["commentaryId", "competitionId", "eventTypeId"],
+      },
+    },
+  },
+  commWicketById: {
+    schema: {
+      tags: ["Commentary"],
+      description: "get commentary wicket data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryWicketId :{type : "integer"},
+        },
+        required: ["commentaryWicketId"],
+      },
+    },
+  },
+  updateCommWicket: {
+    schema: {
+      tags: ["Commentary"],
+      description: "update commentary wicket data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryWicketId :{type : "integer"},
+          commentaryId: { type: "integer" },
+          bowlerId: { type: "integer" },
+          bowlerName: { type: "string" },
+          wicketType: { type: "integer" },
+          batterId: { type: "integer" },
+          batterName: { type: "string" },
+          fieldPlayerId : {type : "integer"},
+          fieldPlayerName: { type: "string" },
+          overId: { type: "integer" },
+          overCount: { type: "string" },
+          commentaryBallByBallId: { type: "integer" },
+          teamId: { type: "integer" },
+          teamScore: { type: "integer" },
+          playerRun: { type: "integer" },
+          playerBalls: { type: "integer" },
+          wicketCount: { type: "integer" },
+          ballCount: { type: "integer" },
+          currentInnings: { type: "integer" },
+          fieldPlayer2Id: { type: "integer" },
+          fieldPlayer2Name: { type: "string" },
+        },
+        required: ["commentaryWicketId"],
+      },
+    },
+  },
 };
 
 const Compitition = {
@@ -3414,6 +3947,19 @@ const Compitition = {
           refId: { type: "string" },
           isActive: { type: "boolean" },
           isTrending : { type: "boolean" },
+          matchTypeId : {type : "integer"},
+          commStatus: { type: "integer" },
+          startDate: { type: "string" },
+          endDate: { type: "string" },
+          tpId: { type: "integer" },
+          type: { type: "integer" },
+          pythonId: { type: "integer" },
+          winPoint: { type: "integer" },
+          tiePoint: { type: "integer" },
+          cancelPoint: { type: "integer" },
+          lossPoint: { type: "integer" },
+          drsCount: { type: "integer" },
+          countryId: { type: "integer" },
         },
         required: ["competitionId"],
       },
@@ -3575,6 +4121,92 @@ const Compitition = {
       },
     },
   },
+  isMenStatus: {
+    schema: {
+      tags: ["Compitition"],
+      description: "change isMen status",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionId: { type: "integer" },
+          isMen: { type: "boolean" },
+        },
+        required: ["competitionId", "isMen"],
+      },
+    },
+  },
+  getTemplatesByCompId: {
+    schema: {
+      tags: ["Compitition"],
+      description: "get Compitition templates by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionId: { type: "integer" },
+        },
+        required: ["competitionId"],
+      },
+    },
+  },
+  saveCompTemplate: {
+    schema: {
+      tags: ["Compitition"],
+      description: "save Compitition Market Template",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          saveTemplates : {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                competitionId: { type: "integer" },
+                marketTemplateId: { type: "integer" },
+              },
+            },
+          },
+          dltTemplate: {
+            type: "array",
+            items: { type: "integer" },
+          }
+        },
+        required: ["saveTemplates", "dltTemplate"],
+      },
+    },
+  },
+  isVirtual: {
+    schema: {
+      tags: ["Compitition"],
+      description: "change virtual status",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionId: { type: "integer" },
+          isVirtual: { type: "boolean" },
+        },
+        required: ["competitionId", "isVirtual"],
+      },
+    },
+  },
+  upStatus : {
+    schema: {
+      tags: ["Compitition"],
+      description: "update Compitition status",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionId: { type: "integer" },
+          commStatus: { type: "integer" }, // e.g., "active", "inactive"
+        },
+        required: ["competitionId", "commStatus"],
+      },
+    },
+  }
 };
 
 const Event = {
@@ -3818,8 +4450,9 @@ const MarketTemplate = {
         properties: {
           marketTemplateId: { type: "integer" },
           matchTypeID: { type: "integer" },
+          devTemplateName: { type: "string" }
         },
-        required: ["marketTemplateId", "matchTypeID"],
+        required: ["marketTemplateId", "matchTypeID", "devTemplateName"],
       },
     },
   },
@@ -3840,6 +4473,31 @@ const MarketTemplate = {
                 matchTypeID: { type: "integer" },
               },
               required: ["marketTemplateId", "matchTypeID"],
+            }
+          }
+        },
+        required: ["marketTemplates"],
+      },
+    },
+  },
+  cloneMultipletemplates: {
+    schema: {
+      tags: ["Market Template"],
+      security: [{ bearerAuth: [] }],
+      description: "clone market template",
+      body: {
+        type: "object",
+        properties: {
+          marketTemplates: {
+            type : "array",
+            items: {
+              type: "object",
+              properties: {
+                marketTemplateId: { type: "integer" },
+                matchTypeID: { type: "integer" },
+                devTemplateName: { type: "string" },
+              },
+              required: ["marketTemplateId", "devTemplateName"],
             }
           }
         },
@@ -3913,6 +4571,7 @@ const MarketTemplate = {
         properties: {
           marketTemplateId: { type: "integer" },
           templateName: { type: "string" },
+          devTemplateName: { type: "string" },
           matchTypeID: { type: "integer" },
           isPredefineMarket: { type: "boolean" },
           isPreMatchOnly: { type: "boolean" },
@@ -3949,16 +4608,18 @@ const MarketTemplate = {
           lineType: { type: "integer" },
           defaultBackSize: { type: "integer" },
           defaultLaySize: { type: "integer" },
-          beforeSuspendMin: { type: "string" },
-          beforeCloseMin: { type: "string" },
+          beforeSuspendMin: { type: "integer" },
+          beforeCloseMin: { type: "integer" },
+          delay: { type: "integer" },
+          matchTypeIds: { type: "array" },
         },
         required: [
           "marketTemplateId",
-          "matchTypeID",
           "playerName",
           "marketTypeId",
           "marketTypeCategoryId",
           "margin",
+          "devTemplateName",
         ],
       },
     },
@@ -4039,6 +4700,21 @@ const MarketTemplate = {
       },
     },
   },
+  isPythonChange: {
+    schema: {
+      tags: ["Market Template"],
+      description: "update isPython on Market Template",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          marketTemplateId: { type: "integer" },
+          isPython: { type: "boolean" },
+        },
+        required: ["marketTemplateId", "isPython"],
+      },
+    },
+  },
   isShowInAdvanceMarket: {
     schema: {
       tags: ["Market Template"],
@@ -4115,8 +4791,9 @@ const Score = {
         type: "object",
         properties: {
           eventId: { type: "string" },
+          commentaryId: { type: "integer" },
         },
-        required: ["eventId"],
+        // required: ["eventId"],
       },
     },
   },
@@ -4608,6 +5285,7 @@ const EventMarket = {
         type: "object",
         properties: {
           commentaryId: { type: "integer" },
+          eventMarketId : { type: "integer" },
         },
         required: ["commentaryId"],
       },
@@ -4633,7 +5311,7 @@ const EventMarket = {
           lineRatio : {type : "number"},
           rateSourceRefID : {type : "string"},
           rateDiff : {type : "number"},
-          runners : {
+          runner : {
             type : "array",
             properties : {
               runner : {type : "string"},
@@ -4655,7 +5333,7 @@ const EventMarket = {
           "lineRatio",
           "rateSourceRefID",
           "rateDiff",
-          "runners"
+          "runner"
         ]
       }
     }
@@ -5249,6 +5927,34 @@ const EventMarket = {
       },
     },
   },
+  loadMarketByCom :{
+    schema : {
+      tags : ["EventMarket"],
+      description : "load market by commentary",
+      security : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          commentaryId : {type : "integer"}
+        },
+        required : ["commentaryId"]
+      }
+    }
+  },
+  MarketInfo :{
+    schema : {
+      tags : ["EventMarket"],
+      description : "get market info by eventMarket Id",
+      security : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          eventMarketId : {type : "integer"}
+        },
+        required : ["eventMarketId"]
+      }
+    }
+  }
 };
 const MarketTemplateRunner = {
   getAll: {
@@ -5790,7 +6496,7 @@ const Banner = {
           startDate: { type: "string" },
           endDate: { type: "string" },
           link: { type: "string" },
-          viewerCount: { type: "integer" },
+          // viewerCount: { type: "integer" },
         },
         required: ["bannerId"],
       },
@@ -6598,7 +7304,42 @@ const Logs = {
         required : ["page", "limit"]
       }
     }
-  }
+  },
+  DRSLogs : {
+    schema : {
+      tags : ["Logs"],
+      description : "event Market Logs",
+      security : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          skip : {type : "integer"},
+          limit : {type : "integer"},
+          commentaryId : {type : "integer"},
+          startDate : {type : "string"},
+          endDate : {type : "string"}
+        },
+        required : ["page", "limit"]
+      }
+    }
+  },
+  autoImportData : {
+    schema : {
+      tags : ["Logs"],
+      description : "AutoImportData Logs",
+      security : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          skip : {type : "integer"},
+          limit : {type : "integer"},
+          startDate : {type : "string"},
+          endDate : {type : "string"}
+        },
+        required : ["page", "limit"]
+      }
+    }
+  },
 }
 const ThirdPartyApis = {
   getAll: {
@@ -8344,6 +9085,11 @@ const CountryCode = {
           id: { type: "integer" },
           countryCode: { type: "string" },
           countryName: { type: "string" },
+          shortName: { type: "string" },
+          timezone: { type: "string" },
+          isActive: { type: "boolean" },
+          isClientShow: { type: "boolean" },
+          isDefault: { type: "boolean" },
         },
         required: ["id"],
       },
@@ -8379,7 +9125,1200 @@ const CountryCode = {
       },
     },
   },
+  activeInactiveApi: {
+    schema: {
+      tags: ["CountryCode"],
+      description: "active inactive CountryCode data",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["id", "isActive"],
+      },
+    },
+  },
+  isClientShowChange: {
+    schema: {
+      tags: ["CountryCode"],
+      description: "update client show CountryCode data",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          isClientShow: { type: "boolean" },
+        },
+        required: ["id", "isClientShow"],
+      },
+    },
+  },
+  isDefaultChange: {
+    schema: {
+      tags: ["CountryCode"],
+      description: "update isDefault CountryCode data",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          isDefault: { type: "boolean" },
+        },
+        required: ["id", "isDefault"],
+      },
+    },
+  },
 };
+const CardType = {
+  save: {
+    schema: {
+      tags: ["CardType"],
+      security: [{ bearerAuth: [] }],
+      description: "save card type data",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          enum: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["id"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["CardType"],
+      description: "delete card type(s) data",
+      body: {
+        type: "object",
+        properties: {
+          id: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["id"],
+      },
+    },
+  },
+  getById: {
+    schema: {
+      tags: ["CardType"],
+      description: "get card type data by id",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+        },
+        required: ["id"],
+      },
+    },
+  },
+  activeInactiveApi: {
+    schema: {
+      tags: ["CardType"],
+      description: "active inactive CardType data",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["id", "isActive"],
+      },
+    },
+  },
+};
+const Packages = {
+  getAll: {
+    schema: {
+      tags: ["Package"],
+      description: "get all Package data",
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+
+  save: {
+    schema: {
+      tags: ["Package"],
+      security: [{ bearerAuth: [] }],
+      description: "save Package data",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          name: { type: "string" },
+          description: { type: "string" },
+          price: { type: "integer" },
+          currency: { type: "string" },
+          intervalType: { type: "integer" },
+          intervalCount: { type: "integer" },
+          razorPayPlanId: { type: "string" },
+          isActive: { type: "boolean" },
+          isDisplay: { type: "boolean" },
+          trailDays: { type: "integer" },
+          isDefault: { type: "boolean" },
+        },
+        required: ["id", "name"],
+      },
+    },
+  },
+
+  delete: {
+    schema: {
+      tags: ["Package"],
+      description: "delete Package data",
+      body: {
+        type: "object",
+        properties: {
+          id: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["id"],
+      },
+    },
+  },
+
+  getById: {
+    schema: {
+      tags: ["Package"],
+      description: "get Package data by id",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+        },
+        required: ["id"],
+      },
+    },
+  },
+
+  activeInactiveApi: {
+    schema: {
+      tags: ["Package"],
+      description: "active inactive Package data",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["id", "isActive"],
+      },
+    },
+  },
+
+  isDisplay: {
+    schema: {
+      tags: ["Package"],
+      description: "isDispaly Package data",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          isDisplay: { type: "boolean" },
+        },
+        required: ["id", "isDisplay"],
+      },
+    },
+  },
+
+  isDefaultChange: {
+    schema: {
+      tags: ["Package"],
+      description: "IsDefault change",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          isDefault: { type: "boolean" },
+        },
+        required: ["id", "isDefault"],
+      },
+    },
+  },
+
+  DisplayUpdate: {
+    schema: {
+      tags: ["Package"],
+      description: "Display update",
+      body: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "integer" },
+            displayOrder: { type: "integer" },
+          },
+        },
+        minItems: 1,
+      },
+    },
+  },
+};
+const Whitelabel = {
+  getAll: {
+    schema: {
+      tags: ["Whitelabel"],
+      description: "get all Whitelabel data",
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+
+  save: {
+    schema: {
+      tags: ["Whitelabel"],
+      security: [{ bearerAuth: [] }],
+      description: "save Whitelabel data",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          domain: { type: "string" },
+          isActive: { type: "boolean" },
+        },
+        required: ["id", "domain"],
+      },
+    },
+  },
+
+  delete: {
+    schema: {
+      tags: ["Whitelabel"],
+      description: "delete Whitelabel data",
+      body: {
+        type: "object",
+        properties: {
+          id: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["id"],
+      },
+    },
+  },
+
+  getById: {
+    schema: {
+      tags: ["Whitelabel"],
+      description: "get Whitelabel data by id",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+        },
+        required: ["id"],
+      },
+    },
+  },
+
+  activeInactive: {
+    schema: {
+      tags: ["Whitelabel"],
+      description: "active inactive Whitelabel data",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["id", "isActive"],
+      },
+    },
+  },
+  upIsDefault: {
+    schema: {
+      tags: ["Whitelabel"],
+      description: "upIsDefault Whitelabel data",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          isDefault: { type: "boolean" },
+        },
+        required: ["id", "isDefault"],
+      },
+    },
+  },
+  demoClientEnableInIOS: {
+    schema: {
+      tags: ["Whitelabel"],
+      description: "demoClientEnableInIOS status change Whitelabel data",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          isDemoClientEnableInIOS: { type: "boolean" },
+        },
+        required: ["id", "isDemoClientEnableInIOS"],
+      },
+    },
+  },
+  isDemoClientLogin: {
+    schema: {
+      tags: ["Whitelabel"],
+      description: "isDemoClientLogin status change Whitelabel data",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          isDemoClientLogin: { type: "boolean" },
+        },
+        required: ["id", "isDemoClientLogin"],
+      },
+    },
+  },
+  hideEvent : {
+    schema: {
+      tags: ["Whitelabel"],
+      description: "hideEvent data",
+      body: {
+        type: "object",
+        properties: {
+          type : { type: "integer" },
+          refId: { type: "integer" },
+          id: { type: "integer" },
+        },
+        required: ["type", "refId", "id"],
+      }
+    }
+  },
+  unHideEvent : {
+    schema: {
+      tags: ["Whitelabel"],
+      description: "hideEvent data",
+      body: {
+        type: "object",
+        properties: {
+          hideEventId: { type: "integer" },
+        },
+        required: ["hideEventId"],
+      }
+    }
+  },
+  getEventTypes : {
+    schema: {
+      tags: ["Whitelabel"],
+      description: "get EventType",
+      body: {
+        type: "object",
+        properties: {
+          id : { type: "integer" },
+        },
+        required: ["id"],
+      }
+    }
+  },
+  getCompetition : {
+    schema: {
+      tags: ["Whitelabel"],
+      description: "get EventType",
+      body: {
+        type: "object",
+        properties: {
+          id : { type: "integer" },
+          eventTypeId : { type: "integer" },
+        },
+        required: ["id", "eventTypeId"],
+      }
+    }
+  },
+  getCommentary : {
+    schema: {
+      tags: ["Whitelabel"],
+      description: "get getCommentary",
+      body: {
+        type: "object",
+        properties: {
+          id : { type: "integer" },
+          eventTypeId : { type: "integer" },
+          competitionId : { type: "integer" },
+        },
+        required: ["id", "eventTypeId" ,"competitionId"],
+      }
+    }
+  }
+};
+const NotificationConfig = {
+  getAll: {
+    schema: {
+      tags: ["Notification config"],
+      description: "get all Notification config data",
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+
+  save: {
+    schema: {
+      tags: ["Notification config"],
+      security: [{ bearerAuth: [] }],
+      description: "save Notification config data",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          eventName: { type: "integer" },
+          content: { type: "string" },
+          isActive: { type: "boolean" },
+        },
+        required: ["id", "eventName", "content"],
+      },
+    },
+  },
+
+  delete: {
+    schema: {
+      tags: ["Notification config"],
+      description: "delete Notification config data",
+      body: {
+        type: "object",
+        properties: {
+          id: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["id"],
+      },
+    },
+  },
+
+  getById: {
+    schema: {
+      tags: ["Notification config"],
+      description: "get Notification config data by id",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+        },
+        required: ["id"],
+      },
+    },
+  },
+
+  activeInactive: {
+    schema: {
+      tags: ["Notification config"],
+      description: "active inactive Notification config data",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["id", "isActive"],
+      },
+    },
+  },
+};
+const VirtualEvent = {
+  saveEvent : {
+    schema : {
+      tags: ["VirtualEvent"],
+      description: "save VirtualEvent data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionId : { type: "integer" },
+          eventDate : { type: "string" },
+          eventName : { type: "string" },
+          eventRefId : { type: "string" }
+        },
+        required: ["competitionId", "eventDate", "eventName"],
+      }
+    }
+  },
+  createVirtualEvent : {
+    schema : {
+      tags: ["VirtualEvent"],
+      description: "create VirtualEvent data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionId : { type: "integer" },
+          eventDate : { type: "string" },
+          eventRefId : { type: "string" },
+          cardType: {type : "integer"},
+          cards : {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                key : { type: "string" },
+                value : { type: "string" },
+                count : { type: "string" },
+              },
+              required: ["key", "value", "count"],              
+            },
+            minItems: 1
+
+          }
+        },
+        required: ["competitionId", "eventDate", "eventRefId", "cards", "cardType"],
+      }
+    }
+  },
+  EventToss : {
+    schema : {
+      tags: ["VirtualEvent"],
+      description: "VirtualEvent Toss",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId : { type: "integer" },
+          tossWonTeam : { type: "integer" },
+          decision : { type: "integer" },
+        },
+        required: ["commentaryId", "tossWonTeam", "decision"],
+      }
+    }
+  },
+  BallStartEvent : {
+    schema : {
+      tags: ["VirtualEvent"],
+      description: "Ball Start Event",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId : { type: "integer" },
+          // displayStatus : { type: "string" },
+          // commentaryPlayerId : { type: "integer" },
+        },
+        required: ["commentaryId"],
+      }
+    }
+  },
+  ballByBall : {
+    schema : {
+      tags: ["VirtualEvent"],
+      description: "Ball Start Event",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId : { type: "integer" },
+          cardType : { type: "string" },
+          cardValue : { type: "integer" },
+          cardKey : { type: "string" },
+          // run : { type: "integer" },
+          // ballType : { type: "integer" },
+        },
+        required: ["commentaryId", "cardType", "cardValue", "cardKey"],
+      }
+    }
+  },
+  suffleCard : {
+    schema : {
+      tags: ["VirtualEvent"],
+      description: "Ball Start Event",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId : { type: "integer" },
+        },
+        required: ["commentaryId"],
+      }
+    }
+  },
+  cancelEvent : {
+    schema : {
+      tags: ["VirtualEvent"],
+      description: "Cancel Event",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId : { type: "integer" },
+        },
+        required: ["commentaryId"],
+      }
+    }
+  },
+    cancelEvent : {
+    schema : {
+      tags: ["VirtualEvent"],
+      description: "Server Time",
+      security: [{ bearerAuth: [] }]
+    }
+  }
+} 
+const FavCompetitions = {
+  save: {
+    schema: {
+      tags: ["FavCompetitions"],
+      security: [{ bearerAuth: [] }],
+      description: "save FavCompetitions data",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          clientId: { type: "string" },
+          competitionId: { type: "integer" },
+          isDefault: { type: "boolean" },
+        },
+        required: ["id", "clientId", "competitionId"],
+      },
+    },
+  },
+
+  delete: {
+    schema: {
+      tags: ["FavCompetitions"],
+      description: "delete FavCompetitions data",
+      body: {
+        type: "object",
+        properties: {
+          id: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["id"],
+      },
+    },
+  },
+
+  updateDisplayOrder: {
+    schema: {
+      tags: ["FavCompetitions"],
+      description: "update display order",
+      body: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "integer" },
+            displayOrder: { type: "integer" },
+          },
+        },
+        minItems: 1,
+      },
+    },
+  },
+};
+const FavCommentary = {
+  save: {
+    schema: {
+      tags: ["FavCommentary"],
+      security: [{ bearerAuth: [] }],
+      description: "save FavCommentary data",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          clientId: { type: "string" },
+          commentaryId: { type: "integer" },
+        },
+        required: ["id", "clientId", "commentaryId"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["FavCommentary"],
+      description: "delete FavCommentary data",
+      body: {
+        type: "object",
+        properties: {
+          id: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["id"],
+      },
+    },
+  },
+};
+const Venue = {
+  getAll: {
+    schema: {
+      tags: ["Venue"],
+      description: "get all venue data",
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+
+  save: {
+    schema: {
+      tags: ["Venue"],
+      security: [{ bearerAuth: [] }],
+      description: "save venue data",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          countryId: { type: "integer" },
+          tpId: { type: "integer" },
+          name: { type: "string" },
+        },
+        required: ["id", "countryId", "name"],
+      },
+    },
+  },
+
+  delete: {
+    schema: {
+      tags: ["Venue"],
+      description: "delete venue data",
+      body: {
+        type: "object",
+        properties: {
+          id: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["id"],
+      },
+    },
+  },
+
+  getById: {
+    schema: {
+      tags: ["Venue"],
+      description: "get venue data by id",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+        },
+        required: ["id"],
+      },
+    },
+  },
+
+  activeInactive: {
+    schema: {
+      tags: ["Venue"],
+      description: "active inactive venue data",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["id", "isActive"],
+      },
+    },
+  },
+};
+const PythonAPI = {
+  getAll: {
+    schema: {
+      tags: ["PythonAPI"],
+      description: "get all Python APIs data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {},
+        required: [],
+      },
+    },
+  },
+  byId: {
+    schema: {
+      tags: ["PythonAPI"],
+      description: "get python api by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+        },
+        required: ["id"],
+      },
+    },
+  },
+  savePythonAPI: {
+    schema: {
+      tags: ["PythonAPI"],
+      description: "save Python API data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          developerName: { type: "string" },
+          URI: { type: "string" },
+          isActive: { type: "boolean" },
+          isDefault: { type: "boolean" },
+        },
+        required: ["id", "developerName", "URI"],
+      },
+    },
+  },
+  deletePythonAPI: {
+    schema: {
+      tags: ["PythonAPI"],
+      description: "delete Python API data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["id"],
+      },
+    },
+  },
+  updateIsDefault: {
+    schema: {
+      tags: ["PythonAPI"],
+      description: "update Default",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          isDefault: { type: "boolean" },
+        },
+        required: ["id", "isDefault"],
+      },
+    },
+  },
+  ActiveInactive: {
+    schema: {
+      tags: ["PythonAPI"],
+      description: "active inactive Python API",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["id", "isActive"],
+      },
+    },
+  },
+};
+const Listing =  {
+  eventTypeList: {
+    schema: {
+      tags: ["Listing"],
+      description: "EventType list",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+  teamList: {
+    schema: {
+      tags: ["Listing"],
+      security: [{ bearerAuth: [] }],
+      description: "get all teams list",
+      body: {
+        type: "object",
+        properties: {
+          eventTypeId: { type: "integer" },
+        },
+      },
+    },
+  },
+  playerList: {
+    schema: {
+      tags: ["Listing"],
+      security: [{ bearerAuth: [] }],
+      description: "get all Players",
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+          eventTypeId: { type: "integer" },
+        },
+      },
+    },
+  },
+  getAllMatchTypes: {
+    schema: {
+      tags: ["Listing"],
+      security: [{ bearerAuth: [] }],
+      description: "get all Match Types",
+    },
+  },
+  markeTypeList: {
+    schema: {
+      tags: ["Listing"],
+      description: "get all market types",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+  getCategoryByMarketType: {
+    schema: {
+      tags: ["Listing"],
+      description: "get all category by market type",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          marketTypeId: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["marketTypeId"],
+      },
+    },
+  },
+  competitionList: {
+    schema: {
+      tags: ["Listing"],
+      description: "get all Compititions",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+          eventTypeId: { type: "integer" },
+        },
+      },
+    },
+  },
+  eventListByCompetitionId: {
+    schema: {
+      tags: ["Listing"],
+      description: "get Events by CompetitionId",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionId: { type: "integer" },
+        },
+        required: ["competitionId"],
+      },
+    },
+  },
+  roleList: {
+    schema: {
+      tags: ["Listing"],
+      description: "get roles list",
+      security: [{ bearerAuth: [] }],
+    },
+  },
+  getAllWithCurrent: {
+    schema: {
+      tags: ["Listing"],
+      description: "get all User including current user",
+      security: [{ bearerAuth: [] }],
+    },
+  },
+  blockList: {
+    schema: {
+      tags: ["Listing"],
+      security: [{ bearerAuth: [] }],
+      description: "get all block types",
+      body: {
+        type: "object",
+        properties: {
+          isShowContent: { type: "boolean" },
+        },
+      },
+    },
+  },
+  getAllTabs: {
+    schema: {
+      tags: ["Listing"],
+      description: "get all tabs",
+      security: [{ bearerAuth: [] }],
+    },
+  },
+  eventByCompetitionId: {
+    schema: {
+      tags: ["Listing"],
+      description: "get Event list by competitionId",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionId: { type: "integer" },
+        },
+        required: ["competitionId"],
+      },
+    },
+  },
+  getAllCommentaries :{
+    schema : {
+      tags : ["Listing"],
+      description : "get all Commentaries",
+      secaurity : [{bearerAuth : []}]
+    }
+  },
+   matchStatus :{
+    schema : {
+      tags : ["Listing"],
+      description : "get all Match Type",
+      secaurity : [{bearerAuth : []}]
+    }
+  },
+  getAllCounntryCodes: {
+    schema: {
+      tags: ["Listing"],
+      description: "get all country list",
+      security: [{ bearerAuth: [] }],
+    },
+  },
+  getAllVenues: {
+    schema: {
+      tags: ["Listing"],
+      description: "get all venues list",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          countryId: { type: "integer" },
+        },
+      },
+    },
+  },
+  getAllMarketTemplateList: {
+    schema: {
+      tags: ["Listing"],
+      description: "get all marketTemplates list",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+}
+const AutoImportData = {
+  getAll :{
+    schema : {
+      tags : ["AutoImportData"],
+      description : "get all Data",
+      secaurity : [{bearerAuth : []}]
+    }
+  },
+  save: {
+    schema: {
+      tags: ["AutoImportData"],
+      description: "save AutoImportData",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          refId: { type: "integer" },
+          refType: { type: "integer" },
+          sourceId: { type: "integer" },
+        },
+        required: ["refId", "refType", "sourceId"],
+      },
+    },
+  },
+}
+const EntitySport = {
+  Teams : {
+    schema : {
+      tags: ["EntitySport"],
+      description: "save Teams",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          teamIds: { type: "array" },
+        },
+        required: ["teamIds"],
+      },
+    }
+  },
+  SavePlayer : {
+    schema : {
+      tags: ["EntitySport"],
+      description: "save player",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          playerIds: { type: "array" },
+        },
+        required: ["playerIds"],
+      },
+    }
+  },
+  SaveCompetition : {
+    schema : {
+      tags: ["EntitySport"],
+      description: "save competitions",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionIds: { type: "array" },
+          tournamentTeamPoint : {type : "array"},
+          tournamentTeamPlayers : {type : "array"}
+        },
+        required: ["competitionIds"],
+      },
+    }
+  },
+  
+  SaveCommentary : {
+    schema : {
+      tags: ["EntitySport"],
+      description: "save commentary",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryIds : { type: "array" },
+        },
+        required: ["commentaryIds"],
+      },
+    }
+  }
+}
 module.exports = {
   Auth,
   Tabs,
@@ -8444,4 +10383,16 @@ module.exports = {
   Tips,
   MatchTypeBowlingPredictor,
   CountryCode,
+  CardType,
+  Packages,
+  Whitelabel,
+  NotificationConfig,
+  VirtualEvent,
+  FavCompetitions,
+  FavCommentary,
+  Venue,
+  PythonAPI,
+  Listing,
+  AutoImportData,
+  EntitySport
 };

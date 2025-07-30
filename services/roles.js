@@ -6,6 +6,7 @@ const {
   deletePermissionQuery,
   roleByIdQuery,
   permissionByRoleIdQuery,
+  permissionByRoleQuery,
 } = require("../repository/TableRoles");
 
 const allRolesService = async (request) => {
@@ -88,8 +89,9 @@ const deleteRoleService = async (request, fastify) => {
 
     if (checkValidRoleId) {
       const role = global.tblRoles.find((item) => item.roleId === roleIds[i]);
+      console.log("role", role)
       throw new Error(
-        `Role Id ${role.roleName} is assigned to user(s), skiping delete`
+        `Role Id ${role.roleName} is assigned to user(s), skiping delete......`
       );
     }
   }
@@ -151,6 +153,46 @@ const roleByTabService = async (request, fastify, tabName = undefined) => {
   }
 };
 
+
+const multiRoleService = async (request, fastify, tabName) => {
+  if (request.userTokenInfo.WrIsSuperAdmin) {
+    return {
+      isAddPermission: true,
+      isEditPermission: true,
+      isDeletePermission: true,
+      isViewPermission: true,
+    };
+  }
+  // if tabName is string, convert it to an array
+  if (typeof tabName === "string") {
+    tabName = [tabName];
+  }
+  const tabNames = tabName;
+  const permissionData = await permissionByRoleQuery(
+    {
+      roleId: request.userTokenInfo.WrRoleId || null,
+      displayType: request.userTokenInfo.WrUserType || null,
+      tabName: tabNames,
+    },
+    fastify
+  );
+  // console.log("permissionData", permissionData);
+  let combinedPermissions = {
+    isAddPermission: false,
+    isEditPermission: false,
+    isDeletePermission: false,
+    isViewPermission: false,
+  };
+
+  for (const permission of permissionData) {
+    combinedPermissions.isAddPermission ||= permission.isAddPermission;
+    combinedPermissions.isEditPermission ||= permission.isEditPermission;
+    combinedPermissions.isDeletePermission ||= permission.isDeletePermission;
+    combinedPermissions.isViewPermission ||= permission.isViewPermission;
+  }
+  return combinedPermissions;
+};
+
 module.exports = {
   allRolesService,
   deleteRoleService,
@@ -158,4 +200,5 @@ module.exports = {
   roleCreateService,
   roleByIdService,
   roleByTabService,
+  multiRoleService,
 };

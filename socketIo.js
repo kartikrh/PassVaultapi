@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
-const { errorLogger } = require("./utilities/logger");
-const { getEventMarketByIdsQuery, insertTimeLogs, updateTimeLogs, socketMarketRunnerDataQuery, openMarketScoketConnectionDataQuery, getMnMarketByCId } = require("./repository/TableEventMarkets");
+const { errorLogger, pythonSocketLogger } = require("./utilities/logger");
+const { getEventMarketByIdsQuery, insertTimeLogs, updateTimeLogs, socketMarketRunnerDataQuery, openMarketScoketConnectionDataQuery, getMnMarketByCId, getMarketByComIdQuery } = require("./repository/TableEventMarkets");
 const { MarketActionType, callTPAPI } = require("./utilities");
 const {createMarketOddsBallByBallBYIDFromSocketIo,createMarketOddsBallInSaveDetails,CheckAndCreateMarketOddsBallInSaveDetails} = require("./repository/TableMarketOddsBallByBall")
 const configConstants = require('./utilities/configConstants');
@@ -26,6 +26,14 @@ const connection = (socket , fastify) => {
     try {
       const MarketArr = [];
       const { commentaryId, marketData } = data;
+      pythonSocketLogger(
+        {
+          ...data,
+          socketId: socket.id ,
+          createdAt : new Date()
+        },
+        fastify
+      )
       const clientInRoom = global.socketIo.sockets.adapter.rooms.get(commentaryId);
       if (clientInRoom?.size) {
         global.socketIo.to(commentaryId).emit("updateMarketData", marketData);
@@ -45,7 +53,7 @@ const connection = (socket , fastify) => {
       if (clientsInRoom?.size && inninRunData.length > 0) {
         global.socketIo.to(roomName).emit("upMnMarket", inninRunData);
       }
-      const timeLogs = await insertTimeLogs(commentaryId, fastify)
+      // const timeLogs = await insertTimeLogs(commentaryId, fastify)
 
       const marketToUpdate = await getEventMarketByIdsQuery(
         { eventMarketIds: marketIdArr },
@@ -73,7 +81,7 @@ const connection = (socket , fastify) => {
       if(eventMarketData.length > 0){
         for (const updatedItem of eventMarketData) {
           let index = global.tblEventMarketsV2.findIndex(
-            (item) => item.eventMarketId === updatedItem.eventMarketId
+            (item) => item.eventMarketId == updatedItem.eventMarketId
           );
     
           if (index !== -1) {
@@ -236,8 +244,8 @@ const connection = (socket , fastify) => {
       global.clientSocketIo.forEach((socket) => {
         socket.client.emit("updateFullscore", sendDataForSocketUpdate);
       });
-      await updateTimeLogs(timeLogs.wrId, fastify);
-      console.log("Event Market Updated successfully");
+      // await updateTimeLogs(timeLogs.wrId, fastify);
+      // console.log("Event Market Updated successfully");
       return true;
     } catch (error) {
       errorLogger(
@@ -353,20 +361,34 @@ const connection = (socket , fastify) => {
     socket.emit("pong")
   })
   
-
-  socket.on("connectEventMarket", (data) => {
+  socket.on("connectEventMarket", async (data) => {
     const { commentaryId } = data;
+    // ignore the marketTypeCategoryId
+     let ignoreCategory = global.tblConfigs.find(
+    (item) => item.key.toLowerCase() === configConstants.IGNOREMARKETINOPEN.toLowerCase()
+    );
+    ignoreCategory = ignoreCategory ? ignoreCategory.value.split(",").map(Number) : [];
     socket.join(commentaryId);
+    const markets = await getMarketByComIdQuery({commentaryId : commentaryId, ignoreMarkets : ignoreCategory}, fastify);
+    const clientInRoom = global.socketIo.sockets.adapter.rooms.get(commentaryId);
+    if (clientInRoom?.size) {
+      global.socketIo.to(commentaryId).emit("updateMarket", markets);
+    }
+
   });
   // connect for scoring page
   socket.on("conCommentary", (data) => {
     const { commentaryId ,eventRefId } = data;
     socket.join(`score-${commentaryId}`);
+    socket.emit("commentaryJoined",{
+      commentaryId : commentaryId
+    })
+
   });
   socket.on("betAllow", async (data) => {
     const { commentaryId, betAllow ,eventRefId } = data;
     // console.log("betAllow", betAllow);
-    // await callTPAPI(data , fastify);
+    callTPAPI(data , fastify);
     //emit the batallow 
     const clientInRoom = global.socketIo.sockets.adapter.rooms.get(`score-${commentaryId}`);
     if(clientInRoom?.size){
@@ -379,26 +401,19 @@ const connection = (socket , fastify) => {
   });
   
   socket.on("comUpdate", (data) => {
-    const {ballStatus , eventRefId , commentaryId } = data;
+    const {ballStatus , eventRefId , commentaryId
+     } = data;
     if(ballStatus?.toLowerCase() === "ballstart"){
       const clientInRoom = global.socketIo.sockets.adapter.rooms.get(`score-${commentaryId}`);
       if(clientInRoom?.size){
-        global.socketIo.to(`score-${commentaryId}`).emit("updateBallStatus", {
-          commentaryId : commentaryId,
-          eventRefId : eventRefId,
-          ballStatus : "ballstart"
-        });
+        global.socketIo.to(`score-${commentaryId}`).emit("updateBallStatus", data);
       }
     }
     if(ballStatus?.toLowerCase() === "scoring"){
       //emit the other socket to update the ball status
       const clientInRoom = global.socketIo.sockets.adapter.rooms.get(`score-${commentaryId}`);
       if(clientInRoom?.size){
-        global.socketIo.to(`score-${commentaryId}`).emit("updateBallStatus", {
-          commentaryId : commentaryId,
-          eventRefId : eventRefId,
-          ballStatus : "scoring"
-        });
+        global.socketIo.to(`score-${commentaryId}`).emit("updateBallStatus", data);
       }
     }
   })

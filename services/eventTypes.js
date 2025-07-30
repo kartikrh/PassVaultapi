@@ -53,14 +53,15 @@ const createEventTypeService = async (request, fastify) => {
       (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
     ).value;
 
-    const path = await storeImageOnServer({
+    const { fullPath, imagePath } = await storeImageOnServer({
       image: image[0],
       project: projectName,
       name: imgName,
       ...ImgModuleConfig.EventTypes,
     });
 
-    request.body.image = path;
+    request.body.image = fullPath;
+    request.body.imagePath = imagePath;
   }
     const data = await insertEventTypeQuery(
     { ...request.body, userId: request.userTokenInfo.WrUserId },
@@ -91,6 +92,7 @@ const updateEventTypeService = async (request, fastify) => {
     displayOrder: checkId.displayOrder,
     isHighlight: checkId.isHighlight,
     userId: request.userTokenInfo.WrUserId,
+    imagePath: checkId.imagePath,
   };
   if ("isActive" in request.body) {
     data.isActive = request.body.isActive;
@@ -118,14 +120,15 @@ const updateEventTypeService = async (request, fastify) => {
     const projectName = global.tblConfigs.find(
       (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
     ).value;
-    const path = await storeImageOnServer({
+    const { fullPath, imagePath } = await storeImageOnServer({
       image: request.body.image[0],
       project: projectName,
       name: imgName,
       ...ImgModuleConfig.EventTypes,
     });
     
-    data.image = path;
+    data.image = fullPath;
+    data.imagePath = imagePath;
   }
 
   await updateEventTypeQuery(data, fastify, request);

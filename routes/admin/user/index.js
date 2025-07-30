@@ -110,11 +110,11 @@ module.exports = async (fastify, opts) => {
     schema: User.changePassword.schema,
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
-      (request, reply) =>
-        checkPermission(request, reply, fastify, {
-          tabName: "Users",
-          mode: "delete",
-        }),
+      // (request, reply) =>
+      //   checkPermission(request, reply, fastify, {
+      //     tabName: "Users",
+      //     mode: "delete",
+      //   }),
     ],
     handler: (request, reply) => updateUserPassword(request, reply, fastify),
   });
