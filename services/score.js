@@ -47,7 +47,8 @@ const getAllCommentariesDataService = async (request,fastify) => {
             let whereCondition = `"wrIsDelete" = false AND "wrCommentaryId" = ${c.commentaryId}`
                 let teams = await getAllCommentaryTeamsDataQuery(whereCondition, fastify);
                 try {
-                    teams?.forEach(async (team) => {
+                    // teams?.forEach(async (team) => {
+                    for (let team of teams){
                         const _teamsC1 = global.tblTeams.filter((item) => item.teamId === team.teamId);
                         if (_teamsC1.length > 0) {
                             team.image = _teamsC1[0].image;
@@ -55,14 +56,16 @@ const getAllCommentariesDataService = async (request,fastify) => {
                             team.nimage = _teamsC1[0].imagePath;
                             team.njersey =  _teamsC1[0].jerseyPath;
                         }
-                    });   
+                    }
+                    // });   
                 } catch (error) {
                     
                 }
                 let condi = `tcp."wrIsDelete" = false AND tcp."wrCommentaryId" = ${c.commentaryId}`
                 let players = await getAllCommentaryPlayerDataQuery(condi, fastify);
                 try {
-                    players?.forEach(async (player) => {
+                    // players?.forEach(async (player) => {
+                    for (let player of players){
                         if (player.bowlerOver !== null && player.bowlerOver !== undefined) {
                             player.bowlerOver = player.bowlerOver.toString();
                         }
@@ -75,7 +78,9 @@ const getAllCommentariesDataService = async (request,fastify) => {
                             player.playerType = _player[0].playerType;
                             player.isKipper = _player[0].isKipper;
                         }
-                    });   
+                    }
+                
+                    // });   
                 } catch (error) {
                     
                 }
@@ -94,7 +99,8 @@ const getAllCommentariesDataService = async (request,fastify) => {
 
                 let partnerships = await getAllCommentaryPartnershipDataQuery(whereCondition, fastify);
                 try {
-                    partnerships?.forEach(async (partnership) => {
+                    // partnerships?.forEach(async (partnership) => {
+                    for (let partnership of partnerships){
                         const _player1 = players.filter((item) => item.commentaryPlayerId === partnership.batter1Id);
             
                         if (_player1.length > 0) {
@@ -108,7 +114,8 @@ const getAllCommentariesDataService = async (request,fastify) => {
                             partnership.player2jerseyandimage = _player2[0].jerseyPlayerImage;
                             partnership.player2jerseyandimagepath = _player2[0].jerseyPlayerImagePath;
                         }
-                    });   
+                    }
+                    // });   
                 } catch (error) {
                     
                 }
