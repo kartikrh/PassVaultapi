@@ -70,45 +70,43 @@ const { MarketTypeId, trimTextData } = require("../utilities");
 const allMatchTypesService = async (request) => {
   const { isActive, entityEnum } = request?.body || {};
   let result = global.tblMatchTypes;
-
   if (isActive !== undefined) {
     result = result.filter(item => item.isActive === isActive);
   } else {
     result = result.filter(item => item.isActive === true);
   }
+   
 
   if (entityEnum) {
     result = result.filter(item => item.entityEnum === entityEnum);
   }
-
-  for (let item of result) {
-    let tempIds = global.tblMatchTypeTemplates.filter(
-      (temp) => temp.matchTypeId === item.matchTypeId
-    ).map((temp) => temp.marketTemplateId);
-    if(tempIds.length > 0) {
-      item.templateIds = tempIds.map((id) => {
-        const template = global.tblMarketTemplate.find(
-          (temp) => temp.marketTemplateId === id
-        );
-        return {
-          marketTemplateId: id,
-          templateName: template?.templateName || null,
-          devTemplateName : template?.devTemplateName || null,
-        }
-      });
-    } else {
-      item.templateIds = [];
-    }
-  }
+  // for (let item of result) {
+  //   let tempIds = global.tblMatchTypeTemplates.filter(
+  //     (temp) => temp.matchTypeId === item.matchTypeId
+  //   ).map((temp) => temp.marketTemplateId);
+  //   if(tempIds.length > 0) {
+  //     item.templateIds = tempIds.map((id) => {
+  //       const template = global.tblMarketTemplate.find(
+  //         (temp) => temp.marketTemplateId === id
+  //       );
+  //       return {
+  //         marketTemplateId: id,
+  //         templateName: template?.templateName || null,
+  //         devTemplateName : template?.devTemplateName || null,
+  //       }
+  //     });
+  //   } else {
+  //     item.templateIds = [];
+  //   }
+  // }
 
   return result || []
 };
 
 const matchTypeByIdService = async (request) => {
   const { matchTypeId } = request.body;
-  const result = global.tblMatchTypes.find(
-    (item) => item.matchTypeId === matchTypeId
-  );
+  const result = { ...global.tblMatchTypes.find(i => i.matchTypeId === matchTypeId) };
+
   // get the templates for the match type
   if (result) {
     let tempIds = global.tblMatchTypeTemplates.filter(

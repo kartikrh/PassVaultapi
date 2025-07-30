@@ -87,6 +87,7 @@ const {
   updatePythonAPIOnCommentaryQuery,
   updateEventTypeAndCompIdQuery,
   getMatchTypeTemplateByComIdQuery,
+  scoringTypeCommentaryQuery,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -3201,6 +3202,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
       commentaryId,
       isEndInnings,
       isCallPredict = false,
+      isTeamStatusUpdate = false,
     } = request.body;
 
     let commentaryIndex,
@@ -3260,6 +3262,17 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
       //     await insertNotificationViaNotiConfigQuery(notificationData, request, fastify);
       //   }
       // }
+    }
+
+    if (!isTeamStatusUpdate && commentaryTeams && commentaryTeams.length > 0) {
+      commentaryTeams = commentaryTeams.map(elem => {
+        const teamData = global?.tblCommentaryTeams?.find(item =>
+          item.commentaryTeamId === elem.commentaryTeamId
+        );
+        return teamData
+          ? { ...elem, teamStatus: teamData.teamStatus }
+          : elem;
+      });
     }
     // get th strike team
     // validate CommentaryId
@@ -6223,8 +6236,9 @@ const commentaryDetailsByEventIdService = async (
 ) => {
   const result = await global.tblCommentaries.find(
     (item) =>
-      item.eventRefId === request.body.eventId ||
-      item.commentaryId === request.body.commentaryId
+      item.commentaryId === request.body.commentaryId ||
+      item.eventRefId === request.body.eventId 
+
   );
 
   // if (!result && request.body.status === undefined) {
@@ -20946,6 +20960,36 @@ const updateCommWicketService = async (request, fastify) => {
   return `Commentary wicket data updated successfully`
 }
 
+const scoringTypeCommentaryService = async (request, fastify) => {
+  const { commentaryId, scoringType, tpId } = request.body;
+
+  const commentary = global.tblCommentaries.findIndex(
+    (item) => item?.commentaryId === commentaryId
+  );
+  if (commentary == -1) {
+    throw new Error("Commentary with this id not Found");
+  }
+
+  if(tpId) {
+    const validate = global.tblCommentaries.find(item => 
+      item.tpId === tpId && item.commentaryId !== commentaryId
+    )
+    if(validate) { 
+      throw new Error("TPID is already existed");
+    }
+  }
+
+  await scoringTypeCommentaryQuery({ commentaryId, scoringType, tpId }, fastify, request);
+
+  global.tblCommentaries[commentary] = {
+    ...global.tblCommentaries[commentary],
+    scoringType,
+    tpId
+  }
+
+  return "Commentary scoring type updated successfully";
+};
+
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -21052,4 +21096,5 @@ module.exports = {
   updateEventTypeAndCompIdService,
   getCommWicketByIdService,
   updateCommWicketService,
+  scoringTypeCommentaryService,
 };
