@@ -23,7 +23,16 @@ const { dltDeviceQuery, saveDeviceQuery } = require("../repository/TableDevice")
 const getAllCommentariesDataService = async (request,fastify) => {
     try {
         let commentaries = {};
-        let where = `tc."wrCommentaryStatus" != 4`;
+        let where = null
+        if(request.body.eventId){
+            where = `tc."wrEventRefId" = '${request.body.eventId}'`;
+        }
+        else if(request.body.commentaryId){
+            where = `tc."wrCommentaryId" = ${request.body.commentaryId}`;
+        }
+        else{
+         where = `tc."wrCommentaryStatus" != 4`;
+        }
         let commentaryData = await getCommentariesDataQuery(fastify, where);
         let com = commentaryData.filter((c) => {
             if (request.body.eventId) {
