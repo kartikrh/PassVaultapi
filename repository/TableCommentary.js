@@ -109,7 +109,7 @@ const getAllCommentaryQuery = async (fastify) => {
   //   OR tc."wrCommentaryStatus" != 4
   //   AND tc."wrIsDelete" = false;
 };
-const getCommentariesDataQuery = async (fastify) => {
+const getCommentariesDataQuery = async (fastify , where = null) => {
   return await fastify.db.query(
     `select 
     "wrCommentaryId" as "commentaryId",
@@ -192,6 +192,7 @@ const getCommentariesDataQuery = async (fastify) => {
     tc."wrPythonURI" as "pythonURI",
     tc."wrCancelTime" as "cancelTime"
     from "tblCommentaries" tc
+
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
     LEFT JOIN "tblMatchTypes" mt ON tc."wrMatchTypeId" = mt."wrMatchTypeId"
@@ -200,7 +201,8 @@ const getCommentariesDataQuery = async (fastify) => {
 	LEFT JOIN "tblCompetitions" co ON tc."wrCompetitionId" = co."wrCompetitionId"
   LEFT JOIN "tblUsers" tu ON tc."wrCreatedBy" = tu."WrUserId"
   WHERE "wrIsDelete" = false AND co."wrIsDeleted" = false
-  AND tc."wrIsActive" = true AND tc."wrIsTest" = false`,
+  AND tc."wrIsActive" = true AND tc."wrIsTest" = false
+  ${where ? `AND ${where}` : ''}`,
     {
       type: fastify.db.QueryTypes.SELECT,
     }
