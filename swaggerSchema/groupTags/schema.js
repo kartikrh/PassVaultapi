@@ -3885,8 +3885,9 @@ const Commentary = {
         properties: {
           commentaryId: { type: "integer"},
           scoringType: { type: "integer"},
+          tpId: { type: ["integer", "null"]},
         },
-        required: ["commentaryId", "scoringType"],
+        required: ["commentaryId", "scoringType", "tpId"],
       },
     },
   },

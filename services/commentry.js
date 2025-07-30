@@ -20960,7 +20960,7 @@ const updateCommWicketService = async (request, fastify) => {
 }
 
 const scoringTypeCommentaryService = async (request, fastify) => {
-  const { commentaryId, scoringType } = request.body;
+  const { commentaryId, scoringType, tpId } = request.body;
 
   const commentary = global.tblCommentaries.findIndex(
     (item) => item?.commentaryId === commentaryId
@@ -20969,9 +20969,22 @@ const scoringTypeCommentaryService = async (request, fastify) => {
     throw new Error("Commentary with this id not Found");
   }
 
-  await scoringTypeCommentaryQuery({ commentaryId, scoringType }, fastify, request);
+  if(tpId) {
+    const validate = global.tblCommentaries.find(item => 
+      item.tpId === tpId && item.commentaryId !== commentaryId
+    )
+    if(validate) { 
+      throw new Error("TPID is already existed");
+    }
+  }
 
-  global.tblCommentaries[commentary].scoringType = scoringType;
+  await scoringTypeCommentaryQuery({ commentaryId, scoringType, tpId }, fastify, request);
+
+  global.tblCommentaries[commentary] = {
+    ...global.tblCommentaries[commentary],
+    scoringType,
+    tpId
+  }
 
   return "Commentary scoring type updated successfully";
 };

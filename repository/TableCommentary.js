@@ -7906,13 +7906,15 @@ const getMatchTypeTemplateByComIdQuery = async (data,request, fastify) => {
 }
 const scoringTypeCommentaryQuery = async (data, fastify, request) => {
   try {
+    console.log("data", data)
     const result = await fastify.db.query(
       `update "tblCommentaries" set
-        "wrScoringType" = $1
-        where "wrCommentaryId" = $2 and "wrIsDelete" = false
+        "wrScoringType" = $1,
+        "wrTpId" = $2
+        where "wrCommentaryId" = $3 and "wrIsDelete" = false
       `,
       {
-        bind: [data.scoringType, data.commentaryId],
+        bind: [data.scoringType, data.tpId || null, data.commentaryId],
       }
     );
     return result;
