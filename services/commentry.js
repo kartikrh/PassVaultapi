@@ -2117,6 +2117,7 @@ const deleteCommentaryService = async (request, fastify) => {
       data: {
         type: "deleteEvent",
         eventId: eventIdArr,
+        commentaryId : commentaryId
       },
     },
     request,
@@ -8025,6 +8026,7 @@ const getMatchDataByCId = async (data, request, fastify) => {
   }
   let comDetails = {
     rno: rno,
+    cid : com.commentaryId,
     eid: com.eventRefId || "",
     ety: eventType?.eventType || "",
     mtyp: com.matchType || "",
@@ -11949,6 +11951,7 @@ const deleteEventResultService = async (request, fastify) => {
       data: {
         type: "deleteEvent",
         eventId: eventIdArr,
+        commentaryId : commentaryId
       },
     },
     request,
@@ -12281,6 +12284,7 @@ const deleteCommentaryHistoryService = async (request, fastify) => {
       data: {
         type: "deleteEvent",
         eventId: eventIdArr,
+        commentaryId :commentaryId
       },
     },
     request,
