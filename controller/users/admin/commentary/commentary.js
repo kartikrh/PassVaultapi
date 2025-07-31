@@ -357,7 +357,8 @@ const changeBowlerOfCommentary = async (request, reply, fastify) => {
 const getScheduleMatchList = async (request, reply, fastify) => {
   try {
     let commentaryData = global.tblCommentaries.filter(
-      (item) => item.commentaryStatus === 1 && item.isActive == true && item.isTest == false
+      (item) => item.commentaryStatus === 1 && item.isActive == true && item.isTest == false &&
+      item.isClientShow === true
     );
     const body = {
       commentaryData,
@@ -393,8 +394,10 @@ const getLiveMatchList = async (request, reply, fastify) => {
       (item) =>
         item.commentaryStatus !== 1 &&
         item.commentaryStatus !== 4 &&
+        item.commentaryStatus !== 10 &&
         item.isActive == true &&
-        item.isTest == false
+        item.isTest == false &&
+        item.isClientShow === true
     );
     const body = {
       commentaryData,
