@@ -8291,7 +8291,7 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
     const { eventId, commentaryId } = request.body;
     const commentary = global.tblCommentaries.find(
       (item) =>
-        item.eventRefId === eventId || item.commentaryId === commentaryId
+        item.commentaryId === commentaryId || item.eventRefId === eventId
     );
     if (!commentary) {
       throw new Error("Commentary with this id not Found");
