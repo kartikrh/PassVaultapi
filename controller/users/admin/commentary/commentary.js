@@ -100,7 +100,7 @@ const {
   scoringTypeCommentaryService,
 } = require("../../../../services/commentry");
 const { getEventSnapByComService, updateEventSnapByComService } = require("../../../../services/competitionEventSnap");
-const { getAllCommentariesDataService, getAllCommentariesDataServiceV1 } = require("../../../../services/score");
+const { getAllCommentariesDataService, getAllCommentariesDataServiceV1, getAllCommentariesDataV2Service } = require("../../../../services/score");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
 const { saveCommDrsLogService, getCommDRSLogByIdService, getCommDRSLogByCommIdService, dltDrsService, takeDrsDataService, upDrsDataService } = require("../../../../services/commentaryDRSLogs");
@@ -789,6 +789,15 @@ const getAllCommentariesDataV1 = async (request, reply, fastify) => {
   }
 };
 
+const getAllCommentariesDataV2 = async (request, reply, fastify) => {
+  try {
+    const result = await getAllCommentariesDataV2Service(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/getAllCommentariesDataV2", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 const AddSuperOverCommentary = async (request, reply, fastify) => {
   try {
     const result = await AddSuperOverCommentaryService(request, fastify);
@@ -1434,4 +1443,5 @@ module.exports = {
   getCommWicketById,
   updateCommWicket,
   scoringTypeCommentary,
+  getAllCommentariesDataV2
 }
