@@ -143,6 +143,129 @@ const getAllCommentariesDataService = async (request,fastify) => {
         throw new Error(error);
     }
 }
+const getAllCommentariesDataV2Service = async (request,fastify) => {
+    try {
+        let commentaries = {};
+        let where = null
+        if(request.body.eventId){
+            where = `tc."wrEventRefId" = '${request.body.eventId}'`;
+        }
+        else if(request.body.commentaryId){
+            where = `tc."wrCommentaryId" = ${request.body.commentaryId}`;
+        }
+        else{
+         where = `tc."wrCommentaryStatus" != 4`;
+        }
+        let commentaryData = await getCommentariesDataQuery(fastify, where);
+        let com = commentaryData.filter((c) => {
+            if (request.body.eventId) {
+                return c.eventRefId == request.body.eventId;
+            } else if (request.body.commentaryId){
+                return c.commentaryId == request.body.commentaryId;
+            } else {
+                return c.commentaryStatus != 4;
+            }
+        })
+        for (c of com) {
+            let whereCondition = `"wrIsDelete" = false AND "wrCommentaryId" = ${c.commentaryId}`
+                let teams = await getAllCommentaryTeamsDataQuery(whereCondition, fastify);
+                try {
+                    // teams?.forEach(async (team) => {
+                    for (let team of teams){
+                        const _teamsC1 = global.tblTeams.filter((item) => item.teamId === team.teamId);
+                        if (_teamsC1.length > 0) {
+                            team.image = _teamsC1[0].image;
+                            team.jersey = _teamsC1[0].jersey;
+                            team.nimage = _teamsC1[0].imagePath;
+                            team.njersey =  _teamsC1[0].jerseyPath;
+                        }
+                    }
+                    // });   
+                } catch (error) {
+                    
+                }
+                let condi = `tcp."wrIsDelete" = false AND tcp."wrCommentaryId" = ${c.commentaryId}`
+                let players = await getAllCommentaryPlayerDataQuery(condi, fastify);
+                try {
+                    // players?.forEach(async (player) => {
+                    for (let player of players){
+                        if (player.bowlerOver !== null && player.bowlerOver !== undefined) {
+                            player.bowlerOver = player.bowlerOver.toString();
+                        }
+                        if (player.bowlerEconomy === "NaN") {
+                            player.bowlerEconomy = null;
+                        }
+                        const _player = global.tblPlayers.filter((item) => item.playerId === player.playerId);
+                        if (_player.length > 0) {
+                            player.playerimage = _player[0].image;
+                            player.playerType = _player[0].playerType;
+                            player.isKipper = _player[0].isKipper;
+                        }
+                    }
+                
+                    // });   
+                } catch (error) {
+                    
+                }
+                let overs = await getAllOversDataQuery(whereCondition, fastify);
+
+                let whereCond = `"wrIsDeletedStatus" = false AND "wrCommentaryId" = ${c.commentaryId}`
+
+                let ballByBall = await getAllCommentaryBallByBallDataQuery(whereCond, fastify);
+                ballByBall?.forEach(async (ball) => {
+                    if (ball.overCount !== null && ball.overCount !== undefined) {
+                        ball.overCount = ball.overCount.toString();
+                    }
+                });
+                
+                let wickets = await getAllCommentaryWicketDataQuery(whereCond, fastify);
+
+                let partnerships = await getAllCommentaryPartnershipDataQuery(whereCondition, fastify);
+                try {
+                    // partnerships?.forEach(async (partnership) => {
+                    for (let partnership of partnerships){
+                        const _player1 = players.filter((item) => item.commentaryPlayerId === partnership.batter1Id);
+            
+                        if (_player1.length > 0) {
+                            partnership.player1image = _player1[0].playerimage;
+                            partnership.player1jerseyandimage = _player1[0].jerseyPlayerImage;
+                            partnership.player1jerseyandimagepath = _player1[0].jerseyPlayerImagePath;
+                        }
+                        const _player2 = players.filter((item) => item.commentaryPlayerId === partnership.batter2Id);
+                        if (_player2.length > 0) {
+                            partnership.player2image = _player2[0].playerimage;
+                            partnership.player2jerseyandimage = _player2[0].jerseyPlayerImage;
+                            partnership.player2jerseyandimagepath = _player2[0].jerseyPlayerImagePath;
+                        }
+                    }
+                    // });   
+                } catch (error) {
+                    
+                }
+                let marketOddsBallByBall = await getAllMarketOddsBallByBallByCommentaryId({
+                    commentaryId: c.commentaryId
+                },fastify) || [];
+
+                commentaries[c.commentaryId] = {
+                    commentaryId : c.commentaryId,
+                    eventRefId : c.eventRefId,
+                    commentaryStatus : c.commentaryStatus,
+                    commentaryDetails: c,
+                    commentaryTeams: teams,
+                    commentaryPlayers: players,
+                    commentaryOver: overs,
+                    commentaryBallByBall: ballByBall,
+                    commentaryWicket: wickets,
+                    commentaryPartnership: partnerships,
+                    marketOddsBallByBall : marketOddsBallByBall,
+                };
+        }
+    
+        return commentaries;
+    } catch (error) {
+        throw new Error(error);
+    }
+}
 // const getAllCommentariesDataService = async (request,fastify) => {
 //     try {
 //         let commentaries = {};
@@ -540,5 +663,6 @@ module.exports = {
     getMarketByGraphByRefIdService,
     getAllCommentariesDataServiceV1,
     getMarketsByCommentaryIdServiceV1,
-    saveDeviceDataService
+    saveDeviceDataService,
+    getAllCommentariesDataV2Service
  };
