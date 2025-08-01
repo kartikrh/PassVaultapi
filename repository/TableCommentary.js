@@ -3110,8 +3110,8 @@ const updateCommentaryWicketQuery = async (data, fastify, request) => {
           data.ballCount,
           data.commentaryWicketId,
           data.currentInnings,
-          data.fieldPlayer2Id,
-          data.fieldPlayer2Name,
+          data.fieldPlayer2Id || null,
+          data.fieldPlayer2Name || null,
         ],
         type: fastify.db.QueryTypes.UPDATE,
       }
