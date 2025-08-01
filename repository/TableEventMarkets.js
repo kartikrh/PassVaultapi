@@ -1925,6 +1925,13 @@ const getMarketDataByCIdQuery = async (request, fastify) => {
 };
 const getMarketsByCIdQuery = async (request, whereCondition, fastify) => {
   try {
+    let firstWhere;
+    if(request.body.eventId){
+      firstWhere = `"wrEventRefID" = ${request.body.eventId}`
+    }
+    if(request.body.commentaryId){
+      firstWhere = `"wrCommentaryId" = ${request.body.commentaryId}`
+    }
     const query = `
       WITH result_market_data AS (
         SELECT 
@@ -1949,7 +1956,7 @@ const getMarketsByCIdQuery = async (request, whereCondition, fastify) => {
             "tblEventMarkets"."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase"
         FROM "tblEventMarkets"
         LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = "tblEventMarkets"."wrTeamID"
-        WHERE "wrEventRefID" = $1 ${whereCondition}
+        WHERE ${firstWhere} ${whereCondition}
         AND "wrStatus" = $2
         AND "wrRateSource" <> 2
         AND "tblEventMarkets"."wrIsDeleted" = false
@@ -1979,8 +1986,8 @@ const getMarketsByCIdQuery = async (request, whereCondition, fastify) => {
         FROM "tblEventMarkets"
         LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = "tblEventMarkets"."wrTeamID"
         LEFT JOIN "tblMarketRunners" tmr ON tmr."wrEventMarketId" = "tblEventMarkets"."wrID"
-        WHERE "wrEventRefID" = $1 ${whereCondition}
-        AND "wrStatus" NOT IN ($2, $3, $4)
+        WHERE ${firstWhere} ${whereCondition}
+        AND "wrStatus" NOT IN ($1, $2, $3)
         AND "wrRateSource" <> 2
         AND "tblEventMarkets"."wrIsDeleted" = false
     )
@@ -1994,7 +2001,7 @@ const getMarketsByCIdQuery = async (request, whereCondition, fastify) => {
     const result = await fastify.db.query(query, {
       type: fastify.db.QueryTypes.SELECT,
       bind: [
-        request.body.eventId,
+        // request.body.eventId,
         EventMarketStatus.Settled,
         EventMarketStatus.Cancel,
         EventMarketStatus.Close,
