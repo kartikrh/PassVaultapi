@@ -4779,8 +4779,9 @@ const Score = {
         type: "object",
         properties: {
           eventId: { type: "string" },
+          commentaryId :{type : "integer"}
         },
-        required: ["eventId"],
+        required: [],
       },
     },
   },

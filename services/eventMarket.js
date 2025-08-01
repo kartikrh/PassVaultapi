@@ -2547,22 +2547,22 @@ const getDetailsByCIdV1Service = async (request, fastify) => {
   let whereCondition = `tc."wrIsDelete" = false AND tem."wrIsDeleted" = false AND tem."wrCommentaryId" = ${commentaryId} AND 
   tem."wrStatus" NOT IN (${EventMarketStatus.Close},${EventMarketStatus.Settled},${EventMarketStatus.Cancel})
   AND tem."wrRateSource" = 1 AND tr."wrIsDeleted" = false`;
-  if (commentary.commentaryStatus != 1) {
-    let battingTeam = global.tblCommentaryTeams.find(
-      (item) =>
-        item.commentaryId === commentaryId &&
-        item.currentInnings === 1 &&
-        item.teamStatus === 1
-    );
-    whereCondition += ` AND tem."wrTeamID" = ${battingTeam.teamId}`;
+  // if (commentary.commentaryStatus != 1) {
+  //   let battingTeam = global.tblCommentaryTeams.find(
+  //     (item) =>
+  //       item.commentaryId === commentaryId &&
+  //       item.currentInnings === 1 &&
+  //       item.teamStatus === 1
+  //   );
+  //   // whereCondition += ` AND tem."wrTeamID" = ${battingTeam.teamId}`;
+  //   eventMarket = await getAllEventMarketsQueryV1(fastify, whereCondition);
+  //   eventMarket = eventMarket.filter((item) => !ignoreMarkets.includes(item.marketTypeCategoryId));
+  //   eventMarket.sort((a, b) => a.marketName.localeCompare(b.marketName));
+  // } else {
     eventMarket = await getAllEventMarketsQueryV1(fastify, whereCondition);
     eventMarket = eventMarket.filter((item) => !ignoreMarkets.includes(item.marketTypeCategoryId));
     eventMarket.sort((a, b) => a.marketName.localeCompare(b.marketName));
-  } else {
-    eventMarket = await getAllEventMarketsQueryV1(fastify, whereCondition);
-    eventMarket = eventMarket.filter((item) => !ignoreMarkets.includes(item.marketTypeCategoryId));
-    eventMarket.sort((a, b) => a.marketName.localeCompare(b.marketName));
-  }
+  // }
   //
   let categories = global.tblMarketTypeCategories.filter(
     (item) => item.marketTypeCategoryId > 0

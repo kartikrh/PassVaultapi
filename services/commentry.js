@@ -2117,6 +2117,7 @@ const deleteCommentaryService = async (request, fastify) => {
       data: {
         type: "deleteEvent",
         eventId: eventIdArr,
+        commentaryId : commentaryId
       },
     },
     request,
@@ -7750,13 +7751,13 @@ const getMatchListByStatus = async (body, request, fastify) => {
       rrr = 0;
     } else {
       if (commentaryTeamsOne?.teamStatus == 1) {
-        crr = parseFloat(commentaryTeamsOne.crr);
-        rrr = parseFloat(commentaryTeamsOne.rrr);
+        crr = parseFloat(commentaryTeamsOne?.crr);
+        rrr = parseFloat(commentaryTeamsOne?.rrr);
         batid = commentaryTeamsOne.teamId;
         ballid = commentaryTeamsTwo.teamId;
       } else {
-        crr = parseFloat(commentaryTeamsOne.crr);
-        rrr = parseFloat(commentaryTeamsOne.rrr);
+        crr = parseFloat(commentaryTeamsOne?.crr);
+        rrr = parseFloat(commentaryTeamsOne?.rrr);
         batid = commentaryTeamsTwo.teamId;
         ballid = commentaryTeamsOne.teamId;
       }
@@ -7820,8 +7821,8 @@ const getMatchListByStatus = async (body, request, fastify) => {
       choseto: toss || null,
       te1n: commentaryTeamsOne?.teamName || "",
       te2n: commentaryTeamsTwo?.teamName || "",
-      s1n: commentaryTeamsOne.shortName || "",
-      s2n: commentaryTeamsTwo.shortName || "",
+      s1n: commentaryTeamsOne?.shortName || "",
+      s2n: commentaryTeamsTwo?.shortName || "",
       te1i: team1?.image || "",
       te2i: team2?.image || "",
       t1jr: team1?.jersey || "",
@@ -7849,10 +7850,10 @@ const getMatchListByStatus = async (body, request, fastify) => {
           ? 0
           : item.winnerId,
       // rmk: item.rmk || "",
-      te1crr: parseFloat(commentaryTeamsOne.crr) || 0,
-      te2crr: parseFloat(commentaryTeamsTwo.crr) || 0,
-      te1rrr: parseFloat(commentaryTeamsOne.rrr) || 0,
-      te2rrr: parseFloat(commentaryTeamsTwo.rrr) || 0,
+      te1crr: parseFloat(commentaryTeamsOne?.crr) || 0,
+      te2crr: parseFloat(commentaryTeamsTwo?.crr) || 0,
+      te1rrr: parseFloat(commentaryTeamsOne?.rrr) || 0,
+      te2rrr: parseFloat(commentaryTeamsTwo?.rrr) || 0,
       crr: crr || 0,
       rrr: rrr || 0,
       cst: item.commentaryStatus,
@@ -8025,6 +8026,7 @@ const getMatchDataByCId = async (data, request, fastify) => {
   }
   let comDetails = {
     rno: rno,
+    cid : com.commentaryId,
     eid: com.eventRefId || "",
     ety: eventType?.eventType || "",
     mtyp: com.matchType || "",
@@ -8291,7 +8293,7 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
     const { eventId, commentaryId } = request.body;
     const commentary = global.tblCommentaries.find(
       (item) =>
-        item.eventRefId === eventId || item.commentaryId === commentaryId
+        item.commentaryId === commentaryId || item.eventRefId === eventId
     );
     if (!commentary) {
       throw new Error("Commentary with this id not Found");
@@ -9295,7 +9297,7 @@ const changeShowClientService = async (request, fastify) => {
     global.tblCommentaries[commentary].isClientShow = request.body.isClientShow;
   }
 
-  if (global.tblCommentaries[commentary].isActive) {
+    // if (global.tblCommentaries[commentary].isClientShow) {
     const cData = await getMatchDataByCId(
       {
         commentaryId: request.body.commentaryId,
@@ -9308,7 +9310,11 @@ const changeShowClientService = async (request, fastify) => {
       {
         serviceType: ServiceType.clientAPI,
         moduleType: APIEndpointModuleType.commentaryUpdate,
-        data: cData,
+        data: {
+          ...cData,
+          isClientShow: request.body.isClientShow,
+          type: "isClientShow",
+        },
       },
       request,
       fastify
@@ -9321,7 +9327,7 @@ const changeShowClientService = async (request, fastify) => {
         request
       );
     });
-  }
+  // }
 
   return "Commentary Updated successfully";
 };
@@ -11949,6 +11955,7 @@ const deleteEventResultService = async (request, fastify) => {
       data: {
         type: "deleteEvent",
         eventId: eventIdArr,
+        commentaryId : commentaryId
       },
     },
     request,
@@ -12281,6 +12288,7 @@ const deleteCommentaryHistoryService = async (request, fastify) => {
       data: {
         type: "deleteEvent",
         eventId: eventIdArr,
+        commentaryId :commentaryId
       },
     },
     request,

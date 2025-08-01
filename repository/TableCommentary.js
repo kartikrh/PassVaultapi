@@ -5069,7 +5069,7 @@ const getAllCompletedCommentaryQuery = async (request, fastify) => {
           AND tct3."wrTeamId" = tc."wrTossWonBy" 
           AND tct3."wrCurrentInnings" = tc."wrCurrentInnings" AND tct3."wrIsDelete" = false
       WHERE tc."wrCommentaryStatus" = 4 AND tc."wrIsDelete" = false
-      AND tc."wrIsActive" = true AND tc."wrIsTest" = false
+      AND tc."wrIsActive" = true AND tc."wrIsTest" = false AND tc."wrIsClientShow" = true
       AND (
         tc."wrCancelTime" IS NULL
         OR tc."wrCancelTime" >= NOW() - INTERVAL '7 days'
@@ -7908,7 +7908,6 @@ const getMatchTypeTemplateByComIdQuery = async (data,request, fastify) => {
 }
 const scoringTypeCommentaryQuery = async (data, fastify, request) => {
   try {
-    console.log("data", data)
     const result = await fastify.db.query(
       `update "tblCommentaries" set
         "wrScoringType" = $1,

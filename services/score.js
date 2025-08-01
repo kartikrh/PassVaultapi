@@ -280,10 +280,27 @@ const getAllCommentariesDataService = async (request,fastify) => {
 const getMarketsByCommentaryIdService =async (request , fastify) => {
     // vlaidate commentry id
     // console.log("called getMarketsByCommentaryIdService")
-    let commentaryData = await getCommentariesDataQuery(fastify);
-    const commentary = commentaryData.find((c) => {
-        return c.eventRefId === request.body.eventId;
-    });    
+    let where = null;
+    let commentaryData = []; 
+    if(request.body.commentaryId && request.body.commentaryId != null){
+        commentaryData = global.tblCommentaries.filter((i)=> i.commentaryId == request.body.commentaryId)
+    }
+    else if(request.body.eventId && request.body.eventId != null){
+        commentaryData = global.tblCommentaries.filter((i)=> i.eventRefId == request.body.eventId)
+    }
+    if(commentaryData.length == 0){
+        if(request.body.commentaryId){
+            where = `tc."wrCommentaryId" = ${request.body.commentaryId}`
+        }
+        else if(request.body.eventId){
+            where = `tc."wrEventRefId" = '${request.body.eventId}'`
+        }
+        else {
+            where = `tc."wrEventRefId" = '${request.body.eventId}'`
+        }
+        commentaryData = await getCommentariesDataQuery(fastify , where);
+    }
+    const commentary = commentaryData[0];
     // if (!commentary && request.body.status === undefined) {
     //     return null;
     // }
