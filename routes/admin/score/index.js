@@ -24,6 +24,7 @@ const {
   insertCommentaryConsoleFe,
   getAllCompletedCommentary,
   getAllCommentariesDataV1,
+  getAllCommentariesDataV2,
 } = require("../../../controller/users/admin/commentary/commentary");
 const { getAllEventMarketsAndRunners } = require('../../../controller/users/admin/eventMarket');
 const { getAllMenuItems } = require("../../../controller/users/admin/menuItem");
@@ -268,6 +269,10 @@ module.exports = async (fastify, opts) => {
   fastify.post("/getLiveCommentariesV1", {
     schema: Commentary.getLiveCommentaries.schema,
     handler: (request, reply) => getAllCommentariesDataV1(request, reply, fastify),
+  })
+  fastify.post("/getLiveCommentariesV2", {
+    schema: Commentary.getLiveCommentaries.schema,
+    handler: (request, reply) => getAllCommentariesDataV2(request, reply, fastify),
   })
 
   fastify.post("/getMarketsByCId" , {
