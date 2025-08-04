@@ -103,6 +103,7 @@ const {
   getCommWicketById,
   updateCommWicket,
   scoringTypeCommentary,
+  validatePasswordOnPredictionFalse,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -1398,5 +1399,17 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request , reply) => scoringTypeCommentary(request, reply, fastify)
+  });
+  fastify.post("/validatePass", {
+    schema : Commentary.validatePassword.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
+          mode: "edit"
+        }),
+    ],
+    handler: (request , reply) => validatePasswordOnPredictionFalse(request, reply, fastify)
   });
 };
