@@ -13858,7 +13858,8 @@ const saveComVirtual = async (request, fastify) => {
     //     });
     //   }
     // }
-    if (isEndInnings && isEndInnings == true && isCallPredict == true) {
+    // if (isEndInnings && isEndInnings == true && isCallPredict == true) {
+    if (isEndInnings && isEndInnings == true && commentaryData?.isPredictMarket == true) {
       //_resFromPredictAPI = null;
       //_resFromPredictAPI = await
       callPredictorMarket(
