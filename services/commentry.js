@@ -21000,6 +21000,22 @@ const scoringTypeCommentaryService = async (request, fastify) => {
   return "Commentary scoring type updated successfully";
 };
 
+const validatePasswordOnPredictionFalseService = async (request, fastify) => {
+  const { password } = request.body;
+  if (!password) {
+    throw new Error(`Password have to pass on body`);
+  }
+
+  const configPassword = global.tblConfigs.find(
+    (item) => item.key === configConstants.PREDICTIONFALSEPASSWORD
+  ).value;
+  if (configPassword !== password) {
+    throw new Error("Invalid Password");
+  }
+
+  return "Password validated successfully";
+};
+
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -21107,4 +21123,5 @@ module.exports = {
   getCommWicketByIdService,
   updateCommWicketService,
   scoringTypeCommentaryService,
+  validatePasswordOnPredictionFalseService,
 };

@@ -3891,6 +3891,20 @@ const Commentary = {
       },
     },
   },
+  validatePassword: {
+    schema: {
+      tags: ["Commentary"],
+      description: "Validate password on prediction false",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          password: { type: "string"},
+        },
+        required: ["password"],
+      },
+    },
+  },
 };
 
 const Compitition = {
