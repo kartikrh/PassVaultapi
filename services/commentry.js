@@ -6370,7 +6370,8 @@ const commentaryDetailsByEventIdService = async (
   let cardKey;
   // Basic elements are set
   cid = result.commentaryId;
-  eid = result.eventRefId.toString();
+  // eid = result.eventRefId.toString();
+  eid = result?.eventRefId != null ? result.eventRefId.toString() : null;
   til = result.eventName;
   getstatus = result.commentaryStatus;
   dis = result.eventDate;
@@ -6458,7 +6459,8 @@ const commentaryDetailsByEventIdService = async (
   if (getstatus == 1) {
     // Assign values to the resultArr object
     resultArr.cid = parseInt(result.commentaryId);
-    resultArr.eid = result.eventRefId.toString();
+    // resultArr.eid = result.eventRefId.toString();
+    resultArr.eid = result?.eventRefId != null ? result.eventRefId.toString() : null;
     resultArr.til = result.eventName;
     resultArr.toss = "Toss Not Done Yet";
     resultArr.scot = "";
@@ -6533,7 +6535,8 @@ const commentaryDetailsByEventIdService = async (
     toss = tossteam + tossType;
     // Assign values to the resultArr object
     resultArr.cid = parseInt(result.commentaryId);
-    resultArr.eid = result.eventRefId.toString();
+    // resultArr.eid = result.eventRefId.toString();
+    resultArr.eid = result?.eventRefId != null ? result.eventRefId.toString() : null;
     resultArr.til = result.eventName;
     resultArr.toss = toss;
     resultArr.scot = "";
@@ -6655,7 +6658,8 @@ const commentaryDetailsByEventIdService = async (
 
     // Assign values to the resultArr object
     resultArr.cid = parseInt(result.commentaryId);
-    resultArr.eid = result.eventRefId.toString();
+    // resultArr.eid = result.eventRefId.toString();
+    resultArr.eid = result?.eventRefId != null ? result.eventRefId.toString() : null;
     resultArr.til = result.eventName;
     resultArr.toss = toss;
     resultArr.scot = scot;
@@ -21008,7 +21012,11 @@ const validatePasswordOnPredictionFalseService = async (request, fastify) => {
 
   const configPassword = global.tblConfigs.find(
     (item) => item.key === configConstants.PREDICTIONFALSEPASSWORD
-  ).value;
+  )?.value;
+  if(!configPassword) {
+    throw new Error("PREDICTIONFALSEPASSWORD key is not found in config");
+  }
+
   if (configPassword !== password) {
     throw new Error("Invalid Password");
   }
