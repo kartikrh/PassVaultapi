@@ -632,7 +632,16 @@ const createCommentaryService = async (request, fastify) => {
       request.body.team2Kipper,
     ];
 
-    let check = captainsAndKippers.filter((item) => !allPlayers.includes(item));
+    // let check = captainsAndKippers.filter((item) => !allPlayers.includes(item));
+    // if (check.length > 0) {
+    //   throw new Error(`Captain and Kipper must be in the player list.`);
+    // }
+
+    let validCaptainsAndKippers = captainsAndKippers.filter(
+      (item) => item !== null && item !== undefined && item !== 0
+    );
+
+    let check = validCaptainsAndKippers.filter((item) => !allPlayers.includes(item));
     if (check.length > 0) {
       throw new Error(`Captain and Kipper must be in the player list.`);
     }
