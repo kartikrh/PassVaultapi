@@ -293,6 +293,7 @@ const updateMarketTemplateService = async (request, fastify) => {
       request.body.autoNotCreateAfterChase : marketTemplate.autoNotCreateAfterChase,
     isPython: request.body.isPython !== undefined ? Boolean(request.body.isPython) : marketTemplate.isPython,
     devTemplateName: request.body.devTemplateName || marketTemplate.devTemplateName,
+    isNameInBall: request.body.isNameInBall !== undefined ? Boolean(request.body.isNameInBall) : marketTemplate.isNameInBall,
   };
   const mt = global.tblMarketTypes.find((m)=> m.marketTypeId == body.marketTypeId)
   if(!mt){
