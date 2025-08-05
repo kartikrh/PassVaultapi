@@ -811,7 +811,8 @@ const getCommMatchTypeTemplatesQuery = async (commentaryId, whereCondition = nul
             tmt."wrDevTemplateName" as "devTemplateName",
             tmt."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
             tmt."wrIsNameInBall" as "isNameInBall",
-            tmt."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase"
+            tmt."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
+            tmt."wrNotIncludedOver" as "notIncludedOver"
           FROM "tblCommMatchTypeTemplate" AS cmtt
           LEFT JOIN "tblMarketTemplates" AS tmt ON tmt."wrID" = cmtt."wrMarketTemplateId"
           LEFT JOIN "tblMatchTypes" AS tm ON tmt."wrMatchTypeID" = tm."wrMatchTypeId"
