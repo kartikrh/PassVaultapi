@@ -632,7 +632,16 @@ const createCommentaryService = async (request, fastify) => {
       request.body.team2Kipper,
     ];
 
-    let check = captainsAndKippers.filter((item) => !allPlayers.includes(item));
+    // let check = captainsAndKippers.filter((item) => !allPlayers.includes(item));
+    // if (check.length > 0) {
+    //   throw new Error(`Captain and Kipper must be in the player list.`);
+    // }
+
+    let validCaptainsAndKippers = captainsAndKippers.filter(
+      (item) => item !== null && item !== undefined && item !== 0
+    );
+
+    let check = validCaptainsAndKippers.filter((item) => !allPlayers.includes(item));
     if (check.length > 0) {
       throw new Error(`Captain and Kipper must be in the player list.`);
     }
@@ -6370,7 +6379,8 @@ const commentaryDetailsByEventIdService = async (
   let cardKey;
   // Basic elements are set
   cid = result.commentaryId;
-  eid = result.eventRefId.toString();
+  // eid = result.eventRefId.toString();
+  eid = result?.eventRefId != null ? result.eventRefId.toString() : null;
   til = result.eventName;
   getstatus = result.commentaryStatus;
   dis = result.eventDate;
@@ -6458,7 +6468,8 @@ const commentaryDetailsByEventIdService = async (
   if (getstatus == 1) {
     // Assign values to the resultArr object
     resultArr.cid = parseInt(result.commentaryId);
-    resultArr.eid = result.eventRefId.toString();
+    // resultArr.eid = result.eventRefId.toString();
+    resultArr.eid = result?.eventRefId != null ? result.eventRefId.toString() : null;
     resultArr.til = result.eventName;
     resultArr.toss = "Toss Not Done Yet";
     resultArr.scot = "";
@@ -6533,7 +6544,8 @@ const commentaryDetailsByEventIdService = async (
     toss = tossteam + tossType;
     // Assign values to the resultArr object
     resultArr.cid = parseInt(result.commentaryId);
-    resultArr.eid = result.eventRefId.toString();
+    // resultArr.eid = result.eventRefId.toString();
+    resultArr.eid = result?.eventRefId != null ? result.eventRefId.toString() : null;
     resultArr.til = result.eventName;
     resultArr.toss = toss;
     resultArr.scot = "";
@@ -6655,7 +6667,8 @@ const commentaryDetailsByEventIdService = async (
 
     // Assign values to the resultArr object
     resultArr.cid = parseInt(result.commentaryId);
-    resultArr.eid = result.eventRefId.toString();
+    // resultArr.eid = result.eventRefId.toString();
+    resultArr.eid = result?.eventRefId != null ? result.eventRefId.toString() : null;
     resultArr.til = result.eventName;
     resultArr.toss = toss;
     resultArr.scot = scot;
@@ -13858,7 +13871,8 @@ const saveComVirtual = async (request, fastify) => {
     //     });
     //   }
     // }
-    if (isEndInnings && isEndInnings == true && isCallPredict == true) {
+    // if (isEndInnings && isEndInnings == true && isCallPredict == true) {
+    if (isEndInnings && isEndInnings == true && commentaryData?.isPredictMarket == true) {
       //_resFromPredictAPI = null;
       //_resFromPredictAPI = await
       callPredictorMarket(
@@ -13869,7 +13883,8 @@ const saveComVirtual = async (request, fastify) => {
         },
         "/api/v1/endinnings",
         fastify,
-        request
+        request,
+        pythonURI
       ).catch((err) => {
         errorLogger(
           fastify,
@@ -20998,6 +21013,26 @@ const scoringTypeCommentaryService = async (request, fastify) => {
   return "Commentary scoring type updated successfully";
 };
 
+const validatePasswordOnPredictionFalseService = async (request, fastify) => {
+  const { password } = request.body;
+  if (!password) {
+    throw new Error(`Password have to pass on body`);
+  }
+
+  const configPassword = global.tblConfigs.find(
+    (item) => item.key === configConstants.PREDICTIONFALSEPASSWORD
+  )?.value;
+  if(!configPassword) {
+    throw new Error("PREDICTIONFALSEPASSWORD key is not found in config");
+  }
+
+  if (configPassword !== password) {
+    throw new Error("Invalid Password");
+  }
+
+  return "Password validated successfully";
+};
+
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -21105,4 +21140,5 @@ module.exports = {
   getCommWicketByIdService,
   updateCommWicketService,
   scoringTypeCommentaryService,
+  validatePasswordOnPredictionFalseService,
 };
