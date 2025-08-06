@@ -3761,6 +3761,7 @@ const getCommentaryDetailByIdQuery = async (data, fastify) => {
               tm."wrMatchType" as "matchType",
               te."wrEventType" as "eventType",
               tco."wrCompetition" as "competition",
+              tc."wrCompetitionId" as "competitionId",
               "wrIsPredictMarket" as "isPredictMarket",
               tc."wrCommentaryCloseTime" as "commentaryCloseTime"
           FROM "tblCommentaries" tc

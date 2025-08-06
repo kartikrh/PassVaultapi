@@ -9607,10 +9607,10 @@ const getActiveCommertyService = async (fastify) => {
         en: commentary.eventName || "",
         ed: convertDate(commentary.eventDate, "DD/MM/YYYY") || "",
         et: convertDate(commentary.eventDate, "hh:mm:ss") || "",
-        te1n: commentaryTeamsOne.teamName || "",
-        te2n: commentaryTeamsTwo.teamName || "",
-        s1n: commentaryTeamsOne.shortName || "",
-        s2n: commentaryTeamsTwo.shortName || "",
+        te1n: commentaryTeamsOne?.teamName || "",
+        te2n: commentaryTeamsTwo?.teamName || "",
+        s1n: commentaryTeamsOne?.shortName || "",
+        s2n: commentaryTeamsTwo?.shortName || "",
       };
 
       // Add data to the object
@@ -10257,6 +10257,7 @@ const getOpenCommentariesService = async (request, fastify) => {
       status: com.commentaryStatus,
       matchType: com.matchType,
       competition: com.competition,
+      competitionId : com.competitionId,
       eventType: com.eventType,
       isPredictMarket: com.isPredictMarket,
     };
