@@ -10272,6 +10272,20 @@ const AutoImportData = {
       secaurity : [{bearerAuth : []}]
     }
   },
+  getById: {
+    schema: {
+      tags: ["AutoImportData"],
+      description: "get AutoImportData by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+        },
+        required: ["id"],
+      },
+    },
+  },
   save: {
     schema: {
       tags: ["AutoImportData"],
@@ -10287,6 +10301,61 @@ const AutoImportData = {
         required: ["refId", "refType", "sourceId"],
       },
     },
+  },
+  edit: {
+    schema: {
+      tags: ["AutoImportData"],
+      description: "update AutoImportData",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          refId: { type: "integer" },
+          sourceId: { type: "integer" },
+          id: { type: "integer" },
+          isImported: { type: "boolean" },
+          isImportStart: { type: "boolean" },
+          importStartTime: { type: "string" },
+          importEndTime: { type: "string" },
+        },
+        required: ["id"],
+      },
+    },
+  },
+  deleteImportData: {
+    schema: {
+      tags: ["AutoImportData"],
+      description: "delete auto import data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["id"],
+      },
+    },
+  },
+  getAllAutoImportData : {
+    schema : {
+      tags : ["AutoImportData"],
+      description : "AutoImportData get all",
+      security : [{bearerAuth : []}],
+      body : {
+        type : "object",
+        properties : {
+          skip : {type : "integer"},
+          limit : {type : "integer"},
+          startDate : {type : "string"},
+          endDate : {type : "string"}
+        },
+        required : ["page", "limit"]
+      }
+    }
   },
 }
 const EntitySport = {
