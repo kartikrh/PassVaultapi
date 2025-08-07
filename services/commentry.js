@@ -719,7 +719,7 @@ const createCommentaryService = async (request, fastify) => {
           request.body.team2Players &&
           request.body.team2Players.length > 0
         ) {
-          const data = [
+          let data = [
             ...request.body.team1Players.map((item, i) => {
               const playerTpId = global.tblPlayers.find(elem => elem.playerId === item);
               return {
@@ -741,6 +741,18 @@ const createCommentaryService = async (request, fastify) => {
               };
             }),
           ];
+          data = data.filter(elem => {
+            if (elem.playerId == 0) {
+              errorLogger(
+                fastify,
+                "playerId 0 error in createCommentaryService",
+                "ERROR --> services/commentary.js/createCommentaryService",
+                request
+              );
+              return false;
+            }
+            return true;
+          });
           for (let info of data) {
             let playerData = await insertCommentaryPlayers(
               {
@@ -825,7 +837,7 @@ const createCommentaryService = async (request, fastify) => {
         request.body.team2Players &&
         request.body.team2Players.length > 0
       ) {
-        const data = [
+        let data = [
           ...request.body.team1Players.map((item, i) => {
             const playerTpId = global.tblPlayers.find(elem => elem.playerId === item);
             return {
@@ -847,6 +859,18 @@ const createCommentaryService = async (request, fastify) => {
             };
           }),
         ];
+        data = data.filter(elem => {
+            if (elem.playerId == 0) {
+              errorLogger(
+                fastify,
+                "playerId 0 error in createCommentaryService.",
+                "ERROR --> services/commentary.js/createCommentaryService",
+                request
+              );
+              return false;
+            }
+          return true;
+        });
         for (let info of data) {
           let playerData = await insertCommentaryPlayers(
             {
@@ -1212,7 +1236,7 @@ const updateCommentaryService = async (request, fastify) => {
           request.body.team2Players &&
           request.body.team2Players.length > 0
         ) {
-          const data = [
+          let data = [
             ...request.body.team1Players.map((item, i) => {
               const playerTpId = global.tblPlayers.find(elem => elem.playerId === item);
               return {
@@ -1234,6 +1258,18 @@ const updateCommentaryService = async (request, fastify) => {
               };
             }),
           ];
+          data = data.filter(elem => {
+            if (elem.playerId == 0) {
+              errorLogger(
+                fastify,
+                "playerId 0 error in update commentary api.",
+                "ERROR --> services/commentary.js/updateCommentaryService",
+                request
+              );
+              return false;
+            }
+            return true;
+          });
           for (let info of data) {
             // await insertCommentaryPlayers(
             //   info,
@@ -1320,7 +1356,7 @@ const updateCommentaryService = async (request, fastify) => {
         request.body.team2Players &&
         request.body.team2Players.length > 0
       ) {
-        const data = [
+        let data = [
           ...request.body.team1Players.map((item, i) => {
             const playerTpId = global.tblPlayers.find(elem => elem.playerId === item);
             return {
@@ -1342,6 +1378,18 @@ const updateCommentaryService = async (request, fastify) => {
             };
           }),
         ];
+        data = data.filter(elem => {
+            if (elem.playerId == 0) {
+              errorLogger(
+                fastify,
+                "playerId 0 error in update commentary api",
+                "ERROR --> services/commentary.js/updateCommentaryService",
+                request
+              );
+              return false;
+            }
+          return true;
+        });
         for (let info of data) {
           // await insertCommentaryPlayers(info, currentinning, fastify, request);
           const playerData = await upsertCommentaryPlayers(
@@ -1607,7 +1655,7 @@ const cloneCommentaryService = async (request, fastify) => {
           request.body.team2Players &&
           request.body.team2Players.length > 0
         ) {
-          const data = [
+          let data = [
             ...request.body.team1Players.map((item, i) => {
               const playerTpId = global.tblPlayers.find(elem => elem.playerId === item);
               return {
@@ -1629,6 +1677,18 @@ const cloneCommentaryService = async (request, fastify) => {
               };
             }),
           ];
+          data = data.filter(elem => {
+            if (elem.playerId == 0) {
+              errorLogger(
+                fastify,
+                "playerId 0 error in clone commentary api",
+                "ERROR --> services/commentary.js/cloneCommentaryService",
+                request
+              );
+              return false;
+            }
+            return true;
+          });
           for (let info of data) {
             let playerData = await insertCommentaryPlayers(
               {
@@ -1711,7 +1771,7 @@ const cloneCommentaryService = async (request, fastify) => {
         request.body.team2Players &&
         request.body.team2Players.length > 0
       ) {
-        const data = [
+        let data = [
           ...request.body.team1Players.map((item, i) => {
             const playerTpId = global.tblPlayers.find(elem => elem.playerId === item);
             return {
@@ -1733,6 +1793,18 @@ const cloneCommentaryService = async (request, fastify) => {
             };
           }),
         ];
+        data = data.filter(elem => {
+            if (elem.playerId == 0) {
+              errorLogger(
+                fastify,
+                "playerId 0 error in clone commentary api.",
+                "ERROR --> services/commentary.js/cloneCommentaryService",
+                request
+              );
+              return false;
+            }
+          return true;
+        });
         for (let info of data) {
           let palyerData = await insertCommentaryPlayers(
             {
@@ -5255,7 +5327,15 @@ const addTeamPlayerService = async (request, fastify) => {
     throw new Error("Player already added in this commentary");
   }
 
-
+  if(playerId == 0) {
+    errorLogger(
+      fastify,
+      "playerId 0 error in addTeamPlayerService api",
+      "ERROR --> services/commentary.js/addTeamPlayerService",
+      request
+    );
+    return;
+  }
   const playerData = await insertCommentaryPlayersQuery(
     {
       commentaryId,
