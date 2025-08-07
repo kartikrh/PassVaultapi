@@ -1012,7 +1012,8 @@ const changeMarketCancelQuery = async (data, request, fastify) => {
           AND "wrID" = $3
           AND "wrStatus"  = $4
           RETURNING 
-            "wrID" AS "eventMarketId"
+            "wrID" AS "eventMarketId",
+            "wrTeamID" as "teamId"
             `;
     const result = await fastify.db.query(query, {
       bind: [
@@ -3905,7 +3906,9 @@ const closeEventMarketsQuery = async (eventMarketId, request, fastify) => {
             "wrCloseTime" AS "closeTime",
             "wrLastUpdate" AS "lastUpdate",
             "wrData" AS "data",
-            "wrIsSendData" AS "isSendData"
+            "wrIsSendData" AS "isSendData",
+            "wrTeamID" as "teamId",
+            "wrCommentaryId" as "commentaryId"
         `;
     const result = await fastify.db.query(query2, {
       bind: [
@@ -3964,7 +3967,9 @@ const cancelEventMarketsQuery = async (eventMarketId, request, fastify) => {
         "wrResult" = null
       where "wrID" = any($1) and "wrStatus" = $3
       RETURNING 
-            "wrID" AS "eventMarketId"
+            "wrID" AS "eventMarketId",
+            "wrCommentaryId" as "commentaryId",
+            "wrTeamID" as "teamId"
     `;
     const result = await fastify.db.query(query2, {
       bind: [eventMarketId, EventMarketStatus.Cancel, EventMarketStatus.Close],

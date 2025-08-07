@@ -840,6 +840,7 @@ const updateVirtualEventStatusService = async (request, fastify) => {
         ...request,
         body: {
           eventId: global.tblCommentaries[index].eventRefId,
+          commentaryId :global.tblCommentaries[index].commentaryId
         },
       },
       fastify,
