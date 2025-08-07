@@ -4679,6 +4679,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           ...request,
           body: {
             eventId: commentaryData.eventRefId,
+            commentaryId : commentaryData.commentaryId
           },
         },
         fastify,
@@ -5717,6 +5718,7 @@ const updateCommentaryStatusService = async (request, fastify) => {
         ...request,
         body: {
           eventId: global.tblCommentaries[index].eventRefId,
+          commentaryId :global.tblCommentaries[index].commentaryId
         },
       },
       fastify,
@@ -5783,6 +5785,8 @@ const commentaryStatusService = async (request, fastify) => {
         ...request,
         body: {
           eventId: global.tblCommentaries[index].eventRefId,
+          commentaryId :global.tblCommentaries[index].commentaryId
+
         },
       },
       fastify,
@@ -6244,12 +6248,19 @@ const commentaryDetailsByEventIdService = async (
   fastify,
   functionName = null
 ) => {
-  const result = await global.tblCommentaries.find(
+  
+  let result 
+  if(request.body.commentaryId){
+    result= await global.tblCommentaries.find(
     (item) =>
-      item.commentaryId === request.body.commentaryId ||
+      item.commentaryId === request.body.commentaryId
+    );
+  }
+  else if (request.body.eventId) {
+    result = global.tblCommentaries.find((item)=>
       item.eventRefId === request.body.eventId 
-
-  );
+    )
+  }
 
   // if (!result && request.body.status === undefined) {
   //   return null;
@@ -13804,6 +13815,7 @@ const saveComVirtual = async (request, fastify) => {
           ...request,
           body: {
             eventId: commentaryData.eventRefId,
+            commentaryId : commentaryData.commentaryId
           },
         },
         fastify,
@@ -14208,6 +14220,8 @@ const commentaryStartService = async (request, fastify) => {
           ...request,
           body: {
             eventId: commentaryData.eventRefId,
+            commentaryId : commentaryData.commentaryId
+
           },
         },
         fastify,
@@ -14513,6 +14527,8 @@ const commentaryTossService = async (request, fastify) => {
           ...request,
           body: {
             eventId: commentaryData.eventRefId,
+            commentaryId : commentaryData.commentaryId
+
           },
         },
         fastify,
@@ -15145,6 +15161,8 @@ const commentaryScoreService = async (request, fastify) => {
           ...request,
           body: {
             eventId: commentaryData.eventRefId,
+            commentaryId : commentaryData.commentaryId
+
           },
         },
         fastify,
@@ -15473,6 +15491,8 @@ const commentaryOverStartService = async (request, fastify) => {
           ...request,
           body: {
             eventId: commentaryData.eventRefId,
+            commentaryId : commentaryData.commentaryId
+
           },
         },
         fastify,
@@ -15777,6 +15797,7 @@ const commentarySwapPlayerService = async (request, fastify) => {
           ...request,
           body: {
             eventId: commentaryData.eventRefId,
+            commentaryId : commentaryData.commentaryId
           },
         },
         fastify,
@@ -16255,6 +16276,8 @@ const commentaryInningChangeService = async (request, fastify) => {
           ...request,
           body: {
             eventId: commentaryData.eventRefId,
+            commentaryId : commentaryData.commentaryId
+
           },
         },
         fastify,
@@ -17507,6 +17530,8 @@ const commentarySetPlayerService = async (request, fastify) => {
           ...request,
           body: {
             eventId: commentaryData.eventRefId,
+            commentaryId : commentaryData.commentaryId
+
           },
         },
         fastify,
@@ -17857,6 +17882,8 @@ const undoAPIService = async (request, fastify) => {
           ...request,
           body: {
             eventId: commentaryData.eventRefId,
+            commentaryId : commentaryData.commentaryId
+
           },
         },
         fastify,
@@ -19199,6 +19226,8 @@ const undoAPIService2 = async (request, fastify) => {
           ...request,
           body: {
             eventId: commentaryData.eventRefId,
+            commentaryId : commentaryData.commentaryId
+
           },
         },
         fastify,
@@ -19843,6 +19872,8 @@ const changeStrikerPlyService = async (request, fastify) => {
           ...request,
           body: {
             eventId: commentaryData.eventRefId,
+            commentaryId : commentaryData.commentaryId
+
           },
         },
         fastify,
@@ -20476,6 +20507,8 @@ const changePlayerService = async (request, fastify) => {
           ...request,
           body: {
             eventId: commentaryData.eventRefId,
+            commentaryId : commentaryData.commentaryId
+
           },
         },
         fastify,
@@ -20814,6 +20847,8 @@ const changeOverService = async (request, fastify) => {
           ...request,
           body: {
             eventId: commentaryData.eventRefId,
+            commentaryId : commentaryData.commentaryId
+
           },
         },
         fastify,
