@@ -11763,7 +11763,8 @@ const cancelCommentaryService = async (request, fastify) => {
       (item) => item?.commentaryId === commentaryId
     );
     if (index !== -1) {
-      global.tblCommentaries[index].commentaryStatus = 4;
+      // global.tblCommentaries[index].commentaryStatus = 4;
+      global.tblCommentaries[index].commentaryStatus = 10;
       global.tblCommentaries[index].result = "Abandoned";
 
       const eventMarket = await closeEventMarketByCIdQuery(
