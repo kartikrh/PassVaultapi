@@ -1274,17 +1274,17 @@ const changeMarketCancelService = async (request, fastify) => {
       (item) => !eventMarketIds.includes(item.eventMarketId)
     );
     // global.tblEventMarkets[eventMarket].status = EventMarketStatus.Cancel;
-    if(commentary?.commentaryStatus == commentaryStatus.INPROGRESS || commentary?.commentaryStatus ==commentaryStatus.COMPLETED){
-      const strikeTeam = global.tblCommentaryTeams.find(
-        (item) => item.commentaryId === commentaryId && item.teamStatus === 1
-      );
+    if(commentary?.commentaryStatus != commentaryStatus.OPEN){
+      // const strikeTeam = global.tblCommentaryTeams.find(
+      //   (item) => item.commentaryId === commentaryId && item.teamStatus === 1
+      // );
       await callPredictorMarket(
         {
           commentary_id: parseInt(commentaryId),
           status: parseInt(EventMarketStatus.Cancel),
           match_type_id: parseInt(commentary.matchTypeId),
           event_market_id: parseInt(eventMarketId),
-          strike_team: strikeTeam.teamId,
+          strike_team: result[0].teamId,
         },
         "/api/v1/marketmanualclose",
         fastify,
@@ -1611,17 +1611,17 @@ const changeMarketCloseService = async (request, fastify) => {
     // global.tblEventMarkets[eventMarket].status = EventMarketStatus.Close;
     // global.tblEventMarkets[eventMarket].data = updatedData;
     // console.log("updatedData", updatedData);
-    if(commentary.commentaryStatus === commentaryStatus.INPROGRESS || commentary.commentaryStatus === commentaryStatus.COMPLETED){
-      const strikeTeam = global.tblCommentaryTeams.find(
-        (item) => item.commentaryId === commentaryId && item.teamStatus === 1
-      );
+    if(commentary.commentaryStatus != commentaryStatus.OPEN){
+      // const strikeTeam = global.tblCommentaryTeams.find(
+      //   (item) => item.commentaryId === commentaryId && item.teamStatus === 1
+      // );
       _resFromPredictAPI = await callPredictorMarket(
         {
           commentary_id: parseInt(commentaryId),
           status: parseInt(EventMarketStatus.Close),
           match_type_id: parseInt(commentary.matchTypeId),
           event_market_id: parseInt(eventMarketId),
-          strike_team: strikeTeam.teamId,
+          strike_team: checkMarketInDb[0].teamId,
         },
         "/api/v1/marketmanualclose",
         fastify,
@@ -3515,6 +3515,23 @@ const closeEventMarketsByIdsService = async (request, fastify) => {
           ...updatedItem,
         };
       }
+      let com = global.tblCommentaries.find((i)=>i.commentaryId == updatedItem.commentaryId);
+      if(com && com.commentaryStatus != commentaryStatus.OPEN ){
+          let pythonURI = com.pythonURI || null
+          callPredictorMarket(
+            {
+              commentary_id: parseInt(updatedItem.commentaryId),
+              status: parseInt(EventMarketStatus.Close),
+              match_type_id: com.matchTypeId || null,
+              event_market_id: parseInt(updatedItem.eventMarketId),
+              strike_team: updatedItem.teamId,
+            },
+            "/api/v1/marketmanualclose",
+            fastify,
+            request,
+            pythonURI
+          );
+      }
     };
     // });
   }
@@ -3578,15 +3595,15 @@ const cancelEventMarketsByIdsService = async (request, fastify) => {
     (item) => !eventMarketId.includes(item.eventMarketId)
   );
   
-  if(eventMarketId.length > 0){
-    for (let item of eventMarketId){
+  if(eventMarket.length > 0){
+    for (let item of eventMarket){
      // add log
       marketLogger(
         {
-          eventMarketId: item,
+          eventMarketId: item.eventMarketId,
           actionType: MarketActionType.marketCancel,
           value:`EventMarketStatus:${EventMarketStatus.Cancel}`,
-          commentaryId : null
+          commentaryId : item.commentaryId
         },
         request,
         fastify
@@ -3599,6 +3616,24 @@ const cancelEventMarketsByIdsService = async (request, fastify) => {
           request
         );
       });
+      
+      const com = global.tblCommentaries.find((i)=>i.commentaryId == item.commentaryId)
+      if(com && com.commentaryStatus != commentaryStatus.OPEN){
+        let pythonURI = com.pythonURI || null;
+        callPredictorMarket(
+          {
+            commentary_id: parseInt(com.commentaryId),
+            status: parseInt(EventMarketStatus.Cancel),
+            match_type_id: parseInt(com?.matchTypeId) || null,
+            event_market_id: parseInt(item.eventMarketId),
+            strike_team: item.teamId,
+          },
+          "/api/v1/marketmanualclose",
+          fastify,
+          request,
+          pythonURI
+        );
+      }
     }
   }
 
