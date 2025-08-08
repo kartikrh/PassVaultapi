@@ -42,10 +42,18 @@ const updateAutoImportDataService = async (request, fastify) => {
     if (!validateImportData) {
         throw new Error("Auto import data with this Id not found");
     }
+    // if (request.body.refId && request.body.sourceId) {
+    //     let where = `"wrId" != ${id} AND "wrRefId" = ${request.body.refId} AND "wrSourceId" = ${request.body.sourceId}`;
+    //     const validateRefId = await getAutoImportDataByIdQuery(where, request, fastify);
+    //     if (validateRefId) {
+    //         throw new Error("Auto import data already existed with this refId and sourceId");
+    //     }
+    // }
+
     const body = {
-        refId: request.body.refId || validateImportData.refId,
+        refId: validateImportData.refId,
         refType: validateImportData.refType,
-        sourceId: request.body.sourceId || validateImportData.sourceId,
+        sourceId: validateImportData.sourceId,
         isImported: request.body.isImported == undefined ? validateImportData.isImported : request.body.isImported,
         isImportStart: request.body.isImportStart == undefined ? validateImportData.isImportStart : request.body.isImportStart,
         importStartTime: request.body.importStartTime || validateImportData.importStartTime,
