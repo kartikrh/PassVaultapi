@@ -199,9 +199,10 @@ const allAutoImportDataLogsQuery = async (body ,request, fastify) => {
                 "wrIsImportStart" as "isImportStart",
                 "wrImportStartTime" as "importStartTime",
                 "wrImportEndTime" as "importEndTime",
-                "wrCreatedBy" as "createdBy",
+                tu."WrUserName" as "createdBy",
                 "wrCreateDate" as "createdDate"
             FROM "tblAutoImportData"
+            LEFT JOIN "tblUsers" tu ON "tblAutoImportData"."wrCreatedBy" = tu."WrUserId"
             ${where}
             ORDER BY "wrId" DESC
             LIMIT $1 OFFSET $2;

@@ -324,8 +324,9 @@ const callPredictorMarket = async (data , endpoint ,fastify ,request, pythonURI 
         request,
         fastify
       );
-      return error.message;
+      return true;
     }
+    return true;
     // throw new Error(error.message);
   }
 
@@ -1302,6 +1303,19 @@ const ScoringTypes = {
   Panel: 1, // Manual
   Entity: 2
 }
+const RefType = {
+  Cricket: 1,
+  Competition: 2,
+  Match: 3,
+  Team: 4,
+  Player: 5,
+}
+const SourceID = {
+  Prediction: 1,
+  Betfair: 2,
+  EntitySport: 3,
+}
+ 
 module.exports = {
   ERROR_CODES,
   error,
@@ -1394,4 +1408,6 @@ module.exports = {
   matchStatusEntity,
   entityCompetition,
   ScoringTypes,
+  RefType,
+  SourceID,
 };

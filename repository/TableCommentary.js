@@ -3762,6 +3762,7 @@ const getCommentaryDetailByIdQuery = async (data, fastify) => {
               te."wrEventType" as "eventType",
               tco."wrCompetition" as "competition",
               tc."wrCompetitionId" as "competitionId",
+              tc."wrIsVirtual" as "isVirtual",
               "wrIsPredictMarket" as "isPredictMarket",
               tc."wrCommentaryCloseTime" as "commentaryCloseTime"
           FROM "tblCommentaries" tc
@@ -4615,7 +4616,8 @@ const cancelCommentaryQuery = async (data, fastify, request) => {
         where "wrCommentaryId" = ANY($3) AND "wrIsDelete" = false
       `,
       {
-        bind: [4, "Abandoned", data.commentaryId],
+        // bind: [4, "Abandoned", data.commentaryId],
+        bind: [10, "Abandoned", data.commentaryId],
       }
     );
 

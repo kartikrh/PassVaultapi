@@ -10310,8 +10310,8 @@ const AutoImportData = {
       body: {
         type: "object",
         properties: {
-          refId: { type: "integer" },
-          sourceId: { type: "integer" },
+          // refId: { type: "integer" },
+          // sourceId: { type: "integer" },
           id: { type: "integer" },
           isImported: { type: "boolean" },
           isImportStart: { type: "boolean" },
