@@ -88,6 +88,7 @@ const {
   updateEventTypeAndCompIdQuery,
   getMatchTypeTemplateByComIdQuery,
   scoringTypeCommentaryQuery,
+  updateteamMaxOverQuery,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -7630,6 +7631,23 @@ const updateMatchTypeInCommentaryService = async (request, fastify) => {
   const updatedData = await getCommentaryByIdQuery(request, fastify);
 
   global.tblCommentaries[index] = updatedData;
+
+  const teamMaxOver = validateMatchType?.maxOversInFirstInings;
+  const currentInning = global.tblCommentaries[index]?.currentInnings
+
+  await updateteamMaxOverQuery({teamMaxOver, commentaryId,
+    //  currentInnings: currentInning
+    },
+    fastify, request
+  );
+  for (const elem of global.tblCommentaryTeams) {
+    if (elem.commentaryId === commentaryId 
+      // && elem.currentInnings == currentInning
+    ) {
+      elem.teamMaxOver = teamMaxOver;
+    }
+  }
+
   let _resFromPredictAPI;
   let callPrediction = {};
   // if (updatedData.isPredictMarket == true) {
