@@ -3905,6 +3905,21 @@ const Commentary = {
       },
     },
   },
+  upMatchInfo: {
+    schema: {
+      tags: ["Commentary"],
+      description: "update MatchInfo",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          // password: { type: "string"},
+          commentaryId : {type : "integer"}
+        },
+        required: ["commentaryId"],
+      },
+    },
+  },
 };
 
 const Compitition = {
