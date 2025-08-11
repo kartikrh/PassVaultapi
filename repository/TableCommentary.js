@@ -8054,6 +8054,32 @@ const scoringTypeCommentaryQuery = async (data, fastify, request) => {
     throw new Error(err.message);
   }
 };
+const updateteamMaxOverQuery = async (data, fastify, request) => {
+  try {
+    return await fastify.db.query(
+      `UPDATE "tblCommentaryTeams" SET "wrTeamMaxOver" = $1 
+      WHERE "wrCommentaryId" = $2 AND "wrIsDelete" = false`,
+      {
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [
+          data.teamMaxOver,
+          data.commentaryId, 
+          // data.currentInnings
+        ],
+      }
+    );
+    //  AND "wrCurrentInnings" = $3 
+  } catch (err) {
+    console.log("errorrr", err)
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/updateteamMaxOverQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -8190,5 +8216,6 @@ module.exports = {
   getComEntityQuery,
   getMatchTypeTemplateByComIdQuery,
   scoringTypeCommentaryQuery,
-  insertCommentaryPlayersEntity
+  insertCommentaryPlayersEntity,
+  updateteamMaxOverQuery,
 };
