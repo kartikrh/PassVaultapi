@@ -83,6 +83,9 @@ async function signInUserServices(request, fastify) {
   if (!user) {
     throw new Error("Incorrect user name or password");
   }
+  if(user?.WrUserType != 1) {
+    throw new Error("Incorrect userType");
+  }
   const WrEId = user.WrEId;
   const ipAdress = requestIp.getClientIp(request);
 

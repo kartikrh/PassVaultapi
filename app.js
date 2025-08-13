@@ -321,8 +321,8 @@ module.exports = async function (fastify, opts) {
         reply.statusCode,
         urlLastParameter[0]
       );
-      const urlTokenExceptions = ["/signout", "/verifyToken"];
-      const urlTokenGeneration = ["/signin", "/signup"];
+      const urlTokenExceptions = ["/signout", "/verifyToken", "/agent/signout"];
+      const urlTokenGeneration = ["/signin", "/signup", "/agent/signin"];
       const allowedStatusCodes = [200, 500, 403, 400];
       if (allowedStatusCodes.includes(reply.statusCode)) {
         if (
