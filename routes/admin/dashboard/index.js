@@ -5,6 +5,7 @@ const {
     getAllNullImagePlayers,
     getAllNullImageTeams,
     getAllDuplicatePlayers,
+    getAllNullImageTeamsAndPlayers,
 } = require("../../../controller/users/admin/dashboard");
 
 module.exports = async (fastify, opts) => {
@@ -25,5 +26,9 @@ module.exports = async (fastify, opts) => {
             (request, reply) => authorize(request, reply, fastify),
         ],
         handler: (request, reply) => getAllDuplicatePlayers(request, reply, fastify),
+    });
+    fastify.post("/imgNullData", {
+        preHandler: [(request, reply) => authorize(request, reply, fastify)],
+        handler: (request, reply) => getAllNullImageTeamsAndPlayers(request, reply, fastify),
     });
 };
