@@ -89,7 +89,7 @@ const generateMarketAndRunners = async (data, request, fastify) => {
     }
 
     // ADD THIS FILTERING LOGIC HERE - Filter templates where isPython is false
-    comTemplate = comTemplate.filter(template => template.isPython === false);
+    comTemplate = comTemplate.filter(template => !template.isPython);
 
     console.log(`Filtered templates (isPython === false): ${comTemplate.length} templates`);
 
