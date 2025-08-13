@@ -527,6 +527,34 @@ const activeInactivePlayerQuery = async (data, request, fastify) => {
       throw new Error(err.message);
     }
 };
+const getAllDuplicatePlayersQuery = async (request, fastify) => {
+    try {
+      return await fastify.db.query(
+        `SELECT 
+            TRIM(LOWER("wrPlayerName")) AS "playerName", 
+			      COUNT(*) AS total,
+       		  MIN("wrPlayerId") AS "Min",
+       		  MAX("wrPlayerId") AS "Max",
+       		  MAX("wrCreatedDate") AS "Date"
+        FROM "tblPlayers"
+		    WHERE "wrIsDeleted" = false
+		    GROUP BY TRIM(LOWER("wrPlayerName"))
+		    HAVING COUNT(*) > 1
+        ORDER BY "Date" DESC`,
+        {
+          type: fastify.db.QueryTypes.SELECT,
+        }
+      );
+    } catch (err) {
+      errorLogger(
+        fastify,
+        err.message,
+        "DB ERROR --> repository/TablePlayer.js/getAllDuplicatePlayersQuery",
+        request
+      );
+      throw new Error(err.message);
+    }
+};
 module.exports = {
   getAllPlayersQuery,
   insertPlayerQuery,
@@ -541,4 +569,5 @@ module.exports = {
   getAllPlayersByIdsQuery,
   getPlyByIdQuery,
   activeInactivePlayerQuery,
+  getAllDuplicatePlayersQuery,
 };
