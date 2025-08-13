@@ -529,23 +529,34 @@ const activeInactivePlayerQuery = async (data, request, fastify) => {
 };
 const getAllDuplicatePlayersQuery = async (request, fastify) => {
     try {
-      return await fastify.db.query(
-        `SELECT 
-            TRIM(LOWER("wrPlayerName")) AS "playerName", 
-            MIN("wrDisplayName") AS "displayName",
-			      COUNT(*) AS total,
-       		  MIN("wrPlayerId") AS "Min",
-       		  MAX("wrPlayerId") AS "Max",
-       		  MAX("wrCreatedDate") AS "Date"
-        FROM "tblPlayers"
-		    WHERE "wrIsDeleted" = false
-		    GROUP BY TRIM(LOWER("wrPlayerName"))
-		    HAVING COUNT(*) > 1
-        ORDER BY "Date" DESC`,
+      // return await fastify.db.query(
+      //   `SELECT 
+      //       TRIM(LOWER("wrPlayerName")) AS "playerName", 
+      //       MIN("wrDisplayName") AS "displayName",
+			//       COUNT(*) AS total,
+      //  		  MIN("wrPlayerId") AS "Min",
+      //  		  MAX("wrPlayerId") AS "Max",
+      //  		  MAX("wrCreatedDate") AS "Date"
+      //   FROM "tblPlayers"
+		  //   WHERE "wrIsDeleted" = false
+		  //   GROUP BY TRIM(LOWER("wrPlayerName"))
+		  //   HAVING COUNT(*) > 1
+      //   ORDER BY "Date" DESC`,
+      //   {
+      //     type: fastify.db.QueryTypes.SELECT,
+      //   }
+      // );
+      let res = await fastify.db.query(
+        `
+            CALL proc_get_duplicate_data($1)
+        `,
+        
         {
-          type: fastify.db.QueryTypes.SELECT,
-        }
-      );
+            type : fastify.db.QueryTypes.SELECT,
+            bind : [null]
+        }    
+    )
+    return res[0].result;
     } catch (err) {
       errorLogger(
         fastify,
