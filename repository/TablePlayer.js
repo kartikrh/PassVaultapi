@@ -532,6 +532,7 @@ const getAllDuplicatePlayersQuery = async (request, fastify) => {
       return await fastify.db.query(
         `SELECT 
             TRIM(LOWER("wrPlayerName")) AS "playerName", 
+            MIN("wrDisplayName") AS "displayName",
 			      COUNT(*) AS total,
        		  MIN("wrPlayerId") AS "Min",
        		  MAX("wrPlayerId") AS "Max",

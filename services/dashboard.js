@@ -8,6 +8,7 @@ const getAllNullImagePlayersService = async (fastify, request) => {
         .map(elem => ({
             playerId: elem.playerId,
             playerName: elem.playerName,
+            displayName: elem.displayName,
             image: elem.image,
             imagePath: elem.imagePath,
             isActive: elem.isActive,
