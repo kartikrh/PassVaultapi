@@ -4004,7 +4004,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         else {
            response.commentaryPlayers.push({
           ...global.tblCommentaryPlayers[index],
-          displayName: ds.displayName,
+          displayName: ds?.displayName,
         });
         }
        
@@ -6533,8 +6533,8 @@ const commentaryDetailsByEventIdService = async (
       item.currentInnings === currentInning
   );
   if (commentaryTeamsOne.length > 0) {
-    t1sn = commentaryTeamsOne[0].shortName;
-    t1n = commentaryTeamsOne[0].teamName;
+    t1sn = commentaryTeamsOne[0]?.shortName;
+    t1n = commentaryTeamsOne[0]?.teamName;
     t1co = commentaryTeamsOne[0].teamColor || "";
     t1bg = commentaryTeamsOne[0].backgroundColor || "";
     const wicket1 =
@@ -6551,8 +6551,8 @@ const commentaryDetailsByEventIdService = async (
   }
 
   if (commentaryTeamsTwo.length > 0) {
-    t2sn = commentaryTeamsTwo[0].shortName;
-    t2n = commentaryTeamsTwo[0].teamName;
+    t2sn = commentaryTeamsTwo[0]?.shortName;
+    t2n = commentaryTeamsTwo[0]?.teamName;
     t2co = commentaryTeamsTwo[0].teamColor || "";
     t2bg = commentaryTeamsTwo[0].backgroundColor || "";
 
@@ -6644,14 +6644,14 @@ const commentaryDetailsByEventIdService = async (
   if (getstatus == 2) {
     const _tosswonby = result.tossWonBy;
     if (commentaryTeamsOne[0].teamId == _tosswonby) {
-      tossteam = commentaryTeamsOne[0].shortName;
+      tossteam = commentaryTeamsOne[0]?.shortName;
       tossType = result.choseTo === 1 ? " opt to bat" : " opt to bowl";
       if (commentaryTeamsOne[0].teamStatus == 1) {
         resultArr.batid = commentaryTeamsOne[0].teamId;
         resultArr.ballid = commentaryTeamsTwo[0].teamId;
       }
     } else {
-      tossteam = commentaryTeamsTwo[0].shortName;
+      tossteam = commentaryTeamsTwo[0]?.shortName;
       tossType = result.choseTo === 1 ? " opt to bat" : " opt to bowl";
       if (commentaryTeamsTwo[0].teamStatus == 1) {
         resultArr.batid = commentaryTeamsTwo[0].teamId;
@@ -6718,10 +6718,10 @@ const commentaryDetailsByEventIdService = async (
   if (getstatus >= 3) {
     const _tosswonby = result.tossWonBy;
     if (commentaryTeamsOne[0].teamId == _tosswonby) {
-      tossteam = commentaryTeamsOne[0].shortName;
+      tossteam = commentaryTeamsOne[0]?.shortName;
       tossType = result.choseTo === 1 ? " opt to bat" : " opt to bowl";
     } else {
-      tossteam = commentaryTeamsTwo[0].shortName;
+      tossteam = commentaryTeamsTwo[0]?.shortName;
       tossType = result.choseTo === 1 ? " opt to bat" : " opt to bowl";
     }
     toss = tossteam + tossType;
