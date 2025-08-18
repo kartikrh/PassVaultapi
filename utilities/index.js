@@ -551,6 +551,7 @@ const callClientAPI = async (data,request, fastify) =>{
     // throw new Error(error.message);
   }
 }
+
 const ServiceType = {
   clientAPI : 1,
   dataProviderAPI : 2,
