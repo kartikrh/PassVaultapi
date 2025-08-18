@@ -10434,6 +10434,51 @@ const EntitySport = {
     }
   }
 }
+const Agent = {
+  signIn : {
+    schema : {
+      tags: ["Agent"],
+      description: "Agent signIn API",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          userName: { type: "string" },
+          password: { type: "string" },
+        },
+        required: ["userName", "password"],
+      },
+    }
+  },
+  signOut: {
+    schema: {
+      tags: ["Agent"],
+      description: "Agent signOut",
+      headers: {
+        type: "object",
+        properties: {
+          Authorization: { type: "string" },
+        },
+        required: ["Authorization"],
+      },
+    },
+  },
+  changePassword: {
+    schema: {
+      tags: ["Agent"],
+      description: "change agent password",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          oldPassword: { type: "string" },
+          newPassword: { type: "string" },
+        },
+        required: ["oldPassword", "newPassword"],
+      },
+    },
+  },
+}
 module.exports = {
   Auth,
   Tabs,
@@ -10509,5 +10554,6 @@ module.exports = {
   PythonAPI,
   Listing,
   AutoImportData,
-  EntitySport
+  EntitySport,
+  Agent,
 };

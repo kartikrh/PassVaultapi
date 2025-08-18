@@ -6,6 +6,7 @@ const { EventMarketStatus } = require('../utilities');
 const { errorLogger } = require('../utilities/logger');
 const { formatBallNumber, normalizeBallToActionMap, synchronizeMarketStatus, calculateOverRunsTillEnd, calculateRunsInSpecificOver } = require('./utils');
 const { fetchRunnersForMarket } = require('./helper');
+const { processDynamicPlayerMarkets } = require('./playerModule');
 
 /**
  * Processes the prediction score market based on incoming payload
