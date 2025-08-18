@@ -529,7 +529,7 @@ const callClientAPI = async (data,request, fastify) =>{
         item.isActive == true)
       if(endPoint){
         let url = `${ser.api}${endPoint.endPoint}`;
-        let dataTosend = data.data;
+        let dataTosend = data.data; 
         const result = await axios.post(url, {
           ...dataTosend
         });
@@ -1321,7 +1321,7 @@ const exchangeMatchinfoAPI = async (data, request, fastify) => {
         let url = entityConstant.EXCHANGEMATCHINFOAPI;
         if (!url) return 'Match info URL not found';
 
-        const authToken = global.tblConfigs.find(item => item.key === ENTITYEXCHAUTHTOKEN)?.value;
+        const authToken = global.tblConfigs.find(item => item.key === configConstants.ENTITYEXCHAUTHTOKEN)?.value;
         if (!authToken) {
             throw new Error("Auth token not found in config");
         }

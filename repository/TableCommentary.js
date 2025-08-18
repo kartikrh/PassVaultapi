@@ -398,7 +398,7 @@ const insertCommentaryQuery = async (request, fastify) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableConfig/insertConfigQuery",
+      "DB ERROR --> repository/TableConfig/insertCommentaryQuery",
       request
     );
     throw new Error(err.message);
@@ -883,7 +883,7 @@ const updateCommentaryQuery = async (request, fastify) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableConfig/updateConfigQuery",
+      "DB ERROR --> repository/TableConfig/updateCommentaryQuery",
       request
     );
     throw new Error(err.message);
