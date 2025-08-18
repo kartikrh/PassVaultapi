@@ -3416,7 +3416,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
       commentaryPlayers.forEach((player) => {
         if (player.commentaryPlayerId) {
           const index = global.tblCommentaryPlayers.findIndex(
-            (item) => item.commentaryPlayerId === player.commentaryPlayerId
+            (item) => item.commentaryPlayerId === player.commentaryPlayerId && item.commentaryId === commentaryId
           );
           if (index === -1) {
             throw new Error("Commentary Player with this id not Found");
@@ -3818,12 +3818,22 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         );
         team.crr = parseFloat(team?.crr) || 0;
         team.rrr = parseFloat(team?.rrr) || 0;
-        global.tblCommentaryTeams[index] = {
+        if(team.commentaryId !== commentaryId) {
+          errorLogger(
+            fastify,
+            `Commentary ID mismatch for team ${team.teamName}. Expected: ${commentaryId}, Found: ${team.commentaryId}`,
+            "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
+            request
+          );
+        }
+        else {
+           global.tblCommentaryTeams[index] = {
           ...team,
           teamPredictionPercentage:
             global.tblCommentaryTeams[index].teamPredictionPercentage,
-        };
-        response.commentaryTeams.push(global.tblCommentaryTeams[index]);
+          };
+          response.commentaryTeams.push(global.tblCommentaryTeams[index]);
+        }
       });
       try {
         response.commentaryTeams.forEach(async (team) => {
@@ -3983,10 +3993,21 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         // get display name
         let ds = global.tblPlayers.find((i) => i.playerId == player.playerId);
         global.tblCommentaryPlayers[index] = player;
-        response.commentaryPlayers.push({
+        if( player.commentaryId !== commentaryId) {
+          errorLogger(
+            fastify,
+            `Commentary ID mismatch for player ${player.playerName}. Expected: ${commentaryId}, Found: ${player.commentaryId}`,
+            "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
+            request
+          );
+        }
+        else {
+           response.commentaryPlayers.push({
           ...global.tblCommentaryPlayers[index],
           displayName: ds.displayName,
         });
+        }
+       
       });
       let _plyers = commentaryPlayers.filter(
         (_fil) => _fil.isPlay === true && _fil.onStrike !== null
