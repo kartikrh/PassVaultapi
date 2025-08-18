@@ -99,6 +99,7 @@ const {
   updateCommWicketService,
   scoringTypeCommentaryService,
   validatePasswordOnPredictionFalseService,
+  updateMatchInfoService,
 } = require("../../../../services/commentry");
 const { getEventSnapByComService, updateEventSnapByComService } = require("../../../../services/competitionEventSnap");
 const { getAllCommentariesDataService, getAllCommentariesDataServiceV1, getAllCommentariesDataV2Service } = require("../../../../services/score");
@@ -1340,6 +1341,15 @@ const validatePasswordOnPredictionFalse = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const updateMatchInfo = async (request, reply, fastify) => {
+  try {
+    const result = await updateMatchInfoService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/updateMatchInfo", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+}
 module.exports = {
   getAllCommentaries,
   getCommentaryById,
@@ -1455,4 +1465,5 @@ module.exports = {
   scoringTypeCommentary,
   getAllCommentariesDataV2,
   validatePasswordOnPredictionFalse,
+  updateMatchInfo
 }
