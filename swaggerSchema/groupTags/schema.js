@@ -2907,17 +2907,28 @@ const Commentary = {
       description: "edit team players",
       security: [{ bearerAuth: [] }],
       body: {
-        type: "array",
+        type: "object",
         properties: {
-          commentaryId: { type: "integer" },
-          teamId: { type: "integer" },
-          playerId: { type: "integer" },
-          batsmanAverage: { type: "integer" },
-          batsmanStrikeRate: { type: "integer" },
-          isInPlayingEleven: { type: "boolean" },
+          commentaryId : { type: "integer" },
+          // eventRefId: { type: "string" },
+          playerDataArray : {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                commentaryId: { type: "integer" },
+                  teamId: { type: "integer" },
+                  playerId: { type: "integer" },
+                  batsmanAverage: { type: "integer" },
+                  batsmanStrikeRate: { type: "integer" },
+                  isInPlayingEleven: { type: "boolean" },
+              },
+            }
+          }
         },
-        required: ["commentaryId", "teamId", "playerId"],
+        required: ["commentaryId", "playerDataArray"],
       },
+      
     },
   },
   loadTeamPlayer: {
