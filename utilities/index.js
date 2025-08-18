@@ -529,7 +529,7 @@ const callClientAPI = async (data,request, fastify) =>{
         item.isActive == true)
       if(endPoint){
         let url = `${ser.api}${endPoint.endPoint}`;
-        let dataTosend = data.data;
+        let dataTosend = data.data; 
         const result = await axios.post(url, {
           ...dataTosend
         });
