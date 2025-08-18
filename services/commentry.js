@@ -88,6 +88,7 @@ const {
   updateEventTypeAndCompIdQuery,
   getMatchTypeTemplateByComIdQuery,
   scoringTypeCommentaryQuery,
+  insertCommentaryPlayersEntity,
   updateteamMaxOverQuery,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
@@ -105,6 +106,7 @@ const {
   callClientAPI,
   MarketTypeId,
   EventName,
+  exchangeMatchinfoAPI,
 } = require("../utilities");
 const {
   getAllPlayersByTeamIdQuery,
@@ -162,6 +164,7 @@ const {
 const { mergeAndSaveImage } = require("../utilities/imageMerge");
 const {
   getAllTeamPlayersByTeamIdAndPlayerIdQuery,
+  insertTeamPlayerQuery,
 } = require("../repository/TableTeamPlayer");
 const {
   insertNotificationViaNotiConfigQuery,
@@ -179,7 +182,9 @@ const {
   insertPitchConditionQuery,
   updatePitchConditionQuery,
   deletePitchConditionWithCommIdQuery,
-} = require("../repository/TablePitchCondition")
+} = require("../repository/TablePitchCondition");
+const { PlayerType } = require("../utilities/entityConst");
+const { insertPlayerEntityQuery, insertPlayerQuery, updateExchangePlayerQuery } = require("../repository/TablePlayer");
 
 const allCommentaryService = async (request, fastify) => {
   // return global.tblCommentaries;
@@ -3393,7 +3398,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
       commentaryTeams.forEach((team) => {
         const index = global.tblCommentaryTeams.findIndex(
           (item) =>
-            item?.commentaryId === team.commentaryId &&
+            item?.commentaryId === commentaryId &&
             item.commentaryTeamId === team.commentaryTeamId
         );
         if (index === -1) {
@@ -3411,7 +3416,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
       commentaryPlayers.forEach((player) => {
         if (player.commentaryPlayerId) {
           const index = global.tblCommentaryPlayers.findIndex(
-            (item) => item.commentaryPlayerId === player.commentaryPlayerId
+            (item) => item.commentaryPlayerId === player.commentaryPlayerId && item.commentaryId === commentaryId
           );
           if (index === -1) {
             throw new Error("Commentary Player with this id not Found");
@@ -3813,12 +3818,22 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         );
         team.crr = parseFloat(team?.crr) || 0;
         team.rrr = parseFloat(team?.rrr) || 0;
-        global.tblCommentaryTeams[index] = {
+        if(team.commentaryId !== commentaryId) {
+          errorLogger(
+            fastify,
+            `Commentary ID mismatch for team ${team.teamName}. Expected: ${commentaryId}, Found: ${team.commentaryId}`,
+            "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
+            request
+          );
+        }
+        else {
+           global.tblCommentaryTeams[index] = {
           ...team,
           teamPredictionPercentage:
             global.tblCommentaryTeams[index].teamPredictionPercentage,
-        };
-        response.commentaryTeams.push(global.tblCommentaryTeams[index]);
+          };
+          response.commentaryTeams.push(global.tblCommentaryTeams[index]);
+        }
       });
       try {
         response.commentaryTeams.forEach(async (team) => {
@@ -3978,10 +3993,21 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         // get display name
         let ds = global.tblPlayers.find((i) => i.playerId == player.playerId);
         global.tblCommentaryPlayers[index] = player;
-        response.commentaryPlayers.push({
+        if( player.commentaryId !== commentaryId) {
+          errorLogger(
+            fastify,
+            `Commentary ID mismatch for player ${player.playerName}. Expected: ${commentaryId}, Found: ${player.commentaryId}`,
+            "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
+            request
+          );
+        }
+        else {
+           response.commentaryPlayers.push({
           ...global.tblCommentaryPlayers[index],
           displayName: ds.displayName,
         });
+        }
+       
       });
       let _plyers = commentaryPlayers.filter(
         (_fil) => _fil.isPlay === true && _fil.onStrike !== null
@@ -21167,7 +21193,141 @@ const validatePasswordOnPredictionFalseService = async (request, fastify) => {
 
   return "Password validated successfully";
 };
+const updateMatchInfoService = async(request , fastify)=>{
+  // check commentary
+  let com = global.tblCommentaries.find((i)=> i.commentaryId == request.body.commentaryId)
+  if(!com){
+    throw new Error("Commentary with this id not found")
+  }
+  // check tpId
+  if(com.tpId == null){
+    throw new Error("TpId for this event not found")
+  }
+  const match = await exchangeMatchinfoAPI({
+    mid : com.tpId
+  }, request, fastify);
+  if (!match || match?.status !== "ok") {
+    throw new Error("Invalid response from Entit-Sport API");
+  }
+  let player11 = match.response["match-playing11"];
+  if(!player11) {
+    return true;
+  }
+  // check noOfInning
+  let totalInning = global.tblMatchTypes.find((i)=> i.matchTypeId == com.historyMatchTypeId)?.noOfIningsPerSide;
+  let teama = player11.teama;
+  let teamb = player11.teamb;
+  let tpTeams = [ match.response.match_info.teama , match.response.match_info.teamb]
+  let teamDetail = [match.response["match-playing11"].teama ,match.response["match-playing11"].teamb]
+  // check which player not in commentaryPlayer
+  // get the teamId 
+  let team1 = global.tblTeams.find((i)=>i.tpId == teama.team_id)
+  let team2 = global.tblTeams.find((i)=>i.tpId == teamb.team_id)
+  if(!team1 || !team2){
+    throw new Error("One of the Team not found")
+  }
+  let comTeam = global.tblCommentaryTeams.filter((i)=> i.commentaryId == request.body.commentaryId 
+  && i.currentInning == com.currentInning)
+  
+  let eventType = global.tblEventTypes.find((et) => et.eventType.toLowerCase() === 'Cricket'.toLocaleLowerCase());
+  let players = match.response.players;
+  
+  let storComPlayer = []
+  for (let player of players){
+    const checkPlayer = global.tblPlayers.find(
+    (item) =>
+      item.playerName.trim().toLowerCase() === player.title.trim().toLowerCase() ||
+      item.tpId == player.pid
+    );
+    if(!checkPlayer){
+      const data = {
+          eventTypeId: eventType?.eventTypeId || eventType['Cricket'],
+          playerTypeId: PlayerType[player?.playing_role],
+          playerName: player?.title,
+          displayName: player?.short_name,
+          country: player?.nationality,
+          isActive: true,
+          isKipper: player?.playing_role === 'wk' ? true : false,
+          isLeftHandedBatting: !player.batting_style.includes('Right'),
+          isLeftArmFielding: !player.bowling_style.includes('Right'),
+          userId: -2,
+          batsmanAverage: 0.0,
+          batsmanStrikeRate: 0.0,
+          bowlerAverage: 0.0,
+          bowlerEconomy: 0.0,
+          tpId: player?.pid || null,
+          bowlingStyle: 0
+      };
 
+      const insertPlayer = await insertPlayerQuery(data, fastify, request);
+      global.tblPlayers.push(insertPlayer)
+
+      // check in which team we add
+      const team = teamDetail.find(teamObj =>
+        teamObj.squads.some(player => player.player_id === player.pid)
+      );
+
+      const teamId = team ? team.team_id : null; 
+      if(teamId){
+        // add in teamPlayer
+        let teamIndb = global.tblTeams.find((i)=> i.tpId == teamId)
+        if(!teamId){
+          errorLogger(
+            fastify,
+            `Team Id not found : ${teamId}`,
+            "Service Error ->> services/commentary.js/updateMatchInfoService",
+            request
+          )
+          continue;
+        }
+        const teamPlayerData = await insertTeamPlayerQuery(
+          {
+            teamId: parseInt(teamIndb.teamId),
+            refPlayerId: insertPlayer.playerId,
+            tpId: insertPlayer?.tpId ?? null,
+            userId: request.userTokenInfo.WrUserId,
+          },
+          fastify,
+          request
+        );
+        // add commentaryTeamPlayer
+        for (let i = 1; i <= totalInning; i++){
+          let currentinning = i;
+          // let commentaryTeam = comTeam.find((i)=> i.teamId == teamIndb.teamId)
+          let playerData = await insertCommentaryPlayersEntity(
+            {
+              commentaryId : com.commentaryId,
+              teamId : teamIndb.teamId,
+              playerId : insertPlayer.playerId,
+              matchTypeId: com.matchTypeId,
+              tpId :insertPlayer.tpId
+            },
+            currentinning,
+            fastify,
+            request
+          );
+          global.tblCommentaryPlayers.push(playerData)
+        }
+      }
+    }
+    else if(checkPlayer?.tpId === null || !checkPlayer?.tpId){
+      const data = {
+        userId: -2,
+        tpId: player?.pid || null,
+        playerId: checkPlayer.playerId,
+      };
+      const updatePlayer = await updateExchangePlayerQuery(data, fastify, request);
+      let pIndex = global.tblPlayers.findIndex((i)=> i.playerId == checkPlayer.playerId)
+      if(pIndex != -1){
+        global.tblPlayers[pIndex].tpId = player.pid;
+      }
+    }
+    else {
+      continue;
+    }
+  }
+  return true;
+}
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -21276,4 +21436,5 @@ module.exports = {
   updateCommWicketService,
   scoringTypeCommentaryService,
   validatePasswordOnPredictionFalseService,
+  updateMatchInfoService
 };

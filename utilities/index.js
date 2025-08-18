@@ -6,6 +6,7 @@ const configConstants = require("./configConstants");
 const { errorLogger, tblPredictorAPILogger ,tblThirdPartyAPILogger} = require("./logger");
 const { getCommentaryDetailByIdQuery } = require("../repository/TableCommentary");
 const { sendNotification } = require("../WebPushHandler");
+const { entityConstant } = require("./entityConst");
 const ERROR_CODES = {
   INVALID_INPUT: "INVALID_INPUT",
   SERVER_ERROR: "SERVER_ERROR",
@@ -528,7 +529,7 @@ const callClientAPI = async (data,request, fastify) =>{
         item.isActive == true)
       if(endPoint){
         let url = `${ser.api}${endPoint.endPoint}`;
-        let dataTosend = data.data;
+        let dataTosend = data.data; 
         const result = await axios.post(url, {
           ...dataTosend
         });
@@ -1315,7 +1316,36 @@ const SourceID = {
   Betfair: 2,
   EntitySport: 3,
 }
- 
+const exchangeMatchinfoAPI = async (data, request, fastify) => {
+    try {
+        let url = entityConstant.EXCHANGEMATCHINFOAPI;
+        if (!url) return 'Match info URL not found';
+
+        const authToken = global.tblConfigs.find(item => item.key === configConstants.ENTITYEXCHAUTHTOKEN)?.value;
+        if (!authToken) {
+            throw new Error("Auth token not found in config");
+        }
+
+        if (!data?.mid) {
+            throw new Error("Match ID is required");
+        }
+
+        url = url.replace("{token}", authToken)
+            .replace("{match_id}", data?.mid || "")
+
+        const result = await axios.get(url, { headers: {} });
+        return result.data;
+    } catch (error) {
+        console.log("error from exchangeMatchInfoAPI", error);
+        errorLogger(
+            fastify,
+            error.message,
+            "DB ERROR --> utilities/index/exchangeMatchInfoAPI",
+            request
+        );
+        return error.response?.data || { status: "failed", response: error.message, api_version: "3.0" };
+    }
+}
 module.exports = {
   ERROR_CODES,
   error,
@@ -1410,4 +1440,5 @@ module.exports = {
   ScoringTypes,
   RefType,
   SourceID,
+  exchangeMatchinfoAPI
 };
