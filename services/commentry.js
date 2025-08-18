@@ -2653,6 +2653,7 @@ const testStoreProcedureService = async (request, fastify) => {
 
     const sendDataForSocketUpdate = {};
     sendDataForSocketUpdate.commentaryId = commentaryId;
+  
     sendDataForSocketUpdate.eventRefId = commentaryData.eventRefId;
     sendDataForSocketUpdate.dataToUpdate = [];
     if (commentaryDetails) {
@@ -4792,37 +4793,6 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           request
         );
       });
-
-      // if(commentaryId){
-      //   let marketRunner = global.tblEventMarkets.filter((item) => item?.commentaryId == commentaryId && item.rateSource === 2)
-      //   marketRunner = marketRunner.map((item) => {
-      //     let teamNameData
-      //     if(item.teamId){
-      //     teamNameData = global.tblCommentaryTeams.find((elem) => elem.teamId === item.teamId)
-      //     }
-      //     if(!item.teamId){
-      //         teamNameData = global.tblCommentaryTeams.find((t) =>
-      //             t.teamName.toLowerCase() == item.runner?.toLowerCase())
-      //     }
-      //     return {
-      //         runnerId: item.runnerId,
-      //         runner: item.runner,
-      //         selectionId: item.selectionId,
-      //         backSize: item.backSize,
-      //         laySize: item.laySize,
-      //         backPrice: item.backPrice,
-      //         layPrice: item.layPrice,
-      //         teamId: item.teamId,
-      //         teamName: teamNameData?.teamName || null
-      //     }
-      // });
-      //   sendDataForSocketUpdate.dataToUpdate.push({
-      //     module: "marketRunner",
-      //     type: "update",
-      //     data: marketRunner,
-      //   });
-      // }
-
       global.clientSocketIo.forEach((socket) => {
         socket.client.emit("updateFullscore", sendDataForSocketUpdate);
       });
@@ -5496,8 +5466,11 @@ const loadTeamPlayerService = async (request, fastify) => {
   return teamPlayers;
 };
 const updateTeamPlayerService = async (request, fastify) => {
-  const { body: playerDataArray } = request;
-  const sendDataForSocketUpdate = {};
+  const { playerDataArray, commentaryId, eventRefId } = request.body;
+  const sendDataForSocketUpdate = {
+    commentaryId: commentaryId,
+    eventRefId : eventRefId
+  };
   sendDataForSocketUpdate.dataToUpdate = [
     {
       module: "commentaryPlayers",
