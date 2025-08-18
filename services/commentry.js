@@ -3398,7 +3398,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
       commentaryTeams.forEach((team) => {
         const index = global.tblCommentaryTeams.findIndex(
           (item) =>
-            item?.commentaryId === team.commentaryId &&
+            item?.commentaryId === commentaryId &&
             item.commentaryTeamId === team.commentaryTeamId
         );
         if (index === -1) {
@@ -21209,7 +21209,7 @@ const updateMatchInfoService = async(request , fastify)=>{
   if (!match || match?.status !== "ok") {
     throw new Error("Invalid response from Entit-Sport API");
   }
-  let player11 = match.response.match-playing11;
+  let player11 = match.response["match-playing11"];
   if(!player11) {
     return true;
   }
@@ -21218,7 +21218,7 @@ const updateMatchInfoService = async(request , fastify)=>{
   let teama = player11.teama;
   let teamb = player11.teamb;
   let tpTeams = [ match.response.match_info.teama , match.response.match_info.teamb]
-  let teamDetail = [match.response.match-playing11.teama ,match.response.match-playing11.teamb]
+  let teamDetail = [match.response["match-playing11"].teama ,match.response["match-playing11"].teamb]
   // check which player not in commentaryPlayer
   // get the teamId 
   let team1 = global.tblTeams.find((i)=>i.tpId == teama.team_id)
@@ -21240,8 +21240,8 @@ const updateMatchInfoService = async(request , fastify)=>{
       item.tpId == player.pid
     );
     if(!checkPlayer){
-       const data = {
-          eventTypeId: eventType?.eventTypeId || EventType['Cricket'],
+      const data = {
+          eventTypeId: eventType?.eventTypeId || eventType['Cricket'],
           playerTypeId: PlayerType[player?.playing_role],
           playerName: player?.title,
           displayName: player?.short_name,
