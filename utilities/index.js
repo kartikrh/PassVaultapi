@@ -533,11 +533,11 @@ const callClientAPI = async (data,request, fastify) =>{
         const result = await axios.post(url, {
           ...dataTosend
         });
-        return result;
+        // return result;
       }
       else {
         console.log("Endpoint not found for service type : ", ser.type, " and module type : ", data.moduleType);
-        return;
+        // return;
       }
     }
     return true;
@@ -551,6 +551,7 @@ const callClientAPI = async (data,request, fastify) =>{
     // throw new Error(error.message);
   }
 }
+
 const ServiceType = {
   clientAPI : 1,
   dataProviderAPI : 2,
