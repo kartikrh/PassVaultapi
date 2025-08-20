@@ -10,6 +10,7 @@ const {
   updateTeamPointsQuery,
   getClientTournamentTeamPointsQuery,
   getTournamentTeamsByCompIdQuery,
+  getTournamentPointsByGroupNameQuery,
 } = require("../repository/TableTournmentTeamPoints");
 const { callClientAPI, ServiceType, APIEndpointModuleType } = require("../utilities");
 const { errorLogger } = require("../utilities/logger")
@@ -48,14 +49,34 @@ const createTblTournamentTeamPointsService = async (request, fastify) => {
     if(!validateTeamId){
       throw new Error('TeamId does not existed');
   }
-  const existedValues = await getTournamentPointsByTeamIdQuery(
-    {competitionId: request.body.competitionId, teamId: request.body.teamId}, 
-    request,
-    fastify
-  );  
-  if(existedValues){
-    throw new Error("TeamId existed with this competitionId");
+
+  if(request.body.groupName) {
+    const groupName = request.body.groupName.toLowerCase().trim();
+
+    //validate team in same group
+    let where = `"wrIsDeleted" = false AND "wrCompetitionId" = ${request.body.competitionId} AND "wrTeamId" = ${request.body.teamId} AND LOWER(TRIM("wrGroupName")) = '${groupName}'`;
+    const validateSameGroup = await getTournamentPointsByGroupNameQuery(where, request, fastify);
+    if(validateSameGroup) {
+      throw new Error(`Team already existed in this group`)
+    }
+  
+    //validate team in other groups
+    let whereCond = `"wrIsDeleted" = false AND "wrCompetitionId" = ${request.body.competitionId} AND "wrTeamId" = ${request.body.teamId} AND LOWER(TRIM("wrGroupName")) != '${groupName}' AND "wrIsActive" = TRUE`;
+    const validateOtherGroup = await getTournamentPointsByGroupNameQuery(whereCond, request, fastify);
+    if(validateOtherGroup) {
+      throw new Error(`Team already existed in another group`)
+    }
+  } else {
+     const existedValues = await getTournamentPointsByTeamIdQuery(
+        {competitionId: request.body.competitionId, teamId: request.body.teamId}, 
+        request,
+        fastify
+      );  
+      if(existedValues){
+        throw new Error("TeamId existed with this competitionId");
+      }
   }
+
   request.body.tpId = validateTeamId?.tpId ?? null;
     
   const saveData = await insertTournamentTeamPointsQuery(request.body, fastify, request);
@@ -120,6 +141,7 @@ const updateTblTournamentTeamPointsService = async (request, fastify) => {
     isActive: request.body.isActive === undefined ? validateId.isActive : request.body.isActive,
     id: request.body.id,
     tpId: request.body.tpId === undefined ? validateId.tpId : request.body.tpId,
+    groupName: request.body.groupName === undefined ? validateId.groupName : request.body.groupName,
   };
 
   await updateTournamentTeamPointsQuery(updateData, fastify, request);
@@ -236,6 +258,7 @@ const updateTournamentTeamPointsService = async (existingItems, fastify, request
       isActive: item.isActive || validateId.isActive,
       id: item.id,
       tpId: item.tpId || validateId.tpId,
+      groupName: item.groupName || validateId.groupName,
     };
 
     await updateTournamentTeamPointsQuery(updateData, fastify, request);
