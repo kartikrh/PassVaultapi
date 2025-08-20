@@ -10677,6 +10677,35 @@ const updateEventRefIdInCommentaryService = async (request, fastify) => {
     }
   }
 
+  let cData = await getMatchDataByCId(
+    {
+      commentaryId: updatedData.commentaryId,
+    },
+    request,
+    fastify
+  );
+  
+  callClientAPI(
+    {
+      serviceType: ServiceType.clientAPI,
+      moduleType: APIEndpointModuleType.commentaryUpdate,
+      data: {
+        ...cData,
+        type: "update",
+      },
+    },
+    request,
+    fastify
+  ).catch((err) => {
+    console.log("call client api console", err);
+    errorLogger(
+      fastify,
+      err.message,
+      "ERROR --> services/commentary.js/updateEventRefIdInCommentaryService",
+      request
+    );
+  });
+
   updatedData.callPrediction = callPrediction;
   return updatedData;
 };
