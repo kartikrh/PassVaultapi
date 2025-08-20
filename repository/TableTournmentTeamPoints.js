@@ -17,6 +17,7 @@ const getAllTournamentTeamPointsQuery = async (fastify) => {
         "wrNetRunRate" as "netRunRate",
         "wrIsActive" as "isActive",
         "wrCreatedAt" as "createdAt",
+        "wrGroupName"  as "groupName",
         "wrTpId" as "tpId"
         from "tblTournamentTeamPoint"
         where "wrIsDeleted" = false
@@ -45,7 +46,8 @@ const insertTournamentTeamPointsQuery = async (data, fastify, request) => {
             "wrNetRunRate",
             "wrIsActive",
             "wrCreatedAt",
-            "wrTpId"
+            "wrTpId",
+            "wrGroupName"
           ) values (
               $1,
               $2,
@@ -59,7 +61,8 @@ const insertTournamentTeamPointsQuery = async (data, fastify, request) => {
               $10,
               $11,
               now(),
-              $12
+              $12,
+              $13
           ) returning *
       )
       select 
@@ -76,6 +79,7 @@ const insertTournamentTeamPointsQuery = async (data, fastify, request) => {
         "wrNetRunRate" as "netRunRate",
         "wrIsActive" as "isActive",
         "wrCreatedAt" as "createdAt",
+        "wrGroupName"  as "groupName",
         "wrTpId" as "tpId"
       from "insert_data"
       `,
@@ -94,6 +98,7 @@ const insertTournamentTeamPointsQuery = async (data, fastify, request) => {
           data.netRunRate === undefined ? 0 : data.netRunRate,
           data.isActive === undefined ? false : data.isActive,
           data.tpId === undefined ? null : data.tpId,
+          data.groupName === undefined ? null : data.groupName,
         ],
       }
     );
@@ -126,7 +131,8 @@ const updateTournamentTeamPointsQuery = async (data, fastify, request) => {
           "wrTotalPoint" = $9,
           "wrNetRunRate" = $10,
           "wrIsActive" = $11,
-          "wrTpId" = $13
+          "wrTpId" = $13,
+          "wrGroupName"  = $14
        WHERE "wrId" = $12`,
       {
         type: fastify.db.QueryTypes.UPDATE,
@@ -144,6 +150,7 @@ const updateTournamentTeamPointsQuery = async (data, fastify, request) => {
           data.isActive,
           data.id,
           data.tpId,
+          data.groupName
         ],
       }
     );
@@ -205,6 +212,7 @@ const activeInactiveTournamentTeamPointsQuery = async (data, request, fastify) =
                   "wrNetRunRate" AS "netRunRate",
                   "wrIsActive" AS "isActive",
                   "wrCreatedAt" AS "createdAt",
+                  "wrGroupName"  as "groupName",
                   "wrTpId" AS "tpId"
             `,
       {
@@ -247,6 +255,7 @@ const updateTeamPointsQuery = async (data, fastify, request) => {
         "wrNetRunRate" as "netRunRate",
         "wrIsActive" as "isActive",
         "wrCreatedAt" as "createdAt",
+        "wrGroupName"  as "groupName",
         "wrTpId" as "tpId"
     `,
       {
@@ -315,6 +324,7 @@ const getTournamentPointsByTeamIdQuery = async (data, request, fastify) => {
            "wrNetRunRate" as "netRunRate",
            "wrIsActive" as "isActive",
            "wrCreatedAt" as "createdAt",
+           "wrGroupName"  as "groupName",
            "wrTpId" as "tpId"
           from "tblTournamentTeamPoint"
           where "wrIsDeleted" = false
@@ -357,6 +367,7 @@ const getTournamentTeamsByCompIdQuery = async (competitionId, request, fastify) 
            "wrNetRunRate" as "netRunRate",
            "wrIsActive" as "isActive",
            "wrCreatedAt" as "createdAt",
+           "wrGroupName"  as "groupName",
            "wrTpId" as "tpId"
           from "tblTournamentTeamPoint"
           where "wrIsDeleted" = false
@@ -397,6 +408,7 @@ const getClientTournamentTeamPointsQuery = async (request, fastify) => {
           ttp."wrCreatedAt" as "createdAt",
           ttp."wrTpId" as "tpId",
           tc."wrCompetition" as "competition",
+          ttp."wrGroupName"  as "groupName",
           tp."wrTeamName" as "teamName"
         FROM "tblTournamentTeamPoint" ttp
         LEFT JOIN "tblCompetitions" tc ON ttp."wrCompetitionId" = tc."wrCompetitionId"
@@ -442,6 +454,44 @@ const deleteTournamentTeamPointsByCompIdQuery = async (competitionIds, fastify, 
   }
 };
 
+const getTournamentPointsByGroupNameQuery = async (whereCondition = null, request, fastify) => {
+  try {
+    const result = await fastify.db.query(
+         `
+          select
+           "wrId" as "id",
+           "wrGroupId" as "groupId",
+           "wrTeamId" as "teamId",
+           "wrCompetitionId" as "competitionId",
+           "wrTotalMatches" as "totalMatches",
+           "wrTotalWin" as "totalWin",
+           "wrTotalLose" as "totalLose",
+           "wrTotalTie" as "totalTie",
+           "wrNoResult" as "noResult",
+           "wrTotalPoint" as "totalPoint",
+           "wrNetRunRate" as "netRunRate",
+           "wrIsActive" as "isActive",
+           "wrCreatedAt" as "createdAt",
+           "wrGroupName"  as "groupName",
+           "wrTpId" as "tpId"
+          from "tblTournamentTeamPoint"
+          ${whereCondition ? `WHERE ${whereCondition}` : ""}`,
+       {
+         type: fastify.db.QueryTypes.SELECT,
+       }
+    );
+    return result[0]
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableTournamentTeamPoints.js/getTournamentPointsByGroupNameQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllTournamentTeamPointsQuery,
   insertTournamentTeamPointsQuery,
@@ -454,4 +504,5 @@ module.exports = {
   getTournamentTeamsByCompIdQuery,
   getClientTournamentTeamPointsQuery,
   deleteTournamentTeamPointsByCompIdQuery,
+  getTournamentPointsByGroupNameQuery,
 };
