@@ -2919,9 +2919,9 @@ const Commentary = {
                 commentaryId: { type: "integer" },
                   teamId: { type: "integer" },
                   playerId: { type: "integer" },
-                  batsmanAverage: { type: "integer" },
-                  batsmanStrikeRate: { type: "integer" },
-                  isInPlayingEleven: { type: "boolean" },
+                  // batsmanAverage: { type: "integer" },
+                  // batsmanStrikeRate: { type: "integer" },
+                  // isInPlayingEleven: { type: "boolean" },
               },
             }
           }

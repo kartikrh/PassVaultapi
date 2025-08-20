@@ -3758,23 +3758,23 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
             );
           });
         }
-        // if (commentaryData && commentaryData?.isTest == false) {
-        //   setPlayerHistoryService(
-        //     {
-        //       commentaryId: [commentaryId],
-        //     },
-        //     request,
-        //     fastify
-        //   ).catch((err) => {
-        //     console.log("setPlayerHistoryService console savedetails", err);
-        //     errorLogger(
-        //       fastify,
-        //       err.message,
-        //       "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket - setPlayerHistoryService",
-        //       request
-        //     );
-        //   });
-        // }
+        if (commentaryData && commentaryData?.isTest == false) {
+          setPlayerHistoryService(
+            {
+              commentaryId: [commentaryId],
+            },
+            request,
+            fastify
+          ).catch((err) => {
+            console.log("setPlayerHistoryService console savedetails", err);
+            errorLogger(
+              fastify,
+              err.message,
+              "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket - setPlayerHistoryService",
+              request
+            );
+          });
+        }
         const tipsData = global.tblTips
           .filter(
             (item) =>
@@ -10294,26 +10294,26 @@ const closeCommentaryService = async (request, fastify) => {
         );
       });
     }
-    // if (
-    //   global.tblCommentaries[index] &&
-    //   global.tblCommentaries[index]?.isTest == false
-    // ) {
-    //   setPlayerHistoryService(
-    //     {
-    //       commentaryId: request.body.commentaryId,
-    //     },
-    //     request,
-    //     fastify
-    //   ).catch((err) => {
-    //     console.log("setPlayerHistoryService console", err);
-    //     errorLogger(
-    //       fastify,
-    //       err.message,
-    //       "ERROR --> services/commentary.js/closeCommentaryService - setPlayerHistoryService",
-    //       request
-    //     );
-    //   });
-    // }
+    if (
+      global.tblCommentaries[index] &&
+      global.tblCommentaries[index]?.isTest == false
+    ) {
+      setPlayerHistoryService(
+        {
+          commentaryId: request.body.commentaryId,
+        },
+        request,
+        fastify
+      ).catch((err) => {
+        console.log("setPlayerHistoryService console", err);
+        errorLogger(
+          fastify,
+          err.message,
+          "ERROR --> services/commentary.js/closeCommentaryService - setPlayerHistoryService",
+          request
+        );
+      });
+    }
   }
 
   //return `Commentary(s) closed successfully`;
@@ -10676,6 +10676,35 @@ const updateEventRefIdInCommentaryService = async (request, fastify) => {
       callPrediction.endPoint = "/api/v1/loadcommentary";
     }
   }
+
+  let cData = await getMatchDataByCId(
+    {
+      commentaryId: updatedData.commentaryId,
+    },
+    request,
+    fastify
+  );
+  
+  callClientAPI(
+    {
+      serviceType: ServiceType.clientAPI,
+      moduleType: APIEndpointModuleType.commentaryUpdate,
+      data: {
+        ...cData,
+        type: "update",
+      },
+    },
+    request,
+    fastify
+  ).catch((err) => {
+    console.log("call client api console", err);
+    errorLogger(
+      fastify,
+      err.message,
+      "ERROR --> services/commentary.js/updateEventRefIdInCommentaryService",
+      request
+    );
+  });
 
   updatedData.callPrediction = callPrediction;
   return updatedData;
