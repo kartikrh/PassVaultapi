@@ -9938,7 +9938,8 @@ const saveCommentaryDetailsAPIService = async (request, fastify) => {
     } = request.body;
 
     // call the sp to save the commentary details
-    await saveCommentaryDetailsAPIQuery(request.body, fastify, request);
+    const res = await saveCommentaryDetailsAPIQuery(request.body, fastify, request);
+    // console.log("saveCommentaryDetailsAPIQuery response", res);
 
     if (commentaryDetails) {
       const commentaryIndex = global.tblCommentaries.findIndex(
@@ -10009,6 +10010,18 @@ const saveCommentaryDetailsAPIService = async (request, fastify) => {
         );
         if (partnershipIndex !== -1) {
           global.tblCommentaryPartnership[partnershipIndex] = partnership;
+        }
+      }
+    }
+    if (res && res.commentaryBallByBallDetails.length > 0) {
+      for (let ball of res.commentaryBallByBallDetails) {
+        let ballIndex = global.tblCommentaryBallByBall.findIndex(
+          (item) => item.commentaryBallByBallId === ball.commentaryBallByBallId
+        );
+        if (ballIndex === -1) {
+          global.tblCommentaryBallByBall.push(ball);
+        } else {
+          global.tblCommentaryBallByBall[ballIndex] = ball;
         }
       }
     }
