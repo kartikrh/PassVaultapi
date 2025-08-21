@@ -356,7 +356,7 @@ const activeInactiveTournamentTeamPointsService = async (request, fastify) => {
   }
 
   if (isActive) {
-    const groupName = validate?.groupName.toLowerCase().trim();
+    const groupName = validate?.groupName == null ? '' : validate?.groupName.toLowerCase().trim();
     let whereCond = `"wrIsDeleted" = false 
       AND "wrId" != ${id} AND "wrCompetitionId" = ${validate?.competitionId} 
       AND "wrTeamId" = ${validate?.teamId} AND LOWER(TRIM("wrGroupName")) != '${groupName}' 
@@ -375,7 +375,7 @@ const activeInactiveTournamentTeamPointsService = async (request, fastify) => {
   if (competitionData && competitionData.isActive == true) {
     const res = await responseChangeService(result[0]?.teamId, result[0]?.competitionId);
     let updateData = [];
-    
+
     if(validationResult != null) {
       updateData.push({ ...validationResult, ...res });
     }
