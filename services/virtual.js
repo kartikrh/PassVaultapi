@@ -2812,12 +2812,15 @@ const suffleCardAPIService = async (request, fastify) => {
   }
   let endPoint = '/api/v1/shufflecards';
   let pythonURI = commentaryDetails.pythonURI || null;
+
+  const strikeTeam = global.tblCommentaryTeams.find(
+    (item) => item?.commentaryId === commentaryId && item.teamStatus === 1
+  );
   // call predct api
   await callPredictorMarket(
     {
-      commentaryId,
       commentary_id: commentaryId,
-      currentInnings: commentaryDetails.currentInnings,
+      strike_team_id: strikeTeam?.teamId
     },
     endPoint,
     fastify,
