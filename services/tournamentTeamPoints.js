@@ -347,6 +347,26 @@ const deleteTournamentTeamPointsService = async (request, fastify) => {
 
 const activeInactiveTournamentTeamPointsService = async (request, fastify) => {
   const { id, isActive } = request.body;
+  let validationResult = null;
+  
+  let where = `"wrIsDeleted" = false AND "wrId" = ${id}`
+  const validate = await getTournamentPointsByGroupNameQuery(where, request, fastify);
+  if(!validate) {
+    throw new Error(`tournamentTeam with this Id not found`)
+  }
+
+  if (isActive) {
+    const groupName = validate?.groupName == null ? '' : validate?.groupName.toLowerCase().trim();
+    let whereCond = `"wrIsDeleted" = false 
+      AND "wrId" != ${id} AND "wrCompetitionId" = ${validate?.competitionId} 
+      AND "wrTeamId" = ${validate?.teamId} AND LOWER(TRIM("wrGroupName")) != '${groupName}' 
+      AND "wrIsActive" = TRUE`;
+    const validation = await getTournamentPointsByGroupNameQuery(whereCond, request, fastify);
+    if(validation) {
+      const updated = await activeInactiveTournamentTeamPointsQuery({ id: validation?.id, isActive: false }, request, fastify);
+      validationResult = updated[0];
+    }
+  }
 
   const result = await activeInactiveTournamentTeamPointsQuery({ id, isActive }, request, fastify);
   const competitionData = global.tblCompetitions.find(
@@ -354,15 +374,20 @@ const activeInactiveTournamentTeamPointsService = async (request, fastify) => {
   );
   if (competitionData && competitionData.isActive == true) {
     const res = await responseChangeService(result[0]?.teamId, result[0]?.competitionId);
-  
+    let updateData = [];
+
+    if(validationResult != null) {
+      updateData.push({ ...validationResult, ...res });
+    }
+    updateData.push({ ...result[0], ...res })
     callClientAPI(
      {
         serviceType: ServiceType.clientAPI,
         moduleType: APIEndpointModuleType.updateSeoModule,
         data: {
           module: 'tournamentTeamPoints',
-          type: "update",
-          data: { ...result[0], ...res }
+          type: "activeData",
+          data: updateData
         }
      },
      request, fastify)
