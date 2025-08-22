@@ -3705,7 +3705,7 @@ const saveCommentaryDetailsAPIQuery = async (data, fastify, request) => {
 
     const result = await fastify.db.query(
       `
-        CALL proc_update_commentarydetails($1, $2 ,$3 ,$4,$5,$6 ,$7)
+        CALL proc_update_commentarydetails($1, $2 ,$3 ,$4,$5,$6 ,$7 ,$8)
       `,
       {
         type: fastify.db.QueryTypes.SELECT,
@@ -3717,11 +3717,12 @@ const saveCommentaryDetailsAPIQuery = async (data, fastify, request) => {
           commentaryWickets ? JSON.stringify(commentaryWickets) : null,
           commentaryPartnership ? JSON.stringify(commentaryPartnership) : null,
           commentaryDetails ? JSON.stringify(commentaryDetails) : null,
+          null,
         ],
       }
     );
 
-    return result;
+    return result[0];
   } catch (err) {
     errorLogger(
       fastify,
