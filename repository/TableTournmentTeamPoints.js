@@ -18,6 +18,7 @@ const getAllTournamentTeamPointsQuery = async (fastify) => {
         "wrIsActive" as "isActive",
         "wrCreatedAt" as "createdAt",
         "wrGroupName"  as "groupName",
+        "wrPosition" as "position",
         "wrTpId" as "tpId"
         from "tblTournamentTeamPoint"
         where "wrIsDeleted" = false
@@ -47,7 +48,8 @@ const insertTournamentTeamPointsQuery = async (data, fastify, request) => {
             "wrIsActive",
             "wrCreatedAt",
             "wrTpId",
-            "wrGroupName"
+            "wrGroupName",
+            "wrPosition"
           ) values (
               $1,
               $2,
@@ -62,7 +64,8 @@ const insertTournamentTeamPointsQuery = async (data, fastify, request) => {
               $11,
               now(),
               $12,
-              $13
+              $13,
+              $14
           ) returning *
       )
       select 
@@ -80,6 +83,7 @@ const insertTournamentTeamPointsQuery = async (data, fastify, request) => {
         "wrIsActive" as "isActive",
         "wrCreatedAt" as "createdAt",
         "wrGroupName"  as "groupName",
+        "wrPosition" as "position",
         "wrTpId" as "tpId"
       from "insert_data"
       `,
@@ -99,6 +103,7 @@ const insertTournamentTeamPointsQuery = async (data, fastify, request) => {
           data.isActive === undefined ? false : data.isActive,
           data.tpId === undefined ? null : data.tpId,
           data.groupName === undefined ? null : data.groupName,
+          data.position === undefined ? null : data.position,
         ],
       }
     );
@@ -132,7 +137,8 @@ const updateTournamentTeamPointsQuery = async (data, fastify, request) => {
           "wrNetRunRate" = $10,
           "wrIsActive" = $11,
           "wrTpId" = $13,
-          "wrGroupName"  = $14
+          "wrGroupName"  = $14,
+          "wrPosition" = $15
        WHERE "wrId" = $12`,
       {
         type: fastify.db.QueryTypes.UPDATE,
@@ -150,7 +156,8 @@ const updateTournamentTeamPointsQuery = async (data, fastify, request) => {
           data.isActive,
           data.id,
           data.tpId,
-          data.groupName
+          data.groupName,
+          data.position,
         ],
       }
     );
@@ -213,6 +220,7 @@ const activeInactiveTournamentTeamPointsQuery = async (data, request, fastify) =
                   "wrIsActive" AS "isActive",
                   "wrCreatedAt" AS "createdAt",
                   "wrGroupName"  as "groupName",
+                  "wrPosition" as "position",
                   "wrTpId" AS "tpId"
             `,
       {
@@ -256,6 +264,7 @@ const updateTeamPointsQuery = async (data, fastify, request) => {
         "wrIsActive" as "isActive",
         "wrCreatedAt" as "createdAt",
         "wrGroupName"  as "groupName",
+        "wrPosition" as "position",
         "wrTpId" as "tpId"
     `,
       {
@@ -325,6 +334,7 @@ const getTournamentPointsByTeamIdQuery = async (data, request, fastify) => {
            "wrIsActive" as "isActive",
            "wrCreatedAt" as "createdAt",
            "wrGroupName"  as "groupName",
+           "wrPosition" as "position",
            "wrTpId" as "tpId"
           from "tblTournamentTeamPoint"
           where "wrIsDeleted" = false
@@ -368,6 +378,7 @@ const getTournamentTeamsByCompIdQuery = async (competitionId, request, fastify) 
            "wrIsActive" as "isActive",
            "wrCreatedAt" as "createdAt",
            "wrGroupName"  as "groupName",
+           "wrPosition" as "position",
            "wrTpId" as "tpId"
           from "tblTournamentTeamPoint"
           where "wrIsDeleted" = false
@@ -409,6 +420,7 @@ const getClientTournamentTeamPointsQuery = async (request, fastify) => {
           ttp."wrTpId" as "tpId",
           tc."wrCompetition" as "competition",
           ttp."wrGroupName"  as "groupName",
+          ttp."wrPosition" as "position",
           tp."wrTeamName" as "teamName"
         FROM "tblTournamentTeamPoint" ttp
         LEFT JOIN "tblCompetitions" tc ON ttp."wrCompetitionId" = tc."wrCompetitionId"
@@ -473,6 +485,7 @@ const getTournamentPointsByGroupNameQuery = async (whereCondition = null, reques
            "wrIsActive" as "isActive",
            "wrCreatedAt" as "createdAt",
            "wrGroupName"  as "groupName",
+           "wrPosition" as "position",
            "wrTpId" as "tpId"
           from "tblTournamentTeamPoint"
           ${whereCondition ? `WHERE ${whereCondition}` : ""}`,
