@@ -2816,6 +2816,7 @@ const suffleCardAPIService = async (request, fastify) => {
   await callPredictorMarket(
     {
       commentaryId,
+      commentary_id: commentaryId,
       currentInnings: commentaryDetails.currentInnings,
     },
     endPoint,
