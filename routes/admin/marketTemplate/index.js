@@ -1,5 +1,7 @@
 const { authorize, checkPermission } = require("../../../controller/middleware");
-const { saveMarketTemplate, getAllMarketTemplate, getMarketTemplateId, deleteMarketTemplate, getMatchTypeList, activeInactiveMarketTemplate, getByMatchTypeId, getMarketTypeList, getCategoryByMarketType, changePredefineRunner, cloneMarketTemplate, getMarketTypeAndCategoryByMarketType, updateIsPerEventStatus, isShowInAdvanceMarketStatusChange, cloneMultiMarketTemplate, defaultIsSendDataChange, allMarketTypesAndCategories, mtAndCategories, isPythonChange, multiCloneMarketTemplate } = require("../../../controller/users/admin/marketTemplate");
+const { saveMarketTemplate, getAllMarketTemplate, getMarketTemplateId, deleteMarketTemplate, getMatchTypeList, activeInactiveMarketTemplate, getByMatchTypeId, getMarketTypeList, getCategoryByMarketType, changePredefineRunner, cloneMarketTemplate, getMarketTypeAndCategoryByMarketType, updateIsPerEventStatus, isShowInAdvanceMarketStatusChange, cloneMultiMarketTemplate, defaultIsSendDataChange, allMarketTypesAndCategories, mtAndCategories, isPythonChange, multiCloneMarketTemplate,
+  isDefaultSetResultChange,
+ } = require("../../../controller/users/admin/marketTemplate");
 const { MarketTemplate, Commentary } = require("../../../swaggerSchema/groupTags/schema");
 
 module.exports = async function (fastify, opts) {
@@ -251,5 +253,16 @@ module.exports = async function (fastify, opts) {
     ],
     handler: (request, reply) => multiCloneMarketTemplate(request, reply, fastify),  
   });
-
+  fastify.post("/isDefaultSetResult", {
+    schema: MarketTemplate.isDefaultSetResultChange.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Market Templates",
+          mode: "edit",
+      }),
+    ],
+    handler: (request, reply) => isDefaultSetResultChange(request, reply, fastify),  
+  });
 };

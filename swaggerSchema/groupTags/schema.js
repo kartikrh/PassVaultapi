@@ -4801,6 +4801,21 @@ const MarketTemplate = {
       },
     },
   },
+  isDefaultSetResultChange: {
+    schema: {
+      tags: ["Market Template"],
+      description: "update isDefaultSetResult on Market Template",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          marketTemplateId: { type: "integer" },
+          isDefaultSetResult: { type: "boolean" },
+        },
+        required: ["marketTemplateId", "isDefaultSetResult"],
+      },
+    },
+  },
 };
 const Score = {
   getAllUpdatedIds: {
