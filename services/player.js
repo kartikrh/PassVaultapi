@@ -101,12 +101,24 @@ const allPlayerByCompetitionAndTeamService = async (request, fastify) => {
   );
 
   if(tournamentTeamPlayers.length > 0) {
-    return tournamentTeamPlayers.map((player) => ({
+    const playersData = Object.values(
+      tournamentTeamPlayers.reduce((acc, player) => {
+        acc[player.playerId] = player;
+        return acc;
+      }, {})
+    );
+    return playersData.map(player => ({
       playerId: player.playerId,
       playerName: player.playerName,
       playerTypeId: player.playerTypeId,
       playerType: player.playerType,
     }));
+    // return tournamentTeamPlayers.map((player) => ({
+    //   playerId: player.playerId,
+    //   playerName: player.playerName,
+    //   playerTypeId: player.playerTypeId,
+    //   playerType: player.playerType,
+    // }));
   }
   
   const result = await getAllPlayersByCompetitionIdTeamIdQuery(teamId, fastify, request);
