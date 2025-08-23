@@ -10013,7 +10013,7 @@ const saveCommentaryDetailsAPIService = async (request, fastify) => {
         }
       }
     }
-    if (res && res.commentaryBallByBallDetails.length > 0) {
+    if (res && res.commentaryBallByBallDetails?.length > 0) {
       for (let ball of res.commentaryBallByBallDetails) {
         let ballIndex = global.tblCommentaryBallByBall.findIndex(
           (item) => item.commentaryBallByBallId === ball.commentaryBallByBallId
