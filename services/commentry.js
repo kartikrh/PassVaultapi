@@ -11826,8 +11826,6 @@ const getTeamAndPlayerListServiceV1 = async (request, fastify) => {
             request
           );
 
-          const playerData = global.tblPlayers.find(item => item.playerId == curr.playerId);
-
           return {
             teamId: curr.teamId,
             playerId: curr.playerId,
@@ -11864,8 +11862,8 @@ const getTeamAndPlayerListServiceV1 = async (request, fastify) => {
             currentInnings: curr.currentInnings,
             playerTypeId: curr.playerTypeId,
             playerType: curr.playerType,
-            image: playerData?.image || null,
-            imagePath: playerData?.imagePath || null
+            jerseyPlayerImage: curr.jerseyPlayerImage,
+            jerseyPlayerImagePath: curr.jerseyPlayerImagePath,
           };
         })
     );
