@@ -9,6 +9,7 @@ const {
   isShowInAdvanceMarketChangeStatusQuery,
   defaultIsSendDataChangeQuery,
   updateIsPythonChangeQuery,
+  updateIsDefaultSetResultChangeQuery,
   allMarketTypesAndCategoriesQuery
 } = require("../repository/TableMarketTemplate");
 const { callPredictorMarket } = require("../utilities");
@@ -18,6 +19,7 @@ const {
   deleteMatchTypeTempByMarketTemplateIdQuery,
   deleteTemplatesByMatchTypeIdAndTempIdQuery,
 } = require("../repository/TableMatchTypeTemplates");
+const { trimTextData } = require("../utilities/index");
 
 const getAllMarketTemplateService = async (request) => {
   const { isActive, matchTypeId , marketTypeId , marketTypeCategoryId, isPython } = request.body;
@@ -73,6 +75,13 @@ const createMarketTemplateService = async (request, fastify) => {
   // validate matchTypeID
   const { matchTypeID, marketTypeId, marketTypeCategoryId, devTemplateName, matchTypeIds } = request.body;
   let matchType = null
+  const trimData = await trimTextData({
+    devTemplateName: request.body.devTemplateName,
+    templateName: request.body.templateName,
+  }, request, fastify);
+  if(trimData) {
+    Object.assign(request.body, trimData);
+  }
   const validate = global.tblMarketTemplate.find(item => 
     item.devTemplateName !== null &&
     item.devTemplateName.toLowerCase().trim() == devTemplateName.toLowerCase().trim()
@@ -146,6 +155,13 @@ const updateMarketTemplateService = async (request, fastify) => {
   // validate marketTemplateId
   const { marketTemplateId, matchTypeID, devTemplateName, matchTypeIds } = request.body;
   let matchType = null
+  const trimData = await trimTextData({
+    devTemplateName: request.body?.devTemplateName,
+    templateName: request.body?.templateName,
+  }, request, fastify);
+  if(trimData) {
+    Object.assign(request.body, trimData);
+  }
   const marketTemplate = global.tblMarketTemplate.find(
     (item) => item.marketTemplateId === marketTemplateId
   );
@@ -294,6 +310,7 @@ const updateMarketTemplateService = async (request, fastify) => {
     isPython: request.body.isPython !== undefined ? Boolean(request.body.isPython) : marketTemplate.isPython,
     devTemplateName: request.body.devTemplateName || marketTemplate.devTemplateName,
     isNameInBall: request.body.isNameInBall !== undefined ? Boolean(request.body.isNameInBall) : marketTemplate.isNameInBall,
+    isDefaultSetResult: request.body.isDefaultSetResult !== undefined ? Boolean(request.body.isDefaultSetResult) : marketTemplate.isDefaultSetResult,
   };
   const mt = global.tblMarketTypes.find((m)=> m.marketTypeId == body.marketTypeId)
   if(!mt){
@@ -473,6 +490,13 @@ const cloneMarketTemplateService = async (request, fastify) => {
   );
   if (!marketTemplate) {
     throw new Error("MarketTemplate not found");
+  }
+  const trimData = await trimTextData({
+    devTemplateName: request.body?.devTemplateName,
+    templateName: request.body?.templateName,
+  }, request, fastify);
+  if(trimData) {
+    Object.assign(request.body, trimData);
   }
 
   const validate = global.tblMarketTemplate.find(item => 
@@ -749,6 +773,22 @@ const isPythonChangeService = async (request, fastify) => {
   return `MarketTemplate updated successfully`;
 };
 
+const isDefaultSetResultChangeService = async (request, fastify) => {
+  const { marketTemplateId, isDefaultSetResult } = request.body;
+  const index = global.tblMarketTemplate.findIndex(
+    (item) => item.marketTemplateId === marketTemplateId
+  );
+
+  if (index === -1) {
+    throw new Error("MarketTemplate with this id not found");
+  }
+
+  await updateIsDefaultSetResultChangeQuery({ marketTemplateId, isDefaultSetResult}, request, fastify);
+  global.tblMarketTemplate[index].isDefaultSetResult = isDefaultSetResult;
+
+  return `MarketTemplate updated successfully`;
+};
+
 const multiCloneMarketTemplateService  = async (request, fastify) => {
   const {marketTemplates} = request.body;
   for (let mar of marketTemplates) {
@@ -782,7 +822,7 @@ const multiCloneMarketTemplateService  = async (request, fastify) => {
     let data = await insertMarketTemplateInCloneQuery(
       {
         ...marketTemplate,
-        devTemplateName,
+        devTemplateName: devTemplateName == '' ? null : devTemplateName.trim(),
         matchTypeID: matchTypeID || null,
         createdBy: request.userTokenInfo.WrUserId,
       },
@@ -871,4 +911,5 @@ module.exports = {
   mtAndCategoriesService,
   isPythonChangeService,
   multiCloneMarketTemplateService,
+  isDefaultSetResultChangeService,
 };
