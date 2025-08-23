@@ -2820,7 +2820,7 @@ const suffleCardAPIService = async (request, fastify) => {
   await callPredictorMarket(
     {
       commentary_id: commentaryId,
-      strike_team_id: strikeTeam.teamId,
+      strike_team_id: strikeTeam?.teamId,
     },
     endPoint,
     fastify,
