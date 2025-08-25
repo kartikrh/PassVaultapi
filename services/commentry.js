@@ -158,6 +158,7 @@ const {
 // const { handleSitemapUpdate } = require("../utilities/SEOIndexing")
 const {
   getAllTournamentTeamPointsQuery,
+  getTournamentPointsByGroupNameQuery,
 } = require("../repository/TableTournmentTeamPoints");
 const {
   getPlayersBattingHistoryByIdQuery,
@@ -711,6 +712,10 @@ const createCommentaryService = async (request, fastify) => {
   }
   request.body.team1TpId = validateTeam1Id?.tpId ?? null
   request.body.team2TpId = validateTeam2Id?.tpId ?? null
+
+  request.body.team1GroupId = await getGroupId(request.body.team1Id, request, fastify);
+  request.body.team2GroupId = await getGroupId(request.body.team2Id, request, fastify);
+
   if (validateMatchTypeId) {
     if (
       validateMatchTypeId?.noOfIningsPerSide &&
@@ -1202,6 +1207,9 @@ const updateCommentaryService = async (request, fastify) => {
     request.body.isClientShow = false;
   }
   await updateCommentaryQuery(request, fastify);
+  // const team1GroupId = await getGroupId(request.body.team1Id, request, fastify);
+  // const team2GroupId = await getGroupId(request.body.team2Id, request, fastify);
+
   const validateMatchTypeId = global.tblMatchTypes.find(
     (item) => item.matchTypeId === request.body.matchTypeId
   );
@@ -1616,6 +1624,8 @@ const cloneCommentaryService = async (request, fastify) => {
   request.body = {
     ...originalCommentary,
     ...request.body,
+    tpId: null,
+    scoringType: 1.
   };
 
   const newCommentary = await insertCommentaryQuery(request, fastify);
@@ -1640,6 +1650,9 @@ const cloneCommentaryService = async (request, fastify) => {
     team1TpId: team1?.tpId ?? null,
     team2TpId: team2?.tpId ?? null,
   };
+
+  request.body.team1GroupId = await getGroupId(request.body.team1Id, request, fastify);
+  request.body.team2GroupId = await getGroupId(request.body.team2Id, request, fastify);
 
   if (validateMatchTypeId) {
     let commentaryPlayer = {
@@ -21360,6 +21373,16 @@ const updateMatchInfoService = async(request , fastify)=>{
   }
   return true;
 }
+
+async function getGroupId(teamId, request, fastify) {
+    const where = `"wrIsDeleted" = false 
+      AND "wrCompetitionId" = ${request.body.competitionId}
+      AND "wrIsActive" = TRUE 
+      AND "wrTeamId" = ${teamId}`;
+    const result = await getTournamentPointsByGroupNameQuery(where, request, fastify);
+    return result?.groupId || null;
+}
+
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -21468,5 +21491,6 @@ module.exports = {
   updateCommWicketService,
   scoringTypeCommentaryService,
   validatePasswordOnPredictionFalseService,
-  updateMatchInfoService
+  updateMatchInfoService,
+  getGroupId,
 };

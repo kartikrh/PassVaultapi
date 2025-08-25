@@ -19,7 +19,7 @@ const {
   callDataProvider,
   callVirtualPredictorMarket,
 } = require("../utilities");
-const { cloneCommentaryService, saveComVirtual } = require("./commentry");
+const { cloneCommentaryService, saveComVirtual, getGroupId } = require("./commentry");
 const {
   insertVirtualEventQuery,
   virtualEventTossQuery,
@@ -250,6 +250,8 @@ const createVirtualEventService = async (request, fastify) => {
     const team2TpId = global.tblTeams.find(
       (item) => item.teamId == request.body.team2Id
     );
+    request.body.team1GroupId = await getGroupId(request.body.team1Id, request, fastify);
+    request.body.team2GroupId = await getGroupId(request.body.team2Id, request, fastify);
     const teamData = {
       commentaryId: commentaryData.commentaryId,
       team1Id: request.body.team1Id,
@@ -258,6 +260,8 @@ const createVirtualEventService = async (request, fastify) => {
       subInning: request.body?.subInning ?? null,
       team1TpId: team1TpId?.tpId ?? null,
       team2TpId: team2TpId?.tpId ?? null,
+      team1GroupId: request.body.team1GroupId,
+      team2GroupId: request.body.team2GroupId,
     };
     const teamsData = await insertVirtualCommentaryTeams(
       teamData,
