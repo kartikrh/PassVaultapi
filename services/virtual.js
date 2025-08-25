@@ -1654,18 +1654,25 @@ const updateRunPayload = async (data, request, fastify) => {
     },
     request
   );
+  const teams = global.tblCommentaryTeams.filter(
+    (item) =>
+      item?.commentaryId === commentaryId &&
+      item.currentInnings == commentaryDetails.currentInnings
+  );
+
+  let remainingBallsShow = teams.some((team) => team.isBattingComplete);
   const ncom = {
     ...commentaryDetails,
     displayStatus: generateDisplayStatus({
       currentBall: ballByBall,
     }),
-    rmk: generateRemainingRuns(
+    rmk: remainingBallsShow ? generateRemainingRuns(
       {
         team: updateBattingTeam,
         ballsPerOver: matchType.ballsPerOver,
       },
       request
-    ),
+    ) : "",
   };
   let objToSave = {
     commentaryTeams: [updateBattingTeam],
@@ -2360,6 +2367,36 @@ const handleWicketService = async (data, request, fastify) => {
       comOver: mc.comOver ?? null,
     };
   }
+  
+  const mc1 = await checkInningsSwitch(
+    {
+      commentaryDetails: res.commentaryDetails,
+      commentaryId: commentaryDetails.commentaryId,
+      matchType,
+      checkFor: inningSwitch.ALL,
+      // checkFor: inningSwitch.OVER,
+    },
+    request,
+    fastify
+  );
+  if (mc1.matchComplete) {
+    return {
+      isMatchComplete: mc.matchComplete,
+      isOverComplete: false,
+      isWicket: true,
+      // result : res
+    };
+  }
+   if (mc1.inningChange) {
+    return {
+      isMatchComplete: mc.matchComplete,
+      isOverComplete: false,
+      isWicket: true,
+      inningChange: mc.inningChange,
+      comOver: mc.comOver ?? null,
+    };
+  }
+
   // player selection
   const { player } = await changePlayer({
     plytyp: playerType.ON_STRIKE,
