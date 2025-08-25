@@ -1,4 +1,6 @@
-const { saveMarketTemplateService, getAllMarketTemplateService, getMarketTemplateIdService, deleteMarketTemplateService, getMatchTypeListService, activeInactiveTemplateService, getByMatchTypeIdService, getMarketTypeListService, getCategoryByMarketTypeService, changePredefineRunnerService, cloneMarketTemplateService, getMarketTypeAndCategoryByMarketTypeService, isPerEventStatusService, isShowInAdvanceMarketChangeStatusService, cloneMultiMarketTemplateService, defaultIsSendDataChangeService, allMarketTypesAndCategoriesService, mtAndCategoriesService, isPythonChangeService, multiCloneMarketTemplateService } = require("../../../../services/marketTemplate");
+const { saveMarketTemplateService, getAllMarketTemplateService, getMarketTemplateIdService, deleteMarketTemplateService, getMatchTypeListService, activeInactiveTemplateService, getByMatchTypeIdService, getMarketTypeListService, getCategoryByMarketTypeService, changePredefineRunnerService, cloneMarketTemplateService, getMarketTypeAndCategoryByMarketTypeService, isPerEventStatusService, isShowInAdvanceMarketChangeStatusService, cloneMultiMarketTemplateService, defaultIsSendDataChangeService, allMarketTypesAndCategoriesService, mtAndCategoriesService, isPythonChangeService, multiCloneMarketTemplateService,
+  isDefaultSetResultChangeService,
+ } = require("../../../../services/marketTemplate");
 const { error, success, ERROR_CODES } = require("../../../../utilities");
 const { errorLogger } = require("../../../../utilities/logger");
 
@@ -188,6 +190,15 @@ const multiCloneMarketTemplate = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const isDefaultSetResultChange = async (request, reply, fastify) => {
+  try {
+    const result = await isDefaultSetResultChangeService(request ,fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/isDefaultSetResultChange", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 module.exports = {
   getAllMarketTemplate,
   saveMarketTemplate,
@@ -209,4 +220,5 @@ module.exports = {
   mtAndCategories,
   isPythonChange,
   multiCloneMarketTemplate,
+  isDefaultSetResultChange,
 };

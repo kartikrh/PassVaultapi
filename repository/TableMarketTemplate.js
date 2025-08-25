@@ -57,6 +57,7 @@ const getAllMarketTemplateQuery = async (fastify) => {
       tmt."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
       tmt."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
       tmt."wrIsNameInBall" as "isNameInBall",
+      tmt."wrIsDefaultSetResult" as "isDefaultSetResult",
       tmt."wrIsPython" as "isPython"
   FROM "tblMarketTemplates" tmt
   LEFT JOIN "tblMatchTypes" tm ON tmt."wrMatchTypeID" = "tm"."wrMatchTypeId"
@@ -82,10 +83,10 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
               "wrTemplateType", "wrDelay","wrIsDefaultBetAllowed","wrIsDefaultMarketActive", "wrIsPerEvent", "wrIsShowInAdvanceMarket",
               "wrLineType", "wrDefaultBackSize", "wrDefaultLaySize","wrBeforeSuspendMin","wrBeforeCloseMin", "wrDefaultIsSendData",
               "wrHowManyOpenMarkets", "wrRateDiff", "wrNotIncludedOver", "wrAutoSuspendAfterChase", "wrAutoNotCreateAfterChase", "wrIsPython",
-              "wrDevTemplateName", "wrIsNameInBall"
+              "wrDevTemplateName", "wrIsNameInBall", "wrIsDefaultSetResult"
               ) values (
                 $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26, $27, $28, $29, $30, $31, $32,$33,$34,$35,$36,
-                $37, $38, $39 ,$40 ,$41, $42, $43, $44, $45, $46, $47, $48, $49, $50
+                $37, $38, $39 ,$40 ,$41, $42, $43, $44, $45, $46, $47, $48, $49, $50, $51
                 ) returning *
           )        
         select 
@@ -140,6 +141,7 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
         "wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
         "wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
         "wrIsNameInBall" as "isNameInBall",
+        "wrIsDefaultSetResult" as "isDefaultSetResult",
         "wrIsPython" as "isPython"
          from insert_data`,
       {
@@ -209,6 +211,7 @@ const insertMarketTemplateQuery = async (data, fastify, request) => {
           data.isPython === undefined ? true : data.isPython,
           data.devTemplateName === undefined ? null : data.devTemplateName,
           data.isNameInBall === undefined ? false : data.isNameInBall,
+          data.isDefaultSetResult === undefined ? false : data.isDefaultSetResult,
         ],
       }
     );
@@ -236,10 +239,10 @@ const insertMarketTemplateInCloneQuery = async (data, fastify, request) => {
               "wrTemplateType", "wrDelay","wrIsDefaultBetAllowed","wrIsDefaultMarketActive", "wrIsPerEvent", "wrIsPredefineRunnerValue", "wrIsShowInAdvanceMarket",
               "wrLineType", "wrDefaultBackSize", "wrDefaultLaySize"
                ,"wrBeforeSuspendMin","wrBeforeCloseMin", "wrDefaultIsSendData", "wrHowManyOpenMarkets", "wrRateDiff", "wrNotIncludedOver",
-               "wrAutoSuspendAfterChase", "wrAutoNotCreateAfterChase", "wrIsPython", "wrDevTemplateName", "wrIsNameInBall"
+               "wrAutoSuspendAfterChase", "wrAutoNotCreateAfterChase", "wrIsPython", "wrDevTemplateName", "wrIsNameInBall", "wrIsDefaultSetResult"
               ) values (
                 $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26, $27, $28, $29, $30, $31, $32,$33,$34,$35,$36,$37,
-                $38, $39, $40 ,$41 ,$42, $43, $44, $45, $46, $47, $48, $49, $50, $51
+                $38, $39, $40 ,$41 ,$42, $43, $44, $45, $46, $47, $48, $49, $50, $51, $52
                 ) returning *
           )        
         select 
@@ -294,6 +297,7 @@ const insertMarketTemplateInCloneQuery = async (data, fastify, request) => {
         "wrIsNameInBall" as "isNameInBall",
         "wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
         "wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
+        "wrIsDefaultSetResult" as "isDefaultSetResult",
         "wrIsPython" as "isPython"
          from insert_data`,
       {
@@ -360,6 +364,7 @@ const insertMarketTemplateInCloneQuery = async (data, fastify, request) => {
           data.isPython === undefined ? true : data.isPython,
           data.devTemplateName === undefined ? null : data.devTemplateName,
           data.isNameInBall === undefined ? false : data.isNameInBall,
+          data.isDefaultSetResult === undefined ? false : data.isDefaultSetResult,
         ],
       }
     );
@@ -508,7 +513,8 @@ const updateMarketTemplateQuery = async (data, fastify, request) => {
             "wrAutoNotCreateAfterChase" = $47,
             "wrIsPython" = $48,
             "wrDevTemplateName" = $49,
-            "wrIsNameInBall" = $50
+            "wrIsNameInBall" = $50,
+            "wrIsDefaultSetResult" = $51
         WHERE "wrID" = $32
         `,
         {
@@ -563,6 +569,7 @@ const updateMarketTemplateQuery = async (data, fastify, request) => {
                 data.isPython,
                 data.devTemplateName,
                 data.isNameInBall,
+                data.isDefaultSetResult,
             ],
             type: fastify.db.QueryTypes.SELECT,
         }
@@ -812,6 +819,7 @@ const getCommMatchTypeTemplatesQuery = async (commentaryId, whereCondition = nul
             tmt."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
             tmt."wrIsNameInBall" as "isNameInBall",
             tmt."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
+            tmt."wrIsDefaultSetResult" as "isDefaultSetResult",
             tmt."wrNotIncludedOver" as "notIncludedOver"
           FROM "tblCommMatchTypeTemplate" AS cmtt
           LEFT JOIN "tblMarketTemplates" AS tmt ON tmt."wrID" = cmtt."wrMarketTemplateId"
@@ -854,6 +862,25 @@ const updateIsPythonChangeQuery = async (data, request, fastify) => {
     throw new Error(err.message);
   }
 };
+const updateIsDefaultSetResultChangeQuery = async (data, request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `UPDATE "tblMarketTemplates" SET "wrIsDefaultSetResult" = $1 WHERE "wrID" = $2`,
+      {
+        bind: [data.isDefaultSetResult, data.marketTemplateId],
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableMarketTemplate/updateIsDefaultSetResultChangeQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
 module.exports = {
   getAllMarketTemplateQuery,
   insertMarketTemplateQuery,
@@ -869,4 +896,5 @@ module.exports = {
   defaultIsSendDataChangeQuery,
   getCommMatchTypeTemplatesQuery,
   updateIsPythonChangeQuery,
+  updateIsDefaultSetResultChangeQuery,
 };

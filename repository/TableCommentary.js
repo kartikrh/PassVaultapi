@@ -4475,6 +4475,7 @@ const getTemplateByComIdQuery = async (data,request, fastify) => {
           tmt1."wrId" as "marketTypeId",
           tmc."wrId" as "marketTypeCategoryId",
           "wrMarketTypeName" as "marketTypeName",
+          tmt."wrIsDefaultSetResult" as "isDefaultSetResult",
           "wrCategoryName" as "categoryName"
         FROM "tblCommMatchTypeTemplate" tcm
         LEFT JOIN "tblMarketTemplates" tmt ON tcm."wrMarketTemplateId" = tmt."wrID"
@@ -4499,6 +4500,7 @@ const getTemplateByComIdQuery = async (data,request, fastify) => {
           "wrMarketTypeName" as "marketTypeName",
           "wrCategoryName" as "categoryName",
           tmt1."wrId" as "marketTypeId",
+          tmt."wrIsDefaultSetResult" as "isDefaultSetResult",
           tmc."wrId" as "marketTypeCategoryId"
         FROM "tblMarketTemplates" tmt
         LEFT JOIN "tblMarketTypes" tmt1 ON tmt."wrMarketTypeId" = tmt1."wrId"
@@ -7971,6 +7973,7 @@ const getMatchTypeTemplateByComIdQuery = async (data,request, fastify) => {
           tmt1."wrId" as "marketTypeId",
           tmc."wrId" as "marketTypeCategoryId",
           "wrMarketTypeName" as "marketTypeName",
+          tmt."wrIsDefaultSetResult" as "isDefaultSetResult",
           "wrCategoryName" as "categoryName"
         FROM "tblCommMatchTypeTemplate" tcm
         LEFT JOIN "tblMarketTemplates" tmt ON tcm."wrMarketTemplateId" = tmt."wrID"
@@ -7996,6 +7999,7 @@ const getMatchTypeTemplateByComIdQuery = async (data,request, fastify) => {
           tmt1."wrId" as "marketTypeId",
           tmt1."wrMarketTypeName" as "marketTypeName",
           tmc."wrId" as "marketTypeCategoryId",
+          tmt."wrIsDefaultSetResult" as "isDefaultSetResult",
           tmc."wrCategoryName" as "categoryName"
         FROM "tblMatchTypeTemplates" tmtt
         LEFT JOIN "tblMarketTemplates" tmt ON tmt."wrID" = tmtt."wrMarketTemplateId"
