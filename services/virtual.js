@@ -1989,12 +1989,12 @@ const generateOverService = async (data, request, fastify) => {
     commentaryDetails: {
       ...commentaryDetails,
       displayStatus: inningSwitch.OVER,
-      rmk: remainingBallsShow
-        ? generateRemainingRuns({
-          team: battingTeam,
-          ballsPerOver: matchType.ballsPerOver,
-        })
-        : "",
+      // rmk: remainingBallsShow
+      //   ? generateRemainingRuns({
+      //     team: battingTeam,
+      //     ballsPerOver: matchType.ballsPerOver,
+      //   })
+      //   : "",
     },
     commentaryOvers: updatedOver,
     commentaryPlayers: [updateBowler],
@@ -2557,6 +2557,10 @@ const onInningChangeService = async (data, request, fastify) => {
   let commentaryUpdates = {
     // commentaryStatus : commentaryStatus.INNINGCHANGE,
     displayStatus: "Innings",
+    rmk : generateRemainingRuns({
+      team: bowlTeam,
+      ballsPerOver: data.matchType.ballsPerOver || 6,
+    })
   };
   const partnershipDetails = {
     ...currentPartnership,
