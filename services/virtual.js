@@ -2360,6 +2360,35 @@ const handleWicketService = async (data, request, fastify) => {
       comOver: mc.comOver ?? null,
     };
   }
+  
+  const mc1 = await checkInningsSwitch(
+    {
+      commentaryDetails: res.commentaryDetails,
+      commentaryId: commentaryDetails.commentaryId,
+      matchType,
+      checkFor: inningSwitch.ALL,
+    },
+    request,
+    fastify
+  );
+    if (mc1.matchComplete) {
+    return {
+      isMatchComplete: mc.matchComplete,
+      isOverComplete: false,
+      isWicket: true,
+      // result : res
+    };
+  }
+   if (mc1.inningChange) {
+    return {
+      isMatchComplete: mc.matchComplete,
+      isOverComplete: false,
+      isWicket: true,
+      inningChange: mc.inningChange,
+      comOver: mc.comOver ?? null,
+    };
+  }
+
   // player selection
   const { player } = await changePlayer({
     plytyp: playerType.ON_STRIKE,
