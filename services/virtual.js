@@ -2164,6 +2164,7 @@ const checkWinner = async (data) => {
     winnerName: winTeam.teamName,
     displayStatus: "",
     result: winMsg,
+    rmk: "",
   };
   const objToSave = {
     commentaryId: commentaryDetails.commentaryId,
@@ -2595,7 +2596,7 @@ const onInningChangeService = async (data, request, fastify) => {
     // commentaryStatus : commentaryStatus.INNINGCHANGE,
     displayStatus: "Innings",
     rmk : generateRemainingRuns({
-      team: bowlTeam,
+      team: { ...bowlTeam, teamTrialRuns: trialRuns},
       ballsPerOver: data.matchType.ballsPerOver || 6,
     })
   };
