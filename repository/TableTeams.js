@@ -231,7 +231,7 @@ const getAllPlayersByTeamIdQuery = async (teamId, fastify, request) => {
 const getAllPlayersByCompetitionIdTeamIdQuery = async (teamId, fastify, request) => {
   try {
     return await fastify.db.query(
-      `SELECT     
+      `SELECT DISTINCT ON (tp."wrRefPlayerId")
           tp."wrRefPlayerId" as "playerId",
           pl."wrPlayerName" as "playerName",
           pl."wrPlayerTypeId" as "playerTypeId",
