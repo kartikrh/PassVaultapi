@@ -2371,7 +2371,7 @@ const handleWicketService = async (data, request, fastify) => {
     request,
     fastify
   );
-    if (mc1.matchComplete) {
+  if (mc1.matchComplete) {
     return {
       isMatchComplete: mc.matchComplete,
       isOverComplete: false,
