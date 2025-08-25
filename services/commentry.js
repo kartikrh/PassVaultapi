@@ -133,6 +133,7 @@ const {
   getMarCountByComQuery,
   getExtrenalMarketQuery,
   getEventMarketsByCommId,
+  getAllEventMarketsQuery,
 } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
 const { commentaryLogger, errorLogger } = require("../utilities/logger");
@@ -2089,6 +2090,20 @@ const deleteCommentaryService = async (request, fastify) => {
   let playerIds = [];
   let matchTypeIds = [];
   let netRunRateData = [];
+  for (const id of commentaryId) {
+    const comm = global.tblCommentaries.find(
+      (c) => c?.commentaryId === id
+    );
+    if (comm && comm?.isPredictMarket == true) {
+      let whereCondition = `tc."wrIsDelete" = false AND tem."wrIsDeleted" = false 
+        AND tem."wrCommentaryId" = ${id} 
+        AND tem."wrStatus" NOT IN (${EventMarketStatus.Close},${EventMarketStatus.Settled},${EventMarketStatus.Cancel})`;
+      const eventMarket = await getAllEventMarketsQuery(fastify, whereCondition);
+      if(eventMarket.length > 0) {
+        throw new Error(`Some markets are still open, so no commentary can be deleted right now`)
+      }
+    }
+  }
   for (const commentary of commentaryId) {
     let eventId = global.tblCommentaries.find(
       (item) => item?.commentaryId === commentary
