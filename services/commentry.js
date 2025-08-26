@@ -10924,7 +10924,9 @@ const AddSuperOverCommentaryService = async (request, fastify) => {
     if (!commentaryTeams) {
       throw new Error("Commenrty Teams with this commentaryId not Found");
     }
-
+    request.body.competitionId = commentary?.competitionId;
+    const team1GroupId = await getGroupId(commentary.team1Id, request, fastify);
+    const team2GroupId = await getGroupId(commentary.team2Id, request, fastify);
     let Teamdata = {};
     Teamdata.commentaryId = commentaryId;
     Teamdata.teamMaxOver = teamMaxOver || 1;
@@ -10933,11 +10935,13 @@ const AddSuperOverCommentaryService = async (request, fastify) => {
         Teamdata.team1Id = team.teamId;
         Teamdata.team1Captain = team.teamCaptain;
         Teamdata.team1Kipper = team.teamKipper;
+        Teamdata.team1GroupId = team1GroupId;
       }
       if (team.teamId == commentary.team2Id) {
         Teamdata.team2Id = team.teamId;
         Teamdata.team2Captain = team.teamCaptain;
         Teamdata.team2Kipper = team.teamKipper;
+        Teamdata.team2GroupId = team2GroupId;
       }
     }
     const commentaryTeam1Players = global.tblCommentaryPlayers.filter(
