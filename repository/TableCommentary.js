@@ -8106,6 +8106,93 @@ const updateteamMaxOverQuery = async (data, fastify, request) => {
     throw new Error(err.message);
   }
 };
+const getAllCommentaryPlayerQueryById = async (data, request, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `select
+          tcp."wrCommentaryPlayerId" as "commentaryPlayerId",
+          tcp."wrCommentaryId" as "commentaryId",
+          tcp."wrTeamId" as "teamId",
+          tcp."wrPlayerId" as "playerId",
+          tcp."wrPlayerName" as "playerName",
+          tcp."wrDisplayOrder" as "displayOrder",
+          tcp."wrBat_Status" as "batStatus",
+          tcp."wrBat_Run" as "batRun",
+          tcp."wrBat_Ball" as "batBall",
+          tcp."wrBat_DotBall" as "batDotBall",
+          tcp."wrBat_FOUR" as "batFour",
+          tcp."wrBat_SIX" as "batSix",
+          tcp."wrBat_SRR" as "batSrr",
+          tcp."wrBat_BattingOrder" as "battingOrder",
+          tcp."wrBat_IsPlay" as "isPlay",
+          tcp."wrBat_OnStrike" as "onStrike",
+          tcp."wrBat_WicketType" as "wicketType",
+          tcp."wrBat_BowlerID" as "bowlerId",
+          tcp."wrBat_FielderID1" as "fielderId1",
+          tcp."wrBat_FielderID2" as "fielderId2",
+          tcp."wrBowler_Over" as "bowlerOver",
+          tcp."wrBowler_CurrentBall" as "bowlerCurrentBall",
+          tcp."wrBowler_TotalBall" as "bowlerTotalBall",
+          tcp."wrBowler_Run" as "bowlerRun",
+          tcp."wrBowler_DotBall" as "bowlerDotBall",
+          tcp."wrBowler_MaidenOver" as "bowlerMaidenOver",
+          tcp."wrBowler_FOUR" as "bowlerFour",
+          tcp."wrBowler_SIX" as "bowlerSix",
+          tcp."wrBowler_WideBall" as "bowlerWideBall",
+          tcp."wrBowler_NOBall" as "bowlerNoBall",
+          tcp."wrBowler_ByeBall" as "bowlerByeBall",
+          tcp."wrBowler_LegByeBall" as "bowlerLegByeBall",
+          tcp."wrBowler_WideBallRun" as "bowlerWideBallRun",
+          tcp."wrBowler_NOBallRun" as "bowlerNoBallRun",
+          tcp."wrBowler_ByeBallRun" as "bowlerByeBallRun",
+          tcp."wrBowler_LegByeBallRun" as "bowlerLegByeBallRun",
+          tcp."wrBowler_TotalWicket" as "bowlerTotalWicket",
+          tcp."wrBowler_Economy" as "bowlerEconomy",
+          tcp."wrBowler_OnStrike" as "bowlerOnStrike",
+          tcp."wrBowler_PeneltyRun" as "bowlerPeneltyRun",
+          tcp."wrIsBatter_Out" as "isBatterOut",
+          tcp."wrIsBatter_Retir" as "isBatterRetir",
+          tcp."wrSwapName" as "swapName",
+          tcp."wrBatsmanAverage" as "batsmanAverage",
+          tcp."wrBatsmanStrikeRate" as "batsmanStrikeRate",
+          tcp."wrBowlerEconomy" as "bowlerEconomy",
+          tcp."wrBowlerAverage" as "bowlerAverage",
+          tcp."wrCurrentInnings" as "currentInnings",
+          tcp."wrBatterOrder" as "batterOrder",
+          tcp."wrBowlerOrder" as "bowlerOrder",
+          tcp."wrBatsmanPreviousStrikeRate"::DOUBLE PRECISION as "batsmanPreviousStrikeRate",
+          tcp."wrBowlerPreviousEconomy"::DOUBLE PRECISION as "bowlerPreviousEconomy",
+          tcp."wrIsInPlayingEleven" as "isInPlayingEleven",
+          tcp."wrBoundary" as "boundary",
+          tcp."wrPlayerBallFaced" as "playerBallFaced",
+          tp."wrPlayerTypeId" as "playerTypeId",
+          tpt."wrPlayerType" as "playerType",
+          tcp."wrJerseyPlayerImage" as "jerseyPlayerImage",
+          tcp."wrJerseyPlayerImagePath" as "jerseyPlayerImagePath",
+          tcp."wrTpId" as "tpId"
+      FROM "tblCommentaryPlayers" AS tcp
+      LEFT JOIN "tblPlayers" AS tp ON tcp."wrPlayerId" = tp."wrPlayerId"
+      LEFT JOIN "tblPlayerTypes" AS tpt ON tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
+      WHERE tcp."wrCommentaryId" = $1
+        AND "wrCommentaryPlayerId" = $2
+        AND tcp."wrIsDelete" = FALSE
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [data.commentaryId, data.commentaryPlayerId]
+      }
+    );
+    return result[0];
+  } catch (error) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/getAllCommentaryPlayerQueryById",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -8237,6 +8324,7 @@ module.exports = {
   updatePythonAPIOnCommentaryQuery,
   updateDrsQuery,
   getAllCommByCompIdQuery,
+  getAllCommentaryPlayerQueryById,
   updateEventTypeAndCompIdQuery,
   updateCommPlayersImagePathQuery,
   getComEntityQuery,
