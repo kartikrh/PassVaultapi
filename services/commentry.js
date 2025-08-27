@@ -47,6 +47,7 @@ const {
   activeInactiveCommentaryQuery,
   closeCommentaryQuery,
   deleteAllCommentaryQuery,
+  getAllCommentaryPlayerQueryById,
   updateDelayInCommentaryQuery,
   deleteCommentaryDataQuery,
   updateEventRefIdInCommentaryQuery,
@@ -529,6 +530,8 @@ const commentaryDetailsByIdService = async (request, fastify) => {
     .filter((item) => item?.isActive === true)
     .sort((a, b) => a.displayOrder - b.displayOrder);
 
+  const overTypeData = global.tblOverTypes.filter(item => item.isActive == true)
+
   const allDetails = {
     commentaryDetails: { ...commentary, ...dataToreturn },
     matchTypeDetails: matchType,
@@ -541,6 +544,7 @@ const commentaryDetailsByIdService = async (request, fastify) => {
     commentaryDisplayStatus,
     // callPrediction,
     shotTypes,
+    overTypes: overTypeData,
   };
   return allDetails;
 };
@@ -5287,6 +5291,8 @@ const addTeamPlayerService = async (request, fastify) => {
   if (!commentary) {
     throw new Error("Commentary with this id not Found");
   }
+  const sendDataForSocketUpdate = {};
+
   // validate teamId
   let commentaryTeamIndex = global.tblCommentaryTeams.find(
     (item) => item?.commentaryId === commentaryId && item.teamId === teamId
@@ -5406,7 +5412,31 @@ const addTeamPlayerService = async (request, fastify) => {
       );
     }
   }
-  global.tblCommentaryPlayers = await getAllCommentaryPlayerQuery(fastify);
+
+  const commPlayerData = await getAllCommentaryPlayerQueryById(
+    {
+      commentaryId: commentary.commentaryId,
+      commentaryPlayerId: playerData[0].commentaryPlayerId,
+    }, request, fastify
+  )
+  sendDataForSocketUpdate.commentaryId = commentary.commentaryId;
+  sendDataForSocketUpdate.eventRefId = commentary.eventRefId;
+  sendDataForSocketUpdate.dataToUpdate = [{
+    module: "commentaryPlayers",
+    type: "create",
+    data: commPlayerData,
+  }];
+  
+  if (
+    global?.clientSocketIo !== undefined &&
+    global?.clientSocketIo.length > 0
+  ) {
+    global.clientSocketIo.forEach((socket) => {
+      socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+    });
+  }
+  // global.tblCommentaryPlayers = await getAllCommentaryPlayerQuery(fastify);
+  global.tblCommentaryPlayers.push(commPlayerData);
 
   return "Player added successfully";
 };
@@ -5438,6 +5468,8 @@ const deleteTeamPlayerService = async (request, fastify) => {
   if (!commentary) {
     throw new Error("Commentary with this id not Found");
   }
+  const sendDataForSocketUpdate = {};
+
   // commentaryPlayerId validation
   if (commentaryPlayerId) {
     let index = global.tblCommentaryPlayers.findIndex(
@@ -5479,6 +5511,23 @@ const deleteTeamPlayerService = async (request, fastify) => {
         item?.commentaryPlayerId === commentaryPlayerId
       )
   );
+
+  sendDataForSocketUpdate.commentaryId = commentaryId;
+  sendDataForSocketUpdate.eventRefId = commentary.eventRefId;
+  sendDataForSocketUpdate.dataToUpdate = [{
+    module: "commentaryPlayers",
+    type: "delete",
+    data: { commentaryPlayerId },
+  }];
+  
+  if (
+    global?.clientSocketIo !== undefined &&
+    global?.clientSocketIo.length > 0
+  ) {
+    global.clientSocketIo.forEach((socket) => {
+      socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+    });
+  }
 
   return "Player deleted successfully";
 };

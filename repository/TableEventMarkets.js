@@ -74,6 +74,7 @@ const getAllEventMarketsV2Query = async (fastify, commentaryIds) => {
         tem."wrIsInningRun" as "isInningRun",
         tem."wrCreatedBy" as "createdBy",
         tem."wrFavRatio" as "favRatio",
+        tem."wrIsDefaultSetResult" as "isDefaultSetResult",
         tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
         tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase"
     FROM "tblEventMarkets" tem
@@ -135,6 +136,7 @@ const getAllEventMarketsQuery = async (fastify, whereCondition = null) => {
         tmr."wrSelectionId" as "selectionId",
         tmr."wrRunner" as "runner",
         tem."wrCreatedBy" as "createdBy",
+        tem."wrIsDefaultSetResult" as "isDefaultSetResult",
         tem."wrAfterCloseTime" as "afterCloseTime",
         tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
         tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase"
@@ -219,6 +221,7 @@ const getAllEventMarketsQueryV1 = async (fastify, whereCondition = null) => {
         tem."wrCreatedBy" as "createdBy",
         tem."wrIsInningRun" as "isInningRun",
         tem."wrWicketNo" as "wicketNo",
+        tem."wrIsDefaultSetResult" as "isDefaultSetResult",
         tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
         tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
         COALESCE(runner_data."runners", '[]') as "runners"
@@ -325,6 +328,7 @@ const getExistingEventMarketsQueryV1 = async (fastify, whereCondition = null) =>
         tem."wrCreatedBy" as "createdBy",
         tem."wrIsInningRun" as "isInningRun",
         tem."wrWicketNo" as "wicketNo",
+        tem."wrIsDefaultSetResult" as "isDefaultSetResult",
         tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
         tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
         COALESCE(runner_data."runners", '[]') as "runners"
@@ -438,6 +442,7 @@ const getEventMarketByIdsQuery = async (data, request, fastify) => {
             tem."wrRateSourceRefID" as "rateSourceRefID",
             tem."wrAfterSuspendTime" as "afterSuspendTime",
             tem."wrCreatedBy" as "createdBy",
+            tem."wrIsDefaultSetResult" as "isDefaultSetResult",
             tem."wrAfterCloseTime" as "afterCloseTime",
             tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
             tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase"
@@ -699,6 +704,7 @@ const getMarketListByCIdQuery = async (data, request, fastify) => {
             tem."wrIsInningRun" as "isInningRun",
             tem."wrPredefinedValue" as "predefinedValue",
             tem."wrWicketNo" as "wicketNo",
+            tem."wrIsDefaultSetResult" as "isDefaultSetResult",
             tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
             tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
             tem."wrPlayerID" as "playerId",
@@ -793,6 +799,7 @@ const getMarketByIdQuery = async (data, request, fastify) => {
             tem."wrWicketNo" as "wicketNo",
             tem."wrIsInningRun" as "isInningRun",
             tem."wrRateDiff" as "rateDiff", 
+            tem."wrIsDefaultSetResult" as "isDefaultSetResult",
             tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
             tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
             tem."wrPlayerID" as "playerId",
@@ -926,6 +933,7 @@ const updateEventMarketRateQuery = async (data, request, fastify) => {
                 tem."wrStatus" as "status",
                 tem."wrIsActive" as "isActive",
                 tem."wrIsAllow" as "isAllow",
+                tem."wrIsDefaultSetResult" as "isDefaultSetResult",
                 tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
                 tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
                 json_agg(
@@ -1377,6 +1385,7 @@ const closeEventMarketByTeamIdQuery = async (data, request, fastify) => {
               tem."wrMarketName" as "marketName",
               tem."wrStatus" as "status",
               tem."wrIsActive" as "isActive",
+              tem."wrIsDefaultSetResult" as "isDefaultSetResult",
               tem."wrIsAllow" as "isAllow",
               tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
               tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
@@ -1547,6 +1556,7 @@ const cancelEventMarketByTeamIdQuery = async (data, request, fastify) => {
           tem."wrMarketName" as "marketName",
           tem."wrStatus" as "status",
           tem."wrIsActive" as "isActive",
+          tem."wrIsDefaultSetResult" as "isDefaultSetResult",
           tem."wrIsAllow" as "isAllow",
           tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
           tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
@@ -1953,6 +1963,7 @@ const getMarketsByCIdQuery = async (request, whereCondition, fastify) => {
             "wrMarketTypeCategoryId" AS "marketTypeCategoryId",
             "wrResult" as "result",
             "tblEventMarkets"."wrIsActive" as "isActive",
+            "tblEventMarkets"."wrIsDefaultSetResult" as "isDefaultSetResult",
             "tblEventMarkets"."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
             "tblEventMarkets"."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase"
         FROM "tblEventMarkets"
@@ -1982,6 +1993,7 @@ const getMarketsByCIdQuery = async (request, whereCondition, fastify) => {
             "wrMarketTypeCategoryId" AS "marketTypeCategoryId",
             tmr."wrLaySize" as "laySize",
             "tblEventMarkets"."wrIsActive" as "isActive",
+            "tblEventMarkets"."wrIsDefaultSetResult" as "isDefaultSetResult",
             "tblEventMarkets"."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
             "tblEventMarkets"."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase"
         FROM "tblEventMarkets"
@@ -2524,6 +2536,7 @@ EventMarkets_CTE AS (
         tem."wrIsActive" AS "isActive",
         tem."wrIsAllow" AS "isAllow",
         tem."wrIsSendData" AS "isSendData",
+        tem."wrIsDefaultSetResult" as "isDefaultSetResult",
         tem."wrLineRatio" AS "lineRatio",
         tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
         tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
@@ -2880,6 +2893,7 @@ const getEventMarketsQuery = async (fastify, whereCondition = null) => {
           tem."wrIsDeleted" as "isDeleted",
           tmr."wrRunner" as "resultRunner",
           tem."wrIsInningRun" as "isInningRun",
+          tem."wrIsDefaultSetResult" as "isDefaultSetResult",
           tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
           tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase"
       FROM "tblEventMarkets" tem
@@ -3054,6 +3068,7 @@ const getEventMarketQueryV1 = async (fastify) => {
           tem."wrDelay" as "delay",
           tem."wrLineRatio" as "lineRatio",
           tem."wrCreatedBy" as "createdBy",
+          tem."wrIsDefaultSetResult" as "isDefaultSetResult",
           tem."wrRateSource" as "rateSource",
           tem."wrRateSourceRefID" as "rateSourceRefID",
           tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
@@ -3220,6 +3235,7 @@ const getEventMarketByIdsQueryV1 = async (data, request, fastify) => {
           tem."wrRateSourceRefID" as "rateSourceRefID",
           tem."wrLineType" as "lineType",
           tem."wrDefaultBackSize" as "defaultBackSize",
+          tem."wrIsDefaultSetResult" as "isDefaultSetResult",
           tem."wrCreatedBy" as "createdBy",
           tem."wrIsInningRun" as "isInningRun",
           tem."wrDefaultLaySize" as "defaultLaySize",
@@ -3302,6 +3318,7 @@ const getMarketListByCIdQueryV1 = async (data, request, fastify) => {
             tem."wrIsInningRun" as "isInningRun",
             tem."wrPredefinedValue" as "predefinedValue",
             tem."wrWicketNo" as "wicketNo",
+            tem."wrIsDefaultSetResult" as "isDefaultSetResult",
             tem."wrPlayerID" as "playerId",
             tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
             tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
@@ -3378,6 +3395,7 @@ const getMarketWithRunnerQuery = async (fastify, whereCondition) => {
         "wrResult" as "result",
         "wrIsResult" as "isResult",
         tem."wrCreatedBy" as "createdBy",
+        tem."wrIsDefaultSetResult" as "isDefaultSetResult",
         tmr."wrRunner" as "resultRunner",
         tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
         tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
@@ -3720,6 +3738,7 @@ const getEventMarketRunnersQuery = async (refID, fastify, request) => {
         tem."wrResult" as "result",
         tem."wrIsResult" as "isResult",
         tem."wrLineType" as "lineType",
+        tem."wrIsDefaultSetResult" as "isDefaultSetResult",
         tem."wrDefaultBackSize" as "defaultBackSize",
         tem."wrCreatedBy" as "createdBy",
         tem."wrDefaultLaySize" as "defaultLaySize"
@@ -4105,6 +4124,7 @@ const suspendMarketQuery = async (data, request, fastify) => {
             tem."wrLineRatio" as "lineRatio",
             tem."wrMarketTypeId" as "marketTypeId",
             tem."wrLineType" as "lineType", 
+            tem."wrIsDefaultSetResult" as "isDefaultSetResult",
             tem."wrRateDiff" as "rateDiff",
             tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
             tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
@@ -4282,6 +4302,7 @@ const playerMarketQuery = async (data, request, fastify) => {
             tem."wrIsInningRun" as "isInningRun",
             tem."wrPredefinedValue" as "predefinedValue",
             tem."wrWicketNo" as "wicketNo",
+            tem."wrIsDefaultSetResult" as "isDefaultSetResult",
             tcp."wrBat_Run" as "playerScore",
             tem."wrPlayerID" as "playerId",
             tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
@@ -4375,6 +4396,7 @@ const boundaryMarketQuery = async (data, request, fastify) => {
             tem."wrIsInningRun" as "isInningRun",
             tem."wrPredefinedValue" as "predefinedValue",
             tem."wrWicketNo" as "wicketNo",
+            tem."wrIsDefaultSetResult" as "isDefaultSetResult",
             tcp."wrBat_FOUR" + tcp."wrBat_SIX" as "playerScore",
             tem."wrPlayerID" as "playerId",
             tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
@@ -4470,6 +4492,7 @@ const pbfMarketQuery = async (data, request, fastify) => {
             tem."wrWicketNo" as "wicketNo",
             tcp."wrBat_Ball" as "playerScore",
             tem."wrPlayerID" as "playerId",
+            tem."wrIsDefaultSetResult" as "isDefaultSetResult",
             tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
             tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
             (
@@ -4538,6 +4561,7 @@ const getEventMarketsByCommId = async (commentaryId, request, fastify) => {
           tmt."wrMarketTypeName" as "marketTypeName",
           tem."wrMarketTypeCategoryId" as "marketTypeCategoryId",
           tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
+          tem."wrIsDefaultSetResult" as "isDefaultSetResult",
           tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
           tmtc."wrCategoryName" as "categoryName",
           COALESCE(
@@ -4704,6 +4728,7 @@ const getManualMarketDataQuery = async (data,request, fastify) => {
           tem."wrWicketNo" as "wicketNo",
           tem."wrCreatedBy" as "createdBy",
           tem."wrFavRatio" as "favRatio",
+          tem."wrIsDefaultSetResult" as "isDefaultSetResult",
           tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
           tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
           COALESCE(runner_data."runners", '[]') as "runners"
@@ -4811,6 +4836,7 @@ const getManualMarketByIdQuery = async (data,request, fastify) => {
           tem."wrAfterSuspendTime" as "afterSuspendTime",
           tem."wrAfterCloseTime" as "afterCloseTime",
           tem."wrRateDiff" as "rateDiff",
+          tem."wrIsDefaultSetResult" as "isDefaultSetResult",
           tem."wrPredefinedValue" as "predefinedValue",
           tem."wrWicketNo" as "wicketNo",
           tem."wrCreatedBy" as "createdBy",
@@ -4925,6 +4951,7 @@ const getExtraMarketQuery = async (data,request, fastify) => {
           tem."wrCreatedBy" as "createdBy",
           tem."wrPredefinedValue" as "predefinedValue",
           tem."wrWicketNo" as "wicketNo",
+          tem."wrIsDefaultSetResult" as "isDefaultSetResult",
           tem."wrFavRatio" as "favRatio",
           tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
           tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
@@ -5503,6 +5530,7 @@ const openMarketScoketConnectionDataQuery = async (commentaryId, fastify) => {
         tem."wrDefaultIsSendData" AS "defaultIsSendData",
         tem."wrRateDiff" AS "rateDiff",
         tem."wrCreatedBy" AS "createdBy",
+        tem."wrIsDefaultSetResult" as "isDefaultSetResult",
         tem."wrIsInningRun" AS "isInningRun",
         tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
         tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
@@ -5789,6 +5817,7 @@ const getMnMarketByCId = async (data, fastify ,request = null) => {
             tem."wrMarketTypeId" as "marketTypeId",
             tem."wrLineType" as "lineType", 
             tem."wrRateDiff" as "rateDiff",
+            tem."wrIsDefaultSetResult" as "isDefaultSetResult",
             tem."wrIsInningRun" as "isInningRun",
             tem."wrPredefinedValue" as "predefinedValue",
             tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
@@ -5874,6 +5903,7 @@ const getRsMarketQuery = async (data, request, fastify) => {
             "wrIsSendData" as "isSendData",
             tem."wrLineRatio" as "lineRatio",
             tem."wrMarketTypeId" as "marketTypeId",
+            tem."wrIsDefaultSetResult" as "isDefaultSetResult",
             tem."wrLineType" as "lineType", 
             tem."wrRateDiff" as "rateDiff",
             tem."wrIsInningRun" as "isInningRun",
@@ -5982,6 +6012,7 @@ const getAllEventMarketsV2ByIdQuery = async (fastify, whereCondition = null) => 
           tem."wrOpenOdds" as "openOdds",
           tem."wrMinOdds" as "minOdds",
           tem."wrMaxOdds" as "maxOdds",
+          tem."wrIsDefaultSetResult" as "isDefaultSetResult",
           tem."wrRateSource" as "rateSource",
           tem."wrRateSourceRefID" as "rateSourceRefID",
           tem."wrPredefinedValue" as "predefinedValue",
@@ -6032,6 +6063,7 @@ const getMarketsByCIdV1Query = async (request, whereCondition, fastify) => {
             "wrMaxOdds" as "maxOds",
             "wrStatus" as "st",
             "wrOpenOdds" as "openOds",
+            "wrIsDefaultSetResult" as "isDefaultSetResult",
             "wrMarketTypeCategoryId" AS "mtcid",
             "wrResult" as "res"
         FROM "tblEventMarkets"
@@ -6057,6 +6089,7 @@ const getMarketsByCIdV1Query = async (request, whereCondition, fastify) => {
             tmr."wrBackPrice" as "bp",
             tmr."wrLayPrice" as "lp",
             tmr."wrBackSize" as "bs",
+            "wrIsDefaultSetResult" as "isDefaultSetResult",
             "wrMarketTypeCategoryId" AS "mtcid",
             tmr."wrLaySize" as "ls"
         FROM "tblEventMarkets"
@@ -6282,6 +6315,7 @@ const getMarketByComIdQuery = async (data,fastify) => {
             tem."wrWicketNo" as "wicketNo",
             tem."wrIsInningRun" as "isInningRun",
             tem."wrRateDiff" as "rateDiff", 
+            tem."wrIsDefaultSetResult" as "isDefaultSetResult",
             tem."wrPlayerID" as "playerId",
             tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
             tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
