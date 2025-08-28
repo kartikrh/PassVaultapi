@@ -91,6 +91,7 @@ const {
   scoringTypeCommentaryQuery,
   insertCommentaryPlayersEntity,
   updateteamMaxOverQuery,
+  deleteCommentaryPlayersByPlayerId,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -1211,8 +1212,8 @@ const updateCommentaryService = async (request, fastify) => {
     request.body.isClientShow = false;
   }
   await updateCommentaryQuery(request, fastify);
-  // const team1GroupId = await getGroupId(request.body.team1Id, request, fastify);
-  // const team2GroupId = await getGroupId(request.body.team2Id, request, fastify);
+  const team1GroupId = await getGroupId(request.body.team1Id, request, fastify);
+  const team2GroupId = await getGroupId(request.body.team2Id, request, fastify);
 
   const validateMatchTypeId = global.tblMatchTypes.find(
     (item) => item.matchTypeId === request.body.matchTypeId
@@ -1225,27 +1226,44 @@ const updateCommentaryService = async (request, fastify) => {
       const TotalInnning = validateMatchTypeId?.noOfIningsPerSide;
       for (let i = 0; i < TotalInnning; i++) {
         request.body.currentInnings = i + 1;
+        // await updateCommentaryTeams(request, fastify, {
+        //   teamCaptain: request.body.team1Captain
+        //     ? request.body.team1Captain
+        //     : null,
+        //   teamKipper: request.body.team1Kipper
+        //     ? request.body.team1Kipper
+        //     : null,
+        //   teamId: request.body.team1Id,
+        //   commentaryId: request.body.commentaryId,
+        //   currentInnings: request.body.currentInnings,
+        // });
+        // await updateCommentaryTeams(request, fastify, {
+        //   teamCaptain: request.body.team2Captain
+        //     ? request.body.team2Captain
+        //     : null,
+        //   teamKipper: request.body.team2Kipper
+        //     ? request.body.team2Kipper
+        //     : null,
+        //   teamId: request.body.team2Id,
+        //   commentaryId: request.body.commentaryId,
+        //   currentInnings: request.body.currentInnings,
+        // });
+
         await updateCommentaryTeams(request, fastify, {
-          teamCaptain: request.body.team1Captain
+          team1Captain: request.body.team1Captain
             ? request.body.team1Captain
             : null,
-          teamKipper: request.body.team1Kipper
-            ? request.body.team1Kipper
-            : null,
-          teamId: request.body.team1Id,
-          commentaryId: request.body.commentaryId,
-          currentInnings: request.body.currentInnings,
-        });
-        await updateCommentaryTeams(request, fastify, {
-          teamCaptain: request.body.team2Captain
+          team1Kipper: request.body.team1Kipper ? request.body.team1Kipper : null,
+          team1Id: request.body.team1Id,
+          team2Captain: request.body.team2Captain
             ? request.body.team2Captain
             : null,
-          teamKipper: request.body.team2Kipper
-            ? request.body.team2Kipper
-            : null,
-          teamId: request.body.team2Id,
+          team2Kipper: request.body.team2Kipper ? request.body.team2Kipper : null,
+          team2Id: request.body.team2Id,
           commentaryId: request.body.commentaryId,
           currentInnings: request.body.currentInnings,
+          team1GroupId: team1GroupId,
+          team2GroupId: team2GroupId,
         });
 
         // await deleteCommentaryPlayers(request, fastify);
@@ -1344,28 +1362,69 @@ const updateCommentaryService = async (request, fastify) => {
               }
             }
           }
+          const validateCommPlayers = global.tblCommentaryPlayers
+            .filter(item => item.commentaryId == request.body.commentaryId)
+            .map(item => item.playerId);
+          const removedPlayers = validateCommPlayers.filter(
+            playerId => ![...request.body.team1Players, ...request.body.team2Players].includes(playerId)
+          );
+          if (removedPlayers && removedPlayers.length > 0) {
+            await deleteCommentaryPlayersByPlayerId(
+              {
+                commentaryId: request.body.commentaryId,
+                playerIds: removedPlayers
+              }, 
+              request, fastify
+            );
+            global.tblCommentaryPlayers = global.tblCommentaryPlayers.filter(
+              (item) => !(item.commentaryId === request.body.commentaryId &&
+                removedPlayers.includes(item.playerId))
+            );
+          }
+        } else {
+          await deleteCommentaryPlayers(request, fastify);
+          global.tblCommentaryPlayers = global.tblCommentaryPlayers.filter(
+            (item) => ![request.body.commentaryId].includes(item?.commentaryId)
+          );
         }
       }
     } else {
       const currentinning = 1;
       request.body.currentInnings = currentinning;
+      // await updateCommentaryTeams(request, fastify, {
+      //   teamCaptain: request.body.team1Captain
+      //     ? request.body.team1Captain
+      //     : null,
+      //   teamKipper: request.body.team1Kipper ? request.body.team1Kipper : null,
+      //   teamId: request.body.team1Id,
+      //   commentaryId: request.body.commentaryId,
+      //   currentInnings: request.body.currentInnings,
+      // });
+      // await updateCommentaryTeams(request, fastify, {
+      //   teamCaptain: request.body.team2Captain
+      //     ? request.body.team2Captain
+      //     : null,
+      //   teamKipper: request.body.team2Kipper ? request.body.team2Kipper : null,
+      //   teamId: request.body.team2Id,
+      //   commentaryId: request.body.commentaryId,
+      //   currentInnings: request.body.currentInnings,
+      // });
+
       await updateCommentaryTeams(request, fastify, {
-        teamCaptain: request.body.team1Captain
+        team1Captain: request.body.team1Captain
           ? request.body.team1Captain
           : null,
-        teamKipper: request.body.team1Kipper ? request.body.team1Kipper : null,
-        teamId: request.body.team1Id,
-        commentaryId: request.body.commentaryId,
-        currentInnings: request.body.currentInnings,
-      });
-      await updateCommentaryTeams(request, fastify, {
-        teamCaptain: request.body.team2Captain
+        team1Kipper: request.body.team1Kipper ? request.body.team1Kipper : null,
+        team1Id: request.body.team1Id,
+        team2Captain: request.body.team2Captain
           ? request.body.team2Captain
           : null,
-        teamKipper: request.body.team2Kipper ? request.body.team2Kipper : null,
-        teamId: request.body.team2Id,
+        team2Kipper: request.body.team2Kipper ? request.body.team2Kipper : null,
+        team2Id: request.body.team2Id,
         commentaryId: request.body.commentaryId,
         currentInnings: request.body.currentInnings,
+        team1GroupId: team1GroupId,
+        team2GroupId: team2GroupId,
       });
 
       // await deleteCommentaryPlayers(request, fastify);
@@ -1459,6 +1518,31 @@ const updateCommentaryService = async (request, fastify) => {
             }
           }
         }
+        const validateCommPlayers = global.tblCommentaryPlayers
+            .filter(item => item.commentaryId == request.body.commentaryId)
+            .map(item => item.playerId);
+          const removedPlayers = validateCommPlayers.filter(
+            playerId => ![...request.body.team1Players, ...request.body.team2Players].includes(playerId)
+          );
+
+          if (removedPlayers && removedPlayers.length > 0) {
+            await deleteCommentaryPlayersByPlayerId(
+              {
+                commentaryId: request.body.commentaryId,
+                playerIds: removedPlayers
+              }, 
+              request, fastify
+            );
+            global.tblCommentaryPlayers = global.tblCommentaryPlayers.filter(
+              (item) => !(item.commentaryId === request.body.commentaryId &&
+                removedPlayers.includes(item.playerId))
+            );
+          }
+      } else {
+        await deleteCommentaryPlayers(request, fastify);
+          global.tblCommentaryPlayers = global.tblCommentaryPlayers.filter(
+            (item) => ![request.body.commentaryId].includes(item?.commentaryId)
+        );
       }
     }
   }
