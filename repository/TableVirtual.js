@@ -8,11 +8,11 @@ const virtualOverQuery = async (data, request, fastify) => {
         "wrTotalFour", "wrTotalSix", "wrTotalWideBall", "wrTotalWideRun", "wrTotalNoball", "wrTotalNoBallRun",
         "wrTotalByesRun", "wrTotalLegByesRun", "wrTotalPanelty", "wrTotalWicket", "wrDotBall", "wrIsComplete",
         "wrIsOverInPowerplay", "wrPowerplayType", "wrIsMaiden", "wrDate", "wrCurrentInnings", "wrTeamScore",
-        "wrIsPowerPlay", "wrPowerPlayName"
+        "wrIsPowerPlay", "wrPowerPlayName", "wrOverType", "wrOverTypeName"
     ) VALUES (
         $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
         $11, $12, $13, $14, $15, $16, $17, $18, $19,
-        $20, $21, $22, $23, $24, $25, $26
+        $20, $21, $22, $23, $24, $25, $26, $27, $28
     )
     RETURNING 
         "wrOverId" AS "overId",
@@ -41,6 +41,8 @@ const virtualOverQuery = async (data, request, fastify) => {
         "wrCurrentInnings" AS "currentInnings",
         "wrTeamScore" AS "teamScore",
         "wrIsPowerPlay" AS "isPowerPlay",
+        "wrOverType" as "overType",
+        "wrOverTypeName" as "overTypeName",
         "wrPowerPlayName" AS "powerPlayName"
     `;
 
@@ -72,6 +74,8 @@ const virtualOverQuery = async (data, request, fastify) => {
         data.teamScore,
         data.isPowerPlay ?? false,
         data.powerPlayName ?? null,
+        data.overType ?? null,
+        data.overTypeName ?? null
       ],
       type: fastify.db.QueryTypes.SELECT,
     });

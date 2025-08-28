@@ -2073,6 +2073,8 @@ const getAllOversQuery = async (fastify) => {
           o."wrIsMaiden" as "isMaiden",
           o."wrDate" as "date",
           o."wrIsDelete" as "isDelete",
+          o."wrOverType" as "overType",
+          o."wrOverTypeName" as "overTypeName",
           o."wrCurrentInnings" as "currentInnings",
           o."wrTeamScore" as "teamScore",
           o."wrIsPowerPlay" as "isPowerPlay",
@@ -2135,6 +2137,8 @@ const getAllOversDataQuery = async (whereCondition = null, fastify) => {
       "wrIsMaiden" as "isMaiden",
       "wrDate" as "date",
       "wrIsDelete" as "isDelete",
+      "wrOverType" as "overType",
+      "wrOverTypeName" as "overTypeName",
       "wrCurrentInnings" as "currentInnings",
       "wrTeamScore" as "teamScore",
       "wrIsPowerPlay" as "isPowerPlay",
@@ -5691,6 +5695,8 @@ const getAllOversDataQueryV1 = async (whereCondition = null, fastify) => {
         "wrIsMaiden" as "imaiden",
         "wrDate" as "dt",
         "wrIsDelete" as "idlt",
+        "wrOverType" as "overType",
+        "wrOverTypeName" as "overTypeName",
         "wrCurrentInnings" as "ci",
         "wrTeamScore" as "tesco",
         "wrIsPowerPlay" as "ipp",
@@ -8304,6 +8310,33 @@ const getAllCommentaryPlayerQueryById = async (data, request, fastify) => {
     throw new Error(err.message);
   }
 };
+
+const overTypeChangeOnOversQuery = async (data, fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `UPDATE "tblOvers" SET
+        "wrOverType" = $1,
+        "wrOverTypeName" = $2
+        WHERE "wrCommentaryId" = $3
+        AND "wrOverId" = $4
+        AND "wrIsDelete" = FALSE
+      `,
+      {
+        bind: [data.overType, data.overTypeName, data.commentaryId, data.overId],
+      }
+    );
+    return result;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/overTypeChangeOnOversQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -8444,4 +8477,5 @@ module.exports = {
   insertCommentaryPlayersEntity,
   updateteamMaxOverQuery,
   deleteCommentaryPlayersByPlayerId,
+  overTypeChangeOnOversQuery,
 };
