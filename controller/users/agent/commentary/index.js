@@ -2,7 +2,8 @@ const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
 const { allEventTypesService, allCommentaryService, changeShowClientService, activeInactiveCommentaryService, getTeamAndPlayerListServiceV1 } = require("../../../../services/agent");
 
-let commonPath = "controller/users/admin/eventTypes/index.js";
+let commonPath = "controller/users/agent/eventTypes/index.js";
+let path = "controller/users/agent/commentary/commentary";
 
 const getAllCommentaries = async (request, reply, fastify) => {
   try {
