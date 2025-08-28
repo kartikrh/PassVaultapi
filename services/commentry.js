@@ -47,6 +47,7 @@ const {
   activeInactiveCommentaryQuery,
   closeCommentaryQuery,
   deleteAllCommentaryQuery,
+  getAllCommentaryPlayerQueryById,
   updateDelayInCommentaryQuery,
   deleteCommentaryDataQuery,
   updateEventRefIdInCommentaryQuery,
@@ -158,6 +159,7 @@ const {
 // const { handleSitemapUpdate } = require("../utilities/SEOIndexing")
 const {
   getAllTournamentTeamPointsQuery,
+  getTournamentPointsByGroupNameQuery,
 } = require("../repository/TableTournmentTeamPoints");
 const {
   getPlayersBattingHistoryByIdQuery,
@@ -528,6 +530,8 @@ const commentaryDetailsByIdService = async (request, fastify) => {
     .filter((item) => item?.isActive === true)
     .sort((a, b) => a.displayOrder - b.displayOrder);
 
+  const overTypeData = global.tblOverTypes.filter(item => item.isActive == true)
+
   const allDetails = {
     commentaryDetails: { ...commentary, ...dataToreturn },
     matchTypeDetails: matchType,
@@ -540,6 +544,7 @@ const commentaryDetailsByIdService = async (request, fastify) => {
     commentaryDisplayStatus,
     // callPrediction,
     shotTypes,
+    overTypes: overTypeData,
   };
   return allDetails;
 };
@@ -711,6 +716,10 @@ const createCommentaryService = async (request, fastify) => {
   }
   request.body.team1TpId = validateTeam1Id?.tpId ?? null
   request.body.team2TpId = validateTeam2Id?.tpId ?? null
+
+  request.body.team1GroupId = await getGroupId(request.body.team1Id, request, fastify);
+  request.body.team2GroupId = await getGroupId(request.body.team2Id, request, fastify);
+
   if (validateMatchTypeId) {
     if (
       validateMatchTypeId?.noOfIningsPerSide &&
@@ -1202,6 +1211,9 @@ const updateCommentaryService = async (request, fastify) => {
     request.body.isClientShow = false;
   }
   await updateCommentaryQuery(request, fastify);
+  // const team1GroupId = await getGroupId(request.body.team1Id, request, fastify);
+  // const team2GroupId = await getGroupId(request.body.team2Id, request, fastify);
+
   const validateMatchTypeId = global.tblMatchTypes.find(
     (item) => item.matchTypeId === request.body.matchTypeId
   );
@@ -1616,6 +1628,8 @@ const cloneCommentaryService = async (request, fastify) => {
   request.body = {
     ...originalCommentary,
     ...request.body,
+    tpId: null,
+    scoringType: 1.
   };
 
   const newCommentary = await insertCommentaryQuery(request, fastify);
@@ -1640,6 +1654,9 @@ const cloneCommentaryService = async (request, fastify) => {
     team1TpId: team1?.tpId ?? null,
     team2TpId: team2?.tpId ?? null,
   };
+
+  request.body.team1GroupId = await getGroupId(request.body.team1Id, request, fastify);
+  request.body.team2GroupId = await getGroupId(request.body.team2Id, request, fastify);
 
   if (validateMatchTypeId) {
     let commentaryPlayer = {
@@ -5274,6 +5291,8 @@ const addTeamPlayerService = async (request, fastify) => {
   if (!commentary) {
     throw new Error("Commentary with this id not Found");
   }
+  const sendDataForSocketUpdate = {};
+
   // validate teamId
   let commentaryTeamIndex = global.tblCommentaryTeams.find(
     (item) => item?.commentaryId === commentaryId && item.teamId === teamId
@@ -5393,7 +5412,31 @@ const addTeamPlayerService = async (request, fastify) => {
       );
     }
   }
-  global.tblCommentaryPlayers = await getAllCommentaryPlayerQuery(fastify);
+
+  const commPlayerData = await getAllCommentaryPlayerQueryById(
+    {
+      commentaryId: commentary.commentaryId,
+      commentaryPlayerId: playerData[0].commentaryPlayerId,
+    }, request, fastify
+  )
+  sendDataForSocketUpdate.commentaryId = commentary.commentaryId;
+  sendDataForSocketUpdate.eventRefId = commentary.eventRefId;
+  sendDataForSocketUpdate.dataToUpdate = [{
+    module: "commentaryPlayers",
+    type: "create",
+    data: commPlayerData,
+  }];
+  
+  if (
+    global?.clientSocketIo !== undefined &&
+    global?.clientSocketIo.length > 0
+  ) {
+    global.clientSocketIo.forEach((socket) => {
+      socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+    });
+  }
+  // global.tblCommentaryPlayers = await getAllCommentaryPlayerQuery(fastify);
+  global.tblCommentaryPlayers.push(commPlayerData);
 
   return "Player added successfully";
 };
@@ -5425,6 +5468,8 @@ const deleteTeamPlayerService = async (request, fastify) => {
   if (!commentary) {
     throw new Error("Commentary with this id not Found");
   }
+  const sendDataForSocketUpdate = {};
+
   // commentaryPlayerId validation
   if (commentaryPlayerId) {
     let index = global.tblCommentaryPlayers.findIndex(
@@ -5466,6 +5511,23 @@ const deleteTeamPlayerService = async (request, fastify) => {
         item?.commentaryPlayerId === commentaryPlayerId
       )
   );
+
+  sendDataForSocketUpdate.commentaryId = commentaryId;
+  sendDataForSocketUpdate.eventRefId = commentary.eventRefId;
+  sendDataForSocketUpdate.dataToUpdate = [{
+    module: "commentaryPlayers",
+    type: "delete",
+    data: { commentaryPlayerId },
+  }];
+  
+  if (
+    global?.clientSocketIo !== undefined &&
+    global?.clientSocketIo.length > 0
+  ) {
+    global.clientSocketIo.forEach((socket) => {
+      socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+    });
+  }
 
   return "Player deleted successfully";
 };
@@ -10911,7 +10973,9 @@ const AddSuperOverCommentaryService = async (request, fastify) => {
     if (!commentaryTeams) {
       throw new Error("Commenrty Teams with this commentaryId not Found");
     }
-
+    request.body.competitionId = commentary?.competitionId;
+    const team1GroupId = await getGroupId(commentary.team1Id, request, fastify);
+    const team2GroupId = await getGroupId(commentary.team2Id, request, fastify);
     let Teamdata = {};
     Teamdata.commentaryId = commentaryId;
     Teamdata.teamMaxOver = teamMaxOver || 1;
@@ -10920,11 +10984,13 @@ const AddSuperOverCommentaryService = async (request, fastify) => {
         Teamdata.team1Id = team.teamId;
         Teamdata.team1Captain = team.teamCaptain;
         Teamdata.team1Kipper = team.teamKipper;
+        Teamdata.team1GroupId = team1GroupId;
       }
       if (team.teamId == commentary.team2Id) {
         Teamdata.team2Id = team.teamId;
         Teamdata.team2Captain = team.teamCaptain;
         Teamdata.team2Kipper = team.teamKipper;
+        Teamdata.team2GroupId = team2GroupId;
       }
     }
     const commentaryTeam1Players = global.tblCommentaryPlayers.filter(
@@ -21360,6 +21426,16 @@ const updateMatchInfoService = async(request , fastify)=>{
   }
   return true;
 }
+
+async function getGroupId(teamId, request, fastify) {
+    const where = `"wrIsDeleted" = false 
+      AND "wrCompetitionId" = ${request.body.competitionId}
+      AND "wrIsActive" = TRUE 
+      AND "wrTeamId" = ${teamId}`;
+    const result = await getTournamentPointsByGroupNameQuery(where, request, fastify);
+    return result?.groupId || null;
+}
+
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -21468,5 +21544,6 @@ module.exports = {
   updateCommWicketService,
   scoringTypeCommentaryService,
   validatePasswordOnPredictionFalseService,
-  updateMatchInfoService
+  updateMatchInfoService,
+  getGroupId,
 };

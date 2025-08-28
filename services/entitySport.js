@@ -3,6 +3,12 @@ const { getTeamsByIds } = require("../repository/TableTeams")
 const { getCompetitionByIdsQuery } = require("../repository/TableCompitition")
 const { getComEntityQuery } = require("../repository/TableCommentary")
 const { getAllTournamentTeamPlayerByIdsQuery } = require("../repository/TableTournamentsTeamPlayers")
+const { getMatchDataByCId } = require("../services/commentry");
+const {
+    callClientAPI,
+    ServiceType,
+    APIEndpointModuleType,
+} = require("../utilities/index");
 
 
 const saveTeamsService = async (request , fastify)=>{
@@ -107,6 +113,38 @@ const saveCommentariesService = async (request , fastify) =>{
             }
             else {
                 global.tblCommentaryPlayers[index] = cp
+            }
+        }
+        for (addCommentry of comp.com) {
+            if (addCommentry.isActive == true && addCommentry.isTest == false) {
+              let cData = await getMatchDataByCId(
+                {
+                  commentaryId: addCommentry.commentaryId,
+                },
+                request,
+                fastify
+              );
+              callClientAPI(
+                {
+                  serviceType: ServiceType.clientAPI,
+                  moduleType: APIEndpointModuleType.commentaryUpdate,
+                  data: {
+                    ...cData,
+                    type: cData?.cst == 1 ? "scheduled" 
+                        : (cData?.cst === 4 || cData?.cst === 10) ? "completed" : "live"
+                  },
+                },
+                request,
+                fastify
+              ).catch((err) => {
+                console.log("call client api console on entitySport", err);
+                errorLogger(
+                  fastify,
+                  err.message,
+                  "ERROR --> services/entitySport.js/saveCommentariesService",
+                  request
+                );
+              });
             }
         }
     }
