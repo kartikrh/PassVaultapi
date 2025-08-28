@@ -747,6 +747,7 @@ const upsertCommentaryPlayers = async (
         "wrCommentaryId" = $1
         AND "wrTeamId" = $2
         AND "wrPlayerId" = $3
+        AND "wrIsDelete" = FALSE
         AND "wrCurrentInnings" = $5
       RETURNING "wrCommentaryPlayerId" AS "commentaryPlayerId"
     )
@@ -942,22 +943,23 @@ const updateCommentaryTeams = async (request, fastify, data) => {
           FROM "tblCommentaryTeams"
           WHERE "wrCommentaryId" = $1
             AND "wrCurrentInnings" = $8
+            AND "wrIsDelete" = FALSE
         )
         UPDATE "tblCommentaryTeams" t
         SET
           "wrTeamId" = CASE
-                         WHEN o.team_slot = 1 THEN $5   -- assign new team2Id into slot1
-                         WHEN o.team_slot = 2 THEN $2   -- assign new team1Id into slot2
+                         WHEN o.team_slot = 1 THEN $5
+                         WHEN o.team_slot = 2 THEN $2
                          ELSE t."wrTeamId"
                        END,
           "wrTeamCaptain" = CASE
-                              WHEN o.team_slot = 1 THEN $3
-                              WHEN o.team_slot = 2 THEN $6
+                              WHEN o.team_slot = 1 THEN $6
+                              WHEN o.team_slot = 2 THEN $3
                               ELSE t."wrTeamCaptain"
                             END,
           "wrTeamKipper" = CASE
-                             WHEN o.team_slot = 1 THEN $4
-                             WHEN o.team_slot = 2 THEN $7
+                             WHEN o.team_slot = 1 THEN $7
+                             WHEN o.team_slot = 2 THEN $4
                              ELSE t."wrTeamKipper"
                            END,
           "wrShortName" = CASE
@@ -981,8 +983,8 @@ const updateCommentaryTeams = async (request, fastify, data) => {
                                   ELSE t."wrBackgroundColor"
                                 END,
           "wrGroupId" = CASE
-                          WHEN o.team_slot = 1 THEN $9
-                          WHEN o.team_slot = 2 THEN $10
+                          WHEN o.team_slot = 1 THEN $10
+                          WHEN o.team_slot = 2 THEN $9
                           ELSE t."wrGroupId"
                         END
         FROM ordered o
