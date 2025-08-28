@@ -1,7 +1,7 @@
 const { signInUser, signOutUser, updateUserPasswordQuery } = require("../repository/TableUser");
 const { v4: uuidv4 } = require("uuid");
 const requestIp = require("request-ip");
-const { deviceInfo, encrypt, decrypt, callClientAPI } = require("../utilities/index");
+const { deviceInfo, encrypt, decrypt, callClientAPI, ServiceType } = require("../utilities/index");
 const { generateToken } = require("../utilities/tokenization");
 const { getTabsQuery, getUserWisePermisionQuery } = require("../repository/TableTabs.js");
 const configConstants = require("../utilities/configConstants.js");
