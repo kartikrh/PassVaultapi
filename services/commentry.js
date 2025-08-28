@@ -92,6 +92,7 @@ const {
   insertCommentaryPlayersEntity,
   updateteamMaxOverQuery,
   deleteCommentaryPlayersByPlayerId,
+  overTypeChangeOnOversQuery,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -21520,6 +21521,33 @@ async function getGroupId(teamId, request, fastify) {
     return result?.groupId || null;
 }
 
+const overTypeChangeOnOversService = async (request, fastify) => {
+  const { overType, overTypeName, commentaryId, overId } = request.body
+  // validate commentary id
+  const commentary = global.tblCommentaries.findIndex(
+    (item) => item?.commentaryId === request.body.commentaryId
+  );
+  if (commentary == -1) {
+    throw new Error("Commentary with this id not Found");
+  }
+
+  const overData = global.tblOvers.findIndex(item => 
+    item.commentaryId == request.body.commentaryId && item.overId == request.body.overId
+  );
+  if (overData == -1) {
+    throw new Error(`Over with this id not found`);
+  }
+  await overTypeChangeOnOversQuery({ overType, overTypeName, commentaryId, overId }, fastify, request);
+
+  global.tblOvers[overData] = {
+    ...global.tblOvers[overData],
+    overType,
+    overTypeName,
+  }
+
+  return "Commentary Updated successfully";
+};
+
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -21630,4 +21658,5 @@ module.exports = {
   validatePasswordOnPredictionFalseService,
   updateMatchInfoService,
   getGroupId,
+  overTypeChangeOnOversService,
 };

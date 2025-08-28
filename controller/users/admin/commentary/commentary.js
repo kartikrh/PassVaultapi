@@ -100,6 +100,7 @@ const {
   scoringTypeCommentaryService,
   validatePasswordOnPredictionFalseService,
   updateMatchInfoService,
+  overTypeChangeOnOversService,
 } = require("../../../../services/commentry");
 const { getEventSnapByComService, updateEventSnapByComService } = require("../../../../services/competitionEventSnap");
 const { getAllCommentariesDataService, getAllCommentariesDataServiceV1, getAllCommentariesDataV2Service } = require("../../../../services/score");
@@ -1348,6 +1349,15 @@ const updateMatchInfo = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 }
+const overTypeChangeOnOvers = async (request, reply, fastify) => {
+  try {
+    const result = await overTypeChangeOnOversService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/overTypeChangeOnOvers", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+}
 module.exports = {
   getAllCommentaries,
   getCommentaryById,
@@ -1463,5 +1473,6 @@ module.exports = {
   scoringTypeCommentary,
   getAllCommentariesDataV2,
   validatePasswordOnPredictionFalse,
-  updateMatchInfo
+  updateMatchInfo,
+  overTypeChangeOnOvers,
 }
