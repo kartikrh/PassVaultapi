@@ -19,7 +19,7 @@ const {
   callDataProvider,
   callVirtualPredictorMarket,
 } = require("../utilities");
-const { cloneCommentaryService, saveComVirtual } = require("./commentry");
+const { cloneCommentaryService, saveComVirtual, getGroupId } = require("./commentry");
 const {
   insertVirtualEventQuery,
   virtualEventTossQuery,
@@ -250,6 +250,8 @@ const createVirtualEventService = async (request, fastify) => {
     const team2TpId = global.tblTeams.find(
       (item) => item.teamId == request.body.team2Id
     );
+    request.body.team1GroupId = await getGroupId(request.body.team1Id, request, fastify);
+    request.body.team2GroupId = await getGroupId(request.body.team2Id, request, fastify);
     const teamData = {
       commentaryId: commentaryData.commentaryId,
       team1Id: request.body.team1Id,
@@ -258,6 +260,8 @@ const createVirtualEventService = async (request, fastify) => {
       subInning: request.body?.subInning ?? null,
       team1TpId: team1TpId?.tpId ?? null,
       team2TpId: team2TpId?.tpId ?? null,
+      team1GroupId: request.body.team1GroupId,
+      team2GroupId: request.body.team2GroupId,
     };
     const teamsData = await insertVirtualCommentaryTeams(
       teamData,
@@ -1654,18 +1658,25 @@ const updateRunPayload = async (data, request, fastify) => {
     },
     request
   );
+  const teams = global.tblCommentaryTeams.filter(
+    (item) =>
+      item?.commentaryId === commentaryId &&
+      item.currentInnings == commentaryDetails.currentInnings
+  );
+
+  let remainingBallsShow = teams.some((team) => team.isBattingComplete);
   const ncom = {
     ...commentaryDetails,
     displayStatus: generateDisplayStatus({
       currentBall: ballByBall,
     }),
-    rmk: generateRemainingRuns(
+    rmk: remainingBallsShow ? generateRemainingRuns(
       {
         team: updateBattingTeam,
         ballsPerOver: matchType.ballsPerOver,
       },
       request
-    ),
+    ) : "",
   };
   let objToSave = {
     commentaryTeams: [updateBattingTeam],
@@ -2157,6 +2168,7 @@ const checkWinner = async (data) => {
     winnerName: winTeam.teamName,
     displayStatus: "",
     result: winMsg,
+    rmk: "",
   };
   const objToSave = {
     commentaryId: commentaryDetails.commentaryId,
@@ -2367,6 +2379,7 @@ const handleWicketService = async (data, request, fastify) => {
       commentaryId: commentaryDetails.commentaryId,
       matchType,
       checkFor: inningSwitch.ALL,
+      // checkFor: inningSwitch.OVER,
     },
     request,
     fastify
@@ -2587,7 +2600,7 @@ const onInningChangeService = async (data, request, fastify) => {
     // commentaryStatus : commentaryStatus.INNINGCHANGE,
     displayStatus: "Innings",
     rmk : generateRemainingRuns({
-      team: bowlTeam,
+      team: { ...bowlTeam, teamTrialRuns: trialRuns},
       ballsPerOver: data.matchType.ballsPerOver || 6,
     })
   };
