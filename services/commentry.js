@@ -3583,16 +3583,16 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
       // }
     }
 
-    if (!isTeamStatusUpdate && commentaryTeams && commentaryTeams.length > 0) {
-      commentaryTeams = commentaryTeams.map(elem => {
-        const teamData = global?.tblCommentaryTeams?.find(item =>
-          item.commentaryTeamId === elem.commentaryTeamId
-        );
-        return teamData
-          ? { ...elem, teamStatus: teamData.teamStatus }
-          : elem;
-      });
-    }
+    // if (!isTeamStatusUpdate && commentaryTeams && commentaryTeams.length > 0) {
+    //   commentaryTeams = commentaryTeams.map(elem => {
+    //     const teamData = global?.tblCommentaryTeams?.find(item =>
+    //       item.commentaryTeamId === elem.commentaryTeamId
+    //     );
+    //     return teamData
+    //       ? { ...elem, teamStatus: teamData.teamStatus }
+    //       : elem;
+    //   });
+    // }
     // get th strike team
     // validate CommentaryId
     if (commentaryDetails) {
