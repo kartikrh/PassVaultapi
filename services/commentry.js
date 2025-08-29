@@ -3521,6 +3521,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
       isEndInnings,
       isCallPredict = false,
       isTeamStatusUpdate = false,
+      updateTeamStatus
     } = request.body;
 
     let commentaryIndex,
@@ -3635,6 +3636,14 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           throw new Error("Commentary Team with this id not Found");
         }
       });
+    }
+    if(updateTeamStatus && updateTeamStatus.length > 0){
+      for (let t of updateTeamStatus){
+        let index = global.tblCommentaryTeams.findIndex((i)=>i.commentaryTeamId == t.commentaryTeamId)
+        if(index == -1){
+          throw new Error("Commentary Team with this id not found of updateTeamStatus")
+        }
+      }
     }
     // validate commentaryPlayers
     if (commentaryPlayers) {
@@ -3755,7 +3764,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
 
     let updatedData = await fastify.db.query(
       `CALL proc_setcommentary(
-      $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11 ,$12,$13,$14 ,$15, $16, $17
+      $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11 ,$12,$13,$14 ,$15, $16, $17,$18
     )`,
       {
         bind: [
@@ -3766,6 +3775,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           commentaryWicket ? JSON.stringify(commentaryWicket) : null,
           commentaryPartnership ? JSON.stringify(commentaryPartnership) : null,
           commentaryDetails ? JSON.stringify(commentaryDetails) : null,
+          updateTeamStatus ? JSON.stringify(updateTeamStatus) : null,
           deleteCommentaryBallByBallId ? deleteCommentaryBallByBallId : null,
           deleteOverId ? deleteOverId : null,
           commentaryId,
@@ -4083,6 +4093,56 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         type: "update",
         // data: commentaryTeams,
         data: response.commentaryTeams.map((team) => ({
+          ...team,
+          crr: parseFloat(team?.crr) || 0,
+          rrr: parseFloat(team?.rrr) || 0,
+        })),
+      });
+    }
+    if(updateTeamStatus && updateTeamStatus != null){
+      response.updateTeamStatus = [];
+      updateTeamStatus.forEach((team) => {
+        const index = global.tblCommentaryTeams.findIndex(
+          (item) =>
+            item?.commentaryId === team.commentaryId &&
+            item.commentaryTeamId === team.commentaryTeamId
+        );
+        if(team.commentaryId !== commentaryId) {
+          errorLogger(
+            fastify,
+            `Commentary ID mismatch for team ${team.teamName}. Expected: ${commentaryId}, Found: ${team.commentaryId}`,
+            "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
+            request
+          );
+        }
+        else {
+          global.tblCommentaryTeams[index] = {
+            ...global.tblCommentaryTeams[index],
+          ...team,
+          teamPredictionPercentage:
+            global.tblCommentaryTeams[index].teamPredictionPercentage,
+          };
+          response.updateTeamStatus.push(global.tblCommentaryTeams[index]);
+        }
+      });
+      try {
+        response.updateTeamStatus.forEach(async (team) => {
+          const _teamsC1 = global.tblTeams.filter(
+            (item) => item.teamId === team.teamId
+          );
+          if (_teamsC1.length > 0) {
+            team.image = _teamsC1[0].image;
+            team.jersey = _teamsC1[0].jersey;
+            team.nimage = _teamsC1[0].imagePath;
+            team.njersey = _teamsC1[0].jerseyPath;
+          }
+        });
+      } catch (error) { }
+      sendDataForSocketUpdate.dataToUpdate.push({
+        module: "commentaryTeams",
+        type: "update",
+        // data: commentaryTeams,
+        data: response.updateTeamStatus.map((team) => ({
           ...team,
           crr: parseFloat(team?.crr) || 0,
           rrr: parseFloat(team?.rrr) || 0,
@@ -5119,6 +5179,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
       );
     });
     response.callPredictions = callPredictions;
+    // response.sendDataForSocketUpdate = sendDataForSocketUpdate
     return response;
   } catch (error) {
     console.log("console value 7418596", error);
