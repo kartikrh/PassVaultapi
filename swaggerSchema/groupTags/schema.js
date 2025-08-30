@@ -3931,6 +3931,23 @@ const Commentary = {
       },
     },
   },
+  changeOverType: {
+    schema: {
+      tags: ["Commentary"],
+      description: "update overType",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId : {type : "integer"},
+          overId : {type : "integer"},
+          overType : {type : "integer"},
+          overTypeName : {type : "string"},
+        },
+        required: ["commentaryId", "overId", "overType", "overTypeName"],
+      },
+    },
+  },
 };
 
 const Compitition = {
