@@ -212,9 +212,9 @@ const saveCommentaryDetails = async (request, reply, fastify) => {
   try {
     // return true;
     //const result = await testStoreProcedureService(request, fastify);
-    if(request.body.commentaryId == 5068){
-      return true;
-    }
+    // if(request.body.commentaryId == 5068){
+    //   return true;
+    // }
     const result = await syncCommentaryStatsWithAPIAndSocket(request, fastify);
     // const result = await saveCommentaryDetailsService(request, fastify);
     //console.timeEnd("saveCommentaryDetails");
