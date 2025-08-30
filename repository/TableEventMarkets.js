@@ -444,6 +444,7 @@ const getEventMarketByIdsQuery = async (data, request, fastify) => {
             tem."wrCreatedBy" as "createdBy",
             tem."wrIsDefaultSetResult" as "isDefaultSetResult",
             tem."wrAfterCloseTime" as "afterCloseTime",
+            tem."wrPredefinedValue" as "predefinedValue",
             tem."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
             tem."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase"
         FROM "tblEventMarkets" tem
