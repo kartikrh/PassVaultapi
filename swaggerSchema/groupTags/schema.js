@@ -7172,6 +7172,20 @@ const Client = {
       },
     },
   },
+  decryptPassword: {
+    schema: {
+      tags: ["Client"],
+      description: "decryptPassword child Client's password",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          userId: { type: "integer" },
+        },
+        required: ["clientId"],
+      },
+    },
+  },
 };
 const weblogs = {
   save: {
