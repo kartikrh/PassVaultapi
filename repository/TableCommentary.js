@@ -747,6 +747,7 @@ const upsertCommentaryPlayers = async (
         "wrCommentaryId" = $1
         AND "wrTeamId" = $2
         AND "wrPlayerId" = $3
+        AND "wrIsDelete" = FALSE
         AND "wrCurrentInnings" = $5
       RETURNING "wrCommentaryPlayerId" AS "commentaryPlayerId"
     )
@@ -894,36 +895,122 @@ const updateCommentaryQuery = async (request, fastify) => {
   }
 };
 
+// const updateCommentaryTeams = async (request, fastify, data) => {
+//   try {
+//     return await fastify.db.query(
+//       `update "tblCommentaryTeams" set
+//       "wrTeamCaptain" = $1,
+//       "wrTeamKipper" = $2,
+//       "wrShortName" = (select "wrTeamShortName" from "tblTeams" where "wrTeamId" = $3),
+//       "wrTeamName" = (select "wrTeamName" from "tblTeams" where "wrTeamId" = $3),
+//       "wrCurrentInnings" = $5,
+//       "wrTeamBattingOrder" = $6
+//       where "wrCommentaryId" = $4 and "wrTeamId" = $3
+//       AND "wrCurrentInnings" = $5
+//     `,
+//       {
+//         type: fastify.db.QueryTypes.SELECT,
+//         bind: [
+//           data.teamCaptain,
+//           data.teamKipper,
+//           data.teamId,
+//           data.commentaryId,
+//           data.currentInnings,
+//           data.teamBattingOrder || null,
+//         ],
+//       }
+//     );
+//   } catch (err) {
+//     errorLogger(
+//       fastify,
+//       err.message,
+//       "DB ERROR --> repository/TableConfig/insertConfigQuery",
+//       request
+//     );
+//     throw new Error(err.message);
+//   }
+// };
+
 const updateCommentaryTeams = async (request, fastify, data) => {
-  try {
+    try {
     return await fastify.db.query(
-      `update "tblCommentaryTeams" set
-      "wrTeamCaptain" = $1,
-      "wrTeamKipper" = $2,
-      "wrShortName" = (select "wrTeamShortName" from "tblTeams" where "wrTeamId" = $3),
-      "wrTeamName" = (select "wrTeamName" from "tblTeams" where "wrTeamId" = $3),
-      "wrCurrentInnings" = $5,
-      "wrTeamBattingOrder" = $6
-      where "wrCommentaryId" = $4 and "wrTeamId" = $3
-      AND "wrCurrentInnings" = $5
-    `,
+      `
+      WITH ordered AS (
+        SELECT 
+            "wrCommentaryTeamId",
+            "wrTeamId",
+            ROW_NUMBER() OVER (ORDER BY "wrCommentaryTeamId" ASC) AS team_slot
+          FROM "tblCommentaryTeams"
+          WHERE "wrCommentaryId" = $1
+            AND "wrCurrentInnings" = $8
+            AND "wrIsDelete" = FALSE
+        )
+        UPDATE "tblCommentaryTeams" t
+        SET
+          "wrTeamId" = CASE
+                         WHEN o.team_slot = 1 THEN $5
+                         WHEN o.team_slot = 2 THEN $2
+                         ELSE t."wrTeamId"
+                       END,
+          "wrTeamCaptain" = CASE
+                              WHEN o.team_slot = 1 THEN $6
+                              WHEN o.team_slot = 2 THEN $3
+                              ELSE t."wrTeamCaptain"
+                            END,
+          "wrTeamKipper" = CASE
+                             WHEN o.team_slot = 1 THEN $7
+                             WHEN o.team_slot = 2 THEN $4
+                             ELSE t."wrTeamKipper"
+                           END,
+          "wrShortName" = CASE
+                            WHEN o.team_slot = 1 THEN (SELECT "wrTeamShortName" FROM "tblTeams" WHERE "wrTeamId" = $5 LIMIT 1)
+                            WHEN o.team_slot = 2 THEN (SELECT "wrTeamShortName" FROM "tblTeams" WHERE "wrTeamId" = $2 LIMIT 1)
+                            ELSE t."wrShortName"
+                          END,
+          "wrTeamName" = CASE
+                           WHEN o.team_slot = 1 THEN (SELECT "wrTeamName" FROM "tblTeams" WHERE "wrTeamId" = $5 LIMIT 1)
+                           WHEN o.team_slot = 2 THEN (SELECT "wrTeamName" FROM "tblTeams" WHERE "wrTeamId" = $2 LIMIT 1)
+                           ELSE t."wrTeamName"
+                         END,
+          "wrTeamColor" = CASE
+                            WHEN o.team_slot = 1 THEN (SELECT "wrTeamColor" FROM "tblTeams" WHERE "wrTeamId" = $5 LIMIT 1)
+                            WHEN o.team_slot = 2 THEN (SELECT "wrTeamColor" FROM "tblTeams" WHERE "wrTeamId" = $2 LIMIT 1)
+                            ELSE t."wrTeamColor"
+                          END,
+          "wrBackgroundColor" = CASE
+                                  WHEN o.team_slot = 1 THEN (SELECT "wrBackgroundColor" FROM "tblTeams" WHERE "wrTeamId" = $5 LIMIT 1)
+                                  WHEN o.team_slot = 2 THEN (SELECT "wrBackgroundColor" FROM "tblTeams" WHERE "wrTeamId" = $2 LIMIT 1)
+                                  ELSE t."wrBackgroundColor"
+                                END,
+          "wrGroupId" = CASE
+                          WHEN o.team_slot = 1 THEN $10
+                          WHEN o.team_slot = 2 THEN $9
+                          ELSE t."wrGroupId"
+                        END
+        FROM ordered o
+        WHERE t."wrCommentaryTeamId" = o."wrCommentaryTeamId"
+      `,
       {
-        type: fastify.db.QueryTypes.SELECT,
         bind: [
-          data.teamCaptain,
-          data.teamKipper,
-          data.teamId,
           data.commentaryId,
+          data.team1Id,
+          data.team1Captain || null,
+          data.team1Kipper || null,
+          data.team2Id,
+          data.team2Captain || null,
+          data.team2Kipper || null,
           data.currentInnings,
-          data.teamBattingOrder || null,
+          data.team1GroupId || null,
+          data.team2GroupId || null,
         ],
+        type: fastify.db.QueryTypes.UPDATE,
       }
     );
   } catch (err) {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableConfig/insertConfigQuery",
+      "DB ERROR --> repository/TableConfig/updateCommentaryTeams",
       request
     );
     throw new Error(err.message);
@@ -943,6 +1030,32 @@ const deleteCommentaryPlayers = async (request, fastify) => {
       {
         type: fastify.db.QueryTypes.SELECT,
         bind: [true, request.userTokenInfo.WrUserId, request.body.commentaryId],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableConfig/insertConfigQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+const deleteCommentaryPlayersByPlayerId = async (data, request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `
+      UPDATE "tblCommentaryPlayers" SET
+        "wrIsDelete" = $1,
+        "wrDeletedBy" = $2,
+        "wrDeletedAt" = now()
+      WHERE "wrCommentaryId" = $3
+      AND "wrPlayerId" = ANY($4);
+    `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [true, request.userTokenInfo.WrUserId, data.commentaryId, data.playerIds],
       }
     );
   } catch (err) {
@@ -1962,6 +2075,8 @@ const getAllOversQuery = async (fastify) => {
           o."wrIsMaiden" as "isMaiden",
           o."wrDate" as "date",
           o."wrIsDelete" as "isDelete",
+          o."wrOverType" as "overType",
+          o."wrOverTypeName" as "overTypeName",
           o."wrCurrentInnings" as "currentInnings",
           o."wrTeamScore" as "teamScore",
           o."wrIsPowerPlay" as "isPowerPlay",
@@ -2024,6 +2139,8 @@ const getAllOversDataQuery = async (whereCondition = null, fastify) => {
       "wrIsMaiden" as "isMaiden",
       "wrDate" as "date",
       "wrIsDelete" as "isDelete",
+      "wrOverType" as "overType",
+      "wrOverTypeName" as "overTypeName",
       "wrCurrentInnings" as "currentInnings",
       "wrTeamScore" as "teamScore",
       "wrIsPowerPlay" as "isPowerPlay",
@@ -5580,6 +5697,8 @@ const getAllOversDataQueryV1 = async (whereCondition = null, fastify) => {
         "wrIsMaiden" as "imaiden",
         "wrDate" as "dt",
         "wrIsDelete" as "idlt",
+        "wrOverType" as "overType",
+        "wrOverTypeName" as "overTypeName",
         "wrCurrentInnings" as "ci",
         "wrTeamScore" as "tesco",
         "wrIsPowerPlay" as "ipp",
@@ -8193,6 +8312,33 @@ const getAllCommentaryPlayerQueryById = async (data, request, fastify) => {
     throw new Error(err.message);
   }
 };
+
+const overTypeChangeOnOversQuery = async (data, fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `UPDATE "tblOvers" SET
+        "wrOverType" = $1,
+        "wrOverTypeName" = $2
+        WHERE "wrCommentaryId" = $3
+        AND "wrOverId" = $4
+        AND "wrIsDelete" = FALSE
+      `,
+      {
+        bind: [data.overType, data.overTypeName, data.commentaryId, data.overId],
+      }
+    );
+    return result;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/overTypeChangeOnOversQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -8332,4 +8478,6 @@ module.exports = {
   scoringTypeCommentaryQuery,
   insertCommentaryPlayersEntity,
   updateteamMaxOverQuery,
+  deleteCommentaryPlayersByPlayerId,
+  overTypeChangeOnOversQuery,
 };
