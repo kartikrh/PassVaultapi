@@ -11,6 +11,11 @@ const connectClients = async (fastify) => {
       (c) => c.isActive === true && c.actionType == clientSocketActionType.connect && c.status !== clientSocketStatus.connected
     );
     const promises = clientUrls.map(async (urlConfig) => {
+      const existing = global.clientSocketIo.find(c => c.url === urlConfig.url);
+      if (existing) {
+        existing.client.disconnect(true);
+        global.clientSocketIo = global.clientSocketIo.filter(c => c.url !== urlConfig.url);
+      }
       const client = io(urlConfig.url, {
         transport: ["websocket"],
         query: { source: "admin-panel"},
@@ -29,7 +34,8 @@ const connectClients = async (fastify) => {
         },fastify).catch((error) => {
           console.log("Error updating client socket status:", error);
         })
-        
+        // Remove any old socket just in case
+        global.clientSocketIo = global.clientSocketIo.filter(c => c.url !== urlConfig.url);
         global.clientSocketIo.push({
             ...urlConfig,
             client,
