@@ -13763,7 +13763,8 @@ const saveComVirtual = async (request, fastify) => {
         ball_by_ball_details: {
           cardKey: updatedData.commentaryBallByBallDetails?.cardKey,
           cardType: updatedData.commentaryBallByBallDetails?.cardType,
-          currentInnings: updatedData.commentaryBallByBallDetails?.currentInnings
+          currentInnings: strikeTeam?.teamBattingOrder,
+          // currentInnings: updatedData.commentaryBallByBallDetails?.currentInnings
         }
       }
       let isNodePrediction = global.tblConfigs.find((item) => item.key === configConstants.ISPREDICATIONFROMNODE)?.value || "false";
