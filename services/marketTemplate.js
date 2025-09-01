@@ -9,6 +9,7 @@ const {
   isShowInAdvanceMarketChangeStatusQuery,
   defaultIsSendDataChangeQuery,
   updateIsPythonChangeQuery,
+  getAllMTDismissalConfigQuery,
   updateIsDefaultSetResultChangeQuery,
   allMarketTypesAndCategoriesQuery
 } = require("../repository/TableMarketTemplate");
@@ -890,6 +891,21 @@ const multiCloneMarketTemplateService  = async (request, fastify) => {
   return "Market Template(s) cloned successfully";
 };
 
+const getAllMTDismissalConfigService = async (request, fastify) => {
+    const { marketTemplateId } = request.body;
+    const overType = global.tblOverTypes || [];
+    const bowlingStyle = global.tblBowlingTypes || [];
+    const runners = global.tblMarketTemplateRunners.filter(item => item.marketTemplateId == marketTemplateId)
+    const dismissalData = await getAllMTDismissalConfigQuery(marketTemplateId, request, fastify);
+
+    return {
+        overType,
+        bowlingStyle,
+        runners,
+        dismissalData,
+    };
+};
+
 module.exports = {
   saveMarketTemplateService,
   getAllMarketTemplateService,
@@ -912,4 +928,5 @@ module.exports = {
   isPythonChangeService,
   multiCloneMarketTemplateService,
   isDefaultSetResultChangeService,
+  getAllMTDismissalConfigService,
 };
