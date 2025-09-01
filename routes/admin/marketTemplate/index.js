@@ -2,6 +2,7 @@ const { authorize, checkPermission } = require("../../../controller/middleware")
 const { saveMarketTemplate, getAllMarketTemplate, getMarketTemplateId, deleteMarketTemplate, getMatchTypeList, activeInactiveMarketTemplate, getByMatchTypeId, getMarketTypeList, getCategoryByMarketType, changePredefineRunner, cloneMarketTemplate, getMarketTypeAndCategoryByMarketType, updateIsPerEventStatus, isShowInAdvanceMarketStatusChange, cloneMultiMarketTemplate, defaultIsSendDataChange, allMarketTypesAndCategories, mtAndCategories, isPythonChange, multiCloneMarketTemplate,
   isDefaultSetResultChange,
   getAllMTDismissalConfig,
+  saveDismissalData,
  } = require("../../../controller/users/admin/marketTemplate");
 const { MarketTemplate, Commentary } = require("../../../swaggerSchema/groupTags/schema");
 
@@ -268,7 +269,7 @@ module.exports = async function (fastify, opts) {
   });
   fastify.post("/dismissalData", {
     schema: MarketTemplate.getAllExtraData.schema,
-    preHandler: [
+      preHandler: [
       (request, reply) => authorize(request, reply, fastify),
       (request, reply) =>
         checkPermission(request, reply, fastify, {
@@ -276,6 +277,18 @@ module.exports = async function (fastify, opts) {
           mode: "view",
       }),
     ],
-    handler: (request, reply) => getAllMTDismissalConfig(request, reply, fastify),  
+    handler: (request, reply) => getAllMTDismissalConfig(request, reply, fastify), 
+  })
+  fastify.post("/saveDismissal", {
+    schema: MarketTemplate.saveDismissal.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Market Templates",
+          mode: "edit",
+      }),
+    ],
+    handler: (request, reply) => saveDismissalData(request, reply, fastify),  
   });
 };
