@@ -4833,6 +4833,20 @@ const MarketTemplate = {
       },
     },
   },
+  getAllExtraData: {
+    schema: {
+      tags: ["Market Template"],
+      description: "get all dismissal and other data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          marketTemplateId: { type: "integer" },
+        },
+        required: ["marketTemplateId"],
+      },
+    },
+  },
 };
 const Score = {
   getAllUpdatedIds: {
@@ -10537,22 +10551,7 @@ const Agent = {
     },
   },
 }
-const MTDismissalConfig = {
-  getAllExtraData: {
-    schema: {
-      tags: ["MarketTemplateDismissalConfig"],
-      description: "get all dismissal and extra data",
-      security: [{ bearerAuth: [] }],
-      body: {
-        type: "object",
-        properties: {
-          marketTemplateId: { type: "integer" },
-        },
-        required: ["marketTemplateId"],
-      },
-    },
-  },
-}
+
 module.exports = {
   Auth,
   Tabs,
@@ -10630,5 +10629,4 @@ module.exports = {
   AutoImportData,
   EntitySport,
   Agent,
-  MTDismissalConfig,
 };
