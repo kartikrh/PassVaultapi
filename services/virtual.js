@@ -2753,7 +2753,7 @@ const onInningChangeService = async (data, request, fastify) => {
   const commentaryOvers = {
     overId: 0,
     commentaryId: commentaryDetails?.commentaryId,
-    teamId: battingTeamId.teamId,
+    teamId: bowlingTeamId.teamId,
     over: 0,
     ballCount: 0,
     bowlerId: bowler?.commentaryPlayerId,
