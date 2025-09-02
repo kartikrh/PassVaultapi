@@ -119,6 +119,7 @@ const getAllPlayersByTeamIdQuery = async (data, request, fastify) => {
             ON tttp."wrPlayerId" = tp."wrPlayerId" 
             AND tttp."wrTeamId" = ttp."wrTeamId"
             AND tttp."wrCompetitionId" = $2
+            AND tttp."wrIsDeleted" = false
         WHERE ttp."wrTeamId" = $1 AND ttp."wrIsDeleted" = false
         AND tttp."wrPlayerId" IS NULL;`,
         {

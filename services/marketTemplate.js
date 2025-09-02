@@ -9,8 +9,10 @@ const {
   isShowInAdvanceMarketChangeStatusQuery,
   defaultIsSendDataChangeQuery,
   updateIsPythonChangeQuery,
+  getAllMTDismissalConfigQuery,
   updateIsDefaultSetResultChangeQuery,
-  allMarketTypesAndCategoriesQuery
+  allMarketTypesAndCategoriesQuery,
+  savemtDismissalQuery
 } = require("../repository/TableMarketTemplate");
 const { callPredictorMarket } = require("../utilities");
 const { createMarketTemplateRunnerQuery } = require("../repository/TableMarketTemplateRunner")
@@ -890,6 +892,26 @@ const multiCloneMarketTemplateService  = async (request, fastify) => {
   return "Market Template(s) cloned successfully";
 };
 
+const getAllMTDismissalConfigService = async (request, fastify) => {
+    const { marketTemplateId } = request.body;
+    const overType = global.tblOverTypes || [];
+    const bowlingStyle = global.tblBowlingTypes || [];
+    const runners = global.tblMarketTemplateRunners.filter(item => item.marketTemplateId == marketTemplateId)
+    const dismissalData = await getAllMTDismissalConfigQuery(marketTemplateId, request, fastify);
+
+    return {
+        overType,
+        bowlingStyle,
+        runners,
+        dismissalData,
+    };
+};
+const saveDismissalDataService = async (request , fastify) =>{
+  // save data in db
+  await savemtDismissalQuery(request,fastify)
+  return 'Data Updated Successfully.'
+}
+
 module.exports = {
   saveMarketTemplateService,
   getAllMarketTemplateService,
@@ -912,4 +934,6 @@ module.exports = {
   isPythonChangeService,
   multiCloneMarketTemplateService,
   isDefaultSetResultChangeService,
+  getAllMTDismissalConfigService,
+  saveDismissalDataService
 };

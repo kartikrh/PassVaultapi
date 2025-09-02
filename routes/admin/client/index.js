@@ -2,7 +2,7 @@ const {
     authorize,
     checkPermission,
   } = require("../../../controller/middleware");
-const { getAllClient, getClientById, saveClient, deleteClient, activeInactiveClient, isUserActiveInactive, emailAndMobileVerify } = require("../../../controller/users/admin/client");
+const { getAllClient, getClientById, saveClient, deleteClient, activeInactiveClient, isUserActiveInactive, emailAndMobileVerify, getClientDecryptedPassword } = require("../../../controller/users/admin/client");
 const { Client } = require("../../../swaggerSchema/groupTags/schema");
   
   module.exports = async (fastify, opts) => {
@@ -101,4 +101,16 @@ const { Client } = require("../../../swaggerSchema/groupTags/schema");
       ],
       handler: (request, reply) => emailAndMobileVerify(request, reply, fastify),
     });
+    fastify.post("/decryptPassword", {
+    schema: Client.decryptPassword.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Client",
+          mode: "view",
+        }),
+    ],
+    handler: (request, reply) => getClientDecryptedPassword(request, reply, fastify),
+  });
 };

@@ -456,7 +456,7 @@ const getAllCommentariesDataV2Service = async (request,fastify) => {
                 ballByBall = global.tblCommentaryBallByBall.filter(item => item.commentaryId == c.commentaryId);
                 wickets = global.tblCommentaryWicket.filter(item => item.commentaryId == c.commentaryId);
                 partnerships = global.tblCommentaryPartnership.filter(item => item.commentaryId == c.commentaryId);
-                marketOddsBallByBall = global.tblMarketOddsBallByBall.filter(item => item.commentaryId == c.commentaryId) || [];
+                marketOddsBallByBall = global.tblMarketOddsBallByBall.filter(item => item?.commentaryId == c.commentaryId) || [];
             }
 
                 try {
