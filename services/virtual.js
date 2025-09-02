@@ -1278,6 +1278,7 @@ const ballByBallChangeService = async (request, fastify) => {
     // set res
     if (result.comOver != null) {
       let getRes = await comResponseService(request, fastify, true);
+      result.comOver = undefined;
       return {
         ...result,
         ...getRes
@@ -1285,6 +1286,7 @@ const ballByBallChangeService = async (request, fastify) => {
     }
     else {
       let getRes = await comResponseService(request, fastify);
+      result.comOver = undefined;
       return {
         ...result,
         ...getRes
@@ -2345,6 +2347,9 @@ const handleWicketService = async (data, request, fastify) => {
   );
   // const res = objToSave;
 
+  let isOverComplete =
+    upOver.ballCount >= (matchType?.ballsPerOver || 6) ? true : false;
+
   const mc = await checkInningsSwitch(
     {
       commentaryDetails: res.commentaryDetails,
@@ -2358,6 +2363,7 @@ const handleWicketService = async (data, request, fastify) => {
   if (mc.matchComplete) {
     return {
       isMatchComplete: mc.matchComplete,
+      inningChange: false,
       isOverComplete: false,
       isWicket: true,
       // result : res
@@ -2366,7 +2372,7 @@ const handleWicketService = async (data, request, fastify) => {
   if (mc.inningChange) {
     return {
       isMatchComplete: mc.matchComplete,
-      isOverComplete: false,
+      isOverComplete: isOverComplete,
       isWicket: true,
       inningChange: mc.inningChange,
       comOver: mc.comOver ?? null,
@@ -2378,7 +2384,7 @@ const handleWicketService = async (data, request, fastify) => {
       commentaryDetails: res.commentaryDetails,
       commentaryId: commentaryDetails.commentaryId,
       matchType,
-      checkFor: inningSwitch.ALL,
+      checkFor: inningSwitch.RUN,
       // checkFor: inningSwitch.OVER,
     },
     request,
@@ -2386,21 +2392,70 @@ const handleWicketService = async (data, request, fastify) => {
   );
   if (mc1.matchComplete) {
     return {
-      isMatchComplete: mc.matchComplete,
-      isOverComplete: false,
+      inningChange: false,
+      isMatchComplete: mc1.matchComplete,
+      isOverComplete: isOverComplete,
       isWicket: true,
       // result : res
     };
   }
-   if (mc1.inningChange) {
+  if (mc1.inningChange) {
     return {
-      isMatchComplete: mc.matchComplete,
-      isOverComplete: false,
+      isMatchComplete: mc1.matchComplete,
+      isOverComplete: isOverComplete,
       isWicket: true,
-      inningChange: mc.inningChange,
-      comOver: mc.comOver ?? null,
+      inningChange: mc1.inningChange,
+      comOver: mc1.comOver ?? null,
     };
   }
+
+
+  let overComplete = null;
+  let comOver = null;
+  if (isOverComplete) {
+    const mc2 = await checkInningsSwitch(
+    {
+      commentaryDetails: res.commentaryDetails,
+      commentaryId: commentaryDetails.commentaryId,
+      matchType,
+      checkFor: inningSwitch.OVER,
+      // checkFor: inningSwitch.OVER,
+    },
+    request,
+    fastify
+    );
+    if (mc2.matchComplete) {
+      return {
+        isMatchComplete: mc2.matchComplete,
+        isOverComplete: isOverComplete,
+        isWicket: true,
+        inningChange: false,
+        // result : res
+      };
+    }
+    if (mc2.inningChange) {
+      return {
+        isMatchComplete: mc2.matchComplete,
+        isOverComplete: isOverComplete,
+        isWicket: true,
+        inningChange: mc2.inningChange,
+        comOver: mc2.comOver ?? null,
+      };
+    }
+    // overComplete = await generateOverService(
+    //   {
+    //     commentaryDetails: nCom,
+    //     overdetails: upOver,
+    //     checkFor: inningSwitch.OVER,
+    //     matchType,
+    //     commentaryId: commentaryDetails.commentaryId,
+    //   },
+    //   request,
+    //   fastify
+    // );
+    // comOver = overComplete.completedOver;
+  }
+
 
   // player selection
   const { player } = await changePlayer({
@@ -2449,13 +2504,13 @@ const handleWicketService = async (data, request, fastify) => {
     },
     fastify
   );
-  let isOverComplete =
+  let isOverComplete1 =
     upOver.ballCount >= (matchType?.ballsPerOver || 6) ? true : false;
 
-  let overComplete = null;
-  let comOver = null;
-  if (isOverComplete) {
-    overComplete = await generateOverService(
+  let overComplete1 = null;
+  let comOver1 = null;
+  if (isOverComplete1) {
+    overComplete1 = await generateOverService(
       {
         commentaryDetails: nCom,
         overdetails: upOver,
@@ -2466,16 +2521,16 @@ const handleWicketService = async (data, request, fastify) => {
       request,
       fastify
     );
-    comOver = overComplete.completedOver;
+    comOver1 = overComplete1.completedOver;
   }
 
   return {
     // result: res2,
     isWicket: true,
-    isOverComplete,
-    isMatchComplete: mc.matchComplete,
+    isOverComplete : isOverComplete1,
+    isMatchComplete: false,
     inningChange: false,
-    comOver: comOver,
+    comOver: comOver1,
   };
 };
 const comResponseService = async (request, fastify, completeOver = false) => {
