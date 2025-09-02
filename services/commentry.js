@@ -6861,8 +6861,8 @@ const commentaryDetailsByEventIdService = async (
   if (commentaryTeamsTwo.length > 0) {
     t2sn = commentaryTeamsTwo[0]?.shortName;
     t2n = commentaryTeamsTwo[0]?.teamName;
-    t2co = commentaryTeamsTwo[0].teamColor || "";
-    t2bg = commentaryTeamsTwo[0].backgroundColor || "";
+    t2co = commentaryTeamsTwo[0]?.teamColor || "";
+    t2bg = commentaryTeamsTwo[0]?.backgroundColor || "";
 
     const wicket1 =
       commentaryTeamsTwo[0].teamWicket === null
@@ -6880,17 +6880,19 @@ const commentaryDetailsByEventIdService = async (
   const _teamsC1 = await global.tblTeams.filter(
     (item) => item.teamId === t1nid
   );
-  t1im = _teamsC1[0].image;
-  t1jr = _teamsC1[0].jersey;
-  nt1im = _teamsC1[0].imagePath;
-  nt1jr = _teamsC1[0].jerseyPath;
+  
+  t1im = _teamsC1[0]?.image;
+  t1jr = _teamsC1[0]?.jersey;
+  nt1im = _teamsC1[0]?.imagePath;
+  nt1jr = _teamsC1[0]?.jerseyPath;
   const _teamsC2 = await global.tblTeams.filter(
     (item) => item.teamId === t2nid
   );
-  t2im = _teamsC2[0].image;
-  t2jr = _teamsC2[0].jersey;
-  nt2im = _teamsC2[0].imagePath;
-  nt2jr = _teamsC2[0].jerseyPath;
+
+  t2im = _teamsC2[0]?.image;
+  t2jr = _teamsC2[0]?.jersey;
+  nt2im = _teamsC2[0]?.imagePath;
+  nt2jr = _teamsC2[0]?.jerseyPath;
   if (getstatus == 1) {
     // Assign values to the resultArr object
     resultArr.cid = parseInt(result.commentaryId);
