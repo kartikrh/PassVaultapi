@@ -13738,7 +13738,7 @@ const saveComVirtual = async (request, fastify) => {
           event_id: commentaryData.eventRefId,
           current_team_id: strikeTeam.teamId,
           total_score: strikeTeam.teamScore,
-          current_ball: decimalOverCount || 0,
+          current_ball: strikeTeam?.teamOver || 0,
           // player_details: _sendPrePlayers,
           // ball_by_ball_details: updatedData.commentaryBallByBallDetails,
           ball_by_ball_id: updatedData.commentaryBallByBallDetails.commentaryBallByBallId
@@ -13749,7 +13749,7 @@ const saveComVirtual = async (request, fastify) => {
         predictscore: {
           commentary_id: commentaryData.commentaryId,
           match_type_id: commentaryData.matchTypeId,
-          ball: decimalOverCount,
+          ball: strikeTeam?.teamOver,
           run: commentaryBallByBall.ballRun,
           total_score: strikeTeam.teamScore,
           strike_team_id: strikeTeam.teamId,
