@@ -4833,6 +4833,54 @@ const MarketTemplate = {
       },
     },
   },
+  getAllExtraData: {
+    schema: {
+      tags: ["Market Template"],
+      description: "get all dismissal and other data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          marketTemplateId: { type: "integer" },
+        },
+        required: ["marketTemplateId"],
+      },
+    },
+  },
+  saveDismissal : {
+    schema: {
+      tags: ["SAVE dismissal data"],
+      description: "save data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          dismissalData : {
+            type : "array",
+            items : {
+              type : "object",
+              properties :{
+                id : {type : "integer"},
+                marketTemplateId: { type: "integer" },
+                marketTemplateRunnerId : {type : "integer"},
+                runnerName : {type : "string"},
+                overType : {type : "integer"},
+                bowlingStyle : {type : "integer"},
+                predefinedValue : {type : "string"},
+                impactProb : {type : "string"}
+              },
+              required: ["marketTemplateId" , "id" ,"marketTemplateRunnerId",
+                "runnerName", "overType", "bowlingStyle", "predefinedValue", "impactProb"
+              ]
+            },
+            minItems : 1
+          },
+        },
+        required : [ "dismissalData"]
+        
+      },
+    }
+  }
 };
 const Score = {
   getAllUpdatedIds: {
@@ -7169,6 +7217,20 @@ const Client = {
           isMobileVerified: { type: "boolean" },
         },
         required: ["clientId", "type"],
+      },
+    },
+  },
+  decryptPassword: {
+    schema: {
+      tags: ["Client"],
+      description: "decryptPassword child Client's password",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          userId: { type: "integer" },
+        },
+        required: ["clientId"],
       },
     },
   },
@@ -10523,6 +10585,7 @@ const Agent = {
     },
   },
 }
+
 module.exports = {
   Auth,
   Tabs,

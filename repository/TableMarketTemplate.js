@@ -881,6 +881,62 @@ const updateIsDefaultSetResultChangeQuery = async (data, request, fastify) => {
     throw new Error(err.message);
   }
 };
+
+const getAllMTDismissalConfigQuery = async (marketTemplateId, request, fastify) => {
+  try {
+      const result = await fastify.db.query(
+          `select 
+              "wrId" as "id",
+              "wrMarketTemplateId" as "marketTemplateId",
+              "wrMarketTemplateRunnerId" as "marketTemplateRunnerId",
+              "wrRunnerName" as "runnerName",
+              "wrOverTypeId" as "overType",
+              "wrBowlingStyle" as "bowlingStyle",
+              "wrPredefinedValue" as "predefinedValue",
+              "wrImpactProb" as "impactProb"
+          from "tblMTDismissalConfig"
+          WHERE "wrMarketTemplateId" = $1
+          `,
+          {
+              type: fastify.db.QueryTypes.SELECT,
+              bind: [marketTemplateId]
+          }
+      );
+      return result;
+    } catch (error) {
+      errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableMarketTemplate/getAllMTDismissalConfigQuery",
+      request
+      )
+      throw new Error(error.message)
+    }
+}
+const savemtDismissalQuery = async ( request, fastify) => {
+  try {
+    const {dismissalData} = request.body
+    return await fastify.db.query(
+      `CALL proc_save_mt_dismissal_config($1)`,
+      {
+        bind: [
+          dismissalData ? JSON.stringify(dismissalData) : null
+          
+        ],
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableMarketTemplate/savemtDismissalQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllMarketTemplateQuery,
   insertMarketTemplateQuery,
@@ -897,4 +953,6 @@ module.exports = {
   getCommMatchTypeTemplatesQuery,
   updateIsPythonChangeQuery,
   updateIsDefaultSetResultChangeQuery,
+  getAllMTDismissalConfigQuery,
+  savemtDismissalQuery
 };

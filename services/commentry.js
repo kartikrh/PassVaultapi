@@ -8495,10 +8495,10 @@ const getMatchDataByCId = async (data, request, fastify) => {
     utc: com.eventDate,
     twonby: TossTeamName?.teamName || null,
     choseto: toss || null,
-    te1n: commentaryTeamsOne.teamName || "",
-    te2n: commentaryTeamsTwo.teamName || "",
-    s1n: commentaryTeamsOne.shortName || "",
-    s2n: commentaryTeamsTwo.shortName || "",
+    te1n: commentaryTeamsOne?.teamName || "",
+    te2n: commentaryTeamsTwo?.teamName || "",
+    s1n: commentaryTeamsOne?.shortName || "",
+    s2n: commentaryTeamsTwo?.shortName || "",
     te1i: team1?.image || "",
     te2i: team2?.image || "",
     t1jr: team1?.jersey || "",
@@ -13763,7 +13763,8 @@ const saveComVirtual = async (request, fastify) => {
         ball_by_ball_details: {
           cardKey: updatedData.commentaryBallByBallDetails?.cardKey,
           cardType: updatedData.commentaryBallByBallDetails?.cardType,
-          currentInnings: updatedData.commentaryBallByBallDetails?.currentInnings
+          currentInnings: strikeTeam?.teamBattingOrder,
+          // currentInnings: updatedData.commentaryBallByBallDetails?.currentInnings
         }
       }
       let isNodePrediction = global.tblConfigs.find((item) => item.key === configConstants.ISPREDICATIONFROMNODE)?.value || "false";

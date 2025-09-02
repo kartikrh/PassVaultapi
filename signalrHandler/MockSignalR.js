@@ -707,7 +707,7 @@ const processRateQueue = async () => {
                                         commentaryId: eventMarkets.commentaryId,
                                         dataTosave: JSON.parse(eventMarkets.data),
                                         updateType: MarketUpdateType.marketInitilization,
-                                        predefinedValue : item.predefinedValue ?? null
+                                        predefinedValue : eventMarkets?.predefinedValue ?? null
 
                                     },
                                     null,
@@ -722,7 +722,7 @@ const processRateQueue = async () => {
                                         dataTosave: JSON.parse(eventMarkets.data),
                                         updateType: MarketUpdateType.marketInitilization,
                                         lineDiff: eventMarkets.line - (previousLine || 0),
-                                        predefinedValue : item.predefinedValue ?? null
+                                        predefinedValue : eventMarkets?.predefinedValue ?? null
                                     },
                                     null,
                                     _fastify
@@ -766,6 +766,7 @@ const processRateQueue = async () => {
                         }
                     }
                 } catch (error) {
+                    console.log("processRateQueue err", error)
                     errorLogger(_fastify, error, "Error in processRateQueue while updating market", null);
                 }
             }
@@ -1166,7 +1167,7 @@ const createUpdateGlobalSignalRData = async (message, request) => {
                     } else {
                         commentary = await global.tblCommentaries.find(
                             // (item) => item.commentaryId === _selectionidData.commentaryId
-                            (item) => item.commentaryId === eventMarketData.commentaryId
+                            (item) => item.commentaryId === eventMarketData?.commentaryId
                         );
                         if (commentary && commentary.isTeamPredictionOn) {
                             let teams;
@@ -1308,6 +1309,7 @@ const createUpdateGlobalSignalRData = async (message, request) => {
         }
     } catch (error) {
         global.sessionData.push({type: "signalrHandler/CreateUpdateSignalRData", data: error})
+        console.log("CreateUpdateSignalRData error", error)
         errorLogger(
             _fastify,
             error,

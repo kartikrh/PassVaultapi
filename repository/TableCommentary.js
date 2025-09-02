@@ -7904,6 +7904,8 @@ const getComEntityQuery = async (data,request,fastify) => {
       tc."wrBallDelay" as "ballDelay",
       tc."wrOverDelay" as "overDelay",
       tc."wrInningDelay" as "inningDelay",
+      tc."wrCountryId" as "countryId",
+      tc."wrVenueId" as "venueId",
       tc."wrTossDelay" as "tossDelay",
       tc."wrPythonId" as "pythonId",
       tc."wrScoringType" as "scoringType",
