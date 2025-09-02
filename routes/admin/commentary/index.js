@@ -106,6 +106,7 @@ const {
   validatePasswordOnPredictionFalse,
   updateMatchInfo,
   overTypeChangeOnOvers,
+  marketOddsdata,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -1437,5 +1438,8 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request , reply) => overTypeChangeOnOvers(request, reply, fastify)
+  });
+  fastify.post("/marketOdds", {
+    handler: (request , reply) => marketOddsdata(request, reply, fastify)
   });
 };
