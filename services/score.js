@@ -452,10 +452,10 @@ const getAllCommentariesDataV2Service = async (request,fastify) => {
             } else {
                 teams = global.tblCommentaryTeams.filter(item => item.commentaryId == c.commentaryId);
                 players = global.tblCommentaryPlayers.filter(item => item.commentaryId == c.commentaryId);
-                overs = global.tblOvers.filter(item => item.commentaryId == c.commentaryId);
-                ballByBall = global.tblCommentaryBallByBall.filter(item => item.commentaryId == c.commentaryId);
-                wickets = global.tblCommentaryWicket.filter(item => item.commentaryId == c.commentaryId);
-                partnerships = global.tblCommentaryPartnership.filter(item => item.commentaryId == c.commentaryId);
+                overs = global.tblOvers.filter(item => item?.commentaryId == c.commentaryId);
+                ballByBall = global.tblCommentaryBallByBall.filter(item => item?.commentaryId == c.commentaryId);
+                wickets = global.tblCommentaryWicket.filter(item => item?.commentaryId == c.commentaryId);
+                partnerships = global.tblCommentaryPartnership.filter(item => item?.commentaryId == c.commentaryId);
                 marketOddsBallByBall = global.tblMarketOddsBallByBall.filter(item => item?.commentaryId == c.commentaryId) || [];
             }
 
