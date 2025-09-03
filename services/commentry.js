@@ -14384,6 +14384,31 @@ const saveComVirtual = async (request, fastify) => {
           request
         );
       });
+      let key1 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTBALLFACED);
+      let key2 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTPLAYERBOUNDARIES);
+      let key3 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTPLAYERRUNS);
+          // let isVirtual = commentaryData.isVirtual || false;
+      callPredictorMarket(
+        {
+          commentary_id: commentaryData.commentaryId,
+          match_type_id: commentaryData.matchTypeId,
+          event_id: commentaryData.eventRefId,
+          default_ball_faced: parseInt(key1?.value) || 0,
+          default_player_boundaries: parseInt(key2?.value) || 0,
+          default_player_runs: parseInt(key3?.value) || 0
+        },
+        "/api/v1/loadcommentary",
+        fastify,
+        request,
+        pythonURI
+      ).catch((err) => {
+        errorLogger(
+          fastify,
+          err.message,
+          "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
+          request
+        );
+      });
     }
     commentaryLogger(
       {
