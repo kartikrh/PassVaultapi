@@ -58,10 +58,6 @@ module.exports = (sequelize) => {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
-      wrHomeSideTeam: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-      },
       wrTossWonBy: {
         type: DataTypes.INTEGER,
         allowNull: true,
@@ -95,10 +91,6 @@ module.exports = (sequelize) => {
         type: DataTypes.TEXT,
         allowNull: true,
       },
-      wrCommentaryUserId: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-      },
       wrUpdateTime: {
         type: DataTypes.DATE,
         allowNull: true,
@@ -128,10 +120,6 @@ module.exports = (sequelize) => {
         allowNull: true,
       },
       isSignalROn: {
-        type: DataTypes.BOOLEAN,
-        allowNull: true,
-      },
-      isMatchTypeUpdated: {
         type: DataTypes.BOOLEAN,
         allowNull: true,
       },
