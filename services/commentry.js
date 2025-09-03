@@ -3818,7 +3818,6 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         winnerName: commentaryDetails.winnerName,
         result: commentaryDetails.result || "",
         currentInnings: commentaryDetails.currentInnings,
-        sortUpdate: commentaryDetails.sortUpdate,
         rmk: commentaryDetails.rmk,
         winRmk: commentaryDetails.winRmk,
         tossRmk: commentaryDetails.tossRmk,
@@ -3838,7 +3837,6 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         result: commentaryDetails.result || "",
         currentInnings: commentaryDetails.currentInnings,
         isPredict: commentaryDetails.isPredictMarket,
-        sortUpdate: commentaryDetails.sortUpdate,
         rmk: commentaryDetails.rmk,
         winRmk: commentaryDetails.winRmk,
         tossRmk: commentaryDetails.tossRmk,
@@ -6738,7 +6736,6 @@ const commentaryDetailsByEventIdService = async (
     loc: result.location,
     t1id: result.team1Id,
     t2id: result.team2Id,
-    srtup: result.sortUpdate ?? "",
     isvirt: result.isVirtual,
     ballDelay: result?.ballDelay,
     overDelay: result?.overDelay,
@@ -8327,7 +8324,6 @@ const getMatchListByStatus = async (body, request, fastify) => {
       t2id: item.team2Id || null,
       isPr: item.isPredictMarket,
       ics: item.isClientShow,
-      srtup: item?.sortUpdate ?? "",
       isTest: item?.isTest,
       isActive: item?.isActive,
       nte1i: team1?.imagePath || "",
@@ -13325,7 +13321,6 @@ const saveComVirtual = async (request, fastify) => {
         winnerName: commentaryDetails.winnerName,
         result: commentaryDetails.result || "",
         currentInnings: commentaryDetails.currentInnings,
-        sortUpdate: commentaryDetails.sortUpdate,
         rmk: commentaryDetails.rmk,
       };
       response.commentaryDetails = {
@@ -13343,7 +13338,6 @@ const saveComVirtual = async (request, fastify) => {
         result: commentaryDetails.result || "",
         currentInnings: commentaryDetails.currentInnings,
         isPredict: commentaryDetails.isPredictMarket,
-        sortUpdate: commentaryDetails.sortUpdate,
         rmk: commentaryDetails.rmk,
       };
       // if(commentaryDetails.commentaryStatus == 2) {
