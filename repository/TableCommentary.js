@@ -1896,7 +1896,8 @@ const getAllCommentaryBallByBallQuery = async (fastify) => {
         tcbb."wrDevOver" as "devOver",
         tcbb."wrDevCurrentOverBall" as "devCurrentOverBall",
         tcbb."wrCardKey" as "cardKey",
-        tcbb."wrCardType" as "cardType"
+        tcbb."wrCardType" as "cardType",
+        tcbb."wrBowlingStyle" as "bowlingStyle"
     from "tblCommentaryBallByBalls" tcbb
     WHERE tcbb."wrCommentaryId" IN (
         SELECT "wrCommentaryId"
