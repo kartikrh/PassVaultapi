@@ -2031,6 +2031,20 @@ const MatchType = {
       },
     },
   },
+  isMenChange: {
+    schema: {
+      tags: ["Match Type"],
+      description: "isMen match type data",
+      body: {
+        type: "object",
+        properties: {
+          matchTypeId: { type: "integer" },
+          isMen: { type: "boolean" },
+        },
+        required: ["matchTypeId", "isMen"],
+      },
+    },
+  },
 };
 const MatchTypeBowlingPredictor = {
   getAll: {
@@ -10535,7 +10549,35 @@ const EntitySport = {
         required: ["commentaryIds"],
       },
     }
-  }
+  },
+  SaveCountryCode: {
+    schema: {
+      tags: ["EntitySport"],
+      description: "save country code",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          countryIds: { type: "array" },
+        },
+        required: ["countryIds"],
+      },
+    }
+  },
+  SaveVenue: {
+    schema: {
+      tags: ["EntitySport"],
+      description: "save venue",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          venueIds: { type: "array" },
+        },
+        required: ["venueIds"],
+      },
+    }
+  },
 }
 const Agent = {
   signIn : {

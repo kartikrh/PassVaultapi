@@ -6,6 +6,7 @@ const {
   updateSumOfRunPerBallQuery,
   isHistoryChangeInMatchTypeQuery,
   activeInactiveMatchTypeQuery,
+  isMenChangeMatchTypeQuery,
 } = require("../repository/TableMatchType");
 const { createMatchTypePredictorQuery } = require("../repository/TableMatchTypePredictor");
 const { saveTemplateQuery, dltTemplateQuery, deleteTemplatesByMatchTypeIdQuery } = require("../repository/TableMatchTypeTemplates");
@@ -499,6 +500,31 @@ const activeInactiveMatchTypeService = async (request, fastify) => {
   return `MatchType data updated successfully`;
 };
 
+const isMenChangeMatchTypeService = async (request, fastify) => {
+  const { matchTypeId, isMen } = request.body;
+  const validateId = global.tblMatchTypes.find(
+    (item) => item.matchTypeId === matchTypeId
+  );
+
+  if (!validateId) {
+    throw new Error("MatchType with this Id not found");
+  }
+  await isMenChangeMatchTypeQuery(
+    {
+      matchTypeId,
+      isMen,
+    },
+    request,
+    fastify
+  );
+  const index = global.tblMatchTypes.findIndex((item) => item.matchTypeId == matchTypeId);
+  if(index != -1){
+    global.tblMatchTypes[index].isMen = isMen;
+  }
+
+  return `MatchType data updated successfully`;
+};
+
 module.exports = {
   allMatchTypesService,
   matchTypeByIdService,
@@ -508,4 +534,5 @@ module.exports = {
   isHistoryChangeInMatchTypeService,
   marketTypeService,
   activeInactiveMatchTypeService,
+  isMenChangeMatchTypeService,
 };

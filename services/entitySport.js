@@ -9,6 +9,8 @@ const {
     ServiceType,
     APIEndpointModuleType,
 } = require("../utilities/index");
+const { getCountryByIds } = require("../repository/TableCountryCodes")
+const { getVenueByIds } = require("../repository/TableVenue")
 
 
 const saveTeamsService = async (request , fastify)=>{
@@ -152,9 +154,40 @@ const saveCommentariesService = async (request , fastify) =>{
         return "No commentaries found to update."
     }
 }
+
+const saveCountryCodesService = async (request, fastify) => {
+    let countryCodes = await getCountryByIds(request.body, request, fastify)
+    for (let cc of countryCodes) {
+        let index = global.tblCountryCodes.findIndex((i) => i.id == cc.id)
+        if (index == -1) {
+            global.tblCountryCodes.push(cc)
+        }
+        else {
+            global.tblCountryCodes[index] = cc;
+        }
+    }
+    return "Country Code Updated successfully."
+}
+
+const saveVenueService = async (request, fastify) => {
+    let venue = await getVenueByIds(request.body, request, fastify)
+    for (let v of venue) {
+        let index = global.tblVenues.findIndex((i) => i.id == v.id)
+        if (index == -1) {
+            global.tblVenues.push(v)
+        }
+        else {
+            global.tblVenues[index] = v;
+        }
+    }
+    return "Venue Updated successfully."
+}
+
 module.exports = {
     saveTeamsService,
     savePlayersService,
     saveCompetitionsService,
-    saveCommentariesService
+    saveCommentariesService,
+    saveCountryCodesService,
+    saveVenueService,
 }
