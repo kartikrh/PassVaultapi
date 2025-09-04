@@ -24,6 +24,7 @@ const {
 } = require("./utilities");
 const Sentry = require("@sentry/node");
 const { instrument } = require("@socket.io/admin-ui");
+const { nodeProfilingIntegration } = require("@sentry/profiling-node");
 const bcrypt = require("bcrypt");
 const Tracing = require("@sentry/tracing");
 const { connectClients, disconnectClients } = require("./sockets");
@@ -37,7 +38,7 @@ const webPush = require("web-push");
 const {webPushset} = require("./WebPushHandler/index.js");
 const { updateMarket } = require("./utilities/marketUpdate.js");
 const cron = require('node-cron');
-const { nodeProfilingIntegration } = require('@sentry/profiling-node');
+// const { nodeProfilingIntegration } = require('@sentry/profiling-node');
 // const { nodeProfilingIntegration } = require("@sentry/profiling-node");
 // Pass --options via CLI arguments in command to enable these options.
 module.exports.options = {};
