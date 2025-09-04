@@ -10549,7 +10549,35 @@ const EntitySport = {
         required: ["commentaryIds"],
       },
     }
-  }
+  },
+  SaveCountryCode: {
+    schema: {
+      tags: ["EntitySport"],
+      description: "save country code",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          countryIds: { type: "array" },
+        },
+        required: ["countryIds"],
+      },
+    }
+  },
+  SaveVenue: {
+    schema: {
+      tags: ["EntitySport"],
+      description: "save venue",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          venueIds: { type: "array" },
+        },
+        required: ["venueIds"],
+      },
+    }
+  },
 }
 const Agent = {
   signIn : {

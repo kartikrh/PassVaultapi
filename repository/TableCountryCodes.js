@@ -233,6 +233,43 @@ const isDefaultFalseCountryCodeQuery = async (data, fastify, request) => {
   }
 };
 
+const getCountryByIds = async (data, request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `SELECT 
+        "wrId" as "id",
+        "wrCountryCode" as "countryCode",
+        "wrCountryName" as "countryName",
+        "wrFlag" as "flag",
+        "wrFlagPath" as "flagPath",
+        "wrIsActive" as "isActive",
+        "wrMaxNumber" as "maxNumber",
+        "wrShortName" as "shortName",
+        "wrIsClientShow" as "isClientShow",
+        "wrIsDefault" as "isDefault",
+        "wrTimezone" as "timezone" 
+       FROM "tblCountryCodes" 
+      WHERE "wrIsDeleted" = FALSE 
+      AND "wrId" = ANY($1);`,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [
+          data.countryIds
+        ]
+      }
+    );
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCountryCode.js/getCountryByIds",
+      request
+    );
+    return true;
+    // throw new Error(err.message);
+  }
+};
+
 module.exports = {
     getAllCountryCodesQuery,
     insertCountryCodeQuery,
@@ -242,4 +279,5 @@ module.exports = {
     isClientShowCountryCodeQuery,
     isDefaultCountryCodeQuery,
     isDefaultFalseCountryCodeQuery,
+    getCountryByIds
 };
