@@ -7,6 +7,7 @@ const {
   isHistoryChangeInMatchTypeService,
   marketTypeService,
   activeInactiveMatchTypeService,
+  isMenChangeMatchTypeService,
 } = require("../../../../services/matchType");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -110,6 +111,15 @@ const activeInactiveMatchType = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const isMenChangeMatchType = async (request, reply, fastify) => {
+  try {
+    const result = await isMenChangeMatchTypeService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/isMenChangeMatchType", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 module.exports = {
   getAllMatchTypes,
   getMatchTypeId,
@@ -120,4 +130,5 @@ module.exports = {
   isHistoryChangeInMatchType,
   marketType,
   activeInactiveMatchType,
+  isMenChangeMatchType,
 };
