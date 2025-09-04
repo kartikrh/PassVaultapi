@@ -1436,7 +1436,6 @@ const ballByBallChangeService = async (request, fastify) => {
       ...getRes,
     };
   }
-  //
 
   let getRes = await comResponseService(request, fastify);
   return {
@@ -2370,6 +2369,7 @@ const handleWicketService = async (data, request, fastify) => {
     };
   }
   if (mc.inningChange) {
+    loadVirtualCom(request, fastify)
     return {
       isMatchComplete: mc.matchComplete,
       isOverComplete: isOverComplete,
@@ -2400,6 +2400,7 @@ const handleWicketService = async (data, request, fastify) => {
     };
   }
   if (mc1.inningChange) {
+    loadVirtualCom(request, fastify)
     return {
       isMatchComplete: mc1.matchComplete,
       isOverComplete: isOverComplete,
@@ -2434,6 +2435,7 @@ const handleWicketService = async (data, request, fastify) => {
       };
     }
     if (mc2.inningChange) {
+    loadVirtualCom(request, fastify)
       return {
         isMatchComplete: mc2.matchComplete,
         isOverComplete: isOverComplete,
