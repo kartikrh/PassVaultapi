@@ -4355,6 +4355,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           item?.commentaryId === commentaryBallByBall.commentaryId &&
           item.teamStatus === 1
       );
+      let over = global.tblOvers.find((i)=>i?.overId == updatedData?.commentaryBallByBallDetails?.overId)
       let nonStrikeTeam = global.tblCommentaryTeams.find(
         (item) =>
           item?.commentaryId === commentaryBallByBall.commentaryId &&
@@ -4399,6 +4400,9 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           total_score: strikeTeam.teamScore,
           strike_team_id: strikeTeam.teamId,
           wicket: _wkt === true ? 1 : 0,
+          over_type : over?.overType || 0,
+          commentary_player_id : commentaryBallByBall?.bowlerId || 0,
+          bowling_style : commentaryBallByBall?.bowlingStyle || 0,
           total_wicket: strikeTeam.teamWicket,
           ball_by_ball_id: updatedData.commentaryBallByBallDetails
             .commentaryBallByBallId
