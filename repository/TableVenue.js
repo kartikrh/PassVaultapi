@@ -222,6 +222,47 @@ const getVenuesByIdsQuery = async (whereCondition = undefined, fastify) => {
         throw new Error(err.message);
     }
 };
+
+const getVenueByIds = async (data, request, fastify) => {
+    try {
+        return await fastify.db.query(
+            `SELECT 
+            tv."wrId" as "id",
+            tv."wrCountryId" as "countryId",
+            tcc."wrCountryName" as "countryName",
+            tv."wrCity" as "city",
+            tv."wrName" as "name",
+            tv."wrTpId" as "tpId",
+            tv."wrIsActive" as "isActive",
+            tv."wrCapacity" as "capacity",
+            tv."wrCreatedBy" as "createdBy",
+            tv."wrCreatedAt" as "createdAt",
+            tv."wrUpdatedBy" as "updatedBy",
+            tv."wrUpdatedAt" as "updatedAt" 
+            FROM "tblVenues" as tv 
+            LEFT JOIN "tblCountryCodes" tcc ON tcc."wrId" = tv."wrCountryId" 
+        WHERE 
+        tv."wrId" = ANY($1) AND 
+        tv."wrIsDeleted" = false`,
+            {
+                type: fastify.db.QueryTypes.SELECT,
+                bind: [
+                    data.venueIds
+                ]
+            }
+        );
+    } catch (error) {
+        errorLogger(
+            fastify,
+            error.message,
+            "DB ERROR --> repository/TableVenue.js/getVenueByIds",
+            request
+        );
+        return true;
+        // throw new Error(err.message);
+    }
+};
+
 module.exports = {
     getAllVenuesQuery,
     insertVenueQuery,
@@ -229,4 +270,5 @@ module.exports = {
     deleteVenueQuery,
     activeInactiveVenueQuery,
     getVenuesByIdsQuery,
+    getVenueByIds,
 };
