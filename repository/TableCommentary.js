@@ -479,7 +479,7 @@ const insertCommentaryPlayers = async (
       `
       WITH insert_data AS (
         insert into "tblCommentaryPlayers" ("wrCommentaryId" , "wrTeamId" , "wrPlayerId","wrPlayerName", "wrDisplayOrder","wrCurrentInnings",
-        "wrBatsmanAverage", "wrBatsmanPreviousStrikeRate", "wrBowlerPreviousEconomy", "wrBowlerAverage", "wrTpId")
+        "wrBatsmanAverage", "wrBatsmanPreviousStrikeRate", "wrBowlerPreviousEconomy", "wrBowlerAverage", "wrTpId", "wrBowlingStyle")
         values (
           $1,
           $2,
@@ -497,7 +497,8 @@ const insertCommentaryPlayers = async (
             (SELECT "wrBowlerEconomy" FROM "tblPlayers" WHERE "wrPlayerId" = $3)
           ),
           (select "wrBowlerAverage" from "tblPlayers" where "wrPlayerId" =$3),
-          $7
+          $7,
+          (select tp."wrBowlingStyle" from "tblPlayers" tp where tp."wrPlayerId" = $3)
         )
         RETURNING *   
       ) 
@@ -506,6 +507,7 @@ const insertCommentaryPlayers = async (
       "wrTeamId" as "teamId",
       "wrCommentaryId" as "commentaryId",
       "wrCommentaryPlayerId" as "commentaryPlayerId",
+      "wrBowlingStyle" as "bowlingStyle",
       "wrTpId" as "tpId"
       FROM "insert_data"
     `,
@@ -543,7 +545,7 @@ const insertCommentaryPlayersEntity = async (
       `
       WITH insert_data AS (
         insert into "tblCommentaryPlayers" ("wrCommentaryId" , "wrTeamId" , "wrPlayerId","wrPlayerName", "wrDisplayOrder","wrCurrentInnings",
-        "wrBatsmanAverage", "wrBatsmanPreviousStrikeRate", "wrBowlerPreviousEconomy", "wrBowlerAverage", "wrTpId")
+        "wrBatsmanAverage", "wrBatsmanPreviousStrikeRate", "wrBowlerPreviousEconomy", "wrBowlerAverage", "wrTpId", "wrBowlingStyle")
         values (
           $1,
           $2,
@@ -561,7 +563,8 @@ const insertCommentaryPlayersEntity = async (
             (SELECT "wrBowlerEconomy" FROM "tblPlayers" WHERE "wrPlayerId" = $3)
           ),
           (select "wrBowlerAverage" from "tblPlayers" where "wrPlayerId" =$3),
-          $7
+          $7,
+          (select tp."wrBowlingStyle" from "tblPlayers" tp where tp."wrPlayerId" = $3)
         )
         RETURNING *   
       ) 
@@ -620,6 +623,7 @@ const insertCommentaryPlayersEntity = async (
         tcp."wrBowlerPreviousEconomy"::DOUBLE PRECISION as "bowlerPreviousEconomy",
         tcp."wrIsInPlayingEleven" as "isInPlayingEleven",
         tcp."wrBoundary" as "boundary",
+        tcp."wrBowlingStyle" as "bowlingStyle",
         tcp."wrPlayerBallFaced" as "playerBallFaced",
         tp."wrPlayerTypeId" as "playerTypeId",
         tpt."wrPlayerType" as "playerType",
@@ -665,7 +669,7 @@ const insertCommentaryPlayersQuery = async (
       `
       WITH insert_data AS (
         insert into "tblCommentaryPlayers" ("wrCommentaryId" , "wrTeamId" , "wrPlayerId","wrPlayerName", "wrDisplayOrder","wrCurrentInnings",
-        "wrBatsmanAverage", "wrBatsmanPreviousStrikeRate", "wrBowlerPreviousEconomy", "wrBowlerAverage", "wrTpId")
+        "wrBatsmanAverage", "wrBatsmanPreviousStrikeRate", "wrBowlerPreviousEconomy", "wrBowlerAverage", "wrTpId", "wrBowlingStyle")
         values (
           $1,
           $2,
@@ -683,7 +687,8 @@ const insertCommentaryPlayersQuery = async (
             (SELECT "wrBowlerEconomy" FROM "tblPlayers" WHERE "wrPlayerId" = $3)
           ),
           (select "wrBowlerAverage" from "tblPlayers" where "wrPlayerId" =$3),
-          $7
+          $7,
+          (select tp."wrBowlingStyle" from "tblPlayers" tp where tp."wrPlayerId" = $3)
         )
         RETURNING *   
       ) 
@@ -692,6 +697,7 @@ const insertCommentaryPlayersQuery = async (
       "wrTeamId" as "teamId",
       "wrCommentaryId" as "commentaryId",
       "wrCommentaryPlayerId" as "commentaryPlayerId",
+      "wrBowlingStyle" as "bowlingStyle",
       "wrTpId" as "tpId"
       FROM "insert_data"
     `,
@@ -740,7 +746,7 @@ const upsertCommentaryPlayers = async (
       RETURNING "wrCommentaryPlayerId" AS "commentaryPlayerId"
     )
     INSERT INTO "tblCommentaryPlayers" ("wrCommentaryId", "wrTeamId", "wrPlayerId", "wrPlayerName", "wrDisplayOrder", "wrCurrentInnings",
-    "wrBatsmanAverage", "wrBatsmanPreviousStrikeRate", "wrBowlerPreviousEconomy", "wrBowlerAverage", "wrTpId")
+    "wrBatsmanAverage", "wrBatsmanPreviousStrikeRate", "wrBowlerPreviousEconomy", "wrBowlerAverage", "wrTpId", "wrBowlingStyle")
     SELECT
       $1,
       $2,
@@ -752,7 +758,8 @@ const upsertCommentaryPlayers = async (
       (SELECT "wrBatsmanStrikeRate" FROM "tblPlayers" WHERE "wrPlayerId" = $3),
       (SELECT "wrBowlerEconomy" FROM "tblPlayers" WHERE "wrPlayerId" = $3),
       (SELECT "wrBowlerAverage" FROM "tblPlayers" WHERE "wrPlayerId" = $3),
-      $6
+      $6,
+      (SELECT tp."wrBowlingStyle" FROM "tblPlayers" tp WHERE tp."wrPlayerId" = $3)
     WHERE NOT EXISTS (SELECT 1 FROM upsert)
     RETURNING "wrCommentaryPlayerId" AS "commentaryPlayerId";
     
@@ -1272,6 +1279,7 @@ const getCommentaryPlayersQuery = async (data, fastify, request) => {
       "wrDisplayOrder" as "displayOrder",
       "wrBatterOrder" as "batterOrder",
       "wrBowlerOrder" as "bowlerOrder",
+      "wrBowlingStyle" as "bowlingStyle",
       "wrPlayerName" as "playerName"
       from "tblCommentaryPlayers"
       where "wrCommentaryId" = $1 and "wrTeamId" = $2 and "wrIsDelete" = false
@@ -1673,6 +1681,7 @@ const getAllCommentaryPlayerQuery = async (fastify) => {
         tcp."wrBowlerPreviousEconomy"::DOUBLE PRECISION as "bowlerPreviousEconomy",
         tcp."wrIsInPlayingEleven" as "isInPlayingEleven",
         tcp."wrBoundary" as "boundary",
+        tcp."wrBowlingStyle" as "bowlingStyle",
         tcp."wrPlayerBallFaced" as "playerBallFaced",
         tp."wrPlayerTypeId" as "playerTypeId",
         tpt."wrPlayerType" as "playerType",
@@ -1770,6 +1779,7 @@ const getAllCommentaryPlayerDataQuery = async (whereCondition = null, fastify) =
         tcp."wrBowlerPreviousEconomy"::DOUBLE PRECISION as "bowlerPreviousEconomy",
         tcp."wrIsInPlayingEleven" as "isInPlayingEleven",
         tcp."wrBoundary" as "boundary",
+        tcp."wrBowlingStyle" as "bowlingStyle",
         tcp."wrPlayerBallFaced" as "playerBallFaced",
         tp."wrPlayerTypeId" as "playerTypeId",
         tpt."wrPlayerType" as "playerType",
@@ -2913,7 +2923,8 @@ const updateCommentaryPlayersQuery = async (data, fastify, request) => {
       "wrBowlerAverage" = $44,
       "wrBatterOrder" = $45,
       "wrBowlerOrder" = $46,
-      "wrTpId" = $49
+      "wrTpId" = $49,
+      "wrBowlingStyle" = $50
       where "wrCommentaryPlayerId" = $47
       AND "wrCurrentInnings" = $48
       `,
@@ -2968,6 +2979,7 @@ const updateCommentaryPlayersQuery = async (data, fastify, request) => {
           data.commentaryPlayerId,
           data.currentInnings,
           data.tpId,
+          data.bowlingStyle,
         ],
         type: fastify.db.QueryTypes.UPDATE,
       }
@@ -3658,6 +3670,7 @@ const getCommnertySquadPlayersList = async (data, fastify, request) => {
             p."wrImage" AS pim,
            
             "tblCommentaryPlayers"."wrBatterOrder"  AS bato,
+            "tblCommentaryPlayers"."wrBowlingStyle" as "bowlingStyle",
 		        "tblCommentaryPlayers"."wrBowlerOrder"  AS bowo,
              CASE
                  WHEN "wrPlayerTypeId" = 1 THEN 'BatsMan'
@@ -5133,6 +5146,7 @@ const getCommPlayersByCommentaryIdQuery = async (commentaryId, request, fastify)
           tcp."wrCommentaryPlayerId" as "commentaryPlayerId",
           tcp."wrCommentaryId" as "commentaryId",
           tcp."wrTeamId" as "teamId",
+          tcp."wrBowlingStyle" as "bowlingStyle",
           tcp."wrPlayerId" as "playerId"
       from "tblCommentaryPlayers" AS tcp
       LEFT JOIN "tblPlayers" AS tp ON tcp."wrPlayerId" = tp."wrPlayerId"
@@ -5625,6 +5639,7 @@ const getAllCommentaryPlayerDataQueryV1 = async (whereCondition = null, fastify)
         tcp."wrBowlerPreviousEconomy"::DOUBLE PRECISION as "bowlprevieco",
         tcp."wrIsInPlayingEleven" as "iiplay11",
         tcp."wrBoundary" as "bundry",
+        tcp."wrBowlingStyle" as "bowlingStyle",
         tcp."wrPlayerBallFaced" as "playbalfaced",
         tp."wrPlayerTypeId" as "pltypid",
         tpt."wrPlayerType" as "pltyp",
@@ -6309,7 +6324,7 @@ const insertVirtualCommentaryPlayers = async (data, fastify, request) => {
           "wrCommentaryId", "wrTeamId", "wrPlayerId", "wrPlayerName",
           "wrDisplayOrder", "wrCurrentInnings",
           "wrBatsmanAverage", "wrBatsmanPreviousStrikeRate",
-          "wrBowlerPreviousEconomy", "wrBowlerAverage", "wrTpId"
+          "wrBowlerPreviousEconomy", "wrBowlerAverage", "wrTpId", "wrBowlingStyle"
         )
         VALUES (
           $1,
@@ -6328,7 +6343,8 @@ const insertVirtualCommentaryPlayers = async (data, fastify, request) => {
             (SELECT "wrBowlerEconomy" FROM "tblPlayers" WHERE "wrPlayerId" = $3)
           ),
           (SELECT "wrBowlerAverage" FROM "tblPlayers" WHERE "wrPlayerId" = $3),
-          $7
+          $7,
+          (SELECT tp."wrBowlingStyle" FROM "tblPlayers" tp WHERE tp."wrPlayerId" = $3)
         )
         RETURNING *
       )
@@ -6387,6 +6403,7 @@ const insertVirtualCommentaryPlayers = async (data, fastify, request) => {
         cpl."wrBowlerPreviousEconomy"::DOUBLE PRECISION AS "bowlerPreviousEconomy",
         cpl."wrIsInPlayingEleven" AS "isInPlayingEleven",
         cpl."wrBoundary" AS "boundary",
+        cpl."wrBowlingStyle" as "bowlingStyle",
         cpl."wrPlayerBallFaced" AS "playerBallFaced",
         tp."wrPlayerTypeId" as "playerTypeId",
         cpl."wrJerseyPlayerImage" AS "jerseyPlayerImage",
@@ -6496,6 +6513,7 @@ const virtualPlayersSelectQuery = async (data, request, fastify) => {
         "wrBowler_Over" as "bowlerOver",
         "wrIsBatter_Out" as "isBatterOut",
         "wrBatterOrder" as "batterOrder",
+        "wrBowlingStyle" as "bowlingStyle",
         "wrBowlerOrder" as "bowlerOrder"`,
       {
         bind: [
@@ -6943,6 +6961,7 @@ const virtualPlayerRunsQuery = async (data, fastify, request) => {
         "wrBowler_SIX" as "bowlerSix",
         "wrBowler_WideBall" as "bowlerWideBall",
         "wrBowler_NOBall" as "bowlerNoBall",
+        "wrBowlingStyle" as "bowlingStyle",
         "wrBowler_ByeBall" as "bowlerByeBall",
         "wrBowler_LegByeBall" as "bowlerLegByeBall",
         "wrBowler_TotalWicket" as "bowlerTotalWicket",
@@ -8010,6 +8029,7 @@ const getComEntityQuery = async (data,request,fastify) => {
         tcp."wrBowlerPreviousEconomy"::DOUBLE PRECISION as "bowlerPreviousEconomy",
         tcp."wrIsInPlayingEleven" as "isInPlayingEleven",
         tcp."wrBoundary" as "boundary",
+        tcp."wrBowlingStyle" as "bowlingStyle",
         tcp."wrPlayerBallFaced" as "playerBallFaced",
         tp."wrPlayerTypeId" as "playerTypeId",
         tpt."wrPlayerType" as "playerType",
@@ -8247,6 +8267,7 @@ const getAllCommentaryPlayerQueryById = async (data, request, fastify) => {
           tcp."wrBowlerPreviousEconomy"::DOUBLE PRECISION as "bowlerPreviousEconomy",
           tcp."wrIsInPlayingEleven" as "isInPlayingEleven",
           tcp."wrBoundary" as "boundary",
+          tcp."wrBowlingStyle" as "bowlingStyle",
           tcp."wrPlayerBallFaced" as "playerBallFaced",
           tp."wrPlayerTypeId" as "playerTypeId",
           tpt."wrPlayerType" as "playerType",

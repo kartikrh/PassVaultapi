@@ -12201,6 +12201,7 @@ const getTeamAndPlayerListServiceV1 = async (request, fastify) => {
             playerType: curr.playerType,
             jerseyPlayerImage: curr.jerseyPlayerImage,
             jerseyPlayerImagePath: curr.jerseyPlayerImagePath,
+            bowlingStyle: curr?.bowlingStyle,
           };
         })
     );
