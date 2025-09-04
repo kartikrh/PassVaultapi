@@ -2031,6 +2031,20 @@ const MatchType = {
       },
     },
   },
+  isMenChange: {
+    schema: {
+      tags: ["Match Type"],
+      description: "isMen match type data",
+      body: {
+        type: "object",
+        properties: {
+          matchTypeId: { type: "integer" },
+          isMen: { type: "boolean" },
+        },
+        required: ["matchTypeId", "isMen"],
+      },
+    },
+  },
 };
 const MatchTypeBowlingPredictor = {
   getAll: {
