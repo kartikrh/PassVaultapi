@@ -410,7 +410,65 @@ const pythonSocketLogger = async (data, fastify) => {
     console.log(error);
   }
 }
+const disMissalLogger = async (data,fastify,request)=>{
+    try {
+      // console.log(data)
+      // if this player have different log false them
+
+    const upQuery = await fastify.db.query(`
+        UPDATE "tblDismissalMarLogs"
+        SET 
+        "wrIsActive" = false
+        WHERE "wrEventMarketId" = $1
+        AND "wrCommentaryPlayerId" =$2
+      `,{
+      type: fastify.db.QueryTypes.SELECT,
+      bind: [
+        data.eventMarketId,
+        data.commentaryPlayerId
+      ],
+    })
+    let market = data.data;
+
+    const query = `
+      INSERT INTO "tblDismissalMarLogs"(
+      "wrCommentaryId", 
+      "wrEventMarketId", 
+      "wrOverTypeId", 
+      "wrCommentaryPlayerId", 
+      "wrWicketNo", 
+      "wrData", 
+      "wrIsActive", 
+      "wrCreatedBy")
+	  VALUES ( $1, $2, $3, $4, $5, $6, $7, $8);
+    `;
+    
+    await fastify.db.query(query, {
+      type: fastify.db.QueryTypes.SELECT,
+      bind: [
+        data.commentaryId || null,
+        data.eventMarketId,
+        data.overTypeId,
+        data.commentaryPlayerId,
+        data.wicketNo,
+        market,
+        data.isActive ||true,
+        request.userTokenInfo?.WrUserId || null
+      ],
+    });
+    return true;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "Error in disMissalLogger -> utilities/logger.js/disMissalLogger",
+      null
+    )
+    console.log(error);
+  }
+}
 
 module.exports = { errorLogger, responseLogger ,responseLogInDB , marketLogger ,
   marketDataLogger,tblPredictorAPILogger,tblThirdPartyAPILogger,commentaryLogger,updateWebRequestLogs,
-  eventMarketLogger, marektResultLogger,pythonSocketLogger};
+  eventMarketLogger, marektResultLogger,pythonSocketLogger,
+disMissalLogger};
