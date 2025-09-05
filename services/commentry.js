@@ -532,7 +532,8 @@ const commentaryDetailsByIdService = async (request, fastify) => {
     .filter((item) => item?.isActive === true)
     .sort((a, b) => a.displayOrder - b.displayOrder);
 
-  const overTypeData = global.tblOverTypes.filter(item => item.isActive == true)
+  const overTypeData = global.tblOverTypes.filter(item => item.isActive == true);
+  const bowlingStyles = global.tblBowlingTypes;
 
   const allDetails = {
     commentaryDetails: { ...commentary, ...dataToreturn },
@@ -547,6 +548,7 @@ const commentaryDetailsByIdService = async (request, fastify) => {
     // callPrediction,
     shotTypes,
     overTypes: overTypeData,
+    bowlingStyles,
   };
   return allDetails;
 };
