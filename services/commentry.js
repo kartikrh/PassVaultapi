@@ -13668,7 +13668,6 @@ const saveComVirtual = async (request, fastify) => {
               pythonURI
             )
           } catch (error) {
-            console.log("errorrrrrr99999-", err)
             errorLogger(
               fastify,
               err.message,
@@ -13842,7 +13841,6 @@ const saveComVirtual = async (request, fastify) => {
             pythonURI
           );
         } catch (err) {
-          console.log("error----rrrrr", err);
           errorLogger(
             fastify,
             err?.message || String(err),
@@ -14328,7 +14326,6 @@ const saveComVirtual = async (request, fastify) => {
           pythonURI
         )
       } catch (error) {
-        console.log("222---", err)
         errorLogger(
           fastify,
           err.message,
@@ -14496,7 +14493,6 @@ const saveComVirtual = async (request, fastify) => {
           pythonURI
         )
       } catch (error) {
-        console.log("errorrrrrr", err)
         errorLogger(
           fastify,
           err.message,
