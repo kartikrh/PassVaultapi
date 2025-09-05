@@ -1095,7 +1095,8 @@ const updateCommentaryPlayerById = async (data, request, fastify) => {
       "wrBatsmanStrikeRate" = $2,
       "wrIsInPlayingEleven" = $3,
       "wrBoundary" = $7,
-      "wrPlayerBallFaced" = $8
+      "wrPlayerBallFaced" = $8,
+      "wrBowlingStyle" = $10
       where "wrPlayerId" = $4
       AND "wrCommentaryId" = $5
       AND "wrTeamId" = $6
@@ -1112,6 +1113,7 @@ const updateCommentaryPlayerById = async (data, request, fastify) => {
           data.boundary || 0,
           data.playerBallFaced || 0,
           data.currentInnings,
+          data.bowlingStyle ?? null,
         ],
       }
     );
@@ -8325,6 +8327,31 @@ const overTypeChangeOnOversQuery = async (data, fastify, request) => {
   }
 };
 
+const bowlingStyleChangeOnCommPlayersQuery = async (data, fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `UPDATE "tblCommentaryPlayers" SET
+        "wrBowlingStyle" = $1
+        WHERE "wrCommentaryId" = ANY($2)
+        AND "wrPlayerId" = $3
+        AND "wrIsDelete" = FALSE
+      `,
+      {
+        bind: [data.bowlingStyle, data.commentaryId, data.playerId],
+      }
+    );
+    return result;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/bowlingStyleChangeOnCommPlayersQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -8466,4 +8493,5 @@ module.exports = {
   updateteamMaxOverQuery,
   deleteCommentaryPlayersByPlayerId,
   overTypeChangeOnOversQuery,
+  bowlingStyleChangeOnCommPlayersQuery,
 };
