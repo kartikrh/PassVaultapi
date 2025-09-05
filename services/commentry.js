@@ -8084,11 +8084,11 @@ const changeBowlerOfCommentaryService = async (request, fastify) => {
       callPredictorMarket(
         {
           commentary_id: commentary.commentaryId,
-          over_type_id: latestOver.overType,
-          over_id: latestOver.overId,
-          team_id: bowlingTeam.teamId,
+          over_type_id: latestOver?.overType || null,
+          over_id: latestOver?.overId || null,
+          team_id: bowlingTeam?.teamId || null,
           bowler_id: bowlerId,
-          wicket: latestOver.totalWicket
+          wicket: latestOver?.totalWicket || null
         },
       "/api/v1/predictscore",
       fastify,
