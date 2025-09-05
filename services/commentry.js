@@ -8075,7 +8075,25 @@ const changeBowlerOfCommentaryService = async (request, fastify) => {
       request,
       fastify
     );
+    const bowlingTeam = global.tblCommentaryTeams.find((i)=> i.commentaryId == commentary.commentaryId 
+      && i.currentInnings ==currentInnings && i.teamStatus == 2)
 
+    const latestOver = global.tblOvers.filter((i)=>i.commentaryId == commentary.commentaryId 
+      && i.currentInnings ==currentInnings && i.teamId == bowlingTeam?.teamId )
+      .sort((a,b) => b.overId - a.overId)[0]
+      callPredictorMarket(
+        {
+          commentary_id: commentary.commentaryId,
+          over_type_id: latestOver?.overType || null,
+          over_id: latestOver?.overId || null,
+          team_id: bowlingTeam?.teamId || null,
+          bowler_id: bowlerId,
+          wicket: latestOver?.totalWicket || null
+        },
+      "/api/v1/predictscore",
+      fastify,
+      request
+    )
     commentaryLogger(
       {
         commentaryId: commentaryId,
