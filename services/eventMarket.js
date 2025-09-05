@@ -3083,7 +3083,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
         {
           commentaryId : item.commentaryId,
           eventMarketId : item.eventMarketId,
-          overTypeId : over?.overType,
+          overTypeId : over?.overType || null,
           commentaryPlayerId : item.playerId || 0,
           wicketNo : item.wicketNo || 0,
           data : item.data,
