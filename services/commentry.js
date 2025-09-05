@@ -5827,6 +5827,7 @@ const updateTeamPlayerService = async (request, fastify) => {
       boundary,
       playerBallFaced,
       currentInnings,
+      bowlingStyle,
     } = playerData;
     let commentary = global.tblCommentaries.find(
       (item) => item?.commentaryId === +commentaryId
@@ -5861,6 +5862,7 @@ const updateTeamPlayerService = async (request, fastify) => {
         boundary,
         playerBallFaced,
         currentInnings,
+        bowlingStyle,
       },
       request,
       fastify
@@ -5880,6 +5882,7 @@ const updateTeamPlayerService = async (request, fastify) => {
       player.isInPlayingEleven = isInPlayingEleven;
       player.boundary = boundary;
       player.playerBallFaced = playerBallFaced;
+      player.bowlingStyle = bowlingStyle;
       player.displayName = ds?.displayName;
     } else {
       throw new Error("Player not found for update");
