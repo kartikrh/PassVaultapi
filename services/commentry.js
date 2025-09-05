@@ -4355,6 +4355,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           item?.commentaryId === commentaryBallByBall.commentaryId &&
           item.teamStatus === 1
       );
+      let over = global.tblOvers.find((i)=>i?.overId == updatedData?.commentaryBallByBallDetails?.overId)
       let nonStrikeTeam = global.tblCommentaryTeams.find(
         (item) =>
           item?.commentaryId === commentaryBallByBall.commentaryId &&
@@ -4399,6 +4400,9 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           total_score: strikeTeam.teamScore,
           strike_team_id: strikeTeam.teamId,
           wicket: _wkt === true ? 1 : 0,
+          over_type : over?.overType || 0,
+          commentary_player_id : commentaryBallByBall?.bowlerId || 0,
+          bowling_style : commentaryBallByBall?.bowlingStyle || 0,
           total_wicket: strikeTeam.teamWicket,
           ball_by_ball_id: updatedData.commentaryBallByBallDetails
             .commentaryBallByBallId
@@ -5823,6 +5827,7 @@ const updateTeamPlayerService = async (request, fastify) => {
       boundary,
       playerBallFaced,
       currentInnings,
+      bowlingStyle,
     } = playerData;
     let commentary = global.tblCommentaries.find(
       (item) => item?.commentaryId === +commentaryId
@@ -5857,6 +5862,7 @@ const updateTeamPlayerService = async (request, fastify) => {
         boundary,
         playerBallFaced,
         currentInnings,
+        bowlingStyle,
       },
       request,
       fastify
@@ -5876,6 +5882,7 @@ const updateTeamPlayerService = async (request, fastify) => {
       player.isInPlayingEleven = isInPlayingEleven;
       player.boundary = boundary;
       player.playerBallFaced = playerBallFaced;
+      player.bowlingStyle = bowlingStyle;
       player.displayName = ds?.displayName;
     } else {
       throw new Error("Player not found for update");
@@ -8068,7 +8075,25 @@ const changeBowlerOfCommentaryService = async (request, fastify) => {
       request,
       fastify
     );
+    const bowlingTeam = global.tblCommentaryTeams.find((i)=> i.commentaryId == commentary.commentaryId 
+      && i.currentInnings ==currentInnings && i.teamStatus == 2)
 
+    const latestOver = global.tblOvers.filter((i)=>i.commentaryId == commentary.commentaryId 
+      && i.currentInnings ==currentInnings && i.teamId == bowlingTeam?.teamId )
+      .sort((a,b) => b.overId - a.overId)[0]
+      callPredictorMarket(
+        {
+          commentary_id: commentary.commentaryId,
+          over_type_id: latestOver?.overType || null,
+          over_id: latestOver?.overId || null,
+          team_id: bowlingTeam?.teamId || null,
+          bowler_id: bowlerId,
+          wicket: latestOver?.totalWicket || null
+        },
+      "/api/v1/predictscore",
+      fastify,
+      request
+    )
     commentaryLogger(
       {
         commentaryId: commentaryId,
@@ -12201,6 +12226,7 @@ const getTeamAndPlayerListServiceV1 = async (request, fastify) => {
             playerType: curr.playerType,
             jerseyPlayerImage: curr.jerseyPlayerImage,
             jerseyPlayerImagePath: curr.jerseyPlayerImagePath,
+            bowlingStyle: curr?.bowlingStyle,
           };
         })
     );
