@@ -24,6 +24,7 @@ const { PROJECT_NAME } = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
 const { deleteTournamentPlayersByPlayerIdQuery } = require("../repository/TableTournamentsTeamPlayers");
 const { deleteAwardsByPlayerIdQuery } = require("../repository/TableCommentaryAward");
+const { bowlingStyleChangeOnCommPlayersQuery } = require("../repository/TableCommentary");
 const { mergeAndSaveImage } = require("../utilities/imageMerge");
 const configConstants = require("../utilities/configConstants");
 const { trimTextData } = require("../utilities/index");
@@ -475,6 +476,33 @@ const updatePlayerService = async (request, fastify) => {
             }
           }
         }
+      }
+    }
+  }
+  const openCommentaryIds = global.tblCommentaries.filter(item => item.commentaryStatus == 1)
+    .map(item => item.commentaryId);
+
+  if(checkPlayerId?.bowlingTypeId != body?.bowlingTypeId && openCommentaryIds.length > 0) {
+    await bowlingStyleChangeOnCommPlayersQuery(
+      {
+        bowlingStyle: body.bowlingTypeId,
+        commentaryId: openCommentaryIds,
+        playerId: body.playerId,
+      },
+      fastify, 
+      request
+    );
+    const updateData = global.tblCommentaryPlayers.filter(
+      item =>
+        openCommentaryIds.includes(item.commentaryId) &&
+        item.playerId === body.playerId
+    );
+    for (const elem of updateData) {
+      const index = global.tblCommentaryPlayers.findIndex(item => 
+        item.commentaryPlayerId == elem.commentaryPlayerId
+      );
+      if(index !== -1) {
+        global.tblCommentaryPlayers[index].bowlingStyle = body.bowlingTypeId
       }
     }
   }

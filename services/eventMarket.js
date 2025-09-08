@@ -80,7 +80,7 @@ const {
   MarketTypeCategories,
 } = require("../utilities/index");
 const { getAllMarketRunnersV2ByIdQuery } = require("../repository/TableMarketRunner");
-const { marketLogger, marketDataLogger, errorLogger, eventMarketLogger, marektResultLogger } = require("../utilities/logger");
+const { marketLogger, marketDataLogger, errorLogger, eventMarketLogger, marektResultLogger, disMissalLogger } = require("../utilities/logger");
 const { validateUser } = require("../repository/TableUser");
 const { encrypt } = require("../utilities/index");
 const { getPlayersBattingHistoryByIdQuery } = require("../repository/TablePlayerHistory");
@@ -3073,7 +3073,28 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
           item
         )
       }
-      marketDataLogger(
+     
+    }
+    if(item.marketTypeId == MarketTypeId.ManualOdds && category.categoryName.toLowerCase() == "mode of dismissal - 6 way" ){
+      const over = global.tblOvers.filter((i)=> i.commentaryId == item.commentaryId && i.teamId == item.teamId 
+      && i.currentInnings == commentary.currentInnings)
+      .sort((a,b) => b.overId - a.overId)
+      disMissalLogger(
+        {
+          commentaryId : item.commentaryId,
+          eventMarketId : item.eventMarketId,
+          overTypeId : over?.overType || null,
+          commentaryPlayerId : item.playerId || 0,
+          wicketNo : item.wicketNo || 0,
+          data : item.data,
+          isActive : true
+        },fastify,request
+      )
+    }
+    let lineDiff = allMarkets.find(
+        (e) => e.marketId === item.eventMarketId
+    )?.lineDiff || 0;
+    marketDataLogger(
         {
           eventMarketId: item.eventMarketId,
           commentaryId: item.commentaryId,
@@ -3085,8 +3106,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
         },
         request,
         fastify
-      )
-    }
+    )
   }
   const teamOnStrike = global.tblCommentaryTeams.find(
     (item) =>

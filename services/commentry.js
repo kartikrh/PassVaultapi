@@ -532,7 +532,8 @@ const commentaryDetailsByIdService = async (request, fastify) => {
     .filter((item) => item?.isActive === true)
     .sort((a, b) => a.displayOrder - b.displayOrder);
 
-  const overTypeData = global.tblOverTypes.filter(item => item.isActive == true)
+  const overTypeData = global.tblOverTypes.filter(item => item.isActive == true);
+  const bowlingStyles = global.tblBowlingTypes;
 
   const allDetails = {
     commentaryDetails: { ...commentary, ...dataToreturn },
@@ -547,6 +548,7 @@ const commentaryDetailsByIdService = async (request, fastify) => {
     // callPrediction,
     shotTypes,
     overTypes: overTypeData,
+    bowlingStyles,
   };
   return allDetails;
 };
@@ -4355,6 +4357,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           item?.commentaryId === commentaryBallByBall.commentaryId &&
           item.teamStatus === 1
       );
+      let over = global.tblOvers.find((i)=>i?.overId == updatedData?.commentaryBallByBallDetails?.overId)
       let nonStrikeTeam = global.tblCommentaryTeams.find(
         (item) =>
           item?.commentaryId === commentaryBallByBall.commentaryId &&
@@ -4399,6 +4402,9 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           total_score: strikeTeam.teamScore,
           strike_team_id: strikeTeam.teamId,
           wicket: _wkt === true ? 1 : 0,
+          over_type : over?.overType || 0,
+          commentary_player_id : commentaryBallByBall?.bowlerId || 0,
+          bowling_style : commentaryBallByBall?.bowlingStyle || 0,
           total_wicket: strikeTeam.teamWicket,
           ball_by_ball_id: updatedData.commentaryBallByBallDetails
             .commentaryBallByBallId
@@ -5823,6 +5829,7 @@ const updateTeamPlayerService = async (request, fastify) => {
       boundary,
       playerBallFaced,
       currentInnings,
+      bowlingStyle,
     } = playerData;
     let commentary = global.tblCommentaries.find(
       (item) => item?.commentaryId === +commentaryId
@@ -5857,6 +5864,7 @@ const updateTeamPlayerService = async (request, fastify) => {
         boundary,
         playerBallFaced,
         currentInnings,
+        bowlingStyle,
       },
       request,
       fastify
@@ -5876,6 +5884,7 @@ const updateTeamPlayerService = async (request, fastify) => {
       player.isInPlayingEleven = isInPlayingEleven;
       player.boundary = boundary;
       player.playerBallFaced = playerBallFaced;
+      player.bowlingStyle = bowlingStyle;
       player.displayName = ds?.displayName;
     } else {
       throw new Error("Player not found for update");
@@ -8068,7 +8077,25 @@ const changeBowlerOfCommentaryService = async (request, fastify) => {
       request,
       fastify
     );
+    const bowlingTeam = global.tblCommentaryTeams.find((i)=> i.commentaryId == commentary.commentaryId 
+      && i.currentInnings ==currentInnings && i.teamStatus == 2)
 
+    const latestOver = global.tblOvers.filter((i)=>i.commentaryId == commentary.commentaryId 
+      && i.currentInnings ==currentInnings && i.teamId == bowlingTeam?.teamId )
+      .sort((a,b) => b.overId - a.overId)[0]
+      callPredictorMarket(
+        {
+          commentary_id: commentary.commentaryId,
+          over_type_id: latestOver?.overType || null,
+          over_id: latestOver?.overId || null,
+          team_id: bowlingTeam?.teamId || null,
+          bowler_id: bowlerId,
+          wicket: latestOver?.totalWicket || null
+        },
+      "/api/v1/predictscore",
+      fastify,
+      request
+    )
     commentaryLogger(
       {
         commentaryId: commentaryId,
@@ -12201,6 +12228,7 @@ const getTeamAndPlayerListServiceV1 = async (request, fastify) => {
             playerType: curr.playerType,
             jerseyPlayerImage: curr.jerseyPlayerImage,
             jerseyPlayerImagePath: curr.jerseyPlayerImagePath,
+            bowlingStyle: curr?.bowlingStyle,
           };
         })
     );
@@ -13591,32 +13619,62 @@ const saveComVirtual = async (request, fastify) => {
           const decimalOverCount = parseFloat(previousBall.overCount);
           const _wkt = previousBall.ballIsWicket;
           //_resFromPredictAPI = await
-          callPredictorMarket(
-            {
-              commentary_id: commentaryData.commentaryId,
-              match_type_id: commentaryData.matchTypeId,
-              ball: decimalOverCount,
-              run: previousBall.ballRun,
-              total_score: strikeTeam.teamScore,
-              strike_team_id: strikeTeam.teamId,
-              wicket: _wkt === true ? 1 : 0,
-              total_wicket: strikeTeam.teamWicket,
-              ball_by_ball_id: deleteCommentaryBallByBallId
-                ? parseInt(deleteCommentaryBallByBallId)
-                : null,
-            },
-            "/api/v1/undoscore",
-            fastify,
-            request,
-            pythonURI
-          ).catch((err) => {
+
+          // await callPredictorMarket(
+          //   {
+          //     commentary_id: commentaryData.commentaryId,
+          //     match_type_id: commentaryData.matchTypeId,
+          //     ball: decimalOverCount,
+          //     run: previousBall.ballRun,
+          //     total_score: strikeTeam.teamScore,
+          //     strike_team_id: strikeTeam.teamId,
+          //     wicket: _wkt === true ? 1 : 0,
+          //     total_wicket: strikeTeam.teamWicket,
+          //     ball_by_ball_id: deleteCommentaryBallByBallId
+          //       ? parseInt(deleteCommentaryBallByBallId)
+          //       : null,
+          //   },
+          //   "/api/v1/undoscore",
+          //   fastify,
+          //   request,
+          //   pythonURI
+          // ).catch((err) => {
+          //   console.log("errorrrrrr99999-", err)
+          //   errorLogger(
+          //     fastify,
+          //     err.message,
+          //     "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
+          //     request
+          //   );
+          // });
+          try {
+            await callPredictorMarket(
+              {
+                commentary_id: commentaryData.commentaryId,
+                match_type_id: commentaryData.matchTypeId,
+                ball: decimalOverCount,
+                run: previousBall.ballRun,
+                total_score: strikeTeam.teamScore,
+                strike_team_id: strikeTeam.teamId,
+                wicket: _wkt === true ? 1 : 0,
+                total_wicket: strikeTeam.teamWicket,
+                ball_by_ball_id: deleteCommentaryBallByBallId
+                  ? parseInt(deleteCommentaryBallByBallId)
+                  : null,
+              },
+              "/api/v1/undoscore",
+              fastify,
+              request,
+              pythonURI
+            )
+          } catch (error) {
             errorLogger(
               fastify,
               err.message,
               "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
               request
             );
-          });
+          }
           // let callPrediction = {};
           // if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
           //   callPrediction.predictioonAPI = "undoscore"
@@ -13767,13 +13825,29 @@ const saveComVirtual = async (request, fastify) => {
       if (isNodePrediction == "true")
         processPredictScoreMarket(predictionPayload)
       else
-        callPredictorMarket(
-          predictionPayload,
-          "/api/v1/predictscore",
-          fastify,
-          request,
-          pythonURI
-        )
+        // callPredictorMarket(
+        //   predictionPayload,
+        //   "/api/v1/predictscore",
+        //   fastify,
+        //   request,
+        //   pythonURI
+        // )
+        try {
+          await callPredictorMarket(
+            predictionPayload,
+            "/api/v1/predictscore",
+            fastify,
+            request,
+            pythonURI
+          );
+        } catch (err) {
+          errorLogger(
+            fastify,
+            err?.message || String(err),
+            "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
+            request
+          );
+        }
     }
     if (commentaryOvers) {
       if (updatedData.overDetails) {
@@ -14224,22 +14298,41 @@ const saveComVirtual = async (request, fastify) => {
       //_resFromPredictAPI = null;
       //_resFromPredictAPI = await
       // if (isCallPredict == true) {
-      callPredictorMarket(
-        {
-          commentary_id: commentaryDetails.commentaryId,
-        },
-        "/api/v1/endcommentary",
-        fastify,
-        request,
-        pythonURI
-      ).catch((err) => {
+      // await callPredictorMarket(
+      //   {
+      //     commentary_id: commentaryDetails.commentaryId,
+      //   },
+      //   "/api/v1/endcommentary",
+      //   fastify,
+      //   request,
+      //   pythonURI
+      // ).catch((err) => {
+      //   console.log("222---", err)
+      //   errorLogger(
+      //     fastify,
+      //     err.message,
+      //     "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
+      //     request
+      //   );
+      // });
+      try {
+        await callPredictorMarket(
+          {
+            commentary_id: commentaryDetails.commentaryId,
+          },
+          "/api/v1/endcommentary",
+          fastify,
+          request,
+          pythonURI
+        )
+      } catch (error) {
         errorLogger(
           fastify,
           err.message,
           "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
           request
         );
-      });
+      }
       // }
       // let competition = global.tblCompetitions.find(
       //   (item) => item.competitionId === commentaryDetails.competitionId
@@ -14366,24 +14459,47 @@ const saveComVirtual = async (request, fastify) => {
     if (isEndInnings && isEndInnings == true && commentaryData?.isPredictMarket == true) {
       //_resFromPredictAPI = null;
       //_resFromPredictAPI = await
-      callPredictorMarket(
-        {
-          commentary_id: commentaryData.commentaryId,
-          match_type_id: commentaryData.matchTypeId,
-          strike_team_id: strikeTeamForEndInnings.teamId,
-        },
-        "/api/v1/endinnings",
-        fastify,
-        request,
-        pythonURI
-      ).catch((err) => {
+
+      // await callPredictorMarket(
+      //   {
+      //     commentary_id: commentaryData.commentaryId,
+      //     match_type_id: commentaryData.matchTypeId,
+      //     strike_team_id: strikeTeamForEndInnings.teamId,
+      //   },
+      //   "/api/v1/endinnings",
+      //   fastify,
+      //   request,
+      //   pythonURI
+      // ).catch((err) => {
+      //   console.log("errorrrrrr", err)
+      //   errorLogger(
+      //     fastify,
+      //     err.message,
+      //     "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
+      //     request
+      //   );
+      // });
+
+      try {
+        await callPredictorMarket(
+          {
+            commentary_id: commentaryData.commentaryId,
+            match_type_id: commentaryData.matchTypeId,
+            strike_team_id: strikeTeamForEndInnings.teamId,
+          },
+          "/api/v1/endinnings",
+          fastify,
+          request,
+          pythonURI
+        )
+      } catch (error) {
         errorLogger(
           fastify,
           err.message,
           "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
           request
         );
-      });
+      }
       // let key1 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTBALLFACED);
       // let key2 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTPLAYERBOUNDARIES);
       // let key3 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTPLAYERRUNS);
