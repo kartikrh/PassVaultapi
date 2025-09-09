@@ -369,6 +369,7 @@ module.exports = async (fastify, opts) => {
     ],
     handler: (request, reply) => cloneCommentary(request, reply, fastify),
   });
+
   fastify.post("/loadMultiCommentary", {
     schema: Commentary.loadMultiCommentary.schema,
     preHandler: [

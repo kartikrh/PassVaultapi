@@ -2980,6 +2980,8 @@ const Commentary = {
           location: { type: "string" },
           weather: { type: "integer" },
           pitch: { type: "integer" },
+          streamingUrl: { type: "string" },
+          streamingType: { type: "integer" },
           // tossWonBy: { type: "string" },
           // choseTo: { type: "integer" },
           // winnerId: { type: "string" },
