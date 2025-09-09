@@ -233,10 +233,34 @@ const deleteICCRankingByIdQuery = async (id, fastify, request) => {
     }
 };
 
+const activeInactiveICCRankingByIdQuery = async (data, request, fastify) => {
+  try {
+    return await fastify.db.query(
+        `
+            update "tblICCRanking" set
+            "wrIsActive" = $1
+            where "wrId" = $2
+        `,
+      {
+        bind: [data.isActive, data.id],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/tblICCRanking.js/activeInactiveICCRankingByIdQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
     getAllICCRankingQuery,
     getICCRankingByIdQuery,
     insertICCRankingQuery,
     updateICCRankingQuery,
-    deleteICCRankingByIdQuery
+    deleteICCRankingByIdQuery,
+    activeInactiveICCRankingByIdQuery
 };

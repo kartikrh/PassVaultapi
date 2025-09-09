@@ -1,4 +1,4 @@
-const { deleteICCRankingByIdQuery, insertICCRankingQuery, updateICCRankingQuery } = require("../repository/tblICCRanking");
+const { deleteICCRankingByIdQuery, insertICCRankingQuery, updateICCRankingQuery, activeInactiveICCRankingByIdQuery } = require("../repository/tblICCRanking");
 const { ICCRankingType } = require("../utilities");
 
 const getAllICCRankingService = async (request) => {
@@ -187,9 +187,28 @@ const deleteICCRankingByIdService = async (request, fastify) => {
     }
 };
 
+const activeInactiveICCRankingByIdService = async (request, fastify) => {
+    const { id, isActive } = request.body;
+    const validateId = global.tblICCRanking.find(
+        (item) => item.id === id
+    );
+    if (!validateId) {
+        throw new Error("ICC Ranking Id not found");
+    }
+    await activeInactiveICCRankingByIdQuery({ id, isActive }, request, fastify);
+
+    const index = global.tblICCRanking.findIndex((item) => item.id === id);
+    if (index != -1) {
+        global.tblICCRanking[index].isActive = isActive;
+    }
+
+    return `IsActive stage updated successfully`;
+};
+
 module.exports = {
     getAllICCRankingService,
     getICCRankingByIdService,
     saveICCRankingService,
-    deleteICCRankingByIdService
+    deleteICCRankingByIdService,
+    activeInactiveICCRankingByIdService
 }

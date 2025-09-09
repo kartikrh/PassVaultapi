@@ -10693,6 +10693,21 @@ const ICCRanking = {
       },
     },
   },
+  activeInactive: {
+    schema: {
+      tags: ["ICC Ranking"],
+      description: "active inactive ICC Ranking",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["id", "isActive"],
+      },
+    },
+  },
 };
 
 module.exports = {
