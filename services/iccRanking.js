@@ -1,6 +1,5 @@
 const { deleteICCRankingByIdQuery, insertICCRankingQuery, updateICCRankingQuery, activeInactiveICCRankingByIdQuery } = require("../repository/tblICCRanking");
-const { ICCRankingType, extractEntries, callEntitySportAPI, ServiceType, APIEndpointModuleType } = require("../utilities");
-const { callClientAPI, ServiceType, APIEndpointModuleType } = require("../utilities");
+const { ICCRankingType, extractEntries, callEntitySportAPI, ServiceType, APIEndpointModuleType, callClientAPI } = require("../utilities");
 const { errorLogger } = require("../utilities/logger")
 
 const getAllICCRankingService = async (request) => {
