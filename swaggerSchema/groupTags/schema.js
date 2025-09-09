@@ -10638,7 +10638,7 @@ const ICCRanking = {
         properties: {
           isActive: { type: "boolean" },
           type: { type: "integer" },
-          matchType: { type: "integer" },
+          matchTypeId: { type: "integer" },
           sportId: { type: "integer" }
         },
       },
