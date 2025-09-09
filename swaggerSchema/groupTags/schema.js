@@ -2980,6 +2980,8 @@ const Commentary = {
           location: { type: "string" },
           weather: { type: "integer" },
           pitch: { type: "integer" },
+          streamingUrl: { type: "string" },
+          streamingType: { type: "integer" },
           // tossWonBy: { type: "string" },
           // choseTo: { type: "integer" },
           // winnerId: { type: "string" },
@@ -10625,6 +10627,91 @@ const Agent = {
   },
 }
 
+const ICCRanking = {
+  getAll: {
+    schema: {
+      tags: ["ICC Ranking"],
+      description: "get all ICC Ranking",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+  getById: {
+    schema: {
+      tags: ["ICC Ranking"],
+      description: "get ICC Ranking by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+        },
+        required: ["id"],
+      },
+    },
+  },
+  save: {
+    schema: {
+      tags: ["ICC Ranking"],
+      description: "insert ICC Ranking data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          sportId: { type: "integer" },
+          matchTypeId: { type: "integer" },
+          type: { type: "integer" },
+          isMen: { type: "boolean" },
+          teamId: { type: "integer" },
+          playerId: { type: "integer" },
+          playerType: { type: "integer" },
+          point: { type: "integer" },
+          rating: { type: "integer" },
+          rank: { type: "integer" },
+          remark: { type: "string" },
+          isActive: { type: "boolean" },
+        },
+        required: ["id", "sportId", "matchTypeId", "type", "isMen", "teamId", "playerId", "playerType", "rating", "point", "rank", "remark", "isActive"]
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["ICC Ranking"],
+      description: "delete ICC Ranking",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+        },
+        required: ["id"],
+      },
+    },
+  },
+  activeInactive: {
+    schema: {
+      tags: ["ICC Ranking"],
+      description: "active inactive ICC Ranking",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["id", "isActive"],
+      },
+    },
+  },
+};
+
 module.exports = {
   Auth,
   Tabs,
@@ -10702,4 +10789,5 @@ module.exports = {
   AutoImportData,
   EntitySport,
   Agent,
+  ICCRanking,
 };

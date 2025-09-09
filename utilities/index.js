@@ -1317,6 +1317,18 @@ const SourceID = {
   Betfair: 2,
   EntitySport: 3,
 }
+
+const ICCRankingType = {
+  Team: 1,
+  Player: 2
+}
+
+const ICCRankingPlayerType = {
+  Batsman: 1,
+  Bowler: 2,
+  AllRounder: 3
+}
+
 const exchangeMatchinfoAPI = async (data, request, fastify) => {
     try {
         let url = entityConstant.EXCHANGEMATCHINFOAPI;
@@ -1441,5 +1453,7 @@ module.exports = {
   ScoringTypes,
   RefType,
   SourceID,
-  exchangeMatchinfoAPI
+  exchangeMatchinfoAPI,
+  ICCRankingType,
+  ICCRankingPlayerType
 };
