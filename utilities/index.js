@@ -1412,7 +1412,7 @@ const extractEntries = (json, isMen) => {
               type: ICCRankingType.Team,
               teamId: teamId?.teamId,
               playerId: null,
-              playerType: null,
+              playerTypeId: null,
               rating: parseInt(item.rating),
               point: parseInt(item.points),
               remark: `${item.matches} matches`,
@@ -1421,14 +1421,14 @@ const extractEntries = (json, isMen) => {
         } else {
           const teamId = teamData.find(t => t?.teamShortName.toLowerCase() === item.team.toLowerCase());
           const playerId = playerData.find(p => p?.tpId === Number(item.pid));
-          let playerType = playerTypeData.find(pt => pt.playerType.toLowerCase() === ICCRankingPlayerType[category].toLowerCase());
-          if (teamId && playerId && playerType) {
+          const playerTypeId = playerTypeData.find(pt => pt.playerType.toLowerCase() === ICCRankingPlayerType[category].toLowerCase());
+          if (teamId && playerId && playerTypeId) {
             output.push({
               ...commonFields,
               type: ICCRankingType.Player,
               teamId: teamId?.teamId,
               playerId: playerId?.playerId,
-              playerType: playerType.playerTypeId,
+              playerTypeId: playerTypeId.playerTypeId,
               rating: parseInt(item.rating),
               point: parseInt(item.careerbestrating.split(" ")[0]),
               remark: item.careerbestrating,
