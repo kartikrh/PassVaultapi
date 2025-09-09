@@ -111,7 +111,11 @@ const insertICCRankingQuery = async (data, fastify, request) => {
                 "wrRank" as "rank",
                 "wrPreRank" as "preRank",
                 "wrRemark" as "remark",
-                "wrIsActive" as "isActive" 
+                "wrIsActive" as "isActive",
+                "wrCreateDate" as "createDate",
+                "wrCreatedBy" as "createdBy",
+                "wrModifyDate" as "modifyDate",
+                "wrModifyBy" as "modifyBy"
             from insert_data`,
             {
                 bind: [
