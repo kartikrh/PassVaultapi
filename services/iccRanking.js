@@ -3,55 +3,55 @@ const { ICCRankingType, extractEntries, callEntitySportAPI, ServiceType, APIEndp
 const { errorLogger } = require("../utilities/logger")
 
 const getAllICCRankingService = async (request) => {
-    const { isActive } = request.body;
-    if (isActive !== undefined) {
-        const result = global.tblICCRanking.filter(
-            (item) => item.isActive === isActive
+    const { isActive, type, matchType, sportId } = request.body;
+
+    return global.tblICCRanking.filter((item) => {
+        return (
+            (isActive === undefined || item.isActive === isActive) &&
+            (type === undefined || type === 0 || item.type === type) &&
+            (matchType === undefined || matchType === 0 || item.matchTypeId === matchType) &&
+            (sportId === undefined || sportId === 0 || item.sportId === sportId)
         );
-        return result;
-    } else {
-        const result = global.tblICCRanking.filter((item) => item.isActive === true);
-        return result;
-    }
+    });
 };
 
 const AllICCRankingService = (request) => {
-  const { isActive } = request.body;
+    const { isActive } = request.body;
 
-  const filterValue = isActive !== undefined ? isActive : true;
+    const filterValue = isActive !== undefined ? isActive : true;
 
-  return global.tblICCRanking
-    .filter(item => item.isActive === filterValue)
-    .map(item => {
-      const sportName = item.sportId
-        ? global.tblEventTypes.find(e => e.eventTypeId == item.sportId)?.eventType || null
-        : null;
+    return global.tblICCRanking
+        .filter(item => item.isActive === filterValue)
+        .map(item => {
+            const sportName = item.sportId
+                ? global.tblEventTypes.find(e => e.eventTypeId == item.sportId)?.eventType || null
+                : null;
 
-      const matchType = item.matchTypeId
-        ? global.tblMatchTypes.find(e => e.matchTypeId == item.matchTypeId)?.matchType || null
-        : null;
+            const matchType = item.matchTypeId
+                ? global.tblMatchTypes.find(e => e.matchTypeId == item.matchTypeId)?.matchType || null
+                : null;
 
-      const teamName = item.teamId
-        ? global.tblTeams.find(e => e.teamId == item.teamId)?.teamName || null
-        : null;
+            const teamName = item.teamId
+                ? global.tblTeams.find(e => e.teamId == item.teamId)?.teamName || null
+                : null;
 
-      const playerName = item.playerId
-        ? global.tblPlayers.find(e => e.playerId == item.playerId)?.playerName || null
-        : null;
+            const playerName = item.playerId
+                ? global.tblPlayers.find(e => e.playerId == item.playerId)?.playerName || null
+                : null;
 
-      const playerTypeName = item.playerType
-        ? global.tblPlayerTypes.find(e => e.playerTypeId == data.playerType)?.playerType || null
-        : null
+            const playerTypeName = item.playerType
+                ? global.tblPlayerTypes.find(e => e.playerTypeId == data.playerType)?.playerType || null
+                : null
 
-      return {
-        ...item,
-        sportName,
-        matchType,
-        teamName,
-        playerName,
-        playerTypeName,
-      };
-    });
+            return {
+                ...item,
+                sportName,
+                matchType,
+                teamName,
+                playerName,
+                playerTypeName,
+            };
+        });
 };
 
 const getICCRankingByIdService = async (request) => {
@@ -220,41 +220,41 @@ const updateICCRankingByIdService = async (request, fastify) => {
 
     const updateData = global.tblICCRanking
         .filter(elem =>
-          elem.sportId == sportId &&
-          elem.matchTypeId === matchTypeId &&
-          elem.type === type &&
-          elem.isMen === isMen &&
-          elem.isActive === true
+            elem.sportId == sportId &&
+            elem.matchTypeId === matchTypeId &&
+            elem.type === type &&
+            elem.isMen === isMen &&
+            elem.isActive === true
         )
         .map(item => {
-          const sportName = item.sportId
-            ? global.tblEventTypes.find(e => e.eventTypeId == item.sportId)?.eventType || null
-            : null;
+            const sportName = item.sportId
+                ? global.tblEventTypes.find(e => e.eventTypeId == item.sportId)?.eventType || null
+                : null;
 
-          const matchType = item.matchTypeId
-            ? global.tblMatchTypes.find(e => e.matchTypeId == item.matchTypeId)?.matchType || null
-            : null;
+            const matchType = item.matchTypeId
+                ? global.tblMatchTypes.find(e => e.matchTypeId == item.matchTypeId)?.matchType || null
+                : null;
 
-          const teamName = item.teamId
-            ? global.tblTeams.find(e => e.teamId == item.teamId)?.teamName || null
-            : null;
+            const teamName = item.teamId
+                ? global.tblTeams.find(e => e.teamId == item.teamId)?.teamName || null
+                : null;
 
-          const playerName = item.playerId
-            ? global.tblPlayers.find(e => e.playerId == item.playerId)?.playerName || null
-            : null;
+            const playerName = item.playerId
+                ? global.tblPlayers.find(e => e.playerId == item.playerId)?.playerName || null
+                : null;
 
-          const playerTypeName = item.playerType
-            ? global.tblPlayerTypes.find(e => e.playerTypeId == item.playerType)?.playerType || null
-            : null;
+            const playerTypeName = item.playerType
+                ? global.tblPlayerTypes.find(e => e.playerTypeId == item.playerType)?.playerType || null
+                : null;
 
-          return {
-            ...item,
-            sportName,
-            matchType,
-            teamName,
-            playerName,
-            playerTypeName,
-          };
+            return {
+                ...item,
+                sportName,
+                matchType,
+                teamName,
+                playerName,
+                playerTypeName,
+            };
         });
     callClientAPI(
         {
