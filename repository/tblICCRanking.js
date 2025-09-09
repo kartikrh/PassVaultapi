@@ -122,7 +122,7 @@ const insertICCRankingQuery = async (data, fastify, request) => {
                     data.sportId || null,
                     data.matchTypeId || null,
                     data.type || null,
-                    data.isMen || null,
+                    data.isMen || false,
                     data.teamId || null,
                     data.playerId || null,
                     data.playerType || null,
@@ -130,7 +130,7 @@ const insertICCRankingQuery = async (data, fastify, request) => {
                     data.point || 0,
                     data.rank || 0,
                     data.remark || null,
-                    data.isActive || null,
+                    data.isActive || true,
                     request.userTokenInfo.WrUserId || null
                 ],
                 type: fastify.db.QueryTypes.SELECT,

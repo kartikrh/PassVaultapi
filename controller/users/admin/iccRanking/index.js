@@ -1,4 +1,4 @@
-const { getAllICCRankingService, getICCRankingByIdService, deleteICCRankingByIdService, saveICCRankingService, updateICCRankingByIdService, activeInactiveICCRankingByIdService, AllICCRankingService } = require("../../../../services/iccRanking");
+const { getAllICCRankingService, getICCRankingByIdService, deleteICCRankingByIdService, saveICCRankingService, updateICCRankingByIdService, activeInactiveICCRankingByIdService, AllICCRankingService, importICCRankingFromEntitySportService } = require("../../../../services/iccRanking");
 const { ERROR_CODES, success, error } = require("../../../../utilities");
 const { errorLogger } = require("../../../../utilities/logger");
 
@@ -74,6 +74,16 @@ const AllICCRankings = async (request, reply, fastify) => {
     }
 };
 
+const importICCRankingFromEntitySport = async (request, reply, fastify) => {
+  try {
+    const result = await importICCRankingFromEntitySportService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/importICCRankingFromEntitySport", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
 module.exports = {
     getAllICCRanking,
     getICCRankingById,
@@ -82,4 +92,5 @@ module.exports = {
     deleteICCRankingById,
     activeInactiveICCRankingById,
     AllICCRankings,
+    importICCRankingFromEntitySport
 }

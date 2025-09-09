@@ -566,6 +566,7 @@ const APIEndpointModuleType = {
   updateSeoModule : 6,
   updateMenuList : 7,
   configUpdate: 8,
+  getICCRankingData: 9,
 }
 const NotificationSendType = {
   all : 1,
@@ -1323,42 +1324,124 @@ const ICCRankingType = {
   Player: 2
 }
 
+const ICCMatchType = {
+  men: {
+    odis: matchTypesEntity.ODI,
+    tests: matchTypesEntity.TEST,
+    t20s: matchTypesEntity.T20
+  },
+  women: {
+    odis: matchTypesEntity["Women ODI"],
+    t20s: matchTypesEntity["Women T20"]
+  }
+}
+
 const ICCRankingPlayerType = {
+  batsmen: "BatsMan",
+  bowlers: "Bowler",
+  "all-rounders": "AllRounder"
+}
+
+const ICCRankingPlayerTypeById = {
   Batsman: 1,
   Bowler: 2,
   AllRounder: 3
 }
 
 const exchangeMatchinfoAPI = async (data, request, fastify) => {
-    try {
-        let url = entityConstant.EXCHANGEMATCHINFOAPI;
-        if (!url) return 'Match info URL not found';
+  try {
+    let url = entityConstant.EXCHANGEMATCHINFOAPI;
+    if (!url) return 'Match info URL not found';
 
-        const authToken = global.tblConfigs.find(item => item.key === configConstants.ENTITYEXCHAUTHTOKEN)?.value;
-        if (!authToken) {
-            throw new Error("Auth token not found in config");
-        }
-
-        if (!data?.mid) {
-            throw new Error("Match ID is required");
-        }
-
-        url = url.replace("{token}", authToken)
-            .replace("{match_id}", data?.mid || "")
-
-        const result = await axios.get(url, { headers: {} });
-        return result.data;
-    } catch (error) {
-        console.log("error from exchangeMatchInfoAPI", error);
-        errorLogger(
-            fastify,
-            error.message,
-            "DB ERROR --> utilities/index/exchangeMatchInfoAPI",
-            request
-        );
-        return error.response?.data || { status: "failed", response: error.message, api_version: "3.0" };
+    const authToken = global.tblConfigs.find(item => item.key === configConstants.ENTITYEXCHAUTHTOKEN)?.value;
+    if (!authToken) {
+      throw new Error("Auth token not found in config");
     }
+
+    if (!data?.mid) {
+      throw new Error("Match ID is required");
+    }
+
+    url = url.replace("{token}", authToken)
+      .replace("{match_id}", data?.mid || "")
+
+    const result = await axios.get(url, { headers: {} });
+    return result.data;
+  } catch (error) {
+    console.log("error from exchangeMatchInfoAPI", error);
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> utilities/index/exchangeMatchInfoAPI",
+      request
+    );
+    return error.response?.data || { status: "failed", response: error.message, api_version: "3.0" };
+  }
 }
+
+const extractEntries = (json, isMen) => {
+  const matchTypeData = global.tblMatchTypes;
+  const playerTypeData = global.tblPlayerTypes;
+  const teamData = global.tblTeams;
+  const playerData = global.tblPlayers;
+  const isTeamCategory = category => category === 'teams';
+  const output = [];
+
+  for (const category in json) {
+    const categoryData = json[category];
+
+    for (const matchType in categoryData) {
+      const matchTypeId = matchTypeData.find(mt => mt.entityEnum === ICCMatchType[isMen ? "men" : "women"][matchType])?.matchTypeId;
+      const entries = categoryData[matchType];
+
+      for (const item of entries) {
+        const commonFields = {
+          id: 0,
+          sportId: 1,
+          matchTypeId: matchTypeId,
+          isMen: isMen,
+          rank: parseInt(item.rank),
+          isActive: true,
+        };
+
+        if (isTeamCategory(category)) {
+          const teamId = teamData.find(t => t?.tpId === Number(item.tid));
+          if (teamId) {
+            output.push({
+              ...commonFields,
+              type: ICCRankingType.Team,
+              teamId: teamId?.teamId,
+              playerId: null,
+              playerType: null,
+              rating: parseInt(item.rating),
+              point: parseInt(item.points),
+              remark: `${item.matches} matches`,
+            });
+          }
+        } else {
+          const teamId = teamData.find(t => t?.teamShortName.toLowerCase() === item.team.toLowerCase());
+          const playerId = playerData.find(p => p?.tpId === Number(item.pid));
+          let playerType = playerTypeData.find(pt => pt.playerType.toLowerCase() === ICCRankingPlayerType[category].toLowerCase());
+          if (teamId && playerId && playerType) {
+            output.push({
+              ...commonFields,
+              type: ICCRankingType.Player,
+              teamId: teamId?.teamId,
+              playerId: playerId?.playerId,
+              playerType: playerType.playerTypeId,
+              rating: parseInt(item.rating),
+              point: parseInt(item.careerbestrating.split(" ")[0]),
+              remark: item.careerbestrating,
+            });
+          }
+        }
+      }
+    }
+  }
+
+  return output;
+}
+
 module.exports = {
   ERROR_CODES,
   error,
@@ -1455,5 +1538,7 @@ module.exports = {
   SourceID,
   exchangeMatchinfoAPI,
   ICCRankingType,
-  ICCRankingPlayerType
+  ICCRankingPlayerType,
+  ICCRankingPlayerTypeById,
+  extractEntries
 };
