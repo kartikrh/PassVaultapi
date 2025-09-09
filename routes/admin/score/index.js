@@ -68,6 +68,7 @@ const {
 const { getAllSocialMedia } = require("../../../controller/users/admin/socialMedia");
 const { clientApiWhitelabels, getHideEvent } = require("../../../controller/users/admin/whitelabel");
 const { deleteClient, deleteClientByEncrypt } = require("../../../controller/users/admin/client");
+const { AllICCRankings } = require("../../../controller/users/admin/iccRanking/index");
 
 module.exports = async (fastify, opts) => {
   fastify.post("/getscore", {
@@ -412,6 +413,9 @@ module.exports = async (fastify, opts) => {
   });
    fastify.post("/tournamentTeamPoints", {
     handler: (request, reply) => getTournamentTeamPoints(request, reply, fastify),
+  });
+  fastify.post("/iccRanking", {
+    handler: (request, reply) => AllICCRankings(request, reply, fastify),
   });
 };
 
