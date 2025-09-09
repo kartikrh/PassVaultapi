@@ -1,5 +1,5 @@
 const { deleteICCRankingByIdQuery, insertICCRankingQuery, updateICCRankingQuery, activeInactiveICCRankingByIdQuery } = require("../repository/tblICCRanking");
-const { ICCRankingType } = require("../utilities");
+const { ICCRankingType, extractEntries, callEntitySportAPI, ServiceType, APIEndpointModuleType } = require("../utilities");
 const { callClientAPI, ServiceType, APIEndpointModuleType } = require("../utilities");
 const { errorLogger } = require("../utilities/logger")
 
@@ -398,6 +398,42 @@ const fieldNamesService = (data) => {
     };
 };
 
+const importICCRankingFromEntitySportService = async (request, fastify) => {
+    callEntitySportAPI(
+        {
+            serviceType: ServiceType.entitySport,
+            moduleType: APIEndpointModuleType.getICCRankingData,
+            data: {
+                module: "iccRanking",
+                type: "get",
+            }
+        },
+        request,
+        fastify
+    ).then(async (response) => {
+        if (response && response.data && response.data.result) {
+            const iccRankingData = response.data.result;
+            const menEntries = extractEntries(iccRankingData.ranks, true);
+            const womenEntries = extractEntries(iccRankingData.women_ranks, false);
+            const resultEntries = [...menEntries, ...womenEntries];
+            for (const entry of resultEntries) {
+                await createICCRankingService({
+                    ...request,
+                    body: entry
+                }, fastify).catch((err) => {
+                    // console.log("error", err.message);
+                });
+            }
+        } else {
+            throw new Error("Error fetching ICC Ranking data from EntitySport API");
+        }
+    }).catch((err) => {
+        throw new Error("API ERROR --> services/iccRanking.js/importICCRankingFromEntitySportService - callEntitySportAPI");
+    });
+
+    return `ICC Ranking data imported successfully`;
+};
+
 module.exports = {
     getAllICCRankingService,
     getICCRankingByIdService,
@@ -405,4 +441,5 @@ module.exports = {
     deleteICCRankingByIdService,
     activeInactiveICCRankingByIdService,
     AllICCRankingService,
+    importICCRankingFromEntitySportService
 }

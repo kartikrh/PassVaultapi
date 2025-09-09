@@ -10710,6 +10710,13 @@ const ICCRanking = {
       },
     },
   },
+  import: {
+    schema: {
+      tags: ["ICC Ranking"],
+      description: "import ICC Ranking data from entity sport",
+      security: [{ bearerAuth: [] }],
+    },
+  },
 };
 
 module.exports = {

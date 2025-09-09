@@ -1,5 +1,5 @@
 const { checkPermission, authorize } = require("../../../controller/middleware");
-const { getAllICCRanking, getICCRankingById, saveICCRanking, deleteICCRankingById, activeInactiveICCRankingById } = require("../../../controller/users/admin/iccRanking");
+const { getAllICCRanking, getICCRankingById, saveICCRanking, deleteICCRankingById, activeInactiveICCRankingById, importICCRankingFromEntitySport } = require("../../../controller/users/admin/iccRanking");
 const { ICCRanking } = require("../../../swaggerSchema/groupTags/schema");
 
 module.exports = async (fastify, opts) => {
@@ -63,5 +63,17 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request, reply) => activeInactiveICCRankingById(request, reply, fastify),
+  });
+  fastify.get("/import", {
+    schema: ICCRanking.import.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "iccRanking",
+          mode: "add",
+        }),
+    ],
+    handler: (request, reply) => importICCRankingFromEntitySport(request, reply, fastify),
   });
 };
