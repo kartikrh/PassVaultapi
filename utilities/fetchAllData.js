@@ -108,7 +108,7 @@ const { getAllPitchConditionsQuery } = require("../repository/TablePitchConditio
 const { getAllPythonAPIsQuery } = require("../repository/TablePythonAPI");
 const { getAllMatchTypeTemplatesQuery } = require("../repository/TableMatchTypeTemplates");
 const { getAllOverTypesQuery } = require("../repository/TableOverType");
-const { getAllICCRankingQuery } = require("../repository/tblICCRanking");
+const { getAllICCRankingQuery } = require("../repository/TableICCRanking");
 
 const fetchAllDataFromDb = async (fastify, reply) => {
   try {
