@@ -8092,7 +8092,7 @@ const changeBowlerOfCommentaryService = async (request, fastify) => {
           bowler_id: bowlerId,
           wicket: latestOver?.totalWicket || null
         },
-      "/api/v1/predictscore",
+      "/api/v1/changebowler",
       fastify,
       request
     )
