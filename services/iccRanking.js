@@ -3,13 +3,13 @@ const { ICCRankingType, extractEntries, callEntitySportAPI, ServiceType, APIEndp
 const { errorLogger } = require("../utilities/logger")
 
 const getAllICCRankingService = async (request) => {
-    const { isActive, type, matchType, sportId } = request.body;
+    const { isActive, type, matchTypeId, sportId } = request.body;
 
     return global.tblICCRanking.filter((item) => {
         return (
             (isActive === undefined || item.isActive === isActive) &&
             (type === undefined || type === 0 || item.type === type) &&
-            (matchType === undefined || matchType === 0 || item.matchTypeId === matchType) &&
+            (matchTypeId === undefined || matchTypeId === 0 || item.matchTypeId === matchTypeId) &&
             (sportId === undefined || sportId === 0 || item.sportId === sportId)
         );
     });
