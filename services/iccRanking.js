@@ -375,8 +375,8 @@ const importICCRankingFromEntitySportService = async (request, fastify) => {
     ).then(async (response) => {
         if (response && response.data && response.data.result) {
             const iccRankingData = response.data.result;
-            const menEntries = extractEntries(iccRankingData.ranks, true);
-            const womenEntries = extractEntries(iccRankingData.women_ranks, false);
+            const menEntries = await extractEntries(iccRankingData.ranks, true, request, fastify);
+            const womenEntries = await extractEntries(iccRankingData.women_ranks, false, request, fastify);
             const resultEntries = [...menEntries, ...womenEntries];
             for (const entry of resultEntries) {
                 await createICCRankingService({
