@@ -24,43 +24,18 @@ const getAllICCRankingService = async (request) => {
     });
 };
 
-const AllICCRankingService = (request) => {
+const AllICCRankingService = async (request) => {
     const { isActive } = request.body;
-
     const filterValue = isActive !== undefined ? isActive : true;
 
-    return global.tblICCRanking
-        .filter(item => item.isActive === filterValue)
-        .map(item => {
-            const sportName = item.sportId
-                ? global.tblEventTypes.find(e => e.eventTypeId == item.sportId)?.eventType || null
-                : null;
-
-            const matchType = item.matchTypeId
-                ? global.tblMatchTypes.find(e => e.matchTypeId == item.matchTypeId)?.matchType || null
-                : null;
-
-            const teamName = item.teamId
-                ? global.tblTeams.find(e => e.teamId == item.teamId)?.teamName || null
-                : null;
-
-            const playerName = item.playerId
-                ? global.tblPlayers.find(e => e.playerId == item.playerId)?.playerName || null
-                : null;
-
-            const playerTypeName = item.playerTypeId
-                ? global.tblPlayerTypes.find(e => e.playerTypeId == data.playerTypeId)?.playerType || null
-                : null
-
-            return {
-                ...item,
-                sportName,
-                matchType,
-                teamName,
-                playerName,
-                playerTypeName,
-            };
-        });
+    return Promise.all(
+        global.tblICCRanking
+            .filter(item => item.isActive === filterValue)
+            .map(async (item) => {
+                const fields = await fieldNamesService(item);
+                return { ...item, ...fields };
+            })
+    );
 };
 
 const getICCRankingByIdService = async (request) => {
@@ -235,35 +210,9 @@ const updateICCRankingByIdService = async (request, fastify) => {
             elem.isMen === isMen &&
             elem.isActive === true
         )
-        .map(item => {
-            const sportName = item.sportId
-                ? global.tblEventTypes.find(e => e.eventTypeId == item.sportId)?.eventType || null
-                : null;
-
-            const matchType = item.matchTypeId
-                ? global.tblMatchTypes.find(e => e.matchTypeId == item.matchTypeId)?.matchType || null
-                : null;
-
-            const teamName = item.teamId
-                ? global.tblTeams.find(e => e.teamId == item.teamId)?.teamName || null
-                : null;
-
-            const playerName = item.playerId
-                ? global.tblPlayers.find(e => e.playerId == item.playerId)?.playerName || null
-                : null;
-
-            const playerTypeName = item.playerTypeId
-                ? global.tblPlayerTypes.find(e => e.playerTypeId == item.playerTypeId)?.playerType || null
-                : null;
-
-            return {
-                ...item,
-                sportName,
-                matchType,
-                teamName,
-                playerName,
-                playerTypeName,
-            };
+        .map(async item => {
+            const fields = await fieldNamesService(item);
+            return { ...item, ...fields };
         });
     callClientAPI(
         {
@@ -374,7 +323,7 @@ const activeInactiveICCRankingByIdService = async (request, fastify) => {
     return `IsActive stage updated successfully`;
 };
 
-const fieldNamesService = (data) => {
+const fieldNamesService = async (data) => {
     let sportName = null,
         matchType = null,
         teamName = null,
@@ -393,7 +342,7 @@ const fieldNamesService = (data) => {
     if (data.playerId) {
         playerName = global.tblPlayers.find(e => e.playerId == data.playerId)?.playerName || null;
     }
-    if (data.playerType) {
+    if (data.playerTypeId) {
         playerTypeName = global.tblPlayerTypes.find(e => e.playerTypeId == data.playerTypeId)?.playerType || null;
     }
 
