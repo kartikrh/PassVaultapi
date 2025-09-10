@@ -1342,12 +1342,6 @@ const ICCRankingPlayerType = {
   "all-rounders": "AllRounder"
 }
 
-const ICCRankingPlayerTypeById = {
-  Batsman: 1,
-  Bowler: 2,
-  AllRounder: 3
-}
-
 const exchangeMatchinfoAPI = async (data, request, fastify) => {
   try {
     let url = entityConstant.EXCHANGEMATCHINFOAPI;
@@ -1539,6 +1533,5 @@ module.exports = {
   exchangeMatchinfoAPI,
   ICCRankingType,
   ICCRankingPlayerType,
-  ICCRankingPlayerTypeById,
   extractEntries
 };
