@@ -220,7 +220,7 @@ const deleteICCRankingByIdQuery = async (id, fastify, request) => {
                 "wrIsDeleted" = $2,
                 "wrDeletedBy" = $3,
                 "wrDeletedAt" = NOW() 
-            WHERE "wrId" =  $4`,
+            WHERE "wrId" =  ANY($4)`,
             {
                 type: fastify.db.QueryTypes.UPDATE,
                 bind: [false, true, request.userTokenInfo.WrUserId, id],
