@@ -10673,14 +10673,14 @@ const ICCRanking = {
           isMen: { type: "boolean" },
           teamId: { type: "integer" },
           playerId: { type: "integer" },
-          playerType: { type: "integer" },
+          playerTypeId: { type: "integer" },
           point: { type: "integer" },
           rating: { type: "integer" },
           rank: { type: "integer" },
           remark: { type: "string" },
           isActive: { type: "boolean" },
         },
-        required: ["id", "sportId", "matchTypeId", "type", "isMen", "teamId", "playerId", "playerType", "rating", "point", "rank", "remark", "isActive"]
+        required: ["id", "sportId", "matchTypeId", "type", "isMen", "teamId", "playerId", "playerTypeId", "rating", "point", "rank", "remark", "isActive"]
       },
     },
   },
