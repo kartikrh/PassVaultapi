@@ -214,8 +214,8 @@ const updateICCRankingByIdService = async (request, fastify) => {
 
     global.tblICCRanking[rankingIndex] = updatedCurrent[0];
 
-    const updateData = global.tblICCRanking
-        .filter(elem =>
+    const updateData = await Promise.all(
+        global.tblICCRanking.filter(elem =>
             elem.sportId == sportId &&
             elem.matchTypeId === matchTypeId &&
             elem.type === type &&
@@ -225,7 +225,8 @@ const updateICCRankingByIdService = async (request, fastify) => {
         .map(async item => {
             const fields = await fieldNamesService(item);
             return { ...item, ...fields };
-        });
+        })
+    );
     callClientAPI(
         {
             serviceType: ServiceType.clientAPI,
@@ -261,40 +262,32 @@ const saveICCRankingService = async (request, fastify) => {
 
 const deleteICCRankingByIdService = async (request, fastify) => {
     const { id } = request.body;
-    const result = global.tblICCRanking.find((item) => item.id === id);
 
-    if (!result) {
-        throw new Error("ICC Ranking with this id not Found");
-    } else {
-        await deleteICCRankingByIdQuery(id, fastify, request);
+    await deleteICCRankingByIdQuery(id, fastify, request);
+    global.tblICCRanking = global.tblICCRanking.filter((item) => !id.includes(item.id));
 
-        global.tblICCRanking = global.tblICCRanking.filter(
-            (item) => item.id !== id
-        );
-
-        callClientAPI(
-            {
-                serviceType: ServiceType.clientAPI,
-                moduleType: APIEndpointModuleType.updateSeoModule,
+    callClientAPI(
+        {
+            serviceType: ServiceType.clientAPI,
+            moduleType: APIEndpointModuleType.updateSeoModule,
+            data: {
+                module: 'iccRankings',
+                type: "delete",
                 data: {
-                    module: 'iccRankings',
-                    type: "delete",
-                    data: {
-                        id: id
-                    }
+                    id: id
                 }
-            }, request, fastify)
-            .catch((err) => {
-                errorLogger(
-                    fastify,
-                    err.message,
-                    "services/iccRanking.js/deleteICCRankingByIdService - callClientAPI",
-                    request
-                );
-            });
+            }
+        }, request, fastify)
+        .catch((err) => {
+            errorLogger(
+                fastify,
+                err.message,
+                "services/iccRanking.js/deleteICCRankingByIdService - callClientAPI",
+                request
+            );
+        });
 
-        return `ICC Ranking(s) deleted successfully`;
-    }
+    return `ICC Ranking(s) deleted successfully`;
 };
 
 const activeInactiveICCRankingByIdService = async (request, fastify) => {

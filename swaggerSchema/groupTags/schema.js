@@ -10692,7 +10692,11 @@ const ICCRanking = {
       body: {
         type: "object",
         properties: {
-          id: { type: "integer" },
+          id: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
         },
         required: ["id"],
       },
