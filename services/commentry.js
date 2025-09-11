@@ -4440,6 +4440,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
       if (updatedData.overDetails) {
         // call predict call
         let pythonURI = commentaryData.pythonURI;
+        let comP = global.tblCommentaryPlayers.find((i)=>i.commentaryPlayerId == updatedData.overDetails?.bowlerId);
         callPredictorMarket(
           {
             commentary_id: commentaryId,
@@ -4447,7 +4448,9 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
             over_id: updatedData.overDetails?.overId || null,
             team_id: updatedData.overDetails?.teamId || null,
             bowler_id: updatedData.overDetails?.bowlerId || null,
-            wicket: updatedData.overDetails?.totalWicket || 0
+            wicket: updatedData.overDetails?.totalWicket || 0,
+            bowling_style : comP?.bowlingStyle || null,
+            ball_by_ball_id : 0
           },
           "/api/v1/changebowler",
           fastify,
@@ -8096,18 +8099,19 @@ const changeBowlerOfCommentaryService = async (request, fastify) => {
     const bowlingTeam = global.tblCommentaryTeams.find((i)=> i.commentaryId == commentary.commentaryId 
       && i.currentInnings ==currentInnings && i.teamStatus == 2)
 
-    const latestOver = global.tblOvers.filter((i)=>i.commentaryId == commentary.commentaryId 
-      && i.currentInnings ==currentInnings && i.teamId == bowlingTeam?.teamId )
-      .sort((a,b) => b.overId - a.overId)[0]
-    const pythonURI = commentary.pythonURI
-      callPredictorMarket(
+    const latestOver = global.tblOvers.filter((i)=> i.overId == overId)
+    const pythonURI = commentary?.pythonURI
+    const comP = global.tblCommentaryPlayers.find((i)=>i.commentaryPlayerId == bowlerId)
+    callPredictorMarket(
         {
           commentary_id: commentary.commentaryId,
           over_type_id: latestOver?.overType || null,
           over_id: latestOver?.overId || null,
           team_id: bowlingTeam?.teamId || null,
           bowler_id: bowlerId,
-          wicket: latestOver?.totalWicket || null
+          wicket: latestOver?.totalWicket || 0,
+          bowling_style : comP?.bowlingStyle || 0,
+          ball_by_ball_id : 0
         },
       "/api/v1/changebowler",
       fastify,
