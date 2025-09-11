@@ -8083,6 +8083,7 @@ const changeBowlerOfCommentaryService = async (request, fastify) => {
     const latestOver = global.tblOvers.filter((i)=>i.commentaryId == commentary.commentaryId 
       && i.currentInnings ==currentInnings && i.teamId == bowlingTeam?.teamId )
       .sort((a,b) => b.overId - a.overId)[0]
+    const pythonURI = commentary.pythonAPI
       callPredictorMarket(
         {
           commentary_id: commentary.commentaryId,
@@ -8094,7 +8095,8 @@ const changeBowlerOfCommentaryService = async (request, fastify) => {
         },
       "/api/v1/changebowler",
       fastify,
-      request
+      request,
+      pythonURI
     )
     commentaryLogger(
       {
