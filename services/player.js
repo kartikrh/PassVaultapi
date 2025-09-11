@@ -13,6 +13,7 @@ const {
   deleteTeamPlayerByPlayerIdQuery,
   getTeamPlayerByPlayerIdQuery,
   getTeamListByPlayerIdQuery,
+  updateTeamPlayerHomeTeamQuery,
 } = require("../repository/TableTeamPlayer");
 const { getAllPlayersByTeamIdQuery, getAllPlayersByCompetitionIdTeamIdQuery } = require("../repository/TableTeams");
 const {
@@ -264,6 +265,17 @@ const insertPlayerService = async (request, fastify) => {
     }
   }
 
+  if(request.body?.homeTeamId !== null && request.body?.homeTeamId !== undefined) {
+    await updateTeamPlayerHomeTeamQuery(
+      {
+        refPlayerId: result?.playerId,
+        teamId: parseInt(request.body.homeTeamId),
+      },
+      fastify,
+      request
+    );
+  }
+
   if (!result) {
     return null;
   } else {
@@ -478,6 +490,16 @@ const updatePlayerService = async (request, fastify) => {
         }
       }
     }
+  }
+  if(request.body?.homeTeamId !== null && request.body?.homeTeamId !== undefined) {
+    await updateTeamPlayerHomeTeamQuery(
+      {
+        refPlayerId: parseInt(request.body.playerId),
+        teamId: parseInt(request.body.homeTeamId),
+      },
+      fastify,
+      request
+    );
   }
   const openCommentaryIds = global.tblCommentaries.filter(item => item.commentaryStatus == 1)
     .map(item => item.commentaryId);

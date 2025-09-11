@@ -384,7 +384,8 @@ const getAllTeamsByPlayerIdQuery = async (playerId, fastify, request) => {
     return await fastify.db.query(
       `select 
       tp."wrTeamId" as "teamId",
-      "wrTeamName" as "teamName"
+      "wrTeamName" as "teamName",
+      tp."wrHomeTeam" as "homeTeam"
        from "tblTeamPlayers" tp
        left join "tblTeams" tt on tp."wrTeamId" = tt."wrTeamId"
        where "wrRefPlayerId" = $1 and tp."wrIsDeleted" = false and tt."wrIsDeleted" = false`,
@@ -433,6 +434,7 @@ const getTeamPlayerQuery = async (data, fastify, request) => {
         tp."wrImage" as "playerImage",
         tt."wrTeamName" as "teamName",
         tp."wrPlayerName" as "playerName",
+        ttm."wrHomeTeam" as "homeTeam",
         ttm."wrTpId" as "tpId"
       FROM
         "tblTeamPlayers" ttm

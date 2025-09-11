@@ -7,6 +7,7 @@ const getAllTeamPlayersQuery = async (fastify) => {
         te2."wrValue" as "teamId",
         te3."wrValue" as "refPlayerId",
         "wrPlayerOrder" as "playerOrder",
+        "wrHomeTeam" as "homeTeam",
         tp."wrTpId" as "tpId"
          from "tblTeamPlayers" tp left join "tblEncryptedData" te on tp."wrTeamPlayerId" = te."wrKey"
          left join "tblEncryptedData" te2 on tp."wrTeamId" = te2."wrKey"
@@ -26,6 +27,7 @@ const getAllTeamPlayersByTeamIdAndPlayerIdQuery = async (data, fastify, request)
         "wrRefPlayerId" as "refPlayerId",
         "wrJerseyPlayerImage" as "jerseyPlayerImage",
         "wrJerseyPlayerImagePath" as "jerseyPlayerImagePath",
+        "wrHomeTeam" as "homeTeam",
         "wrTpId" as "tpId"
       FROM "tblTeamPlayers"
       WHERE "wrRefPlayerId" = $1 AND "wrTeamId" = $2
@@ -54,8 +56,8 @@ const insertTeamPlayerQuery = async (data, fastify, request) => {
       select COALESCE(max("wrPlayerOrder"),0) as "playerOrder" from "tblTeamPlayers" where "wrTeamId" =$1
     ),
     insert_team_player as (
-      insert into "tblTeamPlayers" ("wrTeamId", "wrRefPlayerId", "wrPlayerOrder","wrCreatedDate", "wrCreatedBy", "wrTpId")
-      values ($1,$2, (  select "playerOrder" from display_order) + 1, $3, $4, $5)
+      insert into "tblTeamPlayers" ("wrTeamId", "wrRefPlayerId", "wrPlayerOrder","wrCreatedDate", "wrCreatedBy", "wrTpId", "wrHomeTeam")
+      values ($1,$2, (  select "playerOrder" from display_order) + 1, $3, $4, $5, $6)
       returning *
     )
 
@@ -64,12 +66,13 @@ const insertTeamPlayerQuery = async (data, fastify, request) => {
         "wrTeamId" as "teamId",
         "wrRefPlayerId" as "refPlayerId",
         "wrPlayerOrder" as "playerOrder",
+        "wrHomeTeam" as "homeTeam",
         "wrTpId" as "tpId"
          from "insert_team_player"
 
     `,
       {
-        bind: [data.teamId, data.refPlayerId, new Date(), data.userId, data.tpId || null],
+        bind: [data.teamId, data.refPlayerId, new Date(), data.userId, data.tpId || null, data.homeTeam || false],
         type: fastify.db.QueryTypes.SELECT,
       }
     );
@@ -145,6 +148,7 @@ const getTeamPlayerByPlayerIdQuery = async (refPlayerId, fastify, request) => {
         "wrRefPlayerId" as "refPlayerId",
         "wrJerseyPlayerImage" as "jerseyPlayerImage",
         "wrJerseyPlayerImagePath" as "jerseyPlayerImagePath",
+        "wrHomeTeam" as "homeTeam",
         "wrTpId" as "tpId"
       FROM "tblTeamPlayers"
       WHERE "wrRefPlayerId" = $1 AND "wrIsDeleted" = FALSE`,
@@ -174,6 +178,7 @@ const getTeamPlayerByTeamIdQuery = async (teamId, fastify, request) => {
         "wrRefPlayerId" as "refPlayerId",
         "wrJerseyPlayerImage" as "jerseyPlayerImage",
         "wrJerseyPlayerImagePath" as "jerseyPlayerImagePath",
+        "wrHomeTeam" as "homeTeam",
         "wrTpId" as "tpId"
       FROM "tblTeamPlayers"
       WHERE "wrTeamId" = $1 AND "wrIsDeleted" = FALSE`,
@@ -194,6 +199,38 @@ const getTeamPlayerByTeamIdQuery = async (teamId, fastify, request) => {
   }
 };
 
+const updateTeamPlayerHomeTeamQuery = async (data, fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `UPDATE "tblTeamPlayers" SET
+          "wrHomeTeam" = CASE 
+            WHEN "wrTeamId" = $2 THEN true
+            ELSE false
+          END
+       WHERE "wrRefPlayerId" = $1
+         AND "wrIsDeleted" = false
+       RETURNING
+          "wrTeamId" AS "teamId",
+          "wrRefPlayerId" AS "refPlayerId",
+          "wrHomeTeam" AS "homeTeam"`,
+      {
+        bind: [data.refPlayerId, data.teamId],
+        type: fastify.db.QueryTypes.UPDATE,
+      }
+    );
+
+    return result;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableTeamPlayer/updateTeamPlayerHomeTeamQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 const updateTeamPlayerImageQuery = async (data, fastify) => {
   try {
     const result = await fastify.db.query(
@@ -203,7 +240,8 @@ const updateTeamPlayerImageQuery = async (data, fastify) => {
       WHERE "wrTeamPlayerId" = $1
       RETURNING
         "wrTeamId" AS "teamId",
-        "wrRefPlayerId" AS "refPlayerId"`,
+        "wrRefPlayerId" AS "refPlayerId",
+        "wrHomeTeam" AS "homeTeam"`,
       {
         bind: [data.teamPlayerId, data.jerseyPlayerImage, data.jerseyPlayerImagePath],
         type: fastify.db.QueryTypes.UPDATE,
@@ -229,6 +267,7 @@ const getTeamListByPlayerIdQuery = async (refPlayerId, fastify, request) => {
         tt."wrTeamName" AS "teamName",
         ttp."wrRefPlayerId" AS "refPlayerId",
         tp."wrPlayerName" AS "playerName",
+        ttp."wrHomeTeam" as "homeTeam",
         ttp."wrJerseyPlayerImage" AS "jerseyPlayerImage",
         ttp."wrJerseyPlayerImagePath" AS "jerseyPlayerImagePath",
         ttp."wrTpId" as "tpId"
@@ -262,4 +301,5 @@ module.exports = {
   getTeamPlayerByTeamIdQuery,
   updateTeamPlayerImageQuery,
   getTeamListByPlayerIdQuery,
+  updateTeamPlayerHomeTeamQuery,
 };

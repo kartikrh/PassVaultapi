@@ -115,7 +115,7 @@ const updateICCRankingByIdService = async (request, fastify) => {
     if (!Number.isInteger(newRank) || newRank <= 0) {
         throw new Error("Rank must be a positive integer");
     }
-
+    const updateData = []
     const rankingIndex = global.tblICCRanking.findIndex(item => item.id === bodyId);
     if (rankingIndex === -1) {
         throw new Error("ICC Ranking with this ID not found");
@@ -176,6 +176,7 @@ const updateICCRankingByIdService = async (request, fastify) => {
         const idx = global.tblICCRanking.findIndex(item => item.id === updated[0].id);
         if (idx !== -1) {
             global.tblICCRanking[idx] = updated[0];
+            updateData.push(updated[0])
         }
     }
 
@@ -203,6 +204,7 @@ const updateICCRankingByIdService = async (request, fastify) => {
         const idx = global.tblICCRanking.findIndex(item => item.id === updated[0].id);
         if (idx !== -1) {
             global.tblICCRanking[idx] = updated[0];
+            updateData.push(updated[0]);
         }
     }
 
@@ -213,39 +215,37 @@ const updateICCRankingByIdService = async (request, fastify) => {
     }, fastify, request);
 
     global.tblICCRanking[rankingIndex] = updatedCurrent[0];
+    updateData.push(updatedCurrent[0])
 
-    const updateData = await Promise.all(
-        global.tblICCRanking.filter(elem =>
-            elem.sportId == sportId &&
-            elem.matchTypeId === matchTypeId &&
-            elem.type === type &&
-            elem.isMen === isMen &&
-            elem.isActive === true
-        )
-        .map(async item => {
-            const fields = await fieldNamesService(item);
-            return { ...item, ...fields };
-        })
+    const clientData = await Promise.all(
+        updateData
+            .filter(elem => elem.isActive === true)
+            .map(async item => {
+                const fields = await fieldNamesService(item);
+                return { ...item, ...fields };
+            })
     );
-    callClientAPI(
-        {
-            serviceType: ServiceType.clientAPI,
-            moduleType: APIEndpointModuleType.updateSeoModule,
-            data: {
-                module: 'iccRankings',
-                type: "update",
-                data: updateData
-            }
-        }, request, fastify)
-        .catch((err) => {
-            errorLogger(
-                fastify,
-                err.message,
-                "services/iccRanking.js/updateICCRankingByIdService - callClientAPI",
-                request
-            );
-        }
-        );
+
+    if (clientData.length > 0) { 
+        callClientAPI(
+            {
+                serviceType: ServiceType.clientAPI,
+                moduleType: APIEndpointModuleType.updateSeoModule,
+                data: {
+                    module: 'iccRankings',
+                    type: "update",
+                    data: clientData
+                }
+            }, request, fastify)
+            .catch((err) => {
+                errorLogger(
+                    fastify,
+                    err.message,
+                    "services/iccRanking.js/updateICCRankingByIdService - callClientAPI",
+                    request
+                );
+            });
+    }
 
     return "ICC Ranking(s) updated successfully";
 };
