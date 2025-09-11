@@ -206,6 +206,7 @@ const getAllPlayersByTeamIdQuery = async (teamId, fastify, request) => {
       `SELECT      
       "wrRefPlayerId" as "playerId",
       "wrPlayerName" as "playerName",
+      "wrHomeTeam" as "homeTeam",
       "wrBatsmanAverage" as "batsmanAverage",
       "wrBatsmanStrikeRate" as "batsmanStrikeRate",
       "wrIsKipper" as "isKipper"     
@@ -290,6 +291,7 @@ const getAllPlayersByTeamIdAndMatchTypeIdQuery = async (data, fastify, request) 
       "wrPlayerName" as "playerName",
       "wrBatsmanAverage" as "batsmanAverage",
       "wrBatsmanStrikeRate" as "batsmanStrikeRate",
+      tp."wrHomeTeam" as "homeTeam",
       "wrIsKipper" as "isKipper",
       COALESCE(pbh."wrBallsFacedCount", 0) as "ballsFacedCount",
       COALESCE(pbh."wr4Count", 0) + COALESCE(pbh."wr6Count", 0) as "boundary"
