@@ -10637,6 +10637,9 @@ const ICCRanking = {
         type: "object",
         properties: {
           isActive: { type: "boolean" },
+          type: { type: "integer" },
+          matchTypeId: { type: "integer" },
+          sportId: { type: "integer" }
         },
       },
     },
@@ -10670,14 +10673,14 @@ const ICCRanking = {
           isMen: { type: "boolean" },
           teamId: { type: "integer" },
           playerId: { type: "integer" },
-          playerType: { type: "integer" },
+          playerTypeId: { type: "integer" },
           point: { type: "integer" },
           rating: { type: "integer" },
           rank: { type: "integer" },
           remark: { type: "string" },
           isActive: { type: "boolean" },
         },
-        required: ["id", "sportId", "matchTypeId", "type", "isMen", "teamId", "playerId", "playerType", "rating", "point", "rank", "remark", "isActive"]
+        required: ["id", "sportId", "matchTypeId", "type", "isMen", "teamId", "playerId", "playerTypeId", "rating", "point", "rank", "remark", "isActive"]
       },
     },
   },
@@ -10689,7 +10692,11 @@ const ICCRanking = {
       body: {
         type: "object",
         properties: {
-          id: { type: "integer" },
+          id: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
         },
         required: ["id"],
       },
@@ -10708,6 +10715,13 @@ const ICCRanking = {
         },
         required: ["id", "isActive"],
       },
+    },
+  },
+  import: {
+    schema: {
+      tags: ["ICC Ranking"],
+      description: "import ICC Ranking data from entity sport",
+      security: [{ bearerAuth: [] }],
     },
   },
 };

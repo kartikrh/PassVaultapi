@@ -12,7 +12,7 @@ const getAllICCRankingQuery = async (fastify, request) => {
             "wrIsMen" as "isMen",
             "wrTeamId" as "teamId",
             "wrPlayerId" as "playerId",
-            "wrPlayerType" as "playerType",
+            "wrPlayerTypeId" as "playerTypeId",
             "wrRating" as "rating",
             "wrPoint" as "point",
             "wrRank" as "rank",
@@ -54,7 +54,7 @@ const getICCRankingByIdQuery = async (data, fastify, request) => {
             "wrIsMen" as "isMen",
             "wrTeamId" as "teamId",
             "wrPlayerId" as "playerId",
-            "wrPlayerType" as "playerType",
+            "wrPlayerTypeId" as "playerTypeId",
             "wrRating" as "rating",
             "wrPoint" as "point",
             "wrRank" as "rank",
@@ -92,7 +92,7 @@ const insertICCRankingQuery = async (data, fastify, request) => {
         const result = await fastify.db.query(
             `
             WITH insert_data AS (
-                INSERT INTO "tblICCRanking" ("wrSportId", "wrMatchTypeId", "wrType", "wrIsMen", "wrTeamId", "wrPlayerId", "wrPlayerType", "wrRating", "wrPoint", "wrRank", "wrPreRank", "wrRemark", "wrIsActive", "wrCreatedBy", "wrIsDeleted") 
+                INSERT INTO "tblICCRanking" ("wrSportId", "wrMatchTypeId", "wrType", "wrIsMen", "wrTeamId", "wrPlayerId", "wrPlayerTypeId", "wrRating", "wrPoint", "wrRank", "wrPreRank", "wrRemark", "wrIsActive", "wrCreatedBy", "wrIsDeleted") 
                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $10, $11, $12, $13, false) 
                 returning *
             )
@@ -105,7 +105,7 @@ const insertICCRankingQuery = async (data, fastify, request) => {
                 "wrIsMen" as "isMen",
                 "wrTeamId" as "teamId",
                 "wrPlayerId" as "playerId",
-                "wrPlayerType" as "playerType",
+                "wrPlayerTypeId" as "playerTypeId",
                 "wrRating" as "rating",
                 "wrPoint" as "point",
                 "wrRank" as "rank",
@@ -122,15 +122,15 @@ const insertICCRankingQuery = async (data, fastify, request) => {
                     data.sportId || null,
                     data.matchTypeId || null,
                     data.type || null,
-                    data.isMen || null,
+                    data.isMen || false,
                     data.teamId || null,
                     data.playerId || null,
-                    data.playerType || null,
+                    data.playerTypeId || null,
                     data.rating || 0,
                     data.point || 0,
                     data.rank || 0,
                     data.remark || null,
-                    data.isActive || null,
+                    data.isActive || true,
                     request.userTokenInfo.WrUserId || null
                 ],
                 type: fastify.db.QueryTypes.SELECT,
@@ -154,7 +154,7 @@ const updateICCRankingQuery = async (data, fastify, request) => {
         const result = await fastify.db.query(
             `WITH updated_data AS (
             update "tblICCRanking" set 
-                "wrSportId" = $1, "wrMatchTypeId" = $2,"wrType" = $3, "wrIsMen" = $4, "wrTeamId" = $5, "wrPlayerId" = $6, "wrPlayerType" = $7, "wrRating" = $8, "wrPoint" = $9, "wrRank" = $10, "wrPreRank" = $11, "wrRemark" = $12, "wrIsActive" = $13, "wrModifyDate" = NOW(), "wrModifyBy" = $14 
+                "wrSportId" = $1, "wrMatchTypeId" = $2,"wrType" = $3, "wrIsMen" = $4, "wrTeamId" = $5, "wrPlayerId" = $6, "wrPlayerTypeId" = $7, "wrRating" = $8, "wrPoint" = $9, "wrRank" = $10, "wrPreRank" = $11, "wrRemark" = $12, "wrIsActive" = $13, "wrModifyDate" = NOW(), "wrModifyBy" = $14 
             where "wrId" = $15 
             RETURNING *
             )
@@ -166,7 +166,7 @@ const updateICCRankingQuery = async (data, fastify, request) => {
                 "wrIsMen" as "isMen",
                 "wrTeamId" as "teamId",
                 "wrPlayerId" as "playerId",
-                "wrPlayerType" as "playerType",
+                "wrPlayerTypeId" as "playerTypeId",
                 "wrRating" as "rating",
                 "wrPoint" as "point",
                 "wrRank" as "rank",
@@ -187,7 +187,7 @@ const updateICCRankingQuery = async (data, fastify, request) => {
                     data.isMen,
                     data.teamId,
                     data.playerId,
-                    data.playerType,
+                    data.playerTypeId,
                     data.rating,
                     data.point,
                     data.rank,
@@ -220,7 +220,7 @@ const deleteICCRankingByIdQuery = async (id, fastify, request) => {
                 "wrIsDeleted" = $2,
                 "wrDeletedBy" = $3,
                 "wrDeletedAt" = NOW() 
-            WHERE "wrId" =  $4`,
+            WHERE "wrId" =  ANY($4)`,
             {
                 type: fastify.db.QueryTypes.UPDATE,
                 bind: [false, true, request.userTokenInfo.WrUserId, id],

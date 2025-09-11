@@ -566,6 +566,9 @@ const APIEndpointModuleType = {
   updateSeoModule : 6,
   updateMenuList : 7,
   configUpdate: 8,
+  getICCRankingData: 9,
+  insertICCRankingTeam: 10,
+  insertICCRankingPlayer: 11
 }
 const NotificationSendType = {
   all : 1,
@@ -1099,9 +1102,14 @@ const callEntitySportAPI = async (data, request, fastify) =>{
       if(endPoint){
         let url = `${ser.api}${endPoint.endPoint}`;
         let dataTosend = data.data;
+        const headers = request.headers.authorization ? {
+          'Authorization': request.headers.authorization
+        } : {};
+
         const result = await axios.post(url, {
           ...dataTosend
-        });
+        }, { headers });
+
         return result;
       }
       else {
@@ -1323,42 +1331,177 @@ const ICCRankingType = {
   Player: 2
 }
 
+const ICCMatchType = {
+  men: {
+    odis: matchTypesEntity.ODI,
+    tests: matchTypesEntity.TEST,
+    t20s: matchTypesEntity.T20
+  },
+  women: {
+    odis: matchTypesEntity["Women ODI"],
+    t20s: matchTypesEntity["Women T20"]
+  }
+}
+
 const ICCRankingPlayerType = {
-  Batsman: 1,
-  Bowler: 2,
-  AllRounder: 3
+  batsmen: "BatsMan",
+  bowlers: "Bowler",
+  "all-rounders": "AllRounder"
 }
 
 const exchangeMatchinfoAPI = async (data, request, fastify) => {
-    try {
-        let url = entityConstant.EXCHANGEMATCHINFOAPI;
-        if (!url) return 'Match info URL not found';
+  try {
+    let url = entityConstant.EXCHANGEMATCHINFOAPI;
+    if (!url) return 'Match info URL not found';
 
-        const authToken = global.tblConfigs.find(item => item.key === configConstants.ENTITYEXCHAUTHTOKEN)?.value;
-        if (!authToken) {
-            throw new Error("Auth token not found in config");
-        }
-
-        if (!data?.mid) {
-            throw new Error("Match ID is required");
-        }
-
-        url = url.replace("{token}", authToken)
-            .replace("{match_id}", data?.mid || "")
-
-        const result = await axios.get(url, { headers: {} });
-        return result.data;
-    } catch (error) {
-        console.log("error from exchangeMatchInfoAPI", error);
-        errorLogger(
-            fastify,
-            error.message,
-            "DB ERROR --> utilities/index/exchangeMatchInfoAPI",
-            request
-        );
-        return error.response?.data || { status: "failed", response: error.message, api_version: "3.0" };
+    const authToken = global.tblConfigs.find(item => item.key === configConstants.ENTITYEXCHAUTHTOKEN)?.value;
+    if (!authToken) {
+      throw new Error("Auth token not found in config");
     }
+
+    if (!data?.mid) {
+      throw new Error("Match ID is required");
+    }
+
+    url = url.replace("{token}", authToken)
+      .replace("{match_id}", data?.mid || "")
+
+    const result = await axios.get(url, { headers: {} });
+    return result.data;
+  } catch (error) {
+    console.log("error from exchangeMatchInfoAPI", error);
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> utilities/index/exchangeMatchInfoAPI",
+      request
+    );
+    return error.response?.data || { status: "failed", response: error.message, api_version: "3.0" };
+  }
 }
+
+const insertICCRankingData = async (type, data, request, fastify) => {
+  callEntitySportAPI(
+    {
+      serviceType: ServiceType.entitySport,
+      moduleType: APIEndpointModuleType[type === ICCRankingType.Team ? "insertICCRankingTeam" : "insertICCRankingPlayer"],
+      data: {
+        module: `iccRanking${type === ICCRankingType.Team ? "Team" : "Player"}`,
+        type: "insert",
+        [type === ICCRankingType.Team ? "tid" : "pid"]: Number(data)
+      }
+    },
+    request,
+    fastify
+  ).then(async (response) => {
+    if (response && response.data) {
+      return response.data.result;
+    } else {
+      throw new Error("Error fetching ICC Ranking data from EntitySport API");
+    }
+  }).catch((err) => {
+    throw new Error("API ERROR --> utilities/index.js/insertICCRankingData - callEntitySportAPI");
+  });
+}
+
+const extractEntries = async (json, isMen, request, fastify) => {
+  const matchTypeData = global.tblMatchTypes;
+  const playerTypeData = global.tblPlayerTypes;
+  const teamData = global.tblTeams;
+  const playerData = global.tblPlayers;
+  const isTeamCategory = category => category === 'teams';
+  const output = [];
+
+  for (const category in json) {
+    const categoryData = json[category];
+
+    for (const matchType in categoryData) {
+      const matchTypeId = matchTypeData.find(mt => mt.entityEnum === ICCMatchType[isMen ? "men" : "women"][matchType])?.matchTypeId;
+      const entries = categoryData[matchType];
+
+      for (const item of entries) {
+        const commonFields = {
+          id: 0,
+          sportId: 1,
+          matchTypeId: matchTypeId,
+          isMen: isMen,
+          rank: parseInt(item.rank),
+          isActive: true,
+        };
+
+        if (isTeamCategory(category)) {
+          let teamId = teamData.find(t => t?.tpId === Number(item.tid));
+          if (!teamId) {
+            await insertICCRankingData(ICCRankingType.Team, item.tid, request, fastify)
+              .then((response) => {
+                if (response) {
+                  teamId = global.tblTeams.find(t => t?.tpId === Number(item.tid));
+                }
+              }).catch(err => {
+                console.error("Error inserting ICC Ranking Team:", err.message);
+              });
+          }
+
+          if (teamId) {
+            output.push({
+              ...commonFields,
+              type: ICCRankingType.Team,
+              teamId: teamId?.teamId,
+              playerId: null,
+              playerTypeId: null,
+              rating: parseInt(item.rating),
+              point: parseInt(item.points),
+              remark: `${item.matches} matches`,
+            });
+          } else {
+            errorLogger(
+              fastify,
+              `Skipping team entry due to missing team data: TeamID(${item.tid})`,
+              "ERROR --> utilities/index.js/extractEntries - Team Data Missing",
+              request
+            );
+          }
+        } else {
+          const teamId = teamData.find(t => t?.teamShortName.toLowerCase() === item.team.toLowerCase());
+          let playerId = playerData.find(p => p?.tpId === Number(item.pid));
+          const playerTypeId = playerTypeData.find(pt => pt.playerType.toLowerCase() === ICCRankingPlayerType[category].toLowerCase());
+          if (!playerId) {
+            await insertICCRankingData(ICCRankingType.Player, item.pid, request, fastify)
+              .then((response) => {
+                if (response) {
+                  playerId = global.tblPlayers.find(p => p?.tpId === Number(item.pid));
+                }
+              }).catch(err => {
+                console.error("Error inserting ICC Ranking Player:", err.message);
+              });
+          }
+
+          if (teamId && playerId && playerTypeId) {
+            output.push({
+              ...commonFields,
+              type: ICCRankingType.Player,
+              teamId: teamId?.teamId,
+              playerId: playerId?.playerId,
+              playerTypeId: playerTypeId.playerTypeId,
+              rating: parseInt(item.rating),
+              point: parseInt(item.careerbestrating.split(" ")[0]),
+              remark: item.careerbestrating,
+            });
+          } else {
+            errorLogger(
+              fastify,
+              `Skipping player entry due to missing data: Team(${item.team}), PlayerID(${item.pid}), PlayerType(${ICCRankingPlayerType[category]})`,
+              "ERROR --> utilities/index.js/extractEntries - Player Data Missing",
+              request
+            );
+          }
+        }
+      }
+    }
+  }
+  return output;
+}
+
 module.exports = {
   ERROR_CODES,
   error,
@@ -1455,5 +1598,6 @@ module.exports = {
   SourceID,
   exchangeMatchinfoAPI,
   ICCRankingType,
-  ICCRankingPlayerType
+  ICCRankingPlayerType,
+  extractEntries
 };

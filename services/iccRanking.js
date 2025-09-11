@@ -1,68 +1,63 @@
-const { deleteICCRankingByIdQuery, insertICCRankingQuery, updateICCRankingQuery, activeInactiveICCRankingByIdQuery } = require("../repository/tblICCRanking");
-const { ICCRankingType } = require("../utilities");
-const { callClientAPI, ServiceType, APIEndpointModuleType } = require("../utilities");
+const { deleteICCRankingByIdQuery, insertICCRankingQuery, updateICCRankingQuery, activeInactiveICCRankingByIdQuery } = require("../repository/TableICCRanking");
+const { ICCRankingType, extractEntries, callEntitySportAPI, ServiceType, APIEndpointModuleType, callClientAPI } = require("../utilities");
 const { errorLogger } = require("../utilities/logger")
 
 const getAllICCRankingService = async (request) => {
-    const { isActive } = request.body;
-    if (isActive !== undefined) {
-        const result = global.tblICCRanking.filter(
-            (item) => item.isActive === isActive
+    const { isActive, type, matchTypeId, sportId } = request.body;
+
+    return global.tblICCRanking.filter((item) => {
+        return (
+            (isActive === undefined || item.isActive === isActive) &&
+            (type === undefined || type === 0 || item.type === type) &&
+            (matchTypeId === undefined || matchTypeId === 0 || item.matchTypeId === matchTypeId) &&
+            (sportId === undefined || sportId === 0 || item.sportId === sportId)
         );
-        return result;
-    } else {
-        const result = global.tblICCRanking.filter((item) => item.isActive === true);
-        return result;
-    }
+    }).map(item => {
+        const teamName = global.tblTeams.find(tn => tn.teamId == item.teamId)?.teamName || null;
+        item = { ...item, teamName };
+        if (item.type === ICCRankingType.Player) {
+            const playerName = global.tblPlayers.find(pn => pn.playerId == item.playerId)?.playerName || null;
+            const playerTypeName = global.tblPlayerTypes.find(pt => pt.playerTypeId == item.playerTypeId)?.playerType || null;
+            item = { ...item, playerName, playerTypeName };
+        }
+        return item;
+    });
 };
 
-const AllICCRankingService = (request) => {
-  const { isActive } = request.body;
+const AllICCRankingService = async (request) => {
+    const { isActive } = request.body;
+    const filterValue = isActive !== undefined ? isActive : true;
 
-  const filterValue = isActive !== undefined ? isActive : true;
-
-  return global.tblICCRanking
-    .filter(item => item.isActive === filterValue)
-    .map(item => {
-      const sportName = item.sportId
-        ? global.tblEventTypes.find(e => e.eventTypeId == item.sportId)?.eventType || null
-        : null;
-
-      const matchType = item.matchTypeId
-        ? global.tblMatchTypes.find(e => e.matchTypeId == item.matchTypeId)?.matchType || null
-        : null;
-
-      const teamName = item.teamId
-        ? global.tblTeams.find(e => e.teamId == item.teamId)?.teamName || null
-        : null;
-
-      const playerName = item.playerId
-        ? global.tblPlayers.find(e => e.playerId == item.playerId)?.playerName || null
-        : null;
-
-      const playerTypeName = item.playerType
-        ? global.tblPlayerTypes.find(e => e.playerTypeId == data.playerType)?.playerType || null
-        : null
-
-      return {
-        ...item,
-        sportName,
-        matchType,
-        teamName,
-        playerName,
-        playerTypeName,
-      };
-    });
+    return Promise.all(
+        global.tblICCRanking
+            .filter(item => item.isActive === filterValue)
+            .map(async (item) => {
+                const fields = await fieldNamesService(item);
+                return { ...item, ...fields };
+            })
+    );
 };
 
 const getICCRankingByIdService = async (request) => {
     const { id } = request.body;
     const result = global.tblICCRanking.find((item) => item.id === id);
-    return result || null;
+    if (!result) {
+        return null;
+    }
+
+    const teamName = global.tblTeams.find(tn => tn.teamId == result.teamId)?.teamName || null;
+    result.teamName = teamName;
+    if (result.type === ICCRankingType.Player) {
+        const playerName = global.tblPlayers.find(pn => pn.playerId == result.playerId)?.playerName || null;
+        const playerTypeName = global.tblPlayerTypes.find(pt => pt.playerTypeId == result.playerTypeId)?.playerType || null;
+        result.playerName = playerName;
+        result.playerTypeName = playerTypeName;
+    }
+    return result;
 };
 
 const createICCRankingService = async (request, fastify) => {
-    const { sportId, matchTypeId, type, isMen, teamId, playerId, playerType, rank } = request.body;
+    const { sportId, matchTypeId, type, isMen, teamId, playerId, playerTypeId, rank } = request.body;
     let result = global.tblICCRanking.find((item) => item.sportId === sportId && item.matchTypeId === matchTypeId && item.type === type && item.isMen === isMen);
     if (result) {
         if (type === ICCRankingType.Team) {
@@ -76,11 +71,11 @@ const createICCRankingService = async (request, fastify) => {
                 }
             }
         } else if (type === ICCRankingType.Player) {
-            result = global.tblICCRanking.find((item) => item.sportId === sportId && item.matchTypeId === matchTypeId && item.type === type && item.isMen === isMen && item.playerType === playerType && item.rank === rank);
+            result = global.tblICCRanking.find((item) => item.sportId === sportId && item.matchTypeId === matchTypeId && item.type === type && item.isMen === isMen && item.playerTypeId === playerTypeId && item.rank === rank);
             if (result) {
                 throw new Error("ICC Ranking with this rank already exists");
             } else {
-                result = global.tblICCRanking.find((item) => item.sportId === sportId && item.matchTypeId === matchTypeId && item.type === type && item.isMen === isMen && item.playerId === playerId && item.playerType === playerType);
+                result = global.tblICCRanking.find((item) => item.sportId === sportId && item.matchTypeId === matchTypeId && item.type === type && item.isMen === isMen && item.playerId === playerId && item.playerTypeId === playerTypeId);
                 if (result) {
                     throw new Error("ICC Ranking with this player already exists");
                 }
@@ -114,7 +109,7 @@ const createICCRankingService = async (request, fastify) => {
 };
 
 const updateICCRankingByIdService = async (request, fastify) => {
-    const { id: bodyId, sportId: bodySportId, matchTypeId: bodyMatchTypeId, type: bodyType, isMen: bodyIsMen, teamId: bodyTeamId, playerId: bodyPlayerId, playerType: bodyPlayerType, rank: bodyRank } = request.body;
+    const { id: bodyId, sportId: bodySportId, matchTypeId: bodyMatchTypeId, type: bodyType, isMen: bodyIsMen, teamId: bodyTeamId, playerId: bodyPlayerId, playerTypeId: bodyPlayerTypeId, rank: bodyRank } = request.body;
 
     const newRank = Number(bodyRank);
     if (!Number.isInteger(newRank) || newRank <= 0) {
@@ -128,7 +123,7 @@ const updateICCRankingByIdService = async (request, fastify) => {
 
     const currentRanking = global.tblICCRanking[rankingIndex];
     const {
-        sportId, matchTypeId, type, isMen, teamId, playerId, playerType, rank: currentRank
+        sportId, matchTypeId, type, isMen, teamId, playerId, playerTypeId, rank: currentRank
     } = currentRanking;
 
     const isValidMatch =
@@ -140,7 +135,7 @@ const updateICCRankingByIdService = async (request, fastify) => {
             teamId === bodyTeamId
         ) : (
             playerId === bodyPlayerId &&
-            playerType === bodyPlayerType
+            playerTypeId === bodyPlayerTypeId
         ));
 
     if (!isValidMatch) {
@@ -163,7 +158,7 @@ const updateICCRankingByIdService = async (request, fastify) => {
             (
                 type === ICCRankingType.Team
                     ? item.teamId !== null
-                    : item.playerId !== null && item.playerType === playerType
+                    : item.playerId !== null && item.playerTypeId === playerTypeId
             ) &&
             (
                 isRankIncreasing
@@ -194,7 +189,7 @@ const updateICCRankingByIdService = async (request, fastify) => {
             (
                 type === ICCRankingType.Team
                     ? item.teamId !== null
-                    : item.playerId !== null && item.playerType === playerType
+                    : item.playerId !== null && item.playerTypeId === playerTypeId
             )
         );
     }).filter(
@@ -219,44 +214,19 @@ const updateICCRankingByIdService = async (request, fastify) => {
 
     global.tblICCRanking[rankingIndex] = updatedCurrent[0];
 
-    const updateData = global.tblICCRanking
-        .filter(elem =>
-          elem.sportId == sportId &&
-          elem.matchTypeId === matchTypeId &&
-          elem.type === type &&
-          elem.isMen === isMen &&
-          elem.isActive === true
+    const updateData = await Promise.all(
+        global.tblICCRanking.filter(elem =>
+            elem.sportId == sportId &&
+            elem.matchTypeId === matchTypeId &&
+            elem.type === type &&
+            elem.isMen === isMen &&
+            elem.isActive === true
         )
-        .map(item => {
-          const sportName = item.sportId
-            ? global.tblEventTypes.find(e => e.eventTypeId == item.sportId)?.eventType || null
-            : null;
-
-          const matchType = item.matchTypeId
-            ? global.tblMatchTypes.find(e => e.matchTypeId == item.matchTypeId)?.matchType || null
-            : null;
-
-          const teamName = item.teamId
-            ? global.tblTeams.find(e => e.teamId == item.teamId)?.teamName || null
-            : null;
-
-          const playerName = item.playerId
-            ? global.tblPlayers.find(e => e.playerId == item.playerId)?.playerName || null
-            : null;
-
-          const playerTypeName = item.playerType
-            ? global.tblPlayerTypes.find(e => e.playerTypeId == item.playerType)?.playerType || null
-            : null;
-
-          return {
-            ...item,
-            sportName,
-            matchType,
-            teamName,
-            playerName,
-            playerTypeName,
-          };
-        });
+        .map(async item => {
+            const fields = await fieldNamesService(item);
+            return { ...item, ...fields };
+        })
+    );
     callClientAPI(
         {
             serviceType: ServiceType.clientAPI,
@@ -292,40 +262,32 @@ const saveICCRankingService = async (request, fastify) => {
 
 const deleteICCRankingByIdService = async (request, fastify) => {
     const { id } = request.body;
-    const result = global.tblICCRanking.find((item) => item.id === id);
 
-    if (!result) {
-        throw new Error("ICC Ranking with this id not Found");
-    } else {
-        await deleteICCRankingByIdQuery(id, fastify, request);
+    await deleteICCRankingByIdQuery(id, fastify, request);
+    global.tblICCRanking = global.tblICCRanking.filter((item) => !id.includes(item.id));
 
-        global.tblICCRanking = global.tblICCRanking.filter(
-            (item) => item.id !== id
-        );
-
-        callClientAPI(
-            {
-                serviceType: ServiceType.clientAPI,
-                moduleType: APIEndpointModuleType.updateSeoModule,
+    callClientAPI(
+        {
+            serviceType: ServiceType.clientAPI,
+            moduleType: APIEndpointModuleType.updateSeoModule,
+            data: {
+                module: 'iccRankings',
+                type: "delete",
                 data: {
-                    module: 'iccRankings',
-                    type: "delete",
-                    data: {
-                        id: id
-                    }
+                    id: id
                 }
-            }, request, fastify)
-            .catch((err) => {
-                errorLogger(
-                    fastify,
-                    err.message,
-                    "services/iccRanking.js/deleteICCRankingByIdService - callClientAPI",
-                    request
-                );
-            });
+            }
+        }, request, fastify)
+        .catch((err) => {
+            errorLogger(
+                fastify,
+                err.message,
+                "services/iccRanking.js/deleteICCRankingByIdService - callClientAPI",
+                request
+            );
+        });
 
-        return `ICC Ranking(s) deleted successfully`;
-    }
+    return `ICC Ranking(s) deleted successfully`;
 };
 
 const activeInactiveICCRankingByIdService = async (request, fastify) => {
@@ -366,7 +328,7 @@ const activeInactiveICCRankingByIdService = async (request, fastify) => {
     return `IsActive stage updated successfully`;
 };
 
-const fieldNamesService = (data) => {
+const fieldNamesService = async (data) => {
     let sportName = null,
         matchType = null,
         teamName = null,
@@ -385,8 +347,8 @@ const fieldNamesService = (data) => {
     if (data.playerId) {
         playerName = global.tblPlayers.find(e => e.playerId == data.playerId)?.playerName || null;
     }
-    if (data.playerType) {
-        playerTypeName = global.tblPlayerTypes.find(e => e.playerTypeId == data.playerType)?.playerType || null;
+    if (data.playerTypeId) {
+        playerTypeName = global.tblPlayerTypes.find(e => e.playerTypeId == data.playerTypeId)?.playerType || null;
     }
 
     return {
@@ -398,6 +360,42 @@ const fieldNamesService = (data) => {
     };
 };
 
+const importICCRankingFromEntitySportService = async (request, fastify) => {
+    callEntitySportAPI(
+        {
+            serviceType: ServiceType.entitySport,
+            moduleType: APIEndpointModuleType.getICCRankingData,
+            data: {
+                module: "iccRanking",
+                type: "get",
+            }
+        },
+        request,
+        fastify
+    ).then(async (response) => {
+        if (response && response.data && response.data.result) {
+            const iccRankingData = response.data.result;
+            const menEntries = await extractEntries(iccRankingData.ranks, true, request, fastify);
+            const womenEntries = await extractEntries(iccRankingData.women_ranks, false, request, fastify);
+            const resultEntries = [...menEntries, ...womenEntries];
+            for (const entry of resultEntries) {
+                await createICCRankingService({
+                    ...request,
+                    body: entry
+                }, fastify).catch((err) => {
+                    // console.log("error", err.message);
+                });
+            }
+        } else {
+            throw new Error("Error fetching ICC Ranking data from EntitySport API");
+        }
+    }).catch((err) => {
+        throw new Error("API ERROR --> services/iccRanking.js/importICCRankingFromEntitySportService - callEntitySportAPI");
+    });
+
+    return `ICC Ranking data imported successfully`;
+};
+
 module.exports = {
     getAllICCRankingService,
     getICCRankingByIdService,
@@ -405,4 +403,5 @@ module.exports = {
     deleteICCRankingByIdService,
     activeInactiveICCRankingByIdService,
     AllICCRankingService,
+    importICCRankingFromEntitySportService
 }

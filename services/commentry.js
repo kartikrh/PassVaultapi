@@ -4438,6 +4438,22 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
     }
     if (commentaryOvers) {
       if (updatedData.overDetails) {
+        // call predict call
+        let pythonURI = commentaryData.pythonURI;
+        callPredictorMarket(
+          {
+            commentary_id: commentaryId,
+            over_type_id: updatedData.overDetails?.overType || null,
+            over_id: updatedData.overDetails?.overId || null,
+            team_id: updatedData.overDetails?.teamId || null,
+            bowler_id: updatedData.overDetails?.bowlerId || null,
+            wicket: updatedData.overDetails?.totalWicket || null
+          },
+          "/api/v1/changebowler",
+          fastify,
+          request,
+          pythonURI
+        )
         global.tblOvers.push(updatedData.overDetails);
         response.overdetails = updatedData.overDetails;
         sendDataForSocketUpdate.dataToUpdate.push({
@@ -8083,6 +8099,7 @@ const changeBowlerOfCommentaryService = async (request, fastify) => {
     const latestOver = global.tblOvers.filter((i)=>i.commentaryId == commentary.commentaryId 
       && i.currentInnings ==currentInnings && i.teamId == bowlingTeam?.teamId )
       .sort((a,b) => b.overId - a.overId)[0]
+    const pythonURI = commentary.pythonURI
       callPredictorMarket(
         {
           commentary_id: commentary.commentaryId,
@@ -8094,7 +8111,8 @@ const changeBowlerOfCommentaryService = async (request, fastify) => {
         },
       "/api/v1/changebowler",
       fastify,
-      request
+      request,
+      pythonURI
     )
     commentaryLogger(
       {
