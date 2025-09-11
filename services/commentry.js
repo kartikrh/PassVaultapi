@@ -4438,6 +4438,22 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
     }
     if (commentaryOvers) {
       if (updatedData.overDetails) {
+        // call predict call
+        let pythonURI = commentaryData.pythonURI;
+        callPredictorMarket(
+          {
+            commentary_id: commentaryId,
+            over_type_id: updatedData.overDetails?.overType || null,
+            over_id: updatedData.overDetails?.overId || null,
+            team_id: updatedData.overDetails?.teamId || null,
+            bowler_id: updatedData.overDetails?.bowlerId || null,
+            wicket: updatedData.overDetails?.totalWicket || null
+          },
+          "/api/v1/changebowler",
+          fastify,
+          request,
+          pythonURI
+        )
         global.tblOvers.push(updatedData.overDetails);
         response.overdetails = updatedData.overDetails;
         sendDataForSocketUpdate.dataToUpdate.push({
