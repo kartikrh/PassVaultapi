@@ -4447,7 +4447,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
             over_id: updatedData.overDetails?.overId || null,
             team_id: updatedData.overDetails?.teamId || null,
             bowler_id: updatedData.overDetails?.bowlerId || null,
-            wicket: updatedData.overDetails?.totalWicket || null
+            wicket: updatedData.overDetails?.totalWicket || 0
           },
           "/api/v1/changebowler",
           fastify,
