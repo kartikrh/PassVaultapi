@@ -1405,16 +1405,6 @@ const insertICCRankingTeamPlayerData = async (type, data, request, fastify) => {
   }
 }
 
-const waitUntil = async (predicate, { timeoutMs = 4000, intervalMs = 150 } = {}) => {
-  const start = Date.now();
-  while (Date.now() - start < timeoutMs) {
-    const val = predicate();
-    if (val) return val;
-    await new Promise(r => setTimeout(r, intervalMs));
-  }
-  return null;
-};
-
 const extractEntries = async (json, isMen, request, fastify) => {
   const matchTypeData = global.tblMatchTypes;
   const playerTypeData = global.tblPlayerTypes;
@@ -1449,14 +1439,6 @@ const extractEntries = async (json, isMen, request, fastify) => {
   if (teamIds.size > 0) {
     for (const tid of teamIds) {
       await insertICCRankingTeamPlayerData(ICCRankingType.Team, tid, request, fastify)
-        .then(async (response) => {
-          if (response) {
-            const teamId = global.tblTeams.find(t => t?.tpId === Number(tid));
-            if (!teamId) {
-              await waitUntil(() => global.tblTeams.find(t => t?.tpId === Number(tid)));
-            }
-          }
-        })
         .catch(err => {
           console.error("Error inserting ICC Ranking Team:", err.message);
         });
@@ -1466,14 +1448,6 @@ const extractEntries = async (json, isMen, request, fastify) => {
   if (playerIds.size > 0) {
     for (const pid of playerIds) {
       await insertICCRankingTeamPlayerData(ICCRankingType.Player, pid, request, fastify)
-        .then(async (response) => {
-          if (response) {
-            const playerId = global.tblPlayers.find(p => p?.tpId === Number(pid));
-            if (!playerId) {
-              await waitUntil(() => global.tblPlayers.find(t => t?.tpId === Number(pid)));
-            }
-          }
-        })
         .catch(err => {
           console.error("Error inserting ICC Ranking Player:", err.message);
         });
