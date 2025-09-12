@@ -2901,6 +2901,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
   const fallOfWicket = [];
   const pbMarket = [];
   const wlbMarket = [];
+  const playerDismissal = [];
   // const response = [];
   for (let item of updatedData) {
     let index = global.tblEventMarketsV1.findIndex(
@@ -3079,6 +3080,25 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
       const over = global.tblOvers.filter((i)=> i.commentaryId == item.commentaryId && i.teamId == item.teamId 
       && i.currentInnings == commentary.currentInnings)
       .sort((a,b) => b.overId - a.overId)
+      let line_diff = allMarkets.find(
+          (e) => e.marketId === item.eventMarketId
+        )?.lineDiff || 0;
+        lineDiff = line_diff;
+      let mar = {
+        market_id : item.eventMarketId,
+        market_type_category_id : item.marketTypeCategoryId,
+        line :  item.runners[0].line,
+        is_allow : item.isAllow,
+        is_senddata : item.isSendData,
+        is_active :item.isActive,
+        data : item.data,
+        lay_size : item.runners[0].laySize,
+        back_size :  item.runners[0].backSize,
+        rate_diff : item.rateDiff,
+        line_diff :  line_diff.toFixed(2) || 0,
+        predefinedLine : item.predefinedLine ?? null
+      }
+      playerDismissal.push(mar)
       disMissalLogger(
         {
           commentaryId : item.commentaryId,
@@ -3147,7 +3167,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
     // }
     // callPredictions.push(callPrediction);
     
-    if(updatePlayerLine.length > 0 || fallOfWicket.length > 0 || pbMarket.length > 0 || wlbMarket.length > 0){
+    if(updatePlayerLine.length > 0 || fallOfWicket.length > 0 || pbMarket.length > 0 || wlbMarket.length > 0 || playerDismissal.length > 0){
       callPredictorMarket(
         {
           commentary_id: commentary.commentaryId,
@@ -3156,7 +3176,8 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
           players: updatePlayerLine,
           fallOfWicket : fallOfWicket,
           partnershipBoundaries : pbMarket,
-          wicketLostBalls : wlbMarket
+          wicketLostBalls : wlbMarket,
+          playerDismissal : playerDismissal
         },
         "/api/v1/updateplayerline",
         fastify,

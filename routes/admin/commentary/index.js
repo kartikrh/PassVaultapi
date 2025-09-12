@@ -107,6 +107,7 @@ const {
   updateMatchInfo,
   overTypeChangeOnOvers,
   marketOddsdata,
+  updateStreamURL,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -1442,5 +1443,17 @@ module.exports = async (fastify, opts) => {
   });
   fastify.post("/marketOdds", {
     handler: (request , reply) => marketOddsdata(request, reply, fastify)
+  });
+  fastify.post("/updateStreaming", {
+    schema : Commentary.updateStreamingURLAndType.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
+          mode: "edit"
+        }),
+    ],
+    handler: (request , reply) => updateStreamURL(request, reply, fastify)
   });
 };

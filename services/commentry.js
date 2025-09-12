@@ -93,6 +93,7 @@ const {
   updateteamMaxOverQuery,
   deleteCommentaryPlayersByPlayerId,
   overTypeChangeOnOversQuery,
+  updateStreamingURLQuery,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -8099,7 +8100,7 @@ const changeBowlerOfCommentaryService = async (request, fastify) => {
     const bowlingTeam = global.tblCommentaryTeams.find((i)=> i.commentaryId == commentary.commentaryId 
       && i.currentInnings ==currentInnings && i.teamStatus == 2)
 
-    const latestOver = global.tblOvers.filter((i)=> i.overId == overId)
+    const latestOver = global.tblOvers.find((i)=> i.overId == overId)
     const pythonURI = commentary?.pythonURI
     const comP = global.tblCommentaryPlayers.find((i)=>i.commentaryPlayerId == bowlerId)
     callPredictorMarket(
@@ -21881,6 +21882,26 @@ const overTypeChangeOnOversService = async (request, fastify) => {
   return "Commentary Updated successfully";
 };
 
+const updateStreamURLService = async (request, fastify) => {
+  const { commentaryId, streamingUrl, streamingType } = request.body
+  // validate commentary id
+  const index = global.tblCommentaries.findIndex(
+    (item) => item?.commentaryId === request.body.commentaryId
+  );
+  if (index == -1) {
+    throw new Error("Commentary with this id not Found");
+  }
+
+  await updateStreamingURLQuery({ streamingUrl, streamingType, commentaryId }, fastify, request);
+
+  global.tblCommentaries[index] = {
+    ...global.tblCommentaries[index],
+    streamingUrl,
+    streamingType,
+  }
+  return "Commentary Updated successfully";
+};
+
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -21992,4 +22013,5 @@ module.exports = {
   updateMatchInfoService,
   getGroupId,
   overTypeChangeOnOversService,
+  updateStreamURLService,
 };

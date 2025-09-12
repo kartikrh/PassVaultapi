@@ -421,7 +421,8 @@ const getClientTournamentTeamPointsQuery = async (request, fastify) => {
           tc."wrCompetition" as "competition",
           ttp."wrGroupName"  as "groupName",
           ttp."wrPosition" as "position",
-          tp."wrTeamName" as "teamName"
+          tp."wrTeamName" as "teamName",
+          tp."wrTeamShortName" as "teamShortName"
         FROM "tblTournamentTeamPoint" ttp
         LEFT JOIN "tblCompetitions" tc ON ttp."wrCompetitionId" = tc."wrCompetitionId"
         LEFT JOIN "tblTeams" tp ON tp."wrTeamId" = ttp."wrTeamId"
@@ -505,6 +506,46 @@ const getTournamentPointsByGroupNameQuery = async (whereCondition = null, reques
   }
 };
 
+const getTournamentTeamPointsQuery = async (whereCond = null, request, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `
+          select
+          "wrId" as "id",
+          "wrGroupId" as "groupId",
+          "wrTeamId" as "teamId",
+          "wrCompetitionId" as "competitionId",
+          "wrTotalMatches" as "totalMatches",
+          "wrTotalWin" as "totalWin",
+          "wrTotalLose" as "totalLose",
+          "wrTotalTie" as "totalTie",
+          "wrNoResult" as "noResult",
+          "wrTotalPoint" as "totalPoint",
+          "wrNetRunRate" as "netRunRate",
+          "wrIsActive" as "isActive",
+          "wrCreatedAt" as "createdAt",
+          "wrGroupName"  as "groupName",
+          "wrPosition" as "position",
+          "wrTpId" as "tpId"
+          from "tblTournamentTeamPoint"
+          ${whereCond ? `WHERE ${whereCond}` : ""}
+          `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+    return result;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableTournamentTeamPoints.js/getTournamentTeamPointsQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllTournamentTeamPointsQuery,
   insertTournamentTeamPointsQuery,
@@ -518,4 +559,5 @@ module.exports = {
   getClientTournamentTeamPointsQuery,
   deleteTournamentTeamPointsByCompIdQuery,
   getTournamentPointsByGroupNameQuery,
+  getTournamentTeamPointsQuery,
 };

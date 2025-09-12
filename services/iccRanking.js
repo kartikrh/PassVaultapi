@@ -361,7 +361,7 @@ const fieldNamesService = async (data) => {
 };
 
 const importICCRankingFromEntitySportService = async (request, fastify) => {
-    callEntitySportAPI(
+    await callEntitySportAPI(
         {
             serviceType: ServiceType.entitySport,
             moduleType: APIEndpointModuleType.getICCRankingData,
@@ -386,14 +386,13 @@ const importICCRankingFromEntitySportService = async (request, fastify) => {
                     // console.log("error", err.message);
                 });
             }
+            return `ICC Ranking data imported successfully`;
         } else {
             throw new Error("Error fetching ICC Ranking data from EntitySport API");
         }
     }).catch((err) => {
         throw new Error("API ERROR --> services/iccRanking.js/importICCRankingFromEntitySportService - callEntitySportAPI");
     });
-
-    return `ICC Ranking data imported successfully`;
 };
 
 module.exports = {

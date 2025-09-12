@@ -3961,6 +3961,22 @@ const Commentary = {
       },
     },
   },
+  updateStreamingURLAndType: {
+    schema: {
+      tags: ["Commentary"],
+      description: "update streaming",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId : {type : "integer"},
+          streamingType : {type : "integer"},
+          streamingUrl : {type : "string"},
+        },
+        required: ["commentaryId", "streamingType", "streamingUrl"],
+      },
+    },
+  },
 };
 
 const Compitition = {
