@@ -2983,9 +2983,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
       ) {
         let line_diff = allMarkets.find(
           (e) => e.marketId === item.eventMarketId
-        )?.lineDiff || 0;
-        lineDiff = line_diff;
-        
+        )?.lineDiff || 0;        
         updatePlayerLine.push({
           commentary_player_id : item.playerId,
           market_type_category_id : item.marketTypeCategoryId,
@@ -3083,7 +3081,6 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
       let line_diff = allMarkets.find(
           (e) => e.marketId === item.eventMarketId
         )?.lineDiff || 0;
-        lineDiff = line_diff;
       let mar = {
         market_id : item.eventMarketId,
         market_type_category_id : item.marketTypeCategoryId,
