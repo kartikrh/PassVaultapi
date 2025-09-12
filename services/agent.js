@@ -471,7 +471,8 @@ async function getAgentWisePermissionService(request, fastify) {
 
 const getInitConfigDetails = async (request, fastify) => {
     const initKeys = [configConstants.DPAPIURL, configConstants.DPAPIXKEY, configConstants.DPSOCKETURL, configConstants.SCORECARDFRAMEURL, configConstants.ENABLELOGROCKET, configConstants.LOGROCKETAPPID,
-    configConstants.ISAPPLYPLAYERSTRIKELOGIC, configConstants.ISAPPLYPARTNERSHIPLOGIC, configConstants.ENTITYSPORTURL];
+      configConstants.ISAPPLYPLAYERSTRIKELOGIC, configConstants.ISAPPLYPARTNERSHIPLOGIC, configConstants.ENTITYSPORTURL,
+      configConstants.STREAMINGURL, configConstants.STREAMINGXKEY, configConstants.STREAMINGWATCHURL];
     let result = global.tblConfigs.filter(item => initKeys.includes(item.key));
     return result;
 }
