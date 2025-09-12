@@ -8100,7 +8100,7 @@ const changeBowlerOfCommentaryService = async (request, fastify) => {
     const bowlingTeam = global.tblCommentaryTeams.find((i)=> i.commentaryId == commentary.commentaryId 
       && i.currentInnings ==currentInnings && i.teamStatus == 2)
 
-    const latestOver = global.tblOvers.filter((i)=> i.overId == overId)
+    const latestOver = global.tblOvers.find((i)=> i.overId == overId)
     const pythonURI = commentary?.pythonURI
     const comP = global.tblCommentaryPlayers.find((i)=>i.commentaryPlayerId == bowlerId)
     callPredictorMarket(
