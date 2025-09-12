@@ -93,6 +93,7 @@ const {
   updateteamMaxOverQuery,
   deleteCommentaryPlayersByPlayerId,
   overTypeChangeOnOversQuery,
+  updateStreamingURLQuery,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -21881,6 +21882,26 @@ const overTypeChangeOnOversService = async (request, fastify) => {
   return "Commentary Updated successfully";
 };
 
+const updateStreamURLService = async (request, fastify) => {
+  const { commentaryId, streamingUrl, streamingType } = request.body
+  // validate commentary id
+  const index = global.tblCommentaries.findIndex(
+    (item) => item?.commentaryId === request.body.commentaryId
+  );
+  if (index == -1) {
+    throw new Error("Commentary with this id not Found");
+  }
+
+  await updateStreamingURLQuery({ streamingUrl, streamingType, commentaryId }, fastify, request);
+
+  global.tblCommentaries[index] = {
+    ...global.tblCommentaries[index],
+    streamingUrl,
+    streamingType,
+  }
+  return "Commentary Updated successfully";
+};
+
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -21992,4 +22013,5 @@ module.exports = {
   updateMatchInfoService,
   getGroupId,
   overTypeChangeOnOversService,
+  updateStreamURLService,
 };
