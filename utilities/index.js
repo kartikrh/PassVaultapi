@@ -1102,14 +1102,9 @@ const callEntitySportAPI = async (data, request, fastify) =>{
       if(endPoint){
         let url = `${ser.api}${endPoint.endPoint}`;
         let dataTosend = data.data;
-        const headers = request.headers.authorization ? {
-          'Authorization': request.headers.authorization
-        } : {};
-
         const result = await axios.post(url, {
           ...dataTosend
-        }, { headers });
-
+        });
         return result;
       }
       else {
