@@ -2972,7 +2972,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
           back_size : item.runners[0].backSize,
           rate_diff : item.rateDiff,
           line : item.runners[0].line ?? null,
-          predefinedLine : item.predefinedValue ?? null
+          predefinedLine : item.predefinedValue ?? 0
         })
       }
       if( category &&	
@@ -2997,7 +2997,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
           rate_diff : item.rateDiff,
           line_diff : line_diff.toFixed(2) || 0,
           line : item.runners[0].line?? null,
-          predefinedLine : item.predefinedValue ?? null
+          predefinedLine : item.predefinedValue ?? 0
         });
       }
       if(category && category.categoryName.toLowerCase() == "fall of wicket"){
@@ -3018,7 +3018,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
           rate_diff : item.rateDiff,
           line_diff : line_diff_wick.toFixed(2) || 0,
           line : item.runners[0].line?? null,
-          predefinedLine : item.predefinedValue?? null
+          predefinedLine : item.predefinedValue?? 0
         });
       }
       if(category && category.categoryName.toLowerCase() == "partnership boundaries"){
@@ -3039,7 +3039,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
           rate_diff : item.rateDiff,
           line_diff : line_diff_boun.toFixed(2) || 0,
           line : item.runners[0].line?? null,
-          predefinedLine : item.predefinedValue?? null
+          predefinedLine : item.predefinedValue?? 0
         });
       }
       if(category && category.categoryName.toLowerCase() == "wicket lost balls"){
@@ -3060,7 +3060,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
           rate_diff : item.rateDiff,
           line_diff : line_diff_wick_ball.toFixed(2) || 0,
           line : item.runners[0].line?? null,
-          predefinedLine : item.predefinedValue?? null
+          predefinedLine : item.predefinedValue?? 0
         })
       }
       if(item.predefinedValue == null || item.predefinedValue == 0){
@@ -3075,7 +3075,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
      
     }
     if(item.marketTypeId == MarketTypeId.ManualOdds && category.categoryName.toLowerCase() == "mode of dismissal - 6 way" ){
-      const over = global.tblOvers.filter((i)=> i.commentaryId == item.commentaryId && i.teamId == item.teamId 
+      const over = global.tblOvers.filter((i)=> i.commentaryId == item.commentaryId
       && i.currentInnings == commentary.currentInnings)
       .sort((a,b) => b.overId - a.overId)
       let line_diff = allMarkets.find(
@@ -3093,7 +3093,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
         back_size :  item.runners[0].backSize,
         rate_diff : item.rateDiff,
         line_diff :  line_diff.toFixed(2) || 0,
-        predefinedLine : item.predefinedLine ?? null
+        predefinedLine : item.predefinedLine ?? 0
       }
       playerDismissal.push(mar)
       disMissalLogger(
@@ -3101,7 +3101,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
           commentaryId : item.commentaryId,
           eventMarketId : item.eventMarketId,
           overTypeId : over?.overType || null,
-          commentaryPlayerId : item.playerId || 0,
+          commentaryPlayerId : over.bowlerId || 0,
           wicketNo : item.wicketNo || 0,
           data : item.data,
           isActive : true
