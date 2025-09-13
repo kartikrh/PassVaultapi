@@ -189,9 +189,9 @@ const connection = (socket , fastify) => {
             );
           }
 
-          const tblMarketOddsIndex = global.tblMarketOddsBallByBall.findIndex(item => item.commentaryId === res.commentaryId
-            && item.eventMarketId === res.eventMarketId
-            && item.commentaryBallByBallId === res.commentaryBallByBallId
+          const tblMarketOddsIndex = global.tblMarketOddsBallByBall.findIndex(item => item?.commentaryId === res.commentaryId
+            && item?.eventMarketId === res.eventMarketId
+            && item?.commentaryBallByBallId === res.commentaryBallByBallId
           );
 
           if (tblMarketOddsIndex !== -1) {
