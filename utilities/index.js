@@ -567,8 +567,8 @@ const APIEndpointModuleType = {
   updateMenuList : 7,
   configUpdate: 8,
   getICCRankingData: 9,
-  insertICCRankingTeam: 10,
-  insertICCRankingPlayer: 11
+  insertTeam: 10,
+  insertPlayer: 11
 }
 const NotificationSendType = {
   all : 1,
@@ -1380,9 +1380,9 @@ const insertICCRankingTeamPlayerData = async (type, data, request, fastify) => {
     const response = await callEntitySportAPI(
       {
         serviceType: ServiceType.entitySport,
-        moduleType: APIEndpointModuleType[type === ICCRankingType.Team ? "insertICCRankingTeam" : "insertICCRankingPlayer"],
+        moduleType: APIEndpointModuleType[type === ICCRankingType.Team ? "insertTeam" : "insertPlayer"],
         data: {
-          module: `iccRanking${type === ICCRankingType.Team ? "Team" : "Player"}`,
+          module: type === ICCRankingType.Team ? "team" : "player",
           type: "insert",
           [type === ICCRankingType.Team ? "tid" : "pid"]: Number(data)
         }
