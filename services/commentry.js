@@ -4442,12 +4442,18 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         // call predict call
         let pythonURI = commentaryData.pythonURI;
         let comP = global.tblCommentaryPlayers.find((i)=>i.commentaryPlayerId == updatedData.overDetails?.bowlerId);
+        const batTeam = global.tblCommentaryTeams.find(
+        (item) =>
+          item?.commentaryId === commentaryId &&
+          item.teamStatus === 1 &&
+          item.currentInnings === commentaryData.currentInnings
+        );
         callPredictorMarket(
           {
             commentary_id: commentaryId,
             over_type_id: updatedData.overDetails?.overType || null,
             over_id: updatedData.overDetails?.overId || null,
-            team_id: updatedData.overDetails?.teamId || null,
+            team_id: batTeam?.teamId || null,
             bowler_id: updatedData.overDetails?.bowlerId || null,
             wicket: updatedData.overDetails?.totalWicket || 0,
             bowling_style : comP?.bowlingStyle || null,
@@ -8097,8 +8103,8 @@ const changeBowlerOfCommentaryService = async (request, fastify) => {
       request,
       fastify
     );
-    const bowlingTeam = global.tblCommentaryTeams.find((i)=> i.commentaryId == commentary.commentaryId 
-      && i.currentInnings ==currentInnings && i.teamStatus == 2)
+    const batTeam = global.tblCommentaryTeams.find((i)=> i.commentaryId == commentary.commentaryId 
+      && i.currentInnings ==currentInnings && i.teamStatus == 1)
 
     const latestOver = global.tblOvers.find((i)=> i.overId == overId)
     const pythonURI = commentary?.pythonURI
@@ -8108,7 +8114,7 @@ const changeBowlerOfCommentaryService = async (request, fastify) => {
           commentary_id: commentary.commentaryId,
           over_type_id: latestOver?.overType || null,
           over_id: latestOver?.overId || null,
-          team_id: bowlingTeam?.teamId || null,
+          team_id: batTeam?.teamId || null,
           bowler_id: bowlerId,
           wicket: latestOver?.totalWicket || 0,
           bowling_style : comP?.bowlingStyle || 0,
