@@ -80,7 +80,7 @@ const {
   MarketTypeCategories,
 } = require("../utilities/index");
 const { getAllMarketRunnersV2ByIdQuery } = require("../repository/TableMarketRunner");
-const { marketLogger, marketDataLogger, errorLogger, eventMarketLogger, marektResultLogger } = require("../utilities/logger");
+const { marketLogger, marketDataLogger, errorLogger, eventMarketLogger, marektResultLogger, disMissalLogger } = require("../utilities/logger");
 const { validateUser } = require("../repository/TableUser");
 const { encrypt } = require("../utilities/index");
 const { getPlayersBattingHistoryByIdQuery } = require("../repository/TablePlayerHistory");
@@ -2901,6 +2901,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
   const fallOfWicket = [];
   const pbMarket = [];
   const wlbMarket = [];
+  const playerDismissal = [];
   // const response = [];
   for (let item of updatedData) {
     let index = global.tblEventMarketsV1.findIndex(
@@ -2971,7 +2972,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
           back_size : item.runners[0].backSize,
           rate_diff : item.rateDiff,
           line : item.runners[0].line ?? null,
-          predefinedLine : item.predefinedValue ?? null
+          predefinedLine : item.predefinedValue ?? 0
         })
       }
       if( category &&	
@@ -2982,9 +2983,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
       ) {
         let line_diff = allMarkets.find(
           (e) => e.marketId === item.eventMarketId
-        )?.lineDiff || 0;
-        lineDiff = line_diff;
-        
+        )?.lineDiff || 0;        
         updatePlayerLine.push({
           commentary_player_id : item.playerId,
           market_type_category_id : item.marketTypeCategoryId,
@@ -2998,7 +2997,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
           rate_diff : item.rateDiff,
           line_diff : line_diff.toFixed(2) || 0,
           line : item.runners[0].line?? null,
-          predefinedLine : item.predefinedValue ?? null
+          predefinedLine : item.predefinedValue ?? 0
         });
       }
       if(category && category.categoryName.toLowerCase() == "fall of wicket"){
@@ -3019,7 +3018,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
           rate_diff : item.rateDiff,
           line_diff : line_diff_wick.toFixed(2) || 0,
           line : item.runners[0].line?? null,
-          predefinedLine : item.predefinedValue?? null
+          predefinedLine : item.predefinedValue?? 0
         });
       }
       if(category && category.categoryName.toLowerCase() == "partnership boundaries"){
@@ -3040,7 +3039,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
           rate_diff : item.rateDiff,
           line_diff : line_diff_boun.toFixed(2) || 0,
           line : item.runners[0].line?? null,
-          predefinedLine : item.predefinedValue?? null
+          predefinedLine : item.predefinedValue?? 0
         });
       }
       if(category && category.categoryName.toLowerCase() == "wicket lost balls"){
@@ -3061,7 +3060,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
           rate_diff : item.rateDiff,
           line_diff : line_diff_wick_ball.toFixed(2) || 0,
           line : item.runners[0].line?? null,
-          predefinedLine : item.predefinedValue?? null
+          predefinedLine : item.predefinedValue?? 0
         })
       }
       if(item.predefinedValue == null || item.predefinedValue == 0){
@@ -3073,7 +3072,46 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
           item
         )
       }
-      marketDataLogger(
+     
+    }
+    if(item.marketTypeId == MarketTypeId.ManualOdds && category.categoryName.toLowerCase() == "mode of dismissal - 6 way" ){
+      const over = global.tblOvers.filter((i)=> i.commentaryId == item.commentaryId
+      && i.currentInnings == commentary.currentInnings)
+      .sort((a,b) => b.overId - a.overId)
+      let line_diff = allMarkets.find(
+          (e) => e.marketId === item.eventMarketId
+        )?.lineDiff || 0;
+      let mar = {
+        market_id : item.eventMarketId,
+        market_type_category_id : item.marketTypeCategoryId,
+        line :  item.runners[0].line,
+        is_allow : item.isAllow,
+        is_senddata : item.isSendData,
+        is_active :item.isActive,
+        data : item.data,
+        lay_size : item.runners[0].laySize,
+        back_size :  item.runners[0].backSize,
+        rate_diff : item.rateDiff,
+        line_diff :  line_diff.toFixed(2) || 0,
+        predefinedLine : item.predefinedLine ?? 0
+      }
+      playerDismissal.push(mar)
+      disMissalLogger(
+        {
+          commentaryId : item.commentaryId,
+          eventMarketId : item.eventMarketId,
+          overTypeId : over?.overType || null,
+          commentaryPlayerId : over.bowlerId || 0,
+          wicketNo : item.wicketNo || 0,
+          data : item.data,
+          isActive : true
+        },fastify,request
+      )
+    }
+    let lineDiff = allMarkets.find(
+        (e) => e.marketId === item.eventMarketId
+    )?.lineDiff || 0;
+    marketDataLogger(
         {
           eventMarketId: item.eventMarketId,
           commentaryId: item.commentaryId,
@@ -3085,8 +3123,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
         },
         request,
         fastify
-      )
-    }
+    )
   }
   const teamOnStrike = global.tblCommentaryTeams.find(
     (item) =>
@@ -3127,7 +3164,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
     // }
     // callPredictions.push(callPrediction);
     
-    if(updatePlayerLine.length > 0 || fallOfWicket.length > 0 || pbMarket.length > 0 || wlbMarket.length > 0){
+    if(updatePlayerLine.length > 0 || fallOfWicket.length > 0 || pbMarket.length > 0 || wlbMarket.length > 0 || playerDismissal.length > 0){
       callPredictorMarket(
         {
           commentary_id: commentary.commentaryId,
@@ -3136,7 +3173,8 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
           players: updatePlayerLine,
           fallOfWicket : fallOfWicket,
           partnershipBoundaries : pbMarket,
-          wicketLostBalls : wlbMarket
+          wicketLostBalls : wlbMarket,
+          playerDismissal : playerDismissal
         },
         "/api/v1/updateplayerline",
         fastify,

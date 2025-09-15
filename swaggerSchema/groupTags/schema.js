@@ -2980,6 +2980,8 @@ const Commentary = {
           location: { type: "string" },
           weather: { type: "integer" },
           pitch: { type: "integer" },
+          streamingUrl: { type: "string" },
+          streamingType: { type: "integer" },
           // tossWonBy: { type: "string" },
           // choseTo: { type: "integer" },
           // winnerId: { type: "string" },
@@ -3956,6 +3958,22 @@ const Commentary = {
           overTypeName : {type : "string"},
         },
         required: ["commentaryId", "overId", "overType", "overTypeName"],
+      },
+    },
+  },
+  updateStreamingURLAndType: {
+    schema: {
+      tags: ["Commentary"],
+      description: "update streaming",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId : {type : "integer"},
+          streamingType : {type : "integer"},
+          streamingUrl : {type : "string"},
+        },
+        required: ["commentaryId", "streamingType", "streamingUrl"],
       },
     },
   },
@@ -10625,6 +10643,106 @@ const Agent = {
   },
 }
 
+const ICCRanking = {
+  getAll: {
+    schema: {
+      tags: ["ICC Ranking"],
+      description: "get all ICC Ranking",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+          type: { type: "integer" },
+          matchTypeId: { type: "integer" },
+          sportId: { type: "integer" },
+          playerTypeId: { type: "integer" }
+        },
+      },
+    },
+  },
+  getById: {
+    schema: {
+      tags: ["ICC Ranking"],
+      description: "get ICC Ranking by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+        },
+        required: ["id"],
+      },
+    },
+  },
+  save: {
+    schema: {
+      tags: ["ICC Ranking"],
+      description: "insert ICC Ranking data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          sportId: { type: "integer" },
+          matchTypeId: { type: "integer" },
+          type: { type: "integer" },
+          isMen: { type: "boolean" },
+          teamId: { type: "integer" },
+          playerId: { type: "integer" },
+          playerTypeId: { type: "integer" },
+          point: { type: "integer" },
+          rating: { type: "integer" },
+          rank: { type: "integer" },
+          remark: { type: "string" },
+          isActive: { type: "boolean" },
+        },
+        required: ["id", "sportId", "matchTypeId", "type", "isMen", "teamId", "playerId", "playerTypeId", "rating", "point", "rank", "remark", "isActive"]
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["ICC Ranking"],
+      description: "delete ICC Ranking",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["id"],
+      },
+    },
+  },
+  activeInactive: {
+    schema: {
+      tags: ["ICC Ranking"],
+      description: "active inactive ICC Ranking",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["id", "isActive"],
+      },
+    },
+  },
+  import: {
+    schema: {
+      tags: ["ICC Ranking"],
+      description: "import ICC Ranking data from entity sport",
+      security: [{ bearerAuth: [] }],
+    },
+  },
+};
+
 module.exports = {
   Auth,
   Tabs,
@@ -10702,4 +10820,5 @@ module.exports = {
   AutoImportData,
   EntitySport,
   Agent,
+  ICCRanking,
 };

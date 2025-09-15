@@ -111,6 +111,7 @@ const getAllPlayersByTeamIdQuery = async (data, request, fastify) => {
           tp."wrPlayerId" AS "playerId",
           tp."wrPlayerName" AS "playerName",
           ttp."wrTeamId" AS "teamId",
+          ttp."wrHomeTeam" as "homeTeam",
           ttp."wrTpId" as "tpId"
         FROM "tblTeamPlayers" AS ttp
         LEFT JOIN "tblPlayers" AS tp 

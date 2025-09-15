@@ -212,6 +212,16 @@ module.exports = (sequelize) => {
         type : DataTypes.INTEGER,
         allowNull : true,
         defaultValue : null
+      },
+      wrStreamingUrl : {
+        type : DataTypes.STRING(200),
+        allowNull : true,
+        defaultValue : null
+      },
+      wrStreamingType : {
+        type : DataTypes.INTEGER,
+        allowNull : true,
+        defaultValue : null
       }
     },
     {

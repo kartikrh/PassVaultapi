@@ -107,7 +107,8 @@ const { getAllWeathersQuery } = require("../repository/TableWeather")
 const { getAllPitchConditionsQuery } = require("../repository/TablePitchCondition")
 const { getAllPythonAPIsQuery } = require("../repository/TablePythonAPI");
 const { getAllMatchTypeTemplatesQuery } = require("../repository/TableMatchTypeTemplates");
-const { getAllOverTypesQuery } = require("../repository/TableOverType")
+const { getAllOverTypesQuery } = require("../repository/TableOverType");
+const { getAllICCRankingQuery } = require("../repository/TableICCRanking");
 
 const fetchAllDataFromDb = async (fastify, reply) => {
   try {
@@ -233,6 +234,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const getAllPythonAPIs = await getAllPythonAPIsQuery(fastify);
     const getAllMatchTypeTemplates = await getAllMatchTypeTemplatesQuery(fastify);
     const getAllOverTypes = await getAllOverTypesQuery(fastify);
+    const getAllICCRanking = await getAllICCRankingQuery(fastify);
 
     global.tblTabs = getAllTabs;
     global.tblRoles = getAllRoles;
@@ -319,6 +321,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblPythonAPI = getAllPythonAPIs;
     global.tblMatchTypeTemplates = getAllMatchTypeTemplates;
     global.tblOverTypes = getAllOverTypes;
+    global.tblICCRanking = getAllICCRanking;
     // global.responseLogs = responseLogs;
     // global.thirdPartyAPILogs = thirdPartyAPILogs;
     // global.predictorAPILogs = predictorAPILogs;

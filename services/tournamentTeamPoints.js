@@ -11,6 +11,7 @@ const {
   getClientTournamentTeamPointsQuery,
   getTournamentTeamsByCompIdQuery,
   getTournamentPointsByGroupNameQuery,
+  getTournamentTeamPointsQuery,
 } = require("../repository/TableTournmentTeamPoints");
 const { callClientAPI, ServiceType, APIEndpointModuleType } = require("../utilities");
 const { errorLogger } = require("../utilities/logger")
@@ -310,10 +311,14 @@ const deleteTournamentTeamPointsService = async (request, fastify) => {
   const { id  , teamId, competitionId} = request.body;
 
   await deleteTournamentTeamPointsQuery(id, fastify, request);
-  await deletePlayerByTeamQuery({
-    teamId  : teamId,
-    competitionId : competitionId
-  }, request , fastify)
+  const whereCond = `"wrIsDeleted" = FALSE AND "wrTeamId" = ${teamId} AND "wrCompetitionId" = ${competitionId}`
+  const validate = await getTournamentTeamPointsQuery(whereCond, request, fastify);
+  if (validate.length <= 0) {
+    await deletePlayerByTeamQuery({ teamId, competitionId }, request , fastify);
+    global.tblTournamentTeamPlayers = global.tblTournamentTeamPlayers.filter(
+      (item) => !(teamId.includes(item.teamId) && item.competitionId === competitionId)
+    );
+  }
 
   callClientAPI(
    {
@@ -336,10 +341,6 @@ const deleteTournamentTeamPointsService = async (request, fastify) => {
       request
     );
   });
-
-  global.tblTournamentTeamPlayers = global.tblTournamentTeamPlayers.filter(
-    (item) => !(teamId.includes(item.teamId) && item.competitionId === competitionId)
-  );
   
 
   return `TournamentTeamPoint(s) deleted successfully`;
@@ -594,6 +595,7 @@ const responseChangeService = async (teamId, compeitionId) => {
   const team = global.tblTeams.find(item => item.teamId === teamId);
   return {
     teamName: team?.teamName ?? null,
+    teamShortName: team?.teamShortName ?? null,
     competition: competition?.competition ?? null
   }
 }

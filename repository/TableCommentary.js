@@ -78,7 +78,9 @@ const getAllCommentaryQuery = async (fastify) => {
     tc."wrPythonId" as "pythonId",
     tc."wrScoringType" as "scoringType",
     tc."wrPythonURI" as "pythonURI",
-    tc."wrCancelTime" as "cancelTime"
+    tc."wrCancelTime" as "cancelTime",
+    tc."wrStreamingUrl" as "streamingUrl",
+    tc."wrStreamingType" as "streamingType"
     from "tblCommentaries" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -182,7 +184,9 @@ const getCommentariesDataQuery = async (fastify , where = null) => {
     tc."wrScoringType" as "scoringType",
     tc."wrPythonId" as "pythonId",
     tc."wrPythonURI" as "pythonURI",
-    tc."wrCancelTime" as "cancelTime"
+    tc."wrCancelTime" as "cancelTime",
+    tc."wrStreamingUrl" as "streamingUrl",
+    tc."wrStreamingType" as "streamingType"
     from "tblCommentaries" tc
 
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
@@ -212,7 +216,7 @@ const insertCommentaryQuery = async (request, fastify) => {
         "wrDelay", "wrIsActive", "wrIsClientShow","wrIsTeamPredictionOn", "wrHistoryMatchTypeId", "wrIsCountInPoint","wrIsTest", "wrEventNo",
         "wrDifficulty", "wrPitchHardness", "wrPitchWareSpeed", "wrPitchType", "wrLawnStriping", "wrPitchAge", "wrIsVirtual",
         "wrOnfieldUmpires", "wrThirdUmpire", "wrMatchReferee", "wrSession", "wrTestDayCount", "wrPythonId", "wrPythonURI",
-        "wrCountryId", "wrVenueId", "wrScoringType"
+        "wrCountryId", "wrVenueId", "wrScoringType", "wrStreamingUrl", "wrStreamingType"
         ) values (
           $1,
           $2,
@@ -249,7 +253,9 @@ const insertCommentaryQuery = async (request, fastify) => {
           $41,
           $42,
           $43,
-          $44
+          $44,
+          $45,
+          $46
         ) returning *         
       )
 
@@ -321,7 +327,9 @@ const insertCommentaryQuery = async (request, fastify) => {
     tc."wrScoringType" as "scoringType",
     tc."wrPythonId" as "pythonId",
     tc."wrPythonURI" as "pythonURI",
-    tc."wrCancelTime" as "cancelTime"
+    tc."wrCancelTime" as "cancelTime",
+    "wrStreamingUrl" as "streamingUrl",
+    "wrStreamingType" as "streamingType"
     from "insert_data" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"  
@@ -376,6 +384,8 @@ const insertCommentaryQuery = async (request, fastify) => {
           data.countryId || null,
           data.venueId || null,
           data.scoringType || null,
+          data.streamingUrl || null,
+          data.streamingType || null,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -479,7 +489,7 @@ const insertCommentaryPlayers = async (
       `
       WITH insert_data AS (
         insert into "tblCommentaryPlayers" ("wrCommentaryId" , "wrTeamId" , "wrPlayerId","wrPlayerName", "wrDisplayOrder","wrCurrentInnings",
-        "wrBatsmanAverage", "wrBatsmanPreviousStrikeRate", "wrBowlerPreviousEconomy", "wrBowlerAverage", "wrTpId")
+        "wrBatsmanAverage", "wrBatsmanPreviousStrikeRate", "wrBowlerPreviousEconomy", "wrBowlerAverage", "wrTpId", "wrBowlingStyle")
         values (
           $1,
           $2,
@@ -497,7 +507,8 @@ const insertCommentaryPlayers = async (
             (SELECT "wrBowlerEconomy" FROM "tblPlayers" WHERE "wrPlayerId" = $3)
           ),
           (select "wrBowlerAverage" from "tblPlayers" where "wrPlayerId" =$3),
-          $7
+          $7,
+          (select tp."wrBowlingStyle" from "tblPlayers" tp where tp."wrPlayerId" = $3)
         )
         RETURNING *   
       ) 
@@ -506,6 +517,7 @@ const insertCommentaryPlayers = async (
       "wrTeamId" as "teamId",
       "wrCommentaryId" as "commentaryId",
       "wrCommentaryPlayerId" as "commentaryPlayerId",
+      "wrBowlingStyle" as "bowlingStyle",
       "wrTpId" as "tpId"
       FROM "insert_data"
     `,
@@ -543,7 +555,7 @@ const insertCommentaryPlayersEntity = async (
       `
       WITH insert_data AS (
         insert into "tblCommentaryPlayers" ("wrCommentaryId" , "wrTeamId" , "wrPlayerId","wrPlayerName", "wrDisplayOrder","wrCurrentInnings",
-        "wrBatsmanAverage", "wrBatsmanPreviousStrikeRate", "wrBowlerPreviousEconomy", "wrBowlerAverage", "wrTpId")
+        "wrBatsmanAverage", "wrBatsmanPreviousStrikeRate", "wrBowlerPreviousEconomy", "wrBowlerAverage", "wrTpId", "wrBowlingStyle")
         values (
           $1,
           $2,
@@ -561,7 +573,8 @@ const insertCommentaryPlayersEntity = async (
             (SELECT "wrBowlerEconomy" FROM "tblPlayers" WHERE "wrPlayerId" = $3)
           ),
           (select "wrBowlerAverage" from "tblPlayers" where "wrPlayerId" =$3),
-          $7
+          $7,
+          (select tp."wrBowlingStyle" from "tblPlayers" tp where tp."wrPlayerId" = $3)
         )
         RETURNING *   
       ) 
@@ -620,6 +633,7 @@ const insertCommentaryPlayersEntity = async (
         tcp."wrBowlerPreviousEconomy"::DOUBLE PRECISION as "bowlerPreviousEconomy",
         tcp."wrIsInPlayingEleven" as "isInPlayingEleven",
         tcp."wrBoundary" as "boundary",
+        tcp."wrBowlingStyle" as "bowlingStyle",
         tcp."wrPlayerBallFaced" as "playerBallFaced",
         tp."wrPlayerTypeId" as "playerTypeId",
         tpt."wrPlayerType" as "playerType",
@@ -665,7 +679,7 @@ const insertCommentaryPlayersQuery = async (
       `
       WITH insert_data AS (
         insert into "tblCommentaryPlayers" ("wrCommentaryId" , "wrTeamId" , "wrPlayerId","wrPlayerName", "wrDisplayOrder","wrCurrentInnings",
-        "wrBatsmanAverage", "wrBatsmanPreviousStrikeRate", "wrBowlerPreviousEconomy", "wrBowlerAverage", "wrTpId")
+        "wrBatsmanAverage", "wrBatsmanPreviousStrikeRate", "wrBowlerPreviousEconomy", "wrBowlerAverage", "wrTpId", "wrBowlingStyle")
         values (
           $1,
           $2,
@@ -683,7 +697,8 @@ const insertCommentaryPlayersQuery = async (
             (SELECT "wrBowlerEconomy" FROM "tblPlayers" WHERE "wrPlayerId" = $3)
           ),
           (select "wrBowlerAverage" from "tblPlayers" where "wrPlayerId" =$3),
-          $7
+          $7,
+          (select tp."wrBowlingStyle" from "tblPlayers" tp where tp."wrPlayerId" = $3)
         )
         RETURNING *   
       ) 
@@ -692,6 +707,7 @@ const insertCommentaryPlayersQuery = async (
       "wrTeamId" as "teamId",
       "wrCommentaryId" as "commentaryId",
       "wrCommentaryPlayerId" as "commentaryPlayerId",
+      "wrBowlingStyle" as "bowlingStyle",
       "wrTpId" as "tpId"
       FROM "insert_data"
     `,
@@ -740,7 +756,7 @@ const upsertCommentaryPlayers = async (
       RETURNING "wrCommentaryPlayerId" AS "commentaryPlayerId"
     )
     INSERT INTO "tblCommentaryPlayers" ("wrCommentaryId", "wrTeamId", "wrPlayerId", "wrPlayerName", "wrDisplayOrder", "wrCurrentInnings",
-    "wrBatsmanAverage", "wrBatsmanPreviousStrikeRate", "wrBowlerPreviousEconomy", "wrBowlerAverage", "wrTpId")
+    "wrBatsmanAverage", "wrBatsmanPreviousStrikeRate", "wrBowlerPreviousEconomy", "wrBowlerAverage", "wrTpId", "wrBowlingStyle")
     SELECT
       $1,
       $2,
@@ -752,7 +768,8 @@ const upsertCommentaryPlayers = async (
       (SELECT "wrBatsmanStrikeRate" FROM "tblPlayers" WHERE "wrPlayerId" = $3),
       (SELECT "wrBowlerEconomy" FROM "tblPlayers" WHERE "wrPlayerId" = $3),
       (SELECT "wrBowlerAverage" FROM "tblPlayers" WHERE "wrPlayerId" = $3),
-      $6
+      $6,
+      (SELECT tp."wrBowlingStyle" FROM "tblPlayers" tp WHERE tp."wrPlayerId" = $3)
     WHERE NOT EXISTS (SELECT 1 FROM upsert)
     RETURNING "wrCommentaryPlayerId" AS "commentaryPlayerId";
     
@@ -823,7 +840,9 @@ const updateCommentaryQuery = async (request, fastify) => {
       "wrCountryId" = $34,
       "wrVenueId" = $35,
       "wrTpId" = $36,
-      "wrScoringType" = $37
+      "wrScoringType" = $37,
+      "wrStreamingUrl" = $38,
+      "wrStreamingType" = $39
       where "wrCommentaryId" = $14
       `,
       {
@@ -865,6 +884,8 @@ const updateCommentaryQuery = async (request, fastify) => {
           data.venueId || null,
           data.tpId || null,
           data.scoringType || null,
+          data.streamingUrl || null,
+          data.streamingType || null,
         ],
 
         type: fastify.db.QueryTypes.UPDATE,
@@ -1088,7 +1109,8 @@ const updateCommentaryPlayerById = async (data, request, fastify) => {
       "wrBatsmanStrikeRate" = $2,
       "wrIsInPlayingEleven" = $3,
       "wrBoundary" = $7,
-      "wrPlayerBallFaced" = $8
+      "wrPlayerBallFaced" = $8,
+      "wrBowlingStyle" = $10
       where "wrPlayerId" = $4
       AND "wrCommentaryId" = $5
       AND "wrTeamId" = $6
@@ -1105,6 +1127,7 @@ const updateCommentaryPlayerById = async (data, request, fastify) => {
           data.boundary || 0,
           data.playerBallFaced || 0,
           data.currentInnings,
+          data.bowlingStyle ?? null,
         ],
       }
     );
@@ -1199,7 +1222,9 @@ const getCommentaryByIdQuery = async (request, fastify) => {
       tc."wrScoringType" as "scoringType",
       tc."wrVenueId" as "venueId",
       tc."wrPythonURI" as "pythonURI",
-      tc."wrCancelTime" as "cancelTime"
+      tc."wrCancelTime" as "cancelTime",
+      tc."wrStreamingUrl" as "streamingUrl",
+      tc."wrStreamingType" as "streamingType"
       from "tblCommentaries" tc
       left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
       left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -1272,6 +1297,7 @@ const getCommentaryPlayersQuery = async (data, fastify, request) => {
       "wrDisplayOrder" as "displayOrder",
       "wrBatterOrder" as "batterOrder",
       "wrBowlerOrder" as "bowlerOrder",
+      "wrBowlingStyle" as "bowlingStyle",
       "wrPlayerName" as "playerName"
       from "tblCommentaryPlayers"
       where "wrCommentaryId" = $1 and "wrTeamId" = $2 and "wrIsDelete" = false
@@ -1673,6 +1699,7 @@ const getAllCommentaryPlayerQuery = async (fastify) => {
         tcp."wrBowlerPreviousEconomy"::DOUBLE PRECISION as "bowlerPreviousEconomy",
         tcp."wrIsInPlayingEleven" as "isInPlayingEleven",
         tcp."wrBoundary" as "boundary",
+        tcp."wrBowlingStyle" as "bowlingStyle",
         tcp."wrPlayerBallFaced" as "playerBallFaced",
         tp."wrPlayerTypeId" as "playerTypeId",
         tpt."wrPlayerType" as "playerType",
@@ -1770,6 +1797,7 @@ const getAllCommentaryPlayerDataQuery = async (whereCondition = null, fastify) =
         tcp."wrBowlerPreviousEconomy"::DOUBLE PRECISION as "bowlerPreviousEconomy",
         tcp."wrIsInPlayingEleven" as "isInPlayingEleven",
         tcp."wrBoundary" as "boundary",
+        tcp."wrBowlingStyle" as "bowlingStyle",
         tcp."wrPlayerBallFaced" as "playerBallFaced",
         tp."wrPlayerTypeId" as "playerTypeId",
         tpt."wrPlayerType" as "playerType",
@@ -1896,7 +1924,8 @@ const getAllCommentaryBallByBallQuery = async (fastify) => {
         tcbb."wrDevOver" as "devOver",
         tcbb."wrDevCurrentOverBall" as "devCurrentOverBall",
         tcbb."wrCardKey" as "cardKey",
-        tcbb."wrCardType" as "cardType"
+        tcbb."wrCardType" as "cardType",
+        tcbb."wrBowlingStyle" as "bowlingStyle"
     from "tblCommentaryBallByBalls" tcbb
     WHERE tcbb."wrCommentaryId" IN (
         SELECT "wrCommentaryId"
@@ -2913,7 +2942,8 @@ const updateCommentaryPlayersQuery = async (data, fastify, request) => {
       "wrBowlerAverage" = $44,
       "wrBatterOrder" = $45,
       "wrBowlerOrder" = $46,
-      "wrTpId" = $49
+      "wrTpId" = $49,
+      "wrBowlingStyle" = $50
       where "wrCommentaryPlayerId" = $47
       AND "wrCurrentInnings" = $48
       `,
@@ -2968,6 +2998,7 @@ const updateCommentaryPlayersQuery = async (data, fastify, request) => {
           data.commentaryPlayerId,
           data.currentInnings,
           data.tpId,
+          data.bowlingStyle,
         ],
         type: fastify.db.QueryTypes.UPDATE,
       }
@@ -3658,6 +3689,7 @@ const getCommnertySquadPlayersList = async (data, fastify, request) => {
             p."wrImage" AS pim,
            
             "tblCommentaryPlayers"."wrBatterOrder"  AS bato,
+            "tblCommentaryPlayers"."wrBowlingStyle" as "bowlingStyle",
 		        "tblCommentaryPlayers"."wrBowlerOrder"  AS bowo,
              CASE
                  WHEN "wrPlayerTypeId" = 1 THEN 'BatsMan'
@@ -5133,6 +5165,7 @@ const getCommPlayersByCommentaryIdQuery = async (commentaryId, request, fastify)
           tcp."wrCommentaryPlayerId" as "commentaryPlayerId",
           tcp."wrCommentaryId" as "commentaryId",
           tcp."wrTeamId" as "teamId",
+          tcp."wrBowlingStyle" as "bowlingStyle",
           tcp."wrPlayerId" as "playerId"
       from "tblCommentaryPlayers" AS tcp
       LEFT JOIN "tblPlayers" AS tp ON tcp."wrPlayerId" = tp."wrPlayerId"
@@ -5625,6 +5658,7 @@ const getAllCommentaryPlayerDataQueryV1 = async (whereCondition = null, fastify)
         tcp."wrBowlerPreviousEconomy"::DOUBLE PRECISION as "bowlprevieco",
         tcp."wrIsInPlayingEleven" as "iiplay11",
         tcp."wrBoundary" as "bundry",
+        tcp."wrBowlingStyle" as "bowlingStyle",
         tcp."wrPlayerBallFaced" as "playbalfaced",
         tp."wrPlayerTypeId" as "pltypid",
         tpt."wrPlayerType" as "pltyp",
@@ -6309,7 +6343,7 @@ const insertVirtualCommentaryPlayers = async (data, fastify, request) => {
           "wrCommentaryId", "wrTeamId", "wrPlayerId", "wrPlayerName",
           "wrDisplayOrder", "wrCurrentInnings",
           "wrBatsmanAverage", "wrBatsmanPreviousStrikeRate",
-          "wrBowlerPreviousEconomy", "wrBowlerAverage", "wrTpId"
+          "wrBowlerPreviousEconomy", "wrBowlerAverage", "wrTpId", "wrBowlingStyle"
         )
         VALUES (
           $1,
@@ -6328,7 +6362,8 @@ const insertVirtualCommentaryPlayers = async (data, fastify, request) => {
             (SELECT "wrBowlerEconomy" FROM "tblPlayers" WHERE "wrPlayerId" = $3)
           ),
           (SELECT "wrBowlerAverage" FROM "tblPlayers" WHERE "wrPlayerId" = $3),
-          $7
+          $7,
+          (SELECT tp."wrBowlingStyle" FROM "tblPlayers" tp WHERE tp."wrPlayerId" = $3)
         )
         RETURNING *
       )
@@ -6387,6 +6422,7 @@ const insertVirtualCommentaryPlayers = async (data, fastify, request) => {
         cpl."wrBowlerPreviousEconomy"::DOUBLE PRECISION AS "bowlerPreviousEconomy",
         cpl."wrIsInPlayingEleven" AS "isInPlayingEleven",
         cpl."wrBoundary" AS "boundary",
+        cpl."wrBowlingStyle" as "bowlingStyle",
         cpl."wrPlayerBallFaced" AS "playerBallFaced",
         tp."wrPlayerTypeId" as "playerTypeId",
         cpl."wrJerseyPlayerImage" AS "jerseyPlayerImage",
@@ -6496,6 +6532,7 @@ const virtualPlayersSelectQuery = async (data, request, fastify) => {
         "wrBowler_Over" as "bowlerOver",
         "wrIsBatter_Out" as "isBatterOut",
         "wrBatterOrder" as "batterOrder",
+        "wrBowlingStyle" as "bowlingStyle",
         "wrBowlerOrder" as "bowlerOrder"`,
       {
         bind: [
@@ -6943,6 +6980,7 @@ const virtualPlayerRunsQuery = async (data, fastify, request) => {
         "wrBowler_SIX" as "bowlerSix",
         "wrBowler_WideBall" as "bowlerWideBall",
         "wrBowler_NOBall" as "bowlerNoBall",
+        "wrBowlingStyle" as "bowlingStyle",
         "wrBowler_ByeBall" as "bowlerByeBall",
         "wrBowler_LegByeBall" as "bowlerLegByeBall",
         "wrBowler_TotalWicket" as "bowlerTotalWicket",
@@ -8010,6 +8048,7 @@ const getComEntityQuery = async (data,request,fastify) => {
         tcp."wrBowlerPreviousEconomy"::DOUBLE PRECISION as "bowlerPreviousEconomy",
         tcp."wrIsInPlayingEleven" as "isInPlayingEleven",
         tcp."wrBoundary" as "boundary",
+        tcp."wrBowlingStyle" as "bowlingStyle",
         tcp."wrPlayerBallFaced" as "playerBallFaced",
         tp."wrPlayerTypeId" as "playerTypeId",
         tpt."wrPlayerType" as "playerType",
@@ -8247,6 +8286,7 @@ const getAllCommentaryPlayerQueryById = async (data, request, fastify) => {
           tcp."wrBowlerPreviousEconomy"::DOUBLE PRECISION as "bowlerPreviousEconomy",
           tcp."wrIsInPlayingEleven" as "isInPlayingEleven",
           tcp."wrBoundary" as "boundary",
+          tcp."wrBowlingStyle" as "bowlingStyle",
           tcp."wrPlayerBallFaced" as "playerBallFaced",
           tp."wrPlayerTypeId" as "playerTypeId",
           tpt."wrPlayerType" as "playerType",
@@ -8297,6 +8337,56 @@ const overTypeChangeOnOversQuery = async (data, fastify, request) => {
       fastify,
       err.message,
       "DB ERROR --> repository/TableCommentary/overTypeChangeOnOversQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const bowlingStyleChangeOnCommPlayersQuery = async (data, fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `UPDATE "tblCommentaryPlayers" SET
+        "wrBowlingStyle" = $1
+        WHERE "wrCommentaryId" = ANY($2)
+        AND "wrPlayerId" = $3
+        AND "wrIsDelete" = FALSE
+      `,
+      {
+        bind: [data.bowlingStyle, data.commentaryId, data.playerId],
+      }
+    );
+    return result;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/bowlingStyleChangeOnCommPlayersQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const updateStreamingURLQuery = async (data, fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `UPDATE "tblCommentaries" SET
+        "wrStreamingUrl" = $1,
+        "wrStreamingType" = $2
+      WHERE "wrCommentaryId" = $3
+      AND "wrIsDelete" = FALSE
+      `,
+      {
+        bind: [data.streamingUrl ?? null, data.streamingType ?? null, data.commentaryId],
+      }
+    );
+    return result;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/bowlingStyleChangeOnCommPlayersQuery",
       request
     );
     throw new Error(err.message);
@@ -8444,4 +8534,6 @@ module.exports = {
   updateteamMaxOverQuery,
   deleteCommentaryPlayersByPlayerId,
   overTypeChangeOnOversQuery,
+  bowlingStyleChangeOnCommPlayersQuery,
+  updateStreamingURLQuery,
 };
