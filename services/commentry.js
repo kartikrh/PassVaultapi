@@ -3685,17 +3685,17 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         if (indexTeam === -1) {
           throw new Error("Team with this id not Found");
         }
-        const indexBowler = global.tblCommentaryPlayers.findIndex((item) => {
-          return (
-            item?.commentaryId === commentaryOvers.commentaryId &&
-            item.teamId === commentaryOvers.teamId &&
-            item.commentaryPlayerId === commentaryOvers.bowlerId
-          );
-        });
+        // const indexBowler = global.tblCommentaryPlayers.findIndex((item) => {
+        //   return (
+        //     item?.commentaryId === commentaryOvers.commentaryId &&
+        //     // item.teamId === commentaryOvers.teamId &&
+        //     item.commentaryPlayerId === commentaryOvers.bowlerId
+        //   );
+        // });
 
-        if (indexBowler === -1) {
-          throw new Error("Bowler with this id not Found");
-        }
+        // if (indexBowler === -1) {
+        //   throw new Error("Bowler with this id not Found");
+        // }
       } else {
         overIndex = global.tblOvers.findIndex(
           (item) => item.overId === commentaryOvers.overId
@@ -13243,17 +13243,17 @@ const saveComVirtual = async (request, fastify) => {
         if (indexTeam === -1) {
           throw new Error("Team with this id not Found");
         }
-        const indexBowler = global.tblCommentaryPlayers.findIndex((item) => {
-          return (
-            item?.commentaryId === commentaryOvers.commentaryId &&
-            item.teamId === commentaryOvers.teamId &&
-            item.commentaryPlayerId === commentaryOvers.bowlerId
-          );
-        });
+        // const indexBowler = global.tblCommentaryPlayers.findIndex((item) => {
+        //   return (
+        //     item?.commentaryId === commentaryOvers.commentaryId &&
+        //     item.teamId === commentaryOvers.teamId &&
+        //     item.commentaryPlayerId === commentaryOvers.bowlerId
+        //   );
+        // });
 
-        if (indexBowler === -1) {
-          throw new Error("Bowler with this id not Found");
-        }
+        // if (indexBowler === -1) {
+        //   throw new Error("Bowler with this id not Found");
+        // }
       } else {
         overIndex = global.tblOvers.findIndex(
           (item) => item.overId === commentaryOvers.overId
