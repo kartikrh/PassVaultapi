@@ -421,6 +421,7 @@ const getMatchTypeListService = async (request, fastify) => {
   result = global.tblMatchTypes.map((item) => ({
     matchTypeId: item.matchTypeId,
     matchType: item.matchType,
+    isMen: item.isMen,
   }));
 
   return result;

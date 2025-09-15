@@ -13,7 +13,7 @@ const getAllVendorsQuery = async (fastify) => {
             "wrIsIPCheck" as "isIPCheck",
             "wrCreatedDate" as "createdDate",
             "wrCreatedBy" as "createdBy",
-            tu."WrUserName" as "createdByName"
+            tu."WrName" as "createdByName"
         FROM "tblVendors"
         LEFT JOIN "tblUsers" tu ON tu."WrUserId" = "tblVendors"."wrCreatedBy"
         WHERE "wrIsDeleted" = false
