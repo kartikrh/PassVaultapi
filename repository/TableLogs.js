@@ -18,7 +18,7 @@ const allResponseLogsQuery = async (body,request, fastify) => {
                 logs."wrRequestBody" as "requestBody",
                 logs."wrRequestStartTime" as "requestStartTime",
                 logs."wrRequestEndTime" as "requestEndTime",
-                users."WrUserName" as "createdBy"
+                users."WrName" as "createdBy"
             FROM 
                 "tblResponseLogs" logs
             LEFT JOIN
@@ -79,7 +79,7 @@ const allThirdPartyApiLogsQuery = async (body, request, fastify) => {
                 logs."wrRequestStartTime" as "requestStartTime",
                 logs."wrRequestEndTime" as "requestEndTime",
                 logs."wrResponse" as "response",
-                users."WrUserName" as "createdBy"
+                users."WrName" as "createdBy"
             FROM 
                 "tblThirdPartyApiLogs" logs
             LEFT JOIN
@@ -142,7 +142,7 @@ const allPredictorAPILogsQuery = async (body,request, fastify) => {
                 logs."wrRequestEndTime" as "requestEndTime",
                 logs."wrResponse" as "response",
                 logs."wrCommentaryId" as "commentaryId",
-                users."WrUserName" as "createdBy",
+                users."WrName" as "createdBy",
                 comp."wrCompetition" as "competition",
                 com."wrEventName" as "eventName",
                 com."wrEventRefId" as "eventRefId",
@@ -213,7 +213,7 @@ const allCommentaryLogsQuery = async (body,request, fastify) => {
                 logs."wrGlobal" as "global",
                 logs."wrExtraData" as "extraData",
                 logs."wrCreatedDate" as "createdDate",
-                users."WrUserName" as "createdBy",
+                users."WrName" as "createdBy",
                 comp."wrCompetition" as "competition",
                 com."wrEventName" as "eventName",
                 com."wrEventRefId" as "eventRefId",
@@ -286,7 +286,7 @@ const allErrorLogsQuery = async (body ,request, fastify) => {
                 logs."wrApi" as "api",
                 logs."wrCreatedDate" as "createdDate",
                 logs."wrRequestBody" as "requestBody",
-                users."WrUserName" as "createdBy"
+                users."WrName" as "createdBy"
             FROM
             "tblErrorLogs" logs
             LEFT JOIN
@@ -352,7 +352,7 @@ const allUndoLogsQuery = async (data, request, fastify)=>{
                 logs."wrResponse" as "response",
                 logs."wrCreatedDate" as "createdDate",
                 logs."wrCommentaryId" as "commentaryId",
-                users."WrUserName" as "createdBy",
+                users."WrName" as "createdBy",
                 comp."wrCompetition" as "competition",
                 com."wrEventName" as "eventName",
                 com."wrEventRefId" as "eventRefId",
@@ -419,7 +419,7 @@ const allResponseLogsWithoutFilertsQuery = async (fastify) => {
                 logs."wrGlobal" as "global",
                 logs."wrExtraData" as "extraData",
                 logs."wrCreatedDate" as "createdDate",
-                users."WrUserName" as "createdBy",
+                users."WrName" as "createdBy",
                 comp."wrCompetition" as "competition",
                 com."wrEventName" as "eventName",
                 com."wrEventRefId" as "eventRefId",
@@ -460,7 +460,7 @@ const allResultLogsQuery = async (data, request, fastify)=>{
                 logs."wrId" as "id",
                 logs."wrResult" as "result",
                 logs."wrMarketId" as "marketId",
-                users."WrUserName" as "createdBy",
+                users."WrName" as "createdBy",
                 logs."wrCreatedAt" as "createdAt"
             FROM
                 "tblResultLogs" logs
@@ -524,7 +524,7 @@ const allEMLogsQuery = async (data, request, fastify)=>{
                 logs."wrCreatedBy" as "createdBy",
                 logs."wrRequestTime" as "requestTime",
                 logs."wrResponseTime" as "responseTime",
-                users."WrUserName" as "createdByName"
+                users."WrName" as "createdByName"
             FROM
                 "tblEventMarketLogs" logs
             LEFT JOIN
