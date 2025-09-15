@@ -312,6 +312,9 @@ const commentaryByIdService = async (request, fastify) => {
     request
   );
 
+  const weatherConditions = global.tblWeather.find(item => item.commentaryId === request.body.commentaryId);
+  const pitchConditions = global.tblPitchConditions.find(item => item.commentaryId === request.body.commentaryId);
+
   commentary.team1Captain = team1.teamCaptain;
   commentary.team1Kipper = team1.teamKipper;
   commentary.team1Players = team1Players;
@@ -320,6 +323,8 @@ const commentaryByIdService = async (request, fastify) => {
   commentary.team2Players = team2Players;
   commentary.commentaryId = request.body.commentaryId;
   commentary.drsCount = team1.drsCount;
+  commentary.weatherCondition = weatherConditions;
+  commentary.pitchCondition = pitchConditions;
 
   return commentary;
 };
@@ -1667,7 +1672,7 @@ const updateCommentaryService = async (request, fastify) => {
 
   global.tblCommentaries[index] = updatedData;
 
-  const validateWeather = global.tblWeather.find(item => item?.commentaryId === request.body.commentaryId);
+  const validateWeather = global.tblWeather.find(item => item.commentaryId === request.body.commentaryId);
   if (validateWeather) {
     const weatherData = {
       weatherCondition: request.body.weatherCondition ?? validateWeather.weatherCondition,
@@ -1687,6 +1692,11 @@ const updateCommentaryService = async (request, fastify) => {
     } else {
       global.tblWeather.push(weather[0]);
     }
+  } else {
+    if(request.body?.weatherCondition) {
+      const weather = await insertWeatherQuery(request.body, fastify, request);
+      global.tblWeather.push(weather);
+    }
   }
 
   const validatePitch = global.tblPitchConditions.find(item => item?.commentaryId === request.body.commentaryId);
@@ -1705,6 +1715,11 @@ const updateCommentaryService = async (request, fastify) => {
       global.tblPitchConditions[index] = pitch[0]
     } else {
       global.tblPitchConditions.push(pitch[0]);
+    }
+  } else {
+    if(request.body?.pitchCondition) {
+      const pitch = await insertPitchConditionQuery(request.body, fastify, request);
+      global.tblPitchConditions.push(pitch);
     }
   }
 
