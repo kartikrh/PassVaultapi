@@ -659,7 +659,8 @@ const virtualEventTossService = async (request, fastify) => {
   const commentaryOvers = {
     overId: 0,
     commentaryId: commentary?.commentaryId,
-    teamId: bowlingTeamId,
+    // teamId: bowlingTeamId,
+    teamId: battingTeamId,
     over: 0,
     ballCount: 0,
     bowlerId: bowler?.commentaryPlayerId,
@@ -2810,7 +2811,8 @@ const onInningChangeService = async (data, request, fastify) => {
   const commentaryOvers = {
     overId: 0,
     commentaryId: commentaryDetails?.commentaryId,
-    teamId: bowlingTeamId.teamId,
+    // teamId: bowlingTeamId.teamId,
+    teamId: battingTeamId.teamId,
     over: 0,
     ballCount: 0,
     bowlerId: bowler?.commentaryPlayerId,
