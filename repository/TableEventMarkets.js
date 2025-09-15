@@ -1679,7 +1679,7 @@ const upsertEventMarketSPQuery = async (data, request, fastify) => {
 //             tmd."wrUpdateType" as "updateType",
 //             tmd."wrCreatedDate" as "createdDate",
 //             tmd."wrCreatedBy" as "createdBy",
-//             tu."WrUserName" as "userName",
+//             tu."WrName" as "userName",
 //             tmd."wrLineDiff" as "lineDiff",
 //             tmd."wrIsSendData" as "isSendData"
 //         FROM "tblMarketDataLogs" tmd
@@ -1769,7 +1769,7 @@ const getDataLogsByMarketQuery = async (request, fastify) => {
                 tmd."wrUpdateType" AS "updateType",
                 tmd."wrCreatedDate" AS "createdDate",
                 tmd."wrCreatedBy" AS "createdBy",
-                tu."WrUserName" AS "userName",
+                tu."WrName" AS "userName",
                 tmd."wrLineDiff" AS "lineDiff",
                 tmd."wrIsSendData" AS "isSendData",
                 tmd."wrPredefinedValue" as "predefinedValue"
@@ -1831,7 +1831,7 @@ const getStatusLogsByMarketQuery = async (request, fastify) => {
                     tmd."wrActionType" as "actionType",
                     "wrValue" as "value",
                     "wrUserId" as "userId",
-                    tu."WrUserName" as "userName",
+                    tu."WrName" as "userName",
                     tmd."wrCreatedDate" as "createdDate",
                     tmd."wrResult" as "result"
                 FROM "tblMarketLogs" tmd
