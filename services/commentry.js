@@ -3685,17 +3685,17 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         if (indexTeam === -1) {
           throw new Error("Team with this id not Found");
         }
-        const indexBowler = global.tblCommentaryPlayers.findIndex((item) => {
-          return (
-            item?.commentaryId === commentaryOvers.commentaryId &&
-            item.teamId === commentaryOvers.teamId &&
-            item.commentaryPlayerId === commentaryOvers.bowlerId
-          );
-        });
+        // const indexBowler = global.tblCommentaryPlayers.findIndex((item) => {
+        //   return (
+        //     item?.commentaryId === commentaryOvers.commentaryId &&
+        //     // item.teamId === commentaryOvers.teamId &&
+        //     item.commentaryPlayerId === commentaryOvers.bowlerId
+        //   );
+        // });
 
-        if (indexBowler === -1) {
-          throw new Error("Bowler with this id not Found");
-        }
+        // if (indexBowler === -1) {
+        //   throw new Error("Bowler with this id not Found");
+        // }
       } else {
         overIndex = global.tblOvers.findIndex(
           (item) => item.overId === commentaryOvers.overId
@@ -3998,23 +3998,23 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
             );
           });
         }
-        if (commentaryData && commentaryData?.isTest == false) {
-          setPlayerHistoryService(
-            {
-              commentaryId: [commentaryId],
-            },
-            request,
-            fastify
-          ).catch((err) => {
-            console.log("setPlayerHistoryService console savedetails", err);
-            errorLogger(
-              fastify,
-              err.message,
-              "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket - setPlayerHistoryService",
-              request
-            );
-          });
-        }
+        // if (commentaryData && commentaryData?.isTest == false) {
+        //   setPlayerHistoryService(
+        //     {
+        //       commentaryId: [commentaryId],
+        //     },
+        //     request,
+        //     fastify
+        //   ).catch((err) => {
+        //     console.log("setPlayerHistoryService console savedetails", err);
+        //     errorLogger(
+        //       fastify,
+        //       err.message,
+        //       "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket - setPlayerHistoryService",
+        //       request
+        //     );
+        //   });
+        // }
         const tipsData = global.tblTips
           .filter(
             (item) =>
@@ -10696,26 +10696,26 @@ const closeCommentaryService = async (request, fastify) => {
         );
       });
     }
-    if (
-      global.tblCommentaries[index] &&
-      global.tblCommentaries[index]?.isTest == false
-    ) {
-      setPlayerHistoryService(
-        {
-          commentaryId: request.body.commentaryId,
-        },
-        request,
-        fastify
-      ).catch((err) => {
-        console.log("setPlayerHistoryService console", err);
-        errorLogger(
-          fastify,
-          err.message,
-          "ERROR --> services/commentary.js/closeCommentaryService - setPlayerHistoryService",
-          request
-        );
-      });
-    }
+    // if (
+    //   global.tblCommentaries[index] &&
+    //   global.tblCommentaries[index]?.isTest == false
+    // ) {
+    //   setPlayerHistoryService(
+    //     {
+    //       commentaryId: request.body.commentaryId,
+    //     },
+    //     request,
+    //     fastify
+    //   ).catch((err) => {
+    //     console.log("setPlayerHistoryService console", err);
+    //     errorLogger(
+    //       fastify,
+    //       err.message,
+    //       "ERROR --> services/commentary.js/closeCommentaryService - setPlayerHistoryService",
+    //       request
+    //     );
+    //   });
+    // }
   }
 
   //return `Commentary(s) closed successfully`;
@@ -13243,17 +13243,17 @@ const saveComVirtual = async (request, fastify) => {
         if (indexTeam === -1) {
           throw new Error("Team with this id not Found");
         }
-        const indexBowler = global.tblCommentaryPlayers.findIndex((item) => {
-          return (
-            item?.commentaryId === commentaryOvers.commentaryId &&
-            item.teamId === commentaryOvers.teamId &&
-            item.commentaryPlayerId === commentaryOvers.bowlerId
-          );
-        });
+        // const indexBowler = global.tblCommentaryPlayers.findIndex((item) => {
+        //   return (
+        //     item?.commentaryId === commentaryOvers.commentaryId &&
+        //     item.teamId === commentaryOvers.teamId &&
+        //     item.commentaryPlayerId === commentaryOvers.bowlerId
+        //   );
+        // });
 
-        if (indexBowler === -1) {
-          throw new Error("Bowler with this id not Found");
-        }
+        // if (indexBowler === -1) {
+        //   throw new Error("Bowler with this id not Found");
+        // }
       } else {
         overIndex = global.tblOvers.findIndex(
           (item) => item.overId === commentaryOvers.overId
