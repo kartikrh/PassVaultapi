@@ -334,13 +334,14 @@ const allErrorLogsQuery = async (body ,request, fastify) => {
 };
 const allUndoLogsQuery = async (data, request, fastify)=>{
     try {
-        const { startDate, endDate, page = 1, limit = 20 , commentaryId } = data;
+        const { startDate, endDate, page = 1, limit = 20 , commentaryId, createdById } = data;
         let {skip , take} = getPagination(page, limit);
         // let where = `where "wrRequestBody" ->> 'deleteCommentaryBallByBallId' is not null`;
         let where = commentaryId ? `logs."wrCommentaryId" = ${commentaryId}` : null;
         // where = where ? `${where} AND logs."wrRequestBody" ->> 'deleteCommentaryBallByBallId' is not null` : `logs."wrRequestBody" ->> 'deleteCommentaryBallByBallId' is not null`;
         where = where ? `${where} AND logs."wrComment" = 'delete' ` : `logs."wrComment" = 'delete'`;
         where = startDate && endDate ? (where ? `${where} AND logs."wrCreatedDate" BETWEEN '${startDate}' AND '${endDate}'` : `logs."wrCreatedDate" BETWEEN '${startDate}' AND '${endDate}'`) : where;
+        where = createdById ? (where ? `${where} AND users."WrUserId" = ${createdById}` : `users."WrUserId" = ${createdById}`) : where;
 
 
         // console.log('where', where);
@@ -352,6 +353,7 @@ const allUndoLogsQuery = async (data, request, fastify)=>{
                 logs."wrResponse" as "response",
                 logs."wrCreatedDate" as "createdDate",
                 logs."wrCommentaryId" as "commentaryId",
+                users."WrUserId" as "createdById",
                 users."WrName" as "createdBy",
                 comp."wrCompetition" as "competition",
                 com."wrEventName" as "eventName",
@@ -381,6 +383,7 @@ const allUndoLogsQuery = async (data, request, fastify)=>{
         const totalRecordsQuery = `
             SELECT COUNT(*) as "count"
             FROM "tblCommentaryLogs" logs
+            LEFT JOIN "tblUsers" users ON logs."wrCreatedBy" = users."WrUserId"
             ${where ? `WHERE ${where}` : ''}
         `;
         const totalRecordsResult = await fastify.db.query(totalRecordsQuery, {
