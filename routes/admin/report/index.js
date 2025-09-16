@@ -4,7 +4,7 @@ const { Report } = require("../../../swaggerSchema/groupTags/schema");
 
 module.exports = async (fastify, opts) => {
     fastify.post("/allUndoReportByType", {
-        schema: Report.undoLogsByCommentaryWise.schema,
+        schema: Report.undoReportByType.schema,
         preHandler: [
             (request, reply) => authorize(request, reply, fastify),
             (request, reply) => checkPermission(request, reply, fastify, {
