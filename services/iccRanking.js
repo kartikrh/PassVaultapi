@@ -227,7 +227,7 @@ const updateICCRankingByIdService = async (request, fastify) => {
             })
     );
 
-    if (clientData.length > 0) { 
+    if (clientData.length > 0) {
         callClientAPI(
             {
                 serviceType: ServiceType.clientAPI,
@@ -379,13 +379,33 @@ const importICCRankingFromEntitySportService = async (request, fastify) => {
             const menEntries = await extractEntries(iccRankingData.ranks, true, request, fastify);
             const womenEntries = await extractEntries(iccRankingData.women_ranks, false, request, fastify);
             const resultEntries = [...menEntries, ...womenEntries];
+            const rankingMap = new Map();
+            for (const item of global.tblICCRanking) {
+                const key = `${item.sportId}-${item.matchTypeId}-${item.type}-${item.isMen}-${item.teamId}-${item.playerId}-${item.playerTypeId}-${item.rank}`;
+                rankingMap.set(key, item);
+            }
+
             for (const entry of resultEntries) {
-                await createICCRankingService({
-                    ...request,
-                    body: entry
-                }, fastify).catch((err) => {
-                    // console.log("error", err.message);
-                });
+                const key = `${entry.sportId}-${entry.matchTypeId}-${entry.type}-${entry.isMen}-${entry.teamId}-${entry.playerId}-${entry.playerTypeId}-${entry.rank}`;
+                const checkEntry = rankingMap.get(key);
+                if (checkEntry) {
+                    await updateICCRankingByIdService({
+                        ...request,
+                        body: {
+                            ...checkEntry,
+                            ...entry
+                        }
+                    }, fastify).catch((err) => {
+                        // console.log("error", err.message);
+                    });
+                } else {
+                    await createICCRankingService({
+                        ...request,
+                        body: entry
+                    }, fastify).catch((err) => {
+                        // console.log("error", err.message);
+                    });
+                }
             }
             return `ICC Ranking data imported successfully`;
         } else {
