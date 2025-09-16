@@ -323,8 +323,15 @@ const commentaryByIdService = async (request, fastify) => {
   commentary.team2Players = team2Players;
   commentary.commentaryId = request.body.commentaryId;
   commentary.drsCount = team1.drsCount;
-  commentary.weatherCondition = weatherConditions;
-  commentary.pitchCondition = pitchConditions;
+  if (weatherConditions) {
+    const { id, commentaryId, ...weatherRest } = weatherConditions;
+    Object.assign(commentary, weatherRest);
+  }
+
+  if (pitchConditions) {
+    const { id, commentaryId, ...pitchRest } = pitchConditions;
+    Object.assign(commentary, pitchRest);
+  }
 
   return commentary;
 };
@@ -687,12 +694,31 @@ const createCommentaryService = async (request, fastify) => {
   }
   const addCommentry = await insertCommentaryQuery(request, fastify);
   request.body.commentaryId = addCommentry.commentaryId;
-  if (request.body.weatherCondition) {
+  const weatherFields = [
+    "weatherCondition",
+    "description",
+    "temp",
+    "humidity",
+    "visibility",
+    "windSpeed",
+    "clouds"
+  ];
+
+  const hasWeatherData = weatherFields.some(field => request.body[field] != null);
+
+  if (hasWeatherData) {
     const weather = await insertWeatherQuery(request.body, fastify, request);
     global.tblWeather.push(weather);
   }
 
-  if (request.body.pitchCondition) {
+  const pitchFields = [
+    "pitchCondition",
+    "battingCondition",
+    "paceBowlingCondition",
+    "spineBowlingConniton"
+  ];
+  const hasPitchData = pitchFields.some(field => request.body[field] != null);
+  if (hasPitchData) {
     const pitch = await insertPitchConditionQuery(request.body, fastify, request);
     global.tblPitchConditions.push(pitch);
   }
@@ -1693,7 +1719,19 @@ const updateCommentaryService = async (request, fastify) => {
       global.tblWeather.push(weather[0]);
     }
   } else {
-    if(request.body?.weatherCondition) {
+    const weatherFields = [
+      "weatherCondition",
+      "description",
+      "temp",
+      "humidity",
+      "visibility",
+      "windSpeed",
+      "clouds"
+    ];
+
+    const hasWeatherData = weatherFields.some(field => request.body[field] != null);
+
+    if(hasWeatherData) {
       const weather = await insertWeatherQuery(request.body, fastify, request);
       global.tblWeather.push(weather);
     }
@@ -1717,7 +1755,15 @@ const updateCommentaryService = async (request, fastify) => {
       global.tblPitchConditions.push(pitch[0]);
     }
   } else {
-    if(request.body?.pitchCondition) {
+    const pitchFields = [
+      "pitchCondition",
+      "battingCondition",
+      "paceBowlingCondition",
+      "spineBowlingConniton"
+    ];
+
+    const hasPitchData = pitchFields.some(field => request.body[field] != null);
+    if(hasPitchData) {
       const pitch = await insertPitchConditionQuery(request.body, fastify, request);
       global.tblPitchConditions.push(pitch);
     }
