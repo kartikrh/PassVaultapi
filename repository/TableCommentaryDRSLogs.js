@@ -18,9 +18,9 @@ const allCommentaryDRSLogsQuery = async (body, request, fastify) => {
                 tt."wrTeamName" as "teamName",
                 logs."wrOrder" as "order",
                 logs."wrResult" as "result",
-                tu1."WrUserName" as "createdBy",
+                tu1."WrName" as "createdBy",
                 logs."wrCreatedAt" as "createdAt",
-                tu2."WrUserName" as "updatedBy",
+                tu2."WrName" as "updatedBy",
                 logs."wrUpdatedAt" as "updatedAt",
                 logs."wrIsCount" as "isCount"
             FROM "tblCommentaryDRSLogs" logs
@@ -78,9 +78,9 @@ const commentaryDRSLogByIdQuery = async (id, request, fastify) => {
                 tt."wrTeamName" as "teamName",
                 logs."wrOrder" as "order",
                 logs."wrResult" as "result",
-                tu1."WrUserName" as "createdBy",
+                tu1."WrName" as "createdBy",
                 logs."wrCreatedAt" as "createdAt",
-                tu2."WrUserName" as "updatedBy",
+                tu2."WrName" as "updatedBy",
                 logs."wrUpdatedAt" as "updatedAt",
                 logs."wrIsCount" as "isCount"
             FROM "tblCommentaryDRSLogs" logs
@@ -118,9 +118,9 @@ const commentaryDRSLogByCommQuery = async (whereCondition = undefined, request, 
                 tt."wrTeamName" as "teamName",
                 logs."wrOrder" as "order",
                 logs."wrResult" as "result",
-                tu1."WrUserName" as "createdBy",
+                tu1."WrName" as "createdBy",
                 logs."wrCreatedAt" as "createdAt",
-                tu2."WrUserName" as "updatedBy",
+                tu2."WrName" as "updatedBy",
                 logs."wrUpdatedAt" as "updatedAt",
                 logs."wrIsCount" as "isCount"
             FROM "tblCommentaryDRSLogs" logs
