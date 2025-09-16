@@ -1521,6 +1521,11 @@ const extractEntries = async (json, isMen, request, fastify) => {
   return output;
 }
 
+const UndoReportType = {
+  commentary: 1,
+  user: 2,
+}
+
 module.exports = {
   ERROR_CODES,
   error,
@@ -1618,5 +1623,6 @@ module.exports = {
   exchangeMatchinfoAPI,
   ICCRankingType,
   ICCRankingPlayerType,
-  extractEntries
+  extractEntries,
+  UndoReportType
 };
