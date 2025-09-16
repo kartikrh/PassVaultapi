@@ -631,6 +631,165 @@ const allAutoImportDataLogsQuery = async (body ,request, fastify) => {
         throw new Error(err.message);
     }
 };
+
+const allUndoLogsByCommentaryWiseQuery = async (data, request, fastify) => {
+    try {
+        const { startDate, endDate, page = 1, limit = 20, eventRefId } = data;
+        const { skip, take } = getPagination(page, limit);
+
+        const whereClauses = [`cl."wrComment" = 'delete'`];
+        const filterBindValues = [];
+        let bindIndex = 1;
+
+        if (startDate && endDate) {
+            whereClauses.push(`cl."wrCreatedDate" BETWEEN $${bindIndex} AND $${bindIndex + 1}`);
+            filterBindValues.push(startDate, endDate);
+            bindIndex += 2;
+        }
+
+        if (eventRefId) {
+            whereClauses.push(`c."wrEventRefId" = $${bindIndex}`);
+            filterBindValues.push(eventRefId);
+            bindIndex++;
+        }
+
+        const where = whereClauses.length ? `WHERE ${whereClauses.join(' AND ')}` : '';
+
+        const baseQuery = `
+            SELECT 
+                DATE(cl."wrCreatedDate") AS date,
+                c."wrEventRefId" AS "eventRefId",
+                c."wrEventName" AS "eventName",
+                c."wrCommentaryStatus" AS "status",
+                COUNT(CASE WHEN cl."wrComment" = 'delete' THEN 1 END) AS "totalUndo",
+                COUNT(DISTINCT cl."wrCreatedBy") AS "uniqueScorerCount"
+            FROM "tblCommentaryLogs" cl
+            JOIN "tblCommentaries" c ON cl."wrCommentaryId" = c."wrCommentaryId"
+            ${where}
+            GROUP BY 
+                DATE(cl."wrCreatedDate"),
+                c."wrEventRefId",
+                c."wrEventName",
+                c."wrCommentaryStatus"
+            ORDER BY DATE(cl."wrCreatedDate") DESC
+        `;
+
+        const paginationBindValues = [...filterBindValues, take, skip];
+
+        const result = await fastify.db.query(baseQuery + ` LIMIT $${bindIndex} OFFSET $${bindIndex + 1}`, {
+            type: fastify.db.QueryTypes.SELECT,
+            bind: paginationBindValues
+        });
+
+        const totalRecordsQuery = `
+            SELECT COUNT(*) as "count" FROM (
+                ${baseQuery}
+            ) AS subquery;
+        `;
+
+        const totalRecordsResult = await fastify.db.query(totalRecordsQuery, {
+            type: fastify.db.QueryTypes.SELECT,
+            bind: filterBindValues
+        });
+
+        const totalRecords = parseInt(totalRecordsResult[0].count, 10);
+        const totalPages = Math.ceil(totalRecords / take);
+
+        return {
+            totalRecords,
+            currentPage: page,
+            totalPages,
+            data: result,
+        };
+    } catch (error) {
+        errorLogger(
+            fastify,
+            error.message,
+            "DB ERROR --> repository/TableLogs.js/allUndoLogsByCommentaryWiseQuery",
+            request
+        );
+        throw new Error(error.message);
+    }
+};
+
+const allUndoLogsByUserWiseQuery = async (data, request, fastify) => {
+    try {
+        const { startDate, endDate, page = 1, limit = 20, createdById } = data;
+        const { skip, take } = getPagination(page, limit);
+
+        const whereClauses = [`cl."wrComment" = 'delete'`];
+        const filterBindValues = [];
+        let bindIndex = 1;
+
+        if (startDate && endDate) {
+            whereClauses.push(`cl."wrCreatedDate" BETWEEN $${bindIndex} AND $${bindIndex + 1}`);
+            filterBindValues.push(startDate, endDate);
+            bindIndex += 2;
+        }
+
+        if (createdById) {
+            whereClauses.push(`u."WrUserId" = $${bindIndex}`);
+            filterBindValues.push(createdById);
+            bindIndex++;
+        }
+
+        const where = whereClauses.length ? `WHERE ${whereClauses.join(' AND ')}` : '';
+
+        const baseQuery = `
+            SELECT 
+                DATE(cl."wrCreatedDate") AS date,
+                u."WrUserId" AS "createdById",
+                u."WrName" AS "createdBy",
+                COUNT(CASE WHEN cl."wrComment" = 'delete' THEN 1 END) AS "totalUndo",
+                COUNT(DISTINCT cl."wrCommentaryId") AS "uniqueCommentaryCount"
+            FROM "tblCommentaryLogs" cl
+            JOIN "tblUsers" u ON cl."wrCreatedBy" = u."WrUserId"
+            ${where}
+            GROUP BY 
+                DATE(cl."wrCreatedDate"), 
+                u."WrUserId", 
+                u."WrName"
+            ORDER BY DATE(cl."wrCreatedDate") DESC
+        `;
+
+        const paginationBindValues = [...filterBindValues, take, skip];
+
+        const result = await fastify.db.query(baseQuery + ` LIMIT $${bindIndex} OFFSET $${bindIndex + 1}`, {
+            type: fastify.db.QueryTypes.SELECT,
+            bind: paginationBindValues
+        });
+
+        const totalRecordsQuery = `
+            SELECT COUNT(*) as "count" FROM (
+                ${baseQuery}
+            ) AS subquery;
+        `;
+
+        const totalRecordsResult = await fastify.db.query(totalRecordsQuery, {
+            type: fastify.db.QueryTypes.SELECT,
+            bind: filterBindValues
+        });
+
+        const totalRecords = parseInt(totalRecordsResult[0].count, 10);
+        const totalPages = Math.ceil(totalRecords / take);
+
+        return {
+            totalRecords,
+            currentPage: page,
+            totalPages,
+            data: result,
+        };
+    } catch (error) {
+        errorLogger(
+            fastify,
+            error.message,
+            "DB ERROR --> repository/TableLogs.js/allUndoLogsByUserWiseQuery",
+            request
+        );
+        throw new Error(error.message);
+    }
+};
+
 module.exports = {
     allResponseLogsQuery,
     allThirdPartyApiLogsQuery,
@@ -642,4 +801,6 @@ module.exports = {
     allResultLogsQuery,
     allEMLogsQuery,
     allAutoImportDataLogsQuery,
+    allUndoLogsByCommentaryWiseQuery,
+    allUndoLogsByUserWiseQuery
 };
