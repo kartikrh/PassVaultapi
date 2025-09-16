@@ -1,10 +1,10 @@
 const { checkPermission, authorize } = require("../../../controller/middleware");
 const { allUndoLogsByCommentaryWise, allUndoLogsByUserWise } = require("../../../controller/users/admin/report");
-const { Reports } = require("../../../swaggerSchema/groupTags/schema");
+const { Report } = require("../../../swaggerSchema/groupTags/schema");
 
 module.exports = async (fastify, opts) => {
     fastify.post("/undoLogsByCommentaryWise", {
-        schema: Reports.undoLogsByCommentaryWise.schema,
+        schema: Report.undoLogsByCommentaryWise.schema,
         preHandler: [
             (request, reply) => authorize(request, reply, fastify),
             (request, reply) => checkPermission(request, reply, fastify, {
@@ -15,7 +15,7 @@ module.exports = async (fastify, opts) => {
         handler: (request, reply) => allUndoLogsByCommentaryWise(request, reply, fastify)
     })
     fastify.post("/undoLogsByUserWise", {
-        schema: Reports.undoLogsByUserWise.schema,
+        schema: Report.undoLogsByUserWise.schema,
         preHandler: [
             (request, reply) => authorize(request, reply, fastify),
             (request, reply) => checkPermission(request, reply, fastify, {

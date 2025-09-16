@@ -10743,7 +10743,7 @@ const ICCRanking = {
   },
 };
 
-const Reports = {
+const Report = {
   undoLogsByCommentaryWise: {
     schema: {
       tags: ["Reports"],
@@ -10862,5 +10862,5 @@ module.exports = {
   EntitySport,
   Agent,
   ICCRanking,
-  Reports,
+  Report,
 };
