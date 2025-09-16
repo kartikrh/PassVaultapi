@@ -10746,7 +10746,7 @@ const ICCRanking = {
 const Report = {
   undoLogsByCommentaryWise: {
     schema: {
-      tags: ["Reports"],
+      tags: ["Report"],
       description: "undo Logs by commentary wise",
       security: [{ bearerAuth: [] }],
       body: {
@@ -10765,7 +10765,7 @@ const Report = {
   },
   undoLogsByUserWise: {
     schema: {
-      tags: ["Reports"],
+      tags: ["Report"],
       description: "undo Logs by user wise",
       security: [{ bearerAuth: [] }],
       body: {
