@@ -8,7 +8,7 @@ module.exports = async (fastify, opts) => {
         preHandler: [
             (request, reply) => authorize(request, reply, fastify),
             (request, reply) => checkPermission(request, reply, fastify, {
-                tabName: "report",
+                tabName: "Reports",
                 mode: "view"
             })
         ],
@@ -19,7 +19,7 @@ module.exports = async (fastify, opts) => {
         preHandler: [
             (request, reply) => authorize(request, reply, fastify),
             (request, reply) => checkPermission(request, reply, fastify, {
-                tabName: "report",
+                tabName: "Reports",
                 mode: "view"
             })
         ],
