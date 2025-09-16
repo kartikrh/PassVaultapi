@@ -10743,6 +10743,47 @@ const ICCRanking = {
   },
 };
 
+const Reports = {
+  undoLogsByCommentaryWise: {
+    schema: {
+      tags: ["Reports"],
+      description: "undo Logs by commentary wise",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          page: { type: "integer" },
+          skip: { type: "integer" },
+          limit: { type: "integer" },
+          eventRefId: { type: "string" },
+          startDate: { type: "string" },
+          endDate: { type: "string" }
+        },
+        required: ["page", "limit"]
+      }
+    }
+  },
+  undoLogsByUserWise: {
+    schema: {
+      tags: ["Reports"],
+      description: "undo Logs by user wise",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          page: { type: "integer" },
+          skip: { type: "integer" },
+          limit: { type: "integer" },
+          createdById: { type: "integer" },
+          startDate: { type: "string" },
+          endDate: { type: "string" }
+        },
+        required: ["page", "limit"]
+      }
+    }
+  },
+}
+
 module.exports = {
   Auth,
   Tabs,
@@ -10821,4 +10862,5 @@ module.exports = {
   EntitySport,
   Agent,
   ICCRanking,
+  Reports,
 };
