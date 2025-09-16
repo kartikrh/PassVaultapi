@@ -165,7 +165,8 @@ const generateOver = (data) => {
   return {
     overId: 0,
     commentaryId: commentaryDetails.commentaryId,
-    teamId: teams.bowlingTeam.teamId,
+    // teamId: teams.bowlingTeam.teamId,
+    teamId: teams.battingTeam.teamId,
     bowlerId: bowler?.commentaryPlayerId,
     currentInnings: commentaryDetails.currentInnings,
     over: Math.floor(teams.battingTeam?.teamOver),

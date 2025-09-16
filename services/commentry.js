@@ -312,6 +312,9 @@ const commentaryByIdService = async (request, fastify) => {
     request
   );
 
+  const weatherConditions = global.tblWeather.find(item => item.commentaryId === request.body.commentaryId);
+  const pitchConditions = global.tblPitchConditions.find(item => item.commentaryId === request.body.commentaryId);
+
   commentary.team1Captain = team1.teamCaptain;
   commentary.team1Kipper = team1.teamKipper;
   commentary.team1Players = team1Players;
@@ -320,6 +323,15 @@ const commentaryByIdService = async (request, fastify) => {
   commentary.team2Players = team2Players;
   commentary.commentaryId = request.body.commentaryId;
   commentary.drsCount = team1.drsCount;
+  if (weatherConditions) {
+    const { id, commentaryId, ...weatherRest } = weatherConditions;
+    Object.assign(commentary, weatherRest);
+  }
+
+  if (pitchConditions) {
+    const { id, commentaryId, ...pitchRest } = pitchConditions;
+    Object.assign(commentary, pitchRest);
+  }
 
   return commentary;
 };
@@ -682,12 +694,31 @@ const createCommentaryService = async (request, fastify) => {
   }
   const addCommentry = await insertCommentaryQuery(request, fastify);
   request.body.commentaryId = addCommentry.commentaryId;
-  if (request.body.weatherCondition) {
+  const weatherFields = [
+    "weatherCondition",
+    "description",
+    "temp",
+    "humidity",
+    "visibility",
+    "windSpeed",
+    "clouds"
+  ];
+
+  const hasWeatherData = weatherFields.some(field => request.body[field] != null);
+
+  if (hasWeatherData) {
     const weather = await insertWeatherQuery(request.body, fastify, request);
     global.tblWeather.push(weather);
   }
 
-  if (request.body.pitchCondition) {
+  const pitchFields = [
+    "pitchCondition",
+    "battingCondition",
+    "paceBowlingCondition",
+    "spineBowlingConniton"
+  ];
+  const hasPitchData = pitchFields.some(field => request.body[field] != null);
+  if (hasPitchData) {
     const pitch = await insertPitchConditionQuery(request.body, fastify, request);
     global.tblPitchConditions.push(pitch);
   }
@@ -1667,7 +1698,7 @@ const updateCommentaryService = async (request, fastify) => {
 
   global.tblCommentaries[index] = updatedData;
 
-  const validateWeather = global.tblWeather.find(item => item?.commentaryId === request.body.commentaryId);
+  const validateWeather = global.tblWeather.find(item => item.commentaryId === request.body.commentaryId);
   if (validateWeather) {
     const weatherData = {
       weatherCondition: request.body.weatherCondition ?? validateWeather.weatherCondition,
@@ -1687,6 +1718,23 @@ const updateCommentaryService = async (request, fastify) => {
     } else {
       global.tblWeather.push(weather[0]);
     }
+  } else {
+    const weatherFields = [
+      "weatherCondition",
+      "description",
+      "temp",
+      "humidity",
+      "visibility",
+      "windSpeed",
+      "clouds"
+    ];
+
+    const hasWeatherData = weatherFields.some(field => request.body[field] != null);
+
+    if(hasWeatherData) {
+      const weather = await insertWeatherQuery(request.body, fastify, request);
+      global.tblWeather.push(weather);
+    }
   }
 
   const validatePitch = global.tblPitchConditions.find(item => item?.commentaryId === request.body.commentaryId);
@@ -1705,6 +1753,19 @@ const updateCommentaryService = async (request, fastify) => {
       global.tblPitchConditions[index] = pitch[0]
     } else {
       global.tblPitchConditions.push(pitch[0]);
+    }
+  } else {
+    const pitchFields = [
+      "pitchCondition",
+      "battingCondition",
+      "paceBowlingCondition",
+      "spineBowlingConniton"
+    ];
+
+    const hasPitchData = pitchFields.some(field => request.body[field] != null);
+    if(hasPitchData) {
+      const pitch = await insertPitchConditionQuery(request.body, fastify, request);
+      global.tblPitchConditions.push(pitch);
     }
   }
 
@@ -3685,17 +3746,17 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         if (indexTeam === -1) {
           throw new Error("Team with this id not Found");
         }
-        const indexBowler = global.tblCommentaryPlayers.findIndex((item) => {
-          return (
-            item?.commentaryId === commentaryOvers.commentaryId &&
-            item.teamId === commentaryOvers.teamId &&
-            item.commentaryPlayerId === commentaryOvers.bowlerId
-          );
-        });
+        // const indexBowler = global.tblCommentaryPlayers.findIndex((item) => {
+        //   return (
+        //     item?.commentaryId === commentaryOvers.commentaryId &&
+        //     // item.teamId === commentaryOvers.teamId &&
+        //     item.commentaryPlayerId === commentaryOvers.bowlerId
+        //   );
+        // });
 
-        if (indexBowler === -1) {
-          throw new Error("Bowler with this id not Found");
-        }
+        // if (indexBowler === -1) {
+        //   throw new Error("Bowler with this id not Found");
+        // }
       } else {
         overIndex = global.tblOvers.findIndex(
           (item) => item.overId === commentaryOvers.overId
@@ -13243,17 +13304,17 @@ const saveComVirtual = async (request, fastify) => {
         if (indexTeam === -1) {
           throw new Error("Team with this id not Found");
         }
-        const indexBowler = global.tblCommentaryPlayers.findIndex((item) => {
-          return (
-            item?.commentaryId === commentaryOvers.commentaryId &&
-            item.teamId === commentaryOvers.teamId &&
-            item.commentaryPlayerId === commentaryOvers.bowlerId
-          );
-        });
+        // const indexBowler = global.tblCommentaryPlayers.findIndex((item) => {
+        //   return (
+        //     item?.commentaryId === commentaryOvers.commentaryId &&
+        //     item.teamId === commentaryOvers.teamId &&
+        //     item.commentaryPlayerId === commentaryOvers.bowlerId
+        //   );
+        // });
 
-        if (indexBowler === -1) {
-          throw new Error("Bowler with this id not Found");
-        }
+        // if (indexBowler === -1) {
+        //   throw new Error("Bowler with this id not Found");
+        // }
       } else {
         overIndex = global.tblOvers.findIndex(
           (item) => item.overId === commentaryOvers.overId
