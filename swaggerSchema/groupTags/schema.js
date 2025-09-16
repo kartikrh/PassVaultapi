@@ -10686,7 +10686,10 @@ const ICCRanking = {
           id: { type: "integer" },
           sportId: { type: "integer" },
           matchTypeId: { type: "integer" },
-          type: { type: "integer" },
+          type: {
+            type: "integer",
+            enum: [1, 2]
+          },
           isMen: { type: "boolean" },
           teamId: { type: "integer" },
           playerId: { type: "integer" },
@@ -10697,7 +10700,25 @@ const ICCRanking = {
           remark: { type: "string" },
           isActive: { type: "boolean" },
         },
-        required: ["id", "sportId", "matchTypeId", "type", "isMen", "teamId", "playerId", "playerTypeId", "rating", "point", "rank", "remark", "isActive"]
+        required: ["id", "sportId", "matchTypeId", "type", "isMen", "teamId", "rating", "rank", "isActive"],
+        allOf: [
+          {
+            if: {
+              properties: { type: { const: 1 } }
+            },
+            then: {
+              required: ["point"]
+            }
+          },
+          {
+            if: {
+              properties: { type: { const: 2 } }
+            },
+            then: {
+              required: ["playerId", "playerTypeId"]
+            }
+          }
+        ]
       },
     },
   },
