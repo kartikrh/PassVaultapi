@@ -10686,7 +10686,10 @@ const ICCRanking = {
           id: { type: "integer" },
           sportId: { type: "integer" },
           matchTypeId: { type: "integer" },
-          type: { type: "integer" },
+          type: {
+            type: "integer",
+            enum: [1, 2]
+          },
           isMen: { type: "boolean" },
           teamId: { type: "integer" },
           playerId: { type: "integer" },
@@ -10697,7 +10700,25 @@ const ICCRanking = {
           remark: { type: "string" },
           isActive: { type: "boolean" },
         },
-        required: ["id", "sportId", "matchTypeId", "type", "isMen", "teamId", "playerId", "playerTypeId", "rating", "point", "rank", "remark", "isActive"]
+        required: ["id", "sportId", "matchTypeId", "type", "isMen", "teamId", "rating", "rank", "isActive"],
+        allOf: [
+          {
+            if: {
+              properties: { type: { const: 1 } }
+            },
+            then: {
+              required: ["point"]
+            }
+          },
+          {
+            if: {
+              properties: { type: { const: 2 } }
+            },
+            then: {
+              required: ["playerId", "playerTypeId"]
+            }
+          }
+        ]
       },
     },
   },
@@ -10744,41 +10765,42 @@ const ICCRanking = {
 };
 
 const Report = {
-  undoLogsByCommentaryWise: {
+  undoReportByType: {
     schema: {
       tags: ["Report"],
-      description: "undo Logs by commentary wise",
+      description: "undo report by commentary or user wise",
       security: [{ bearerAuth: [] }],
       body: {
         type: "object",
         properties: {
+          type: { type: "integer", enum: [1, 2] },
           page: { type: "integer" },
           skip: { type: "integer" },
           limit: { type: "integer" },
           eventRefId: { type: "string" },
-          startDate: { type: "string" },
-          endDate: { type: "string" }
-        },
-        required: ["page", "limit"]
-      }
-    }
-  },
-  undoLogsByUserWise: {
-    schema: {
-      tags: ["Report"],
-      description: "undo Logs by user wise",
-      security: [{ bearerAuth: [] }],
-      body: {
-        type: "object",
-        properties: {
-          page: { type: "integer" },
-          skip: { type: "integer" },
-          limit: { type: "integer" },
           createdById: { type: "integer" },
           startDate: { type: "string" },
           endDate: { type: "string" }
         },
-        required: ["page", "limit"]
+        required: ["page", "limit", "type"],
+        allOf: [
+          {
+            if: {
+              properties: { type: { const: 1 } }
+            },
+            then: {
+              required: ["eventRefId"]
+            }
+          },
+          {
+            if: {
+              properties: { type: { const: 2 } }
+            },
+            then: {
+              required: ["createdById"]
+            }
+          }
+        ]
       }
     }
   },
