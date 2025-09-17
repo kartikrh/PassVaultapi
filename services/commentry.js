@@ -22428,7 +22428,7 @@ const syncEntitySportCommentaryService = async (request, fastify) => {
             const overIndex = global.tblOvers.findIndex(item => 
               item.overId === overDetails.overId
             )
-            if (overIndex !== -1) {
+            if (overIndex === -1) {
               global.tblOvers.push(overDetails);
             } else {
               global.tblOvers[overIndex] = overDetails
@@ -22447,7 +22447,7 @@ const syncEntitySportCommentaryService = async (request, fastify) => {
             const findBallByBall = global.tblCommentaryBallByBall.findIndex(item => 
               item.commentaryBallByBallId == ballDetails.commentaryBallByBallId
             )
-            if (findBallByBall !== -1) {
+            if (findBallByBall === -1) {
                 global.tblCommentaryBallByBall.push(ballDetails);
             } else {
                 response.commentaryBallByBallDetails[findBallByBall] = ballDetails;
@@ -22466,8 +22466,8 @@ const syncEntitySportCommentaryService = async (request, fastify) => {
             // call Third Party API
             if (ballDetails.ballType > 0) {
 
-              let _wkt = commentaryBallByBall.ballIsWicket;
-              let _bory = commentaryBallByBall.ballIsBoundry;
+              let _wkt = ballDetails.ballIsWicket;
+              let _bory = ballDetails.ballIsBoundry;
               if (_bory == true) {
                   let boundaryType;
                   let ballRun = ballDetails.ballRun;
@@ -22502,10 +22502,10 @@ const syncEntitySportCommentaryService = async (request, fastify) => {
         }
         if (commentaryWicket) {
           for (const wicketDetails of updatedData.commentaryWicketDetails) {
-            const wicketData = global.tblCommentaryWicket.findIndex(item => 
+            const wicketIndex = global.tblCommentaryWicket.findIndex(item => 
               item.commentaryWicketId == wicketDetails.commentaryWicketId
             )
-            if (wicketData !== -1) {
+            if (wicketIndex === -1) {
                 global.tblCommentaryWicket.push(wicketDetails);
                 await notiConfigContentReplaceService(
                     EventName.WICKET,
@@ -22514,7 +22514,7 @@ const syncEntitySportCommentaryService = async (request, fastify) => {
                     fastify
                 );
             } else {
-              global.tblCommentaryWicket[wicketData] = wicketDetails;
+              global.tblCommentaryWicket[wicketIndex] = wicketDetails;
             }
           }
           response.commentaryWicketDetails = updatedData.commentaryWicketDetails;
