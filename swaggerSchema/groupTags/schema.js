@@ -10783,24 +10783,6 @@ const Report = {
           endDate: { type: "string" }
         },
         required: ["page", "limit", "type"],
-        allOf: [
-          {
-            if: {
-              properties: { type: { const: 1 } }
-            },
-            then: {
-              required: ["eventRefId"]
-            }
-          },
-          {
-            if: {
-              properties: { type: { const: 2 } }
-            },
-            then: {
-              required: ["createdById"]
-            }
-          }
-        ]
       }
     }
   },
