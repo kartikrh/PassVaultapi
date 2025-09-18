@@ -655,13 +655,13 @@ const allUndoLogsByCommentaryWiseQuery = async (data, request, fastify) => {
 
         if (eventTypeId) {
             whereClauses.push(`c."wrEventTypeId" = $${bindIndex}`);
-            filterBindValues.push(eventRefId);
+            filterBindValues.push(eventTypeId);
             bindIndex++;
         }
 
         if (competitionId) {
             whereClauses.push(`c."wrCompetitionId" = $${bindIndex}`);
-            filterBindValues.push(eventRefId);
+            filterBindValues.push(competitionId);
             bindIndex++;
         }
 
