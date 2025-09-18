@@ -659,16 +659,28 @@ const allUndoLogsByCommentaryWiseQuery = async (data, request, fastify) => {
             SELECT 
                 DATE(cl."wrCreatedDate") AS date,
                 c."wrEventRefId" AS "eventRefId",
+                c."wrEventTypeId" AS "eventTypeId",
+                et."wrEventType" AS "eventType",
+                c."wrCompetitionId" AS "competitionId",
+                comp."wrCompetition" AS "competition",
                 c."wrEventName" AS "eventName",
+                c."wrCommentaryId" AS "commentaryId",
                 c."wrCommentaryStatus" AS "status",
                 COUNT(CASE WHEN cl."wrComment" = 'delete' THEN 1 END) AS "totalUndo",
                 COUNT(DISTINCT cl."wrCreatedBy") AS "uniqueScorerCount"
             FROM "tblCommentaryLogs" cl
             JOIN "tblCommentaries" c ON cl."wrCommentaryId" = c."wrCommentaryId"
+            LEFT JOIN "tblEventTypes" et ON et."wrEventTypeId" = c."wrEventTypeId"
+            LEFT JOIN "tblCompetitions" comp ON comp."wrCompetitionId" = c."wrCompetitionId"
             ${where}
             GROUP BY 
                 DATE(cl."wrCreatedDate"),
                 c."wrEventRefId",
+                c."wrEventTypeId",
+                et."wrEventType",
+                c."wrCompetitionId",
+                comp."wrCompetition",
+                c."wrCommentaryId",
                 c."wrEventName",
                 c."wrCommentaryStatus"
             ORDER BY DATE(cl."wrCreatedDate") DESC
