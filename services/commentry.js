@@ -8175,7 +8175,7 @@ const changeBowlerOfCommentaryService = async (request, fastify) => {
           commentary_id: commentary.commentaryId,
           over_type_id: latestOver?.overType || null,
           over_id: latestOver?.overId || null,
-          team_id: batTeam?.teamId || null,
+          team_id: latestOver?.teamId || null,
           bowler_id: bowlerId,
           wicket: latestOver?.totalWicket || 0,
           bowling_style : comP?.bowlingStyle || 0,
