@@ -634,7 +634,7 @@ const allAutoImportDataLogsQuery = async (body ,request, fastify) => {
 
 const allUndoLogsByCommentaryWiseQuery = async (data, request, fastify) => {
     try {
-        const { startDate, endDate, page = 1, limit = 20, eventRefId } = data;
+        const { startDate, endDate, page = 1, limit = 20, eventRefId, eventTypeId, competitionId } = data;
         const { skip, take } = getPagination(page, limit);
 
         const whereClauses = [`cl."wrComment" = 'delete'`];
@@ -649,6 +649,18 @@ const allUndoLogsByCommentaryWiseQuery = async (data, request, fastify) => {
 
         if (eventRefId) {
             whereClauses.push(`c."wrEventRefId" = $${bindIndex}`);
+            filterBindValues.push(eventRefId);
+            bindIndex++;
+        }
+
+        if (eventTypeId) {
+            whereClauses.push(`c."wrEventTypeId" = $${bindIndex}`);
+            filterBindValues.push(eventRefId);
+            bindIndex++;
+        }
+
+        if (competitionId) {
+            whereClauses.push(`c."wrCompetitionId" = $${bindIndex}`);
             filterBindValues.push(eventRefId);
             bindIndex++;
         }
