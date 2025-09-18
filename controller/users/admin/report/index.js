@@ -10,8 +10,10 @@ const getAllUndoReportByType = async (request, reply, fastify) => {
         let result = null;
         if (type === UndoReportType.commentary) {
             result = await allUndoLogsByCommentaryWiseQuery(request.body, request, fastify);
-        } else {
+        } else if (type === UndoReportType.user) {
             result = await allUndoLogsByUserWiseQuery(request.body, request, fastify);
+        } else {
+            throw new Error("Invalid type of undo report");
         }
         reply.status(200).send(success(result, 200));
     } catch (err) {

@@ -10778,29 +10778,13 @@ const Report = {
           skip: { type: "integer" },
           limit: { type: "integer" },
           eventRefId: { type: "string" },
+          eventTypeId: { type: "integer" },
+          competitionId: { type: "integer" },
           createdById: { type: "integer" },
           startDate: { type: "string" },
           endDate: { type: "string" }
         },
         required: ["page", "limit", "type"],
-        allOf: [
-          {
-            if: {
-              properties: { type: { const: 1 } }
-            },
-            then: {
-              required: ["eventRefId"]
-            }
-          },
-          {
-            if: {
-              properties: { type: { const: 2 } }
-            },
-            then: {
-              required: ["createdById"]
-            }
-          }
-        ]
       }
     }
   },
