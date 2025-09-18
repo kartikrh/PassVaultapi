@@ -4509,6 +4509,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           item.teamStatus === 1 &&
           item.currentInnings === commentaryData.currentInnings
         );
+        
         callPredictorMarket(
           {
             commentary_id: commentaryId,
