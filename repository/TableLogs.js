@@ -669,7 +669,7 @@ const allUndoLogsByCommentaryWiseQuery = async (data, request, fastify) => {
 
         const baseQuery = `
             SELECT 
-                DATE(cl."wrCreatedDate") AS date,
+                cl."wrCreatedDate" AS date,
                 c."wrEventRefId" AS "eventRefId",
                 c."wrEventTypeId" AS "eventTypeId",
                 et."wrEventType" AS "eventType",
@@ -686,7 +686,7 @@ const allUndoLogsByCommentaryWiseQuery = async (data, request, fastify) => {
             LEFT JOIN "tblCompetitions" comp ON comp."wrCompetitionId" = c."wrCompetitionId"
             ${where}
             GROUP BY 
-                DATE(cl."wrCreatedDate"),
+                cl."wrCreatedDate",
                 c."wrEventRefId",
                 c."wrEventTypeId",
                 et."wrEventType",
@@ -695,7 +695,7 @@ const allUndoLogsByCommentaryWiseQuery = async (data, request, fastify) => {
                 c."wrCommentaryId",
                 c."wrEventName",
                 c."wrCommentaryStatus"
-            ORDER BY DATE(cl."wrCreatedDate") DESC
+            ORDER BY cl."wrCreatedDate" DESC
         `;
 
         const paginationBindValues = [...filterBindValues, take, skip];
