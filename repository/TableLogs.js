@@ -761,7 +761,7 @@ const allUndoLogsByUserWiseQuery = async (data, request, fastify) => {
 
         const baseQuery = `
             SELECT 
-                DATE(cl."wrCreatedDate") AS date,
+                cl."wrCreatedDate" AS date,
                 u."WrUserId" AS "createdById",
                 u."WrName" AS "createdBy",
                 COUNT(CASE WHEN cl."wrComment" = 'delete' THEN 1 END) AS "totalUndo",
@@ -770,10 +770,10 @@ const allUndoLogsByUserWiseQuery = async (data, request, fastify) => {
             JOIN "tblUsers" u ON cl."wrCreatedBy" = u."WrUserId"
             ${where}
             GROUP BY 
-                DATE(cl."wrCreatedDate"), 
+                cl."wrCreatedDate", 
                 u."WrUserId", 
                 u."WrName"
-            ORDER BY DATE(cl."wrCreatedDate") DESC
+            ORDER BY cl."wrCreatedDate" DESC
         `;
 
         const paginationBindValues = [...filterBindValues, take, skip];
