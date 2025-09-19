@@ -7439,9 +7439,13 @@ const Logs = {
       body : {
         type : "object",
         properties : {
+          page: { type: "integer" },
           skip : {type : "integer"},
           limit : {type : "integer"},
+          eventTypeId: { type: "integer" },
+          competitionId: { type: "integer" },
           commentaryId : {type : "integer"},
+          createdById : {type : "integer"},
           startDate : {type : "string"},
           endDate : {type : "string"}
         },
