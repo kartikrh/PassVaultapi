@@ -703,8 +703,8 @@ const allUndoLogsByCommentaryWiseQuery = async (data, request, fastify) => {
                 comp."wrCompetition" AS "competition",
                 c."wrEventName" AS "eventName",
                 c."wrCommentaryId" AS "commentaryId",
-                COUNT(CASE WHEN cl."wrComment" = 'delete' THEN 1 END) AS "totalUndo",
-                COUNT(DISTINCT cl."wrCreatedBy") AS "uniqueScorerCount"
+                COUNT(CASE WHEN cl."wrComment" = 'delete' THEN 1 END)::INT AS "totalUndo",
+                COUNT(DISTINCT cl."wrCreatedBy")::INT AS "uniqueScorerCount"
             FROM "tblCommentaryLogs" cl
             JOIN "tblCommentaries" c ON cl."wrCommentaryId" = c."wrCommentaryId"
             LEFT JOIN "tblEventTypes" et ON et."wrEventTypeId" = c."wrEventTypeId"
@@ -785,8 +785,8 @@ const allUndoLogsByUserWiseQuery = async (data, request, fastify) => {
             SELECT 
                 u."WrUserId" AS "createdById",
                 u."WrName" AS "createdBy",
-                COUNT(CASE WHEN cl."wrComment" = 'delete' THEN 1 END) AS "totalUndo",
-                COUNT(DISTINCT cl."wrCommentaryId") AS "uniqueCommentaryCount"
+                COUNT(CASE WHEN cl."wrComment" = 'delete' THEN 1 END)::INT AS "totalUndo",
+                COUNT(DISTINCT cl."wrCommentaryId")::INT AS "uniqueCommentaryCount"
             FROM "tblCommentaryLogs" cl
             JOIN "tblUsers" u ON cl."wrCreatedBy" = u."WrUserId"
             ${where}
