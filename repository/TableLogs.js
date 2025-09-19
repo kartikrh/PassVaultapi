@@ -348,19 +348,19 @@ const allUndoLogsQuery = async (data, request, fastify)=>{
         }
 
         if (eventTypeId) {
-            whereClauses.push(`logs."wrEventTypeId" = $${bindIndex}`);
+            whereClauses.push(`com."wrEventTypeId" = $${bindIndex}`);
             filterBindValues.push(eventTypeId);
             bindIndex++;
         }
 
         if (competitionId) {
-            whereClauses.push(`logs."wrCompetitionId" = $${bindIndex}`);
+            whereClauses.push(`com."wrCompetitionId" = $${bindIndex}`);
             filterBindValues.push(competitionId);
             bindIndex++;
         }
 
         if (commentaryId) {
-            whereClauses.push(`logs."wrCommentaryId" = $${bindIndex}`);
+            whereClauses.push(`com."wrCommentaryId" = $${bindIndex}`);
             filterBindValues.push(commentaryId);
             bindIndex++;
         }
