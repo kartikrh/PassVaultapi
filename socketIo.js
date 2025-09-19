@@ -240,10 +240,11 @@ const connection = (socket , fastify) => {
       //     }
       //   ];
       // }
-  
-      global.clientSocketIo.forEach((socket) => {
-        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
-      });
+      if (marketOdd.length > 0) {
+        global.clientSocketIo.forEach((socket) => {
+          socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+        });
+      }
       // await updateTimeLogs(timeLogs.wrId, fastify);
       // console.log("Event Market Updated successfully");
       return true;
