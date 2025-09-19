@@ -1625,6 +1625,34 @@ const updateVerifiedUserQuery = async (data, request, fastify) => {
     
   }
 }
+const getUserListQuery = async (request, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `SELECT 
+          "WrUserId" as "userId",
+          --"WrUserName" as "userName",
+          "WrName" as "name"
+      FROM "tblUsers"
+      WHERE "WrIsDelete" = FALSE
+      AND "WrIsActive" = TRUE
+      `,
+      {
+        type: QueryTypes.SELECT,
+      }
+    );
+
+    return result;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableUser/getUserListQuery",
+      request
+    );
+    throw new Error(error.message);
+    
+  }
+}
 module.exports = {
   signInUser,
   signUpUser,
@@ -1663,4 +1691,5 @@ module.exports = {
   changePasswordQuery,
   updateClientValidateKeysQuery,
   updateVerifiedUserQuery,
+  getUserListQuery,
 };

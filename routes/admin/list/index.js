@@ -27,6 +27,7 @@ const {
     allCountryCodes,
     allVenueList,
     allMarketTemplateList,
+    getUserList,
 } = require("../../../controller/users/admin/list/index");
 const { Listing } = require("../../../swaggerSchema/groupTags/schema");
 
@@ -159,5 +160,9 @@ module.exports = async (fastify, opts) => {
         schema : Listing.getAllMarketTemplateList.schema,
         preHandler : [(request, reply) => authorize(request, reply, fastify)],
         handler : (request, reply) => allMarketTemplateList(request, reply, fastify)
+    });
+    fastify.post("/userList",{
+        preHandler : [(request, reply) => authorize(request, reply, fastify)],
+        handler : (request, reply) => getUserList(request, reply, fastify)
     });
 }
