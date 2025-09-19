@@ -334,19 +334,46 @@ const allErrorLogsQuery = async (body ,request, fastify) => {
 };
 const allUndoLogsQuery = async (data, request, fastify)=>{
     try {
-        const { startDate, endDate, page = 1, limit = 20 , commentaryId, createdById } = data;
-        let {skip , take} = getPagination(page, limit);
-        // let where = `where "wrRequestBody" ->> 'deleteCommentaryBallByBallId' is not null`;
-        let where = commentaryId ? `logs."wrCommentaryId" = ${commentaryId}` : null;
-        // where = where ? `${where} AND logs."wrRequestBody" ->> 'deleteCommentaryBallByBallId' is not null` : `logs."wrRequestBody" ->> 'deleteCommentaryBallByBallId' is not null`;
-        where = where ? `${where} AND logs."wrComment" = 'delete' ` : `logs."wrComment" = 'delete'`;
-        where = startDate && endDate ? (where ? `${where} AND logs."wrCreatedDate" BETWEEN '${startDate}' AND '${endDate}'` : `logs."wrCreatedDate" BETWEEN '${startDate}' AND '${endDate}'`) : where;
-        where = createdById ? (where ? `${where} AND users."WrUserId" = ${createdById}` : `users."WrUserId" = ${createdById}`) : where;
+        const { startDate, endDate, page = 1, limit = 20 , eventTypeId, competitionId, commentaryId, createdById } = data;
+        const { skip, take } = getPagination(page, limit);
 
+        const whereClauses = [`logs."wrComment" = 'delete'`];
+        const filterBindValues = [];
+        let bindIndex = 1;
 
-        // console.log('where', where);
+        if (startDate && endDate) {
+            whereClauses.push(`logs."wrCreatedDate" BETWEEN $${bindIndex} AND $${bindIndex + 1}`);
+            filterBindValues.push(startDate, endDate);
+            bindIndex += 2;
+        }
 
-        const query = `
+        if (eventTypeId) {
+            whereClauses.push(`com."wrEventTypeId" = $${bindIndex}`);
+            filterBindValues.push(eventTypeId);
+            bindIndex++;
+        }
+
+        if (competitionId) {
+            whereClauses.push(`com."wrCompetitionId" = $${bindIndex}`);
+            filterBindValues.push(competitionId);
+            bindIndex++;
+        }
+
+        if (commentaryId) {
+            whereClauses.push(`com."wrCommentaryId" = $${bindIndex}`);
+            filterBindValues.push(commentaryId);
+            bindIndex++;
+        }
+
+        if (createdById) {
+            whereClauses.push(`logs."wrCreatedBy" = $${bindIndex}`);
+            filterBindValues.push(createdById);
+            bindIndex++;
+        }
+
+        const where = whereClauses.length ? `WHERE ${whereClauses.join(' AND ')}` : '';
+
+        const baseQuery = `
             SELECT
                 logs."wrId" as "id",
                 logs."wrRequestBody" as "requestBody",
@@ -368,26 +395,26 @@ const allUndoLogsQuery = async (data, request, fastify)=>{
                 "tblCommentaries" com ON logs."wrCommentaryId" = com."wrCommentaryId"
             LEFT JOIN
                 "tblCompetitions" comp ON com."wrCompetitionId" = comp."wrCompetitionId"
-            ${where ? `WHERE ${where}` : ''}
+            ${where}
             ORDER BY logs."wrId" DESC
-            LIMIT $1 OFFSET $2;
         `;
-        const result = await fastify.db.query(query, {
+
+        const paginationBindValues = [...filterBindValues, take, skip];
+
+        const result = await fastify.db.query(baseQuery + ` LIMIT $${bindIndex} OFFSET $${bindIndex + 1}`, {
             type: fastify.db.QueryTypes.SELECT,
-            bind : [
-                take,
-                skip
-            ]
+            bind: paginationBindValues
         });
     
         const totalRecordsQuery = `
-            SELECT COUNT(*) as "count"
-            FROM "tblCommentaryLogs" logs
-            LEFT JOIN "tblUsers" users ON logs."wrCreatedBy" = users."WrUserId"
-            ${where ? `WHERE ${where}` : ''}
+            SELECT COUNT(*) as "count" FROM (
+                ${baseQuery}
+            ) AS subquery;
         `;
+
         const totalRecordsResult = await fastify.db.query(totalRecordsQuery, {
-            type: fastify.db.QueryTypes.SELECT
+            type: fastify.db.QueryTypes.SELECT,
+            bind: filterBindValues
         });
    
         const totalRecords = parseInt(totalRecordsResult[0].count, 10);
@@ -634,7 +661,7 @@ const allAutoImportDataLogsQuery = async (body ,request, fastify) => {
 
 const allUndoLogsByCommentaryWiseQuery = async (data, request, fastify) => {
     try {
-        const { startDate, endDate, page = 1, limit = 20, eventRefId, eventTypeId, competitionId } = data;
+        const { startDate, endDate, page = 1, limit = 20, eventTypeId, competitionId, commentaryId } = data;
         const { skip, take } = getPagination(page, limit);
 
         const whereClauses = [`cl."wrComment" = 'delete'`];
@@ -645,12 +672,6 @@ const allUndoLogsByCommentaryWiseQuery = async (data, request, fastify) => {
             whereClauses.push(`cl."wrCreatedDate" BETWEEN $${bindIndex} AND $${bindIndex + 1}`);
             filterBindValues.push(startDate, endDate);
             bindIndex += 2;
-        }
-
-        if (eventRefId) {
-            whereClauses.push(`c."wrEventRefId" = $${bindIndex}`);
-            filterBindValues.push(eventRefId);
-            bindIndex++;
         }
 
         if (eventTypeId) {
@@ -665,37 +686,38 @@ const allUndoLogsByCommentaryWiseQuery = async (data, request, fastify) => {
             bindIndex++;
         }
 
+        if (commentaryId) {
+            whereClauses.push(`c."wrCommentaryId" = $${bindIndex}`);
+            filterBindValues.push(commentaryId);
+            bindIndex++;
+        }
+
         const where = whereClauses.length ? `WHERE ${whereClauses.join(' AND ')}` : '';
 
         const baseQuery = `
             SELECT 
-                DATE(cl."wrCreatedDate") AS date,
-                c."wrEventRefId" AS "eventRefId",
+                MIN(c."wrEventDate") AS "date",
                 c."wrEventTypeId" AS "eventTypeId",
                 et."wrEventType" AS "eventType",
                 c."wrCompetitionId" AS "competitionId",
                 comp."wrCompetition" AS "competition",
                 c."wrEventName" AS "eventName",
                 c."wrCommentaryId" AS "commentaryId",
-                c."wrCommentaryStatus" AS "status",
-                COUNT(CASE WHEN cl."wrComment" = 'delete' THEN 1 END) AS "totalUndo",
-                COUNT(DISTINCT cl."wrCreatedBy") AS "uniqueScorerCount"
+                COUNT(CASE WHEN cl."wrComment" = 'delete' THEN 1 END)::INT AS "totalUndo",
+                COUNT(DISTINCT cl."wrCreatedBy")::INT AS "uniqueScorerCount"
             FROM "tblCommentaryLogs" cl
             JOIN "tblCommentaries" c ON cl."wrCommentaryId" = c."wrCommentaryId"
             LEFT JOIN "tblEventTypes" et ON et."wrEventTypeId" = c."wrEventTypeId"
             LEFT JOIN "tblCompetitions" comp ON comp."wrCompetitionId" = c."wrCompetitionId"
             ${where}
             GROUP BY 
-                DATE(cl."wrCreatedDate"),
-                c."wrEventRefId",
                 c."wrEventTypeId",
                 et."wrEventType",
                 c."wrCompetitionId",
                 comp."wrCompetition",
-                c."wrCommentaryId",
                 c."wrEventName",
-                c."wrCommentaryStatus"
-            ORDER BY DATE(cl."wrCreatedDate") DESC
+                c."wrCommentaryId"
+            ORDER BY "date" DESC
         `;
 
         const paginationBindValues = [...filterBindValues, take, skip];
@@ -761,19 +783,17 @@ const allUndoLogsByUserWiseQuery = async (data, request, fastify) => {
 
         const baseQuery = `
             SELECT 
-                DATE(cl."wrCreatedDate") AS date,
                 u."WrUserId" AS "createdById",
                 u."WrName" AS "createdBy",
-                COUNT(CASE WHEN cl."wrComment" = 'delete' THEN 1 END) AS "totalUndo",
-                COUNT(DISTINCT cl."wrCommentaryId") AS "uniqueCommentaryCount"
+                COUNT(CASE WHEN cl."wrComment" = 'delete' THEN 1 END)::INT AS "totalUndo",
+                COUNT(DISTINCT cl."wrCommentaryId")::INT AS "uniqueCommentaryCount"
             FROM "tblCommentaryLogs" cl
             JOIN "tblUsers" u ON cl."wrCreatedBy" = u."WrUserId"
             ${where}
             GROUP BY 
-                DATE(cl."wrCreatedDate"), 
                 u."WrUserId", 
                 u."WrName"
-            ORDER BY DATE(cl."wrCreatedDate") DESC
+            ORDER BY "createdBy" ASC
         `;
 
         const paginationBindValues = [...filterBindValues, take, skip];

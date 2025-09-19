@@ -1,4 +1,5 @@
 const { matchTypesEntity, matchStatusEntity, entityCompetition } = require("../utilities")
+const { getUserListQuery } = require("../repository/TableUser");
 
 const matchStatusDataService = async (request) =>{
     let matchType = matchStatusEntity;
@@ -12,8 +13,13 @@ const compStatusDataService = async (request)=>{
     let comp = entityCompetition;
     return comp;
 }
+const getUserListService = async (request, fastify)=>{
+    let result = await getUserListQuery(request, fastify);
+    return result;
+}
 module.exports = {
     matchStatusDataService,
     matchTypeDataService,
-    compStatusDataService
+    compStatusDataService,
+    getUserListService,
 }

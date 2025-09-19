@@ -25,7 +25,7 @@ const { getEventListService } = require("../../../../services/notification");
 
 const { errorLogger } = require("../../../../utilities/logger");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
-const { matchStatusDataService, matchTypeDataService, compStatusDataService } = require("../../../../services/list");
+const { matchStatusDataService, matchTypeDataService, compStatusDataService, getUserListService } = require("../../../../services/list");
 const { allCountryCodeService } = require("../../../../services/countryCode");
 const { allVenuesService } = require("../../../../services/venue");
 const { getAllMarketTemplateService } = require("../../../../services/marketTemplate");
@@ -356,7 +356,15 @@ const allMarketTemplateList = async (request, reply, fastify)=>{
         reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
     }
 }
-
+const getUserList = async (request, reply, fastify)=>{
+  try {
+      const result = await getUserListService(request, fastify);
+      reply.status(200).send(success(result, 200));
+  } catch (err) {
+      errorLogger(fastify, err.message, commonPath + "/getUserList", request);
+      reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+}
 module.exports = {
     getEventTypeList,
     getTeamList,
@@ -385,4 +393,5 @@ module.exports = {
     allCountryCodes,
     allVenueList,
     allMarketTemplateList,
+    getUserList,
 }

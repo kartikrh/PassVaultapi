@@ -3886,6 +3886,8 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         winRmk: commentaryDetails.winRmk,
         tossRmk: commentaryDetails.tossRmk,
       };
+      const weatherAndPitchData = await weatherAndPitchDataService(commentaryId);
+
       response.commentaryDetails = {
         ...global.tblCommentaries[commentaryIndex],
         displayStatus: commentaryDetails.displayStatus,
@@ -3904,6 +3906,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         rmk: commentaryDetails.rmk,
         winRmk: commentaryDetails.winRmk,
         tossRmk: commentaryDetails.tossRmk,
+        ...weatherAndPitchData,
       };
       if (commentaryDetails.commentaryStatus == 2) {
         await notiConfigContentReplaceService(
@@ -7436,6 +7439,8 @@ const commentaryDetailsByEventIdService = async (
   //   };
   // });
 
+  const weatherAndPitchData = await weatherAndPitchDataService(result.commentaryId);
+
   const allDetails = {
     cm: {
       ...resultArr,
@@ -7444,6 +7449,7 @@ const commentaryDetailsByEventIdService = async (
       res: result.result,
       isvirtual: result.isVirtual,
       cid : result.commentaryId,
+      ...weatherAndPitchData,
     },
     cbb,
     cbt,
@@ -8375,6 +8381,8 @@ const getMatchListByStatus = async (body, request, fastify) => {
     // } catch (error) {
     //   console.log(error)
     // }
+    
+    const weatherAndPitchData = await weatherAndPitchDataService(item.commentaryId);
 
     let details = {
       rno: rno,
@@ -8453,6 +8461,7 @@ const getMatchListByStatus = async (body, request, fastify) => {
       overDelay: item?.overDelay || 0,
       inningDelay: item?.inningDelay || 0,
       tossDelay: item?.tossDelay || 0,
+      ...weatherAndPitchData,
       // mr: mr
       // bowT : item.bowlingTeam || null,
     };
@@ -12947,7 +12956,16 @@ const deleteCommentaryHistoryService = async (request, fastify) => {
 };
 
 const getAllCompletedCommentaryService = async (request, fastify) => {
-  const result = await getAllCompletedCommentaryQuery(request, fastify);
+  const completedCommentaryData = await getAllCompletedCommentaryQuery(request, fastify);
+  const result = await Promise.all(
+    completedCommentaryData.map(async (item) => {
+      const weatherAndPitchData = await weatherAndPitchDataService(item.commentaryId);
+      return {
+        ...item,
+        ...weatherAndPitchData,
+      };
+    })
+  );
   return result;
 };
 
@@ -13442,6 +13460,7 @@ const saveComVirtual = async (request, fastify) => {
         currentInnings: commentaryDetails.currentInnings,
         rmk: commentaryDetails.rmk,
       };
+      const weatherAndPitchData = await weatherAndPitchDataService(commentaryId);
       response.commentaryDetails = {
         ...global.tblCommentaries[commentaryIndex],
         displayStatus: commentaryDetails.displayStatus,
@@ -13458,6 +13477,7 @@ const saveComVirtual = async (request, fastify) => {
         currentInnings: commentaryDetails.currentInnings,
         isPredict: commentaryDetails.isPredictMarket,
         rmk: commentaryDetails.rmk,
+        ...weatherAndPitchData,
       };
       // if(commentaryDetails.commentaryStatus == 2) {
       //   // await notiConfigContentReplaceService(EventName.WINTOSS, commentaryDetails.commentaryId, request, fastify);
@@ -14788,10 +14808,11 @@ const commentaryStartService = async (request, fastify) => {
         modifyDate: commentaryDetails.modifyDate,
         commentaryStatus: commentaryDetails.commentaryStatus,
       };
+      const weatherAndPitchData = await weatherAndPitchDataService(commentaryId);
       sendToSocket.dataToUpdate.push({
         module: "commentaryDetails",
         type: "update",
-        data: global.tblCommentaries[comI],
+        data: { ...global.tblCommentaries[comI], ...weatherAndPitchData },
       });
     }
     if (previousCommentaryStatus != statusToUpdate) {
@@ -15079,10 +15100,11 @@ const commentaryTossService = async (request, fastify) => {
         choseTo: commentaryDetails.choseTo,
         tossRmk: commentaryDetails.tossRmk,
       };
+      const weatherAndPitchData = await weatherAndPitchDataService(commentaryId);
       sendToSocket.dataToUpdate.push({
         module: "commentaryDetails",
         type: "update",
-        data: global.tblCommentaries[comI],
+        data: { ...global.tblCommentaries[comI], ...weatherAndPitchData },
       });
       notiConfigContentReplaceService(
         EventName.WINTOSS,
@@ -15485,10 +15507,11 @@ const commentaryScoreService = async (request, fastify) => {
         displayStatus: commentaryDetails.displayStatus,
         rmk: commentaryDetails.rmk,
       };
+      const weatherAndPitchData = await weatherAndPitchDataService(commentaryId);
       sendDataForSocketUpdate.dataToUpdate.push({
         module: "commentaryDetails",
         type: "update",
-        data: global.tblCommentaries[comI],
+        data: { ...global.tblCommentaries[comI], ...weatherAndPitchData },
       });
     }
     if (commentaryTeams.length > 0) {
@@ -16379,11 +16402,13 @@ const commentarySwapPlayerService = async (request, fastify) => {
         updateTime: new Date(),
         rmk: commentaryDetails.rmk
       };
+      const weatherAndPitchData = await weatherAndPitchDataService(commentaryId);
       response.commentaryDetails = {
         ...global.tblCommentaries[comI],
         displayStatus: commentaryDetails.displayStatus,
         updateTime: new Date(),
-        rmk: commentaryDetails.rmk
+        rmk: commentaryDetails.rmk,
+        ...weatherAndPitchData,
       };
       sendDataForSocketUpdate.dataToUpdate.push({
         module: "commentaryDetails",
@@ -16725,7 +16750,11 @@ const commentaryInningChangeService = async (request, fastify) => {
         commentaryStatus: commentaryDetails.commentaryStatus,
         rmk: commentaryDetails.rmk
       };
-      response.commentaryDetails = global.tblCommentaries[commentaryIndex]
+      const weatherAndPitchData = await weatherAndPitchDataService(commentaryId);
+      response.commentaryDetails = {
+        ...global.tblCommentaries[commentaryIndex],
+        ...weatherAndPitchData,
+      }
       if (
         previousCommentaryStatus != statusToUpdate &&
         commentaryData?.isPredictMarket == true
@@ -17367,10 +17396,12 @@ const commentaryWicketService = async (request, fastify) => {
         displayStatus: commentaryDetails.displayStatus,
         updateTime: new Date(),
       };
+      const weatherAndPitchData = await weatherAndPitchDataService(commentaryId);
       response.commentaryDetails = {
         ...global.tblCommentaries[commentaryIndex],
         displayStatus: commentaryDetails.displayStatus,
         updateTime: new Date(),
+        ...weatherAndPitchData,
       };
       sendDataForSocketUpdate.dataToUpdate.push({
         module: "commentaryDetails",
@@ -18454,10 +18485,11 @@ const undoAPIService = async (request, fastify) => {
         commentaryStatus: commentaryDetails.commentaryStatus,
         currentInnings: commentaryDetails.currentInnings,
       };
+      const weatherAndPitchData = await weatherAndPitchDataService(commentaryId);
       sendDataForSocketUpdate.dataToUpdate.push({
         module: "commentaryDetails",
         type: "update",
-        data: global.tblCommentaries[comI],
+        data: { ...global.tblCommentaries[comI], ...weatherAndPitchData },
       });
       response.commentaryDetails = global.tblCommentaries[comI];
     }
@@ -18953,8 +18985,11 @@ const undoAPIService2 = async (request, fastify) => {
         ...global.tblCommentaries[commentaryIndex],
         ...commentaryDetails
       };
-      response.commentaryDetails =
-        global.tblCommentaries[commentaryIndex]
+      const weatherAndPitchData = await weatherAndPitchDataService(commentaryId);
+      response.commentaryDetails = {
+        ...global.tblCommentaries[commentaryIndex],
+        ...weatherAndPitchData,
+      }
       sendDataForSocketUpdate.dataToUpdate.push({
         module: "commentaryDetails",
         type: "update",
@@ -20368,7 +20403,11 @@ const changeStrikerPlyService = async (request, fastify) => {
         ...global.tblCommentaries[commentaryIndex],
         ...commentaryDetails
       };
-      response.commentaryDetails = global.tblCommentaries[commentaryIndex];
+      const weatherAndPitchData = await weatherAndPitchDataService(commentaryId);
+      response.commentaryDetails = {
+        ...global.tblCommentaries[commentaryIndex],
+        ...weatherAndPitchData,
+      };
       if (commentaryDetails.commentaryStatus == 2) {
         await notiConfigContentReplaceService(
           EventName.WINTOSS,
@@ -20845,7 +20884,11 @@ const changePlayerService = async (request, fastify) => {
         ...global.tblCommentaries[commentaryIndex],
         ...commentaryDetails
       };
-      response.commentaryDetails = global.tblCommentaries[commentaryIndex]
+      const weatherAndPitchData = await weatherAndPitchDataService(commentaryId);
+      response.commentaryDetails = {
+        ...global.tblCommentaries[commentaryIndex],
+        ...weatherAndPitchData,
+      }
       if (commentaryDetails.commentaryStatus == 2) {
         await notiConfigContentReplaceService(
           EventName.WINTOSS,
@@ -21418,9 +21461,11 @@ const changeOverService = async (request, fastify) => {
         ...global.tblCommentaries[commentaryIndex],
         ...commentaryDetails
       };
-
-      response.commentaryDetails =
-        global.tblCommentaries[commentaryIndex]
+      const weatherAndPitchData = await weatherAndPitchDataService(commentaryId);
+      response.commentaryDetails = {
+        ...global.tblCommentaries[commentaryIndex],
+        ...weatherAndPitchData,
+      }
       sendDataForSocketUpdate.dataToUpdate.push({
         module: "commentaryDetails",
         type: "update",
@@ -22206,6 +22251,7 @@ const syncEntitySportCommentaryService = async (request, fastify) => {
                 winRmk: commentaryDetails.winRmk,
                 tossRmk: commentaryDetails.tossRmk,
             };
+            const weatherAndPitchData = await weatherAndPitchDataService(commentaryId);
             response.commentaryDetails = {
                 ...global.tblCommentaries[commentaryIndex],
                 displayStatus: commentaryDetails.displayStatus,
@@ -22224,6 +22270,7 @@ const syncEntitySportCommentaryService = async (request, fastify) => {
                 rmk: commentaryDetails.rmk,
                 winRmk: commentaryDetails.winRmk,
                 tossRmk: commentaryDetails.tossRmk,
+                ...weatherAndPitchData
             };
             if (commentaryDetails.commentaryStatus == 2) {
                 await notiConfigContentReplaceService(
@@ -22572,52 +22619,52 @@ const syncEntitySportCommentaryService = async (request, fastify) => {
             data: response.commentaryPartnershipDetails,
           });
         }
-            // call the getscore and emit the event data
-            if (
-                global?.clientSocketIo !== undefined &&
-                global?.clientSocketIo.length > 0
-            ) {
-                commentaryDetailsByEventIdService(
-                    {
-                        ...request,
-                        body: {
-                            eventId: commentaryData.eventRefId,
-                            commentaryId: commentaryData.commentaryId
-                        },
+        // call the getscore and emit the event data
+        if (
+            global?.clientSocketIo !== undefined &&
+            global?.clientSocketIo.length > 0
+        ) {
+            commentaryDetailsByEventIdService(
+                {
+                    ...request,
+                    body: {
+                        eventId: commentaryData.eventRefId,
+                        commentaryId: commentaryData.commentaryId
                     },
+                },
+                fastify,
+                "callFromSocket"
+            ).catch((err) => {
+                console.log("err in entity commentaryDetailsByEventIdService", err);
+                errorLogger(
                     fastify,
-                    "callFromSocket"
-                ).catch((err) => {
-                    console.log("err in entity commentaryDetailsByEventIdService", err);
-                    errorLogger(
-                        fastify,
-                        err.message,
-                        "ERROR --> services/commentary.js/syncEntitySportCommentaryService",
-                        request
-                    );
-                });
-                global.clientSocketIo.forEach((socket) => {
-                    socket.client.emit("updateFullscore", sendDataForSocketUpdate);
-                });
-            }
+                    err.message,
+                    "ERROR --> services/commentary.js/syncEntitySportCommentaryService",
+                    request
+                );
+            });
+            global.clientSocketIo.forEach((socket) => {
+                socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+            });
+        }
 
-            if (global.wss) {
-                let res = {};
-                res.eventname = "ShortScore";
-                res.connectionID = "";
-                let _ShortCommentry = setShortCommenrty(commentaryData.eventRefId);
-                _ShortCommentry = JSON.stringify(_ShortCommentry);
-                res.data = _ShortCommentry;
-                // Iterate over all connected clients and send the update
-                global.wss.clients.forEach(function each(client) {
-                    if (client.readyState === WebSocket.OPEN) {
-                        client.send(JSON.stringify(res));
-                    }
-                });
-            }
-            
-            // response.callPredictions = callPredictions;
-            return response;
+        if (global.wss) {
+            let res = {};
+            res.eventname = "ShortScore";
+            res.connectionID = "";
+            let _ShortCommentry = setShortCommenrty(commentaryData.eventRefId);
+            _ShortCommentry = JSON.stringify(_ShortCommentry);
+            res.data = _ShortCommentry;
+            // Iterate over all connected clients and send the update
+            global.wss.clients.forEach(function each(client) {
+                if (client.readyState === WebSocket.OPEN) {
+                    client.send(JSON.stringify(res));
+                }
+            });
+        }
+        
+        // response.callPredictions = callPredictions;
+        return response;
     } catch (error) {
         await commentaryLogger(
             {
@@ -22654,6 +22701,36 @@ const syncEntitySportCommentaryService = async (request, fastify) => {
     }
 };
 
+const weatherAndPitchDataService = async (commentaryId) => {
+  const commentaryData = global.tblCommentaries.find(item => item.commentaryId == commentaryId);
+  const pitchData = global.tblPitchConditions.find(elem => elem.commentaryId == commentaryId);
+  const weatherDetails = global.tblWeather.find(elem => elem.commentaryId == commentaryId);
+
+  return {
+    onfieldUmpires: commentaryData?.onfieldUmpires || "",
+    matchReferee: commentaryData?.matchReferee || "",
+    thirdUmpire: commentaryData?.thirdUmpire || "",
+    difficulty: commentaryData?.difficulty || 0,
+    pitchHardness: commentaryData?.pitchHardness || 0,
+    pitchCracks: commentaryData?.pitchCracks || 0,
+    pitchWareSpeed: commentaryData?.pitchWareSpeed || 0,
+    pitchType: commentaryData?.pitchType || 0,
+    lawnStriping: commentaryData?.lawnStriping || 0,
+    pitchAge: commentaryData?.pitchAge || 0,
+    session: commentaryData?.session || "",
+    battingCondition: pitchData?.battingCondition || "",
+    pitchCondition: pitchData?.pitchCondition || "",
+    paceBowlingCondition: pitchData?.paceBowlingCondition || "",
+    spineBowlingConniton: pitchData?.spineBowlingConniton || "",
+    weatherCondition: weatherDetails?.weatherCondition || "",
+    description: weatherDetails?.description || "",
+    temp: weatherDetails?.temp || null,
+    humidity: weatherDetails?.humidity || null,
+    visibility: weatherDetails?.visibility || null,
+    windSpeed: weatherDetails?.windSpeed || null,
+    clouds: weatherDetails?.clouds || null,
+  }
+} 
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -22766,4 +22843,5 @@ module.exports = {
   getGroupId,
   overTypeChangeOnOversService,
   updateStreamURLService,
+  weatherAndPitchDataService,
 };

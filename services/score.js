@@ -19,6 +19,7 @@ const {
     getAllCommentaryPartnershipDataQueryV1,
 } = require("../repository/TableCommentary");
 const { dltDeviceQuery, saveDeviceQuery } = require("../repository/TableDevice");
+const { weatherAndPitchDataService } = require("../services/commentry");
 
 // const getAllCommentariesDataService = async (request,fastify) => {
 //     try {
@@ -254,12 +255,13 @@ const getAllCommentariesDataService = async (request,fastify) => {
                 } catch (error) {
                     
                 }
+                const weatherAndPitchData = await weatherAndPitchDataService(c.commentaryId);
 
                 commentaries[c.eventRefId] = {
                     commentaryId : c.commentaryId,
                     eventrefId : c.eventRefId,
                     commentaryStatus : c.commentaryStatus,
-                    commentaryDetails: c,
+                    commentaryDetails: { ...c, ...weatherAndPitchData },
                     commentaryTeams: teams,
                     commentaryPlayers: players,
                     commentaryOver: overs,
@@ -510,11 +512,13 @@ const getAllCommentariesDataV2Service = async (request,fastify) => {
                     console.log("error on getAllCommentariesDataV2Service: ", error.message);
                 }
 
+                const weatherAndPitchData = await weatherAndPitchDataService(c.commentaryId);
+
                 commentaries[c.commentaryId] = {
                     commentaryId : c.commentaryId,
                     eventRefId : c.eventRefId,
                     commentaryStatus : c.commentaryStatus,
-                    commentaryDetails: c,
+                    commentaryDetails: { ...c, ...weatherAndPitchData },
                     commentaryTeams: teams,
                     commentaryPlayers: players,
                     commentaryOver: overs,
@@ -832,11 +836,13 @@ const getAllCommentariesDataServiceV1 = async (request,fastify) => {
                     commentaryId: c.cid
                 },fastify) || [];
 
+                const weatherAndPitchData = await weatherAndPitchDataService(c.cid);
+
                 commentaries[c.erefid] = {
                     cid : c.cid,
                     erefid : c.erefid,
                     cs : c.cs,
-                    commentaryDetails: c,
+                    commentaryDetails: { ...c, ...weatherAndPitchData },
                     commentaryTeams: teams,
                     commentaryPlayers: players,
                     commentaryOver: overs,
