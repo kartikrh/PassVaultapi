@@ -6,9 +6,10 @@ const getAllPlayersQuery = async (fastify) => {
     "wrPlayerId" AS "playerId",
     tp."wrEventTypeId" AS "eventTypeId",
     tp."wrPlayerTypeId" AS "playerTypeId",
-    tp."wrBowlingStyle" AS "bowlingTypeId",
+    tp."wrBowlingStyle" AS "bowlingStyleId",
     tet."wrEventType" AS "eventType",
-    tbt."wrBowlingType" AS "bowlingStyle",
+    tp."wrBowlingType" AS "bowlingTypeId",
+    tbt."wrBowlingType" AS "bowlingType",
     tpt."wrPlayerType" AS "playerType",
     tp."wrPlayerName" AS "playerName",
     tp."wrImage" AS "image",
@@ -29,7 +30,7 @@ FROM
     "tblPlayers" tp
     LEFT JOIN "tblEventTypes" tet ON tp."wrEventTypeId" = tet."wrEventTypeId"
     LEFT JOIN "tblPlayerTypes" tpt ON tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
-    LEFT JOIN "tblBowlingTypes" tbt ON tp."wrBowlingStyle" = tbt."wrBowlingTypeId"
+    LEFT JOIN "tblBowlingTypes" tbt ON tp."wrBowlingType" = tbt."wrBowlingTypeId"
     WHERE tp."wrIsDeleted" = false;
 
      `,
@@ -80,9 +81,10 @@ const getPlyByIdQuery = async (data ,request ,fastify) => {
         "wrPlayerId" AS "playerId",
         tp."wrEventTypeId" AS "eventTypeId",
         tp."wrPlayerTypeId" AS "playerTypeId",
-        tp."wrBowlingStyle" AS "bowlingTypeId",
+        tp."wrBowlingStyle" AS "bowlingStyleId",
         tet."wrEventType" AS "eventType",
-        tbt."wrBowlingType" AS "bowlingStyle",
+        tp."wrBowlingType" AS "bowlingTypeId",
+        tbt."wrBowlingType" AS "bowlingType",
         tpt."wrPlayerType" AS "playerType",
         tp."wrPlayerName" AS "playerName",
         tp."wrImage" AS "image",
@@ -103,7 +105,7 @@ const getPlyByIdQuery = async (data ,request ,fastify) => {
         "tblPlayers" tp
         LEFT JOIN "tblEventTypes" tet ON tp."wrEventTypeId" = tet."wrEventTypeId"
         LEFT JOIN "tblPlayerTypes" tpt ON tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
-        LEFT JOIN "tblBowlingTypes" tbt ON tp."wrBowlingStyle" = tbt."wrBowlingTypeId"
+        LEFT JOIN "tblBowlingTypes" tbt ON tp."wrBowlingType" = tbt."wrBowlingTypeId"
         WHERE tp."wrIsDeleted" = false
         AND tp."wrPlayerId" = ANY($1)
 
@@ -132,8 +134,8 @@ const insertPlayerQuery = async (data, fastify, request) => {
   try {
     const result = await fastify.db.query(
       `with insert_data as (
-      insert into "tblPlayers" ("wrPlayerName","wrImage","wrBowlingStyle","wrIsActive","wrIsKipper","wrIsLeftHandedBatting","wrIsLeftArmFielding","wrBatsmanAverage","wrBatsmanStrikeRate","wrBowlerAverage","wrBowlerEconomy","wrDisplayName" ,"wrEventTypeId","wrPlayerTypeId" ,"wrCreatedDate","wrCreatedBy","wrIsSystemPlayer", "wrImagePath", "wrTpId", "wrCountryId")
-      values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17, $18, $19, $20)
+      insert into "tblPlayers" ("wrPlayerName","wrImage","wrBowlingStyle","wrIsActive","wrIsKipper","wrIsLeftHandedBatting","wrIsLeftArmFielding","wrBatsmanAverage","wrBatsmanStrikeRate","wrBowlerAverage","wrBowlerEconomy","wrDisplayName" ,"wrEventTypeId","wrPlayerTypeId" ,"wrCreatedDate","wrCreatedBy","wrIsSystemPlayer", "wrImagePath", "wrTpId", "wrCountryId", "wrBowlingType")
+      values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17, $18, $19, $20, $21)
       returning *
     )
 
@@ -141,9 +143,10 @@ const insertPlayerQuery = async (data, fastify, request) => {
         "wrPlayerId" as "playerId",
         tp."wrEventTypeId" as "eventTypeId",
         tp."wrPlayerTypeId" as "playerTypeId",
-        tp."wrBowlingStyle" as "bowlingTypeId",
+        tp."wrBowlingStyle" as "bowlingStyleId",
         tet."wrEventType" as "eventType",
-        tbt."wrBowlingType" as "bowlingStyle",
+        tp."wrBowlingType" as "bowlingTypeId",
+        tbt."wrBowlingType" AS "bowlingType",
         tpt."wrPlayerType" as "playerType",
         "wrPlayerName" as "playerName",
         tp."wrImage" as "image",
@@ -159,11 +162,11 @@ const insertPlayerQuery = async (data, fastify, request) => {
         "wrIsSystemPlayer" as "isSystemPlayer",
         tp."wrImagePath" AS "imagePath",
         tp."wrTpId" AS "tpId",
-        tp."wrCountryId" AS "countryId"
+        tp."wrCountryId" AS "countryId",
      from "insert_data" tp 
      left join "tblEventTypes" tet on tp."wrEventTypeId" = tet."wrEventTypeId"
      left join "tblPlayerTypes" tpt on tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
-      left join "tblBowlingTypes" tbt on tp."wrBowlingStyle" = tbt."wrBowlingTypeId"
+      left join "tblBowlingTypes" tbt on tp."wrBowlingType" = tbt."wrBowlingTypeId"
 
     `,
       {
@@ -171,7 +174,7 @@ const insertPlayerQuery = async (data, fastify, request) => {
         bind: [
           data.playerName || null,
           data.image || null,
-          data.bowlingTypeId || 0,
+          data.bowlingStyleId || 0,
           data.isActive || false,
           data.isKipper || false,
           data.isLeftHandedBatting || false,
@@ -189,6 +192,7 @@ const insertPlayerQuery = async (data, fastify, request) => {
           data.imagePath || null,
           data.tpId || null,
           data.countryId || null,
+          data.bowlingTypeId || null,
         ],
       }
     );
@@ -209,14 +213,14 @@ const updatePlayerQuery = async (data, fastify, request) => {
   try {
     return await fastify.db.query(
       `update "tblPlayers" set "wrPlayerName" = $1,"wrImage" = $2,"wrBowlingStyle" = 
-      $3,"wrIsActive" = $4,"wrIsKipper" = $5,"wrIsLeftHandedBatting" = $6,"wrIsLeftArmFielding" = $7,"wrBatsmanAverage" = $8,"wrBatsmanStrikeRate" = $9,"wrBowlerAverage" = $10,"wrBowlerEconomy" = $11,"wrDisplayName" = $12,"wrEventTypeId" = $13,"wrPlayerTypeId" =$14,"wrModifyDate" = $15,"wrModifyBy" = $16,"wrIsSystemPlayer" = $17, "wrImagePath" = $19, "wrTpId" = $20, "wrCountryId" = $21
+      $3,"wrIsActive" = $4,"wrIsKipper" = $5,"wrIsLeftHandedBatting" = $6,"wrIsLeftArmFielding" = $7,"wrBatsmanAverage" = $8,"wrBatsmanStrikeRate" = $9,"wrBowlerAverage" = $10,"wrBowlerEconomy" = $11,"wrDisplayName" = $12,"wrEventTypeId" = $13,"wrPlayerTypeId" =$14,"wrModifyDate" = $15,"wrModifyBy" = $16,"wrIsSystemPlayer" = $17, "wrImagePath" = $19, "wrTpId" = $20, "wrCountryId" = $21, "wrBowlingType" = $22
       where "wrPlayerId" = $18`,
       {
         type: fastify.db.QueryTypes.UPDATE,
         bind: [
           data.playerName,
           data.image,
-          data.bowlingTypeId,
+          data.bowlingStyleId,
           data.isActive,
           data.isKipper,
           data.isLeftHandedBatting,
@@ -235,6 +239,7 @@ const updatePlayerQuery = async (data, fastify, request) => {
           data.imagePath,
           data.tpId,
           data.countryId,
+          data.bowlingTypeId,
         ],
       }
     );
@@ -470,9 +475,10 @@ const getAllPlayersByIdsQuery = async (whereCondition = undefined, fastify) => {
           tp."wrPlayerId" AS "playerId",
           tp."wrEventTypeId" AS "eventTypeId",
           tp."wrPlayerTypeId" AS "playerTypeId",
-          tp."wrBowlingStyle" AS "bowlingTypeId",
+          tp."wrBowlingStyle" AS "bowlingStyleId",
           tet."wrEventType" AS "eventType",
-          tbt."wrBowlingType" AS "bowlingStyle",
+          tp."wrBowlingType" AS "bowlingTypeId",
+          tbt."wrBowlingType" AS "bowlingType",
           tpt."wrPlayerType" AS "playerType",
           tp."wrPlayerName" AS "playerName",
           tp."wrImage" AS "image",
@@ -536,7 +542,7 @@ const getPlayerByIdQuery = async (whereCondition = undefined, request, fastify) 
     "wrPlayerId" AS "playerId",
     tp."wrEventTypeId" AS "eventTypeId",
     tp."wrPlayerTypeId" AS "playerTypeId",
-    tp."wrBowlingStyle" AS "bowlingTypeId",
+    tp."wrBowlingStyle" AS "bowlingStyleId",
     tet."wrEventType" AS "eventType",
     tbt."wrBowlingType" AS "bowlingStyle",
     tpt."wrPlayerType" AS "playerType",
@@ -559,7 +565,7 @@ const getPlayerByIdQuery = async (whereCondition = undefined, request, fastify) 
     "tblPlayers" tp
     LEFT JOIN "tblEventTypes" tet ON tp."wrEventTypeId" = tet."wrEventTypeId"
     LEFT JOIN "tblPlayerTypes" tpt ON tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
-    LEFT JOIN "tblBowlingTypes" tbt ON tp."wrBowlingStyle" = tbt."wrBowlingTypeId"
+    LEFT JOIN "tblBowlingTypes" tbt ON tp."wrBowlingType" = tbt."wrBowlingTypeId"
     WHERE tp."wrIsDeleted" = false
    ${whereCondition ? `AND ${whereCondition}` : ""}`,
       {
@@ -594,9 +600,10 @@ const updateExchangePlayerQuery = async (data, fastify, request) => {
     tp."wrPlayerId" AS "playerId",
     tp."wrEventTypeId" AS "eventTypeId",
     tp."wrPlayerTypeId" AS "playerTypeId",
-    tp."wrBowlingStyle" AS "bowlingTypeId",
+    tp."wrBowlingStyle" AS "bowlingStyleId",
     tet."wrEventType" AS "eventType",
-    tbt."wrBowlingType" AS "bowlingStyle",
+    tp."wrBowlingType" AS "bowlingTypeId",
+    tbt."wrBowlingType" AS "bowlingType",
     tpt."wrPlayerType" AS "playerType",
     tp."wrCountry" AS "country",
     tp."wrPlayerName" AS "playerName",
