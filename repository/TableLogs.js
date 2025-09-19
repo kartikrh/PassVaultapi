@@ -696,7 +696,7 @@ const allUndoLogsByCommentaryWiseQuery = async (data, request, fastify) => {
 
         const baseQuery = `
             SELECT 
-                MIN(cl."wrCreatedDate") AS "date",
+                MIN(c."wrEventDate") AS "date",
                 c."wrEventTypeId" AS "eventTypeId",
                 et."wrEventType" AS "eventType",
                 c."wrCompetitionId" AS "competitionId",
