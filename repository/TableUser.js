@@ -1629,9 +1629,9 @@ const getUserListQuery = async (request, fastify) => {
   try {
     const result = await fastify.db.query(
       `SELECT 
-          "WrUserId" as "userId",
+          "WrUserId" as "createdBy",
           --"WrUserName" as "userName",
-          "WrName" as "name"
+          "WrName" as "createdById"
       FROM "tblUsers"
       WHERE "WrIsDelete" = FALSE
       AND "WrIsActive" = TRUE
