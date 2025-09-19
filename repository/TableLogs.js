@@ -396,8 +396,7 @@ const allUndoLogsQuery = async (data, request, fastify)=>{
             LEFT JOIN
                 "tblCompetitions" comp ON com."wrCompetitionId" = comp."wrCompetitionId"
             ${where}
-            ORDER BY logs."wrId" DESC
-            LIMIT $1 OFFSET $2;
+            ORDER BY logs."wrId" DESC;
         `;
 
         const paginationBindValues = [...filterBindValues, take, skip];
