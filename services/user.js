@@ -43,6 +43,7 @@ const {
   clientDetailsByIdQuery,
   updateClientValidateKeysQuery,
   updateVerifiedUserQuery,
+  getParentIdTreeQuery,
 } = require("../repository/TableUser");
 const {
   deviceInfo,
@@ -354,6 +355,26 @@ const addUserService = async (request, fastify) => {
     throw new Error("User already exists with this username");
   }
 
+  const parentIds = [];
+  let currentId = request.body.parentId;
+
+  while (currentId && currentId != '0') {
+    const result = await getParentIdTreeQuery(currentId, request, fastify);
+    if (!result.length) break;
+
+    if (result[0].userId && !parentIds.includes(result[0].userId)) {
+      parentIds.push(result[0].userId);
+    }
+
+    if (result[0].parentId && result[0].parentId !== 0) {
+      parentIds.push(result[0].parentId);
+    }
+
+    currentId = result[0].encParentId;
+  }
+
+  request.body.parentTree = parentIds.join(',');
+
   const userData = await addUserQuery(request, fastify);
 
   global.tblUsers.push(userData);
@@ -382,6 +403,7 @@ const updateUserService = async (request, fastify) => {
     allowMultipleLogin: findUser.allowMultipleLogin,
     userType: request.body.userType || findUser.userType,
     roleId: findUser.roleId,
+    parentTree: findUser.parentTree,
     password: findUser.password,
     eventTypeId : request.body.eventTypeId || findUser.eventTypeId,
     competitionId : request.body.competitionId || findUser.competitionId,

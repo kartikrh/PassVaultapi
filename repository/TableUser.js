@@ -171,6 +171,7 @@ const getAllUsersQuery = async (fastify) => {
     tu."WrMobile" as "mobile",
     tu."WrUserType" as "userType",
     tu."wrEventTypeId" as "eventTypeId",
+    tu."wrParentTree" as "parentTree",
     tu."wrCompetitionId" as "competitionId"
      from "tblUsers" tu left join "tblEncryptedData" te on tu."WrUserId" = te."wrKey"
      left join "tblEncryptedData" te1 on tu."WrParentId" = te1."wrKey" 
@@ -192,11 +193,11 @@ const addUserQuery = async (request, fastify) => {
       with insert_data as (
         INSERT INTO "tblUsers" ("WrParentId" , "WrRoleId" , "WrUserName" , "WrPassword" , "WrName" , "WrMobile" , "WrIsActive" ,
          "WrAllowMultipleLogin" , "WrIsSuperAdmin", "WrCreatedBy","WrCreatedDate" , "WrUserIp" , "WrUserType",
-         "wrEventTypeId","wrCompetitionId") 
+         "wrEventTypeId","wrCompetitionId", "wrParentTree") 
         VALUES (
           (select "wrKey" from "tblEncryptedData" where "wrValue" = $1),
           (select "wrKey" from "tblEncryptedData" where "wrValue" = $2),
-          $3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15) RETURNING *
+          $3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16) RETURNING *
       )
 
       select 
@@ -213,6 +214,7 @@ const addUserQuery = async (request, fastify) => {
     tu."WrMobile" as "mobile",
     tu."WrUserType" as "userType",
     tu."wrEventTypeId" as "eventTypeId",
+    tu."wrParentTree" as "parentTree",
     tu."wrCompetitionId" as "competitionId"
      from "insert_data" tu left join "tblEncryptedData" te on tu."WrUserId" = te."wrKey"
      left join "tblEncryptedData" te1 on tu."WrParentId" = te1."wrKey" 
@@ -237,7 +239,8 @@ const addUserQuery = async (request, fastify) => {
           "0",
           request.body.userType || null,
           request.body.eventTypeId || 0,
-          request.body.competitionId || 0
+          request.body.competitionId || 0,
+          request.body.parentTree || null,
         ],
       }
     );
@@ -1631,7 +1634,8 @@ const getUserListQuery = async (request, fastify) => {
       `SELECT 
           "WrUserId" as "userId",
           --"WrUserName" as "userName",
-          "WrName" as "name"
+          "WrName" as "name",
+          "wrParentTree" as "parentTree"
       FROM "tblUsers"
       WHERE "WrIsDelete" = FALSE
       AND "WrIsActive" = TRUE
@@ -1653,6 +1657,40 @@ const getUserListQuery = async (request, fastify) => {
     
   }
 }
+const getParentIdTreeQuery = async (userId, request, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `SELECT 
+          u."WrUserId" AS "userId",
+          u."WrParentId" AS "parentId",
+          COALESCE(te1."wrValue", '0') AS "encParentId"
+      FROM "tblUsers" u
+      LEFT JOIN "tblEncryptedData" te1
+          ON u."WrParentId" = te1."wrKey"
+      WHERE u."WrUserId" = (
+          SELECT "wrKey"
+          FROM "tblEncryptedData"
+          WHERE "wrValue" = $1
+      )
+      AND u."WrIsDelete" = FALSE
+      AND u."WrIsActive" = TRUE;`,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [userId],
+      }
+    );
+
+    return result;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableUser/getParentIdTreeQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+};
 module.exports = {
   signInUser,
   signUpUser,
@@ -1692,4 +1730,5 @@ module.exports = {
   updateClientValidateKeysQuery,
   updateVerifiedUserQuery,
   getUserListQuery,
+  getParentIdTreeQuery,
 };
