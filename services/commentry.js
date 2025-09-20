@@ -21886,7 +21886,8 @@ const updateMatchInfoService = async(request , fastify)=>{
           bowlerAverage: 0.0,
           bowlerEconomy: 0.0,
           tpId: player?.pid || null,
-          bowlingStyle: 0
+          bowlingStyleId: 0,
+          bowlingTypeId: 0
       };
 
       const insertPlayer = await insertPlayerQuery(data, fastify, request);
