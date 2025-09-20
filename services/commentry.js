@@ -22709,7 +22709,7 @@ const weatherAndPitchDataService = async (commentaryId) => {
     paceBowlingCondition: pitchData?.paceBowlingCondition || "",
     spineBowlingConniton: pitchData?.spineBowlingConniton || "",
     weatherCondition: weatherDetails?.weatherCondition || "",
-    description: weatherDetails?.description || "",
+    // description: weatherDetails?.description || "",
     temp: weatherDetails?.temp || null,
     humidity: weatherDetails?.humidity || null,
     visibility: weatherDetails?.visibility || null,
