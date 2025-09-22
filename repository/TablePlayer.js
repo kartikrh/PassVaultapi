@@ -162,7 +162,7 @@ const insertPlayerQuery = async (data, fastify, request) => {
         "wrIsSystemPlayer" as "isSystemPlayer",
         tp."wrImagePath" AS "imagePath",
         tp."wrTpId" AS "tpId",
-        tp."wrCountryId" AS "countryId",
+        tp."wrCountryId" AS "countryId"
      from "insert_data" tp 
      left join "tblEventTypes" tet on tp."wrEventTypeId" = tet."wrEventTypeId"
      left join "tblPlayerTypes" tpt on tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
