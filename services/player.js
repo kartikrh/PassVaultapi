@@ -506,7 +506,7 @@ const updatePlayerService = async (request, fastify) => {
   if(checkPlayerId?.bowlingTypeId != body?.bowlingTypeId && openCommentaryIds.length > 0) {
     await bowlingStyleChangeOnCommPlayersQuery(
       {
-        bowlingStyle: body.bowlingTypeId,
+        bowlingType: body.bowlingTypeId,
         commentaryId: openCommentaryIds,
         playerId: body.playerId,
       },
@@ -523,7 +523,7 @@ const updatePlayerService = async (request, fastify) => {
         item.commentaryPlayerId == elem.commentaryPlayerId
       );
       if(index !== -1) {
-        global.tblCommentaryPlayers[index].bowlingStyle = body.bowlingTypeId
+        global.tblCommentaryPlayers[index].bowlingType = body.bowlingTypeId
       }
     }
   }
