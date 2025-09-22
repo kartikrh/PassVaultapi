@@ -5920,7 +5920,7 @@ const updateTeamPlayerService = async (request, fastify) => {
       boundary,
       playerBallFaced,
       currentInnings,
-      bowlingStyle,
+      bowlingType,
     } = playerData;
     let commentary = global.tblCommentaries.find(
       (item) => item?.commentaryId === +commentaryId
@@ -5955,7 +5955,7 @@ const updateTeamPlayerService = async (request, fastify) => {
         boundary,
         playerBallFaced,
         currentInnings,
-        bowlingStyle,
+        bowlingType,
       },
       request,
       fastify
@@ -5975,7 +5975,7 @@ const updateTeamPlayerService = async (request, fastify) => {
       player.isInPlayingEleven = isInPlayingEleven;
       player.boundary = boundary;
       player.playerBallFaced = playerBallFaced;
-      player.bowlingStyle = bowlingStyle;
+      player.bowlingType = bowlingType;
       player.displayName = ds?.displayName;
     } else {
       throw new Error("Player not found for update");
@@ -12328,7 +12328,7 @@ const getTeamAndPlayerListServiceV1 = async (request, fastify) => {
             playerType: curr.playerType,
             jerseyPlayerImage: curr.jerseyPlayerImage,
             jerseyPlayerImagePath: curr.jerseyPlayerImagePath,
-            bowlingStyle: curr?.bowlingStyle,
+            bowlingType: curr?.bowlingType,
           };
         })
     );
