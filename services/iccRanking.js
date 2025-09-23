@@ -403,6 +403,7 @@ const importICCRankingFromEntitySportService = async (request, fastify) => {
                     }, fastify);
                 }
             }
+
             return `ICC Ranking data imported successfully`;
         } else {
             throw new Error("Error fetching ICC Ranking data from EntitySport API");
