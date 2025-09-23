@@ -395,12 +395,16 @@ const importICCRankingFromEntitySportService = async (request, fastify) => {
                             ...checkEntry,
                             ...entry
                         }
-                    }, fastify);
+                    }, fastify).catch((err) => {
+                        // console.log("error", err.message);
+                    });
                 } else {
                     await createICCRankingService({
                         ...request,
                         body: entry
-                    }, fastify);
+                    }, fastify).catch((err) => {
+                        // console.log("error", err.message);
+                    });
                 }
             }
             return `ICC Ranking data imported successfully`;
