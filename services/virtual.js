@@ -1361,7 +1361,7 @@ const ballByBallChangeService = async (request, fastify) => {
       {
         commentaryDetails,
         commentaryId: commentaryDetails.commentaryId,
-        checkFor: inningSwitch.OVER,
+        checkFor: inningSwitch.ALL,
         matchType,
       },
       request,
@@ -1796,7 +1796,7 @@ const checkInningsSwitch = async (data, request, fastify) => {
         Math.ceil(+overdetails.over || 0) + 1 >= batTeam?.teamMaxOver;
       wicketLimit = batTeam?.teamWicket > maxNoOfWicket - 2;
       isRunTargetAchieved =
-        isLastInnigs && target !== 0 && batTeam?.teamScore > target;
+        isLastInnigs && target !== 0 && batTeam?.teamScore >= target;
 
       conditionsToCheck.push(overLimit, wicketLimit, isRunTargetAchieved);
       break;
