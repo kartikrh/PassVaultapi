@@ -3077,7 +3077,7 @@ const updateMarketRateServiceV1 = async (request, fastify) => {
     if(item.marketTypeId == MarketTypeId.ManualOdds && category.categoryName.toLowerCase() == "mode of dismissal - 6 way" ){
       const over = global.tblOvers.filter((i)=> i.commentaryId == item.commentaryId
       && i.currentInnings == commentary.currentInnings)
-      .sort((a,b) => b.overId - a.overId)
+      .sort((a,b) => b.overId - a.overId)[0]
       let line_diff = allMarkets.find(
           (e) => e.marketId === item.eventMarketId
         )?.lineDiff || 0;
