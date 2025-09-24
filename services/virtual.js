@@ -51,7 +51,7 @@ const {
   getAllTeamPlayersByTeamIdAndPlayerIdQuery,
 } = require("../repository/TableTeamPlayer");
 const { mergeAndSaveImage } = require("../utilities/imageMerge");
-const { commentaryDetailsByEventIdService } = require("./commentry");
+const { commentaryDetailsByEventIdService, weatherAndPitchDataService } = require("./commentry");
 const { errorLogger, marketLogger } = require("../utilities/logger");
 const {
   virtualOverQuery,
@@ -808,6 +808,12 @@ const updateVirtualEventStatusService = async (request, fastify) => {
   if (index === -1) {
     throw new Error("Commentary with this id not found");
   }
+  const response = {};
+  const sendDataForSocketUpdate = {};
+  sendDataForSocketUpdate.commentaryId = commentaryId;
+  sendDataForSocketUpdate.eventRefId = global.tblCommentaries[index]?.eventRefId ?? null;
+  sendDataForSocketUpdate.dataToUpdate = [];
+
   let pythonURI = global.tblCommentaries[index]?.pythonURI || null;
   let displayStatus = "Ball";
   const commentaryDetails = {
@@ -863,6 +869,23 @@ const updateVirtualEventStatusService = async (request, fastify) => {
       );
     });
   }
+
+  const weatherAndPitchData = await weatherAndPitchDataService(commentaryId);
+  
+  response.commentaryDetails = {
+    ...global.tblCommentaries[index],
+    displayStatus,
+    ...weatherAndPitchData,
+  };
+  sendDataForSocketUpdate.dataToUpdate.push({
+    module: "commentaryDetails",
+    type: "update",
+    data: response.commentaryDetails,
+  });
+
+  global.clientSocketIo.forEach((socket) => {
+    socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+  });
 
   commentaryDetails.callPredictions = [];
   const comData = await commentaryResponseSerivce(commentaryId);
