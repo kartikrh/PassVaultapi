@@ -4520,7 +4520,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
             over_id: updatedData.overDetails?.overId || null,
             team_id: updatedData.overDetails?.teamId || null,
             bowler_id: updatedData.overDetails?.bowlerId || null,
-            wicket: updatedData.overDetails?.totalWicket || 0,
+            wicket: batTeam?.teamWicket || 0,
             bowling_style : comP?.bowlingType || null,
             ball_by_ball_id : 0
           },
@@ -8184,7 +8184,7 @@ const changeBowlerOfCommentaryService = async (request, fastify) => {
           over_id: latestOver?.overId || null,
           team_id: latestOver?.teamId || null,
           bowler_id: bowlerId,
-          wicket: latestOver?.totalWicket || 0,
+          wicket: batTeam?.teamWicket || 0,
           bowling_style : comP?.bowlingType || 0,
           ball_by_ball_id : 0
         },
