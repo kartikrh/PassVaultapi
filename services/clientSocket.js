@@ -1,6 +1,11 @@
 const { createClientSocketQuery, updateClientSocketQuery, deleteClientSocketQuery, updateActionTypeQuery, updateActiveInactiveClientSocketQuery } = require("../repository/TableClientSocket");
 const { connectClients, disconnectClients, disconnectInactiveClients } = require("../sockets");
-const { clientSocketActionType } = require("../utilities");
+const { 
+    clientSocketActionType, 
+    callSocketCountClientAPI,
+    APIEndpointModuleType, 
+    ServiceType,
+ } = require("../utilities");
 
 const getAllClientSocketService = async (request, fastify) => {
     const {isActive} = request.body;
@@ -41,6 +46,31 @@ const createClientSocketService = async (request, fastify) => {
     global.tblClientSocket.push(data);
     return data;
 
+}
+const socketCountService = async (request, fastify) => {
+    try {
+        const socketClientCount = await callSocketCountClientAPI(
+            {
+                serviceType: ServiceType.clientAPI,
+                moduleType: APIEndpointModuleType.getSocketCount,
+            },
+            request,
+            fastify
+        );
+
+        return {
+            totalCount: socketClientCount.totalCount,
+            rooms: socketClientCount.rooms
+        };
+    } catch (err) {
+        errorLogger(
+            fastify,
+            err.message,
+            "SERVICE ERROR --> services/clientSocket.js/socketCountService",
+            request
+        );
+        return null;
+    }
 }
 
 const updateClientSocketService = async (request, fastify) => {
@@ -158,5 +188,6 @@ module.exports = {
     saveClientSocketService,
     deleteClientSocketService,
     changeActionTypeService,
-    activeInactiveClientSocketService
+    activeInactiveClientSocketService,
+    socketCountService,
 }
