@@ -609,6 +609,12 @@ const getAllTournamentTeamPointsService = async (request, fastify) => {
 
 const importTournamentTeamPointFromEntitySportService = async (request, fastify) => {
   const { refId, refType, sourceId } = request.body;
+
+  const checkCompetition = global.tblCompetitions.find(item => item.tpId === refId);
+  if (!checkCompetition) {
+    throw new Error("Competition not found for this id");
+  }
+
   const whereCondition = `"wrRefId" = ${refId} AND "wrRefType" = ${refType} AND "wrSourceId" = ${sourceId} AND "wrIsImported" = true`;
   const validateCompImportData = await getAutoImportDataByIdQuery(whereCondition, request, fastify);
   if (validateCompImportData) {
@@ -620,89 +626,88 @@ const importTournamentTeamPointFromEntitySportService = async (request, fastify)
     isImportStart: true,
     importStartTime: new Date()
   }, fastify, request);
-  if (insertAutoImportData) {
-    const checkCompetition = global.tblCompetitions.find(item => item.tpId === refId);
-    if (!checkCompetition) {
-      throw new Error("Competition not found for this id");
-    }
 
-    await callEntitySportAPI(
-      {
-        serviceType: ServiceType.entitySport,
-        moduleType: APIEndpointModuleType.getCompetitionInfo,
-        data: {
-          module: "competitionInfo",
-          type: "get",
-          cid: refId
-        }
-      },
-      request,
-      fastify
-    ).then(async (response) => {
-      if (response && response.data && response.data.result) {
-        const result = response.data.result.response;
-        let alltournamentTeamPoints = await getAllTournamentTeamPointsQuery(fastify);
-        alltournamentTeamPoints = alltournamentTeamPoints.filter(item => item.competitionId === checkCompetition?.competitionId);
+  const response = await callEntitySportAPI(
+    {
+      serviceType: ServiceType.entitySport,
+      moduleType: APIEndpointModuleType.getCompetitionInfo,
+      data: {
+        module: "competitionInfo",
+        type: "get",
+        cid: refId
+      }
+    },
+    request,
+    fastify
+  );
 
-        const checkTournamentTypeGroup = result?.rounds.every(item => item.type === "group") && result?.standing?.standings.length > 0;
-        for (let team of result?.teams) {
-          if (checkTournamentTypeGroup) {
-            const checkTeam = global.tblTeams.find(item => item.tpId === team?.tid);
-            if (checkTeam) {
-              const getdata = {
+  if (response && response.data && response.data.result) {
+    const result = response.data.result.response;
+    let alltournamentTeamPoints = await getAllTournamentTeamPointsQuery(fastify);
+    alltournamentTeamPoints = alltournamentTeamPoints.filter(item => item.competitionId === checkCompetition?.competitionId);
+
+    const checkTournamentTypeGroup = result?.rounds.every(item => item.type === "group") && result?.standing?.standings.length > 0;
+    for (let team of result?.teams) {
+      if (checkTournamentTypeGroup) {
+        const checkTeam = global.tblTeams.find(item => item.tpId === team?.tid);
+        if (checkTeam) {
+          const getdata = {
+            teamId: checkTeam?.teamId,
+            competitionId: checkCompetition?.competitionId,
+          }
+          const groupData = extractGroupDataFromArray(result?.standing?.standings, team?.tid);
+          for (let gd of groupData) {
+            const checkTournamentTeamPoint = alltournamentTeamPoints.find(item => item.competitionId === checkCompetition?.competitionId && item.teamId === checkTeam?.teamId && item.groupId === gd.groupId);
+
+            if (checkTournamentTeamPoint) {
+              const updateTournamentTeamPointData = {
+                ...checkTournamentTeamPoint,
+                ...gd,
+                isActive: gd.position === teamRemarkType.Q ? false : true
+              }
+              await updateTournamentTeamPointsQuery(updateTournamentTeamPointData, fastify, request);
+            } else {
+              const data = {
+                groupId: 1,
+                groupName: null,
                 teamId: checkTeam?.teamId,
-                competitionId: checkCompetition?.competitionId,
+                competitionId: getdata?.competitionId,
+                tpId: checkTeam?.tpId || null,
+                isActive: gd.position === teamRemarkType.Q ? false : true,
+                ...gd
               }
-              const groupData = extractGroupDataFromArray(result?.standing?.standings, team?.tid);
-              for (let gd of groupData) {
-                const checkTournamentTeamPoint = alltournamentTeamPoints.find(item => item.competitionId === checkCompetition?.competitionId && item.teamId === checkTeam?.teamId && item.groupId === gd.groupId);
-
-                if (checkTournamentTeamPoint) {
-                  const updateTournamentTeamPointData = {
-                    ...checkTournamentTeamPoint,
-                    ...gd,
-                    isActive: gd.position === teamRemarkType.Q ? false : true
-                  }
-                  await updateTournamentTeamPointsQuery(updateTournamentTeamPointData, fastify, request);
-                } else {
-                  const data = {
-                    groupId: 1,
-                    groupName: null,
-                    teamId: checkTeam?.teamId,
-                    competitionId: getdata?.competitionId,
-                    tpId: checkTeam?.tpId || null,
-                    isActive: gd.position === teamRemarkType.Q ? false : true,
-                    ...gd
-                  }
-                  await insertTournamentTeamPointsQuery(data, fastify, request);
-                }
-              }
+              await insertTournamentTeamPointsQuery(data, fastify, request);
             }
           }
         }
-
-        const updateAutoImportDataBody = {
-          refId,
-          refType,
-          sourceId,
-          isImported: false,
-          importEndTime: new Date(),
-          id: insertAutoImportData.id
-        }
-        await updateAutoImportDataService({
-          ...request,
-          body: updateAutoImportDataBody
-        }, fastify);
-        return `Tournament team point data imported successfully`;
-      } else {
-        throw new Error("Error fetching Competition info data from EntitySport API");
       }
-    }).catch((err) => {
-      throw new Error("API ERROR --> services/tournamentTeamPoints.js/importTournamentTeamPointFromEntitySportService - callEntitySportAPI");
-    });
+    }
+
+    await updateAutoImportDataService({
+      ...request,
+      body: {
+        ...request.body,
+        isImported: false,
+        importEndTime: new Date(),
+        id: insertAutoImportData.id
+      }
+    }, fastify);
+
+    return `Tournament team point data imported successfully`;
+
   } else {
-    return insertAutoImportData;
+    await updateAutoImportDataService({
+      ...request,
+      body: {
+        ...request.body,
+        isImported: false,
+        importEndTime: new Date(),
+        id: insertAutoImportData.id
+      }
+    }, fastify);
+    throw new Error("Error fetching Competition info data from EntitySport API");
   }
+
 };
 
 module.exports = {
