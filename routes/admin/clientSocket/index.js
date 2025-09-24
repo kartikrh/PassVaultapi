@@ -6,6 +6,7 @@ const {
   deleteClientSocket,
   changeActionType,
   activeInactiveClientSocket,
+  socketCount,
 } = require("../../../controller/users/admin/clientSocket");
 const { ClientSocket } = require("../../../swaggerSchema/groupTags/schema");
 
@@ -81,5 +82,15 @@ module.exports = async (fastify, opts) => {
       })
     ],
     handler : (request, reply) => activeInactiveClientSocket(request, reply, fastify)
+  })
+  fastify.post("/socketCount",{
+    preHandler : [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) => checkPermission(request, reply, fastify, {
+        tabName : "ClientSocket",
+        mode : "view"
+      })
+    ],
+    handler : (request, reply) => socketCount(request, reply, fastify)
   })
 };

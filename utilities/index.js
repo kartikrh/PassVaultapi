@@ -551,6 +551,77 @@ const callClientAPI = async (data,request, fastify) =>{
     // throw new Error(error.message);
   }
 }
+const callSocketCountClientAPI = async (data, request, fastify) => {
+  try {
+    let clientServices = global.tblAPIs.filter(
+      (item) => item.type == data.serviceType && item.isActive == true
+    );
+
+    if (clientServices.length === 0) {
+      return { totalCount: 0, rooms: {} };
+    }
+
+    const results = [];
+    for (const ser of clientServices) {
+      const endPoint = global.tblAPIEndpoints.find(
+        (item) =>
+          item.serviceType === ser.type &&
+          item.moduleType === data.moduleType &&
+          item.isActive === true
+      );
+
+      if (!endPoint) {
+        console.log(
+          "Endpoint not found for service type:",
+          ser.type,
+          "and module type:",
+          data.moduleType
+        );
+        continue;
+      }
+
+      const url = `${ser.api}${endPoint.endPoint}`;
+      const payload = data.data || {};
+
+      try {
+        const result = await axios.post(url, payload);
+        console.log(result)
+        results.push(result.data);
+      } catch (err) {
+        errorLogger(
+          fastify,
+          err.message,
+          "API ERROR --> utilities/index/callClientAPI",
+          request
+        );
+      }
+    }
+
+    let totalCount = 0;
+    let rooms = {};
+
+    for (const res of results) {
+      if (res?.totalCount) {
+        totalCount += res.totalCount;
+      }
+      if (res?.rooms && typeof res.rooms === "object") {
+        for (const [room, count] of Object.entries(res.rooms)) {
+          rooms[room] = (rooms[room] || 0) + count;
+        }
+      }
+    }
+
+    return { totalCount, rooms };
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "UTIL ERROR --> utilities/index/callClientAPI",
+      request
+    );
+    return { totalCount: 0, rooms: {} };
+  }
+};
 
 const ServiceType = {
   clientAPI : 1,
@@ -568,7 +639,8 @@ const APIEndpointModuleType = {
   configUpdate: 8,
   getICCRankingData: 9,
   insertTeam: 10,
-  insertPlayer: 11
+  insertPlayer: 11,
+  getSocketCount: 12,
 }
 const NotificationSendType = {
   all : 1,
@@ -1624,5 +1696,6 @@ module.exports = {
   ICCRankingType,
   ICCRankingPlayerType,
   extractEntries,
-  UndoReportType
+  UndoReportType,
+  callSocketCountClientAPI,
 };
