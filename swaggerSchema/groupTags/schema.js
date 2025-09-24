@@ -8448,6 +8448,22 @@ const TournamentTeamPoints = {
       },
     },
   },
+  import: {
+    schema: {
+      tags: ["Tournament Team Points"],
+      description: "import Tournament Team Points",
+      security: [{ bearerAuth: [] }],
+      body: {
+          type: "object",
+          properties: {
+            refId: { type: "integer" },
+            refType: { type: "integer" },
+            sourceId: { type: "integer" }
+          },
+          required: ["refId", "refType", "sourceId"],
+      },
+    },
+  },
 };
 const PlayerHistory = {
   getAll: {
