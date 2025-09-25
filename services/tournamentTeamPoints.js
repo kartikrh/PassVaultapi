@@ -649,6 +649,7 @@ const importTournamentTeamPointFromEntitySportService = async (request, fastify)
     const checkTournamentTypeGroup = result?.rounds.every(item => item.type === "group") && result?.standing?.standings.length > 0;
     for (let team of result?.teams) {
       if (checkTournamentTypeGroup) {
+        const highestOrder = Math.max(...result?.rounds.map(group => group.order));
         const checkTeam = global.tblTeams.find(item => item.tpId === team?.tid);
         if (checkTeam) {
           const getdata = {
@@ -663,7 +664,7 @@ const importTournamentTeamPointFromEntitySportService = async (request, fastify)
               const updateTournamentTeamPointData = {
                 ...checkTournamentTeamPoint,
                 ...gd,
-                isActive: gd.position === teamRemarkType.Q ? false : true
+                isActive: highestOrder === gd.groupId ? true : (gd.position === teamRemarkType.Q ? false : true)
               }
               await updateTournamentTeamPointsQuery(updateTournamentTeamPointData, fastify, request);
             } else {
@@ -673,7 +674,7 @@ const importTournamentTeamPointFromEntitySportService = async (request, fastify)
                 teamId: checkTeam?.teamId,
                 competitionId: getdata?.competitionId,
                 tpId: checkTeam?.tpId || null,
-                isActive: gd.position === teamRemarkType.Q ? false : true,
+                isActive: highestOrder === gd.groupId ? true : (gd.position === teamRemarkType.Q ? false : true),
                 ...gd
               }
               await insertTournamentTeamPointsQuery(data, fastify, request);
