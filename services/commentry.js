@@ -6182,6 +6182,12 @@ const updateCommentaryStatusService = async (request, fastify) => {
   if (index === -1) {
     throw new Error("Commentary with this id not found");
   }
+  const response = {};
+  const sendDataForSocketUpdate = {};
+  sendDataForSocketUpdate.commentaryId = commentaryId;
+  sendDataForSocketUpdate.eventRefId = global.tblCommentaries[index]?.eventRefId ?? null;
+  sendDataForSocketUpdate.dataToUpdate = [];
+
   // let _resFromPredictAPI;
   // let callPredictions = [];
   // Prepare the commentary details for update
@@ -6249,6 +6255,23 @@ const updateCommentaryStatusService = async (request, fastify) => {
       );
     });
   }
+  const weatherAndPitchData = await weatherAndPitchDataService(commentaryId);
+
+  response.commentaryDetails = {
+    ...global.tblCommentaries[index],
+    displayStatus,
+    ...weatherAndPitchData,
+  };
+  sendDataForSocketUpdate.dataToUpdate.push({
+    module: "commentaryDetails",
+    type: "update",
+    data: response.commentaryDetails,
+  });
+
+  global.clientSocketIo.forEach((socket) => {
+    socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+  });
+  
   commentaryDetails.callPredictions = [];
   return {
     name: "commentaryDetails",
@@ -6275,6 +6298,13 @@ const commentaryStatusService = async (request, fastify) => {
   if (index === -1) {
     throw new Error("Commentary with this id not found");
   }
+
+  const response = {};
+  const sendDataForSocketUpdate = {};
+  sendDataForSocketUpdate.commentaryId = commentaryId;
+  sendDataForSocketUpdate.eventRefId = global.tblCommentaries[index]?.eventRefId ?? null;
+  sendDataForSocketUpdate.dataToUpdate = [];
+
   const commentaryDetails = {
     commentaryId,
     displayStatus,
@@ -6317,6 +6347,24 @@ const commentaryStatusService = async (request, fastify) => {
       );
     });
   }
+
+  const weatherAndPitchData = await weatherAndPitchDataService(commentaryId);
+
+  response.commentaryDetails = {
+    ...global.tblCommentaries[index],
+    displayStatus,
+    ...weatherAndPitchData,
+  };
+  sendDataForSocketUpdate.dataToUpdate.push({
+    module: "commentaryDetails",
+    type: "update",
+    data: response.commentaryDetails,
+  });
+
+  global.clientSocketIo.forEach((socket) => {
+    socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+  });
+
   commentaryDetails.callPredictions = [];
   return {
     name: "commentaryDetails",
