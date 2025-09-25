@@ -1925,7 +1925,8 @@ const getAllCommentaryBallByBallQuery = async (fastify) => {
         tcbb."wrDevCurrentOverBall" as "devCurrentOverBall",
         tcbb."wrCardKey" as "cardKey",
         tcbb."wrCardType" as "cardType",
-        tcbb."wrBowlingStyle" as "bowlingStyle"
+        tcbb."wrBowlingStyle" as "bowlingStyle",
+        tcbb."wrTpId" as "tpId"
     from "tblCommentaryBallByBalls" tcbb
     WHERE tcbb."wrCommentaryId" IN (
         SELECT "wrCommentaryId"
@@ -7050,19 +7051,32 @@ const updateVirtualPartnershipQuery = async (data, fastify, request) => {
       RETURNING
           "wrCommentaryPartnershipId" as "commentaryPartnershipId",
           "wrCommentaryId" as "commentaryId",
+          "wrTeamId" as "teamId",
+          "wrBatter1Id" as "batter1Id",
+          "wrBatter1Name" as "batter1Name",
+          "wrBatter2Id" as "batter2Id",
+          "wrBatter2Name" as "batter2Name",
           "wrTotalRuns" as "totalRuns",
           "wrTotalBalls" as "totalBalls",
           "wrExtras" as "extras",
+          "wrCurrentInnings" as "currentInnings",
           "wrCommentaryBallByBallId" as "commentaryBallByBallId",
           "wrBatter1Balls" as "batter1Balls",
           "wrBatter2Balls" as "batter2Balls",
           "wrBatter1Runs" as "batter1Runs",
           "wrBatter2Runs" as "batter2Runs",
+          "wrCreatedDate" as "createdDate",
           "wrTotalFour" as "totalFour",
           "wrTotalSix" as "totalSix",
           "wrTotalExtra" as "totalExtra",
           "wrTotalWide" as "totalWide",
           "wrTotalNoBall" as "totalNoBall",
+          "wrOrder" as "order",
+          "wrIsActive" as "isActive",
+          "wrP1Ball" as "p1Ball",
+          "wrP2Ball" as "p2Ball",
+          "wrP1Run" as "p1Run",
+          "wrP2Run" as "p2Run",
           "wrTeamScore" as "teamScore",
           "wrTeamWicket" as "teamWicket"
       `,

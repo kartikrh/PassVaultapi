@@ -22016,7 +22016,7 @@ const updateStreamURLService = async (request, fastify) => {
   return "Commentary Updated successfully";
 };
 
-const syncEntitySportCommentaryService = async (data,fastify,request) => {
+const syncEntitySportCommentaryService = async (data,fastify,request = null) => {
     const startTime = new Date();
     try {
         let {
@@ -22076,7 +22076,7 @@ const syncEntitySportCommentaryService = async (data,fastify,request) => {
             statusToUpdate = commentaryDetails?.commentaryStatus;
         }
         // validate commentaryTeams
-        if (commentaryTeams.length >0) {
+        if (commentaryTeams && commentaryTeams.length >0) {
             commentaryTeams.forEach((team) => {
                 const index = global.tblCommentaryTeams.findIndex(
                     (item) =>
@@ -22499,7 +22499,7 @@ const syncEntitySportCommentaryService = async (data,fastify,request) => {
                 data: response.commentaryPlayers,
             });
         }
-        if (commentaryOvers.length > 0  ) {
+        if (commentaryOvers && commentaryOvers.length > 0  ) {
           for (const overDetails of updatedData.overDetails) {
             const ovIndex = global.tblOvers.findIndex(item => 
               item.overId === overDetails.overId
@@ -22673,7 +22673,7 @@ const syncEntitySportCommentaryService = async (data,fastify,request) => {
                 apiName: "/saveDetails",
                 reqStartTime: startTime,
             },
-            request,
+            null,
             fastify
         ).catch((err) => {
             console.log("commentary logger console", err);
@@ -22681,7 +22681,7 @@ const syncEntitySportCommentaryService = async (data,fastify,request) => {
                 fastify,
                 err.message,
                 "ERROR --> services/commentary.js/syncEntitySportCommentaryService",
-                request
+                null
             );
         });
         throw new Error(error.message);
