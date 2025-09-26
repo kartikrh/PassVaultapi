@@ -681,10 +681,11 @@ const callSocketCountClientAPI = async (data, request, fastify) => {
 };
 
 const ServiceType = {
-  clientAPI: 1,
-  dataProviderAPI: 2,
-  entitySport: 3,
-};
+  clientAPI : 1,
+  dataProviderAPI : 2,
+  entitySport : 3,
+}
+
 const APIEndpointModuleType = {
   commentaryUpdate: 1,
   vendorUpdate: 2,
