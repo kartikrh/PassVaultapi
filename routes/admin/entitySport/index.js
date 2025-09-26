@@ -6,6 +6,7 @@ const {
   saveCommentaries,
   saveCountryCodes,
   saveVenues,
+  saveTournamentTeamPlayer,
 } = require("../../../controller/users/admin/entitySport");
 
 module.exports = async (fastify, opts) => {
@@ -32,5 +33,9 @@ module.exports = async (fastify, opts) => {
   fastify.post("/saveVenue", {
     schema: EntitySport.SaveVenue.schema,
     handler: (request, reply) => saveVenues(request, reply, fastify),
+  });
+  fastify.post("/saveTournamentTeamPlayer", {
+    schema: EntitySport.SaveTournamentTeamPlayer.schema,
+    handler: (request, reply) => saveTournamentTeamPlayer(request, reply, fastify),
   });
 };
