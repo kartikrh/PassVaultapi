@@ -4,7 +4,7 @@ const { io } = require("socket.io-client");
 const { clientSocketActionType, clientSocketStatus } = require("../utilities");
 const { updateEntitySocketStatusQuery, updateReconnectCountQuery } = require("../repository/TableEntitySockets");
 const { errorLogger } = require("../utilities/logger");
-const { setEntityCom2Service } = require("../services/entitySport")
+// const { setEntityCom2Service } = require("../services/entitySport")
 
 const connectEntitySport = async (fastify) => {
   try {
