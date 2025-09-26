@@ -10809,7 +10809,21 @@ const Report = {
     }
   },
 }
-
+const EntitySocket = {
+  getAll: {
+    schema: {
+      tags: ["EntitySocket"],
+      description: "get all EntitySockets",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+}
 module.exports = {
   Auth,
   Tabs,
@@ -10889,4 +10903,5 @@ module.exports = {
   Agent,
   ICCRanking,
   Report,
+  EntitySocket,
 };
