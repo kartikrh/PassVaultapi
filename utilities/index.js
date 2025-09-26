@@ -698,6 +698,7 @@ const APIEndpointModuleType = {
   insertTeam: 10,
   insertPlayer: 11,
   getSocketCount: 12,
+  getCompetitionInfo: 13
 }
 
 const NotificationSendType = {
@@ -1831,6 +1832,40 @@ const UndoReportType = {
   user: 2,
 };
 
+const teamRemarkType = {
+  Q: "Q",
+  E: "E"
+}
+
+const extractGroupDataFromArray = (data, teamId) => {
+  const groupData = [];
+
+  for (const group of data) {
+    for (const team of group.standings) {
+      if (Number(team.team_id) === teamId) {
+        groupData.push({
+          groupId: group.round.order,
+          groupName: group.round.name,
+          totalMatches: team.played,
+          totalWin: team.win,
+          totalLose: team.loss,
+          totalTie: team.draw,
+          noResult: team.nr,
+          totalPoint: team.points,
+          netRunRate: team.netrr,
+          ...(team.quality === "true" ? {
+            position: teamRemarkType.Q
+          } : {}),
+          ...(team.eliminate === "true" ? {
+            position: teamRemarkType.E
+          } : {}),
+        })
+      }
+    }
+  }
+  return groupData.sort((a, b) => a.groupId - b.groupId);
+}
+
 module.exports = {
   ERROR_CODES,
   error,
@@ -1933,5 +1968,7 @@ module.exports = {
   callSocketCountClientAPI,
   ICCRankingPlayerTypeById,
   inningStatus,
-  EntityCommentaryStatus
+  EntityCommentaryStatus,
+  teamRemarkType,
+  extractGroupDataFromArray
 };

@@ -405,8 +405,8 @@ const updateUserService = async (request, fastify) => {
     roleId: findUser.roleId,
     parentTree: findUser.parentTree,
     password: findUser.password,
-    eventTypeId : request.body.eventTypeId || findUser.eventTypeId,
-    competitionId : request.body.competitionId || findUser.competitionId,
+    eventTypeId : request.body.eventTypeId ?? findUser.eventTypeId,
+    competitionId : request.body.competitionId ?? findUser.competitionId,
   };
 
   if (request.body.roleId) {
