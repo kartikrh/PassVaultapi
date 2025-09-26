@@ -187,7 +187,7 @@ const saveTournamentTeamPlayerService = async (request, fastify) => {
     const { tournamentTeamPlayerIds } = request.body;
     let ply = await getAllTournamentTeamPlayerByIdsQuery({
         tournamentTeamPlayers: tournamentTeamPlayerIds
-    }, request, fastify)
+    }, request, fastify);
 
     for (let p of ply) {
         let index = global.tblTournamentTeamPlayers.findIndex((tp) => tp.id == p.id);
@@ -203,7 +203,7 @@ const saveTournamentTeamPlayerService = async (request, fastify) => {
     const missingIds = tournamentTeamPlayerIds.filter(id => !objectIds.includes(id));
     global.tblTournamentTeamPlayers = global.tblTournamentTeamPlayers.filter(item => !missingIds.includes(item.id));
 
-    return "Tournament Team Players Updated successfully."
+    return "Tournament Team Players Data Updated successfully."
 }
 
 module.exports = {
