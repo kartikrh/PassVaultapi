@@ -628,6 +628,7 @@ const ServiceType = {
   dataProviderAPI : 2,
   entitySport : 3,
 }
+
 const APIEndpointModuleType = {
   commentaryUpdate : 1,
   vendorUpdate : 2,
