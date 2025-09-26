@@ -850,6 +850,7 @@ const createCommentaryService = async (request, fastify) => {
                     teamName: teamData.teamName,
                     commentaryPlayerId: playerData[0].commentaryPlayerId,
                     teamPlayerId: null,
+                    commentaryId: addCommentry?.commentaryId,
                   },
                   fastify
                 );
@@ -968,6 +969,7 @@ const createCommentaryService = async (request, fastify) => {
                   teamName: teamData.teamName,
                   commentaryPlayerId: playerData[0].commentaryPlayerId,
                   teamPlayerId: null,
+                  commentaryId: addCommentry?.commentaryId,
                 },
                 fastify
               );
@@ -1390,6 +1392,7 @@ const updateCommentaryService = async (request, fastify) => {
                         teamName: teamData.teamName,
                         commentaryPlayerId: players.commentaryPlayerId,
                         teamPlayerId: null,
+                        commentaryId: request.body?.commentaryId,
                       },
                       fastify
                     );
@@ -1549,6 +1552,7 @@ const updateCommentaryService = async (request, fastify) => {
                       teamName: teamData.teamName,
                       commentaryPlayerId: players.commentaryPlayerId,
                       teamPlayerId: null,
+                      commentaryId: request.body?.commentaryId,
                     },
                     fastify
                   );
@@ -1656,6 +1660,7 @@ const updateCommentaryService = async (request, fastify) => {
                       teamName: teamData.teamName,
                       commentaryPlayerId: players.commentaryPlayerId,
                       teamPlayerId: null,
+                      commentaryId: request.body?.commentaryId,
                     },
                     fastify
                   );
@@ -2019,6 +2024,7 @@ const cloneCommentaryService = async (request, fastify) => {
                     teamName: teamData.teamName,
                     commentaryPlayerId: playerData[0].commentaryPlayerId,
                     teamPlayerId: null,
+                    commentaryId: newCommentary?.commentaryId,
                   },
                   fastify
                 );
@@ -2135,6 +2141,7 @@ const cloneCommentaryService = async (request, fastify) => {
                   teamName: teamData.teamName,
                   commentaryPlayerId: palyerData[0].commentaryPlayerId,
                   teamPlayerId: null,
+                  commentaryId: newCommentary?.commentaryId,
                 },
                 fastify
               );
@@ -5761,6 +5768,7 @@ const addTeamPlayerService = async (request, fastify) => {
           teamName: teamData.teamName,
           commentaryPlayerId: playerData[0].commentaryPlayerId,
           teamPlayerId: teamPlayerData?.teamPlayerId ?? null,
+          commentaryId: commentaryId,
         },
         fastify
       );
@@ -6818,7 +6826,7 @@ const commentaryDetailsByEventIdService = async (
       item.commentaryId === request.body.commentaryId
     );
   }
-  else if (request.body.eventId) {
+  else if (request.body.eventId && request.body.eventId !== "") {
     result = global.tblCommentaries.find((item)=>
       item.eventRefId === request.body.eventId 
     )
@@ -6830,6 +6838,9 @@ const commentaryDetailsByEventIdService = async (
   // if (!result && request.body.status === 1) {
   //     throw new Error("Commentary with this id not found");
   // }
+  if (!result && request.body?.eventId == "") {
+    return null;
+  }
   if (!result) {
     throw new Error("Commentary with this id not Found");
   }

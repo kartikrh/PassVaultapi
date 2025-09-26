@@ -332,6 +332,7 @@ const createVirtualEventService = async (request, fastify) => {
                 teamName: teamData.teamName,
                 commentaryPlayerId: playerData.commentaryPlayerId,
                 teamPlayerId: null,
+                commentaryId: commentaryData.commentaryId,
               },
               fastify
             );

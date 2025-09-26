@@ -256,6 +256,7 @@ const insertPlayerService = async (request, fastify) => {
                 teamName: teamData.teamName,
                 teamPlayerId: teamPlayerData.teamPlayerId,
                 commentaryPlayerId: null,
+                commentaryId: null,
               }, fastify);
             }
             }
@@ -482,6 +483,7 @@ const updatePlayerService = async (request, fastify) => {
                   teamName: teamData.teamName,
                   teamPlayerId: teamPlayerData.teamPlayerId,
                   commentaryPlayerId: null,
+                  commentaryId: null,
                 }, fastify);
               }
             }
@@ -691,6 +693,7 @@ const mergePlayerImageAndJerseyService = async (request, fastify) => {
             teamName: teamData.teamName,
             teamPlayerId: playerData.teamPlayerId,
             commentaryPlayerId: null,
+            commentaryId: null,
           }, fastify);
         }
       }
@@ -724,6 +727,7 @@ const setTeamPlayerImgService = async (request, fastify) => {
       teamName: p.teamName,
       teamPlayerId: p.teamPlayerId,
       commentaryPlayerId: null,
+      commentaryId: null,
     }, fastify);
 
   }
