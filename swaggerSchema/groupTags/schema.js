@@ -10616,6 +10616,20 @@ const EntitySport = {
       },
     }
   },
+  SaveTournamentTeamPlayer: {
+    schema: {
+      tags: ["EntitySport"],
+      description: "save Tournament Team Player",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          tournamentTeamPlayerIds: { type: "array" },
+        },
+        required: ["tournamentTeamPlayerIds"],
+      },
+    }
+  },
 }
 const Agent = {
   signIn : {

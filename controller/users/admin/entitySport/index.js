@@ -8,7 +8,8 @@ const {
   saveCountryCodesService,
   saveVenueService,
   setEntityComService,
-  setEntityCom2Service
+  setEntityCom2Service,
+  saveTournamentTeamPlayerService
 } = require("../../../../services/entitySport");
 
 let path = "controller/users/admin/entitySport/index";
@@ -94,6 +95,16 @@ const setEntityCom2 = async (request ,reply ,fastify)=>{
     }
 
 }
+const saveTournamentTeamPlayer = async (request, reply, fastify) => {
+    try {
+        const result = await saveTournamentTeamPlayerService(request, fastify);
+        reply.status(200).send(success(result, 200));
+    } catch (err) {
+        errorLogger(fastify, err.message, path + "/saveVenues", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+    }
+}
+
 module.exports = {
     saveTeams,
     savePlayers,
@@ -102,5 +113,6 @@ module.exports = {
     saveCountryCodes,
     saveVenues,
     setEntityCom,
-    setEntityCom2
+    setEntityCom2,
+    saveTournamentTeamPlayer
 }
