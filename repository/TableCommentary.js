@@ -8357,6 +8357,30 @@ const overTypeChangeOnOversQuery = async (data, fastify, request) => {
   }
 };
 
+const bowlingTypeChangeQuery = async (data, fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `UPDATE "tblCommentaryPlayers" SET
+        "wrBowlingType" = $1
+        WHERE "wrCommentaryId" = $2
+        AND "wrCommentaryPlayerId" = $3
+      `,
+      {
+        bind: [data.bowlingType, data.commentaryId, data.commentaryPlayerId],
+      }
+    );
+    return result;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary/bowlingTypeChangeQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 const bowlingStyleChangeOnCommPlayersQuery = async (data, fastify, request) => {
   try {
     const result = await fastify.db.query(
@@ -8550,4 +8574,5 @@ module.exports = {
   overTypeChangeOnOversQuery,
   bowlingStyleChangeOnCommPlayersQuery,
   updateStreamingURLQuery,
+  bowlingTypeChangeQuery,
 };

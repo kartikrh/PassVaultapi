@@ -3961,6 +3961,22 @@ const Commentary = {
       },
     },
   },
+  bowlingTypeChange: {
+    schema: {
+      tags: ["Commentary"],
+      description: "update bowlingType",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId : {type : "integer"},
+          commentaryPlayerId : {type : "integer"},
+          bowlingType : {type : "integer"},
+        },
+        required: ["commentaryId", "commentaryPlayerId", "bowlingType"],
+      },
+    },
+  },
   updateStreamingURLAndType: {
     schema: {
       tags: ["Commentary"],

@@ -102,6 +102,7 @@ const {
   updateMatchInfoService,
   overTypeChangeOnOversService,
   updateStreamURLService,
+  bowlingTypeChangeService,
 } = require("../../../../services/commentry");
 const { getEventSnapByComService, updateEventSnapByComService } = require("../../../../services/competitionEventSnap");
 const { getAllCommentariesDataService, getAllCommentariesDataServiceV1, getAllCommentariesDataV2Service } = require("../../../../services/score");
@@ -1359,6 +1360,15 @@ const overTypeChangeOnOvers = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 }
+const bowlingTypeChange = async (request, reply, fastify) => {
+  try {
+    const result = await bowlingTypeChangeService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/bowlingTypeChange", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+}
 const marketOddsdata = async (request, reply, fastify) => {
   try {
     const result = global.tblMarketOddsBallByBall.filter(item => item == null);
@@ -1496,4 +1506,5 @@ module.exports = {
   overTypeChangeOnOvers,
   marketOddsdata,
   updateStreamURL,
+  bowlingTypeChange,
 }
