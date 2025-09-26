@@ -28,9 +28,11 @@ const { nodeProfilingIntegration } = require("@sentry/profiling-node");
 const bcrypt = require("bcrypt");
 const Tracing = require("@sentry/tracing");
 const { connectClients, disconnectClients } = require("./sockets");
+const { connectEntitySport, disconnectEntitySports } = require("./sockets/enitySport.js");
 const {
   disConnectClientSocketQuery,
 } = require("./repository/TableClientSocket");
+const { disConnectEntitySocketQuery } = require("./repository/TableEntitySockets.js");
 const {startSignalR} = require("./signalrHandler/MockSignalR.js")
 const WebSocket = require("ws");
 const WebsocketConnection = require("./websocket");
@@ -118,9 +120,12 @@ module.exports = async function (fastify, opts) {
           // await featchData(fastify);
           await fetchAllDataFromDb(fastify);
           await disConnectClientSocketQuery(fastify);
+          await disConnectEntitySocketQuery(fastify);
           await startSignalR(fastify);
           connectClients(fastify);
           disconnectClients(fastify);
+          connectEntitySport(fastify);
+          disconnectEntitySports(fastify);
           webPushset(webPush);
           updateMarket(fastify)
           
@@ -221,6 +226,7 @@ module.exports = async function (fastify, opts) {
     console.log("preClose hook executed");
     try {
       await disConnectClientSocketQuery(fastify);
+      await disConnectEntitySocketQuery(fastify);
       console.log("Cleanup task executed successfully");
     } catch (error) {
       console.error("Error during preClose hook execution:", error);

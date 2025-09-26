@@ -183,6 +183,29 @@ const saveVenueService = async (request, fastify) => {
     return "Venue Updated successfully."
 }
 
+const saveTournamentTeamPlayerService = async (request, fastify) => {
+    const { tournamentTeamPlayerIds } = request.body;
+    let ply = await getAllTournamentTeamPlayerByIdsQuery({
+        tournamentTeamPlayers: tournamentTeamPlayerIds
+    }, request, fastify)
+
+    for (let p of ply) {
+        let index = global.tblTournamentTeamPlayers.findIndex((tp) => tp.id == p.id);
+        if (index == -1) {
+            global.tblTournamentTeamPlayers.push(p)
+        }
+        else {
+            global.tblTournamentTeamPlayers[index] = p
+        }
+    }
+
+    const objectIds = ply.map(obj => obj.id);
+    const missingIds = tournamentTeamPlayerIds.filter(id => !objectIds.includes(id));
+    global.tblTournamentTeamPlayers = global.tblTournamentTeamPlayers.filter(item => !missingIds.includes(item.id));
+
+    return "Tournament Team Players Updated successfully."
+}
+
 module.exports = {
     saveTeamsService,
     savePlayersService,
@@ -190,4 +213,5 @@ module.exports = {
     saveCommentariesService,
     saveCountryCodesService,
     saveVenueService,
+    saveTournamentTeamPlayerService
 }
