@@ -109,6 +109,7 @@ const { getAllPythonAPIsQuery } = require("../repository/TablePythonAPI");
 const { getAllMatchTypeTemplatesQuery } = require("../repository/TableMatchTypeTemplates");
 const { getAllOverTypesQuery } = require("../repository/TableOverType");
 const { getAllICCRankingQuery } = require("../repository/TableICCRanking");
+const { getAllEntitySocketsQuery } = require("../repository/TableEntitySockets");
 
 const fetchAllDataFromDb = async (fastify, reply) => {
   try {
@@ -235,6 +236,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const getAllMatchTypeTemplates = await getAllMatchTypeTemplatesQuery(fastify);
     const getAllOverTypes = await getAllOverTypesQuery(fastify);
     const getAllICCRanking = await getAllICCRankingQuery(fastify);
+    const getAllEntitySockets = await getAllEntitySocketsQuery(fastify);
 
     global.tblTabs = getAllTabs;
     global.tblRoles = getAllRoles;
@@ -322,6 +324,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblMatchTypeTemplates = getAllMatchTypeTemplates;
     global.tblOverTypes = getAllOverTypes;
     global.tblICCRanking = getAllICCRanking;
+    global.tblEntitySockets = getAllEntitySockets;
     // global.responseLogs = responseLogs;
     // global.thirdPartyAPILogs = thirdPartyAPILogs;
     // global.predictorAPILogs = predictorAPILogs;

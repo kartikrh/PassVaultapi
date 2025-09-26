@@ -3961,6 +3961,22 @@ const Commentary = {
       },
     },
   },
+  bowlingTypeChange: {
+    schema: {
+      tags: ["Commentary"],
+      description: "update bowlingType",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId : {type : "integer"},
+          commentaryPlayerId : {type : "integer"},
+          bowlingType : {type : "integer"},
+        },
+        required: ["commentaryId", "commentaryPlayerId", "bowlingType"],
+      },
+    },
+  },
   updateStreamingURLAndType: {
     schema: {
       tags: ["Commentary"],
@@ -10616,6 +10632,20 @@ const EntitySport = {
       },
     }
   },
+  SaveTournamentTeamPlayer: {
+    schema: {
+      tags: ["EntitySport"],
+      description: "save Tournament Team Player",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          tournamentTeamPlayerIds: { type: "array" },
+        },
+        required: ["tournamentTeamPlayerIds"],
+      },
+    }
+  },
 }
 const Agent = {
   signIn : {
@@ -10809,7 +10839,21 @@ const Report = {
     }
   },
 }
-
+const EntitySocket = {
+  getAll: {
+    schema: {
+      tags: ["EntitySocket"],
+      description: "get all EntitySockets",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+}
 module.exports = {
   Auth,
   Tabs,
@@ -10889,4 +10933,5 @@ module.exports = {
   Agent,
   ICCRanking,
   Report,
+  EntitySocket,
 };

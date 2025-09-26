@@ -94,6 +94,7 @@ const {
   deleteCommentaryPlayersByPlayerId,
   overTypeChangeOnOversQuery,
   updateStreamingURLQuery,
+  bowlingTypeChangeQuery,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -22044,6 +22045,32 @@ const overTypeChangeOnOversService = async (request, fastify) => {
   return "Commentary Updated successfully";
 };
 
+const bowlingTypeChangeService = async (request, fastify) => {
+  const { commentaryId, commentaryPlayerId, bowlingType } = request.body
+  // validate commentary id
+  const commentary = global.tblCommentaries.findIndex(
+    (item) => item?.commentaryId === commentaryId
+  );
+  if (commentary == -1) {
+    throw new Error("Commentary with this id not Found");
+  }
+
+  const playerData = global.tblCommentaryPlayers.findIndex(item => 
+    item.commentaryPlayerId == commentaryPlayerId && item.commentaryId == commentaryId
+  );
+  if (playerData == -1) {
+    throw new Error(`Player with this id not found`);
+  }
+  await bowlingTypeChangeQuery({ commentaryId, commentaryPlayerId, bowlingType }, fastify, request);
+
+  global.tblCommentaryPlayers[playerData] = {
+    ...global.tblCommentaryPlayers[playerData],
+    bowlingType,
+  }
+
+  return "Commentary Updated successfully";
+};
+
 const updateStreamURLService = async (request, fastify) => {
   const { commentaryId, streamingUrl, streamingType } = request.body
   // validate commentary id
@@ -22880,4 +22907,5 @@ module.exports = {
   updateStreamURLService,
   syncEntitySportCommentaryService,
   weatherAndPitchDataService,
+  bowlingTypeChangeService,
 };
