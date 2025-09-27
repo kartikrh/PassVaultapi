@@ -9964,7 +9964,6 @@ const changeShowClientService = async (request, fastify) => {
     };
     
     global.clientSocketIo.forEach((socket) => {
-      console.log("sdfsdf", socketData);
       socket.client.emit("updateActionType", socketData);
     });
   }
@@ -10669,6 +10668,20 @@ const activeInactiveCommentaryService = async (request, fastify) => {
       request
     );
   });
+  if (
+    global?.clientSocketIo !== undefined &&
+    global?.clientSocketIo.length > 0
+  ) {
+    const socketData = {
+      commentaryId: request.body.commentaryId,
+      isClientShow: global.tblCommentaries[commentary].isClientShow,
+      isActive: global.tblCommentaries[commentary].isActive
+    };
+    
+    global.clientSocketIo.forEach((socket) => {
+      socket.client.emit("updateActionType", socketData);
+    });
+  }
   return "Commentary Updated successfully";
 };
 const closeCommentaryService = async (request, fastify) => {
