@@ -458,8 +458,8 @@ module.exports = async function (fastify, opts) {
         "https://admin.socket.io",
         "https://panel.deployed.live",
         "http://localhost:3001",
-        // "https://uatpanel.deployed.live",
-        "https://uatpanel.scorre.info",
+        "https://uatpanel.deployed.live",
+        // "https://uatpanel.scorre.info",
         "http://localhost:8080"
       ],
       credentials: true,
