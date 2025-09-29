@@ -70,8 +70,19 @@ const addTournamentTeamPlayersService = async (request, fastify) => {
     );
     
     global.tblTournamentTeamPlayers.push(data[0]);
+    return data[0];
   });
-  await Promise.all(insertPromises);
+
+  let data = await Promise.all(insertPromises);
+  data = data.filter(Boolean).map(item => item.playerId);
+  const tournamentTeamPlayerIds = global.tblTournamentTeamPlayers.filter(item => item.competitionId === competitionId && data.includes(item.playerId) && item.teamId !== teamId);
+  if (tournamentTeamPlayerIds && tournamentTeamPlayerIds.length > 0) {
+    const idsToDelete = tournamentTeamPlayerIds.map((item) => item.id)
+    await deleteTournamentTeamPlayersQuery(idsToDelete, request, fastify);
+    global.tblTournamentTeamPlayers = global.tblTournamentTeamPlayers.filter(
+      (item) => !idsToDelete.includes(item.id)
+    )
+  }
 
   return "Tournaments Team players added successfully";
 };

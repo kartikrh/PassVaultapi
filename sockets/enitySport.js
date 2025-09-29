@@ -29,12 +29,12 @@ const connectEntitySport = async (fastify) => {
 
       // Attach event listeners for connection events
       client.on("connect", () => {
-        console.log(`Connected to ${urlConfig.url}`);
+        console.log(`Connected to entitySport - ${urlConfig.url}`);
         updateEntitySocketStatusQuery({
           entitySocketId : [urlConfig.entitySocketId],
           status : clientSocketStatus.connected
         },fastify).catch((error) => {
-          console.log("Error updating client socket status:", error);
+          console.log("Error updating entity socket status:", error);
         })
         // Remove any old socket just in case
         global.entitySportSocketIo = global.entitySportSocketIo.filter(c => c.url !== urlConfig.url);
@@ -63,10 +63,10 @@ const connectEntitySport = async (fastify) => {
         });
       });
       client.on("connect_error", (error) => {
-        console.log(`Connection error: ${error}`);
+        console.log(`Entity Connection error: ${error}`);
       });
       client.on("disconnect", () => {
-        console.log(`Disconnected from ${urlConfig.url}`);
+        console.log(`Entity Disconnected from ${urlConfig.url}`);
         global.entitySportSocketIo = global.entitySportSocketIo.filter(
           (c) => c.client !== client
         );
@@ -90,7 +90,7 @@ const connectEntitySport = async (fastify) => {
         }
       });
       client.io.on("reconnect_attempt", (attemptNumber) => {
-        console.log(`Reconnect attempt: ${attemptNumber}`);
+        console.log(`Entity Reconnect attempt: ${attemptNumber}`);
         updateReconnectCountQuery({
           entitySocketId : urlConfig.entitySocketId,
           reconnectCount : attemptNumber
@@ -106,7 +106,7 @@ const connectEntitySport = async (fastify) => {
     // Wait for all client connections to be established
     await Promise.all(promises);
   } catch (error) {
-    console.log("Error connecting clients:", error);
+    console.log("Entity Error connecting clients:", error);
     errorLogger(
       fastify,
       error.message,
@@ -153,7 +153,7 @@ const disconnectEntitySports = async (fastify) => {
       "ERROR --> socketIo.js/entitySports/disconnectEntitySports",
       null
     )
-    console.log("Error disconnecting clients:", error);
+    console.log("Entity Error disconnecting clients:", error);
   }
 }
 const disconnectInactiveEntityClients = async (fastify) => {
@@ -169,7 +169,7 @@ const disconnectInactiveEntityClients = async (fastify) => {
     await Promise.all(promises);
     return true;
   } catch (error) {
-    console.log("Error disconnecting inactive clients:", error);
+    console.log("Entity Error disconnecting inactive clients:", error);
     errorLogger(
       fastify,
       error.message,
