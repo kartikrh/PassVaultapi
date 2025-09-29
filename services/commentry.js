@@ -1830,6 +1830,21 @@ const updateCommentaryService = async (request, fastify) => {
     );
   });
 
+  if (
+    global?.clientSocketIo !== undefined &&
+    global?.clientSocketIo.length > 0
+  ) {
+    const socketData = {
+      commentaryId: updatedData.commentaryId,
+      isClientShow: updatedData?.isClientShow,
+      isActive: updatedData?.isActive
+    };
+    
+    global.clientSocketIo.forEach((socket) => {
+      socket.client.emit("updateActionType", socketData);
+    });
+  }
+
   return updatedData;
 };
 
@@ -9938,6 +9953,21 @@ const changeShowClientService = async (request, fastify) => {
     global.tblCommentaries[commentary].isClientShow = request.body.isClientShow;
   }
 
+  if (
+    global?.clientSocketIo !== undefined &&
+    global?.clientSocketIo.length > 0
+  ) {
+    const socketData = {
+      commentaryId: request.body.commentaryId,
+      isClientShow: global.tblCommentaries[commentary].isClientShow,
+      isActive: global.tblCommentaries[commentary]?.isActive
+    };
+    
+    global.clientSocketIo.forEach((socket) => {
+      socket.client.emit("updateActionType", socketData);
+    });
+  }
+
     // if (global.tblCommentaries[commentary].isClientShow) {
     const cData = await getMatchDataByCId(
       {
@@ -10638,6 +10668,20 @@ const activeInactiveCommentaryService = async (request, fastify) => {
       request
     );
   });
+  if (
+    global?.clientSocketIo !== undefined &&
+    global?.clientSocketIo.length > 0
+  ) {
+    const socketData = {
+      commentaryId: request.body.commentaryId,
+      isClientShow: global.tblCommentaries[commentary].isClientShow,
+      isActive: global.tblCommentaries[commentary].isActive
+    };
+    
+    global.clientSocketIo.forEach((socket) => {
+      socket.client.emit("updateActionType", socketData);
+    });
+  }
   return "Commentary Updated successfully";
 };
 const closeCommentaryService = async (request, fastify) => {
@@ -13056,6 +13100,16 @@ const updateMergeImageOnCommentaryPlayersService = async (request, fastify) => {
             },
             fastify
           );
+          const index = global.tblCommentaryPlayers.findIndex(item => 
+            item.commentaryPlayerId == players?.commentaryPlayerId
+          );
+          if(index !== -1) {
+            global.tblCommentaryPlayers[index] = {
+              ...global.tblCommentaryPlayers[index],
+              jerseyPlayerImage: teamPlayers?.jerseyPlayerImage,
+              jerseyPlayerImagePath: teamPlayers?.jerseyPlayerImagePath,
+            }
+          } 
         }
       }
     }
