@@ -642,7 +642,9 @@ const APIEndpointModuleType = {
   insertTeam: 10,
   insertPlayer: 11,
   getSocketCount: 12,
-  getCompetitionInfo: 13
+  getCompetitionInfo: 13,
+  getTeamDataByIdFromEntity: 14,
+  getPlayerDataByIdFromEntity: 15
 }
 const NotificationSendType = {
   all : 1,
@@ -1634,6 +1636,34 @@ const extractGroupDataFromArray = (data, teamId) => {
   return groupData.sort((a, b) => a.groupId - b.groupId);
 }
 
+const EntityPlayerType = {
+  bat: 1,
+  bowl: 2,
+  all: 4,
+  wk: 3,
+  wkbat: 3
+}
+
+const EntityBowlingStyleType = {
+  pace: 1,
+  spin: 2
+}
+
+const extractBowlingStyle = (bowlingType, bowlingStyle) => {
+  if (!bowlingType || !bowlingStyle || global.tblBowlingTypes.length < 1) return null;
+
+  const normalizedStyle = bowlingStyle
+    .replace(/left arm |right arm /i, '')
+    .replace(/\s/g, '')
+    .toLowerCase();
+
+  const match = global.tblBowlingTypes.find(item =>
+    item.bowlingType.replace(/\s/g, '').toLowerCase() === normalizedStyle
+  );
+
+  return match?.bowlingTypeId || null;
+};
+
 module.exports = {
   ERROR_CODES,
   error,
@@ -1735,5 +1765,8 @@ module.exports = {
   UndoReportType,
   callSocketCountClientAPI,
   teamRemarkType,
-  extractGroupDataFromArray
+  extractGroupDataFromArray,
+  EntityPlayerType,
+  EntityBowlingStyleType,
+  extractBowlingStyle
 };

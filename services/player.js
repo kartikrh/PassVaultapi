@@ -28,7 +28,9 @@ const { deleteAwardsByPlayerIdQuery } = require("../repository/TableCommentaryAw
 const { bowlingStyleChangeOnCommPlayersQuery } = require("../repository/TableCommentary");
 const { mergeAndSaveImage } = require("../utilities/imageMerge");
 const configConstants = require("../utilities/configConstants");
-const { trimTextData } = require("../utilities/index");
+const { trimTextData, callEntitySportAPI, ServiceType, APIEndpointModuleType, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, RefType } = require("../utilities/index");
+const { getAutoImportDataByIdQuery, insertAutoImportDataQuery } = require("../repository/TableAutoImportData");
+const { updateAutoImportDataService } = require("./autoImportData");
 
 const allPlayerService = async (request,fastify) => {
   const { isActive, eventTypeId , teamId} = request.body;
@@ -754,6 +756,134 @@ const activeInactivePlayerService = async (request, fastify) => {
   return `Player data updated successfully`;
 };
 
+const UpdatePlayerFromEntityService = async (request, fastify) => {
+  const { playerIds } = request.body;
+
+  const playerData = global.tblPlayers.filter(
+    (item) => playerIds.includes(item.playerId) && item.tpId !== null
+  );
+
+  let updateCount = 0;
+
+  for (const entry of playerData) {
+    try {
+      const whereCondition = `"wrRefId" = ${entry.tpId} AND "wrRefType" = ${RefType.Player} AND "wrSourceId" = 3 AND "wrIsImported" = true`;
+      const validateCompImportData = await getAutoImportDataByIdQuery(whereCondition, request, fastify);
+      if (!validateCompImportData) {
+        const insertAutoImportBody = {
+          refId: entry.tpId,
+          refType: RefType.Player,
+          sourceId: 3
+        }
+        const insertAutoImportData = await insertAutoImportDataQuery({
+          ...insertAutoImportBody,
+          isImportStart: true,
+          importStartTime: new Date()
+        }, fastify, request);
+
+        const response = await callEntitySportAPI(
+          {
+            serviceType: ServiceType.entitySport,
+            moduleType: APIEndpointModuleType.getPlayerDataByIdFromEntity,
+            data: {
+              module: 'player',
+              type: "get",
+              pid: entry.tpId
+            }
+          },
+          request,
+          fastify
+        );
+
+        const playerDataResponse = response.data.result?.response?.player;
+        if (playerDataResponse) {
+          const { playerTypeId, playerName, displayName, isKipper, isLeftHandedBatting, isLeftArmFielding, bowlingStyleId, bowlingTypeId } = entry;
+          const { playing_role, title, short_name, batting_style, bowling_style, bowling_type } = playerDataResponse;
+
+          let changedValues = { ...entry };
+
+          const entityPlayerTypeId = EntityPlayerType[playing_role];
+          if (entityPlayerTypeId && playerTypeId !== entityPlayerTypeId) {
+            changedValues.playerTypeId = entityPlayerTypeId;
+          }
+          if (title && playerName !== title) {
+            changedValues.playerName = title;
+          }
+          if (short_name && displayName !== short_name) {
+            changedValues.displayName = short_name;
+          }
+          const entityIsKeeper = playing_role === "wk";
+          if ("isKipper" in entry && isKipper !== entityIsKeeper) {
+            changedValues.isKipper = entityIsKeeper;
+          }
+          const entityBattingStyle = batting_style?.includes("Right");
+          if ("isLeftHandedBatting" in entry && isLeftHandedBatting !== entityBattingStyle) {
+            changedValues.isLeftHandedBatting = entityBattingStyle;
+          }
+          const entityBowlingStyle = bowling_style?.includes("Right");
+          if ("isLeftArmFielding" in entry && isLeftArmFielding !== entityBowlingStyle) {
+            changedValues.isLeftArmFielding = entityBowlingStyle;
+          }
+          const EntityBowlingStyleTypeId = EntityBowlingStyleType[bowling_type?.toLowerCase()];
+          if (EntityBowlingStyleTypeId && bowlingStyleId !== EntityBowlingStyleTypeId) {
+            changedValues.bowlingStyleId = EntityBowlingStyleTypeId;
+          }
+          const entityBowlingStyleId = extractBowlingStyle(bowling_type, bowling_style);
+          if (entityBowlingStyleId && bowlingTypeId !== entityBowlingStyleId) {
+            changedValues.bowlingTypeId = entityBowlingStyleId;
+          }
+
+          const isChanged = (
+            changedValues.playerTypeId !== playerTypeId ||
+            changedValues.playerName !== playerName ||
+            changedValues.displayName !== displayName ||
+            changedValues.isKipper !== isKipper ||
+            changedValues.isLeftHandedBatting !== isLeftHandedBatting ||
+            changedValues.isLeftArmFielding !== isLeftArmFielding ||
+            changedValues.bowlingStyleId !== bowlingStyleId ||
+            changedValues.bowlingTypeId !== bowlingTypeId
+          );
+
+          if (isChanged) {
+            changedValues.userId = request.userTokenInfo.WrUserId;
+            try {
+              await updatePlayerQuery(changedValues, fastify, request);
+              delete changedValues.userId;
+              const index = global.tblPlayers.findIndex(
+                (item) => item.playerId === entry.playerId
+              );
+              if (index !== -1) {
+                global.tblPlayers[index] = changedValues;
+              }
+              updateCount++;
+            } catch (err) {
+              throw new Error(`Failed to update player: ${err.message}`);
+            }
+          }
+        }
+
+        await updateAutoImportDataService({
+          ...request,
+          body: {
+            ...insertAutoImportBody,
+            isImported: false,
+            importEndTime: new Date(),
+            id: insertAutoImportData.id
+          }
+        }, fastify);
+      }
+    } catch (err) {
+      throw new Error(`Failed to fetch or process player data: ${err.message}`);
+    }
+  }
+
+  if (updateCount > 0) {
+    return `Player data updated successfully`;
+  }
+
+  return "No update found in player data";
+};
+
 module.exports = {
   allPlayerService,
   playerByIdService,
@@ -769,4 +899,5 @@ module.exports = {
   setTeamPlayerImgService,
   getTeamListPlayerIdService,
   activeInactivePlayerService,
+  UpdatePlayerFromEntityService
 };
