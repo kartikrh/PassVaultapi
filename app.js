@@ -457,6 +457,7 @@ module.exports = async function (fastify, opts) {
       origin: [
         "https://admin.socket.io",
         "https://panel.deployed.live",
+        "https://panel.scorre.info",
         "http://localhost:3001",
         "https://uatpanel.deployed.live",
         "https://uatpanel.scorre.info",
