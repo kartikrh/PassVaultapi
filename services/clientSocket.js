@@ -48,30 +48,24 @@ const createClientSocketService = async (request, fastify) => {
 
 }
 const socketCountService = async (request, fastify) => {
-    try {
-        const socketClientCount = await callSocketCountClientAPI(
-            {
-                serviceType: ServiceType.clientAPI,
-                moduleType: APIEndpointModuleType.getSocketCount,
-            },
-            request,
-            fastify
-        );
+  try {
+    const socketClientCount = await callSocketCountClientAPI(request, fastify);
 
-        return {
-            totalCount: socketClientCount.totalCount,
-            rooms: socketClientCount.rooms
-        };
-    } catch (err) {
-        errorLogger(
-            fastify,
-            err.message,
-            "SERVICE ERROR --> services/clientSocket.js/socketCountService",
-            request
-        );
-        return null;
-    }
-}
+    return {
+      totalCount: socketClientCount.totalCount,
+      rooms: socketClientCount.rooms,
+      clients: socketClientCount.clients
+    };
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "SERVICE ERROR --> services/clientSocket.js/socketCountService",
+      request
+    );
+    return { totalCount: 0, rooms: {}, clients: [] };
+  }
+};
 
 const updateClientSocketService = async (request, fastify) => {
     // validate id exists
