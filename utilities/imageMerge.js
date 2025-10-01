@@ -27,7 +27,7 @@ const convertToPng = async (imageUrl, fastify, data) => {
   } catch (error) {
     errorLogger(
       fastify,
-      `${error.message} ${data?.playerName ? '- ' + data?.playerName : ""} ${data?.teamName ? ' and teamName' + data?.teamName : ""} ${data?.commentaryId ? ' with ' + data?.commentaryId : " "}`,
+      `${error.message} ${data?.playerName ? '- ' + data?.playerName : ""} ${data?.teamName ? ' and teamName ' + data?.teamName : ""} ${data?.commentaryId ? ' with ' + data?.commentaryId : " "}`,
       "ERROR --> utilities/imageMerge.js/convertToPng",
       null
     );
