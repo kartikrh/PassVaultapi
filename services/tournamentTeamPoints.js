@@ -1,6 +1,7 @@
 const { getAutoImportDataByIdQuery, insertAutoImportDataQuery } = require("../repository/TableAutoImportData");
 const { createTeamPointLogQuery, getLogByComIdQuery } = require("../repository/TableTeamPointLogs");
-const { deletePlayerByTeamQuery } = require("../repository/TableTournamentsTeamPlayers");
+const { getAllPlayersByTeamIdQuery } = require("../repository/TableTeams");
+const { deletePlayerByTeamQuery, deleteTournamentTeamPlayersQuery, insertTournamentTeamPlayersQuery } = require("../repository/TableTournamentsTeamPlayers");
 const {
   getAllTournamentTeamPointsQuery,
   insertTournamentTeamPointsQuery,
@@ -646,20 +647,44 @@ const importTournamentTeamPointFromEntitySportService = async (request, fastify)
     let alltournamentTeamPoints = await getAllTournamentTeamPointsQuery(fastify);
     alltournamentTeamPoints = alltournamentTeamPoints.filter(item => item.competitionId === checkCompetition?.competitionId);
 
+    const checkTournamentTeamPlayers = global.tblTournamentTeamPlayers.filter(item => item.competitionId === checkCompetition?.competitionId);
+
     const checkTournamentTypeGroup = result?.rounds.every(item => item.type === "group") && result?.standing?.standings.length > 0;
     for (let team of result?.teams) {
       if (checkTournamentTypeGroup) {
         const highestOrder = Math.max(...result?.rounds.map(group => group.order));
         const checkTeam = global.tblTeams.find(item => item.tpId === team?.tid);
         if (checkTeam) {
-          const getdata = {
-            teamId: checkTeam?.teamId,
-            competitionId: checkCompetition?.competitionId,
+          const teamPlayers = await getAllPlayersByTeamIdQuery(checkTeam?.teamId, fastify, request);
+          const tournamentTeamPlayers = checkTournamentTeamPlayers.filter(item => item.teamId === checkTeam?.teamId);
+          const tournamentTeamPlayerIds = new Set(tournamentTeamPlayers.map(p => p.playerId));
+          const missingPlayerIds = teamPlayers.filter(p => !tournamentTeamPlayerIds.has(p.playerId)).map(p => p.playerId);
+          for (const mp of missingPlayerIds) {
+            const checkTournamentTeamPlayersById = checkTournamentTeamPlayers.find(item => item.playerId === mp);
+            if (checkTournamentTeamPlayersById) {
+              if (checkTournamentTeamPlayersById.teamId !== checkTeam.teamId) {
+                await deleteTournamentTeamPlayersQuery({
+                  data: [checkTournamentTeamPlayersById.id]
+                }, request, fastify);
+                global.tblTournamentTeamPlayers = global.tblTournamentTeamPlayers.filter(item => item.id !== checkTournamentTeamPlayers.id);
+
+                const data = {
+                  teamId: checkTeam.teamId,
+                  competitionId: checkCompetition?.competitionId,
+                  playerId: mp,
+                  playerName: checkTournamentTeamPlayersById?.playerName,
+                  tpId: checkTournamentTeamPlayersById?.tpId || null,
+                  userId: request.userTokenInfo.WrUserId,
+                }
+
+                const insertTournamentTeamPlayer = await insertTournamentTeamPlayersQuery(data, request, fastify);
+                global.tblTournamentTeamPlayers.push(insertTournamentTeamPlayer[0])
+              }
+            }
           }
           const groupData = extractGroupDataFromArray(result?.standing?.standings, team?.tid);
           for (let gd of groupData) {
             const checkTournamentTeamPoint = alltournamentTeamPoints.find(item => item.competitionId === checkCompetition?.competitionId && item.teamId === checkTeam?.teamId && item.groupId === gd.groupId);
-
             if (checkTournamentTeamPoint) {
               const updateTournamentTeamPointData = {
                 ...checkTournamentTeamPoint,
@@ -672,7 +697,7 @@ const importTournamentTeamPointFromEntitySportService = async (request, fastify)
                 groupId: 1,
                 groupName: null,
                 teamId: checkTeam?.teamId,
-                competitionId: getdata?.competitionId,
+                competitionId: checkCompetition?.competitionId,
                 tpId: checkTeam?.tpId || null,
                 isActive: highestOrder === gd.groupId ? true : (gd.position === teamRemarkType.Q ? false : true),
                 ...gd
