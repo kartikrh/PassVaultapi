@@ -400,7 +400,7 @@ const getAllCommentariesDataService = async (request,fastify) => {
 //         throw new Error(error);
 //     }
 // }
-async function asyncFilter(array, predicate, chunkSize = 1000) {
+async function asyncFilter(array, predicate, chunkSize = 100) {
   const results = [];
   let index = 0;
 
