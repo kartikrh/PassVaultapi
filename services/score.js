@@ -435,6 +435,9 @@ const getAllCommentariesDataV2Service = async (request,fastify) => {
                 return c.commentaryStatus != 4;
             }
         })
+        if(!request.body.eventId  && !request.body.commentaryId){
+            commData = [2]
+        }
         for (c of com) {
             let teams, players, overs, ballByBall, wickets, partnerships, marketOddsBallByBall;
             
