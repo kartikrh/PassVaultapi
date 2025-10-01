@@ -276,18 +276,16 @@ const setEntityComService = async (request , fastify) =>{
     //     }
     // }
 
-    // let battingTeam = global.tblCommentaryTeams.find((ct)=> ct.commentaryId == comDetails.commentaryId && ct.teamStatus == 2 && ct.currentInnings == comDetails.currentInnings);
-    // let bowlingTeam = global.tblCommentaryTeams.find((ct)=> ct.commentaryId == comDetails.commentaryId && ct.teamStatus == 1 && ct.currentInnings == comDetails.currentInnings);
-    // if(!bowlingTeam || !battingTeam){
-    //     throw new Error("Bowling or Batting team not found.")
-    // }
-    //total Inning
-    let totalInning = request.body.totalInning;
-    let result;    
-    for (let i=1; i<= totalInning; i++){
-        let inningData = request.body[`inning${i}`];
-        if(!inningData){
-            throw new Error(`Inning${i} data not found in request.`)
+const saveTournamentTeamPlayerService = async (request, fastify) => {
+    const { tournamentTeamPlayerIds } = request.body;
+    let ply = await getAllTournamentTeamPlayerByIdsQuery({
+        tournamentTeamPlayers: tournamentTeamPlayerIds
+    }, request, fastify);
+
+    for (let p of ply) {
+        let index = global.tblTournamentTeamPlayers.findIndex((tp) => tp.id == p.id);
+        if (index == -1) {
+            global.tblTournamentTeamPlayers.push(p)
         }
         //get first inning data first inning team
         let firstSubInning = inningData.find((i) => i.inning.number == 1);
@@ -854,6 +852,7 @@ const setEntityCom2Service = async (request , fastify) =>{
     
     return true;
 
+    return "Tournament Team Players Data Updated successfully."
 }
 const handleComArr = async (data , request , fastify , comDetails) =>{
     const {response} = data;
@@ -2664,4 +2663,4 @@ const dumpFun = async () =>{
         }   
     } 
 }
-
+}

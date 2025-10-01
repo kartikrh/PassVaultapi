@@ -12,7 +12,7 @@ const { updateCommentaryPlayerJerseyImageQuery, updateCommPlayersImagePathQuery 
 const sharp = require("sharp");
 
 
-const convertToPng = async (imageUrl,fastify) => {
+const convertToPng = async (imageUrl, fastify, data) => {
   try {
     const response = await axios.get(imageUrl, { responseType: "arraybuffer" });
     let imageBuffer = Buffer.from(response.data);
@@ -27,7 +27,7 @@ const convertToPng = async (imageUrl,fastify) => {
   } catch (error) {
     errorLogger(
       fastify,
-      error.message,
+      `${error.message} ${data?.playerName ? '- ' + data?.playerName : ""} ${data?.teamName ? ' and teamName ' + data?.teamName : ""} ${data?.commentaryId ? ' with ' + data?.commentaryId : " "}`,
       "ERROR --> utilities/imageMerge.js/convertToPng",
       null
     );
@@ -63,8 +63,8 @@ const resizeImage = async (imageBuffer, width, height, fastify) => {
 
 const mergeAndSaveImage = async (data, fastify) => {
   try {
-    let playerBuffer = await convertToPng(data.playerImage,fastify);
-    let jerseyBuffer =  await convertToPng(data.jersey,fastify);
+    let playerBuffer = await convertToPng(data.playerImage, fastify, data);
+    let jerseyBuffer =  await convertToPng(data.jersey, fastify, data);
 
     const backgroundImage = path.resolve("bgMergeImage", "bgMergeImage.png");
     const CANVAS_WIDTH = parseInt(

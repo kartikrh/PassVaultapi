@@ -221,6 +221,7 @@ const createTeamService = async (request, fastify) => {
                 teamName: request.body.teamName,
                 teamPlayerId: teamPlayerData.teamPlayerId,
                 commentaryPlayerId: null,
+                commentaryId: null,
               }, fastify);
             }
             }
@@ -425,6 +426,7 @@ const updateTeamService = async (request, fastify) => {
                 teamName: body.teamName,
                 teamPlayerId: teamPlayerData.teamPlayerId,
                 commentaryPlayerId: null,
+                commentaryId: null,
               }, fastify);
             }
           }
@@ -591,6 +593,7 @@ const mergeTeamJerseyAndPlayerImageService = async (request, fastify) => {
               teamName: checkTeamId.teamName,
               teamPlayerId: teamData.teamPlayerId,
               commentaryPlayerId: null,
+              commentaryId: null,
             }, fastify);
           }
       }

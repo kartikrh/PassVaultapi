@@ -608,67 +608,80 @@ const callClientAPI = async (data, request, fastify) => {
     // throw new Error(error.message);
   }
 }
-const callSocketCountClientAPI = async (data, request, fastify) => {
+const callSocketCountClientAPI = async (request, fastify) => {
   try {
-    let clientServices = global.tblAPIs.filter(
-      (item) => item.type == data.serviceType && item.isActive == true
+    const clientUrls = global.tblClientSocket.filter((c) => c.isActive === true);
+
+    if (clientUrls.length === 0) {
+      return { totalCount: 0, rooms: {}, clients: [] };
+    }
+
+    const endPoint = global.tblAPIEndpoints.find(
+      (item) =>
+        item.serviceType === ServiceType.clientAPI &&
+        item.moduleType === APIEndpointModuleType.getSocketCount &&
+        item.isActive === true
     );
 
-    if (clientServices.length === 0) {
-      return { totalCount: 0, rooms: {} };
-    }
-
-    const results = [];
-    for (const ser of clientServices) {
-      const endPoint = global.tblAPIEndpoints.find(
-        (item) =>
-          item.serviceType === ser.type &&
-          item.moduleType === data.moduleType &&
-          item.isActive === true
+    if (!endPoint) {
+      console.log(
+        "Endpoint not found for service type:",
+        ServiceType.clientAPI,
+        "and module type:",
+        APIEndpointModuleType.getSocketCount
       );
-
-      if (!endPoint) {
-        console.log(
-          "Endpoint not found for service type:",
-          ser.type,
-          "and module type:",
-          data.moduleType
-        );
-        continue;
-      }
-
-      const url = `${ser.api}${endPoint.endPoint}`;
-      const payload = data.data || {};
-
-      try {
-        const result = await axios.post(url, payload);
-        console.log(result)
-        results.push(result.data);
-      } catch (err) {
-        errorLogger(
-          fastify,
-          err.message,
-          "API ERROR --> utilities/index/callClientAPI",
-          request
-        );
-      }
+      return { totalCount: 0, rooms: {}, clients: [] };
     }
+
+    const urlCalls = clientUrls.map((ser) => {
+      const url = `${ser.url}${endPoint.endPoint}`;
+      return axios
+        .post(url, {})
+        .then((result) => ({
+          clientSocketId: ser.clientSocketId,
+          serverName: ser.serverName,
+          data: result.data
+        }))
+        .catch((err) => {
+          errorLogger(
+            fastify,
+            err.message,
+            "API ERROR --> utilities/index/callClientAPI for socketCount",
+            request
+          );
+          return {
+            clientSocketId: ser.clientSocketId,
+            serverName: ser.serverName,
+            data: { totalCount: 0, rooms: {} }
+          };
+        });
+    });
+
+    const results = await Promise.all(urlCalls);
 
     let totalCount = 0;
-    let rooms = {};
+    const rooms = {};
+    const clients = [];
 
     for (const res of results) {
-      if (res?.totalCount) {
-        totalCount += res.totalCount;
+      const clientTotal = res.data?.totalCount || 0;
+      const clientRooms = res.data?.rooms || {};
+
+      totalCount += clientTotal;
+
+      for (const [room, count] of Object.entries(clientRooms)) {
+        rooms[room] = (rooms[room] || 0) + count;
       }
-      if (res?.rooms && typeof res.rooms === "object") {
-        for (const [room, count] of Object.entries(res.rooms)) {
-          rooms[room] = (rooms[room] || 0) + count;
-        }
-      }
+
+      clients.push({
+        clientSocketId: res.clientSocketId,
+        serverName: res.serverName,
+        totalCount: clientTotal,
+        rooms: clientRooms
+      });
     }
 
-    return { totalCount, rooms };
+    return { totalCount, rooms, clients };
   } catch (error) {
     errorLogger(
       fastify,
@@ -676,7 +689,7 @@ const callSocketCountClientAPI = async (data, request, fastify) => {
       "UTIL ERROR --> utilities/index/callClientAPI",
       request
     );
-    return { totalCount: 0, rooms: {} };
+    return { totalCount: 0, rooms: {}, clients: [] };
   }
 };
 

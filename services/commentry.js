@@ -850,6 +850,7 @@ const createCommentaryService = async (request, fastify) => {
                     teamName: teamData.teamName,
                     commentaryPlayerId: playerData[0].commentaryPlayerId,
                     teamPlayerId: null,
+                    commentaryId: addCommentry?.commentaryId,
                   },
                   fastify
                 );
@@ -968,6 +969,7 @@ const createCommentaryService = async (request, fastify) => {
                   teamName: teamData.teamName,
                   commentaryPlayerId: playerData[0].commentaryPlayerId,
                   teamPlayerId: null,
+                  commentaryId: addCommentry?.commentaryId,
                 },
                 fastify
               );
@@ -1390,6 +1392,7 @@ const updateCommentaryService = async (request, fastify) => {
                         teamName: teamData.teamName,
                         commentaryPlayerId: players.commentaryPlayerId,
                         teamPlayerId: null,
+                        commentaryId: request.body?.commentaryId,
                       },
                       fastify
                     );
@@ -1549,6 +1552,7 @@ const updateCommentaryService = async (request, fastify) => {
                       teamName: teamData.teamName,
                       commentaryPlayerId: players.commentaryPlayerId,
                       teamPlayerId: null,
+                      commentaryId: request.body?.commentaryId,
                     },
                     fastify
                   );
@@ -1656,6 +1660,7 @@ const updateCommentaryService = async (request, fastify) => {
                       teamName: teamData.teamName,
                       commentaryPlayerId: players.commentaryPlayerId,
                       teamPlayerId: null,
+                      commentaryId: request.body?.commentaryId,
                     },
                     fastify
                   );
@@ -1824,6 +1829,21 @@ const updateCommentaryService = async (request, fastify) => {
       request
     );
   });
+
+  if (
+    global?.clientSocketIo !== undefined &&
+    global?.clientSocketIo.length > 0
+  ) {
+    const socketData = {
+      commentaryId: updatedData.commentaryId,
+      isClientShow: updatedData?.isClientShow,
+      isActive: updatedData?.isActive
+    };
+    
+    global.clientSocketIo.forEach((socket) => {
+      socket.client.emit("updateActionType", socketData);
+    });
+  }
 
   return updatedData;
 };
@@ -2019,6 +2039,7 @@ const cloneCommentaryService = async (request, fastify) => {
                     teamName: teamData.teamName,
                     commentaryPlayerId: playerData[0].commentaryPlayerId,
                     teamPlayerId: null,
+                    commentaryId: newCommentary?.commentaryId,
                   },
                   fastify
                 );
@@ -2135,6 +2156,7 @@ const cloneCommentaryService = async (request, fastify) => {
                   teamName: teamData.teamName,
                   commentaryPlayerId: palyerData[0].commentaryPlayerId,
                   teamPlayerId: null,
+                  commentaryId: newCommentary?.commentaryId,
                 },
                 fastify
               );
@@ -5761,6 +5783,7 @@ const addTeamPlayerService = async (request, fastify) => {
           teamName: teamData.teamName,
           commentaryPlayerId: playerData[0].commentaryPlayerId,
           teamPlayerId: teamPlayerData?.teamPlayerId ?? null,
+          commentaryId: commentaryId,
         },
         fastify
       );
@@ -6818,7 +6841,7 @@ const commentaryDetailsByEventIdService = async (
       item.commentaryId === request.body.commentaryId
     );
   }
-  else if (request.body.eventId) {
+  else if (request.body.eventId && request.body.eventId !== "") {
     result = global.tblCommentaries.find((item)=>
       item.eventRefId === request.body.eventId 
     )
@@ -6830,6 +6853,9 @@ const commentaryDetailsByEventIdService = async (
   // if (!result && request.body.status === 1) {
   //     throw new Error("Commentary with this id not found");
   // }
+  if (!result && request.body?.eventId == "") {
+    return null;
+  }
   if (!result) {
     throw new Error("Commentary with this id not Found");
   }
@@ -9927,6 +9953,21 @@ const changeShowClientService = async (request, fastify) => {
     global.tblCommentaries[commentary].isClientShow = request.body.isClientShow;
   }
 
+  if (
+    global?.clientSocketIo !== undefined &&
+    global?.clientSocketIo.length > 0
+  ) {
+    const socketData = {
+      commentaryId: request.body.commentaryId,
+      isClientShow: global.tblCommentaries[commentary].isClientShow,
+      isActive: global.tblCommentaries[commentary]?.isActive
+    };
+    
+    global.clientSocketIo.forEach((socket) => {
+      socket.client.emit("updateActionType", socketData);
+    });
+  }
+
     // if (global.tblCommentaries[commentary].isClientShow) {
     const cData = await getMatchDataByCId(
       {
@@ -10627,6 +10668,20 @@ const activeInactiveCommentaryService = async (request, fastify) => {
       request
     );
   });
+  if (
+    global?.clientSocketIo !== undefined &&
+    global?.clientSocketIo.length > 0
+  ) {
+    const socketData = {
+      commentaryId: request.body.commentaryId,
+      isClientShow: global.tblCommentaries[commentary].isClientShow,
+      isActive: global.tblCommentaries[commentary].isActive
+    };
+    
+    global.clientSocketIo.forEach((socket) => {
+      socket.client.emit("updateActionType", socketData);
+    });
+  }
   return "Commentary Updated successfully";
 };
 const closeCommentaryService = async (request, fastify) => {
@@ -13045,6 +13100,16 @@ const updateMergeImageOnCommentaryPlayersService = async (request, fastify) => {
             },
             fastify
           );
+          const index = global.tblCommentaryPlayers.findIndex(item => 
+            item.commentaryPlayerId == players?.commentaryPlayerId
+          );
+          if(index !== -1) {
+            global.tblCommentaryPlayers[index] = {
+              ...global.tblCommentaryPlayers[index],
+              jerseyPlayerImage: teamPlayers?.jerseyPlayerImage,
+              jerseyPlayerImagePath: teamPlayers?.jerseyPlayerImagePath,
+            }
+          } 
         }
       }
     }
