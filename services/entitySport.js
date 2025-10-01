@@ -1801,7 +1801,8 @@ module.exports = {
     saveCountryCodesService,
     saveVenueService,
     setEntityComService,
-    setEntityCom2Service
+    setEntityCom2Service,
+    saveTournamentTeamPlayerService
 }
 const saveEntityService = async (data ,request, fastify) => {
   const startTime = new Date();
