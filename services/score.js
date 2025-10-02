@@ -400,6 +400,30 @@ const getAllCommentariesDataService = async (request,fastify) => {
 //         throw new Error(error);
 //     }
 // }
+async function asyncFilter(array, predicate, chunkSize = 100) {
+  const results = [];
+  let index = 0;
+
+  return new Promise((resolve) => {
+    function processChunk() {
+      const end = Math.min(index + chunkSize, array.length);
+
+      for (; index < end; index++) {
+        if (predicate(array[index], index, array)) {
+          results.push(array[index]);
+        }
+      }
+
+      if (index < array.length) {
+        setImmediate(processChunk); // let event loop breathe
+      } else {
+        resolve(results);
+      }
+    }
+
+    processChunk();
+  });
+}
 const getAllCommentariesDataV2Service = async (request,fastify) => {
     try {
         let commentaries = {};
@@ -455,13 +479,14 @@ const getAllCommentariesDataV2Service = async (request,fastify) => {
                 partnerships = await getAllCommentaryPartnershipDataQuery(whereCondition, fastify);
                 marketOddsBallByBall = await getAllMarketOddsBallByBallByCommentaryId({commentaryId: c.commentaryId},fastify) || [];
             } else {
-                teams = global.tblCommentaryTeams.filter(item => item.commentaryId == c.commentaryId);
-                players = global.tblCommentaryPlayers.filter(item => item.commentaryId == c.commentaryId);
-                overs = global.tblOvers.filter(item => item?.commentaryId == c.commentaryId);
-                ballByBall = global.tblCommentaryBallByBall.filter(item => item?.commentaryId == c.commentaryId);
-                wickets = global.tblCommentaryWicket.filter(item => item?.commentaryId == c.commentaryId);
-                partnerships = global.tblCommentaryPartnership.filter(item => item?.commentaryId == c.commentaryId);
-                marketOddsBallByBall = global.tblMarketOddsBallByBall.filter(item => item?.commentaryId == c.commentaryId) || [];
+               teams = await asyncFilter(global.tblCommentaryTeams, item => item.commentaryId == c.commentaryId);
+                players = await asyncFilter(global.tblCommentaryPlayers, item => item.commentaryId == c.commentaryId);
+                overs = await asyncFilter(global.tblOvers, item => item?.commentaryId == c.commentaryId);
+                ballByBall = await asyncFilter(global.tblCommentaryBallByBall, item => item?.commentaryId == c.commentaryId);
+                wickets = await asyncFilter(global.tblCommentaryWicket, item => item?.commentaryId == c.commentaryId);
+                partnerships = await asyncFilter(global.tblCommentaryPartnership, item => item?.commentaryId == c.commentaryId);
+                marketOddsBallByBall = await asyncFilter(global.tblMarketOddsBallByBall, item => item?.commentaryId == c.commentaryId) || [];
+
             }
 
                 try {
