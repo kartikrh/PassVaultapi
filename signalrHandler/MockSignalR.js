@@ -1424,7 +1424,8 @@ const updateMarketRunnerDataOnSocket = async (message) => {
 
         if (
             global?.clientSocketIo !== undefined &&
-            global?.clientSocketIo.length > 0
+            global?.clientSocketIo.length > 0 &&
+            runnerValues.length > 0
         ) {
             global.clientSocketIo.forEach((socket) => {
                 socket.client.emit("updateRunnerData", runnerValues);
