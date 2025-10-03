@@ -2500,18 +2500,18 @@ const deleteCommentaryService = async (request, fastify) => {
     await netRunRateRe_calculationService(request, fastify);
   }
 
-  for (const p of playerIds) {
-    const request = {
-      body: {
-        playerId: p,
-        matchTypeId: matchTypeIds,
-      },
-    };
-    if (request.body.matchTypeId.length > 0) {
-      await calculationOfCommPlayerBatHistService(request, fastify);
-      await calculationOfCommPlayerBowlHistService(request, fastify);
-    }
-  }
+  // for (const p of playerIds) {
+  //   const request = {
+  //     body: {
+  //       playerId: p,
+  //       matchTypeId: matchTypeIds,
+  //     },
+  //   };
+  //   if (request.body.matchTypeId.length > 0) {
+  //     await calculationOfCommPlayerBatHistService(request, fastify);
+  //     await calculationOfCommPlayerBowlHistService(request, fastify);
+  //   }
+  // }
 
   callClientAPI(
     {
@@ -13006,16 +13006,16 @@ const deleteCommentaryHistoryService = async (request, fastify) => {
     await netRunRateRe_calculationService(request, fastify);
   }
 
-  for (const p of playerIds) {
-    const request = {
-      body: {
-        playerId: p,
-        matchTypeId: matchTypeIds,
-      },
-    };
-    await calculationOfCommPlayerBatHistService(request, fastify);
-    await calculationOfCommPlayerBowlHistService(request, fastify);
-  }
+  // for (const p of playerIds) {
+  //   const request = {
+  //     body: {
+  //       playerId: p,
+  //       matchTypeId: matchTypeIds,
+  //     },
+  //   };
+  //   await calculationOfCommPlayerBatHistService(request, fastify);
+  //   await calculationOfCommPlayerBowlHistService(request, fastify);
+  // }
 
   callClientAPI(
     {
