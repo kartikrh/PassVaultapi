@@ -649,61 +649,58 @@ const importTournamentTeamPointFromEntitySportService = async (request, fastify)
 
     const checkTournamentTeamPlayers = global.tblTournamentTeamPlayers.filter(item => item.competitionId === checkCompetition?.competitionId);
 
-    const checkTournamentTypeGroup = result?.rounds.every(item => item.type === "group") && result?.standing?.standings.length > 0;
     for (let team of result?.teams) {
-      if (checkTournamentTypeGroup) {
-        const highestOrder = Math.max(...result?.rounds.map(group => group.order));
-        const checkTeam = global.tblTeams.find(item => item.tpId === team?.tid);
-        if (checkTeam) {
-          const teamPlayers = await getAllPlayersByTeamIdQuery(checkTeam?.teamId, fastify, request);
-          const tournamentTeamPlayers = checkTournamentTeamPlayers.filter(item => item.teamId === checkTeam?.teamId);
-          const tournamentTeamPlayerIds = new Set(tournamentTeamPlayers.map(p => p.playerId));
-          const missingPlayerIds = teamPlayers.filter(p => !tournamentTeamPlayerIds.has(p.playerId)).map(p => p.playerId);
-          for (const mp of missingPlayerIds) {
-            const checkTournamentTeamPlayersById = checkTournamentTeamPlayers.find(item => item.playerId === mp);
-            if (checkTournamentTeamPlayersById) {
-              if (checkTournamentTeamPlayersById.teamId !== checkTeam.teamId) {
-                await deleteTournamentTeamPlayersQuery({
-                  data: [checkTournamentTeamPlayersById.id]
-                }, request, fastify);
-                global.tblTournamentTeamPlayers = global.tblTournamentTeamPlayers.filter(item => item.id !== checkTournamentTeamPlayers.id);
+      const highestOrder = Math.max(...result?.rounds.map(group => group.order));
+      const checkTeam = global.tblTeams.find(item => item.tpId === team?.tid);
+      if (checkTeam) {
+        const teamPlayers = await getAllPlayersByTeamIdQuery(checkTeam?.teamId, fastify, request);
+        const tournamentTeamPlayers = checkTournamentTeamPlayers.filter(item => item.teamId === checkTeam?.teamId);
+        const tournamentTeamPlayerIds = new Set(tournamentTeamPlayers.map(p => p.playerId));
+        const missingPlayerIds = teamPlayers.filter(p => !tournamentTeamPlayerIds.has(p.playerId)).map(p => p.playerId);
+        for (const mp of missingPlayerIds) {
+          const checkTournamentTeamPlayersById = checkTournamentTeamPlayers.find(item => item.playerId === mp);
+          if (checkTournamentTeamPlayersById) {
+            if (checkTournamentTeamPlayersById.teamId !== checkTeam.teamId) {
+              await deleteTournamentTeamPlayersQuery({
+                data: [checkTournamentTeamPlayersById.id]
+              }, request, fastify);
+              global.tblTournamentTeamPlayers = global.tblTournamentTeamPlayers.filter(item => item.id !== checkTournamentTeamPlayers.id);
 
-                const data = {
-                  teamId: checkTeam.teamId,
-                  competitionId: checkCompetition?.competitionId,
-                  playerId: mp,
-                  playerName: checkTournamentTeamPlayersById?.playerName,
-                  tpId: checkTournamentTeamPlayersById?.tpId || null,
-                  userId: request.userTokenInfo.WrUserId,
-                }
-
-                const insertTournamentTeamPlayer = await insertTournamentTeamPlayersQuery(data, request, fastify);
-                global.tblTournamentTeamPlayers.push(insertTournamentTeamPlayer[0])
+              const data = {
+                teamId: checkTeam.teamId,
+                competitionId: checkCompetition?.competitionId,
+                playerId: mp,
+                playerName: checkTournamentTeamPlayersById?.playerName,
+                tpId: checkTournamentTeamPlayersById?.tpId || null,
+                userId: request.userTokenInfo.WrUserId,
               }
+
+              const insertTournamentTeamPlayer = await insertTournamentTeamPlayersQuery(data, request, fastify);
+              global.tblTournamentTeamPlayers.push(insertTournamentTeamPlayer[0])
             }
           }
-          const groupData = extractGroupDataFromArray(result?.standing?.standings, team?.tid);
-          for (let gd of groupData) {
-            const checkTournamentTeamPoint = alltournamentTeamPoints.find(item => item.competitionId === checkCompetition?.competitionId && item.teamId === checkTeam?.teamId && item.groupId === gd.groupId);
-            if (checkTournamentTeamPoint) {
-              const updateTournamentTeamPointData = {
-                ...checkTournamentTeamPoint,
-                ...gd,
-                isActive: highestOrder === gd.groupId ? true : (gd.position === teamRemarkType.Q ? false : true)
-              }
-              await updateTournamentTeamPointsQuery(updateTournamentTeamPointData, fastify, request);
-            } else {
-              const data = {
-                groupId: 1,
-                groupName: null,
-                teamId: checkTeam?.teamId,
-                competitionId: checkCompetition?.competitionId,
-                tpId: checkTeam?.tpId || null,
-                isActive: highestOrder === gd.groupId ? true : (gd.position === teamRemarkType.Q ? false : true),
-                ...gd
-              }
-              await insertTournamentTeamPointsQuery(data, fastify, request);
+        }
+        const groupData = extractGroupDataFromArray(result?.standing?.standings, team?.tid);
+        for (let gd of groupData) {
+          const checkTournamentTeamPoint = alltournamentTeamPoints.find(item => item.competitionId === checkCompetition?.competitionId && item.teamId === checkTeam?.teamId && item.groupId === gd.groupId);
+          if (checkTournamentTeamPoint) {
+            const updateTournamentTeamPointData = {
+              ...checkTournamentTeamPoint,
+              ...gd,
+              isActive: highestOrder === gd.groupId ? true : (gd.position === teamRemarkType.Q ? false : true)
             }
+            await updateTournamentTeamPointsQuery(updateTournamentTeamPointData, fastify, request);
+          } else {
+            const data = {
+              groupId: 1,
+              groupName: null,
+              teamId: checkTeam?.teamId,
+              competitionId: checkCompetition?.competitionId,
+              tpId: checkTeam?.tpId || null,
+              isActive: highestOrder === gd.groupId ? true : (gd.position === teamRemarkType.Q ? false : true),
+              ...gd
+            }
+            await insertTournamentTeamPointsQuery(data, fastify, request);
           }
         }
       }
