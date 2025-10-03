@@ -16,13 +16,14 @@ const {
   upStatusQuery,
   getMatchTypeTemplateByCompetitionIdQuery,
 } = require("../repository/TableCompitition");
-const {storeImageOnServer, removeImageFromServer, generateImageName } = require("../utilities/Images");
-const { PROJECT_NAME } = require("../utilities/configConstants");
+const {storeImageOnServer, removeImageFromServer, generateImageName, getImageFromUrl } = require("../utilities/Images");
+const { PROJECT_NAME, ENTITYDEFAULTTEAMIMG, ENTITYDEFAULTTEAMIMGPATH, ENTITYDEFAULTJERSEYIMG, ENTITYDEFAULTJERSEYIMGPATH } = require("../utilities/configConstants");
 const {ImgModuleConfig} = require("../utilities/imageConstant");
-const { APIEndpointModuleType, ServiceType, callClientAPI, compStatus, callCardCricket } = require("../utilities");
+const { APIEndpointModuleType, ServiceType, callClientAPI, compStatus, callCardCricket, callEntitySportAPI, EntityEnums, EventType, CompetitionType } = require("../utilities");
 const { getCommentariesResultQuery, getAllCommByCompIdQuery } = require("../repository/TableCommentary")
 const { deleteTournamentTeamPlayersByCompIdQuery } = require("../repository/TableTournamentsTeamPlayers");
 const { deleteTournamentTeamPointsByCompIdQuery } = require("../repository/TableTournmentTeamPoints");
+const { insertTeamQuery, updateTeamQuery } = require("../repository/TableTeams");
 
 // const allCompetitionService = async (request) => {
 //   const { isActive, isTrending, eventTypeId, matchTypeId, isMen, type } = request.body;
@@ -857,6 +858,89 @@ const upCompStatusService = async (request, fastify) => {
   
   return `Competition status updated successfully`;
 };
+
+const competitionImportService = async (data, fastify, request) => {
+  const entitySportCompetition = await callEntitySportAPI(
+    {
+      serviceType: ServiceType.entitySport,
+      moduleType: APIEndpointModuleType.getCompetitionInfo,
+      data: {
+        module: "competition",
+        type: "get",
+        cid: data.cid
+      }
+    },
+    request,
+    fastify
+  )
+
+  let entitySportCompetitionResponse = entitySportCompetition?.data?.result;
+  console.log("🚀 ~ competitionImportService ~ entitySportCompetitionResponse:", entitySportCompetitionResponse)
+  if (!entitySportCompetitionResponse || entitySportCompetitionResponse?.status !== "ok") {
+    throw new Error("Invalid response from Entit-Sport API");
+  }
+
+  entitySportCompetitionResponse = entitySportCompetitionResponse?.response;
+
+  let checkCompetition = global.tblCompetitions.find(item => item.tpId === data.cid || item.competition.toLowerCase() === entitySportCompetitionResponse.title.replace(/'/g, "''").toLowerCase());
+  console.log("🚀 ~ competitionImportService ~ checkCompetition:", checkCompetition);
+  const eventType = global.tblEventTypes.find((et) => et.eventType.toLowerCase() === 'Cricket'.toLowerCase());
+  const matchType = global.tblMatchTypes.find(item => item.entityEnum === EntityEnums[entitySportCompetitionResponse?.game_format.toUpperCase()]);
+
+  const pythonIdData = global.tblPythonAPI.find(item => item.isDefault === true && item.isActive === true);
+  if (!pythonIdData) {
+    console.error("Default Python API not found");
+  }
+  const competitionData = {
+    competition: entitySportCompetitionResponse?.title,
+    eventTypeId: eventType?.eventTypeId || EventType['Cricket'],
+    refId: entitySportCompetitionResponse?.cid,
+    isActive: true,
+    isEventSnap: true,
+    matchTypeId: matchType?.matchTypeId || null,
+    drsCount: 2,
+    isMen: entitySportCompetitionResponse?.teams[0]?.sex == 'male' ? true : false,
+    type: CompetitionType[entitySportCompetitionResponse?.category.toUpperCase()],
+    commStatus: compStatus[entitySportCompetitionResponse?.status], // 1: fixture, 2: live, 3: result
+    startDate: entitySportCompetitionResponse?.datestart,
+    endDate: entitySportCompetitionResponse?.dateend,
+    tpId: entitySportCompetitionResponse?.cid,
+    pythonId: pythonIdData?.id || null,
+  }
+
+  if (!checkCompetition) {
+    const insertCompetition = await insertCompetitionQuery({
+      ...request,
+      userTokenInfo: {
+        WrUserId: -2
+      },
+      body: competitionData
+    }, fastify);
+    global.tblCompetitions.push(insertCompetition);
+    checkCompetition = insertCompetition;
+  } else {
+    const updateCompetitionData = {
+      ...checkCompetition,
+      ...competitionData
+    };
+
+    const updatedCompetition = await updateCompititionQuery(updateCompetitionData, fastify, {
+      ...request,
+      userTokenInfo: {
+        WrUserId: -2
+      }
+    });
+    const index = global.tblCompetitions.findIndex(item => item.competitionId === checkCompetition.competitionId);
+
+    global.tblCompetitions[index] = updatedCompetition[0];
+    checkCompetition = updatedCompetition[0];
+  }
+
+  let checkTournamentTypeGroup = entitySportCompetitionResponse?.rounds.every(item => item.type === "group") && entitySportCompetitionResponse?.standing?.standings.length > 0;
+
+  return checkCompetition;
+}
+
 module.exports = {
   allCompetitionService,
   competitionByIdService,
@@ -876,4 +960,5 @@ module.exports = {
   isVirtualCompetitionService,
   upCompStatusService,
   getMatchTypeTemplateByCompetitionIdService,
+  competitionImportService
 };

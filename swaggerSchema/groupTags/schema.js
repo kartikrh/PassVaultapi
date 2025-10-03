@@ -1634,6 +1634,20 @@ const Teams = {
       },
     },
   },
+  importUpdate: {
+    schema: {
+      tags: ["Teams"],
+      security: [{ bearerAuth: [] }],
+      description: "Update Teams from entity sport",
+      body: {
+        type: "object",
+        properties: {
+          teamIds: { type: "array" }
+        },
+        required: ["teamIds"],
+      },
+    },
+  },
 };
 
 const PaneltyRuns = {
@@ -1890,6 +1904,20 @@ const Player = {
           isActive: { type: "boolean" },
         },
         required: ["playerId", "isActive"],
+      },
+    },
+  },
+  importUpdate: {
+    schema: {
+      tags: ["Player"],
+      security: [{ bearerAuth: [] }],
+      description: "Update Player from entity sport",
+      body: {
+        type: "object",
+        properties: {
+          playerIds: { type: "array" }
+        },
+        required: ["playerIds"],
       },
     },
   },

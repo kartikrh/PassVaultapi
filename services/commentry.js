@@ -112,6 +112,10 @@ const {
   MarketTypeId,
   EventName,
   exchangeMatchinfoAPI,
+  EventType,
+  EntityEnums,
+  parseUmpires,
+  callEntitySportAPI,
 } = require("../utilities");
 const {
   getAllPlayersByTeamIdQuery,
@@ -192,6 +196,8 @@ const {
 } = require("../repository/TablePitchCondition");
 const { PlayerType } = require("../utilities/entityConst");
 const { insertPlayerEntityQuery, insertPlayerQuery, updateExchangePlayerQuery } = require("../repository/TablePlayer");
+const { insertCountryCodeQuery } = require("../repository/TableCountryCodes");
+const { insertVenueQuery, updateVenueQuery } = require("../repository/TableVenue");
 
 const allCommentaryService = async (request, fastify) => {
   // return global.tblCommentaries;
@@ -22858,6 +22864,167 @@ const weatherAndPitchDataService = async (commentaryId) => {
     clouds: weatherDetails?.clouds || null,
   }
 } 
+
+const matchImportService = async (data, fastify, request = null) => {
+  const checkCommentary = global.tblCommentaries.find(item => item.tpId === data.mid);
+  if (checkCommentary) return checkCommentary;
+
+  const entitySportMatch = await callEntitySportAPI(
+    {
+      serviceType: ServiceType.entitySport,
+      moduleType: APIEndpointModuleType.getMatchByIdFromEntity,
+      data: {
+        module: "match",
+        type: "get",
+        mid: data.mid
+      }
+    },
+    request,
+    fastify
+  )
+
+  let entitySportMatchResponse = entitySportMatch?.data?.result;
+  if (!entitySportMatchResponse || entitySportMatchResponse?.status !== "ok") {
+    throw new Error("Invalid response from Entit-Sport API");
+  }
+
+  entitySportMatchResponse = entitySportMatchResponse?.response;
+  const matchInfoResponse = entitySportMatchResponse?.match_info;
+
+  const checkCompetition = global.tblCompetitions.find(item => item.tpId === matchInfoResponse?.competition?.cid);
+
+  const pythonIdData = global.tblPythonAPI.find(item => item.isDefault === true && item.isActive === true);
+  if (!pythonIdData) {
+    console.error("Default Python API not found");
+  }
+  const eventType = global.tblEventTypes.find((et) => et.eventType.toLowerCase() === 'Cricket'.toLowerCase());
+  const matchType = global.tblMatchTypes.find(item => item.entityEnum === EntityEnums[matchInfoResponse?.competition?.match_format.toUpperCase()]);
+  let checkCountry, checkVenue;
+  if (matchInfoResponse?.venue?.country && matchInfoResponse?.venue?.country !== "") {
+    const checkCountry = global.tblCountryCodes.find(item => item.countryName === matchInfoResponse?.venue?.country);
+    if (!checkCountry) {
+      const countryData = {
+        countryName: matchInfoResponse?.venue?.country || null,
+        isActive: true,
+      };
+      const insertCountryCode = await insertCountryCodeQuery(countryData, fastify, request);
+      global.tblCountryCodes.push(insertCountryCode);
+    }
+
+    let checkVenue = global.tblVenues.find(item => item.countryId === checkCountry?.id && item.city === matchInfoResponse?.venue?.location && item.name === matchInfoResponse?.venue?.name);
+    if (!checkVenue) {
+      const venueData = {
+        countryId: checkCountry?.id,
+        city: matchInfoResponse?.venue?.location || null,
+        name: matchInfoResponse?.venue?.name || null,
+        tpId: matchInfoResponse?.venue?.venue_id || null,
+        isActive: true,
+        capacity: matchInfoResponse?.venue?.capacity || null,
+      };
+
+      checkVenue = await insertVenueQuery(venueData, fastify, request);
+      global.tblVenues.push(checkVenue);
+    } else if (checkVenue?.tpId === null || !checkVenue?.tpId) {
+      const venueData = {
+        tpId: matchInfoResponse?.venue?.venue_id || null,
+        venueId: checkVenue.id,
+      };
+
+      checkVenue = await updateVenueQuery(venueData, fastify, request);
+      const index = global.tblVenues.findIndex(
+        (item) => item.id === checkVenue.id
+      );
+
+      global.tblVenues[index] = checkVenue;
+    }
+  }
+
+  let onfieldUmpires = null, thirdUmpire = null;
+  if (matchInfoResponse?.umpires) {
+    onfieldUmpires = parseUmpires(matchInfoResponse?.umpires).onFieldUmpires.join(', ') || null;
+    thirdUmpire = parseUmpires(matchInfoResponse?.umpires).thirdUmpire || null;
+  }
+
+  let commentaryData = {
+    eventTypeId: eventType?.eventTypeId || EventType['Cricket'],
+    matchTypeId: matchType?.matchTypeId,
+    competitionId: checkCompetition?.competitionId,
+    eventId: null,
+    eventDate: matchInfoResponse?.date_start,
+    eventName: matchInfoResponse?.title,
+    eventRefId: null,
+    team1Id: teamIdfromTpId[matchInfoResponse?.teama?.team_id],
+    team2Id: teamIdfromTpId[matchInfoResponse?.teamb?.team_id],
+    location: checkVenue?.name && checkVenue?.countryName ? `${checkVenue.name}, ${checkVenue.countryName}` : null,
+    weather: null,
+    pitchCracks: null,
+    displayStatus: matchInfoResponse?.status_note,
+    isClientShow: false,
+    commentaryStatus: 1,
+    tpId: entitySportMatchResponse?.match_id,
+    createdBy: -2,
+    marketId: null,
+    CurrentInnings: -1,
+    systemPlayerCount: null,
+    isPlayersShow: false,
+    isPredictMarket: false,
+    delay: 0,
+    isActive: true,
+    commentaryCloseTime: null,
+    isTeamPredictionOn: true,
+    lineRatio: null,
+    isClientShow: false,
+    ballDelay: null,
+    overDelay: null,
+    inningDelay: null,
+    tossDelay: null,
+    difficulty: null,
+    eventNo: matchInfoResponse?.match_number,
+    isVirtual: false,
+    session: 1,
+    pythonId: pythonIdData?.id,
+    pythonURI: pythonIdData?.URI,
+    isMatchDraw: false,
+    isWheelShow: false,
+    shotType: false,
+    tossRmk: false,
+    cardType: null,
+    matchReferee: matchInfoResponse?.referee || null,
+    onfieldUmpires,
+    thirdUmpire,
+    isTest: matchInfoResponse?.status_str.includes('test') ? true : false,
+    choseTo: null,
+    commentaryResult: null,
+    systemPlayerCount: null,
+    cancelTime: null,
+    tossWonBy: null,
+    rmk: null,
+    winRmk: null,
+    isSignalROn: false,
+    winnerId: null,
+    winnerName: null,
+    isEventStart: false,
+    isCountInPoint: checkCompetition?.isPointTable,
+    testDayCount: null,
+    target: null,
+    pitchHardness: null,
+    pitchWareSpeed: null,
+    pitchType: null,
+    lawnStriping: null,
+    pitchAge: null,
+    countryId: checkCountry?.id || null,
+    venueId: checkVenue?.id || null
+  }
+
+  const insertCommentary = await insertCommentaryQuery({
+    ...request,
+    body: commentaryData
+  }, fastify);
+
+  global.tblCommentaries.push(insertCommentary);
+  return insertCommentary;
+}
+
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -22973,4 +23140,5 @@ module.exports = {
   syncEntitySportCommentaryService,
   weatherAndPitchDataService,
   bowlingTypeChangeService,
+  matchImportService
 };
