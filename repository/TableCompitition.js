@@ -194,36 +194,70 @@ const deleteCompetitionQuery = async (request, fastify) => {
 const updateCompititionQuery = async (data, fastify, request) => {
   try {
     return await fastify.db.query(
-      `
-      update "tblCompetitions" set
-        "wrCompetition" = $1,
-        "wrEventTypeId" = $2,
-        "wrRefID" = $3,
-        "wrImage" = $4,
-        "wrIsActive" = $5,
-        "wrModifyBy" = $6,
-        "wrModifyDate" = now(),
-        "wrIsTrending" = $7,
-        "wrIsEventSnap" = $8,
-        "wrIsPointTable" = $9,
-        "wrMatchTypeId" = $11,
-        "wrWinPoint" = $12,
-        "wrTiePoint" = $13,
-        "wrCancelPoint" = $14,
-        "wrLossPoint" = $15,
-        "wrDrsCount" = $16,
-        "wrImagePath" = $17,
-        "wrIsMen" = $18,
-        "wrType" = $19,
-        "wrIsVirtual" = $20,
-        "wrStatus" = $21,
-        "wrStartDate" = $22,
-        "wrEndDate" = $23,
-        "wrTpId" = $24,
-        "wrPythonId" = $25,
-        "wrCountryId" = $26
+      `WITH update_data AS (
+        update "tblCompetitions" set
+          "wrCompetition" = $1,
+          "wrEventTypeId" = $2,
+          "wrRefID" = $3,
+          "wrImage" = $4,
+          "wrIsActive" = $5,
+          "wrModifyBy" = $6,
+          "wrModifyDate" = now(),
+          "wrIsTrending" = $7,
+          "wrIsEventSnap" = $8,
+          "wrIsPointTable" = $9,
+          "wrMatchTypeId" = $11,
+          "wrWinPoint" = $12,
+          "wrTiePoint" = $13,
+          "wrCancelPoint" = $14,
+          "wrLossPoint" = $15,
+          "wrDrsCount" = $16,
+          "wrImagePath" = $17,
+          "wrIsMen" = $18,
+          "wrType" = $19,
+          "wrIsVirtual" = $20,
+          "wrStatus" = $21,
+          "wrStartDate" = $22,
+          "wrEndDate" = $23,
+          "wrTpId" = $24,
+          "wrPythonId" = $25,
+          "wrCountryId" = $26
         where "wrCompetitionId" = $10
-        `,
+        returning *
+      )
+      select 
+        "wrCompetitionId" as "competitionId",
+        "wrCompetition" as "competition",
+        tc."wrEventTypeId" as "eventTypeId",
+        "wrEventType" as "eventType",
+        tc."wrRefID" as "refId",
+        tc."wrImage" as "image",
+        tc."wrIsActive" as "isActive",
+        tc."wrDisplayOrder" as "displayOrder",
+        tc."wrIsTrending" as "isTrending",
+        tc."wrIsEventSnap" as "isEventSnap",
+        tc."wrIsPointTable" as "isPointTable",
+        tc."wrMatchTypeId" as "matchTypeId",
+        tc."wrWinPoint" as "winPoint",
+        tc."wrTiePoint" as "tiePoint",
+        tc."wrCancelPoint" as "cancelPoint",
+        tc."wrLossPoint" as "lossPoint",
+        tc."wrDrsCount" as "drsCount",
+        tc."wrImagePath" as "imagePath",
+        tc."wrIsMen" as "isMen",
+        tc."wrType" as "type",
+        tc."wrIsVirtual" as "isVirtual",
+        tc."wrStatus" as "commStatus",
+        tc."wrStartDate" as "startDate",
+        tc."wrEndDate" as "endDate",
+        tc."wrTpId" as "tpId",
+        tc."wrCountryId" as "countryId",
+        tc."wrPythonId" as "pythonId",
+        tpa."wrDeveloperName" as "developerName"
+      from "update_data" tc
+      inner join "tblEventTypes" tev on tc."wrEventTypeId" = tev."wrEventTypeId"
+      LEFT JOIN "tblPythonAPI" tpa on tc."wrPythonId" = tpa."wrId"
+      `,
       {
         bind: [
           data.competition,

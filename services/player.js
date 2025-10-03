@@ -20,6 +20,7 @@ const {
   storeImageOnServer,
   generateImageName,
   removeImageFromServer,
+  getImageFromUrl,
 } = require("../utilities/Images");
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
@@ -28,7 +29,7 @@ const { deleteAwardsByPlayerIdQuery } = require("../repository/TableCommentaryAw
 const { bowlingStyleChangeOnCommPlayersQuery } = require("../repository/TableCommentary");
 const { mergeAndSaveImage } = require("../utilities/imageMerge");
 const configConstants = require("../utilities/configConstants");
-const { trimTextData, callEntitySportAPI, ServiceType, APIEndpointModuleType, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, RefType } = require("../utilities/index");
+const { trimTextData, callEntitySportAPI, ServiceType, APIEndpointModuleType, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, RefType, EventType } = require("../utilities/index");
 const { getAutoImportDataByIdQuery, insertAutoImportDataQuery } = require("../repository/TableAutoImportData");
 const { updateAutoImportDataService } = require("./autoImportData");
 
@@ -884,6 +885,90 @@ const UpdatePlayerFromEntityService = async (request, fastify) => {
   return "No update found in player data";
 };
 
+const playerImportService = async (data, fastify, request = null) => {
+  const entitySportPlayer = await callEntitySportAPI(
+    {
+      serviceType: ServiceType.entitySport,
+      moduleType: APIEndpointModuleType.getPlayerDataByIdFromEntity,
+      data: {
+        module: "player",
+        type: "get",
+        pid: data.pid
+      }
+    },
+    request,
+    fastify
+  )
+
+  let entitySportPlayerResponse = entitySportPlayer?.data?.result;
+  if (!entitySportPlayerResponse || entitySportPlayerResponse?.status !== "ok") {
+    throw new Error("Invalid response from Entit-Sport API");
+  }
+
+  entitySportPlayerResponse = entitySportPlayerResponse?.response?.player;
+
+  let playerData = {
+    eventTypeId: EventType['Cricket'],
+    playerTypeId: EntityPlayerType[entitySportPlayerResponse?.playing_role],
+    playerName: entitySportPlayerResponse?.title,
+    displayName: entitySportPlayerResponse?.short_name,
+    country: entitySportPlayerResponse?.nationality,
+    isActive: true,
+    isKipper: entitySportPlayerResponse?.playing_role === 'wk' ? true : false,
+    isLeftHandedBatting: !entitySportPlayerResponse.batting_style.includes('Right'),
+    isLeftArmFielding: !entitySportPlayerResponse.bowling_style.includes('Right'),
+    userId: -2,
+    batsmanAverage: 0.0,
+    batsmanStrikeRate: 0.0,
+    bowlerAverage: 0.0,
+    bowlerEconomy: 0.0,
+    tpId: entitySportPlayerResponse?.pid || null,
+    bowlingStyleId: entitySportPlayerResponse.bowling_type ? EntityBowlingStyleType[entitySportPlayerResponse.bowling_type.toLowerCase()] : null,
+    bowlingTypeId: extractBowlingStyle(entitySportPlayerResponse.bowling_type, entitySportPlayerResponse.bowling_style)
+  };
+  const checkPlayer = global.tblPlayers.find(item => item.tpId === entitySportPlayerResponse?.pid || item.playerName.toLowerCase() === entitySportPlayerResponse.title.replace(/'/g, "''").toLowerCase());
+  if (!checkPlayer) {
+    let imageUrl = entitySportPlayerResponse?.logo_url;
+    if (!imageUrl) {
+      imageUrl = {
+        fullPath: global.tblConfigs.find(item => item.key === configConstants.ENTITYDEFAULTPLAYERIMG)?.value || null,
+        imagePath: global.tblConfigs.find(item => item.key === configConstants.ENTITYDEFAULTPLAYERIMGPATH)?.value || null
+      }
+    } else {
+      const getImageDataFromUrl = await getImageFromUrl({
+        type: ImgModuleConfig.Players.type,
+        imageUrl
+      });
+
+      if (getImageDataFromUrl && getImageDataFromUrl.fullPath) {
+        imageUrl = getImageDataFromUrl
+      }
+    }
+
+    const newPlayerData = {
+      ...playerData,
+      image: imageUrl.fullPath,
+      imagePath: imageUrl.imagePath,
+    };
+
+    const insertPlayer = await insertPlayerQuery(newPlayerData, fastify, request);
+    global.tblPlayers.push(insertPlayer);
+    playerData = insertPlayer;
+  } else {
+    const updatePlayerData = {
+      ...checkPlayer,
+      ...playerData
+    };
+
+    const updatedPlayerData = await updatePlayerQuery(updatePlayerData, fastify, request);
+    const index = global.tblPlayers.findIndex(item => item.playerId === checkPlayer.playerId);
+
+    global.tblPlayers[index] = updatedPlayerData[0];
+    playerData = updatedPlayerData[0];
+  }
+  return playerData;
+}
+
 module.exports = {
   allPlayerService,
   playerByIdService,
@@ -899,5 +984,6 @@ module.exports = {
   setTeamPlayerImgService,
   getTeamListPlayerIdService,
   activeInactivePlayerService,
-  UpdatePlayerFromEntityService
+  UpdatePlayerFromEntityService,
+  playerImportService
 };

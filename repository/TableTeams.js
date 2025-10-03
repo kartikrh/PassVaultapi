@@ -142,9 +142,29 @@ const insertTeamQuery = async (data, fastify, request) => {
 const updateTeamQuery = async (data, fastify, request) => {
   try {
     return await fastify.db.query(
-      `UPDATE "tblTeams" SET "wrTeamName" = $1, "wrTeamShortName" = $2,"wrImage" = $3, "wrEventTypeId" = $4, "wrModifyBy" = $5, 
-      "wrModifyDate" = $6,"WrTeamJersey"=$7, "wrTeamColor" = $9, "wrBackgroundColor" = $10, "wrImagePath" = $11, "wrJerseyPath" = $12, "wrTpId" = $13, "wrCountryId" = $14
-        WHERE "wrTeamId" = $8`,
+      `WITH update_data AS (
+        UPDATE "tblTeams" SET "wrTeamName" = $1, "wrTeamShortName" = $2,"wrImage" = $3, "wrEventTypeId" = $4, "wrModifyBy" = $5, 
+          "wrModifyDate" = $6,"WrTeamJersey"=$7, "wrTeamColor" = $9, "wrBackgroundColor" = $10, "wrImagePath" = $11, "wrJerseyPath" = $12, "wrTpId" = $13, "wrCountryId" = $14
+        WHERE "wrTeamId" = $8
+        returning *
+      )
+      SELECT 
+        "wrTeamId" as "teamId",
+        tt."wrEventTypeId" as "eventTypeId",
+        "wrTeamName" as "teamName",
+        "wrTeamShortName" as "teamShortName",
+        "WrTeamJersey" as "jersey",
+        tt."wrImage" as "image",
+        "wrEventType" AS "eventType",
+        "wrTeamColor" AS "teamColor",
+        "wrBackgroundColor" AS "backgroundColor",
+        tt."wrImagePath" AS "imagePath",
+        tt."wrJerseyPath" AS "jerseyPath",
+        tt."wrTpId" AS "tpId",
+        tt."wrCountryId" AS "countryId"
+      FROM "update_data" tt 
+      INNER JOIN "tblEventTypes" evt ON tt."wrEventTypeId" = evt."wrEventTypeId"
+      `,
       {
         bind: [
           data.teamName,
@@ -162,7 +182,7 @@ const updateTeamQuery = async (data, fastify, request) => {
           data.tpId,
           data.countryId,
         ],
-        type: fastify.db.QueryTypes.UPDATE,
+        type: fastify.db.QueryTypes.SELECT,
       }
     );
   } catch (err) {
@@ -205,6 +225,7 @@ const getAllPlayersByTeamIdQuery = async (teamId, fastify, request) => {
     return await fastify.db.query(
       `SELECT      
       "wrRefPlayerId" as "playerId",
+      pl."wrTpId" as "tpId",
       "wrPlayerName" as "playerName",
       "wrHomeTeam" as "homeTeam",
       "wrBatsmanAverage" as "batsmanAverage",

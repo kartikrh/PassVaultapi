@@ -657,7 +657,8 @@ const APIEndpointModuleType = {
   getSocketCount: 12,
   getCompetitionInfo: 13,
   getTeamDataByIdFromEntity: 14,
-  getPlayerDataByIdFromEntity: 15
+  getPlayerDataByIdFromEntity: 15,
+  getMatchByIdFromEntity: 16
 }
 const NotificationSendType = {
   all : 1,
@@ -1190,7 +1191,9 @@ const callEntitySportAPI = async (data, request, fastify) =>{
         item.isActive == true)
       if(endPoint){
         let url = `${ser.api}${endPoint.endPoint}`;
+        console.log("🚀 ~ callEntitySportAPI ~ url:", url)
         let dataTosend = data.data;
+        console.log("🚀 ~ callEntitySportAPI ~ dataTosend:", dataTosend)
         const result = await axios.post(url, {
           ...dataTosend
         });
@@ -1241,10 +1244,13 @@ const EntityEnums = {
     TB10: 20
 }
 const compStatus = {
-  "upcoming" : 1,
-  "started" : 2,
-  "completed" : 3,
-  "stopped" : 4,
+  "upcoming": 1,
+  "started": 2,
+  "completed": 3,
+  "stopped": 4,
+  "fixture": 1,
+  "live": 2,
+  "result": 3,
 }
 const callCardCricket = async (data ,request , fastify) =>{
   try {
@@ -1677,6 +1683,43 @@ const extractBowlingStyle = (bowlingType, bowlingStyle) => {
   return match?.bowlingTypeId || null;
 };
 
+const EventType = {
+   Cricket: 1,
+   Soccer: 2,
+}
+
+const parseUmpires = (umpiresString) => {
+    const umpires = [];
+    let current = '';
+    let level = 0;
+
+    for (const char of umpiresString) {
+        if (char === '(') level++;
+        else if (char === ')') level--;
+
+        if (char === ',' && level === 0) {
+            umpires.push(current.trim());
+            current = '';
+        } else {
+            current += char;
+        }
+    }
+    if (current) umpires.push(current.trim());
+
+    const onFieldUmpires = [];
+    let thirdUmpire = null;
+
+    for (const umpire of umpires) {
+        if (umpire.toLowerCase().includes('tv')) {
+            thirdUmpire = umpire;
+        } else if (onFieldUmpires.length < 2) {
+            onFieldUmpires.push(umpire);
+        }
+    }
+
+    return { onFieldUmpires, thirdUmpire };
+};
+
 module.exports = {
   ERROR_CODES,
   error,
@@ -1781,5 +1824,7 @@ module.exports = {
   extractGroupDataFromArray,
   EntityPlayerType,
   EntityBowlingStyleType,
-  extractBowlingStyle
+  extractBowlingStyle,
+  EventType,
+  parseUmpires
 };
