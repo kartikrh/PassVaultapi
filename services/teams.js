@@ -890,7 +890,7 @@ const teamImportService = async (data, fastify, request = null) => {
     }
   }
 
-  return teamData;
+  return checkTeam;
 }
 
 module.exports = {

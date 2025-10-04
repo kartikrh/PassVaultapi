@@ -72,10 +72,10 @@ const entitySportAutoImportProcess = async (fastify) => {
             if (result) return true;  // if you want to stop after first successful?
         }
 
-        // for (const match of grouped?.[RefType.Match.toString()] || []) {
-        //     const result = await processImport(match, matchImportService, 'mid');
-        //     if (result) return true;  // if you want to stop after first successful?
-        // }
+        for (const match of grouped?.[RefType.Match.toString()] || []) {
+            const result = await processImport(match, matchImportService, 'mid');
+            if (result) return true;  // if you want to stop after first successful?
+        }
 
         for (const player of grouped?.[RefType.Player.toString()] || []) {
             const result = await processImport(player, playerImportService, 'pid');
