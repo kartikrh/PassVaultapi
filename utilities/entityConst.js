@@ -6,9 +6,16 @@ const PlayerType = {
    bowl: 2,
    all: 4,
    wk: 3,
-   wkbat : 3
+   wkbat: 3
 }
+
+const nullTeamtpIds = [
+   127770,
+   127775
+]
+
 module.exports = {
-    entityConstant,
-    PlayerType
+   entityConstant,
+   PlayerType,
+   nullTeamtpIds
 }
