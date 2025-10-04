@@ -227,6 +227,8 @@ const getAllPlayersByTeamIdQuery = async (teamId, fastify, request) => {
       "wrRefPlayerId" as "playerId",
       pl."wrTpId" as "tpId",
       "wrPlayerName" as "playerName",
+      "wrPlayerOrder" as "playerOrder",
+      "wrTeamId" as "teamId",
       "wrHomeTeam" as "homeTeam",
       "wrBatsmanAverage" as "batsmanAverage",
       "wrBatsmanStrikeRate" as "batsmanStrikeRate",

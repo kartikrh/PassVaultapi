@@ -62,10 +62,10 @@ const entitySportAutoImportProcess = async (fastify) => {
             }
         };
 
-        // for (const competition of grouped?.[RefType.Competition.toString()] || []) {
-        //     const result = await processImport(competition, competitionImportService, 'cid');
-        //     if (result) return true;  // if you want to stop after first successful?
-        // }
+        for (const competition of grouped?.[RefType.Competition.toString()] || []) {
+            const result = await processImport(competition, competitionImportService, 'cid');
+            if (result) return true;  // if you want to stop after first successful?
+        }
 
         for (const team of grouped?.[RefType.Team.toString()] || []) {
             const result = await processImport(team, teamImportService, 'tid');
