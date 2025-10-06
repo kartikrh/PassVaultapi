@@ -22796,6 +22796,35 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
                 }
             });
         }
+        await commentaryLogger(
+            {
+                commentaryId: data.commentaryId,
+                requestBody: data,
+                response: response,
+                global: {
+                    partnership: global.tblCommentaryPartnership.filter(
+                        (item) => item?.commentaryId === data.commentaryId
+                    ),
+                },
+                extra: {
+                    ballByBall: global.tblCommentaryBallByBall.filter(
+                        (item) => item?.commentaryId === data.commentaryId
+                    ),
+                },
+                apiName: "/setEntityCom",
+                reqStartTime: startTime,
+            },
+            null,
+            fastify
+        ).catch((err) => {
+            console.log("commentary logger console", err);
+            errorLogger(
+                fastify,
+                err.message,
+                "ERROR --> services/commentary.js/syncEntitySportCommentaryService",
+                null
+            );
+        });
         
         // response.callPredictions = callPredictions;
         return response;
@@ -22817,7 +22846,7 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
                         (item) => item?.commentaryId === data.commentaryId
                     ),
                 },
-                apiName: "/saveDetails",
+                apiName: "/setEntityCom",
                 reqStartTime: startTime,
             },
             null,
