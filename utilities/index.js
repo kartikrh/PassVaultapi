@@ -712,7 +712,10 @@ const APIEndpointModuleType = {
   insertTeam: 10,
   insertPlayer: 11,
   getSocketCount: 12,
-  getCompetitionInfo: 13
+  getCompetitionInfo: 13,
+  getTeamDataByIdFromEntity: 14,
+  getPlayerDataByIdFromEntity: 15,
+  getMatchByIdFromEntity: 16
 }
 
 const NotificationSendType = {
@@ -1281,7 +1284,9 @@ const callEntitySportAPI = async (data, request, fastify) => {
       );
       if (endPoint) {
         let url = `${ser.api}${endPoint.endPoint}`;
+        console.log("🚀 ~ callEntitySportAPI ~ url:", url)
         let dataTosend = data.data;
+        console.log("🚀 ~ callEntitySportAPI ~ dataTosend:", dataTosend)
         const result = await axios.post(url, {
           ...dataTosend,
         });
@@ -1340,8 +1345,20 @@ const compStatus = {
   started: 2,
   completed: 3,
   stopped: 4,
+  "fixture": 1,
+  "live": 2,
+  "result": 3,
 };
-const callCardCricket = async (data, request, fastify) => {
+// const callCardCricket = async (data, request, fastify) => {
+//   "upcoming": 1,
+//   "started": 2,
+//   "completed": 3,
+//   "stopped": 4,
+//   "fixture": 1,
+//   "live": 2,
+//   "result": 3,
+// }
+const callCardCricket = async (data ,request , fastify) =>{
   try {
     // console.log("callCardCricket", data);
     // return true;
@@ -1880,6 +1897,71 @@ const extractGroupDataFromArray = (data, teamId) => {
   return groupData.sort((a, b) => a.groupId - b.groupId);
 }
 
+const EntityPlayerType = {
+  bat: 1,
+  bowl: 2,
+  all: 4,
+  wk: 3,
+  wkbat: 3
+}
+
+const EntityBowlingStyleType = {
+  pace: 1,
+  spin: 2
+}
+
+const extractBowlingStyle = (bowlingType, bowlingStyle) => {
+  if (!bowlingType || !bowlingStyle || global.tblBowlingTypes.length < 1) return null;
+
+  const normalizedStyle = bowlingStyle
+    .replace(/left arm |right arm /i, '')
+    .replace(/\s/g, '')
+    .toLowerCase();
+
+  const match = global.tblBowlingTypes.find(item =>
+    item.bowlingType.replace(/\s/g, '').toLowerCase() === normalizedStyle
+  );
+
+  return match?.bowlingTypeId || null;
+};
+
+const EventType = {
+   Cricket: 1,
+   Soccer: 2,
+}
+
+const parseUmpires = (umpiresString) => {
+    const umpires = [];
+    let current = '';
+    let level = 0;
+
+    for (const char of umpiresString) {
+        if (char === '(') level++;
+        else if (char === ')') level--;
+
+        if (char === ',' && level === 0) {
+            umpires.push(current.trim());
+            current = '';
+        } else {
+            current += char;
+        }
+    }
+    if (current) umpires.push(current.trim());
+
+    const onFieldUmpires = [];
+    let thirdUmpire = null;
+
+    for (const umpire of umpires) {
+        if (umpire.toLowerCase().includes('tv')) {
+            thirdUmpire = umpire;
+        } else if (onFieldUmpires.length < 2) {
+            onFieldUmpires.push(umpire);
+        }
+    }
+
+    return { onFieldUmpires, thirdUmpire };
+};
+
 module.exports = {
   ERROR_CODES,
   error,
@@ -1984,5 +2066,10 @@ module.exports = {
   inningStatus,
   EntityCommentaryStatus,
   teamRemarkType,
-  extractGroupDataFromArray
+  extractGroupDataFromArray,
+  EntityPlayerType,
+  EntityBowlingStyleType,
+  extractBowlingStyle,
+  EventType,
+  parseUmpires
 };

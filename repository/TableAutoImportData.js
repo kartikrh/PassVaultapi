@@ -1,7 +1,7 @@
 const { errorLogger } = require("../utilities/logger");
 const { getPagination } = require("../utilities");
 
-const getAllAutoImportDataQuery = async (request, fastify) => {
+const getAllAutoImportDataQuery = async (request, fastify, whereCondition = undefined) => {
     try {
         return await fastify.db.query(
             `SELECT 
@@ -15,7 +15,8 @@ const getAllAutoImportDataQuery = async (request, fastify) => {
                 "wrImportEndTime" as "importEndTime",
                 "wrCreatedBy" as "createdBy",
                 "wrCreateDate" as "createdDate"
-            FROM "tblAutoImportData";`,
+            FROM "tblAutoImportData"
+            ${whereCondition ? `WHERE ${whereCondition}` : ""}`,
             { type: fastify.db.QueryTypes.SELECT }
         );
     } catch (err) {
