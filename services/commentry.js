@@ -22163,7 +22163,7 @@ const updateStreamURLService = async (request, fastify) => {
   return "Commentary Updated successfully";
 };
 
-const syncEntitySportCommentaryService = async (data,fastify,request) => {
+const syncEntitySportCommentaryService = async (data,fastify,request = null) => {
     const startTime = new Date();
     try {
         let {
@@ -22223,7 +22223,7 @@ const syncEntitySportCommentaryService = async (data,fastify,request) => {
             statusToUpdate = commentaryDetails?.commentaryStatus;
         }
         // validate commentaryTeams
-        if (commentaryTeams.length >0) {
+        if (commentaryTeams && commentaryTeams.length >0) {
             commentaryTeams.forEach((team) => {
                 const index = global.tblCommentaryTeams.findIndex(
                     (item) =>
@@ -22646,7 +22646,7 @@ const syncEntitySportCommentaryService = async (data,fastify,request) => {
                 data: response.commentaryPlayers,
             });
         }
-        if (commentaryOvers.length > 0  ) {
+        if (commentaryOvers && commentaryOvers.length > 0  ) {
           for (const overDetails of updatedData.overDetails) {
             const ovIndex = global.tblOvers.findIndex(item => 
               item.overId === overDetails.overId
@@ -22796,6 +22796,35 @@ const syncEntitySportCommentaryService = async (data,fastify,request) => {
                 }
             });
         }
+        await commentaryLogger(
+            {
+                commentaryId: data.commentaryId,
+                requestBody: data,
+                response: response,
+                global: {
+                    partnership: global.tblCommentaryPartnership.filter(
+                        (item) => item?.commentaryId === data.commentaryId
+                    ),
+                },
+                extra: {
+                    ballByBall: global.tblCommentaryBallByBall.filter(
+                        (item) => item?.commentaryId === data.commentaryId
+                    ),
+                },
+                apiName: "/setEntityCom",
+                reqStartTime: startTime,
+            },
+            null,
+            fastify
+        ).catch((err) => {
+            console.log("commentary logger console", err);
+            errorLogger(
+                fastify,
+                err.message,
+                "ERROR --> services/commentary.js/syncEntitySportCommentaryService",
+                null
+            );
+        });
         
         // response.callPredictions = callPredictions;
         return response;
@@ -22817,10 +22846,10 @@ const syncEntitySportCommentaryService = async (data,fastify,request) => {
                         (item) => item?.commentaryId === data.commentaryId
                     ),
                 },
-                apiName: "/saveDetails",
+                apiName: "/setEntityCom",
                 reqStartTime: startTime,
             },
-            request,
+            null,
             fastify
         ).catch((err) => {
             console.log("commentary logger console", err);
@@ -22828,7 +22857,7 @@ const syncEntitySportCommentaryService = async (data,fastify,request) => {
                 fastify,
                 err.message,
                 "ERROR --> services/commentary.js/syncEntitySportCommentaryService",
-                request
+                null
             );
         });
         throw new Error(error.message);

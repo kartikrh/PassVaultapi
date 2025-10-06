@@ -3,8 +3,14 @@ const crypto = require("crypto");
 const moment = require("moment");
 const { default: axios } = require("axios");
 const configConstants = require("./configConstants");
-const { errorLogger, tblPredictorAPILogger ,tblThirdPartyAPILogger} = require("./logger");
-const { getCommentaryDetailByIdQuery } = require("../repository/TableCommentary");
+const {
+  errorLogger,
+  tblPredictorAPILogger,
+  tblThirdPartyAPILogger,
+} = require("./logger");
+const {
+  getCommentaryDetailByIdQuery,
+} = require("../repository/TableCommentary");
 const { sendNotification } = require("../WebPushHandler");
 const { entityConstant } = require("./entityConst");
 const ERROR_CODES = {
@@ -34,7 +40,7 @@ const virtualError = (message, errorCode, status) => {
     //   message: message || "Internal Server Error",
     // },
     message: message || "Internal Server Error",
-    data: null
+    data: null,
   };
 };
 
@@ -51,7 +57,7 @@ const virtualSuccess = (result, status) => {
     success: true,
     status: status,
     data: result,
-    message : "Success",
+    message: "Success",
   };
 };
 
@@ -126,69 +132,83 @@ const isJson = (json) => {
     return false;
   }
   return true;
-}
+};
 
 const getTitle = (str) => {
   try {
-    str = str.split("?")[0]
-    if (str === "signin") return "Sign In"
-    else if (str === "signout") return "Sign Out"
-    else if (str === "signup") return "Sign Up"
-    return str.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/^./, str => str.toUpperCase())
+    str = str.split("?")[0];
+    if (str === "signin") return "Sign In";
+    else if (str === "signout") return "Sign Out";
+    else if (str === "signup") return "Sign Up";
+    return str
+      .replace(/([a-z])([A-Z])/g, "$1 $2")
+      .replace(/^./, (str) => str.toUpperCase());
   } catch (err) {
     console.log(`Error while generating title for ${str}`);
     return "";
   }
-}
+};
 
 const getMessage = (payload, code, type) => {
   const sendErrorMessage = (defaultMessage) => {
-    let message = typeof payload?.error === "string" ? payload.error : payload?.error?.message;
+    let message =
+      typeof payload?.error === "string"
+        ? payload.error
+        : payload?.error?.message;
     if (!message) message = defaultMessage;
     return message;
-  }
+  };
   const generateMessage = (title, action = "") => {
     const isError = payload?.error;
-    return isError ? sendErrorMessage(`${title}${" " + action} failed`) : `${title}${" " + action} successfully`
-  }
+    return isError
+      ? sendErrorMessage(`${title}${" " + action} failed`)
+      : `${title}${" " + action} successfully`;
+  };
   switch (code) {
     case 500:
-      return sendErrorMessage(`Internal Server Error`)
+      return sendErrorMessage(`Internal Server Error`);
     case 200:
-      let message = typeof payload?.result === "string" ? payload.result : payload?.result?.message;
+      let message =
+        typeof payload?.result === "string"
+          ? payload.result
+          : payload?.result?.message;
       if (payload?.error) {
         message = sendErrorMessage("Something Went Wrong");
       }
       if (!message) {
         if (type === "signin" || type === "signup") {
           message = generateMessage(payload.title);
-        } else if (type === "save" || type === "create" || type === "saveDetails") {
+        } else if (
+          type === "save" ||
+          type === "create" ||
+          type === "saveDetails"
+        ) {
           message = generateMessage(payload.title, "saved");
-        } else if (type.includes('delete')) {
+        } else if (type.includes("delete")) {
           message = generateMessage(`${payload.title}(s)`, "delete");
         } else {
           message = generateMessage(payload.title, "fetched");
         }
       }
-      return message
+      return message;
     case 400:
-      return sendErrorMessage(`Invalid Request`)
+      return sendErrorMessage(`Invalid Request`);
     case 403:
-      return sendErrorMessage(`Unauthorized Access`)
+      return sendErrorMessage(`Unauthorized Access`);
     default:
-      return sendErrorMessage(`Something Went Wrong with status ${code}`)
+      return sendErrorMessage(`Something Went Wrong with status ${code}`);
   }
-}
+};
 
 function getUserChildIds(parentId, data) {
   const result = [];
 
   function findChildren(currentId) {
     const children = data
-      .filter(item => item.parentId === currentId)
-      .map(item => item.userId);
+      .filter((item) => item.parentId === currentId)
+      .map((item) => item.userId);
 
-    children.forEach(child => {
+    children.forEach((child) => {
       result.push(child);
       findChildren(child);
     });
@@ -197,13 +217,13 @@ function getUserChildIds(parentId, data) {
   findChildren(parentId);
   return result;
 }
-const convertDate = (date, format) =>{
+const convertDate = (date, format) => {
   if (date) {
     if (format) return moment(date).local().format(format);
-    return  moment(date).local().format("DD/MM/YYYY hh:mm:ss a");
+    return moment(date).local().format("DD/MM/YYYY hh:mm:ss a");
   }
   return "";
-}
+};
 const wicketType = {
   1: "Bold",
   2: "Catch",
@@ -214,8 +234,8 @@ const wicketType = {
   7: "Retired Out",
   8: "Timed Out",
   9: "Hit Ball Twice",
-  10: "Obstruct the Fielding"
-}
+  10: "Obstruct the Fielding",
+};
 const BALL_TYPE = {
   OVER_COMPLETE: 0,
   REGULAR: 1,
@@ -229,51 +249,61 @@ const BALL_TYPE = {
   RETIRED_HURT: 9,
   BOWLER_RETIRED_HURT: 10,
 };
-const decryptEncryptionId = async (encryptionKey , fastify) =>{
- try {
-  const data = await fastify.db.query(`SELECT "wrKey" from "tblEncryptedData" where "wrValue" = $1`,
-  {
-    type: fastify.db.QueryTypes.SELECT,
-    bind: [encryptionKey]
-  })
+const decryptEncryptionId = async (encryptionKey, fastify) => {
+  try {
+    const data = await fastify.db.query(
+      `SELECT "wrKey" from "tblEncryptedData" where "wrValue" = $1`,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [encryptionKey],
+      }
+    );
 
-  return data[0].wrKey;
- } catch (error) {
-  throw new Error(error);
- }
-}
+    return data[0].wrKey;
+  } catch (error) {
+    throw new Error(error);
+  }
+};
 const EventMarketStatus = {
-  NotOpen :	0,
-  Open:	1,
-  Inactive:	2,
-  Suspend:	3,
-  Close:	4,
-  Settled	:5,
-  Cancel:	6,
-  WIN : 7,
-  LOSE : 8,
-}
+  NotOpen: 0,
+  Open: 1,
+  Inactive: 2,
+  Suspend: 3,
+  Close: 4,
+  Settled: 5,
+  Cancel: 6,
+  WIN: 7,
+  LOSE: 8,
+};
 
 const EventMarketRateSource = {
-  Manual :	2,
-}
+  Manual: 2,
+};
 const MarketActionType = {
-  isresultSet : 1,
-  setResult : 2,
-  marketCancel : 3,
-  closeMarket : 4,
-  closeMarketOnTossWin : 5,
-  setAndFinalizeResult:6,
-  setResultAndIsResultFalse :7,
-  allMarketClose : 8,
-  dlsMarketClose : 9,
-  dlsMarketCloseCancel : 10,
-  closeMarketOnDLSChange : 11,
-  virtualMarketCancel : 12,
-}
-const callPredictorMarket = async (data , endpoint ,fastify ,request, pythonURI = null) =>{
+  isresultSet: 1,
+  setResult: 2,
+  marketCancel: 3,
+  closeMarket: 4,
+  closeMarketOnTossWin: 5,
+  setAndFinalizeResult: 6,
+  setResultAndIsResultFalse: 7,
+  allMarketClose: 8,
+  dlsMarketClose: 9,
+  dlsMarketCloseCancel: 10,
+  closeMarketOnDLSChange: 11,
+  virtualMarketCancel: 12,
+};
+const callPredictorMarket = async (
+  data,
+  endpoint,
+  fastify,
+  request,
+  pythonURI = null
+) => {
   let requestStartTime = new Date();
-  let loggerConfig = global.tblConfigs.find((item) => item.key === configConstants.ISPREDICTORLOGGER).value;
+  let loggerConfig = global.tblConfigs.find(
+    (item) => item.key === configConstants.ISPREDICTORLOGGER
+  ).value;
   try {
     // let predictorURL = global.tblConfigs.find((item) => item.key === configConstants.MARKET_PREDICTOR)?.value;
     // if(isVirtual == true){
@@ -281,28 +311,28 @@ const callPredictorMarket = async (data , endpoint ,fastify ,request, pythonURI 
     //   predictorURL = global.tblConfigs.find((item) => item.key === configConstants.VIRTUALMARKETPREDICTOR)?.value;
     // }
     let predictorURL = pythonURI;
-    if(!predictorURL){
+    if (!predictorURL) {
       errorLogger(
         fastify,
         "Predictor URL not found",
         "DB ERROR --> utilities/index/callPredictorMarket",
         request
-      )
-      return true
+      );
+      return true;
     }
     const url = `${predictorURL}${endpoint}`;
     const result = await axios.post(url, {
-      ...data
+      ...data,
     });
 
-    if (loggerConfig == "true"){
+    if (loggerConfig == "true") {
       tblPredictorAPILogger(
         {
-          endPoint : endpoint,
-          requestBody : data,
-          requestStartTime : requestStartTime,
-          requestEndTime : new Date(),
-          response : result.data
+          endPoint: endpoint,
+          requestBody: data,
+          requestStartTime: requestStartTime,
+          requestEndTime: new Date(),
+          response: result.data,
         },
         request,
         fastify
@@ -310,17 +340,17 @@ const callPredictorMarket = async (data , endpoint ,fastify ,request, pythonURI 
     }
     return result;
   } catch (error) {
-    if(loggerConfig == "true"){
+    if (loggerConfig == "true") {
       tblPredictorAPILogger(
         {
-          endPoint : endpoint,
-          requestBody : data,
-          requestStartTime : requestStartTime,
-          requestEndTime : new Date(),
-          response : {
-            error : error.message,
-            type : "error"
-          }
+          endPoint: endpoint,
+          requestBody: data,
+          requestStartTime: requestStartTime,
+          requestEndTime: new Date(),
+          response: {
+            error: error.message,
+            type: "error",
+          },
         },
         request,
         fastify
@@ -330,41 +360,43 @@ const callPredictorMarket = async (data , endpoint ,fastify ,request, pythonURI 
     return true;
     // throw new Error(error.message);
   }
-
-}
+};
 
 //fraud check Api
-const callfds = async (data , endpoint ,fastify ,request) =>{
+const callfds = async (data, endpoint, fastify, request) => {
   let requestStartTime = new Date();
   try {
     const now = new Date();
     let formattedDate;
     try {
-      const offset = global.tblConfigs.find((item) => item.key === configConstants.SERVER_OFFSET_TIMEZONE).value;
-      if(offset){
+      const offset = global.tblConfigs.find(
+        (item) => item.key === configConstants.SERVER_OFFSET_TIMEZONE
+      ).value;
+      if (offset) {
         formattedDate = formatDateToISOStringwithOffset(now, offset);
-      }
-      else{
-        formattedDate = formatDateToISOString(now);  
+      } else {
+        formattedDate = formatDateToISOString(now);
       }
     } catch (error) {
-      formattedDate = formatDateToISOString(now);  
+      formattedDate = formatDateToISOString(now);
     }
     data.BWDateTime = formattedDate.toString();
-    const fdsURL = global.tblConfigs.find((item) => item.key === configConstants.FRAUDDET_DECTIONAPI).value;
-    if(fdsURL){
+    const fdsURL = global.tblConfigs.find(
+      (item) => item.key === configConstants.FRAUDDET_DECTIONAPI
+    ).value;
+    if (fdsURL) {
       const url = `${fdsURL}${endpoint}`;
       const result = await axios.post(url, {
-        ...data
+        ...data,
       });
 
       await tblThirdPartyAPILogger(
         {
-          endPoint : endpoint,
-          requestBody : data,
-          requestStartTime : requestStartTime,
-          requestEndTime : new Date(),
-          response : result.data
+          endPoint: endpoint,
+          requestBody: data,
+          requestStartTime: requestStartTime,
+          requestEndTime: new Date(),
+          response: result.data,
         },
         request,
         fastify
@@ -376,137 +408,152 @@ const callfds = async (data , endpoint ,fastify ,request) =>{
     //console.error(error.message);
     await tblThirdPartyAPILogger(
       {
-        endPoint : endpoint,
-        requestBody : data,
-        requestStartTime : requestStartTime,
-        requestEndTime : new Date(),
-        response : error.message
+        endPoint: endpoint,
+        requestBody: data,
+        requestStartTime: requestStartTime,
+        requestEndTime: new Date(),
+        response: error.message,
       },
       request,
       fastify
     );
     // throw new Error(error.message);
   }
-}
+};
 
 const formatDateToISOString = (date) => {
   const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  const seconds = String(date.getSeconds()).padStart(2, '0');
-  
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  const seconds = String(date.getSeconds()).padStart(2, "0");
+
   return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
-}
+};
 
 const formatDateToISOStringwithOffset = (date, offset) => {
   // Parse the offset to extract hours and minutes
-  const sign = offset[0] === '-' ? -1 : 1;
-  const [hours, minutes] = offset.slice(1).split(':').map(Number);
+  const sign = offset[0] === "-" ? -1 : 1;
+  const [hours, minutes] = offset.slice(1).split(":").map(Number);
   const totalOffsetMilliseconds = sign * (hours * 60 + minutes) * 60 * 1000;
-  
+
   // Adjust the date by the total offset in milliseconds
   const adjustedDate = new Date(date.getTime() + totalOffsetMilliseconds);
 
   const year = adjustedDate.getFullYear();
-  const month = String(adjustedDate.getMonth() + 1).padStart(2, '0');
-  const day = String(adjustedDate.getDate()).padStart(2, '0');
-  const hoursStr = String(adjustedDate.getHours()).padStart(2, '0');
-  const minutesStr = String(adjustedDate.getMinutes()).padStart(2, '0');
-  const seconds = String(adjustedDate.getSeconds()).padStart(2, '0');
-  
+  const month = String(adjustedDate.getMonth() + 1).padStart(2, "0");
+  const day = String(adjustedDate.getDate()).padStart(2, "0");
+  const hoursStr = String(adjustedDate.getHours()).padStart(2, "0");
+  const minutesStr = String(adjustedDate.getMinutes()).padStart(2, "0");
+  const seconds = String(adjustedDate.getSeconds()).padStart(2, "0");
+
   return `${year}-${month}-${day}T${hoursStr}:${minutesStr}:${seconds}`;
 };
 
 const MarketUpdateType = {
-  marketInitilization : 1,
-  predictMarket : 2,
-  marketViewer : 3,
-  marketUpdateRate : 4,
-  isSendDataUpdate : 5,
-}
-const ActionTypeForMarketCancel ={
-  winClose : 1,
-  winCloseCancel : 2,
-  winMustClose : 3,
-  winMustCloseCancel : 4,
-  dlsCloseMarket : 5,
-  dlsCloseCancelMarket : 6
-}
+  marketInitilization: 1,
+  predictMarket: 2,
+  marketViewer: 3,
+  marketUpdateRate: 4,
+  isSendDataUpdate: 5,
+};
+const ActionTypeForMarketCancel = {
+  winClose: 1,
+  winCloseCancel: 2,
+  winMustClose: 3,
+  winMustCloseCancel: 4,
+  dlsCloseMarket: 5,
+  dlsCloseCancelMarket: 6,
+};
 const genrateKey = () => {
   // Define the format pattern
   const format = "XXXX-XXXX-XXXX-XXXX";
   const key = format.replace(/[^\d-]/g, () => Math.floor(Math.random() * 10));
   return key;
-}
+};
 const clientSocketStatus = {
-  none : 0,
-  connected : 1,
-  disconnected : 2,
-  reconnected : 3
-}
+  none: 0,
+  connected: 1,
+  disconnected: 2,
+  reconnected: 3,
+};
 const clientSocketActionType = {
-  connect : 1,
-  disconnect : 2,
-  reconnect : 3,
-}
+  connect: 1,
+  disconnect: 2,
+  reconnect: 3,
+};
 const fetchDataForClient = async (fastify, reply) => {
-  const clientUrl = global.tblConfigs.find((item) => item.key === configConstants.SCORECLIENTAPIURL).value;
-  if(!clientUrl) return 'Client URL not found';
-  const result = await axios.post(`${clientUrl}/loadData` ,{}) ;
+  const clientUrl = global.tblConfigs.find(
+    (item) => item.key === configConstants.SCORECLIENTAPIURL
+  ).value;
+  if (!clientUrl) return "Client URL not found";
+  const result = await axios.post(`${clientUrl}/loadData`, {});
   console.log(result.data);
   return result.data;
-}
-const callDataProvider = async (data, fastify) =>{
+};
+const callDataProvider = async (data, fastify) => {
   try {
     // return true;
     /// find the service which have the type of dataProviderAPI
-    let services = global.tblAPIs.filter((item) => item.type == data.serviceType && item.isActive == true);
-    for (ser of services){
+    let services = global.tblAPIs.filter(
+      (item) => item.type == data.serviceType && item.isActive == true
+    );
+    for (ser of services) {
       // find the endpoint for the service and module
-      let endpoint = global.tblAPIEndpoints.find((item)=>
-        item.serviceType == ser.type && item.moduleType == data.moduleType && item.isActive == true
-      ) 
-      if(endpoint){
+      let endpoint = global.tblAPIEndpoints.find(
+        (item) =>
+          item.serviceType == ser.type &&
+          item.moduleType == data.moduleType &&
+          item.isActive == true
+      );
+      if (endpoint) {
         let url = `${ser.api}${endpoint.endPoint}`;
         let dataTosend = {};
-        if(data.moduleType == APIEndpointModuleType.commentaryUpdate && data.serviceType == ServiceType.dataProviderAPI){
-          if(data.type == "delete"){
+        if (
+          data.moduleType == APIEndpointModuleType.commentaryUpdate &&
+          data.serviceType == ServiceType.dataProviderAPI
+        ) {
+          if (data.type == "delete") {
             dataTosend = {
-              commentaryId : data.commentaryId
-            }
-          }
-          else {
+              commentaryId: data.commentaryId,
+            };
+          } else {
             dataTosend = await getCommentaryDetailByIdQuery(data, fastify);
           }
 
           dataTosend = {
             ...dataTosend,
-            type : data.type
+            type: data.type,
           };
-        }
-        else if(data.moduleType == APIEndpointModuleType.vendorUpdate && data.serviceType == ServiceType.dataProviderAPI
-          || data.moduleType == APIEndpointModuleType.vendorIpUpdate && data.serviceType == ServiceType.dataProviderAPI)
-        {
+        } else if (
+          (data.moduleType == APIEndpointModuleType.vendorUpdate &&
+            data.serviceType == ServiceType.dataProviderAPI) ||
+          (data.moduleType == APIEndpointModuleType.vendorIpUpdate &&
+            data.serviceType == ServiceType.dataProviderAPI)
+        ) {
           dataTosend = {
             ...data.data,
-            type : data.type
+            type: data.type,
           };
         }
-        
+
         const result = await axios.post(url, {
-          ...dataTosend
+          ...dataTosend,
         });
         return result;
-      }
-      else {
-        console.log("Endpoint not found for service type : ", ser.type, " and module type : ", data.moduleType);
+      } else {
+        console.log(
+          "Endpoint not found for service type : ",
+          ser.type,
+          " and module type : ",
+          data.moduleType
+        );
         return;
       }
     }
 
-    return true  
+    return true;
   } catch (error) {
     errorLogger(
       fastify,
@@ -514,29 +561,39 @@ const callDataProvider = async (data, fastify) =>{
       "DB ERROR --> utilities/index/callDataProvider",
       null
     );
-    
+
     console.log("error From callDataProvider", error);
   }
-}
-const callClientAPI = async (data,request, fastify) =>{
+};
+const callClientAPI = async (data, request, fastify) => {
   try {
-    let clientServices = global.tblAPIs.filter((item) => item.type == data.serviceType && item.isActive == true);
-    if(clientServices.length == 0){
+    let clientServices = global.tblAPIs.filter(
+      (item) => item.type == data.serviceType && item.isActive == true
+    );
+    if (clientServices.length == 0) {
       return true;
     }
-    for (ser of clientServices){
-      let endPoint = global.tblAPIEndpoints.find((item)=> item.serviceType == ser.type && item.moduleType == data.moduleType &&
-        item.isActive == true)
-      if(endPoint){
+    for (ser of clientServices) {
+      let endPoint = global.tblAPIEndpoints.find(
+        (item) =>
+          item.serviceType == ser.type &&
+          item.moduleType == data.moduleType &&
+          item.isActive == true
+      );
+      if (endPoint) {
         let url = `${ser.api}${endPoint.endPoint}`;
-        let dataTosend = data.data; 
+        let dataTosend = data.data;
         const result = await axios.post(url, {
-          ...dataTosend
+          ...dataTosend,
         });
         // return result;
-      }
-      else {
-        console.log("Endpoint not found for service type : ", ser.type, " and module type : ", data.moduleType);
+      } else {
+        console.log(
+          "Endpoint not found for service type : ",
+          ser.type,
+          " and module type : ",
+          data.moduleType
+        );
         // return;
       }
     }
@@ -643,13 +700,13 @@ const ServiceType = {
 }
 
 const APIEndpointModuleType = {
-  commentaryUpdate : 1,
-  vendorUpdate : 2,
-  vendorIpUpdate : 3,
-  updateConfig : 4,	
+  commentaryUpdate: 1,
+  vendorUpdate: 2,
+  vendorIpUpdate: 3,
+  updateConfig: 4,
   updateBanner: 5,
-  updateSeoModule : 6,
-  updateMenuList : 7,
+  updateSeoModule: 6,
+  updateMenuList: 7,
   configUpdate: 8,
   getICCRankingData: 9,
   insertTeam: 10,
@@ -660,15 +717,16 @@ const APIEndpointModuleType = {
   getPlayerDataByIdFromEntity: 15,
   getMatchByIdFromEntity: 16
 }
+
 const NotificationSendType = {
-  all : 1,
-  onlyLoggedInUser : 2,
-  pushNotification : 3
-}
-const sendNotificationByType =async (data , request , fastify) =>{
+  all: 1,
+  onlyLoggedInUser: 2,
+  pushNotification: 3,
+};
+const sendNotificationByType = async (data, request, fastify) => {
   try {
     let eventName;
-    switch(data.sendType){
+    switch (data.sendType) {
       case NotificationSendType.all:
         eventName = "onSendNotificationToAll";
         break;
@@ -688,15 +746,14 @@ const sendNotificationByType =async (data , request , fastify) =>{
         break;
     }
     // saveNotificationLogsQuery(data,request, fastify);
-    if( 
+    if (
       global?.clientSocketIo !== undefined &&
       global?.clientSocketIo.length > 0
-    ){
+    ) {
       global.clientSocketIo.forEach((socket) => {
         socket.client.emit(eventName, data);
       });
-    }
-    else {
+    } else {
       console.log("Client Socket Not Found");
     }
 
@@ -711,12 +768,12 @@ const sendNotificationByType =async (data , request , fastify) =>{
     );
     // throw new Error(error.message);
   }
-}
+};
 const pageLimit = {
-  notifcationLog : {
-      limit : 20
-  }
-}
+  notifcationLog: {
+    limit: 20,
+  },
+};
 const getPagination = (page = 1, size = 20) => {
   if (page < 1 || size < 1) {
     throw new Error("Page number and page size must be greater than zero.");
@@ -725,101 +782,114 @@ const getPagination = (page = 1, size = 20) => {
   const take = size;
 
   return {
-    skip ,
-    take 
-  }
-}
+    skip,
+    take,
+  };
+};
 const clientProvider = {
-  Manual : 1,
-  Google : 2,
-  Facebook : 3,
-}
+  Manual: 1,
+  Google: 2,
+  Facebook: 3,
+};
 const typesOfServices = {
-  GmailService: 'gmail',
-  SmtpService: 'smtp',
-}
+  GmailService: "gmail",
+  SmtpService: "smtp",
+};
 
 const templateModel = {
-  MobileNo : 1,
-  Email : 2,
-}
+  MobileNo: 1,
+  Email: 2,
+};
 const templateType = {
-  Welcome : 1,
-  Verify : 2,
-  NewsLetter : 3
-}
+  Welcome: 1,
+  Verify: 2,
+  NewsLetter: 3,
+};
 const newsType = {
-  news : 1,
-  article : 2,
-}
+  news: 1,
+  article: 2,
+};
 const getIpAddress = (req) => {
-  const ip = req.ip || req.headers['x-forwarded-for'] || request.raw.connection.remoteAddress;
+  const ip =
+    req.ip ||
+    req.headers["x-forwarded-for"] ||
+    request.raw.connection.remoteAddress;
   return ip;
-}
+};
 const thirdPartyApiType = {
-  Socket : 1,
-  API : 2
-}
+  Socket: 1,
+  API: 2,
+};
 const commentaryStatus = {
-  OPEN : 1,
-  TOSSDONE : 2,
-  INPROGRESS : 3,
-  COMPLETED : 4,
-  INNINGCHANGE : 5,
-  CANCELLED : 10
-}
+  OPEN: 1,
+  TOSSDONE: 2,
+  INPROGRESS: 3,
+  COMPLETED: 4,
+  INNINGCHANGE: 5,
+  CANCELLED: 10,
+};
+const EntityCommentaryStatus = {
+  DEFAULT : 0,
+  OPEN: 1,
+  TOSSDONE: 2,
+  INPROGRESS: 3,
+  COMPLETED: 4,
+  INNINGCHANGE: 6,
+  CANCELLED: 10,
+
+};
 const LineType = {
-  BackLay:	1,
+  BackLay: 1,
   Lay: 2,
-}
+};
 const VideoLibraryType = {
-  OUR:	1,
+  OUR: 1,
   YOUTUBE: 2,
-}
+};
 const MarketTypeId = {
-  "Market": 1,
-  "Bookmarkers" : 3,
-  "ManualOdds" : 5,
-  "Fancy" : 2,
-  "LineMarket" : 4,
-  "MeterPari" : 6,
-  "Sportbook" : 7,
-}
+  Market: 1,
+  Bookmarkers: 3,
+  ManualOdds: 5,
+  Fancy: 2,
+  LineMarket: 4,
+  MeterPari: 6,
+  Sportbook: 7,
+};
 const MarketTypeCategories = {
-  "MARKET": 5,
-  "WINTOSS": 6,
-  "BOOKMAKERS": 7,
-  "MANUALODDS": 8,
-  "ADVFANCY": 9,
-  "OVERSESSION": 10,
-  "ONLYOVER": 11,
-  "PLAYER": 12,
-  "WICKET": 13,
-  "BOWLERSESSION": 14,
-  "PREMIUMODDS": 15,
-  "TIE": 16,
-  "LINEMARKET": 17,
-  "OVERUNDER": 18,
-  "PLAYERODDS": 20,
-  "BOUNDARYODDS": 21,
-  "OTHERODDS": 22,
-  "SESSION": 23,
-  "EXTRAODDS": 24,
-  "SPECIALODDS": 25,
-  "FANCYLDO": 26,
-  "ONLYOVERLDO": 27,
-  "LASTDIGITNUMBER": 28,
-  "PLAYERBOUNDARIES": 29,
-  "PLAYERBALLSFACED": 30,
-  "FALLOFWICKET": 31,
-  "PARTNERSHIPBOUNDARIES": 32,
-  "WICKETLOSTBALLS": 33,
-  "ODDEVEN": 35,
-  "TOTALEVENTRUN": 36,
-  "TOPBOWLER": 37,
-  "TOPBATSMAN": 38,
-  "MIDSESSION": 39,
-}
+  MARKET: 5,
+  WINTOSS: 6,
+  BOOKMAKERS: 7,
+  MANUALODDS: 8,
+  ADVFANCY: 9,
+  OVERSESSION: 10,
+  ONLYOVER: 11,
+  PLAYER: 12,
+  WICKET: 13,
+  BOWLERSESSION: 14,
+  PREMIUMODDS: 15,
+  TIE: 16,
+  LINEMARKET: 17,
+  OVERUNDER: 18,
+  PLAYERODDS: 20,
+  BOUNDARYODDS: 21,
+  OTHERODDS: 22,
+  SESSION: 23,
+  EXTRAODDS: 24,
+  SPECIALODDS: 25,
+  FANCYLDO: 26,
+  ONLYOVERLDO: 27,
+  LASTDIGITNUMBER: 28,
+  PLAYERBOUNDARIES: 29,
+  PLAYERBALLSFACED: 30,
+  FALLOFWICKET: 31,
+  PARTNERSHIPBOUNDARIES: 32,
+  WICKETLOSTBALLS: 33,
+  ODDEVEN: 35,
+  TOTALEVENTRUN: 36,
+  TOPBOWLER: 37,
+  TOPBATSMAN: 38,
+  MIDSESSION: 39,
+};
 
 const ModuleTypes = {
   Commentary: 1,
@@ -865,20 +935,28 @@ const ModuleTypes = {
   Venue: 41,
   CommentaryById: 42,
   PythonAPI: 43,
-}
-const callTPAPI = async (data ,fastify) =>{
+};
+const callTPAPI = async (data, fastify) => {
   try {
     // check if the third party api is enabled or not
-    let isCallThirdParty = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.ISCALLEVENTALLOWORDERAPI.toLowerCase())?.value;
-    if(isCallThirdParty == undefined){
+    let isCallThirdParty = global.tblConfigs.find(
+      (item) =>
+        item.key.toLowerCase() ===
+        configConstants.ISCALLEVENTALLOWORDERAPI.toLowerCase()
+    )?.value;
+    if (isCallThirdParty == undefined) {
       return true;
     }
-    if(isCallThirdParty == "false"){
+    if (isCallThirdParty == "false") {
       return true;
     }
-    if(isCallThirdParty == "true"){
-      const thirdPartyAPI = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.EVENTALLOWORDERAPI.toLowerCase())?.value;
-      if(thirdPartyAPI == undefined){
+    if (isCallThirdParty == "true") {
+      const thirdPartyAPI = global.tblConfigs.find(
+        (item) =>
+          item.key.toLowerCase() ===
+          configConstants.EVENTALLOWORDERAPI.toLowerCase()
+      )?.value;
+      if (thirdPartyAPI == undefined) {
         return true;
       }
       // const header = global.tblConfigs.find((item) => item.key === configConstants.THIRDPARTYKEY)?.value;
@@ -886,12 +964,12 @@ const callTPAPI = async (data ,fastify) =>{
       //   return true;
       // }
       await axios.post(thirdPartyAPI, {
-        eventID : data.eventRefId,
-        isAllow : data.betAllow,
+        eventID: data.eventRefId,
+        isAllow: data.betAllow,
       });
       return true;
     }
-    
+
     return true;
   } catch (error) {
     console.log("error from callTPAPI", error);
@@ -902,28 +980,29 @@ const callTPAPI = async (data ,fastify) =>{
       null
     );
   }
-}
+};
 const clientProcessStatus = {
-  ADDUSERDETAIL : 1,
-  MOEMAILVERIFIED : 2,
-  PASSWORDSET : 3,
-}
+  ADDUSERDETAIL: 1,
+  MOEMAILVERIFIED: 2,
+  PASSWORDSET: 3,
+};
 const sendOtpToMobile = async (data, request, fastify) => {
   try {
-    let url = global.tblWhitelabels.find((item) => item.id === data.id)?.mobileOTPSendUrl;
+    let url = global.tblWhitelabels.find(
+      (item) => item.id === data.id
+    )?.mobileOTPSendUrl;
     // let url = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.OTPURL.toLowerCase())?.value;
-    if(!url) return 'OTP URL not found';
+    if (!url) return "OTP URL not found";
     // call this otp url to send otp to mobile
     // replace {mobile} with the mobile number
     //remove + from country code
     let cc = data.countryCode.replace("+", "");
     url = url.replace("{mobile}", cc + data.mobileNo);
     const result = await axios.post(url);
-    console.log(result)
-    if(result.data.type == "success"){
+    console.log(result);
+    if (result.data.type == "success") {
       return true;
-    }
-    else {
+    } else {
       errorLogger(
         fastify,
         result.data.message,
@@ -942,13 +1021,14 @@ const sendOtpToMobile = async (data, request, fastify) => {
     );
     throw new Error(error.message);
   }
-}
+};
 const verifyOTP = async (data, request, fastify) => {
   try {
     let config = global.tblWhitelabels.find((item) => item.id === data.id);
     // let url = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.OTPVERIFY.toLowerCase())?.value;
     // let otpAuthKey = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.OTPAUTHKEY.toLowerCase())?.value;
-    if(!config || !config.mobileOTPVerify || !config.mobileOTPAuthKey) return 'OTP Verify URL not found';
+    if (!config || !config.mobileOTPVerify || !config.mobileOTPAuthKey)
+      return "OTP Verify URL not found";
     let cc = data.countryCode.replace("+", "");
     const mobileNumber = cc + data.mobileNo;
     // url = url.replace("{otp}", data.otp);
@@ -956,11 +1036,12 @@ const verifyOTP = async (data, request, fastify) => {
     let otpUrl = config.mobileOTPVerify
       .replace("{otp}", encodeURIComponent(data.otp))
       .replace("{mobile}", encodeURIComponent(mobileNumber));
-    const result = await axios.get(otpUrl, { headers: { authkey: config.mobileOTPAuthKey }});
-    if(result.data.type == "success"){
+    const result = await axios.get(otpUrl, {
+      headers: { authkey: config.mobileOTPAuthKey },
+    });
+    if (result.data.type == "success") {
       return true;
-    }
-    else {
+    } else {
       errorLogger(
         fastify,
         result.data.message,
@@ -979,19 +1060,20 @@ const verifyOTP = async (data, request, fastify) => {
     );
     throw new Error(error.message);
   }
-}
+};
 const forgotPasswordOTP = async (data, request, fastify) => {
   try {
-    let url = global.tblWhitelabels.find((item) => item.id === data.id)?.mobileOTPForgotUrl;
+    let url = global.tblWhitelabels.find(
+      (item) => item.id === data.id
+    )?.mobileOTPForgotUrl;
     // let url = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.OTPFORGOTURL.toLowerCase())?.value;
-    if(!url) return 'OTP URL not found';
+    if (!url) return "OTP URL not found";
     let cc = data.countryCode.replace("+", "");
     url = url.replace("{mobile}", cc + data.mobileNo);
     const result = await axios.post(url);
-    if(result.data.type == "success"){
+    if (result.data.type == "success") {
       return true;
-    }
-    else {
+    } else {
       errorLogger(
         fastify,
         result.data.message,
@@ -1010,19 +1092,20 @@ const forgotPasswordOTP = async (data, request, fastify) => {
     );
     throw new Error(error.message);
   }
-}
+};
 const resendOTP = async (data, request, fastify) => {
   try {
-    let url = global.tblWhitelabels.find((item) => item.id === data.id)?.mobileOTPResendUrl;
+    let url = global.tblWhitelabels.find(
+      (item) => item.id === data.id
+    )?.mobileOTPResendUrl;
     // let url = global.tblConfigs.find((item) => item.key.toLowerCase() === configConstants.OTPRESEND.toLowerCase())?.value;
-    if(!url) return 'OTP URL not found';
+    if (!url) return "OTP URL not found";
     let cc = data.countryCode.replace("+", "");
     url = url.replace("{mobile}", cc + data.mobileNo);
     const result = await axios.get(url, { headers: {} });
-    if(result.data.type == "success"){
+    if (result.data.type == "success") {
       return true;
-    }
-    else {
+    } else {
       errorLogger(
         fastify,
         result.data.message,
@@ -1041,13 +1124,13 @@ const resendOTP = async (data, request, fastify) => {
     );
     throw new Error(error.message);
   }
-}
+};
 
 const IntervalType = {
-  DAY:	1,
+  DAY: 1,
   MONTHLY: 2,
-  YEARLY: 3
-}
+  YEARLY: 3,
+};
 const EventName = {
   COMMINGSOON: 1,
   WINTOSS: 2,
@@ -1055,152 +1138,166 @@ const EventName = {
   INNINGCOMPLETED: 4,
   BOUNDARY: 5,
   WICKET: 6,
-  EVENTCOMPLETED: 7
-}
+  EVENTCOMPLETED: 7,
+};
 const generateEventId = () => {
   const d = new Date();
-  return `${d.getDate().toString().padStart(2, '0')}${(d.getMonth()+1).toString().padStart(2, '0')}${d.getFullYear().toString().slice(-2)}${d.getHours().toString().padStart(2, '0')}${d.getMinutes().toString().padStart(2, '0')}`;
+  return `${d.getDate().toString().padStart(2, "0")}${(d.getMonth() + 1)
+    .toString()
+    .padStart(2, "0")}${d.getFullYear().toString().slice(-2)}${d
+    .getHours()
+    .toString()
+    .padStart(2, "0")}${d.getMinutes().toString().padStart(2, "0")}`;
 };
 
 const ClientInfoLoginType = {
   SUCCESS: 1,
   FAILED: 2,
-}
+};
 const CompetitionType = {
   INTERNATIONAL: 1,
   DOMESTIC: 2,
-}
+};
 const Weather = {
   RANDOM: 1,
-  COLD : 2,
-  WARM : 3,
-  HOT : 4,
-  MILD : 5, 
-  
-}
+  COLD: 2,
+  WARM: 3,
+  HOT: 4,
+  MILD: 5,
+};
 const PitchCracks = {
   NONE: 1,
   LIGHT: 2,
   HEAVY: 3,
-}
+};
 
 const PitchWareSpeed = {
   NORMAL: 1,
   SLOW: 2,
   FAST: 3,
-}
+};
 const PitchHardness = {
   SOFT: 1,
   VERYSOFT: 2,
   HARD: 3,
   MEDIUM: 4,
-}
+};
 const PitchType = {
-  1 : "Dry",
-  2 : "Grassy/Dusty",
-  3 : "Grassy/Dry",
-  4 : "Grassy",
-  5 : "Dusty",
-  6 : "Standard"
-}
+  1: "Dry",
+  2: "Grassy/Dusty",
+  3: "Grassy/Dry",
+  4: "Grassy",
+  5: "Dusty",
+  6: "Standard",
+};
 const LawnStriping = {
-  1 : "Cross hatch",
-  2 : "Stripe",
-  3 : "Vertical",
-  4 : "None",
-  5 : "Diamond"
-}
+  1: "Cross hatch",
+  2: "Stripe",
+  3: "Vertical",
+  4: "None",
+  5: "Diamond",
+};
 
 const PitchAge = {
-  1 : "Day 1",
-  2 : "Day 2", 
-  3 : "Day 3", 
-  4 : "Day 4", 
-  5 : "Day 5"
-}
+  1: "Day 1",
+  2: "Day 2",
+  3: "Day 3",
+  4: "Day 4",
+  5: "Day 5",
+};
 const playerSwitchObj = {
-  SWITCH_BOWLER : "SWITCH_BOWLER",
-  CHANGE_BOWLER : "CHANGE_BOWLER",
-  BATTER_SWITCH : "BATTER_SWITCH"
-}
+  SWITCH_BOWLER: "SWITCH_BOWLER",
+  CHANGE_BOWLER: "CHANGE_BOWLER",
+  BATTER_SWITCH: "BATTER_SWITCH",
+};
 const wicketTypeObj = {
-  BOLD : 1,
-  BOLD_LABEL : "Bowled",
-  CATCH : 2,
-  CATCH_LABEL : "Catch",
-  STUMP : 3,
-  STUMP_LABEL : "Stump",
-  HIT_WICKET : 4,
-  HIT_WICKET_LABEL : "Hit Wicket",
-  LBW : 5,
-  LBW_LABEL : "LBW",
-  RUN_OUT : 6,
-  RUN_OUT_LABEL : "Run Out",
-  RETIRED_OUT : 7,
-  RETIRED_OUT_LABEL : "Retired Out",
-  TIMED_OUT : 8,
-  TIMED_OUT_LABEL : "Timed Out",
-  HIT_BALL_TWICE : 9,
-  HIT_BALL_TWICE_LABEL : "Hit B. Twice",
-  OBSTRACT_THE_FIELDING : 10,
-  OBSTRACT_THE_FIELDING_LABEL : "Obst. Field"
-}
+  BOLD: 1,
+  BOLD_LABEL: "Bowled",
+  CATCH: 2,
+  CATCH_LABEL: "Catch",
+  STUMP: 3,
+  STUMP_LABEL: "Stump",
+  HIT_WICKET: 4,
+  HIT_WICKET_LABEL: "Hit Wicket",
+  LBW: 5,
+  LBW_LABEL: "LBW",
+  RUN_OUT: 6,
+  RUN_OUT_LABEL: "Run Out",
+  RETIRED_OUT: 7,
+  RETIRED_OUT_LABEL: "Retired Out",
+  TIMED_OUT: 8,
+  TIMED_OUT_LABEL: "Timed Out",
+  HIT_BALL_TWICE: 9,
+  HIT_BALL_TWICE_LABEL: "Hit B. Twice",
+  OBSTRACT_THE_FIELDING: 10,
+  OBSTRACT_THE_FIELDING_LABEL: "Obst. Field",
+};
 const inningSwitch = {
-   EXTRAS : "EXTRAS",
-   OVER : "OVER",
-   OVER_ENDED : "OVER_ENDED",
-   WICKET : "WICKET",
-   RUN : "RUN",
-   ALL : "ALL"
-}
+  EXTRAS: "EXTRAS",
+  OVER: "OVER",
+  OVER_ENDED: "OVER_ENDED",
+  WICKET: "WICKET",
+  RUN: "RUN",
+  ALL: "ALL",
+};
 const playerType = {
-  CURRENT_BOWLER : "CURRENT_BOWLER",
-  BATTING_TEAM : "BATTING_TEAM",
-  BOWLING_TEAM : "BOWLING_TEAM",
-  ON_STRIKE :"ON_STRIKE",
-  NON_STRIKE : "NON_STRIKE"
-}
+  CURRENT_BOWLER: "CURRENT_BOWLER",
+  BATTING_TEAM: "BATTING_TEAM",
+  BOWLING_TEAM: "BOWLING_TEAM",
+  ON_STRIKE: "ON_STRIKE",
+  NON_STRIKE: "NON_STRIKE",
+};
 const teamStatus = {
-  BAT_TEAM_STATUS : 1,
-  BOWL_TEAM_STATUS :2
-}
+  BAT_TEAM_STATUS: 1,
+  BOWL_TEAM_STATUS: 2,
+};
 const Cards = {
-  "A" : 1,
-  "2" : 2,
-  "3" : 3,
-  "4" : 4,
-  "5" : 5,
-  "6" : 6,
-  "10" : 0,
-  "J" : -1,
-  "K" : -2
-}
+  A: 1,
+  2: 2,
+  3: 3,
+  4: 4,
+  5: 5,
+  6: 6,
+  10: 0,
+  J: -1,
+  K: -2,
+};
 const HideEventType = {
-  eventType : 1,
-  competition : 2,
-  commentary : 3,
-}
-const callEntitySportAPI = async (data, request, fastify) =>{
+  eventType: 1,
+  competition: 2,
+  commentary: 3,
+};
+const callEntitySportAPI = async (data, request, fastify) => {
   try {
-    let competitionServices = global.tblAPIs.filter((item) => item.type == data.serviceType && item.isActive == true);
-    if(competitionServices.length == 0){
+    let competitionServices = global.tblAPIs.filter(
+      (item) => item.type == data.serviceType && item.isActive == true
+    );
+    if (competitionServices.length == 0) {
       return true;
     }
-    for (ser of competitionServices){
-      let endPoint = global.tblAPIEndpoints.find((item)=> item.serviceType == ser.type && item.moduleType == data.moduleType &&
-        item.isActive == true)
-      if(endPoint){
+    for (ser of competitionServices) {
+      let endPoint = global.tblAPIEndpoints.find(
+        (item) =>
+          item.serviceType == ser.type &&
+          item.moduleType == data.moduleType &&
+          item.isActive == true
+      );
+      if (endPoint) {
         let url = `${ser.api}${endPoint.endPoint}`;
         console.log("🚀 ~ callEntitySportAPI ~ url:", url)
         let dataTosend = data.data;
         console.log("🚀 ~ callEntitySportAPI ~ dataTosend:", dataTosend)
         const result = await axios.post(url, {
-          ...dataTosend
+          ...dataTosend,
         });
         return result;
-      }
-      else {
-        console.log("Endpoint not found for service type : ", ser.type, " and module type : ", data.moduleType);
+      } else {
+        console.log(
+          "Endpoint not found for service type : ",
+          ser.type,
+          " and module type : ",
+          data.moduleType
+        );
         return;
       }
     }
@@ -1214,53 +1311,64 @@ const callEntitySportAPI = async (data, request, fastify) =>{
     );
     // throw new Error(error.message);
   }
-}
+};
 const comCardType = {
-  "Heart" : 1,
-  "Diamond" :2,
-  "Clubs" : 3,
-  "Spades" : 4
-}
+  Heart: 1,
+  Diamond: 2,
+  Clubs: 3,
+  Spades: 4,
+};
 const EntityEnums = {
-    ODI: 1,
-    TEST: 2,
-    T20I: 3,
-    LimitedOverDomesticMatch: 4,
-    FirstClass: 5,
-    T20: 6, //Domestic
-    WomenODI: 7,
-    WomenT20: 8,
-    YouthODI: 9,
-    YouthT20: 10,
-    Other: 11,
-    OtherListA: 12,
-    Other1stClass: 13,
-    OtherT20: 14,
-    YouthTest: 15,
-    WomanTest: 16,
-    T10: 17,
-    T100: 18,
-    WomenT100: 19,
-    TB10: 20
-}
+  ODI: 1,
+  TEST: 2,
+  T20I: 3,
+  LimitedOverDomesticMatch: 4,
+  FirstClass: 5,
+  T20: 6, //Domestic
+  WomenODI: 7,
+  WomenT20: 8,
+  YouthODI: 9,
+  YouthT20: 10,
+  Other: 11,
+  OtherListA: 12,
+  Other1stClass: 13,
+  OtherT20: 14,
+  YouthTest: 15,
+  WomanTest: 16,
+  T10: 17,
+  T100: 18,
+  WomenT100: 19,
+  TB10: 20,
+};
 const compStatus = {
-  "upcoming": 1,
-  "started": 2,
-  "completed": 3,
-  "stopped": 4,
+  upcoming: 1,
+  started: 2,
+  completed: 3,
+  stopped: 4,
   "fixture": 1,
   "live": 2,
   "result": 3,
-}
+};
+// const callCardCricket = async (data, request, fastify) => {
+//   "upcoming": 1,
+//   "started": 2,
+//   "completed": 3,
+//   "stopped": 4,
+//   "fixture": 1,
+//   "live": 2,
+//   "result": 3,
+// }
 const callCardCricket = async (data ,request , fastify) =>{
   try {
     // console.log("callCardCricket", data);
     // return true;
-    let cardUrl = global.tblConfigs.find((item) => item.key === configConstants.CARDCRICKETURL)?.value;
-    if(!cardUrl) return 'Card Cricket URL not found';
+    let cardUrl = global.tblConfigs.find(
+      (item) => item.key === configConstants.CARDCRICKETURL
+    )?.value;
+    if (!cardUrl) return "Card Cricket URL not found";
     // call this card cricket url to send data
     const result = await axios.post(cardUrl, {
-      ...data
+      ...data,
     });
     return true;
   } catch (error) {
@@ -1269,11 +1377,10 @@ const callCardCricket = async (data ,request , fastify) =>{
       error.message,
       "DB ERROR --> utilities/index/callCardCricket",
       request
-    )
+    );
     // throw new Error(error.message);
   }
-
-}
+};
 const GlobalModuleType = {
   Commentary: 1,
   CommenaryTeams: 2,
@@ -1287,11 +1394,11 @@ const GlobalModuleType = {
   Venue: 10,
   Weather: 11,
   PitchConditon: 12,
-}
+};
 const StoreTypes = {
   Insert: 1,
-  Update: 2
-}
+  Update: 2,
+};
 const trimTextData = async (data, request, fastify) => {
   try {
     if (!data || typeof data !== "object" || Array.isArray(data)) {
@@ -1299,45 +1406,54 @@ const trimTextData = async (data, request, fastify) => {
     }
     const trimmedData = {};
     for (const [key, value] of Object.entries(data)) {
-      trimmedData[key] = typeof value === "string" ? value.trim().replace(/\s+/g, ' ') : value;
+      trimmedData[key] =
+        typeof value === "string" ? value.trim().replace(/\s+/g, " ") : value;
     }
-    return trimmedData
+    return trimmedData;
   } catch (error) {
     errorLogger(
       fastify,
       error.message,
       "DB ERROR --> utilities/index.js/trimTextData",
       request
-    )
+    );
   }
-}
-const callVirtualPredictorMarket = async (data , endpoint ,fastify ,request, pythonURI = null) =>{
+};
+const callVirtualPredictorMarket = async (
+  data,
+  endpoint,
+  fastify,
+  request,
+  pythonURI = null
+) => {
   let requestStartTime = new Date();
-  let loggerConfig = global.tblConfigs.find((item) => item.key === configConstants.ISPREDICTORLOGGER).value;
+  let loggerConfig = global.tblConfigs.find(
+    (item) => item.key === configConstants.ISPREDICTORLOGGER
+  ).value;
   try {
     let predictorURL = pythonURI;
-    if(!predictorURL){
+    if (!predictorURL) {
       errorLogger(
         fastify,
         "Predictor URL not found",
         "DB ERROR --> utilities/index/callPredictorMarket",
         request
-      )
-      throw new Error("Predictor URL not found")
+      );
+      throw new Error("Predictor URL not found");
     }
     const url = `${predictorURL}${endpoint}`;
     const result = await axios.post(url, {
-      ...data
+      ...data,
     });
 
-    if (loggerConfig == "true"){
+    if (loggerConfig == "true") {
       tblPredictorAPILogger(
         {
-          endPoint : endpoint,
-          requestBody : data,
-          requestStartTime : requestStartTime,
-          requestEndTime : new Date(),
-          response : result.data
+          endPoint: endpoint,
+          requestBody: data,
+          requestStartTime: requestStartTime,
+          requestEndTime: new Date(),
+          response: result.data,
         },
         request,
         fastify
@@ -1345,17 +1461,17 @@ const callVirtualPredictorMarket = async (data , endpoint ,fastify ,request, pyt
     }
     return result;
   } catch (error) {
-    if(loggerConfig == "true"){
+    if (loggerConfig == "true") {
       tblPredictorAPILogger(
         {
-          endPoint : endpoint,
-          requestBody : data,
-          requestStartTime : requestStartTime,
-          requestEndTime : new Date(),
-          response : {
-            error : error.message,
-            type : "error"
-          }
+          endPoint: endpoint,
+          requestBody: data,
+          requestStartTime: requestStartTime,
+          requestEndTime: new Date(),
+          response: {
+            error: error.message,
+            type: "error",
+          },
         },
         request,
         fastify
@@ -1364,87 +1480,179 @@ const callVirtualPredictorMarket = async (data , endpoint ,fastify ,request, pyt
     }
     // throw new Error(error.message);
   }
-
-}
+};
 const matchTypesEntity = {
-  "ODI": 1,
-  "TEST": 2,
-  "T20I": 3,
+  ODI: 1,
+  TEST: 2,
+  T20I: 3,
   "List A": 4,
   "First Class": 5,
-  "T20": 6,
+  T20: 6,
   "Women ODI": 7,
   "Women T20": 8,
   "Youth ODI": 9,
   "Youth T20": 10,
-  "Other": 11,
+  Other: 11,
   "Other List A": 12,
   "Other 1st Class": 13,
   "Other T20": 14,
   "Youth Test": 15,
   "Woman Test": 16,
-  "T10": 17,
-  "T100": 18,
+  T10: 17,
+  T100: 18,
   "Women T100": 19,
-  "TB-10": 20
+  "TB-10": 20,
 };
 const matchStatusEntity = {
-  "Scheduled" : 1,
-  "Completed" :2,
-  "Live" :3,
-  "Abandoned, canceled, no result" :4
-}
+  Scheduled: 1,
+  Completed: 2,
+  Live: 3,
+  "Abandoned, canceled, no result": 4,
+};
 const entityCompetition = {
-  1 : "fixture",
-  2 : "result",
-  3 : "live"
-}
+  1: "fixture",
+  2: "result",
+  3: "live",
+};
 const ScoringTypes = {
   Panel: 1, // Manual
-  Entity: 2
-}
+  Entity: 2,
+};
 const RefType = {
   Cricket: 1,
   Competition: 2,
   Match: 3,
   Team: 4,
   Player: 5,
-}
+};
 const SourceID = {
   Prediction: 1,
   Betfair: 2,
   EntitySport: 3,
-}
+};
 
 const ICCRankingType = {
   Team: 1,
-  Player: 2
-}
+  Player: 2,
+};
 
 const ICCMatchType = {
   men: {
     odis: matchTypesEntity.ODI,
     tests: matchTypesEntity.TEST,
-    t20s: matchTypesEntity.T20
+    t20s: matchTypesEntity.T20,
   },
   women: {
     odis: matchTypesEntity["Women ODI"],
-    t20s: matchTypesEntity["Women T20"]
-  }
-}
+    t20s: matchTypesEntity["Women T20"],
+  },
+};
 
 const ICCRankingPlayerType = {
   batsmen: "BatsMan",
   bowlers: "Bowler",
-  "all-rounders": "AllRounder"
-}
+  "all-rounders": "AllRounder",
+};
+
+const ICCRankingPlayerTypeById = {
+  Batsman: 1,
+  Bowler: 2,
+  AllRounder: 3,
+};
+const inningStatus = {
+  Scheduled: 1,
+  Completed: 2,
+  Live: 3,
+  Abandoned: 4,
+};
+const commentaryEvents = {
+  1: "Players Enter",
+  2: "New Batter",
+  3: "New Bowler",
+  4: "Catch Drop",
+  5: "Misfield",
+  6: "Boundary Check",
+  7: "3rd umpire",
+  8: "3rd umpire out",
+  9: "3rd umpire not out",
+  10: "Review",
+  11: "Injured",
+  12: "Maiden over",
+  13: "Wicket Check",
+  14: "Stump Check",
+  15: "Catch Check",
+  16: "1st Bounce",
+  17: "2nd Bounce",
+  18: "Fast Bowler",
+  19: "Spin Bowler",
+  20: "Appeal",
+  21: "Ball In Air",
+  22: "Bowler Stop",
+  23: "Over",
+  24: "Ball Chalu",
+  25: "Wicket",
+  26: "Dot",
+  27: "Wide",
+  28: "No Ball",
+  29: "Bye",
+  30: "Leg Bye",
+  31: "Four",
+  32: "Six",
+  34: "Retired Hurt",
+  35: "1 run",
+  36: "2 run",
+  37: "3 run",
+  38: "4 run",
+  39: "5 run",
+  40: "6 run",
+  41: "7 run",
+  42: "Bowled",
+  43: "Caught",
+  44: "LBW",
+  45: "Stumped",
+  46: "Run Out",
+  47: "Hit Wicket",
+  48: "Retired Out",
+  49: "Obstructing The Field",
+  50: "Timed Out",
+  51: "Toss",
+  52: "Delayed",
+  53: "Drinks Break",
+  54: "Inning Break",
+  55: "Stumps",
+  56: "Lunch Break",
+  57: "Tea Break",
+  58: "Match Start Delay",
+  59: "Rain Delay",
+  60: "Dinner",
+  61: "Strategic Timeout",
+  62: "Technical Issue",
+  63: "Bad Light",
+  64: "Match Interrupted",
+  65: "Toss Update",
+  66: "Playing-11 Update",
+  67: "Match End",
+  68: "Fielder Injured",
+  69: "Batter Injured",
+  70: "Bowler Injured",
+  71: "Runout Check",
+  72: "Free Hit",
+  73: "Overthrow",
+  74: "No Ball Check",
+  75: "Wide Ball Check",
+  76: "LBW Check",
+  77: "Batting Review",
+  78: "Bowling Review",
+};
 
 const exchangeMatchinfoAPI = async (data, request, fastify) => {
   try {
     let url = entityConstant.EXCHANGEMATCHINFOAPI;
-    if (!url) return 'Match info URL not found';
+    if (!url) return "Match info URL not found";
 
-    const authToken = global.tblConfigs.find(item => item.key === configConstants.ENTITYEXCHAUTHTOKEN)?.value;
+    const authToken = global.tblConfigs.find(
+      (item) => item.key === configConstants.ENTITYEXCHAUTHTOKEN
+    )?.value;
     if (!authToken) {
       throw new Error("Auth token not found in config");
     }
@@ -1453,8 +1661,9 @@ const exchangeMatchinfoAPI = async (data, request, fastify) => {
       throw new Error("Match ID is required");
     }
 
-    url = url.replace("{token}", authToken)
-      .replace("{match_id}", data?.mid || "")
+    url = url
+      .replace("{token}", authToken)
+      .replace("{match_id}", data?.mid || "");
 
     const result = await axios.get(url, { headers: {} });
     return result.data;
@@ -1466,21 +1675,30 @@ const exchangeMatchinfoAPI = async (data, request, fastify) => {
       "DB ERROR --> utilities/index/exchangeMatchInfoAPI",
       request
     );
-    return error.response?.data || { status: "failed", response: error.message, api_version: "3.0" };
+    return (
+      error.response?.data || {
+        status: "failed",
+        response: error.message,
+        api_version: "3.0",
+      }
+    );
   }
-}
+};
 
 const insertICCRankingTeamPlayerData = async (type, data, request, fastify) => {
   try {
     const response = await callEntitySportAPI(
       {
         serviceType: ServiceType.entitySport,
-        moduleType: APIEndpointModuleType[type === ICCRankingType.Team ? "insertTeam" : "insertPlayer"],
+        moduleType:
+          APIEndpointModuleType[
+            type === ICCRankingType.Team ? "insertTeam" : "insertPlayer"
+          ],
         data: {
           module: type === ICCRankingType.Team ? "team" : "player",
           type: "insert",
-          [type === ICCRankingType.Team ? "tid" : "pid"]: Number(data)
-        }
+          [type === ICCRankingType.Team ? "tid" : "pid"]: Number(data),
+        },
       },
       request,
       fastify
@@ -1491,21 +1709,28 @@ const insertICCRankingTeamPlayerData = async (type, data, request, fastify) => {
     }
     throw new Error("Error fetching ICC Ranking data from EntitySport API");
   } catch (err) {
-    throw new Error("API ERROR --> utilities/index.js/insertICCRankingTeamPlayerData - callEntitySportAPI");
+    throw new Error(
+      "API ERROR --> utilities/index.js/insertICCRankingTeamPlayerData - callEntitySportAPI"
+    );
   }
-}
+};
 
 const extractEntries = async (json, isMen, request, fastify) => {
   const matchTypeData = global.tblMatchTypes;
   const playerTypeData = global.tblPlayerTypes;
-  const isTeamCategory = category => category === 'teams';
+  const isTeamCategory = (category) => category === "teams";
   const output = [];
 
-  const teamMap = new Map(global.tblTeams.map(team => [team.tpId, team]));
-  const playerMap = new Map(global.tblPlayers.map(player => [player.tpId, player]));
-  const playerTypeMap = new Map(playerTypeData.map(pt => [pt.playerType.toLowerCase(), pt]));
+  const teamMap = new Map(global.tblTeams.map((team) => [team.tpId, team]));
+  const playerMap = new Map(
+    global.tblPlayers.map((player) => [player.tpId, player])
+  );
+  const playerTypeMap = new Map(
+    playerTypeData.map((pt) => [pt.playerType.toLowerCase(), pt])
+  );
 
-  let teamIds = new Set(), playerIds = new Set();
+  let teamIds = new Set(),
+    playerIds = new Set();
   for (const category in json) {
     const categoryData = json[category];
 
@@ -1528,31 +1753,46 @@ const extractEntries = async (json, isMen, request, fastify) => {
 
   if (teamIds.size > 0) {
     for (const tid of teamIds) {
-      await insertICCRankingTeamPlayerData(ICCRankingType.Team, tid, request, fastify)
-        .catch(err => {
-          console.error("Error inserting ICC Ranking Team:", err.message);
-        });
+      await insertICCRankingTeamPlayerData(
+        ICCRankingType.Team,
+        tid,
+        request,
+        fastify
+      ).catch((err) => {
+        console.error("Error inserting ICC Ranking Team:", err.message);
+      });
     }
   }
 
   if (playerIds.size > 0) {
     for (const pid of playerIds) {
-      await insertICCRankingTeamPlayerData(ICCRankingType.Player, pid, request, fastify)
-        .catch(err => {
-          console.error("Error inserting ICC Ranking Player:", err.message);
-        });
+      await insertICCRankingTeamPlayerData(
+        ICCRankingType.Player,
+        pid,
+        request,
+        fastify
+      ).catch((err) => {
+        console.error("Error inserting ICC Ranking Player:", err.message);
+      });
     }
   }
 
-  const newTeamMap = new Map(global.tblTeams.map(team => [team.tpId, team]));
-  const newTeamShortNameMap = new Map(global.tblTeams.map(team => [team.teamShortName.toLowerCase(), team]));
-  const newPlayerMap = new Map(global.tblPlayers.map(player => [player.tpId, player]));
+  const newTeamMap = new Map(global.tblTeams.map((team) => [team.tpId, team]));
+  const newTeamShortNameMap = new Map(
+    global.tblTeams.map((team) => [team.teamShortName.toLowerCase(), team])
+  );
+  const newPlayerMap = new Map(
+    global.tblPlayers.map((player) => [player.tpId, player])
+  );
 
   for (const category in json) {
     const categoryData = json[category];
 
     for (const matchType in categoryData) {
-      const matchTypeId = matchTypeData.find(mt => mt.entityEnum === ICCMatchType[isMen ? "men" : "women"][matchType])?.matchTypeId;
+      const matchTypeId = matchTypeData.find(
+        (mt) =>
+          mt.entityEnum === ICCMatchType[isMen ? "men" : "women"][matchType]
+      )?.matchTypeId;
       const entries = categoryData[matchType];
 
       for (const item of entries) {
@@ -1589,7 +1829,9 @@ const extractEntries = async (json, isMen, request, fastify) => {
         } else {
           const teamId = newTeamShortNameMap.get(item.team.toLowerCase());
           let playerId = newPlayerMap.get(Number(item.pid));
-          const playerTypeId = playerTypeMap.get(ICCRankingPlayerType[category].toLowerCase());
+          const playerTypeId = playerTypeMap.get(
+            ICCRankingPlayerType[category].toLowerCase()
+          );
           if (teamId && playerId && playerTypeId) {
             output.push({
               ...commonFields,
@@ -1614,12 +1856,12 @@ const extractEntries = async (json, isMen, request, fastify) => {
     }
   }
   return output;
-}
+};
 
 const UndoReportType = {
   commentary: 1,
   user: 2,
-}
+};
 
 const teamRemarkType = {
   Q: "Q",
@@ -1820,6 +2062,9 @@ module.exports = {
   extractEntries,
   UndoReportType,
   callSocketCountClientAPI,
+  ICCRankingPlayerTypeById,
+  inningStatus,
+  EntityCommentaryStatus,
   teamRemarkType,
   extractGroupDataFromArray,
   EntityPlayerType,

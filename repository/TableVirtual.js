@@ -128,7 +128,8 @@ const virtualBallByBallQuery = async (data, request, fastify) => {
             "wrTeamScore",
             "wrTeamWicket",
             "wrCardKey",
-            "wrCardType"
+            "wrCardType",
+            "wrTpId"
         )
         VALUES (
             $1, $2, $3, $4, $5,
@@ -137,7 +138,7 @@ const virtualBallByBallQuery = async (data, request, fastify) => {
             $16, $17, $18, $19, $20,
             $21, $22, $23, $24, $25,
             $26, $27, $28, $29, $30,
-            $31 ,$32 ,$33
+            $31 ,$32 ,$33 ,$34
         )
         RETURNING
             "wrCommentaryBallByBallId" AS "commentaryBallByBallId",
@@ -173,7 +174,8 @@ const virtualBallByBallQuery = async (data, request, fastify) => {
             "wrTeamScore" AS "teamScore",
             "wrTeamWicket" AS "teamWicket",
             "wrCardKey" AS "cardKey",
-            "wrCardType" AS "cardType"
+            "wrCardType" AS "cardType",
+            "wrTpId" AS "tpId"
             ;`;
 
     const result = await fastify.db.query(query, {
@@ -185,7 +187,7 @@ const virtualBallByBallQuery = async (data, request, fastify) => {
             data.currentOverBalls,
             data.bowlerId,
             data.batStrikeId,
-            data.batNonStrikeId,
+            data.batNonStrikeId ?? 0,
             data.ballIsCount,
             data.ballType,
             data.ballIsDot,
@@ -201,8 +203,8 @@ const virtualBallByBallQuery = async (data, request, fastify) => {
             data.ballFielderId1,
             data.ballFielderId2,
             data.overIsMaiden,
-            data.nextBatStrikeId,
-            data.nextBatNonStrikeId,
+            data.nextBatStrikeId ?? 0,
+            data.nextBatNonStrikeId ?? 0,
             data.isDelete ?? false,
             data.currentInnings,
             data.autoStrikeBallCount ?? null,
@@ -211,6 +213,7 @@ const virtualBallByBallQuery = async (data, request, fastify) => {
             data.teamWicket ?? null,
             data.cardKey ?? null,
             data.cardType ?? null,
+            data.tpId ?? null
           ],
         type: fastify.db.QueryTypes.SELECT,
     });
@@ -292,7 +295,9 @@ const virtualPartnershipQuery = async (data, request, fastify) => {
         "wrP1Ball" AS "p1Ball",
         "wrP2Ball" AS "p2Ball",
         "wrP1Run" AS "p1Run",
-        "wrP2Run" AS "p2Run"
+        "wrP2Run" AS "p2Run",
+        "wrTeamScore" as "teamScore",
+        "wrTeamWicket" as "teamWicket"
     `;
     const result = await fastify.db.query(query, {
         bind : [
