@@ -929,8 +929,8 @@ const competitionImportService = async (data, fastify, request) => {
         WrUserId: -2
       }
     });
-    const index = global.tblCompetitions.findIndex(item => item.competitionId === checkCompetition.competitionId);
 
+    const index = global.tblCompetitions.findIndex(item => item.competitionId === checkCompetition.competitionId);
     global.tblCompetitions[index] = updatedCompetition[0];
     checkCompetition = updatedCompetition[0];
   }
