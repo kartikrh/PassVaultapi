@@ -23,7 +23,8 @@ const { APIEndpointModuleType, ServiceType, callClientAPI, compStatus, callCardC
 const { getCommentariesResultQuery, getAllCommByCompIdQuery } = require("../repository/TableCommentary")
 const { deleteTournamentTeamPlayersByCompIdQuery } = require("../repository/TableTournamentsTeamPlayers");
 const { deleteTournamentTeamPointsByCompIdQuery } = require("../repository/TableTournmentTeamPoints");
-const { insertTeamQuery, updateTeamQuery } = require("../repository/TableTeams");
+const { matchImportService } = require("./commentry");
+const { addEditTournamentTeamPointDataService } = require("./tournamentTeamPoints");
 
 // const allCompetitionService = async (request) => {
 //   const { isActive, isTrending, eventTypeId, matchTypeId, isMen, type } = request.body;
@@ -875,7 +876,6 @@ const competitionImportService = async (data, fastify, request) => {
   )
 
   let entitySportCompetitionResponse = entitySportCompetition?.data?.result;
-  console.log("🚀 ~ competitionImportService ~ entitySportCompetitionResponse:", entitySportCompetitionResponse)
   if (!entitySportCompetitionResponse || entitySportCompetitionResponse?.status !== "ok") {
     throw new Error("Invalid response from Entit-Sport API");
   }
@@ -883,7 +883,6 @@ const competitionImportService = async (data, fastify, request) => {
   entitySportCompetitionResponse = entitySportCompetitionResponse?.response;
 
   let checkCompetition = global.tblCompetitions.find(item => item.tpId === data.cid || item.competition.toLowerCase() === entitySportCompetitionResponse.title.replace(/'/g, "''").toLowerCase());
-  console.log("🚀 ~ competitionImportService ~ checkCompetition:", checkCompetition);
   const eventType = global.tblEventTypes.find((et) => et.eventType.toLowerCase() === 'Cricket'.toLowerCase());
   const matchType = global.tblMatchTypes.find(item => item.entityEnum === EntityEnums[entitySportCompetitionResponse?.game_format.toUpperCase()]);
 
@@ -936,7 +935,67 @@ const competitionImportService = async (data, fastify, request) => {
     checkCompetition = updatedCompetition[0];
   }
 
-  let checkTournamentTypeGroup = entitySportCompetitionResponse?.rounds.every(item => item.type === "group") && entitySportCompetitionResponse?.standing?.standings.length > 0;
+  let allCompetitionMatch = [];
+  const entitySportCompetitionMatchFirst = await callEntitySportAPI(
+    {
+      serviceType: ServiceType.entitySport,
+      moduleType: APIEndpointModuleType.getCompetitionMatchFromEntity,
+      data: {
+        module: "competitionMatch",
+        type: "get",
+        cid: data.cid,
+        page: 1,
+        limit: 50
+      }
+    },
+    request,
+    fastify
+  )
+
+  let entitySportCompetitionMatchFirstResponse = entitySportCompetitionMatchFirst?.data?.result;
+  if (!entitySportCompetitionMatchFirstResponse || entitySportCompetitionMatchFirstResponse?.status !== "ok") {
+    throw new Error("Invalid response from Entit-Sport API");
+  }
+
+  entitySportCompetitionMatchFirstResponse = entitySportCompetitionMatchFirstResponse?.response;
+  allCompetitionMatch.push(...entitySportCompetitionMatchFirstResponse?.items);
+
+  const totalPages = entitySportCompetitionMatchFirstResponse?.total_pages;
+  if (totalPages > 1) {
+    for (let page = 2; page <= totalPages; page++) {
+      const entitySportCompetitionMatchOther = await callEntitySportAPI(
+        {
+          serviceType: ServiceType.entitySport,
+          moduleType: APIEndpointModuleType.getCompetitionMatchFromEntity,
+          data: {
+            module: "competitionMatch",
+            type: "get",
+            cid: data.cid,
+            page,
+            limit: 50
+          }
+        },
+        request,
+        fastify
+      )
+      
+      let entitySportCompetitionMatchOtherResponse = entitySportCompetitionMatchOther?.data?.result;
+      if (!entitySportCompetitionMatchOtherResponse || entitySportCompetitionMatchOtherResponse?.status !== "ok") {
+        throw new Error("Invalid response from Entit-Sport API");
+      }
+      
+      entitySportCompetitionMatchOtherResponse = entitySportCompetitionMatchOtherResponse?.response;
+      allCompetitionMatch.push(...entitySportCompetitionMatchOtherResponse?.items);
+    }
+  }
+
+  for (const match of allCompetitionMatch) {
+    await matchImportService({
+      mid: match.match_id
+    }, fastify, request);
+  }
+
+  await addEditTournamentTeamPointDataService(entitySportCompetitionResponse, checkCompetition?.competitionId, fastify, request);
 
   return checkCompetition;
 }

@@ -278,7 +278,7 @@ const updateCompititionQuery = async (data, fastify, request) => {
           data.drsCount,
           data.imagePath,
           data.isMen,
-          data.type,
+          data.type || null,
           data.isVirtual,
           data.commStatus || null,
           data.startDate,
