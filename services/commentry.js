@@ -199,7 +199,6 @@ const { insertPlayerEntityQuery, insertPlayerQuery, updateExchangePlayerQuery } 
 const { insertCountryCodeQuery } = require("../repository/TableCountryCodes");
 const { insertVenueQuery, updateVenueQuery } = require("../repository/TableVenue");
 const { teamImportService } = require("./teams");
-const { competitionImportService } = require("./competition");
 
 const allCommentaryService = async (request, fastify) => {
   // return global.tblCommentaries;

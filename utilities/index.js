@@ -1340,6 +1340,7 @@ const EntityEnums = {
   T100: 18,
   WomenT100: 19,
   TB10: 20,
+  MIXED: null
 };
 const compStatus = {
   upcoming: 1,
