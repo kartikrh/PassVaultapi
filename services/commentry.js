@@ -22951,12 +22951,14 @@ const matchImportService = async (data, fastify, request = null) => {
   let teamAData, teamBData;
   if (teamA && !nullTeamtpIds.includes(teamA)) {
     teamAData = await teamImportService({
-      tid: teamA
+      tid: teamA,
+      cid: checkCompetition?.competitionId
     }, fastify, request);
   }
   if (teamB && !nullTeamtpIds.includes(teamB)) {
     teamBData = await teamImportService({
-      tid: teamB
+      tid: teamB,
+      cid: checkCompetition?.competitionId
     }, fastify, request);
   }
 
@@ -23023,6 +23025,29 @@ const matchImportService = async (data, fastify, request = null) => {
     const teamAPlaying11Squad = playing11Squad?.teama?.squads?.map(item => item.player_id);
     const teamBPlaying11Squad = playing11Squad?.teamb?.squads?.map(item => item.player_id);
 
+    const insertCommentaryPlayersByTeam = async (i, commentaryId, teamId, teamPlaying11Squad, matchTypeId, fastify, request) => {
+      let commentaryPlayers = global.tblCommentaryPlayers.filter(item => item.commentaryId === commentaryId && item.teamId === teamId);
+      const playersInTeamsSet = new Set(commentaryPlayers.map(player => player.tpId));
+      const filteredPlayerIds = teamPlaying11Squad.filter(pid => !playersInTeamsSet.has(pid));
+
+      const playersInTeams = await getAllPlayersByTeamIdQuery(
+        teamId,
+        fastify,
+        request
+      );
+
+      for (const playerId of filteredPlayerIds) {
+        const teamPlayerData = playersInTeams.find(item => item.teamId === teamId && item.tpId === Number(playerId))
+        await insertCommentaryPlayers({
+          commentaryId,
+          teamId,
+          playerId: teamPlayerData?.playerId,
+          displayOrder: teamPlayerData?.playerOrder,
+          matchTypeId,
+        }, i, fastify, request);
+      }
+    }
+
     for (let i = 1; i <= noOfInning; i++) {
       let commentaryTeam = global.tblCommentaryTeams.findIndex(
         (item) =>
@@ -23043,53 +23068,8 @@ const matchImportService = async (data, fastify, request = null) => {
         global.tblCommentaryTeams.push(commentaryTeams);
       }
 
-      if (teamAData) {
-        let teamId = teamAData.teamId;
-        let commentaryPlayers = global.tblCommentaryPlayers.filter(item => item.commentaryId && teamId === teamId);
-        const playersInTeamsSet = new Set(commentaryPlayers.map(player => player.tpId));
-        const filteredPlayerIds = teamAPlaying11Squad.filter(pid => !playersInTeamsSet.has(pid));
-
-        const playersInTeams = await getAllPlayersByTeamIdQuery(
-          teamId,
-          fastify,
-          request
-        );
-
-        for (const playerId of filteredPlayerIds) {
-          const tblPlayerId = global.tblPlayers.find(item => item.tpId === Number(playerId))?.playerId;
-          await insertCommentaryPlayers({
-            commentaryId: insertCommentary.commentaryId,
-            teamId: teamId,
-            playerId: tblPlayerId,
-            displayOrder: playersInTeams.find(item => item.teamId === teamId && item.playerId === tblPlayerId)?.playerOrder,
-            matchTypeId: matchType?.matchTypeId,
-          }, i, fastify, request);
-        }
-      }
-
-      if (teamBData) {
-        let teamId = teamBData.teamId;
-        let commentaryPlayers = global.tblCommentaryPlayers.filter(item => item.commentaryId && teamId === teamId);
-        const playersInTeamsSet = new Set(commentaryPlayers.map(player => player.tpId));
-        const filteredPlayerIds = teamBPlaying11Squad.filter(pid => !playersInTeamsSet.has(pid));
-
-        const playersInTeams = await getAllPlayersByTeamIdQuery(
-          teamId,
-          fastify,
-          request
-        );
-
-        for (const playerId of filteredPlayerIds) {
-          const tblPlayerId = global.tblPlayers.find(item => item.tpId === Number(playerId))?.playerId;
-          await insertCommentaryPlayers({
-            commentaryId: insertCommentary.commentaryId,
-            teamId: teamId,
-            playerId: tblPlayerId,
-            displayOrder: playersInTeams.find(item => item.teamId === teamId && item.playerId === tblPlayerId)?.playerOrder,
-            matchTypeId: matchType?.matchTypeId,
-          }, i, fastify, request);
-        }
-      }
+      await insertCommentaryPlayersByTeam(i, insertCommentary.commentaryId, teamAData.teamId, teamAPlaying11Squad, matchType?.matchTypeId, fastify, request);
+      await insertCommentaryPlayersByTeam(i, insertCommentary.commentaryId, teamBData.teamId, teamBPlaying11Squad, matchType?.matchTypeId, fastify, request);
     }
 
     return insertCommentary;

@@ -29,6 +29,7 @@ const { getAutoImportDataByIdQuery, insertAutoImportDataQuery } = require("../re
 const { insertPlayerQuery } = require("../repository/TablePlayer");
 const { updateAutoImportDataService } = require("./autoImportData");
 const { playerImportService } = require("./player");
+const { addTournamentTeamPlayersService } = require("./tournamentTeamPlayers");
 const allTeamsService = async () => {
   return global.tblTeams;
 };
@@ -855,39 +856,38 @@ const teamImportService = async (data, fastify, request = null) => {
     }, fastify, request);
   }
 
-  const playersInTeams = await getAllPlayersByTeamIdQuery(
-    checkTeam.teamId,
-    fastify,
-    request
-  );
+  const playersInTeams = await getAllPlayersByTeamIdQuery(checkTeam.teamId, fastify, request);
 
-  const playersInTeamsSet = new Set(playersInTeams.map(player => player.tpId));
-  const filteredPlayerIds = uniquePlayerIds.filter(pid => !playersInTeamsSet.has(pid));
-
-  const tpIdToPlayerIdMap = new Map(
-    global.tblPlayers
-      .filter(item => item.tpId && filteredPlayerIds.includes(item.tpId))
-      .map(item => [item.tpId, item.playerId])
-  );
-
-  for (const tpId of filteredPlayerIds) {
-    try {
-      const refPlayerId = tpIdToPlayerIdMap.get(tpId) ?? null;
-
+  for (const playerId of uniquePlayerIds) {
+    const teamPlayerData = await playersInTeams.find(item => item.tpId === playerId);
+    if (!teamPlayerData) {
+      const playerData = global.tblPlayers.find(item => item.tpId === playerId);
       await insertTeamPlayerQuery({
         teamId: checkTeam.teamId,
-        refPlayerId,
-        tpId,
+        refPlayerId: playerData?.playerId,
+        tpId: playerId,
         userId: -2,
       }, fastify, request);
-
       await updateTeamPlayerHomeTeamQuery({
-        refPlayerId,
+        refPlayerId: playerData?.playerId,
         teamId: checkTeam?.teamId
       }, fastify, request);
-    } catch (error) {
-      console.log(`Failed to insert player with tpId ${tpId}:`, error);
     }
+  }
+
+  if (data?.cid) {
+    const playersTpId = global.tblPlayers.filter(item => uniquePlayerIds.includes(item.tpId));
+    await addTournamentTeamPlayersService({
+      ...request,
+      body: {
+        teamPlayers: playersTpId,
+        competitionId: data?.cid,
+        teamId:checkTeam.teamId
+      },
+      userTokenInfo: {
+        WrUserId: -2
+      }
+    }, fastify);
   }
 
   return checkTeam;

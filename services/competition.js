@@ -876,7 +876,6 @@ const competitionImportService = async (data, fastify, request) => {
   )
 
   let entitySportCompetitionResponse = entitySportCompetition?.data?.result;
-  console.log("🚀 ~ competitionImportService ~ entitySportCompetitionResponse:", entitySportCompetitionResponse)
   if (!entitySportCompetitionResponse || entitySportCompetitionResponse?.status !== "ok") {
     throw new Error("Invalid response from Entit-Sport API");
   }
@@ -916,7 +915,6 @@ const competitionImportService = async (data, fastify, request) => {
       },
       body: competitionData
     }, fastify);
-    console.log("🚀 ~ competitionImportService ~ insertCompetition:", insertCompetition)
     global.tblCompetitions.push(insertCompetition);
     checkCompetition = insertCompetition;
   } else {
@@ -924,7 +922,6 @@ const competitionImportService = async (data, fastify, request) => {
       ...checkCompetition,
       ...competitionData
     };
-    console.log("🚀 ~ competitionImportService ~ updateCompetitionData:", updateCompetitionData)
 
     const updatedCompetition = await updateCompititionQuery(updateCompetitionData, fastify, {
       ...request,
