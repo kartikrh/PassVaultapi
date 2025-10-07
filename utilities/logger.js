@@ -471,14 +471,15 @@ const disMissalLogger = async (data,fastify,request)=>{
 
 const originalLog = console.log;
 const originalLogError = console.error;
+const originalLogWarn = console.warn;
 
-console.log = (...args) => {
-  originalLog(`[${getCurrentDateTime()}]`, ...args);
+const createLogPrefix = (originalFn) => {
+  return (...args) => originalFn(`[${getCurrentDateTime()}]`, ...args);
 }
 
-console.error = (...args) => {
-  originalLogError(`[${getCurrentDateTime()}]`, ...args);
-}
+console.log = createLogPrefix(originalLog);
+console.error = createLogPrefix(originalLogError);
+console.warn = createLogPrefix(originalLogWarn);
 
 module.exports = { errorLogger, responseLogger ,responseLogInDB , marketLogger ,
   marketDataLogger,tblPredictorAPILogger,tblThirdPartyAPILogger,commentaryLogger,updateWebRequestLogs,
