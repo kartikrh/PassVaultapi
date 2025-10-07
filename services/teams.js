@@ -806,8 +806,7 @@ const teamImportService = async (data, fastify, request = null) => {
         fullPath: global.tblConfigs.find(item => item.key === ENTITYDEFAULTTEAMIMG)?.value || null,
         imagePath: global.tblConfigs.find(item => item.key === ENTITYDEFAULTTEAMIMGPATH)?.value || null
       }
-    }
-    if (imageUrl) {
+    } else {
       const getImageDataFromUrl = await getImageFromUrl({
         type: ImgModuleConfig.Teams.type,
         imageUrl
@@ -818,7 +817,7 @@ const teamImportService = async (data, fastify, request = null) => {
       }
     }
 
-    teamJerseyImageData = {
+    let teamJerseyImageData = {
       fullPath: global.tblConfigs.find(item => item.key === ENTITYDEFAULTJERSEYIMG)?.value || null,
       imagePath: global.tblConfigs.find(item => item.key === ENTITYDEFAULTJERSEYIMGPATH)?.value || null
     }
@@ -827,7 +826,8 @@ const teamImportService = async (data, fastify, request = null) => {
       image: imageUrl.fullPath,
       imagePath: imageUrl.imagePath,
       jersey: teamJerseyImageData.fullPath,
-      jerseyPath: teamJerseyImageData.imagePath
+      jerseyPath: teamJerseyImageData.imagePath,
+      userId: -2
     }
     const insertTeam = await insertTeamQuery(data, fastify, request);
     global.tblTeams.push(insertPlayer);
