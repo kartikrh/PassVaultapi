@@ -1,6 +1,6 @@
 const ResponseLog = require("../database/schema/responseLogger");
 const { ISCOMMENTARYLOGGER } = require("./configConstants");
-const moment = require('moment-timezone');
+const { getCurrentDateTime } = require('./datetime');
 
 const errorLogger = async (fastify, errMessage, errStack, request , data = null) => {
   try {
@@ -470,9 +470,14 @@ const disMissalLogger = async (data,fastify,request)=>{
 }
 
 const originalLog = console.log;
+const originalLogError = console.error;
 
 console.log = (...args) => {
-  originalLog(`[${moment().tz('Asia/Kolkata').format('DD-MM-YYYY hh:mm:ss A')}]`, ...args);
+  originalLog(`[${getCurrentDateTime()}]`, ...args);
+}
+
+console.error = (...args) => {
+  originalLogError(`[${getCurrentDateTime()}]`, ...args);
 }
 
 module.exports = { errorLogger, responseLogger ,responseLogInDB , marketLogger ,
