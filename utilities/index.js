@@ -1285,9 +1285,7 @@ const callEntitySportAPI = async (data, request, fastify) => {
       );
       if (endPoint) {
         let url = `${ser.api}${endPoint.endPoint}`;
-        console.log("🚀 ~ callEntitySportAPI ~ url:", url)
         let dataTosend = data.data;
-        console.log("🚀 ~ callEntitySportAPI ~ dataTosend:", dataTosend)
         const result = await axios.post(url, {
           ...dataTosend,
         });
