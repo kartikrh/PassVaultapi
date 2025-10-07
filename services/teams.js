@@ -829,7 +829,7 @@ const teamImportService = async (data, fastify, request = null) => {
       jerseyPath: teamJerseyImageData.imagePath,
     }
     const insertTeam = await insertTeamQuery(teamData, fastify, request);
-    global.tblTeams.push(insertPlayer);
+    global.tblTeams.push(insertTeam);
     checkTeam = insertTeam;
   }
 
