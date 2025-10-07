@@ -22936,9 +22936,7 @@ const matchImportService = async (data, fastify, request = null) => {
 
   const checkCompetition = global.tblCompetitions.find(item => item.tpId === matchInfoResponse?.competition?.cid);
   if (!checkCompetition) {
-    await competitionImportService({
-      cid: matchInfoResponse?.competition?.cid
-    }, fastify, request);
+    throw new Error("Competition not found for tpId " + matchInfoResponse?.competition?.cid);
   }
 
   const pythonIdData = global.tblPythonAPI.find(item => item.isDefault === true && item.isActive === true);
