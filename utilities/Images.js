@@ -3,7 +3,7 @@ const { generateFileName } = require("./index");
 const path = require("path");
 const { default: axios } = require("axios");
 const FormData = require('form-data');
-const { FILE_UPLOAD_URL, VIDEOUPLOADMAXSIZE } = require("./configConstants");
+const { FILE_UPLOAD_URL, VIDEOUPLOADMAXSIZE, PROJECT_NAME } = require("./configConstants");
 
 const storeImage = async (imageBuffer) => {
   try {
@@ -167,7 +167,7 @@ const generateImageName = (args) => {
 const getImageFromUrl = async (args) => {
   try {
     const { type, imageUrl } = args;
-    const fileUploadURL = global.tblConfigs.find((item) => item.key === FILEUPLOADURI).value;
+    const fileUploadURL = global.tblConfigs.find((item) => item.key === FILE_UPLOAD_URL).value;
     const projectName = global.tblConfigs.find((item) => item.key === PROJECT_NAME).value;
     const result = await axios.post(
       `${fileUploadURL}/download`,
