@@ -23068,22 +23068,6 @@ const matchImportService = async (data, fastify, request = null) => {
 
       global.tblCommentaries.push(insertCommentary);
       checkCommentary = insertCommentary;
-    } else {
-      const updateCommentaryData = {
-        ...checkCommentary,
-        ...commentaryData
-      }
-      const updateCommentary = await updateCommentaryQuery({
-        ...request,
-        body: updateCommentaryData,
-        userTokenInfo: {
-          WrUserId: -2
-        }
-      }, fastify);
-
-      const index = global.tblCommentaries.findIndex(item => item.commentaryId === checkCommentary.commentaryId);
-      global.tblCommentaries[index] = updateCommentary[0];
-      checkCommentary = updateCommentary[0];
     }
 
     const noOfInning = matchType.noOfIningsPerSide;

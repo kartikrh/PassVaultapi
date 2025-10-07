@@ -832,17 +832,6 @@ const teamImportService = async (data, fastify, request = null) => {
     const insertTeam = await insertTeamQuery(data, fastify, request);
     global.tblTeams.push(insertPlayer);
     checkTeam = insertTeam;
-  } else {
-    const updateTeamData = {
-      ...checkTeam,
-      ...teamData
-    };
-
-    const updatedTeamData = await updateTeamQuery(updateTeamData, fastify, request);
-    const index = global.tblTeams.findIndex(item => item.teamId === checkTeam.teamId);
-
-    global.tblTeams[index] = updatedTeamData[0];
-    checkTeam = updatedTeamData[0];
   }
 
   const allPlayers = Object.values(entitySportPlayerResponse).flat();
