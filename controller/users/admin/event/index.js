@@ -21,7 +21,7 @@ const getAllEvents = async (request, reply, fastify) => {
 };
 const getEventId = async (request, reply, fastify) => {
   try {
-    const result = await eventByIdService(request);
+    const result = await eventByIdService(request, fastify);
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, path + "/getEventId", request);
