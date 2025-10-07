@@ -917,22 +917,6 @@ const competitionImportService = async (data, fastify, request) => {
     }, fastify);
     global.tblCompetitions.push(insertCompetition);
     checkCompetition = insertCompetition;
-  } else {
-    const updateCompetitionData = {
-      ...checkCompetition,
-      ...competitionData
-    };
-
-    const updatedCompetition = await updateCompititionQuery(updateCompetitionData, fastify, {
-      ...request,
-      userTokenInfo: {
-        WrUserId: -2
-      }
-    });
-
-    const index = global.tblCompetitions.findIndex(item => item.competitionId === checkCompetition.competitionId);
-    global.tblCompetitions[index] = updatedCompetition[0];
-    checkCompetition = updatedCompetition[0];
   }
 
   let allCompetitionMatch = [];

@@ -954,17 +954,6 @@ const playerImportService = async (data, fastify, request = null) => {
     const insertPlayer = await insertPlayerQuery(newPlayerData, fastify, request);
     global.tblPlayers.push(insertPlayer);
     playerData = insertPlayer;
-  } else {
-    const updatePlayerData = {
-      ...checkPlayer,
-      ...playerData
-    };
-
-    const updatedPlayerData = await updatePlayerQuery(updatePlayerData, fastify, request);
-    const index = global.tblPlayers.findIndex(item => item.playerId === checkPlayer.playerId);
-
-    global.tblPlayers[index] = updatedPlayerData[0];
-    playerData = updatedPlayerData[0];
   }
   return playerData;
 }
