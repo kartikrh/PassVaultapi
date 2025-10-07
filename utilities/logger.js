@@ -1,5 +1,6 @@
 const ResponseLog = require("../database/schema/responseLogger");
 const { ISCOMMENTARYLOGGER } = require("./configConstants");
+const moment = require('moment-timezone');
 
 const errorLogger = async (fastify, errMessage, errStack, request , data = null) => {
   try {
@@ -466,6 +467,12 @@ const disMissalLogger = async (data,fastify,request)=>{
     )
     console.log(error);
   }
+}
+
+const originalLog = console.log;
+
+console.log = (...args) => {
+  originalLog(`[${moment().tz('Asia/Kolkata').format('DD-MM-YYYY hh:mm:ss A')}]`, ...args);
 }
 
 module.exports = { errorLogger, responseLogger ,responseLogInDB , marketLogger ,
