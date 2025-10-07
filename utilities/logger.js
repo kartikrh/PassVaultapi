@@ -208,7 +208,7 @@ const commentaryLogger = async (data, request, fastify) => {
     if (addLog == "false") {
       return true;
     }
-    let comment = request.body.deleteCommentaryBallByBallId || request.body.deleteOverId ? "delete" : null;
+    let comment = request?.body?.deleteCommentaryBallByBallId || request?.body?.deleteOverId ? "delete" : null;
     const query = `
       INSERT INTO "tblCommentaryLogs"
       (

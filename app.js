@@ -131,7 +131,7 @@ module.exports = async function (fastify, opts) {
           updateMarket(fastify)
           
         } catch (error) {
-          console.error("Error during post-sync operations:", error);
+          console.error(new Date(), "Error during post-sync operations:", error);
         }
       });
     });
@@ -140,21 +140,21 @@ module.exports = async function (fastify, opts) {
         // Fetching data from db every 24 hrs once(at midnight)
         await FetchingCommentariesDataFromCron(fastify);
       } catch (error) {
-        console.error("Error during scheduled task:", error);
+        console.error(new Date(), "Error during scheduled task:", error);
       }
     });
     cron.schedule('* * * * *', async () => {
       try {
         await upcomingCommentaries(fastify);
       } catch (error) {
-        console.error("Error during scheduled task:", error);
+        console.error(new Date(), "Error during scheduled task:", error);
       }
     });
     cron.schedule('0,30 * * * * *', async () => {
       try {
         await entitySportAutoImportProcess(fastify);
       } catch (error) {
-        console.error("Error during scheduled task:", error);
+        console.error(new Date(), "Error during scheduled task:", error);
       }
     });
 
@@ -237,7 +237,7 @@ module.exports = async function (fastify, opts) {
       await disConnectEntitySocketQuery(fastify);
       console.log("Cleanup task executed successfully");
     } catch (error) {
-      console.error("Error during preClose hook execution:", error);
+      console.error(new Date(), "Error during preClose hook execution:", error);
     }
   });
   fastify.register(require("@fastify/compress"), {

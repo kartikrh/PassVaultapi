@@ -83,7 +83,13 @@ const entitySportAutoImportProcess = async (fastify) => {
         }
 
     } catch (err) {
-        console.error("Error in autoImportProcess", err);
+        console.error(new Date(), "Error in autoImportProcess", err);
+        errorLogger(
+          fastify,
+          err.message,
+          "ERROR --> services/entitySportAutoImport.js/entitySportAutoImport",
+          null
+        );
     }
 };
 
