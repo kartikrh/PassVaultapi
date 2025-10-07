@@ -8695,6 +8695,7 @@ const getMatchDataByCId = async (data, request, fastify) => {
   if (com.choseTo) {
     toss = com.choseTo == 1 ? "BAT" : "BOWL";
   }
+  const weatherAndPitchData = await weatherAndPitchDataService(com.commentaryId);
   let comDetails = {
     rno: rno,
     cid : com.commentaryId,
@@ -8756,6 +8757,7 @@ const getMatchDataByCId = async (data, request, fastify) => {
     isTest: com.isTest,
     isActive: com.isActive,
     etyId: eventType?.eventTypeId,
+    ...weatherAndPitchData,
   };
   return comDetails;
 };

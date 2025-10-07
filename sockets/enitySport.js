@@ -4,7 +4,7 @@ const { io } = require("socket.io-client");
 const { clientSocketActionType, clientSocketStatus } = require("../utilities");
 const { updateEntitySocketStatusQuery, updateReconnectCountQuery } = require("../repository/TableEntitySockets");
 const { errorLogger } = require("../utilities/logger");
-// const { setEntityCom2Service } = require("../services/entitySport")
+const { setEntityCom2Service } = require("../services/entitySport")
 
 const connectEntitySport = async (fastify) => {
   try {
@@ -48,9 +48,9 @@ const connectEntitySport = async (fastify) => {
 
         client.on("entityScoreData", async (payload) => {
           try {
-            // // console.log("Received entity data from Backend A:", payload);
-            // const request = { body: { response: payload } };
-            // await setEntityCom2Service(request, fastify);
+            // console.log("Received entity data from Backend A:", payload);
+            const request = { body: { response: payload } };
+            await setEntityCom2Service(request, fastify);
           } catch (err) {
             console.error("Error saving entity data:", err);
             errorLogger(

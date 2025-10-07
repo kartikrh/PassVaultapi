@@ -1691,6 +1691,33 @@ const getParentIdTreeQuery = async (userId, request, fastify) => {
     throw new Error(error.message);
   }
 };
+const getUserFullNameQuery = async (userId, request, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `SELECT 
+          "WrUserId" as "userId",
+          "WrName" as "name"
+      FROM "tblUsers"
+      WHERE "WrUserId" = $1
+      AND "WrIsDelete" = FALSE`,
+      {
+        type: QueryTypes.SELECT,
+        bind: [userId]
+      }
+    );
+
+    return result[0];
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableUser/getUserFullNameQuery",
+      request
+    );
+    throw new Error(error.message);
+    
+  }
+}
 module.exports = {
   signInUser,
   signUpUser,
@@ -1731,4 +1758,5 @@ module.exports = {
   updateVerifiedUserQuery,
   getUserListQuery,
   getParentIdTreeQuery,
+  getUserFullNameQuery,
 };

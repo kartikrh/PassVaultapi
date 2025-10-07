@@ -5,8 +5,9 @@ const {
 } = require("../repository/TableEvent");
 const { convertDate } = require("../utilities");
 const configConstants = require("../utilities/configConstants");
+const { getUserFullNameQuery } = require("../repository/TableUser");
 
-const allEventService = async (request) => {
+const allEventService = async (request, fastify) => {
   const { isActive, eventTypeId, competitionId } = request.body;
 
   const filterObject = {
@@ -53,6 +54,15 @@ const allEventService = async (request) => {
     });
   }
   _event = _event.sort((a, b) => new Date(b.eventDate) - new Date(a.eventDate));
+  _event = await Promise.all(
+    _event.map(async (item) => {
+      let userData = await getUserFullNameQuery(item.createdBy, request, fastify);
+      return {
+        ...item,
+        createdBy: userData?.name ?? null
+      };
+    })
+  );
   return _event;
   // old Code
   // if (isActive !== undefined) {
@@ -65,10 +75,15 @@ const allEventService = async (request) => {
   // return _event;
 };
 
-const eventByIdService = async (request) => {
+const eventByIdService = async (request, fastify) => {
   const { eventId } = request.body;
   const result = global.tblEvents.find((item) => item.eventId === eventId);
-  return result || null;
+  if (!result) return null;
+  const userData = await getUserFullNameQuery(result?.createdBy, request, fastify);
+  return {
+    ...result,
+    createdBy: userData?.name ?? null
+  }
 };
 
 const eventBycompetitionIdService = async (request) => {
@@ -145,6 +160,7 @@ const updateEventService = async (request, fastify) => {
       request.body.venue === undefined ? checkId.venue : request.body.venue,
     eventType: checkId.eventType,
     competition: checkId.competition,
+    createdBy: checkId.createdBy,
   };
 
   if ("isActive" in request.body) {
