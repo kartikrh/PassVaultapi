@@ -118,7 +118,7 @@ const saveDeviceQuery = async (data, fastify, request) => {
           data.userType || 0,
           data.deviceType || 0,
           data.mobileToken || "",
-          data.tempCId || ""
+          data.tempCId || 0
         ],
       }
     );

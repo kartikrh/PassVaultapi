@@ -647,6 +647,7 @@ const addEditTournamentTeamPointDataService = async (result, competitionId, fast
       }
       const groupData = extractGroupDataFromArray(result?.standing?.standings, team?.tid);
       for (let gd of groupData) {
+        let validateComp = global.tblCompetitions.find(item => item.compeitionId == competitionId)
         const checkTournamentTeamPoint = alltournamentTeamPoints.find(item => item.competitionId === competitionId && item.teamId === checkTeam?.teamId && item.groupId === gd.groupId);
         if (checkTournamentTeamPoint) {
           const updateTournamentTeamPointData = {
@@ -654,7 +655,29 @@ const addEditTournamentTeamPointDataService = async (result, competitionId, fast
             ...gd,
             isActive: highestOrder === gd.groupId ? true : (gd.position === teamRemarkType.Q ? false : true)
           }
-          await updateTournamentTeamPointsQuery(updateTournamentTeamPointData, fastify, request);
+          let updateData = await updateTournamentTeamPointsQuery(updateTournamentTeamPointData, fastify, request);
+          updateData = updateData[0];
+          if (validateComp && validateComp?.isActive == true) {
+            const res = await responseChangeService(updateData?.teamId, updateData?.competitionId);
+            callClientAPI(
+             {
+                serviceType: ServiceType.clientAPI,
+                moduleType: APIEndpointModuleType.updateSeoModule,
+                data: {
+                  module: 'tournamentTeamPoints',
+                  type: "update",
+                  data: { ...updateData, ...res }
+                }
+             }, null, fastify)
+            .catch((err) => {
+              errorLogger(
+                fastify,
+                err.message,
+                "services/tournamentTeamPoints.js/importTournamentTeamPointFromEntitySportService update - callClientAPI",
+                null
+              );
+            });
+          }
         } else {
           const data = {
             groupId: 1,
@@ -665,7 +688,28 @@ const addEditTournamentTeamPointDataService = async (result, competitionId, fast
             isActive: highestOrder === gd.groupId ? true : (gd.position === teamRemarkType.Q ? false : true),
             ...gd
           }
-          await insertTournamentTeamPointsQuery(data, fastify, request);
+          const pointData = await insertTournamentTeamPointsQuery(data, fastify, request);
+          if (validateComp && validateComp?.isActive == true) {
+            const res = await responseChangeService(pointData?.teamId, pointData?.competitionId);
+            callClientAPI(
+             {
+                serviceType: ServiceType.clientAPI,
+                moduleType: APIEndpointModuleType.updateSeoModule,
+                data: {
+                  module: 'tournamentTeamPoints',
+                  type: "add",
+                  data: { ...pointData, ...res }
+                }
+             }, null, fastify)
+            .catch((err) => {
+              errorLogger(
+                fastify,
+                err.message,
+                "services/tournamentTeamPoints.js/importTournamentTeamPointFromEntitySportService - callClientAPI",
+                null
+              );
+            }); 
+          }
         }
       }
     }

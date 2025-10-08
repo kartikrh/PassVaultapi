@@ -122,45 +122,65 @@ const insertTournamentTeamPointsQuery = async (data, fastify, request) => {
 
 const updateTournamentTeamPointsQuery = async (data, fastify, request) => {
   try {
-    return await fastify.db.query(
-      `UPDATE "tblTournamentTeamPoint" 
-       SET 
-          "wrGroupId" = $1,
-          "wrTeamId" = $2,
-          "wrCompetitionId" = $3,
-          "wrTotalMatches" = $4,
-          "wrTotalWin" = $5,
-          "wrTotalLose" = $6,
-          "wrTotalTie" = $7,
-          "wrNoResult" = $8,
-          "wrTotalPoint" = $9,
-          "wrNetRunRate" = $10,
-          "wrIsActive" = $11,
-          "wrTpId" = $13,
-          "wrGroupName"  = $14,
-          "wrPosition" = $15
-       WHERE "wrId" = $12`,
-      {
-        type: fastify.db.QueryTypes.UPDATE,
-        bind: [
-          data.groupId,
-          data.teamId,
-          data.competitionId,
-          data.totalMatches,
-          data.totalWin,
-          data.totalLose,
-          data.totalTie,
-          data.noResult,
-          data.totalPoint,
-          data.netRunRate,
-          data.isActive,
-          data.id,
-          data.tpId,
-          data.groupName,
-          data.position,
-        ],
-      }
-    );
+    const query = `
+      UPDATE "tblTournamentTeamPoint"
+      SET 
+        "wrGroupId" = $1,
+        "wrTeamId" = $2,
+        "wrCompetitionId" = $3,
+        "wrTotalMatches" = $4,
+        "wrTotalWin" = $5,
+        "wrTotalLose" = $6,
+        "wrTotalTie" = $7,
+        "wrNoResult" = $8,
+        "wrTotalPoint" = $9,
+        "wrNetRunRate" = $10,
+        "wrIsActive" = $11,
+        "wrTpId" = $12,
+        "wrGroupName" = $13,
+        "wrPosition" = $14
+      WHERE "wrId" = $15
+      RETURNING 
+        "wrId" AS "id",
+        "wrGroupId" AS "groupId",
+        "wrTeamId" AS "teamId",
+        "wrCompetitionId" AS "competitionId",
+        "wrTotalMatches" AS "totalMatches",
+        "wrTotalWin" AS "totalWin",
+        "wrTotalLose" AS "totalLose",
+        "wrTotalTie" AS "totalTie",
+        "wrNoResult" AS "noResult",
+        "wrTotalPoint" AS "totalPoint",
+        "wrNetRunRate" AS "netRunRate",
+        "wrIsActive" AS "isActive",
+        "wrCreatedAt" AS "createdAt",
+        "wrGroupName" AS "groupName",
+        "wrPosition" AS "position",
+        "wrTpId" AS "tpId";
+    `;
+
+    const result = await fastify.db.query(query, {
+      type: fastify.db.QueryTypes.UPDATE,
+      bind: [
+        data.groupId,
+        data.teamId,
+        data.competitionId,
+        data.totalMatches,
+        data.totalWin,
+        data.totalLose,
+        data.totalTie,
+        data.noResult,
+        data.totalPoint,
+        data.netRunRate,
+        data.isActive,
+        data.tpId,
+        data.groupName,
+        data.position,
+        data.id,
+      ],
+    });
+
+    return result[0] || null;
   } catch (err) {
     errorLogger(
       fastify,
