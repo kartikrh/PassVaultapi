@@ -712,11 +712,11 @@ const APIEndpointModuleType = {
   insertTeam: 10,
   insertPlayer: 11,
   getSocketCount: 12,
-  getCompetitionInfo: 13,
+  getCompetitionDataByIdFromEntity: 13,
   getTeamDataByIdFromEntity: 14,
   getPlayerDataByIdFromEntity: 15,
-  getMatchByIdFromEntity: 16,
-  getCompetitionMatchFromEntity: 17
+  getMatchDataByIdFromEntity: 16,
+  getCompetitionMatchDataByIdFromEntity: 17
 }
 
 const NotificationSendType = {
@@ -1268,39 +1268,16 @@ const HideEventType = {
   competition: 2,
   commentary: 3,
 };
-const callEntitySportAPI = async (data, request, fastify) => {
+const callEntitySportAPI = async (url, request, fastify) => {
   try {
-    let competitionServices = global.tblAPIs.filter(
-      (item) => item.type == data.serviceType && item.isActive == true
-    );
-    if (competitionServices.length == 0) {
+    let checkEntitySportIsActive = global.tblEntitySockets.find(item => item.isActive == true && item.status === clientSocketStatus.connected);
+    if (!checkEntitySportIsActive) {
+      console.log("Entity Sport API is not active");
       return true;
     }
-    for (ser of competitionServices) {
-      let endPoint = global.tblAPIEndpoints.find(
-        (item) =>
-          item.serviceType == ser.type &&
-          item.moduleType == data.moduleType &&
-          item.isActive == true
-      );
-      if (endPoint) {
-        let url = `${ser.api}${endPoint.endPoint}`;
-        let dataTosend = data.data;
-        const result = await axios.post(url, {
-          ...dataTosend,
-        });
-        return result;
-      } else {
-        console.log(
-          "Endpoint not found for service type : ",
-          ser.type,
-          " and module type : ",
-          data.moduleType
-        );
-        return;
-      }
-    }
-    return true;
+
+    const result = await axios.get(`${checkEntitySportIsActive.url}${url}`);
+    return result;
   } catch (error) {
     errorLogger(
       fastify,
@@ -1962,6 +1939,26 @@ const parseUmpires = (umpiresString) => {
     return { onFieldUmpires, thirdUmpire };
 };
 
+const checkEntitySportAPIEndpointIsActive = (moduleType) => {
+  try {
+    let getEntitySportAPIEndpointIsActive = global.tblAPIEndpoints.find(item => item.serviceType == ServiceType.entitySport && item.isActive == true && item.moduleType === moduleType);
+    if (!getEntitySportAPIEndpointIsActive) {
+      return {
+        message: `Entity Sport API module ${moduleType} is not active`,
+        data: null
+      };
+    }
+    return {
+      data: getEntitySportAPIEndpointIsActive?.endPoint
+    };
+  } catch (error) {
+    return {
+      message: error.message,
+      data: null
+    };
+  }
+}
+
 module.exports = {
   ERROR_CODES,
   error,
@@ -2071,5 +2068,6 @@ module.exports = {
   EntityBowlingStyleType,
   extractBowlingStyle,
   EventType,
-  parseUmpires
+  parseUmpires,
+  checkEntitySportAPIEndpointIsActive
 };

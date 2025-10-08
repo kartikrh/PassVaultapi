@@ -116,6 +116,7 @@ const {
   EntityEnums,
   parseUmpires,
   callEntitySportAPI,
+  checkEntitySportAPIEndpointIsActive,
 } = require("../utilities");
 const {
   getAllPlayersByTeamIdQuery,
@@ -22914,23 +22915,21 @@ const weatherAndPitchDataService = async (commentaryId) => {
 } 
 
 const matchImportService = async (data, fastify, request = null) => {
-  let checkCommentary = global.tblCommentaries.find(item => item.tpId === data.mid);
-  const entitySportMatch = await callEntitySportAPI({
-    serviceType: ServiceType.entitySport,
-    moduleType: APIEndpointModuleType.getMatchByIdFromEntity,
-    data: {
-      module: "match",
-      type: "get",
-      mid: data.mid
-    }
-  }, request, fastify);
+  const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getMatchDataByIdFromEntity);
+  if (!checkEntitySportAPIEndpoint.data) {
+    throw new Error(checkEntitySportAPIEndpoint.message);
+  }
+
+  const url = checkEntitySportAPIEndpoint.data.replace("{mid}", data.mid);
+  const entitySportMatch = await callEntitySportAPI(url, request, fastify);
 
   let entitySportMatchResponse = entitySportMatch?.data?.result;
-  if (!entitySportMatchResponse || entitySportMatchResponse?.status !== "ok") {
+  if (!entitySportMatchResponse) {
     throw new Error("Invalid response from Entit-Sport API");
   }
 
-  entitySportMatchResponse = entitySportMatchResponse?.response;
+  let checkCommentary = global.tblCommentaries.find(item => item.tpId === data.mid);
+
   const matchInfoResponse = entitySportMatchResponse?.match_info;
 
   const checkCompetition = global.tblCompetitions.find(item => item.tpId === matchInfoResponse?.competition?.cid);

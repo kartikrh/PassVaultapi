@@ -24,7 +24,7 @@ const { ImgModuleConfig } = require("../utilities/imageConstant");
 const { deletePlayersByTeamIdQuery } = require("../repository/TableTournamentsTeamPlayers")
 const { deletePointsByTeamIdQuery } = require("../repository/TableTournmentTeamPoints")
 const { mergeAndSaveImage } = require("../utilities/imageMerge");
-const { trimTextData, RefType, callEntitySportAPI, ServiceType, APIEndpointModuleType, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, EventType } = require("../utilities/index");
+const { trimTextData, RefType, callEntitySportAPI, ServiceType, APIEndpointModuleType, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, EventType, checkEntitySportAPIEndpointIsActive } = require("../utilities/index");
 const { getAutoImportDataByIdQuery, insertAutoImportDataQuery } = require("../repository/TableAutoImportData");
 const { insertPlayerQuery } = require("../repository/TablePlayer");
 const { updateAutoImportDataService } = require("./autoImportData");
@@ -756,27 +756,21 @@ const UpdateTeamFromEntityService = async (request, fastify) => {
 };
 
 const teamImportService = async (data, fastify, request = null) => {
-  const entitySportTeam = await callEntitySportAPI(
-    {
-      serviceType: ServiceType.entitySport,
-      moduleType: APIEndpointModuleType.getTeamDataByIdFromEntity,
-      data: {
-        module: "team",
-        type: "get",
-        tid: data.tid
-      }
-    },
-    request,
-    fastify
-  )
+  const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getTeamDataByIdFromEntity);
+  if (!checkEntitySportAPIEndpoint.data) {
+    throw new Error(checkEntitySportAPIEndpoint.message);
+  }
 
-  let entitySportTeamPlayerResponse = entitySportTeam?.data?.result;
-  if (!entitySportTeamPlayerResponse || entitySportTeamPlayerResponse?.status !== "ok") {
+  const url = checkEntitySportAPIEndpoint.data.replace("{tid}", data.tid);
+  const entitySportTeamPlayer = await callEntitySportAPI(url, request, fastify);
+
+  let entitySportTeamPlayerResponse = entitySportTeamPlayer?.data?.result;
+  if (!entitySportTeamPlayerResponse) {
     throw new Error("Invalid response from Entit-Sport API");
   }
 
-  let entitySportTeamResponse = entitySportTeamPlayerResponse?.response?.items?.team;
-  let entitySportPlayerResponse = entitySportTeamPlayerResponse?.response?.items?.players;
+  let entitySportTeamResponse = entitySportTeamPlayerResponse?.items?.team;
+  let entitySportPlayerResponse = entitySportTeamPlayerResponse?.items?.players;
 
   entitySportTeamResponse = {
     ...entitySportTeamResponse,

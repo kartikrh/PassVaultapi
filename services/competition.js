@@ -19,7 +19,7 @@ const {
 const {storeImageOnServer, removeImageFromServer, generateImageName, getImageFromUrl } = require("../utilities/Images");
 const { PROJECT_NAME, ENTITYDEFAULTTEAMIMG, ENTITYDEFAULTTEAMIMGPATH, ENTITYDEFAULTJERSEYIMG, ENTITYDEFAULTJERSEYIMGPATH } = require("../utilities/configConstants");
 const {ImgModuleConfig} = require("../utilities/imageConstant");
-const { APIEndpointModuleType, ServiceType, callClientAPI, compStatus, callCardCricket, callEntitySportAPI, EntityEnums, EventType, CompetitionType } = require("../utilities");
+const { APIEndpointModuleType, ServiceType, callClientAPI, compStatus, callCardCricket, callEntitySportAPI, EntityEnums, EventType, CompetitionType, checkEntitySportAPIEndpointIsActive } = require("../utilities");
 const { getCommentariesResultQuery, getAllCommByCompIdQuery } = require("../repository/TableCommentary")
 const { deleteTournamentTeamPlayersByCompIdQuery } = require("../repository/TableTournamentsTeamPlayers");
 const { deleteTournamentTeamPointsByCompIdQuery } = require("../repository/TableTournmentTeamPoints");
@@ -861,26 +861,18 @@ const upCompStatusService = async (request, fastify) => {
 };
 
 const competitionImportService = async (data, fastify, request) => {
-  const entitySportCompetition = await callEntitySportAPI(
-    {
-      serviceType: ServiceType.entitySport,
-      moduleType: APIEndpointModuleType.getCompetitionInfo,
-      data: {
-        module: "competition",
-        type: "get",
-        cid: data.cid
-      }
-    },
-    request,
-    fastify
-  )
-
-  let entitySportCompetitionResponse = entitySportCompetition?.data?.result;
-  if (!entitySportCompetitionResponse || entitySportCompetitionResponse?.status !== "ok") {
-    throw new Error("Invalid response from Entit-Sport API");
+  const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getCompetitionDataByIdFromEntity);
+  if (!checkEntitySportAPIEndpoint.data) {
+    throw new Error(checkEntitySportAPIEndpoint.message);
   }
 
-  entitySportCompetitionResponse = entitySportCompetitionResponse?.response;
+  const url = checkEntitySportAPIEndpoint.data.replace("{cid}", data.cid);
+  const entitySportCompetition = await callEntitySportAPI(url, request, fastify);
+
+  let entitySportCompetitionResponse = entitySportCompetition?.data?.result;
+  if (!entitySportCompetitionResponse) {
+    throw new Error("Invalid response from Entit-Sport API");
+  }
 
   let checkCompetition = global.tblCompetitions.find(item => item.tpId === data.cid || item.competition.toLowerCase() === entitySportCompetitionResponse.title.replace(/'/g, "''").toLowerCase());
   const eventType = global.tblEventTypes.find((et) => et.eventType.toLowerCase() === 'Cricket'.toLowerCase());
@@ -920,57 +912,28 @@ const competitionImportService = async (data, fastify, request) => {
   }
 
   let allCompetitionMatch = [];
-  const entitySportCompetitionMatchFirst = await callEntitySportAPI(
-    {
-      serviceType: ServiceType.entitySport,
-      moduleType: APIEndpointModuleType.getCompetitionMatchFromEntity,
-      data: {
-        module: "competitionMatch",
-        type: "get",
-        cid: data.cid,
-        page: 1,
-        limit: 50
-      }
-    },
-    request,
-    fastify
-  )
-
-  let entitySportCompetitionMatchFirstResponse = entitySportCompetitionMatchFirst?.data?.result;
-  if (!entitySportCompetitionMatchFirstResponse || entitySportCompetitionMatchFirstResponse?.status !== "ok") {
-    throw new Error("Invalid response from Entit-Sport API");
+  const checkEntitySportAPIEndpoint2 = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getCompetitionMatchDataByIdFromEntity);
+  if (!checkEntitySportAPIEndpoint2.data) {
+    throw new Error(checkEntitySportAPIEndpoint2.message);
   }
 
-  entitySportCompetitionMatchFirstResponse = entitySportCompetitionMatchFirstResponse?.response;
-  allCompetitionMatch.push(...entitySportCompetitionMatchFirstResponse?.items);
-
-  const totalPages = entitySportCompetitionMatchFirstResponse?.total_pages;
-  if (totalPages > 1) {
-    for (let page = 2; page <= totalPages; page++) {
-      const entitySportCompetitionMatchOther = await callEntitySportAPI(
-        {
-          serviceType: ServiceType.entitySport,
-          moduleType: APIEndpointModuleType.getCompetitionMatchFromEntity,
-          data: {
-            module: "competitionMatch",
-            type: "get",
-            cid: data.cid,
-            page,
-            limit: 50
-          }
-        },
-        request,
-        fastify
-      )
-      
-      let entitySportCompetitionMatchOtherResponse = entitySportCompetitionMatchOther?.data?.result;
-      if (!entitySportCompetitionMatchOtherResponse || entitySportCompetitionMatchOtherResponse?.status !== "ok") {
-        throw new Error("Invalid response from Entit-Sport API");
-      }
-      
-      entitySportCompetitionMatchOtherResponse = entitySportCompetitionMatchOtherResponse?.response;
-      allCompetitionMatch.push(...entitySportCompetitionMatchOtherResponse?.items);
+  let page = 1, totalPages = 1;
+  while (page <= totalPages) {
+    const params = new URLSearchParams();
+    let url = checkEntitySportAPIEndpoint2.data.replace("{cid}", data.cid) + "?";
+    params.append("paged", page);
+    params.append("per_page", 50);
+    url += `&${params.toString()}`;
+    const entitySportCompetitionMatch = await callEntitySportAPI(url, request, fastify);
+    let entitySportCompetitionMatchResponse = entitySportCompetitionMatch?.data?.result;
+    if (!entitySportCompetitionMatchResponse) {
+      throw new Error("Invalid response from Entit-Sport API");
     }
+    if (page === 1) {
+      totalPages = entitySportCompetitionMatchResponse?.total_pages || 1;
+    }
+    allCompetitionMatch.push(...entitySportCompetitionMatchResponse?.items)
+    page++;
   }
 
   for (const match of allCompetitionMatch) {

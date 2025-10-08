@@ -29,7 +29,7 @@ const { deleteAwardsByPlayerIdQuery } = require("../repository/TableCommentaryAw
 const { bowlingStyleChangeOnCommPlayersQuery } = require("../repository/TableCommentary");
 const { mergeAndSaveImage } = require("../utilities/imageMerge");
 const configConstants = require("../utilities/configConstants");
-const { trimTextData, callEntitySportAPI, ServiceType, APIEndpointModuleType, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, RefType, EventType } = require("../utilities/index");
+const { trimTextData, callEntitySportAPI, ServiceType, APIEndpointModuleType, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, RefType, EventType, checkEntitySportAPIEndpointIsActive } = require("../utilities/index");
 const { getAutoImportDataByIdQuery, insertAutoImportDataQuery } = require("../repository/TableAutoImportData");
 const { updateAutoImportDataService } = require("./autoImportData");
 
@@ -886,47 +886,20 @@ const UpdatePlayerFromEntityService = async (request, fastify) => {
 };
 
 const playerImportService = async (data, fastify, request = null) => {
-  const entitySportPlayer = await callEntitySportAPI(
-    {
-      serviceType: ServiceType.entitySport,
-      moduleType: APIEndpointModuleType.getPlayerDataByIdFromEntity,
-      data: {
-        module: "player",
-        type: "get",
-        pid: data.pid
-      }
-    },
-    request,
-    fastify
-  )
+  const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getPlayerDataByIdFromEntity);
+  if (!checkEntitySportAPIEndpoint.data) {
+    throw new Error(checkEntitySportAPIEndpoint.message);
+  }
 
-  let entitySportPlayerResponse = entitySportPlayer?.data?.result;
-  if (!entitySportPlayerResponse || entitySportPlayerResponse?.status !== "ok") {
+  const url = checkEntitySportAPIEndpoint.data.replace("{pid}", data.pid);
+  const entitySportPlayer = await callEntitySportAPI(url, request, fastify);
+
+  let entitySportPlayerResponse = entitySportPlayer?.data?.result?.player;
+  if (!entitySportPlayerResponse) {
     throw new Error("Invalid response from Entit-Sport API");
   }
 
-  entitySportPlayerResponse = entitySportPlayerResponse?.response?.player;
-
-  let playerData = {
-    eventTypeId: EventType['Cricket'],
-    playerTypeId: EntityPlayerType[entitySportPlayerResponse?.playing_role],
-    playerName: entitySportPlayerResponse?.title,
-    displayName: entitySportPlayerResponse?.short_name,
-    country: entitySportPlayerResponse?.nationality,
-    isActive: true,
-    isKipper: entitySportPlayerResponse?.playing_role === 'wk' ? true : false,
-    isLeftHandedBatting: !entitySportPlayerResponse.batting_style.includes('Right'),
-    isLeftArmFielding: !entitySportPlayerResponse.bowling_style.includes('Right'),
-    userId: -2,
-    batsmanAverage: 0.0,
-    batsmanStrikeRate: 0.0,
-    bowlerAverage: 0.0,
-    bowlerEconomy: 0.0,
-    tpId: entitySportPlayerResponse?.pid || null,
-    bowlingStyleId: entitySportPlayerResponse.bowling_type ? EntityBowlingStyleType[entitySportPlayerResponse.bowling_type.toLowerCase()] : null,
-    bowlingTypeId: extractBowlingStyle(entitySportPlayerResponse.bowling_type, entitySportPlayerResponse.bowling_style)
-  };
-  const checkPlayer = global.tblPlayers.find(item => item.tpId === entitySportPlayerResponse?.pid || item.playerName.toLowerCase() === entitySportPlayerResponse.title.replace(/'/g, "''").toLowerCase());
+  let checkPlayer = global.tblPlayers.find(item => item.tpId === entitySportPlayerResponse?.pid || item.playerName.toLowerCase() === entitySportPlayerResponse?.title.replace(/'/g, "''").toLowerCase());
   if (!checkPlayer) {
     let imageUrl = entitySportPlayerResponse?.logo_url;
     if (!imageUrl) {
@@ -945,17 +918,33 @@ const playerImportService = async (data, fastify, request = null) => {
       }
     }
 
-    const newPlayerData = {
-      ...playerData,
+    let insertPlayerData = {
+      eventTypeId: EventType['Cricket'],
+      playerTypeId: EntityPlayerType[entitySportPlayerResponse?.playing_role],
+      playerName: entitySportPlayerResponse?.title,
+      displayName: entitySportPlayerResponse?.short_name,
+      country: entitySportPlayerResponse?.nationality,
+      isActive: true,
+      isKipper: entitySportPlayerResponse?.playing_role === 'wk' ? true : false,
+      isLeftHandedBatting: !entitySportPlayerResponse.batting_style.includes('Right'),
+      isLeftArmFielding: !entitySportPlayerResponse.bowling_style.includes('Right'),
+      userId: -2,
+      batsmanAverage: 0.0,
+      batsmanStrikeRate: 0.0,
+      bowlerAverage: 0.0,
+      bowlerEconomy: 0.0,
+      tpId: entitySportPlayerResponse?.pid || null,
+      bowlingStyleId: entitySportPlayerResponse.bowling_type ? EntityBowlingStyleType[entitySportPlayerResponse.bowling_type.toLowerCase()] : null,
+      bowlingTypeId: extractBowlingStyle(entitySportPlayerResponse.bowling_type, entitySportPlayerResponse.bowling_style),
       image: imageUrl.fullPath,
       imagePath: imageUrl.imagePath,
     };
 
-    const insertPlayer = await insertPlayerQuery(newPlayerData, fastify, request);
+    const insertPlayer = await insertPlayerQuery(insertPlayerData, fastify, request);
     global.tblPlayers.push(insertPlayer);
-    playerData = insertPlayer;
+    checkPlayer = insertPlayer;
   }
-  return playerData;
+  return checkPlayer;
 }
 
 module.exports = {
