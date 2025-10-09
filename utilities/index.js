@@ -1272,10 +1272,9 @@ const HideEventType = {
 };
 const callEntitySportAPI = async (url, request, fastify) => {
   try {
-    let checkEntitySportIsActive = global.tblEntitySockets.find(item => item.isActive == true && item.status === clientSocketStatus.connected);
+    let checkEntitySportIsActive = global.tblEntitySockets.find(item => item.isActive == true);
     if (!checkEntitySportIsActive) {
-      console.log("Entity Sport API is not active");
-      return true;
+      throw new Error("Entity Sport API is not active");
     }
 
     const result = await axios.get(`${checkEntitySportIsActive.url}${url}`);
@@ -1287,7 +1286,7 @@ const callEntitySportAPI = async (url, request, fastify) => {
       "DB ERROR --> utilities/index/callEntitySportAPI",
       request
     );
-    // throw new Error(error.message);
+    throw new Error(error.message);
   }
 };
 const comCardType = {
@@ -1664,179 +1663,6 @@ const exchangeMatchinfoAPI = async (data, request, fastify) => {
   }
 };
 
-const insertICCRankingTeamPlayerData = async (type, data, request, fastify) => {
-  try {
-    const response = await callEntitySportAPI(
-      {
-        serviceType: ServiceType.entitySport,
-        moduleType:
-          APIEndpointModuleType[
-            type === ICCRankingType.Team ? "insertTeam" : "insertPlayer"
-          ],
-        data: {
-          module: type === ICCRankingType.Team ? "team" : "player",
-          type: "insert",
-          [type === ICCRankingType.Team ? "tid" : "pid"]: Number(data),
-        },
-      },
-      request,
-      fastify
-    );
-
-    if (response && response.data) {
-      return response.data.result;
-    }
-    throw new Error("Error fetching ICC Ranking data from EntitySport API");
-  } catch (err) {
-    throw new Error(
-      "API ERROR --> utilities/index.js/insertICCRankingTeamPlayerData - callEntitySportAPI"
-    );
-  }
-};
-
-const extractEntries = async (json, isMen, request, fastify) => {
-  const matchTypeData = global.tblMatchTypes;
-  const playerTypeData = global.tblPlayerTypes;
-  const isTeamCategory = (category) => category === "teams";
-  const output = [];
-
-  const teamMap = new Map(global.tblTeams.map((team) => [team.tpId, team]));
-  const playerMap = new Map(
-    global.tblPlayers.map((player) => [player.tpId, player])
-  );
-  const playerTypeMap = new Map(
-    playerTypeData.map((pt) => [pt.playerType.toLowerCase(), pt])
-  );
-
-  let teamIds = new Set(),
-    playerIds = new Set();
-  for (const category in json) {
-    const categoryData = json[category];
-
-    for (const matchType in categoryData) {
-      const entries = categoryData[matchType];
-
-      for (const item of entries) {
-        if (isTeamCategory(category)) {
-          if (!teamMap.has(Number(item.tid))) {
-            teamIds.add(item.tid);
-          }
-        } else {
-          if (!playerMap.has(Number(item.pid))) {
-            playerIds.add(item.pid);
-          }
-        }
-      }
-    }
-  }
-
-  if (teamIds.size > 0) {
-    for (const tid of teamIds) {
-      await insertICCRankingTeamPlayerData(
-        ICCRankingType.Team,
-        tid,
-        request,
-        fastify
-      ).catch((err) => {
-        console.error("Error inserting ICC Ranking Team:", err.message);
-      });
-    }
-  }
-
-  if (playerIds.size > 0) {
-    for (const pid of playerIds) {
-      await insertICCRankingTeamPlayerData(
-        ICCRankingType.Player,
-        pid,
-        request,
-        fastify
-      ).catch((err) => {
-        console.error("Error inserting ICC Ranking Player:", err.message);
-      });
-    }
-  }
-
-  const newTeamMap = new Map(global.tblTeams.map((team) => [team.tpId, team]));
-  const newTeamShortNameMap = new Map(
-    global.tblTeams.map((team) => [team.teamShortName.toLowerCase(), team])
-  );
-  const newPlayerMap = new Map(
-    global.tblPlayers.map((player) => [player.tpId, player])
-  );
-
-  for (const category in json) {
-    const categoryData = json[category];
-
-    for (const matchType in categoryData) {
-      const matchTypeId = matchTypeData.find(
-        (mt) =>
-          mt.entityEnum === ICCMatchType[isMen ? "men" : "women"][matchType]
-      )?.matchTypeId;
-      const entries = categoryData[matchType];
-
-      for (const item of entries) {
-        const commonFields = {
-          id: 0,
-          sportId: 1,
-          matchTypeId: matchTypeId,
-          isMen: isMen,
-          rank: parseInt(item.rank),
-          isActive: true,
-        };
-
-        if (isTeamCategory(category)) {
-          const teamId = newTeamMap.get(Number(item.tid));
-          if (teamId) {
-            output.push({
-              ...commonFields,
-              type: ICCRankingType.Team,
-              teamId: teamId.teamId,
-              playerId: null,
-              playerTypeId: null,
-              rating: parseInt(item.rating),
-              point: parseInt(item.points),
-              remark: `${item.matches} matches`,
-            });
-          } else {
-            errorLogger(
-              fastify,
-              `Skipping team entry due to missing team data: TeamID(${item.tid})`,
-              "ERROR --> utilities/index.js/extractEntries - Team Data Missing",
-              request
-            );
-          }
-        } else {
-          const teamId = newTeamShortNameMap.get(item.team.toLowerCase());
-          let playerId = newPlayerMap.get(Number(item.pid));
-          const playerTypeId = playerTypeMap.get(
-            ICCRankingPlayerType[category].toLowerCase()
-          );
-          if (teamId && playerId && playerTypeId) {
-            output.push({
-              ...commonFields,
-              type: ICCRankingType.Player,
-              teamId: teamId.teamId,
-              playerId: playerId.playerId,
-              playerTypeId: playerTypeId.playerTypeId,
-              rating: parseInt(item.rating),
-              point: parseInt(item.careerbestrating.split(" ")[0]),
-              remark: item.careerbestrating,
-            });
-          } else {
-            errorLogger(
-              fastify,
-              `Skipping player entry due to missing data: Team(${item.team}), PlayerID(${item.pid}), PlayerType(${ICCRankingPlayerType[category]})`,
-              "ERROR --> utilities/index.js/extractEntries - Player Data Missing",
-              request
-            );
-          }
-        }
-      }
-    }
-  }
-  return output;
-};
-
 const UndoReportType = {
   commentary: 1,
   user: 2,
@@ -2058,7 +1884,6 @@ module.exports = {
   exchangeMatchinfoAPI,
   ICCRankingType,
   ICCRankingPlayerType,
-  extractEntries,
   UndoReportType,
   callSocketCountClientAPI,
   ICCRankingPlayerTypeById,
@@ -2071,5 +1896,6 @@ module.exports = {
   extractBowlingStyle,
   EventType,
   parseUmpires,
-  checkEntitySportAPIEndpointIsActive
+  checkEntitySportAPIEndpointIsActive,
+  ICCMatchType
 };
