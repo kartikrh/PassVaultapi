@@ -758,6 +758,11 @@ const activeInactivePlayerService = async (request, fastify) => {
 };
 
 const UpdatePlayerFromEntityService = async (request, fastify) => {
+  const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getPlayerDataByIdFromEntity);
+  if (!checkEntitySportAPIEndpoint.data) {
+    throw new Error(checkEntitySportAPIEndpoint.message);
+  }
+
   const { playerIds } = request.body;
 
   const playerData = global.tblPlayers.filter(
@@ -782,84 +787,75 @@ const UpdatePlayerFromEntityService = async (request, fastify) => {
           importStartTime: new Date()
         }, fastify, request);
 
-        const response = await callEntitySportAPI(
-          {
-            serviceType: ServiceType.entitySport,
-            moduleType: APIEndpointModuleType.getPlayerDataByIdFromEntity,
-            data: {
-              module: 'player',
-              type: "get",
-              pid: entry.tpId
-            }
-          },
-          request,
-          fastify
+        const url = checkEntitySportAPIEndpoint.data.replace("{pid}", entry.tpId);
+        const entitySportPlayer = await callEntitySportAPI(url, request, fastify);
+
+        const entitySportPlayerResponse = entitySportPlayer?.data?.result?.player;
+        if (!entitySportPlayerResponse) {
+          throw new Error("Invalid response from Entit-Sport API");
+        }
+
+        const { playerTypeId, playerName, displayName, isKipper, isLeftHandedBatting, isLeftArmFielding, bowlingStyleId, bowlingTypeId } = entry;
+        const { playing_role, title, short_name, batting_style, bowling_style, bowling_type } = entitySportPlayerResponse;
+
+        let changedValues = { ...entry };
+
+        const entityPlayerTypeId = EntityPlayerType[playing_role];
+        if (entityPlayerTypeId && playerTypeId !== entityPlayerTypeId) {
+          changedValues.playerTypeId = entityPlayerTypeId;
+        }
+        if (title && playerName !== title) {
+          changedValues.playerName = title;
+        }
+        if (short_name && displayName !== short_name) {
+          changedValues.displayName = short_name;
+        }
+        const entityIsKeeper = playing_role === "wk";
+        if ("isKipper" in entry && isKipper !== entityIsKeeper) {
+          changedValues.isKipper = entityIsKeeper;
+        }
+        const entityBattingStyle = batting_style?.includes("Right");
+        if ("isLeftHandedBatting" in entry && isLeftHandedBatting !== entityBattingStyle) {
+          changedValues.isLeftHandedBatting = entityBattingStyle;
+        }
+        const entityBowlingStyle = bowling_style?.includes("Right");
+        if ("isLeftArmFielding" in entry && isLeftArmFielding !== entityBowlingStyle) {
+          changedValues.isLeftArmFielding = entityBowlingStyle;
+        }
+        const EntityBowlingStyleTypeId = EntityBowlingStyleType[bowling_type?.toLowerCase()];
+        if (EntityBowlingStyleTypeId && bowlingStyleId !== EntityBowlingStyleTypeId) {
+          changedValues.bowlingStyleId = EntityBowlingStyleTypeId;
+        }
+        const entityBowlingStyleId = extractBowlingStyle(bowling_type, bowling_style);
+        if (entityBowlingStyleId && bowlingTypeId !== entityBowlingStyleId) {
+          changedValues.bowlingTypeId = entityBowlingStyleId;
+        }
+
+        const isChanged = (
+          changedValues.playerTypeId !== playerTypeId ||
+          changedValues.playerName !== playerName ||
+          changedValues.displayName !== displayName ||
+          changedValues.isKipper !== isKipper ||
+          changedValues.isLeftHandedBatting !== isLeftHandedBatting ||
+          changedValues.isLeftArmFielding !== isLeftArmFielding ||
+          changedValues.bowlingStyleId !== bowlingStyleId ||
+          changedValues.bowlingTypeId !== bowlingTypeId
         );
 
-        const playerDataResponse = response.data.result?.response?.player;
-        if (playerDataResponse) {
-          const { playerTypeId, playerName, displayName, isKipper, isLeftHandedBatting, isLeftArmFielding, bowlingStyleId, bowlingTypeId } = entry;
-          const { playing_role, title, short_name, batting_style, bowling_style, bowling_type } = playerDataResponse;
-
-          let changedValues = { ...entry };
-
-          const entityPlayerTypeId = EntityPlayerType[playing_role];
-          if (entityPlayerTypeId && playerTypeId !== entityPlayerTypeId) {
-            changedValues.playerTypeId = entityPlayerTypeId;
-          }
-          if (title && playerName !== title) {
-            changedValues.playerName = title;
-          }
-          if (short_name && displayName !== short_name) {
-            changedValues.displayName = short_name;
-          }
-          const entityIsKeeper = playing_role === "wk";
-          if ("isKipper" in entry && isKipper !== entityIsKeeper) {
-            changedValues.isKipper = entityIsKeeper;
-          }
-          const entityBattingStyle = batting_style?.includes("Right");
-          if ("isLeftHandedBatting" in entry && isLeftHandedBatting !== entityBattingStyle) {
-            changedValues.isLeftHandedBatting = entityBattingStyle;
-          }
-          const entityBowlingStyle = bowling_style?.includes("Right");
-          if ("isLeftArmFielding" in entry && isLeftArmFielding !== entityBowlingStyle) {
-            changedValues.isLeftArmFielding = entityBowlingStyle;
-          }
-          const EntityBowlingStyleTypeId = EntityBowlingStyleType[bowling_type?.toLowerCase()];
-          if (EntityBowlingStyleTypeId && bowlingStyleId !== EntityBowlingStyleTypeId) {
-            changedValues.bowlingStyleId = EntityBowlingStyleTypeId;
-          }
-          const entityBowlingStyleId = extractBowlingStyle(bowling_type, bowling_style);
-          if (entityBowlingStyleId && bowlingTypeId !== entityBowlingStyleId) {
-            changedValues.bowlingTypeId = entityBowlingStyleId;
-          }
-
-          const isChanged = (
-            changedValues.playerTypeId !== playerTypeId ||
-            changedValues.playerName !== playerName ||
-            changedValues.displayName !== displayName ||
-            changedValues.isKipper !== isKipper ||
-            changedValues.isLeftHandedBatting !== isLeftHandedBatting ||
-            changedValues.isLeftArmFielding !== isLeftArmFielding ||
-            changedValues.bowlingStyleId !== bowlingStyleId ||
-            changedValues.bowlingTypeId !== bowlingTypeId
-          );
-
-          if (isChanged) {
-            changedValues.userId = request.userTokenInfo.WrUserId;
-            try {
-              await updatePlayerQuery(changedValues, fastify, request);
-              delete changedValues.userId;
-              const index = global.tblPlayers.findIndex(
-                (item) => item.playerId === entry.playerId
-              );
-              if (index !== -1) {
-                global.tblPlayers[index] = changedValues;
-              }
-              updateCount++;
-            } catch (err) {
-              throw new Error(`Failed to update player: ${err.message}`);
+        if (isChanged) {
+          changedValues.userId = request.userTokenInfo.WrUserId;
+          try {
+            const updatePlayerData = await updatePlayerQuery(changedValues, fastify, request);
+            delete changedValues.userId;
+            const index = global.tblPlayers.findIndex(
+              (item) => item.playerId === entry.playerId
+            );
+            if (index !== -1) {
+              global.tblPlayers[index] = updatePlayerData[0];
             }
+            updateCount++;
+          } catch (err) {
+            throw new Error(`Failed to update player: ${err.message}`);
           }
         }
 
