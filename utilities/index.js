@@ -716,7 +716,8 @@ const APIEndpointModuleType = {
   getTeamDataByIdFromEntity: 14,
   getPlayerDataByIdFromEntity: 15,
   getMatchDataByIdFromEntity: 16,
-  getCompetitionMatchDataByIdFromEntity: 17
+  getCompetitionMatchDataByIdFromEntity: 17,
+  getCompetitionSquadDataByIdFromEntity: 18
 }
 
 const NotificationSendType = {

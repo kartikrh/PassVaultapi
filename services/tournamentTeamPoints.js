@@ -626,9 +626,12 @@ const addEditTournamentTeamPointDataService = async (result, competitionId, fast
         const checkTournamentTeamPlayersById = checkTournamentTeamPlayers.find(item => item.playerId === mp);
         if (checkTournamentTeamPlayersById) {
           if (checkTournamentTeamPlayersById.teamId !== checkTeam.teamId) {
-            await deleteTournamentTeamPlayersQuery({
-              data: [checkTournamentTeamPlayersById.id]
-            }, request, fastify);
+            await deleteTournamentTeamPlayersQuery([checkTournamentTeamPlayersById.id], {
+              ...request,
+              userTokenInfo: {
+                WrUserId: -2
+              }
+            }, fastify);
             global.tblTournamentTeamPlayers = global.tblTournamentTeamPlayers.filter(item => item.id !== checkTournamentTeamPlayers.id);
 
             const data = {
