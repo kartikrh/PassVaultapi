@@ -740,6 +740,7 @@ const setEntityCom2Service = async (request , fastify) =>{
     if(response.live.game_state == EntityCommentaryStatus.DEFAULT && comDetails.commentaryStatus != commentaryStatus.COMPLETED){
       await matchCompleteService(request.body , fastify , comDetails)
     }
+
     
     return true;
 
