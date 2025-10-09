@@ -5,6 +5,8 @@ const {
   deleteEntitySocketService,
   activeInactiveEntitySocketService,
   changeEntityActionTypeService,
+  isAutoScoreUpdateEntitySocketService,
+  isAutoUpdateCommentaryEntitySocketService,
 } = require("../../../../services/entitySocket");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -70,6 +72,26 @@ const changeEntityActionType = async (request, reply, fastify) => {
   }
 };
 
+const isAutoScoreUpdateEntitySocket = async (request, reply, fastify) => {
+  try {
+    const result = await isAutoScoreUpdateEntitySocketService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/isAutoScoreUpdateEntitySocket", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
+const isAutoUpdateCommentaryEntitySocket = async (request, reply, fastify) => {
+  try {
+    const result = await isAutoUpdateCommentaryEntitySocketService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/isAutoUpdateCommentaryEntitySocket", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
 module.exports = {
   getAllEntitySocket,
   getEntitySocketById,
@@ -77,4 +99,6 @@ module.exports = {
   deleteEntitySocket,
   activeInactiveEntitySocket,
   changeEntityActionType,
+  isAutoScoreUpdateEntitySocket,
+  isAutoUpdateCommentaryEntitySocket,
 };

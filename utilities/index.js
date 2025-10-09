@@ -936,6 +936,7 @@ const ModuleTypes = {
   Venue: 41,
   CommentaryById: 42,
   PythonAPI: 43,
+  EntitySocket: 44,
 };
 const callTPAPI = async (data, fastify) => {
   try {

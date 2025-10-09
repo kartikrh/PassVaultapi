@@ -3,11 +3,20 @@ const {
     updateEntitySocketQuery,
     deleteEntitySocketQuery,
     updateActiveInactiveEntitySocketQuery,
-    updateEntityActionTypeQuery
+    updateEntityActionTypeQuery,
+    isAutoScoreUpdateEntitySocketQuery,
+    isAutoUpdateCommentaryEntitySocketQuery,
 } = require("../repository/TableEntitySockets");
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
 const { storeImageOnServer, removeImageFromServer, generateImageName } = require("../utilities/Images");
+const { 
+    connectEntitySport,
+    disconnectEntitySports, 
+    disconnectInactiveEntityClients,
+    disconnectIsAutoScoreUpdateFalseEntityClients,
+} = require("../sockets/enitySport");
+const { clientSocketActionType } = require("../utilities");
 
 const getAllEntitySocketService = async (request, fastify) => {
     const { isActive } = request.body;
@@ -230,12 +239,12 @@ const changeEntityActionTypeService = async (request, fastify) => {
     for (index of indexOfId) {
         global.tblEntitySockets[index].actionType = request.body.actionType;
     }
-    // if (request.body.actionType === clientSocketActionType.connect) {
-    //     connectClients(fastify);
-    // }
-    // else if (request.body.actionType === clientSocketActionType.disconnect) {
-    //     disconnectClients(fastify);
-    // }
+    if (request.body.actionType === clientSocketActionType.connect) {
+        connectEntitySport(fastify);
+    }
+    else if (request.body.actionType === clientSocketActionType.disconnect) {
+        disconnectEntitySports(fastify);
+    }
 
     return `Entity Socket updated successfully`;
 }
@@ -249,15 +258,49 @@ const activeInactiveEntitySocketService = async (request, fastify) => {
     await updateActiveInactiveEntitySocketQuery(
         request,
         fastify
-    )
-    // if (isActive === true) {
-    //     connectClients(fastify);
-    //     disconnectClients(fastify);
-    // } else {
-    //     disconnectInactiveClients(fastify);
-    // }
-
+    );
     global.tblEntitySockets[index].isActive = isActive;
+
+    if (isActive === true) {
+        connectEntitySport(fastify);
+        disconnectEntitySports(fastify);
+    } else {
+        disconnectInactiveEntityClients(fastify);
+    }
+
+    return `Entity Socket updated successfully`;
+}
+
+const isAutoScoreUpdateEntitySocketService = async (request, fastify) => {
+    const { entitySocketId, isAutoScoreUpdate } = request.body;
+    let index = global.tblEntitySockets.findIndex((item) => item.entitySocketId === entitySocketId);
+    if (index === -1) {
+        throw new Error(`Entity with this id not found`);
+    }
+    await isAutoScoreUpdateEntitySocketQuery(request, fastify);
+    
+    global.tblEntitySockets[index].isAutoScoreUpdate = isAutoScoreUpdate;
+
+    if (isAutoScoreUpdate == true) {
+        console.log("dsfsdfdsfsdf")
+        connectEntitySport(fastify);
+        disconnectEntitySports(fastify);
+    } else {
+        disconnectIsAutoScoreUpdateFalseEntityClients(fastify);
+    }
+
+    return `Entity Socket updated successfully`;
+}
+
+const isAutoUpdateCommentaryEntitySocketService = async (request, fastify) => {
+    const { entitySocketId, isAutoUpdateCommentary } = request.body;
+    let index = global.tblEntitySockets.findIndex((item) => item.entitySocketId === entitySocketId);
+    if (index === -1) {
+        throw new Error(`Entity with this id not found`);
+    }
+    await isAutoUpdateCommentaryEntitySocketQuery(request, fastify);
+
+    global.tblEntitySockets[index].isAutoUpdateCommentary = isAutoUpdateCommentary;
     return `Entity Socket updated successfully`;
 }
 
@@ -268,4 +311,6 @@ module.exports = {
     deleteEntitySocketService,
     changeEntityActionTypeService,
     activeInactiveEntitySocketService,
+    isAutoScoreUpdateEntitySocketService,
+    isAutoUpdateCommentaryEntitySocketService,
 }

@@ -10938,7 +10938,6 @@ const EntitySocket = {
       },
     },
   },
-
   activeInactive: {
     schema: {
       tags: ["EntitySocket"],
@@ -10954,7 +10953,36 @@ const EntitySocket = {
       },
     },
   },
-
+  entityAutoScoreUpdate: {
+    schema: {
+      tags: ["EntitySocket"],
+      description: "isAutoScoreUpdate EntitySocket",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          entitySocketId: { type: "integer" },
+          isAutoScoreUpdate: { type: "boolean" },
+        },
+        required: ["entitySocketId", "isAutoScoreUpdate"],
+      },
+    },
+  },
+  entityAutoUpdateCommentary: {
+    schema: {
+      tags: ["EntitySocket"],
+      description: "isAutoUpdateCommentary EntitySocket",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          entitySocketId: { type: "integer" },
+          isAutoUpdateCommentary: { type: "boolean" },
+        },
+        required: ["entitySocketId", "isAutoUpdateCommentary"],
+      },
+    },
+  },
   changeActionType: {
     schema: {
       tags: ["EntitySocket"],

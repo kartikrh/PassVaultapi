@@ -83,7 +83,7 @@ const updateEntitySocketStatusQuery = async(data, fastify) =>{
         throw new Error(error.message); 
    }
 }
-const updateReconnectCountQuery = async(data,fastify) =>{
+const updateReconnectCountQuery = async(data, fastify) =>{
     let result = await fastify.db.query(`
         UPDATE "tblEntitySockets"
         SET
@@ -128,7 +128,7 @@ const disConnectEntitySocketQuery = async (fastify) => {
     }
 };
 
-const createEntitySocketQuery =async (data,request,fastify) =>{
+const createEntitySocketQuery =async (data, request, fastify) =>{
     try {
         const query = `
             INSERT INTO "tblEntitySockets"(
@@ -202,7 +202,7 @@ const createEntitySocketQuery =async (data,request,fastify) =>{
     }
 }
 
-const updateEntitySocketQuery = async(data,request,fastify) =>{
+const updateEntitySocketQuery = async(data, request, fastify) =>{
     try {
         const query = `
             UPDATE "tblEntitySockets"
@@ -277,7 +277,7 @@ const updateEntitySocketQuery = async(data,request,fastify) =>{
     }
 }
 
-const deleteEntitySocketQuery  = async(entitySocketId,request,fastify) =>{
+const deleteEntitySocketQuery  = async(entitySocketId, request, fastify) =>{
     try {
         const query = `
             UPDATE "tblEntitySockets" SET
@@ -336,7 +336,7 @@ const updateEntityActionTypeQuery = async(data, request, fastify) =>{
         throw new Error(err.message);
     }
 }
-const updateActiveInactiveEntitySocketQuery = async(request,fastify) =>{
+const updateActiveInactiveEntitySocketQuery = async(request, fastify) =>{
     try {
         const query = `
             UPDATE "tblEntitySockets"
@@ -366,6 +366,62 @@ const updateActiveInactiveEntitySocketQuery = async(request,fastify) =>{
     }
 }
 
+const isAutoScoreUpdateEntitySocketQuery = async(request, fastify) =>{
+    try {
+        const query = `
+            UPDATE "tblEntitySockets" SET
+                "wrIsAutoScoreUpdate" = $1
+            WHERE "wrId" = $2`;
+
+        const data = await fastify.db.query(query,
+            {
+                type: fastify.db.QueryTypes.SELECT,
+                bind: [
+                    request.body.isAutoScoreUpdate,
+                    request.body.entitySocketId
+                ]
+            }
+        )
+        return data[0];
+    } catch (err) {
+        errorLogger(
+            fastify,
+            err.message,
+            "DB Error --> repository/TableEntitySockets/isAutoScoreUpdateEntitySocketQuery",
+            request
+        )
+        throw new Error(err.message);
+    }
+}
+
+const isAutoUpdateCommentaryEntitySocketQuery = async(request, fastify) =>{
+    try {
+        const query = `
+            UPDATE "tblEntitySockets" SET
+                "wrIsAutoUpdateCommentary" = $1
+            WHERE "wrId" = $2`;
+
+        const data = await fastify.db.query(query,
+            {
+                type: fastify.db.QueryTypes.SELECT,
+                bind: [
+                    request.body.isAutoUpdateCommentary,
+                    request.body.entitySocketId
+                ]
+            }
+        )
+        return data[0];
+    } catch (err) {
+        errorLogger(
+            fastify,
+            err.message,
+            "DB Error --> repository/TableEntitySockets/isAutoUpdateCommentaryEntitySocketQuery",
+            request
+        )
+        throw new Error(err.message);
+    }
+}
+
 module.exports = {
     getAllEntitySocketsQuery,
     updateEntitySocketStatusQuery,
@@ -376,4 +432,6 @@ module.exports = {
     deleteEntitySocketQuery,
     updateEntityActionTypeQuery,
     updateActiveInactiveEntitySocketQuery,
+    isAutoScoreUpdateEntitySocketQuery,
+    isAutoUpdateCommentaryEntitySocketQuery,
 };
