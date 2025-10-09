@@ -827,10 +827,47 @@ const teamImportService = async (data, fastify, request = null) => {
     checkTeam = insertTeam;
   }
 
-  const allPlayers = Object.values(entitySportPlayerResponse).flat();
+  let allPlayers = Object.values(entitySportPlayerResponse).flat();
+
+  if (data?.competitionId && data?.cid) {
+    const checkEntitySportAPIEndpoint2 = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getCompetitionSquadDataByIdFromEntity);
+    if (!checkEntitySportAPIEndpoint2.data) {
+      throw new Error(checkEntitySportAPIEndpoint2.message);
+    }
+
+    const url2 = checkEntitySportAPIEndpoint2.data.replace("{cid}", data.cid);
+    const entitySportCompetitionSquad = await callEntitySportAPI(url2, request, fastify);
+
+    let entitySportCompetitionSquadResponse = entitySportCompetitionSquad?.data?.result?.squads;
+    if (!entitySportCompetitionSquadResponse) {
+      throw new Error("Invalid response from Entit-Sport API");
+    }
+
+    const competitionSquadPlayers = entitySportCompetitionSquadResponse.reduce((acc, team) => {
+      acc[team.team_id] = team.players || [];
+      return acc;
+    }, {});
+    allPlayers = [...allPlayers, ...competitionSquadPlayers[data.tid]];
+  }
+
   const seen = new Set();
   const uniquePlayers = allPlayers.filter(player => !seen.has(player.pid) && seen.add(player.pid));
   const uniquePlayerIds = uniquePlayers.map(item => item.pid)
+
+  if (data?.competitionId && data?.cid) {
+    const playersTpId = global.tblPlayers.filter(item => uniquePlayerIds.includes(item.tpId));
+    await addTournamentTeamPlayersService({
+      ...request,
+      body: {
+        teamPlayers: playersTpId,
+        competitionId: data?.competitionId,
+        teamId: checkTeam.teamId
+      },
+      userTokenInfo: {
+        WrUserId: -2
+      }
+    }, fastify);
+  }
 
   for (const playerId of uniquePlayerIds) {
     await playerImportService({
@@ -855,21 +892,6 @@ const teamImportService = async (data, fastify, request = null) => {
         teamId: checkTeam?.teamId
       }, fastify, request);
     }
-  }
-
-  if (data?.cid) {
-    const playersTpId = global.tblPlayers.filter(item => uniquePlayerIds.includes(item.tpId));
-    await addTournamentTeamPlayersService({
-      ...request,
-      body: {
-        teamPlayers: playersTpId,
-        competitionId: data?.cid,
-        teamId:checkTeam.teamId
-      },
-      userTokenInfo: {
-        WrUserId: -2
-      }
-    }, fastify);
   }
 
   return checkTeam;

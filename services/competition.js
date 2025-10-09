@@ -942,7 +942,12 @@ const competitionImportService = async (data, fastify, request) => {
     }, fastify, request);
   }
 
-  await addEditTournamentTeamPointDataService(entitySportCompetitionResponse, checkCompetition?.competitionId, fastify, request);
+  await addEditTournamentTeamPointDataService(entitySportCompetitionResponse, checkCompetition?.competitionId, fastify, {
+    ...request,
+    userTokenInfo: {
+      WrUserId: -2
+    },
+  });
 
   return checkCompetition;
 }
