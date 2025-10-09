@@ -10881,6 +10881,98 @@ const EntitySocket = {
       },
     },
   },
+  byId: {
+    schema: {
+      tags: ["EntitySocket"],
+      description: "get EntitySocket by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          entitySocketId: { type: "integer" },
+        },
+        required: ["entitySocketId"],
+      },
+    },
+  },
+  save: {
+    schema: {
+      tags: ["EntitySocket"],
+      description: "save EntitySocket",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          entitySocketId: { type: "integer" },
+          serverName: { type: "string" },
+          url: { type: "string" },
+          isActive: { type: "boolean" },
+          status: { type: "integer" },
+          reconnectDelay: { type: "integer" },
+          reconnectAttempts: { type: "integer" },
+          reconnectMaxDelay: { type: "integer" },
+          reconnectCount: { type: "integer" },
+          actionType: { type: "integer" },
+          isAutoUpdateCommentary: { type: "boolean" },
+          isAutoScoreUpdate: { type: "boolean" },
+        },
+        required: ["entitySocketId", "url", "serverName"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["EntitySocket"],
+      description: "delete EntitySocket",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          entitySocketId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["entitySocketId"],
+      },
+    },
+  },
+
+  activeInactive: {
+    schema: {
+      tags: ["EntitySocket"],
+      description: "active inactive EntitySocket",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          entitySocketId: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["entitySocketId", "isActive"],
+      },
+    },
+  },
+
+  changeActionType: {
+    schema: {
+      tags: ["EntitySocket"],
+      description: "change action type",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          entitySocketId: {
+            type: "array",
+            items: { type: "integer" },
+          },
+          actionType: { type: "integer" },
+        },
+        required: ["entitySocketId", "actionType"],
+      },
+    },
+  },
 }
 module.exports = {
   Auth,
