@@ -6,6 +6,8 @@ const {
   deleteEntitySocket,
   activeInactiveEntitySocket,
   changeEntityActionType,
+  isAutoScoreUpdateEntitySocket,
+  isAutoUpdateCommentaryEntitySocket,
 } = require("../../../controller/users/admin/entitySocket");
 const { EntitySocket } = require("../../../swaggerSchema/groupTags/schema");
 
@@ -14,11 +16,11 @@ module.exports = async (fastify, opts) => {
     schema: EntitySocket.getAll.schema,
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
-      //   (request, reply) =>
-      //     checkPermission(request, reply, fastify, {
-      //       tabName: "EntitySocket",
-      //       mode: "view",
-      //     }),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "EntitySocket",
+          mode: "view",
+        }),
     ],
     handler: (request, reply) => getAllEntitySocket(request, reply, fastify),
   });
@@ -27,11 +29,11 @@ module.exports = async (fastify, opts) => {
     schema: EntitySocket.byId.schema,
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
-      //   (request, reply) =>
-      //     checkPermission(request, reply, fastify, {
-      //       tabName: "EntitySocket",
-      //       mode: "view",
-      //     }),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "EntitySocket",
+          mode: "view",
+        }),
     ],
     handler: (request, reply) => getEntitySocketById(request, reply, fastify),
   });
@@ -40,11 +42,11 @@ module.exports = async (fastify, opts) => {
     schema: EntitySocket.save.schema,
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
-      //   (request, reply) =>
-      //     checkPermission(request, reply, fastify, {
-      //       tabName: "EntitySocket",
-      //       mode: request.body.entitySocketId == 0 ? "add" : "edit",
-      //     }),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "EntitySocket",
+          mode: request.body.entitySocketId == 0 ? "add" : "edit",
+        }),
     ],
     handler: (request, reply) => saveEntitySocket(request, reply, fastify),
   });
@@ -53,11 +55,11 @@ module.exports = async (fastify, opts) => {
     schema: EntitySocket.delete.schema,
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
-      //   (request, reply) =>
-      //     checkPermission(request, reply, fastify, {
-      //       tabName: "EntitySocket",
-      //       mode: "delete",
-      //     }),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "EntitySocket",
+          mode: "delete",
+        }),
     ],
     handler: (request, reply) => deleteEntitySocket(request, reply, fastify),
   });
@@ -66,11 +68,11 @@ module.exports = async (fastify, opts) => {
     schema: EntitySocket.activeInactive.schema,
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
-      //   (request, reply) =>
-      //     checkPermission(request, reply, fastify, {
-      //       tabName: "EntitySocket",
-      //       mode: "edit",
-      //     }),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "EntitySocket",
+          mode: "edit",
+        }),
     ],
     handler: (request, reply) => activeInactiveEntitySocket(request, reply, fastify),
   });
@@ -79,12 +81,38 @@ module.exports = async (fastify, opts) => {
     schema: EntitySocket.changeActionType.schema,
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
-      //   (request, reply) =>
-      //     checkPermission(request, reply, fastify, {
-      //       tabName: "EntitySocket",
-      //       mode: "edit",
-      //     }),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "EntitySocket",
+          mode: "edit",
+        }),
     ],
     handler: (request, reply) => changeEntityActionType(request, reply, fastify),
+  });
+
+  fastify.post("/autoScoreUpdate", {
+    schema: EntitySocket.entityAutoScoreUpdate.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "EntitySocket",
+          mode: "edit",
+        }),
+    ],
+    handler: (request, reply) => isAutoScoreUpdateEntitySocket(request, reply, fastify),
+  });
+
+  fastify.post("/autoUpdateCommentary", {
+    schema: EntitySocket.entityAutoUpdateCommentary.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "EntitySocket",
+          mode: "edit",
+        }),
+    ],
+    handler: (request, reply) => isAutoUpdateCommentaryEntitySocket(request, reply, fastify),
   });
 };
