@@ -1272,10 +1272,9 @@ const HideEventType = {
 };
 const callEntitySportAPI = async (url, request, fastify) => {
   try {
-    let checkEntitySportIsActive = global.tblEntitySockets.find(item => item.isActive == true && item.status === clientSocketStatus.connected);
+    let checkEntitySportIsActive = global.tblEntitySockets.find(item => item.isActive == true);
     if (!checkEntitySportIsActive) {
-      console.log("Entity Sport API is not active");
-      return true;
+      throw new Error("Entity Sport API is not active");
     }
 
     const result = await axios.get(`${checkEntitySportIsActive.url}${url}`);
@@ -1287,7 +1286,7 @@ const callEntitySportAPI = async (url, request, fastify) => {
       "DB ERROR --> utilities/index/callEntitySportAPI",
       request
     );
-    // throw new Error(error.message);
+    throw new Error(error.message);
   }
 };
 const comCardType = {
