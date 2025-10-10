@@ -3,7 +3,7 @@ const { generateFileName } = require("./index");
 const path = require("path");
 const { default: axios } = require("axios");
 const FormData = require('form-data');
-const { FILE_UPLOAD_URL, VIDEOUPLOADMAXSIZE } = require("./configConstants");
+const { FILE_UPLOAD_URL, VIDEOUPLOADMAXSIZE, PROJECT_NAME } = require("./configConstants");
 
 const storeImage = async (imageBuffer) => {
   try {
@@ -163,6 +163,30 @@ const generateImageName = (args) => {
   const imageName = name.replace(/[^a-zA-Z0-9-_]/g, "");
   return imageName;
 }
+
+const getImageFromUrl = async (args) => {
+  try {
+    const { type, imageUrl } = args;
+    const fileUploadURL = global.tblConfigs.find((item) => item.key === FILE_UPLOAD_URL).value;
+    const projectName = global.tblConfigs.find((item) => item.key === PROJECT_NAME).value;
+    const result = await axios.post(
+      `${fileUploadURL}/download`,
+      {
+        project: projectName,
+        type,
+        imageUrl
+      }
+    );
+    if (!result.data.success) {
+      throw new Error(result.data.error.message);
+    }
+    return result.data.result;
+  } catch (error) {
+    console.log("Error in getImageFromUrl", error);
+    throw new Error(error.message);
+  }
+}
+
 module.exports = {
   storeImage,
   removeImage,
@@ -170,4 +194,5 @@ module.exports = {
   removeImageFromServer,
   generateImageName,
   storeFileOnServer,
+  getImageFromUrl
 };

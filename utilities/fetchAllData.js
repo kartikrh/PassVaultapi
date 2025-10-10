@@ -1,4 +1,5 @@
 const { ModuleTypes, EventName, GlobalModuleType, StoreTypes } = require("../utilities/index");
+const { errorLogger } = require("./logger");
 const { getAllActiveInactiveTabsQuery } = require("../repository/TableTabs");
 const { getAllBlocksQuery } = require("../repository/TableBlock");
 const { getAllMenuTypesQuery } = require("../repository/TableMenuTypes");
@@ -341,6 +342,12 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     }
   } catch (error) {
     console.log("error in fetchAllDataFromDb", error.message,error);
+    errorLogger(
+      fastify,
+      error.message,
+      "ERROR --> utilities/fetchAllData.js/fetchDataFromDb",
+      null
+    );
     if (reply) {
       reply.status(200).send({
         status: 200,
@@ -370,10 +377,16 @@ const FetchingCommentariesDataFromCron = async (fastify) => {
     const marketIds = new Set(global.tblEventMarketsV2.map((elem) => elem.eventMarketId));
     global.tblMarketRunnerV2 = global.tblMarketRunnerV2.filter((item) => marketIds.has(item.eventMarketId));
 
-    console.log("Commentary data updated in via node-cron successfully");
+    console.log(new Date(), "Commentary data updated in via node-cron successfully");
 
   } catch (error) {
-    console.log("error in FetchingCommentariesDataFromCron", error.message,error);
+    console.log(new Date(), "error in FetchingCommentariesDataFromCron:", error.message,error);
+    errorLogger(
+      fastify,
+      error.message,
+      "ERROR --> utilities/fetchAllData.js/FetchingCommentariesDataFromCron",
+      null
+    );
   }
 }
 
@@ -422,7 +435,13 @@ const upcomingCommentaries = async (fastify) => {
         // }
       }
   } catch (error) {
-    console.error("Error in upcomingCommentaries:", error.message, error);
+    console.error(new Date(), "Error in upcomingCommentaries:", error.message, error);
+    errorLogger(
+      fastify,
+      error.message,
+      "ERROR --> utilities/fetchAllData.js/upcomingCommentaries",
+      null
+    );
   }
 };
 
@@ -732,6 +751,11 @@ const panelLoadDataByEnum = async (request, fastify, reply) => {
           global.tblPythonAPI = pythonData;
           break;
         }
+        case ModuleTypes.EntitySocket: {
+          const getAllEntitySockets = await getAllEntitySocketsQuery(fastify);
+          global.tblEntitySockets = getAllEntitySockets;
+          break;
+        }
         default:
           break;
       }
@@ -744,7 +768,7 @@ const panelLoadDataByEnum = async (request, fastify, reply) => {
       });
     }
   } catch (error) {
-    console.log("error in panelLoadDataByEnum", error.message,error);
+    console.log(new Date(), "error in panelLoadDataByEnum", error.message,error);
     if (reply) {
       reply.status(200).send({
         status: 200,

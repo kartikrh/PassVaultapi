@@ -212,11 +212,43 @@ const insertPlayerQuery = async (data, fastify, request) => {
 const updatePlayerQuery = async (data, fastify, request) => {
   try {
     return await fastify.db.query(
-      `update "tblPlayers" set "wrPlayerName" = $1,"wrImage" = $2,"wrBowlingStyle" = 
-      $3,"wrIsActive" = $4,"wrIsKipper" = $5,"wrIsLeftHandedBatting" = $6,"wrIsLeftArmFielding" = $7,"wrBatsmanAverage" = $8,"wrBatsmanStrikeRate" = $9,"wrBowlerAverage" = $10,"wrBowlerEconomy" = $11,"wrDisplayName" = $12,"wrEventTypeId" = $13,"wrPlayerTypeId" =$14,"wrModifyDate" = $15,"wrModifyBy" = $16,"wrIsSystemPlayer" = $17, "wrImagePath" = $19, "wrTpId" = $20, "wrCountryId" = $21, "wrBowlingType" = $22
-      where "wrPlayerId" = $18`,
+      `WITH update_data AS (
+        update "tblPlayers" set "wrPlayerName" = $1,"wrImage" = $2,"wrBowlingStyle" = 
+          $3,"wrIsActive" = $4,"wrIsKipper" = $5,"wrIsLeftHandedBatting" = $6,"wrIsLeftArmFielding" = $7,"wrBatsmanAverage" = $8,"wrBatsmanStrikeRate" = $9,"wrBowlerAverage" = $10,"wrBowlerEconomy" = $11,"wrDisplayName" = $12,"wrEventTypeId" = $13,"wrPlayerTypeId" =$14,"wrModifyDate" = $15,"wrModifyBy" = $16,"wrIsSystemPlayer" = $17, "wrImagePath" = $19, "wrTpId" = $20, "wrCountryId" = $21, "wrBowlingType" = $22
+        where "wrPlayerId" = $18
+        returning *
+      )
+      Select 
+        "wrPlayerId" as "playerId",
+        tp."wrEventTypeId" as "eventTypeId",
+        tp."wrPlayerTypeId" as "playerTypeId",
+        tp."wrBowlingStyle" as "bowlingStyleId",
+        tet."wrEventType" as "eventType",
+        tp."wrBowlingType" as "bowlingTypeId",
+        tbt."wrBowlingType" AS "bowlingType",
+        tpt."wrPlayerType" as "playerType",
+        "wrPlayerName" as "playerName",
+        tp."wrImage" as "image",
+        tp."wrIsActive" as "isActive",
+        "wrIsKipper" as "isKipper",
+        "wrIsLeftHandedBatting" as "isLeftHandedBatting",
+        "wrIsLeftArmFielding" as "isLeftArmFielding",
+        "wrBatsmanAverage"  as "batsmanAverage",
+        "wrBatsmanStrikeRate"  as "batsmanStrikeRate",
+        "wrBowlerAverage" as "bowlerAverage",
+        "wrBowlerEconomy"  as "bowlerEconomy",
+        "wrDisplayName"   as "displayName",
+        "wrIsSystemPlayer" as "isSystemPlayer",
+        tp."wrImagePath" AS "imagePath",
+        tp."wrTpId" AS "tpId",
+        tp."wrCountryId" AS "countryId"
+      from "update_data" tp 
+      left join "tblEventTypes" tet on tp."wrEventTypeId" = tet."wrEventTypeId"
+      left join "tblPlayerTypes" tpt on tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
+      left join "tblBowlingTypes" tbt on tp."wrBowlingType" = tbt."wrBowlingTypeId"
+      `,
       {
-        type: fastify.db.QueryTypes.UPDATE,
+        type: fastify.db.QueryTypes.SELECT,
         bind: [
           data.playerName,
           data.image,

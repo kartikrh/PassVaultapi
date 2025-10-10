@@ -233,6 +233,7 @@ const insertEventQuery = async (request, fastify) => {
     te."wrIsActive" as "isActive",
     te."wrCountryCode" as "countryCode",
     te."wrTimeZone" as "timeZone",
+    te."wrCreatedBy" as "createdBy",
     te."wrVenue" as "venue"
     from "insert_data" te
     left join "tblEventTypes" tet on te."wrEventTypeId" = tet."wrEventTypeId"
