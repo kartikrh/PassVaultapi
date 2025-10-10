@@ -1,10 +1,12 @@
-
 global.entitySportSocketIo = [];
 const { io } = require("socket.io-client");
 const { clientSocketActionType, clientSocketStatus } = require("../utilities");
-const { updateEntitySocketStatusQuery, updateReconnectCountQuery } = require("../repository/TableEntitySockets");
+const {
+  updateEntitySocketStatusQuery,
+  updateReconnectCountQuery,
+} = require("../repository/TableEntitySockets");
 const { errorLogger } = require("../utilities/logger");
-const { setEntityCom2Service } = require("../services/entitySport")
+const { setEntityCom2Service } = require("../services/entitySport");
 
 const connectEntitySport = async (fastify) => {
   try {
@@ -16,14 +18,18 @@ const connectEntitySport = async (fastify) => {
     );
 
     const promises = entitySports.map(async (urlConfig) => {
-      const existing = global.entitySportSocketIo.find(c => c.url === urlConfig.url);
+      const existing = global.entitySportSocketIo.find(
+        (c) => c.url === urlConfig.url
+      );
       if (existing) {
         existing.client.disconnect(true);
-        global.entitySportSocketIo = global.entitySportSocketIo.filter(c => c.url !== urlConfig.url);
+        global.entitySportSocketIo = global.entitySportSocketIo.filter(
+          (c) => c.url !== urlConfig.url
+        );
       }
       const client = io(urlConfig.url, {
         transport: ["websocket"],
-        query: { source: "admin-panel-entity"},
+        query: { source: "admin-panel-entity" },
         reconnection: true,
         reconnectionDelay: urlConfig.reconnectDelay,
         reconnectionDelayMax: urlConfig.reconnectMaxDelay,
@@ -33,27 +39,38 @@ const connectEntitySport = async (fastify) => {
       // Attach event listeners for connection events
       client.on("connect", () => {
         console.log(`Connected to entitySport - ${urlConfig.url}`);
-        updateEntitySocketStatusQuery({
-          entitySocketId : [urlConfig.entitySocketId],
-          status : clientSocketStatus.connected
-        },fastify).catch((error) => {
+        updateEntitySocketStatusQuery(
+          {
+            entitySocketId: [urlConfig.entitySocketId],
+            status: clientSocketStatus.connected,
+          },
+          fastify
+        ).catch((error) => {
           console.log("Error updating entity socket status:", error);
-        })
+        });
         // Remove any old socket just in case
-        global.entitySportSocketIo = global.entitySportSocketIo.filter(c => c.url !== urlConfig.url);
+        global.entitySportSocketIo = global.entitySportSocketIo.filter(
+          (c) => c.url !== urlConfig.url
+        );
         global.entitySportSocketIo.push({
-            ...urlConfig,
-            client,
+          ...urlConfig,
+          client,
         });
         // update status in global.tblEntitySockets
-        let index = global.tblEntitySockets.findIndex((c) => c.entitySocketId === urlConfig.entitySocketId);
-        global.tblEntitySockets[index].status = clientSocketStatus.connected;      
+        let index = global.tblEntitySockets.findIndex(
+          (c) => c.entitySocketId === urlConfig.entitySocketId
+        );
+        global.tblEntitySockets[index].status = clientSocketStatus.connected;
 
         client.on("entityScoreData", async (payload) => {
           try {
             // console.log("Received entity data from Backend A:", payload);
-            const request = { body: { response: payload } };
-            await setEntityCom2Service(request, fastify);
+            const request = { body: payload };
+            if (response.api_type && response.api_type == "match_push_obj") {
+              await setEntityCom2Service(request, fastify);
+            } else {
+              return true;
+            }
           } catch (err) {
             console.error("Error saving entity data:", err);
             errorLogger(
@@ -73,35 +90,45 @@ const connectEntitySport = async (fastify) => {
         global.entitySportSocketIo = global.entitySportSocketIo.filter(
           (c) => c.client !== client
         );
-        updateEntitySocketStatusQuery({
-          entitySocketId : [urlConfig.entitySocketId],
-          status : clientSocketStatus.disconnected
-        },fastify)
-        .catch((error) => {
+        updateEntitySocketStatusQuery(
+          {
+            entitySocketId: [urlConfig.entitySocketId],
+            status: clientSocketStatus.disconnected,
+          },
+          fastify
+        ).catch((error) => {
           errorLogger(
             fastify,
             error.message,
             "DB Error --> socketIo.js/entitySports/connectEntitySport",
             null
-        )
-       })
-        
+          );
+        });
+
         // update status in global.tblEntitySockets
-        let index = global.tblEntitySockets.findIndex((c) => c.entitySocketId === urlConfig.entitySocketId);
-        if(index !== -1){
-        global.tblEntitySockets[index].status = clientSocketStatus.disconnected;
+        let index = global.tblEntitySockets.findIndex(
+          (c) => c.entitySocketId === urlConfig.entitySocketId
+        );
+        if (index !== -1) {
+          global.tblEntitySockets[index].status =
+            clientSocketStatus.disconnected;
         }
       });
       client.io.on("reconnect_attempt", (attemptNumber) => {
         console.log(`Entity Reconnect attempt: ${attemptNumber}`);
-        updateReconnectCountQuery({
-          entitySocketId : urlConfig.entitySocketId,
-          reconnectCount : attemptNumber
-        },fastify);
+        updateReconnectCountQuery(
+          {
+            entitySocketId: urlConfig.entitySocketId,
+            reconnectCount: attemptNumber,
+          },
+          fastify
+        );
 
-        let index = global.tblEntitySockets.findIndex((c) => c.entitySocketId === urlConfig.entitySocketId);
-        if(index !== -1){
-        global.tblEntitySockets[index].reconnectCount = attemptNumber;
+        let index = global.tblEntitySockets.findIndex(
+          (c) => c.entitySocketId === urlConfig.entitySocketId
+        );
+        if (index !== -1) {
+          global.tblEntitySockets[index].reconnectCount = attemptNumber;
         }
       });
     });
@@ -122,19 +149,26 @@ const connectEntitySport = async (fastify) => {
 const disconnectEntitySports = async (fastify) => {
   try {
     const disconnectClientUrls = global.tblEntitySockets.filter(
-      (c) => c.isActive === true && c.actionType == clientSocketActionType.disconnect && c.status !== clientSocketStatus.disconnected
+      (c) =>
+        c.isActive === true &&
+        c.actionType == clientSocketActionType.disconnect &&
+        c.status !== clientSocketStatus.disconnected
     );
     const promises = disconnectClientUrls?.map((client) => {
-       const clientInstance = global.entitySportSocketIo.find((c) => c.entitySocketId === client.entitySocketId);
-       clientInstance?.client.disconnect();
+      const clientInstance = global.entitySportSocketIo.find(
+        (c) => c.entitySocketId === client.entitySocketId
+      );
+      clientInstance?.client.disconnect();
     });
     await Promise.all(promises);
     const clientIds = disconnectClientUrls.map((c) => c.entitySocketId);
-    updateEntitySocketStatusQuery({
-      entitySocketId : clientIds,
-      status : clientSocketStatus.disconnected
-    },fastify)
-    .catch((error) => {
+    updateEntitySocketStatusQuery(
+      {
+        entitySocketId: clientIds,
+        status: clientSocketStatus.disconnected,
+      },
+      fastify
+    ).catch((error) => {
       errorLogger(
         fastify,
         error.message,
@@ -148,17 +182,19 @@ const disconnectEntitySports = async (fastify) => {
         c.status = clientSocketStatus.disconnected;
       }
     });
-    global.entitySportSocketIo = global.entitySportSocketIo.filter((c) => !disconnectClientUrls.includes(c.entitySocketId));
+    global.entitySportSocketIo = global.entitySportSocketIo.filter(
+      (c) => !disconnectClientUrls.includes(c.entitySocketId)
+    );
   } catch (error) {
     errorLogger(
       fastify,
       error.message,
       "ERROR --> socketIo.js/entitySports/disconnectEntitySports",
       null
-    )
+    );
     console.log("Entity Error disconnecting clients:", error);
   }
-}
+};
 const disconnectInactiveEntityClients = async (fastify) => {
   try {
     // check if client is inactive and connected
@@ -166,7 +202,9 @@ const disconnectInactiveEntityClients = async (fastify) => {
       (c) => c.isActive === false && c.status === clientSocketStatus.connected
     );
     const promises = inactiveClients?.map((client) => {
-      const clientInstance = global.entitySportSocketIo.find((c) => c.entitySocketId === client.entitySocketId);
+      const clientInstance = global.entitySportSocketIo.find(
+        (c) => c.entitySocketId === client.entitySocketId
+      );
       clientInstance.client.disconnect();
     });
     await Promise.all(promises);
@@ -210,4 +248,3 @@ module.exports = {
   disconnectInactiveEntityClients,
   disconnectIsAutoScoreUpdateFalseEntityClients,
 };
-
