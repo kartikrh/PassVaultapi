@@ -64,11 +64,9 @@ const connectEntitySport = async (fastify) => {
 
         client.on("entityScoreData", async (payload) => {
           try {
-            // console.log("Received entity data from socket", request.body);
+            // console.log("Received entity data from Backend A:", payload);
             const request = { body: payload };
-            console.log("Received entity data from socket", payload.match_id);
-            if (payload.match_id == 93747 && payload.api_type && payload.api_type == "match_push_obj") {
-              console.log("Scoring function called........");
+            if (payload.api_type && payload.api_type == "match_push_obj") {
               await setEntityCom2Service(request, fastify);
             } else {
               return true;
