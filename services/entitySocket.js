@@ -282,7 +282,6 @@ const isAutoScoreUpdateEntitySocketService = async (request, fastify) => {
     global.tblEntitySockets[index].isAutoScoreUpdate = isAutoScoreUpdate;
 
     if (isAutoScoreUpdate == true) {
-        console.log("dsfsdfdsfsdf")
         connectEntitySport(fastify);
         disconnectEntitySports(fastify);
     } else {
