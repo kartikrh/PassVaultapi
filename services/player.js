@@ -870,7 +870,8 @@ const UpdatePlayerFromEntityService = async (request, fastify) => {
         }, fastify);
       }
     } catch (err) {
-      throw new Error(`Failed to fetch or process player data: ${err.message}`);
+      errorLogger(fastify, `Failed to fetch or process player id: ${entry.playerId} data: ${err.message}`, "/services/teams.js/UpdateTeamFromEntityService", request);
+      continue;
     }
   }
 
@@ -900,8 +901,8 @@ const playerImportService = async (data, fastify, request = null) => {
     let imageUrl = entitySportPlayerResponse?.logo_url;
     if (!imageUrl) {
       imageUrl = {
-        fullPath: global.tblConfigs.find(item => item.key === configConstants.ENTITYDEFAULTPLAYERIMG)?.value || null,
-        imagePath: global.tblConfigs.find(item => item.key === configConstants.ENTITYDEFAULTPLAYERIMGPATH)?.value || null
+        fullPath: global.tblEntitySockets[0]?.defaultPlayerImage || null,
+        imagePath: global.tblEntitySockets[0]?.defaultPlayerImagePath || null
       }
     } else {
       const getImageDataFromUrl = await getImageFromUrl({

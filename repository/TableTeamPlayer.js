@@ -56,8 +56,8 @@ const insertTeamPlayerQuery = async (data, fastify, request) => {
       select COALESCE(max("wrPlayerOrder"),0) as "playerOrder" from "tblTeamPlayers" where "wrTeamId" =$1
     ),
     insert_team_player as (
-      insert into "tblTeamPlayers" ("wrTeamId", "wrRefPlayerId", "wrPlayerOrder","wrCreatedDate", "wrCreatedBy", "wrTpId", "wrHomeTeam")
-      values ($1,$2, (  select "playerOrder" from display_order) + 1, $3, $4, $5, $6)
+      insert into "tblTeamPlayers" ("wrTeamId", "wrRefPlayerId", "wrPlayerOrder","wrCreatedDate", "wrCreatedBy", "wrTpId", "wrHomeTeam", "wrJerseyPlayerImage", "wrJerseyPlayerImagePath")
+      values ($1,$2, (  select "playerOrder" from display_order) + 1, $3, $4, $5, $6, $7, $8)
       returning *
     )
 
@@ -72,7 +72,7 @@ const insertTeamPlayerQuery = async (data, fastify, request) => {
 
     `,
       {
-        bind: [data.teamId, data.refPlayerId, new Date(), data.userId, data.tpId || null, data.homeTeam || false],
+        bind: [data.teamId, data.refPlayerId, new Date(), data.userId, data.tpId || null, data.homeTeam || false, data?.jerseyPlayerImage || null, data?.jerseyPlayerImagePath || null],
         type: fastify.db.QueryTypes.SELECT,
       }
     );
