@@ -311,7 +311,8 @@ const setEntityCom2Service = async (request , fastify) =>{
     }
     let tpId = comDetails.tpId;
     if(!tpId){
-        throw new Error("This commentary not associated with any tpId.")
+        // throw new Error("This commentary not associated with any tpId.")
+        return true;
     }
     // check the status
     if(response.live.game_state == commentaryStatus.TOSSDONE){
