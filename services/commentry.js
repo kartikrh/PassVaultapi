@@ -117,6 +117,9 @@ const {
   parseUmpires,
   callEntitySportAPI,
   checkEntitySportAPIEndpointIsActive,
+  CompetitionType,
+  compStatus,
+  ScoringTypes,
 } = require("../utilities");
 const {
   getAllPlayersByTeamIdQuery,
@@ -200,6 +203,7 @@ const { insertPlayerEntityQuery, insertPlayerQuery, updateExchangePlayerQuery } 
 const { insertCountryCodeQuery } = require("../repository/TableCountryCodes");
 const { insertVenueQuery, updateVenueQuery } = require("../repository/TableVenue");
 const { teamImportService } = require("./teams");
+const { insertCompetitionQuery } = require("../repository/TableCompitition");
 
 const allCommentaryService = async (request, fastify) => {
   // return global.tblCommentaries;
@@ -22914,6 +22918,60 @@ const weatherAndPitchDataService = async (commentaryId) => {
   }
 } 
 
+const insertCompetitionOnMatchImportService = async (cid, fastify, request) => {
+  const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getCompetitionDataByIdFromEntity);
+  if (!checkEntitySportAPIEndpoint.data) {
+    throw new Error(checkEntitySportAPIEndpoint.message);
+  }
+
+  const url = checkEntitySportAPIEndpoint.data.replace("{cid}", cid);
+  const entitySportCompetition = await callEntitySportAPI(url, request, fastify);
+
+  let entitySportCompetitionResponse = entitySportCompetition?.data?.result;
+  if (!entitySportCompetitionResponse) {
+    throw new Error("Invalid response from Entit-Sport API");
+  }
+
+  let checkCompetition = global.tblCompetitions.find(item => item.tpId === cid || item.competition.toLowerCase() === entitySportCompetitionResponse.title.replace(/'/g, "''").toLowerCase());
+  const eventType = global.tblEventTypes.find((et) => et.eventType.toLowerCase() === 'Cricket'.toLowerCase());
+  const matchType = global.tblMatchTypes.find(item => item.entityEnum === EntityEnums[entitySportCompetitionResponse?.game_format.toUpperCase()]);
+
+  const pythonIdData = global.tblPythonAPI.find(item => item.isDefault === true && item.isActive === true);
+  if (!pythonIdData) {
+    console.error("Default Python API not found");
+  }
+
+  const competitionData = {
+    competition: entitySportCompetitionResponse?.title,
+    eventTypeId: eventType?.eventTypeId || EventType['Cricket'],
+    refId: entitySportCompetitionResponse?.cid,
+    isActive: true,
+    isEventSnap: true,
+    matchTypeId: matchType?.matchTypeId || null,
+    drsCount: 2,
+    isMen: entitySportCompetitionResponse?.teams[0]?.sex == 'male' ? true : false,
+    type: CompetitionType[entitySportCompetitionResponse?.category.toUpperCase()],
+    commStatus: compStatus[entitySportCompetitionResponse?.status], // 1: fixture, 2: live, 3: result
+    startDate: entitySportCompetitionResponse?.datestart,
+    endDate: entitySportCompetitionResponse?.dateend,
+    tpId: entitySportCompetitionResponse?.cid,
+    pythonId: pythonIdData?.id || null,
+  }
+
+  if (!checkCompetition) {
+    const insertCompetition = await insertCompetitionQuery({
+      ...request,
+      userTokenInfo: {
+        WrUserId: -2
+      },
+      body: competitionData
+    }, fastify);
+    global.tblCompetitions.push(insertCompetition);
+    checkCompetition = insertCompetition;
+  }
+  return checkCompetition;
+}
+
 const matchImportService = async (data, fastify, request = null) => {
   const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getMatchDataByIdFromEntity);
   if (!checkEntitySportAPIEndpoint.data) {
@@ -22932,9 +22990,9 @@ const matchImportService = async (data, fastify, request = null) => {
 
   const matchInfoResponse = entitySportMatchResponse?.match_info;
 
-  const checkCompetition = global.tblCompetitions.find(item => item.tpId === matchInfoResponse?.competition?.cid);
+  let checkCompetition = global.tblCompetitions.find(item => item.tpId === matchInfoResponse?.competition?.cid);
   if (!checkCompetition) {
-    throw new Error("Competition not found for tpId " + matchInfoResponse?.competition?.cid);
+    checkCompetition = await insertCompetitionOnMatchImportService(matchInfoResponse?.competition?.cid, fastify, request);
   }
 
   const pythonIdData = global.tblPythonAPI.find(item => item.isDefault === true && item.isActive === true);
@@ -23055,7 +23113,8 @@ const matchImportService = async (data, fastify, request = null) => {
       isEventStart: false,
       isCountInPoint: checkCompetition?.isPointTable,
       countryId: checkCountry?.id,
-      venueId: checkVenue?.id
+      venueId: checkVenue?.id,
+      scoringType: ScoringTypes.Entity
     }
 
     if (!checkCommentary) {
