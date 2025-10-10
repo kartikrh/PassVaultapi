@@ -900,8 +900,8 @@ const playerImportService = async (data, fastify, request = null) => {
     let imageUrl = entitySportPlayerResponse?.logo_url;
     if (!imageUrl) {
       imageUrl = {
-        fullPath: global.tblConfigs.find(item => item.key === configConstants.ENTITYDEFAULTPLAYERIMG)?.value || null,
-        imagePath: global.tblConfigs.find(item => item.key === configConstants.ENTITYDEFAULTPLAYERIMGPATH)?.value || null
+        fullPath: global.tblEntitySockets[0]?.defaultPlayerImage || null,
+        imagePath: global.tblEntitySockets[0]?.defaultPlayerImagePath || null
       }
     } else {
       const getImageDataFromUrl = await getImageFromUrl({
