@@ -59,7 +59,8 @@ const createEntitySocketService = async (request, fastify) => {
 
     const processImage = async (imageArray, moduleConfig) => {
         const imgName = generateImageName({
-            name: request.body.serverName
+            // name: request.body.serverName
+            name: request.body.serverName.replace(/\s+/g, '')
         });
 
         const { fullPath, imagePath } = await storeImageOnServer({
@@ -149,7 +150,7 @@ const updateEntitySocketService = async (request, fastify) => {
 
     const processImage = async (imageArray, moduleConfig) => {
         const imgName = generateImageName({
-            name: request.body.serverName
+            name: request.body.serverName.replace(/\s+/g, '')
         });
 
         const { fullPath, imagePath } = await storeImageOnServer({
@@ -205,6 +206,23 @@ const updateEntitySocketService = async (request, fastify) => {
 const deleteEntitySocketService = async (request, fastify) => {
     const { entitySocketId } = request.body;
 
+    for (const id of entitySocketId) {
+      const validateId = global.tblEntitySockets.find((item) => item.entitySocketId === id);
+      if (validateId) {
+        if (validateId.defaultPlayerImage) {
+          await removeImageFromServer({ path: validateId.defaultPlayerImage });
+        }
+
+        if (validateId.defaultTeamImage) {
+          await removeImageFromServer({ path: validateId.defaultTeamImage });
+        }
+
+        if (validateId.defaultJerseyImage) {
+          await removeImageFromServer({ path: validateId.defaultJerseyImage });
+        }
+      }
+    }
+  
     await deleteEntitySocketQuery(
         entitySocketId,
         request,
