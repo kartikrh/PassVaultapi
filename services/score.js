@@ -930,7 +930,7 @@ const saveDeviceDataService = async (request, fastify) => {
     let deviceData = devices.filter((d) => d.deviceType === deviceType && (d.userId === userId || d.tempCId === tempCId));
     if(deviceData.length > 0){
         // delete the old device data
-        let ids = deviceData.map((d) => d.id);
+        let ids = deviceData.map((d) => d.deviceId);
         await dltDeviceQuery(
             ids,
             fastify,
