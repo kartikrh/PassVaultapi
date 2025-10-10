@@ -157,6 +157,7 @@ const mergeAndSaveImage = async (data, fastify) => {
         await updateCommPlayerImagePath(playerId, teamId, fullPath, imagePath, fastify);
       }
     }
+    return { fullPath, imagePath };
   } catch (error) {
     console.log("mergeimage error", error)
     errorLogger(

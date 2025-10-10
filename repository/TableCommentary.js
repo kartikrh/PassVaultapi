@@ -489,7 +489,7 @@ const insertCommentaryPlayers = async (
       `
       WITH insert_data AS (
         insert into "tblCommentaryPlayers" ("wrCommentaryId" , "wrTeamId" , "wrPlayerId","wrPlayerName", "wrDisplayOrder","wrCurrentInnings",
-        "wrBatsmanAverage", "wrBatsmanPreviousStrikeRate", "wrBowlerPreviousEconomy", "wrBowlerAverage", "wrTpId", "wrBowlingType")
+        "wrBatsmanAverage", "wrBatsmanPreviousStrikeRate", "wrBowlerPreviousEconomy", "wrBowlerAverage", "wrTpId", "wrBowlingType", "wrJerseyPlayerImage", "wrJerseyPlayerImagePath")
         values (
           $1,
           $2,
@@ -508,7 +508,9 @@ const insertCommentaryPlayers = async (
           ),
           (select "wrBowlerAverage" from "tblPlayers" where "wrPlayerId" =$3),
           $7,
-          (select tp."wrBowlingType" from "tblPlayers" tp where tp."wrPlayerId" = $3)
+          (select tp."wrBowlingType" from "tblPlayers" tp where tp."wrPlayerId" = $3),
+          $8,
+          $9
         )
         RETURNING *   
       ) 
@@ -588,6 +590,8 @@ const insertCommentaryPlayers = async (
           currentinning,
           data.matchTypeId,
           data.tpId || null,
+          data?.jerseyPlayerImage || null,
+          data?.jerseyPlayerImagePath || null,
         ],
       }
     );
