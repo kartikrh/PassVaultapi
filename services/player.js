@@ -870,7 +870,8 @@ const UpdatePlayerFromEntityService = async (request, fastify) => {
         }, fastify);
       }
     } catch (err) {
-      throw new Error(`Failed to fetch or process player data: ${err.message}`);
+      errorLogger(fastify, `Failed to fetch or process player id: ${entry.playerId} data: ${err.message}`, "/services/teams.js/UpdateTeamFromEntityService", request);
+      continue;
     }
   }
 
