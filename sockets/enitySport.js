@@ -66,11 +66,12 @@ const connectEntitySport = async (fastify) => {
           try {
             // console.log("Received entity data from Backend A:", payload);
             const request = { body: payload };
-            if (response.api_type && response.api_type == "match_push_obj") {
+            if (payload.api_type && payload.api_type == "match_push_obj") {
               await setEntityCom2Service(request, fastify);
             } else {
               return true;
             }
+            
           } catch (err) {
             console.error("Error saving entity data:", err);
             errorLogger(
