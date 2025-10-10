@@ -71,6 +71,7 @@ const connectEntitySport = async (fastify) => {
             } else {
               return true;
             }
+            
           } catch (err) {
             console.error("Error saving entity data:", err);
             errorLogger(
