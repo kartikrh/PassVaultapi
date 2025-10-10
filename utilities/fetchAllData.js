@@ -751,6 +751,11 @@ const panelLoadDataByEnum = async (request, fastify, reply) => {
           global.tblPythonAPI = pythonData;
           break;
         }
+        case ModuleTypes.EntitySocket: {
+          const getAllEntitySockets = await getAllEntitySocketsQuery(fastify);
+          global.tblEntitySockets = getAllEntitySockets;
+          break;
+        }
         default:
           break;
       }

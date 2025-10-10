@@ -11,10 +11,10 @@ const { setEntityCom2Service } = require("../services/entitySport");
 const connectEntitySport = async (fastify) => {
   try {
     const entitySports = global.tblEntitySockets.filter(
-      (c) =>
-        c.isActive === true &&
-        c.actionType == clientSocketActionType.connect &&
-        c.status !== clientSocketStatus.connected
+      (c) => c.isActive === true 
+        && c.actionType == clientSocketActionType.connect 
+        && c.status !== clientSocketStatus.connected
+        && c.isAutoScoreUpdate == true
     );
 
     const promises = entitySports.map(async (urlConfig) => {
@@ -218,9 +218,33 @@ const disconnectInactiveEntityClients = async (fastify) => {
       null
     );
   }
-};
-module.exports = {
+}
+const disconnectIsAutoScoreUpdateFalseEntityClients = async (fastify) => {
+  try {
+    // check if client is inactive and connected
+    const inactiveClients = global.tblEntitySockets.filter(
+      (c) => c.isActive === true && c.status === clientSocketStatus.connected
+        && c.isAutoScoreUpdate === false
+    );
+    const promises = inactiveClients?.map((client) => {
+      const clientInstance = global.entitySportSocketIo.find((c) => c.entitySocketId === client.entitySocketId);
+      clientInstance.client.disconnect();
+    });
+    await Promise.all(promises);
+    return true;
+  } catch (error) {
+    console.log("Entity Error disconnecting isAutoScoreUpdate clients:", error);
+    errorLogger(
+      fastify,
+      error.message,
+      "ERROR --> socketIo.js/entitySports/disconnectIsAutoScoreUpdateFalseEntityClients",
+      null
+    );
+  }
+}
+module.exports = { 
   connectEntitySport,
   disconnectEntitySports,
   disconnectInactiveEntityClients,
+  disconnectIsAutoScoreUpdateFalseEntityClients,
 };
