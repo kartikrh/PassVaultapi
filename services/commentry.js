@@ -23114,7 +23114,6 @@ const matchImportService = async (data, fastify, request = null) => {
       isCountInPoint: checkCompetition?.isPointTable,
       countryId: checkCountry?.id,
       venueId: checkVenue?.id,
-      scoringType: ScoringTypes.Entity
     }
 
     if (!checkCommentary) {
@@ -23155,7 +23154,9 @@ const matchImportService = async (data, fastify, request = null) => {
           playerId: teamPlayerData?.playerId,
           displayOrder: teamPlayerData?.playerOrder,
           matchTypeId,
-          tpId: teamPlayerData?.tpId
+          tpId: teamPlayerData?.tpId,
+          jerseyPlayerImage: teamPlayerData?.jerseyPlayerImage || null,
+          jerseyPlayerImagePath: teamPlayerData?.jerseyPlayerImagePath || null,
         }, i, fastify, request);
         global.tblCommentaryPlayers.push(insertCommentaryPlayerData[0]);
       }

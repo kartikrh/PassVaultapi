@@ -30,6 +30,7 @@ const { insertPlayerQuery } = require("../repository/TablePlayer");
 const { updateAutoImportDataService } = require("./autoImportData");
 const { playerImportService } = require("./player");
 const { addTournamentTeamPlayersService } = require("./tournamentTeamPlayers");
+const { errorLogger } = require("../utilities/logger");
 const allTeamsService = async () => {
   return global.tblTeams;
 };
@@ -844,7 +845,9 @@ const teamImportService = async (data, fastify, request = null) => {
       acc[team.team_id] = team.players || [];
       return acc;
     }, {});
-    allPlayers = [...allPlayers, ...competitionSquadPlayers[data.tid]];
+    if (competitionSquadPlayers[data.tid] && competitionSquadPlayers[data.tid].length > 0) {  
+      allPlayers = [...allPlayers, ...competitionSquadPlayers[data.tid]];
+    }
   }
 
   const seen = new Set();
@@ -878,11 +881,31 @@ const teamImportService = async (data, fastify, request = null) => {
     const teamPlayerData = await playersInTeams.find(item => item.tpId === playerId);
     if (!teamPlayerData) {
       const playerData = global.tblPlayers.find(item => item.tpId === playerId);
+      let mergeAndSaveImageData = null;
+      if (playerData?.image && checkTeam?.jersey) {
+        try {
+          mergeAndSaveImageData = await mergeAndSaveImage({
+            jersey: checkTeam.jersey,
+            playerImage: playerData.image,
+            playerName: playerData.playerName,
+            teamName: checkTeam.teamName,
+            teamPlayerId: null,
+            commentaryPlayerId: null,
+            commentaryId: null,
+          }, fastify);
+        } catch (error) {
+          errorLogger(fastify, err.message, "/service/teams.js/teamImportService/mergeAndSaveImageData", request);
+          continue;
+        }
+      }
+
       await insertTeamPlayerQuery({
         teamId: checkTeam.teamId,
         refPlayerId: playerData?.playerId,
         tpId: playerId,
         userId: -2,
+        jerseyPlayerImage: mergeAndSaveImageData ? mergeAndSaveImageData.jerseyPlayerImage : null,
+        jerseyPlayerImagePath: mergeAndSaveImageData ? mergeAndSaveImageData.jerseyPlayerImagePath : null,
       }, fastify, request);
       await updateTeamPlayerHomeTeamQuery({
         refPlayerId: playerData?.playerId,
