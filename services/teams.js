@@ -19,7 +19,7 @@ const {
   generateImageName,
   getImageFromUrl,
 } = require("../utilities/Images");
-const { PROJECT_NAME, ENTITYDEFAULTPLAYERIMG, ENTITYDEFAULTPLAYERIMGPATH, ENTITYDEFAULTTEAMIMG, ENTITYDEFAULTTEAMIMGPATH, ENTITYDEFAULTJERSEYIMG, ENTITYDEFAULTJERSEYIMGPATH } = require("../utilities/configConstants");
+const { PROJECT_NAME } = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
 const { deletePlayersByTeamIdQuery } = require("../repository/TableTournamentsTeamPlayers")
 const { deletePointsByTeamIdQuery } = require("../repository/TableTournmentTeamPoints")
@@ -658,8 +658,8 @@ const UpdateTeamFromEntityService = async (request, fastify) => {
             let playerImageData = player?.logo_url;
             if (!playerImageData) {
               playerImageData = {
-                fullPath: global.tblConfigs.find(item => item.key === ENTITYDEFAULTPLAYERIMG)?.value || null,
-                imagePath: global.tblConfigs.find(item => item.key === ENTITYDEFAULTPLAYERIMGPATH)?.value || null
+                fullPath: global.tblEntitySockets[0]?.defaultTeamImage || null,
+                imagePath: global.tblEntitySockets[0]?.defaultTeamImagePath || null
               }
             } else {
               const getImageDataFromUrl = await getImageFromUrl({
@@ -794,8 +794,8 @@ const teamImportService = async (data, fastify, request = null) => {
     let imageUrl = entitySportTeamResponse?.logo_url;
     if (!imageUrl) {
       imageUrl = {
-        fullPath: global.tblConfigs.find(item => item.key === ENTITYDEFAULTTEAMIMG)?.value || null,
-        imagePath: global.tblConfigs.find(item => item.key === ENTITYDEFAULTTEAMIMGPATH)?.value || null
+        fullPath: global.tblEntitySockets[0]?.defaultTeamImage || null,
+        imagePath: global.tblEntitySockets[0]?.defaultTeamImagePath || null
       }
     } else {
       const getImageDataFromUrl = await getImageFromUrl({
@@ -809,8 +809,8 @@ const teamImportService = async (data, fastify, request = null) => {
     }
 
     let teamJerseyImageData = {
-      fullPath: global.tblConfigs.find(item => item.key === ENTITYDEFAULTJERSEYIMG)?.value || null,
-      imagePath: global.tblConfigs.find(item => item.key === ENTITYDEFAULTJERSEYIMGPATH)?.value || null
+      fullPath: global.tblEntitySockets[0]?.defaultJerseyImage || null,
+      imagePath: tblEntitySockets[0]?.defaultJerseyImagePath || null,
     }
     teamData = {
       ...teamData,
