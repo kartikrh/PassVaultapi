@@ -1634,6 +1634,20 @@ const Teams = {
       },
     },
   },
+  importUpdate: {
+    schema: {
+      tags: ["Teams"],
+      security: [{ bearerAuth: [] }],
+      description: "Update Teams from entity sport",
+      body: {
+        type: "object",
+        properties: {
+          teamIds: { type: "array" }
+        },
+        required: ["teamIds"],
+      },
+    },
+  },
 };
 
 const PaneltyRuns = {
@@ -1890,6 +1904,20 @@ const Player = {
           isActive: { type: "boolean" },
         },
         required: ["playerId", "isActive"],
+      },
+    },
+  },
+  importUpdate: {
+    schema: {
+      tags: ["Player"],
+      security: [{ bearerAuth: [] }],
+      description: "Update Player from entity sport",
+      body: {
+        type: "object",
+        properties: {
+          playerIds: { type: "array" }
+        },
+        required: ["playerIds"],
       },
     },
   },
@@ -10850,6 +10878,126 @@ const EntitySocket = {
         properties: {
           isActive: { type: "boolean" },
         },
+      },
+    },
+  },
+  byId: {
+    schema: {
+      tags: ["EntitySocket"],
+      description: "get EntitySocket by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          entitySocketId: { type: "integer" },
+        },
+        required: ["entitySocketId"],
+      },
+    },
+  },
+  save: {
+    schema: {
+      tags: ["EntitySocket"],
+      description: "save EntitySocket",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          entitySocketId: { type: "integer" },
+          serverName: { type: "string" },
+          url: { type: "string" },
+          isActive: { type: "boolean" },
+          status: { type: "integer" },
+          reconnectDelay: { type: "integer" },
+          reconnectAttempts: { type: "integer" },
+          reconnectMaxDelay: { type: "integer" },
+          reconnectCount: { type: "integer" },
+          actionType: { type: "integer" },
+          isAutoUpdateCommentary: { type: "boolean" },
+          isAutoScoreUpdate: { type: "boolean" },
+        },
+        required: ["entitySocketId", "url", "serverName"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["EntitySocket"],
+      description: "delete EntitySocket",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          entitySocketId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["entitySocketId"],
+      },
+    },
+  },
+  activeInactive: {
+    schema: {
+      tags: ["EntitySocket"],
+      description: "active inactive EntitySocket",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          entitySocketId: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["entitySocketId", "isActive"],
+      },
+    },
+  },
+  entityAutoScoreUpdate: {
+    schema: {
+      tags: ["EntitySocket"],
+      description: "isAutoScoreUpdate EntitySocket",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          entitySocketId: { type: "integer" },
+          isAutoScoreUpdate: { type: "boolean" },
+        },
+        required: ["entitySocketId", "isAutoScoreUpdate"],
+      },
+    },
+  },
+  entityAutoUpdateCommentary: {
+    schema: {
+      tags: ["EntitySocket"],
+      description: "isAutoUpdateCommentary EntitySocket",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          entitySocketId: { type: "integer" },
+          isAutoUpdateCommentary: { type: "boolean" },
+        },
+        required: ["entitySocketId", "isAutoUpdateCommentary"],
+      },
+    },
+  },
+  changeActionType: {
+    schema: {
+      tags: ["EntitySocket"],
+      description: "change action type",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          entitySocketId: {
+            type: "array",
+            items: { type: "integer" },
+          },
+          actionType: { type: "integer" },
+        },
+        required: ["entitySocketId", "actionType"],
       },
     },
   },

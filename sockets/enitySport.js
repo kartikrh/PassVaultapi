@@ -4,12 +4,15 @@ const { io } = require("socket.io-client");
 const { clientSocketActionType, clientSocketStatus } = require("../utilities");
 const { updateEntitySocketStatusQuery, updateReconnectCountQuery } = require("../repository/TableEntitySockets");
 const { errorLogger } = require("../utilities/logger");
-// const { setEntityCom2Service } = require("../services/entitySport")
+const { setEntityCom2Service } = require("../services/entitySport")
 
 const connectEntitySport = async (fastify) => {
   try {
     const entitySports = global.tblEntitySockets.filter(
-      (c) => c.isActive === true && c.actionType == clientSocketActionType.connect && c.status !== clientSocketStatus.connected
+      (c) => c.isActive === true 
+        && c.actionType == clientSocketActionType.connect 
+        && c.status !== clientSocketStatus.connected
+        && c.isAutoScoreUpdate == true
     );
 
     const promises = entitySports.map(async (urlConfig) => {
@@ -48,9 +51,9 @@ const connectEntitySport = async (fastify) => {
 
         client.on("entityScoreData", async (payload) => {
           try {
-            // // console.log("Received entity data from Backend A:", payload);
-            // const request = { body: { response: payload } };
-            // await setEntityCom2Service(request, fastify);
+            // console.log("Received entity data from Backend A:", payload);
+            const request = { body: { response: payload } };
+            await setEntityCom2Service(request, fastify);
           } catch (err) {
             console.error("Error saving entity data:", err);
             errorLogger(
@@ -178,9 +181,33 @@ const disconnectInactiveEntityClients = async (fastify) => {
     );
   }
 }
+const disconnectIsAutoScoreUpdateFalseEntityClients = async (fastify) => {
+  try {
+    // check if client is inactive and connected
+    const inactiveClients = global.tblEntitySockets.filter(
+      (c) => c.isActive === true && c.status === clientSocketStatus.connected
+        && c.isAutoScoreUpdate === false
+    );
+    const promises = inactiveClients?.map((client) => {
+      const clientInstance = global.entitySportSocketIo.find((c) => c.entitySocketId === client.entitySocketId);
+      clientInstance.client.disconnect();
+    });
+    await Promise.all(promises);
+    return true;
+  } catch (error) {
+    console.log("Entity Error disconnecting isAutoScoreUpdate clients:", error);
+    errorLogger(
+      fastify,
+      error.message,
+      "ERROR --> socketIo.js/entitySports/disconnectIsAutoScoreUpdateFalseEntityClients",
+      null
+    );
+  }
+}
 module.exports = { 
   connectEntitySport,
   disconnectEntitySports,
   disconnectInactiveEntityClients,
+  disconnectIsAutoScoreUpdateFalseEntityClients,
 };
 

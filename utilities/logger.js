@@ -1,5 +1,6 @@
 const ResponseLog = require("../database/schema/responseLogger");
 const { ISCOMMENTARYLOGGER } = require("./configConstants");
+const { getCurrentDateTime } = require('./datetime');
 
 const errorLogger = async (fastify, errMessage, errStack, request , data = null) => {
   try {
@@ -208,7 +209,7 @@ const commentaryLogger = async (data, request, fastify) => {
     if (addLog == "false") {
       return true;
     }
-    let comment = request.body.deleteCommentaryBallByBallId || request.body.deleteOverId ? "delete" : null;
+    let comment = request?.body?.deleteCommentaryBallByBallId || request?.body?.deleteOverId ? "delete" : null;
     const query = `
       INSERT INTO "tblCommentaryLogs"
       (
@@ -467,6 +468,18 @@ const disMissalLogger = async (data,fastify,request)=>{
     console.log(error);
   }
 }
+
+const originalLog = console.log;
+const originalLogError = console.error;
+const originalLogWarn = console.warn;
+
+const createLogPrefix = (originalFn) => {
+  return (...args) => originalFn(`[${getCurrentDateTime()}]`, ...args);
+}
+
+console.log = createLogPrefix(originalLog);
+console.error = createLogPrefix(originalLogError);
+console.warn = createLogPrefix(originalLogWarn);
 
 module.exports = { errorLogger, responseLogger ,responseLogInDB , marketLogger ,
   marketDataLogger,tblPredictorAPILogger,tblThirdPartyAPILogger,commentaryLogger,updateWebRequestLogs,
