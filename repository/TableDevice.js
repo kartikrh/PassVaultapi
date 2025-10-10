@@ -200,7 +200,7 @@ const dltDeviceQuery = async (id, fastify, request) => {
           "wrIsDeleted" = true,
           "wrDeletedBy" = null,
           "wrDeletedAt" = now()
-      WHERE "wrDeviceId" IN ($1)`,
+      WHERE "wrDeviceId" = ANY($1)`,
       {
         type: fastify.db.QueryTypes.UPDATE,
         bind: [id],
