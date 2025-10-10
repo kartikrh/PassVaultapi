@@ -643,7 +643,7 @@ const UpdateTeamFromEntityService = async (request, fastify) => {
         const url = checkEntitySportAPIEndpoint.data.replace("{tid}", entry.tpId);
         const entitySportTeamPlayer = await callEntitySportAPI(url, request, fastify);
 
-        let entitySportTeamPlayerResponse = entitySportTeamPlayer?.data?.result;
+        let entitySportTeamPlayerResponse = entitySportTeamPlayer?.data?.result?.items;
         if (!entitySportTeamPlayerResponse) {
           throw new Error("Invalid response from Entit-Sport API");
         }
@@ -742,7 +742,8 @@ const UpdateTeamFromEntityService = async (request, fastify) => {
         }, fastify);
       }
     } catch (err) {
-      throw new Error(`Failed to fetch or process team data: ${err.message}`);
+      errorLogger(fastify, `Failed to fetch or process team id: ${entry.teamId} data: ${err.message}`, "/services/teams.js/UpdateTeamFromEntityService", request);
+      continue;
     }
   }
 
