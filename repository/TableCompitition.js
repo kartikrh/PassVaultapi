@@ -511,7 +511,7 @@ const isMenChangeStatusQuery = async (data, request, fastify) => {
     throw new Error(err.message);
   }
 };
-const getTemplateByCompetitionIdQuery = async (data,request, fastify) => {
+const getTemplateByCompetitionIdQuery = async (data, request, fastify) => {
   try {
     let assignedMarketTemplates = await fastify.db.query(
       `
