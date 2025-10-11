@@ -883,22 +883,22 @@ const teamImportService = async (data, fastify, request = null) => {
     if (!teamPlayerData) {
       const playerData = global.tblPlayers.find(item => item.tpId === playerId);
       let mergeAndSaveImageData = null;
-      if (playerData?.image && checkTeam?.jersey) {
-        try {
-          mergeAndSaveImageData = await mergeAndSaveImage({
-            jersey: checkTeam.jersey,
-            playerImage: playerData.image,
-            playerName: playerData.playerName,
-            teamName: checkTeam.teamName,
-            teamPlayerId: null,
-            commentaryPlayerId: null,
-            commentaryId: null,
-          }, fastify);
-        } catch (error) {
-          errorLogger(fastify, err.message, "/service/teams.js/teamImportService/mergeAndSaveImageData", request);
-          continue;
-        }
-      }
+      // if (playerData?.image && checkTeam?.jersey) {
+      //   try {
+      //     mergeAndSaveImageData = await mergeAndSaveImage({
+      //       jersey: checkTeam.jersey,
+      //       playerImage: playerData.image,
+      //       playerName: playerData.playerName,
+      //       teamName: checkTeam.teamName,
+      //       teamPlayerId: null,
+      //       commentaryPlayerId: null,
+      //       commentaryId: null,
+      //     }, fastify);
+      //   } catch (error) {
+      //     errorLogger(fastify, err.message, "/service/teams.js/teamImportService/mergeAndSaveImageData", request);
+      //     continue;
+      //   }
+      // }
 
       await insertTeamPlayerQuery({
         teamId: checkTeam.teamId,
