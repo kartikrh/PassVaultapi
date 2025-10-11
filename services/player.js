@@ -903,22 +903,22 @@ const playerImportService = async (data, fastify, request = null) => {
     && item.playerName.toLowerCase() === entitySportPlayerResponse?.title.replace(/'/g, "''").toLowerCase() &&
     item.displayName.trim().replace(/'/g, "''").toLowerCase() == entitySportPlayerResponse?.short_name.toLowerCase())
     if(!checkPlayer){
-      let imageUrl = entitySportPlayerResponse?.logo_url;
-      if (!imageUrl) {
-        imageUrl = {
+      // let imageUrl = entitySportPlayerResponse?.logo_url;
+      // if (!imageUrl) {
+      let imageUrl = {
           fullPath: global.tblEntitySockets[0]?.defaultPlayerImage || null,
           imagePath: global.tblEntitySockets[0]?.defaultPlayerImagePath || null
         }
-      } else {
-        const getImageDataFromUrl = await getImageFromUrl({
-          type: ImgModuleConfig.Players.type,
-          imageUrl
-        });
+      // } else {
+      //   const getImageDataFromUrl = await getImageFromUrl({
+      //     type: ImgModuleConfig.Players.type,
+      //     imageUrl
+      //   });
 
-        if (getImageDataFromUrl && getImageDataFromUrl.fullPath) {
-          imageUrl = getImageDataFromUrl
-        }
-      }
+      //   if (getImageDataFromUrl && getImageDataFromUrl.fullPath) {
+      //     imageUrl = getImageDataFromUrl
+      //   }
+      // }
 
     let insertPlayerData = {
       eventTypeId: EventType['Cricket'],
