@@ -22969,6 +22969,20 @@ const insertCompetitionOnMatchImportService = async (cid, fastify, request) => {
     global.tblCompetitions.push(insertCompetition);
     checkCompetition = insertCompetition;
   }
+  // else if (!checkCompetition?.tpId || checkCompetition?.tpId === null) {
+  //   const data = {
+  //     tpId: data.cid,
+  //     modifiedBy: -2,
+  //     competitionId: checkCompetition.competitionId
+  //   }
+  //   const updateCompetition = await updateTpIdCompQuery(data, fastify, request);
+  //   let index = global.tblCompetitions.findIndex((i)=> i.competitionId == checkCompetition.competitionId)
+  //   if(index != -1){
+  //     global.tblCompetitions[index] = updateCompetition[0]
+  //   }
+  //     checkCompetition = global.tblCompetitions[index] ;
+  // } 
+  
   return checkCompetition;
 }
 
@@ -23003,7 +23017,7 @@ const matchImportService = async (data, fastify, request = null) => {
   const EntityEnumsUpperCase = Object.fromEntries(
     Object.entries(EntityEnums).map(([key, value]) => [key.toUpperCase(), value])
   );
-  const matchType = global.tblMatchTypes.find(item => item.entityEnum === EntityEnumsUpperCase[matchInfoResponse?.competition?.match_format.toUpperCase()]);
+  const matchType = global.tblMatchTypes.find(item => item.entityEnum === EntityEnumsUpperCase[matchInfoResponse?.format_str.toUpperCase()]);
   let checkCountry, checkVenue;
   if (matchInfoResponse?.venue?.country && matchInfoResponse?.venue?.country !== "") {
     const checkCountry = global.tblCountryCodes.find(item => item.countryName === matchInfoResponse?.venue?.country);

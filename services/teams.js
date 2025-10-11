@@ -12,6 +12,7 @@ const {
   deleteTeamQuery,
   getAllPlayersByTeamIdQuery,
   getAllCompetitionByTeamIdQuery,
+  updateExchangeTeamQuery,
 } = require("../repository/TableTeams");
 const {
   removeImageFromServer,
@@ -825,7 +826,19 @@ const teamImportService = async (data, fastify, request = null) => {
     global.tblTeams.push(insertTeam);
     checkTeam = insertTeam;
   }
-
+  else if (checkTeam?.tpId === null || !checkTeam?.tpId) {
+    const data = {
+      userId: -2,
+      tpId: entitySportTeamResponse?.tid || null,
+      teamId: checkTeam.teamId
+    }
+    const updateTeam = await updateExchangeTeamQuery(data, fastify, request);
+    let index = global.tblTeams.findIndex((i)=> i.teamId == checkTeam.teamId)
+    if(index != -1){
+      global.tblTeams[index] = updateTeam[0]
+    }
+    checkTeam = updateTeam[0]
+  } 
   let allPlayers = Object.values(entitySportPlayerResponse).flat();
 
   if (data?.competitionId && data?.cid) {

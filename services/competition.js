@@ -15,6 +15,7 @@ const {
   getAssignedTemplateByCompetitionIdQuery,
   upStatusQuery,
   getMatchTypeTemplateByCompetitionIdQuery,
+  updateTpIdCompQuery,
 } = require("../repository/TableCompitition");
 const {storeImageOnServer, removeImageFromServer, generateImageName, getImageFromUrl } = require("../utilities/Images");
 const { PROJECT_NAME, ENTITYDEFAULTTEAMIMG, ENTITYDEFAULTTEAMIMGPATH, ENTITYDEFAULTJERSEYIMG, ENTITYDEFAULTJERSEYIMGPATH } = require("../utilities/configConstants");
@@ -878,6 +879,9 @@ const competitionImportService = async (data, fastify, request) => {
   const eventType = global.tblEventTypes.find((et) => et.eventType.toLowerCase() === 'Cricket'.toLowerCase());
   const matchType = global.tblMatchTypes.find(item => item.entityEnum === EntityEnums[entitySportCompetitionResponse?.game_format.toUpperCase()]);
 
+  if(entitySportCompetitionResponse?.game_format.toUpperCase() == EntityEnums.MIXED){
+    matchType = null
+  }
   const pythonIdData = global.tblPythonAPI.find(item => item.isDefault === true && item.isActive === true);
   if (!pythonIdData) {
     console.error("Default Python API not found");
@@ -910,6 +914,19 @@ const competitionImportService = async (data, fastify, request) => {
     global.tblCompetitions.push(insertCompetition);
     checkCompetition = insertCompetition;
   }
+  // else if (!checkCompetition?.tpId || checkCompetition?.tpId === null) {
+  //   const data = {
+  //     tpId: data.cid,
+  //     modifiedBy: -2,
+  //     competitionId: checkCompetition.competitionId
+  //   }
+  //   const updateCompetition = await updateTpIdCompQuery(data, fastify, request);
+  //   let index = global.tblCompetitions.findIndex((i)=> i.competitionId == checkCompetition.competitionId)
+  //   if(index != -1){
+  //     global.tblCompetitions[index] = updateCompetition[0]
+  //   }
+  //   checkCompetition = global.tblCompetitions[index] ;
+  // } 
 
   let allCompetitionMatch = [];
   const checkEntitySportAPIEndpoint2 = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getCompetitionMatchDataByIdFromEntity);
