@@ -23017,7 +23017,7 @@ const matchImportService = async (data, fastify, request = null) => {
   const EntityEnumsUpperCase = Object.fromEntries(
     Object.entries(EntityEnums).map(([key, value]) => [key.toUpperCase(), value])
   );
-  const matchType = global.tblMatchTypes.find(item => item.entityEnum === EntityEnumsUpperCase[matchInfoResponse?.format_str.toUpperCase()]);
+  const matchType = global.tblMatchTypes.find(item => item.entityEnum === EntityEnumsUpperCase[matchInfoResponse?.format_str.toUpperCase().replace(/\s+/g, '')]);
   let checkCountry, checkVenue;
   if (matchInfoResponse?.venue?.country && matchInfoResponse?.venue?.country !== "") {
     const checkCountry = global.tblCountryCodes.find(item => item.countryName === matchInfoResponse?.venue?.country);
