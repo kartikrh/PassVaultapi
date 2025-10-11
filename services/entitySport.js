@@ -304,10 +304,12 @@ const setEntityCom2Service = async (request , fastify) =>{
     const {response} = request.body
     let comDetails =global.tblCommentaries.find((c)=> c.tpId == response?.match_id)
     if(!comDetails){
-        throw new Error("Commentary with this tp id not found.")
-    }
-    if(comDetails.scoringType != 2){
+        // throw new Error("Commentary with this tp id not found.")
         return true;
+    }
+    if(comDetails.scoringType != 2 || comDetails.scoringType == null ){
+      // console.log("scoring not auto")
+      return true;
     }
     let tpId = comDetails.tpId;
     if(!tpId){
