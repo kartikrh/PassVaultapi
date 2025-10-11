@@ -570,7 +570,7 @@ const getTemplateByCompetitionIdQuery = async (data, request, fastify) => {
     return {
       assignedTemplates: assignedMarketTemplates,
       unassignedTemplates: unAssignedMarketTemplates,
-    }
+    };
   } catch (error) {
     errorLogger(
       fastify,
