@@ -15,6 +15,7 @@ const {
   getAssignedTemplateByCompetitionIdQuery,
   upStatusQuery,
   getMatchTypeTemplateByCompetitionIdQuery,
+  updateTpIdCompQuery,
 } = require("../repository/TableCompitition");
 const {storeImageOnServer, removeImageFromServer, generateImageName, getImageFromUrl } = require("../utilities/Images");
 const { PROJECT_NAME, ENTITYDEFAULTTEAMIMG, ENTITYDEFAULTTEAMIMGPATH, ENTITYDEFAULTJERSEYIMG, ENTITYDEFAULTJERSEYIMGPATH } = require("../utilities/configConstants");
@@ -910,6 +911,19 @@ const competitionImportService = async (data, fastify, request) => {
     global.tblCompetitions.push(insertCompetition);
     checkCompetition = insertCompetition;
   }
+  // else if (!checkCompetition?.tpId || checkCompetition?.tpId === null) {
+  //   const data = {
+  //     tpId: data.cid,
+  //     modifiedBy: -2,
+  //     competitionId: checkCompetition.competitionId
+  //   }
+  //   const updateCompetition = await updateTpIdCompQuery(data, fastify, request);
+  //   let index = global.tblCompetitions.findIndex((i)=> i.competitionId == checkCompetition.competitionId)
+  //   if(index != -1){
+  //     global.tblCompetitions[index] = updateCompetition[0]
+  //   }
+  //   checkCompetition = global.tblCompetitions[index] ;
+  // } 
 
   let allCompetitionMatch = [];
   const checkEntitySportAPIEndpoint2 = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getCompetitionMatchDataByIdFromEntity);

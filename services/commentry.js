@@ -22969,6 +22969,20 @@ const insertCompetitionOnMatchImportService = async (cid, fastify, request) => {
     global.tblCompetitions.push(insertCompetition);
     checkCompetition = insertCompetition;
   }
+  // else if (!checkCompetition?.tpId || checkCompetition?.tpId === null) {
+  //   const data = {
+  //     tpId: data.cid,
+  //     modifiedBy: -2,
+  //     competitionId: checkCompetition.competitionId
+  //   }
+  //   const updateCompetition = await updateTpIdCompQuery(data, fastify, request);
+  //   let index = global.tblCompetitions.findIndex((i)=> i.competitionId == checkCompetition.competitionId)
+  //   if(index != -1){
+  //     global.tblCompetitions[index] = updateCompetition[0]
+  //   }
+  //     checkCompetition = global.tblCompetitions[index] ;
+  // } 
+  
   return checkCompetition;
 }
 
