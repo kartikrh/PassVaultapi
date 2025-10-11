@@ -166,7 +166,67 @@ const insertCompetitionQuery = async (request, fastify) => {
     throw new Error(err.message);
   }
 };
-
+const updateTpIdCompQuery = async (data, fastify, request) => {
+  try {
+    return await fastify.db.query(
+      `
+      WITH update_data AS (
+        UPDATE "tblCompetitions" SET
+          "wrModifyBy" = $1,
+          "wrModifyDate" = NOW(),
+          "wrTpId" = $2
+        WHERE "wrCompetitionId" = $3
+        AND "wrIsDeleted" = false
+        RETURNING *
+      )
+      SELECT 
+        ud."wrCompetitionId" AS "competitionId",
+        ud."wrCompetition" AS "competition",
+        ud."wrEventTypeId" AS "eventTypeId",
+        tev."wrEventType" AS "eventType",
+        ud."wrRefID" AS "refId",
+        ud."wrImage" AS "image",
+        ud."wrIsActive" AS "isActive",
+        ud."wrDisplayOrder" AS "displayOrder",
+        ud."wrIsTrending" AS "isTrending",
+        ud."wrIsEventSnap" AS "isEventSnap",
+        ud."wrIsPointTable" AS "isPointTable",
+        ud."wrMatchTypeId" AS "matchTypeId",
+        ud."wrWinPoint" AS "winPoint",
+        ud."wrTiePoint" AS "tiePoint",
+        ud."wrCancelPoint" AS "cancelPoint",
+        ud."wrLossPoint" AS "lossPoint",
+        ud."wrDrsCount" AS "drsCount",
+        ud."wrImagePath" AS "imagePath",
+        ud."wrIsMen" AS "isMen",
+        ud."wrType" AS "type",
+        ud."wrIsVirtual" AS "isVirtual",
+        ud."wrStatus" AS "commStatus",
+        ud."wrStartDate" AS "startDate",
+        ud."wrEndDate" AS "endDate",
+        ud."wrTpId" AS "tpId"
+      FROM update_data ud
+      INNER JOIN "tblEventTypes" tev ON ud."wrEventTypeId" = tev."wrEventTypeId"
+      `,
+      {
+        bind: [
+          data.modifiedBy || request.userTokenInfo?.WrUserId || null,
+          data.tpId,
+          data.competitionId,
+        ],
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCompitition/updateExchangeCompititionQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
 const deleteCompetitionQuery = async (request, fastify) => {
   try {
     return await fastify.db.query(
@@ -451,7 +511,7 @@ const isMenChangeStatusQuery = async (data, request, fastify) => {
     throw new Error(err.message);
   }
 };
-const getTemplateByCompetitionIdQuery = async (data,request, fastify) => {
+const getTemplateByCompetitionIdQuery = async (data, request, fastify) => {
   try {
     let assignedMarketTemplates = await fastify.db.query(
       `
@@ -510,7 +570,7 @@ const getTemplateByCompetitionIdQuery = async (data,request, fastify) => {
     return {
       assignedTemplates: assignedMarketTemplates,
       unassignedTemplates: unAssignedMarketTemplates,
-    }
+    };
   } catch (error) {
     errorLogger(
       fastify,
@@ -979,4 +1039,5 @@ module.exports = {
   getAllCompetitionByIdsQuery,
   getCompetitionByIdsQuery,
   getMatchTypeTemplateByCompetitionIdQuery,
+  updateTpIdCompQuery,
 };

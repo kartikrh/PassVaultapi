@@ -138,6 +138,56 @@ const insertTeamQuery = async (data, fastify, request) => {
     throw new Error(err.message);
   }
 };
+const updateExchangeTeamQuery = async (data, fastify, request) => {
+  try {
+    return await fastify.db.query(
+      `WITH update_data AS (
+        UPDATE "tblTeams" SET
+        "wrModifyBy" = $1,
+        "wrModifyDate" = $2,
+        "wrTpId" = $3
+        WHERE "wrTeamId" = $4
+        AND "wrIsDeleted" = false
+        RETURNING *
+      )
+      SELECT 
+        tt."wrTeamId" AS "teamId",
+        tt."wrEventTypeId" AS "eventTypeId",
+        tt."wrTeamName" AS "teamName",
+        tt."wrTeamShortName" AS "teamShortName",
+        tt."WrTeamJersey" AS "jersey",
+        tt."wrImage" AS "image",
+        tt."wrCountry" AS "country",
+        evt."wrEventType" AS "eventType",
+        tt."wrTeamColor" AS "teamColor",
+        tt."wrBackgroundColor" AS "backgroundColor",
+        tt."wrImagePath" AS "imagePath",
+        tt."wrJerseyPath" AS "jerseyPath",
+        tt."wrTpId" AS "tpId"
+      FROM update_data tt
+      INNER JOIN "tblEventTypes" evt ON tt."wrEventTypeId" = evt."wrEventTypeId"
+      `,
+      {
+        bind: [
+          data.userId,
+          new Date(),
+          data.tpId,
+          data.teamId
+        ],
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableTeams/updateExchangeTeamQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 
 const updateTeamQuery = async (data, fastify, request) => {
   try {
@@ -383,5 +433,6 @@ module.exports = {
   getAllPlayersByCompetitionIdTeamIdQuery,
   getAllPlayersByTeamIdAndMatchTypeIdQuery,
   getAllTeamsByIdsQuery,
-  getTeamsByIds
+  getTeamsByIds,
+  updateExchangeTeamQuery
 };
