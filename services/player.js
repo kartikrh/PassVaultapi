@@ -7,6 +7,7 @@ const {
   updateIsSystemPlayerQuery,
   getTeamPlayerQuery,
   activeInactivePlayerQuery,
+  updateExchangePlayerQuery,
 } = require("../repository/TablePlayer");
 const {
   insertTeamPlayerQuery,
@@ -896,24 +897,28 @@ const playerImportService = async (data, fastify, request = null) => {
     throw new Error("Invalid response from Entit-Sport API");
   }
 
-  let checkPlayer = global.tblPlayers.find(item => item.tpId === entitySportPlayerResponse?.pid || item.playerName.toLowerCase() === entitySportPlayerResponse?.title.replace(/'/g, "''").toLowerCase());
+  let checkPlayer = global.tblPlayers.find(item => item.tpId == entitySportPlayerResponse?.pid);
   if (!checkPlayer) {
-    let imageUrl = entitySportPlayerResponse?.logo_url;
-    if (!imageUrl) {
-      imageUrl = {
-        fullPath: global.tblEntitySockets[0]?.defaultPlayerImage || null,
-        imagePath: global.tblEntitySockets[0]?.defaultPlayerImagePath || null
-      }
-    } else {
-      const getImageDataFromUrl = await getImageFromUrl({
-        type: ImgModuleConfig.Players.type,
-        imageUrl
-      });
+    checkPlayer = global.tblPlayers.find((item) => item.tpId == null 
+    && item.playerName.toLowerCase() === entitySportPlayerResponse?.title.replace(/'/g, "''").toLowerCase() &&
+    item.displayName.trim().replace(/'/g, "''").toLowerCase() == entitySportPlayerResponse?.short_name.toLowerCase())
+    if(!checkPlayer){
+      let imageUrl = entitySportPlayerResponse?.logo_url;
+      if (!imageUrl) {
+        imageUrl = {
+          fullPath: global.tblEntitySockets[0]?.defaultPlayerImage || null,
+          imagePath: global.tblEntitySockets[0]?.defaultPlayerImagePath || null
+        }
+      } else {
+        const getImageDataFromUrl = await getImageFromUrl({
+          type: ImgModuleConfig.Players.type,
+          imageUrl
+        });
 
-      if (getImageDataFromUrl && getImageDataFromUrl.fullPath) {
-        imageUrl = getImageDataFromUrl
+        if (getImageDataFromUrl && getImageDataFromUrl.fullPath) {
+          imageUrl = getImageDataFromUrl
+        }
       }
-    }
 
     let insertPlayerData = {
       eventTypeId: EventType['Cricket'],
@@ -937,10 +942,37 @@ const playerImportService = async (data, fastify, request = null) => {
       imagePath: imageUrl.imagePath,
     };
 
-    const insertPlayer = await insertPlayerQuery(insertPlayerData, fastify, request);
-    global.tblPlayers.push(insertPlayer);
-    checkPlayer = insertPlayer;
+      const insertPlayer = await insertPlayerQuery(insertPlayerData, fastify, request);
+      global.tblPlayers.push(insertPlayer);
+      checkPlayer = insertPlayer;
+    }
+    else if (checkPlayer?.tpId === null || !checkPlayer?.tpId) {
+      const data = {
+        userId: -2,
+        tpId: entitySportPlayerResponse?.pid || null,
+        playerId: checkPlayer.playerId,
+      };
+      const updatePlayer = await updateExchangePlayerQuery(data, fastify, request);
+      console.log("updatePlayer", updatePlayer)
+      let index = global.tblPlayers.findIndex((i)=>i.playerId == checkPlayer.playerId)
+      if(index != -1){
+        global.tblPlayers[index] = updatePlayer
+      }
+      checkPlayer = updatePlayer
+    }
   }
+  // else if (checkPlayer?.tpId === null || !checkPlayer?.tpId) {
+  //   const data = {
+  //     userId: -2,
+  //     tpId: entitySportPlayerResponse?.pid || null,
+  //     playerId: checkPlayer.playerId,
+  //   };
+  //   const updatePlayer = await updateExchangePlayerQuery(data, fastify, request);
+  //   let index = global.tblPlayers.findIndex((i)=>i.playerId == checkPlayer.playerId)
+  //   if(index != -1){
+  //     global.tblPlayers[index] = updatePlayer
+  //   }
+  // }
   return checkPlayer;
 }
 
