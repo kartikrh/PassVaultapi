@@ -879,6 +879,9 @@ const competitionImportService = async (data, fastify, request) => {
   const eventType = global.tblEventTypes.find((et) => et.eventType.toLowerCase() === 'Cricket'.toLowerCase());
   const matchType = global.tblMatchTypes.find(item => item.entityEnum === EntityEnums[entitySportCompetitionResponse?.game_format.toUpperCase()]);
 
+  if(entitySportCompetitionResponse?.game_format.toUpperCase() == EntityEnums.MIXED){
+    matchType = null
+  }
   const pythonIdData = global.tblPythonAPI.find(item => item.isDefault === true && item.isActive === true);
   if (!pythonIdData) {
     console.error("Default Python API not found");
