@@ -22932,7 +22932,6 @@ const insertCompetitionOnMatchImportService = async (cid, fastify, request) => {
     throw new Error("Invalid response from Entit-Sport API");
   }
 
-  let checkCompetition = global.tblCompetitions.find(item => item.tpId === cid || item.competition.toLowerCase() === entitySportCompetitionResponse.title.replace(/'/g, "''").toLowerCase());
   const eventType = global.tblEventTypes.find((et) => et.eventType.toLowerCase() === 'Cricket'.toLowerCase());
   const matchType = global.tblMatchTypes.find(item => item.entityEnum === EntityEnums[entitySportCompetitionResponse?.game_format.toUpperCase()]);
 
@@ -22958,32 +22957,16 @@ const insertCompetitionOnMatchImportService = async (cid, fastify, request) => {
     pythonId: pythonIdData?.id || null,
   }
 
-  if (!checkCompetition) {
-    const insertCompetition = await insertCompetitionQuery({
-      ...request,
-      userTokenInfo: {
-        WrUserId: -2
-      },
-      body: competitionData
-    }, fastify);
-    global.tblCompetitions.push(insertCompetition);
-    checkCompetition = insertCompetition;
-  }
-  // else if (!checkCompetition?.tpId || checkCompetition?.tpId === null) {
-  //   const data = {
-  //     tpId: data.cid,
-  //     modifiedBy: -2,
-  //     competitionId: checkCompetition.competitionId
-  //   }
-  //   const updateCompetition = await updateTpIdCompQuery(data, fastify, request);
-  //   let index = global.tblCompetitions.findIndex((i)=> i.competitionId == checkCompetition.competitionId)
-  //   if(index != -1){
-  //     global.tblCompetitions[index] = updateCompetition[0]
-  //   }
-  //     checkCompetition = global.tblCompetitions[index] ;
-  // } 
+  const insertCompetition = await insertCompetitionQuery({
+    ...request,
+    userTokenInfo: {
+      WrUserId: -2
+    },
+    body: competitionData
+  }, fastify);
+  global.tblCompetitions.push(insertCompetition);
   
-  return checkCompetition;
+  return insertCompetition;
 }
 
 const matchImportService = async (data, fastify, request = null) => {
@@ -23024,9 +23007,9 @@ const matchImportService = async (data, fastify, request = null) => {
     console.error("Default Python API not found");
   }
   const eventType = global.tblEventTypes.find((et) => et.eventType.toLowerCase() === 'Cricket'.toLowerCase());
-  const EntityEnumsUpperCase = Object.fromEntries(
-    Object.entries(EntityEnums).map(([key, value]) => [key.toUpperCase(), value])
-  );
+  // const EntityEnumsUpperCase = Object.fromEntries(
+  //   Object.entries(EntityEnums).map(([key, value]) => [key.toUpperCase(), value])
+  // );
   // const matchType = global.tblMatchTypes.find(item => item.entityEnum === EntityEnumsUpperCase[matchInfoResponse?.format_str.toUpperCase().replace(/\s+/g, '')]);
   let checkCountry, checkVenue;
   if (matchInfoResponse?.venue?.country && matchInfoResponse?.venue?.country !== "") {
@@ -23172,17 +23155,26 @@ const matchImportService = async (data, fastify, request = null) => {
 
       for (const playerId of filteredPlayerIds) {
         const teamPlayerData = playersInTeams.find(item => item.teamId === teamId && item.tpId === Number(playerId))
-        const insertCommentaryPlayerData = await insertCommentaryPlayers({
-          commentaryId,
-          teamId,
-          playerId: teamPlayerData?.playerId,
-          displayOrder: teamPlayerData?.playerOrder,
-          matchTypeId,
-          tpId: teamPlayerData?.tpId,
-          jerseyPlayerImage: teamPlayerData?.jerseyPlayerImage || null,
-          jerseyPlayerImagePath: teamPlayerData?.jerseyPlayerImagePath || null,
-        }, i, fastify, request);
-        global.tblCommentaryPlayers.push(insertCommentaryPlayerData[0]);
+        if (!teamPlayerData) {
+          errorLogger(
+            fastify,
+            `Team Id ${teamId} Player tpId ${playerId} not found in team players`,
+            "ERROR --> services/commentary.js/matchImportService",
+            request
+          );
+        } else {
+          const insertCommentaryPlayerData = await insertCommentaryPlayers({
+            commentaryId,
+            teamId,
+            playerId: teamPlayerData?.playerId,
+            displayOrder: teamPlayerData?.playerOrder,
+            matchTypeId,
+            tpId: teamPlayerData?.tpId,
+            jerseyPlayerImage: teamPlayerData?.jerseyPlayerImage || null,
+            jerseyPlayerImagePath: teamPlayerData?.jerseyPlayerImagePath || null,
+          }, i, fastify, request);
+          global.tblCommentaryPlayers.push(insertCommentaryPlayerData[0]);
+        }
       }
     }
 
