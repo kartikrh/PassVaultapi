@@ -23003,6 +23003,16 @@ const matchImportService = async (data, fastify, request = null) => {
   let checkCommentary = global.tblCommentaries.find(item => item.tpId === data.mid);
 
   const matchInfoResponse = entitySportMatchResponse?.match_info;
+  let matchType = global.tblMatchTypes.find(item => item.entityEnum === matchInfoResponse.format);
+  if(!matchType){
+    errorLogger(
+      fastify,
+      `Match Type not found for format ${matchInfoResponse.format} `,
+      "ERROR --> services/commentry.js/matchImportService",
+      request
+    );
+    return true;
+  } 
 
   let checkCompetition = global.tblCompetitions.find(item => item.tpId === matchInfoResponse?.competition?.cid);
   if (!checkCompetition) {
@@ -23017,7 +23027,7 @@ const matchImportService = async (data, fastify, request = null) => {
   const EntityEnumsUpperCase = Object.fromEntries(
     Object.entries(EntityEnums).map(([key, value]) => [key.toUpperCase(), value])
   );
-  const matchType = global.tblMatchTypes.find(item => item.entityEnum === EntityEnumsUpperCase[matchInfoResponse?.format_str.toUpperCase().replace(/\s+/g, '')]);
+  // const matchType = global.tblMatchTypes.find(item => item.entityEnum === EntityEnumsUpperCase[matchInfoResponse?.format_str.toUpperCase().replace(/\s+/g, '')]);
   let checkCountry, checkVenue;
   if (matchInfoResponse?.venue?.country && matchInfoResponse?.venue?.country !== "") {
     const checkCountry = global.tblCountryCodes.find(item => item.countryName === matchInfoResponse?.venue?.country);

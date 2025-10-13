@@ -396,7 +396,7 @@ const insertCommentaryQuery = async (request, fastify) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableConfig/insertCommentaryQuery",
+      "DB ERROR --> repository/TableCommentary.js/insertCommentaryQuery",
       request
     );
     throw new Error(err.message);
@@ -471,7 +471,7 @@ const insertCommentaryTeams = async (request, fastify) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableConfig/insertConfigQuery",
+      "DB ERROR --> repository/TableCommentary.js/insertCommentaryTeams",
       request
     );
     throw new Error(err.message);
@@ -599,7 +599,7 @@ const insertCommentaryPlayers = async (
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableConfig/insertConfigQuery",
+      "DB ERROR --> repository/TableCommentary.js/insertCommentaryPlayers",
       request
     );
     throw new Error(err.message);
@@ -724,7 +724,7 @@ const insertCommentaryPlayersEntity = async (
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableConfig/insertConfigQuery",
+      "DB ERROR --> repository/TableCommentary.js/insertCommentaryPlayersEntity",
       request
     );
     throw new Error(err.message);
@@ -853,7 +853,7 @@ const upsertCommentaryPlayers = async (
     errorLogger(
       fastify,
       error.message,
-      "DB ERROR --> repository/TableCommentary/upsertCommentaryPlayers",
+      "DB ERROR --> repository/TableCommentary.js/upsertCommentaryPlayers",
       request
     );
     throw new Error(error.message);
@@ -1036,7 +1036,7 @@ const updateCommentaryQuery = async (request, fastify) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableConfig/updateCommentaryQuery",
+      "DB ERROR --> repository/TableCommentary.js/updateCommentaryQuery",
       request
     );
     throw new Error(err.message);
@@ -1072,7 +1072,7 @@ const updateCommentaryQuery = async (request, fastify) => {
 //     errorLogger(
 //       fastify,
 //       err.message,
-//       "DB ERROR --> repository/TableConfig/insertConfigQuery",
+//       "DB ERROR --> repository/TableCommentary.js/updateCommentaryTeams",
 //       request
 //     );
 //     throw new Error(err.message);
@@ -1158,7 +1158,7 @@ const updateCommentaryTeams = async (request, fastify, data) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableConfig/updateCommentaryTeams",
+      "DB ERROR --> repository/TableCommentary.js/updateCommentaryTeams",
       request
     );
     throw new Error(err.message);
@@ -1184,7 +1184,7 @@ const deleteCommentaryPlayers = async (request, fastify) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableConfig/insertConfigQuery",
+      "DB ERROR --> repository/TableCommentary.js/deleteCommentaryPlayers",
       request
     );
     throw new Error(err.message);
@@ -1210,7 +1210,7 @@ const deleteCommentaryPlayersByPlayerId = async (data, request, fastify) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableConfig/insertConfigQuery",
+      "DB ERROR --> repository/TableCommentary.js/deleteCommentaryPlayersByPlayerId",
       request
     );
     throw new Error(err.message);
@@ -1234,7 +1234,7 @@ const deleteCommentaryPlayerById = async (data, request, fastify) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableConfig/deleteCommentaryPlayerById",
+      "DB ERROR --> repository/TableCommentary.js/deleteCommentaryPlayerById",
       request
     );
     throw new Error(err.message);
@@ -1276,7 +1276,7 @@ const updateCommentaryPlayerById = async (data, request, fastify) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/updateCommentaryPlayerById",
+      "DB ERROR --> repository/TableCommentary.js/updateCommentaryPlayerById",
       request
     );
     throw new Error(err.message);
@@ -1385,7 +1385,7 @@ const getCommentaryByIdQuery = async (request, fastify) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableConfig/getConfigByIdQuery",
+      "DB ERROR --> repository/TableCommentary.js/getCommentaryByIdQuery",
       request
     );
     throw new Error(err.message);
@@ -1448,7 +1448,7 @@ const getCommentaryTeamsQuery = async (data, fastify, request) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableConfig/getConfigByIdQuery",
+      "DB ERROR --> repository/TableCommentary.js/getCommentaryTeamsQuery",
       request
     );
     throw new Error(err.message);
@@ -1483,7 +1483,7 @@ const getCommentaryPlayersQuery = async (data, fastify, request) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableConfig/getConfigByIdQuery",
+      "DB ERROR --> repository/TableCommentary.js/getCommentaryPlayersQuery",
       request
     );
     throw new Error(err.message);
@@ -1511,7 +1511,7 @@ const getPredictorLogsQuery = async (data, fastify, request) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/getPredictorLogsQuery",
+      "DB ERROR --> repository/TableCommentary.js/getPredictorLogsQuery",
       request
     );
     throw new Error(err.message);
@@ -1589,7 +1589,7 @@ const deleteCommentryQuery = async (commentaryId, request, fastify) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableConfig/deleteCommentryQuery",
+      "DB ERROR --> repository/TableCommentary.js/deleteCommentryQuery",
       request
     );
     throw new Error(err.message);
@@ -1628,7 +1628,7 @@ const deleteBallByBallCommentoriesQuery = async (id, request, fastify) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableConfig/deleteBallByBallCommentoriesQuery",
+      "DB ERROR --> repository/TableCommentary.js/deleteBallByBallCommentoriesQuery",
       request
     );
     throw new Error(err.message);
@@ -1661,7 +1661,7 @@ const deleteOverCommentoriesQuery = async (id, request, fastify) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableConfig/deleteOverCommentoriesQuery",
+      "DB ERROR --> repository/TableCommentary.js/deleteOverCommentoriesQuery",
       request
     );
     throw new Error(err.message);
@@ -2729,7 +2729,7 @@ const createCommentaryPartnershipQuery = async (data, fastify, request) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/createCommentaryPartnershipQuery",
+      "DB ERROR --> repository/TableCommentary.js/createCommentaryPartnershipQuery",
       request
     );
     throw new Error(err.message);
@@ -2782,7 +2782,7 @@ const updateCommentaryPartnershipQuery = async (data, fastify, request) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/updateCommentaryPartnershipQuery",
+      "DB ERROR --> repository/TableCommentary.js/updateCommentaryPartnershipQuery",
       request
     );
     throw new Error(err.message);
@@ -2872,7 +2872,7 @@ const createOverQuery = async (data, fastify, request) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/createOverQuery",
+      "DB ERROR --> repository/TableCommentary.js/createOverQuery",
       request
     );
     throw new Error(err.message);
@@ -2939,7 +2939,7 @@ const updateOverQuery = async (data, fastify, request) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/updateOverQuery",
+      "DB ERROR --> repository/TableCommentary.js/updateOverQuery",
       request
     );
     throw new Error(err.message);
@@ -2965,7 +2965,7 @@ const updateCommentaryDetailsQuery = async (data, fastify, request) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableConfig/updateCommentaryDetailsQuery",
+      "DB ERROR --> repository/TableCommentary.js/updateCommentaryDetailsQuery",
       request
     );
     throw new Error(err.message);
@@ -2989,7 +2989,7 @@ const updateCommentaryStatusQuery = async (data, fastify, request) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableConfig/updateCommentaryDetailsQuery",
+      "DB ERROR --> repository/TableCommentary.js/updateCommentaryStatusQuery",
       request
     );
     throw new Error(err.message);
@@ -3055,7 +3055,7 @@ const updateCommentaryTeamsQuery = async (data, fastify, request) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableConfig/updateCommentaryTeamsQuery",
+      "DB ERROR --> repository/TableCommentary.js/updateCommentaryTeamsQuery",
       request
     );
     throw new Error(err.message);
@@ -3177,7 +3177,7 @@ const updateCommentaryPlayersQuery = async (data, fastify, request) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableConfig/updateCommentaryPlayersQuery",
+      "DB ERROR --> repository/TableCommentary.js/updateCommentaryPlayersQuery",
       request
     );
     throw new Error(err.message);
@@ -3291,7 +3291,7 @@ const createBallByBallCommentoriesQuery = async (data, fastify, request) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableConfig/createBallByBallCommentoriesQuery",
+      "DB ERROR --> repository/TableCommentary.js/createBallByBallCommentoriesQuery",
       request
     );
     throw new Error(err.message);
@@ -3368,7 +3368,7 @@ const updateBallByBallCommentoriesQuery = async (data, fastify, request) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableConfig/updateBallByBallCommentoriesQuery",
+      "DB ERROR --> repository/TableCommentary.js/updateBallByBallCommentoriesQuery",
       request
     );
     throw new Error(err.message);
@@ -3484,7 +3484,7 @@ const createCommentaryWicketQuery = async (data, fastify, request) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableConfig/createCommentaryWicketQuery",
+      "DB ERROR --> repository/TableCommentary.js/createCommentaryWicketQuery",
       request
     );
     throw new Error(err.message);
@@ -3549,7 +3549,7 @@ const updateCommentaryWicketQuery = async (data, fastify, request) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableConfig/updateCommentaryWicketQuery",
+      "DB ERROR --> repository/TableCommentary.js/updateCommentaryWicketQuery",
       request
     );
     throw new Error(err.message);
@@ -3571,7 +3571,7 @@ const UpdateCommentaryTimeQuery = async (data, fastify, request) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/UpdateCommentaryTimeQuery",
+      "DB ERROR --> repository/TableCommentary.js/UpdateCommentaryTimeQuery",
       request
     );
     throw new Error(err.message);
@@ -3601,7 +3601,7 @@ const getCommentaryID_Socket = async (data, fastify, request) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/getCommentaryID_Socket",
+      "DB ERROR --> repository/TableCommentary.js/getCommentaryID_Socket",
       request
     );
     throw new Error(err.message);
@@ -3664,7 +3664,7 @@ const updateCommentaryPlayerIdInCommentaryTeams = async (
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/updateCommentaryPlayerIdInCommentaryTeams",
+      "DB ERROR --> repository/TableCommentary.js/updateCommentaryPlayerIdInCommentaryTeams",
       request
     );
     throw new Error(err.message);
@@ -3684,7 +3684,7 @@ const updateMatchTypeInCommentaryQuery = async (data, fastify, request) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/updateMatchTypeInCommentaryQuery",
+      "DB ERROR --> repository/TableCommentary.js/updateMatchTypeInCommentaryQuery",
       request
     );
     throw new Error(err.message);
@@ -3791,7 +3791,7 @@ const changeBowlerInCommentary = async (data, request, fastify) => {
     errorLogger(
       fastify,
       error.message,
-      "DB ERROR --> repository/TableCommentary/changeBowlerInCommentary",
+      "DB ERROR --> repository/TableCommentary.js/changeBowlerInCommentary",
       request
     );
     throw new Error(error.message);
@@ -3891,7 +3891,7 @@ const getCommnertySquadPlayersList = async (data, fastify, request) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/getCommnertySquadPlayersList",
+      "DB ERROR --> repository/TableCommentary.js/getCommnertySquadPlayersList",
       request
     );
     throw new Error(err.message);
@@ -3915,7 +3915,7 @@ const updateShowClientQuery = async (data, request, fastify) => {
     errorLogger(
       fastify,
       error.message,
-      "DB ERROR --> repository/TableCommentary/updateShowClientQuery",
+      "DB ERROR --> repository/TableCommentary.js/updateShowClientQuery",
       request
     );
     throw new Error(error.message);
@@ -3938,7 +3938,7 @@ const updatePlayerShowQuery = async (data, request, fastify) => {
     errorLogger(
       fastify,
       error.message,
-      "DB ERROR --> repository/TableCommentary/updatePlayerShowQuery",
+      "DB ERROR --> repository/TableCommentary.js/updatePlayerShowQuery",
       request
     );
     throw new Error(error.message);
@@ -3963,7 +3963,7 @@ const updateisPredictMarketInCommentaryQuery = async (
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/updateMatchTypeInCommentaryQuery",
+      "DB ERROR --> repository/TableCommentary.js/updateisPredictMarketInCommentaryQuery",
       request
     );
     throw new Error(err.message);
@@ -3994,7 +3994,7 @@ const updateResultInCommentaryQuery = async (data, fastify, request) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/updateResultInCommentaryQuery",
+      "DB ERROR --> repository/TableCommentary.js/updateResultInCommentaryQuery",
       request
     );
     throw new Error(err.message);
@@ -4038,7 +4038,7 @@ const saveCommentaryDetailsAPIQuery = async (data, fastify, request) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/saveCommentaryDetailsAPIQuery",
+      "DB ERROR --> repository/TableCommentary.js/saveCommentaryDetailsAPIQuery",
       request
     );
     throw new Error(err.message);
@@ -4060,7 +4060,7 @@ const activeInactiveCommentaryQuery = async (data, fastify, request) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/activeInactiveCommentaryQuery",
+      "DB ERROR --> repository/TableCommentary.js/activeInactiveCommentaryQuery",
       request
     );
     throw new Error(err.message);
@@ -4084,7 +4084,7 @@ const closeCommentaryQuery = async (data, fastify, request) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/closeCommentaryQuery",
+      "DB ERROR --> repository/TableCommentary.js/closeCommentaryQuery",
       request
     );
     throw new Error(err.message);
@@ -4101,7 +4101,7 @@ const deleteAllCommentaryQuery = async (fastify) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/deleteAllCommentaryQuery",
+      "DB ERROR --> repository/TableCommentary.js/deleteAllCommentaryQuery",
       request
     );
     throw new Error(err.message);
@@ -4121,7 +4121,7 @@ const updateDelayInCommentaryQuery = async (data, fastify, request) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/updateDelayInCommentaryQuery",
+      "DB ERROR --> repository/TableCommentary.js/updateDelayInCommentaryQuery",
       request
     );
     throw new Error(err.message);
@@ -4141,7 +4141,7 @@ const updateEventRefIdInCommentaryQuery = async (data, fastify, request) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/updateEventRefIdInCommentaryQuery",
+      "DB ERROR --> repository/TableCommentary.js/updateEventRefIdInCommentaryQuery",
       request
     );
     throw new Error(err.message);
@@ -4173,7 +4173,7 @@ const deleteCommentaryDataQuery = async (data, fastify, request) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/deleteCommentaryDataQuery",
+      "DB ERROR --> repository/TableCommentary.js/deleteCommentaryDataQuery",
       request
     );
     throw new Error(err.message);
@@ -4213,7 +4213,7 @@ const getCommentaryDetailByIdQuery = async (data, fastify) => {
     errorLogger(
       fastify,
       error.message,
-      "DB ERROR --> repository/TableCommentary/getCommentaryDetailByIdQuery",
+      "DB ERROR --> repository/TableCommentary.js/getCommentaryDetailByIdQuery",
       request
     );
     throw new Error(error.message);
@@ -4237,7 +4237,7 @@ const updateMaxOverDetailQuery = async (data, fastify, request) => {
     errorLogger(
       fastify,
       error.message,
-      "DB ERROR --> repository/TableCommentary/updateMaxOverDetailQuery",
+      "DB ERROR --> repository/TableCommentary.js/updateMaxOverDetailQuery",
       request
     );
     throw new Error(error.message);
@@ -4265,7 +4265,7 @@ const upOverDLSQuery = async (data, fastify, request) => {
     errorLogger(
       fastify,
       error.message,
-      "DB ERROR --> repository/TableCommentary/upOverDLSQuery",
+      "DB ERROR --> repository/TableCommentary.js/upOverDLSQuery",
       request
     );
     throw new Error(error.message);
@@ -4293,7 +4293,7 @@ const updateSuperOverCommentaryQuery = async (data, fastify) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableConfig/updateConfigQuery",
+      "DB ERROR --> repository/TableCommentary.js/updateSuperOverCommentaryQuery",
       request
     );
     throw new Error(err.message);
@@ -4362,7 +4362,7 @@ const insertCommentarySuperOverTeams = async (request, fastify) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableConfig/insertConfigQuery",
+      "DB ERROR --> repository/TableCommentary.js/insertCommentarySuperOverTeams",
       request
     );
     throw new Error(err.message);
@@ -4409,7 +4409,7 @@ const updateCommentaryBattingTeamQuery = async (data, fastify) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/updateCommentaryBattingTeamQuery",
+      "DB ERROR --> repository/TableCommentary.js/updateCommentaryBattingTeamQuery",
       request
     );
     throw new Error(err.message);
@@ -4435,7 +4435,7 @@ const updateCommentaryBattingTeamQuery = async (data, fastify) => {
 //     errorLogger(
 //       fastify,
 //       err.message,
-//       "DB ERROR --> repository/TableConfig/updateConfigQuery",
+//       "DB ERROR --> repository/TableCommentary.js/updateCommentaryTeamPredictionPrecentageQuery",
 //       request
 //     );
 //     throw new Error(err.message);
@@ -4483,7 +4483,7 @@ const updateCommentaryTeamPredictionPrecentageQuery = async (data, fastify) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/updateCommentaryTeamPredictionPrecentageQuery",
+      "DB ERROR --> repository/TableCommentary.js/updateCommentaryTeamPredictionPrecentageQuery",
       request
     );
     throw new Error(err.message);
@@ -4538,7 +4538,7 @@ const updateTeamPrediction = async (request, fastify) => {
     errorLogger(
       fastify,
       error.message,
-      "DB ERROR --> repository/TableCommentary/updatePlayerShowAndTeamPrediction",
+      "DB ERROR --> repository/TableCommentary.js/updateTeamPrediction",
       request
     );
     throw new Error(error.message);
@@ -4561,7 +4561,7 @@ const updateAverageOfPlayerQuery = async (data, request,fastify) => {
     errorLogger(
       fastify,
       error.message,
-      "DB ERROR --> repository/TableCommentary/updateAverageOfPlayerQuery",
+      "DB ERROR --> repository/TableCommentary.js/updateAverageOfPlayerQuery",
       request
     );
     throw new Error(error.message);
@@ -4585,7 +4585,7 @@ const updateBoundaryOfPlayerQuery = async (data, request,fastify) => {
     errorLogger(
       fastify,
       error.message,
-      "DB ERROR --> repository/TableCommentary/updateAverageOfPlayerQuery",
+      "DB ERROR --> repository/TableCommentary.js/updateBoundaryOfPlayerQuery",
       request
     );
     throw new Error(error.message);
@@ -4607,7 +4607,7 @@ const updateLineRationQuery = async (data, request, fastify) => {
     errorLogger(
       fastify,
       error.message,
-      "DB ERROR --> repository/TableCommentary/updateLineRationQuery",
+      "DB ERROR --> repository/TableCommentary.js/updateLineRationQuery",
       request
     );
     throw new Error(error.message);
@@ -4640,7 +4640,7 @@ const updateLineRatioComQuery = async (data, request, fastify) => {
     errorLogger(
       fastify,
       error.message,
-      "DB ERROR --> repository/TableCommentary/updateLineRatioComQuery",
+      "DB ERROR --> repository/TableCommentary.js/updateLineRatioComQuery",
       request
     );
     throw new Error(error.message);
@@ -4662,7 +4662,7 @@ const completedCommentaryStatusQuery = async (data, fastify, request) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/completedCommentaryStatusQuery",
+      "DB ERROR --> repository/TableCommentary.js/completedCommentaryStatusQuery",
       request
     );
     throw new Error(err.message);
@@ -4724,7 +4724,7 @@ const insertCommentaryConsoleFeQuery = async (data, fastify, request) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentaryConsoleFe/insertCommentaryConsoleFeQuery",
+      "DB ERROR --> repository/TableCommentary.js/insertCommentaryConsoleFeQuery",
       request
     );
     throw new Error(err.message);
@@ -4748,7 +4748,7 @@ const revertCommentaryQuery = async (data, fastify, request) => {
     errorLogger(
       fastify,
       error.message,
-      "DB ERROR --> repository/TableCommentary/revertCommentaryQuery",
+      "DB ERROR --> repository/TableCommentary.js/revertCommentaryQuery",
       request
     );
     throw new Error(error.message);
@@ -4771,7 +4771,7 @@ const updatePbfOfPlayerQuery = async (data, request,fastify) => {
     errorLogger(
       fastify,
       error.message,
-      "DB ERROR --> repository/TableCommentary/updatePbfOfPlayerQuery",
+      "DB ERROR --> repository/TableCommentary.js/updatePbfOfPlayerQuery",
       request
     );
     throw new Error(error.message);
@@ -4842,7 +4842,7 @@ const getTemplateByComIdQuery = async (data,request, fastify) => {
     errorLogger(
       fastify,
       error.message,
-      "DB ERROR --> repository/TableCommentary/getTemplateByComIdQuery",
+      "DB ERROR --> repository/TableCommentary.js/getTemplateByComIdQuery",
       request
     );
     throw new Error(error.message);
@@ -4904,7 +4904,7 @@ const saveComTemplateQuery = async (data, request, fastify) => {
     errorLogger(
       fastify,
       error.message,
-      "DB ERROR --> repository/TableCommentary/saveComTemplateQuery",
+      "DB ERROR --> repository/TableCommentary.js/saveComTemplateQuery",
       request
     );
     throw new Error(error.message);
@@ -5063,7 +5063,7 @@ const cancelCommentaryQuery = async (data, fastify, request) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/cancelCommentaryQuery",
+      "DB ERROR --> repository/TableCommentary.js/cancelCommentaryQuery",
       request
     );
     throw new Error(err.message);
@@ -5088,7 +5088,7 @@ const cancelComQuery = async (data, fastify, request) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/cancelComQuery",
+      "DB ERROR --> repository/TableCommentary.js/cancelComQuery",
       request
     );
     throw new Error(err.message);
@@ -5174,7 +5174,7 @@ const getCommentariesResultQuery = async (request, fastify) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/getCommentariesResultQuery",
+      "DB ERROR --> repository/TableCommentary.js/getCommentariesResultQuery",
       request
     );
     throw new Error(err.message);
@@ -5197,7 +5197,7 @@ const isCountInPOintCommentaryChangeQuery = async (data, fastify, request) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/isCountInPOintCommentaryChangeQuery",
+      "DB ERROR --> repository/TableCommentary.js/isCountInPOintCommentaryChangeQuery",
       request
     );
     throw new Error(err.message);
@@ -5302,7 +5302,7 @@ const getAllCommentaryHistoryQuery = async (whereCondition, fastify, request) =>
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/isCountInPOintCommentaryChangeQuery",
+      "DB ERROR --> repository/TableCommentary.js/getAllCommentaryHistoryQuery",
       request
     );
     throw new Error(err.message);
@@ -5321,7 +5321,7 @@ const deleteCommentryHistoryQuery = async (commentaryId, request, fastify) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/deleteCommentryHistoryQuery",
+      "DB ERROR --> repository/TableCommentary.js/deleteCommentryHistoryQuery",
       request
     );
     throw new Error(err.message);
@@ -5351,7 +5351,7 @@ const getCommPlayersByCommentaryIdQuery = async (commentaryId, request, fastify)
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/getCommPlayersByCommentaryIdQuery",
+      "DB ERROR --> repository/TableCommentary.js/getCommPlayersByCommentaryIdQuery",
       request
     );
     throw new Error(err.message);
@@ -5520,7 +5520,7 @@ const getAllCompletedCommentaryQuery = async (request, fastify) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/getAllCompletedCommentaryQuery",
+      "DB ERROR --> repository/TableCommentary.js/getAllCompletedCommentaryQuery",
       request
     );
     throw new Error(err.message);
@@ -5624,7 +5624,7 @@ const getCommentariesDataByDifferentIdsQuery = async (whereCondition, request, f
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/getCommentariesDataByDifferentIdsQuery",
+      "DB ERROR --> repository/TableCommentary.js/getCommentariesDataByDifferentIdsQuery",
       request
     );
     throw new Error(err.message);
@@ -6032,7 +6032,7 @@ const updateCommentaryPlayerJerseyImageQuery = async (data, fastify) => {
     errorLogger(
       fastify,
       error.message,
-      "DB ERROR --> repository/TableCommentary/updateCommentaryPlayerJerseyImageQuery",
+      "DB ERROR --> repository/TableCommentary.js/updateCommentaryPlayerJerseyImageQuery",
       null
     );
     throw new Error(error.message);
@@ -6062,7 +6062,7 @@ const getCommentaryTeamsDRSQuery = async (data, fastify) => {
     errorLogger(
       fastify,
       error.message,
-      "DB ERROR --> repository/TableCommentary/getCommentaryTeamsDRSQuery",
+      "DB ERROR --> repository/TableCommentary.js/getCommentaryTeamsDRSQuery",
       null
     );
     throw new Error(error.message);
@@ -6098,7 +6098,7 @@ const updateCommentaryTeamDrsAttemptsAndFailQuery = async (data, fastify) => {
     errorLogger(
       fastify,
       error.message,
-      "DB ERROR --> repository/TableCommentary/updateCommentaryTeamDrsAttemptsAndFailQuery",
+      "DB ERROR --> repository/TableCommentary.js/updateCommentaryTeamDrsAttemptsAndFailQuery",
       null
     );
     throw new Error(error.message);
@@ -6131,7 +6131,7 @@ const updateCommentaryTeamDrsAttemptsQuery = async (data, fastify) => {
     errorLogger(
       fastify,
       error.message,
-      "DB ERROR --> repository/TableCommentary/updateCommentaryTeamDrsAttemptsQuery",
+      "DB ERROR --> repository/TableCommentary.js/updateCommentaryTeamDrsAttemptsQuery",
       null
     );
     throw new Error(error.message);
@@ -6153,7 +6153,7 @@ const changeIsTestComQuery = async (data, fastify, request) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/changeIsTestComQuery",
+      "DB ERROR --> repository/TableCommentary.js/changeIsTestComQuery",
       request
     );
     throw new Error(err.message);
@@ -6175,7 +6175,7 @@ const changeIsEventStartQuery = async (data, fastify, request) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/changeIsEventStartQuery",
+      "DB ERROR --> repository/TableCommentary.js/changeIsEventStartQuery",
       request
     );
     throw new Error(err.message);
@@ -6841,7 +6841,7 @@ const createvirtualPartnershipQuery = async (data, fastify, request) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/createvirtualPartnershipQuery",
+      "DB ERROR --> repository/TableCommentary.js/createvirtualPartnershipQuery",
       request
     );
     throw new Error(err.message);
@@ -6914,7 +6914,7 @@ const createVirtualOverQuery = async (data, fastify, request) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/createVirtualOverQuery",
+      "DB ERROR --> repository/TableCommentary.js/createVirtualOverQuery",
       request
     );
     throw new Error(err.message);
@@ -7097,7 +7097,7 @@ const virtualTeamRunsQuery = async (data, fastify, request) => {
     errorLogger(
       fastify,
       error.message,
-      "DB ERROR --> repository/TableCommentary/virtualTeamRunsQuery",
+      "DB ERROR --> repository/TableCommentary.js/virtualTeamRunsQuery",
       request
     );
     throw new Error(error.message);
@@ -7188,7 +7188,7 @@ const virtualPlayerRunsQuery = async (data, fastify, request) => {
     errorLogger(
       fastify,
       error.message,
-      "DB ERROR --> repository/TableCommentary/virtualPlayerRunsQuery",
+      "DB ERROR --> repository/TableCommentary.js/virtualPlayerRunsQuery",
       request
     );
     throw new Error(error.message);
@@ -7277,7 +7277,7 @@ const updateVirtualPartnershipQuery = async (data, fastify, request) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/updateVirtualPartnershipQuery",
+      "DB ERROR --> repository/TableCommentary.js/updateVirtualPartnershipQuery",
       request
     );
     throw new Error(err.message);
@@ -7381,7 +7381,7 @@ const updateVirtualBallByBallQuery = async (data, fastify, request) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/updateVirtualBallByBallQuery",
+      "DB ERROR --> repository/TableCommentary.js/updateVirtualBallByBallQuery",
       request
     );
     throw new Error(err.message);
@@ -7446,7 +7446,7 @@ const updateVirtualOverQuery = async (data, fastify, request) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/updateVirtualOverQuery",
+      "DB ERROR --> repository/TableCommentary.js/updateVirtualOverQuery",
       request
     );
     throw new Error(err.message);
@@ -7555,7 +7555,7 @@ const createVirtualWicketQuery = async (data, fastify, request) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/createVirtualWicketQuery",
+      "DB ERROR --> repository/TableCommentary.js/createVirtualWicketQuery",
       request
     );
     throw new Error(err.message);
@@ -7597,7 +7597,7 @@ const addCompTempQuery = async (data,request,fastify)=>{
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/createVirtualWicketQuery",
+      "DB ERROR --> repository/TableCommentary.js/addCompTempQuery",
       request
     );
     throw new Error(err.message);
@@ -7795,7 +7795,7 @@ const insertCommentaryWithImportQuery = async (data, request, fastify) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/insertCommentaryWithImportQuery",
+      "DB ERROR --> repository/TableCommentary.js/insertCommentaryWithImportQuery",
       request
     );
     throw new Error(err.message);
@@ -7867,7 +7867,7 @@ const insertCommentaryTeamsOnImportQuery = async (data, request, fastify) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/insertCommentaryTeamsOnImportQuery",
+      "DB ERROR --> repository/TableCommentary.js/insertCommentaryTeamsOnImportQuery",
       request
     );
     throw new Error(err.message);
@@ -7895,7 +7895,7 @@ const updatePitchageAndSessionQuery = async (data, fastify, request) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/updatePitchageAndSessionQuery",
+      "DB ERROR --> repository/TableCommentary.js/updatePitchageAndSessionQuery",
       request
     );
     throw new Error(err.message);
@@ -7919,7 +7919,7 @@ const updatePythonAPIOnCommentaryQuery = async (request, fastify) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/updatePythonAPIOnCommentaryQuery",
+      "DB ERROR --> repository/TableCommentary.js/updatePythonAPIOnCommentaryQuery",
       request
     );
     throw new Error(err.message);
@@ -7955,7 +7955,7 @@ const updateDrsQuery = async (data, fastify) => {
     errorLogger(
       fastify,
       error.message,
-      "DB ERROR --> repository/TableCommentary/updateCommentaryTeamDrsAttemptsQuery",
+      "DB ERROR --> repository/TableCommentary.js/updateDrsQuery",
       null
     );
     throw new Error(error.message);
@@ -7977,7 +7977,7 @@ const getAllCommByCompIdQuery = async (competitionId, request, fastify) => {
     errorLogger(
       fastify,
       error.message,
-      "DB ERROR --> repository/TableCommentary/getAllCommByCompIdQuery",
+      "DB ERROR --> repository/TableCommentary.js/getAllCommByCompIdQuery",
       request
     );
     throw new Error(error.message);
@@ -8006,7 +8006,7 @@ const updateEventTypeAndCompIdQuery = async (data, request, fastify) => {
     errorLogger(
       fastify,
       error.message,
-      "DB ERROR --> repository/TableCommentary/updateEventTypeAndCompIdQuery",
+      "DB ERROR --> repository/TableCommentary.js/updateEventTypeAndCompIdQuery",
       request
     );
     throw new Error(error.message);
@@ -8261,7 +8261,7 @@ const getComEntityQuery = async (data,request,fastify) => {
     errorLogger(
       fastify,
       error.message,
-      "DB ERROR --> repository/TableCommentary/getComEntityQuery",
+      "DB ERROR --> repository/TableCommentary.js/getComEntityQuery",
       request
     );
     return true;
@@ -8284,7 +8284,7 @@ const updateCommPlayersImagePathQuery = async (data, fastify) => {
     errorLogger(
       fastify,
       error.message,
-      "DB ERROR --> repository/TableCommentary/updateCommPlayersImagePathQuery",
+      "DB ERROR --> repository/TableCommentary.js/updateCommPlayersImagePathQuery",
       null
     );
     throw new Error(error.message);
@@ -8355,7 +8355,7 @@ const getMatchTypeTemplateByComIdQuery = async (data,request, fastify) => {
     errorLogger(
       fastify,
       error.message,
-      "DB ERROR --> repository/TableCommentary/getMatchTypeTemplateByComIdQuery",
+      "DB ERROR --> repository/TableCommentary.js/getMatchTypeTemplateByComIdQuery",
       request
     );
     throw new Error(error.message);
@@ -8379,7 +8379,7 @@ const scoringTypeCommentaryQuery = async (data, fastify, request) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/scoringTypeCommentaryQuery",
+      "DB ERROR --> repository/TableCommentary.js/scoringTypeCommentaryQuery",
       request
     );
     throw new Error(err.message);
@@ -8405,7 +8405,7 @@ const updateteamMaxOverQuery = async (data, fastify, request) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/updateteamMaxOverQuery",
+      "DB ERROR --> repository/TableCommentary.js/updateteamMaxOverQuery",
       request
     );
     throw new Error(err.message);
@@ -8493,7 +8493,7 @@ const getAllCommentaryPlayerQueryById = async (data, request, fastify) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/getAllCommentaryPlayerQueryById",
+      "DB ERROR --> repository/TableCommentary.js/getAllCommentaryPlayerQueryById",
       request
     );
     throw new Error(err.message);
@@ -8519,7 +8519,7 @@ const overTypeChangeOnOversQuery = async (data, fastify, request) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/overTypeChangeOnOversQuery",
+      "DB ERROR --> repository/TableCommentary.js/overTypeChangeOnOversQuery",
       request
     );
     throw new Error(err.message);
@@ -8543,7 +8543,7 @@ const bowlingTypeChangeQuery = async (data, fastify, request) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/bowlingTypeChangeQuery",
+      "DB ERROR --> repository/TableCommentary.js/bowlingTypeChangeQuery",
       request
     );
     throw new Error(err.message);
@@ -8568,7 +8568,7 @@ const bowlingStyleChangeOnCommPlayersQuery = async (data, fastify, request) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/bowlingStyleChangeOnCommPlayersQuery",
+      "DB ERROR --> repository/TableCommentary.js/bowlingStyleChangeOnCommPlayersQuery",
       request
     );
     throw new Error(err.message);
@@ -8593,7 +8593,7 @@ const updateStreamingURLQuery = async (data, fastify, request) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommentary/bowlingStyleChangeOnCommPlayersQuery",
+      "DB ERROR --> repository/TableCommentary.js/updateStreamingURLQuery",
       request
     );
     throw new Error(err.message);

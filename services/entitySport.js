@@ -941,6 +941,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
       for (let c of commentaries){
         let updateBall = {}
         let ball = 1;
+        
         let tpId = c.event_id;
         let event = c.event;
         if(String(c.score) == "w" ){
