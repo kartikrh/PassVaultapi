@@ -875,6 +875,10 @@ const competitionImportService = async (data, fastify, request) => {
     throw new Error("Invalid response from Entit-Sport API");
   }
 
+  if (entitySportCompetitionResponse?.status === "result") {
+    return true;
+  }
+
   let checkCompetition = global.tblCompetitions.find(item => item.tpId === data.cid);
   const eventType = global.tblEventTypes.find((et) => et.eventType.toLowerCase() === 'Cricket'.toLowerCase());
   let matchType = global.tblMatchTypes.find(item => item.entityEnum === EntityEnums[entitySportCompetitionResponse?.game_format.toUpperCase()]);
@@ -903,31 +907,6 @@ const competitionImportService = async (data, fastify, request) => {
     pythonId: pythonIdData?.id || null,
   }
 
-  if (!checkCompetition) {
-    const insertCompetition = await insertCompetitionQuery({
-      ...request,
-      userTokenInfo: {
-        WrUserId: -2
-      },
-      body: competitionData
-    }, fastify);
-    global.tblCompetitions.push(insertCompetition);
-    checkCompetition = insertCompetition;
-  }
-  // else if (!checkCompetition?.tpId || checkCompetition?.tpId === null) {
-  //   const data = {
-  //     tpId: data.cid,
-  //     modifiedBy: -2,
-  //     competitionId: checkCompetition.competitionId
-  //   }
-  //   const updateCompetition = await updateTpIdCompQuery(data, fastify, request);
-  //   let index = global.tblCompetitions.findIndex((i)=> i.competitionId == checkCompetition.competitionId)
-  //   if(index != -1){
-  //     global.tblCompetitions[index] = updateCompetition[0]
-  //   }
-  //   checkCompetition = global.tblCompetitions[index] ;
-  // } 
-
   let allCompetitionMatch = [];
   const checkEntitySportAPIEndpoint2 = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getCompetitionMatchDataByIdFromEntity);
   if (!checkEntitySportAPIEndpoint2.data) {
@@ -952,6 +931,35 @@ const competitionImportService = async (data, fastify, request) => {
     allCompetitionMatch.push(...entitySportCompetitionMatchResponse?.items)
     page++;
   }
+
+  if (allCompetitionMatch.length === 0) {
+    return true;
+  }
+
+  if (!checkCompetition) {
+    const insertCompetition = await insertCompetitionQuery({
+      ...request,
+      userTokenInfo: {
+        WrUserId: -2
+      },
+      body: competitionData
+    }, fastify);
+    global.tblCompetitions.push(insertCompetition);
+    checkCompetition = insertCompetition;
+  }
+  // else if (!checkCompetition?.tpId || checkCompetition?.tpId === null) {
+  //   const data = {
+  //     tpId: data.cid,
+  //     modifiedBy: -2,
+  //     competitionId: checkCompetition.competitionId
+  //   }
+  //   const updateCompetition = await updateTpIdCompQuery(data, fastify, request);
+  //   let index = global.tblCompetitions.findIndex((i)=> i.competitionId == checkCompetition.competitionId)
+  //   if(index != -1){
+  //     global.tblCompetitions[index] = updateCompetition[0]
+  //   }
+  //   checkCompetition = global.tblCompetitions[index] ;
+  // }
 
   for (const match of allCompetitionMatch) {
     await matchImportService({
