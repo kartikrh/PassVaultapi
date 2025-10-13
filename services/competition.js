@@ -875,7 +875,7 @@ const competitionImportService = async (data, fastify, request) => {
     throw new Error("Invalid response from Entit-Sport API");
   }
 
-  let checkCompetition = global.tblCompetitions.find(item => item.tpId === data.cid || item.competition.toLowerCase() === entitySportCompetitionResponse.title.replace(/'/g, "''").toLowerCase());
+  let checkCompetition = global.tblCompetitions.find(item => item.tpId === data.cid);
   const eventType = global.tblEventTypes.find((et) => et.eventType.toLowerCase() === 'Cricket'.toLowerCase());
   let matchType = global.tblMatchTypes.find(item => item.entityEnum === EntityEnums[entitySportCompetitionResponse?.game_format.toUpperCase()]);
 
