@@ -884,6 +884,7 @@ const UpdatePlayerFromEntityService = async (request, fastify) => {
 };
 
 const playerImportService = async (data, fastify, request = null) => {
+  throw new Error(`imageUrl ${global.tblEntitySockets[0]?.defaultPlayerImage || null} and ${global.tblEntitySockets[0]?.defaultPlayerImagePath || null}`);
   const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getPlayerDataByIdFromEntity);
   if (!checkEntitySportAPIEndpoint.data) {
     throw new Error(checkEntitySportAPIEndpoint.message);
