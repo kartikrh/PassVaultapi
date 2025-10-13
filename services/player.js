@@ -884,7 +884,6 @@ const UpdatePlayerFromEntityService = async (request, fastify) => {
 };
 
 const playerImportService = async (data, fastify, request = null) => {
-  throw new Error(`imageUrl ${global.tblEntitySockets[0]?.defaultPlayerImage || null} and ${global.tblEntitySockets[0]?.defaultPlayerImagePath || null}`);
   const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getPlayerDataByIdFromEntity);
   if (!checkEntitySportAPIEndpoint.data) {
     throw new Error(checkEntitySportAPIEndpoint.message);
@@ -910,7 +909,6 @@ const playerImportService = async (data, fastify, request = null) => {
           fullPath: global.tblEntitySockets[0]?.defaultPlayerImage || null,
           imagePath: global.tblEntitySockets[0]?.defaultPlayerImagePath || null
         }
-        throw new Error(`imageUrl ${imageUrl.fullPath} and ${imageUrl.imagePath}`);
       // } else {
       //   const getImageDataFromUrl = await getImageFromUrl({
       //     type: ImgModuleConfig.Players.type,
