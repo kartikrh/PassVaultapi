@@ -879,7 +879,7 @@ const competitionImportService = async (data, fastify, request) => {
   const eventType = global.tblEventTypes.find((et) => et.eventType.toLowerCase() === 'Cricket'.toLowerCase());
   let matchType = global.tblMatchTypes.find(item => item.entityEnum === EntityEnums[entitySportCompetitionResponse?.game_format.toUpperCase()]);
 
-  if(entitySportCompetitionResponse?.game_format.toUpperCase() == EntityEnums.MIXED){
+  if(entitySportCompetitionResponse?.game_format.toUpperCase() == "MIXED"){
     matchType = null
   }
   const pythonIdData = global.tblPythonAPI.find(item => item.isDefault === true && item.isActive === true);
