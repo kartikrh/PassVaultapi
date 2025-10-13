@@ -908,7 +908,7 @@ const playerImportService = async (data, fastify, request = null) => {
       let imageUrl = {
           fullPath: global.tblEntitySockets[0]?.defaultPlayerImage || null,
           imagePath: global.tblEntitySockets[0]?.defaultPlayerImagePath || null
-        }
+        };
       // } else {
       //   const getImageDataFromUrl = await getImageFromUrl({
       //     type: ImgModuleConfig.Players.type,
