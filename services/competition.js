@@ -946,7 +946,7 @@ const competitionImportService = async (data, fastify, request) => {
     const insertCompetition = await insertCompetitionQuery({
       ...request,
       userTokenInfo: {
-        WrUserId: -2
+        WrUserId: -5
       },
       body: competitionData
     }, fastify);
@@ -976,7 +976,7 @@ const competitionImportService = async (data, fastify, request) => {
   await addEditTournamentTeamPointDataService(entitySportCompetitionResponse, checkCompetition?.competitionId, fastify, {
     ...request,
     userTokenInfo: {
-      WrUserId: -2
+      WrUserId: -5
     },
   });
 

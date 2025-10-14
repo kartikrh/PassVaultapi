@@ -788,7 +788,7 @@ const teamImportService = async (data, fastify, request = null) => {
     teamShortName: entitySportTeamResponse?.abbr,
     country: entitySportTeamResponse?.country,
     eventTypeId: eventType?.eventTypeId || EventType['Cricket'],
-    userId: -2,
+    userId: -5,
     tpId: entitySportTeamResponse?.tid || null
   };
 
@@ -813,7 +813,7 @@ const teamImportService = async (data, fastify, request = null) => {
 
     let teamJerseyImageData = {
       fullPath: global.tblEntitySockets[0]?.defaultJerseyImage || null,
-      imagePath: tblEntitySockets[0]?.defaultJerseyImagePath || null,
+      imagePath:  global.tblEntitySockets[0]?.defaultJerseyImagePath || null,
     }
     teamData = {
       ...teamData,
@@ -828,7 +828,7 @@ const teamImportService = async (data, fastify, request = null) => {
   }
   else if (checkTeam?.tpId === null || !checkTeam?.tpId) {
     const data = {
-      userId: -2,
+      userId: -5,
       tpId: entitySportTeamResponse?.tid || null,
       teamId: checkTeam.teamId
     }
@@ -878,7 +878,7 @@ const teamImportService = async (data, fastify, request = null) => {
         teamId: checkTeam.teamId
       },
       userTokenInfo: {
-        WrUserId: -2
+        WrUserId: -5
       }
     }, fastify);
   }
@@ -917,7 +917,7 @@ const teamImportService = async (data, fastify, request = null) => {
         teamId: checkTeam.teamId,
         refPlayerId: playerData?.playerId,
         tpId: playerId,
-        userId: -2,
+        userId: -5,
         jerseyPlayerImage: mergeAndSaveImageData ? mergeAndSaveImageData.jerseyPlayerImage : null,
         jerseyPlayerImagePath: mergeAndSaveImageData ? mergeAndSaveImageData.jerseyPlayerImagePath : null,
       }, fastify, request);

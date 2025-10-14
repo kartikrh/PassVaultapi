@@ -957,7 +957,7 @@ const playerImportService = async (data, fastify, request = null) => {
     }
     else if (checkPlayer?.tpId === null || !checkPlayer?.tpId) {
       const data = {
-        userId: -2,
+        userId: -3,
         tpId: entitySportPlayerResponse?.pid || null,
         playerId: checkPlayer.playerId,
       };
