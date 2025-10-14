@@ -1792,6 +1792,7 @@ module.exports = {
   error,
   success,
   deviceInfo,
+
   hashFunction,
   encryptedObject,
   encrypt,
