@@ -885,6 +885,7 @@ const UpdatePlayerFromEntityService = async (request, fastify) => {
 };
 
 const playerImportService = async (data, fastify, request = null) => {
+  console.log("🚀 ~ playerImportService ~ data:", data)
   const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getPlayerDataByIdFromEntity);
   if (!checkEntitySportAPIEndpoint.data) {
     throw new Error(checkEntitySportAPIEndpoint.message);
@@ -944,14 +945,6 @@ const playerImportService = async (data, fastify, request = null) => {
       };
       const insertPlayer = await insertPlayerQuery(insertPlayerData, fastify, request);
       console.log("🚀 ~ playerImportService ~ insertPlayer:", insertPlayer)
-      errorLogger(fastify, `playerImportService called for pid: ${data.pid}`, "/services/player.js/playerImportService", {
-        ...request,
-        body: {
-          tblEntitySockets: global.tblEntitySockets[0],
-          insertPlayerData: insertPlayerData,
-          afterinsertPlayer: insertPlayer
-        }
-      });
       global.tblPlayers.push(insertPlayer);
       checkPlayer = insertPlayer;
     }
