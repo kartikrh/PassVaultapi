@@ -144,10 +144,9 @@ const changeActionTypeService = async (request, fastify) => {
     for (index of indexOfId){
         global.tblClientSocket[index].actionType = request.body.actionType;
         const clientSocketId = global.tblClientSocket[index]?.clientSocketId
-    if(request.body.actionType === clientSocketActionType.connect){
+        if(request.body.actionType === clientSocketActionType.connect) {
             connectClients(fastify, clientSocketId);
-    }
-    else if(request.body.actionType === clientSocketActionType.disconnect){
+        } else if(request.body.actionType === clientSocketActionType.disconnect){
             disconnectClients(fastify, clientSocketId);
         }
     }

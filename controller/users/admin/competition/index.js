@@ -43,6 +43,8 @@ const getCompetitionList = async (request, reply, fastify) => {
         competition: item.competition,
         drsCount: item.drsCount,
         matchTypeId: item.matchTypeId,
+        startDate: item.startDate ?? null,
+        endDate: item.endDate ?? null
       };
     });
     reply.status(200).send(success(result, 200));

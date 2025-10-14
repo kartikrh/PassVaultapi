@@ -280,12 +280,12 @@ const changeEntityActionTypeService = async (request, fastify) => {
 
     for (index of indexOfId) {
         global.tblEntitySockets[index].actionType = request.body.actionType;
-    }
-    if (request.body.actionType === clientSocketActionType.connect) {
-        connectEntitySport(fastify);
-    }
-    else if (request.body.actionType === clientSocketActionType.disconnect) {
-        disconnectEntitySports(fastify);
+        const entityId = global.tblEntitySockets[index]?.entitySocketId
+        if (request.body.actionType === clientSocketActionType.connect) {
+            connectEntitySport(fastify, entityId);
+        } else if (request.body.actionType === clientSocketActionType.disconnect) {
+            disconnectEntitySports(fastify, entityId);
+        }
     }
 
     return `Entity Socket updated successfully`;
