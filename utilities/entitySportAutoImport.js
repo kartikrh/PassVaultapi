@@ -7,7 +7,6 @@ const { teamImportService } = require("../services/teams");
 const { errorLogger } = require("./logger");
 
 const entitySportAutoImportProcess = async (fastify) => {
-    console.log("🚀 ~ entitySportAutoImportProcess ~ started:")
     try {
         const condition = `"wrIsImported" = ${true} AND "wrIsImportStart" = ${false} AND "wrSourceId" = ${3}`;
         const autoImportDataCompetition = await getAllAutoImportDataQuery(null, fastify, condition);
@@ -22,7 +21,6 @@ const entitySportAutoImportProcess = async (fastify) => {
         });
 
         const importStart = async (data) => {
-            console.log("🚀 ~ entitySportAutoImportProcess ~ importStart:", data)
             try {
                 await updateAutoImportDataQuery(data, fastify, null);
             } catch (err) {
@@ -31,7 +29,6 @@ const entitySportAutoImportProcess = async (fastify) => {
         };
 
         const importEnd = async (data) => {
-            console.log("🚀 ~ entitySportAutoImportProcess ~ importEnd:", data)
             try {
                 await updateAutoImportDataQuery({
                     ...data,
