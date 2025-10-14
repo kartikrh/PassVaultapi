@@ -22970,7 +22970,6 @@ const insertCompetitionOnMatchImportService = async (cid, fastify, request) => {
 }
 
 const matchImportService = async (data, fastify, request = null) => {
-  console.log("🚀 ~ matchImportService ~ data:", data)
   const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getMatchDataByIdFromEntity);
   if (!checkEntitySportAPIEndpoint.data) {
     throw new Error(checkEntitySportAPIEndpoint.message);

@@ -885,7 +885,6 @@ const UpdatePlayerFromEntityService = async (request, fastify) => {
 };
 
 const playerImportService = async (data, fastify, request = null) => {
-  console.log("🚀 ~ playerImportService ~ data:", data)
   const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getPlayerDataByIdFromEntity);
   if (!checkEntitySportAPIEndpoint.data) {
     throw new Error(checkEntitySportAPIEndpoint.message);
@@ -944,7 +943,6 @@ const playerImportService = async (data, fastify, request = null) => {
         imagePath: imageUrl.imagePath,
       };
       const insertPlayer = await insertPlayerQuery(insertPlayerData, fastify, request);
-      console.log("🚀 ~ playerImportService ~ insertPlayer:", insertPlayer)
       global.tblPlayers.push(insertPlayer);
       checkPlayer = insertPlayer;
     }

@@ -863,7 +863,6 @@ const upCompStatusService = async (request, fastify) => {
 };
 
 const competitionImportService = async (data, fastify, request) => {
-console.log("🚀 ~ competitionImportService ~ competitionImportService:", data)
   const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getCompetitionDataByIdFromEntity);
   if (!checkEntitySportAPIEndpoint.data) {
     throw new Error(checkEntitySportAPIEndpoint.message);
