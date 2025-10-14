@@ -33,6 +33,7 @@ const configConstants = require("../utilities/configConstants");
 const { trimTextData, callEntitySportAPI, ServiceType, APIEndpointModuleType, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, RefType, EventType, checkEntitySportAPIEndpointIsActive } = require("../utilities/index");
 const { getAutoImportDataByIdQuery, insertAutoImportDataQuery } = require("../repository/TableAutoImportData");
 const { updateAutoImportDataService } = require("./autoImportData");
+const { errorLogger } = require("../utilities/logger");
 
 const allPlayerService = async (request,fastify) => {
   const { isActive, eventTypeId , teamId} = request.body;
@@ -884,7 +885,6 @@ const UpdatePlayerFromEntityService = async (request, fastify) => {
 };
 
 const playerImportService = async (data, fastify, request = null) => {
-  console.log("🚀 ~ playerImportService ~ global.tblEntitySockets[0]:", global.tblEntitySockets[0])
   const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getPlayerDataByIdFromEntity);
   if (!checkEntitySportAPIEndpoint.data) {
     throw new Error(checkEntitySportAPIEndpoint.message);
@@ -942,8 +942,14 @@ const playerImportService = async (data, fastify, request = null) => {
       image: imageUrl.fullPath,
       imagePath: imageUrl.imagePath,
     };
-    console.log("🚀 ~ playerImportService ~ insertPlayerData:", insertPlayerData)
 
+    errorLogger(fastify, `playerImportService called for pid: ${data.pid}`, "/services/player.js/playerImportService", {
+      ...request,
+      body: {
+        socketData: global.tblEntitySockets[0],
+        playerData: insertPlayerData
+      }
+    });
       const insertPlayer = await insertPlayerQuery(insertPlayerData, fastify, request);
       global.tblPlayers.push(insertPlayer);
       checkPlayer = insertPlayer;
