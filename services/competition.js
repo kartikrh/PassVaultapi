@@ -72,6 +72,7 @@ const { addEditTournamentTeamPointDataService } = require("./tournamentTeamPoint
 //     return result;
 //   }
 // };
+
 const allCompetitionService = async (request) => {
   const { isActive, isTrending, eventTypeId, matchTypeId, isMen, type, isVirtual, pythonId, countryId } = request.body;
 
