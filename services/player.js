@@ -931,7 +931,7 @@ const playerImportService = async (data, fastify, request = null) => {
         isKipper: entitySportPlayerResponse?.playing_role === 'wk' ? true : false,
         isLeftHandedBatting: !entitySportPlayerResponse.batting_style.includes('Right'),
         isLeftArmFielding: !entitySportPlayerResponse.bowling_style.includes('Right'),
-        userId: -2,
+        userId: -3,
         batsmanAverage: 0.0,
         batsmanStrikeRate: 0.0,
         bowlerAverage: 0.0,
@@ -942,8 +942,15 @@ const playerImportService = async (data, fastify, request = null) => {
         image: imageUrl.fullPath,
         imagePath: imageUrl.imagePath,
       };
-
       const insertPlayer = await insertPlayerQuery(insertPlayerData, fastify, request);
+      errorLogger(fastify, `playerImportService called for pid: ${data.pid}`, "/services/player.js/playerImportService", {
+        ...request,
+        body: {
+          tblEntitySockets: global.tblEntitySockets[0],
+          insertPlayerData: insertPlayerData,
+          afterinsertPlayer: insertPlayer
+        }
+      });
       global.tblPlayers.push(insertPlayer);
       checkPlayer = insertPlayer;
     }
