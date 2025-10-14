@@ -968,6 +968,7 @@ console.log("🚀 ~ competitionImportService ~ competitionImportService:", data)
   //   checkCompetition = global.tblCompetitions[index] ;
   // }
 
+  allCompetitionMatch = allCompetitionMatch.filter(m => m.status !== matchStatusEntity.Completed);
   for (const match of allCompetitionMatch) {
     await matchImportService({
       mid: match.match_id
