@@ -936,6 +936,11 @@ const competitionImportService = async (data, fastify, request) => {
   if (allCompetitionMatch.length === 0) {
     return true;
   }
+  
+  let checkIfOneOfMatchIsLive = allCompetitionMatch.find(m => m.status === matchStatusEntity.Live || m.status === matchStatusEntity.Scheduled);
+  if(!checkIfOneOfMatchIsLive){
+    return true;
+  }
 
   if (!checkCompetition) {
     const insertCompetition = await insertCompetitionQuery({
@@ -962,10 +967,6 @@ const competitionImportService = async (data, fastify, request) => {
   //   checkCompetition = global.tblCompetitions[index] ;
   // }
 
-  let checkIfOneOfMatchIsLive = allCompetitionMatch.find(m => m.status === matchStatusEntity.Live || m.status === matchStatusEntity.Scheduled);
-  if(!checkIfOneOfMatchIsLive){
-    return true;
-  }
   for (const match of allCompetitionMatch) {
     await matchImportService({
       mid: match.match_id
