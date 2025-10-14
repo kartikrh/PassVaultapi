@@ -18,6 +18,35 @@ const getAllTeamPlayersQuery = async (fastify) => {
   );
 };
 
+const AllTeamPlayersQuery = async (fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `SELECT 
+        "wrTeamPlayerId" as "teamPlayerId",
+        "wrTeamId" as "teamId",
+        "wrRefPlayerId" as "refPlayerId",
+        "wrJerseyPlayerImage" as "jerseyPlayerImage",
+        "wrJerseyPlayerImagePath" as "jerseyPlayerImagePath",
+        "wrHomeTeam" as "homeTeam",
+        "wrTpId" as "tpId"
+      FROM "tblTeamPlayers"
+      WHERE "wrIsDeleted" = FALSE`,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+    return result;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableTeamPlayer/AllTeamPlayersQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 const getAllTeamPlayersByTeamIdAndPlayerIdQuery = async (data, fastify, request) => {
   try {
     const result = await fastify.db.query(
@@ -323,6 +352,36 @@ const getHomeTeamPlayerByPlayerIdQuery = async (data, fastify, request) => {
   }
 };
 
+const AllTeamPlayersNullImageQuery = async (fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `SELECT 
+        "wrTeamPlayerId" as "teamPlayerId",
+        "wrTeamId" as "teamId",
+        "wrRefPlayerId" as "refPlayerId",
+        "wrJerseyPlayerImage" as "jerseyPlayerImage",
+        "wrJerseyPlayerImagePath" as "jerseyPlayerImagePath",
+        "wrHomeTeam" as "homeTeam",
+        "wrTpId" as "tpId"
+      FROM "tblTeamPlayers"
+      WHERE "wrIsDeleted" = FALSE
+      AND "wrJerseyPlayerImage" IS NULL;`,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+    return result;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableTeamPlayer/AllTeamPlayersQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   insertTeamPlayerQuery,
   getAllTeamPlayersByTeamIdAndPlayerIdQuery,
@@ -333,5 +392,7 @@ module.exports = {
   updateTeamPlayerImageQuery,
   getTeamListByPlayerIdQuery,
   updateTeamPlayerHomeTeamQuery,
-  getHomeTeamPlayerByPlayerIdQuery
+  getHomeTeamPlayerByPlayerIdQuery,
+  AllTeamPlayersQuery,
+  AllTeamPlayersNullImageQuery,
 };
