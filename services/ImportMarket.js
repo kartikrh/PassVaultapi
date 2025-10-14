@@ -630,6 +630,8 @@ const getCompByEventTypeService = async (request, fastify) => {
       competition: item.competition,
       competitionRefId : item.refId,
       isActive: item.isActive,
+      startDate: item.startDate ?? null,
+      endDate: item.endDate ?? null
     }
   });
 
