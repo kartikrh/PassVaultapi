@@ -943,6 +943,7 @@ const playerImportService = async (data, fastify, request = null) => {
         imagePath: imageUrl.imagePath,
       };
       const insertPlayer = await insertPlayerQuery(insertPlayerData, fastify, request);
+      console.log("🚀 ~ playerImportService ~ insertPlayer:", insertPlayer)
       errorLogger(fastify, `playerImportService called for pid: ${data.pid}`, "/services/player.js/playerImportService", {
         ...request,
         body: {
