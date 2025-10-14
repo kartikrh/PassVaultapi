@@ -984,6 +984,7 @@ const competitionImportService = async (data, fastify, request) => {
   });
 
   return checkCompetition;
+  
 }
 
 module.exports = {

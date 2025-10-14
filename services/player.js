@@ -191,14 +191,17 @@ const insertPlayerService = async (request, fastify) => {
     Object.assign(request.body, trimData);
   }
 
-  const validatePlayerName = global.tblPlayers.find(
-    (item) =>
-      item.playerName.trim().toLowerCase() === request.body.playerName.trim().toLowerCase()
-  );
+  // const validatePlayerName = global.tblPlayers.find(
+  //   (item) =>
+  //     item.playerName.trim().toLowerCase() === request.body.playerName.trim().toLowerCase() &&
+  //     item.displayName.trim().toLowerCase () === request.body.displayName.trim().toLowerCase() 
+  // );
 
-  if (validatePlayerName) {
-    throw new Error("Player Name already exist");
-  }
+
+
+  // if (validatePlayerName) {
+  //   throw new Error("Player Name already exist");
+  // }
   const validateTpId = global.tblPlayers.find(
     (item) =>
       item.tpId == request.body?.tpId && item.tpId != null
@@ -314,15 +317,15 @@ const updatePlayerService = async (request, fastify) => {
   if(trimData) {
     Object.assign(request.body, trimData);
   }
-  const validatePlayerName = global.tblPlayers.find(
-    (item) =>
-      item.playerName.trim().toLowerCase() === request.body.playerName.trim().toLowerCase() &&
-      item.playerId !== request.body.playerId
-  );
+  // const validatePlayerName = global.tblPlayers.find(
+  //   (item) =>
+  //     item.playerName.trim().toLowerCase() === request.body.playerName.trim().toLowerCase() &&
+  //     item.playerId !== request.body.playerId
+  // );
 
-  if (validatePlayerName) {
-    throw new Error("Player Name already exist");
-  }
+  // if (validatePlayerName) {
+  //   throw new Error("Player Name already exist");
+  // }
   if(checkPlayerId) {
     const validateTpId = global.tblPlayers.find(
       (item) =>
