@@ -943,21 +943,12 @@ const playerImportService = async (data, fastify, request = null) => {
         imagePath: imageUrl.imagePath,
       };
       const insertPlayer = await insertPlayerQuery(insertPlayerData, fastify, request);
-      console.log("🚀 ~ playerImportService ~ insertPlayer:", insertPlayer)
-      errorLogger(fastify, `playerImportService called for pid: ${data.pid}`, "/services/player.js/playerImportService", {
-        ...request,
-        body: {
-          tblEntitySockets: global.tblEntitySockets[0],
-          insertPlayerData: insertPlayerData,
-          afterinsertPlayer: insertPlayer
-        }
-      });
       global.tblPlayers.push(insertPlayer);
       checkPlayer = insertPlayer;
     }
     else if (checkPlayer?.tpId === null || !checkPlayer?.tpId) {
       const data = {
-        userId: -2,
+        userId: -3,
         tpId: entitySportPlayerResponse?.pid || null,
         playerId: checkPlayer.playerId,
       };
