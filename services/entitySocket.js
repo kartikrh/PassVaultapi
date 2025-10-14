@@ -100,6 +100,15 @@ const createEntitySocketService = async (request, fastify) => {
         request.body.defaultJerseyImagePath = imagePath;
     }
 
+    if (request.body.defaultPlayerJerseyImage?.length) {
+        const { fullPath, imagePath } = await processImage(
+            request.body.defaultPlayerJerseyImage,
+            ImgModuleConfig.Teams
+        );
+        request.body.defaultPlayerJerseyImage = fullPath;
+        request.body.defaultPlayerJerseyImagePath = imagePath;
+    }
+
     const data = await createEntitySocketQuery(
         {
             ...request.body,
@@ -138,6 +147,8 @@ const updateEntitySocketService = async (request, fastify) => {
         defaultTeamImagePath: result.defaultTeamImagePath,
         defaultJerseyImage: result.defaultJerseyImage,
         defaultJerseyImagePath: result.defaultJerseyImagePath,
+        defaultPlayerJerseyImage: result.defaultPlayerJerseyImage,
+        defaultPlayerJerseyImagePath: result.defaultPlayerJerseyImagePath,
         isAutoScoreUpdate: request.body.isAutoScoreUpdate || result.isAutoScoreUpdate,
     }
     const projectConfig = global.tblConfigs.find(
@@ -190,6 +201,15 @@ const updateEntitySocketService = async (request, fastify) => {
         body.defaultJerseyImagePath = imagePath;
     }
 
+    if (request.body.defaultPlayerJerseyImage?.length) {
+        const { fullPath, imagePath } = await processImage(
+            request.body.defaultPlayerJerseyImage,
+            ImgModuleConfig.Teams
+        );
+        body.defaultPlayerJerseyImage = fullPath;
+        body.defaultPlayerJerseyImagePath = imagePath;
+    }
+
     const data = await updateEntitySocketQuery(
         body,
         request,
@@ -219,6 +239,10 @@ const deleteEntitySocketService = async (request, fastify) => {
 
         if (validateId.defaultJerseyImage) {
           await removeImageFromServer({ path: validateId.defaultJerseyImage });
+        }
+
+        if (validateId.defaultPlayerJerseyImage) {
+          await removeImageFromServer({ path: validateId.defaultPlayerJerseyImage });
         }
       }
     }

@@ -5,11 +5,22 @@ const { clientSocketActionType, clientSocketStatus } = require("../utilities");
 const { updateClientSocketStatusQuery, updateReconnectCountQuery } = require("../repository/TableClientSocket");
 const { errorLogger } = require("../utilities/logger");
 
-const connectClients = async (fastify) => {
+const connectClients = async (fastify, clientSocketId = undefined) => {
   try {
-    const clientUrls = global.tblClientSocket.filter(
-      (c) => c.isActive === true && c.actionType == clientSocketActionType.connect && c.status !== clientSocketStatus.connected
-    );
+    // const clientUrls = global.tblClientSocket.filter(
+    //   (c) => c.isActive === true && c.actionType == clientSocketActionType.connect && c.status !== clientSocketStatus.connected
+    // );
+    let clientUrls;
+    if (clientSocketId !== undefined) {
+      clientUrls = global.tblClientSocket.filter(
+        (c) => c.clientSocketId == clientSocketId && c.isActive === true && c.actionType == clientSocketActionType.connect 
+          && c.status !== clientSocketStatus.connected
+      );
+    } else {
+      clientUrls = global.tblClientSocket.filter(
+        (c) => c.isActive === true && c.actionType == clientSocketActionType.connect && c.status !== clientSocketStatus.connected
+      );
+    }
     const promises = clientUrls.map(async (urlConfig) => {
       const existing = global.clientSocketIo.find(c => c.url === urlConfig.url);
       if (existing) {
@@ -45,7 +56,7 @@ const connectClients = async (fastify) => {
         global.tblClientSocket[index].status = clientSocketStatus.connected;      
       });
       client.on("connect_error", (error) => {
-        console.log(`Connection error: ${error}`);
+        console.log(`Connection error ${urlConfig.url}: ${error}`);
       });
       client.on("disconnect", () => {
         console.log(`Disconnected from ${urlConfig.url}`);
@@ -72,7 +83,7 @@ const connectClients = async (fastify) => {
         }
       });
       client.io.on("reconnect_attempt", (attemptNumber) => {
-        console.log(`Reconnect attempt: ${attemptNumber}`);
+        console.log(`Reconnect attempt ${urlConfig.url}: ${attemptNumber}`);
         updateReconnectCountQuery({
           clientSocketId : urlConfig.clientSocketId,
           reconnectCount : attemptNumber
@@ -204,11 +215,22 @@ const connectClients = async (fastify) => {
     // console.error("Error connecting clients:", error);
   }
 };
-const disconnectClients = async (fastify) => {
+const disconnectClients = async (fastify, clientSocketId = undefined) => {
   try {
-    const disconnectClientUrls = global.tblClientSocket.filter(
-      (c) => c.isActive === true && c.actionType == clientSocketActionType.disconnect && c.status !== clientSocketStatus.disconnected
-    );
+    // const disconnectClientUrls = global.tblClientSocket.filter(
+    //   (c) => c.isActive === true && c.actionType == clientSocketActionType.disconnect && c.status !== clientSocketStatus.disconnected
+    // );
+    let disconnectClientUrls;
+    if (clientSocketId !== undefined) {
+      disconnectClientUrls = global.tblClientSocket.filter(
+        (c) => c.clientSocketId == clientSocketId &&  c.isActive === true && c.actionType == clientSocketActionType.disconnect 
+          && c.status !== clientSocketStatus.disconnected
+      );
+    } else {
+      disconnectClientUrls = global.tblClientSocket.filter(
+        (c) => c.isActive === true && c.actionType == clientSocketActionType.disconnect && c.status !== clientSocketStatus.disconnected
+      );
+    }
     const promises = disconnectClientUrls?.map((client) => {
        const clientInstance = global.clientSocketIo.find((c) => c.clientSocketId === client.clientSocketId);
        clientInstance?.client.disconnect();
