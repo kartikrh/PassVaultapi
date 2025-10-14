@@ -20,7 +20,7 @@ const {
 const {storeImageOnServer, removeImageFromServer, generateImageName, getImageFromUrl } = require("../utilities/Images");
 const { PROJECT_NAME, ENTITYDEFAULTTEAMIMG, ENTITYDEFAULTTEAMIMGPATH, ENTITYDEFAULTJERSEYIMG, ENTITYDEFAULTJERSEYIMGPATH } = require("../utilities/configConstants");
 const {ImgModuleConfig} = require("../utilities/imageConstant");
-const { APIEndpointModuleType, ServiceType, callClientAPI, compStatus, callCardCricket, callEntitySportAPI, EntityEnums, EventType, CompetitionType, checkEntitySportAPIEndpointIsActive } = require("../utilities");
+const { APIEndpointModuleType, ServiceType, callClientAPI, compStatus, callCardCricket, callEntitySportAPI, EntityEnums, EventType, CompetitionType, checkEntitySportAPIEndpointIsActive, matchStatusEntity, error } = require("../utilities");
 const { getCommentariesResultQuery, getAllCommByCompIdQuery } = require("../repository/TableCommentary")
 const { deleteTournamentTeamPlayersByCompIdQuery } = require("../repository/TableTournamentsTeamPlayers");
 const { deleteTournamentTeamPointsByCompIdQuery } = require("../repository/TableTournmentTeamPoints");
@@ -72,6 +72,7 @@ const { addEditTournamentTeamPointDataService } = require("./tournamentTeamPoint
 //     return result;
 //   }
 // };
+
 const allCompetitionService = async (request) => {
   const { isActive, isTrending, eventTypeId, matchTypeId, isMen, type, isVirtual, pythonId, countryId } = request.body;
 
@@ -935,6 +936,11 @@ const competitionImportService = async (data, fastify, request) => {
   if (allCompetitionMatch.length === 0) {
     return true;
   }
+  
+  let checkIfOneOfMatchIsLive = allCompetitionMatch.find(m => m.status === matchStatusEntity.Live || m.status === matchStatusEntity.Scheduled);
+  if(!checkIfOneOfMatchIsLive){
+    return true;
+  }
 
   if (!checkCompetition) {
     const insertCompetition = await insertCompetitionQuery({
@@ -961,10 +967,6 @@ const competitionImportService = async (data, fastify, request) => {
   //   checkCompetition = global.tblCompetitions[index] ;
   // }
 
-  let checkIfOneOfMatchIsLive = allCompetitionMatch.find(m => m.status === matchStatusEntity.Live || m.status === matchStatusEntity.Scheduled);
-  if(!checkIfOneOfMatchIsLive){
-    return true;
-  }
   for (const match of allCompetitionMatch) {
     await matchImportService({
       mid: match.match_id
