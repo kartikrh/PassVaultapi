@@ -23,6 +23,8 @@ const getAllEntitySocketsQuery = async (fastify) => {
                 "wrDefaultTeamImagePath" as "defaultTeamImagePath",
                 "wrDefaultJerseyImage" as "defaultJerseyImage",
                 "wrDefaultJerseyImagePath" as "defaultJerseyImagePath",
+                "wrDefaultPlayerJerseyImage" as "defaultPlayerJerseyImage",
+                "wrDefaultPlayerJerseyImagePath" as "defaultPlayerJerseyImagePath",
                 "wrIsAutoScoreUpdate" as "isAutoScoreUpdate"
             FROM "tblEntitySockets"
             WHERE "wrIsDeleted" = FALSE;`,
@@ -145,9 +147,11 @@ const createEntitySocketQuery =async (data, request, fastify) =>{
                 "wrDefaultTeamImagePath",
                 "wrDefaultJerseyImage",
                 "wrDefaultJerseyImagePath",
-                "wrIsAutoScoreUpdate"
+                "wrIsAutoScoreUpdate",
+                "wrDefaultPlayerJerseyImage",
+                "wrDefaultPlayerJerseyImagePath"
             )
-            VALUES( $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+            VALUES( $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
             RETURNING 
                 "wrId" as "entitySocketId",
                 "wrServerName" as "serverName",
@@ -167,6 +171,8 @@ const createEntitySocketQuery =async (data, request, fastify) =>{
                 "wrDefaultTeamImagePath" as "defaultTeamImagePath",
                 "wrDefaultJerseyImage" as "defaultJerseyImage",
                 "wrDefaultJerseyImagePath" as "defaultJerseyImagePath",
+                "wrDefaultPlayerJerseyImage" as "defaultPlayerJerseyImage",
+                "wrDefaultPlayerJerseyImagePath" as "defaultPlayerJerseyImagePath",
                 "wrIsAutoScoreUpdate" as "isAutoScoreUpdate"
         `;
         const result = await fastify.db.query(query,
@@ -187,6 +193,8 @@ const createEntitySocketQuery =async (data, request, fastify) =>{
                     data.defaultJerseyImage ?? null,
                     data.defaultJerseyImagePath ?? null,
                     data.isAutoScoreUpdate ?? false,
+                    data.defaultPlayerJerseyImage ?? null,
+                    data.defaultPlayerJerseyImagePath ?? null,
                 ]
             }
         )
@@ -220,7 +228,9 @@ const updateEntitySocketQuery = async(data, request, fastify) =>{
                 "wrDefaultTeamImagePath" = $11,
                 "wrDefaultJerseyImage" = $12,
                 "wrDefaultJerseyImagePath" = $13,
-                "wrIsAutoScoreUpdate" = $14
+                "wrIsAutoScoreUpdate" = $14,
+                "wrDefaultPlayerJerseyImage" = $16,
+                "wrDefaultPlayerJerseyImagePath" = $17
             WHERE "wrId" = $15
             RETURNING 
                 "wrId" as "entitySocketId",
@@ -241,6 +251,8 @@ const updateEntitySocketQuery = async(data, request, fastify) =>{
                 "wrDefaultTeamImagePath" as "defaultTeamImagePath",
                 "wrDefaultJerseyImage" as "defaultJerseyImage",
                 "wrDefaultJerseyImagePath" as "defaultJerseyImagePath",
+                "wrDefaultPlayerJerseyImage" as "defaultPlayerJerseyImage",
+                "wrDefaultPlayerJerseyImagePath" as "defaultPlayerJerseyImagePath",
                 "wrIsAutoScoreUpdate" as "isAutoScoreUpdate"
         `;
         const result = await  fastify.db.query(query,
@@ -262,6 +274,8 @@ const updateEntitySocketQuery = async(data, request, fastify) =>{
                     data.defaultJerseyImagePath,
                     data.isAutoScoreUpdate,
                     data.entitySocketId,
+                    data.defaultPlayerJerseyImage,
+                    data.defaultPlayerJerseyImagePath,
                 ]
             }
         )

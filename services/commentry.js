@@ -23121,6 +23121,7 @@ const matchImportService = async (data, fastify, request = null) => {
       isCountInPoint: checkCompetition?.isPointTable,
       countryId: checkCountry?.id,
       venueId: checkVenue?.id,
+      scoringType : null
     }
 
     if (!checkCommentary) {
@@ -23139,8 +23140,18 @@ const matchImportService = async (data, fastify, request = null) => {
     const noOfInning = matchType.noOfIningsPerSide;
     const maxOver = matchType.maxOversInFirstInings;
     const playing11Squad = entitySportMatchResponse?.["match-playing11"];
-    const teamAPlaying11Squad = playing11Squad?.teama?.squads?.map(item => Number(item.player_id));
-    const teamBPlaying11Squad = playing11Squad?.teamb?.squads?.map(item => Number(item.player_id));
+    let teamAPlaying11Squad = playing11Squad?.teama?.squads?.map(item => Number(item.player_id));
+    let teamBPlaying11Squad = playing11Squad?.teamb?.squads?.map(item => Number(item.player_id));
+
+    if (!teamAPlaying11Squad || teamAPlaying11Squad.length === 0) {
+      teamAPlaying11Squad = await getAllPlayersByTeamIdQuery(teamAData.teamId, fastify, request);
+      teamAPlaying11Squad = teamAPlaying11Squad.map(item => item.tpId);
+    }
+
+    if (!teamBPlaying11Squad || teamBPlaying11Squad.length === 0) {
+      teamBPlaying11Squad = await getAllPlayersByTeamIdQuery(teamBData.teamId, fastify, request);
+      teamBPlaying11Squad = teamBPlaying11Squad.map(item => item.tpId);
+    }
 
     const insertCommentaryPlayersByTeam = async (i, commentaryId, teamId, teamPlaying11Squad, matchTypeId, fastify, request) => {
       let commentaryPlayers = global.tblCommentaryPlayers.filter(item => item.commentaryId === commentaryId && item.teamId === teamId);
