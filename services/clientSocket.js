@@ -143,13 +143,20 @@ const changeActionTypeService = async (request, fastify) => {
 
     for (index of indexOfId){
         global.tblClientSocket[index].actionType = request.body.actionType;
-    }
+        const clientSocketId = global.tblClientSocket[index]?.clientSocketId
     if(request.body.actionType === clientSocketActionType.connect){
-        connectClients(fastify);
+            connectClients(fastify, clientSocketId);
     }
     else if(request.body.actionType === clientSocketActionType.disconnect){
-        disconnectClients(fastify);
+            disconnectClients(fastify, clientSocketId);
+        }
     }
+    // if(request.body.actionType === clientSocketActionType.connect){
+    //     connectClients(fastify);
+    // }
+    // else if(request.body.actionType === clientSocketActionType.disconnect){
+    //     disconnectClients(fastify);
+    // }
     
 
     return `Client Socket updated successfully`;
