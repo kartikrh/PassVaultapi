@@ -900,16 +900,16 @@ const playerImportService = async (data, fastify, request = null) => {
 
   let checkPlayer = global.tblPlayers.find(item => item.tpId == entitySportPlayerResponse?.pid);
   if (!checkPlayer) {
-    checkPlayer = global.tblPlayers.find((item) => item.tpId == null 
-    && item.playerName.toLowerCase() === entitySportPlayerResponse?.title.replace(/'/g, "''").toLowerCase() &&
-    item.displayName.trim().replace(/'/g, "''").toLowerCase() == entitySportPlayerResponse?.short_name.toLowerCase())
-    if(!checkPlayer){
+    checkPlayer = global.tblPlayers.find((item) => item.tpId == null
+      && item.playerName.toLowerCase() === entitySportPlayerResponse?.title.replace(/'/g, "''").toLowerCase() &&
+      item.displayName.trim().replace(/'/g, "''").toLowerCase() == entitySportPlayerResponse?.short_name.toLowerCase())
+    if (!checkPlayer) {
       // let imageUrl = entitySportPlayerResponse?.logo_url;
       // if (!imageUrl) {
       let imageUrl = {
-          fullPath: global.tblEntitySockets[0]?.defaultPlayerImage || null,
-          imagePath: global.tblEntitySockets[0]?.defaultPlayerImagePath || null
-        };
+        fullPath: global.tblEntitySockets[0]?.defaultPlayerImage || null,
+        imagePath: global.tblEntitySockets[0]?.defaultPlayerImagePath || null
+      };
       // } else {
       //   const getImageDataFromUrl = await getImageFromUrl({
       //     type: ImgModuleConfig.Players.type,
@@ -921,35 +921,28 @@ const playerImportService = async (data, fastify, request = null) => {
       //   }
       // }
 
-    let insertPlayerData = {
-      eventTypeId: EventType['Cricket'],
-      playerTypeId: EntityPlayerType[entitySportPlayerResponse?.playing_role],
-      playerName: entitySportPlayerResponse?.title,
-      displayName: entitySportPlayerResponse?.short_name,
-      country: entitySportPlayerResponse?.nationality,
-      isActive: true,
-      isKipper: entitySportPlayerResponse?.playing_role === 'wk' ? true : false,
-      isLeftHandedBatting: !entitySportPlayerResponse.batting_style.includes('Right'),
-      isLeftArmFielding: !entitySportPlayerResponse.bowling_style.includes('Right'),
-      userId: -2,
-      batsmanAverage: 0.0,
-      batsmanStrikeRate: 0.0,
-      bowlerAverage: 0.0,
-      bowlerEconomy: 0.0,
-      tpId: entitySportPlayerResponse?.pid || null,
-      bowlingStyleId: entitySportPlayerResponse.bowling_type ? EntityBowlingStyleType[entitySportPlayerResponse.bowling_type.toLowerCase()] : null,
-      bowlingTypeId: extractBowlingStyle(entitySportPlayerResponse.bowling_type, entitySportPlayerResponse.bowling_style),
-      image: imageUrl.fullPath,
-      imagePath: imageUrl.imagePath,
-    };
+      let insertPlayerData = {
+        eventTypeId: EventType['Cricket'],
+        playerTypeId: EntityPlayerType[entitySportPlayerResponse?.playing_role],
+        playerName: entitySportPlayerResponse?.title,
+        displayName: entitySportPlayerResponse?.short_name,
+        country: entitySportPlayerResponse?.nationality,
+        isActive: true,
+        isKipper: entitySportPlayerResponse?.playing_role === 'wk' ? true : false,
+        isLeftHandedBatting: !entitySportPlayerResponse.batting_style.includes('Right'),
+        isLeftArmFielding: !entitySportPlayerResponse.bowling_style.includes('Right'),
+        userId: -2,
+        batsmanAverage: 0.0,
+        batsmanStrikeRate: 0.0,
+        bowlerAverage: 0.0,
+        bowlerEconomy: 0.0,
+        tpId: entitySportPlayerResponse?.pid || null,
+        bowlingStyleId: entitySportPlayerResponse.bowling_type ? EntityBowlingStyleType[entitySportPlayerResponse.bowling_type.toLowerCase()] : null,
+        bowlingTypeId: extractBowlingStyle(entitySportPlayerResponse.bowling_type, entitySportPlayerResponse.bowling_style),
+        image: imageUrl.fullPath,
+        imagePath: imageUrl.imagePath,
+      };
 
-    errorLogger(fastify, `playerImportService called for pid: ${data.pid}`, "/services/player.js/playerImportService", {
-      ...request,
-      body: {
-        socketData: global.tblEntitySockets[0],
-        playerData: insertPlayerData
-      }
-    });
       const insertPlayer = await insertPlayerQuery(insertPlayerData, fastify, request);
       global.tblPlayers.push(insertPlayer);
       checkPlayer = insertPlayer;
@@ -962,8 +955,8 @@ const playerImportService = async (data, fastify, request = null) => {
       };
       const updatePlayer = await updateExchangePlayerQuery(data, fastify, request);
       console.log("updatePlayer", updatePlayer)
-      let index = global.tblPlayers.findIndex((i)=>i.playerId == checkPlayer.playerId)
-      if(index != -1){
+      let index = global.tblPlayers.findIndex((i) => i.playerId == checkPlayer.playerId)
+      if (index != -1) {
         global.tblPlayers[index] = updatePlayer
       }
       checkPlayer = updatePlayer
