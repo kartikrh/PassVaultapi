@@ -22024,7 +22024,7 @@ const updateMatchInfoService = async(request , fastify)=>{
           isKipper: player?.playing_role === 'wk' ? true : false,
           isLeftHandedBatting: !player.batting_style.includes('Right'),
           isLeftArmFielding: !player.bowling_style.includes('Right'),
-          userId: -2,
+          userId: -5,
           batsmanAverage: 0.0,
           batsmanStrikeRate: 0.0,
           bowlerAverage: 0.0,
@@ -22087,7 +22087,7 @@ const updateMatchInfoService = async(request , fastify)=>{
     }
     else if(checkPlayer?.tpId === null || !checkPlayer?.tpId){
       const data = {
-        userId: -2,
+        userId: -5,
         tpId: player?.pid || null,
         playerId: checkPlayer.playerId,
       };
@@ -22960,7 +22960,7 @@ const insertCompetitionOnMatchImportService = async (cid, fastify, request) => {
   const insertCompetition = await insertCompetitionQuery({
     ...request,
     userTokenInfo: {
-      WrUserId: -2
+      WrUserId: -5
     },
     body: competitionData
   }, fastify);
@@ -23037,7 +23037,7 @@ const matchImportService = async (data, fastify, request = null) => {
       checkVenue = await insertVenueQuery(venueData, fastify, {
         ...request,
         userTokenInfo: {
-          WrUserId: -2
+          WrUserId: -5
         }
       });
       global.tblVenues.push(checkVenue);
@@ -23050,7 +23050,7 @@ const matchImportService = async (data, fastify, request = null) => {
       checkVenue = await updateVenueQuery(venueData, fastify, {
         ...request,
         userTokenInfo: {
-          WrUserId: -2
+          WrUserId: -5
         }
       });
       const index = global.tblVenues.findIndex(item => item.id === checkVenue.id);
@@ -23095,7 +23095,7 @@ const matchImportService = async (data, fastify, request = null) => {
       isClientShow: false,
       commentaryStatus: 1,
       tpId: entitySportMatchResponse?.match_id,
-      createdBy: -2,
+      createdBy: -5,
       CurrentInnings: -1,
       isPlayersShow: false,
       isPredictMarket: false,
@@ -23129,7 +23129,7 @@ const matchImportService = async (data, fastify, request = null) => {
         ...request,
         body: commentaryData,
         userTokenInfo: {
-          WrUserId: -2
+          WrUserId: -5
         }
       }, fastify);
 
