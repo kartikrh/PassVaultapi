@@ -756,6 +756,7 @@ const UpdateTeamFromEntityService = async (request, fastify) => {
 };
 
 const teamImportService = async (data, fastify, request = null) => {
+  console.log("🚀 ~ teamImportService ~ data:", data)
   const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getTeamDataByIdFromEntity);
   if (!checkEntitySportAPIEndpoint.data) {
     throw new Error(checkEntitySportAPIEndpoint.message);
