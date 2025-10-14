@@ -151,13 +151,13 @@ module.exports = async function (fastify, opts) {
       }
     });
     
-    cron.schedule('0,30 * * * * *', async () => {
-      try {
-        await entitySportAutoImportProcess(fastify);
-      } catch (error) {
-        console.error(new Date(), "Error during scheduled task:", error);
-      }
-    });
+    // cron.schedule('0,30 * * * * *', async () => {
+    //   try {
+    //     await entitySportAutoImportProcess(fastify);
+    //   } catch (error) {
+    //     console.error(new Date(), "Error during scheduled task:", error);
+    //   }
+    // });
 
     // .after(async () => {
     //   require("./sequelize/tables/userModel")(fastify.db);
