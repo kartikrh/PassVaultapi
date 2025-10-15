@@ -1389,7 +1389,7 @@ const competitionImportService = async (data, fastify, request) => {
         checkCommentary = insertCommentary;
       }
 
-      if (match?.weather && match?.weather.length > 0 && commentaryId) {
+      if (match?.weather && match?.weather.length > 0) {
         const checkWeather = global.tblWeather.find(item => item.commentaryId === checkCommentary.commentaryId);
         if (checkWeather) {
           const matchWeather = match?.weather[0];
