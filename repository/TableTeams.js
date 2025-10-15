@@ -230,7 +230,7 @@ const updateTeamQuery = async (data, fastify, request) => {
           data.imagePath,
           data.jerseyPath,
           data.tpId,
-          data.countryId,
+          data.countryId || null,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
