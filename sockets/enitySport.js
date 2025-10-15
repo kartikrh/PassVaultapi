@@ -8,15 +8,30 @@ const {
 const { errorLogger } = require("../utilities/logger");
 const { setEntityCom2Service } = require("../services/entitySport");
 
-const connectEntitySport = async (fastify) => {
+const connectEntitySport = async (fastify, entitySocketId = undefined) => {
   try {
-    const entitySports = global.tblEntitySockets.filter(
-      (c) => c.isActive === true 
-        && c.actionType == clientSocketActionType.connect 
-        && c.status !== clientSocketStatus.connected
-        && c.isAutoScoreUpdate == true
-    );
-
+    // const entitySports = global.tblEntitySockets.filter(
+    //   (c) => c.isActive === true 
+    //     && c.actionType == clientSocketActionType.connect 
+    //     && c.status !== clientSocketStatus.connected
+    //     && c.isAutoScoreUpdate == true
+    // );
+    let entitySports;
+    if (entitySocketId !== undefined) {
+      entitySports = global.tblEntitySockets.filter(
+        (c) => c.isActive === true && c.entitySocketId == entitySocketId
+          && c.actionType == clientSocketActionType.connect 
+          && c.status !== clientSocketStatus.connected
+          && c.isAutoScoreUpdate == true
+      );
+    } else {
+      entitySports = global.tblEntitySockets.filter(
+        (c) => c.isActive === true 
+          && c.actionType == clientSocketActionType.connect 
+          && c.status !== clientSocketStatus.connected
+          && c.isAutoScoreUpdate == true
+      );
+    }
     const promises = entitySports.map(async (urlConfig) => {
       const existing = global.entitySportSocketIo.find(
         (c) => c.url === urlConfig.url
@@ -147,14 +162,30 @@ const connectEntitySport = async (fastify) => {
     // console.error("Error connecting clients:", error);
   }
 };
-const disconnectEntitySports = async (fastify) => {
+const disconnectEntitySports = async (fastify, entitySocketId = undefined) => {
   try {
-    const disconnectClientUrls = global.tblEntitySockets.filter(
-      (c) =>
-        c.isActive === true &&
-        c.actionType == clientSocketActionType.disconnect &&
-        c.status !== clientSocketStatus.disconnected
-    );
+    // const disconnectClientUrls = global.tblEntitySockets.filter(
+    //   (c) =>
+    //     c.isActive === true &&
+    //     c.actionType == clientSocketActionType.disconnect &&
+    //     c.status !== clientSocketStatus.disconnected
+    // );
+    let disconnectClientUrls;
+    if (entitySocketId !== undefined) {
+      disconnectClientUrls = global.tblEntitySockets.filter(
+        (c) =>
+          c.isActive === true && c.entitySocketId === entitySocketId &&
+          c.actionType == clientSocketActionType.disconnect &&
+          c.status !== clientSocketStatus.disconnected
+      );
+    } else {
+      disconnectClientUrls = global.tblEntitySockets.filter(
+        (c) =>
+          c.isActive === true &&
+          c.actionType == clientSocketActionType.disconnect &&
+          c.status !== clientSocketStatus.disconnected
+      );
+    }
     const promises = disconnectClientUrls?.map((client) => {
       const clientInstance = global.entitySportSocketIo.find(
         (c) => c.entitySocketId === client.entitySocketId

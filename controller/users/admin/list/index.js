@@ -183,7 +183,9 @@ const getCompetitionList = async (request, reply, fastify) => {
         isVirtual: item.isVirtual,
         pythonId: item.pythonId,
         pythonURI: pythonURI?.URI ?? null,
-        countryId: item.countryId
+        countryId: item.countryId,
+        startDate: item.startDate ?? null,
+        endDate: item.endDate ?? null
       };
     });
     reply.status(200).send(success(result, 200));

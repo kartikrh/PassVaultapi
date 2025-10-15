@@ -720,6 +720,8 @@ const getAllCompetitionListService = async (request, fastify) => {
       competition: item.competition,
       eventTypeId: item.eventTypeId,
       eventType: item.eventType,
+      startDate: item.startDate ?? null,
+      endDate: item.endDate ?? null
     };
   });
   return result;
@@ -982,6 +984,7 @@ const competitionImportService = async (data, fastify, request) => {
   });
 
   return checkCompetition;
+  
 }
 
 module.exports = {

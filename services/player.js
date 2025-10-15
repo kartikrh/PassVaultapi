@@ -15,6 +15,8 @@ const {
   getTeamPlayerByPlayerIdQuery,
   getTeamListByPlayerIdQuery,
   updateTeamPlayerHomeTeamQuery,
+  AllTeamPlayersQuery,
+  AllTeamPlayersNullImageQuery,
 } = require("../repository/TableTeamPlayer");
 const { getAllPlayersByTeamIdQuery, getAllPlayersByCompetitionIdTeamIdQuery } = require("../repository/TableTeams");
 const {
@@ -191,14 +193,17 @@ const insertPlayerService = async (request, fastify) => {
     Object.assign(request.body, trimData);
   }
 
-  const validatePlayerName = global.tblPlayers.find(
-    (item) =>
-      item.playerName.trim().toLowerCase() === request.body.playerName.trim().toLowerCase()
-  );
+  // const validatePlayerName = global.tblPlayers.find(
+  //   (item) =>
+  //     item.playerName.trim().toLowerCase() === request.body.playerName.trim().toLowerCase() &&
+  //     item.displayName.trim().toLowerCase () === request.body.displayName.trim().toLowerCase() 
+  // );
 
-  if (validatePlayerName) {
-    throw new Error("Player Name already exist");
-  }
+
+
+  // if (validatePlayerName) {
+  //   throw new Error("Player Name already exist");
+  // }
   const validateTpId = global.tblPlayers.find(
     (item) =>
       item.tpId == request.body?.tpId && item.tpId != null
@@ -314,15 +319,15 @@ const updatePlayerService = async (request, fastify) => {
   if(trimData) {
     Object.assign(request.body, trimData);
   }
-  const validatePlayerName = global.tblPlayers.find(
-    (item) =>
-      item.playerName.trim().toLowerCase() === request.body.playerName.trim().toLowerCase() &&
-      item.playerId !== request.body.playerId
-  );
+  // const validatePlayerName = global.tblPlayers.find(
+  //   (item) =>
+  //     item.playerName.trim().toLowerCase() === request.body.playerName.trim().toLowerCase() &&
+  //     item.playerId !== request.body.playerId
+  // );
 
-  if (validatePlayerName) {
-    throw new Error("Player Name already exist");
-  }
+  // if (validatePlayerName) {
+  //   throw new Error("Player Name already exist");
+  // }
   if(checkPlayerId) {
     const validateTpId = global.tblPlayers.find(
       (item) =>
@@ -976,6 +981,102 @@ const playerImportService = async (data, fastify, request = null) => {
   return checkPlayer;
 }
 
+const allPlayersMergeImageService = async (request, fastify) => {
+  await errorLogger(
+    fastify,
+    `All players merge image process started - ${new Date().toISOString()}`,
+    `services/player.js/allPlayersMergeImageService`,
+    null
+  );
+
+  // Start the background process (non-blocking)
+  (async () => {
+    try {
+      const teamPlayersData = await AllTeamPlayersQuery(fastify, request);
+      for (const playerData of teamPlayersData) {
+        const player = global.tblPlayers.find(item => item.playerId == playerData.refPlayerId);
+        const team = global.tblTeams.find(item => item.teamId == playerData.teamId);
+
+        if (player?.image && team?.jersey) {
+          mergeAndSaveImage({
+            playerImage: player.image,
+            jersey: team.jersey,
+            playerName: player.playerName,
+            teamName: team.teamName,
+            teamPlayerId: playerData.teamPlayerId,
+            commentaryPlayerId: null,
+            commentaryId: null,
+          }, fastify);
+        }
+      }
+
+      await errorLogger(
+        fastify,
+        `All players merge image process completed - ${new Date().toISOString()}`,
+        `services/player.js/allPlayersMergeImageService`,
+        null
+      );
+    } catch (err) {
+      await errorLogger(
+        fastify,
+        `Error in allPlayersMergeImageService - ${err.message}`,
+        `services/player.js/allPlayersMergeImageService`,
+        err.stack
+      );
+    }
+  })();
+
+  return "All Player image(s) and Jersey image(s) merge process started";
+};
+
+const mergePlayerNullImageService = async (request, fastify) => {
+  await errorLogger(
+    fastify,
+    `All null players merge image process started - ${new Date().toISOString()}`,
+    `services/player.js/mergePlayerNullImageService`,
+    null
+  );
+
+  (async () => {
+    try {
+      const teamPlayersData = await AllTeamPlayersNullImageQuery(fastify, request);
+
+      for (const playerData of teamPlayersData) {
+        const player = global.tblPlayers.find(item => item.playerId == playerData.refPlayerId);
+        const team = global.tblTeams.find(item => item.teamId == playerData.teamId);
+
+        if (player?.image && team?.jersey) {
+          mergeAndSaveImage({
+            playerImage: player.image,
+            jersey: team.jersey,
+            playerName: player.playerName,
+            teamName: team.teamName,
+            teamPlayerId: playerData.teamPlayerId,
+            commentaryPlayerId: null,
+            commentaryId: null,
+          }, fastify);
+        }
+      }
+
+      await errorLogger(
+        fastify,
+        `All null players merge image process completed - ${new Date().toISOString()}`,
+        `services/player.js/mergePlayerNullImageService`,
+        null
+      );
+    } catch (err) {
+      await errorLogger(
+        fastify,
+        `Error in allPlayersMergeImageService - ${err.message}`,
+        `services/player.js/mergePlayerNullImageService`,
+        err.stack
+      );
+    }
+  })();
+
+  return "All Player image(s) and Jersey image(s) merge process started";
+};
+
 module.exports = {
   allPlayerService,
   playerByIdService,
@@ -992,5 +1093,7 @@ module.exports = {
   getTeamListPlayerIdService,
   activeInactivePlayerService,
   UpdatePlayerFromEntityService,
-  playerImportService
+  playerImportService,
+  allPlayersMergeImageService,
+  mergePlayerNullImageService,
 };
