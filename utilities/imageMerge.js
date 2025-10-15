@@ -7,14 +7,15 @@ const { PROJECT_NAME } = require("./configConstants");
 const { ImgModuleConfig } = require("./imageConstant");
 const { errorLogger } = require("./logger");
 const axios = require("axios");
+const https = require("https");
 const { updateTeamPlayerImageQuery } = require("../repository/TableTeamPlayer");
 const { updateCommentaryPlayerJerseyImageQuery, updateCommPlayersImagePathQuery } = require("../repository/TableCommentary");
 const sharp = require("sharp");
 
-
+const agent = new https.Agent({ keepAlive: true });
 const convertToPng = async (imageUrl, fastify, data) => {
   try {
-    const response = await axios.get(imageUrl, { responseType: "arraybuffer" });
+    const response = await axios.get(imageUrl, { responseType: "arraybuffer", timeout: 10000, httpsAgent: agent });
     let imageBuffer = Buffer.from(response.data);
 
     if (!imageUrl.toLowerCase().endsWith(".png")) {
