@@ -15,8 +15,6 @@ const {
   getTeamPlayerByPlayerIdQuery,
   getTeamListByPlayerIdQuery,
   updateTeamPlayerHomeTeamQuery,
-  AllTeamPlayersQuery,
-  AllTeamPlayersNullImageQuery,
 } = require("../repository/TableTeamPlayer");
 const { getAllPlayersByTeamIdQuery, getAllPlayersByCompetitionIdTeamIdQuery } = require("../repository/TableTeams");
 const {
@@ -36,6 +34,7 @@ const { trimTextData, callEntitySportAPI, ServiceType, APIEndpointModuleType, En
 const { getAutoImportDataByIdQuery, insertAutoImportDataQuery } = require("../repository/TableAutoImportData");
 const { updateAutoImportDataService } = require("./autoImportData");
 const { errorLogger } = require("../utilities/logger");
+const { playersMergeImageService } = require("../utilities/index");
 
 const allPlayerService = async (request,fastify) => {
   const { isActive, eventTypeId , teamId} = request.body;
@@ -982,99 +981,13 @@ const playerImportService = async (data, fastify, request = null) => {
 }
 
 const allPlayersMergeImageService = async (request, fastify) => {
-  await errorLogger(
-    fastify,
-    `All players merge image process started - ${new Date().toISOString()}`,
-    `services/player.js/allPlayersMergeImageService`,
-    null
-  );
-
-  // Start the background process (non-blocking)
-  (async () => {
-    try {
-      const teamPlayersData = await AllTeamPlayersQuery(fastify, request);
-      for (const playerData of teamPlayersData) {
-        const player = global.tblPlayers.find(item => item.playerId == playerData.refPlayerId);
-        const team = global.tblTeams.find(item => item.teamId == playerData.teamId);
-
-        if (player?.image && team?.jersey) {
-          mergeAndSaveImage({
-            playerImage: player.image,
-            jersey: team.jersey,
-            playerName: player.playerName,
-            teamName: team.teamName,
-            teamPlayerId: playerData.teamPlayerId,
-            commentaryPlayerId: null,
-            commentaryId: null,
-          }, fastify);
-        }
-      }
-
-      await errorLogger(
-        fastify,
-        `All players merge image process completed - ${new Date().toISOString()}`,
-        `services/player.js/allPlayersMergeImageService`,
-        null
-      );
-    } catch (err) {
-      await errorLogger(
-        fastify,
-        `Error in allPlayersMergeImageService - ${err.message}`,
-        `services/player.js/allPlayersMergeImageService`,
-        err.stack
-      );
-    }
-  })();
-
-  return "All Player image(s) and Jersey image(s) merge process started";
+  const result = await playersMergeImageService(1, request, fastify)
+  return result;
 };
 
 const mergePlayerNullImageService = async (request, fastify) => {
-  await errorLogger(
-    fastify,
-    `All null players merge image process started - ${new Date().toISOString()}`,
-    `services/player.js/mergePlayerNullImageService`,
-    null
-  );
-
-  (async () => {
-    try {
-      const teamPlayersData = await AllTeamPlayersNullImageQuery(fastify, request);
-
-      for (const playerData of teamPlayersData) {
-        const player = global.tblPlayers.find(item => item.playerId == playerData.refPlayerId);
-        const team = global.tblTeams.find(item => item.teamId == playerData.teamId);
-
-        if (player?.image && team?.jersey) {
-          mergeAndSaveImage({
-            playerImage: player.image,
-            jersey: team.jersey,
-            playerName: player.playerName,
-            teamName: team.teamName,
-            teamPlayerId: playerData.teamPlayerId,
-            commentaryPlayerId: null,
-            commentaryId: null,
-          }, fastify);
-        }
-      }
-
-      await errorLogger(
-        fastify,
-        `All null players merge image process completed - ${new Date().toISOString()}`,
-        `services/player.js/mergePlayerNullImageService`,
-        null
-      );
-    } catch (err) {
-      await errorLogger(
-        fastify,
-        `Error in allPlayersMergeImageService - ${err.message}`,
-        `services/player.js/mergePlayerNullImageService`,
-        err.stack
-      );
-    }
-  })();
-
-  return "All Player image(s) and Jersey image(s) merge process started";
+  const result = await playersMergeImageService(2, request, fastify)
+  return result;
 };
 
 module.exports = {
