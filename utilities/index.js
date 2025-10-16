@@ -2,7 +2,7 @@ const uaParser = require("ua-parser-js");
 const crypto = require("crypto");
 const moment = require("moment");
 const { default: axios } = require("axios");
-const pLimit = require("p-limit").default;
+// const pLimit = require("p-limit").default;
 const { mergeAndSaveImage } = require("./imageMerge");
 const configConstants = require("./configConstants");
 const {
