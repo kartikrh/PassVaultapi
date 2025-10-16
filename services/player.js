@@ -802,8 +802,8 @@ const UpdatePlayerFromEntityService = async (request, fastify) => {
           throw new Error("Invalid response from Entit-Sport API");
         }
 
-        const { playerTypeId, playerName, displayName, isKipper, isLeftHandedBatting, isLeftArmFielding, bowlingStyleId, bowlingTypeId } = entry;
-        const { playing_role, title, short_name, batting_style, bowling_style, bowling_type } = entitySportPlayerResponse;
+        const { playerTypeId, playerName, displayName, isKipper, isLeftHandedBatting, isLeftArmFielding, bowlingStyleId, bowlingTypeId, countryId } = entry;
+        const { playing_role, title, short_name, batting_style, bowling_style, bowling_type, nationality } = entitySportPlayerResponse;
 
         let changedValues = { ...entry };
 
@@ -837,6 +837,21 @@ const UpdatePlayerFromEntityService = async (request, fastify) => {
         if (entityBowlingStyleId && bowlingTypeId !== entityBowlingStyleId) {
           changedValues.bowlingTypeId = entityBowlingStyleId;
         }
+        const countryData = global.tblCountryCodes.find(item => item.countryName.toLowerCase() === nationality?.toLowerCase());
+        if (countryId && countryId !== countryData?.id) {
+          const checkCountry = global.tblCountryCodes.find(item => item.countryName.toLowerCase() === nationality?.toLowerCase());
+          if (checkCountry) {
+            changedValues.countryId = checkCountry?.id
+          } else {
+            const insertCountryData = {
+              countryName: nationality || null,
+              isActive: true,
+            };
+            const insertCountryCode = await insertCountryCodeQuery(insertCountryData, fastify, request);
+            global.tblCountryCodes.push(insertCountryCode);
+            changedValues.countryId = insertCountryCode?.id
+          }
+        }
 
         const isChanged = (
           changedValues.playerTypeId !== playerTypeId ||
@@ -846,7 +861,8 @@ const UpdatePlayerFromEntityService = async (request, fastify) => {
           changedValues.isLeftHandedBatting !== isLeftHandedBatting ||
           changedValues.isLeftArmFielding !== isLeftArmFielding ||
           changedValues.bowlingStyleId !== bowlingStyleId ||
-          changedValues.bowlingTypeId !== bowlingTypeId
+          changedValues.bowlingTypeId !== bowlingTypeId ||
+          changedValues.countryId !== countryId
         );
 
         if (isChanged) {
