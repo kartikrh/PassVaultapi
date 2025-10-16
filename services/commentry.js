@@ -23255,7 +23255,7 @@ const matchImportService = async (data, fastify, request = null) => {
       delay: 0,
       isActive: true,
       isTeamPredictionOn: true,
-      isClientShow: false,
+      isClientShow: true,
       eventNo: matchInfoResponse?.match_number,
       isVirtual: false,
       session: 1,
