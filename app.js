@@ -115,7 +115,7 @@ module.exports = async function (fastify, opts) {
         "iccRankingModel"
       ];
       
-      models.forEach((model) => require(`./sequelize/tables/${model}`)(fastify.db));
+      models.forEach((model) => require(`./sequelize/tables/${model}`)(fastify.db,fastify.db.Sequelize));
       setImmediate(async () => {
         try {
           // await featchData(fastify);
