@@ -873,6 +873,69 @@ const upCompStatusService = async (request, fastify) => {
   return `Competition status updated successfully`;
 };
 
+const upsertPlayers = async (entitySocketData, players, playerTpId, request, fastify) => {
+  let checkPlayer = global.tblPlayers.find(item => item.tpId === playerTpId);
+  if (!checkPlayer) {
+    const getPlayerFromEntity = players?.find(p => p.pid === playerTpId);
+    checkPlayer = global.tblPlayers.find((item) => item.tpId == null
+      && item.playerName.toLowerCase() === getPlayerFromEntity?.title.replace(/'/g, "''").toLowerCase() &&
+      item.displayName.trim().replace(/'/g, "''").toLowerCase() == getPlayerFromEntity?.short_name.toLowerCase())
+    if (!checkPlayer) {
+      let getCountry = null;
+      if (getPlayerFromEntity?.nationality) {
+        getCountry = global.tblCountryCodes.find(item => item.countryName.toLowerCase() === getPlayerFromEntity?.nationality.toLowerCase());
+        if (!getCountry) {
+          const insertCountryData = {
+            countryName: getPlayerFromEntity?.nationality || null,
+            isActive: true,
+          };
+          const insertCountryCode = await insertCountryCodeQuery(insertCountryData, fastify, request);
+          global.tblCountryCodes.push(insertCountryCode);
+          getCountry = insertCountryCode;
+        }
+      }
+      let insertPlayerData = {
+        eventTypeId: EventType['Cricket'],
+        playerTypeId: EntityPlayerType[getPlayerFromEntity?.playing_role],
+        playerName: getPlayerFromEntity?.title,
+        displayName: getPlayerFromEntity?.short_name,
+        countryId: getCountry?.id,
+        isActive: true,
+        isKipper: getPlayerFromEntity?.playing_role === 'wk' ? true : false,
+        isLeftHandedBatting: getPlayerFromEntity.batting_style ? !getPlayerFromEntity.batting_style.includes('Right') : false,
+        isLeftArmFielding: getPlayerFromEntity.bowling_style ? !getPlayerFromEntity.bowling_style.includes('Right') : false,
+        userId: -3,
+        batsmanAverage: 0.0,
+        batsmanStrikeRate: 0.0,
+        bowlerAverage: 0.0,
+        bowlerEconomy: 0.0,
+        tpId: getPlayerFromEntity?.pid || null,
+        bowlingStyleId: getPlayerFromEntity.bowling_type ? EntityBowlingStyleType[getPlayerFromEntity.bowling_type.toLowerCase()] : null,
+        bowlingTypeId: extractBowlingStyle(getPlayerFromEntity.bowling_type, getPlayerFromEntity.bowling_style),
+        image: entitySocketData?.defaultPlayerImage || null,
+        imagePath: entitySocketData?.defaultPlayerImagePath || null
+      };
+      const insertPlayer = await insertPlayerQuery(insertPlayerData, fastify, request);
+      global.tblPlayers.push(insertPlayer);
+      checkPlayer = insertPlayer;
+    }
+    else if (checkPlayer?.tpId === null || !checkPlayer?.tpId) {
+      const data = {
+        userId: -3,
+        tpId: getPlayerFromEntity?.pid || null,
+        playerId: checkPlayer.playerId,
+      };
+      const updatePlayer = await updateExchangePlayerQuery(data, fastify, request);
+      let index = global.tblPlayers.findIndex((i) => i.playerId == checkPlayer.playerId)
+      if (index != -1) {
+        global.tblPlayers[index] = updatePlayer
+      }
+      checkPlayer = updatePlayer;
+    }
+  }
+  return checkPlayer;
+}
+
 const insertTeamPlayersByTeamId = async (teamId, teamTpId, request, fastify) => {
   const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getTeamDataByIdFromEntity);
   if (!checkEntitySportAPIEndpoint.data) {
@@ -882,7 +945,7 @@ const insertTeamPlayersByTeamId = async (teamId, teamTpId, request, fastify) => 
   const url = checkEntitySportAPIEndpoint.data.replace("{tid}", teamTpId);
   const entitySportTeamPlayers = await callEntitySportAPI(url, request, fastify);
 
-  let entitySportTeamPlayersResponse = entitySportTeamPlayers?.data?.result?.item?.players;
+  let entitySportTeamPlayersResponse = entitySportTeamPlayers?.data?.result?.items?.players;
   if (!entitySportTeamPlayersResponse) {
     throw new Error("Invalid response from Entit-Sport API");
   }
@@ -892,65 +955,8 @@ const insertTeamPlayersByTeamId = async (teamId, teamTpId, request, fastify) => 
   const newPlayers = [];
   const entityTeamPlayers = Object.values(entitySportTeamPlayersResponse).flat();
   for (const player of entityTeamPlayers) {
-    let checkPlayer = global.tblPlayers.find(item => item.tpId == player?.pid);
-    if (!checkPlayer) {
-      checkPlayer = global.tblPlayers.find((item) => item.tpId == null
-        && item.playerName.toLowerCase() === player?.title.replace(/'/g, "''").toLowerCase() &&
-        item.displayName.trim().replace(/'/g, "''").toLowerCase() == player?.short_name.toLowerCase())
-      if (!checkPlayer) {
-        let getCountry = null;
-        if (player?.nationality) {
-          getCountry = global.tblCountryCodes.find(item => item.countryName.toLowerCase() === player?.nationality.toLowerCase());
-          if (!getCountry) {
-            const insertCountryData = {
-              countryName: player?.nationality || null,
-              isActive: true,
-            };
-            const insertCountryCode = await insertCountryCodeQuery(insertCountryData, fastify, request);
-            global.tblCountryCodes.push(insertCountryCode);
-            getCountry = insertCountryCode;
-          }
-        }
-        let insertPlayerData = {
-          eventTypeId: EventType['Cricket'],
-          playerTypeId: EntityPlayerType[player?.playing_role],
-          playerName: player?.title,
-          displayName: player?.short_name,
-          countryId: getCountry?.id,
-          isActive: true,
-          isKipper: player?.playing_role === 'wk' ? true : false,
-          isLeftHandedBatting: !player.batting_style.includes('Right'),
-          isLeftArmFielding: !player.bowling_style.includes('Right'),
-          userId: -3,
-          batsmanAverage: 0.0,
-          batsmanStrikeRate: 0.0,
-          bowlerAverage: 0.0,
-          bowlerEconomy: 0.0,
-          tpId: player?.pid || null,
-          bowlingStyleId: player.bowling_type ? EntityBowlingStyleType[player.bowling_type.toLowerCase()] : null,
-          bowlingTypeId: extractBowlingStyle(player.bowling_type, player.bowling_style),
-          image: entitySocketData?.defaultPlayerImage || null,
-          imagePath: entitySocketData?.defaultPlayerImagePath || null
-        };
-        const insertPlayer = await insertPlayerQuery(insertPlayerData, fastify, request);
-        global.tblPlayers.push(insertPlayer);
-        checkPlayer = insertPlayer;
-      }
-      else if (checkPlayer?.tpId === null || !checkPlayer?.tpId) {
-        const data = {
-          userId: -3,
-          tpId: player?.pid || null,
-          playerId: checkPlayer.playerId,
-        };
-        const updatePlayer = await updateExchangePlayerQuery(data, fastify, request);
-        let index = global.tblPlayers.findIndex((i) => i.playerId == checkPlayer.playerId)
-        if (index != -1) {
-          global.tblPlayers[index] = updatePlayer
-        }
-        checkPlayer = updatePlayer;
-      }
-    }
-    newPlayers.push(checkPlayer);
+    const upsertPlayer = await upsertPlayers(entitySocketData, entityTeamPlayers, player?.pid, request, fastify);
+    newPlayers.push(upsertPlayer);
   }
 
   const uniquePlayers = [...new Map(newPlayers.map(player => [player.playerId, player])).values()];
@@ -998,66 +1004,8 @@ const insertCommentaryPlayersByTeam = async (i, commentaryId, teamId, teamPlayin
   for (const playerId of filteredPlayerIds) {
     const teamPlayerData = playersInTeams.find(item => item.teamId === teamId && item.tpId === Number(playerId));
     if (!teamPlayerData) {
-      let checkPlayer = global.tblPlayers.find(item => item.tpId === playerId);
-      if (!checkPlayer) {
-        const getPlayerFromEntity = players?.find(p => p.pid === playerId);
-        checkPlayer = global.tblPlayers.find((item) => item.tpId == null
-          && item.playerName.toLowerCase() === getPlayerFromEntity?.title.replace(/'/g, "''").toLowerCase() &&
-          item.displayName.trim().replace(/'/g, "''").toLowerCase() == getPlayerFromEntity?.short_name.toLowerCase())
-        if (!checkPlayer) {
-          let getCountry = null;
-          if (getPlayerFromEntity?.nationality) {
-            getCountry = global.tblCountryCodes.find(item => item.countryName.toLowerCase() === getPlayerFromEntity?.nationality.toLowerCase());
-            if (!getCountry) {
-              const insertCountryData = {
-                countryName: getPlayerFromEntity?.nationality || null,
-                isActive: true,
-              };
-              const insertCountryCode = await insertCountryCodeQuery(insertCountryData, fastify, request);
-              global.tblCountryCodes.push(insertCountryCode);
-              getCountry = insertCountryCode;
-            }
-          }
-          let insertPlayerData = {
-            eventTypeId: EventType['Cricket'],
-            playerTypeId: EntityPlayerType[getPlayerFromEntity?.playing_role],
-            playerName: getPlayerFromEntity?.title,
-            displayName: getPlayerFromEntity?.short_name,
-            countryId: getCountry?.id,
-            isActive: true,
-            isKipper: getPlayerFromEntity?.playing_role === 'wk' ? true : false,
-            isLeftHandedBatting: !getPlayerFromEntity.batting_style.includes('Right'),
-            isLeftArmFielding: !getPlayerFromEntity.bowling_style.includes('Right'),
-            userId: -3,
-            batsmanAverage: 0.0,
-            batsmanStrikeRate: 0.0,
-            bowlerAverage: 0.0,
-            bowlerEconomy: 0.0,
-            tpId: getPlayerFromEntity?.pid || null,
-            bowlingStyleId: getPlayerFromEntity.bowling_type ? EntityBowlingStyleType[getPlayerFromEntity.bowling_type.toLowerCase()] : null,
-            bowlingTypeId: extractBowlingStyle(getPlayerFromEntity.bowling_type, getPlayerFromEntity.bowling_style),
-            image: entitySocketData?.defaultPlayerImage || null,
-            imagePath: entitySocketData?.defaultPlayerImagePath || null
-          };
-          const insertPlayer = await insertPlayerQuery(insertPlayerData, fastify, request);
-          global.tblPlayers.push(insertPlayer);
-          checkPlayer = insertPlayer;
-        }
-        else if (checkPlayer?.tpId === null || !checkPlayer?.tpId) {
-          const data = {
-            userId: -3,
-            tpId: getPlayerFromEntity?.pid || null,
-            playerId: checkPlayer.playerId,
-          };
-          const updatePlayer = await updateExchangePlayerQuery(data, fastify, request);
-          let index = global.tblPlayers.findIndex((i) => i.playerId == checkPlayer.playerId)
-          if (index != -1) {
-            global.tblPlayers[index] = updatePlayer
-          }
-          checkPlayer = updatePlayer;
-        }
-      }
-      newPlayers.push(checkPlayer);
+      const upsertPlayer = await upsertPlayers(entitySocketData, players, playerId, request, fastify);
+      newPlayers.push(upsertPlayer);
     }
   }
 
@@ -1066,7 +1014,7 @@ const insertCommentaryPlayersByTeam = async (i, commentaryId, teamId, teamPlayin
   const teamPlayerByTeamId = await getAllPlayersByTeamIdQuery(teamId, fastify, request);
   if (teamId && uniquePlayers.length > 0) {
     for (const player of uniquePlayers) {
-      const checkPlayerExistsInTeam = teamPlayerByTeamId.find(item => item.playerId === checkPlayer.playerId);
+      const checkPlayerExistsInTeam = teamPlayerByTeamId.find(item => item.playerId === player.playerId);
       if (!checkPlayerExistsInTeam) {
         await insertTeamPlayerQuery({
           teamId: teamId,
@@ -1341,82 +1289,12 @@ const competitionImportService = async (data, fastify, request) => {
       const entitySportCompetitionTeam = entitySportCompetitionSquadResponse?.find(t => t.team_id === team);
       if (entitySportCompetitionTeam && entitySportCompetitionTeam.players && entitySportCompetitionTeam.players.length > 0) {
         for (const player of entitySportCompetitionTeam.players) {
-          let checkPlayer = global.tblPlayers.find(item => item.tpId == player?.pid);
-          if (!checkPlayer) {
-            checkPlayer = global.tblPlayers.find((item) => item.tpId == null
-              && item.playerName.toLowerCase() === player?.title.replace(/'/g, "''").toLowerCase() &&
-              item.displayName.trim().replace(/'/g, "''").toLowerCase() == player?.short_name.toLowerCase())
-            if (!checkPlayer) {
-              let getCountry = null;
-              if (player?.nationality) {
-                getCountry = global.tblCountryCodes.find(item => item.countryName.toLowerCase() === player?.nationality.toLowerCase());
-                if (!getCountry) {
-                  const insertCountryData = {
-                    countryName: player?.nationality || null,
-                    isActive: true,
-                  };
-                  const insertCountryCode = await insertCountryCodeQuery(insertCountryData, fastify, request);
-                  global.tblCountryCodes.push(insertCountryCode);
-                  getCountry = insertCountryCode;
-                }
-              }
-              let insertPlayerData = {
-                eventTypeId: EventType['Cricket'],
-                playerTypeId: EntityPlayerType[player?.playing_role],
-                playerName: player?.title,
-                displayName: player?.short_name,
-                countryId: getCountry?.id,
-                isActive: true,
-                isKipper: player?.playing_role === 'wk' ? true : false,
-                isLeftHandedBatting: !player.batting_style.includes('Right'),
-                isLeftArmFielding: !player.bowling_style.includes('Right'),
-                userId: -3,
-                batsmanAverage: 0.0,
-                batsmanStrikeRate: 0.0,
-                bowlerAverage: 0.0,
-                bowlerEconomy: 0.0,
-                tpId: player?.pid || null,
-                bowlingStyleId: player.bowling_type ? EntityBowlingStyleType[player.bowling_type.toLowerCase()] : null,
-                bowlingTypeId: extractBowlingStyle(player.bowling_type, player.bowling_style),
-                image: entitySocketData?.defaultPlayerImage || null,
-                imagePath: entitySocketData?.defaultPlayerImagePath || null
-              };
-              const insertPlayer = await insertPlayerQuery(insertPlayerData, fastify, request);
-              global.tblPlayers.push(insertPlayer);
-              checkPlayer = insertPlayer;
-            }
-            else if (checkPlayer?.tpId === null || !checkPlayer?.tpId) {
-              const data = {
-                userId: -3,
-                tpId: player?.pid || null,
-                playerId: checkPlayer.playerId,
-              };
-              const updatePlayer = await updateExchangePlayerQuery(data, fastify, request);
-              let index = global.tblPlayers.findIndex((i) => i.playerId == checkPlayer.playerId)
-              if (index != -1) {
-                global.tblPlayers[index] = updatePlayer
-              }
-              checkPlayer = updatePlayer;
-            }
-          }
-
-          players.push(checkPlayer);
+          const upsertPlayer = await upsertPlayers(entitySocketData, entitySportCompetitionTeam.players, player?.pid, request, fastify);
+          players.push(upsertPlayer);
         }
       }
 
       const uniquePlayers = [...new Map(players.map(player => [player.playerId, player])).values()];
-
-      await addTournamentTeamPlayersService({
-        ...request,
-        body: {
-          teamPlayers: uniquePlayers,
-          competitionId: checkCompetition.competitionId,
-          teamId: checkTeam.teamId
-        },
-        userTokenInfo: {
-          WrUserId: -5
-        }
-      }, fastify);
 
       const teamPlayerByTeamId = await getAllPlayersByTeamIdQuery(checkTeam.teamId, fastify, request);
       if (uniquePlayers.length > 0) {
@@ -1657,6 +1535,22 @@ const competitionImportService = async (data, fastify, request) => {
         await insertCommentaryPlayersByTeam(i, checkCommentary.commentaryId, teamB.teamId, teamBSquad, entitySportMatchResponse?.players, matchType?.matchTypeId, fastify, request);
       }
     }
+  }
+
+  for (const team of competitionTeamTpIds) {
+    let checkTeam = global.tblTeams.find(item => item.tpId === team);
+    const teamPlayerByTeamId = await getAllPlayersByTeamIdQuery(checkTeam.teamId, fastify, request);
+    await addTournamentTeamPlayersService({
+      ...request,
+      body: {
+        teamPlayers: teamPlayerByTeamId,
+        competitionId: checkCompetition?.competitionId,
+        teamId: checkTeam.teamId
+      },
+      userTokenInfo: {
+        WrUserId: -5
+      }
+    }, fastify);
   }
 
   await addEditTournamentTeamPointDataService(entitySportCompetitionResponse, checkCompetition?.competitionId, fastify, {
