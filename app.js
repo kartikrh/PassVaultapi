@@ -96,26 +96,28 @@ module.exports = async function (fastify, opts) {
     .register(fsequelize, {
       ...dbPg,
       instance: "db", // tells the plugin to create a Sequelize instance with the name "db"
-      models: path.join(__dirname, "sequelize", "tables", "userModel.js"),
+    models: path.join(__dirname, "sequelize/tables"), // point to the folder, not a single file
     })
     .after(async () => {
       // Load models and sync DB
-      const models = [
-        "userModel", "userLoginInfoModel", "tabsModel", "roleModel", "encryptionData",
-        "permissionModel", "blockModel", "menuTypeModel", "menuItemModel", "menuItemTypeModel",
-        "pageModel", "pageAliasModel", "pageFormateModel", "eventTypeModel", "teamModel", 
-        "teamPlayersModel", "paneltyRunsModel", "playerModel", "matchTypeModel", "errorLogModel", 
-        "playerTypeModel", "bowlingTypeModel", "configModel", "CommentaryModel", "commentaryTeamModel", 
-        "commentaryPlayerModel", "compititionModel", "eventModel", "commentaryBallByBallModel", 
-        "commentaryPartnershipModel", "commentaryWicketModel", "overModel", "displayStatusModel", 
-        "newsModel", "subScribesDomainModel", "subScribesSubDomainModel", "matchTypePredictorModel", 
-        "marketTemplateModel", "eventMarketsModel", "marketRunnerModel", "marketTemplateRunnerModel", 
-        "vendorsModel", "vendorIpModel", "clientSocketModel", "activityLogModel", "mailSettingsModel", 
-        "thirdPartyApisModel", "commentaryScoringLogsModel", "clientVideoModel", "awardModel", "commentaryAwardModel","cardTypeModel",
-        "iccRankingModel"
-      ];
+      // const models = [
+      //   "userModel", "userLoginInfoModel", "tabsModel", "roleModel", "encryptionData",
+      //   "permissionModel", "blockModel", "menuTypeModel", "menuItemModel", "menuItemTypeModel",
+      //   "pageModel", "pageAliasModel", "pageFormateModel", "eventTypeModel", "teamModel", 
+      //   "teamPlayersModel", "paneltyRunsModel", "playerModel", "matchTypeModel", "errorLogModel", 
+      //   "playerTypeModel", "bowlingTypeModel", "configModel", "CommentaryModel", "commentaryTeamModel", 
+      //   "commentaryPlayerModel", "compititionModel", "eventModel", "commentaryBallByBallModel", 
+      //   "commentaryPartnershipModel", "commentaryWicketModel", "overModel", "displayStatusModel", 
+      //   "newsModel", "subScribesDomainModel", "subScribesSubDomainModel", "matchTypePredictorModel", 
+      //   "marketTemplateModel", "eventMarketsModel", "marketRunnerModel", "marketTemplateRunnerModel", 
+      //   "vendorsModel", "vendorIpModel", "clientSocketModel", "activityLogModel", "mailSettingsModel", 
+      //   "thirdPartyApisModel", "commentaryScoringLogsModel", "clientVideoModel", "awardModel", "commentaryAwardModel","cardTypeModel",
+      //   "iccRankingModel"
+      // ];
       
-      models.forEach((model) => require(`./sequelize/tables/${model}`)(fastify.db));
+      // models.forEach((model) => require(`./sequelize/tables/${model}`)(fastify.db));
+          console.log("✅ Sequelize instance ready", !!fastify.db, !!fastify.db);
+
       setImmediate(async () => {
         try {
           // await featchData(fastify);
