@@ -22978,7 +22978,7 @@ const insertCompetitionOnMatchImportService = async (cid, fastify, request) => {
   return insertCompetition;
 }
 
-const insertMatchTeamAndPlayers = async (teamTpId, eventType, request, fastify) => {
+const insertTeamAndPlayers = async (teamTpId, eventType, request, fastify) => {
   const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getTeamDataByIdFromEntity);
   if (!checkEntitySportAPIEndpoint.data) {
     throw new Error(checkEntitySportAPIEndpoint.message);
@@ -23223,10 +23223,10 @@ const matchImportService = async (data, fastify, request = null) => {
   const teamB = matchInfoResponse?.teamb?.team_id;
   let teamAData, teamBData;
   if (teamA && !nullTeamtpIds.includes(teamA)) {
-    teamAData = await insertMatchTeamAndPlayers(teamA, eventType, request, fastify);
+    teamAData = await insertTeamAndPlayers(teamA, eventType, request, fastify);
   }
   if (teamB && !nullTeamtpIds.includes(teamB)) {
-    teamBData = await insertMatchTeamAndPlayers(teamB, eventType, request, fastify);
+    teamBData = await insertTeamAndPlayers(teamB, eventType, request, fastify);
   }
 
   if (teamAData && teamBData) {
@@ -23475,5 +23475,6 @@ module.exports = {
   syncEntitySportCommentaryService,
   weatherAndPitchDataService,
   bowlingTypeChangeService,
-  matchImportService
+  matchImportService,
+  insertTeamAndPlayers
 };
