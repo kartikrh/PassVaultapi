@@ -125,11 +125,11 @@ function decrypt(encrypted) {
   return decrypted;
 }
 
-const generateFileName = () => {
-  let timestamp = new Date().toISOString().replace(/[-:.]/g, "");
-  let random = ("" + Math.random()).substring(2, 8);
-  return timestamp + random;
-};
+// const generateFileName = () => {
+//   let timestamp = new Date().toISOString().replace(/[-:.]/g, "");
+//   let random = ("" + Math.random()).substring(2, 8);
+//   return timestamp + random;
+// };
 
 const isJson = (json) => {
   try {
@@ -1905,7 +1905,7 @@ module.exports = {
   encryptedObject,
   encrypt,
   decrypt,
-  generateFileName,
+  // generateFileName,
   isJson,
   getTitle,
   getMessage,

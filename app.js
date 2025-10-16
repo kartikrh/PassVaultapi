@@ -143,6 +143,7 @@ module.exports = async function (fastify, opts) {
         console.error(new Date(), "Error during scheduled task:", error);
       }
     });
+
     cron.schedule('* * * * *', async () => {
       try {
         await upcomingCommentaries(fastify);
@@ -150,7 +151,7 @@ module.exports = async function (fastify, opts) {
         console.error(new Date(), "Error during scheduled task:", error);
       }
     });
-    
+
     cron.schedule('0,30 * * * * *', async () => {
       try {
         await entitySportAutoImportProcess(fastify);
