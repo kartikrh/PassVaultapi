@@ -2,7 +2,7 @@ const path = require("path");
 const {ImgModuleConfig} = require("../utilities/imageConstant");
 const { storeImageOnServer } = require("../utilities/Images");
 const { PROJECT_NAME } = require("../utilities/configConstants");
-const { generateFileName } = require("../utilities");
+const { generateFileName } = require("../utilities/generateFileName");
 
 const ckImageUploadService = async (request) => {
     if (request.body.upload && request.body.upload.length) {

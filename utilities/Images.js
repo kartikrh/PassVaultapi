@@ -1,9 +1,9 @@
 const fs = require("fs");
-const { generateFileName } = require("./index");
 const path = require("path");
 const { default: axios } = require("axios");
 const FormData = require('form-data');
 const { FILE_UPLOAD_URL, VIDEOUPLOADMAXSIZE, PROJECT_NAME } = require("./configConstants");
+const { generateFileName } = require("./generateFileName");
 
 const storeImage = async (imageBuffer) => {
   try {
