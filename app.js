@@ -135,29 +135,30 @@ module.exports = async function (fastify, opts) {
         }
       });
     });
-    // cron.schedule('0 0 * * *', async () => {
-    //   try {
-    //     // Fetching data from db every 24 hrs once(at midnight)
-    //     await FetchingCommentariesDataFromCron(fastify);
-    //   } catch (error) {
-    //     console.error(new Date(), "Error during scheduled task:", error);
-    //   }
-    // });
-    // cron.schedule('* * * * *', async () => {
-    //   try {
-    //     await upcomingCommentaries(fastify);
-    //   } catch (error) {
-    //     console.error(new Date(), "Error during scheduled task:", error);
-    //   }
-    // });
-    
-    // cron.schedule('0,30 * * * * *', async () => {
-    //   try {
-    //     await entitySportAutoImportProcess(fastify);
-    //   } catch (error) {
-    //     console.error(new Date(), "Error during scheduled task:", error);
-    //   }
-    // });
+    cron.schedule('0 0 * * *', async () => {
+      try {
+        // Fetching data from db every 24 hrs once(at midnight)
+        await FetchingCommentariesDataFromCron(fastify);
+      } catch (error) {
+        console.error(new Date(), "Error during scheduled task:", error);
+      }
+    });
+
+    cron.schedule('* * * * *', async () => {
+      try {
+        await upcomingCommentaries(fastify);
+      } catch (error) {
+        console.error(new Date(), "Error during scheduled task:", error);
+      }
+    });
+
+    cron.schedule('0,30 * * * * *', async () => {
+      try {
+        await entitySportAutoImportProcess(fastify);
+      } catch (error) {
+        console.error(new Date(), "Error during scheduled task:", error);
+      }
+    });
 
     // .after(async () => {
     //   require("./sequelize/tables/userModel")(fastify.db);
