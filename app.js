@@ -96,7 +96,7 @@ module.exports = async function (fastify, opts) {
     .register(fsequelize, {
       ...dbPg,
       instance: "db", // tells the plugin to create a Sequelize instance with the name "db"
-      models: path.join(__dirname, "sequelize", "tables", "userModel.js"),
+      // models: path.join(__dirname, "sequelize/tables"), // <-- point to folder
     })
     .after(async () => {
       // Load models and sync DB
