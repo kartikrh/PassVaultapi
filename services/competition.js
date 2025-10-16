@@ -970,7 +970,7 @@ const insertTeamPlayersByTeamId = async (teamId, teamTpId, request, fastify) => 
           await insertTeamPlayerQuery({
             teamId: teamId,
             refPlayerId: player?.playerId,
-            tpId: player?.pid,
+            tpId: player?.tpId || null,
             userId: -5,
             jerseyPlayerImage: entitySocketData?.defaultPlayerJerseyImage || null,
             jerseyPlayerImagePath: entitySocketData?.defaultPlayerJerseyImagePath || null,
@@ -1305,7 +1305,7 @@ const competitionImportService = async (data, fastify, request) => {
               await insertTeamPlayerQuery({
                 teamId: checkTeam.teamId,
                 refPlayerId: player?.playerId,
-                tpId: player?.pid,
+                tpId: player?.tpId || null,
                 userId: -5,
                 jerseyPlayerImage: entitySocketData?.defaultPlayerJerseyImage || null,
                 jerseyPlayerImagePath: entitySocketData?.defaultPlayerJerseyImagePath || null,
@@ -1582,5 +1582,7 @@ module.exports = {
   isVirtualCompetitionService,
   upCompStatusService,
   getMatchTypeTemplateByCompetitionIdService,
-  competitionImportService
+  competitionImportService,
+  insertTeamPlayersByTeamId,
+  insertCommentaryPlayersByTeam
 };
