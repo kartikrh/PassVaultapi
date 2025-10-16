@@ -208,7 +208,6 @@ const { PlayerType, nullTeamtpIds } = require("../utilities/entityConst");
 const { insertPlayerEntityQuery, insertPlayerQuery, updateExchangePlayerQuery } = require("../repository/TablePlayer");
 const { insertCountryCodeQuery } = require("../repository/TableCountryCodes");
 const { insertVenueQuery, updateVenueQuery } = require("../repository/TableVenue");
-const { teamImportService } = require("./teams");
 const { insertCompetitionQuery } = require("../repository/TableCompitition");
 const { getImageFromUrl } = require("../utilities/Images");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
