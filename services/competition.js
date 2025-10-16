@@ -1582,5 +1582,7 @@ module.exports = {
   isVirtualCompetitionService,
   upCompStatusService,
   getMatchTypeTemplateByCompetitionIdService,
-  competitionImportService
+  competitionImportService,
+  insertTeamPlayersByTeamId,
+  insertCommentaryPlayersByTeam
 };
