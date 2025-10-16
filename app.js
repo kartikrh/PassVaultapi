@@ -93,50 +93,38 @@ module.exports = async function (fastify, opts) {
   //   process.exit();
   // });
   fastify
-    .register(fsequelize, {
-      ...dbPg,
-      instance: "db", // tells the plugin to create a Sequelize instance with the name "db"
-    models: path.join(__dirname, "sequelize/tables"), // point to the folder, not a single file
-    })
-    .after(async () => {
-      // Load models and sync DB
-      // const models = [
-      //   "userModel", "userLoginInfoModel", "tabsModel", "roleModel", "encryptionData",
-      //   "permissionModel", "blockModel", "menuTypeModel", "menuItemModel", "menuItemTypeModel",
-      //   "pageModel", "pageAliasModel", "pageFormateModel", "eventTypeModel", "teamModel", 
-      //   "teamPlayersModel", "paneltyRunsModel", "playerModel", "matchTypeModel", "errorLogModel", 
-      //   "playerTypeModel", "bowlingTypeModel", "configModel", "CommentaryModel", "commentaryTeamModel", 
-      //   "commentaryPlayerModel", "compititionModel", "eventModel", "commentaryBallByBallModel", 
-      //   "commentaryPartnershipModel", "commentaryWicketModel", "overModel", "displayStatusModel", 
-      //   "newsModel", "subScribesDomainModel", "subScribesSubDomainModel", "matchTypePredictorModel", 
-      //   "marketTemplateModel", "eventMarketsModel", "marketRunnerModel", "marketTemplateRunnerModel", 
-      //   "vendorsModel", "vendorIpModel", "clientSocketModel", "activityLogModel", "mailSettingsModel", 
-      //   "thirdPartyApisModel", "commentaryScoringLogsModel", "clientVideoModel", "awardModel", "commentaryAwardModel","cardTypeModel",
-      //   "iccRankingModel"
-      // ];
-      
-      // models.forEach((model) => require(`./sequelize/tables/${model}`)(fastify.db));
-          console.log("✅ Sequelize instance ready", !!fastify.db, !!fastify.db);
+  .register(fsequelize, {
+    ...dbPg,
+    instance: "db", // Sequelize instance will be available as fastify.db
+    models: path.join(__dirname, "sequelize/tables"), // point to folder
+  })
+  .after(() => {
+    // ✅ This runs immediately after Sequelize is ready
+    console.log("✅ Sequelize instance ready", !!fastify.db, fastify.db);
+  });
 
-      setImmediate(async () => {
-        try {
-          // await featchData(fastify);
-          await fetchAllDataFromDb(fastify);
-          await disConnectClientSocketQuery(fastify);
-          await disConnectEntitySocketQuery(fastify);
-          await startSignalR(fastify);
-          connectClients(fastify);
-          disconnectClients(fastify);
-          connectEntitySport(fastify);
-          disconnectEntitySports(fastify);
-          webPushset(webPush);
-          updateMarket(fastify)
-          
-        } catch (error) {
-          console.error(new Date(), "Error during post-sync operations:", error);
-        }
-      });
-    });
+// Run heavy async tasks AFTER Fastify is fully ready
+fastify.ready().then(async () => {
+  try {
+    console.log("🚀 Running post-start async tasks");
+
+    await fetchAllDataFromDb(fastify);
+    await disConnectClientSocketQuery(fastify);
+    await disConnectEntitySocketQuery(fastify);
+    await startSignalR(fastify);
+    connectClients(fastify);
+    disconnectClients(fastify);
+    connectEntitySport(fastify);
+    disconnectEntitySports(fastify);
+    webPushset(webPush);
+    updateMarket(fastify);
+
+    console.log("✅ Post-start tasks completed");
+  } catch (err) {
+    console.error(new Date(), "Error during post-sync operations:", err);
+  }
+});
+
     // cron.schedule('0 0 * * *', async () => {
     //   try {
     //     // Fetching data from db every 24 hrs once(at midnight)
