@@ -275,6 +275,8 @@ const getAllPlayersByTeamIdQuery = async (teamId, fastify, request) => {
     return await fastify.db.query(
       `SELECT      
       "wrRefPlayerId" as "playerId",
+      "wrJerseyPlayerImage" as "jerseyPlayerImage",
+      "wrJerseyPlayerImagePath" as "jerseyPlayerImagePath",
       pl."wrTpId" as "tpId",
       "wrPlayerName" as "playerName",
       "wrPlayerOrder" as "playerOrder",

@@ -5,7 +5,7 @@ const { playerImportService } = require("./player");
 const { teamImportService } = require("./teams");
 
 const getAllICCRankingService = async (request) => {
-    const { isActive, type, matchTypeId, sportId, playerTypeId } = request.body;
+    const { isActive, type, matchTypeId, sportId, playerTypeId, isMen } = request.body;
 
     return global.tblICCRanking.filter((item) => {
         return (
@@ -13,7 +13,8 @@ const getAllICCRankingService = async (request) => {
             (type === undefined || type === 0 || item.type === type) &&
             (matchTypeId === undefined || matchTypeId === 0 || item.matchTypeId === matchTypeId) &&
             (sportId === undefined || sportId === 0 || item.sportId === sportId) &&
-            (playerTypeId === undefined || playerTypeId === 0 || item.playerTypeId === playerTypeId)
+            (playerTypeId === undefined || playerTypeId === 0 || item.playerTypeId === playerTypeId) &&
+            (isMen === undefined || item.isMen === isMen)
         );
     }).map(item => {
         const teamName = global.tblTeams.find(tn => tn.teamId == item.teamId)?.teamName || null;
