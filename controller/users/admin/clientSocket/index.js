@@ -6,6 +6,7 @@ const {
   changeActionTypeService,
   activeInactiveClientSocketService,
   socketCountService,
+  changeIsUpdateViewClientSocketService,
 } = require("../../../../services/clientSocket");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -76,6 +77,15 @@ const socketCount = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const changeIsUpdateViewClientSocket = async (request, reply, fastify) => {
+  try {
+    const result = await changeIsUpdateViewClientSocketService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/changeIsUpdateViewClientSocket", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 module.exports = {
   getAllClientSocket,
   getClientSocketById,
@@ -84,4 +94,5 @@ module.exports = {
   changeActionType,
   activeInactiveClientSocket,
   socketCount,
+  changeIsUpdateViewClientSocket,
 };
